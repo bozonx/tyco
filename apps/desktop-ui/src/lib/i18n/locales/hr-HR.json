@@ -12,7 +12,8 @@
     "translationMenu": "Prijevod",
     "voiceTransformation": "Glasovna transformacija",
     "webhook": "Webhook",
-    "chatPromptsMenu": "Unaprijed postavljeni upiti za chat"
+    "chatPromptsMenu": "Unaprijed postavljeni upiti za chat",
+    "voiceCommands": "Glasovne naredbe"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -1337,7 +1338,8 @@
     "recordAgain": "Snimi ponovno",
     "run": "Pokreni",
     "textPlaceholder": "vaš tekst",
-    "title": "Glasovne naredbe"
+    "title": "Glasovne naredbe",
+    "missingSelection": "Potreban je odabrani tekst."
   },
   "voiceGrammar": {
     "actions": { "askInChat": "pitaj u chatu" },

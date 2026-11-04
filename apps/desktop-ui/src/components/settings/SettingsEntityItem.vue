@@ -108,7 +108,7 @@ function handleCardClick(event: MouseEvent) {
   cursor: pointer;
 }
 
-.settings-entity.is-openable:hover {
+.settings-entity.is-openable:not(:has(select, input, textarea)):hover {
   background-color: var(--app-hover);
   border-color: var(--app-border);
 }

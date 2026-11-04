@@ -435,3 +435,22 @@ fn a_command_of_another_platform_is_not_called_and_stays_in_the_config() {
         "elsewhere"
     );
 }
+
+#[test]
+fn detects_selection_placeholder_in_scripts_and_webhooks() {
+    let script_yes = json!({"command": "echo {{SELECTION}} - {{TEXT}}"});
+    let script_no = json!({"command": "echo {{TEXT}}"});
+    assert!(script_mentions_selection(&script_yes));
+    assert!(!script_mentions_selection(&script_no));
+
+    let webhook_yes = json!({
+        "url": "https://example.com/api",
+        "payloadTemplate": "{\"sel\": \"{{SELECTION}}\"}"
+    });
+    let webhook_no = json!({
+        "url": "https://example.com/api",
+        "payloadTemplate": "{\"text\": \"{{TEXT}}\"}"
+    });
+    assert!(webhook_mentions_selection(&webhook_yes));
+    assert!(!webhook_mentions_selection(&webhook_no));
+}

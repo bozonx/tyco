@@ -224,6 +224,7 @@ const OPENS_DIALOG = new Set<StandardActionId>([
   'chatPromptsMenu',
   'customTransformation',
   'voiceTransformation',
+  'voiceCommands',
 ])
 
 const availableActions = computed((): MainActionChoice[] => [

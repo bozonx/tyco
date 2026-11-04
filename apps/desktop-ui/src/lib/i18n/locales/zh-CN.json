@@ -12,7 +12,8 @@
     "translationMenu": "翻译",
     "voiceTransformation": "语音转换",
     "webhook": "Webhook",
-    "chatPromptsMenu": "聊天提示词预设"
+    "chatPromptsMenu": "聊天提示词预设",
+    "voiceCommands": "语音命令"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -1331,7 +1332,8 @@
     "recordAgain": "重新录音",
     "run": "运行",
     "textPlaceholder": "您的文本",
-    "title": "语音命令"
+    "title": "语音命令",
+    "missingSelection": "需要提供选中的文本。"
   },
   "voiceGrammar": {
     "actions": { "askInChat": "在聊天中询问;在对话中提问" },

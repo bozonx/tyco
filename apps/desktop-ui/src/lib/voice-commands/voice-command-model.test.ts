@@ -519,3 +519,39 @@ it('settles the text of a session that broke while finishing without running it'
   expect(model.error.value).toBe('Timed out')
   expect(deps.run).not.toHaveBeenCalled()
 })
+
+it('passes selection context to deps.run and blocks commands requiring selection when context is missing', async () => {
+  const selectionCommand = {
+    ...createCommand('script', 'with-sel'),
+    isVoiceEnabled: true,
+    phrases: ['summarize'],
+    toolConfig: { command: 'echo {{SELECTION}} - {{TEXT}}' },
+  }
+  const { model, deps } = setup({
+    commands: () => [selectionCommand],
+    finishDictation: vi.fn(async () => 'summarize details'),
+  })
+
+  await model.start()
+  await model.finish('review')
+
+  expect(model.stage.value).toBe('review')
+  expect(model.command.value?.id).toBe('with-sel')
+  expect(model.inputIssue.value).toBe('missing-selection')
+  expect(model.canRun.value).toBe(false)
+
+  await model.run()
+  expect(deps.run).not.toHaveBeenCalled()
+
+  model.setContext({ selectionText: 'Selected passage' })
+  expect(model.inputIssue.value).toBeUndefined()
+  expect(model.canRun.value).toBe(true)
+
+  await model.run()
+  expect(deps.run).toHaveBeenCalledWith(
+    expect.objectContaining({ id: 'with-sel' }),
+    'details',
+    expect.any(AbortSignal),
+    { selectionText: 'Selected passage' }
+  )
+})

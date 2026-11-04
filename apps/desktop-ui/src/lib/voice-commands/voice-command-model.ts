@@ -28,17 +28,23 @@ import {
   type VoiceCandidate,
 } from './voice-resolver'
 
+export interface VoiceCommandContext {
+  selectionText: string
+}
+
 export interface VoiceCommandDependencies extends TimerDependencies {
   commands: () => readonly CommandConfig[]
   builtInCommands?: () => readonly CommandConfig[]
   tools: ToolLookup
+  context?: VoiceCommandContext | (() => VoiceCommandContext | undefined)
   startDictation: (handlers: DictationHandlers) => Promise<void>
   finishDictation: () => Promise<string>
   cancelDictation: () => Promise<void>
   run: (
     command: CommandConfig,
     text: string,
-    signal: AbortSignal
+    signal: AbortSignal,
+    context?: VoiceCommandContext
   ) => Promise<InvocationOutcome>
   /** The recognized speech, kept in the history before anything runs */
   saveTranscript?: (text: string) => Promise<unknown>
@@ -90,6 +96,12 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   /** A message key (`voiceCommands.*`, `toast.*`) or a message as it came */
   const error = ref('')
   const autoStopWarning = shallowRef<AutoStopWarning>()
+  const explicitContext = shallowRef<VoiceCommandContext | undefined>()
+  const context = computed(() => {
+    if (explicitContext.value !== undefined) return explicitContext.value
+    if (typeof deps.context === 'function') return deps.context()
+    return deps.context
+  })
   let generation = 0
   /** Why the session broke while `finish` was waiting for its last words */
   let interruption: string | undefined
@@ -159,7 +171,12 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   )
   const inputIssue = computed(() =>
     command.value
-      ? voiceInputIssue(command.value, inputText.value, deps.tools)
+      ? voiceInputIssue(
+          command.value,
+          inputText.value,
+          deps.tools,
+          context.value
+        )
       : undefined
   )
   /** Speech before the recognized command, dropped as a failed attempt */
@@ -186,7 +203,8 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     const issue = voiceInputIssue(
       activeCommand.value,
       activeCandidate.value.text,
-      deps.tools
+      deps.tools,
+      context.value
     )
     return !issue
   })
@@ -214,7 +232,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       stage.value !== 'review' ||
       !target ||
       !isVoiceCommand(target, deps.tools) ||
-      voiceInputIssue(target, inputText.value, deps.tools)
+      voiceInputIssue(target, inputText.value, deps.tools, context.value)
     )
       return
     const current = generation
@@ -223,7 +241,9 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     error.value = ''
     stage.value = 'running'
     try {
-      const result = await deps.run(target, text, controller.signal)
+      const result = await (context.value
+        ? deps.run(target, text, controller.signal, context.value)
+        : deps.run(target, text, controller.signal))
       if (current !== generation || disposed) return
       if (!result.success)
         error.value = result.message || 'voiceCommands.failed'
@@ -436,6 +456,10 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     choose,
     chooseCommand,
     switchCommand,
+    context,
+    setContext: (ctx?: VoiceCommandContext) => {
+      explicitContext.value = ctx
+    },
     run,
     start,
     finish,

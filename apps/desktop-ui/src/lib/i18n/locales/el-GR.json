@@ -12,7 +12,8 @@
     "translationMenu": "Μετάφραση",
     "voiceTransformation": "Φωνητικός μετασχηματισμός",
     "webhook": "Webhook",
-    "chatPromptsMenu": "Προεπιλογές προτροπών συνομιλίας"
+    "chatPromptsMenu": "Προεπιλογές προτροπών συνομιλίας",
+    "voiceCommands": "Φωνητικές εντολές"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -1334,7 +1335,8 @@
     "recordAgain": "Νέα ηχογράφηση",
     "run": "Εκτέλεση",
     "textPlaceholder": "το κείμενό σας",
-    "title": "Φωνητικές εντολές"
+    "title": "Φωνητικές εντολές",
+    "missingSelection": "Απαιτείται επιλεγμένο κείμενο."
   },
   "voiceGrammar": {
     "actions": { "askInChat": "ρώτα στη συνομιλία" },

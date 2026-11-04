@@ -294,7 +294,10 @@ Tool content is always returned in the job's `output`. `--wait` writes that
 content to stdout exactly, without adding a newline. `--wait --json` instead
 prints the complete final job object. A tool can have its own intrinsic side
 effects (for example a webhook, script, `core.copy`, or `core.insert`); choosing
-returned output does not undo or disable those effects.
+returned output does not undo or disable those effects. For custom scripts and
+webhooks, Tyco substitutes `{{TEXT}}` with the provided input text (`TYCO_TEXT`
+environment variable in scripts) and `{{SELECTION}}` with any captured selection
+context (`TYCO_SELECTION` in scripts).
 
 ### Interactive execution and selection
 

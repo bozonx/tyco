@@ -9,6 +9,8 @@ pub struct ScriptActionRequest {
     /// timeout are read from the config, see `user_config::script_command`.
     pub command_id: String,
     pub text: String,
+    #[serde(default)]
+    pub selection_text: Option<String>,
     #[serde(rename = "captureOutput")]
     pub should_capture_output: bool,
     #[serde(rename = "logOutput")]

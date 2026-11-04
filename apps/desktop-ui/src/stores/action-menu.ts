@@ -40,6 +40,9 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     openVoiceTransformationModal: (text: string) => {
       menuModalsStore.nextModal(MenuModals.VOICE_TRANSFORMATION, { text })
     },
+    openVoiceCommandsModal: (text: string) => {
+      menuModalsStore.nextModal(MenuModals.VOICE_COMMANDS, { text })
+    },
     openStylingModal: (text: string, stylingId?: string) => {
       menuModalsStore.nextModal(MenuModals.STYLING, { text, stylingId })
     },

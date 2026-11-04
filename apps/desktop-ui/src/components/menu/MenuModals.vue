@@ -28,6 +28,13 @@
       :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
     />
+    <VoiceCommandsView
+      v-else-if="
+        menuModalsStore.currentStep?.modal === MenuModals.VOICE_COMMANDS
+      "
+      :key="menuModalsStore.currentStepId"
+      v-bind="menuModalsStore.currentStep.params"
+    />
     <StylingMenu
       v-else-if="menuModalsStore.currentStep?.modal === MenuModals.STYLING"
       :key="menuModalsStore.currentStepId"
@@ -80,6 +87,7 @@
 import { computed } from 'vue'
 
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import VoiceCommandsView from '../../views/VoiceCommandsView.vue'
 import Overlay from '../overlay/Overlay.vue'
 import ActionSelectModal from './ActionSelectModal.vue'
 import ChatPromptsMenu from './ChatPromptsMenu.vue'

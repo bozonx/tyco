@@ -16,6 +16,7 @@ export const STANDARD_ACTION_IDS = [
   'chatPromptsMenu',
   'customTransformation',
   'voiceTransformation',
+  'voiceCommands',
 ] as const
 
 export type StandardActionId = (typeof STANDARD_ACTION_IDS)[number]
@@ -32,6 +33,9 @@ export interface PluginMainAction {
 
 /** Stands in for the text in a command, a webhook URL or its payload */
 export const ACTION_TEXT_PLACEHOLDER = '{{TEXT}}'
+
+/** Stands in for the selection in a command, a webhook URL or its payload */
+export const ACTION_SELECTION_PLACEHOLDER = '{{SELECTION}}'
 
 /**
  * What a command does with the text its tool returns: nothing, the result menu,
@@ -136,6 +140,53 @@ export const webhookTakesText = (
   config.url.includes(ACTION_TEXT_PLACEHOLDER) ||
   (config.method !== 'GET' &&
     Boolean(config.payloadTemplate?.includes(ACTION_TEXT_PLACEHOLDER)))
+
+/**
+ * Whether a script mentions `{{SELECTION}}`. Keep in sync with
+ * `script_mentions_selection` in
+ * `src-tauri/src/services/external/command_library.rs`
+ */
+export const scriptTakesSelection = (
+  config: Pick<ScriptToolConfig, 'command'>
+) => config.command.includes(ACTION_SELECTION_PLACEHOLDER)
+
+/**
+ * Whether a webhook mentions `{{SELECTION}}`. Keep in sync with
+ * `webhook_mentions_selection` in
+ * `src-tauri/src/services/external/command_library.rs`
+ */
+export const webhookTakesSelection = (
+  config: Pick<WebhookToolConfig, 'url' | 'method' | 'payloadTemplate'>
+) =>
+  config.url.includes(ACTION_SELECTION_PLACEHOLDER) ||
+  (config.method !== 'GET' &&
+    Boolean(config.payloadTemplate?.includes(ACTION_SELECTION_PLACEHOLDER)))
+
+/** Whether a command uses `{{SELECTION}}` in its script or webhook settings */
+export const commandTakesSelection = (
+  command: Pick<CommandConfig, 'toolId' | 'toolConfig'>
+): boolean => {
+  if (command.toolId === 'script') {
+    return (
+      typeof command.toolConfig.command === 'string' &&
+      scriptTakesSelection(
+        command.toolConfig as unknown as Pick<ScriptToolConfig, 'command'>
+      )
+    )
+  }
+  if (command.toolId === 'webhook') {
+    return (
+      typeof command.toolConfig.url === 'string' &&
+      webhookTakesSelection(
+        command.toolConfig as unknown as Pick<
+          WebhookToolConfig,
+          'url' | 'method' | 'payloadTemplate'
+        >
+      )
+    )
+  }
+  return false
+}
 
 /**
  * A user command of the command library: a tool with its settings, invoked from

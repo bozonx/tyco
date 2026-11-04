@@ -47,7 +47,8 @@ export interface ScriptAndWebhookToolDependencies {
   executeWebhook?: (
     target: WebhookTarget,
     text: string | null,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    selectionText?: string | null
   ) => Promise<string>
   /** A unique id of a script run */
   newRunId?: () => string
@@ -112,6 +113,7 @@ function createScriptTool(
             {
               captureOutput: call.isOutputRequested,
               isOutputLogged: call.command.isOutputLogged,
+              selectionText: call.context?.selectionText,
             }
           ),
           runId,
@@ -190,16 +192,21 @@ function createWebhookTool(
       }
       let response: string
       try {
-        response = await deps.executeWebhook(
-          {
-            ...config,
-            id: call.command?.id ?? '',
-            name: call.command?.name || 'Webhook',
-            isOutputLogged: call.command?.isOutputLogged ?? false,
-          },
-          webhookTakesText(config) ? textOf(call.input) : null,
-          call.signal
-        )
+        const target = {
+          ...config,
+          id: call.command?.id ?? '',
+          name: call.command?.name || 'Webhook',
+          isOutputLogged: call.command?.isOutputLogged ?? false,
+        }
+        const text = webhookTakesText(config) ? textOf(call.input) : null
+        response = await (call.context?.selectionText !== undefined
+          ? deps.executeWebhook(
+              target,
+              text,
+              call.signal,
+              call.context.selectionText
+            )
+          : deps.executeWebhook(target, text, call.signal))
       } catch (error) {
         if (call.signal.aborted) return cancelled
         return {

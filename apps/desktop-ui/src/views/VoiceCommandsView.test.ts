@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => ({
   chooseCommand: vi.fn(),
   choose: vi.fn(),
   switchCommand: vi.fn(),
+  setContext: vi.fn(),
   hide: vi.fn(),
   release: vi.fn(),
 }))
@@ -90,8 +91,9 @@ const candidate = (commandId: string, text = 'Hello') => ({
   commandOffset: 0,
 })
 let desktop: TestDesktop
-const mountView = () =>
+const mountView = (props: { text?: string } = {}) =>
   mount(VoiceCommandsView, {
+    props,
     global: { plugins: [i18n, desktop.pinia] },
     attachTo: document.body,
   })
@@ -330,6 +332,15 @@ describe('separate voice command overlay', () => {
     await row.trigger('click')
     expect(mocks.choose).not.toHaveBeenCalled()
     expect(mocks.chooseCommand).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('sets selection context from props and shows preview', async () => {
+    const wrapper = mountView({ text: 'Selected text preview' })
+    expect(mocks.setContext).toHaveBeenCalledWith({
+      selectionText: 'Selected text preview',
+    })
+    expect(wrapper.text()).toContain('Selected text preview')
     wrapper.unmount()
   })
 })

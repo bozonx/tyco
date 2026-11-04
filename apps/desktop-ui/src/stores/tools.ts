@@ -158,7 +158,7 @@ export const useToolsStore = defineStore('tools', () => {
       ...createScriptActionClient(ipcStore.call),
       secretIds: async () =>
         new Set(Object.keys(await useSecretsStore().client.status())),
-      executeWebhook: (target, text, signal) =>
+      executeWebhook: (target, text, signal, selectionText) =>
         executeWebhook(
           target,
           text,
@@ -167,7 +167,8 @@ export const useToolsStore = defineStore('tools', () => {
             await ipcStore.call('log_webhook_call', { name, details })
           },
           signal,
-          environment().variables
+          environment().variables,
+          selectionText
         ),
     }),
     ...coreTools,

@@ -1,4 +1,4 @@
-import type { CommandConfig } from '@tyco/shared'
+import { type CommandConfig, commandTakesSelection } from '@tyco/shared'
 import { messages } from '../i18n/messages'
 import {
   commandTakesText,
@@ -458,8 +458,12 @@ export function findVoiceConflicts(
 export function voiceInputIssue(
   command: CommandConfig,
   text: string,
-  tools: ToolLookup
-): 'missing-text' | 'extra-text' | undefined {
+  tools: ToolLookup,
+  context?: { selectionText: string }
+): 'missing-text' | 'extra-text' | 'missing-selection' | undefined {
+  if (commandTakesSelection(command) && !context?.selectionText?.trim()) {
+    return 'missing-selection'
+  }
   if (commandTakesText(command, tools))
     return text.trim() ? undefined : 'missing-text'
   return text.trim() ? 'extra-text' : undefined

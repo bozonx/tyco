@@ -256,6 +256,29 @@ describe('ShortcutList', () => {
     wrapper.unmount()
   })
 
+  it('closes all modals and hides window on Shift+Escape even when breadcrumbs exist', async () => {
+    await openWindow('quick')
+    mocks.currentModal = 'ai-task'
+    mocks.breadcrumbs = ['insert', 'ai-task']
+
+    const wrapper = mount(ShortcutList, {
+      props: { text: 'task text', escVisible: true },
+    })
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Escape', shiftKey: true })
+    )
+    window.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'Escape', shiftKey: true })
+    )
+
+    expect(mocks.closeAll).toHaveBeenCalled()
+    expect(mocks.back).not.toHaveBeenCalled()
+    await flushPromises()
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
   it('respects explicit escMode prop', () => {
     mocks.currentModal = 'insert'
 

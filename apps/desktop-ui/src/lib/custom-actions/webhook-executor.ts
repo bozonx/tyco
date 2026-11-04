@@ -33,9 +33,16 @@ function filled(
   template: string,
   variables: VariableValues,
   place: VariablePlace,
-  text: string | null
+  text: string | null,
+  selectionText?: string | null
 ): string {
-  const result = substituteVariables(template, variables, place, text)
+  const result = substituteVariables(
+    template,
+    variables,
+    place,
+    text,
+    selectionText
+  )
   if (result.ok) return result.value
   throw new Error(
     result.missing.length
@@ -60,10 +67,11 @@ function isJson(value: string): boolean {
 export function buildWebhookRequest(
   target: WebhookTarget,
   text: string | null,
-  variables: VariableValues = {}
+  variables: VariableValues = {},
+  selectionText?: string | null
 ): { url: string; init: RequestInit & { headers: Record<string, string> } } {
   const method = target.method || 'POST'
-  const url = filled(target.url.trim(), variables, 'url', text)
+  const url = filled(target.url.trim(), variables, 'url', text, selectionText)
 
   const headers: Record<string, string> = { 'user-agent': 'Tyco-Desktop' }
   let body: string | undefined
@@ -76,7 +84,7 @@ export function buildWebhookRequest(
           timestamp: Date.now(),
           source: 'tyco',
         })
-      : filled(rawTemplate, variables, 'json', text)
+      : filled(rawTemplate, variables, 'json', text, selectionText)
     headers['content-type'] =
       template !== ACTION_TEXT_PLACEHOLDER && isJson(body)
         ? 'application/json; charset=utf-8'
@@ -152,9 +160,15 @@ export async function executeWebhook(
   fetchFn: FetchFunction,
   logFn?: WebhookCallLog,
   signal?: AbortSignal,
-  variables: VariableValues = {}
+  variables: VariableValues = {},
+  selectionText?: string | null
 ): Promise<string> {
-  const { url, init } = buildWebhookRequest(target, text, variables)
+  const { url, init } = buildWebhookRequest(
+    target,
+    text,
+    variables,
+    selectionText
+  )
   // Paths and query strings can contain webhook credentials.
   let origin = '[invalid URL]'
   try {

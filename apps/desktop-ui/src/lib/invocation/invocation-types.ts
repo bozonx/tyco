@@ -39,6 +39,8 @@ export interface InvocationOptions {
   signal?: AbortSignal
   /** Where the run is invoked from; the action menu by default */
   source?: CommandRunSource
+  /** Context captured at invocation time, such as selected text */
+  context?: { selectionText: string }
   /** The stages of a long run, see `ToolCall.onProgress` */
   onProgress?: (stage: string) => void
 }

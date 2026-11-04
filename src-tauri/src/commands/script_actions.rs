@@ -26,6 +26,7 @@ pub async fn execute_script_action(
             &SavedScriptRun {
                 command_id: &request.command_id,
                 text: &request.text,
+                selection_text: request.selection_text.as_deref(),
                 should_capture_output: request.should_capture_output,
                 should_log_output: request.should_log_output,
                 run_id: request.run_id.as_deref(),

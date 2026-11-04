@@ -450,4 +450,30 @@ mod input_completion_tests {
         assert_eq!(items.len(), 1);
         assert!(items[0].is_result_applied);
     }
+
+    #[test]
+    fn keeps_instruction_when_collapsing_source_and_output() {
+        use crate::models::{EditorHistoryInputKind, EditorHistoryInstruction};
+
+        let mut source = history_item("voice", "raw speech", EditorHistoryKind::Source);
+        source.instruction = Some(EditorHistoryInstruction {
+            text: "make it concise".to_string(),
+            input_kind: EditorHistoryInputKind::Voice,
+        });
+        let mut items = vec![source];
+        let id = push_editor_history(
+            &mut items,
+            history_item("sent", "raw speech", EditorHistoryKind::Output),
+            100,
+        );
+        assert_eq!(id, "voice");
+        assert_eq!(items.len(), 1);
+        assert_eq!(
+            items[0].instruction,
+            Some(EditorHistoryInstruction {
+                text: "make it concise".to_string(),
+                input_kind: EditorHistoryInputKind::Voice,
+            })
+        );
+    }
 }

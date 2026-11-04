@@ -12,7 +12,8 @@
     "translationMenu": "Переклад",
     "voiceTransformation": "Голосова трансформація",
     "webhook": "Вебхук",
-    "chatPromptsMenu": "Швидкі промпти для чату"
+    "chatPromptsMenu": "Швидкі промпти для чату",
+    "voiceCommands": "Голосові команди"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -1334,7 +1335,8 @@
     "recordAgain": "Записати знову",
     "run": "Виконати",
     "textPlaceholder": "ваш текст",
-    "title": "Голосові команди"
+    "title": "Голосові команди",
+    "missingSelection": "Потрібен виділений текст."
   },
   "voiceGrammar": {
     "actions": { "askInChat": "запитай у чаті" },

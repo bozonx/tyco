@@ -57,12 +57,10 @@ export function useAppRuntime() {
     dismiss: () => {},
     keydown: (event) => {
       if (event.key === 'Escape') {
-        if (
-          event.shiftKey &&
-          !menuModalsStore.hasOpenModal &&
-          !menuModalsStore.pendingModal
-        ) {
+        if (event.shiftKey) {
           event.preventDefault()
+          menuModalsStore.cancelPending()
+          menuModalsStore.closeAll()
           void ipcStore.callOrNotify('hide_window')
           return
         }

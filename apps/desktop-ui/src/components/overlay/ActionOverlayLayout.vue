@@ -18,7 +18,7 @@
           type="button"
           class="action-overlay-esc"
           :title="escTitle"
-          @click="handleEsc"
+          @click="onEscClick"
         >
           <KeyboardKey>Esc</KeyboardKey>
           <span>{{ escLabel }}</span>
@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { provide } from 'vue'
+import { onMounted, onUnmounted, provide } from 'vue'
 
 import { useOverlayNav } from '../../composables/use-overlay-nav'
 import { previewAppearanceKey } from '../../lib/ui/preview-context'
@@ -65,11 +65,33 @@ const props = withDefaults(
   }
 )
 
-const { escLabel, escTitle, handleEsc } = useOverlayNav(() => ({
+const { escLabel, escTitle, handleEsc, handleCloseAll } = useOverlayNav(() => ({
   escMode: props.escMode,
   escLabel: props.escLabel,
   onEsc: props.onEsc,
 }))
+
+function onEscClick(event: MouseEvent) {
+  if (event.shiftKey) {
+    handleCloseAll()
+  } else {
+    handleEsc()
+  }
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && props.escVisible && event.shiftKey) {
+    event.preventDefault()
+    handleCloseAll()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown)
+})
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+})
 </script>
 
 <style scoped>

@@ -64,6 +64,10 @@ export interface ToolCallCommand {
   isOutputLogged: boolean
 }
 
+export interface ToolCallContext {
+  selectionText: string
+}
+
 export interface ToolCall {
   input: Record<string, unknown>
   /** `toolConfig` of the command over the plugin settings */
@@ -74,6 +78,8 @@ export interface ToolCall {
   editorSnapshot?: EditorInputSnapshot
   signal: AbortSignal
   command?: ToolCallCommand
+  /** Context captured at invocation time, such as selected text. */
+  context?: ToolCallContext
   /** The output is used: it is not enough to start a long script and leave */
   isOutputRequested: boolean
   /** Tells the caller which stage a long run is at, for it to show */

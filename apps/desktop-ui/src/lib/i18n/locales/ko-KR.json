@@ -12,7 +12,8 @@
     "translationMenu": "번역",
     "voiceTransformation": "음성 변환",
     "webhook": "웹후크",
-    "chatPromptsMenu": "채팅 프롬프트 사전 설정"
+    "chatPromptsMenu": "채팅 프롬프트 사전 설정",
+    "voiceCommands": "음성 명령"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -1331,7 +1332,8 @@
     "recordAgain": "다시 녹음",
     "run": "실행",
     "textPlaceholder": "입력할 텍스트",
-    "title": "음성 명령"
+    "title": "음성 명령",
+    "missingSelection": "선택한 텍스트가 필요합니다."
   },
   "voiceGrammar": {
     "actions": { "askInChat": "채팅에서 질문" },

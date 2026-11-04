@@ -380,4 +380,27 @@ describe('voice resolver CJK and SOV languages', () => {
       text: 'Сәлем әлем',
     })
   })
+
+  it('validates selection context requirement for commands using {{SELECTION}}', () => {
+    const tools = testTools()
+    const selectionScript = {
+      ...createCommand('script', 'with-selection'),
+      isVoiceEnabled: true,
+      phrases: ['summarize'],
+      toolConfig: { command: 'echo {{SELECTION}} - {{TEXT}}' },
+    }
+    expect(voiceInputIssue(selectionScript, 'some text', tools)).toBe(
+      'missing-selection'
+    )
+    expect(
+      voiceInputIssue(selectionScript, 'some text', tools, {
+        selectionText: '   ',
+      })
+    ).toBe('missing-selection')
+    expect(
+      voiceInputIssue(selectionScript, 'some text', tools, {
+        selectionText: 'selected text',
+      })
+    ).toBeUndefined()
+  })
 })

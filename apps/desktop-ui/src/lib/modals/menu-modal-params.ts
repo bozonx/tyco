@@ -11,6 +11,7 @@ export enum MenuModals {
   TRANSFORMATION = 'transformation',
   CUSTOM_TRANSFORMATION = 'custom-transformation',
   VOICE_TRANSFORMATION = 'voice-transformation',
+  VOICE_COMMANDS = 'voice-commands',
   STYLING = 'styling',
   CHAT_PROMPTS = 'chat-prompts',
   DIFF = 'diff',
@@ -48,6 +49,10 @@ export interface CustomTransformationMenuParams {
   shortcutsDisabled?: boolean
 }
 export interface VoiceTransformationMenuParams {
+  text?: string
+  shortcutsDisabled?: boolean
+}
+export interface VoiceCommandsMenuParams {
   text?: string
   shortcutsDisabled?: boolean
 }
@@ -132,6 +137,7 @@ interface MenuModalParams {
   [MenuModals.TRANSFORMATION]: TransformationMenuParams
   [MenuModals.CUSTOM_TRANSFORMATION]: CustomTransformationMenuParams
   [MenuModals.VOICE_TRANSFORMATION]: VoiceTransformationMenuParams
+  [MenuModals.VOICE_COMMANDS]: VoiceCommandsMenuParams
   [MenuModals.STYLING]: StylingMenuParams
   [MenuModals.CHAT_PROMPTS]: ChatPromptsMenuParams
   [MenuModals.DIFF]: DiffMenuParams

@@ -12,7 +12,8 @@
     "translationMenu": "თარგმანი",
     "voiceTransformation": "ხმოვანი ტრანსფორმაცია",
     "webhook": "ვებჰუკი",
-    "chatPromptsMenu": "ჩატის პრომპტების წინასწარი პარამეტრები"
+    "chatPromptsMenu": "ჩატის პრომპტების წინასწარი პარამეტრები",
+    "voiceCommands": "ხმოვანი ბრძანებები"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -1334,7 +1335,8 @@
     "recordAgain": "ხელახლა ჩაწერა",
     "run": "გაშვება",
     "textPlaceholder": "თქვენი ტექსტი",
-    "title": "ხმოვანი ბრძანებები"
+    "title": "ხმოვანი ბრძანებები",
+    "missingSelection": "საჭიროა მონიშნული ტექსტი."
   },
   "voiceGrammar": {
     "actions": { "askInChat": "იკითხე ჩატში" },

@@ -12,7 +12,8 @@
     "translationMenu": "Traduction",
     "voiceTransformation": "Transformation vocale",
     "webhook": "Webhook",
-    "chatPromptsMenu": "Préréglages de prompts pour le chat"
+    "chatPromptsMenu": "Préréglages de prompts pour le chat",
+    "voiceCommands": "Commandes vocales"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -1337,7 +1338,8 @@
     "recordAgain": "Réenregistrer",
     "run": "Exécuter",
     "textPlaceholder": "votre texte",
-    "title": "Commandes vocales"
+    "title": "Commandes vocales",
+    "missingSelection": "Un texte sélectionné est nécessaire."
   },
   "voiceGrammar": {
     "actions": { "askInChat": "demande dans le chat" },

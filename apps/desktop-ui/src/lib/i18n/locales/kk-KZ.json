@@ -12,7 +12,8 @@
     "translationMenu": "Аударма",
     "voiceTransformation": "Дауыспен түрлендіру",
     "webhook": "Вебхук",
-    "chatPromptsMenu": "Чат промпттерінің алдын ала орнатулары"
+    "chatPromptsMenu": "Чат промпттерінің алдын ала орнатулары",
+    "voiceCommands": "Дауыстық командалар"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -1334,7 +1335,8 @@
     "recordAgain": "Қайта жазу",
     "run": "Орындау",
     "textPlaceholder": "сіздің мәтініңіз",
-    "title": "Дауыстық командалар"
+    "title": "Дауыстық командалар",
+    "missingSelection": "Бөліп көрсетілген мәтін қажет."
   },
   "voiceGrammar": {
     "actions": { "askInChat": "чатта сұра" },

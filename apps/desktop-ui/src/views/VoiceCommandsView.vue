@@ -8,6 +8,7 @@
       <template #preview>
         <div class="voice-commands">
           <section class="voice-main">
+            <TextPreview v-if="contextText" :text="contextText" />
             <template v-if="isListening">
               <div v-if="voice.activeCommand" class="voice-chosen">
                 <AppIcon
@@ -169,6 +170,7 @@ import FieldTextArea from '../components/common/FieldTextArea.vue'
 import InfoTooltip from '../components/common/InfoTooltip.vue'
 import InlineNotice from '../components/common/InlineNotice.vue'
 import StateMessage from '../components/common/StateMessage.vue'
+import TextPreview from '../components/common/TextPreview.vue'
 import ActionOverlayLayout from '../components/overlay/ActionOverlayLayout.vue'
 import ShortcutButton from '../components/overlay/ShortcutButton.vue'
 import AudioWaveform from '../components/voice/AudioWaveform.vue'
@@ -203,14 +205,27 @@ import { useQuickDismissStore } from '../stores/quick-dismiss'
 import { useToolsStore } from '../stores/tools'
 import { useVoiceCommandsStore } from '../stores/voice-commands'
 
+const props = withDefaults(
+  defineProps<{ text?: string; shortcutsDisabled?: boolean }>(),
+  { text: '', shortcutsDisabled: false }
+)
+
 const { t } = useI18n()
 const desktopStore = useDesktopStore()
 const tools = useToolsStore()
 const voice = useVoiceCommandsStore()
 const releaseHold = useQuickDismissStore().hold()
-const { handleEsc, handleCloseAll } = useOverlayNav(() => ({
-  escMode: 'close',
-}))
+const { handleEsc, handleCloseAll } = useOverlayNav(() => ({ escMode: 'auto' }))
+
+const contextText = computed(() => (props.text?.trim() ? props.text : ''))
+
+watch(
+  contextText,
+  (text) => {
+    voice.setContext(text ? { selectionText: text } : undefined)
+  },
+  { immediate: true }
+)
 
 const textRef = ref<TextControl | null>(null)
 const { audioLevel, audioPeak, recordingDurationMs } = useVoiceRecordingMeter(
@@ -389,6 +404,7 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeyDown)
   releaseHold()
+  voice.setContext(undefined)
   void voice.cancel()
 })
 </script>

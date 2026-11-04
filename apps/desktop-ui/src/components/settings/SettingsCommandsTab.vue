@@ -421,9 +421,6 @@ onBeforeUnmount(finishRemoval)
     transform var(--transition-base),
     opacity var(--transition-fast);
 }
-.command-card:hover {
-  --disclosure-panel-border-color: var(--app-border-strong);
-}
 
 /* Neighbours glide into place only while a drag is in progress */
 .command-card.is-sorting {

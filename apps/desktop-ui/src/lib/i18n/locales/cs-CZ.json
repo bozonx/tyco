@@ -12,7 +12,8 @@
     "translationMenu": "Překlad",
     "voiceTransformation": "Hlasová transformace",
     "webhook": "Webhook",
-    "chatPromptsMenu": "Předvolby promptů chatu"
+    "chatPromptsMenu": "Předvolby promptů chatu",
+    "voiceCommands": "Hlasové příkazy"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -1331,7 +1332,8 @@
     "recordAgain": "Nahrát znovu",
     "run": "Spustit",
     "textPlaceholder": "váš text",
-    "title": "Hlasové příkazy"
+    "title": "Hlasové příkazy",
+    "missingSelection": "Je vyžadován výběr textu."
   },
   "voiceGrammar": {
     "actions": { "askInChat": "zeptej se v chatu" },

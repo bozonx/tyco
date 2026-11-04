@@ -12,7 +12,8 @@
     "translationMenu": "翻訳",
     "voiceTransformation": "音声変換",
     "webhook": "Webhook",
-    "chatPromptsMenu": "チャットプロンプトのプリセット"
+    "chatPromptsMenu": "チャットプロンプトのプリセット",
+    "voiceCommands": "音声コマンド"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -1334,7 +1335,8 @@
     "recordAgain": "もう一度録音",
     "run": "実行",
     "textPlaceholder": "テキスト",
-    "title": "音声コマンド"
+    "title": "音声コマンド",
+    "missingSelection": "選択されたテキストが必要です。"
   },
   "voiceGrammar": {
     "actions": { "askInChat": "チャットで質問" },

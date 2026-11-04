@@ -133,6 +133,28 @@ describe('Editor actions shortcut', () => {
     wrapper.unmount()
   })
 
+  it('closes editor window on Shift+Escape even when an action modal is open', async () => {
+    const wrapper = mount(EditorView, {
+      global: { stubs: { Editor: true, ContentPadding: true } },
+    })
+    const modals = useMenuModalsStore()
+    modals.nextModal(MenuModals.INSERT, { text: 'Some action text' })
+    expect(modals.hasOpenModal).toBe(true)
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        code: 'Escape',
+        shiftKey: true,
+        cancelable: true,
+      })
+    )
+    await flushPromises()
+
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
   it('opens actions with selected editor text when selection exists', () => {
     const editor = useEditorInputStore()
     editor.setValue('Full text', 'plain')

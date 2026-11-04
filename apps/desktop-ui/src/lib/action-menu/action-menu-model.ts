@@ -37,6 +37,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   openTransformationModal?: (text: string, transformationId?: string) => void
   openCustomTransformationModal?: (text: string) => void
   openVoiceTransformationModal?: (text: string) => void
+  openVoiceCommandsModal?: (text: string) => void
   openStylingModal?: (text: string, stylingId?: string) => void
   openChatPromptsModal?: (text: string, promptId?: string) => void
   /** With `language` the dialog translates into it at once */
@@ -235,6 +236,15 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
               return
             }
             deps.openVoiceTransformationModal?.(text)
+          },
+        },
+        {
+          id: 'voiceCommands',
+          labelKey: 'action.voiceCommands',
+          icon: 'mdi:microphone',
+          trailingIcon: 'mdi:chevron-right',
+          action: async (text: string) => {
+            deps.openVoiceCommandsModal?.(text)
           },
         },
         {

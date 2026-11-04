@@ -9,6 +9,9 @@ use std::process::Command;
 /// [`substitute`].
 pub const TEXT_ENV: &str = "TYCO_TEXT";
 
+/// The environment variable that carries the selection context into a command.
+pub const SELECTION_ENV: &str = "TYCO_SELECTION";
+
 /// A command that runs `script` in the platform shell, in a process group of
 /// its own, so that [`kill_tree`] stops whatever the script started.
 pub fn command(script: &str) -> Command {

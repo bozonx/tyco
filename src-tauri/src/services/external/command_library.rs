@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::errors::AppError;
-use crate::services::custom_actions::TEXT_PLACEHOLDER;
+use crate::services::custom_actions::{SELECTION_PLACEHOLDER, TEXT_PLACEHOLDER};
 
 /// How a command of a tool gets its input from a text.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, ts_rs::TS)]
@@ -228,6 +228,25 @@ fn webhook_can_take_text(config: &Value) -> bool {
     str_field(config, "url").contains(TEXT_PLACEHOLDER)
         || (str_field(config, "method") != "GET"
             && str_field(config, "payloadTemplate").contains(TEXT_PLACEHOLDER))
+}
+
+/// Whether a script mentions `{{SELECTION}}`.
+/// Keep in sync with `scriptTakesSelection` in
+/// `packages/shared/src/user-config/commands-config.ts`.
+#[allow(dead_code)]
+pub fn script_mentions_selection(config: &Value) -> bool {
+    let command = str_field(config, "command");
+    command.contains(SELECTION_PLACEHOLDER)
+}
+
+/// Whether a webhook mentions `{{SELECTION}}`.
+/// Keep in sync with `webhookTakesSelection` in
+/// `packages/shared/src/user-config/commands-config.ts`.
+#[allow(dead_code)]
+pub fn webhook_mentions_selection(config: &Value) -> bool {
+    str_field(config, "url").contains(SELECTION_PLACEHOLDER)
+        || (str_field(config, "method") != "GET"
+            && str_field(config, "payloadTemplate").contains(SELECTION_PLACEHOLDER))
 }
 
 /// Whether the tool of the command can run it, and if so whether it takes

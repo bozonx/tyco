@@ -183,6 +183,7 @@ export function createToolInvoker(deps: ToolInvokerDependencies) {
           : {}),
         ...outputRequest(resolveSink(invocation, options) !== 'none'),
         ...(options.onProgress ? { onProgress: options.onProgress } : {}),
+        ...(options.context ? { context: options.context } : {}),
       })
       if (signal.aborted) {
         const settled = cancelledToolResult(result)

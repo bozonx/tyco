@@ -118,6 +118,35 @@ describe('ActionOverlayLayout', () => {
     await wrapper.find('.action-overlay-esc').trigger('click')
     expect(await hideCalls()).toHaveLength(1)
   })
+
+  it('triggers closeAll and hides window when Esc button clicked with shiftKey', async () => {
+    mocks.breadcrumbs = ['insert', 'preview']
+    const wrapper = mount(ActionOverlayLayout, {
+      props: { title: 'Test Title' },
+    })
+
+    await wrapper
+      .find('.action-overlay-esc')
+      .trigger('click', { shiftKey: true })
+    expect(mocks.closeAll).toHaveBeenCalled()
+    expect(await hideCalls()).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('triggers closeAll and hides window on Shift+Escape keydown', async () => {
+    mocks.breadcrumbs = ['insert', 'preview']
+    const wrapper = mount(ActionOverlayLayout, {
+      props: { title: 'Test Title' },
+    })
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', shiftKey: true })
+    )
+    expect(mocks.closeAll).toHaveBeenCalled()
+    expect(await hideCalls()).toHaveLength(1)
+    wrapper.unmount()
+  })
+
   it('provides a plain preview default while preserving explicit frames', () => {
     const wrapper = mount(ActionOverlayLayout, {
       slots: {

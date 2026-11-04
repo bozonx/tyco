@@ -87,6 +87,14 @@ describe('CustomTransformationMenu', () => {
       expect.objectContaining({ toolConfig: { prompt: 'Make it better' } })
     )
 
+    const historyCalls = desktop.backend.callsOf('add_editor_history_item')
+    expect(historyCalls).toHaveLength(1)
+    expect(historyCalls[0].entry).toMatchObject({
+      text: 'Some sample text',
+      operation: 'aiTask',
+      instruction: { text: 'Make it better', inputKind: 'typed' },
+    })
+
     const modalsStore = useMenuModalsStore()
     expect(modalsStore.currentModal).toBe(MenuModals.DIFF)
   })

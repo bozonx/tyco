@@ -1,4 +1,7 @@
-import { ACTION_TEXT_PLACEHOLDER } from './user-config/commands-config'
+import {
+  ACTION_SELECTION_PLACEHOLDER,
+  ACTION_TEXT_PLACEHOLDER,
+} from './user-config/commands-config'
 
 /**
  * A variable of the commands: the user data declares its name once, each device
@@ -124,7 +127,7 @@ export type VariableSubstitution =
   /** A value cannot go there, e.g. a line break into a header */
   | { ok: false; missing: []; invalidName: string }
 
-const TOKEN_SOURCE = String.raw`\{\{TEXT\}\}|${REFERENCE_SOURCE}`
+const TOKEN_SOURCE = String.raw`\{\{TEXT\}\}|\{\{SELECTION\}\}|${REFERENCE_SOURCE}`
 
 function isJson(value: string): boolean {
   try {
@@ -145,7 +148,8 @@ export function substituteVariables(
   template: string,
   values: VariableValues,
   place: VariablePlace,
-  text?: string | null
+  text?: string | null,
+  selection?: string | null
 ): VariableSubstitution {
   const missing = missingVariables([template], values)
   if (missing.length) return { ok: false, missing }
@@ -161,8 +165,17 @@ export function substituteVariables(
       : place === 'url'
         ? encodeURIComponent(text ?? '')
         : (text ?? '')
-  const valueOf = (token: string, name: string | undefined) =>
-    name !== undefined ? values[name]! : (textValue ?? token)
+  const selectionValue =
+    selection === undefined
+      ? undefined
+      : place === 'url'
+        ? encodeURIComponent(selection ?? '')
+        : (selection ?? '')
+  const valueOf = (token: string, name: string | undefined) => {
+    if (name !== undefined) return values[name]!
+    if (token === ACTION_SELECTION_PLACEHOLDER) return selectionValue ?? token
+    return textValue ?? token
+  }
   if (place === 'json') return { ok: true, value: fillBody(template, valueOf) }
   return {
     ok: true,
@@ -184,6 +197,8 @@ function fillBody(
 ): string {
   if (template.trim() === ACTION_TEXT_PLACEHOLDER)
     return valueOf(ACTION_TEXT_PLACEHOLDER, undefined)
+  if (template.trim() === ACTION_SELECTION_PLACEHOLDER)
+    return valueOf(ACTION_SELECTION_PLACEHOLDER, undefined)
   if (isJson(fillJson(template, () => ''))) return fillJson(template, valueOf)
   return template.replace(
     new RegExp(TOKEN_SOURCE, 'g'),

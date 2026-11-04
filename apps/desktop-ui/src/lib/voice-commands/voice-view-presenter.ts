@@ -109,7 +109,7 @@ export function resolveVoiceNotice(
     error: string
     command: CommandConfig | undefined
     unavailableReason: (command: CommandConfig) => string | undefined
-    inputIssue: 'missing-text' | 'extra-text' | undefined
+    inputIssue: 'missing-text' | 'extra-text' | 'missing-selection' | undefined
     stage: string
     resolutionKind: VoiceResolution['kind']
   },
@@ -128,7 +128,9 @@ export function resolveVoiceNotice(
         message:
           state.inputIssue === 'missing-text'
             ? t('voiceCommands.missingText')
-            : t('voiceCommands.extraText'),
+            : state.inputIssue === 'missing-selection'
+              ? t('voiceCommands.missingSelection')
+              : t('voiceCommands.extraText'),
       }
     return undefined
   }

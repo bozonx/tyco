@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 0bdbe5dfa9afb69d526ce8bf9c7ce08eaf68ea2cb76f6b53456c12786093bd9a
+// Source hash: 169324810b8943b9b0a57c8bff831a8b96ab6c68ee78ac187e077a4917c128a9
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -604,6 +604,7 @@ export type ScriptActionRequest = {
    */
   commandId: string
   text: string
+  selectionText?: string | null
   captureOutput: boolean
   logOutput: boolean
   /** Lets `cancel_script_action` stop the command. */

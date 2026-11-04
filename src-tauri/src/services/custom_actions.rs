@@ -5,7 +5,8 @@ mod process_runner;
 pub use command_logging::{action_log_path, log_command_run, log_custom_action, CommandRunRecord};
 pub use file_dialogs::{pick_directory, pick_file, pick_script_file};
 pub use process_runner::{
-    execute_script, ScriptExecutionResult, ScriptRequest, ScriptRuns, TEXT_PLACEHOLDER,
+    execute_script, ScriptExecutionResult, ScriptRequest, ScriptRuns, SELECTION_PLACEHOLDER,
+    TEXT_PLACEHOLDER,
 };
 
 use std::path::Path;
@@ -20,6 +21,7 @@ use crate::{errors::AppError, models::user_config};
 pub struct SavedScriptRun<'a> {
     pub command_id: &'a str,
     pub text: &'a str,
+    pub selection_text: Option<&'a str>,
     pub should_capture_output: bool,
     pub should_log_output: bool,
     pub run_id: Option<&'a str>,
@@ -61,6 +63,7 @@ pub fn execute_saved_script(
             working_dir: Some(tool_config.working_directory.as_str())
                 .filter(|dir| !dir.trim().is_empty()),
             text: run.text,
+            selection_text: run.selection_text,
             should_capture_output: run.should_capture_output,
             should_log_output: run.should_log_output,
             run_id: run.run_id,
@@ -90,6 +93,7 @@ mod tests {
                 &SavedScriptRun {
                     command_id,
                     text: "",
+                    selection_text: None,
                     should_capture_output: true,
                     should_log_output: false,
                     run_id: None,

@@ -129,6 +129,14 @@ describe('VoiceTransformationMenu', () => {
       expect.objectContaining({ toolConfig: { prompt: 'make it concise' } })
     )
 
+    const historyCalls = desktop.backend.callsOf('add_editor_history_item')
+    expect(historyCalls).toHaveLength(1)
+    expect(historyCalls[0].entry).toMatchObject({
+      text: 'Some long verbose text',
+      operation: 'aiTask',
+      instruction: { text: 'make it concise', inputKind: 'voice' },
+    })
+
     const modalsStore = useMenuModalsStore()
     expect(modalsStore.currentModal).toBe(MenuModals.DIFF)
   })

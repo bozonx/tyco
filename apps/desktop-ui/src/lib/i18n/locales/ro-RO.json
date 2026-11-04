@@ -12,7 +12,8 @@
     "translationMenu": "Traducere",
     "voiceTransformation": "Transformare vocală",
     "webhook": "Webhook",
-    "chatPromptsMenu": "Presetări prompturi chat"
+    "chatPromptsMenu": "Presetări prompturi chat",
+    "voiceCommands": "Comenzi vocale"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -1337,7 +1338,8 @@
     "recordAgain": "Înregistrează din nou",
     "run": "Rulează",
     "textPlaceholder": "textul dvs.",
-    "title": "Comenzi vocale"
+    "title": "Comenzi vocale",
+    "missingSelection": "Este necesar textul selectat."
   },
   "voiceGrammar": {
     "actions": { "askInChat": "întreabă în chat" },

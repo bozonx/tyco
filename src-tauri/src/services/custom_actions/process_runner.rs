@@ -18,6 +18,9 @@ use crate::services::variables::{self, VariableValues};
 /// Stands in for the text in a command; see `shell::substitute`.
 pub const TEXT_PLACEHOLDER: &str = "{{TEXT}}";
 
+/// Stands in for the selection in a command.
+pub const SELECTION_PLACEHOLDER: &str = "{{SELECTION}}";
+
 /// How long a command whose output is not needed is waited for. One still
 /// running by then, e.g. a GUI app it started, is left in the background.
 const STATUS_WAIT: Duration = Duration::from_secs(3);
@@ -50,6 +53,7 @@ pub struct ScriptRequest<'a> {
     pub command: &'a str,
     pub working_dir: Option<&'a str>,
     pub text: &'a str,
+    pub selection_text: Option<&'a str>,
     /// The caller uses the output: the command is waited for until it exits
     /// or the run is cancelled. The caller shows the run and can cancel it, so
     /// there is no time limit; a background caller cancels on its own limit.
@@ -398,11 +402,19 @@ fn script_command(request: &ScriptRequest) -> std::process::Command {
         .iter()
         .map(|name| (variables::placeholder(name), VariableValues::env_name(name)))
         .collect();
-    let mut placeholders = vec![shell::Placeholder {
-        token: TEXT_PLACEHOLDER,
-        env: shell::TEXT_ENV,
-        value: request.text,
-    }];
+    let selection = request.selection_text.unwrap_or_default();
+    let mut placeholders = vec![
+        shell::Placeholder {
+            token: TEXT_PLACEHOLDER,
+            env: shell::TEXT_ENV,
+            value: request.text,
+        },
+        shell::Placeholder {
+            token: SELECTION_PLACEHOLDER,
+            env: shell::SELECTION_ENV,
+            value: selection,
+        },
+    ];
     for ((token, env), name) in tokens.iter().zip(&names) {
         placeholders.push(shell::Placeholder {
             token,
@@ -412,6 +424,7 @@ fn script_command(request: &ScriptRequest) -> std::process::Command {
     }
     let mut command = shell::command(&shell::substitute_all(request.command, &placeholders));
     command.env(shell::TEXT_ENV, request.text);
+    command.env(shell::SELECTION_ENV, selection);
     command.envs(request.variables.env());
     command
 }
@@ -439,6 +452,7 @@ mod tests {
             command,
             working_dir: None,
             text,
+            selection_text: None,
             should_capture_output: true,
             should_log_output: false,
             run_id: None,
@@ -629,6 +643,24 @@ mod tests {
             PathBuf::from(cwd.trim()).canonicalize().unwrap(),
             dir.canonicalize().unwrap()
         );
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    #[test]
+    fn integration_substitutes_selection_and_exports_tyco_selection_env() {
+        let result = execute_script(
+            &ScriptRuns::default(),
+            &ScriptRequest {
+                selection_text: Some("selected quote's"),
+                ..request(
+                    "printf '%s|%s' {{SELECTION}} \"$TYCO_SELECTION\"",
+                    "ignored",
+                )
+            },
+            None,
+        )
+        .unwrap();
+        assert_eq!(result.stdout, "selected quote's|selected quote's");
     }
 
     #[test]
