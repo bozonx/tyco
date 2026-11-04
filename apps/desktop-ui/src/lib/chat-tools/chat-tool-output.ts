@@ -1,6 +1,12 @@
 /** How much of a tool's output the model is given by default */
 export const TOOL_OUTPUT_CHARACTERS = 20_000
 
+/**
+ * The smallest budget a tool call receives so the model gets usable output even
+ * when the turn's budget is nearly exhausted
+ */
+export const MIN_TOOL_OUTPUT_CHARACTERS = 2_000
+
 export interface ToolOutput {
   /** What the model and the chat get: the output, cut to the limit */
   text: string

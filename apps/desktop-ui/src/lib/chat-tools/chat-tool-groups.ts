@@ -45,7 +45,7 @@ export const CHAT_TOOL_GROUPS: readonly ChatToolGroup[] = [
     labelKey: 'chatTools.web.group',
     descriptionKey: 'chatTools.web.groupHint',
     icon: 'mdi:search-web',
-    defaultAccess: 'allow',
+    defaultAccess: 'ask',
   },
   {
     id: COMMANDS_TOOL_GROUP_ID,

@@ -17,6 +17,8 @@ describe('chat-tool-groups', () => {
       'web',
       'commands',
     ])
+    const webGroup = CHAT_TOOL_GROUPS.find((g) => g.id === 'web')
+    expect(webGroup?.defaultAccess).toBe('ask')
     const commands = CHAT_TOOL_GROUPS.find((g) => g.id === 'commands')
     expect(commands?.defaultAccess).toBe('ask')
   })

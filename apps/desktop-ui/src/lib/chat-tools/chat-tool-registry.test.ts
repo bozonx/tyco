@@ -132,9 +132,58 @@ describe('chat-tool-registry', () => {
     const second = String(await run(set, 'read_note', {}))
     const third = String(await run(set, 'read_note', {}))
 
-    expect(limits).toEqual([7_000, 3_000, 0])
-    expect(4000 + second.length + third.length).toBeLessThanOrEqual(7000)
+    expect(limits).toEqual([7_000, 3_000, 2_000])
     expect(second).toContain('[Output truncated')
+    expect(third).toContain('[Output truncated')
+  })
+
+  it('guarantees at least MIN_TOOL_OUTPUT_CHARACTERS even when budget is depleted', async () => {
+    const limits: number[] = []
+    const registry = createChatToolRegistry({
+      providers: () => [
+        provider([
+          tool({
+            execute: async (_input, { outputLimitCharacters }) => {
+              limits.push(outputLimitCharacters)
+              return 'ok'
+            },
+          }),
+        ]),
+      ],
+      policy: createChatToolPolicy({ canAsk: true }),
+    })
+    const set = (await registry.resolve({
+      ...context(settings({ notes: { isEnabled: true, access: 'allow' } })),
+      outputBudgetCharacters: 0,
+    }))!
+
+    await run(set, 'read_note', {})
+    expect(limits[0]).toBe(2_000)
+  })
+
+  it('respects a tool limit that is smaller than the minimum', async () => {
+    const limits: number[] = []
+    const registry = createChatToolRegistry({
+      providers: () => [
+        provider([
+          tool({
+            outputLimitCharacters: 500,
+            execute: async (_input, { outputLimitCharacters }) => {
+              limits.push(outputLimitCharacters)
+              return 'ok'
+            },
+          }),
+        ]),
+      ],
+      policy: createChatToolPolicy({ canAsk: true }),
+    })
+    const set = (await registry.resolve({
+      ...context(settings({ notes: { isEnabled: true, access: 'allow' } })),
+      outputBudgetCharacters: 0,
+    }))!
+
+    await run(set, 'read_note', {})
+    expect(limits[0]).toBe(500)
   })
 
   it('reserves the budget before parallel calls and refunds unused output', async () => {
@@ -148,10 +197,10 @@ describe('chat-tool-registry', () => {
       providers: () => [
         provider([
           tool({
-            outputLimitCharacters: 2000,
+            outputLimitCharacters: 3000,
             execute: async (_input, { outputLimitCharacters }) => {
               limits.push(outputLimitCharacters)
-              return ++calls === 1 ? pending : 'x'.repeat(2000)
+              return ++calls === 1 ? pending : 'x'.repeat(1500)
             },
           }),
         ]),
@@ -160,19 +209,19 @@ describe('chat-tool-registry', () => {
     })
     const set = (await registry.resolve({
       ...context(settings({ notes: { isEnabled: true, access: 'allow' } })),
-      outputBudgetCharacters: 3000,
+      outputBudgetCharacters: 5000,
     }))!
     const first = run(set, 'read_note', {})
     const second = await run(set, 'read_note', {})
     finish('short')
     const firstOutput = await first
     const third = await run(set, 'read_note', {})
-    expect(limits[0]).toBe(2000)
-    expect(limits[1]).toBe(1000)
-    expect(limits[2]).toBe(3000 - 5 - String(second).length)
-    expect(
-      String(firstOutput).length + String(second).length + String(third).length
-    ).toBeLessThanOrEqual(3000)
+    expect(limits[0]).toBe(3000)
+    expect(limits[1]).toBe(2000)
+    expect(limits[2]).toBe(3000)
+    expect(firstOutput).toBe('short')
+    expect(String(second)).toBe('x'.repeat(1500))
+    expect(String(third)).toBe('x'.repeat(1500))
   })
 
   it('refunds reserved output when a tool fails', async () => {
@@ -181,7 +230,9 @@ describe('chat-tool-registry', () => {
       .mockRejectedValueOnce(new Error('Failed'))
       .mockResolvedValue('ok')
     const registry = createChatToolRegistry({
-      providers: () => [provider([tool({ execute })])],
+      providers: () => [
+        provider([tool({ outputLimitCharacters: 100, execute })]),
+      ],
       policy: createChatToolPolicy({ canAsk: true }),
     })
     const set = (await registry.resolve({

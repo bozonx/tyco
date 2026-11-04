@@ -167,19 +167,20 @@ export function createWebToolProvider(
             properties: { url: URL },
             required: ['url'],
           },
+          outputLimitCharacters: deps.getMaxCharacters?.(),
           execute: async (input: unknown, options: ChatToolExecuteOptions) => {
             const args = asInput(input)
             const url = text(args.url).trim()
             if (!url) throw new Error('URL cannot be empty')
 
-            const maxCharacters = deps.getMaxCharacters?.()
+            const configuredMax = deps.getMaxCharacters?.()
+            const maxCharacters =
+              configuredMax !== undefined
+                ? Math.min(configuredMax, options.outputLimitCharacters)
+                : options.outputLimitCharacters
 
             const response = await withAbort(
-              deps.run(profileId, {
-                operation: 'fetch',
-                url,
-                ...(maxCharacters !== undefined ? { maxCharacters } : {}),
-              }),
+              deps.run(profileId, { operation: 'fetch', url, maxCharacters }),
               options.signal
             )
 

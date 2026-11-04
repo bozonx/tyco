@@ -126,13 +126,14 @@ describe('web-tools', () => {
     expect(run).toHaveBeenCalledWith('prof-1', {
       operation: 'fetch',
       url: 'https://example.com/page',
+      maxCharacters: 5000,
     })
     expect(result).toContain('# Page Title')
     expect(result).toContain('Source: https://example.com/page')
     expect(result).toContain('Page content here.')
   })
 
-  it('passes maxCharacters to web_fetch when configured', async () => {
+  it('passes min of configured maxCharacters and outputLimitCharacters to web_fetch', async () => {
     const run = vi
       .fn()
       .mockResolvedValue({
@@ -153,12 +154,31 @@ describe('web-tools', () => {
     })
 
     const fetchTool = tools.find((t) => t.name === 'web_fetch')!
+    expect(fetchTool.outputLimitCharacters).toBe(8000)
+
+    // When outputLimit is smaller than configured max, use outputLimit
     await fetchTool.execute(
       { url: 'https://example.com/page' },
       {
         signal: new AbortController().signal,
         toolCallId: 'call-2',
         outputLimitCharacters: 5000,
+      }
+    )
+
+    expect(run).toHaveBeenCalledWith('prof-1', {
+      operation: 'fetch',
+      url: 'https://example.com/page',
+      maxCharacters: 5000,
+    })
+
+    // When configured max is smaller than outputLimit, use configured max
+    await fetchTool.execute(
+      { url: 'https://example.com/page' },
+      {
+        signal: new AbortController().signal,
+        toolCallId: 'call-3',
+        outputLimitCharacters: 12000,
       }
     )
 

@@ -12,7 +12,11 @@ import type {
 } from '@tyco/shared'
 import type { JsonSchema } from '@tyco/plugin-sdk'
 
-import { normalizeToolOutput, TOOL_OUTPUT_CHARACTERS } from './chat-tool-output'
+import {
+  MIN_TOOL_OUTPUT_CHARACTERS,
+  normalizeToolOutput,
+  TOOL_OUTPUT_CHARACTERS,
+} from './chat-tool-output'
 import { chatToolApprovalKey, type ChatToolPolicy } from './chat-tool-policy'
 import { MAX_TOOL_NAME_LENGTH } from './tool-name'
 
@@ -175,14 +179,11 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
           tool.inputSchema as Parameters<typeof jsonSchema>[0]
         ),
         execute: async (input, { abortSignal, toolCallId }) => {
+          const toolLimit = tool.outputLimitCharacters ?? TOOL_OUTPUT_CHARACTERS
+          const minCharacters = Math.min(toolLimit, MIN_TOOL_OUTPUT_CHARACTERS)
           const limitCharacters = Math.max(
-            0,
-            Math.floor(
-              Math.min(
-                tool.outputLimitCharacters ?? TOOL_OUTPUT_CHARACTERS,
-                remainingCharacters
-              )
-            )
+            minCharacters,
+            Math.floor(Math.min(toolLimit, remainingCharacters))
           )
           remainingCharacters -= limitCharacters
           let usedCharacters = 0

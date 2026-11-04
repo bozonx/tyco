@@ -13,6 +13,7 @@ const DEFAULT_SEARCH_COUNT: usize = 5;
 const MAX_SEARCH_COUNT: usize = 20;
 const MAX_QUERY_LEN: usize = 1000;
 const WEB_TIMEOUT: Duration = Duration::from_secs(30);
+const USER_AGENT: &str = concat!("TyCo/", env!("CARGO_PKG_VERSION"));
 
 pub const DEFAULT_FETCH_MAX_CHARS: usize = 15_000;
 pub const MAX_FETCH_CHARS: usize = 100_000;
@@ -198,8 +199,9 @@ pub async fn run(
             let mut req = client
                 .get(&target_url)
                 .header("Accept", "application/json")
-                .header("User-Agent", "TyCo/0.1.0")
-                .header("X-No-Cache", "true");
+                .header("User-Agent", USER_AGENT)
+                .header("X-No-Cache", "true")
+                .header("X-Respond-With", "no-content");
 
             if let Some(token) = secret.filter(|s| !s.trim().is_empty()) {
                 req = req.header("Authorization", format!("Bearer {token}"));
@@ -215,12 +217,13 @@ pub async fn run(
                 AppError::Failed(format!("Failed to read Jina search response: {e}"))
             })?;
 
+            let has_secret = secret.map(|s| !s.trim().is_empty()).unwrap_or(false);
             if !status.is_success() {
                 return Err(format_jina_http_error(
                     "Jina search",
                     status,
                     &body_text,
-                    secret.is_some(),
+                    has_secret,
                 ));
             }
 
@@ -275,7 +278,7 @@ pub async fn run(
             let mut req = client
                 .get(&target_url)
                 .header("Accept", "application/json")
-                .header("User-Agent", "TyCo/0.1.0")
+                .header("User-Agent", USER_AGENT)
                 .header("X-Return-Format", "markdown");
 
             if let Some(token) = secret.filter(|s| !s.trim().is_empty()) {
@@ -292,12 +295,13 @@ pub async fn run(
                 AppError::Failed(format!("Failed to read Jina reader response: {e}"))
             })?;
 
+            let has_secret = secret.map(|s| !s.trim().is_empty()).unwrap_or(false);
             if !status.is_success() {
                 return Err(format_jina_http_error(
                     "Jina reader",
                     status,
                     &body_text,
-                    secret.is_some(),
+                    has_secret,
                 ));
             }
 
@@ -500,5 +504,69 @@ mod tests {
             false,
         );
         assert_eq!(err_html.to_string(), "Jina search failed with HTTP 502");
+    }
+
+    #[tokio::test]
+    async fn test_run_input_validation() {
+        // Empty search query
+        let res = run(
+            None,
+            AiWebToolRequest::Search {
+                query: "   ".into(),
+                count: None,
+            },
+        )
+        .await;
+        assert!(matches!(res, Err(AppError::InvalidInput(_))));
+
+        // Query too long
+        let long_query = "x".repeat(MAX_QUERY_LEN + 1);
+        let res = run(
+            None,
+            AiWebToolRequest::Search {
+                query: long_query,
+                count: None,
+            },
+        )
+        .await;
+        assert!(matches!(res, Err(AppError::InvalidInput(_))));
+
+        // Invalid URL
+        let res = run(
+            None,
+            AiWebToolRequest::Fetch {
+                url: "not a url".into(),
+                max_characters: None,
+            },
+        )
+        .await;
+        assert!(matches!(res, Err(AppError::InvalidInput(_))));
+
+        // Non-http(s) scheme
+        let res = run(
+            None,
+            AiWebToolRequest::Fetch {
+                url: "ftp://example.com/file.txt".into(),
+                max_characters: None,
+            },
+        )
+        .await;
+        assert!(matches!(res, Err(AppError::InvalidInput(_))));
+    }
+
+    #[test]
+    fn test_format_jina_http_error_empty_secret() {
+        let has_secret = Some("   ")
+            .map(|s: &str| !s.trim().is_empty())
+            .unwrap_or(false);
+        assert!(!has_secret);
+
+        let err = format_jina_http_error(
+            "Jina search",
+            reqwest::StatusCode::TOO_MANY_REQUESTS,
+            "rate limit",
+            has_secret,
+        );
+        assert!(err.to_string().contains("shared free tier"));
     }
 }
