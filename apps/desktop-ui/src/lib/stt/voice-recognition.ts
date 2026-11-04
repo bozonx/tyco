@@ -1,4 +1,5 @@
 import { computed, ref } from 'vue'
+import { createContextualCorrectionModel } from './contextual-correction'
 import type { EditorHistoryEntry } from '@tyco/shared'
 import { createInputHistorySession } from '../history/input-history-session'
 import {
@@ -48,6 +49,11 @@ export interface VoiceRecognitionDependencies extends TimerDependencies {
   finishDictation: () => Promise<string>
   cancelDictation: () => Promise<void>
   shouldFormatRecognizedText: () => boolean
+  shouldCorrectContextually?: () => boolean
+  contextualVoiceCorrection?: (
+    text: string,
+    signal: AbortSignal
+  ) => Promise<unknown>
   shouldInsertStyleDirectly?: () => boolean
   voiceCorrection: (text: string, signal?: AbortSignal) => Promise<string>
   voiceStyling?: (
@@ -115,6 +121,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   /** Set once a dictation started; it stays finishable after a failure */
   let hasSession = false
   let lastTranscriptText = ''
+  let contextual: ReturnType<typeof createContextualCorrectionModel> | undefined
   const historySession = deps.saveCheckpoint
     ? createInputHistorySession({
         save: deps.saveCheckpoint,
@@ -166,6 +173,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     sessionGeneration += 1
     hasSession = false
     voiceSession.abort()
+    contextual?.cancel()
 
     cancelling = (async () => {
       try {
@@ -262,25 +270,40 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
 
       const styleRule = options?.styleRule
       const voiceStyling = deps.voiceStyling
+      const correctContextually = contextual
       const postProcess =
         styleRule && voiceStyling
           ? {
               pending: { styling: true },
               run: (postSignal: AbortSignal) =>
-                voiceStyling(recognizedText, styleRule, postSignal),
+                (async () => {
+                  const text = correctContextually
+                    ? await correctContextually.finish(recognizedText)
+                    : recognizedText
+                  if (postSignal.aborted) return text
+                  return voiceStyling(text, styleRule, postSignal)
+                })(),
             }
-          : shouldFormatRecognizedText()
+          : correctContextually
             ? {
                 pending: { correction: true },
-                run: (postSignal: AbortSignal) =>
-                  voiceCorrection(recognizedText, postSignal),
+                run: () => correctContextually.finish(recognizedText),
               }
-            : null
+            : shouldFormatRecognizedText()
+              ? {
+                  pending: { correction: true },
+                  run: (postSignal: AbortSignal) =>
+                    voiceCorrection(recognizedText, postSignal),
+                }
+              : null
 
       if (postProcess) {
         // Explicit cancellation stops delivery; the source is already in history.
         const controller = new AbortController()
-        const abortPostProcess = () => controller.abort()
+        const abortPostProcess = () => {
+          controller.abort()
+          contextual?.cancel()
+        }
         signal?.addEventListener('abort', abortPostProcess)
         const owner = deps.setPendingModal({
           ...postProcess.pending,
@@ -296,6 +319,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
         timeout.start(() => {
           isTimedOut = true
           controller.abort()
+          contextual?.cancel()
         }, postProcessTimeoutMs)
 
         try {
@@ -344,6 +368,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       notifyCancelled()
     } finally {
       if (generation === sessionGeneration) {
+        contextual?.cancel()
         isStarted.value = false
         isTranscribing.value = false
         isFinishing.value = false
@@ -399,12 +424,32 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     transcript.value = createLiveTranscriptState()
     lastTranscriptText = ''
     const generation = ++sessionGeneration
+    contextual?.cancel()
+    contextual =
+      deps.shouldCorrectContextually?.() && deps.contextualVoiceCorrection
+        ? createContextualCorrectionModel({
+            request: deps.contextualVoiceCorrection,
+            timeoutMs: postProcessTimeoutMs,
+            onText: (text) => {
+              if (generation !== sessionGeneration) return
+              transcript.value = { ...transcript.value, committed: text }
+            },
+            onError: () => {
+              if (generation === sessionGeneration)
+                toastKey('toast.voiceContextualCorrectionFailed', 'error')
+            },
+          })
+        : undefined
     starting = (async () => {
       try {
         await startDictation({
           onText: (state) => {
             if (generation !== sessionGeneration) return
-            transcript.value = state
+            transcript.value = {
+              ...state,
+              committed: contextual?.text ?? state.committed,
+            }
+            contextual?.update(state.committed)
             historySession?.update(liveTranscriptText(state))
             // empty results come in silence too: only new words are speech
             const text = liveTranscriptText(state)
@@ -433,6 +478,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
         if (message) toastText(message, 'error')
         else toastKey('toast.voiceRecognitionFailed', 'error')
         voiceSession.abort()
+        contextual?.cancel()
         notifyCancelled()
       }
     })().finally(() => {
@@ -447,6 +493,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     restartGeneration += 1
     sessionGeneration += 1
     voiceSession.dispose()
+    contextual?.cancel()
     const stopping = cancelDictation()
     void (async () => {
       await stopping

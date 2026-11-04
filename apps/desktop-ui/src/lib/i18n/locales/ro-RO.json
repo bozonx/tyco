@@ -1241,6 +1241,7 @@
     "webhookFailed": "Cererea către webhook a eșuat",
     "webhookKeyNotSet": "Cheia acestui webhook nu este setată pe acest dispozitiv; introduceți-o în setările comenzii",
     "webhookSuccess": "Webhook trimis cu succes",
+    "voiceContextualCorrectionFailed": "Corectarea contextuală a eșuat; textul disponibil a fost păstrat",
     "voicePostProcessTimeout": "Procesarea vocală a durat prea mult; s-a păstrat textul original",
     "variablesNotSet": "Unele variabile nu au valoare pe acest dispozitiv; setați-le în Setări → Variabile"
   },

@@ -1238,6 +1238,7 @@
     "webhookFailed": "Webhookリクエストが失敗しました",
     "webhookKeyNotSet": "この Webhook のキーはこのデバイスで設定されていません。コマンドの設定で入力してください",
     "webhookSuccess": "Webhookが正常に送信されました",
+    "voiceContextualCorrectionFailed": "文脈に基づく修正に失敗しました。認識済みのテキストは保持されました",
     "voicePostProcessTimeout": "音声処理に時間がかかりすぎました。元のテキストを保持しました",
     "variablesNotSet": "このデバイスで値のない変数があります。設定 → 変数 で設定してください"
   },

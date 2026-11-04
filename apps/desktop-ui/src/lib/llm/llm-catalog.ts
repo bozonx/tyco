@@ -98,6 +98,7 @@ export function buildProviderFactories(
             // A local server usually takes no key; send no header then
             ...(apiKey ? { apiKey } : {}),
             includeUsage: true,
+            supportsStructuredOutputs: true,
             fetch,
           }).chatModel(modelId),
       ])
@@ -139,7 +140,7 @@ function toDefinition(
       input: model.canUseImages ? ['text', 'image'] : ['text'],
       output: ['text'],
     },
-    capabilities: { tools: model.canUseTools },
+    capabilities: { tools: model.canUseTools, structuredOutput: true },
     contextSize: modelContextWindowTokens(model, [provider]),
     maxOutputTokens: Math.min(
       model.maxOutputTokens ?? OUTPUT_TOKENS_CEILING,

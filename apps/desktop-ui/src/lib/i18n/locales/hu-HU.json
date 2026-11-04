@@ -1238,6 +1238,7 @@
     "webhookFailed": "A webhook-kérés sikertelen",
     "webhookKeyNotSet": "Ennek a webhooknak a kulcsa nincs beállítva ezen az eszközön; adja meg a parancs beállításaiban",
     "webhookSuccess": "A webhook sikeresen elküldve",
+    "voiceContextualCorrectionFailed": "A szövegkörnyezet alapján végzett javítás sikertelen; a rendelkezésre álló szöveg megmaradt",
     "voicePostProcessTimeout": "A hangfeldolgozás túl sokáig tartott; az eredeti szöveg megmaradt",
     "variablesNotSet": "Egyes változóknak nincs értéke ezen az eszközön; állítsa be őket: Beállítások → Változók"
   },

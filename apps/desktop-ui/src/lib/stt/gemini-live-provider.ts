@@ -1,3 +1,4 @@
+import { createSmartEndpoint } from './smart-endpoint'
 import { AiError } from '@bozonx/ai-kit'
 import type {
   ProviderStreamRequest,
@@ -91,11 +92,19 @@ export const createGeminiLiveProvider =
           ? rawModelId
           : `models/${rawModelId}`
 
+        const manualEndpointing = rawModelId.includes('transcribe')
+        const endpoint = createSmartEndpoint(request.sampleRate)
+        let pendingTurns = 0
+        const sendActivity = (activity: 'activityStart' | 'activityEnd') => {
+          session.send(JSON.stringify({ realtimeInput: { [activity]: {} } }))
+          if (activity === 'activityEnd') pendingTurns += 1
+        }
+
         const language = request.options?.language?.trim()
         const isAuto = !language || language === 'auto' || language === 'multi'
 
         const transcriptionConfig: Record<string, unknown> = {
-          mode: 'smart',
+          mode: 'SMART',
           ...(isAuto ? {} : { languageCodes: [language] }),
         }
 
@@ -104,6 +113,13 @@ export const createGeminiLiveProvider =
             model: modelName,
             generationConfig: { responseModalities: ['TEXT'] },
             inputAudioTranscription: transcriptionConfig,
+            ...(manualEndpointing
+              ? {
+                  realtimeInputConfig: {
+                    automaticActivityDetection: { disabled: true },
+                  },
+                }
+              : {}),
           },
         }
 
@@ -128,6 +144,10 @@ export const createGeminiLiveProvider =
 
         void setupCompletePromise.catch(() => undefined)
 
+        let resolveAudioComplete: () => void = () => {}
+        const audioComplete = new Promise<IteratorResult<string>>((resolve) => {
+          resolveAudioComplete = () => resolve({ done: true, value: undefined })
+        })
         let audioEnded = false
         let closed = false
         let rejectFailure: (error: unknown) => void = () => {}
@@ -153,27 +173,55 @@ export const createGeminiLiveProvider =
           try {
             session.send(JSON.stringify(setupPayload))
             await setupCompletePromise
-            for await (const chunk of request.audio) {
-              if (request.signal.aborted || closed) break
-              const base64 = uint8ArrayToBase64(chunk.data)
+            let prefix = new Uint8Array(0)
+            const sendAudio = (data: Uint8Array) =>
               session.send(
                 JSON.stringify({
                   realtimeInput: {
                     mediaChunks: [
                       {
                         mimeType: `audio/pcm;rate=${request.sampleRate}`,
-                        data: base64,
+                        data: uint8ArrayToBase64(data),
                       },
                     ],
                   },
                 })
               )
+            for await (const chunk of request.audio) {
+              if (request.signal.aborted || closed) break
+              const boundary = manualEndpointing
+                ? endpoint.push(chunk.data)
+                : undefined
+              if (boundary?.skip) {
+                // Keep 200 ms before the detected onset, including soft consonants.
+                const combined = new Uint8Array(
+                  prefix.length + chunk.data.length
+                )
+                combined.set(prefix)
+                combined.set(chunk.data, prefix.length)
+                prefix = combined.slice(
+                  -Math.floor(request.sampleRate * 0.2) * 2
+                )
+                continue
+              }
+              if (boundary?.start) {
+                sendActivity('activityStart')
+                if (prefix.length) sendAudio(prefix)
+                prefix = new Uint8Array(0)
+              }
+              sendAudio(chunk.data)
+              if (boundary?.end) sendActivity('activityEnd')
             }
             if (!request.signal.aborted && !closed) {
               audioEnded = true
-              session.send(
-                JSON.stringify({ realtimeInput: { audioStreamEnd: true } })
-              )
+              if (manualEndpointing) {
+                if (endpoint.active) sendActivity('activityEnd')
+                if (pendingTurns === 0) resolveAudioComplete()
+              } else {
+                session.send(
+                  JSON.stringify({ realtimeInput: { audioStreamEnd: true } })
+                )
+              }
             }
           } catch (error) {
             if (!closed) rejectFailure(error)
@@ -188,7 +236,11 @@ export const createGeminiLiveProvider =
             try {
               const messages = session.messages[Symbol.asyncIterator]()
               for (;;) {
-                const next = await Promise.race([messages.next(), failure])
+                const next = await Promise.race([
+                  messages.next(),
+                  failure,
+                  audioComplete,
+                ])
                 if (next.done) break
                 const raw = next.value
                 const message = parseGeminiLiveMessage(raw)
@@ -209,7 +261,12 @@ export const createGeminiLiveProvider =
 
                 const content = message.serverContent
                 if (!content) continue
-                const isLastTurn = audioEnded && content.turnComplete
+                if (content.turnComplete && manualEndpointing)
+                  pendingTurns = Math.max(0, pendingTurns - 1)
+                const isLastTurn =
+                  audioEnded &&
+                  content.turnComplete &&
+                  (!manualEndpointing || pendingTurns === 0)
 
                 // If server sends content without explicit setupComplete, release pump
                 resolveSetup()

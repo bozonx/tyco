@@ -1235,6 +1235,7 @@
     "webhookFailed": "Požadavek na webhook selhal",
     "webhookKeyNotSet": "Klíč tohoto webhooku není na tomto zařízení nastaven; zadejte ho v nastavení příkazu",
     "webhookSuccess": "Webhook byl úspěšně odeslán",
+    "voiceContextualCorrectionFailed": "Kontextová oprava se nezdařila; dostupný text byl zachován",
     "voicePostProcessTimeout": "Zpracování hlasu trvalo příliš dlouho; byl zachován původní text",
     "variablesNotSet": "Proměnné nemají na tomto zařízení hodnotu; nastavte je v Nastavení → Proměnné"
   },

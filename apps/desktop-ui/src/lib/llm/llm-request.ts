@@ -1,3 +1,4 @@
+import type { z } from 'zod'
 import type { ChatMessage } from '@tyco/shared'
 
 import {
@@ -19,6 +20,7 @@ import {
 import { buildLlmPrompt, type LlmPrompt } from './llm-prompt'
 
 export interface AiRequestOptions {
+  schema?: z.ZodType<unknown>
   onChunk?: (chunk: string) => void
   signal?: AbortSignal
   onModel?: (model: { provider: string; model: string }) => void
@@ -117,6 +119,7 @@ export function createLlmRequest(deps: LlmRequestDependencies) {
       if (!prompt) return ''
 
       return await deps.client.run(taskName, prompt, {
+        schema: options.schema,
         modelId: options.modelId,
         onChunk: options.onChunk,
         signal: options.signal,

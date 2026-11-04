@@ -53,6 +53,25 @@ describe('LLM application actions', () => {
     })
   })
 
+  it('uses the voice task with a structured schema and minimal correction instructions', async () => {
+    const f = fixture()
+    f.aiRequest.mockResolvedValue('{"edits":[]}')
+    const signal = new AbortController().signal
+    expect(
+      await f.actions.contextualVoiceCorrection('Transcript', signal)
+    ).toEqual({ edits: [] })
+    expect(f.aiRequest).toHaveBeenCalledWith(
+      'voiceCorrection',
+      'Transcript',
+      expect.objectContaining({
+        instructions: expect.stringContaining('Never paraphrase'),
+        schema: expect.anything(),
+        signal,
+        notifyError: false,
+      })
+    )
+  })
+
   it('preserves chat history, model and streaming options without mutating messages', async () => {
     const f = fixture()
     const history: ChatMessage[] = [{ role: 'assistant', content: 'Previous' }]

@@ -1,3 +1,4 @@
+import { CONTEXTUAL_CORRECTION_SCHEMA } from '../stt/contextual-correction'
 import { createAiCommandRunner } from '../ai-commands/ai-command-runner'
 import {
   dynamicTool,
@@ -155,6 +156,36 @@ describe('llm-client', () => {
     const { client } = setup(fetch)
 
     await expect(client.run('correction', prompt)).resolves.toBe('Fixed text')
+  })
+
+  it('sends a structured schema to the provider and returns validated JSON', async () => {
+    const fetch = vi.fn<FetchFunction>(async () =>
+      jsonResponse(200, {
+        id: '1',
+        object: 'chat.completion',
+        created: 1,
+        model: 'm',
+        choices: [
+          {
+            index: 0,
+            message: { role: 'assistant', content: '{"edits":[]}' },
+            finish_reason: 'stop',
+          },
+        ],
+        usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+      })
+    )
+    const { client } = setup(fetch)
+    expect(
+      await client.run('voiceCorrection', prompt, {
+        schema: CONTEXTUAL_CORRECTION_SCHEMA,
+      })
+    ).toBe('{"edits":[]}')
+    const body = JSON.parse(String(fetch.mock.calls[0][1]?.body))
+    expect(body.response_format.type).toBe('json_schema')
+    expect(body.response_format.json_schema.schema.properties.edits.type).toBe(
+      'array'
+    )
   })
 
   it('fails without a key instead of trying another model', async () => {

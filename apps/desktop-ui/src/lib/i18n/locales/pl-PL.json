@@ -1241,6 +1241,7 @@
     "webhookFailed": "Zapytanie do webhooka nie powiodło się",
     "webhookKeyNotSet": "Klucz tego webhooka nie jest ustawiony na tym urządzeniu; wpisz go w ustawieniach polecenia",
     "webhookSuccess": "Webhook wysłany pomyślnie",
+    "voiceContextualCorrectionFailed": "Korekta kontekstowa nie powiodła się; zachowano dostępny tekst",
     "voicePostProcessTimeout": "Przetwarzanie głosu trwało zbyt długo; zachowano oryginalny tekst",
     "variablesNotSet": "Zmienne nie mają wartości na tym urządzeniu; ustaw je w Ustawienia → Zmienne"
   },

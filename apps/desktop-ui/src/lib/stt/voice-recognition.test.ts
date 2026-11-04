@@ -163,6 +163,111 @@ describe('voice recognition failures', () => {
     return { ...context, handlers }
   }
 
+  it('corrects finalized Live text for editable targets without the legacy pass', async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValue({
+        edits: [
+          {
+            old: 'Call Jon tomorrow.',
+            new: 'Call John tomorrow.',
+            reason: 'Misspelled name',
+          },
+        ],
+      })
+    const { model, deps, handlers } = await started({
+      shouldFormatRecognizedText: () => false,
+      shouldCorrectContextually: () => true,
+      contextualVoiceCorrection: request,
+      finishDictation: vi.fn().mockResolvedValue('Call Jon tomorrow.'),
+    })
+    handlers.onText({ committed: '', draft: 'Call Jon' })
+    expect(request).not.toHaveBeenCalled()
+    handlers.onText({ committed: 'Call Jon tomorrow.', draft: '' })
+    await vi.waitFor(() =>
+      expect(model.transcript.value.committed).toBe('Call John tomorrow.')
+    )
+    handlers.onText({ committed: 'Call Jon tomorrow.', draft: 'Then' })
+    expect(model.transcript.value).toEqual({
+      committed: 'Call John tomorrow.',
+      draft: 'Then',
+    })
+    await model.finish('submit')
+    expect(deps.voiceCorrection).not.toHaveBeenCalled()
+    expect(request).toHaveBeenCalledTimes(1)
+    expect(deps.saveSource).toHaveBeenCalledWith(
+      'Call Jon tomorrow.',
+      'voiceCorrection'
+    )
+    expect(deps.onCorrected).toHaveBeenCalledWith(
+      'Call John tomorrow.',
+      'Call Jon tomorrow.',
+      'Call John tomorrow.',
+      'submit'
+    )
+    model.dispose()
+  })
+
+  it('runs the final contextual pass over the final audio and styles its result separately', async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValue({
+        edits: [
+          {
+            old: 'Call Jon tomorrow.',
+            new: 'Call John tomorrow.',
+            reason: 'Misspelled name',
+          },
+        ],
+      })
+    const voiceStyling = vi.fn().mockResolvedValue('Styled text')
+    const { model, deps, handlers } = await started({
+      shouldCorrectContextually: () => true,
+      contextualVoiceCorrection: request,
+      voiceStyling,
+      finishDictation: vi.fn().mockResolvedValue('Call Jon tomorrow.'),
+    })
+    handlers.onText({ committed: '', draft: 'Call Jon tomorrow' })
+    await model.finishWithStyle('Formal')
+    expect(request).toHaveBeenCalledOnce()
+    expect(voiceStyling).toHaveBeenCalledWith(
+      'Call John tomorrow.',
+      'Formal',
+      expect.any(AbortSignal)
+    )
+    expect(deps.voiceCorrection).not.toHaveBeenCalled()
+    model.dispose()
+  })
+
+  it('cancels in-flight contextual work on restart and rejects its late reply', async () => {
+    let resolve!: (value: unknown) => void
+    const request = vi.fn().mockImplementation(
+      () =>
+        new Promise((done) => {
+          resolve = done
+        })
+    )
+    const { model, handlers } = await started({
+      shouldCorrectContextually: () => true,
+      contextualVoiceCorrection: request,
+    })
+    handlers.onText({ committed: 'Call Jon tomorrow.', draft: '' })
+    await model.restartSession()
+    resolve({
+      edits: [
+        {
+          old: 'Call Jon tomorrow.',
+          new: 'Call John tomorrow.',
+          reason: 'Misspelled name',
+        },
+      ],
+    })
+    await Promise.resolve()
+    expect(model.transcript.value).toEqual({ committed: '', draft: '' })
+    expect(request.mock.calls[0][1].aborted).toBe(true)
+    model.dispose()
+  })
+
   it.each([
     [
       new DictationError('timeout', 'Slow'),

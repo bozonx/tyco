@@ -1235,6 +1235,7 @@
     "webhookFailed": "웹후크 요청 실패",
     "webhookKeyNotSet": "이 웹훅의 키가 이 기기에 설정되지 않았습니다. 명령 설정에서 입력하세요",
     "webhookSuccess": "웹후크가 성공적으로 전송되었습니다",
+    "voiceContextualCorrectionFailed": "문맥에 따른 수정에 실패했습니다. 인식된 텍스트는 유지되었습니다",
     "voicePostProcessTimeout": "음성 처리에 시간이 너무 오래 걸렸습니다. 원본 텍스트가 유지되었습니다",
     "variablesNotSet": "이 기기에 값이 없는 변수가 있습니다. 설정 → 변수에서 지정하세요"
   },

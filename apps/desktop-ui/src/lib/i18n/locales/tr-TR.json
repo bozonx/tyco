@@ -1238,6 +1238,7 @@
     "webhookFailed": "Web kancası isteği başarısız oldu",
     "webhookKeyNotSet": "Bu webhook’un anahtarı bu cihazda ayarlanmadı; komut ayarlarından girin",
     "webhookSuccess": "Web kancası başarıyla gönderildi",
+    "voiceContextualCorrectionFailed": "Bağlama göre düzeltme başarısız oldu; mevcut metin korundu",
     "voicePostProcessTimeout": "Ses işleme çok uzun sürdü; orijinal metin korundu",
     "variablesNotSet": "Bazı değişkenlerin bu cihazda değeri yok; Ayarlar → Değişkenler bölümünden ayarlayın"
   },

@@ -88,7 +88,15 @@
     </SettingsSection>
 
     <SettingsSection>
-      <FieldRow :label="t('settings.formatWithLlm')">
+      <FieldRow
+        :label="
+          t(
+            userConfig.stt.provider === 'geminiLive'
+              ? 'settings.voiceTextCorrection'
+              : 'settings.formatWithLlm'
+          )
+        "
+      >
         <FieldSwitch v-model="userConfig.stt.isVoiceCorrectionEnabled" />
       </FieldRow>
       <SettingsTaskModel
@@ -96,7 +104,10 @@
         task="voiceCorrection"
       />
       <FieldRow
-        v-if="userConfig.stt.isVoiceCorrectionEnabled"
+        v-if="
+          userConfig.stt.isVoiceCorrectionEnabled &&
+          userConfig.stt.provider !== 'geminiLive'
+        "
         :label="t('settings.sttLlmRules')"
         :info="t('settings.sttLlmRulesInfo')"
         vertical

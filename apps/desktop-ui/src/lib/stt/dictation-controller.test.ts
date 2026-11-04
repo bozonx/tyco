@@ -110,6 +110,16 @@ describe('dictation controller', () => {
     )
   })
 
+  it('enables contextual correction only for Gemini Live with correction enabled', () => {
+    const { config, controller } = setup()
+    config.stt.isVoiceCorrectionEnabled = true
+    expect(controller.shouldCorrectContextually()).toBe(false)
+    config.stt.provider = 'geminiLive'
+    expect(controller.shouldCorrectContextually()).toBe(true)
+    config.stt.isVoiceCorrectionEnabled = false
+    expect(controller.shouldCorrectContextually()).toBe(false)
+  })
+
   it('uses the latest configuration for each session and formatting preference', async () => {
     const { config, deps, handlers, controller } = setup()
     expect(controller.shouldFormatRecognizedText()).toBe(false)

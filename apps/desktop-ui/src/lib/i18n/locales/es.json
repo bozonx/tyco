@@ -1241,6 +1241,7 @@
     "webhookFailed": "La solicitud al webhook falló",
     "webhookKeyNotSet": "La clave de este webhook no está definida en este dispositivo; introdúcela en los ajustes del comando",
     "webhookSuccess": "Webhook enviado correctamente",
+    "voiceContextualCorrectionFailed": "No se pudo corregir la transcripción según el contexto; se conservó el texto disponible",
     "voicePostProcessTimeout": "El procesamiento de voz tardó demasiado; se mantuvo el texto original",
     "variablesNotSet": "Hay variables sin valor en este dispositivo; defínelas en Ajustes → Variables"
   },

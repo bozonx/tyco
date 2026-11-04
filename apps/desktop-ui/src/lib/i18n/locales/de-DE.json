@@ -1241,6 +1241,7 @@
     "webhookFailed": "Webhook-Anfrage fehlgeschlagen",
     "webhookKeyNotSet": "Der Schlüssel dieses Webhooks ist auf diesem Gerät nicht gesetzt; gib ihn in den Befehlseinstellungen ein",
     "webhookSuccess": "Webhook erfolgreich gesendet",
+    "voiceContextualCorrectionFailed": "Die kontextbezogene Korrektur ist fehlgeschlagen; der vorhandene Text wurde beibehalten",
     "voicePostProcessTimeout": "Sprachverarbeitung dauerte zu lange; Originaltext beibehalten",
     "variablesNotSet": "Variablen haben auf diesem Gerät keinen Wert; legen Sie ihn unter Einstellungen → Variablen fest"
   },

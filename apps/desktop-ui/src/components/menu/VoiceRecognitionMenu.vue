@@ -66,9 +66,11 @@ const {
   cancelDictation,
   finishDictation,
   shouldFormatRecognizedText,
+  shouldCorrectContextually,
   startDictation,
 } = useDictationActions()
-const { voiceCorrection, stylingPrompt } = useLlmStore().actions
+const { voiceCorrection, contextualVoiceCorrection, stylingPrompt } =
+  useLlmStore().actions
 const { toastKey, toastText } = useToast()
 const { t } = useI18n()
 const desktopStore = useDesktopStore()
@@ -106,6 +108,8 @@ const model = createVoiceRecognition({
   shouldInsertStyleDirectly: () =>
     desktopStore.userConfig.stt?.isStylingBarDirectInsertEnabled ?? false,
   voiceCorrection,
+  shouldCorrectContextually,
+  contextualVoiceCorrection,
   voiceStyling: (text, rule, signal) => stylingPrompt(rule, text, { signal }),
   saveCheckpoint: historyStore.saveEditorHistory,
   saveSource: (text, action) => historyStore.saveSource(text, action),

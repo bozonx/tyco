@@ -157,6 +157,19 @@ describe('SettingsVoiceTab.vue', () => {
     expect(config.stt.isVoiceCorrectionEnabled).toBe(true)
   })
 
+  it('shows the contextual correction model without obsolete formatting rules for Gemini Live', () => {
+    const config = createConfig()
+    config.stt.provider = 'geminiLive'
+    config.stt.isVoiceCorrectionEnabled = true
+    const wrapper = mountTab(config)
+    const labels = wrapper
+      .findAll('.field-row-stub')
+      .map((field) => field.attributes('data-label'))
+    expect(labels).toContain('settings.voiceTextCorrection')
+    expect(labels).not.toContain('settings.formatWithLlm')
+    expect(labels).not.toContain('settings.sttLlmRules')
+  })
+
   it('toggles the styling bar setting and shows direct insert toggle', async () => {
     const config = createConfig()
     const wrapper = mountTab(config)

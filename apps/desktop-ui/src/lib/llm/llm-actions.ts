@@ -10,6 +10,10 @@ import type {
   AiChatTurnOptions,
   AiRequestOptions,
 } from './llm-request'
+import {
+  CONTEXTUAL_CORRECTION_SCHEMA,
+  CONTEXTUAL_CORRECTION_INSTRUCTION,
+} from '../stt/contextual-correction'
 import { cleanLlmOutput } from './llm-output'
 
 type TextTaskKind =
@@ -137,6 +141,22 @@ export function createLlmActions(deps: LlmActionsDependencies) {
   return {
     aiRequest,
     voiceCorrection,
+    contextualVoiceCorrection: async (
+      text: string,
+      signal: AbortSignal
+    ): Promise<unknown> => {
+      const response = await aiRequest(
+        LlmInstructionKind.VOICE_CORRECTION,
+        text,
+        {
+          instructions: CONTEXTUAL_CORRECTION_INSTRUCTION,
+          schema: CONTEXTUAL_CORRECTION_SCHEMA,
+          notifyError: false,
+          signal,
+        }
+      )
+      return CONTEXTUAL_CORRECTION_SCHEMA.parse(JSON.parse(response))
+    },
     sendChatMessage,
     generateChatTitle,
     correctText,

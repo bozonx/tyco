@@ -1235,6 +1235,7 @@
     "webhookFailed": "Webhook 请求失败",
     "webhookKeyNotSet": "此设备上未设置该 Webhook 的密钥；请在命令设置中输入",
     "webhookSuccess": "Webhook 发送成功",
+    "voiceContextualCorrectionFailed": "上下文校正失败；已保留现有转录文本",
     "voicePostProcessTimeout": "语音处理耗时过长；已保留原始文本",
     "variablesNotSet": "部分变量在此设备上没有值；请在“设置 → 变量”中设置"
   },

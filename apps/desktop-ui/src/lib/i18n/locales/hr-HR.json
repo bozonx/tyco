@@ -1241,6 +1241,7 @@
     "webhookFailed": "Zahtjev prema webhooku nije uspio",
     "webhookKeyNotSet": "Ključ ovog webhooka nije postavljen na ovom uređaju; unesite ga u postavkama naredbe",
     "webhookSuccess": "Webhook je uspješno poslan",
+    "voiceContextualCorrectionFailed": "Kontekstualni ispravak nije uspio; dostupni tekst je sačuvan",
     "voicePostProcessTimeout": "Obrada glasa trajala je predugo; izvorni tekst je zadržan",
     "variablesNotSet": "Varijable nemaju vrijednost na ovom uređaju; postavite ih u Postavke → Varijable"
   },

@@ -77,6 +77,9 @@ export function createDictationController(
 
   return {
     shouldFormatRecognizedText,
+    shouldCorrectContextually: () =>
+      deps.getConfig().stt.provider === 'geminiLive' &&
+      deps.getConfig().stt.isVoiceCorrectionEnabled,
     startDictation,
     finishDictation,
     cancelDictation,

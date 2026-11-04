@@ -1241,6 +1241,7 @@
     "webhookFailed": "Webhook request failed",
     "webhookKeyNotSet": "The key of this webhook is not set on this device; enter it in the command settings",
     "webhookSuccess": "Webhook sent successfully",
+    "voiceContextualCorrectionFailed": "Contextual correction failed; the available transcript was kept",
     "voicePostProcessTimeout": "Voice processing took too long; original text kept",
     "variablesNotSet": "Variables have no value on this device; set them in Settings → Variables"
   },

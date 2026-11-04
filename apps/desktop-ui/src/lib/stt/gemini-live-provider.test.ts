@@ -21,7 +21,7 @@ describe('gemini-live-provider', () => {
         messages: messages.values,
         close,
         send: (raw) => {
-          if (JSON.parse(raw as string).realtimeInput?.audioStreamEnd) endSent()
+          if (JSON.parse(raw as string).realtimeInput?.activityEnd) endSent()
         },
       }),
     })
@@ -37,8 +37,10 @@ describe('gemini-live-provider', () => {
       for await (const event of events) {
         collected.push(event)
         // A completed turn while recording must not stop the microphone stream.
-        if (event.type === 'final' && event.segment.text === 'First')
+        if (event.type === 'final' && event.segment.text === 'First') {
+          audio.push({ data: new Uint8Array([0, 16]) })
           audio.end()
+        }
       }
     })()
     messages.push(JSON.stringify({ setupComplete: {} }))
@@ -62,6 +64,98 @@ describe('gemini-live-provider', () => {
     await reading
     expect(collected).toHaveLength(2)
     expect(close).toHaveBeenCalledOnce()
+  })
+
+  it('finishes silent audio without sending empty activity turns or waiting for a reply', async () => {
+    const messages = createAsyncQueue<string>()
+    const sent: Record<string, unknown>[] = []
+    const close = vi.fn()
+    const provider = createGeminiLiveProvider()({
+      apiKey: 'test-key',
+      openSocket: async () => ({
+        messages: messages.values,
+        close,
+        send: (raw) => {
+          const frame = JSON.parse(raw as string)
+          sent.push(frame)
+          if (frame.setup) messages.push(JSON.stringify({ setupComplete: {} }))
+        },
+      }),
+    })
+    const events = await provider.transcribeStream!({
+      modelId: 'gemini-3.5-transcribe-live',
+      options: {},
+      sampleRate: 16000,
+      signal: new AbortController().signal,
+      audio: {
+        async *[Symbol.asyncIterator]() {
+          yield { data: new Uint8Array(64000) }
+        },
+      },
+    })
+    const collected = []
+    for await (const event of events) collected.push(event)
+    expect(collected).toEqual([])
+    expect(sent).toHaveLength(1)
+    expect(close).toHaveBeenCalledOnce()
+  })
+
+  it('preserves both utterances and drains every outstanding final turn', async () => {
+    const messages = createAsyncQueue<string>()
+    const sent: Array<{ realtimeInput?: Record<string, unknown> }> = []
+    let turnCount = 0
+    const provider = createGeminiLiveProvider()({
+      apiKey: 'test-key',
+      openSocket: async () => ({
+        messages: messages.values,
+        close: vi.fn(),
+        send: (raw) => {
+          const frame = JSON.parse(raw as string)
+          sent.push(frame)
+          if (frame.setup) messages.push(JSON.stringify({ setupComplete: {} }))
+          if (frame.realtimeInput?.activityEnd)
+            messages.push(
+              JSON.stringify({
+                serverContent: {
+                  inputTranscription: { text: `Utterance ${++turnCount}` },
+                  turnComplete: true,
+                },
+              })
+            )
+        },
+      }),
+    })
+    const events = await provider.transcribeStream!({
+      modelId: 'gemini-3.5-transcribe-live',
+      options: {},
+      sampleRate: 16000,
+      signal: new AbortController().signal,
+      audio: {
+        async *[Symbol.asyncIterator]() {
+          yield { data: new Uint8Array([0, 16]) }
+          yield { data: new Uint8Array(48000) }
+          yield { data: new Uint8Array(48000) }
+          yield { data: new Uint8Array([0, 16]) }
+        },
+      },
+    })
+    const texts = []
+    for await (const event of events)
+      if (event.type === 'final') texts.push(event.segment.text)
+    expect(texts).toEqual(['Utterance 1', 'Utterance 2'])
+    expect(
+      sent.filter((frame) => frame.realtimeInput?.activityStart)
+    ).toHaveLength(2)
+    expect(
+      sent.filter((frame) => frame.realtimeInput?.activityEnd)
+    ).toHaveLength(2)
+    expect(sent.some((frame) => frame.realtimeInput?.audioStreamEnd)).toBe(
+      false
+    )
+    // Speech, its trailing silence, the bounded onset buffer, then speech.
+    expect(
+      sent.filter((frame) => frame.realtimeInput?.mediaChunks)
+    ).toHaveLength(4)
   })
 
   it.each(['audio', 'send', 'setup', 'abort'] as const)(
@@ -157,7 +251,7 @@ describe('gemini-live-provider', () => {
       }),
     })
 
-    const audioChunk = new Uint8Array([1, 2, 3, 4])
+    const audioChunk = new Uint8Array([0, 16, 0, 16])
     const events = await provider.transcribeStream!({
       modelId: 'gemini-3.5-transcribe-live',
       options: {},
@@ -182,13 +276,14 @@ describe('gemini-live-provider', () => {
       setup: {
         model: 'models/gemini-3.5-transcribe-live',
         generationConfig: { responseModalities: ['TEXT'] },
-        inputAudioTranscription: { mode: 'smart' },
+        inputAudioTranscription: { mode: 'SMART' },
+        realtimeInputConfig: { automaticActivityDetection: { disabled: true } },
         systemInstruction: { parts: [{ text: 'Custom prompt rules' }] },
       },
     })
 
     // Verify audio chunk was sent
-    const chunkMessage = JSON.parse(sent[1])
+    const chunkMessage = JSON.parse(sent[2])
     expect(chunkMessage.realtimeInput.mediaChunks[0].mimeType).toBe(
       'audio/pcm;rate=16000'
     )
@@ -197,8 +292,8 @@ describe('gemini-live-provider', () => {
     )
 
     // Verify audioStreamEnd was sent
-    const endMessage = JSON.parse(sent[2])
-    expect(endMessage.realtimeInput.audioStreamEnd).toBe(true)
+    const endMessage = JSON.parse(sent[3])
+    expect(endMessage.realtimeInput.activityEnd).toEqual({})
 
     // Verify collected stream events
     expect(collected).toEqual([
@@ -234,7 +329,11 @@ describe('gemini-live-provider', () => {
       options: { language: 'ru' },
       sampleRate: 16000,
       signal: new AbortController().signal,
-      audio: { async *[Symbol.asyncIterator]() {} },
+      audio: {
+        async *[Symbol.asyncIterator]() {
+          yield { data: new Uint8Array([0, 16]) }
+        },
+      },
     })
 
     for await (const _ of events) {
@@ -245,7 +344,7 @@ describe('gemini-live-provider', () => {
     const setup = JSON.parse(sent[0])
     expect(setup.setup.model).toBe('models/gemini-3.5-transcribe-live')
     expect(setup.setup.inputAudioTranscription).toEqual({
-      mode: 'smart',
+      mode: 'SMART',
       languageCodes: ['ru'],
     })
   })
@@ -281,7 +380,11 @@ describe('gemini-live-provider', () => {
       options: {},
       sampleRate: 16000,
       signal: new AbortController().signal,
-      audio: { async *[Symbol.asyncIterator]() {} },
+      audio: {
+        async *[Symbol.asyncIterator]() {
+          yield { data: new Uint8Array([0, 16]) }
+        },
+      },
     })
 
     const collected: unknown[] = []
@@ -327,7 +430,11 @@ describe('gemini-live-provider', () => {
       options: {},
       sampleRate: 16000,
       signal: new AbortController().signal,
-      audio: { async *[Symbol.asyncIterator]() {} },
+      audio: {
+        async *[Symbol.asyncIterator]() {
+          yield { data: new Uint8Array([0, 16]) }
+        },
+      },
     })
 
     const collected: unknown[] = []
@@ -365,7 +472,11 @@ describe('gemini-live-provider', () => {
       options: {},
       sampleRate: 16000,
       signal: new AbortController().signal,
-      audio: { async *[Symbol.asyncIterator]() {} },
+      audio: {
+        async *[Symbol.asyncIterator]() {
+          yield { data: new Uint8Array([0, 16]) }
+        },
+      },
     })
 
     await expect(async () => {

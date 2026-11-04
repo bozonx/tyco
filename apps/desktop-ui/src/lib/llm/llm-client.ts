@@ -1,3 +1,4 @@
+import type { z } from 'zod'
 import { errorMessage } from '@tyco/shared/value-guards'
 import {
   AiError,
@@ -71,6 +72,7 @@ export function isKeylessProvider(config: LlmConfig, providerId: string) {
 export type LlmRunName = LlmTask | 'chat'
 
 interface LlmCallOptions {
+  schema?: z.ZodType<unknown>
   /** The model id to use instead of the task's model; the chat passes its pick */
   modelId?: string
   signal?: AbortSignal
@@ -367,10 +369,10 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
         signal,
         deadline
       )
-      const result = await kit.generate(request)
+      const result = await kit.generate({ ...request, schema: options.schema })
       options.onModel?.({ provider: result.provider, model: result.model })
       ensureCompleteAnswer(result.finishReason, result.text)
-      return result.text
+      return options.schema ? JSON.stringify(result.object) : result.text
     } catch (error) {
       if (options.signal?.aborted) return ''
       if (signal.aborted) {
