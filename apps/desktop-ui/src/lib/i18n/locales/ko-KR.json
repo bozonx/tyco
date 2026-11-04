@@ -1208,6 +1208,7 @@
     "snippetsHint": "빠른 액세스 및 삽입을 위한 저장된 텍스트 조각입니다. 카드를 드래그하여 순서를 변경하세요.",
     "addSnippet": "스니펫 추가",
     "noSnippets": "아직 저장된 스니펫이 없습니다",
+    "snippetNamePlaceholder": "이름 (선택 사항)",
     "snippetTextPlaceholder": "스니펫 텍스트 입력…",
     "searchSnippetsPlaceholder": "스니펫 검색…",
     "hotkeyDescriptions": {}

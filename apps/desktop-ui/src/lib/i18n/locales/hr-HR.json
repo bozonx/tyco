@@ -1214,6 +1214,7 @@
     "snippetsHint": "Spremljeni fragmenti teksta za brzi pristup i umetanje. Povucite kartice za promjenu redoslijeda.",
     "addSnippet": "Dodaj isječak",
     "noSnippets": "Još nema spremljenih isječaka",
+    "snippetNamePlaceholder": "Naziv (neobavezno)",
     "snippetTextPlaceholder": "Unesite tekst isječka…",
     "searchSnippetsPlaceholder": "Pretraži isječke…",
     "hotkeyDescriptions": {}

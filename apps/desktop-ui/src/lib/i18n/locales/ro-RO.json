@@ -1214,6 +1214,7 @@
     "snippetsHint": "Fragmente de text salvate pentru acces și inserare rapidă. Trageți cardurile pentru a le reordona.",
     "addSnippet": "Adaugă fragment",
     "noSnippets": "Niciun fragment salvat încă",
+    "snippetNamePlaceholder": "Nume (opțional)",
     "snippetTextPlaceholder": "Introduceți textul fragmentului…",
     "searchSnippetsPlaceholder": "Căutați fragmente…",
     "hotkeyDescriptions": {}

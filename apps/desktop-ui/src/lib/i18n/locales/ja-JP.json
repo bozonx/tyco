@@ -1211,6 +1211,7 @@
     "snippetsHint": "すばやくアクセスして挿入するための保存されたテキスト。カードをドラッグして並べ替えます。",
     "addSnippet": "スニペットを追加",
     "noSnippets": "保存されたスニペットはまだありません",
+    "snippetNamePlaceholder": "名前（任意）",
     "snippetTextPlaceholder": "スニペットのテキストを入力…",
     "searchSnippetsPlaceholder": "スニペットを検索…",
     "hotkeyDescriptions": {}

@@ -1214,6 +1214,7 @@
     "snippetsHint": "Zapisane fragmenty tekstu do szybkiego dostępu i wstawiania. Przeciągaj karty, aby zmienić kolejność.",
     "addSnippet": "Dodaj wstawkę",
     "noSnippets": "Brak zapisanych wstawek",
+    "snippetNamePlaceholder": "Nazwa (opcjonalnie)",
     "snippetTextPlaceholder": "Wpisz tekst wstawki…",
     "searchSnippetsPlaceholder": "Szukaj wstawek…",
     "hotkeyDescriptions": {}

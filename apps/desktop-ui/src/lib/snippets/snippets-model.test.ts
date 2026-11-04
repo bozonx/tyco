@@ -86,13 +86,13 @@ describe('snippets-model', () => {
       })
     })
 
-    it('prepends new snippet to the front', () => {
+    it('appends new snippet to the end', () => {
       const result = addSnippet(sampleSnippets, 'New snippet text')
       expect(result.success).toBe(true)
       if (result.success) {
         expect(result.item.id).toBe('snippet-4')
         expect(result.item.text).toBe('New snippet text')
-        expect(result.items[0]).toEqual(result.item)
+        expect(result.items[3]).toEqual(result.item)
         expect(result.items).toHaveLength(4)
       }
     })

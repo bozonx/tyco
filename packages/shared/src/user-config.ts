@@ -212,6 +212,7 @@ export interface ChatPromptsConfig {
 export interface SnippetConfig {
   id: string
   text: string
+  name?: string
 }
 
 export interface SnippetsConfig {

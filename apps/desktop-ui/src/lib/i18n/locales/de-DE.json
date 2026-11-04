@@ -1214,6 +1214,7 @@
     "snippetsHint": "Gespeicherte Textfragmente für schnellen Zugriff und Einfügen. Ziehen Sie Karten, um sie neu anzuordnen.",
     "addSnippet": "Textbaustein hinzufügen",
     "noSnippets": "Noch keine Textbausteine gespeichert",
+    "snippetNamePlaceholder": "Name (optional)",
     "snippetTextPlaceholder": "Textbaustein eingeben…",
     "searchSnippetsPlaceholder": "Textbausteine suchen…",
     "hotkeyDescriptions": {}

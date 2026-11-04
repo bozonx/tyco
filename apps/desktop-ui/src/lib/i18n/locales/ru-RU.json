@@ -1211,6 +1211,7 @@
     "snippetsHint": "Сохраненные фрагменты текста для быстрого доступа и вставки. Перетаскивайте карточки для изменения порядка.",
     "addSnippet": "Добавить сниппет",
     "noSnippets": "Сниппетов пока нет",
+    "snippetNamePlaceholder": "Название (необязательно)",
     "snippetTextPlaceholder": "Введите текст сниппета…",
     "searchSnippetsPlaceholder": "Поиск сниппетов…",
     "hotkeyDescriptions": {}

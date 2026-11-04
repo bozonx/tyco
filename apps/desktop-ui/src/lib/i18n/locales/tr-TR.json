@@ -1211,6 +1211,7 @@
     "snippetsHint": "Hızlı erişim ve ekleme için kaydedilmiş metin parçacıkları. Sıralamayı değiştirmek için kartları sürükleyin.",
     "addSnippet": "Parçacık ekle",
     "noSnippets": "Henüz kaydedilmiş parçacık yok",
+    "snippetNamePlaceholder": "Ad (isteğe bağlı)",
     "snippetTextPlaceholder": "Parçacık metnini girin…",
     "searchSnippetsPlaceholder": "Parçacıkları ara…",
     "hotkeyDescriptions": {}

@@ -1214,6 +1214,7 @@
     "snippetsHint": "Fragmentos de texto guardados para acceso rápido e inserción. Arrastra las tarjetas para reordenarlas.",
     "addSnippet": "Añadir fragmento",
     "noSnippets": "Aún no hay fragmentos guardados",
+    "snippetNamePlaceholder": "Nombre (opcional)",
     "snippetTextPlaceholder": "Introduce el texto del fragmento…",
     "searchSnippetsPlaceholder": "Buscar fragmentos…",
     "hotkeyDescriptions": {}

@@ -1208,6 +1208,7 @@
     "snippetsHint": "Uložené textové fragmenty pro rychlý přístup a vložení. Přetažením karet změníte pořadí.",
     "addSnippet": "Přidat úryvek",
     "noSnippets": "Zatím žádné uložené úryvky",
+    "snippetNamePlaceholder": "Název (volitelné)",
     "snippetTextPlaceholder": "Zadejte text úryvku…",
     "searchSnippetsPlaceholder": "Hledat úryvky…",
     "hotkeyDescriptions": {}

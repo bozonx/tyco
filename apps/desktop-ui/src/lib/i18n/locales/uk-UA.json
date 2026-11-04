@@ -1211,6 +1211,7 @@
     "snippetsHint": "Збережені фрагменти тексту для швидкого доступу та вставки. Перетягуйте картки для зміни порядку.",
     "addSnippet": "Додати сніпет",
     "noSnippets": "Сніпетів поки немає",
+    "snippetNamePlaceholder": "Назва (необов’язково)",
     "snippetTextPlaceholder": "Введіть текст сніпета…",
     "searchSnippetsPlaceholder": "Пошук сніпетів…",
     "hotkeyDescriptions": {}

@@ -1214,6 +1214,7 @@
     "snippetsHint": "Saved text fragments for quick access and insertion. Drag cards to reorder.",
     "addSnippet": "Add snippet",
     "noSnippets": "No snippets saved yet",
+    "snippetNamePlaceholder": "Name (optional)",
     "snippetTextPlaceholder": "Enter snippet text…",
     "searchSnippetsPlaceholder": "Search snippets…",
     "hotkeyDescriptions": {}

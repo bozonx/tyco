@@ -1214,6 +1214,7 @@
     "snippetsHint": "Fragmentos de texto salvos para acesso e inserção rápidos. Arraste os cartões para reordenar.",
     "addSnippet": "Adicionar snippet",
     "noSnippets": "Nenhum snippet salvo ainda",
+    "snippetNamePlaceholder": "Nome (opcional)",
     "snippetTextPlaceholder": "Digite o texto do snippet…",
     "searchSnippetsPlaceholder": "Buscar snippets…",
     "hotkeyDescriptions": {}

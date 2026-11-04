@@ -1211,6 +1211,7 @@
     "snippetsHint": "Mentett szövegrészletek a gyors eléréshez és beillesztéshez. Húzza a kártyákat az átrendezéshez.",
     "addSnippet": "Szövegrészlet hozzáadása",
     "noSnippets": "Még nincsenek mentett szövegrészletek",
+    "snippetNamePlaceholder": "Név (nem kötelező)",
     "snippetTextPlaceholder": "Írja be a szövegrészletet…",
     "searchSnippetsPlaceholder": "Szövegrészletek keresése…",
     "hotkeyDescriptions": {}

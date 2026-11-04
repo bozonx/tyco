@@ -1211,6 +1211,7 @@
     "snippetsHint": "Жылдам қол жеткізу және кірістіру үшін сақталған мәтін үзінділері. Ретін өзгерту үшін карточкаларды сүйреңіз.",
     "addSnippet": "Сниппет қосу",
     "noSnippets": "Әзірше сақталған сниппеттер жоқ",
+    "snippetNamePlaceholder": "Атауы (міндетті емес)",
     "snippetTextPlaceholder": "Сниппет мәтінін енгізіңіз…",
     "searchSnippetsPlaceholder": "Сниппеттерді іздеу…",
     "hotkeyDescriptions": {}

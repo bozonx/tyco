@@ -46,6 +46,12 @@
               <span v-else class="snippet-slot-index">#{{ index + 1 }}</span>
             </div>
             <div class="snippet-card-content">
+              <FieldInput
+                :model-value="snippet.name ?? ''"
+                :placeholder="t('settings.snippetNamePlaceholder')"
+                :aria-label="t('settings.snippetNamePlaceholder')"
+                @update:model-value="updateSnippetName(index, $event)"
+              />
               <FieldPromptTextArea
                 :model-value="snippet.text"
                 :placeholder="t('settings.snippetTextPlaceholder')"
@@ -82,6 +88,7 @@ import {
 } from '../../lib/snippets/snippets-model'
 import Button from '../common/Button.vue'
 import DragHandle from '../common/DragHandle.vue'
+import FieldInput from '../common/FieldInput.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import IconButton from '../common/IconButton.vue'
 import KeyboardKey from '../common/KeyboardKey.vue'
@@ -133,6 +140,15 @@ function updateSnippetText(index: number, text: string) {
   const target = current[index]
   if (target) {
     current[index] = { ...target, text }
+    userConfig.value.snippets = { items: current }
+  }
+}
+
+function updateSnippetName(index: number, name: string) {
+  const current = [...snippets.value]
+  const target = current[index]
+  if (target) {
+    current[index] = { ...target, name }
     userConfig.value.snippets = { items: current }
   }
 }
@@ -218,6 +234,9 @@ function deleteSnippet(index: number) {
 .snippet-card-content {
   flex: 1 1 0%;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .snippet-card-actions {

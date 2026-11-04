@@ -6,7 +6,7 @@
         type="button"
         class="snippets-esc"
         :title="escTitle"
-        @click="close"
+        @click="handleEsc"
       >
         <KeyboardKey>Esc</KeyboardKey>
         <span>{{ escLabel }}</span>
@@ -66,6 +66,7 @@
             {{ SHORTCUT_SLOT_KEYS[index]?.toUpperCase() }}
           </KeyboardKey>
           <span v-else class="snippet-slot-index">#{{ index + 1 }}</span>
+          <span v-if="snippet.name" class="snippet-name">{{ snippet.name }}</span>
         </div>
         <div class="snippet-cell-text snippet-item-text">
           {{ snippet.text }}
@@ -115,19 +116,7 @@ const inputRef = ref<HTMLInputElement | null>(null)
 const gridRef = ref<HTMLDivElement | null>(null)
 const itemRefs = ref<(HTMLElement | null)[]>([])
 
-function close() {
-  menuModalsStore.cancelPending()
-  menuModalsStore.closeAll()
-  try {
-    void ipcStore.callOrNotify('hide_window')
-  } catch {
-    // Dev mode fallback
-  }
-}
-
-const { escLabel, escTitle, handleCloseAll } = useOverlayNav(() => ({
-  onEsc: close,
-}))
+const { escLabel, escTitle, handleEsc, handleCloseAll } = useOverlayNav()
 
 const setItemRef = (index: number, el: unknown) => {
   itemRefs.value[index] = el as HTMLElement | null
@@ -172,7 +161,9 @@ function onSearchKeyDown(event: KeyboardEvent) {
 
   if (event.key === 'Escape') {
     event.preventDefault()
-    close()
+    if (event.shiftKey) handleCloseAll()
+    else handleEsc()
+    event.stopPropagation()
     return
   }
 
@@ -209,7 +200,9 @@ function onGridKeyDown(event: KeyboardEvent) {
 
   if (event.key === 'Escape') {
     event.preventDefault()
-    close()
+    if (event.shiftKey) handleCloseAll()
+    else handleEsc()
+    event.stopPropagation()
     return
   }
 
@@ -491,6 +484,14 @@ onUnmounted(() => {
   justify-content: space-between;
   min-height: 1.5rem;
   flex-shrink: 0;
+}
+
+.snippet-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: var(--space-xs);
 }
 
 .snippet-slot-key {

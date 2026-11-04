@@ -1211,6 +1211,7 @@
     "snippetsHint": "შენახული ტექსტური ფრაგმენტები სწრაფი წვდომისა და ჩასმისთვის. გადაათრიეთ ბარათები რიგის შესაცვლელად.",
     "addSnippet": "სნიპეტის დამატება",
     "noSnippets": "სნიპეტები ჯერ არ არის შენახული",
+    "snippetNamePlaceholder": "სახელი (არასავალდებულო)",
     "snippetTextPlaceholder": "შეიყვანეთ სნიპეტის ტექსტი…",
     "searchSnippetsPlaceholder": "სნიპეტების ძიება…",
     "hotkeyDescriptions": {}

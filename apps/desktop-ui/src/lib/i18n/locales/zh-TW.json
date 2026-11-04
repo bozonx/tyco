@@ -1208,6 +1208,7 @@
     "snippetsHint": "儲存的文字片段，用於快速存取與插入。拖動卡片可重新排序。",
     "addSnippet": "新增片段",
     "noSnippets": "暫無已儲存的片段",
+    "snippetNamePlaceholder": "名稱（選填）",
     "snippetTextPlaceholder": "輸入片段內容…",
     "searchSnippetsPlaceholder": "搜尋片段…",
     "hotkeyDescriptions": {}

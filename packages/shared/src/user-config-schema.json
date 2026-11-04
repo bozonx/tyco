@@ -912,7 +912,8 @@
                 "maxLength": 64,
                 "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
               },
-              "text": { "type": "string", "default": "" }
+              "text": { "type": "string", "default": "" },
+              "name": { "type": "string" }
             },
             "required": ["id", "text"]
           },

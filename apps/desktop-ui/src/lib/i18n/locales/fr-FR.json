@@ -1214,6 +1214,7 @@
     "snippetsHint": "Fragments de texte enregistrés pour un accès et une insertion rapides. Faites glisser les cartes pour réorganiser.",
     "addSnippet": "Ajouter un extrait",
     "noSnippets": "Aucun extrait enregistré pour le moment",
+    "snippetNamePlaceholder": "Nom (facultatif)",
     "snippetTextPlaceholder": "Entrez le texte de l’extrait…",
     "searchSnippetsPlaceholder": "Rechercher des extraits…",
     "hotkeyDescriptions": {}

@@ -1214,6 +1214,7 @@
     "snippetsHint": "Frammenti di testo salvati per accesso e inserimento rapidi. Trascina le schede per riordinarle.",
     "addSnippet": "Aggiungi snippet",
     "noSnippets": "Nessuno snippet salvato",
+    "snippetNamePlaceholder": "Nome (facoltativo)",
     "snippetTextPlaceholder": "Inserisci il testo dello snippet…",
     "searchSnippetsPlaceholder": "Cerca snippet…",
     "hotkeyDescriptions": {}

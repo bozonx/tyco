@@ -32,7 +32,8 @@ export function filterSnippets(
     return [...snippets]
   }
   return snippets.filter((item) =>
-    item.text.toLowerCase().includes(normalizedQuery)
+    item.text.toLowerCase().includes(normalizedQuery) ||
+    (item.name ?? '').toLowerCase().includes(normalizedQuery)
   )
 }
 
@@ -40,7 +41,7 @@ export type AddSnippetResult =
   | { success: true; item: SnippetConfig; items: SnippetConfig[] }
   | { success: false; reason: 'empty' | 'duplicate' }
 
-/** Prepends a new snippet to the list if valid and non-duplicate. */
+/** Appends a new snippet to the list if valid and non-duplicate. */
 export function addSnippet(
   snippets: readonly SnippetConfig[],
   text: string
@@ -53,7 +54,7 @@ export function addSnippet(
     return { success: false, reason: 'duplicate' }
   }
   const item: SnippetConfig = { id: nextSnippetId(snippets), text }
-  return { success: true, item, items: [item, ...snippets] }
+  return { success: true, item, items: [...snippets, item] }
 }
 
 /** Updates the text of an existing snippet. */
