@@ -104,7 +104,7 @@ export const createGeminiLiveProvider =
         const isAuto = !language || language === 'auto' || language === 'multi'
 
         const transcriptionConfig: Record<string, unknown> = {
-          mode: 'SMART',
+          ...(manualEndpointing ? { mode: 'SMART' } : {}),
           ...(isAuto ? {} : { languageCodes: [language] }),
         }
 
@@ -150,6 +150,14 @@ export const createGeminiLiveProvider =
         })
         let audioEnded = false
         let closed = false
+        let drainTimer: ReturnType<typeof setTimeout> | undefined
+        const scheduleDrain = (ms = 1500) => {
+          if (!audioEnded || closed) return
+          clearTimeout(drainTimer)
+          drainTimer = setTimeout(() => {
+            resolveAudioComplete()
+          }, ms)
+        }
         let rejectFailure: (error: unknown) => void = () => {}
         const failure = new Promise<never>((_, reject) => {
           rejectFailure = reject
@@ -217,6 +225,7 @@ export const createGeminiLiveProvider =
               if (manualEndpointing) {
                 if (endpoint.active) sendActivity('activityEnd')
                 if (pendingTurns === 0) resolveAudioComplete()
+                else scheduleDrain()
               } else {
                 session.send(
                   JSON.stringify({ realtimeInput: { audioStreamEnd: true } })
@@ -261,6 +270,7 @@ export const createGeminiLiveProvider =
 
                 const content = message.serverContent
                 if (!content) continue
+                if (audioEnded) scheduleDrain()
                 if (content.turnComplete && manualEndpointing)
                   pendingTurns = Math.max(0, pendingTurns - 1)
                 const isLastTurn =
@@ -338,6 +348,7 @@ export const createGeminiLiveProvider =
               }
             } finally {
               closed = true
+              clearTimeout(drainTimer)
               request.signal.removeEventListener('abort', onAbort)
               rejectSetup(new Error('Session closed'))
               session.close()

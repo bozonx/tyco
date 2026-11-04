@@ -61,6 +61,23 @@ function isMinimalEdit(old: string, next: string): boolean {
   return row[next.length] / Math.max(old.length, next.length) <= 0.35
 }
 
+/** Whether newly added text warrants a contextual correction pass. */
+export function hasMeaningfulGrowth(
+  current: string,
+  previousSnapshot: string
+): boolean {
+  const trimmed = current.trim()
+  if (!trimmed) return false
+  if (!previousSnapshot) {
+    return /[.!?](\s|$)/.test(trimmed) || trimmed.length >= 60
+  }
+  const delta = current.startsWith(previousSnapshot)
+    ? current.slice(previousSnapshot.length).trim()
+    : trimmed
+  if (!delta) return false
+  return /[.!?](\s|$)/.test(delta) || delta.length >= 60
+}
+
 /** Owns one transcript, its raw source and one serialized correction request. */
 export function createContextualCorrectionModel(
   deps: ContextualCorrectionDependencies
@@ -71,13 +88,15 @@ export function createContextualCorrectionModel(
   let cancelled = false
   let finishing = false
   let lastRequestedRevision = -1
+  let lastRequestedSnapshot = ''
   let pending: Promise<void> | undefined
   let controller: AbortController | undefined
   let protectedRanges: Array<{ from: number; to: number }> = []
 
-  function apply(response: CorrectionResponse) {
+  function apply(response: CorrectionResponse, snapshot: string) {
     const replacements: Array<{ from: number; to: number; text: string }> = []
     for (const edit of response.edits) {
+      if (!snapshot.includes(edit.old)) continue
       const from = text.indexOf(edit.old)
       const to = from + edit.old.length
       if (
@@ -98,6 +117,7 @@ export function createContextualCorrectionModel(
         continue
       replacements.push({ from, to, text: edit.new })
     }
+    if (replacements.length === 0) return
     for (const replacement of replacements.sort((a, b) => b.from - a.from)) {
       text =
         text.slice(0, replacement.from) +
@@ -114,14 +134,27 @@ export function createContextualCorrectionModel(
     deps.onText(text)
   }
 
-  function launch(): Promise<void> {
-    if (cancelled || !text.trim() || revision === lastRequestedRevision)
+  function launch(callerSignal?: AbortSignal): Promise<void> {
+    if (
+      cancelled ||
+      callerSignal?.aborted ||
+      !text.trim() ||
+      text === lastRequestedSnapshot
+    )
       return Promise.resolve()
     const requestRevision = revision
     const snapshot = text
     lastRequestedRevision = requestRevision
+    lastRequestedSnapshot = snapshot
     const current = new AbortController()
     controller = current
+
+    const onCallerAbort = () => current.abort()
+    if (callerSignal) {
+      if (callerSignal.aborted) current.abort()
+      else callerSignal.addEventListener('abort', onCallerAbort, { once: true })
+    }
+
     let timeout: ReturnType<typeof setTimeout> | undefined
     let removeAbortListener = () => {}
     const aborted = new Promise<never>((_, reject) => {
@@ -138,22 +171,28 @@ export function createContextualCorrectionModel(
           deps.request(snapshot, current.signal),
           aborted,
         ])
-        if (cancelled || current.signal.aborted || requestRevision !== revision)
-          return
-        apply(CONTEXTUAL_CORRECTION_SCHEMA.parse(response))
+        if (cancelled || current.signal.aborted) return
+        apply(CONTEXTUAL_CORRECTION_SCHEMA.parse(response), snapshot)
       } catch (error) {
         if (!cancelled) deps.onError(error)
       } finally {
         clearTimeout(timeout)
         removeAbortListener()
+        if (callerSignal)
+          callerSignal.removeEventListener('abort', onCallerAbort)
       }
     })()
     pending = operation
     void operation.then(() => {
       if (pending !== operation) return
       pending = undefined
-      // Only growth during the request schedules another pass, never our own edits.
-      if (!cancelled && !finishing && revision !== requestRevision)
+      // Growth during the request schedules another pass, never our own edits.
+      if (
+        !cancelled &&
+        !finishing &&
+        revision !== requestRevision &&
+        hasMeaningfulGrowth(text, lastRequestedSnapshot)
+      )
         void launch()
     })
     return operation
@@ -161,14 +200,47 @@ export function createContextualCorrectionModel(
 
   function update(raw: string) {
     if (cancelled || raw === source) return
-    if (raw.startsWith(source)) text += raw.slice(source.length)
-    else if (!protectedRanges.length) {
-      text = raw
+    if (raw.startsWith(source)) {
+      text += raw.slice(source.length)
+    } else {
+      let commonLen = 0
+      while (
+        commonLen < source.length &&
+        commonLen < raw.length &&
+        source[commonLen] === raw[commonLen]
+      ) {
+        commonLen++
+      }
+      if (commonLen < source.length && source.trimEnd().length <= commonLen) {
+        commonLen = source.trimEnd().length
+      }
+      const rawAdded = raw.slice(commonLen)
+      if (commonLen === 0 && !protectedRanges.length && text === source) {
+        text = raw
+      } else {
+        const removedFromSource = source.length - commonLen
+        const safeSliceEnd = Math.max(0, text.length - removedFromSource)
+        const canTrimText = !protectedRanges.some((r) => r.to > safeSliceEnd)
+        if (
+          canTrimText &&
+          removedFromSource > 0 &&
+          text.endsWith(source.slice(commonLen))
+        ) {
+          text = text.slice(0, text.length - removedFromSource) + rawAdded
+        } else {
+          text += rawAdded
+        }
+      }
     }
     source = raw
     revision += 1
     deps.onText(text)
-    if (!finishing && !pending) void launch()
+    if (
+      !finishing &&
+      !pending &&
+      hasMeaningfulGrowth(text, lastRequestedSnapshot)
+    )
+      void launch()
   }
 
   return {
@@ -184,11 +256,26 @@ export function createContextualCorrectionModel(
       revision += 1
       deps.onText(text)
     },
-    async finish(raw: string) {
+    async finish(raw: string, signal?: AbortSignal) {
       finishing = true
       update(raw)
-      await pending
-      if (!cancelled) await launch()
+      if (pending) {
+        if (signal) {
+          await Promise.race([
+            pending,
+            new Promise<void>((resolve) => {
+              signal.addEventListener('abort', () => resolve(), { once: true })
+            }),
+          ])
+        } else {
+          await pending
+        }
+      }
+      if (!cancelled && (!signal || !signal.aborted)) {
+        if (revision !== lastRequestedRevision && text.trim()) {
+          await launch(signal)
+        }
+      }
       return text
     },
     cancel() {

@@ -57,7 +57,7 @@ describe('contextual correction', () => {
     }
   )
 
-  it('serializes requests and discards stale revisions, coalescing growth', async () => {
+  it('serializes requests and applies valid edits while coalescing growth', async () => {
     let resolve!: (value: unknown) => void
     const request = vi
       .fn()
@@ -76,7 +76,7 @@ describe('contextual correction', () => {
     resolve(response('Call Jon.', 'Call John.'))
     await vi.waitFor(() => expect(request).toHaveBeenCalledTimes(2))
     expect(await model.finish('Call Jon. Then wait. Continue.')).toBe(
-      'Call Jon. Then wait. Continue.'
+      'Call John. Then wait. Continue.'
     )
     expect(request).toHaveBeenCalledTimes(2)
   })
@@ -97,6 +97,34 @@ describe('contextual correction', () => {
     model.editText('Call Jon tomorrow.')
     resolve(response('Call Jon.', 'Call John.'))
     expect(await model.finish('Call Jon.')).toBe('Call Jon tomorrow.')
+  })
+
+  it('preserves subsequent spoken text after manual edits instead of dropping it', async () => {
+    const { model } = setup()
+    model.update('Initial speech.')
+    model.editText('Initial speech edited.')
+    // Subsequent speech adds more text
+    model.update('Initial speech. More speech.')
+    expect(await model.finish('Initial speech. More speech.')).toBe(
+      'Initial speech edited. More speech.'
+    )
+  })
+
+  it('preserves prior corrections across boundary and whitespace adjustments', async () => {
+    const { model } = setup(
+      vi
+        .fn()
+        .mockResolvedValueOnce(response('Call Jon.', 'Call John.'))
+        .mockResolvedValue({ edits: [] })
+    )
+    model.update('Call Jon.')
+    // Wait for correction to apply
+    await vi.waitFor(() => expect(model.text).toBe('Call John.'))
+    // New speech arrives where punctuation is glued or whitespace changes
+    model.update('Call Jon. Next sentence.')
+    expect(await model.finish('Call Jon. Next sentence.')).toBe(
+      'Call John. Next sentence.'
+    )
   })
 
   it('aborts cancellation and suppresses late delivery', async () => {

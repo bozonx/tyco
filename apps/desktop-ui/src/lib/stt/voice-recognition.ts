@@ -281,7 +281,10 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
               run: (postSignal: AbortSignal) =>
                 (async () => {
                   const text = correctContextually
-                    ? await correctContextually.finish(recognizedText)
+                    ? await correctContextually.finish(
+                        recognizedText,
+                        postSignal
+                      )
                     : recognizedText
                   if (postSignal.aborted) return text
                   return voiceStyling(text, styleRule, postSignal)
@@ -290,7 +293,8 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           : correctContextually
             ? {
                 pending: { correction: true },
-                run: () => correctContextually.finish(recognizedText),
+                run: (postSignal: AbortSignal) =>
+                  correctContextually.finish(recognizedText, postSignal),
               }
             : shouldFormatRecognizedText()
               ? {
@@ -341,8 +345,15 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
             })
           }
         } catch {
-          // the request has told the failure; the raw text goes on
+          // the request has told the failure; keep available contextual text
           if (!isCurrent()) return
+          if (correctContextually && correctContextually.text.trim()) {
+            resultText = correctContextually.text
+            correctedText = correctContextually.text
+            await deps.saveSourceResult(sourceId, resultText).catch(() => {
+              toastKey('history.operationFailed', 'error')
+            })
+          }
         } finally {
           timeout.stop()
           // a timeout is not the user's choice: a buffered intent still holds
@@ -427,6 +438,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     transcript.value = createLiveTranscriptState()
     lastTranscriptText = ''
     const generation = ++sessionGeneration
+    let hasReportedContextualError = false
     contextual?.cancel()
     contextual =
       deps.shouldCorrectContextually?.() && deps.contextualVoiceCorrection
@@ -438,8 +450,13 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
               transcript.value = { ...transcript.value, committed: text }
             },
             onError: () => {
-              if (generation === sessionGeneration)
+              if (
+                generation === sessionGeneration &&
+                !hasReportedContextualError
+              ) {
+                hasReportedContextualError = true
                 toastKey('toast.voiceContextualCorrectionFailed', 'error')
+              }
             },
           })
         : undefined

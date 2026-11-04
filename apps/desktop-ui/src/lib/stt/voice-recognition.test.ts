@@ -268,6 +268,67 @@ describe('voice recognition failures', () => {
     model.dispose()
   })
 
+  it('keeps intermediate contextual corrections when the final pass times out', async () => {
+    vi.useFakeTimers()
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce({
+        edits: [
+          {
+            old: 'Call Jon tomorrow.',
+            new: 'Call John tomorrow.',
+            reason: 'Misspelled name',
+          },
+        ],
+      })
+      .mockImplementationOnce(() => new Promise(() => {}))
+    const { model, deps, handlers } = await started({
+      shouldCorrectContextually: () => true,
+      contextualVoiceCorrection: request,
+      finishDictation: vi
+        .fn()
+        .mockResolvedValue('Call Jon tomorrow. More words.'),
+      postProcessTimeoutMs: 500,
+    })
+    handlers.onText({ committed: 'Call Jon tomorrow.', draft: '' })
+    await vi.waitFor(() =>
+      expect(model.transcript.value.committed).toBe('Call John tomorrow.')
+    )
+    const finishing = model.finish('insert')
+    await vi.advanceTimersByTimeAsync(500)
+    await finishing
+    expect(deps.toastKey).toHaveBeenCalledWith(
+      'toast.voicePostProcessTimeout',
+      'warn'
+    )
+    expect(deps.onCorrected).toHaveBeenCalledWith(
+      'Call John tomorrow. More words.',
+      'Call Jon tomorrow. More words.',
+      'Call John tomorrow. More words.',
+      'insert'
+    )
+    model.dispose()
+    vi.useRealTimers()
+  })
+
+  it('reports contextual correction error at most once per dictation session', async () => {
+    const request = vi.fn().mockRejectedValue(new Error('LLM down'))
+    const { model, deps, handlers } = await started({
+      shouldCorrectContextually: () => true,
+      contextualVoiceCorrection: request,
+    })
+    handlers.onText({ committed: 'First chunk.', draft: '' })
+    await vi.waitFor(() => expect(request).toHaveBeenCalledTimes(1))
+    handlers.onText({ committed: 'First chunk. Second chunk.', draft: '' })
+    await vi.waitFor(() => expect(request).toHaveBeenCalledTimes(2))
+    expect(deps.toastKey).toHaveBeenCalledTimes(1)
+    expect(deps.toastKey).toHaveBeenCalledWith(
+      'toast.voiceContextualCorrectionFailed',
+      'error'
+    )
+    model.dispose()
+  })
+
   it.each([
     [
       new DictationError('timeout', 'Slow'),

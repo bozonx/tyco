@@ -28,6 +28,13 @@ export interface LlmActionsDependencies {
   notifyEmptyText: () => void
 }
 
+export function extractJsonFromResponse(raw: string): unknown {
+  const trimmed = raw.trim()
+  const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
+  const candidate = fenceMatch ? fenceMatch[1].trim() : trimmed
+  return JSON.parse(candidate)
+}
+
 export function createLlmActions(deps: LlmActionsDependencies) {
   const { aiRequest } = deps
   const voiceCorrection = async (text: string, signal?: AbortSignal) => {
@@ -145,17 +152,33 @@ export function createLlmActions(deps: LlmActionsDependencies) {
       text: string,
       signal: AbortSignal
     ): Promise<unknown> => {
-      const response = await aiRequest(
-        LlmInstructionKind.VOICE_CORRECTION,
-        text,
-        {
-          instructions: CONTEXTUAL_CORRECTION_INSTRUCTION,
-          schema: CONTEXTUAL_CORRECTION_SCHEMA,
-          notifyError: false,
-          signal,
-        }
-      )
-      return CONTEXTUAL_CORRECTION_SCHEMA.parse(JSON.parse(response))
+      try {
+        const response = await aiRequest(
+          LlmInstructionKind.VOICE_CORRECTION,
+          text,
+          {
+            instructions: CONTEXTUAL_CORRECTION_INSTRUCTION,
+            schema: CONTEXTUAL_CORRECTION_SCHEMA,
+            notifyError: false,
+            signal,
+          }
+        )
+        return CONTEXTUAL_CORRECTION_SCHEMA.parse(JSON.parse(response))
+      } catch (error) {
+        if (signal.aborted) throw error
+        const fallbackResponse = await aiRequest(
+          LlmInstructionKind.VOICE_CORRECTION,
+          text,
+          {
+            instructions: `${CONTEXTUAL_CORRECTION_INSTRUCTION}\nReturn a valid raw JSON object with the format: {"edits": [{"old": "...", "new": "...", "reason": "..."}]}`,
+            notifyError: false,
+            signal,
+          }
+        )
+        return CONTEXTUAL_CORRECTION_SCHEMA.parse(
+          extractJsonFromResponse(fallbackResponse)
+        )
+      }
     },
     sendChatMessage,
     generateChatTitle,

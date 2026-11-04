@@ -72,6 +72,33 @@ describe('LLM application actions', () => {
     )
   })
 
+  it('falls back to instruction-guided JSON when structured schema output fails', async () => {
+    const f = fixture()
+    f.aiRequest
+      .mockRejectedValueOnce(new Error('Structured output schema unsupported'))
+      .mockResolvedValueOnce(
+        '```json\n{"edits":[{"old":"a","new":"b","reason":"typo"}]}\n```'
+      )
+    const signal = new AbortController().signal
+    expect(
+      await f.actions.contextualVoiceCorrection('Transcript', signal)
+    ).toEqual({ edits: [{ old: 'a', new: 'b', reason: 'typo' }] })
+    expect(f.aiRequest).toHaveBeenCalledTimes(2)
+    expect(f.aiRequest).toHaveBeenLastCalledWith(
+      'voiceCorrection',
+      'Transcript',
+      expect.objectContaining({
+        instructions: expect.stringContaining('Return a valid raw JSON object'),
+        signal,
+        notifyError: false,
+      })
+    )
+    const lastCall = f.aiRequest.mock.calls.at(-1) as unknown[] | undefined
+    expect(
+      (lastCall?.[2] as { schema?: unknown } | undefined)?.schema
+    ).toBeUndefined()
+  })
+
   it('preserves chat history, model and streaming options without mutating messages', async () => {
     const f = fixture()
     const history: ChatMessage[] = [{ role: 'assistant', content: 'Previous' }]

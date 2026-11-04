@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   createSmartEndpoint,
+  SMART_INTER_WORD_SILENCE_MS,
   SMART_MAX_UTTERANCE_MS,
   SMART_SILENCE_MS,
+  SMART_SOFT_MAX_UTTERANCE_MS,
 } from './smart-endpoint'
 
 function pcm(durationMs: number, value = 0) {
@@ -23,6 +25,19 @@ describe('SMART endpointing', () => {
     })
     expect(model.push(pcm(100, 1000))).toEqual({ start: true, end: false })
   })
+
+  it('ends on inter-word silence once past the soft maximum utterance duration', () => {
+    const model = createSmartEndpoint(16000)
+    expect(model.push(pcm(SMART_SOFT_MAX_UTTERANCE_MS, 1000))).toEqual({
+      start: true,
+      end: false,
+    })
+    expect(model.push(pcm(SMART_INTER_WORD_SILENCE_MS))).toEqual({
+      start: false,
+      end: true,
+    })
+  })
+
   it('bounds uninterrupted speech and handles silence without division by zero', () => {
     const model = createSmartEndpoint(16000)
     expect(model.push(pcm(SMART_MAX_UTTERANCE_MS, 1000))).toEqual({

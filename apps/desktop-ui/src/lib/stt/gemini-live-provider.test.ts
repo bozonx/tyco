@@ -66,6 +66,64 @@ describe('gemini-live-provider', () => {
     expect(close).toHaveBeenCalledOnce()
   })
 
+  it('drains and finishes when server omits turnComplete after audio ends', async () => {
+    vi.useFakeTimers()
+    try {
+      const messages = createAsyncQueue<string>()
+      const audio = createAsyncQueue<{ data: Uint8Array }>()
+      const close = vi.fn()
+      let endSent!: () => void
+      const ended = new Promise<void>((resolve) => {
+        endSent = resolve
+      })
+      const provider = createGeminiLiveProvider()({
+        apiKey: 'test-key',
+        openSocket: async () => ({
+          messages: messages.values,
+          close,
+          send: (raw) => {
+            if (JSON.parse(raw as string).realtimeInput?.activityEnd) endSent()
+          },
+        }),
+      })
+      const events = await provider.transcribeStream!({
+        modelId: 'gemini-3.5-transcribe-live',
+        options: {},
+        sampleRate: 16000,
+        signal: new AbortController().signal,
+        audio: audio.values,
+      })
+      const collected: unknown[] = []
+      const reading = (async () => {
+        for await (const event of events) {
+          collected.push(event)
+        }
+      })()
+      messages.push(JSON.stringify({ setupComplete: {} }))
+      // Send speech chunk, then end audio
+      audio.push({ data: new Uint8Array([0, 16]) })
+      audio.end()
+      await ended
+
+      // Server sends transcription without turnComplete
+      messages.push(
+        JSON.stringify({
+          serverContent: {
+            inputTranscription: { text: 'Only text without turnComplete' },
+          },
+        })
+      )
+      // Advance timers by drain duration (1500ms)
+      await vi.advanceTimersByTimeAsync(1500)
+      await reading
+
+      expect(collected).toHaveLength(1)
+      expect(close).toHaveBeenCalledOnce()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('finishes silent audio without sending empty activity turns or waiting for a reply', async () => {
     const messages = createAsyncQueue<string>()
     const sent: Record<string, unknown>[] = []

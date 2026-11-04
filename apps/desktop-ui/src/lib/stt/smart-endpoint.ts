@@ -1,6 +1,8 @@
 /** Initial local endpointing parameters, to be tuned on dictation recordings. */
 export const SMART_SILENCE_MS = 1500
+export const SMART_SOFT_MAX_UTTERANCE_MS = 25_000
 export const SMART_MAX_UTTERANCE_MS = 30_000
+export const SMART_INTER_WORD_SILENCE_MS = 300
 const SPEECH_RMS = 0.008
 
 /**
@@ -29,7 +31,10 @@ export function createSmartEndpoint(sampleRate: number) {
       durationMs += duration
       silenceMs = isSpeech ? 0 : silenceMs + duration
       const end =
-        silenceMs >= SMART_SILENCE_MS || durationMs >= SMART_MAX_UTTERANCE_MS
+        silenceMs >= SMART_SILENCE_MS ||
+        (durationMs >= SMART_SOFT_MAX_UTTERANCE_MS &&
+          silenceMs >= SMART_INTER_WORD_SILENCE_MS) ||
+        durationMs >= SMART_MAX_UTTERANCE_MS
       if (end) {
         active = false
         durationMs = 0
