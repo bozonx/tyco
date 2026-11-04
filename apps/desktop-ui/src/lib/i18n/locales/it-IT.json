@@ -302,7 +302,8 @@
     "editorModalTitle": "Editor di testo",
     "linesCount": "Righe: {count}",
     "charsCount": "Caratteri: {count}",
-    "done": "Fine"
+    "done": "Fine",
+    "closeAllHint": "Shift+Esc chiude tutto immediatamente"
   },
   "desktopErrors": {
     "busy": "È in corso un’altra operazione, riprova più tardi",

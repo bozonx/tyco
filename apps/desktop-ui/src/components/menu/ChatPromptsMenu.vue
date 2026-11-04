@@ -76,7 +76,7 @@ async function runPrompt(promptText: string) {
   await ipcStore.callOrNotify('open_main_chat', {
     attachment: trimmedText ? { text: trimmedText } : undefined,
     question: trimmedPrompt,
-    autoSend: true,
+    autoSend: false,
   })
 }
 

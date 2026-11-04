@@ -56,7 +56,18 @@ export function useAppRuntime() {
     keyboardPhase: 'bubble',
     dismiss: () => {},
     keydown: (event) => {
-      if (event.key === 'Escape') navPanelStore.handleKeyDown(event)
+      if (event.key === 'Escape') {
+        if (
+          event.shiftKey &&
+          !menuModalsStore.hasOpenModal &&
+          !menuModalsStore.pendingModal
+        ) {
+          event.preventDefault()
+          void ipcStore.callOrNotify('hide_window')
+          return
+        }
+        navPanelStore.handleKeyDown(event)
+      }
     },
   })
   const chatStore = useChatStore()

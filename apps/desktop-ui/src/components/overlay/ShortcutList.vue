@@ -40,6 +40,7 @@
           size="sm"
           :keys="[slot.key.toUpperCase()]"
           :icon="slot.action.icon"
+          :trailing-icon="slot.action.trailingIcon"
           :disabled="slot.action.disabled"
           :title="
             slot.action.hint
@@ -102,7 +103,7 @@ const props = withDefaults(
 
 const editorNavigation = useEditorNavigation()
 const { t } = useI18n()
-const { handleEsc } = useOverlayNav(() => ({
+const { handleEsc, handleCloseAll } = useOverlayNav(() => ({
   escMode: props.escMode,
   onEsc: props.escAction,
 }))
@@ -194,7 +195,11 @@ function handleShortcutKeyUp(event: KeyboardEvent) {
     goToEditor()
   } else if (event.code === 'Escape' && props.escVisible) {
     event.preventDefault()
-    handleEsc()
+    if (event.shiftKey) {
+      handleCloseAll()
+    } else {
+      handleEsc()
+    }
   } else {
     let codeLetter: string | undefined
     if (event.code.length === 4 && event.code.startsWith('Key')) {

@@ -9,5 +9,9 @@ export const useNavPanelStore = defineStore('navPanel', () => {
   return createNavPanelModel({
     hasOpenModal: () => menuModalsStore.hasOpenModal,
     backModal: () => menuModalsStore.back(),
+    closeAll: () => {
+      menuModalsStore.cancelPending()
+      menuModalsStore.closeAll()
+    },
   })
 })

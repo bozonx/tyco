@@ -302,7 +302,8 @@
     "editorModalTitle": "Edytor tekstu",
     "linesCount": "Wiersze: {count}",
     "charsCount": "Znaki: {count}",
-    "done": "Gotowe"
+    "done": "Gotowe",
+    "closeAllHint": "Shift+Esc natychmiast zamyka wszystko"
   },
   "desktopErrors": {
     "busy": "Trwa inna operacja, spróbuj później",

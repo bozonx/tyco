@@ -17,6 +17,12 @@
     <span class="shortcut-label">
       <slot />
     </span>
+    <AppIcon
+      v-if="trailingIcon"
+      :icon="trailingIcon"
+      size="md"
+      class="shortcut-trailing-icon"
+    />
   </button>
 </template>
 
@@ -29,11 +35,18 @@ withDefaults(
   defineProps<{
     keys: string[]
     icon?: string
+    trailingIcon?: string
     disabled?: boolean
     variant?: 'primary' | 'ghost'
     size?: ControlSize
   }>(),
-  { icon: undefined, disabled: false, variant: 'ghost', size: 'md' }
+  {
+    icon: undefined,
+    trailingIcon: undefined,
+    disabled: false,
+    variant: 'ghost',
+    size: 'md',
+  }
 )
 
 const emit = defineEmits<{ (e: 'click'): void }>()
@@ -99,6 +112,14 @@ const emit = defineEmits<{ (e: 'click'): void }>()
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.shortcut-trailing-icon {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--app-text-muted);
 }
 
 .shortcut.is-primary {

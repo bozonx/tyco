@@ -46,4 +46,25 @@ describe('createNavPanelModel', () => {
     model.handleKeyDown({ code: 'Escape', defaultPrevented: true })
     expect(onEscape).toHaveBeenCalledOnce()
   })
+
+  it('closes all modals when Shift+Escape is pressed', () => {
+    const closeAll = vi.fn()
+    const backModal = vi.fn()
+    const onEscape = vi.fn()
+    const model = createNavPanelModel({
+      hasOpenModal: () => true,
+      backModal,
+      closeAll,
+    })
+    model.resetNavPanelState({ onEscape })
+
+    model.handleKeyDown({
+      code: 'Escape',
+      shiftKey: true,
+      defaultPrevented: false,
+    })
+    expect(closeAll).toHaveBeenCalledOnce()
+    expect(backModal).not.toHaveBeenCalled()
+    expect(onEscape).not.toHaveBeenCalled()
+  })
 })

@@ -208,7 +208,9 @@ const desktopStore = useDesktopStore()
 const tools = useToolsStore()
 const voice = useVoiceCommandsStore()
 const releaseHold = useQuickDismissStore().hold()
-const { handleEsc } = useOverlayNav(() => ({ escMode: 'close' }))
+const { handleEsc, handleCloseAll } = useOverlayNav(() => ({
+  escMode: 'close',
+}))
 
 const textRef = ref<TextControl | null>(null)
 const { audioLevel, audioPeak, recordingDurationMs } = useVoiceRecordingMeter(
@@ -302,9 +304,13 @@ const pick = (entry: VoiceCatalogEntry) => {
   }
 }
 
-const close = () => {
+const close = (isShift: boolean | MouseEvent = false) => {
   void voice.cancel()
-  handleEsc()
+  if (typeof isShift === 'boolean' && isShift) {
+    handleCloseAll()
+  } else {
+    handleEsc()
+  }
 }
 
 watch(
@@ -347,7 +353,7 @@ const onKeyDown = (event: KeyboardEvent) => {
   if (event.repeat || event.isComposing || event.keyCode === 229) return
   if (event.code === 'Escape') {
     event.preventDefault()
-    close()
+    close(event.shiftKey)
     return
   }
   if (voice.stage === 'recording') {

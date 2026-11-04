@@ -302,7 +302,8 @@
     "editorModalTitle": "ტექსტის რედაქტორი",
     "linesCount": "ხაზები: {count}",
     "charsCount": "სიმბოლოები: {count}",
-    "done": "მზადაა"
+    "done": "მზადაა",
+    "closeAllHint": "Shift+Esc ყველაფერს დაუყოვნებლივ ხურავს"
   },
   "desktopErrors": {
     "busy": "მიმდინარეობს სხვა ოპერაცია, სცადეთ მოგვიანებით",

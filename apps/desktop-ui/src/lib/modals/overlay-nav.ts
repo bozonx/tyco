@@ -9,6 +9,7 @@ export interface OverlayNavDependencies {
   t: (key: string) => string
   goBack: () => void
   hideWindow: () => void
+  closeAll?: () => void
 }
 
 export interface OverlayNavOptions {
@@ -66,6 +67,8 @@ export function createOverlayNavModel(
       : deps.t('common.close')
   })
 
+  const escTitle = computed<string>(() => deps.t('common.closeAllHint'))
+
   const handleEsc = () => {
     const opts = options()
     if (opts.onEsc) {
@@ -80,5 +83,13 @@ export function createOverlayNavModel(
     }
   }
 
-  return { resolvedEscMode, escLabel, handleEsc }
+  const handleCloseAll = () => {
+    if (deps.closeAll) {
+      deps.closeAll()
+    } else {
+      deps.hideWindow()
+    }
+  }
+
+  return { resolvedEscMode, escLabel, escTitle, handleEsc, handleCloseAll }
 }

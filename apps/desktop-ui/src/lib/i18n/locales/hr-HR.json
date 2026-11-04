@@ -302,7 +302,8 @@
     "editorModalTitle": "Uređivač teksta",
     "linesCount": "Redaka: {count}",
     "charsCount": "Znakova: {count}",
-    "done": "Gotovo"
+    "done": "Gotovo",
+    "closeAllHint": "Shift+Esc odmah zatvara sve"
   },
   "desktopErrors": {
     "busy": "U tijeku je druga operacija, pokušajte kasnije",

@@ -184,6 +184,14 @@ describe('InsertMenu correction step', () => {
     await wrapper.vm.$nextTick()
     expect(actionMenuStore.pageIndex).toBe(0)
     expect(wrapper.find('.preview-area').exists()).toBe(true)
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }))
+    await wrapper.vm.$nextTick()
+    expect(actionMenuStore.pageIndex).toBe(1)
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }))
+    await wrapper.vm.$nextTick()
+    expect(actionMenuStore.pageIndex).toBe(0)
   })
 })
 

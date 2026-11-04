@@ -302,7 +302,8 @@
     "editorModalTitle": "Текстовий редактор",
     "linesCount": "Рядків: {count}",
     "charsCount": "Символів: {count}",
-    "done": "Готово"
+    "done": "Готово",
+    "closeAllHint": "Shift+Esc закриває все відразу"
   },
   "desktopErrors": {
     "busy": "Виконується інша операція, спробуйте пізніше",

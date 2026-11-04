@@ -302,7 +302,8 @@
     "editorModalTitle": "Szövegszerkesztő",
     "linesCount": "Sorok: {count}",
     "charsCount": "Karakterek: {count}",
-    "done": "Kész"
+    "done": "Kész",
+    "closeAllHint": "A Shift+Esc azonnal bezár mindent"
   },
   "desktopErrors": {
     "busy": "Egy másik művelet fut, próbálja később",

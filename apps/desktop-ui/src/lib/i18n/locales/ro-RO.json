@@ -302,7 +302,8 @@
     "editorModalTitle": "Editor de text",
     "linesCount": "Linii: {count}",
     "charsCount": "Caractere: {count}",
-    "done": "Gata"
+    "done": "Gata",
+    "closeAllHint": "Shift+Esc închide totul imediat"
   },
   "desktopErrors": {
     "busy": "Altă operație este în curs, încercați mai târziu",

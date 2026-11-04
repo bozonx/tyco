@@ -302,7 +302,8 @@
     "editorModalTitle": "文字編輯器",
     "linesCount": "行數: {count}",
     "charsCount": "字元數: {count}",
-    "done": "完成"
+    "done": "完成",
+    "closeAllHint": "Shift+Esc 立即關閉所有內容"
   },
   "desktopErrors": {
     "busy": "另一項操作正在進行，請稍後重試",

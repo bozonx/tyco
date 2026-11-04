@@ -302,7 +302,8 @@
     "editorModalTitle": "Textový editor",
     "linesCount": "Řádky: {count}",
     "charsCount": "Znaky: {count}",
-    "done": "Hotovo"
+    "done": "Hotovo",
+    "closeAllHint": "Shift+Esc okamžitě zavře vše"
   },
   "desktopErrors": {
     "busy": "Probíhá jiná operace, zkuste to později",

@@ -39,6 +39,7 @@ export interface ActionItem extends Contribution {
   label?: string
   labelKey?: string
   icon?: string
+  trailingIcon?: string
   disabled?: boolean
   hint?: string
   useFullEditorText?: boolean

@@ -302,7 +302,8 @@
     "editorModalTitle": "Texteditor",
     "linesCount": "Zeilen: {count}",
     "charsCount": "Zeichen: {count}",
-    "done": "Fertig"
+    "done": "Fertig",
+    "closeAllHint": "Shift+Esc schließt sofort alles"
   },
   "desktopErrors": {
     "busy": "Ein anderer Vorgang läuft, bitte später erneut versuchen",

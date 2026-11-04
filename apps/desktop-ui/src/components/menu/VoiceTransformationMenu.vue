@@ -44,6 +44,7 @@
           variant="ghost"
           :keys="['Esc']"
           :icon="resolvedEscMode === 'back' ? 'mdi:arrow-left' : 'mdi:close'"
+          :title="escTitle"
           :disabled="isFinishing"
           @click="handleClose"
         >
@@ -97,6 +98,7 @@ const editorNavigation = useEditorNavigation()
 const {
   resolvedEscMode,
   escLabel,
+  escTitle,
   handleEsc: defaultHandleEsc,
 } = useOverlayNav()
 

@@ -152,7 +152,15 @@ const { diffMode, stepMode } = usePersistedDiffMode()
 const statusVisible = computed(() => props.isCorrectionUnchanged)
 
 useViewModeArrowKeys((step) => {
-  if (hasDiff.value) stepMode(step)
+  if (hasDiff.value) {
+    stepMode(step)
+  } else if (actionMenuStore.pageCount > 1) {
+    if (step === 1) {
+      actionMenuStore.nextPage()
+    } else if (step === -1) {
+      actionMenuStore.prevPage()
+    }
+  }
 })
 
 const isShowingOriginal = computed(

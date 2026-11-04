@@ -44,6 +44,23 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
     }
   }
 
+  const closeAll = () => {
+    menuModalsStore.cancelPending()
+    menuModalsStore.closeAll()
+    try {
+      if (isQuickWindow()) {
+        const mode = desktopStore.desktopState?.mode
+        if (mode === 'quickInput') quickInputStore.discard()
+        if (mode === 'voice') voiceResultStore.step.resetResult()
+        void ipcStore.callOrNotify('hide_window')
+      } else {
+        void ipcStore.callOrNotify('hide_window')
+      }
+    } catch {
+      // Dev mode fallback
+    }
+  }
+
   return createOverlayNavModel(
     {
       currentModal: () => menuModalsStore.currentModal,
@@ -54,6 +71,7 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
       t,
       goBack,
       hideWindow,
+      closeAll,
     },
     options
   )

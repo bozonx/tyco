@@ -302,7 +302,8 @@
     "editorModalTitle": "Επεξεργαστής κειμένου",
     "linesCount": "Γραμμές: {count}",
     "charsCount": "Χαρακτήρες: {count}",
-    "done": "Τέλος"
+    "done": "Τέλος",
+    "closeAllHint": "Το Shift+Esc κλείνει τα πάντα αμέσως"
   },
   "desktopErrors": {
     "busy": "Εκτελείται άλλη λειτουργία, δοκιμάστε αργότερα",

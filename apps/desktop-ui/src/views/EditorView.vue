@@ -59,6 +59,11 @@ useDismissibleLayer({
 
 function handleKeyDown(event: KeyboardEvent) {
   if (event.defaultPrevented) return
+  if (event.key === 'Escape' && event.shiftKey) {
+    event.preventDefault()
+    void closeEditor()
+    return
+  }
   if (menuModalsStore.hasOpenModal || menuModalsStore.pendingModal) return
   // Enter breaks lines in the editor whatever the submit key is
   if (isCtrlEnter(event)) {

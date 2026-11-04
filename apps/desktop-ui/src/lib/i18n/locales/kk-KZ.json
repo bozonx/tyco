@@ -302,7 +302,8 @@
     "editorModalTitle": "Мәтін редакторы",
     "linesCount": "Жолдар: {count}",
     "charsCount": "Таңбалар: {count}",
-    "done": "Дайын"
+    "done": "Дайын",
+    "closeAllHint": "Shift+Esc бәрін бірден жабады"
   },
   "desktopErrors": {
     "busy": "Басқа операция орындалуда, кейінірек қайталаңыз",

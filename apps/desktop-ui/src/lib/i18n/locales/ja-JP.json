@@ -302,7 +302,8 @@
     "editorModalTitle": "テキストエディター",
     "linesCount": "行数: {count}",
     "charsCount": "文字数: {count}",
-    "done": "完了"
+    "done": "完了",
+    "closeAllHint": "Shift+Esc で直ちにすべてを閉じます"
   },
   "desktopErrors": {
     "busy": "別の操作を実行中です。後でもう一度お試しください",

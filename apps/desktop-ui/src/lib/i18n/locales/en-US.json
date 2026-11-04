@@ -302,7 +302,8 @@
     "editorModalTitle": "Text editor",
     "linesCount": "Lines: {count}",
     "charsCount": "Characters: {count}",
-    "done": "Done"
+    "done": "Done",
+    "closeAllHint": "Shift+Esc closes everything immediately"
   },
   "desktopErrors": {
     "busy": "Busy with another operation, try again later",

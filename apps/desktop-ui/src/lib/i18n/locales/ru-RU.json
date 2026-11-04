@@ -302,7 +302,8 @@
     "editorModalTitle": "Редактор текста",
     "linesCount": "Строк: {count}",
     "charsCount": "Символов: {count}",
-    "done": "Готово"
+    "done": "Готово",
+    "closeAllHint": "Shift+Esc закрывает всё сразу"
   },
   "desktopErrors": {
     "busy": "Выполняется другая операция, попробуйте позже",

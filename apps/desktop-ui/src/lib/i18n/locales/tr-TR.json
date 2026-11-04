@@ -302,7 +302,8 @@
     "editorModalTitle": "Metin düzenleyici",
     "linesCount": "Satır: {count}",
     "charsCount": "Karakter: {count}",
-    "done": "Bitti"
+    "done": "Bitti",
+    "closeAllHint": "Shift+Esc her şeyi hemen kapatır"
   },
   "desktopErrors": {
     "busy": "Başka bir işlem sürüyor, daha sonra tekrar deneyin",

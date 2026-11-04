@@ -302,7 +302,8 @@
     "editorModalTitle": "텍스트 편집기",
     "linesCount": "줄: {count}",
     "charsCount": "글자 수: {count}",
-    "done": "완료"
+    "done": "완료",
+    "closeAllHint": "Shift+Esc는 즉시 모든 것을 닫습니다"
   },
   "desktopErrors": {
     "busy": "다른 작업이 진행 중입니다. 나중에 다시 시도하세요",

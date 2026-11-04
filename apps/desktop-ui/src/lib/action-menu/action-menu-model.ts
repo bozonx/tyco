@@ -15,7 +15,6 @@ import {
 } from '@tyco/shared'
 
 import {
-  commandIcon,
   commandLabel,
   commandTakesText,
   isMenuCommand,
@@ -90,7 +89,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
   const createCommandActionItem = (command: CommandConfig): ActionItem => ({
     id: `command:${command.id}`,
     name: commandLabel(command),
-    icon: commandIcon(command, deps.tools),
+    icon: 'mdi:console-line',
     action: async (text: string) => {
       if (commandTakesText(command, deps.tools)) await deps.saveOutput(text)
       await commandRunner.run(command, text, { source: 'menu' })
@@ -203,6 +202,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           id: 'transformationMenu',
           labelKey: 'action.transformationMenu',
           icon: 'mdi:auto-fix',
+          trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
             if (!text?.trim()) {
               deps.showToast('toast.textNotSelected', 'error')
@@ -215,6 +215,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           id: 'customTransformation',
           labelKey: 'action.customTransformation',
           icon: 'mdi:pencil-outline',
+          trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
             if (!text?.trim()) {
               deps.showToast('toast.textNotSelected', 'error')
@@ -227,6 +228,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           id: 'voiceTransformation',
           labelKey: 'action.voiceTransformation',
           icon: 'mdi:microphone-outline',
+          trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
             if (!text?.trim()) {
               deps.showToast('toast.textNotSelected', 'error')
@@ -239,6 +241,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           id: 'stylingMenu',
           labelKey: 'action.stylingMenu',
           icon: 'mdi:palette-outline',
+          trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
             if (!text?.trim()) {
               deps.showToast('toast.textNotSelected', 'error')
@@ -251,6 +254,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           id: 'chatPromptsMenu',
           labelKey: 'action.chatPromptsMenu',
           icon: 'mdi:lightning-bolt-outline',
+          trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
             if (!text?.trim()) {
               deps.showToast('toast.textNotSelected', 'error')
@@ -269,6 +273,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           id: 'translationMenu',
           labelKey: 'action.translationMenu',
           icon: 'mdi:translate',
+          trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
             if (!text?.trim()) {
               deps.showToast('toast.textNotSelected', 'error')

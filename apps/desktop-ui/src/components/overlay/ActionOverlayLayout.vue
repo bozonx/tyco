@@ -17,6 +17,7 @@
           v-if="escVisible"
           type="button"
           class="action-overlay-esc"
+          :title="escTitle"
           @click="handleEsc"
         >
           <KeyboardKey>Esc</KeyboardKey>
@@ -64,7 +65,7 @@ const props = withDefaults(
   }
 )
 
-const { escLabel, handleEsc } = useOverlayNav(() => ({
+const { escLabel, escTitle, handleEsc } = useOverlayNav(() => ({
   escMode: props.escMode,
   escLabel: props.escLabel,
   onEsc: props.onEsc,

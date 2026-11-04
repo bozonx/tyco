@@ -91,7 +91,7 @@ describe('ChatPromptsMenu', () => {
       expect.objectContaining({
         attachment: { text: 'Some sample text' },
         question: 'Summarize this in 3 bullet points',
-        autoSend: true,
+        autoSend: false,
       })
     )
   })

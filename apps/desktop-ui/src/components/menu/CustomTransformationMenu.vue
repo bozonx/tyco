@@ -62,7 +62,7 @@ const runStep = useMenuStepRun()
 const { t } = useI18n()
 const chatStore = useChatStore()
 const chatInputStore = useChatInputStore()
-const { escLabel, handleEsc } = useOverlayNav()
+const { escLabel, escTitle, handleEsc } = useOverlayNav()
 const editorNavigation = useEditorNavigation()
 
 const prompt = ref('')
@@ -109,7 +109,12 @@ const promptHints = computed<QueryPanelHint[]>(() => [
         },
       ]
     : []),
-  { keys: ['Esc'], label: escLabel.value, action: close },
+  {
+    keys: ['Esc'],
+    label: escLabel.value,
+    title: escTitle.value,
+    action: close,
+  },
 ])
 
 function goToEditor() {
