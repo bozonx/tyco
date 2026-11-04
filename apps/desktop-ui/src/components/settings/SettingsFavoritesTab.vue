@@ -1,8 +1,8 @@
 <template>
   <div class="settings-stack">
     <SettingsSection
-      :title="t('settings.snippetsTab')"
-      :info="t('settings.snippetsHint')"
+      :title="t('settings.favoritesTab')"
+      :info="t('settings.favoritesHint')"
       bare
     >
       <template #actions>
@@ -10,63 +10,63 @@
           variant="primary"
           size="sm"
           icon="mdi:plus"
-          @click="addNewSnippet"
+          @click="addNewFavorite"
         >
-          {{ t('settings.addSnippet') }}
+          {{ t('settings.addFavorite') }}
         </Button>
       </template>
 
-      <div class="snippets-tab">
+      <div class="favorites-tab">
         <StateMessage
-          v-if="!snippets.length"
-          class="snippets-empty"
-          :message="t('settings.noSnippets')"
+          v-if="!favorites.length"
+          class="favorites-empty"
+          :message="t('settings.noFavorites')"
         />
 
-        <div v-else ref="listRef" class="snippets-list">
+        <div v-else ref="listRef" class="favorites-list">
           <div
-            v-for="(snippet, index) in snippets"
-            :key="snippet.id"
+            v-for="(favorite, index) in favorites"
+            :key="favorite.id"
             data-sortable-item
-            class="snippet-card"
+            class="favorite-card"
             :class="{
               'is-sorting': isSorting,
               'is-dragged': draggedIndex === index,
-              'is-empty': !snippet.text?.trim(),
+              'is-empty': !favorite.text?.trim(),
             }"
             :style="itemStyle(index)"
           >
-            <div class="snippet-card-drag">
+            <div class="favorite-card-drag">
               <DragHandle @drag="startDrag(index, $event)" />
             </div>
-            <div class="snippet-card-key">
-              <KeyboardKey v-if="index < 15" class="snippet-slot-key">
+            <div class="favorite-card-key">
+              <KeyboardKey v-if="index < 15" class="favorite-slot-key">
                 {{ SHORTCUT_SLOT_KEYS[index]?.toUpperCase() }}
               </KeyboardKey>
-              <span v-else class="snippet-slot-index">#{{ index + 1 }}</span>
+              <span v-else class="favorite-slot-index">#{{ index + 1 }}</span>
             </div>
-            <div class="snippet-card-content">
+            <div class="favorite-card-content">
               <FieldInput
-                :model-value="snippet.name ?? ''"
-                :placeholder="t('settings.snippetNamePlaceholder')"
-                :aria-label="t('settings.snippetNamePlaceholder')"
-                @update:model-value="updateSnippetName(index, $event)"
+                :model-value="favorite.name ?? ''"
+                :placeholder="t('settings.favoriteNamePlaceholder')"
+                :aria-label="t('settings.favoriteNamePlaceholder')"
+                @update:model-value="updateFavoriteName(index, $event)"
               />
               <FieldPromptTextArea
-                :model-value="snippet.text"
-                :placeholder="t('settings.snippetTextPlaceholder')"
-                :aria-label="t('settings.snippetTextPlaceholder')"
-                :modal-title="t('settings.snippetsTab')"
-                @update:model-value="updateSnippetText(index, $event)"
+                :model-value="favorite.text"
+                :placeholder="t('settings.favoriteTextPlaceholder')"
+                :aria-label="t('settings.favoriteTextPlaceholder')"
+                :modal-title="t('settings.favoritesTab')"
+                @update:model-value="updateFavoriteText(index, $event)"
               />
             </div>
-            <div class="snippet-card-actions">
+            <div class="favorite-card-actions">
               <IconButton
                 size="sm"
                 variant="ghost"
                 icon="mdi:trash-can-outline"
                 :label="t('common.delete')"
-                @click="deleteSnippet(index)"
+                @click="deleteFavorite(index)"
               />
             </div>
           </div>
@@ -83,9 +83,9 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import { useSortableList } from '../../composables/use-sortable-list'
 import {
-  nextSnippetId,
-  reorderSnippets,
-} from '../../lib/snippets/snippets-model'
+  nextFavoriteId,
+  reorderFavorites,
+} from '../../lib/favorites/favorites-model'
 import Button from '../common/Button.vue'
 import DragHandle from '../common/DragHandle.vue'
 import FieldInput from '../common/FieldInput.vue'
@@ -94,22 +94,22 @@ import IconButton from '../common/IconButton.vue'
 import KeyboardKey from '../common/KeyboardKey.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsSection from './SettingsSection.vue'
-import { SHORTCUT_SLOT_KEYS, type SnippetConfig } from '@tyco/shared'
+import { type FavoriteConfig, SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig } = useSettingsContext()
 
 const listRef = ref<HTMLElement | null>(null)
 
-const snippets = computed<SnippetConfig[]>(
-  () => userConfig.value.snippets?.items ?? []
+const favorites = computed<FavoriteConfig[]>(
+  () => userConfig.value.favorites?.items ?? []
 )
 
 const { draggedIndex, isSorting, startDrag, itemOffset } = useSortableList(
   listRef,
   (from, to) => {
-    const next = reorderSnippets(snippets.value, from, to)
-    userConfig.value.snippets = { items: next }
+    const next = reorderFavorites(favorites.value, from, to)
+    userConfig.value.favorites = { items: next }
   }
 )
 
@@ -119,13 +119,13 @@ const itemStyle = (index: number): CSSProperties | undefined => {
   return { transform: `translate3d(0, ${offset}px, 0)` }
 }
 
-function addNewSnippet() {
-  const nextId = nextSnippetId(snippets.value)
-  userConfig.value.snippets = {
-    items: [...snippets.value, { id: nextId, text: '' }],
+function addNewFavorite() {
+  const nextId = nextFavoriteId(favorites.value)
+  userConfig.value.favorites = {
+    items: [...favorites.value, { id: nextId, text: '' }],
   }
   void nextTick(() => {
-    const cards = listRef.value?.querySelectorAll('.snippet-card')
+    const cards = listRef.value?.querySelectorAll('.favorite-card')
     const lastCard = cards?.[cards.length - 1] as HTMLElement | undefined
     if (lastCard) {
       lastCard.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' })
@@ -135,45 +135,45 @@ function addNewSnippet() {
   })
 }
 
-function updateSnippetText(index: number, text: string) {
-  const current = [...snippets.value]
+function updateFavoriteText(index: number, text: string) {
+  const current = [...favorites.value]
   const target = current[index]
   if (target) {
     current[index] = { ...target, text }
-    userConfig.value.snippets = { items: current }
+    userConfig.value.favorites = { items: current }
   }
 }
 
-function updateSnippetName(index: number, name: string) {
-  const current = [...snippets.value]
+function updateFavoriteName(index: number, name: string) {
+  const current = [...favorites.value]
   const target = current[index]
   if (target) {
     current[index] = { ...target, name }
-    userConfig.value.snippets = { items: current }
+    userConfig.value.favorites = { items: current }
   }
 }
 
-function deleteSnippet(index: number) {
-  const current = [...snippets.value]
+function deleteFavorite(index: number) {
+  const current = [...favorites.value]
   current.splice(index, 1)
-  userConfig.value.snippets = { items: current }
+  userConfig.value.favorites = { items: current }
 }
 </script>
 
 <style scoped>
-.snippets-tab {
+.favorites-tab {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
 }
 
-.snippets-list {
+.favorites-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
 }
 
-.snippet-card {
+.favorite-card {
   display: flex;
   align-items: flex-start;
   gap: var(--space-xs);
@@ -186,14 +186,14 @@ function deleteSnippet(index: number) {
     opacity var(--transition-fast);
 }
 
-.snippet-card.is-sorting {
+.favorite-card.is-sorting {
   transition:
     border-color var(--transition-fast),
     box-shadow var(--transition-fast),
     transform var(--transition-base);
 }
 
-.snippet-card.is-dragged {
+.favorite-card.is-dragged {
   position: relative;
   z-index: 1;
   box-shadow: var(--app-shadow-lg);
@@ -201,18 +201,18 @@ function deleteSnippet(index: number) {
   transition: none;
 }
 
-.snippet-card.is-empty {
+.favorite-card.is-empty {
   border-color: color-mix(in oklab, var(--color-primary) 70%, transparent);
   box-shadow: 0 0 0 2px
     color-mix(in oklab, var(--color-primary) 25%, transparent);
 }
 
-.snippet-card-drag {
+.favorite-card-drag {
   padding-top: var(--space-xs);
   flex-shrink: 0;
 }
 
-.snippet-card-key {
+.favorite-card-key {
   padding-top: var(--space-xs);
   flex-shrink: 0;
   display: flex;
@@ -221,17 +221,17 @@ function deleteSnippet(index: number) {
   min-width: 1.75rem;
 }
 
-.snippet-slot-key {
+.favorite-slot-key {
   --key-size: 1.5rem;
 }
 
-.snippet-slot-index {
+.favorite-slot-index {
   font-size: var(--text-caption);
   color: var(--app-text-muted);
   user-select: none;
 }
 
-.snippet-card-content {
+.favorite-card-content {
   flex: 1 1 0%;
   min-width: 0;
   display: flex;
@@ -239,11 +239,11 @@ function deleteSnippet(index: number) {
   gap: var(--space-xs);
 }
 
-.snippet-card-actions {
+.favorite-card-actions {
   flex-shrink: 0;
 }
 
-.snippets-empty {
+.favorites-empty {
   padding: var(--space-xl) var(--space-md);
 }
 </style>

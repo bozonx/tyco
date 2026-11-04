@@ -129,7 +129,7 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 15] = [
     ActivationMode::QuickAiRequest,
     ActivationMode::VoiceQuickAiRequest,
     ActivationMode::ChatPrompts,
-    ActivationMode::Snippets,
+    ActivationMode::Favorites,
     ActivationMode::History,
 ];
 
@@ -265,7 +265,7 @@ fn default_key(mode: ActivationMode) -> Option<&'static str> {
         | ActivationMode::QuickAiRequest
         | ActivationMode::VoiceQuickAiRequest
         | ActivationMode::ChatPrompts
-        | ActivationMode::Snippets
+        | ActivationMode::Favorites
         | ActivationMode::History
         | ActivationMode::Config
         | ActivationMode::ExternalAccess => None,
@@ -340,7 +340,7 @@ fn mode_description(mode: ActivationMode) -> &'static str {
         ActivationMode::QuickAiRequest => "Quick AI request",
         ActivationMode::VoiceQuickAiRequest => "Voice quick AI request",
         ActivationMode::ChatPrompts => "Open chat prompt presets",
-        ActivationMode::Snippets => "Open snippets",
+        ActivationMode::Favorites => "Open favorites",
         ActivationMode::History => "Open history",
         ActivationMode::Config => "Open settings",
         ActivationMode::ExternalAccess => "Answer a request for the selection",

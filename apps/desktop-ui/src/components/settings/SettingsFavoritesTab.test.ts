@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { createTestSettingsContext } from '../../test/settings-context'
-import SettingsSnippetsTab from './SettingsSnippetsTab.vue'
+import SettingsFavoritesTab from './SettingsFavoritesTab.vue'
 import type { UserConfig } from '@tyco/shared'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -13,10 +13,10 @@ vi.mock('../../composables/use-i18n', () => ({
   }),
 }))
 
-describe('SettingsSnippetsTab', () => {
+describe('SettingsFavoritesTab', () => {
   const mountTab = (config: Partial<UserConfig> = {}) => {
     const context = createTestSettingsContext(config)
-    const wrapper = mount(SettingsSnippetsTab, {
+    const wrapper = mount(SettingsFavoritesTab, {
       global: {
         provide: context.provide,
         stubs: {
@@ -53,74 +53,74 @@ describe('SettingsSnippetsTab', () => {
     return { wrapper, context }
   }
 
-  it('renders empty state when there are no snippets', () => {
-    const { wrapper } = mountTab({ snippets: { items: [] } })
-    expect(wrapper.find('.state-message').text()).toBe('settings.noSnippets')
-    expect(wrapper.findAll('.snippet-card')).toHaveLength(0)
+  it('renders empty state when there are no favorites', () => {
+    const { wrapper } = mountTab({ favorites: { items: [] } })
+    expect(wrapper.find('.state-message').text()).toBe('settings.noFavorites')
+    expect(wrapper.findAll('.favorite-card')).toHaveLength(0)
   })
 
-  it('renders existing snippets list', () => {
+  it('renders existing favorites list', () => {
     const { wrapper } = mountTab({
-      snippets: {
+      favorites: {
         items: [
-          { id: 'snippet-1', text: 'Text 1' },
-          { id: 'snippet-2', text: 'Text 2' },
+          { id: 'favorite-1', text: 'Text 1' },
+          { id: 'favorite-2', text: 'Text 2' },
         ],
       },
     })
-    const cards = wrapper.findAll('.snippet-card')
+    const cards = wrapper.findAll('.favorite-card')
     expect(cards).toHaveLength(2)
   })
 
-  it('adds a new snippet to the bottom when Add button is clicked', async () => {
+  it('adds a new favorite to the bottom when Add button is clicked', async () => {
     const { wrapper, context } = mountTab({
-      snippets: { items: [{ id: 'snippet-1', text: 'Existing' }] },
+      favorites: { items: [{ id: 'favorite-1', text: 'Existing' }] },
     })
 
     const addBtn = wrapper.find('.btn')
     await addBtn.trigger('click')
     await nextTick()
 
-    const items = context.draft.value.snippets.items
+    const items = context.draft.value.favorites.items
     expect(items).toHaveLength(2)
-    expect(items[0]?.id).toBe('snippet-1')
+    expect(items[0]?.id).toBe('favorite-1')
     expect(items[1]?.text).toBe('')
-    expect(items[1]?.id).toBe('snippet-2')
+    expect(items[1]?.id).toBe('favorite-2')
   })
 
-  it('highlights empty snippets with is-empty class', () => {
+  it('highlights empty favorites with is-empty class', () => {
     const { wrapper } = mountTab({
-      snippets: {
+      favorites: {
         items: [
-          { id: 'snippet-1', text: 'Has text' },
-          { id: 'snippet-2', text: '   ' },
+          { id: 'favorite-1', text: 'Has text' },
+          { id: 'favorite-2', text: '   ' },
         ],
       },
     })
 
-    const cards = wrapper.findAll('.snippet-card')
+    const cards = wrapper.findAll('.favorite-card')
     expect(cards[0]?.classes()).not.toContain('is-empty')
     expect(cards[1]?.classes()).toContain('is-empty')
   })
 
-  it('updates snippet text on textarea input', async () => {
+  it('updates favorite text on textarea input', async () => {
     const { wrapper, context } = mountTab({
-      snippets: { items: [{ id: 'snippet-1', text: 'Initial' }] },
+      favorites: { items: [{ id: 'favorite-1', text: 'Initial' }] },
     })
 
     const textarea = wrapper.find('textarea')
     await textarea.setValue('Modified content')
     await nextTick()
 
-    expect(context.draft.value.snippets.items[0]?.text).toBe('Modified content')
+    expect(context.draft.value.favorites.items[0]?.text).toBe('Modified content')
   })
 
-  it('deletes a snippet when delete button is clicked', async () => {
+  it('deletes a favorite when delete button is clicked', async () => {
     const { wrapper, context } = mountTab({
-      snippets: {
+      favorites: {
         items: [
-          { id: 'snippet-1', text: 'Keep' },
-          { id: 'snippet-2', text: 'Delete me' },
+          { id: 'favorite-1', text: 'Keep' },
+          { id: 'favorite-2', text: 'Delete me' },
         ],
       },
     })
@@ -130,7 +130,7 @@ describe('SettingsSnippetsTab', () => {
     await deleteButtons[1]?.trigger('click')
     await nextTick()
 
-    expect(context.draft.value.snippets.items).toHaveLength(1)
-    expect(context.draft.value.snippets.items[0]?.id).toBe('snippet-1')
+    expect(context.draft.value.favorites.items).toHaveLength(1)
+    expect(context.draft.value.favorites.items[0]?.id).toBe('favorite-1')
   })
 })

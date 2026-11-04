@@ -27,12 +27,12 @@
             class="preview-action-btn"
             size="sm"
             :label="
-              isSavedAsSnippet
-                ? t('action.savedAsSnippet')
-                : t('action.saveAsSnippet')
+              isSavedAsFavorite
+                ? t('action.savedAsFavorite')
+                : t('action.saveAsFavorite')
             "
-            :icon="isSavedAsSnippet ? 'mdi:check' : 'mdi:bookmark-plus-outline'"
-            @click="saveAsSnippet"
+            :icon="isSavedAsFavorite ? 'mdi:check' : 'mdi:bookmark-plus-outline'"
+            @click="saveAsFavorite"
           />
           <CopyButton
             class="preview-action-btn"
@@ -90,9 +90,9 @@ import useToast from '../../composables/use-toast'
 import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
 import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
 import {
-  addSnippet,
-  isDuplicateSnippet,
-} from '../../lib/snippets/snippets-model'
+  addFavorite,
+  isDuplicateFavorite,
+} from '../../lib/favorites/favorites-model'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
@@ -111,26 +111,26 @@ import { APP_CONFIG } from '@tyco/shared'
 const editorNavigation = useEditorNavigation()
 const { toastKey } = useToast()
 
-const isSavedAsSnippet = ref(false)
+const isSavedAsFavorite = ref(false)
 let savedTimer: ReturnType<typeof setTimeout> | null = null
 
-async function saveAsSnippet() {
+async function saveAsFavorite() {
   const text = activeActionText.value.trim()
   if (!text) return
 
-  const currentSnippets = desktopStore.userConfig.snippets?.items ?? []
-  if (isDuplicateSnippet(currentSnippets, text)) {
-    toastKey('toast.snippetAlreadyExists', 'warn')
+  const currentFavorites = desktopStore.userConfig.favorites?.items ?? []
+  if (isDuplicateFavorite(currentFavorites, text)) {
+    toastKey('toast.favoriteAlreadyExists', 'warn')
     return
   }
 
-  const result = addSnippet(currentSnippets, text)
+  const result = addFavorite(currentFavorites, text)
   if (result.success) {
-    await desktopStore.updateUserConfig({ snippets: { items: result.items } })
-    isSavedAsSnippet.value = true
+    await desktopStore.updateUserConfig({ favorites: { items: result.items } })
+    isSavedAsFavorite.value = true
     if (savedTimer) clearTimeout(savedTimer)
     savedTimer = setTimeout(() => {
-      isSavedAsSnippet.value = false
+      isSavedAsFavorite.value = false
     }, 1500)
   }
 }

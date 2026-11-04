@@ -272,7 +272,7 @@ describe('Settings.vue', () => {
         'transformations',
         'styling',
         'chat-prompts',
-        'snippets',
+        'favorites',
         'languages',
       ],
       ['commands', 'variables'],

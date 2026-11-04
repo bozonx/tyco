@@ -23,7 +23,7 @@ export const ActivationMode = {
   QUICK_AI_REQUEST: 'quickAiRequest',
   VOICE_QUICK_AI_REQUEST: 'voiceQuickAiRequest',
   CHAT_PROMPTS: 'chatPrompts',
-  SNIPPETS: 'snippets',
+  FAVORITES: 'favorites',
   EDITOR: 'editor',
   QUICK_INPUT: 'quickInput',
   CHAT: 'chat',

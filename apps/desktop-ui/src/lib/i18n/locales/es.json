@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "Ajustes predefinidos de prompts de chat",
     "voiceCommands": "Comandos de voz",
-    "snippetsMenu": "Fragmentos",
-    "saveAsSnippet": "Guardar como fragmento",
-    "savedAsSnippet": "Guardado como fragmento",
+    "favoritesMenu": "Fragmentos",
+    "saveAsFavorite": "Guardar como fragmento",
+    "savedAsFavorite": "Guardado como fragmento",
     "quickAiRequest": "Petición rápida a la IA",
     "voiceQuickAiRequest": "Petición rápida por voz a la IA"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Se insertará al terminar",
     "ruleNotFound": "Esta regla ya no existe",
     "chatPrompts": "Ajustes predefinidos de prompts de chat",
-    "snippets": "Fragmentos"
+    "favorites": "Fragmentos"
   },
   "nav": {
     "aiChat": "Preguntar a la IA",
@@ -793,7 +793,7 @@
       "chatPrompts": "Prompts de chat predefinidos para texto seleccionado",
       "selectionActionsPage4": "Acciones: página 4",
       "selectionActionsPage5": "Acciones: página 5",
-      "snippets": "Fragmentos",
+      "favorites": "Fragmentos",
       "quickAiRequest": "Petición rápida a la IA",
       "voiceQuickAiRequest": "Petición rápida por voz a la IA"
     },
@@ -1209,14 +1209,14 @@
     "webFetchMaxCharactersHint": "Número máximo de caracteres extraídos de una sola página web (1.000 a 100.000). Ahorra ventana de contexto.",
     "webFetchMaxCharactersError": "Introduce un número entre 1.000 y 100.000",
     "profileWebSearchLlmNotice": "La clave de API y el límite de tamaño de página se configuran globalmente en los ajustes de LLM.",
-    "snippetsTab": "Fragmentos",
-    "snippetsNavTab": "Fragmentos",
-    "snippetsHint": "Fragmentos de texto guardados para acceso rápido e inserción. Arrastra las tarjetas para reordenarlas.",
-    "addSnippet": "Añadir fragmento",
-    "noSnippets": "Aún no hay fragmentos guardados",
-    "snippetNamePlaceholder": "Nombre (opcional)",
-    "snippetTextPlaceholder": "Introduce el texto del fragmento…",
-    "searchSnippetsPlaceholder": "Buscar fragmentos…",
+    "favoritesTab": "Fragmentos",
+    "favoritesNavTab": "Fragmentos",
+    "favoritesHint": "Fragmentos de texto guardados para acceso rápido e inserción. Arrastra las tarjetas para reordenarlas.",
+    "addFavorite": "Añadir fragmento",
+    "noFavorites": "Aún no hay fragmentos guardados",
+    "favoriteNamePlaceholder": "Nombre (opcional)",
+    "favoriteTextPlaceholder": "Introduce el texto del fragmento…",
+    "searchFavoritesPlaceholder": "Buscar fragmentos…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
@@ -1274,7 +1274,7 @@
     "variablesNotSet": "Hay variables sin valor en este dispositivo; defínelas en Ajustes → Variables",
     "dictationResultReady": "El dictado está listo, pero la ventana ya muestra otra cosa. Cópialo para no perderlo.",
     "dictationResultInHistory": "También está guardado en el historial.",
-    "snippetAlreadyExists": "Ya existe un fragmento con este texto"
+    "favoriteAlreadyExists": "Ya existe un fragmento con este texto"
   },
   "tools": {
     "aiTask": "Comando de IA",
@@ -1438,7 +1438,7 @@
     "valueNotSet": "Sin definir en este dispositivo: los comandos que la usan no se ejecutan",
     "valuePlaceholder": "Una ruta, una dirección u otro texto"
   },
-  "snippets": { "noMatches": "No se encontraron fragmentos" },
+  "favorites": { "noMatches": "No se encontraron fragmentos" },
   "replyBlocks": {
     "insertIntoWindow": "Insertar en la ventana",
     "insertIntoEditor": "Al editor",

@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "チャットプロンプトのプリセット",
     "voiceCommands": "音声コマンド",
-    "snippetsMenu": "スニペット",
-    "saveAsSnippet": "スニペットとして保存",
-    "savedAsSnippet": "スニペットに保存しました",
+    "favoritesMenu": "スニペット",
+    "saveAsFavorite": "スニペットとして保存",
+    "savedAsFavorite": "スニペットに保存しました",
     "quickAiRequest": "AIクイックリクエスト",
     "voiceQuickAiRequest": "音声AIクイックリクエスト"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "完了時に挿入されます",
     "ruleNotFound": "このルールはもう存在しません",
     "chatPrompts": "チャットプロンプトのプリセット",
-    "snippets": "スニペット"
+    "favorites": "スニペット"
   },
   "nav": {
     "aiChat": "AIに質問",
@@ -790,7 +790,7 @@
       "chatPrompts": "選択テキストのチャットプロンプトプリセット",
       "selectionActionsPage4": "アクション: ページ 4",
       "selectionActionsPage5": "アクション: ページ 5",
-      "snippets": "スニペット",
+      "favorites": "スニペット",
       "quickAiRequest": "AIクイックリクエスト",
       "voiceQuickAiRequest": "音声AIクイックリクエスト"
     },
@@ -1206,14 +1206,14 @@
     "webFetchMaxCharactersHint": "1つのウェブページから取得する最大文字数（1,000〜100,000）。コンテキストウィンドウの節約に役立ちます。",
     "webFetchMaxCharactersError": "1,000から100,000までの数値を入力してください",
     "profileWebSearchLlmNotice": "APIキーとページサイズ制限は、LLM設定でグローバルに構成されます。",
-    "snippetsTab": "スニペット",
-    "snippetsNavTab": "スニペット",
-    "snippetsHint": "すばやくアクセスして挿入するための保存されたテキスト。カードをドラッグして並べ替えます。",
-    "addSnippet": "スニペットを追加",
-    "noSnippets": "保存されたスニペットはまだありません",
-    "snippetNamePlaceholder": "名前（任意）",
-    "snippetTextPlaceholder": "スニペットのテキストを入力…",
-    "searchSnippetsPlaceholder": "スニペットを検索…",
+    "favoritesTab": "スニペット",
+    "favoritesNavTab": "スニペット",
+    "favoritesHint": "すばやくアクセスして挿入するための保存されたテキスト。カードをドラッグして並べ替えます。",
+    "addFavorite": "スニペットを追加",
+    "noFavorites": "保存されたスニペットはまだありません",
+    "favoriteNamePlaceholder": "名前（任意）",
+    "favoriteTextPlaceholder": "スニペットのテキストを入力…",
+    "searchFavoritesPlaceholder": "スニペットを検索…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
@@ -1271,7 +1271,7 @@
     "variablesNotSet": "このデバイスで値のない変数があります。設定 → 変数 で設定してください",
     "dictationResultReady": "音声入力が完了しましたが、ウィンドウはすでに別の画面です。失わないようにコピーしてください。",
     "dictationResultInHistory": "履歴にも保存されています。",
-    "snippetAlreadyExists": "このテキストのスニペットは既に存在します"
+    "favoriteAlreadyExists": "このテキストのスニペットは既に存在します"
   },
   "tools": {
     "aiTask": "AI コマンド",
@@ -1435,7 +1435,7 @@
     "valueNotSet": "このデバイスでは未設定: これを使うコマンドは実行されません",
     "valuePlaceholder": "パス、アドレス、その他のテキスト"
   },
-  "snippets": { "noMatches": "一致するスニペットがありません" },
+  "favorites": { "noMatches": "一致するスニペットがありません" },
   "replyBlocks": {
     "insertIntoWindow": "ウィンドウに挿入",
     "insertIntoEditor": "エディタへ",

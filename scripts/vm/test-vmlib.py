@@ -497,7 +497,7 @@ class EmbeddedJavaScriptTests(unittest.TestCase):
         import ast
         import subprocess
 
-        snippets = []
+        favorites = []
         for path in Path(__file__).parent.glob("*.py"):
             for node in ast.walk(ast.parse(path.read_text())):
                 if isinstance(node, ast.Dict):
@@ -508,7 +508,7 @@ class EmbeddedJavaScriptTests(unittest.TestCase):
                             and isinstance(value, ast.Constant)
                             and isinstance(value.value, str)
                         ):
-                            snippets.append(
+                            favorites.append(
                                 {
                                     "file": path.name,
                                     "line": value.lineno,
@@ -525,18 +525,18 @@ class EmbeddedJavaScriptTests(unittest.TestCase):
                     and isinstance(node.args[0], ast.Constant)
                     and isinstance(node.args[0].value, str)
                 ):
-                    snippets.append(
+                    favorites.append(
                         {
                             "file": path.name,
                             "line": node.lineno,
                             "script": node.args[0].value,
                         }
                     )
-        self.assertTrue(snippets, "No embedded WebDriver scripts were collected")
+        self.assertTrue(favorites, "No embedded WebDriver scripts were collected")
         validator = "const fs=require('node:fs'); const scripts=JSON.parse(fs.readFileSync(0,'utf8')); const errors=[]; for(const item of scripts){try{new Function(item.script)}catch(error){errors.push({file:item.file,line:item.line,error:error.message})}} process.stdout.write(JSON.stringify(errors)); process.exitCode=errors.length?1:0;"
         result = subprocess.run(
             ["node", "-e", validator],
-            input=json.dumps(snippets),
+            input=json.dumps(favorites),
             capture_output=True,
             text=True,
             check=False,

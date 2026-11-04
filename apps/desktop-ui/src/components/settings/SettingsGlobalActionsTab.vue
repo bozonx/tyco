@@ -199,7 +199,7 @@ const MODE_ORDER: HotkeyId[] = [
   'quickAiRequest',
   'voiceQuickAiRequest',
   'chatPrompts',
-  'snippets',
+  'favorites',
   'history',
 ]
 

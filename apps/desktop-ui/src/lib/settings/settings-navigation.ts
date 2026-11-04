@@ -87,9 +87,9 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         icon: 'mdi:lightning-bolt-outline',
       },
       {
-        id: 'snippets',
-        labelKey: 'settings.snippetsTab',
-        navigationLabelKey: 'settings.snippetsNavTab',
+        id: 'favorites',
+        labelKey: 'settings.favoritesTab',
+        navigationLabelKey: 'settings.favoritesNavTab',
         icon: 'mdi:card-text-outline',
       },
       {
@@ -396,7 +396,7 @@ const CONFIG_SECTION_TABS: Record<string, SettingsSectionId> = {
   transformations: 'transformations',
   styling: 'styling',
   chatPrompts: 'chat-prompts',
-  snippets: 'snippets',
+  favorites: 'favorites',
   aiVault: 'ai-profiles',
   aiProfiles: 'ai-profiles',
   plugins: 'plugins',

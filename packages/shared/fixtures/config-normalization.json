@@ -224,7 +224,7 @@
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": "",
+        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": ""
       },
@@ -385,7 +385,7 @@
       "chatPrompts": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "snippets": { "items": [] }
+      "favorites": { "items": [] }
     }
   },
   {
@@ -619,7 +619,7 @@
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": "",
+        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": ""
       },
@@ -776,7 +776,7 @@
       "chatPrompts": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "snippets": { "items": [] }
+      "favorites": { "items": [] }
     }
   },
   {
@@ -999,7 +999,7 @@
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": "",
+        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": ""
       },
@@ -1160,7 +1160,7 @@
       "chatPrompts": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "snippets": { "items": [] }
+      "favorites": { "items": [] }
     }
   },
   {
@@ -1388,7 +1388,7 @@
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": "",
+        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": ""
       },
@@ -1554,7 +1554,7 @@
       "chatPrompts": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "snippets": { "items": [] }
+      "favorites": { "items": [] }
     }
   },
   {
@@ -1772,7 +1772,7 @@
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": "",
+        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": ""
       },
@@ -1926,7 +1926,7 @@
       "chatPrompts": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "snippets": { "items": [] }
+      "favorites": { "items": [] }
     }
   },
   {
@@ -2149,7 +2149,7 @@
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": "",
+        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": ""
       },
@@ -2310,7 +2310,7 @@
       "chatPrompts": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "snippets": { "items": [] }
+      "favorites": { "items": [] }
     }
   },
   {
@@ -2535,7 +2535,7 @@
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": "",
+        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": ""
       },
@@ -2696,7 +2696,7 @@
       "chatPrompts": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "snippets": { "items": [] }
+      "favorites": { "items": [] }
     }
   },
   {
@@ -2934,7 +2934,7 @@
         "selectionActionsPage5": "",
         "chatPrompts": "",
         "history": "",
-        "snippets": "",
+        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": ""
       },
@@ -3089,7 +3089,7 @@
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "items": [], "slots": {} },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "snippets": { "items": [] }
+      "favorites": { "items": [] }
     }
   },
   {
@@ -3332,7 +3332,7 @@
         "selectionActionsPage5": "",
         "chatPrompts": "",
         "history": "",
-        "snippets": "",
+        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": ""
       },
@@ -3494,7 +3494,7 @@
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "items": [], "slots": {} },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "snippets": { "items": [] }
+      "favorites": { "items": [] }
     }
   },
   {
@@ -3748,7 +3748,7 @@
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": "",
+        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": ""
       },
@@ -3978,7 +3978,7 @@
       "chatPrompts": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "snippets": { "items": [] }
+      "favorites": { "items": [] }
     }
   },
   {
@@ -4248,7 +4248,7 @@
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": "",
+        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": ""
       },
@@ -4482,7 +4482,7 @@
       "chatPrompts": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "snippets": { "items": [] }
+      "favorites": { "items": [] }
     }
   }
 ]

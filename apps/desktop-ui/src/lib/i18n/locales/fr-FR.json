@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "Préréglages de prompts pour le chat",
     "voiceCommands": "Commandes vocales",
-    "snippetsMenu": "Extraits",
-    "saveAsSnippet": "Enregistrer comme extrait",
-    "savedAsSnippet": "Enregistré dans les extraits",
+    "favoritesMenu": "Extraits",
+    "saveAsFavorite": "Enregistrer comme extrait",
+    "savedAsFavorite": "Enregistré dans les extraits",
     "quickAiRequest": "Requête IA rapide",
     "voiceQuickAiRequest": "Requête vocale IA rapide"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Sera inséré une fois terminé",
     "ruleNotFound": "Cette règle n'existe plus",
     "chatPrompts": "Préréglages de prompts pour le chat",
-    "snippets": "Extraits"
+    "favorites": "Extraits"
   },
   "nav": {
     "aiChat": "Demander à l’IA",
@@ -793,7 +793,7 @@
       "chatPrompts": "Préréglages de prompts pour le texte sélectionné",
       "selectionActionsPage4": "Actions : page 4",
       "selectionActionsPage5": "Actions : page 5",
-      "snippets": "Extraits",
+      "favorites": "Extraits",
       "quickAiRequest": "Requête IA rapide",
       "voiceQuickAiRequest": "Requête vocale IA rapide"
     },
@@ -1209,14 +1209,14 @@
     "webFetchMaxCharactersHint": "Nombre maximal de caractères récupérés d’une seule page Web (1 000 à 100 000). Économise la fenêtre de contexte.",
     "webFetchMaxCharactersError": "Entrez un nombre entre 1 000 et 100 000",
     "profileWebSearchLlmNotice": "La clé API et la limite de taille des pages sont configurées globalement dans les paramètres LLM.",
-    "snippetsTab": "Extraits",
-    "snippetsNavTab": "Extraits",
-    "snippetsHint": "Fragments de texte enregistrés pour un accès et une insertion rapides. Faites glisser les cartes pour réorganiser.",
-    "addSnippet": "Ajouter un extrait",
-    "noSnippets": "Aucun extrait enregistré pour le moment",
-    "snippetNamePlaceholder": "Nom (facultatif)",
-    "snippetTextPlaceholder": "Entrez le texte de l’extrait…",
-    "searchSnippetsPlaceholder": "Rechercher des extraits…",
+    "favoritesTab": "Extraits",
+    "favoritesNavTab": "Extraits",
+    "favoritesHint": "Fragments de texte enregistrés pour un accès et une insertion rapides. Faites glisser les cartes pour réorganiser.",
+    "addFavorite": "Ajouter un extrait",
+    "noFavorites": "Aucun extrait enregistré pour le moment",
+    "favoriteNamePlaceholder": "Nom (facultatif)",
+    "favoriteTextPlaceholder": "Entrez le texte de l’extrait…",
+    "searchFavoritesPlaceholder": "Rechercher des extraits…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
@@ -1274,7 +1274,7 @@
     "variablesNotSet": "Des variables n’ont pas de valeur sur cet appareil ; définissez-les dans Paramètres → Variables",
     "dictationResultReady": "La dictée est prête, mais la fenêtre est passée à autre chose. Copiez-la pour ne pas la perdre.",
     "dictationResultInHistory": "Elle est aussi enregistrée dans l’historique.",
-    "snippetAlreadyExists": "Un extrait avec ce texte existe déjà"
+    "favoriteAlreadyExists": "Un extrait avec ce texte existe déjà"
   },
   "tools": {
     "aiTask": "Commande IA",
@@ -1438,7 +1438,7 @@
     "valueNotSet": "Non définie sur cet appareil : les commandes qui l’utilisent ne s’exécutent pas",
     "valuePlaceholder": "Un chemin, une adresse ou un autre texte"
   },
-  "snippets": { "noMatches": "Aucun extrait correspondant" },
+  "favorites": { "noMatches": "Aucun extrait correspondant" },
   "replyBlocks": {
     "insertIntoWindow": "Insérer dans la fenêtre",
     "insertIntoEditor": "Vers l'éditeur",

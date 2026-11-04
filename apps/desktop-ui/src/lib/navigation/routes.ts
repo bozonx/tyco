@@ -17,7 +17,7 @@ const APP_ROUTE_NAMES = {
   QUICK_AI_REQUEST: 'quickAiRequest',
   VOICE_QUICK_AI_REQUEST: 'voiceQuickAiRequest',
   CHAT_PROMPTS: 'chatPrompts',
-  SNIPPETS: 'snippets',
+  FAVORITES: 'favorites',
 } as const
 
 export const APP_ROUTES = {
@@ -49,7 +49,7 @@ export const APP_ROUTES = {
     path: '/voiceQuickAiRequest',
   },
   CHAT_PROMPTS: { name: APP_ROUTE_NAMES.CHAT_PROMPTS, path: '/chatPrompts' },
-  SNIPPETS: { name: APP_ROUTE_NAMES.SNIPPETS, path: '/snippets' },
+  FAVORITES: { name: APP_ROUTE_NAMES.FAVORITES, path: '/favorites' },
 } as const
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]['path']
@@ -66,7 +66,7 @@ export const MODE_ROUTE_MAP: Record<ActivationMode, AppRoutePath> = {
   [ActivationMode.VOICE_QUICK_AI_REQUEST]:
     APP_ROUTES.VOICE_QUICK_AI_REQUEST.path,
   [ActivationMode.CHAT_PROMPTS]: APP_ROUTES.CHAT_PROMPTS.path,
-  [ActivationMode.SNIPPETS]: APP_ROUTES.SNIPPETS.path,
+  [ActivationMode.FAVORITES]: APP_ROUTES.FAVORITES.path,
   [ActivationMode.EDITOR]: APP_ROUTES.EDITOR.path,
   [ActivationMode.QUICK_INPUT]: APP_ROUTES.WRITE.path,
   [ActivationMode.CHAT]: APP_ROUTES.CHAT.path,
@@ -94,7 +94,7 @@ const QUICK_WINDOW_MODES: ReadonlySet<ActivationMode> = new Set([
   ActivationMode.QUICK_AI_REQUEST,
   ActivationMode.VOICE_QUICK_AI_REQUEST,
   ActivationMode.CHAT_PROMPTS,
-  ActivationMode.SNIPPETS,
+  ActivationMode.FAVORITES,
   ActivationMode.EXTERNAL_ACCESS,
 ])
 

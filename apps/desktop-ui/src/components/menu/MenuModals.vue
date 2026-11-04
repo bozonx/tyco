@@ -38,8 +38,8 @@
       :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
     />
-    <SnippetsMenu
-      v-else-if="menuModalsStore.currentStep?.modal === MenuModals.SNIPPETS"
+    <FavoritesMenu
+      v-else-if="menuModalsStore.currentStep?.modal === MenuModals.FAVORITES"
       :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
     />
@@ -94,7 +94,7 @@ import InProgressMessage from './InProgressMessage.vue'
 import InsertMenu from './InsertMenu.vue'
 import PreviewMenu from './PreviewMenu.vue'
 import QuickAiRequestMenu from './QuickAiRequestMenu.vue'
-import SnippetsMenu from './SnippetsMenu.vue'
+import FavoritesMenu from './FavoritesMenu.vue'
 import StylingMenu from './StylingMenu.vue'
 import TransformationMenu from './TransformationMenu.vue'
 import TranslateMenu from './TranslateMenu.vue'

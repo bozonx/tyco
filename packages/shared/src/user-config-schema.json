@@ -171,7 +171,7 @@
         "quickAiRequest": { "type": "string", "default": "" },
         "voiceQuickAiRequest": { "type": "string", "default": "" },
         "chatPrompts": { "type": "string", "default": "" },
-        "snippets": { "type": "string", "default": "" },
+        "favorites": { "type": "string", "default": "" },
         "history": { "type": "string", "default": "" },
         "voiceCommands": { "type": "string", "default": "Ctrl+Alt+Shift+X" },
         "selectionCorrection": {
@@ -201,7 +201,7 @@
         "quickAiRequest",
         "voiceQuickAiRequest",
         "chatPrompts",
-        "snippets",
+        "favorites",
         "history",
         "voiceCommands",
         "selectionCorrection"
@@ -373,7 +373,7 @@
                         "transformationMenu",
                         "stylingMenu",
                         "chatPromptsMenu",
-                        "snippetsMenu",
+                        "favoritesMenu",
                         "correction",
                         "translationMenu",
                         "askInChat",
@@ -897,7 +897,7 @@
       "required": ["items", "slots"],
       "defaultPath": "chatPrompts"
     },
-    "snippets": {
+    "favorites": {
       "type": "object",
       "properties": {
         "items": {
@@ -922,7 +922,7 @@
       },
       "required": ["items"],
       "default": { "items": [] },
-      "defaultPath": "snippets"
+      "defaultPath": "favorites"
     },
     "aiVault": {
       "type": "object",
@@ -1171,7 +1171,7 @@
     "transformations",
     "styling",
     "chatPrompts",
-    "snippets",
+    "favorites",
     "markdown",
     "plugins",
     "chat",

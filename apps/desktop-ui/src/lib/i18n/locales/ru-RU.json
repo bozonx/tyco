@@ -12,9 +12,9 @@
     "webhook": "Вебхук",
     "chatPromptsMenu": "Быстрые промпты для чата",
     "voiceCommands": "Голосовые команды",
-    "snippetsMenu": "Сниппеты",
-    "saveAsSnippet": "Сохранить как сниппет",
-    "savedAsSnippet": "Сохранено в сниппеты",
+    "favoritesMenu": "Избранное",
+    "saveAsFavorite": "Сохранить в избранное",
+    "savedAsFavorite": "Сохранено в избранное",
     "quickAiRequest": "Быстрый запрос к ИИ",
     "voiceQuickAiRequest": "Голосовой быстрый запрос к ИИ"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Вставится по завершении",
     "ruleNotFound": "Это правило больше не существует",
     "chatPrompts": "Быстрые промпты для чата",
-    "snippets": "Сниппеты"
+    "favorites": "Избранное"
   },
   "nav": {
     "aiChat": "Спросить ИИ",
@@ -790,7 +790,7 @@
       "chatPrompts": "Быстрые промпты для чата с ИИ",
       "selectionActionsPage4": "Действия: страница 4",
       "selectionActionsPage5": "Действия: страница 5",
-      "snippets": "Сниппеты",
+      "favorites": "Избранное",
       "quickAiRequest": "Быстрый запрос к ИИ",
       "voiceQuickAiRequest": "Голосовой быстрый запрос к ИИ"
     },
@@ -1206,14 +1206,14 @@
     "webFetchMaxCharactersHint": "Максимальное количество символов, загружаемых с одной веб-страницы (от 1 000 до 100 000). Помогает экономить контекстное окно.",
     "webFetchMaxCharactersError": "Введите число от 1 000 до 100 000",
     "profileWebSearchLlmNotice": "API-ключ и лимиты объёма страниц настраиваются глобально в настройках LLM.",
-    "snippetsTab": "Сниппеты",
-    "snippetsNavTab": "Сниппеты",
-    "snippetsHint": "Сохраненные фрагменты текста для быстрого доступа и вставки. Перетаскивайте карточки для изменения порядка.",
-    "addSnippet": "Добавить сниппет",
-    "noSnippets": "Сниппетов пока нет",
-    "snippetNamePlaceholder": "Название (необязательно)",
-    "snippetTextPlaceholder": "Введите текст сниппета…",
-    "searchSnippetsPlaceholder": "Поиск сниппетов…",
+    "favoritesTab": "Избранное",
+    "favoritesNavTab": "Избранное",
+    "favoritesHint": "Сохраненные фрагменты текста для быстрого доступа и вставки. Перетаскивайте карточки для изменения порядка.",
+    "addFavorite": "Добавить в избранное",
+    "noFavorites": "В избранном пока ничего нет",
+    "favoriteNamePlaceholder": "Название (необязательно)",
+    "favoriteTextPlaceholder": "Введите текст…",
+    "searchFavoritesPlaceholder": "Поиск в избранном…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
@@ -1271,7 +1271,7 @@
     "variablesNotSet": "Переменные не заданы на этом устройстве; задайте их в «Настройки → Переменные»",
     "dictationResultReady": "Диктовка готова, но окно уже занято другим. Скопируйте текст, чтобы не потерять его.",
     "dictationResultInHistory": "Он также сохранён в истории.",
-    "snippetAlreadyExists": "Сниппет с таким текстом уже существует"
+    "favoriteAlreadyExists": "Такой текст уже есть в избранном"
   },
   "tools": {
     "aiTask": "ИИ-команда",
@@ -1435,7 +1435,7 @@
     "valueNotSet": "Не задано на этом устройстве: команды с этой переменной не выполняются",
     "valuePlaceholder": "Путь, адрес или другой текст"
   },
-  "snippets": { "noMatches": "Ничего не найдено" },
+  "favorites": { "noMatches": "Ничего не найдено" },
   "replyBlocks": {
     "insertIntoWindow": "Вставить в окно",
     "insertIntoEditor": "В редактор",

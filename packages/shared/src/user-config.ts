@@ -150,7 +150,7 @@ export interface HotkeysConfig {
   quickAiRequest: string
   voiceQuickAiRequest: string
   chatPrompts: string
-  snippets: string
+  favorites: string
   history: string
   voiceCommands: string
   selectionCorrection: string
@@ -208,16 +208,16 @@ export interface ChatPromptsConfig {
   slots: ShortcutSlots<string>
 }
 
-/** A saved text snippet */
-export interface SnippetConfig {
+/** A saved text favorite */
+export interface FavoriteConfig {
   id: string
   text: string
   name?: string
 }
 
-export interface SnippetsConfig {
-  /** The saved text snippets, in display order */
-  items: SnippetConfig[]
+export interface FavoritesConfig {
+  /** The saved text favorites, in display order */
+  items: FavoriteConfig[]
 }
 
 export const QUICK_CORRECTION_MODES = ['live', 'onSubmit', 'off'] as const
@@ -265,7 +265,7 @@ export interface UserConfig {
   transformations: TransformationsConfig
   styling: StylingsConfig
   chatPrompts: ChatPromptsConfig
-  snippets: SnippetsConfig
+  favorites: FavoritesConfig
   aiVault: AiVaultLocationConfig
   aiProfiles: AiProfilesConfig
   markdown: MarkdownConfig

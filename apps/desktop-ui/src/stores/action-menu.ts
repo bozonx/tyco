@@ -59,8 +59,8 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     openChatPromptsModal: (text: string, promptId?: string) => {
       menuModalsStore.nextModal(MenuModals.CHAT_PROMPTS, { text, promptId })
     },
-    openSnippetsModal: () => {
-      menuModalsStore.nextModal(MenuModals.SNIPPETS, {})
+    openFavoritesModal: () => {
+      menuModalsStore.nextModal(MenuModals.FAVORITES, {})
     },
     openTranslateModal: (text: string, language?: string) => {
       menuModalsStore.nextModal(MenuModals.TRANSLATE, { text, language })

@@ -20,7 +20,7 @@ pub enum ActivationMode {
     QuickAiRequest,
     VoiceQuickAiRequest,
     ChatPrompts,
-    Snippets,
+    Favorites,
     History,
     Config,
     /// Asks the user whether an external call may use the selection; Tyco
@@ -45,7 +45,7 @@ impl ActivationMode {
         Self::QuickAiRequest,
         Self::VoiceQuickAiRequest,
         Self::ChatPrompts,
-        Self::Snippets,
+        Self::Favorites,
         Self::History,
         Self::Config,
     ];
@@ -75,7 +75,7 @@ impl ActivationMode {
             Self::QuickAiRequest => "quickAiRequest",
             Self::VoiceQuickAiRequest => "voiceQuickAiRequest",
             Self::ChatPrompts => "chatPrompts",
-            Self::Snippets => "snippets",
+            Self::Favorites => "favorites",
             Self::History => "history",
             Self::Config => "config",
             Self::ExternalAccess => "externalAccess",

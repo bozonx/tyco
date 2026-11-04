@@ -158,7 +158,7 @@ describe('Editor actions shortcut', () => {
   it('opens actions with selected editor text when selection exists', () => {
     const editor = useEditorInputStore()
     editor.setValue('Full text', 'plain')
-    editor.setSelection('Selected snippet', 0, 16)
+    editor.setSelection('Selected favorite', 0, 16)
     const modals = useMenuModalsStore()
     const open = vi.spyOn(modals, 'nextModal')
     const wrapper = mount(EditorView, {
@@ -173,7 +173,7 @@ describe('Editor actions shortcut', () => {
       new KeyboardEvent('keydown', { code: 'Enter', ctrlKey: true })
     )
     expect(open).toHaveBeenCalledWith(MenuModals.INSERT, {
-      text: 'Selected snippet',
+      text: 'Selected favorite',
     })
     wrapper.unmount()
   })

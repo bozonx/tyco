@@ -283,7 +283,7 @@ fn window_label_for_mode(mode: ActivationMode) -> &'static str {
         | ActivationMode::QuickAiRequest
         | ActivationMode::VoiceQuickAiRequest
         | ActivationMode::ChatPrompts
-        | ActivationMode::Snippets
+        | ActivationMode::Favorites
         | ActivationMode::ExternalAccess => QUICK_WINDOW_LABEL,
         ActivationMode::Editor
         | ActivationMode::Chat
@@ -317,7 +317,7 @@ mod tests {
             ActivationMode::QuickAiRequest,
             ActivationMode::VoiceQuickAiRequest,
             ActivationMode::ChatPrompts,
-            ActivationMode::Snippets,
+            ActivationMode::Favorites,
             ActivationMode::ExternalAccess,
         ] {
             assert_eq!(window_label_for_mode(mode), QUICK_WINDOW_LABEL);

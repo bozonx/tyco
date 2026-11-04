@@ -31,6 +31,14 @@
     <div data-testid="editor-toolbar-right" class="flex items-center gap-1">
       <EditorToolbarItems :items="rightToolbarItems" />
       <IconButton
+        size="sm"
+        variant="ghost"
+        :disabled="!editorInputStore.actionText().trim()"
+        :label="scoped(t('action.saveAsFavorite'))"
+        icon="mdi:bookmark-plus-outline"
+        @click="saveFavorite"
+      />
+      <IconButton
         v-if="desktopStore.userConfig.isInDevelopment"
         size="sm"
         variant="ghost"
@@ -79,7 +87,9 @@ import { computed } from 'vue'
 import { useEditorActions } from '../../composables/use-editor-actions'
 import { useI18n } from '../../composables/use-i18n'
 import { useMarkupMode } from '../../composables/use-markup-mode'
+import useToast from '../../composables/use-toast'
 import { scopedActionLabel } from '../../lib/editor/editor-toolbar-item'
+import { addFavorite } from '../../lib/favorites/favorites-model'
 import { useDesktopStore } from '../../stores/desktop'
 import type { EditItem } from '../../stores/edit-menu'
 import { useEditMenuStore } from '../../stores/edit-menu'
@@ -102,6 +112,20 @@ const editMenuStore = useEditMenuStore()
 const toolbarStore = useToolbarStore()
 const desktopStore = useDesktopStore()
 const { t } = useI18n()
+const { toastKey } = useToast()
+
+async function saveFavorite() {
+  const result = addFavorite(
+    desktopStore.userConfig.favorites.items,
+    editorInputStore.actionText()
+  )
+  if (!result.success) {
+    if (result.reason === 'duplicate')
+      toastKey('toast.favoriteAlreadyExists', 'warn')
+    return
+  }
+  await desktopStore.updateUserConfig({ favorites: { items: result.items } })
+}
 const { getLabel, doEdit } = useEditorActions()
 const { isMarkupShown, toggleShowMarkup } = useMarkupMode()
 

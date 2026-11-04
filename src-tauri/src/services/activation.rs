@@ -88,7 +88,7 @@ impl Activation {
     /// from: not an action page the user set to run without text,
     /// see `actionPages[].inputMode` of the config. The first page always takes text.
     pub fn can_take_selection(&self, user_config: &Value) -> bool {
-        if self.mode == ActivationMode::VoiceCommands || self.mode == ActivationMode::Snippets {
+        if self.mode == ActivationMode::VoiceCommands || self.mode == ActivationMode::Favorites {
             return false;
         }
         if self.mode != ActivationMode::SelectionActions {

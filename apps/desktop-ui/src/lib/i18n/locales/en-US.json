@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "Chat prompt presets",
     "voiceCommands": "Voice commands",
-    "snippetsMenu": "Snippets",
-    "saveAsSnippet": "Save as snippet",
-    "savedAsSnippet": "Saved as snippet",
+    "favoritesMenu": "Favorites",
+    "saveAsFavorite": "Save as favorite",
+    "savedAsFavorite": "Saved as favorite",
     "quickAiRequest": "Quick AI request",
     "voiceQuickAiRequest": "Voice quick AI request"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Will insert on completion",
     "ruleNotFound": "This rule no longer exists",
     "chatPrompts": "Chat prompt presets",
-    "snippets": "Snippets"
+    "favorites": "Favorites"
   },
   "nav": {
     "aiChat": "Ask AI",
@@ -793,7 +793,7 @@
       "chatPrompts": "Chat prompt presets for selected text",
       "selectionActionsPage4": "Actions: page 4",
       "selectionActionsPage5": "Actions: page 5",
-      "snippets": "Snippets",
+      "favorites": "Favorites",
       "quickAiRequest": "Quick AI request",
       "voiceQuickAiRequest": "Voice quick AI request"
     },
@@ -1209,14 +1209,14 @@
     "webFetchMaxCharactersHint": "Maximum number of characters fetched from a single web page (1,000 to 100,000). Helps save context window.",
     "webFetchMaxCharactersError": "Enter a number from 1,000 to 100,000",
     "profileWebSearchLlmNotice": "API key and page size limits are configured globally in LLM settings.",
-    "snippetsTab": "Snippets",
-    "snippetsNavTab": "Snippets",
-    "snippetsHint": "Saved text fragments for quick access and insertion. Drag cards to reorder.",
-    "addSnippet": "Add snippet",
-    "noSnippets": "No snippets saved yet",
-    "snippetNamePlaceholder": "Name (optional)",
-    "snippetTextPlaceholder": "Enter snippet text…",
-    "searchSnippetsPlaceholder": "Search snippets…",
+    "favoritesTab": "Favorites",
+    "favoritesNavTab": "Favorites",
+    "favoritesHint": "Saved text fragments for quick access and insertion. Drag cards to reorder.",
+    "addFavorite": "Add favorite",
+    "noFavorites": "No favorites saved yet",
+    "favoriteNamePlaceholder": "Name (optional)",
+    "favoriteTextPlaceholder": "Enter favorite text…",
+    "searchFavoritesPlaceholder": "Search favorites…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
@@ -1274,7 +1274,7 @@
     "variablesNotSet": "Variables have no value on this device; set them in Settings → Variables",
     "dictationResultReady": "Dictation is ready, but the window has moved on. Copy it so it is not lost.",
     "dictationResultInHistory": "It is also saved in the history.",
-    "snippetAlreadyExists": "A snippet with this text already exists"
+    "favoriteAlreadyExists": "A favorite with this text already exists"
   },
   "tools": {
     "aiTask": "AI command",
@@ -1438,7 +1438,7 @@
     "valueNotSet": "Not set on this device: commands that use it do not run",
     "valuePlaceholder": "A path, an address or other text"
   },
-  "snippets": { "noMatches": "No matching snippets" },
+  "favorites": { "noMatches": "No matching favorites" },
   "replyBlocks": {
     "insertIntoWindow": "Insert into window",
     "insertIntoEditor": "To editor",

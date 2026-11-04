@@ -127,7 +127,7 @@ import SettingsPluginsTab from './SettingsPluginsTab.vue'
 import SettingsProfileDetailTab from './SettingsProfileDetailTab.vue'
 import SettingsProjectDetailTab from './SettingsProjectDetailTab.vue'
 import SettingsSaveStatus from './SettingsSaveStatus.vue'
-import SettingsSnippetsTab from './SettingsSnippetsTab.vue'
+import SettingsFavoritesTab from './SettingsFavoritesTab.vue'
 import SettingsStylingTab from './SettingsStylingTab.vue'
 import SettingsTransformationsTab from './SettingsTransformationsTab.vue'
 import SettingsTranslationsTab from './SettingsTranslationsTab.vue'
@@ -154,7 +154,7 @@ const SECTION_TABS: Record<
   transformations: SettingsTransformationsTab,
   styling: SettingsStylingTab,
   'chat-prompts': SettingsChatPromptsTab,
-  snippets: SettingsSnippetsTab,
+  favorites: SettingsFavoritesTab,
   languages: SettingsLanguagesTab,
 }
 

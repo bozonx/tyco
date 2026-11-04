@@ -85,8 +85,8 @@
           :key="activationId"
         />
       </div>
-      <div v-show="currentMode === 'snippets'" class="quick-mode-layer">
-        <SnippetsView v-if="currentMode === 'snippets'" :key="activationId" />
+      <div v-show="currentMode === 'favorites'" class="quick-mode-layer">
+        <FavoritesView v-if="currentMode === 'favorites'" :key="activationId" />
       </div>
       <div v-show="currentMode === 'voiceChat'" class="quick-mode-layer">
         <VoiceChatView v-if="currentMode === 'voiceChat'" />
@@ -129,7 +129,7 @@ import CorrectionView from '../../views/CorrectionView.vue'
 import ExternalAccessView from '../../views/ExternalAccessView.vue'
 import QuickAiRequestView from '../../views/QuickAiRequestView.vue'
 import SelectionView from '../../views/SelectionView.vue'
-import SnippetsView from '../../views/SnippetsView.vue'
+import FavoritesView from '../../views/FavoritesView.vue'
 import StylingView from '../../views/StylingView.vue'
 import TransformationView from '../../views/TransformationView.vue'
 import TranslateView from '../../views/TranslateView.vue'

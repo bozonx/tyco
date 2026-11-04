@@ -85,8 +85,8 @@ const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 const { t } = useI18n()
 const fieldRef = ref<TextControl | null>(null)
 
-/** Puts `snippet` in place of the selection, or at the end without focus. */
-async function insert(snippet: string) {
+/** Puts `favorite` in place of the selection, or at the end without focus. */
+async function insert(favorite: string) {
   const el = fieldRef.value
   const value = props.modelValue ?? ''
   const focused = el?.isFocused() ?? false
@@ -94,10 +94,10 @@ async function insert(snippet: string) {
     ? (el?.getSelection()?.start ?? value.length)
     : value.length
   const end = focused ? (el?.getSelection()?.end ?? start) : value.length
-  emit('update:modelValue', value.slice(0, start) + snippet + value.slice(end))
+  emit('update:modelValue', value.slice(0, start) + favorite + value.slice(end))
   await nextTick()
   el?.focus()
-  el?.select(start + snippet.length, start + snippet.length)
+  el?.select(start + favorite.length, start + favorite.length)
 }
 
 defineExpose({ insert })

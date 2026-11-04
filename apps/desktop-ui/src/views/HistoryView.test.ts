@@ -144,8 +144,8 @@ describe('HistoryView.vue', () => {
 
     await flushPromises()
 
-    capturedHandler('toEditor', { id: 'item-1', value: 'Saved snippet' })
-    expect(mockToEditor).toHaveBeenCalledWith('Saved snippet')
+    capturedHandler('toEditor', { id: 'item-1', value: 'Saved favorite' })
+    expect(mockToEditor).toHaveBeenCalledWith('Saved favorite')
   })
 
   it('handles copy action on history item', async () => {

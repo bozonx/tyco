@@ -1,10 +1,10 @@
 <template>
-  <div class="snippets-menu">
-    <div class="snippets-header">
-      <h1 class="snippets-title">{{ t('menu.snippets') }}</h1>
+  <div class="favorites-menu">
+    <div class="favorites-header">
+      <h1 class="favorites-title">{{ t('menu.favorites') }}</h1>
       <button
         type="button"
-        class="snippets-esc"
+        class="favorites-esc"
         :title="escTitle"
         @click="handleEsc"
       >
@@ -13,15 +13,15 @@
       </button>
     </div>
 
-    <div class="snippets-search-row">
-      <AppIcon icon="mdi:magnify" size="md" class="snippets-search-icon" />
+    <div class="favorites-search-row">
+      <AppIcon icon="mdi:magnify" size="md" class="favorites-search-icon" />
       <input
         ref="inputRef"
         v-model="query"
         type="text"
-        class="snippets-search-input"
-        :placeholder="t('settings.searchSnippetsPlaceholder')"
-        :aria-label="t('settings.searchSnippetsPlaceholder')"
+        class="favorites-search-input"
+        :placeholder="t('settings.searchFavoritesPlaceholder')"
+        :aria-label="t('settings.searchFavoritesPlaceholder')"
         spellcheck="false"
         autocomplete="off"
         @focus="isSearchFocused = true"
@@ -31,7 +31,7 @@
       <button
         v-if="query"
         type="button"
-        class="snippets-search-clear"
+        class="favorites-search-clear"
         aria-label="Clear"
         @click="clearQuery"
       >
@@ -40,44 +40,46 @@
     </div>
 
     <div
-      v-if="filteredSnippets.length > 0"
+      v-if="filteredFavorites.length > 0"
       ref="gridRef"
-      class="snippets-grid"
+      class="favorites-grid"
       tabindex="-1"
       role="grid"
       @keydown="onGridKeyDown"
     >
       <div
-        v-for="(snippet, index) in filteredSnippets"
-        :key="snippet.id"
+        v-for="(favorite, index) in filteredFavorites"
+        :key="favorite.id"
         :ref="(el) => setItemRef(index, el)"
         role="row"
-        class="snippet-grid-cell snippet-item"
+        class="favorite-grid-cell favorite-item"
         :class="{
           'is-selected': index === selectedIndex,
           'has-shortcut': index < 15,
         }"
         :aria-selected="index === selectedIndex"
-        @click="selectSnippet(snippet)"
+        @click="selectFavorite(favorite)"
         @mouseenter="selectedIndex = index"
       >
-        <div class="snippet-cell-top">
-          <KeyboardKey v-if="index < 15" class="snippet-slot-key">
+        <div class="favorite-cell-top">
+          <KeyboardKey v-if="index < 15" class="favorite-slot-key">
             {{ SHORTCUT_SLOT_KEYS[index]?.toUpperCase() }}
           </KeyboardKey>
-          <span v-else class="snippet-slot-index">#{{ index + 1 }}</span>
-          <span v-if="snippet.name" class="snippet-name">{{ snippet.name }}</span>
+          <span v-else class="favorite-slot-index">#{{ index + 1 }}</span>
+          <span v-if="favorite.name" class="favorite-name">{{
+            favorite.name
+          }}</span>
         </div>
-        <div class="snippet-cell-text snippet-item-text">
-          {{ snippet.text }}
+        <div class="favorite-cell-text favorite-item-text">
+          {{ favorite.text }}
         </div>
       </div>
     </div>
-    <div v-else class="snippets-empty">
+    <div v-else class="favorites-empty">
       {{
-        allSnippets.length === 0
-          ? t('settings.noSnippets')
-          : t('snippets.noMatches')
+        allFavorites.length === 0
+          ? t('settings.noFavorites')
+          : t('favorites.noMatches')
       }}
     </div>
   </div>
@@ -88,16 +90,16 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
-import { filterSnippets } from '../../lib/snippets/snippets-model'
+import { filterFavorites } from '../../lib/favorites/favorites-model'
 import { useDesktopStore } from '../../stores/desktop'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import AppIcon from '../common/AppIcon.vue'
 import KeyboardKey from '../common/KeyboardKey.vue'
 import {
+  type FavoriteConfig,
   SHORTCUT_SLOT_KEYS,
   type ShortcutSlotKey,
-  type SnippetConfig,
 } from '@tyco/shared'
 
 const props = withDefaults(defineProps<{ shortcutsDisabled?: boolean }>(), {
@@ -122,23 +124,23 @@ const setItemRef = (index: number, el: unknown) => {
   itemRefs.value[index] = el as HTMLElement | null
 }
 
-const allSnippets = computed<SnippetConfig[]>(() => {
-  return desktopStore.userConfig.snippets?.items ?? []
+const allFavorites = computed<FavoriteConfig[]>(() => {
+  return desktopStore.userConfig.favorites?.items ?? []
 })
 
-const filteredSnippets = computed<SnippetConfig[]>(() => {
-  return filterSnippets(allSnippets.value, query.value)
+const filteredFavorites = computed<FavoriteConfig[]>(() => {
+  return filterFavorites(allFavorites.value, query.value)
 })
 
-watch(filteredSnippets, () => {
+watch(filteredFavorites, () => {
   selectedIndex.value = 0
 })
 
-async function selectSnippet(snippet?: SnippetConfig) {
-  if (!snippet) return
+async function selectFavorite(favorite?: FavoriteConfig) {
+  if (!favorite) return
   menuModalsStore.closeAll()
   await ipcStore.callOrNotify('paste_into_target_and_hide', {
-    text: snippet.text,
+    text: favorite.text,
   })
 }
 
@@ -189,8 +191,8 @@ function onSearchKeyDown(event: KeyboardEvent) {
 
   if (event.key === 'Enter') {
     event.preventDefault()
-    if (filteredSnippets.value.length > 0) {
-      void selectSnippet(filteredSnippets.value[selectedIndex.value])
+    if (filteredFavorites.value.length > 0) {
+      void selectFavorite(filteredFavorites.value[selectedIndex.value])
     }
   }
 }
@@ -206,7 +208,7 @@ function onGridKeyDown(event: KeyboardEvent) {
     return
   }
 
-  const count = filteredSnippets.value.length
+  const count = filteredFavorites.value.length
   if (count === 0) return
 
   switch (event.key) {
@@ -266,7 +268,7 @@ function onGridKeyDown(event: KeyboardEvent) {
       return
     case 'Enter':
       event.preventDefault()
-      void selectSnippet(filteredSnippets.value[selectedIndex.value])
+      void selectFavorite(filteredFavorites.value[selectedIndex.value])
       return
   }
 
@@ -278,7 +280,7 @@ function onGridKeyDown(event: KeyboardEvent) {
   const shortcutIndex = SHORTCUT_SLOT_KEYS.indexOf(letter)
   if (shortcutIndex >= 0 && shortcutIndex < count) {
     event.preventDefault()
-    void selectSnippet(filteredSnippets.value[shortcutIndex])
+    void selectFavorite(filteredFavorites.value[shortcutIndex])
     return
   }
 
@@ -323,7 +325,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.snippets-menu {
+.favorites-menu {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -333,7 +335,7 @@ onUnmounted(() => {
   box-sizing: border-box;
 }
 
-.snippets-header {
+.favorites-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -342,7 +344,7 @@ onUnmounted(() => {
   min-height: 1.75rem;
 }
 
-.snippets-title {
+.favorites-title {
   margin: 0;
   font-size: var(--text-lead);
   font-weight: 600;
@@ -350,7 +352,7 @@ onUnmounted(() => {
   line-height: 1.25;
 }
 
-.snippets-esc {
+.favorites-esc {
   display: inline-flex;
   align-items: center;
   gap: var(--space-sm);
@@ -367,17 +369,17 @@ onUnmounted(() => {
     background-color var(--transition-fast);
 }
 
-.snippets-esc:hover {
+.favorites-esc:hover {
   color: var(--color-base-content);
   background-color: var(--app-hover);
 }
 
-.snippets-esc:focus-visible {
+.favorites-esc:focus-visible {
   outline: var(--app-focus-outline-width) solid var(--color-primary);
   outline-offset: 2px;
 }
 
-.snippets-search-row {
+.favorites-search-row {
   position: relative;
   display: flex;
   align-items: center;
@@ -385,14 +387,14 @@ onUnmounted(() => {
   width: 100%;
 }
 
-.snippets-search-icon {
+.favorites-search-icon {
   position: absolute;
   left: 0.75rem;
   color: var(--app-text-muted);
   pointer-events: none;
 }
 
-.snippets-search-input {
+.favorites-search-input {
   width: 100%;
   box-sizing: border-box;
   padding: 0.5rem 2.25rem 0.5rem 2.25rem;
@@ -407,12 +409,12 @@ onUnmounted(() => {
     box-shadow var(--transition-fast);
 }
 
-.snippets-search-input:focus {
+.favorites-search-input:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
-.snippets-search-clear {
+.favorites-search-clear {
   position: absolute;
   right: 0.75rem;
   background: none;
@@ -426,12 +428,12 @@ onUnmounted(() => {
   border-radius: var(--radius-sm);
 }
 
-.snippets-search-clear:hover {
+.favorites-search-clear:hover {
   color: var(--color-base-content);
   background-color: var(--app-hover);
 }
 
-.snippets-grid {
+.favorites-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-auto-rows: minmax(115px, 1fr);
@@ -444,7 +446,7 @@ onUnmounted(() => {
   outline: none;
 }
 
-.snippet-grid-cell {
+.favorite-grid-cell {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -463,12 +465,12 @@ onUnmounted(() => {
     box-shadow var(--transition-fast);
 }
 
-.snippet-grid-cell:hover {
+.favorite-grid-cell:hover {
   background-color: var(--app-hover);
   border-color: var(--app-border);
 }
 
-.snippet-grid-cell.is-selected {
+.favorite-grid-cell.is-selected {
   border-color: var(--color-primary);
   background-color: color-mix(
     in oklab,
@@ -478,7 +480,7 @@ onUnmounted(() => {
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
-.snippet-cell-top {
+.favorite-cell-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -486,7 +488,7 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-.snippet-name {
+.favorite-name {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -494,18 +496,18 @@ onUnmounted(() => {
   margin-left: var(--space-xs);
 }
 
-.snippet-slot-key {
+.favorite-slot-key {
   --key-size: 1.35rem;
   --key-font-size: var(--text-caption);
 }
 
-.snippet-slot-index {
+.favorite-slot-index {
   font-size: var(--text-caption);
   color: var(--app-text-muted);
   user-select: none;
 }
 
-.snippet-cell-text {
+.favorite-cell-text {
   font-size: var(--text-control);
   line-height: 1.35;
   color: var(--color-base-content);
@@ -519,7 +521,7 @@ onUnmounted(() => {
   flex: 1 1 0%;
 }
 
-.snippets-empty {
+.favorites-empty {
   display: flex;
   align-items: center;
   justify-content: center;

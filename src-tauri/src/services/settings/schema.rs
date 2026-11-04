@@ -313,7 +313,7 @@ const ENTITY_COLLECTIONS: [&str; 8] = [
     "/transformations/items",
     "/styling/items",
     "/chatPrompts/items",
-    "/snippets/items",
+    "/favorites/items",
     "/llm/providers",
     "/llm/models",
 ];
