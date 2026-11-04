@@ -39,11 +39,7 @@ describe('ReplyBlock', () => {
 
   it('emits insert and insertEditor events on button clicks', async () => {
     const wrapper = mount(ReplyBlock, {
-      props: {
-        block: {
-          text: 'Replacement text',
-        },
-      },
+      props: { block: { text: 'Replacement text' } },
       global: {
         stubs: {
           Button: {
@@ -66,26 +62,16 @@ describe('ReplyBlock', () => {
 
   it('shows diff toggle button only when originalText is different from block text', async () => {
     const wrapperWithoutDiff = mount(ReplyBlock, {
-      props: {
-        block: { text: 'Same text' },
-        originalText: 'Same text',
-      },
-      global: {
-        stubs: { Button: true, CopyButton: true, Diff: true },
-      },
+      props: { block: { text: 'Same text' }, originalText: 'Same text' },
+      global: { stubs: { Button: true, CopyButton: true, Diff: true } },
     })
     expect(wrapperWithoutDiff.findComponent(Diff).exists()).toBe(false)
 
     const wrapperWithDiff = mount(ReplyBlock, {
-      props: {
-        block: { text: 'New text' },
-        originalText: 'Original text',
-      },
+      props: { block: { text: 'New text' }, originalText: 'Original text' },
       global: {
         stubs: {
-          Button: {
-            template: '<button class="btn-stub"><slot /></button>',
-          },
+          Button: { template: '<button class="btn-stub"><slot /></button>' },
           CopyButton: true,
           Diff: {
             name: 'Diff',

@@ -44,11 +44,7 @@
         :icon="isDiffOpen ? 'mdi:eye-outline' : 'mdi:compare-horizontal'"
         @click="isDiffOpen = !isDiffOpen"
       >
-        {{
-          isDiffOpen
-            ? t('replyBlocks.hideDiff')
-            : t('replyBlocks.showDiff')
-        }}
+        {{ isDiffOpen ? t('replyBlocks.hideDiff') : t('replyBlocks.showDiff') }}
       </Button>
 
       <CopyButton

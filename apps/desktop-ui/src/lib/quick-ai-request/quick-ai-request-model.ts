@@ -52,7 +52,10 @@ export interface QuickAiRequestModelDependencies {
   // Config & Model
   getUserConfig: () => UserConfig
   getAppConfig: () => AppConfig
-  getAvailableTools: (modelId: string, profile?: AiProfile) => Promise<{
+  getAvailableTools: (
+    modelId: string,
+    profile?: AiProfile
+  ) => Promise<{
     tools: ChatToolSet | null
     policy?: ChatToolPolicy
     maxStepCount?: number
@@ -82,7 +85,10 @@ export interface QuickAiRequestModelDependencies {
     turns: EditorHistoryTurn[],
     result?: string | null
   ) => Promise<void>
-  listRecentInstructions?: (limit?: number, profileId?: string | null) => string[]
+  listRecentInstructions?: (
+    limit?: number,
+    profileId?: string | null
+  ) => string[]
 
   // Text insertion / Actions
   insertText: (text: string) => Promise<void>
@@ -106,7 +112,9 @@ export interface QuickAiRequestModelDependencies {
   toolsUnsupportedError?: () => string
 }
 
-export function createQuickAiRequestModel(deps: QuickAiRequestModelDependencies) {
+export function createQuickAiRequestModel(
+  deps: QuickAiRequestModelDependencies
+) {
   const inputMode = ref<'text' | 'voice'>(deps.initialInputMode ?? 'text')
   const profileId = ref<string | null>(deps.initialProfileId ?? null)
   const isProfileLocked = ref(false)
@@ -118,10 +126,15 @@ export function createQuickAiRequestModel(deps: QuickAiRequestModelDependencies)
   const approvals = createChatToolApprovals()
   let abortController: AbortController | null = null
 
-  const extractAllReplyBlocks = (parts: ChatMessagePart[]): ReplyBlockData[] => {
+  const extractAllReplyBlocks = (
+    parts: ChatMessagePart[]
+  ): ReplyBlockData[] => {
     const blocks: ReplyBlockData[] = []
     for (const part of parts) {
-      if (part.type === 'tool-call' && part.toolName === REPLY_BLOCKS_TOOL_NAME) {
+      if (
+        part.type === 'tool-call' &&
+        part.toolName === REPLY_BLOCKS_TOOL_NAME
+      ) {
         blocks.push(...extractReplyBlocks(part.input))
       }
     }
@@ -150,7 +163,10 @@ export function createQuickAiRequestModel(deps: QuickAiRequestModelDependencies)
     }
   }
 
-  const answerToolApproval = (approvalId: string, decision: ChatToolDecision) => {
+  const answerToolApproval = (
+    approvalId: string,
+    decision: ChatToolDecision
+  ) => {
     approvals.answer(approvalId, decision)
   }
 
@@ -215,10 +231,7 @@ export function createQuickAiRequestModel(deps: QuickAiRequestModelDependencies)
         const savedId = await deps.saveEditorHistorySession({
           sourceText: deps.sourceText,
           profileId: profileId.value,
-          instruction: {
-            text: trimmed,
-            inputKind: historyInputKind,
-          },
+          instruction: { text: trimmed, inputKind: historyInputKind },
           operation: 'quickAiRequest',
           turns: [{ prompt: trimmed, inputKind: historyInputKind }],
         })
@@ -423,7 +436,8 @@ export function createQuickAiRequestModel(deps: QuickAiRequestModelDependencies)
     }
 
     const chatId = deps.createId()
-    const firstPrompt = turns.value[0]?.prompt.slice(0, 50) || 'Quick AI Request'
+    const firstPrompt =
+      turns.value[0]?.prompt.slice(0, 50) || 'Quick AI Request'
     const now = Date.now()
     const chat: Chat = {
       id: chatId,

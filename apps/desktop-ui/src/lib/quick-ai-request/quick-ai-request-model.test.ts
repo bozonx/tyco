@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { LlmStreamEvent } from '../llm/llm-client'
 import type { AppConfig, UserConfig } from '@tyco/shared'
 import {
   createQuickAiRequestModel,
@@ -8,16 +9,12 @@ import { REPLY_BLOCKS_TOOL_NAME } from '../reply-blocks/reply-blocks-tool'
 
 const mockAppConfig: AppConfig = {
   rulePrefix: 'Rules',
-  aiInstructions: {
-    quickRequest: 'You are a quick AI assistant.',
-  },
+  aiInstructions: { quickRequest: 'You are a quick AI assistant.' },
 } as unknown as AppConfig
 
 const mockUserConfig: UserConfig = {
   llm: {
-    tasks: {
-      quickRequest: { modelId: 'gpt-4' },
-    },
+    tasks: { quickRequest: { modelId: 'gpt-4' } },
     models: [
       { id: 'gpt-4', name: 'GPT 4', canUseTools: true },
       { id: 'simple-model', name: 'Simple', canUseTools: false },
@@ -28,8 +25,9 @@ const mockUserConfig: UserConfig = {
 function createSetup(overrides: Partial<QuickAiRequestModelDependencies> = {}) {
   const saveEditorHistorySession = vi.fn(async () => 'history-123')
   const updateEditorHistorySession = vi.fn(async () => {})
-  const listRecentInstructions = vi.fn((_limit?: number, pId?: string | null) =>
-    pId === 'prof-1' ? ['profile instruction'] : ['default instruction']
+  const listRecentInstructions = vi.fn(
+    (_limit?: number, pId?: string | null) =>
+      pId === 'prof-1' ? ['profile instruction'] : ['default instruction']
   )
   const insertText = vi.fn(async () => {})
   const copyText = vi.fn(async () => {})
@@ -37,7 +35,9 @@ function createSetup(overrides: Partial<QuickAiRequestModelDependencies> = {}) {
   const openMainChat = vi.fn(async () => {})
   const saveChat = vi.fn(async () => {})
   const closeOverlay = vi.fn(() => {})
-  const resolveProfileInstructions = vi.fn(async (id: string) => `Soul of ${id}`)
+  const resolveProfileInstructions = vi.fn(
+    async (id: string) => `Soul of ${id}`
+  )
 
   let idCounter = 1
   const createId = vi.fn(() => `id-${idCounter++}`)
@@ -47,9 +47,7 @@ function createSetup(overrides: Partial<QuickAiRequestModelDependencies> = {}) {
       type: 'tool-call',
       toolCallId: 'call-1',
       toolName: REPLY_BLOCKS_TOOL_NAME,
-      input: {
-        blocks: [{ title: 'Option 1', text: 'Transformed text' }],
-      },
+      input: { blocks: [{ title: 'Option 1', text: 'Transformed text' }] },
     }
     yield {
       type: 'finish',
@@ -95,10 +93,7 @@ describe('QuickAiRequestModel', () => {
     const { model } = createSetup({
       getUserConfig: () =>
         ({
-          llm: {
-            tasks: { quickRequest: { modelId: '' } },
-            models: [],
-          },
+          llm: { tasks: { quickRequest: { modelId: '' } }, models: [] },
         }) as unknown as UserConfig,
     })
 
@@ -113,7 +108,9 @@ describe('QuickAiRequestModel', () => {
         ({
           llm: {
             tasks: { quickRequest: { modelId: 'simple-model' } },
-            models: [{ id: 'simple-model', name: 'Simple', canUseTools: false }],
+            models: [
+              { id: 'simple-model', name: 'Simple', canUseTools: false },
+            ],
           },
         }) as unknown as UserConfig,
     })
@@ -164,12 +161,9 @@ describe('QuickAiRequestModel', () => {
     expect(deps.saveEditorHistorySession).toHaveBeenCalledWith({
       sourceText: 'Selected original text',
       profileId: null,
-      instruction: {
-        prompt: 'Make it concise',
-        inputKind: 'text',
-      },
+      instruction: { text: 'Make it concise', inputKind: 'typed' },
       operation: 'quickAiRequest',
-      turns: [{ prompt: 'Make it concise', inputKind: 'text' }],
+      turns: [{ prompt: 'Make it concise', inputKind: 'typed' }],
     })
     expect(deps.updateEditorHistorySession).toHaveBeenCalledWith(
       'history-123',
@@ -177,7 +171,7 @@ describe('QuickAiRequestModel', () => {
         {
           prompt: 'Make it concise',
           result: 'Transformed text',
-          inputKind: 'text',
+          inputKind: 'typed',
         },
       ],
       'Transformed text'
@@ -245,18 +239,17 @@ describe('QuickAiRequestModel', () => {
           expect.objectContaining({
             role: 'user',
             content: 'Make it formal',
-            attachments: [{ text: 'Selected original text', source: 'selection' }],
+            attachments: [
+              { text: 'Selected original text', source: 'selection' },
+            ],
           }),
-          expect.objectContaining({
-            role: 'assistant',
-          }),
+          expect.objectContaining({ role: 'assistant' }),
         ]),
-      })
+      }),
+      undefined
     )
     expect(deps.openMainChat).toHaveBeenCalledWith(
-      expect.objectContaining({
-        chatId: expect.any(String),
-      })
+      expect.objectContaining({ chatId: expect.any(String) })
     )
     expect(deps.closeOverlay).toHaveBeenCalled()
   })

@@ -22,8 +22,8 @@ export interface ProfileInstructionsContext {
 }
 
 /**
- * Resolves the full instructions (SOUL.md + memory block) for a profile
- * without requiring the full chat runtime or chat history loading.
+ * Resolves the full instructions (SOUL.md + memory block) for a profile without
+ * requiring the full chat runtime or chat history loading.
  */
 export async function resolveProfileInstructions(
   profileId: string,

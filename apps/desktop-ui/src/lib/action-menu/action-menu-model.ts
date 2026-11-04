@@ -35,10 +35,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** Records a text that leaves the app; runs before the window closes. */
   saveOutput: (text: string) => Promise<void>
   openTransformationModal?: (text: string, transformationId?: string) => void
-  openQuickAiRequestModal?: (
-    text: string,
-    inputMode?: 'text' | 'voice'
-  ) => void
+  openQuickAiRequestModal?: (text: string, inputMode?: 'text' | 'voice') => void
   openVoiceCommandsModal?: (text: string) => void
   openStylingModal?: (text: string, stylingId?: string) => void
   openChatPromptsModal?: (text: string, promptId?: string) => void

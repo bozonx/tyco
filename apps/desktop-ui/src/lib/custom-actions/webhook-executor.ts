@@ -2,6 +2,7 @@ import { errorMessage } from '@tyco/shared/value-guards'
 import type { FetchFunction } from '@bozonx/ai-kit'
 import {
   ACTION_TEXT_PLACEHOLDER,
+  ACTION_SELECTION_PLACEHOLDER,
   substituteVariables,
   type VariablePlace,
   type VariableValues,
@@ -86,7 +87,9 @@ export function buildWebhookRequest(
         })
       : filled(rawTemplate, variables, 'json', text, selectionText)
     headers['content-type'] =
-      template !== ACTION_TEXT_PLACEHOLDER && isJson(body)
+      template !== ACTION_TEXT_PLACEHOLDER &&
+      template !== ACTION_SELECTION_PLACEHOLDER &&
+      isJson(body)
         ? 'application/json; charset=utf-8'
         : 'text/plain; charset=utf-8'
   }

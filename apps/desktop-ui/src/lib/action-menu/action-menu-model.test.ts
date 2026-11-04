@@ -156,9 +156,7 @@ describe('createActionMenuModel', () => {
       'some text to transform'
     )
 
-    const customTransformation = actions.find(
-      (a) => a.id === 'quickAiRequest'
-    )
+    const customTransformation = actions.find((a) => a.id === 'quickAiRequest')
     await customTransformation?.action('some text for custom query')
     expect(deps.openQuickAiRequestModal).toHaveBeenCalledWith(
       'some text for custom query',

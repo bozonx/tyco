@@ -44,7 +44,14 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       })
     },
     openVoiceCommandsModal: (text: string) => {
-      menuModalsStore.nextModal(MenuModals.VOICE_COMMANDS, { text })
+      menuModalsStore.nextModal(MenuModals.VOICE_COMMANDS, {
+        text,
+        ...(!text &&
+        model.takesText.value &&
+        desktopStore.desktopState.mode === 'selectionActions'
+          ? { selectionActivationId: desktopStore.desktopState.activationId }
+          : {}),
+      })
     },
     openStylingModal: (text: string, stylingId?: string) => {
       menuModalsStore.nextModal(MenuModals.STYLING, { text, stylingId })

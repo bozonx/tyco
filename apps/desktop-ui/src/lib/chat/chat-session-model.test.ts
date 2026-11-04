@@ -60,7 +60,9 @@ describe('createChatSessionModel', () => {
         { role: 'assistant' as const, content: 'AI answer' },
       ]
 
-      const success = await model.createChatFromMessages(msgs, { title: 'Transferred Chat' })
+      const success = await model.createChatFromMessages(msgs, {
+        title: 'Transferred Chat',
+      })
 
       expect(success).toBe(true)
       expect(persist).toHaveBeenCalledWith(msgs, {
@@ -68,7 +70,9 @@ describe('createChatSessionModel', () => {
         title: 'Transferred Chat',
       })
       expect(state.messages.value).toEqual(msgs)
-      expect(deps.saveSessionState).toHaveBeenCalledWith({ lastChatId: 'chat-1' })
+      expect(deps.saveSessionState).toHaveBeenCalledWith({
+        lastChatId: 'chat-1',
+      })
       expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.CHAT.path)
     })
   })

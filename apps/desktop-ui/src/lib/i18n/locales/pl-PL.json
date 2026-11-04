@@ -18,9 +18,7 @@
     "quickAiRequest": "Szybkie zapytanie do SI",
     "voiceQuickAiRequest": "Głosowe szybkie zapytanie do SI"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Dołącz plik",
     "alertCaution": "Ostrożnie",
@@ -181,9 +179,7 @@
       "noCommands": "Nie skonfigurowano jeszcze poleceń użytkownika.",
       "noCommandsHint": "Najpierw utwórz polecenia w Ustawienia → Polecenia."
     },
-    "replyBlocks": {
-      "toolLabel": "Warianty odpowiedzi"
-    }
+    "replyBlocks": { "toolLabel": "Warianty odpowiedzi" }
   },
   "commands": {
     "advanced": "Zaawansowane",
@@ -1222,9 +1218,7 @@
     "searchSnippetsPlaceholder": "Szukaj wstawek…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": {
-    "insertIntoEditor": "Wstaw do edytora"
-  },
+  "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
     "auto": "Jak w systemie",
     "dark": "Ciemny",
@@ -1363,9 +1357,7 @@
     "missingSelection": "Wymagany jest zaznaczony tekst."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "zapytaj na czacie"
-    },
+    "actions": { "askInChat": "zapytaj na czacie" },
     "languages": {
       "cs-CZ": "Czeski",
       "de-DE": "niemiecki",
@@ -1395,9 +1387,7 @@
     },
     "translate": "przetłumacz na"
   },
-  "window": {
-    "clickToFocus": "Kliknij, aby kontynuować"
-  },
+  "window": { "clickToFocus": "Kliknij, aby kontynuować" },
   "write": {
     "alreadyCorrected": "Tekst jest już poprawiony",
     "cancel": "Anuluj",
@@ -1447,9 +1437,7 @@
     "valueNotSet": "Nieustawiona na tym urządzeniu: polecenia, które jej używają, nie działają",
     "valuePlaceholder": "Ścieżka, adres lub inny tekst"
   },
-  "snippets": {
-    "noMatches": "Brak pasujących wstawek"
-  },
+  "snippets": { "noMatches": "Brak pasujących wstawek" },
   "replyBlocks": {
     "insertIntoWindow": "Wstaw do okna",
     "insertIntoEditor": "Do edytora",

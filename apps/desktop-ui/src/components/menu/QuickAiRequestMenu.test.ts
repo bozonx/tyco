@@ -21,15 +21,27 @@ describe('QuickAiRequestMenu', () => {
     desktop.backend.handle('save_chat', () => undefined)
     desktop.backend.handle('copy_text', () => undefined)
     desktop.backend.handle('add_editor_history_item', () => 'history-1')
-    desktop.backend.handle('update_editor_history_item_session', () => undefined)
+    desktop.backend.handle(
+      'update_editor_history_item_session',
+      () => undefined
+    )
 
     desktop.setUserConfig({
       llm: {
+        ...desktop.backend.userConfig.llm,
         tasks: {
-          quickRequest: { modelId: 'gpt-4' },
+          ...desktop.backend.userConfig.llm.tasks,
+          quickRequest: { modelId: 'gpt-4', rule: '' },
         },
         models: [
-          { id: 'gpt-4', name: 'GPT 4', canUseTools: true },
+          {
+            id: 'gpt-4',
+            name: 'GPT 4',
+            providerId: 'openai',
+            providerModelId: 'gpt-4',
+            canUseImages: false,
+            canUseTools: true,
+          },
         ],
       },
     })
@@ -48,14 +60,16 @@ describe('QuickAiRequestMenu', () => {
           AppIcon: true,
           IconButton: {
             props: ['icon', 'title'],
-            template: '<button class="icon-btn" :title="title" @click="$attrs.onClick"><slot /></button>',
+            template:
+              '<button class="icon-btn" :title="title" @click="$attrs.onClick"><slot /></button>',
           },
           KeyboardKey: { template: '<kbd class="kbd"><slot /></kbd>' },
           AudioWaveform: true,
           LiveTranscript: true,
           ReplyBlock: {
             props: ['block'],
-            template: '<div class="reply-block"><span class="reply-text">{{ block.text }}</span></div>',
+            template:
+              '<div class="reply-block"><span class="reply-text">{{ block.text }}</span></div>',
           },
         },
       },
@@ -75,8 +89,10 @@ describe('QuickAiRequestMenu', () => {
   it('shows error banner when model is not configured', async () => {
     desktop.setUserConfig({
       llm: {
+        ...desktop.backend.userConfig.llm,
         tasks: {
-          quickRequest: { modelId: '' },
+          ...desktop.backend.userConfig.llm.tasks,
+          quickRequest: { modelId: '', rule: '' },
         },
         models: [],
       },
@@ -89,17 +105,26 @@ describe('QuickAiRequestMenu', () => {
     await flushPromises()
 
     expect(wrapper.find('.quick-error-banner').exists()).toBe(true)
-    expect(wrapper.find('.quick-error-text').text()).toBe('settings.errors.noModelConfigured')
+    expect(wrapper.find('.quick-error-text').text()).toBe('llmErrors.noModel')
   })
 
   it('shows error banner when model does not support tools', async () => {
     desktop.setUserConfig({
       llm: {
+        ...desktop.backend.userConfig.llm,
         tasks: {
-          quickRequest: { modelId: 'simple-model' },
+          ...desktop.backend.userConfig.llm.tasks,
+          quickRequest: { modelId: 'simple-model', rule: '' },
         },
         models: [
-          { id: 'simple-model', name: 'Simple', canUseTools: false },
+          {
+            id: 'simple-model',
+            name: 'Simple',
+            providerId: 'openai',
+            providerModelId: 'simple-model',
+            canUseImages: false,
+            canUseTools: false,
+          },
         ],
       },
     })
@@ -111,7 +136,9 @@ describe('QuickAiRequestMenu', () => {
     await flushPromises()
 
     expect(wrapper.find('.quick-error-banner').exists()).toBe(true)
-    expect(wrapper.find('.quick-error-text').text()).toBe('settings.errors.toolsUnsupported')
+    expect(wrapper.find('.quick-error-text').text()).toBe(
+      'llmErrors.toolsUnsupported'
+    )
   })
 
   it('calls open_main_chat when switching to chat', async () => {

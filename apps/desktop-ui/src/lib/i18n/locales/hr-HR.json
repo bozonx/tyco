@@ -18,9 +18,7 @@
     "quickAiRequest": "Brzi upit za UI",
     "voiceQuickAiRequest": "Glasovni brzi upit za UI"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Priloži datoteku",
     "alertCaution": "Oprez",
@@ -181,9 +179,7 @@
       "noCommands": "Još nema konfiguriranih prilagođenih naredbi.",
       "noCommandsHint": "Prvo stvorite naredbe u Postavke → Naredbe."
     },
-    "replyBlocks": {
-      "toolLabel": "Blokovi odgovora"
-    }
+    "replyBlocks": { "toolLabel": "Blokovi odgovora" }
   },
   "commands": {
     "advanced": "Napredno",
@@ -1222,9 +1218,7 @@
     "searchSnippetsPlaceholder": "Pretraži isječke…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": {
-    "insertIntoEditor": "Umetni u uređivač"
-  },
+  "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
     "auto": "Kao u sustavu",
     "dark": "Tamna",
@@ -1363,9 +1357,7 @@
     "missingSelection": "Potreban je odabrani tekst."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "pitaj u chatu"
-    },
+    "actions": { "askInChat": "pitaj u chatu" },
     "languages": {
       "cs-CZ": "Češki",
       "de-DE": "njemački",
@@ -1395,9 +1387,7 @@
     },
     "translate": "prevedi na"
   },
-  "window": {
-    "clickToFocus": "Kliknite za nastavak"
-  },
+  "window": { "clickToFocus": "Kliknite za nastavak" },
   "write": {
     "alreadyCorrected": "Tekst je već ispravljen",
     "cancel": "Odustani",
@@ -1447,9 +1437,7 @@
     "valueNotSet": "Nije postavljena na ovom uređaju: naredbe koje je koriste ne pokreću se",
     "valuePlaceholder": "Putanja, adresa ili drugi tekst"
   },
-  "snippets": {
-    "noMatches": "Nema podudarnih isječaka"
-  },
+  "snippets": { "noMatches": "Nema podudarnih isječaka" },
   "replyBlocks": {
     "insertIntoWindow": "Umetni u prozor",
     "insertIntoEditor": "U uređivač",

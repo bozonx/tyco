@@ -18,9 +18,7 @@
     "quickAiRequest": "Solicitare rapidă IA",
     "voiceQuickAiRequest": "Solicitare vocală rapidă IA"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Atașează un fișier",
     "alertCaution": "Atenție",
@@ -181,9 +179,7 @@
       "noCommands": "Nu există încă comenzi personalizate configurate.",
       "noCommandsHint": "Creați mai întâi comenzi în Setări → Comenzi."
     },
-    "replyBlocks": {
-      "toolLabel": "Blocuri de răspuns"
-    }
+    "replyBlocks": { "toolLabel": "Blocuri de răspuns" }
   },
   "commands": {
     "advanced": "Avansat",
@@ -1222,9 +1218,7 @@
     "searchSnippetsPlaceholder": "Căutați fragmente…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": {
-    "insertIntoEditor": "Inserează în editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
     "auto": "Ca în sistem",
     "dark": "Întunecată",
@@ -1363,9 +1357,7 @@
     "missingSelection": "Este necesar textul selectat."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "întreabă în chat"
-    },
+    "actions": { "askInChat": "întreabă în chat" },
     "languages": {
       "cs-CZ": "Cehă",
       "de-DE": "germană",
@@ -1395,9 +1387,7 @@
     },
     "translate": "tradu în"
   },
-  "window": {
-    "clickToFocus": "Faceți clic pentru a continua"
-  },
+  "window": { "clickToFocus": "Faceți clic pentru a continua" },
   "write": {
     "alreadyCorrected": "Textul este deja corectat",
     "cancel": "Anulează",
@@ -1447,9 +1437,7 @@
     "valueNotSet": "Nesetată pe acest dispozitiv: comenzile care o folosesc nu rulează",
     "valuePlaceholder": "O cale, o adresă sau alt text"
   },
-  "snippets": {
-    "noMatches": "Niciun fragment găsit"
-  },
+  "snippets": { "noMatches": "Niciun fragment găsit" },
   "replyBlocks": {
     "insertIntoWindow": "Inserează în fereastră",
     "insertIntoEditor": "În editor",

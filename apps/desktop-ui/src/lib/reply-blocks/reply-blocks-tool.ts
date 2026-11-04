@@ -27,7 +27,9 @@ export function extractReplyBlocks(input: unknown): ReplyBlockData[] {
   if (!input || typeof input !== 'object') return []
 
   const target =
-    'input' in input && (input as { input: unknown }).input && typeof (input as { input: unknown }).input === 'object'
+    'input' in input &&
+    (input as { input: unknown }).input &&
+    typeof (input as { input: unknown }).input === 'object'
       ? (input as { input: unknown }).input
       : input
 
@@ -47,18 +49,16 @@ export function extractReplyBlocks(input: unknown): ReplyBlockData[] {
         ? titleRaw.trim()
         : undefined
 
-    result.push({
-      ...(title ? { title } : {}),
-      text,
-    })
+    result.push({ ...(title ? { title } : {}), text })
   }
 
   return result
 }
 
 /**
- * Chat tool definition for proposing text replacement and reply options.
- * The execute function is a no-op confirmation that acknowledges the blocks were presented.
+ * Chat tool definition for proposing text replacement and reply options. The
+ * execute function is a no-op confirmation that acknowledges the blocks were
+ * presented.
  */
 export function createReplyBlocksTool(): ChatToolDefinition {
   return {
@@ -105,15 +105,10 @@ export function createReplyBlocksTool(): ChatToolDefinition {
   }
 }
 
-/**
- * Creates a tool provider offering propose_replies to chat sessions.
- */
+/** Creates a tool provider offering propose_replies to chat sessions. */
 export function createReplyBlocksToolProvider(): ChatToolProvider {
   const tool = createReplyBlocksTool()
-  return {
-    id: 'reply-blocks',
-    tools: () => [tool],
-  }
+  return { id: 'reply-blocks', tools: () => [tool] }
 }
 
 /**
@@ -127,16 +122,14 @@ export function withReplyBlocksToolGroup(
     ...settings,
     groups: {
       ...settings?.groups,
-      [REPLY_BLOCKS_TOOL_GROUP_ID]: {
-        isEnabled: true,
-        access: 'allow',
-      },
+      [REPLY_BLOCKS_TOOL_GROUP_ID]: { isEnabled: true, access: 'allow' },
     },
   }
 }
 
 /**
- * Ensures propose_replies is present in a ChatToolSet with approved execution access.
+ * Ensures propose_replies is present in a ChatToolSet with approved execution
+ * access.
  */
 export function withReplyBlocksTool(set: ChatToolSet | null): ChatToolSet {
   const replyTool = createReplyBlocksTool()
@@ -146,7 +139,9 @@ export function withReplyBlocksTool(set: ChatToolSet | null): ChatToolSet {
   const tools: ToolSet = { ...set?.tools }
   tools[replyTool.name] = dynamicTool({
     description: replyTool.description,
-    inputSchema: jsonSchema(replyTool.inputSchema as Parameters<typeof jsonSchema>[0]),
+    inputSchema: jsonSchema(
+      replyTool.inputSchema as Parameters<typeof jsonSchema>[0]
+    ),
     execute: async (input) => {
       const res = await replyTool.execute(input, {
         signal: new AbortController().signal,

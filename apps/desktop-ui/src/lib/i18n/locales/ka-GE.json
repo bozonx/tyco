@@ -18,9 +18,7 @@
     "quickAiRequest": "სწრაფი AI მოთხოვნა",
     "voiceQuickAiRequest": "ხმოვანი სწრაფი AI მოთხოვნა"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "ფაილის მიმაგრება",
     "alertCaution": "ყურადღება",
@@ -181,9 +179,7 @@
       "noCommands": "მორგებული ბრძანებები ჯერ არ არის კონფიგურირებული.",
       "noCommandsHint": "ჯერ შექმენით ბრძანებები პარამეტრები → ბრძანებები განყოფილებაში."
     },
-    "replyBlocks": {
-      "toolLabel": "პასუხის ბლოკები"
-    }
+    "replyBlocks": { "toolLabel": "პასუხის ბლოკები" }
   },
   "commands": {
     "advanced": "დამატებითი",
@@ -610,10 +606,7 @@
       "command": "ბრძანებამ ტექსტი უცვლელად დატოვა",
       "correction": "შეცდომები ვერ მოიძებნა"
     },
-    "working": {
-      "command": "ბრძანება სრულდება…",
-      "correction": "სწორდება…"
-    }
+    "working": { "command": "ბრძანება სრულდება…", "correction": "სწორდება…" }
   },
   "settings": {
     "accessAllow": "დაშვება",
@@ -1222,9 +1215,7 @@
     "searchSnippetsPlaceholder": "სნიპეტების ძიება…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": {
-    "insertIntoEditor": "რედაქტორში ჩასმა"
-  },
+  "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {
     "auto": "სისტემის მიხედვით",
     "dark": "მუქი",
@@ -1363,9 +1354,7 @@
     "missingSelection": "საჭიროა მონიშნული ტექსტი."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "იკითხე ჩატში"
-    },
+    "actions": { "askInChat": "იკითხე ჩატში" },
     "languages": {
       "cs-CZ": "ჩეხური",
       "de-DE": "გერმანულად",
@@ -1395,9 +1384,7 @@
     },
     "translate": "თარგმნე"
   },
-  "window": {
-    "clickToFocus": "დააწკაპუნეთ გასაგრძელებლად"
-  },
+  "window": { "clickToFocus": "დააწკაპუნეთ გასაგრძელებლად" },
   "write": {
     "alreadyCorrected": "ტექსტი უკვე შესწორებულია",
     "cancel": "გაუქმება",
@@ -1447,9 +1434,7 @@
     "valueNotSet": "ამ მოწყობილობაზე მითითებული არ არის: მისი გამომყენებელი ბრძანებები არ სრულდება",
     "valuePlaceholder": "გზა, მისამართი ან სხვა ტექსტი"
   },
-  "snippets": {
-    "noMatches": "სნიპეტები არ მოიძებნა"
-  },
+  "snippets": { "noMatches": "სნიპეტები არ მოიძებნა" },
   "replyBlocks": {
     "insertIntoWindow": "ფანჯარაში ჩასმა",
     "insertIntoEditor": "რედაქტორში",

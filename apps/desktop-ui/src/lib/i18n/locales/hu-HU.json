@@ -18,9 +18,7 @@
     "quickAiRequest": "Gyors MI kérés",
     "voiceQuickAiRequest": "Hangalapú gyors MI kérés"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Fájl csatolása",
     "alertCaution": "Vigyázat",
@@ -181,9 +179,7 @@
       "noCommands": "Még nincsenek egyéni parancsok konfigurálva.",
       "noCommandsHint": "Először hozzon létre parancsokat a Beállítások → Parancsok menüben."
     },
-    "replyBlocks": {
-      "toolLabel": "Válaszblokkok"
-    }
+    "replyBlocks": { "toolLabel": "Válaszblokkok" }
   },
   "commands": {
     "advanced": "Speciális",
@@ -610,10 +606,7 @@
       "command": "A parancs változatlanul hagyta a szöveget",
       "correction": "Nem található hiba"
     },
-    "working": {
-      "command": "A parancs fut…",
-      "correction": "Javítás…"
-    }
+    "working": { "command": "A parancs fut…", "correction": "Javítás…" }
   },
   "settings": {
     "accessAllow": "Engedélyezés",
@@ -1222,9 +1215,7 @@
     "searchSnippetsPlaceholder": "Szövegrészletek keresése…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": {
-    "insertIntoEditor": "Beillesztés a szerkesztőbe"
-  },
+  "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
     "auto": "Rendszer szerint",
     "dark": "Sötét",
@@ -1363,9 +1354,7 @@
     "missingSelection": "Kijelölt szöveg szükséges."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "kérdezd meg a csevegésben"
-    },
+    "actions": { "askInChat": "kérdezd meg a csevegésben" },
     "languages": {
       "cs-CZ": "Cseh",
       "de-DE": "németre",
@@ -1395,9 +1384,7 @@
     },
     "translate": "fordítsd le"
   },
-  "window": {
-    "clickToFocus": "Kattintson a folytatáshoz"
-  },
+  "window": { "clickToFocus": "Kattintson a folytatáshoz" },
   "write": {
     "alreadyCorrected": "A szöveg már javítva van",
     "cancel": "Mégse",
@@ -1447,9 +1434,7 @@
     "valueNotSet": "Nincs megadva ezen az eszközön: az ezt használó parancsok nem futnak",
     "valuePlaceholder": "Útvonal, cím vagy más szöveg"
   },
-  "snippets": {
-    "noMatches": "Nincs egyező szövegrészlet"
-  },
+  "snippets": { "noMatches": "Nincs egyező szövegrészlet" },
   "replyBlocks": {
     "insertIntoWindow": "Beszúrás az ablakba",
     "insertIntoEditor": "A szerkesztőbe",

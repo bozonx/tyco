@@ -18,9 +18,7 @@
     "quickAiRequest": "AIクイックリクエスト",
     "voiceQuickAiRequest": "音声AIクイックリクエスト"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "ファイルを添付",
     "alertCaution": "注意",
@@ -181,9 +179,7 @@
       "noCommands": "カスタムコマンドはまだ設定されていません。",
       "noCommandsHint": "最初に「設定 → コマンド」でコマンドを作成してください。"
     },
-    "replyBlocks": {
-      "toolLabel": "返答ブロック"
-    }
+    "replyBlocks": { "toolLabel": "返答ブロック" }
   },
   "commands": {
     "advanced": "高度な設定",
@@ -610,10 +606,7 @@
       "command": "コマンドによるテキストの変更はありませんでした",
       "correction": "修正箇所は見つかりませんでした"
     },
-    "working": {
-      "command": "コマンドを実行中…",
-      "correction": "校正中…"
-    }
+    "working": { "command": "コマンドを実行中…", "correction": "校正中…" }
   },
   "settings": {
     "accessAllow": "許可",
@@ -1222,9 +1215,7 @@
     "searchSnippetsPlaceholder": "スニペットを検索…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": {
-    "insertIntoEditor": "エディターに挿入"
-  },
+  "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {
     "auto": "システム設定に従う",
     "dark": "ダーク",
@@ -1363,9 +1354,7 @@
     "missingSelection": "選択されたテキストが必要です。"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "チャットで質問"
-    },
+    "actions": { "askInChat": "チャットで質問" },
     "languages": {
       "cs-CZ": "チェコ語",
       "de-DE": "ドイツ語",
@@ -1395,9 +1384,7 @@
     },
     "translate": "{language}に翻訳して;{language}に翻訳;翻訳"
   },
-  "window": {
-    "clickToFocus": "クリックして続行"
-  },
+  "window": { "clickToFocus": "クリックして続行" },
   "write": {
     "alreadyCorrected": "テキストはすでに修正済みです",
     "cancel": "キャンセル",
@@ -1447,9 +1434,7 @@
     "valueNotSet": "このデバイスでは未設定: これを使うコマンドは実行されません",
     "valuePlaceholder": "パス、アドレス、その他のテキスト"
   },
-  "snippets": {
-    "noMatches": "一致するスニペットがありません"
-  },
+  "snippets": { "noMatches": "一致するスニペットがありません" },
   "replyBlocks": {
     "insertIntoWindow": "ウィンドウに挿入",
     "insertIntoEditor": "エディタへ",

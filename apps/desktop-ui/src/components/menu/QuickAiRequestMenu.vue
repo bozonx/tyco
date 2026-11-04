@@ -1,12 +1,13 @@
 <template>
-  <ActionOverlayLayout
-    :title="t('action.quickAiRequest')"
-    :on-esc="handleEsc"
-  >
+  <ActionOverlayLayout :title="t('action.quickAiRequest')" :on-esc="handleEsc">
     <template #header-extra>
       <div class="quick-profile-picker">
         <label class="quick-profile-label">
-          <AppIcon icon="mdi:account-outline" size="sm" class="quick-profile-icon" />
+          <AppIcon
+            icon="mdi:account-outline"
+            size="sm"
+            class="quick-profile-icon"
+          />
           <FieldSelect
             size="sm"
             :model-value="model.profileId.value ?? ''"
@@ -42,16 +43,14 @@
 
       <!-- Feed of multi-turn interactions -->
       <div v-if="model.turns.value.length > 0" class="turns-feed">
-        <div
-          v-for="turn in model.turns.value"
-          :key="turn.id"
-          class="turn-item"
-        >
+        <div v-for="turn in model.turns.value" :key="turn.id" class="turn-item">
           <!-- User Prompt -->
           <div class="turn-user-message">
             <span class="turn-prompt-icon">
               <AppIcon
-                :icon="turn.inputKind === 'voice' ? 'mdi:microphone' : 'mdi:account'"
+                :icon="
+                  turn.inputKind === 'voice' ? 'mdi:microphone' : 'mdi:account'
+                "
                 size="sm"
               />
             </span>
@@ -82,7 +81,10 @@
             <div v-if="turn.parts.length > 0" class="turn-parts">
               <template v-for="(part, pIndex) in turn.parts" :key="pIndex">
                 <ChatToolCall
-                  v-if="part.type === 'tool-call' && part.toolName !== REPLY_BLOCKS_TOOL_NAME"
+                  v-if="
+                    part.type === 'tool-call' &&
+                    part.toolName !== REPLY_BLOCKS_TOOL_NAME
+                  "
                   :call="part"
                   @decide="model.answerToolApproval(part.approvalId!, $event)"
                 />
@@ -90,10 +92,7 @@
             </div>
 
             <!-- Generating indicator -->
-            <div
-              v-if="turn.status === 'generating'"
-              class="turn-generating"
-            >
+            <div v-if="turn.status === 'generating'" class="turn-generating">
               <span class="spinner" />
               <span>{{ t('common.inProgress') }}</span>
             </div>
@@ -108,7 +107,10 @@
       </div>
 
       <!-- Config or Model Error banner -->
-      <div v-if="model.error.value && model.turns.value.length === 0" class="quick-error-banner">
+      <div
+        v-if="model.error.value && model.turns.value.length === 0"
+        class="quick-error-banner"
+      >
         <AppIcon icon="mdi:alert-circle-outline" size="md" />
         <span class="quick-error-text">{{ model.error.value }}</span>
         <button type="button" class="quick-error-link" @click="goToSettings">
@@ -149,6 +151,50 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+
+import { useDictationActions } from '../../composables/use-dictation-actions'
+import { useEditorNavigation } from '../../composables/use-editor-navigation'
+import { useI18n } from '../../composables/use-i18n'
+import { useOverlayNav } from '../../composables/use-overlay-nav'
+import useToast from '../../composables/use-toast'
+import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
+import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-meter'
+import { createDesktopChatTools } from '../../lib/chat-tools/desktop-chat-tools'
+import { resolveProfileInstructions } from '../../lib/chat/chat-profile-runtime'
+import { invokeDesktop } from '../../lib/desktop/invoke'
+import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
+import { describeError } from '../../lib/errors/describe-error'
+import { resultOrThrow } from '../../lib/ipc/ipc-model'
+import { clientLogger } from '../../lib/logger'
+import { filterOptions } from '../../lib/menu-query/menu-query'
+import type { QuickAiRequestMenuParams } from '../../lib/modals/menu-modal-params'
+import {
+  type QuickAiRequestModel,
+  createQuickAiRequestModel,
+} from '../../lib/quick-ai-request/quick-ai-request-model'
+import { REPLY_BLOCKS_TOOL_NAME } from '../../lib/reply-blocks/reply-blocks-tool'
+import { describeDictationError } from '../../lib/stt/dictation-error'
+import { useAiProfilesStore } from '../../stores/ai-profiles'
+import { useDesktopStore } from '../../stores/desktop'
+import { useHistoryStore } from '../../stores/history'
+import { useIpcStore } from '../../stores/ipc'
+import { useLlmStore } from '../../stores/llm'
+import { useMenuModalsStore } from '../../stores/menu-modals'
+import { useToolsStore } from '../../stores/tools'
+import ChatToolCall from '../chat/ChatToolCall.vue'
+import ReplyBlock from '../chat/ReplyBlock.vue'
+import AppIcon from '../common/AppIcon.vue'
+import FieldSelect from '../common/FieldSelect.vue'
+import IconButton from '../common/IconButton.vue'
+import TextPreview from '../common/TextPreview.vue'
+import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
+import AudioWaveform from '../voice/AudioWaveform.vue'
+import LiveTranscript from '../voice/LiveTranscript.vue'
+import QueryPanel, {
+  type QueryPanelHint,
+  type QueryPanelOption,
+  type QueryPanelSubmit,
+} from './QueryPanel.vue'
 import {
   APP_CONFIG,
   type AiProfile,
@@ -157,51 +203,6 @@ import {
   type EditorHistoryInstruction,
   type EditorHistoryTurn,
 } from '@tyco/shared'
-import { resultOrThrow } from '../../lib/ipc/ipc-model'
-import { useEditorNavigation } from '../../composables/use-editor-navigation'
-import { useI18n } from '../../composables/use-i18n'
-import { useOverlayNav } from '../../composables/use-overlay-nav'
-import useToast from '../../composables/use-toast'
-import { useDictationActions } from '../../composables/use-dictation-actions'
-import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-meter'
-import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
-import { invokeDesktop } from '../../lib/desktop/invoke'
-import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
-import { describeError } from '../../lib/errors/describe-error'
-import { describeDictationError } from '../../lib/stt/dictation-error'
-import { filterOptions } from '../../lib/menu-query/menu-query'
-import type { QuickAiRequestMenuParams } from '../../lib/modals/menu-modal-params'
-import {
-  createQuickAiRequestModel,
-  type QuickAiRequestModel,
-} from '../../lib/quick-ai-request/quick-ai-request-model'
-import {
-  REPLY_BLOCKS_TOOL_NAME,
-} from '../../lib/reply-blocks/reply-blocks-tool'
-import { resolveProfileInstructions } from '../../lib/chat/chat-profile-runtime'
-import { createDesktopChatTools } from '../../lib/chat-tools/desktop-chat-tools'
-import { clientLogger } from '../../lib/logger'
-import { useAiProfilesStore } from '../../stores/ai-profiles'
-import { useDesktopStore } from '../../stores/desktop'
-import { useHistoryStore } from '../../stores/history'
-import { useIpcStore } from '../../stores/ipc'
-import { useLlmStore } from '../../stores/llm'
-import { useMenuModalsStore } from '../../stores/menu-modals'
-import { useToolsStore } from '../../stores/tools'
-import TextPreview from '../common/TextPreview.vue'
-import AppIcon from '../common/AppIcon.vue'
-import IconButton from '../common/IconButton.vue'
-import FieldSelect from '../common/FieldSelect.vue'
-import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
-import AudioWaveform from '../voice/AudioWaveform.vue'
-import LiveTranscript from '../voice/LiveTranscript.vue'
-import ReplyBlock from '../chat/ReplyBlock.vue'
-import ChatToolCall from '../chat/ChatToolCall.vue'
-import QueryPanel, {
-  type QueryPanelHint,
-  type QueryPanelOption,
-  type QueryPanelSubmit,
-} from './QueryPanel.vue'
 
 const props = withDefaults(defineProps<QuickAiRequestMenuParams>(), {
   text: '',
@@ -321,9 +322,7 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
   listRecentInstructions: (limit?: number, pId?: string | null) =>
     historyStore.listRecentInstructions(limit, pId),
   insertText: async (text: string) => {
-    await ipcStore.callOrNotify('paste_into_target_and_hide', {
-      text,
-    })
+    await ipcStore.callOrNotify('paste_into_target_and_hide', { text })
     void historyStore.saveOutput(text)
   },
   copyText: async (text: string) => {
@@ -346,10 +345,7 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
   },
   saveChat: async (chat: Chat, pId?: string) => {
     resultOrThrow(
-      await ipcStore.call('save_chat', {
-        profileId: pId ?? null,
-        chat,
-      }),
+      await ipcStore.call('save_chat', { profileId: pId ?? null, chat }),
       'save_chat'
     )
   },
@@ -418,11 +414,12 @@ async function stopVoice(): Promise<string> {
   try {
     const text = await dictation.finishDictation()
     isListening.value = false
-    const spoken = (
-      liveTranscript.value.committed +
-      ' ' +
-      (liveTranscript.value.draft || '')
-    ).trim() || text.trim()
+    const spoken =
+      (
+        liveTranscript.value.committed +
+        ' ' +
+        (liveTranscript.value.draft || '')
+      ).trim() || text.trim()
     liveTranscript.value = { committed: '', draft: '' }
     return spoken
   } catch (err) {
@@ -503,9 +500,7 @@ function handleEsc() {
 }
 
 function goToSettings() {
-  void ipcStore.callOrNotify('activate_mode', {
-    mode: 'config',
-  })
+  void ipcStore.callOrNotify('activate_mode', { mode: 'config' })
 }
 
 onMounted(async () => {

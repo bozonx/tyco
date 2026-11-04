@@ -267,8 +267,10 @@ describe('feature models', () => {
     modeControl.vm.$emit('update:modelValue', 'perTask')
     await flushPromises()
 
-    const selects = wrapper.findAllComponents(FieldSelect)
-    const translation = selects.at(-7)!
+    const translation = wrapper
+      .findAllComponents(FieldRow)
+      .find((row) => row.props('label') === 'action.translationMenu')!
+      .findComponent(FieldSelect)
     const options = translation.props('options') as { id: string }[]
     expect(options[0]).toEqual({ id: '', name: 'settings.taskModelNone' })
     expect(options.map((option) => option.id)).toContain('gemini-flash')
@@ -396,6 +398,7 @@ describe('SettingsLlmTab.vue', () => {
       'settings.aiCommands',
       'settings.transformationsTab',
       'settings.stylingTab',
+      'action.quickAiRequest',
       'settings.chatImageQuality',
       'settings.webJinaApiKey',
       'settings.webFetchMaxCharacters',

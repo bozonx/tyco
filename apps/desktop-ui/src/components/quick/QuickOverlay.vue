@@ -62,10 +62,7 @@
           :key="activationId"
         />
       </div>
-      <div
-        v-show="currentMode === 'quickAiRequest'"
-        class="quick-mode-layer"
-      >
+      <div v-show="currentMode === 'quickAiRequest'" class="quick-mode-layer">
         <QuickAiRequestView
           v-if="currentMode === 'quickAiRequest'"
           :key="activationId"

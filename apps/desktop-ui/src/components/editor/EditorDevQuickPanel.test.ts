@@ -45,16 +45,16 @@ describe('EditorDevQuickPanel.vue', () => {
     expect(transformBtn.text()).toContain('Transform')
 
     const customTransformBtn = wrapper.find(
-      'button[title="Open Quick Custom Transform"]'
+      'button[title="Open Quick AI Request"]'
     )
     expect(customTransformBtn.exists()).toBe(true)
-    expect(customTransformBtn.text()).toContain('Custom Transform')
+    expect(customTransformBtn.text()).toBe('Quick AI')
 
     const voiceTransformBtn = wrapper.find(
-      'button[title="Open Quick Voice Transform"]'
+      'button[title="Open Voice Quick AI Request"]'
     )
     expect(voiceTransformBtn.exists()).toBe(true)
-    expect(voiceTransformBtn.text()).toContain('Voice Transform')
+    expect(voiceTransformBtn.text()).toBe('Voice Quick AI')
   })
 
   it('activates styling mode on click', async () => {
@@ -107,7 +107,7 @@ describe('EditorDevQuickPanel.vue', () => {
     ])
   })
 
-  it('activates custom transformation mode on click', async () => {
+  it('activates quick AI request mode on click', async () => {
     const wrapper = mount(EditorDevQuickPanel, {
       global: {
         plugins: [desktop.pinia],
@@ -123,7 +123,7 @@ describe('EditorDevQuickPanel.vue', () => {
     })
 
     const customTransformBtn = wrapper.find(
-      'button[title="Open Quick Custom Transform"]'
+      'button[title="Open Quick AI Request"]'
     )
     await customTransformBtn.trigger('click')
 

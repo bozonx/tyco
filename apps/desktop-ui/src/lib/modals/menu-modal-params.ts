@@ -51,6 +51,8 @@ export interface QuickAiRequestMenuParams {
   profileId?: string | null
 }
 export interface VoiceCommandsMenuParams {
+  /** Follows a late selection capture from this action-menu activation only. */
+  selectionActivationId?: number
   text?: string
   shortcutsDisabled?: boolean
 }

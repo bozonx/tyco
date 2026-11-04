@@ -101,8 +101,8 @@ import { messageSteps } from '../../lib/chat-tools/chat-message-steps'
 import type { ChatToolApprovalRequest } from '../../lib/chat-tools/chat-tool-loop'
 import type { ChatToolDecision } from '../../lib/chat-tools/chat-tool-policy'
 import {
-  extractReplyBlocks,
   REPLY_BLOCKS_TOOL_NAME,
+  extractReplyBlocks,
 } from '../../lib/reply-blocks/reply-blocks-tool'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'

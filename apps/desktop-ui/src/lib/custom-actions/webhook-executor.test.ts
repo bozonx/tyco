@@ -299,3 +299,38 @@ describe('executeWebhook', () => {
     expect(log.mock.calls[0][1]).toContain('[truncated]')
   })
 })
+
+describe('selection context in webhook requests', () => {
+  it.each(['123', 'true', '{"value":1}', 'ordinary text'])(
+    'sends a standalone selection as plain text: %s',
+    (selection) => {
+      const { init } = buildWebhookRequest(
+        webhook({ payloadTemplate: '{{SELECTION}}' }),
+        null,
+        {},
+        selection
+      )
+      expect(init.body).toBe(selection)
+      expect(init.headers['content-type']).toBe('text/plain; charset=utf-8')
+    }
+  )
+
+  it('escapes selection in JSON and URL templates separately from command text', () => {
+    const selection = 'quote " and & slash /'
+    const { url, init } = buildWebhookRequest(
+      webhook({
+        url: 'https://example.com/?selection={{SELECTION}}',
+        payloadTemplate: '{"selection":"{{SELECTION}}","text":{{TEXT}}}',
+      }),
+      'voice argument',
+      {},
+      selection
+    )
+    expect(new URL(url).searchParams.get('selection')).toBe(selection)
+    expect(JSON.parse(init.body as string)).toEqual({
+      selection,
+      text: 'voice argument',
+    })
+    expect(init.headers['content-type']).toBe('application/json; charset=utf-8')
+  })
+})

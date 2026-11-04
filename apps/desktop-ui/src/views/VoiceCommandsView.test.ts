@@ -91,7 +91,9 @@ const candidate = (commandId: string, text = 'Hello') => ({
   commandOffset: 0,
 })
 let desktop: TestDesktop
-const mountView = (props: { text?: string } = {}) =>
+const mountView = (
+  props: { text?: string; selectionActivationId?: number } = {}
+) =>
   mount(VoiceCommandsView, {
     props,
     global: { plugins: [i18n, desktop.pinia] },
@@ -332,6 +334,33 @@ describe('separate voice command overlay', () => {
     await row.trigger('click')
     expect(mocks.choose).not.toHaveBeenCalled()
     expect(mocks.chooseCommand).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('receives a late selection from its action-menu activation', async () => {
+    const wrapper = mountView({ selectionActivationId: 12 })
+    expect(mocks.setContext).toHaveBeenLastCalledWith(undefined)
+
+    desktop.setState({ selectedText: 'Late selected text' })
+    await flushPromises()
+    expect(mocks.setContext).toHaveBeenLastCalledWith({
+      selectionText: 'Late selected text',
+    })
+    expect(wrapper.text()).toContain('Late selected text')
+
+    desktop.setState({ activationId: 13, selectedText: 'Another activation' })
+    await flushPromises()
+    expect(mocks.setContext).toHaveBeenLastCalledWith(undefined)
+    expect(wrapper.text()).not.toContain('Another activation')
+    wrapper.unmount()
+  })
+
+  it('does not adopt desktop selection without an action-menu context', async () => {
+    const wrapper = mountView()
+    desktop.setState({ selectedText: 'Unrelated selection' })
+    await flushPromises()
+    expect(mocks.setContext).toHaveBeenLastCalledWith(undefined)
+    expect(wrapper.text()).not.toContain('Unrelated selection')
     wrapper.unmount()
   })
 

@@ -18,9 +18,7 @@
     "quickAiRequest": "Γρήγορο αίτημα AI",
     "voiceQuickAiRequest": "Φωνητικό γρήγορο αίτημα AI"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Επισύναψη αρχείου",
     "alertCaution": "Προσοχή",
@@ -181,9 +179,7 @@
       "noCommands": "Δεν έχουν ρυθμιστεί ακόμη προσαρμοσμένες εντολές.",
       "noCommandsHint": "Δημιουργήστε πρώτα εντολές στις Ρυθμίσεις → Εντολές."
     },
-    "replyBlocks": {
-      "toolLabel": "Μπλοκ απαντήσεων"
-    }
+    "replyBlocks": { "toolLabel": "Μπλοκ απαντήσεων" }
   },
   "commands": {
     "advanced": "Για προχωρημένους",
@@ -610,10 +606,7 @@
       "command": "Η εντολή άφησε το κείμενο αμετάβλητο",
       "correction": "Δεν βρέθηκαν λάθη"
     },
-    "working": {
-      "command": "Εκτέλεση εντολής…",
-      "correction": "Διόρθωση…"
-    }
+    "working": { "command": "Εκτέλεση εντολής…", "correction": "Διόρθωση…" }
   },
   "settings": {
     "accessAllow": "Να επιτρέπεται",
@@ -1222,9 +1215,7 @@
     "searchSnippetsPlaceholder": "Αναζήτηση αποσπασμάτων…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": {
-    "insertIntoEditor": "Εισαγωγή στον επεξεργαστή"
-  },
+  "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {
     "auto": "Όπως στο σύστημα",
     "dark": "Σκούρο",
@@ -1363,9 +1354,7 @@
     "missingSelection": "Απαιτείται επιλεγμένο κείμενο."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "ρώτα στη συνομιλία"
-    },
+    "actions": { "askInChat": "ρώτα στη συνομιλία" },
     "languages": {
       "cs-CZ": "Τσεχικά",
       "de-DE": "γερμανικά",
@@ -1395,9 +1384,7 @@
     },
     "translate": "μετάφρασε στα"
   },
-  "window": {
-    "clickToFocus": "Κάντε κλικ για να συνεχίσετε"
-  },
+  "window": { "clickToFocus": "Κάντε κλικ για να συνεχίσετε" },
   "write": {
     "alreadyCorrected": "Το κείμενο είναι ήδη διορθωμένο",
     "cancel": "Ακύρωση",
@@ -1447,9 +1434,7 @@
     "valueNotSet": "Δεν έχει οριστεί σε αυτή τη συσκευή: οι εντολές που τη χρησιμοποιούν δεν εκτελούνται",
     "valuePlaceholder": "Μια διαδρομή, μια διεύθυνση ή άλλο κείμενο"
   },
-  "snippets": {
-    "noMatches": "Δεν βρέθηκαν αποσπάσματα"
-  },
+  "snippets": { "noMatches": "Δεν βρέθηκαν αποσπάσματα" },
   "replyBlocks": {
     "insertIntoWindow": "Εισαγωγή στο παράθυρο",
     "insertIntoEditor": "Στον επεξεργαστή",

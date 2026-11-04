@@ -47,9 +47,7 @@ describe('reply-blocks-tool', () => {
       expect(tool.inputSchema.required).toContain('blocks')
 
       const result = await tool.execute(
-        {
-          blocks: [{ text: 'Answer' }],
-        },
+        { blocks: [{ text: 'Answer' }] },
         {
           signal: new AbortController().signal,
           toolCallId: 'call_1',
@@ -88,9 +86,7 @@ describe('reply-blocks-tool', () => {
 
     it('preserves other existing groups', () => {
       const initial = {
-        groups: {
-          files: { isEnabled: true, access: 'ask' as const },
-        },
+        groups: { files: { isEnabled: true, access: 'ask' as const } },
       }
       const settings = withReplyBlocksToolGroup(initial)
       expect(settings.groups.files).toEqual({ isEnabled: true, access: 'ask' })

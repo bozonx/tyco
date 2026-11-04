@@ -63,7 +63,8 @@ export const MODE_ROUTE_MAP: Record<ActivationMode, AppRoutePath> = {
   [ActivationMode.STYLING]: APP_ROUTES.STYLING.path,
   [ActivationMode.TRANSFORMATION]: APP_ROUTES.TRANSFORMATION.path,
   [ActivationMode.QUICK_AI_REQUEST]: APP_ROUTES.QUICK_AI_REQUEST.path,
-  [ActivationMode.VOICE_QUICK_AI_REQUEST]: APP_ROUTES.VOICE_QUICK_AI_REQUEST.path,
+  [ActivationMode.VOICE_QUICK_AI_REQUEST]:
+    APP_ROUTES.VOICE_QUICK_AI_REQUEST.path,
   [ActivationMode.CHAT_PROMPTS]: APP_ROUTES.CHAT_PROMPTS.path,
   [ActivationMode.SNIPPETS]: APP_ROUTES.SNIPPETS.path,
   [ActivationMode.EDITOR]: APP_ROUTES.EDITOR.path,

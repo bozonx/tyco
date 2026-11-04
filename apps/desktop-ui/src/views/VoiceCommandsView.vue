@@ -206,7 +206,11 @@ import { useToolsStore } from '../stores/tools'
 import { useVoiceCommandsStore } from '../stores/voice-commands'
 
 const props = withDefaults(
-  defineProps<{ text?: string; shortcutsDisabled?: boolean }>(),
+  defineProps<{
+    text?: string
+    shortcutsDisabled?: boolean
+    selectionActivationId?: number
+  }>(),
   { text: '', shortcutsDisabled: false }
 )
 
@@ -217,7 +221,15 @@ const voice = useVoiceCommandsStore()
 const releaseHold = useQuickDismissStore().hold()
 const { handleEsc, handleCloseAll } = useOverlayNav(() => ({ escMode: 'auto' }))
 
-const contextText = computed(() => (props.text?.trim() ? props.text : ''))
+const contextText = computed(() => {
+  const state = desktopStore.desktopState
+  const text =
+    props.selectionActivationId !== undefined &&
+    props.selectionActivationId === state.activationId
+      ? (state.selectedText ?? props.text)
+      : props.text
+  return text?.trim() ? text : ''
+})
 
 watch(
   contextText,

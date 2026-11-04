@@ -221,12 +221,12 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "customTransformation": "",
-        "voiceTransformation": "",
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": ""
+        "snippets": "",
+        "quickAiRequest": "",
+        "voiceQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -311,7 +311,8 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "transformation": { "modelId": "" },
-          "styling": { "modelId": "" }
+          "styling": { "modelId": "" },
+          "quickRequest": { "modelId": "", "rule": "" }
         },
         "imageQuality": "balanced"
       },
@@ -363,8 +364,8 @@
             "s": { "type": "standard", "actionId": "stylingMenu" },
             "d": { "type": "standard", "actionId": "correction" },
             "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "customTransformation" },
-            "v": { "type": "standard", "actionId": "voiceTransformation" }
+            "g": { "type": "standard", "actionId": "quickAiRequest" },
+            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
           }
         }
       ],
@@ -615,12 +616,12 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "customTransformation": "",
-        "voiceTransformation": "",
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": ""
+        "snippets": "",
+        "quickAiRequest": "",
+        "voiceQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -701,7 +702,8 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "transformation": { "modelId": "" },
-          "styling": { "modelId": "" }
+          "styling": { "modelId": "" },
+          "quickRequest": { "modelId": "", "rule": "" }
         },
         "imageQuality": "balanced"
       },
@@ -753,8 +755,8 @@
             "s": { "type": "standard", "actionId": "stylingMenu" },
             "d": { "type": "standard", "actionId": "correction" },
             "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "customTransformation" },
-            "v": { "type": "standard", "actionId": "voiceTransformation" }
+            "g": { "type": "standard", "actionId": "quickAiRequest" },
+            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
           }
         }
       ],
@@ -994,12 +996,12 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "customTransformation": "",
-        "voiceTransformation": "",
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": ""
+        "snippets": "",
+        "quickAiRequest": "",
+        "voiceQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1084,7 +1086,8 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "transformation": { "modelId": "" },
-          "styling": { "modelId": "" }
+          "styling": { "modelId": "" },
+          "quickRequest": { "modelId": "", "rule": "" }
         },
         "imageQuality": "balanced"
       },
@@ -1136,8 +1139,8 @@
             "s": { "type": "standard", "actionId": "stylingMenu" },
             "d": { "type": "standard", "actionId": "correction" },
             "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "customTransformation" },
-            "v": { "type": "standard", "actionId": "voiceTransformation" }
+            "g": { "type": "standard", "actionId": "quickAiRequest" },
+            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
           }
         }
       ],
@@ -1382,12 +1385,12 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "customTransformation": "",
-        "voiceTransformation": "",
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": ""
+        "snippets": "",
+        "quickAiRequest": "",
+        "voiceQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1472,7 +1475,8 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "transformation": { "modelId": "" },
-          "styling": { "modelId": "" }
+          "styling": { "modelId": "" },
+          "quickRequest": { "modelId": "", "rule": "" }
         },
         "imageQuality": "balanced"
       },
@@ -1529,8 +1533,8 @@
             "s": { "type": "standard", "actionId": "stylingMenu" },
             "d": { "type": "standard", "actionId": "correction" },
             "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "customTransformation" },
-            "v": { "type": "standard", "actionId": "voiceTransformation" }
+            "g": { "type": "standard", "actionId": "quickAiRequest" },
+            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
           }
         }
       ],
@@ -1765,12 +1769,12 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "customTransformation": "",
-        "voiceTransformation": "",
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": ""
+        "snippets": "",
+        "quickAiRequest": "",
+        "voiceQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1848,7 +1852,8 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "transformation": { "modelId": "" },
-          "styling": { "modelId": "" }
+          "styling": { "modelId": "" },
+          "quickRequest": { "modelId": "", "rule": "" }
         },
         "imageQuality": "balanced"
       },
@@ -1900,8 +1905,8 @@
             "s": { "type": "standard", "actionId": "stylingMenu" },
             "d": { "type": "standard", "actionId": "correction" },
             "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "customTransformation" },
-            "v": { "type": "standard", "actionId": "voiceTransformation" }
+            "g": { "type": "standard", "actionId": "quickAiRequest" },
+            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
           }
         }
       ],
@@ -2141,12 +2146,12 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "customTransformation": "",
-        "voiceTransformation": "",
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": ""
+        "snippets": "",
+        "quickAiRequest": "",
+        "voiceQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2231,7 +2236,8 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "transformation": { "modelId": "" },
-          "styling": { "modelId": "" }
+          "styling": { "modelId": "" },
+          "quickRequest": { "modelId": "", "rule": "" }
         },
         "imageQuality": "balanced"
       },
@@ -2283,8 +2289,8 @@
             "s": { "type": "standard", "actionId": "stylingMenu" },
             "d": { "type": "standard", "actionId": "correction" },
             "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "customTransformation" },
-            "v": { "type": "standard", "actionId": "voiceTransformation" }
+            "g": { "type": "standard", "actionId": "quickAiRequest" },
+            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
           }
         }
       ],
@@ -2526,12 +2532,12 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "customTransformation": "",
-        "voiceTransformation": "",
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": ""
+        "snippets": "",
+        "quickAiRequest": "",
+        "voiceQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2616,7 +2622,8 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "transformation": { "modelId": "" },
-          "styling": { "modelId": "" }
+          "styling": { "modelId": "" },
+          "quickRequest": { "modelId": "", "rule": "" }
         },
         "imageQuality": "balanced"
       },
@@ -2668,8 +2675,8 @@
             "s": { "type": "standard", "actionId": "stylingMenu" },
             "d": { "type": "standard", "actionId": "correction" },
             "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "customTransformation" },
-            "v": { "type": "standard", "actionId": "voiceTransformation" }
+            "g": { "type": "standard", "actionId": "quickAiRequest" },
+            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
           }
         }
       ],
@@ -2925,11 +2932,11 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "customTransformation": "",
-        "voiceTransformation": "",
         "chatPrompts": "",
         "history": "",
-        "snippets": ""
+        "snippets": "",
+        "quickAiRequest": "",
+        "voiceQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -3014,7 +3021,8 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "transformation": { "modelId": "" },
-          "styling": { "modelId": "" }
+          "styling": { "modelId": "" },
+          "quickRequest": { "modelId": "", "rule": "" }
         },
         "imageQuality": "balanced"
       },
@@ -3071,8 +3079,8 @@
             "s": { "type": "standard", "actionId": "stylingMenu" },
             "d": { "type": "standard", "actionId": "correction" },
             "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "customTransformation" },
-            "v": { "type": "standard", "actionId": "voiceTransformation" }
+            "g": { "type": "standard", "actionId": "quickAiRequest" },
+            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
           }
         }
       ],
@@ -3322,11 +3330,11 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "customTransformation": "",
-        "voiceTransformation": "",
         "chatPrompts": "",
         "history": "",
-        "snippets": ""
+        "snippets": "",
+        "quickAiRequest": "",
+        "voiceQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -3418,7 +3426,8 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "transformation": { "modelId": "" },
-          "styling": { "modelId": "" }
+          "styling": { "modelId": "" },
+          "quickRequest": { "modelId": "", "rule": "" }
         },
         "imageQuality": "balanced"
       },
@@ -3475,8 +3484,8 @@
             "s": { "type": "standard", "actionId": "stylingMenu" },
             "d": { "type": "standard", "actionId": "correction" },
             "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "customTransformation" },
-            "v": { "type": "standard", "actionId": "voiceTransformation" }
+            "g": { "type": "standard", "actionId": "quickAiRequest" },
+            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
           }
         }
       ],
@@ -3736,12 +3745,12 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "customTransformation": "",
-        "voiceTransformation": "",
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": ""
+        "snippets": "",
+        "quickAiRequest": "",
+        "voiceQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -3895,7 +3904,8 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "transformation": { "modelId": "" },
-          "styling": { "modelId": "" }
+          "styling": { "modelId": "" },
+          "quickRequest": { "modelId": "", "rule": "" }
         },
         "imageQuality": "balanced"
       },
@@ -3947,8 +3957,8 @@
             "s": { "type": "standard", "actionId": "stylingMenu" },
             "d": { "type": "standard", "actionId": "correction" },
             "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "customTransformation" },
-            "v": { "type": "standard", "actionId": "voiceTransformation" }
+            "g": { "type": "standard", "actionId": "quickAiRequest" },
+            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
           }
         }
       ],
@@ -4235,12 +4245,12 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "customTransformation": "",
-        "voiceTransformation": "",
         "chatPrompts": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
-        "snippets": ""
+        "snippets": "",
+        "quickAiRequest": "",
+        "voiceQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -4400,7 +4410,8 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "transformation": { "modelId": "" },
-          "styling": { "modelId": "" }
+          "styling": { "modelId": "" },
+          "quickRequest": { "modelId": "", "rule": "" }
         },
         "imageQuality": "balanced"
       },
@@ -4452,8 +4463,8 @@
             "s": { "type": "standard", "actionId": "stylingMenu" },
             "d": { "type": "standard", "actionId": "correction" },
             "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "customTransformation" },
-            "v": { "type": "standard", "actionId": "voiceTransformation" }
+            "g": { "type": "standard", "actionId": "quickAiRequest" },
+            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
           }
         }
       ],

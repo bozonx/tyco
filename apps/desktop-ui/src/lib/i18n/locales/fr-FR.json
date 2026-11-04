@@ -18,9 +18,7 @@
     "quickAiRequest": "Requête IA rapide",
     "voiceQuickAiRequest": "Requête vocale IA rapide"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Joindre un fichier",
     "alertCaution": "Attention",
@@ -181,9 +179,7 @@
       "noCommands": "Aucune commande personnalisée configurée pour le moment.",
       "noCommandsHint": "Créez d'abord des commandes dans Paramètres → Commandes."
     },
-    "replyBlocks": {
-      "toolLabel": "Blocs de réponse"
-    }
+    "replyBlocks": { "toolLabel": "Blocs de réponse" }
   },
   "commands": {
     "advanced": "Avancé",
@@ -1222,9 +1218,7 @@
     "searchSnippetsPlaceholder": "Rechercher des extraits…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": {
-    "insertIntoEditor": "Insérer dans l’éditeur"
-  },
+  "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {
     "auto": "Comme le système",
     "dark": "Sombre",
@@ -1363,9 +1357,7 @@
     "missingSelection": "Un texte sélectionné est nécessaire."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "demande dans le chat"
-    },
+    "actions": { "askInChat": "demande dans le chat" },
     "languages": {
       "cs-CZ": "Tchèque",
       "de-DE": "allemand",
@@ -1395,9 +1387,7 @@
     },
     "translate": "traduis en"
   },
-  "window": {
-    "clickToFocus": "Cliquez pour continuer"
-  },
+  "window": { "clickToFocus": "Cliquez pour continuer" },
   "write": {
     "alreadyCorrected": "Le texte est déjà corrigé",
     "cancel": "Annuler",
@@ -1447,9 +1437,7 @@
     "valueNotSet": "Non définie sur cet appareil : les commandes qui l’utilisent ne s’exécutent pas",
     "valuePlaceholder": "Un chemin, une adresse ou un autre texte"
   },
-  "snippets": {
-    "noMatches": "Aucun extrait correspondant"
-  },
+  "snippets": { "noMatches": "Aucun extrait correspondant" },
   "replyBlocks": {
     "insertIntoWindow": "Insérer dans la fenêtre",
     "insertIntoEditor": "Vers l'éditeur",
