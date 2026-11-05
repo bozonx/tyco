@@ -90,6 +90,7 @@ describe('SettingsMainActionsTab.vue', () => {
   it('offers standard actions, profiles, named transformations and plugin actions', () => {
     const texts = optionTexts(mountTab())
     expect(texts).toContain('action.correction')
+    expect(texts).toContain('settings.hotkeyActions.selectionCorrection')
     expect(texts).toContain('action.askInChat')
     expect(texts).toContain('settings.askInProfileChat:{"profile":"Assistant"}')
     expect(texts).toContain('action.transformationMenu…')

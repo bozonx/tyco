@@ -9,6 +9,7 @@ export const STANDARD_ACTION_IDS = [
   'insertIntoWindow',
   'copyToClipboard',
   'correction',
+  'directCorrection',
   'askInChat',
   'translationMenu',
   'transformationMenu',

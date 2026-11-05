@@ -10,7 +10,10 @@ import {
   CorrectionAbortedError,
   isCorrectionAborted,
 } from '../lib/quick-input/quick-correction'
-import { createQuickInsert } from '../lib/quick-input/quick-insert'
+import {
+  createQuickInsert,
+  type QuickInsertDependencies,
+} from '../lib/quick-input/quick-insert'
 import { useBufferedIntent } from '../composables/use-buffered-intent'
 import { useTextCorrectionStore } from './text-correction'
 import { useHistoryStore } from './history'
@@ -65,48 +68,66 @@ export const useCorrectionWorkflowStore = defineStore(
       isAborted: isCorrectionAborted,
     })
 
-    // the correction of the submission being inserted, to stop it
-    let insertCorrection: AbortController | null = null
-    const quickInsert = createQuickInsert({
-      correct: (text) => {
-        const cached = corrector.getCachedCorrection(text)
-        if (cached !== undefined) return Promise.resolve(cached)
-        insertCorrection?.abort()
-        insertCorrection = new AbortController()
-        return correct(text, insertCorrection.signal)
-      },
-      cancelCorrection: () => {
-        insertCorrection?.abort()
-        corrector.cancelLive()
-      },
-      saveOutput: (text) => historyStore.saveOutput(text, 'quickInput'),
-      saveSource: (text) => quickInput.saveSource(text, 'correction'),
+    const createInsertCorrector = () => {
+      let controller: AbortController | null = null
+      return {
+        correct: (text: string) => {
+          const cached = corrector.getCachedCorrection(text)
+          if (cached !== undefined) return Promise.resolve(cached)
+          controller?.abort()
+          controller = new AbortController()
+          return correct(text, controller.signal)
+        },
+        cancelCorrection: () => {
+          controller?.abort()
+          corrector.cancelLive()
+        },
+      }
+    }
+    const quickInsertDependencies: Omit<
+      QuickInsertDependencies,
+      'correct' | 'cancelCorrection'
+    > = {
+      saveOutput: (text: string) => historyStore.saveOutput(text, 'quickInput'),
+      saveSource: (text: string) => quickInput.saveSource(text, 'correction'),
       saveDraft: () => quickInput.flushHistory(),
       saveSourceResult: historyStore.saveSourceResult,
       reportHistoryError: () => toastKey('history.operationFailed', 'error'),
       // a failed insertion is reported by the tool: the window may be gone
-      insert: async (text) => {
+      insert: async (text: string) => {
         const result = await invocations.call('core.insert', text)
         if (!result.ok) throw new Error(toolResultMessage(result, translate))
       },
       openStep: (params) =>
         menuModalsStore.nextModal(MenuModals.INSERT, params),
-      setPending: (onCancel) =>
+      setPending: (onCancel: () => void) =>
         menuModalsStore.setPendingModal({ correction: true, onCancel }),
-      clearPending: (owner) =>
+      clearPending: (owner?: number | void) =>
         menuModalsStore.clearPendingModal(owner ?? undefined),
-      reportError: (error) =>
+      reportError: (error: unknown) =>
         toastText(describeError(error, translate), 'error'),
       isAborted: isCorrectionAborted,
+    }
+    const quickInsert = createQuickInsert({
+      ...quickInsertDependencies,
+      ...createInsertCorrector(),
+    })
+    const directCorrection = createQuickInsert({
+      ...quickInsertDependencies,
+      ...createInsertCorrector(),
+      saveSource: (text) => historyStore.saveSource(text, 'correction'),
+      saveOutput: (text) => historyStore.saveOutput(text),
     })
 
     onScopeDispose(() => {
       step.dispose()
       quickInsert.dispose()
+      directCorrection.dispose()
     })
 
     return {
       insert: quickInsert.start,
+      correctAndInsert: directCorrection.start,
       insertLive: (text: string) =>
         quickInsert.start(text, (t) => corrector.getFinalCorrection(t)),
       nextLive: (text: string) =>

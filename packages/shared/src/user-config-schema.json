@@ -381,6 +381,7 @@
                         "openHistory",
                         "voiceInput",
                         "correction",
+                        "directCorrection",
                         "translationMenu",
                         "askInChat",
                         "quickAiRequest",

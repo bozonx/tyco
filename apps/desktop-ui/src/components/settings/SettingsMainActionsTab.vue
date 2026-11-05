@@ -257,13 +257,15 @@ const availableActions = computed((): MainActionChoice[] => [
   ...STANDARD_ACTION_IDS.map((actionId) => ({
     config: { type: 'standard' as const, actionId },
     name:
-      actionId === 'openHistory'
-        ? t('nav.history')
-        : actionId === 'voiceInput'
-          ? t('menu.voiceInput')
-          : OPENS_DIALOG.has(actionId)
-            ? `${t(`action.${actionId}`)}…`
-            : t(`action.${actionId}`),
+      actionId === 'directCorrection'
+        ? t('settings.hotkeyActions.selectionCorrection')
+        : actionId === 'openHistory'
+          ? t('nav.history')
+          : actionId === 'voiceInput'
+            ? t('menu.voiceInput')
+            : OPENS_DIALOG.has(actionId)
+              ? `${t(`action.${actionId}`)}…`
+              : t(`action.${actionId}`),
     group: standardActionGroup(actionId),
   })),
   ...languages.value.map((language) => ({

@@ -45,6 +45,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   openTranslateModal: (text: string, language?: string) => void
   /** `extra` goes to the params of the correction step, see `InsertMenu` */
   startCorrection: (text: string, extra?: CorrectionStepExtra) => Promise<void>
+  correctAndInsert?: (text: string) => Promise<void>
   minCorrectionLength?: () => number
   isMainActionVisible?: (action: MainActionConfig) => boolean
   actionPages?: () => readonly ActionPageConfig[] | undefined
@@ -297,6 +298,25 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           trailingIcon: 'mdi:chevron-right',
           action: async () => {
             deps.openFavoritesModal?.()
+          },
+        },
+        {
+          id: 'directCorrection',
+          labelKey: 'settings.hotkeyActions.selectionCorrection',
+          icon: 'mdi:spellcheck',
+          action: async (text: string) => {
+            if (!text?.trim()) {
+              deps.showToast('toast.textNotSelected', 'error')
+              return
+            }
+            if (
+              text.trim().length <
+              (deps.minCorrectionLength?.() ?? APP_CONFIG.minCorrectionLength)
+            ) {
+              deps.showToast('toast.textTooShortForCorrection', 'warn')
+              return
+            }
+            await deps.correctAndInsert?.(text)
           },
         },
         {

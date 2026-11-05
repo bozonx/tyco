@@ -42,6 +42,7 @@ describe('createActionMenuModel', () => {
       openChatPromptsModal: vi.fn(),
       openFavoritesModal: vi.fn(),
       startCorrection: vi.fn().mockResolvedValue(undefined),
+      correctAndInsert: vi.fn().mockResolvedValue(undefined),
       showToast: vi.fn(),
       hideWindow: vi.fn(),
       minCorrectionLength: () => 10,
@@ -103,6 +104,24 @@ describe('createActionMenuModel', () => {
     store.setPage(0)
     expect(store.pageIndex.value).toBe(0)
     expect(store.takesText.value).toBe(true)
+  })
+
+  it('corrects and inserts directly only for sufficiently long text', async () => {
+    const { store, deps } = setup()
+    await store.runDefaultAction('directCorrection', '')
+    await store.runDefaultAction('directCorrection', 'short')
+    expect(deps.correctAndInsert).not.toHaveBeenCalled()
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.textNotSelected',
+      'error'
+    )
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.textTooShortForCorrection',
+      'warn'
+    )
+    await store.runDefaultAction('directCorrection', 'Text to correct')
+    expect(deps.correctAndInsert).toHaveBeenCalledWith('Text to correct')
+    expect(deps.startCorrection).not.toHaveBeenCalled()
   })
 
   it('shows toast when attempting actions on empty text', async () => {
@@ -337,6 +356,7 @@ describe('createActionMenuModel', () => {
       saveOutput: vi.fn().mockResolvedValue(undefined),
       openTranslateModal: vi.fn(),
       startCorrection: vi.fn().mockResolvedValue(undefined),
+      correctAndInsert: vi.fn().mockResolvedValue(undefined),
       showToast: vi.fn(),
       mainActions: () => mainActions,
       tools: testTools(),
