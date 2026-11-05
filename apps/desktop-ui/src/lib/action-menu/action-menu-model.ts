@@ -36,7 +36,10 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   saveOutput: (text: string) => Promise<void>
   openTransformationModal?: (text: string, transformationId?: string) => void
   openQuickAiRequestModal?: (text: string, inputMode?: 'text' | 'voice') => void
-  openVoiceCommandsModal?: (text: string) => void
+  openVoiceCommandsModal?: (
+    text: string,
+    inputMode: 'selection' | 'none'
+  ) => void
   openStylingModal?: (text: string, stylingId?: string) => void
   openChatPromptsModal?: (text: string, promptId?: string) => void
   openFavoritesModal?: () => void
@@ -246,7 +249,16 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           icon: 'mdi:microphone',
           trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
-            deps.openVoiceCommandsModal?.(text)
+            deps.openVoiceCommandsModal?.(text, 'selection')
+          },
+        },
+        {
+          id: 'voiceCommandsWithoutContext',
+          labelKey: 'action.voiceCommandsWithoutContext',
+          icon: 'mdi:microphone',
+          trailingIcon: 'mdi:chevron-right',
+          action: async () => {
+            deps.openVoiceCommandsModal?.('', 'none')
           },
         },
         {

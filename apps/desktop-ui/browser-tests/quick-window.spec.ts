@@ -1,9 +1,10 @@
-import { ActivationMode } from '@tyco/shared'
+import { ActivationMode, DESKTOP_EVENTS } from '@tyco/shared'
 
 import { expect, test } from './support/fixtures'
 import { FakeDesktop } from './support/fake-desktop'
 import { installLlm } from './support/llm'
 import { installQuickWindow } from './support/quick-window'
+import { installVoice } from './support/voice'
 
 test.use({ windowLabel: 'quick' })
 
@@ -88,6 +89,41 @@ test.describe('quick input', () => {
 
 test.describe('action menu', () => {
   test.use({ startMode: ActivationMode.SELECTION_ACTIONS })
+
+  for (const isLateCapture of [false, true]) {
+    test(`shows selected context in voice commands (${isLateCapture ? 'late' : 'ready'} capture)`, async ({
+      page,
+      desktop,
+    }) => {
+      installQuickWindow(desktop)
+      const voice = installVoice(desktop)
+      const selectedText = 'Selected context for voice commands'
+      desktop.activation.selectedText = isLateCapture ? null : selectedText
+      desktop.userConfig.actionPages[0]!.slots.q = {
+        type: 'standard',
+        actionId: 'voiceCommands',
+      }
+      await page.goto('/')
+      await page
+        .getByRole('button', { name: /Voice commands with selection/ })
+        .click()
+      await voice.partial('Ask in chat explain this')
+      if (isLateCapture) {
+        const state = desktop.snapshot()
+        await desktop.emit(DESKTOP_EVENTS.STATE_CHANGED, {
+          ...state,
+          revision: state.revision + 1,
+          activation: { ...state.activation, selectedText },
+        })
+      }
+      const preview = page.locator('.voice-main pre')
+      await expect(preview).toHaveText(selectedText)
+      await expect(preview).toBeVisible()
+      const box = await preview.boundingBox()
+      expect(box!.height).toBeGreaterThan(40)
+      await page.keyboard.press('Escape')
+    })
+  }
 
   test('runs a command from the action menu and shows its result', async ({
     page,

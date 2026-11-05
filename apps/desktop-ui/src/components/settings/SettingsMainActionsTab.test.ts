@@ -89,6 +89,8 @@ describe('SettingsMainActionsTab.vue', () => {
 
   it('offers standard actions, profiles, named transformations and plugin actions', () => {
     const texts = optionTexts(mountTab())
+    expect(texts).toContain('action.voiceCommands…')
+    expect(texts).toContain('action.voiceCommandsWithoutContext…')
     expect(texts).toContain('action.correction')
     expect(texts).toContain('settings.hotkeyActions.selectionCorrection')
     expect(texts).toContain('action.askInChat')
@@ -112,6 +114,22 @@ describe('SettingsMainActionsTab.vue', () => {
       transformationId: 'shorten',
     })
   })
+
+  it.each(['voiceCommands', 'voiceCommandsWithoutContext'])(
+    'assigns %s to a shortcut slot',
+    async (actionId) => {
+      const wrapper = mountTab()
+      const select = wrapper.get('select')
+      const option = select
+        .findAll('option')
+        .find((item) => item.text() === `action.${actionId}…`)!
+      await select.setValue(option.element.value)
+      expect(context.draft.value.actionPages[0].slots.q).toEqual({
+        type: 'standard',
+        actionId,
+      })
+    }
+  )
 
   it('adds, moves and removes slots', async () => {
     const wrapper = mountTab()

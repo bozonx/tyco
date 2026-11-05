@@ -18,6 +18,7 @@ export const STANDARD_ACTION_IDS = [
   'quickAiRequest',
   'voiceQuickAiRequest',
   'voiceCommands',
+  'voiceCommandsWithoutContext',
   'favoritesMenu',
   'openHistory',
   'voiceInput',

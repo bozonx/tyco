@@ -7,6 +7,45 @@ describe('voice command action context', () => {
   let desktop: TestDesktop | undefined
   afterEach(() => desktop?.dispose())
 
+  it.each(['', 'Selected passage'])(
+    'opens context-free voice commands without selection tracking (text: %j)',
+    async (text) => {
+      desktop = await loadFakeDesktop({
+        mode: 'selectionActions',
+        activation: { activationId: 42, selectedText: text },
+      })
+      desktop.setUserConfig({
+        actionPages: [
+          {
+            inputMode: 'selection',
+            slots: {
+              q: { type: 'standard', actionId: 'voiceCommandsWithoutContext' },
+            },
+          },
+        ],
+      })
+      const actions = useActionMenuStore()
+      const action = actions.getShortcutActions()[0]
+      expect(action?.id).toBe('voiceCommandsWithoutContext')
+      await action?.action(text)
+      expect(useMenuModalsStore().currentStep?.params).toEqual({ text: '' })
+
+      desktop.setState({ selectedText: 'Late selected text' })
+      expect(useMenuModalsStore().currentStep?.params).toEqual({ text: '' })
+    }
+  )
+
+  it('opens voice commands with the supplied selection', async () => {
+    desktop = await loadFakeDesktop({ mode: 'selectionActions' })
+    await useActionMenuStore().runDefaultAction(
+      'voiceCommands',
+      'Selected passage'
+    )
+    expect(useMenuModalsStore().currentStep?.params).toEqual({
+      text: 'Selected passage',
+    })
+  })
+
   it.each(['selection', 'none'] as const)(
     'follows late capture only on a %s page',
     async (inputMode) => {

@@ -47,10 +47,11 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
         inputMode,
       })
     },
-    openVoiceCommandsModal: (text: string) => {
+    openVoiceCommandsModal: (text, inputMode) => {
       menuModalsStore.nextModal(MenuModals.VOICE_COMMANDS, {
-        text,
-        ...(!text &&
+        text: inputMode === 'selection' ? text : '',
+        ...(inputMode === 'selection' &&
+        !text &&
         model.takesText.value &&
         desktopStore.desktopState.mode === 'selectionActions'
           ? { selectionActivationId: desktopStore.desktopState.activationId }

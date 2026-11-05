@@ -199,6 +199,24 @@ describe('voice command session', () => {
     model.chooseCommand('second')
     expect(model.inputText.value).toBe('save note Hello!')
   })
+  it('runs a voice command with no text or selection input', async () => {
+    const { model, deps, commands } = setup({
+      finishDictation: vi.fn(async () => 'turn off kitchen lights'),
+    })
+    commands[0]!.phrases = ['turn off kitchen lights']
+    commands[0]!.toolConfig = { command: 'home-control kitchen off' }
+    await model.start()
+    await model.finish('review')
+    expect(model.inputText.value).toBe('')
+    expect(model.canRun.value).toBe(true)
+    await model.run()
+    expect(deps.run).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'note' }),
+      '',
+      expect.any(AbortSignal)
+    )
+  })
+
   it('rejects missing or extra input without substituting a selection', async () => {
     const { model, deps, commands } = setup()
     deps.finishDictation = vi.fn(async () => 'save note')

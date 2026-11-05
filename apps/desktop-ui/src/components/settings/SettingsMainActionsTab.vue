@@ -246,6 +246,7 @@ const OPENS_DIALOG = new Set<StandardActionId>([
   'quickAiRequest',
   'voiceQuickAiRequest',
   'voiceCommands',
+  'voiceCommandsWithoutContext',
 ])
 
 const availableActions = computed((): MainActionChoice[] => [
