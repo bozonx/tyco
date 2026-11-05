@@ -1004,6 +1004,7 @@
     "rebindHotkeysError": "Nie udało się ponownie zarejestrować skrótów",
     "rebindHotkeysHint": "Przywraca skróty usunięte w ustawieniach systemu; zmienione przez Ciebie skróty są zachowywane. Aby pozbyć się przestarzałych skrótów, najpierw usuń Tyco w ustawieniach systemu.",
     "removeActionPage": "Usuń stronę",
+    "removeActionPageConfirm": "Ta strona zawiera działania. Usunąć ją?",
     "removeKey": "Usuń klucz",
     "removeModel": "Usuń model",
     "removeModelConfirm": "Usunąć ten model?",

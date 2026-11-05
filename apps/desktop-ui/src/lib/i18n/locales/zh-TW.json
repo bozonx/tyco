@@ -998,6 +998,7 @@
     "rebindHotkeysError": "無法重新註冊快捷鍵",
     "rebindHotkeysHint": "還原在系統設定中被移除的快捷鍵；已自訂的快捷鍵將予以保留。若要捨棄過時的快捷鍵，請先在系統設定中移除 Tyco。",
     "removeActionPage": "移除分頁",
+    "removeActionPageConfirm": "此頁面包含動作。要移除嗎？",
     "removeKey": "移除金鑰",
     "removeModel": "移除模型",
     "removeModelConfirm": "要移除此模型嗎？",

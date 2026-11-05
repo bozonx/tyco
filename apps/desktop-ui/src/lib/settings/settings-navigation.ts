@@ -87,15 +87,15 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         icon: 'mdi:lightning-bolt-outline',
       },
       {
+        id: 'languages',
+        labelKey: 'settings.languagesTab',
+        icon: 'mdi:translate-variant',
+      },
+      {
         id: 'favorites',
         labelKey: 'settings.favoritesTab',
         navigationLabelKey: 'settings.favoritesNavTab',
         icon: 'mdi:card-text-outline',
-      },
-      {
-        id: 'languages',
-        labelKey: 'settings.languagesTab',
-        icon: 'mdi:translate-variant',
       },
     ],
   },

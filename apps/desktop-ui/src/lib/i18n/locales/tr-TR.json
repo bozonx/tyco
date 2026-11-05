@@ -1001,6 +1001,7 @@
     "rebindHotkeysError": "Kısayollar yeniden kaydedilemedi",
     "rebindHotkeysHint": "Sistem ayarlarında silinen kısayolları geri getirir; değiştirdiğiniz kısayollar korunur. Eski kısayolları kaldırmak için önce sistem ayarlarında Tyco’yu silin.",
     "removeActionPage": "Sayfayı kaldır",
+    "removeActionPageConfirm": "Bu sayfa eylemler içeriyor. Kaldırılsın mı?",
     "removeKey": "Anahtarı kaldır",
     "removeModel": "Modeli sil",
     "removeModelConfirm": "Bu model kaldırılsın mı?",

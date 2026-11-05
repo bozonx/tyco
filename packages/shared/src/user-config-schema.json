@@ -178,7 +178,10 @@
           "type": "string",
           "default": "Ctrl+Alt+Shift+F"
         },
-        "selectionActionsPage2": { "type": "string", "default": "" },
+        "selectionActionsPage2": {
+          "type": "string",
+          "default": "Ctrl+Alt+Shift+D"
+        },
         "selectionActionsPage3": { "type": "string", "default": "" },
         "selectionActionsPage4": { "type": "string", "default": "" },
         "selectionActionsPage5": { "type": "string", "default": "" }
@@ -374,6 +377,9 @@
                         "stylingMenu",
                         "chatPromptsMenu",
                         "favoritesMenu",
+                        "voiceCommands",
+                        "openHistory",
+                        "voiceInput",
                         "correction",
                         "translationMenu",
                         "askInChat",

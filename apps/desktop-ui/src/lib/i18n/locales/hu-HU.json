@@ -1001,6 +1001,7 @@
     "rebindHotkeysError": "A billentyűparancsokat nem sikerült újraregisztrálni",
     "rebindHotkeysHint": "Visszaállítja a rendszerbeállításokban eltávolított billentyűparancsokat; az Ön által módosítottak megmaradnak. Az elavult billentyűparancsok megszüntetéséhez először távolítsa el a Tycót a rendszerbeállításokban.",
     "removeActionPage": "Oldal eltávolítása",
+    "removeActionPageConfirm": "Ez az oldal műveleteket tartalmaz. Eltávolítja?",
     "removeKey": "Kulcs eltávolítása",
     "removeModel": "Modell eltávolítása",
     "removeModelConfirm": "Eltávolítja ezt a modellt?",

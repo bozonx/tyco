@@ -1004,6 +1004,7 @@
     "rebindHotkeysError": "Comenzile rapide nu au putut fi înregistrate din nou",
     "rebindHotkeysHint": "Recuperează comenzile rapide eliminate în setările sistemului; cele pe care le-ați schimbat sunt păstrate. Pentru a renunța la comenzile rapide învechite, eliminați mai întâi Tyco în setările sistemului.",
     "removeActionPage": "Elimină pagina",
+    "removeActionPageConfirm": "Această pagină conține acțiuni. O eliminați?",
     "removeKey": "Elimină cheia",
     "removeModel": "Elimină modelul",
     "removeModelConfirm": "Eliminați acest model?",

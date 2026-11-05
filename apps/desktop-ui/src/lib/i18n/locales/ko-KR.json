@@ -998,6 +998,7 @@
     "rebindHotkeysError": "단축키를 다시 등록할 수 없습니다",
     "rebindHotkeysHint": "시스템 설정에서 제거된 단축키를 다시 가져옵니다. 변경한 단축키는 유지됩니다. 오래된 단축키를 삭제하려면 먼저 시스템 설정에서 Tyco를 제거하세요.",
     "removeActionPage": "페이지 삭제",
+    "removeActionPageConfirm": "이 페이지에 작업이 있습니다. 삭제하시겠습니까?",
     "removeKey": "키 제거",
     "removeModel": "모델 제거",
     "removeModelConfirm": "이 모델을 제거하시겠습니까?",

@@ -1004,6 +1004,7 @@
     "rebindHotkeysError": "Impossible de réenregistrer les raccourcis",
     "rebindHotkeysHint": "Rétablit les raccourcis supprimés dans les paramètres du système ; les raccourcis que vous avez modifiés sont conservés. Pour éliminer les raccourcis obsolètes, supprimez d’abord Tyco dans les paramètres du système.",
     "removeActionPage": "Supprimer la page",
+    "removeActionPageConfirm": "Cette page contient des actions. La supprimer ?",
     "removeKey": "Retirer la clé",
     "removeModel": "Retirer le modèle",
     "removeModelConfirm": "Retirer ce modèle ?",

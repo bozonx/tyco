@@ -1004,6 +1004,7 @@
     "rebindHotkeysError": "Could not register the hotkeys again",
     "rebindHotkeysHint": "Brings back the hotkeys removed in the system settings; the shortcuts you changed are kept. To drop outdated hotkeys, first remove Tyco in the system settings.",
     "removeActionPage": "Remove page",
+    "removeActionPageConfirm": "This page contains actions. Remove it?",
     "removeKey": "Remove key",
     "removeModel": "Remove model",
     "removeModelConfirm": "Remove this model?",

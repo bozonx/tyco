@@ -11,6 +11,7 @@ import { useInvocationRunnerDependencies } from './invocations'
 import { useCorrectionWorkflowStore } from './correction-workflow'
 import { useHistoryStore } from './history'
 import { useDesktopStore } from './desktop'
+import { useIpcStore } from './ipc'
 import { MenuModals, useMenuModalsStore } from './menu-modals'
 import { useAiProfilesStore } from './ai-profiles'
 import { useProfileChatStore } from './chat'
@@ -25,6 +26,9 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
   const aiProfilesStore = useAiProfilesStore()
 
   const model = createActionMenuModel({
+    activateMode: async (mode) => {
+      await useIpcStore().callOrNotify('activate_mode', { mode })
+    },
     saveOutput: async (text: string) => {
       await historyStore.saveOutput(text)
     },

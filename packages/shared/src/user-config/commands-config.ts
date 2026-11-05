@@ -18,6 +18,8 @@ export const STANDARD_ACTION_IDS = [
   'voiceQuickAiRequest',
   'voiceCommands',
   'favoritesMenu',
+  'openHistory',
+  'voiceInput',
 ] as const
 
 export type StandardActionId = (typeof STANDARD_ACTION_IDS)[number]

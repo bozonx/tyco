@@ -1004,6 +1004,7 @@
     "rebindHotkeysError": "Die Tastenkürzel konnten nicht erneut registriert werden",
     "rebindHotkeysHint": "Holt die in den Systemeinstellungen entfernten Tastenkürzel zurück; von Ihnen geänderte Kürzel bleiben erhalten. Um veraltete Kürzel loszuwerden, entfernen Sie Tyco zuerst in den Systemeinstellungen.",
     "removeActionPage": "Seite entfernen",
+    "removeActionPageConfirm": "Diese Seite enthält Aktionen. Entfernen?",
     "removeKey": "Schlüssel entfernen",
     "removeModel": "Modell entfernen",
     "removeModelConfirm": "Dieses Modell entfernen?",

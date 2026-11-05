@@ -64,6 +64,15 @@
         </div>
       </template>
     </ShortcutSlots>
+    <ConfirmModal
+      :open="isRemoveConfirmOpen"
+      :title="t('settings.removeActionPage')"
+      :message="t('settings.removeActionPageConfirm')"
+      :confirm-text="t('common.remove')"
+      danger
+      @confirm="deletePage"
+      @cancel="isRemoveConfirmOpen = false"
+    />
   </SettingsSection>
 </template>
 
@@ -100,6 +109,7 @@ import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
+import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
@@ -123,6 +133,7 @@ const aiProfilesStore = useAiProfilesStore()
 const toolsStore = useToolsStore()
 
 const page = ref(0)
+const isRemoveConfirmOpen = ref(false)
 const actionPages = computed(() => userConfig.value.actionPages ?? [])
 const pagesCount = computed(() => actionPages.value.length)
 
@@ -143,6 +154,15 @@ function addPage() {
 
 function removePage() {
   if (pagesCount.value <= 1) return
+  if (Object.values(actionPages.value[page.value]?.slots ?? {}).some(Boolean)) {
+    isRemoveConfirmOpen.value = true
+    return
+  }
+  deletePage()
+}
+
+function deletePage() {
+  isRemoveConfirmOpen.value = false
   operations.updateActionPages(
     actionPages.value.filter((_, index) => index !== page.value)
   )
@@ -236,9 +256,14 @@ const availableActions = computed((): MainActionChoice[] => [
   })),
   ...STANDARD_ACTION_IDS.map((actionId) => ({
     config: { type: 'standard' as const, actionId },
-    name: OPENS_DIALOG.has(actionId)
-      ? `${t(`action.${actionId}`)}…`
-      : t(`action.${actionId}`),
+    name:
+      actionId === 'openHistory'
+        ? t('nav.history')
+        : actionId === 'voiceInput'
+          ? t('menu.voiceInput')
+          : OPENS_DIALOG.has(actionId)
+            ? `${t(`action.${actionId}`)}…`
+            : t(`action.${actionId}`),
     group: standardActionGroup(actionId),
   })),
   ...languages.value.map((language) => ({

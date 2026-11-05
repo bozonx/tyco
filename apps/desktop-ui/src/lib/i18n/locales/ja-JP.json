@@ -1001,6 +1001,7 @@
     "rebindHotkeysError": "ショートカットを再登録できませんでした",
     "rebindHotkeysHint": "システム設定で削除されたショートカットを再登録します。変更したショートカットは維持されます。古いショートカットを破棄するには、まずシステム設定でTycoを削除してください。",
     "removeActionPage": "ページを削除",
+    "removeActionPageConfirm": "このページにはアクションがあります。削除しますか？",
     "removeKey": "キーを削除",
     "removeModel": "モデルを削除",
     "removeModelConfirm": "このモデルを削除しますか？",

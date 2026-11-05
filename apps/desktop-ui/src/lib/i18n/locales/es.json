@@ -1004,6 +1004,7 @@
     "rebindHotkeysError": "No se pudieron volver a registrar los atajos",
     "rebindHotkeysHint": "Recupera los atajos eliminados en la configuración del sistema; los atajos que cambiaste se conservan. Para quitar atajos obsoletos, primero elimina Tyco en la configuración del sistema.",
     "removeActionPage": "Eliminar página",
+    "removeActionPageConfirm": "Esta página contiene acciones. ¿Eliminarla?",
     "removeKey": "Quitar la clave",
     "removeModel": "Quitar el modelo",
     "removeModelConfirm": "¿Quitar este modelo?",

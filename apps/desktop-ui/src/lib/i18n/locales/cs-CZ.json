@@ -998,6 +998,7 @@
     "rebindHotkeysError": "Zkratky se nepodařilo znovu zaregistrovat",
     "rebindHotkeysHint": "Vrátí zkratky odstraněné v nastavení systému; zkratky, které jste změnili, zůstanou. Chcete-li se zbavit zastaralých zkratek, nejprve odeberte Tyco v nastavení systému.",
     "removeActionPage": "Odebrat stránku",
+    "removeActionPageConfirm": "Tato stránka obsahuje akce. Odebrat ji?",
     "removeKey": "Odebrat klíč",
     "removeModel": "Odebrat model",
     "removeModelConfirm": "Odebrat tento model?",

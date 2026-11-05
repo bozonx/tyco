@@ -40,6 +40,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   openStylingModal?: (text: string, stylingId?: string) => void
   openChatPromptsModal?: (text: string, promptId?: string) => void
   openFavoritesModal?: () => void
+  activateMode?: (mode: 'history' | 'voice') => Promise<void>
   /** With `language` the dialog translates into it at once */
   openTranslateModal: (text: string, language?: string) => void
   /** `extra` goes to the params of the correction step, see `InsertMenu` */
@@ -271,6 +272,22 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
               return
             }
             deps.openChatPromptsModal?.(text)
+          },
+        },
+        {
+          id: 'openHistory',
+          labelKey: 'nav.history',
+          icon: 'mdi:history',
+          action: async () => {
+            await deps.activateMode?.('history')
+          },
+        },
+        {
+          id: 'voiceInput',
+          labelKey: 'menu.voiceInput',
+          icon: 'mdi:microphone-outline',
+          action: async () => {
+            await deps.activateMode?.('voice')
           },
         },
         {

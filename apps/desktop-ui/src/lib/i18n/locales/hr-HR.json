@@ -1004,6 +1004,7 @@
     "rebindHotkeysError": "Prečaci se nisu mogli ponovno registrirati",
     "rebindHotkeysHint": "Vraća prečace uklonjene u postavkama sustava; prečaci koje ste promijenili ostaju. Da biste se riješili zastarjelih prečaca, najprije uklonite Tyco u postavkama sustava.",
     "removeActionPage": "Ukloni stranicu",
+    "removeActionPageConfirm": "Ova stranica sadrži radnje. Ukloniti je?",
     "removeKey": "Ukloni ključ",
     "removeModel": "Ukloni model",
     "removeModelConfirm": "Ukloniti ovaj model?",

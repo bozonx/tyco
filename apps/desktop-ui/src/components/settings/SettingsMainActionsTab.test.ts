@@ -79,7 +79,10 @@ describe('SettingsMainActionsTab.vue', () => {
 
   const mountTab = () =>
     mount(SettingsMainActionsTab, {
-      global: { provide: context.provide, stubs: { ShortcutSlots } },
+      global: {
+        provide: context.provide,
+        stubs: { ShortcutSlots, ConfirmModal: true },
+      },
     })
   const optionTexts = (wrapper: ReturnType<typeof mountTab>) =>
     wrapper.findAll('option').map((option) => option.text())
@@ -204,6 +207,36 @@ describe('SettingsMainActionsTab.vue', () => {
       .findAllComponents({ name: 'Button' })
       .find((b) => b.text().includes('settings.removeActionPage'))!
     await deleteBtn.trigger('click')
+    expect(context.draft.value.actionPages).toHaveLength(1)
+  })
+  it('asks before removing a populated page and keeps it when cancelled', async () => {
+    configure({
+      actionPages: [
+        { inputMode: 'selection', slots: {} },
+        {
+          inputMode: 'none',
+          slots: { q: { type: 'standard', actionId: 'voiceInput' } },
+        },
+      ],
+    })
+    const wrapper = mountTab()
+    await wrapper.findAllComponents({ name: 'Button' })[1]!.trigger('click')
+    await wrapper
+      .findAllComponents({ name: 'Button' })
+      .find((b) => b.text().includes('settings.removeActionPage'))!
+      .trigger('click')
+    const modal = wrapper.findComponent({ name: 'ConfirmModal' })
+    expect(modal.props('open')).toBe(true)
+    expect(context.draft.value.actionPages).toHaveLength(2)
+    modal.vm.$emit('cancel')
+    await wrapper.vm.$nextTick()
+    expect(modal.props('open')).toBe(false)
+    expect(context.draft.value.actionPages).toHaveLength(2)
+    await wrapper
+      .findAllComponents({ name: 'Button' })
+      .find((b) => b.text().includes('settings.removeActionPage'))!
+      .trigger('click')
+    modal.vm.$emit('confirm')
     expect(context.draft.value.actionPages).toHaveLength(1)
   })
 })

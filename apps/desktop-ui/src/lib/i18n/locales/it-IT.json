@@ -1004,6 +1004,7 @@
     "rebindHotkeysError": "Impossibile registrare di nuovo le scorciatoie",
     "rebindHotkeysHint": "Ripristina le scorciatoie rimosse nelle impostazioni di sistema; quelle che hai modificato vengono mantenute. Per eliminare scorciatoie obsolete, rimuovi prima Tyco nelle impostazioni di sistema.",
     "removeActionPage": "Rimuovi pagina",
+    "removeActionPageConfirm": "Questa pagina contiene azioni. Rimuoverla?",
     "removeKey": "Rimuovi la chiave",
     "removeModel": "Rimuovi il modello",
     "removeModelConfirm": "Rimuovere questo modello?",

@@ -1004,6 +1004,7 @@
     "rebindHotkeysError": "Não foi possível registrar os atalhos novamente",
     "rebindHotkeysHint": "Recupera os atalhos removidos nas configurações do sistema; os atalhos que você alterou são mantidos. Para descartar atalhos obsoletos, primeiro remova o Tyco nas configurações do sistema.",
     "removeActionPage": "Remover página",
+    "removeActionPageConfirm": "Esta página contém ações. Removê-la?",
     "removeKey": "Remover chave",
     "removeModel": "Remover modelo",
     "removeModelConfirm": "Remover este modelo?",

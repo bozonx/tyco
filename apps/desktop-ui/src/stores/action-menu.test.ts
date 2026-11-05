@@ -32,3 +32,21 @@ describe('voice command action context', () => {
     }
   )
 })
+
+describe('window actions', () => {
+  let desktop: TestDesktop | undefined
+  afterEach(() => desktop?.dispose())
+
+  it.each([
+    ['openHistory', 'history'],
+    ['voiceInput', 'voice'],
+  ] as const)(
+    'activates %s without passing the selected text',
+    async (action, mode) => {
+      desktop = await loadFakeDesktop({ mode: 'selectionActions' })
+      desktop.backend.handle('activate_mode', () => undefined)
+      await useActionMenuStore().runDefaultAction(action, 'selected text')
+      expect(desktop.backend.callsOf('activate_mode')).toEqual([{ mode }])
+    }
+  )
+})
