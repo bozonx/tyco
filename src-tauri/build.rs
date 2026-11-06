@@ -145,6 +145,7 @@ fn main() {
             "send_socket_binary",
             "send_socket_text",
             "set_editor_history_item_result",
+            "reveal_quick_window",
             "set_quick_input_region",
             "set_secret",
             "set_tool_catalog",

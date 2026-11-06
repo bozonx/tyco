@@ -19,6 +19,26 @@ pub(super) fn panel_layer(app: &AppHandle) -> Option<PanelKeyboardMode> {
     layer.supported.then_some(layer.keyboard)
 }
 
+/// Restores the quick window's opacity once the webview has rendered `activation_id`.
+pub fn reveal_quick_window(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
+    on_main_thread(app, move |app| {
+        let snapshot = app.state::<AppState>().snapshot();
+        let active_label = app.state::<RuntimeWindows>().active_label();
+        if !is_current_quick_activation(
+            active_label,
+            snapshot.window.is_window_shown,
+            snapshot.activation.activation_id,
+            activation_id,
+        ) {
+            return Ok(());
+        }
+        let Some(window) = app.get_webview_window(QUICK_WINDOW_LABEL) else {
+            return Ok(());
+        };
+        crate::services::platform::set_window_opacity(&window, 1.0)
+    })
+}
+
 /// Limits pointer input of the visible quick window to `region`; the rest of
 /// the window lets clicks through to the windows below. `None` restores input
 /// over the whole window.

@@ -16,6 +16,7 @@
     "allow-finish-external-job",
     "allow-finish-selection-run",
     "allow-mark-activation-metric",
+    "allow-reveal-quick-window",
     "allow-set-quick-input-region",
     "allow-set-tool-catalog",
     "allow-submit-activation-metric-value"

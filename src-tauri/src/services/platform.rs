@@ -43,10 +43,10 @@ pub use foreground_context::{
     restore_foreground_target, ForegroundTarget, RESTORES_FOCUS_BEFORE_HIDING,
 };
 pub use panel_surface::{
-    apply_panel_surface, attach_panel_surface, disable_panel_keyboard, focus_window,
-    is_layer_shell_supported, is_panel_relocating, select_panel_monitor, set_panel_input_region,
-    set_window_opacity, settle_panel_keyboard, target_monitor_point, InputRegion,
-    PanelKeyboardMode,
+    apply_panel_surface, attach_panel_surface, defer_quick_reveal, disable_panel_keyboard,
+    focus_window, is_layer_shell_supported, is_panel_relocating, select_panel_monitor,
+    set_panel_input_region, set_window_opacity, settle_panel_keyboard, target_monitor_point,
+    InputRegion, PanelKeyboardMode,
 };
 pub use shortcut_settings::{has_shortcut_settings, open_shortcut_settings};
 pub use text_injector::{

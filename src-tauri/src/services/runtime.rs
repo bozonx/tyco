@@ -10,7 +10,7 @@ mod warmup;
 mod window_visibility;
 
 pub use lifecycle::{create_windows, manage_state, request_exit, request_restart, setup, shutdown};
-pub use panel_layer::set_quick_input_region;
+pub use panel_layer::{reveal_quick_window, set_quick_input_region};
 pub use target_focus::{follow_target_window, forget_target_window, wait_until_unfocused};
 pub use target_paste::paste_into_target;
 pub use tray::set_tray_menu_labels;
@@ -230,11 +230,11 @@ fn activate_on_main_thread(
         .ok_or_else(|| AppError::ServiceUnavailable(format!("Window {window_label} not found")))?;
     let state = app.state::<AppState>();
 
-    // the warmup may have left the window transparent
-    super::platform::set_window_opacity(&window, 1.0)?;
-
     let (width, height) = WINDOW_SIZE;
     if is_quick_window {
+        // Keep the quick window transparent until the webview draws the new
+        // activation, so the compositor does not flash the previous buffer.
+        super::platform::defer_quick_reveal(&window)?;
         let layer = panel_layer(app);
         super::platform::select_panel_monitor(&window, monitor_point, layer)?;
         // a layer surface takes its size from `apply_panel_surface`
@@ -246,6 +246,7 @@ fn activate_on_main_thread(
         super::platform::set_panel_input_region(&window, None)?;
         super::platform::apply_panel_surface(&window, activation.mode.profile(), layer)?;
     } else {
+        super::platform::set_window_opacity(&window, 1.0)?;
         window.set_size(tauri::LogicalSize::new(width, height))?;
         window.set_decorations(true)?;
         window.set_resizable(true)?;
@@ -253,15 +254,6 @@ fn activate_on_main_thread(
         if state.snapshot().window.is_window_shown && !has_focused_window(app) {
             let _ = window.hide();
         }
-    }
-    window.set_focusable(true)?;
-    window.show()?;
-    super::activation::metrics::mark_show(app);
-    if let Err(error) = window.unminimize() {
-        log::warn!("Could not unminimize window: {error}");
-    }
-    if let Err(error) = crate::services::platform::focus_window(&window) {
-        log::warn!("Could not focus window: {error}");
     }
 
     state.update_snapshot(|snapshot| {
@@ -281,7 +273,19 @@ fn activate_on_main_thread(
         activation.mode,
         activation.source
     );
-    emit_state(app, &state)
+    let emitted = emit_state(app, &state);
+
+    window.set_focusable(true)?;
+    window.show()?;
+    super::activation::metrics::mark_show(app);
+    if let Err(error) = window.unminimize() {
+        log::warn!("Could not unminimize window: {error}");
+    }
+    if let Err(error) = crate::services::platform::focus_window(&window) {
+        log::warn!("Could not focus window: {error}");
+    }
+
+    emitted
 }
 
 fn window_label_for_mode(mode: ActivationMode) -> &'static str {

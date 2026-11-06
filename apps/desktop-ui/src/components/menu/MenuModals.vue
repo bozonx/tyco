@@ -1,6 +1,6 @@
 <template>
   <!-- an inline voice input is drawn by the editor itself -->
-  <Overlay v-if="menuModalsStore.currentStep && !isInlineVoice">
+  <Overlay v-if="isVisible && menuModalsStore.currentStep && !isInlineVoice">
     <!-- keyed by step: a correction step over an insert one is a new screen -->
     <InsertMenu
       v-if="menuModalsStore.currentStep?.modal === MenuModals.INSERT"
@@ -76,7 +76,10 @@
     />
   </Overlay>
 
-  <Overlay :nav-bar-visible="false" v-if="menuModalsStore.pendingModal">
+  <Overlay
+    :nav-bar-visible="false"
+    v-if="isVisible && menuModalsStore.pendingModal"
+  >
     <InProgressMessage v-bind="menuModalsStore.pendingModal" />
   </Overlay>
 </template>
@@ -84,6 +87,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { isQuickWindow } from '../../lib/desktop/window'
+import { useDesktopStore } from '../../stores/desktop'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import VoiceCommandsView from '../../views/VoiceCommandsView.vue'
 import Overlay from '../overlay/Overlay.vue'
@@ -100,7 +105,13 @@ import TransformationMenu from './TransformationMenu.vue'
 import TranslateMenu from './TranslateMenu.vue'
 import VoiceRecognitionMenu from './VoiceRecognitionMenu.vue'
 
+const desktopStore = useDesktopStore()
 const menuModalsStore = useMenuModalsStore()
+const inQuickWindow = isQuickWindow()
+
+const isVisible = computed(
+  () => !inQuickWindow || Boolean(desktopStore.desktopState.isWindowShown)
+)
 
 const isInlineVoice = computed(() => {
   const step = menuModalsStore.currentStep

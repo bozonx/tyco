@@ -1,7 +1,13 @@
 <template>
   <div
     class="quick-overlay-root"
-    :class="[isSheet ? 'is-sheet' : 'is-panel', { 'has-modal': hasModal }]"
+    :class="[
+      isSheet ? 'is-sheet' : 'is-panel',
+      {
+        'has-modal': hasModal,
+        'is-hidden': !desktopStore.desktopState.isWindowShown,
+      },
+    ]"
     @pointerdown="handleRootPointerDown"
   >
     <!-- without decorations nothing else tells that the keys go elsewhere -->
@@ -203,6 +209,36 @@ const session = useQuickWindowSession({
 })
 const keepsOnFocusLoss = computed(session.keepsOnFocusLoss)
 
+let pendingRevealFrame: number | undefined
+
+const cancelPendingReveal = () => {
+  if (
+    pendingRevealFrame !== undefined &&
+    typeof cancelAnimationFrame === 'function'
+  ) {
+    cancelAnimationFrame(pendingRevealFrame)
+    pendingRevealFrame = undefined
+  }
+}
+
+const scheduleQuickWindowReveal = () => {
+  cancelPendingReveal()
+  if (!desktopStore.desktopState.isWindowShown) return
+  void nextTick(() => {
+    if (unmounted || !desktopStore.desktopState.isWindowShown) return
+    const reveal = () => {
+      pendingRevealFrame = undefined
+      if (unmounted || !desktopStore.desktopState.isWindowShown) return
+      void ipcStore.call('reveal_quick_window')
+    }
+    if (typeof requestAnimationFrame === 'function') {
+      pendingRevealFrame = requestAnimationFrame(reveal)
+    } else {
+      reveal()
+    }
+  })
+}
+
 const handleRootPointerDown = (event: PointerEvent) => {
   // a click around the input lands in this window; a menu takes them all
   if (!cardRef.value || isSheet.value || keepsOnFocusLoss.value) return
@@ -297,6 +333,7 @@ const syncFocus = () => {
 
 onMounted(() => {
   syncFocus()
+  scheduleQuickWindowReveal()
   inputResizeObserver = new ResizeObserver(updateInputRegion)
   observeInputParts()
   if (cardRef.value && typeof MutationObserver !== 'undefined') {
@@ -327,6 +364,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   unmounted = true
+  cancelPendingReveal()
   inputResizeObserver?.disconnect()
   inputMutationObserver?.disconnect()
   window.removeEventListener('resize', updateInputRegion)
@@ -358,6 +396,18 @@ watch(
   (isShown) => {
     syncFocus()
     if (isShown) void windowFocus.refresh()
+    else cancelPendingReveal()
+  }
+)
+
+watch(
+  [
+    () => desktopStore.desktopState.isWindowShown,
+    () => desktopStore.desktopState.activationId,
+    currentMode,
+  ],
+  ([isShown]) => {
+    if (isShown) scheduleQuickWindowReveal()
   }
 )
 
@@ -482,7 +532,8 @@ watch(
   pointer-events: none;
 }
 
-.quick-overlay-root.has-modal .quick-overlay-card {
+.quick-overlay-root.has-modal .quick-overlay-card,
+.quick-overlay-root.is-hidden .quick-overlay-card {
   visibility: hidden;
 }
 

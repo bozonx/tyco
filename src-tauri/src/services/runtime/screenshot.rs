@@ -43,6 +43,7 @@ impl ScreenshotWindows for Windows<'_> {
         }
         let label = app.state::<super::RuntimeWindows>().active_label();
         if let Some(window) = app.get_webview_window(label) {
+            platform::set_window_opacity(&window, 1.0)?;
             if label == QUICK_WINDOW_LABEL {
                 platform::apply_panel_surface(
                     &window,

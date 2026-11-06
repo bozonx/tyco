@@ -119,6 +119,7 @@ beforeEach(async () => {
   )
   desktop.backend.handle('hide_window', () => undefined)
   desktop.backend.handle('hide_quick_window_on_blur', () => undefined)
+  desktop.backend.handle('reveal_quick_window', () => undefined)
   desktop.backend.handle('set_quick_input_region', () => undefined)
 })
 
@@ -430,17 +431,29 @@ describe('quick overlay menus', () => {
 
       desktop.setState({ isWindowShown: false })
       await nextTick()
+      expect(wrapper.find('.quick-overlay-root').classes()).toContain(
+        'is-hidden'
+      )
       expect(mocks.menuMounts).toBe(1)
       expect(mocks.menuUnmounts).toBe(0)
       mocks.cancelAndCloseAll.mockClear()
+      desktop.backend.calls.length = 0
       desktop.setState({ isWindowShown: true })
       desktop.setState({
         activationId: desktop.backend.activation.activationId + 1,
       })
       await nextTick()
+      expect(wrapper.find('.quick-overlay-root').classes()).not.toContain(
+        'is-hidden'
+      )
       expect(mocks.menuMounts).toBe(2)
       expect(mocks.menuUnmounts).toBe(1)
       expect(mocks.cancelAndCloseAll).toHaveBeenCalledOnce()
+      await vi.waitFor(() =>
+        expect(desktop.backend.callsOf('reveal_quick_window')).toContainEqual({
+          activationId: desktop.backend.activation.activationId,
+        })
+      )
 
       desktop.setState({ mode: 'quickInput' })
       await nextTick()

@@ -211,7 +211,7 @@ import { createDesktopChatTools } from '../../lib/chat-tools/desktop-chat-tools'
 import { getChatImage } from '../../lib/chat/chat-image-storage'
 import { chatModelOptions } from '../../lib/chat/chat-llm-selection'
 import { resolveProfileInstructions } from '../../lib/chat/chat-profile-runtime'
-import { insertAtCursor, type TextRange } from '../../lib/chat/insert-at-cursor'
+import { type TextRange, insertAtCursor } from '../../lib/chat/insert-at-cursor'
 import { invokeDesktop } from '../../lib/desktop/invoke'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { describeError } from '../../lib/errors/describe-error'
@@ -292,12 +292,7 @@ const lastInputKind = ref<'text' | 'voice'>(
   props.inputMode === 'voice' ? 'voice' : 'text'
 )
 const rememberedSelection = ref<TextRange | null>(null)
-const voiceRange = ref({
-  start: 0,
-  end: 0,
-  prefix: '',
-  suffix: '',
-})
+const voiceRange = ref({ start: 0, end: 0, prefix: '', suffix: '' })
 
 const voiceActivationMode = computed(() => {
   if (!isQuickWindow) return undefined

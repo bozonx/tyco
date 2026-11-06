@@ -321,6 +321,7 @@ export interface DesktopCommands {
     args: { activationId: number }
     result: ChatImage | null
   }
+  reveal_quick_window: { args: { activationId: number }; result: void }
   rewrite_ai_profile_memory: {
     args: {
       profileId: string
@@ -465,5 +466,6 @@ export const ACTIVATION_DESKTOP_COMMANDS = [
   'paste_into_target_and_hide',
   'remove_screenshot',
   'retake_screenshot',
+  'reveal_quick_window',
   'set_quick_input_region',
 ] as const satisfies readonly DesktopCommandName[]

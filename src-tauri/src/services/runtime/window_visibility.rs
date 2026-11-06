@@ -19,8 +19,11 @@ pub(super) fn hide_inactive_window(app: &AppHandle, active_label: &str) -> Resul
         return Ok(());
     };
 
-    if inactive_label == QUICK_WINDOW_LABEL && app.state::<PanelLayerState>().supported {
-        crate::services::platform::disable_panel_keyboard(&window)?;
+    if inactive_label == QUICK_WINDOW_LABEL {
+        if app.state::<PanelLayerState>().supported {
+            crate::services::platform::disable_panel_keyboard(&window)?;
+        }
+        let _ = crate::services::platform::set_window_opacity(&window, 0.0);
     }
 
     window.hide()?;
@@ -195,8 +198,11 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
         .get_webview_window(label)
         .ok_or_else(|| AppError::ServiceUnavailable(format!("Window {label} not found")))?;
 
-    if label == QUICK_WINDOW_LABEL && app.state::<PanelLayerState>().supported {
-        crate::services::platform::disable_panel_keyboard(&window)?;
+    if label == QUICK_WINDOW_LABEL {
+        if app.state::<PanelLayerState>().supported {
+            crate::services::platform::disable_panel_keyboard(&window)?;
+        }
+        let _ = crate::services::platform::set_window_opacity(&window, 0.0);
     }
 
     app.state::<ActivationCoordinator>().invalidate();

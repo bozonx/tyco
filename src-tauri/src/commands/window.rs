@@ -22,6 +22,11 @@ pub fn hide_quick_window_on_blur(app: AppHandle, activation_id: u64) -> Result<(
 }
 
 #[tauri::command]
+pub fn reveal_quick_window(app: AppHandle, activation_id: u64) -> Result<(), AppError> {
+    runtime::reveal_quick_window(&app, activation_id)
+}
+
+#[tauri::command]
 pub fn set_quick_input_region(
     app: AppHandle,
     region: Option<InputRegion>,

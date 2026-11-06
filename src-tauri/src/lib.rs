@@ -331,6 +331,7 @@ pub fn run() {
             commands::window::hide_window,
             commands::window::open_in_browser_and_hide,
             commands::window::paste_into_target_and_hide,
+            commands::window::reveal_quick_window,
             commands::window::set_quick_input_region,
             commands::window::set_tray_menu_labels,
         ])
