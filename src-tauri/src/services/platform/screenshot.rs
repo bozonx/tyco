@@ -1,8 +1,5 @@
 //! Bounded, single-monitor capture. No window/runtime state crosses this boundary.
-use crate::{
-    desktop_contract::{MAX_CHAT_IMAGE_DIMENSION, MAX_CHAT_IMAGE_PIXELS},
-    errors::AppError,
-};
+use crate::{errors::AppError, services::chat_images::within_capture_limits};
 
 #[cfg(target_os = "linux")]
 mod linux;
@@ -24,12 +21,7 @@ pub(crate) struct Pixels {
 }
 
 pub(crate) fn pixel_bytes(width: u32, height: u32) -> Result<usize, AppError> {
-    if width == 0
-        || height == 0
-        || width > MAX_CHAT_IMAGE_DIMENSION
-        || height > MAX_CHAT_IMAGE_DIMENSION
-        || u64::from(width) * u64::from(height) > MAX_CHAT_IMAGE_PIXELS
-    {
+    if !within_capture_limits(width, height) {
         return Err(AppError::FileTooLarge(
             "Screenshot dimensions limit exceeded".into(),
         ));
@@ -71,7 +63,7 @@ mod tests {
     #[test]
     fn bounds_are_checked_before_allocating_pixels() {
         assert_eq!(pixel_bytes(3840, 2160).unwrap(), 3840 * 2160 * 4);
-        for (w, h) in [(0, 10), (10, 0), (u32::MAX, 10), (16384, 16384)] {
+        for (w, h) in [(0, 10), (10, 0), (u32::MAX, 10), (16384, 16384), (16385, 1)] {
             assert!(pixel_bytes(w, h).is_err());
         }
     }

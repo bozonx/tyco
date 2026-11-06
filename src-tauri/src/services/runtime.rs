@@ -214,7 +214,7 @@ fn activate_on_main_thread(
     if !activation.mode.is_screenshot() {
         app.state::<super::chat_images::ChatImages>()
             .lock()
-            .release_owner("quick/screenshot");
+            .release_owner(super::screenshot::OWNER);
     }
     let window_label = window_label_for_mode(activation.mode);
     let is_quick_window = window_label == QUICK_WINDOW_LABEL;

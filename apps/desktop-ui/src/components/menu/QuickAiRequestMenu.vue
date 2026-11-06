@@ -45,7 +45,7 @@
         <ChatImageAttachment
           v-if="model.sourceImage.value"
           :image="model.sourceImage.value"
-          :removable="!model.turns.value.length && !isCapturing"
+          :removable="!model.isSourceImageLocked.value && !isCapturing"
           compact
           @remove="removeScreenshot"
         />
@@ -53,11 +53,7 @@
           icon="mdi:camera-retake-outline"
           :label="t('screenshot.retake')"
           :title="t('screenshot.retake')"
-          :disabled="
-            isCapturing ||
-            model.isGenerating.value ||
-            Boolean(model.turns.value.length)
-          "
+          :disabled="isCapturing || model.isSourceImageLocked.value"
           @click="retakeScreenshot"
         />
       </div>
@@ -502,14 +498,13 @@ watch(
 )
 
 async function removeScreenshot() {
-  if (model.isGenerating.value || model.turns.value.length) return
+  if (model.isSourceImageLocked.value) return
   const result = await ipcStore.callOrNotify('remove_screenshot')
   if (result.success) model.setSourceImage(undefined)
 }
 
 async function retakeScreenshot() {
-  if (isCapturing.value || model.isGenerating.value || model.turns.value.length)
-    return
+  if (isCapturing.value || model.isSourceImageLocked.value) return
   isCapturing.value = true
   try {
     if (isListening.value) {

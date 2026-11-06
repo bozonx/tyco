@@ -55,6 +55,72 @@ fn within_limits(width: u32, height: u32) -> bool {
         && u64::from(width) * u64::from(height) <= MAX_PIXELS
 }
 
+/// Bounds for raw captured pixels before they are reduced to the image limits.
+pub const MAX_CAPTURE_DIMENSION: u32 = 16_384;
+pub const MAX_CAPTURE_PIXELS: u64 = 48_000_000;
+
+pub fn within_capture_limits(width: u32, height: u32) -> bool {
+    width > 0
+        && height > 0
+        && width <= MAX_CAPTURE_DIMENSION
+        && height <= MAX_CAPTURE_DIMENSION
+        && u64::from(width) * u64::from(height) <= MAX_CAPTURE_PIXELS
+}
+
+/// The size a capture is encoded at: the quality's longest edge, never larger
+/// than the source and always within the image limits.
+fn capture_size(width: u32, height: u32, quality: &str) -> (u32, u32) {
+    let max_edge = match quality {
+        "economy" => 1024,
+        "original" => MAX_DIMENSION,
+        _ => 1568,
+    };
+    let longest = f64::from(width.max(height));
+    let area = f64::from(width) * f64::from(height);
+    let scale = (f64::from(max_edge) / longest)
+        .min((MAX_PIXELS as f64 / area).sqrt())
+        .min(1.0);
+    if scale >= 1.0 {
+        return (width, height);
+    }
+    let fit = |side: u32| ((f64::from(side) * scale).floor() as u32).max(1);
+    (fit(width), fit(height))
+}
+
+/// Averages every source pixel an output pixel covers. Unlike sampling a few
+/// neighbours, this keeps thin text strokes when HiDPI screens shrink 2-4x.
+fn downscale(pixels: &[u8], width: u32, height: u32, out_width: u32, out_height: u32) -> Vec<u8> {
+    let (width, height) = (width as usize, height as usize);
+    let (out_width, out_height) = (out_width as usize, out_height as usize);
+    let span = |index: usize, out: usize, source: usize| {
+        let start = index * source / out;
+        let end = ((index + 1) * source / out).max(start + 1);
+        start..end
+    };
+    let mut resized = vec![0; out_width * out_height * 4];
+    for out_y in 0..out_height {
+        let rows = span(out_y, out_height, height);
+        for out_x in 0..out_width {
+            let columns = span(out_x, out_width, width);
+            let mut sum = [0u32; 4];
+            for y in rows.clone() {
+                let row = &pixels[(y * width + columns.start) * 4..(y * width + columns.end) * 4];
+                for pixel in row.as_chunks::<4>().0 {
+                    for (total, value) in sum.iter_mut().zip(pixel) {
+                        *total += u32::from(*value);
+                    }
+                }
+            }
+            let count = (rows.len() * columns.len()) as u32;
+            let target = &mut resized[(out_y * out_width + out_x) * 4..][..4];
+            for (value, total) in target.iter_mut().zip(sum) {
+                *value = ((total + count / 2) / count) as u8;
+            }
+        }
+    }
+    resized
+}
+
 /// Decode the webview's PNG and encode the pixels as a WebP, never carrying
 /// source metadata onto disk.
 fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>), AppError> {
@@ -191,60 +257,29 @@ impl ChatImageStore {
         normalize(bytes, name)
     }
 
-    /// Native captures share the encoder and bounds without an intermediate PNG.
+    /// Native captures share the encoder without an intermediate PNG. A capture
+    /// may exceed the image limits, e.g. a portal shot of several monitors; it
+    /// is reduced to fit them instead of being rejected.
     pub fn prepare_capture(
         pixels: &[u8],
         width: u32,
         height: u32,
         quality: &str,
     ) -> Result<(ChatImage, Vec<u8>), AppError> {
-        if !within_limits(width, height) || pixels.len() != width as usize * height as usize * 4 {
+        if !within_capture_limits(width, height)
+            || pixels.len() != width as usize * height as usize * 4
+        {
             return Err(AppError::FileTooLarge(
                 "Screenshot dimensions limit exceeded".into(),
             ));
         }
-        let max_edge = match quality {
-            "economy" => 1024,
-            "original" => MAX_DIMENSION,
-            _ => 1568,
-        };
-        let longest = width.max(height);
-        if longest <= max_edge {
-            return encode_pixels(pixels, width, height, true, Some("Screenshot.webp".into()));
+        let (out_width, out_height) = capture_size(width, height, quality);
+        let name = Some("Screenshot.webp".to_string());
+        if (out_width, out_height) == (width, height) {
+            return encode_pixels(pixels, width, height, true, name);
         }
-        let out_width = (u64::from(width) * u64::from(max_edge) / u64::from(longest)).max(1) as u32;
-        let out_height =
-            (u64::from(height) * u64::from(max_edge) / u64::from(longest)).max(1) as u32;
-        let mut resized = vec![0; out_width as usize * out_height as usize * 4];
-        // Bilinear sampling retains antialiased screen text when reducing HiDPI captures.
-        for y in 0..out_height {
-            let sy = ((y as f64 + 0.5) * height as f64 / out_height as f64 - 0.5).max(0.0);
-            let y0 = sy as u32;
-            let y1 = (y0 + 1).min(height - 1);
-            let dy = sy - y0 as f64;
-            for x in 0..out_width {
-                let sx = ((x as f64 + 0.5) * width as f64 / out_width as f64 - 0.5).max(0.0);
-                let x0 = sx as u32;
-                let x1 = (x0 + 1).min(width - 1);
-                let dx = sx - x0 as f64;
-                for c in 0..4usize {
-                    let at = |x: u32, y: u32| {
-                        pixels[(y as usize * width as usize + x as usize) * 4 + c] as f64
-                    };
-                    resized[(y as usize * out_width as usize + x as usize) * 4 + c] =
-                        ((at(x0, y0) * (1.0 - dx) + at(x1, y0) * dx) * (1.0 - dy)
-                            + (at(x0, y1) * (1.0 - dx) + at(x1, y1) * dx) * dy)
-                            .round() as u8;
-                }
-            }
-        }
-        encode_pixels(
-            &resized,
-            out_width,
-            out_height,
-            true,
-            Some("Screenshot.webp".into()),
-        )
+        let resized = downscale(pixels, width, height, out_width, out_height);
+        encode_pixels(&resized, out_width, out_height, true, name)
     }
 
     pub fn remember(&mut self, image: ChatImage, bytes: Vec<u8>) -> Result<(), AppError> {
@@ -520,6 +555,34 @@ mod tests {
         assert!(ChatImageStore::prepare_capture(&[0; 15], 2, 2, "balanced").is_err());
         assert!(ChatImageStore::prepare_capture(&[], 0, 0, "balanced").is_err());
         assert!(ChatImageStore::prepare_capture(&[], 100_000, 1, "balanced").is_err());
+    }
+
+    #[test]
+    fn a_capture_beyond_the_image_limits_is_reduced_to_fit_them() {
+        // Three 4K monitors side by side, as a portal may return them.
+        assert_eq!(capture_size(11_520, 2160, "original"), (8000, 1500));
+        // A 5K monitor kept at its size would exceed the pixel limit.
+        let (width, height) = capture_size(7680, 4320, "original");
+        assert!(u64::from(width) * u64::from(height) <= MAX_PIXELS);
+        assert_eq!(capture_size(1920, 1080, "original"), (1920, 1080));
+        assert_eq!(capture_size(800, 600, "economy"), (800, 600));
+    }
+
+    #[test]
+    fn downscaling_averages_thin_strokes_instead_of_dropping_them() {
+        // A one-pixel black line every four columns on white.
+        let (width, height) = (16u32, 4u32);
+        let mut pixels = vec![255u8; (width * height * 4) as usize];
+        for y in 0..height {
+            for x in (0..width).step_by(4) {
+                let at = ((y * width + x) * 4) as usize;
+                pixels[at..at + 3].fill(0);
+            }
+        }
+        let resized = downscale(&pixels, width, height, 4, 1);
+        for pixel in resized.as_chunks::<4>().0 {
+            assert_eq!(*pixel, [191, 191, 191, 255]);
+        }
     }
 
     fn png() -> Vec<u8> {

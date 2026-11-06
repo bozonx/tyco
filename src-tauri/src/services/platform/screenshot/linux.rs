@@ -180,7 +180,7 @@ fn read_portal_image(path: &std::path::Path) -> Result<Pixels, AppError> {
     }
     let mut decoder = png::Decoder::new(std::io::Cursor::new(data));
     decoder.set_limits(png::Limits {
-        bytes: 128 * 1024 * 1024,
+        bytes: 256 * 1024 * 1024,
     });
     decoder.set_transformations(png::Transformations::EXPAND | png::Transformations::STRIP_16);
     let mut reader = decoder.read_info().map_err(failed)?;

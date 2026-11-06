@@ -206,8 +206,19 @@ export function createQuickAiRequestModel(
     )
   }
 
+  /**
+   * The screenshot is fixed once the model has answered over it. A first
+   * request that failed or was stopped before any answer leaves it
+   * replaceable.
+   */
+  const isSourceImageLocked = computed(
+    () =>
+      isGenerating.value ||
+      turns.value.some((turn) => turn.status === 'done' || turn.textResponse)
+  )
+
   const setSourceImage = (image: ChatImage | undefined) => {
-    if (turns.value.length || isGenerating.value) return
+    if (isSourceImageLocked.value) return
     sourceImage.value = image
   }
 
@@ -539,6 +550,7 @@ export function createQuickAiRequestModel(
     modelIssue,
     describeModelIssue,
     sourceImage,
+    isSourceImageLocked,
     setSourceImage,
     isProfileLocked,
     isGenerating,

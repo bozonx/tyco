@@ -5,18 +5,30 @@ release size/latency measurements are still to be recorded. Stage 2 not started.
 
 Stage 1 implementation notes:
 
-- Backend: `services/runtime/screenshot.rs` (orchestration, ownership under the
-  `quick/screenshot` image owner, retake/remove/transfer) and
+- Backend: `services/screenshot.rs` (orchestration behind the
+  `ScreenshotWindows` / `ScreenshotSource` host traits, ownership under the
+  `quick/screenshot` image owner, unit-tested without a Tauri runtime),
+  `services/runtime/screenshot.rs` (Tauri adapter: threads, windows,
+  retake/remove/transfer) and
   `services/platform/screenshot/` (X11 RandR monitor + `GetImage`, Wayland
   Screenshot portal, Windows GDI `BitBlt`). Captures are encoded by
-  `ChatImageStore::prepare_capture` without an intermediate PNG.
+  `ChatImageStore::prepare_capture` without an intermediate PNG. Reduction
+  averages the covered source pixels (area filter) to keep thin text readable.
+  Raw captures are accepted up to 16384 px per edge and 48 MP and reduced to
+  the chat image limits instead of being rejected.
 - Monitor choice: X11 and Windows capture the monitor under the pointer. On
   Wayland the portal decides: with portal version 3+ the `Screen` target is
   requested non-interactively; older portals return what the compositor
-  captures (GNOME and KDE capture all outputs). TyCo does not crop portal
+  captures (GNOME and KDE capture all outputs). Wayland gives clients no global
+  pointer position, so TyCo cannot pick the monitor and does not crop portal
   results in stage 1.
 - Failure and cancellation restore the previously visible TyCo window; a
-  failure emits `app://screenshot-failed`, shown as a toast in the quick window.
+  failure emits `app://screenshot-failed`. The quick window shows it as a toast
+  when a TyCo window is visible, otherwise as an error status bubble.
+- The profile stays locked to Ask AI for the whole screenshot session.
+- The screenshot can be retaken or removed until the model has answered over
+  it; a first request that failed or was stopped without an answer keeps it
+  replaceable.
 - Screenshot quick sessions are not saved to editor history; transfer to the
   main chat (`open_screenshot_chat`) persists through normal chat history.
 
@@ -33,7 +45,8 @@ Both entry points start with the default **Ask AI** profile selected, regardless
 of the profile used in the previous quick request. Use the existing default
 profile representation (`profileId: null`), task configuration and instructions;
 do not create a new custom profile or a separate screenshot model setting.
-Custom-profile screenshot workflows are outside the first release.
+Custom-profile screenshot workflows are outside the first release, so the
+profile picker stays locked for a screenshot session.
 
 ## Existing implementation to reuse
 
@@ -71,8 +84,10 @@ implementing the corresponding parts.
   actions.
 - For multiple monitors, capture the entire monitor containing the pointer at
   invocation time, rather than stitching all monitors into one image. Resolve
-  the monitor before window changes. If a portal requires its own monitor
-  chooser, use that system choice and document the platform difference.
+  the monitor before window changes. Exception: on Wayland the portal decides
+  what is captured (a system chooser, or all outputs on GNOME/KDE), because
+  clients cannot learn the pointer's monitor; use that result as is and
+  document the platform difference.
 - Associate capture with the activation generation. Cancellation, a newer
   activation or shutdown must discard a late result and release its resources.
   Do not start microphone recording while a capture dialog is still active.
@@ -87,6 +102,7 @@ implementing the corresponding parts.
   capabilities; do not assume that every portal supports an explicit screen
   target or silent capture. Handle system consent, cancellation and unsupported
   backends explicitly. Stage 1 must not silently enter area-selection mode.
+  A failure must be visible even when no TyCo window was open before capture.
 - Linux X11: reuse the portal where suitable or implement full-monitor capture
   through the existing `x11rb` dependency. Handle actual pixel layout and monitor
   geometry rather than assuming a fixed RGB format.
@@ -95,7 +111,9 @@ implementing the corresponding parts.
 - Feed pixels into the existing bounded image-normalization pipeline. Audit
   decoded-pixel and byte limits for large/HiDPI screens before allocating; avoid
   rejecting valid captures only because an intermediate full-size PNG exceeds a
-  file-import limit. Preserve readable text using the existing quality policy.
+  file-import limit. Reduce oversized captures (for example several monitors
+  from a portal) to the image limits rather than rejecting them. Preserve
+  readable text using the existing quality policy and an area-averaging filter.
 - Portal output may be a temporary file. Read only the result authorized by the
   capture operation; validate it and clean up application-owned temporary data
   according to the portal contract. Do not claim that capture never touches disk.
@@ -113,7 +131,8 @@ implementing the corresponding parts.
   submit the recognized question through the same request path as typed text.
 - Allow switching between text and voice without losing the screenshot or draft.
   Retaking replaces the screenshot only after successful capture; cancellation
-  retains the previous screenshot and question.
+  retains the previous screenshot and question. Retake and removal stay
+  available until the model has answered over the screenshot.
 - Require a nonempty typed or recognized question for the first release. Taking
   a screenshot alone must not trigger an LLM request.
 - Reuse existing submit, cancel, streaming, reply blocks and result actions.

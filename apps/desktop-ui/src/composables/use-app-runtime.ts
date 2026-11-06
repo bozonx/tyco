@@ -221,7 +221,20 @@ export function useAppRuntime() {
     stopMetrics: activationMetrics.stop,
     disposePlugins: pluginRuntime.dispose,
     refreshPlugins: pluginRuntime.refreshInstalledPlugins,
-    notifyScreenshotFailed: () => toastKey('screenshot.failed', 'error'),
+    // A failed first capture leaves no TyCo window to show a toast in
+    notifyScreenshotFailed: () => {
+      if (desktopStore.desktopState.isWindowShown) {
+        toastKey('screenshot.failed', 'error')
+        return
+      }
+      void ipcStore.call('show_status_overlay', {
+        request: {
+          kind: 'error',
+          text: t('screenshot.failed'),
+          hideAfterMs: 6000,
+        },
+      })
+    },
     notifySettingsConflict: () =>
       toastKey('settings.userData.syncConflictToast', 'warn'),
     shutdown: settingsShutdown,

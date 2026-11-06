@@ -538,8 +538,22 @@ describe('QuickAiRequestModel', () => {
       model.setSourceImage(screenshot)
 
       await model.submitPrompt('What is this?')
+      expect(model.isSourceImageLocked.value).toBe(true)
       model.setSourceImage(retaken)
       expect(model.sourceImage.value).toEqual(screenshot)
+    })
+
+    it('keeps the screenshot replaceable after a first request with no answer', async () => {
+      const { model } = screenshotSetup({
+        stream: vi.fn(() => {
+          throw new Error('network down')
+        }),
+      })
+      expect(await model.submitPrompt('What is this?')).toBe(false)
+      expect(model.isSourceImageLocked.value).toBe(false)
+      const retaken = { ...screenshot, id: 'shot-2' }
+      model.setSourceImage(retaken)
+      expect(model.sourceImage.value).toEqual(retaken)
     })
 
     it('transfers the conversation with the screenshot to the main chat', async () => {

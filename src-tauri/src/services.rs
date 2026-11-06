@@ -19,6 +19,7 @@ pub mod platform;
 pub mod plugins;
 pub mod random_id;
 pub mod runtime;
+pub mod screenshot;
 pub mod secrets;
 pub mod selection_replace;
 pub mod settings;

@@ -1,61 +1,136 @@
 //! Screenshot activations defer showing the overlay until pixels are available.
+//! Capture policy lives in `services::screenshot`; this module binds it to
+//! the Tauri windows, threads and shared state.
 use super::{activate_on_main_thread, on_main_thread, MAIN_WINDOW_LABEL, QUICK_WINDOW_LABEL};
 use crate::{
     errors::AppError,
     models::ChatImage,
     services::{
-        activation::{
-            coordinator::{ActivationCoordinator, CaptureRequest},
-            Activation,
-        },
+        activation::{coordinator::ActivationCoordinator, Activation},
         background::BackgroundServices,
-        chat_images::{ChatImageStore, ChatImages},
+        chat_images::ChatImages,
         platform,
+        screenshot::{self as orchestration, Outcome, ScreenshotSource, ScreenshotWindows, OWNER},
     },
     state::AppState,
 };
 use tauri::{AppHandle, Manager};
 
-const OWNER: &str = "quick/screenshot";
+struct Windows<'a>(&'a AppHandle);
+
+impl ScreenshotWindows for Windows<'_> {
+    fn is_quitting(&self) -> bool {
+        self.0.state::<AppState>().is_quitting()
+    }
+
+    fn hide(&self) -> Result<(), AppError> {
+        for label in [MAIN_WINDOW_LABEL, QUICK_WINDOW_LABEL] {
+            if let Some(window) = self.0.get_webview_window(label) {
+                if label == QUICK_WINDOW_LABEL {
+                    platform::disable_panel_keyboard(&window)?;
+                }
+                window.hide()?;
+            }
+        }
+        Ok(())
+    }
+
+    fn restore(&self) -> Result<(), AppError> {
+        let app = self.0;
+        let snapshot = app.state::<AppState>().snapshot();
+        if !snapshot.window.is_window_shown {
+            return Ok(());
+        }
+        let label = app.state::<super::RuntimeWindows>().active_label();
+        if let Some(window) = app.get_webview_window(label) {
+            if label == QUICK_WINDOW_LABEL {
+                platform::apply_panel_surface(
+                    &window,
+                    snapshot.window.window_profile,
+                    super::panel_layer(app),
+                )?;
+            }
+            window.show()?;
+            platform::focus_window(&window)?;
+        }
+        Ok(())
+    }
+}
+
+struct Source<'a>(&'a AppHandle);
+
+impl ScreenshotSource for Source<'_> {
+    fn settle(&self) -> bool {
+        // Let the native compositor consume the unmap before reading its pixels.
+        self.0
+            .state::<BackgroundServices>()
+            .token()
+            .wait(std::time::Duration::from_millis(150))
+    }
+
+    fn is_stopped(&self) -> bool {
+        self.0.state::<BackgroundServices>().token().is_stopped()
+    }
+
+    fn capture(
+        &self,
+        screen: Option<platform::screenshot::Screen>,
+    ) -> Result<Option<platform::screenshot::Pixels>, AppError> {
+        platform::screenshot::capture(screen)
+    }
+
+    fn image_quality(&self) -> String {
+        self.0
+            .state::<AppState>()
+            .user_config()
+            .pointer("/llm/imageQuality")
+            .and_then(|v| v.as_str())
+            .unwrap_or("balanced")
+            .to_string()
+    }
+}
 
 pub(super) fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppError> {
+    // Resolve the monitor and the insertion target before any window changes.
     let screen = platform::screenshot::screen()?;
     activation.target_window_id =
         platform::capture_foreground_target().map(platform::ForegroundTarget::into_platform_id);
     let handle = app.clone();
     on_main_thread(app, move |app| {
-        let request = prepare(app)?;
+        let request = orchestration::begin(&app.state::<ActivationCoordinator>(), &Windows(app))?;
         let worker = handle.clone();
         handle
             .state::<BackgroundServices>()
             .spawn_thread("screenshot-activation", move |stop| {
-                let result = capture(&worker, screen, &request);
+                let capture = orchestration::capture(
+                    &worker.state::<ActivationCoordinator>(),
+                    &request,
+                    &Source(&worker),
+                    screen,
+                );
                 if stop.is_stopped() {
                     return;
                 }
                 let published = on_main_thread(&worker, move |app| {
-                    app.state::<ActivationCoordinator>()
-                        .publish(&request, || match result {
-                            Ok(Some((image, bytes))) => {
-                                let images = app.state::<ChatImages>();
-                                let mut images = images.lock();
-                                images.remember(image.clone(), bytes)?;
-                                images.sync(OWNER, std::slice::from_ref(&image.id))?;
-                                drop(images);
-                                activation.screenshot = Some(image);
-                                activate_on_main_thread(app, activation, screen.map(|s| (s.x, s.y)))
-                            }
-                            Ok(None) => restore(app),
-                            Err(error) => {
-                                restore(app)?;
-                                crate::events::emit::<crate::events::ScreenshotFailed, _>(
-                                    app,
-                                    error.code(),
-                                )?;
-                                log::warn!("Screenshot capture failed: {error}");
-                                Ok(())
-                            }
-                        })
+                    let outcome = orchestration::finish(
+                        &app.state::<ActivationCoordinator>(),
+                        &request,
+                        capture,
+                        &Windows(app),
+                        &app.state::<ChatImages>(),
+                        |image| {
+                            activation.screenshot = Some(image);
+                            activate_on_main_thread(app, activation, screen.map(|s| (s.x, s.y)))
+                        },
+                    )?;
+                    if let Some(Outcome::Failed(error)) = outcome {
+                        log::warn!("Screenshot capture failed: {error}");
+                        crate::events::emit::<crate::events::ScreenshotFailed, _>(
+                            app,
+                            error.code(),
+                        )?;
+                    }
+                    Ok(())
                 });
                 if let Err(error) = published {
                     log::warn!("Could not publish screenshot: {error}");
@@ -69,45 +144,42 @@ pub fn retake(app: &AppHandle, activation_id: u64) -> Result<Option<ChatImage>, 
     let screen = platform::screenshot::screen()?;
     let (sender, receiver) = std::sync::mpsc::sync_channel(1);
     on_main_thread(app, move |app| {
-        let snapshot = app.state::<AppState>().snapshot();
-        if snapshot.activation.activation_id != activation_id
-            || !snapshot.activation.mode.is_some_and(|m| m.is_screenshot())
-        {
-            return Err(AppError::Stale(
-                "Screenshot session is no longer current".into(),
-            ));
-        }
+        ensure_current(app, activation_id)?;
+        let request = orchestration::begin(&app.state::<ActivationCoordinator>(), &Windows(app))?;
         sender
-            .send(prepare(app)?)
+            .send(request)
             .map_err(|e| AppError::Failed(e.to_string()))
     })?;
     let request = receiver
         .recv()
         .map_err(|e| AppError::Failed(e.to_string()))?;
-    let result = capture(app, screen, &request);
+    let capture = orchestration::capture(
+        &app.state::<ActivationCoordinator>(),
+        &request,
+        &Source(app),
+        screen,
+    );
     let (sender, receiver) = std::sync::mpsc::sync_channel(1);
     on_main_thread(app, move |app| {
-        let mut output = Err(AppError::Stale(
-            "Screenshot session is no longer current".into(),
-        ));
-        app.state::<ActivationCoordinator>().publish(&request, || {
-            restore(app)?;
-            output = match result {
-                Ok(Some((image, bytes))) => {
-                    let images = app.state::<ChatImages>();
-                    let mut images = images.lock();
-                    images.remember(image.clone(), bytes)?;
-                    images.sync(OWNER, std::slice::from_ref(&image.id))?;
-                    app.state::<AppState>()
-                        .update_snapshot(|s| s.activation.screenshot = Some(image.clone()));
-                    super::publish_state(app, &app.state::<AppState>());
-                    Ok(Some(image))
-                }
-                Ok(None) => Ok(None),
-                Err(error) => Err(error),
-            };
-            Ok(())
-        })?;
+        let outcome = orchestration::finish(
+            &app.state::<ActivationCoordinator>(),
+            &request,
+            capture,
+            &Windows(app),
+            &app.state::<ChatImages>(),
+            |image| {
+                let state = app.state::<AppState>();
+                state.update_snapshot(|s| s.activation.screenshot = Some(image));
+                super::publish_state(app, &state);
+                Windows(app).restore()
+            },
+        )?;
+        let output = match outcome {
+            Some(Outcome::Captured(image)) => Ok(Some(image)),
+            Some(Outcome::Cancelled) => Ok(None),
+            Some(Outcome::Failed(error)) => Err(error),
+            None => Err(stale()),
+        };
         sender
             .send(output)
             .map_err(|e| AppError::Failed(e.to_string()))
@@ -117,81 +189,24 @@ pub fn retake(app: &AppHandle, activation_id: u64) -> Result<Option<ChatImage>, 
         .map_err(|e| AppError::Failed(e.to_string()))?
 }
 
-fn prepare(app: &AppHandle) -> Result<CaptureRequest, AppError> {
-    if app.state::<AppState>().is_quitting() {
-        return Err(AppError::ServiceUnavailable(
-            "Application is stopping".into(),
-        ));
-    }
-    let request = app.state::<ActivationCoordinator>().reserve();
-    // Do not publish hidden state: the existing view and microphone wiring must
-    // survive a retake. Blur dismissal is suppressed while capture owns the window.
-    for label in [MAIN_WINDOW_LABEL, QUICK_WINDOW_LABEL] {
-        if let Some(window) = app.get_webview_window(label) {
-            if label == QUICK_WINDOW_LABEL {
-                platform::disable_panel_keyboard(&window)?;
-            }
-            window.hide()?;
-        }
-    }
-    Ok(request)
+fn stale() -> AppError {
+    AppError::Stale("Screenshot session is no longer current".into())
 }
 
-fn capture(
-    app: &AppHandle,
-    screen: Option<platform::screenshot::Screen>,
-    request: &CaptureRequest,
-) -> Result<Option<(ChatImage, Vec<u8>)>, AppError> {
-    // Let the native compositor consume the unmap before reading its pixels.
-    let stop = app.state::<BackgroundServices>().token();
-    if stop.wait(std::time::Duration::from_millis(150))
-        || !app.state::<ActivationCoordinator>().is_current(request)
-    {
-        return Ok(None);
-    }
-    let pixels = platform::screenshot::capture(screen)?;
-    if stop.is_stopped() || !app.state::<ActivationCoordinator>().is_current(request) {
-        return Ok(None);
-    }
-    pixels
-        .map(|pixels| {
-            let config = app.state::<AppState>().user_config();
-            let quality = config
-                .pointer("/llm/imageQuality")
-                .and_then(|v| v.as_str())
-                .unwrap_or("balanced");
-            ChatImageStore::prepare_capture(&pixels.bytes, pixels.width, pixels.height, quality)
-        })
-        .transpose()
-}
-
-fn restore(app: &AppHandle) -> Result<(), AppError> {
+fn ensure_current(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
     let snapshot = app.state::<AppState>().snapshot();
-    if snapshot.window.is_window_shown {
-        let label = app.state::<super::RuntimeWindows>().active_label();
-        if let Some(window) = app.get_webview_window(label) {
-            if label == QUICK_WINDOW_LABEL {
-                platform::apply_panel_surface(
-                    &window,
-                    snapshot.window.window_profile,
-                    super::panel_layer(app),
-                )?;
-            }
-            window.show()?;
-            platform::focus_window(&window)?;
-        }
+    if snapshot.activation.activation_id != activation_id
+        || !snapshot.activation.mode.is_some_and(|m| m.is_screenshot())
+    {
+        return Err(stale());
     }
     Ok(())
 }
 
 pub fn remove(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
+        ensure_current(app, activation_id)?;
         let state = app.state::<AppState>();
-        if state.snapshot().activation.activation_id != activation_id {
-            return Err(AppError::Stale(
-                "Screenshot session is no longer current".into(),
-            ));
-        }
         state.update_snapshot(|s| s.activation.screenshot = None);
         app.state::<ChatImages>().lock().release_owner(OWNER);
         super::emit_state(app, &state)
@@ -205,14 +220,8 @@ pub fn open_chat(
 ) -> Result<(), AppError> {
     let handle = app.clone();
     on_main_thread(app, move |app| {
+        ensure_current(app, activation_id)?;
         let snapshot = app.state::<AppState>().snapshot();
-        if snapshot.activation.activation_id != activation_id
-            || !snapshot.activation.mode.is_some_and(|m| m.is_screenshot())
-        {
-            return Err(AppError::Stale(
-                "Screenshot session is no longer current".into(),
-            ));
-        }
         let ids: Vec<String> = transfer
             .chat
             .messages
