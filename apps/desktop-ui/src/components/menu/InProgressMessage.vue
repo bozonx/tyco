@@ -17,64 +17,6 @@
       icon="mdi:progress-clock"
     />
 
-    <div
-      v-if="props.allowBufferedIntent && menuModalsStore.bufferedIntent"
-      class="buffered-intent-badge"
-    >
-      <AppIcon
-        :icon="
-          menuModalsStore.bufferedIntent === 'insert'
-            ? isEditorTarget
-              ? 'mdi:pencil-outline'
-              : 'mdi:application-export'
-            : 'mdi:clipboard-arrow-right-outline'
-        "
-        size="sm"
-      />
-      <span class="buffered-label">{{
-        menuModalsStore.bufferedIntent === 'insert'
-          ? isEditorTarget
-            ? t('menu.replaceInEditor')
-            : t('menu.willInsertOnFinish')
-          : t('menu.willCopyOnFinish')
-      }}</span>
-      <span class="buffered-hint">({{ t('menu.cancelIntentHint') }})</span>
-      <button
-        type="button"
-        class="buffered-dismiss"
-        :title="t('menu.cancelIntentHint')"
-        :aria-label="t('menu.cancelIntentHint')"
-        @click="menuModalsStore.clearBufferedIntent"
-      >
-        <AppIcon icon="mdi:close" size="xs" />
-      </button>
-    </div>
-
-    <div v-else-if="props.allowBufferedIntent" class="buffered-intent-hints">
-      <button
-        type="button"
-        class="hint-chip"
-        :class="{ 'is-disabled': !canBufferInsert }"
-        :aria-disabled="!canBufferInsert"
-        :title="!canBufferInsert ? t('selection.noTarget') : undefined"
-        @click="requestBufferedInsert"
-      >
-        <span class="hint-kbd">Space</span>
-        <span>{{
-          isEditorTarget ? t('menu.replaceInEditor') : t('menu.insertOnFinish')
-        }}</span>
-      </button>
-      <button
-        v-if="canBufferCopy"
-        type="button"
-        class="hint-chip"
-        @click="menuModalsStore.setBufferedIntent('copy')"
-      >
-        <span class="hint-kbd">C</span>
-        <span>{{ t('menu.copyOnFinish') }}</span>
-      </button>
-    </div>
-
     <Button
       type="button"
       class="in-progress-cancel-btn"
@@ -84,6 +26,41 @@
     >
       {{ props.cancelLabel || t('common.cancel') }}
     </Button>
+
+    <div v-if="props.allowBufferedIntent" class="buffered-intent-slot">
+      <div
+        v-if="menuModalsStore.bufferedIntent"
+        class="buffered-intent-badge"
+      >
+        <AppIcon
+          :icon="
+            menuModalsStore.bufferedIntent === 'insert'
+              ? isEditorTarget
+                ? 'mdi:pencil-outline'
+                : 'mdi:application-export'
+              : 'mdi:clipboard-arrow-right-outline'
+          "
+          size="sm"
+        />
+        <span class="buffered-label">{{
+          menuModalsStore.bufferedIntent === 'insert'
+            ? isEditorTarget
+              ? t('menu.replaceInEditor')
+              : t('menu.willInsertOnFinish')
+            : t('menu.willCopyOnFinish')
+        }}</span>
+        <span class="buffered-hint">({{ t('menu.cancelIntentHint') }})</span>
+        <button
+          type="button"
+          class="buffered-dismiss"
+          :title="t('menu.cancelIntentHint')"
+          :aria-label="t('menu.cancelIntentHint')"
+          @click="menuModalsStore.clearBufferedIntent"
+        >
+          <AppIcon icon="mdi:close" size="xs" />
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -207,6 +184,13 @@ useDismissibleLayer({
   height: 100%;
 }
 
+.buffered-intent-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+}
+
 .buffered-intent-badge {
   display: inline-flex;
   align-items: center;
@@ -250,52 +234,6 @@ useDismissibleLayer({
 .buffered-dismiss:hover {
   color: var(--color-base-content);
   background-color: var(--app-surface-sunken);
-}
-
-.buffered-intent-hints {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.hint-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: 0.25rem 0.625rem;
-  background-color: var(--app-surface-raised);
-  border: 1px solid var(--app-border-subtle);
-  border-radius: var(--radius-full);
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.hint-chip:hover:not(.is-disabled) {
-  color: var(--color-base-content);
-  border-color: var(--app-border-strong);
-  background-color: var(--app-surface-sunken);
-}
-
-.hint-chip.is-disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.hint-kbd {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0.375rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  font-family: inherit;
-  line-height: 1.25;
-  background-color: var(--app-surface-sunken);
-  border: 1px solid var(--app-border-subtle);
-  border-radius: var(--radius-sm);
-  color: var(--color-base-content);
 }
 
 @keyframes pulse-border {

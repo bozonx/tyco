@@ -37,9 +37,12 @@
           v-if="chatStore.isGenerating && !streamHasContent"
           class="typing-indicator"
           role="status"
-          :aria-label="t('chat.generating')"
         >
-          <span /><span /><span />
+          <span
+            class="loading loading-spinner loading-xs text-primary"
+            aria-hidden="true"
+          />
+          <span>{{ t('chat.generating') }}</span>
         </div>
 
         <InlineNotice
@@ -314,23 +317,11 @@ onMounted(() => {
   padding: var(--space-2xl) var(--space-lg);
 }
 .typing-indicator {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: var(--space-xs);
   color: var(--app-text-muted);
-}
-.typing-indicator > span {
-  width: 0.38rem;
-  height: 0.38rem;
-  border-radius: 50%;
-  background: currentColor;
-  animation: chat-pulse 1.2s infinite ease-in-out;
-}
-.typing-indicator > span:nth-child(2) {
-  animation-delay: 150ms;
-}
-.typing-indicator > span:nth-child(3) {
-  animation-delay: 300ms;
+  font-size: var(--text-caption);
 }
 .chat-error span {
   flex: 1;
@@ -375,28 +366,11 @@ onMounted(() => {
   box-shadow: var(--app-shadow-md);
   cursor: pointer;
 }
-@keyframes chat-pulse {
-  0%,
-  60%,
-  100% {
-    opacity: 0.35;
-    transform: translateY(0);
-  }
-  30% {
-    opacity: 1;
-    transform: translateY(-2px);
-  }
-}
 @media (max-width: 640px) {
   .chat-column,
   .composer-wrap {
     padding-right: var(--space-md);
     padding-left: var(--space-md);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .typing-indicator > span {
-    animation: none;
   }
 }
 </style>

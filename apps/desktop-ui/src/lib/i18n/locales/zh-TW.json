@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "擷取螢幕並向 AI 提問",
     "voiceScreenshotQuickAiRequest": "擷取螢幕並向 AI 語音提問"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "附加檔案",
     "alertCaution": "注意",
@@ -187,7 +189,9 @@
       "noCommands": "尚未設定自訂命令。",
       "noCommandsHint": "請先在設定 → 命令中建立命令。"
     },
-    "replyBlocks": { "toolLabel": "回覆區塊" }
+    "replyBlocks": {
+      "toolLabel": "回覆區塊"
+    }
   },
   "commands": {
     "advanced": "進階",
@@ -548,11 +552,9 @@
     "aiRequest": "AI 請求",
     "cancelIntentHint": "按 Esc 取消",
     "compareResult": "比較結果",
-    "copyOnFinish": "複製",
     "correction": "校對",
     "dictationInterrupted": "辨識已停止。按 Enter 保留辨識的文字，或按 Esc 放棄。",
     "finish": "完成",
-    "insertOnFinish": "完成後插入",
     "listening": "聆聽中...",
     "autoStopCountdown": "錄音將在 {seconds} 秒後自動停止",
     "replaceInEditor": "在編輯器中取代",
@@ -602,7 +604,10 @@
     "cancelled": "已取消",
     "done": "完成",
     "emptyResult": "模型傳回了空白結果",
-    "failed": { "command": "命令執行失敗", "correction": "校對失敗" },
+    "failed": {
+      "command": "命令執行失敗",
+      "correction": "校對失敗"
+    },
     "focusChanged": "視窗在此期間已切換，因此結果已複製到剪貼簿",
     "noSelection": "未選取任何內容",
     "noTarget": "沒有任何應用程式視窗取得焦點",
@@ -613,7 +618,10 @@
       "command": "命令未對文字進行任何變更",
       "correction": "未發現任何錯誤"
     },
-    "working": { "command": "正在執行命令…", "correction": "正在校對…" }
+    "working": {
+      "command": "正在執行命令…",
+      "correction": "正在校對…"
+    }
   },
   "settings": {
     "accessAllow": "允許",
@@ -1226,7 +1234,9 @@
     "searchFavoritesPlaceholder": "搜尋我的最愛…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "插入至編輯器" },
+  "shortcuts": {
+    "insertIntoEditor": "插入至編輯器"
+  },
   "theme": {
     "auto": "跟隨系統",
     "dark": "深色",
@@ -1365,7 +1375,9 @@
     "missingSelection": "必須提供選取的文字。"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "在聊天中提問;在對話中提問" },
+    "actions": {
+      "askInChat": "在聊天中提問;在對話中提問"
+    },
     "languages": {
       "cs-CZ": "捷克語",
       "de-DE": "德文;德語",
@@ -1395,7 +1407,9 @@
     },
     "translate": "翻譯成;翻譯為;翻譯到"
   },
-  "window": { "clickToFocus": "按一下以繼續" },
+  "window": {
+    "clickToFocus": "按一下以繼續"
+  },
   "write": {
     "alreadyCorrected": "文字已經過校對",
     "cancel": "取消",
@@ -1445,7 +1459,9 @@
     "valueNotSet": "此裝置上未設定：使用它的命令不會執行",
     "valuePlaceholder": "路徑、位址或其他文字"
   },
-  "favorites": { "noMatches": "沒有相符的收藏" },
+  "favorites": {
+    "noMatches": "沒有相符的收藏"
+  },
   "replyBlocks": {
     "insertIntoWindow": "插入至視窗",
     "insertIntoEditor": "至編輯器",

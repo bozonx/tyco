@@ -100,10 +100,21 @@ export const useCorrectionWorkflowStore = defineStore(
       },
       openStep: (params) =>
         menuModalsStore.nextModal(MenuModals.INSERT, params),
-      setPending: (onCancel: () => void) =>
-        menuModalsStore.setPendingModal({ correction: true, onCancel }),
+      setPending: (onCancel, options) =>
+        menuModalsStore.setPendingModal({
+          ...(options?.direct ? {} : { correction: true }),
+          ...(options?.allowBufferedIntent
+            ? { allowBufferedIntent: true }
+            : {}),
+          onCancel,
+        }),
       clearPending: (owner?: number | void) =>
         menuModalsStore.clearPendingModal(owner ?? undefined),
+      isPending: (owner) =>
+        owner !== undefined && menuModalsStore.isPendingModal(owner),
+      consumeBufferedIntent: menuModalsStore.consumeBufferedIntent,
+      executeBufferedIntent: (intent, text, sourceText) =>
+        runBufferedIntent(intent, text, sourceText, {}),
       reportError: (error: unknown) =>
         toastText(describeError(error, translate), 'error'),
       isAborted: isCorrectionAborted,

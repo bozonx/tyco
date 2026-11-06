@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "Captura de tela e pergunta à IA",
     "voiceScreenshotQuickAiRequest": "Captura de tela e pergunta por voz à IA"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Anexar arquivo",
     "alertCaution": "Cuidado",
@@ -187,7 +189,9 @@
       "noCommands": "Nenhum comando personalizado configurado ainda.",
       "noCommandsHint": "Crie comandos primeiro em Configurações → Comandos."
     },
-    "replyBlocks": { "toolLabel": "Blocos de resposta" }
+    "replyBlocks": {
+      "toolLabel": "Blocos de resposta"
+    }
   },
   "commands": {
     "advanced": "Avançado",
@@ -548,11 +552,9 @@
     "aiRequest": "Solicitação à IA",
     "cancelIntentHint": "Esc para cancelar",
     "compareResult": "Comparar o resultado",
-    "copyOnFinish": "Copiar",
     "correction": "Correção",
     "dictationInterrupted": "O reconhecimento parou. Pressione Enter para manter o texto reconhecido ou Esc para descartá-lo.",
     "finish": "Concluir",
-    "insertOnFinish": "Inserir ao concluir",
     "listening": "Ouvindo...",
     "autoStopCountdown": "A gravação será interrompida automaticamente em {seconds} s",
     "replaceInEditor": "Substituir no editor",
@@ -1232,7 +1234,9 @@
     "searchFavoritesPlaceholder": "Pesquisar favoritos...",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Inserir no editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserir no editor"
+  },
   "theme": {
     "auto": "Seguir o sistema",
     "dark": "Escuro",
@@ -1371,7 +1375,9 @@
     "missingSelection": "É necessário texto selecionado."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "pergunte no chat" },
+    "actions": {
+      "askInChat": "pergunte no chat"
+    },
     "languages": {
       "cs-CZ": "Tcheco",
       "de-DE": "alemão",
@@ -1401,7 +1407,9 @@
     },
     "translate": "traduza para"
   },
-  "window": { "clickToFocus": "Clique para continuar" },
+  "window": {
+    "clickToFocus": "Clique para continuar"
+  },
   "write": {
     "alreadyCorrected": "O texto já está corrigido",
     "cancel": "Cancelar",
@@ -1451,7 +1459,9 @@
     "valueNotSet": "Não definida neste dispositivo: os comandos que a usam não são executados",
     "valuePlaceholder": "Um caminho, um endereço ou outro texto"
   },
-  "favorites": { "noMatches": "Não há favoritos correspondentes" },
+  "favorites": {
+    "noMatches": "Não há favoritos correspondentes"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Inserir na janela",
     "insertIntoEditor": "No editor",

@@ -119,7 +119,7 @@
         {{ t('settings.aiProfilesTab') }}
       </Button>
     </StateMessage>
-    <StateMessage v-else kind="loading" />
+    <StateMessage v-else kind="loading" :message="t('common.inProgress')" />
   </div>
 </template>
 

@@ -112,6 +112,9 @@ describe('quick correction and insertion', () => {
   it('supports insertDirect without calling correction', async () => {
     const { deps, model } = setup()
     await model.insertDirect('Direct text')
+    expect(deps.setPending).toHaveBeenCalledWith(expect.any(Function), {
+      direct: true,
+    })
     expect(deps.correct).not.toHaveBeenCalled()
     expect(deps.saveOutput).toHaveBeenCalledWith('Direct text')
     expect(deps.insert).toHaveBeenCalledWith('Direct text')
@@ -121,6 +124,9 @@ describe('quick correction and insertion', () => {
     const { deps, model } = setup()
     const custom = vi.fn(async (_t: string) => 'Fixed live text')
     await model.next('Raw live text', custom)
+    expect(deps.setPending).toHaveBeenCalledWith(expect.any(Function), {
+      allowBufferedIntent: true,
+    })
     expect(custom).toHaveBeenCalledWith('Raw live text')
     expect(deps.clearPending).toHaveBeenCalledOnce()
     expect(deps.openStep).toHaveBeenCalledWith({
@@ -129,6 +135,23 @@ describe('quick correction and insertion', () => {
       isCorrectionUnchanged: false,
     })
     expect(deps.insert).not.toHaveBeenCalled()
+  })
+
+  it('executes buffered intent instead of opening the actions step when buffered during next', async () => {
+    const { deps } = setup()
+    const executeBufferedIntent = vi.fn().mockResolvedValue(true)
+    const model = createQuickInsert({
+      ...deps,
+      consumeBufferedIntent: () => 'insert',
+      executeBufferedIntent,
+    })
+    await model.next('Raw live text', async () => 'Fixed live text')
+    expect(executeBufferedIntent).toHaveBeenCalledWith(
+      'insert',
+      'Fixed live text',
+      'Raw live text'
+    )
+    expect(deps.openStep).not.toHaveBeenCalled()
   })
 
   it('marks isCorrectionUnchanged when next correction equals input', async () => {

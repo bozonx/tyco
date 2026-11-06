@@ -103,12 +103,16 @@ describe('InProgressMessage', () => {
     expect(onCancel).toHaveBeenCalledOnce()
   })
 
-  it('does not show buffered intent hints by default when allowBufferedIntent is false', () => {
-    const wrapper = mount(InProgressMessage)
+  it('does not show buffered intent badge before key press even when allowBufferedIntent is true', () => {
+    const wrapper = mount(InProgressMessage, {
+      props: { allowBufferedIntent: true },
+    })
     expect(wrapper.find('.buffered-intent-hints').exists()).toBe(false)
+    expect(wrapper.find('.buffered-intent-slot').exists()).toBe(true)
+    expect(wrapper.find('.buffered-intent-badge').exists()).toBe(false)
   })
 
-  it('buffers insert on Space or Enter key, and clears intent on Escape without cancelling', async () => {
+  it('buffers insert on Space or Enter key below the cancel button, and clears intent on Escape without cancelling', async () => {
     const onCancel = vi.fn()
     const menuModalsStore = useMenuModalsStore()
     const wrapper = mount(InProgressMessage, {
@@ -118,8 +122,16 @@ describe('InProgressMessage', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
     expect(menuModalsStore.bufferedIntent).toBe('insert')
     await wrapper.vm.$nextTick()
-    expect(wrapper.find('.buffered-intent-badge').exists()).toBe(true)
+    const badge = wrapper.find('.buffered-intent-badge')
+    const cancelBtn = wrapper.find('.in-progress-cancel-btn')
+    expect(badge.exists()).toBe(true)
     expect(wrapper.text()).toContain('menu.willInsertOnFinish')
+    expect(
+      Boolean(
+        cancelBtn.element.compareDocumentPosition(badge.element) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      )
+    ).toBe(true)
 
     // Escape clears the buffered intent, doesn't cancel
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
@@ -158,21 +170,19 @@ describe('InProgressMessage', () => {
     expect(menuModalsStore.bufferedIntent).toBeNull()
   })
 
-  it('warns and does not register insert intent when target window is unavailable', async () => {
+  it('warns and does not register insert intent when target window is unavailable', () => {
     desktop.setState({ windowId: null })
     const menuModalsStore = useMenuModalsStore()
-    const wrapper = mount(InProgressMessage, {
+    mount(InProgressMessage, {
       props: { allowBufferedIntent: true },
     })
-
-    expect(wrapper.find('.hint-chip.is-disabled').exists()).toBe(true)
 
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
     expect(menuModalsStore.bufferedIntent).toBeNull()
     expect(mocks.toastKey).toHaveBeenCalledWith('selection.noTarget', 'warn')
   })
 
-  it('offers replaceInEditor on Space when on the editor page and hides copy during editor correction', async () => {
+  it('offers replaceInEditor on Space when on the editor page and ignores copy during editor correction', async () => {
     mocks.isEditorPage = true
     desktop.setState({ windowId: null })
     const menuModalsStore = useMenuModalsStore()
@@ -180,8 +190,7 @@ describe('InProgressMessage', () => {
       props: { allowBufferedIntent: true, correction: true },
     })
 
-    expect(wrapper.text()).toContain('menu.replaceInEditor')
-    expect(wrapper.text()).not.toContain('menu.copyOnFinish')
+    expect(wrapper.find('.buffered-intent-badge').exists()).toBe(false)
 
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyC' }))
     expect(menuModalsStore.bufferedIntent).toBeNull()

@@ -41,21 +41,7 @@
               />
             </template>
 
-            <StateMessage
-              v-else-if="voice.stage === 'running'"
-              kind="loading"
-              :message="
-                t('commands.running', {
-                  name: voice.command ? commandLabel(voice.command) : '',
-                })
-              "
-            >
-              <Button type="button" @click="close" variant="ghost" size="sm">
-                {{ t('common.cancel') }}
-              </Button>
-            </StateMessage>
-
-            <template v-else>
+            <template v-else-if="voice.stage !== 'running'">
               <div v-if="voice.command" class="voice-chosen">
                 <AppIcon
                   :icon="commandIcon(voice.command, tools)"
@@ -163,13 +149,11 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import AppIcon from '../components/common/AppIcon.vue'
 import Badge from '../components/common/Badge.vue'
-import Button from '../components/common/Button.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import FieldSelect from '../components/common/FieldSelect.vue'
 import FieldTextArea from '../components/common/FieldTextArea.vue'
 import InfoTooltip from '../components/common/InfoTooltip.vue'
 import InlineNotice from '../components/common/InlineNotice.vue'
-import StateMessage from '../components/common/StateMessage.vue'
 import TextPreview from '../components/common/TextPreview.vue'
 import ActionOverlayLayout from '../components/overlay/ActionOverlayLayout.vue'
 import ShortcutButton from '../components/overlay/ShortcutButton.vue'
@@ -201,6 +185,7 @@ import {
   voiceCommandLanguageLabel,
 } from '../lib/voice-commands/voice-view-presenter'
 import { useDesktopStore } from '../stores/desktop'
+import { useMenuModalsStore } from '../stores/menu-modals'
 import { useQuickDismissStore } from '../stores/quick-dismiss'
 import { useToolsStore } from '../stores/tools'
 import { useVoiceCommandsStore } from '../stores/voice-commands'
@@ -216,6 +201,7 @@ const props = withDefaults(
 
 const { t } = useI18n()
 const desktopStore = useDesktopStore()
+const menuModalsStore = useMenuModalsStore()
 const tools = useToolsStore()
 const voice = useVoiceCommandsStore()
 const releaseHold = useQuickDismissStore().hold()
@@ -340,14 +326,35 @@ const close = (isShift: boolean | MouseEvent = false) => {
   }
 }
 
+let runningPendingOwner: number | undefined
+
+const syncRunningPending = () => {
+  if (voice.stage === 'running') {
+    runningPendingOwner = menuModalsStore.setPendingModal(
+      {
+        label: t('commands.running', {
+          name: voice.command ? commandLabel(voice.command) : '',
+        }),
+        onCancel: close,
+      },
+      runningPendingOwner
+    )
+  } else if (runningPendingOwner !== undefined) {
+    menuModalsStore.clearPendingModal(runningPendingOwner)
+    runningPendingOwner = undefined
+  }
+}
+
 watch(
-  () => voice.stage,
-  async (stage, previous) => {
-    if (stage === 'review' && previous === 'finishing') {
+  () => [voice.stage, voice.command] as const,
+  async ([stage], previous) => {
+    syncRunningPending()
+    if (stage === 'review' && previous?.[0] === 'finishing') {
       await nextTick()
       textRef.value?.focus()
     }
-  }
+  },
+  { immediate: true }
 )
 
 watch(
@@ -378,6 +385,7 @@ const withHotkey = (keys: string[]) =>
 const onKeyDown = (event: KeyboardEvent) => {
   // Enter that confirms an IME composition belongs to the text
   if (event.repeat || event.isComposing || event.keyCode === 229) return
+  if (voice.stage === 'running') return
   if (event.code === 'Escape') {
     event.preventDefault()
     close(event.shiftKey)
@@ -415,6 +423,10 @@ onMounted(() => {
 })
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeyDown)
+  if (runningPendingOwner !== undefined) {
+    menuModalsStore.clearPendingModal(runningPendingOwner)
+    runningPendingOwner = undefined
+  }
   releaseHold()
   voice.setContext(undefined)
   void voice.cancel()

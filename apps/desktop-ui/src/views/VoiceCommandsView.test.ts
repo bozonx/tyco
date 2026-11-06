@@ -8,6 +8,7 @@ import { translate } from '../lib/i18n'
 import { i18n } from '../lib/i18n'
 import { getLanguageLabelKey } from '../lib/locale/language'
 import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
+import { useMenuModalsStore } from '../stores/menu-modals'
 import VoiceCommandsView from './VoiceCommandsView.vue'
 import type {
   VoiceCandidate,
@@ -370,6 +371,27 @@ describe('separate voice command overlay', () => {
       selectionText: 'Selected text preview',
     })
     expect(wrapper.text()).toContain('Selected text preview')
+    wrapper.unmount()
+  })
+
+  it('opens and clears the shared pending modal while a command is running', async () => {
+    const menuModalsStore = useMenuModalsStore()
+    const wrapper = mountView()
+    expect(menuModalsStore.pendingModal).toBeUndefined()
+
+    voice.command = commands[0]
+    voice.stage = 'running'
+    await flushPromises()
+    expect(menuModalsStore.pendingModal).toMatchObject({
+      label: translate('commands.running', { name: 'Command 0' }),
+    })
+
+    menuModalsStore.pendingModal?.onCancel?.()
+    expect(mocks.cancel).toHaveBeenCalledOnce()
+
+    voice.stage = 'review'
+    await flushPromises()
+    expect(menuModalsStore.pendingModal).toBeUndefined()
     wrapper.unmount()
   })
 })

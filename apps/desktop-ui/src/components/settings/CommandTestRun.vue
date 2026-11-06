@@ -22,6 +22,10 @@
         {{ t('commands.testStop') }}
       </Button>
       <span v-if="isRunning" class="test-run-status">
+        <span
+          class="loading loading-spinner loading-xs text-primary"
+          aria-hidden="true"
+        />
         {{ t('commands.testRunning') }}
       </span>
       <span v-else-if="hasIssues" class="test-run-status">
@@ -177,6 +181,9 @@ onUnmounted(stop)
 }
 
 .test-run-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs, 0.25rem);
   font-size: var(--text-caption);
   color: var(--app-text-muted);
 }

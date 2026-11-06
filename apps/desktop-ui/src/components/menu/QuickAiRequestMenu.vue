@@ -109,9 +109,16 @@
             </div>
 
             <!-- Generating indicator -->
-            <div v-if="turn.status === 'generating'" class="turn-generating">
-              <span class="spinner" />
-              <span>{{ t('common.inProgress') }}</span>
+            <div
+              v-if="turn.status === 'generating'"
+              class="turn-generating"
+              role="status"
+            >
+              <span
+                class="loading loading-spinner loading-xs text-primary"
+                aria-hidden="true"
+              />
+              <span>{{ t('chat.generating') }}</span>
             </div>
 
             <!-- Turn error -->

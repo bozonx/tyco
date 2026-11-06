@@ -459,6 +459,50 @@ describe('createActionMenuModel', () => {
     })
   })
 
+  it('shows and clears pending modal while a command action runs and aborts on cancel', async () => {
+    const { deps } = setup()
+    const script = {
+      ...createCommand('script', 'sc1'),
+      name: 'Echo',
+      toolConfig: { command: 'echo {{TEXT}}' },
+    }
+    const setPendingModal = vi.fn().mockReturnValue(7)
+    const clearPendingModal = vi.fn()
+    let capturedSignal: AbortSignal | undefined
+    const executeScriptAction = vi.fn().mockImplementation(async (params) => {
+      capturedSignal = params.signal
+      const pending = setPendingModal.mock.calls[0]?.[0]
+      pending?.onCancel?.()
+      return {
+        success: true,
+        exitCode: 0,
+        stdout: '',
+        stderr: '',
+        running: false,
+      }
+    })
+    const store = createActionMenuModel({
+      ...deps,
+      setPendingModal,
+      clearPendingModal,
+      tools: testTools({ executeScriptAction }),
+      mainActions: () => ({ q: { type: 'command', commandId: 'sc1' } }),
+      commands: () => [script],
+    })
+
+    const [item] = store.getShortcutActions()
+    await item?.action('menu text')
+
+    expect(setPendingModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        label: 'Running “Echo”…',
+        onCancel: expect.any(Function),
+      })
+    )
+    expect(capturedSignal?.aborted).toBe(true)
+    expect(clearPendingModal).toHaveBeenCalledWith(7)
+  })
+
   it('builds the items of transformations and languages, which open their dialog', async () => {
     const { deps } = setup()
     const store = createActionMenuModel({

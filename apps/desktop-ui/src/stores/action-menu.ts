@@ -32,6 +32,9 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     saveOutput: async (text: string) => {
       await historyStore.saveOutput(text)
     },
+    setPendingModal: (params, owner) =>
+      menuModalsStore.setPendingModal(params, owner),
+    clearPendingModal: (owner) => menuModalsStore.clearPendingModal(owner),
     openTransformationModal: (text: string, transformationId?: string) => {
       menuModalsStore.nextModal(MenuModals.TRANSFORMATION, {
         text,

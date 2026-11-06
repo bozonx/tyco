@@ -74,7 +74,7 @@ async function runItem(itemId: string) {
     toastKey('menu.ruleNotFound', 'warn')
     return
   }
-  await runRule(item.rule)
+  await runRule(item.rule, slotItemLabel(item))
 }
 
 useMenuStartup({
@@ -86,7 +86,7 @@ useMenuStartup({
   run: runItem,
 })
 
-async function runRule(rule: string) {
+async function runRule(rule: string, itemLabel?: string) {
   const trimmedText = props.text.trim()
 
   if (!trimmedText) {
@@ -103,7 +103,9 @@ async function runRule(rule: string) {
     text: trimmedText,
     sourceText: props.text,
     operation: 'aiTask',
-    pending: props.kind.pending,
+    pending: itemLabel
+      ? { ...props.kind.pending, label: itemLabel }
+      : props.kind.pending,
     invoke: (signal) =>
       invocations.call(props.kind.toolId, trimmedText, {
         signal,

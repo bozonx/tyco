@@ -1,7 +1,14 @@
+import type { BufferedPendingAction } from '../modals/menu-modal-params'
+
 export interface QuickInsertStepParams {
   text: string
   oldText: string
   isCorrectionUnchanged: boolean
+}
+
+export interface QuickInsertPendingOptions {
+  allowBufferedIntent?: boolean
+  direct?: boolean
 }
 
 export interface QuickInsertDependencies {
@@ -19,8 +26,18 @@ export interface QuickInsertDependencies {
   reportHistoryError?: (error: unknown) => void
   insert: (text: string) => Promise<void>
   openStep?: (params: QuickInsertStepParams) => void
-  setPending: (cancel: () => void) => number | void
+  setPending: (
+    cancel: () => void,
+    options?: QuickInsertPendingOptions
+  ) => number | void
   clearPending: (owner?: number | void) => void
+  isPending?: (owner: number | void) => boolean
+  consumeBufferedIntent?: () => BufferedPendingAction | null
+  executeBufferedIntent?: (
+    intent: BufferedPendingAction,
+    text: string,
+    sourceText: string
+  ) => Promise<boolean | void> | boolean | void
   reportError: (error: unknown) => void
   /** Whether the error means the correction was stopped, not that it failed */
   isAborted?: (error: unknown) => boolean
@@ -121,14 +138,16 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
     if (disposed || active || !text.trim()) return
     const run: { owner?: number | void } = {}
     active = run
-    run.owner = deps.setPending(cancel)
+    run.owner = deps.setPending(cancel, { allowBufferedIntent: true })
     let step: QuickInsertStepParams
+    let succeeded = false
     try {
       const { result, sourceId } = await correctWithHistory(text, customCorrect)
       if (active !== run) return
       if (!result.trim()) throw new Error('Correction returned empty text')
       if (result !== text) await saveSourceResult(sourceId, result)
       if (active !== run) return
+      succeeded = true
       step = {
         text: result,
         oldText: result === text ? '' : text,
@@ -140,16 +159,27 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
       if (!deps.isAborted?.(error)) deps.reportError(error)
       step = { text, oldText: '', isCorrectionUnchanged: false }
     }
+    const showResult = deps.isPending?.(run.owner) ?? true
+    const buffered =
+      succeeded && showResult ? (deps.consumeBufferedIntent?.() ?? null) : null
     active = null
     deps.clearPending(run.owner)
-    deps.openStep?.(step)
+    if (buffered && deps.executeBufferedIntent) {
+      const handled = await deps.executeBufferedIntent(
+        buffered,
+        step.text,
+        text
+      )
+      if (handled !== false) return
+    }
+    if (showResult) deps.openStep?.(step)
   }
 
   const insertDirect = async (text: string): Promise<void> => {
     if (disposed || active || !text.trim()) return
     const run: { owner?: number | void } = {}
     active = run
-    run.owner = deps.setPending(cancel)
+    run.owner = deps.setPending(cancel, { direct: true })
     try {
       try {
         await deps.saveDraft?.()

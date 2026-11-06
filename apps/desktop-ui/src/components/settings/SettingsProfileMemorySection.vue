@@ -56,6 +56,16 @@
         <StateMessage
           v-if="isLoading && (!topics || topics.length === 0)"
           kind="loading"
+          :message="t('common.inProgress')"
+        />
+
+        <StateMessage
+          v-else-if="isCompacting"
+          density="compact"
+          kind="loading"
+          :message="
+            t('settings.profileMemoryCompactTitle', { file: compactingFile })
+          "
         />
 
         <div v-else-if="!topics || topics.length === 0" class="memory-empty">
@@ -131,6 +141,7 @@
             size="sm"
             variant="neutral"
             icon="mdi:auto-fix"
+            :loading="isCompacting"
             :disabled="
               isCompacting || isApplying || isSaving || !editorContent.trim()
             "

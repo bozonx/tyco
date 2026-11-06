@@ -28,12 +28,15 @@ import {
   type InvocationRunnerDependencies,
 } from '../invocation/invocation-runner'
 import { getLanguageLabelKey } from '../locale/language'
+import type { PendingModalParams } from '../modals/menu-modal-params'
 import { normalizeMainActions } from './main-actions'
 
 export type { ActionItem } from '../../types/plugins'
 export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** Records a text that leaves the app; runs before the window closes. */
   saveOutput: (text: string) => Promise<void>
+  setPendingModal?: (params: PendingModalParams, owner?: number) => number
+  clearPendingModal?: (owner: number) => void
   openTransformationModal?: (text: string, transformationId?: string) => void
   openQuickAiRequestModal?: (text: string, inputMode?: 'text' | 'voice') => void
   openVoiceCommandsModal?: (
@@ -104,7 +107,19 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     icon: 'mdi:console-line',
     action: async (text: string) => {
       if (commandTakesText(command, deps.tools)) await deps.saveOutput(text)
-      await commandRunner.run(command, text, { source: 'menu' })
+      const controller = new AbortController()
+      const owner = deps.setPendingModal?.({
+        label: translate('commands.running', { name: commandLabel(command) }),
+        onCancel: () => controller.abort(),
+      })
+      try {
+        await commandRunner.run(command, text, {
+          source: 'menu',
+          signal: controller.signal,
+        })
+      } finally {
+        if (owner !== undefined) deps.clearPendingModal?.(owner)
+      }
     },
   })
 
