@@ -1139,18 +1139,14 @@
                 }
               },
               "required": ["modelId"],
-              "default": {
-                "modelId": "gemini-3.5-transcribe-live"
-              }
+              "default": { "modelId": "gemini-3.5-transcribe-live" }
             }
           },
           "required": ["deepgram", "sherpaOnnx", "geminiLive"],
           "default": {
             "deepgram": { "modelId": "nova-3", "language": "auto" },
             "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
-            "geminiLive": {
-              "modelId": "gemini-3.5-transcribe-live"
-            }
+            "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
           }
         }
       },

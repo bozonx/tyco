@@ -131,6 +131,7 @@ import {
   secretId,
 } from '../../lib/stt/stt-client'
 import { activeSttModel } from '../../lib/stt/stt-config'
+import type { ControlOption } from '../../lib/ui/control-option'
 import { useSecretsStore } from '../../stores/secrets'
 import FieldInput from '../common/FieldInput.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
@@ -143,11 +144,10 @@ import SettingsSection from './SettingsSection.vue'
 import SettingsTaskModel from './SettingsTaskModel.vue'
 import {
   STT_PROVIDERS,
-  VOICE_CORRECTION_MODES,
   type SttProvider,
+  VOICE_CORRECTION_MODES,
   type VoiceCorrectionMode,
 } from '@tyco/shared'
-import type { ControlOption } from '../../lib/ui/control-option'
 
 const { draft: userConfig } = useSettingsContext()
 const { t } = useI18n()

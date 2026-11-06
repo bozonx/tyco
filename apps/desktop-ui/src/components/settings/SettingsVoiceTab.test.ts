@@ -33,9 +33,7 @@ describe('SettingsVoiceTab.vue', () => {
         providers: {
           deepgram: { modelId: 'nova-3', language: 'auto' },
           sherpaOnnx: { baseUrl: 'ws://localhost:6006' },
-          geminiLive: {
-            modelId: 'gemini-3.5-transcribe-live',
-          },
+          geminiLive: { modelId: 'gemini-3.5-transcribe-live' },
         },
       },
       ...overrides,
@@ -60,7 +58,7 @@ describe('SettingsVoiceTab.vue', () => {
           FieldSelect: {
             props: ['modelValue', 'options'],
             template:
-              '<select class="field-select-stub" :value="modelValue" @change="$emit(\'update:modelValue\', $event.target.value)" />',
+              '<select class="field-select-stub" :value="modelValue" @change="$emit(\'update:modelValue\', $event.target.value)"><option v-for="option in options" :key="option.id" :value="option.id">{{ option.name }}</option></select>',
           },
           FieldInput: {
             props: ['modelValue'],
@@ -72,10 +70,14 @@ describe('SettingsVoiceTab.vue', () => {
             template:
               '<input type="checkbox" class="field-switch-stub" :checked="modelValue" @change="$emit(\'update:modelValue\', $event.target.checked)" />',
           },
-          FieldTextArea: {
+          FieldPromptTextArea: {
             props: ['modelValue'],
             template:
               '<textarea class="field-textarea-stub" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+          },
+          SettingsTaskModel: {
+            props: ['task'],
+            template: '<div class="task-model-stub" :data-task="task" />',
           },
           SecretKeyField: {
             props: ['hasKey', 'save', 'remove', 'modelValue'],
@@ -198,9 +200,7 @@ describe('SettingsVoiceTab.vue', () => {
         providers: {
           deepgram: { modelId: 'nova-3', language: 'auto' },
           sherpaOnnx: { baseUrl: '' },
-          geminiLive: {
-            modelId: 'gemini-3.5-transcribe-live',
-          },
+          geminiLive: { modelId: 'gemini-3.5-transcribe-live' },
         },
       },
     })
