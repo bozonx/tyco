@@ -17,7 +17,9 @@
     "saveAsFavorite": "Spremi u favorite",
     "savedAsFavorite": "Spremljeno u favorite",
     "quickAiRequest": "Brzi upit za UI",
-    "voiceQuickAiRequest": "Glasovni brzi upit za UI"
+    "voiceQuickAiRequest": "Glasovni brzi upit za UI",
+    "screenshotQuickAiRequest": "Snimka zaslona i pitanje za AI",
+    "voiceScreenshotQuickAiRequest": "Snimka zaslona i glasovno pitanje za AI"
   },
   "app": { "title": "TyCo" },
   "chat": {

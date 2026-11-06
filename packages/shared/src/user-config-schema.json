@@ -390,7 +390,9 @@
                         "translationMenu",
                         "askInChat",
                         "quickAiRequest",
-                        "voiceQuickAiRequest"
+                        "voiceQuickAiRequest",
+                        "screenshotQuickAiRequest",
+                        "voiceScreenshotQuickAiRequest"
                       ]
                     }
                   },

@@ -17,6 +17,8 @@ export const STANDARD_ACTION_IDS = [
   'chatPromptsMenu',
   'quickAiRequest',
   'voiceQuickAiRequest',
+  'screenshotQuickAiRequest',
+  'voiceScreenshotQuickAiRequest',
   'voiceCommands',
   'voiceCommandsWithoutContext',
   'favoritesMenu',

@@ -17,7 +17,9 @@
     "saveAsFavorite": "儲存至我的最愛",
     "savedAsFavorite": "已儲存至我的最愛",
     "quickAiRequest": "AI 快速請求",
-    "voiceQuickAiRequest": "語音 AI 快速請求"
+    "voiceQuickAiRequest": "語音 AI 快速請求",
+    "screenshotQuickAiRequest": "擷取螢幕並向 AI 提問",
+    "voiceScreenshotQuickAiRequest": "擷取螢幕並向 AI 語音提問"
   },
   "app": { "title": "TyCo" },
   "chat": {

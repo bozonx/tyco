@@ -17,7 +17,9 @@
     "saveAsFavorite": "Favorilere kaydet",
     "savedAsFavorite": "Favorilere kaydedildi",
     "quickAiRequest": "Hızlı YZ isteği",
-    "voiceQuickAiRequest": "Sesli hızlı YZ isteği"
+    "voiceQuickAiRequest": "Sesli hızlı YZ isteği",
+    "screenshotQuickAiRequest": "Ekran görüntüsü ve yapay zekâ sorusu",
+    "voiceScreenshotQuickAiRequest": "Ekran görüntüsü ve sesli yapay zekâ sorusu"
   },
   "app": { "title": "TyCo" },
   "chat": {

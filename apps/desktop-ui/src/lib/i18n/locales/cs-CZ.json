@@ -17,7 +17,9 @@
     "saveAsFavorite": "Uložit do oblíbených",
     "savedAsFavorite": "Uloženo do oblíbených",
     "quickAiRequest": "Rychlý dotaz na AI",
-    "voiceQuickAiRequest": "Hlasový rychlý dotaz na AI"
+    "voiceQuickAiRequest": "Hlasový rychlý dotaz na AI",
+    "screenshotQuickAiRequest": "Snímek obrazovky a dotaz AI",
+    "voiceScreenshotQuickAiRequest": "Snímek obrazovky a hlasový dotaz AI"
   },
   "app": { "title": "TyCo" },
   "chat": {

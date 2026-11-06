@@ -17,7 +17,9 @@
     "saveAsFavorite": "Сохранить в избранное",
     "savedAsFavorite": "Сохранено в избранное",
     "quickAiRequest": "Быстрый запрос к ИИ",
-    "voiceQuickAiRequest": "Голосовой быстрый запрос к ИИ"
+    "voiceQuickAiRequest": "Голосовой быстрый запрос к ИИ",
+    "screenshotQuickAiRequest": "Скриншот и вопрос ИИ",
+    "voiceScreenshotQuickAiRequest": "Скриншот и голосовой вопрос ИИ"
   },
   "app": { "title": "TyCo" },
   "chat": {

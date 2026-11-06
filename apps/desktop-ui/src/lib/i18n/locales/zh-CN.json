@@ -17,7 +17,9 @@
     "saveAsFavorite": "保存到收藏夹",
     "savedAsFavorite": "已保存到收藏夹",
     "quickAiRequest": "AI 快速请求",
-    "voiceQuickAiRequest": "语音 AI 快速请求"
+    "voiceQuickAiRequest": "语音 AI 快速请求",
+    "screenshotQuickAiRequest": "截图并向 AI 提问",
+    "voiceScreenshotQuickAiRequest": "截图并向 AI 语音提问"
   },
   "app": { "title": "TyCo" },
   "chat": {

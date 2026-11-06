@@ -245,6 +245,8 @@ const OPENS_DIALOG = new Set<StandardActionId>([
   'favoritesMenu',
   'quickAiRequest',
   'voiceQuickAiRequest',
+  'screenshotQuickAiRequest',
+  'voiceScreenshotQuickAiRequest',
   'voiceCommands',
   'voiceCommandsWithoutContext',
 ])

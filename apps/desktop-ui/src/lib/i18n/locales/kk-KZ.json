@@ -17,7 +17,9 @@
     "saveAsFavorite": "Сүйіктілерге сақтаңыз",
     "savedAsFavorite": "Сүйіктілерге сақталды",
     "quickAiRequest": "ЖИ жылдам сұрауы",
-    "voiceQuickAiRequest": "Дауыстық ЖИ жылдам сұрауы"
+    "voiceQuickAiRequest": "Дауыстық ЖИ жылдам сұрауы",
+    "screenshotQuickAiRequest": "Скриншот және ЖИ-ге сұрақ",
+    "voiceScreenshotQuickAiRequest": "Скриншот және ЖИ-ге дауыстық сұрақ"
   },
   "app": { "title": "TyCo" },
   "chat": {

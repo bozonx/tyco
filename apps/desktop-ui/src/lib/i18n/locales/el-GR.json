@@ -17,7 +17,9 @@
     "saveAsFavorite": "Αποθήκευση στα αγαπημένα",
     "savedAsFavorite": "Αποθηκεύτηκε στα αγαπημένα",
     "quickAiRequest": "Γρήγορο αίτημα AI",
-    "voiceQuickAiRequest": "Φωνητικό γρήγορο αίτημα AI"
+    "voiceQuickAiRequest": "Φωνητικό γρήγορο αίτημα AI",
+    "screenshotQuickAiRequest": "Στιγμιότυπο οθόνης και ερώτηση στην ΤΝ",
+    "voiceScreenshotQuickAiRequest": "Στιγμιότυπο οθόνης και φωνητική ερώτηση στην ΤΝ"
   },
   "app": { "title": "TyCo" },
   "chat": {

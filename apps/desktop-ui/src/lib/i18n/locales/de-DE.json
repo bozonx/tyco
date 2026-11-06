@@ -17,7 +17,9 @@
     "saveAsFavorite": "In Favoriten speichern",
     "savedAsFavorite": "In Favoriten gespeichert",
     "quickAiRequest": "Schnelle KI-Anfrage",
-    "voiceQuickAiRequest": "Sprach-Schnellanfrage an KI"
+    "voiceQuickAiRequest": "Sprach-Schnellanfrage an KI",
+    "screenshotQuickAiRequest": "Bildschirmfoto und KI-Frage",
+    "voiceScreenshotQuickAiRequest": "Bildschirmfoto und KI-Sprachfrage"
   },
   "app": { "title": "TyCo" },
   "chat": {

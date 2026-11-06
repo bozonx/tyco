@@ -17,7 +17,9 @@
     "saveAsFavorite": "Зберегти у вибране",
     "savedAsFavorite": "Збережено у вибране",
     "quickAiRequest": "Швидкий запит до ШІ",
-    "voiceQuickAiRequest": "Голосовий швидкий запит до ШІ"
+    "voiceQuickAiRequest": "Голосовий швидкий запит до ШІ",
+    "screenshotQuickAiRequest": "Знімок екрана й запитання ШІ",
+    "voiceScreenshotQuickAiRequest": "Знімок екрана й голосове запитання ШІ"
   },
   "app": { "title": "TyCo" },
   "chat": {

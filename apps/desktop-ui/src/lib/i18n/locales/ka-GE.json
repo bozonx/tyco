@@ -17,7 +17,9 @@
     "saveAsFavorite": "Რჩეულებში შენახვა",
     "savedAsFavorite": "Შეინახა რჩეულებში",
     "quickAiRequest": "სწრაფი AI მოთხოვნა",
-    "voiceQuickAiRequest": "ხმოვანი სწრაფი AI მოთხოვნა"
+    "voiceQuickAiRequest": "ხმოვანი სწრაფი AI მოთხოვნა",
+    "screenshotQuickAiRequest": "ეკრანის სურათი და კითხვა AI-ს",
+    "voiceScreenshotQuickAiRequest": "ეკრანის სურათი და ხმოვანი კითხვა AI-ს"
   },
   "app": { "title": "TyCo" },
   "chat": {

@@ -17,7 +17,9 @@
     "saveAsFavorite": "Salvează în favorite",
     "savedAsFavorite": "Salvat în favorite",
     "quickAiRequest": "Solicitare rapidă IA",
-    "voiceQuickAiRequest": "Solicitare vocală rapidă IA"
+    "voiceQuickAiRequest": "Solicitare vocală rapidă IA",
+    "screenshotQuickAiRequest": "Captură de ecran și întrebare pentru IA",
+    "voiceScreenshotQuickAiRequest": "Captură de ecran și întrebare vocală pentru IA"
   },
   "app": { "title": "TyCo" },
   "chat": {

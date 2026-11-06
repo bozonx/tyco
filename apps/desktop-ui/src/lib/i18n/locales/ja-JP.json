@@ -17,7 +17,9 @@
     "saveAsFavorite": "お気に入りに保存",
     "savedAsFavorite": "お気に入りに保存しました",
     "quickAiRequest": "AIクイックリクエスト",
-    "voiceQuickAiRequest": "音声AIクイックリクエスト"
+    "voiceQuickAiRequest": "音声AIクイックリクエスト",
+    "screenshotQuickAiRequest": "スクリーンショットとAIへの質問",
+    "voiceScreenshotQuickAiRequest": "スクリーンショットとAIへの音声質問"
   },
   "app": { "title": "TyCo" },
   "chat": {

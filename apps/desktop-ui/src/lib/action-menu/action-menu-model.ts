@@ -43,7 +43,13 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   openStylingModal?: (text: string, stylingId?: string) => void
   openChatPromptsModal?: (text: string, promptId?: string) => void
   openFavoritesModal?: () => void
-  activateMode?: (mode: 'history' | 'voice') => Promise<void>
+  activateMode?: (
+    mode:
+      | 'history'
+      | 'voice'
+      | 'screenshotQuickAiRequest'
+      | 'voiceScreenshotQuickAiRequest'
+  ) => Promise<void>
   /** With `language` the dialog translates into it at once */
   openTranslateModal: (text: string, language?: string) => void
   /** `extra` goes to the params of the correction step, see `InsertMenu` */
@@ -241,6 +247,22 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
               return
             }
             deps.openQuickAiRequestModal?.(text, 'voice')
+          },
+        },
+        {
+          id: 'screenshotQuickAiRequest',
+          labelKey: 'action.screenshotQuickAiRequest',
+          icon: 'mdi:monitor-screenshot',
+          action: async () => {
+            await deps.activateMode?.('screenshotQuickAiRequest')
+          },
+        },
+        {
+          id: 'voiceScreenshotQuickAiRequest',
+          labelKey: 'action.voiceScreenshotQuickAiRequest',
+          icon: 'mdi:monitor-screenshot',
+          action: async () => {
+            await deps.activateMode?.('voiceScreenshotQuickAiRequest')
           },
         },
         {
