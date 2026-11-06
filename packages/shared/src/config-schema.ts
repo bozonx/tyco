@@ -287,6 +287,10 @@ export function normalizeLlmConfig(value: unknown): UserConfig['llm'] {
   }
   for (const task of LLM_TASKS)
     if (!models.has(llm.tasks[task].modelId)) llm.tasks[task].modelId = ''
+  // a task added after the common model was picked has no model of its own yet
+  if (llm.modelMode === 'all' && llm.commonModelId)
+    for (const task of LLM_TASKS)
+      if (!llm.tasks[task].modelId) llm.tasks[task].modelId = llm.commonModelId
   return llm
 }
 

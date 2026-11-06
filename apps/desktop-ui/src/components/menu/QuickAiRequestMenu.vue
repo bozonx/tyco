@@ -468,16 +468,20 @@ function saveQuickRequestTaskModel(modelId: string) {
   })
 }
 
-const modelSelectOptions = computed(() =>
-  model.modelOptions.value.map((option) => ({
+const modelSelectOptions = computed(() => [
+  // without a pick the select would show nothing at all
+  ...(model.modelId.value
+    ? []
+    : [{ id: '', name: t('chat.selectModel'), disabled: true }]),
+  ...model.modelOptions.value.map((option) => ({
     id: option.id,
     name: [
       option.name,
       option.providerLabel,
       ...(option.canUseTools ? [] : [t('chat.noToolCalling')]),
     ].join(' · '),
-  }))
-)
+  })),
+])
 
 function onModelSelect(val: string | number | undefined) {
   if (typeof val === 'string' && val) void model.setModelId(val)
