@@ -13,6 +13,7 @@ import {
   type ProfileToolSettings,
 } from '@tyco/shared'
 
+import { createReplyBlocksToolProvider } from '../reply-blocks/reply-blocks-tool'
 import type { ToolLookup } from '../tools/tool-types'
 import type { CommandEnvironment } from '../variables/command-variables'
 import { createChatToolsSession } from './chat-tools-session'
@@ -112,6 +113,7 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
   const extractText = deps.extractDocumentText ?? readDocumentText
   const checkDebug = deps.isDebugEnabled ?? isDebugChatToolsEnabled
   const debugToolProvider = createDebugChatToolProvider()
+  const replyBlocksToolProvider = createReplyBlocksToolProvider()
   const fileToolProvider = createFileToolProvider({
     listRoots: (id) => deps.invoke('list_ai_file_roots', { profileId: id }),
     run: (id, request) =>
@@ -177,6 +179,7 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
 
   const session = createChatToolsSession({
     providers: () => [
+      replyBlocksToolProvider,
       fileToolProvider,
       memoryToolProvider,
       webToolProvider,

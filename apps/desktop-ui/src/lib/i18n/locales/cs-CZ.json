@@ -137,7 +137,8 @@
     "voiceInput": "Hlasové zadávání",
     "voiceSendHint": "Odeslat hned (Ctrl+Enter)",
     "promptPresets": "Předvolby promptů",
-    "noPromptsConfigured": "Nejsou nastaveny žádné předvolby promptů"
+    "noPromptsConfigured": "Nejsou nastaveny žádné předvolby promptů",
+    "noToolCalling": "bez nástrojů"
   },
   "chatTools": {
     "files": {
@@ -472,7 +473,8 @@
     "filterQuickInput": "Rychlé zadávání",
     "filterVoice": "Hlas",
     "filterUnsent": "Neodeslané",
-    "filterUnsentHint": "Jen texty, které nebyly vloženy ani zkopírovány"
+    "filterUnsentHint": "Jen texty, které nebyly vloženy ani zkopírovány",
+    "requestTurns": "Otázky a odpovědi: {count}"
   },
   "input": {
     "historySearchPlaceholder": "Hledat v historii...",
@@ -528,6 +530,7 @@
     "rateLimit": "Příliš mnoho požadavků na poskytovatele; zkuste to později",
     "stepLimit": "Model vyčerpal kroky nástrojů a odpověď nedokončil. Požádejte ho, ať pokračuje, nebo zvyšte limit kroků profilu.",
     "timeout": "Model odpovídal příliš dlouho",
+    "toolsRequired": "Tento model neumí volat nástroje. Rychlé dotazy a chaty to potřebují: zapněte volání nástrojů v nastavení modelu nebo vyberte jiný.",
     "toolsUnsupported": "Model neumí používat nástroje. Vypněte v jeho nastavení „Volání nástrojů“ nebo vyberte jiný model.",
     "unavailable": "Poskytovatel je nedostupný",
     "unknown": "Požadavek na AI selhal"
@@ -1446,7 +1449,8 @@
   "quickAiRequest": {
     "selectProfile": "Vybrat profil",
     "profileLocked": "Profil je během relace uzamčen",
-    "defaultProfile": "Dotaz na AI"
+    "defaultProfile": "Dotaz na AI",
+    "noModel": "Vyberte model pro rychlé dotazy."
   },
   "screenshot": {
     "retake": "Pořídit snímek znovu",

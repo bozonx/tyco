@@ -6,6 +6,7 @@ pub const VALID_SESSION_STATE_KEYS: &[&str] = &[
     "lastMode",
     "lastChatModelId",
     "lastProfileChatIds",
+    "quickRequestModelIds",
     "recentTranslateLanguages",
 ];
 
@@ -23,21 +24,40 @@ pub fn merge_session_state(
         }
     }
     // Merge under the settings lock so independent windows cannot overwrite
-    // another profile's last chat with a stale client snapshot.
-    if let Some(Value::Object(ids)) = patch.get_mut("lastProfileChatIds") {
-        let mut merged_ids = serde_json::to_value(&current.last_profile_chat_ids)?;
-        if let Some(current_ids) = merged_ids.as_object_mut() {
-            current_ids.extend(std::mem::take(ids));
-            // an empty id forgets the profile's last chat
-            current_ids.retain(|_, id| id.as_str().is_some_and(|id| !id.is_empty()));
-            *ids = std::mem::take(current_ids);
-        }
-    }
+    // another profile's entry with a stale client snapshot.
+    merge_profile_ids(
+        &mut patch,
+        "lastProfileChatIds",
+        &current.last_profile_chat_ids,
+    )?;
+    merge_profile_ids(
+        &mut patch,
+        "quickRequestModelIds",
+        &current.quick_request_model_ids,
+    )?;
     let mut merged = serde_json::to_value(current)?;
     if let Some(fields) = merged.as_object_mut() {
         fields.extend(patch);
     }
     Ok(serde_json::from_value(merged)?)
+}
+
+/// Merges a by-profile map of `patch` into `current`; an empty id forgets the
+/// profile's entry.
+fn merge_profile_ids(
+    patch: &mut serde_json::Map<String, Value>,
+    key: &str,
+    current: &std::collections::HashMap<String, String>,
+) -> Result<(), AppError> {
+    if let Some(Value::Object(ids)) = patch.get_mut(key) {
+        let mut merged_ids = serde_json::to_value(current)?;
+        if let Some(current_ids) = merged_ids.as_object_mut() {
+            current_ids.extend(std::mem::take(ids));
+            current_ids.retain(|_, id| id.as_str().is_some_and(|id| !id.is_empty()));
+            *ids = std::mem::take(current_ids);
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -62,6 +82,25 @@ mod tests {
 
         assert!(!merged.last_profile_chat_ids.contains_key("writer"));
         assert_eq!(merged.last_profile_chat_ids["reviewer"], "chat-2");
+    }
+
+    #[test]
+    fn quick_request_models_merge_by_profile() {
+        let state: SessionState = serde_json::from_value(
+            json!({ "quickRequestModelIds": { "writer": "model-a", "reviewer": "model-b" } }),
+        )
+        .unwrap();
+        let merged = merge_session_state(
+            &state,
+            json!({ "quickRequestModelIds": { "writer": "model-c", "reviewer": "" } })
+                .as_object()
+                .unwrap()
+                .clone(),
+        )
+        .unwrap();
+
+        assert_eq!(merged.quick_request_model_ids["writer"], "model-c");
+        assert!(!merged.quick_request_model_ids.contains_key("reviewer"));
     }
 
     #[test]

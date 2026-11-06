@@ -137,7 +137,8 @@
     "voiceInput": "Voice input",
     "voiceSendHint": "Send right away (Ctrl+Enter)",
     "promptPresets": "Prompt presets",
-    "noPromptsConfigured": "No prompt presets configured"
+    "noPromptsConfigured": "No prompt presets configured",
+    "noToolCalling": "no tool calling"
   },
   "chatTools": {
     "files": {
@@ -472,7 +473,8 @@
     "filterQuickInput": "Quick input",
     "filterVoice": "Voice",
     "filterUnsent": "Not sent",
-    "filterUnsentHint": "Only texts that were never inserted or copied"
+    "filterUnsentHint": "Only texts that were never inserted or copied",
+    "requestTurns": "Questions and answers: {count}"
   },
   "input": {
     "historySearchPlaceholder": "Search history...",
@@ -528,6 +530,7 @@
     "rateLimit": "Too many requests to the provider; try again later",
     "stepLimit": "The model used up its tool steps without finishing the answer. Ask it to continue or raise the step limit of the profile.",
     "timeout": "The model took too long to answer",
+    "toolsRequired": "This model cannot call tools. Quick requests and chats need tool calling: turn it on in the model settings or pick another model.",
     "toolsUnsupported": "The model cannot use tools. Turn off “Tool calling” in its settings or pick another model.",
     "unavailable": "The provider is not reachable",
     "unknown": "The AI request failed"
@@ -1452,7 +1455,8 @@
   "quickAiRequest": {
     "selectProfile": "Select profile",
     "profileLocked": "Profile locked during session",
-    "defaultProfile": "Ask AI"
+    "defaultProfile": "Ask AI",
+    "noModel": "Choose a model for quick requests."
   },
   "screenshot": {
     "retake": "Retake screenshot",

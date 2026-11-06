@@ -137,7 +137,8 @@
     "voiceInput": "Introducere vocală",
     "voiceSendHint": "Trimite imediat (Ctrl+Enter)",
     "promptPresets": "Presetări prompturi",
-    "noPromptsConfigured": "Nicio presetare de prompt configurată"
+    "noPromptsConfigured": "Nicio presetare de prompt configurată",
+    "noToolCalling": "fără instrumente"
   },
   "chatTools": {
     "files": {
@@ -472,7 +473,8 @@
     "filterQuickInput": "Introducere rapidă",
     "filterVoice": "Voce",
     "filterUnsent": "Netrimise",
-    "filterUnsentHint": "Doar textele care nu au fost niciodată inserate sau copiate"
+    "filterUnsentHint": "Doar textele care nu au fost niciodată inserate sau copiate",
+    "requestTurns": "Întrebări și răspunsuri: {count}"
   },
   "input": {
     "historySearchPlaceholder": "Caută în istoric...",
@@ -528,6 +530,7 @@
     "rateLimit": "Prea multe cereri către furnizor; încercați din nou mai târziu",
     "stepLimit": "Modelul și-a epuizat pașii de instrumente fără să termine răspunsul. Cereți-i să continue sau măriți limita de pași a profilului.",
     "timeout": "Modelul a răspuns prea încet",
+    "toolsRequired": "Acest model nu poate apela instrumente. Cererile rapide și chaturile au nevoie de asta: activează apelarea instrumentelor în setările modelului sau alege alt model.",
     "toolsUnsupported": "Modelul nu poate folosi instrumente. Dezactivați „Apelarea instrumentelor” în setările lui sau alegeți alt model.",
     "unavailable": "Furnizorul nu poate fi accesat",
     "unknown": "Cererea către AI a eșuat"
@@ -1452,7 +1455,8 @@
   "quickAiRequest": {
     "selectProfile": "Selectează profilul",
     "profileLocked": "Profil blocat în timpul sesiunii",
-    "defaultProfile": "Întrebare pentru AI"
+    "defaultProfile": "Întrebare pentru AI",
+    "noModel": "Alege un model pentru cererile rapide."
   },
   "screenshot": {
     "retake": "Refă captura de ecran",

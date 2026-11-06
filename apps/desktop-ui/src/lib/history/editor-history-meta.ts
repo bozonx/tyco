@@ -1,4 +1,8 @@
-import type { EditorHistoryItem, EditorHistoryOperation } from '@tyco/shared'
+import type {
+  EditorHistoryItem,
+  EditorHistoryOperation,
+  EditorHistoryTurn,
+} from '@tyco/shared'
 
 export interface EditorHistoryMeta {
   icon: string
@@ -12,6 +16,8 @@ export interface EditorHistoryView extends EditorHistoryMeta {
   original?: { labelKey: string; text: string }
   /** The AI result was inserted into a window or copied. */
   isResultApplied: boolean
+  /** The questions and answers of a quick AI request, oldest first. */
+  turns?: EditorHistoryTurn[]
 }
 
 const OPERATION_ICONS: Record<EditorHistoryOperation, string> = {
@@ -64,24 +70,38 @@ export function getEditorHistoryMeta(
 
 export function getEditorHistoryView(
   item: Pick<EditorHistoryItem, 'kind' | 'operation' | 'result' | 'text'> &
-    Partial<Pick<EditorHistoryItem, 'isResultApplied'>>
+    Partial<Pick<EditorHistoryItem, 'isResultApplied' | 'turns'>>
 ): EditorHistoryView {
   const meta = getEditorHistoryMeta(item)
+  const turns = item.kind === 'source' && item.turns?.length ? item.turns : []
 
   if (item.kind !== 'source' || !item.result) {
-    return { ...meta, text: item.text, isResultApplied: !!item.isResultApplied }
+    return {
+      ...meta,
+      text: item.text,
+      isResultApplied: !!item.isResultApplied,
+      ...(turns.length ? { turns } : {}),
+    }
   }
+
+  // a request made without a selection stores its first question as the text
+  const hasSourceText = item.text.trim() !== turns[0]?.prompt.trim()
 
   return {
     ...meta,
     text: item.result,
-    original: {
-      labelKey:
-        item.operation === 'voiceCorrection'
-          ? 'history.originalTranscript'
-          : 'history.original',
-      text: item.text,
-    },
+    ...(hasSourceText
+      ? {
+          original: {
+            labelKey:
+              item.operation === 'voiceCorrection'
+                ? 'history.originalTranscript'
+                : 'history.original',
+            text: item.text,
+          },
+        }
+      : {}),
     isResultApplied: !!item.isResultApplied,
+    ...(turns.length ? { turns } : {}),
   }
 }

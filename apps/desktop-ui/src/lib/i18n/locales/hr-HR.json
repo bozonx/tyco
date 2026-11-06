@@ -137,7 +137,8 @@
     "voiceInput": "Glasovni unos",
     "voiceSendHint": "Pošalji odmah (Ctrl+Enter)",
     "promptPresets": "Unaprijed postavljeni upiti",
-    "noPromptsConfigured": "Nema konfiguriranih upita"
+    "noPromptsConfigured": "Nema konfiguriranih upita",
+    "noToolCalling": "bez alata"
   },
   "chatTools": {
     "files": {
@@ -472,7 +473,8 @@
     "filterQuickInput": "Brzi unos",
     "filterVoice": "Glas",
     "filterUnsent": "Neposlano",
-    "filterUnsentHint": "Samo tekstovi koji nikad nisu umetnuti ni kopirani"
+    "filterUnsentHint": "Samo tekstovi koji nikad nisu umetnuti ni kopirani",
+    "requestTurns": "Pitanja i odgovori: {count}"
   },
   "input": {
     "historySearchPlaceholder": "Pretraži povijest...",
@@ -528,6 +530,7 @@
     "rateLimit": "Previše zahtjeva prema pružatelju; pokušajte kasnije",
     "stepLimit": "Model je potrošio korake alata, a nije dovršio odgovor. Zamolite ga da nastavi ili povećajte ograničenje koraka profila.",
     "timeout": "Model je predugo odgovarao",
+    "toolsRequired": "Ovaj model ne može pozivati alate. Brzi upiti i chatovi to trebaju: uključite pozivanje alata u postavkama modela ili odaberite drugi.",
     "toolsUnsupported": "Model ne može koristiti alate. Isključite „Pozivanje alata” u njegovim postavkama ili odaberite drugi model.",
     "unavailable": "Pružatelj nije dostupan",
     "unknown": "AI zahtjev nije uspio"
@@ -1452,7 +1455,8 @@
   "quickAiRequest": {
     "selectProfile": "Odaberite profil",
     "profileLocked": "Profil je zaključan tijekom sesije",
-    "defaultProfile": "Pitanje za AI"
+    "defaultProfile": "Pitanje za AI",
+    "noModel": "Odaberite model za brze upite."
   },
   "screenshot": {
     "retake": "Ponovno snimi zaslon",

@@ -137,7 +137,8 @@
     "voiceInput": "Hangbevitel",
     "voiceSendHint": "Azonnali küldés (Ctrl+Enter)",
     "promptPresets": "Prompt-sablonok",
-    "noPromptsConfigured": "Nincsenek beállítva prompt-sablonok"
+    "noPromptsConfigured": "Nincsenek beállítva prompt-sablonok",
+    "noToolCalling": "eszközök nélkül"
   },
   "chatTools": {
     "files": {
@@ -472,7 +473,8 @@
     "filterQuickInput": "Gyors bevitel",
     "filterVoice": "Hang",
     "filterUnsent": "Nem elküldött",
-    "filterUnsentHint": "Csak a soha be nem illesztett vagy ki nem másolt szövegek"
+    "filterUnsentHint": "Csak a soha be nem illesztett vagy ki nem másolt szövegek",
+    "requestTurns": "Kérdések és válaszok: {count}"
   },
   "input": {
     "historySearchPlaceholder": "Keresés az előzményekben...",
@@ -528,6 +530,7 @@
     "rateLimit": "Túl sok kérés a szolgáltató felé; próbálja újra később",
     "stepLimit": "A modell elhasználta az eszközlépéseit, mielőtt befejezte volna a választ. Kérje meg, hogy folytassa, vagy növelje a profil lépéskorlátját.",
     "timeout": "A modell túl sokáig válaszolt",
+    "toolsRequired": "Ez a modell nem tud eszközöket hívni. A gyors kérésekhez és a csevegésekhez erre szükség van: kapcsold be az eszközhívást a modell beállításaiban, vagy válassz másikat.",
     "toolsUnsupported": "A modell nem tud eszközöket használni. Kapcsolja ki a beállításaiban az „Eszközhívás” opciót, vagy válasszon másik modellt.",
     "unavailable": "A szolgáltató nem érhető el",
     "unknown": "Az MI-kérés sikertelen"
@@ -1449,7 +1452,8 @@
   "quickAiRequest": {
     "selectProfile": "Profil kiválasztása",
     "profileLocked": "A profil a munkamenet során zárolva van",
-    "defaultProfile": "Kérdés az AI-hoz"
+    "defaultProfile": "Kérdés az AI-hoz",
+    "noModel": "Válassz modellt a gyors kérésekhez."
   },
   "screenshot": {
     "retake": "Képernyőkép újrakészítése",

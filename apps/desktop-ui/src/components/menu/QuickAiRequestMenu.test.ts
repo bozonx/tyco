@@ -37,7 +37,7 @@ describe('QuickAiRequestMenu', () => {
           {
             id: 'gpt-4',
             name: 'GPT 4',
-            providerId: 'openai',
+            providerId: 'ollama',
             providerModelId: 'gpt-4',
             canUseImages: false,
             canUseTools: true,
@@ -99,13 +99,13 @@ describe('QuickAiRequestMenu', () => {
     })
 
     const wrapper = mountMenu()
-    const input = wrapper.find('.query-panel-input')
-    await input.setValue('Explain this')
-    await input.trigger('keydown', { key: 'Enter' })
     await flushPromises()
 
+    // told before the user types anything
     expect(wrapper.find('.quick-error-banner').exists()).toBe(true)
-    expect(wrapper.find('.quick-error-text').text()).toBe('llmErrors.noModel')
+    expect(wrapper.find('.quick-error-text').text()).toBe(
+      'quickAiRequest.noModel'
+    )
   })
 
   it('shows error banner when model does not support tools', async () => {
@@ -120,7 +120,7 @@ describe('QuickAiRequestMenu', () => {
           {
             id: 'simple-model',
             name: 'Simple',
-            providerId: 'openai',
+            providerId: 'ollama',
             providerModelId: 'simple-model',
             canUseImages: false,
             canUseTools: false,
@@ -130,14 +130,55 @@ describe('QuickAiRequestMenu', () => {
     })
 
     const wrapper = mountMenu()
+    await flushPromises()
+    expect(wrapper.find('.quick-error-text').text()).toBe(
+      'llmErrors.toolsRequired'
+    )
+
     const input = wrapper.find('.query-panel-input')
     await input.setValue('Explain this')
     await input.trigger('keydown', { key: 'Enter' })
     await flushPromises()
 
-    expect(wrapper.find('.quick-error-banner').exists()).toBe(true)
     expect(wrapper.find('.quick-error-text').text()).toBe(
-      'llmErrors.toolsUnsupported'
+      'llmErrors.toolsRequired'
+    )
+  })
+
+  it('lists the models and remembers the pick of "Ask AI" in its task', async () => {
+    desktop.setUserConfig({
+      llm: {
+        ...desktop.backend.userConfig.llm,
+        models: [
+          ...desktop.backend.userConfig.llm.models,
+          {
+            id: 'local',
+            name: 'Local',
+            providerId: 'ollama',
+            providerModelId: 'local',
+            canUseImages: false,
+            canUseTools: false,
+          },
+        ],
+      },
+    })
+
+    const wrapper = mountMenu()
+    const modelSelect = wrapper.findAll('select')[1]
+    const labels = modelSelect.findAll('option').map((option) => option.text())
+    expect(labels).toEqual([
+      expect.stringContaining('GPT 4'),
+      expect.stringContaining('chat.noToolCalling'),
+    ])
+
+    await modelSelect.setValue('1')
+    await flushPromises()
+
+    expect(desktop.backend.userConfig.llm.tasks.quickRequest.modelId).toBe(
+      'local'
+    )
+    expect(wrapper.find('.quick-error-text').text()).toBe(
+      'llmErrors.toolsRequired'
     )
   })
 

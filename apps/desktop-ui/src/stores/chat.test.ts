@@ -52,7 +52,14 @@ beforeEach(() => {
     ...desktopStore.desktopState,
     userConfig: {
       ...desktopStore.desktopState.userConfig,
-      llm: structuredClone(DEFAULT_LLM_CONFIG),
+      // chats need tool calling: the default local model has it off
+      llm: {
+        ...structuredClone(DEFAULT_LLM_CONFIG),
+        models: DEFAULT_LLM_CONFIG.models.map((model) => ({
+          ...model,
+          canUseTools: true,
+        })),
+      },
     },
     isWindowShown: true,
   })

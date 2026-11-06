@@ -199,7 +199,15 @@ const editorItems = computed<HistoryListItem[]>(() =>
         label: t(view.original.labelKey),
         text: view.original.text,
       },
-      searchText: label,
+      turns: view.turns?.map((turn) => ({
+        prompt: turn.prompt,
+        result: turn.result,
+        isVoice: turn.inputKind === 'voice',
+      })),
+      searchText: [
+        label,
+        ...(view.turns ?? []).map((turn) => turn.prompt),
+      ].join(' '),
       time: item.createdAt,
     }
   })

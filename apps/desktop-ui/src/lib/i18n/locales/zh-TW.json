@@ -137,7 +137,8 @@
     "voiceInput": "語音輸入",
     "voiceSendHint": "立即發送 (Ctrl+Enter)",
     "promptPresets": "提示詞預設",
-    "noPromptsConfigured": "未設定提示詞預設"
+    "noPromptsConfigured": "未設定提示詞預設",
+    "noToolCalling": "不支援工具"
   },
   "chatTools": {
     "files": {
@@ -472,7 +473,8 @@
     "filterQuickInput": "快速輸入",
     "filterVoice": "語音",
     "filterUnsent": "未傳送",
-    "filterUnsentHint": "僅顯示從未插入或複製的文字"
+    "filterUnsentHint": "僅顯示從未插入或複製的文字",
+    "requestTurns": "問題與回答：{count}"
   },
   "input": {
     "historySearchPlaceholder": "搜尋歷史記錄...",
@@ -528,6 +530,7 @@
     "rateLimit": "對提供者的請求過於頻繁；請稍後再試",
     "stepLimit": "模型已用盡工具呼叫步數，但尚未完成回覆。您可以要求其繼續，或提高該設定檔的步數限制。",
     "timeout": "模型回應逾時",
+    "toolsRequired": "此模型無法呼叫工具。快速請求和聊天需要工具呼叫：請在模型設定中開啟，或選擇其他模型。",
     "toolsUnsupported": "此模型無法使用工具。請在其設定中關閉「工具呼叫」，或選擇其他模型。",
     "unavailable": "無法連線至提供者",
     "unknown": "AI 請求失敗"
@@ -1446,7 +1449,8 @@
   "quickAiRequest": {
     "selectProfile": "選取設定檔",
     "profileLocked": "工作階段期間設定檔已鎖定",
-    "defaultProfile": "向 AI 提問"
+    "defaultProfile": "向 AI 提問",
+    "noModel": "請為快速請求選擇模型。"
   },
   "screenshot": {
     "retake": "重新擷取螢幕",

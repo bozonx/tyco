@@ -28,6 +28,7 @@ export function prepareGenerationRequest(
     | 'getChatModel'
     | 'notifyError'
     | 'noModelError'
+    | 'toolsRequiredError'
     | 'imageModelError'
     | 'messageTooLongError'
     | 'imageOmittedText'
@@ -41,6 +42,13 @@ export function prepareGenerationRequest(
   const model = deps.getChatModel()
   if (!model) {
     deps.notifyError(deps.noModelError())
+    return null
+  }
+
+  // chats rely on tools, such as reply blocks: a model without them is refused
+  // rather than answering worse without a word
+  if (model.canUseTools === false) {
+    deps.notifyError(deps.toolsRequiredError?.() || deps.noModelError())
     return null
   }
 

@@ -186,4 +186,34 @@ describe('HistoryList.vue', () => {
     await actionButtons[0].trigger('click')
     expect(wrapper.emitted('action')?.[0]).toEqual(['copy', sampleItems[0]])
   })
+
+  it('shows the questions and answers of a request under its result', async () => {
+    const wrapper = mount(HistoryList, {
+      props: {
+        items: [
+          {
+            id: 'q',
+            value: 'Hey',
+            turns: [
+              { prompt: 'Reply politely', result: 'Hi', isVoice: false },
+              { prompt: 'Shorter', result: 'Hey', isVoice: true },
+            ],
+          },
+        ],
+      },
+      global: { stubs: { StateMessage: true, Button: true, IconButton: true } },
+    })
+
+    const toggle = wrapper.find('.history-original-toggle')
+    expect(toggle.text()).toContain('history.requestTurns:{"count":2}')
+    expect(wrapper.find('.history-turns').exists()).toBe(false)
+
+    await toggle.trigger('click')
+
+    const turns = wrapper.findAll('.history-turn')
+    expect(
+      turns.map((turn) => turn.find('.history-turn-prompt').text())
+    ).toEqual(['Reply politely', 'Shorter'])
+    expect(turns[1].find('.history-turn-result').text()).toBe('Hey')
+  })
 })

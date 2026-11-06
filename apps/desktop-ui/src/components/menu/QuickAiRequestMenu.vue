@@ -21,6 +21,21 @@
             @update:model-value="onProfileSelect"
           />
         </label>
+        <label class="quick-profile-label">
+          <AppIcon
+            icon="mdi:creation-outline"
+            size="sm"
+            class="quick-profile-icon"
+          />
+          <FieldSelect
+            size="sm"
+            :model-value="model.modelId.value ?? ''"
+            :disabled="model.isGenerating.value"
+            :options="modelSelectOptions"
+            :title="t('chat.selectModel')"
+            @update:model-value="onModelSelect"
+          />
+        </label>
       </div>
     </template>
 
@@ -126,13 +141,10 @@
         </div>
       </div>
 
-      <!-- Config or Model Error banner -->
-      <div
-        v-if="model.error.value && model.turns.value.length === 0"
-        class="quick-error-banner"
-      >
+      <!-- Model problems are told at once; request errors after a send -->
+      <div v-if="bannerText" class="quick-error-banner" role="alert">
         <AppIcon icon="mdi:alert-circle-outline" size="md" />
-        <span class="quick-error-text">{{ model.error.value }}</span>
+        <span class="quick-error-text">{{ bannerText }}</span>
         <button type="button" class="quick-error-link" @click="goToSettings">
           {{ t('chat.configureModels') }}
         </button>
@@ -183,15 +195,18 @@ import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
 import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-meter'
 import { createDesktopChatTools } from '../../lib/chat-tools/desktop-chat-tools'
 import { getChatImage } from '../../lib/chat/chat-image-storage'
+import { chatModelOptions } from '../../lib/chat/chat-llm-selection'
 import { resolveProfileInstructions } from '../../lib/chat/chat-profile-runtime'
 import { invokeDesktop } from '../../lib/desktop/invoke'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { describeError } from '../../lib/errors/describe-error'
 import { resultOrThrow } from '../../lib/ipc/ipc-model'
+import { normalizeLlmConfig } from '../../lib/llm/llm-config'
 import { formatLlmError } from '../../lib/llm/llm-errors'
 import { clientLogger } from '../../lib/logger'
 import { filterOptions } from '../../lib/menu-query/menu-query'
 import type { QuickAiRequestMenuParams } from '../../lib/modals/menu-modal-params'
+import { isSecretUsable } from '../../lib/net/secrets'
 import {
   type QuickAiRequestModel,
   createQuickAiRequestModel,
@@ -204,6 +219,7 @@ import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
 import { useMenuModalsStore } from '../../stores/menu-modals'
+import { useSecretsStore } from '../../stores/secrets'
 import { useToolsStore } from '../../stores/tools'
 import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
 import ChatToolCall from '../chat/ChatToolCall.vue'
@@ -225,8 +241,8 @@ import {
   type AiProfile,
   type Chat,
   type ChatAttachment,
-  type EditorHistoryInstruction,
   type EditorHistoryTurn,
+  llmSecretId,
 } from '@tyco/shared'
 
 const props = withDefaults(defineProps<QuickAiRequestMenuParams>(), {
@@ -243,6 +259,7 @@ const ipcStore = useIpcStore()
 const llmStore = useLlmStore()
 const toolsStore = useToolsStore()
 const aiProfilesStore = useAiProfilesStore()
+const secretsStore = useSecretsStore()
 const dictation = useDictationActions()
 const editorNavigation = useEditorNavigation()
 const { toastKey, toastText } = useToast()
@@ -300,32 +317,37 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
   },
   getUserConfig: () => desktopStore.userConfig,
   getAppConfig: () => APP_CONFIG,
-  getAvailableTools: async (modelId: string, profile?: AiProfile) => {
-    const chatTools = createDesktopChatTools({
-      profileId: profile?.id ?? null,
-      invoke: invokeDesktop,
-      canUseTools: () => true,
-      getMemoryMode: () => profile?.memoryMode,
-      getChatId: () => undefined,
-      getFetchMaxCharacters: () =>
-        desktopStore.userConfig?.llm?.webSearch?.fetchMaxCharacters,
-      warn: (msg) => clientLogger.warn(msg, 'tools'),
-      commands: () => desktopStore.userConfig?.commands ?? [],
-      tools: toolsStore,
-      environment: toolsStore.environment,
-    })
-    const turnResult = await chatTools.turnTools(
+  getModelOptions: () =>
+    chatModelOptions(normalizeLlmConfig(desktopStore.userConfig?.llm), (id) =>
+      isSecretUsable(secretsStore.secrets, llmSecretId(id))
+    ),
+  getRememberedModelId: (pId) =>
+    (pId
+      ? desktopStore.sessionState?.quickRequestModelIds?.[pId]
+      : undefined) ||
+    desktopStore.userConfig?.llm?.tasks?.quickRequest?.modelId ||
+    undefined,
+  rememberModelId: async (pId, modelId) => {
+    const response = pId
+      ? await desktopStore.patchSessionState({
+          quickRequestModelIds: { [pId]: modelId },
+        })
+      : await saveQuickRequestTaskModel(modelId)
+    if (!response.success) toastText(describeError(response.error, t), 'error')
+  },
+  turnTools: async (modelId, pId, profile) => {
+    const tools = chatToolsFor(pId, profile)
+    const turn = await tools.turnTools(
       modelId,
       undefined,
       profile?.tools,
       profile?.memoryMode
     )
-    return {
-      tools: turnResult.tools?.tools ?? null,
-      policy: turnResult.tools?.policy,
-      maxStepCount: turnResult.tools?.maxStepCount,
-    }
+    return turn.tools
   },
+  answerToolApproval: (approvalId, decision) =>
+    chatToolsScope?.tools.answerApproval(approvalId, decision),
+  cancelToolApprovals: () => chatToolsScope?.tools.dispose(),
   stream: (llmPrompt, options) =>
     llmStore.client.stream('quickRequest', llmPrompt, options),
   resolveProfileInstructions: (pId: string) =>
@@ -337,30 +359,20 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
       warn: (msg) => clientLogger.warn(msg, 'profile'),
     }),
   getProfile: (pId: string) => aiProfilesStore.getProfile(pId),
-  saveEditorHistorySession: async (entry: {
-    sourceText?: string
-    profileId?: string | null
-    instruction: EditorHistoryInstruction
-    operation: 'quickAiRequest'
-    turns: EditorHistoryTurn[]
-    result?: string
-  }) => {
-    return historyStore.saveSource(
-      entry.sourceText ?? '',
-      entry.operation,
+  createHistorySession: (session) =>
+    historyStore.saveSource(
+      session.text,
+      'quickAiRequest',
       undefined,
-      entry.instruction,
-      entry.profileId ?? undefined,
-      entry.turns
-    )
-  },
-  updateEditorHistorySession: async (
+      session.instruction,
+      session.profileId ?? undefined,
+      session.turns
+    ),
+  updateHistorySession: (
     id: string,
     historyTurns: EditorHistoryTurn[],
-    result?: string | null
-  ) => {
-    await historyStore.updateSession(id, historyTurns, result ?? undefined)
-  },
+    result: string | undefined
+  ) => historyStore.updateSession(id, historyTurns, result),
   listRecentInstructions: (limit?: number, pId?: string | null) =>
     historyStore.listRecentInstructions(limit, pId),
   insertText: async (text: string) => {
@@ -394,11 +406,95 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
       'save_chat'
     )
   },
+  generateChatTitle: (question, answer, modelId) =>
+    llmStore.actions.generateChatTitle(question, answer, modelId),
+  renameChat: async (chatId, title, pId) => {
+    resultOrThrow(
+      await ipcStore.call('rename_chat', {
+        id: chatId,
+        title,
+        profileId: pId ?? null,
+      }),
+      'rename_chat'
+    )
+  },
+  imageTitle: () => t('chat.imageTitle'),
   createId: () => crypto.randomUUID(),
   closeOverlay: () => menuModalsStore.closeAll(),
-  noModelError: () => t('llmErrors.noModel'),
-  toolsUnsupportedError: () => t('llmErrors.toolsUnsupported'),
+  noModelError: () => t('quickAiRequest.noModel'),
+  toolsRequiredError: () => t('llmErrors.toolsRequired'),
 })
+
+/**
+ * The tools of the request: one session per profile, so that a call allowed
+ * "for this session" stays allowed for the follow-up questions
+ */
+let chatToolsScope:
+  | {
+      profileId: string | null
+      tools: ReturnType<typeof createDesktopChatTools>
+    }
+  | undefined
+function chatToolsFor(pId: string | null, profile?: AiProfile) {
+  if (chatToolsScope?.profileId === pId) return chatToolsScope.tools
+  chatToolsScope?.tools.dispose()
+  const tools = createDesktopChatTools({
+    profileId: pId,
+    invoke: invokeDesktop,
+    canUseTools: () => true,
+    getMemoryMode: () => profile?.memoryMode,
+    getChatId: () => undefined,
+    getFetchMaxCharacters: () =>
+      desktopStore.userConfig?.llm?.webSearch?.fetchMaxCharacters,
+    warn: (msg) => clientLogger.warn(msg, 'tools'),
+    commands: () => desktopStore.userConfig?.commands ?? [],
+    tools: toolsStore,
+    environment: toolsStore.environment,
+  })
+  chatToolsScope = { profileId: pId, tools }
+  return tools
+}
+
+/** "Ask AI" keeps its quick request model in the task settings */
+function saveQuickRequestTaskModel(modelId: string) {
+  const llm = desktopStore.userConfig.llm
+  return desktopStore.updateUserConfig({
+    llm: {
+      ...llm,
+      tasks: {
+        ...llm.tasks,
+        quickRequest: { ...llm.tasks.quickRequest, modelId },
+      },
+    },
+  })
+}
+
+const modelSelectOptions = computed(() =>
+  model.modelOptions.value.map((option) => ({
+    id: option.id,
+    name: [
+      option.name,
+      option.providerLabel,
+      ...(option.canUseTools ? [] : [t('chat.noToolCalling')]),
+    ].join(' · '),
+  }))
+)
+
+function onModelSelect(val: string | number | undefined) {
+  if (typeof val === 'string' && val) void model.setModelId(val)
+}
+
+/** Shown at once: the user learns before asking that the model will not do */
+const modelIssueText = computed(() =>
+  model.modelIssue.value ? model.describeModelIssue(model.modelIssue.value) : ''
+)
+
+/** A failed turn shows its error itself, under the question */
+const bannerText = computed(
+  () =>
+    modelIssueText.value ||
+    (model.turns.value.at(-1)?.status === 'error' ? '' : model.error.value)
+)
 
 watch(
   () => props.screenshot,
@@ -622,6 +718,8 @@ onUnmounted(() => {
 .quick-profile-picker {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
 }
 
 .quick-profile-label {

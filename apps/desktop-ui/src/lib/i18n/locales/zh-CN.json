@@ -137,7 +137,8 @@
     "voiceInput": "语音输入",
     "voiceSendHint": "立即发送 (Ctrl+Enter)",
     "promptPresets": "提示词预设",
-    "noPromptsConfigured": "未配置提示词预设"
+    "noPromptsConfigured": "未配置提示词预设",
+    "noToolCalling": "不支持工具"
   },
   "chatTools": {
     "files": {
@@ -472,7 +473,8 @@
     "filterQuickInput": "快速输入",
     "filterVoice": "语音",
     "filterUnsent": "未发送",
-    "filterUnsentHint": "仅显示从未插入或复制的文本"
+    "filterUnsentHint": "仅显示从未插入或复制的文本",
+    "requestTurns": "问题与回答：{count}"
   },
   "input": {
     "historySearchPlaceholder": "搜索历史记录…",
@@ -528,6 +530,7 @@
     "rateLimit": "向提供商发送的请求过多；请稍后重试",
     "stepLimit": "模型在完成回答前耗尽了工具调用步数。请让其继续回答或增加配置文件的步数上限。",
     "timeout": "模型响应超时",
+    "toolsRequired": "此模型无法调用工具。快速请求和聊天需要工具调用：请在模型设置中开启，或选择其他模型。",
     "toolsUnsupported": "该模型不支持调用工具。请在其设置中关闭“工具调用”或选择其他模型。",
     "unavailable": "提供商不可用",
     "unknown": "AI 请求失败"
@@ -1446,7 +1449,8 @@
   "quickAiRequest": {
     "selectProfile": "选择配置文件",
     "profileLocked": "会话期间配置文件已锁定",
-    "defaultProfile": "向 AI 提问"
+    "defaultProfile": "向 AI 提问",
+    "noModel": "请为快速请求选择模型。"
   },
   "screenshot": {
     "retake": "重新截图",

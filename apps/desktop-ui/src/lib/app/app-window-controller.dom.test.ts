@@ -17,6 +17,7 @@ import { createSettingsSession } from '../settings/settings-session'
 import { createMainWindowReset } from './main-window-reset'
 import { useChatStore } from '../../stores/chat'
 import { useChatInputStore } from '../../stores/chat-input'
+import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { appNavigation } from '../../navigation'
@@ -276,6 +277,22 @@ describe('application workflow integration', () => {
     const pinia = createPinia()
     setActivePinia(pinia)
     vi.spyOn(appNavigation, 'push').mockResolvedValue()
+    // chats need tool calling: the default local model has it off
+    const desktopStore = useDesktopStore()
+    const { userConfig } = desktopStore.desktopState
+    desktopStore.applyViewState({
+      ...desktopStore.desktopState,
+      userConfig: {
+        ...userConfig,
+        llm: {
+          ...userConfig.llm,
+          models: userConfig.llm.models.map((model) => ({
+            ...model,
+            canUseTools: true,
+          })),
+        },
+      },
+    })
     const chat = useChatStore()
     const input = useChatInputStore()
     const f = fixture({

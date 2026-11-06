@@ -137,7 +137,8 @@
     "voiceInput": "Ses girişi",
     "voiceSendHint": "Hemen gönder (Ctrl+Enter)",
     "promptPresets": "İstem önayarları",
-    "noPromptsConfigured": "Yapılandırılmış istem önayarı yok"
+    "noPromptsConfigured": "Yapılandırılmış istem önayarı yok",
+    "noToolCalling": "araçsız"
   },
   "chatTools": {
     "files": {
@@ -472,7 +473,8 @@
     "filterQuickInput": "Hızlı giriş",
     "filterVoice": "Ses",
     "filterUnsent": "Gönderilmemiş",
-    "filterUnsentHint": "Yalnızca hiç eklenmemiş veya kopyalanmamış metinler"
+    "filterUnsentHint": "Yalnızca hiç eklenmemiş veya kopyalanmamış metinler",
+    "requestTurns": "Sorular ve yanıtlar: {count}"
   },
   "input": {
     "historySearchPlaceholder": "Geçmişte ara...",
@@ -528,6 +530,7 @@
     "rateLimit": "Sağlayıcıya çok fazla istek gönderildi; daha sonra tekrar deneyin",
     "stepLimit": "Model, yanıtı bitirmeden araç adımlarını tüketti. Devam etmesini isteyin veya profilin adım sınırını artırın.",
     "timeout": "Model yanıt vermekte çok gecikti",
+    "toolsRequired": "Bu model araç çağıramıyor. Hızlı istekler ve sohbetler araç çağırmaya ihtiyaç duyar: model ayarlarında açın veya başka bir model seçin.",
     "toolsUnsupported": "Model araç kullanamıyor. Ayarlarında “Araç çağırma”yı kapatın veya başka bir model seçin.",
     "unavailable": "Sağlayıcıya ulaşılamıyor",
     "unknown": "Yapay zekâ isteği başarısız oldu"
@@ -1449,7 +1452,8 @@
   "quickAiRequest": {
     "selectProfile": "Profil seç",
     "profileLocked": "Oturum sırasında profil kilitlendi",
-    "defaultProfile": "Yapay Zekaya Soru"
+    "defaultProfile": "Yapay Zekaya Soru",
+    "noModel": "Hızlı istekler için bir model seçin."
   },
   "screenshot": {
     "retake": "Ekran görüntüsünü yeniden al",

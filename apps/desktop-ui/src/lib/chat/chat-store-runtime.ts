@@ -330,6 +330,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     chatLoadError: () => translate('chat.loadFailed'),
     messageTooLongError: () => translate('llmErrors.contextLength'),
     noModelError: () => translate('chat.noModels'),
+    toolsRequiredError: () => translate('llmErrors.toolsRequired'),
     imageModelError: () => translate('chat.imageModelRequired'),
     imageTitle: () => translate('chat.imageTitle'),
     branchTitle: (title) => translate('chat.branchTitle', { title }),
@@ -356,6 +357,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
         ? {
             id: picked.id,
             canUseImages: picked.canUseImages,
+            canUseTools: picked.canUseTools,
             budgetCharacters: requestBudgetCharacters(),
             reservesToolSteps: chatTools.mayOfferTools({
               canUseTools: picked.canUseTools,

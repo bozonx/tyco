@@ -137,7 +137,8 @@
     "voiceInput": "Spracheingabe",
     "voiceSendHint": "Sofort senden (Strg+Enter)",
     "promptPresets": "Prompt-Vorlagen",
-    "noPromptsConfigured": "Keine Prompt-Vorlagen konfiguriert"
+    "noPromptsConfigured": "Keine Prompt-Vorlagen konfiguriert",
+    "noToolCalling": "ohne Tools"
   },
   "chatTools": {
     "files": {
@@ -472,7 +473,8 @@
     "filterQuickInput": "Schnelleingabe",
     "filterVoice": "Sprache",
     "filterUnsent": "Nicht gesendet",
-    "filterUnsentHint": "Nur Texte, die nie eingefügt oder kopiert wurden"
+    "filterUnsentHint": "Nur Texte, die nie eingefügt oder kopiert wurden",
+    "requestTurns": "Fragen und Antworten: {count}"
   },
   "input": {
     "historySearchPlaceholder": "Verlauf durchsuchen...",
@@ -528,6 +530,7 @@
     "rateLimit": "Zu viele Anfragen an den Anbieter; versuchen Sie es später erneut",
     "stepLimit": "Das Modell hat seine Werkzeugschritte aufgebraucht, ohne die Antwort abzuschließen. Bitten Sie es fortzufahren oder erhöhen Sie das Schrittlimit des Profils.",
     "timeout": "Das Modell hat zu lange für die Antwort gebraucht",
+    "toolsRequired": "Dieses Modell kann keine Tools aufrufen. Schnellanfragen und Chats brauchen Tool-Aufrufe: Schalte sie in den Modelleinstellungen ein oder wähle ein anderes Modell.",
     "toolsUnsupported": "Das Modell kann keine Werkzeuge verwenden. Schalten Sie „Werkzeugaufrufe“ in seinen Einstellungen aus oder wählen Sie ein anderes Modell.",
     "unavailable": "Der Anbieter ist nicht erreichbar",
     "unknown": "Die KI-Anfrage ist fehlgeschlagen"
@@ -1452,7 +1455,8 @@
   "quickAiRequest": {
     "selectProfile": "Profil auswählen",
     "profileLocked": "Profil während der Sitzung gesperrt",
-    "defaultProfile": "Frage an die KI"
+    "defaultProfile": "Frage an die KI",
+    "noModel": "Wähle ein Modell für Schnellanfragen."
   },
   "screenshot": {
     "retake": "Bildschirmfoto erneut aufnehmen",

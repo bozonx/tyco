@@ -98,7 +98,14 @@
         :title="t('chat.selectModel')"
         :items="modelMenuItems"
       />
-      <span class="composer-hint">{{ inputHint }}</span>
+      <span
+        v-if="isToolCallingMissing"
+        class="composer-hint composer-hint-warning"
+        role="status"
+      >
+        {{ t('llmErrors.toolsRequired') }}
+      </span>
+      <span v-else class="composer-hint">{{ inputHint }}</span>
       <div class="composer-actions">
         <IconButton
           size="sm"
@@ -175,6 +182,10 @@ const inputHint = computed(() => {
     newline: newlineShortcut(submitKey),
   })
 })
+/** Chats need tool calling; the user learns it before sending */
+const isToolCallingMissing = computed(
+  () => chatStore.selectedModel?.canUseTools === false
+)
 const filePicker = ref<HTMLInputElement | null>(null)
 function pickFiles(event: Event) {
   const input = event.target as HTMLInputElement
@@ -183,7 +194,12 @@ function pickFiles(event: Event) {
 }
 const modelMenuItems = computed<DropdownMenuItem[]>(() => [
   ...chatStore.modelOptions.map((option) => ({
-    label: `${option.name} · ${option.providerLabel}${option.canUseImages ? ` · ${t('settings.vision')}` : ''}`,
+    label: [
+      option.name,
+      option.providerLabel,
+      ...(option.canUseImages ? [t('settings.vision')] : []),
+      ...(option.canUseTools ? [] : [t('chat.noToolCalling')]),
+    ].join(' · '),
     icon: option.id === chatStore.selectedModel?.id ? 'mdi:check' : undefined,
     action: () => chatStore.selectModel(option.id),
   })),
@@ -243,6 +259,12 @@ function voiceInput() {
 }
 .chat-composer:focus-within .composer-hint {
   opacity: 1;
+}
+
+.composer-hint-warning {
+  opacity: 1;
+  color: var(--color-warning);
+  white-space: normal;
 }
 
 .chat-composer.is-dragging {

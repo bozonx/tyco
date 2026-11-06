@@ -54,7 +54,7 @@ function runtimeDependencies(profileId: string): ChatStoreRuntimeDependencies {
     refreshProfile: vi.fn(async () => profile),
     readSoul: vi.fn(async () => '# Soul'),
     updateProfileModel: vi.fn(async () => {}),
-    getUserConfig: () => structuredClone(DEFAULT_USER_CONFIG),
+    getUserConfig: () => configWithToolModels(),
     getSessionState: () => structuredClone(DEFAULT_SESSION_STATE),
     saveSessionState: vi.fn(async () => ({ success: true })),
     hasSecret: () => true,
@@ -69,6 +69,16 @@ function runtimeDependencies(profileId: string): ChatStoreRuntimeDependencies {
     toastKey: vi.fn(),
     warn: vi.fn(),
   }
+}
+
+/** Chats need tool calling: the default local model has it off */
+function configWithToolModels() {
+  const config = structuredClone(DEFAULT_USER_CONFIG)
+  config.llm.models = config.llm.models.map((model) => ({
+    ...model,
+    canUseTools: true,
+  }))
+  return config
 }
 
 describe('chat-store-runtime', () => {
@@ -160,7 +170,7 @@ describe('chat-store-runtime', () => {
       refreshProfile: vi.fn(async () => undefined),
       readSoul: vi.fn(async () => ''),
       updateProfileModel: vi.fn(async () => {}),
-      getUserConfig: () => structuredClone(DEFAULT_USER_CONFIG),
+      getUserConfig: () => configWithToolModels(),
       getSessionState: () => structuredClone(DEFAULT_SESSION_STATE),
       saveSessionState: vi.fn(async () => ({ success: true })),
       hasSecret: () => true,
@@ -187,6 +197,28 @@ describe('chat-store-runtime', () => {
       'history.operationFailed',
       'error'
     )
+    runtime.dispose()
+  })
+
+  it('refuses a model without tool calling and says why', async () => {
+    const deps = runtimeDependencies('writer')
+    const config = structuredClone(DEFAULT_USER_CONFIG)
+    config.llm.models = config.llm.models.map((model) => ({
+      ...model,
+      canUseTools: false,
+    }))
+    const toastText = vi.fn()
+    const runtime = createChatStoreRuntime({
+      ...deps,
+      getUserConfig: () => config,
+      toastText,
+    })
+
+    deps.input.setValue('Hello')
+    await runtime.sendInput()
+
+    expect(deps.llmActions.sendChatMessage).not.toHaveBeenCalled()
+    expect(toastText).toHaveBeenCalledWith('llmErrors.toolsRequired', 'error')
     runtime.dispose()
   })
 
@@ -218,7 +250,7 @@ describe('chat-store-runtime', () => {
       updateProfileModel: vi.fn(async () => {
         throw new Error('vault locked')
       }),
-      getUserConfig: () => structuredClone(DEFAULT_USER_CONFIG),
+      getUserConfig: () => configWithToolModels(),
       getSessionState: () => structuredClone(DEFAULT_SESSION_STATE),
       saveSessionState: vi.fn(async () => ({ success: true })),
       hasSecret: () => true,
@@ -282,7 +314,7 @@ describe('chat-store-runtime', () => {
       refreshProfile: vi.fn(async () => profile),
       readSoul: vi.fn(async () => '# Soul'),
       updateProfileModel: vi.fn(async () => {}),
-      getUserConfig: () => structuredClone(DEFAULT_USER_CONFIG),
+      getUserConfig: () => configWithToolModels(),
       getSessionState: () => sessionState,
       saveSessionState,
       hasSecret: () => true,

@@ -93,4 +93,43 @@ describe('getEditorHistoryView', () => {
     expect(view).toMatchObject({ text: 'text', isResultApplied: false })
     expect(view.original).toBeUndefined()
   })
+
+  it('keeps the turns of a quick request with its original', () => {
+    const turns = [
+      { prompt: 'Reply politely', inputKind: 'typed' as const, result: 'Hi' },
+      { prompt: 'Shorter', inputKind: 'voice' as const, result: 'Hey' },
+    ]
+    const view = getEditorHistoryView({
+      kind: 'source',
+      operation: 'quickAiRequest',
+      text: 'Client message',
+      result: 'Hey',
+      turns,
+    })
+
+    expect(view).toMatchObject({
+      text: 'Hey',
+      original: { labelKey: 'history.original', text: 'Client message' },
+      turns,
+    })
+  })
+
+  it('does not repeat the question as the original of a request without a selection', () => {
+    const view = getEditorHistoryView({
+      kind: 'source',
+      operation: 'quickAiRequest',
+      text: 'What is a monad?',
+      result: 'A monad is…',
+      turns: [
+        {
+          prompt: 'What is a monad?',
+          inputKind: 'typed',
+          result: 'A monad is…',
+        },
+      ],
+    })
+
+    expect(view.original).toBeUndefined()
+    expect(view.turns).toHaveLength(1)
+  })
 })

@@ -137,7 +137,8 @@
     "voiceInput": "Input vocale",
     "voiceSendHint": "Invia subito (Ctrl+Invio)",
     "promptPresets": "Preset di prompt",
-    "noPromptsConfigured": "Nessun preset di prompt configurato"
+    "noPromptsConfigured": "Nessun preset di prompt configurato",
+    "noToolCalling": "senza strumenti"
   },
   "chatTools": {
     "files": {
@@ -472,7 +473,8 @@
     "filterQuickInput": "Inserimento rapido",
     "filterVoice": "Voce",
     "filterUnsent": "Non inviati",
-    "filterUnsentHint": "Solo i testi mai inseriti né copiati"
+    "filterUnsentHint": "Solo i testi mai inseriti né copiati",
+    "requestTurns": "Domande e risposte: {count}"
   },
   "input": {
     "historySearchPlaceholder": "Cerca nella cronologia...",
@@ -528,6 +530,7 @@
     "rateLimit": "Troppe richieste al provider; riprova più tardi",
     "stepLimit": "Il modello ha esaurito i passi degli strumenti senza completare la risposta. Chiedigli di continuare o aumenta il limite di passi del profilo.",
     "timeout": "Il modello ha impiegato troppo tempo a rispondere",
+    "toolsRequired": "Questo modello non può chiamare strumenti. Le richieste rapide e le chat ne hanno bisogno: attiva la chiamata agli strumenti nelle impostazioni del modello o scegline un altro.",
     "toolsUnsupported": "Il modello non può usare strumenti. Disattiva «Chiamata di strumenti» nelle sue impostazioni o scegli un altro modello.",
     "unavailable": "Il provider non è raggiungibile",
     "unknown": "La richiesta all’IA non è riuscita"
@@ -1452,7 +1455,8 @@
   "quickAiRequest": {
     "selectProfile": "Seleziona profilo",
     "profileLocked": "Profilo bloccato durante la sessione",
-    "defaultProfile": "Domanda all'IA"
+    "defaultProfile": "Domanda all'IA",
+    "noModel": "Scegli un modello per le richieste rapide."
   },
   "screenshot": {
     "retake": "Acquisisci di nuovo la schermata",

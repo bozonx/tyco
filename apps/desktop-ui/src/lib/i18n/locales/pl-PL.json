@@ -137,7 +137,8 @@
     "voiceInput": "Wprowadzanie głosowe",
     "voiceSendHint": "Wyślij od razu (Ctrl+Enter)",
     "promptPresets": "Zestawy promptów",
-    "noPromptsConfigured": "Brak skonfigurowanych promptów"
+    "noPromptsConfigured": "Brak skonfigurowanych promptów",
+    "noToolCalling": "bez narzędzi"
   },
   "chatTools": {
     "files": {
@@ -472,7 +473,8 @@
     "filterQuickInput": "Szybkie wprowadzanie",
     "filterVoice": "Głos",
     "filterUnsent": "Niewysłane",
-    "filterUnsentHint": "Tylko teksty, które nigdy nie zostały wstawione ani skopiowane"
+    "filterUnsentHint": "Tylko teksty, które nigdy nie zostały wstawione ani skopiowane",
+    "requestTurns": "Pytania i odpowiedzi: {count}"
   },
   "input": {
     "historySearchPlaceholder": "Szukaj w historii...",
@@ -528,6 +530,7 @@
     "rateLimit": "Za dużo zapytań do dostawcy; spróbuj później",
     "stepLimit": "Model wyczerpał kroki narzędzi, nie kończąc odpowiedzi. Poproś go o kontynuowanie lub zwiększ limit kroków profilu.",
     "timeout": "Model odpowiadał zbyt długo",
+    "toolsRequired": "Ten model nie potrafi wywoływać narzędzi. Szybkie zapytania i czaty tego wymagają: włącz wywoływanie narzędzi w ustawieniach modelu lub wybierz inny.",
     "toolsUnsupported": "Model nie może używać narzędzi. Wyłącz „Wywoływanie narzędzi” w jego ustawieniach lub wybierz inny model.",
     "unavailable": "Dostawca jest nieosiągalny",
     "unknown": "Zapytanie do AI nie powiodło się"
@@ -1452,7 +1455,8 @@
   "quickAiRequest": {
     "selectProfile": "Wybierz profil",
     "profileLocked": "Profil zablokowany podczas sesji",
-    "defaultProfile": "Pytanie do AI"
+    "defaultProfile": "Pytanie do AI",
+    "noModel": "Wybierz model do szybkich zapytań."
   },
   "screenshot": {
     "retake": "Zrób zrzut ponownie",

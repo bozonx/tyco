@@ -137,7 +137,8 @@
     "voiceInput": "音声入力",
     "voiceSendHint": "すぐに送信 (Ctrl+Enter)",
     "promptPresets": "プロンプトプリセット",
-    "noPromptsConfigured": "設定されたプロンプトプリセットはありません"
+    "noPromptsConfigured": "設定されたプロンプトプリセットはありません",
+    "noToolCalling": "ツールなし"
   },
   "chatTools": {
     "files": {
@@ -472,7 +473,8 @@
     "filterQuickInput": "クイック入力",
     "filterVoice": "音声",
     "filterUnsent": "未送信",
-    "filterUnsentHint": "挿入もコピーもされていないテキストのみ"
+    "filterUnsentHint": "挿入もコピーもされていないテキストのみ",
+    "requestTurns": "質問と回答: {count}"
   },
   "input": {
     "historySearchPlaceholder": "履歴を検索...",
@@ -528,6 +530,7 @@
     "rateLimit": "プロバイダーへのリクエストが多すぎます。後でもう一度お試しください",
     "stepLimit": "モデルが回答を完了する前にツールのステップ制限に達しました。続行を指示するか、プロファイルのステップ制限を引き上げてください。",
     "timeout": "モデルの応答に時間がかかりすぎました",
+    "toolsRequired": "このモデルはツールを呼び出せません。クイックリクエストとチャットにはツール呼び出しが必要です。モデル設定で有効にするか、別のモデルを選んでください。",
     "toolsUnsupported": "モデルがツールを使用できません。モデル設定で「ツール呼び出し」を無効にするか、別のモデルを選択してください。",
     "unavailable": "プロバイダーに接続できません",
     "unknown": "AIリクエストに失敗しました"
@@ -1449,7 +1452,8 @@
   "quickAiRequest": {
     "selectProfile": "プロファイルを選択",
     "profileLocked": "セッション中はプロファイルがロックされます",
-    "defaultProfile": "AIへの質問"
+    "defaultProfile": "AIへの質問",
+    "noModel": "クイックリクエスト用のモデルを選んでください。"
   },
   "screenshot": {
     "retake": "スクリーンショットを撮り直す",

@@ -6,6 +6,8 @@ import type { AppRoutePath } from '../navigation/routes'
 interface ChatRequestModel {
   id: string
   canUseImages?: boolean
+  /** False for a model without tool calling, which chats do not support */
+  canUseTools?: boolean
   /** How many characters the request may carry */
   budgetCharacters: number
   /**
@@ -56,6 +58,8 @@ export interface ChatModelDependencies {
   chatLoadError?: () => string
   messageTooLongError: () => string
   noModelError: () => string
+  /** Told when the picked model cannot call tools */
+  toolsRequiredError?: () => string
   imageModelError?: () => string
   imageTitle?: () => string
   branchTitle?: (title: string) => string

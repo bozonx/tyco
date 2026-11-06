@@ -1,10 +1,8 @@
-import { dynamicTool, jsonSchema, type ToolSet } from '@bozonx/ai-kit'
 import type { ProfileToolSettings } from '@tyco/shared'
 
 import type {
   ChatToolDefinition,
   ChatToolProvider,
-  ChatToolSet,
 } from '../chat-tools/chat-tool-registry'
 
 export const REPLY_BLOCKS_TOOL_NAME = 'propose_replies'
@@ -105,10 +103,18 @@ export function createReplyBlocksTool(): ChatToolDefinition {
   }
 }
 
-/** Creates a tool provider offering propose_replies to chat sessions. */
+const REPLY_BLOCKS_INSTRUCTIONS =
+  `When the user asks for text to send or paste — a reply to a message, a rewrite, a translation — call ${REPLY_BLOCKS_TOOL_NAME} with that text instead of writing it in the answer. ` +
+  'Give one block per variant the user asked for; keep explanations, if any, in the answer itself.'
+
+/** Offers propose_replies to every turn that can call tools */
 export function createReplyBlocksToolProvider(): ChatToolProvider {
   const tool = createReplyBlocksTool()
-  return { id: 'reply-blocks', tools: () => [tool] }
+  return {
+    id: 'reply-blocks',
+    tools: () => [tool],
+    instructions: () => REPLY_BLOCKS_INSTRUCTIONS,
+  }
 }
 
 /**
@@ -124,50 +130,5 @@ export function withReplyBlocksToolGroup(
       ...settings?.groups,
       [REPLY_BLOCKS_TOOL_GROUP_ID]: { isEnabled: true, access: 'allow' },
     },
-  }
-}
-
-/**
- * Ensures propose_replies is present in a ChatToolSet with approved execution
- * access.
- */
-export function withReplyBlocksTool(set: ChatToolSet | null): ChatToolSet {
-  const replyTool = createReplyBlocksTool()
-  const definitions = new Map(set?.definitions)
-  definitions.set(replyTool.name, replyTool)
-
-  const tools: ToolSet = { ...set?.tools }
-  tools[replyTool.name] = dynamicTool({
-    description: replyTool.description,
-    inputSchema: jsonSchema(
-      replyTool.inputSchema as Parameters<typeof jsonSchema>[0]
-    ),
-    execute: async (input) => {
-      const res = await replyTool.execute(input, {
-        signal: new AbortController().signal,
-        toolCallId: 'propose_replies',
-        outputLimitCharacters: 100_000,
-      })
-      return JSON.stringify(res)
-    },
-  })
-
-  return {
-    tools,
-    definitions,
-    truncatedCallIds: set?.truncatedCallIds ?? new Set(),
-    approvalKey: (toolName, input) =>
-      toolName === replyTool.name
-        ? toolName
-        : set?.approvalKey
-          ? set.approvalKey(toolName, input)
-          : toolName,
-    toolApproval: (context) =>
-      context.toolCall.toolName === replyTool.name
-        ? 'approved'
-        : typeof set?.toolApproval === 'function'
-          ? set.toolApproval(context)
-          : 'denied',
-    instructions: set?.instructions,
   }
 }

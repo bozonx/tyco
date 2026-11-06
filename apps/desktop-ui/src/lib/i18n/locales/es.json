@@ -137,7 +137,8 @@
     "voiceInput": "Entrada de voz",
     "voiceSendHint": "Enviar de inmediato (Ctrl+Enter)",
     "promptPresets": "Prompts predefinidos",
-    "noPromptsConfigured": "No hay prompts predefinidos configurados"
+    "noPromptsConfigured": "No hay prompts predefinidos configurados",
+    "noToolCalling": "sin herramientas"
   },
   "chatTools": {
     "files": {
@@ -472,7 +473,8 @@
     "filterQuickInput": "Entrada rápida",
     "filterVoice": "Voz",
     "filterUnsent": "No enviados",
-    "filterUnsentHint": "Solo los textos que nunca se insertaron ni copiaron"
+    "filterUnsentHint": "Solo los textos que nunca se insertaron ni copiaron",
+    "requestTurns": "Preguntas y respuestas: {count}"
   },
   "input": {
     "historySearchPlaceholder": "Buscar en el historial...",
@@ -528,6 +530,7 @@
     "rateLimit": "Demasiadas solicitudes al proveedor; inténtalo más tarde",
     "stepLimit": "El modelo agotó sus pasos de herramientas sin terminar la respuesta. Pídele que continúe o aumenta el límite de pasos del perfil.",
     "timeout": "El modelo tardó demasiado en responder",
+    "toolsRequired": "Este modelo no puede llamar a herramientas. Las solicitudes rápidas y los chats las necesitan: actívalas en los ajustes del modelo o elige otro modelo.",
     "toolsUnsupported": "El modelo no puede usar herramientas. Desactiva «Llamada a herramientas» en su configuración o elige otro modelo.",
     "unavailable": "No se puede contactar con el proveedor",
     "unknown": "La solicitud a la IA falló"
@@ -1452,7 +1455,8 @@
   "quickAiRequest": {
     "selectProfile": "Seleccionar perfil",
     "profileLocked": "Perfil bloqueado durante la sesión",
-    "defaultProfile": "Pregunta a la IA"
+    "defaultProfile": "Pregunta a la IA",
+    "noModel": "Elige un modelo para las solicitudes rápidas."
   },
   "screenshot": {
     "retake": "Volver a capturar la pantalla",

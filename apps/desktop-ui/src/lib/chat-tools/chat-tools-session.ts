@@ -11,6 +11,7 @@ import {
   createChatToolRegistry,
   type ChatToolProvider,
 } from './chat-tool-registry'
+import { withReplyBlocksToolGroup } from '../reply-blocks/reply-blocks-tool'
 import { withDebugToolGroup } from './debug-chat-tools'
 import { withMemoryToolGroup } from './memory-tools'
 
@@ -57,7 +58,10 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
     const baseSettings = deps.isDebugEnabled?.()
       ? withDebugToolGroup(request.settings)
       : request.settings
-    const settings = withMemoryToolGroup(baseSettings, request.memoryMode)
+    // reply blocks are part of every chat that can call tools
+    const settings = withReplyBlocksToolGroup(
+      withMemoryToolGroup(baseSettings, request.memoryMode)
+    )
     const tools = await registry.resolve({
       profileId: request.profileId,
       modelId: request.modelId,
@@ -86,17 +90,12 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
 
   /**
    * Whether a turn may get any tools, decided without asking the providers:
-   * enough to keep part of the context for the steps
+   * enough to keep part of the context for the steps. Reply blocks are always
+   * offered, so any model that calls tools gets some
    */
   const mayOfferTools = (
     request: Pick<ChatToolsRequest, 'canUseTools' | 'settings' | 'memoryMode'>
-  ) =>
-    request.canUseTools &&
-    (deps.isDebugEnabled?.() === true ||
-      (request.memoryMode !== undefined && request.memoryMode !== 'off') ||
-      Object.values(request.settings?.groups ?? {}).some(
-        (group) => group.isEnabled && group.access !== 'deny'
-      ))
+  ) => request.canUseTools
 
   return {
     toolsFor,

@@ -183,6 +183,10 @@ export class FakeDesktopBackend {
           ...this.sessionState.lastProfileChatIds,
           ...patch.lastProfileChatIds,
         },
+        quickRequestModelIds: {
+          ...this.sessionState.quickRequestModelIds,
+          ...patch.quickRequestModelIds,
+        },
       }
       this.revision++
       return this.snapshot()

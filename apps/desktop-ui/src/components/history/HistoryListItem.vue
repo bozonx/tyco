@@ -65,34 +65,54 @@
         @toggle="emit('toggleExpanded')"
       />
 
-      <div v-if="item.original" class="history-original">
+      <div v-if="hasDetails" class="history-original">
         <DisclosureHeader
           class="history-original-toggle"
           density="compact"
           :expanded="originalShown"
           :controls="originalId"
-          :title="item.original.label"
+          :title="detailsTitle"
           @toggle="emit('toggleOriginal')"
         />
-        <div
-          v-if="originalShown"
-          :id="originalId"
-          class="history-original-body"
-        >
-          <div class="history-original-text">
-            {{ item.original.text }}
+        <div v-if="originalShown" :id="originalId" class="history-details">
+          <div v-if="item.original" class="history-original-body">
+            <div class="history-original-text">
+              {{ item.original.text }}
+            </div>
+            <div class="history-original-actions">
+              <IconButton
+                v-for="action in originalActions"
+                :key="action.id"
+                size="xs"
+                variant="ghost"
+                @click="emit('action', action.id, item)"
+                :label="action.title"
+                :icon="action.icon"
+              />
+            </div>
           </div>
-          <div class="history-original-actions">
-            <IconButton
-              v-for="action in originalActions"
-              :key="action.id"
-              size="xs"
-              variant="ghost"
-              @click="emit('action', action.id, item)"
-              :label="action.title"
-              :icon="action.icon"
-            />
-          </div>
+          <ol v-if="item.turns?.length" class="history-turns">
+            <li
+              v-for="(turn, index) in item.turns"
+              :key="index"
+              class="history-turn"
+            >
+              <div class="history-turn-prompt">
+                <AppIcon
+                  :icon="
+                    turn.isVoice
+                      ? 'mdi:microphone-outline'
+                      : 'mdi:message-outline'
+                  "
+                  size="xs"
+                />
+                <span>{{ turn.prompt }}</span>
+              </div>
+              <div v-if="turn.result" class="history-turn-result">
+                {{ turn.result }}
+              </div>
+            </li>
+          </ol>
         </div>
       </div>
     </div>
@@ -134,6 +154,14 @@ const LONG_ENTRY_LINE_LIMIT = 3
 
 const visibleActions = computed(() =>
   props.actions.filter((action) => action.isVisible?.(props.item) ?? true)
+)
+const hasDetails = computed(() =>
+  Boolean(props.item.original || props.item.turns?.length)
+)
+const detailsTitle = computed(() =>
+  props.item.turns?.length
+    ? t('history.requestTurns', { count: props.item.turns.length })
+    : (props.item.original?.label ?? '')
 )
 const isLong = computed(
   () =>
@@ -246,6 +274,49 @@ const isLong = computed(
   border-left: 2px solid var(--app-border);
   background-color: var(--app-surface-sunken);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.history-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.history-turns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: var(--space-2xs) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-turn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-left: 2px solid var(--app-border);
+  background-color: var(--app-surface-sunken);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: var(--text-control);
+  line-height: 1.5;
+  word-break: break-word;
+  user-select: text;
+  cursor: text;
+}
+
+.history-turn-prompt {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  font-weight: 500;
+  color: var(--color-base-content);
+}
+
+.history-turn-result {
+  color: var(--app-text-muted);
+  white-space: pre-wrap;
 }
 
 .history-original-text {

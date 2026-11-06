@@ -5,6 +5,10 @@ import { describe, expect, it, vi } from 'vitest'
 import type { ChatToolDefinition, ChatToolProvider } from './chat-tool-registry'
 import { createChatToolsSession } from './chat-tools-session'
 import { createDebugChatToolProvider } from './debug-chat-tools'
+import {
+  createReplyBlocksToolProvider,
+  REPLY_BLOCKS_TOOL_NAME,
+} from '../reply-blocks/reply-blocks-tool'
 
 const readNote: ChatToolDefinition = {
   name: 'read_note',
@@ -27,6 +31,28 @@ const request = {
 }
 
 describe('chat-tools-session', () => {
+  it('offers reply blocks to every chat, without asking, even "Ask AI"', async () => {
+    const session = createChatToolsSession({
+      providers: () => [createReplyBlocksToolProvider()],
+    })
+
+    const tools = await session.toolsFor({
+      profileId: null,
+      modelId: 'model',
+      canUseTools: true,
+      settings: undefined,
+    })
+
+    expect(Object.keys(tools!.tools!.tools)).toEqual([REPLY_BLOCKS_TOOL_NAME])
+    expect(tools!.tools!.instructions).toContain(REPLY_BLOCKS_TOOL_NAME)
+    const decide = tools!.tools!.toolApproval as (options: unknown) => unknown
+    expect(
+      decide({
+        toolCall: { toolName: REPLY_BLOCKS_TOOL_NAME, input: { blocks: [] } },
+      })
+    ).toBe('approved')
+  })
+
   it('gives a turn the tools of its profile and its step limit', async () => {
     const session = createChatToolsSession({ providers: () => [notes] })
 
@@ -136,12 +162,13 @@ describe('chat-tools-session reserve', () => {
     expect(session.mayOfferTools({ ...request, canUseTools: false })).toBe(
       false
     )
+    // reply blocks are offered even when every group is denied
     expect(
       session.mayOfferTools({
         canUseTools: true,
         settings: { groups: { notes: { isEnabled: true, access: 'deny' } } },
       })
-    ).toBe(false)
+    ).toBe(true)
     expect(
       createChatToolsSession({
         providers: () => [],

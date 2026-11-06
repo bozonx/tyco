@@ -137,7 +137,8 @@
     "voiceInput": "Saisie vocale",
     "voiceSendHint": "Envoyer tout de suite (Ctrl+Entrée)",
     "promptPresets": "Préréglages de prompts",
-    "noPromptsConfigured": "Aucun préréglage de prompt configuré"
+    "noPromptsConfigured": "Aucun préréglage de prompt configuré",
+    "noToolCalling": "sans outils"
   },
   "chatTools": {
     "files": {
@@ -472,7 +473,8 @@
     "filterQuickInput": "Saisie rapide",
     "filterVoice": "Voix",
     "filterUnsent": "Non envoyés",
-    "filterUnsentHint": "Uniquement les textes jamais insérés ni copiés"
+    "filterUnsentHint": "Uniquement les textes jamais insérés ni copiés",
+    "requestTurns": "Questions et réponses : {count}"
   },
   "input": {
     "historySearchPlaceholder": "Rechercher dans l’historique...",
@@ -528,6 +530,7 @@
     "rateLimit": "Trop de requêtes envoyées au fournisseur ; réessayez plus tard",
     "stepLimit": "Le modèle a épuisé ses étapes d’outils sans terminer la réponse. Demandez-lui de continuer ou augmentez la limite d’étapes du profil.",
     "timeout": "Le modèle a mis trop de temps à répondre",
+    "toolsRequired": "Ce modèle ne peut pas appeler d’outils. Les requêtes rapides et les chats en ont besoin : activez l’appel d’outils dans les réglages du modèle ou choisissez-en un autre.",
     "toolsUnsupported": "Le modèle ne peut pas utiliser d’outils. Désactivez « Appel d’outils » dans ses paramètres ou choisissez un autre modèle.",
     "unavailable": "Le fournisseur est injoignable",
     "unknown": "La requête à l’IA a échoué"
@@ -1452,7 +1455,8 @@
   "quickAiRequest": {
     "selectProfile": "Sélectionner un profil",
     "profileLocked": "Profil verrouillé pendant la session",
-    "defaultProfile": "Question à l'IA"
+    "defaultProfile": "Question à l'IA",
+    "noModel": "Choisissez un modèle pour les requêtes rapides."
   },
   "screenshot": {
     "retake": "Reprendre la capture",

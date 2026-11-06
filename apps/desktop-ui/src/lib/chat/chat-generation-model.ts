@@ -41,6 +41,7 @@ export function createChatGenerationModel(
     | 'formatError'
     | 'getChatModel'
     | 'noModelError'
+    | 'toolsRequiredError'
     | 'imageModelError'
     | 'messageTooLongError'
     | 'imageOmittedText'
