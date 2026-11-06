@@ -113,8 +113,7 @@ export const useCorrectionWorkflowStore = defineStore(
       isPending: (owner) =>
         owner !== undefined && menuModalsStore.isPendingModal(owner),
       consumeBufferedIntent: menuModalsStore.consumeBufferedIntent,
-      executeBufferedIntent: (intent, text, sourceText) =>
-        runBufferedIntent(intent, text, sourceText, {}),
+      executeBufferedIntent: runBufferedIntent,
       reportError: (error: unknown) =>
         toastText(describeError(error, translate), 'error'),
       isAborted: isCorrectionAborted,

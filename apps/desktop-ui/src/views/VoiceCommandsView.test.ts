@@ -377,7 +377,7 @@ describe('separate voice command overlay', () => {
   it('opens and clears the shared pending modal while a command is running', async () => {
     const menuModalsStore = useMenuModalsStore()
     const wrapper = mountView()
-    expect(menuModalsStore.pendingModal).toBeUndefined()
+    expect(menuModalsStore.pendingModal).toBeNull()
 
     voice.command = commands[0]
     voice.stage = 'running'
@@ -391,7 +391,7 @@ describe('separate voice command overlay', () => {
 
     voice.stage = 'review'
     await flushPromises()
-    expect(menuModalsStore.pendingModal).toBeUndefined()
+    expect(menuModalsStore.pendingModal).toBeNull()
     wrapper.unmount()
   })
 })

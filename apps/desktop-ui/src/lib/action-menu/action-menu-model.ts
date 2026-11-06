@@ -409,6 +409,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
   const getRegisteredActions = registry.list
 
   const pageIndex = ref(0)
+  const lastRequestedPageIndex = ref(0)
   const pageCount = computed(() =>
     Math.max(1, deps.actionPages?.()?.length ?? 1)
   )
@@ -420,15 +421,37 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     return currentPage.value?.inputMode !== 'none'
   })
 
-  const setPage = (index: number) => {
+  const clampPage = (index: number) => {
     const max = pageCount.value - 1
-    pageIndex.value = Math.max(0, Math.min(index, max))
+    return Math.max(0, Math.min(index, max))
+  }
+  const setPage = (index: number) => {
+    pageIndex.value = clampPage(index)
+  }
+  const openPage = (index: number) => {
+    lastRequestedPageIndex.value = index
+    setPage(index)
   }
   const nextPage = () => {
     pageIndex.value = (pageIndex.value + 1) % pageCount.value
   }
   const prevPage = () => {
     pageIndex.value = (pageIndex.value - 1 + pageCount.value) % pageCount.value
+  }
+  /**
+   * Handles an action-page hotkey or command while the action menu is already
+   * open: repeating the last requested page or asking for the page already
+   * shown steps to the next page; asking for another page opens it directly.
+   */
+  const repeatOpenPage = (index: number) => {
+    const previous = lastRequestedPageIndex.value
+    lastRequestedPageIndex.value = index
+    const target = clampPage(index)
+    if (index !== previous && target !== pageIndex.value) {
+      pageIndex.value = target
+    } else {
+      nextPage()
+    }
   }
 
   const resolveMainActions = (
@@ -527,6 +550,8 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     currentPage,
     takesText,
     setPage,
+    openPage,
+    repeatOpenPage,
     nextPage,
     prevPage,
   }

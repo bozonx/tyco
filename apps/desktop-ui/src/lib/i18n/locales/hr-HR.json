@@ -21,9 +21,7 @@
     "screenshotQuickAiRequest": "Snimka zaslona i pitanje za AI",
     "voiceScreenshotQuickAiRequest": "Snimka zaslona i glasovno pitanje za AI"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Priloži datoteku",
     "alertCaution": "Oprez",
@@ -189,9 +187,7 @@
       "noCommands": "Još nema konfiguriranih prilagođenih naredbi.",
       "noCommandsHint": "Prvo stvorite naredbe u Postavke → Naredbe."
     },
-    "replyBlocks": {
-      "toolLabel": "Blokovi odgovora"
-    }
+    "replyBlocks": { "toolLabel": "Blokovi odgovora" }
   },
   "commands": {
     "advanced": "Napredno",
@@ -1234,9 +1230,7 @@
     "searchFavoritesPlaceholder": "Pretraži favorite…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": {
-    "insertIntoEditor": "Umetni u uređivač"
-  },
+  "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
     "auto": "Kao u sustavu",
     "dark": "Tamna",
@@ -1375,9 +1369,7 @@
     "missingSelection": "Potreban je odabrani tekst."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "pitaj u chatu"
-    },
+    "actions": { "askInChat": "pitaj u chatu" },
     "languages": {
       "cs-CZ": "Češki",
       "de-DE": "njemački",
@@ -1407,9 +1399,7 @@
     },
     "translate": "prevedi na"
   },
-  "window": {
-    "clickToFocus": "Kliknite za nastavak"
-  },
+  "window": { "clickToFocus": "Kliknite za nastavak" },
   "write": {
     "alreadyCorrected": "Tekst je već ispravljen",
     "cancel": "Odustani",
@@ -1459,9 +1449,7 @@
     "valueNotSet": "Nije postavljena na ovom uređaju: naredbe koje je koriste ne pokreću se",
     "valuePlaceholder": "Putanja, adresa ili drugi tekst"
   },
-  "favorites": {
-    "noMatches": "Nema podudarnih favorita"
-  },
+  "favorites": { "noMatches": "Nema podudarnih favorita" },
   "replyBlocks": {
     "insertIntoWindow": "Umetni u prozor",
     "insertIntoEditor": "U uređivač",

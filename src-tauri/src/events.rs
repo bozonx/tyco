@@ -87,6 +87,9 @@ desktop_events! {
     /// A repeated activation confirms the open voice input; carries its
     /// activation id.
     VoiceFinish = "app://voice-finish" => u64;
+    /// A repeated action-menu activation turns its page; carries the
+    /// activation id and the requested 0-based page index.
+    ActionPageTurn = "app://action-page-turn" => ActionPageTurnEvent;
     /// The held voice hotkey was released (Push-to-Talk); carries the
     /// activation id. It ends a recording, never starts one.
     VoiceRelease = "app://voice-release" => u64;
@@ -114,6 +117,15 @@ pub struct EditorTransfer {
 #[cfg_attr(not(feature = "activation-bench"), allow(dead_code))]
 pub struct ActivationMetricsRequest {
     pub id: u64,
+}
+
+/// Asks the open action menu of `activation_id` to turn to `page_index`, or to
+/// advance to the next page when `page_index` repeats the last requested page.
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct ActionPageTurnEvent {
+    pub activation_id: u64,
+    pub page_index: usize,
 }
 
 #[derive(Debug, Clone, Serialize, TS)]

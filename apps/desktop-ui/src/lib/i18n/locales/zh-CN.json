@@ -21,9 +21,7 @@
     "screenshotQuickAiRequest": "截图并向 AI 提问",
     "voiceScreenshotQuickAiRequest": "截图并向 AI 语音提问"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "添加附件",
     "alertCaution": "小心",
@@ -189,9 +187,7 @@
       "noCommands": "尚未配置自定义命令。",
       "noCommandsHint": "请先在设置 → 命令中创建命令。"
     },
-    "replyBlocks": {
-      "toolLabel": "回复块"
-    }
+    "replyBlocks": { "toolLabel": "回复块" }
   },
   "commands": {
     "advanced": "高级",
@@ -604,10 +600,7 @@
     "cancelled": "已取消",
     "done": "已完成",
     "emptyResult": "模型返回了空结果",
-    "failed": {
-      "command": "命令执行失败",
-      "correction": "纠错失败"
-    },
+    "failed": { "command": "命令执行失败", "correction": "纠错失败" },
     "focusChanged": "在此期间活动窗口已更改，结果已复制到剪贴板",
     "noSelection": "未选中任何内容",
     "noTarget": "没有具有焦点的应用程序窗口",
@@ -618,10 +611,7 @@
       "command": "命令未对文本做任何更改",
       "correction": "未发现错误"
     },
-    "working": {
-      "command": "正在运行命令…",
-      "correction": "正在纠错…"
-    }
+    "working": { "command": "正在运行命令…", "correction": "正在纠错…" }
   },
   "settings": {
     "accessAllow": "允许",
@@ -1234,9 +1224,7 @@
     "searchFavoritesPlaceholder": "搜索收藏夹…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": {
-    "insertIntoEditor": "插入到编辑器"
-  },
+  "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
     "auto": "跟随系统",
     "dark": "深色",
@@ -1375,9 +1363,7 @@
     "missingSelection": "需要提供选中的文本。"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "在聊天中询问;在对话中提问"
-    },
+    "actions": { "askInChat": "在聊天中询问;在对话中提问" },
     "languages": {
       "cs-CZ": "捷克语",
       "de-DE": "德语",
@@ -1407,9 +1393,7 @@
     },
     "translate": "翻译成;翻译为"
   },
-  "window": {
-    "clickToFocus": "点击以继续"
-  },
+  "window": { "clickToFocus": "点击以继续" },
   "write": {
     "alreadyCorrected": "文本已完成纠错",
     "cancel": "取消",
@@ -1459,9 +1443,7 @@
     "valueNotSet": "此设备上未设置：使用它的命令不会运行",
     "valuePlaceholder": "路径、地址或其他文本"
   },
-  "favorites": {
-    "noMatches": "没有匹配的收藏夹"
-  },
+  "favorites": { "noMatches": "没有匹配的收藏夹" },
   "replyBlocks": {
     "insertIntoWindow": "插入到窗口",
     "insertIntoEditor": "到编辑器",

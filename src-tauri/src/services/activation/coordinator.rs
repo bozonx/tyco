@@ -24,6 +24,7 @@ pub(crate) struct CaptureRequest {
 pub(crate) struct ActivationCoordinator {
     generation: Mutex<u64>,
     screenshot_generation: std::sync::atomic::AtomicU64,
+    selection_captured_generation: std::sync::atomic::AtomicU64,
 }
 
 impl ActivationCoordinator {
@@ -50,11 +51,41 @@ impl ActivationCoordinator {
             .store(0, std::sync::atomic::Ordering::SeqCst);
         *generation += 1;
         let request_generation = *generation;
+        self.selection_captured_generation.store(
+            if capture || activation.selected_text.is_some() {
+                request_generation
+            } else {
+                0
+            },
+            std::sync::atomic::Ordering::SeqCst,
+        );
         host.activate(activation)?;
         Ok(capture.then_some(CaptureRequest {
             generation: request_generation,
             foreground_target,
         }))
+    }
+
+    /// Schedules selection capture for the current activation if it opened on a
+    /// page that took no text and has now turned to another page.
+    pub fn capture_for_current(&self, target_window_id: Option<&str>) -> Option<CaptureRequest> {
+        let generation = *self.generation.locked();
+        if generation == 0
+            || self
+                .selection_captured_generation
+                .load(std::sync::atomic::Ordering::SeqCst)
+                == generation
+        {
+            return None;
+        }
+        self.selection_captured_generation
+            .store(generation, std::sync::atomic::Ordering::SeqCst);
+        Some(CaptureRequest {
+            generation,
+            foreground_target: target_window_id
+                .map(str::to_owned)
+                .map(ForegroundTarget::from_platform_id),
+        })
     }
 
     /// Reserve a generation before asynchronous screenshot capture. Windows are
@@ -279,6 +310,32 @@ mod tests {
                 panic!("failed activation left an old capture valid")
             })
             .unwrap();
+    }
+
+    #[test]
+    fn turning_from_a_no_text_page_schedules_selection_capture_once() {
+        let coordinator = ActivationCoordinator::default();
+        let host = Host {
+            config: serde_json::json!({"actionPages": [{"inputMode":"selection"}, {"inputMode":"none"}]}),
+            ..Host::default()
+        };
+        let mut act = activation(ActivationMode::SelectionActions);
+        act.action_page_index = Some(1);
+        assert!(coordinator.begin(&host, act).unwrap().is_none());
+
+        let deferred = coordinator
+            .capture_for_current(Some("foreground"))
+            .expect("turning to another page schedules the skipped capture");
+        assert_eq!(
+            deferred
+                .foreground_target
+                .as_ref()
+                .map(ForegroundTarget::as_platform_id),
+            Some("foreground")
+        );
+        assert!(coordinator
+            .capture_for_current(Some("foreground"))
+            .is_none());
     }
 
     #[test]

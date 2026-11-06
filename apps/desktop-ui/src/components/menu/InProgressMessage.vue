@@ -28,10 +28,7 @@
     </Button>
 
     <div v-if="props.allowBufferedIntent" class="buffered-intent-slot">
-      <div
-        v-if="menuModalsStore.bufferedIntent"
-        class="buffered-intent-badge"
-      >
+      <div v-if="menuModalsStore.bufferedIntent" class="buffered-intent-badge">
         <AppIcon
           :icon="
             menuModalsStore.bufferedIntent === 'insert'

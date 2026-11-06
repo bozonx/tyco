@@ -106,6 +106,51 @@ describe('createActionMenuModel', () => {
     expect(store.takesText.value).toBe(true)
   })
 
+  it('cycles all pages on repeated hotkey presses and jumps to a different page first', () => {
+    const { deps } = setup()
+    const store = createActionMenuModel({
+      ...deps,
+      actionPages: () => [
+        { inputMode: 'selection', slots: {} },
+        { inputMode: 'selection', slots: {} },
+        { inputMode: 'selection', slots: {} },
+      ],
+    })
+
+    // Opened on page 1 (index 0); repeating the page 1 hotkey cycles 1 -> 2 -> 0 -> 1
+    store.openPage(0)
+    expect(store.pageIndex.value).toBe(0)
+    const seenFromFirst: number[] = []
+    for (let i = 0; i < 4; i++) {
+      store.repeatOpenPage(0)
+      seenFromFirst.push(store.pageIndex.value)
+    }
+    expect(seenFromFirst).toEqual([1, 2, 0, 1])
+
+    // Opened on page 2 (index 1); repeating the page 2 hotkey also cycles all pages
+    store.openPage(1)
+    expect(store.pageIndex.value).toBe(1)
+    const seenFromSecond: number[] = []
+    for (let i = 0; i < 4; i++) {
+      store.repeatOpenPage(1)
+      seenFromSecond.push(store.pageIndex.value)
+    }
+    expect(seenFromSecond).toEqual([2, 0, 1, 2])
+
+    // Pressing a different page hotkey jumps to that page first, then cycles on repeat
+    store.openPage(0)
+    store.repeatOpenPage(2)
+    expect(store.pageIndex.value).toBe(2)
+    store.repeatOpenPage(2)
+    expect(store.pageIndex.value).toBe(0)
+
+    // Pressing a different page hotkey whose page is already shown steps forward instead of staying put
+    store.openPage(0)
+    store.setPage(1)
+    store.repeatOpenPage(1)
+    expect(store.pageIndex.value).toBe(2)
+  })
+
   it('corrects and inserts directly only for sufficiently long text', async () => {
     const { store, deps } = setup()
     await store.runDefaultAction('directCorrection', '')
@@ -468,9 +513,8 @@ describe('createActionMenuModel', () => {
     }
     const setPendingModal = vi.fn().mockReturnValue(7)
     const clearPendingModal = vi.fn()
-    let capturedSignal: AbortSignal | undefined
-    const executeScriptAction = vi.fn().mockImplementation(async (params) => {
-      capturedSignal = params.signal
+    const cancelScriptAction = vi.fn().mockResolvedValue(undefined)
+    const executeScriptAction = vi.fn().mockImplementation(async () => {
       const pending = setPendingModal.mock.calls[0]?.[0]
       pending?.onCancel?.()
       return {
@@ -485,7 +529,7 @@ describe('createActionMenuModel', () => {
       ...deps,
       setPendingModal,
       clearPendingModal,
-      tools: testTools({ executeScriptAction }),
+      tools: testTools({ executeScriptAction, cancelScriptAction }),
       mainActions: () => ({ q: { type: 'command', commandId: 'sc1' } }),
       commands: () => [script],
     })
@@ -499,7 +543,7 @@ describe('createActionMenuModel', () => {
         onCancel: expect.any(Function),
       })
     )
-    expect(capturedSignal?.aborted).toBe(true)
+    expect(cancelScriptAction).toHaveBeenCalledOnce()
     expect(clearPendingModal).toHaveBeenCalledWith(7)
   })
 

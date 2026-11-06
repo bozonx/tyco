@@ -21,9 +21,7 @@
     "screenshotQuickAiRequest": "Bildschirmfoto und KI-Frage",
     "voiceScreenshotQuickAiRequest": "Bildschirmfoto und KI-Sprachfrage"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Datei anhängen",
     "alertCaution": "Vorsicht",
@@ -189,9 +187,7 @@
       "noCommands": "Noch keine benutzerdefinierten Befehle konfiguriert.",
       "noCommandsHint": "Erstellen Sie zuerst Befehle unter Einstellungen → Befehle."
     },
-    "replyBlocks": {
-      "toolLabel": "Antwortblöcke"
-    }
+    "replyBlocks": { "toolLabel": "Antwortblöcke" }
   },
   "commands": {
     "advanced": "Erweitert",
@@ -1234,9 +1230,7 @@
     "searchFavoritesPlaceholder": "Favoriten suchen…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": {
-    "insertIntoEditor": "In den Editor einfügen"
-  },
+  "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {
     "auto": "Wie im System",
     "dark": "Dunkel",
@@ -1375,9 +1369,7 @@
     "missingSelection": "Ausgewählter Text erforderlich."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "frage im chat"
-    },
+    "actions": { "askInChat": "frage im chat" },
     "languages": {
       "cs-CZ": "Tschechisch",
       "de-DE": "Deutsch",
@@ -1407,9 +1399,7 @@
     },
     "translate": "übersetze auf"
   },
-  "window": {
-    "clickToFocus": "Zum Fortfahren klicken"
-  },
+  "window": { "clickToFocus": "Zum Fortfahren klicken" },
   "write": {
     "alreadyCorrected": "Der Text ist bereits korrigiert",
     "cancel": "Abbrechen",
@@ -1459,9 +1449,7 @@
     "valueNotSet": "Auf diesem Gerät nicht festgelegt: Befehle damit werden nicht ausgeführt",
     "valuePlaceholder": "Ein Pfad, eine Adresse oder anderer Text"
   },
-  "favorites": {
-    "noMatches": "Keine passenden Favoriten"
-  },
+  "favorites": { "noMatches": "Keine passenden Favoriten" },
   "replyBlocks": {
     "insertIntoWindow": "In Fenster einfügen",
     "insertIntoEditor": "In Editor",

@@ -21,9 +21,7 @@
     "screenshotQuickAiRequest": "Скриншот и вопрос ИИ",
     "voiceScreenshotQuickAiRequest": "Скриншот и голосовой вопрос ИИ"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Прикрепить файл",
     "alertCaution": "Осторожно",
@@ -189,9 +187,7 @@
       "noCommands": "Пользовательские команды пока не настроены.",
       "noCommandsHint": "Сначала создайте команды в Настройки → Команды."
     },
-    "replyBlocks": {
-      "toolLabel": "Варианты ответа"
-    }
+    "replyBlocks": { "toolLabel": "Варианты ответа" }
   },
   "commands": {
     "advanced": "Дополнительно",
@@ -618,10 +614,7 @@
       "command": "Команда оставила текст без изменений",
       "correction": "Ошибок не найдено"
     },
-    "working": {
-      "command": "Выполняю команду…",
-      "correction": "Исправляю…"
-    }
+    "working": { "command": "Выполняю команду…", "correction": "Исправляю…" }
   },
   "settings": {
     "accessAllow": "Разрешено",
@@ -1234,9 +1227,7 @@
     "searchFavoritesPlaceholder": "Поиск в избранном…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": {
-    "insertIntoEditor": "Вставить в редактор"
-  },
+  "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {
     "auto": "Как в системе",
     "dark": "Темная",
@@ -1375,9 +1366,7 @@
     "missingSelection": "Нужен выделенный текст."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "спроси в чате"
-    },
+    "actions": { "askInChat": "спроси в чате" },
     "languages": {
       "cs-CZ": "Чешский",
       "de-DE": "немецкий",
@@ -1407,9 +1396,7 @@
     },
     "translate": "переведи на"
   },
-  "window": {
-    "clickToFocus": "Нажмите, чтобы продолжить"
-  },
+  "window": { "clickToFocus": "Нажмите, чтобы продолжить" },
   "write": {
     "alreadyCorrected": "Текст уже корректирован",
     "cancel": "Отмена",
@@ -1459,9 +1446,7 @@
     "valueNotSet": "Не задано на этом устройстве: команды с этой переменной не выполняются",
     "valuePlaceholder": "Путь, адрес или другой текст"
   },
-  "favorites": {
-    "noMatches": "Ничего не найдено"
-  },
+  "favorites": { "noMatches": "Ничего не найдено" },
   "replyBlocks": {
     "insertIntoWindow": "Вставить в окно",
     "insertIntoEditor": "В редактор",

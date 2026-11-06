@@ -165,6 +165,26 @@ pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError>
             let _ = sender.send(result);
             return;
         }
+        if activation
+            .turns_open_action_page(snapshot.activation.mode, snapshot.window.is_window_shown)
+        {
+            let page_index = activation.action_page_index.unwrap_or(0);
+            let capture = handle
+                .state::<ActivationCoordinator>()
+                .capture_for_current(snapshot.activation.target_window_id.as_deref());
+            let result = crate::events::emit_to::<crate::events::ActionPageTurn, _>(
+                &handle,
+                QUICK_WINDOW_LABEL,
+                crate::events::ActionPageTurnEvent {
+                    activation_id: snapshot.activation.activation_id,
+                    page_index,
+                },
+            )
+            .map(|()| capture)
+            .map_err(AppError::from);
+            let _ = sender.send(result);
+            return;
+        }
         let result = handle.state::<ActivationCoordinator>().begin(
             &RuntimeActivationHost {
                 app: &handle,

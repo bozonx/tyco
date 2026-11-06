@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: c5557b6479ba298cfe900daabe8b915c4bc9d0dacd9660aa927b165dc3028149
+// Source hash: 2129d9c142ac0896a2c93d0ae0e55ddf35e33f32bdc0efec2fc8ace7bf0348bb
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -14,6 +14,12 @@ export type AccessRequest = {
   /** The output is to replace the selection, not only to be returned. */
   replace: boolean
 }
+
+/**
+ * Asks the open action menu of `activation_id` to turn to `page_index`, or to
+ * advance to the next page when `page_index` repeats the last requested page.
+ */
+export type ActionPageTurnEvent = { activationId: number; pageIndex: number }
 
 /** A moment of an activation the webview reports. */
 export type ActivationMetricMark = 'frame' | 'dom-focus' | 'first-char'
@@ -958,6 +964,7 @@ export interface DesktopEventPayloads {
   'app://activation-metrics-start': ActivationMetricsRequest
   'app://activation-metrics-collect': ActivationMetricsRequest
   'app://voice-finish': number
+  'app://action-page-turn': ActionPageTurnEvent
   'app://voice-release': number
   'app://voice-audio-level': VoiceAudioLevelPayload
   'app://selection-run': SelectionRunEvent

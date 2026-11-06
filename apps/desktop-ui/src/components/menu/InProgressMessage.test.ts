@@ -129,7 +129,7 @@ describe('InProgressMessage', () => {
     expect(
       Boolean(
         cancelBtn.element.compareDocumentPosition(badge.element) &
-          Node.DOCUMENT_POSITION_FOLLOWING
+        Node.DOCUMENT_POSITION_FOLLOWING
       )
     ).toBe(true)
 
@@ -173,9 +173,7 @@ describe('InProgressMessage', () => {
   it('warns and does not register insert intent when target window is unavailable', () => {
     desktop.setState({ windowId: null })
     const menuModalsStore = useMenuModalsStore()
-    mount(InProgressMessage, {
-      props: { allowBufferedIntent: true },
-    })
+    mount(InProgressMessage, { props: { allowBufferedIntent: true } })
 
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
     expect(menuModalsStore.bufferedIntent).toBeNull()

@@ -131,6 +131,23 @@ impl Activation {
             && open_mode == Some(self.mode)
     }
 
+    /// Whether this activation turns the page of an already open action menu
+    /// instead of starting a new activation: the hotkey, D-Bus call or
+    /// `tyco-ctl` call that opens an action page also steps through the pages
+    /// while the menu is shown. A call that brings its own text asks for a new
+    /// activation.
+    pub fn turns_open_action_page(
+        &self,
+        open_mode: Option<ActivationMode>,
+        is_window_shown: bool,
+    ) -> bool {
+        self.mode == ActivationMode::SelectionActions
+            && self.source != ActivationSource::Ui
+            && self.selected_text.is_none()
+            && is_window_shown
+            && open_mode == Some(ActivationMode::SelectionActions)
+    }
+
     /// Accept a positional mode, --mode MODE, or --mode=MODE after argv[0].
     pub fn from_args(args: &[String]) -> Result<Option<Self>, AppError> {
         let values = &args[args.len().min(1)..];
@@ -202,6 +219,31 @@ mod tests {
         assert!(!chat.finishes_open_voice_input(Some(Chat), true));
         let voice = Activation::new(Voice, ActivationSource::Hotkey);
         assert!(!voice.finishes_open_voice_input(Some(VoiceChat), true));
+    }
+
+    #[test]
+    fn a_repeated_external_activation_turns_the_open_action_page() {
+        use ActivationMode::{Chat, SelectionActions};
+        for page_index in [0, 1, 4] {
+            for source in [
+                ActivationSource::Hotkey,
+                ActivationSource::Dbus,
+                ActivationSource::Cli,
+            ] {
+                let activation = Activation::selection_actions(page_index, source);
+                assert!(activation.turns_open_action_page(Some(SelectionActions), true));
+                assert!(!activation.turns_open_action_page(Some(SelectionActions), false));
+                assert!(!activation.turns_open_action_page(Some(Chat), true));
+                assert!(!activation.turns_open_action_page(None, true));
+            }
+            let from_ui = Activation::selection_actions(page_index, ActivationSource::Ui);
+            assert!(!from_ui.turns_open_action_page(Some(SelectionActions), true));
+            let mut with_text = Activation::selection_actions(page_index, ActivationSource::Dbus);
+            with_text.selected_text = Some("text".into());
+            assert!(!with_text.turns_open_action_page(Some(SelectionActions), true));
+        }
+        let chat = Activation::new(Chat, ActivationSource::Hotkey);
+        assert!(!chat.turns_open_action_page(Some(SelectionActions), true));
     }
 
     #[test]

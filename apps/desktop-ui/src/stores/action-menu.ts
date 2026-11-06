@@ -96,10 +96,13 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
   })
 
   watch(
-    () => desktopStore.desktopState.actionPageIndex,
-    (index) => {
+    () => [
+      desktopStore.desktopState.activationId,
+      desktopStore.desktopState.actionPageIndex,
+    ],
+    ([, index]) => {
       if (typeof index === 'number') {
-        model.setPage(index)
+        model.openPage(index)
       }
     },
     { immediate: true }
