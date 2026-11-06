@@ -2,11 +2,13 @@ import { computed, ref } from 'vue'
 import { createContextualCorrectionModel } from './contextual-correction'
 import type { EditorHistoryEntry } from '@tyco/shared'
 import { createInputHistorySession } from '../history/input-history-session'
+import type { BufferedPendingAction } from '../modals/menu-modal-params'
 import {
   type TimerDependencies,
   createSingleTimer,
 } from '../timers/single-timer'
 import { describeDictationError } from './dictation-error'
+import type { DictationTarget } from './dictation-target'
 import type { LiveDictationStart } from './live-dictation'
 import {
   createLiveTranscriptState,
@@ -78,10 +80,16 @@ export interface VoiceRecognitionDependencies extends TimerDependencies {
     onCancel: () => void
   }) => number
   clearPendingModal: (owner: number) => void
-  consumeBufferedIntent?: () => 'insert' | 'copy' | null
+  consumeBufferedIntent?: () => BufferedPendingAction | null
   postProcessTimeoutMs?: number
   now?: () => number
-  options: () => { chat?: boolean; prefix?: string; suffix?: string }
+  options: () => {
+    chat?: boolean
+    inline?: boolean
+    target?: DictationTarget
+    prefix?: string
+    suffix?: string
+  }
   onCorrected: (
     result: string,
     recognized: string,
@@ -321,10 +329,13 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           contextual?.cancel()
         }
         signal?.addEventListener('abort', abortPostProcess)
+        const canBufferPostProcessIntent =
+          intent === 'next' ||
+          (!deps.options().inline && deps.options().target !== 'editor')
         const owner = deps.setPendingModal({
           ...postProcess.pending,
           cancelLabel: t('common.cancel'),
-          allowBufferedIntent: intent === 'next',
+          allowBufferedIntent: canBufferPostProcessIntent,
           onCancel: () => {
             void cancel()
           },
@@ -378,7 +389,12 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
 
       if (!isCurrent()) return
       const buffered = deps.consumeBufferedIntent?.()
-      if (buffered && intent === 'next' && !postProcessAborted) {
+      if (
+        buffered &&
+        (intent === 'next' ||
+          (!deps.options().inline && deps.options().target !== 'editor')) &&
+        !postProcessAborted
+      ) {
         intent = buffered
       }
       finishingText = ''

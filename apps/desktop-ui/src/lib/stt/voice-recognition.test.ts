@@ -742,6 +742,33 @@ describe('voice recognition failures', () => {
     model.dispose()
   })
 
+  it('enables buffered intent during voice post-processing and emits a buffered slot action', async () => {
+    const slotIntent = {
+      slotIndex: 8,
+      key: 'F',
+      label: 'action.transformationMenu',
+      icon: 'mdi:auto-fix',
+    }
+    const { deps, model } = setup({
+      consumeBufferedIntent: () => slotIntent,
+    })
+    await model.startSession()
+    await model.finish('insert')
+    expect(deps.setPendingModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        correction: true,
+        allowBufferedIntent: true,
+      })
+    )
+    expect(deps.onCorrected).toHaveBeenCalledWith(
+      'Formatted words.',
+      'Raw words',
+      'Formatted words.',
+      slotIntent
+    )
+    model.dispose()
+  })
+
   it('saves raw recognized text to history even when formatting is disabled', async () => {
     vi.useFakeTimers()
     const { deps, model } = setup({ shouldFormatRecognizedText: () => false })

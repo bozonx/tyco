@@ -108,6 +108,11 @@ export function createCorrectionStep(deps: CorrectionStepDependencies) {
     await deps.saveResult(text, result)
     if (controller.signal.aborted) return
     if (showResult && buffered && deps.executeBufferedIntent) {
+      if (typeof buffered === 'object' && buffered !== null) {
+        deps.openStep({ ...base, ...resultParams(text, result) })
+        await deps.executeBufferedIntent(buffered, result, text, extra)
+        return
+      }
       const handled = await deps.executeBufferedIntent(
         buffered,
         result,

@@ -29,23 +29,11 @@
 
     <div v-if="props.allowBufferedIntent" class="buffered-intent-slot">
       <div v-if="menuModalsStore.bufferedIntent" class="buffered-intent-badge">
-        <AppIcon
-          :icon="
-            menuModalsStore.bufferedIntent === 'insert'
-              ? isEditorTarget
-                ? 'mdi:pencil-outline'
-                : 'mdi:application-export'
-              : 'mdi:clipboard-arrow-right-outline'
-          "
-          size="sm"
-        />
-        <span class="buffered-label">{{
-          menuModalsStore.bufferedIntent === 'insert'
-            ? isEditorTarget
-              ? t('menu.replaceInEditor')
-              : t('menu.willInsertOnFinish')
-            : t('menu.willCopyOnFinish')
-        }}</span>
+        <AppIcon :icon="bufferedBadgeIcon" size="sm" />
+        <KeyboardKey v-if="bufferedBadgeKey">{{
+          bufferedBadgeKey
+        }}</KeyboardKey>
+        <span class="buffered-label">{{ bufferedBadgeLabel }}</span>
         <span class="buffered-hint">({{ t('menu.cancelIntentHint') }})</span>
         <button
           type="button"
@@ -69,10 +57,13 @@ import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import type { PendingModalParams } from '../../lib/modals/menu-modal-params'
+import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
 import { useMenuModalsStore } from '../../stores/menu-modals'
+import { SHORTCUT_SLOT_KEYS } from '../../types'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
+import KeyboardKey from '../common/KeyboardKey.vue'
 import StateMessage from '../common/StateMessage.vue'
 
 const props = withDefaults(defineProps<PendingModalParams>(), {
@@ -85,18 +76,64 @@ const props = withDefaults(defineProps<PendingModalParams>(), {
 })
 
 const menuModalsStore = useMenuModalsStore()
+const actionMenuStore = useActionMenuStore()
 const desktopStore = useDesktopStore()
 const editorNavigation = useEditorNavigation()
 const { toastKey } = useToast()
 const { t } = useI18n()
 
 const isEditorTarget = computed(() => editorNavigation.isEditorPage())
+const isEditorCorrection = computed(
+  () => props.correction && isEditorTarget.value
+)
 const canBufferInsert = computed(
   () => isEditorTarget.value || desktopStore.canInsertIntoWindow
 )
 const canBufferCopy = computed(
-  () => props.allowBufferedCopy && !(props.correction && isEditorTarget.value)
+  () => props.allowBufferedCopy && !isEditorCorrection.value
 )
+const canBufferEditor = computed(
+  () => !isEditorTarget.value && canBufferCopy.value
+)
+
+const bufferedBadgeIcon = computed(() => {
+  const intent = menuModalsStore.bufferedIntent
+  if (!intent) return 'mdi:application-export'
+  if (intent === 'insert') {
+    return isEditorTarget.value
+      ? 'mdi:pencil-outline'
+      : 'mdi:application-export'
+  }
+  if (intent === 'copy') return 'mdi:clipboard-arrow-right-outline'
+  if (intent === 'editor') return 'mdi:pencil-outline'
+  return intent.icon || 'mdi:lightning-bolt-outline'
+})
+
+const bufferedBadgeKey = computed(() => {
+  const intent = menuModalsStore.bufferedIntent
+  if (typeof intent === 'object' && intent !== null) {
+    return intent.key
+  }
+  return ''
+})
+
+const bufferedBadgeLabel = computed(() => {
+  const intent = menuModalsStore.bufferedIntent
+  if (!intent) return ''
+  if (intent === 'insert') {
+    return isEditorTarget.value
+      ? t('menu.replaceInEditor')
+      : t('menu.willInsertOnFinish')
+  }
+  if (intent === 'copy') return t('menu.willCopyOnFinish')
+  if (intent === 'editor') return t('shortcuts.insertIntoEditor')
+  return intent.label
+})
+
+function getActionLabel(item?: ActionItem) {
+  if (!item) return ''
+  return item.labelKey ? t(item.labelKey) : item.label || item.name || ''
+}
 
 function requestBufferedInsert() {
   if (!canBufferInsert.value) {
@@ -120,7 +157,7 @@ function handleCancel() {
 
 function handleKeyDown(event: KeyboardEvent) {
   if (!props.allowBufferedIntent) return
-  if (event.ctrlKey || event.altKey || event.metaKey) return
+  if (event.ctrlKey || event.altKey || event.metaKey || event.isComposing) return
 
   if (event.code === 'Escape' || event.key === 'Escape') {
     if (menuModalsStore.bufferedIntent) {
@@ -131,26 +168,70 @@ function handleKeyDown(event: KeyboardEvent) {
     return
   }
 
+  let codeLetter: string | undefined
+  if (event.code.length === 4 && event.code.startsWith('Key')) {
+    codeLetter = event.code.slice(3).toLowerCase()
+  }
+  const slotIndex = codeLetter
+    ? SHORTCUT_SLOT_KEYS.findIndex((key) => key === codeLetter)
+    : -1
+
   if (event.repeat) {
     if (
       event.code === 'Space' ||
       event.code === 'Enter' ||
-      (event.code === 'KeyC' && canBufferCopy.value)
+      (event.code === 'Tab' && !event.shiftKey && canBufferEditor.value) ||
+      (slotIndex >= 0 && canBufferCopy.value)
     ) {
       event.preventDefault()
+      event.stopImmediatePropagation()
     }
     return
   }
 
   if (event.code === 'Space' || event.code === 'Enter') {
     event.preventDefault()
+    event.stopImmediatePropagation()
     requestBufferedInsert()
     return
   }
 
-  if (event.code === 'KeyC' && canBufferCopy.value) {
+  if (event.code === 'Tab' && !event.shiftKey && canBufferEditor.value) {
     event.preventDefault()
-    menuModalsStore.setBufferedIntent('copy')
+    event.stopImmediatePropagation()
+    menuModalsStore.setBufferedIntent('editor')
+    return
+  }
+
+  if (slotIndex >= 0 && canBufferCopy.value && codeLetter) {
+    const slotAction = actionMenuStore.getShortcutActions()[slotIndex]
+    if (slotAction && !slotAction.disabled) {
+      if (props.correction && slotAction.id === 'correction') return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      if (slotAction.id === 'insertIntoWindow') {
+        requestBufferedInsert()
+        return
+      }
+      if (slotAction.id === 'copyToClipboard') {
+        menuModalsStore.setBufferedIntent('copy')
+        return
+      }
+      const label = getActionLabel(slotAction)
+      if (!label) return
+      menuModalsStore.setBufferedIntent({
+        slotIndex,
+        key: codeLetter.toUpperCase(),
+        label,
+        icon: slotAction.icon,
+      })
+      return
+    }
+    if (codeLetter === 'c') {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      menuModalsStore.setBufferedIntent('copy')
+    }
   }
 }
 

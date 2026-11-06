@@ -128,7 +128,17 @@ export interface PreviewMenuParams {
 export interface ActionSelectMenuParams {
   onSelect: (actionId: string) => void
 }
-export type BufferedPendingAction = 'insert' | 'copy'
+export interface BufferedSlotAction {
+  slotIndex: number
+  key: string
+  label: string
+  icon?: string
+}
+export type BufferedPendingAction =
+  | 'insert'
+  | 'copy'
+  | 'editor'
+  | BufferedSlotAction
 
 export interface PendingModalParams {
   ai?: boolean

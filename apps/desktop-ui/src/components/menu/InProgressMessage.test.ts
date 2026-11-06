@@ -160,6 +160,42 @@ describe('InProgressMessage', () => {
     expect(wrapper.text()).toContain('menu.willInsertOnFinish')
   })
 
+  it('buffers next-menu shortcut slot actions (e.g. KeyF for transformationMenu) and Tab for editor', async () => {
+    const menuModalsStore = useMenuModalsStore()
+    const wrapper = mount(InProgressMessage, {
+      props: { allowBufferedIntent: true },
+    })
+
+    // Default slot 8 ('f') is transformationMenu
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyF' }))
+    expect(menuModalsStore.bufferedIntent).toEqual({
+      slotIndex: 8,
+      key: 'F',
+      label: 'action.transformationMenu',
+      icon: 'mdi:auto-fix',
+    })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('F')
+    expect(wrapper.text()).toContain('action.transformationMenu')
+
+    // Tab buffers 'editor'
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Tab' }))
+    expect(menuModalsStore.bufferedIntent).toBe('editor')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('shortcuts.insertIntoEditor')
+  })
+
+  it('does not buffer correction slot action when already running a correction', () => {
+    const menuModalsStore = useMenuModalsStore()
+    mount(InProgressMessage, {
+      props: { allowBufferedIntent: true, correction: true },
+    })
+
+    // Default slot 3 ('r') is correction
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR' }))
+    expect(menuModalsStore.bufferedIntent).toBeNull()
+  })
+
   it('ignores repeated keydown events so held Enter does not buffer intent', () => {
     const menuModalsStore = useMenuModalsStore()
     mount(InProgressMessage, { props: { allowBufferedIntent: true } })

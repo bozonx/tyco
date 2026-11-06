@@ -121,6 +121,15 @@ export function createMenuStepRun(deps: MenuStepRunDependencies) {
 
       const buffered = deps.consumeBufferedIntent?.()
       if (buffered && deps.executeBufferedIntent) {
+        if (typeof buffered === 'object' && buffered !== null) {
+          request.show(text, result)
+          await deps.executeBufferedIntent(
+            buffered,
+            text,
+            request.sourceText ?? request.text
+          )
+          return
+        }
         const handled = await deps.executeBufferedIntent(
           buffered,
           text,

@@ -5,6 +5,10 @@ export interface BufferedIntentDependencies {
   isEditorPage: () => boolean
   /** Replaces `sourceText` in the editor; false when it could not */
   applyEditorTransfer: (text: string, sourceText: string) => boolean | void
+  /** Moves `text` into the editor directly (Tab shortcut) */
+  toEditor?: (text: string) => void
+  /** Runs the shortcut action at `slotIndex` on `text`; false when unavailable */
+  runSlotAction?: (slotIndex: number, text: string) => Promise<boolean> | boolean
   focusEditor: () => void
   canInsertIntoWindow: () => boolean
   closeAll: () => void
@@ -39,6 +43,15 @@ export function createBufferedIntentRunner(deps: BufferedIntentDependencies) {
     text: string,
     sourceText: string
   ): Promise<boolean> => {
+    if (intent === 'editor') {
+      if (!deps.toEditor) return false
+      deps.toEditor(text)
+      return true
+    }
+    if (typeof intent === 'object' && intent !== null) {
+      if (!deps.runSlotAction) return false
+      return await deps.runSlotAction(intent.slotIndex, text)
+    }
     if (intent === 'insert' && deps.isEditorPage()) {
       if (deps.applyEditorTransfer(text, sourceText) === false) return true
       deps.closeAll()

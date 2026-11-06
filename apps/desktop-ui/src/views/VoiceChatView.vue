@@ -28,6 +28,7 @@ import { computed, ref, watch } from 'vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import InsertMenu from '../components/menu/InsertMenu.vue'
 import VoiceRecognitionMenu from '../components/menu/VoiceRecognitionMenu.vue'
+import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useVoiceResultStep } from '../composables/use-voice-result-step'
 import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
 import { useActionMenuStore } from '../stores/action-menu'
@@ -46,6 +47,7 @@ const navPanelStore = useNavPanelStore()
 const chatStore = useChatStore()
 const menuModalsStore = useMenuModalsStore()
 const windowStore = useWindowStore()
+const editorNavigation = useEditorNavigation()
 
 navPanelStore.resetNavPanelState({ panelVisible: false })
 
@@ -80,6 +82,18 @@ async function handleCorrected(
 ) {
   if (intent === 'copy') {
     void actionMenuStore.runDefaultAction('copyToClipboard', resultText)
+    return
+  }
+  if (intent === 'editor') {
+    editorNavigation.toEditor(resultText)
+    return
+  }
+  if (typeof intent === 'object' && intent !== null) {
+    showResult(resultText, recognizedText !== resultText ? recognizedText : '')
+    const slotAction = actionMenuStore.getShortcutActions()[intent.slotIndex]
+    if (slotAction && !slotAction.disabled) {
+      void slotAction.action(resultText)
+    }
     return
   }
   if (intent === 'next') {

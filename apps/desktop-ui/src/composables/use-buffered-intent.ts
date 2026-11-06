@@ -2,6 +2,7 @@ import { isQuickWindow } from '../lib/desktop/window'
 import { translate } from '../lib/i18n'
 import { toolResultMessage } from '../lib/invocation/invocation-result'
 import { createBufferedIntentRunner } from '../lib/modals/buffered-intent'
+import { useActionMenuStore } from '../stores/action-menu'
 import { useDesktopStore } from '../stores/desktop'
 import { useEditorInputStore } from '../stores/editor-input'
 import { useHistoryStore } from '../stores/history'
@@ -16,6 +17,7 @@ import { useEditorNavigation } from './use-editor-navigation'
  * `createBufferedIntentRunner`
  */
 export function useBufferedIntent() {
+  const actionMenuStore = useActionMenuStore()
   const menuModalsStore = useMenuModalsStore()
   const historyStore = useHistoryStore()
   const desktopStore = useDesktopStore()
@@ -28,6 +30,13 @@ export function useBufferedIntent() {
   return createBufferedIntentRunner({
     isEditorPage: editorNavigation.isEditorPage,
     applyEditorTransfer: editorNavigation.applyEditorTransfer,
+    toEditor: (text) => editorNavigation.toEditor(text),
+    runSlotAction: async (slotIndex, text) => {
+      const action = actionMenuStore.getShortcutActions()[slotIndex]
+      if (!action || action.disabled) return false
+      await action.action(text)
+      return true
+    },
     focusEditor: () => editorInputStore.requestFocus(),
     canInsertIntoWindow: () => desktopStore.canInsertIntoWindow,
     closeAll: () => menuModalsStore.closeAll(),

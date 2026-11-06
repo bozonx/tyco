@@ -10,6 +10,8 @@ import VoiceView from './VoiceView.vue'
 const mocks = vi.hoisted(() => ({
   insertAction: vi.fn(),
   copyAction: vi.fn(),
+  transformationAction: vi.fn(),
+  toEditor: vi.fn(),
   navPanel: { resetNavPanelState: vi.fn() },
   menuModals: { hasOpenModal: false },
   navigationPush: vi.fn(),
@@ -17,6 +19,10 @@ const mocks = vi.hoisted(() => ({
     mode: (): string | undefined => undefined,
     confirm: () => {},
   },
+}))
+
+vi.mock('../composables/use-editor-navigation', () => ({
+  useEditorNavigation: () => ({ toEditor: mocks.toEditor }),
 }))
 
 vi.mock('../composables/use-voice-finish-signal', () => ({
@@ -66,6 +72,17 @@ vi.mock('../stores/action-menu', () => ({
     ]
     return {
       getDefaultActions: actions,
+      getShortcutActions: () => [
+        { id: 'copyToClipboard', action: mocks.copyAction },
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { id: 'transformationMenu', action: mocks.transformationAction },
+      ],
       runDefaultAction: async (id: string, text: string) => {
         const action = actions().find((item) => item.id === id)
         await action?.action(text)
@@ -151,6 +168,47 @@ describe('VoiceView.vue', () => {
     await flushPromises()
 
     expect(mocks.copyAction).toHaveBeenCalledWith('Dictated text')
+    expect(wrapper.findComponent({ name: 'InsertMenu' }).exists()).toBe(false)
+  })
+
+  it('shows InsertMenu and executes buffered slot action when intent is a slot action', async () => {
+    const wrapper = mount(VoiceView, { props: { bar: false } })
+    const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+
+    voiceMenu.vm.$emit(
+      'corrected',
+      'Corrected text',
+      'Raw text',
+      'Corrected text',
+      {
+        slotIndex: 8,
+        key: 'F',
+        label: 'action.transformationMenu',
+        icon: 'mdi:auto-fix',
+      }
+    )
+    await flushPromises()
+
+    const insertMenu = wrapper.findComponent({ name: 'InsertMenu' })
+    expect(insertMenu.exists()).toBe(true)
+    expect(insertMenu.props('text')).toBe('Corrected text')
+    expect(mocks.transformationAction).toHaveBeenCalledWith('Corrected text')
+  })
+
+  it('transfers dictated text to editor when intent is editor', async () => {
+    const wrapper = mount(VoiceView, { props: { bar: false } })
+    const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+
+    voiceMenu.vm.$emit(
+      'corrected',
+      'Dictated text',
+      'Dictated text',
+      undefined,
+      'editor'
+    )
+    await flushPromises()
+
+    expect(mocks.toEditor).toHaveBeenCalledWith('Dictated text')
     expect(wrapper.findComponent({ name: 'InsertMenu' }).exists()).toBe(false)
   })
 

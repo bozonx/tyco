@@ -165,6 +165,11 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
     active = null
     deps.clearPending(run.owner)
     if (buffered && deps.executeBufferedIntent) {
+      if (typeof buffered === 'object' && buffered !== null) {
+        if (showResult) deps.openStep?.(step)
+        await deps.executeBufferedIntent(buffered, step.text, text)
+        return
+      }
       const handled = await deps.executeBufferedIntent(
         buffered,
         step.text,
