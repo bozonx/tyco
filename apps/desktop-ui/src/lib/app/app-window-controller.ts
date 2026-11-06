@@ -22,6 +22,7 @@ export interface AppWindowControllerDependencies {
   refreshPlugins: () => Promise<void>
   /** Another device changed the settings this one has just saved */
   notifySettingsConflict: () => void
+  notifyScreenshotFailed?: () => void
   shutdown: {
     request: (requestId: number) => Promise<void>
     cancel: () => void
@@ -122,6 +123,13 @@ export function createAppWindowController(
       subscribe(DESKTOP_EVENTS.QUIT_REQUESTED, deps.shutdown.request),
       subscribe(DESKTOP_EVENTS.QUIT_CANCELLED, deps.shutdown.cancel),
       subscribe(DESKTOP_EVENTS.PLUGINS_CHANGED, deps.refreshPlugins),
+      ...(deps.isQuickWindow
+        ? [
+            subscribe(DESKTOP_EVENTS.SCREENSHOT_FAILED, () =>
+              deps.notifyScreenshotFailed?.()
+            ),
+          ]
+        : []),
     ]
     if (deps.isQuickWindow) {
       subscriptions.push(
@@ -141,6 +149,21 @@ export function createAppWindowController(
     } else {
       subscriptions.push(
         subscribe(DESKTOP_EVENTS.OPEN_MAIN_CHAT, openChat),
+        subscribe(
+          DESKTOP_EVENTS.OPEN_SCREENSHOT_CHAT,
+          async ({ chat, question }) => {
+            const request = ++chatRequest
+            deps.closeModals()
+            await deps.goToChat()
+            if (scope.stopped || request !== chatRequest) return
+            await deps.startChat({ title: chat.title, messages: chat.messages })
+            if (scope.stopped || request !== chatRequest) return
+            await deps.afterRender()
+            if (scope.stopped || request !== chatRequest) return
+            if (question?.trim()) deps.setChatInput(question.trim())
+            deps.focusChatInput()
+          }
+        ),
         subscribe(DESKTOP_EVENTS.OPEN_MAIN_EDITOR, async (payload) => {
           deps.applyEditorTransfer(
             payload.text ?? undefined,

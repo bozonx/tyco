@@ -796,7 +796,9 @@
       "selectionActionsPage5": "Aktionen: Seite 5",
       "favorites": "Favoriten",
       "quickAiRequest": "Schnelle KI-Anfrage",
-      "voiceQuickAiRequest": "Sprach-Schnellanfrage an KI"
+      "voiceQuickAiRequest": "Sprach-Schnellanfrage an KI",
+      "screenshotQuickAiRequest": "Bildschirmfoto und KI-Frage",
+      "voiceScreenshotQuickAiRequest": "Bildschirmfoto und KI-Sprachfrage"
     },
     "hotkeyInput": {
       "cancelHint": "Esc zum Abbrechen",
@@ -1451,5 +1453,9 @@
     "selectProfile": "Profil auswählen",
     "profileLocked": "Profil während der Sitzung gesperrt",
     "defaultProfile": "Frage an die KI"
+  },
+  "screenshot": {
+    "retake": "Bildschirmfoto erneut aufnehmen",
+    "failed": "Der Bildschirm konnte nicht aufgenommen werden. Prüfen Sie die Aufnahmeberechtigungen und die Unterstützung des Desktop-Portals."
   }
 }

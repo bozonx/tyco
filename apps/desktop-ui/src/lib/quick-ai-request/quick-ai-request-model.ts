@@ -4,6 +4,7 @@ import type {
   Chat,
   ChatAttachment,
   ChatMessage,
+  ChatImage,
   ChatMessagePart,
   EditorHistoryInputKind,
   EditorHistoryInstruction,
@@ -30,7 +31,11 @@ import {
 } from '../chat-tools/chat-tool-policy'
 import type { ChatToolSet } from '../chat-tools/chat-tool-registry'
 import { buildLlmPrompt } from '../llm/llm-prompt'
-import type { LlmStreamEvent, LlmStreamOptions } from '../llm/llm-client'
+import {
+  LlmError,
+  type LlmStreamEvent,
+  type LlmStreamOptions,
+} from '../llm/llm-client'
 import type { LlmPrompt } from '../llm/llm-prompt'
 
 export interface QuickAiRequestTurn {
@@ -46,6 +51,13 @@ export interface QuickAiRequestTurn {
 
 export interface QuickAiRequestModelDependencies {
   sourceText?: string
+  screenshotMode?: boolean
+  sourceImage?: ChatImage
+  loadImage?: (id: string) => Promise<Uint8Array<ArrayBuffer>>
+  openScreenshotChat?: (chat: Chat, question?: string) => Promise<void>
+  describeLlmError?: (error: LlmError) => string
+  imageModelError?: () => string
+  imageUnavailableError?: () => string
   initialInputMode?: 'text' | 'voice'
   initialProfileId?: string | null
 
@@ -116,8 +128,11 @@ export function createQuickAiRequestModel(
   deps: QuickAiRequestModelDependencies
 ) {
   const inputMode = ref<'text' | 'voice'>(deps.initialInputMode ?? 'text')
-  const profileId = ref<string | null>(deps.initialProfileId ?? null)
-  const isProfileLocked = ref(false)
+  const profileId = ref<string | null>(
+    deps.screenshotMode ? null : (deps.initialProfileId ?? null)
+  )
+  const sourceImage = ref<ChatImage | undefined>(deps.sourceImage)
+  const isProfileLocked = ref(Boolean(deps.screenshotMode))
   const isGenerating = ref(false)
   const turns = ref<QuickAiRequestTurn[]>([])
   const error = ref<string | null>(null)
@@ -141,6 +156,22 @@ export function createQuickAiRequestModel(
     return blocks
   }
 
+  const setSourceImage = (image: ChatImage | undefined) => {
+    if (turns.value.length || isGenerating.value) return
+    sourceImage.value = image
+  }
+
+  const firstTurnContext = () => ({
+    ...(deps.sourceText
+      ? {
+          attachments: [
+            { text: deps.sourceText, source: 'selection' as const },
+          ],
+        }
+      : {}),
+    ...(sourceImage.value ? { images: [sourceImage.value] } : {}),
+  })
+
   const setInputMode = (mode: 'text' | 'voice') => {
     inputMode.value = mode
   }
@@ -153,7 +184,6 @@ export function createQuickAiRequestModel(
   const stopGeneration = () => {
     if (abortController) {
       abortController.abort()
-      abortController = null
     }
     approvals.cancelAll()
     isGenerating.value = false
@@ -205,6 +235,17 @@ export function createQuickAiRequestModel(
       return false
     }
 
+    if (sourceImage.value && !model.canUseImages) {
+      error.value =
+        deps.imageModelError?.() ??
+        'Choose a model that supports images in model settings.'
+      return false
+    }
+
+    const controller = new AbortController()
+    abortController = controller
+    const signal = controller.signal
+
     // 2. Lock profile after first generation starts
     isProfileLocked.value = true
     isGenerating.value = true
@@ -226,7 +267,7 @@ export function createQuickAiRequestModel(
     const currentTurnIndex = turns.value.length - 1
     const historyInputKind: EditorHistoryInputKind =
       mode === 'voice' ? 'voice' : 'typed'
-    if (currentTurnIndex === 0) {
+    if (currentTurnIndex === 0 && !deps.screenshotMode) {
       try {
         const savedId = await deps.saveEditorHistorySession({
           sourceText: deps.sourceText,
@@ -255,6 +296,8 @@ export function createQuickAiRequestModel(
       }
     }
 
+    if (signal.aborted) return false
+
     // 5. Build conversation history
     const conversation: ChatMessage[] = []
     for (let i = 0; i < turns.value.length; i++) {
@@ -263,9 +306,7 @@ export function createQuickAiRequestModel(
         conversation.push({
           role: 'user',
           content: t.prompt,
-          ...(i === 0 && deps.sourceText
-            ? { attachments: [{ text: deps.sourceText, source: 'selection' }] }
-            : {}),
+          ...(i === 0 ? firstTurnContext() : {}),
         })
         conversation.push({
           role: 'assistant',
@@ -277,16 +318,12 @@ export function createQuickAiRequestModel(
         conversation.push({
           role: 'user',
           content: t.prompt,
-          ...(i === 0 && deps.sourceText
-            ? { attachments: [{ text: deps.sourceText, source: 'selection' }] }
-            : {}),
+          ...(i === 0 ? firstTurnContext() : {}),
         })
       }
     }
 
     // 6. Build prompt & instructions
-    abortController = new AbortController()
-    const signal = abortController.signal
 
     try {
       const appConfig = deps.getAppConfig()
@@ -301,7 +338,23 @@ export function createQuickAiRequestModel(
         .filter(Boolean)
         .join('\n\n')
 
+      const imageBytes = new Map<string, Uint8Array<ArrayBuffer>>()
+      if (sourceImage.value) {
+        try {
+          if (!deps.loadImage) throw new Error('Image loader unavailable')
+          imageBytes.set(
+            sourceImage.value.id,
+            await deps.loadImage(sourceImage.value.id)
+          )
+        } catch {
+          throw new Error(
+            deps.imageUnavailableError?.() ?? 'Image is unavailable'
+          )
+        }
+      }
+      if (signal.aborted) return false
       const llmPrompt = buildLlmPrompt(conversation, {
+        imageBytes,
         instructions,
         rules: taskConfig.rule,
         rulePrefix: appConfig.rulePrefix,
@@ -313,6 +366,7 @@ export function createQuickAiRequestModel(
         ? deps.getProfile?.(profileId.value)
         : undefined
       const available = await deps.getAvailableTools(modelId, selectedProfile)
+      if (signal.aborted) return false
       const toolSet = withReplyBlocksTool(available.tools)
 
       const loopDeps: ChatToolLoopDependencies = {
@@ -327,12 +381,14 @@ export function createQuickAiRequestModel(
         maxStepCount: available.maxStepCount ?? 5,
         signal,
         onUpdate: (state) => {
+          if (signal.aborted) return
           turn.textResponse = state.content
           turn.parts = [...state.parts]
           turn.replyBlocks = extractAllReplyBlocks(state.parts)
         },
       })
 
+      if (signal.aborted) return false
       turn.textResponse = result.content
       turn.parts = [...result.parts]
       turn.replyBlocks = extractAllReplyBlocks(result.parts)
@@ -360,14 +416,19 @@ export function createQuickAiRequestModel(
         turn.status = 'done'
         return false
       }
-      const msg = errorMessage(err)
+      const msg =
+        err instanceof LlmError && deps.describeLlmError
+          ? deps.describeLlmError(err)
+          : errorMessage(err)
       turn.status = 'error'
       turn.error = msg
       error.value = msg
       return false
     } finally {
-      isGenerating.value = false
-      abortController = null
+      if (abortController === controller) {
+        isGenerating.value = false
+        abortController = null
+      }
     }
   }
 
@@ -405,7 +466,7 @@ export function createQuickAiRequestModel(
   const switchToChat = async (currentInputDraft?: string) => {
     stopGeneration()
 
-    if (turns.value.length === 0) {
+    if (turns.value.length === 0 && !deps.screenshotMode) {
       await deps.openMainChat({
         attachment: deps.sourceText
           ? { text: deps.sourceText, source: 'selection' }
@@ -423,9 +484,7 @@ export function createQuickAiRequestModel(
       chatMessages.push({
         role: 'user',
         content: t.prompt,
-        ...(i === 0 && deps.sourceText
-          ? { attachments: [{ text: deps.sourceText, source: 'selection' }] }
-          : {}),
+        ...(i === 0 ? firstTurnContext() : {}),
       })
       chatMessages.push({
         role: 'assistant',
@@ -435,6 +494,14 @@ export function createQuickAiRequestModel(
       })
     }
 
+    if (!chatMessages.length && deps.screenshotMode) {
+      chatMessages.push({
+        role: 'user',
+        content: currentInputDraft?.trim() || '',
+        ...firstTurnContext(),
+      })
+      currentInputDraft = undefined
+    }
     const chatId = deps.createId()
     const firstPrompt =
       turns.value[0]?.prompt.slice(0, 50) || 'Quick AI Request'
@@ -444,6 +511,17 @@ export function createQuickAiRequestModel(
       title: firstPrompt,
       lastMessageAt: now,
       messages: chatMessages,
+    }
+
+    if (deps.screenshotMode) {
+      if (!deps.openScreenshotChat)
+        throw new Error('Screenshot chat transfer is unavailable')
+      await deps.openScreenshotChat(
+        chat,
+        currentInputDraft?.trim() || undefined
+      )
+      deps.closeOverlay()
+      return
     }
 
     if (deps.saveChat) {
@@ -461,6 +539,8 @@ export function createQuickAiRequestModel(
   return {
     inputMode,
     profileId,
+    sourceImage,
+    setSourceImage,
     isProfileLocked,
     isGenerating,
     turns,

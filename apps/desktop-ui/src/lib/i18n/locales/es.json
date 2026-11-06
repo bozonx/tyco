@@ -796,7 +796,9 @@
       "selectionActionsPage5": "Acciones: página 5",
       "favorites": "Favoritos",
       "quickAiRequest": "Petición rápida a la IA",
-      "voiceQuickAiRequest": "Petición rápida por voz a la IA"
+      "voiceQuickAiRequest": "Petición rápida por voz a la IA",
+      "screenshotQuickAiRequest": "Captura de pantalla y pregunta a la IA",
+      "voiceScreenshotQuickAiRequest": "Captura de pantalla y pregunta por voz a la IA"
     },
     "hotkeyInput": {
       "cancelHint": "Esc para cancelar",
@@ -1451,5 +1453,9 @@
     "selectProfile": "Seleccionar perfil",
     "profileLocked": "Perfil bloqueado durante la sesión",
     "defaultProfile": "Pregunta a la IA"
+  },
+  "screenshot": {
+    "retake": "Volver a capturar la pantalla",
+    "failed": "No se pudo capturar la pantalla. Comprueba los permisos de captura y la compatibilidad del portal del escritorio."
   }
 }

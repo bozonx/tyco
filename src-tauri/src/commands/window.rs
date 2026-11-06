@@ -1,4 +1,4 @@
-use tauri::{AppHandle, WebviewWindow};
+use tauri::{AppHandle, Manager, WebviewWindow};
 
 use super::run_blocking;
 use crate::errors::AppError;
@@ -70,4 +70,31 @@ pub fn set_tray_menu_labels(
     tooltip_label: Option<String>,
 ) -> Result<(), AppError> {
     runtime::set_tray_menu_labels(&app, &show_label, &quit_label, tooltip_label.as_deref())
+}
+
+/// Retakes the screen while retaining the quick request activation and draft.
+#[tauri::command]
+pub async fn retake_screenshot(
+    app: AppHandle,
+    activation_id: u64,
+) -> Result<Option<crate::models::ChatImage>, AppError> {
+    let services = app.state::<crate::services::background::BackgroundServices>();
+    let handle = app.clone();
+    services
+        .run_blocking(move || runtime::screenshot::retake(&handle, activation_id))
+        .await?
+}
+
+#[tauri::command]
+pub fn remove_screenshot(app: AppHandle, activation_id: u64) -> Result<(), AppError> {
+    runtime::screenshot::remove(&app, activation_id)
+}
+
+#[tauri::command]
+pub fn open_screenshot_chat(
+    app: AppHandle,
+    transfer: crate::models::ScreenshotChatTransfer,
+    activation_id: u64,
+) -> Result<(), AppError> {
+    runtime::screenshot::open_chat(&app, transfer, activation_id)
 }

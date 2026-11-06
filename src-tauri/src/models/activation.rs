@@ -19,6 +19,8 @@ pub enum ActivationMode {
     Transformation,
     QuickAiRequest,
     VoiceQuickAiRequest,
+    ScreenshotQuickAiRequest,
+    VoiceScreenshotQuickAiRequest,
     ChatPrompts,
     Favorites,
     History,
@@ -30,7 +32,7 @@ pub enum ActivationMode {
 
 impl ActivationMode {
     /// The modes a caller may name: every one but `ExternalAccess`.
-    pub const PUBLIC_MODES: [Self; 17] = [
+    pub const PUBLIC_MODES: [Self; 19] = [
         Self::Editor,
         Self::QuickInput,
         Self::Chat,
@@ -44,6 +46,8 @@ impl ActivationMode {
         Self::Transformation,
         Self::QuickAiRequest,
         Self::VoiceQuickAiRequest,
+        Self::ScreenshotQuickAiRequest,
+        Self::VoiceScreenshotQuickAiRequest,
         Self::ChatPrompts,
         Self::Favorites,
         Self::History,
@@ -74,6 +78,8 @@ impl ActivationMode {
             Self::Transformation => "transformation",
             Self::QuickAiRequest => "quickAiRequest",
             Self::VoiceQuickAiRequest => "voiceQuickAiRequest",
+            Self::ScreenshotQuickAiRequest => "screenshotQuickAiRequest",
+            Self::VoiceScreenshotQuickAiRequest => "voiceScreenshotQuickAiRequest",
             Self::ChatPrompts => "chatPrompts",
             Self::Favorites => "favorites",
             Self::History => "history",
@@ -81,6 +87,13 @@ impl ActivationMode {
             Self::ExternalAccess => "externalAccess",
         }
     }
+    pub fn is_screenshot(self) -> bool {
+        matches!(
+            self,
+            Self::ScreenshotQuickAiRequest | Self::VoiceScreenshotQuickAiRequest
+        )
+    }
+
     pub fn profile(self) -> WindowProfile {
         match self {
             // the dictation bar leaves the screen above it in view

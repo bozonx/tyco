@@ -793,7 +793,9 @@
       "selectionActionsPage5": "Műveletek: 5. oldal",
       "favorites": "Kedvencek",
       "quickAiRequest": "Gyors MI kérés",
-      "voiceQuickAiRequest": "Hangalapú gyors MI kérés"
+      "voiceQuickAiRequest": "Hangalapú gyors MI kérés",
+      "screenshotQuickAiRequest": "Képernyőkép és kérdés az MI-nek",
+      "voiceScreenshotQuickAiRequest": "Képernyőkép és hangos kérdés az MI-nek"
     },
     "hotkeyInput": {
       "cancelHint": "Esc: megszakítás",
@@ -1448,5 +1450,9 @@
     "selectProfile": "Profil kiválasztása",
     "profileLocked": "A profil a munkamenet során zárolva van",
     "defaultProfile": "Kérdés az AI-hoz"
+  },
+  "screenshot": {
+    "retake": "Képernyőkép újrakészítése",
+    "failed": "Nem sikerült rögzíteni a képernyőt. Ellenőrizze a képernyőrögzítési engedélyeket és az asztali portál támogatását."
   }
 }

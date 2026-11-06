@@ -796,7 +796,9 @@
       "selectionActionsPage5": "Acțiuni: pagina 5",
       "favorites": "Favorite",
       "quickAiRequest": "Solicitare rapidă IA",
-      "voiceQuickAiRequest": "Solicitare vocală rapidă IA"
+      "voiceQuickAiRequest": "Solicitare vocală rapidă IA",
+      "screenshotQuickAiRequest": "Captură de ecran și întrebare pentru IA",
+      "voiceScreenshotQuickAiRequest": "Captură de ecran și întrebare vocală pentru IA"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pentru anulare",
@@ -1451,5 +1453,9 @@
     "selectProfile": "Selectează profilul",
     "profileLocked": "Profil blocat în timpul sesiunii",
     "defaultProfile": "Întrebare pentru AI"
+  },
+  "screenshot": {
+    "retake": "Refă captura de ecran",
+    "failed": "Ecranul nu a putut fi capturat. Verifică permisiunile de captură și compatibilitatea portalului desktop."
   }
 }

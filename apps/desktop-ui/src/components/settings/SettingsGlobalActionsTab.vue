@@ -198,6 +198,8 @@ const MODE_ORDER: HotkeyId[] = [
   'transformation',
   'quickAiRequest',
   'voiceQuickAiRequest',
+  'screenshotQuickAiRequest',
+  'voiceScreenshotQuickAiRequest',
   'chatPrompts',
   'favorites',
   'history',

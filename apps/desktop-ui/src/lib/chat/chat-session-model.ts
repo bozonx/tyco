@@ -92,7 +92,12 @@ export function createChatSessionModel(
   const startChat = async (chatParams: ChatParams) => {
     if (disposed) return
     clearChat()
-    currentChatParams.value = { ...chatParams, id: deps.createId() }
+    const { messages: initialMessages, ...params } = chatParams
+    currentChatParams.value = { ...params, id: deps.createId() }
+    if (initialMessages?.length) {
+      messages.value = initialMessages
+      await persist(initialMessages, currentChatParams.value)
+    }
     await deps.navigateTo(APP_ROUTES.CHAT.path)
   }
 

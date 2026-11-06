@@ -79,6 +79,21 @@
           input-mode="voice"
         />
       </div>
+      <div
+        v-if="
+          currentMode === 'screenshotQuickAiRequest' ||
+          currentMode === 'voiceScreenshotQuickAiRequest'
+        "
+        class="quick-mode-layer"
+      >
+        <QuickAiRequestView
+          :key="activationId"
+          screenshot-mode
+          :input-mode="
+            currentMode === 'voiceScreenshotQuickAiRequest' ? 'voice' : 'text'
+          "
+        />
+      </div>
       <div v-show="currentMode === 'chatPrompts'" class="quick-mode-layer">
         <ChatPromptsView
           v-if="currentMode === 'chatPrompts'"

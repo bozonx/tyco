@@ -242,7 +242,9 @@
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
         "quickAiRequest": "",
-        "voiceQuickAiRequest": ""
+        "voiceQuickAiRequest": "",
+        "screenshotQuickAiRequest": "",
+        "voiceScreenshotQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -636,7 +638,9 @@
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
         "quickAiRequest": "",
-        "voiceQuickAiRequest": ""
+        "voiceQuickAiRequest": "",
+        "screenshotQuickAiRequest": "",
+        "voiceScreenshotQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1016,7 +1020,9 @@
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
         "quickAiRequest": "",
-        "voiceQuickAiRequest": ""
+        "voiceQuickAiRequest": "",
+        "screenshotQuickAiRequest": "",
+        "voiceScreenshotQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1405,7 +1411,9 @@
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
         "quickAiRequest": "",
-        "voiceQuickAiRequest": ""
+        "voiceQuickAiRequest": "",
+        "screenshotQuickAiRequest": "",
+        "voiceScreenshotQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1789,7 +1797,9 @@
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
         "quickAiRequest": "",
-        "voiceQuickAiRequest": ""
+        "voiceQuickAiRequest": "",
+        "screenshotQuickAiRequest": "",
+        "voiceScreenshotQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2166,7 +2176,9 @@
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
         "quickAiRequest": "",
-        "voiceQuickAiRequest": ""
+        "voiceQuickAiRequest": "",
+        "screenshotQuickAiRequest": "",
+        "voiceScreenshotQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2552,7 +2564,9 @@
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
         "quickAiRequest": "",
-        "voiceQuickAiRequest": ""
+        "voiceQuickAiRequest": "",
+        "screenshotQuickAiRequest": "",
+        "voiceScreenshotQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2951,7 +2965,9 @@
         "history": "",
         "favorites": "",
         "quickAiRequest": "",
-        "voiceQuickAiRequest": ""
+        "voiceQuickAiRequest": "",
+        "screenshotQuickAiRequest": "",
+        "voiceScreenshotQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -3349,7 +3365,9 @@
         "history": "",
         "favorites": "",
         "quickAiRequest": "",
-        "voiceQuickAiRequest": ""
+        "voiceQuickAiRequest": "",
+        "screenshotQuickAiRequest": "",
+        "voiceScreenshotQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -3765,7 +3783,9 @@
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
         "quickAiRequest": "",
-        "voiceQuickAiRequest": ""
+        "voiceQuickAiRequest": "",
+        "screenshotQuickAiRequest": "",
+        "voiceScreenshotQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -4265,7 +4285,9 @@
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
         "quickAiRequest": "",
-        "voiceQuickAiRequest": ""
+        "voiceQuickAiRequest": "",
+        "screenshotQuickAiRequest": "",
+        "voiceScreenshotQuickAiRequest": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {

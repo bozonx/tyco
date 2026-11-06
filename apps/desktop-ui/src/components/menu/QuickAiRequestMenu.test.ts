@@ -158,4 +158,82 @@ describe('QuickAiRequestMenu', () => {
       })
     )
   })
+
+  describe('screenshot mode', () => {
+    const screenshot = {
+      id: 'shot-1',
+      mediaType: 'image/webp' as const,
+      width: 1920,
+      height: 1080,
+      size: 1000,
+    }
+    const mountScreenshotMenu = () =>
+      mount(QuickAiRequestMenu, {
+        props: { screenshotMode: true, screenshot },
+        global: {
+          plugins: [desktop.pinia],
+          stubs: {
+            AppIcon: true,
+            AudioWaveform: true,
+            LiveTranscript: true,
+            ChatImageAttachment: {
+              props: ['image', 'removable'],
+              template:
+                '<div class="shot" :data-id="image.id"><button v-if="removable" class="remove-shot" @click="$emit(\'remove\')" /></div>',
+            },
+          },
+        },
+      })
+
+    it('previews the screenshot and removes it', async () => {
+      desktop.backend.handle('remove_screenshot', () => undefined)
+      const wrapper = mountScreenshotMenu()
+      expect(wrapper.find('.shot').attributes('data-id')).toBe('shot-1')
+
+      await wrapper.find('.remove-shot').trigger('click')
+      await flushPromises()
+      expect(
+        desktop.backend.calls.some((c) => c.command === 'remove_screenshot')
+      ).toBe(true)
+      expect(wrapper.find('.shot').exists()).toBe(false)
+    })
+
+    it('replaces the screenshot after a successful retake and keeps the draft', async () => {
+      desktop.backend.handle('retake_screenshot', () => ({
+        ...screenshot,
+        id: 'shot-2',
+      }))
+      const wrapper = mountScreenshotMenu()
+      await wrapper.find('.query-panel-input').setValue('What is this?')
+      await wrapper.find('[title="screenshot.retake"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.find('.shot').attributes('data-id')).toBe('shot-2')
+      expect(
+        (wrapper.find('.query-panel-input').element as HTMLTextAreaElement)
+          .value
+      ).toBe('What is this?')
+    })
+
+    it('keeps the previous screenshot when the retake is cancelled', async () => {
+      desktop.backend.handle('retake_screenshot', () => null)
+      const wrapper = mountScreenshotMenu()
+      await wrapper.find('[title="screenshot.retake"]').trigger('click')
+      await flushPromises()
+      expect(wrapper.find('.shot').attributes('data-id')).toBe('shot-1')
+    })
+
+    it('keeps the draft when the model cannot read images', async () => {
+      const wrapper = mountScreenshotMenu()
+      const input = wrapper.find('.query-panel-input')
+      await input.setValue('What is this?')
+      await input.trigger('keydown', { key: 'Enter' })
+      await flushPromises()
+
+      expect(wrapper.find('.quick-error-text').text()).toBe(
+        'chat.imageModelRequired'
+      )
+      expect((input.element as HTMLTextAreaElement).value).toBe('What is this?')
+    })
+  })
 })

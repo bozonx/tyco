@@ -790,7 +790,9 @@
       "selectionActionsPage5": "操作：第 5 页",
       "favorites": "收藏夹",
       "quickAiRequest": "AI 快速请求",
-      "voiceQuickAiRequest": "语音 AI 快速请求"
+      "voiceQuickAiRequest": "语音 AI 快速请求",
+      "screenshotQuickAiRequest": "截图并向 AI 提问",
+      "voiceScreenshotQuickAiRequest": "截图并向 AI 语音提问"
     },
     "hotkeyInput": {
       "cancelHint": "按 Esc 取消",
@@ -1445,5 +1447,9 @@
     "selectProfile": "选择配置文件",
     "profileLocked": "会话期间配置文件已锁定",
     "defaultProfile": "向 AI 提问"
+  },
+  "screenshot": {
+    "retake": "重新截图",
+    "failed": "无法截取屏幕。请检查屏幕捕获权限和桌面门户支持。"
   }
 }

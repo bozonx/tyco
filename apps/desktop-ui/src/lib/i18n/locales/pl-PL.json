@@ -796,7 +796,9 @@
       "selectionActionsPage5": "Działania: strona 5",
       "favorites": "Ulubione",
       "quickAiRequest": "Szybkie zapytanie do SI",
-      "voiceQuickAiRequest": "Głosowe szybkie zapytanie do SI"
+      "voiceQuickAiRequest": "Głosowe szybkie zapytanie do SI",
+      "screenshotQuickAiRequest": "Zrzut ekranu i pytanie do AI",
+      "voiceScreenshotQuickAiRequest": "Zrzut ekranu i głosowe pytanie do AI"
     },
     "hotkeyInput": {
       "cancelHint": "Esc, aby anulować",
@@ -1451,5 +1453,9 @@
     "selectProfile": "Wybierz profil",
     "profileLocked": "Profil zablokowany podczas sesji",
     "defaultProfile": "Pytanie do AI"
+  },
+  "screenshot": {
+    "retake": "Zrób zrzut ponownie",
+    "failed": "Nie udało się przechwycić ekranu. Sprawdź uprawnienia do przechwytywania i obsługę portalu pulpitu."
   }
 }

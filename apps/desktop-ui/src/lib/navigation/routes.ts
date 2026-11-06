@@ -65,6 +65,10 @@ export const MODE_ROUTE_MAP: Record<ActivationMode, AppRoutePath> = {
   [ActivationMode.QUICK_AI_REQUEST]: APP_ROUTES.QUICK_AI_REQUEST.path,
   [ActivationMode.VOICE_QUICK_AI_REQUEST]:
     APP_ROUTES.VOICE_QUICK_AI_REQUEST.path,
+  [ActivationMode.SCREENSHOT_QUICK_AI_REQUEST]:
+    APP_ROUTES.QUICK_AI_REQUEST.path,
+  [ActivationMode.VOICE_SCREENSHOT_QUICK_AI_REQUEST]:
+    APP_ROUTES.VOICE_QUICK_AI_REQUEST.path,
   [ActivationMode.CHAT_PROMPTS]: APP_ROUTES.CHAT_PROMPTS.path,
   [ActivationMode.FAVORITES]: APP_ROUTES.FAVORITES.path,
   [ActivationMode.EDITOR]: APP_ROUTES.EDITOR.path,
@@ -93,6 +97,8 @@ const QUICK_WINDOW_MODES: ReadonlySet<ActivationMode> = new Set([
   ActivationMode.TRANSFORMATION,
   ActivationMode.QUICK_AI_REQUEST,
   ActivationMode.VOICE_QUICK_AI_REQUEST,
+  ActivationMode.SCREENSHOT_QUICK_AI_REQUEST,
+  ActivationMode.VOICE_SCREENSHOT_QUICK_AI_REQUEST,
   ActivationMode.CHAT_PROMPTS,
   ActivationMode.FAVORITES,
   ActivationMode.EXTERNAL_ACCESS,

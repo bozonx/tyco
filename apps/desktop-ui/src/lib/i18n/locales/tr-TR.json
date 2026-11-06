@@ -793,7 +793,9 @@
       "selectionActionsPage5": "Eylemler: sayfa 5",
       "favorites": "Favoriler",
       "quickAiRequest": "Hızlı YZ isteği",
-      "voiceQuickAiRequest": "Sesli hızlı YZ isteği"
+      "voiceQuickAiRequest": "Sesli hızlı YZ isteği",
+      "screenshotQuickAiRequest": "Ekran görüntüsü ve yapay zekâ sorusu",
+      "voiceScreenshotQuickAiRequest": "Ekran görüntüsü ve sesli yapay zekâ sorusu"
     },
     "hotkeyInput": {
       "cancelHint": "İptal için Esc",
@@ -1448,5 +1450,9 @@
     "selectProfile": "Profil seç",
     "profileLocked": "Oturum sırasında profil kilitlendi",
     "defaultProfile": "Yapay Zekaya Soru"
+  },
+  "screenshot": {
+    "retake": "Ekran görüntüsünü yeniden al",
+    "failed": "Ekran yakalanamadı. Ekran yakalama izinlerini ve masaüstü portalı desteğini kontrol edin."
   }
 }

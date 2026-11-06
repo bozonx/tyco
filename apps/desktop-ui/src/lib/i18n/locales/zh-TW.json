@@ -790,7 +790,9 @@
       "selectionActionsPage5": "操作：第 5 頁",
       "favorites": "我的最愛",
       "quickAiRequest": "AI 快速請求",
-      "voiceQuickAiRequest": "語音 AI 快速請求"
+      "voiceQuickAiRequest": "語音 AI 快速請求",
+      "screenshotQuickAiRequest": "擷取螢幕並向 AI 提問",
+      "voiceScreenshotQuickAiRequest": "擷取螢幕並向 AI 語音提問"
     },
     "hotkeyInput": {
       "cancelHint": "按 Esc 取消",
@@ -1445,5 +1447,9 @@
     "selectProfile": "選取設定檔",
     "profileLocked": "工作階段期間設定檔已鎖定",
     "defaultProfile": "向 AI 提問"
+  },
+  "screenshot": {
+    "retake": "重新擷取螢幕",
+    "failed": "無法擷取螢幕。請檢查螢幕擷取權限和桌面入口支援。"
   }
 }

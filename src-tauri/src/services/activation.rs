@@ -37,6 +37,7 @@ pub struct Activation {
     pub source: ActivationSource,
     pub target_window_id: Option<String>,
     pub selected_text: Option<String>,
+    pub screenshot: Option<crate::models::ChatImage>,
     /// The page of `actionPages` the action menu opens on; `None` or 0 for the first one.
     pub action_page_index: Option<usize>,
     /// The source the history opens filtered by; only for `History`.
@@ -52,6 +53,7 @@ impl Activation {
             source,
             target_window_id: None,
             selected_text: None,
+            screenshot: None,
             action_page_index: None,
             history_origin: None,
             access_request: None,
@@ -88,7 +90,10 @@ impl Activation {
     /// from: not an action page the user set to run without text,
     /// see `actionPages[].inputMode` of the config. The first page always takes text.
     pub fn can_take_selection(&self, user_config: &Value) -> bool {
-        if self.mode == ActivationMode::VoiceCommands || self.mode == ActivationMode::Favorites {
+        if self.mode.is_screenshot()
+            || self.mode == ActivationMode::VoiceCommands
+            || self.mode == ActivationMode::Favorites
+        {
             return false;
         }
         if self.mode != ActivationMode::SelectionActions {

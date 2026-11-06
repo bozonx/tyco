@@ -60,6 +60,8 @@
     "transformation": "",
     "quickAiRequest": "",
     "voiceQuickAiRequest": "",
+    "screenshotQuickAiRequest": "",
+    "voiceScreenshotQuickAiRequest": "",
     "chatPrompts": "",
     "favorites": "",
     "history": "",

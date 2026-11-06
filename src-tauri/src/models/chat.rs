@@ -276,3 +276,11 @@ mod validation_tests {
         assert!(serde_json::from_value::<ChatImage>(serde_json::json!({"id": "image", "mediaType": "image/svg+xml", "width": 1, "height": 1, "size": 1})).is_err());
     }
 }
+
+/// A live screenshot conversation transferred without a history round trip.
+#[derive(Debug, Clone, Serialize, Deserialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct ScreenshotChatTransfer {
+    pub chat: Chat,
+    pub question: Option<String>,
+}

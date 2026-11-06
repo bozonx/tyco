@@ -793,7 +793,9 @@
       "selectionActionsPage5": "მოქმედებები: გვერდი 5",
       "favorites": "Რჩეულები",
       "quickAiRequest": "სწრაფი AI მოთხოვნა",
-      "voiceQuickAiRequest": "ხმოვანი სწრაფი AI მოთხოვნა"
+      "voiceQuickAiRequest": "ხმოვანი სწრაფი AI მოთხოვნა",
+      "screenshotQuickAiRequest": "ეკრანის სურათი და კითხვა AI-ს",
+      "voiceScreenshotQuickAiRequest": "ეკრანის სურათი და ხმოვანი კითხვა AI-ს"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — გაუქმება",
@@ -1448,5 +1450,9 @@
     "selectProfile": "პროფილის არჩევა",
     "profileLocked": "პროფილი დაბლოკილია სესიის განმავლობაში",
     "defaultProfile": "კითხვა AI-ს"
+  },
+  "screenshot": {
+    "retake": "ეკრანის სურათის ხელახლა გადაღება",
+    "failed": "ეკრანის გადაღება ვერ მოხერხდა. შეამოწმეთ ეკრანის გადაღების ნებართვები და სამუშაო მაგიდის პორტალის მხარდაჭერა."
   }
 }

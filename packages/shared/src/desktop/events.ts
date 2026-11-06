@@ -8,6 +8,8 @@ export const DESKTOP_EVENTS = {
   STORAGE_CHANGED: 'app://storage-changed',
   STATE_CHANGED: 'app://state-changed',
   HOTKEYS_CHANGED: 'app://hotkeys-changed',
+  OPEN_SCREENSHOT_CHAT: 'app://open-screenshot-chat',
+  SCREENSHOT_FAILED: 'app://screenshot-failed',
   OPEN_MAIN_CHAT: 'app://open-main-chat',
   OPEN_MAIN_EDITOR: 'app://open-main-editor',
   /** A chat history changed in storage */

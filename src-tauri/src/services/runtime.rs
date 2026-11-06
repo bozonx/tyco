@@ -1,6 +1,7 @@
 use crate::locks::MutexExt;
 mod lifecycle;
 mod panel_layer;
+pub mod screenshot;
 pub mod settings_shutdown;
 mod target_focus;
 mod target_paste;
@@ -115,6 +116,9 @@ impl ActivationHost for RuntimeActivationHost<'_> {
 }
 
 pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError> {
+    if activation.mode.is_screenshot() {
+        return screenshot::activate(app, activation);
+    }
     let foreground_target = if activation.target_window_id.is_none() {
         super::platform::capture_foreground_target()
     } else {
@@ -207,6 +211,11 @@ fn activate_on_main_thread(
     activation: Activation,
     monitor_point: Option<(i32, i32)>,
 ) -> Result<(), AppError> {
+    if !activation.mode.is_screenshot() {
+        app.state::<super::chat_images::ChatImages>()
+            .lock()
+            .release_owner("quick/screenshot");
+    }
     let window_label = window_label_for_mode(activation.mode);
     let is_quick_window = window_label == QUICK_WINDOW_LABEL;
     app.state::<RuntimeWindows>().set_active_label(window_label);
@@ -255,6 +264,7 @@ fn activate_on_main_thread(
         snapshot.activation.mode = Some(activation.mode);
         snapshot.activation.target_window_id = activation.target_window_id;
         snapshot.activation.selected_text = activation.selected_text;
+        snapshot.activation.screenshot = activation.screenshot;
         snapshot.activation.action_page_index = activation.action_page_index;
         snapshot.activation.history_origin = activation.history_origin;
         snapshot.activation.access_request = activation.access_request;
@@ -282,6 +292,8 @@ fn window_label_for_mode(mode: ActivationMode) -> &'static str {
         | ActivationMode::Transformation
         | ActivationMode::QuickAiRequest
         | ActivationMode::VoiceQuickAiRequest
+        | ActivationMode::ScreenshotQuickAiRequest
+        | ActivationMode::VoiceScreenshotQuickAiRequest
         | ActivationMode::ChatPrompts
         | ActivationMode::Favorites
         | ActivationMode::ExternalAccess => QUICK_WINDOW_LABEL,

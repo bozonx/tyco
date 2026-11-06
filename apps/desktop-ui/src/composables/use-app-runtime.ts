@@ -221,6 +221,7 @@ export function useAppRuntime() {
     stopMetrics: activationMetrics.stop,
     disposePlugins: pluginRuntime.dispose,
     refreshPlugins: pluginRuntime.refreshInstalledPlugins,
+    notifyScreenshotFailed: () => toastKey('screenshot.failed', 'error'),
     notifySettingsConflict: () =>
       toastKey('settings.userData.syncConflictToast', 'warn'),
     shutdown: settingsShutdown,

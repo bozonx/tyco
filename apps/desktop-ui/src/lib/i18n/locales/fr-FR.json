@@ -796,7 +796,9 @@
       "selectionActionsPage5": "Actions : page 5",
       "favorites": "Favoris",
       "quickAiRequest": "Requête IA rapide",
-      "voiceQuickAiRequest": "Requête vocale IA rapide"
+      "voiceQuickAiRequest": "Requête vocale IA rapide",
+      "screenshotQuickAiRequest": "Capture d’écran et question à l’IA",
+      "voiceScreenshotQuickAiRequest": "Capture d’écran et question vocale à l’IA"
     },
     "hotkeyInput": {
       "cancelHint": "Échap pour annuler",
@@ -1451,5 +1453,9 @@
     "selectProfile": "Sélectionner un profil",
     "profileLocked": "Profil verrouillé pendant la session",
     "defaultProfile": "Question à l'IA"
+  },
+  "screenshot": {
+    "retake": "Reprendre la capture",
+    "failed": "Impossible de capturer l’écran. Vérifiez les autorisations de capture et la prise en charge du portail du bureau."
   }
 }

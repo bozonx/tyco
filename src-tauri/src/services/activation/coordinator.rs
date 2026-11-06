@@ -23,6 +23,7 @@ pub(crate) struct CaptureRequest {
 #[derive(Default)]
 pub(crate) struct ActivationCoordinator {
     generation: Mutex<u64>,
+    screenshot_generation: std::sync::atomic::AtomicU64,
 }
 
 impl ActivationCoordinator {
@@ -45,6 +46,8 @@ impl ActivationCoordinator {
         let capture = activation.selected_text.is_none()
             && !(activation.mode == ActivationMode::Editor && host.has_focused_window())
             && activation.can_take_selection(&host.user_config());
+        self.screenshot_generation
+            .store(0, std::sync::atomic::Ordering::SeqCst);
         *generation += 1;
         let request_generation = *generation;
         host.activate(activation)?;
@@ -54,11 +57,36 @@ impl ActivationCoordinator {
         }))
     }
 
+    /// Reserve a generation before asynchronous screenshot capture. Windows are
+    /// hidden by the caller on the same executor, before the capture is started.
+    pub fn reserve(&self) -> CaptureRequest {
+        let mut generation = self.generation.locked();
+        *generation += 1;
+        self.screenshot_generation
+            .store(*generation, std::sync::atomic::Ordering::SeqCst);
+        CaptureRequest {
+            generation: *generation,
+            foreground_target: None,
+        }
+    }
+
+    pub fn is_screenshot_pending(&self) -> bool {
+        self.screenshot_generation
+            .load(std::sync::atomic::Ordering::SeqCst)
+            != 0
+    }
+
+    pub fn is_current(&self, request: &CaptureRequest) -> bool {
+        *self.generation.locked() == request.generation
+    }
+
     /// Discards the captures still running: the window now shows something
     /// other than what they were started for, e.g. the main window opened
     /// from the tray or with a transferred text.
     pub fn invalidate(&self) {
         *self.generation.locked() += 1;
+        self.screenshot_generation
+            .store(0, std::sync::atomic::Ordering::SeqCst);
     }
 
     /// Serialize publication with invalidation by a newer activation.
@@ -69,7 +97,10 @@ impl ActivationCoordinator {
     ) -> Result<(), AppError> {
         let generation = self.generation.locked();
         if *generation == request.generation {
-            publish()?;
+            let result = publish();
+            self.screenshot_generation
+                .store(0, std::sync::atomic::Ordering::SeqCst);
+            result?;
         }
         Ok(())
     }
@@ -273,5 +304,65 @@ mod tests {
         assert!(coordinator
             .publish(&request, || Err(AppError::Failed("emit failed".into())))
             .is_err());
+    }
+
+    #[test]
+    fn a_screenshot_capture_is_published_only_while_it_is_current() {
+        let coordinator = ActivationCoordinator::default();
+        let request = coordinator.reserve();
+        assert!(coordinator.is_screenshot_pending());
+        assert!(coordinator.is_current(&request));
+
+        let mut published = false;
+        coordinator
+            .publish(&request, || {
+                published = true;
+                Ok(())
+            })
+            .unwrap();
+        assert!(published);
+        assert!(!coordinator.is_screenshot_pending());
+    }
+
+    #[test]
+    fn hiding_or_a_newer_activation_discards_a_late_screenshot() {
+        let coordinator = ActivationCoordinator::default();
+        let hidden = coordinator.reserve();
+        coordinator.invalidate();
+        assert!(!coordinator.is_current(&hidden));
+        assert!(!coordinator.is_screenshot_pending());
+
+        let replaced = coordinator.reserve();
+        let newer = coordinator.reserve();
+        assert!(!coordinator.is_current(&replaced));
+        let mut published = false;
+        coordinator
+            .publish(&replaced, || {
+                published = true;
+                Ok(())
+            })
+            .unwrap();
+        assert!(!published);
+        assert!(coordinator.is_current(&newer));
+
+        coordinator
+            .begin(&Host::default(), activation(ActivationMode::QuickAiRequest))
+            .unwrap();
+        assert!(!coordinator.is_current(&newer));
+        assert!(!coordinator.is_screenshot_pending());
+    }
+
+    #[test]
+    fn a_screenshot_activation_never_captures_the_selection() {
+        let coordinator = ActivationCoordinator::default();
+        for mode in [
+            ActivationMode::ScreenshotQuickAiRequest,
+            ActivationMode::VoiceScreenshotQuickAiRequest,
+        ] {
+            assert!(coordinator
+                .begin(&Host::default(), activation(mode))
+                .unwrap()
+                .is_none());
+        }
     }
 }

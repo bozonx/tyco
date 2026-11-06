@@ -67,6 +67,8 @@ desktop_events! {
     PluginsChanged = "app://plugins-changed" => ();
     StateChanged = "app://state-changed" => DesktopSnapshot;
     HotkeysChanged = "app://hotkeys-changed" => ();
+    OpenScreenshotChat = "app://open-screenshot-chat" => crate::models::ScreenshotChatTransfer;
+    ScreenshotFailed = "app://screenshot-failed" => crate::errors::ErrorCode;
     OpenMainChat = "app://open-main-chat" => OpenMainChatEvent;
     OpenMainEditor = "app://open-main-editor" => EditorTransfer;
     /// A chat history changed in storage.

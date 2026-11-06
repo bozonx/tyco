@@ -18,6 +18,9 @@ pub struct ActivationSnapshot {
     #[serde(rename = "windowId")]
     pub target_window_id: Option<String>,
     pub selected_text: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub screenshot: Option<super::ChatImage>,
     pub mode: Option<ActivationMode>,
     /// The page of `actionPages` the action menu opens on; `None` or 0 for the first one.
     pub action_page_index: Option<usize>,

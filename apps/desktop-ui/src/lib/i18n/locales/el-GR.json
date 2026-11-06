@@ -793,7 +793,9 @@
       "selectionActionsPage5": "Ενέργειες: σελίδα 5",
       "favorites": "Αγαπημένα",
       "quickAiRequest": "Γρήγορο αίτημα AI",
-      "voiceQuickAiRequest": "Φωνητικό γρήγορο αίτημα AI"
+      "voiceQuickAiRequest": "Φωνητικό γρήγορο αίτημα AI",
+      "screenshotQuickAiRequest": "Στιγμιότυπο οθόνης και ερώτηση στην ΤΝ",
+      "voiceScreenshotQuickAiRequest": "Στιγμιότυπο οθόνης και φωνητική ερώτηση στην ΤΝ"
     },
     "hotkeyInput": {
       "cancelHint": "Esc για ακύρωση",
@@ -1448,5 +1450,9 @@
     "selectProfile": "Επιλογή προφίλ",
     "profileLocked": "Το προφίλ είναι κλειδωμένο κατά τη συνεδρία",
     "defaultProfile": "Ερώτηση στο AI"
+  },
+  "screenshot": {
+    "retake": "Νέα λήψη στιγμιότυπου",
+    "failed": "Δεν ήταν δυνατή η λήψη της οθόνης. Ελέγξτε τις άδειες λήψης και την υποστήριξη της πύλης επιφάνειας εργασίας."
   }
 }

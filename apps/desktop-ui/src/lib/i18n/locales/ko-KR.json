@@ -790,7 +790,9 @@
       "selectionActionsPage5": "작업: 페이지 5",
       "favorites": "즐겨찾기",
       "quickAiRequest": "AI 빠른 요청",
-      "voiceQuickAiRequest": "음성 AI 빠른 요청"
+      "voiceQuickAiRequest": "음성 AI 빠른 요청",
+      "screenshotQuickAiRequest": "스크린샷과 AI 질문",
+      "voiceScreenshotQuickAiRequest": "스크린샷과 AI 음성 질문"
     },
     "hotkeyInput": {
       "cancelHint": "취소하려면 Esc",
@@ -1445,5 +1447,9 @@
     "selectProfile": "프로필 선택",
     "profileLocked": "세션 중 프로필이 잠금되었습니다",
     "defaultProfile": "AI에게 질문"
+  },
+  "screenshot": {
+    "retake": "스크린샷 다시 찍기",
+    "failed": "화면을 캡처하지 못했습니다. 화면 캡처 권한과 데스크톱 포털 지원을 확인하세요."
   }
 }

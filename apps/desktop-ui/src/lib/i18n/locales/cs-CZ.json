@@ -790,7 +790,9 @@
       "selectionActionsPage5": "Akce: stránka 5",
       "favorites": "Oblíbené",
       "quickAiRequest": "Rychlý dotaz na AI",
-      "voiceQuickAiRequest": "Hlasový rychlý dotaz na AI"
+      "voiceQuickAiRequest": "Hlasový rychlý dotaz na AI",
+      "screenshotQuickAiRequest": "Snímek obrazovky a dotaz AI",
+      "voiceScreenshotQuickAiRequest": "Snímek obrazovky a hlasový dotaz AI"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pro zrušení",
@@ -1445,5 +1447,9 @@
     "selectProfile": "Vybrat profil",
     "profileLocked": "Profil je během relace uzamčen",
     "defaultProfile": "Dotaz na AI"
+  },
+  "screenshot": {
+    "retake": "Pořídit snímek znovu",
+    "failed": "Obrazovku se nepodařilo zachytit. Zkontrolujte oprávnění k zachycení a podporu portálu plochy."
   }
 }

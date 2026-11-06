@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: a9e198d05b4117135d2c7f62a6cb34c616765601afaf1e0aa68d22a485d89883
+// Source hash: e29cff312be71f89ec5724164024cfd5c0e7b4405ff73e2f862d14fae685edc4
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -35,6 +35,8 @@ export type ActivationMode =
   | 'transformation'
   | 'quickAiRequest'
   | 'voiceQuickAiRequest'
+  | 'screenshotQuickAiRequest'
+  | 'voiceScreenshotQuickAiRequest'
   | 'chatPrompts'
   | 'favorites'
   | 'history'
@@ -320,6 +322,7 @@ export type DesktopActivationState = {
   activationId: number
   windowId: string | null
   selectedText: string | null
+  screenshot?: ChatImage
   mode: ActivationMode | null
   /**
    * The page of `actionPages` the action menu opens on; `None` or 0 for the
@@ -610,6 +613,9 @@ export type ProjectPermission = {
   read: ProjectAccessMode
   write: ProjectAccessMode
 }
+
+/** A live screenshot conversation transferred without a history round trip. */
+export type ScreenshotChatTransfer = { chat: Chat; question: string | null }
 
 /** A request of the webview to run a saved script. */
 export type ScriptActionRequest = {
@@ -919,6 +925,8 @@ export interface DesktopEventPayloads {
   'app://plugins-changed': null
   'app://state-changed': DesktopSnapshot
   'app://hotkeys-changed': null
+  'app://open-screenshot-chat': ScreenshotChatTransfer
+  'app://screenshot-failed': DesktopErrorCode
   'app://open-main-chat': OpenMainChatEvent
   'app://open-main-editor': EditorTransfer
   'app://chats-changed': ChatsChangedEvent

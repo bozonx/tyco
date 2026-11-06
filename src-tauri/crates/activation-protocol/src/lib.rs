@@ -19,6 +19,8 @@ pub const START_MODES: &[&str] = &[
     "transformation",
     "quickAiRequest",
     "voiceQuickAiRequest",
+    "screenshotQuickAiRequest",
+    "voiceScreenshotQuickAiRequest",
     "customTransformation",
     "voiceTransformation",
     "chatPrompts",
@@ -37,6 +39,8 @@ pub fn canonical_mode(value: &str) -> &str {
         "voice-quick-ai-request" | "voice-transformation" | "voiceTransformation" => {
             "voiceQuickAiRequest"
         }
+        "screenshot-quick-ai-request" => "screenshotQuickAiRequest",
+        "voice-screenshot-quick-ai-request" => "voiceScreenshotQuickAiRequest",
         "chat-prompts" => "chatPrompts",
         "settings" => "config",
         _ => value,
@@ -53,6 +57,8 @@ pub fn cli_mode(mode: &str) -> &str {
         "voiceChat" => "voice-chat",
         "quickAiRequest" | "customTransformation" => "quick-ai-request",
         "voiceQuickAiRequest" | "voiceTransformation" => "voice-quick-ai-request",
+        "screenshotQuickAiRequest" => "screenshot-quick-ai-request",
+        "voiceScreenshotQuickAiRequest" => "voice-screenshot-quick-ai-request",
         "chatPrompts" => "chat-prompts",
         "config" => "settings",
         _ => mode,

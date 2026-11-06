@@ -253,4 +253,208 @@ describe('QuickAiRequestModel', () => {
     )
     expect(deps.closeOverlay).toHaveBeenCalled()
   })
+
+  describe('screenshot mode', () => {
+    const screenshot = {
+      id: 'shot-1',
+      mediaType: 'image/webp' as const,
+      width: 1920,
+      height: 1080,
+      size: 1000,
+    }
+    const visionConfig = {
+      llm: {
+        tasks: { quickRequest: { modelId: 'vision' } },
+        models: [
+          {
+            id: 'vision',
+            name: 'Vision',
+            canUseTools: true,
+            canUseImages: true,
+          },
+          { id: 'text', name: 'Text', canUseTools: true, canUseImages: false },
+        ],
+      },
+    } as unknown as UserConfig
+    const bytes = new Uint8Array([1, 2, 3])
+
+    const screenshotSetup = (
+      overrides: Partial<QuickAiRequestModelDependencies> = {}
+    ) =>
+      createSetup({
+        sourceText: undefined,
+        screenshotMode: true,
+        sourceImage: screenshot,
+        initialProfileId: 'prof-1',
+        getUserConfig: () => visionConfig,
+        loadImage: vi.fn(async () => bytes),
+        openScreenshotChat: vi.fn(async () => {}),
+        ...overrides,
+      })
+
+    const userContents = (call: unknown[]) =>
+      (call[0] as { messages: { role: string; content: unknown }[] }).messages
+        .filter((m) => m.role === 'user')
+        .map((m) => m.content)
+
+    it('starts with the default Ask AI profile, ignoring the previous one', () => {
+      const { model } = screenshotSetup()
+      expect(model.profileId.value).toBeNull()
+      model.setProfileId('prof-2')
+      expect(model.profileId.value).toBeNull()
+    })
+
+    it.each(['text', 'voice'] as const)(
+      'sends the screenshot with the first %s question only',
+      async (mode) => {
+        const { model, deps } = screenshotSetup()
+        expect(await model.submitPrompt('What is on screen?', mode)).toBe(true)
+        expect(await model.submitPrompt('And the title?', mode)).toBe(true)
+
+        const stream = vi.mocked(deps.stream)
+        const first = userContents(stream.mock.calls[0])
+        expect(first).toEqual([
+          [
+            { type: 'text', text: 'What is on screen?' },
+            { type: 'file', data: bytes, mediaType: 'image/webp' },
+          ],
+        ])
+        const followUp = userContents(stream.mock.calls[1])
+        expect(followUp[0]).toEqual(first[0])
+        expect(followUp[1]).toBe('And the title?')
+        expect(deps.saveEditorHistorySession).not.toHaveBeenCalled()
+      }
+    )
+
+    it('does not send an empty question', async () => {
+      const { model, deps } = screenshotSetup()
+      expect(await model.submitPrompt('  ')).toBe(false)
+      expect(deps.stream).not.toHaveBeenCalled()
+    })
+
+    it('rejects a model without image support before sending', async () => {
+      const { model, deps } = screenshotSetup({
+        getUserConfig: () =>
+          ({
+            llm: {
+              ...visionConfig.llm,
+              tasks: { quickRequest: { modelId: 'text' } },
+            },
+          }) as unknown as UserConfig,
+        imageModelError: () => 'needs vision',
+      })
+      expect(await model.submitPrompt('What is this?')).toBe(false)
+      expect(model.error.value).toBe('needs vision')
+      expect(model.turns.value).toHaveLength(0)
+      expect(deps.stream).not.toHaveBeenCalled()
+    })
+
+    it('reports missing image bytes and keeps the screenshot for a retry', async () => {
+      const loadImage = vi
+        .fn<(id: string) => Promise<Uint8Array<ArrayBuffer>>>()
+        .mockRejectedValueOnce(new Error('gone'))
+        .mockResolvedValue(bytes)
+      const { model, deps } = screenshotSetup({
+        loadImage,
+        imageUnavailableError: () => 'image unavailable',
+      })
+      expect(await model.submitPrompt('What is this?')).toBe(false)
+      expect(model.error.value).toBe('image unavailable')
+      expect(deps.stream).not.toHaveBeenCalled()
+      expect(model.sourceImage.value).toEqual(screenshot)
+
+      expect(await model.submitPrompt('What is this?')).toBe(true)
+      expect(loadImage).toHaveBeenLastCalledWith('shot-1')
+    })
+
+    it('shows the provider error and keeps the image context', async () => {
+      const { model } = screenshotSetup({
+        stream: vi.fn(() => {
+          throw new Error('provider rejected the image')
+        }),
+      })
+      expect(await model.submitPrompt('What is this?')).toBe(false)
+      expect(model.error.value).toContain('provider rejected the image')
+      expect(model.sourceImage.value).toEqual(screenshot)
+    })
+
+    it('does not publish a cancelled answer', async () => {
+      let release!: () => void
+      const gate = new Promise<void>((resolve) => (release = resolve))
+      const { model } = screenshotSetup({
+        loadImage: vi.fn(async () => {
+          await gate
+          return bytes
+        }),
+      })
+      const pending = model.submitPrompt('What is this?')
+      model.stopGeneration()
+      release()
+      expect(await pending).toBe(false)
+      expect(model.isGenerating.value).toBe(false)
+    })
+
+    it('replaces or removes the screenshot only before the first question', async () => {
+      const { model } = screenshotSetup()
+      const retaken = { ...screenshot, id: 'shot-2' }
+      model.setSourceImage(retaken)
+      expect(model.sourceImage.value).toEqual(retaken)
+      model.setSourceImage(undefined)
+      expect(model.sourceImage.value).toBeUndefined()
+      model.setSourceImage(screenshot)
+
+      await model.submitPrompt('What is this?')
+      model.setSourceImage(retaken)
+      expect(model.sourceImage.value).toEqual(screenshot)
+    })
+
+    it('transfers the conversation with the screenshot to the main chat', async () => {
+      const { model, deps } = screenshotSetup()
+      await model.submitPrompt('What is this?')
+      await model.switchToChat('draft follow-up')
+
+      expect(deps.openScreenshotChat).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messages: [
+            expect.objectContaining({
+              role: 'user',
+              content: 'What is this?',
+              images: [screenshot],
+            }),
+            expect.objectContaining({ role: 'assistant' }),
+          ],
+        }),
+        'draft follow-up'
+      )
+      expect(deps.saveChat).not.toHaveBeenCalled()
+      expect(deps.openMainChat).not.toHaveBeenCalled()
+      expect(deps.closeOverlay).toHaveBeenCalled()
+    })
+
+    it('transfers an unanswered screenshot with its draft question', async () => {
+      const { model, deps } = screenshotSetup()
+      await model.switchToChat('What is this?')
+      expect(deps.openScreenshotChat).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messages: [
+            { role: 'user', content: 'What is this?', images: [screenshot] },
+          ],
+        }),
+        undefined
+      )
+    })
+
+    it('keeps the quick session when the transfer fails', async () => {
+      const { model, deps } = screenshotSetup({
+        openScreenshotChat: vi.fn(async () => {
+          throw new Error('transfer failed')
+        }),
+      })
+      await model.submitPrompt('What is this?')
+      await expect(model.switchToChat()).rejects.toThrow('transfer failed')
+      expect(deps.closeOverlay).not.toHaveBeenCalled()
+      expect(model.turns.value).toHaveLength(1)
+      expect(model.sourceImage.value).toEqual(screenshot)
+    })
+  })
 })

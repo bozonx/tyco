@@ -115,7 +115,7 @@ pub(crate) struct HotkeyBinding {
     pub(crate) description: String,
 }
 
-pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 15] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 17] = [
     ActivationMode::Editor,
     ActivationMode::QuickInput,
     ActivationMode::Chat,
@@ -128,6 +128,8 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 15] = [
     ActivationMode::Transformation,
     ActivationMode::QuickAiRequest,
     ActivationMode::VoiceQuickAiRequest,
+    ActivationMode::ScreenshotQuickAiRequest,
+    ActivationMode::VoiceScreenshotQuickAiRequest,
     ActivationMode::ChatPrompts,
     ActivationMode::Favorites,
     ActivationMode::History,
@@ -264,6 +266,8 @@ fn default_key(mode: ActivationMode) -> Option<&'static str> {
         | ActivationMode::Transformation
         | ActivationMode::QuickAiRequest
         | ActivationMode::VoiceQuickAiRequest
+        | ActivationMode::ScreenshotQuickAiRequest
+        | ActivationMode::VoiceScreenshotQuickAiRequest
         | ActivationMode::ChatPrompts
         | ActivationMode::Favorites
         | ActivationMode::History
@@ -339,6 +343,8 @@ fn mode_description(mode: ActivationMode) -> &'static str {
         ActivationMode::Transformation => "Open text transformation",
         ActivationMode::QuickAiRequest => "Quick AI request",
         ActivationMode::VoiceQuickAiRequest => "Voice quick AI request",
+        ActivationMode::ScreenshotQuickAiRequest => "Screenshot quick AI request",
+        ActivationMode::VoiceScreenshotQuickAiRequest => "Voice screenshot quick AI request",
         ActivationMode::ChatPrompts => "Open chat prompt presets",
         ActivationMode::Favorites => "Open favorites",
         ActivationMode::History => "Open history",

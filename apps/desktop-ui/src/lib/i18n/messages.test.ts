@@ -170,6 +170,8 @@ const DYNAMIC_KEYS = new Set([
     'transformation',
     'quickAiRequest',
     'voiceQuickAiRequest',
+    'screenshotQuickAiRequest',
+    'voiceScreenshotQuickAiRequest',
     'chatPrompts',
     'history',
     'favorites',

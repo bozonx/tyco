@@ -793,7 +793,9 @@
       "selectionActionsPage5": "Әрекеттер: 5-бет",
       "favorites": "Сүйіктілер",
       "quickAiRequest": "ЖИ жылдам сұрауы",
-      "voiceQuickAiRequest": "Дауыстық ЖИ жылдам сұрауы"
+      "voiceQuickAiRequest": "Дауыстық ЖИ жылдам сұрауы",
+      "screenshotQuickAiRequest": "Скриншот және ЖИ-ге сұрақ",
+      "voiceScreenshotQuickAiRequest": "Скриншот және ЖИ-ге дауыстық сұрақ"
     },
     "hotkeyInput": {
       "cancelHint": "Болдырмау үшін Esc",
@@ -1448,5 +1450,9 @@
     "selectProfile": "Профильді таңдау",
     "profileLocked": "Сессия кезінде профиль бұғатталған",
     "defaultProfile": "ЖИ-ға сұрақ"
+  },
+  "screenshot": {
+    "retake": "Скриншотты қайта түсіру",
+    "failed": "Экранды түсіру мүмкін болмады. Экранды түсіру рұқсаттарын және жұмыс үстелі порталының қолдауын тексеріңіз."
   }
 }

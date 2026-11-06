@@ -796,7 +796,9 @@
       "selectionActionsPage5": "Azioni: pagina 5",
       "favorites": "Preferiti",
       "quickAiRequest": "Richiesta rapida IA",
-      "voiceQuickAiRequest": "Richiesta vocale rapida IA"
+      "voiceQuickAiRequest": "Richiesta vocale rapida IA",
+      "screenshotQuickAiRequest": "Schermata e domanda all’IA",
+      "voiceScreenshotQuickAiRequest": "Schermata e domanda vocale all’IA"
     },
     "hotkeyInput": {
       "cancelHint": "Esc per annullare",
@@ -1451,5 +1453,9 @@
     "selectProfile": "Seleziona profilo",
     "profileLocked": "Profilo bloccato durante la sessione",
     "defaultProfile": "Domanda all'IA"
+  },
+  "screenshot": {
+    "retake": "Acquisisci di nuovo la schermata",
+    "failed": "Impossibile acquisire lo schermo. Controlla le autorizzazioni di acquisizione e il supporto del portale desktop."
   }
 }

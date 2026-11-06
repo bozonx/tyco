@@ -26,6 +26,26 @@
 
     <template #preview>
       <TextPreview v-if="props.text" :text="props.text" />
+      <div v-if="props.screenshotMode" class="screenshot-preview">
+        <ChatImageAttachment
+          v-if="model.sourceImage.value"
+          :image="model.sourceImage.value"
+          :removable="!model.turns.value.length && !isCapturing"
+          compact
+          @remove="removeScreenshot"
+        />
+        <IconButton
+          icon="mdi:camera-retake-outline"
+          :label="t('screenshot.retake')"
+          :title="t('screenshot.retake')"
+          :disabled="
+            isCapturing ||
+            model.isGenerating.value ||
+            Boolean(model.turns.value.length)
+          "
+          @click="retakeScreenshot"
+        />
+      </div>
 
       <!-- Voice recording waveform and live transcript -->
       <div v-if="isListening" class="voice-transcription-box">
@@ -121,8 +141,10 @@
 
     <template #actions>
       <QueryPanel
+        ref="queryPanelRef"
         v-model="prompt"
         :disabled="
+          isCapturing ||
           props.shortcutsDisabled ||
           Boolean(menuModalsStore.pendingModal) ||
           model.isGenerating.value
@@ -150,7 +172,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useDictationActions } from '../../composables/use-dictation-actions'
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
@@ -160,11 +182,13 @@ import useToast from '../../composables/use-toast'
 import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
 import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-meter'
 import { createDesktopChatTools } from '../../lib/chat-tools/desktop-chat-tools'
+import { getChatImage } from '../../lib/chat/chat-image-storage'
 import { resolveProfileInstructions } from '../../lib/chat/chat-profile-runtime'
 import { invokeDesktop } from '../../lib/desktop/invoke'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { describeError } from '../../lib/errors/describe-error'
 import { resultOrThrow } from '../../lib/ipc/ipc-model'
+import { formatLlmError } from '../../lib/llm/llm-errors'
 import { clientLogger } from '../../lib/logger'
 import { filterOptions } from '../../lib/menu-query/menu-query'
 import type { QuickAiRequestMenuParams } from '../../lib/modals/menu-modal-params'
@@ -181,6 +205,7 @@ import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useToolsStore } from '../../stores/tools'
+import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
 import ChatToolCall from '../chat/ChatToolCall.vue'
 import ReplyBlock from '../chat/ReplyBlock.vue'
 import AppIcon from '../common/AppIcon.vue'
@@ -226,6 +251,9 @@ const { handleEsc: defaultHandleEsc } = useOverlayNav()
 
 const isQuickWindow = isInQuickWindow()
 const prompt = ref('')
+const isCapturing = ref(false)
+const queryPanelRef = ref<InstanceType<typeof QueryPanel>>()
+let disposed = false
 const isListening = ref(false)
 const isFinishingVoice = ref(false)
 const liveTranscript = ref({ committed: '', draft: '' })
@@ -256,6 +284,20 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
   sourceText: props.text,
   initialInputMode: props.inputMode,
   initialProfileId: props.profileId,
+  screenshotMode: props.screenshotMode,
+  sourceImage: props.screenshot,
+  loadImage: (id) => getChatImage(id),
+  imageModelError: () => t('chat.imageModelRequired'),
+  imageUnavailableError: () => t('chat.imageUnavailable'),
+  describeLlmError: (error) => formatLlmError(error, t),
+  openScreenshotChat: async (chat, question) => {
+    resultOrThrow(
+      await ipcStore.call('open_screenshot_chat', {
+        transfer: { chat, question: question ?? null },
+      }),
+      'open_screenshot_chat'
+    )
+  },
   getUserConfig: () => desktopStore.userConfig,
   getAppConfig: () => APP_CONFIG,
   getAvailableTools: async (modelId: string, profile?: AiProfile) => {
@@ -341,7 +383,10 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
     chatId?: string
     autoSend?: boolean
   }) => {
-    await ipcStore.callOrNotify('open_main_chat', params)
+    resultOrThrow(
+      await ipcStore.callOrNotify('open_main_chat', params),
+      'open_main_chat'
+    )
   },
   saveChat: async (chat: Chat, pId?: string) => {
     resultOrThrow(
@@ -354,6 +399,39 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
   noModelError: () => t('llmErrors.noModel'),
   toolsUnsupportedError: () => t('llmErrors.toolsUnsupported'),
 })
+
+watch(
+  () => props.screenshot,
+  (image) => model.setSourceImage(image)
+)
+
+async function removeScreenshot() {
+  if (model.isGenerating.value || model.turns.value.length) return
+  const result = await ipcStore.callOrNotify('remove_screenshot')
+  if (result.success) model.setSourceImage(undefined)
+}
+
+async function retakeScreenshot() {
+  if (isCapturing.value || model.isGenerating.value || model.turns.value.length)
+    return
+  isCapturing.value = true
+  try {
+    if (isListening.value) {
+      const spoken = await stopVoice()
+      if (spoken)
+        prompt.value = [prompt.value, spoken].filter(Boolean).join(' ')
+    }
+    const result = await ipcStore.call('retake_screenshot')
+    if (disposed) return
+    if (result.success) {
+      if (result.result) model.setSourceImage(result.result)
+    } else toastKey('screenshot.failed', 'error')
+  } finally {
+    isCapturing.value = false
+    await nextTick()
+    if (!disposed) queryPanelRef.value?.focus()
+  }
+}
 
 // Query options suggestions filtered by profile
 const recentPrompts = computed(() => model.getRecentInstructions(5))
@@ -389,7 +467,7 @@ const promptHints = computed<QueryPanelHint[]>(() => [
 ])
 
 async function startVoice() {
-  if (isListening.value) return
+  if (isListening.value || isCapturing.value || disposed) return
   try {
     await dictation.startDictation({
       onText: (event) => {
@@ -402,6 +480,10 @@ async function startVoice() {
         toastText(describeDictationError(err, t), 'error')
       },
     })
+    if (disposed) {
+      await dictation.cancelDictation().catch(() => undefined)
+      return
+    }
     isListening.value = true
   } catch (err) {
     toastText(describeError(err, t), 'error')
@@ -445,9 +527,9 @@ async function toggleVoice() {
 async function finishVoice() {
   const spoken = await stopVoice()
   if (spoken) {
-    prompt.value = spoken
-    await model.submitPrompt(spoken, 'voice')
-    prompt.value = ''
+    prompt.value = [prompt.value, spoken].filter(Boolean).join(' ')
+    const sent = prompt.value
+    if (await model.submitPrompt(sent, 'voice')) prompt.value = ''
   }
 }
 
@@ -463,7 +545,7 @@ async function handleQuerySubmit(submitEvent?: QueryPanelSubmit) {
   if (isListening.value) {
     const spoken = await stopVoice()
     if (spoken) {
-      textToSend = spoken
+      textToSend = [textToSend, spoken].filter(Boolean).join(' ')
       inputKind = 'voice'
     }
   }
@@ -474,8 +556,8 @@ async function handleQuerySubmit(submitEvent?: QueryPanelSubmit) {
 
   if (!textToSend) return
 
-  prompt.value = ''
-  await model.submitPrompt(textToSend, inputKind)
+  prompt.value = textToSend
+  if (await model.submitPrompt(textToSend, inputKind)) prompt.value = ''
 }
 
 async function switchToChat() {
@@ -483,7 +565,11 @@ async function switchToChat() {
     await dictation.cancelDictation().catch(() => undefined)
     isListening.value = false
   }
-  await model.switchToChat(prompt.value)
+  try {
+    await model.switchToChat(prompt.value)
+  } catch (error) {
+    toastText(describeError(error, t), 'error')
+  }
 }
 
 function handleEsc() {
@@ -515,6 +601,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  disposed = true
   if (isListening.value) {
     void dictation.cancelDictation().catch(() => undefined)
   }
@@ -525,6 +612,13 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.screenshot-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-block: var(--space-xs);
+}
+
 .quick-profile-picker {
   display: flex;
   align-items: center;

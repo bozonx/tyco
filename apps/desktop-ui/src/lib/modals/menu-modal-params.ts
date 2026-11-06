@@ -1,4 +1,5 @@
 import type { ActionItem } from '@tyco/plugin-sdk'
+import type { ChatImage } from '@tyco/shared'
 import type { DictationTarget } from '../stt/dictation-target'
 import type {
   VoiceFinishBehavior,
@@ -45,6 +46,8 @@ export interface TransformationMenuParams {
   transformationId?: string
 }
 export interface QuickAiRequestMenuParams {
+  screenshotMode?: boolean
+  screenshot?: ChatImage
   text?: string
   shortcutsDisabled?: boolean
   inputMode?: 'text' | 'voice'

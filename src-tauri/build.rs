@@ -47,6 +47,9 @@ fn main() {
         tauri_build::AppManifest::new().commands(&[
             "acknowledge_fetch_chunk",
             "acknowledge_settings_shutdown",
+            "open_screenshot_chat",
+            "retake_screenshot",
+            "remove_screenshot",
             "activate_mode",
             "add_ai_profile_memory_fact",
             "add_editor_history_item",

@@ -796,7 +796,9 @@
       "selectionActionsPage5": "Radnje: stranica 5",
       "favorites": "Favoriti",
       "quickAiRequest": "Brzi upit za UI",
-      "voiceQuickAiRequest": "Glasovni brzi upit za UI"
+      "voiceQuickAiRequest": "Glasovni brzi upit za UI",
+      "screenshotQuickAiRequest": "Snimka zaslona i pitanje za AI",
+      "voiceScreenshotQuickAiRequest": "Snimka zaslona i glasovno pitanje za AI"
     },
     "hotkeyInput": {
       "cancelHint": "Esc za odustajanje",
@@ -1451,5 +1453,9 @@
     "selectProfile": "Odaberite profil",
     "profileLocked": "Profil je zaključan tijekom sesije",
     "defaultProfile": "Pitanje za AI"
+  },
+  "screenshot": {
+    "retake": "Ponovno snimi zaslon",
+    "failed": "Nije moguće snimiti zaslon. Provjerite dopuštenja za snimanje i podršku portala radne površine."
   }
 }

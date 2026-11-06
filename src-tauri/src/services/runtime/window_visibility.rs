@@ -78,7 +78,7 @@ pub fn open_main_chat(
 }
 
 /// Shows the main window and hands `payload` over to it.
-fn show_main_with<E: DesktopEvent>(
+pub(super) fn show_main_with<E: DesktopEvent>(
     app: &AppHandle,
     mode: ActivationMode,
     payload: E::Payload,
@@ -153,6 +153,9 @@ fn show_application_mode_on_main_thread(
 
 pub fn hide_quick_window_on_blur(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
+        if app.state::<ActivationCoordinator>().is_screenshot_pending() {
+            return Ok(());
+        }
         let snapshot = app.state::<AppState>().snapshot();
         let active_label = app.state::<RuntimeWindows>().active_label();
         if !is_current_quick_activation(
@@ -196,6 +199,7 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
         crate::services::platform::disable_panel_keyboard(&window)?;
     }
 
+    app.state::<ActivationCoordinator>().invalidate();
     state.update_snapshot(|snapshot| {
         snapshot.window.is_window_shown = false;
     });

@@ -1,6 +1,24 @@
 # Screenshot quick requests
 
-Status: planned; no implementation yet.
+Status: stage 1 implemented; native acceptance on the platform matrix and the
+release size/latency measurements are still to be recorded. Stage 2 not started.
+
+Stage 1 implementation notes:
+
+- Backend: `services/runtime/screenshot.rs` (orchestration, ownership under the
+  `quick/screenshot` image owner, retake/remove/transfer) and
+  `services/platform/screenshot/` (X11 RandR monitor + `GetImage`, Wayland
+  Screenshot portal, Windows GDI `BitBlt`). Captures are encoded by
+  `ChatImageStore::prepare_capture` without an intermediate PNG.
+- Monitor choice: X11 and Windows capture the monitor under the pointer. On
+  Wayland the portal decides: with portal version 3+ the `Screen` target is
+  requested non-interactively; older portals return what the compositor
+  captures (GNOME and KDE capture all outputs). TyCo does not crop portal
+  results in stage 1.
+- Failure and cancellation restore the previously visible TyCo window; a
+  failure emits `app://screenshot-failed`, shown as a toast in the quick window.
+- Screenshot quick sessions are not saved to editor history; transfer to the
+  main chat (`open_screenshot_chat`) persists through normal chat history.
 
 ## Goal and scope
 

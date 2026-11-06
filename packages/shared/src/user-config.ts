@@ -149,6 +149,8 @@ export interface HotkeysConfig {
   transformation: string
   quickAiRequest: string
   voiceQuickAiRequest: string
+  screenshotQuickAiRequest: string
+  voiceScreenshotQuickAiRequest: string
   chatPrompts: string
   favorites: string
   history: string

@@ -2,6 +2,7 @@ import { isRecord as record } from '../value-guards'
 import type {
   ChatAttachment,
   ChatImage,
+  ChatMessage,
   OpenMainChatEvent,
 } from '../generated/desktop-types'
 
@@ -65,6 +66,8 @@ export interface ChatParams {
   id?: string
   /** The title the chat has in the history */
   title?: string
+  /** Initial messages of a live conversation transferred between windows. */
+  messages?: ChatMessage[]
   images?: ChatImage[]
   attachments?: ChatAttachment[]
 }

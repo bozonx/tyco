@@ -793,7 +793,9 @@
       "selectionActionsPage5": "アクション: ページ 5",
       "favorites": "お気に入り",
       "quickAiRequest": "AIクイックリクエスト",
-      "voiceQuickAiRequest": "音声AIクイックリクエスト"
+      "voiceQuickAiRequest": "音声AIクイックリクエスト",
+      "screenshotQuickAiRequest": "スクリーンショットとAIへの質問",
+      "voiceScreenshotQuickAiRequest": "スクリーンショットとAIへの音声質問"
     },
     "hotkeyInput": {
       "cancelHint": "Escでキャンセル",
@@ -1448,5 +1450,9 @@
     "selectProfile": "プロファイルを選択",
     "profileLocked": "セッション中はプロファイルがロックされます",
     "defaultProfile": "AIへの質問"
+  },
+  "screenshot": {
+    "retake": "スクリーンショットを撮り直す",
+    "failed": "画面をキャプチャできませんでした。画面キャプチャの権限とデスクトップポータルの対応状況を確認してください。"
   }
 }

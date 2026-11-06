@@ -37,6 +37,7 @@ import type {
   ProfileMemoryChange,
   ProfileMemorySearchResult,
   ProfileMemoryTopic,
+  ScreenshotChatTransfer,
   ScriptActionRequest,
   ScriptExecutionResult,
   SecretStatus,
@@ -219,6 +220,10 @@ export interface DesktopCommands {
     }
     result: void
   }
+  open_screenshot_chat: {
+    args: { transfer: ScreenshotChatTransfer; activationId: number }
+    result: void
+  }
   open_socket: {
     args: { request: SocketRequest; onEvent: DesktopChannel }
     result: number
@@ -265,6 +270,7 @@ export interface DesktopCommands {
     args: { mode: UserDataRelocationMode; path?: string | null }
     result: void
   }
+  remove_screenshot: { args: { activationId: number }; result: void }
   rename_chat: {
     args: { id: string; title: string; profileId?: string | null }
     result: void
@@ -290,6 +296,10 @@ export interface DesktopCommands {
     result: void
   }
   restore_previous_plugin_package: { args: { id: string }; result: void }
+  retake_screenshot: {
+    args: { activationId: number }
+    result: ChatImage | null
+  }
   rewrite_ai_profile_memory: {
     args: {
       profileId: string
@@ -419,6 +429,9 @@ export const ACTIVATION_DESKTOP_COMMANDS = [
   'open_in_browser_and_hide',
   'open_main_chat',
   'open_main_editor',
+  'open_screenshot_chat',
   'paste_into_target_and_hide',
+  'remove_screenshot',
+  'retake_screenshot',
   'set_quick_input_region',
 ] as const satisfies readonly DesktopCommandName[]

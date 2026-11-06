@@ -86,10 +86,26 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
         .next_frame(&mut pixels)
         .map_err(|_| AppError::invalid_input("Invalid PNG pixels"))?;
     let pixels = &pixels[..output.buffer_size()];
-    let encoder = if output.color_type == png::ColorType::Rgba {
-        webp::Encoder::from_rgba(pixels, output.width, output.height)
+    encode_pixels(
+        pixels,
+        output.width,
+        output.height,
+        output.color_type == png::ColorType::Rgba,
+        name,
+    )
+}
+
+fn encode_pixels(
+    pixels: &[u8],
+    width: u32,
+    height: u32,
+    rgba: bool,
+    name: Option<String>,
+) -> Result<(ChatImage, Vec<u8>), AppError> {
+    let encoder = if rgba {
+        webp::Encoder::from_rgba(pixels, width, height)
     } else {
-        webp::Encoder::from_rgb(pixels, output.width, output.height)
+        webp::Encoder::from_rgb(pixels, width, height)
     };
     for quality in WEBP_QUALITIES {
         let encoded = encoder
@@ -101,8 +117,8 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
         let image = ChatImage {
             id: sha256_hex(&*encoded),
             media_type: crate::models::ChatImageMediaType::Webp,
-            width_px: output.width,
-            height_px: output.height,
+            width_px: width,
+            height_px: height,
             size_bytes: encoded.len(),
             name: name.map(|name| name.chars().take(255).collect()),
         };
@@ -173,6 +189,62 @@ impl ChatImageStore {
     /// encoding does not hold its lock; [`Self::remember`] keeps the result.
     pub fn prepare(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>), AppError> {
         normalize(bytes, name)
+    }
+
+    /// Native captures share the encoder and bounds without an intermediate PNG.
+    pub fn prepare_capture(
+        pixels: &[u8],
+        width: u32,
+        height: u32,
+        quality: &str,
+    ) -> Result<(ChatImage, Vec<u8>), AppError> {
+        if !within_limits(width, height) || pixels.len() != width as usize * height as usize * 4 {
+            return Err(AppError::FileTooLarge(
+                "Screenshot dimensions limit exceeded".into(),
+            ));
+        }
+        let max_edge = match quality {
+            "economy" => 1024,
+            "original" => MAX_DIMENSION,
+            _ => 1568,
+        };
+        let longest = width.max(height);
+        if longest <= max_edge {
+            return encode_pixels(pixels, width, height, true, Some("Screenshot.webp".into()));
+        }
+        let out_width = (u64::from(width) * u64::from(max_edge) / u64::from(longest)).max(1) as u32;
+        let out_height =
+            (u64::from(height) * u64::from(max_edge) / u64::from(longest)).max(1) as u32;
+        let mut resized = vec![0; out_width as usize * out_height as usize * 4];
+        // Bilinear sampling retains antialiased screen text when reducing HiDPI captures.
+        for y in 0..out_height {
+            let sy = ((y as f64 + 0.5) * height as f64 / out_height as f64 - 0.5).max(0.0);
+            let y0 = sy as u32;
+            let y1 = (y0 + 1).min(height - 1);
+            let dy = sy - y0 as f64;
+            for x in 0..out_width {
+                let sx = ((x as f64 + 0.5) * width as f64 / out_width as f64 - 0.5).max(0.0);
+                let x0 = sx as u32;
+                let x1 = (x0 + 1).min(width - 1);
+                let dx = sx - x0 as f64;
+                for c in 0..4usize {
+                    let at = |x: u32, y: u32| {
+                        pixels[(y as usize * width as usize + x as usize) * 4 + c] as f64
+                    };
+                    resized[(y as usize * out_width as usize + x as usize) * 4 + c] =
+                        ((at(x0, y0) * (1.0 - dx) + at(x1, y0) * dx) * (1.0 - dy)
+                            + (at(x0, y1) * (1.0 - dx) + at(x1, y1) * dx) * dy)
+                            .round() as u8;
+                }
+            }
+        }
+        encode_pixels(
+            &resized,
+            out_width,
+            out_height,
+            true,
+            Some("Screenshot.webp".into()),
+        )
     }
 
     pub fn remember(&mut self, image: ChatImage, bytes: Vec<u8>) -> Result<(), AppError> {
@@ -430,6 +502,25 @@ pub fn remove_orphan_images(
 mod tests {
     use super::*;
     use crate::services::test_support::TestDir;
+
+    #[test]
+    fn a_capture_is_encoded_without_an_intermediate_png_and_scaled_by_quality() {
+        let pixels = vec![200u8; 3200 * 1800 * 4];
+        let (image, bytes) =
+            ChatImageStore::prepare_capture(&pixels, 3200, 1800, "balanced").unwrap();
+        assert_eq!((image.width_px, image.height_px), (1568, 882));
+        assert_eq!(image.size_bytes, bytes.len());
+        let (small, _) =
+            ChatImageStore::prepare_capture(&pixels[..64 * 32 * 4], 64, 32, "economy").unwrap();
+        assert_eq!((small.width_px, small.height_px), (64, 32));
+    }
+
+    #[test]
+    fn a_capture_with_inconsistent_or_oversized_dimensions_is_rejected() {
+        assert!(ChatImageStore::prepare_capture(&[0; 15], 2, 2, "balanced").is_err());
+        assert!(ChatImageStore::prepare_capture(&[], 0, 0, "balanced").is_err());
+        assert!(ChatImageStore::prepare_capture(&[], 100_000, 1, "balanced").is_err());
+    }
 
     fn png() -> Vec<u8> {
         let mut bytes = Vec::new();

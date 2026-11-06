@@ -793,7 +793,9 @@
       "selectionActionsPage5": "Действия: страница 5",
       "favorites": "Избранное",
       "quickAiRequest": "Быстрый запрос к ИИ",
-      "voiceQuickAiRequest": "Голосовой быстрый запрос к ИИ"
+      "voiceQuickAiRequest": "Голосовой быстрый запрос к ИИ",
+      "screenshotQuickAiRequest": "Скриншот и вопрос ИИ",
+      "voiceScreenshotQuickAiRequest": "Скриншот и голосовой вопрос ИИ"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — отмена",
@@ -1448,5 +1450,9 @@
     "selectProfile": "Выбрать профиль",
     "profileLocked": "Профиль заблокирован во время сессии",
     "defaultProfile": "Вопрос к ИИ"
+  },
+  "screenshot": {
+    "retake": "Сделать снимок заново",
+    "failed": "Не удалось захватить экран. Проверьте разрешения на захват и поддержку портала рабочего стола."
   }
 }
