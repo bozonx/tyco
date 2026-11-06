@@ -25,6 +25,9 @@ describe('QuickAiRequestMenu', () => {
       'update_editor_history_item_session',
       () => undefined
     )
+    desktop.backend.handle('start_fetch', () => {
+      throw new Error('offline in test')
+    })
 
     desktop.setUserConfig({
       llm: {
@@ -59,13 +62,26 @@ describe('QuickAiRequestMenu', () => {
         stubs: {
           AppIcon: true,
           IconButton: {
-            props: ['icon', 'title'],
+            props: ['icon', 'title', 'disabled'],
             template:
-              '<button class="icon-btn" :title="title" @click="$attrs.onClick"><slot /></button>',
+              '<button class="icon-btn" :title="title" :disabled="disabled" @click="$attrs.onClick"><slot /></button>',
           },
           KeyboardKey: { template: '<kbd class="kbd"><slot /></kbd>' },
-          AudioWaveform: true,
-          LiveTranscript: true,
+          VoiceRecognitionMenu: {
+            name: 'VoiceRecognitionMenu',
+            props: [
+              'variant',
+              'chat',
+              'target',
+              'finishBehavior',
+              'activationMode',
+              'prefix',
+              'suffix',
+            ],
+            emits: ['cancelled', 'corrected'],
+            template:
+              '<div class="voice-bar" :data-prefix="prefix" :data-suffix="suffix" />',
+          },
           ReplyBlock: {
             props: ['block'],
             template:
@@ -200,6 +216,81 @@ describe('QuickAiRequestMenu', () => {
     )
   })
 
+  describe('voice input and send button', () => {
+    it('opens with VoiceRecognitionMenu bar when inputMode is voice', () => {
+      const wrapper = mountMenu({ inputMode: 'voice' })
+      expect(wrapper.find('.voice-bar').exists()).toBe(true)
+      expect(wrapper.find('.query-panel-input').exists()).toBe(false)
+    })
+
+    it('switches to VoiceRecognitionMenu with prefix and suffix from cursor position', async () => {
+      const wrapper = mountMenu()
+      const input = wrapper.find('.query-panel-input')
+      await input.setValue('Translate  please')
+      const el = input.element as HTMLInputElement
+      el.setSelectionRange(10, 10)
+
+      await wrapper.find('[title="chat.voiceInput"]').trigger('click')
+
+      const voiceBar = wrapper.find('.voice-bar')
+      expect(voiceBar.exists()).toBe(true)
+      expect(voiceBar.attributes('data-prefix')).toBe('Translate ')
+      expect(voiceBar.attributes('data-suffix')).toBe(' please')
+    })
+
+    it('inserts recognized text into the input and shows enabled send button on insert intent', async () => {
+      const wrapper = mountMenu()
+      const input = wrapper.find('.query-panel-input')
+      await input.setValue('Hello ')
+      const el = input.element as HTMLInputElement
+      el.setSelectionRange(6, 6)
+
+      await wrapper.find('[title="chat.voiceInput"]').trigger('click')
+      const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+      voiceMenu.vm.$emit('corrected', 'world', 'world', undefined, 'insert')
+      await flushPromises()
+
+      expect(wrapper.find('.voice-bar').exists()).toBe(false)
+      const restoredInput = wrapper.find('.query-panel-input')
+      expect((restoredInput.element as HTMLInputElement).value).toBe(
+        'Hello world'
+      )
+
+      const sendBtn = wrapper.find('[title="chat.sendMessage"]')
+      expect(sendBtn.exists()).toBe(true)
+      expect((sendBtn.element as HTMLButtonElement).disabled).toBe(false)
+    })
+
+    it('submits immediately when voice recognition finishes with submit intent', async () => {
+      const wrapper = mountMenu({ inputMode: 'voice' })
+      const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+      voiceMenu.vm.$emit(
+        'corrected',
+        'Summarize this',
+        'Summarize this',
+        undefined,
+        'submit'
+      )
+      await flushPromises()
+
+      expect(wrapper.find('.turn-prompt-text').text()).toBe('Summarize this')
+    })
+
+    it('disables the send button when prompt is empty and submits on click when non-empty', async () => {
+      const wrapper = mountMenu()
+      const sendBtn = wrapper.find('[title="chat.sendMessage"]')
+      expect((sendBtn.element as HTMLButtonElement).disabled).toBe(true)
+
+      await wrapper.find('.query-panel-input').setValue('Make it shorter')
+      expect((sendBtn.element as HTMLButtonElement).disabled).toBe(false)
+
+      await sendBtn.trigger('click')
+      await flushPromises()
+
+      expect(wrapper.find('.turn-prompt-text').text()).toBe('Make it shorter')
+    })
+  })
+
   describe('screenshot mode', () => {
     const screenshot = {
       id: 'shot-1',
@@ -215,8 +306,6 @@ describe('QuickAiRequestMenu', () => {
           plugins: [desktop.pinia],
           stubs: {
             AppIcon: true,
-            AudioWaveform: true,
-            LiveTranscript: true,
             ChatImageAttachment: {
               props: ['image', 'removable'],
               template:

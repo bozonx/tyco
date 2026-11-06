@@ -58,20 +58,6 @@
         />
       </div>
 
-      <!-- Voice recording waveform and live transcript -->
-      <div v-if="isListening" class="voice-transcription-box">
-        <AudioWaveform
-          :level="audioLevel"
-          :peak="audioPeak"
-          :duration-ms="recordingDurationMs"
-          :is-transcribing="isFinishingVoice"
-        />
-        <LiveTranscript
-          :committed="liveTranscript.committed"
-          :draft="liveTranscript.draft"
-        />
-      </div>
-
       <!-- Feed of multi-turn interactions -->
       <div v-if="model.turns.value.length > 0" class="turns-feed">
         <div v-for="turn in model.turns.value" :key="turn.id" class="turn-item">
@@ -148,7 +134,20 @@
     </template>
 
     <template #actions>
+      <VoiceRecognitionMenu
+        v-if="isListening"
+        variant="bar"
+        chat
+        target="chat"
+        finish-behavior="confirm"
+        :activation-mode="voiceActivationMode"
+        :prefix="voiceRange.prefix"
+        :suffix="voiceRange.suffix"
+        @cancelled="handleVoiceCancelled"
+        @corrected="handleVoiceCorrected"
+      />
       <QueryPanel
+        v-else
         ref="queryPanelRef"
         v-model="prompt"
         :disabled="
@@ -160,18 +159,40 @@
         :placeholder="t('menu.aiPromptPlaceholder')"
         :options="recentOptions"
         :hints="promptHints"
+        @blur="handleInputBlur"
         @submit="handleQuerySubmit"
         @back="handleEsc"
       >
         <template #after-input>
           <IconButton
-            :icon="isListening ? 'mdi:stop' : 'mdi:microphone'"
+            icon="mdi:microphone-outline"
             size="md"
+            variant="ghost"
             class="mic-action-btn"
-            :class="{ 'is-listening': isListening }"
-            :label="isListening ? t('chat.stop') : t('chat.voiceInput')"
-            :title="isListening ? t('chat.stop') : t('chat.voiceInput')"
-            @click="toggleVoice"
+            :disabled="isCapturing || model.isGenerating.value"
+            :label="t('chat.voiceInput')"
+            :title="t('chat.voiceInput')"
+            @click="startVoice"
+          />
+          <IconButton
+            v-if="!model.isGenerating.value"
+            icon="mdi:arrow-up"
+            size="md"
+            variant="primary"
+            class="send-action-btn"
+            :disabled="!canSend"
+            :label="t('chat.sendMessage')"
+            :title="t('chat.sendMessage')"
+            @click="handleQuerySubmit({ ctrl: false })"
+          />
+          <IconButton
+            v-else
+            icon="mdi:stop"
+            size="md"
+            class="stop-action-btn"
+            :label="t('chat.stop')"
+            :title="t('chat.stop')"
+            @click="model.stopGeneration()"
           />
         </template>
       </QueryPanel>
@@ -182,17 +203,15 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { useDictationActions } from '../../composables/use-dictation-actions'
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
 import useToast from '../../composables/use-toast'
-import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
-import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-meter'
 import { createDesktopChatTools } from '../../lib/chat-tools/desktop-chat-tools'
 import { getChatImage } from '../../lib/chat/chat-image-storage'
 import { chatModelOptions } from '../../lib/chat/chat-llm-selection'
 import { resolveProfileInstructions } from '../../lib/chat/chat-profile-runtime'
+import { insertAtCursor, type TextRange } from '../../lib/chat/insert-at-cursor'
 import { invokeDesktop } from '../../lib/desktop/invoke'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { describeError } from '../../lib/errors/describe-error'
@@ -209,7 +228,8 @@ import {
 } from '../../lib/quick-ai-request/quick-ai-request-model'
 import { createQuickAiRequestSession } from '../../lib/quick-ai-request/quick-ai-request-session'
 import { REPLY_BLOCKS_TOOL_NAME } from '../../lib/reply-blocks/reply-blocks-tool'
-import { describeDictationError } from '../../lib/stt/dictation-error'
+import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
+import { useActionMenuStore } from '../../stores/action-menu'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useDesktopStore } from '../../stores/desktop'
 import { useHistoryStore } from '../../stores/history'
@@ -226,13 +246,12 @@ import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
 import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
-import AudioWaveform from '../voice/AudioWaveform.vue'
-import LiveTranscript from '../voice/LiveTranscript.vue'
 import QueryPanel, {
   type QueryPanelHint,
   type QueryPanelOption,
   type QueryPanelSubmit,
 } from './QueryPanel.vue'
+import VoiceRecognitionMenu from './VoiceRecognitionMenu.vue'
 import {
   APP_CONFIG,
   type AiProfile,
@@ -249,6 +268,7 @@ const props = withDefaults(defineProps<QuickAiRequestMenuParams>(), {
   profileId: null,
 })
 
+const actionMenuStore = useActionMenuStore()
 const menuModalsStore = useMenuModalsStore()
 const desktopStore = useDesktopStore()
 const historyStore = useHistoryStore()
@@ -257,7 +277,6 @@ const llmStore = useLlmStore()
 const toolsStore = useToolsStore()
 const aiProfilesStore = useAiProfilesStore()
 const secretsStore = useSecretsStore()
-const dictation = useDictationActions()
 const editorNavigation = useEditorNavigation()
 const { toastKey, toastText } = useToast()
 const { t } = useI18n()
@@ -268,19 +287,29 @@ const prompt = ref('')
 const isCapturing = ref(false)
 const queryPanelRef = ref<InstanceType<typeof QueryPanel>>()
 let disposed = false
-const isListening = ref(false)
-const isFinishingVoice = ref(false)
-const liveTranscript = ref({ committed: '', draft: '' })
-
-const { audioLevel, audioPeak, recordingDurationMs } = useVoiceRecordingMeter(
-  () => isListening.value
+const isListening = ref(props.inputMode === 'voice')
+const lastInputKind = ref<'text' | 'voice'>(
+  props.inputMode === 'voice' ? 'voice' : 'text'
 )
+const rememberedSelection = ref<TextRange | null>(null)
+const voiceRange = ref({
+  start: 0,
+  end: 0,
+  prefix: '',
+  suffix: '',
+})
 
-useVoiceFinishSignal(
-  () => (isQuickWindow ? 'voiceQuickAiRequest' : undefined),
-  () => void finishVoice(),
-  () => void finishVoice()
-)
+const voiceActivationMode = computed(() => {
+  if (!isQuickWindow) return undefined
+  const mode = desktopStore.desktopState?.mode
+  if (
+    mode === 'voiceQuickAiRequest' ||
+    mode === 'voiceScreenshotQuickAiRequest'
+  ) {
+    return mode
+  }
+  return undefined
+})
 
 // Profile select options
 const profileSelectOptions = computed(() => [
@@ -514,11 +543,7 @@ async function retakeScreenshot() {
   if (isCapturing.value || model.isSourceImageLocked.value) return
   isCapturing.value = true
   try {
-    if (isListening.value) {
-      const spoken = await stopVoice()
-      if (spoken)
-        prompt.value = [prompt.value, spoken].filter(Boolean).join(' ')
-    }
+    isListening.value = false
     const result = await ipcStore.call('retake_screenshot')
     if (disposed) return
     if (result.success) {
@@ -530,6 +555,13 @@ async function retakeScreenshot() {
     if (!disposed) queryPanelRef.value?.focus()
   }
 }
+
+const canSend = computed(
+  () =>
+    Boolean(prompt.value.trim()) &&
+    !isCapturing.value &&
+    !model.isGenerating.value
+)
 
 // Query options suggestions filtered by profile
 const recentPrompts = computed(() => model.getRecentInstructions(5))
@@ -545,7 +577,7 @@ const promptHints = computed<QueryPanelHint[]>(() => [
   {
     keys: ['Enter'],
     label: t('menu.aiPromptRun'),
-    disabled: !prompt.value.trim() && !isListening.value,
+    disabled: !canSend.value,
     action: () => handleQuerySubmit({ ctrl: false }),
   },
   {
@@ -564,70 +596,87 @@ const promptHints = computed<QueryPanelHint[]>(() => [
     : []),
 ])
 
-async function startVoice() {
-  if (isListening.value || isCapturing.value || disposed) return
-  try {
-    await dictation.startDictation({
-      onText: (event) => {
-        liveTranscript.value = {
-          committed: event.committed,
-          draft: event.draft,
-        }
-      },
-      onError: (err) => {
-        toastText(describeDictationError(err, t), 'error')
-      },
-    })
-    if (disposed) {
-      await dictation.cancelDictation().catch(() => undefined)
+function handleInputBlur(event: FocusEvent) {
+  const input = event.target as HTMLInputElement | null
+  if (!input) return
+  rememberedSelection.value = {
+    start: input.selectionStart ?? prompt.value.length,
+    end: input.selectionEnd ?? prompt.value.length,
+  }
+}
+
+function captureVoiceRange() {
+  const raw = queryPanelRef.value?.getSelection() ??
+    rememberedSelection.value ?? {
+      start: prompt.value.length,
+      end: prompt.value.length,
+    }
+  const start = Math.max(0, Math.min(raw.start, prompt.value.length))
+  const end = Math.max(start, Math.min(raw.end, prompt.value.length))
+  voiceRange.value = {
+    start,
+    end,
+    prefix: prompt.value.slice(0, start),
+    suffix: prompt.value.slice(end),
+  }
+}
+
+function startVoice() {
+  if (
+    isListening.value ||
+    isCapturing.value ||
+    model.isGenerating.value ||
+    disposed
+  )
+    return
+  captureVoiceRange()
+  isListening.value = true
+}
+
+function handleVoiceCancelled() {
+  isListening.value = false
+  void nextTick(() => queryPanelRef.value?.focus())
+}
+
+async function handleVoiceCorrected(
+  resultText: string,
+  _recognizedText: string,
+  _correctedText: string | undefined,
+  intent: VoiceFinishIntent
+) {
+  isListening.value = false
+  if (intent === 'copy') {
+    void actionMenuStore.runDefaultAction('copyToClipboard', resultText)
+    return
+  }
+
+  let caret = voiceRange.value.end
+  if (resultText.trim()) {
+    const inserted = insertAtCursor(
+      prompt.value,
+      { start: voiceRange.value.start, end: voiceRange.value.end },
+      resultText
+    )
+    prompt.value = inserted.value
+    caret = inserted.caret
+    rememberedSelection.value = { start: caret, end: caret }
+    lastInputKind.value = 'voice'
+  }
+
+  if (intent === 'submit') {
+    const textToSend = prompt.value.trim()
+    if (textToSend && (await model.submitPrompt(textToSend, 'voice'))) {
+      prompt.value = ''
+      rememberedSelection.value = null
+      lastInputKind.value = 'text'
       return
     }
-    isListening.value = true
-  } catch (err) {
-    toastText(describeError(err, t), 'error')
   }
-}
 
-async function stopVoice(): Promise<string> {
-  if (!isListening.value) return ''
-  isFinishingVoice.value = true
-  try {
-    const text = await dictation.finishDictation()
-    isListening.value = false
-    const spoken =
-      (
-        liveTranscript.value.committed +
-        ' ' +
-        (liveTranscript.value.draft || '')
-      ).trim() || text.trim()
-    liveTranscript.value = { committed: '', draft: '' }
-    return spoken
-  } catch (err) {
-    toastText(describeError(err, t), 'error')
-    return ''
-  } finally {
-    isFinishingVoice.value = false
-    isListening.value = false
-  }
-}
-
-async function toggleVoice() {
-  if (isListening.value) {
-    const spoken = await stopVoice()
-    if (spoken) {
-      prompt.value = prompt.value ? `${prompt.value} ${spoken}` : spoken
-    }
-  } else {
-    await startVoice()
-  }
-}
-
-async function finishVoice() {
-  const spoken = await stopVoice()
-  if (spoken) {
-    prompt.value = [prompt.value, spoken].filter(Boolean).join(' ')
-    const sent = prompt.value
-    if (await model.submitPrompt(sent, 'voice')) prompt.value = ''
+  await nextTick()
+  if (!disposed) {
+    queryPanelRef.value?.focus()
+    queryPanelRef.value?.select(caret, caret)
   }
 }
 
@@ -638,31 +687,25 @@ async function handleQuerySubmit(submitEvent?: QueryPanelSubmit) {
   }
 
   let textToSend = prompt.value.trim()
-  let inputKind: 'text' | 'voice' = 'text'
-
-  if (isListening.value) {
-    const spoken = await stopVoice()
-    if (spoken) {
-      textToSend = [textToSend, spoken].filter(Boolean).join(' ')
-      inputKind = 'voice'
-    }
-  }
+  let inputKind: 'text' | 'voice' = lastInputKind.value
 
   if (submitEvent?.option) {
     textToSend = submitEvent.option.label
+    inputKind = 'text'
   }
 
   if (!textToSend) return
 
   prompt.value = textToSend
-  if (await model.submitPrompt(textToSend, inputKind)) prompt.value = ''
+  if (await model.submitPrompt(textToSend, inputKind)) {
+    prompt.value = ''
+    rememberedSelection.value = null
+    lastInputKind.value = 'text'
+  }
 }
 
 async function switchToChat() {
-  if (isListening.value) {
-    await dictation.cancelDictation().catch(() => undefined)
-    isListening.value = false
-  }
+  isListening.value = false
   try {
     await model.switchToChat(prompt.value)
   } catch (error) {
@@ -675,11 +718,6 @@ function handleEsc() {
     model.stopGeneration()
     return
   }
-  if (isListening.value) {
-    void dictation.cancelDictation().catch(() => undefined)
-    isListening.value = false
-    return
-  }
   defaultHandleEsc()
 }
 
@@ -687,22 +725,14 @@ function goToSettings() {
   void ipcStore.callOrNotify('activate_mode', { mode: 'config' })
 }
 
-onMounted(async () => {
+onMounted(() => {
   if (!aiProfilesStore.isLoaded) {
     void aiProfilesStore.loadAll()
-  }
-
-  if (props.inputMode === 'voice') {
-    await nextTick()
-    await startVoice()
   }
 })
 
 onUnmounted(() => {
   disposed = true
-  if (isListening.value) {
-    void dictation.cancelDictation().catch(() => undefined)
-  }
   if (model.isGenerating.value) {
     model.stopGeneration()
   }
@@ -734,13 +764,6 @@ onUnmounted(() => {
 
 .quick-profile-icon {
   color: var(--color-text-subtle);
-}
-
-.voice-transcription-box {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  margin-top: var(--space-sm);
 }
 
 .turns-feed {
@@ -838,22 +861,5 @@ onUnmounted(() => {
   color: inherit;
   cursor: pointer;
   padding: 0;
-}
-
-.mic-action-btn.is-listening {
-  color: var(--color-danger);
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.15);
-  }
-  100% {
-    transform: scale(1);
-  }
 }
 </style>

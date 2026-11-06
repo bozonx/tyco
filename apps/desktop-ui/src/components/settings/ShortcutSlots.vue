@@ -7,14 +7,17 @@
       class="shortcut-slot"
       :class="{
         'is-empty': !items[index],
+        'is-stacked': stacked,
         'is-dragged': draggedIndex === index,
         'is-drop-target': targetIndex === index,
       }"
     >
-      <KeyboardKey>{{ key }}</KeyboardKey>
+      <div class="slot-lead">
+        <KeyboardKey>{{ key }}</KeyboardKey>
+        <DragHandle v-if="items[index]" @drag="startDrag(index, $event)" />
+      </div>
 
       <template v-if="items[index]">
-        <DragHandle @drag="startDrag(index, $event)" />
         <div class="slot-content">
           <slot name="item" :item="items[index]" :index="index" />
         </div>
@@ -53,7 +56,11 @@ import DragHandle from '../common/DragHandle.vue'
 import IconButton from '../common/IconButton.vue'
 import KeyboardKey from '../common/KeyboardKey.vue'
 
-const props = defineProps<{ items: readonly (T | null | undefined)[] }>()
+const props = defineProps<{
+  items: readonly (T | null | undefined)[]
+  /** Pin the key to the top with the drag handle under it (multi-field items). */
+  stacked?: boolean
+}>()
 
 const emit = defineEmits<{
   (event: 'move', from: number, to: number): void
@@ -102,6 +109,22 @@ const { draggedIndex, targetIndex, startDrag } = useSortableList(
 
 .shortcut-slot.is-dragged {
   opacity: 0.45;
+}
+
+.slot-lead {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.shortcut-slot.is-stacked {
+  align-items: flex-start;
+}
+
+.is-stacked .slot-lead {
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .slot-content {

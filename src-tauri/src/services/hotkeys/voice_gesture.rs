@@ -103,7 +103,8 @@ pub(crate) fn pressed(app: &AppHandle, target: &HotkeyTarget, id: &str) -> Resul
         mode @ (ActivationMode::Voice
         | ActivationMode::VoiceChat
         | ActivationMode::VoiceCommands
-        | ActivationMode::VoiceQuickAiRequest),
+        | ActivationMode::VoiceQuickAiRequest
+        | ActivationMode::VoiceScreenshotQuickAiRequest),
     ) = target
     else {
         return target.trigger(app, id);

@@ -27,6 +27,7 @@
           autocomplete="off"
           @input="onInput"
           @keydown="onKeyDown"
+          @blur="emit('blur', $event)"
         />
       </label>
       <slot name="after-input" />
@@ -110,6 +111,7 @@
 import { nextTick, onMounted, ref, useId, watch } from 'vue'
 
 import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
+import { useTextControl } from '../../composables/use-text-control'
 import {
   type QueryOption,
   moveHighlight,
@@ -173,6 +175,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'submit', value: QueryPanelSubmit): void
+  (e: 'blur', value: FocusEvent): void
   (e: 'back'): void
   (e: 'save'): void
 }>()
@@ -180,6 +183,7 @@ const emit = defineEmits<{
 const listboxId = useId()
 const inputRef = ref<HTMLInputElement | null>(null)
 const highlightedOptionIndex = ref(-1)
+const textControl = useTextControl(inputRef)
 
 const resetHighlight = () => {
   const selectedOptionIndex = props.options.findIndex(
@@ -196,7 +200,7 @@ const resetHighlight = () => {
 
 watch(() => props.options, resetHighlight, { immediate: true })
 
-const focus = () => inputRef.value?.focus()
+const focus = () => textControl.focus()
 watch(
   () => props.disabled,
   (disabled) => {
@@ -285,7 +289,7 @@ useDismissibleLayer({
 
 onMounted(focus)
 
-defineExpose({ focus })
+defineExpose(textControl)
 </script>
 
 <style scoped>

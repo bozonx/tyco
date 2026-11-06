@@ -120,7 +120,11 @@ impl Activation {
     ) -> bool {
         matches!(
             self.mode,
-            ActivationMode::Voice | ActivationMode::VoiceChat | ActivationMode::VoiceCommands
+            ActivationMode::Voice
+                | ActivationMode::VoiceChat
+                | ActivationMode::VoiceCommands
+                | ActivationMode::VoiceQuickAiRequest
+                | ActivationMode::VoiceScreenshotQuickAiRequest
         ) && self.source != ActivationSource::Ui
             && self.selected_text.is_none()
             && is_window_shown
@@ -166,8 +170,17 @@ mod tests {
 
     #[test]
     fn a_repeated_external_activation_finishes_the_open_voice_input() {
-        use ActivationMode::{Chat, Voice, VoiceChat, VoiceCommands};
-        for mode in [Voice, VoiceChat, VoiceCommands] {
+        use ActivationMode::{
+            Chat, Voice, VoiceChat, VoiceCommands, VoiceQuickAiRequest,
+            VoiceScreenshotQuickAiRequest,
+        };
+        for mode in [
+            Voice,
+            VoiceChat,
+            VoiceCommands,
+            VoiceQuickAiRequest,
+            VoiceScreenshotQuickAiRequest,
+        ] {
             for source in [
                 ActivationSource::Hotkey,
                 ActivationSource::Dbus,

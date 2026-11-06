@@ -10,6 +10,7 @@
     <SettingsSection bare>
       <ShortcutSlots
         :items="slots"
+        stacked
         @move="moveItem"
         @add="addItem"
         @remove="removeItem"

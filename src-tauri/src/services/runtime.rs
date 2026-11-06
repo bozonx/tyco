@@ -117,7 +117,12 @@ impl ActivationHost for RuntimeActivationHost<'_> {
 
 pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError> {
     if activation.mode.is_screenshot() {
-        return screenshot::activate(app, activation);
+        let snapshot = app.state::<AppState>().snapshot();
+        if !activation
+            .finishes_open_voice_input(snapshot.activation.mode, snapshot.window.is_window_shown)
+        {
+            return screenshot::activate(app, activation);
+        }
     }
     let foreground_target = if activation.target_window_id.is_none() {
         super::platform::capture_foreground_target()

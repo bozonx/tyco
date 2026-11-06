@@ -108,7 +108,11 @@ export interface VoiceMenuParams {
    * The activation mode that opened this voice input: its repeated hotkey or
    * external call confirms the input.
    */
-  activationMode?: 'voice' | 'voiceChat'
+  activationMode?:
+    | 'voice'
+    | 'voiceChat'
+    | 'voiceQuickAiRequest'
+    | 'voiceScreenshotQuickAiRequest'
 }
 export interface DiffMenuParams {
   oldText: string
