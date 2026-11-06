@@ -7,7 +7,7 @@ import type { FakeDesktop } from './fake-desktop'
 export function installVoice(desktop: FakeDesktop) {
   desktop.userConfig.stt = {
     provider: 'sherpaOnnx',
-    isVoiceCorrectionEnabled: false,
+    correctionMode: 'off',
     isVoiceHoldEnabled: false,
     isStylingBarEnabled: false,
     isStylingBarDirectInsertEnabled: false,
@@ -16,7 +16,6 @@ export function installVoice(desktop: FakeDesktop) {
       sherpaOnnx: { baseUrl: 'ws://speech.invalid:6006' },
       geminiLive: {
         modelId: 'gemini-3.5-transcribe-live',
-        systemInstruction: '',
       },
     },
   }

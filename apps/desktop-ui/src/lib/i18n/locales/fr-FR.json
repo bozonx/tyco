@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "Capture d’écran et question à l’IA",
     "voiceScreenshotQuickAiRequest": "Capture d’écran et question vocale à l’IA"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Joindre un fichier",
     "alertCaution": "Attention",
@@ -187,7 +189,9 @@
       "noCommands": "Aucune commande personnalisée configurée pour le moment.",
       "noCommandsHint": "Créez d'abord des commandes dans Paramètres → Commandes."
     },
-    "replyBlocks": { "toolLabel": "Blocs de réponse" }
+    "replyBlocks": {
+      "toolLabel": "Blocs de réponse"
+    }
   },
   "commands": {
     "advanced": "Avancé",
@@ -772,9 +776,6 @@
     "externalMethods": "Autres méthodes d’activation",
     "externalMethodsHint": "Utilisez cette commande depuis un terminal, un script ou un raccourci système. Le client tyco-ctl doit être installé et disponible dans le PATH. Linux prend aussi en charge D-Bus : org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "forcedByEInk": "Avec le thème encre électronique, toujours un contraste élevé et pas d’animations",
-    "formatWithLlm": "Corriger automatiquement la dictée avant de l'insérer dans une application externe",
-    "geminiLivePrompt": "Invite de dictée",
-    "geminiLivePromptInfo": "Instructions envoyées à Gemini Live pendant la reconnaissance vocale. Précisez la mise en forme du code, la correction des lapsus et la ponctuation.",
     "generalTab": "Général",
     "globalActionsHint": "Raccourcis clavier globaux qui appellent Tyco depuis n’importe quelle application. Cliquez sur un champ et appuyez sur la combinaison voulue ; Échap annule la saisie.",
     "globalHotkeysTitle": "Raccourcis globaux",
@@ -1230,7 +1231,9 @@
     "searchFavoritesPlaceholder": "Rechercher des favoris…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
+  "shortcuts": {
+    "insertIntoEditor": "Insérer dans l’éditeur"
+  },
   "theme": {
     "auto": "Comme le système",
     "dark": "Sombre",
@@ -1369,7 +1372,9 @@
     "missingSelection": "Un texte sélectionné est nécessaire."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "demande dans le chat" },
+    "actions": {
+      "askInChat": "demande dans le chat"
+    },
     "languages": {
       "cs-CZ": "Tchèque",
       "de-DE": "allemand",
@@ -1399,7 +1404,9 @@
     },
     "translate": "traduis en"
   },
-  "window": { "clickToFocus": "Cliquez pour continuer" },
+  "window": {
+    "clickToFocus": "Cliquez pour continuer"
+  },
   "write": {
     "alreadyCorrected": "Le texte est déjà corrigé",
     "cancel": "Annuler",
@@ -1449,7 +1456,9 @@
     "valueNotSet": "Non définie sur cet appareil : les commandes qui l’utilisent ne s’exécutent pas",
     "valuePlaceholder": "Un chemin, une adresse ou un autre texte"
   },
-  "favorites": { "noMatches": "Aucun favori correspondant" },
+  "favorites": {
+    "noMatches": "Aucun favori correspondant"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Insérer dans la fenêtre",
     "insertIntoEditor": "Vers l'éditeur",

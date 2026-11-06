@@ -1095,7 +1095,11 @@
           "enum": ["deepgram", "sherpaOnnx", "geminiLive"],
           "default": "deepgram"
         },
-        "isVoiceCorrectionEnabled": { "type": "boolean", "default": false },
+        "correctionMode": {
+          "type": "string",
+          "enum": ["live", "onSubmit", "off"],
+          "default": "off"
+        },
         "isVoiceHoldEnabled": { "type": "boolean", "default": false },
         "isStylingBarEnabled": { "type": "boolean", "default": false },
         "isStylingBarDirectInsertEnabled": {
@@ -1132,16 +1136,11 @@
                 "modelId": {
                   "type": "string",
                   "default": "gemini-3.5-transcribe-live"
-                },
-                "systemInstruction": {
-                  "type": "string",
-                  "default": "You are an expert real-time speech-to-text dictation engine. Transcribe the user's speech accurately into written text.\n- Correct slip-ups, stutters, and filler words.\n- Intelligently format code, variable names, and CLI commands.\n- Transcribe technical and programming terms accurately in English.\n- Insert proper punctuation and natural capitalization.\n- Output ONLY the transcribed text without any conversational preamble or notes."
                 }
               },
-              "required": ["modelId", "systemInstruction"],
+              "required": ["modelId"],
               "default": {
-                "modelId": "gemini-3.5-transcribe-live",
-                "systemInstruction": "You are an expert real-time speech-to-text dictation engine. Transcribe the user's speech accurately into written text.\n- Correct slip-ups, stutters, and filler words.\n- Intelligently format code, variable names, and CLI commands.\n- Transcribe technical and programming terms accurately in English.\n- Insert proper punctuation and natural capitalization.\n- Output ONLY the transcribed text without any conversational preamble or notes."
+                "modelId": "gemini-3.5-transcribe-live"
               }
             }
           },
@@ -1150,15 +1149,14 @@
             "deepgram": { "modelId": "nova-3", "language": "auto" },
             "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
             "geminiLive": {
-              "modelId": "gemini-3.5-transcribe-live",
-              "systemInstruction": "You are an expert real-time speech-to-text dictation engine. Transcribe the user's speech accurately into written text.\n- Correct slip-ups, stutters, and filler words.\n- Intelligently format code, variable names, and CLI commands.\n- Transcribe technical and programming terms accurately in English.\n- Insert proper punctuation and natural capitalization.\n- Output ONLY the transcribed text without any conversational preamble or notes."
+              "modelId": "gemini-3.5-transcribe-live"
             }
           }
         }
       },
       "required": [
         "provider",
-        "isVoiceCorrectionEnabled",
+        "correctionMode",
         "isVoiceHoldEnabled",
         "isStylingBarEnabled",
         "isStylingBarDirectInsertEnabled",

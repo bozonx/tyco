@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "Schermata e domanda all’IA",
     "voiceScreenshotQuickAiRequest": "Schermata e domanda vocale all’IA"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Allega file",
     "alertCaution": "Attenzione",
@@ -187,7 +189,9 @@
       "noCommands": "Nessun comando personalizzato ancora configurato.",
       "noCommandsHint": "Crea prima i comandi in Impostazioni → Comandi."
     },
-    "replyBlocks": { "toolLabel": "Blocchi di risposta" }
+    "replyBlocks": {
+      "toolLabel": "Blocchi di risposta"
+    }
   },
   "commands": {
     "advanced": "Avanzate",
@@ -772,9 +776,6 @@
     "externalMethods": "Altri metodi di attivazione",
     "externalMethodsHint": "Usa questo comando da un terminale, da uno script o da una scorciatoia di sistema. Il client tyco-ctl deve essere installato e disponibile nel PATH. Linux supporta anche D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "forcedByEInk": "Con il tema e-ink, sempre contrasto alto e nessuna animazione",
-    "formatWithLlm": "Correggi automaticamente la dettatura prima di inserirla in un'applicazione esterna",
-    "geminiLivePrompt": "Prompt di dettatura",
-    "geminiLivePromptInfo": "Istruzioni inviate a Gemini Live durante il riconoscimento vocale. Specifica come formattare il codice, correggere errori e gestire la punteggiatura.",
     "generalTab": "Generale",
     "globalActionsHint": "Scorciatoie da tastiera globali che richiamano Tyco da qualsiasi applicazione. Fai clic su un campo e premi la combinazione di tasti desiderata; Esc annulla l’inserimento.",
     "globalHotkeysTitle": "Scorciatoie globali",
@@ -1230,7 +1231,9 @@
     "searchFavoritesPlaceholder": "Cerca tra i preferiti...",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserisci nell’editor"
+  },
   "theme": {
     "auto": "Come nel sistema",
     "dark": "Scuro",
@@ -1369,7 +1372,9 @@
     "missingSelection": "Il testo selezionato è obbligatorio."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "chiedi nella chat" },
+    "actions": {
+      "askInChat": "chiedi nella chat"
+    },
     "languages": {
       "cs-CZ": "Ceco",
       "de-DE": "tedesco",
@@ -1399,7 +1404,9 @@
     },
     "translate": "traduci in"
   },
-  "window": { "clickToFocus": "Fai clic per continuare" },
+  "window": {
+    "clickToFocus": "Fai clic per continuare"
+  },
   "write": {
     "alreadyCorrected": "Il testo è già corretto",
     "cancel": "Annulla",
@@ -1449,7 +1456,9 @@
     "valueNotSet": "Non impostata su questo dispositivo: i comandi che la usano non vengono eseguiti",
     "valuePlaceholder": "Un percorso, un indirizzo o altro testo"
   },
-  "favorites": { "noMatches": "Nessun preferito corrispondente" },
+  "favorites": {
+    "noMatches": "Nessun preferito corrispondente"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Inserisci nella finestra",
     "insertIntoEditor": "Nell'editor",

@@ -6,6 +6,9 @@ export const STT_PROVIDERS = ['deepgram', 'sherpaOnnx', 'geminiLive'] as const
 
 export type SttProvider = (typeof STT_PROVIDERS)[number]
 
+export const VOICE_CORRECTION_MODES = ['live', 'onSubmit', 'off'] as const
+export type VoiceCorrectionMode = (typeof VOICE_CORRECTION_MODES)[number]
+
 export interface DeepgramSttSettings {
   /** The Deepgram model, e.g. `nova-3` */
   modelId: string
@@ -24,18 +27,17 @@ export interface SherpaOnnxSttSettings {
 export interface GeminiLiveSttSettings {
   /** The Gemini model, e.g. `gemini-3.5-transcribe-live` */
   modelId: string
-  /** System instruction prompt guiding speech recognition and text formatting */
-  systemInstruction: string
 }
 
 export interface SttConfig {
   provider: SttProvider
   /**
-   * The LLM turns the transcript into written text; its settings are
-   * `llm.tasks.voiceCorrection`. By design it applies only to dictation into
-   * external windows, not to the chat or the editor.
+   * How the LLM corrects recognized speech (`llm.tasks.voiceCorrection`):
+   * `live` applies contextual corrections during speech and at the end across
+   * all targets; `onSubmit` runs a single pass when dictation into an external
+   * window finishes; `off` disables LLM correction.
    */
-  isVoiceCorrectionEnabled: boolean
+  correctionMode: VoiceCorrectionMode
   /** Whether holding the voice hotkey records until released (Push-to-Talk) */
   isVoiceHoldEnabled: boolean
   /** Whether to show the 15-key styling keyboard during hotkey voice input */

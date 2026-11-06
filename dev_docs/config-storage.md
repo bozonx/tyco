@@ -81,7 +81,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `markdown`        | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                                       |
 | `plugins`         | per plugin id: `isEnabled` and the plugin-owned `settings`                                                                  |
 | `chat`            | `history` (`storage`: `off` or `disk`, `retentionDays`)                                                                     |
-| `stt`             | `provider`, `isVoiceCorrectionEnabled`, `providers.deepgram`, `providers.sherpaOnnx`                                        |
+| `stt`             | `provider`, `correctionMode`, `providers.deepgram`, `providers.sherpaOnnx`, `providers.geminiLive`                          |
 
 The hotkeys of `hotkeys` are named as the activation modes they open
 (`quickInput`, `selectionActions`, `selectionActionsPage2`..`selectionActionsPage5`,
@@ -107,7 +107,7 @@ hold the items themselves. Action pages are addressed by 1-based index
 
 `llm.tasks` holds what each LLM task needs: `chat` (`rule`; the chat runs on
 the model picked in it), `correction`, `voiceCorrection` (`modelId`,
-`rule`; on when `stt.isVoiceCorrectionEnabled`), `translation` (`modelId`, `rule`, `qualityGateRule` for the review
+`rule`; on when `stt.correctionMode !== 'off'`), `translation` (`modelId`, `rule`, `qualityGateRule` for the review
 pass) and `aiTask` (`modelId`; the model of every AI command, each of which
 has its own prompt). `modelId` is
 the one model that answers the task, empty when none is picked; a call that

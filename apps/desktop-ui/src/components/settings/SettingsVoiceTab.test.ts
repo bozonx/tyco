@@ -27,7 +27,7 @@ describe('SettingsVoiceTab.vue', () => {
       stt: {
         ...structuredClone(DEFAULT_USER_CONFIG.stt),
         provider: 'sherpaOnnx',
-        isVoiceCorrectionEnabled: false,
+        correctionMode: 'off',
         isStylingBarEnabled: false,
         isStylingBarDirectInsertEnabled: false,
         providers: {
@@ -35,7 +35,6 @@ describe('SettingsVoiceTab.vue', () => {
           sherpaOnnx: { baseUrl: 'ws://localhost:6006' },
           geminiLive: {
             modelId: 'gemini-3.5-transcribe-live',
-            systemInstruction: '',
           },
         },
       },
@@ -123,10 +122,9 @@ describe('SettingsVoiceTab.vue', () => {
     expect(labels).toContain('settings.model')
     expect(labels).toContain('settings.sttLanguage')
     expect(labels).not.toContain('settings.sttServerUrl')
-    expect(labels).not.toContain('settings.geminiLivePrompt')
   })
 
-  it('renders API key, model, and dictation prompt when provider is geminiLive', async () => {
+  it('renders API key and model when provider is geminiLive', async () => {
     const config = createConfig()
     config.stt.provider = 'geminiLive'
     const wrapper = mountTab(config)
@@ -136,38 +134,30 @@ describe('SettingsVoiceTab.vue', () => {
       .map((f) => f.attributes('data-label'))
     expect(labels).toContain('settings.apiKey')
     expect(labels).toContain('settings.model')
-    expect(labels).toContain('settings.geminiLivePrompt')
     expect(labels).not.toContain('settings.sttLanguage')
     expect(labels).not.toContain('settings.sttServerUrl')
-
-    const promptTextarea = wrapper.find('.field-textarea-stub')
-    expect(promptTextarea.exists()).toBe(true)
   })
 
-  it('toggles the LLM formatting to reveal the rules field', async () => {
+  it('switches voice correction mode to reveal the model and rules fields for any provider', async () => {
     const config = createConfig()
     const wrapper = mountTab(config)
 
     expect(wrapper.find('.field-textarea-stub').exists()).toBe(false)
 
-    const switchInput = wrapper.find('.field-switch-stub')
-    await switchInput.setValue(true)
+    const selects = wrapper.findAll('.field-select-stub')
+    const correctionSelect = selects.at(-1)!
+    await correctionSelect.setValue('live')
 
     expect(wrapper.find('.field-textarea-stub').exists()).toBe(true)
-    expect(config.stt.isVoiceCorrectionEnabled).toBe(true)
-  })
+    expect(config.stt.correctionMode).toBe('live')
 
-  it('shows the contextual correction model without obsolete formatting rules for Gemini Live', () => {
-    const config = createConfig()
     config.stt.provider = 'geminiLive'
-    config.stt.isVoiceCorrectionEnabled = true
-    const wrapper = mountTab(config)
+    await wrapper.vm.$nextTick()
     const labels = wrapper
       .findAll('.field-row-stub')
       .map((field) => field.attributes('data-label'))
     expect(labels).toContain('settings.voiceTextCorrection')
-    expect(labels).not.toContain('settings.formatWithLlm')
-    expect(labels).not.toContain('settings.sttLlmRules')
+    expect(labels).toContain('settings.sttLlmRules')
   })
 
   it('toggles the styling bar setting and shows direct insert toggle', async () => {
@@ -175,16 +165,16 @@ describe('SettingsVoiceTab.vue', () => {
     const wrapper = mountTab(config)
 
     const switches = wrapper.findAll('.field-switch-stub')
-    const stylingSwitch = switches.at(1)
+    const stylingSwitch = switches.at(0)
     expect(stylingSwitch).toBeDefined()
-    expect(wrapper.findAll('.field-switch-stub')).toHaveLength(2)
+    expect(wrapper.findAll('.field-switch-stub')).toHaveLength(1)
 
     await stylingSwitch!.setValue(true)
     expect(config.stt.isStylingBarEnabled).toBe(true)
 
     const updatedSwitches = wrapper.findAll('.field-switch-stub')
-    expect(updatedSwitches).toHaveLength(3)
-    const directInsertSwitch = updatedSwitches.at(2)
+    expect(updatedSwitches).toHaveLength(2)
+    const directInsertSwitch = updatedSwitches.at(1)
     expect(directInsertSwitch).toBeDefined()
 
     await directInsertSwitch!.setValue(true)
@@ -202,7 +192,7 @@ describe('SettingsVoiceTab.vue', () => {
       stt: {
         ...structuredClone(DEFAULT_USER_CONFIG.stt),
         provider: 'deepgram',
-        isVoiceCorrectionEnabled: false,
+        correctionMode: 'off',
         isStylingBarEnabled: false,
         isStylingBarDirectInsertEnabled: false,
         providers: {
@@ -210,7 +200,6 @@ describe('SettingsVoiceTab.vue', () => {
           sherpaOnnx: { baseUrl: '' },
           geminiLive: {
             modelId: 'gemini-3.5-transcribe-live',
-            systemInstruction: '',
           },
         },
       },

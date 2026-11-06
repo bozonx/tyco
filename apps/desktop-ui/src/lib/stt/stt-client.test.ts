@@ -289,7 +289,6 @@ describe('createSttClient', () => {
     const geminiModel = {
       provider: 'geminiLive' as const,
       modelId: 'gemini-3.5-transcribe-live',
-      systemInstruction: 'Format as TypeScript',
     }
 
     const parts = await collect(

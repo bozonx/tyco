@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "截图并向 AI 提问",
     "voiceScreenshotQuickAiRequest": "截图并向 AI 语音提问"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "添加附件",
     "alertCaution": "小心",
@@ -187,7 +189,9 @@
       "noCommands": "尚未配置自定义命令。",
       "noCommandsHint": "请先在设置 → 命令中创建命令。"
     },
-    "replyBlocks": { "toolLabel": "回复块" }
+    "replyBlocks": {
+      "toolLabel": "回复块"
+    }
   },
   "commands": {
     "advanced": "高级",
@@ -600,7 +604,10 @@
     "cancelled": "已取消",
     "done": "已完成",
     "emptyResult": "模型返回了空结果",
-    "failed": { "command": "命令执行失败", "correction": "纠错失败" },
+    "failed": {
+      "command": "命令执行失败",
+      "correction": "纠错失败"
+    },
     "focusChanged": "在此期间活动窗口已更改，结果已复制到剪贴板",
     "noSelection": "未选中任何内容",
     "noTarget": "没有具有焦点的应用程序窗口",
@@ -611,7 +618,10 @@
       "command": "命令未对文本做任何更改",
       "correction": "未发现错误"
     },
-    "working": { "command": "正在运行命令…", "correction": "正在纠错…" }
+    "working": {
+      "command": "正在运行命令…",
+      "correction": "正在纠错…"
+    }
   },
   "settings": {
     "accessAllow": "允许",
@@ -766,9 +776,6 @@
     "externalMethods": "其他激活方式",
     "externalMethodsHint": "可从终端、脚本或系统快捷键运行此命令。必须已安装 tyco-ctl 客户端且可在 PATH 中找到。Linux 还支持 D-Bus：org.tyco.Service、/org/tyco/Object、org.tyco.Interface。",
     "forcedByEInk": "使用电子墨水主题时始终开启高对比度并禁用动画",
-    "formatWithLlm": "在插入外部应用程序前自动更正听写",
-    "geminiLivePrompt": "听写提示词",
-    "geminiLivePromptInfo": "语音识别期间发送给 Gemini Live 的系统指令。可指定代码格式化、口误修正、术语和标点符号规则。",
     "generalTab": "通用",
     "globalActionsHint": "可从任何应用程序调用 Tyco 的全局键盘快捷键。点击输入框并按下所需的按键组合；按 Esc 可取消输入。",
     "globalHotkeysTitle": "全局快捷键",
@@ -1224,7 +1231,9 @@
     "searchFavoritesPlaceholder": "搜索收藏夹…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "插入到编辑器" },
+  "shortcuts": {
+    "insertIntoEditor": "插入到编辑器"
+  },
   "theme": {
     "auto": "跟随系统",
     "dark": "深色",
@@ -1363,7 +1372,9 @@
     "missingSelection": "需要提供选中的文本。"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "在聊天中询问;在对话中提问" },
+    "actions": {
+      "askInChat": "在聊天中询问;在对话中提问"
+    },
     "languages": {
       "cs-CZ": "捷克语",
       "de-DE": "德语",
@@ -1393,7 +1404,9 @@
     },
     "translate": "翻译成;翻译为"
   },
-  "window": { "clickToFocus": "点击以继续" },
+  "window": {
+    "clickToFocus": "点击以继续"
+  },
   "write": {
     "alreadyCorrected": "文本已完成纠错",
     "cancel": "取消",
@@ -1443,7 +1456,9 @@
     "valueNotSet": "此设备上未设置：使用它的命令不会运行",
     "valuePlaceholder": "路径、地址或其他文本"
   },
-  "favorites": { "noMatches": "没有匹配的收藏夹" },
+  "favorites": {
+    "noMatches": "没有匹配的收藏夹"
+  },
   "replyBlocks": {
     "insertIntoWindow": "插入到窗口",
     "insertIntoEditor": "到编辑器",

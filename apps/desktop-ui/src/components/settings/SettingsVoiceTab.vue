@@ -63,20 +63,6 @@
           @update:model-value="setGeminiLiveModelName"
         />
       </FieldRow>
-      <FieldRow
-        v-if="userConfig.stt.provider === 'geminiLive'"
-        :label="t('settings.geminiLivePrompt')"
-        :info="t('settings.geminiLivePromptInfo')"
-        vertical
-      >
-        <FieldPromptTextArea
-          :model-value="
-            userConfig.stt.providers.geminiLive?.systemInstruction ?? ''
-          "
-          :modal-title="t('settings.geminiLivePrompt')"
-          @update:model-value="setGeminiLiveSystemInstruction"
-        />
-      </FieldRow>
       <FieldRow v-if="sttNeedsKey" :label="t('settings.apiKey')">
         <SecretKeyField
           :key="secretId(currentSttModel)"
@@ -89,26 +75,19 @@
     </SettingsSection>
 
     <SettingsSection>
-      <FieldRow
-        :label="
-          t(
-            userConfig.stt.provider === 'geminiLive'
-              ? 'settings.voiceTextCorrection'
-              : 'settings.formatWithLlm'
-          )
-        "
-      >
-        <FieldSwitch v-model="userConfig.stt.isVoiceCorrectionEnabled" />
+      <FieldRow :label="t('settings.voiceTextCorrection')">
+        <FieldSelect
+          :model-value="userConfig.stt.correctionMode"
+          :options="voiceCorrectionOptions"
+          @update:model-value="setVoiceCorrectionMode"
+        />
       </FieldRow>
       <SettingsTaskModel
-        v-if="userConfig.stt.isVoiceCorrectionEnabled"
+        v-if="userConfig.stt.correctionMode !== 'off'"
         task="voiceCorrection"
       />
       <FieldRow
-        v-if="
-          userConfig.stt.isVoiceCorrectionEnabled &&
-          userConfig.stt.provider !== 'geminiLive'
-        "
+        v-if="userConfig.stt.correctionMode !== 'off'"
         :label="t('settings.sttLlmRules')"
         :info="t('settings.sttLlmRulesInfo')"
         vertical
@@ -162,7 +141,13 @@ import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsTaskModel from './SettingsTaskModel.vue'
-import { STT_PROVIDERS, type SttProvider } from '@tyco/shared'
+import {
+  STT_PROVIDERS,
+  VOICE_CORRECTION_MODES,
+  type SttProvider,
+  type VoiceCorrectionMode,
+} from '@tyco/shared'
+import type { ControlOption } from '../../lib/ui/control-option'
 
 const { draft: userConfig } = useSettingsContext()
 const { t } = useI18n()
@@ -186,6 +171,23 @@ const setSttProvider = (value: string | number | undefined) => {
     userConfig.value.stt.provider = value as SttProvider
 }
 
+const voiceCorrectionOptions = computed<ControlOption<VoiceCorrectionMode>[]>(
+  () => [
+    { id: 'live', name: t('settings.quickCorrectionLive') },
+    { id: 'onSubmit', name: t('settings.quickCorrectionOnSubmit') },
+    { id: 'off', name: t('settings.quickCorrectionOff') },
+  ]
+)
+
+const setVoiceCorrectionMode = (value: string | number | undefined) => {
+  if (
+    typeof value === 'string' &&
+    (VOICE_CORRECTION_MODES as readonly string[]).includes(value)
+  ) {
+    userConfig.value.stt.correctionMode = value as VoiceCorrectionMode
+  }
+}
+
 /** Told here, not only when a dictation fails to start */
 const sttServerUrlError = computed(() =>
   !sttNeedsKey.value &&
@@ -206,7 +208,6 @@ const ensureGeminiLiveConfig = () => {
   if (!userConfig.value.stt.providers.geminiLive) {
     userConfig.value.stt.providers.geminiLive = {
       modelId: 'gemini-3.5-transcribe-live',
-      systemInstruction: '',
     }
   }
   return userConfig.value.stt.providers.geminiLive
@@ -214,10 +215,6 @@ const ensureGeminiLiveConfig = () => {
 
 const setGeminiLiveModelName = (value: string) => {
   ensureGeminiLiveConfig().modelId = value
-}
-
-const setGeminiLiveSystemInstruction = (value: string) => {
-  ensureGeminiLiveConfig().systemInstruction = value
 }
 
 const hasSttKey = computed(() =>

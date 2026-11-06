@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "스크린샷과 AI 질문",
     "voiceScreenshotQuickAiRequest": "스크린샷과 AI 음성 질문"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "파일 첨부",
     "alertCaution": "주의",
@@ -187,7 +189,9 @@
       "noCommands": "아직 구성된 사용자 지정 명령어가 없습니다.",
       "noCommandsHint": "먼저 설정 → 명령어에서 명령어를 생성하세요."
     },
-    "replyBlocks": { "toolLabel": "답변 블록" }
+    "replyBlocks": {
+      "toolLabel": "답변 블록"
+    }
   },
   "commands": {
     "advanced": "고급",
@@ -600,7 +604,10 @@
     "cancelled": "취소됨",
     "done": "완료",
     "emptyResult": "모델이 빈 결과를 반환했습니다",
-    "failed": { "command": "명령 실패", "correction": "교정 실패" },
+    "failed": {
+      "command": "명령 실패",
+      "correction": "교정 실패"
+    },
     "focusChanged": "그 사이에 활성 창이 변경되어 결과가 클립보드에 복사되었습니다",
     "noSelection": "선택된 내용이 없습니다",
     "noTarget": "포커스가 있는 애플리케이션 창이 없습니다",
@@ -611,7 +618,10 @@
       "command": "명령 실행 후에도 텍스트가 변경되지 않았습니다",
       "correction": "오류를 찾지 못했습니다"
     },
-    "working": { "command": "명령 실행 중…", "correction": "교정 중…" }
+    "working": {
+      "command": "명령 실행 중…",
+      "correction": "교정 중…"
+    }
   },
   "settings": {
     "accessAllow": "허용",
@@ -766,9 +776,6 @@
     "externalMethods": "기타 실행 방법",
     "externalMethodsHint": "터미널, 스크립트 또는 시스템 단축키에서 이 명령을 사용하세요. tyco-ctl 클라이언트가 설치되어 PATH에 있어야 합니다. Linux는 D-Bus도 지원합니다: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "forcedByEInk": "전자잉크 테마에서는 항상 높은 대비와 애니메이션 끄기가 적용됩니다",
-    "formatWithLlm": "외부 애플리케이션에 삽입하기 전에 받아쓰기 자동 수정",
-    "geminiLivePrompt": "받아쓰기 프롬프트",
-    "geminiLivePromptInfo": "음성 인식 중 Gemini Live에 전송되는 지침입니다. 코드 서식 지정, 말실수 수정, 용어 및 문장 부호 규칙을 지정할 수 있습니다.",
     "generalTab": "일반",
     "globalActionsHint": "어떤 애플리케이션에서든 Tyco를 호출하는 전역 단축키입니다. 필드를 클릭하고 원하는 키 조합을 누르세요. Esc를 누르면 입력이 취소됩니다.",
     "globalHotkeysTitle": "전역 단축키",
@@ -1224,7 +1231,9 @@
     "searchFavoritesPlaceholder": "즐겨찾기 검색...",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
+  "shortcuts": {
+    "insertIntoEditor": "편집기에 삽입"
+  },
   "theme": {
     "auto": "시스템 설정 따르기",
     "dark": "다크",
@@ -1363,7 +1372,9 @@
     "missingSelection": "선택한 텍스트가 필요합니다."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "채팅에서 질문" },
+    "actions": {
+      "askInChat": "채팅에서 질문"
+    },
     "languages": {
       "cs-CZ": "체코어;체코어로",
       "de-DE": "독일어;독일어로",
@@ -1393,7 +1404,9 @@
     },
     "translate": "{language}로 번역;{language}로 번역해;{language} 번역;번역"
   },
-  "window": { "clickToFocus": "계속하려면 클릭하세요" },
+  "window": {
+    "clickToFocus": "계속하려면 클릭하세요"
+  },
   "write": {
     "alreadyCorrected": "텍스트가 이미 교정되었습니다",
     "cancel": "취소",
@@ -1443,7 +1456,9 @@
     "valueNotSet": "이 기기에 설정되지 않음: 이 변수를 쓰는 명령은 실행되지 않습니다",
     "valuePlaceholder": "경로, 주소 또는 다른 텍스트"
   },
-  "favorites": { "noMatches": "일치하는 즐겨찾기 없음" },
+  "favorites": {
+    "noMatches": "일치하는 즐겨찾기 없음"
+  },
   "replyBlocks": {
     "insertIntoWindow": "창에 삽입",
     "insertIntoEditor": "편집기로",

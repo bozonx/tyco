@@ -35,7 +35,7 @@ describe('dictation credential preflight', () => {
     desktop?.dispose()
     const userConfig = structuredClone(DEFAULT_USER_CONFIG) as UserConfig
     userConfig.stt.provider = provider
-    userConfig.stt.isVoiceCorrectionEnabled = false
+    userConfig.stt.correctionMode = 'off'
     desktop = await loadFakeDesktop({ userConfig })
   }
   const handlers = { onText: vi.fn(), onError: vi.fn() }

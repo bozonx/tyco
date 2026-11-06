@@ -1136,7 +1136,7 @@ mod tests {
     fn startup_repair_is_idempotent_and_removes_dangling_references() {
         let mut config = crate::services::settings::defaults::default_user_config();
         config["editor"]["history"]["maxItems"] = json!(1.5);
-        config["stt"]["isVoiceCorrectionEnabled"] = json!("yes");
+        config["stt"]["correctionMode"] = json!("yes");
         config["actionPages"] = json!([{
             "inputMode": "selection",
             "slots": {
@@ -1163,7 +1163,7 @@ mod tests {
             config["transformations"]["slots"],
             json!({"w": "deep-edit"})
         );
-        assert_eq!(config["stt"]["isVoiceCorrectionEnabled"], false);
+        assert_eq!(config["stt"]["correctionMode"], "off");
     }
 
     #[test]

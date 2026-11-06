@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "Bildschirmfoto und KI-Frage",
     "voiceScreenshotQuickAiRequest": "Bildschirmfoto und KI-Sprachfrage"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Datei anhängen",
     "alertCaution": "Vorsicht",
@@ -187,7 +189,9 @@
       "noCommands": "Noch keine benutzerdefinierten Befehle konfiguriert.",
       "noCommandsHint": "Erstellen Sie zuerst Befehle unter Einstellungen → Befehle."
     },
-    "replyBlocks": { "toolLabel": "Antwortblöcke" }
+    "replyBlocks": {
+      "toolLabel": "Antwortblöcke"
+    }
   },
   "commands": {
     "advanced": "Erweitert",
@@ -772,9 +776,6 @@
     "externalMethods": "Weitere Aufrufmöglichkeiten",
     "externalMethodsHint": "Verwenden Sie diesen Befehl aus einem Terminal, einem Skript oder über ein Systemkürzel. Der Client tyco-ctl muss installiert und im PATH verfügbar sein. Linux unterstützt auch D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "forcedByEInk": "Mit dem E-Ink-Design immer hoher Kontrast und keine Animationen",
-    "formatWithLlm": "Diktat vor dem Einfügen in externe Anwendung automatisch korrigieren",
-    "geminiLivePrompt": "Diktier-Prompt",
-    "geminiLivePromptInfo": "Anweisungen für Gemini Live während der Spracherkennung. Bestimmen Sie Regeln für Code-Formatierung, Korrektur von Versprechern und Zeichensetzung.",
     "generalTab": "Allgemein",
     "globalActionsHint": "Globale Tastenkürzel, die Tyco aus jeder Anwendung aufrufen. Klicken Sie in ein Feld und drücken Sie die gewünschte Tastenkombination; Esc bricht die Eingabe ab.",
     "globalHotkeysTitle": "Globale Tastenkürzel",
@@ -1230,7 +1231,9 @@
     "searchFavoritesPlaceholder": "Favoriten suchen…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
+  "shortcuts": {
+    "insertIntoEditor": "In den Editor einfügen"
+  },
   "theme": {
     "auto": "Wie im System",
     "dark": "Dunkel",
@@ -1369,7 +1372,9 @@
     "missingSelection": "Ausgewählter Text erforderlich."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "frage im chat" },
+    "actions": {
+      "askInChat": "frage im chat"
+    },
     "languages": {
       "cs-CZ": "Tschechisch",
       "de-DE": "Deutsch",
@@ -1399,7 +1404,9 @@
     },
     "translate": "übersetze auf"
   },
-  "window": { "clickToFocus": "Zum Fortfahren klicken" },
+  "window": {
+    "clickToFocus": "Zum Fortfahren klicken"
+  },
   "write": {
     "alreadyCorrected": "Der Text ist bereits korrigiert",
     "cancel": "Abbrechen",
@@ -1449,7 +1456,9 @@
     "valueNotSet": "Auf diesem Gerät nicht festgelegt: Befehle damit werden nicht ausgeführt",
     "valuePlaceholder": "Ein Pfad, eine Adresse oder anderer Text"
   },
-  "favorites": { "noMatches": "Keine passenden Favoriten" },
+  "favorites": {
+    "noMatches": "Keine passenden Favoriten"
+  },
   "replyBlocks": {
     "insertIntoWindow": "In Fenster einfügen",
     "insertIntoEditor": "In Editor",

@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "Скриншот және ЖИ-ге сұрақ",
     "voiceScreenshotQuickAiRequest": "Скриншот және ЖИ-ге дауыстық сұрақ"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Файл тіркеу",
     "alertCaution": "Абайлаңыз",
@@ -187,7 +189,9 @@
       "noCommands": "Әзірше пайдаланушы пәрмендері конфигурацияланбаған.",
       "noCommandsHint": "Алдымен Баптаулар → Пәрмендер бөлімінде пәрмендер жасаңыз."
     },
-    "replyBlocks": { "toolLabel": "Жауап нұсқалары" }
+    "replyBlocks": {
+      "toolLabel": "Жауап нұсқалары"
+    }
   },
   "commands": {
     "advanced": "Қосымша",
@@ -614,7 +618,10 @@
       "command": "Команда мәтінді өзгертпей қалдырды",
       "correction": "Қате табылмады"
     },
-    "working": { "command": "Команда орындалуда…", "correction": "Түзетілуде…" }
+    "working": {
+      "command": "Команда орындалуда…",
+      "correction": "Түзетілуде…"
+    }
   },
   "settings": {
     "accessAllow": "Рұқсат ету",
@@ -769,9 +776,6 @@
     "externalMethods": "Шақырудың басқа тәсілдері",
     "externalMethodsHint": "Бұл команданы терминалдан, скрипттен немесе жүйелік перне тіркесімінен қолданыңыз. tyco-ctl клиенті орнатылған және PATH ішінде қолжетімді болуы керек. Linux-та D-Bus та қолдау көрсетіледі: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "forcedByEInk": "E-ink тақырыбында әрқашан жоғары контраст және анимациясыз",
-    "formatWithLlm": "Сыртқы қолданбаға қоймас бұрын диктантты автоматты түрде түзету",
-    "geminiLivePrompt": "Дауыспен енгізу промпті",
-    "geminiLivePromptInfo": "Дауысты тану кезінде Gemini Live жүйесіне жіберілетін нұсқаулар. Кодты пішімдеу, қателерді түзеу және тыныс белгілері ережелерін көрсетіңіз.",
     "generalTab": "Жалпы",
     "globalActionsHint": "Tyco-ны кез келген қолданбадан шақыратын жаһандық перне тіркесімдері. Өрісті басып, қажетті тіркесімді басыңыз; Esc енгізуді болдырмайды.",
     "globalHotkeysTitle": "Жаһандық жылдам пернелер",
@@ -1227,7 +1231,9 @@
     "searchFavoritesPlaceholder": "Сүйіктілерді іздеу…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
+  "shortcuts": {
+    "insertIntoEditor": "Редакторға кірістіру"
+  },
   "theme": {
     "auto": "Жүйедегідей",
     "dark": "Қараңғы",
@@ -1366,7 +1372,9 @@
     "missingSelection": "Бөліп көрсетілген мәтін қажет."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "чатта сұра" },
+    "actions": {
+      "askInChat": "чатта сұра"
+    },
     "languages": {
       "cs-CZ": "Чех;чех тілі",
       "de-DE": "неміс тіліне;немісше",
@@ -1396,7 +1404,9 @@
     },
     "translate": "{language} аудар;аудар"
   },
-  "window": { "clickToFocus": "Жалғастыру үшін басыңыз" },
+  "window": {
+    "clickToFocus": "Жалғастыру үшін басыңыз"
+  },
   "write": {
     "alreadyCorrected": "Мәтін бұрыннан түзетілген",
     "cancel": "Бас тарту",
@@ -1446,7 +1456,9 @@
     "valueNotSet": "Бұл құрылғыда орнатылмаған: оны қолданатын командалар орындалмайды",
     "valuePlaceholder": "Жол, мекенжай немесе басқа мәтін"
   },
-  "favorites": { "noMatches": "Сәйкес келетін фавориттер жоқ" },
+  "favorites": {
+    "noMatches": "Сәйкес келетін фавориттер жоқ"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Терезеге кірістіру",
     "insertIntoEditor": "Редакторға",

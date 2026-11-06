@@ -550,7 +550,7 @@ describe('Settings.vue', () => {
     expect(sections[0].attributes('data-title')).toBe('settings.sttTab')
     expect(sections[1].attributes('data-title')).toBeFalsy()
     expect(
-      sections[1].find('[data-label="settings.formatWithLlm"]').exists()
+      sections[1].find('[data-label="settings.voiceTextCorrection"]').exists()
     ).toBe(true)
   })
 

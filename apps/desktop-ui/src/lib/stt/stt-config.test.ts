@@ -24,7 +24,6 @@ describe('activeSttModel', () => {
     expect(activeSttModel(config)).toEqual({
       provider: 'geminiLive',
       modelId: 'gemini-3.5-transcribe-live',
-      systemInstruction: config.providers.geminiLive.systemInstruction,
     })
   })
 })

@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "Στιγμιότυπο οθόνης και ερώτηση στην ΤΝ",
     "voiceScreenshotQuickAiRequest": "Στιγμιότυπο οθόνης και φωνητική ερώτηση στην ΤΝ"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Επισύναψη αρχείου",
     "alertCaution": "Προσοχή",
@@ -187,7 +189,9 @@
       "noCommands": "Δεν έχουν ρυθμιστεί ακόμη προσαρμοσμένες εντολές.",
       "noCommandsHint": "Δημιουργήστε πρώτα εντολές στις Ρυθμίσεις → Εντολές."
     },
-    "replyBlocks": { "toolLabel": "Μπλοκ απαντήσεων" }
+    "replyBlocks": {
+      "toolLabel": "Μπλοκ απαντήσεων"
+    }
   },
   "commands": {
     "advanced": "Για προχωρημένους",
@@ -614,7 +618,10 @@
       "command": "Η εντολή άφησε το κείμενο αμετάβλητο",
       "correction": "Δεν βρέθηκαν λάθη"
     },
-    "working": { "command": "Εκτέλεση εντολής…", "correction": "Διόρθωση…" }
+    "working": {
+      "command": "Εκτέλεση εντολής…",
+      "correction": "Διόρθωση…"
+    }
   },
   "settings": {
     "accessAllow": "Να επιτρέπεται",
@@ -769,9 +776,6 @@
     "externalMethods": "Άλλοι τρόποι ενεργοποίησης",
     "externalMethodsHint": "Χρησιμοποιήστε αυτή την εντολή από τερματικό, σενάριο ή συντόμευση συστήματος. Ο πελάτης tyco-ctl πρέπει να είναι εγκατεστημένος και διαθέσιμος στο PATH. Το Linux υποστηρίζει επίσης D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "forcedByEInk": "Με το θέμα e-ink πάντα υψηλή αντίθεση και χωρίς κινούμενα εφέ",
-    "formatWithLlm": "Αυτόματη διόρθωση υπαγόρευσης πριν από την εισαγωγή σε εξωτερική εφαρμογή",
-    "geminiLivePrompt": "Εντολή υπαγόρευσης",
-    "geminiLivePromptInfo": "Οδηγίες που αποστέλλονται στο Gemini Live κατά την αναγνώριση ομιλίας. Καθορίστε κανόνες για μορφοποίηση κώδικα, διόρθωση λαθών και στίξη.",
     "generalTab": "Γενικά",
     "globalActionsHint": "Καθολικές συντομεύσεις πληκτρολογίου που καλούν το Tyco από οποιαδήποτε εφαρμογή. Κάντε κλικ σε ένα πεδίο και πατήστε τον επιθυμητό συνδυασμό πλήκτρων· το Esc ακυρώνει την εισαγωγή.",
     "globalHotkeysTitle": "Καθολικές συντομεύσεις",
@@ -1227,7 +1231,9 @@
     "searchFavoritesPlaceholder": "Αναζήτηση αγαπημένων…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
+  "shortcuts": {
+    "insertIntoEditor": "Εισαγωγή στον επεξεργαστή"
+  },
   "theme": {
     "auto": "Όπως στο σύστημα",
     "dark": "Σκούρο",
@@ -1366,7 +1372,9 @@
     "missingSelection": "Απαιτείται επιλεγμένο κείμενο."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "ρώτα στη συνομιλία" },
+    "actions": {
+      "askInChat": "ρώτα στη συνομιλία"
+    },
     "languages": {
       "cs-CZ": "Τσεχικά",
       "de-DE": "γερμανικά",
@@ -1396,7 +1404,9 @@
     },
     "translate": "μετάφρασε στα"
   },
-  "window": { "clickToFocus": "Κάντε κλικ για να συνεχίσετε" },
+  "window": {
+    "clickToFocus": "Κάντε κλικ για να συνεχίσετε"
+  },
   "write": {
     "alreadyCorrected": "Το κείμενο είναι ήδη διορθωμένο",
     "cancel": "Ακύρωση",
@@ -1446,7 +1456,9 @@
     "valueNotSet": "Δεν έχει οριστεί σε αυτή τη συσκευή: οι εντολές που τη χρησιμοποιούν δεν εκτελούνται",
     "valuePlaceholder": "Μια διαδρομή, μια διεύθυνση ή άλλο κείμενο"
   },
-  "favorites": { "noMatches": "Δεν υπάρχουν αγαπημένα που να ταιριάζουν" },
+  "favorites": {
+    "noMatches": "Δεν υπάρχουν αγαπημένα που να ταιριάζουν"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Εισαγωγή στο παράθυρο",
     "insertIntoEditor": "Στον επεξεργαστή",

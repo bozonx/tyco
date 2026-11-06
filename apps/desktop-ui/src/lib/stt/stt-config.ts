@@ -9,8 +9,6 @@ export interface SttModel {
   language?: string
   /** The address of a self-hosted server */
   baseUrl?: string
-  /** System instruction for Gemini Live */
-  systemInstruction?: string
 }
 
 /** A sherpa-onnx server runs the one model it was started with */
@@ -29,7 +27,6 @@ export function activeSttModel(config: SttConfig): SttModel {
       provider: 'geminiLive',
       modelId:
         config.providers.geminiLive?.modelId || 'gemini-3.5-transcribe-live',
-      systemInstruction: config.providers.geminiLive?.systemInstruction,
     }
   return {
     provider: 'deepgram',

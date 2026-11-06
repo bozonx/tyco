@@ -126,7 +126,6 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
       provider: model.provider,
       model: model.modelId,
       baseUrl: model.baseUrl,
-      systemInstruction: model.systemInstruction,
     })
     const cached = kits.get(key)
     if (cached) return cached
@@ -138,9 +137,7 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
       sttProviders: {
         [KIT_PROVIDERS.deepgram]: createDeepgramProvider,
         [KIT_PROVIDERS.sherpaOnnx]: createSherpaProvider,
-        [KIT_PROVIDERS.geminiLive]: createGeminiLiveProvider(
-          model.systemInstruction
-        ),
+        [KIT_PROVIDERS.geminiLive]: createGeminiLiveProvider(),
       },
       retry: { totalTimeoutMs: CONNECT_TIMEOUT_MS },
     })

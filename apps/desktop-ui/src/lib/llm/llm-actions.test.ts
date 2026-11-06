@@ -55,6 +55,7 @@ describe('LLM application actions', () => {
 
   it('uses the voice task with a structured schema and minimal correction instructions', async () => {
     const f = fixture()
+    f.userConfig.llm.tasks.voiceCorrection.rule = 'Keep domain terms'
     f.aiRequest.mockResolvedValue('{"edits":[]}')
     const signal = new AbortController().signal
     expect(
@@ -65,6 +66,7 @@ describe('LLM application actions', () => {
       'Transcript',
       expect.objectContaining({
         instructions: expect.stringContaining('Never paraphrase'),
+        rules: 'Keep domain terms',
         schema: expect.anything(),
         signal,
         notifyError: false,
@@ -74,6 +76,7 @@ describe('LLM application actions', () => {
 
   it('falls back to instruction-guided JSON when structured schema output fails', async () => {
     const f = fixture()
+    f.userConfig.llm.tasks.voiceCorrection.rule = 'Keep domain terms'
     f.aiRequest
       .mockRejectedValueOnce(new Error('Structured output schema unsupported'))
       .mockResolvedValueOnce(
@@ -89,6 +92,7 @@ describe('LLM application actions', () => {
       'Transcript',
       expect.objectContaining({
         instructions: expect.stringContaining('Return a valid raw JSON object'),
+        rules: 'Keep domain terms',
         signal,
         notifyError: false,
       })

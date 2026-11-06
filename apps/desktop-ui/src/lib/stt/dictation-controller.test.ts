@@ -98,7 +98,6 @@ describe('dictation controller', () => {
         sherpaOnnx: { baseUrl: 'ws://speech.lan:6006' },
         geminiLive: {
           modelId: 'gemini-3.5-transcribe-live',
-          systemInstruction: '',
         },
       },
     })
@@ -110,13 +109,15 @@ describe('dictation controller', () => {
     )
   })
 
-  it('enables contextual correction only for Gemini Live with correction enabled', () => {
+  it('enables contextual correction when correctionMode is live for any provider', () => {
     const { config, controller } = setup()
-    config.stt.isVoiceCorrectionEnabled = true
+    config.stt.correctionMode = 'onSubmit'
     expect(controller.shouldCorrectContextually()).toBe(false)
+    config.stt.correctionMode = 'live'
+    expect(controller.shouldCorrectContextually()).toBe(true)
     config.stt.provider = 'geminiLive'
     expect(controller.shouldCorrectContextually()).toBe(true)
-    config.stt.isVoiceCorrectionEnabled = false
+    config.stt.correctionMode = 'off'
     expect(controller.shouldCorrectContextually()).toBe(false)
   })
 
@@ -126,7 +127,7 @@ describe('dictation controller', () => {
     expect(controller.shouldFormatRecognizedText('external')).toBe(false)
     expect(controller.shouldFormatRecognizedText('chat')).toBe(false)
     expect(controller.shouldFormatRecognizedText('editor')).toBe(false)
-    config.stt.isVoiceCorrectionEnabled = true
+    config.stt.correctionMode = 'onSubmit'
     config.stt.providers.deepgram.language = 'en-US'
     expect(controller.shouldFormatRecognizedText()).toBe(true)
     expect(controller.shouldFormatRecognizedText('external')).toBe(true)
@@ -136,7 +137,10 @@ describe('dictation controller', () => {
     expect(deps.dictation.start).toHaveBeenCalledWith(
       expect.objectContaining({ language: 'en-US' })
     )
-    config.stt.isVoiceCorrectionEnabled = false
+    config.stt.correctionMode = 'live'
+    expect(controller.shouldFormatRecognizedText()).toBe(false)
+    expect(controller.shouldFormatRecognizedText('external')).toBe(false)
+    config.stt.correctionMode = 'off'
     expect(controller.shouldFormatRecognizedText()).toBe(false)
     expect(controller.shouldFormatRecognizedText('external')).toBe(false)
   })
@@ -146,7 +150,7 @@ describe('dictation controller', () => {
       providers: {
         deepgram: { modelId: '', language: 'auto' },
         sherpaOnnx: { baseUrl: '' },
-        geminiLive: { modelId: '', systemInstruction: '' },
+        geminiLive: { modelId: '' },
       },
     })
     await expect(controller.startDictation(handlers)).rejects.toThrow(

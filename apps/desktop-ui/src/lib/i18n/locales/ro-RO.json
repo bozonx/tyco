@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "Captură de ecran și întrebare pentru IA",
     "voiceScreenshotQuickAiRequest": "Captură de ecran și întrebare vocală pentru IA"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Atașează un fișier",
     "alertCaution": "Atenție",
@@ -187,7 +189,9 @@
       "noCommands": "Nu există încă comenzi personalizate configurate.",
       "noCommandsHint": "Creați mai întâi comenzi în Setări → Comenzi."
     },
-    "replyBlocks": { "toolLabel": "Blocuri de răspuns" }
+    "replyBlocks": {
+      "toolLabel": "Blocuri de răspuns"
+    }
   },
   "commands": {
     "advanced": "Avansat",
@@ -772,9 +776,6 @@
     "externalMethods": "Alte metode de activare",
     "externalMethodsHint": "Folosiți această comandă dintr-un terminal, un script sau o comandă rapidă de sistem. Clientul tyco-ctl trebuie să fie instalat și disponibil în PATH. Linux acceptă și D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "forcedByEInk": "Cu tema e-ink, întotdeauna contrast ridicat și fără animații",
-    "formatWithLlm": "Corectează automat dictarea înainte de inserarea într-o aplicație externă",
-    "geminiLivePrompt": "Prompt de dictare",
-    "geminiLivePromptInfo": "Instrucțiuni trimise către Gemini Live în timpul recunoașterii vocale. Specificați reguli pentru formatarea codului, corectarea greșelilor și punctuație.",
     "generalTab": "General",
     "globalActionsHint": "Comenzi rapide globale care apelează Tyco din orice aplicație. Faceți clic pe un câmp și apăsați combinația de taste dorită; Esc anulează introducerea.",
     "globalHotkeysTitle": "Comenzi rapide globale",
@@ -1230,7 +1231,9 @@
     "searchFavoritesPlaceholder": "Caută favorite…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Inserează în editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserează în editor"
+  },
   "theme": {
     "auto": "Ca în sistem",
     "dark": "Întunecată",
@@ -1369,7 +1372,9 @@
     "missingSelection": "Este necesar textul selectat."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "întreabă în chat" },
+    "actions": {
+      "askInChat": "întreabă în chat"
+    },
     "languages": {
       "cs-CZ": "Cehă",
       "de-DE": "germană",
@@ -1399,7 +1404,9 @@
     },
     "translate": "tradu în"
   },
-  "window": { "clickToFocus": "Faceți clic pentru a continua" },
+  "window": {
+    "clickToFocus": "Faceți clic pentru a continua"
+  },
   "write": {
     "alreadyCorrected": "Textul este deja corectat",
     "cancel": "Anulează",
@@ -1449,7 +1456,9 @@
     "valueNotSet": "Nesetată pe acest dispozitiv: comenzile care o folosesc nu rulează",
     "valuePlaceholder": "O cale, o adresă sau alt text"
   },
-  "favorites": { "noMatches": "Nu există favorite care să se potrivească" },
+  "favorites": {
+    "noMatches": "Nu există favorite care să se potrivească"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Inserează în fereastră",
     "insertIntoEditor": "În editor",

@@ -152,12 +152,14 @@ export function createLlmActions(deps: LlmActionsDependencies) {
       text: string,
       signal: AbortSignal
     ): Promise<unknown> => {
+      const rules = deps.getUserConfig().llm?.tasks.voiceCorrection.rule
       try {
         const response = await aiRequest(
           LlmInstructionKind.VOICE_CORRECTION,
           text,
           {
             instructions: CONTEXTUAL_CORRECTION_INSTRUCTION,
+            rules,
             schema: CONTEXTUAL_CORRECTION_SCHEMA,
             notifyError: false,
             signal,
@@ -171,6 +173,7 @@ export function createLlmActions(deps: LlmActionsDependencies) {
           text,
           {
             instructions: `${CONTEXTUAL_CORRECTION_INSTRUCTION}\nReturn a valid raw JSON object with the format: {"edits": [{"old": "...", "new": "...", "reason": "..."}]}`,
+            rules,
             notifyError: false,
             signal,
           }

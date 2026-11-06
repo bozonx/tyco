@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "Snímek obrazovky a dotaz AI",
     "voiceScreenshotQuickAiRequest": "Snímek obrazovky a hlasový dotaz AI"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Přiložit soubor",
     "alertCaution": "Pozor",
@@ -187,7 +189,9 @@
       "noCommands": "Zatím nejsou nakonfigurovány žádné uživatelské příkazy.",
       "noCommandsHint": "Nejprve vytvořte příkazy v Nastavení → Příkazy."
     },
-    "replyBlocks": { "toolLabel": "Varianty odpovědí" }
+    "replyBlocks": {
+      "toolLabel": "Varianty odpovědí"
+    }
   },
   "commands": {
     "advanced": "Pokročilé",
@@ -600,7 +604,10 @@
     "cancelled": "Zrušeno",
     "done": "Hotovo",
     "emptyResult": "Model vrátil prázdný výsledek",
-    "failed": { "command": "Příkaz selhal", "correction": "Oprava selhala" },
+    "failed": {
+      "command": "Příkaz selhal",
+      "correction": "Oprava selhala"
+    },
     "focusChanged": "Mezitím se změnilo okno, proto byl výsledek zkopírován do schránky",
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
@@ -611,7 +618,10 @@
       "command": "Příkaz ponechal text beze změny",
       "correction": "Nenalezeny žádné chyby"
     },
-    "working": { "command": "Spouští se příkaz…", "correction": "Opravuje se…" }
+    "working": {
+      "command": "Spouští se příkaz…",
+      "correction": "Opravuje se…"
+    }
   },
   "settings": {
     "accessAllow": "Povolit",
@@ -766,9 +776,6 @@
     "externalMethods": "Další způsoby spuštění",
     "externalMethodsHint": "Použijte tento příkaz z terminálu, skriptu nebo systémové zkratky. Klient tyco-ctl musí být nainstalován a dostupný v PATH. Linux podporuje také D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "forcedByEInk": "S motivem e-ink vždy vysoký kontrast a žádné animace",
-    "formatWithLlm": "Automaticky opravit diktování před vložením do externí aplikace",
-    "geminiLivePrompt": "Výzva k diktování",
-    "geminiLivePromptInfo": "Pokyny odesílané službě Gemini Live během rozpoznávání řeči. Můžete zadat pravidla pro opravu přeřeknutí, formátování kódu a interpunkci.",
     "generalTab": "Obecné",
     "globalActionsHint": "Globální klávesové zkratky, které vyvolají Tyco z libovolné aplikace. Klikněte do pole a stiskněte požadovanou kombinaci kláves; Esc zadávání zruší.",
     "globalHotkeysTitle": "Globální klávesové zkratky",
@@ -1224,7 +1231,9 @@
     "searchFavoritesPlaceholder": "Hledat v oblíbených...",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
+  "shortcuts": {
+    "insertIntoEditor": "Vložit do editoru"
+  },
   "theme": {
     "auto": "Podle systému",
     "dark": "Tmavý",
@@ -1363,7 +1372,9 @@
     "missingSelection": "Je vyžadován výběr textu."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "zeptej se v chatu" },
+    "actions": {
+      "askInChat": "zeptej se v chatu"
+    },
     "languages": {
       "cs-CZ": "Czech",
       "de-DE": "němčiny",
@@ -1393,7 +1404,9 @@
     },
     "translate": "přelož do"
   },
-  "window": { "clickToFocus": "Klikněte pro pokračování" },
+  "window": {
+    "clickToFocus": "Klikněte pro pokračování"
+  },
   "write": {
     "alreadyCorrected": "Text je již opraven",
     "cancel": "Zrušit",
@@ -1443,7 +1456,9 @@
     "valueNotSet": "Na tomto zařízení není nastavena: příkazy, které ji používají, se nespustí",
     "valuePlaceholder": "Cesta, adresa nebo jiný text"
   },
-  "favorites": { "noMatches": "Žádné odpovídající oblíbené" },
+  "favorites": {
+    "noMatches": "Žádné odpovídající oblíbené"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Vložit do okna",
     "insertIntoEditor": "Do editoru",

@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "Zrzut ekranu i pytanie do AI",
     "voiceScreenshotQuickAiRequest": "Zrzut ekranu i głosowe pytanie do AI"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Dołącz plik",
     "alertCaution": "Ostrożnie",
@@ -187,7 +189,9 @@
       "noCommands": "Nie skonfigurowano jeszcze poleceń użytkownika.",
       "noCommandsHint": "Najpierw utwórz polecenia w Ustawienia → Polecenia."
     },
-    "replyBlocks": { "toolLabel": "Warianty odpowiedzi" }
+    "replyBlocks": {
+      "toolLabel": "Warianty odpowiedzi"
+    }
   },
   "commands": {
     "advanced": "Zaawansowane",
@@ -772,9 +776,6 @@
     "externalMethods": "Inne sposoby uruchamiania",
     "externalMethodsHint": "Używaj tego polecenia z terminala, skryptu lub skrótu systemowego. Klient tyco-ctl musi być zainstalowany i dostępny w PATH. Linux obsługuje też D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "forcedByEInk": "Z motywem e-ink zawsze wysoki kontrast i brak animacji",
-    "formatWithLlm": "Automatycznie poprawiaj dyktowanie przed wklejeniem do zewnętrznej aplikacji",
-    "geminiLivePrompt": "Prompt dyktowania",
-    "geminiLivePromptInfo": "Instrukcje wysyłane do Gemini Live podczas rozpoznawania mowy. Określ zasady formatowania kodu, poprawiania przejęzyczeń i interpunkcji.",
     "generalTab": "Ogólne",
     "globalActionsHint": "Globalne skróty klawiszowe wywołujące Tyco z dowolnej aplikacji. Kliknij pole i naciśnij wybraną kombinację klawiszy; Esc anuluje wprowadzanie.",
     "globalHotkeysTitle": "Skróty globalne",
@@ -1230,7 +1231,9 @@
     "searchFavoritesPlaceholder": "Wyszukaj ulubione…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
+  "shortcuts": {
+    "insertIntoEditor": "Wstaw do edytora"
+  },
   "theme": {
     "auto": "Jak w systemie",
     "dark": "Ciemny",
@@ -1369,7 +1372,9 @@
     "missingSelection": "Wymagany jest zaznaczony tekst."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "zapytaj na czacie" },
+    "actions": {
+      "askInChat": "zapytaj na czacie"
+    },
     "languages": {
       "cs-CZ": "Czeski",
       "de-DE": "niemiecki",
@@ -1399,7 +1404,9 @@
     },
     "translate": "przetłumacz na"
   },
-  "window": { "clickToFocus": "Kliknij, aby kontynuować" },
+  "window": {
+    "clickToFocus": "Kliknij, aby kontynuować"
+  },
   "write": {
     "alreadyCorrected": "Tekst jest już poprawiony",
     "cancel": "Anuluj",
@@ -1449,7 +1456,9 @@
     "valueNotSet": "Nieustawiona na tym urządzeniu: polecenia, które jej używają, nie działają",
     "valuePlaceholder": "Ścieżka, adres lub inny tekst"
   },
-  "favorites": { "noMatches": "Brak pasujących ulubionych" },
+  "favorites": {
+    "noMatches": "Brak pasujących ulubionych"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Wstaw do okna",
     "insertIntoEditor": "Do edytora",
