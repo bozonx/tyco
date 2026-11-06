@@ -441,7 +441,7 @@ onUnmounted(() => {
 .favorites-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-auto-rows: minmax(115px, 1fr);
+  grid-auto-rows: 8.5rem;
   gap: var(--space-sm);
   align-content: start;
   flex: 1 1 0%;
