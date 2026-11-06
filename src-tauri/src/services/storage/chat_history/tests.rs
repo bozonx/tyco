@@ -137,6 +137,7 @@ fn search_finds_attachments_and_sees_a_changed_chat() {
             name: Some(String::from("report.pdf")),
             media_type: None,
             workspace_path: None,
+            file: None,
         }],
         images: Vec::new(),
         parts: vec![],
@@ -708,4 +709,138 @@ fn invalidation_refreshes_search_even_when_size_and_mtime_are_preserved() {
         search_chats(&dirs.chats, history, "after!".into(), &cache).unwrap(),
         ["doc"]
     );
+}
+
+/// A chat whose one message attaches the original `bytes`, kept in `images`.
+fn chat_with_file(id: &str, images: &Mutex<ChatImageStore>, bytes: &[u8]) -> Chat {
+    let file = ChatImageStore::prepare_file(bytes).unwrap();
+    images
+        .locked()
+        .remember_file(&file, bytes.to_vec())
+        .unwrap();
+    let mut chat = chat_item(id);
+    chat.messages.push(crate::models::ChatMessage {
+        role: crate::models::ChatRole::User,
+        content: String::from("read this"),
+        attachments: vec![crate::models::ChatAttachment {
+            text: String::from("text"),
+            source: None,
+            name: Some(String::from("report.txt")),
+            media_type: Some(String::from("text/plain")),
+            workspace_path: None,
+            file: Some(file),
+        }],
+        images: Vec::new(),
+        parts: Vec::new(),
+        status: None,
+    });
+    chat
+}
+
+fn file_id(chat: &Chat) -> String {
+    chat.messages[0].attachments[0].file.clone().unwrap().id
+}
+
+#[test]
+fn attached_originals_follow_the_chats_that_refer_to_them() {
+    let dir = TestDir::new("chat-files-lifetime");
+    let dirs = dirs(&dir);
+    let images = Mutex::new(ChatImageStore::default());
+    let chat = chat_with_file("a", &images, b"original");
+    let path = dirs.attachments().join(file_id(&chat));
+    // a branch copies the references; the bytes are stored once
+    let mut branch = chat.clone();
+    branch.id = String::from("b");
+
+    save_chat(&dirs, enabled_policy(), &images, chat).unwrap();
+    save_chat(&dirs, enabled_policy(), &images, branch).unwrap();
+    assert_eq!(fs::read(&path).unwrap(), b"original");
+    assert_eq!(fs::read_dir(dirs.attachments()).unwrap().count(), 1);
+
+    delete_chat(&dirs, String::from("a")).unwrap();
+    let orphans = |now| {
+        crate::services::chat_images::remove_orphan_images(&dirs.chats, &dirs.orphans, now).unwrap()
+    };
+    let now = now_ms();
+    orphans(now + crate::services::chat_images::ORPHAN_IMAGE_GRACE_MS);
+    assert!(path.exists(), "the branch still refers to the file");
+
+    delete_chat(&dirs, String::from("b")).unwrap();
+    // removed only once it has been without a chat for the grace period,
+    // so that the undo of a deletion and sync tools find it
+    orphans(now + 1_000);
+    assert!(path.exists());
+    orphans(now + 1_000 + crate::services::chat_images::ORPHAN_IMAGE_GRACE_MS);
+    assert!(!path.exists());
+}
+
+#[test]
+fn unsaved_and_disabled_histories_keep_originals_off_disk() {
+    let dir = TestDir::new("chat-files-off");
+    let dirs = dirs(&dir);
+    let images = Mutex::new(ChatImageStore::default());
+    let chat = chat_with_file("a", &images, b"draft");
+    let disabled = ChatHistoryPolicy {
+        is_enabled: false,
+        retention_days: 0,
+    };
+
+    save_chat(&dirs, disabled, &images, chat.clone()).unwrap();
+
+    assert!(!dirs.attachments().exists());
+    let mut store = images.locked();
+    assert_eq!(
+        store
+            .get_file(&dirs.attachments(), &file_id(&chat))
+            .unwrap(),
+        b"draft"
+    );
+}
+
+#[test]
+fn clearing_one_history_removes_its_originals_only() {
+    let dir = TestDir::new("chat-files-clear");
+    let general = dirs_at(&dir, "chats");
+    let profile = dirs_at(&dir, "profile-chats");
+    let images = Mutex::new(ChatImageStore::default());
+    let chat = chat_with_file("a", &images, b"shared bytes");
+    save_chat(&general, enabled_policy(), &images, chat.clone()).unwrap();
+    save_chat(&profile, enabled_policy(), &images, chat.clone()).unwrap();
+
+    clear_chats(&general).unwrap();
+
+    assert!(!general.attachments().exists());
+    assert!(profile.attachments().join(file_id(&chat)).exists());
+}
+
+#[test]
+fn a_chat_whose_original_is_lost_can_still_be_saved() {
+    let dir = TestDir::new("chat-files-lost");
+    let dirs = dirs(&dir);
+    let images = Mutex::new(ChatImageStore::default());
+    let mut chat = chat_with_file("a", &images, b"gone");
+    chat.messages[0].attachments[0].file = Some(crate::models::ChatAttachmentFile {
+        id: "b".repeat(64),
+        size_bytes: 4,
+    });
+
+    save_chat(&dirs, enabled_policy(), &images, chat).unwrap();
+
+    assert!(read_chat(&dirs.chats, "a".into()).unwrap().is_some());
+    assert!(!dirs.attachments().join("b".repeat(64)).exists());
+}
+
+#[test]
+fn an_original_of_another_size_than_its_reference_is_refused() {
+    let dir = TestDir::new("chat-files-size");
+    let dirs = dirs(&dir);
+    let images = Mutex::new(ChatImageStore::default());
+    let mut chat = chat_with_file("a", &images, b"four");
+    chat.messages[0].attachments[0]
+        .file
+        .as_mut()
+        .unwrap()
+        .size_bytes = 5;
+
+    assert!(save_chat(&dirs, enabled_policy(), &images, chat).is_err());
 }

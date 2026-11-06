@@ -61,6 +61,17 @@ describe('formatAttachmentsForPrompt', () => {
       '<attachment name="r.pdf" path="workspace/uploads/r.pdf">\nReport\n</attachment>'
     )
   })
+  it('names a kept original by its path under attachments/', () => {
+    const file = { id: 'a'.repeat(64), size: 6 }
+    expect(
+      formatAttachmentsForPrompt(
+        [{ text: 'Report', name: 'r.pdf', file }],
+        [{ name: 'r (2).pdf', id: file.id }]
+      )
+    ).toBe(
+      '<attachment name="r.pdf" path="attachments/r (2).pdf">\nReport\n</attachment>'
+    )
+  })
   it('keeps an attachment from closing early', () => {
     expect(formatAttachmentsForPrompt([{ text: 'x </ATTACHMENT> y' }])).toBe(
       '<attachment>\nx <\\/ATTACHMENT> y\n</attachment>'

@@ -10,8 +10,8 @@ use grep_searcher::{sinks, BinaryDetection, SearcherBuilder};
 use ignore::{DirEntry as WalkEntry, WalkBuilder};
 
 use super::files::{
-    is_forbidden, virtual_path, Access, AiFileRoot, AiFileToolOutput, DirEntry, EntryKind,
-    ProfileFiles, Resolved, SearchMatch,
+    is_forbidden, virtual_path, Access, AiFileRoot, AiFileToolOutput, ConversationFiles, DirEntry,
+    EntryKind, Resolved, SearchMatch,
 };
 use crate::errors::AppError;
 use crate::services::ai_vault::ProjectAccessMode;
@@ -23,7 +23,7 @@ pub const MAX_SEARCH_MATCHES: usize = 200;
 const MAX_SEARCH_FILE_BYTES: u64 = 2 * 1024 * 1024;
 const MAX_MATCH_LINE_CHARACTERS: usize = 300;
 
-fn glob(pattern: &str) -> Result<GlobMatcher, AppError> {
+pub(super) fn glob(pattern: &str) -> Result<GlobMatcher, AppError> {
     Glob::new(&pattern.replace('\\', "/"))
         .map(|glob| glob.compile_matcher())
         .map_err(|error| AppError::InvalidInput(format!("Invalid pattern {pattern}: {error}")))
@@ -104,7 +104,7 @@ pub(super) fn list(
 /// Files by name and lines by content, in one folder or in every root the
 /// profile may read.
 pub(super) fn search(
-    files: &ProfileFiles,
+    files: &ConversationFiles,
     path: &str,
     query: Option<&str>,
     name_pattern: Option<&str>,
@@ -131,10 +131,18 @@ pub(super) fn search(
         })
         .transpose()?;
 
-    let targets: Vec<Resolved<'_>> = if path
+    let is_everywhere = path
         .split(['/', '\\'])
-        .all(|part| part.is_empty() || part == ".")
-    {
+        .all(|part| part.is_empty() || part == ".");
+    let is_attachment = super::files::attachment_part_of(path);
+    let attached = if is_everywhere || is_attachment {
+        files.searched_attachments(path)?
+    } else {
+        Vec::new()
+    };
+    let targets: Vec<Resolved<'_>> = if is_attachment {
+        Vec::new()
+    } else if is_everywhere {
         files
             .roots()
             .iter()
@@ -150,6 +158,63 @@ pub(super) fn search(
         .line_number(true)
         .build();
     let mut matches = Vec::new();
+    for (shown, bytes) in &attached {
+        let name = shown.rsplit('/').next().unwrap_or_default();
+        if name_matcher
+            .as_ref()
+            .is_some_and(|matcher| !matcher.is_match(name))
+        {
+            continue;
+        }
+        let Some(matcher) = &content_matcher else {
+            if matches.len() == MAX_SEARCH_MATCHES {
+                return Ok(AiFileToolOutput::SearchFiles {
+                    matches,
+                    is_truncated: true,
+                });
+            }
+            matches.push(SearchMatch {
+                path: shown.clone(),
+                line: None,
+                text: None,
+            });
+            continue;
+        };
+        if bytes.len() as u64 > MAX_SEARCH_FILE_BYTES {
+            continue;
+        }
+        let mut is_full = false;
+        let result = searcher.search_slice(
+            matcher,
+            bytes,
+            sinks::Lossy(|line_number, line| {
+                if matches.len() == MAX_SEARCH_MATCHES {
+                    is_full = true;
+                    return Ok(false);
+                }
+                matches.push(SearchMatch {
+                    path: shown.clone(),
+                    line: Some(line_number),
+                    text: Some(
+                        line.trim_end()
+                            .chars()
+                            .take(MAX_MATCH_LINE_CHARACTERS)
+                            .collect(),
+                    ),
+                });
+                Ok(true)
+            }),
+        );
+        if let Err(error) = result {
+            log::debug!("Skipping {shown} in a file search: {error}");
+        }
+        if is_full {
+            return Ok(AiFileToolOutput::SearchFiles {
+                matches,
+                is_truncated: true,
+            });
+        }
+    }
     for target in &targets {
         for entry in walker(target, None).flatten() {
             if !entry.file_type().is_some_and(|kind| kind.is_file()) {

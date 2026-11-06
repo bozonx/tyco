@@ -6,14 +6,11 @@ import type { invokeDesktop } from '../desktop/invoke'
 import { createChatDesktopFiles } from './chat-desktop-files'
 
 describe('chat-desktop-files', () => {
-  it('saves dropped text files to workspace uploads when profile file tools are enabled', async () => {
+  it('keeps the original of a dropped text file in any chat', async () => {
     const draft = ref<ChatParams>({})
     const invoke = vi.fn(async (command: string) => {
       if (command === 'read_dropped_file') {
         return [...new TextEncoder().encode('hello world')]
-      }
-      if (command === 'save_ai_upload') {
-        return 'workspace/uploads/notes.txt'
       }
       return undefined
     }) as unknown as typeof invokeDesktop
@@ -21,18 +18,17 @@ describe('chat-desktop-files', () => {
     const toastText = vi.fn()
     const toastKey = vi.fn()
 
+    const storeFile = vi.fn(async () => ({ id: 'a'.repeat(64), size: 11 }))
     const files = createChatDesktopFiles({
-      profileId: 'writer',
       invoke,
       storeImage: vi.fn(),
+      storeFile,
       syncImages: vi.fn(async () => undefined),
       imageQuality: () => 'balanced',
-      profileTools: () => ({
-        groups: { files: { isEnabled: true, access: 'allow' } },
-      }),
       getDraft: () => draft.value,
       getMessages: () => [],
       getSavingImages: () => [],
+      getSavingFileIds: () => [],
       isGenerating: () => false,
       addAttachment,
       translate: (key) => key,
@@ -47,14 +43,11 @@ describe('chat-desktop-files', () => {
       path: '/tmp/notes.txt',
     })
 
-    expect(invoke).toHaveBeenCalledWith('save_ai_upload', {
-      bytes: expect.any(Uint8Array),
-      meta: { profileId: 'writer', name: 'notes.txt' },
-    })
+    expect(storeFile).toHaveBeenCalledWith(expect.any(Uint8Array))
     expect(addAttachment).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'notes.txt',
-        workspacePath: 'workspace/uploads/notes.txt',
+        file: { id: 'a'.repeat(64), size: 11 },
       })
     )
     files.dispose()
@@ -65,15 +58,15 @@ describe('chat-desktop-files', () => {
     const toastKey = vi.fn()
 
     const files = createChatDesktopFiles({
-      profileId: null,
       invoke: vi.fn() as unknown as typeof invokeDesktop,
       storeImage: vi.fn(),
+      storeFile: vi.fn(),
       syncImages: vi.fn(async () => undefined),
       imageQuality: () => 'balanced',
-      profileTools: () => undefined,
       getDraft: () => draft.value,
       getMessages: () => [],
       getSavingImages: () => [],
+      getSavingFileIds: () => [],
       isGenerating: () => true,
       addAttachment: vi.fn(),
       translate: (key) => key,

@@ -10,14 +10,14 @@ describe('native invoke boundary', () => {
   it('sends binary bytes as the body and their metadata as a header', async () => {
     native.invoke.mockResolvedValueOnce(undefined)
     const bytes = new Uint8Array([1, 2])
-    await invokeDesktop('save_ai_upload', {
+    await invokeDesktop('store_chat_image', {
       bytes,
-      meta: { profileId: 'p', name: 'отчёт.pdf' },
+      meta: { importId: 'i', name: 'отчёт.png' },
     })
-    expect(native.invoke).toHaveBeenLastCalledWith('save_ai_upload', bytes, {
+    expect(native.invoke).toHaveBeenLastCalledWith('store_chat_image', bytes, {
       headers: {
         [BINARY_META_HEADER]: encodeURIComponent(
-          '{"profileId":"p","name":"отчёт.pdf"}'
+          '{"importId":"i","name":"отчёт.png"}'
         ),
       },
     })

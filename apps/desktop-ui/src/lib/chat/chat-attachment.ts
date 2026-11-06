@@ -1,4 +1,10 @@
-import type { ChatAttachment, ChatAttachmentSource } from '@tyco/shared'
+import type {
+  AiAttachedFile,
+  ChatAttachment,
+  ChatAttachmentSource,
+} from '@tyco/shared'
+
+import { attachmentPath } from './chat-attached-files'
 
 /** The i18n key of the label an attachment is shown with */
 export function attachmentLabelKey(source?: ChatAttachmentSource): string {
@@ -68,19 +74,23 @@ const escapeAttribute = (value: string) =>
 /**
  * The attachments as the model gets them, before the question. The text stays
  * as it is, readable and without escaping overhead; only a closing tag inside
- * it is broken, so an attachment cannot end early
+ * it is broken, so an attachment cannot end early. `files` names the originals
+ * of the conversation for the file tools, see `conversationAttachedFiles`
  */
 export function formatAttachmentsForPrompt(
-  attachments: ChatAttachment[] = []
+  attachments: ChatAttachment[] = [],
+  files: readonly AiAttachedFile[] = []
 ): string {
   return attachments
-    .map(({ text, source, name, mediaType, workspacePath }) => {
+    .map((attachment) => {
+      const { text, source, name, mediaType, workspacePath } = attachment
+      // the file tools reach the file itself by this path
+      const path = attachmentPath(attachment, files) ?? workspacePath
       const attribute =
         (source ? ` source="${escapeAttribute(source)}"` : '') +
         (name ? ` name="${escapeAttribute(name)}"` : '') +
         (mediaType ? ` media-type="${escapeAttribute(mediaType)}"` : '') +
-        // the file tools reach the file itself by this path
-        (workspacePath ? ` path="${escapeAttribute(workspacePath)}"` : '')
+        (path ? ` path="${escapeAttribute(path)}"` : '')
       const body = text.replace(/<(\/attachment)/gi, '<\\$1')
       return `<attachment${attribute}>\n${body}\n</attachment>`
     })

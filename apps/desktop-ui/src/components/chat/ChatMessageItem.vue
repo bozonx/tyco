@@ -9,6 +9,7 @@
           :source="attachment.source"
           :name="attachment.name"
           :media-type="attachment.mediaType"
+          :file="attachment.file"
         />
       </div>
 

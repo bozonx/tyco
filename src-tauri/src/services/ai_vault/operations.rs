@@ -169,7 +169,7 @@ pub fn create_profile(vault_root: &Path, profile: AiProfile, soul: &str) -> Resu
     create_private_dir(&dir)?;
     create_private_dir(&dir.join(PROFILE_CHATS_DIR))?;
     let workspace = dir.join("workspace");
-    for sub in ["uploads", "generated", "downloads"] {
+    for sub in ["generated", "downloads"] {
         create_private_dir(&workspace.join(sub))?;
     }
     let memory = dir.join(super::memory::PROFILE_MEMORY_DIR);

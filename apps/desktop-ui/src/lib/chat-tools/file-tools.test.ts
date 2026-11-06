@@ -26,6 +26,8 @@ const roots: AiFileRoot[] = [
   { path: 'projects/notes', name: 'Notes', read: 'ask', write: 'deny' },
 ]
 
+const SCOPE = { profileId: 'writer', attachments: [] }
+
 const settings = (
   access: 'allow' | 'ask' = 'allow',
   isEnabled = true
@@ -84,6 +86,30 @@ describe('file-tools', () => {
     expect(await provider.tools(context(settings('allow', false)))).toEqual([])
     expect(await provider.tools(context({ groups: {} }))).toEqual([])
     expect(deps.listRoots).not.toHaveBeenCalled()
+  })
+
+  it('offers only reading the attachments without the files group', async () => {
+    const attachments = [{ name: 'a.md', id: 'a'.repeat(64) }]
+    const { provider, deps } = setup({
+      listRoots: vi.fn(async () => [
+        { path: 'attachments', read: 'allow' as const, write: 'deny' as const },
+      ]),
+    })
+    const tools = await provider.tools({
+      ...context(undefined, null),
+      attachedFiles: attachments,
+    })
+    expect(tools.map((tool) => tool.name)).toEqual([
+      'list_files',
+      'read_file',
+      'search_files',
+    ])
+    expect(tools.every((tool) => tool.groupId === 'attachments')).toBe(true)
+    expect(tools[1].accessFor!({ path: 'attachments/a.md' })).toBe('allow')
+    expect(deps.listRoots).toHaveBeenCalledWith({
+      profileId: null,
+      attachments,
+    })
   })
 
   it('offers nothing when the roots cannot be read', async () => {
@@ -157,7 +183,7 @@ describe('file-tools', () => {
       limit: 1,
     })
 
-    expect(deps.run).toHaveBeenCalledWith('writer', {
+    expect(deps.run).toHaveBeenCalledWith(SCOPE, {
       operation: 'readFile',
       path: 'workspace/a.md',
       limit: 1,
@@ -183,7 +209,7 @@ describe('file-tools', () => {
     })
 
     expect(deps.readDocumentText).toHaveBeenCalledWith(
-      'writer',
+      SCOPE,
       'workspace/r.pdf',
       'application/pdf'
     )
@@ -207,7 +233,7 @@ describe('file-tools', () => {
       characterOffset: 3,
     })
     expect(deps.run).toHaveBeenCalledWith(
-      'writer',
+      SCOPE,
       expect.objectContaining({ characterOffset: 3 })
     )
   })
@@ -266,7 +292,7 @@ describe('file-tools', () => {
       before: 'old',
       after: 'new',
     })
-    expect(deps.preview).toHaveBeenCalledWith('writer', {
+    expect(deps.preview).toHaveBeenCalledWith(SCOPE, {
       operation: 'editFile',
       path: 'workspace/a.md',
       oldText: 'old',

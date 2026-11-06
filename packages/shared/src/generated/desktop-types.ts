@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 18edc8fb7337d8bc8ce12e54fcfec1f79fb758a61b4efbf2f3a8353e8b50c14d
+// Source hash: c5557b6479ba298cfe900daabe8b915c4bc9d0dacd9660aa927b165dc3028149
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -42,6 +42,14 @@ export type ActivationMode =
   | 'history'
   | 'config'
   | 'externalAccess'
+
+/** A file attached to the conversation, as the webview names it. */
+export type AiAttachedFile = {
+  /** The file name the model reaches it by, unique in the conversation. */
+  name: string
+  /** The id of the original in the conversation's file store. */
+  id: string
+}
 
 /** A change the user is asked about, before it is made. */
 export type AiFileChangePreview = {
@@ -186,12 +194,6 @@ export type AiProject = {
   updatedAt: number
 }
 
-export type AiUploadMeta = {
-  profileId: string
-  /** The name of the dropped file. */
-  name: string
-}
-
 export type AiWebToolOutput =
   | { operation: 'search'; results: Array<WebSearchResultItem> }
   | { operation: 'fetch'; url: string; title?: string; content: string }
@@ -219,10 +221,23 @@ export type ChatAttachment = {
   name?: string
   mediaType?: string
   /**
-   * Where a file dropped into a profile chat is kept for the file tools, e.g.
-   * `workspace/uploads/report.pdf`.
+   * Where earlier versions kept a file dropped into a profile chat, e.g.
+   * `workspace/uploads/report.pdf`; new attachments keep `file` instead.
    */
   workspacePath?: string
+  /**
+   * The original of an attached file, kept with the conversation; none for a
+   * text that is not a file and for attachments stored before originals were
+   * kept.
+   */
+  file?: ChatAttachmentFile
+}
+
+/** The original of an attached file in the conversation's file store. */
+export type ChatAttachmentFile = {
+  /** The SHA-256 of the bytes, which names the stored file. */
+  id: string
+  size: number
 }
 
 /**
@@ -231,6 +246,11 @@ export type ChatAttachment = {
  */
 export type ChatAttachmentSource =
   'selection' | 'editorSelection' | 'editorText'
+
+export type ChatFileMeta = {
+  /** Holds the file until a sync of the chat releases it. */
+  importId: string
+}
 
 /** A normalized image owned by the chat image store. */
 export type ChatImage = {

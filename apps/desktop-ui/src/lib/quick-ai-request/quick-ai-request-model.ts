@@ -130,6 +130,11 @@ export interface QuickAiRequestModelDependencies {
     profileId?: string
   ) => Promise<void>
   createId: () => string
+  /**
+   * The id of the conversation, which the full chat keeps when it moves there;
+   * see `quick-ai-request-session.ts`
+   */
+  chatId?: string
   closeOverlay: () => void
 
   noModelError?: () => string
@@ -509,7 +514,7 @@ export function createQuickAiRequestModel(
       deps.imageTitle?.() || 'Image'
     )
     const chat: Chat = {
-      id: deps.createId(),
+      id: deps.chatId ?? deps.createId(),
       title: draftTitle,
       lastMessageAt: Date.now(),
       messages: chatMessages,

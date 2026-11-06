@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import type { Chat, ChatMessage, ChatImage, ChatParams } from '@tyco/shared'
 import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
+import { attachmentFileIds } from './chat-attached-files'
 export function createChatPersistenceQueue(
   deps: Pick<
     ChatModelDependencies,
@@ -40,6 +41,8 @@ export function createChatPersistenceQueue(
     }
   }
   const savingImages = ref<ChatImage[]>([])
+  /** The originals of attached files a write in progress refers to */
+  const savingFileIds = ref<string[]>([])
 
   /** Writes the chat as it is; a failure is reported by the dependency */
   const persist = (
@@ -56,6 +59,10 @@ export function createChatPersistenceQueue(
     }
     const held = chatMessages.flatMap((message) => message.images || [])
     savingImages.value.push(...held)
+    const heldFileIds = attachmentFileIds(
+      chatMessages.flatMap((message) => message.attachments || [])
+    )
+    savingFileIds.value.push(...heldFileIds)
     pendingWriteCount += 1
     const writeNumber = ++writeCount
     const write = lastWrite.then(async () => {
@@ -69,6 +76,10 @@ export function createChatPersistenceQueue(
         for (const image of held) {
           const index = savingImages.value.indexOf(image)
           if (index >= 0) savingImages.value.splice(index, 1)
+        }
+        for (const id of heldFileIds) {
+          const index = savingFileIds.value.indexOf(id)
+          if (index >= 0) savingFileIds.value.splice(index, 1)
         }
         settle()
       }
@@ -103,6 +114,7 @@ export function createChatPersistenceQueue(
     persist,
     renameChat,
     savingImages,
+    savingFileIds,
     hasPendingWrites: () =>
       pendingWriteCount > 0 ||
       (failedChatId !== undefined &&

@@ -5,6 +5,7 @@ import {
   type ToolSet,
 } from '@bozonx/ai-kit'
 import type {
+  AiAttachedFile,
   ProfileMemoryMode,
   ProfileToolSettings,
   ProjectAccessMode,
@@ -90,6 +91,8 @@ export interface ChatToolContext {
   settings: ProfileToolSettings | undefined
   /** Profile long-term memory mode */
   memoryMode?: ProfileMemoryMode
+  /** The originals attached to the conversation, by the names the model uses */
+  attachedFiles?: readonly AiAttachedFile[]
   /**
    * How much the outputs of the turn's tools may add to the request in all;
    * unlimited when absent

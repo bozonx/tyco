@@ -28,7 +28,7 @@ use crate::services::chat_images::ChatImageStore;
 /// The folders and files of one chat history.
 #[derive(Clone, Debug)]
 pub struct ChatDirs {
-    /// The chat files and their `images` folder.
+    /// The chat files and their `images` and `attachments` folders.
     pub chats: PathBuf,
     /// The derived index of the state folder.
     pub index: PathBuf,
@@ -40,6 +40,10 @@ pub struct ChatDirs {
 impl ChatDirs {
     pub fn images(&self) -> PathBuf {
         chat_image_directory(&self.chats)
+    }
+
+    pub fn attachments(&self) -> PathBuf {
+        chat_file_directory(&self.chats)
     }
 }
 
@@ -227,7 +231,12 @@ fn validate_stored_chat_id(path: &Path, chat: &Chat) -> Result<(), AppError> {
 }
 
 pub fn chat_image_directory(chats_dir: &Path) -> PathBuf {
-    chats_dir.join("images")
+    chats_dir.join(crate::services::chat_images::IMAGES_DIR)
+}
+
+/// The folder of the attachment originals of the chats of `chats_dir`.
+pub fn chat_file_directory(chats_dir: &Path) -> PathBuf {
+    chats_dir.join(crate::services::chat_images::ATTACHMENTS_DIR)
 }
 
 fn chat_path(chats_dir: &Path, id: &str) -> Result<PathBuf, AppError> {
@@ -251,7 +260,11 @@ pub fn save_chat(
     let path = chat_path(&dirs.chats, &chat.id)?;
     let mut history = list_chats(dirs)?;
 
-    images.locked().persist(&dirs.images(), &chat)?;
+    {
+        let mut images = images.locked();
+        images.persist(&dirs.images(), &chat)?;
+        images.persist_files(&dirs.attachments(), &chat)?;
+    }
 
     // the chat being saved stays, whatever date its last message has
     let mut removed = policy.drop_expired(&mut history, now_ms());
@@ -286,7 +299,8 @@ fn clean_images(dirs: &ChatDirs) {
     }
 }
 
-/// Whether the stored version of `chat` refers to images the new one does not.
+/// Whether the stored version of `chat` refers to images or files the new one
+/// does not.
 /// A stored chat that cannot be read counts as one that does.
 fn drops_images(chats_dir: &Path, chat: &Chat) -> bool {
     let stored = match read_chat(chats_dir, chat.id.clone()) {
@@ -301,8 +315,15 @@ fn drops_images(chats_dir: &Path, chat: &Chat) -> bool {
 fn chat_image_ids(chat: &Chat) -> std::collections::HashSet<&str> {
     chat.messages
         .iter()
-        .flat_map(|message| &message.images)
-        .map(|image| image.id.as_str())
+        .flat_map(|message| {
+            let images = message.images.iter().map(|image| image.id.as_str());
+            let files = message
+                .attachments
+                .iter()
+                .filter_map(|attachment| attachment.file.as_ref())
+                .map(|file| file.id.as_str());
+            images.chain(files)
+        })
         .collect()
 }
 
@@ -676,12 +697,13 @@ pub(super) fn enforce_chat_history_policy(
     Ok(removed)
 }
 
-/// Removes the chat files, the images and the index.
+/// Removes the chat files, their images and attachments, and the index.
 pub fn clear_chats(dirs: &ChatDirs) -> Result<(), AppError> {
     super::user_data::ensure_write_allowed(&dirs.chats)?;
-    let images_dir = dirs.images();
-    if images_dir.exists() {
-        fs::remove_dir_all(images_dir)?;
+    for files_dir in [dirs.images(), dirs.attachments()] {
+        if files_dir.exists() {
+            fs::remove_dir_all(files_dir)?;
+        }
     }
     for (_, path) in super::user_files::list_own_files(&dirs.chats, |name| {
         chat_file_id(Path::new(name)).is_some()

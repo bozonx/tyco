@@ -24,6 +24,21 @@
       <span class="chat-attachment-excerpt">{{ excerpt }}</span>
       <span class="chat-attachment-size">{{ size }}</span>
     </button>
+    <template v-if="file && !removable">
+      <IconButton
+        class="chat-attachment-action"
+        @click="exportFile"
+        :label="t('chat.exportAttachment')"
+        icon="mdi:download-outline"
+      />
+      <IconButton
+        v-if="profileId"
+        class="chat-attachment-action"
+        @click="saveToWorkspace"
+        :label="t('chat.saveAttachmentToWorkspace')"
+        icon="mdi:folder-plus-outline"
+      />
+    </template>
     <IconButton
       v-if="removable"
       class="chat-attachment-remove"
@@ -42,16 +57,19 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useId } from 'vue'
 
+import { useChatScopeProfileId } from '../../composables/use-chat-scope'
 import { useI18n } from '../../composables/use-i18n'
+import useToast from '../../composables/use-toast'
 import {
   attachmentExcerpt,
   attachmentIcon,
   attachmentLabelKey,
   attachmentTitle,
 } from '../../lib/chat/chat-attachment'
+import { useIpcStore } from '../../stores/ipc'
 import AppIcon from '../common/AppIcon.vue'
 import IconButton from '../common/IconButton.vue'
-import type { ChatAttachmentSource } from '@tyco/shared'
+import type { ChatAttachmentFile, ChatAttachmentSource } from '@tyco/shared'
 
 /** A text attached to a chat message: one sent, or one going with the next */
 const props = defineProps<{
@@ -59,12 +77,46 @@ const props = defineProps<{
   source?: ChatAttachmentSource
   name?: string
   mediaType?: string
+  /** The original of an attached file, kept with the conversation */
+  file?: ChatAttachmentFile
   removable?: boolean
   /** Draws attention when it appears: it may arrive after the chat opened */
   announce?: boolean
 }>()
 const emit = defineEmits<{ (e: 'remove'): void }>()
 const { t, locale } = useI18n()
+const { toastKey, toastText, toastError } = useToast()
+const ipcStore = useIpcStore()
+const profileId = useChatScopeProfileId()
+const fileName = () => props.name || 'file'
+
+/** Saves a copy of the original wherever the user chooses */
+async function exportFile() {
+  if (!props.file) return
+  const response = await ipcStore.call('export_chat_file', {
+    id: props.file.id,
+    name: fileName(),
+    profileId: profileId ?? null,
+  })
+  if (!response.success) toastError(response.error)
+  else if (response.result) toastKey('chat.attachmentExported', 'success')
+}
+
+/** Copies the original into the profile's workspace, where it stays */
+async function saveToWorkspace() {
+  if (!props.file || !profileId) return
+  const response = await ipcStore.call('save_chat_file_to_workspace', {
+    profileId,
+    fileId: props.file.id,
+    name: fileName(),
+  })
+  if (!response.success) toastError(response.error)
+  else
+    toastText(
+      t('chat.attachmentSavedToWorkspace', { path: response.result }),
+      'success'
+    )
+}
 const previewId = useId()
 const isOpen = ref(false)
 const isArriving = ref(false)
@@ -145,6 +197,20 @@ onMounted(() => {
   flex-shrink: 0;
   color: var(--app-text-faint);
   white-space: nowrap;
+}
+.chat-attachment-action {
+  display: inline-flex;
+  padding: 0.15rem;
+  border-radius: var(--radius-sm);
+  color: var(--app-text-faint);
+  cursor: pointer;
+}
+.chat-attachment-action:last-of-type {
+  margin-right: 0.2rem;
+}
+.chat-attachment-action:hover {
+  background: var(--app-hover);
+  color: var(--color-base-content);
 }
 .chat-attachment-remove {
   display: inline-flex;

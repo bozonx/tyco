@@ -4,17 +4,19 @@ import type {
   AccessDecision,
   ActivationMetricMark,
   ActivationMode,
+  AiAttachedFile,
   AiFileChangePreview,
   AiFileRoot,
   AiFileToolOutput,
   AiFileToolRequest,
   AiProfile,
   AiProject,
-  AiUploadMeta,
   AiWebToolOutput,
   AiWebToolRequest,
   Chat,
   ChatAttachment,
+  ChatAttachmentFile,
+  ChatFileMeta,
   ChatImage,
   ChatImageMeta,
   ChatSummary,
@@ -137,6 +139,10 @@ export interface DesktopCommands {
     args: { request: ScriptActionRequest }
     result: ScriptExecutionResult
   }
+  export_chat_file: {
+    args: { id: string; name: string; profileId?: string | null }
+    result: boolean
+  }
   finish_external_job: {
     args: { id: string; completion: JobCompletion }
     result: ExternalJob | null
@@ -172,7 +178,10 @@ export interface DesktopCommands {
     args: { inspectionId: string }
     result: InstalledPlugin
   }
-  list_ai_file_roots: { args: { profileId: string }; result: Array<AiFileRoot> }
+  list_ai_file_roots: {
+    args: { profileId?: string | null; attachments: Array<AiAttachedFile> }
+    result: Array<AiFileRoot>
+  }
   list_ai_profile_memory_topics: {
     args: { profileId: string }
     result: Array<ProfileMemoryTopic>
@@ -243,11 +252,19 @@ export interface DesktopCommands {
   pick_plugin_package: { args: undefined; result: PluginPackagePreview | null }
   pick_script_file: { args: undefined; result: string | null }
   preview_ai_file_change: {
-    args: { profileId: string; request: AiFileToolRequest }
+    args: {
+      profileId?: string | null
+      attachments: Array<AiAttachedFile>
+      request: AiFileToolRequest
+    }
     result: AiFileChangePreview
   }
   read_ai_file_bytes: {
-    args: { profileId: string; path: string }
+    args: {
+      profileId?: string | null
+      attachments: Array<AiAttachedFile>
+      path: string
+    }
     result: ArrayBuffer
   }
   read_ai_profile_memory: {
@@ -255,6 +272,10 @@ export interface DesktopCommands {
     result: string
   }
   read_ai_profile_soul: { args: { id: string }; result: string }
+  read_chat_file: {
+    args: { id: string; profileId?: string | null }
+    result: ArrayBuffer
+  }
   read_chat_image: {
     args: { id: string; profileId?: string | null }
     result: ArrayBuffer
@@ -310,7 +331,11 @@ export interface DesktopCommands {
     result: ProfileMemoryChange
   }
   run_ai_file_tool: {
-    args: { profileId: string; request: AiFileToolRequest }
+    args: {
+      profileId?: string | null
+      attachments: Array<AiAttachedFile>
+      request: AiFileToolRequest
+    }
     result: AiFileToolOutput
   }
   run_ai_web_tool: {
@@ -319,8 +344,11 @@ export interface DesktopCommands {
   }
   save_ai_profile: { args: { profile: AiProfile }; result: void }
   save_ai_project: { args: { project: AiProject }; result: void }
-  save_ai_upload: { args: BinaryArgs<AiUploadMeta>; result: string }
   save_chat: { args: { chat: Chat; profileId?: string | null }; result: void }
+  save_chat_file_to_workspace: {
+    args: { profileId: string; fileId: string; name: string }
+    result: string
+  }
   save_user_config: {
     args: { userConfig: UserConfig; baseConfig: UserConfig }
     result: DesktopSnapshot
@@ -369,6 +397,10 @@ export interface DesktopCommands {
     result: VoiceCaptureInfo
   }
   stop_voice_capture: { args: { sessionId?: number | null }; result: void }
+  store_chat_file: {
+    args: BinaryArgs<ChatFileMeta>
+    result: ChatAttachmentFile
+  }
   store_chat_image: { args: BinaryArgs<ChatImageMeta>; result: ChatImage }
   submit_activation_metric_value: {
     args: { id: number; value: string }
@@ -417,8 +449,8 @@ export type DesktopCommandResult<K extends DesktopCommandName> =
 
 /** The commands whose argument is `BinaryArgs` */
 export const BINARY_DESKTOP_COMMANDS = [
-  'save_ai_upload',
   'send_socket_binary',
+  'store_chat_file',
   'store_chat_image',
 ] as const satisfies readonly DesktopCommandName[]
 

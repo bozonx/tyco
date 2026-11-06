@@ -332,6 +332,18 @@ describe('QuickAiRequestModel', () => {
     expect(deps.closeOverlay).toHaveBeenCalled()
   })
 
+  it('moves the conversation to the chat of its session', async () => {
+    const { model, deps } = createSetup({ chatId: 'session-chat' })
+    await model.submitPrompt('Make it formal')
+
+    await model.switchToChat()
+
+    expect(vi.mocked(deps.saveChat!).mock.calls[0][0].id).toBe('session-chat')
+    expect(deps.openMainChat).toHaveBeenCalledWith(
+      expect.objectContaining({ chatId: 'session-chat' })
+    )
+  })
+
   it('moves the conversation to a new chat and names it', async () => {
     const { model, deps } = createSetup({ initialProfileId: 'prof-1' })
     await model.submitPrompt('Make it formal')

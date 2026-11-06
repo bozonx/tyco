@@ -145,8 +145,10 @@ const ACCESS_TEXT = {
 /** What the model is told about the folders it reaches */
 export function formatFileRoots(roots: readonly AiFileRoot[]): string {
   const lines = roots.map((root) => {
+    if (root.path === 'attachments')
+      return `- attachments/ — the files the user attached to this conversation, by their names; read-only, write a copy into another folder to change one.`
     if (!root.name)
-      return `- ${root.path}/ — your own folder for notes, drafts and files the user drops into the chat (in ${root.path}/uploads/).`
+      return `- ${root.path}/ — your own folder for notes, drafts and files to keep.`
     const about = root.description ? ` (${root.description})` : ''
     return `- ${root.path}/ — the project "${root.name}"${about}; reading ${ACCESS_TEXT[root.read]}, changing ${ACCESS_TEXT[root.write]}.`
   })

@@ -207,6 +207,7 @@ import {
   type QuickAiRequestModel,
   createQuickAiRequestModel,
 } from '../../lib/quick-ai-request/quick-ai-request-model'
+import { createQuickAiRequestSession } from '../../lib/quick-ai-request/quick-ai-request-session'
 import { REPLY_BLOCKS_TOOL_NAME } from '../../lib/reply-blocks/reply-blocks-tool'
 import { describeDictationError } from '../../lib/stt/dictation-error'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
@@ -292,6 +293,37 @@ function onProfileSelect(val: string | number | undefined) {
   model.setProfileId(selected)
 }
 
+/**
+ * The conversation of the request: its chat id, kept when it moves to the full
+ * chat, and its tools, so that a call allowed "for this session" stays allowed
+ * for the follow-up questions
+ */
+const session = createQuickAiRequestSession({
+  createId: () => crypto.randomUUID(),
+  createTools: ({
+    chatId,
+    profileId: pId,
+    profile,
+  }: {
+    chatId: string
+    profileId: string | null
+    profile?: AiProfile
+  }) =>
+    createDesktopChatTools({
+      profileId: pId,
+      invoke: invokeDesktop,
+      canUseTools: () => true,
+      getMemoryMode: () => profile?.memoryMode,
+      getChatId: () => chatId,
+      getFetchMaxCharacters: () =>
+        desktopStore.userConfig?.llm?.webSearch?.fetchMaxCharacters,
+      warn: (msg) => clientLogger.warn(msg, 'tools'),
+      commands: () => desktopStore.userConfig?.commands ?? [],
+      tools: toolsStore,
+      environment: toolsStore.environment,
+    }),
+})
+
 // Model instantiation with dependencies
 const model: QuickAiRequestModel = createQuickAiRequestModel({
   sourceText: props.text,
@@ -332,7 +364,7 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
     if (!response.success) toastText(describeError(response.error, t), 'error')
   },
   turnTools: async (modelId, pId, profile) => {
-    const tools = chatToolsFor(pId, profile)
+    const tools = session.toolsFor(pId, profile)
     const turn = await tools.turnTools(
       modelId,
       undefined,
@@ -342,8 +374,8 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
     return turn.tools
   },
   answerToolApproval: (approvalId, decision) =>
-    chatToolsScope?.tools.answerApproval(approvalId, decision),
-  cancelToolApprovals: () => chatToolsScope?.tools.dispose(),
+    session.currentTools()?.answerApproval(approvalId, decision),
+  cancelToolApprovals: () => session.currentTools()?.dispose(),
   stream: (llmPrompt, options) =>
     llmStore.client.stream('quickRequest', llmPrompt, options),
   resolveProfileInstructions: (pId: string) =>
@@ -416,40 +448,11 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
   },
   imageTitle: () => t('chat.imageTitle'),
   createId: () => crypto.randomUUID(),
+  chatId: session.chatId,
   closeOverlay: () => menuModalsStore.closeAll(),
   noModelError: () => t('quickAiRequest.noModel'),
   toolsRequiredError: () => t('llmErrors.toolsRequired'),
 })
-
-/**
- * The tools of the request: one session per profile, so that a call allowed
- * "for this session" stays allowed for the follow-up questions
- */
-let chatToolsScope:
-  | {
-      profileId: string | null
-      tools: ReturnType<typeof createDesktopChatTools>
-    }
-  | undefined
-function chatToolsFor(pId: string | null, profile?: AiProfile) {
-  if (chatToolsScope?.profileId === pId) return chatToolsScope.tools
-  chatToolsScope?.tools.dispose()
-  const tools = createDesktopChatTools({
-    profileId: pId,
-    invoke: invokeDesktop,
-    canUseTools: () => true,
-    getMemoryMode: () => profile?.memoryMode,
-    getChatId: () => undefined,
-    getFetchMaxCharacters: () =>
-      desktopStore.userConfig?.llm?.webSearch?.fetchMaxCharacters,
-    warn: (msg) => clientLogger.warn(msg, 'tools'),
-    commands: () => desktopStore.userConfig?.commands ?? [],
-    tools: toolsStore,
-    environment: toolsStore.environment,
-  })
-  chatToolsScope = { profileId: pId, tools }
-  return tools
-}
 
 /** "Ask AI" keeps its quick request model in the task settings */
 function saveQuickRequestTaskModel(modelId: string) {
@@ -699,6 +702,7 @@ onUnmounted(() => {
   if (model.isGenerating.value) {
     model.stopGeneration()
   }
+  session.dispose()
 })
 </script>
 

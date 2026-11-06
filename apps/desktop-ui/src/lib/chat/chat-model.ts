@@ -31,6 +31,7 @@ export function createChatModel(deps: ChatModelDependencies) {
   return {
     ...state,
     savingImages: persistence.savingImages,
+    savingFileIds: persistence.savingFileIds,
     /**
      * Reload only an idle, saved conversation; preserve work started during
      * I/O.

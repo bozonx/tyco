@@ -17,14 +17,14 @@ fn root(path: &str, dir: &Path, read: ProjectAccessMode, write: ProjectAccessMod
 }
 
 /// The workspace and two projects: `docs` to read only, `site` to change.
-fn fixture(label: &str) -> (TestDir, ProfileFiles) {
+fn fixture(label: &str) -> (TestDir, ConversationFiles<'static>) {
     let dir = TestDir::new(label);
     for sub in ["workspace", "docs", "site"] {
         fs::create_dir_all(dir.join(sub)).unwrap();
     }
     fs::write(dir.join("docs/project.json"), "{}").unwrap();
     fs::write(dir.join("docs/readme.md"), "first\nsecond\nthird\n").unwrap();
-    let files = ProfileFiles::from_roots(vec![
+    let files = ConversationFiles::from_roots(vec![
         root("workspace", &dir.join("workspace"), Allow, Allow),
         root("projects/docs", &dir.join("docs"), Allow, Deny),
         root("projects/site", &dir.join("site"), Ask, Ask),
@@ -32,7 +32,10 @@ fn fixture(label: &str) -> (TestDir, ProfileFiles) {
     (dir, files)
 }
 
-fn run(files: &ProfileFiles, request: serde_json::Value) -> Result<AiFileToolOutput, AppError> {
+fn run(
+    files: &ConversationFiles,
+    request: serde_json::Value,
+) -> Result<AiFileToolOutput, AppError> {
     files.run_with(serde_json::from_value(request).unwrap(), |path| {
         if path.is_dir() {
             fs::remove_dir_all(path)?;
@@ -521,25 +524,166 @@ fn listings_go_down_to_the_depth_asked() {
 }
 
 #[test]
-fn uploads_get_names_of_their_own() {
-    let (dir, files) = fixture("ai_files_uploads");
+fn copies_into_the_workspace_get_names_of_their_own() {
+    let (dir, files) = fixture("ai_files_copies");
     assert_eq!(
-        files.save_upload("../report.pdf", b"one").unwrap(),
-        "workspace/uploads/report.pdf"
+        files.save_copy("../report.pdf", b"one").unwrap(),
+        "workspace/report.pdf"
     );
     assert_eq!(
-        files.save_upload("report.pdf", b"two").unwrap(),
-        "workspace/uploads/report (1).pdf"
+        files.save_copy("report.pdf", b"two").unwrap(),
+        "workspace/report (1).pdf"
     );
+    assert_eq!(files.save_copy("..", b"three").unwrap(), "workspace/file");
     assert_eq!(
-        files.save_upload("..", b"three").unwrap(),
-        "workspace/uploads/file"
-    );
-    assert_eq!(
-        fs::read(dir.join("workspace/uploads/report (1).pdf")).unwrap(),
+        fs::read(dir.join("workspace/report (1).pdf")).unwrap(),
         b"two"
     );
 }
+
+fn attached(name: &str, bytes: &[u8]) -> (AiAttachedFile, Vec<u8>) {
+    (
+        AiAttachedFile {
+            name: name.into(),
+            id: crate::services::sha256::sha256_hex(bytes),
+        },
+        bytes.to_vec(),
+    )
+}
+
+fn attachments(files: Vec<(AiAttachedFile, Vec<u8>)>) -> Attachments<'static> {
+    let store: HashMap<String, Vec<u8>> = files
+        .iter()
+        .map(|(file, bytes)| (file.id.clone(), bytes.clone()))
+        .collect();
+    Attachments::new(
+        files.into_iter().map(|(file, _)| file).collect(),
+        Box::new(move |id| {
+            store
+                .get(id)
+                .cloned()
+                .ok_or_else(|| AppError::invalid_input("missing"))
+        }),
+    )
+    .unwrap()
+}
+
+#[test]
+fn attachments_are_listed_read_and_searched_but_never_changed() {
+    let files = ConversationFiles::general(attachments(vec![
+        attached("notes.md", b"alpha\nbeta\n"),
+        attached("report.pdf", b"%PDF-1.7"),
+    ]));
+    let roots: Vec<_> = files
+        .roots()
+        .iter()
+        .map(|root| root.path.as_str())
+        .collect();
+    assert_eq!(roots, ["attachments"]);
+
+    let listed = run(
+        &files,
+        serde_json::json!({"operation": "listDir", "path": ""}),
+    )
+    .unwrap();
+    assert!(
+        matches!(listed, AiFileToolOutput::ListDir { ref entries, .. } if entries[0].path == "attachments/")
+    );
+    let AiFileToolOutput::ListDir { entries, .. } = run(
+        &files,
+        serde_json::json!({"operation": "listDir", "path": "attachments", "pattern": "*.md"}),
+    )
+    .unwrap() else {
+        panic!("a listing")
+    };
+    assert_eq!(entries[0].path, "attachments/notes.md");
+    assert_eq!(entries.len(), 1);
+
+    let AiFileToolOutput::ReadFile { content, .. } = run(
+        &files,
+        serde_json::json!({"operation": "readFile", "path": "attachments/notes.md", "offset": 2}),
+    )
+    .unwrap() else {
+        panic!("a text")
+    };
+    assert_eq!(content, "beta\n");
+    assert!(matches!(
+        run(
+            &files,
+            serde_json::json!({"operation": "readFile", "path": "attachments/report.pdf"})
+        )
+        .unwrap(),
+        AiFileToolOutput::ReadDocument { .. }
+    ));
+    assert_eq!(
+        files.read_bytes("attachments/report.pdf").unwrap(),
+        b"%PDF-1.7"
+    );
+
+    let AiFileToolOutput::SearchFiles { matches, .. } = run(
+        &files,
+        serde_json::json!({"operation": "searchFiles", "query": "beta"}),
+    )
+    .unwrap() else {
+        panic!("matches")
+    };
+    assert_eq!(matches.len(), 1);
+    assert_eq!(matches[0].path, "attachments/notes.md");
+    assert_eq!(matches[0].line, Some(2));
+
+    for request in [
+        serde_json::json!({"operation": "writeFile", "path": "attachments/notes.md", "content": "x"}),
+        serde_json::json!({"operation": "deletePath", "path": "attachments/notes.md"}),
+        serde_json::json!({"operation": "movePath", "from": "attachments/notes.md", "to": "workspace/n.md"}),
+    ] {
+        assert!(message(run(&files, request)).contains("read-only"));
+    }
+    assert!(message(run(
+        &files,
+        serde_json::json!({"operation": "readFile", "path": "workspace/a.md"}),
+    ))
+    .contains("without a profile"));
+}
+
+#[test]
+fn a_profile_reaches_attachments_beside_its_folders() {
+    let (dir, _) = fixture("ai_files_attachments_profile");
+    let files = ConversationFiles::with_attachments(
+        vec![root("workspace", &dir.join("workspace"), Allow, Allow)],
+        attachments(vec![attached("a.txt", b"needle")]),
+    );
+    fs::write(dir.join("workspace/b.txt"), "needle").unwrap();
+    let roots: Vec<_> = files
+        .roots()
+        .iter()
+        .map(|root| root.path.as_str())
+        .collect();
+    assert_eq!(roots, ["attachments", "workspace"]);
+    let AiFileToolOutput::SearchFiles { matches, .. } = run(
+        &files,
+        serde_json::json!({"operation": "searchFiles", "query": "needle"}),
+    )
+    .unwrap() else {
+        panic!("matches")
+    };
+    let paths: Vec<_> = matches.iter().map(|item| item.path.as_str()).collect();
+    assert_eq!(paths, ["attachments/a.txt", "workspace/b.txt"]);
+}
+
+#[test]
+fn attachment_names_must_be_plain_and_unique() {
+    let read = || -> ReadAttachmentFn { Box::new(|_| Ok(Vec::new())) };
+    for names in [vec!["a/b"], vec![".."], vec![""], vec!["a.txt", "A.txt"]] {
+        let files = names
+            .iter()
+            .map(|name| attached(name, name.as_bytes()).0)
+            .collect();
+        assert!(Attachments::new(files, read()).is_err(), "{names:?}");
+    }
+    assert!(Attachments::new(vec![attached("a (2).txt", b"").0], read()).is_ok());
+}
+
+type ReadAttachmentFn = Box<dyn Fn(&str) -> Result<Vec<u8>, AppError>>;
 
 fn profile(tools: Option<ProfileToolSettings>) -> AiProfile {
     AiProfile {
@@ -607,7 +751,7 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
         ai_vault::create_project(&vault, &paths, project(id, index as u64)).unwrap();
     }
 
-    let files = ProfileFiles::load(&vault, &paths, "writer").unwrap();
+    let files = ConversationFiles::load(&vault, &paths, "writer", Attachments::none()).unwrap();
     let roots: Vec<_> = files
         .roots()
         .iter()
@@ -630,12 +774,15 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
     ));
     assert!(error.contains("not available"), "{error}");
 
+    // with its file tools off a profile reaches its attachments only
     ai_vault::save_profile(&vault, profile(None)).unwrap();
-    assert!(ProfileFiles::load(&vault, &paths, "writer")
-        .err()
-        .unwrap()
-        .to_string()
-        .contains("off"));
+    let files = ConversationFiles::load(&vault, &paths, "writer", Attachments::none()).unwrap();
+    assert!(files.roots().is_empty());
+    let error = message(run(
+        &files,
+        serde_json::json!({"operation": "readFile", "path": "workspace/a.md"}),
+    ));
+    assert!(error.contains("off"), "{error}");
 }
 
 #[test]
@@ -667,7 +814,7 @@ fn an_external_project_without_its_folder_here_is_named_and_refused() {
     )
     .unwrap();
 
-    let files = ProfileFiles::load(&vault, &paths, "writer").unwrap();
+    let files = ConversationFiles::load(&vault, &paths, "writer", Attachments::none()).unwrap();
     let book = &files.roots()[1];
     assert_eq!(book.path, "projects/book");
     assert!(book.unavailable.is_some());
@@ -745,7 +892,7 @@ fn a_permission_denied_rename_does_not_fall_back_to_copying() {
     assert!(!directory.join("workspace/moved.txt").exists());
 }
 
-fn read_content(files: &ProfileFiles, path: &str) -> String {
+fn read_content(files: &ConversationFiles, path: &str) -> String {
     match run(
         files,
         serde_json::json!({"operation": "readFile", "path": path}),

@@ -63,13 +63,14 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<ErrorPayload>();
     visitor.visit::<crate::ipc::SessionStatePatch>();
     visitor.visit::<commands::action_logs::ClientLogLevel>();
-    visitor.visit::<commands::ai_files::AiUploadMeta>();
     visitor.visit::<commands::chat_images::ChatImageMeta>();
+    visitor.visit::<commands::chat_images::ChatFileMeta>();
     visitor.visit::<commands::net::SocketFrameMeta>();
     visitor.visit::<commands::plugins::PluginPackagePreview>();
     visitor.visit::<models::ScriptActionRequest>();
     visitor.visit::<models::Chat>();
     visitor.visit::<models::ChatAttachment>();
+    visitor.visit::<models::ChatAttachmentFile>();
     visitor.visit::<models::ChatImage>();
     visitor.visit::<models::ChatSummary>();
     visitor.visit::<models::EditorHistoryEntry>();
@@ -84,6 +85,7 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<services::activation::ActivationMode>();
     visitor.visit::<services::activation::metrics::ActivationMetricMark>();
     visitor.visit::<services::ai_tools::files::AiFileChangePreview>();
+    visitor.visit::<services::ai_tools::files::AiAttachedFile>();
     visitor.visit::<services::ai_tools::files::AiFileRoot>();
     visitor.visit::<services::ai_tools::files::AiFileToolOutput>();
     visitor.visit::<services::ai_tools::files::AiFileToolRequest>();

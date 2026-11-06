@@ -1,5 +1,6 @@
 import {
   DEFAULT_TOOL_STEP_COUNT,
+  type AiAttachedFile,
   type ProfileMemoryMode,
   type ProfileToolSettings,
 } from '@tyco/shared'
@@ -13,6 +14,7 @@ import {
 } from './chat-tool-registry'
 import { withReplyBlocksToolGroup } from '../reply-blocks/reply-blocks-tool'
 import { withDebugToolGroup } from './debug-chat-tools'
+import { ATTACHMENTS_TOOL_GROUP_ID } from './file-tools'
 import { withMemoryToolGroup } from './memory-tools'
 
 export interface ChatToolsSessionDependencies {
@@ -35,6 +37,21 @@ export interface ChatToolsRequest {
   memoryMode?: ProfileMemoryMode
   /** How much the outputs of the turn's tools may add to the request */
   outputBudgetCharacters?: number
+  /** The originals attached to the conversation, for the file tools */
+  attachedFiles?: readonly AiAttachedFile[]
+}
+
+/** Reading the user's own attachments is part of every chat with tools */
+function withAttachmentsToolGroup(
+  settings: ProfileToolSettings
+): ProfileToolSettings {
+  return {
+    ...settings,
+    groups: {
+      ...settings.groups,
+      [ATTACHMENTS_TOOL_GROUP_ID]: { isEnabled: true, access: 'allow' },
+    },
+  }
 }
 
 /**
@@ -59,8 +76,10 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
       ? withDebugToolGroup(request.settings)
       : request.settings
     // reply blocks are part of every chat that can call tools
-    const settings = withReplyBlocksToolGroup(
-      withMemoryToolGroup(baseSettings, request.memoryMode)
+    const settings = withAttachmentsToolGroup(
+      withReplyBlocksToolGroup(
+        withMemoryToolGroup(baseSettings, request.memoryMode)
+      )
     )
     const tools = await registry.resolve({
       profileId: request.profileId,
@@ -68,6 +87,7 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
       settings,
       memoryMode: request.memoryMode,
       outputBudgetCharacters: request.outputBudgetCharacters,
+      attachedFiles: request.attachedFiles,
     })
     if (!tools) return undefined
     return {

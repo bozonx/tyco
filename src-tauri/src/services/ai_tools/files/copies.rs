@@ -3,30 +3,25 @@ use std::io;
 use super::scoped_io;
 
 use super::sandbox::virtual_path;
-use super::{Access, ProfileFiles, MAX_UPLOAD_BYTES, WORKSPACE_ROOT};
+use super::{Access, ConversationFiles, MAX_UPLOAD_BYTES, WORKSPACE_ROOT};
 use crate::errors::AppError;
 
-/// Where the files dropped into a profile chat are kept, inside the workspace.
-const UPLOADS_DIR: &str = "uploads";
-const MAX_UPLOAD_FILENAME_LENGTH: usize = 120;
+const MAX_COPY_FILENAME_LENGTH: usize = 120;
 
-impl ProfileFiles {
-    /// Keeps a file dropped into the chat in `workspace/uploads/`, under a
-    /// name no other upload has; returns the path the model reaches it by.
-    pub fn save_upload(&self, name: &str, bytes: &[u8]) -> Result<String, AppError> {
+impl ConversationFiles<'_> {
+    /// Keeps a copy of a file attached to the chat in `workspace/`, under a
+    /// name no other file there has; returns the path the model reaches it
+    /// by. The copy is a permanent material of the profile from then on.
+    pub fn save_copy(&self, name: &str, bytes: &[u8]) -> Result<String, AppError> {
         if bytes.len() > MAX_UPLOAD_BYTES {
             return Err(AppError::ResourceLimit(
                 "The file is too large to keep".into(),
             ));
         }
-        let uploads = self.resolve(
-            &format!("{WORKSPACE_ROOT}/{UPLOADS_DIR}"),
-            Access::Write,
-            true,
-        )?;
+        let uploads = self.resolve(WORKSPACE_ROOT, Access::Write, true)?;
         uploads.directory.create_dir_all(uploads.relative_path())?;
         let directory = uploads.directory.open_dir(uploads.relative_path())?;
-        let name = upload_file_name(name);
+        let name = copy_file_name(name);
         let (stem, extension) = match name.rsplit_once('.') {
             Some((stem, extension)) if !stem.is_empty() => {
                 (stem.to_string(), format!(".{extension}"))
@@ -47,13 +42,13 @@ impl ProfileFiles {
             }
         }
         Err(AppError::ResourceLimit(
-            "Too many uploads with this name".into(),
+            "Too many files with this name".into(),
         ))
     }
 }
 
-/// A name for a dropped file that is one plain file name.
-fn upload_file_name(name: &str) -> String {
+/// A name for a copied file that is one plain file name.
+fn copy_file_name(name: &str) -> String {
     let base = name.rsplit(['/', '\\']).next().unwrap_or_default();
     let cleaned: String = base
         .chars()
@@ -66,7 +61,7 @@ fn upload_file_name(name: &str) -> String {
         })
         .collect();
     let cleaned = cleaned.trim().trim_start_matches('.').trim();
-    let cleaned: String = cleaned.chars().take(MAX_UPLOAD_FILENAME_LENGTH).collect();
+    let cleaned: String = cleaned.chars().take(MAX_COPY_FILENAME_LENGTH).collect();
     if cleaned.is_empty() || cleaned.eq_ignore_ascii_case(".git") {
         "file".into()
     } else {

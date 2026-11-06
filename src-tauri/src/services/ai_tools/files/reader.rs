@@ -3,17 +3,18 @@ use std::path::Path;
 
 use super::sandbox::Resolved;
 use super::{
-    Access, AiFileToolOutput, DirEntry, EntryKind, ProfileFiles, MAX_READ_BYTES, MAX_WRITE_BYTES,
+    Access, AiFileToolOutput, ConversationFiles, DirEntry, EntryKind, MAX_READ_BYTES,
+    MAX_WRITE_BYTES,
 };
 use crate::errors::AppError;
 use crate::services::ai_tools::file_search;
 use crate::services::ai_vault::ProjectAccessMode;
 
-const DEFAULT_READ_LINES: usize = 2000;
+pub(super) const DEFAULT_READ_LINES: usize = 2000;
 /// The bytes looked at to tell a binary file from a text one.
 const BINARY_PROBE_BYTES: usize = 8192;
 
-impl ProfileFiles {
+impl ConversationFiles<'_> {
     pub(super) fn list_dir(
         &self,
         path: &str,
@@ -55,6 +56,9 @@ impl ProfileFiles {
     /// Reads an existing file of a root, for the webview to extract a
     /// document's text from.
     pub fn read_bytes(&self, path: &str) -> Result<Vec<u8>, AppError> {
+        if super::attachments::attachment_part(path).is_some() {
+            return self.attachment_bytes(path);
+        }
         let target = self.resolve(path, Access::Read, true)?;
         read_scoped_bytes(&target, path, MAX_READ_BYTES)
     }
@@ -106,7 +110,7 @@ impl ProfileFiles {
     }
 }
 
-fn document_media_type(path: &Path) -> Option<&'static str> {
+pub(super) fn document_media_type(path: &Path) -> Option<&'static str> {
     let extension = path.extension()?.to_string_lossy().to_ascii_lowercase();
     match extension.as_str() {
         "pdf" => Some("application/pdf"),
@@ -117,7 +121,11 @@ fn document_media_type(path: &Path) -> Option<&'static str> {
 
 /// The text of a file; a binary one is refused.
 fn read_text(target: &Resolved<'_>, shown: &str, max_bytes: u64) -> Result<String, AppError> {
-    let bytes = read_scoped_bytes(target, shown, max_bytes)?;
+    text_of(read_scoped_bytes(target, shown, max_bytes)?, shown)
+}
+
+/// The text of the bytes of a file; a binary one is refused.
+pub(super) fn text_of(bytes: Vec<u8>, shown: &str) -> Result<String, AppError> {
     if bytes[..bytes.len().min(BINARY_PROBE_BYTES)].contains(&0) {
         return Err(AppError::invalid_input(format!("{shown} is a binary file")));
     }

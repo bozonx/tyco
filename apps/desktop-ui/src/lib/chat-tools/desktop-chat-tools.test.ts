@@ -33,6 +33,7 @@ describe('desktop-chat-tools', () => {
     expect(result.tools?.maxStepCount).toBe(4)
     expect(invoke).toHaveBeenCalledWith('list_ai_file_roots', {
       profileId: 'writer',
+      attachments: [],
     })
   })
 

@@ -1,5 +1,8 @@
 # Chat files and vision
 
+Who owns these files, where they are stored and when they are removed:
+`chat-files.md`.
+
 The composer has one file picker, clipboard file paste, and native Tauri file
 drops. All paths use the same bounded, sequential importer. An error is reported
 for each file; later files still import. Replacing the draft discards late

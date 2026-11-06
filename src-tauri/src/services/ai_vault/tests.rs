@@ -130,7 +130,7 @@ fn a_created_profile_has_its_folders_and_soul() {
 
     let dir = vault_root.join("profiles").join("writer");
     assert!(dir.join("chats").is_dir());
-    for sub in ["uploads", "generated", "downloads"] {
+    for sub in ["generated", "downloads"] {
         assert!(dir.join("workspace").join(sub).is_dir());
     }
     assert_eq!(

@@ -1,10 +1,15 @@
 import { invokeDesktop as invoke } from '../desktop/invoke'
-import { type ChatImage, type Chat, type DesktopInvoke } from '@tyco/shared'
+import {
+  type ChatAttachmentFile,
+  type ChatImage,
+  type Chat,
+  type DesktopInvoke,
+} from '@tyco/shared'
 
 /**
- * Holds the images imported into one chat of a window until a sync of the chat
- * takes them over: "Ask AI", or the profile `profileId`. See
- * `src-tauri/src/commands/chat_images.rs`
+ * Holds the images and file originals imported into one chat of a window until
+ * a sync of the chat takes them over: "Ask AI", or the profile `profileId`. See
+ * `src-tauri/src/commands/chat_images.rs` and `dev_docs/chat-files.md`
  */
 export function createChatImageStorage(deps: {
   invoke: DesktopInvoke
@@ -28,6 +33,20 @@ export function createChatImageStorage(deps: {
     return image
   }
 
+  /** Keeps the original of an attached file, whatever tools the chat has */
+  async function storeChatFile(
+    bytes: Uint8Array<ArrayBuffer>
+  ): Promise<ChatAttachmentFile> {
+    const importId = deps.createId()
+    const file = await deps.invoke('store_chat_file', {
+      bytes,
+      meta: { importId },
+    })
+    completedImportIds.push(importId)
+    return file
+  }
+
+  /** Holds the images and files the chat shows, by id */
   function syncChatImages(ids: string[]): Promise<void> {
     const importIds = completedImportIds.splice(0)
     return deps
@@ -47,7 +66,17 @@ export function createChatImageStorage(deps: {
 
   const loadImage = (id: string) => getChatImage(id, profileId, deps.invoke)
 
-  return { storeChatImage, syncChatImages, loadChatWithImages, loadImage }
+  const loadFile = async (id: string) =>
+    new Uint8Array(await deps.invoke('read_chat_file', { id, profileId }))
+
+  return {
+    storeChatImage,
+    storeChatFile,
+    syncChatImages,
+    loadChatWithImages,
+    loadImage,
+    loadFile,
+  }
 }
 
 /** The bytes of a chat image; a profile chat keeps its images itself */

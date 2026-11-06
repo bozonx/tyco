@@ -1,15 +1,18 @@
-//! The file tools of a profile's chat. The model reaches the profile's
-//! `workspace/` and the projects the profile has permissions for, by paths
-//! like `workspace/notes.md` and `projects/<project-id>/src/main.rs`; it never
-//! sees, nor names, an absolute path.
+//! The file tools of a conversation. The model reaches the files attached to
+//! the conversation under `attachments/`, read-only, and in a profile's chat
+//! with its file tools on, the profile's `workspace/` and the projects the
+//! profile has permissions for, by paths like `workspace/notes.md` and
+//! `projects/<project-id>/src/main.rs`; it never sees, nor names, an absolute
+//! path. See `dev_docs/chat-files.md`.
 //!
 //! The webview asks the user about `ask`; here a path is kept inside its root,
 //! `deny` is enforced, and the files Tyco owns stay out of reach.
 
+mod attachments;
+mod copies;
 mod reader;
 mod sandbox;
 mod scoped_io;
-mod uploads;
 mod writer;
 
 use std::fs;
@@ -21,8 +24,15 @@ use super::file_search;
 use crate::errors::AppError;
 use crate::services::ai_vault::ProjectAccessMode;
 
+pub use self::attachments::{AiAttachedFile, Attachments, ATTACHMENTS_ROOT};
+
+/// Whether a model path is inside `attachments/`.
+pub(super) fn attachment_part_of(path: &str) -> bool {
+    attachments::attachment_part(path).is_some()
+}
 #[cfg(test)]
 pub(super) use self::reader::page_lines;
+pub(super) use self::reader::page_lines_from;
 pub(super) use self::sandbox::{is_forbidden, virtual_path, Resolved};
 #[cfg(test)]
 pub(super) use self::writer::apply_edit;
@@ -267,17 +277,43 @@ pub struct AiFileChangePreview {
     pub after: String,
 }
 
-/// The folders a profile's file tools reach, with its permissions to each.
-pub struct ProfileFiles {
+/// What the file tools of one conversation reach: its attachments, and the
+/// folders of its profile with the permissions to each.
+pub struct ConversationFiles<'a> {
     roots: Vec<AiFileRoot>,
+    attachments: Attachments<'a>,
+    /// Why the profile's folders are out of reach, when they are.
+    folders_off: Option<&'static str>,
 }
 
-impl ProfileFiles {
-    #[cfg(test)]
-    pub(super) fn from_roots(roots: Vec<AiFileRoot>) -> Self {
-        Self { roots }
+impl<'a> ConversationFiles<'a> {
+    fn new(
+        mut roots: Vec<AiFileRoot>,
+        attachments: Attachments<'a>,
+        folders_off: Option<&'static str>,
+    ) -> Self {
+        if !attachments.is_empty() {
+            roots.insert(0, attachments.root());
+        }
+        Self {
+            roots,
+            attachments,
+            folders_off,
+        }
     }
 
+    #[cfg(test)]
+    pub(super) fn from_roots(roots: Vec<AiFileRoot>) -> Self {
+        Self::new(roots, Attachments::none(), None)
+    }
+
+    #[cfg(test)]
+    pub(super) fn with_attachments(roots: Vec<AiFileRoot>, attachments: Attachments<'a>) -> Self {
+        Self::new(roots, attachments, None)
+    }
+}
+
+impl ConversationFiles<'_> {
     pub fn roots(&self) -> &[AiFileRoot] {
         &self.roots
     }
@@ -295,12 +331,36 @@ impl ProfileFiles {
         request: AiFileToolRequest,
         remove: impl FnOnce(&Path) -> Result<(), AppError>,
     ) -> Result<AiFileToolOutput, AppError> {
+        match &request {
+            AiFileToolRequest::WriteFile { path, .. }
+            | AiFileToolRequest::EditFile { path, .. }
+            | AiFileToolRequest::DeletePath { path } => self.ensure_writable(path)?,
+            AiFileToolRequest::MovePath { from, to } => {
+                self.ensure_writable(from)?;
+                self.ensure_writable(to)?;
+            }
+            _ => {}
+        }
         match request {
+            AiFileToolRequest::ListDir { path, pattern, .. }
+                if attachments::attachment_part(&path).is_some() =>
+            {
+                self.list_attachments(&path, pattern.as_deref())
+            }
             AiFileToolRequest::ListDir {
                 path,
                 depth,
                 pattern,
             } => self.list_dir(&path, depth, pattern.as_deref()),
+            AiFileToolRequest::ReadFile {
+                path,
+                offset,
+                limit,
+                max_characters,
+                character_offset,
+            } if attachments::attachment_part(&path).is_some() => {
+                self.read_attachment(&path, offset, limit, max_characters, character_offset)
+            }
             AiFileToolRequest::ReadFile {
                 path,
                 offset,

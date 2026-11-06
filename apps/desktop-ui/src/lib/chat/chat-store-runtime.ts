@@ -26,6 +26,7 @@ import {
   type ChatControllerDependencies,
 } from './chat-controller'
 import { createChatDesktopFiles } from './chat-desktop-files'
+import { conversationAttachedFiles } from './chat-attached-files'
 import { isChatHistoryEnabled } from './chat-history-settings'
 import { createChatImageStorage } from './chat-image-storage'
 import {
@@ -102,12 +103,17 @@ const CHAT_SAVE_RETRY_DELAYS_MS = [1000, 5000] as const
  */
 export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
   const { profileId, history, translate, toastKey, toastText, warn } = deps
-  const { storeChatImage, syncChatImages, loadChatWithImages, loadImage } =
-    createChatImageStorage({
-      invoke: deps.invoke,
-      createId: () => crypto.randomUUID(),
-      profileId: profileId ?? undefined,
-    })
+  const {
+    storeChatImage,
+    storeChatFile,
+    syncChatImages,
+    loadChatWithImages,
+    loadImage,
+  } = createChatImageStorage({
+    invoke: deps.invoke,
+    createId: () => crypto.randomUUID(),
+    profileId: profileId ?? undefined,
+  })
 
   const profile = computed(() =>
     profileId ? deps.getProfile(profileId) : undefined
@@ -154,6 +160,11 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     canUseTools: () => selectedModel.value?.canUseTools ?? false,
     getMemoryMode: () => profile.value?.memoryMode,
     getChatId: () => model.currentChatParams.value.id,
+    // the same names the prompt gives the model, see `buildLlmPrompt`
+    getAttachedFiles: () =>
+      conversationAttachedFiles(
+        model.messages.value.flatMap((message) => message.attachments || [])
+      ),
     getFetchMaxCharacters: () =>
       deps.getUserConfig()?.llm?.webSearch?.fetchMaxCharacters,
     warn,
@@ -376,15 +387,15 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
   )
 
   const files = createChatDesktopFiles({
-    profileId,
     invoke: deps.invoke,
     storeImage: storeChatImage,
+    storeFile: storeChatFile,
     syncImages: syncChatImages,
     imageQuality: () => deps.getUserConfig()?.llm.imageQuality,
-    profileTools: () => profile.value?.tools,
     getDraft: () => model.currentChatParams.value,
     getMessages: () => model.messages.value,
     getSavingImages: () => model.savingImages.value,
+    getSavingFileIds: () => model.savingFileIds.value,
     isGenerating: () => model.isGenerating.value,
     addAttachment: model.addAttachment,
     translate,

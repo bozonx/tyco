@@ -1,4 +1,5 @@
 import type {
+  AiAttachedFile,
   AiFileChangePreview,
   AiFileRoot,
   AiFileToolOutput,
@@ -22,19 +23,32 @@ import {
   pageText,
 } from './file-tool-format'
 
+/**
+ * What the file tools of a conversation reach: its attachments, and the folders
+ * of its profile. Rust resolves both; see `dev_docs/chat-files.md`
+ */
+export interface FileToolScope {
+  /** Null for "Ask AI" */
+  profileId: string | null
+  attachments: readonly AiAttachedFile[]
+}
+
+/** The group of the read-only tools on the attachments alone */
+export const ATTACHMENTS_TOOL_GROUP_ID = 'attachments'
+
 export interface FileToolsDependencies {
-  listRoots: (profileId: string) => Promise<AiFileRoot[]>
+  listRoots: (scope: FileToolScope) => Promise<AiFileRoot[]>
   run: (
-    profileId: string,
+    scope: FileToolScope,
     request: AiFileToolRequest
   ) => Promise<AiFileToolOutput>
   preview: (
-    profileId: string,
+    scope: FileToolScope,
     request: AiFileToolRequest
   ) => Promise<AiFileChangePreview>
   /** The text of a PDF or DOCX in a root */
   readDocumentText: (
-    profileId: string,
+    scope: FileToolScope,
     path: string,
     mediaType: string
   ) => Promise<string>
@@ -76,8 +90,8 @@ export function fileRootOf(
   const rootPath =
     parts[0] === 'projects' && parts[1]
       ? `projects/${parts[1]}`
-      : parts[0] === 'workspace'
-        ? 'workspace'
+      : parts[0] === 'workspace' || parts[0] === 'attachments'
+        ? parts[0]
         : undefined
   return roots.find((root) => root.path === rootPath)
 }
@@ -88,7 +102,7 @@ const isEmptyPath = (path: string) =>
 const PATH: JsonSchema = {
   type: 'string',
   description:
-    'A path starting with workspace/ or projects/<project-id>/, e.g. "workspace/notes.md"',
+    'A path starting with attachments/, workspace/ or projects/<project-id>/, e.g. "workspace/notes.md"',
 }
 
 interface FileToolSpec {
@@ -312,9 +326,11 @@ const FILE_TOOLS: readonly FileToolSpec[] = [
 ]
 
 /**
- * The file tools of a profile chat: its workspace and the projects it has
- * permissions for. The folders and permissions are read for every turn; Rust
- * checks them again on every call
+ * The file tools of a conversation: the files attached to it, read-only, and in
+ * a profile chat with the files group on, its workspace and the projects it has
+ * permissions for. Without the group the attachments are read through the
+ * always-on `attachments` group. The folders and permissions are read for every
+ * turn; Rust checks them again on every call
  */
 export function createFileToolProvider(
   deps: FileToolsDependencies
@@ -324,8 +340,9 @@ export function createFileToolProvider(
 
   function definition(
     spec: FileToolSpec,
-    profileId: string,
+    scope: FileToolScope,
     roots: readonly AiFileRoot[],
+    groupId: string,
     groupAccess: ProjectAccessMode
   ): ChatToolDefinition {
     /** The roots of a call; an empty path reaches all that can be read */
@@ -345,11 +362,11 @@ export function createFileToolProvider(
         asInput(input),
         options.outputLimitCharacters
       )
-      const output = await deps.run(profileId, request)
+      const output = await deps.run(scope, request)
       if (output.operation !== 'readDocument')
         return formatFileToolOutput(output)
       const documentText = await deps.readDocumentText(
-        profileId,
+        scope,
         output.path,
         output.mediaType
       )
@@ -370,7 +387,7 @@ export function createFileToolProvider(
 
     return {
       name: spec.name,
-      groupId: FILES_TOOL_GROUP_ID,
+      groupId,
       labelKey: spec.labelKey,
       icon: spec.icon,
       description: spec.description,
@@ -396,7 +413,7 @@ export function createFileToolProvider(
         ? {
             preview: async (input: unknown) => {
               const change = await deps.preview(
-                profileId,
+                scope,
                 spec.request(asInput(input), 0)
               )
               return { kind: 'file-change' as const, ...change }
@@ -410,20 +427,30 @@ export function createFileToolProvider(
   return {
     id: 'files',
     async tools(context) {
+      const scope: FileToolScope = {
+        profileId: context.profileId,
+        attachments: context.attachedFiles ?? [],
+      }
       const group = context.settings?.groups[FILES_TOOL_GROUP_ID]
-      if (!context.profileId || !group?.isEnabled || group.access === 'deny')
-        return []
+      const hasFolders = Boolean(
+        context.profileId && group?.isEnabled && group.access !== 'deny'
+      )
+      if (!hasFolders && !scope.attachments.length) return []
       let roots: AiFileRoot[]
       try {
-        roots = await deps.listRoots(context.profileId)
+        roots = await deps.listRoots(scope)
       } catch (error) {
         deps.warn?.(`The file tools are unavailable: ${String(error)}`)
         return []
       }
       turnRoots.set(context, roots)
-      const profileId = context.profileId
-      return FILE_TOOLS.map((spec) =>
-        definition(spec, profileId, roots, group.access)
+      if (hasFolders)
+        return FILE_TOOLS.map((spec) =>
+          definition(spec, scope, roots, FILES_TOOL_GROUP_ID, group!.access)
+        )
+      // the user's own files of this conversation: read freely, never changed
+      return FILE_TOOLS.filter((spec) => spec.access === 'read').map((spec) =>
+        definition(spec, scope, roots, ATTACHMENTS_TOOL_GROUP_ID, 'allow')
       )
     },
     instructions(context) {

@@ -45,8 +45,8 @@ pub struct ChatAttachment {
     #[serde(default, rename = "mediaType", skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub media_type: Option<String>,
-    /// Where a file dropped into a profile chat is kept for the file tools,
-    /// e.g. `workspace/uploads/report.pdf`.
+    /// Where earlier versions kept a file dropped into a profile chat, e.g.
+    /// `workspace/uploads/report.pdf`; new attachments keep `file` instead.
     #[serde(
         default,
         rename = "workspacePath",
@@ -54,6 +54,21 @@ pub struct ChatAttachment {
     )]
     #[ts(optional)]
     pub workspace_path: Option<String>,
+    /// The original of an attached file, kept with the conversation; none for
+    /// a text that is not a file and for attachments stored before originals
+    /// were kept.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub file: Option<ChatAttachmentFile>,
+}
+
+/// The original of an attached file in the conversation's file store.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
+pub struct ChatAttachmentFile {
+    /// The SHA-256 of the bytes, which names the stored file.
+    pub id: String,
+    #[serde(rename = "size")]
+    pub size_bytes: usize,
 }
 
 /// A normalized image owned by the chat image store.

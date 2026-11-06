@@ -1,6 +1,7 @@
 import type { ModelMessage } from '@bozonx/ai-kit'
-import type { ChatMessage } from '@tyco/shared'
+import type { AiAttachedFile, ChatMessage } from '@tyco/shared'
 
+import { conversationAttachedFiles } from '../chat/chat-attached-files'
 import { formatAttachmentsForPrompt } from '../chat/chat-attachment'
 import { assistantMessages } from './llm-prompt-steps'
 
@@ -24,8 +25,11 @@ export interface LlmPromptOptions {
   canUseTools?: boolean
 }
 
-function messageContent(message: ChatMessage): string {
-  const attachments = formatAttachmentsForPrompt(message.attachments)
+function messageContent(
+  message: ChatMessage,
+  files: readonly AiAttachedFile[]
+): string {
+  const attachments = formatAttachmentsForPrompt(message.attachments, files)
 
   return [attachments, message.content].filter(Boolean).join('\n\n').trim()
 }
@@ -53,10 +57,16 @@ export function buildLlmPrompt(
     .filter(Boolean)
     .join('\n\n')
 
+  // only a model with tools reaches the originals by their paths
+  const files = options.canUseTools
+    ? conversationAttachedFiles(
+        conversation.flatMap((message) => message.attachments || [])
+      )
+    : []
   const messages = conversation
     .filter((message) => message.role !== 'developer')
     .flatMap((message): ModelMessage[] => {
-      const text = messageContent(message)
+      const text = messageContent(message, files)
       if (message.role === 'assistant') {
         return assistantMessages(message, text, options.canUseTools ?? false)
       }

@@ -6,6 +6,7 @@ import type {
   ChatAttachment,
 } from '@tyco/shared'
 
+import { attachmentFileIds, messageFileIds } from './chat-attached-files'
 import type { ChatFileNotice } from './chat-file-error'
 import {
   createChatFileInput,
@@ -18,6 +19,8 @@ export interface ChatFileControllerDependencies {
   getDraft: () => ChatParams
   getMessages: () => ChatMessage[]
   getSavingImages: () => ChatImage[]
+  /** The originals a write in progress refers to */
+  getSavingFileIds: () => string[]
   isGenerating: () => boolean
   prepare: (
     file: File,
@@ -34,7 +37,10 @@ export interface ChatFileControllerDependencies {
   reportBusy: () => void
 }
 
-/** Owns import queues and image lifetimes independently of Pinia and native IO. */
+/**
+ * Owns import queues and the lifetimes of images and file originals
+ * independently of Pinia and native IO.
+ */
 export function createChatFileController(deps: ChatFileControllerDependencies) {
   const importing = ref(0)
   const opening = ref(0)
@@ -42,12 +48,14 @@ export function createChatFileController(deps: ChatFileControllerDependencies) {
   let fileQueue = Promise.resolve()
   let imageSync = Promise.resolve()
   let disposed = false
-  const imageIds = () =>
-    [
-      ...pendingImages.value,
-      ...deps.getSavingImages(),
-      ...deps.getMessages().flatMap((message) => message.images || []),
-    ].map((image) => image.id)
+  /** What the chat holds: images and originals of the draft and the messages */
+  const imageIds = () => [
+    ...pendingImages.value.map((image) => image.id),
+    ...attachmentFileIds(deps.getDraft().attachments),
+    ...deps.getSavingImages().map((image) => image.id),
+    ...deps.getSavingFileIds(),
+    ...messageFileIds(deps.getMessages()),
+  ]
   const stopOwnership = watch(
     () => ({ busy: importing.value + opening.value, ids: imageIds() }),
     ({ busy }) => {

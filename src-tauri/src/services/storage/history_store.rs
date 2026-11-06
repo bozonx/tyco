@@ -606,7 +606,27 @@ fn load_chat_images(
     retention: ImageRetention<'_>,
 ) -> Result<(), AppError> {
     let directory = chats::chat_image_directory(chats_dir);
+    let files_dir = chats::chat_file_directory(chats_dir);
     let mut images = images.lock();
+    // originals are read when a tool or an export needs them; the undo keeps
+    // them in memory, as the saved history may lose them meanwhile
+    let files = chat
+        .messages
+        .iter()
+        .flat_map(|message| &message.attachments)
+        .filter_map(|attachment| attachment.file.as_ref());
+    for file in files {
+        match retention {
+            ImageRetention::Active(Some(owner)) => images.hold(owner, &file.id),
+            ImageRetention::Active(None) => {}
+            ImageRetention::Undo(owner) => {
+                images.hold_undo(owner, &file.id);
+                if let Err(error) = images.get_file(&files_dir, &file.id) {
+                    log::warn!("Could not preserve chat file {} for undo: {error}", file.id);
+                }
+            }
+        }
+    }
     for image in chat.messages.iter().flat_map(|message| &message.images) {
         match retention {
             ImageRetention::Active(Some(owner)) => images.hold(owner, &image.id),
@@ -634,6 +654,22 @@ fn load_chat_images(
 pub fn read_chat_image(app: &AppHandle, scope: &ChatScope, id: &str) -> Result<Vec<u8>, AppError> {
     with_chats(app, scope, ChatAccess::Read, |_, dirs| {
         app.state::<ChatImages>().lock().get(&dirs.images(), id)
+    })
+}
+
+/// The folder of the attachment originals of the conversations of `scope`.
+pub fn chat_files_dir(app: &AppHandle, scope: &ChatScope) -> Result<std::path::PathBuf, AppError> {
+    with_chats(app, scope, ChatAccess::Read, |_, dirs| {
+        Ok(dirs.attachments())
+    })
+}
+
+/// The original of an attached file of a conversation of `scope`.
+pub fn read_chat_file(app: &AppHandle, scope: &ChatScope, id: &str) -> Result<Vec<u8>, AppError> {
+    with_chats(app, scope, ChatAccess::Read, |_, dirs| {
+        app.state::<ChatImages>()
+            .lock()
+            .get_file(&dirs.attachments(), id)
     })
 }
 

@@ -1,4 +1,5 @@
 import {
+  type AiAttachedFile,
   type AiFileChangePreview,
   type AiFileRoot,
   type AiFileToolOutput,
@@ -23,26 +24,33 @@ import {
   isDebugChatToolsEnabled,
 } from './debug-chat-tools'
 import { readDocumentText } from './file-document-text'
-import { createFileToolProvider } from './file-tools'
+import { createFileToolProvider, type FileToolScope } from './file-tools'
 import { createMemoryToolProvider } from './memory-tools'
 import { createWebToolProvider } from './web-tools'
 
+interface FileToolArgs {
+  profileId: string | null
+  attachments: AiAttachedFile[]
+}
+
+const fileToolArgs = (scope: FileToolScope): FileToolArgs => ({
+  profileId: scope.profileId,
+  attachments: [...scope.attachments],
+})
+
 export interface DesktopChatToolsInvoke {
-  (
-    command: 'list_ai_file_roots',
-    args: { profileId: string }
-  ): Promise<AiFileRoot[]>
+  (command: 'list_ai_file_roots', args: FileToolArgs): Promise<AiFileRoot[]>
   (
     command: 'run_ai_file_tool',
-    args: { profileId: string; request: AiFileToolRequest }
+    args: FileToolArgs & { request: AiFileToolRequest }
   ): Promise<AiFileToolOutput>
   (
     command: 'preview_ai_file_change',
-    args: { profileId: string; request: AiFileToolRequest }
+    args: FileToolArgs & { request: AiFileToolRequest }
   ): Promise<AiFileChangePreview>
   (
     command: 'read_ai_file_bytes',
-    args: { profileId: string; path: string }
+    args: FileToolArgs & { path: string }
   ): Promise<ArrayBuffer | number[]>
   (
     command: 'read_ai_profile_memory',
@@ -96,6 +104,8 @@ export interface DesktopChatToolsDependencies {
   canUseTools: () => boolean
   getMemoryMode?: () => ProfileMemoryMode | undefined
   getChatId?: () => string | null | undefined
+  /** The originals attached to the conversation, for the file tools */
+  getAttachedFiles?: () => readonly AiAttachedFile[]
   getFetchMaxCharacters?: () => number | undefined
   warn: (message: string) => void
   extractDocumentText?: typeof readDocumentText
@@ -115,15 +125,22 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
   const debugToolProvider = createDebugChatToolProvider()
   const replyBlocksToolProvider = createReplyBlocksToolProvider()
   const fileToolProvider = createFileToolProvider({
-    listRoots: (id) => deps.invoke('list_ai_file_roots', { profileId: id }),
-    run: (id, request) =>
-      deps.invoke('run_ai_file_tool', { profileId: id, request }),
-    preview: (id, request) =>
-      deps.invoke('preview_ai_file_change', { profileId: id, request }),
-    readDocumentText: async (id, path, mediaType) =>
+    listRoots: (scope) =>
+      deps.invoke('list_ai_file_roots', fileToolArgs(scope)),
+    run: (scope, request) =>
+      deps.invoke('run_ai_file_tool', { ...fileToolArgs(scope), request }),
+    preview: (scope, request) =>
+      deps.invoke('preview_ai_file_change', {
+        ...fileToolArgs(scope),
+        request,
+      }),
+    readDocumentText: async (scope, path, mediaType) =>
       extractText(
         new Uint8Array(
-          await deps.invoke('read_ai_file_bytes', { profileId: id, path })
+          await deps.invoke('read_ai_file_bytes', {
+            ...fileToolArgs(scope),
+            path,
+          })
         ),
         path,
         mediaType
@@ -208,6 +225,7 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
         settings: profileTools,
         memoryMode: resolvedMode,
         outputBudgetCharacters,
+        attachedFiles: deps.getAttachedFiles?.(),
       }),
     }
   }

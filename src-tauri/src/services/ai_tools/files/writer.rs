@@ -4,11 +4,12 @@ use super::scoped_io;
 
 use super::reader::read_existing_text;
 use super::{
-    Access, AiFileChangePreview, AiFileToolOutput, AiFileToolRequest, ProfileFiles, MAX_WRITE_BYTES,
+    Access, AiFileChangePreview, AiFileToolOutput, AiFileToolRequest, ConversationFiles,
+    MAX_WRITE_BYTES,
 };
 use crate::errors::AppError;
 
-impl ProfileFiles {
+impl ConversationFiles<'_> {
     pub(super) fn write_file(
         &self,
         path: &str,
@@ -97,6 +98,11 @@ impl ProfileFiles {
 
     /// What a write or an edit would change, without changing anything.
     pub fn preview(&self, request: AiFileToolRequest) -> Result<AiFileChangePreview, AppError> {
+        match &request {
+            AiFileToolRequest::WriteFile { path, .. }
+            | AiFileToolRequest::EditFile { path, .. } => self.ensure_writable(path)?,
+            _ => {}
+        }
         match request {
             AiFileToolRequest::WriteFile { path, content } => {
                 ensure_write_size(content.len())?;

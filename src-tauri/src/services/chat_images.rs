@@ -1,5 +1,7 @@
-//! Normalized chat images. Drafts stay in bounded session memory; only history
-//! saves write bytes to disk. Session copies survive history deletion.
+//! The files of conversations: normalized images and the originals of
+//! attached files. Drafts stay in bounded session memory; only history saves
+//! write bytes to disk. Session copies survive history deletion. Ownership and
+//! lifetime: `dev_docs/chat-files.md`.
 use crate::locks::MutexExt;
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -10,7 +12,13 @@ use crate::services::sha256::sha256_hex;
 
 use super::atomic_file::write_private_bytes;
 use crate::errors::AppError;
-use crate::models::{Chat, ChatImage};
+use crate::models::{Chat, ChatAttachmentFile, ChatImage};
+
+/// The folder of the attachment originals inside a chat folder.
+pub const ATTACHMENTS_DIR: &str = "attachments";
+/// The folder of the images inside a chat folder.
+pub const IMAGES_DIR: &str = "images";
+pub use crate::desktop_contract::MAX_CHAT_FILE_BYTES as MAX_FILE_BYTES;
 
 /// The lossless PNG the webview hands over before it becomes a WebP.
 pub use crate::desktop_contract::MAX_CHAT_IMAGE_SOURCE_BYTES as MAX_SOURCE_BYTES;
@@ -233,6 +241,9 @@ impl ChatImages {
 #[derive(Default)]
 pub struct ChatImageStore {
     images: HashMap<String, (ChatImage, Vec<u8>)>,
+    /// Attachment originals, by the SHA-256 of their bytes.
+    files: HashMap<String, Vec<u8>>,
+    /// The bytes of images and files together.
     total_image_bytes: usize,
     image_ids_by_owner: HashMap<String, HashSet<String>>,
     owner_expiration_deadlines: HashMap<String, std::time::Instant>,
@@ -287,29 +298,137 @@ impl ChatImageStore {
         if self.images.contains_key(&image.id) {
             return Ok(());
         }
-        if self.total_image_bytes + bytes.len() > MAX_SESSION_BYTES {
-            let held: HashSet<_> = self
-                .image_ids_by_owner
-                .values()
-                .flatten()
-                .cloned()
-                .collect();
-            self.images.retain(|id, (_, cached)| {
-                if held.contains(id) {
-                    true
-                } else {
-                    self.total_image_bytes -= cached.len();
-                    false
-                }
-            });
+        self.make_room(bytes.len())?;
+        self.total_image_bytes += bytes.len();
+        self.images.insert(image.id.clone(), (image, bytes));
+        Ok(())
+    }
+
+    /// Evicts what no owner holds when `len` more bytes would not fit.
+    fn make_room(&mut self, len: usize) -> Result<(), AppError> {
+        if self.total_image_bytes + len > MAX_SESSION_BYTES {
+            self.evict_unheld();
         }
-        if self.total_image_bytes + bytes.len() > MAX_SESSION_BYTES {
+        if self.total_image_bytes + len > MAX_SESSION_BYTES {
             return Err(AppError::ResourceLimit(
                 "Chat image session memory limit exceeded".into(),
             ));
         }
+        Ok(())
+    }
+
+    fn evict_unheld(&mut self) {
+        let held: HashSet<_> = self
+            .image_ids_by_owner
+            .values()
+            .flatten()
+            .cloned()
+            .collect();
+        let total = &mut self.total_image_bytes;
+        self.images.retain(|id, (_, cached)| {
+            let keep = held.contains(id);
+            if !keep {
+                *total -= cached.len();
+            }
+            keep
+        });
+        self.files.retain(|id, cached| {
+            let keep = held.contains(id);
+            if !keep {
+                *total -= cached.len();
+            }
+            keep
+        });
+    }
+
+    /// The reference of an attachment original, checked against the limits.
+    pub fn prepare_file(bytes: &[u8]) -> Result<ChatAttachmentFile, AppError> {
+        if bytes.len() > MAX_FILE_BYTES {
+            return Err(AppError::FileTooLarge("File size limit exceeded".into()));
+        }
+        Ok(ChatAttachmentFile {
+            id: sha256_hex(bytes),
+            size_bytes: bytes.len(),
+        })
+    }
+
+    /// Keeps the bytes of an attachment original `file` describes.
+    pub fn remember_file(
+        &mut self,
+        file: &ChatAttachmentFile,
+        bytes: Vec<u8>,
+    ) -> Result<(), AppError> {
+        self.expire_owners();
+        if self.files.contains_key(&file.id) {
+            return Ok(());
+        }
+        self.make_room(bytes.len())?;
         self.total_image_bytes += bytes.len();
-        self.images.insert(image.id.clone(), (image, bytes));
+        self.files.insert(file.id.clone(), bytes);
+        Ok(())
+    }
+
+    /// The bytes of an attachment original: from the session, else from the
+    /// `attachments` folder `directory`, verified by their hash.
+    pub fn get_file(&mut self, directory: &Path, id: &str) -> Result<Vec<u8>, AppError> {
+        validate_id(id)?;
+        if let Some(bytes) = self.files.get(id) {
+            return Ok(bytes.clone());
+        }
+        let mut bytes = Vec::new();
+        fs::File::open(directory.join(id))?
+            .take((MAX_FILE_BYTES + 1) as u64)
+            .read_to_end(&mut bytes)?;
+        if bytes.len() > MAX_FILE_BYTES || sha256_hex(&bytes) != id {
+            return Err(AppError::InvalidData("Corrupted chat file".into()));
+        }
+        let file = ChatAttachmentFile {
+            id: id.to_string(),
+            size_bytes: bytes.len(),
+        };
+        // an unheld read must not fail for want of session memory
+        if let Err(error) = self.remember_file(&file, bytes.clone()) {
+            log::debug!("Not caching chat file {id}: {error}");
+        }
+        Ok(bytes)
+    }
+
+    /// Writes the attachment originals `chat` refers to into the
+    /// `attachments` folder `directory`.
+    pub fn persist_files(&mut self, directory: &Path, chat: &Chat) -> Result<(), AppError> {
+        for message in &chat.messages {
+            let files = message
+                .attachments
+                .iter()
+                .filter_map(|item| item.file.as_ref());
+            for file in files {
+                if message.role != crate::models::ChatRole::User {
+                    return Err(AppError::InvalidInput(
+                        "Unsupported chat file message".into(),
+                    ));
+                }
+                let path = directory.join(&file.id);
+                validate_id(&file.id)?;
+                if path.is_file() {
+                    continue;
+                }
+                // a file lost from the disk and the session must not keep the
+                // rest of the chat from being saved
+                let bytes = match self.get_file(directory, &file.id) {
+                    Ok(bytes) => bytes,
+                    Err(error @ (AppError::Io(_) | AppError::InvalidData(_))) => {
+                        log::warn!("Saving the chat without file {}: {error}", file.id);
+                        continue;
+                    }
+                    Err(error) => return Err(error),
+                };
+                if bytes.len() != file.size_bytes {
+                    return Err(AppError::InvalidInput("Invalid chat file metadata".into()));
+                }
+                crate::services::atomic_file::create_private_dir(directory)?;
+                write_private_bytes(&path, &bytes)?;
+            }
+        }
         Ok(())
     }
 
@@ -337,20 +456,7 @@ impl ChatImageStore {
         }
         self.image_ids_by_owner
             .insert(owner.to_string(), ids.iter().cloned().collect());
-        let held: HashSet<_> = self
-            .image_ids_by_owner
-            .values()
-            .flatten()
-            .cloned()
-            .collect();
-        self.images.retain(|id, (_, bytes)| {
-            if held.contains(id) {
-                true
-            } else {
-                self.total_image_bytes -= bytes.len();
-                false
-            }
-        });
+        self.evict_unheld();
         Ok(())
     }
 
@@ -448,25 +554,24 @@ pub const ORPHAN_IMAGE_GRACE_MS: u64 = 7 * 24 * 60 * 60 * 1000;
 /// keep the time of the original.
 type OrphanRecord = std::collections::BTreeMap<String, std::collections::BTreeMap<String, u64>>;
 
-/// Removes the images of `chats_dir` no chat has referred to for
-/// `ORPHAN_IMAGE_GRACE_MS`, by the times kept in `orphans_path`. An image that
-/// is referred to again leaves the record. An unreadable chat aborts
-/// collection: uncertain references are kept.
+/// Removes the images and attachment originals of `chats_dir` no chat has
+/// referred to for `ORPHAN_IMAGE_GRACE_MS`, by the times kept in
+/// `orphans_path`. A file that is referred to again leaves the record. An
+/// unreadable chat aborts collection: uncertain references are kept.
 pub fn remove_orphan_images(
     chats_dir: &Path,
     orphans_path: &Path,
     now_ms: u64,
 ) -> Result<(), AppError> {
     crate::services::storage::user_data::ensure_write_allowed(chats_dir)?;
-    let directory = chats_dir.join("images");
     let mut record: OrphanRecord = fs::read(orphans_path)
         .ok()
         .and_then(|raw| serde_json::from_slice(&raw).ok())
         .unwrap_or_default();
-    let key = directory.to_string_lossy().into_owned();
     let before = record.clone();
 
-    let mut live = HashSet::new();
+    let mut live_images = HashSet::new();
+    let mut live_files = HashSet::new();
     let chats = crate::services::storage::user_files::list_own_files(chats_dir, |name| {
         name.strip_suffix(".json")
             .is_some_and(|id| crate::services::file_ids::is_file_id(id) && id != "index")
@@ -476,33 +581,71 @@ pub fn remove_orphan_images(
             Ok(chat) => chat,
             Err(error) => {
                 log::warn!(
-                    "Keeping all chat images: chat file {} is unreadable ({error})",
+                    "Keeping all chat files: chat file {} is unreadable ({error})",
                     path.display()
                 );
                 return Ok(());
             }
         };
-        live.extend(
-            chat.messages
-                .into_iter()
-                .flat_map(|message| message.images)
-                .map(|image| image.id),
-        );
+        for message in chat.messages {
+            live_images.extend(message.images.into_iter().map(|image| image.id));
+            live_files.extend(
+                message
+                    .attachments
+                    .into_iter()
+                    .filter_map(|attachment| attachment.file)
+                    .map(|file| file.id),
+            );
+        }
     }
-    let images = crate::services::storage::user_files::list_own_files(&directory, |name| {
-        Path::new(name)
+    let images = chats_dir.join(IMAGES_DIR);
+    collect_orphans(&mut record, &images, &live_images, now_ms, |name| {
+        let path = Path::new(name);
+        let is_known = path
             .extension()
             .and_then(|ext| ext.to_str())
-            .is_some_and(|ext| FORMATS.iter().any(|(known, _)| *known == ext))
+            .is_some_and(|ext| FORMATS.iter().any(|(known, _)| *known == ext));
+        is_known
+            .then(|| {
+                path.file_stem()
+                    .and_then(|id| id.to_str())
+                    .map(str::to_owned)
+            })
+            .flatten()
+    })?;
+    let files = chats_dir.join(ATTACHMENTS_DIR);
+    collect_orphans(&mut record, &files, &live_files, now_ms, |name| {
+        validate_id(name).is_ok().then(|| name.to_owned())
+    })?;
+    if record != before {
+        if let Some(dir) = orphans_path.parent() {
+            crate::services::atomic_file::create_private_dir(dir)?;
+        }
+        crate::services::atomic_file::write_private(
+            orphans_path,
+            &serde_json::to_string(&record)?,
+        )?;
+    }
+    Ok(())
+}
+
+/// Collects the files of `directory` whose id, read from the name by
+/// `id_of`, is not in `live` and has been without a reference long enough.
+fn collect_orphans(
+    record: &mut OrphanRecord,
+    directory: &Path,
+    live: &HashSet<String>,
+    now_ms: u64,
+    id_of: impl Fn(&str) -> Option<String>,
+) -> Result<(), AppError> {
+    let key = directory.to_string_lossy().into_owned();
+    let entries = crate::services::storage::user_files::list_own_files(directory, |name| {
+        id_of(name).is_some()
     })?;
     let seen = record.entry(key.clone()).or_default();
     let mut present = HashSet::new();
-    for (_, path) in images {
-        let Some(id) = path
-            .file_stem()
-            .and_then(|id| id.to_str())
-            .map(str::to_owned)
-        else {
+    for (name, path) in entries {
+        let Some(id) = id_of(&name) else {
             continue;
         };
         present.insert(id.clone());
@@ -520,15 +663,6 @@ pub fn remove_orphan_images(
     seen.retain(|id, _| present.contains(id));
     if seen.is_empty() {
         record.remove(&key);
-    }
-    if record != before {
-        if let Some(dir) = orphans_path.parent() {
-            crate::services::atomic_file::create_private_dir(dir)?;
-        }
-        crate::services::atomic_file::write_private(
-            orphans_path,
-            &serde_json::to_string(&record)?,
-        )?;
     }
     Ok(())
 }
@@ -772,6 +906,7 @@ mod tests {
                     vec![0; MAX_SESSION_BYTES],
                 ),
             )]),
+            files: HashMap::new(),
             total_image_bytes: MAX_SESSION_BYTES,
             image_ids_by_owner: HashMap::from([("window".into(), HashSet::from(["held".into()]))]),
             owner_expiration_deadlines: HashMap::new(),

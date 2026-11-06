@@ -1,40 +1,62 @@
-//! The file tools of profile chats. The webview names a profile and a path
-//! the model gave; the folders and the permissions are read here, anew for
-//! every call, since the user may change them by hand meanwhile.
+//! The file tools of a conversation. The webview names the profile, if any,
+//! the attachments of the conversation by name and id, and a path the model
+//! gave; the folders and the permissions are read here, anew for every call,
+//! since the user may change them by hand meanwhile. See
+//! `dev_docs/chat-files.md`.
 
-use serde::Deserialize;
-use tauri::AppHandle;
-use ts_rs::TS;
+use tauri::{AppHandle, Manager};
 
 use super::run_blocking;
 use crate::{
     errors::AppError,
-    ipc::BinaryRequest,
     services::ai_tools::files::{
-        AiFileChangePreview, AiFileRoot, AiFileToolOutput, AiFileToolRequest, ProfileFiles,
+        AiAttachedFile, AiFileChangePreview, AiFileRoot, AiFileToolOutput, AiFileToolRequest,
+        Attachments, ConversationFiles,
     },
-    services::ai_vault,
+    services::{ai_vault, chat_images::ChatImages, storage, storage::ChatScope},
 };
 
-#[derive(Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-pub struct AiUploadMeta {
-    pub profile_id: String,
-    /// The name of the dropped file.
-    pub name: String,
+/// Runs `operation` on what the file tools of the conversation reach.
+fn with_conversation_files<T>(
+    app: &AppHandle,
+    profile_id: Option<String>,
+    attached: Vec<AiAttachedFile>,
+    operation: impl FnOnce(&ConversationFiles<'_>) -> Result<T, AppError>,
+) -> Result<T, AppError> {
+    let scope = ChatScope::from_profile_id(profile_id.clone());
+    let attachments = if attached.is_empty() {
+        Attachments::none()
+    } else {
+        let files_dir = storage::chat_files_dir(app, &scope)?;
+        let images = app.state::<ChatImages>();
+        Attachments::new(
+            attached,
+            Box::new(move |id| images.lock().get_file(&files_dir, id)),
+        )?
+    };
+    match profile_id {
+        None => operation(&ConversationFiles::general(attachments)),
+        Some(profile_id) => ai_vault::with_projects(app, |dir, paths| {
+            operation(&ConversationFiles::load(
+                dir,
+                paths,
+                &profile_id,
+                attachments,
+            )?)
+        }),
+    }
 }
 
-/// The folders the profile's file tools reach, with its permissions to each.
+/// The folders the conversation's file tools reach, with the permissions to each.
 #[tauri::command]
 pub async fn list_ai_file_roots(
     app: AppHandle,
-    profile_id: String,
+    profile_id: Option<String>,
+    attachments: Vec<AiAttachedFile>,
 ) -> Result<Vec<AiFileRoot>, AppError> {
     run_blocking(move || {
-        ai_vault::with_projects(&app, |dir, paths| {
-            Ok(ProfileFiles::load(dir, paths, &profile_id)?
-                .roots()
-                .to_vec())
+        with_conversation_files(&app, profile_id, attachments, |files| {
+            Ok(files.roots().to_vec())
         })
     })
     .await?
@@ -43,13 +65,12 @@ pub async fn list_ai_file_roots(
 #[tauri::command]
 pub async fn run_ai_file_tool(
     app: AppHandle,
-    profile_id: String,
+    profile_id: Option<String>,
+    attachments: Vec<AiAttachedFile>,
     request: AiFileToolRequest,
 ) -> Result<AiFileToolOutput, AppError> {
     run_blocking(move || {
-        ai_vault::with_projects(&app, |dir, paths| {
-            ProfileFiles::load(dir, paths, &profile_id)?.run(request)
-        })
+        with_conversation_files(&app, profile_id, attachments, |files| files.run(request))
     })
     .await?
 }
@@ -58,12 +79,13 @@ pub async fn run_ai_file_tool(
 #[tauri::command]
 pub async fn preview_ai_file_change(
     app: AppHandle,
-    profile_id: String,
+    profile_id: Option<String>,
+    attachments: Vec<AiAttachedFile>,
     request: AiFileToolRequest,
 ) -> Result<AiFileChangePreview, AppError> {
     run_blocking(move || {
-        ai_vault::with_projects(&app, |dir, paths| {
-            ProfileFiles::load(dir, paths, &profile_id)?.preview(request)
+        with_conversation_files(&app, profile_id, attachments, |files| {
+            files.preview(request)
         })
     })
     .await?
@@ -73,30 +95,32 @@ pub async fn preview_ai_file_change(
 #[tauri::command]
 pub async fn read_ai_file_bytes(
     app: AppHandle,
-    profile_id: String,
+    profile_id: Option<String>,
+    attachments: Vec<AiAttachedFile>,
     path: String,
 ) -> Result<tauri::ipc::Response, AppError> {
     run_blocking(move || {
-        ai_vault::with_projects(&app, |dir, paths| {
-            ProfileFiles::load(dir, paths, &profile_id)?
-                .read_bytes(&path)
-                .map(tauri::ipc::Response::new)
+        with_conversation_files(&app, profile_id, attachments, |files| {
+            files.read_bytes(&path).map(tauri::ipc::Response::new)
         })
     })
     .await?
 }
 
-/// Keeps a file dropped into a profile chat in its `workspace/uploads/`; the
-/// bytes come as the raw body. Returns the path the model reaches it by.
+/// Copies a file attached to a chat of the profile into its `workspace/`,
+/// where it stays when the chat goes. Returns the path the model reaches it by.
 #[tauri::command]
-pub async fn save_ai_upload(
+pub async fn save_chat_file_to_workspace(
     app: AppHandle,
-    request: BinaryRequest<AiUploadMeta>,
+    profile_id: String,
+    file_id: String,
+    name: String,
 ) -> Result<String, AppError> {
-    let BinaryRequest { bytes, meta } = request;
     run_blocking(move || {
-        ai_vault::with_projects(&app, |dir, paths| {
-            ProfileFiles::load(dir, paths, &meta.profile_id)?.save_upload(&meta.name, &bytes)
+        let scope = ChatScope::from_profile_id(Some(profile_id.clone()));
+        let bytes = storage::read_chat_file(&app, &scope, &file_id)?;
+        ai_vault::with_projects(&app, |dir, _| {
+            ConversationFiles::workspace(dir, &profile_id)?.save_copy(&name, &bytes)
         })
     })
     .await?

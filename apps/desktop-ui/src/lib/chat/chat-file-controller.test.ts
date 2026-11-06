@@ -21,6 +21,7 @@ function setup(isGenerating = false) {
     getDraft: () => draft.value,
     getMessages: () => [],
     getSavingImages: () => [],
+    getSavingFileIds: () => [],
     isGenerating: () => isGenerating,
     prepare,
     addAttachment: vi.fn(),
@@ -46,6 +47,19 @@ describe('chat file controller ownership', () => {
     expect(draft.value.images).toEqual([image])
     expect(syncImages).toHaveBeenLastCalledWith(['image'])
     controller.removeImage('image')
+    await nextTick()
+    await controller.whenSynced()
+    expect(syncImages).toHaveBeenLastCalledWith([])
+    controller.dispose()
+  })
+  it('holds the originals of the draft and the messages', async () => {
+    const { controller, draft, syncImages } = setup()
+    const file = { id: 'original', size: 4 }
+    draft.value = { attachments: [{ text: 'a', name: 'a.txt', file }] }
+    await nextTick()
+    await controller.whenSynced()
+    expect(syncImages).toHaveBeenLastCalledWith(['original'])
+    draft.value = { attachments: [] }
     await nextTick()
     await controller.whenSynced()
     expect(syncImages).toHaveBeenLastCalledWith([])
@@ -90,6 +104,7 @@ describe('chat file controller ownership', () => {
       getDraft: () => draft.value,
       getMessages: () => [],
       getSavingImages: () => [],
+      getSavingFileIds: () => [],
       isGenerating: () => false,
       prepare,
       addAttachment: vi.fn(),

@@ -1,11 +1,13 @@
-//! The images of chats and the files dropped onto a chat.
+//! The images and attachment originals of chats, and the files dropped onto
+//! a chat; see `dev_docs/chat-files.md`.
 //!
-//! An image lives in session memory until a chat that shows it is saved. The
-//! webview keeps it alive by holding it:
+//! An image or an original lives in session memory until a chat that shows
+//! it is saved. The webview keeps it alive by holding it:
 //!
-//! - `store_chat_image` and `get_chat` hold what they hand out under an
-//!   import id the webview picks, until the next `sync_chat_images` of the
-//!   chat lists the images it shows and releases those import ids;
+//! - `store_chat_image`, `store_chat_file` and `get_chat` hold what they hand
+//!   out under an import id the webview picks, until the next
+//!   `sync_chat_images` of the chat lists the images and files it shows and
+//!   releases those import ids;
 //! - `delete_chat` holds the images of the deleted chat for its undo, until
 //!   `release_deleted_chat_images` or a short timeout.
 
@@ -85,6 +87,79 @@ pub async fn store_chat_image(
     .await?
 }
 
+#[derive(Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct ChatFileMeta {
+    /// Holds the file until a sync of the chat releases it.
+    pub import_id: String,
+}
+
+/// Keeps the original of a file attached to a chat, sent as the raw body;
+/// see the module. Every attached file is kept, whatever tools the chat has.
+#[tauri::command]
+pub async fn store_chat_file(
+    window: WebviewWindow,
+    app: AppHandle,
+    request: BinaryRequest<ChatFileMeta>,
+) -> Result<crate::models::ChatAttachmentFile, AppError> {
+    let owner = import_owner(&window, &request.meta.import_id)?;
+    run_blocking(move || {
+        let file = ChatImageStore::prepare_file(&request.bytes)?;
+        let images = app.state::<ChatImages>();
+        let mut images = images.lock();
+        images.remember_file(&file, request.bytes)?;
+        images.hold(&owner, &file.id);
+        Ok(file)
+    })
+    .await?
+}
+
+/// The original of a file attached to a chat of the profile, or of "Ask AI".
+#[tauri::command]
+pub async fn read_chat_file(
+    app: AppHandle,
+    id: String,
+    profile_id: Option<String>,
+) -> Result<tauri::ipc::Response, AppError> {
+    let scope = ChatScope::from_profile_id(profile_id);
+    run_blocking(move || storage::read_chat_file(&app, &scope, &id).map(tauri::ipc::Response::new))
+        .await?
+}
+
+/// Lets the user save a copy of a file attached to a chat wherever they
+/// choose. Returns whether a copy was saved.
+#[tauri::command]
+pub async fn export_chat_file(
+    app: AppHandle,
+    id: String,
+    name: String,
+    profile_id: Option<String>,
+) -> Result<bool, AppError> {
+    use tauri_plugin_dialog::DialogExt;
+    let scope = ChatScope::from_profile_id(profile_id);
+    run_blocking(move || {
+        let bytes = storage::read_chat_file(&app, &scope, &id)?;
+        let file_name = std::path::Path::new(&name)
+            .file_name()
+            .map(|name| name.to_string_lossy().into_owned())
+            .unwrap_or_else(|| "file".into());
+        let Some(target) = app
+            .dialog()
+            .file()
+            .set_file_name(file_name)
+            .blocking_save_file()
+        else {
+            return Ok(false);
+        };
+        let path = target
+            .into_path()
+            .map_err(|reason| AppError::InvalidInput(reason.to_string()))?;
+        std::fs::write(path, bytes)?;
+        Ok(true)
+    })
+    .await?
+}
+
 #[tauri::command]
 pub async fn read_chat_image(
     app: AppHandle,
@@ -96,7 +171,8 @@ pub async fn read_chat_image(
         .await?
 }
 
-/// Holds the images the chat shows now and releases the given import ids.
+/// Holds the images and files the chat shows now and releases the given
+/// import ids.
 #[tauri::command]
 pub async fn sync_chat_images(
     window: WebviewWindow,

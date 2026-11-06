@@ -49,7 +49,6 @@
 │       ├── health.md
 │       └── preferences.md
 └── workspace/          # Рабочая область (политика allow)
-    ├── uploads/
     ├── generated/
     └── downloads/
 ```

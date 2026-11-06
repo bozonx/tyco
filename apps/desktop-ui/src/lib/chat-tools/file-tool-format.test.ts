@@ -133,10 +133,12 @@ describe('file-tool-format', () => {
 
   it('describes the roots with their permissions', () => {
     const text = formatFileRoots([
+      { path: 'attachments', read: 'allow', write: 'deny' },
       { path: 'workspace', read: 'allow', write: 'allow' },
       { path: 'projects/site', name: 'Site', read: 'ask', write: 'deny' },
     ])
-    expect(text).toContain('(in workspace/uploads/)')
+    expect(text).toContain('- attachments/ — the files the user attached')
+    expect(text).toContain('- workspace/ — your own folder')
     expect(text).toContain(
       '- projects/site/ — the project "Site"; reading asks the user first, changing not allowed.'
     )

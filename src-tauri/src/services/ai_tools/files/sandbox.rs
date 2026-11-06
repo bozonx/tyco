@@ -4,7 +4,10 @@ use cap_std::fs::Dir;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 
-use super::{Access, AiFileRoot, ProfileFiles, FILES_TOOL_GROUP, PROJECTS_ROOT, WORKSPACE_ROOT};
+use super::{
+    Access, AiFileRoot, Attachments, ConversationFiles, ATTACHMENTS_ROOT, FILES_TOOL_GROUP,
+    PROJECTS_ROOT, WORKSPACE_ROOT,
+};
 use crate::errors::AppError;
 use crate::services::ai_vault::{self, AiProfile, ProjectAccessMode};
 
@@ -128,26 +131,40 @@ fn canonical_prefix(path: &Path) -> Result<PathBuf, AppError> {
     }
 }
 
-impl ProfileFiles {
-    /// The profile's roots as they are on disk now. A profile whose file tools
-    /// are off reaches none.
+impl<'a> ConversationFiles<'a> {
+    /// A conversation without a profile: its attachments only.
+    pub fn general(attachments: Attachments<'a>) -> Self {
+        Self::new(Vec::new(), attachments, Some("A chat without a profile"))
+    }
+
+    /// The profile's workspace alone, for a copy the user asks for whatever
+    /// the profile's tools are.
+    pub fn workspace(vault_root: &Path, profile_id: &str) -> Result<Self, AppError> {
+        ai_vault::get_profile(vault_root, profile_id)?;
+        Ok(Self::new(
+            vec![workspace_root(vault_root, profile_id)?],
+            Attachments::none(),
+            None,
+        ))
+    }
+
+    /// The attachments and the profile's roots as they are on disk now. A
+    /// profile whose file tools are off reaches its attachments only.
     pub fn load(
         vault_root: &Path,
         paths: &ai_vault::ProjectPaths,
         profile_id: &str,
+        attachments: Attachments<'a>,
     ) -> Result<Self, AppError> {
         let profile = ai_vault::get_profile(vault_root, profile_id)?;
-        ensure_files_enabled(&profile)?;
-        let mut roots = vec![AiFileRoot {
-            path: WORKSPACE_ROOT.into(),
-            name: None,
-            description: None,
-            read: ProjectAccessMode::Allow,
-            write: ProjectAccessMode::Allow,
-            dir: ai_vault::profile_workspace_dir(vault_root, profile_id)?,
-            has_project_file: false,
-            unavailable: None,
-        }];
+        if !files_enabled(&profile) {
+            return Ok(Self::new(
+                Vec::new(),
+                attachments,
+                Some("The file tools are off for this profile"),
+            ));
+        }
+        let mut roots = vec![workspace_root(vault_root, profile_id)?];
         for project in ai_vault::list_projects(vault_root, paths)? {
             let Some(permission) = profile.project_permissions.get(&project.id) else {
                 continue;
@@ -177,9 +194,11 @@ impl ProfileFiles {
                 unavailable,
             });
         }
-        Ok(Self { roots })
+        Ok(Self::new(roots, attachments, None))
     }
+}
 
+impl ConversationFiles<'_> {
     /// The root a path starts with and the rest of it, checked to be plain
     /// names inside the root.
     fn locate(&self, path: &str) -> Result<(&AiFileRoot, PathBuf), AppError> {
@@ -194,7 +213,12 @@ impl ProfileFiles {
         let (root, rest) = match parts.as_slice() {
             [] => {
                 return Err(AppError::invalid_input(
-                    "Name a path inside workspace/ or projects/<project-id>/",
+                    "Name a path inside attachments/, workspace/ or projects/<project-id>/",
+                ))
+            }
+            [ATTACHMENTS_ROOT, ..] => {
+                return Err(AppError::invalid_input(
+                    "attachments/ is read-only: write a copy into workspace/ to change a file",
                 ))
             }
             [WORKSPACE_ROOT, rest @ ..] => (self.find_root(WORKSPACE_ROOT)?, rest),
@@ -221,7 +245,12 @@ impl ProfileFiles {
         self.roots
             .iter()
             .find(|root| root.path == path)
-            .ok_or_else(|| AppError::invalid_input(format!("The profile has no access to {path}")))
+            .ok_or_else(|| match self.folders_off {
+                Some(reason) => AppError::invalid_input(format!(
+                    "{reason}: only attachments/ is available, not {path}"
+                )),
+                None => AppError::invalid_input(format!("The profile has no access to {path}")),
+            })
     }
 
     /// Where a path is on disk, kept inside its root.
@@ -285,17 +314,25 @@ impl ProfileFiles {
     }
 }
 
-fn ensure_files_enabled(profile: &AiProfile) -> Result<(), AppError> {
+fn workspace_root(vault_root: &Path, profile_id: &str) -> Result<AiFileRoot, AppError> {
+    Ok(AiFileRoot {
+        path: WORKSPACE_ROOT.into(),
+        name: None,
+        description: None,
+        read: ProjectAccessMode::Allow,
+        write: ProjectAccessMode::Allow,
+        dir: ai_vault::profile_workspace_dir(vault_root, profile_id)?,
+        has_project_file: false,
+        unavailable: None,
+    })
+}
+
+fn files_enabled(profile: &AiProfile) -> bool {
     let group = profile
         .tools
         .as_ref()
         .and_then(|tools| tools.groups.get(FILES_TOOL_GROUP));
-    match group {
-        Some(group) if group.is_enabled && group.access != ProjectAccessMode::Deny => Ok(()),
-        _ => Err(AppError::invalid_input(
-            "The file tools are off for this profile",
-        )),
-    }
+    group.is_some_and(|group| group.is_enabled && group.access != ProjectAccessMode::Deny)
 }
 
 #[cfg(all(test, unix))]
@@ -312,7 +349,7 @@ mod tests {
         let outside = directory.join("outside");
         fs::create_dir_all(workspace.join("nested")).unwrap();
         fs::create_dir(&outside).unwrap();
-        let files = ProfileFiles::from_roots(vec![AiFileRoot::for_test(
+        let files = ConversationFiles::from_roots(vec![AiFileRoot::for_test(
             WORKSPACE_ROOT,
             &workspace,
             ProjectAccessMode::Allow,
@@ -336,7 +373,7 @@ mod tests {
         fs::create_dir_all(workspace.join("nested")).unwrap();
         fs::create_dir(&outside).unwrap();
         fs::write(outside.join("file.txt"), "outside").unwrap();
-        let files = ProfileFiles::from_roots(vec![AiFileRoot::for_test(
+        let files = ConversationFiles::from_roots(vec![AiFileRoot::for_test(
             WORKSPACE_ROOT,
             &workspace,
             ProjectAccessMode::Allow,

@@ -33,7 +33,7 @@ mod tests {
 
     #[test]
     fn file_attachment_metadata_survives_history_roundtrip() {
-        let value = serde_json::json!({ "text": "contents", "name": "report.pdf", "mediaType": "application/pdf" });
+        let value = serde_json::json!({ "text": "contents", "name": "report.pdf", "mediaType": "application/pdf", "file": { "id": "ab", "size": 8 } });
         let attachment: ChatAttachment = serde_json::from_value(value.clone()).unwrap();
         assert_eq!(serde_json::to_value(attachment).unwrap(), value);
     }
@@ -46,6 +46,7 @@ mod tests {
             name: None,
             media_type: None,
             workspace_path: None,
+            file: None,
         };
 
         assert_eq!(
@@ -73,6 +74,7 @@ mod desktop_contract_tests {
                 name: Some("selection.txt".into()),
                 media_type: Some("text/plain".into()),
                 workspace_path: None,
+                file: None,
             }),
             question: Some("Explain this text".into()),
             auto_send: true,
