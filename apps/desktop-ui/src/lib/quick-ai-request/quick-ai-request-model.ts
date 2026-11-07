@@ -51,12 +51,32 @@ export interface QuickAiRequestTurn {
 /** Why a request cannot be sent with the picked model */
 export type QuickAiRequestModelIssue = 'noModel' | 'toolsRequired'
 
+/**
+ * What the request is about. The selection may be empty; the screenshot may be
+ * removed or retaken until the model answers over it.
+ */
+export type QuickAiRequestContext =
+  | { kind: 'selection'; text?: string }
+  | { kind: 'screenshot'; image?: ChatImage }
+
+/** A conversation the main window takes over with its images */
+export interface QuickAiRequestScreenshotTransfer {
+  chat: Chat
+  question?: string
+  profileId?: string
+}
+
 export interface QuickAiRequestModelDependencies {
-  sourceText?: string
-  screenshotMode?: boolean
-  sourceImage?: ChatImage
+  /** The selection without text when not given */
+  context?: QuickAiRequestContext
   loadImage?: (id: string) => Promise<Uint8Array<ArrayBuffer>>
-  openScreenshotChat?: (chat: Chat, question?: string) => Promise<void>
+  /**
+   * Hands a screenshot conversation to the main window. Its image lives in the
+   * activation, so it cannot be saved from here like a text chat.
+   */
+  openScreenshotChat?: (
+    transfer: QuickAiRequestScreenshotTransfer
+  ) => Promise<void>
   describeLlmError?: (error: LlmError) => string
   imageModelError?: () => string
   imageUnavailableError?: () => string
@@ -150,15 +170,18 @@ const MODEL_ISSUE_FALLBACK: Record<QuickAiRequestModelIssue, string> = {
 export function createQuickAiRequestModel(
   deps: QuickAiRequestModelDependencies
 ) {
+  const context = deps.context ?? { kind: 'selection' }
+  const sourceText = context.kind === 'selection' ? context.text : undefined
+  const isScreenshot = context.kind === 'screenshot'
   const inputMode = ref<'text' | 'voice'>(deps.initialInputMode ?? 'text')
-  const profileId = ref<string | null>(
-    deps.screenshotMode ? null : (deps.initialProfileId ?? null)
-  )
+  const profileId = ref<string | null>(deps.initialProfileId ?? null)
   const modelId = ref<string | null>(
     deps.getRememberedModelId(profileId.value) ?? null
   )
-  const sourceImage = ref<ChatImage | undefined>(deps.sourceImage)
-  const isProfileLocked = ref(Boolean(deps.screenshotMode))
+  const sourceImage = ref<ChatImage | undefined>(
+    context.kind === 'screenshot' ? context.image : undefined
+  )
+  const isProfileLocked = ref(false)
   const isGenerating = ref(false)
   const turns = ref<QuickAiRequestTurn[]>([])
   const error = ref<string | null>(null)
@@ -195,10 +218,11 @@ export function createQuickAiRequestModel(
   const resultOf = (turn: QuickAiRequestTurn) =>
     turn.replyBlocks[0]?.text || turn.textResponse.trim() || undefined
 
+  /** The history keeps text requests; a screenshot is not stored there */
   const recordHistory = (result?: string) => {
-    if (deps.screenshotMode) return Promise.resolve()
+    if (isScreenshot) return Promise.resolve()
     return history.record(
-      deps.sourceText,
+      sourceText,
       profileId.value,
       turns.value
         .filter((turn) => turn.status === 'done')
@@ -228,12 +252,8 @@ export function createQuickAiRequestModel(
   }
 
   const firstTurnContext = () => ({
-    ...(deps.sourceText
-      ? {
-          attachments: [
-            { text: deps.sourceText, source: 'selection' as const },
-          ],
-        }
+    ...(sourceText
+      ? { attachments: [{ text: sourceText, source: 'selection' as const }] }
       : {}),
     ...(sourceImage.value ? { images: [sourceImage.value] } : {}),
   })
@@ -445,7 +465,7 @@ export function createQuickAiRequestModel(
       return
     }
     if (target === 'window') await deps.insertText(block.text)
-    else await deps.toEditor(block.text, deps.sourceText)
+    else await deps.toEditor(block.text, sourceText)
     deps.closeOverlay()
   }
 
@@ -467,83 +487,97 @@ export function createQuickAiRequestModel(
     }
   }
 
+  /** The conversation so far, the context in its first question */
+  const conversationMessages = (): ChatMessage[] =>
+    turns.value.flatMap((turn, index): ChatMessage[] => [
+      {
+        role: 'user',
+        content: turn.prompt,
+        ...(index === 0 ? firstTurnContext() : {}),
+      },
+      {
+        role: 'assistant',
+        content: turn.textResponse,
+        parts: turn.parts,
+        status: turn.status === 'done' ? 'complete' : 'stopped',
+      },
+    ])
+
+  const chatOf = (messages: ChatMessage[]): Chat => ({
+    id: deps.chatId ?? deps.createId(),
+    title: draftTitleOf(messages[0], deps.imageTitle?.() || 'Image'),
+    lastMessageAt: Date.now(),
+    messages,
+  })
+
+  /** The image moves with the chat; an unanswered draft becomes its question */
+  const transferScreenshotChat = async (draft?: string) => {
+    if (!deps.openScreenshotChat)
+      throw new Error('Screenshot chat transfer is unavailable')
+    const messages = conversationMessages()
+    const isUnanswered = messages.length === 0
+    if (isUnanswered)
+      messages.push({
+        role: 'user',
+        content: draft ?? '',
+        ...firstTurnContext(),
+      })
+    await deps.openScreenshotChat({
+      chat: chatOf(messages),
+      question: isUnanswered ? undefined : draft,
+      profileId: profileId.value ?? undefined,
+    })
+  }
+
+  /** Saves the conversation here and opens it, then names it */
+  const transferSavedChat = async (draft?: string) => {
+    const chat = chatOf(conversationMessages())
+    const pId = profileId.value ?? undefined
+    await deps.saveChat?.(chat, pId)
+    await deps.openMainChat({
+      chatId: chat.id,
+      profileId: pId,
+      question: draft,
+    })
+    return () => {
+      const firstAnswer = turns.value[0]
+      void generateTitle(
+        chat.id,
+        chat.messages[0].content,
+        firstAnswer?.textResponse.trim() ||
+          (firstAnswer ? (resultOf(firstAnswer) ?? '') : ''),
+        chat.title
+      )
+    }
+  }
+
+  /**
+   * Continues the request in the main chat of its profile: a fresh chat with
+   * the selection when nothing was asked yet, the whole conversation otherwise
+   */
   const switchToChat = async (currentInputDraft?: string) => {
     stopGeneration()
-    let question = currentInputDraft?.trim() || undefined
+    const draft = currentInputDraft?.trim() || undefined
 
-    if (turns.value.length === 0 && !deps.screenshotMode) {
+    if (isScreenshot) {
+      await transferScreenshotChat(draft)
+      deps.closeOverlay()
+      return
+    }
+    if (turns.value.length === 0) {
       await deps.openMainChat({
-        attachment: deps.sourceText
-          ? { text: deps.sourceText, source: 'selection' }
+        attachment: sourceText
+          ? { text: sourceText, source: 'selection' }
           : undefined,
-        question,
+        question: draft,
         profileId: profileId.value ?? undefined,
       })
       deps.closeOverlay()
       return
     }
-
-    const chatMessages: ChatMessage[] = turns.value.flatMap(
-      (turn, index): ChatMessage[] => [
-        {
-          role: 'user',
-          content: turn.prompt,
-          ...(index === 0 ? firstTurnContext() : {}),
-        },
-        {
-          role: 'assistant',
-          content: turn.textResponse,
-          parts: turn.parts,
-          status: turn.status === 'done' ? 'complete' : 'stopped',
-        },
-      ]
-    )
-
-    if (!chatMessages.length && deps.screenshotMode) {
-      chatMessages.push({
-        role: 'user',
-        content: question ?? '',
-        ...firstTurnContext(),
-      })
-      question = undefined
-    }
-
-    const firstQuestion = chatMessages[0]
-    const draftTitle = draftTitleOf(
-      firstQuestion,
-      deps.imageTitle?.() || 'Image'
-    )
-    const chat: Chat = {
-      id: deps.chatId ?? deps.createId(),
-      title: draftTitle,
-      lastMessageAt: Date.now(),
-      messages: chatMessages,
-    }
-
-    if (deps.screenshotMode) {
-      if (!deps.openScreenshotChat)
-        throw new Error('Screenshot chat transfer is unavailable')
-      await deps.openScreenshotChat(chat, question)
-      deps.closeOverlay()
-      return
-    }
-
-    await deps.saveChat?.(chat, profileId.value ?? undefined)
-    await deps.openMainChat({
-      chatId: chat.id,
-      profileId: profileId.value ?? undefined,
-      question,
-    })
+    const nameChat = await transferSavedChat(draft)
     deps.closeOverlay()
-
-    const firstAnswer = turns.value[0]
-    void generateTitle(
-      chat.id,
-      firstQuestion.content,
-      firstAnswer?.textResponse.trim() ||
-        (firstAnswer ? (resultOf(firstAnswer) ?? '') : ''),
-      draftTitle
-    )
+    nameChat()
   }
 
   return {

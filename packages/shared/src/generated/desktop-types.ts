@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: a847b8de956668bcbba1bdf45467254ceb03bc4c3d5b5fd74f664feb1b0b3f07
+// Source hash: e369e449a6fc9a65746c66812eb7fdcc1adbdbc7e6d500862eb7f85528831b9a
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -655,7 +655,12 @@ export type ScreenshotAreaSelection = {
 export type ScreenshotCaptureMode = 'screen' | 'area'
 
 /** A live screenshot conversation transferred without a history round trip. */
-export type ScreenshotChatTransfer = { chat: Chat; question: string | null }
+export type ScreenshotChatTransfer = {
+  chat: Chat
+  question: string | null
+  /** The profile whose chat receives the conversation; none for Ask AI */
+  profileId: string | null
+}
 
 /** A request of the webview to run a saved script. */
 export type ScriptActionRequest = {

@@ -61,7 +61,7 @@ function createSetup(overrides: Partial<QuickAiRequestModelDependencies> = {}) {
   }
 
   const deps: QuickAiRequestModelDependencies = {
-    sourceText: 'Selected original text',
+    context: { kind: 'selection', text: 'Selected original text' },
     getUserConfig: () => config,
     getAppConfig: () => mockAppConfig,
     getModelOptions: () => optionsOf(config),
@@ -220,7 +220,7 @@ describe('QuickAiRequestModel', () => {
   })
 
   it('stores a request without a selection under its first question', async () => {
-    const { model, deps } = createSetup({ sourceText: undefined })
+    const { model, deps } = createSetup({ context: { kind: 'selection' } })
 
     await model.submitPrompt('What is a monad?')
     await flushHistory()
@@ -428,9 +428,7 @@ describe('QuickAiRequestModel', () => {
       overrides: Partial<QuickAiRequestModelDependencies> = {}
     ) =>
       createSetup({
-        sourceText: undefined,
-        screenshotMode: true,
-        sourceImage: screenshot,
+        context: { kind: 'screenshot', image: screenshot },
         initialProfileId: 'prof-1',
         getUserConfig: () => visionConfig,
         loadImage: vi.fn(async () => bytes),
@@ -443,11 +441,16 @@ describe('QuickAiRequestModel', () => {
         .filter((m) => m.role === 'user')
         .map((m) => m.content)
 
-    it('starts with the default Ask AI profile, ignoring the previous one', () => {
-      const { model } = screenshotSetup()
-      expect(model.profileId.value).toBeNull()
+    it('starts with the given profile and lets the user change it before the first question', async () => {
+      const { model, deps } = screenshotSetup()
+      expect(model.profileId.value).toBe('prof-1')
       model.setProfileId('prof-2')
-      expect(model.profileId.value).toBeNull()
+      expect(model.profileId.value).toBe('prof-2')
+
+      await model.submitPrompt('What is on screen?')
+      expect(deps.resolveProfileInstructions).toHaveBeenCalledWith('prof-2')
+      model.setProfileId(null)
+      expect(model.profileId.value).toBe('prof-2')
     })
 
     it.each(['text', 'voice'] as const)(
@@ -573,8 +576,8 @@ describe('QuickAiRequestModel', () => {
       await model.submitPrompt('What is this?')
       await model.switchToChat('draft follow-up')
 
-      expect(deps.openScreenshotChat).toHaveBeenCalledWith(
-        expect.objectContaining({
+      expect(deps.openScreenshotChat).toHaveBeenCalledWith({
+        chat: expect.objectContaining({
           messages: [
             expect.objectContaining({
               role: 'user',
@@ -584,8 +587,9 @@ describe('QuickAiRequestModel', () => {
             expect.objectContaining({ role: 'assistant' }),
           ],
         }),
-        'draft follow-up'
-      )
+        question: 'draft follow-up',
+        profileId: 'prof-1',
+      })
       expect(deps.saveChat).not.toHaveBeenCalled()
       expect(deps.openMainChat).not.toHaveBeenCalled()
       expect(deps.closeOverlay).toHaveBeenCalled()
@@ -594,13 +598,23 @@ describe('QuickAiRequestModel', () => {
     it('transfers an unanswered screenshot with its draft question', async () => {
       const { model, deps } = screenshotSetup()
       await model.switchToChat('What is this?')
-      expect(deps.openScreenshotChat).toHaveBeenCalledWith(
-        expect.objectContaining({
+      expect(deps.openScreenshotChat).toHaveBeenCalledWith({
+        chat: expect.objectContaining({
+          title: 'What is this?',
           messages: [
             { role: 'user', content: 'What is this?', images: [screenshot] },
           ],
         }),
-        undefined
+        question: undefined,
+        profileId: 'prof-1',
+      })
+    })
+
+    it('transfers a screenshot to the Ask AI chat without a profile', async () => {
+      const { model, deps } = screenshotSetup({ initialProfileId: null })
+      await model.switchToChat('What is this?')
+      expect(deps.openScreenshotChat).toHaveBeenCalledWith(
+        expect.objectContaining({ profileId: undefined })
       )
     })
 

@@ -58,77 +58,17 @@
         />
       </div>
 
-      <!-- Feed of multi-turn interactions -->
-      <div v-if="model.turns.value.length > 0" class="turns-feed">
-        <div v-for="turn in model.turns.value" :key="turn.id" class="turn-item">
-          <!-- User Prompt -->
-          <div class="turn-user-message">
-            <span class="turn-prompt-icon">
-              <AppIcon
-                :icon="
-                  turn.inputKind === 'voice' ? 'mdi:microphone' : 'mdi:account'
-                "
-                size="sm"
-              />
-            </span>
-            <span class="turn-prompt-text">{{ turn.prompt }}</span>
-          </div>
-
-          <!-- Assistant Response -->
-          <div class="turn-assistant-message">
-            <!-- Text Response -->
-            <div v-if="turn.textResponse" class="turn-text-response">
-              {{ turn.textResponse }}
-            </div>
-
-            <!-- Reply Blocks (propose_replies tool) -->
-            <div v-if="turn.replyBlocks.length > 0" class="reply-blocks-list">
-              <ReplyBlock
-                v-for="(block, bIndex) in turn.replyBlocks"
-                :key="bIndex"
-                :block="block"
-                :source-text="props.text"
-                @insert-window="model.applyReplyBlock(block, 'window')"
-                @insert-editor="model.applyReplyBlock(block, 'editor')"
-                @copy="model.applyReplyBlock(block, 'copy')"
-              />
-            </div>
-
-            <!-- Other tool calls (e.g. awaiting approval) -->
-            <div v-if="turn.parts.length > 0" class="turn-parts">
-              <template v-for="(part, pIndex) in turn.parts" :key="pIndex">
-                <ChatToolCall
-                  v-if="
-                    part.type === 'tool-call' &&
-                    part.toolName !== REPLY_BLOCKS_TOOL_NAME
-                  "
-                  :call="part"
-                  @decide="model.answerToolApproval(part.approvalId!, $event)"
-                />
-              </template>
-            </div>
-
-            <!-- Generating indicator -->
-            <div
-              v-if="turn.status === 'generating'"
-              class="turn-generating"
-              role="status"
-            >
-              <span
-                class="loading loading-spinner loading-xs text-primary"
-                aria-hidden="true"
-              />
-              <span>{{ t('chat.generating') }}</span>
-            </div>
-
-            <!-- Turn error -->
-            <div v-if="turn.status === 'error'" class="turn-error">
-              <AppIcon icon="mdi:alert-circle-outline" size="sm" />
-              <span>{{ turn.error }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <QuickAiRequestTurns
+        :turns="model.turns.value"
+        :source-text="props.text"
+        @apply-reply-block="
+          (block, target) => model.applyReplyBlock(block, target)
+        "
+        @answer-tool-approval="
+          (approvalId, decision) =>
+            model.answerToolApproval(approvalId, decision)
+        "
+      />
 
       <!-- Model problems are told at once; request errors after a send -->
       <div v-if="bannerText" class="quick-error-banner" role="alert">
@@ -234,7 +174,6 @@ import {
   createQuickAiRequestModel,
 } from '../../lib/quick-ai-request/quick-ai-request-model'
 import { createQuickAiRequestSession } from '../../lib/quick-ai-request/quick-ai-request-session'
-import { REPLY_BLOCKS_TOOL_NAME } from '../../lib/reply-blocks/reply-blocks-tool'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import { useActionMenuStore } from '../../stores/action-menu'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
@@ -246,8 +185,6 @@ import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useSecretsStore } from '../../stores/secrets'
 import { useToolsStore } from '../../stores/tools'
 import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
-import ChatToolCall from '../chat/ChatToolCall.vue'
-import ReplyBlock from '../chat/ReplyBlock.vue'
 import AppIcon from '../common/AppIcon.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
@@ -258,6 +195,7 @@ import QueryPanel, {
   type QueryPanelOption,
   type QueryPanelSubmit,
 } from './QueryPanel.vue'
+import QuickAiRequestTurns from './QuickAiRequestTurns.vue'
 import VoiceRecognitionMenu from './VoiceRecognitionMenu.vue'
 import {
   APP_CONFIG,
@@ -359,19 +297,19 @@ const session = createQuickAiRequestSession({
 
 // Model instantiation with dependencies
 const model: QuickAiRequestModel = createQuickAiRequestModel({
-  sourceText: props.text,
+  context: props.screenshotMode
+    ? { kind: 'screenshot', image: props.screenshot }
+    : { kind: 'selection', text: props.text },
   initialInputMode: props.inputMode,
   initialProfileId: props.profileId,
-  screenshotMode: props.screenshotMode,
-  sourceImage: props.screenshot,
   loadImage: (id) => getChatImage(id),
   imageModelError: () => t('chat.imageModelRequired'),
   imageUnavailableError: () => t('chat.imageUnavailable'),
   describeLlmError: (error) => formatLlmError(error, t),
-  openScreenshotChat: async (chat, question) => {
+  openScreenshotChat: async ({ chat, question, profileId: pId }) => {
     resultOrThrow(
       await ipcStore.call('open_screenshot_chat', {
-        transfer: { chat, question: question ?? null },
+        transfer: { chat, question: question ?? null, profileId: pId ?? null },
       }),
       'open_screenshot_chat'
     )
@@ -771,77 +709,6 @@ onUnmounted(() => {
 
 .quick-profile-icon {
   color: var(--color-text-subtle);
-}
-
-.turns-feed {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  margin-top: var(--space-sm);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  max-height: 380px;
-  padding-right: var(--space-xs);
-}
-
-.turn-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.turn-user-message {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  font-weight: 500;
-  color: var(--color-text);
-  background: var(--color-bg-subtle);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-md);
-  align-self: flex-start;
-}
-
-.turn-prompt-icon {
-  display: inline-flex;
-  color: var(--color-primary);
-}
-
-.turn-assistant-message {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  padding-left: var(--space-xs);
-}
-
-.turn-text-response {
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  white-space: pre-wrap;
-  line-height: 1.5;
-}
-
-.reply-blocks-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  margin-top: var(--space-xs);
-}
-
-.turn-generating {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  font-size: var(--font-size-xs);
-  color: var(--color-text-subtle);
-}
-
-.turn-error {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  font-size: var(--font-size-xs);
-  color: var(--color-danger);
 }
 
 .quick-error-banner {

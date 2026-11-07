@@ -75,36 +75,12 @@
           :key="activationId"
         />
       </div>
-      <div v-show="currentMode === 'quickAiRequest'" class="quick-mode-layer">
+      <div v-show="quickAiRequestVariant" class="quick-mode-layer">
         <QuickAiRequestView
-          v-if="currentMode === 'quickAiRequest'"
+          v-if="quickAiRequestVariant"
           :key="activationId"
-          input-mode="text"
-        />
-      </div>
-      <div
-        v-show="currentMode === 'voiceQuickAiRequest'"
-        class="quick-mode-layer"
-      >
-        <QuickAiRequestView
-          v-if="currentMode === 'voiceQuickAiRequest'"
-          :key="activationId"
-          input-mode="voice"
-        />
-      </div>
-      <div
-        v-if="
-          currentMode === 'screenshotQuickAiRequest' ||
-          currentMode === 'voiceScreenshotQuickAiRequest'
-        "
-        class="quick-mode-layer"
-      >
-        <QuickAiRequestView
-          :key="activationId"
-          screenshot-mode
-          :input-mode="
-            currentMode === 'voiceScreenshotQuickAiRequest' ? 'voice' : 'text'
-          "
+          :input-mode="quickAiRequestVariant.inputMode"
+          :screenshot-mode="quickAiRequestVariant.isScreenshot"
         />
       </div>
       <div v-show="currentMode === 'chatPrompts'" class="quick-mode-layer">
@@ -141,6 +117,7 @@ import { desktopClient } from '../../lib/desktop/client'
 import { getDesktopWindow as getCurrentWindow } from '../../lib/desktop/window'
 import { resultOrThrow } from '../../lib/ipc/ipc-model'
 import { clientLogger } from '../../lib/logger'
+import { quickAiRequestVariantOf } from '../../lib/quick-ai-request/quick-ai-request-variant'
 import { createFocusLossWatcher } from '../../lib/quick-panel/focus-loss'
 import {
   type InputRegion,
@@ -182,6 +159,9 @@ const { t } = useI18n()
 
 const currentMode = computed(
   () => desktopStore.desktopState?.mode || 'quickInput'
+)
+const quickAiRequestVariant = computed(() =>
+  quickAiRequestVariantOf(currentMode.value)
 )
 const activationId = computed(() => desktopStore.desktopState.activationId)
 const hasModal = computed(

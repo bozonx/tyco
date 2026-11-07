@@ -149,6 +149,54 @@ describe('application window events', () => {
     f.controller.stop()
   })
 
+  it('starts a transferred screenshot chat and leaves its question unsent', async () => {
+    const f = fixture()
+    await f.controller.start()
+    const messages = [{ role: 'user' as const, content: 'What is this?' }]
+    await f.deliver(DESKTOP_EVENTS.OPEN_SCREENSHOT_CHAT, {
+      chat: { id: 'c1', title: 'Shot', lastMessageAt: 1, messages },
+      question: ' And this? ',
+      profileId: null,
+    })
+    expect(f.deps.goToChat).toHaveBeenCalledOnce()
+    expect(f.deps.startChat).toHaveBeenCalledWith({ title: 'Shot', messages })
+    expect(f.deps.setChatInput).toHaveBeenCalledWith('And this?')
+    expect(f.deps.sendChatInput).not.toHaveBeenCalled()
+    expect(f.deps.focusChatInput).toHaveBeenCalledOnce()
+    f.controller.stop()
+  })
+
+  it('starts a transferred screenshot chat in its profile chat', async () => {
+    const profileChatInstance = {
+      startChat: vi.fn(async () => {}),
+      openLastChat: vi.fn(async () => {}),
+      openChat: vi.fn(async () => {}),
+      setChatInput: vi.fn(),
+      sendChatInput: vi.fn(async () => {}),
+      focusChatInput: vi.fn(),
+    }
+    const goToProfileChat = vi.fn(async () => {})
+    const f = fixture({
+      goToProfileChat,
+      profileChat: vi.fn(() => profileChatInstance),
+    })
+    await f.controller.start()
+    const messages = [{ role: 'user' as const, content: 'What is this?' }]
+    await f.deliver(DESKTOP_EVENTS.OPEN_SCREENSHOT_CHAT, {
+      chat: { id: 'c1', title: 'Shot', lastMessageAt: 1, messages },
+      question: null,
+      profileId: 'assistant',
+    })
+    expect(goToProfileChat).toHaveBeenCalledWith('assistant')
+    expect(f.deps.startChat).not.toHaveBeenCalled()
+    expect(profileChatInstance.startChat).toHaveBeenCalledWith({
+      title: 'Shot',
+      messages,
+    })
+    expect(profileChatInstance.focusChatInput).toHaveBeenCalledOnce()
+    f.controller.stop()
+  })
+
   it('opens an existing chat by chatId when present', async () => {
     const f = fixture()
     await f.controller.start()

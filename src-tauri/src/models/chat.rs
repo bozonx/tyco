@@ -298,4 +298,6 @@ mod validation_tests {
 pub struct ScreenshotChatTransfer {
     pub chat: Chat,
     pub question: Option<String>,
+    /// The profile whose chat receives the conversation; none for Ask AI
+    pub profile_id: Option<String>,
 }

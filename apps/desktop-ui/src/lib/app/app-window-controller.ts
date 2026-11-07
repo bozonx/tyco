@@ -67,49 +67,75 @@ export function createAppWindowController(
   let starting: Promise<void> | undefined
   let chatRequest = 0
 
+  /** The chat of the profile, else the Ask AI one */
+  async function goToChatOf(profileId: string | null | undefined) {
+    if (profileId && deps.goToProfileChat) await deps.goToProfileChat(profileId)
+    else await deps.goToChat()
+    const profile =
+      profileId && deps.profileChat ? deps.profileChat(profileId) : null
+    return (
+      profile ?? {
+        startChat: deps.startChat,
+        openLastChat: deps.openLastChat,
+        openChat: deps.openChat,
+        setChatInput: deps.setChatInput,
+        sendChatInput: deps.sendChatInput,
+        focusChatInput: deps.focusChatInput,
+      }
+    )
+  }
+
+  /** Starts a chat request; a later one makes the earlier one stale */
+  function beginChatRequest() {
+    const request = ++chatRequest
+    deps.closeModals()
+    return () => !scope.stopped && request === chatRequest
+  }
+
   async function openChat(
     payload: EventPayload<typeof DESKTOP_EVENTS.OPEN_MAIN_CHAT>
   ) {
-    const request = ++chatRequest
-    const isCurrent = () => !scope.stopped && request === chatRequest
-    deps.closeModals()
-    if (payload.profileId && deps.goToProfileChat) {
-      await deps.goToProfileChat(payload.profileId)
-    } else {
-      await deps.goToChat()
-    }
+    const isCurrent = beginChatRequest()
+    const chat = await goToChatOf(payload.profileId)
     if (!isCurrent()) return
     const { attachment, question, autoSend } = payload
     const trimmedText = attachment?.text?.trim()
     const trimmedQuestion = question?.trim()
-    const profile =
-      payload.profileId && deps.profileChat
-        ? deps.profileChat(payload.profileId)
-        : null
-    const startChat = profile ? profile.startChat : deps.startChat
-    const openLastChat = profile ? profile.openLastChat : deps.openLastChat
     if (payload.chatId) {
-      if (profile) await profile.openChat(payload.chatId)
-      else await deps.openChat(payload.chatId)
+      await chat.openChat(payload.chatId)
     } else if (attachment && trimmedText) {
-      await startChat({ attachments: [{ ...attachment, text: trimmedText }] })
+      await chat.startChat({
+        attachments: [{ ...attachment, text: trimmedText }],
+      })
     } else if (trimmedQuestion) {
-      await startChat({})
+      await chat.startChat({})
     } else {
-      await openLastChat()
+      await chat.openLastChat()
     }
     if (!isCurrent()) return
     await deps.afterRender()
     if (!isCurrent() || !trimmedQuestion) return
-    if (profile) profile.setChatInput(trimmedQuestion)
-    else deps.setChatInput(trimmedQuestion)
-    if (autoSend) {
-      if (profile) await profile.sendChatInput()
-      else await deps.sendChatInput()
-    } else {
-      if (profile) profile.focusChatInput()
-      else deps.focusChatInput()
-    }
+    chat.setChatInput(trimmedQuestion)
+    if (autoSend) await chat.sendChatInput()
+    else chat.focusChatInput()
+  }
+
+  async function openScreenshotChat(
+    payload: EventPayload<typeof DESKTOP_EVENTS.OPEN_SCREENSHOT_CHAT>
+  ) {
+    const isCurrent = beginChatRequest()
+    const chat = await goToChatOf(payload.profileId)
+    if (!isCurrent()) return
+    await chat.startChat({
+      title: payload.chat.title,
+      messages: payload.chat.messages,
+    })
+    if (!isCurrent()) return
+    await deps.afterRender()
+    if (!isCurrent()) return
+    const question = payload.question?.trim()
+    if (question) chat.setChatInput(question)
+    chat.focusChatInput()
   }
 
   function start(): Promise<void> {
@@ -149,21 +175,7 @@ export function createAppWindowController(
     } else {
       subscriptions.push(
         subscribe(DESKTOP_EVENTS.OPEN_MAIN_CHAT, openChat),
-        subscribe(
-          DESKTOP_EVENTS.OPEN_SCREENSHOT_CHAT,
-          async ({ chat, question }) => {
-            const request = ++chatRequest
-            deps.closeModals()
-            await deps.goToChat()
-            if (scope.stopped || request !== chatRequest) return
-            await deps.startChat({ title: chat.title, messages: chat.messages })
-            if (scope.stopped || request !== chatRequest) return
-            await deps.afterRender()
-            if (scope.stopped || request !== chatRequest) return
-            if (question?.trim()) deps.setChatInput(question.trim())
-            deps.focusChatInput()
-          }
-        ),
+        subscribe(DESKTOP_EVENTS.OPEN_SCREENSHOT_CHAT, openScreenshotChat),
         subscribe(DESKTOP_EVENTS.OPEN_MAIN_EDITOR, async (payload) => {
           deps.applyEditorTransfer(
             payload.text ?? undefined,
