@@ -701,7 +701,7 @@
     "chatHistoryRetentionDaysHint": "Un chat este șters când nu a avut mesaje noi atât timp. Chaturile mai vechi sunt șterse imediat.",
     "chatHistoryRetentionNever": "Niciodată",
     "chatImageQuality": "Calitatea imaginilor",
-    "chatImageQualityHint": "Se aplică tuturor chaturilor, inclusiv celor ale profilurilor. Se aplică atașamentelor noi. O calitate mai mare folosește mai multă memorie și context. Imaginile sunt trimise ca WebP fără metadate; limitele sunt 24 MP și 5 MB după comprimare.",
+    "chatImageQualityHint": "Se aplică tuturor atașamentelor noi din toate chaturile. Imaginile sunt curățate de metadatele EXIF și convertite în WebP (limite de până la 24 MP și 5 MB după comprimare). Echilibrată (2048 px) păstrează capturile de ecran Full HD 1:1, Economică (1024 px) economisește tokenuri, iar Maximă (până la 8000 px) păstrează rezoluția originală.",
     "chatInfo": "Un chat rapid cu IA pentru sarcini zilnice. Spre deosebire de profilurile IA cu roluri și instrumente izolate, aceasta este o conversație universală nelegată de un profil anume. Puteți pune întrebări, utiliza textul selectat drept context, atașa imagini, configura un prompt general de sistem și gestiona istoricul local de conversații.",
     "chatPrompt": "Prompt principal",
     "chatPromptInfo": "Se adaugă la instrucțiunile chatului când nu este selectat niciun profil în el.",
@@ -799,7 +799,7 @@
       "voiceCommands": "Comenzi vocale",
       "selectionActionsPage2": "Acțiuni: pagina 2",
       "selectionActionsPage3": "Acțiuni: pagina 3",
-      "chatPrompts": "Prompturi: pagina 1",
+      "chatPrompts": "Prompturi",
       "selectionActionsPage4": "Acțiuni: pagina 4",
       "selectionActionsPage5": "Acțiuni: pagina 5",
       "favorites": "Favorite",
@@ -807,10 +807,6 @@
       "voiceQuickAiRequest": "Solicitare vocală rapidă IA",
       "screenshotQuickAiRequest": "Captură de ecran și întrebare pentru IA",
       "voiceScreenshotQuickAiRequest": "Captură de ecran și întrebare vocală pentru IA",
-      "chatPromptsPage2": "Prompturi: pagina 2",
-      "chatPromptsPage3": "Prompturi: pagina 3",
-      "chatPromptsPage4": "Prompturi: pagina 4",
-      "chatPromptsPage5": "Prompturi: pagina 5",
       "customAction1": "Acțiune personalizată 1",
       "customAction2": "Acțiune personalizată 2",
       "customAction3": "Acțiune personalizată 3",
@@ -834,7 +830,7 @@
     },
     "hotkeysMissing": "Unele comenzi rapide au fost eliminate în setările sistemului și nu funcționează. Folosiți „Înregistrează din nou” pentru a le recupera.",
     "hotkeysTab": "Comenzi rapide",
-    "imageQualityBalanced": "Echilibrată – până la 1568 px",
+    "imageQualityBalanced": "Echilibrată – până la 2048 px",
     "imageQualityEconomy": "Economică – până la 1024 px",
     "imageQualityOriginal": "Maximă – până la 8000 px",
     "inlineCorrectionExternalHint": "Rulați această comandă dintr-un script sau dintr-o comandă rapidă de sistem. D-Bus: metoda CorrectSelection din org.tyco.Interface.",
@@ -857,7 +853,8 @@
       "transformation": "Transformări text",
       "translation": "Traducere",
       "unavailable": "Indisponibile",
-      "profiles": "Profiluri"
+      "profiles": "Profiluri",
+      "chatPrompts": "Prompturi"
     },
     "mainActionProfileRemoved": "Profil șters",
     "mainActionStylingRemoved": "Stil de text șters",
@@ -1222,7 +1219,7 @@
     "webJinaApiKeyHint": "Opțional. Fără cheie, cererile folosesc nivelul gratuit cu limite partajate.",
     "chatPromptsTab": "Presetări prompturi chat",
     "chatPromptsNavTab": "Prompturi chat",
-    "chatPromptsHint": "Pagini de prompturi pentru cereri rapide către AI. Fiecare pagină folosește propriul profil, fiecare prompt pornește cu propria tastă. Trageți cardurile pentru a schimba tastele.",
+    "chatPromptsHint": "Prompturi pentru cereri rapide către AI. Un prompt cu profil rulează în acel profil și este oferit doar în chaturile lui; un prompt fără profil rulează ca „Întreabă AI” și este oferit în orice chat. Primele 15 prompturi primesc taste în meniul de prompturi; trageți cardurile pentru a schimba ordinea.",
     "prompt": "Prompt",
     "sectionWebSearch": "Căutare web pentru agenți",
     "webSearchSectionHint": "Setări pentru instrumentele de căutare web și citire a paginilor utilizate de modelele și profilurile AI.",
@@ -1240,12 +1237,6 @@
     "searchFavoritesPlaceholder": "Caută favorite…",
     "hotkeyDescriptions": {},
     "chatPromptsSentImmediately": "Trimite promptul imediat",
-    "addPromptPage": "Adaugă pagină",
-    "promptPageProfile": "Profil",
-    "movePromptPageBack": "Mută pagina înapoi",
-    "movePromptPageForward": "Mută pagina înainte",
-    "removePromptPage": "Elimină pagina",
-    "removePromptPageConfirm": "Eliminați această pagină împreună cu prompturile ei?",
     "historyTab": "Istoric",
     "customActionsTitle": "Acțiuni personalizate",
     "customActionsInfo": "Atribuiți comenzi rapide globale pentru a executa direct orice acțiune.",
@@ -1255,7 +1246,10 @@
     "chatHistoryHint": "Inclusiv cererile rapide. Conversațiile profilurilor sunt stocate în dosarul profilului și se setează în fila „Profiluri AI”.",
     "chatQuickRequestsSaved": "Salvează cererile rapide",
     "chatQuickRequestsSavedInfo": "Cererile rapide apar în conversații ca un grup separat. O cerere continuată în conversație este salvată mereu.",
-    "chatStorageLink": "Stocarea conversațiilor se setează în fila"
+    "chatStorageLink": "Stocarea conversațiilor se setează în fila",
+    "addChatPrompt": "Adăugați prompt",
+    "chatPromptProfile": "Profil",
+    "mainActionPromptRemoved": "Prompt șters"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
@@ -1497,12 +1491,14 @@
     "addArea": "Adaugă captură de zonă"
   },
   "chatPrompts": {
-    "pageLabel": "{page} · {profile}",
-    "missingProfile": "Fără profil",
-    "pages": "Pagini de prompturi",
-    "noPages": "Nu există încă pagini de prompturi. Adăugați una în setări.",
-    "pageNotFound": "Pagina de prompturi {page} nu există.",
-    "profileMissing": "Profilul acestei pagini nu mai există. Alegeți altul în setări.",
-    "openSettings": "Deschide setările"
+    "missingProfile": "Profil șters",
+    "profileMissing": "Profilul acestui prompt a fost șters. Până alegeți altul, promptul rulează fără profil.",
+    "openSettings": "Deschide setările",
+    "searchPlaceholder": "Căutați prompturi…",
+    "noMatches": "Niciun prompt nu se potrivește căutării",
+    "empty": "Încă nu există prompturi",
+    "emptyHint": "Adăugați prompturi în setări.",
+    "everyProfile": "Fără profil (Întrebare pentru AI)",
+    "actionName": "Prompt: {prompt}"
   }
 }

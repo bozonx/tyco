@@ -415,6 +415,11 @@ describe('image quality', () => {
       (quality.props('options') as { id: string }[]).map(({ id }) => id)
     ).toEqual(['economy', 'balanced', 'original'])
 
+    const qualityRow = wrapper
+      .findAllComponents(FieldRow)
+      .find((row) => row.props('label') === 'settings.chatImageQuality')
+    expect(qualityRow?.props('info')).toBe('settings.chatImageQualityHint')
+
     quality.vm.$emit('update:modelValue', 'original')
     await flushPromises()
     expect(llm.imageQuality).toBe('original')

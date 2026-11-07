@@ -307,11 +307,12 @@ const BUILTIN_LLM_PROVIDERS: [&str; 3] = ["google", "openrouter", "deepseek"];
 const CUSTOM_LLM_PROVIDER_TYPE: &str = "openaiCompatible";
 
 /// The entity collections, each with distinct ids.
-const ENTITY_COLLECTIONS: [&str; 7] = [
+const ENTITY_COLLECTIONS: [&str; 8] = [
     "/commands",
     "/variables",
     "/transformations/items",
     "/styling/items",
+    "/chatPrompts/items",
     "/favorites/items",
     "/llm/providers",
     "/llm/models",
@@ -323,38 +324,6 @@ fn tool_config_schema(tool_id: &Value) -> Option<&'static Value> {
         Some("webhook") => Some(&SCHEMA["$defs"]["webhookToolConfig"]),
         _ => None,
     }
-}
-
-/// A prompt page holds its own prompts: distinct ids, each slotted at most
-/// once, and slots that point to its prompts.
-fn validate_prompt_page(page: &Value) -> Result<(), AppError> {
-    let mut seen = HashSet::new();
-    for item in page["items"].as_array().into_iter().flatten() {
-        if !seen.insert(item["id"].as_str()) {
-            return Err(invalid_field("chatPrompts.pages.items"));
-        }
-    }
-    let mut slotted = HashSet::new();
-    for value in slot_values(&page["slots"]) {
-        let id = value.as_str();
-        if !slotted.insert(id) || !seen.contains(&id) {
-            return Err(invalid_field("chatPrompts.pages.slots"));
-        }
-    }
-    Ok(())
-}
-
-/// Drops repeated prompts of a page and the slots that point nowhere.
-fn normalize_prompt_page(page: &mut Value) {
-    let mut item_ids = HashSet::new();
-    if let Some(items) = page["items"].as_array_mut() {
-        items.retain(|item| item_ids.insert(item["id"].as_str().unwrap_or_default().to_owned()));
-    }
-    let mut slotted = HashSet::new();
-    retain_slots(&mut page["slots"], |id| {
-        let id = id.as_str().unwrap_or_default();
-        item_ids.contains(id) && slotted.insert(id.to_owned())
-    });
 }
 
 fn validate_references(config: &Value) -> Result<(), AppError> {
@@ -380,6 +349,7 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
     }
     let transformations = ids(config, "/transformations/items");
     let stylings = ids(config, "/styling/items");
+    let prompts = ids(config, "/chatPrompts/items");
     for (slots, key) in [
         (&config["transformations"]["slots"], "transformations.slots"),
         (&config["styling"]["slots"], "styling.slots"),
@@ -404,13 +374,6 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
         if !stylings.contains(id) {
             return Err(invalid_field("styling.slots"));
         }
-    }
-    for page in config["chatPrompts"]["pages"]
-        .as_array()
-        .into_iter()
-        .flatten()
-    {
-        validate_prompt_page(page)?;
     }
     let providers = ids(config, "/llm/providers");
     for provider in config["llm"]["providers"].as_array().into_iter().flatten() {
@@ -466,6 +429,11 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
                     if !stylings.contains(slot["stylingId"].as_str().unwrap_or_default()) =>
                 {
                     return Err(invalid_field("actionPages.stylingId"))
+                }
+                Some("chatPrompt")
+                    if !prompts.contains(slot["promptId"].as_str().unwrap_or_default()) =>
+                {
+                    return Err(invalid_field("actionPages.promptId"))
                 }
                 Some("launcherPage") => {
                     return Err(invalid_field("actionPages.launcherPage"));
@@ -621,13 +589,10 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
         let id = id.as_str().unwrap_or_default();
         styling_ids.contains(id) && slotted_stylings.insert(id.to_owned())
     });
-    for page in config["chatPrompts"]["pages"]
-        .as_array_mut()
+    let prompt_ids: HashSet<String> = ids(config, "/chatPrompts/items")
         .into_iter()
-        .flatten()
-    {
-        normalize_prompt_page(page);
-    }
+        .map(str::to_owned)
+        .collect();
     let provider_ids: HashSet<String> = ids(config, "/llm/providers")
         .into_iter()
         .map(str::to_owned)
@@ -688,6 +653,9 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
                     .contains(slot["transformationId"].as_str().unwrap_or_default()),
                 Some("styling") => {
                     styling_ids.contains(slot["stylingId"].as_str().unwrap_or_default())
+                }
+                Some("chatPrompt") => {
+                    prompt_ids.contains(slot["promptId"].as_str().unwrap_or_default())
                 }
                 Some("launcherPage") => false,
                 _ => true,
@@ -1162,26 +1130,29 @@ mod tests {
     }
 
     #[test]
-    fn prompt_pages_keep_their_own_prompts() {
-        let prompt = |id: &str| json!({"id": id, "name": "", "rule": "Say hi"});
+    fn prompts_have_distinct_ids_and_action_slots_point_to_them() {
+        let prompt = |id: &str| json!({"id": id, "name": "", "rule": "Say hi", "profileId": ""});
         let mut config = crate::services::settings::defaults::default_user_config();
-        config["chatPrompts"]["pages"] = json!([
-            {"profileId": "", "items": [prompt("a")], "slots": {"q": "a"}},
-            {"profileId": "writer", "items": [prompt("a")], "slots": {"w": "a"}},
-        ]);
+        config["chatPrompts"]["items"] = json!([prompt("a"), prompt("b")]);
+        config["actionPages"][0]["slots"]["q"] = json!({"type": "chatPrompt", "promptId": "a"});
         validate_user_config(&config).unwrap();
 
-        for page in [
-            json!({"profileId": "", "items": [prompt("a"), prompt("a")], "slots": {}}),
-            json!({"profileId": "", "items": [prompt("a")], "slots": {"q": "b"}}),
-            json!({"profileId": "", "items": [prompt("a")], "slots": {"q": "a", "w": "a"}}),
-        ] {
-            let mut invalid = config.clone();
-            invalid["chatPrompts"]["pages"] = json!([page]);
-            assert!(validate_user_config(&invalid).is_err());
-            assert!(normalize_user_config(&mut invalid));
-            validate_user_config(&invalid).unwrap();
-        }
+        let mut repeated = config.clone();
+        repeated["chatPrompts"]["items"] = json!([prompt("a"), prompt("a")]);
+        repeated["actionPages"][0]["slots"] = json!({});
+        assert!(validate_user_config(&repeated).is_err());
+        assert!(normalize_user_config(&mut repeated));
+        validate_user_config(&repeated).unwrap();
+        assert_eq!(repeated["chatPrompts"]["items"].as_array().unwrap().len(), 1);
+
+        let mut dangling = config.clone();
+        dangling["actionPages"][0]["slots"]["w"] =
+            json!({"type": "chatPrompt", "promptId": "gone"});
+        assert!(validate_user_config(&dangling).is_err());
+        assert!(normalize_user_config(&mut dangling));
+        validate_user_config(&dangling).unwrap();
+        assert!(dangling["actionPages"][0]["slots"].get("w").is_none());
+        assert_eq!(dangling["actionPages"][0]["slots"]["q"]["promptId"], "a");
     }
 
     #[test]

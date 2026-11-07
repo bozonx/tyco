@@ -701,7 +701,7 @@
     "chatHistoryRetentionDaysHint": "A chat is deleted when it has had no new messages for this long. Older chats are deleted right away.",
     "chatHistoryRetentionNever": "Never",
     "chatImageQuality": "Image quality",
-    "chatImageQualityHint": "Applies to all chats, profile chats included. Applies to new attachments. Higher quality uses more memory and context. Images are sent as WebP without metadata; limits are 24 MP and 5 MB after compression.",
+    "chatImageQualityHint": "Applies to all new attachments in all chats. Images are stripped of EXIF metadata and converted to WebP (limits are up to 24 MP and 5 MB after compression). Balanced (2048 px) preserves Full HD screenshots 1:1, Economy (1024 px) saves tokens, and Maximum (up to 8000 px) preserves original resolution.",
     "chatInfo": "A quick AI chat for everyday tasks. Unlike AI profiles with isolated roles and tools, this is a universal conversation not tied to a specific profile. You can ask questions, use selected text as context, attach images, set a general system prompt, and manage local chat history.",
     "chatPrompt": "Main prompt",
     "chatPromptInfo": "Added to the chat instructions when no profile is selected in the chat.",
@@ -799,7 +799,7 @@
       "voiceCommands": "Voice commands",
       "selectionActionsPage2": "Actions: page 2",
       "selectionActionsPage3": "Actions: page 3",
-      "chatPrompts": "Prompts: page 1",
+      "chatPrompts": "Prompts",
       "selectionActionsPage4": "Actions: page 4",
       "selectionActionsPage5": "Actions: page 5",
       "favorites": "Favorites",
@@ -807,10 +807,6 @@
       "voiceQuickAiRequest": "Voice quick AI request",
       "screenshotQuickAiRequest": "Screenshot and AI question",
       "voiceScreenshotQuickAiRequest": "Screenshot and voice AI question",
-      "chatPromptsPage2": "Prompts: page 2",
-      "chatPromptsPage3": "Prompts: page 3",
-      "chatPromptsPage4": "Prompts: page 4",
-      "chatPromptsPage5": "Prompts: page 5",
       "customAction1": "Custom action 1",
       "customAction2": "Custom action 2",
       "customAction3": "Custom action 3",
@@ -834,7 +830,7 @@
     },
     "hotkeysMissing": "Some hotkeys were removed in the system settings and do not work. Use “Register again” to bring them back.",
     "hotkeysTab": "Hotkeys",
-    "imageQualityBalanced": "Balanced — up to 1568 px",
+    "imageQualityBalanced": "Balanced — up to 2048 px",
     "imageQualityEconomy": "Economy — up to 1024 px",
     "imageQualityOriginal": "Maximum — up to 8000 px",
     "inlineCorrectionExternalHint": "Run this command from a script or a system shortcut. D-Bus: method CorrectSelection of org.tyco.Interface.",
@@ -857,7 +853,8 @@
       "transformation": "Text transformations",
       "translation": "Translation",
       "unavailable": "Unavailable",
-      "profiles": "Profiles"
+      "profiles": "Profiles",
+      "chatPrompts": "Prompts"
     },
     "mainActionProfileRemoved": "Deleted profile",
     "mainActionStylingRemoved": "Deleted text style",
@@ -1222,7 +1219,7 @@
     "webJinaApiKeyHint": "Optional. Without a key, requests use the free tier with shared rate limits.",
     "chatPromptsTab": "Chat prompt presets",
     "chatPromptsNavTab": "Chat prompts",
-    "chatPromptsHint": "Prompt pages for quick AI requests. Each page runs with its own profile; each prompt runs with its own key. Drag the cards to change their keys.",
+    "chatPromptsHint": "Prompts for quick AI requests. A prompt with a profile runs in that profile and is offered only in its chats; a prompt without one runs as Ask AI and is offered in every chat. The first 15 prompts get keys in the prompt menu; drag the cards to reorder them.",
     "prompt": "Prompt",
     "sectionWebSearch": "Web search for agents",
     "webSearchSectionHint": "Settings for web search and page reading tools used by AI models and profiles.",
@@ -1240,12 +1237,6 @@
     "searchFavoritesPlaceholder": "Search favorites…",
     "hotkeyDescriptions": {},
     "chatPromptsSentImmediately": "Send the prompt at once",
-    "addPromptPage": "Add page",
-    "promptPageProfile": "Profile",
-    "movePromptPageBack": "Move page back",
-    "movePromptPageForward": "Move page forward",
-    "removePromptPage": "Remove page",
-    "removePromptPageConfirm": "Remove this page and its prompts?",
     "historyTab": "History",
     "customActionsTitle": "Custom actions",
     "customActionsInfo": "Assign global hotkeys to run any action directly from the menu.",
@@ -1255,7 +1246,10 @@
     "chatHistoryHint": "Including quick requests. Profile chats are stored in the profile folder and set up on the AI Profiles tab.",
     "chatQuickRequestsSaved": "Save quick requests",
     "chatQuickRequestsSavedInfo": "Quick requests are listed as a separate group in the chats. A request continued in the chat is always saved.",
-    "chatStorageLink": "Chat storage is set up on the tab"
+    "chatStorageLink": "Chat storage is set up on the tab",
+    "addChatPrompt": "Add prompt",
+    "chatPromptProfile": "Profile",
+    "mainActionPromptRemoved": "Deleted prompt"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
@@ -1497,12 +1491,14 @@
     "addArea": "Add area screenshot"
   },
   "chatPrompts": {
-    "pageLabel": "{page} · {profile}",
-    "missingProfile": "No profile",
-    "pages": "Prompt pages",
-    "noPages": "No prompt pages yet. Add one in the settings.",
-    "pageNotFound": "There is no prompt page {page}.",
-    "profileMissing": "The profile of this page no longer exists. Choose another one in the settings.",
-    "openSettings": "Open settings"
+    "missingProfile": "Deleted profile",
+    "profileMissing": "The profile of this prompt was deleted. The prompt runs without a profile until you choose another one.",
+    "openSettings": "Open settings",
+    "searchPlaceholder": "Search prompts…",
+    "noMatches": "No prompts match the search",
+    "empty": "No prompts yet",
+    "emptyHint": "Add prompts in the settings.",
+    "everyProfile": "No profile (Ask AI)",
+    "actionName": "Prompt: {prompt}"
   }
 }

@@ -11,135 +11,165 @@
       />
     </SettingsSection>
     <SettingsSection bare>
-      <div class="flex flex-wrap items-center gap-2 mb-3">
-        <PromptPagesBar
-          v-if="views.length"
-          :pages="views"
-          :active-index="page"
-          :label="pageLabel"
-          @select="page = $event"
-        />
-        <Button size="sm" icon="mdi:plus" @click="addPage">
-          {{ t('settings.addPromptPage') }}
+      <template #actions>
+        <Button variant="primary" size="sm" icon="mdi:plus" @click="addPrompt">
+          {{ t('settings.addChatPrompt') }}
         </Button>
-      </div>
-      <p v-if="!views.length" class="text-sm text-muted">
-        {{ t('chatPrompts.noPages') }}
-      </p>
-      <template v-if="currentPage">
-        <div class="flex flex-wrap items-center gap-2 mb-3">
-          <label class="flex items-center gap-2">
-            <span class="text-sm">{{ t('settings.promptPageProfile') }}</span>
-            <FieldSelect
-              size="sm"
-              :model-value="currentPage.profileId"
-              :options="profileOptions"
-              @update:model-value="setProfile"
-            />
-          </label>
-          <IconButton
-            variant="ghost"
-            size="sm"
-            icon="mdi:chevron-left"
-            :label="t('settings.movePromptPageBack')"
-            :disabled="page === 0"
-            @click="movePage(-1)"
-          />
-          <IconButton
-            variant="ghost"
-            size="sm"
-            icon="mdi:chevron-right"
-            :label="t('settings.movePromptPageForward')"
-            :disabled="page >= views.length - 1"
-            @click="movePage(1)"
-          />
-          <Button
-            variant="ghost"
-            class="ml-auto"
-            size="sm"
-            icon="mdi:trash-can-outline"
-            @click="isRemoveConfirmOpen = true"
-          >
-            {{ t('settings.removePromptPage') }}
-          </Button>
-        </div>
-        <InlineNotice
-          v-if="views[page]?.isProfileMissing"
-          class="mb-3"
-          kind="warning"
-          :message="t('chatPrompts.profileMissing')"
-        />
-        <RuleLibrarySettings
-          :key="page"
-          id-prefix="chat-prompt"
-          prompt-placeholder-key="settings.prompt"
-          :library="currentPage"
-          @update:library="updatePage"
-        />
       </template>
+
+      <StateMessage
+        v-if="!prompts.length"
+        class="chat-prompts-empty"
+        :message="t('chatPrompts.empty')"
+      />
+
+      <div v-else ref="listRef" class="chat-prompts-list">
+        <div
+          v-for="(prompt, index) in prompts"
+          :key="prompt.id"
+          data-sortable-item
+          class="chat-prompt-card"
+          :class="{
+            'is-sorting': isSorting,
+            'is-dragged': draggedIndex === index,
+          }"
+          :style="itemStyle(index)"
+        >
+          <div class="chat-prompt-card-drag">
+            <DragHandle @drag="startDrag(index, $event)" />
+          </div>
+          <div class="chat-prompt-card-key">
+            <KeyboardKey
+              v-if="index < SHORTCUT_SLOT_KEYS.length"
+              class="chat-prompt-slot-key"
+            >
+              {{ SHORTCUT_SLOT_KEYS[index]?.toUpperCase() }}
+            </KeyboardKey>
+            <span v-else class="chat-prompt-slot-index">#{{ index + 1 }}</span>
+          </div>
+          <div class="chat-prompt-card-content">
+            <div class="chat-prompt-card-row">
+              <FieldInput
+                class="chat-prompt-card-name"
+                :model-value="prompt.name"
+                :placeholder="t('settings.name')"
+                :aria-label="t('settings.name')"
+                @update:model-value="updatePrompt(index, { name: $event })"
+              />
+              <FieldSelect
+                class="chat-prompt-card-profile"
+                :model-value="prompt.profileId"
+                :options="profileOptions(prompt)"
+                :aria-label="t('settings.chatPromptProfile')"
+                :title="t('settings.chatPromptProfile')"
+                @update:model-value="setProfile(index, $event)"
+              />
+            </div>
+            <InlineNotice
+              v-if="isProfileMissing(prompt)"
+              kind="warning"
+              :message="t('chatPrompts.profileMissing')"
+            />
+            <FieldPromptTextArea
+              :model-value="prompt.rule"
+              :placeholder="t('settings.prompt')"
+              :aria-label="t('settings.prompt')"
+              :modal-title="prompt.name || t('settings.prompt')"
+              @update:model-value="updatePrompt(index, { rule: $event })"
+            />
+          </div>
+          <div class="chat-prompt-card-actions">
+            <IconButton
+              size="sm"
+              variant="ghost"
+              icon="mdi:trash-can-outline"
+              :label="t('common.delete')"
+              @click="removePrompts([prompt.id])"
+            />
+          </div>
+        </div>
+      </div>
     </SettingsSection>
-    <ConfirmModal
-      :open="isRemoveConfirmOpen"
-      :title="t('settings.removePromptPage')"
-      :message="t('settings.removePromptPageConfirm')"
-      :confirm-text="t('common.remove')"
-      danger
-      @confirm="removePage"
-      @cancel="isRemoveConfirmOpen = false"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { type CSSProperties, computed, nextTick, onUnmounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { usePromptPages } from '../../composables/use-prompt-pages'
 import { useSettingsContext } from '../../composables/use-settings-context'
+import { useSortableList } from '../../composables/use-sortable-list'
 import {
-  type SlotLibrary,
-  type SlotLibraryItem,
-  withoutEmptySlotItems,
-} from '../../lib/shortcut-slots/slot-library'
+  moveChatPrompt,
+  newChatPrompt,
+  withoutPromptActions,
+  withoutPromptCustomActions,
+} from '../../lib/chat-prompts/chat-prompts'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
-import ConfirmModal from '../common/ConfirmModal.vue'
+import DragHandle from '../common/DragHandle.vue'
+import FieldInput from '../common/FieldInput.vue'
+import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
-import PromptPagesBar from '../menu/PromptPagesBar.vue'
-import RuleLibrarySettings from './RuleLibrarySettings.vue'
+import KeyboardKey from '../common/KeyboardKey.vue'
+import StateMessage from '../common/StateMessage.vue'
 import SettingsSection from './SettingsSection.vue'
-import type { ChatPromptPageConfig, ChatPromptsConfig } from '@tyco/shared'
+import {
+  type ChatPromptConfig,
+  type ChatPromptsConfig,
+  SHORTCUT_SLOT_KEYS,
+} from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig } = useSettingsContext()
 const aiProfilesStore = useAiProfilesStore()
 
+if (!aiProfilesStore.isLoaded) void aiProfilesStore.loadAll()
+
+const listRef = ref<HTMLElement | null>(null)
+
 const chatPrompts = computed<ChatPromptsConfig>(
   () => userConfig.value.chatPrompts
 )
-const { views, pageLabel } = usePromptPages(() => chatPrompts.value.pages)
+const prompts = computed(() => chatPrompts.value.items)
 
-const page = ref(0)
-const isRemoveConfirmOpen = ref(false)
-const currentPage = computed(() => chatPrompts.value.pages[page.value])
+function setPrompts(items: ChatPromptConfig[]) {
+  userConfig.value.chatPrompts = { ...chatPrompts.value, items }
+}
 
-const profileOptions = computed(() => {
+const { draggedIndex, isSorting, startDrag, itemOffset } = useSortableList(
+  listRef,
+  (from, to) => setPrompts(moveChatPrompt(prompts.value, from, to))
+)
+
+const itemStyle = (index: number): CSSProperties | undefined => {
+  const offset = itemOffset(index)
+  if (!offset) return undefined
+  return { transform: `translate3d(0, ${offset}px, 0)` }
+}
+
+const isProfileMissing = (prompt: ChatPromptConfig) =>
+  Boolean(prompt.profileId) &&
+  aiProfilesStore.isLoaded &&
+  !aiProfilesStore.profiles.some((profile) => profile.id === prompt.profileId)
+
+function profileOptions(prompt: ChatPromptConfig) {
   const options = [
-    { id: '', name: t('quickAiRequest.defaultProfile') },
+    { id: '', name: t('chatPrompts.everyProfile') },
     ...aiProfilesStore.profiles.map((p) => ({ id: p.id, name: p.name })),
   ]
-  const profileId = currentPage.value?.profileId
-  if (profileId && !options.some((option) => option.id === profileId)) {
-    options.push({ id: profileId, name: t('chatPrompts.missingProfile') })
+  if (prompt.profileId && !options.some((o) => o.id === prompt.profileId)) {
+    options.push({
+      id: prompt.profileId,
+      name: aiProfilesStore.isLoaded
+        ? t('chatPrompts.missingProfile')
+        : prompt.profileId,
+    })
   }
   return options
-})
-
-function setPages(pages: ChatPromptPageConfig[]) {
-  userConfig.value.chatPrompts = { ...chatPrompts.value, pages }
 }
 
 function setSentImmediately(value: boolean) {
@@ -149,59 +179,141 @@ function setSentImmediately(value: boolean) {
   }
 }
 
-function addPage() {
-  setPages([
-    ...chatPrompts.value.pages,
-    { profileId: '', items: [], slots: {} },
-  ])
-  page.value = chatPrompts.value.pages.length - 1
+function addPrompt() {
+  setPrompts([...prompts.value, newChatPrompt(prompts.value)])
+  void nextTick(() => {
+    const cards = listRef.value?.querySelectorAll('.chat-prompt-card')
+    const lastCard = cards?.[cards.length - 1] as HTMLElement | undefined
+    lastCard?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' })
+    lastCard?.querySelector('input')?.focus()
+  })
 }
 
-function updatePage(library: SlotLibrary<SlotLibraryItem>) {
-  setPages(
-    chatPrompts.value.pages.map((item, index) =>
-      index === page.value ? { ...item, ...library } : item
-    )
+function updatePrompt(index: number, patch: Partial<ChatPromptConfig>) {
+  setPrompts(
+    prompts.value.map((item, i) => (i === index ? { ...item, ...patch } : item))
   )
 }
 
-function setProfile(value: string | number | undefined) {
-  const profileId = typeof value === 'string' ? value : ''
-  setPages(
-    chatPrompts.value.pages.map((item, index) =>
-      index === page.value ? { ...item, profileId } : item
+function setProfile(index: number, value: string | number | undefined) {
+  updatePrompt(index, { profileId: typeof value === 'string' ? value : '' })
+}
+
+/** Removes the prompts and the actions that run them */
+function removePrompts(ids: readonly string[]) {
+  if (!ids.length) return
+  const removed = new Set(ids)
+  setPrompts(prompts.value.filter((item) => !removed.has(item.id)))
+  const config = userConfig.value
+  config.actionPages = config.actionPages.map((page) => ({
+    ...page,
+    slots: withoutPromptActions(page.slots ?? {}, removed),
+  }))
+  if (config.customActionSlots) {
+    config.customActionSlots = withoutPromptCustomActions(
+      config.customActionSlots,
+      removed
     )
-  )
-}
-
-function movePage(delta: number) {
-  const target = page.value + delta
-  const pages = [...chatPrompts.value.pages]
-  if (target < 0 || target >= pages.length) return
-  const [moved] = pages.splice(page.value, 1)
-  pages.splice(target, 0, moved!)
-  setPages(pages)
-  page.value = target
-}
-
-function removePage() {
-  isRemoveConfirmOpen.value = false
-  setPages(chatPrompts.value.pages.filter((_, index) => index !== page.value))
-  page.value = Math.max(
-    0,
-    Math.min(page.value, chatPrompts.value.pages.length - 1)
-  )
-}
-
-onUnmounted(() => {
-  const pages = chatPrompts.value.pages
-  const cleaned = pages.map((item) => withoutEmptySlotItems(item))
-  if (
-    cleaned.some(
-      (item, index) => item.items.length !== pages[index]!.items.length
-    )
-  ) {
-    setPages(cleaned)
   }
+}
+
+/** A prompt left without a name and a text is dropped */
+onUnmounted(() => {
+  removePrompts(
+    prompts.value
+      .filter((item) => !item.name.trim() && !item.rule.trim())
+      .map((item) => item.id)
+  )
 })
 </script>
+
+<style scoped>
+.chat-prompts-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.chat-prompt-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  background-color: var(--app-surface-raised);
+  border: 1px solid var(--app-border-subtle);
+  border-radius: var(--radius-lg);
+  transition:
+    transform var(--transition-base),
+    opacity var(--transition-fast);
+}
+
+.chat-prompt-card.is-sorting {
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-base);
+}
+
+.chat-prompt-card.is-dragged {
+  position: relative;
+  z-index: 1;
+  box-shadow: var(--app-shadow-lg);
+  border-color: var(--color-primary);
+  transition: none;
+}
+
+.chat-prompt-card-drag,
+.chat-prompt-card-key {
+  padding-top: var(--space-xs);
+  flex-shrink: 0;
+}
+
+.chat-prompt-card-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+}
+
+.chat-prompt-slot-key {
+  --key-size: 1.5rem;
+}
+
+.chat-prompt-slot-index {
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
+  user-select: none;
+}
+
+.chat-prompt-card-content {
+  flex: 1 1 0%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.chat-prompt-card-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.chat-prompt-card-name {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.chat-prompt-card-profile {
+  flex: 0 1 14rem;
+  min-width: 0;
+}
+
+.chat-prompt-card-actions {
+  flex-shrink: 0;
+}
+
+.chat-prompts-empty {
+  padding: var(--space-xl) var(--space-md);
+}
+</style>

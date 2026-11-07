@@ -3,10 +3,12 @@ import { computed, ref } from 'vue'
 import type { CorrectionStepExtra } from '../correction/correction-step'
 import type { ActionItem } from '../../types/plugins'
 import { createContributionRegistry } from '../plugins/contribution-registry'
+import { describeChatPrompt } from '../chat-prompts/chat-prompts'
 
 import {
   APP_CONFIG,
   type ActionPageConfig,
+  type ChatPromptConfig,
   type CommandConfig,
   type CoreToolId,
   type MainActionConfig,
@@ -50,6 +52,8 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   ) => void
   openStylingModal?: (text: string, stylingId?: string) => void
   openChatPromptsModal?: (text: string) => void
+  /** Opens the quick AI request with `prompt`, in the profile, if any */
+  openChatPrompt?: (text: string, prompt: string, profileId: string | null) => void
   openFavoritesModal?: () => void
   activateMode?: (
     mode:
@@ -73,6 +77,10 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   transformations?: () => readonly { id: string; name: string }[] | undefined
   styling?: () => readonly { id: string; name: string }[] | undefined
   profiles?: () => readonly { id: string; name: string }[] | undefined
+  /** Whether `profiles` is known; until then a prompt keeps its profile */
+  areProfilesLoaded?: () => boolean
+  /** The prompt library the items of the `chatPrompt` type refer to */
+  chatPrompts?: () => readonly ChatPromptConfig[] | undefined
   openProfileChat?: (profileId: string, text: string) => Promise<void> | void
 }
 
@@ -167,6 +175,26 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       name: item.name,
       icon: 'mdi:palette-outline',
       action: withText((text) => deps.openStylingModal?.(text, stylingId)),
+    }
+  }
+
+  /** A prompt opens the quick AI request with it, with or without text */
+  const createChatPromptActionItem = (
+    promptId: string
+  ): ActionItem | undefined => {
+    const prompt = deps.chatPrompts?.()?.find((item) => item.id === promptId)
+    if (!prompt?.rule.trim()) return undefined
+    const view = describeChatPrompt(prompt, {
+      profiles: deps.profiles?.() ?? [],
+      areProfilesLoaded: deps.areProfilesLoaded?.() ?? true,
+    })
+    return {
+      id: `chatPrompt:${promptId}`,
+      name: view.label,
+      icon: 'mdi:lightning-bolt-outline',
+      action: async (text: string) => {
+        deps.openChatPrompt?.(text ?? '', prompt.rule.trim(), view.runProfileId)
+      },
     }
   }
 
@@ -562,6 +590,9 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     }
     if (item.type === 'styling') {
       return createStylingActionItem(item.stylingId)
+    }
+    if (item.type === 'chatPrompt') {
+      return createChatPromptActionItem(item.promptId)
     }
     if (item.type === 'translation') {
       return createTranslationActionItem(item.language)

@@ -447,13 +447,8 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
   config.styling.slots = distinctSlots(
     filterSlots(config.styling.slots, (id) => stylingIds.has(id))
   )
-  for (const page of config.chatPrompts.pages) {
-    page.items = deduplicate(page.items)
-    const promptIds = new Set(page.items.map((item) => item.id))
-    page.slots = distinctSlots(
-      filterSlots(page.slots, (id) => promptIds.has(id))
-    )
-  }
+  config.chatPrompts.items = deduplicate(config.chatPrompts.items)
+  const promptIds = new Set(config.chatPrompts.items.map((item) => item.id))
   if (config.favorites?.items) {
     config.favorites.items = deduplicate(config.favorites.items)
   }
@@ -468,6 +463,7 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
       if (slot.type === 'transformation')
         return transformationIds.has(slot.transformationId)
       if (slot.type === 'styling') return stylingIds.has(slot.stylingId)
+      if (slot.type === 'chatPrompt') return promptIds.has(slot.promptId)
       return true
     })
   }

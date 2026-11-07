@@ -46,7 +46,7 @@ describe('chat image input', () => {
   const { createObjectURL, revokeObjectURL } = URL
 
   beforeEach(() => {
-    decoded = { width: 2000, height: 1000 }
+    decoded = { width: 4000, height: 2000 }
     vi.stubGlobal(
       'Image',
       class implements FakeImage {
@@ -93,8 +93,8 @@ describe('chat image input', () => {
 
   it.each([
     ['economy', 1024, 512],
-    ['balanced', 1568, 784],
-    ['original', 2000, 1000],
+    ['balanced', 2048, 1024],
+    ['original', 4000, 2000],
   ] as const)(
     'scales a %s image to %ix%i and releases its URL',
     async (quality, width, height) => {
@@ -114,6 +114,12 @@ describe('chat image input', () => {
       expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:image')
     }
   )
+
+  it('does not downscale a Full HD image at balanced quality', async () => {
+    decoded = { width: 1920, height: 1080 }
+    await prepareChatImage(pngFile(), 'balanced')
+    expect([canvas.width, canvas.height]).toEqual([1920, 1080])
+  })
 
   it('rejects empty and oversized files before reading them', async () => {
     await expect(

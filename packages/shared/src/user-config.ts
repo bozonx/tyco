@@ -155,10 +155,6 @@ export interface HotkeysConfig {
   screenshotQuickAiRequest: string
   voiceScreenshotQuickAiRequest: string
   chatPrompts: string
-  chatPromptsPage2: string
-  chatPromptsPage3: string
-  chatPromptsPage4: string
-  chatPromptsPage5: string
   favorites: string
   history: string
   voiceCommands: string
@@ -208,28 +204,26 @@ export interface StylingsConfig {
   slots: ShortcutSlots<string>
 }
 
-/** A named prompt of a prompt page */
+/** A named prompt of the prompt library */
 export interface ChatPromptConfig {
   id: string
   name: string
   rule: string
-}
-
-/** A page of prompts that run with one AI profile */
-export interface ChatPromptPageConfig {
-  /** The AI profile the prompts run with; empty for the default one */
+  /**
+   * The AI profile the prompt belongs to; empty for a prompt of every profile,
+   * which runs as the plain quick AI request outside a chat
+   */
   profileId: string
-  /** The prompts of the page, in the order the settings list them */
-  items: ChatPromptConfig[]
-  /** The menu of the page: prompt ids by shortcut key */
-  slots: ShortcutSlots<string>
 }
 
 export interface ChatPromptsConfig {
   /** Whether a picked prompt is sent at once instead of waiting in the input */
   isSentImmediately: boolean
-  /** The prompt pages, addressed by index like the action pages */
-  pages: ChatPromptPageConfig[]
+  /**
+   * The prompt library, in display order; the first prompts get the shortcut
+   * keys of the prompt menu
+   */
+  items: ChatPromptConfig[]
 }
 
 /** A saved text favorite */

@@ -35,7 +35,7 @@ relaxation is required. The parser does not execute PDF document actions.
 Settings → language models → chat attachments controls new image imports:
 
 - Economy: longest edge up to 1024 pixels.
-- Balanced (default): longest edge up to 1568 pixels.
+- Balanced (default): longest edge up to 2048 pixels.
 - No resizing: retain decoded pixel dimensions within safety limits.
 
 Every mode strips metadata and stores normalized PNG, not the original file.

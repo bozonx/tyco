@@ -701,7 +701,7 @@
     "chatHistoryRetentionDaysHint": "Czat jest usuwany, gdy przez tyle czasu nie miał nowych wiadomości. Starsze czaty są usuwane od razu.",
     "chatHistoryRetentionNever": "Nigdy",
     "chatImageQuality": "Jakość obrazów",
-    "chatImageQualityHint": "Dotyczy wszystkich czatów, także czatów profili. Dotyczy nowych załączników. Wyższa jakość zużywa więcej pamięci i kontekstu. Obrazy są wysyłane jako WebP bez metadanych; limity to 24 MP i 5 MB po kompresji.",
+    "chatImageQualityHint": "Dotyczy wszystkich nowych załączników we wszystkich czatach. Z obrazów usuwane są metadane EXIF i są one konwertowane do formatu WebP (limity do 24 MP i 5 MB po kompresji). Zrównoważona (2048 px) zachowuje zrzuty ekranu Full HD 1:1, Oszczędna (1024 px) oszczędza tokeny, a Maksymalna (do 8000 px) zachowuje oryginalną rozdzielczość.",
     "chatInfo": "Szybki czat z AI do codziennych zadań. W przeciwieństwie do profili AI z odrębnymi rolami i narzędziami jest to uniwersalna konwersacja niepowiązana z konkretnym profilem. Możesz zadawać pytania, przekazywać zaznaczony tekst jako kontekst, dołączać obrazy, ustawiać ogólny prompt systemowy i zarządzać lokalną historią czatów.",
     "chatPrompt": "Główny prompt",
     "chatPromptInfo": "Dodawany do instrukcji czatu, gdy nie wybrano w nim profilu.",
@@ -799,7 +799,7 @@
       "voiceCommands": "Polecenia głosowe",
       "selectionActionsPage2": "Działania: strona 2",
       "selectionActionsPage3": "Działania: strona 3",
-      "chatPrompts": "Prompty: strona 1",
+      "chatPrompts": "Prompty",
       "selectionActionsPage4": "Działania: strona 4",
       "selectionActionsPage5": "Działania: strona 5",
       "favorites": "Ulubione",
@@ -807,10 +807,6 @@
       "voiceQuickAiRequest": "Głosowe szybkie zapytanie do SI",
       "screenshotQuickAiRequest": "Zrzut ekranu i pytanie do AI",
       "voiceScreenshotQuickAiRequest": "Zrzut ekranu i głosowe pytanie do AI",
-      "chatPromptsPage2": "Prompty: strona 2",
-      "chatPromptsPage3": "Prompty: strona 3",
-      "chatPromptsPage4": "Prompty: strona 4",
-      "chatPromptsPage5": "Prompty: strona 5",
       "customAction1": "Własna akcja 1",
       "customAction2": "Własna akcja 2",
       "customAction3": "Własna akcja 3",
@@ -834,7 +830,7 @@
     },
     "hotkeysMissing": "Niektóre skróty zostały usunięte w ustawieniach systemu i nie działają. Użyj „Zarejestruj ponownie”, aby je przywrócić.",
     "hotkeysTab": "Skróty",
-    "imageQualityBalanced": "Zrównoważona — do 1568 px",
+    "imageQualityBalanced": "Zrównoważona — do 2048 px",
     "imageQualityEconomy": "Oszczędna — do 1024 px",
     "imageQualityOriginal": "Maksymalna — do 8000 px",
     "inlineCorrectionExternalHint": "Uruchamiaj to polecenie ze skryptu lub skrótu systemowego. D-Bus: metoda CorrectSelection interfejsu org.tyco.Interface.",
@@ -857,7 +853,8 @@
       "transformation": "Transformacja tekstu",
       "translation": "Tłumaczenie",
       "unavailable": "Niedostępne",
-      "profiles": "Profile"
+      "profiles": "Profile",
+      "chatPrompts": "Prompty"
     },
     "mainActionProfileRemoved": "Usunięty profil",
     "mainActionStylingRemoved": "Usunięty styl tekstu",
@@ -1222,7 +1219,7 @@
     "webJinaApiKeyHint": "Opcjonalnie. Bez klucza żądania korzystają z bezpłatnego planu ze wspólnymi limitami.",
     "chatPromptsTab": "Zestawy promptów czatu",
     "chatPromptsNavTab": "Prompty czatu",
-    "chatPromptsHint": "Strony promptów do szybkich zapytań do AI. Każda strona działa z własnym profilem, każdy prompt uruchamia się własnym klawiszem. Przeciągaj karty, aby zmienić klawisze.",
+    "chatPromptsHint": "Prompty do szybkich zapytań AI. Prompt z profilem działa w tym profilu i jest proponowany tylko w jego czatach; prompt bez profilu działa jako „Zapytaj AI” i jest proponowany w każdym czacie. Pierwsze 15 promptów dostaje klawisze w menu promptów; przeciągaj karty, aby zmienić kolejność.",
     "prompt": "Prompt",
     "sectionWebSearch": "Wyszukiwanie w sieci dla agentów",
     "webSearchSectionHint": "Ustawienia wyszukiwania w sieci i czytania stron używanych przez modele i profile AI.",
@@ -1240,12 +1237,6 @@
     "searchFavoritesPlaceholder": "Wyszukaj ulubione…",
     "hotkeyDescriptions": {},
     "chatPromptsSentImmediately": "Wysyłaj prompt od razu",
-    "addPromptPage": "Dodaj stronę",
-    "promptPageProfile": "Profil",
-    "movePromptPageBack": "Przesuń stronę wstecz",
-    "movePromptPageForward": "Przesuń stronę dalej",
-    "removePromptPage": "Usuń stronę",
-    "removePromptPageConfirm": "Usunąć tę stronę razem z jej promptami?",
     "historyTab": "Historia",
     "customActionsTitle": "Własne akcje",
     "customActionsInfo": "Przypisz globalne skróty klawiszowe, aby bezpośrednio wywoływać dowolne akcje.",
@@ -1255,7 +1246,10 @@
     "chatHistoryHint": "Łącznie z szybkimi zapytaniami. Czaty profili są przechowywane w folderze profilu i ustawiane na karcie „Profile AI”.",
     "chatQuickRequestsSaved": "Zapisuj szybkie zapytania",
     "chatQuickRequestsSavedInfo": "Szybkie zapytania są widoczne w czatach jako osobna grupa. Zapytanie kontynuowane w czacie jest zawsze zapisywane.",
-    "chatStorageLink": "Przechowywanie czatów ustawia się na karcie"
+    "chatStorageLink": "Przechowywanie czatów ustawia się na karcie",
+    "addChatPrompt": "Dodaj prompt",
+    "chatPromptProfile": "Profil",
+    "mainActionPromptRemoved": "Usunięty prompt"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
@@ -1497,12 +1491,14 @@
     "addArea": "Dodaj zrzut obszaru"
   },
   "chatPrompts": {
-    "pageLabel": "{page} · {profile}",
-    "missingProfile": "Brak profilu",
-    "pages": "Strony promptów",
-    "noPages": "Nie ma jeszcze stron promptów. Dodaj je w ustawieniach.",
-    "pageNotFound": "Nie ma strony promptów {page}.",
-    "profileMissing": "Profil tej strony już nie istnieje. Wybierz inny w ustawieniach.",
-    "openSettings": "Otwórz ustawienia"
+    "missingProfile": "Usunięty profil",
+    "profileMissing": "Profil tego promptu został usunięty. Dopóki nie wybierzesz innego, prompt działa bez profilu.",
+    "openSettings": "Otwórz ustawienia",
+    "searchPlaceholder": "Szukaj promptów…",
+    "noMatches": "Żaden prompt nie pasuje do wyszukiwania",
+    "empty": "Nie ma jeszcze promptów",
+    "emptyHint": "Dodaj prompty w ustawieniach.",
+    "everyProfile": "Bez profilu (Pytanie do AI)",
+    "actionName": "Prompt: {prompt}"
   }
 }

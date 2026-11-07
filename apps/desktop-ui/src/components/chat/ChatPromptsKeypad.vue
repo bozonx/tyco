@@ -11,31 +11,30 @@
       tabindex="-1"
     >
       <div class="chat-prompts-container">
-        <PromptPagesBar
-          v-if="profilePages.length > 1"
-          :pages="profilePages"
-          :active-index="currentView?.index ?? -1"
-          :label="pageLabel"
-          has-keys
-          @select="selectPage"
-        />
-        <div class="chat-prompts-grid-5x3">
-          <template v-for="slot in slots" :key="slot.key">
-            <ShortcutButton
-              v-if="slot.item"
-              size="sm"
-              :keys="[slot.key.toUpperCase()]"
-              :title="slot.label"
-              @click="handleSelect(slot.item.prompt.rule)"
-            >
-              {{ slot.label }}
-            </ShortcutButton>
-            <div v-else class="shortcut-empty-slot" aria-hidden="true" />
+        <SearchShortcutGrid
+          v-model:query="query"
+          dense
+          :items="filteredItems"
+          :placeholder="t('chatPrompts.searchPlaceholder')"
+          :empty-text="
+            profileViews.length
+              ? t('chatPrompts.noMatches')
+              : t('chat.noPromptsConfigured')
+          "
+          @select="handleSelect($event.view.prompt.rule)"
+          @escape="emit('close')"
+        >
+          <template #title="{ item }">
+            <span class="chat-prompt-name" :title="item.view.prompt.rule">{{
+              item.view.label
+            }}</span>
+            <ChatPromptProfileBadge
+              v-if="item.view.isProfileMissing"
+              class="chat-prompt-badge"
+              :view="item.view"
+            />
           </template>
-        </div>
-        <div v-if="!hasConfiguredPrompts" class="chat-prompts-empty-hint">
-          {{ t('chat.noPromptsConfigured') }}
-        </div>
+        </SearchShortcutGrid>
       </div>
     </MenuSurface>
   </Teleport>
@@ -45,17 +44,16 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useAnchoredPanel } from '../../composables/use-anchored-panel'
+import { useChatPrompts } from '../../composables/use-chat-prompts'
 import { useChatScope } from '../../composables/use-chat-scope'
 import { useI18n } from '../../composables/use-i18n'
-import { usePromptPages } from '../../composables/use-prompt-pages'
 import {
-  promptPagesOfProfile,
-  promptSlots,
-} from '../../lib/chat-prompts/prompt-pages'
+  chatPromptsOfProfile,
+  filterChatPrompts,
+} from '../../lib/chat-prompts/chat-prompts'
 import MenuSurface from '../common/MenuSurface.vue'
-import PromptPagesBar from '../menu/PromptPagesBar.vue'
-import ShortcutButton from '../overlay/ShortcutButton.vue'
-import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
+import SearchShortcutGrid from '../menu/SearchShortcutGrid.vue'
+import ChatPromptProfileBadge from './ChatPromptProfileBadge.vue'
 
 const props = defineProps<{ isOpen: boolean; anchor: HTMLElement | null }>()
 
@@ -66,9 +64,10 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const { chat: chatStore } = useChatScope()
-const { views, pageLabel } = usePromptPages()
+const { views } = useChatPrompts()
 const surfaceRef = ref<InstanceType<typeof MenuSurface> | null>(null)
 const canTeleport = ref(false)
+const query = ref('')
 
 const { style: panelStyle, theme: panelTheme } = useAnchoredPanel({
   isOpen: () => props.isOpen,
@@ -78,74 +77,21 @@ const { style: panelStyle, theme: panelTheme } = useAnchoredPanel({
   align: () => 'start',
 })
 
-/** Only the pages of the profile of this chat */
-const profilePages = computed(() =>
-  promptPagesOfProfile(views.value, chatStore.profileId)
-)
-const pagePosition = ref(0)
-const currentView = computed(
-  () => profilePages.value[pagePosition.value] ?? profilePages.value[0] ?? null
+/** The prompts of every profile and those of the profile of this chat */
+const profileViews = computed(() =>
+  chatPromptsOfProfile(views.value, chatStore.profileId)
 )
 
-function selectPage(index: number) {
-  const position = profilePages.value.findIndex((view) => view.index === index)
-  if (position >= 0) pagePosition.value = position
-}
-
-const slots = computed(() => {
-  const items = promptSlots(currentView.value?.page)
-  return SHORTCUT_SLOT_KEYS.map((key, index) => {
-    const item = items[index] ?? null
-    return { key, item, label: item?.label ?? '' }
-  })
-})
-
-const hasConfiguredPrompts = computed(() => slots.value.some((s) => s.item))
+const filteredItems = computed(() =>
+  filterChatPrompts(profileViews.value, query.value).map((view) => ({
+    id: view.prompt.id,
+    view,
+  }))
+)
 
 function handleSelect(rule: string) {
   emit('select', rule)
   emit('close')
-}
-
-function handleKeyDown(event: KeyboardEvent) {
-  if (!props.isOpen) return
-
-  if (event.code === 'Escape') {
-    event.preventDefault()
-    emit('close')
-    return
-  }
-
-  let codeLetter: string | undefined
-  if (event.code.length === 4 && event.code.startsWith('Key')) {
-    codeLetter = event.code.slice(3).toLowerCase()
-  }
-
-  if (codeLetter) {
-    const matchedSlot = slots.value.find((s) => s.key === codeLetter)
-    if (matchedSlot?.item) {
-      event.preventDefault()
-      handleSelect(matchedSlot.item.prompt.rule)
-    }
-    return
-  }
-
-  const count = profilePages.value.length
-  if (count <= 1) return
-  const digit = /^Digit([0-9])$/.exec(event.code)?.[1]
-  if (digit !== undefined) {
-    const position = digit === '0' ? 9 : Number(digit) - 1
-    if (position < count) {
-      event.preventDefault()
-      pagePosition.value = position
-    }
-  } else if (event.code === 'PageDown' || event.code === 'ArrowRight') {
-    event.preventDefault()
-    pagePosition.value = (pagePosition.value + 1) % count
-  } else if (event.code === 'PageUp' || event.code === 'ArrowLeft') {
-    event.preventDefault()
-    pagePosition.value = (pagePosition.value - 1 + count) % count
-  }
 }
 
 function handlePointerDown(event: PointerEvent) {
@@ -169,11 +115,9 @@ watch(
   () => props.isOpen,
   (open) => {
     if (open) {
-      pagePosition.value = 0
-      window.addEventListener('keydown', handleKeyDown, true)
+      query.value = ''
       window.addEventListener('pointerdown', handlePointerDown, true)
     } else {
-      window.removeEventListener('keydown', handleKeyDown, true)
       window.removeEventListener('pointerdown', handlePointerDown, true)
     }
   },
@@ -181,7 +125,6 @@ watch(
 )
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown, true)
   window.removeEventListener('pointerdown', handlePointerDown, true)
 })
 </script>
@@ -204,24 +147,16 @@ onUnmounted(() => {
   padding: var(--space-xs);
 }
 
-.chat-prompts-grid-5x3 {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-template-rows: repeat(3, 2.125rem);
-  gap: var(--space-xs);
-}
-
-.shortcut-empty-slot {
-  min-height: 2.125rem;
-  border-radius: var(--radius-sm);
-  background: var(--app-surface-soft);
-  opacity: 0.35;
-}
-
-.chat-prompts-empty-hint {
+.chat-prompt-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--text-label);
-  color: var(--color-base-muted);
-  text-align: center;
-  padding: var(--space-xs) 0;
+}
+
+.chat-prompt-badge {
+  flex-shrink: 0;
+  max-width: 40%;
 }
 </style>

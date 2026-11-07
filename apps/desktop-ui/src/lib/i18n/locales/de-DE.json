@@ -701,7 +701,7 @@
     "chatHistoryRetentionDaysHint": "Ein Chat wird gelöscht, wenn er so lange keine neuen Nachrichten hatte. Ältere Chats werden sofort gelöscht.",
     "chatHistoryRetentionNever": "Nie",
     "chatImageQuality": "Bildqualität",
-    "chatImageQualityHint": "Gilt für alle Chats, auch für die Chats der Profile. Gilt für neue Anhänge. Höhere Qualität braucht mehr Speicher und Kontext. Bilder werden als WebP ohne Metadaten gesendet; die Grenzen sind 24 MP und 5 MB nach der Komprimierung.",
+    "chatImageQualityHint": "Gilt für alle neuen Anhänge in allen Chats. Bilder werden von EXIF-Metadaten bereinigt und in WebP konvertiert (Grenzen: bis zu 24 MP und 5 MB nach Komprimierung). Ausgewogen (2048 px) erhält Full-HD-Screenshots 1:1, Sparsam (1024 px) spart Tokens und Maximal (bis 8000 px) behält die Originalauflösung bei.",
     "chatInfo": "Ein schneller KI-Chat für alltägliche Aufgaben. Im Gegensatz zu KI-Profilen mit isolierten Rollen und Werkzeugen ist dies ein universeller Chat ohne Bindung an ein Profil. Sie können Fragen stellen, markierten Text als Kontext nutzen, Bilder anhängen, einen allgemeinen Systemprompt festlegen und den lokalen Chatverlauf verwalten.",
     "chatPrompt": "Haupt-Prompt",
     "chatPromptInfo": "Wird den Chat-Anweisungen hinzugefügt, wenn im Chat kein Profil ausgewählt ist.",
@@ -799,7 +799,7 @@
       "voiceCommands": "Sprachbefehle",
       "selectionActionsPage2": "Aktionen: Seite 2",
       "selectionActionsPage3": "Aktionen: Seite 3",
-      "chatPrompts": "Prompts: Seite 1",
+      "chatPrompts": "Prompts",
       "selectionActionsPage4": "Aktionen: Seite 4",
       "selectionActionsPage5": "Aktionen: Seite 5",
       "favorites": "Favoriten",
@@ -807,10 +807,6 @@
       "voiceQuickAiRequest": "Sprach-Schnellanfrage an KI",
       "screenshotQuickAiRequest": "Bildschirmfoto und KI-Frage",
       "voiceScreenshotQuickAiRequest": "Bildschirmfoto und KI-Sprachfrage",
-      "chatPromptsPage2": "Prompts: Seite 2",
-      "chatPromptsPage3": "Prompts: Seite 3",
-      "chatPromptsPage4": "Prompts: Seite 4",
-      "chatPromptsPage5": "Prompts: Seite 5",
       "customAction1": "Benutzerdefinierte Aktion 1",
       "customAction2": "Benutzerdefinierte Aktion 2",
       "customAction3": "Benutzerdefinierte Aktion 3",
@@ -834,7 +830,7 @@
     },
     "hotkeysMissing": "Einige Tastenkürzel wurden in den Systemeinstellungen entfernt und funktionieren nicht. Mit „Erneut registrieren“ holen Sie sie zurück.",
     "hotkeysTab": "Tastenkürzel",
-    "imageQualityBalanced": "Ausgewogen – bis 1568 px",
+    "imageQualityBalanced": "Ausgewogen – bis 2048 px",
     "imageQualityEconomy": "Sparsam – bis 1024 px",
     "imageQualityOriginal": "Maximal – bis 8000 px",
     "inlineCorrectionExternalHint": "Führen Sie diesen Befehl aus einem Skript oder über ein Systemkürzel aus. D-Bus: Methode CorrectSelection von org.tyco.Interface.",
@@ -857,7 +853,8 @@
       "transformation": "Texttransformation",
       "translation": "Übersetzung",
       "unavailable": "Nicht verfügbar",
-      "profiles": "Profile"
+      "profiles": "Profile",
+      "chatPrompts": "Prompts"
     },
     "mainActionProfileRemoved": "Gelöschtes Profil",
     "mainActionStylingRemoved": "Gelöschter Textstil",
@@ -1222,7 +1219,7 @@
     "webJinaApiKeyHint": "Optional. Ohne Schlüssel nutzen Anfragen das kostenlose Kontingent mit geteilten Limits.",
     "chatPromptsTab": "Chat-Prompt-Vorlagen",
     "chatPromptsNavTab": "Chat-Prompts",
-    "chatPromptsHint": "Prompt-Seiten für schnelle KI-Anfragen. Jede Seite nutzt ihr eigenes Profil, jeder Prompt startet mit seiner eigenen Taste. Ziehen Sie die Karten, um die Tasten zu ändern.",
+    "chatPromptsHint": "Prompts für schnelle KI-Anfragen. Ein Prompt mit Profil läuft in diesem Profil und wird nur in dessen Chats angeboten; ein Prompt ohne Profil läuft als „KI fragen“ und wird in jedem Chat angeboten. Die ersten 15 Prompts erhalten Tasten im Prompt-Menü; ziehen Sie die Karten, um die Reihenfolge zu ändern.",
     "prompt": "Prompt",
     "sectionWebSearch": "Websuche für Agenten",
     "webSearchSectionHint": "Einstellungen für Websuche und das Abrufen von Webseiten durch KI-Modelle und Profile.",
@@ -1240,12 +1237,6 @@
     "searchFavoritesPlaceholder": "Favoriten suchen…",
     "hotkeyDescriptions": {},
     "chatPromptsSentImmediately": "Prompt sofort senden",
-    "addPromptPage": "Seite hinzufügen",
-    "promptPageProfile": "Profil",
-    "movePromptPageBack": "Seite nach vorne verschieben",
-    "movePromptPageForward": "Seite nach hinten verschieben",
-    "removePromptPage": "Seite entfernen",
-    "removePromptPageConfirm": "Diese Seite mit ihren Prompts entfernen?",
     "historyTab": "Verlauf",
     "customActionsTitle": "Benutzerdefinierte Aktionen",
     "customActionsInfo": "Weisen Sie globale Tastenkombinationen zu, um Aktionen direkt auszuführen.",
@@ -1255,7 +1246,10 @@
     "chatHistoryHint": "Einschließlich Schnellanfragen. Profil-Chats liegen im Profilordner und werden im Tab „KI-Profile“ eingestellt.",
     "chatQuickRequestsSaved": "Schnellanfragen speichern",
     "chatQuickRequestsSavedInfo": "Schnellanfragen erscheinen in den Chats als eigene Gruppe. Eine im Chat fortgesetzte Anfrage wird immer gespeichert.",
-    "chatStorageLink": "Die Chat-Speicherung wird eingestellt im Tab"
+    "chatStorageLink": "Die Chat-Speicherung wird eingestellt im Tab",
+    "addChatPrompt": "Prompt hinzufügen",
+    "chatPromptProfile": "Profil",
+    "mainActionPromptRemoved": "Gelöschter Prompt"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {
@@ -1497,12 +1491,14 @@
     "addArea": "Bereichsscreenshot hinzufügen"
   },
   "chatPrompts": {
-    "pageLabel": "{page} · {profile}",
-    "missingProfile": "Kein Profil",
-    "pages": "Prompt-Seiten",
-    "noPages": "Noch keine Prompt-Seiten. Fügen Sie in den Einstellungen eine hinzu.",
-    "pageNotFound": "Es gibt keine Prompt-Seite {page}.",
-    "profileMissing": "Das Profil dieser Seite existiert nicht mehr. Wählen Sie in den Einstellungen ein anderes.",
-    "openSettings": "Einstellungen öffnen"
+    "missingProfile": "Gelöschtes Profil",
+    "profileMissing": "Das Profil dieses Prompts wurde gelöscht. Bis Sie ein anderes wählen, läuft der Prompt ohne Profil.",
+    "openSettings": "Einstellungen öffnen",
+    "searchPlaceholder": "Prompts durchsuchen…",
+    "noMatches": "Keine Prompts passen zur Suche",
+    "empty": "Noch keine Prompts",
+    "emptyHint": "Fügen Sie Prompts in den Einstellungen hinzu.",
+    "everyProfile": "Kein Profil (Frage an die KI)",
+    "actionName": "Prompt: {prompt}"
   }
 }

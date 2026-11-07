@@ -37,6 +37,9 @@ function isValidActionSlot(slot: unknown): slot is MainActionConfig {
       typeof item.stylingId === 'string' && item.stylingId.trim().length > 0
     )
   }
+  if (item.type === 'chatPrompt') {
+    return typeof item.promptId === 'string' && item.promptId.trim().length > 0
+  }
   if (item.type === 'translation') {
     return typeof item.language === 'string' && item.language.trim().length > 0
   }

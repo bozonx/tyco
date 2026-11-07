@@ -93,7 +93,7 @@ describe('SettingsMainActionsTab.vue', () => {
     const optgroupLabels = wrapper
       .findAll('optgroup')
       .map((group) => group.attributes('label'))
-    expect(optgroupLabels).toContain('settings.promptPageProfile: Assistant')
+    expect(optgroupLabels).toContain('settings.chatPromptProfile: Assistant')
     expect(optgroupLabels).toContain('quickAiRequest.defaultProfile')
     expect(optgroupLabels).toContain('nav.menu')
     expect(texts).toContain('action.voiceCommands…')
@@ -106,6 +106,42 @@ describe('SettingsMainActionsTab.vue', () => {
     expect(texts).toContain('Shout')
     expect(texts).not.toContain('Without id')
     expect(texts.join()).not.toContain('Hidden')
+  })
+
+  it('offers each prompt in the group of its profile and runs it from a slot', async () => {
+    configure({
+      chatPrompts: {
+        isSentImmediately: false,
+        items: [
+          { id: 'fix', name: 'Fix', rule: 'Fix it', profileId: 'assistant' },
+          { id: 'sum', name: 'Sum', rule: 'Sum up', profileId: '' },
+          { id: 'blank', name: 'Blank', rule: ' ', profileId: '' },
+        ],
+      },
+    })
+    const wrapper = mountTab()
+    const groupOf = (text: string) =>
+      wrapper
+        .findAll('optgroup')
+        .find((group) =>
+          group.findAll('option').some((option) => option.text() === text)
+        )
+        ?.attributes('label')
+    const name = (prompt: string) =>
+      `chatPrompts.actionName:${JSON.stringify({ prompt })}`
+    expect(groupOf(name('Fix'))).toBe('settings.chatPromptProfile: Assistant')
+    expect(groupOf(name('Sum'))).toBe('settings.mainActionGroups.chatPrompts')
+    expect(optionTexts(wrapper)).not.toContain(name('Blank'))
+
+    const select = wrapper.get('select')
+    const fix = select
+      .findAll('option')
+      .find((option) => option.text() === name('Fix'))!
+    await select.setValue(fix.element.value)
+    expect(context.draft.value.actionPages[0].slots.q).toEqual({
+      type: 'chatPrompt',
+      promptId: 'fix',
+    })
   })
 
   it('replaces a slot with the picked action', async () => {

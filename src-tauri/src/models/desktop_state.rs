@@ -24,8 +24,8 @@ pub struct ActivationSnapshot {
     #[ts(optional)]
     pub screenshot: Option<super::ChatImage>,
     pub mode: Option<ActivationMode>,
-    /// The page the menu opens on: of `actionPages` for `selectionActions`, of
-    /// `chatPrompts.pages` for `chatPrompts`; `None` or 0 for the first one.
+    /// The page of `actionPages` the menu opens on, for `selectionActions`;
+    /// `None` or 0 for the first one.
     pub action_page_index: Option<usize>,
     /// The slot index for `customAction`; `None` or 0 for the first one.
     pub custom_action_index: Option<usize>,

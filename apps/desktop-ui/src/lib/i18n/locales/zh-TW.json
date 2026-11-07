@@ -695,7 +695,7 @@
     "chatHistoryRetentionDaysHint": "若聊天記錄在此時間內未有新訊息，將予以刪除。更早的聊天記錄會立即刪除。",
     "chatHistoryRetentionNever": "永不",
     "chatImageQuality": "圖片品質",
-    "chatImageQualityHint": "套用至所有聊天，包括設定檔的聊天。 套用至新附件。較高的品質會消耗更多記憶體與上下文。圖片發送為不帶中繼資料的 WebP；限制為 24 MP 以及壓縮後 5 MB。",
+    "chatImageQualityHint": "套用至所有聊天中的所有新附件。圖片將清除 EXIF 中繼資料並轉換為 WebP（壓縮後限制最高 24 MP 與 5 MB）。「均衡」（2048 像素）以 1:1 保留 Full HD 螢幕截圖，「省流」（1024 像素）節省權杖，「最高」（最高 8000 像素）保留原始解析度。",
     "chatInfo": "用於日常任務的快速 AI 對話。與擁有獨立角色和工具的 AI 設定檔不同，這是未綁定任何特定設定檔的通用對話。您可以發問、將選取的文字作為上下文、附加圖片、設定通用系統提示詞並管理本機對話歷程記錄。",
     "chatPrompt": "主要提示詞",
     "chatPromptInfo": "聊天中未選擇設定檔時，會加入聊天指示中。",
@@ -793,7 +793,7 @@
       "voiceCommands": "語音命令",
       "selectionActionsPage2": "操作：第 2 頁",
       "selectionActionsPage3": "操作：第 3 頁",
-      "chatPrompts": "提示詞：第 1 頁",
+      "chatPrompts": "提示詞",
       "selectionActionsPage4": "操作：第 4 頁",
       "selectionActionsPage5": "操作：第 5 頁",
       "favorites": "我的最愛",
@@ -801,10 +801,6 @@
       "voiceQuickAiRequest": "語音 AI 快速請求",
       "screenshotQuickAiRequest": "擷取螢幕並向 AI 提問",
       "voiceScreenshotQuickAiRequest": "擷取螢幕並向 AI 語音提問",
-      "chatPromptsPage2": "提示詞：第 2 頁",
-      "chatPromptsPage3": "提示詞：第 3 頁",
-      "chatPromptsPage4": "提示詞：第 4 頁",
-      "chatPromptsPage5": "提示詞：第 5 頁",
       "customAction1": "自訂動作 1",
       "customAction2": "自訂動作 2",
       "customAction3": "自訂動作 3",
@@ -828,7 +824,7 @@
     },
     "hotkeysMissing": "部分快捷鍵已在系統設定中被移除，無法正常運作。請使用「重新註冊」予以還原。",
     "hotkeysTab": "快捷鍵",
-    "imageQualityBalanced": "均衡 — 最高 1568 像素",
+    "imageQualityBalanced": "均衡 — 最高 2048 像素",
     "imageQualityEconomy": "省流 — 最高 1024 像素",
     "imageQualityOriginal": "最高品質 — 最高 8000 像素",
     "inlineCorrectionExternalHint": "從指令碼或系統快捷鍵執行此命令。D-Bus：org.tyco.Interface 的 CorrectSelection 方法。",
@@ -851,7 +847,8 @@
       "transformation": "文字轉換",
       "translation": "翻譯",
       "unavailable": "無法使用",
-      "profiles": "設定檔"
+      "profiles": "設定檔",
+      "chatPrompts": "提示詞"
     },
     "mainActionProfileRemoved": "已刪除的設定檔",
     "mainActionStylingRemoved": "已刪除的文字風格",
@@ -1216,7 +1213,7 @@
     "webJinaApiKeyHint": "選填。未配置金鑰時，請求將使用具有共用速率限制的免費層級。",
     "chatPromptsTab": "聊天提示詞預設",
     "chatPromptsNavTab": "聊天提示詞",
-    "chatPromptsHint": "用於快速 AI 請求的提示詞頁面。每個頁面使用自己的設定檔，每個提示詞以自己的按鍵執行。拖曳卡片即可變更按鍵。",
+    "chatPromptsHint": "用於快速 AI 請求的提示詞。帶設定檔的提示詞在該設定檔中執行，且只在其聊天中提供；不帶設定檔的提示詞以「詢問 AI」執行，並在所有聊天中提供。前 15 個提示詞在提示詞選單中取得按鍵；拖曳卡片可調整順序。",
     "prompt": "提示詞",
     "sectionWebSearch": "代理網頁搜尋",
     "webSearchSectionHint": "AI 模型與設定檔使用的網頁搜尋與頁面讀取工具設定。",
@@ -1234,12 +1231,6 @@
     "searchFavoritesPlaceholder": "搜尋我的最愛…",
     "hotkeyDescriptions": {},
     "chatPromptsSentImmediately": "立即傳送提示詞",
-    "addPromptPage": "新增頁面",
-    "promptPageProfile": "設定檔",
-    "movePromptPageBack": "將頁面前移",
-    "movePromptPageForward": "將頁面後移",
-    "removePromptPage": "移除頁面",
-    "removePromptPageConfirm": "要移除此頁面及其提示詞嗎？",
     "historyTab": "歷史",
     "customActionsTitle": "自訂動作",
     "customActionsInfo": "指派全域快速鍵以直接執行任何動作。",
@@ -1249,7 +1240,10 @@
     "chatHistoryHint": "包含快速請求。設定檔的聊天儲存在設定檔資料夾中，於「AI 設定檔」分頁設定。",
     "chatQuickRequestsSaved": "儲存快速請求",
     "chatQuickRequestsSavedInfo": "快速請求在聊天中顯示為獨立的群組。在聊天中繼續的請求一律會被儲存。",
-    "chatStorageLink": "聊天儲存於此分頁設定："
+    "chatStorageLink": "聊天儲存於此分頁設定：",
+    "addChatPrompt": "新增提示詞",
+    "chatPromptProfile": "設定檔",
+    "mainActionPromptRemoved": "已刪除的提示詞"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
@@ -1491,12 +1485,14 @@
     "addArea": "新增區域截圖"
   },
   "chatPrompts": {
-    "pageLabel": "{page} · {profile}",
-    "missingProfile": "無設定檔",
-    "pages": "提示詞頁面",
-    "noPages": "還沒有提示詞頁面。請在設定中新增。",
-    "pageNotFound": "提示詞頁面 {page} 不存在。",
-    "profileMissing": "此頁面的設定檔已不存在。請在設定中選擇其他設定檔。",
-    "openSettings": "開啟設定"
+    "missingProfile": "已刪除的設定檔",
+    "profileMissing": "此提示詞的設定檔已被刪除。在您選擇其他設定檔之前，提示詞將不使用設定檔執行。",
+    "openSettings": "開啟設定",
+    "searchPlaceholder": "搜尋提示詞…",
+    "noMatches": "沒有符合搜尋的提示詞",
+    "empty": "還沒有提示詞",
+    "emptyHint": "請在設定中新增提示詞。",
+    "everyProfile": "無設定檔（向 AI 提問）",
+    "actionName": "提示詞：{prompt}"
   }
 }

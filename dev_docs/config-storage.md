@@ -76,7 +76,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `llm`             | `imageQuality`, `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below)                   |
 | `transformations` | `items`, the transformation library; `slots`, the transformation menu (a shortcut grid of transformation ids)               |
 | `styling`         | `items`, the styling library; `slots`, the styling menu (a shortcut grid of styling ids)                                    |
-| `chatPrompts`     | `isSentImmediately`; `pages`, the prompt pages: each has `profileId` (empty for the default profile), `items` and `slots`   |
+| `chatPrompts`     | `isSentImmediately`; `items`, the prompt library: each prompt has `profileId`, empty for a prompt of every profile          |
 | `aiVault`         | `path`, empty for the default location                                                                                      |
 | `aiProfiles`      | `chatHistory` (`storage`: `off` or `disk`, `retentionDays`)                                                                 |
 | `markdown`        | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                                       |
@@ -88,10 +88,16 @@ The hotkeys of `hotkeys` are named as the activation modes they open
 (`quickInput`, `selectionActions`, `selectionActionsPage2`..`selectionActionsPage5`,
 `translation`, …); the name is also the hotkey id the UI and the system portal use.
 `selectionCorrection` corrects the selection in place. All five action page hotkeys
-are configurable regardless of how many action pages currently exist, and so are
-the five prompt page hotkeys (`chatPrompts`, `chatPromptsPage2`..`chatPromptsPage5`).
-A prompt page keeps its own prompts; a picked prompt opens the quick AI request
-with the profile of its page, and is sent at once when `isSentImmediately` is set.
+are configurable regardless of how many action pages currently exist.
+
+The prompts are one list, like the favorites: the prompt menu (`chatPrompts`)
+searches it, and its first fifteen prompts get the shortcut keys. A prompt
+with a `profileId` belongs to that profile: it opens the quick AI request with
+it, and the chat composer offers it only in the chats of that profile. A prompt
+without one, or whose profile is gone, opens the plain quick AI request and is
+offered in every chat. A slot of `actionPages` or `customActionSlots` runs a
+single prompt as `{ "type": "chatPrompt", "promptId" }`. A picked prompt is
+sent at once when `isSentImmediately` is set.
 
 The glossary is one for every target language: `{ "term", "translation" }`,
 where a term kept as it is has itself as its translation. ai-kit's

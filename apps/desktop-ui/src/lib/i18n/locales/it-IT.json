@@ -701,7 +701,7 @@
     "chatHistoryRetentionDaysHint": "Una chat viene eliminata quando non riceve nuovi messaggi per questo periodo. Le chat più vecchie vengono eliminate subito.",
     "chatHistoryRetentionNever": "Mai",
     "chatImageQuality": "Qualità delle immagini",
-    "chatImageQualityHint": "Si applica a tutte le chat, comprese quelle dei profili. Si applica ai nuovi allegati. Una qualità più alta usa più memoria e contesto. Le immagini vengono inviate come WebP senza metadati; i limiti sono 24 MP e 5 MB dopo la compressione.",
+    "chatImageQualityHint": "Si applica a tutti i nuovi allegati in tutte le chat. Le immagini vengono ripulite dai metadati EXIF e convertite in WebP (limiti fino a 24 MP e 5 MB dopo la compressione). Bilanciata (2048 px) preserva gli screenshot Full HD 1:1, Economica (1024 px) risparmia token e Massima (fino a 8000 px) mantiene la risoluzione originale.",
     "chatInfo": "Una chat rapida con l'IA per le attività quotidiane. A differenza dei profili IA con ruoli e strumenti isolati, questa è una conversazione universale non legata a un profilo specifico. Puoi fare domande, usare il testo selezionato come contesto, allegare immagini, impostare un prompt di sistema generale e gestire la cronologia locale delle chat.",
     "chatPrompt": "Prompt principale",
     "chatPromptInfo": "Aggiunto alle istruzioni della chat quando non vi è selezionato alcun profilo.",
@@ -799,7 +799,7 @@
       "voiceCommands": "Comandi vocali",
       "selectionActionsPage2": "Azioni: pagina 2",
       "selectionActionsPage3": "Azioni: pagina 3",
-      "chatPrompts": "Prompt: pagina 1",
+      "chatPrompts": "Prompt",
       "selectionActionsPage4": "Azioni: pagina 4",
       "selectionActionsPage5": "Azioni: pagina 5",
       "favorites": "Preferiti",
@@ -807,10 +807,6 @@
       "voiceQuickAiRequest": "Richiesta vocale rapida IA",
       "screenshotQuickAiRequest": "Schermata e domanda all’IA",
       "voiceScreenshotQuickAiRequest": "Schermata e domanda vocale all’IA",
-      "chatPromptsPage2": "Prompt: pagina 2",
-      "chatPromptsPage3": "Prompt: pagina 3",
-      "chatPromptsPage4": "Prompt: pagina 4",
-      "chatPromptsPage5": "Prompt: pagina 5",
       "customAction1": "Azione personalizzata 1",
       "customAction2": "Azione personalizzata 2",
       "customAction3": "Azione personalizzata 3",
@@ -834,7 +830,7 @@
     },
     "hotkeysMissing": "Alcune scorciatoie sono state rimosse nelle impostazioni di sistema e non funzionano. Usa «Registra di nuovo» per ripristinarle.",
     "hotkeysTab": "Scorciatoie",
-    "imageQualityBalanced": "Bilanciata: fino a 1568 px",
+    "imageQualityBalanced": "Bilanciata: fino a 2048 px",
     "imageQualityEconomy": "Economica: fino a 1024 px",
     "imageQualityOriginal": "Massima: fino a 8000 px",
     "inlineCorrectionExternalHint": "Esegui questo comando da uno script o da una scorciatoia di sistema. D-Bus: metodo CorrectSelection di org.tyco.Interface.",
@@ -857,7 +853,8 @@
       "transformation": "Trasformazioni del testo",
       "translation": "Traduzione",
       "unavailable": "Non disponibili",
-      "profiles": "Profili"
+      "profiles": "Profili",
+      "chatPrompts": "Prompt"
     },
     "mainActionProfileRemoved": "Profilo eliminato",
     "mainActionStylingRemoved": "Stile del testo eliminato",
@@ -1222,7 +1219,7 @@
     "webJinaApiKeyHint": "Facoltativo. Senza chiave, le richieste utilizzano il piano gratuito con limiti condivisi.",
     "chatPromptsTab": "Preset di prompt per la chat",
     "chatPromptsNavTab": "Prompt della chat",
-    "chatPromptsHint": "Pagine di prompt per le richieste rapide all’IA. Ogni pagina usa il proprio profilo, ogni prompt si avvia con il proprio tasto. Trascina le schede per cambiare i tasti.",
+    "chatPromptsHint": "Prompt per richieste rapide all’IA. Un prompt con profilo viene eseguito in quel profilo ed è proposto solo nelle sue chat; un prompt senza profilo viene eseguito come «Chiedi all’IA» ed è proposto in ogni chat. I primi 15 prompt ricevono i tasti nel menu dei prompt; trascina le schede per cambiare l’ordine.",
     "prompt": "Prompt",
     "sectionWebSearch": "Ricerca web per gli agenti",
     "webSearchSectionHint": "Impostazioni per la ricerca sul web e la lettura delle pagine utilizzate dai modelli e profili IA.",
@@ -1240,12 +1237,6 @@
     "searchFavoritesPlaceholder": "Cerca tra i preferiti...",
     "hotkeyDescriptions": {},
     "chatPromptsSentImmediately": "Invia subito il prompt",
-    "addPromptPage": "Aggiungi pagina",
-    "promptPageProfile": "Profilo",
-    "movePromptPageBack": "Sposta la pagina indietro",
-    "movePromptPageForward": "Sposta la pagina avanti",
-    "removePromptPage": "Rimuovi pagina",
-    "removePromptPageConfirm": "Rimuovere questa pagina e i suoi prompt?",
     "historyTab": "Cronologia",
     "customActionsTitle": "Azioni personalizzate",
     "customActionsInfo": "Assegna scorciatoie globali per eseguire direttamente qualsiasi azione.",
@@ -1255,7 +1246,10 @@
     "chatHistoryHint": "Incluse le richieste rapide. Le chat dei profili sono salvate nella cartella del profilo e si impostano nella scheda «Profili IA».",
     "chatQuickRequestsSaved": "Salva le richieste rapide",
     "chatQuickRequestsSavedInfo": "Le richieste rapide compaiono nelle chat come gruppo a parte. Una richiesta proseguita in chat viene sempre salvata.",
-    "chatStorageLink": "L’archiviazione delle chat si imposta nella scheda"
+    "chatStorageLink": "L’archiviazione delle chat si imposta nella scheda",
+    "addChatPrompt": "Aggiungi prompt",
+    "chatPromptProfile": "Profilo",
+    "mainActionPromptRemoved": "Prompt eliminato"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {
@@ -1497,12 +1491,14 @@
     "addArea": "Aggiungi screenshot dell'area"
   },
   "chatPrompts": {
-    "pageLabel": "{page} · {profile}",
-    "missingProfile": "Nessun profilo",
-    "pages": "Pagine di prompt",
-    "noPages": "Nessuna pagina di prompt. Aggiungine una nelle impostazioni.",
-    "pageNotFound": "La pagina di prompt {page} non esiste.",
-    "profileMissing": "Il profilo di questa pagina non esiste più. Scegline un altro nelle impostazioni.",
-    "openSettings": "Apri impostazioni"
+    "missingProfile": "Profilo eliminato",
+    "profileMissing": "Il profilo di questo prompt è stato eliminato. Finché non ne scegli un altro, il prompt viene eseguito senza profilo.",
+    "openSettings": "Apri impostazioni",
+    "searchPlaceholder": "Cerca prompt…",
+    "noMatches": "Nessun prompt corrisponde alla ricerca",
+    "empty": "Ancora nessun prompt",
+    "emptyHint": "Aggiungi i prompt nelle impostazioni.",
+    "everyProfile": "Nessun profilo (Domanda all'IA)",
+    "actionName": "Prompt: {prompt}"
   }
 }

@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   installFakeDesktop,
@@ -18,19 +18,24 @@ describe('ChatPromptsKeypad.vue', () => {
     desktop.setUserConfig({
       chatPrompts: {
         isSentImmediately: false,
-        pages: [
+        items: [
           {
+            id: 'p0',
+            name: 'Poem',
+            rule: 'Write a poem',
             profileId: 'writer',
-            items: [{ id: 'p0', name: 'Poem', rule: 'Write a poem' }],
-            slots: { q: 'p0' },
           },
           {
+            id: 'p1',
+            name: 'Summarize',
+            rule: 'Summarize the text',
             profileId: '',
-            items: [
-              { id: 'p1', name: 'Summarize', rule: 'Summarize the text' },
-              { id: 'p2', name: 'Explain', rule: 'Explain in simple terms' },
-            ],
-            slots: { q: 'p1', w: 'p2' },
+          },
+          {
+            id: 'p2',
+            name: 'Explain',
+            rule: 'Explain in simple terms',
+            profileId: '',
           },
         ],
       },
@@ -41,78 +46,65 @@ describe('ChatPromptsKeypad.vue', () => {
     desktop.dispose()
   })
 
-  it('renders only the pages of the profile of the chat', () => {
-    const anchor = document.createElement('div')
-    const wrapper = mount(ChatPromptsKeypad, {
-      props: { isOpen: true, anchor },
+  const mountKeypad = () =>
+    mount(ChatPromptsKeypad, {
+      props: { isOpen: true, anchor: document.createElement('div') },
       global: { plugins: [desktop.pinia], stubs: { Teleport: true } },
+      attachTo: document.body,
     })
 
-    const buttons = wrapper.findAllComponents({ name: 'ShortcutButton' })
-    expect(buttons.map((button) => button.text())).not.toContain('Poem')
-    expect(wrapper.find('.prompt-pages-bar').exists()).toBe(false)
+  const names = (wrapper: ReturnType<typeof mountKeypad>) =>
+    wrapper.findAll('.chat-prompt-name').map((cell) => cell.text())
+
+  it('offers the prompts of every profile, not those of another profile', () => {
+    const wrapper = mountKeypad()
+    expect(names(wrapper)).toEqual(['Summarize', 'Explain'])
+    wrapper.unmount()
   })
 
-  it('renders buttons for configured slots and handles mouse click', async () => {
-    const anchor = document.createElement('div')
-    const wrapper = mount(ChatPromptsKeypad, {
-      props: { isOpen: true, anchor },
-      global: { plugins: [desktop.pinia], stubs: { Teleport: true } },
-    })
-
-    const buttons = wrapper.findAllComponents({ name: 'ShortcutButton' })
-    expect(buttons.length).toBe(2)
-    expect(buttons[0].text()).toContain('Summarize')
-    expect(buttons[1].text()).toContain('Explain')
-
-    await buttons[0].trigger('click')
+  it('inserts a prompt on click', async () => {
+    const wrapper = mountKeypad()
+    await wrapper.findAll('.search-grid-cell')[0]!.trigger('click')
 
     expect(wrapper.emitted('select')).toEqual([['Summarize the text']])
     expect(wrapper.emitted('close')).toHaveLength(1)
+    wrapper.unmount()
   })
 
-  it('selects prompt on keyboard key press', async () => {
-    const anchor = document.createElement('div')
-    const wrapper = mount(ChatPromptsKeypad, {
-      props: { isOpen: true, anchor },
-      global: { plugins: [desktop.pinia], stubs: { Teleport: true } },
-    })
+  it('filters by the search and picks with a shortcut key in the grid', async () => {
+    const wrapper = mountKeypad()
+    await wrapper.find('.search-grid-search-input').setValue('expl')
+    expect(names(wrapper)).toEqual(['Explain'])
 
-    window.dispatchEvent(
-      new KeyboardEvent('keydown', { code: 'KeyQ', key: 'q' })
-    )
+    await wrapper
+      .find('.search-grid-search-input')
+      .trigger('keydown', { key: 'ArrowDown' })
+    await wrapper
+      .find('.search-grid-grid')
+      .trigger('keydown', { key: 'q', code: 'KeyQ' })
 
-    expect(wrapper.emitted('select')).toEqual([['Summarize the text']])
+    expect(wrapper.emitted('select')).toEqual([['Explain in simple terms']])
+    wrapper.unmount()
+  })
+
+  it('closes on Escape', async () => {
+    const wrapper = mountKeypad()
+    await wrapper
+      .find('.search-grid-search-input')
+      .trigger('keydown', { key: 'Escape' })
     expect(wrapper.emitted('close')).toHaveLength(1)
+    wrapper.unmount()
   })
 
-  it('closes on Escape key press', async () => {
-    const anchor = document.createElement('div')
-    const wrapper = mount(ChatPromptsKeypad, {
-      props: { isOpen: true, anchor },
-      global: { plugins: [desktop.pinia], stubs: { Teleport: true } },
-    })
-
-    window.dispatchEvent(
-      new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape' })
-    )
-
-    expect(wrapper.emitted('close')).toHaveLength(1)
-    expect(wrapper.emitted('select')).toBeUndefined()
-  })
-
-  it('shows empty hint when no prompts are configured', async () => {
+  it('shows the empty hint when the chat has no prompts', async () => {
     desktop.setUserConfig({
-      chatPrompts: { isSentImmediately: false, pages: [] },
+      chatPrompts: { isSentImmediately: false, items: [] },
     })
-    const anchor = document.createElement('div')
-    const wrapper = mount(ChatPromptsKeypad, {
-      props: { isOpen: true, anchor },
-      global: { plugins: [desktop.pinia], stubs: { Teleport: true } },
-    })
-
-    const emptyHint = wrapper.find('.chat-prompts-empty-hint')
-    expect(emptyHint.exists()).toBe(true)
-    expect(emptyHint.text()).toBe('chat.noPromptsConfigured')
+    await flushPromises()
+    const wrapper = mountKeypad()
+    expect(wrapper.find('.search-grid-empty').text()).toBe(
+      'chat.noPromptsConfigured'
+    )
+    wrapper.unmount()
   })
 })

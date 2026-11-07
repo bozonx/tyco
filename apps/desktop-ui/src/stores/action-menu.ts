@@ -77,6 +77,16 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     openChatPromptsModal: (text: string) => {
       menuModalsStore.nextModal(MenuModals.CHAT_PROMPTS, { text })
     },
+    openChatPrompt: (text, prompt, profileId) => {
+      menuModalsStore.nextModal(MenuModals.QUICK_AI_REQUEST, {
+        text,
+        profileId,
+        prompt,
+        isPromptSent: Boolean(
+          desktopStore.userConfig.chatPrompts?.isSentImmediately
+        ),
+      })
+    },
     openFavoritesModal: () => {
       menuModalsStore.nextModal(MenuModals.FAVORITES, {})
     },
@@ -98,6 +108,8 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     transformations: () => desktopStore.userConfig.transformations?.items,
     styling: () => desktopStore.userConfig.styling?.items,
     profiles: () => aiProfilesStore.profiles,
+    areProfilesLoaded: () => aiProfilesStore.isLoaded,
+    chatPrompts: () => desktopStore.userConfig.chatPrompts?.items,
     openProfileChat: async (profileId, text) => {
       const profileChat = useProfileChatStore(profileId)
       await profileChat.attachToChat(text)

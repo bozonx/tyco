@@ -30,7 +30,6 @@ pub enum ActivationSource {
 }
 
 const SELECTION_ACTIONS_MODE_PREFIX: &str = "selectionActions:";
-const CHAT_PROMPTS_MODE_PREFIX: &str = "chatPrompts:";
 const CUSTOM_ACTION_MODE_PREFIX: &str = "customAction:";
 
 #[derive(Debug)]
@@ -41,8 +40,8 @@ pub struct Activation {
     pub selected_text: Option<String>,
     pub screenshots: Vec<crate::models::ChatImage>,
     pub screenshot: Option<crate::models::ChatImage>,
-    /// The page the menu opens on: of `actionPages` for `SelectionActions`, of
-    /// `chatPrompts.pages` for `ChatPrompts`; `None` or 0 for the first one.
+    /// The page of `actionPages` the menu opens on, for `SelectionActions`;
+    /// `None` or 0 for the first one.
     pub action_page_index: Option<usize>,
     /// The slot index of `customActionSlots`; only for `CustomAction`.
     pub custom_action_index: Option<usize>,
@@ -74,12 +73,6 @@ impl Activation {
         activation
     }
 
-    pub fn chat_prompts(page_index: usize, source: ActivationSource) -> Self {
-        let mut activation = Self::new(ActivationMode::ChatPrompts, source);
-        activation.action_page_index = Some(page_index);
-        activation
-    }
-
     pub fn custom_action(slot_index: usize, source: ActivationSource) -> Self {
         let mut activation = Self::new(ActivationMode::CustomAction, source);
         activation.custom_action_index = Some(slot_index);
@@ -87,7 +80,6 @@ impl Activation {
     }
 
     /// A mode, or `selectionActions:<page 1-based index>` for an action page,
-    /// or `chatPrompts:<page 1-based index>` for a prompt page,
     /// or `customAction:<slot 1-based index>` for a custom action slot.
     pub fn from_mode(value: &str, source: ActivationSource) -> Result<Self, AppError> {
         let pages = [
@@ -95,11 +87,6 @@ impl Activation {
                 ActivationMode::SelectionActions,
                 SELECTION_ACTIONS_MODE_PREFIX,
                 "selection-actions:",
-            ),
-            (
-                ActivationMode::ChatPrompts,
-                CHAT_PROMPTS_MODE_PREFIX,
-                "chat-prompts:",
             ),
             (
                 ActivationMode::CustomAction,
@@ -134,11 +121,6 @@ impl Activation {
         format!("{SELECTION_ACTIONS_MODE_PREFIX}{}", page_index + 1)
     }
 
-    /// The mode string that opens the prompts on `page_index` (0-based).
-    pub fn prompt_page_mode(page_index: usize) -> String {
-        format!("{CHAT_PROMPTS_MODE_PREFIX}{}", page_index + 1)
-    }
-
     /// The mode string that runs the custom action on `slot_index` (0-based).
     pub fn custom_action_mode(slot_index: usize) -> String {
         format!("{CUSTOM_ACTION_MODE_PREFIX}{}", slot_index + 1)
@@ -146,10 +128,7 @@ impl Activation {
 
     /// Whether the mode has pages a repeated activation steps through.
     fn has_pages(mode: ActivationMode) -> bool {
-        matches!(
-            mode,
-            ActivationMode::SelectionActions | ActivationMode::ChatPrompts
-        )
+        mode == ActivationMode::SelectionActions
     }
 
     /// Whether the activation takes the selection of the window it was made
@@ -318,14 +297,12 @@ mod tests {
     }
 
     #[test]
-    fn prompt_pages_parse_and_turn_only_the_open_prompts() {
-        let activation = Activation::from_mode("chat-prompts:3", ActivationSource::Cli).unwrap();
+    fn prompts_open_without_pages() {
+        let activation = Activation::from_mode("chat-prompts", ActivationSource::Cli).unwrap();
         assert_eq!(activation.mode, ActivationMode::ChatPrompts);
-        assert_eq!(activation.action_page_index, Some(2));
-        assert_eq!(Activation::prompt_page_mode(2), "chatPrompts:3");
-        assert!(Activation::from_mode("chatPrompts:x", ActivationSource::Cli).is_err());
-        assert!(activation.turns_open_action_page(Some(ActivationMode::ChatPrompts), true));
-        assert!(!activation.turns_open_action_page(Some(ActivationMode::SelectionActions), true));
+        assert_eq!(activation.action_page_index, None);
+        assert!(Activation::from_mode("chatPrompts:2", ActivationSource::Cli).is_err());
+        assert!(!activation.turns_open_action_page(Some(ActivationMode::ChatPrompts), true));
     }
 
     #[test]

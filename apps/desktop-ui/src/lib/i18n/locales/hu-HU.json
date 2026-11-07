@@ -698,7 +698,7 @@
     "chatHistoryRetentionDaysHint": "Egy csevegés akkor törlődik, ha ennyi ideig nem érkezett bele új üzenet. A régebbi csevegések azonnal törlődnek.",
     "chatHistoryRetentionNever": "Soha",
     "chatImageQuality": "Képminőség",
-    "chatImageQualityHint": "Minden csevegésre vonatkozik, a profilok csevegéseit is beleértve. Az új mellékletekre vonatkozik. A jobb minőség több memóriát és kontextust használ. A képek metaadatok nélküli WebP formátumban kerülnek elküldésre; a korlát 24 MP és tömörítés után 5 MB.",
+    "chatImageQualityHint": "Minden csevegés összes új mellékletére érvényes. A képekről törlődnek az EXIF metaadatok, és WebP formátumba konvertálódnak (korlát: legfeljebb 24 MP és tömörítés után 5 MB). A Kiegyensúlyozott (2048 px) 1:1 arányban megőrzi a Full HD képernyőképeket, a Takarékos (1024 px) tokeneket spórol, a Maximális (legfeljebb 8000 px) pedig megtartja az eredeti felbontást.",
     "chatInfo": "Gyors AI-csevegés a mindennapi feladatokhoz. Az izolált szerepkörökkel és eszközökkel rendelkező AI-profilokkal ellentétben ez egy univerzális beszélgetés, amely nem kötődik konkrét profilhoz. Feltehet kérdéseket, használhatja a kijelölt szöveget kontextusként, csatolhat képeket, beállíthat általános rendszerpromptot és kezelheti a helyi csevegési előzményeket.",
     "chatPrompt": "Fő prompt",
     "chatPromptInfo": "A csevegés utasításaihoz adódik, ha nincs kiválasztva profil a csevegésben.",
@@ -796,7 +796,7 @@
       "voiceCommands": "Hangparancsok",
       "selectionActionsPage2": "Műveletek: 2. oldal",
       "selectionActionsPage3": "Műveletek: 3. oldal",
-      "chatPrompts": "Promptok: 1. oldal",
+      "chatPrompts": "Promptok",
       "selectionActionsPage4": "Műveletek: 4. oldal",
       "selectionActionsPage5": "Műveletek: 5. oldal",
       "favorites": "Kedvencek",
@@ -804,10 +804,6 @@
       "voiceQuickAiRequest": "Hangalapú gyors MI kérés",
       "screenshotQuickAiRequest": "Képernyőkép és kérdés az MI-nek",
       "voiceScreenshotQuickAiRequest": "Képernyőkép és hangos kérdés az MI-nek",
-      "chatPromptsPage2": "Promptok: 2. oldal",
-      "chatPromptsPage3": "Promptok: 3. oldal",
-      "chatPromptsPage4": "Promptok: 4. oldal",
-      "chatPromptsPage5": "Promptok: 5. oldal",
       "customAction1": "Egyéni művelet 1",
       "customAction2": "Egyéni művelet 2",
       "customAction3": "Egyéni művelet 3",
@@ -831,7 +827,7 @@
     },
     "hotkeysMissing": "Néhány billentyűparancsot eltávolítottak a rendszerbeállításokban, ezért nem működnek. Az „Újraregisztrálás” gombbal visszaállíthatja őket.",
     "hotkeysTab": "Billentyűparancsok",
-    "imageQualityBalanced": "Kiegyensúlyozott – legfeljebb 1568 px",
+    "imageQualityBalanced": "Kiegyensúlyozott – legfeljebb 2048 px",
     "imageQualityEconomy": "Takarékos – legfeljebb 1024 px",
     "imageQualityOriginal": "Maximális – legfeljebb 8000 px",
     "inlineCorrectionExternalHint": "Futtassa ezt a parancsot szkriptből vagy rendszerszintű billentyűparancsból. D-Bus: az org.tyco.Interface CorrectSelection metódusa.",
@@ -854,7 +850,8 @@
       "transformation": "Szövegátalakítás",
       "translation": "Fordítás",
       "unavailable": "Nem érhető el",
-      "profiles": "Profilok"
+      "profiles": "Profilok",
+      "chatPrompts": "Promptok"
     },
     "mainActionProfileRemoved": "Törölt profil",
     "mainActionStylingRemoved": "Törölt szövegstílus",
@@ -1219,7 +1216,7 @@
     "webJinaApiKeyHint": "Opcionális. Kulcs nélkül a kérések az ingyenes szintet használják megosztott korlátokkal.",
     "chatPromptsTab": "Csevegési prompt-sablonok",
     "chatPromptsNavTab": "Csevegési promptek",
-    "chatPromptsHint": "Promptoldalak a gyors MI-kérésekhez. Minden oldal a saját profiljával fut, minden prompt a saját billentyűjével indul. A kártyák húzásával módosíthatja a billentyűket.",
+    "chatPromptsHint": "Promptok gyors MI-kérésekhez. A profillal rendelkező prompt abban a profilban fut, és csak annak csevegéseiben jelenik meg; a profil nélküli prompt „Kérdezd az MI-t” módon fut, és minden csevegésben elérhető. Az első 15 prompt billentyűt kap a promptmenüben; a sorrend módosításához húzza a kártyákat.",
     "prompt": "Prompt",
     "sectionWebSearch": "Webes keresés ágenseknek",
     "webSearchSectionHint": "Az AI modellek és profilok által használt webes keresési és oldalolvasási eszközök beállításai.",
@@ -1237,12 +1234,6 @@
     "searchFavoritesPlaceholder": "Kedvencek keresése…",
     "hotkeyDescriptions": {},
     "chatPromptsSentImmediately": "A prompt azonnali küldése",
-    "addPromptPage": "Oldal hozzáadása",
-    "promptPageProfile": "Profil",
-    "movePromptPageBack": "Oldal mozgatása hátra",
-    "movePromptPageForward": "Oldal mozgatása előre",
-    "removePromptPage": "Oldal eltávolítása",
-    "removePromptPageConfirm": "Eltávolítja ezt az oldalt a promptjaival együtt?",
     "historyTab": "Előzmények",
     "customActionsTitle": "Egyéni műveletek",
     "customActionsInfo": "Rendeljen hozzá globális billentyűparancsokat bármely művelet közvetlen futtatásához.",
@@ -1252,7 +1243,10 @@
     "chatHistoryHint": "A gyorskérésekkel együtt. A profilok csevegései a profil mappájában vannak, és az „MI-profilok” lapon állíthatók.",
     "chatQuickRequestsSaved": "Gyorskérések mentése",
     "chatQuickRequestsSavedInfo": "A gyorskérések külön csoportként jelennek meg a csevegések között. A csevegésben folytatott kérés mindig mentésre kerül.",
-    "chatStorageLink": "A csevegések tárolása ezen a lapon állítható:"
+    "chatStorageLink": "A csevegések tárolása ezen a lapon állítható:",
+    "addChatPrompt": "Prompt hozzáadása",
+    "chatPromptProfile": "Profil",
+    "mainActionPromptRemoved": "Törölt prompt"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
@@ -1494,12 +1488,14 @@
     "addArea": "Területképernyőkép hozzáadása"
   },
   "chatPrompts": {
-    "pageLabel": "{page} · {profile}",
-    "missingProfile": "Nincs profil",
-    "pages": "Promptoldalak",
-    "noPages": "Még nincsenek promptoldalak. Adjon hozzá egyet a beállításokban.",
-    "pageNotFound": "A(z) {page}. promptoldal nem létezik.",
-    "profileMissing": "Ennek az oldalnak a profilja már nem létezik. Válasszon másikat a beállításokban.",
-    "openSettings": "Beállítások megnyitása"
+    "missingProfile": "Törölt profil",
+    "profileMissing": "A prompt profilja törölve lett. Amíg nem választ másikat, a prompt profil nélkül fut.",
+    "openSettings": "Beállítások megnyitása",
+    "searchPlaceholder": "Promptok keresése…",
+    "noMatches": "Egy prompt sem felel meg a keresésnek",
+    "empty": "Még nincsenek promptok",
+    "emptyHint": "Adjon hozzá promptokat a beállításokban.",
+    "everyProfile": "Profil nélkül (Kérdés az AI-hoz)",
+    "actionName": "Prompt: {prompt}"
   }
 }

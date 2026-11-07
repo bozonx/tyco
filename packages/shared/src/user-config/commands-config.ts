@@ -260,6 +260,12 @@ export interface StylingMainAction {
   stylingId: string
 }
 
+/** A prompt of `chatPrompts`, by its `id` */
+export interface ChatPromptMainAction {
+  type: 'chatPrompt'
+  promptId: string
+}
+
 /** A translation into one of `translation.targetLanguages` */
 export interface TranslationMainAction {
   type: 'translation'
@@ -294,6 +300,7 @@ export type MainActionConfig =
   | CommandMainAction
   | TransformationMainAction
   | StylingMainAction
+  | ChatPromptMainAction
   | TranslationMainAction
   | ProfileChatMainAction
   | ProfileMainAction

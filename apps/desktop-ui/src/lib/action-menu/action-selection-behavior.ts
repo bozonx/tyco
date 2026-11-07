@@ -61,6 +61,7 @@ export function resolveActionSelectionBehavior(
       return { disabled: false, forcedValue: null }
 
     case 'profileChat':
+    case 'chatPrompt':
       return { disabled: false, forcedValue: null }
 
     case 'standard':

@@ -18,7 +18,7 @@ export { MAX_CHAT_IMAGES_COUNT } from '@tyco/shared'
 const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024
 /** The longest side of an image sent at the economy and balanced qualities */
 const ECONOMY_IMAGE_DIMENSION = 1024
-const BALANCED_IMAGE_DIMENSION = 1568
+const BALANCED_IMAGE_DIMENSION = 2048
 /**
  * The context an image takes, estimated conservatively: tiles of this size,
  * each worth some tokens, plus a fixed part, and never less than the minimum.

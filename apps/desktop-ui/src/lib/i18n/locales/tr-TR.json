@@ -698,7 +698,7 @@
     "chatHistoryRetentionDaysHint": "Bu süre boyunca yeni mesaj gelmeyen sohbet silinir. Daha eski sohbetler hemen silinir.",
     "chatHistoryRetentionNever": "Asla",
     "chatImageQuality": "Görsel kalitesi",
-    "chatImageQualityHint": "Profil sohbetleri dahil tüm sohbetlere uygulanır. Yeni eklere uygulanır. Daha yüksek kalite daha fazla bellek ve bağlam kullanır. Görseller meta veri olmadan WebP olarak gönderilir; sınırlar sıkıştırma sonrası 24 MP ve 5 MB.",
+    "chatImageQualityHint": "Tüm sohbetlerdeki tüm yeni eklere uygulanır. Görsellerden EXIF meta verileri temizlenir ve WebP biçimine dönüştürülür (sıkıştırma sonrası en fazla 24 MP ve 5 MB sınırları). Dengeli (2048 px) Full HD ekran görüntülerini 1:1 korur, Ekonomik (1024 px) belirteç tasarrufu sağlar ve En yüksek (8000 px'e kadar) orijinal çözünürlüğü korur.",
     "chatInfo": "Günlük görevler için hızlı bir yapay zeka sohbeti. İzole rollere ve araçlara sahip yapay zeka profillerinin aksine bu, belirli bir profile bağlı olmayan evrensel bir sohbettir. Soru sorabilir, seçili metni bağlam olarak kullanabilir, görsel ekleyebilir, genel bir sistem istemi ayarlayabilir ve yerel sohbet geçmişini yönetebilirsiniz.",
     "chatPrompt": "Ana istem",
     "chatPromptInfo": "Sohbette profil seçilmediğinde sohbet talimatlarına eklenir.",
@@ -796,7 +796,7 @@
       "voiceCommands": "Sesli komutlar",
       "selectionActionsPage2": "Eylemler: sayfa 2",
       "selectionActionsPage3": "Eylemler: sayfa 3",
-      "chatPrompts": "İstemler: sayfa 1",
+      "chatPrompts": "İstemler",
       "selectionActionsPage4": "Eylemler: sayfa 4",
       "selectionActionsPage5": "Eylemler: sayfa 5",
       "favorites": "Favoriler",
@@ -804,10 +804,6 @@
       "voiceQuickAiRequest": "Sesli hızlı YZ isteği",
       "screenshotQuickAiRequest": "Ekran görüntüsü ve yapay zekâ sorusu",
       "voiceScreenshotQuickAiRequest": "Ekran görüntüsü ve sesli yapay zekâ sorusu",
-      "chatPromptsPage2": "İstemler: sayfa 2",
-      "chatPromptsPage3": "İstemler: sayfa 3",
-      "chatPromptsPage4": "İstemler: sayfa 4",
-      "chatPromptsPage5": "İstemler: sayfa 5",
       "customAction1": "Özel eylem 1",
       "customAction2": "Özel eylem 2",
       "customAction3": "Özel eylem 3",
@@ -831,7 +827,7 @@
     },
     "hotkeysMissing": "Bazı kısayollar sistem ayarlarında silindi ve çalışmıyor. Geri getirmek için «Yeniden kaydet»i kullanın.",
     "hotkeysTab": "Kısayollar",
-    "imageQualityBalanced": "Dengeli — en fazla 1568 px",
+    "imageQualityBalanced": "Dengeli — en fazla 2048 px",
     "imageQualityEconomy": "Ekonomik — en fazla 1024 px",
     "imageQualityOriginal": "En yüksek — 8000 px’e kadar",
     "inlineCorrectionExternalHint": "Bu komutu bir betikten veya sistem kısayolundan çalıştırın. D-Bus: org.tyco.Interface arayüzünün CorrectSelection yöntemi.",
@@ -854,7 +850,8 @@
       "transformation": "Metin dönüştürmeleri",
       "translation": "Çeviri",
       "unavailable": "Kullanılamayanlar",
-      "profiles": "Profiller"
+      "profiles": "Profiller",
+      "chatPrompts": "İstemler"
     },
     "mainActionProfileRemoved": "Silinen profil",
     "mainActionStylingRemoved": "Silinen metin stili",
@@ -1219,7 +1216,7 @@
     "webJinaApiKeyHint": "İsteğe bağlı. Anahtar olmadan istekler paylaşılan hız sınırlarına sahip ücretsiz katmanı kullanır.",
     "chatPromptsTab": "Sohbet istemi önayarları",
     "chatPromptsNavTab": "Sohbet istemleri",
-    "chatPromptsHint": "Hızlı yapay zekâ istekleri için istem sayfaları. Her sayfa kendi profiliyle çalışır, her istem kendi tuşuyla başlar. Tuşları değiştirmek için kartları sürükleyin.",
+    "chatPromptsHint": "Hızlı yapay zekâ istekleri için istemler. Profili olan bir istem o profilde çalışır ve yalnızca onun sohbetlerinde sunulur; profili olmayan bir istem “Yapay zekâya sor” olarak çalışır ve her sohbette sunulur. İlk 15 istem, istem menüsünde tuş alır; sırayı değiştirmek için kartları sürükleyin.",
     "prompt": "İstem",
     "sectionWebSearch": "Ajanlar için web araması",
     "webSearchSectionHint": "Yapay zeka modelleri ve profilleri tarafından kullanılan web araması ve sayfa okuma araçları için ayarlar.",
@@ -1237,12 +1234,6 @@
     "searchFavoritesPlaceholder": "Favorileri ara…",
     "hotkeyDescriptions": {},
     "chatPromptsSentImmediately": "İstemi hemen gönder",
-    "addPromptPage": "Sayfa ekle",
-    "promptPageProfile": "Profil",
-    "movePromptPageBack": "Sayfayı geri taşı",
-    "movePromptPageForward": "Sayfayı ileri taşı",
-    "removePromptPage": "Sayfayı kaldır",
-    "removePromptPageConfirm": "Bu sayfa istemleriyle birlikte kaldırılsın mı?",
     "historyTab": "Geçmiş",
     "customActionsTitle": "Özel eylemler",
     "customActionsInfo": "Herhangi bir eylemi doğrudan çalıştırmak için genel kısayollar atayın.",
@@ -1252,7 +1243,10 @@
     "chatHistoryHint": "Hızlı istekler dahil. Profil sohbetleri profil klasöründe saklanır ve “Yapay Zekâ Profilleri” sekmesinden ayarlanır.",
     "chatQuickRequestsSaved": "Hızlı istekleri kaydet",
     "chatQuickRequestsSavedInfo": "Hızlı istekler sohbetlerde ayrı bir grup olarak gösterilir. Sohbette sürdürülen bir istek her zaman kaydedilir.",
-    "chatStorageLink": "Sohbetlerin saklanması şu sekmeden ayarlanır:"
+    "chatStorageLink": "Sohbetlerin saklanması şu sekmeden ayarlanır:",
+    "addChatPrompt": "İstem ekle",
+    "chatPromptProfile": "Profil",
+    "mainActionPromptRemoved": "Silinen istem"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
@@ -1494,12 +1488,14 @@
     "addArea": "Alan ekran görüntüsü ekle"
   },
   "chatPrompts": {
-    "pageLabel": "{page} · {profile}",
-    "missingProfile": "Profil yok",
-    "pages": "İstem sayfaları",
-    "noPages": "Henüz istem sayfası yok. Ayarlardan bir tane ekleyin.",
-    "pageNotFound": "{page}. istem sayfası yok.",
-    "profileMissing": "Bu sayfanın profili artık mevcut değil. Ayarlardan başka bir profil seçin.",
-    "openSettings": "Ayarları aç"
+    "missingProfile": "Silinen profil",
+    "profileMissing": "Bu istemin profili silindi. Başka bir profil seçene kadar istem profilsiz çalışır.",
+    "openSettings": "Ayarları aç",
+    "searchPlaceholder": "İstemlerde ara…",
+    "noMatches": "Aramayla eşleşen istem yok",
+    "empty": "Henüz istem yok",
+    "emptyHint": "İstemleri ayarlardan ekleyin.",
+    "everyProfile": "Profil yok (Yapay Zekaya Soru)",
+    "actionName": "İstem: {prompt}"
   }
 }

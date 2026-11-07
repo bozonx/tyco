@@ -275,10 +275,6 @@ const MODE_ORDER: HotkeyId[] = [
   'screenshotQuickAiRequest',
   'voiceScreenshotQuickAiRequest',
   'chatPrompts',
-  'chatPromptsPage2',
-  'chatPromptsPage3',
-  'chatPromptsPage4',
-  'chatPromptsPage5',
   'favorites',
   'history',
 ]
@@ -326,12 +322,8 @@ const inlineId = INLINE_CORRECTION_HOTKEY_ID
 const openCommandForMode = (mode: string) => {
   if (mode === 'selectionActions') return 'tyco-ctl open selection-actions'
   if (mode === 'chatPrompts') return 'tyco-ctl open chat-prompts'
-  const page = /^(selectionActions|chatPrompts)Page(\d)$/.exec(mode)
-  if (page) {
-    const target =
-      page[1] === 'chatPrompts' ? 'chat-prompts' : 'selection-actions'
-    return `tyco-ctl open ${target}:${page[2]}`
-  }
+  const page = /^selectionActionsPage(\d)$/.exec(mode)
+  if (page) return `tyco-ctl open selection-actions:${page[1]}`
   return `tyco-ctl open ${mode}`
 }
 

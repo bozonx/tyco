@@ -19,6 +19,10 @@ import {
   standardActionGroup,
 } from '../lib/action-menu/main-action-options'
 import { isMainActionVisible } from '../lib/action-menu/main-actions'
+import {
+  chatPromptLabel,
+  describeChatPrompts,
+} from '../lib/chat-prompts/chat-prompts'
 import { normalizeCommands } from '../lib/commands/command-config'
 import { commandLabel, isMenuCommand } from '../lib/commands/command-runtime'
 import { resolveInstalledPlugins } from '../lib/plugins/plugin-settings'
@@ -79,6 +83,13 @@ export function useMainActionChoices(
     userConfig.value.styling.items.filter((item) => item.name.trim())
   )
 
+  const prompts = computed(() =>
+    describeChatPrompts(userConfig.value.chatPrompts.items, {
+      profiles: aiProfilesStore.profiles,
+      areProfilesLoaded: aiProfilesStore.isLoaded,
+    })
+  )
+
   const isOffered = (command: CommandConfig) =>
     slotIds.value.has(optionId({ type: 'command', commandId: command.id })) ||
     !duplicatesDirectChoice(command, {
@@ -98,6 +109,13 @@ export function useMainActionChoices(
         group: { kind: 'profile' as const, profileId: profile.id },
       }))
     ),
+    ...prompts.value.map((view) => ({
+      config: { type: 'chatPrompt' as const, promptId: view.prompt.id },
+      name: t('chatPrompts.actionName', { prompt: view.label }),
+      group: view.runProfileId
+        ? { kind: 'profile' as const, profileId: view.runProfileId }
+        : { kind: 'chatPrompts' as const },
+    })),
     ...STANDARD_ACTION_IDS.map((actionId) => ({
       config: { type: 'standard' as const, actionId },
       name:
@@ -178,11 +196,13 @@ export function useMainActionChoices(
       case 'profile': {
         const profile = aiProfilesStore.getProfile(group.profileId)
         return profile
-          ? `${t('settings.promptPageProfile')}: ${profile.name}`
+          ? `${t('settings.chatPromptProfile')}: ${profile.name}`
           : t('settings.mainActionGroups.profiles')
       }
       case 'profiles':
         return t('settings.mainActionGroups.profiles')
+      case 'chatPrompts':
+        return t('settings.mainActionGroups.chatPrompts')
       case 'translation':
         return t('settings.mainActionGroups.translation')
       case 'aiCommands':
@@ -220,6 +240,14 @@ export function useMainActionChoices(
     if (slot.type === 'transformation')
       return t('settings.mainActionTransformationRemoved')
     if (slot.type === 'styling') return t('settings.mainActionStylingRemoved')
+    if (slot.type === 'chatPrompt') {
+      const prompt = userConfig.value.chatPrompts.items.find(
+        (item) => item.id === slot.promptId
+      )
+      return prompt
+        ? t('chatPrompts.actionName', { prompt: chatPromptLabel(prompt) })
+        : t('settings.mainActionPromptRemoved')
+    }
     if (slot.type === 'translation') return slot.language
     if (slot.type !== 'command') return slot.actionId
     const command = commands.value.find((item) => item.id === slot.commandId)

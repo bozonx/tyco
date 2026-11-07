@@ -55,10 +55,7 @@ pub fn activate_mode(
     }
     let mut activation = Activation::new(mode, ActivationSource::Ui);
     if let Some(index) = action_page_index {
-        if !matches!(
-            mode,
-            ActivationMode::SelectionActions | ActivationMode::ChatPrompts
-        ) {
+        if mode != ActivationMode::SelectionActions {
             return Err(AppError::InvalidInput("Invalid action page".into()));
         }
         activation.action_page_index = Some(index);

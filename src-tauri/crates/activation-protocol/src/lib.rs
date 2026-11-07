@@ -73,8 +73,6 @@ pub fn is_start_mode(value: &str) -> bool {
     let rest = [
         "selectionActions:",
         "selection-actions:",
-        "chatPrompts:",
-        "chat-prompts:",
         "customAction:",
         "custom-action:",
     ]

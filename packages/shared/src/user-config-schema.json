@@ -193,10 +193,6 @@
         "selectionActionsPage3": { "type": "string", "default": "" },
         "selectionActionsPage4": { "type": "string", "default": "" },
         "selectionActionsPage5": { "type": "string", "default": "" },
-        "chatPromptsPage2": { "type": "string", "default": "" },
-        "chatPromptsPage3": { "type": "string", "default": "" },
-        "chatPromptsPage4": { "type": "string", "default": "" },
-        "chatPromptsPage5": { "type": "string", "default": "" },
         "customAction1": { "type": "string", "default": "" },
         "customAction2": { "type": "string", "default": "" },
         "customAction3": { "type": "string", "default": "" },
@@ -227,10 +223,6 @@
         "history",
         "voiceCommands",
         "selectionCorrection",
-        "chatPromptsPage2",
-        "chatPromptsPage3",
-        "chatPromptsPage4",
-        "chatPromptsPage5",
         "customAction1",
         "customAction2",
         "customAction3",
@@ -472,6 +464,18 @@
                 {
                   "type": "object",
                   "properties": {
+                    "type": { "enum": ["chatPrompt"] },
+                    "promptId": {
+                      "type": "string",
+                      "default": "",
+                      "minLength": 1
+                    }
+                  },
+                  "required": ["type", "promptId"]
+                },
+                {
+                  "type": "object",
+                  "properties": {
                     "type": { "enum": ["translation"] },
                     "language": {
                       "type": "string",
@@ -582,6 +586,14 @@
                   "stylingId": { "type": "string", "minLength": 1 }
                 },
                 "required": ["type", "stylingId"]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": { "enum": ["chatPrompt"] },
+                  "promptId": { "type": "string", "minLength": 1 }
+                },
+                "required": ["type", "promptId"]
               },
               {
                 "type": "object",
@@ -1015,62 +1027,28 @@
       "type": "object",
       "properties": {
         "isSentImmediately": { "type": "boolean", "default": false },
-        "pages": {
+        "items": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "profileId": { "type": "string", "default": "" },
-              "items": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "default": "",
-                      "minLength": 1,
-                      "maxLength": 64,
-                      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
-                    },
-                    "name": { "type": "string", "default": "" },
-                    "rule": { "type": "string", "default": "" }
-                  },
-                  "required": ["id", "name", "rule"]
-                },
-                "default": []
+              "id": {
+                "type": "string",
+                "default": "",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
               },
-              "slots": {
-                "type": "object",
-                "propertyNames": {
-                  "enum": [
-                    "q",
-                    "w",
-                    "e",
-                    "r",
-                    "t",
-                    "a",
-                    "s",
-                    "d",
-                    "f",
-                    "g",
-                    "z",
-                    "x",
-                    "c",
-                    "v",
-                    "b"
-                  ]
-                },
-                "additionalProperties": { "type": "string", "minLength": 1 },
-                "default": {}
-              }
+              "name": { "type": "string", "default": "" },
+              "rule": { "type": "string", "default": "" },
+              "profileId": { "type": "string", "default": "" }
             },
-            "required": ["profileId", "items", "slots"]
+            "required": ["id", "name", "rule", "profileId"]
           },
           "default": []
         }
       },
-      "required": ["isSentImmediately", "pages"],
+      "required": ["isSentImmediately", "items"],
       "defaultPath": "chatPrompts"
     },
     "favorites": {

@@ -695,7 +695,7 @@
     "chatHistoryRetentionDaysHint": "Chat se smaže, když v něm takto dlouho nepřibyla nová zpráva. Starší chaty se smažou ihned.",
     "chatHistoryRetentionNever": "Nikdy",
     "chatImageQuality": "Kvalita obrázků",
-    "chatImageQualityHint": "Platí pro všechny chaty včetně chatů profilů. Platí pro nové přílohy. Vyšší kvalita zabere více paměti a kontextu. Obrázky se posílají jako WebP bez metadat; limity jsou 24 MP a 5 MB po kompresi.",
+    "chatImageQualityHint": "Platí pro všechny nové přílohy ve všech chatech. Z obrázků se odstraní metadata EXIF a převedou se do WebP (limity jsou do 24 MP a 5 MB po kompresi). Vyvážená (2048 px) zachová snímky obrazovky Full HD 1:1, Úsporná (1024 px) šetří tokeny a Maximální (do 8000 px) zachová původní rozlišení.",
     "chatInfo": "Rychlý chat s umělou inteligencí pro každodenní úkoly. Na rozdíl od profilů AI s oddělenými rolemi a nástroji jde o univerzální konverzaci bez vazby na konkrétní profil. Můžete pokládat dotazy, použít vybraný text jako kontext, přikládat obrázky, nastavit obecný systémový prompt a spravovat lokální historii chatu.",
     "chatPrompt": "Hlavní prompt",
     "chatPromptInfo": "Přidává se k instrukcím chatu, pokud v něm není vybrán profil.",
@@ -793,7 +793,7 @@
       "voiceCommands": "Hlasové příkazy",
       "selectionActionsPage2": "Akce: stránka 2",
       "selectionActionsPage3": "Akce: stránka 3",
-      "chatPrompts": "Prompty: stránka 1",
+      "chatPrompts": "Prompty",
       "selectionActionsPage4": "Akce: stránka 4",
       "selectionActionsPage5": "Akce: stránka 5",
       "favorites": "Oblíbené",
@@ -801,10 +801,6 @@
       "voiceQuickAiRequest": "Hlasový rychlý dotaz na AI",
       "screenshotQuickAiRequest": "Snímek obrazovky a dotaz AI",
       "voiceScreenshotQuickAiRequest": "Snímek obrazovky a hlasový dotaz AI",
-      "chatPromptsPage2": "Prompty: stránka 2",
-      "chatPromptsPage3": "Prompty: stránka 3",
-      "chatPromptsPage4": "Prompty: stránka 4",
-      "chatPromptsPage5": "Prompty: stránka 5",
       "customAction1": "Vlastní akce 1",
       "customAction2": "Vlastní akce 2",
       "customAction3": "Vlastní akce 3",
@@ -828,7 +824,7 @@
     },
     "hotkeysMissing": "Některé zkratky byly odstraněny v nastavení systému a nefungují. Vraťte je tlačítkem „Znovu zaregistrovat“.",
     "hotkeysTab": "Klávesové zkratky",
-    "imageQualityBalanced": "Vyvážená – do 1568 px",
+    "imageQualityBalanced": "Vyvážená – do 2048 px",
     "imageQualityEconomy": "Úsporná – do 1024 px",
     "imageQualityOriginal": "Maximální – do 8000 px",
     "inlineCorrectionExternalHint": "Spouštějte tento příkaz ze skriptu nebo systémové zkratky. D-Bus: metoda CorrectSelection rozhraní org.tyco.Interface.",
@@ -851,7 +847,8 @@
       "transformation": "Transformace textu",
       "translation": "Překlad",
       "unavailable": "Nedostupné",
-      "profiles": "Profily"
+      "profiles": "Profily",
+      "chatPrompts": "Prompty"
     },
     "mainActionProfileRemoved": "Smazaný profil",
     "mainActionStylingRemoved": "Smazaný styl textu",
@@ -1216,7 +1213,7 @@
     "webJinaApiKeyHint": "Volitelné. Bez klíče požadavky využívají bezplatný tarif se sdílenými limity.",
     "chatPromptsTab": "Předvolby promptů chatu",
     "chatPromptsNavTab": "Prompty chatu",
-    "chatPromptsHint": "Stránky promptů pro rychlé dotazy na AI. Každá stránka používá svůj profil, každý prompt se spouští vlastní klávesou. Přetažením karet změníte klávesy.",
+    "chatPromptsHint": "Prompty pro rychlé dotazy na AI. Prompt s profilem běží v tomto profilu a nabízí se jen v jeho chatech; prompt bez profilu běží jako „Zeptat se AI“ a nabízí se v každém chatu. Prvních 15 promptů dostane klávesy v nabídce promptů; přetažením karet změníte pořadí.",
     "prompt": "Prompt",
     "sectionWebSearch": "Vyhledávání na webu pro agenty",
     "webSearchSectionHint": "Nastavení nástrojů pro vyhledávání na webu a čtení stránek používaných modely a profily AI.",
@@ -1234,12 +1231,6 @@
     "searchFavoritesPlaceholder": "Hledat v oblíbených...",
     "hotkeyDescriptions": {},
     "chatPromptsSentImmediately": "Odeslat prompt hned",
-    "addPromptPage": "Přidat stránku",
-    "promptPageProfile": "Profil",
-    "movePromptPageBack": "Posunout stránku zpět",
-    "movePromptPageForward": "Posunout stránku dopředu",
-    "removePromptPage": "Odebrat stránku",
-    "removePromptPageConfirm": "Odebrat tuto stránku i s jejími prompty?",
     "historyTab": "Historie",
     "customActionsTitle": "Vlastní akce",
     "customActionsInfo": "Přiřaďte globální klávesové zkratky pro přímé spuštění libovolné akce.",
@@ -1249,7 +1240,10 @@
     "chatHistoryHint": "Včetně rychlých dotazů. Chaty profilů se ukládají do složky profilu a nastavují se na kartě „Profily AI“.",
     "chatQuickRequestsSaved": "Ukládat rychlé dotazy",
     "chatQuickRequestsSavedInfo": "Rychlé dotazy se v chatech zobrazují jako samostatná skupina. Dotaz, který pokračuje v chatu, se uloží vždy.",
-    "chatStorageLink": "Ukládání chatů se nastavuje na kartě"
+    "chatStorageLink": "Ukládání chatů se nastavuje na kartě",
+    "addChatPrompt": "Přidat prompt",
+    "chatPromptProfile": "Profil",
+    "mainActionPromptRemoved": "Smazaný prompt"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
@@ -1491,12 +1485,14 @@
     "addArea": "Přidat snímek oblasti"
   },
   "chatPrompts": {
-    "pageLabel": "{page} · {profile}",
-    "missingProfile": "Žádný profil",
-    "pages": "Stránky promptů",
-    "noPages": "Zatím tu nejsou žádné stránky promptů. Přidejte je v nastavení.",
-    "pageNotFound": "Stránka promptů {page} neexistuje.",
-    "profileMissing": "Profil této stránky už neexistuje. Vyberte jiný v nastavení.",
-    "openSettings": "Otevřít nastavení"
+    "missingProfile": "Smazaný profil",
+    "profileMissing": "Profil tohoto promptu byl smazán. Dokud nevyberete jiný, prompt běží bez profilu.",
+    "openSettings": "Otevřít nastavení",
+    "searchPlaceholder": "Hledat prompty…",
+    "noMatches": "Hledání neodpovídá žádný prompt",
+    "empty": "Zatím žádné prompty",
+    "emptyHint": "Přidejte prompty v nastavení.",
+    "everyProfile": "Bez profilu (Dotaz na AI)",
+    "actionName": "Prompt: {prompt}"
   }
 }

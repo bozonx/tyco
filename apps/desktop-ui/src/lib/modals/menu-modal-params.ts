@@ -53,7 +53,7 @@ export interface QuickAiRequestMenuParams {
   shortcutsDisabled?: boolean
   inputMode?: 'text' | 'voice'
   profileId?: string | null
-  /** The request the input starts with, e.g. from a prompt page */
+  /** The request the input starts with, e.g. from a prompt */
   prompt?: string
   /** Sends `prompt` at once instead of leaving it in the input */
   isPromptSent?: boolean
@@ -73,8 +73,6 @@ export interface StylingMenuParams {
 export interface ChatPromptsMenuParams {
   text?: string
   shortcutsDisabled?: boolean
-  /** The prompt page the menu opens on, 0-based */
-  pageIndex?: number
 }
 export interface FavoritesMenuParams {
   shortcutsDisabled?: boolean

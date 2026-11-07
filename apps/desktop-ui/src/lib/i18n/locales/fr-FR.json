@@ -701,7 +701,7 @@
     "chatHistoryRetentionDaysHint": "Un chat est supprimé lorsqu’il n’a reçu aucun nouveau message pendant cette durée. Les chats plus anciens sont supprimés immédiatement.",
     "chatHistoryRetentionNever": "Jamais",
     "chatImageQuality": "Qualité des images",
-    "chatImageQualityHint": "S’applique à tous les chats, y compris ceux des profils. S’applique aux nouvelles pièces jointes. Une qualité plus élevée consomme plus de mémoire et de contexte. Les images sont envoyées en WebP sans métadonnées ; les limites sont de 24 Mpx et 5 Mo après compression.",
+    "chatImageQualityHint": "S’applique à toutes les nouvelles pièces jointes dans tous les chats. Les métadonnées EXIF sont supprimées et les images sont converties en WebP (limites jusqu’à 24 Mpx et 5 Mo après compression). Équilibrée (2048 px) préserve les captures Full HD 1:1, Économique (1024 px) économise les jetons et Maximale (jusqu’à 8000 px) conserve la résolution d’origine.",
     "chatInfo": "Un chat IA rapide pour les tâches quotidiennes. Contrairement aux profils IA avec des rôles et outils isolés, il s'agit d'une conversation universelle sans profil spécifique. Vous pouvez poser des questions, utiliser le texte sélectionné comme contexte, joindre des images, configurer une instruction système générale et gérer l'historique local des discussions.",
     "chatPrompt": "Prompt principal",
     "chatPromptInfo": "Ajouté aux instructions du chat lorsqu’aucun profil n’y est sélectionné.",
@@ -799,7 +799,7 @@
       "voiceCommands": "Commandes vocales",
       "selectionActionsPage2": "Actions : page 2",
       "selectionActionsPage3": "Actions : page 3",
-      "chatPrompts": "Prompts : page 1",
+      "chatPrompts": "Prompts",
       "selectionActionsPage4": "Actions : page 4",
       "selectionActionsPage5": "Actions : page 5",
       "favorites": "Favoris",
@@ -807,10 +807,6 @@
       "voiceQuickAiRequest": "Requête vocale IA rapide",
       "screenshotQuickAiRequest": "Capture d’écran et question à l’IA",
       "voiceScreenshotQuickAiRequest": "Capture d’écran et question vocale à l’IA",
-      "chatPromptsPage2": "Prompts : page 2",
-      "chatPromptsPage3": "Prompts : page 3",
-      "chatPromptsPage4": "Prompts : page 4",
-      "chatPromptsPage5": "Prompts : page 5",
       "customAction1": "Action personnalisée 1",
       "customAction2": "Action personnalisée 2",
       "customAction3": "Action personnalisée 3",
@@ -834,7 +830,7 @@
     },
     "hotkeysMissing": "Certains raccourcis ont été supprimés dans les paramètres du système et ne fonctionnent pas. Utilisez « Réenregistrer » pour les rétablir.",
     "hotkeysTab": "Raccourcis",
-    "imageQualityBalanced": "Équilibrée : jusqu’à 1568 px",
+    "imageQualityBalanced": "Équilibrée : jusqu’à 2048 px",
     "imageQualityEconomy": "Économique : jusqu’à 1024 px",
     "imageQualityOriginal": "Maximale : jusqu’à 8000 px",
     "inlineCorrectionExternalHint": "Lancez cette commande depuis un script ou un raccourci système. D-Bus : méthode CorrectSelection de org.tyco.Interface.",
@@ -857,7 +853,8 @@
       "transformation": "Transformations de texte",
       "translation": "Traduction",
       "unavailable": "Indisponibles",
-      "profiles": "Profils"
+      "profiles": "Profils",
+      "chatPrompts": "Prompts"
     },
     "mainActionProfileRemoved": "Profil supprimé",
     "mainActionStylingRemoved": "Style de texte supprimé",
@@ -1222,7 +1219,7 @@
     "webJinaApiKeyHint": "Facultatif. Sans clé, les requêtes utilisent le niveau gratuit avec des limites partagées.",
     "chatPromptsTab": "Préréglages de prompts pour le chat",
     "chatPromptsNavTab": "Prompts de chat",
-    "chatPromptsHint": "Pages de prompts pour les requêtes IA rapides. Chaque page utilise son propre profil, chaque prompt se lance avec sa propre touche. Faites glisser les cartes pour changer les touches.",
+    "chatPromptsHint": "Prompts pour les requêtes IA rapides. Un prompt avec un profil s’exécute dans ce profil et n’est proposé que dans ses chats ; un prompt sans profil s’exécute comme « Demander à l’IA » et est proposé dans tous les chats. Les 15 premiers prompts reçoivent des touches dans le menu des prompts ; faites glisser les cartes pour changer l’ordre.",
     "prompt": "Prompt",
     "sectionWebSearch": "Recherche Web pour les agents",
     "webSearchSectionHint": "Paramètres de recherche Web et de lecture de pages utilisés par les modèles et profils d'IA.",
@@ -1240,12 +1237,6 @@
     "searchFavoritesPlaceholder": "Rechercher des favoris…",
     "hotkeyDescriptions": {},
     "chatPromptsSentImmediately": "Envoyer le prompt immédiatement",
-    "addPromptPage": "Ajouter une page",
-    "promptPageProfile": "Profil",
-    "movePromptPageBack": "Déplacer la page vers l’arrière",
-    "movePromptPageForward": "Déplacer la page vers l’avant",
-    "removePromptPage": "Supprimer la page",
-    "removePromptPageConfirm": "Supprimer cette page et ses prompts ?",
     "historyTab": "Historique",
     "customActionsTitle": "Actions personnalisées",
     "customActionsInfo": "Attribuez des raccourcis globaux pour exécuter directement n'importe quelle action.",
@@ -1255,7 +1246,10 @@
     "chatHistoryHint": "Y compris les requêtes rapides. Les discussions des profils sont stockées dans le dossier du profil et se règlent dans l’onglet « Profils IA ».",
     "chatQuickRequestsSaved": "Enregistrer les requêtes rapides",
     "chatQuickRequestsSavedInfo": "Les requêtes rapides apparaissent dans les discussions comme un groupe à part. Une requête poursuivie dans la discussion est toujours enregistrée.",
-    "chatStorageLink": "Le stockage des discussions se règle dans l’onglet"
+    "chatStorageLink": "Le stockage des discussions se règle dans l’onglet",
+    "addChatPrompt": "Ajouter un prompt",
+    "chatPromptProfile": "Profil",
+    "mainActionPromptRemoved": "Prompt supprimé"
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {
@@ -1497,12 +1491,14 @@
     "addArea": "Ajouter une capture de zone"
   },
   "chatPrompts": {
-    "pageLabel": "{page} · {profile}",
-    "missingProfile": "Aucun profil",
-    "pages": "Pages de prompts",
-    "noPages": "Aucune page de prompts. Ajoutez-en une dans les paramètres.",
-    "pageNotFound": "La page de prompts {page} n’existe pas.",
-    "profileMissing": "Le profil de cette page n’existe plus. Choisissez-en un autre dans les paramètres.",
-    "openSettings": "Ouvrir les paramètres"
+    "missingProfile": "Profil supprimé",
+    "profileMissing": "Le profil de ce prompt a été supprimé. Tant que vous n’en choisissez pas un autre, le prompt s’exécute sans profil.",
+    "openSettings": "Ouvrir les paramètres",
+    "searchPlaceholder": "Rechercher des prompts…",
+    "noMatches": "Aucun prompt ne correspond à la recherche",
+    "empty": "Aucun prompt pour l’instant",
+    "emptyHint": "Ajoutez des prompts dans les paramètres.",
+    "everyProfile": "Sans profil (Question à l'IA)",
+    "actionName": "Prompt : {prompt}"
   }
 }

@@ -701,7 +701,7 @@
     "chatHistoryRetentionDaysHint": "Chat se briše kad toliko dugo nema novih poruka. Stariji chatovi brišu se odmah.",
     "chatHistoryRetentionNever": "Nikad",
     "chatImageQuality": "Kvaliteta slike",
-    "chatImageQualityHint": "Vrijedi za sve chatove, uključujući chatove profila. Vrijedi za nove privitke. Viša kvaliteta troši više memorije i konteksta. Slike se šalju kao WebP bez metapodataka; ograničenja su 24 MP i 5 MB nakon sažimanja.",
+    "chatImageQualityHint": "Vrijedi za sve nove privitke u svim chatovima. Slikama se uklanjaju EXIF metapodaci i pretvaraju se u WebP (ograničenja do 24 MP i 5 MB nakon sažimanja). Uravnotežena (2048 px) čuva Full HD snimke zaslona 1:1, Štedljiva (1024 px) štedi tokene, a Najviša (do 8000 px) zadržava izvornu razlučivost.",
     "chatInfo": "Brzi AI chat za svakodnevne zadatke. Za razliku od AI profila s izoliranim ulogama i alatima, ovo je univerzalni razgovor bez vezivanja uz određeni profil. Možete postavljati pitanja, koristiti označeni tekst kao kontekst, priložiti slike, postaviti opći sistemski prompt i upravljati lokalnom poviješću razgovora.",
     "chatPrompt": "Glavni prompt",
     "chatPromptInfo": "Dodaje se uputama chata ako u njemu nije odabran profil.",
@@ -799,7 +799,7 @@
       "voiceCommands": "Glasovne naredbe",
       "selectionActionsPage2": "Radnje: stranica 2",
       "selectionActionsPage3": "Radnje: stranica 3",
-      "chatPrompts": "Promptovi: stranica 1",
+      "chatPrompts": "Promptovi",
       "selectionActionsPage4": "Radnje: stranica 4",
       "selectionActionsPage5": "Radnje: stranica 5",
       "favorites": "Favoriti",
@@ -807,10 +807,6 @@
       "voiceQuickAiRequest": "Glasovni brzi upit za UI",
       "screenshotQuickAiRequest": "Snimka zaslona i pitanje za AI",
       "voiceScreenshotQuickAiRequest": "Snimka zaslona i glasovno pitanje za AI",
-      "chatPromptsPage2": "Promptovi: stranica 2",
-      "chatPromptsPage3": "Promptovi: stranica 3",
-      "chatPromptsPage4": "Promptovi: stranica 4",
-      "chatPromptsPage5": "Promptovi: stranica 5",
       "customAction1": "Prilagođena radnja 1",
       "customAction2": "Prilagođena radnja 2",
       "customAction3": "Prilagođena radnja 3",
@@ -834,7 +830,7 @@
     },
     "hotkeysMissing": "Neki su prečaci uklonjeni u postavkama sustava i ne rade. Upotrijebite „Ponovno registriraj” da biste ih vratili.",
     "hotkeysTab": "Prečaci",
-    "imageQualityBalanced": "Uravnotežena – do 1568 px",
+    "imageQualityBalanced": "Uravnotežena – do 2048 px",
     "imageQualityEconomy": "Štedljiva – do 1024 px",
     "imageQualityOriginal": "Najviša – do 8000 px",
     "inlineCorrectionExternalHint": "Pokrenite ovu naredbu iz skripte ili prečaca sustava. D-Bus: metoda CorrectSelection sučelja org.tyco.Interface.",
@@ -857,7 +853,8 @@
       "transformation": "Transformacije teksta",
       "translation": "Prijevod",
       "unavailable": "Nedostupne",
-      "profiles": "Profili"
+      "profiles": "Profili",
+      "chatPrompts": "Promptovi"
     },
     "mainActionProfileRemoved": "Izbrisani profil",
     "mainActionStylingRemoved": "Izbrisan stil teksta",
@@ -1222,7 +1219,7 @@
     "webJinaApiKeyHint": "Neobavezno. Bez ključa, zahtjevi koriste besplatnu razinu sa zajedničkim ograničenjima.",
     "chatPromptsTab": "Unaprijed postavljeni upiti za chat",
     "chatPromptsNavTab": "Upiti za chat",
-    "chatPromptsHint": "Stranice promptova za brze upite AI-ju. Svaka stranica koristi svoj profil, a svaki se prompt pokreće svojom tipkom. Povucite kartice da biste promijenili tipke.",
+    "chatPromptsHint": "Promptovi za brze AI upite. Prompt s profilom pokreće se u tom profilu i nudi se samo u njegovim chatovima; prompt bez profila pokreće se kao „Pitaj AI” i nudi se u svakom chatu. Prvih 15 promptova dobiva tipke u izborniku promptova; povucite kartice da promijenite redoslijed.",
     "prompt": "Upit",
     "sectionWebSearch": "Pretraživanje weba za agente",
     "webSearchSectionHint": "Postavke za alate za pretraživanje weba i čitanje stranica koje koriste AI modeli i profili.",
@@ -1240,12 +1237,6 @@
     "searchFavoritesPlaceholder": "Pretraži favorite…",
     "hotkeyDescriptions": {},
     "chatPromptsSentImmediately": "Odmah pošalji prompt",
-    "addPromptPage": "Dodaj stranicu",
-    "promptPageProfile": "Profil",
-    "movePromptPageBack": "Pomakni stranicu unatrag",
-    "movePromptPageForward": "Pomakni stranicu naprijed",
-    "removePromptPage": "Ukloni stranicu",
-    "removePromptPageConfirm": "Ukloniti ovu stranicu i njezine promptove?",
     "historyTab": "Povijest",
     "customActionsTitle": "Prilagođene radnje",
     "customActionsInfo": "Dodijelite globalne prečace za izravno pokretanje bilo koje radnje.",
@@ -1255,7 +1246,10 @@
     "chatHistoryHint": "Uključujući brze upite. Razgovori profila spremaju se u mapu profila i postavljaju na kartici „AI profili”.",
     "chatQuickRequestsSaved": "Spremaj brze upite",
     "chatQuickRequestsSavedInfo": "Brzi upiti prikazuju se u razgovorima kao zasebna skupina. Upit nastavljen u razgovoru uvijek se sprema.",
-    "chatStorageLink": "Spremanje razgovora postavlja se na kartici"
+    "chatStorageLink": "Spremanje razgovora postavlja se na kartici",
+    "addChatPrompt": "Dodaj prompt",
+    "chatPromptProfile": "Profil",
+    "mainActionPromptRemoved": "Izbrisani prompt"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
@@ -1497,12 +1491,14 @@
     "addArea": "Dodaj snimku područja"
   },
   "chatPrompts": {
-    "pageLabel": "{page} · {profile}",
-    "missingProfile": "Nema profila",
-    "pages": "Stranice promptova",
-    "noPages": "Još nema stranica promptova. Dodajte ih u postavkama.",
-    "pageNotFound": "Stranica promptova {page} ne postoji.",
-    "profileMissing": "Profil ove stranice više ne postoji. Odaberite drugi u postavkama.",
-    "openSettings": "Otvori postavke"
+    "missingProfile": "Izbrisani profil",
+    "profileMissing": "Profil ovog prompta je izbrisan. Dok ne odaberete drugi, prompt se pokreće bez profila.",
+    "openSettings": "Otvori postavke",
+    "searchPlaceholder": "Pretraži promptove…",
+    "noMatches": "Nijedan prompt ne odgovara pretrazi",
+    "empty": "Još nema promptova",
+    "emptyHint": "Dodajte promptove u postavkama.",
+    "everyProfile": "Bez profila (Pitanje za AI)",
+    "actionName": "Prompt: {prompt}"
   }
 }

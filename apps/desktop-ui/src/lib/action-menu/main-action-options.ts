@@ -19,6 +19,7 @@ export type MainActionGroup =
         | 'menu'
         | 'askAi'
         | 'profiles'
+        | 'chatPrompts'
         | 'translation'
         | 'aiCommands'
         | 'transformation'
@@ -48,6 +49,7 @@ const GROUP_ORDER: MainActionGroup['kind'][] = [
   'askAi',
   'profile',
   'profiles',
+  'chatPrompts',
   'translation',
   'aiCommands',
   'transformation',
@@ -67,6 +69,7 @@ export function mainActionOptionId(
   if (item.type === 'transformation')
     return `transformation:${item.transformationId}`
   if (item.type === 'styling') return `styling:${item.stylingId}`
+  if (item.type === 'chatPrompt') return `chatPrompt:${item.promptId}`
   if (item.type === 'translation') return `translation:${item.language}`
   return `${item.type}:${item.actionId}`
 }

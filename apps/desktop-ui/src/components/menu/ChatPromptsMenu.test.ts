@@ -13,33 +13,29 @@ vi.mock('../../composables/use-i18n', () => ({
 
 describe('ChatPromptsMenu', () => {
   let desktop: TestDesktop
-  let shortcutListProps: Record<string, any> = {}
 
   beforeEach(() => {
     desktop = installFakeDesktop({}, 'quick')
     desktop.backend.handle('hide_window', () => undefined)
     desktop.backend.handle('open_main_chat', () => undefined)
+    desktop.backend.handle('list_ai_profiles', () => [])
     desktop.setUserConfig({
       chatPrompts: {
-        isSentImmediately: false,
-        pages: [
+        isSentImmediately: true,
+        items: [
           {
+            id: 'item-1',
+            name: 'Summarize',
+            rule: 'Summarize this in 3 bullet points',
             profileId: '',
-            items: [
-              {
-                id: 'item-1',
-                name: 'Summarize',
-                rule: 'Summarize this in 3 bullet points',
-              },
-              { id: 'item-2', name: 'Critique', rule: 'Critique this code' },
-            ],
-            slots: { q: 'item-1', w: 'item-2' },
           },
           {
+            id: 'item-2',
+            name: 'Critique',
+            rule: 'Critique this code',
             profileId: 'gone',
-            items: [{ id: 'item-3', name: 'Lost', rule: 'Lost prompt' }],
-            slots: { q: 'item-3' },
           },
+          { id: 'item-3', name: 'Empty', rule: '  ', profileId: '' },
         ],
       },
     })
@@ -63,86 +59,80 @@ describe('ChatPromptsMenu', () => {
             template:
               '<div class="layout"><slot name="preview" /><slot name="actions" /></div>',
           },
-          ShortcutList: {
-            props: [
-              'text',
-              'spaceKey',
-              'leftLetterKeys',
-              'isEditorButtonVisible',
-            ],
-            setup(props: any) {
-              shortcutListProps = props
-              return () => null
-            },
-          },
         },
       },
+      attachTo: document.body,
     })
 
-  it('renders TextPreview with provided text', () => {
+  const names = (wrapper: ReturnType<typeof mountMenu>) =>
+    wrapper.findAll('.chat-prompt-name').map((cell) => cell.text())
+
+  it('lists the prompts with a text and the context', async () => {
     const wrapper = mountMenu()
+    await flushPromises()
     expect(wrapper.find('.text-preview').text()).toBe('Some sample text')
+    expect(names(wrapper)).toEqual(['Summarize', 'Critique'])
+    expect(wrapper.text()).toContain('chatPrompts.missingProfile')
+    wrapper.unmount()
   })
 
-  it('runs a prompt as a quick request with the profile of its page', async () => {
+  it('runs a prompt as a quick request, without a profile that is gone', async () => {
     const wrapper = mountMenu()
+    await flushPromises()
     const menuModalsStore = useMenuModalsStore()
 
-    const qKey = shortcutListProps.leftLetterKeys[0]
-    expect(qKey.name).toBe('Summarize')
-    await qKey.action()
-    await flushPromises()
+    await wrapper.find('.search-grid-search-input').setValue('crit')
+    expect(names(wrapper)).toEqual(['Critique'])
+    await wrapper
+      .find('.search-grid-search-input')
+      .trigger('keydown', { key: 'Enter' })
 
     expect(menuModalsStore.currentStep?.modal).toBe(MenuModals.QUICK_AI_REQUEST)
     expect(menuModalsStore.currentStep?.params).toEqual(
       expect.objectContaining({
         text: 'Some sample text',
         profileId: null,
-        prompt: 'Summarize this in 3 bullet points',
-        isPromptSent: false,
+        prompt: 'Critique this code',
+        isPromptSent: true,
       })
     )
     wrapper.unmount()
   })
 
-  it('disables context and runs prompt with empty text', async () => {
+  it('runs a prompt with its profile and without the removed context', async () => {
+    desktop.backend.handle('list_ai_profiles', () => [
+      { id: 'gone', name: 'Reviewer' },
+    ])
     const wrapper = mountMenu()
+    await flushPromises()
     const menuModalsStore = useMenuModalsStore()
 
-    const removeBtn = wrapper.find('button[aria-label="action.removeContext"]')
-    expect(removeBtn.exists()).toBe(true)
-    await removeBtn.trigger('click')
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.find('.context-disabled-banner').exists()).toBe(true)
-    expect(shortcutListProps.text).toBe('')
-
-    const qKey = shortcutListProps.leftLetterKeys[0]
-    await qKey.action()
-    await flushPromises()
+    await wrapper.find('button[aria-label="action.removeContext"]').trigger('click')
+    await wrapper
+      .find('.search-grid-search-input')
+      .trigger('keydown', { key: 'ArrowDown' })
+    await wrapper
+      .find('.search-grid-grid')
+      .trigger('keydown', { key: 'w', code: 'KeyW' })
 
     expect(menuModalsStore.currentStep?.params).toEqual(
       expect.objectContaining({
         text: '',
-        profileId: null,
-        prompt: 'Summarize this in 3 bullet points',
-        isPromptSent: false,
+        profileId: 'gone',
+        prompt: 'Critique this code',
       })
     )
     wrapper.unmount()
   })
 
-  it('opens the page of the hotkey and reports a missing one', async () => {
-    const wrapper = mountMenu({ pageIndex: 4 })
+  it('points to the settings when there are no prompts', async () => {
+    desktop.setUserConfig({
+      chatPrompts: { isSentImmediately: false, items: [] },
+    })
+    const wrapper = mountMenu()
     await flushPromises()
-    expect(wrapper.text()).toContain('chatPrompts.pageNotFound')
-  })
-
-  it('warns about a page whose profile is gone', async () => {
-    desktop.backend.handle('list_ai_profiles', () => [])
-    const wrapper = mountMenu({ pageIndex: 1 })
-    await flushPromises()
-    expect(wrapper.text()).toContain('chatPrompts.profileMissing')
-    expect(shortcutListProps.leftLetterKeys).toEqual([])
+    expect(wrapper.find('.search-grid-empty').text()).toBe('chatPrompts.empty')
+    expect(wrapper.text()).toContain('chatPrompts.emptyHint')
+    wrapper.unmount()
   })
 })

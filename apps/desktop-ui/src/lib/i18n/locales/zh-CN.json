@@ -695,7 +695,7 @@
     "chatHistoryRetentionDaysHint": "当对话在此时长内没有新消息时将被删除。更早的对话将立即被删除。",
     "chatHistoryRetentionNever": "从不",
     "chatImageQuality": "图像画质",
-    "chatImageQualityHint": "适用于所有聊天，包括配置文件的聊天。 适用于新添加的附件。画质越高，占用的内存和上下文越多。图像以无元数据的 WebP 格式发送；压缩后的上限为 2400 万像素和 5 MB。",
+    "chatImageQualityHint": "适用于所有聊天中的所有新附件。图像将清除 EXIF 元数据并转换为 WebP（压缩后限制最高 2400 万像素和 5 MB）。“均衡”（2048 像素）以 1:1 保持全高清截图，“经济”（1024 像素）节省令牌，“最高”（最高 8000 像素）保留原始分辨率。",
     "chatInfo": "用于日常任务的快速 AI 对话。与拥有独立角色和工具的 AI 配置文件不同，这是不绑定任何配置文件的通用对话。你可以提问、将所选文本作为上下文、附加图片、配置通用系统提示词并管理本地对话历史记录。",
     "chatPrompt": "主提示词",
     "chatPromptInfo": "聊天中未选择配置档案时，会添加到聊天指令中。",
@@ -793,7 +793,7 @@
       "voiceCommands": "语音命令",
       "selectionActionsPage2": "操作：第 2 页",
       "selectionActionsPage3": "操作：第 3 页",
-      "chatPrompts": "提示词：第 1 页",
+      "chatPrompts": "提示词",
       "selectionActionsPage4": "操作：第 4 页",
       "selectionActionsPage5": "操作：第 5 页",
       "favorites": "收藏夹",
@@ -801,10 +801,6 @@
       "voiceQuickAiRequest": "语音 AI 快速请求",
       "screenshotQuickAiRequest": "截图并向 AI 提问",
       "voiceScreenshotQuickAiRequest": "截图并向 AI 语音提问",
-      "chatPromptsPage2": "提示词：第 2 页",
-      "chatPromptsPage3": "提示词：第 3 页",
-      "chatPromptsPage4": "提示词：第 4 页",
-      "chatPromptsPage5": "提示词：第 5 页",
       "customAction1": "自定义操作 1",
       "customAction2": "自定义操作 2",
       "customAction3": "自定义操作 3",
@@ -828,7 +824,7 @@
     },
     "hotkeysMissing": "部分快捷键在系统设置中被移除且无法使用。请使用“重新注册”将其恢复。",
     "hotkeysTab": "快捷键",
-    "imageQualityBalanced": "均衡 — 最高 1568 像素",
+    "imageQualityBalanced": "均衡 — 最高 2048 像素",
     "imageQualityEconomy": "经济 — 最高 1024 像素",
     "imageQualityOriginal": "最高 — 最高 8000 像素",
     "inlineCorrectionExternalHint": "从脚本或系统快捷键运行此命令。D-Bus：org.tyco.Interface 的 CorrectSelection 方法。",
@@ -851,7 +847,8 @@
       "transformation": "文本转换",
       "translation": "翻译",
       "unavailable": "不可用",
-      "profiles": "配置文件"
+      "profiles": "配置文件",
+      "chatPrompts": "提示词"
     },
     "mainActionProfileRemoved": "已删除的配置文件",
     "mainActionStylingRemoved": "已删除的文本风格",
@@ -1216,7 +1213,7 @@
     "webJinaApiKeyHint": "可选。未配置密钥时，请求将使用具有共享速率限制的免费层级。",
     "chatPromptsTab": "聊天提示词预设",
     "chatPromptsNavTab": "聊天提示词",
-    "chatPromptsHint": "用于快速 AI 请求的提示词页面。每个页面使用自己的配置文件，每个提示词用自己的按键运行。拖动卡片可更改按键。",
+    "chatPromptsHint": "用于快速 AI 请求的提示词。带配置文件的提示词在该配置文件中运行，并且只在其聊天中提供；不带配置文件的提示词以“询问 AI”运行，并在所有聊天中提供。前 15 个提示词在提示词菜单中获得按键；拖动卡片可调整顺序。",
     "prompt": "提示词",
     "sectionWebSearch": "智能体网页搜索",
     "webSearchSectionHint": "AI 模型和配置文件使用的网页搜索与页面读取工具的设置。",
@@ -1234,12 +1231,6 @@
     "searchFavoritesPlaceholder": "搜索收藏夹…",
     "hotkeyDescriptions": {},
     "chatPromptsSentImmediately": "立即发送提示词",
-    "addPromptPage": "添加页面",
-    "promptPageProfile": "配置文件",
-    "movePromptPageBack": "将页面前移",
-    "movePromptPageForward": "将页面后移",
-    "removePromptPage": "删除页面",
-    "removePromptPageConfirm": "要删除此页面及其提示词吗？",
     "historyTab": "历史",
     "customActionsTitle": "自定义操作",
     "customActionsInfo": "分配全局快捷键以直接执行任何操作。",
@@ -1249,7 +1240,10 @@
     "chatHistoryHint": "包括快速请求。配置文件的聊天保存在配置文件文件夹中，在“AI 配置文件”选项卡中设置。",
     "chatQuickRequestsSaved": "保存快速请求",
     "chatQuickRequestsSavedInfo": "快速请求在聊天中显示为单独的分组。在聊天中继续的请求始终会被保存。",
-    "chatStorageLink": "聊天存储在此选项卡中设置："
+    "chatStorageLink": "聊天存储在此选项卡中设置：",
+    "addChatPrompt": "添加提示词",
+    "chatPromptProfile": "配置文件",
+    "mainActionPromptRemoved": "已删除的提示词"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
@@ -1491,12 +1485,14 @@
     "addArea": "添加区域截图"
   },
   "chatPrompts": {
-    "pageLabel": "{page} · {profile}",
-    "missingProfile": "无配置文件",
-    "pages": "提示词页面",
-    "noPages": "还没有提示词页面。请在设置中添加。",
-    "pageNotFound": "提示词页面 {page} 不存在。",
-    "profileMissing": "此页面的配置文件已不存在。请在设置中选择其他配置文件。",
-    "openSettings": "打开设置"
+    "missingProfile": "已删除的配置文件",
+    "profileMissing": "此提示词的配置文件已被删除。在您选择其他配置文件之前，提示词将不使用配置文件运行。",
+    "openSettings": "打开设置",
+    "searchPlaceholder": "搜索提示词…",
+    "noMatches": "没有与搜索匹配的提示词",
+    "empty": "还没有提示词",
+    "emptyHint": "请在设置中添加提示词。",
+    "everyProfile": "无配置文件（向 AI 提问）",
+    "actionName": "提示词：{prompt}"
   }
 }
