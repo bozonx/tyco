@@ -836,6 +836,7 @@ mod tests {
                 parts: vec![],
                 status: None,
             }],
+            is_quick_request: None,
         };
         store.persist(&directory.join("images"), &chat).unwrap();
         fs::write(
@@ -905,6 +906,7 @@ mod tests {
                 parts: vec![],
                 status: None,
             }],
+            is_quick_request: None,
         };
         assert!(store.persist(Path::new("/nonexistent"), &chat).is_err());
         let mut full = ChatImageStore {

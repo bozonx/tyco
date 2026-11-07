@@ -201,6 +201,10 @@ export interface DesktopCommands {
     result: Array<ChatSummary>
   }
   list_installed_plugins: { args: undefined; result: Array<InstalledPlugin> }
+  list_recent_quick_request_prompts: {
+    args: { profileId?: string | null; limit: number }
+    result: Array<string>
+  }
   log_client_message: {
     args: { level: ClientLogLevel; message: string; context?: string | null }
     result: void

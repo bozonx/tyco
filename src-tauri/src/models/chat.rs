@@ -234,6 +234,23 @@ mod tests {
         assert_eq!(round_trip.last_message_at_ms, 1_791_806_400_000);
         assert_eq!(serialized["title"], "Chat title");
     }
+
+    #[test]
+    fn chat_quick_request_flag_preserves_wire_names() {
+        let chat: Chat = serde_json::from_value(serde_json::json!({
+            "id": "chat-2",
+            "title": "Quick prompt",
+            "lastMessageAt": 1_791_806_400_000_u64,
+            "messages": [],
+            "isQuickRequest": true,
+        }))
+        .unwrap();
+        assert_eq!(chat.is_quick_request, Some(true));
+        let summary = ChatSummary::from(&chat);
+        assert_eq!(summary.is_quick_request, Some(true));
+        let serialized = serde_json::to_value(&summary).unwrap();
+        assert_eq!(serialized["isQuickRequest"], true);
+    }
 }
 
 #[cfg(test)]

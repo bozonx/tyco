@@ -53,13 +53,17 @@
       @keydown.esc="closeSearch"
     />
 
-    <div class="chat-list-scroll">
+    <div class="chat-list-scroll regular-chats-scroll">
       <StateMessage
-        v-if="groups.length === 0"
+        v-if="regularGroups.length === 0"
         class="chat-list-empty"
         :message="query ? t('history.nothingFound') : t('history.empty')"
       />
-      <section v-for="group in groups" :key="group.key" class="chat-group">
+      <section
+        v-for="group in regularGroups"
+        :key="group.key"
+        class="chat-group"
+      >
         <h2>{{ t(`chat.group.${group.key}`) }}</h2>
         <ul class="chat-list">
           <li v-for="item in group.items" :key="item.id" class="chat-list-row">
@@ -111,6 +115,109 @@
           </li>
         </ul>
       </section>
+    </div>
+
+    <div
+      v-if="quickRequests.length > 0 || query"
+      class="quick-requests-container"
+      :class="{ 'is-expanded': isQuickRequestsExpanded }"
+    >
+      <button
+        type="button"
+        class="quick-requests-header"
+        :aria-expanded="isQuickRequestsExpanded"
+        @click="isQuickRequestsExpanded = !isQuickRequestsExpanded"
+      >
+        <div class="header-title">
+          <AppIcon
+            icon="mdi:lightning-bolt-outline"
+            size="sm"
+            class="shrink-0"
+          />
+          <span class="truncate">{{ t('chat.quickAiRequests') }}</span>
+          <span v-if="quickRequests.length > 0" class="quick-requests-badge">
+            {{ quickRequests.length }}
+          </span>
+        </div>
+        <AppIcon
+          :icon="
+            isQuickRequestsExpanded ? 'mdi:chevron-down' : 'mdi:chevron-right'
+          "
+          size="sm"
+          class="shrink-0"
+        />
+      </button>
+
+      <div
+        v-if="isQuickRequestsExpanded"
+        class="chat-list-scroll quick-requests-scroll"
+      >
+        <StateMessage
+          v-if="quickRequestGroups.length === 0"
+          class="chat-list-empty"
+          :message="query ? t('history.nothingFound') : t('history.empty')"
+        />
+        <section
+          v-for="group in quickRequestGroups"
+          :key="group.key"
+          class="chat-group"
+        >
+          <h2>{{ t(`chat.group.${group.key}`) }}</h2>
+          <ul class="chat-list">
+            <li
+              v-for="item in group.items"
+              :key="item.id"
+              class="chat-list-row"
+            >
+              <form
+                v-if="renamingId === item.id"
+                class="rename-form"
+                @submit.prevent="finishRename(item)"
+              >
+                <input
+                  ref="renameInputs"
+                  v-model="renameValue"
+                  :maxlength="MAX_CHAT_TITLE_LENGTH"
+                  :aria-label="t('chat.renameChat')"
+                  @keydown.esc="cancelRename"
+                  @blur="finishRename(item)"
+                />
+              </form>
+              <template v-else>
+                <button
+                  type="button"
+                  class="chat-list-item"
+                  :disabled="chatStore.isGenerating"
+                  :class="{
+                    'is-active': chatStore.currentChatParams?.id === item.id,
+                  }"
+                  :title="item.title"
+                  @click="openChat(item.id)"
+                >
+                  <AppIcon
+                    icon="mdi:lightning-bolt-outline"
+                    size="sm"
+                    class="shrink-0 text-primary"
+                  />
+                  <span class="truncate">{{
+                    item.title || t('common.empty')
+                  }}</span>
+                </button>
+                <DropdownMenu
+                  size="xs"
+                  square
+                  hide-chevron
+                  icon="mdi:dots-horizontal"
+                  class="row-menu"
+                  :title="t('common.more')"
+                  align="right"
+                  :items="getRowMenuItems(item)"
+                />
+              </template>
+            </li>
+          </ul>
+        </section>
+      </div>
     </div>
 
     <div v-if="chatHistoryDisabled" class="sidebar-footer">
@@ -240,11 +347,47 @@ watch([query, chatListKey], ([value], [previousQuery]) => {
 })
 
 const now = useNow()
-const groups = computed(() =>
+
+const regularChats = computed(() =>
+  history.chatHistory.filter((item) => !item.isQuickRequest)
+)
+const quickRequests = computed(() =>
+  history.chatHistory.filter((item) => Boolean(item.isQuickRequest))
+)
+
+const regularGroups = computed(() =>
   groupChatHistory(
-    filterChatHistory(history.chatHistory, query.value, matchedIds.value),
+    filterChatHistory(regularChats.value, query.value, matchedIds.value),
     now.value
   )
+)
+
+const quickRequestGroups = computed(() =>
+  groupChatHistory(
+    filterChatHistory(quickRequests.value, query.value, matchedIds.value),
+    now.value
+  )
+)
+
+const isQuickRequestsExpanded = ref(false)
+
+watch(
+  () => chatStore.currentChatParams?.id,
+  (id) => {
+    if (id && quickRequests.value.some((q) => q.id === id)) {
+      isQuickRequestsExpanded.value = true
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  () => query.value.trim(),
+  (q) => {
+    if (q && quickRequestGroups.value.length > 0) {
+      isQuickRequestsExpanded.value = true
+    }
+  }
 )
 
 function getRowMenuItems(item: ChatSummary): DropdownMenuItem[] {
@@ -381,6 +524,62 @@ onUnmounted(() => {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+.regular-chats-scroll {
+  flex: 1;
+  min-height: 0;
+}
+.quick-requests-container {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-top: 1px solid var(--app-border-subtle);
+  padding-top: var(--space-xs);
+  max-height: 45%;
+}
+.quick-requests-container.is-expanded {
+  flex: 1;
+  min-height: 8rem;
+}
+.quick-requests-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  color: var(--app-text-muted);
+  font-size: var(--text-control);
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  text-align: left;
+}
+.quick-requests-header:hover {
+  color: var(--color-base-content);
+  background: var(--app-hover);
+}
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+.quick-requests-badge {
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--radius-full);
+  background: var(--app-surface-sunken);
+  color: var(--app-text-faint);
+  font-size: var(--text-micro);
+  font-weight: 600;
+}
+.quick-requests-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin-top: var(--space-xs);
 }
 .chat-group + .chat-group {
   margin-top: var(--space-lg);

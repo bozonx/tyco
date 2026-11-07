@@ -206,7 +206,10 @@ const editorItems = computed<HistoryListItem[]>(() =>
       })),
       searchText: [
         label,
-        ...(view.turns ?? []).map((turn) => turn.prompt),
+        ...(view.turns ?? []).flatMap((turn) => [
+          turn.prompt,
+          turn.result || '',
+        ]),
       ].join(' '),
       time: item.createdAt,
     }

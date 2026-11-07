@@ -145,7 +145,8 @@
     "voiceSendHint": "Бірден жіберу (Ctrl+Enter)",
     "promptPresets": "Промпт алдын ала орнатулары",
     "noPromptsConfigured": "Реттелген промпт алдын ала орнатулары жоқ",
-    "noToolCalling": "құралдарсыз"
+    "noToolCalling": "құралдарсыз",
+    "quickAiRequests": "Жылдам сұраулар"
   },
   "chatTools": {
     "files": {
@@ -1041,7 +1042,7 @@
     "sectionAccessibility": "Арнайы мүмкіндіктер",
     "sectionAppearance": "Сыртқы түрі",
     "sectionChatHistory": "Чат тарихы",
-    "sectionEditorHistory": "Редактор тарихы",
+    "sectionEditorHistory": "Әрекеттер мен енгізу тарихы",
     "sectionLlmImages": "Чаттардағы суреттер",
     "sectionMarkdown": "Markdown пішімдеу",
     "sectionMarkdownClean": "Markdown-ды қарапайым мәтінге түрлендіру",
@@ -1236,7 +1237,8 @@
     "movePromptPageBack": "Бетті артқа жылжыту",
     "movePromptPageForward": "Бетті алға жылжыту",
     "removePromptPage": "Бетті жою",
-    "removePromptPageConfirm": "Бұл бетті промпттарымен бірге жою керек пе?"
+    "removePromptPageConfirm": "Бұл бетті промпттарымен бірге жою керек пе?",
+    "historyTab": "Тарих"
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {

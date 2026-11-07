@@ -145,7 +145,8 @@
     "voiceSendHint": "Odeslat hned (Ctrl+Enter)",
     "promptPresets": "Předvolby promptů",
     "noPromptsConfigured": "Nejsou nastaveny žádné předvolby promptů",
-    "noToolCalling": "bez nástrojů"
+    "noToolCalling": "bez nástrojů",
+    "quickAiRequests": "Rychlé dotazy"
   },
   "chatTools": {
     "files": {
@@ -1038,7 +1039,7 @@
     "sectionAccessibility": "Přístupnost",
     "sectionAppearance": "Vzhled",
     "sectionChatHistory": "Historie chatů",
-    "sectionEditorHistory": "Historie editoru",
+    "sectionEditorHistory": "Historie akcí a vstupu",
     "sectionLlmImages": "Obrázky v chatech",
     "sectionMarkdown": "Formátování Markdown",
     "sectionMarkdownClean": "Převod Markdownu na prostý text",
@@ -1233,7 +1234,8 @@
     "movePromptPageBack": "Posunout stránku zpět",
     "movePromptPageForward": "Posunout stránku dopředu",
     "removePromptPage": "Odebrat stránku",
-    "removePromptPageConfirm": "Odebrat tuto stránku i s jejími prompty?"
+    "removePromptPageConfirm": "Odebrat tuto stránku i s jejími prompty?",
+    "historyTab": "Historie"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

@@ -145,7 +145,8 @@
     "voiceSendHint": "すぐに送信 (Ctrl+Enter)",
     "promptPresets": "プロンプトプリセット",
     "noPromptsConfigured": "設定されたプロンプトプリセットはありません",
-    "noToolCalling": "ツールなし"
+    "noToolCalling": "ツールなし",
+    "quickAiRequests": "クイックリクエスト"
   },
   "chatTools": {
     "files": {
@@ -1041,7 +1042,7 @@
     "sectionAccessibility": "アクセシビリティ",
     "sectionAppearance": "外観",
     "sectionChatHistory": "チャット履歴",
-    "sectionEditorHistory": "エディター履歴",
+    "sectionEditorHistory": "アクションと入力の履歴",
     "sectionLlmImages": "チャット内の画像",
     "sectionMarkdown": "Markdownの整形",
     "sectionMarkdownClean": "Markdownからプレーンテキストへの変換",
@@ -1236,7 +1237,8 @@
     "movePromptPageBack": "ページを前へ移動",
     "movePromptPageForward": "ページを後ろへ移動",
     "removePromptPage": "ページを削除",
-    "removePromptPageConfirm": "このページとそのプロンプトを削除しますか？"
+    "removePromptPageConfirm": "このページとそのプロンプトを削除しますか？",
+    "historyTab": "履歴"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

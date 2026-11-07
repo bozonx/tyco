@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 640b90f2f2bb74bfa7efe170c30cf1c2dff83921f853e00bdc0d4890e6ea223b
+// Source hash: bc7ebf90af0e9611889cb91dd4658900e7f8104a970aa8ba406bc9dbb5ca7f0b
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -214,6 +214,7 @@ export type Chat = {
   /** Unix time in milliseconds. */
   lastMessageAt: number
   messages: Array<ChatMessage>
+  isQuickRequest?: boolean
 }
 
 /** A text the user attached to a chat message. */
@@ -295,6 +296,7 @@ export type ChatSummary = {
   title: string
   /** Unix time in milliseconds. */
   lastMessageAt: number
+  isQuickRequest?: boolean
 }
 
 /**

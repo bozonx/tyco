@@ -145,7 +145,8 @@
     "voiceSendHint": "Отправить сразу (Ctrl+Enter)",
     "promptPresets": "Заготовленные промпты",
     "noPromptsConfigured": "Заготовленные промпты не настроены",
-    "noToolCalling": "без инструментов"
+    "noToolCalling": "без инструментов",
+    "quickAiRequests": "Быстрые запросы"
   },
   "chatTools": {
     "files": {
@@ -1041,7 +1042,7 @@
     "sectionAccessibility": "Доступность",
     "sectionAppearance": "Внешний вид",
     "sectionChatHistory": "История чата",
-    "sectionEditorHistory": "История редактора",
+    "sectionEditorHistory": "История действий и ввода",
     "sectionLlmImages": "Изображения в чатах",
     "sectionMarkdown": "Форматирование Markdown",
     "sectionMarkdownClean": "Преобразование Markdown в простой текст",
@@ -1236,7 +1237,8 @@
     "movePromptPageBack": "Переместить страницу назад",
     "movePromptPageForward": "Переместить страницу вперёд",
     "removePromptPage": "Удалить страницу",
-    "removePromptPageConfirm": "Удалить эту страницу вместе с её промптами?"
+    "removePromptPageConfirm": "Удалить эту страницу вместе с её промптами?",
+    "historyTab": "История"
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {

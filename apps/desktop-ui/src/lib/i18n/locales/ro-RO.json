@@ -145,7 +145,8 @@
     "voiceSendHint": "Trimite imediat (Ctrl+Enter)",
     "promptPresets": "Presetări prompturi",
     "noPromptsConfigured": "Nicio presetare de prompt configurată",
-    "noToolCalling": "fără instrumente"
+    "noToolCalling": "fără instrumente",
+    "quickAiRequests": "Interogări rapide"
   },
   "chatTools": {
     "files": {
@@ -1044,7 +1045,7 @@
     "sectionAccessibility": "Accesibilitate",
     "sectionAppearance": "Aspect",
     "sectionChatHistory": "Istoricul chaturilor",
-    "sectionEditorHistory": "Istoricul editorului",
+    "sectionEditorHistory": "Istoricul acțiunilor și al introducerii",
     "sectionLlmImages": "Imagini în chaturi",
     "sectionMarkdown": "Formatare Markdown",
     "sectionMarkdownClean": "Conversia Markdown în text simplu",
@@ -1239,7 +1240,8 @@
     "movePromptPageBack": "Mută pagina înapoi",
     "movePromptPageForward": "Mută pagina înainte",
     "removePromptPage": "Elimină pagina",
-    "removePromptPageConfirm": "Eliminați această pagină împreună cu prompturile ei?"
+    "removePromptPageConfirm": "Eliminați această pagină împreună cu prompturile ei?",
+    "historyTab": "Istoric"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

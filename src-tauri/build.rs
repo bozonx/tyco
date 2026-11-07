@@ -98,6 +98,7 @@ fn main() {
             "list_ai_projects",
             "list_chats",
             "list_installed_plugins",
+            "list_recent_quick_request_prompts",
             "log_client_message",
             "log_command_run",
             "log_webhook_call",

@@ -145,7 +145,8 @@
     "voiceSendHint": "立即發送 (Ctrl+Enter)",
     "promptPresets": "提示詞預設",
     "noPromptsConfigured": "未設定提示詞預設",
-    "noToolCalling": "不支援工具"
+    "noToolCalling": "不支援工具",
+    "quickAiRequests": "快捷請求"
   },
   "chatTools": {
     "files": {
@@ -1038,7 +1039,7 @@
     "sectionAccessibility": "無障礙輔助",
     "sectionAppearance": "外觀",
     "sectionChatHistory": "聊天記錄",
-    "sectionEditorHistory": "編輯器歷史記錄",
+    "sectionEditorHistory": "操作與輸入歷史",
     "sectionLlmImages": "聊天中的圖片",
     "sectionMarkdown": "Markdown 格式化",
     "sectionMarkdownClean": "Markdown 轉純文字轉換",
@@ -1233,7 +1234,8 @@
     "movePromptPageBack": "將頁面前移",
     "movePromptPageForward": "將頁面後移",
     "removePromptPage": "移除頁面",
-    "removePromptPageConfirm": "要移除此頁面及其提示詞嗎？"
+    "removePromptPageConfirm": "要移除此頁面及其提示詞嗎？",
+    "historyTab": "歷史"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

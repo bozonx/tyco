@@ -1,4 +1,5 @@
 use super::*;
+use crate::models::{ChatMessage, ChatRole};
 use crate::services::storage::test_support::TestDir;
 use serde_json::json;
 
@@ -8,6 +9,7 @@ fn chat_item(id: &str) -> Chat {
         title: String::from("chat"),
         last_message_at_ms: 0,
         messages: Vec::new(),
+        is_quick_request: None,
     }
 }
 
@@ -843,4 +845,95 @@ fn an_original_of_another_size_than_its_reference_is_refused() {
         .size_bytes = 5;
 
     assert!(save_chat(&dirs, enabled_policy(), &images, chat).is_err());
+}
+
+#[test]
+fn list_recent_quick_request_prompts_returns_deduplicated_user_prompts() {
+    let dir = TestDir::new("quick-prompts-test");
+    let dirs = dirs(&dir);
+    let images = Mutex::new(ChatImageStore::default());
+
+    let mut quick1 = dated("q1", 200);
+    quick1.is_quick_request = Some(true);
+    quick1.messages = vec![
+        ChatMessage {
+            role: ChatRole::User,
+            content: "First question".into(),
+            attachments: vec![],
+            images: vec![],
+            parts: vec![],
+            status: None,
+        },
+        ChatMessage {
+            role: ChatRole::Assistant,
+            content: "Answer 1".into(),
+            attachments: vec![],
+            images: vec![],
+            parts: vec![],
+            status: None,
+        },
+        ChatMessage {
+            role: ChatRole::User,
+            content: "Follow up question".into(),
+            attachments: vec![],
+            images: vec![],
+            parts: vec![],
+            status: None,
+        },
+    ];
+
+    let mut quick2 = dated("q2", 100);
+    quick2.is_quick_request = Some(true);
+    quick2.messages = vec![
+        ChatMessage {
+            role: ChatRole::User,
+            content: "Old question".into(),
+            attachments: vec![],
+            images: vec![],
+            parts: vec![],
+            status: None,
+        },
+        ChatMessage {
+            role: ChatRole::User,
+            content: "First question".into(), // Duplicate prompt
+            attachments: vec![],
+            images: vec![],
+            parts: vec![],
+            status: None,
+        },
+    ];
+
+    let mut normal_chat = dated("n1", 300);
+    normal_chat.is_quick_request = None;
+    normal_chat.messages = vec![ChatMessage {
+        role: ChatRole::User,
+        content: "Normal chat question".into(),
+        attachments: vec![],
+        images: vec![],
+        parts: vec![],
+        status: None,
+    }];
+
+    save_chat(&dirs, enabled_policy(), &images, quick1).unwrap();
+    save_chat(&dirs, enabled_policy(), &images, quick2).unwrap();
+    save_chat(&dirs, enabled_policy(), &images, normal_chat).unwrap();
+
+    let prompts = list_recent_quick_request_prompts(&dirs, enabled_policy(), 5).unwrap();
+    assert_eq!(
+        prompts,
+        vec![
+            "Follow up question".to_string(),
+            "First question".to_string(),
+            "Old question".to_string(),
+        ]
+    );
+
+    let limited = list_recent_quick_request_prompts(&dirs, enabled_policy(), 2).unwrap();
+    assert_eq!(
+        limited,
+        vec![
+            "Follow up question".to_string(),
+            "First question".to_string(),
+        ]
+    );
 }

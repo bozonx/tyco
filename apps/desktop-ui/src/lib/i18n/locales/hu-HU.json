@@ -145,7 +145,8 @@
     "voiceSendHint": "Azonnali küldés (Ctrl+Enter)",
     "promptPresets": "Prompt-sablonok",
     "noPromptsConfigured": "Nincsenek beállítva prompt-sablonok",
-    "noToolCalling": "eszközök nélkül"
+    "noToolCalling": "eszközök nélkül",
+    "quickAiRequests": "Gyors kérések"
   },
   "chatTools": {
     "files": {
@@ -1041,7 +1042,7 @@
     "sectionAccessibility": "Akadálymentesség",
     "sectionAppearance": "Megjelenés",
     "sectionChatHistory": "Csevegési előzmények",
-    "sectionEditorHistory": "Szerkesztő előzményei",
+    "sectionEditorHistory": "Művelet- és beviteli előzmények",
     "sectionLlmImages": "Képek a csevegésekben",
     "sectionMarkdown": "Markdown-formázás",
     "sectionMarkdownClean": "Markdown átalakítása egyszerű szöveggé",
@@ -1236,7 +1237,8 @@
     "movePromptPageBack": "Oldal mozgatása hátra",
     "movePromptPageForward": "Oldal mozgatása előre",
     "removePromptPage": "Oldal eltávolítása",
-    "removePromptPageConfirm": "Eltávolítja ezt az oldalt a promptjaival együtt?"
+    "removePromptPageConfirm": "Eltávolítja ezt az oldalt a promptjaival együtt?",
+    "historyTab": "Előzmények"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

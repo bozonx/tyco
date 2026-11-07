@@ -537,7 +537,31 @@ const canSend = computed(
 )
 
 // Query options suggestions filtered by profile
-const recentPrompts = computed(() => model.getRecentInstructions(5))
+const recentPrompts = ref<string[]>([])
+async function loadRecentPrompts(pId: string | null) {
+  try {
+    const res = await ipcStore.call('list_recent_quick_request_prompts', {
+      profileId: pId ?? null,
+      limit: 5,
+    })
+    if (res.success && Array.isArray(res.result)) {
+      recentPrompts.value = res.result
+      return
+    }
+  } catch {
+    // fall back to empty
+  }
+  recentPrompts.value = []
+}
+
+watch(
+  () => model.profileId.value,
+  (pId) => {
+    void loadRecentPrompts(pId)
+  },
+  { immediate: true }
+)
+
 const recentOptions = computed<QueryPanelOption[]>(() =>
   filterOptions(
     recentPrompts.value.map((entry) => ({ id: entry, label: entry })),

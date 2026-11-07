@@ -145,7 +145,8 @@
     "voiceSendHint": "Άμεση αποστολή (Ctrl+Enter)",
     "promptPresets": "Προεπιλογές προτροπών",
     "noPromptsConfigured": "Δεν έχουν ρυθμιστεί προεπιλογές προτροπών",
-    "noToolCalling": "χωρίς εργαλεία"
+    "noToolCalling": "χωρίς εργαλεία",
+    "quickAiRequests": "Γρήγορα αιτήματα"
   },
   "chatTools": {
     "files": {
@@ -1041,7 +1042,7 @@
     "sectionAccessibility": "Προσβασιμότητα",
     "sectionAppearance": "Εμφάνιση",
     "sectionChatHistory": "Ιστορικό συνομιλιών",
-    "sectionEditorHistory": "Ιστορικό επεξεργαστή",
+    "sectionEditorHistory": "Ιστορικό ενεργειών και εισαγωγής",
     "sectionLlmImages": "Εικόνες στις συνομιλίες",
     "sectionMarkdown": "Μορφοποίηση Markdown",
     "sectionMarkdownClean": "Μετατροπή Markdown σε απλό κείμενο",
@@ -1236,7 +1237,8 @@
     "movePromptPageBack": "Μετακίνηση σελίδας πίσω",
     "movePromptPageForward": "Μετακίνηση σελίδας μπροστά",
     "removePromptPage": "Αφαίρεση σελίδας",
-    "removePromptPageConfirm": "Αφαίρεση αυτής της σελίδας μαζί με τις προτροπές της;"
+    "removePromptPageConfirm": "Αφαίρεση αυτής της σελίδας μαζί με τις προτροπές της;",
+    "historyTab": "Ιστορικό"
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {

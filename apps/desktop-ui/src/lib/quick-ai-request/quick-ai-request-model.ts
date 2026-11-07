@@ -113,10 +113,10 @@ export interface QuickAiRequestModelDependencies {
   getProfile?: (profileId: string) => AiProfile | undefined
 
   /** Resolves to the id of the stored entry, null when nothing was stored */
-  createHistorySession: (
+  createHistorySession?: (
     session: QuickAiRequestHistorySession
   ) => Promise<string | null>
-  updateHistorySession: (
+  updateHistorySession?: (
     id: string,
     turns: EditorHistoryTurn[],
     result: string | undefined
@@ -196,8 +196,8 @@ export function createQuickAiRequestModel(
   const error = ref<string | null>(null)
 
   const history = createQuickAiRequestHistory({
-    create: deps.createHistorySession,
-    update: deps.updateHistorySession,
+    create: deps.createHistorySession ?? (() => Promise.resolve(null)),
+    update: deps.updateHistorySession ?? (() => Promise.resolve()),
   })
   let abortController: AbortController | null = null
 
@@ -467,6 +467,7 @@ export function createQuickAiRequestModel(
       activeTurn.parts = [...result.parts]
       activeTurn.replyBlocks = replyBlocksOf(result.parts)
       activeTurn.status = 'done'
+      void saveQuickRequestChat()
       void recordHistory()
       return true
     } catch (err) {
@@ -541,12 +542,47 @@ export function createQuickAiRequestModel(
       },
     ])
 
+  const assignedChatId = deps.chatId ?? deps.createId()
   const chatOf = (messages: ChatMessage[]): Chat => ({
-    id: deps.chatId ?? deps.createId(),
+    id: assignedChatId,
     title: draftTitleOf(messages[0], deps.imageTitle?.() || 'Image'),
     lastMessageAt: Date.now(),
     messages,
+    isQuickRequest: true,
   })
+
+  let chatTitleGenerated = false
+  const saveQuickRequestChat = async () => {
+    if (isScreenshot || turns.value.length === 0 || !deps.saveChat) return
+    const messages = conversationMessages()
+    if (messages.length === 0) return
+    const chat = chatOf(messages)
+    const pId = profileId.value ?? undefined
+    try {
+      await deps.saveChat(chat, pId)
+      if (
+        !chatTitleGenerated &&
+        turns.value.length === 1 &&
+        deps.generateChatTitle &&
+        deps.renameChat
+      ) {
+        chatTitleGenerated = true
+        const firstAnswer = turns.value[0]
+        const answer =
+          firstAnswer?.textResponse.trim() || resultOf(firstAnswer) || ''
+        if (answer) {
+          void generateTitle(
+            chat.id,
+            chat.messages[0].content,
+            answer,
+            chat.title
+          )
+        }
+      }
+    } catch {
+      // Chat saving failure should not break the ongoing quick request.
+    }
+  }
 
   /** The image moves with the chat; an unanswered draft becomes its question */
   const transferScreenshotChat = async (draft?: string) => {

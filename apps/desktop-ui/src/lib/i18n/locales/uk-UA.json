@@ -145,7 +145,8 @@
     "voiceSendHint": "Надіслати одразу (Ctrl+Enter)",
     "promptPresets": "Заготовлені промпти",
     "noPromptsConfigured": "Заготовлені промпти не налаштовані",
-    "noToolCalling": "без інструментів"
+    "noToolCalling": "без інструментів",
+    "quickAiRequests": "Швидкі запити"
   },
   "chatTools": {
     "files": {
@@ -1041,7 +1042,7 @@
     "sectionAccessibility": "Доступність",
     "sectionAppearance": "Вигляд",
     "sectionChatHistory": "Історія чатів",
-    "sectionEditorHistory": "Історія редактора",
+    "sectionEditorHistory": "Історія дій та введення",
     "sectionLlmImages": "Зображення в чатах",
     "sectionMarkdown": "Форматування Markdown",
     "sectionMarkdownClean": "Перетворення Markdown у звичайний текст",
@@ -1236,7 +1237,8 @@
     "movePromptPageBack": "Перемістити сторінку назад",
     "movePromptPageForward": "Перемістити сторінку вперед",
     "removePromptPage": "Видалити сторінку",
-    "removePromptPageConfirm": "Видалити цю сторінку разом з її промптами?"
+    "removePromptPageConfirm": "Видалити цю сторінку разом з її промптами?",
+    "historyTab": "Історія"
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {

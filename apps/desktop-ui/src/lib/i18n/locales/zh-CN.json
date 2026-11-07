@@ -145,7 +145,8 @@
     "voiceSendHint": "立即发送 (Ctrl+Enter)",
     "promptPresets": "提示词预设",
     "noPromptsConfigured": "未配置提示词预设",
-    "noToolCalling": "不支持工具"
+    "noToolCalling": "不支持工具",
+    "quickAiRequests": "快捷请求"
   },
   "chatTools": {
     "files": {
@@ -1038,7 +1039,7 @@
     "sectionAccessibility": "辅助功能",
     "sectionAppearance": "外观",
     "sectionChatHistory": "聊天历史记录",
-    "sectionEditorHistory": "编辑器历史记录",
+    "sectionEditorHistory": "操作与输入历史",
     "sectionLlmImages": "聊天中的图像",
     "sectionMarkdown": "Markdown 格式化",
     "sectionMarkdownClean": "Markdown 转纯文本设置",
@@ -1233,7 +1234,8 @@
     "movePromptPageBack": "将页面前移",
     "movePromptPageForward": "将页面后移",
     "removePromptPage": "删除页面",
-    "removePromptPageConfirm": "要删除此页面及其提示词吗？"
+    "removePromptPageConfirm": "要删除此页面及其提示词吗？",
+    "historyTab": "历史"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

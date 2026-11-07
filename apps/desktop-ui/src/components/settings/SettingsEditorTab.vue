@@ -67,8 +67,6 @@
         <FieldSwitch v-model="markdownStrip.hasTaskCheckboxes" />
       </FieldRow>
     </SettingsSection>
-
-    <SettingsEditorHistorySection />
   </div>
 </template>
 
@@ -80,7 +78,6 @@ import { useSettingsContext } from '../../composables/use-settings-context'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
-import SettingsEditorHistorySection from './SettingsEditorHistorySection.vue'
 import SettingsSection from './SettingsSection.vue'
 import { type MarkdownFormatSettings, normalizeConfigValue } from '@tyco/shared'
 

@@ -145,7 +145,8 @@
     "voiceSendHint": "Hemen gönder (Ctrl+Enter)",
     "promptPresets": "İstem önayarları",
     "noPromptsConfigured": "Yapılandırılmış istem önayarı yok",
-    "noToolCalling": "araçsız"
+    "noToolCalling": "araçsız",
+    "quickAiRequests": "Hızlı istekler"
   },
   "chatTools": {
     "files": {
@@ -1041,7 +1042,7 @@
     "sectionAccessibility": "Erişilebilirlik",
     "sectionAppearance": "Görünüm",
     "sectionChatHistory": "Sohbet geçmişi",
-    "sectionEditorHistory": "Düzenleyici geçmişi",
+    "sectionEditorHistory": "Eylem ve giriş geçmişi",
     "sectionLlmImages": "Sohbetlerdeki görseller",
     "sectionMarkdown": "Markdown biçimlendirme",
     "sectionMarkdownClean": "Markdown'ı düz metne dönüştürme",
@@ -1236,7 +1237,8 @@
     "movePromptPageBack": "Sayfayı geri taşı",
     "movePromptPageForward": "Sayfayı ileri taşı",
     "removePromptPage": "Sayfayı kaldır",
-    "removePromptPageConfirm": "Bu sayfa istemleriyle birlikte kaldırılsın mı?"
+    "removePromptPageConfirm": "Bu sayfa istemleriyle birlikte kaldırılsın mı?",
+    "historyTab": "Geçmiş"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

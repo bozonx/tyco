@@ -23,6 +23,7 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         labelKey: 'settings.editorTab',
         icon: 'mdi:pencil-outline',
       },
+      { id: 'history', labelKey: 'settings.historyTab', icon: 'mdi:history' },
       {
         id: 'accessibility',
         labelKey: 'settings.sectionAccessibility',
@@ -408,6 +409,7 @@ const CONFIG_SECTION_TABS: Record<string, SettingsSectionId> = {
 const CONFIG_FIELD_TABS: Record<string, SettingsSectionId> = {
   'appearance.theme': 'general',
   'translation.targetLanguages': 'languages',
+  'editor.history': 'history',
 }
 
 /**

@@ -23,6 +23,7 @@
     "allow-get-desktop-state",
     "allow-get-hotkey-provider-info",
     "allow-list-installed-plugins",
+    "allow-list-recent-quick-request-prompts",
     "allow-log-client-message",
     "allow-log-command-run",
     "allow-log-webhook-call",

@@ -120,6 +120,7 @@ import SettingsEditorTab from './SettingsEditorTab.vue'
 import SettingsFavoritesTab from './SettingsFavoritesTab.vue'
 import SettingsGeneralTab from './SettingsGeneralTab.vue'
 import SettingsGlobalActionsTab from './SettingsGlobalActionsTab.vue'
+import SettingsHistoryTab from './SettingsHistoryTab.vue'
 import SettingsLanguagesTab from './SettingsLanguagesTab.vue'
 import SettingsLlmTab from './SettingsLlmTab.vue'
 import SettingsMainActionsTab from './SettingsMainActionsTab.vue'
@@ -141,6 +142,7 @@ const SECTION_TABS: Record<
 > = {
   general: SettingsGeneralTab,
   editor: SettingsEditorTab,
+  history: SettingsHistoryTab,
   'global-actions': SettingsGlobalActionsTab,
   stt: SettingsVoiceTab,
   chat: SettingsChatTab,

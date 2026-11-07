@@ -224,6 +224,15 @@ mod tests {
     fn enforce_masks_secrets_in_entries_stored_before() {
         let mut item = history_item("a", "password=hunter22", EditorHistoryKind::Source);
         item.result = Some(String::from("token: abcdef123456"));
+        item.instruction = Some(crate::models::EditorHistoryInstruction {
+            text: "secret: hunter223344".into(),
+            input_kind: crate::models::EditorHistoryInputKind::Typed,
+        });
+        item.turns = Some(vec![crate::models::EditorHistoryTurn {
+            prompt: "token: hunter223344".into(),
+            input_kind: crate::models::EditorHistoryInputKind::Typed,
+            result: Some("api_key: hunter223344".into()),
+        }]);
         let mut history = vec![item];
 
         EditorHistoryPolicy {
@@ -236,6 +245,18 @@ mod tests {
         assert_eq!(
             history[0].result.as_deref(),
             Some("token: [REDACTED SECRET]")
+        );
+        assert_eq!(
+            history[0].instruction.as_ref().unwrap().text,
+            "secret: [REDACTED SECRET]"
+        );
+        assert_eq!(
+            history[0].turns.as_ref().unwrap()[0].prompt,
+            "token: [REDACTED SECRET]"
+        );
+        assert_eq!(
+            history[0].turns.as_ref().unwrap()[0].result.as_deref(),
+            Some("api_key: [REDACTED SECRET]")
         );
     }
 }

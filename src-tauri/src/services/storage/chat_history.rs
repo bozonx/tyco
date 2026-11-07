@@ -156,7 +156,10 @@ pub fn list_recent_quick_request_prompts(
     let mut prompts = Vec::new();
     let mut seen = std::collections::HashSet::new();
 
-    for summary in summaries.into_iter().filter(|s| s.is_quick_request == Some(true)) {
+    for summary in summaries
+        .into_iter()
+        .filter(|s| s.is_quick_request == Some(true))
+    {
         if let Ok(Some(chat)) = read_chat(&dirs.chats, summary.id) {
             for message in chat.messages.iter().rev() {
                 if message.role == crate::models::ChatRole::User {

@@ -145,7 +145,8 @@
     "voiceSendHint": "Enviar imediatamente (Ctrl+Enter)",
     "promptPresets": "Predefinições de prompts",
     "noPromptsConfigured": "Nenhuma predefinição de prompt configurada",
-    "noToolCalling": "sem ferramentas"
+    "noToolCalling": "sem ferramentas",
+    "quickAiRequests": "Consultas rápidas"
   },
   "chatTools": {
     "files": {
@@ -1044,7 +1045,7 @@
     "sectionAccessibility": "Acessibilidade",
     "sectionAppearance": "Aparência",
     "sectionChatHistory": "Histórico de chats",
-    "sectionEditorHistory": "Histórico do editor",
+    "sectionEditorHistory": "Histórico de ações e entrada",
     "sectionLlmImages": "Imagens nos chats",
     "sectionMarkdown": "Formatação Markdown",
     "sectionMarkdownClean": "Conversão de Markdown para texto simples",
@@ -1239,7 +1240,8 @@
     "movePromptPageBack": "Mover página para trás",
     "movePromptPageForward": "Mover página para frente",
     "removePromptPage": "Remover página",
-    "removePromptPageConfirm": "Remover esta página e seus prompts?"
+    "removePromptPageConfirm": "Remover esta página e seus prompts?",
+    "historyTab": "Histórico"
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {

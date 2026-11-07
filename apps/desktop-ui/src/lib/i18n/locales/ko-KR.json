@@ -145,7 +145,8 @@
     "voiceSendHint": "바로 보내기 (Ctrl+Enter)",
     "promptPresets": "프롬프트 사전 설정",
     "noPromptsConfigured": "구성된 프롬프트 사전 설정이 없습니다",
-    "noToolCalling": "도구 없음"
+    "noToolCalling": "도구 없음",
+    "quickAiRequests": "빠른 요청"
   },
   "chatTools": {
     "files": {
@@ -1038,7 +1039,7 @@
     "sectionAccessibility": "접근성",
     "sectionAppearance": "모양",
     "sectionChatHistory": "채팅 기록",
-    "sectionEditorHistory": "편집기 기록",
+    "sectionEditorHistory": "작업 및 입력 기록",
     "sectionLlmImages": "채팅의 이미지",
     "sectionMarkdown": "Markdown 서식",
     "sectionMarkdownClean": "Markdown을 일반 텍스트로 변환",
@@ -1233,7 +1234,8 @@
     "movePromptPageBack": "페이지를 앞으로 이동",
     "movePromptPageForward": "페이지를 뒤로 이동",
     "removePromptPage": "페이지 삭제",
-    "removePromptPageConfirm": "이 페이지와 프롬프트를 삭제할까요?"
+    "removePromptPageConfirm": "이 페이지와 프롬프트를 삭제할까요?",
+    "historyTab": "기록"
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {

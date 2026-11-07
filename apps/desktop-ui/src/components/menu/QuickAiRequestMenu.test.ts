@@ -19,6 +19,7 @@ describe('QuickAiRequestMenu', () => {
     desktop.backend.handle('paste_into_target_and_hide', () => undefined)
     desktop.backend.handle('open_main_chat', () => undefined)
     desktop.backend.handle('save_chat', () => undefined)
+    desktop.backend.handle('list_recent_quick_request_prompts', () => [])
     desktop.backend.handle('copy_text', () => undefined)
     desktop.backend.handle('add_editor_history_item', () => 'history-1')
     desktop.backend.handle(

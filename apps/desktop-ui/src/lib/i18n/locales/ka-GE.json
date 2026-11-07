@@ -145,7 +145,8 @@
     "voiceSendHint": "დაუყოვნებლივ გაგზავნა (Ctrl+Enter)",
     "promptPresets": "პრომპტების წინასწარი პარამეტრები",
     "noPromptsConfigured": "პრომპტების წინასწარი პარამეტრები არ არის კონფიგურირებული",
-    "noToolCalling": "ხელსაწყოების გარეშე"
+    "noToolCalling": "ხელსაწყოების გარეშე",
+    "quickAiRequests": "სწრაფი მოთხოვნები"
   },
   "chatTools": {
     "files": {
@@ -1041,7 +1042,7 @@
     "sectionAccessibility": "მისაწვდომობა",
     "sectionAppearance": "იერსახე",
     "sectionChatHistory": "ჩატების ისტორია",
-    "sectionEditorHistory": "რედაქტორის ისტორია",
+    "sectionEditorHistory": "მოქმედებების და შეყვანის ისტორია",
     "sectionLlmImages": "სურათები ჩატებში",
     "sectionMarkdown": "Markdown ფორმატირება",
     "sectionMarkdownClean": "Markdown-ის უბრალო ტექსტად გარდაქმნა",
@@ -1236,7 +1237,8 @@
     "movePromptPageBack": "გვერდის უკან გადატანა",
     "movePromptPageForward": "გვერდის წინ გადატანა",
     "removePromptPage": "გვერდის წაშლა",
-    "removePromptPageConfirm": "წავშალოთ ეს გვერდი მის პრომპტებთან ერთად?"
+    "removePromptPageConfirm": "წავშალოთ ეს გვერდი მის პრომპტებთან ერთად?",
+    "historyTab": "ისტორია"
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {
