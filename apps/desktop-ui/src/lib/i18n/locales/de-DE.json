@@ -795,14 +795,18 @@
       "voiceCommands": "Sprachbefehle",
       "selectionActionsPage2": "Aktionen: Seite 2",
       "selectionActionsPage3": "Aktionen: Seite 3",
-      "chatPrompts": "Chat-Prompt-Vorlagen für ausgewählten Text",
+      "chatPrompts": "Prompts: Seite 1",
       "selectionActionsPage4": "Aktionen: Seite 4",
       "selectionActionsPage5": "Aktionen: Seite 5",
       "favorites": "Favoriten",
       "quickAiRequest": "Schnelle KI-Anfrage",
       "voiceQuickAiRequest": "Sprach-Schnellanfrage an KI",
       "screenshotQuickAiRequest": "Bildschirmfoto und KI-Frage",
-      "voiceScreenshotQuickAiRequest": "Bildschirmfoto und KI-Sprachfrage"
+      "voiceScreenshotQuickAiRequest": "Bildschirmfoto und KI-Sprachfrage",
+      "chatPromptsPage2": "Prompts: Seite 2",
+      "chatPromptsPage3": "Prompts: Seite 3",
+      "chatPromptsPage4": "Prompts: Seite 4",
+      "chatPromptsPage5": "Prompts: Seite 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc zum Abbrechen",
@@ -1209,7 +1213,7 @@
     "webJinaApiKeyHint": "Optional. Ohne Schlüssel nutzen Anfragen das kostenlose Kontingent mit geteilten Limits.",
     "chatPromptsTab": "Chat-Prompt-Vorlagen",
     "chatPromptsNavTab": "Chat-Prompts",
-    "chatPromptsHint": "Vorbereitete Prompts zum Senden an den Chat. Im Chat-Prompt-Menü wird jeder mit einer eigenen Taste ausgeführt; ziehen Sie die Karten, um ihre Tasten zu ändern.",
+    "chatPromptsHint": "Prompt-Seiten für schnelle KI-Anfragen. Jede Seite nutzt ihr eigenes Profil, jeder Prompt startet mit seiner eigenen Taste. Ziehen Sie die Karten, um die Tasten zu ändern.",
     "prompt": "Prompt",
     "sectionWebSearch": "Websuche für Agenten",
     "webSearchSectionHint": "Einstellungen für Websuche und das Abrufen von Webseiten durch KI-Modelle und Profile.",
@@ -1231,7 +1235,14 @@
     "screenshotCaptureMode": "Aufnahmemodus",
     "screenshotCaptureModeHint": "Wählen Sie, ob der gesamte Bildschirm aufgenommen oder ein bestimmter Bereich ausgewählt werden soll.",
     "screenshotCaptureModeScreen": "Gesamter Bildschirm",
-    "screenshotCaptureModeArea": "Ausgewählter Bereich"
+    "screenshotCaptureModeArea": "Ausgewählter Bereich",
+    "chatPromptsSentImmediately": "Prompt sofort senden",
+    "addPromptPage": "Seite hinzufügen",
+    "promptPageProfile": "Profil",
+    "movePromptPageBack": "Seite nach vorne verschieben",
+    "movePromptPageForward": "Seite nach hinten verschieben",
+    "removePromptPage": "Seite entfernen",
+    "removePromptPageConfirm": "Diese Seite mit ihren Prompts entfernen?"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {
@@ -1469,5 +1480,14 @@
     "retake": "Bildschirmfoto erneut aufnehmen",
     "failed": "Der Bildschirm konnte nicht aufgenommen werden. Prüfen Sie die Aufnahmeberechtigungen und die Unterstützung des Desktop-Portals.",
     "selectAreaInstruction": "Ziehen Sie, um einen Bereich auszuwählen. Drücken Sie Escape zum Abbrechen."
+  },
+  "chatPrompts": {
+    "pageLabel": "{page} · {profile}",
+    "missingProfile": "Kein Profil",
+    "pages": "Prompt-Seiten",
+    "noPages": "Noch keine Prompt-Seiten. Fügen Sie in den Einstellungen eine hinzu.",
+    "pageNotFound": "Es gibt keine Prompt-Seite {page}.",
+    "profileMissing": "Das Profil dieser Seite existiert nicht mehr. Wählen Sie in den Einstellungen ein anderes.",
+    "openSettings": "Einstellungen öffnen"
   }
 }

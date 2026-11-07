@@ -792,14 +792,18 @@
       "voiceCommands": "ხმოვანი ბრძანებები",
       "selectionActionsPage2": "მოქმედებები: გვერდი 2",
       "selectionActionsPage3": "მოქმედებები: გვერდი 3",
-      "chatPrompts": "ჩატის პრომპტების წინასწარი პარამეტრები მონიშნული ტექსტისთვის",
+      "chatPrompts": "პრომპტები: გვერდი 1",
       "selectionActionsPage4": "მოქმედებები: გვერდი 4",
       "selectionActionsPage5": "მოქმედებები: გვერდი 5",
       "favorites": "Რჩეულები",
       "quickAiRequest": "სწრაფი AI მოთხოვნა",
       "voiceQuickAiRequest": "ხმოვანი სწრაფი AI მოთხოვნა",
       "screenshotQuickAiRequest": "ეკრანის სურათი და კითხვა AI-ს",
-      "voiceScreenshotQuickAiRequest": "ეკრანის სურათი და ხმოვანი კითხვა AI-ს"
+      "voiceScreenshotQuickAiRequest": "ეკრანის სურათი და ხმოვანი კითხვა AI-ს",
+      "chatPromptsPage2": "პრომპტები: გვერდი 2",
+      "chatPromptsPage3": "პრომპტები: გვერდი 3",
+      "chatPromptsPage4": "პრომპტები: გვერდი 4",
+      "chatPromptsPage5": "პრომპტები: გვერდი 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — გაუქმება",
@@ -1206,7 +1210,7 @@
     "webJinaApiKeyHint": "არასავალდებულო. გასაღების გარეშე, მოთხოვნები იყენებს უფასო ტარიფს საერთო ლიმიტებით.",
     "chatPromptsTab": "ჩატის პრომპტების წინასწარი პარამეტრები",
     "chatPromptsNavTab": "ჩატის პრომპტები",
-    "chatPromptsHint": "წინასწარ მომზადებული პრომპტები ჩატში გასაგზავნად. ჩატის პრომპტების მენიუში თითოეული საკუთარი ღილაკით ეშვება; გადაათრიეთ ბარათები ღილაკების შესაცვლელად.",
+    "chatPromptsHint": "პრომპტების გვერდები AI-სთან სწრაფი მოთხოვნებისთვის. თითოეული გვერდი საკუთარ პროფილს იყენებს, თითოეული პრომპტი საკუთარი ღილაკით ეშვება. ღილაკების შესაცვლელად გადაათრიეთ ბარათები.",
     "prompt": "პრომპტი",
     "sectionWebSearch": "ვებ-ძიება აგენტებისთვის",
     "webSearchSectionHint": "AI მოდელებისა და პროფილების მიერ გამოყენებული ვებ-ძიებისა და გვერდის წაკითხვის ხელსაწყოების პარამეტრები.",
@@ -1228,7 +1232,14 @@
     "screenshotCaptureMode": "გადაღების რეჟიმი",
     "screenshotCaptureModeHint": "აირჩიეთ მთლიანი ეკრანის გადაღება თუ კონკრეტული არეალის მონიშვნა.",
     "screenshotCaptureModeScreen": "მთლიანი ეკრანი",
-    "screenshotCaptureModeArea": "მონიშნული არეალი"
+    "screenshotCaptureModeArea": "მონიშნული არეალი",
+    "chatPromptsSentImmediately": "პრომპტის დაუყოვნებლივ გაგზავნა",
+    "addPromptPage": "გვერდის დამატება",
+    "promptPageProfile": "პროფილი",
+    "movePromptPageBack": "გვერდის უკან გადატანა",
+    "movePromptPageForward": "გვერდის წინ გადატანა",
+    "removePromptPage": "გვერდის წაშლა",
+    "removePromptPageConfirm": "წავშალოთ ეს გვერდი მის პრომპტებთან ერთად?"
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {
@@ -1466,5 +1477,14 @@
     "retake": "ეკრანის სურათის ხელახლა გადაღება",
     "failed": "ეკრანის გადაღება ვერ მოხერხდა. შეამოწმეთ ეკრანის გადაღების ნებართვები და სამუშაო მაგიდის პორტალის მხარდაჭერა.",
     "selectAreaInstruction": "გადაათრიეთ არეალის ასარჩევად. გასაუქმებლად დააჭირეთ Escape-ს."
+  },
+  "chatPrompts": {
+    "pageLabel": "{page} · {profile}",
+    "missingProfile": "პროფილი არ არის",
+    "pages": "პრომპტების გვერდები",
+    "noPages": "პრომპტების გვერდები ჯერ არ არის. დაამატეთ პარამეტრებში.",
+    "pageNotFound": "პრომპტების გვერდი {page} არ არსებობს.",
+    "profileMissing": "ამ გვერდის პროფილი აღარ არსებობს. აირჩიეთ სხვა პარამეტრებში.",
+    "openSettings": "პარამეტრების გახსნა"
   }
 }

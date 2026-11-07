@@ -789,14 +789,18 @@
       "voiceCommands": "Hlasové příkazy",
       "selectionActionsPage2": "Akce: stránka 2",
       "selectionActionsPage3": "Akce: stránka 3",
-      "chatPrompts": "Předvolby promptů chatu pro vybraný text",
+      "chatPrompts": "Prompty: stránka 1",
       "selectionActionsPage4": "Akce: stránka 4",
       "selectionActionsPage5": "Akce: stránka 5",
       "favorites": "Oblíbené",
       "quickAiRequest": "Rychlý dotaz na AI",
       "voiceQuickAiRequest": "Hlasový rychlý dotaz na AI",
       "screenshotQuickAiRequest": "Snímek obrazovky a dotaz AI",
-      "voiceScreenshotQuickAiRequest": "Snímek obrazovky a hlasový dotaz AI"
+      "voiceScreenshotQuickAiRequest": "Snímek obrazovky a hlasový dotaz AI",
+      "chatPromptsPage2": "Prompty: stránka 2",
+      "chatPromptsPage3": "Prompty: stránka 3",
+      "chatPromptsPage4": "Prompty: stránka 4",
+      "chatPromptsPage5": "Prompty: stránka 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pro zrušení",
@@ -1203,7 +1207,7 @@
     "webJinaApiKeyHint": "Volitelné. Bez klíče požadavky využívají bezplatný tarif se sdílenými limity.",
     "chatPromptsTab": "Předvolby promptů chatu",
     "chatPromptsNavTab": "Prompty chatu",
-    "chatPromptsHint": "Předem připravené prompty pro odeslání do chatu. V nabídce promptů chatu se každý spouští vlastní klávesou; přetažením karet změníte jejich klávesy.",
+    "chatPromptsHint": "Stránky promptů pro rychlé dotazy na AI. Každá stránka používá svůj profil, každý prompt se spouští vlastní klávesou. Přetažením karet změníte klávesy.",
     "prompt": "Prompt",
     "sectionWebSearch": "Vyhledávání na webu pro agenty",
     "webSearchSectionHint": "Nastavení nástrojů pro vyhledávání na webu a čtení stránek používaných modely a profily AI.",
@@ -1225,7 +1229,14 @@
     "screenshotCaptureMode": "Režim snímání",
     "screenshotCaptureModeHint": "Zvolte, zda pořídit snímek celé obrazovky nebo vybrat konkrétní oblast.",
     "screenshotCaptureModeScreen": "Celá obrazovka",
-    "screenshotCaptureModeArea": "Vybraná oblast"
+    "screenshotCaptureModeArea": "Vybraná oblast",
+    "chatPromptsSentImmediately": "Odeslat prompt hned",
+    "addPromptPage": "Přidat stránku",
+    "promptPageProfile": "Profil",
+    "movePromptPageBack": "Posunout stránku zpět",
+    "movePromptPageForward": "Posunout stránku dopředu",
+    "removePromptPage": "Odebrat stránku",
+    "removePromptPageConfirm": "Odebrat tuto stránku i s jejími prompty?"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
@@ -1463,5 +1474,14 @@
     "retake": "Pořídit snímek znovu",
     "failed": "Obrazovku se nepodařilo zachytit. Zkontrolujte oprávnění k zachycení a podporu portálu plochy.",
     "selectAreaInstruction": "Přetažením vyberte oblast. Stisknutím klávesy Escape zrušíte výběr."
+  },
+  "chatPrompts": {
+    "pageLabel": "{page} · {profile}",
+    "missingProfile": "Žádný profil",
+    "pages": "Stránky promptů",
+    "noPages": "Zatím tu nejsou žádné stránky promptů. Přidejte je v nastavení.",
+    "pageNotFound": "Stránka promptů {page} neexistuje.",
+    "profileMissing": "Profil této stránky už neexistuje. Vyberte jiný v nastavení.",
+    "openSettings": "Otevřít nastavení"
   }
 }

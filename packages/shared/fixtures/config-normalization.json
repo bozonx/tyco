@@ -239,6 +239,10 @@
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
         "chatPrompts": "",
+        "chatPromptsPage2": "",
+        "chatPromptsPage3": "",
+        "chatPromptsPage4": "",
+        "chatPromptsPage5": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
@@ -397,7 +401,7 @@
         "slots": { "q": "deep-edit" }
       },
       "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "pages": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] }
@@ -633,6 +637,10 @@
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
         "chatPrompts": "",
+        "chatPromptsPage2": "",
+        "chatPromptsPage3": "",
+        "chatPromptsPage4": "",
+        "chatPromptsPage5": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
@@ -788,7 +796,7 @@
         "slots": { "q": "deep-edit" }
       },
       "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "pages": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] }
@@ -1013,6 +1021,10 @@
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
         "chatPrompts": "",
+        "chatPromptsPage2": "",
+        "chatPromptsPage3": "",
+        "chatPromptsPage4": "",
+        "chatPromptsPage5": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
@@ -1172,7 +1184,7 @@
         "slots": { "q": "deep-edit" }
       },
       "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "pages": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] }
@@ -1402,6 +1414,10 @@
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
         "chatPrompts": "",
+        "chatPromptsPage2": "",
+        "chatPromptsPage3": "",
+        "chatPromptsPage4": "",
+        "chatPromptsPage5": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
@@ -1566,7 +1582,7 @@
         "slots": { "q": "deep-edit" }
       },
       "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "pages": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] }
@@ -1786,6 +1802,10 @@
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
         "chatPrompts": "",
+        "chatPromptsPage2": "",
+        "chatPromptsPage3": "",
+        "chatPromptsPage4": "",
+        "chatPromptsPage5": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
@@ -1938,7 +1958,7 @@
         "slots": { "q": "deep-edit" }
       },
       "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "pages": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] }
@@ -2163,6 +2183,10 @@
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
         "chatPrompts": "",
+        "chatPromptsPage2": "",
+        "chatPromptsPage3": "",
+        "chatPromptsPage4": "",
+        "chatPromptsPage5": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
@@ -2322,7 +2346,7 @@
         "slots": { "q": "deep-edit" }
       },
       "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "pages": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] }
@@ -2549,6 +2573,10 @@
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
         "chatPrompts": "",
+        "chatPromptsPage2": "",
+        "chatPromptsPage3": "",
+        "chatPromptsPage4": "",
+        "chatPromptsPage5": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
@@ -2708,7 +2736,7 @@
         "slots": { "q": "deep-edit" }
       },
       "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "pages": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] }
@@ -2949,6 +2977,10 @@
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
         "chatPrompts": "",
+        "chatPromptsPage2": "",
+        "chatPromptsPage3": "",
+        "chatPromptsPage4": "",
+        "chatPromptsPage5": "",
         "history": "",
         "favorites": "",
         "quickAiRequest": "",
@@ -3102,7 +3134,7 @@
       "variables": [],
       "variableValues": {},
       "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "pages": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] }
     }
@@ -3347,6 +3379,10 @@
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
         "chatPrompts": "",
+        "chatPromptsPage2": "",
+        "chatPromptsPage3": "",
+        "chatPromptsPage4": "",
+        "chatPromptsPage5": "",
         "history": "",
         "favorites": "",
         "quickAiRequest": "",
@@ -3507,7 +3543,7 @@
       "variables": [],
       "variableValues": {},
       "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "pages": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] }
     }
@@ -3762,6 +3798,10 @@
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
         "chatPrompts": "",
+        "chatPromptsPage2": "",
+        "chatPromptsPage3": "",
+        "chatPromptsPage4": "",
+        "chatPromptsPage5": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
@@ -3990,7 +4030,7 @@
         "slots": { "q": "deep-edit" }
       },
       "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "pages": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] }
@@ -4262,6 +4302,10 @@
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
         "chatPrompts": "",
+        "chatPromptsPage2": "",
+        "chatPromptsPage3": "",
+        "chatPromptsPage4": "",
+        "chatPromptsPage5": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "favorites": "",
@@ -4494,7 +4538,7 @@
         "slots": { "q": "deep-edit" }
       },
       "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "pages": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] }

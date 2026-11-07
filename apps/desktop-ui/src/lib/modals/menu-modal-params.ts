@@ -52,6 +52,10 @@ export interface QuickAiRequestMenuParams {
   shortcutsDisabled?: boolean
   inputMode?: 'text' | 'voice'
   profileId?: string | null
+  /** The request the input starts with, e.g. from a prompt page */
+  prompt?: string
+  /** Sends `prompt` at once instead of leaving it in the input */
+  isPromptSent?: boolean
 }
 export interface VoiceCommandsMenuParams {
   /** Follows a late selection capture from this action-menu activation only. */
@@ -68,8 +72,8 @@ export interface StylingMenuParams {
 export interface ChatPromptsMenuParams {
   text?: string
   shortcutsDisabled?: boolean
-  /** Runs this prompt immediately when the dialog opens. */
-  promptId?: string
+  /** The prompt page the menu opens on, 0-based */
+  pageIndex?: number
 }
 export interface FavoritesMenuParams {
   shortcutsDisabled?: boolean

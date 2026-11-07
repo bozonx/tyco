@@ -273,6 +273,8 @@ const props = withDefaults(defineProps<QuickAiRequestMenuParams>(), {
   shortcutsDisabled: false,
   inputMode: 'text',
   profileId: null,
+  prompt: '',
+  isPromptSent: false,
 })
 
 const actionMenuStore = useActionMenuStore()
@@ -290,7 +292,7 @@ const { t } = useI18n()
 const { handleEsc: defaultHandleEsc } = useOverlayNav()
 
 const isQuickWindow = isInQuickWindow()
-const prompt = ref('')
+const prompt = ref(props.prompt)
 const isCapturing = ref(false)
 const queryPanelRef = ref<InstanceType<typeof QueryPanel>>()
 let disposed = false
@@ -730,6 +732,9 @@ function goToSettings() {
 onMounted(() => {
   if (!aiProfilesStore.isLoaded) {
     void aiProfilesStore.loadAll()
+  }
+  if (props.isPromptSent && prompt.value.trim()) {
+    void handleQuerySubmit()
   }
 })
 

@@ -36,7 +36,8 @@ pub fn open_main_editor(
 }
 
 /// Opens `mode` as the user would with a hotkey, with `text` in place of the
-/// selection. `action_page_index` picks a page of the action menu;
+/// selection. `action_page_index` picks a page of the action menu or of the
+/// prompts;
 /// `history_origin` filters the history it opens.
 #[tauri::command]
 pub fn activate_mode(
@@ -54,7 +55,10 @@ pub fn activate_mode(
     }
     let mut activation = Activation::new(mode, ActivationSource::Ui);
     if let Some(index) = action_page_index {
-        if mode != ActivationMode::SelectionActions {
+        if !matches!(
+            mode,
+            ActivationMode::SelectionActions | ActivationMode::ChatPrompts
+        ) {
             return Err(AppError::InvalidInput("Invalid action page".into()));
         }
         activation.action_page_index = Some(index);

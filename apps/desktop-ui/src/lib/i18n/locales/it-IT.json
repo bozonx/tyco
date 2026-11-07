@@ -795,14 +795,18 @@
       "voiceCommands": "Comandi vocali",
       "selectionActionsPage2": "Azioni: pagina 2",
       "selectionActionsPage3": "Azioni: pagina 3",
-      "chatPrompts": "Preset di prompt della chat per il testo selezionato",
+      "chatPrompts": "Prompt: pagina 1",
       "selectionActionsPage4": "Azioni: pagina 4",
       "selectionActionsPage5": "Azioni: pagina 5",
       "favorites": "Preferiti",
       "quickAiRequest": "Richiesta rapida IA",
       "voiceQuickAiRequest": "Richiesta vocale rapida IA",
       "screenshotQuickAiRequest": "Schermata e domanda all’IA",
-      "voiceScreenshotQuickAiRequest": "Schermata e domanda vocale all’IA"
+      "voiceScreenshotQuickAiRequest": "Schermata e domanda vocale all’IA",
+      "chatPromptsPage2": "Prompt: pagina 2",
+      "chatPromptsPage3": "Prompt: pagina 3",
+      "chatPromptsPage4": "Prompt: pagina 4",
+      "chatPromptsPage5": "Prompt: pagina 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc per annullare",
@@ -1209,7 +1213,7 @@
     "webJinaApiKeyHint": "Facoltativo. Senza chiave, le richieste utilizzano il piano gratuito con limiti condivisi.",
     "chatPromptsTab": "Preset di prompt per la chat",
     "chatPromptsNavTab": "Prompt della chat",
-    "chatPromptsHint": "Prompt preimpostati da inviare alla chat. Nel menu dei prompt della chat, ciascuno viene eseguito con il proprio tasto; trascina le schede per modificare i tasti.",
+    "chatPromptsHint": "Pagine di prompt per le richieste rapide all’IA. Ogni pagina usa il proprio profilo, ogni prompt si avvia con il proprio tasto. Trascina le schede per cambiare i tasti.",
     "prompt": "Prompt",
     "sectionWebSearch": "Ricerca web per gli agenti",
     "webSearchSectionHint": "Impostazioni per la ricerca sul web e la lettura delle pagine utilizzate dai modelli e profili IA.",
@@ -1231,7 +1235,14 @@
     "screenshotCaptureMode": "Modalità di cattura",
     "screenshotCaptureModeHint": "Scegli se catturare l'intero schermo o selezionare un'area specifica.",
     "screenshotCaptureModeScreen": "Intero schermo",
-    "screenshotCaptureModeArea": "Area selezionata"
+    "screenshotCaptureModeArea": "Area selezionata",
+    "chatPromptsSentImmediately": "Invia subito il prompt",
+    "addPromptPage": "Aggiungi pagina",
+    "promptPageProfile": "Profilo",
+    "movePromptPageBack": "Sposta la pagina indietro",
+    "movePromptPageForward": "Sposta la pagina avanti",
+    "removePromptPage": "Rimuovi pagina",
+    "removePromptPageConfirm": "Rimuovere questa pagina e i suoi prompt?"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {
@@ -1469,5 +1480,14 @@
     "retake": "Acquisisci di nuovo la schermata",
     "failed": "Impossibile acquisire lo schermo. Controlla le autorizzazioni di acquisizione e il supporto del portale desktop.",
     "selectAreaInstruction": "Trascina per selezionare un'area. Premi Esc per annullare."
+  },
+  "chatPrompts": {
+    "pageLabel": "{page} · {profile}",
+    "missingProfile": "Nessun profilo",
+    "pages": "Pagine di prompt",
+    "noPages": "Nessuna pagina di prompt. Aggiungine una nelle impostazioni.",
+    "pageNotFound": "La pagina di prompt {page} non esiste.",
+    "profileMissing": "Il profilo di questa pagina non esiste più. Scegline un altro nelle impostazioni.",
+    "openSettings": "Apri impostazioni"
   }
 }

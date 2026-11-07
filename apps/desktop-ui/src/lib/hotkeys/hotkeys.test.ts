@@ -19,6 +19,10 @@ describe('hotkeys', () => {
       'selectionActionsPage3',
       'selectionActionsPage4',
       'selectionActionsPage5',
+      'chatPromptsPage2',
+      'chatPromptsPage3',
+      'chatPromptsPage4',
+      'chatPromptsPage5',
       'selectionCorrection',
     ]
     expect(Object.keys(DEFAULT_USER_CONFIG.hotkeys).sort()).toEqual(

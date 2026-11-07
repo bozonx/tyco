@@ -792,14 +792,18 @@
       "voiceCommands": "音声コマンド",
       "selectionActionsPage2": "アクション: ページ 2",
       "selectionActionsPage3": "アクション: ページ 3",
-      "chatPrompts": "選択テキストのチャットプロンプトプリセット",
+      "chatPrompts": "プロンプト：ページ 1",
       "selectionActionsPage4": "アクション: ページ 4",
       "selectionActionsPage5": "アクション: ページ 5",
       "favorites": "お気に入り",
       "quickAiRequest": "AIクイックリクエスト",
       "voiceQuickAiRequest": "音声AIクイックリクエスト",
       "screenshotQuickAiRequest": "スクリーンショットとAIへの質問",
-      "voiceScreenshotQuickAiRequest": "スクリーンショットとAIへの音声質問"
+      "voiceScreenshotQuickAiRequest": "スクリーンショットとAIへの音声質問",
+      "chatPromptsPage2": "プロンプト：ページ 2",
+      "chatPromptsPage3": "プロンプト：ページ 3",
+      "chatPromptsPage4": "プロンプト：ページ 4",
+      "chatPromptsPage5": "プロンプト：ページ 5"
     },
     "hotkeyInput": {
       "cancelHint": "Escでキャンセル",
@@ -1206,7 +1210,7 @@
     "webJinaApiKeyHint": "省略可能。キーがない場合、リクエストは共有レート制限のある無料枠を使用します。",
     "chatPromptsTab": "チャットプロンプトのプリセット",
     "chatPromptsNavTab": "チャットプロンプト",
-    "chatPromptsHint": "チャットに送信するプリセットプロンプト。チャットプロンプトメニューでは各項目が固有のキーで実行されます。カードをドラッグしてキーを変更できます。",
+    "chatPromptsHint": "AI へのクイックリクエスト用のプロンプトページです。各ページは独自のプロファイルで動作し、各プロンプトは専用のキーで実行されます。カードをドラッグしてキーを変更できます。",
     "prompt": "プロンプト",
     "sectionWebSearch": "エージェント用ウェブ検索",
     "webSearchSectionHint": "AIモデルやプロファイルが使用するウェブ検索およびページ読み取りツールの設定。",
@@ -1228,7 +1232,14 @@
     "screenshotCaptureMode": "キャプチャモード",
     "screenshotCaptureModeHint": "画面全体をキャプチャするか、特定の領域を選択するかを指定します。",
     "screenshotCaptureModeScreen": "画面全体",
-    "screenshotCaptureModeArea": "選択した領域"
+    "screenshotCaptureModeArea": "選択した領域",
+    "chatPromptsSentImmediately": "プロンプトをすぐに送信",
+    "addPromptPage": "ページを追加",
+    "promptPageProfile": "プロファイル",
+    "movePromptPageBack": "ページを前へ移動",
+    "movePromptPageForward": "ページを後ろへ移動",
+    "removePromptPage": "ページを削除",
+    "removePromptPageConfirm": "このページとそのプロンプトを削除しますか？"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {
@@ -1466,5 +1477,14 @@
     "retake": "スクリーンショットを撮り直す",
     "failed": "画面をキャプチャできませんでした。画面キャプチャの権限とデスクトップポータルの対応状況を確認してください。",
     "selectAreaInstruction": "ドラッグして領域を選択してください。キャンセルするには Escape を押します。"
+  },
+  "chatPrompts": {
+    "pageLabel": "{page} · {profile}",
+    "missingProfile": "プロファイルなし",
+    "pages": "プロンプトページ",
+    "noPages": "プロンプトページはまだありません。設定で追加してください。",
+    "pageNotFound": "プロンプトページ {page} はありません。",
+    "profileMissing": "このページのプロファイルはもう存在しません。設定で別のプロファイルを選んでください。",
+    "openSettings": "設定を開く"
   }
 }

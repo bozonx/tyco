@@ -192,7 +192,11 @@
         },
         "selectionActionsPage3": { "type": "string", "default": "" },
         "selectionActionsPage4": { "type": "string", "default": "" },
-        "selectionActionsPage5": { "type": "string", "default": "" }
+        "selectionActionsPage5": { "type": "string", "default": "" },
+        "chatPromptsPage2": { "type": "string", "default": "" },
+        "chatPromptsPage3": { "type": "string", "default": "" },
+        "chatPromptsPage4": { "type": "string", "default": "" },
+        "chatPromptsPage5": { "type": "string", "default": "" }
       },
       "required": [
         "editor",
@@ -217,7 +221,11 @@
         "favorites",
         "history",
         "voiceCommands",
-        "selectionCorrection"
+        "selectionCorrection",
+        "chatPromptsPage2",
+        "chatPromptsPage3",
+        "chatPromptsPage4",
+        "chatPromptsPage5"
       ],
       "defaultPath": "hotkeys",
       "x-scope": "device"
@@ -870,51 +878,63 @@
     "chatPrompts": {
       "type": "object",
       "properties": {
-        "items": {
+        "isSentImmediately": { "type": "boolean", "default": false },
+        "pages": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "id": {
-                "type": "string",
-                "default": "",
-                "minLength": 1,
-                "maxLength": 64,
-                "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+              "profileId": { "type": "string", "default": "" },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "default": "",
+                      "minLength": 1,
+                      "maxLength": 64,
+                      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+                    },
+                    "name": { "type": "string", "default": "" },
+                    "rule": { "type": "string", "default": "" }
+                  },
+                  "required": ["id", "name", "rule"]
+                },
+                "default": []
               },
-              "name": { "type": "string", "default": "" },
-              "rule": { "type": "string", "default": "" }
+              "slots": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "q",
+                    "w",
+                    "e",
+                    "r",
+                    "t",
+                    "a",
+                    "s",
+                    "d",
+                    "f",
+                    "g",
+                    "z",
+                    "x",
+                    "c",
+                    "v",
+                    "b"
+                  ]
+                },
+                "additionalProperties": { "type": "string", "minLength": 1 },
+                "default": {}
+              }
             },
-            "required": ["id", "name", "rule"]
+            "required": ["profileId", "items", "slots"]
           },
           "default": []
-        },
-        "slots": {
-          "type": "object",
-          "propertyNames": {
-            "enum": [
-              "q",
-              "w",
-              "e",
-              "r",
-              "t",
-              "a",
-              "s",
-              "d",
-              "f",
-              "g",
-              "z",
-              "x",
-              "c",
-              "v",
-              "b"
-            ]
-          },
-          "additionalProperties": { "type": "string", "minLength": 1 },
-          "default": {}
         }
       },
-      "required": ["items", "slots"],
+      "required": ["isSentImmediately", "pages"],
       "defaultPath": "chatPrompts"
     },
     "favorites": {

@@ -792,14 +792,18 @@
       "voiceCommands": "Дауыстық командалар",
       "selectionActionsPage2": "Әрекеттер: 2-бет",
       "selectionActionsPage3": "Әрекеттер: 3-бет",
-      "chatPrompts": "Таңдалған мәтінге арналған чат промпттерінің алдын ала орнатулары",
+      "chatPrompts": "Промпттар: 1-бет",
       "selectionActionsPage4": "Әрекеттер: 4-бет",
       "selectionActionsPage5": "Әрекеттер: 5-бет",
       "favorites": "Сүйіктілер",
       "quickAiRequest": "ЖИ жылдам сұрауы",
       "voiceQuickAiRequest": "Дауыстық ЖИ жылдам сұрауы",
       "screenshotQuickAiRequest": "Скриншот және ЖИ-ге сұрақ",
-      "voiceScreenshotQuickAiRequest": "Скриншот және ЖИ-ге дауыстық сұрақ"
+      "voiceScreenshotQuickAiRequest": "Скриншот және ЖИ-ге дауыстық сұрақ",
+      "chatPromptsPage2": "Промпттар: 2-бет",
+      "chatPromptsPage3": "Промпттар: 3-бет",
+      "chatPromptsPage4": "Промпттар: 4-бет",
+      "chatPromptsPage5": "Промпттар: 5-бет"
     },
     "hotkeyInput": {
       "cancelHint": "Болдырмау үшін Esc",
@@ -1206,7 +1210,7 @@
     "webJinaApiKeyHint": "Міндетті емес. Кілті жоқ сұраулар ортақ лимиттері бар тегін тарифті пайдаланады.",
     "chatPromptsTab": "Чат промпттерінің алдын ала орнатулары",
     "chatPromptsNavTab": "Чат промпттері",
-    "chatPromptsHint": "Чатқа жіберуге арналған дайын промпттер. Чат промпттері мәзірінде әрқайсысы өз пернесімен іске қосылады; пернелерді өзгерту үшін карточкаларды сүйреңіз.",
+    "chatPromptsHint": "ЖИ-ге жылдам сұраулар үшін промпт беттері. Әр бет өз профилімен жұмыс істейді, әр промпт өз пернесімен іске қосылады. Пернелерді өзгерту үшін карталарды сүйреңіз.",
     "prompt": "Промпт",
     "sectionWebSearch": "Агенттерге арналған веб-іздеу",
     "webSearchSectionHint": "AI үлгілері мен профильдері қолданатын веб-іздеу және беттерді оқу құралдарының параметрлері.",
@@ -1228,7 +1232,14 @@
     "screenshotCaptureMode": "Түсіру режимі",
     "screenshotCaptureModeHint": "Бүкіл экранды түсіру немесе белгілі бір аймақты таңдау.",
     "screenshotCaptureModeScreen": "Бүкіл экран",
-    "screenshotCaptureModeArea": "Таңдалған аймақ"
+    "screenshotCaptureModeArea": "Таңдалған аймақ",
+    "chatPromptsSentImmediately": "Промптты бірден жіберу",
+    "addPromptPage": "Бет қосу",
+    "promptPageProfile": "Профиль",
+    "movePromptPageBack": "Бетті артқа жылжыту",
+    "movePromptPageForward": "Бетті алға жылжыту",
+    "removePromptPage": "Бетті жою",
+    "removePromptPageConfirm": "Бұл бетті промпттарымен бірге жою керек пе?"
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {
@@ -1466,5 +1477,14 @@
     "retake": "Скриншотты қайта түсіру",
     "failed": "Экранды түсіру мүмкін болмады. Экранды түсіру рұқсаттарын және жұмыс үстелі порталының қолдауын тексеріңіз.",
     "selectAreaInstruction": "Аймақты курсормен таңдаңыз. Бас тарту үшін Escape пернесін басыңыз."
+  },
+  "chatPrompts": {
+    "pageLabel": "{page} · {profile}",
+    "missingProfile": "Профиль жоқ",
+    "pages": "Промпт беттері",
+    "noPages": "Промпт беттері әлі жоқ. Оларды баптауларда қосыңыз.",
+    "pageNotFound": "{page}-промпт беті жоқ.",
+    "profileMissing": "Бұл беттің профилі енді жоқ. Баптауларда басқасын таңдаңыз.",
+    "openSettings": "Баптауларды ашу"
   }
 }

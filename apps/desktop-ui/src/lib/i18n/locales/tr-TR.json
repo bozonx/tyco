@@ -792,14 +792,18 @@
       "voiceCommands": "Sesli komutlar",
       "selectionActionsPage2": "Eylemler: sayfa 2",
       "selectionActionsPage3": "Eylemler: sayfa 3",
-      "chatPrompts": "Seçili metin için sohbet istemi önayarları",
+      "chatPrompts": "İstemler: sayfa 1",
       "selectionActionsPage4": "Eylemler: sayfa 4",
       "selectionActionsPage5": "Eylemler: sayfa 5",
       "favorites": "Favoriler",
       "quickAiRequest": "Hızlı YZ isteği",
       "voiceQuickAiRequest": "Sesli hızlı YZ isteği",
       "screenshotQuickAiRequest": "Ekran görüntüsü ve yapay zekâ sorusu",
-      "voiceScreenshotQuickAiRequest": "Ekran görüntüsü ve sesli yapay zekâ sorusu"
+      "voiceScreenshotQuickAiRequest": "Ekran görüntüsü ve sesli yapay zekâ sorusu",
+      "chatPromptsPage2": "İstemler: sayfa 2",
+      "chatPromptsPage3": "İstemler: sayfa 3",
+      "chatPromptsPage4": "İstemler: sayfa 4",
+      "chatPromptsPage5": "İstemler: sayfa 5"
     },
     "hotkeyInput": {
       "cancelHint": "İptal için Esc",
@@ -1206,7 +1210,7 @@
     "webJinaApiKeyHint": "İsteğe bağlı. Anahtar olmadan istekler paylaşılan hız sınırlarına sahip ücretsiz katmanı kullanır.",
     "chatPromptsTab": "Sohbet istemi önayarları",
     "chatPromptsNavTab": "Sohbet istemleri",
-    "chatPromptsHint": "Sohbete gönderilecek hazır istemler. Sohbet istemleri menüsünde her biri kendi tuşuyla çalışır; tuşlarını değiştirmek için kartları sürükleyin.",
+    "chatPromptsHint": "Hızlı yapay zekâ istekleri için istem sayfaları. Her sayfa kendi profiliyle çalışır, her istem kendi tuşuyla başlar. Tuşları değiştirmek için kartları sürükleyin.",
     "prompt": "İstem",
     "sectionWebSearch": "Ajanlar için web araması",
     "webSearchSectionHint": "Yapay zeka modelleri ve profilleri tarafından kullanılan web araması ve sayfa okuma araçları için ayarlar.",
@@ -1228,7 +1232,14 @@
     "screenshotCaptureMode": "Yakalama modu",
     "screenshotCaptureModeHint": "Tüm ekranı yakalamayı veya belirli bir alanı seçmeyi tercih edin.",
     "screenshotCaptureModeScreen": "Tüm ekran",
-    "screenshotCaptureModeArea": "Seçilen alan"
+    "screenshotCaptureModeArea": "Seçilen alan",
+    "chatPromptsSentImmediately": "İstemi hemen gönder",
+    "addPromptPage": "Sayfa ekle",
+    "promptPageProfile": "Profil",
+    "movePromptPageBack": "Sayfayı geri taşı",
+    "movePromptPageForward": "Sayfayı ileri taşı",
+    "removePromptPage": "Sayfayı kaldır",
+    "removePromptPageConfirm": "Bu sayfa istemleriyle birlikte kaldırılsın mı?"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
@@ -1466,5 +1477,14 @@
     "retake": "Ekran görüntüsünü yeniden al",
     "failed": "Ekran yakalanamadı. Ekran yakalama izinlerini ve masaüstü portalı desteğini kontrol edin.",
     "selectAreaInstruction": "Bir alan seçmek için sürükleyin. İptal etmek için Escape tuşuna basın."
+  },
+  "chatPrompts": {
+    "pageLabel": "{page} · {profile}",
+    "missingProfile": "Profil yok",
+    "pages": "İstem sayfaları",
+    "noPages": "Henüz istem sayfası yok. Ayarlardan bir tane ekleyin.",
+    "pageNotFound": "{page}. istem sayfası yok.",
+    "profileMissing": "Bu sayfanın profili artık mevcut değil. Ayarlardan başka bir profil seçin.",
+    "openSettings": "Ayarları aç"
   }
 }

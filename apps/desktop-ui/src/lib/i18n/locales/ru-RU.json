@@ -792,14 +792,18 @@
       "voiceCommands": "Голосовые команды",
       "selectionActionsPage2": "Действия: страница 2",
       "selectionActionsPage3": "Действия: страница 3",
-      "chatPrompts": "Быстрые промпты для чата с ИИ",
+      "chatPrompts": "Промпты: страница 1",
       "selectionActionsPage4": "Действия: страница 4",
       "selectionActionsPage5": "Действия: страница 5",
       "favorites": "Избранное",
       "quickAiRequest": "Быстрый запрос к ИИ",
       "voiceQuickAiRequest": "Голосовой быстрый запрос к ИИ",
       "screenshotQuickAiRequest": "Скриншот и вопрос ИИ",
-      "voiceScreenshotQuickAiRequest": "Скриншот и голосовой вопрос ИИ"
+      "voiceScreenshotQuickAiRequest": "Скриншот и голосовой вопрос ИИ",
+      "chatPromptsPage2": "Промпты: страница 2",
+      "chatPromptsPage3": "Промпты: страница 3",
+      "chatPromptsPage4": "Промпты: страница 4",
+      "chatPromptsPage5": "Промпты: страница 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — отмена",
@@ -1206,7 +1210,7 @@
     "webJinaApiKeyHint": "Необязательно. Без ключа запросы работают через бесплатный тариф с общими лимитами.",
     "chatPromptsTab": "Быстрые промпты для чата",
     "chatPromptsNavTab": "Промпты для чата",
-    "chatPromptsHint": "Заготовленные промпты для отправки в чат. В меню быстрых промптов каждый запускается своей клавишей; перетаскивайте карточки для смены клавиш.",
+    "chatPromptsHint": "Страницы промптов для быстрых запросов к ИИ. Каждая страница работает со своим профилем, каждый промпт запускается своей клавишей. Перетаскивайте карточки, чтобы сменить клавиши.",
     "prompt": "Промпт",
     "sectionWebSearch": "Поиск в интернете для агентов",
     "webSearchSectionHint": "Параметры инструментов поиска в интернете и чтения веб-страниц для ИИ-моделей и профилей.",
@@ -1228,7 +1232,14 @@
     "screenshotCaptureMode": "Режим захвата",
     "screenshotCaptureModeHint": "Делать снимок всего экрана или выбирать произвольную область.",
     "screenshotCaptureModeScreen": "Весь экран",
-    "screenshotCaptureModeArea": "Выделенная область"
+    "screenshotCaptureModeArea": "Выделенная область",
+    "chatPromptsSentImmediately": "Отправлять промпт сразу",
+    "addPromptPage": "Добавить страницу",
+    "promptPageProfile": "Профиль",
+    "movePromptPageBack": "Переместить страницу назад",
+    "movePromptPageForward": "Переместить страницу вперёд",
+    "removePromptPage": "Удалить страницу",
+    "removePromptPageConfirm": "Удалить эту страницу вместе с её промптами?"
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {
@@ -1466,5 +1477,14 @@
     "retake": "Сделать снимок заново",
     "failed": "Не удалось захватить экран. Проверьте разрешения на захват и поддержку портала рабочего стола.",
     "selectAreaInstruction": "Выделите область курсором. Нажмите Escape для отмены."
+  },
+  "chatPrompts": {
+    "pageLabel": "{page} · {profile}",
+    "missingProfile": "Нет профиля",
+    "pages": "Страницы промптов",
+    "noPages": "Страниц промптов пока нет. Добавьте их в настройках.",
+    "pageNotFound": "Страницы промптов {page} нет.",
+    "profileMissing": "Профиль этой страницы больше не существует. Выберите другой в настройках.",
+    "openSettings": "Открыть настройки"
   }
 }

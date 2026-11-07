@@ -11,6 +11,14 @@
       tabindex="-1"
     >
       <div class="chat-prompts-container">
+        <PromptPagesBar
+          v-if="profilePages.length > 1"
+          :pages="profilePages"
+          :active-index="currentView?.index ?? -1"
+          :label="pageLabel"
+          has-keys
+          @select="selectPage"
+        />
         <div class="chat-prompts-grid-5x3">
           <template v-for="slot in slots" :key="slot.key">
             <ShortcutButton
@@ -18,7 +26,7 @@
               size="sm"
               :keys="[slot.key.toUpperCase()]"
               :title="slot.label"
-              @click="handleSelect(slot.item.rule)"
+              @click="handleSelect(slot.item.prompt.rule)"
             >
               {{ slot.label }}
             </ShortcutButton>
@@ -37,13 +45,15 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useAnchoredPanel } from '../../composables/use-anchored-panel'
+import { useChatScope } from '../../composables/use-chat-scope'
 import { useI18n } from '../../composables/use-i18n'
+import { usePromptPages } from '../../composables/use-prompt-pages'
 import {
-  slotItemLabel,
-  slotItemList,
-} from '../../lib/shortcut-slots/slot-library'
-import { useDesktopStore } from '../../stores/desktop'
+  promptPagesOfProfile,
+  promptSlots,
+} from '../../lib/chat-prompts/prompt-pages'
 import MenuSurface from '../common/MenuSurface.vue'
+import PromptPagesBar from '../menu/PromptPagesBar.vue'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 
@@ -55,7 +65,8 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const desktopStore = useDesktopStore()
+const { chat: chatStore } = useChatScope()
+const { views, pageLabel } = usePromptPages()
 const surfaceRef = ref<InstanceType<typeof MenuSurface> | null>(null)
 const canTeleport = ref(false)
 
@@ -67,19 +78,27 @@ const { style: panelStyle, theme: panelTheme } = useAnchoredPanel({
   align: () => 'start',
 })
 
-const library = () => desktopStore.userConfig.chatPrompts
-const items = computed(() => slotItemList(library()))
-
-const slots = computed(() =>
-  SHORTCUT_SLOT_KEYS.map((key, index) => {
-    const item = items.value[index]
-    return {
-      key,
-      item: item?.rule.trim() ? item : null,
-      label: item ? slotItemLabel(item) : '',
-    }
-  })
+/** Only the pages of the profile of this chat */
+const profilePages = computed(() =>
+  promptPagesOfProfile(views.value, chatStore.profileId)
 )
+const pagePosition = ref(0)
+const currentView = computed(
+  () => profilePages.value[pagePosition.value] ?? profilePages.value[0] ?? null
+)
+
+function selectPage(index: number) {
+  const position = profilePages.value.findIndex((view) => view.index === index)
+  if (position >= 0) pagePosition.value = position
+}
+
+const slots = computed(() => {
+  const items = promptSlots(currentView.value?.page)
+  return SHORTCUT_SLOT_KEYS.map((key, index) => {
+    const item = items[index] ?? null
+    return { key, item, label: item?.label ?? '' }
+  })
+})
 
 const hasConfiguredPrompts = computed(() => slots.value.some((s) => s.item))
 
@@ -104,10 +123,28 @@ function handleKeyDown(event: KeyboardEvent) {
 
   if (codeLetter) {
     const matchedSlot = slots.value.find((s) => s.key === codeLetter)
-    if (matchedSlot?.item?.rule.trim()) {
+    if (matchedSlot?.item) {
       event.preventDefault()
-      handleSelect(matchedSlot.item.rule)
+      handleSelect(matchedSlot.item.prompt.rule)
     }
+    return
+  }
+
+  const count = profilePages.value.length
+  if (count <= 1) return
+  const digit = /^Digit([0-9])$/.exec(event.code)?.[1]
+  if (digit !== undefined) {
+    const position = digit === '0' ? 9 : Number(digit) - 1
+    if (position < count) {
+      event.preventDefault()
+      pagePosition.value = position
+    }
+  } else if (event.code === 'PageDown' || event.code === 'ArrowRight') {
+    event.preventDefault()
+    pagePosition.value = (pagePosition.value + 1) % count
+  } else if (event.code === 'PageUp' || event.code === 'ArrowLeft') {
+    event.preventDefault()
+    pagePosition.value = (pagePosition.value - 1 + count) % count
   }
 }
 
@@ -132,6 +169,7 @@ watch(
   () => props.isOpen,
   (open) => {
     if (open) {
+      pagePosition.value = 0
       window.addEventListener('keydown', handleKeyDown, true)
       window.addEventListener('pointerdown', handlePointerDown, true)
     } else {

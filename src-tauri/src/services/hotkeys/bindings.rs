@@ -15,6 +15,15 @@ const SELECTION_ACTIONS_PAGE_2_KEY: &str = "selectionActionsPage2";
 const SELECTION_ACTIONS_PAGE_3_KEY: &str = "selectionActionsPage3";
 const SELECTION_ACTIONS_PAGE_4_KEY: &str = "selectionActionsPage4";
 const SELECTION_ACTIONS_PAGE_5_KEY: &str = "selectionActionsPage5";
+const CHAT_PROMPTS_KEY: &str = "chatPrompts";
+/// The hotkeys of the prompt pages by 0-based index; the first one is the mode.
+const PROMPT_PAGE_KEYS: [&str; 5] = [
+    CHAT_PROMPTS_KEY,
+    "chatPromptsPage2",
+    "chatPromptsPage3",
+    "chatPromptsPage4",
+    "chatPromptsPage5",
+];
 
 pub(super) use crate::services::selection_replace::CORRECTION_ACTION;
 const DEFAULT_CORRECTION_KEY: &str = "F";
@@ -30,6 +39,8 @@ pub(crate) enum HotkeyTarget {
     InlineCorrection,
     /// An action page by 0-based index
     ActionPage(usize),
+    /// A page of `chatPrompts.pages` by 0-based index
+    PromptPage(usize),
 }
 
 impl HotkeyTarget {
@@ -54,6 +65,9 @@ impl HotkeyTarget {
         if id == SELECTION_ACTIONS_PAGE_5_KEY {
             return Ok(Self::ActionPage(4));
         }
+        if let Some(index) = PROMPT_PAGE_KEYS.iter().position(|key| *key == id) {
+            return Ok(Self::PromptPage(index));
+        }
         ActivationMode::parse(id).map(Self::Mode)
     }
 
@@ -65,6 +79,10 @@ impl HotkeyTarget {
             Self::ActionPage(3) => SELECTION_ACTIONS_PAGE_4_KEY.to_owned(),
             Self::ActionPage(4) => SELECTION_ACTIONS_PAGE_5_KEY.to_owned(),
             Self::ActionPage(index) => format!("selectionActionsPage{}", index + 1),
+            Self::PromptPage(index) => PROMPT_PAGE_KEYS.get(*index).map_or_else(
+                || format!("chatPromptsPage{}", index + 1),
+                |key| (*key).to_owned(),
+            ),
             Self::Mode(mode) => mode.as_str().to_owned(),
             Self::InlineCorrection => SELECTION_CORRECTION_CONFIG_KEY.to_owned(),
         }
@@ -75,6 +93,10 @@ impl HotkeyTarget {
             Self::ActionPage(0) => "tyco-ctl open selection-actions".to_owned(),
             Self::ActionPage(index) => {
                 format!("tyco --mode={}", Activation::action_page_mode(*index))
+            }
+            Self::PromptPage(0) => "tyco-ctl open chat-prompts".to_owned(),
+            Self::PromptPage(index) => {
+                format!("tyco --mode={}", Activation::prompt_page_mode(*index))
             }
             Self::Mode(mode) => format!(
                 "tyco-ctl open {}",
@@ -92,6 +114,10 @@ impl HotkeyTarget {
             Self::ActionPage(index) => runtime::activate(
                 app,
                 Activation::selection_actions(*index, ActivationSource::Hotkey),
+            ),
+            Self::PromptPage(index) => runtime::activate(
+                app,
+                Activation::chat_prompts(*index, ActivationSource::Hotkey),
             ),
             Self::Mode(mode) => {
                 runtime::activate(app, Activation::new(*mode, ActivationSource::Hotkey))
@@ -115,7 +141,7 @@ pub(crate) struct HotkeyBinding {
     pub(crate) description: String,
 }
 
-pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 17] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 16] = [
     ActivationMode::Editor,
     ActivationMode::QuickInput,
     ActivationMode::Chat,
@@ -130,7 +156,6 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 17] = [
     ActivationMode::VoiceQuickAiRequest,
     ActivationMode::ScreenshotQuickAiRequest,
     ActivationMode::VoiceScreenshotQuickAiRequest,
-    ActivationMode::ChatPrompts,
     ActivationMode::Favorites,
     ActivationMode::History,
 ];
@@ -188,8 +213,18 @@ pub(crate) fn bindings_from_config(config: &Value) -> Vec<HotkeyBinding> {
         description: desc.to_owned(),
     });
 
+    let prompt_pages = PROMPT_PAGE_KEYS
+        .iter()
+        .enumerate()
+        .map(|(index, key)| HotkeyBinding {
+            target: HotkeyTarget::PromptPage(index),
+            shortcut: configured_shortcut(configured.and_then(|values| values.get(*key)), || None),
+            description: format!("Show prompts: page {}", index + 1),
+        });
+
     modes
         .chain(action_pages)
+        .chain(prompt_pages)
         .chain([selection_binding(config)])
         .collect()
 }
@@ -242,7 +277,9 @@ pub(crate) fn global_target(id: &str) -> Option<HotkeyTarget> {
     let target = HotkeyTarget::parse(id).ok()?;
     let global = match &target {
         HotkeyTarget::Mode(mode) => GLOBAL_HOTKEY_MODES.contains(mode),
-        HotkeyTarget::InlineCorrection | HotkeyTarget::ActionPage(_) => true,
+        HotkeyTarget::InlineCorrection
+        | HotkeyTarget::ActionPage(_)
+        | HotkeyTarget::PromptPage(_) => true,
     };
     global.then_some(target)
 }
@@ -321,6 +358,9 @@ pub fn default_hotkeys_config() -> Value {
         SELECTION_ACTIONS_PAGE_5_KEY.to_owned(),
         Value::String(String::new()),
     );
+    for key in PROMPT_PAGE_KEYS {
+        hotkeys.insert(key.to_owned(), Value::String(String::new()));
+    }
     hotkeys.insert(
         SELECTION_CORRECTION_CONFIG_KEY.to_owned(),
         Value::String(default_correction_shortcut().unwrap_or_default()),
@@ -345,7 +385,7 @@ fn mode_description(mode: ActivationMode) -> &'static str {
         ActivationMode::VoiceQuickAiRequest => "Voice quick AI request",
         ActivationMode::ScreenshotQuickAiRequest => "Screenshot quick AI request",
         ActivationMode::VoiceScreenshotQuickAiRequest => "Voice screenshot quick AI request",
-        ActivationMode::ChatPrompts => "Open chat prompt presets",
+        ActivationMode::ChatPrompts => "Show prompts",
         ActivationMode::Favorites => "Open favorites",
         ActivationMode::History => "Open history",
         ActivationMode::Config => "Open settings",
@@ -405,7 +445,9 @@ mod tests {
             .into_iter()
             .map(|binding| binding.target.id())
             .collect::<Vec<_>>();
-        assert_eq!(defaults.len(), GLOBAL_HOTKEY_MODES.len() + 1 + 5);
+        assert_eq!(defaults.len(), GLOBAL_HOTKEY_MODES.len() + 1 + 5 + 5);
+        assert!(defaults.contains(&String::from("chatPrompts")));
+        assert!(defaults.contains(&String::from("chatPromptsPage5")));
         assert!(defaults.contains(&String::from("selectionCorrection")));
         assert!(defaults.contains(&String::from("selectionActions")));
         assert!(defaults.contains(&String::from("selectionActionsPage2")));
@@ -421,7 +463,8 @@ mod tests {
                 "editor": "Super+Space",
                 "voice": "  ",
                 "selectionActions": "",
-                "selectionActionsPage2": "Ctrl+Alt+2"
+                "selectionActionsPage2": "Ctrl+Alt+2",
+                "chatPromptsPage3": "Ctrl+Alt+P"
             }
         }));
         let shortcut = |id: &str| {
@@ -430,8 +473,13 @@ mod tests {
                 .find(|binding| binding.target.id() == id)
                 .and_then(|binding| binding.shortcut.clone())
         };
-        assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len() + 1 + 5);
+        assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len() + 1 + 5 + 5);
         assert_eq!(shortcut("editor").as_deref(), Some("Super+Space"));
+        assert_eq!(shortcut("chatPromptsPage3").as_deref(), Some("Ctrl+Alt+P"));
+        assert_eq!(
+            HotkeyTarget::parse("chatPromptsPage3").ok(),
+            Some(HotkeyTarget::PromptPage(2))
+        );
         assert_eq!(shortcut("selectionActions"), None);
         assert_eq!(
             shortcut("selectionActionsPage2").as_deref(),

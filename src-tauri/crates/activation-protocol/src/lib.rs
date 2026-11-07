@@ -67,13 +67,15 @@ pub fn is_start_mode(value: &str) -> bool {
     if START_MODES.contains(&canonical_mode(value)) {
         return true;
     }
-    let rest = value
-        .strip_prefix("selectionActions:")
-        .or_else(|| value.strip_prefix("selection-actions:"));
-    if let Some(rest) = rest {
-        return rest.parse::<usize>().is_ok_and(|p| p > 0);
-    }
-    false
+    let rest = [
+        "selectionActions:",
+        "selection-actions:",
+        "chatPrompts:",
+        "chat-prompts:",
+    ]
+    .into_iter()
+    .find_map(|prefix| value.strip_prefix(prefix));
+    rest.is_some_and(|rest| rest.parse::<usize>().is_ok_and(|p| p > 0))
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]

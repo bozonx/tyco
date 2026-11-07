@@ -76,6 +76,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `llm`             | `imageQuality`, `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below)                   |
 | `transformations` | `items`, the transformation library; `slots`, the transformation menu (a shortcut grid of transformation ids)               |
 | `styling`         | `items`, the styling library; `slots`, the styling menu (a shortcut grid of styling ids)                                    |
+| `chatPrompts`     | `isSentImmediately`; `pages`, the prompt pages: each has `profileId` (empty for the default profile), `items` and `slots`   |
 | `aiVault`         | `path`, empty for the default location                                                                                      |
 | `aiProfiles`      | `chatHistory` (`storage`: `off` or `disk`, `retentionDays`)                                                                 |
 | `markdown`        | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                                       |
@@ -87,7 +88,10 @@ The hotkeys of `hotkeys` are named as the activation modes they open
 (`quickInput`, `selectionActions`, `selectionActionsPage2`..`selectionActionsPage5`,
 `translation`, …); the name is also the hotkey id the UI and the system portal use.
 `selectionCorrection` corrects the selection in place. All five action page hotkeys
-are configurable regardless of how many action pages currently exist.
+are configurable regardless of how many action pages currently exist, and so are
+the five prompt page hotkeys (`chatPrompts`, `chatPromptsPage2`..`chatPromptsPage5`).
+A prompt page keeps its own prompts; a picked prompt opens the quick AI request
+with the profile of its page, and is sent at once when `isSentImmediately` is set.
 
 The glossary is one for every target language: `{ "term", "translation" }`,
 where a term kept as it is has itself as its translation. ai-kit's

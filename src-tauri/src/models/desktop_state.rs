@@ -22,7 +22,8 @@ pub struct ActivationSnapshot {
     #[ts(optional)]
     pub screenshot: Option<super::ChatImage>,
     pub mode: Option<ActivationMode>,
-    /// The page of `actionPages` the action menu opens on; `None` or 0 for the first one.
+    /// The page the menu opens on: of `actionPages` for `selectionActions`, of
+    /// `chatPrompts.pages` for `chatPrompts`; `None` or 0 for the first one.
     pub action_page_index: Option<usize>,
     /// The source the history opens filtered by, e.g. from the quick input.
     pub history_origin: Option<super::EditorHistoryOrigin>,

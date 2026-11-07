@@ -792,14 +792,18 @@
       "voiceCommands": "Hangparancsok",
       "selectionActionsPage2": "Műveletek: 2. oldal",
       "selectionActionsPage3": "Műveletek: 3. oldal",
-      "chatPrompts": "Csevegési prompt-sablonok a kijelölt szöveghez",
+      "chatPrompts": "Promptok: 1. oldal",
       "selectionActionsPage4": "Műveletek: 4. oldal",
       "selectionActionsPage5": "Műveletek: 5. oldal",
       "favorites": "Kedvencek",
       "quickAiRequest": "Gyors MI kérés",
       "voiceQuickAiRequest": "Hangalapú gyors MI kérés",
       "screenshotQuickAiRequest": "Képernyőkép és kérdés az MI-nek",
-      "voiceScreenshotQuickAiRequest": "Képernyőkép és hangos kérdés az MI-nek"
+      "voiceScreenshotQuickAiRequest": "Képernyőkép és hangos kérdés az MI-nek",
+      "chatPromptsPage2": "Promptok: 2. oldal",
+      "chatPromptsPage3": "Promptok: 3. oldal",
+      "chatPromptsPage4": "Promptok: 4. oldal",
+      "chatPromptsPage5": "Promptok: 5. oldal"
     },
     "hotkeyInput": {
       "cancelHint": "Esc: megszakítás",
@@ -1206,7 +1210,7 @@
     "webJinaApiKeyHint": "Opcionális. Kulcs nélkül a kérések az ingyenes szintet használják megosztott korlátokkal.",
     "chatPromptsTab": "Csevegési prompt-sablonok",
     "chatPromptsNavTab": "Csevegési promptek",
-    "chatPromptsHint": "Előre összeállított promptek a csevegésbe küldéshez. A csevegési promptek menüjében mindegyik saját billentyűvel fut; a kártyák húzásával módosíthatja a billentyűket.",
+    "chatPromptsHint": "Promptoldalak a gyors MI-kérésekhez. Minden oldal a saját profiljával fut, minden prompt a saját billentyűjével indul. A kártyák húzásával módosíthatja a billentyűket.",
     "prompt": "Prompt",
     "sectionWebSearch": "Webes keresés ágenseknek",
     "webSearchSectionHint": "Az AI modellek és profilok által használt webes keresési és oldalolvasási eszközök beállításai.",
@@ -1228,7 +1232,14 @@
     "screenshotCaptureMode": "Rögzítési mód",
     "screenshotCaptureModeHint": "Válassza ki, hogy a teljes képernyőt vagy egy kijelölt területet rögzítsen.",
     "screenshotCaptureModeScreen": "Teljes képernyő",
-    "screenshotCaptureModeArea": "Kijelölt terület"
+    "screenshotCaptureModeArea": "Kijelölt terület",
+    "chatPromptsSentImmediately": "A prompt azonnali küldése",
+    "addPromptPage": "Oldal hozzáadása",
+    "promptPageProfile": "Profil",
+    "movePromptPageBack": "Oldal mozgatása hátra",
+    "movePromptPageForward": "Oldal mozgatása előre",
+    "removePromptPage": "Oldal eltávolítása",
+    "removePromptPageConfirm": "Eltávolítja ezt az oldalt a promptjaival együtt?"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
@@ -1466,5 +1477,14 @@
     "retake": "Képernyőkép újrakészítése",
     "failed": "Nem sikerült rögzíteni a képernyőt. Ellenőrizze a képernyőrögzítési engedélyeket és az asztali portál támogatását.",
     "selectAreaInstruction": "Húzza az egeret a terület kijelöléséhez. A művelet megszakításához nyomja meg az Escape billentyűt."
+  },
+  "chatPrompts": {
+    "pageLabel": "{page} · {profile}",
+    "missingProfile": "Nincs profil",
+    "pages": "Promptoldalak",
+    "noPages": "Még nincsenek promptoldalak. Adjon hozzá egyet a beállításokban.",
+    "pageNotFound": "A(z) {page}. promptoldal nem létezik.",
+    "profileMissing": "Ennek az oldalnak a profilja már nem létezik. Válasszon másikat a beállításokban.",
+    "openSettings": "Beállítások megnyitása"
   }
 }

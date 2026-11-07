@@ -17,17 +17,40 @@ describe('ChatPromptsKeypad.vue', () => {
     desktop = installFakeDesktop({}, 'chat')
     desktop.setUserConfig({
       chatPrompts: {
-        items: [
-          { id: 'p1', name: 'Summarize', rule: 'Summarize the text' },
-          { id: 'p2', name: 'Explain', rule: 'Explain in simple terms' },
+        isSentImmediately: false,
+        pages: [
+          {
+            profileId: 'writer',
+            items: [{ id: 'p0', name: 'Poem', rule: 'Write a poem' }],
+            slots: { q: 'p0' },
+          },
+          {
+            profileId: '',
+            items: [
+              { id: 'p1', name: 'Summarize', rule: 'Summarize the text' },
+              { id: 'p2', name: 'Explain', rule: 'Explain in simple terms' },
+            ],
+            slots: { q: 'p1', w: 'p2' },
+          },
         ],
-        slots: { q: 'p1', w: 'p2' },
       },
     })
   })
 
   afterEach(() => {
     desktop.dispose()
+  })
+
+  it('renders only the pages of the profile of the chat', () => {
+    const anchor = document.createElement('div')
+    const wrapper = mount(ChatPromptsKeypad, {
+      props: { isOpen: true, anchor },
+      global: { plugins: [desktop.pinia], stubs: { Teleport: true } },
+    })
+
+    const buttons = wrapper.findAllComponents({ name: 'ShortcutButton' })
+    expect(buttons.map((button) => button.text())).not.toContain('Poem')
+    expect(wrapper.find('.prompt-pages-bar').exists()).toBe(false)
   })
 
   it('renders buttons for configured slots and handles mouse click', async () => {
@@ -79,7 +102,9 @@ describe('ChatPromptsKeypad.vue', () => {
   })
 
   it('shows empty hint when no prompts are configured', async () => {
-    desktop.setUserConfig({ chatPrompts: { items: [], slots: {} } })
+    desktop.setUserConfig({
+      chatPrompts: { isSentImmediately: false, pages: [] },
+    })
     const anchor = document.createElement('div')
     const wrapper = mount(ChatPromptsKeypad, {
       props: { isOpen: true, anchor },

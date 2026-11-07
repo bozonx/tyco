@@ -30,6 +30,7 @@ pub enum ActivationSource {
 }
 
 const SELECTION_ACTIONS_MODE_PREFIX: &str = "selectionActions:";
+const CHAT_PROMPTS_MODE_PREFIX: &str = "chatPrompts:";
 
 #[derive(Debug)]
 pub struct Activation {
@@ -38,7 +39,8 @@ pub struct Activation {
     pub target_window_id: Option<String>,
     pub selected_text: Option<String>,
     pub screenshot: Option<crate::models::ChatImage>,
-    /// The page of `actionPages` the action menu opens on; `None` or 0 for the first one.
+    /// The page the menu opens on: of `actionPages` for `SelectionActions`, of
+    /// `chatPrompts.pages` for `ChatPrompts`; `None` or 0 for the first one.
     pub action_page_index: Option<usize>,
     /// The source the history opens filtered by; only for `History`.
     pub history_origin: Option<crate::models::EditorHistoryOrigin>,
@@ -66,17 +68,40 @@ impl Activation {
         activation
     }
 
-    /// A mode, or `selectionActions:<page 1-based index>` for an action page.
+    pub fn chat_prompts(page_index: usize, source: ActivationSource) -> Self {
+        let mut activation = Self::new(ActivationMode::ChatPrompts, source);
+        activation.action_page_index = Some(page_index);
+        activation
+    }
+
+    /// A mode, or `selectionActions:<page 1-based index>` for an action page,
+    /// or `chatPrompts:<page 1-based index>` for a prompt page.
     pub fn from_mode(value: &str, source: ActivationSource) -> Result<Self, AppError> {
-        let rest = value
-            .strip_prefix(SELECTION_ACTIONS_MODE_PREFIX)
-            .or_else(|| value.strip_prefix("selection-actions:"));
-        if let Some(rest) = rest {
-            if let Ok(page_num) = rest.parse::<usize>() {
-                let page_index = if page_num > 0 { page_num - 1 } else { 0 };
-                return Ok(Self::selection_actions(page_index, source));
-            }
-            return Err(AppError::InvalidInput("Invalid action page".into()));
+        let pages = [
+            (
+                ActivationMode::SelectionActions,
+                SELECTION_ACTIONS_MODE_PREFIX,
+                "selection-actions:",
+            ),
+            (
+                ActivationMode::ChatPrompts,
+                CHAT_PROMPTS_MODE_PREFIX,
+                "chat-prompts:",
+            ),
+        ];
+        for (mode, prefix, cli_prefix) in pages {
+            let Some(rest) = value
+                .strip_prefix(prefix)
+                .or_else(|| value.strip_prefix(cli_prefix))
+            else {
+                continue;
+            };
+            let Ok(page_num) = rest.parse::<usize>() else {
+                return Err(AppError::InvalidInput("Invalid page".into()));
+            };
+            let mut activation = Self::new(mode, source);
+            activation.action_page_index = Some(page_num.saturating_sub(1));
+            return Ok(activation);
         }
         Ok(Self::new(ActivationMode::parse(value)?, source))
     }
@@ -84,6 +109,19 @@ impl Activation {
     /// The mode string that opens the action menu on `page_index` (0-based).
     pub fn action_page_mode(page_index: usize) -> String {
         format!("{SELECTION_ACTIONS_MODE_PREFIX}{}", page_index + 1)
+    }
+
+    /// The mode string that opens the prompts on `page_index` (0-based).
+    pub fn prompt_page_mode(page_index: usize) -> String {
+        format!("{CHAT_PROMPTS_MODE_PREFIX}{}", page_index + 1)
+    }
+
+    /// Whether the mode has pages a repeated activation steps through.
+    fn has_pages(mode: ActivationMode) -> bool {
+        matches!(
+            mode,
+            ActivationMode::SelectionActions | ActivationMode::ChatPrompts
+        )
     }
 
     /// Whether the activation takes the selection of the window it was made
@@ -132,8 +170,8 @@ impl Activation {
     }
 
     /// Whether this activation turns the page of an already open action menu
-    /// instead of starting a new activation: the hotkey, D-Bus call or
-    /// `tyco-ctl` call that opens an action page also steps through the pages
+    /// or prompts menu instead of starting a new activation: the hotkey, D-Bus
+    /// call or `tyco-ctl` call that opens a page also steps through the pages
     /// while the menu is shown. A call that brings its own text asks for a new
     /// activation.
     pub fn turns_open_action_page(
@@ -141,11 +179,11 @@ impl Activation {
         open_mode: Option<ActivationMode>,
         is_window_shown: bool,
     ) -> bool {
-        self.mode == ActivationMode::SelectionActions
+        Self::has_pages(self.mode)
             && self.source != ActivationSource::Ui
             && self.selected_text.is_none()
             && is_window_shown
-            && open_mode == Some(ActivationMode::SelectionActions)
+            && open_mode == Some(self.mode)
     }
 
     /// Accept a positional mode, --mode MODE, or --mode=MODE after argv[0].
@@ -244,6 +282,17 @@ mod tests {
         }
         let chat = Activation::new(Chat, ActivationSource::Hotkey);
         assert!(!chat.turns_open_action_page(Some(SelectionActions), true));
+    }
+
+    #[test]
+    fn prompt_pages_parse_and_turn_only_the_open_prompts() {
+        let activation = Activation::from_mode("chat-prompts:3", ActivationSource::Cli).unwrap();
+        assert_eq!(activation.mode, ActivationMode::ChatPrompts);
+        assert_eq!(activation.action_page_index, Some(2));
+        assert_eq!(Activation::prompt_page_mode(2), "chatPrompts:3");
+        assert!(Activation::from_mode("chatPrompts:x", ActivationSource::Cli).is_err());
+        assert!(activation.turns_open_action_page(Some(ActivationMode::ChatPrompts), true));
+        assert!(!activation.turns_open_action_page(Some(ActivationMode::SelectionActions), true));
     }
 
     #[test]

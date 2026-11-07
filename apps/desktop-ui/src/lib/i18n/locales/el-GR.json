@@ -792,14 +792,18 @@
       "voiceCommands": "Φωνητικές εντολές",
       "selectionActionsPage2": "Ενέργειες: σελίδα 2",
       "selectionActionsPage3": "Ενέργειες: σελίδα 3",
-      "chatPrompts": "Προεπιλογές προτροπών συνομιλίας για επιλεγμένο κείμενο",
+      "chatPrompts": "Προτροπές: σελίδα 1",
       "selectionActionsPage4": "Ενέργειες: σελίδα 4",
       "selectionActionsPage5": "Ενέργειες: σελίδα 5",
       "favorites": "Αγαπημένα",
       "quickAiRequest": "Γρήγορο αίτημα AI",
       "voiceQuickAiRequest": "Φωνητικό γρήγορο αίτημα AI",
       "screenshotQuickAiRequest": "Στιγμιότυπο οθόνης και ερώτηση στην ΤΝ",
-      "voiceScreenshotQuickAiRequest": "Στιγμιότυπο οθόνης και φωνητική ερώτηση στην ΤΝ"
+      "voiceScreenshotQuickAiRequest": "Στιγμιότυπο οθόνης και φωνητική ερώτηση στην ΤΝ",
+      "chatPromptsPage2": "Προτροπές: σελίδα 2",
+      "chatPromptsPage3": "Προτροπές: σελίδα 3",
+      "chatPromptsPage4": "Προτροπές: σελίδα 4",
+      "chatPromptsPage5": "Προτροπές: σελίδα 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc για ακύρωση",
@@ -1206,7 +1210,7 @@
     "webJinaApiKeyHint": "Προαιρετικό. Χωρίς κλειδί, τα αιτήματα χρησιμοποιούν το δωρεάν πρόγραμμα με κοινά όρια.",
     "chatPromptsTab": "Προεπιλογές προτροπών συνομιλίας",
     "chatPromptsNavTab": "Προτροπές συνομιλίας",
-    "chatPromptsHint": "Προκαθορισμένες προτροπές για αποστολή στη συνομιλία. Στο μενού προτροπών συνομιλίας κάθε μία εκτελείται με δικό της πλήκτρο· σύρετε τις κάρτες για να αλλάξετε τα πλήκτρα.",
+    "chatPromptsHint": "Σελίδες προτροπών για γρήγορα αιτήματα στην ΤΝ. Κάθε σελίδα χρησιμοποιεί το δικό της προφίλ και κάθε προτροπή ξεκινά με το δικό της πλήκτρο. Σύρετε τις κάρτες για να αλλάξετε τα πλήκτρα.",
     "prompt": "Προτροπή",
     "sectionWebSearch": "Αναζήτηση ιστού για πράκτορες",
     "webSearchSectionHint": "Ρυθμίσεις για εργαλεία αναζήτησης ιστού και ανάγνωσης σελίδων που χρησιμοποιούνται από μοντέλα και προφίλ AI.",
@@ -1228,7 +1232,14 @@
     "screenshotCaptureMode": "Λειτουργία λήψης",
     "screenshotCaptureModeHint": "Επιλέξτε εάν θα γίνει λήψη ολόκληρης της οθόνης ή επιλεγμένης περιοχής.",
     "screenshotCaptureModeScreen": "Ολόκληρη η οθόνη",
-    "screenshotCaptureModeArea": "Επιλεγμένη περιοχή"
+    "screenshotCaptureModeArea": "Επιλεγμένη περιοχή",
+    "chatPromptsSentImmediately": "Άμεση αποστολή της προτροπής",
+    "addPromptPage": "Προσθήκη σελίδας",
+    "promptPageProfile": "Προφίλ",
+    "movePromptPageBack": "Μετακίνηση σελίδας πίσω",
+    "movePromptPageForward": "Μετακίνηση σελίδας μπροστά",
+    "removePromptPage": "Αφαίρεση σελίδας",
+    "removePromptPageConfirm": "Αφαίρεση αυτής της σελίδας μαζί με τις προτροπές της;"
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {
@@ -1466,5 +1477,14 @@
     "retake": "Νέα λήψη στιγμιότυπου",
     "failed": "Δεν ήταν δυνατή η λήψη της οθόνης. Ελέγξτε τις άδειες λήψης και την υποστήριξη της πύλης επιφάνειας εργασίας.",
     "selectAreaInstruction": "Σύρετε για να επιλέξετε περιοχή. Πατήστε Escape για ακύρωση."
+  },
+  "chatPrompts": {
+    "pageLabel": "{page} · {profile}",
+    "missingProfile": "Χωρίς προφίλ",
+    "pages": "Σελίδες προτροπών",
+    "noPages": "Δεν υπάρχουν ακόμη σελίδες προτροπών. Προσθέστε μία στις ρυθμίσεις.",
+    "pageNotFound": "Δεν υπάρχει σελίδα προτροπών {page}.",
+    "profileMissing": "Το προφίλ αυτής της σελίδας δεν υπάρχει πλέον. Επιλέξτε άλλο στις ρυθμίσεις.",
+    "openSettings": "Άνοιγμα ρυθμίσεων"
   }
 }

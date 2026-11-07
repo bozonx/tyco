@@ -19,7 +19,8 @@ const USAGE: &str = "Usage: tyco-ctl status
        tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
 
 Modes: editor, quick-input, chat, voice-chat, voice-commands, voice, selection-actions,
-       correction, translation, history, settings.
+       chat-prompts, correction, translation, history, settings.
+Pages: selection-actions:N and chat-prompts:N open page N.
 Use --stdin for private text. Input is preserved exactly.
 Run defaults to non-interactive execution and always returns output.
 Use --replace to replace a selection.
@@ -44,6 +45,8 @@ const MAX_JOB_WAIT_TIMEOUT_SECS: u64 = 3600;
 fn canonical_activation_mode(value: &str) -> String {
     if let Some(rest) = value.strip_prefix("selection-actions:") {
         format!("selectionActions:{rest}")
+    } else if let Some(rest) = value.strip_prefix("chat-prompts:") {
+        format!("chatPrompts:{rest}")
     } else {
         tyco_activation_protocol::canonical_mode(value).into()
     }
@@ -514,6 +517,7 @@ mod tests {
         assert!(command(&["run", "test", "-"]).is_err());
         assert!(command(&["open", "selection-actions", "--selection"]).is_ok());
         assert!(command(&["open", "selection-actions:2"]).is_ok());
+        assert!(command(&["open", "chat-prompts:2"]).is_ok());
         assert!(command(&["open", "selectionActions:3"]).is_ok());
         assert!(command(&["open", "selection-actions:0"]).is_err());
         assert!(command(&["open", "selection-actions:abc"]).is_err());

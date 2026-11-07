@@ -70,13 +70,21 @@ import {
 type Library = SlotLibrary<SlotLibraryItem>
 type MainAction = MainActionConfig
 
-/** The settings of a rule library: the styles or the transformations */
+/**
+ * The settings of a rule library: the styles, the transformations, or the
+ * prompts of a prompt page
+ */
 const props = defineProps<{
   task?: LlmTask
   titleKey?: string
-  hintKey: string
+  hintKey?: string
   /** The config key of the library */
-  libraryKey: 'styling' | 'transformations' | 'chatPrompts'
+  libraryKey?: 'styling' | 'transformations'
+  /**
+   * The library itself, in place of `libraryKey`; changes go to
+   * `update:library`, and the owner drops its empty items
+   */
+  library?: Library
   /** The start of a new item id */
   idPrefix: string
   promptPlaceholderKey?: string
@@ -84,14 +92,21 @@ const props = defineProps<{
   isMainActionOf?: (action: MainAction, id: string) => boolean
 }>()
 
+const emit = defineEmits<{ (e: 'update:library', library: Library): void }>()
+
 const { t } = useI18n()
 const { draft: userConfig } = useSettingsContext()
 
-const library = (): Library => userConfig.value[props.libraryKey]
+const library = (): Library =>
+  props.library ??
+  (props.libraryKey
+    ? userConfig.value[props.libraryKey]
+    : { items: [], slots: {} })
 const slots = computed(() => slotItemList(library()))
 
 function setLibrary(next: Library) {
-  userConfig.value[props.libraryKey] = next
+  if (props.library) emit('update:library', next)
+  else if (props.libraryKey) userConfig.value[props.libraryKey] = next
 }
 
 /** Main actions of removed items would point nowhere */
@@ -144,6 +159,7 @@ function updateItem(
 }
 
 onUnmounted(() => {
+  if (props.library || !props.libraryKey) return
   const current = library()
   const cleaned = withoutEmptySlotItems(current)
   if (cleaned.items.length === current.items.length) return

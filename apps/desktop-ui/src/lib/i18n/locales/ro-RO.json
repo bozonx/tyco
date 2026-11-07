@@ -795,14 +795,18 @@
       "voiceCommands": "Comenzi vocale",
       "selectionActionsPage2": "Acțiuni: pagina 2",
       "selectionActionsPage3": "Acțiuni: pagina 3",
-      "chatPrompts": "Presetări prompturi chat pentru textul selectat",
+      "chatPrompts": "Prompturi: pagina 1",
       "selectionActionsPage4": "Acțiuni: pagina 4",
       "selectionActionsPage5": "Acțiuni: pagina 5",
       "favorites": "Favorite",
       "quickAiRequest": "Solicitare rapidă IA",
       "voiceQuickAiRequest": "Solicitare vocală rapidă IA",
       "screenshotQuickAiRequest": "Captură de ecran și întrebare pentru IA",
-      "voiceScreenshotQuickAiRequest": "Captură de ecran și întrebare vocală pentru IA"
+      "voiceScreenshotQuickAiRequest": "Captură de ecran și întrebare vocală pentru IA",
+      "chatPromptsPage2": "Prompturi: pagina 2",
+      "chatPromptsPage3": "Prompturi: pagina 3",
+      "chatPromptsPage4": "Prompturi: pagina 4",
+      "chatPromptsPage5": "Prompturi: pagina 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pentru anulare",
@@ -1209,7 +1213,7 @@
     "webJinaApiKeyHint": "Opțional. Fără cheie, cererile folosesc nivelul gratuit cu limite partajate.",
     "chatPromptsTab": "Presetări prompturi chat",
     "chatPromptsNavTab": "Prompturi chat",
-    "chatPromptsHint": "Prompturi prestabilite de trimis în chat. În meniul de prompturi chat, fiecare rulează cu propria tastă; trageți cardurile pentru a schimba tastele.",
+    "chatPromptsHint": "Pagini de prompturi pentru cereri rapide către AI. Fiecare pagină folosește propriul profil, fiecare prompt pornește cu propria tastă. Trageți cardurile pentru a schimba tastele.",
     "prompt": "Prompt",
     "sectionWebSearch": "Căutare web pentru agenți",
     "webSearchSectionHint": "Setări pentru instrumentele de căutare web și citire a paginilor utilizate de modelele și profilurile AI.",
@@ -1231,7 +1235,14 @@
     "screenshotCaptureMode": "Mod de captură",
     "screenshotCaptureModeHint": "Alegeți dacă doriți să capturați întregul ecran sau să selectați o zonă specifică.",
     "screenshotCaptureModeScreen": "Tot ecranul",
-    "screenshotCaptureModeArea": "Zona selectată"
+    "screenshotCaptureModeArea": "Zona selectată",
+    "chatPromptsSentImmediately": "Trimite promptul imediat",
+    "addPromptPage": "Adaugă pagină",
+    "promptPageProfile": "Profil",
+    "movePromptPageBack": "Mută pagina înapoi",
+    "movePromptPageForward": "Mută pagina înainte",
+    "removePromptPage": "Elimină pagina",
+    "removePromptPageConfirm": "Eliminați această pagină împreună cu prompturile ei?"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
@@ -1469,5 +1480,14 @@
     "retake": "Refă captura de ecran",
     "failed": "Ecranul nu a putut fi capturat. Verifică permisiunile de captură și compatibilitatea portalului desktop.",
     "selectAreaInstruction": "Trageți pentru a selecta o zonă. Apăsați Escape pentru a anula."
+  },
+  "chatPrompts": {
+    "pageLabel": "{page} · {profile}",
+    "missingProfile": "Fără profil",
+    "pages": "Pagini de prompturi",
+    "noPages": "Nu există încă pagini de prompturi. Adăugați una în setări.",
+    "pageNotFound": "Pagina de prompturi {page} nu există.",
+    "profileMissing": "Profilul acestei pagini nu mai există. Alegeți altul în setări.",
+    "openSettings": "Deschide setările"
   }
 }

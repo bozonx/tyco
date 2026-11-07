@@ -792,14 +792,18 @@
       "voiceCommands": "Голосові команди",
       "selectionActionsPage2": "Дії: сторінка 2",
       "selectionActionsPage3": "Дії: сторінка 3",
-      "chatPrompts": "Швидкі промпти для чату з ШІ",
+      "chatPrompts": "Промпти: сторінка 1",
       "selectionActionsPage4": "Дії: сторінка 4",
       "selectionActionsPage5": "Дії: сторінка 5",
       "favorites": "Улюблене",
       "quickAiRequest": "Швидкий запит до ШІ",
       "voiceQuickAiRequest": "Голосовий швидкий запит до ШІ",
       "screenshotQuickAiRequest": "Знімок екрана й запитання ШІ",
-      "voiceScreenshotQuickAiRequest": "Знімок екрана й голосове запитання ШІ"
+      "voiceScreenshotQuickAiRequest": "Знімок екрана й голосове запитання ШІ",
+      "chatPromptsPage2": "Промпти: сторінка 2",
+      "chatPromptsPage3": "Промпти: сторінка 3",
+      "chatPromptsPage4": "Промпти: сторінка 4",
+      "chatPromptsPage5": "Промпти: сторінка 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — скасувати",
@@ -1206,7 +1210,7 @@
     "webJinaApiKeyHint": "Необов'язково. Без ключа запити працюють через безкоштовний тариф зі спільними лімітами.",
     "chatPromptsTab": "Швидкі промпти для чату",
     "chatPromptsNavTab": "Промпти для чату",
-    "chatPromptsHint": "Заготовлені промпти для надсилання в чат. У меню швидких промптів кожен запускається своєю клавішею; перетягуйте картки для зміни клавіш.",
+    "chatPromptsHint": "Сторінки промптів для швидких запитів до ШІ. Кожна сторінка працює зі своїм профілем, кожен промпт запускається своєю клавішею. Перетягуйте картки, щоб змінити клавіші.",
     "prompt": "Промпт",
     "sectionWebSearch": "Пошук в інтернеті для агентів",
     "webSearchSectionHint": "Параметри інструментів пошуку в інтернеті та завантаження веб-сторінок для ШІ-моделей і профілів.",
@@ -1228,7 +1232,14 @@
     "screenshotCaptureMode": "Режим захоплення",
     "screenshotCaptureModeHint": "Робити знімок усього екрана чи вибирати довільну область.",
     "screenshotCaptureModeScreen": "Весь екран",
-    "screenshotCaptureModeArea": "Виділена область"
+    "screenshotCaptureModeArea": "Виділена область",
+    "chatPromptsSentImmediately": "Надсилати промпт одразу",
+    "addPromptPage": "Додати сторінку",
+    "promptPageProfile": "Профіль",
+    "movePromptPageBack": "Перемістити сторінку назад",
+    "movePromptPageForward": "Перемістити сторінку вперед",
+    "removePromptPage": "Видалити сторінку",
+    "removePromptPageConfirm": "Видалити цю сторінку разом з її промптами?"
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {
@@ -1466,5 +1477,14 @@
     "retake": "Зробити знімок знову",
     "failed": "Не вдалося захопити екран. Перевірте дозволи на захоплення та підтримку порталу стільниці.",
     "selectAreaInstruction": "Виділіть область курсором. Натисніть Escape для скасування."
+  },
+  "chatPrompts": {
+    "pageLabel": "{page} · {profile}",
+    "missingProfile": "Немає профілю",
+    "pages": "Сторінки промптів",
+    "noPages": "Сторінок промптів ще немає. Додайте їх у налаштуваннях.",
+    "pageNotFound": "Сторінки промптів {page} немає.",
+    "profileMissing": "Профіль цієї сторінки більше не існує. Виберіть інший у налаштуваннях.",
+    "openSettings": "Відкрити налаштування"
   }
 }

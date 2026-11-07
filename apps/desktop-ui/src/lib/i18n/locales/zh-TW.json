@@ -789,14 +789,18 @@
       "voiceCommands": "語音命令",
       "selectionActionsPage2": "操作：第 2 頁",
       "selectionActionsPage3": "操作：第 3 頁",
-      "chatPrompts": "針對所選文字的聊天提示詞預設",
+      "chatPrompts": "提示詞：第 1 頁",
       "selectionActionsPage4": "操作：第 4 頁",
       "selectionActionsPage5": "操作：第 5 頁",
       "favorites": "我的最愛",
       "quickAiRequest": "AI 快速請求",
       "voiceQuickAiRequest": "語音 AI 快速請求",
       "screenshotQuickAiRequest": "擷取螢幕並向 AI 提問",
-      "voiceScreenshotQuickAiRequest": "擷取螢幕並向 AI 語音提問"
+      "voiceScreenshotQuickAiRequest": "擷取螢幕並向 AI 語音提問",
+      "chatPromptsPage2": "提示詞：第 2 頁",
+      "chatPromptsPage3": "提示詞：第 3 頁",
+      "chatPromptsPage4": "提示詞：第 4 頁",
+      "chatPromptsPage5": "提示詞：第 5 頁"
     },
     "hotkeyInput": {
       "cancelHint": "按 Esc 取消",
@@ -1203,7 +1207,7 @@
     "webJinaApiKeyHint": "選填。未配置金鑰時，請求將使用具有共用速率限制的免費層級。",
     "chatPromptsTab": "聊天提示詞預設",
     "chatPromptsNavTab": "聊天提示詞",
-    "chatPromptsHint": "發送到聊天的預設提示詞。在聊天提示詞選單中，每個提示詞都有對應的快捷鍵；拖曳卡片可變更對應按鍵。",
+    "chatPromptsHint": "用於快速 AI 請求的提示詞頁面。每個頁面使用自己的設定檔，每個提示詞以自己的按鍵執行。拖曳卡片即可變更按鍵。",
     "prompt": "提示詞",
     "sectionWebSearch": "代理網頁搜尋",
     "webSearchSectionHint": "AI 模型與設定檔使用的網頁搜尋與頁面讀取工具設定。",
@@ -1225,7 +1229,14 @@
     "screenshotCaptureMode": "擷取模式",
     "screenshotCaptureModeHint": "選擇擷取整個螢幕或選取特定區域。",
     "screenshotCaptureModeScreen": "整個螢幕",
-    "screenshotCaptureModeArea": "選取區域"
+    "screenshotCaptureModeArea": "選取區域",
+    "chatPromptsSentImmediately": "立即傳送提示詞",
+    "addPromptPage": "新增頁面",
+    "promptPageProfile": "設定檔",
+    "movePromptPageBack": "將頁面前移",
+    "movePromptPageForward": "將頁面後移",
+    "removePromptPage": "移除頁面",
+    "removePromptPageConfirm": "要移除此頁面及其提示詞嗎？"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
@@ -1463,5 +1474,14 @@
     "retake": "重新擷取螢幕",
     "failed": "無法擷取螢幕。請檢查螢幕擷取權限和桌面入口支援。",
     "selectAreaInstruction": "拖曳滑鼠選取區域。按 Escape 取消。"
+  },
+  "chatPrompts": {
+    "pageLabel": "{page} · {profile}",
+    "missingProfile": "無設定檔",
+    "pages": "提示詞頁面",
+    "noPages": "還沒有提示詞頁面。請在設定中新增。",
+    "pageNotFound": "提示詞頁面 {page} 不存在。",
+    "profileMissing": "此頁面的設定檔已不存在。請在設定中選擇其他設定檔。",
+    "openSettings": "開啟設定"
   }
 }

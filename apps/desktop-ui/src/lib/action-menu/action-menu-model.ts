@@ -44,7 +44,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
     inputMode: 'selection' | 'none'
   ) => void
   openStylingModal?: (text: string, stylingId?: string) => void
-  openChatPromptsModal?: (text: string, promptId?: string) => void
+  openChatPromptsModal?: (text: string) => void
   openFavoritesModal?: () => void
   activateMode?: (
     mode:

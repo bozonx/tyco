@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 05da833699e4ebe2a938e828c544f0b10db16b3312e985f2c6adc3f343765863
+// Source hash: a847b8de956668bcbba1bdf45467254ceb03bc4c3d5b5fd74f664feb1b0b3f07
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -353,8 +353,8 @@ export type DesktopActivationState = {
   screenshot?: ChatImage
   mode: ActivationMode | null
   /**
-   * The page of `actionPages` the action menu opens on; `None` or 0 for the
-   * first one.
+   * The page the menu opens on: of `actionPages` for `selectionActions`, of
+   * `chatPrompts.pages` for `chatPrompts`; `None` or 0 for the first one.
    */
   actionPageIndex: number | null
   /** The source the history opens filtered by, e.g. from the quick input. */

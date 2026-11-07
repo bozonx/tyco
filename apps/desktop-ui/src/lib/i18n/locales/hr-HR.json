@@ -795,14 +795,18 @@
       "voiceCommands": "Glasovne naredbe",
       "selectionActionsPage2": "Radnje: stranica 2",
       "selectionActionsPage3": "Radnje: stranica 3",
-      "chatPrompts": "Unaprijed postavljeni upiti za chat za odabrani tekst",
+      "chatPrompts": "Promptovi: stranica 1",
       "selectionActionsPage4": "Radnje: stranica 4",
       "selectionActionsPage5": "Radnje: stranica 5",
       "favorites": "Favoriti",
       "quickAiRequest": "Brzi upit za UI",
       "voiceQuickAiRequest": "Glasovni brzi upit za UI",
       "screenshotQuickAiRequest": "Snimka zaslona i pitanje za AI",
-      "voiceScreenshotQuickAiRequest": "Snimka zaslona i glasovno pitanje za AI"
+      "voiceScreenshotQuickAiRequest": "Snimka zaslona i glasovno pitanje za AI",
+      "chatPromptsPage2": "Promptovi: stranica 2",
+      "chatPromptsPage3": "Promptovi: stranica 3",
+      "chatPromptsPage4": "Promptovi: stranica 4",
+      "chatPromptsPage5": "Promptovi: stranica 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc za odustajanje",
@@ -1209,7 +1213,7 @@
     "webJinaApiKeyHint": "Neobavezno. Bez ključa, zahtjevi koriste besplatnu razinu sa zajedničkim ograničenjima.",
     "chatPromptsTab": "Unaprijed postavljeni upiti za chat",
     "chatPromptsNavTab": "Upiti za chat",
-    "chatPromptsHint": "Unaprijed pripremljeni upiti za slanje u chat. U izborniku upita za chat svaki se pokreće vlastitom tipkom; povucite kartice da promijenite tipke.",
+    "chatPromptsHint": "Stranice promptova za brze upite AI-ju. Svaka stranica koristi svoj profil, a svaki se prompt pokreće svojom tipkom. Povucite kartice da biste promijenili tipke.",
     "prompt": "Upit",
     "sectionWebSearch": "Pretraživanje weba za agente",
     "webSearchSectionHint": "Postavke za alate za pretraživanje weba i čitanje stranica koje koriste AI modeli i profili.",
@@ -1231,7 +1235,14 @@
     "screenshotCaptureMode": "Način snimanja",
     "screenshotCaptureModeHint": "Odaberite želite li snimiti cijeli zaslon ili odabrano područje.",
     "screenshotCaptureModeScreen": "Cijeli zaslon",
-    "screenshotCaptureModeArea": "Odabrano područje"
+    "screenshotCaptureModeArea": "Odabrano područje",
+    "chatPromptsSentImmediately": "Odmah pošalji prompt",
+    "addPromptPage": "Dodaj stranicu",
+    "promptPageProfile": "Profil",
+    "movePromptPageBack": "Pomakni stranicu unatrag",
+    "movePromptPageForward": "Pomakni stranicu naprijed",
+    "removePromptPage": "Ukloni stranicu",
+    "removePromptPageConfirm": "Ukloniti ovu stranicu i njezine promptove?"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
@@ -1469,5 +1480,14 @@
     "retake": "Ponovno snimi zaslon",
     "failed": "Nije moguće snimiti zaslon. Provjerite dopuštenja za snimanje i podršku portala radne površine.",
     "selectAreaInstruction": "Povucite za odabir područja. Pritisnite Escape za odustajanje."
+  },
+  "chatPrompts": {
+    "pageLabel": "{page} · {profile}",
+    "missingProfile": "Nema profila",
+    "pages": "Stranice promptova",
+    "noPages": "Još nema stranica promptova. Dodajte ih u postavkama.",
+    "pageNotFound": "Stranica promptova {page} ne postoji.",
+    "profileMissing": "Profil ove stranice više ne postoji. Odaberite drugi u postavkama.",
+    "openSettings": "Otvori postavke"
   }
 }
