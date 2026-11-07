@@ -40,6 +40,22 @@ export function liveTranscriptText(state: LiveTranscriptState): string {
   return joinTranscript(state.committed, state.draft)
 }
 
+/**
+ * Whether `next` carries new recognized speech over `previous`. A draft cleared
+ * by an empty provider result is a retracted noise guess, not new words.
+ */
+export function hasNewTranscriptSpeech(
+  previous: LiveTranscriptState,
+  next: LiveTranscriptState
+): boolean {
+  const nextText = liveTranscriptText(next)
+  const previousText = liveTranscriptText(previous)
+  if (nextText === previousText) return false
+  // Retracting the draft back to `committed` without adding words is silence.
+  if (next.committed === previous.committed && !next.draft) return false
+  return true
+}
+
 function joinTranscript(head: string, tail: string): string {
   const next = tail.trim()
   if (!next) return head

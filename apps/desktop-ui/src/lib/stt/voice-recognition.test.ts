@@ -592,7 +592,14 @@ describe('voice recognition failures', () => {
       'toast.recordingLimitReached',
       'warn'
     )
-    await vi.waitFor(() => expect(deps.onCorrected).toHaveBeenCalled())
+    await vi.waitFor(() =>
+      expect(deps.onCorrected).toHaveBeenCalledWith(
+        'Raw words',
+        'Raw words',
+        undefined,
+        'next'
+      )
+    )
     expect(vi.getTimerCount()).toBe(0)
   })
 
@@ -603,10 +610,11 @@ describe('voice recognition failures', () => {
     })
     await vi.advanceTimersByTimeAsync(100_000)
     handlers.onText({ committed: '', draft: 'Heard' })
-    // empty results arrive in silence too and do not count as speech
+    // empty results and retracted draft guesses arrive in silence too and do
+    // not count as speech
     await vi.advanceTimersByTimeAsync(100_000)
-    handlers.onText({ committed: 'Heard', draft: '' })
-    handlers.onText({ committed: 'Heard', draft: '' })
+    handlers.onText({ committed: '', draft: '' })
+    handlers.onText({ committed: '', draft: '' })
     // the silence counts from the last new words, at 100 s
     await vi.advanceTimersByTimeAsync(79_000)
     expect(deps.toastKey).not.toHaveBeenCalled()
@@ -616,7 +624,14 @@ describe('voice recognition failures', () => {
       'toast.recordingSilenceStop',
       'warn'
     )
-    await vi.waitFor(() => expect(deps.onCorrected).toHaveBeenCalled())
+    await vi.waitFor(() =>
+      expect(deps.onCorrected).toHaveBeenCalledWith(
+        'Raw words',
+        'Raw words',
+        undefined,
+        'next'
+      )
+    )
     expect(vi.getTimerCount()).toBe(0)
   })
 
@@ -749,16 +764,11 @@ describe('voice recognition failures', () => {
       label: 'action.transformationMenu',
       icon: 'mdi:auto-fix',
     }
-    const { deps, model } = setup({
-      consumeBufferedIntent: () => slotIntent,
-    })
+    const { deps, model } = setup({ consumeBufferedIntent: () => slotIntent })
     await model.startSession()
     await model.finish('insert')
     expect(deps.setPendingModal).toHaveBeenCalledWith(
-      expect.objectContaining({
-        correction: true,
-        allowBufferedIntent: true,
-      })
+      expect.objectContaining({ correction: true, allowBufferedIntent: true })
     )
     expect(deps.onCorrected).toHaveBeenCalledWith(
       'Formatted words.',

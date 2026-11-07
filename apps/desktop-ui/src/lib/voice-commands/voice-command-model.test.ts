@@ -129,6 +129,31 @@ describe('voice command session', () => {
     }
   })
 
+  it('starts the silence timer only once the microphone is recording', async () => {
+    vi.useFakeTimers()
+    try {
+      let releaseStart!: () => void
+      const { model, deps } = setup({
+        startDictation: vi.fn(
+          () =>
+            new Promise<void>((resolve) => {
+              releaseStart = resolve
+            })
+        ),
+      })
+      const starting = model.start()
+      await Promise.resolve()
+      expect(vi.getTimerCount()).toBe(0)
+      releaseStart()
+      await starting
+      expect(vi.getTimerCount()).toBeGreaterThan(0)
+      await vi.advanceTimersByTimeAsync(180_000)
+      expect(deps.finishDictation).toHaveBeenCalledOnce()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('previews revised partials, waits for final STT and requires confirmation when finished for review', async () => {
     const { model, deps, partial } = setup()
     await model.start()

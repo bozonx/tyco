@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import {
   applyTranscriptPart,
   createLiveTranscriptState,
+  hasNewTranscriptSpeech,
   liveTranscriptText,
 } from './live-transcript'
 
@@ -68,5 +69,30 @@ describe('live transcript', () => {
     expect(liveTranscriptText({ committed: '你好', draft: 'world' })).toBe(
       '你好 world'
     )
+  })
+
+  it('counts new words as speech and ignores retracted draft guesses', () => {
+    const empty = createLiveTranscriptState()
+    const draftNoise = { committed: '', draft: 'uh' }
+    expect(hasNewTranscriptSpeech(empty, draftNoise)).toBe(true)
+    // Retracting a draft back to empty is not speech
+    expect(hasNewTranscriptSpeech(draftNoise, empty)).toBe(false)
+
+    const settled = { committed: 'Heard', draft: '' }
+    // Settling the exact same words as the draft does not add new words
+    expect(
+      hasNewTranscriptSpeech({ committed: '', draft: 'Heard' }, settled)
+    ).toBe(false)
+    // Retracting a draft after settled text is not speech
+    expect(
+      hasNewTranscriptSpeech({ committed: 'Heard', draft: 'noise' }, settled)
+    ).toBe(false)
+    // A final that revises the draft words is new speech
+    expect(
+      hasNewTranscriptSpeech(
+        { committed: '', draft: 'Helo' },
+        { committed: 'Hello', draft: '' }
+      )
+    ).toBe(true)
   })
 })

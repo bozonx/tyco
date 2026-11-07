@@ -12,6 +12,8 @@ import type { DictationTarget } from './dictation-target'
 import type { LiveDictationStart } from './live-dictation'
 import {
   createLiveTranscriptState,
+  hasNewTranscriptSpeech,
+  type LiveTranscriptState,
   liveTranscriptText,
 } from './live-transcript'
 import type { VoiceFinishIntent } from './voice-finish-intent'
@@ -135,7 +137,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   let disposed = false
   /** Set once a dictation started; it stays finishable after a failure */
   let hasSession = false
-  let lastTranscriptText = ''
+  let lastRawState: LiveTranscriptState = createLiveTranscriptState()
   /** The best text of the dictation being finished: raw, then processed */
   let finishingText = ''
   let contextual: ReturnType<typeof createContextualCorrectionModel> | undefined
@@ -166,7 +168,9 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           : 'toast.recordingLimitReached',
         'warn'
       )
-      void finish()
+      // An unattended stop must not type into the focused external window or
+      // send a half-spoken chat prompt on its own.
+      void finish('next')
     },
   })
 
@@ -463,7 +467,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     historySession?.end()
     historySession?.update('')
     transcript.value = createLiveTranscriptState()
-    lastTranscriptText = ''
+    lastRawState = createLiveTranscriptState()
     finishingText = ''
     const generation = ++sessionGeneration
     let hasReportedContextualError = false
@@ -500,11 +504,10 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
             contextual?.update(state.committed)
             historySession?.update(liveTranscriptText(state))
             // empty results come in silence too: only new words are speech
-            const text = liveTranscriptText(state)
-            if (text !== lastTranscriptText) {
-              lastTranscriptText = text
+            if (hasNewTranscriptSpeech(lastRawState, state)) {
               voiceSession.markActivity()
             }
+            lastRawState = state
           },
           // a fast failure must not overtake the start it belongs to
           onError: (error) => {

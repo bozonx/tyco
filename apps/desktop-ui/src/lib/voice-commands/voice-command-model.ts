@@ -7,6 +7,7 @@ import type { DictationHandlers } from '../stt/dictation-controller'
 import { type DictationError, dictationErrorKey } from '../stt/dictation-error'
 import {
   createLiveTranscriptState,
+  hasNewTranscriptSpeech,
   liveTranscriptText,
   type LiveTranscriptState,
 } from '../stt/live-transcript'
@@ -352,7 +353,6 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     // Preserve the previous text until new recognition explicitly replaces it.
     selected.value = undefined
     liveTranscript.value = createLiveTranscriptState()
-    voiceSession.begin()
     const pending = (async () => {
       await stopping
       if (current !== generation || disposed) return
@@ -363,11 +363,13 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
             !disposed &&
             stage.value === 'recording'
           ) {
+            const previous = liveTranscript.value
             liveTranscript.value = state
-            const text = liveTranscriptText(state)
             // empty results come in silence too: only new words are speech
-            if (text !== transcript.value) voiceSession.markActivity()
-            transcript.value = text
+            if (hasNewTranscriptSpeech(previous, state)) {
+              voiceSession.markActivity()
+            }
+            transcript.value = liveTranscriptText(state)
           }
         },
         onError: (cause) => {
@@ -392,6 +394,13 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
           stage.value = 'review'
         },
       })
+      if (current !== generation || disposed) {
+        await deps.cancelDictation()
+        return
+      }
+      if (stage.value === 'recording') {
+        voiceSession.begin()
+      }
     })()
       .catch((cause: unknown) => {
         if (current !== generation || disposed) return
