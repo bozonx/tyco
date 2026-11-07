@@ -131,6 +131,20 @@ describe('chat controller', () => {
     expect(deps.input.requestFocus).not.toHaveBeenCalled()
   })
 
+  it('opens main chat without attachment when text is empty in quick window', async () => {
+    const { controller, deps, state } = setup()
+    state.label = 'quick'
+    await controller.attachToChat('')
+    expect(deps.openMainChat).toHaveBeenCalledWith(undefined)
+  })
+
+  it('opens last or new chat when text is empty in main window', async () => {
+    const { controller, model } = setup()
+    const openSpy = vi.spyOn(model, 'openLastOrNewChat')
+    await controller.attachToChat('')
+    expect(openSpy).toHaveBeenCalled()
+  })
+
   it('infers attachment sources and preserves an explicit source', async () => {
     const { controller, editor, model } = setup()
     editor.value = 'Draft'

@@ -104,9 +104,7 @@ test.describe('action menu', () => {
         actionId: 'voiceCommands',
       }
       await page.goto('/')
-      await page
-        .getByRole('button', { name: /Voice commands with selection/ })
-        .click()
+      await page.getByRole('button', { name: /Voice commands/ }).click()
       await voice.partial('Ask in chat explain this')
       if (isLateCapture) {
         const state = desktop.snapshot()

@@ -8,25 +8,29 @@ describe('voice command action context', () => {
   afterEach(() => desktop?.dispose())
 
   it.each(['', 'Selected passage'])(
-    'opens context-free voice commands without selection tracking (text: %j)',
+    'opens context-free voice commands without selection tracking on inputMode: none page (text: %j)',
     async (text) => {
       desktop = await loadFakeDesktop({
         mode: 'selectionActions',
-        activation: { activationId: 42, selectedText: text },
+        activation: {
+          activationId: 42,
+          selectedText: text,
+          actionPageIndex: 1,
+        },
       })
       desktop.setUserConfig({
         actionPages: [
+          { inputMode: 'selection', slots: {} },
           {
-            inputMode: 'selection',
-            slots: {
-              q: { type: 'standard', actionId: 'voiceCommandsWithoutContext' },
-            },
+            inputMode: 'none',
+            slots: { q: { type: 'standard', actionId: 'voiceCommands' } },
           },
         ],
       })
       const actions = useActionMenuStore()
+      actions.setPage(1)
       const action = actions.getShortcutActions()[0]
-      expect(action?.id).toBe('voiceCommandsWithoutContext')
+      expect(action?.id).toBe('voiceCommands')
       await action?.action(text)
       expect(useMenuModalsStore().currentStep?.params).toEqual({ text: '' })
 
@@ -34,6 +38,25 @@ describe('voice command action context', () => {
       expect(useMenuModalsStore().currentStep?.params).toEqual({ text: '' })
     }
   )
+
+  it('normalizes legacy voiceCommandsWithoutContext to voiceCommands', async () => {
+    desktop = await loadFakeDesktop({ mode: 'selectionActions' })
+    desktop.setUserConfig({
+      actionPages: [
+        {
+          inputMode: 'selection',
+          slots: {
+            q: {
+              type: 'standard',
+              actionId: 'voiceCommandsWithoutContext' as any,
+            },
+          },
+        },
+      ],
+    })
+    const action = useActionMenuStore().getShortcutActions()[0]
+    expect(action?.id).toBe('voiceCommands')
+  })
 
   it('opens voice commands with the supplied selection', async () => {
     desktop = await loadFakeDesktop({ mode: 'selectionActions' })

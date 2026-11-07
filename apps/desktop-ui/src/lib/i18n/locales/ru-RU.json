@@ -1,6 +1,6 @@
 {
   "action": {
-    "askInChat": "В чат",
+    "askInChat": "Спросить в чате",
     "copy": "Скопировать",
     "copyToClipboard": "Скопировать и закрыть",
     "correction": "Коррекция",
@@ -11,8 +11,7 @@
     "translationMenu": "Перевод",
     "webhook": "Вебхук",
     "chatPromptsMenu": "Быстрые промпты для чата",
-    "voiceCommands": "Голосовые команды с выделением",
-    "voiceCommandsWithoutContext": "Голосовые команды без контекста",
+    "voiceCommands": "Голосовые команды",
     "favoritesMenu": "Избранное",
     "saveAsFavorite": "Сохранить в избранное",
     "savedAsFavorite": "Сохранено в избранное",
@@ -1470,7 +1469,7 @@
   "quickAiRequest": {
     "selectProfile": "Выбрать профиль",
     "profileLocked": "Профиль заблокирован во время сессии",
-    "defaultProfile": "Вопрос к ИИ",
+    "defaultProfile": "Спросить ИИ",
     "noModel": "Выберите модель для быстрых запросов."
   },
   "screenshot": {

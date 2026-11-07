@@ -349,16 +349,10 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           icon: 'mdi:microphone',
           trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
-            deps.openVoiceCommandsModal?.(text, 'selection')
-          },
-        },
-        {
-          id: 'voiceCommandsWithoutContext',
-          labelKey: 'action.voiceCommandsWithoutContext',
-          icon: 'mdi:microphone',
-          trailingIcon: 'mdi:chevron-right',
-          action: async () => {
-            deps.openVoiceCommandsModal?.('', 'none')
+            deps.openVoiceCommandsModal?.(
+              text,
+              takesText.value ? 'selection' : 'none'
+            )
           },
         },
         {
@@ -380,7 +374,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           icon: 'mdi:lightning-bolt-outline',
           trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
-            if (!text?.trim()) {
+            if (takesText.value && !text?.trim()) {
               deps.showToast('toast.textNotSelected', 'error')
               return
             }

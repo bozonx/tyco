@@ -396,7 +396,6 @@
                         "chatPromptsMenu",
                         "favoritesMenu",
                         "voiceCommands",
-                        "voiceCommandsWithoutContext",
                         "openHistory",
                         "voiceInput",
                         "correction",

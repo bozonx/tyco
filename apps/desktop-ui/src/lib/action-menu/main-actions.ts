@@ -62,6 +62,19 @@ function isValidActionSlot(slot: unknown): slot is MainActionConfig {
   return false
 }
 
+function normalizeSlot(slot: unknown): MainActionConfig | null {
+  if (!slot || typeof slot !== 'object') return null
+  const item = slot as Record<string, unknown>
+  if (
+    item.type === 'standard' &&
+    item.actionId === 'voiceCommandsWithoutContext'
+  ) {
+    return { type: 'standard', actionId: 'voiceCommands' }
+  }
+  if (!isValidActionSlot(slot)) return null
+  return slot
+}
+
 /** The items of the action menu grid in key order; an empty slot is `null` */
 export function normalizeMainActions(
   value: unknown
@@ -75,10 +88,12 @@ export function normalizeMainActions(
   const filtered: ShortcutSlots<MainActionConfig> = {}
   for (const [key, slot] of Object.entries(value as Record<string, unknown>)) {
     if (
-      SHORTCUT_SLOT_KEYS.includes(key as (typeof SHORTCUT_SLOT_KEYS)[number]) &&
-      isValidActionSlot(slot)
+      SHORTCUT_SLOT_KEYS.includes(key as (typeof SHORTCUT_SLOT_KEYS)[number])
     ) {
-      filtered[key as (typeof SHORTCUT_SLOT_KEYS)[number]] = slot
+      const normalized = normalizeSlot(slot)
+      if (normalized) {
+        filtered[key as (typeof SHORTCUT_SLOT_KEYS)[number]] = normalized
+      }
     }
   }
   return slotList(filtered)

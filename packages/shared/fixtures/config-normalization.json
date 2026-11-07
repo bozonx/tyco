@@ -10,10 +10,6 @@
             "d": { "type": "standard", "actionId": "openHistory" },
             "f": { "type": "standard", "actionId": "voiceInput" },
             "g": { "type": "standard", "actionId": "voiceCommands" },
-            "s": {
-              "type": "standard",
-              "actionId": "voiceCommandsWithoutContext"
-            },
             "a": { "type": "standard", "actionId": "directCorrection" }
           }
         }
@@ -380,10 +376,6 @@
             "d": { "type": "standard", "actionId": "openHistory" },
             "f": { "type": "standard", "actionId": "voiceInput" },
             "g": { "type": "standard", "actionId": "voiceCommands" },
-            "s": {
-              "type": "standard",
-              "actionId": "voiceCommandsWithoutContext"
-            },
             "a": { "type": "standard", "actionId": "directCorrection" }
           }
         }
