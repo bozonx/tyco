@@ -410,6 +410,7 @@ const CONFIG_FIELD_TABS: Record<string, SettingsSectionId> = {
   'appearance.theme': 'general',
   'translation.targetLanguages': 'languages',
   'editor.history': 'history',
+  'chat.history': 'history',
 }
 
 /**

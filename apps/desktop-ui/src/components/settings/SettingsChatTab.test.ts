@@ -9,16 +9,12 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 describe('SettingsChatTab.vue', () => {
-  it('holds the prompt and the chat history of Ask AI', async () => {
+  it('holds the prompt of Ask AI and leads to its chat history', async () => {
     const context = createTestSettingsContext()
     const wrapper = mount(SettingsChatTab, {
       global: {
         provide: context.provide,
         stubs: {
-          SettingsChatHistorySection: {
-            props: ['scope'],
-            template: '<div class="chat-history-stub" :data-scope="scope" />',
-          },
           FieldRow: {
             props: ['label'],
             template: '<div class="row" :data-label="label"><slot /></div>',
@@ -31,14 +27,15 @@ describe('SettingsChatTab.vue', () => {
     expect(
       wrapper.findAll('.row').map((row) => row.attributes('data-label'))
     ).toEqual(['settings.chatPrompt'])
-    expect(wrapper.get('.chat-history-stub').attributes('data-scope')).toBe(
-      'askAi'
-    )
+    expect(wrapper.text()).toContain('settings.chatStorageLink')
     const section = wrapper.findComponent({ name: 'SettingsSection' })
     expect(section.props('title')).toBe('settings.chat')
     expect(section.props('info')).toBe('settings.chatInfo')
 
     await wrapper.get('textarea').setValue('Answer briefly')
     expect(context.draft.value.llm.tasks.chat.rule).toBe('Answer briefly')
+
+    await wrapper.get('.inline-action').trigger('click')
+    expect(context.navigate).toHaveBeenCalledWith('history')
   })
 })

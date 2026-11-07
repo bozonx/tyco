@@ -37,12 +37,6 @@ const optionsOf = (config: UserConfig): ChatLlmOption[] =>
 
 function createSetup(overrides: Partial<QuickAiRequestModelDependencies> = {}) {
   const config = overrides.getUserConfig?.() ?? mockUserConfig
-  const createHistorySession = vi.fn(async () => 'history-123')
-  const updateHistorySession = vi.fn(async () => {})
-  const listRecentInstructions = vi.fn(
-    (_limit?: number, pId?: string | null) =>
-      pId === 'prof-1' ? ['profile instruction'] : ['default instruction']
-  )
   let idCounter = 1
 
   async function* mockStream(): AsyncGenerator<LlmStreamEvent> {
@@ -73,10 +67,6 @@ function createSetup(overrides: Partial<QuickAiRequestModelDependencies> = {}) {
     cancelToolApprovals: vi.fn(),
     stream: vi.fn(() => mockStream()),
     resolveProfileInstructions: vi.fn(async (id: string) => `Soul of ${id}`),
-    createHistorySession,
-    updateHistorySession,
-    removeFromHistorySession: vi.fn(async () => {}),
-    listRecentInstructions,
     insertText: vi.fn(async () => {}),
     copyText: vi.fn(async () => {}),
     toEditor: vi.fn(async () => {}),
@@ -178,17 +168,7 @@ describe('QuickAiRequestModel', () => {
     expect(model.profileId.value).toBe('prof-1')
   })
 
-  it('filters recent instructions by profile', () => {
-    const { model } = createSetup()
-
-    model.setProfileId(null)
-    expect(model.getRecentInstructions()).toEqual(['default instruction'])
-
-    model.setProfileId('prof-1')
-    expect(model.getRecentInstructions()).toEqual(['profile instruction'])
-  })
-
-  it('extracts reply blocks and stores the session after the answer', async () => {
+  it('saves the conversation as a quick request chat after the answer', async () => {
     const { model, deps } = createSetup()
 
     expect(await model.submitPrompt('Make it concise')).toBe(true)
@@ -199,39 +179,25 @@ describe('QuickAiRequestModel', () => {
     expect(turn.replyBlocks).toEqual([
       { title: 'Option 1', text: 'Transformed text' },
     ])
-
-    const stored = [
-      {
-        prompt: 'Make it concise',
-        inputKind: 'typed',
-        result: 'Transformed text',
-      },
-    ]
-    expect(deps.createHistorySession).toHaveBeenCalledWith({
-      text: 'Selected original text',
-      profileId: null,
-      instruction: { text: 'Make it concise', inputKind: 'typed' },
-      turns: stored,
-    })
-    expect(deps.updateHistorySession).toHaveBeenCalledWith(
-      'history-123',
-      stored,
-      'Transformed text'
+    expect(deps.saveChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isQuickRequest: true,
+        title: 'Make it concise',
+        messages: [
+          expect.objectContaining({ role: 'user', content: 'Make it concise' }),
+          expect.objectContaining({ role: 'assistant', status: 'complete' }),
+        ],
+      }),
+      undefined
+    )
+    expect(deps.renameChat).toHaveBeenCalledWith(
+      'id-1',
+      'Generated title',
+      undefined
     )
   })
 
-  it('stores a request without a selection under its first question', async () => {
-    const { model, deps } = createSetup({ context: { kind: 'selection' } })
-
-    await model.submitPrompt('What is a monad?')
-    await flushHistory()
-
-    expect(deps.createHistorySession).toHaveBeenCalledWith(
-      expect.objectContaining({ text: 'What is a monad?' })
-    )
-  })
-
-  it('leaves no history entry for a failed request', async () => {
+  it('saves nothing for a failed request', async () => {
     const { model, deps } = createSetup({
       stream: vi.fn(() => {
         throw new Error('offline')
@@ -242,10 +208,10 @@ describe('QuickAiRequestModel', () => {
     await flushHistory()
 
     expect(model.turns.value[0].status).toBe('error')
-    expect(deps.createHistorySession).not.toHaveBeenCalled()
+    expect(deps.saveChat).not.toHaveBeenCalled()
   })
 
-  it('leaves no history entry for a cancelled request', async () => {
+  it('saves nothing for a cancelled request', async () => {
     let release!: () => void
     const gate = new Promise<void>((resolve) => (release = resolve))
     const { model, deps } = createSetup({
@@ -264,59 +230,43 @@ describe('QuickAiRequestModel', () => {
 
     expect(model.turns.value[0].status).toBe('stopped')
     expect(deps.cancelToolApprovals).toHaveBeenCalled()
-    expect(deps.createHistorySession).not.toHaveBeenCalled()
+    expect(deps.saveChat).not.toHaveBeenCalled()
   })
 
-  it('keeps every turn of the session in one entry', async () => {
+  it('keeps every turn in one chat and its generated title', async () => {
     const { model, deps } = createSetup()
 
     await model.submitPrompt('Turn 1')
+    await flushHistory()
     await model.submitPrompt('Turn 2')
     await flushHistory()
 
-    expect(model.turns.value).toHaveLength(2)
-    expect(deps.createHistorySession).toHaveBeenCalledTimes(1)
-    expect(deps.updateHistorySession).toHaveBeenLastCalledWith(
-      'history-123',
-      [
-        { prompt: 'Turn 1', inputKind: 'typed', result: 'Transformed text' },
-        { prompt: 'Turn 2', inputKind: 'typed', result: 'Transformed text' },
-      ],
-      'Transformed text'
-    )
+    const saves = vi.mocked(deps.saveChat!).mock.calls.map(([chat]) => chat)
+    expect(saves).toHaveLength(2)
+    expect(saves[1].id).toBe(saves[0].id)
+    expect(saves[1].title).toBe('Generated title')
+    expect(saves[1].messages).toHaveLength(4)
+    expect(deps.generateChatTitle).toHaveBeenCalledTimes(1)
   })
 
   it.each(['window', 'editor', 'copy'] as const)(
-    'stores the %s block as the result before it leaves the app',
+    'hands the %s block over',
     async (target) => {
-      const order: string[] = []
-      const { model, deps } = createSetup({
-        updateHistorySession: vi.fn(async (_id, _turns, result) => {
-          order.push(`history:${result}`)
-        }),
-        insertText: vi.fn(async (text: string) => {
-          order.push(`out:${text}`)
-        }),
-        toEditor: vi.fn(async (text: string) => {
-          order.push(`out:${text}`)
-        }),
-        copyText: vi.fn(async (text: string) => {
-          order.push(`out:${text}`)
-        }),
-      })
+      const { model, deps } = createSetup()
       await model.submitPrompt('Test')
       await flushHistory()
-      order.length = 0
 
       await model.applyReplyBlock({ text: 'Picked variant' }, target)
 
-      expect(order).toEqual(['history:Picked variant', 'out:Picked variant'])
-      if (target === 'editor') {
-        expect(deps.toEditor).toHaveBeenCalledWith(
-          'Picked variant',
-          'Selected original text'
-        )
-      }
+      const handOver = {
+        window: deps.insertText,
+        editor: deps.toEditor,
+        copy: deps.copyText,
+      }[target]
+      expect(handOver).toHaveBeenCalledWith(
+        'Picked variant',
+        ...(target === 'editor' ? ['Selected original text'] : [])
+      )
       expect(deps.closeOverlay).toHaveBeenCalledTimes(target === 'copy' ? 0 : 1)
     }
   )
@@ -346,13 +296,19 @@ describe('QuickAiRequestModel', () => {
   })
 
   it('moves the conversation to a new chat and names it', async () => {
-    const { model, deps } = createSetup({ initialProfileId: 'prof-1' })
+    const { model, deps } = createSetup({
+      initialProfileId: 'prof-1',
+      // the quick request saves no title of its own
+      renameChat: undefined,
+    })
     await model.submitPrompt('Make it formal')
+    await flushHistory()
+    deps.renameChat = vi.fn(async () => {})
 
     await model.switchToChat()
     await flushHistory()
 
-    expect(deps.saveChat).toHaveBeenCalledWith(
+    expect(deps.saveChat).toHaveBeenLastCalledWith(
       expect.objectContaining({
         title: 'Make it formal',
         messages: [
@@ -368,11 +324,13 @@ describe('QuickAiRequestModel', () => {
       }),
       'prof-1'
     )
-    const chatId = vi.mocked(deps.saveChat!).mock.calls[0][0].id
+    const moved = vi.mocked(deps.saveChat!).mock.lastCall![0]
+    // the chat leaves the quick requests
+    expect(moved.isQuickRequest).toBeUndefined()
+    const chatId = moved.id
     expect(deps.openMainChat).toHaveBeenCalledWith(
       expect.objectContaining({ chatId, profileId: 'prof-1' })
     )
-    expect(deps.removeFromHistorySession).toHaveBeenCalledWith('history-123')
     // the answer is the reply block alone
     expect(deps.generateChatTitle).toHaveBeenCalledWith(
       'Make it formal',
@@ -473,7 +431,7 @@ describe('QuickAiRequestModel', () => {
         const followUp = userContents(stream.mock.calls[1])
         expect(followUp[0]).toEqual(first[0])
         expect(followUp[1]).toBe('And the title?')
-        expect(deps.createHistorySession).not.toHaveBeenCalled()
+        expect(deps.saveChat).not.toHaveBeenCalled()
       }
     )
 

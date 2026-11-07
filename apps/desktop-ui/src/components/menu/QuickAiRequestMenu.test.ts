@@ -22,10 +22,6 @@ describe('QuickAiRequestMenu', () => {
     desktop.backend.handle('list_recent_quick_request_prompts', () => [])
     desktop.backend.handle('copy_text', () => undefined)
     desktop.backend.handle('add_editor_history_item', () => 'history-1')
-    desktop.backend.handle(
-      'update_editor_history_item_session',
-      () => undefined
-    )
     desktop.backend.handle('start_fetch', () => {
       throw new Error('offline in test')
     })

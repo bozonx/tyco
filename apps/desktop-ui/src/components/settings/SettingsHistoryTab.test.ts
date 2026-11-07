@@ -9,7 +9,7 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 describe('SettingsHistoryTab.vue', () => {
-  it('renders editor history section in every mode', () => {
+  it('holds the action history and the chats of Ask AI in every mode', () => {
     const mountTab = (isInDevelopment: boolean) =>
       mount(SettingsHistoryTab, {
         global: {
@@ -18,11 +18,18 @@ describe('SettingsHistoryTab.vue', () => {
             SettingsEditorHistorySection: {
               template: '<div class="editor-history-stub" />',
             },
+            SettingsChatHistorySection: {
+              props: ['scope'],
+              template: '<div class="chat-history-stub" :data-scope="scope" />',
+            },
           },
         },
       })
 
     expect(mountTab(true).find('.editor-history-stub').exists()).toBe(true)
     expect(mountTab(false).find('.editor-history-stub').exists()).toBe(true)
+    expect(
+      mountTab(false).get('.chat-history-stub').attributes('data-scope')
+    ).toBe('askAi')
   })
 })

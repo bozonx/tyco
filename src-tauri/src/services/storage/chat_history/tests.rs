@@ -23,6 +23,7 @@ fn enabled_policy() -> ChatHistoryPolicy {
     ChatHistoryPolicy {
         is_enabled: true,
         retention_days: 0,
+        saves_quick_requests: true,
     }
 }
 
@@ -173,6 +174,7 @@ fn a_disabled_history_stores_no_chat_in_any_folder() {
     let policy = ChatHistoryPolicy {
         is_enabled: false,
         retention_days: 0,
+        saves_quick_requests: true,
     };
 
     save_chat(&dirs, policy, &images, chat_item("chat")).unwrap();
@@ -275,6 +277,7 @@ fn saving_a_chat_past_the_retention_period_keeps_it() {
     let policy = ChatHistoryPolicy {
         is_enabled: true,
         retention_days: 30,
+        saves_quick_requests: true,
     };
     // a chat whose last message is from 1970, e.g. one only renamed
     save_chat(&dirs, policy, &images, chat_item("old")).unwrap();
@@ -330,6 +333,7 @@ fn chat_history_policy_reads_the_settings() {
         ChatHistoryPolicy {
             is_enabled: true,
             retention_days: 0,
+            saves_quick_requests: true,
         }
     );
     assert_eq!(
@@ -339,6 +343,7 @@ fn chat_history_policy_reads_the_settings() {
         ChatHistoryPolicy {
             is_enabled: false,
             retention_days: 30,
+            saves_quick_requests: true,
         }
     );
 }
@@ -354,6 +359,7 @@ fn profile_chats_follow_their_own_settings() {
         ChatHistoryPolicy {
             is_enabled: false,
             retention_days: 0,
+            saves_quick_requests: true,
         }
     );
     assert_eq!(
@@ -361,6 +367,7 @@ fn profile_chats_follow_their_own_settings() {
         ChatHistoryPolicy {
             is_enabled: true,
             retention_days: 7,
+            saves_quick_requests: true,
         }
     );
     assert_eq!(
@@ -368,6 +375,7 @@ fn profile_chats_follow_their_own_settings() {
         ChatHistoryPolicy {
             is_enabled: true,
             retention_days: 0,
+            saves_quick_requests: true,
         }
     );
 }
@@ -383,6 +391,7 @@ fn chat_history_policy_drops_the_chats_past_the_retention_period() {
     let policy = |retention_days| ChatHistoryPolicy {
         is_enabled: true,
         retention_days,
+        saves_quick_requests: true,
     };
 
     policy(0).drop_expired(&mut history, now);
@@ -402,6 +411,7 @@ fn chat_history_policy_disabled_does_not_clear_chats() {
     let policy = ChatHistoryPolicy {
         is_enabled: false,
         retention_days: 0,
+        saves_quick_requests: true,
     };
     enforce_chat_history_policy(&dirs, policy).unwrap();
     assert_eq!(ids(&dirs), ["chat-1"]);
@@ -611,6 +621,7 @@ fn retention_applies_while_the_history_is_off() {
         ChatHistoryPolicy {
             is_enabled: false,
             retention_days: 30,
+            saves_quick_requests: true,
         },
     )
     .unwrap();
@@ -785,6 +796,7 @@ fn unsaved_and_disabled_histories_keep_originals_off_disk() {
     let disabled = ChatHistoryPolicy {
         is_enabled: false,
         retention_days: 0,
+        saves_quick_requests: true,
     };
 
     save_chat(&dirs, disabled, &images, chat.clone()).unwrap();
@@ -936,4 +948,36 @@ fn list_recent_quick_request_prompts_returns_deduplicated_user_prompts() {
             "First question".to_string(),
         ]
     );
+}
+
+#[test]
+fn quick_requests_are_not_saved_when_the_policy_leaves_them_out() {
+    let dir = TestDir::new("quick-off-test");
+    let dirs = dirs(&dir);
+    let images = Mutex::new(ChatImageStore::default());
+    let policy = ChatHistoryPolicy {
+        saves_quick_requests: false,
+        ..enabled_policy()
+    };
+
+    let mut quick = dated("q1", 100);
+    quick.is_quick_request = Some(true);
+    save_chat(&dirs, policy, &images, quick).unwrap();
+    save_chat(&dirs, policy, &images, dated("c1", 100)).unwrap();
+
+    let ids: Vec<String> = list_chats(&dirs)
+        .unwrap()
+        .into_iter()
+        .map(|chat| chat.id)
+        .collect();
+    assert_eq!(ids, vec![String::from("c1")]);
+}
+
+#[test]
+fn the_policy_reads_whether_quick_requests_are_saved() {
+    let config = json!({
+        "chat": { "history": { "storage": "disk", "isQuickRequestSavingEnabled": false } },
+    });
+    assert!(!ChatHistoryPolicy::from_config(&config).saves_quick_requests);
+    assert!(ChatHistoryPolicy::for_profiles(&config).saves_quick_requests);
 }

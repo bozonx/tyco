@@ -79,6 +79,7 @@ export const MODE_ROUTE_MAP: Record<ActivationMode, AppRoutePath> = {
   [ActivationMode.CONFIG]: APP_ROUTES.CONFIG.path,
   // the quick window renders it by the mode, see `QuickOverlay`
   [ActivationMode.EXTERNAL_ACCESS]: APP_ROUTES.HOME.path,
+  [ActivationMode.CUSTOM_ACTION]: APP_ROUTES.HOME.path,
 }
 
 /**
@@ -102,6 +103,7 @@ const QUICK_WINDOW_MODES: ReadonlySet<ActivationMode> = new Set([
   ActivationMode.CHAT_PROMPTS,
   ActivationMode.FAVORITES,
   ActivationMode.EXTERNAL_ACCESS,
+  ActivationMode.CUSTOM_ACTION,
 ])
 
 export function isQuickWindowMode(mode: ActivationMode | null): boolean {

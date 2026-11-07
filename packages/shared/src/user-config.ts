@@ -11,6 +11,7 @@ import type { SttConfig } from './user-config/stt-config'
 import type {
   ActionPageConfig,
   CommandConfig,
+  CustomActionSlotConfig,
 } from './user-config/commands-config'
 import type { VariableConfig } from './variables'
 
@@ -86,6 +87,8 @@ export interface ChatHistoryConfig {
   storage: ChatHistoryStorage
   /** Absent: chats are kept indefinitely */
   retentionDays?: number
+  /** Absent: quick requests are saved along with the chats */
+  isQuickRequestSavingEnabled?: boolean
 }
 
 /** The settings of the "Ask AI" chat */

@@ -49,7 +49,7 @@ impl ChatDirs {
 
 /// The folder of the indexes in the state folder.
 const INDEX_DIR: &str = "index";
-const CHAT_INDEX_FILE: &str = "chats-v2.json";
+const CHAT_INDEX_FILE: &str = "chats-v3.json";
 const ORPHAN_IMAGES_FILE: &str = "orphan-images.json";
 
 /// The chats of "Ask AI": `chats` of the user data folder.
@@ -160,16 +160,11 @@ pub fn list_recent_quick_request_prompts(
         .into_iter()
         .filter(|s| s.is_quick_request == Some(true))
     {
-        if let Ok(Some(chat)) = read_chat(&dirs.chats, summary.id) {
-            for message in chat.messages.iter().rev() {
-                if message.role == crate::models::ChatRole::User {
-                    let text = message.content.trim();
-                    if !text.is_empty() && seen.insert(text.to_string()) {
-                        prompts.push(text.to_string());
-                        if prompts.len() >= limit {
-                            return Ok(prompts);
-                        }
-                    }
+        for prompt in summary.recent_prompts {
+            if seen.insert(prompt.clone()) {
+                prompts.push(prompt);
+                if prompts.len() >= limit {
+                    return Ok(prompts);
                 }
             }
         }
@@ -283,7 +278,7 @@ pub fn save_chat(
     images: &Mutex<ChatImageStore>,
     mut chat: Chat,
 ) -> Result<Vec<String>, AppError> {
-    if !policy.is_enabled {
+    if !policy.saves(&chat) {
         return Ok(Vec::new());
     }
     // a title made from another one, e.g. of a branch, may outgrow the limit
@@ -673,6 +668,8 @@ pub struct ChatHistoryPolicy {
     /// Chats without a message for this many days are dropped; 0 keeps them
     /// forever.
     pub retention_days: u64,
+    /// Quick requests are saved along with the chats.
+    pub saves_quick_requests: bool,
 }
 
 impl ChatHistoryPolicy {
@@ -684,6 +681,12 @@ impl ChatHistoryPolicy {
     /// The policy every profile chat follows.
     pub fn for_profiles(user_config: &Value) -> Self {
         user_config::profile_chat_history(user_config).into()
+    }
+
+    /// The chat is to be stored: chats are saved, and quick requests too if
+    /// it is one.
+    pub fn saves(&self, chat: &Chat) -> bool {
+        self.is_enabled && (self.saves_quick_requests || chat.is_quick_request != Some(true))
     }
 
     /// Drops the chats whose last message is older than the retention period.
@@ -710,6 +713,7 @@ impl From<ChatHistoryConfig> for ChatHistoryPolicy {
         Self {
             is_enabled: config.storage != HistoryStorage::Off,
             retention_days: config.retention_days,
+            saves_quick_requests: config.is_quick_request_saving_enabled.unwrap_or(true),
         }
     }
 }

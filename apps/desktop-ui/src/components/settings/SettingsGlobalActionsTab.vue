@@ -116,6 +116,79 @@
     </SettingsSection>
 
     <SettingsSection
+      :title="t('settings.customActionsTitle')"
+      :info="t('settings.customActionsInfo')"
+      device-scoped
+    >
+      <div
+        v-for="(slot, index) in customActionSlots"
+        :key="index"
+        class="custom-action-slot"
+      >
+        <FieldRow
+          :label="t('settings.customActionSlot', { index: index + 1 })"
+          :error="rowError(customActionHotkeyRow(index).id)"
+        >
+          <template #info>
+            <InfoPopover
+              :aria-label="t('settings.externalMethods')"
+              align="start"
+            >
+              <div class="hotkey-info">
+                <p class="hotkey-info-title">
+                  {{ t('settings.externalMethods') }}
+                </p>
+                <p>{{ t('settings.externalMethodsHint') }}</p>
+                <div class="external-command">
+                  <code>{{ customActionHotkeyRow(index).command }}</code>
+                  <CopyButton
+                    :value="customActionHotkeyRow(index).command"
+                    :label="t('settings.copyActivationCommand')"
+                  />
+                </div>
+              </div>
+            </InfoPopover>
+          </template>
+          <div class="custom-action-controls">
+            <FieldSelect
+              class="custom-action-select"
+              :model-value="optionId(slot.action)"
+              :options="customActionOptions"
+              @update:model-value="updateCustomAction(index, $event)"
+            />
+            <FieldSwitch
+              :model-value="slotTakesSelection(index)"
+              :disabled="slotBehavior(index).disabled"
+              :label="t('settings.customActionTakesSelection')"
+              @update:model-value="setSlotTakesSelection(index, $event)"
+            />
+            <div class="hotkey-control custom-action-hotkey">
+              <HotkeyInput
+                :model-value="customActionHotkeyRow(index).value"
+                :aria-label="customActionHotkeyRow(index).label"
+                :placeholder="t('settings.hotkeyNotAssigned')"
+                :readonly="!isEditable"
+                :platform="providerState.platform"
+                @update:model-value="
+                  setShortcut(customActionHotkeyRow(index).id, $event)
+                "
+                @recording="suspendHotkeys"
+              />
+              <IconButton
+                v-if="isEditable && customActionHotkeyRow(index).value"
+                size="sm"
+                variant="ghost"
+                icon="mdi:close"
+                :label="t('settings.unassignHotkey')"
+                @click="setShortcut(customActionHotkeyRow(index).id, '')"
+              />
+            </div>
+          </div>
+        </FieldRow>
+      </div>
+    </SettingsSection>
+
+    <SettingsSection
       :title="t('settings.appHotkeysTitle')"
       :info="t('settings.appHotkeysHint')"
     >
@@ -138,7 +211,9 @@ import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useMainActionChoices } from '../../composables/use-main-action-choices'
 import { useSettingsContext } from '../../composables/use-settings-context'
+import { resolveActionSelectionBehavior } from '../../lib/action-menu/action-selection-behavior'
 import {
   activationCommand,
   isEditable as checkIsEditable,
@@ -164,6 +239,7 @@ import EditorShortcutsSettings from './EditorShortcutsSettings.vue'
 import HotkeyInput from './HotkeyInput.vue'
 import SettingsSection from './SettingsSection.vue'
 import {
+  CUSTOM_ACTION_HOTKEY_IDS,
   DEFAULT_SUBMIT_KEY,
   DEFAULT_USER_CONFIG,
   type HotkeyId,
@@ -233,7 +309,13 @@ const globalInfo = computed(() =>
 )
 
 const modes = (Object.keys(DEFAULT_USER_CONFIG.hotkeys) as HotkeyId[])
-  .filter((id) => id !== 'selectionCorrection')
+  .filter(
+    (id) =>
+      id !== 'selectionCorrection' &&
+      !CUSTOM_ACTION_HOTKEY_IDS.includes(
+        id as (typeof CUSTOM_ACTION_HOTKEY_IDS)[number]
+      )
+  )
   .sort(
     (a, b) =>
       (MODE_ORDER.indexOf(a) + 1 || Infinity) -
@@ -251,6 +333,97 @@ const openCommandForMode = (mode: string) => {
     return `tyco-ctl open ${target}:${page[2]}`
   }
   return `tyco-ctl open ${mode}`
+}
+
+const customActionSlots = computed(() => {
+  const current = userConfig.value.customActionSlots ?? []
+  if (current.length === 5) return current
+  const filled = [...current]
+  while (filled.length < 5) {
+    filled.push({ action: null, takesSelection: true })
+  }
+  return filled
+})
+
+const customSlotsConfigs = computed(() =>
+  customActionSlots.value.map((s) => s.action)
+)
+
+const {
+  actionOptions: baseCustomActionOptions,
+  availableActions,
+  optionId,
+  commands,
+  toolsStore,
+} = useMainActionChoices(customSlotsConfigs)
+
+const customActionOptions = computed(() => [
+  { id: '', name: t('settings.customActionNotAssigned'), group: '' },
+  ...baseCustomActionOptions.value,
+])
+
+const customActionRows = computed<HotkeyRow[]>(() =>
+  CUSTOM_ACTION_HOTKEY_IDS.map((id, index) => ({
+    id,
+    label: t('settings.customActionSlot', { index: index + 1 }),
+    value: displayedShortcut(
+      providerState,
+      id,
+      userConfig.value.hotkeys[id] ?? ''
+    ),
+    defaultValue: '',
+    command: activationCommand(
+      providerState,
+      id,
+      `tyco-ctl open custom-action:${index + 1}`
+    ),
+    externalHint: t('settings.externalMethodsHint'),
+  }))
+)
+
+function customActionHotkeyRow(index: number): HotkeyRow {
+  return customActionRows.value[index]
+}
+
+function slotBehavior(index: number) {
+  const slot = customActionSlots.value[index]
+  return resolveActionSelectionBehavior(
+    slot?.action,
+    commands.value,
+    toolsStore
+  )
+}
+
+function slotTakesSelection(index: number): boolean {
+  const behavior = slotBehavior(index)
+  if (behavior.forcedValue !== null) {
+    return behavior.forcedValue
+  }
+  return customActionSlots.value[index]?.takesSelection ?? true
+}
+
+function setSlotTakesSelection(index: number, value: boolean) {
+  const slots = [...customActionSlots.value]
+  const current = slots[index] ?? { action: null, takesSelection: true }
+  slots[index] = { ...current, takesSelection: value }
+  userConfig.value.customActionSlots = slots
+}
+
+function updateCustomAction(
+  index: number,
+  optionValue: string | number | undefined
+) {
+  const slots = [...customActionSlots.value]
+  const current = slots[index] ?? { action: null, takesSelection: true }
+  if (!optionValue || optionValue === '') {
+    slots[index] = { ...current, action: null }
+  } else {
+    const selected = availableActions.value.find(
+      ({ config }) => optionId(config) === optionValue
+    )
+    slots[index] = { ...current, action: selected ? selected.config : null }
+  }
+  userConfig.value.customActionSlots = slots
 }
 
 const allRows = computed<HotkeyRow[]>(() => [
@@ -291,12 +464,16 @@ const allRows = computed<HotkeyRow[]>(() => [
     externalHint: t('settings.inlineCorrectionExternalHint'),
     description: t('settings.inlineCorrectionHint'),
   },
+  ...customActionRows.value,
 ])
 
 const rows = computed(() =>
   allRows.value.filter(
     (row) =>
       !['chat', 'voiceChat'].includes(row.id) &&
+      !CUSTOM_ACTION_HOTKEY_IDS.includes(
+        row.id as (typeof CUSTOM_ACTION_HOTKEY_IDS)[number]
+      ) &&
       (userConfig.value.isInDevelopment ||
         !['voiceCommands', 'correction', 'history', inlineId].includes(row.id))
   )
@@ -405,5 +582,27 @@ onMounted(async () => {
 
 .hotkey-info .external-command code {
   background: var(--app-surface);
+}
+
+.custom-action-slot {
+  width: 100%;
+}
+
+.custom-action-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+}
+
+.custom-action-select {
+  flex: 1 1 200px;
+  min-width: 180px;
+}
+
+.custom-action-hotkey {
+  flex: 1 1 180px;
+  min-width: 160px;
 }
 </style>

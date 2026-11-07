@@ -16,6 +16,18 @@
 
     <FieldRow
       v-if="isHistoryChecked"
+      :label="t('settings.chatQuickRequestsSaved')"
+      :info="t('settings.chatQuickRequestsSavedInfo')"
+      inline
+    >
+      <FieldSwitch
+        :model-value="history.isQuickRequestSavingEnabled ?? true"
+        @update:model-value="setQuickRequestSaving"
+      />
+    </FieldRow>
+
+    <FieldRow
+      v-if="isHistoryChecked"
       :label="t('settings.chatHistoryRetentionDays')"
       :info="t('settings.chatHistoryRetentionDaysHint')"
       inline
@@ -77,7 +89,7 @@ const props = withDefaults(defineProps<{ scope?: ChatHistoryScope }>(), {
 const TEXTS = {
   askAi: {
     titleKey: 'settings.sectionChatHistory',
-    infoKey: '',
+    infoKey: 'settings.chatHistoryHint',
     confirmKey: 'settings.clearChatsConfirmDialog',
   },
   profiles: {
@@ -106,6 +118,12 @@ const isHistoryChecked = computed(() => history.value.storage !== 'off')
 
 function setHistoryEnabled(isEnabled: boolean) {
   history.value.storage = isEnabled ? 'disk' : 'off'
+}
+
+/** Saving is the default, kept as no field */
+function setQuickRequestSaving(isEnabled: boolean) {
+  if (isEnabled) delete history.value.isQuickRequestSavingEnabled
+  else history.value.isQuickRequestSavingEnabled = false
 }
 
 const { pendingChange, confirmChange, cancelChange, setRetentionDays } =

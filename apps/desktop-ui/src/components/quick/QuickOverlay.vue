@@ -393,7 +393,7 @@ onMounted(() => {
     .catch((error: unknown) =>
       clientLogger.error('Could not watch window focus', error, 'quick')
     )
-    void desktopClient
+  void desktopClient
     .listen(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA_CLOSED, () => {
       activeAreaSelection.value = null
       isAwaitingCaptureOutcome.value = false

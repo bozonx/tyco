@@ -10,7 +10,10 @@ import type { ToolLookup } from '../tools/tool-types'
 export interface ActionSelectionBehavior {
   /** Whether the user cannot toggle the switch in the settings */
   disabled: boolean
-  /** If locked, the forced value; if null, the slot config's takesSelection value applies */
+  /**
+   * If locked, the forced value; if null, the slot config's takesSelection
+   * value applies
+   */
   forcedValue: boolean | null
 }
 

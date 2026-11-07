@@ -219,7 +219,6 @@ import {
   type AiProfile,
   type Chat,
   type ChatAttachment,
-  type EditorHistoryTurn,
   llmSecretId,
 } from '@tyco/shared'
 
@@ -375,25 +374,6 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
       warn: (msg) => clientLogger.warn(msg, 'profile'),
     }),
   getProfile: (pId: string) => aiProfilesStore.getProfile(pId),
-  createHistorySession: (session) =>
-    historyStore.saveSource(
-      session.text,
-      'quickAiRequest',
-      undefined,
-      session.instruction,
-      session.profileId ?? undefined,
-      session.turns
-    ),
-  updateHistorySession: (
-    id: string,
-    historyTurns: EditorHistoryTurn[],
-    result: string | undefined
-  ) => historyStore.updateSession(id, historyTurns, result),
-  removeFromHistorySession: async (id: string) => {
-    await historyStore.removeFromEditorHistory(id)
-  },
-  listRecentInstructions: (limit?: number, pId?: string | null) =>
-    historyStore.listRecentInstructions(limit, pId),
   insertText: async (text: string) => {
     await ipcStore.callOrNotify('paste_into_target_and_hide', { text })
     void historyStore.saveOutput(text)

@@ -34,6 +34,7 @@ export const ActivationMode = {
   CONFIG: 'config',
   /** Asks whether an external call may use the selection; Tyco opens it itself */
   EXTERNAL_ACCESS: 'externalAccess',
+  CUSTOM_ACTION: 'customAction',
 } as const satisfies Record<string, ActivationModeName>
 
 /** The user data folder before the backend tells where it is */

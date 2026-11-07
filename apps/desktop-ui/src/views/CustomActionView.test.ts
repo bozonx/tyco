@@ -29,17 +29,11 @@ describe('CustomActionView', () => {
   })
 
   const mountView = () =>
-    mount(CustomActionView, {
-      global: {
-        plugins: [desktop.pinia],
-      },
-    })
+    mount(CustomActionView, { global: { plugins: [desktop.pinia] } })
 
   it('hides window if slot action is empty', async () => {
     desktop.setUserConfig({
-      customActionSlots: [
-        { action: null, takesSelection: true },
-      ],
+      customActionSlots: [{ action: null, takesSelection: true }],
     })
     const hideWindowSpy = vi.fn().mockResolvedValue(undefined)
     desktop.backend.handle('hide_window', hideWindowSpy)

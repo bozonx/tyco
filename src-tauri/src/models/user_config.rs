@@ -55,6 +55,9 @@ pub struct ChatHistoryConfig {
     /// 0 keeps the chats forever.
     #[serde(default, deserialize_with = "lenient")]
     pub retention_days: u64,
+    /// Quick requests are saved with the chats; `None` when missing.
+    #[serde(default, deserialize_with = "lenient")]
+    pub is_quick_request_saving_enabled: Option<bool>,
 }
 
 /// The history of the chats of "Ask AI".
@@ -469,7 +472,8 @@ mod tests {
             chat_history(&config),
             ChatHistoryConfig {
                 storage: HistoryStorage::Off,
-                retention_days: 7
+                retention_days: 7,
+                is_quick_request_saving_enabled: None
             }
         );
         assert_eq!(profile_chat_history(&config), ChatHistoryConfig::default());

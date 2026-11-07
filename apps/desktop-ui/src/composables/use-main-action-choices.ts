@@ -114,7 +114,7 @@ export function useMainActionChoices(
     })),
     ...languages.value.map((language) => ({
       config: { type: 'translation' as const, language },
-      name: translationLanguageLabel(language, locale.value),
+      name: translationLanguageLabel(language, locale?.value ?? 'en-US'),
       group: { kind: 'translation' as const },
     })),
     ...transformations.value.map((item) => ({

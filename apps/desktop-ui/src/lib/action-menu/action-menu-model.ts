@@ -578,7 +578,9 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
   const getShortcutActions = (
     targetPageIndex = pageIndex.value
   ): (ActionItem | undefined)[] => {
-    const slots = resolveMainActions(undefined, targetPageIndex).map(resolveActionItem)
+    const slots = resolveMainActions(undefined, targetPageIndex).map(
+      resolveActionItem
+    )
     while (slots.length && !slots.at(-1)) slots.pop()
     return [
       ...slots,

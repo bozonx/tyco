@@ -13,7 +13,14 @@
       </FieldRow>
     </SettingsSection>
 
-    <SettingsChatHistorySection scope="askAi" />
+    <SettingsSection bare>
+      <template #description>
+        {{ t('settings.chatStorageLink') }}
+        <InlineAction @click="navigate('history')">
+          {{ t('settings.historyTab') }}</InlineAction
+        >.
+      </template>
+    </SettingsSection>
   </div>
 </template>
 
@@ -22,9 +29,9 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
-import SettingsChatHistorySection from './SettingsChatHistorySection.vue'
+import InlineAction from '../common/InlineAction.vue'
 import SettingsSection from './SettingsSection.vue'
 
 const { t } = useI18n()
-const { draft: userConfig } = useSettingsContext()
+const { draft: userConfig, navigate } = useSettingsContext()
 </script>

@@ -275,7 +275,6 @@ pub fn run() {
             commands::editor_history::get_editor_history,
             commands::editor_history::restore_editor_history_item,
             commands::editor_history::set_editor_history_item_result,
-            commands::editor_history::update_editor_history_item_session,
             commands::external_jobs::answer_external_access,
             commands::external_jobs::claim_external_job,
             commands::external_jobs::finish_external_job,

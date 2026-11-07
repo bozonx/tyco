@@ -166,7 +166,6 @@ fn main() {
             "sync_chat_images",
             "undo_ai_profile_memory",
             "uninstall_plugin_package",
-            "update_editor_history_item_session",
             "write_ai_profile_soul",
             "write_plugin_note",
         ]),

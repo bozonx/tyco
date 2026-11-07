@@ -5,7 +5,6 @@ import type {
   EditorHistoryItem,
   EditorHistoryOperation,
   EditorHistoryOrigin,
-  EditorHistoryTurn,
 } from '@tyco/shared'
 import type { HistoryApi } from './history-call'
 import { createHistoryCall } from './history-call'
@@ -86,8 +85,7 @@ export function createEditorHistoryModel(
     operation: EditorHistoryOperation,
     origin?: EditorHistoryOrigin,
     instruction?: EditorHistoryInstruction,
-    profileId?: string,
-    turns?: EditorHistoryTurn[]
+    profileId?: string
   ) =>
     saveEditorHistory({
       text,
@@ -96,7 +94,6 @@ export function createEditorHistoryModel(
       ...(origin && { origin }),
       ...(instruction && { instruction }),
       ...(profileId && { profileId }),
-      ...(turns && { turns }),
     })
 
   /** Remembers what the AI made of the `source` entry `id`. */
@@ -107,23 +104,6 @@ export function createEditorHistoryModel(
     if (!canRecord() || !id) return
 
     await track(call('set_editor_history_item_result', { id, result }))
-  }
-
-  /** Updates the turns and final result of an active multi-turn AI session. */
-  const updateSession = async (
-    id: string | null,
-    turns: EditorHistoryTurn[],
-    result?: string
-  ): Promise<void> => {
-    if (!canRecord() || !id) return
-
-    await track(
-      call('update_editor_history_item_session', {
-        id,
-        turns,
-        result: result ?? null,
-      })
-    )
   }
 
   /** Resolves to the removed entry, so that the removal can be undone. */
@@ -154,49 +134,6 @@ export function createEditorHistoryModel(
     editorHistory.value = []
   }
 
-  /**
-   * Recent instructions from history from newest to oldest, without duplicates
-   * (comparing after trim). Empty when recording is disabled.
-   */
-  const listRecentInstructions = (
-    limit = 5,
-    profileId?: string | null
-  ): string[] => {
-    if (!canRecord() || limit <= 0) return []
-
-    const result: string[] = []
-    const seen = new Set<string>()
-
-    for (const item of editorHistory.value) {
-      if (
-        profileId !== undefined &&
-        item.profileId !== (profileId ?? undefined)
-      ) {
-        continue
-      }
-
-      if (item.turns && item.turns.length > 0) {
-        for (let i = item.turns.length - 1; i >= 0; i--) {
-          const promptText = item.turns[i].prompt.trim()
-          if (!promptText || seen.has(promptText)) continue
-          seen.add(promptText)
-          result.push(promptText)
-          if (result.length >= limit) return result
-        }
-      }
-
-      const instructionText = item.instruction?.text.trim()
-      if (!instructionText) continue
-      if (seen.has(instructionText)) continue
-
-      seen.add(instructionText)
-      result.push(instructionText)
-      if (result.length >= limit) break
-    }
-
-    return result
-  }
-
   return {
     editorHistory,
     loadEditorHistory,
@@ -205,10 +142,8 @@ export function createEditorHistoryModel(
     onOutput,
     saveSource,
     saveSourceResult,
-    updateSession,
     removeFromEditorHistory,
     restoreEditorItem,
     clearEditorHistory,
-    listRecentInstructions,
   }
 }

@@ -95,10 +95,10 @@ describe('SettingsGlobalActionsTab.vue', () => {
     },
     FieldSwitch: {
       name: 'FieldSwitch',
-      props: ['modelValue'],
+      props: ['modelValue', 'disabled'],
       emits: ['update:modelValue'],
       template:
-        '<button class="field-switch-stub" :data-checked="modelValue" @click="$emit(\'update:modelValue\', !modelValue)" />',
+        '<button class="field-switch-stub" :data-checked="modelValue" :disabled="disabled" @click="$emit(\'update:modelValue\', !modelValue)" />',
     },
     HotkeyInput: true,
     InfoTooltip: true,
@@ -111,6 +111,9 @@ describe('SettingsGlobalActionsTab.vue', () => {
     const wrapper = mount(SettingsGlobalActionsTab, {
       global: { provide: context.provide, stubs: globalStubs },
     })
+    const rowLabels = wrapper
+      .findAll('.field-row-stub')
+      .map((r) => r.attributes('data-label'))
     for (const key of [
       'chat',
       'voiceChat',
@@ -119,7 +122,7 @@ describe('SettingsGlobalActionsTab.vue', () => {
       'history',
       'selectionCorrection',
     ]) {
-      expect(wrapper.text()).not.toContain(`settings.hotkeyActions.${key}`)
+      expect(rowLabels).not.toContain(`settings.hotkeyActions.${key}`)
     }
     expect(context.draft.value.hotkeys.selectionCorrection).toBe(
       DEFAULT_USER_CONFIG.hotkeys.selectionCorrection
@@ -290,5 +293,46 @@ describe('SettingsGlobalActionsTab.vue', () => {
           'settings.hotkeyActions.selectionActionsPage3'
       )
     ).toBe(true)
+  })
+
+  it('renders 5 custom action slots and handles action selection with takesSelection locking', async () => {
+    const wrapper = mount(SettingsGlobalActionsTab, {
+      global: { provide: context.provide, stubs: globalStubs },
+    })
+
+    const customSlots = wrapper.findAll('.custom-action-slot')
+    expect(customSlots).toHaveLength(5)
+
+    // Initially slot 0 has no action, takesSelection is true and switch is disabled
+    const firstSwitch = customSlots[0].findComponent({ name: 'FieldSwitch' })
+    expect(firstSwitch.props('modelValue')).toBe(true)
+    expect(firstSwitch.props('disabled')).toBe(true)
+
+    // Select translationMenu action (which strictly requires selection -> locked true)
+    const firstSelect = customSlots[0].findComponent({ name: 'FieldSelect' })
+    await firstSelect.vm.$emit('update:modelValue', 'standard:translationMenu')
+    expect(context.draft.value.customActionSlots[0].action).toEqual({
+      type: 'standard',
+      actionId: 'translationMenu',
+    })
+    expect(firstSwitch.props('disabled')).toBe(true)
+    expect(firstSwitch.props('modelValue')).toBe(true)
+
+    // Select screenshotQuickAiRequest (screenshot -> locked false)
+    await firstSelect.vm.$emit(
+      'update:modelValue',
+      'standard:screenshotQuickAiRequest'
+    )
+    expect(firstSwitch.props('disabled')).toBe(true)
+    expect(firstSwitch.props('modelValue')).toBe(false)
+
+    // Select quickAiRequest (flexible -> enabled switch)
+    await firstSelect.vm.$emit('update:modelValue', 'standard:quickAiRequest')
+    expect(firstSwitch.props('disabled')).toBe(false)
+    expect(firstSwitch.props('modelValue')).toBe(true)
+
+    // Toggle switch
+    await firstSwitch.vm.$emit('update:modelValue', false)
+    expect(context.draft.value.customActionSlots[0].takesSelection).toBe(false)
   })
 })

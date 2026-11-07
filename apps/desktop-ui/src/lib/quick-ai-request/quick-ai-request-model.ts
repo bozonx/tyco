@@ -7,7 +7,6 @@ import type {
   ChatImage,
   ChatMessage,
   ChatMessagePart,
-  EditorHistoryTurn,
   UserConfig,
 } from '@tyco/shared'
 import { errorMessage } from '@tyco/shared/value-guards'
@@ -31,10 +30,6 @@ import {
   REPLY_BLOCKS_TOOL_NAME,
   type ReplyBlockData,
 } from '../reply-blocks/reply-blocks-tool'
-import {
-  createQuickAiRequestHistory,
-  type QuickAiRequestHistorySession,
-} from './quick-ai-request-history'
 
 export interface QuickAiRequestTurn {
   id: string
@@ -112,21 +107,6 @@ export interface QuickAiRequestModelDependencies {
   resolveProfileInstructions: (profileId: string) => Promise<string>
   getProfile?: (profileId: string) => AiProfile | undefined
 
-  /** Resolves to the id of the stored entry, null when nothing was stored */
-  createHistorySession?: (
-    session: QuickAiRequestHistorySession
-  ) => Promise<string | null>
-  updateHistorySession?: (
-    id: string,
-    turns: EditorHistoryTurn[],
-    result: string | undefined
-  ) => Promise<void>
-  removeFromHistorySession?: (id: string) => Promise<void>
-  listRecentInstructions?: (
-    limit?: number,
-    profileId?: string | null
-  ) => string[]
-
   insertText: (text: string) => Promise<void>
   copyText: (text: string) => Promise<void>
   toEditor: (text: string, sourceText?: string) => Promise<void>
@@ -195,10 +175,6 @@ export function createQuickAiRequestModel(
   const turns = ref<QuickAiRequestTurn[]>([])
   const error = ref<string | null>(null)
 
-  const history = createQuickAiRequestHistory({
-    create: deps.createHistorySession ?? (() => Promise.resolve(null)),
-    update: deps.updateHistorySession ?? (() => Promise.resolve()),
-  })
   let abortController: AbortController | null = null
 
   const modelOptions = computed(() => deps.getModelOptions())
@@ -223,26 +199,9 @@ export function createQuickAiRequestModel(
         : []
     )
 
-  /** What a turn leaves in the history: the first block, else the answer */
+  /** What a turn amounts to: the first block, else the answer */
   const resultOf = (turn: QuickAiRequestTurn) =>
     turn.replyBlocks[0]?.text || turn.textResponse.trim() || undefined
-
-  /** The history keeps text requests; a screenshot is not stored there */
-  const recordHistory = (result?: string) => {
-    if (isScreenshot) return Promise.resolve()
-    return history.record(
-      sourceText.value,
-      profileId.value,
-      turns.value
-        .filter((turn) => turn.status === 'done')
-        .map((turn) => ({
-          prompt: turn.prompt,
-          inputKind: turn.inputKind,
-          result: resultOf(turn),
-        })),
-      result
-    )
-  }
 
   const isSourceTextLocked = computed(
     () =>
@@ -333,9 +292,6 @@ export function createQuickAiRequestModel(
   ) => {
     deps.answerToolApproval(approvalId, decision)
   }
-
-  const getRecentInstructions = (limit = 5): string[] =>
-    deps.listRecentInstructions?.(limit, profileId.value) ?? []
 
   const conversationFor = (count: number): ChatMessage[] =>
     turns.value.slice(0, count).flatMap((turn, index): ChatMessage[] => {
@@ -468,7 +424,6 @@ export function createQuickAiRequestModel(
       activeTurn.replyBlocks = replyBlocksOf(result.parts)
       activeTurn.status = 'done'
       void saveQuickRequestChat()
-      void recordHistory()
       return true
     } catch (err) {
       if (signal.aborted) {
@@ -495,10 +450,6 @@ export function createQuickAiRequestModel(
     block: ReplyBlockData,
     target: 'window' | 'editor' | 'copy'
   ) => {
-    // the entry must hold the text before it leaves the app, so that the
-    // history can mark it as sent
-    await recordHistory(block.text)
-
     if (target === 'copy') {
       await deps.copyText(block.text)
       return
@@ -509,6 +460,8 @@ export function createQuickAiRequestModel(
   }
 
   /** Names the chat after its first exchange, once it is saved */
+  /** The title the model gave the chat, once it did */
+  let generatedTitle: string | undefined
   const generateTitle = async (
     chatId: string,
     question: string,
@@ -519,8 +472,11 @@ export function createQuickAiRequestModel(
     if (!deps.generateChatTitle || !deps.renameChat || !model || !answer) return
     try {
       const title = await deps.generateChatTitle(question, answer, model.id)
-      if (title && title !== draftTitle)
+      if (title && title !== draftTitle) {
         await deps.renameChat(chatId, title, profileId.value ?? undefined)
+        // later saves of the conversation keep it
+        generatedTitle = title
+      }
     } catch {
       // the draft title stays
     }
@@ -543,20 +499,30 @@ export function createQuickAiRequestModel(
     ])
 
   const assignedChatId = deps.chatId ?? deps.createId()
-  const chatOf = (messages: ChatMessage[]): Chat => ({
+  /** A chat moved to the main chat is an ordinary one there */
+  const chatOf = (messages: ChatMessage[], isQuickRequest = false): Chat => ({
     id: assignedChatId,
-    title: draftTitleOf(messages[0], deps.imageTitle?.() || 'Image'),
+    title:
+      generatedTitle ??
+      draftTitleOf(messages[0], deps.imageTitle?.() || 'Image'),
     lastMessageAt: Date.now(),
     messages,
-    isQuickRequest: true,
+    ...(isQuickRequest ? { isQuickRequest } : {}),
   })
 
   let chatTitleGenerated = false
-  const saveQuickRequestChat = async () => {
+  /** The last save of the conversation; a transfer waits for it */
+  let pendingSave: Promise<void> = Promise.resolve()
+  /** Keeps the conversation in the chat history, among the quick requests */
+  const saveQuickRequestChat = () => {
+    pendingSave = pendingSave.then(writeQuickRequestChat)
+    return pendingSave
+  }
+  const writeQuickRequestChat = async () => {
     if (isScreenshot || turns.value.length === 0 || !deps.saveChat) return
     const messages = conversationMessages()
     if (messages.length === 0) return
-    const chat = chatOf(messages)
+    const chat = chatOf(messages, true)
     const pId = profileId.value ?? undefined
     try {
       await deps.saveChat(chat, pId)
@@ -605,6 +571,7 @@ export function createQuickAiRequestModel(
 
   /** Saves the conversation here and opens it, then names it */
   const transferSavedChat = async (draft?: string) => {
+    await pendingSave
     const chat = chatOf(conversationMessages())
     const pId = profileId.value ?? undefined
     await deps.saveChat?.(chat, pId)
@@ -614,6 +581,7 @@ export function createQuickAiRequestModel(
       question: draft,
     })
     return () => {
+      if (generatedTitle) return
       const firstAnswer = turns.value[0]
       void generateTitle(
         chat.id,
@@ -650,10 +618,6 @@ export function createQuickAiRequestModel(
       return
     }
     const nameChat = await transferSavedChat(draft)
-    const sessionId = history.sessionId()
-    if (sessionId && deps.removeFromHistorySession) {
-      await deps.removeFromHistorySession(sessionId).catch(() => undefined)
-    }
     deps.closeOverlay()
     nameChat()
   }
@@ -681,13 +645,11 @@ export function createQuickAiRequestModel(
     isGenerating,
     turns,
     error,
-    historySessionId: history.sessionId,
     setInputMode,
     setProfileId,
     setModelId,
     stopGeneration,
     answerToolApproval,
-    getRecentInstructions,
     submitPrompt,
     applyReplyBlock,
     switchToChat,

@@ -619,10 +619,7 @@
             ],
             "default": null
           },
-          "takesSelection": {
-            "type": "boolean",
-            "default": true
-          }
+          "takesSelection": { "type": "boolean", "default": true }
         },
         "required": ["action", "takesSelection"]
       },
@@ -1122,7 +1119,8 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 9007199254740991
-            }
+            },
+            "isQuickRequestSavingEnabled": { "type": "boolean" }
           },
           "required": ["storage"],
           "default": { "storage": "disk" }
@@ -1244,7 +1242,8 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 9007199254740991
-            }
+            },
+            "isQuickRequestSavingEnabled": { "type": "boolean" }
           },
           "required": ["storage"],
           "default": { "storage": "disk" }

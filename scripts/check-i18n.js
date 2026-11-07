@@ -230,6 +230,11 @@ const DYNAMIC_KEYS = new Set([
     'chatPromptsPage5',
     'favorites',
     'history',
+    'customAction1',
+    'customAction2',
+    'customAction3',
+    'customAction4',
+    'customAction5',
   ].map((mode) => `settings.hotkeyActions.${mode}`),
   ...['editor', 'browser', 'notes', 'none'].map(
     (cap) => `settings.pluginCapability.${cap}`

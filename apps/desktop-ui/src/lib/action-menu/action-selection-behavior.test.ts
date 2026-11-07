@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { CommandConfig } from '@tyco/shared'
 
+import { createCommand } from '../commands/command-config'
 import { testTools } from '../tools/testing'
 import { resolveActionSelectionBehavior } from './action-selection-behavior'
 
@@ -19,10 +20,7 @@ describe('resolveActionSelectionBehavior', () => {
 
   it('locks to true for text-bound actions (translation, transformation, styling)', () => {
     expect(
-      resolveActionSelectionBehavior({
-        type: 'translation',
-        language: 'es',
-      })
+      resolveActionSelectionBehavior({ type: 'translation', language: 'es' })
     ).toEqual({ disabled: true, forcedValue: true })
 
     expect(
@@ -33,10 +31,7 @@ describe('resolveActionSelectionBehavior', () => {
     ).toEqual({ disabled: true, forcedValue: true })
 
     expect(
-      resolveActionSelectionBehavior({
-        type: 'styling',
-        stylingId: 'bold',
-      })
+      resolveActionSelectionBehavior({ type: 'styling', stylingId: 'bold' })
     ).toEqual({ disabled: true, forcedValue: true })
   })
 
@@ -110,40 +105,25 @@ describe('resolveActionSelectionBehavior', () => {
     ).toEqual({ disabled: false, forcedValue: null })
 
     expect(
-      resolveActionSelectionBehavior({
-        type: 'profileChat',
-        profileId: 'p1',
-      })
+      resolveActionSelectionBehavior({ type: 'profileChat', profileId: 'p1' })
     ).toEqual({ disabled: false, forcedValue: null })
   })
 
   it('handles commands based on their text and selection requirements', () => {
     const commands: CommandConfig[] = [
       {
-        id: 'cmd-selection',
+        ...createCommand('script', 'cmd-selection'),
         name: 'Selection Cmd',
-        description: '',
-        icon: '',
-        isEnabled: true,
-        toolId: 'script',
         toolConfig: { command: 'echo {{SELECTION}}' },
       },
       {
-        id: 'cmd-text',
+        ...createCommand('script', 'cmd-text'),
         name: 'Text Cmd',
-        description: '',
-        icon: '',
-        isEnabled: true,
-        toolId: 'script',
         toolConfig: { command: 'echo {{TEXT}}' },
       },
       {
-        id: 'cmd-none',
+        ...createCommand('script', 'cmd-none'),
         name: 'No Text Cmd',
-        description: '',
-        icon: '',
-        isEnabled: true,
-        toolId: 'script',
         toolConfig: { command: 'date' },
       },
     ]

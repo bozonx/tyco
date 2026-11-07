@@ -142,6 +142,34 @@ pub struct ChatSummary {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub is_quick_request: Option<bool>,
+    /// The latest questions of a quick request, newest first, so that the
+    /// recent prompts are listed without reading every chat.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(skip)]
+    pub recent_prompts: Vec<String>,
+}
+
+/// How many questions of a quick request its summary keeps.
+const SUMMARY_PROMPT_COUNT: usize = 5;
+
+fn recent_prompts_of(chat: &Chat) -> Vec<String> {
+    if chat.is_quick_request != Some(true) {
+        return Vec::new();
+    }
+    let mut prompts: Vec<String> = Vec::new();
+    for message in chat.messages.iter().rev() {
+        let prompt = message.content.trim();
+        if message.role == ChatRole::User
+            && !prompt.is_empty()
+            && !prompts.iter().any(|seen| seen == prompt)
+        {
+            prompts.push(prompt.to_string());
+            if prompts.len() == SUMMARY_PROMPT_COUNT {
+                break;
+            }
+        }
+    }
+    prompts
 }
 
 impl From<&Chat> for ChatSummary {
@@ -151,6 +179,7 @@ impl From<&Chat> for ChatSummary {
             title: chat.title.clone(),
             last_message_at_ms: chat.last_message_at_ms,
             is_quick_request: chat.is_quick_request,
+            recent_prompts: recent_prompts_of(chat),
         }
     }
 }
