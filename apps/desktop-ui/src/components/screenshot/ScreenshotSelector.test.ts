@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 import ScreenshotSelector from './ScreenshotSelector.vue'
 import type { ScreenshotAreaSelection } from '@tyco/shared'
 
@@ -14,13 +15,14 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 const selection: ScreenshotAreaSelection = {
-  activationId: 1,
+  selectionId: 1,
   imageId: 'test-image-id',
   screenX: 0,
   screenY: 0,
-  width: 1920,
-  height: 1080,
-  scaleFactor: 1.5,
+  // jsdom views are 1024 × 768, so the image is twice the view size
+  width: 2048,
+  height: 1536,
+  scaleFactor: 1,
 }
 
 describe('ScreenshotSelector', () => {
@@ -57,6 +59,7 @@ describe('ScreenshotSelector', () => {
     await flushPromises()
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await wrapper.trigger('keydown', { key: 'Escape' })
     expect(wrapper.emitted('cancel')).toHaveLength(1)
   })
 
@@ -69,81 +72,86 @@ describe('ScreenshotSelector', () => {
     expect(wrapper.emitted('cancel')).toHaveLength(1)
   })
 
-  it('rejects selections smaller than MIN_DRAG_PX (4px)', async () => {
+  async function mountLoaded() {
     mocks.getImage.mockResolvedValue(new Uint8Array([1, 2, 3]))
     const wrapper = mount(ScreenshotSelector, { props: { selection } })
     await flushPromises()
+    return wrapper
+  }
 
+  async function drag(
+    wrapper: Awaited<ReturnType<typeof mountLoaded>>,
+    from: [number, number],
+    to: [number, number]
+  ) {
     const root = wrapper.get('.screenshot-selector-root').element
     root.dispatchEvent(
-      new PointerEvent('pointerdown', { button: 0, clientX: 10, clientY: 10 })
+      new PointerEvent('pointerdown', {
+        button: 0,
+        clientX: from[0],
+        clientY: from[1],
+      })
     )
     root.dispatchEvent(
-      new PointerEvent('pointermove', { clientX: 12, clientY: 12 })
-    ) // 2x2 px (< 4px)
-    root.dispatchEvent(
-      new PointerEvent('pointerup', { clientX: 12, clientY: 12 })
+      new PointerEvent('pointermove', { clientX: to[0], clientY: to[1] })
     )
+    root.dispatchEvent(
+      new PointerEvent('pointerup', { clientX: to[0], clientY: to[1] })
+    )
+    await nextTick()
+  }
 
+  const pressEnter = () =>
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
+
+  it('ignores drags shorter than the minimum selection', async () => {
+    const wrapper = await mountLoaded()
+    await drag(wrapper, [10, 10], [12, 12])
+    pressEnter()
     expect(wrapper.emitted('confirm')).toBeUndefined()
+    expect(wrapper.find('.selection-box').exists()).toBe(false)
   })
 
-  it('emits confirm with scaled crop coordinates on valid drag', async () => {
-    mocks.getImage.mockResolvedValue(new Uint8Array([1, 2, 3]))
-    const wrapper = mount(ScreenshotSelector, { props: { selection } })
-    await flushPromises()
+  it('keeps a finished drag until it is confirmed with Enter', async () => {
+    const wrapper = await mountLoaded()
+    await drag(wrapper, [100, 100], [300, 200])
+    expect(wrapper.emitted('confirm')).toBeUndefined()
+    expect(wrapper.get('.selection-badge').text()).toBe('400 × 200 px')
 
-    const root = wrapper.get('.screenshot-selector-root').element
-    root.dispatchEvent(
-      new PointerEvent('pointerdown', { button: 0, clientX: 100, clientY: 100 })
-    )
-    root.dispatchEvent(
-      new PointerEvent('pointermove', { clientX: 300, clientY: 200 })
-    )
-    root.dispatchEvent(
-      new PointerEvent('pointerup', { clientX: 300, clientY: 200 })
-    )
-
-    const emitted = wrapper.emitted('confirm')
-    expect(emitted).toHaveLength(1)
-    // scale factor is 1.5:
-    // x: 100 * 1.5 = 150
-    // y: 100 * 1.5 = 150
-    // width: 200 * 1.5 = 300
-    // height: 100 * 1.5 = 150
-    expect(emitted?.[0]?.[0]).toEqual({
-      x: 150,
-      y: 150,
-      width: 300,
-      height: 150,
-    })
-  })
-
-  it('handles reverse drag (drag from bottom-right to top-left)', async () => {
-    mocks.getImage.mockResolvedValue(new Uint8Array([1, 2, 3]))
-    const wrapper = mount(ScreenshotSelector, {
-      props: { selection: { ...selection, scaleFactor: 1.0 } },
-    })
-    await flushPromises()
-
-    const root = wrapper.get('.screenshot-selector-root').element
-    root.dispatchEvent(
-      new PointerEvent('pointerdown', { button: 0, clientX: 400, clientY: 300 })
-    )
-    root.dispatchEvent(
-      new PointerEvent('pointermove', { clientX: 200, clientY: 100 })
-    )
-    root.dispatchEvent(
-      new PointerEvent('pointerup', { clientX: 200, clientY: 100 })
-    )
-
-    const emitted = wrapper.emitted('confirm')
-    expect(emitted).toHaveLength(1)
-    expect(emitted?.[0]?.[0]).toEqual({
+    pressEnter()
+    expect(wrapper.emitted('confirm')?.[0]?.[0]).toEqual({
       x: 200,
-      y: 100,
-      width: 200,
+      y: 200,
+      width: 400,
       height: 200,
+    })
+  })
+
+  it('confirms with the button or a double-click', async () => {
+    const wrapper = await mountLoaded()
+    await drag(wrapper, [400, 300], [200, 100])
+    await wrapper.get('.selection-confirm').trigger('click')
+    await wrapper.trigger('dblclick')
+    const emitted = wrapper.emitted('confirm')
+    expect(emitted).toHaveLength(2)
+    expect(emitted?.[0]?.[0]).toEqual({
+      x: 400,
+      y: 200,
+      width: 400,
+      height: 400,
+    })
+  })
+
+  it('redraws the selection on a new drag', async () => {
+    const wrapper = await mountLoaded()
+    await drag(wrapper, [100, 100], [300, 200])
+    await drag(wrapper, [0, 0], [50, 50])
+    pressEnter()
+    expect(wrapper.emitted('confirm')?.[0]?.[0]).toEqual({
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
     })
   })
 })

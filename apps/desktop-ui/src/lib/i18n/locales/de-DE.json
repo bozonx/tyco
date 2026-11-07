@@ -1477,9 +1477,12 @@
     "noModel": "Wähle ein Modell für Schnellanfragen."
   },
   "screenshot": {
-    "retake": "Bildschirmfoto erneut aufnehmen",
+    "retakeScreen": "Ganzen Bildschirm neu aufnehmen",
+    "retakeArea": "Bereich neu auswählen",
     "failed": "Der Bildschirm konnte nicht aufgenommen werden. Prüfen Sie die Aufnahmeberechtigungen und die Unterstützung des Desktop-Portals.",
-    "selectAreaInstruction": "Ziehen Sie, um einen Bereich auszuwählen. Drücken Sie Escape zum Abbrechen."
+    "selectAreaInstruction": "Ziehen Sie, um einen Bereich auszuwählen. Escape bricht ab.",
+    "confirmArea": "Bereich verwenden",
+    "confirmAreaInstruction": "Enter oder Doppelklick bestätigt, erneutes Ziehen wählt neu. Escape bricht ab."
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

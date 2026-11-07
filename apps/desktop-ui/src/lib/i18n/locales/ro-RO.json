@@ -1477,9 +1477,12 @@
     "noModel": "Alege un model pentru cererile rapide."
   },
   "screenshot": {
-    "retake": "Refă captura de ecran",
+    "retakeScreen": "Recapturează tot ecranul",
+    "retakeArea": "Reselectează zona",
     "failed": "Ecranul nu a putut fi capturat. Verifică permisiunile de captură și compatibilitatea portalului desktop.",
-    "selectAreaInstruction": "Trageți pentru a selecta o zonă. Apăsați Escape pentru a anula."
+    "selectAreaInstruction": "Trageți pentru a selecta o zonă. Escape anulează.",
+    "confirmArea": "Folosește zona",
+    "confirmAreaInstruction": "Enter sau dublu clic confirmă, trageți din nou pentru a redesena. Escape anulează."
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

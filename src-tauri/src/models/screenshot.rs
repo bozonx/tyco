@@ -3,7 +3,6 @@ use ts_rs::TS;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum ScreenshotCaptureMode {
     #[default]
     Screen,
@@ -12,7 +11,6 @@ pub enum ScreenshotCaptureMode {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct CropRect {
     pub x: u32,
     pub y: u32,
@@ -23,7 +21,8 @@ pub struct CropRect {
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct ScreenshotAreaSelection {
-    pub activation_id: u64,
+    /// Echoed by `confirm_screenshot_crop` / `cancel_screenshot_crop`.
+    pub selection_id: u64,
     pub image_id: String,
     pub screen_x: i32,
     pub screen_y: i32,

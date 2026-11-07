@@ -16,6 +16,9 @@ use crate::{
 
 /// The image owner that keeps the quick request screenshot alive.
 pub(crate) const OWNER: &str = "quick/screenshot";
+/// Owns the frozen full-screen image only while the area selector shows it,
+/// so cancelling a selection never releases the previous screenshot.
+pub(crate) const SELECTOR_OWNER: &str = "quick/screenshot-selector";
 
 /// Window side of a capture, called on the window executor.
 pub(crate) trait ScreenshotWindows {
@@ -26,11 +29,15 @@ pub(crate) trait ScreenshotWindows {
     /// Shows the window that was visible before the capture, if any.
     fn restore(&self) -> Result<(), AppError>;
     /// Prompts the user to drag a selection rectangle over the frozen image.
+    /// `selection_id` identifies this prompt in the confirm/cancel commands.
+    /// Returns `None` on cancellation or as soon as `is_live` turns false.
     fn select_area(
         &self,
+        selection_id: u64,
         screen: Screen,
         image: &ChatImage,
         bytes: &[u8],
+        is_live: &dyn Fn() -> bool,
     ) -> Result<Option<CropRect>, AppError>;
 }
 
@@ -99,7 +106,14 @@ pub(crate) fn capture(
         let screen = screen.ok_or_else(|| AppError::invalid_input("Missing monitor"))?;
         let (full_image, full_bytes) =
             ChatImageStore::prepare_capture(&pixels.bytes, pixels.width, pixels.height)?;
-        let crop = windows.select_area(screen, &full_image, &full_bytes)?;
+        let is_live = || !source.is_stopped() && coordinator.is_current(request);
+        let crop = windows.select_area(
+            request.generation,
+            screen,
+            &full_image,
+            &full_bytes,
+            &is_live,
+        )?;
         if source.is_stopped() || !coordinator.is_current(request) {
             return Ok(None);
         }
@@ -180,9 +194,11 @@ mod tests {
         }
         fn select_area(
             &self,
+            _selection_id: u64,
             _screen: Screen,
             _image: &ChatImage,
             _bytes: &[u8],
+            _is_live: &dyn Fn() -> bool,
         ) -> Result<Option<CropRect>, AppError> {
             self.log.borrow_mut().push("select_area");
             Ok(self.area_crop.borrow_mut().take().unwrap_or(None))

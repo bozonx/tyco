@@ -1471,9 +1471,12 @@
     "noModel": "请为快速请求选择模型。"
   },
   "screenshot": {
-    "retake": "重新截图",
+    "retakeScreen": "重新截取整个屏幕",
+    "retakeArea": "重新选择区域",
     "failed": "无法截取屏幕。请检查屏幕捕获权限和桌面门户支持。",
-    "selectAreaInstruction": "拖动鼠标选择区域。按 Escape 取消。"
+    "selectAreaInstruction": "拖动以选择区域。按 Escape 取消。",
+    "confirmArea": "使用此区域",
+    "confirmAreaInstruction": "按 Enter 或双击确认，再次拖动可重新选择。按 Escape 取消。"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

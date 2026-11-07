@@ -1471,9 +1471,12 @@
     "noModel": "請為快速請求選擇模型。"
   },
   "screenshot": {
-    "retake": "重新擷取螢幕",
+    "retakeScreen": "重新擷取整個螢幕",
+    "retakeArea": "重新選取區域",
     "failed": "無法擷取螢幕。請檢查螢幕擷取權限和桌面入口支援。",
-    "selectAreaInstruction": "拖曳滑鼠選取區域。按 Escape 取消。"
+    "selectAreaInstruction": "拖曳以選取區域。按 Escape 取消。",
+    "confirmArea": "使用此區域",
+    "confirmAreaInstruction": "按 Enter 或按兩下確認，再次拖曳可重新選取。按 Escape 取消。"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

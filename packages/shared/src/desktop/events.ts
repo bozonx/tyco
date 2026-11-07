@@ -11,6 +11,8 @@ export const DESKTOP_EVENTS = {
   OPEN_SCREENSHOT_CHAT: 'app://open-screenshot-chat',
   SCREENSHOT_FAILED: 'app://screenshot-failed',
   SCREENSHOT_SELECT_AREA: 'app://screenshot-select-area',
+  /** The area selector closed: answered, cancelled or no longer current */
+  SCREENSHOT_SELECT_AREA_CLOSED: 'app://screenshot-select-area-closed',
   OPEN_MAIN_CHAT: 'app://open-main-chat',
   OPEN_MAIN_EDITOR: 'app://open-main-editor',
   /** A chat history changed in storage */

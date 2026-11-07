@@ -114,7 +114,7 @@ export interface DesktopCommands {
     result: HotkeyApplyResult
   }
   cancel_net_task: { args: { id: number }; result: void }
-  cancel_screenshot_crop: { args: { activationId: number }; result: void }
+  cancel_screenshot_crop: { args: { selectionId: number }; result: void }
   cancel_script_action: { args: { runId: string }; result: boolean }
   claim_external_job: { args: { id: string }; result: boolean }
   clear_ai_profile_memory: { args: { profileId: string }; result: void }
@@ -125,7 +125,7 @@ export interface DesktopCommands {
     result: void
   }
   confirm_screenshot_crop: {
-    args: { activationId: number; crop: CropRect }
+    args: { selectionId: number; crop: CropRect }
     result: void
   }
   copy_text: { args: { text: string }; result: void }
@@ -464,8 +464,6 @@ export const BINARY_DESKTOP_COMMANDS = [
 
 /** The commands that act for an activation and name it by `activationId` */
 export const ACTIVATION_DESKTOP_COMMANDS = [
-  'cancel_screenshot_crop',
-  'confirm_screenshot_crop',
   'hide_quick_window_on_blur',
   'hide_window',
   'open_in_browser_and_hide',

@@ -1477,9 +1477,12 @@
     "noModel": "Escolha um modelo para as solicitações rápidas."
   },
   "screenshot": {
-    "retake": "Capturar a tela novamente",
+    "retakeScreen": "Recapturar a tela inteira",
+    "retakeArea": "Selecionar a área novamente",
     "failed": "Não foi possível capturar a tela. Verifique as permissões de captura e o suporte ao portal da área de trabalho.",
-    "selectAreaInstruction": "Arraste para selecionar uma área. Pressione Esc para cancelar."
+    "selectAreaInstruction": "Arraste para selecionar uma área. Esc cancela.",
+    "confirmArea": "Usar área",
+    "confirmAreaInstruction": "Pressione Enter ou clique duas vezes para confirmar; arraste de novo para refazer. Esc cancela."
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

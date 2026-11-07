@@ -1477,9 +1477,12 @@
     "noModel": "Wybierz model do szybkich zapytań."
   },
   "screenshot": {
-    "retake": "Zrób zrzut ponownie",
+    "retakeScreen": "Ponownie przechwyć cały ekran",
+    "retakeArea": "Ponownie zaznacz obszar",
     "failed": "Nie udało się przechwycić ekranu. Sprawdź uprawnienia do przechwytywania i obsługę portalu pulpitu.",
-    "selectAreaInstruction": "Przeciągnij, aby wybrać obszar. Naciśnij Escape, aby anulować."
+    "selectAreaInstruction": "Przeciągnij, aby zaznaczyć obszar. Escape anuluje.",
+    "confirmArea": "Użyj obszaru",
+    "confirmAreaInstruction": "Enter lub dwuklik zatwierdza, ponowne przeciągnięcie zmienia zaznaczenie. Escape anuluje."
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

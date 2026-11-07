@@ -1,7 +1,7 @@
 # Screenshot quick requests
 
-Status: stage 1 implemented; native acceptance on the platform matrix and the
-release size/latency measurements are still to be recorded. Stage 2 not started.
+Status: stages 1 and 2 implemented; native acceptance on the platform matrix and
+the release size/latency measurements are still to be recorded for both.
 
 Stage 1 implementation notes:
 
@@ -31,6 +31,30 @@ Stage 1 implementation notes:
   replaceable.
 - Screenshot quick sessions are not saved to editor history; transfer to the
   main chat (`open_screenshot_chat`) persists through normal chat history.
+
+Stage 2 implementation notes:
+
+- The default capture mode is the `quickWindow.screenshotCaptureMode` setting
+  (entire screen by default). The preview offers two retake buttons, entire
+  screen and area, which pass the mode to `retake_screenshot` explicitly.
+- Wayland selects the area natively: the portal `Area` target with portal
+  version 3+, otherwise an interactive portal dialog whose UI differs per
+  desktop (GNOME offers screen/window/area, KDE opens its own tool).
+- X11 and Windows capture the monitor under the pointer first and show
+  `ScreenshotSelector.vue` over that frozen image in the quick window, so the
+  selector never appears in the pixels. Selection is limited to that monitor.
+  A drag draws the rectangle; Enter, double-click or the confirm button accepts
+  it, a new drag redraws it, Escape or right click cancels. Crops are mapped from
+  the real view size to monitor pixels (`lib/screenshot/area-selection.ts`), so
+  the window scale factor does not matter.
+- A prompt is identified by its capture generation (`selectionId`), not by the
+  activation id: the first capture selects before its activation is published.
+  The worker waits with a timeout and stops on shutdown or a newer activation;
+  `app://screenshot-select-area-closed` then closes the selector.
+- The frozen image is owned by `quick/screenshot-selector` only while shown, so
+  cancelling an area retake keeps the previous screenshot. The quick window's
+  position, size and always-on-top state are restored after selection.
+- Crops are taken from the original pixels before normalization.
 
 ## Goal and scope
 

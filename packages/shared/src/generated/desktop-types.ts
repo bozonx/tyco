@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: e369e449a6fc9a65746c66812eb7fdcc1adbdbc7e6d500862eb7f85528831b9a
+// Source hash: d610d4b0a883fa9b9f4a5f7c4ebd4ed536aa3d159184036df23838298e37039b
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -643,7 +643,8 @@ export type ProjectPermission = {
 }
 
 export type ScreenshotAreaSelection = {
-  activationId: number
+  /** Echoed by `confirm_screenshot_crop` / `cancel_screenshot_crop`. */
+  selectionId: number
   imageId: string
   screenX: number
   screenY: number
@@ -975,6 +976,7 @@ export interface DesktopEventPayloads {
   'app://open-screenshot-chat': ScreenshotChatTransfer
   'app://screenshot-failed': DesktopErrorCode
   'app://screenshot-select-area': ScreenshotAreaSelection
+  'app://screenshot-select-area-closed': null
   'app://open-main-chat': OpenMainChatEvent
   'app://open-main-editor': EditorTransfer
   'app://chats-changed': ChatsChangedEvent

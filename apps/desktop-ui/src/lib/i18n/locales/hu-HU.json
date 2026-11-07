@@ -1474,9 +1474,12 @@
     "noModel": "Válassz modellt a gyors kérésekhez."
   },
   "screenshot": {
-    "retake": "Képernyőkép újrakészítése",
+    "retakeScreen": "Teljes képernyő újrarögzítése",
+    "retakeArea": "Terület újbóli kijelölése",
     "failed": "Nem sikerült rögzíteni a képernyőt. Ellenőrizze a képernyőrögzítési engedélyeket és az asztali portál támogatását.",
-    "selectAreaInstruction": "Húzza az egeret a terület kijelöléséhez. A művelet megszakításához nyomja meg az Escape billentyűt."
+    "selectAreaInstruction": "Húzással jelöljön ki egy területet. Az Escape megszakítja.",
+    "confirmArea": "Terület használata",
+    "confirmAreaInstruction": "Enter vagy dupla kattintás: jóváhagyás, újabb húzás: újrarajzolás. Az Escape megszakítja."
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

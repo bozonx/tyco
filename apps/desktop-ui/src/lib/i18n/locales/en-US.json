@@ -1477,9 +1477,12 @@
     "noModel": "Choose a model for quick requests."
   },
   "screenshot": {
-    "retake": "Retake screenshot",
+    "retakeScreen": "Retake entire screen",
+    "retakeArea": "Reselect area",
     "failed": "Could not capture the screen. Check screen capture permissions and desktop portal support.",
-    "selectAreaInstruction": "Drag to select an area. Press Escape to cancel."
+    "selectAreaInstruction": "Drag to select an area. Press Escape to cancel.",
+    "confirmArea": "Use area",
+    "confirmAreaInstruction": "Press Enter or double-click to confirm, drag again to redraw. Escape cancels."
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

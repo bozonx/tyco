@@ -1471,9 +1471,12 @@
     "noModel": "Vyberte model pro rychlé dotazy."
   },
   "screenshot": {
-    "retake": "Pořídit snímek znovu",
+    "retakeScreen": "Znovu zachytit celou obrazovku",
+    "retakeArea": "Znovu vybrat oblast",
     "failed": "Obrazovku se nepodařilo zachytit. Zkontrolujte oprávnění k zachycení a podporu portálu plochy.",
-    "selectAreaInstruction": "Přetažením vyberte oblast. Stisknutím klávesy Escape zrušíte výběr."
+    "selectAreaInstruction": "Tažením vyberte oblast. Escape zruší.",
+    "confirmArea": "Použít oblast",
+    "confirmAreaInstruction": "Enter nebo dvojklik potvrdí, novým tažením výběr překreslíte. Escape zruší."
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

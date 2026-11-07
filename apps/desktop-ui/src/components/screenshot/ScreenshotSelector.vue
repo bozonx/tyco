@@ -1,36 +1,37 @@
 <template>
   <div
+    ref="rootRef"
     class="screenshot-selector-root"
     tabindex="-1"
     @pointerdown="onPointerDown"
     @pointermove="onPointerMove"
     @pointerup="onPointerUp"
+    @dblclick="onConfirm"
     @contextmenu.prevent="onCancel"
-    @keydown.esc="onCancel"
   >
     <img
       v-if="imageUrl"
       :src="imageUrl"
       class="screenshot-selector-image"
-      alt="Screen capture"
+      alt=""
       draggable="false"
     />
 
-    <!-- Dimmed exterior -->
-    <template v-if="hasSelection">
+    <template v-if="shownRect">
+      <!-- Dimmed exterior -->
       <div
         class="dimmed-area"
         :style="{
           top: '0px',
           left: '0px',
           right: '0px',
-          height: `${rect.y}px`,
+          height: px(shownRect.y),
         }"
       />
       <div
         class="dimmed-area"
         :style="{
-          top: `${rect.y + rect.height}px`,
+          top: px(shownRect.y + shownRect.height),
           left: '0px',
           right: '0px',
           bottom: '0px',
@@ -39,42 +40,53 @@
       <div
         class="dimmed-area"
         :style="{
-          top: `${rect.y}px`,
+          top: px(shownRect.y),
           left: '0px',
-          width: `${rect.x}px`,
-          height: `${rect.height}px`,
+          width: px(shownRect.x),
+          height: px(shownRect.height),
         }"
       />
       <div
         class="dimmed-area"
         :style="{
-          top: `${rect.y}px`,
-          left: `${rect.x + rect.width}px`,
+          top: px(shownRect.y),
+          left: px(shownRect.x + shownRect.width),
           right: '0px',
-          height: `${rect.height}px`,
+          height: px(shownRect.height),
         }"
       />
 
-      <!-- Visible selection rectangle -->
       <div
         class="selection-box"
         :style="{
-          left: `${rect.x}px`,
-          top: `${rect.y}px`,
-          width: `${rect.width}px`,
-          height: `${rect.height}px`,
+          left: px(shownRect.x),
+          top: px(shownRect.y),
+          width: px(shownRect.width),
+          height: px(shownRect.height),
         }"
       >
-        <div class="selection-badge">
-          {{ badgeText }}
-        </div>
+        <div class="selection-badge">{{ badgeText }}</div>
+        <button
+          v-if="!isDragging"
+          type="button"
+          class="selection-confirm"
+          @pointerdown.stop
+          @click.stop="onConfirm"
+        >
+          {{ t('screenshot.confirmArea') }}
+        </button>
       </div>
     </template>
     <div v-else class="dimmed-full" />
 
-    <!-- Instruction hint -->
     <div v-if="!isDragging" class="selection-hint">
-      {{ t('screenshot.selectAreaInstruction') }}
+      {{
+        t(
+          shownRect
+            ? 'screenshot.confirmAreaInstruction'
+            : 'screenshot.selectAreaInstruction'
+        )
+      }}
     </div>
   </div>
 </template>
@@ -84,6 +96,13 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { getChatImage } from '../../lib/chat/chat-image-storage'
+import {
+  type Size,
+  type ViewRect,
+  dragRect,
+  isSelection,
+  toPhysicalCrop,
+} from '../../lib/screenshot/area-selection'
 import type { CropRect, ScreenshotAreaSelection } from '@tyco/shared'
 
 const props = defineProps<{ selection: ScreenshotAreaSelection }>()
@@ -92,82 +111,68 @@ const emit = defineEmits<{ confirm: [crop: CropRect]; cancel: [] }>()
 
 const { t } = useI18n()
 
+const rootRef = ref<HTMLElement>()
 const imageUrl = ref('')
 const isDragging = ref(false)
-const startX = ref(0)
-const startY = ref(0)
-const currentX = ref(0)
-const currentY = ref(0)
+const dragStart = ref({ x: 0, y: 0 })
+const dragEnd = ref({ x: 0, y: 0 })
+/** The finished selection, kept until confirmed or redrawn. */
+const selected = ref<ViewRect | null>(null)
 
-const MIN_DRAG_PX = 4
+function viewSize(): Size {
+  const root = rootRef.value
+  return {
+    width: root?.clientWidth || window.innerWidth,
+    height: root?.clientHeight || window.innerHeight,
+  }
+}
 
-const rect = computed(() => {
-  const x = Math.min(startX.value, currentX.value)
-  const y = Math.min(startY.value, currentY.value)
-  const width = Math.abs(currentX.value - startX.value)
-  const height = Math.abs(currentY.value - startY.value)
-  return { x, y, width, height }
+const imageSize = computed<Size>(() => ({
+  width: props.selection.width,
+  height: props.selection.height,
+}))
+
+const shownRect = computed<ViewRect | null>(() => {
+  if (!isDragging.value) return selected.value
+  const rect = dragRect(dragStart.value, dragEnd.value, viewSize())
+  return isSelection(rect) ? rect : null
 })
-
-const hasSelection = computed(
-  () => rect.value.width >= MIN_DRAG_PX && rect.value.height >= MIN_DRAG_PX
-)
 
 const badgeText = computed(() => {
-  const scale = props.selection.scaleFactor || 1
-  const w = Math.round(rect.value.width * scale)
-  const h = Math.round(rect.value.height * scale)
-  return `${w} × ${h} px`
+  const rect = shownRect.value
+  const crop = rect && toPhysicalCrop(rect, viewSize(), imageSize.value)
+  return crop ? `${crop.width} × ${crop.height} px` : ''
 })
+
+const px = (value: number) => `${value}px`
 
 function onPointerDown(e: PointerEvent) {
   if (e.button !== 0) return
   isDragging.value = true
-  startX.value = e.clientX
-  startY.value = e.clientY
-  currentX.value = e.clientX
-  currentY.value = e.clientY
+  dragStart.value = { x: e.clientX, y: e.clientY }
+  dragEnd.value = { x: e.clientX, y: e.clientY }
   ;(e.currentTarget as HTMLElement | null)?.setPointerCapture?.(e.pointerId)
 }
 
 function onPointerMove(e: PointerEvent) {
   if (!isDragging.value) return
-  currentX.value = e.clientX
-  currentY.value = e.clientY
+  dragEnd.value = { x: e.clientX, y: e.clientY }
 }
 
 function onPointerUp(e: PointerEvent) {
   if (!isDragging.value) return
+  dragEnd.value = { x: e.clientX, y: e.clientY }
+  const rect = dragRect(dragStart.value, dragEnd.value, viewSize())
   isDragging.value = false
   ;(e.currentTarget as HTMLElement | null)?.releasePointerCapture?.(e.pointerId)
+  // A click keeps the previous selection, so a double-click can confirm it.
+  if (isSelection(rect)) selected.value = rect
+}
 
-  if (!hasSelection.value) {
-    startX.value = 0
-    startY.value = 0
-    currentX.value = 0
-    currentY.value = 0
-    return
-  }
-
-  const scale = props.selection.scaleFactor || 1
-  const x = Math.round(rect.value.x * scale)
-  const y = Math.round(rect.value.y * scale)
-  let width = Math.round(rect.value.width * scale)
-  let height = Math.round(rect.value.height * scale)
-
-  if (x >= props.selection.width || y >= props.selection.height) {
-    onCancel()
-    return
-  }
-  width = Math.min(width, props.selection.width - x)
-  height = Math.min(height, props.selection.height - y)
-  if (width < MIN_DRAG_PX || height < MIN_DRAG_PX) {
-    onCancel()
-    return
-  }
-
-  const crop: CropRect = { x, y, width, height }
-  emit('confirm', crop)
+function onConfirm() {
+  if (isDragging.value || !selected.value) return
+  const crop = toPhysicalCrop(selected.value, viewSize(), imageSize.value)
+  if (crop) emit('confirm', crop)
 }
 
 function onCancel() {
@@ -179,18 +184,22 @@ function handleKeyDown(e: KeyboardEvent) {
     e.preventDefault()
     e.stopPropagation()
     onCancel()
+  } else if (e.key === 'Enter') {
+    e.preventDefault()
+    e.stopPropagation()
+    onConfirm()
   }
 }
 
 onMounted(async () => {
   window.addEventListener('keydown', handleKeyDown)
+  rootRef.value?.focus()
   try {
     const bytes = await getChatImage(props.selection.imageId)
     imageUrl.value = URL.createObjectURL(
       new Blob([bytes], { type: 'image/webp' })
     )
   } catch {
-    // If the image fails to load, cancel cleanly
     onCancel()
   }
 })
@@ -213,6 +222,7 @@ onBeforeUnmount(() => {
   user-select: none;
   cursor: crosshair;
   overflow: hidden;
+  outline: none;
   z-index: var(--z-overlay, 99999);
 }
 
@@ -225,17 +235,15 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-.dimmed-full {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  pointer-events: none;
-}
-
+.dimmed-full,
 .dimmed-area {
   position: absolute;
   background: rgba(0, 0, 0, 0.45);
   pointer-events: none;
+}
+
+.dimmed-full {
+  inset: 0;
 }
 
 .selection-box {
@@ -258,6 +266,22 @@ onBeforeUnmount(() => {
   background: rgba(0, 0, 0, 0.85);
   color: #ffffff;
   border-radius: 3px;
+  white-space: nowrap;
+}
+
+.selection-confirm {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  padding: 4px 12px;
+  font-size: 13px;
+  color: var(--color-primary-content);
+  background: var(--color-primary);
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  pointer-events: auto;
   white-space: nowrap;
 }
 

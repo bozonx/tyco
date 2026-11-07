@@ -50,11 +50,18 @@
           @remove="removeScreenshot"
         />
         <IconButton
-          icon="mdi:camera-retake-outline"
-          :label="t('screenshot.retake')"
-          :title="t('screenshot.retake')"
+          icon="mdi:monitor-screenshot"
+          :label="t('screenshot.retakeScreen')"
+          :title="t('screenshot.retakeScreen')"
           :disabled="isCapturing || model.isSourceImageLocked.value"
-          @click="retakeScreenshot"
+          @click="retakeScreenshot('screen')"
+        />
+        <IconButton
+          icon="mdi:selection-drag"
+          :label="t('screenshot.retakeArea')"
+          :title="t('screenshot.retakeArea')"
+          :disabled="isCapturing || model.isSourceImageLocked.value"
+          @click="retakeScreenshot('area')"
         />
       </div>
 
@@ -203,6 +210,7 @@ import {
   type Chat,
   type ChatAttachment,
   type EditorHistoryTurn,
+  type ScreenshotCaptureMode,
   llmSecretId,
 } from '@tyco/shared'
 
@@ -481,12 +489,12 @@ async function removeScreenshot() {
   if (result.success) model.setSourceImage(undefined)
 }
 
-async function retakeScreenshot() {
+async function retakeScreenshot(mode: ScreenshotCaptureMode) {
   if (isCapturing.value || model.isSourceImageLocked.value) return
   isCapturing.value = true
   try {
     isListening.value = false
-    const result = await ipcStore.call('retake_screenshot')
+    const result = await ipcStore.call('retake_screenshot', { mode })
     if (disposed) return
     if (result.success) {
       if (result.result) model.setSourceImage(result.result)

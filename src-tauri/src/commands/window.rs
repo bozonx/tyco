@@ -94,15 +94,15 @@ pub async fn retake_screenshot(
 #[tauri::command]
 pub fn confirm_screenshot_crop(
     app: AppHandle,
-    activation_id: u64,
+    selection_id: u64,
     crop: crate::models::CropRect,
 ) -> Result<(), AppError> {
-    runtime::screenshot::confirm_crop(&app, activation_id, crop)
+    runtime::screenshot::confirm_crop(&app, selection_id, crop)
 }
 
 #[tauri::command]
-pub fn cancel_screenshot_crop(app: AppHandle, activation_id: u64) -> Result<(), AppError> {
-    runtime::screenshot::cancel_crop(&app, activation_id)
+pub fn cancel_screenshot_crop(app: AppHandle, selection_id: u64) -> Result<(), AppError> {
+    runtime::screenshot::cancel_crop(&app, selection_id)
 }
 
 #[tauri::command]

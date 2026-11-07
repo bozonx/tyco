@@ -180,19 +180,25 @@ const isPanelMode = computed(
 
 const activeAreaSelection = ref<ScreenshotAreaSelection | null>(null)
 let stopSelectAreaListener: (() => void) | undefined
+let stopSelectAreaClosedListener: (() => void) | undefined
 
 const onConfirmCrop = async (crop: CropRect) => {
   const selection = activeAreaSelection.value
   activeAreaSelection.value = null
   if (!selection) return
-  await ipcStore.call('confirm_screenshot_crop', { crop })
+  await ipcStore.call('confirm_screenshot_crop', {
+    selectionId: selection.selectionId,
+    crop,
+  })
 }
 
 const onCancelCrop = async () => {
   const selection = activeAreaSelection.value
   activeAreaSelection.value = null
   if (!selection) return
-  await ipcStore.call('cancel_screenshot_crop')
+  await ipcStore.call('cancel_screenshot_crop', {
+    selectionId: selection.selectionId,
+  })
 }
 
 const isSheet = computed(() => {
@@ -376,6 +382,21 @@ onMounted(() => {
       clientLogger.error('Could not watch window focus', error, 'quick')
     )
   void desktopClient
+    .listen(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA_CLOSED, () => {
+      activeAreaSelection.value = null
+    })
+    .then((remove) => {
+      if (unmounted) remove()
+      else stopSelectAreaClosedListener = remove
+    })
+    .catch((error: unknown) =>
+      clientLogger.error(
+        'Could not watch screenshot area select',
+        error,
+        'quick'
+      )
+    )
+  void desktopClient
     .listen(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA, (payload) => {
       activeAreaSelection.value = payload
     })
@@ -403,6 +424,7 @@ onUnmounted(() => {
   windowFocus.dispose()
   removeFocusListener?.()
   stopSelectAreaListener?.()
+  stopSelectAreaClosedListener?.()
   delete document.documentElement.dataset.windowFocused
 })
 

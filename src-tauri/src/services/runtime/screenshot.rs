@@ -10,58 +10,45 @@ use crate::{
         background::BackgroundServices,
         chat_images::ChatImages,
         platform,
-        screenshot::{self as orchestration, Outcome, ScreenshotSource, ScreenshotWindows, OWNER},
+        screenshot::{
+            self as orchestration, Outcome, ScreenshotSource, ScreenshotWindows, OWNER,
+            SELECTOR_OWNER,
+        },
     },
     state::AppState,
 };
 use tauri::{AppHandle, Manager};
 
+/// Hands the crop chosen in the selector back to the waiting capture worker.
+/// Prompts are keyed by their selection id, not by the activation id: the
+/// first capture of an activation selects before the activation is published.
 #[derive(Default)]
 pub struct ScreenshotCropCoordinator {
     pending: std::sync::Mutex<Option<(u64, std::sync::mpsc::SyncSender<Option<CropRect>>)>>,
 }
 
 impl ScreenshotCropCoordinator {
-    pub fn wait_for_crop(
-        &self,
-        activation_id: u64,
-    ) -> (
-        std::sync::mpsc::Receiver<Option<CropRect>>,
-        impl FnOnce() + '_,
-    ) {
+    fn wait_for_crop(&self, selection_id: u64) -> std::sync::mpsc::Receiver<Option<CropRect>> {
         let (sender, receiver) = std::sync::mpsc::sync_channel(1);
-        *self.pending.lock().unwrap() = Some((activation_id, sender));
-        let cleanup = move || {
-            let mut guard = self.pending.lock().unwrap();
-            if guard.as_ref().map(|(id, _)| *id) == Some(activation_id) {
-                *guard = None;
-            }
-        };
-        (receiver, cleanup)
+        *self.pending.lock().unwrap() = Some((selection_id, sender));
+        receiver
     }
 
-    pub fn confirm(&self, activation_id: u64, crop: CropRect) -> bool {
+    fn clear(&self, selection_id: u64) {
         let mut guard = self.pending.lock().unwrap();
-        if let Some((id, sender)) = guard.take() {
-            if id == activation_id {
-                let _ = sender.send(Some(crop));
-                return true;
-            }
-            *guard = Some((id, sender));
+        if guard.as_ref().map(|(id, _)| *id) == Some(selection_id) {
+            *guard = None;
         }
-        false
     }
 
-    pub fn cancel(&self, activation_id: u64) -> bool {
+    fn answer(&self, selection_id: u64, crop: Option<CropRect>) -> bool {
         let mut guard = self.pending.lock().unwrap();
-        if let Some((id, sender)) = guard.take() {
-            if id == activation_id {
-                let _ = sender.send(None);
-                return true;
-            }
-            *guard = Some((id, sender));
+        if guard.as_ref().map(|(id, _)| *id) != Some(selection_id) {
+            return false;
         }
-        false
+        let (_, sender) = guard.take().expect("checked above");
+        let _ = sender.send(crop);
+        true
     }
 }
 
@@ -109,64 +96,127 @@ impl ScreenshotWindows for Windows<'_> {
 
     fn select_area(
         &self,
+        selection_id: u64,
         screen: platform::screenshot::Screen,
         image: &ChatImage,
         bytes: &[u8],
+        is_live: &dyn Fn() -> bool,
     ) -> Result<Option<CropRect>, AppError> {
         let app = self.0;
         let images = app.state::<ChatImages>();
-        images.lock().remember(image.clone(), bytes.to_vec())?;
-        images
-            .lock()
-            .sync(orchestration::OWNER, std::slice::from_ref(&image.id))?;
+        {
+            let mut images = images.lock();
+            images.remember(image.clone(), bytes.to_vec())?;
+            images.sync(SELECTOR_OWNER, std::slice::from_ref(&image.id))?;
+        }
+        let crops = app.state::<ScreenshotCropCoordinator>();
+        let receiver = crops.wait_for_crop(selection_id);
+        let crop = show_selector(app, selection_id, screen, &image.id)
+            .map(|()| wait_for_crop(&receiver, is_live));
+        crops.clear(selection_id);
+        images.lock().release_owner(SELECTOR_OWNER);
+        hide_selector(app);
+        crop
+    }
+}
 
-        let activation_id = app.state::<AppState>().snapshot().activation.activation_id;
-        let crop_coordinator = app.state::<ScreenshotCropCoordinator>();
-        let (receiver, cleanup) = crop_coordinator.wait_for_crop(activation_id);
+/// The quick window geometry the selector replaces while it covers a monitor.
+struct SavedGeometry {
+    position: Option<tauri::PhysicalPosition<i32>>,
+    size: Option<tauri::PhysicalSize<u32>>,
+    always_on_top: bool,
+}
 
+static SAVED_GEOMETRY: std::sync::Mutex<Option<SavedGeometry>> = std::sync::Mutex::new(None);
+
+fn monitor_scale(app: &AppHandle, screen: platform::screenshot::Screen) -> Option<f64> {
+    app.available_monitors()
+        .ok()?
+        .into_iter()
+        .find(|m| m.position().x == screen.x && m.position().y == screen.y)
+        .map(|m| m.scale_factor())
+}
+
+fn show_selector(
+    app: &AppHandle,
+    selection_id: u64,
+    screen: platform::screenshot::Screen,
+    image_id: &str,
+) -> Result<(), AppError> {
+    let image_id = image_id.to_owned();
+    on_main_thread(app, move |app| {
         let window = app
             .get_webview_window(QUICK_WINDOW_LABEL)
             .ok_or_else(|| AppError::ServiceUnavailable("Quick window not found".into()))?;
+        *SAVED_GEOMETRY.lock().unwrap() = Some(SavedGeometry {
+            position: window.outer_position().ok(),
+            size: window.inner_size().ok(),
+            always_on_top: window.is_always_on_top().unwrap_or(false),
+        });
+        let scale_factor = monitor_scale(app, screen)
+            .or_else(|| window.scale_factor().ok())
+            .unwrap_or(1.0);
+        window.set_position(tauri::PhysicalPosition::new(screen.x, screen.y))?;
+        window.set_size(tauri::PhysicalSize::new(screen.width, screen.height))?;
+        platform::set_window_opacity(&window, 1.0)?;
+        window.set_always_on_top(true)?;
+        window.show()?;
+        platform::focus_window(&window)?;
+        crate::events::emit::<crate::events::ScreenshotSelectArea, _>(
+            app,
+            crate::models::ScreenshotAreaSelection {
+                selection_id,
+                image_id,
+                screen_x: screen.x,
+                screen_y: screen.y,
+                width: screen.width,
+                height: screen.height,
+                scale_factor,
+            },
+        )?;
+        Ok(())
+    })
+}
 
-        let scale_factor = window.scale_factor().unwrap_or(1.0);
-        let screen_x = screen.x;
-        let screen_y = screen.y;
-        let width = screen.width;
-        let height = screen.height;
-        let image_id = image.id.clone();
-
-        on_main_thread(app, move |app| {
-            if let Some(w) = app.get_webview_window(QUICK_WINDOW_LABEL) {
-                let _ = w.set_position(tauri::Position::Physical(tauri::PhysicalPosition::new(
-                    screen_x, screen_y,
-                )));
-                let _ = w.set_size(tauri::Size::Physical(tauri::PhysicalSize::new(
-                    width, height,
-                )));
-                let _ = platform::set_window_opacity(&w, 1.0);
-                let _ = w.set_always_on_top(true);
-                let _ = w.show();
-                let _ = platform::focus_window(&w);
+/// Hides the selector and gives the quick window its previous geometry back,
+/// so `restore` or the activation shows it as before the capture.
+fn hide_selector(app: &AppHandle) {
+    let Some(saved) = SAVED_GEOMETRY.lock().unwrap().take() else {
+        return;
+    };
+    let result = on_main_thread(app, move |app| {
+        crate::events::emit::<crate::events::ScreenshotSelectAreaClosed, _>(app, ())?;
+        if let Some(window) = app.get_webview_window(QUICK_WINDOW_LABEL) {
+            window.hide()?;
+            window.set_always_on_top(saved.always_on_top)?;
+            if let Some(size) = saved.size {
+                window.set_size(size)?;
             }
-            crate::events::emit::<crate::events::ScreenshotSelectArea, _>(
-                app,
-                crate::models::ScreenshotAreaSelection {
-                    activation_id,
-                    image_id,
-                    screen_x,
-                    screen_y,
-                    width,
-                    height,
-                    scale_factor,
-                },
-            )?;
-            Ok(())
-        })?;
-
-        let crop = receiver.recv().unwrap_or(None);
-        cleanup();
-        Ok(crop)
+            if let Some(position) = saved.position {
+                window.set_position(position)?;
+            }
+        }
+        Ok(())
+    });
+    if let Err(error) = result {
+        log::warn!("Could not close the screenshot area selector: {error}");
     }
+}
+
+/// Waits for the selector without blocking shutdown or a newer activation.
+fn wait_for_crop(
+    receiver: &std::sync::mpsc::Receiver<Option<CropRect>>,
+    is_live: &dyn Fn() -> bool,
+) -> Option<CropRect> {
+    use std::sync::mpsc::RecvTimeoutError;
+    while is_live() {
+        match receiver.recv_timeout(std::time::Duration::from_millis(100)) {
+            Ok(crop) => return crop,
+            Err(RecvTimeoutError::Timeout) => {}
+            Err(RecvTimeoutError::Disconnected) => return None,
+        }
+    }
+    None
 }
 
 struct Source<'a>(&'a AppHandle);
@@ -309,22 +359,22 @@ pub fn retake(
         .map_err(|e| AppError::Failed(e.to_string()))?
 }
 
-pub fn confirm_crop(app: &AppHandle, activation_id: u64, crop: CropRect) -> Result<(), AppError> {
-    ensure_current(app, activation_id)?;
+pub fn confirm_crop(app: &AppHandle, selection_id: u64, crop: CropRect) -> Result<(), AppError> {
+    if crop.width == 0 || crop.height == 0 {
+        return Err(AppError::invalid_input("Empty screenshot selection"));
+    }
     if !app
         .state::<ScreenshotCropCoordinator>()
-        .confirm(activation_id, crop)
+        .answer(selection_id, Some(crop))
     {
         return Err(stale());
     }
     Ok(())
 }
 
-pub fn cancel_crop(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
-    ensure_current(app, activation_id)?;
-    let _ = app
-        .state::<ScreenshotCropCoordinator>()
-        .cancel(activation_id);
+pub fn cancel_crop(app: &AppHandle, selection_id: u64) -> Result<(), AppError> {
+    app.state::<ScreenshotCropCoordinator>()
+        .answer(selection_id, None);
     Ok(())
 }
 
@@ -387,4 +437,38 @@ pub fn open_chat(
             activation_id,
         )
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CROP: CropRect = CropRect {
+        x: 1,
+        y: 2,
+        width: 3,
+        height: 4,
+    };
+
+    #[test]
+    fn only_the_pending_selection_is_answered() {
+        let crops = ScreenshotCropCoordinator::default();
+        let receiver = crops.wait_for_crop(7);
+        assert!(!crops.answer(6, Some(CROP)));
+        assert!(crops.answer(7, Some(CROP)));
+        assert!(!crops.answer(7, None));
+        assert_eq!(wait_for_crop(&receiver, &|| true), Some(CROP));
+    }
+
+    #[test]
+    fn waiting_stops_when_the_capture_is_no_longer_live() {
+        let crops = ScreenshotCropCoordinator::default();
+        let receiver = crops.wait_for_crop(1);
+        assert_eq!(wait_for_crop(&receiver, &|| false), None);
+        // A newer prompt drops the older sender.
+        let _newer = crops.wait_for_crop(2);
+        assert_eq!(wait_for_crop(&receiver, &|| true), None);
+        crops.clear(1);
+        assert!(crops.answer(2, None));
+    }
 }

@@ -1477,9 +1477,12 @@
     "noModel": "Choisissez un modèle pour les requêtes rapides."
   },
   "screenshot": {
-    "retake": "Reprendre la capture",
+    "retakeScreen": "Recapturer tout l’écran",
+    "retakeArea": "Resélectionner une zone",
     "failed": "Impossible de capturer l’écran. Vérifiez les autorisations de capture et la prise en charge du portail du bureau.",
-    "selectAreaInstruction": "Faites glisser pour sélectionner une zone. Appuyez sur Échap pour annuler."
+    "selectAreaInstruction": "Faites glisser pour sélectionner une zone. Échap pour annuler.",
+    "confirmArea": "Utiliser la zone",
+    "confirmAreaInstruction": "Entrée ou double-clic pour confirmer, glissez à nouveau pour redessiner. Échap annule."
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

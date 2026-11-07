@@ -485,7 +485,7 @@ describe('quick overlay menus', () => {
         expect(wrapper.get('.quick-overlay-card').isVisible()).toBe(true)
 
         await desktop.emit(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA, {
-          activationId: desktop.backend.activation.activationId,
+          selectionId: 42,
           imageId: 'test-img',
           screenX: 0,
           screenY: 0,
@@ -514,10 +514,7 @@ describe('quick overlay menus', () => {
         expect(wrapper.find('.mock-screenshot-selector').exists()).toBe(false)
         expect(
           desktop.backend.callsOf('confirm_screenshot_crop')
-        ).toContainEqual({
-          activationId: desktop.backend.activation.activationId,
-          crop,
-        })
+        ).toContainEqual({ selectionId: 42, crop })
       } finally {
         wrapper.unmount()
       }
@@ -532,7 +529,7 @@ describe('quick overlay menus', () => {
       await flushPromises()
       try {
         await desktop.emit(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA, {
-          activationId: desktop.backend.activation.activationId,
+          selectionId: 42,
           imageId: 'test-img',
           screenX: 0,
           screenY: 0,
@@ -551,9 +548,36 @@ describe('quick overlay menus', () => {
         expect(wrapper.find('.mock-screenshot-selector').exists()).toBe(false)
         expect(
           desktop.backend.callsOf('cancel_screenshot_crop')
-        ).toContainEqual({
-          activationId: desktop.backend.activation.activationId,
+        ).toContainEqual({ selectionId: 42 })
+      } finally {
+        wrapper.unmount()
+      }
+    })
+
+    it('closes the selector when the backend ends the selection', async () => {
+      stubResizeObserver()
+      desktop.setState({ isWindowShown: true })
+      const wrapper = mount(QuickOverlay, {
+        global: { plugins: [desktop.pinia] },
+      })
+      await flushPromises()
+      try {
+        await desktop.emit(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA, {
+          selectionId: 42,
+          imageId: 'test-img',
+          screenX: 0,
+          screenY: 0,
+          width: 1920,
+          height: 1080,
+          scaleFactor: 1,
         })
+        await flushPromises()
+        expect(wrapper.find('.mock-screenshot-selector').exists()).toBe(true)
+
+        await desktop.emit(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA_CLOSED, null)
+        await flushPromises()
+        expect(wrapper.find('.mock-screenshot-selector').exists()).toBe(false)
+        expect(desktop.backend.callsOf('cancel_screenshot_crop')).toEqual([])
       } finally {
         wrapper.unmount()
       }

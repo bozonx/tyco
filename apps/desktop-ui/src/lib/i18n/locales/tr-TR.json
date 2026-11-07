@@ -1474,9 +1474,12 @@
     "noModel": "Hızlı istekler için bir model seçin."
   },
   "screenshot": {
-    "retake": "Ekran görüntüsünü yeniden al",
+    "retakeScreen": "Tüm ekranı yeniden yakala",
+    "retakeArea": "Alanı yeniden seç",
     "failed": "Ekran yakalanamadı. Ekran yakalama izinlerini ve masaüstü portalı desteğini kontrol edin.",
-    "selectAreaInstruction": "Bir alan seçmek için sürükleyin. İptal etmek için Escape tuşuna basın."
+    "selectAreaInstruction": "Bir alan seçmek için sürükleyin. Escape iptal eder.",
+    "confirmArea": "Alanı kullan",
+    "confirmAreaInstruction": "Onaylamak için Enter'a basın veya çift tıklayın, yeniden çizmek için tekrar sürükleyin. Escape iptal eder."
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

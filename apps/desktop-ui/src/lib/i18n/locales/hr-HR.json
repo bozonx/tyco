@@ -1477,9 +1477,12 @@
     "noModel": "Odaberite model za brze upite."
   },
   "screenshot": {
-    "retake": "Ponovno snimi zaslon",
+    "retakeScreen": "Ponovno snimi cijeli zaslon",
+    "retakeArea": "Ponovno odaberi područje",
     "failed": "Nije moguće snimiti zaslon. Provjerite dopuštenja za snimanje i podršku portala radne površine.",
-    "selectAreaInstruction": "Povucite za odabir područja. Pritisnite Escape za odustajanje."
+    "selectAreaInstruction": "Povucite za odabir područja. Escape poništava.",
+    "confirmArea": "Koristi područje",
+    "confirmAreaInstruction": "Enter ili dvoklik potvrđuje, ponovno povlačenje mijenja odabir. Escape poništava."
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

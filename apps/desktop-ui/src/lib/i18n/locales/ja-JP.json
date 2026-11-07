@@ -1474,9 +1474,12 @@
     "noModel": "クイックリクエスト用のモデルを選んでください。"
   },
   "screenshot": {
-    "retake": "スクリーンショットを撮り直す",
+    "retakeScreen": "画面全体を撮り直す",
+    "retakeArea": "範囲を選び直す",
     "failed": "画面をキャプチャできませんでした。画面キャプチャの権限とデスクトップポータルの対応状況を確認してください。",
-    "selectAreaInstruction": "ドラッグして領域を選択してください。キャンセルするには Escape を押します。"
+    "selectAreaInstruction": "ドラッグして範囲を選択します。Escape でキャンセル。",
+    "confirmArea": "この範囲を使う",
+    "confirmAreaInstruction": "Enter またはダブルクリックで確定、再度ドラッグで選び直します。Escape でキャンセル。"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

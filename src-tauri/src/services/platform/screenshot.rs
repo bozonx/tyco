@@ -76,39 +76,6 @@ pub(crate) fn crop_pixels(pixels: &Pixels, rect: CropRect) -> Result<Pixels, App
     })
 }
 
-#[allow(dead_code)]
-pub(crate) fn physical_rect_from_logical(
-    logical_x: f64,
-    logical_y: f64,
-    logical_width: f64,
-    logical_height: f64,
-    scale_factor: f64,
-    max_width: u32,
-    max_height: u32,
-) -> Option<CropRect> {
-    if logical_width <= 0.0 || logical_height <= 0.0 || scale_factor <= 0.0 {
-        return None;
-    }
-    let x = (logical_x * scale_factor).round().max(0.0) as u32;
-    let y = (logical_y * scale_factor).round().max(0.0) as u32;
-    let width = (logical_width * scale_factor).round().max(1.0) as u32;
-    let height = (logical_height * scale_factor).round().max(1.0) as u32;
-    if x >= max_width || y >= max_height {
-        return None;
-    }
-    let width = width.min(max_width - x);
-    let height = height.min(max_height - y);
-    if width == 0 || height == 0 {
-        return None;
-    }
-    Some(CropRect {
-        x,
-        y,
-        width,
-        height,
-    })
-}
-
 /// Resolve the monitor before hiding application windows. Wayland delegates
 /// monitor access to the portal and may use a system picker instead.
 pub(crate) fn screen() -> Result<Option<Screen>, AppError> {
@@ -243,36 +210,5 @@ mod tests {
             }
         )
         .is_err());
-    }
-
-    #[test]
-    fn maps_logical_to_physical_pixels() {
-        let rect = physical_rect_from_logical(10.0, 20.0, 100.0, 200.0, 2.0, 1920, 1080).unwrap();
-        assert_eq!(
-            rect,
-            CropRect {
-                x: 20,
-                y: 40,
-                width: 200,
-                height: 400
-            }
-        );
-
-        // Clamping to max bounds
-        let clamped =
-            physical_rect_from_logical(900.0, 500.0, 200.0, 200.0, 2.0, 1920, 1080).unwrap();
-        assert_eq!(
-            clamped,
-            CropRect {
-                x: 1800,
-                y: 1000,
-                width: 120,
-                height: 80
-            }
-        );
-
-        // Empty/invalid coordinates return None
-        assert!(physical_rect_from_logical(0.0, 0.0, 0.0, 10.0, 1.0, 100, 100).is_none());
-        assert!(physical_rect_from_logical(200.0, 0.0, 10.0, 10.0, 1.0, 100, 100).is_none());
     }
 }

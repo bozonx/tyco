@@ -335,7 +335,7 @@ describe('QuickAiRequestMenu', () => {
       }))
       const wrapper = mountScreenshotMenu()
       await wrapper.find('.query-panel-input').setValue('What is this?')
-      await wrapper.find('[title="screenshot.retake"]').trigger('click')
+      await wrapper.find('[title="screenshot.retakeScreen"]').trigger('click')
       await flushPromises()
 
       expect(wrapper.find('.shot').attributes('data-id')).toBe('shot-2')
@@ -348,9 +348,21 @@ describe('QuickAiRequestMenu', () => {
     it('keeps the previous screenshot when the retake is cancelled', async () => {
       desktop.backend.handle('retake_screenshot', () => null)
       const wrapper = mountScreenshotMenu()
-      await wrapper.find('[title="screenshot.retake"]').trigger('click')
+      await wrapper.find('[title="screenshot.retakeScreen"]').trigger('click')
       await flushPromises()
       expect(wrapper.find('.shot').attributes('data-id')).toBe('shot-1')
+    })
+
+    it('retakes with the capture mode of the chosen button', async () => {
+      desktop.backend.handle('retake_screenshot', () => null)
+      const wrapper = mountScreenshotMenu()
+      await wrapper.find('[title="screenshot.retakeArea"]').trigger('click')
+      await flushPromises()
+      await wrapper.find('[title="screenshot.retakeScreen"]').trigger('click')
+      await flushPromises()
+      expect(
+        desktop.backend.callsOf('retake_screenshot').map((args) => args.mode)
+      ).toEqual(['area', 'screen'])
     })
 
     it('keeps the draft when the model cannot read images', async () => {

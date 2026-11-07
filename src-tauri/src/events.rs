@@ -70,6 +70,8 @@ desktop_events! {
     OpenScreenshotChat = "app://open-screenshot-chat" => crate::models::ScreenshotChatTransfer;
     ScreenshotFailed = "app://screenshot-failed" => crate::errors::ErrorCode;
     ScreenshotSelectArea = "app://screenshot-select-area" => crate::models::ScreenshotAreaSelection;
+    /// The area selector closed: answered, cancelled or no longer current.
+    ScreenshotSelectAreaClosed = "app://screenshot-select-area-closed" => ();
     OpenMainChat = "app://open-main-chat" => OpenMainChatEvent;
     OpenMainEditor = "app://open-main-editor" => EditorTransfer;
     /// A chat history changed in storage.
