@@ -1,9 +1,5 @@
 use super::{pixel_bytes, Pixels, Screen};
-use crate::{errors::AppError, models::ScreenshotCaptureMode, services::platform::session};
-
-pub(crate) fn selects_area_natively() -> bool {
-    session::current().is_wayland()
-}
+use crate::{errors::AppError, services::platform::session};
 use x11rb::{
     connection::Connection,
     protocol::{
@@ -51,10 +47,7 @@ pub(super) fn screen() -> Result<Option<Screen>, AppError> {
     }))
 }
 
-pub(super) fn capture(
-    screen: Option<Screen>,
-    mode: ScreenshotCaptureMode,
-) -> Result<Option<Pixels>, AppError> {
+pub(super) fn capture(screen: Option<Screen>) -> Result<Option<Pixels>, AppError> {
     if session::current().is_x11() {
         return capture_x11(screen.ok_or_else(|| AppError::invalid_input("Missing monitor"))?)
             .map(Some);
@@ -64,7 +57,7 @@ pub(super) fn capture(
             "Screenshot capture needs a graphical session".into(),
         ));
     }
-    tauri::async_runtime::block_on(capture_portal(mode))
+    tauri::async_runtime::block_on(capture_portal())
 }
 
 fn capture_x11(screen: Screen) -> Result<Pixels, AppError> {
@@ -139,7 +132,10 @@ fn capture_x11(screen: Screen) -> Result<Pixels, AppError> {
     })
 }
 
-async fn capture_portal(mode: ScreenshotCaptureMode) -> Result<Option<Pixels>, AppError> {
+/// Asks the portal for the entire screen without its dialog. Old portals have
+/// no target choice and return what the compositor captures, on GNOME and KDE
+/// all outputs. TyCo's own selector crops that image in area mode.
+async fn capture_portal() -> Result<Option<Pixels>, AppError> {
     use ashpd::desktop::screenshot::{AvailableTargets, ScreenshotOptions, ScreenshotProxy};
     let proxy = ScreenshotProxy::new().await.map_err(failed)?;
     let mut options = ScreenshotOptions::default()
@@ -147,25 +143,12 @@ async fn capture_portal(mode: ScreenshotCaptureMode) -> Result<Option<Pixels>, A
         .set_modal(false);
     if proxy.version() >= 3 {
         let targets = proxy.available_targets().await.map_err(failed)?;
-        match mode {
-            ScreenshotCaptureMode::Area => {
-                if targets.contains(AvailableTargets::Area) {
-                    options = options.set_target(AvailableTargets::Area);
-                } else {
-                    options = options.set_interactive(true);
-                }
-            }
-            ScreenshotCaptureMode::Screen => {
-                if !targets.contains(AvailableTargets::Screen) {
-                    return Err(AppError::ServiceUnavailable(
-                        "The screenshot portal cannot capture an entire screen".into(),
-                    ));
-                }
-                options = options.set_target(AvailableTargets::Screen);
-            }
+        if !targets.contains(AvailableTargets::Screen) {
+            return Err(AppError::ServiceUnavailable(
+                "The screenshot portal cannot capture an entire screen".into(),
+            ));
         }
-    } else if mode == ScreenshotCaptureMode::Area {
-        options = options.set_interactive(true);
+        options = options.set_target(AvailableTargets::Screen);
     }
     let request = proxy.screenshot(None, options).await.map_err(failed)?;
     let response = match request.response() {

@@ -161,6 +161,42 @@ describe('QuickAiRequestMenu', () => {
     )
   })
 
+  it('reads the keys, so that the models of keyed providers are listed', async () => {
+    desktop.backend.handle('get_secret_statuses', () => ({
+      'llm.google': {
+        available: true,
+        origins: ['https://generativelanguage.googleapis.com'],
+      },
+    }))
+    desktop.setUserConfig({
+      llm: {
+        ...desktop.backend.userConfig.llm,
+        models: [
+          ...desktop.backend.userConfig.llm.models,
+          {
+            id: 'gemini',
+            name: 'Gemini',
+            providerId: 'google',
+            providerModelId: 'gemini',
+            canUseImages: false,
+            canUseTools: true,
+          },
+        ],
+      },
+    })
+
+    const wrapper = mountMenu()
+    await flushPromises()
+    const labels = wrapper
+      .findAll('select')[1]
+      .findAll('option')
+      .map((option) => option.text())
+    expect(labels).toEqual([
+      expect.stringContaining('GPT 4'),
+      expect.stringContaining('Gemini'),
+    ])
+  })
+
   it('lists the models and remembers the pick of "Ask AI" in its task', async () => {
     desktop.setUserConfig({
       llm: {

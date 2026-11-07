@@ -34,19 +34,22 @@ Stage 1 implementation notes:
 
 Stage 2 implementation notes:
 
-- The default capture mode is the `quickWindow.screenshotCaptureMode` setting
-  (entire screen by default). The preview offers two retake buttons, entire
-  screen and area, which pass the mode to `retake_screenshot` explicitly.
-- Wayland selects the area natively: the portal `Area` target with portal
-  version 3+, otherwise an interactive portal dialog whose UI differs per
-  desktop (GNOME offers screen/window/area, KDE opens its own tool).
-- X11 and Windows capture the monitor under the pointer first and show
-  `ScreenshotSelector.vue` over that frozen image in the quick window, so the
-  selector never appears in the pixels. Selection is limited to that monitor.
-  A drag draws the rectangle; Enter, double-click or the confirm button accepts
-  it, a new drag redraws it, Escape or right click cancels. Crops are mapped from
-  the real view size to monitor pixels (`lib/screenshot/area-selection.ts`), so
-  the window scale factor does not matter.
+- The default capture mode is the `quickWindow.screenshotCaptureMode` setting,
+  `area` by default. The preview offers two retake buttons, entire screen and
+  area, which pass the mode to `retake_screenshot` explicitly.
+- Area mode works the same on every platform: TyCo captures the entire screen
+  (the monitor under the pointer on X11/Windows, the portal result on Wayland,
+  without the portal dialog) and shows that frozen image in the quick window
+  covering the monitor (`platform::cover_output`: layer-shell anchors on all
+  edges, otherwise monitor geometry or fullscreen). The selector itself never
+  appears in the pixels. Selecting is cropping that image.
+- The frozen image is fitted into the view (`lib/screenshot/area-selection.ts`).
+  A single-monitor capture fills it exactly; a portal capture of several
+  outputs (GNOME/KDE) is shown whole with bars, and the drag is clamped to it.
+  Crops are mapped from the shown size to image pixels, so window scale factors
+  do not matter.
+- A drag draws the rectangle; Enter, double-click or the confirm button accepts
+  it, a new drag redraws it, Escape or right click cancels.
 - A prompt is identified by its capture generation (`selectionId`), not by the
   activation id: the first capture selects before its activation is published.
   The worker waits with a timeout and stops on shutdown or a newer activation;

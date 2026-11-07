@@ -675,12 +675,15 @@ function goToSettings() {
   void ipcStore.callOrNotify('activate_mode', { mode: 'config' })
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (!aiProfilesStore.isLoaded) {
     void aiProfilesStore.loadAll()
   }
-  if (props.isPromptSent && prompt.value.trim()) {
-    void handleQuerySubmit()
+  // The models of a provider show up only when its key is known to be set;
+  // the quick window has not read the keys yet, or they changed since then.
+  await secretsStore.refreshSecrets().catch(() => undefined)
+  if (props.isPromptSent && prompt.value.trim() && !disposed) {
+    await handleQuerySubmit()
   }
 })
 

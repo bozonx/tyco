@@ -13,6 +13,12 @@
       v-if="imageUrl"
       :src="imageUrl"
       class="screenshot-selector-image"
+      :style="{
+        left: px(imageRect.x),
+        top: px(imageRect.y),
+        width: px(imageRect.width),
+        height: px(imageRect.height),
+      }"
       alt=""
       draggable="false"
     />
@@ -100,6 +106,7 @@ import {
   type Size,
   type ViewRect,
   dragRect,
+  fittedImageRect,
   isSelection,
   toPhysicalCrop,
 } from '../../lib/screenshot/area-selection'
@@ -119,7 +126,7 @@ const dragEnd = ref({ x: 0, y: 0 })
 /** The finished selection, kept until confirmed or redrawn. */
 const selected = ref<ViewRect | null>(null)
 
-function viewSize(): Size {
+function measureView(): Size {
   const root = rootRef.value
   return {
     width: root?.clientWidth || window.innerWidth,
@@ -127,20 +134,28 @@ function viewSize(): Size {
   }
 }
 
+// The window grows to the monitor after the selector mounts.
+const view = ref<Size>(measureView())
+const updateView = () => {
+  view.value = measureView()
+}
+
 const imageSize = computed<Size>(() => ({
   width: props.selection.width,
   height: props.selection.height,
 }))
 
+const imageRect = computed(() => fittedImageRect(view.value, imageSize.value))
+
 const shownRect = computed<ViewRect | null>(() => {
   if (!isDragging.value) return selected.value
-  const rect = dragRect(dragStart.value, dragEnd.value, viewSize())
+  const rect = dragRect(dragStart.value, dragEnd.value, imageRect.value)
   return isSelection(rect) ? rect : null
 })
 
 const badgeText = computed(() => {
   const rect = shownRect.value
-  const crop = rect && toPhysicalCrop(rect, viewSize(), imageSize.value)
+  const crop = rect && toPhysicalCrop(rect, imageRect.value, imageSize.value)
   return crop ? `${crop.width} × ${crop.height} px` : ''
 })
 
@@ -148,6 +163,7 @@ const px = (value: number) => `${value}px`
 
 function onPointerDown(e: PointerEvent) {
   if (e.button !== 0) return
+  updateView()
   isDragging.value = true
   dragStart.value = { x: e.clientX, y: e.clientY }
   dragEnd.value = { x: e.clientX, y: e.clientY }
@@ -162,7 +178,7 @@ function onPointerMove(e: PointerEvent) {
 function onPointerUp(e: PointerEvent) {
   if (!isDragging.value) return
   dragEnd.value = { x: e.clientX, y: e.clientY }
-  const rect = dragRect(dragStart.value, dragEnd.value, viewSize())
+  const rect = dragRect(dragStart.value, dragEnd.value, imageRect.value)
   isDragging.value = false
   ;(e.currentTarget as HTMLElement | null)?.releasePointerCapture?.(e.pointerId)
   // A click keeps the previous selection, so a double-click can confirm it.
@@ -171,7 +187,7 @@ function onPointerUp(e: PointerEvent) {
 
 function onConfirm() {
   if (isDragging.value || !selected.value) return
-  const crop = toPhysicalCrop(selected.value, viewSize(), imageSize.value)
+  const crop = toPhysicalCrop(selected.value, imageRect.value, imageSize.value)
   if (crop) emit('confirm', crop)
 }
 
@@ -193,6 +209,8 @@ function handleKeyDown(e: KeyboardEvent) {
 
 onMounted(async () => {
   window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('resize', updateView)
+  updateView()
   rootRef.value?.focus()
   try {
     const bytes = await getChatImage(props.selection.imageId)
@@ -206,6 +224,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('resize', updateView)
   if (imageUrl.value) {
     URL.revokeObjectURL(imageUrl.value)
     imageUrl.value = ''
@@ -223,15 +242,12 @@ onBeforeUnmount(() => {
   cursor: crosshair;
   overflow: hidden;
   outline: none;
+  background: #000000;
   z-index: var(--z-overlay, 99999);
 }
 
 .screenshot-selector-image {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
   pointer-events: none;
 }
 

@@ -150,7 +150,7 @@
         "screenshotCaptureMode": {
           "type": "string",
           "enum": ["screen", "area"],
-          "default": "screen"
+          "default": "area"
         }
       },
       "required": [

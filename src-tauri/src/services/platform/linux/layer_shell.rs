@@ -103,6 +103,18 @@ pub fn set_sheet_profile(window: &impl IsA<gtk::Window>, margin_top: i32) {
     }
 }
 
+/// Anchors the surface to every edge, so it covers its whole output.
+pub fn set_cover_profile(window: &impl IsA<gtk::Window>) {
+    let pointer = raw(window);
+    // SAFETY: the window was initialized by `attach` and remains alive.
+    unsafe {
+        for edge in [EDGE_TOP, EDGE_BOTTOM, EDGE_LEFT, EDGE_RIGHT] {
+            gtk_layer_set_anchor(pointer, edge, 1);
+            gtk_layer_set_margin(pointer, edge, 0);
+        }
+    }
+}
+
 pub fn set_keyboard(window: &impl IsA<gtk::Window>, keyboard: KeyboardMode) {
     let mode = match keyboard {
         KeyboardMode::None => KEYBOARD_NONE,

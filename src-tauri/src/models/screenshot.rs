@@ -4,8 +4,9 @@ use ts_rs::TS;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub enum ScreenshotCaptureMode {
-    #[default]
     Screen,
+    /// Captures the entire screen, then crops it in TyCo's selector.
+    #[default]
     Area,
 }
 

@@ -128,6 +128,54 @@ pub fn disable_panel_keyboard(_window: &WebviewWindow) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Makes the quick window cover one whole output for the screenshot area
+/// selector: on the given monitor where window placement works, otherwise
+/// on the output the compositor shows it on (Wayland).
+pub fn cover_output(
+    window: &WebviewWindow,
+    monitor: Option<(i32, i32, u32, u32)>,
+    layer: bool,
+) -> Result<(), AppError> {
+    #[cfg(target_os = "linux")]
+    {
+        set_panel_input_region(window, None)?;
+        if layer {
+            use super::linux::layer_shell::{self, KeyboardMode};
+            let gtk_window = window.gtk_window()?;
+            let (width, height) = layer_shell::monitor(&gtk_window)
+                .map(|m| (m.geometry().width(), m.geometry().height()))
+                .unwrap_or((0, 0));
+            window.with_webview(move |webview| {
+                webview.inner().set_size_request(width, height);
+            })?;
+            gtk_window.set_default_size(width.max(1), height.max(1));
+            layer_shell::set_cover_profile(&gtk_window);
+            layer_shell::set_keyboard(&gtk_window, KeyboardMode::Exclusive);
+            gtk_window.queue_resize();
+            // The next `apply_panel_surface` restores the panel geometry.
+            APPLIED_GEOMETRY.set(None);
+            return Ok(());
+        }
+    }
+    let _ = layer;
+    match monitor {
+        Some((x, y, width, height)) => {
+            window.set_position(tauri::PhysicalPosition::new(x, y))?;
+            window.set_size(tauri::PhysicalSize::new(width, height))?;
+        }
+        None => window.set_fullscreen(true)?,
+    }
+    Ok(())
+}
+
+/// Undoes `cover_output`; `apply_panel_surface` then lays out the panel again.
+pub fn uncover_output(window: &WebviewWindow, layer: bool) -> Result<(), AppError> {
+    if !layer && window.is_fullscreen()? {
+        window.set_fullscreen(false)?;
+    }
+    Ok(())
+}
+
 /// Whether the quick window can be a layer-shell surface, which takes its
 /// size and keyboard mode from `apply_panel_surface`; only Linux has them.
 pub fn is_layer_shell_supported() -> bool {

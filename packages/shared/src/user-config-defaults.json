@@ -42,7 +42,7 @@
     "isHiddenOnBlur": true,
     "isCorrectionPrefetchEnabled": false,
     "correctionMode": "onSubmit",
-    "screenshotCaptureMode": "screen"
+    "screenshotCaptureMode": "area"
   },
   "hotkeys": {
     "editor": "",

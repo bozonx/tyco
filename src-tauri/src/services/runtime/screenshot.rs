@@ -97,7 +97,8 @@ impl ScreenshotWindows for Windows<'_> {
     fn select_area(
         &self,
         selection_id: u64,
-        screen: platform::screenshot::Screen,
+        screen: Option<platform::screenshot::Screen>,
+        size: (u32, u32),
         image: &ChatImage,
         bytes: &[u8],
         is_live: &dyn Fn() -> bool,
@@ -111,7 +112,7 @@ impl ScreenshotWindows for Windows<'_> {
         }
         let crops = app.state::<ScreenshotCropCoordinator>();
         let receiver = crops.wait_for_crop(selection_id);
-        let crop = show_selector(app, selection_id, screen, &image.id)
+        let crop = show_selector(app, selection_id, screen, size, &image.id)
             .map(|()| wait_for_crop(&receiver, is_live));
         crops.clear(selection_id);
         images.lock().release_owner(SELECTOR_OWNER);
@@ -125,22 +126,16 @@ struct SavedGeometry {
     position: Option<tauri::PhysicalPosition<i32>>,
     size: Option<tauri::PhysicalSize<u32>>,
     always_on_top: bool,
+    layer: bool,
 }
 
 static SAVED_GEOMETRY: std::sync::Mutex<Option<SavedGeometry>> = std::sync::Mutex::new(None);
 
-fn monitor_scale(app: &AppHandle, screen: platform::screenshot::Screen) -> Option<f64> {
-    app.available_monitors()
-        .ok()?
-        .into_iter()
-        .find(|m| m.position().x == screen.x && m.position().y == screen.y)
-        .map(|m| m.scale_factor())
-}
-
 fn show_selector(
     app: &AppHandle,
     selection_id: u64,
-    screen: platform::screenshot::Screen,
+    screen: Option<platform::screenshot::Screen>,
+    (width, height): (u32, u32),
     image_id: &str,
 ) -> Result<(), AppError> {
     let image_id = image_id.to_owned();
@@ -148,18 +143,22 @@ fn show_selector(
         let window = app
             .get_webview_window(QUICK_WINDOW_LABEL)
             .ok_or_else(|| AppError::ServiceUnavailable("Quick window not found".into()))?;
+        let layer = super::panel_layer(app).is_some();
         *SAVED_GEOMETRY.lock().unwrap() = Some(SavedGeometry {
             position: window.outer_position().ok(),
             size: window.inner_size().ok(),
             always_on_top: window.is_always_on_top().unwrap_or(false),
+            layer,
         });
-        let scale_factor = monitor_scale(app, screen)
-            .or_else(|| window.scale_factor().ok())
-            .unwrap_or(1.0);
-        window.set_position(tauri::PhysicalPosition::new(screen.x, screen.y))?;
-        window.set_size(tauri::PhysicalSize::new(screen.width, screen.height))?;
+        platform::cover_output(
+            &window,
+            screen.map(|s| (s.x, s.y, s.width, s.height)),
+            layer,
+        )?;
         platform::set_window_opacity(&window, 1.0)?;
-        window.set_always_on_top(true)?;
+        if !layer {
+            window.set_always_on_top(true)?;
+        }
         window.show()?;
         platform::focus_window(&window)?;
         crate::events::emit::<crate::events::ScreenshotSelectArea, _>(
@@ -167,11 +166,11 @@ fn show_selector(
             crate::models::ScreenshotAreaSelection {
                 selection_id,
                 image_id,
-                screen_x: screen.x,
-                screen_y: screen.y,
-                width: screen.width,
-                height: screen.height,
-                scale_factor,
+                screen_x: screen.map_or(0, |s| s.x),
+                screen_y: screen.map_or(0, |s| s.y),
+                width,
+                height,
+                scale_factor: window.scale_factor().unwrap_or(1.0),
             },
         )?;
         Ok(())
@@ -188,12 +187,15 @@ fn hide_selector(app: &AppHandle) {
         crate::events::emit::<crate::events::ScreenshotSelectAreaClosed, _>(app, ())?;
         if let Some(window) = app.get_webview_window(QUICK_WINDOW_LABEL) {
             window.hide()?;
-            window.set_always_on_top(saved.always_on_top)?;
-            if let Some(size) = saved.size {
-                window.set_size(size)?;
-            }
-            if let Some(position) = saved.position {
-                window.set_position(position)?;
+            platform::uncover_output(&window, saved.layer)?;
+            if !saved.layer {
+                window.set_always_on_top(saved.always_on_top)?;
+                if let Some(size) = saved.size {
+                    window.set_size(size)?;
+                }
+                if let Some(position) = saved.position {
+                    window.set_position(position)?;
+                }
             }
         }
         Ok(())
@@ -237,13 +239,8 @@ impl ScreenshotSource for Source<'_> {
     fn capture(
         &self,
         screen: Option<platform::screenshot::Screen>,
-        mode: ScreenshotCaptureMode,
     ) -> Result<Option<platform::screenshot::Pixels>, AppError> {
-        platform::screenshot::capture(screen, mode)
-    }
-
-    fn selects_area_natively(&self) -> bool {
-        platform::screenshot::selects_area_natively()
+        platform::screenshot::capture(screen)
     }
 }
 

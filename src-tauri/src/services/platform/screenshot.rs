@@ -1,9 +1,5 @@
 //! Bounded, single-monitor capture. No window/runtime state crosses this boundary.
-use crate::{
-    errors::AppError,
-    models::{CropRect, ScreenshotCaptureMode},
-    services::chat_images::within_capture_limits,
-};
+use crate::{errors::AppError, models::CropRect, services::chat_images::within_capture_limits};
 
 #[cfg(target_os = "linux")]
 mod linux;
@@ -31,13 +27,6 @@ pub(crate) fn pixel_bytes(width: u32, height: u32) -> Result<usize, AppError> {
         ));
     }
     Ok(width as usize * height as usize * 4)
-}
-
-pub(crate) fn selects_area_natively() -> bool {
-    #[cfg(target_os = "linux")]
-    return linux::selects_area_natively();
-    #[cfg(not(target_os = "linux"))]
-    false
 }
 
 pub(crate) fn crop_pixels(pixels: &Pixels, rect: CropRect) -> Result<Pixels, AppError> {
@@ -89,21 +78,18 @@ pub(crate) fn screen() -> Result<Option<Screen>, AppError> {
     ))
 }
 
-pub(crate) fn capture(
-    screen: Option<Screen>,
-    mode: ScreenshotCaptureMode,
-) -> Result<Option<Pixels>, AppError> {
+/// Captures one entire screen; area selection crops the result afterwards.
+pub(crate) fn capture(screen: Option<Screen>) -> Result<Option<Pixels>, AppError> {
     #[cfg(target_os = "linux")]
-    return linux::capture(screen, mode);
+    return linux::capture(screen);
     #[cfg(target_os = "windows")]
     {
-        let _ = mode;
         windows::capture(screen.ok_or_else(|| AppError::invalid_input("Missing monitor"))?)
             .map(Some)
     }
     #[cfg(not(any(target_os = "linux", target_os = "windows")))]
     {
-        let _ = (screen, mode);
+        let _ = screen;
         Err(AppError::ServiceUnavailable(
             "Screenshot capture is unsupported on this platform".into(),
         ))

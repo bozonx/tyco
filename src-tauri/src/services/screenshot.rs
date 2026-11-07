@@ -31,10 +31,13 @@ pub(crate) trait ScreenshotWindows {
     /// Prompts the user to drag a selection rectangle over the frozen image.
     /// `selection_id` identifies this prompt in the confirm/cancel commands.
     /// Returns `None` on cancellation or as soon as `is_live` turns false.
+    /// `screen` is the captured monitor, or `None` when the system chose what
+    /// to capture (Wayland); `size` is the frozen image size in pixels.
     fn select_area(
         &self,
         selection_id: u64,
-        screen: Screen,
+        screen: Option<Screen>,
+        size: (u32, u32),
         image: &ChatImage,
         bytes: &[u8],
         is_live: &dyn Fn() -> bool,
@@ -46,12 +49,7 @@ pub(crate) trait ScreenshotSource {
     /// Waits for the compositor to drop the hidden windows; true when stopping.
     fn settle(&self) -> bool;
     fn is_stopped(&self) -> bool;
-    fn capture(
-        &self,
-        screen: Option<Screen>,
-        mode: ScreenshotCaptureMode,
-    ) -> Result<Option<Pixels>, AppError>;
-    fn selects_area_natively(&self) -> bool;
+    fn capture(&self, screen: Option<Screen>) -> Result<Option<Pixels>, AppError>;
 }
 
 pub(crate) type Capture = Result<Option<(ChatImage, Vec<u8>)>, AppError>;
@@ -95,21 +93,22 @@ pub(crate) fn capture(
     if source.settle() || !coordinator.is_current(request) {
         return Ok(None);
     }
-    let pixels = source.capture(screen, mode)?;
+    // Area mode captures the entire screen too and crops it in the selector.
+    let pixels = source.capture(screen)?;
     if source.is_stopped() || !coordinator.is_current(request) {
         return Ok(None);
     }
     let Some(pixels) = pixels else {
         return Ok(None);
     };
-    let pixels = if mode == ScreenshotCaptureMode::Area && !source.selects_area_natively() {
-        let screen = screen.ok_or_else(|| AppError::invalid_input("Missing monitor"))?;
+    let pixels = if mode == ScreenshotCaptureMode::Area {
         let (full_image, full_bytes) =
             ChatImageStore::prepare_capture(&pixels.bytes, pixels.width, pixels.height)?;
         let is_live = || !source.is_stopped() && coordinator.is_current(request);
         let crop = windows.select_area(
             request.generation,
             screen,
+            (pixels.width, pixels.height),
             &full_image,
             &full_bytes,
             &is_live,
@@ -175,6 +174,7 @@ mod tests {
         hide_fails: bool,
         log: RefCell<Vec<&'static str>>,
         area_crop: RefCell<Option<Option<CropRect>>>,
+        selector_size: Cell<Option<(u32, u32)>>,
     }
 
     impl ScreenshotWindows for Windows {
@@ -195,19 +195,20 @@ mod tests {
         fn select_area(
             &self,
             _selection_id: u64,
-            _screen: Screen,
+            _screen: Option<Screen>,
+            size: (u32, u32),
             _image: &ChatImage,
             _bytes: &[u8],
             _is_live: &dyn Fn() -> bool,
         ) -> Result<Option<CropRect>, AppError> {
             self.log.borrow_mut().push("select_area");
+            self.selector_size.set(Some(size));
             Ok(self.area_crop.borrow_mut().take().unwrap_or(None))
         }
     }
 
     struct Source<'a> {
         stopped: bool,
-        native_area: bool,
         result: RefCell<Option<Result<Option<Pixels>, AppError>>>,
         screens: RefCell<Vec<Option<(i32, i32)>>>,
         captures: Cell<usize>,
@@ -219,7 +220,6 @@ mod tests {
         fn returning(result: Result<Option<Pixels>, AppError>) -> Self {
             Self {
                 stopped: false,
-                native_area: false,
                 result: RefCell::new(Some(result)),
                 screens: RefCell::default(),
                 captures: Cell::new(0),
@@ -235,20 +235,13 @@ mod tests {
         fn is_stopped(&self) -> bool {
             self.stopped
         }
-        fn capture(
-            &self,
-            screen: Option<Screen>,
-            _mode: ScreenshotCaptureMode,
-        ) -> Result<Option<Pixels>, AppError> {
+        fn capture(&self, screen: Option<Screen>) -> Result<Option<Pixels>, AppError> {
             self.captures.set(self.captures.get() + 1);
             self.screens.borrow_mut().push(screen.map(|s| (s.x, s.y)));
             if let Some(during) = self.during {
                 during();
             }
             self.result.borrow_mut().take().unwrap()
-        }
-        fn selects_area_natively(&self) -> bool {
-            self.native_area
         }
     }
 
@@ -379,13 +372,49 @@ mod tests {
     }
 
     #[test]
-    fn native_area_capture_skips_ui_selector() {
+    fn area_selection_runs_over_a_system_chosen_capture() {
+        // Wayland: no monitor is known, the selector covers the frozen image.
         let coordinator = ActivationCoordinator::default();
-        let windows = Windows::default();
+        let windows = Windows {
+            area_crop: RefCell::new(Some(Some(CropRect {
+                x: 0,
+                y: 0,
+                width: 40,
+                height: 30,
+            }))),
+            ..Windows::default()
+        };
         let request = begin(&coordinator, &windows).unwrap();
-        let mut source = Source::returning(Ok(Some(pixels(500, 300))));
-        source.native_area = true;
+        let source = Source::returning(Ok(Some(pixels(3840, 1080))));
         let (image, _) = capture(
+            &coordinator,
+            &request,
+            &source,
+            &windows,
+            None,
+            ScreenshotCaptureMode::Area,
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!((image.width_px, image.height_px), (40, 30));
+        assert_eq!(windows.selector_size.get(), Some((3840, 1080)));
+    }
+
+    #[test]
+    fn a_selection_out_of_the_image_is_rejected() {
+        let coordinator = ActivationCoordinator::default();
+        let windows = Windows {
+            area_crop: RefCell::new(Some(Some(CropRect {
+                x: 1900,
+                y: 0,
+                width: 40,
+                height: 30,
+            }))),
+            ..Windows::default()
+        };
+        let request = begin(&coordinator, &windows).unwrap();
+        let source = Source::returning(Ok(Some(pixels(1920, 1080))));
+        assert!(capture(
             &coordinator,
             &request,
             &source,
@@ -393,10 +422,7 @@ mod tests {
             Some(screen()),
             ScreenshotCaptureMode::Area,
         )
-        .unwrap()
-        .unwrap();
-        assert_eq!((image.width_px, image.height_px), (500, 300));
-        assert_eq!(*windows.log.borrow(), ["hide"]);
+        .is_err());
     }
 
     #[test]

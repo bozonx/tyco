@@ -307,9 +307,9 @@ describe('SettingsGlobalActionsTab.vue', () => {
       name: 'FieldSelect',
     })
     expect(selectComponent.exists()).toBe(true)
-    expect(selectComponent.props('modelValue')).toBe('screen')
+    expect(selectComponent.props('modelValue')).toBe('area')
 
-    await selectComponent.vm.$emit('update:modelValue', 'area')
-    expect(context.draft.value.quickWindow.screenshotCaptureMode).toBe('area')
+    await selectComponent.vm.$emit('update:modelValue', 'screen')
+    expect(context.draft.value.quickWindow.screenshotCaptureMode).toBe('screen')
   })
 })
