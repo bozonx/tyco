@@ -60,7 +60,10 @@ describe('HistoryView.vue', () => {
         stubs: {
           Icon: true,
           Button: true,
-          SearchInput: true,
+          SearchInput: {
+            methods: { focus: () => {} },
+            template: '<div class="search-input-stub" />',
+          },
           HistoryList: {
             props: ['items'],
             template:
@@ -251,5 +254,69 @@ describe('HistoryView.vue', () => {
     await flushPromises()
     expect(wrapper.findAll('.item')).toHaveLength(2)
     expect(wrapper.find('.filtered').text()).toBe('false')
+  })
+
+  it('matches search query in turn result', async () => {
+    const historyStore = useHistoryStore()
+    vi.spyOn(historyStore, 'loadEditorHistory').mockImplementation(async () => {
+      historyStore.editorHistory = [
+        {
+          id: 'turn-item',
+          kind: 'source',
+          operation: 'correction',
+          text: 'base output',
+          result: 'transformed output',
+          turns: [
+            {
+              id: 't1',
+              prompt: 'summarize',
+              result: 'special-needle in turn result',
+              createdAt: 1,
+            },
+          ],
+          createdAt: 1,
+        } as any,
+        {
+          id: 'other-item',
+          kind: 'source',
+          operation: 'correction',
+          text: 'unrelated text',
+          result: 'other result',
+          createdAt: 1,
+        } as any,
+      ]
+    })
+    const wrapper = mount(HistoryView, {
+      global: {
+        stubs: {
+          SearchInput: {
+            props: ['modelValue'],
+            emits: ['update:modelValue'],
+            methods: { focus: () => {} },
+            template:
+              '<input class="search-input" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+          },
+          HistoryList: {
+            props: ['items', 'searchQuery'],
+            computed: {
+              filtered() {
+                const q = this.searchQuery?.trim().toLowerCase()
+                if (!q) return this.items
+                return this.items.filter((i: any) =>
+                  [i.value, i.searchText].join('\n').toLowerCase().includes(q)
+                )
+              },
+            },
+            template:
+              '<div class="history-list-stub"><slot name="search" /><div v-for="item in filtered" :key="item.id" class="item">{{ item.value }}</div></div>',
+          },
+        },
+      },
+    })
+    await flushPromises()
+    expect(wrapper.findAll('.item')).toHaveLength(2)
+
+    await wrapper.find('.search-input').setValue('special-needle')
+    expect(wrapper.findAll('.item')).toHaveLength(1)
   })
 })

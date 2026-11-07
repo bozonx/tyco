@@ -89,7 +89,10 @@ describe('settings navigation', () => {
     expect(
       groups.map((group) => [group.label, group.items.map((item) => item.id)])
     ).toEqual([
-      [undefined, ['general', 'global-actions', 'editor', 'accessibility']],
+      [
+        undefined,
+        ['general', 'global-actions', 'editor', 'history', 'accessibility'],
+      ],
       [
         'settings.aiCategory',
         ['llm', 'stt', 'chat', 'translations', 'correction', 'ai-profiles'],

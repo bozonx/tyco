@@ -265,7 +265,7 @@ describe('Settings.vue', () => {
           list.findAll('button').map((btn) => btn.attributes('data-key'))
         )
     ).toEqual([
-      ['general', 'global-actions', 'editor', 'accessibility'],
+      ['general', 'global-actions', 'editor', 'history', 'accessibility'],
       ['llm', 'stt', 'chat', 'translations', 'correction', 'ai-profiles'],
       [
         'main-actions',
