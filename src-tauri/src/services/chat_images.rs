@@ -161,6 +161,7 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
         output.height,
         output.color_type == png::ColorType::Rgba,
         name,
+        true,
     )
 }
 
@@ -170,23 +171,26 @@ fn encode_pixels(
     height: u32,
     rgba: bool,
     name: Option<String>,
+    lossless: bool,
 ) -> Result<(ChatImage, Vec<u8>), AppError> {
     let encoder = if rgba {
         webp::Encoder::from_rgba(pixels, width, height)
     } else {
         webp::Encoder::from_rgb(pixels, width, height)
     };
-    if let Ok(encoded) = encoder.encode_simple(true, 75.0) {
-        if encoded.len() <= MAX_IMAGE_BYTES {
-            let image = ChatImage {
-                id: sha256_hex(&*encoded),
-                media_type: crate::models::ChatImageMediaType::Webp,
-                width_px: width,
-                height_px: height,
-                size_bytes: encoded.len(),
-                name: name.map(|name| name.chars().take(255).collect()),
-            };
-            return Ok((image, encoded.to_vec()));
+    if lossless {
+        if let Ok(encoded) = encoder.encode_simple(true, 75.0) {
+            if encoded.len() <= MAX_IMAGE_BYTES {
+                let image = ChatImage {
+                    id: sha256_hex(&*encoded),
+                    media_type: crate::models::ChatImageMediaType::Webp,
+                    width_px: width,
+                    height_px: height,
+                    size_bytes: encoded.len(),
+                    name: name.map(|name| name.chars().take(255).collect()),
+                };
+                return Ok((image, encoded.to_vec()));
+            }
         }
     }
     for quality in WEBP_QUALITIES {
@@ -294,10 +298,10 @@ impl ChatImageStore {
         let (out_width, out_height) = capture_size(width, height);
         let name = Some("Screenshot.webp".to_string());
         if (out_width, out_height) == (width, height) {
-            return encode_pixels(pixels, width, height, true, name);
+            return encode_pixels(pixels, width, height, true, name, false);
         }
         let resized = downscale(pixels, width, height, out_width, out_height);
-        encode_pixels(&resized, out_width, out_height, true, name)
+        encode_pixels(&resized, out_width, out_height, true, name, false)
     }
 
     pub fn remember(&mut self, image: ChatImage, bytes: Vec<u8>) -> Result<(), AppError> {
