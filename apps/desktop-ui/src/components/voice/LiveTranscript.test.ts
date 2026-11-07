@@ -68,6 +68,18 @@ describe('LiveTranscript', () => {
     expect(wrapper.text()).toContain('After')
   })
 
+  it('hides cursors when isFinishing is true', () => {
+    const placeholderWrapper = mount(LiveTranscript, {
+      props: { committed: '', draft: '', isFinishing: true },
+    })
+    expect(placeholderWrapper.find('.placeholder-cursor').exists()).toBe(false)
+
+    const contentWrapper = mount(LiveTranscript, {
+      props: { committed: 'Hello', draft: '', isFinishing: true },
+    })
+    expect(contentWrapper.find('.live-transcript-cursor').exists()).toBe(false)
+  })
+
   it('exposes a polite live region for screen readers', () => {
     const wrapper = mount(LiveTranscript, {
       props: { committed: 'testing', draft: '' },

@@ -4,7 +4,7 @@
 use super::{activate_on_main_thread, on_main_thread, MAIN_WINDOW_LABEL, QUICK_WINDOW_LABEL};
 use crate::{
     errors::AppError,
-    models::ChatImage,
+    models::{ChatImage, CropRect, ScreenshotCaptureMode},
     services::{
         activation::{coordinator::ActivationCoordinator, Activation},
         background::BackgroundServices,
@@ -15,6 +15,55 @@ use crate::{
     state::AppState,
 };
 use tauri::{AppHandle, Manager};
+
+#[derive(Default)]
+pub struct ScreenshotCropCoordinator {
+    pending: std::sync::Mutex<Option<(u64, std::sync::mpsc::SyncSender<Option<CropRect>>)>>,
+}
+
+impl ScreenshotCropCoordinator {
+    pub fn wait_for_crop(
+        &self,
+        activation_id: u64,
+    ) -> (
+        std::sync::mpsc::Receiver<Option<CropRect>>,
+        impl FnOnce() + '_,
+    ) {
+        let (sender, receiver) = std::sync::mpsc::sync_channel(1);
+        *self.pending.lock().unwrap() = Some((activation_id, sender));
+        let cleanup = move || {
+            let mut guard = self.pending.lock().unwrap();
+            if guard.as_ref().map(|(id, _)| *id) == Some(activation_id) {
+                *guard = None;
+            }
+        };
+        (receiver, cleanup)
+    }
+
+    pub fn confirm(&self, activation_id: u64, crop: CropRect) -> bool {
+        let mut guard = self.pending.lock().unwrap();
+        if let Some((id, sender)) = guard.take() {
+            if id == activation_id {
+                let _ = sender.send(Some(crop));
+                return true;
+            }
+            *guard = Some((id, sender));
+        }
+        false
+    }
+
+    pub fn cancel(&self, activation_id: u64) -> bool {
+        let mut guard = self.pending.lock().unwrap();
+        if let Some((id, sender)) = guard.take() {
+            if id == activation_id {
+                let _ = sender.send(None);
+                return true;
+            }
+            *guard = Some((id, sender));
+        }
+        false
+    }
+}
 
 struct Windows<'a>(&'a AppHandle);
 
@@ -45,16 +94,78 @@ impl ScreenshotWindows for Windows<'_> {
         if let Some(window) = app.get_webview_window(label) {
             platform::set_window_opacity(&window, 1.0)?;
             if label == QUICK_WINDOW_LABEL {
-                platform::apply_panel_surface(
-                    &window,
-                    snapshot.window.window_profile,
-                    super::panel_layer(app),
-                )?;
+                let layer = super::panel_layer(app);
+                if layer.is_none() {
+                    let (width, height) = super::WINDOW_SIZE;
+                    let _ = window.set_size(tauri::LogicalSize::new(width, height));
+                }
+                platform::apply_panel_surface(&window, snapshot.window.window_profile, layer)?;
             }
             window.show()?;
             platform::focus_window(&window)?;
         }
         Ok(())
+    }
+
+    fn select_area(
+        &self,
+        screen: platform::screenshot::Screen,
+        image: &ChatImage,
+        bytes: &[u8],
+    ) -> Result<Option<CropRect>, AppError> {
+        let app = self.0;
+        let images = app.state::<ChatImages>();
+        images.lock().remember(image.clone(), bytes.to_vec())?;
+        images
+            .lock()
+            .sync(orchestration::OWNER, std::slice::from_ref(&image.id))?;
+
+        let activation_id = app.state::<AppState>().snapshot().activation.activation_id;
+        let crop_coordinator = app.state::<ScreenshotCropCoordinator>();
+        let (receiver, cleanup) = crop_coordinator.wait_for_crop(activation_id);
+
+        let window = app
+            .get_webview_window(QUICK_WINDOW_LABEL)
+            .ok_or_else(|| AppError::ServiceUnavailable("Quick window not found".into()))?;
+
+        let scale_factor = window.scale_factor().unwrap_or(1.0);
+        let screen_x = screen.x;
+        let screen_y = screen.y;
+        let width = screen.width;
+        let height = screen.height;
+        let image_id = image.id.clone();
+
+        on_main_thread(app, move |app| {
+            if let Some(w) = app.get_webview_window(QUICK_WINDOW_LABEL) {
+                let _ = w.set_position(tauri::Position::Physical(tauri::PhysicalPosition::new(
+                    screen_x, screen_y,
+                )));
+                let _ = w.set_size(tauri::Size::Physical(tauri::PhysicalSize::new(
+                    width, height,
+                )));
+                let _ = platform::set_window_opacity(&w, 1.0);
+                let _ = w.set_always_on_top(true);
+                let _ = w.show();
+                let _ = platform::focus_window(&w);
+            }
+            crate::events::emit::<crate::events::ScreenshotSelectArea, _>(
+                app,
+                crate::models::ScreenshotAreaSelection {
+                    activation_id,
+                    image_id,
+                    screen_x,
+                    screen_y,
+                    width,
+                    height,
+                    scale_factor,
+                },
+            )?;
+            Ok(())
+        })?;
+
+        let crop = receiver.recv().unwrap_or(None);
+        cleanup();
+        Ok(crop)
     }
 }
 
@@ -76,24 +187,21 @@ impl ScreenshotSource for Source<'_> {
     fn capture(
         &self,
         screen: Option<platform::screenshot::Screen>,
+        mode: ScreenshotCaptureMode,
     ) -> Result<Option<platform::screenshot::Pixels>, AppError> {
-        platform::screenshot::capture(screen)
+        platform::screenshot::capture(screen, mode)
     }
 
-    fn image_quality(&self) -> String {
-        self.0
-            .state::<AppState>()
-            .user_config()
-            .pointer("/llm/imageQuality")
-            .and_then(|v| v.as_str())
-            .unwrap_or("balanced")
-            .to_string()
+    fn selects_area_natively(&self) -> bool {
+        platform::screenshot::selects_area_natively()
     }
 }
 
 pub(super) fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppError> {
     // Resolve the monitor and the insertion target before any window changes.
     let screen = platform::screenshot::screen()?;
+    let mode =
+        crate::models::user_config::screenshot_capture_mode(&app.state::<AppState>().user_config());
     activation.target_window_id =
         platform::capture_foreground_target().map(platform::ForegroundTarget::into_platform_id);
     let handle = app.clone();
@@ -107,7 +215,9 @@ pub(super) fn activate(app: &AppHandle, mut activation: Activation) -> Result<()
                     &worker.state::<ActivationCoordinator>(),
                     &request,
                     &Source(&worker),
+                    &Windows(&worker),
                     screen,
+                    mode,
                 );
                 if stop.is_stopped() {
                     return;
@@ -141,7 +251,14 @@ pub(super) fn activate(app: &AppHandle, mut activation: Activation) -> Result<()
 }
 
 /// Retake without replacing the activation or its frontend question/conversation.
-pub fn retake(app: &AppHandle, activation_id: u64) -> Result<Option<ChatImage>, AppError> {
+pub fn retake(
+    app: &AppHandle,
+    activation_id: u64,
+    mode: Option<ScreenshotCaptureMode>,
+) -> Result<Option<ChatImage>, AppError> {
+    let mode = mode.unwrap_or_else(|| {
+        crate::models::user_config::screenshot_capture_mode(&app.state::<AppState>().user_config())
+    });
     let screen = platform::screenshot::screen()?;
     let (sender, receiver) = std::sync::mpsc::sync_channel(1);
     on_main_thread(app, move |app| {
@@ -158,7 +275,9 @@ pub fn retake(app: &AppHandle, activation_id: u64) -> Result<Option<ChatImage>, 
         &app.state::<ActivationCoordinator>(),
         &request,
         &Source(app),
+        &Windows(app),
         screen,
+        mode,
     );
     let (sender, receiver) = std::sync::mpsc::sync_channel(1);
     on_main_thread(app, move |app| {
@@ -188,6 +307,25 @@ pub fn retake(app: &AppHandle, activation_id: u64) -> Result<Option<ChatImage>, 
     receiver
         .recv()
         .map_err(|e| AppError::Failed(e.to_string()))?
+}
+
+pub fn confirm_crop(app: &AppHandle, activation_id: u64, crop: CropRect) -> Result<(), AppError> {
+    ensure_current(app, activation_id)?;
+    if !app
+        .state::<ScreenshotCropCoordinator>()
+        .confirm(activation_id, crop)
+    {
+        return Err(stale());
+    }
+    Ok(())
+}
+
+pub fn cancel_crop(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
+    ensure_current(app, activation_id)?;
+    let _ = app
+        .state::<ScreenshotCropCoordinator>()
+        .cancel(activation_id);
+    Ok(())
 }
 
 fn stale() -> AppError {

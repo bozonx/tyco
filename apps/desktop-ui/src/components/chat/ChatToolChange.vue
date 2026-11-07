@@ -75,6 +75,7 @@ const summary = computed(() =>
 }
 .tool-change-lines {
   overflow: auto;
+  overscroll-behavior: contain;
   max-height: 20rem;
   margin: 0;
   padding: var(--space-xs) 0;

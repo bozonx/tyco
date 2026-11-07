@@ -50,6 +50,8 @@ fn main() {
             "open_screenshot_chat",
             "retake_screenshot",
             "remove_screenshot",
+            "confirm_screenshot_crop",
+            "cancel_screenshot_crop",
             "activate_mode",
             "add_ai_profile_memory_fact",
             "add_editor_history_item",

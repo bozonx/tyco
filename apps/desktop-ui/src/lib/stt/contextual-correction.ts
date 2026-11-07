@@ -245,6 +245,9 @@ export function createContextualCorrectionModel(
 
   return {
     update,
+    markFinishing() {
+      finishing = true
+    },
     /**
      * Manual changes belong to the user; even a pending reply cannot overwrite
      * them.

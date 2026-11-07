@@ -1,7 +1,7 @@
 <template>
   <ActionOverlayLayout :title="t('settings.selectAction')" esc-mode="back">
     <template #preview>
-      <div class="flex flex-col gap-2 p-3 overflow-y-auto h-full">
+      <div class="flex flex-col gap-2 p-3 overflow-y-auto overscroll-contain h-full">
         <Button
           v-for="action in actions"
           :key="action.id"

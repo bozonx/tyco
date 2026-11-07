@@ -157,7 +157,8 @@ function handleCancel() {
 
 function handleKeyDown(event: KeyboardEvent) {
   if (!props.allowBufferedIntent) return
-  if (event.ctrlKey || event.altKey || event.metaKey || event.isComposing) return
+  if (event.ctrlKey || event.altKey || event.metaKey || event.isComposing)
+    return
 
   if (event.code === 'Escape' || event.key === 'Escape') {
     if (menuModalsStore.bufferedIntent) {

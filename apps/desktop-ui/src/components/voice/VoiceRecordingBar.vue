@@ -3,7 +3,7 @@
     class="voice-bar"
     :class="{ 'with-styling': Boolean(slots) }"
     role="region"
-    :aria-label="t('menu.listening')"
+    :aria-label="ariaLabel"
   >
     <LiveTranscript
       class="voice-bar-transcript"
@@ -11,6 +11,7 @@
       :draft="transcript.draft"
       :prefix="prefix"
       :suffix="suffix"
+      :is-finishing="isFinishing"
     />
     <div
       v-if="slots"
@@ -40,6 +41,8 @@
           :peak="audioPeak"
           :duration-ms="recordingDurationMs"
           :is-transcribing="isTranscribing"
+          :is-correcting="isCorrecting"
+          :is-styling="isStyling"
         />
       </div>
       <VoiceAutoStopNotice :deadline-ms="autoStopDeadlineMs" />
@@ -70,6 +73,13 @@ import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 
 const props = defineProps<VoiceRecordingProps>()
 const { t } = useI18n()
+
+const ariaLabel = computed(() => {
+  if (props.isCorrecting) return t('menu.correction')
+  if (props.isStyling) return t('menu.styling')
+  if (props.isTranscribing) return t('menu.transcribing')
+  return t('menu.listening')
+})
 
 const slots = computed(() => {
   if (!props.stylingPresets || !props.stylingPresets.length) return null

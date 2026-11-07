@@ -6,6 +6,7 @@
       {
         'has-modal': hasModal,
         'is-hidden': !desktopStore.desktopState.isWindowShown,
+        'is-selecting-area': Boolean(activeAreaSelection),
       },
     ]"
     @pointerdown="handleRootPointerDown"
@@ -19,7 +20,17 @@
     >
       {{ t('window.clickToFocus') }}
     </div>
-    <div ref="cardRef" class="quick-overlay-card">
+    <ScreenshotSelector
+      v-if="activeAreaSelection"
+      :selection="activeAreaSelection"
+      @confirm="onConfirmCrop"
+      @cancel="onCancelCrop"
+    />
+    <div
+      v-show="!activeAreaSelection"
+      ref="cardRef"
+      class="quick-overlay-card"
+    >
       <div v-show="currentMode === 'quickInput'" class="quick-mode-layer">
         <WriteView />
       </div>
@@ -130,6 +141,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useQuickWindowSession } from '../../composables/use-quick-window-session'
+import { desktopClient } from '../../lib/desktop/client'
 import { getDesktopWindow as getCurrentWindow } from '../../lib/desktop/window'
 import { resultOrThrow } from '../../lib/ipc/ipc-model'
 import { clientLogger } from '../../lib/logger'
@@ -158,6 +170,12 @@ import VoiceChatView from '../../views/VoiceChatView.vue'
 import VoiceCommandsView from '../../views/VoiceCommandsView.vue'
 import VoiceView from '../../views/VoiceView.vue'
 import WriteView from '../../views/WriteView.vue'
+import ScreenshotSelector from '../screenshot/ScreenshotSelector.vue'
+import {
+  type CropRect,
+  DESKTOP_EVENTS,
+  type ScreenshotAreaSelection,
+} from '@tyco/shared'
 
 const ipcStore = useIpcStore()
 const desktopStore = useDesktopStore()
@@ -184,8 +202,31 @@ const isPanelMode = computed(
     (currentMode.value === 'voice' && !voiceResultShown.value)
 )
 
+const activeAreaSelection = ref<ScreenshotAreaSelection | null>(null)
+let stopSelectAreaListener: (() => void) | undefined
+
+const onConfirmCrop = async (crop: CropRect) => {
+  const selection = activeAreaSelection.value
+  activeAreaSelection.value = null
+  if (!selection) return
+  await ipcStore.call('confirm_screenshot_crop', {
+    activationId: selection.activationId,
+    crop,
+  })
+}
+
+const onCancelCrop = async () => {
+  const selection = activeAreaSelection.value
+  activeAreaSelection.value = null
+  if (!selection) return
+  await ipcStore.call('cancel_screenshot_crop', {
+    activationId: selection.activationId,
+  })
+}
+
 const isSheet = computed(() => {
   return (
+    Boolean(activeAreaSelection.value) ||
     !isPanelMode.value ||
     menuModalsStore.currentModal !== MenuModals.NONE ||
     Boolean(menuModalsStore.pendingModal)
@@ -256,7 +297,8 @@ const focusLoss = createFocusLossWatcher({
     // a hidden window has nothing to dismiss
     return !(await window.isVisible()) || (await window.isFocused())
   },
-  canDismiss: session.canDismissOnFocusLoss,
+  canDismiss: () =>
+    !activeAreaSelection.value && session.canDismissOnFocusLoss(),
   onLost: session.dismissOnBlur,
 })
 let removeFocusListener: (() => void) | undefined
@@ -279,6 +321,7 @@ watch(
 /** The input alone shows it by its frame; a hint there would cover the page. */
 const showFocusHint = computed(
   () =>
+    !activeAreaSelection.value &&
     !isWindowFocused.value &&
     isSheet.value &&
     Boolean(desktopStore.desktopState.isWindowShown)
@@ -287,6 +330,7 @@ let unmounted = false
 
 const measureInputRegion = (): InputRegion | null => {
   if (
+    activeAreaSelection.value ||
     isSheet.value ||
     !desktopStore.desktopState.isWindowShown ||
     !cardRef.value
@@ -360,6 +404,21 @@ onMounted(() => {
     .catch((error: unknown) =>
       clientLogger.error('Could not watch window focus', error, 'quick')
     )
+  void desktopClient
+    .listen(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA, (payload) => {
+      activeAreaSelection.value = payload
+    })
+    .then((remove) => {
+      if (unmounted) remove()
+      else stopSelectAreaListener = remove
+    })
+    .catch((error: unknown) =>
+      clientLogger.error(
+        'Could not watch screenshot area select',
+        error,
+        'quick'
+      )
+    )
 })
 
 onUnmounted(() => {
@@ -372,6 +431,7 @@ onUnmounted(() => {
   focusLoss.dispose()
   windowFocus.dispose()
   removeFocusListener?.()
+  stopSelectAreaListener?.()
   delete document.documentElement.dataset.windowFocused
 })
 
@@ -382,12 +442,23 @@ watch([currentMode, () => desktopStore.desktopState.isWindowShown], () => {
 watch(
   [
     isSheet,
+    activeAreaSelection,
     // the input and the voice bar are both panels, of different sizes
     currentMode,
     () => desktopStore.desktopState.isWindowShown,
     () => desktopStore.desktopState.activationId,
   ],
   updateInputRegionAfterRender
+)
+
+watch(
+  [
+    () => desktopStore.desktopState.activationId,
+    () => desktopStore.desktopState.isWindowShown,
+  ],
+  () => {
+    activeAreaSelection.value = null
+  }
 )
 
 // Keep focus in the input field when window is shown or hidden so focus arrives immediately
@@ -442,6 +513,10 @@ watch(
 
 .quick-overlay-root.is-panel {
   justify-content: flex-end;
+}
+
+.quick-overlay-root.is-selecting-area {
+  padding: 0;
 }
 
 .quick-overlay-root.is-sheet {

@@ -25,6 +25,7 @@ export const editorTheme: Extension = EditorView.theme({
     fontSize: 'var(--editor-font-size)',
     lineHeight: 'var(--editor-line-height)',
     overflow: 'auto',
+    overscrollBehavior: 'contain',
   },
   '.cm-content': {
     padding: 'var(--editor-padding)',

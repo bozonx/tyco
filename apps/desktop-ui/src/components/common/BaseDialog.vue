@@ -88,6 +88,7 @@ onBeforeUnmount(() => {
   margin: auto;
   padding: var(--space-lg);
   overflow: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
   background: var(--app-surface-raised);

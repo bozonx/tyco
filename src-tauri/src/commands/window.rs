@@ -82,12 +82,27 @@ pub fn set_tray_menu_labels(
 pub async fn retake_screenshot(
     app: AppHandle,
     activation_id: u64,
+    mode: Option<crate::models::ScreenshotCaptureMode>,
 ) -> Result<Option<crate::models::ChatImage>, AppError> {
     let services = app.state::<crate::services::background::BackgroundServices>();
     let handle = app.clone();
     services
-        .run_blocking(move || runtime::screenshot::retake(&handle, activation_id))
+        .run_blocking(move || runtime::screenshot::retake(&handle, activation_id, mode))
         .await?
+}
+
+#[tauri::command]
+pub fn confirm_screenshot_crop(
+    app: AppHandle,
+    activation_id: u64,
+    crop: crate::models::CropRect,
+) -> Result<(), AppError> {
+    runtime::screenshot::confirm_crop(&app, activation_id, crop)
+}
+
+#[tauri::command]
+pub fn cancel_screenshot_crop(app: AppHandle, activation_id: u64) -> Result<(), AppError> {
+    runtime::screenshot::cancel_crop(&app, activation_id)
 }
 
 #[tauri::command]

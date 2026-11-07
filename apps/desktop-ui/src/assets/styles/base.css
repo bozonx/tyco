@@ -16,12 +16,14 @@
     text-rendering: optimizeLegibility;
     /* Desktop-only: disable text selection on UI chrome */
     user-select: none;
+    overscroll-behavior: none;
   }
 
   body {
     margin: 0;
     padding: 0;
     overflow: hidden; /* Tauri window manages its own scrolling */
+    overscroll-behavior: none;
     background-color: transparent;
     color: var(--color-base-content);
   }
@@ -41,6 +43,12 @@
   [contenteditable],
   .selectable {
     user-select: text;
+  }
+
+  /* Prevent scroll chaining on inputs and editors */
+  textarea,
+  .cm-scroller {
+    overscroll-behavior: contain;
   }
 
   /* Set by useSortableList while a list item is being dragged */

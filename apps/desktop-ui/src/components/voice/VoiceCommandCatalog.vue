@@ -150,6 +150,7 @@ const onCatalogKeyDown = (event: KeyboardEvent) => {
 .voice-catalog {
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--space-xs);
   border-left: 1px solid var(--app-border-subtle);
 }

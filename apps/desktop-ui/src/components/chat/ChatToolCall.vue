@@ -218,6 +218,7 @@ const argumentsPreview = computed(() => {
 }
 .tool-call-details pre {
   overflow: auto;
+  overscroll-behavior: contain;
   max-height: 16rem;
   margin: 0;
   padding: var(--space-xs) var(--space-sm);

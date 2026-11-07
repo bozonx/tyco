@@ -30,6 +30,7 @@ pre {
   margin: 0;
   padding: var(--space-md) var(--space-lg);
   overflow-y: auto;
+  overscroll-behavior: contain;
   font-family: var(--font-sans);
   font-size: var(--preview-font-size);
   line-height: var(--preview-line-height);

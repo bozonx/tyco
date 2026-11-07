@@ -163,6 +163,7 @@ const groups = computed(() =>
   min-height: 0;
   padding-right: var(--space-xs);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .history-group + .history-group {

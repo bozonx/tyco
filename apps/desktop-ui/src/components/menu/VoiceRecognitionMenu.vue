@@ -7,6 +7,8 @@
     :recording-duration-ms="recordingDurationMs"
     :auto-stop-deadline-ms="autoStopWarning?.deadlineMs"
     :is-transcribing="isTranscribing"
+    :is-correcting="isCorrecting"
+    :is-styling="isStyling"
     :is-finishing="isFinishing"
     :finish-behavior="props.finishBehavior"
     :finish-hotkey="finishHotkey"
@@ -172,6 +174,8 @@ const {
   isFinishing,
   isStarted,
   isTranscribing,
+  isCorrecting,
+  isStyling,
   cancel,
   finish,
   finishWithStyle,

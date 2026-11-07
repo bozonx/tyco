@@ -774,6 +774,7 @@ onUnmounted(() => {
   gap: var(--space-md);
   margin-top: var(--space-sm);
   overflow-y: auto;
+  overscroll-behavior: contain;
   max-height: 380px;
   padding-right: var(--space-xs);
 }

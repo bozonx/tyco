@@ -235,6 +235,7 @@ defineExpose({
   padding: var(--space-md);
   border-radius: var(--radius-lg);
   box-sizing: border-box;
+  overscroll-behavior: contain;
 }
 
 .field-prompt-modal-footer {

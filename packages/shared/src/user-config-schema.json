@@ -146,12 +146,18 @@
           "type": "string",
           "enum": ["live", "onSubmit", "off"],
           "default": "onSubmit"
+        },
+        "screenshotCaptureMode": {
+          "type": "string",
+          "enum": ["screen", "area"],
+          "default": "screen"
         }
       },
       "required": [
         "isHiddenOnBlur",
         "isCorrectionPrefetchEnabled",
-        "correctionMode"
+        "correctionMode",
+        "screenshotCaptureMode"
       ],
       "defaultPath": "quickWindow"
     },

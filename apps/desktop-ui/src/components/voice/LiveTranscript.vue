@@ -11,7 +11,7 @@
         <span class="placeholder-text">{{
           placeholder || t('menu.speakNow')
         }}</span>
-        <span class="placeholder-cursor" aria-hidden="true" />
+        <span v-if="!isFinishing" class="placeholder-cursor" aria-hidden="true" />
       </div>
       <div v-else class="live-transcript-content">
         <span v-if="prefix" class="live-transcript-prefix">{{ prefix }}</span>
@@ -24,7 +24,7 @@
         <span v-if="!hasContent" class="placeholder-text placeholder-inline"
           >{{ placeholderSpacer }}{{ placeholder || t('menu.speakNow') }}</span
         >
-        <span class="live-transcript-cursor" aria-hidden="true" />
+        <span v-if="!isFinishing" class="live-transcript-cursor" aria-hidden="true" />
         <span v-if="suffix" class="live-transcript-suffix"
           >{{ suffixSpacer }}{{ suffix }}</span
         >
@@ -50,6 +50,7 @@ const props = defineProps<{
   prefix?: string
   /** Text that follows the voice dictation (e.g. content after caret) */
   suffix?: string
+  isFinishing?: boolean
 }>()
 
 const { t } = useI18n()
@@ -99,6 +100,7 @@ watch(
   min-height: 0;
   padding: var(--space-md) var(--space-lg);
   overflow-y: auto;
+  overscroll-behavior: contain;
   font-size: var(--text-title);
   line-height: 1.6;
   text-align: left;

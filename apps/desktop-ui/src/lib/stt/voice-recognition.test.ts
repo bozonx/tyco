@@ -434,7 +434,10 @@ describe('voice recognition failures', () => {
         }),
     })
     const finishing = model.finish()
-    await vi.waitFor(() => expect(model.isTranscribing.value).toBe(true))
+    await vi.waitFor(() => {
+      expect(model.isStarted.value).toBe(false)
+      expect(model.isTranscribing.value).toBe(true)
+    })
     const timeout = new DictationError('timeout', 'Timed out')
     handlers.onError(timeout)
     await vi.waitFor(() => expect(deps.onCancelled).toHaveBeenCalled())
@@ -559,6 +562,9 @@ describe('voice recognition failures', () => {
     await model.startSession()
     const finishing = model.finish()
     await vi.waitFor(() => expect(deps.setPendingModal).toHaveBeenCalled())
+    expect(model.isStarted.value).toBe(false)
+    expect(model.isTranscribing.value).toBe(false)
+    expect(model.isCorrecting.value).toBe(true)
     vi.mocked(deps.setPendingModal).mock.calls[0]![0].onCancel()
     await finishing
     await vi.waitFor(() => expect(deps.onCancelled).toHaveBeenCalledOnce())

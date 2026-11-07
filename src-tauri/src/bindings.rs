@@ -72,6 +72,8 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<models::ChatAttachment>();
     visitor.visit::<models::ChatAttachmentFile>();
     visitor.visit::<models::ChatImage>();
+    visitor.visit::<models::ScreenshotCaptureMode>();
+    visitor.visit::<models::CropRect>();
     visitor.visit::<models::ChatSummary>();
     visitor.visit::<models::EditorHistoryEntry>();
     visitor.visit::<models::DesktopSnapshot>();

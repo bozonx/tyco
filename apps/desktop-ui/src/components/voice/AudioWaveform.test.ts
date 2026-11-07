@@ -67,4 +67,31 @@ describe('reduced motion at mount', () => {
     document.documentElement.removeAttribute('data-motion')
     wrapper.unmount()
   })
+
+  it('renders correction state and stops animation loop when isCorrecting is true', async () => {
+    const cancel = vi.spyOn(window, 'cancelAnimationFrame')
+    const wrapper = mount(AudioWaveform, {
+      props: { isCorrecting: true },
+      global: { plugins: [i18n] },
+    })
+    expect(wrapper.find('.transcribing-state').exists()).toBe(true)
+    expect(wrapper.find('.transcribing-label').text()).toBe(
+      i18n.global.t('menu.correction')
+    )
+    expect(wrapper.find('.listening-state').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('renders styling state when isStyling is true', async () => {
+    const wrapper = mount(AudioWaveform, {
+      props: { isStyling: true },
+      global: { plugins: [i18n] },
+    })
+    expect(wrapper.find('.transcribing-state').exists()).toBe(true)
+    expect(wrapper.find('.transcribing-label').text()).toBe(
+      i18n.global.t('menu.styling')
+    )
+    expect(wrapper.find('.listening-state').exists()).toBe(false)
+    wrapper.unmount()
+  })
 })

@@ -129,6 +129,24 @@
         />
       </FieldRow>
     </SettingsSection>
+    <SettingsSection
+      :title="t('settings.screenshotSectionTitle')"
+      :info="t('settings.screenshotSectionHint')"
+    >
+      <FieldRow
+        :label="t('settings.screenshotCaptureMode')"
+        :info="t('settings.screenshotCaptureModeHint')"
+      >
+        <FieldSelect
+          :model-value="userConfig.quickWindow.screenshotCaptureMode"
+          :options="screenshotCaptureModeOptions"
+          @update:model-value="
+            userConfig.quickWindow.screenshotCaptureMode =
+              $event as ScreenshotCaptureMode
+          "
+        />
+      </FieldRow>
+    </SettingsSection>
     <EditorShortcutsSettings />
   </div>
 </template>
@@ -168,6 +186,7 @@ import {
   DEFAULT_USER_CONFIG,
   type HotkeyId,
   INLINE_CORRECTION_HOTKEY_ID,
+  type ScreenshotCaptureMode,
   type SubmitKey,
 } from '@tyco/shared'
 
@@ -178,6 +197,13 @@ const submitKeyOptions = computed((): { id: SubmitKey; name: string }[] => [
   { id: 'Enter', name: t('settings.submitKey.enter') },
   { id: 'Ctrl+Enter', name: t('settings.submitKey.ctrlEnter') },
 ])
+
+const screenshotCaptureModeOptions = computed(
+  (): { id: ScreenshotCaptureMode; name: string }[] => [
+    { id: 'screen', name: t('settings.screenshotCaptureModeScreen') },
+    { id: 'area', name: t('settings.screenshotCaptureModeArea') },
+  ]
+)
 
 /** Display order of the activation modes; unknown modes go last. */
 const MODE_ORDER: HotkeyId[] = [
@@ -401,6 +427,7 @@ onMounted(async () => {
 
 .external-command code {
   overflow-x: auto;
+  overscroll-behavior: contain;
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
   background: var(--app-surface-raised);

@@ -523,6 +523,7 @@ async function handleClearMemory() {
 
 .memory-dialog-diff {
   overflow: auto;
+  overscroll-behavior: contain;
   max-height: 25rem;
   padding: var(--space-xs);
   background: var(--app-surface-raised);

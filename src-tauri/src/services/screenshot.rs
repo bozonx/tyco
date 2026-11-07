@@ -6,11 +6,11 @@
 //! result only while its generation is still current.
 use crate::{
     errors::AppError,
-    models::ChatImage,
+    models::{ChatImage, CropRect, ScreenshotCaptureMode},
     services::{
         activation::coordinator::{ActivationCoordinator, CaptureRequest},
         chat_images::{ChatImageStore, ChatImages},
-        platform::screenshot::{Pixels, Screen},
+        platform::screenshot::{crop_pixels, Pixels, Screen},
     },
 };
 
@@ -25,6 +25,13 @@ pub(crate) trait ScreenshotWindows {
     fn hide(&self) -> Result<(), AppError>;
     /// Shows the window that was visible before the capture, if any.
     fn restore(&self) -> Result<(), AppError>;
+    /// Prompts the user to drag a selection rectangle over the frozen image.
+    fn select_area(
+        &self,
+        screen: Screen,
+        image: &ChatImage,
+        bytes: &[u8],
+    ) -> Result<Option<CropRect>, AppError>;
 }
 
 /// Capture side, called on a worker thread.
@@ -32,8 +39,12 @@ pub(crate) trait ScreenshotSource {
     /// Waits for the compositor to drop the hidden windows; true when stopping.
     fn settle(&self) -> bool;
     fn is_stopped(&self) -> bool;
-    fn capture(&self, screen: Option<Screen>) -> Result<Option<Pixels>, AppError>;
-    fn image_quality(&self) -> String;
+    fn capture(
+        &self,
+        screen: Option<Screen>,
+        mode: ScreenshotCaptureMode,
+    ) -> Result<Option<Pixels>, AppError>;
+    fn selects_area_natively(&self) -> bool;
 }
 
 pub(crate) type Capture = Result<Option<(ChatImage, Vec<u8>)>, AppError>;
@@ -70,25 +81,36 @@ pub(crate) fn capture(
     coordinator: &ActivationCoordinator,
     request: &CaptureRequest,
     source: &impl ScreenshotSource,
+    windows: &impl ScreenshotWindows,
     screen: Option<Screen>,
+    mode: ScreenshotCaptureMode,
 ) -> Capture {
     if source.settle() || !coordinator.is_current(request) {
         return Ok(None);
     }
-    let pixels = source.capture(screen)?;
+    let pixels = source.capture(screen, mode)?;
     if source.is_stopped() || !coordinator.is_current(request) {
         return Ok(None);
     }
-    pixels
-        .map(|pixels| {
-            ChatImageStore::prepare_capture(
-                &pixels.bytes,
-                pixels.width,
-                pixels.height,
-                &source.image_quality(),
-            )
-        })
-        .transpose()
+    let Some(pixels) = pixels else {
+        return Ok(None);
+    };
+    let pixels = if mode == ScreenshotCaptureMode::Area && !source.selects_area_natively() {
+        let screen = screen.ok_or_else(|| AppError::invalid_input("Missing monitor"))?;
+        let (full_image, full_bytes) =
+            ChatImageStore::prepare_capture(&pixels.bytes, pixels.width, pixels.height)?;
+        let crop = windows.select_area(screen, &full_image, &full_bytes)?;
+        if source.is_stopped() || !coordinator.is_current(request) {
+            return Ok(None);
+        }
+        let Some(crop) = crop else {
+            return Ok(None);
+        };
+        crop_pixels(&pixels, crop)?
+    } else {
+        pixels
+    };
+    ChatImageStore::prepare_capture(&pixels.bytes, pixels.width, pixels.height).map(Some)
 }
 
 /// Publishes `capture` while `request` is current; `None` when it is stale, in
@@ -138,6 +160,7 @@ mod tests {
         quitting: bool,
         hide_fails: bool,
         log: RefCell<Vec<&'static str>>,
+        area_crop: RefCell<Option<Option<CropRect>>>,
     }
 
     impl ScreenshotWindows for Windows {
@@ -155,10 +178,20 @@ mod tests {
             self.log.borrow_mut().push("restore");
             Ok(())
         }
+        fn select_area(
+            &self,
+            _screen: Screen,
+            _image: &ChatImage,
+            _bytes: &[u8],
+        ) -> Result<Option<CropRect>, AppError> {
+            self.log.borrow_mut().push("select_area");
+            Ok(self.area_crop.borrow_mut().take().unwrap_or(None))
+        }
     }
 
     struct Source<'a> {
         stopped: bool,
+        native_area: bool,
         result: RefCell<Option<Result<Option<Pixels>, AppError>>>,
         screens: RefCell<Vec<Option<(i32, i32)>>>,
         captures: Cell<usize>,
@@ -170,6 +203,7 @@ mod tests {
         fn returning(result: Result<Option<Pixels>, AppError>) -> Self {
             Self {
                 stopped: false,
+                native_area: false,
                 result: RefCell::new(Some(result)),
                 screens: RefCell::default(),
                 captures: Cell::new(0),
@@ -185,7 +219,11 @@ mod tests {
         fn is_stopped(&self) -> bool {
             self.stopped
         }
-        fn capture(&self, screen: Option<Screen>) -> Result<Option<Pixels>, AppError> {
+        fn capture(
+            &self,
+            screen: Option<Screen>,
+            _mode: ScreenshotCaptureMode,
+        ) -> Result<Option<Pixels>, AppError> {
             self.captures.set(self.captures.get() + 1);
             self.screens.borrow_mut().push(screen.map(|s| (s.x, s.y)));
             if let Some(during) = self.during {
@@ -193,8 +231,8 @@ mod tests {
             }
             self.result.borrow_mut().take().unwrap()
         }
-        fn image_quality(&self) -> String {
-            "economy".into()
+        fn selects_area_natively(&self) -> bool {
+            self.native_area
         }
     }
 
@@ -252,38 +290,133 @@ mod tests {
     }
 
     #[test]
-    fn the_monitor_resolved_before_hiding_is_captured_and_encoded() {
+    fn the_monitor_resolved_before_hiding_is_captured_and_encoded_as_is() {
         let coordinator = ActivationCoordinator::default();
-        let request = begin(&coordinator, &Windows::default()).unwrap();
+        let windows = Windows::default();
+        let request = begin(&coordinator, &windows).unwrap();
         let source = Source::returning(Ok(Some(pixels(2048, 1024))));
-        let (image, bytes) = capture(&coordinator, &request, &source, Some(screen()))
-            .unwrap()
-            .unwrap();
+        let (image, bytes) = capture(
+            &coordinator,
+            &request,
+            &source,
+            &windows,
+            Some(screen()),
+            ScreenshotCaptureMode::Screen,
+        )
+        .unwrap()
+        .unwrap();
         assert_eq!(*source.screens.borrow(), [Some((-1920, 0))]);
-        // The economy quality reduces the longest edge to 1024 pixels.
-        assert_eq!((image.width_px, image.height_px), (1024, 512));
+        // Exact dimensions preserved without downscaling!
+        assert_eq!((image.width_px, image.height_px), (2048, 1024));
         assert_eq!(image.size_bytes, bytes.len());
+    }
+
+    #[test]
+    fn area_capture_with_ui_selection_crops_pixels() {
+        let coordinator = ActivationCoordinator::default();
+        let windows = Windows {
+            area_crop: RefCell::new(Some(Some(CropRect {
+                x: 10,
+                y: 10,
+                width: 100,
+                height: 50,
+            }))),
+            ..Windows::default()
+        };
+        let request = begin(&coordinator, &windows).unwrap();
+        let source = Source::returning(Ok(Some(pixels(1920, 1080))));
+        let (image, bytes) = capture(
+            &coordinator,
+            &request,
+            &source,
+            &windows,
+            Some(screen()),
+            ScreenshotCaptureMode::Area,
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!((image.width_px, image.height_px), (100, 50));
+        assert_eq!(image.size_bytes, bytes.len());
+        assert_eq!(*windows.log.borrow(), ["hide", "select_area"]);
+    }
+
+    #[test]
+    fn area_capture_cancellation_in_ui_returns_none() {
+        let coordinator = ActivationCoordinator::default();
+        let windows = Windows {
+            area_crop: RefCell::new(Some(None)),
+            ..Windows::default()
+        };
+        let request = begin(&coordinator, &windows).unwrap();
+        let source = Source::returning(Ok(Some(pixels(1920, 1080))));
+        let result = capture(
+            &coordinator,
+            &request,
+            &source,
+            &windows,
+            Some(screen()),
+            ScreenshotCaptureMode::Area,
+        )
+        .unwrap();
+        assert!(result.is_none());
+        assert_eq!(*windows.log.borrow(), ["hide", "select_area"]);
+    }
+
+    #[test]
+    fn native_area_capture_skips_ui_selector() {
+        let coordinator = ActivationCoordinator::default();
+        let windows = Windows::default();
+        let request = begin(&coordinator, &windows).unwrap();
+        let mut source = Source::returning(Ok(Some(pixels(500, 300))));
+        source.native_area = true;
+        let (image, _) = capture(
+            &coordinator,
+            &request,
+            &source,
+            &windows,
+            Some(screen()),
+            ScreenshotCaptureMode::Area,
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!((image.width_px, image.height_px), (500, 300));
+        assert_eq!(*windows.log.borrow(), ["hide"]);
     }
 
     #[test]
     fn a_stale_or_stopped_capture_never_reaches_the_backend() {
         let coordinator = ActivationCoordinator::default();
-        let request = begin(&coordinator, &Windows::default()).unwrap();
+        let windows = Windows::default();
+        let request = begin(&coordinator, &windows).unwrap();
         coordinator.invalidate();
         let source = Source::returning(Ok(Some(pixels(4, 4))));
-        assert!(capture(&coordinator, &request, &source, None)
-            .unwrap()
-            .is_none());
+        assert!(capture(
+            &coordinator,
+            &request,
+            &source,
+            &windows,
+            None,
+            ScreenshotCaptureMode::Screen
+        )
+        .unwrap()
+        .is_none());
         assert_eq!(source.captures.get(), 0);
 
-        let request = begin(&coordinator, &Windows::default()).unwrap();
+        let request = begin(&coordinator, &windows).unwrap();
         let stopped = Source {
             stopped: true,
             ..Source::returning(Ok(Some(pixels(4, 4))))
         };
-        assert!(capture(&coordinator, &request, &stopped, None)
-            .unwrap()
-            .is_none());
+        assert!(capture(
+            &coordinator,
+            &request,
+            &stopped,
+            &windows,
+            None,
+            ScreenshotCaptureMode::Screen
+        )
+        .unwrap()
+        .is_none());
         assert_eq!(stopped.captures.get(), 0);
     }
 
@@ -300,11 +433,19 @@ mod tests {
             during: Some(&newer),
             ..Source::returning(Ok(Some(pixels(4, 4))))
         };
-        let late = capture(&coordinator, &request, &source, None).unwrap();
+        let late = capture(
+            &coordinator,
+            &request,
+            &source,
+            &windows,
+            None,
+            ScreenshotCaptureMode::Screen,
+        )
+        .unwrap();
         assert!(late.is_none());
 
         // A result computed before invalidation is still dropped on publication.
-        let stale = ChatImageStore::prepare_capture(&[1; 16], 2, 2, "balanced").unwrap();
+        let stale = ChatImageStore::prepare_capture(&[1; 16], 2, 2).unwrap();
         let id = stale.0.id.clone();
         let outcome = finish(
             &coordinator,
@@ -326,7 +467,7 @@ mod tests {
         let windows = Windows::default();
         let images = ChatImages::default();
         let request = begin(&coordinator, &windows).unwrap();
-        let captured = ChatImageStore::prepare_capture(&[1; 16], 2, 2, "balanced").unwrap();
+        let captured = ChatImageStore::prepare_capture(&[1; 16], 2, 2).unwrap();
         let id = captured.0.id.clone();
         let outcome = finish(
             &coordinator,
@@ -381,7 +522,7 @@ mod tests {
         let windows = Windows::default();
         let images = ChatImages::default();
         let request = begin(&coordinator, &windows).unwrap();
-        let captured = ChatImageStore::prepare_capture(&[1; 16], 2, 2, "balanced").unwrap();
+        let captured = ChatImageStore::prepare_capture(&[1; 16], 2, 2).unwrap();
         let outcome = finish(
             &coordinator,
             &request,

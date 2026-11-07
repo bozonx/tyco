@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 2129d9c142ac0896a2c93d0ae0e55ddf35e33f32bdc0efec2fc8ace7bf0348bb
+// Source hash: 05da833699e4ebe2a938e828c544f0b10db16b3312e985f2c6adc3f343765863
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -344,6 +344,8 @@ export type CommandRunRecord = {
 export type CommandRunSource =
   'menu' | 'toolbar' | 'launcher' | 'voice' | 'external' | 'chat' | 'selection'
 
+export type CropRect = { x: number; y: number; width: number; height: number }
+
 export type DesktopActivationState = {
   activationId: number
   windowId: string | null
@@ -639,6 +641,18 @@ export type ProjectPermission = {
   read: ProjectAccessMode
   write: ProjectAccessMode
 }
+
+export type ScreenshotAreaSelection = {
+  activationId: number
+  imageId: string
+  screenX: number
+  screenY: number
+  width: number
+  height: number
+  scaleFactor: number
+}
+
+export type ScreenshotCaptureMode = 'screen' | 'area'
 
 /** A live screenshot conversation transferred without a history round trip. */
 export type ScreenshotChatTransfer = { chat: Chat; question: string | null }
@@ -955,6 +969,7 @@ export interface DesktopEventPayloads {
   'app://hotkeys-changed': null
   'app://open-screenshot-chat': ScreenshotChatTransfer
   'app://screenshot-failed': DesktopErrorCode
+  'app://screenshot-select-area': ScreenshotAreaSelection
   'app://open-main-chat': OpenMainChatEvent
   'app://open-main-editor': EditorTransfer
   'app://chats-changed': ChatsChangedEvent

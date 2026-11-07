@@ -8,7 +8,10 @@ export interface BufferedIntentDependencies {
   /** Moves `text` into the editor directly (Tab shortcut) */
   toEditor?: (text: string) => void
   /** Runs the shortcut action at `slotIndex` on `text`; false when unavailable */
-  runSlotAction?: (slotIndex: number, text: string) => Promise<boolean> | boolean
+  runSlotAction?: (
+    slotIndex: number,
+    text: string
+  ) => Promise<boolean> | boolean
   focusEditor: () => void
   canInsertIntoWindow: () => boolean
   closeAll: () => void

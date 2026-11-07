@@ -36,6 +36,7 @@ pub fn manage_state(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri
         .manage(std::sync::Arc::new(
             crate::services::platform::notifications::NotificationService::default(),
         ))
+        .manage(super::screenshot::ScreenshotCropCoordinator::default())
 }
 
 pub fn setup(app: &mut App) -> Result<(), AppError> {

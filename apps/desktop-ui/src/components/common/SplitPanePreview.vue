@@ -142,6 +142,7 @@ onUnmounted(() => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   font-family: var(--font-sans);
   font-size: var(--preview-font-size);
   line-height: var(--preview-line-height);

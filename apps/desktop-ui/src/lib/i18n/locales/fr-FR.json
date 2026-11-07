@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "Capture d’écran et question à l’IA",
     "voiceScreenshotQuickAiRequest": "Capture d’écran et question vocale à l’IA"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Joindre un fichier",
     "alertCaution": "Attention",
@@ -187,7 +189,9 @@
       "noCommands": "Aucune commande personnalisée configurée pour le moment.",
       "noCommandsHint": "Créez d'abord des commandes dans Paramètres → Commandes."
     },
-    "replyBlocks": { "toolLabel": "Blocs de réponse" }
+    "replyBlocks": {
+      "toolLabel": "Blocs de réponse"
+    }
   },
   "commands": {
     "advanced": "Avancé",
@@ -557,7 +561,6 @@
     "reviewResult": "Vérifier le résultat",
     "speakNow": "Parlez dans le micro...",
     "styling": "Stylisation de texte",
-    "transcribing": "Transcription...",
     "transformation": "Transformation de texte",
     "translate": "Traduire",
     "translateAutoDetect": "Détection automatique",
@@ -1225,9 +1228,17 @@
     "favoriteNamePlaceholder": "Nom (facultatif)",
     "favoriteTextPlaceholder": "Saisissez le texte…",
     "searchFavoritesPlaceholder": "Rechercher des favoris…",
-    "hotkeyDescriptions": {}
+    "hotkeyDescriptions": {},
+    "screenshotSectionTitle": "Capture d'écran",
+    "screenshotSectionHint": "Mode de capture utilisé pour les requêtes rapides avec capture et les nouvelles prises.",
+    "screenshotCaptureMode": "Mode de capture",
+    "screenshotCaptureModeHint": "Choisissez de capturer tout l'écran ou de sélectionner une zone spécifique.",
+    "screenshotCaptureModeScreen": "Tout l'écran",
+    "screenshotCaptureModeArea": "Zone sélectionnée"
   },
-  "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
+  "shortcuts": {
+    "insertIntoEditor": "Insérer dans l’éditeur"
+  },
   "theme": {
     "auto": "Comme le système",
     "dark": "Sombre",
@@ -1366,7 +1377,9 @@
     "missingSelection": "Un texte sélectionné est nécessaire."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "demande dans le chat" },
+    "actions": {
+      "askInChat": "demande dans le chat"
+    },
     "languages": {
       "cs-CZ": "Tchèque",
       "de-DE": "allemand",
@@ -1396,7 +1409,9 @@
     },
     "translate": "traduis en"
   },
-  "window": { "clickToFocus": "Cliquez pour continuer" },
+  "window": {
+    "clickToFocus": "Cliquez pour continuer"
+  },
   "write": {
     "alreadyCorrected": "Le texte est déjà corrigé",
     "cancel": "Annuler",
@@ -1446,7 +1461,9 @@
     "valueNotSet": "Non définie sur cet appareil : les commandes qui l’utilisent ne s’exécutent pas",
     "valuePlaceholder": "Un chemin, une adresse ou un autre texte"
   },
-  "favorites": { "noMatches": "Aucun favori correspondant" },
+  "favorites": {
+    "noMatches": "Aucun favori correspondant"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Insérer dans la fenêtre",
     "insertIntoEditor": "Vers l'éditeur",
@@ -1461,6 +1478,7 @@
   },
   "screenshot": {
     "retake": "Reprendre la capture",
-    "failed": "Impossible de capturer l’écran. Vérifiez les autorisations de capture et la prise en charge du portail du bureau."
+    "failed": "Impossible de capturer l’écran. Vérifiez les autorisations de capture et la prise en charge du portail du bureau.",
+    "selectAreaInstruction": "Faites glisser pour sélectionner une zone. Appuyez sur Échap pour annuler."
   }
 }

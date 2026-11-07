@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "擷取螢幕並向 AI 提問",
     "voiceScreenshotQuickAiRequest": "擷取螢幕並向 AI 語音提問"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "附加檔案",
     "alertCaution": "注意",
@@ -187,7 +189,9 @@
       "noCommands": "尚未設定自訂命令。",
       "noCommandsHint": "請先在設定 → 命令中建立命令。"
     },
-    "replyBlocks": { "toolLabel": "回覆區塊" }
+    "replyBlocks": {
+      "toolLabel": "回覆區塊"
+    }
   },
   "commands": {
     "advanced": "進階",
@@ -557,7 +561,6 @@
     "reviewResult": "檢視結果",
     "speakNow": "請對著麥克風說話...",
     "styling": "文字風格化",
-    "transcribing": "轉錄中...",
     "transformation": "文字轉換",
     "translate": "翻譯",
     "translateAutoDetect": "自動偵測",
@@ -600,7 +603,10 @@
     "cancelled": "已取消",
     "done": "完成",
     "emptyResult": "模型傳回了空白結果",
-    "failed": { "command": "命令執行失敗", "correction": "校對失敗" },
+    "failed": {
+      "command": "命令執行失敗",
+      "correction": "校對失敗"
+    },
     "focusChanged": "視窗在此期間已切換，因此結果已複製到剪貼簿",
     "noSelection": "未選取任何內容",
     "noTarget": "沒有任何應用程式視窗取得焦點",
@@ -611,7 +617,10 @@
       "command": "命令未對文字進行任何變更",
       "correction": "未發現任何錯誤"
     },
-    "working": { "command": "正在執行命令…", "correction": "正在校對…" }
+    "working": {
+      "command": "正在執行命令…",
+      "correction": "正在校對…"
+    }
   },
   "settings": {
     "accessAllow": "允許",
@@ -1219,9 +1228,17 @@
     "favoriteNamePlaceholder": "名稱（選填）",
     "favoriteTextPlaceholder": "輸入文字…",
     "searchFavoritesPlaceholder": "搜尋我的最愛…",
-    "hotkeyDescriptions": {}
+    "hotkeyDescriptions": {},
+    "screenshotSectionTitle": "螢幕截圖",
+    "screenshotSectionHint": "螢幕截圖快捷請求與重新擷取時使用的擷取模式。",
+    "screenshotCaptureMode": "擷取模式",
+    "screenshotCaptureModeHint": "選擇擷取整個螢幕或選取特定區域。",
+    "screenshotCaptureModeScreen": "整個螢幕",
+    "screenshotCaptureModeArea": "選取區域"
   },
-  "shortcuts": { "insertIntoEditor": "插入至編輯器" },
+  "shortcuts": {
+    "insertIntoEditor": "插入至編輯器"
+  },
   "theme": {
     "auto": "跟隨系統",
     "dark": "深色",
@@ -1360,7 +1377,9 @@
     "missingSelection": "必須提供選取的文字。"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "在聊天中提問;在對話中提問" },
+    "actions": {
+      "askInChat": "在聊天中提問;在對話中提問"
+    },
     "languages": {
       "cs-CZ": "捷克語",
       "de-DE": "德文;德語",
@@ -1390,7 +1409,9 @@
     },
     "translate": "翻譯成;翻譯為;翻譯到"
   },
-  "window": { "clickToFocus": "按一下以繼續" },
+  "window": {
+    "clickToFocus": "按一下以繼續"
+  },
   "write": {
     "alreadyCorrected": "文字已經過校對",
     "cancel": "取消",
@@ -1440,7 +1461,9 @@
     "valueNotSet": "此裝置上未設定：使用它的命令不會執行",
     "valuePlaceholder": "路徑、位址或其他文字"
   },
-  "favorites": { "noMatches": "沒有相符的收藏" },
+  "favorites": {
+    "noMatches": "沒有相符的收藏"
+  },
   "replyBlocks": {
     "insertIntoWindow": "插入至視窗",
     "insertIntoEditor": "至編輯器",
@@ -1455,6 +1478,7 @@
   },
   "screenshot": {
     "retake": "重新擷取螢幕",
-    "failed": "無法擷取螢幕。請檢查螢幕擷取權限和桌面入口支援。"
+    "failed": "無法擷取螢幕。請檢查螢幕擷取權限和桌面入口支援。",
+    "selectAreaInstruction": "拖曳滑鼠選取區域。按 Escape 取消。"
   }
 }

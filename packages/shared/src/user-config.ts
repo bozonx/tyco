@@ -225,10 +225,14 @@ export interface FavoritesConfig {
 export const QUICK_CORRECTION_MODES = ['live', 'onSubmit', 'off'] as const
 export type QuickCorrectionMode = (typeof QUICK_CORRECTION_MODES)[number]
 
+export const SCREENSHOT_CAPTURE_MODES = ['screen', 'area'] as const
+export type ScreenshotCaptureMode = (typeof SCREENSHOT_CAPTURE_MODES)[number]
+
 export interface QuickWindowConfig {
   isHiddenOnBlur: boolean
   isCorrectionPrefetchEnabled: boolean
   correctionMode: QuickCorrectionMode
+  screenshotCaptureMode: ScreenshotCaptureMode
 }
 
 /** Complete, normalized configuration used throughout the application. */

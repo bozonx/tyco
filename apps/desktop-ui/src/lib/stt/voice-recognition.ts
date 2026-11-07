@@ -129,6 +129,8 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   const isCancelling = ref(false)
   const isStarted = ref(false)
   const isTranscribing = ref(false)
+  const isCorrecting = ref(false)
+  const isStyling = ref(false)
   let sessionGeneration = 0
   let starting: Promise<void> | undefined
   let cancelling: Promise<void> | undefined
@@ -210,6 +212,8 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       } finally {
         isStarted.value = false
         isTranscribing.value = false
+        isCorrecting.value = false
+        isStyling.value = false
         isFinishing.value = false
         isCancelling.value = false
         cancelling = undefined
@@ -239,6 +243,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     const isCurrent = () => generation === sessionGeneration && !signal?.aborted
     isFinishing.value = true
     voiceSession.stopTimer()
+    contextual?.markFinishing()
 
     try {
       await starting
@@ -251,13 +256,13 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
         return
       }
       hasSession = false
+      isStarted.value = false
       isTranscribing.value = true
       // the provider's last words arrive after the microphone is off
       const recognizedText = await finishDictation()
       if (!isCurrent()) return
-      isStarted.value = false
-      isTranscribing.value = false
       finishingText = recognizedText
+      isTranscribing.value = false
 
       if (!recognizedText.trim()) {
         const { chat, prefix = '', suffix = '' } = deps.options()
@@ -326,6 +331,11 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
               : null
 
       if (postProcess) {
+        if ('styling' in postProcess.pending && postProcess.pending.styling) {
+          isStyling.value = true
+        } else {
+          isCorrecting.value = true
+        }
         // Explicit cancellation stops delivery; the source is already in history.
         const controller = new AbortController()
         const abortPostProcess = () => {
@@ -380,6 +390,8 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
             })
           }
         } finally {
+          isCorrecting.value = false
+          isStyling.value = false
           timeout.stop()
           // a timeout is not the user's choice: a buffered intent still holds
           postProcessAborted = controller.signal.aborted && !isTimedOut
@@ -584,6 +596,8 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     isFinishing,
     isStarted,
     isTranscribing,
+    isCorrecting,
+    isStyling,
     cancel,
     finish,
     finishWithStyle,

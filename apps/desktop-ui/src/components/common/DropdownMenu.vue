@@ -44,7 +44,7 @@
         :style="panelStyle"
         :data-theme="panelTheme"
         @focusout="onFocusout"
-        class="dropdown-panel min-w-44 max-w-80 max-h-72 overflow-y-auto"
+        class="dropdown-panel min-w-44 max-w-80 max-h-72 overflow-y-auto overscroll-contain"
         :id="menuId"
         role="menu"
         :aria-label="label ?? title ?? translate('common.more')"

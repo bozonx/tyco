@@ -327,6 +327,8 @@ pub fn run() {
             commands::window::open_screenshot_chat,
             commands::window::retake_screenshot,
             commands::window::remove_screenshot,
+            commands::window::confirm_screenshot_crop,
+            commands::window::cancel_screenshot_crop,
             commands::window::hide_quick_window_on_blur,
             commands::window::hide_window,
             commands::window::open_in_browser_and_hide,

@@ -202,6 +202,7 @@
     min-height: 5rem;
     padding-block: 0.5rem;
     padding-inline: 0.75rem;
+    overscroll-behavior: contain;
   }
 
   :is(.input, .select, .textarea):is(:focus, :focus-within) {

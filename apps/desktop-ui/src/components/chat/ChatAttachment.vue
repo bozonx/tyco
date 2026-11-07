@@ -229,6 +229,7 @@ onMounted(() => {
   max-height: 10rem;
   margin: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: var(--space-sm);
   border: 1px solid var(--app-border-subtle);
   border-radius: var(--radius-md);

@@ -160,6 +160,7 @@
   flex-shrink: 0;
   max-height: 4.5rem;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: 0.375rem 0.5rem;
   border-radius: var(--radius-sm);
   background-color: var(--app-surface-sunken);

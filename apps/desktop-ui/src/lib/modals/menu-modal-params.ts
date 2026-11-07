@@ -135,10 +135,7 @@ export interface BufferedSlotAction {
   icon?: string
 }
 export type BufferedPendingAction =
-  | 'insert'
-  | 'copy'
-  | 'editor'
-  | BufferedSlotAction
+  'insert' | 'copy' | 'editor' | BufferedSlotAction
 
 export interface PendingModalParams {
   ai?: boolean

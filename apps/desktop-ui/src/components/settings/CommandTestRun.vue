@@ -214,6 +214,7 @@ onUnmounted(stop)
   margin: 0;
   padding: var(--space-xs, 0.25rem) var(--space-sm, 0.5rem);
   overflow: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--app-border);
   border-radius: var(--radius-sm);
   background-color: var(--app-surface-sunken);

@@ -229,6 +229,7 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-lg);
   background: var(--app-surface-raised);
   overflow: auto;
+  overscroll-behavior: contain;
 }
 .chat-markdown :deep(pre code) {
   font-family: var(--font-mono);
@@ -252,6 +253,7 @@ onBeforeUnmount(() => {
   max-width: 100%;
   border-collapse: collapse;
   overflow-x: auto;
+  overscroll-behavior: contain;
 }
 .chat-markdown :deep(th),
 .chat-markdown :deep(td) {
@@ -388,6 +390,7 @@ onBeforeUnmount(() => {
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
+  overscroll-behavior: contain;
   padding: 0.25rem 0;
 }
 .chat-markdown :deep(.katex) {
@@ -399,6 +402,7 @@ onBeforeUnmount(() => {
 .chat-markdown :deep(.chat-diagram-preview) {
   max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior: contain;
   padding: 0.6rem;
   background: white;
   border-radius: var(--radius-sm);

@@ -3,18 +3,33 @@
     "name": "fractional counts and invalid speech fields and partial editor shortcuts",
     "input": {
       "actionPages": [
-        { "inputMode": "selection", "slots": {} },
+        {
+          "inputMode": "selection",
+          "slots": {}
+        },
         {
           "inputMode": "none",
           "slots": {
-            "d": { "type": "standard", "actionId": "openHistory" },
-            "f": { "type": "standard", "actionId": "voiceInput" },
-            "g": { "type": "standard", "actionId": "voiceCommands" },
+            "d": {
+              "type": "standard",
+              "actionId": "openHistory"
+            },
+            "f": {
+              "type": "standard",
+              "actionId": "voiceInput"
+            },
+            "g": {
+              "type": "standard",
+              "actionId": "voiceCommands"
+            },
             "s": {
               "type": "standard",
               "actionId": "voiceCommandsWithoutContext"
             },
-            "a": { "type": "standard", "actionId": "directCorrection" }
+            "a": {
+              "type": "standard",
+              "actionId": "directCorrection"
+            }
           }
         }
       ],
@@ -25,7 +40,10 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto", "user": "auto" },
+      "language": {
+        "ui": "auto",
+        "user": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -59,7 +77,9 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -72,16 +92,34 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -133,15 +171,25 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          }
         },
         "imageQuality": "balanced"
       },
@@ -165,12 +213,21 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": 42, "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+          "deepgram": {
+            "modelId": 42,
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          }
         },
         "correctionMode": 42
       }
@@ -183,7 +240,9 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto" },
+      "language": {
+        "ui": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -219,7 +278,8 @@
       "quickWindow": {
         "isHiddenOnBlur": true,
         "isCorrectionPrefetchEnabled": false,
-        "correctionMode": "onSubmit"
+        "correctionMode": "onSubmit",
+        "screenshotCaptureMode": "screen"
       },
       "hotkeys": {
         "editor": "",
@@ -246,7 +306,9 @@
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": ""
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -258,16 +320,34 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -319,18 +399,35 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          },
+          "transformation": {
+            "modelId": ""
+          },
+          "styling": {
+            "modelId": ""
+          },
+          "quickRequest": {
+            "modelId": "",
+            "rule": ""
+          }
         },
         "imageQuality": "balanced"
       },
@@ -354,13 +451,24 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
-          "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          },
+          "geminiLive": {
+            "modelId": "gemini-3.5-transcribe-live"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false,
@@ -368,18 +476,33 @@
         "isStylingBarDirectInsertEnabled": false
       },
       "actionPages": [
-        { "inputMode": "selection", "slots": {} },
+        {
+          "inputMode": "selection",
+          "slots": {}
+        },
         {
           "inputMode": "none",
           "slots": {
-            "d": { "type": "standard", "actionId": "openHistory" },
-            "f": { "type": "standard", "actionId": "voiceInput" },
-            "g": { "type": "standard", "actionId": "voiceCommands" },
+            "d": {
+              "type": "standard",
+              "actionId": "openHistory"
+            },
+            "f": {
+              "type": "standard",
+              "actionId": "voiceInput"
+            },
+            "g": {
+              "type": "standard",
+              "actionId": "voiceCommands"
+            },
             "s": {
               "type": "standard",
               "actionId": "voiceCommandsWithoutContext"
             },
-            "a": { "type": "standard", "actionId": "directCorrection" }
+            "a": {
+              "type": "standard",
+              "actionId": "directCorrection"
+            }
           }
         }
       ],
@@ -393,13 +516,29 @@
             "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
-        "slots": { "q": "deep-edit" }
+        "slots": {
+          "q": "deep-edit"
+        }
       },
-      "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
-      "aiVault": { "path": "" },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] }
+      "styling": {
+        "items": [],
+        "slots": {}
+      },
+      "chatPrompts": {
+        "items": [],
+        "slots": {}
+      },
+      "aiVault": {
+        "path": ""
+      },
+      "aiProfiles": {
+        "chatHistory": {
+          "storage": "disk"
+        }
+      },
+      "favorites": {
+        "items": []
+      }
     }
   },
   {
@@ -412,7 +551,10 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto", "user": "auto" },
+      "language": {
+        "ui": "auto",
+        "user": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -440,7 +582,9 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -453,16 +597,34 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -525,15 +687,25 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "missing",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          }
         },
         "imageQuality": "balanced"
       },
@@ -557,12 +729,21 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false
@@ -576,7 +757,9 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto" },
+      "language": {
+        "ui": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -612,7 +795,8 @@
       "quickWindow": {
         "isHiddenOnBlur": true,
         "isCorrectionPrefetchEnabled": false,
-        "correctionMode": "onSubmit"
+        "correctionMode": "onSubmit",
+        "screenshotCaptureMode": "screen"
       },
       "hotkeys": {
         "editor": "",
@@ -639,7 +823,9 @@
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": ""
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -651,16 +837,34 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -712,14 +916,35 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
-          "translation": { "modelId": "", "rule": "", "qualityGateRule": "" },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "translation": {
+            "modelId": "",
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          },
+          "transformation": {
+            "modelId": ""
+          },
+          "styling": {
+            "modelId": ""
+          },
+          "quickRequest": {
+            "modelId": "",
+            "rule": ""
+          }
         },
         "imageQuality": "balanced"
       },
@@ -743,13 +968,24 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
-          "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          },
+          "geminiLive": {
+            "modelId": "gemini-3.5-transcribe-live"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false,
@@ -760,16 +996,46 @@
         {
           "inputMode": "selection",
           "slots": {
-            "q": { "type": "standard", "actionId": "copyToClipboard" },
-            "w": { "type": "plugin", "actionId": "FastNote:write" },
-            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
-            "t": { "type": "standard", "actionId": "translationMenu" },
-            "a": { "type": "standard", "actionId": "askInChat" },
-            "s": { "type": "standard", "actionId": "stylingMenu" },
-            "d": { "type": "standard", "actionId": "correction" },
-            "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "quickAiRequest" },
-            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
+            "q": {
+              "type": "standard",
+              "actionId": "copyToClipboard"
+            },
+            "w": {
+              "type": "plugin",
+              "actionId": "FastNote:write"
+            },
+            "e": {
+              "type": "plugin",
+              "actionId": "SearchInInternet:search"
+            },
+            "t": {
+              "type": "standard",
+              "actionId": "translationMenu"
+            },
+            "a": {
+              "type": "standard",
+              "actionId": "askInChat"
+            },
+            "s": {
+              "type": "standard",
+              "actionId": "stylingMenu"
+            },
+            "d": {
+              "type": "standard",
+              "actionId": "correction"
+            },
+            "f": {
+              "type": "standard",
+              "actionId": "transformationMenu"
+            },
+            "g": {
+              "type": "standard",
+              "actionId": "quickAiRequest"
+            },
+            "v": {
+              "type": "standard",
+              "actionId": "voiceQuickAiRequest"
+            }
           }
         }
       ],
@@ -783,13 +1049,29 @@
             "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
-        "slots": { "q": "deep-edit" }
+        "slots": {
+          "q": "deep-edit"
+        }
       },
-      "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
-      "aiVault": { "path": "" },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] }
+      "styling": {
+        "items": [],
+        "slots": {}
+      },
+      "chatPrompts": {
+        "items": [],
+        "slots": {}
+      },
+      "aiVault": {
+        "path": ""
+      },
+      "aiProfiles": {
+        "chatHistory": {
+          "storage": "disk"
+        }
+      },
+      "favorites": {
+        "items": []
+      }
     }
   },
   {
@@ -802,7 +1084,10 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto", "user": "auto" },
+      "language": {
+        "ui": "auto",
+        "user": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -830,7 +1115,9 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -843,16 +1130,34 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -904,15 +1209,25 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          }
         },
         "imageQuality": "balanced"
       },
@@ -936,12 +1251,21 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false
@@ -955,7 +1279,9 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto" },
+      "language": {
+        "ui": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -991,7 +1317,8 @@
       "quickWindow": {
         "isHiddenOnBlur": true,
         "isCorrectionPrefetchEnabled": false,
-        "correctionMode": "onSubmit"
+        "correctionMode": "onSubmit",
+        "screenshotCaptureMode": "screen"
       },
       "hotkeys": {
         "editor": "",
@@ -1018,7 +1345,9 @@
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": ""
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -1030,16 +1359,34 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -1091,18 +1438,35 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          },
+          "transformation": {
+            "modelId": ""
+          },
+          "styling": {
+            "modelId": ""
+          },
+          "quickRequest": {
+            "modelId": "",
+            "rule": ""
+          }
         },
         "imageQuality": "balanced"
       },
@@ -1126,13 +1490,24 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
-          "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          },
+          "geminiLive": {
+            "modelId": "gemini-3.5-transcribe-live"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false,
@@ -1143,16 +1518,46 @@
         {
           "inputMode": "selection",
           "slots": {
-            "q": { "type": "standard", "actionId": "copyToClipboard" },
-            "w": { "type": "plugin", "actionId": "FastNote:write" },
-            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
-            "t": { "type": "standard", "actionId": "translationMenu" },
-            "a": { "type": "standard", "actionId": "askInChat" },
-            "s": { "type": "standard", "actionId": "stylingMenu" },
-            "d": { "type": "standard", "actionId": "correction" },
-            "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "quickAiRequest" },
-            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
+            "q": {
+              "type": "standard",
+              "actionId": "copyToClipboard"
+            },
+            "w": {
+              "type": "plugin",
+              "actionId": "FastNote:write"
+            },
+            "e": {
+              "type": "plugin",
+              "actionId": "SearchInInternet:search"
+            },
+            "t": {
+              "type": "standard",
+              "actionId": "translationMenu"
+            },
+            "a": {
+              "type": "standard",
+              "actionId": "askInChat"
+            },
+            "s": {
+              "type": "standard",
+              "actionId": "stylingMenu"
+            },
+            "d": {
+              "type": "standard",
+              "actionId": "correction"
+            },
+            "f": {
+              "type": "standard",
+              "actionId": "transformationMenu"
+            },
+            "g": {
+              "type": "standard",
+              "actionId": "quickAiRequest"
+            },
+            "v": {
+              "type": "standard",
+              "actionId": "voiceQuickAiRequest"
+            }
           }
         }
       ],
@@ -1166,13 +1571,29 @@
             "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
-        "slots": { "q": "deep-edit" }
+        "slots": {
+          "q": "deep-edit"
+        }
       },
-      "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
-      "aiVault": { "path": "" },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] }
+      "styling": {
+        "items": [],
+        "slots": {}
+      },
+      "chatPrompts": {
+        "items": [],
+        "slots": {}
+      },
+      "aiVault": {
+        "path": ""
+      },
+      "aiProfiles": {
+        "chatHistory": {
+          "storage": "disk"
+        }
+      },
+      "favorites": {
+        "items": []
+      }
     }
   },
   {
@@ -1185,7 +1606,10 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto", "user": "auto" },
+      "language": {
+        "ui": "auto",
+        "user": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -1213,7 +1637,9 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -1225,17 +1651,40 @@
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
-        "glossary": [{ "term": "word", "translation": "term" }],
-        "targetLanguages": { "q": "en-US" },
+        "glossary": [
+          {
+            "term": "word",
+            "translation": "term"
+          }
+        ],
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -1287,15 +1736,25 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          }
         },
         "imageQuality": "balanced"
       },
@@ -1321,15 +1780,28 @@
       "plugins": {
         "Custom": {
           "isEnabled": true,
-          "settings": { "nested": { "count": 3 } }
+          "settings": {
+            "nested": {
+              "count": 3
+            }
+          }
         }
       },
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false
@@ -1343,7 +1815,9 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto" },
+      "language": {
+        "ui": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -1379,7 +1853,8 @@
       "quickWindow": {
         "isHiddenOnBlur": true,
         "isCorrectionPrefetchEnabled": false,
-        "correctionMode": "onSubmit"
+        "correctionMode": "onSubmit",
+        "screenshotCaptureMode": "screen"
       },
       "hotkeys": {
         "editor": "",
@@ -1406,7 +1881,9 @@
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": ""
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -1417,17 +1894,40 @@
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
-        "glossary": [{ "term": "word", "translation": "term" }],
-        "targetLanguages": { "q": "en-US" },
+        "glossary": [
+          {
+            "term": "word",
+            "translation": "term"
+          }
+        ],
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -1479,18 +1979,35 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          },
+          "transformation": {
+            "modelId": ""
+          },
+          "styling": {
+            "modelId": ""
+          },
+          "quickRequest": {
+            "modelId": "",
+            "rule": ""
+          }
         },
         "imageQuality": "balanced"
       },
@@ -1516,16 +2033,31 @@
       "plugins": {
         "Custom": {
           "isEnabled": true,
-          "settings": { "nested": { "count": 3 } }
+          "settings": {
+            "nested": {
+              "count": 3
+            }
+          }
         }
       },
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
-          "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          },
+          "geminiLive": {
+            "modelId": "gemini-3.5-transcribe-live"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false,
@@ -1536,16 +2068,46 @@
         {
           "inputMode": "selection",
           "slots": {
-            "q": { "type": "standard", "actionId": "copyToClipboard" },
-            "w": { "type": "plugin", "actionId": "FastNote:write" },
-            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
-            "t": { "type": "standard", "actionId": "translationMenu" },
-            "a": { "type": "standard", "actionId": "askInChat" },
-            "s": { "type": "standard", "actionId": "stylingMenu" },
-            "d": { "type": "standard", "actionId": "correction" },
-            "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "quickAiRequest" },
-            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
+            "q": {
+              "type": "standard",
+              "actionId": "copyToClipboard"
+            },
+            "w": {
+              "type": "plugin",
+              "actionId": "FastNote:write"
+            },
+            "e": {
+              "type": "plugin",
+              "actionId": "SearchInInternet:search"
+            },
+            "t": {
+              "type": "standard",
+              "actionId": "translationMenu"
+            },
+            "a": {
+              "type": "standard",
+              "actionId": "askInChat"
+            },
+            "s": {
+              "type": "standard",
+              "actionId": "stylingMenu"
+            },
+            "d": {
+              "type": "standard",
+              "actionId": "correction"
+            },
+            "f": {
+              "type": "standard",
+              "actionId": "transformationMenu"
+            },
+            "g": {
+              "type": "standard",
+              "actionId": "quickAiRequest"
+            },
+            "v": {
+              "type": "standard",
+              "actionId": "voiceQuickAiRequest"
+            }
           }
         }
       ],
@@ -1559,13 +2121,29 @@
             "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
-        "slots": { "q": "deep-edit" }
+        "slots": {
+          "q": "deep-edit"
+        }
       },
-      "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
-      "aiVault": { "path": "" },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] }
+      "styling": {
+        "items": [],
+        "slots": {}
+      },
+      "chatPrompts": {
+        "items": [],
+        "slots": {}
+      },
+      "aiVault": {
+        "path": ""
+      },
+      "aiProfiles": {
+        "chatHistory": {
+          "storage": "disk"
+        }
+      },
+      "favorites": {
+        "items": []
+      }
     }
   },
   {
@@ -1578,7 +2156,10 @@
         "motion": "reduce",
         "uiScalePercent": "175"
       },
-      "language": { "ui": "auto", "user": "auto" },
+      "language": {
+        "ui": "auto",
+        "user": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -1606,7 +2187,9 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -1619,17 +2202,35 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "openaiCompatible" },
-          { "id": "Bad Id", "type": "google" },
-          { "id": "custom", "type": "google" },
-          { "id": "ollama", "type": "openaiCompatible" }
+          {
+            "id": "google",
+            "type": "openaiCompatible"
+          },
+          {
+            "id": "Bad Id",
+            "type": "google"
+          },
+          {
+            "id": "custom",
+            "type": "google"
+          },
+          {
+            "id": "ollama",
+            "type": "openaiCompatible"
+          }
         ],
         "models": [
           {
@@ -1675,15 +2276,25 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          }
         },
         "imageQuality": "balanced"
       },
@@ -1707,12 +2318,21 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false
@@ -1726,7 +2346,9 @@
         "motion": "reduce",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto" },
+      "language": {
+        "ui": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -1762,7 +2384,8 @@
       "quickWindow": {
         "isHiddenOnBlur": true,
         "isCorrectionPrefetchEnabled": false,
-        "correctionMode": "onSubmit"
+        "correctionMode": "onSubmit",
+        "screenshotCaptureMode": "screen"
       },
       "hotkeys": {
         "editor": "",
@@ -1789,7 +2412,9 @@
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": ""
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -1801,17 +2426,39 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
-          { "id": "ollama", "type": "openaiCompatible", "baseUrl": "" }
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
+          {
+            "id": "ollama",
+            "type": "openaiCompatible",
+            "baseUrl": ""
+          }
         ],
         "models": [
           {
@@ -1855,18 +2502,35 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          },
+          "transformation": {
+            "modelId": ""
+          },
+          "styling": {
+            "modelId": ""
+          },
+          "quickRequest": {
+            "modelId": "",
+            "rule": ""
+          }
         },
         "imageQuality": "balanced"
       },
@@ -1890,13 +2554,24 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
-          "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          },
+          "geminiLive": {
+            "modelId": "gemini-3.5-transcribe-live"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false,
@@ -1907,16 +2582,46 @@
         {
           "inputMode": "selection",
           "slots": {
-            "q": { "type": "standard", "actionId": "copyToClipboard" },
-            "w": { "type": "plugin", "actionId": "FastNote:write" },
-            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
-            "t": { "type": "standard", "actionId": "translationMenu" },
-            "a": { "type": "standard", "actionId": "askInChat" },
-            "s": { "type": "standard", "actionId": "stylingMenu" },
-            "d": { "type": "standard", "actionId": "correction" },
-            "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "quickAiRequest" },
-            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
+            "q": {
+              "type": "standard",
+              "actionId": "copyToClipboard"
+            },
+            "w": {
+              "type": "plugin",
+              "actionId": "FastNote:write"
+            },
+            "e": {
+              "type": "plugin",
+              "actionId": "SearchInInternet:search"
+            },
+            "t": {
+              "type": "standard",
+              "actionId": "translationMenu"
+            },
+            "a": {
+              "type": "standard",
+              "actionId": "askInChat"
+            },
+            "s": {
+              "type": "standard",
+              "actionId": "stylingMenu"
+            },
+            "d": {
+              "type": "standard",
+              "actionId": "correction"
+            },
+            "f": {
+              "type": "standard",
+              "actionId": "transformationMenu"
+            },
+            "g": {
+              "type": "standard",
+              "actionId": "quickAiRequest"
+            },
+            "v": {
+              "type": "standard",
+              "actionId": "voiceQuickAiRequest"
+            }
           }
         }
       ],
@@ -1930,13 +2635,29 @@
             "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
-        "slots": { "q": "deep-edit" }
+        "slots": {
+          "q": "deep-edit"
+        }
       },
-      "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
-      "aiVault": { "path": "" },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] }
+      "styling": {
+        "items": [],
+        "slots": {}
+      },
+      "chatPrompts": {
+        "items": [],
+        "slots": {}
+      },
+      "aiVault": {
+        "path": ""
+      },
+      "aiProfiles": {
+        "chatHistory": {
+          "storage": "disk"
+        }
+      },
+      "favorites": {
+        "items": []
+      }
     }
   },
   {
@@ -1949,7 +2670,10 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto", "user": "auto" },
+      "language": {
+        "ui": "auto",
+        "user": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -1977,7 +2701,9 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -1990,16 +2716,34 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -2051,15 +2795,25 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          }
         },
         "imageQuality": "balanced"
       },
@@ -2083,12 +2837,21 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false
@@ -2102,7 +2865,9 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto" },
+      "language": {
+        "ui": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -2138,7 +2903,8 @@
       "quickWindow": {
         "isHiddenOnBlur": true,
         "isCorrectionPrefetchEnabled": false,
-        "correctionMode": "onSubmit"
+        "correctionMode": "onSubmit",
+        "screenshotCaptureMode": "screen"
       },
       "hotkeys": {
         "editor": "",
@@ -2165,7 +2931,9 @@
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": ""
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -2177,16 +2945,34 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -2238,18 +3024,35 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          },
+          "transformation": {
+            "modelId": ""
+          },
+          "styling": {
+            "modelId": ""
+          },
+          "quickRequest": {
+            "modelId": "",
+            "rule": ""
+          }
         },
         "imageQuality": "balanced"
       },
@@ -2273,13 +3076,24 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
-          "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          },
+          "geminiLive": {
+            "modelId": "gemini-3.5-transcribe-live"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false,
@@ -2290,16 +3104,46 @@
         {
           "inputMode": "selection",
           "slots": {
-            "q": { "type": "standard", "actionId": "copyToClipboard" },
-            "w": { "type": "plugin", "actionId": "FastNote:write" },
-            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
-            "t": { "type": "standard", "actionId": "translationMenu" },
-            "a": { "type": "standard", "actionId": "askInChat" },
-            "s": { "type": "standard", "actionId": "stylingMenu" },
-            "d": { "type": "standard", "actionId": "correction" },
-            "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "quickAiRequest" },
-            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
+            "q": {
+              "type": "standard",
+              "actionId": "copyToClipboard"
+            },
+            "w": {
+              "type": "plugin",
+              "actionId": "FastNote:write"
+            },
+            "e": {
+              "type": "plugin",
+              "actionId": "SearchInInternet:search"
+            },
+            "t": {
+              "type": "standard",
+              "actionId": "translationMenu"
+            },
+            "a": {
+              "type": "standard",
+              "actionId": "askInChat"
+            },
+            "s": {
+              "type": "standard",
+              "actionId": "stylingMenu"
+            },
+            "d": {
+              "type": "standard",
+              "actionId": "correction"
+            },
+            "f": {
+              "type": "standard",
+              "actionId": "transformationMenu"
+            },
+            "g": {
+              "type": "standard",
+              "actionId": "quickAiRequest"
+            },
+            "v": {
+              "type": "standard",
+              "actionId": "voiceQuickAiRequest"
+            }
           }
         }
       ],
@@ -2313,13 +3157,29 @@
             "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
-        "slots": { "q": "deep-edit" }
+        "slots": {
+          "q": "deep-edit"
+        }
       },
-      "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
-      "aiVault": { "path": "" },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] }
+      "styling": {
+        "items": [],
+        "slots": {}
+      },
+      "chatPrompts": {
+        "items": [],
+        "slots": {}
+      },
+      "aiVault": {
+        "path": ""
+      },
+      "aiProfiles": {
+        "chatHistory": {
+          "storage": "disk"
+        }
+      },
+      "favorites": {
+        "items": []
+      }
     }
   },
   {
@@ -2332,7 +3192,10 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto", "user": "auto" },
+      "language": {
+        "ui": "auto",
+        "user": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -2361,7 +3224,9 @@
         "unknownAction": "Ctrl+Alt+U",
         "selectionCorrection": "Ctrl+Alt+F"
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -2374,16 +3239,34 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -2435,15 +3318,25 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          }
         },
         "imageQuality": "balanced"
       },
@@ -2467,12 +3360,21 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false
@@ -2486,7 +3388,9 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto" },
+      "language": {
+        "ui": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -2522,7 +3426,8 @@
       "quickWindow": {
         "isHiddenOnBlur": true,
         "isCorrectionPrefetchEnabled": false,
-        "correctionMode": "onSubmit"
+        "correctionMode": "onSubmit",
+        "screenshotCaptureMode": "screen"
       },
       "hotkeys": {
         "editor": "",
@@ -2550,7 +3455,9 @@
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": ""
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -2562,16 +3469,34 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -2623,18 +3548,35 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          },
+          "transformation": {
+            "modelId": ""
+          },
+          "styling": {
+            "modelId": ""
+          },
+          "quickRequest": {
+            "modelId": "",
+            "rule": ""
+          }
         },
         "imageQuality": "balanced"
       },
@@ -2658,13 +3600,24 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
-          "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          },
+          "geminiLive": {
+            "modelId": "gemini-3.5-transcribe-live"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false,
@@ -2675,16 +3628,46 @@
         {
           "inputMode": "selection",
           "slots": {
-            "q": { "type": "standard", "actionId": "copyToClipboard" },
-            "w": { "type": "plugin", "actionId": "FastNote:write" },
-            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
-            "t": { "type": "standard", "actionId": "translationMenu" },
-            "a": { "type": "standard", "actionId": "askInChat" },
-            "s": { "type": "standard", "actionId": "stylingMenu" },
-            "d": { "type": "standard", "actionId": "correction" },
-            "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "quickAiRequest" },
-            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
+            "q": {
+              "type": "standard",
+              "actionId": "copyToClipboard"
+            },
+            "w": {
+              "type": "plugin",
+              "actionId": "FastNote:write"
+            },
+            "e": {
+              "type": "plugin",
+              "actionId": "SearchInInternet:search"
+            },
+            "t": {
+              "type": "standard",
+              "actionId": "translationMenu"
+            },
+            "a": {
+              "type": "standard",
+              "actionId": "askInChat"
+            },
+            "s": {
+              "type": "standard",
+              "actionId": "stylingMenu"
+            },
+            "d": {
+              "type": "standard",
+              "actionId": "correction"
+            },
+            "f": {
+              "type": "standard",
+              "actionId": "transformationMenu"
+            },
+            "g": {
+              "type": "standard",
+              "actionId": "quickAiRequest"
+            },
+            "v": {
+              "type": "standard",
+              "actionId": "voiceQuickAiRequest"
+            }
           }
         }
       ],
@@ -2698,13 +3681,29 @@
             "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
-        "slots": { "q": "deep-edit" }
+        "slots": {
+          "q": "deep-edit"
+        }
       },
-      "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
-      "aiVault": { "path": "" },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] }
+      "styling": {
+        "items": [],
+        "slots": {}
+      },
+      "chatPrompts": {
+        "items": [],
+        "slots": {}
+      },
+      "aiVault": {
+        "path": ""
+      },
+      "aiProfiles": {
+        "chatHistory": {
+          "storage": "disk"
+        }
+      },
+      "favorites": {
+        "items": []
+      }
     }
   },
   {
@@ -2717,7 +3716,10 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto", "user": "auto" },
+      "language": {
+        "ui": "auto",
+        "user": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -2746,7 +3748,9 @@
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -2766,14 +3770,30 @@
           "r": ""
         },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -2825,15 +3845,25 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          }
         },
         "imageQuality": "balanced"
       },
@@ -2857,24 +3887,46 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false
       },
-      "aiVault": { "path": "" },
+      "aiVault": {
+        "path": ""
+      },
       "transformations": {
         "items": [
-          { "id": "a", "name": "A", "rule": "x" },
-          { "id": "a", "name": "Copy", "rule": "y" },
+          {
+            "id": "a",
+            "name": "A",
+            "rule": "x"
+          },
+          {
+            "id": "a",
+            "name": "Copy",
+            "rule": "y"
+          },
           "bogus"
         ],
-        "slots": { "q": "a", "w": "a" }
+        "slots": {
+          "q": "a",
+          "w": "a"
+        }
       }
     },
     "expected": {
@@ -2885,7 +3937,9 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto" },
+      "language": {
+        "ui": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -2921,7 +3975,8 @@
       "quickWindow": {
         "isHiddenOnBlur": true,
         "isCorrectionPrefetchEnabled": false,
-        "correctionMode": "onSubmit"
+        "correctionMode": "onSubmit",
+        "screenshotCaptureMode": "screen"
       },
       "hotkeys": {
         "editor": "",
@@ -2948,7 +4003,9 @@
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": ""
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -2960,16 +4017,35 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US", "w": "ru-RU" },
+        "targetLanguages": {
+          "q": "en-US",
+          "w": "ru-RU"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -3021,18 +4097,35 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          },
+          "transformation": {
+            "modelId": ""
+          },
+          "styling": {
+            "modelId": ""
+          },
+          "quickRequest": {
+            "modelId": "",
+            "rule": ""
+          }
         },
         "imageQuality": "balanced"
       },
@@ -3056,47 +4149,110 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
-          "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          },
+          "geminiLive": {
+            "modelId": "gemini-3.5-transcribe-live"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
-      "aiVault": { "path": "" },
+      "aiVault": {
+        "path": ""
+      },
       "transformations": {
-        "items": [{ "id": "a", "name": "A", "rule": "x" }],
-        "slots": { "q": "a" }
+        "items": [
+          {
+            "id": "a",
+            "name": "A",
+            "rule": "x"
+          }
+        ],
+        "slots": {
+          "q": "a"
+        }
       },
       "actionPages": [
         {
           "inputMode": "selection",
           "slots": {
-            "q": { "type": "standard", "actionId": "copyToClipboard" },
-            "w": { "type": "plugin", "actionId": "FastNote:write" },
-            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
-            "t": { "type": "standard", "actionId": "translationMenu" },
-            "a": { "type": "standard", "actionId": "askInChat" },
-            "s": { "type": "standard", "actionId": "stylingMenu" },
-            "d": { "type": "standard", "actionId": "correction" },
-            "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "quickAiRequest" },
-            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
+            "q": {
+              "type": "standard",
+              "actionId": "copyToClipboard"
+            },
+            "w": {
+              "type": "plugin",
+              "actionId": "FastNote:write"
+            },
+            "e": {
+              "type": "plugin",
+              "actionId": "SearchInInternet:search"
+            },
+            "t": {
+              "type": "standard",
+              "actionId": "translationMenu"
+            },
+            "a": {
+              "type": "standard",
+              "actionId": "askInChat"
+            },
+            "s": {
+              "type": "standard",
+              "actionId": "stylingMenu"
+            },
+            "d": {
+              "type": "standard",
+              "actionId": "correction"
+            },
+            "f": {
+              "type": "standard",
+              "actionId": "transformationMenu"
+            },
+            "g": {
+              "type": "standard",
+              "actionId": "quickAiRequest"
+            },
+            "v": {
+              "type": "standard",
+              "actionId": "voiceQuickAiRequest"
+            }
           }
         }
       ],
       "variables": [],
       "variableValues": {},
-      "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] }
+      "styling": {
+        "items": [],
+        "slots": {}
+      },
+      "chatPrompts": {
+        "items": [],
+        "slots": {}
+      },
+      "aiProfiles": {
+        "chatHistory": {
+          "storage": "disk"
+        }
+      },
+      "favorites": {
+        "items": []
+      }
     }
   },
   {
@@ -3109,7 +4265,9 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto" },
+      "language": {
+        "ui": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -3138,7 +4296,9 @@
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -3152,7 +4312,10 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [
-          { "term": " TyCo ", "translation": "TyCo" },
+          {
+            "term": " TyCo ",
+            "translation": "TyCo"
+          },
           {
             "term": "workspace",
             "translation": " ",
@@ -3162,19 +4325,47 @@
               "EN": "x"
             }
           },
-          { "term": "empty", "translation": "", "translations": { "es": " " } },
-          { "term": "bare", "translation": "" }
+          {
+            "term": "empty",
+            "translation": "",
+            "translations": {
+              "es": " "
+            }
+          },
+          {
+            "term": "bare",
+            "translation": ""
+          }
         ],
-        "targetLanguages": { "q": "en-US", "w": "ru-RU" },
+        "targetLanguages": {
+          "q": "en-US",
+          "w": "ru-RU"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -3226,15 +4417,25 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          }
         },
         "imageQuality": "balanced"
       },
@@ -3258,20 +4459,39 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false
       },
-      "aiVault": { "path": "" },
+      "aiVault": {
+        "path": ""
+      },
       "transformations": {
-        "items": [{ "id": "a", "name": "A", "rule": "x" }],
-        "slots": { "q": "a" }
+        "items": [
+          {
+            "id": "a",
+            "name": "A",
+            "rule": "x"
+          }
+        ],
+        "slots": {
+          "q": "a"
+        }
       }
     },
     "expected": {
@@ -3282,7 +4502,9 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto" },
+      "language": {
+        "ui": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -3318,7 +4540,8 @@
       "quickWindow": {
         "isHiddenOnBlur": true,
         "isCorrectionPrefetchEnabled": false,
-        "correctionMode": "onSubmit"
+        "correctionMode": "onSubmit",
+        "screenshotCaptureMode": "screen"
       },
       "hotkeys": {
         "editor": "",
@@ -3345,7 +4568,9 @@
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": ""
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -3357,23 +4582,47 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [
-          { "term": "TyCo", "translation": "TyCo" },
+          {
+            "term": "TyCo",
+            "translation": "TyCo"
+          },
           {
             "term": "workspace",
             "translation": "",
-            "translations": { "es": "espacio de trabajo" }
+            "translations": {
+              "es": "espacio de trabajo"
+            }
           }
         ],
-        "targetLanguages": { "q": "en-US", "w": "ru-RU" },
+        "targetLanguages": {
+          "q": "en-US",
+          "w": "ru-RU"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -3425,18 +4674,35 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          },
+          "transformation": {
+            "modelId": ""
+          },
+          "styling": {
+            "modelId": ""
+          },
+          "quickRequest": {
+            "modelId": "",
+            "rule": ""
+          }
         },
         "imageQuality": "balanced"
       },
@@ -3460,47 +4726,110 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
-          "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          },
+          "geminiLive": {
+            "modelId": "gemini-3.5-transcribe-live"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
-      "aiVault": { "path": "" },
+      "aiVault": {
+        "path": ""
+      },
       "transformations": {
-        "items": [{ "id": "a", "name": "A", "rule": "x" }],
-        "slots": { "q": "a" }
+        "items": [
+          {
+            "id": "a",
+            "name": "A",
+            "rule": "x"
+          }
+        ],
+        "slots": {
+          "q": "a"
+        }
       },
       "actionPages": [
         {
           "inputMode": "selection",
           "slots": {
-            "q": { "type": "standard", "actionId": "copyToClipboard" },
-            "w": { "type": "plugin", "actionId": "FastNote:write" },
-            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
-            "t": { "type": "standard", "actionId": "translationMenu" },
-            "a": { "type": "standard", "actionId": "askInChat" },
-            "s": { "type": "standard", "actionId": "stylingMenu" },
-            "d": { "type": "standard", "actionId": "correction" },
-            "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "quickAiRequest" },
-            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
+            "q": {
+              "type": "standard",
+              "actionId": "copyToClipboard"
+            },
+            "w": {
+              "type": "plugin",
+              "actionId": "FastNote:write"
+            },
+            "e": {
+              "type": "plugin",
+              "actionId": "SearchInInternet:search"
+            },
+            "t": {
+              "type": "standard",
+              "actionId": "translationMenu"
+            },
+            "a": {
+              "type": "standard",
+              "actionId": "askInChat"
+            },
+            "s": {
+              "type": "standard",
+              "actionId": "stylingMenu"
+            },
+            "d": {
+              "type": "standard",
+              "actionId": "correction"
+            },
+            "f": {
+              "type": "standard",
+              "actionId": "transformationMenu"
+            },
+            "g": {
+              "type": "standard",
+              "actionId": "quickAiRequest"
+            },
+            "v": {
+              "type": "standard",
+              "actionId": "voiceQuickAiRequest"
+            }
           }
         }
       ],
       "variables": [],
       "variableValues": {},
-      "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] }
+      "styling": {
+        "items": [],
+        "slots": {}
+      },
+      "chatPrompts": {
+        "items": [],
+        "slots": {}
+      },
+      "aiProfiles": {
+        "chatHistory": {
+          "storage": "disk"
+        }
+      },
+      "favorites": {
+        "items": []
+      }
     }
   },
   {
@@ -3513,7 +4842,10 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto", "user": "auto" },
+      "language": {
+        "ui": "auto",
+        "user": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -3541,7 +4873,9 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -3554,47 +4888,75 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [
         {
           "id": "notes",
           "name": "Notes",
           "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "toolConfig": {
+            "command": "true"
+          }
         },
         {
           "id": "MyCmd",
           "name": "Upper case",
           "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "toolConfig": {
+            "command": "true"
+          }
         },
         {
           "id": "Мой скрипт",
           "name": "Cyrillic only",
           "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "toolConfig": {
+            "command": "true"
+          }
         },
         {
           "id": " Notes ",
           "name": "Collides with notes",
           "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "toolConfig": {
+            "command": "true"
+          }
         },
         {
           "id": "MyCmd",
           "name": "Repeat of an invalid id",
           "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "toolConfig": {
+            "command": "true"
+          }
         }
       ],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -3646,15 +5008,25 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          }
         },
         "imageQuality": "balanced"
       },
@@ -3678,12 +5050,21 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false
@@ -3697,7 +5078,9 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto" },
+      "language": {
+        "ui": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -3733,7 +5116,8 @@
       "quickWindow": {
         "isHiddenOnBlur": true,
         "isCorrectionPrefetchEnabled": false,
-        "correctionMode": "onSubmit"
+        "correctionMode": "onSubmit",
+        "screenshotCaptureMode": "screen"
       },
       "hotkeys": {
         "editor": "",
@@ -3760,7 +5144,9 @@
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": ""
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -3772,16 +5158,24 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [
         {
           "id": "notes",
           "name": "Notes",
           "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "toolConfig": {
+            "command": "true"
+          },
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -3798,7 +5192,9 @@
           "id": "mycmd",
           "name": "Upper case",
           "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "toolConfig": {
+            "command": "true"
+          },
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -3815,7 +5211,9 @@
           "id": "command",
           "name": "Cyrillic only",
           "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "toolConfig": {
+            "command": "true"
+          },
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -3832,7 +5230,9 @@
           "id": "notes-2",
           "name": "Collides with notes",
           "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "toolConfig": {
+            "command": "true"
+          },
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -3848,9 +5248,21 @@
       ],
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -3902,18 +5314,35 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          },
+          "transformation": {
+            "modelId": ""
+          },
+          "styling": {
+            "modelId": ""
+          },
+          "quickRequest": {
+            "modelId": "",
+            "rule": ""
+          }
         },
         "imageQuality": "balanced"
       },
@@ -3937,13 +5366,24 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
-          "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          },
+          "geminiLive": {
+            "modelId": "gemini-3.5-transcribe-live"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false,
@@ -3954,16 +5394,46 @@
         {
           "inputMode": "selection",
           "slots": {
-            "q": { "type": "standard", "actionId": "copyToClipboard" },
-            "w": { "type": "plugin", "actionId": "FastNote:write" },
-            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
-            "t": { "type": "standard", "actionId": "translationMenu" },
-            "a": { "type": "standard", "actionId": "askInChat" },
-            "s": { "type": "standard", "actionId": "stylingMenu" },
-            "d": { "type": "standard", "actionId": "correction" },
-            "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "quickAiRequest" },
-            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
+            "q": {
+              "type": "standard",
+              "actionId": "copyToClipboard"
+            },
+            "w": {
+              "type": "plugin",
+              "actionId": "FastNote:write"
+            },
+            "e": {
+              "type": "plugin",
+              "actionId": "SearchInInternet:search"
+            },
+            "t": {
+              "type": "standard",
+              "actionId": "translationMenu"
+            },
+            "a": {
+              "type": "standard",
+              "actionId": "askInChat"
+            },
+            "s": {
+              "type": "standard",
+              "actionId": "stylingMenu"
+            },
+            "d": {
+              "type": "standard",
+              "actionId": "correction"
+            },
+            "f": {
+              "type": "standard",
+              "actionId": "transformationMenu"
+            },
+            "g": {
+              "type": "standard",
+              "actionId": "quickAiRequest"
+            },
+            "v": {
+              "type": "standard",
+              "actionId": "voiceQuickAiRequest"
+            }
           }
         }
       ],
@@ -3977,13 +5447,29 @@
             "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
-        "slots": { "q": "deep-edit" }
+        "slots": {
+          "q": "deep-edit"
+        }
       },
-      "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
-      "aiVault": { "path": "" },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] }
+      "styling": {
+        "items": [],
+        "slots": {}
+      },
+      "chatPrompts": {
+        "items": [],
+        "slots": {}
+      },
+      "aiVault": {
+        "path": ""
+      },
+      "aiProfiles": {
+        "chatHistory": {
+          "storage": "disk"
+        }
+      },
+      "favorites": {
+        "items": []
+      }
     }
   },
   {
@@ -3996,7 +5482,10 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto", "user": "auto" },
+      "language": {
+        "ui": "auto",
+        "user": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -4024,7 +5513,9 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -4037,50 +5528,93 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [
         {
           "id": "notes",
           "name": "Notes",
           "toolId": "script",
-          "toolConfig": { "command": "true" },
-          "platforms": ["linux", "macos", "linux"]
+          "toolConfig": {
+            "command": "true"
+          },
+          "platforms": [
+            "linux",
+            "macos",
+            "linux"
+          ]
         },
         {
           "id": "MyCmd",
           "name": "Upper case",
           "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "toolConfig": {
+            "command": "true"
+          }
         },
         {
           "id": "Мой скрипт",
           "name": "Cyrillic only",
           "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "toolConfig": {
+            "command": "true"
+          }
         },
         {
           "id": " Notes ",
           "name": "Collides with notes",
           "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "toolConfig": {
+            "command": "true"
+          }
         },
         {
           "id": "MyCmd",
           "name": "Repeat of an invalid id",
           "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "toolConfig": {
+            "command": "true"
+          }
         }
       ],
       "variables": [
-        { "id": "notes", "name": "NOTES_DIR", "description": "Notes" },
-        { "id": "dup", "name": "NOTES_DIR", "description": "" },
-        { "id": "builtin", "name": "TYCO_X", "description": "" },
-        { "id": "bad", "name": "lower", "description": "" },
-        { "id": "notes", "name": "OTHER", "description": "" },
-        { "id": "api", "name": "LOCAL_API" }
+        {
+          "id": "notes",
+          "name": "NOTES_DIR",
+          "description": "Notes"
+        },
+        {
+          "id": "dup",
+          "name": "NOTES_DIR",
+          "description": ""
+        },
+        {
+          "id": "builtin",
+          "name": "TYCO_X",
+          "description": ""
+        },
+        {
+          "id": "bad",
+          "name": "lower",
+          "description": ""
+        },
+        {
+          "id": "notes",
+          "name": "OTHER",
+          "description": ""
+        },
+        {
+          "id": "api",
+          "name": "LOCAL_API"
+        }
       ],
       "variableValues": {
         "notes": "/n",
@@ -4091,9 +5625,21 @@
       },
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -4145,15 +5691,25 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          }
         },
         "imageQuality": "balanced"
       },
@@ -4177,12 +5733,21 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false
@@ -4196,7 +5761,9 @@
         "motion": "auto",
         "uiScalePercent": 100
       },
-      "language": { "ui": "auto" },
+      "language": {
+        "ui": "auto"
+      },
       "editor": {
         "submitKey": "Enter",
         "diffViewMode": "unified",
@@ -4232,7 +5799,8 @@
       "quickWindow": {
         "isHiddenOnBlur": true,
         "isCorrectionPrefetchEnabled": false,
-        "correctionMode": "onSubmit"
+        "correctionMode": "onSubmit",
+        "screenshotCaptureMode": "screen"
       },
       "hotkeys": {
         "editor": "",
@@ -4259,7 +5827,9 @@
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": ""
       },
-      "externalAccess": { "canAccessSelection": false },
+      "externalAccess": {
+        "canAccessSelection": false
+      },
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
@@ -4271,17 +5841,27 @@
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en-US" },
+        "targetLanguages": {
+          "q": "en-US"
+        },
         "viewMode": "split",
-        "providers": { "deepl": { "endpoint": "free" } }
+        "providers": {
+          "deepl": {
+            "endpoint": "free"
+          }
+        }
       },
       "commands": [
         {
           "id": "notes",
           "name": "Notes",
           "toolId": "script",
-          "toolConfig": { "command": "true" },
-          "platforms": ["linux"],
+          "toolConfig": {
+            "command": "true"
+          },
+          "platforms": [
+            "linux"
+          ],
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -4298,7 +5878,9 @@
           "id": "mycmd",
           "name": "Upper case",
           "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "toolConfig": {
+            "command": "true"
+          },
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -4315,7 +5897,9 @@
           "id": "command",
           "name": "Cyrillic only",
           "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "toolConfig": {
+            "command": "true"
+          },
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -4332,7 +5916,9 @@
           "id": "notes-2",
           "name": "Collides with notes",
           "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "toolConfig": {
+            "command": "true"
+          },
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -4347,15 +5933,37 @@
         }
       ],
       "variables": [
-        { "id": "notes", "name": "NOTES_DIR", "description": "Notes" },
-        { "id": "api", "name": "LOCAL_API", "description": "" }
+        {
+          "id": "notes",
+          "name": "NOTES_DIR",
+          "description": "Notes"
+        },
+        {
+          "id": "api",
+          "name": "LOCAL_API",
+          "description": ""
+        }
       ],
-      "variableValues": { "notes": "/n" },
+      "variableValues": {
+        "notes": "/n"
+      },
       "llm": {
         "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "google",
+            "type": "google",
+            "name": "Google Gemini"
+          },
+          {
+            "id": "openrouter",
+            "type": "openrouter",
+            "name": "OpenRouter"
+          },
+          {
+            "id": "deepseek",
+            "type": "deepseek",
+            "name": "DeepSeek"
+          },
           {
             "id": "ollama",
             "type": "openaiCompatible",
@@ -4407,18 +6015,35 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
-          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "chat": {
+            "rule": ""
+          },
+          "correction": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
           "translation": {
             "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "voiceCorrection": {
+            "modelId": "ollama-qwen",
+            "rule": ""
+          },
+          "aiTask": {
+            "modelId": "ollama-qwen"
+          },
+          "transformation": {
+            "modelId": ""
+          },
+          "styling": {
+            "modelId": ""
+          },
+          "quickRequest": {
+            "modelId": "",
+            "rule": ""
+          }
         },
         "imageQuality": "balanced"
       },
@@ -4442,13 +6067,24 @@
         }
       },
       "plugins": {},
-      "chat": { "history": { "storage": "disk" } },
+      "chat": {
+        "history": {
+          "storage": "disk"
+        }
+      },
       "stt": {
         "provider": "deepgram",
         "providers": {
-          "deepgram": { "modelId": "nova-3", "language": "auto" },
-          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
-          "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
+          "deepgram": {
+            "modelId": "nova-3",
+            "language": "auto"
+          },
+          "sherpaOnnx": {
+            "baseUrl": "ws://localhost:6006"
+          },
+          "geminiLive": {
+            "modelId": "gemini-3.5-transcribe-live"
+          }
         },
         "correctionMode": "off",
         "isVoiceHoldEnabled": false,
@@ -4459,16 +6095,46 @@
         {
           "inputMode": "selection",
           "slots": {
-            "q": { "type": "standard", "actionId": "copyToClipboard" },
-            "w": { "type": "plugin", "actionId": "FastNote:write" },
-            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
-            "t": { "type": "standard", "actionId": "translationMenu" },
-            "a": { "type": "standard", "actionId": "askInChat" },
-            "s": { "type": "standard", "actionId": "stylingMenu" },
-            "d": { "type": "standard", "actionId": "correction" },
-            "f": { "type": "standard", "actionId": "transformationMenu" },
-            "g": { "type": "standard", "actionId": "quickAiRequest" },
-            "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
+            "q": {
+              "type": "standard",
+              "actionId": "copyToClipboard"
+            },
+            "w": {
+              "type": "plugin",
+              "actionId": "FastNote:write"
+            },
+            "e": {
+              "type": "plugin",
+              "actionId": "SearchInInternet:search"
+            },
+            "t": {
+              "type": "standard",
+              "actionId": "translationMenu"
+            },
+            "a": {
+              "type": "standard",
+              "actionId": "askInChat"
+            },
+            "s": {
+              "type": "standard",
+              "actionId": "stylingMenu"
+            },
+            "d": {
+              "type": "standard",
+              "actionId": "correction"
+            },
+            "f": {
+              "type": "standard",
+              "actionId": "transformationMenu"
+            },
+            "g": {
+              "type": "standard",
+              "actionId": "quickAiRequest"
+            },
+            "v": {
+              "type": "standard",
+              "actionId": "voiceQuickAiRequest"
+            }
           }
         }
       ],
@@ -4480,13 +6146,29 @@
             "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
-        "slots": { "q": "deep-edit" }
+        "slots": {
+          "q": "deep-edit"
+        }
       },
-      "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [], "slots": {} },
-      "aiVault": { "path": "" },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] }
+      "styling": {
+        "items": [],
+        "slots": {}
+      },
+      "chatPrompts": {
+        "items": [],
+        "slots": {}
+      },
+      "aiVault": {
+        "path": ""
+      },
+      "aiProfiles": {
+        "chatHistory": {
+          "storage": "disk"
+        }
+      },
+      "favorites": {
+        "items": []
+      }
     }
   }
 ]

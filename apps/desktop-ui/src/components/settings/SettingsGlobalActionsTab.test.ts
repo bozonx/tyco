@@ -291,4 +291,25 @@ describe('SettingsGlobalActionsTab.vue', () => {
       )
     ).toBe(true)
   })
+
+  it('renders screenshot capture mode select and updates config', async () => {
+    const wrapper = mount(SettingsGlobalActionsTab, {
+      global: { provide: context.provide, stubs: globalStubs },
+    })
+    await flushPromises()
+
+    const captureModeRow = wrapper.find(
+      '[data-label="settings.screenshotCaptureMode"]'
+    )
+    expect(captureModeRow.exists()).toBe(true)
+
+    const selectComponent = captureModeRow.findComponent({
+      name: 'FieldSelect',
+    })
+    expect(selectComponent.exists()).toBe(true)
+    expect(selectComponent.props('modelValue')).toBe('screen')
+
+    await selectComponent.vm.$emit('update:modelValue', 'area')
+    expect(context.draft.value.quickWindow.screenshotCaptureMode).toBe('area')
+  })
 })

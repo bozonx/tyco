@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "Στιγμιότυπο οθόνης και ερώτηση στην ΤΝ",
     "voiceScreenshotQuickAiRequest": "Στιγμιότυπο οθόνης και φωνητική ερώτηση στην ΤΝ"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Επισύναψη αρχείου",
     "alertCaution": "Προσοχή",
@@ -187,7 +189,9 @@
       "noCommands": "Δεν έχουν ρυθμιστεί ακόμη προσαρμοσμένες εντολές.",
       "noCommandsHint": "Δημιουργήστε πρώτα εντολές στις Ρυθμίσεις → Εντολές."
     },
-    "replyBlocks": { "toolLabel": "Μπλοκ απαντήσεων" }
+    "replyBlocks": {
+      "toolLabel": "Μπλοκ απαντήσεων"
+    }
   },
   "commands": {
     "advanced": "Για προχωρημένους",
@@ -557,7 +561,6 @@
     "reviewResult": "Έλεγχος αποτελέσματος",
     "speakNow": "Μιλήστε στο μικρόφωνο...",
     "styling": "Διαμόρφωση στυλ κειμένου",
-    "transcribing": "Μεταγραφή...",
     "transformation": "Μετασχηματισμός κειμένου",
     "translate": "Μετάφραση",
     "translateAutoDetect": "Αυτόματη ανίχνευση",
@@ -614,7 +617,10 @@
       "command": "Η εντολή άφησε το κείμενο αμετάβλητο",
       "correction": "Δεν βρέθηκαν λάθη"
     },
-    "working": { "command": "Εκτέλεση εντολής…", "correction": "Διόρθωση…" }
+    "working": {
+      "command": "Εκτέλεση εντολής…",
+      "correction": "Διόρθωση…"
+    }
   },
   "settings": {
     "accessAllow": "Να επιτρέπεται",
@@ -1222,9 +1228,17 @@
     "favoriteNamePlaceholder": "Όνομα (προαιρετικό)",
     "favoriteTextPlaceholder": "Εισάγετε κείμενο…",
     "searchFavoritesPlaceholder": "Αναζήτηση αγαπημένων…",
-    "hotkeyDescriptions": {}
+    "hotkeyDescriptions": {},
+    "screenshotSectionTitle": "Λήψη στιγμιότυπου",
+    "screenshotSectionHint": "Λειτουργία λήψης για γρήγορα αιτήματα με στιγμιότυπο οθόνης και νέες λήψεις.",
+    "screenshotCaptureMode": "Λειτουργία λήψης",
+    "screenshotCaptureModeHint": "Επιλέξτε εάν θα γίνει λήψη ολόκληρης της οθόνης ή επιλεγμένης περιοχής.",
+    "screenshotCaptureModeScreen": "Ολόκληρη η οθόνη",
+    "screenshotCaptureModeArea": "Επιλεγμένη περιοχή"
   },
-  "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
+  "shortcuts": {
+    "insertIntoEditor": "Εισαγωγή στον επεξεργαστή"
+  },
   "theme": {
     "auto": "Όπως στο σύστημα",
     "dark": "Σκούρο",
@@ -1363,7 +1377,9 @@
     "missingSelection": "Απαιτείται επιλεγμένο κείμενο."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "ρώτα στη συνομιλία" },
+    "actions": {
+      "askInChat": "ρώτα στη συνομιλία"
+    },
     "languages": {
       "cs-CZ": "Τσεχικά",
       "de-DE": "γερμανικά",
@@ -1393,7 +1409,9 @@
     },
     "translate": "μετάφρασε στα"
   },
-  "window": { "clickToFocus": "Κάντε κλικ για να συνεχίσετε" },
+  "window": {
+    "clickToFocus": "Κάντε κλικ για να συνεχίσετε"
+  },
   "write": {
     "alreadyCorrected": "Το κείμενο είναι ήδη διορθωμένο",
     "cancel": "Ακύρωση",
@@ -1443,7 +1461,9 @@
     "valueNotSet": "Δεν έχει οριστεί σε αυτή τη συσκευή: οι εντολές που τη χρησιμοποιούν δεν εκτελούνται",
     "valuePlaceholder": "Μια διαδρομή, μια διεύθυνση ή άλλο κείμενο"
   },
-  "favorites": { "noMatches": "Δεν υπάρχουν αγαπημένα που να ταιριάζουν" },
+  "favorites": {
+    "noMatches": "Δεν υπάρχουν αγαπημένα που να ταιριάζουν"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Εισαγωγή στο παράθυρο",
     "insertIntoEditor": "Στον επεξεργαστή",
@@ -1458,6 +1478,7 @@
   },
   "screenshot": {
     "retake": "Νέα λήψη στιγμιότυπου",
-    "failed": "Δεν ήταν δυνατή η λήψη της οθόνης. Ελέγξτε τις άδειες λήψης και την υποστήριξη της πύλης επιφάνειας εργασίας."
+    "failed": "Δεν ήταν δυνατή η λήψη της οθόνης. Ελέγξτε τις άδειες λήψης και την υποστήριξη της πύλης επιφάνειας εργασίας.",
+    "selectAreaInstruction": "Σύρετε για να επιλέξετε περιοχή. Πατήστε Escape για ακύρωση."
   }
 }

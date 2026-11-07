@@ -41,7 +41,8 @@
   "quickWindow": {
     "isHiddenOnBlur": true,
     "isCorrectionPrefetchEnabled": false,
-    "correctionMode": "onSubmit"
+    "correctionMode": "onSubmit",
+    "screenshotCaptureMode": "screen"
   },
   "hotkeys": {
     "editor": "",

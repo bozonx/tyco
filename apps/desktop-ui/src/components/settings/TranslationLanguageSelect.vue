@@ -355,6 +355,7 @@ defineExpose({ focus: () => (triggerRef.value as HTMLElement | null)?.focus() })
 .options-list {
   max-height: 15rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 2px;

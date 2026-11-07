@@ -21,8 +21,6 @@ pub const START_MODES: &[&str] = &[
     "voiceQuickAiRequest",
     "screenshotQuickAiRequest",
     "voiceScreenshotQuickAiRequest",
-    "customTransformation",
-    "voiceTransformation",
     "chatPrompts",
     "favorites",
     "history",

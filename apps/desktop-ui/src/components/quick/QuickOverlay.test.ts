@@ -8,7 +8,7 @@ import {
   reactive,
 } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ActivationMode } from '@tyco/shared'
+import { type ActivationMode, DESKTOP_EVENTS } from '@tyco/shared'
 
 import {
   loadFakeDesktop,
@@ -90,6 +90,14 @@ vi.mock('../../views/TransformationView.vue', () => ({
 }))
 vi.mock('../../views/QuickAiRequestView.vue', () => ({
   default: { template: '<div class="quick-ai-request-view" />' },
+}))
+vi.mock('../screenshot/ScreenshotSelector.vue', () => ({
+  default: {
+    name: 'ScreenshotSelector',
+    props: ['selection'],
+    emits: ['confirm', 'cancel'],
+    template: '<div class="mock-screenshot-selector" />',
+  },
 }))
 vi.mock('../../views/VoiceView.vue', () => ({
   default: defineComponent({
@@ -462,5 +470,91 @@ describe('quick overlay menus', () => {
       wrapper.unmount()
       desktop.setState({ mode: 'quickInput' })
     }
+  })
+
+  describe('screenshot area selection', () => {
+    it('shows selector and hides card when select area event is received, then confirms', async () => {
+      stubResizeObserver()
+      desktop.setState({ isWindowShown: true })
+      const wrapper = mount(QuickOverlay, {
+        global: { plugins: [desktop.pinia] },
+      })
+      await flushPromises()
+      try {
+        expect(wrapper.find('.mock-screenshot-selector').exists()).toBe(false)
+        expect(wrapper.get('.quick-overlay-card').isVisible()).toBe(true)
+
+        await desktop.emit(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA, {
+          activationId: desktop.backend.activation.activationId,
+          imageId: 'test-img',
+          screenX: 0,
+          screenY: 0,
+          width: 1920,
+          height: 1080,
+          scaleFactor: 1,
+        })
+        await flushPromises()
+        await nextTick()
+
+        expect(wrapper.find('.mock-screenshot-selector').exists()).toBe(true)
+        expect(wrapper.find('.quick-overlay-root').classes()).toContain(
+          'is-selecting-area'
+        )
+        expect(
+          (wrapper.find('.quick-overlay-card').element as HTMLElement).style
+            .display
+        ).toBe('none')
+
+        const selector = wrapper.findComponent({ name: 'ScreenshotSelector' })
+        const crop = { x: 10, y: 20, width: 100, height: 100 }
+        selector.vm.$emit('confirm', crop)
+        await flushPromises()
+        await nextTick()
+
+        expect(wrapper.find('.mock-screenshot-selector').exists()).toBe(false)
+        expect(
+          desktop.backend.callsOf('confirm_screenshot_crop')
+        ).toContainEqual({
+          activationId: desktop.backend.activation.activationId,
+          crop,
+        })
+      } finally {
+        wrapper.unmount()
+      }
+    })
+
+    it('cancels area selection on cancel event', async () => {
+      stubResizeObserver()
+      desktop.setState({ isWindowShown: true })
+      const wrapper = mount(QuickOverlay, {
+        global: { plugins: [desktop.pinia] },
+      })
+      await flushPromises()
+      try {
+        await desktop.emit(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA, {
+          activationId: desktop.backend.activation.activationId,
+          imageId: 'test-img',
+          screenX: 0,
+          screenY: 0,
+          width: 1920,
+          height: 1080,
+          scaleFactor: 1,
+        })
+        await flushPromises()
+        await nextTick()
+
+        const selector = wrapper.findComponent({ name: 'ScreenshotSelector' })
+        selector.vm.$emit('cancel')
+        await flushPromises()
+        await nextTick()
+
+        expect(wrapper.find('.mock-screenshot-selector').exists()).toBe(false)
+        expect(desktop.backend.callsOf('cancel_screenshot_crop')).toContainEqual({
+          activationId: desktop.backend.activation.activationId,
+        })
+      } finally {
+        wrapper.unmount()
+      }
+    })
   })
 })

@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "Snímek obrazovky a dotaz AI",
     "voiceScreenshotQuickAiRequest": "Snímek obrazovky a hlasový dotaz AI"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Přiložit soubor",
     "alertCaution": "Pozor",
@@ -187,7 +189,9 @@
       "noCommands": "Zatím nejsou nakonfigurovány žádné uživatelské příkazy.",
       "noCommandsHint": "Nejprve vytvořte příkazy v Nastavení → Příkazy."
     },
-    "replyBlocks": { "toolLabel": "Varianty odpovědí" }
+    "replyBlocks": {
+      "toolLabel": "Varianty odpovědí"
+    }
   },
   "commands": {
     "advanced": "Pokročilé",
@@ -557,7 +561,6 @@
     "reviewResult": "Zkontrolovat výsledek",
     "speakNow": "Mluvte do mikrofonu...",
     "styling": "Stylizace textu",
-    "transcribing": "Přepisování...",
     "transformation": "Transformace textu",
     "translate": "Přeložit",
     "translateAutoDetect": "Rozpoznat automaticky",
@@ -600,7 +603,10 @@
     "cancelled": "Zrušeno",
     "done": "Hotovo",
     "emptyResult": "Model vrátil prázdný výsledek",
-    "failed": { "command": "Příkaz selhal", "correction": "Oprava selhala" },
+    "failed": {
+      "command": "Příkaz selhal",
+      "correction": "Oprava selhala"
+    },
     "focusChanged": "Mezitím se změnilo okno, proto byl výsledek zkopírován do schránky",
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
@@ -611,7 +617,10 @@
       "command": "Příkaz ponechal text beze změny",
       "correction": "Nenalezeny žádné chyby"
     },
-    "working": { "command": "Spouští se příkaz…", "correction": "Opravuje se…" }
+    "working": {
+      "command": "Spouští se příkaz…",
+      "correction": "Opravuje se…"
+    }
   },
   "settings": {
     "accessAllow": "Povolit",
@@ -1219,9 +1228,17 @@
     "favoriteNamePlaceholder": "Název (volitelné)",
     "favoriteTextPlaceholder": "Zadejte text…",
     "searchFavoritesPlaceholder": "Hledat v oblíbených...",
-    "hotkeyDescriptions": {}
+    "hotkeyDescriptions": {},
+    "screenshotSectionTitle": "Snímek obrazovky",
+    "screenshotSectionHint": "Režim snímání používaný pro rychlé dotazy se snímkem obrazovky a opakované pořízení.",
+    "screenshotCaptureMode": "Režim snímání",
+    "screenshotCaptureModeHint": "Zvolte, zda pořídit snímek celé obrazovky nebo vybrat konkrétní oblast.",
+    "screenshotCaptureModeScreen": "Celá obrazovka",
+    "screenshotCaptureModeArea": "Vybraná oblast"
   },
-  "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
+  "shortcuts": {
+    "insertIntoEditor": "Vložit do editoru"
+  },
   "theme": {
     "auto": "Podle systému",
     "dark": "Tmavý",
@@ -1360,7 +1377,9 @@
     "missingSelection": "Je vyžadován výběr textu."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "zeptej se v chatu" },
+    "actions": {
+      "askInChat": "zeptej se v chatu"
+    },
     "languages": {
       "cs-CZ": "Czech",
       "de-DE": "němčiny",
@@ -1390,7 +1409,9 @@
     },
     "translate": "přelož do"
   },
-  "window": { "clickToFocus": "Klikněte pro pokračování" },
+  "window": {
+    "clickToFocus": "Klikněte pro pokračování"
+  },
   "write": {
     "alreadyCorrected": "Text je již opraven",
     "cancel": "Zrušit",
@@ -1440,7 +1461,9 @@
     "valueNotSet": "Na tomto zařízení není nastavena: příkazy, které ji používají, se nespustí",
     "valuePlaceholder": "Cesta, adresa nebo jiný text"
   },
-  "favorites": { "noMatches": "Žádné odpovídající oblíbené" },
+  "favorites": {
+    "noMatches": "Žádné odpovídající oblíbené"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Vložit do okna",
     "insertIntoEditor": "Do editoru",
@@ -1455,6 +1478,7 @@
   },
   "screenshot": {
     "retake": "Pořídit snímek znovu",
-    "failed": "Obrazovku se nepodařilo zachytit. Zkontrolujte oprávnění k zachycení a podporu portálu plochy."
+    "failed": "Obrazovku se nepodařilo zachytit. Zkontrolujte oprávnění k zachycení a podporu portálu plochy.",
+    "selectAreaInstruction": "Přetažením vyberte oblast. Stisknutím klávesy Escape zrušíte výběr."
   }
 }

@@ -350,6 +350,7 @@ onUnmounted(() => {
   border-right: 1px solid var(--app-border-subtle);
   background-color: var(--app-surface-raised);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .settings-nav-title {
@@ -374,6 +375,7 @@ onUnmounted(() => {
   flex: 1;
   min-width: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .settings-content-inner {

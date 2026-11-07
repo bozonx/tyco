@@ -30,7 +30,7 @@
       <template v-if="profiles.length > 0">
         <div
           ref="profilesContainerRef"
-          class="profiles-tabs-container overflow-x-auto no-scrollbar flex items-center gap-1 min-w-0"
+          class="profiles-tabs-container overflow-x-auto overscroll-contain no-scrollbar flex items-center gap-1 min-w-0"
           :class="{
             'has-hidden-start': hasHiddenTabs.start,
             'has-hidden-end': hasHiddenTabs.end,

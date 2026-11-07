@@ -319,6 +319,8 @@ export class FakeDesktopBackend {
     this.handle('log_client_message', noop)
     this.handle('mark_activation_metric', noop)
     this.handle('submit_activation_metric_value', noop)
+    this.handle('confirm_screenshot_crop', noop)
+    this.handle('cancel_screenshot_crop', noop)
     this.handle('set_tool_catalog', noop)
     this.handle('set_tray_menu_labels', noop)
   }

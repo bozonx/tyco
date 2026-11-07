@@ -348,6 +348,7 @@ defineExpose(textControl)
   margin: 0;
   padding: 0.25rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
   list-style: none;
   border: 1px solid var(--app-border-subtle);
   border-radius: var(--radius-md);

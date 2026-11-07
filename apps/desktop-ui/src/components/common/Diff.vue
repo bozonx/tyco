@@ -169,6 +169,7 @@ function getPartClass(part: DiffPart): string {
   white-space: pre-wrap;
   word-break: break-word;
   overflow-y: auto;
+  overscroll-behavior: contain;
   flex: 1;
   min-height: 0;
 }

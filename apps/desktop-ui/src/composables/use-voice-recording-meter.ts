@@ -21,6 +21,7 @@ export function useVoiceRecordingMeter(isRecording: () => boolean) {
       if (!recording) {
         audioLevel.value = 0
         audioPeak.value = 0
+        recordingDurationMs.value = 0
         return
       }
       const startedAt = Date.now()

@@ -21,7 +21,9 @@
     "screenshotQuickAiRequest": "Ekran görüntüsü ve yapay zekâ sorusu",
     "voiceScreenshotQuickAiRequest": "Ekran görüntüsü ve sesli yapay zekâ sorusu"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Dosya ekle",
     "alertCaution": "Dikkat",
@@ -187,7 +189,9 @@
       "noCommands": "Henüz özel komut yapılandırılmadı.",
       "noCommandsHint": "Önce Ayarlar → Komutlar bölümünde komut oluşturun."
     },
-    "replyBlocks": { "toolLabel": "Yanıt blokları" }
+    "replyBlocks": {
+      "toolLabel": "Yanıt blokları"
+    }
   },
   "commands": {
     "advanced": "Gelişmiş",
@@ -557,7 +561,6 @@
     "reviewResult": "Sonucu inceleyin",
     "speakNow": "Mikrofona konuşun...",
     "styling": "Metin stillendirme",
-    "transcribing": "Yazıya dökülüyor...",
     "transformation": "Metin dönüştürme",
     "translate": "Çevir",
     "translateAutoDetect": "Otomatik algıla",
@@ -614,7 +617,10 @@
       "command": "Komut metni olduğu gibi bıraktı",
       "correction": "Hata bulunamadı"
     },
-    "working": { "command": "Komut çalışıyor…", "correction": "Düzeltiliyor…" }
+    "working": {
+      "command": "Komut çalışıyor…",
+      "correction": "Düzeltiliyor…"
+    }
   },
   "settings": {
     "accessAllow": "İzin Ver",
@@ -1222,9 +1228,17 @@
     "favoriteNamePlaceholder": "Ad (isteğe bağlı)",
     "favoriteTextPlaceholder": "Metin girin…",
     "searchFavoritesPlaceholder": "Favorileri ara…",
-    "hotkeyDescriptions": {}
+    "hotkeyDescriptions": {},
+    "screenshotSectionTitle": "Ekran görüntüsü yakalama",
+    "screenshotSectionHint": "Ekran görüntülü hızlı istekler ve yeniden çekimler için kullanılan yakalama modu.",
+    "screenshotCaptureMode": "Yakalama modu",
+    "screenshotCaptureModeHint": "Tüm ekranı yakalamayı veya belirli bir alanı seçmeyi tercih edin.",
+    "screenshotCaptureModeScreen": "Tüm ekran",
+    "screenshotCaptureModeArea": "Seçilen alan"
   },
-  "shortcuts": { "insertIntoEditor": "Editöre ekle" },
+  "shortcuts": {
+    "insertIntoEditor": "Editöre ekle"
+  },
   "theme": {
     "auto": "Sistem dili",
     "dark": "Koyu",
@@ -1363,7 +1377,9 @@
     "missingSelection": "Seçili metin gerekli."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "sohbette sor" },
+    "actions": {
+      "askInChat": "sohbette sor"
+    },
     "languages": {
       "cs-CZ": "Çekçe;Çekçeye",
       "de-DE": "Almancaya;Almanca",
@@ -1393,7 +1409,9 @@
     },
     "translate": "{language} çevir;{language}ye çevir;{language}e çevir;çevir"
   },
-  "window": { "clickToFocus": "Devam etmek için tıklayın" },
+  "window": {
+    "clickToFocus": "Devam etmek için tıklayın"
+  },
   "write": {
     "alreadyCorrected": "Metin zaten düzeltildi",
     "cancel": "İptal",
@@ -1443,7 +1461,9 @@
     "valueNotSet": "Bu cihazda ayarlanmamış: onu kullanan komutlar çalışmaz",
     "valuePlaceholder": "Bir yol, adres veya başka bir metin"
   },
-  "favorites": { "noMatches": "Eşleşen favori yok" },
+  "favorites": {
+    "noMatches": "Eşleşen favori yok"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Pencereye ekle",
     "insertIntoEditor": "Düzenleyiciye",
@@ -1458,6 +1478,7 @@
   },
   "screenshot": {
     "retake": "Ekran görüntüsünü yeniden al",
-    "failed": "Ekran yakalanamadı. Ekran yakalama izinlerini ve masaüstü portalı desteğini kontrol edin."
+    "failed": "Ekran yakalanamadı. Ekran yakalama izinlerini ve masaüstü portalı desteğini kontrol edin.",
+    "selectAreaInstruction": "Bir alan seçmek için sürükleyin. İptal etmek için Escape tuşuna basın."
   }
 }

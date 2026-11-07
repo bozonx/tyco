@@ -4,10 +4,10 @@
     :class="{ compact, 'is-inline': layout === 'inline' }"
     data-testid="audio-waveform"
   >
-    <!-- Transcribing mode -->
-    <div v-if="isTranscribing" class="transcribing-state">
+    <!-- Transcribing / processing mode -->
+    <div v-if="isProcessing" class="transcribing-state">
       <span class="loading loading-spinner loading-lg text-primary" />
-      <p class="transcribing-label">{{ t('menu.transcribing') }}</p>
+      <p class="transcribing-label">{{ processingLabel }}</p>
     </div>
 
     <!-- Active listening / recording mode -->
@@ -52,13 +52,32 @@ const props = withDefaults(
     peak?: number
     durationMs?: number
     isTranscribing?: boolean
+    isCorrecting?: boolean
+    isStyling?: boolean
     layout?: 'stacked' | 'inline'
     compact?: boolean
   }>(),
-  { level: 0, peak: 0, durationMs: 0, isTranscribing: false, compact: true }
+  {
+    level: 0,
+    peak: 0,
+    durationMs: 0,
+    isTranscribing: false,
+    isCorrecting: false,
+    isStyling: false,
+    compact: true,
+  }
 )
 
 const { t } = useI18n()
+
+const isProcessing = computed(
+  () => props.isTranscribing || props.isCorrecting || props.isStyling
+)
+const processingLabel = computed(() => {
+  if (props.isCorrecting) return t('menu.correction')
+  if (props.isStyling) return t('menu.styling')
+  return t('menu.transcribing')
+})
 
 let motionQuery: MediaQueryList | undefined
 let mutationObserver: MutationObserver | undefined
@@ -102,7 +121,7 @@ function applyStaticLevel() {
 
 function updateAnimation(timeMs?: number) {
   animationFrameId = null
-  if (props.isTranscribing || isReducedMotion.value) return
+  if (isProcessing.value || isReducedMotion.value) return
   const frame = model.step({
     level: props.level,
     peak: props.peak,
@@ -119,7 +138,7 @@ function syncAnimation() {
   animationFrameId = null
   if (isReducedMotion.value) {
     applyStaticLevel()
-  } else if (!props.isTranscribing) {
+  } else if (!isProcessing.value) {
     animationFrameId = requestAnimationFrame(updateAnimation)
   }
 }
@@ -132,13 +151,13 @@ function syncMotionPreference() {
 watch(
   () => [props.level, props.peak, props.compact],
   () => {
-    if (isReducedMotion.value && !props.isTranscribing) {
+    if (isReducedMotion.value && !isProcessing.value) {
       applyStaticLevel()
     }
   }
 )
 
-watch(() => props.isTranscribing, syncAnimation)
+watch(isProcessing, syncAnimation)
 onMounted(() => {
   motionQuery =
     typeof window.matchMedia === 'function'

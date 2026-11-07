@@ -12,6 +12,8 @@
     "allow-open-screenshot-chat",
     "allow-retake-screenshot",
     "allow-remove-screenshot",
+    "allow-confirm-screenshot-crop",
+    "allow-cancel-screenshot-crop",
     "allow-hide-quick-window-on-blur",
     "allow-finish-external-job",
     "allow-finish-selection-run",

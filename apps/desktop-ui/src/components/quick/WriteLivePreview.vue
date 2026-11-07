@@ -114,6 +114,7 @@ function handleClick() {
     background-color var(--transition-fast);
   max-height: 8rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
   user-select: text;
 }
 

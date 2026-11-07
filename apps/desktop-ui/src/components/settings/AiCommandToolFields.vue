@@ -117,6 +117,7 @@ function setMaxSteps(text: string) {
   gap: var(--space-xs);
   max-height: 14rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .ai-command-empty {

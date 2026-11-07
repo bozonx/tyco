@@ -13,6 +13,8 @@ export interface VoiceRecordingProps {
   /** When the recording stops by itself, once that is near */
   autoStopDeadlineMs?: number
   isTranscribing: boolean
+  isCorrecting?: boolean
+  isStyling?: boolean
   isFinishing: boolean
   finishBehavior?: VoiceFinishBehavior
   /** The global hotkey that also confirms the input, see `VoiceRecordingActions` */

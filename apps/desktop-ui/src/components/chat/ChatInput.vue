@@ -101,6 +101,7 @@ function handleKeydown(event: KeyboardEvent) {
   max-height: 12rem;
   resize: none;
   overflow-y: auto;
+  overscroll-behavior: contain;
   border: 0;
   border-radius: var(--radius-lg);
   background: transparent;

@@ -75,17 +75,12 @@ pub fn within_capture_limits(width: u32, height: u32) -> bool {
         && u64::from(width) * u64::from(height) <= MAX_CAPTURE_PIXELS
 }
 
-/// The size a capture is encoded at: the quality's longest edge, never larger
-/// than the source and always within the image limits.
-fn capture_size(width: u32, height: u32, quality: &str) -> (u32, u32) {
-    let max_edge = match quality {
-        "economy" => 1024,
-        "original" => MAX_DIMENSION,
-        _ => 1568,
-    };
+/// The size a capture is encoded at: kept as is unless exceeding the maximum
+/// dimension or pixel count limit.
+fn capture_size(width: u32, height: u32) -> (u32, u32) {
     let longest = f64::from(width.max(height));
     let area = f64::from(width) * f64::from(height);
-    let scale = (f64::from(max_edge) / longest)
+    let scale = (f64::from(MAX_DIMENSION) / longest)
         .min((MAX_PIXELS as f64 / area).sqrt())
         .min(1.0);
     if scale >= 1.0 {
@@ -181,6 +176,19 @@ fn encode_pixels(
     } else {
         webp::Encoder::from_rgb(pixels, width, height)
     };
+    if let Ok(encoded) = encoder.encode_simple(true, 75.0) {
+        if encoded.len() <= MAX_IMAGE_BYTES {
+            let image = ChatImage {
+                id: sha256_hex(&*encoded),
+                media_type: crate::models::ChatImageMediaType::Webp,
+                width_px: width,
+                height_px: height,
+                size_bytes: encoded.len(),
+                name: name.map(|name| name.chars().take(255).collect()),
+            };
+            return Ok((image, encoded.to_vec()));
+        }
+    }
     for quality in WEBP_QUALITIES {
         let encoded = encoder
             .encode_simple(false, quality)
@@ -275,7 +283,6 @@ impl ChatImageStore {
         pixels: &[u8],
         width: u32,
         height: u32,
-        quality: &str,
     ) -> Result<(ChatImage, Vec<u8>), AppError> {
         if !within_capture_limits(width, height)
             || pixels.len() != width as usize * height as usize * 4
@@ -284,7 +291,7 @@ impl ChatImageStore {
                 "Screenshot dimensions limit exceeded".into(),
             ));
         }
-        let (out_width, out_height) = capture_size(width, height, quality);
+        let (out_width, out_height) = capture_size(width, height);
         let name = Some("Screenshot.webp".to_string());
         if (out_width, out_height) == (width, height) {
             return encode_pixels(pixels, width, height, true, name);
@@ -673,33 +680,31 @@ mod tests {
     use crate::services::test_support::TestDir;
 
     #[test]
-    fn a_capture_is_encoded_without_an_intermediate_png_and_scaled_by_quality() {
+    fn a_capture_is_encoded_without_an_intermediate_png_and_preserves_dimensions() {
         let pixels = vec![200u8; 3200 * 1800 * 4];
-        let (image, bytes) =
-            ChatImageStore::prepare_capture(&pixels, 3200, 1800, "balanced").unwrap();
-        assert_eq!((image.width_px, image.height_px), (1568, 882));
+        let (image, bytes) = ChatImageStore::prepare_capture(&pixels, 3200, 1800).unwrap();
+        assert_eq!((image.width_px, image.height_px), (3200, 1800));
         assert_eq!(image.size_bytes, bytes.len());
-        let (small, _) =
-            ChatImageStore::prepare_capture(&pixels[..64 * 32 * 4], 64, 32, "economy").unwrap();
+        let (small, _) = ChatImageStore::prepare_capture(&pixels[..64 * 32 * 4], 64, 32).unwrap();
         assert_eq!((small.width_px, small.height_px), (64, 32));
     }
 
     #[test]
     fn a_capture_with_inconsistent_or_oversized_dimensions_is_rejected() {
-        assert!(ChatImageStore::prepare_capture(&[0; 15], 2, 2, "balanced").is_err());
-        assert!(ChatImageStore::prepare_capture(&[], 0, 0, "balanced").is_err());
-        assert!(ChatImageStore::prepare_capture(&[], 100_000, 1, "balanced").is_err());
+        assert!(ChatImageStore::prepare_capture(&[0; 15], 2, 2).is_err());
+        assert!(ChatImageStore::prepare_capture(&[], 0, 0).is_err());
+        assert!(ChatImageStore::prepare_capture(&[], 100_000, 1).is_err());
     }
 
     #[test]
     fn a_capture_beyond_the_image_limits_is_reduced_to_fit_them() {
         // Three 4K monitors side by side, as a portal may return them.
-        assert_eq!(capture_size(11_520, 2160, "original"), (8000, 1500));
+        assert_eq!(capture_size(11_520, 2160), (8000, 1500));
         // A 5K monitor kept at its size would exceed the pixel limit.
-        let (width, height) = capture_size(7680, 4320, "original");
+        let (width, height) = capture_size(7680, 4320);
         assert!(u64::from(width) * u64::from(height) <= MAX_PIXELS);
-        assert_eq!(capture_size(1920, 1080, "original"), (1920, 1080));
-        assert_eq!(capture_size(800, 600, "economy"), (800, 600));
+        assert_eq!(capture_size(1920, 1080), (1920, 1080));
+        assert_eq!(capture_size(800, 600), (800, 600));
     }
 
     #[test]

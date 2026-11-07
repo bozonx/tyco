@@ -69,6 +69,7 @@ desktop_events! {
     HotkeysChanged = "app://hotkeys-changed" => ();
     OpenScreenshotChat = "app://open-screenshot-chat" => crate::models::ScreenshotChatTransfer;
     ScreenshotFailed = "app://screenshot-failed" => crate::errors::ErrorCode;
+    ScreenshotSelectArea = "app://screenshot-select-area" => crate::models::ScreenshotAreaSelection;
     OpenMainChat = "app://open-main-chat" => OpenMainChatEvent;
     OpenMainEditor = "app://open-main-editor" => EditorTransfer;
     /// A chat history changed in storage.
