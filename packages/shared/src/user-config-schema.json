@@ -479,6 +479,23 @@
                     "profileId": { "type": "string", "minLength": 1 }
                   },
                   "required": ["type", "profileId"]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": { "enum": ["profile"] },
+                    "profileId": { "type": "string", "minLength": 1 },
+                    "action": {
+                      "enum": [
+                        "quickAiRequest",
+                        "voiceQuickAiRequest",
+                        "screenshotQuickAiRequest",
+                        "voiceScreenshotQuickAiRequest",
+                        "chat"
+                      ]
+                    }
+                  },
+                  "required": ["type", "profileId", "action"]
                 }
               ]
             },

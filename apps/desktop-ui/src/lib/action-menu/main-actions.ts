@@ -45,6 +45,20 @@ function isValidActionSlot(slot: unknown): slot is MainActionConfig {
       typeof item.profileId === 'string' && item.profileId.trim().length > 0
     )
   }
+  if (item.type === 'profile') {
+    return (
+      typeof item.profileId === 'string' &&
+      item.profileId.trim().length > 0 &&
+      typeof item.action === 'string' &&
+      [
+        'quickAiRequest',
+        'voiceQuickAiRequest',
+        'screenshotQuickAiRequest',
+        'voiceScreenshotQuickAiRequest',
+        'chat',
+      ].includes(item.action)
+    )
+  }
   return false
 }
 

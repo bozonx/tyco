@@ -305,7 +305,7 @@ describe('createActionMenuModel', () => {
     })
   })
 
-  it('opens the chat with the text for askInChat action', async () => {
+  it('opens the chat with or without text for askInChat action', async () => {
     const { store, deps, services } = setup()
     const actions = store.getDefaultActions()
 
@@ -313,11 +313,8 @@ describe('createActionMenuModel', () => {
       (a) => a.labelKey === 'action.askInChat'
     )
     await askInChatAction?.action('   ')
-    expect(deps.showToast).toHaveBeenCalledWith(
-      'toast.textNotSelected',
-      'error'
-    )
-    expect(services.askInChat).not.toHaveBeenCalled()
+    expect(services.askInChat).toHaveBeenCalledWith('   ')
+    expect(deps.showToast).not.toHaveBeenCalled()
 
     await askInChatAction?.action('some context text')
     expect(services.askInChat).toHaveBeenCalledWith('some context text')

@@ -10,6 +10,7 @@ import {
   type CommandConfig,
   type CoreToolId,
   type MainActionConfig,
+  type ProfileActionKind,
   type ShortcutSlots,
   type StandardActionId,
 } from '@tyco/shared'
@@ -38,7 +39,11 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   setPendingModal?: (params: PendingModalParams, owner?: number) => number
   clearPendingModal?: (owner: number) => void
   openTransformationModal?: (text: string, transformationId?: string) => void
-  openQuickAiRequestModal?: (text: string, inputMode?: 'text' | 'voice') => void
+  openQuickAiRequestModal?: (
+    text: string,
+    inputMode?: 'text' | 'voice',
+    profileId?: string | null
+  ) => void
   openVoiceCommandsModal?: (
     text: string,
     inputMode: 'selection' | 'none'
@@ -181,8 +186,68 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     return {
       id: `profileChat:${profileId}`,
       name: translate('settings.askInProfileChat', { profile: profile.name }),
-      icon: 'mdi:account-outline',
-      action: withText((text) => deps.openProfileChat?.(profileId, text)),
+      icon: 'mdi:chat-question-outline',
+      action: async (text: string) => {
+        await deps.openProfileChat?.(profileId, text)
+      },
+    }
+  }
+
+  const createProfileActionItem = (
+    profileId: string,
+    action: ProfileActionKind
+  ): ActionItem | undefined => {
+    const profile = deps.profiles?.()?.find((p) => p.id === profileId)
+    if (!profile) return undefined
+    const baseId = `profile:${profileId}:${action}`
+    switch (action) {
+      case 'quickAiRequest':
+        return {
+          id: baseId,
+          name: translate('action.quickAiRequest'),
+          icon: 'mdi:pencil-outline',
+          trailingIcon: 'mdi:chevron-right',
+          action: async (text: string) => {
+            deps.openQuickAiRequestModal?.(text, 'text', profileId)
+          },
+        }
+      case 'voiceQuickAiRequest':
+        return {
+          id: baseId,
+          name: translate('action.voiceQuickAiRequest'),
+          icon: 'mdi:microphone-outline',
+          trailingIcon: 'mdi:chevron-right',
+          action: async (text: string) => {
+            deps.openQuickAiRequestModal?.(text, 'voice', profileId)
+          },
+        }
+      case 'screenshotQuickAiRequest':
+        return {
+          id: baseId,
+          name: translate('action.screenshotQuickAiRequest'),
+          icon: 'mdi:monitor-screenshot',
+          action: async () => {
+            await deps.activateMode?.('screenshotQuickAiRequest')
+          },
+        }
+      case 'voiceScreenshotQuickAiRequest':
+        return {
+          id: baseId,
+          name: translate('action.voiceScreenshotQuickAiRequest'),
+          icon: 'mdi:monitor-screenshot',
+          action: async () => {
+            await deps.activateMode?.('voiceScreenshotQuickAiRequest')
+          },
+        }
+      case 'chat':
+        return {
+          id: baseId,
+          name: translate('action.askInChat'),
+          icon: 'mdi:chat-question-outline',
+          action: async (text: string) => {
+            await deps.openProfileChat?.(profileId, text)
+          },
+        }
     }
   }
 
@@ -244,10 +309,6 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           icon: 'mdi:pencil-outline',
           trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
-            if (!text?.trim()) {
-              deps.showToast('toast.textNotSelected', 'error')
-              return
-            }
             deps.openQuickAiRequestModal?.(text, 'text')
           },
         },
@@ -257,10 +318,6 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           icon: 'mdi:microphone-outline',
           trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
-            if (!text?.trim()) {
-              deps.showToast('toast.textNotSelected', 'error')
-              return
-            }
             deps.openQuickAiRequestModal?.(text, 'voice')
           },
         },
@@ -387,15 +444,22 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
             deps.openTranslateModal(text)
           },
         },
-        createBuiltinActionItem(
-          {
-            id: 'askInChat',
-            labelKey: 'action.askInChat',
-            icon: 'mdi:chat-question-outline',
+        {
+          id: 'askInChat',
+          labelKey: 'action.askInChat',
+          icon: 'mdi:chat-question-outline',
+          action: async (text: string) => {
+            await invocationRunner.run(
+              {
+                toolId: 'core.askInChat',
+                toolConfig: {},
+                label: translate('action.askInChat'),
+              },
+              text,
+              { source: 'menu' }
+            )
           },
-          'core.askInChat',
-          false
-        ),
+        },
       ] satisfies ActionItem[]
     ).filter(
       (action) =>
@@ -505,6 +569,9 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       }
       if (item.type === 'profileChat') {
         return createProfileChatActionItem(item.profileId)
+      }
+      if (item.type === 'profile') {
+        return createProfileActionItem(item.profileId, item.action)
       }
       return undefined
     })

@@ -92,9 +92,6 @@
       <div v-show="currentMode === 'favorites'" class="quick-mode-layer">
         <FavoritesView v-if="currentMode === 'favorites'" :key="activationId" />
       </div>
-      <div v-show="currentMode === 'voiceChat'" class="quick-mode-layer">
-        <VoiceChatView v-if="currentMode === 'voiceChat'" />
-      </div>
       <!-- gone with the window: a prompt hidden without an answer denies -->
       <div v-show="currentMode === 'externalAccess'" class="quick-mode-layer">
         <ExternalAccessView
@@ -139,7 +136,6 @@ import SelectionView from '../../views/SelectionView.vue'
 import StylingView from '../../views/StylingView.vue'
 import TransformationView from '../../views/TransformationView.vue'
 import TranslateView from '../../views/TranslateView.vue'
-import VoiceChatView from '../../views/VoiceChatView.vue'
 import VoiceCommandsView from '../../views/VoiceCommandsView.vue'
 import VoiceView from '../../views/VoiceView.vue'
 import WriteView from '../../views/WriteView.vue'

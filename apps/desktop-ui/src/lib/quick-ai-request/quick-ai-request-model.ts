@@ -121,6 +121,7 @@ export interface QuickAiRequestModelDependencies {
     turns: EditorHistoryTurn[],
     result: string | undefined
   ) => Promise<void>
+  removeFromHistorySession?: (id: string) => Promise<void>
   listRecentInstructions?: (
     limit?: number,
     profileId?: string | null
@@ -576,6 +577,10 @@ export function createQuickAiRequestModel(
       return
     }
     const nameChat = await transferSavedChat(draft)
+    const sessionId = history.sessionId()
+    if (sessionId && deps.removeFromHistorySession) {
+      await deps.removeFromHistorySession(sessionId).catch(() => undefined)
+    }
     deps.closeOverlay()
     nameChat()
   }

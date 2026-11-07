@@ -17,12 +17,13 @@ const groupLabel = (group: MainActionGroup) =>
   group.kind === 'plugin' ? `plugin ${group.plugin}` : group.kind
 
 describe('main action groups', () => {
-  it('puts all standard actions, including menu openers, in the basic group', () => {
-    expect(standardActionGroup('translationMenu')).toEqual({ kind: 'basic' })
-    expect(standardActionGroup('transformationMenu')).toEqual({ kind: 'basic' })
-    expect(standardActionGroup('stylingMenu')).toEqual({ kind: 'basic' })
+  it('groups standard actions by category', () => {
+    expect(standardActionGroup('translationMenu')).toEqual({ kind: 'menu' })
+    expect(standardActionGroup('transformationMenu')).toEqual({ kind: 'menu' })
+    expect(standardActionGroup('stylingMenu')).toEqual({ kind: 'menu' })
     expect(standardActionGroup('insertIntoWindow')).toEqual({ kind: 'basic' })
-    expect(standardActionGroup('askInChat')).toEqual({ kind: 'basic' })
+    expect(standardActionGroup('askInChat')).toEqual({ kind: 'askAi' })
+    expect(standardActionGroup('quickAiRequest')).toEqual({ kind: 'askAi' })
   })
 
   it('groups a plugin action by its plugin', () => {

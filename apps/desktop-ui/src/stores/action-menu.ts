@@ -43,11 +43,13 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     },
     openQuickAiRequestModal: (
       text: string,
-      inputMode: 'text' | 'voice' = 'text'
+      inputMode: 'text' | 'voice' = 'text',
+      profileId?: string | null
     ) => {
       menuModalsStore.nextModal(MenuModals.QUICK_AI_REQUEST, {
         text,
         inputMode,
+        profileId: profileId ?? null,
       })
     },
     openVoiceCommandsModal: (text, inputMode) => {

@@ -210,8 +210,6 @@ const MODE_ORDER: HotkeyId[] = [
   'quickInput',
   'voice',
   'editor',
-  'chat',
-  'voiceChat',
   'voiceCommands',
   'selectionActions',
   'selectionActionsPage2',
@@ -324,15 +322,9 @@ const allRows = computed<HotkeyRow[]>(() => [
 const rows = computed(() =>
   allRows.value.filter(
     (row) =>
-      userConfig.value.isInDevelopment ||
-      ![
-        'chat',
-        'voiceChat',
-        'voiceCommands',
-        'correction',
-        'history',
-        inlineId,
-      ].includes(row.id)
+      !['chat', 'voiceChat'].includes(row.id) &&
+      (userConfig.value.isInDevelopment ||
+        !['voiceCommands', 'correction', 'history', inlineId].includes(row.id))
   )
 )
 

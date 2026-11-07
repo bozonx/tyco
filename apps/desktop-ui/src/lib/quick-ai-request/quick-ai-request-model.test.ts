@@ -75,6 +75,7 @@ function createSetup(overrides: Partial<QuickAiRequestModelDependencies> = {}) {
     resolveProfileInstructions: vi.fn(async (id: string) => `Soul of ${id}`),
     createHistorySession,
     updateHistorySession,
+    removeFromHistorySession: vi.fn(async () => {}),
     listRecentInstructions,
     insertText: vi.fn(async () => {}),
     copyText: vi.fn(async () => {}),
@@ -371,6 +372,7 @@ describe('QuickAiRequestModel', () => {
     expect(deps.openMainChat).toHaveBeenCalledWith(
       expect.objectContaining({ chatId, profileId: 'prof-1' })
     )
+    expect(deps.removeFromHistorySession).toHaveBeenCalledWith('history-123')
     // the answer is the reply block alone
     expect(deps.generateChatTitle).toHaveBeenCalledWith(
       'Make it formal',

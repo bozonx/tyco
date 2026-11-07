@@ -155,7 +155,6 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
     canRunFromChat: false,
     run: async (call) => {
       const text = textOf(call)
-      if (!text.trim()) return noText
       await deps.askInChat(text)
       // the chat opens in the main window, which the quick one hands over to
       return { ok: true, keepWindow: true }

@@ -16,6 +16,8 @@ export type MainActionGroup =
   | {
       kind:
         | 'basic'
+        | 'menu'
+        | 'askAi'
         | 'profiles'
         | 'translation'
         | 'aiCommands'
@@ -24,6 +26,7 @@ export type MainActionGroup =
         | 'commands'
         | 'unavailable'
     }
+  | { kind: 'profile'; profileId: string }
   | { kind: 'plugin'; plugin: string }
 
 /** An action that can go to a slot of the main menu */
@@ -41,6 +44,9 @@ export interface MainActionOption {
 
 const GROUP_ORDER: MainActionGroup['kind'][] = [
   'basic',
+  'menu',
+  'askAi',
+  'profile',
   'profiles',
   'translation',
   'aiCommands',
@@ -56,6 +62,7 @@ export function mainActionOptionId(
 ): string {
   if (!item) return ''
   if (item.type === 'profileChat') return `profileChat:${item.profileId}`
+  if (item.type === 'profile') return `profile:${item.profileId}:${item.action}`
   if (item.type === 'command') return `command:${item.commandId}`
   if (item.type === 'transformation')
     return `transformation:${item.transformationId}`
@@ -64,7 +71,25 @@ export function mainActionOptionId(
   return `${item.type}:${item.actionId}`
 }
 
-export function standardActionGroup(_id: StandardActionId): MainActionGroup {
+export function standardActionGroup(id: StandardActionId): MainActionGroup {
+  if (
+    id === 'quickAiRequest' ||
+    id === 'voiceQuickAiRequest' ||
+    id === 'screenshotQuickAiRequest' ||
+    id === 'voiceScreenshotQuickAiRequest' ||
+    id === 'askInChat'
+  ) {
+    return { kind: 'askAi' }
+  }
+  if (
+    id === 'translationMenu' ||
+    id === 'transformationMenu' ||
+    id === 'stylingMenu' ||
+    id === 'chatPromptsMenu' ||
+    id === 'favoritesMenu'
+  ) {
+    return { kind: 'menu' }
+  }
   return { kind: 'basic' }
 }
 
@@ -170,7 +195,8 @@ export function buildMainActionOptions(deps: {
   labeled.sort(
     (a, b) =>
       a.rank - b.rank ||
-      (a.rank === GROUP_ORDER.indexOf('plugin')
+      (a.rank === GROUP_ORDER.indexOf('plugin' as const) ||
+      a.rank === GROUP_ORDER.indexOf('profile' as const)
         ? a.group.localeCompare(b.group)
         : 0) ||
       a.index - b.index

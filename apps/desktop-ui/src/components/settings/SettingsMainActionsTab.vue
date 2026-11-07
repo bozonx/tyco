@@ -120,6 +120,7 @@ import {
   type ActionPageConfig,
   type CommandConfig,
   type MainActionConfig,
+  PROFILE_ACTION_KINDS,
   STANDARD_ACTION_IDS,
   type StandardActionId,
 } from '@tyco/shared'
@@ -252,11 +253,14 @@ const OPENS_DIALOG = new Set<StandardActionId>([
 ])
 
 const availableActions = computed((): MainActionChoice[] => [
-  ...aiProfilesStore.profiles.map((profile) => ({
-    config: { type: 'profileChat' as const, profileId: profile.id },
-    name: t('settings.askInProfileChat', { profile: profile.name }),
-    group: { kind: 'profiles' as const },
-  })),
+  ...aiProfilesStore.profiles.flatMap((profile) =>
+    PROFILE_ACTION_KINDS.map((action) => ({
+      config: { type: 'profile' as const, profileId: profile.id, action },
+      name:
+        action === 'chat' ? t('action.askInChat') : `${t(`action.${action}`)}…`,
+      group: { kind: 'profile' as const, profileId: profile.id },
+    }))
+  ),
   ...STANDARD_ACTION_IDS.map((actionId) => ({
     config: { type: 'standard' as const, actionId },
     name:
@@ -332,6 +336,16 @@ function groupLabel(group: MainActionGroup): string {
   switch (group.kind) {
     case 'basic':
       return t('settings.mainActionGroups.basic')
+    case 'menu':
+      return t('nav.menu')
+    case 'askAi':
+      return t('quickAiRequest.defaultProfile')
+    case 'profile': {
+      const profile = aiProfilesStore.getProfile(group.profileId)
+      return profile
+        ? `${t('settings.promptPageProfile')}: ${profile.name}`
+        : t('settings.mainActionGroups.profiles')
+    }
     case 'profiles':
       return t('settings.mainActionGroups.profiles')
     case 'translation':
@@ -357,6 +371,16 @@ function unavailableName(slot: MainActionConfig): string {
     const profile = aiProfilesStore.getProfile(slot.profileId)
     return profile
       ? t('settings.askInProfileChat', { profile: profile.name })
+      : t('settings.mainActionProfileRemoved')
+  }
+  if (slot.type === 'profile') {
+    const profile = aiProfilesStore.getProfile(slot.profileId)
+    const actionName =
+      slot.action === 'chat'
+        ? t('action.askInChat')
+        : t(`action.${slot.action}`)
+    return profile
+      ? `${profile.name} — ${actionName}`
       : t('settings.mainActionProfileRemoved')
   }
   if (slot.type === 'transformation')

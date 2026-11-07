@@ -88,13 +88,20 @@ describe('SettingsMainActionsTab.vue', () => {
     wrapper.findAll('option').map((option) => option.text())
 
   it('offers standard actions, profiles, named transformations and plugin actions', () => {
-    const texts = optionTexts(mountTab())
+    const wrapper = mountTab()
+    const texts = optionTexts(wrapper)
+    const optgroupLabels = wrapper
+      .findAll('optgroup')
+      .map((group) => group.attributes('label'))
+    expect(optgroupLabels).toContain('settings.promptPageProfile: Assistant')
+    expect(optgroupLabels).toContain('quickAiRequest.defaultProfile')
+    expect(optgroupLabels).toContain('nav.menu')
     expect(texts).toContain('action.voiceCommands…')
     expect(texts).toContain('action.voiceCommandsWithoutContext…')
     expect(texts).toContain('action.correction')
     expect(texts).toContain('settings.hotkeyActions.selectionCorrection')
     expect(texts).toContain('action.askInChat')
-    expect(texts).toContain('settings.askInProfileChat:{"profile":"Assistant"}')
+    expect(texts).toContain('action.quickAiRequest…')
     expect(texts).toContain('action.transformationMenu…')
     expect(texts).toContain('Shorten')
     expect(texts).toContain('Shout')
@@ -155,6 +162,7 @@ describe('SettingsMainActionsTab.vue', () => {
           slots: {
             q: { type: 'transformation', transformationId: 'removed' },
             w: { type: 'command', commandId: 'missing' },
+            e: { type: 'profile', profileId: 'removed', action: 'chat' },
           },
         },
       ],
@@ -162,6 +170,7 @@ describe('SettingsMainActionsTab.vue', () => {
     const texts = optionTexts(mountTab())
     expect(texts).toContain('settings.mainActionTransformationRemoved')
     expect(texts).toContain('commands.unavailableInMenu:{"name":"missing"}')
+    expect(texts).toContain('settings.mainActionProfileRemoved')
   })
 
   it('opens the command of a slot for editing', async () => {

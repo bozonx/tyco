@@ -273,6 +273,22 @@ export interface ProfileChatMainAction {
   profileId: string
 }
 
+export const PROFILE_ACTION_KINDS = [
+  'quickAiRequest',
+  'voiceQuickAiRequest',
+  'screenshotQuickAiRequest',
+  'voiceScreenshotQuickAiRequest',
+  'chat',
+] as const
+export type ProfileActionKind = (typeof PROFILE_ACTION_KINDS)[number]
+
+/** An AI profile action in the action menu */
+export interface ProfileMainAction {
+  type: 'profile'
+  profileId: string
+  action: ProfileActionKind
+}
+
 export type MainActionConfig =
   | StandardMainAction
   | PluginMainAction
@@ -281,6 +297,7 @@ export type MainActionConfig =
   | StylingMainAction
   | TranslationMainAction
   | ProfileChatMainAction
+  | ProfileMainAction
 
 /** A configured action page; pages are addressed by index. */
 export interface ActionPageConfig {

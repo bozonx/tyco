@@ -36,6 +36,16 @@
             @update:model-value="onModelSelect"
           />
         </label>
+        <IconButton
+          icon="mdi:chat-question-outline"
+          size="sm"
+          variant="ghost"
+          class="switch-chat-btn"
+          :disabled="model.isGenerating.value"
+          :label="t('action.askInChat')"
+          :title="`${t('action.askInChat')} (Ctrl+Enter)`"
+          @click="switchToChat"
+        />
       </div>
     </template>
 
@@ -380,6 +390,9 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
     historyTurns: EditorHistoryTurn[],
     result: string | undefined
   ) => historyStore.updateSession(id, historyTurns, result),
+  removeFromHistorySession: async (id: string) => {
+    await historyStore.removeFromEditorHistory(id)
+  },
   listRecentInstructions: (limit?: number, pId?: string | null) =>
     historyStore.listRecentInstructions(limit, pId),
   insertText: async (text: string) => {
