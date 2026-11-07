@@ -77,6 +77,19 @@ pub fn set_tray_menu_labels(
     runtime::set_tray_menu_labels(&app, &show_label, &quit_label, tooltip_label.as_deref())
 }
 
+/// Adds another screenshot while retaining the quick request activation and draft.
+#[tauri::command]
+pub async fn add_screenshot(
+    app: AppHandle,
+    activation_id: u64,
+) -> Result<Option<crate::models::ChatImage>, AppError> {
+    let services = app.state::<crate::services::background::BackgroundServices>();
+    let handle = app.clone();
+    services
+        .run_blocking(move || runtime::screenshot::add(&handle, activation_id))
+        .await?
+}
+
 /// Retakes the screen while retaining the quick request activation and draft.
 #[tauri::command]
 pub async fn retake_screenshot(
@@ -106,8 +119,12 @@ pub fn cancel_screenshot_crop(app: AppHandle, selection_id: u64) -> Result<(), A
 }
 
 #[tauri::command]
-pub fn remove_screenshot(app: AppHandle, activation_id: u64) -> Result<(), AppError> {
-    runtime::screenshot::remove(&app, activation_id)
+pub fn remove_screenshot(
+    app: AppHandle,
+    activation_id: u64,
+    image_id: Option<String>,
+) -> Result<(), AppError> {
+    runtime::screenshot::remove(&app, activation_id, image_id)
 }
 
 #[tauri::command]

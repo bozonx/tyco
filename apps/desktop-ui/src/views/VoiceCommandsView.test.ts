@@ -374,6 +374,34 @@ describe('separate voice command overlay', () => {
     wrapper.unmount()
   })
 
+  it('disables context on remove and restores it on restore', async () => {
+    const wrapper = mountView({ text: 'Selected text preview' })
+    expect(mocks.setContext).toHaveBeenLastCalledWith({
+      selectionText: 'Selected text preview',
+    })
+
+    const removeBtn = wrapper.find(
+      `button[aria-label="${translate('action.removeContext')}"]`
+    )
+    expect(removeBtn.exists()).toBe(true)
+    await removeBtn.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('.context-disabled-banner').exists()).toBe(true)
+    expect(mocks.setContext).toHaveBeenLastCalledWith(undefined)
+
+    const restoreBtn = wrapper.find('.context-restore-btn')
+    expect(restoreBtn.exists()).toBe(true)
+    await restoreBtn.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('.context-disabled-banner').exists()).toBe(false)
+    expect(mocks.setContext).toHaveBeenLastCalledWith({
+      selectionText: 'Selected text preview',
+    })
+    wrapper.unmount()
+  })
+
   it('opens and clears the shared pending modal while a command is running', async () => {
     const menuModalsStore = useMenuModalsStore()
     const wrapper = mountView()

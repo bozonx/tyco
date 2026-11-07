@@ -160,7 +160,8 @@ pub(crate) fn finish(
 fn store(images: &ChatImages, image: &ChatImage, bytes: Vec<u8>) -> Result<(), AppError> {
     let mut images = images.lock();
     images.remember(image.clone(), bytes)?;
-    images.sync(OWNER, std::slice::from_ref(&image.id))
+    images.hold(OWNER, &image.id);
+    Ok(())
 }
 
 #[cfg(test)]

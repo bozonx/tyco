@@ -18,7 +18,9 @@
     "quickAiRequest": "სწრაფი AI მოთხოვნა",
     "voiceQuickAiRequest": "ხმოვანი სწრაფი AI მოთხოვნა",
     "screenshotQuickAiRequest": "ეკრანის სურათი და კითხვა AI-ს",
-    "voiceScreenshotQuickAiRequest": "ეკრანის სურათი და ხმოვანი კითხვა AI-ს"
+    "voiceScreenshotQuickAiRequest": "ეკრანის სურათი და ხმოვანი კითხვა AI-ს",
+    "removeContext": "კონტექსტის ამოშლა",
+    "restoreContext": "კონტექსტის აღდგენა"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "ეს წესი აღარ არსებობს",
     "chatPrompts": "ჩატის პრომპტების წინასწარი პარამეტრები",
     "favorites": "Რჩეულები",
-    "transcribing": "მიმდინარეობს ტრანსკრიფცია..."
+    "transcribing": "მიმდინარეობს ტრანსკრიფცია...",
+    "contextRemoved": "კონტექსტი ამოშლილია",
+    "contextRequired": "საჭიროა კონტექსტი"
   },
   "nav": {
     "aiChat": "ჰკითხეთ AI-ს",
@@ -1226,12 +1230,6 @@
     "favoriteTextPlaceholder": "Შეიყვანეთ ტექსტი…",
     "searchFavoritesPlaceholder": "Მოიძიეთ რჩეულები…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "ეკრანის გადაღება",
-    "screenshotSectionHint": "გადაღების რეჟიმი სწრაფი მოთხოვნებისთვის ეკრანის სურათით და ხელახალი გადაღებისთვის.",
-    "screenshotCaptureMode": "გადაღების რეჟიმი",
-    "screenshotCaptureModeHint": "აირჩიეთ მთლიანი ეკრანის გადაღება თუ კონკრეტული არეალის მონიშვნა.",
-    "screenshotCaptureModeScreen": "მთლიანი ეკრანი",
-    "screenshotCaptureModeArea": "მონიშნული არეალი",
     "chatPromptsSentImmediately": "პრომპტის დაუყოვნებლივ გაგზავნა",
     "addPromptPage": "გვერდის დამატება",
     "promptPageProfile": "პროფილი",
@@ -1473,12 +1471,11 @@
     "noModel": "აირჩიეთ მოდელი სწრაფი მოთხოვნებისთვის."
   },
   "screenshot": {
-    "retakeScreen": "მთელი ეკრანის ხელახლა გადაღება",
-    "retakeArea": "არეალის ხელახლა მონიშვნა",
     "failed": "ეკრანის გადაღება ვერ მოხერხდა. შეამოწმეთ ეკრანის გადაღების ნებართვები და სამუშაო მაგიდის პორტალის მხარდაჭერა.",
     "selectAreaInstruction": "გადაათრიეთ არეალის მოსანიშნად. Escape — გაუქმება.",
     "confirmArea": "არეალის გამოყენება",
-    "confirmAreaInstruction": "Enter ან ორმაგი დაწკაპუნება — დადასტურება, ხელახლა გადათრევა — ახალი მონიშვნა. Escape — გაუქმება."
+    "confirmAreaInstruction": "Enter ან ორმაგი დაწკაპუნება — დადასტურება, ხელახლა გადათრევა — ახალი მონიშვნა. Escape — გაუქმება.",
+    "addArea": "არეალის სკრინშოტის დამატება"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

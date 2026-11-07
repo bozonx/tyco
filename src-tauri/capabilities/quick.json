@@ -10,6 +10,7 @@
     "allow-answer-external-access",
     "allow-claim-external-job",
     "allow-open-screenshot-chat",
+    "allow-add-screenshot",
     "allow-retake-screenshot",
     "allow-remove-screenshot",
     "allow-confirm-screenshot-crop",

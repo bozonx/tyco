@@ -6,6 +6,9 @@
       :screenshot="
         props.screenshotMode ? desktopStore.desktopState.screenshot : undefined
       "
+      :screenshots="
+        props.screenshotMode ? desktopStore.desktopState.screenshots : undefined
+      "
       :shortcuts-disabled="shortcutsDisabled"
       :input-mode="props.inputMode"
       :profile-id="effectiveProfileId"

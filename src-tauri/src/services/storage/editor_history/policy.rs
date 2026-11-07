@@ -81,6 +81,12 @@ impl EditorHistoryPolicy {
             if let Some(instruction) = &mut item.instruction {
                 instruction.text = redact_secrets(&instruction.text);
             }
+            if let Some(turns) = &mut item.turns {
+                for turn in turns.iter_mut() {
+                    turn.prompt = redact_secrets(&turn.prompt);
+                    turn.result = turn.result.take().map(|result| redact_secrets(&result));
+                }
+            }
         }
     }
 

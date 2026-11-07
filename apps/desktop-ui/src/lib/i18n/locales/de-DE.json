@@ -18,7 +18,9 @@
     "quickAiRequest": "Schnelle KI-Anfrage",
     "voiceQuickAiRequest": "Sprach-Schnellanfrage an KI",
     "screenshotQuickAiRequest": "Bildschirmfoto und KI-Frage",
-    "voiceScreenshotQuickAiRequest": "Bildschirmfoto und KI-Sprachfrage"
+    "voiceScreenshotQuickAiRequest": "Bildschirmfoto und KI-Sprachfrage",
+    "removeContext": "Kontext entfernen",
+    "restoreContext": "Kontext wiederherstellen"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "Diese Regel existiert nicht mehr",
     "chatPrompts": "Chat-Prompt-Vorlagen",
     "favorites": "Favoriten",
-    "transcribing": "Transkribieren..."
+    "transcribing": "Transkribieren...",
+    "contextRemoved": "Kontext entfernt",
+    "contextRequired": "Kontext erforderlich"
   },
   "nav": {
     "aiChat": "KI fragen",
@@ -1229,12 +1233,6 @@
     "favoriteTextPlaceholder": "Text eingeben...",
     "searchFavoritesPlaceholder": "Favoriten suchen…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "Bildschirmaufnahme",
-    "screenshotSectionHint": "Aufnahmemodus für Bildschirmfoto-Schnellanfragen und Neuaufnahmen.",
-    "screenshotCaptureMode": "Aufnahmemodus",
-    "screenshotCaptureModeHint": "Wählen Sie, ob der gesamte Bildschirm aufgenommen oder ein bestimmter Bereich ausgewählt werden soll.",
-    "screenshotCaptureModeScreen": "Gesamter Bildschirm",
-    "screenshotCaptureModeArea": "Ausgewählter Bereich",
     "chatPromptsSentImmediately": "Prompt sofort senden",
     "addPromptPage": "Seite hinzufügen",
     "promptPageProfile": "Profil",
@@ -1476,12 +1474,11 @@
     "noModel": "Wähle ein Modell für Schnellanfragen."
   },
   "screenshot": {
-    "retakeScreen": "Ganzen Bildschirm neu aufnehmen",
-    "retakeArea": "Bereich neu auswählen",
     "failed": "Der Bildschirm konnte nicht aufgenommen werden. Prüfen Sie die Aufnahmeberechtigungen und die Unterstützung des Desktop-Portals.",
     "selectAreaInstruction": "Ziehen Sie, um einen Bereich auszuwählen. Escape bricht ab.",
     "confirmArea": "Bereich verwenden",
-    "confirmAreaInstruction": "Enter oder Doppelklick bestätigt, erneutes Ziehen wählt neu. Escape bricht ab."
+    "confirmAreaInstruction": "Enter oder Doppelklick bestätigt, erneutes Ziehen wählt neu. Escape bricht ab.",
+    "addArea": "Bereichsscreenshot hinzufügen"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

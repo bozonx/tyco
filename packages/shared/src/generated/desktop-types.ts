@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: d610d4b0a883fa9b9f4a5f7c4ebd4ed536aa3d159184036df23838298e37039b
+// Source hash: 640b90f2f2bb74bfa7efe170c30cf1c2dff83921f853e00bdc0d4890e6ea223b
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -350,6 +350,7 @@ export type DesktopActivationState = {
   activationId: number
   windowId: string | null
   selectedText: string | null
+  screenshots?: Array<ChatImage>
   screenshot?: ChatImage
   mode: ActivationMode | null
   /**

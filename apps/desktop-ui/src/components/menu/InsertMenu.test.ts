@@ -236,6 +236,30 @@ describe('InsertMenu correction step', () => {
     expect(toastSpy).toHaveBeenCalledWith('toast.favoriteAlreadyExists', 'warn')
     expect(desktop.backend.userConfig.favorites.items).toHaveLength(1)
   })
+
+  it('disables context and blocks context-requiring actions on remove context click', async () => {
+    const wrapper = mountMenu({ text: 'Some text to transform' })
+    const removeBtn = wrapper.find('button[aria-label="action.removeContext"]')
+    expect(removeBtn.exists()).toBe(true)
+
+    await removeBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.context-disabled-banner').exists()).toBe(true)
+    const shortcutList = wrapper.findComponent(ShortcutList)
+    expect(shortcutList.props('text')).toBe('')
+
+    // Restore context
+    const restoreBtn = wrapper.find('.context-restore-btn')
+    expect(restoreBtn.exists()).toBe(true)
+    await restoreBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.context-disabled-banner').exists()).toBe(false)
+    expect(wrapper.findComponent(ShortcutList).props('text')).toBe(
+      'Some text to transform'
+    )
+  })
 })
 
 afterEach(() => {

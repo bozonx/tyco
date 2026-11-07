@@ -18,6 +18,8 @@ pub struct ActivationSnapshot {
     #[serde(rename = "windowId")]
     pub target_window_id: Option<String>,
     pub selected_text: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub screenshots: Vec<super::ChatImage>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub screenshot: Option<super::ChatImage>,

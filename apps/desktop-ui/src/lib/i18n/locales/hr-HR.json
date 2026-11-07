@@ -18,7 +18,9 @@
     "quickAiRequest": "Brzi upit za UI",
     "voiceQuickAiRequest": "Glasovni brzi upit za UI",
     "screenshotQuickAiRequest": "Snimka zaslona i pitanje za AI",
-    "voiceScreenshotQuickAiRequest": "Snimka zaslona i glasovno pitanje za AI"
+    "voiceScreenshotQuickAiRequest": "Snimka zaslona i glasovno pitanje za AI",
+    "removeContext": "Ukloni kontekst",
+    "restoreContext": "Vrati kontekst"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "Ovo pravilo više ne postoji",
     "chatPrompts": "Unaprijed postavljeni upiti za chat",
     "favorites": "Favoriti",
-    "transcribing": "Pretvaranje govora u tekst..."
+    "transcribing": "Pretvaranje govora u tekst...",
+    "contextRemoved": "Kontekst uklonjen",
+    "contextRequired": "Potreban kontekst"
   },
   "nav": {
     "aiChat": "Pitaj AI",
@@ -1229,12 +1233,6 @@
     "favoriteTextPlaceholder": "Unesite tekst…",
     "searchFavoritesPlaceholder": "Pretraži favorite…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "Snimanje zaslona",
-    "screenshotSectionHint": "Način snimanja koji se koristi za brze upite sa snimkom zaslona i ponovno snimanje.",
-    "screenshotCaptureMode": "Način snimanja",
-    "screenshotCaptureModeHint": "Odaberite želite li snimiti cijeli zaslon ili odabrano područje.",
-    "screenshotCaptureModeScreen": "Cijeli zaslon",
-    "screenshotCaptureModeArea": "Odabrano područje",
     "chatPromptsSentImmediately": "Odmah pošalji prompt",
     "addPromptPage": "Dodaj stranicu",
     "promptPageProfile": "Profil",
@@ -1476,12 +1474,11 @@
     "noModel": "Odaberite model za brze upite."
   },
   "screenshot": {
-    "retakeScreen": "Ponovno snimi cijeli zaslon",
-    "retakeArea": "Ponovno odaberi područje",
     "failed": "Nije moguće snimiti zaslon. Provjerite dopuštenja za snimanje i podršku portala radne površine.",
     "selectAreaInstruction": "Povucite za odabir područja. Escape poništava.",
     "confirmArea": "Koristi područje",
-    "confirmAreaInstruction": "Enter ili dvoklik potvrđuje, ponovno povlačenje mijenja odabir. Escape poništava."
+    "confirmAreaInstruction": "Enter ili dvoklik potvrđuje, ponovno povlačenje mijenja odabir. Escape poništava.",
+    "addArea": "Dodaj snimku područja"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

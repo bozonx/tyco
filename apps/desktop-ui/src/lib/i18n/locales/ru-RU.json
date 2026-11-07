@@ -18,7 +18,9 @@
     "quickAiRequest": "Быстрый запрос к ИИ",
     "voiceQuickAiRequest": "Голосовой быстрый запрос к ИИ",
     "screenshotQuickAiRequest": "Скриншот и вопрос ИИ",
-    "voiceScreenshotQuickAiRequest": "Скриншот и голосовой вопрос ИИ"
+    "voiceScreenshotQuickAiRequest": "Скриншот и голосовой вопрос ИИ",
+    "removeContext": "Убрать контекст",
+    "restoreContext": "Восстановить контекст"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "Это правило больше не существует",
     "chatPrompts": "Быстрые промпты для чата",
     "favorites": "Избранное",
-    "transcribing": "Распознавание..."
+    "transcribing": "Распознавание...",
+    "contextRemoved": "Контекст убран",
+    "contextRequired": "Требуется контекст"
   },
   "nav": {
     "aiChat": "Спросить ИИ",
@@ -1226,12 +1230,6 @@
     "favoriteTextPlaceholder": "Введите текст…",
     "searchFavoritesPlaceholder": "Поиск в избранном…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "Захват экрана",
-    "screenshotSectionHint": "Режим захвата для быстрых запросов со снимком экрана и повторной съемки.",
-    "screenshotCaptureMode": "Режим захвата",
-    "screenshotCaptureModeHint": "Делать снимок всего экрана или выбирать произвольную область.",
-    "screenshotCaptureModeScreen": "Весь экран",
-    "screenshotCaptureModeArea": "Выделенная область",
     "chatPromptsSentImmediately": "Отправлять промпт сразу",
     "addPromptPage": "Добавить страницу",
     "promptPageProfile": "Профиль",
@@ -1473,12 +1471,11 @@
     "noModel": "Выберите модель для быстрых запросов."
   },
   "screenshot": {
-    "retakeScreen": "Переснять весь экран",
-    "retakeArea": "Выделить область заново",
     "failed": "Не удалось захватить экран. Проверьте разрешения на захват и поддержку портала рабочего стола.",
     "selectAreaInstruction": "Выделите область курсором. Escape — отмена.",
     "confirmArea": "Использовать область",
-    "confirmAreaInstruction": "Enter или двойной щелчок — подтвердить, новое выделение — перерисовать. Escape — отмена."
+    "confirmAreaInstruction": "Enter или двойной щелчок — подтвердить, новое выделение — перерисовать. Escape — отмена.",
+    "addArea": "Добавить область экрана"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

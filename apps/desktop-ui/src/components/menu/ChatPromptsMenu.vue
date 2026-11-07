@@ -1,7 +1,11 @@
 <template>
   <ActionOverlayLayout :title="t('menu.chatPrompts')" :on-esc="close">
     <template #preview>
-      <TextPreview :text="props.text" />
+      <ContextPreview
+        v-if="props.text"
+        v-model:disabled="isContextDisabled"
+        :text="props.text"
+      />
     </template>
 
     <template #actions>
@@ -37,7 +41,7 @@
         <ShortcutList
           v-if="!pageError"
           :key="navigation.pageIndex.value"
-          :text="props.text"
+          :text="activeText"
           :left-letter-keys="leftLetterKeys"
           :shortcuts-disabled="props.shortcutsDisabled"
           :is-editor-button-visible="!editorNavigation.isEditorPage()"
@@ -65,8 +69,8 @@ import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import Button from '../common/Button.vue'
 import InlineNotice from '../common/InlineNotice.vue'
-import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
+import ContextPreview from '../overlay/ContextPreview.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
 import PromptPagesBar from './PromptPagesBar.vue'
 import { DESKTOP_EVENTS } from '@tyco/shared'
@@ -76,6 +80,9 @@ const props = withDefaults(defineProps<ChatPromptsMenuParams>(), {
   shortcutsDisabled: false,
   pageIndex: 0,
 })
+
+const isContextDisabled = ref(false)
+const activeText = computed(() => (isContextDisabled.value ? '' : props.text))
 
 const editorNavigation = useEditorNavigation()
 const menuModalsStore = useMenuModalsStore()
@@ -125,7 +132,7 @@ async function runPrompt(rule: string, profileId: string) {
   const prompt = rule.trim()
   if (!prompt) return
   menuModalsStore.nextModal(MenuModals.QUICK_AI_REQUEST, {
-    text: props.text,
+    text: activeText.value,
     profileId: profileId || null,
     prompt,
     isPromptSent: Boolean(

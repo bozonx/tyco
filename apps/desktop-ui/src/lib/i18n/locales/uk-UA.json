@@ -18,7 +18,9 @@
     "quickAiRequest": "Швидкий запит до ШІ",
     "voiceQuickAiRequest": "Голосовий швидкий запит до ШІ",
     "screenshotQuickAiRequest": "Знімок екрана й запитання ШІ",
-    "voiceScreenshotQuickAiRequest": "Знімок екрана й голосове запитання ШІ"
+    "voiceScreenshotQuickAiRequest": "Знімок екрана й голосове запитання ШІ",
+    "removeContext": "Прибрати контекст",
+    "restoreContext": "Відновити контекст"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "Цього правила більше не існує",
     "chatPrompts": "Швидкі промпти для чату",
     "favorites": "Улюблене",
-    "transcribing": "Розпізнавання..."
+    "transcribing": "Розпізнавання...",
+    "contextRemoved": "Контекст прибрано",
+    "contextRequired": "Потрібен контекст"
   },
   "nav": {
     "aiChat": "Запитати ШІ",
@@ -1226,12 +1230,6 @@
     "favoriteTextPlaceholder": "Введіть текст…",
     "searchFavoritesPlaceholder": "Шукати вподобання…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "Захоплення екрана",
-    "screenshotSectionHint": "Режим захоплення для швидких запитів зі знімком екрана та повторної зйомки.",
-    "screenshotCaptureMode": "Режим захоплення",
-    "screenshotCaptureModeHint": "Робити знімок усього екрана чи вибирати довільну область.",
-    "screenshotCaptureModeScreen": "Весь екран",
-    "screenshotCaptureModeArea": "Виділена область",
     "chatPromptsSentImmediately": "Надсилати промпт одразу",
     "addPromptPage": "Додати сторінку",
     "promptPageProfile": "Профіль",
@@ -1473,12 +1471,11 @@
     "noModel": "Виберіть модель для швидких запитів."
   },
   "screenshot": {
-    "retakeScreen": "Перезняти весь екран",
-    "retakeArea": "Виділити область заново",
     "failed": "Не вдалося захопити екран. Перевірте дозволи на захоплення та підтримку порталу стільниці.",
     "selectAreaInstruction": "Виділіть область курсором. Escape — скасувати.",
     "confirmArea": "Використати область",
-    "confirmAreaInstruction": "Enter або подвійне клацання — підтвердити, нове виділення — перемалювати. Escape — скасувати."
+    "confirmAreaInstruction": "Enter або подвійне клацання — підтвердити, нове виділення — перемалювати. Escape — скасувати.",
+    "addArea": "Додати знімок області"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

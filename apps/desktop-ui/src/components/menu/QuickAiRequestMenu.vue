@@ -50,34 +50,34 @@
     </template>
 
     <template #preview>
-      <TextPreview v-if="props.text" :text="props.text" />
+      <ContextPreview
+        v-if="props.text"
+        :text="props.text"
+        :disabled="model.isSourceTextDisabled.value"
+        :allow-disable="!model.isSourceTextLocked.value"
+        @update:disabled="(disabled) => model.setSourceTextDisabled(disabled)"
+      />
       <div v-if="props.screenshotMode" class="screenshot-preview">
         <ChatImageAttachment
-          v-if="model.sourceImage.value"
-          :image="model.sourceImage.value"
+          v-for="img in model.sourceImages.value"
+          :key="img.id"
+          :image="img"
           :removable="!model.isSourceImageLocked.value && !isCapturing"
           compact
-          @remove="removeScreenshot"
-        />
-        <IconButton
-          icon="mdi:monitor-screenshot"
-          :label="t('screenshot.retakeScreen')"
-          :title="t('screenshot.retakeScreen')"
-          :disabled="isCapturing || model.isSourceImageLocked.value"
-          @click="retakeScreenshot('screen')"
+          @remove="removeScreenshot(img.id)"
         />
         <IconButton
           icon="mdi:selection-drag"
-          :label="t('screenshot.retakeArea')"
-          :title="t('screenshot.retakeArea')"
+          :label="t('screenshot.addArea')"
+          :title="t('screenshot.addArea')"
           :disabled="isCapturing || model.isSourceImageLocked.value"
-          @click="retakeScreenshot('area')"
+          @click="addScreenshot"
         />
       </div>
 
       <QuickAiRequestTurns
         :turns="model.turns.value"
-        :source-text="props.text"
+        :source-text="model.sourceText.value"
         @apply-reply-block="
           (block, target) => model.applyReplyBlock(block, target)
         "
@@ -205,8 +205,8 @@ import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
 import AppIcon from '../common/AppIcon.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
-import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
+import ContextPreview from '../overlay/ContextPreview.vue'
 import QueryPanel, {
   type QueryPanelHint,
   type QueryPanelOption,
@@ -220,7 +220,6 @@ import {
   type Chat,
   type ChatAttachment,
   type EditorHistoryTurn,
-  type ScreenshotCaptureMode,
   llmSecretId,
 } from '@tyco/shared'
 
@@ -316,7 +315,7 @@ const session = createQuickAiRequestSession({
 // Model instantiation with dependencies
 const model: QuickAiRequestModel = createQuickAiRequestModel({
   context: props.screenshotMode
-    ? { kind: 'screenshot', image: props.screenshot }
+    ? { kind: 'screenshot', image: props.screenshot, images: props.screenshots }
     : { kind: 'selection', text: props.text },
   initialInputMode: props.inputMode,
   initialProfileId: props.profileId,
@@ -492,25 +491,36 @@ const bannerText = computed(
 )
 
 watch(
-  () => props.screenshot,
-  (image) => model.setSourceImage(image)
+  () => props.screenshots,
+  (images) => {
+    if (images) model.setSourceImages(images)
+  }
 )
 
-async function removeScreenshot() {
+watch(
+  () => props.screenshot,
+  (image) => {
+    if (image && !model.sourceImages.value.some((img) => img.id === image.id)) {
+      model.addSourceImage(image)
+    }
+  }
+)
+
+async function removeScreenshot(imageId: string) {
   if (model.isSourceImageLocked.value) return
-  const result = await ipcStore.callOrNotify('remove_screenshot')
-  if (result.success) model.setSourceImage(undefined)
+  const result = await ipcStore.callOrNotify('remove_screenshot', { imageId })
+  if (result.success) model.removeSourceImage(imageId)
 }
 
-async function retakeScreenshot(mode: ScreenshotCaptureMode) {
+async function addScreenshot() {
   if (isCapturing.value || model.isSourceImageLocked.value) return
   isCapturing.value = true
   try {
     isListening.value = false
-    const result = await ipcStore.call('retake_screenshot', { mode })
+    const result = await ipcStore.call('add_screenshot')
     if (disposed) return
     if (result.success) {
-      if (result.result) model.setSourceImage(result.result)
+      if (result.result) model.addSourceImage(result.result)
     } else toastKey('screenshot.failed', 'error')
   } finally {
     isCapturing.value = false
@@ -548,12 +558,12 @@ const promptHints = computed<QueryPanelHint[]>(() => [
     label: t('action.askInChat'),
     action: () => switchToChat(),
   },
-  ...(props.text && !editorNavigation.isEditorPage()
+  ...(model.sourceText.value && !editorNavigation.isEditorPage()
     ? [
         {
           keys: ['Tab'],
           label: t('shortcuts.insertIntoEditor'),
-          action: () => editorNavigation.toEditor(props.text),
+          action: () => editorNavigation.toEditor(model.sourceText.value ?? ''),
         },
       ]
     : []),

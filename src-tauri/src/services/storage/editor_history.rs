@@ -438,8 +438,7 @@ fn restore_item(
         return Ok(());
     }
 
-    item.text = policy.redact(item.text);
-    item.result = item.result.map(|result| policy.redact(result));
+    policy.redact_item(&mut item);
     // a journal keeps the removal of the old id for good: the entry comes
     // back under a new one
     if !history.store.is_memory() {

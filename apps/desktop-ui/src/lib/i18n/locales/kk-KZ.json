@@ -18,7 +18,9 @@
     "quickAiRequest": "ЖИ жылдам сұрауы",
     "voiceQuickAiRequest": "Дауыстық ЖИ жылдам сұрауы",
     "screenshotQuickAiRequest": "Скриншот және ЖИ-ге сұрақ",
-    "voiceScreenshotQuickAiRequest": "Скриншот және ЖИ-ге дауыстық сұрақ"
+    "voiceScreenshotQuickAiRequest": "Скриншот және ЖИ-ге дауыстық сұрақ",
+    "removeContext": "Мәтінмәнді алып тастау",
+    "restoreContext": "Мәтінмәнді қалпына келтіру"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "Бұл ереже енді жоқ",
     "chatPrompts": "Чат промпттерінің алдын ала орнатулары",
     "favorites": "Сүйіктілер",
-    "transcribing": "Тану жүруде..."
+    "transcribing": "Тану жүруде...",
+    "contextRemoved": "Мәтінмән алынып тасталды",
+    "contextRequired": "Мәтінмән қажет"
   },
   "nav": {
     "aiChat": "ЖИ-ден сұрау",
@@ -1226,12 +1230,6 @@
     "favoriteTextPlaceholder": "Мәтінді енгізу…",
     "searchFavoritesPlaceholder": "Сүйіктілерді іздеу…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "Экранды түсіру",
-    "screenshotSectionHint": "Скриншотпен жылдам сұраулар мен қайта түсіру үшін пайдаланылатын түсіру режимі.",
-    "screenshotCaptureMode": "Түсіру режимі",
-    "screenshotCaptureModeHint": "Бүкіл экранды түсіру немесе белгілі бір аймақты таңдау.",
-    "screenshotCaptureModeScreen": "Бүкіл экран",
-    "screenshotCaptureModeArea": "Таңдалған аймақ",
     "chatPromptsSentImmediately": "Промптты бірден жіберу",
     "addPromptPage": "Бет қосу",
     "promptPageProfile": "Профиль",
@@ -1473,12 +1471,11 @@
     "noModel": "Жылдам сұраулар үшін модельді таңдаңыз."
   },
   "screenshot": {
-    "retakeScreen": "Бүкіл экранды қайта түсіру",
-    "retakeArea": "Аймақты қайта таңдау",
     "failed": "Экранды түсіру мүмкін болмады. Экранды түсіру рұқсаттарын және жұмыс үстелі порталының қолдауын тексеріңіз.",
     "selectAreaInstruction": "Аймақты таңдау үшін сүйреңіз. Escape — бас тарту.",
     "confirmArea": "Аймақты пайдалану",
-    "confirmAreaInstruction": "Растау үшін Enter немесе қос шерту, қайта сызу үшін қайта сүйреңіз. Escape — бас тарту."
+    "confirmAreaInstruction": "Растау үшін Enter немесе қос шерту, қайта сызу үшін қайта сүйреңіз. Escape — бас тарту.",
+    "addArea": "Аумақ скриншотын қосу"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

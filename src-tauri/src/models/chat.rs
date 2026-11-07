@@ -126,6 +126,9 @@ pub struct Chat {
     #[serde(rename = "lastMessageAt")]
     pub last_message_at_ms: u64,
     pub messages: Vec<ChatMessage>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub is_quick_request: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ts_rs::TS)]
@@ -136,6 +139,9 @@ pub struct ChatSummary {
     /// Unix time in milliseconds.
     #[serde(rename = "lastMessageAt")]
     pub last_message_at_ms: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub is_quick_request: Option<bool>,
 }
 
 impl From<&Chat> for ChatSummary {
@@ -144,6 +150,7 @@ impl From<&Chat> for ChatSummary {
             id: chat.id.clone(),
             title: chat.title.clone(),
             last_message_at_ms: chat.last_message_at_ms,
+            is_quick_request: chat.is_quick_request,
         }
     }
 }

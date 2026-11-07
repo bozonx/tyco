@@ -18,7 +18,9 @@
     "quickAiRequest": "AI 快速请求",
     "voiceQuickAiRequest": "语音 AI 快速请求",
     "screenshotQuickAiRequest": "截图并向 AI 提问",
-    "voiceScreenshotQuickAiRequest": "截图并向 AI 语音提问"
+    "voiceScreenshotQuickAiRequest": "截图并向 AI 语音提问",
+    "removeContext": "移除上下文",
+    "restoreContext": "恢复上下文"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "此规则已不存在",
     "chatPrompts": "聊天提示词预设",
     "favorites": "收藏夹",
-    "transcribing": "正在转录..."
+    "transcribing": "正在转录...",
+    "contextRemoved": "上下文已移除",
+    "contextRequired": "需要上下文"
   },
   "nav": {
     "aiChat": "询问 AI",
@@ -1223,12 +1227,6 @@
     "favoriteTextPlaceholder": "输入文字…",
     "searchFavoritesPlaceholder": "搜索收藏夹…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "屏幕截图",
-    "screenshotSectionHint": "截图快捷请求和重新截图时使用的捕获模式。",
-    "screenshotCaptureMode": "捕获模式",
-    "screenshotCaptureModeHint": "选择捕获整个屏幕还是选择特定区域。",
-    "screenshotCaptureModeScreen": "整个屏幕",
-    "screenshotCaptureModeArea": "选定区域",
     "chatPromptsSentImmediately": "立即发送提示词",
     "addPromptPage": "添加页面",
     "promptPageProfile": "配置文件",
@@ -1470,12 +1468,11 @@
     "noModel": "请为快速请求选择模型。"
   },
   "screenshot": {
-    "retakeScreen": "重新截取整个屏幕",
-    "retakeArea": "重新选择区域",
     "failed": "无法截取屏幕。请检查屏幕捕获权限和桌面门户支持。",
     "selectAreaInstruction": "拖动以选择区域。按 Escape 取消。",
     "confirmArea": "使用此区域",
-    "confirmAreaInstruction": "按 Enter 或双击确认，再次拖动可重新选择。按 Escape 取消。"
+    "confirmAreaInstruction": "按 Enter 或双击确认，再次拖动可重新选择。按 Escape 取消。",
+    "addArea": "添加区域截图"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

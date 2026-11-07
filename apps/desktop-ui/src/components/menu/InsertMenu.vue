@@ -15,34 +15,12 @@
         v-if="actionMenuStore.takesText && (props.oldText || props.text)"
         class="preview-area"
       >
-        <Diff
-          v-if="props.oldText"
+        <ContextPreview
+          v-model:disabled="isContextDisabled"
+          :text="props.text"
           :old-text="props.oldText"
-          :new-text="props.text"
-          :mode="diffMode"
+          :diff-mode="diffMode"
         />
-        <TextPreview v-else :text="props.text" />
-        <div v-if="activeActionText" class="preview-actions">
-          <IconButton
-            class="preview-action-btn"
-            size="sm"
-            :label="
-              isSavedAsFavorite
-                ? t('action.savedAsFavorite')
-                : t('action.saveAsFavorite')
-            "
-            :icon="
-              isSavedAsFavorite ? 'mdi:check' : 'mdi:bookmark-plus-outline'
-            "
-            @click="saveAsFavorite"
-          />
-          <CopyButton
-            class="preview-action-btn"
-            :value="activeActionText"
-            :label="t('action.copy')"
-            size="sm"
-          />
-        </div>
       </div>
     </template>
 
@@ -88,64 +66,22 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
-import useToast from '../../composables/use-toast'
 import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
-import {
-  addFavorite,
-  isDuplicateFavorite,
-} from '../../lib/favorites/favorites-model'
 import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import AppIcon from '../common/AppIcon.vue'
-import CopyButton from '../common/CopyButton.vue'
-import Diff from '../common/Diff.vue'
-import IconButton from '../common/IconButton.vue'
 import KeyboardKey from '../common/KeyboardKey.vue'
-import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
+import ContextPreview from '../overlay/ContextPreview.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
 import ResultViewModeToggle from './ResultViewModeToggle.vue'
 import { APP_CONFIG } from '@tyco/shared'
 
 const editorNavigation = useEditorNavigation()
-const { toastKey, toastError } = useToast()
-
-const isSavedAsFavorite = ref(false)
-let savedTimer: ReturnType<typeof setTimeout> | null = null
-
-async function saveAsFavorite() {
-  const text = activeActionText.value.trim()
-  if (!text) return
-
-  const currentFavorites = desktopStore.userConfig.favorites?.items ?? []
-  if (isDuplicateFavorite(currentFavorites, text)) {
-    toastKey('toast.favoriteAlreadyExists', 'warn')
-    return
-  }
-
-  const result = addFavorite(currentFavorites, text)
-  if (result.success) {
-    const response = await desktopStore.updateUserConfig({
-      favorites: { items: result.items },
-    })
-    if (!response.success) {
-      toastError(response.error)
-      return
-    }
-    isSavedAsFavorite.value = true
-    if (savedTimer) clearTimeout(savedTimer)
-    savedTimer = setTimeout(() => {
-      isSavedAsFavorite.value = false
-    }, 1500)
-  }
-}
-
-onUnmounted(() => {
-  if (savedTimer) clearTimeout(savedTimer)
-})
+const isContextDisabled = ref(false)
 
 const props = withDefaults(defineProps<InsertMenuParams>(), {
   text: '',
@@ -223,13 +159,15 @@ const isShowingOriginal = computed(
 )
 
 const activeActionText = computed(() => {
+  if (isContextDisabled.value) return ''
   if (!actionMenuStore.takesText) return ''
   return isShowingOriginal.value ? props.oldText : props.text
 })
 
-const activeSourceText = computed(() =>
-  isShowingOriginal.value ? undefined : props.oldText
-)
+const activeSourceText = computed(() => {
+  if (isContextDisabled.value) return undefined
+  return isShowingOriginal.value ? undefined : props.oldText
+})
 
 const editorButtonLabel = computed(() =>
   isShowingOriginal.value
@@ -250,8 +188,27 @@ const correctionBlocker = computed(() => {
   return undefined
 })
 
+const requiresContext = (actionId?: string) => {
+  if (!actionId) return false
+  return (
+    actionId === 'correction' ||
+    actionId === 'insertIntoWindow' ||
+    actionId === 'copyToClipboard' ||
+    actionId === 'transformationMenu' ||
+    actionId.startsWith('transformation:') ||
+    actionId === 'stylingMenu' ||
+    actionId.startsWith('styling:') ||
+    actionId === 'translateMenu' ||
+    actionId.startsWith('translate:') ||
+    actionId === 'applyToEditor'
+  )
+}
+
 function shouldDisableAction(item?: ActionItem) {
   if (!item) return false
+  if (isContextDisabled.value && requiresContext(item.id)) {
+    return true
+  }
   if (item.id === 'insertIntoWindow') {
     return !(
       desktopStore.canInsertIntoWindow &&
@@ -266,6 +223,9 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
   (props.insertOnly || editorTarget.value ? [] : actionsMenu.value).map(
     (item: ActionItem | undefined) => {
       if (!item) return undefined
+      if (isContextDisabled.value && requiresContext(item.id)) {
+        return { ...item, disabled: true, hint: t('menu.contextRequired') }
+      }
       if (item.id === 'correction' && correctionBlocker.value) {
         return { ...item, disabled: true, hint: correctionBlocker.value }
       }
@@ -278,7 +238,16 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
 )
 
 const primaryAction = computed<ActionItem | undefined>(() => {
-  if (editorTarget.value) return applyToEditorAction
+  if (editorTarget.value) {
+    if (isContextDisabled.value) {
+      return {
+        ...applyToEditorAction,
+        disabled: true,
+        hint: t('menu.contextRequired'),
+      }
+    }
+    return applyToEditorAction
+  }
   if (!props.allowInsertButton) return undefined
   const insertAction =
     actionsMenu.value.find((item) => item?.id === 'insertIntoWindow') ??
@@ -291,8 +260,10 @@ const primaryAction = computed<ActionItem | undefined>(() => {
   }
 
   const disabled = insertAction.disabled || shouldDisableAction(insertAction)
-  const hint =
-    insertAction.id === 'insertIntoWindow' && !desktopStore.canInsertIntoWindow
+  const hint = isContextDisabled.value
+    ? t('menu.contextRequired')
+    : insertAction.id === 'insertIntoWindow' &&
+        !desktopStore.canInsertIntoWindow
       ? t('selection.noTarget')
       : insertAction.hint
 
@@ -381,30 +352,5 @@ onUnmounted(() => {
   display: flex;
   flex: 1 1 0%;
   min-height: 0;
-}
-
-.preview-actions {
-  position: absolute;
-  top: var(--space-xs);
-  right: var(--space-xs);
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2xs);
-}
-
-.preview-action-btn {
-  background-color: var(--app-surface-raised);
-  border: 1px solid var(--app-border-subtle);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  opacity: 0.85;
-  transition:
-    opacity var(--transition-fast),
-    background-color var(--transition-fast);
-}
-
-.preview-action-btn:hover {
-  opacity: 1;
 }
 </style>

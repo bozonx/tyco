@@ -8,7 +8,11 @@
       <template #preview>
         <div class="voice-commands">
           <section class="voice-main">
-            <TextPreview v-if="contextText" :text="contextText" />
+            <ContextPreview
+              v-if="contextText"
+              v-model:disabled="isContextDisabled"
+              :text="contextText"
+            />
             <template v-if="isListening">
               <div v-if="voice.activeCommand" class="voice-chosen">
                 <AppIcon
@@ -154,8 +158,8 @@ import FieldSelect from '../components/common/FieldSelect.vue'
 import FieldTextArea from '../components/common/FieldTextArea.vue'
 import InfoTooltip from '../components/common/InfoTooltip.vue'
 import InlineNotice from '../components/common/InlineNotice.vue'
-import TextPreview from '../components/common/TextPreview.vue'
 import ActionOverlayLayout from '../components/overlay/ActionOverlayLayout.vue'
+import ContextPreview from '../components/overlay/ContextPreview.vue'
 import ShortcutButton from '../components/overlay/ShortcutButton.vue'
 import AudioWaveform from '../components/voice/AudioWaveform.vue'
 import LiveTranscript from '../components/voice/LiveTranscript.vue'
@@ -207,6 +211,8 @@ const voice = useVoiceCommandsStore()
 const releaseHold = useQuickDismissStore().hold()
 const { handleEsc, handleCloseAll } = useOverlayNav(() => ({ escMode: 'auto' }))
 
+const isContextDisabled = ref(false)
+
 const contextText = computed(() => {
   const state = desktopStore.desktopState
   const text =
@@ -217,8 +223,12 @@ const contextText = computed(() => {
   return text?.trim() ? text : ''
 })
 
+const activeContextText = computed(() =>
+  isContextDisabled.value ? '' : contextText.value
+)
+
 watch(
-  contextText,
+  activeContextText,
   (text) => {
     voice.setContext(text ? { selectionText: text } : undefined)
   },

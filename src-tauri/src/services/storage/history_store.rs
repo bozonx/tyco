@@ -487,6 +487,21 @@ pub fn list_chats(app: &AppHandle, scope: &ChatScope) -> Result<Vec<ChatSummary>
     })
 }
 
+pub fn list_recent_quick_request_prompts(
+    app: &AppHandle,
+    scope: &ChatScope,
+    limit: usize,
+) -> Result<Vec<String>, AppError> {
+    with_chats(app, scope, ChatAccess::Read, |state, dirs| {
+        let config = state.user_config();
+        let policy = match scope {
+            ChatScope::AskAi => chats::ChatHistoryPolicy::from_config(&config),
+            ChatScope::Profile(_) => chats::ChatHistoryPolicy::for_profiles(&config),
+        };
+        chats::list_recent_quick_request_prompts(dirs, policy, limit)
+    })
+}
+
 /// Import leases and image loading are protected against concurrent cleanup.
 pub fn read_chat(
     app: &AppHandle,

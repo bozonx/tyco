@@ -18,7 +18,9 @@
     "quickAiRequest": "Rychlý dotaz na AI",
     "voiceQuickAiRequest": "Hlasový rychlý dotaz na AI",
     "screenshotQuickAiRequest": "Snímek obrazovky a dotaz AI",
-    "voiceScreenshotQuickAiRequest": "Snímek obrazovky a hlasový dotaz AI"
+    "voiceScreenshotQuickAiRequest": "Snímek obrazovky a hlasový dotaz AI",
+    "removeContext": "Odebrat kontext",
+    "restoreContext": "Obnovit kontext"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "Toto pravidlo již neexistuje",
     "chatPrompts": "Předvolby promptů chatu",
     "favorites": "Oblíbené",
-    "transcribing": "Přepisování..."
+    "transcribing": "Přepisování...",
+    "contextRemoved": "Kontext odebrán",
+    "contextRequired": "Vyžadován kontext"
   },
   "nav": {
     "aiChat": "Zeptat se AI",
@@ -1223,12 +1227,6 @@
     "favoriteTextPlaceholder": "Zadejte text…",
     "searchFavoritesPlaceholder": "Hledat v oblíbených...",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "Snímek obrazovky",
-    "screenshotSectionHint": "Režim snímání používaný pro rychlé dotazy se snímkem obrazovky a opakované pořízení.",
-    "screenshotCaptureMode": "Režim snímání",
-    "screenshotCaptureModeHint": "Zvolte, zda pořídit snímek celé obrazovky nebo vybrat konkrétní oblast.",
-    "screenshotCaptureModeScreen": "Celá obrazovka",
-    "screenshotCaptureModeArea": "Vybraná oblast",
     "chatPromptsSentImmediately": "Odeslat prompt hned",
     "addPromptPage": "Přidat stránku",
     "promptPageProfile": "Profil",
@@ -1470,12 +1468,11 @@
     "noModel": "Vyberte model pro rychlé dotazy."
   },
   "screenshot": {
-    "retakeScreen": "Znovu zachytit celou obrazovku",
-    "retakeArea": "Znovu vybrat oblast",
     "failed": "Obrazovku se nepodařilo zachytit. Zkontrolujte oprávnění k zachycení a podporu portálu plochy.",
     "selectAreaInstruction": "Tažením vyberte oblast. Escape zruší.",
     "confirmArea": "Použít oblast",
-    "confirmAreaInstruction": "Enter nebo dvojklik potvrdí, novým tažením výběr překreslíte. Escape zruší."
+    "confirmAreaInstruction": "Enter nebo dvojklik potvrdí, novým tažením výběr překreslíte. Escape zruší.",
+    "addArea": "Přidat snímek oblasti"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

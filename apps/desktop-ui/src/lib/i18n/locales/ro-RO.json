@@ -18,7 +18,9 @@
     "quickAiRequest": "Solicitare rapidă IA",
     "voiceQuickAiRequest": "Solicitare vocală rapidă IA",
     "screenshotQuickAiRequest": "Captură de ecran și întrebare pentru IA",
-    "voiceScreenshotQuickAiRequest": "Captură de ecran și întrebare vocală pentru IA"
+    "voiceScreenshotQuickAiRequest": "Captură de ecran și întrebare vocală pentru IA",
+    "removeContext": "Elimină contextul",
+    "restoreContext": "Restaurează contextul"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "Această regulă nu mai există",
     "chatPrompts": "Presetări prompturi chat",
     "favorites": "Favorite",
-    "transcribing": "Se transcrie..."
+    "transcribing": "Se transcrie...",
+    "contextRemoved": "Context eliminat",
+    "contextRequired": "Context necesar"
   },
   "nav": {
     "aiChat": "Întreabă AI",
@@ -1229,12 +1233,6 @@
     "favoriteTextPlaceholder": "Introdu textul…",
     "searchFavoritesPlaceholder": "Caută favorite…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "Captură de ecran",
-    "screenshotSectionHint": "Modul de captură utilizat pentru solicitări rapide cu captură de ecran și reîncercări.",
-    "screenshotCaptureMode": "Mod de captură",
-    "screenshotCaptureModeHint": "Alegeți dacă doriți să capturați întregul ecran sau să selectați o zonă specifică.",
-    "screenshotCaptureModeScreen": "Tot ecranul",
-    "screenshotCaptureModeArea": "Zona selectată",
     "chatPromptsSentImmediately": "Trimite promptul imediat",
     "addPromptPage": "Adaugă pagină",
     "promptPageProfile": "Profil",
@@ -1476,12 +1474,11 @@
     "noModel": "Alege un model pentru cererile rapide."
   },
   "screenshot": {
-    "retakeScreen": "Recapturează tot ecranul",
-    "retakeArea": "Reselectează zona",
     "failed": "Ecranul nu a putut fi capturat. Verifică permisiunile de captură și compatibilitatea portalului desktop.",
     "selectAreaInstruction": "Trageți pentru a selecta o zonă. Escape anulează.",
     "confirmArea": "Folosește zona",
-    "confirmAreaInstruction": "Enter sau dublu clic confirmă, trageți din nou pentru a redesena. Escape anulează."
+    "confirmAreaInstruction": "Enter sau dublu clic confirmă, trageți din nou pentru a redesena. Escape anulează.",
+    "addArea": "Adaugă captură de zonă"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

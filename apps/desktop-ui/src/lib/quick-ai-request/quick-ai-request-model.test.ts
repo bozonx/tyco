@@ -560,6 +560,27 @@ describe('QuickAiRequestModel', () => {
       expect(model.sourceImage.value).toEqual(screenshot)
     })
 
+    it('adds and removes multiple screenshots individually before the first question', async () => {
+      const { model } = screenshotSetup()
+      const secondShot = { ...screenshot, id: 'shot-2' }
+      const thirdShot = { ...screenshot, id: 'shot-3' }
+      model.addSourceImage(secondShot)
+      model.addSourceImage(thirdShot)
+      expect(model.sourceImages.value).toEqual([
+        screenshot,
+        secondShot,
+        thirdShot,
+      ])
+
+      model.removeSourceImage('shot-2')
+      expect(model.sourceImages.value).toEqual([screenshot, thirdShot])
+
+      await model.submitPrompt('What is this?')
+      expect(model.isSourceImageLocked.value).toBe(true)
+      model.removeSourceImage('shot-3')
+      expect(model.sourceImages.value).toEqual([screenshot, thirdShot])
+    })
+
     it('keeps the screenshot replaceable after a first request with no answer', async () => {
       const { model } = screenshotSetup({
         stream: vi.fn(() => {
@@ -632,5 +653,25 @@ describe('QuickAiRequestModel', () => {
       expect(model.turns.value).toHaveLength(1)
       expect(model.sourceImage.value).toEqual(screenshot)
     })
+  })
+
+  it('disables and restores source text context', async () => {
+    const { model, deps } = createSetup({
+      context: { kind: 'selection', text: 'Selected source text' },
+    })
+    expect(model.sourceText.value).toBe('Selected source text')
+    expect(model.isSourceTextDisabled.value).toBe(false)
+
+    model.setSourceTextDisabled(true)
+    expect(model.sourceText.value).toBeUndefined()
+    expect(model.isSourceTextDisabled.value).toBe(true)
+
+    await model.submitPrompt('Explain')
+    const call = vi.mocked(deps.stream).mock.calls[0]?.[0]
+    expect(call?.messages[0]?.content).toBe('Explain')
+
+    expect(model.isSourceTextLocked.value).toBe(true)
+    model.setSourceTextDisabled(false)
+    expect(model.isSourceTextDisabled.value).toBe(true)
   })
 })

@@ -18,7 +18,9 @@
     "quickAiRequest": "AI 빠른 요청",
     "voiceQuickAiRequest": "음성 AI 빠른 요청",
     "screenshotQuickAiRequest": "스크린샷과 AI 질문",
-    "voiceScreenshotQuickAiRequest": "스크린샷과 AI 음성 질문"
+    "voiceScreenshotQuickAiRequest": "스크린샷과 AI 음성 질문",
+    "removeContext": "컨텍스트 제거",
+    "restoreContext": "컨텍스트 복원"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "이 규칙은 더 이상 존재하지 않습니다",
     "chatPrompts": "채팅 프롬프트 사전 설정",
     "favorites": "즐겨찾기",
-    "transcribing": "텍스트 변환 중..."
+    "transcribing": "텍스트 변환 중...",
+    "contextRemoved": "컨텍스트 제거됨",
+    "contextRequired": "컨텍스트 필요"
   },
   "nav": {
     "aiChat": "AI에게 질문",
@@ -1223,12 +1227,6 @@
     "favoriteTextPlaceholder": "텍스트 입력...",
     "searchFavoritesPlaceholder": "즐겨찾기 검색...",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "화면 캡처",
-    "screenshotSectionHint": "스크린샷 빠른 요청 및 다시 찍기에 사용되는 캡처 모드입니다.",
-    "screenshotCaptureMode": "캡처 모드",
-    "screenshotCaptureModeHint": "전체 화면을 캡처할지 또는 특정 영역을 선택할지 지정합니다.",
-    "screenshotCaptureModeScreen": "전체 화면",
-    "screenshotCaptureModeArea": "선택한 영역",
     "chatPromptsSentImmediately": "프롬프트 바로 보내기",
     "addPromptPage": "페이지 추가",
     "promptPageProfile": "프로필",
@@ -1470,12 +1468,11 @@
     "noModel": "빠른 요청에 사용할 모델을 선택하세요."
   },
   "screenshot": {
-    "retakeScreen": "전체 화면 다시 캡처",
-    "retakeArea": "영역 다시 선택",
     "failed": "화면을 캡처하지 못했습니다. 화면 캡처 권한과 데스크톱 포털 지원을 확인하세요.",
     "selectAreaInstruction": "드래그하여 영역을 선택하세요. Escape로 취소합니다.",
     "confirmArea": "이 영역 사용",
-    "confirmAreaInstruction": "Enter 또는 더블클릭으로 확정하고, 다시 드래그하면 새로 선택합니다. Escape로 취소합니다."
+    "confirmAreaInstruction": "Enter 또는 더블클릭으로 확정하고, 다시 드래그하면 새로 선택합니다. Escape로 취소합니다.",
+    "addArea": "영역 스크린샷 추가"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

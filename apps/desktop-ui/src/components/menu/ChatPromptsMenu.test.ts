@@ -105,6 +105,33 @@ describe('ChatPromptsMenu', () => {
     wrapper.unmount()
   })
 
+  it('disables context and runs prompt with empty text', async () => {
+    const wrapper = mountMenu()
+    const menuModalsStore = useMenuModalsStore()
+
+    const removeBtn = wrapper.find('button[aria-label="action.removeContext"]')
+    expect(removeBtn.exists()).toBe(true)
+    await removeBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.context-disabled-banner').exists()).toBe(true)
+    expect(shortcutListProps.text).toBe('')
+
+    const qKey = shortcutListProps.leftLetterKeys[0]
+    await qKey.action()
+    await flushPromises()
+
+    expect(menuModalsStore.currentStep?.params).toEqual(
+      expect.objectContaining({
+        text: '',
+        profileId: null,
+        prompt: 'Summarize this in 3 bullet points',
+        isPromptSent: false,
+      })
+    )
+    wrapper.unmount()
+  })
+
   it('opens the page of the hotkey and reports a missing one', async () => {
     const wrapper = mountMenu({ pageIndex: 4 })
     await flushPromises()

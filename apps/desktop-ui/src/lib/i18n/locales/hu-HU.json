@@ -18,7 +18,9 @@
     "quickAiRequest": "Gyors MI kérés",
     "voiceQuickAiRequest": "Hangalapú gyors MI kérés",
     "screenshotQuickAiRequest": "Képernyőkép és kérdés az MI-nek",
-    "voiceScreenshotQuickAiRequest": "Képernyőkép és hangos kérdés az MI-nek"
+    "voiceScreenshotQuickAiRequest": "Képernyőkép és hangos kérdés az MI-nek",
+    "removeContext": "Kontextus eltávolítása",
+    "restoreContext": "Kontextus visszaállítása"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "Ez a szabály már nem létezik",
     "chatPrompts": "Csevegési prompt-sablonok",
     "favorites": "Kedvencek",
-    "transcribing": "Átírás..."
+    "transcribing": "Átírás...",
+    "contextRemoved": "Kontextus eltávolítva",
+    "contextRequired": "Kontextus szükséges"
   },
   "nav": {
     "aiChat": "Kérdezze az MI-t",
@@ -1226,12 +1230,6 @@
     "favoriteTextPlaceholder": "Írd be a szöveget…",
     "searchFavoritesPlaceholder": "Kedvencek keresése…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "Képernyőfelvétel",
-    "screenshotSectionHint": "A gyors képernyőképes kérésekhez és újrafelvételekhez használt rögzítési mód.",
-    "screenshotCaptureMode": "Rögzítési mód",
-    "screenshotCaptureModeHint": "Válassza ki, hogy a teljes képernyőt vagy egy kijelölt területet rögzítsen.",
-    "screenshotCaptureModeScreen": "Teljes képernyő",
-    "screenshotCaptureModeArea": "Kijelölt terület",
     "chatPromptsSentImmediately": "A prompt azonnali küldése",
     "addPromptPage": "Oldal hozzáadása",
     "promptPageProfile": "Profil",
@@ -1473,12 +1471,11 @@
     "noModel": "Válassz modellt a gyors kérésekhez."
   },
   "screenshot": {
-    "retakeScreen": "Teljes képernyő újrarögzítése",
-    "retakeArea": "Terület újbóli kijelölése",
     "failed": "Nem sikerült rögzíteni a képernyőt. Ellenőrizze a képernyőrögzítési engedélyeket és az asztali portál támogatását.",
     "selectAreaInstruction": "Húzással jelöljön ki egy területet. Az Escape megszakítja.",
     "confirmArea": "Terület használata",
-    "confirmAreaInstruction": "Enter vagy dupla kattintás: jóváhagyás, újabb húzás: újrarajzolás. Az Escape megszakítja."
+    "confirmAreaInstruction": "Enter vagy dupla kattintás: jóváhagyás, újabb húzás: újrarajzolás. Az Escape megszakítja.",
+    "addArea": "Területképernyőkép hozzáadása"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

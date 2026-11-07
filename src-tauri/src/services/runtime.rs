@@ -281,6 +281,7 @@ fn activate_on_main_thread(
         snapshot.activation.mode = Some(activation.mode);
         snapshot.activation.target_window_id = activation.target_window_id;
         snapshot.activation.selected_text = activation.selected_text;
+        snapshot.activation.screenshots = activation.screenshots;
         snapshot.activation.screenshot = activation.screenshot;
         snapshot.activation.action_page_index = activation.action_page_index;
         snapshot.activation.history_origin = activation.history_origin;

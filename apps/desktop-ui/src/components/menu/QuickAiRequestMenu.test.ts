@@ -62,9 +62,9 @@ describe('QuickAiRequestMenu', () => {
         stubs: {
           AppIcon: true,
           IconButton: {
-            props: ['icon', 'title', 'disabled'],
+            props: ['icon', 'title', 'disabled', 'label'],
             template:
-              '<button class="icon-btn" :title="title" :disabled="disabled" @click="$attrs.onClick"><slot /></button>',
+              '<button class="icon-btn" :title="title ?? label" :aria-label="label" :disabled="disabled" @click="$attrs.onClick"><slot /></button>',
           },
           KeyboardKey: { template: '<kbd class="kbd"><slot /></kbd>' },
           VoiceRecognitionMenu: {
@@ -93,6 +93,26 @@ describe('QuickAiRequestMenu', () => {
 
   it('renders preview with source text', () => {
     const wrapper = mountMenu({ text: 'Hello text to transform' })
+    expect(wrapper.text()).toContain('Hello text to transform')
+  })
+
+  it('disables and restores source text context preview', async () => {
+    const wrapper = mountMenu({ text: 'Hello text to transform' })
+    expect(wrapper.text()).toContain('Hello text to transform')
+
+    const removeBtn = wrapper.find('button[aria-label="action.removeContext"]')
+    expect(removeBtn.exists()).toBe(true)
+    await removeBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.context-disabled-banner').exists()).toBe(true)
+
+    const restoreBtn = wrapper.find('.context-restore-btn')
+    expect(restoreBtn.exists()).toBe(true)
+    await restoreBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.context-disabled-banner').exists()).toBe(false)
     expect(wrapper.text()).toContain('Hello text to transform')
   })
 
@@ -359,46 +379,40 @@ describe('QuickAiRequestMenu', () => {
       await wrapper.find('.remove-shot').trigger('click')
       await flushPromises()
       expect(
-        desktop.backend.calls.some((c) => c.command === 'remove_screenshot')
+        desktop.backend
+          .callsOf('remove_screenshot')
+          .some((c) => c.imageId === 'shot-1')
       ).toBe(true)
       expect(wrapper.find('.shot').exists()).toBe(false)
     })
 
-    it('replaces the screenshot after a successful retake and keeps the draft', async () => {
-      desktop.backend.handle('retake_screenshot', () => ({
+    it('adds another screenshot after a successful capture and keeps the draft', async () => {
+      desktop.backend.handle('add_screenshot', () => ({
         ...screenshot,
         id: 'shot-2',
       }))
       const wrapper = mountScreenshotMenu()
       await wrapper.find('.query-panel-input').setValue('What is this?')
-      await wrapper.find('[title="screenshot.retakeScreen"]').trigger('click')
+      await wrapper.find('[title="screenshot.addArea"]').trigger('click')
       await flushPromises()
 
-      expect(wrapper.find('.shot').attributes('data-id')).toBe('shot-2')
+      const shots = wrapper.findAll('.shot')
+      expect(shots).toHaveLength(2)
+      expect(shots[0].attributes('data-id')).toBe('shot-1')
+      expect(shots[1].attributes('data-id')).toBe('shot-2')
       expect(
         (wrapper.find('.query-panel-input').element as HTMLTextAreaElement)
           .value
       ).toBe('What is this?')
     })
 
-    it('keeps the previous screenshot when the retake is cancelled', async () => {
-      desktop.backend.handle('retake_screenshot', () => null)
+    it('keeps previous screenshots when adding is cancelled', async () => {
+      desktop.backend.handle('add_screenshot', () => null)
       const wrapper = mountScreenshotMenu()
-      await wrapper.find('[title="screenshot.retakeScreen"]').trigger('click')
+      await wrapper.find('[title="screenshot.addArea"]').trigger('click')
       await flushPromises()
+      expect(wrapper.findAll('.shot')).toHaveLength(1)
       expect(wrapper.find('.shot').attributes('data-id')).toBe('shot-1')
-    })
-
-    it('retakes with the capture mode of the chosen button', async () => {
-      desktop.backend.handle('retake_screenshot', () => null)
-      const wrapper = mountScreenshotMenu()
-      await wrapper.find('[title="screenshot.retakeArea"]').trigger('click')
-      await flushPromises()
-      await wrapper.find('[title="screenshot.retakeScreen"]').trigger('click')
-      await flushPromises()
-      expect(
-        desktop.backend.callsOf('retake_screenshot').map((args) => args.mode)
-      ).toEqual(['area', 'screen'])
     })
 
     it('keeps the draft when the model cannot read images', async () => {

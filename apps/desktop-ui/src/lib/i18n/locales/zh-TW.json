@@ -18,7 +18,9 @@
     "quickAiRequest": "AI 快速請求",
     "voiceQuickAiRequest": "語音 AI 快速請求",
     "screenshotQuickAiRequest": "擷取螢幕並向 AI 提問",
-    "voiceScreenshotQuickAiRequest": "擷取螢幕並向 AI 語音提問"
+    "voiceScreenshotQuickAiRequest": "擷取螢幕並向 AI 語音提問",
+    "removeContext": "移除上下文",
+    "restoreContext": "還原上下文"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "此規則已不存在",
     "chatPrompts": "聊天提示詞預設",
     "favorites": "我的最愛",
-    "transcribing": "正在轉錄..."
+    "transcribing": "正在轉錄...",
+    "contextRemoved": "上下文已移除",
+    "contextRequired": "需要上下文"
   },
   "nav": {
     "aiChat": "詢問 AI",
@@ -1223,12 +1227,6 @@
     "favoriteTextPlaceholder": "輸入文字…",
     "searchFavoritesPlaceholder": "搜尋我的最愛…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "螢幕截圖",
-    "screenshotSectionHint": "螢幕截圖快捷請求與重新擷取時使用的擷取模式。",
-    "screenshotCaptureMode": "擷取模式",
-    "screenshotCaptureModeHint": "選擇擷取整個螢幕或選取特定區域。",
-    "screenshotCaptureModeScreen": "整個螢幕",
-    "screenshotCaptureModeArea": "選取區域",
     "chatPromptsSentImmediately": "立即傳送提示詞",
     "addPromptPage": "新增頁面",
     "promptPageProfile": "設定檔",
@@ -1470,12 +1468,11 @@
     "noModel": "請為快速請求選擇模型。"
   },
   "screenshot": {
-    "retakeScreen": "重新擷取整個螢幕",
-    "retakeArea": "重新選取區域",
     "failed": "無法擷取螢幕。請檢查螢幕擷取權限和桌面入口支援。",
     "selectAreaInstruction": "拖曳以選取區域。按 Escape 取消。",
     "confirmArea": "使用此區域",
-    "confirmAreaInstruction": "按 Enter 或按兩下確認，再次拖曳可重新選取。按 Escape 取消。"
+    "confirmAreaInstruction": "按 Enter 或按兩下確認，再次拖曳可重新選取。按 Escape 取消。",
+    "addArea": "新增區域截圖"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

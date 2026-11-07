@@ -18,7 +18,9 @@
     "quickAiRequest": "Hızlı YZ isteği",
     "voiceQuickAiRequest": "Sesli hızlı YZ isteği",
     "screenshotQuickAiRequest": "Ekran görüntüsü ve yapay zekâ sorusu",
-    "voiceScreenshotQuickAiRequest": "Ekran görüntüsü ve sesli yapay zekâ sorusu"
+    "voiceScreenshotQuickAiRequest": "Ekran görüntüsü ve sesli yapay zekâ sorusu",
+    "removeContext": "Bağlamı kaldır",
+    "restoreContext": "Bağlamı geri yükle"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "Bu kural artık mevcut değil",
     "chatPrompts": "Sohbet istemi önayarları",
     "favorites": "Favoriler",
-    "transcribing": "Metne dönüştürülüyor..."
+    "transcribing": "Metne dönüştürülüyor...",
+    "contextRemoved": "Bağlam kaldırıldı",
+    "contextRequired": "Bağlam gerekli"
   },
   "nav": {
     "aiChat": "Yapay Zekâya Sor",
@@ -1226,12 +1230,6 @@
     "favoriteTextPlaceholder": "Metin girin…",
     "searchFavoritesPlaceholder": "Favorileri ara…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "Ekran görüntüsü yakalama",
-    "screenshotSectionHint": "Ekran görüntülü hızlı istekler ve yeniden çekimler için kullanılan yakalama modu.",
-    "screenshotCaptureMode": "Yakalama modu",
-    "screenshotCaptureModeHint": "Tüm ekranı yakalamayı veya belirli bir alanı seçmeyi tercih edin.",
-    "screenshotCaptureModeScreen": "Tüm ekran",
-    "screenshotCaptureModeArea": "Seçilen alan",
     "chatPromptsSentImmediately": "İstemi hemen gönder",
     "addPromptPage": "Sayfa ekle",
     "promptPageProfile": "Profil",
@@ -1473,12 +1471,11 @@
     "noModel": "Hızlı istekler için bir model seçin."
   },
   "screenshot": {
-    "retakeScreen": "Tüm ekranı yeniden yakala",
-    "retakeArea": "Alanı yeniden seç",
     "failed": "Ekran yakalanamadı. Ekran yakalama izinlerini ve masaüstü portalı desteğini kontrol edin.",
     "selectAreaInstruction": "Bir alan seçmek için sürükleyin. Escape iptal eder.",
     "confirmArea": "Alanı kullan",
-    "confirmAreaInstruction": "Onaylamak için Enter'a basın veya çift tıklayın, yeniden çizmek için tekrar sürükleyin. Escape iptal eder."
+    "confirmAreaInstruction": "Onaylamak için Enter'a basın veya çift tıklayın, yeniden çizmek için tekrar sürükleyin. Escape iptal eder.",
+    "addArea": "Alan ekran görüntüsü ekle"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

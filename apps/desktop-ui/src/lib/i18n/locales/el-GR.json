@@ -18,7 +18,9 @@
     "quickAiRequest": "Γρήγορο αίτημα AI",
     "voiceQuickAiRequest": "Φωνητικό γρήγορο αίτημα AI",
     "screenshotQuickAiRequest": "Στιγμιότυπο οθόνης και ερώτηση στην ΤΝ",
-    "voiceScreenshotQuickAiRequest": "Στιγμιότυπο οθόνης και φωνητική ερώτηση στην ΤΝ"
+    "voiceScreenshotQuickAiRequest": "Στιγμιότυπο οθόνης και φωνητική ερώτηση στην ΤΝ",
+    "removeContext": "Αφαίρεση περιβάλλοντος",
+    "restoreContext": "Επαναφορά περιβάλλοντος"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "Αυτός ο κανόνας δεν υπάρχει πλέον",
     "chatPrompts": "Προεπιλογές προτροπών συνομιλίας",
     "favorites": "Αγαπημένα",
-    "transcribing": "Μεταγραφή..."
+    "transcribing": "Μεταγραφή...",
+    "contextRemoved": "Το περιβάλλον αφαιρέθηκε",
+    "contextRequired": "Απαιτείται περιβάλλον"
   },
   "nav": {
     "aiChat": "Ρωτήστε την ΤΝ",
@@ -1226,12 +1230,6 @@
     "favoriteTextPlaceholder": "Εισάγετε κείμενο…",
     "searchFavoritesPlaceholder": "Αναζήτηση αγαπημένων…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "Λήψη στιγμιότυπου",
-    "screenshotSectionHint": "Λειτουργία λήψης για γρήγορα αιτήματα με στιγμιότυπο οθόνης και νέες λήψεις.",
-    "screenshotCaptureMode": "Λειτουργία λήψης",
-    "screenshotCaptureModeHint": "Επιλέξτε εάν θα γίνει λήψη ολόκληρης της οθόνης ή επιλεγμένης περιοχής.",
-    "screenshotCaptureModeScreen": "Ολόκληρη η οθόνη",
-    "screenshotCaptureModeArea": "Επιλεγμένη περιοχή",
     "chatPromptsSentImmediately": "Άμεση αποστολή της προτροπής",
     "addPromptPage": "Προσθήκη σελίδας",
     "promptPageProfile": "Προφίλ",
@@ -1473,12 +1471,11 @@
     "noModel": "Επιλέξτε μοντέλο για τα γρήγορα αιτήματα."
   },
   "screenshot": {
-    "retakeScreen": "Νέα λήψη ολόκληρης οθόνης",
-    "retakeArea": "Νέα επιλογή περιοχής",
     "failed": "Δεν ήταν δυνατή η λήψη της οθόνης. Ελέγξτε τις άδειες λήψης και την υποστήριξη της πύλης επιφάνειας εργασίας.",
     "selectAreaInstruction": "Σύρετε για να επιλέξετε περιοχή. Το Escape ακυρώνει.",
     "confirmArea": "Χρήση περιοχής",
-    "confirmAreaInstruction": "Enter ή διπλό κλικ για επιβεβαίωση, σύρετε ξανά για νέα επιλογή. Το Escape ακυρώνει."
+    "confirmAreaInstruction": "Enter ή διπλό κλικ για επιβεβαίωση, σύρετε ξανά για νέα επιλογή. Το Escape ακυρώνει.",
+    "addArea": "Προσθήκη στιγμιότυπου περιοχής"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

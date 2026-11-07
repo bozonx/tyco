@@ -18,7 +18,9 @@
     "quickAiRequest": "Requête IA rapide",
     "voiceQuickAiRequest": "Requête vocale IA rapide",
     "screenshotQuickAiRequest": "Capture d’écran et question à l’IA",
-    "voiceScreenshotQuickAiRequest": "Capture d’écran et question vocale à l’IA"
+    "voiceScreenshotQuickAiRequest": "Capture d’écran et question vocale à l’IA",
+    "removeContext": "Supprimer le contexte",
+    "restoreContext": "Restaurer le contexte"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "Cette règle n'existe plus",
     "chatPrompts": "Préréglages de prompts pour le chat",
     "favorites": "Favoris",
-    "transcribing": "Transcription..."
+    "transcribing": "Transcription...",
+    "contextRemoved": "Contexte supprimé",
+    "contextRequired": "Contexte requis"
   },
   "nav": {
     "aiChat": "Demander à l’IA",
@@ -1229,12 +1233,6 @@
     "favoriteTextPlaceholder": "Saisissez le texte…",
     "searchFavoritesPlaceholder": "Rechercher des favoris…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "Capture d'écran",
-    "screenshotSectionHint": "Mode de capture utilisé pour les requêtes rapides avec capture et les nouvelles prises.",
-    "screenshotCaptureMode": "Mode de capture",
-    "screenshotCaptureModeHint": "Choisissez de capturer tout l'écran ou de sélectionner une zone spécifique.",
-    "screenshotCaptureModeScreen": "Tout l'écran",
-    "screenshotCaptureModeArea": "Zone sélectionnée",
     "chatPromptsSentImmediately": "Envoyer le prompt immédiatement",
     "addPromptPage": "Ajouter une page",
     "promptPageProfile": "Profil",
@@ -1476,12 +1474,11 @@
     "noModel": "Choisissez un modèle pour les requêtes rapides."
   },
   "screenshot": {
-    "retakeScreen": "Recapturer tout l’écran",
-    "retakeArea": "Resélectionner une zone",
     "failed": "Impossible de capturer l’écran. Vérifiez les autorisations de capture et la prise en charge du portail du bureau.",
     "selectAreaInstruction": "Faites glisser pour sélectionner une zone. Échap pour annuler.",
     "confirmArea": "Utiliser la zone",
-    "confirmAreaInstruction": "Entrée ou double-clic pour confirmer, glissez à nouveau pour redessiner. Échap annule."
+    "confirmAreaInstruction": "Entrée ou double-clic pour confirmer, glissez à nouveau pour redessiner. Échap annule.",
+    "addArea": "Ajouter une capture de zone"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

@@ -48,6 +48,7 @@ fn main() {
             "acknowledge_fetch_chunk",
             "acknowledge_settings_shutdown",
             "open_screenshot_chat",
+            "add_screenshot",
             "retake_screenshot",
             "remove_screenshot",
             "confirm_screenshot_crop",

@@ -18,7 +18,9 @@
     "quickAiRequest": "Szybkie zapytanie do SI",
     "voiceQuickAiRequest": "Głosowe szybkie zapytanie do SI",
     "screenshotQuickAiRequest": "Zrzut ekranu i pytanie do AI",
-    "voiceScreenshotQuickAiRequest": "Zrzut ekranu i głosowe pytanie do AI"
+    "voiceScreenshotQuickAiRequest": "Zrzut ekranu i głosowe pytanie do AI",
+    "removeContext": "Usuń kontekst",
+    "restoreContext": "Przywróć kontekst"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "Ta reguła już nie istnieje",
     "chatPrompts": "Zestawy promptów czatu",
     "favorites": "Ulubione",
-    "transcribing": "Transkrypcja..."
+    "transcribing": "Transkrypcja...",
+    "contextRemoved": "Kontekst usunięty",
+    "contextRequired": "Wymagany kontekst"
   },
   "nav": {
     "aiChat": "Zapytaj AI",
@@ -1229,12 +1233,6 @@
     "favoriteTextPlaceholder": "Wpisz tekst...",
     "searchFavoritesPlaceholder": "Wyszukaj ulubione…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "Przechwytywanie ekranu",
-    "screenshotSectionHint": "Tryb przechwytywania używany do szybkich zapytań ze zrzutem ekranu i ponownego przechwytywania.",
-    "screenshotCaptureMode": "Tryb przechwytywania",
-    "screenshotCaptureModeHint": "Wybierz, czy przechwycić cały ekran, czy zaznaczony obszar.",
-    "screenshotCaptureModeScreen": "Cały ekran",
-    "screenshotCaptureModeArea": "Zaznaczony obszar",
     "chatPromptsSentImmediately": "Wysyłaj prompt od razu",
     "addPromptPage": "Dodaj stronę",
     "promptPageProfile": "Profil",
@@ -1476,12 +1474,11 @@
     "noModel": "Wybierz model do szybkich zapytań."
   },
   "screenshot": {
-    "retakeScreen": "Ponownie przechwyć cały ekran",
-    "retakeArea": "Ponownie zaznacz obszar",
     "failed": "Nie udało się przechwycić ekranu. Sprawdź uprawnienia do przechwytywania i obsługę portalu pulpitu.",
     "selectAreaInstruction": "Przeciągnij, aby zaznaczyć obszar. Escape anuluje.",
     "confirmArea": "Użyj obszaru",
-    "confirmAreaInstruction": "Enter lub dwuklik zatwierdza, ponowne przeciągnięcie zmienia zaznaczenie. Escape anuluje."
+    "confirmAreaInstruction": "Enter lub dwuklik zatwierdza, ponowne przeciągnięcie zmienia zaznaczenie. Escape anuluje.",
+    "addArea": "Dodaj zrzut obszaru"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

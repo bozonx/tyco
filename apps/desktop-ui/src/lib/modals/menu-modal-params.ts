@@ -48,6 +48,7 @@ export interface TransformationMenuParams {
 export interface QuickAiRequestMenuParams {
   screenshotMode?: boolean
   screenshot?: ChatImage
+  screenshots?: ChatImage[]
   text?: string
   shortcutsDisabled?: boolean
   inputMode?: 'text' | 'voice'

@@ -18,7 +18,9 @@
     "quickAiRequest": "Quick AI request",
     "voiceQuickAiRequest": "Voice quick AI request",
     "screenshotQuickAiRequest": "Screenshot and AI question",
-    "voiceScreenshotQuickAiRequest": "Screenshot and voice AI question"
+    "voiceScreenshotQuickAiRequest": "Screenshot and voice AI question",
+    "removeContext": "Remove context",
+    "restoreContext": "Restore context"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "willInsertOnFinish": "Will insert on completion",
     "ruleNotFound": "This rule no longer exists",
     "chatPrompts": "Chat prompt presets",
-    "favorites": "Favorites"
+    "favorites": "Favorites",
+    "contextRemoved": "Context removed",
+    "contextRequired": "Context required"
   },
   "nav": {
     "aiChat": "Ask AI",
@@ -1229,12 +1233,6 @@
     "favoriteTextPlaceholder": "Enter favorite text…",
     "searchFavoritesPlaceholder": "Search favorites…",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "Screenshot capture",
-    "screenshotSectionHint": "Capture mode used by screenshot quick requests and retakes.",
-    "screenshotCaptureMode": "Capture mode",
-    "screenshotCaptureModeHint": "Choose whether to capture the entire screen or select a specific area.",
-    "screenshotCaptureModeScreen": "Entire screen",
-    "screenshotCaptureModeArea": "Selected area",
     "chatPromptsSentImmediately": "Send the prompt at once",
     "addPromptPage": "Add page",
     "promptPageProfile": "Profile",
@@ -1476,12 +1474,11 @@
     "noModel": "Choose a model for quick requests."
   },
   "screenshot": {
-    "retakeScreen": "Retake entire screen",
-    "retakeArea": "Reselect area",
     "failed": "Could not capture the screen. Check screen capture permissions and desktop portal support.",
     "selectAreaInstruction": "Drag to select an area. Press Escape to cancel.",
     "confirmArea": "Use area",
-    "confirmAreaInstruction": "Press Enter or double-click to confirm, drag again to redraw. Escape cancels."
+    "confirmAreaInstruction": "Press Enter or double-click to confirm, drag again to redraw. Escape cancels.",
+    "addArea": "Add area screenshot"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

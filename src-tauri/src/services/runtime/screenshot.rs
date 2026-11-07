@@ -247,8 +247,7 @@ impl ScreenshotSource for Source<'_> {
 pub(super) fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppError> {
     // Resolve the monitor and the insertion target before any window changes.
     let screen = platform::screenshot::screen()?;
-    let mode =
-        crate::models::user_config::screenshot_capture_mode(&app.state::<AppState>().user_config());
+    let mode = ScreenshotCaptureMode::Area;
     activation.target_window_id =
         platform::capture_foreground_target().map(platform::ForegroundTarget::into_platform_id);
     let handle = app.clone();
@@ -277,6 +276,7 @@ pub(super) fn activate(app: &AppHandle, mut activation: Activation) -> Result<()
                         &Windows(app),
                         &app.state::<ChatImages>(),
                         |image| {
+                            activation.screenshots = vec![image.clone()];
                             activation.screenshot = Some(image);
                             activate_on_main_thread(app, activation, screen.map(|s| (s.x, s.y)))
                         },
@@ -297,15 +297,9 @@ pub(super) fn activate(app: &AppHandle, mut activation: Activation) -> Result<()
     })
 }
 
-/// Retake without replacing the activation or its frontend question/conversation.
-pub fn retake(
-    app: &AppHandle,
-    activation_id: u64,
-    mode: Option<ScreenshotCaptureMode>,
-) -> Result<Option<ChatImage>, AppError> {
-    let mode = mode.unwrap_or_else(|| {
-        crate::models::user_config::screenshot_capture_mode(&app.state::<AppState>().user_config())
-    });
+/// Adds another screenshot while retaining the quick request activation and draft.
+pub fn add(app: &AppHandle, activation_id: u64) -> Result<Option<ChatImage>, AppError> {
+    let mode = ScreenshotCaptureMode::Area;
     let screen = platform::screenshot::screen()?;
     let (sender, receiver) = std::sync::mpsc::sync_channel(1);
     on_main_thread(app, move |app| {
@@ -336,7 +330,10 @@ pub fn retake(
             &app.state::<ChatImages>(),
             |image| {
                 let state = app.state::<AppState>();
-                state.update_snapshot(|s| s.activation.screenshot = Some(image));
+                state.update_snapshot(|s| {
+                    s.activation.screenshots.push(image.clone());
+                    s.activation.screenshot = s.activation.screenshots.first().cloned();
+                });
                 super::publish_state(app, &state);
                 Windows(app).restore()
             },
@@ -354,6 +351,15 @@ pub fn retake(
     receiver
         .recv()
         .map_err(|e| AppError::Failed(e.to_string()))?
+}
+
+/// Retake without replacing the activation or its frontend question/conversation.
+pub fn retake(
+    app: &AppHandle,
+    activation_id: u64,
+    _mode: Option<ScreenshotCaptureMode>,
+) -> Result<Option<ChatImage>, AppError> {
+    add(app, activation_id)
 }
 
 pub fn confirm_crop(app: &AppHandle, selection_id: u64, crop: CropRect) -> Result<(), AppError> {
@@ -389,12 +395,36 @@ fn ensure_current(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
     Ok(())
 }
 
-pub fn remove(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
+pub fn remove(
+    app: &AppHandle,
+    activation_id: u64,
+    image_id: Option<String>,
+) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
         ensure_current(app, activation_id)?;
         let state = app.state::<AppState>();
-        state.update_snapshot(|s| s.activation.screenshot = None);
-        app.state::<ChatImages>().lock().release_owner(OWNER);
+        let images = app.state::<ChatImages>();
+        let mut remaining_ids = Vec::new();
+        state.update_snapshot(|s| {
+            if let Some(target_id) = image_id.as_deref() {
+                s.activation.screenshots.retain(|i| i.id != target_id);
+            } else {
+                s.activation.screenshots.clear();
+            }
+            s.activation.screenshot = s.activation.screenshots.first().cloned();
+            remaining_ids = s
+                .activation
+                .screenshots
+                .iter()
+                .map(|i| i.id.clone())
+                .collect();
+        });
+        let mut images = images.lock();
+        if remaining_ids.is_empty() {
+            images.release_owner(OWNER);
+        } else {
+            images.sync(OWNER, &remaining_ids)?;
+        }
         super::emit_state(app, &state)
     })
 }
@@ -415,8 +445,13 @@ pub fn open_chat(
             .flat_map(|m| &m.images)
             .map(|i| i.id.clone())
             .collect();
-        let expected = snapshot.activation.screenshot.as_ref().map(|i| &i.id);
-        if ids.iter().any(|id| Some(id) != expected) {
+        let valid_ids: std::collections::HashSet<_> = snapshot
+            .activation
+            .screenshots
+            .iter()
+            .map(|i| i.id.as_str())
+            .collect();
+        if ids.iter().any(|id| !valid_ids.contains(id.as_str())) {
             return Err(AppError::InvalidInput("Unexpected screenshot image".into()));
         }
         // The destination owns these bytes before the quick overlay can be

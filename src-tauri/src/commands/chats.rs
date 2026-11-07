@@ -19,6 +19,16 @@ pub async fn list_chats(
 }
 
 #[tauri::command]
+pub async fn list_recent_quick_request_prompts(
+    app: AppHandle,
+    profile_id: Option<String>,
+    limit: usize,
+) -> Result<Vec<String>, AppError> {
+    let scope = ChatScope::from_profile_id(profile_id);
+    run_blocking(move || storage::list_recent_quick_request_prompts(&app, &scope, limit)).await?
+}
+
+#[tauri::command]
 pub async fn get_chat(
     window: WebviewWindow,
     app: AppHandle,

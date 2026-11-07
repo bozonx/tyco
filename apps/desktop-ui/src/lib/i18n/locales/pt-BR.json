@@ -18,7 +18,9 @@
     "quickAiRequest": "Requisição rápida de IA",
     "voiceQuickAiRequest": "Requisição rápida de IA por voz",
     "screenshotQuickAiRequest": "Captura de tela e pergunta à IA",
-    "voiceScreenshotQuickAiRequest": "Captura de tela e pergunta por voz à IA"
+    "voiceScreenshotQuickAiRequest": "Captura de tela e pergunta por voz à IA",
+    "removeContext": "Remover contexto",
+    "restoreContext": "Restaurar contexto"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -586,7 +588,9 @@
     "ruleNotFound": "Esta regra não existe mais",
     "chatPrompts": "Predefinições de prompts de chat",
     "favorites": "Favoritos",
-    "transcribing": "Transcrevendo..."
+    "transcribing": "Transcrevendo...",
+    "contextRemoved": "Contexto removido",
+    "contextRequired": "Contexto necessário"
   },
   "nav": {
     "aiChat": "Perguntar à IA",
@@ -1229,12 +1233,6 @@
     "favoriteTextPlaceholder": "Introduza o texto...",
     "searchFavoritesPlaceholder": "Pesquisar favoritos...",
     "hotkeyDescriptions": {},
-    "screenshotSectionTitle": "Captura de tela",
-    "screenshotSectionHint": "Modo de captura usado para solicitações rápidas com captura e repetições.",
-    "screenshotCaptureMode": "Modo de captura",
-    "screenshotCaptureModeHint": "Escolha se deseja capturar toda a tela ou selecionar uma área específica.",
-    "screenshotCaptureModeScreen": "Tela inteira",
-    "screenshotCaptureModeArea": "Área selecionada",
     "chatPromptsSentImmediately": "Enviar o prompt imediatamente",
     "addPromptPage": "Adicionar página",
     "promptPageProfile": "Perfil",
@@ -1476,12 +1474,11 @@
     "noModel": "Escolha um modelo para as solicitações rápidas."
   },
   "screenshot": {
-    "retakeScreen": "Recapturar a tela inteira",
-    "retakeArea": "Selecionar a área novamente",
     "failed": "Não foi possível capturar a tela. Verifique as permissões de captura e o suporte ao portal da área de trabalho.",
     "selectAreaInstruction": "Arraste para selecionar uma área. Esc cancela.",
     "confirmArea": "Usar área",
-    "confirmAreaInstruction": "Pressione Enter ou clique duas vezes para confirmar; arraste de novo para refazer. Esc cancela."
+    "confirmAreaInstruction": "Pressione Enter ou clique duas vezes para confirmar; arraste de novo para refazer. Esc cancela.",
+    "addArea": "Adicionar captura de área"
   },
   "chatPrompts": {
     "pageLabel": "{page} · {profile}",

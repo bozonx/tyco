@@ -38,6 +38,7 @@ pub struct Activation {
     pub source: ActivationSource,
     pub target_window_id: Option<String>,
     pub selected_text: Option<String>,
+    pub screenshots: Vec<crate::models::ChatImage>,
     pub screenshot: Option<crate::models::ChatImage>,
     /// The page the menu opens on: of `actionPages` for `SelectionActions`, of
     /// `chatPrompts.pages` for `ChatPrompts`; `None` or 0 for the first one.
@@ -55,6 +56,7 @@ impl Activation {
             source,
             target_window_id: None,
             selected_text: None,
+            screenshots: Vec::new(),
             screenshot: None,
             action_page_index: None,
             history_origin: None,

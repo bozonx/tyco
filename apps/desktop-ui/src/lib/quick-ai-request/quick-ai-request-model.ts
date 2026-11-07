@@ -57,7 +57,7 @@ export type QuickAiRequestModelIssue = 'noModel' | 'toolsRequired'
  */
 export type QuickAiRequestContext =
   | { kind: 'selection'; text?: string }
-  | { kind: 'screenshot'; image?: ChatImage }
+  | { kind: 'screenshot'; image?: ChatImage; images?: ChatImage[] }
 
 /** A conversation the main window takes over with its images */
 export interface QuickAiRequestScreenshotTransfer {
@@ -172,16 +172,24 @@ export function createQuickAiRequestModel(
   deps: QuickAiRequestModelDependencies
 ) {
   const context = deps.context ?? { kind: 'selection' }
-  const sourceText = context.kind === 'selection' ? context.text : undefined
+  const originalSourceText =
+    context.kind === 'selection' ? context.text : undefined
+  const isSourceTextDisabled = ref(false)
+  const sourceText = computed(() =>
+    isSourceTextDisabled.value ? undefined : originalSourceText
+  )
   const isScreenshot = context.kind === 'screenshot'
   const inputMode = ref<'text' | 'voice'>(deps.initialInputMode ?? 'text')
   const profileId = ref<string | null>(deps.initialProfileId ?? null)
   const modelId = ref<string | null>(
     deps.getRememberedModelId(profileId.value) ?? null
   )
-  const sourceImage = ref<ChatImage | undefined>(
-    context.kind === 'screenshot' ? context.image : undefined
+  const sourceImages = ref<ChatImage[]>(
+    context.kind === 'screenshot'
+      ? (context.images ?? (context.image ? [context.image] : []))
+      : []
   )
+  const sourceImage = computed(() => sourceImages.value[0])
   const isProfileLocked = ref(false)
   const isGenerating = ref(false)
   const turns = ref<QuickAiRequestTurn[]>([])
@@ -223,7 +231,7 @@ export function createQuickAiRequestModel(
   const recordHistory = (result?: string) => {
     if (isScreenshot) return Promise.resolve()
     return history.record(
-      sourceText,
+      sourceText.value,
       profileId.value,
       turns.value
         .filter((turn) => turn.status === 'done')
@@ -234,6 +242,17 @@ export function createQuickAiRequestModel(
         })),
       result
     )
+  }
+
+  const isSourceTextLocked = computed(
+    () =>
+      isGenerating.value ||
+      turns.value.some((turn) => turn.status === 'done' || turn.textResponse)
+  )
+
+  const setSourceTextDisabled = (disabled: boolean) => {
+    if (isSourceTextLocked.value) return
+    isSourceTextDisabled.value = disabled
   }
 
   /**
@@ -249,14 +268,35 @@ export function createQuickAiRequestModel(
 
   const setSourceImage = (image: ChatImage | undefined) => {
     if (isSourceImageLocked.value) return
-    sourceImage.value = image
+    sourceImages.value = image ? [image] : []
+  }
+
+  const setSourceImages = (images: ChatImage[]) => {
+    if (isSourceImageLocked.value) return
+    sourceImages.value = images
+  }
+
+  const addSourceImage = (image: ChatImage) => {
+    if (isSourceImageLocked.value) return
+    if (!sourceImages.value.some((img) => img.id === image.id)) {
+      sourceImages.value = [...sourceImages.value, image]
+    }
+  }
+
+  const removeSourceImage = (id: string) => {
+    if (isSourceImageLocked.value) return
+    sourceImages.value = sourceImages.value.filter((img) => img.id !== id)
   }
 
   const firstTurnContext = () => ({
-    ...(sourceText
-      ? { attachments: [{ text: sourceText, source: 'selection' as const }] }
+    ...(sourceText.value
+      ? {
+          attachments: [
+            { text: sourceText.value, source: 'selection' as const },
+          ],
+        }
       : {}),
-    ...(sourceImage.value ? { images: [sourceImage.value] } : {}),
+    ...(sourceImages.value.length ? { images: [...sourceImages.value] } : {}),
   })
 
   const setInputMode = (mode: 'text' | 'voice') => {
@@ -328,7 +368,7 @@ export function createQuickAiRequestModel(
       return false
     }
 
-    if (sourceImage.value && !model.canUseImages) {
+    if (sourceImages.value.length > 0 && !model.canUseImages) {
       error.value =
         deps.imageModelError?.() ??
         'Choose a model that supports images in model settings.'
@@ -370,13 +410,10 @@ export function createQuickAiRequestModel(
         .join('\n\n')
 
       const imageBytes = new Map<string, Uint8Array<ArrayBuffer>>()
-      if (sourceImage.value) {
+      for (const img of sourceImages.value) {
         try {
           if (!deps.loadImage) throw new Error('Image loader unavailable')
-          imageBytes.set(
-            sourceImage.value.id,
-            await deps.loadImage(sourceImage.value.id)
-          )
+          imageBytes.set(img.id, await deps.loadImage(img.id))
         } catch {
           throw new Error(
             deps.imageUnavailableError?.() ?? 'Image is unavailable'
@@ -466,7 +503,7 @@ export function createQuickAiRequestModel(
       return
     }
     if (target === 'window') await deps.insertText(block.text)
-    else await deps.toEditor(block.text, sourceText)
+    else await deps.toEditor(block.text, sourceText.value)
     deps.closeOverlay()
   }
 
@@ -567,8 +604,8 @@ export function createQuickAiRequestModel(
     }
     if (turns.value.length === 0) {
       await deps.openMainChat({
-        attachment: sourceText
-          ? { text: sourceText, source: 'selection' }
+        attachment: sourceText.value
+          ? { text: sourceText.value, source: 'selection' }
           : undefined,
         question: draft,
         profileId: profileId.value ?? undefined,
@@ -593,9 +630,17 @@ export function createQuickAiRequestModel(
     selectedModel,
     modelIssue,
     describeModelIssue,
+    sourceText,
+    isSourceTextDisabled,
+    isSourceTextLocked,
+    setSourceTextDisabled,
     sourceImage,
+    sourceImages,
     isSourceImageLocked,
     setSourceImage,
+    setSourceImages,
+    addSourceImage,
+    removeSourceImage,
     isProfileLocked,
     isGenerating,
     turns,

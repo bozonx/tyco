@@ -49,7 +49,7 @@ impl ChatDirs {
 
 /// The folder of the indexes in the state folder.
 const INDEX_DIR: &str = "index";
-const CHAT_INDEX_FILE: &str = "chats.json";
+const CHAT_INDEX_FILE: &str = "chats-v2.json";
 const ORPHAN_IMAGES_FILE: &str = "orphan-images.json";
 
 /// The chats of "Ask AI": `chats` of the user data folder.
@@ -142,6 +142,37 @@ fn read_index(path: &Path) -> Option<ChatIndex> {
 
 pub fn list_chats(dirs: &ChatDirs) -> Result<Vec<ChatSummary>, AppError> {
     load_chat_index(dirs)
+}
+
+pub fn list_recent_quick_request_prompts(
+    dirs: &ChatDirs,
+    policy: ChatHistoryPolicy,
+    limit: usize,
+) -> Result<Vec<String>, AppError> {
+    if !policy.is_enabled || limit == 0 {
+        return Ok(Vec::new());
+    }
+    let summaries = list_chats(dirs)?;
+    let mut prompts = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+
+    for summary in summaries.into_iter().filter(|s| s.is_quick_request == Some(true)) {
+        if let Ok(Some(chat)) = read_chat(&dirs.chats, summary.id) {
+            for message in chat.messages.iter().rev() {
+                if message.role == crate::models::ChatRole::User {
+                    let text = message.content.trim();
+                    if !text.is_empty() && seen.insert(text.to_string()) {
+                        prompts.push(text.to_string());
+                        if prompts.len() >= limit {
+                            return Ok(prompts);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(prompts)
 }
 
 /// The summaries of the chats, the most recent first. A file the index saw

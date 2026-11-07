@@ -368,13 +368,6 @@ struct SttConfig {
     is_voice_hold_enabled: bool,
 }
 
-pub fn screenshot_capture_mode(config: &Value) -> super::ScreenshotCaptureMode {
-    config
-        .pointer("/quickWindow/screenshotCaptureMode")
-        .and_then(|v| serde_json::from_value(v.clone()).ok())
-        .unwrap_or_default()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

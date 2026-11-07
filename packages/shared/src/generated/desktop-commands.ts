@@ -105,6 +105,7 @@ export interface DesktopCommands {
     args: { entry: EditorHistoryEntry }
     result: string | null
   }
+  add_screenshot: { args: { activationId: number }; result: ChatImage | null }
   answer_external_access: {
     args: { jobId: string; decision: AccessDecision }
     result: void
@@ -298,7 +299,10 @@ export interface DesktopCommands {
     args: { mode: UserDataRelocationMode; path?: string | null }
     result: void
   }
-  remove_screenshot: { args: { activationId: number }; result: void }
+  remove_screenshot: {
+    args: { activationId: number; imageId?: string | null }
+    result: void
+  }
   rename_chat: {
     args: { id: string; title: string; profileId?: string | null }
     result: void
@@ -464,6 +468,7 @@ export const BINARY_DESKTOP_COMMANDS = [
 
 /** The commands that act for an activation and name it by `activationId` */
 export const ACTIVATION_DESKTOP_COMMANDS = [
+  'add_screenshot',
   'hide_quick_window_on_blur',
   'hide_window',
   'open_in_browser_and_hide',
