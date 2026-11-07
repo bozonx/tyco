@@ -8,7 +8,7 @@
       "
       :shortcuts-disabled="shortcutsDisabled"
       :input-mode="props.inputMode"
-      :profile-id="props.profileId"
+      :profile-id="effectiveProfileId"
     />
   </ContentPadding>
 </template>
@@ -17,6 +17,7 @@
 import ContentPadding from '../components/common/ContentPadding.vue'
 import QuickAiRequestMenu from '../components/menu/QuickAiRequestMenu.vue'
 import { useSelectionActionContext } from '../composables/use-selection-action-context'
+import { useActionMenuStore } from '../stores/action-menu'
 import { useDesktopStore } from '../stores/desktop'
 
 const props = withDefaults(
@@ -29,5 +30,8 @@ const props = withDefaults(
 )
 
 const desktopStore = useDesktopStore()
+const actionMenuStore = useActionMenuStore()
+const effectiveProfileId =
+  props.profileId ?? actionMenuStore.consumePendingProfileId?.() ?? null
 const { text, shortcutsDisabled } = useSelectionActionContext()
 </script>

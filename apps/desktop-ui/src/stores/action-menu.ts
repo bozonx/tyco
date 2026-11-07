@@ -1,4 +1,4 @@
-import { watch } from 'vue'
+import { ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { APP_CONFIG } from '@tyco/shared'
 
@@ -25,8 +25,16 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
   const correctionWorkflowStore = useCorrectionWorkflowStore()
   const aiProfilesStore = useAiProfilesStore()
 
+  const pendingProfileId = ref<string | null>(null)
+  const consumePendingProfileId = () => {
+    const id = pendingProfileId.value
+    pendingProfileId.value = null
+    return id
+  }
+
   const model = createActionMenuModel({
-    activateMode: async (mode) => {
+    activateMode: async (mode, profileId) => {
+      pendingProfileId.value = profileId ?? null
       await useIpcStore().callOrNotify('activate_mode', { mode })
     },
     saveOutput: async (text: string) => {
@@ -110,5 +118,5 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     { immediate: true }
   )
 
-  return model
+  return { ...model, consumePendingProfileId }
 })

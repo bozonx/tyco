@@ -595,4 +595,67 @@ describe('createActionMenuModel', () => {
     await action?.action('text for writer')
     expect(openProfileChat).toHaveBeenCalledWith('writer', 'text for writer')
   })
+
+  it('creates and executes all profile action kinds', async () => {
+    const openProfileChat = vi.fn()
+    const openQuickAiRequestModal = vi.fn()
+    const activateMode = vi.fn()
+    const { deps } = setup()
+    const store = createActionMenuModel({
+      ...deps,
+      profiles: () => [{ id: 'writer', name: 'Writer' }],
+      openProfileChat,
+      openQuickAiRequestModal,
+      activateMode,
+      mainActions: () => ({
+        q: { type: 'profile', profileId: 'writer', action: 'quickAiRequest' },
+        w: {
+          type: 'profile',
+          profileId: 'writer',
+          action: 'voiceQuickAiRequest',
+        },
+        e: {
+          type: 'profile',
+          profileId: 'writer',
+          action: 'screenshotQuickAiRequest',
+        },
+        r: {
+          type: 'profile',
+          profileId: 'writer',
+          action: 'voiceScreenshotQuickAiRequest',
+        },
+        t: { type: 'profile', profileId: 'writer', action: 'chat' },
+      }),
+    })
+    const slots = store.getShortcutActions()
+    expect(slots[0]?.name).toContain('Writer')
+    await slots[0]?.action('hello')
+    expect(openQuickAiRequestModal).toHaveBeenCalledWith(
+      'hello',
+      'text',
+      'writer'
+    )
+
+    await slots[1]?.action('hello voice')
+    expect(openQuickAiRequestModal).toHaveBeenCalledWith(
+      'hello voice',
+      'voice',
+      'writer'
+    )
+
+    await slots[2]?.action('')
+    expect(activateMode).toHaveBeenCalledWith(
+      'screenshotQuickAiRequest',
+      'writer'
+    )
+
+    await slots[3]?.action('')
+    expect(activateMode).toHaveBeenCalledWith(
+      'voiceScreenshotQuickAiRequest',
+      'writer'
+    )
+
+    await slots[4]?.action('chat text')
+    expect(openProfileChat).toHaveBeenCalledWith('writer', 'chat text')
+  })
 })

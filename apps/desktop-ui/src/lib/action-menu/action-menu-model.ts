@@ -56,7 +56,8 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
       | 'history'
       | 'voice'
       | 'screenshotQuickAiRequest'
-      | 'voiceScreenshotQuickAiRequest'
+      | 'voiceScreenshotQuickAiRequest',
+    profileId?: string
   ) => Promise<void>
   /** With `language` the dialog translates into it at once */
   openTranslateModal: (text: string, language?: string) => void
@@ -204,7 +205,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       case 'quickAiRequest':
         return {
           id: baseId,
-          name: translate('action.quickAiRequest'),
+          name: `${translate('action.quickAiRequest')}: ${profile.name}`,
           icon: 'mdi:pencil-outline',
           trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
@@ -214,7 +215,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       case 'voiceQuickAiRequest':
         return {
           id: baseId,
-          name: translate('action.voiceQuickAiRequest'),
+          name: `${translate('action.voiceQuickAiRequest')}: ${profile.name}`,
           icon: 'mdi:microphone-outline',
           trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
@@ -224,25 +225,30 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       case 'screenshotQuickAiRequest':
         return {
           id: baseId,
-          name: translate('action.screenshotQuickAiRequest'),
+          name: `${translate('action.screenshotQuickAiRequest')}: ${profile.name}`,
           icon: 'mdi:monitor-screenshot',
           action: async () => {
-            await deps.activateMode?.('screenshotQuickAiRequest')
+            await deps.activateMode?.('screenshotQuickAiRequest', profileId)
           },
         }
       case 'voiceScreenshotQuickAiRequest':
         return {
           id: baseId,
-          name: translate('action.voiceScreenshotQuickAiRequest'),
+          name: `${translate('action.voiceScreenshotQuickAiRequest')}: ${profile.name}`,
           icon: 'mdi:monitor-screenshot',
           action: async () => {
-            await deps.activateMode?.('voiceScreenshotQuickAiRequest')
+            await deps.activateMode?.(
+              'voiceScreenshotQuickAiRequest',
+              profileId
+            )
           },
         }
       case 'chat':
         return {
           id: baseId,
-          name: translate('action.askInChat'),
+          name: translate('settings.askInProfileChat', {
+            profile: profile.name,
+          }),
           icon: 'mdi:chat-question-outline',
           action: async (text: string) => {
             await deps.openProfileChat?.(profileId, text)

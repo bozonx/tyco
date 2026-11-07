@@ -257,7 +257,9 @@ const availableActions = computed((): MainActionChoice[] => [
     PROFILE_ACTION_KINDS.map((action) => ({
       config: { type: 'profile' as const, profileId: profile.id, action },
       name:
-        action === 'chat' ? t('action.askInChat') : `${t(`action.${action}`)}…`,
+        action === 'chat'
+          ? t('settings.askInProfileChat', { profile: profile.name })
+          : `${t(`action.${action}`)}: ${profile.name}…`,
       group: { kind: 'profile' as const, profileId: profile.id },
     }))
   ),
