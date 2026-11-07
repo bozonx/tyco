@@ -71,7 +71,12 @@
     "chatPromptsPage2": "",
     "chatPromptsPage3": "",
     "chatPromptsPage4": "",
-    "chatPromptsPage5": ""
+    "chatPromptsPage5": "",
+    "customAction1": "",
+    "customAction2": "",
+    "customAction3": "",
+    "customAction4": "",
+    "customAction5": ""
   },
   "externalAccess": { "canAccessSelection": false },
   "windowInsertion": {
@@ -105,6 +110,13 @@
         "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
       }
     }
+  ],
+  "customActionSlots": [
+    { "action": null, "takesSelection": true },
+    { "action": null, "takesSelection": true },
+    { "action": null, "takesSelection": true },
+    { "action": null, "takesSelection": true },
+    { "action": null, "takesSelection": true }
   ],
   "commands": [],
   "variables": [],

@@ -31,6 +31,7 @@ pub enum ActivationSource {
 
 const SELECTION_ACTIONS_MODE_PREFIX: &str = "selectionActions:";
 const CHAT_PROMPTS_MODE_PREFIX: &str = "chatPrompts:";
+const CUSTOM_ACTION_MODE_PREFIX: &str = "customAction:";
 
 #[derive(Debug)]
 pub struct Activation {
@@ -43,6 +44,8 @@ pub struct Activation {
     /// The page the menu opens on: of `actionPages` for `SelectionActions`, of
     /// `chatPrompts.pages` for `ChatPrompts`; `None` or 0 for the first one.
     pub action_page_index: Option<usize>,
+    /// The slot index of `customActionSlots`; only for `CustomAction`.
+    pub custom_action_index: Option<usize>,
     /// The source the history opens filtered by; only for `History`.
     pub history_origin: Option<crate::models::EditorHistoryOrigin>,
     /// What the access prompt asks about, see `services::external::access`.
@@ -59,6 +62,7 @@ impl Activation {
             screenshots: Vec::new(),
             screenshot: None,
             action_page_index: None,
+            custom_action_index: None,
             history_origin: None,
             access_request: None,
         }
@@ -76,8 +80,15 @@ impl Activation {
         activation
     }
 
+    pub fn custom_action(slot_index: usize, source: ActivationSource) -> Self {
+        let mut activation = Self::new(ActivationMode::CustomAction, source);
+        activation.custom_action_index = Some(slot_index);
+        activation
+    }
+
     /// A mode, or `selectionActions:<page 1-based index>` for an action page,
-    /// or `chatPrompts:<page 1-based index>` for a prompt page.
+    /// or `chatPrompts:<page 1-based index>` for a prompt page,
+    /// or `customAction:<slot 1-based index>` for a custom action slot.
     pub fn from_mode(value: &str, source: ActivationSource) -> Result<Self, AppError> {
         let pages = [
             (
@@ -89,6 +100,11 @@ impl Activation {
                 ActivationMode::ChatPrompts,
                 CHAT_PROMPTS_MODE_PREFIX,
                 "chat-prompts:",
+            ),
+            (
+                ActivationMode::CustomAction,
+                CUSTOM_ACTION_MODE_PREFIX,
+                "custom-action:",
             ),
         ];
         for (mode, prefix, cli_prefix) in pages {
@@ -102,7 +118,12 @@ impl Activation {
                 return Err(AppError::InvalidInput("Invalid page".into()));
             };
             let mut activation = Self::new(mode, source);
-            activation.action_page_index = Some(page_num.saturating_sub(1));
+            let zero_based = page_num.saturating_sub(1);
+            if mode == ActivationMode::CustomAction {
+                activation.custom_action_index = Some(zero_based);
+            } else {
+                activation.action_page_index = Some(zero_based);
+            }
             return Ok(activation);
         }
         Ok(Self::new(ActivationMode::parse(value)?, source))
@@ -116,6 +137,11 @@ impl Activation {
     /// The mode string that opens the prompts on `page_index` (0-based).
     pub fn prompt_page_mode(page_index: usize) -> String {
         format!("{CHAT_PROMPTS_MODE_PREFIX}{}", page_index + 1)
+    }
+
+    /// The mode string that runs the custom action on `slot_index` (0-based).
+    pub fn custom_action_mode(slot_index: usize) -> String {
+        format!("{CUSTOM_ACTION_MODE_PREFIX}{}", slot_index + 1)
     }
 
     /// Whether the mode has pages a repeated activation steps through.
@@ -135,6 +161,11 @@ impl Activation {
             || self.mode == ActivationMode::Favorites
         {
             return false;
+        }
+        if self.mode == ActivationMode::CustomAction {
+            let index = self.custom_action_index.unwrap_or(0);
+            let slots = user_config::custom_action_slots(user_config);
+            return slots.get(index).is_none_or(|slot| slot.takes_selection);
         }
         if self.mode != ActivationMode::SelectionActions {
             return true;

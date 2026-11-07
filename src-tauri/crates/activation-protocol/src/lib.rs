@@ -25,6 +25,7 @@ pub const START_MODES: &[&str] = &[
     "favorites",
     "history",
     "config",
+    "customAction",
 ];
 
 pub fn canonical_mode(value: &str) -> &str {
@@ -40,6 +41,7 @@ pub fn canonical_mode(value: &str) -> &str {
         "screenshot-quick-ai-request" => "screenshotQuickAiRequest",
         "voice-screenshot-quick-ai-request" => "voiceScreenshotQuickAiRequest",
         "chat-prompts" => "chatPrompts",
+        "custom-action" => "customAction",
         "settings" => "config",
         _ => value,
     }
@@ -58,6 +60,7 @@ pub fn cli_mode(mode: &str) -> &str {
         "screenshotQuickAiRequest" => "screenshot-quick-ai-request",
         "voiceScreenshotQuickAiRequest" => "voice-screenshot-quick-ai-request",
         "chatPrompts" => "chat-prompts",
+        "customAction" => "custom-action",
         "config" => "settings",
         _ => mode,
     }
@@ -72,6 +75,8 @@ pub fn is_start_mode(value: &str) -> bool {
         "selection-actions:",
         "chatPrompts:",
         "chat-prompts:",
+        "customAction:",
+        "custom-action:",
     ]
     .into_iter()
     .find_map(|prefix| value.strip_prefix(prefix));

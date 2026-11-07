@@ -308,3 +308,12 @@ export const DEFAULT_ACTION_PAGES =
   configDefaults.actionPages as ActionPageConfig[]
 
 export const DEFAULT_MAIN_ACTIONS = DEFAULT_ACTION_PAGES[0].slots
+
+/** A configured custom hotkey slot */
+export interface CustomActionSlotConfig {
+  action: MainActionConfig | null
+  takesSelection: boolean
+}
+
+export const DEFAULT_CUSTOM_ACTION_SLOTS =
+  configDefaults.customActionSlots as CustomActionSlotConfig[]

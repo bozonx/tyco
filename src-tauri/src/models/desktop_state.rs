@@ -27,6 +27,8 @@ pub struct ActivationSnapshot {
     /// The page the menu opens on: of `actionPages` for `selectionActions`, of
     /// `chatPrompts.pages` for `chatPrompts`; `None` or 0 for the first one.
     pub action_page_index: Option<usize>,
+    /// The slot index for `customAction`; `None` or 0 for the first one.
+    pub custom_action_index: Option<usize>,
     /// The source the history opens filtered by, e.g. from the quick input.
     pub history_origin: Option<super::EditorHistoryOrigin>,
     pub access_request: Option<AccessRequest>,

@@ -284,6 +284,7 @@ fn activate_on_main_thread(
         snapshot.activation.screenshots = activation.screenshots;
         snapshot.activation.screenshot = activation.screenshot;
         snapshot.activation.action_page_index = activation.action_page_index;
+        snapshot.activation.custom_action_index = activation.custom_action_index;
         snapshot.activation.history_origin = activation.history_origin;
         snapshot.activation.access_request = activation.access_request;
         snapshot.window.is_window_shown = true;
@@ -326,6 +327,7 @@ fn window_label_for_mode(mode: ActivationMode) -> &'static str {
         | ActivationMode::VoiceScreenshotQuickAiRequest
         | ActivationMode::ChatPrompts
         | ActivationMode::Favorites
+        | ActivationMode::CustomAction
         | ActivationMode::ExternalAccess => QUICK_WINDOW_LABEL,
         ActivationMode::Editor
         | ActivationMode::Chat

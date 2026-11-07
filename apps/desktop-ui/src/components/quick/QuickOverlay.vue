@@ -5,7 +5,8 @@
       isSheet ? 'is-sheet' : 'is-panel',
       {
         'has-modal': hasModal,
-        'is-hidden': !desktopStore.desktopState.isWindowShown,
+        'is-hidden':
+          !desktopStore.desktopState.isWindowShown || isAwaitingCaptureOutcome,
         'is-selecting-area': Boolean(activeAreaSelection),
       },
     ]"
@@ -26,7 +27,12 @@
       @confirm="onConfirmCrop"
       @cancel="onCancelCrop"
     />
-    <div v-show="!activeAreaSelection" ref="cardRef" class="quick-overlay-card">
+    <div
+      v-show="!activeAreaSelection"
+      ref="cardRef"
+      class="quick-overlay-card"
+      :inert="Boolean(activeAreaSelection) || isAwaitingCaptureOutcome"
+    >
       <div v-show="currentMode === 'quickInput'" class="quick-mode-layer">
         <WriteView />
       </div>
@@ -92,6 +98,12 @@
       <div v-show="currentMode === 'favorites'" class="quick-mode-layer">
         <FavoritesView v-if="currentMode === 'favorites'" :key="activationId" />
       </div>
+      <div v-show="currentMode === 'customAction'" class="quick-mode-layer">
+        <CustomActionView
+          v-if="currentMode === 'customAction'"
+          :key="activationId"
+        />
+      </div>
       <!-- gone with the window: a prompt hidden without an answer denies -->
       <div v-show="currentMode === 'externalAccess'" class="quick-mode-layer">
         <ExternalAccessView
@@ -129,6 +141,7 @@ import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickInputStore } from '../../stores/quick-input'
 import ChatPromptsView from '../../views/ChatPromptsView.vue'
 import CorrectionView from '../../views/CorrectionView.vue'
+import CustomActionView from '../../views/CustomActionView.vue'
 import ExternalAccessView from '../../views/ExternalAccessView.vue'
 import FavoritesView from '../../views/FavoritesView.vue'
 import QuickAiRequestView from '../../views/QuickAiRequestView.vue'
@@ -175,13 +188,15 @@ const isPanelMode = computed(
 )
 
 const activeAreaSelection = ref<ScreenshotAreaSelection | null>(null)
+const isAwaitingCaptureOutcome = ref(false)
 let stopSelectAreaListener: (() => void) | undefined
 let stopSelectAreaClosedListener: (() => void) | undefined
 
 const onConfirmCrop = async (crop: CropRect) => {
   const selection = activeAreaSelection.value
-  activeAreaSelection.value = null
   if (!selection) return
+  isAwaitingCaptureOutcome.value = true
+  activeAreaSelection.value = null
   await ipcStore.call('confirm_screenshot_crop', {
     selectionId: selection.selectionId,
     crop,
@@ -190,8 +205,9 @@ const onConfirmCrop = async (crop: CropRect) => {
 
 const onCancelCrop = async () => {
   const selection = activeAreaSelection.value
-  activeAreaSelection.value = null
   if (!selection) return
+  isAwaitingCaptureOutcome.value = true
+  activeAreaSelection.value = null
   await ipcStore.call('cancel_screenshot_crop', {
     selectionId: selection.selectionId,
   })
@@ -377,9 +393,10 @@ onMounted(() => {
     .catch((error: unknown) =>
       clientLogger.error('Could not watch window focus', error, 'quick')
     )
-  void desktopClient
+    void desktopClient
     .listen(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA_CLOSED, () => {
       activeAreaSelection.value = null
+      isAwaitingCaptureOutcome.value = false
     })
     .then((remove) => {
       if (unmounted) remove()
@@ -394,6 +411,7 @@ onMounted(() => {
     )
   void desktopClient
     .listen(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA, (payload) => {
+      isAwaitingCaptureOutcome.value = false
       activeAreaSelection.value = payload
     })
     .then((remove) => {
@@ -447,6 +465,7 @@ watch(
   ],
   () => {
     activeAreaSelection.value = null
+    isAwaitingCaptureOutcome.value = false
   }
 )
 

@@ -170,6 +170,24 @@ pub fn cover_output(
 
 /// Undoes `cover_output`; `apply_panel_surface` then lays out the panel again.
 pub fn uncover_output(window: &WebviewWindow, layer: bool) -> Result<(), AppError> {
+    #[cfg(target_os = "linux")]
+    if layer {
+        let (width, height) = (WINDOW_SIZE.0 as i32, WINDOW_SIZE.1 as i32);
+        window.with_webview(move |webview| {
+            webview.inner().set_size_request(width, height);
+        })?;
+        let gtk_window = window.gtk_window()?;
+        gtk_window.set_default_size(width, height);
+        gtk_window.resize(width, height);
+        super::linux::layer_shell::set_sheet_profile(&gtk_window, FALLBACK_SHEET_MARGIN_TOP);
+        super::linux::layer_shell::set_keyboard(
+            &gtk_window,
+            super::linux::layer_shell::KeyboardMode::None,
+        );
+        gtk_window.queue_resize();
+        APPLIED_GEOMETRY.set(None);
+        return Ok(());
+    }
     if !layer && window.is_fullscreen()? {
         window.set_fullscreen(false)?;
     }

@@ -596,6 +596,20 @@ describe('createActionMenuModel', () => {
     expect(openProfileChat).toHaveBeenCalledWith('writer', 'text for writer')
   })
 
+  it('resolves individual action items with resolveActionItem', () => {
+    const { deps } = setup()
+    const model = createActionMenuModel(deps)
+
+    const copyItem = model.resolveActionItem({
+      type: 'standard',
+      actionId: 'copyToClipboard',
+    })
+    expect(copyItem).toBeDefined()
+    expect(copyItem?.id).toBe('copyToClipboard')
+
+    expect(model.resolveActionItem(null)).toBeUndefined()
+  })
+
   it('creates and executes all profile action kinds', async () => {
     const openProfileChat = vi.fn()
     const openQuickAiRequestModal = vi.fn()

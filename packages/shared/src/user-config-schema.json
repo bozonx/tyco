@@ -196,7 +196,12 @@
         "chatPromptsPage2": { "type": "string", "default": "" },
         "chatPromptsPage3": { "type": "string", "default": "" },
         "chatPromptsPage4": { "type": "string", "default": "" },
-        "chatPromptsPage5": { "type": "string", "default": "" }
+        "chatPromptsPage5": { "type": "string", "default": "" },
+        "customAction1": { "type": "string", "default": "" },
+        "customAction2": { "type": "string", "default": "" },
+        "customAction3": { "type": "string", "default": "" },
+        "customAction4": { "type": "string", "default": "" },
+        "customAction5": { "type": "string", "default": "" }
       },
       "required": [
         "editor",
@@ -225,7 +230,12 @@
         "chatPromptsPage2",
         "chatPromptsPage3",
         "chatPromptsPage4",
-        "chatPromptsPage5"
+        "chatPromptsPage5",
+        "customAction1",
+        "customAction2",
+        "customAction3",
+        "customAction4",
+        "customAction5"
       ],
       "defaultPath": "hotkeys",
       "x-scope": "device"
@@ -504,6 +514,119 @@
         "required": ["inputMode", "slots"]
       },
       "defaultPath": "actionPages"
+    },
+    "customActionSlots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "anyOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "properties": {
+                  "type": { "enum": ["standard"] },
+                  "actionId": {
+                    "enum": [
+                      "insertIntoWindow",
+                      "copyToClipboard",
+                      "transformationMenu",
+                      "stylingMenu",
+                      "chatPromptsMenu",
+                      "favoritesMenu",
+                      "voiceCommands",
+                      "openHistory",
+                      "voiceInput",
+                      "translationMenu",
+                      "quickAiRequest",
+                      "voiceQuickAiRequest",
+                      "screenshotQuickAiRequest",
+                      "voiceScreenshotQuickAiRequest",
+                      "askInChat",
+                      "correction",
+                      "directCorrection"
+                    ]
+                  }
+                },
+                "required": ["type", "actionId"]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": { "enum": ["plugin"] },
+                  "actionId": { "type": "string", "minLength": 1 }
+                },
+                "required": ["type", "actionId"]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": { "enum": ["command"] },
+                  "commandId": { "type": "string", "minLength": 1 }
+                },
+                "required": ["type", "commandId"]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": { "enum": ["transformation"] },
+                  "transformationId": { "type": "string", "minLength": 1 }
+                },
+                "required": ["type", "transformationId"]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": { "enum": ["styling"] },
+                  "stylingId": { "type": "string", "minLength": 1 }
+                },
+                "required": ["type", "stylingId"]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": { "enum": ["translation"] },
+                  "language": { "type": "string", "minLength": 1 }
+                },
+                "required": ["type", "language"]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": { "enum": ["profileChat"] },
+                  "profileId": { "type": "string", "minLength": 1 }
+                },
+                "required": ["type", "profileId"]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": { "enum": ["profile"] },
+                  "profileId": { "type": "string", "minLength": 1 },
+                  "action": {
+                    "enum": [
+                      "quickAiRequest",
+                      "voiceQuickAiRequest",
+                      "screenshotQuickAiRequest",
+                      "voiceScreenshotQuickAiRequest",
+                      "chat"
+                    ]
+                  }
+                },
+                "required": ["type", "profileId", "action"]
+              }
+            ],
+            "default": null
+          },
+          "takesSelection": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": ["action", "takesSelection"]
+      },
+      "defaultPath": "customActionSlots"
     },
     "commands": {
       "type": "array",
@@ -1214,6 +1337,7 @@
     "windowInsertion",
     "translation",
     "actionPages",
+    "customActionSlots",
     "commands",
     "variables",
     "variableValues",

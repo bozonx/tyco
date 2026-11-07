@@ -18,6 +18,7 @@
       "selectedText": "Captured text",
       "mode": "editor",
       "actionPageIndex": null,
+      "customActionIndex": null,
       "historyOrigin": null,
       "accessRequest": null
     },

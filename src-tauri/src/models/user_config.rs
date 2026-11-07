@@ -201,6 +201,29 @@ pub fn action_pages(config: &Value) -> Vec<ActionPageConfig> {
         .collect()
 }
 
+fn default_true() -> bool {
+    true
+}
+
+/// A custom action slot, `customActionSlots[]`.
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct CustomActionSlotConfig {
+    #[serde(default = "default_true")]
+    pub takes_selection: bool,
+}
+
+/// The custom action slots in their order.
+pub fn custom_action_slots(config: &Value) -> Vec<CustomActionSlotConfig> {
+    config
+        .get("customActionSlots")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|slot| CustomActionSlotConfig::deserialize(slot).ok())
+        .collect()
+}
+
 /// `externalAccess`: what calls from outside the app may use.
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]

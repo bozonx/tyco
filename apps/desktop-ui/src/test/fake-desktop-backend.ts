@@ -88,6 +88,7 @@ export class FakeDesktopBackend {
       selectedText: null,
       mode: options.mode ?? ActivationMode.EDITOR,
       actionPageIndex: null,
+      customActionIndex: null,
       historyOrigin: null,
       accessRequest: null,
       ...structuredClone(options.activation),

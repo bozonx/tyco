@@ -535,9 +535,10 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     )
   }
 
-  const getShortcutActions = (
-    targetPageIndex = pageIndex.value
-  ): (ActionItem | undefined)[] => {
+  const resolveActionItem = (
+    item: MainActionConfig | null | undefined
+  ): ActionItem | undefined => {
+    if (!item) return undefined
     const defaults = new Map(
       getDefaultActions().map((action) => [action.id, action])
     )
@@ -547,34 +548,37 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     const commands = new Map(
       (deps.commands?.() ?? []).map((command) => [command.id, command])
     )
-    const slots = resolveMainActions(undefined, targetPageIndex).map((item) => {
-      if (!item) return undefined
-      if (item.type === 'standard') return defaults.get(item.actionId)
-      if (item.type === 'plugin') return plugins.get(item.actionId)
-      if (item.type === 'command') {
-        // a disabled or unavailable command leaves its slot empty
-        const command = commands.get(item.commandId)
-        return command && isMenuCommand(command, deps.tools)
-          ? createCommandActionItem(command)
-          : undefined
-      }
-      if (item.type === 'transformation') {
-        return createTransformationActionItem(item.transformationId)
-      }
-      if (item.type === 'styling') {
-        return createStylingActionItem(item.stylingId)
-      }
-      if (item.type === 'translation') {
-        return createTranslationActionItem(item.language)
-      }
-      if (item.type === 'profileChat') {
-        return createProfileChatActionItem(item.profileId)
-      }
-      if (item.type === 'profile') {
-        return createProfileActionItem(item.profileId, item.action)
-      }
-      return undefined
-    })
+    if (item.type === 'standard') return defaults.get(item.actionId)
+    if (item.type === 'plugin') return plugins.get(item.actionId)
+    if (item.type === 'command') {
+      // a disabled or unavailable command leaves its slot empty
+      const command = commands.get(item.commandId)
+      return command && isMenuCommand(command, deps.tools)
+        ? createCommandActionItem(command)
+        : undefined
+    }
+    if (item.type === 'transformation') {
+      return createTransformationActionItem(item.transformationId)
+    }
+    if (item.type === 'styling') {
+      return createStylingActionItem(item.stylingId)
+    }
+    if (item.type === 'translation') {
+      return createTranslationActionItem(item.language)
+    }
+    if (item.type === 'profileChat') {
+      return createProfileChatActionItem(item.profileId)
+    }
+    if (item.type === 'profile') {
+      return createProfileActionItem(item.profileId, item.action)
+    }
+    return undefined
+  }
+
+  const getShortcutActions = (
+    targetPageIndex = pageIndex.value
+  ): (ActionItem | undefined)[] => {
+    const slots = resolveMainActions(undefined, targetPageIndex).map(resolveActionItem)
     while (slots.length && !slots.at(-1)) slots.pop()
     return [
       ...slots,
@@ -611,6 +615,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     correct,
     getActionsMenu,
     getShortcutActions,
+    resolveActionItem,
     registerActionsItems,
     pageIndex,
     pageCount,

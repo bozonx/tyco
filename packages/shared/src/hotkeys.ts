@@ -19,6 +19,21 @@ export const ACTION_PAGE_HOTKEY_IDS: readonly [
   'selectionActionsPage5',
 ]
 
+/** Hotkeys corresponding to custom action slots by index */
+export const CUSTOM_ACTION_HOTKEY_IDS: readonly [
+  HotkeyId,
+  HotkeyId,
+  HotkeyId,
+  HotkeyId,
+  HotkeyId,
+] = [
+  'customAction1',
+  'customAction2',
+  'customAction3',
+  'customAction4',
+  'customAction5',
+]
+
 /** The shortcut saved for a hotkey id; empty when there is none */
 export function configuredHotkey(
   config: Pick<UserConfig, 'hotkeys'>,

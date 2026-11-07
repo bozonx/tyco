@@ -25,6 +25,7 @@ pub enum ActivationMode {
     Favorites,
     History,
     Config,
+    CustomAction,
     /// Asks the user whether an external call may use the selection; Tyco
     /// opens it itself, so no caller can name it.
     ExternalAccess,
@@ -32,7 +33,7 @@ pub enum ActivationMode {
 
 impl ActivationMode {
     /// The modes a caller may name: every one but `ExternalAccess`.
-    pub const PUBLIC_MODES: [Self; 19] = [
+    pub const PUBLIC_MODES: [Self; 20] = [
         Self::Editor,
         Self::QuickInput,
         Self::Chat,
@@ -52,6 +53,7 @@ impl ActivationMode {
         Self::Favorites,
         Self::History,
         Self::Config,
+        Self::CustomAction,
     ];
 
     /// A public mode in any spelling `tyco_activation_protocol` accepts.
@@ -84,6 +86,7 @@ impl ActivationMode {
             Self::Favorites => "favorites",
             Self::History => "history",
             Self::Config => "config",
+            Self::CustomAction => "customAction",
             Self::ExternalAccess => "externalAccess",
         }
     }

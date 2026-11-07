@@ -160,6 +160,11 @@ export interface HotkeysConfig {
   history: string
   voiceCommands: string
   selectionCorrection: string
+  customAction1: string
+  customAction2: string
+  customAction3: string
+  customAction4: string
+  customAction5: string
 }
 
 /** The hotkeys of activation modes and action pages */
@@ -273,6 +278,7 @@ export interface UserConfig {
   }
   translation: TranslationConfig
   actionPages: ActionPageConfig[]
+  customActionSlots: CustomActionSlotConfig[]
   commands: CommandConfig[]
   /** The variables commands refer to as `{{var:NAME}}`, see `variables.ts` */
   variables: VariableConfig[]

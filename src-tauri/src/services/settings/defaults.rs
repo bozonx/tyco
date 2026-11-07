@@ -42,6 +42,7 @@ pub fn default_desktop_snapshot(
             screenshot: None,
             mode: session_state.last_mode.or(Some(ActivationMode::Editor)),
             action_page_index: None,
+            custom_action_index: None,
             history_origin: None,
             access_request: None,
         },

@@ -198,24 +198,37 @@ function onCancel() {
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     e.preventDefault()
-    e.stopPropagation()
+    e.stopImmediatePropagation()
     onCancel()
   } else if (e.key === 'Enter') {
     e.preventDefault()
-    e.stopPropagation()
+    e.stopImmediatePropagation()
     onConfirm()
+  } else {
+    e.stopImmediatePropagation()
   }
 }
 
+function handleKeyUp(e: KeyboardEvent) {
+  e.stopImmediatePropagation()
+}
+
 onMounted(async () => {
-  window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('keydown', handleKeyDown, true)
+  window.addEventListener('keyup', handleKeyUp, true)
   window.addEventListener('resize', updateView)
   updateView()
   rootRef.value?.focus()
   try {
     const bytes = await getChatImage(props.selection.imageId)
+    const isPng =
+      bytes.length >= 4 &&
+      bytes[0] === 0x89 &&
+      bytes[1] === 0x50 &&
+      bytes[2] === 0x4e &&
+      bytes[3] === 0x47
     imageUrl.value = URL.createObjectURL(
-      new Blob([bytes], { type: 'image/webp' })
+      new Blob([bytes], { type: isPng ? 'image/png' : 'image/webp' })
     )
   } catch {
     onCancel()
@@ -223,7 +236,8 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('keydown', handleKeyDown, true)
+  window.removeEventListener('keyup', handleKeyUp, true)
   window.removeEventListener('resize', updateView)
   if (imageUrl.value) {
     URL.revokeObjectURL(imageUrl.value)

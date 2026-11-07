@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: bc7ebf90af0e9611889cb91dd4658900e7f8104a970aa8ba406bc9dbb5ca7f0b
+// Source hash: a65cb27eddb24869ce1b26e3b1da801c13421d12d9077c81b120a02c1240cc03
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -47,6 +47,7 @@ export type ActivationMode =
   | 'favorites'
   | 'history'
   | 'config'
+  | 'customAction'
   | 'externalAccess'
 
 /** A file attached to the conversation, as the webview names it. */
@@ -360,6 +361,8 @@ export type DesktopActivationState = {
    * `chatPrompts.pages` for `chatPrompts`; `None` or 0 for the first one.
    */
   actionPageIndex: number | null
+  /** The slot index for `customAction`; `None` or 0 for the first one. */
+  customActionIndex: number | null
   /** The source the history opens filtered by, e.g. from the quick input. */
   historyOrigin: EditorHistoryOrigin | null
   accessRequest: AccessRequest | null

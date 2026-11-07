@@ -80,34 +80,13 @@
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useMainActionChoices } from '../../composables/use-main-action-choices'
 import { useSettingsContext } from '../../composables/use-settings-context'
-import {
-  type MainActionChoice,
-  type MainActionGroup,
-  buildMainActionOptions,
-  commandGroup,
-  duplicatesDirectChoice,
-  mainActionOptionId,
-  pluginActionGroup,
-  standardActionGroup,
-} from '../../lib/action-menu/main-action-options'
-import {
-  isMainActionVisible,
-  normalizeMainActions,
-} from '../../lib/action-menu/main-actions'
-import { normalizeCommands } from '../../lib/commands/command-config'
-import { commandLabel, isMenuCommand } from '../../lib/commands/command-runtime'
-import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
+import { normalizeMainActions } from '../../lib/action-menu/main-actions'
 import {
   moveShortcutSlot,
-  slotList,
   slotsFromList,
 } from '../../lib/shortcut-slots/shortcut-slots'
-import { translationLanguageLabel } from '../../lib/translation/translation-languages'
-import { useActionMenuStore } from '../../stores/action-menu'
-import { useAiProfilesStore } from '../../stores/ai-profiles'
-import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
-import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldSelect from '../common/FieldSelect.vue'
@@ -118,20 +97,12 @@ import SettingsSection from './SettingsSection.vue'
 import ShortcutSlots from './ShortcutSlots.vue'
 import {
   type ActionPageConfig,
-  type CommandConfig,
   type MainActionConfig,
-  PROFILE_ACTION_KINDS,
   STANDARD_ACTION_IDS,
-  type StandardActionId,
 } from '@tyco/shared'
 
-const { pluginFactories } = usePluginRuntimeStore()
-
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const { draft: userConfig, operations, editCommand } = useSettingsContext()
-const actionMenuStore = useActionMenuStore()
-const aiProfilesStore = useAiProfilesStore()
-const toolsStore = useToolsStore()
 
 const page = ref(0)
 const isRemoveConfirmOpen = ref(false)
@@ -191,220 +162,14 @@ const actionSlots = computed(() =>
   normalizeMainActions(actionPages.value[page.value]?.slots)
 )
 
-const isVisible = (action: MainActionConfig) =>
-  isMainActionVisible(action, userConfig.value.isInDevelopment)
 const visibleActionSlots = computed(() =>
   actionSlots.value.map((action) =>
     action && isVisible(action) ? action : null
   )
 )
 
-const commands = computed(() => normalizeCommands(userConfig.value.commands))
-
-const optionId = mainActionOptionId
-
-/** The translation languages, and those the slots translate into already */
-const languages = computed(() => [
-  ...new Set([
-    ...slotList(userConfig.value.translation.targetLanguages).filter(
-      (language): language is string => !!language
-    ),
-    ...actionSlots.value.flatMap((slot) =>
-      slot?.type === 'translation' ? [slot.language] : []
-    ),
-  ]),
-])
-
-const slotIds = computed(() => new Set(actionSlots.value.map(optionId)))
-
-const transformations = computed(() =>
-  userConfig.value.transformations.items.filter((item) => item.name.trim())
-)
-
-const styling = computed(() =>
-  userConfig.value.styling.items.filter((item) => item.name.trim())
-)
-
-/**
- * A command that does what a language or a task of the picker does is left out,
- * unless a slot holds it
- */
-const isOffered = (command: CommandConfig) =>
-  slotIds.value.has(optionId({ type: 'command', commandId: command.id })) ||
-  !duplicatesDirectChoice(command, {
-    languages: languages.value,
-    transformations: transformations.value.map((item) => item.rule),
-    styling: styling.value.map((item) => item.rule),
-  })
-
-/** Actions that open a dialog to pick what to do are marked as such */
-const OPENS_DIALOG = new Set<StandardActionId>([
-  'translationMenu',
-  'transformationMenu',
-  'stylingMenu',
-  'chatPromptsMenu',
-  'favoritesMenu',
-  'quickAiRequest',
-  'voiceQuickAiRequest',
-  'screenshotQuickAiRequest',
-  'voiceScreenshotQuickAiRequest',
-  'voiceCommands',
-])
-
-const availableActions = computed((): MainActionChoice[] => [
-  ...aiProfilesStore.profiles.flatMap((profile) =>
-    PROFILE_ACTION_KINDS.map((action) => ({
-      config: { type: 'profile' as const, profileId: profile.id, action },
-      name:
-        action === 'chat'
-          ? t('settings.askInProfileChat', { profile: profile.name })
-          : `${t(`action.${action}`)}: ${profile.name}…`,
-      group: { kind: 'profile' as const, profileId: profile.id },
-    }))
-  ),
-  ...STANDARD_ACTION_IDS.map((actionId) => ({
-    config: { type: 'standard' as const, actionId },
-    name:
-      actionId === 'directCorrection'
-        ? t('settings.hotkeyActions.selectionCorrection')
-        : actionId === 'openHistory'
-          ? t('nav.history')
-          : actionId === 'voiceInput'
-            ? t('menu.voiceInput')
-            : OPENS_DIALOG.has(actionId)
-              ? `${t(`action.${actionId}`)}…`
-              : t(`action.${actionId}`),
-    group: standardActionGroup(actionId),
-  })),
-  ...languages.value.map((language) => ({
-    config: { type: 'translation' as const, language },
-    name: translationLanguageLabel(language, locale.value),
-    group: { kind: 'translation' as const },
-  })),
-  ...transformations.value.map((item) => ({
-    config: { type: 'transformation' as const, transformationId: item.id },
-    name: item.name,
-    group: { kind: 'transformation' as const },
-  })),
-  ...styling.value.map((item) => ({
-    config: { type: 'styling' as const, stylingId: item.id },
-    name: item.name,
-    group: { kind: 'styling' as const },
-  })),
-  // plugins offer only the actions they register for this menu
-  ...actionMenuStore
-    .getRegisteredActions()
-    .flatMap((action) =>
-      action.id
-        ? [
-            {
-              config: { type: 'plugin' as const, actionId: action.id },
-              name: action.labelKey
-                ? t(action.labelKey)
-                : (action.label ?? action.name ?? action.id),
-              group: pluginActionGroup(action.id, action.ownerPluginId),
-            },
-          ]
-        : []
-    ),
-  // only commands that take the text of the editor fit the menu
-  ...commands.value
-    .filter(
-      (command) => isMenuCommand(command, toolsStore) && isOffered(command)
-    )
-    .map((command) => ({
-      config: { type: 'command' as const, commandId: command.id },
-      name: commandLabel(command),
-      group: commandGroup(command, toolsStore),
-    })),
-])
-
-const pluginLabels = computed(
-  () =>
-    new Map(
-      resolveInstalledPlugins(pluginFactories, userConfig.value).map(
-        (plugin) => [
-          plugin.pluginId,
-          plugin.labelKey
-            ? t(plugin.labelKey)
-            : plugin.label || plugin.pluginId,
-        ]
-      )
-    )
-)
-
-function groupLabel(group: MainActionGroup): string {
-  switch (group.kind) {
-    case 'basic':
-      return t('settings.mainActionGroups.basic')
-    case 'menu':
-      return t('nav.menu')
-    case 'askAi':
-      return t('quickAiRequest.defaultProfile')
-    case 'profile': {
-      const profile = aiProfilesStore.getProfile(group.profileId)
-      return profile
-        ? `${t('settings.promptPageProfile')}: ${profile.name}`
-        : t('settings.mainActionGroups.profiles')
-    }
-    case 'profiles':
-      return t('settings.mainActionGroups.profiles')
-    case 'translation':
-      return t('settings.mainActionGroups.translation')
-    case 'aiCommands':
-      return t('settings.mainActionGroups.aiCommands')
-    case 'transformation':
-      return t('settings.mainActionGroups.transformation')
-    case 'styling':
-      return t('settings.mainActionGroups.styling')
-    case 'commands':
-      return t('settings.mainActionGroups.commands')
-    case 'unavailable':
-      return t('settings.mainActionGroups.unavailable')
-    case 'plugin':
-      return pluginLabels.value.get(group.plugin) ?? group.plugin
-  }
-}
-
-/** The name of a slot whose action is not on offer, e.g. a disabled command */
-function unavailableName(slot: MainActionConfig): string {
-  if (slot.type === 'profileChat') {
-    const profile = aiProfilesStore.getProfile(slot.profileId)
-    return profile
-      ? t('settings.askInProfileChat', { profile: profile.name })
-      : t('settings.mainActionProfileRemoved')
-  }
-  if (slot.type === 'profile') {
-    const profile = aiProfilesStore.getProfile(slot.profileId)
-    const actionName =
-      slot.action === 'chat'
-        ? t('action.askInChat')
-        : t(`action.${slot.action}`)
-    return profile
-      ? `${profile.name} — ${actionName}`
-      : t('settings.mainActionProfileRemoved')
-  }
-  if (slot.type === 'transformation')
-    return t('settings.mainActionTransformationRemoved')
-  if (slot.type === 'styling') return t('settings.mainActionStylingRemoved')
-  if (slot.type === 'translation') return slot.language
-  if (slot.type !== 'command') return slot.actionId
-  const command = commands.value.find((item) => item.id === slot.commandId)
-  return t('commands.unavailableInMenu', {
-    name: command ? commandLabel(command) : slot.commandId,
-  })
-}
-
-const actionOptions = computed(() =>
-  buildMainActionOptions({
-    choices: availableActions.value.filter((choice) =>
-      isVisible(choice.config)
-    ),
-    slots: visibleActionSlots.value,
-    unavailableName,
-    groupLabel,
-  })
-)
+const { actionOptions, availableActions, optionId, isVisible } =
+  useMainActionChoices(visibleActionSlots)
 
 function updatePageSlots(slots: (MainActionConfig | null)[]) {
   const pages = actionPages.value.map((item, index) =>

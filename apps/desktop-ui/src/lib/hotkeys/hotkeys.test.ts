@@ -24,6 +24,11 @@ describe('hotkeys', () => {
       'chatPromptsPage4',
       'chatPromptsPage5',
       'selectionCorrection',
+      'customAction1',
+      'customAction2',
+      'customAction3',
+      'customAction4',
+      'customAction5',
     ]
     expect(Object.keys(DEFAULT_USER_CONFIG.hotkeys).sort()).toEqual(
       expectedModes.sort()

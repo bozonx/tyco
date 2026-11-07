@@ -103,7 +103,7 @@ pub(crate) fn capture(
     };
     let pixels = if mode == ScreenshotCaptureMode::Area {
         let (full_image, full_bytes) =
-            ChatImageStore::prepare_capture(&pixels.bytes, pixels.width, pixels.height)?;
+            ChatImageStore::prepare_selector_preview(&pixels.bytes, pixels.width, pixels.height)?;
         let is_live = || !source.is_stopped() && coordinator.is_current(request);
         let crop = windows.select_area(
             request.generation,

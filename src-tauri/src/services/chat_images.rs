@@ -304,6 +304,46 @@ impl ChatImageStore {
         encode_pixels(&resized, out_width, out_height, true, name, false)
     }
 
+    /// Encodes a full-screen preview for the area selector as an uncompressed
+    /// PNG in session memory, avoiding slow full-screen WebP compression and
+    /// preserving the exact pixel dimensions for cropping.
+    pub fn prepare_selector_preview(
+        pixels: &[u8],
+        width: u32,
+        height: u32,
+    ) -> Result<(ChatImage, Vec<u8>), AppError> {
+        if !within_capture_limits(width, height)
+            || pixels.len() != width as usize * height as usize * 4
+        {
+            return Err(AppError::FileTooLarge(
+                "Screenshot dimensions limit exceeded".into(),
+            ));
+        }
+        let mut encoded = Vec::with_capacity(pixels.len() + 1024);
+        {
+            let mut encoder = png::Encoder::new(&mut encoded, width, height);
+            encoder.set_color(png::ColorType::Rgba);
+            encoder.set_depth(png::BitDepth::Eight);
+            encoder.set_compression(png::Compression::NoCompression);
+            encoder.set_filter(png::Filter::NoFilter);
+            let mut writer = encoder
+                .write_header()
+                .map_err(|_| AppError::invalid_input("PNG encoding failed"))?;
+            writer
+                .write_image_data(pixels)
+                .map_err(|_| AppError::invalid_input("PNG encoding failed"))?;
+        }
+        let image = ChatImage {
+            id: sha256_hex(&encoded),
+            media_type: crate::models::ChatImageMediaType::Webp,
+            width_px: width,
+            height_px: height,
+            size_bytes: encoded.len(),
+            name: None,
+        };
+        Ok((image, encoded))
+    }
+
     pub fn remember(&mut self, image: ChatImage, bytes: Vec<u8>) -> Result<(), AppError> {
         self.expire_owners();
         if self.images.contains_key(&image.id) {
