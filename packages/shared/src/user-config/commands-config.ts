@@ -10,19 +10,19 @@ export const STANDARD_ACTION_IDS = [
   'copyToClipboard',
   'correction',
   'directCorrection',
+  'openHistory',
+  'voiceInput',
+  'voiceCommands',
   'translationMenu',
   'transformationMenu',
   'stylingMenu',
   'chatPromptsMenu',
+  'favoritesMenu',
   'quickAiRequest',
   'voiceQuickAiRequest',
   'screenshotQuickAiRequest',
   'voiceScreenshotQuickAiRequest',
   'askInChat',
-  'voiceCommands',
-  'favoritesMenu',
-  'openHistory',
-  'voiceInput',
 ] as const
 
 export type StandardActionId = (typeof STANDARD_ACTION_IDS)[number]
@@ -294,6 +294,12 @@ export interface ProfileMainAction {
   action: ProfileActionKind
 }
 
+/** Opens an action page by its index */
+export interface ActionPageMainAction {
+  type: 'actionPage'
+  pageIndex: number
+}
+
 export type MainActionConfig =
   | StandardMainAction
   | PluginMainAction
@@ -304,6 +310,7 @@ export type MainActionConfig =
   | TranslationMainAction
   | ProfileChatMainAction
   | ProfileMainAction
+  | ActionPageMainAction
 
 /** A configured action page; pages are addressed by index. */
 export interface ActionPageConfig {

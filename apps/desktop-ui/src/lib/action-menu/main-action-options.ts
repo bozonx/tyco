@@ -16,7 +16,7 @@ export type MainActionGroup =
   | {
       kind:
         | 'basic'
-        | 'menu'
+        | 'actionPages'
         | 'askAi'
         | 'profiles'
         | 'chatPrompts'
@@ -45,7 +45,7 @@ export interface MainActionOption {
 
 const GROUP_ORDER: MainActionGroup['kind'][] = [
   'basic',
-  'menu',
+  'actionPages',
   'askAi',
   'profile',
   'profiles',
@@ -63,6 +63,7 @@ export function mainActionOptionId(
   item: MainActionConfig | null | undefined
 ): string {
   if (!item) return ''
+  if (item.type === 'actionPage') return `actionPage:${item.pageIndex}`
   if (item.type === 'profileChat') return `profileChat:${item.profileId}`
   if (item.type === 'profile') return `profile:${item.profileId}:${item.action}`
   if (item.type === 'command') return `command:${item.commandId}`
@@ -83,15 +84,6 @@ export function standardActionGroup(id: StandardActionId): MainActionGroup {
     id === 'askInChat'
   ) {
     return { kind: 'askAi' }
-  }
-  if (
-    id === 'translationMenu' ||
-    id === 'transformationMenu' ||
-    id === 'stylingMenu' ||
-    id === 'chatPromptsMenu' ||
-    id === 'favoritesMenu'
-  ) {
-    return { kind: 'menu' }
   }
   return { kind: 'basic' }
 }

@@ -18,10 +18,11 @@ const groupLabel = (group: MainActionGroup) =>
 
 describe('main action groups', () => {
   it('groups standard actions by category', () => {
-    expect(standardActionGroup('translationMenu')).toEqual({ kind: 'menu' })
-    expect(standardActionGroup('transformationMenu')).toEqual({ kind: 'menu' })
-    expect(standardActionGroup('stylingMenu')).toEqual({ kind: 'menu' })
+    expect(standardActionGroup('translationMenu')).toEqual({ kind: 'basic' })
+    expect(standardActionGroup('transformationMenu')).toEqual({ kind: 'basic' })
+    expect(standardActionGroup('stylingMenu')).toEqual({ kind: 'basic' })
     expect(standardActionGroup('insertIntoWindow')).toEqual({ kind: 'basic' })
+    expect(standardActionGroup('voiceCommands')).toEqual({ kind: 'basic' })
     expect(standardActionGroup('askInChat')).toEqual({ kind: 'askAi' })
     expect(standardActionGroup('quickAiRequest')).toEqual({ kind: 'askAi' })
   })
@@ -130,6 +131,9 @@ describe('mainActionOptionId', () => {
     ).toBe('transformation:shorten')
     expect(mainActionOptionId({ type: 'translation', language: 'en-US' })).toBe(
       'translation:en-US'
+    )
+    expect(mainActionOptionId({ type: 'actionPage', pageIndex: 2 })).toBe(
+      'actionPage:2'
     )
   })
 })

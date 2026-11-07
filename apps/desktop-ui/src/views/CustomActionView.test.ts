@@ -99,4 +99,28 @@ describe('CustomActionView', () => {
     expect(modals.hasOpenModal).toBe(true)
     expect(hideWindowSpy).not.toHaveBeenCalled()
   })
+
+  it('executes actionPage action and leaves window open', async () => {
+    desktop.setUserConfig({
+      customActionSlots: [
+        { action: { type: 'actionPage', pageIndex: 1 }, takesSelection: true },
+      ],
+    })
+    const hideWindowSpy = vi.fn().mockResolvedValue(undefined)
+    desktop.backend.handle('hide_window', hideWindowSpy)
+
+    const actionMenu = useActionMenuStore()
+    const mockAction = vi.fn().mockResolvedValue(undefined)
+    vi.spyOn(actionMenu, 'resolveActionItem').mockReturnValue({
+      id: 'actionPage:1',
+      name: 'Page 2',
+      action: mockAction,
+    })
+
+    mountView()
+    await flushPromises()
+
+    expect(mockAction).toHaveBeenCalledWith('Custom selected text')
+    expect(hideWindowSpy).not.toHaveBeenCalled()
+  })
 })

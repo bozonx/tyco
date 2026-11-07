@@ -2,6 +2,7 @@ import { computed, type Ref } from 'vue'
 
 import {
   type CommandConfig,
+  DEFAULT_ACTION_PAGES,
   type MainActionConfig,
   PROFILE_ACTION_KINDS,
   STANDARD_ACTION_IDS,
@@ -90,6 +91,11 @@ export function useMainActionChoices(
     })
   )
 
+  const actionPages = computed(() => {
+    const pages = userConfig.value.actionPages
+    return pages && pages.length > 0 ? pages : DEFAULT_ACTION_PAGES
+  })
+
   const isOffered = (command: CommandConfig) =>
     slotIds.value.has(optionId({ type: 'command', commandId: command.id })) ||
     !duplicatesDirectChoice(command, {
@@ -129,6 +135,11 @@ export function useMainActionChoices(
                 ? `${t(`action.${actionId}`)}…`
                 : t(`action.${actionId}`),
       group: standardActionGroup(actionId),
+    })),
+    ...actionPages.value.map((_, index) => ({
+      config: { type: 'actionPage' as const, pageIndex: index },
+      name: t('settings.actionPage', { page: index + 1 }),
+      group: { kind: 'actionPages' as const },
     })),
     ...languages.value.map((language) => ({
       config: { type: 'translation' as const, language },
@@ -189,8 +200,8 @@ export function useMainActionChoices(
     switch (group.kind) {
       case 'basic':
         return t('settings.mainActionGroups.basic')
-      case 'menu':
-        return t('nav.menu')
+      case 'actionPages':
+        return t('settings.mainActionGroups.actionPages')
       case 'askAi':
         return t('quickAiRequest.defaultProfile')
       case 'profile': {
@@ -236,6 +247,9 @@ export function useMainActionChoices(
       return profile
         ? `${profile.name} — ${actionName}`
         : t('settings.mainActionProfileRemoved')
+    }
+    if (slot.type === 'actionPage') {
+      return t('settings.actionPage', { page: slot.pageIndex + 1 })
     }
     if (slot.type === 'transformation')
       return t('settings.mainActionTransformationRemoved')

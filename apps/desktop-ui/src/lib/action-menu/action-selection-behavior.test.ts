@@ -107,6 +107,10 @@ describe('resolveActionSelectionBehavior', () => {
     expect(
       resolveActionSelectionBehavior({ type: 'profileChat', profileId: 'p1' })
     ).toEqual({ disabled: false, forcedValue: null })
+
+    expect(
+      resolveActionSelectionBehavior({ type: 'actionPage', pageIndex: 1 })
+    ).toEqual({ disabled: false, forcedValue: null })
   })
 
   it('handles commands based on their text and selection requirements', () => {

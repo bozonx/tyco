@@ -62,6 +62,13 @@ function isValidActionSlot(slot: unknown): slot is MainActionConfig {
       ].includes(item.action)
     )
   }
+  if (item.type === 'actionPage') {
+    return (
+      typeof item.pageIndex === 'number' &&
+      Number.isInteger(item.pageIndex) &&
+      item.pageIndex >= 0
+    )
+  }
   return false
 }
 

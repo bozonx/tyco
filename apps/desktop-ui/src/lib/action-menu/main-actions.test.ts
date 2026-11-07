@@ -35,13 +35,17 @@ describe('normalizeMainActions', () => {
       r: { type: 'transformation', transformationId: '' },
       t: { type: 'translation', language: 'en-US' },
       a: { type: 'translation' },
+      s: { type: 'actionPage', pageIndex: 2 },
+      d: { type: 'actionPage', pageIndex: -1 },
     }
-    expect(normalizeMainActions(raw).slice(0, 6)).toEqual([
+    expect(normalizeMainActions(raw).slice(0, 8)).toEqual([
       { type: 'command', commandId: 'sc1' },
       null,
       { type: 'transformation', transformationId: 'shorten' },
       null,
       { type: 'translation', language: 'en-US' },
+      null,
+      { type: 'actionPage', pageIndex: 2 },
       null,
     ])
   })

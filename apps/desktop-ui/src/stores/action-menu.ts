@@ -114,6 +114,20 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       const profileChat = useProfileChatStore(profileId)
       await profileChat.attachToChat(text)
     },
+    openActionPage: async (pageIndex, text) => {
+      if (
+        desktopStore.desktopState.mode === 'selectionActions' &&
+        desktopStore.desktopState.isWindowShown
+      ) {
+        model.openPage(pageIndex)
+      } else {
+        await useIpcStore().callOrNotify('activate_mode', {
+          mode: 'selectionActions',
+          actionPageIndex: pageIndex,
+          text: text ?? desktopStore.desktopState.selectedText ?? '',
+        })
+      }
+    },
     ...useInvocationRunnerDependencies(),
   })
 

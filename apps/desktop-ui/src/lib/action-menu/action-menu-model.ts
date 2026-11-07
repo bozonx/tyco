@@ -86,6 +86,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** The prompt library the items of the `chatPrompt` type refer to */
   chatPrompts?: () => readonly ChatPromptConfig[] | undefined
   openProfileChat?: (profileId: string, text: string) => Promise<void> | void
+  openActionPage?: (pageIndex: number, text?: string) => Promise<void> | void
 }
 
 export function createActionMenuModel(deps: ActionMenuDependencies) {
@@ -286,6 +287,26 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
             await deps.openProfileChat?.(profileId, text)
           },
         }
+    }
+  }
+
+  const createActionPageActionItem = (
+    targetIndex: number
+  ): ActionItem | undefined => {
+    const pages = deps.actionPages?.()
+    if (pages && targetIndex >= pages.length) return undefined
+    return {
+      id: `actionPage:${targetIndex}`,
+      name: translate('settings.actionPage', { page: targetIndex + 1 }),
+      icon: 'mdi:book-open-page-variant-outline',
+      trailingIcon: 'mdi:chevron-right',
+      action: async (text: string) => {
+        if (deps.openActionPage) {
+          await deps.openActionPage(targetIndex, text)
+        } else {
+          openPage(targetIndex)
+        }
+      },
     }
   }
 
@@ -606,6 +627,9 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     }
     if (item.type === 'profile') {
       return createProfileActionItem(item.profileId, item.action)
+    }
+    if (item.type === 'actionPage') {
+      return createActionPageActionItem(item.pageIndex)
     }
     return undefined
   }

@@ -581,6 +581,36 @@ describe('createActionMenuModel', () => {
     )
   })
 
+  it('runs a prompt of the library in its profile, with or without text', async () => {
+    const openChatPrompt = vi.fn()
+    const { deps } = setup()
+    const store = createActionMenuModel({
+      ...deps,
+      openChatPrompt,
+      profiles: () => [{ id: 'writer', name: 'Writer' }],
+      chatPrompts: () => [
+        { id: 'fix', name: 'Fix', rule: ' Fix it ', profileId: 'writer' },
+        { id: 'lost', name: 'Lost', rule: 'Lost', profileId: 'gone' },
+        { id: 'blank', name: 'Blank', rule: ' ', profileId: '' },
+      ],
+      mainActions: () => ({
+        q: { type: 'chatPrompt', promptId: 'fix' },
+        w: { type: 'chatPrompt', promptId: 'lost' },
+        e: { type: 'chatPrompt', promptId: 'blank' },
+        r: { type: 'chatPrompt', promptId: 'deleted' },
+      }),
+    })
+    const slots = store.getShortcutActions()
+    expect(slots.map((action) => action?.id)).toEqual([
+      'chatPrompt:fix',
+      'chatPrompt:lost',
+    ])
+    await slots[0]?.action('')
+    expect(openChatPrompt).toHaveBeenCalledWith('', 'Fix it', 'writer')
+    await slots[1]?.action('text')
+    expect(openChatPrompt).toHaveBeenLastCalledWith('text', 'Lost', null)
+  })
+
   it('opens profile chat with text for profileChat action', async () => {
     const openProfileChat = vi.fn()
     const { deps } = setup()
@@ -607,7 +637,35 @@ describe('createActionMenuModel', () => {
     expect(copyItem).toBeDefined()
     expect(copyItem?.id).toBe('copyToClipboard')
 
+    const pageItem = model.resolveActionItem({
+      type: 'actionPage',
+      pageIndex: 1,
+    })
+    expect(pageItem).toBeDefined()
+    expect(pageItem?.id).toBe('actionPage:1')
+
     expect(model.resolveActionItem(null)).toBeUndefined()
+  })
+
+  it('creates and executes actionPage actions', async () => {
+    const openActionPage = vi.fn()
+    const { deps } = setup()
+    const store = createActionMenuModel({
+      ...deps,
+      actionPages: () => [
+        {
+          inputMode: 'selection',
+          slots: { q: { type: 'actionPage', pageIndex: 1 } },
+        },
+        { inputMode: 'none', slots: {} },
+      ],
+      openActionPage,
+    })
+
+    const slots = store.getShortcutActions()
+    expect(slots[0]?.id).toBe('actionPage:1')
+    await slots[0]?.action('hello')
+    expect(openActionPage).toHaveBeenCalledWith(1, 'hello')
   })
 
   it('creates and executes all profile action kinds', async () => {

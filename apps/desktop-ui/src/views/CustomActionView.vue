@@ -24,7 +24,11 @@ onMounted(async () => {
     const actionItem = actionMenuStore.resolveActionItem(slot.action)
     if (actionItem) {
       await actionItem.action(text)
-      if (!menuModalsStore.hasOpenModal && !menuModalsStore.pendingModal) {
+      if (
+        !menuModalsStore.hasOpenModal &&
+        !menuModalsStore.pendingModal &&
+        slot.action.type !== 'actionPage'
+      ) {
         await ipcStore.call('hide_window')
       }
       return
