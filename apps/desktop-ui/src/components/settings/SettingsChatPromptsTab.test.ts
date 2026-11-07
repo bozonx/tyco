@@ -19,7 +19,7 @@ describe('SettingsChatPromptsTab', () => {
   beforeEach(() => {
     desktop = installFakeDesktop({}, 'main')
     desktop.backend.handle('list_ai_profiles', () => [
-      { id: 'writer', name: 'Writer' },
+      { id: 'writer', name: 'Writer' } as never,
     ])
   })
 
@@ -122,8 +122,8 @@ describe('SettingsChatPromptsTab', () => {
       },
     })
     wrapper.unmount()
-    expect(context.draft.value.chatPrompts.items.map((item) => item.id)).toEqual(
-      ['b']
-    )
+    expect(
+      context.draft.value.chatPrompts.items.map((item) => item.id)
+    ).toEqual(['b'])
   })
 })

@@ -53,7 +53,11 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   openStylingModal?: (text: string, stylingId?: string) => void
   openChatPromptsModal?: (text: string) => void
   /** Opens the quick AI request with `prompt`, in the profile, if any */
-  openChatPrompt?: (text: string, prompt: string, profileId: string | null) => void
+  openChatPrompt?: (
+    text: string,
+    prompt: string,
+    profileId: string | null
+  ) => void
   openFavoritesModal?: () => void
   activateMode?: (
     mode:

@@ -515,7 +515,7 @@ watch(
   background: transparent;
   display: flex;
   flex-direction: column;
-  padding: var(--space-sm);
+  padding: var(--space-xs);
   box-sizing: border-box;
 }
 

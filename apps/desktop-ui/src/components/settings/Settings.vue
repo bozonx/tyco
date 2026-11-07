@@ -346,7 +346,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  width: 216px;
+  width: 236px;
   flex-shrink: 0;
   padding: var(--space-lg) var(--space-md);
   border-right: 1px solid var(--app-border-subtle);

@@ -704,7 +704,7 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn panel_fits_small_high_dpi_outputs() {
-        assert_eq!(fitted_panel_size(1920, 1080), (930, 600));
+        assert_eq!(fitted_panel_size(1920, 1080), (1000, 600));
         assert_eq!(fitted_panel_size(960, 540), (928, 444));
     }
 

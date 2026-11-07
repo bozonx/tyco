@@ -13,14 +13,19 @@
     <span class="shortcut-keys">
       <KeyboardKey v-for="key in keys" :key="key">{{ key }}</KeyboardKey>
     </span>
-    <AppIcon v-if="icon" :icon="icon" size="md" class="shortcut-icon" />
+    <AppIcon
+      v-if="icon"
+      :icon="icon"
+      :size="size === 'sm' || size === 'xs' ? 'sm' : 'md'"
+      class="shortcut-icon"
+    />
     <span class="shortcut-label">
       <slot />
     </span>
     <AppIcon
       v-if="trailingIcon"
       :icon="trailingIcon"
-      size="md"
+      :size="size === 'sm' || size === 'xs' ? 'sm' : 'md'"
       class="shortcut-trailing-icon"
     />
   </button>
@@ -110,8 +115,12 @@ const emit = defineEmits<{ (e: 'click'): void }>()
 
 .shortcut-label {
   overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  word-break: break-word;
+  line-height: 1.15;
   flex: 1 1 0%;
   min-width: 0;
 }
@@ -140,8 +149,8 @@ const emit = defineEmits<{ (e: 'click'): void }>()
 }
 
 .shortcut.is-sm {
-  gap: 0.375rem;
-  padding: 0.2rem 0.375rem;
+  gap: 0.3125rem;
+  padding: 0.25rem 0.375rem;
   font-size: var(--text-control);
   max-width: none;
 

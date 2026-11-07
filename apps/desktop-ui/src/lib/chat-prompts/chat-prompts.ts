@@ -25,8 +25,8 @@ export interface ChatPromptView {
   /** The prompt names a profile that no longer exists */
   isProfileMissing: boolean
   /**
-   * The profile the prompt runs with outside a chat; `null` for the plain
-   * quick AI request, as for a prompt whose profile is gone
+   * The profile the prompt runs with outside a chat; `null` for the plain quick
+   * AI request, as for a prompt whose profile is gone
    */
   runProfileId: string | null
 }
@@ -83,8 +83,8 @@ export function describeChatPrompts(
 
 /**
  * The prompts a chat of `profileId` offers, `null` standing for the chat
- * without a profile: the prompts of every profile, those whose profile is
- * gone, and the prompts of this profile
+ * without a profile: the prompts of every profile, those whose profile is gone,
+ * and the prompts of this profile
  */
 export function chatPromptsOfProfile(
   views: readonly ChatPromptView[],

@@ -1143,7 +1143,10 @@ mod tests {
         assert!(validate_user_config(&repeated).is_err());
         assert!(normalize_user_config(&mut repeated));
         validate_user_config(&repeated).unwrap();
-        assert_eq!(repeated["chatPrompts"]["items"].as_array().unwrap().len(), 1);
+        assert_eq!(
+            repeated["chatPrompts"]["items"].as_array().unwrap().len(),
+            1
+        );
 
         let mut dangling = config.clone();
         dangling["actionPages"][0]["slots"]["w"] =

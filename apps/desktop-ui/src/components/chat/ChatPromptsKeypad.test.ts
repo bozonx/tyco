@@ -19,12 +19,7 @@ describe('ChatPromptsKeypad.vue', () => {
       chatPrompts: {
         isSentImmediately: false,
         items: [
-          {
-            id: 'p0',
-            name: 'Poem',
-            rule: 'Write a poem',
-            profileId: 'writer',
-          },
+          { id: 'p0', name: 'Poem', rule: 'Write a poem', profileId: 'writer' },
           {
             id: 'p1',
             name: 'Summarize',

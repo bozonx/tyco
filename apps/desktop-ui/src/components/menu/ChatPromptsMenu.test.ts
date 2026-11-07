@@ -101,13 +101,15 @@ describe('ChatPromptsMenu', () => {
 
   it('runs a prompt with its profile and without the removed context', async () => {
     desktop.backend.handle('list_ai_profiles', () => [
-      { id: 'gone', name: 'Reviewer' },
+      { id: 'gone', name: 'Reviewer' } as never,
     ])
     const wrapper = mountMenu()
     await flushPromises()
     const menuModalsStore = useMenuModalsStore()
 
-    await wrapper.find('button[aria-label="action.removeContext"]').trigger('click')
+    await wrapper
+      .find('button[aria-label="action.removeContext"]')
+      .trigger('click')
     await wrapper
       .find('.search-grid-search-input')
       .trigger('keydown', { key: 'ArrowDown' })

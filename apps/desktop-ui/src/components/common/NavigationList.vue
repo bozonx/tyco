@@ -25,7 +25,7 @@
             class="shrink-0"
             aria-hidden="true"
           />
-          <span class="navigation-label truncate">{{ item.name }}</span>
+          <span class="navigation-label">{{ item.name }}</span>
           <Badge
             v-if="item.status"
             class="navigation-status"
@@ -91,6 +91,17 @@ const emit = defineEmits<{ 'update:modelValue': [key: string | number] }>()
 .navigation-item.is-nested {
   padding-left: var(--space-2xl);
   font-size: var(--text-control);
+}
+.navigation-label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  word-break: break-word;
+  line-height: 1.25;
+  flex: 1 1 0%;
+  min-width: 0;
 }
 .navigation-status {
   margin-left: auto;

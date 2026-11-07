@@ -246,14 +246,14 @@ function getActionLabel(item?: ActionItem) {
 .shortcuts-grid-5x3 {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-template-rows: repeat(3, 2.125rem);
+  grid-template-rows: repeat(3, 2.75rem);
   gap: var(--space-xs);
   padding-top: var(--space-xs);
   border-top: 1px solid var(--app-border-subtle);
 }
 
 .shortcut-empty-slot {
-  min-height: 2.125rem;
+  min-height: 2.75rem;
   border-radius: var(--radius-md);
   border: 1px dashed transparent;
 }

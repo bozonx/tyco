@@ -19,7 +19,7 @@ pub use crate::models::{AccessRequest, ActivationMode, WindowProfile};
 /// Logical size of every activated window; keep it in sync with the windows in
 /// `tauri.conf.json`. The quick input panel draws only its input field and
 /// lets clicks through the rest of the window.
-pub const WINDOW_SIZE: (f64, f64) = (930.0, 600.0);
+pub const WINDOW_SIZE: (f64, f64) = (1000.0, 600.0);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ActivationSource {

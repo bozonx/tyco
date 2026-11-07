@@ -30,7 +30,7 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   inset: 0;
   z-index: var(--z-overlay);
   display: flex;
-  padding: var(--space-lg);
+  padding: var(--space-sm);
   background-color: var(--app-overlay-bg);
   backdrop-filter: var(--app-overlay-backdrop);
   color: var(--color-base-content);
@@ -38,13 +38,13 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
 }
 
 :global([data-window='quick'] .overlay) {
-  inset: var(--space-sm);
+  inset: var(--space-xs);
   background-color: var(--color-base-100);
   backdrop-filter: none;
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
   box-shadow: none;
-  padding: var(--space-sm);
+  padding: var(--space-xs);
   overflow: hidden;
 }
 
@@ -63,10 +63,10 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 920px;
+  max-width: 100%;
   min-height: 0;
   margin: 0 auto;
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-xs) var(--space-sm);
   border: none;
   border-radius: 0;
   background-color: transparent;
