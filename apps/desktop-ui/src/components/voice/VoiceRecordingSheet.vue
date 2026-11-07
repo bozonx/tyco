@@ -1,8 +1,5 @@
 <template>
-  <ActionOverlayLayout
-    :title="title"
-    :on-esc="cancel"
-  >
+  <ActionOverlayLayout :title="title" :on-esc="cancel">
     <template #preview>
       <!-- the question goes to the chat with this text: the user sees what
            the answer will be about -->

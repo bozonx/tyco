@@ -30,7 +30,9 @@ describe('hotkeys', () => {
     expect(DEFAULT_USER_CONFIG.hotkeys.selectionActions).toBe(
       'Ctrl+Alt+Shift+S'
     )
-    expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage2).toBe('')
+    expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage2).toBe(
+      'Ctrl+Alt+Shift+D'
+    )
     expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage3).toBe('')
     expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage4).toBe('')
     expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage5).toBe('')

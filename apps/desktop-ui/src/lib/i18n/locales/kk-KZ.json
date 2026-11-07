@@ -21,9 +21,7 @@
     "screenshotQuickAiRequest": "Скриншот және ЖИ-ге сұрақ",
     "voiceScreenshotQuickAiRequest": "Скриншот және ЖИ-ге дауыстық сұрақ"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Файл тіркеу",
     "alertCaution": "Абайлаңыз",
@@ -189,9 +187,7 @@
       "noCommands": "Әзірше пайдаланушы пәрмендері конфигурацияланбаған.",
       "noCommandsHint": "Алдымен Баптаулар → Пәрмендер бөлімінде пәрмендер жасаңыз."
     },
-    "replyBlocks": {
-      "toolLabel": "Жауап нұсқалары"
-    }
+    "replyBlocks": { "toolLabel": "Жауап нұсқалары" }
   },
   "commands": {
     "advanced": "Қосымша",
@@ -590,7 +586,8 @@
     "willInsertOnFinish": "Аяқталған соң кірістіріледі",
     "ruleNotFound": "Бұл ереже енді жоқ",
     "chatPrompts": "Чат промпттерінің алдын ала орнатулары",
-    "favorites": "Сүйіктілер"
+    "favorites": "Сүйіктілер",
+    "transcribing": "Тану жүруде..."
   },
   "nav": {
     "aiChat": "ЖИ-ден сұрау",
@@ -617,10 +614,7 @@
       "command": "Команда мәтінді өзгертпей қалдырды",
       "correction": "Қате табылмады"
     },
-    "working": {
-      "command": "Команда орындалуда…",
-      "correction": "Түзетілуде…"
-    }
+    "working": { "command": "Команда орындалуда…", "correction": "Түзетілуде…" }
   },
   "settings": {
     "accessAllow": "Рұқсат ету",
@@ -1236,9 +1230,7 @@
     "screenshotCaptureModeScreen": "Бүкіл экран",
     "screenshotCaptureModeArea": "Таңдалған аймақ"
   },
-  "shortcuts": {
-    "insertIntoEditor": "Редакторға кірістіру"
-  },
+  "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {
     "auto": "Жүйедегідей",
     "dark": "Қараңғы",
@@ -1377,9 +1369,7 @@
     "missingSelection": "Бөліп көрсетілген мәтін қажет."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "чатта сұра"
-    },
+    "actions": { "askInChat": "чатта сұра" },
     "languages": {
       "cs-CZ": "Чех;чех тілі",
       "de-DE": "неміс тіліне;немісше",
@@ -1409,9 +1399,7 @@
     },
     "translate": "{language} аудар;аудар"
   },
-  "window": {
-    "clickToFocus": "Жалғастыру үшін басыңыз"
-  },
+  "window": { "clickToFocus": "Жалғастыру үшін басыңыз" },
   "write": {
     "alreadyCorrected": "Мәтін бұрыннан түзетілген",
     "cancel": "Бас тарту",
@@ -1461,9 +1449,7 @@
     "valueNotSet": "Бұл құрылғыда орнатылмаған: оны қолданатын командалар орындалмайды",
     "valuePlaceholder": "Жол, мекенжай немесе басқа мәтін"
   },
-  "favorites": {
-    "noMatches": "Сәйкес келетін фавориттер жоқ"
-  },
+  "favorites": { "noMatches": "Сәйкес келетін фавориттер жоқ" },
   "replyBlocks": {
     "insertIntoWindow": "Терезеге кірістіру",
     "insertIntoEditor": "Редакторға",

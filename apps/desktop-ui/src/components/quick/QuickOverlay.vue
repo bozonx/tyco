@@ -26,11 +26,7 @@
       @confirm="onConfirmCrop"
       @cancel="onCancelCrop"
     />
-    <div
-      v-show="!activeAreaSelection"
-      ref="cardRef"
-      class="quick-overlay-card"
-    >
+    <div v-show="!activeAreaSelection" ref="cardRef" class="quick-overlay-card">
       <div v-show="currentMode === 'quickInput'" class="quick-mode-layer">
         <WriteView />
       </div>
@@ -209,19 +205,14 @@ const onConfirmCrop = async (crop: CropRect) => {
   const selection = activeAreaSelection.value
   activeAreaSelection.value = null
   if (!selection) return
-  await ipcStore.call('confirm_screenshot_crop', {
-    activationId: selection.activationId,
-    crop,
-  })
+  await ipcStore.call('confirm_screenshot_crop', { crop })
 }
 
 const onCancelCrop = async () => {
   const selection = activeAreaSelection.value
   activeAreaSelection.value = null
   if (!selection) return
-  await ipcStore.call('cancel_screenshot_crop', {
-    activationId: selection.activationId,
-  })
+  await ipcStore.call('cancel_screenshot_crop')
 }
 
 const isSheet = computed(() => {

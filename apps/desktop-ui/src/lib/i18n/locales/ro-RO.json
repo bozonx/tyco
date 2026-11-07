@@ -21,9 +21,7 @@
     "screenshotQuickAiRequest": "Captură de ecran și întrebare pentru IA",
     "voiceScreenshotQuickAiRequest": "Captură de ecran și întrebare vocală pentru IA"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Atașează un fișier",
     "alertCaution": "Atenție",
@@ -189,9 +187,7 @@
       "noCommands": "Nu există încă comenzi personalizate configurate.",
       "noCommandsHint": "Creați mai întâi comenzi în Setări → Comenzi."
     },
-    "replyBlocks": {
-      "toolLabel": "Blocuri de răspuns"
-    }
+    "replyBlocks": { "toolLabel": "Blocuri de răspuns" }
   },
   "commands": {
     "advanced": "Avansat",
@@ -590,7 +586,8 @@
     "willInsertOnFinish": "Se va introduce la finalizare",
     "ruleNotFound": "Această regulă nu mai există",
     "chatPrompts": "Presetări prompturi chat",
-    "favorites": "Favorite"
+    "favorites": "Favorite",
+    "transcribing": "Se transcrie..."
   },
   "nav": {
     "aiChat": "Întreabă AI",
@@ -1236,9 +1233,7 @@
     "screenshotCaptureModeScreen": "Tot ecranul",
     "screenshotCaptureModeArea": "Zona selectată"
   },
-  "shortcuts": {
-    "insertIntoEditor": "Inserează în editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
     "auto": "Ca în sistem",
     "dark": "Întunecată",
@@ -1377,9 +1372,7 @@
     "missingSelection": "Este necesar textul selectat."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "întreabă în chat"
-    },
+    "actions": { "askInChat": "întreabă în chat" },
     "languages": {
       "cs-CZ": "Cehă",
       "de-DE": "germană",
@@ -1409,9 +1402,7 @@
     },
     "translate": "tradu în"
   },
-  "window": {
-    "clickToFocus": "Faceți clic pentru a continua"
-  },
+  "window": { "clickToFocus": "Faceți clic pentru a continua" },
   "write": {
     "alreadyCorrected": "Textul este deja corectat",
     "cancel": "Anulează",
@@ -1461,9 +1452,7 @@
     "valueNotSet": "Nesetată pe acest dispozitiv: comenzile care o folosesc nu rulează",
     "valuePlaceholder": "O cale, o adresă sau alt text"
   },
-  "favorites": {
-    "noMatches": "Nu există favorite care să se potrivească"
-  },
+  "favorites": { "noMatches": "Nu există favorite care să se potrivească" },
   "replyBlocks": {
     "insertIntoWindow": "Inserează în fereastră",
     "insertIntoEditor": "În editor",

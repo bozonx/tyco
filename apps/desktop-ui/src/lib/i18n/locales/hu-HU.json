@@ -21,9 +21,7 @@
     "screenshotQuickAiRequest": "Képernyőkép és kérdés az MI-nek",
     "voiceScreenshotQuickAiRequest": "Képernyőkép és hangos kérdés az MI-nek"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Fájl csatolása",
     "alertCaution": "Vigyázat",
@@ -189,9 +187,7 @@
       "noCommands": "Még nincsenek egyéni parancsok konfigurálva.",
       "noCommandsHint": "Először hozzon létre parancsokat a Beállítások → Parancsok menüben."
     },
-    "replyBlocks": {
-      "toolLabel": "Válaszblokkok"
-    }
+    "replyBlocks": { "toolLabel": "Válaszblokkok" }
   },
   "commands": {
     "advanced": "Speciális",
@@ -590,7 +586,8 @@
     "willInsertOnFinish": "Befejezés után beillesztésre kerül",
     "ruleNotFound": "Ez a szabály már nem létezik",
     "chatPrompts": "Csevegési prompt-sablonok",
-    "favorites": "Kedvencek"
+    "favorites": "Kedvencek",
+    "transcribing": "Átírás..."
   },
   "nav": {
     "aiChat": "Kérdezze az MI-t",
@@ -617,10 +614,7 @@
       "command": "A parancs változatlanul hagyta a szöveget",
       "correction": "Nem található hiba"
     },
-    "working": {
-      "command": "A parancs fut…",
-      "correction": "Javítás…"
-    }
+    "working": { "command": "A parancs fut…", "correction": "Javítás…" }
   },
   "settings": {
     "accessAllow": "Engedélyezés",
@@ -1236,9 +1230,7 @@
     "screenshotCaptureModeScreen": "Teljes képernyő",
     "screenshotCaptureModeArea": "Kijelölt terület"
   },
-  "shortcuts": {
-    "insertIntoEditor": "Beillesztés a szerkesztőbe"
-  },
+  "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
     "auto": "Rendszer szerint",
     "dark": "Sötét",
@@ -1377,9 +1369,7 @@
     "missingSelection": "Kijelölt szöveg szükséges."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "kérdezd meg a csevegésben"
-    },
+    "actions": { "askInChat": "kérdezd meg a csevegésben" },
     "languages": {
       "cs-CZ": "Cseh",
       "de-DE": "németre",
@@ -1409,9 +1399,7 @@
     },
     "translate": "fordítsd le"
   },
-  "window": {
-    "clickToFocus": "Kattintson a folytatáshoz"
-  },
+  "window": { "clickToFocus": "Kattintson a folytatáshoz" },
   "write": {
     "alreadyCorrected": "A szöveg már javítva van",
     "cancel": "Mégse",
@@ -1461,9 +1449,7 @@
     "valueNotSet": "Nincs megadva ezen az eszközön: az ezt használó parancsok nem futnak",
     "valuePlaceholder": "Útvonal, cím vagy más szöveg"
   },
-  "favorites": {
-    "noMatches": "Nincsenek egyező kedvencek"
-  },
+  "favorites": { "noMatches": "Nincsenek egyező kedvencek" },
   "replyBlocks": {
     "insertIntoWindow": "Beszúrás az ablakba",
     "insertIntoEditor": "A szerkesztőbe",

@@ -21,9 +21,7 @@
     "screenshotQuickAiRequest": "Zrzut ekranu i pytanie do AI",
     "voiceScreenshotQuickAiRequest": "Zrzut ekranu i głosowe pytanie do AI"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Dołącz plik",
     "alertCaution": "Ostrożnie",
@@ -189,9 +187,7 @@
       "noCommands": "Nie skonfigurowano jeszcze poleceń użytkownika.",
       "noCommandsHint": "Najpierw utwórz polecenia w Ustawienia → Polecenia."
     },
-    "replyBlocks": {
-      "toolLabel": "Warianty odpowiedzi"
-    }
+    "replyBlocks": { "toolLabel": "Warianty odpowiedzi" }
   },
   "commands": {
     "advanced": "Zaawansowane",
@@ -590,7 +586,8 @@
     "willInsertOnFinish": "Zostanie wstawione po ukończeniu",
     "ruleNotFound": "Ta reguła już nie istnieje",
     "chatPrompts": "Zestawy promptów czatu",
-    "favorites": "Ulubione"
+    "favorites": "Ulubione",
+    "transcribing": "Transkrypcja..."
   },
   "nav": {
     "aiChat": "Zapytaj AI",
@@ -1236,9 +1233,7 @@
     "screenshotCaptureModeScreen": "Cały ekran",
     "screenshotCaptureModeArea": "Zaznaczony obszar"
   },
-  "shortcuts": {
-    "insertIntoEditor": "Wstaw do edytora"
-  },
+  "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
     "auto": "Jak w systemie",
     "dark": "Ciemny",
@@ -1377,9 +1372,7 @@
     "missingSelection": "Wymagany jest zaznaczony tekst."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "zapytaj na czacie"
-    },
+    "actions": { "askInChat": "zapytaj na czacie" },
     "languages": {
       "cs-CZ": "Czeski",
       "de-DE": "niemiecki",
@@ -1409,9 +1402,7 @@
     },
     "translate": "przetłumacz na"
   },
-  "window": {
-    "clickToFocus": "Kliknij, aby kontynuować"
-  },
+  "window": { "clickToFocus": "Kliknij, aby kontynuować" },
   "write": {
     "alreadyCorrected": "Tekst jest już poprawiony",
     "cancel": "Anuluj",
@@ -1461,9 +1452,7 @@
     "valueNotSet": "Nieustawiona na tym urządzeniu: polecenia, które jej używają, nie działają",
     "valuePlaceholder": "Ścieżka, adres lub inny tekst"
   },
-  "favorites": {
-    "noMatches": "Brak pasujących ulubionych"
-  },
+  "favorites": { "noMatches": "Brak pasujących ulubionych" },
   "replyBlocks": {
     "insertIntoWindow": "Wstaw do okna",
     "insertIntoEditor": "Do edytora",

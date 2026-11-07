@@ -20,7 +20,12 @@
     <template v-if="hasSelection">
       <div
         class="dimmed-area"
-        :style="{ top: '0px', left: '0px', right: '0px', height: `${rect.y}px` }"
+        :style="{
+          top: '0px',
+          left: '0px',
+          right: '0px',
+          height: `${rect.y}px`,
+        }"
       />
       <div
         class="dimmed-area"
@@ -81,14 +86,9 @@ import { useI18n } from '../../composables/use-i18n'
 import { getChatImage } from '../../lib/chat/chat-image-storage'
 import type { CropRect, ScreenshotAreaSelection } from '@tyco/shared'
 
-const props = defineProps<{
-  selection: ScreenshotAreaSelection
-}>()
+const props = defineProps<{ selection: ScreenshotAreaSelection }>()
 
-const emit = defineEmits<{
-  confirm: [crop: CropRect]
-  cancel: []
-}>()
+const emit = defineEmits<{ confirm: [crop: CropRect]; cancel: [] }>()
 
 const { t } = useI18n()
 

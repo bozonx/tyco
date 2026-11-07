@@ -21,9 +21,7 @@
     "screenshotQuickAiRequest": "Captura de pantalla y pregunta a la IA",
     "voiceScreenshotQuickAiRequest": "Captura de pantalla y pregunta por voz a la IA"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Adjuntar archivo",
     "alertCaution": "Precaución",
@@ -189,9 +187,7 @@
       "noCommands": "Aún no se han configurado comandos personalizados.",
       "noCommandsHint": "Cree comandos primero en Configuración → Comandos."
     },
-    "replyBlocks": {
-      "toolLabel": "Bloques de respuesta"
-    }
+    "replyBlocks": { "toolLabel": "Bloques de respuesta" }
   },
   "commands": {
     "advanced": "Avanzado",
@@ -590,7 +586,8 @@
     "willInsertOnFinish": "Se insertará al terminar",
     "ruleNotFound": "Esta regla ya no existe",
     "chatPrompts": "Ajustes predefinidos de prompts de chat",
-    "favorites": "Favoritos"
+    "favorites": "Favoritos",
+    "transcribing": "Transcribiendo..."
   },
   "nav": {
     "aiChat": "Preguntar a la IA",
@@ -1236,9 +1233,7 @@
     "screenshotCaptureModeScreen": "Pantalla completa",
     "screenshotCaptureModeArea": "Área seleccionada"
   },
-  "shortcuts": {
-    "insertIntoEditor": "Insertar en el editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {
     "auto": "Como en el sistema",
     "dark": "Oscuro",
@@ -1377,9 +1372,7 @@
     "missingSelection": "Se necesita texto seleccionado."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "pregunta en el chat"
-    },
+    "actions": { "askInChat": "pregunta en el chat" },
     "languages": {
       "cs-CZ": "Checo",
       "de-DE": "alemán",
@@ -1409,9 +1402,7 @@
     },
     "translate": "traduce al"
   },
-  "window": {
-    "clickToFocus": "Haz clic para continuar"
-  },
+  "window": { "clickToFocus": "Haz clic para continuar" },
   "write": {
     "alreadyCorrected": "El texto ya está corregido",
     "cancel": "Cancelar",
@@ -1461,9 +1452,7 @@
     "valueNotSet": "Sin definir en este dispositivo: los comandos que la usan no se ejecutan",
     "valuePlaceholder": "Una ruta, una dirección u otro texto"
   },
-  "favorites": {
-    "noMatches": "No hay favoritos que coincidan"
-  },
+  "favorites": { "noMatches": "No hay favoritos que coincidan" },
   "replyBlocks": {
     "insertIntoWindow": "Insertar en la ventana",
     "insertIntoEditor": "Al editor",

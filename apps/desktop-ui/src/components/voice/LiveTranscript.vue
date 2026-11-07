@@ -11,7 +11,11 @@
         <span class="placeholder-text">{{
           placeholder || t('menu.speakNow')
         }}</span>
-        <span v-if="!isFinishing" class="placeholder-cursor" aria-hidden="true" />
+        <span
+          v-if="!isFinishing"
+          class="placeholder-cursor"
+          aria-hidden="true"
+        />
       </div>
       <div v-else class="live-transcript-content">
         <span v-if="prefix" class="live-transcript-prefix">{{ prefix }}</span>
@@ -24,7 +28,11 @@
         <span v-if="!hasContent" class="placeholder-text placeholder-inline"
           >{{ placeholderSpacer }}{{ placeholder || t('menu.speakNow') }}</span
         >
-        <span v-if="!isFinishing" class="live-transcript-cursor" aria-hidden="true" />
+        <span
+          v-if="!isFinishing"
+          class="live-transcript-cursor"
+          aria-hidden="true"
+        />
         <span v-if="suffix" class="live-transcript-suffix"
           >{{ suffixSpacer }}{{ suffix }}</span
         >

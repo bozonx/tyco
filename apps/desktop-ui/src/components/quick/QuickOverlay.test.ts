@@ -549,7 +549,9 @@ describe('quick overlay menus', () => {
         await nextTick()
 
         expect(wrapper.find('.mock-screenshot-selector').exists()).toBe(false)
-        expect(desktop.backend.callsOf('cancel_screenshot_crop')).toContainEqual({
+        expect(
+          desktop.backend.callsOf('cancel_screenshot_crop')
+        ).toContainEqual({
           activationId: desktop.backend.activation.activationId,
         })
       } finally {

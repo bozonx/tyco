@@ -18,10 +18,7 @@ vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key, locale: { value: 'en-US' } }),
 }))
 
-const transform = vi.hoisted(() => vi.fn())
-vi.mock('../../stores/invocations', () => ({
-  useInvocationsStore: () => ({ call: transform }),
-}))
+const transform = vi.fn()
 
 const result = {
   ok: true,
@@ -76,6 +73,7 @@ describe('TranslateMenu', () => {
     desktop = await loadFakeDesktop()
     transform.mockReset()
     transform.mockResolvedValue(result)
+    vi.spyOn(useInvocationsStore(), 'call').mockImplementation(transform)
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
     vi.spyOn(historyStore, 'saveSourceResult').mockResolvedValue()

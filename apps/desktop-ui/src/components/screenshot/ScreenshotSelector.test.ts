@@ -3,9 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ScreenshotSelector from './ScreenshotSelector.vue'
 import type { ScreenshotAreaSelection } from '@tyco/shared'
 
-const mocks = vi.hoisted(() => ({
-  getImage: vi.fn(),
-}))
+const mocks = vi.hoisted(() => ({ getImage: vi.fn() }))
 
 vi.mock('../../lib/chat/chat-image-storage', () => ({
   getChatImage: mocks.getImage,
@@ -34,9 +32,7 @@ describe('ScreenshotSelector', () => {
 
   it('loads image and renders image with blob URL', async () => {
     mocks.getImage.mockResolvedValue(new Uint8Array([1, 2, 3]))
-    const wrapper = mount(ScreenshotSelector, {
-      props: { selection },
-    })
+    const wrapper = mount(ScreenshotSelector, { props: { selection } })
     await flushPromises()
 
     expect(mocks.getImage).toHaveBeenCalledWith('test-image-id')
@@ -49,9 +45,7 @@ describe('ScreenshotSelector', () => {
 
   it('emits cancel if image loading fails', async () => {
     mocks.getImage.mockRejectedValue(new Error('Failed to load image'))
-    const wrapper = mount(ScreenshotSelector, {
-      props: { selection },
-    })
+    const wrapper = mount(ScreenshotSelector, { props: { selection } })
     await flushPromises()
 
     expect(wrapper.emitted('cancel')).toHaveLength(1)
@@ -59,9 +53,7 @@ describe('ScreenshotSelector', () => {
 
   it('cancels on Escape keydown', async () => {
     mocks.getImage.mockResolvedValue(new Uint8Array([1, 2, 3]))
-    const wrapper = mount(ScreenshotSelector, {
-      props: { selection },
-    })
+    const wrapper = mount(ScreenshotSelector, { props: { selection } })
     await flushPromises()
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
@@ -70,9 +62,7 @@ describe('ScreenshotSelector', () => {
 
   it('cancels on contextmenu (right click)', async () => {
     mocks.getImage.mockResolvedValue(new Uint8Array([1, 2, 3]))
-    const wrapper = mount(ScreenshotSelector, {
-      props: { selection },
-    })
+    const wrapper = mount(ScreenshotSelector, { props: { selection } })
     await flushPromises()
 
     await wrapper.trigger('contextmenu')
@@ -81,9 +71,7 @@ describe('ScreenshotSelector', () => {
 
   it('rejects selections smaller than MIN_DRAG_PX (4px)', async () => {
     mocks.getImage.mockResolvedValue(new Uint8Array([1, 2, 3]))
-    const wrapper = mount(ScreenshotSelector, {
-      props: { selection },
-    })
+    const wrapper = mount(ScreenshotSelector, { props: { selection } })
     await flushPromises()
 
     const root = wrapper.get('.screenshot-selector-root').element
@@ -102,9 +90,7 @@ describe('ScreenshotSelector', () => {
 
   it('emits confirm with scaled crop coordinates on valid drag', async () => {
     mocks.getImage.mockResolvedValue(new Uint8Array([1, 2, 3]))
-    const wrapper = mount(ScreenshotSelector, {
-      props: { selection },
-    })
+    const wrapper = mount(ScreenshotSelector, { props: { selection } })
     await flushPromises()
 
     const root = wrapper.get('.screenshot-selector-root').element

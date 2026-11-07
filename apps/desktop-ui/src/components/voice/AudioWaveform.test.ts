@@ -69,11 +69,12 @@ describe('reduced motion at mount', () => {
   })
 
   it('renders correction state and stops animation loop when isCorrecting is true', async () => {
-    const cancel = vi.spyOn(window, 'cancelAnimationFrame')
+    const request = vi.spyOn(window, 'requestAnimationFrame')
     const wrapper = mount(AudioWaveform, {
       props: { isCorrecting: true },
       global: { plugins: [i18n] },
     })
+    expect(request).not.toHaveBeenCalled()
     expect(wrapper.find('.transcribing-state').exists()).toBe(true)
     expect(wrapper.find('.transcribing-label').text()).toBe(
       i18n.global.t('menu.correction')

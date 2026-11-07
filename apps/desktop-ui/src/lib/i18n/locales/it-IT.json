@@ -21,9 +21,7 @@
     "screenshotQuickAiRequest": "Schermata e domanda all’IA",
     "voiceScreenshotQuickAiRequest": "Schermata e domanda vocale all’IA"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Allega file",
     "alertCaution": "Attenzione",
@@ -189,9 +187,7 @@
       "noCommands": "Nessun comando personalizzato ancora configurato.",
       "noCommandsHint": "Crea prima i comandi in Impostazioni → Comandi."
     },
-    "replyBlocks": {
-      "toolLabel": "Blocchi di risposta"
-    }
+    "replyBlocks": { "toolLabel": "Blocchi di risposta" }
   },
   "commands": {
     "advanced": "Avanzate",
@@ -590,7 +586,8 @@
     "willInsertOnFinish": "Verrà inserito al completamento",
     "ruleNotFound": "Questa regola non esiste più",
     "chatPrompts": "Preset di prompt per la chat",
-    "favorites": "Preferiti"
+    "favorites": "Preferiti",
+    "transcribing": "Trascrizione in corso..."
   },
   "nav": {
     "aiChat": "Chiedi all’IA",
@@ -1236,9 +1233,7 @@
     "screenshotCaptureModeScreen": "Intero schermo",
     "screenshotCaptureModeArea": "Area selezionata"
   },
-  "shortcuts": {
-    "insertIntoEditor": "Inserisci nell’editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {
     "auto": "Come nel sistema",
     "dark": "Scuro",
@@ -1377,9 +1372,7 @@
     "missingSelection": "Il testo selezionato è obbligatorio."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "chiedi nella chat"
-    },
+    "actions": { "askInChat": "chiedi nella chat" },
     "languages": {
       "cs-CZ": "Ceco",
       "de-DE": "tedesco",
@@ -1409,9 +1402,7 @@
     },
     "translate": "traduci in"
   },
-  "window": {
-    "clickToFocus": "Fai clic per continuare"
-  },
+  "window": { "clickToFocus": "Fai clic per continuare" },
   "write": {
     "alreadyCorrected": "Il testo è già corretto",
     "cancel": "Annulla",
@@ -1461,9 +1452,7 @@
     "valueNotSet": "Non impostata su questo dispositivo: i comandi che la usano non vengono eseguiti",
     "valuePlaceholder": "Un percorso, un indirizzo o altro testo"
   },
-  "favorites": {
-    "noMatches": "Nessun preferito corrispondente"
-  },
+  "favorites": { "noMatches": "Nessun preferito corrispondente" },
   "replyBlocks": {
     "insertIntoWindow": "Inserisci nella finestra",
     "insertIntoEditor": "Nell'editor",

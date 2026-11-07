@@ -21,9 +21,7 @@
     "screenshotQuickAiRequest": "Знімок екрана й запитання ШІ",
     "voiceScreenshotQuickAiRequest": "Знімок екрана й голосове запитання ШІ"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Прикріпити файл",
     "alertCaution": "Обережно",
@@ -189,9 +187,7 @@
       "noCommands": "Користувацькі команди ще не налаштовано.",
       "noCommandsHint": "Спочатку створіть команди в Налаштування → Команди."
     },
-    "replyBlocks": {
-      "toolLabel": "Варіанти відповіді"
-    }
+    "replyBlocks": { "toolLabel": "Варіанти відповіді" }
   },
   "commands": {
     "advanced": "Додатково",
@@ -590,7 +586,8 @@
     "willInsertOnFinish": "Вставиться після завершення",
     "ruleNotFound": "Цього правила більше не існує",
     "chatPrompts": "Швидкі промпти для чату",
-    "favorites": "Улюблене"
+    "favorites": "Улюблене",
+    "transcribing": "Розпізнавання..."
   },
   "nav": {
     "aiChat": "Запитати ШІ",
@@ -617,10 +614,7 @@
       "command": "Команда залишила текст без змін",
       "correction": "Помилок не знайдено"
     },
-    "working": {
-      "command": "Виконання команди…",
-      "correction": "Виправлення…"
-    }
+    "working": { "command": "Виконання команди…", "correction": "Виправлення…" }
   },
   "settings": {
     "accessAllow": "Дозволити",
@@ -1236,9 +1230,7 @@
     "screenshotCaptureModeScreen": "Весь екран",
     "screenshotCaptureModeArea": "Виділена область"
   },
-  "shortcuts": {
-    "insertIntoEditor": "Вставити в редактор"
-  },
+  "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {
     "auto": "Як у системі",
     "dark": "Темна",
@@ -1377,9 +1369,7 @@
     "missingSelection": "Потрібен виділений текст."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "запитай у чаті"
-    },
+    "actions": { "askInChat": "запитай у чаті" },
     "languages": {
       "cs-CZ": "Чеська",
       "de-DE": "німецькою",
@@ -1409,9 +1399,7 @@
     },
     "translate": "переклади"
   },
-  "window": {
-    "clickToFocus": "Клацніть, щоб продовжити"
-  },
+  "window": { "clickToFocus": "Клацніть, щоб продовжити" },
   "write": {
     "alreadyCorrected": "Текст уже виправлено",
     "cancel": "Скасувати",
@@ -1461,9 +1449,7 @@
     "valueNotSet": "Не задано на цьому пристрої: команди з цією змінною не виконуються",
     "valuePlaceholder": "Шлях, адреса або інший текст"
   },
-  "favorites": {
-    "noMatches": "Немає відповідних елементів вибраного"
-  },
+  "favorites": { "noMatches": "Немає відповідних елементів вибраного" },
   "replyBlocks": {
     "insertIntoWindow": "Вставити у вікно",
     "insertIntoEditor": "В редактор",

@@ -21,9 +21,7 @@
     "screenshotQuickAiRequest": "Screenshot and AI question",
     "voiceScreenshotQuickAiRequest": "Screenshot and voice AI question"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Attach file",
     "alertCaution": "Caution",
@@ -189,9 +187,7 @@
       "noCommands": "No custom commands configured yet.",
       "noCommandsHint": "Create commands in Settings → Commands first."
     },
-    "replyBlocks": {
-      "toolLabel": "Reply Blocks"
-    }
+    "replyBlocks": { "toolLabel": "Reply Blocks" }
   },
   "commands": {
     "advanced": "Advanced",
@@ -1237,9 +1233,7 @@
     "screenshotCaptureModeScreen": "Entire screen",
     "screenshotCaptureModeArea": "Selected area"
   },
-  "shortcuts": {
-    "insertIntoEditor": "Insert into editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
     "auto": "System default",
     "dark": "Dark",
@@ -1378,9 +1372,7 @@
     "missingSelection": "Selection is required."
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "ask in chat"
-    },
+    "actions": { "askInChat": "ask in chat" },
     "languages": {
       "cs-CZ": "Czech",
       "de-DE": "German",
@@ -1410,9 +1402,7 @@
     },
     "translate": "translate to"
   },
-  "window": {
-    "clickToFocus": "Click to continue"
-  },
+  "window": { "clickToFocus": "Click to continue" },
   "write": {
     "alreadyCorrected": "Text is already corrected",
     "cancel": "Cancel",
@@ -1462,9 +1452,7 @@
     "valueNotSet": "Not set on this device: commands that use it do not run",
     "valuePlaceholder": "A path, an address or other text"
   },
-  "favorites": {
-    "noMatches": "No matching favorites"
-  },
+  "favorites": { "noMatches": "No matching favorites" },
   "replyBlocks": {
     "insertIntoWindow": "Insert into window",
     "insertIntoEditor": "To editor",
