@@ -1256,7 +1256,14 @@
     "chatStorageLink": "Chat storage is set up on the tab",
     "addChatPrompt": "Add prompt",
     "chatPromptProfile": "Profile",
-    "mainActionPromptRemoved": "Deleted prompt"
+    "mainActionPromptRemoved": "Deleted prompt",
+    "hotkeyGroups": {
+      "primary": "Primary modes",
+      "ai": "AI requests",
+      "text": "Text operations",
+      "tools": "Tools and history",
+      "actionPages": "Action menu pages"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

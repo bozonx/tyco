@@ -367,4 +367,22 @@ describe('SettingsGlobalActionsTab.vue', () => {
     await firstSwitch.vm.$emit('update:modelValue', false)
     expect(context.draft.value.customActionSlots[0].takesSelection).toBe(false)
   })
+
+  it('renders visual group headers for global hotkeys', () => {
+    const wrapper = mount(SettingsGlobalActionsTab, {
+      global: { provide: context.provide, stubs: globalStubs },
+    })
+
+    const groupTitles = wrapper
+      .findAll('.hotkey-group-title')
+      .map((el) => el.text())
+
+    expect(groupTitles).toEqual([
+      'settings.hotkeyGroups.primary',
+      'settings.hotkeyGroups.ai',
+      'settings.hotkeyGroups.text',
+      'settings.hotkeyGroups.tools',
+      'settings.hotkeyGroups.actionPages',
+    ])
+  })
 })

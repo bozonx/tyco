@@ -1250,7 +1250,14 @@
     "chatStorageLink": "聊天儲存於此分頁設定：",
     "addChatPrompt": "新增提示詞",
     "chatPromptProfile": "設定檔",
-    "mainActionPromptRemoved": "已刪除的提示詞"
+    "mainActionPromptRemoved": "已刪除的提示詞",
+    "hotkeyGroups": {
+      "primary": "主要模式",
+      "ai": "AI 請求",
+      "text": "文字處理",
+      "tools": "工具與歷史",
+      "actionPages": "動作選單頁面"
+    }
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

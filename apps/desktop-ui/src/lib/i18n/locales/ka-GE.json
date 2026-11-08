@@ -1253,7 +1253,14 @@
     "chatStorageLink": "ჩატების შენახვა იმართება ჩანართზე",
     "addChatPrompt": "პრომპტის დამატება",
     "chatPromptProfile": "პროფილი",
-    "mainActionPromptRemoved": "წაშლილი პრომპტი"
+    "mainActionPromptRemoved": "წაშლილი პრომპტი",
+    "hotkeyGroups": {
+      "primary": "ძირითადი რეჟიმები",
+      "ai": "AI მოთხოვნები",
+      "text": "ტექსტის დამუშავება",
+      "tools": "ხელსაწყოები და ისტორია",
+      "actionPages": "მოქმედებების მენიუს გვერდები"
+    }
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {

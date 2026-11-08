@@ -1253,7 +1253,14 @@
     "chatStorageLink": "Η αποθήκευση συνομιλιών ρυθμίζεται στην καρτέλα",
     "addChatPrompt": "Προσθήκη προτροπής",
     "chatPromptProfile": "Προφίλ",
-    "mainActionPromptRemoved": "Διαγραμμένη προτροπή"
+    "mainActionPromptRemoved": "Διαγραμμένη προτροπή",
+    "hotkeyGroups": {
+      "primary": "Κύριες λειτουργίες",
+      "ai": "Αιτήματα AI",
+      "text": "Λειτουργίες κειμένου",
+      "tools": "Εργαλεία και ιστορικό",
+      "actionPages": "Σελίδες μενού ενεργειών"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {

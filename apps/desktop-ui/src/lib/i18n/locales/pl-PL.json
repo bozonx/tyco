@@ -1256,7 +1256,14 @@
     "chatStorageLink": "Przechowywanie czatów ustawia się na karcie",
     "addChatPrompt": "Dodaj prompt",
     "chatPromptProfile": "Profil",
-    "mainActionPromptRemoved": "Usunięty prompt"
+    "mainActionPromptRemoved": "Usunięty prompt",
+    "hotkeyGroups": {
+      "primary": "Główne tryby",
+      "ai": "Zapytania AI",
+      "text": "Operacje na tekście",
+      "tools": "Narzędzia i historia",
+      "actionPages": "Strony menu akcji"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

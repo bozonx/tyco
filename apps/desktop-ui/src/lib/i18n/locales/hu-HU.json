@@ -1253,7 +1253,14 @@
     "chatStorageLink": "A csevegések tárolása ezen a lapon állítható:",
     "addChatPrompt": "Prompt hozzáadása",
     "chatPromptProfile": "Profil",
-    "mainActionPromptRemoved": "Törölt prompt"
+    "mainActionPromptRemoved": "Törölt prompt",
+    "hotkeyGroups": {
+      "primary": "Fő módok",
+      "ai": "MI-kérések",
+      "text": "Szövegműveletek",
+      "tools": "Eszközök és előzmények",
+      "actionPages": "Műveletmenü-oldalak"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

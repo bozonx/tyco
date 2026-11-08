@@ -39,17 +39,22 @@
         icon="mdi:information-outline"
         :message="portalError"
       />
-      <GlobalHotkeyRow
-        v-for="row in generalRows"
-        :key="row.id"
-        :row="row"
-        :platform="providerState.platform"
-        :is-editable="isEditable"
-        :error="rowError(row.id)"
-        :external-command="providerState.statuses[row.id]?.externalCommand"
-        @set="setShortcut(row.id, $event)"
-        @recording="suspendHotkeys"
-      />
+      <div v-for="group in generalGroups" :key="group.id" class="hotkey-group">
+        <div class="hotkey-group-header">
+          <span class="hotkey-group-title">{{ group.label }}</span>
+        </div>
+        <GlobalHotkeyRow
+          v-for="row in group.rows"
+          :key="row.id"
+          :row="row"
+          :platform="providerState.platform"
+          :is-editable="isEditable"
+          :error="rowError(row.id)"
+          :external-command="providerState.statuses[row.id]?.externalCommand"
+          @set="setShortcut(row.id, $event)"
+          @recording="suspendHotkeys"
+        />
+      </div>
     </SettingsSection>
 
     <SettingsSection
@@ -235,21 +240,65 @@ const MODE_ORDER: HotkeyId[] = [
   'editor',
   'voiceCommands',
   'selectionActions',
-  'selectionActionsPage2',
-  'selectionActionsPage3',
-  'selectionActionsPage4',
-  'selectionActionsPage5',
-  'correction',
-  'translation',
-  'styling',
-  'transformation',
   'quickAiRequest',
   'voiceQuickAiRequest',
   'screenshotQuickAiRequest',
   'voiceScreenshotQuickAiRequest',
+  'selectionCorrection',
+  'correction',
+  'translation',
+  'styling',
+  'transformation',
   'chatPrompts',
   'favorites',
   'history',
+  'selectionActionsPage2',
+  'selectionActionsPage3',
+  'selectionActionsPage4',
+  'selectionActionsPage5',
+]
+
+const GENERAL_HOTKEY_GROUPS: readonly {
+  id: string
+  labelKey: string
+  hotkeyIds: readonly HotkeyId[]
+}[] = [
+  {
+    id: 'primary',
+    labelKey: 'settings.hotkeyGroups.primary',
+    hotkeyIds: ['quickInput', 'editor', 'selectionActions'],
+  },
+  {
+    id: 'ai',
+    labelKey: 'settings.hotkeyGroups.ai',
+    hotkeyIds: ['quickAiRequest', 'screenshotQuickAiRequest'],
+  },
+  {
+    id: 'text',
+    labelKey: 'settings.hotkeyGroups.text',
+    hotkeyIds: [
+      'selectionCorrection',
+      'correction',
+      'translation',
+      'styling',
+      'transformation',
+    ],
+  },
+  {
+    id: 'tools',
+    labelKey: 'settings.hotkeyGroups.tools',
+    hotkeyIds: ['chatPrompts', 'favorites', 'history'],
+  },
+  {
+    id: 'actionPages',
+    labelKey: 'settings.hotkeyGroups.actionPages',
+    hotkeyIds: [
+      'selectionActionsPage2',
+      'selectionActionsPage3',
+      'selectionActionsPage4',
+      'selectionActionsPage5',
+    ],
+  },
 ]
 
 type HotkeyRow = GlobalHotkeyRowModel
@@ -454,6 +503,42 @@ const rows = computed(() =>
 const generalRows = computed(() =>
   rows.value.filter((row) => !isVoiceHotkey(row.id))
 )
+
+const generalGroups = computed(() => {
+  const rowMap = new Map(generalRows.value.map((row) => [row.id, row]))
+  const placed = new Set<string>()
+
+  const groups: { id: string; label: string; rows: HotkeyRow[] }[] = []
+
+  for (const groupDef of GENERAL_HOTKEY_GROUPS) {
+    const groupRows: HotkeyRow[] = []
+    for (const id of groupDef.hotkeyIds) {
+      const row = rowMap.get(id)
+      if (row) {
+        groupRows.push(row)
+        placed.add(id)
+      }
+    }
+    if (groupRows.length > 0) {
+      groups.push({
+        id: groupDef.id,
+        label: t(groupDef.labelKey),
+        rows: groupRows,
+      })
+    }
+  }
+
+  const remaining = generalRows.value.filter((row) => !placed.has(row.id))
+  if (remaining.length > 0) {
+    if (groups.length > 0) {
+      groups[groups.length - 1].rows.push(...remaining)
+    } else {
+      groups.push({ id: 'other', label: '', rows: remaining })
+    }
+  }
+
+  return groups
+})
 const voiceRows = computed(() =>
   VOICE_HOTKEY_IDS.flatMap(
     (id) => rows.value.find((row) => row.id === id) ?? []
@@ -611,5 +696,30 @@ onMounted(async () => {
 .custom-action-hotkey {
   flex: 1 1 180px;
   min-width: 160px;
+}
+
+.hotkey-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.hotkey-group-header {
+  display: flex;
+  align-items: center;
+  padding: var(--space-xs) var(--space-lg);
+  background: var(--app-surface-raised);
+  border-bottom: 1px solid var(--app-border-subtle);
+}
+
+.hotkey-group:not(:first-child) .hotkey-group-header {
+  border-top: 1px solid var(--app-border-subtle);
+}
+
+.hotkey-group-title {
+  font-size: var(--text-micro);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--app-text-muted);
 }
 </style>

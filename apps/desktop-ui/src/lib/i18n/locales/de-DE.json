@@ -1256,7 +1256,14 @@
     "chatStorageLink": "Die Chat-Speicherung wird eingestellt im Tab",
     "addChatPrompt": "Prompt hinzufügen",
     "chatPromptProfile": "Profil",
-    "mainActionPromptRemoved": "Gelöschter Prompt"
+    "mainActionPromptRemoved": "Gelöschter Prompt",
+    "hotkeyGroups": {
+      "primary": "Hauptmodi",
+      "ai": "KI-Anfragen",
+      "text": "Textoperationen",
+      "tools": "Werkzeuge und Verlauf",
+      "actionPages": "Aktionsmenü-Seiten"
+    }
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

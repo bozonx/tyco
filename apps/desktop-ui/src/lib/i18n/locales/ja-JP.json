@@ -1253,7 +1253,14 @@
     "chatStorageLink": "チャットの保存は次のタブで設定します:",
     "addChatPrompt": "プロンプトを追加",
     "chatPromptProfile": "プロファイル",
-    "mainActionPromptRemoved": "削除されたプロンプト"
+    "mainActionPromptRemoved": "削除されたプロンプト",
+    "hotkeyGroups": {
+      "primary": "メインモード",
+      "ai": "AIリクエスト",
+      "text": "テキスト操作",
+      "tools": "ツールと履歴",
+      "actionPages": "アクションメニューページ"
+    }
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

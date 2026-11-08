@@ -1250,7 +1250,14 @@
     "chatStorageLink": "Ukládání chatů se nastavuje na kartě",
     "addChatPrompt": "Přidat prompt",
     "chatPromptProfile": "Profil",
-    "mainActionPromptRemoved": "Smazaný prompt"
+    "mainActionPromptRemoved": "Smazaný prompt",
+    "hotkeyGroups": {
+      "primary": "Hlavní režimy",
+      "ai": "Požadavky na AI",
+      "text": "Operace s textem",
+      "tools": "Nástroje a historie",
+      "actionPages": "Stránky nabídky akcí"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

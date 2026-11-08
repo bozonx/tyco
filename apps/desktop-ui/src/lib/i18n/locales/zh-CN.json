@@ -1250,7 +1250,14 @@
     "chatStorageLink": "聊天存储在此选项卡中设置：",
     "addChatPrompt": "添加提示词",
     "chatPromptProfile": "配置文件",
-    "mainActionPromptRemoved": "已删除的提示词"
+    "mainActionPromptRemoved": "已删除的提示词",
+    "hotkeyGroups": {
+      "primary": "主要模式",
+      "ai": "AI 请求",
+      "text": "文本处理",
+      "tools": "工具与历史",
+      "actionPages": "操作菜单页面"
+    }
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

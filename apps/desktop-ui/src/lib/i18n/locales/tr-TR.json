@@ -1253,7 +1253,14 @@
     "chatStorageLink": "Sohbetlerin saklanması şu sekmeden ayarlanır:",
     "addChatPrompt": "İstem ekle",
     "chatPromptProfile": "Profil",
-    "mainActionPromptRemoved": "Silinen istem"
+    "mainActionPromptRemoved": "Silinen istem",
+    "hotkeyGroups": {
+      "primary": "Ana modlar",
+      "ai": "Yapay zeka istekleri",
+      "text": "Metin işlemleri",
+      "tools": "Araçlar ve geçmiş",
+      "actionPages": "Eylem menüsü sayfaları"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

@@ -1253,7 +1253,14 @@
     "chatStorageLink": "Хранение чатов настраивается на вкладке",
     "addChatPrompt": "Добавить промпт",
     "chatPromptProfile": "Профиль",
-    "mainActionPromptRemoved": "Удалённый промпт"
+    "mainActionPromptRemoved": "Удалённый промпт",
+    "hotkeyGroups": {
+      "primary": "Основные режимы",
+      "ai": "Запросы к ИИ",
+      "text": "Обработка текста",
+      "tools": "Инструменты и история",
+      "actionPages": "Страницы меню действий"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {

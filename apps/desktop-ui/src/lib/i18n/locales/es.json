@@ -1256,7 +1256,14 @@
     "chatStorageLink": "El almacenamiento de chats se configura en la pestaña",
     "addChatPrompt": "Añadir prompt",
     "chatPromptProfile": "Perfil",
-    "mainActionPromptRemoved": "Prompt eliminado"
+    "mainActionPromptRemoved": "Prompt eliminado",
+    "hotkeyGroups": {
+      "primary": "Modos principales",
+      "ai": "Solicitudes de IA",
+      "text": "Operaciones de texto",
+      "tools": "Herramientas e historial",
+      "actionPages": "Páginas del menú de acciones"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

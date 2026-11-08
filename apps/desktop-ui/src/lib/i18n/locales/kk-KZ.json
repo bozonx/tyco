@@ -1253,7 +1253,14 @@
     "chatStorageLink": "Чаттарды сақтау мына қойындыда бапталады:",
     "addChatPrompt": "Промпт қосу",
     "chatPromptProfile": "Профиль",
-    "mainActionPromptRemoved": "Жойылған промпт"
+    "mainActionPromptRemoved": "Жойылған промпт",
+    "hotkeyGroups": {
+      "primary": "Негізгі режимдер",
+      "ai": "ЖИ сұраулары",
+      "text": "Мәтінмен жұмыс",
+      "tools": "Құралдар және журнал",
+      "actionPages": "Әрекеттер мәзірі беттері"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {

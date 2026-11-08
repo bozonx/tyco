@@ -1253,7 +1253,14 @@
     "chatStorageLink": "Зберігання чатів налаштовується на вкладці",
     "addChatPrompt": "Додати промпт",
     "chatPromptProfile": "Профіль",
-    "mainActionPromptRemoved": "Видалений промпт"
+    "mainActionPromptRemoved": "Видалений промпт",
+    "hotkeyGroups": {
+      "primary": "Основні режими",
+      "ai": "Запити до ШІ",
+      "text": "Обробка тексту",
+      "tools": "Інструменти та історія",
+      "actionPages": "Сторінки меню дій"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {
