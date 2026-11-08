@@ -1210,8 +1210,16 @@
     "vaultUseDefault": "Varsayılan klasörü kullan",
     "vaultUseSubfolder": "tyco-vault alt klasörünü kullan",
     "vision": "Görsel desteği",
-    "voiceHoldToRecord": "Kaydetmek için kısayolu basılı tutun (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Varsayılan olarak, sesli giriş tek bir basışla açılıp kapanır. Yalnızca kısayol basılı tutulurken kaydetmek için etkinleştirin.",
+    "voiceHotkeysTitle": "Sesli giriş",
+    "voiceHotkeysInfo": "Konuşma kaydını başlatan kısayollar. Yapay zekâya sesli sorular her zaman ikinci basışla biter.",
+    "voiceHold": {
+      "voice": "Dikte ederken kısayolu basılı tut (Push-to-Talk)",
+      "voiceCommands": "Komut söylerken kısayolu basılı tut (Push-to-Talk)"
+    },
+    "voiceHoldHint": {
+      "voice": "Varsayılan olarak bir basış dikteyi başlatır, sonraki basış bitirir. Yalnızca kısayol basılıyken dikte etmek için açın.",
+      "voiceCommands": "Varsayılan olarak bir basış sesli komutu başlatır, sonraki basış bitirir. Komutu yalnızca kısayol basılıyken söylemek için açın."
+    },
     "voiceTextCorrection": "Tanınan metni düzeltme",
     "webJinaApiKey": "Jina AI API anahtarı",
     "webJinaApiKeyHint": "İsteğe bağlı. Anahtar olmadan istekler paylaşılan hız sınırlarına sahip ücretsiz katmanı kullanır.",

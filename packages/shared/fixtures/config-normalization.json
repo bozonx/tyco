@@ -365,7 +365,8 @@
           "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false,
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -570,7 +571,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false
       }
     },
     "expected": {
@@ -763,7 +765,8 @@
           "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false,
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -962,7 +965,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false
       }
     },
     "expected": {
@@ -1159,7 +1163,8 @@
           "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false,
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -1363,7 +1368,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false
       }
     },
     "expected": {
@@ -1565,7 +1571,8 @@
           "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false,
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -1759,7 +1766,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false
       }
     },
     "expected": {
@@ -1949,7 +1957,8 @@
           "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false,
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -2148,7 +2157,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false
       }
     },
     "expected": {
@@ -2345,7 +2355,8 @@
           "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false,
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -2545,7 +2556,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false
       }
     },
     "expected": {
@@ -2743,7 +2755,8 @@
           "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false,
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -2948,7 +2961,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false
       },
       "aiVault": { "path": "" },
       "transformations": {
@@ -3154,7 +3168,8 @@
           "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false,
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -3362,7 +3377,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false
       },
       "aiVault": { "path": "" },
       "transformations": {
@@ -3571,7 +3587,8 @@
           "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false,
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -3795,7 +3812,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false
       }
     },
     "expected": {
@@ -4061,7 +4079,8 @@
           "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false,
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -4307,7 +4326,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false
       }
     },
     "expected": {
@@ -4579,7 +4599,8 @@
           "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
         },
         "correctionMode": "off",
-        "isVoiceHoldEnabled": false,
+        "isVoiceInputHoldEnabled": false,
+        "isVoiceCommandsHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },

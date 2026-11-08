@@ -1213,8 +1213,16 @@
     "vaultUseDefault": "Koristi zadanu mapu",
     "vaultUseSubfolder": "Koristi podmapu tyco-vault",
     "vision": "Unos slika",
-    "voiceHoldToRecord": "Držite prečac za snimanje (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Prema zadanim postavkama, glasovni unos se uključuje jednim pritiskom. Uključite za snimanje samo dok držite pritisnut prečac.",
+    "voiceHotkeysTitle": "Glasovni unos",
+    "voiceHotkeysInfo": "Prečaci koji pokreću snimanje govora. Glasovna pitanja AI-ju uvijek završavaju drugim pritiskom.",
+    "voiceHold": {
+      "voice": "Držite prečac tijekom diktiranja (Push-to-Talk)",
+      "voiceCommands": "Držite prečac dok izgovarate naredbu (Push-to-Talk)"
+    },
+    "voiceHoldHint": {
+      "voice": "Prema zadanim postavkama jedan pritisak pokreće diktiranje, a sljedeći ga završava. Uključite za diktiranje samo dok držite prečac.",
+      "voiceCommands": "Prema zadanim postavkama jedan pritisak pokreće glasovnu naredbu, a sljedeći je završava. Uključite za izgovaranje naredbe samo dok držite prečac."
+    },
     "voiceTextCorrection": "Ispravak izdiktiranog teksta",
     "webJinaApiKey": "Jina AI API ključ",
     "webJinaApiKeyHint": "Neobavezno. Bez ključa, zahtjevi koriste besplatnu razinu sa zajedničkim ograničenjima.",

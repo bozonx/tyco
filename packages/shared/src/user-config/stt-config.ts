@@ -38,8 +38,16 @@ export interface SttConfig {
    * window finishes; `off` disables LLM correction.
    */
   correctionMode: VoiceCorrectionMode
-  /** Whether holding the voice hotkey records until released (Push-to-Talk) */
-  isVoiceHoldEnabled: boolean
+  /**
+   * Whether holding the voice input hotkey records until released
+   * (Push-to-Talk)
+   */
+  isVoiceInputHoldEnabled: boolean
+  /**
+   * Whether holding the voice commands hotkey records until released
+   * (Push-to-Talk)
+   */
+  isVoiceCommandsHoldEnabled: boolean
   /** Whether to show the 15-key styling keyboard during hotkey voice input */
   isStylingBarEnabled: boolean
   /** Whether pressing a style key inserts the result directly without preview */

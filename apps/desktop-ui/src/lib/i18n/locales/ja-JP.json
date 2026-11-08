@@ -1210,8 +1210,16 @@
     "vaultUseDefault": "既定のフォルダーを使う",
     "vaultUseSubfolder": "tyco-vault サブフォルダーを使う",
     "vision": "画像入力",
-    "voiceHoldToRecord": "ショートカットを長押しして録音 (Push-to-Talk)",
-    "voiceHoldToRecordHint": "デフォルトでは、音声入力は1回のキー押下で切り替わります。有効にすると、キーを押している間だけ録音されます。",
+    "voiceHotkeysTitle": "音声入力",
+    "voiceHotkeysInfo": "音声の録音を開始するショートカット。AIへの音声質問は常にもう一度押すと終了します。",
+    "voiceHold": {
+      "voice": "ディクテーション中はショートカットを押し続ける (Push-to-Talk)",
+      "voiceCommands": "コマンドを話す間はショートカットを押し続ける (Push-to-Talk)"
+    },
+    "voiceHoldHint": {
+      "voice": "デフォルトでは、1回押すとディクテーションが始まり、もう一度押すと終了します。有効にすると、ショートカットを押している間だけディクテーションします。",
+      "voiceCommands": "デフォルトでは、1回押すと音声コマンドが始まり、もう一度押すと終了します。有効にすると、ショートカットを押している間だけコマンドを録音します。"
+    },
     "voiceTextCorrection": "音声テキストの校正",
     "webJinaApiKey": "Jina AI API キー",
     "webJinaApiKeyHint": "省略可能。キーがない場合、リクエストは共有レート制限のある無料枠を使用します。",

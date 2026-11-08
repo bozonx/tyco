@@ -1258,7 +1258,8 @@
           "enum": ["live", "onSubmit", "off"],
           "default": "off"
         },
-        "isVoiceHoldEnabled": { "type": "boolean", "default": false },
+        "isVoiceInputHoldEnabled": { "type": "boolean", "default": false },
+        "isVoiceCommandsHoldEnabled": { "type": "boolean", "default": false },
         "isStylingBarEnabled": { "type": "boolean", "default": false },
         "isStylingBarDirectInsertEnabled": {
           "type": "boolean",
@@ -1311,7 +1312,8 @@
       "required": [
         "provider",
         "correctionMode",
-        "isVoiceHoldEnabled",
+        "isVoiceInputHoldEnabled",
+        "isVoiceCommandsHoldEnabled",
         "isStylingBarEnabled",
         "isStylingBarDirectInsertEnabled",
         "providers"

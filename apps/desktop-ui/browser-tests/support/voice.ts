@@ -8,7 +8,8 @@ export function installVoice(desktop: FakeDesktop) {
   desktop.userConfig.stt = {
     provider: 'sherpaOnnx',
     correctionMode: 'off',
-    isVoiceHoldEnabled: false,
+    isVoiceInputHoldEnabled: false,
+    isVoiceCommandsHoldEnabled: false,
     isStylingBarEnabled: false,
     isStylingBarDirectInsertEnabled: false,
     providers: {

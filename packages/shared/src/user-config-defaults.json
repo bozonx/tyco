@@ -230,7 +230,8 @@
   "stt": {
     "provider": "deepgram",
     "correctionMode": "off",
-    "isVoiceHoldEnabled": false,
+    "isVoiceInputHoldEnabled": false,
+    "isVoiceCommandsHoldEnabled": false,
     "isStylingBarEnabled": false,
     "isStylingBarDirectInsertEnabled": false,
     "providers": {

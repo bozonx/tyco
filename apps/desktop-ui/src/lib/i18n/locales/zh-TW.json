@@ -1207,8 +1207,16 @@
     "vaultUseDefault": "使用預設資料夾",
     "vaultUseSubfolder": "使用 tyco-vault 子資料夾",
     "vision": "圖片輸入",
-    "voiceHoldToRecord": "按住快捷鍵錄音 (Push-to-Talk)",
-    "voiceHoldToRecordHint": "預設情況下，按一次快捷鍵即可切換語音輸入。啟用後僅在按住快捷鍵時錄音。",
+    "voiceHotkeysTitle": "語音輸入",
+    "voiceHotkeysInfo": "用於開始錄製語音的快速鍵。向 AI 提出的語音問題一律再按一次才結束。",
+    "voiceHold": {
+      "voice": "聽寫時按住快速鍵 (Push-to-Talk)",
+      "voiceCommands": "說出指令時按住快速鍵 (Push-to-Talk)"
+    },
+    "voiceHoldHint": {
+      "voice": "預設情況下，按一次開始聽寫，再按一次結束。開啟後僅在按住快速鍵時聽寫。",
+      "voiceCommands": "預設情況下，按一次開始語音指令，再按一次結束。開啟後僅在按住快速鍵時錄製指令。"
+    },
     "voiceTextCorrection": "語音文字校對",
     "webJinaApiKey": "Jina AI API 金鑰",
     "webJinaApiKeyHint": "選填。未配置金鑰時，請求將使用具有共用速率限制的免費層級。",

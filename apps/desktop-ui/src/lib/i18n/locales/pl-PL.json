@@ -1213,8 +1213,16 @@
     "vaultUseDefault": "Użyj folderu domyślnego",
     "vaultUseSubfolder": "Użyj podfolderu tyco-vault",
     "vision": "Wejście obrazów",
-    "voiceHoldToRecord": "Przytrzymaj skrót, aby nagrywać (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Domyślnie wprowadzanie głosowe jest przełączane pojedynczym naciśnięciem. Włącz, aby nagrywać tylko podczas przytrzymywania skrótu.",
+    "voiceHotkeysTitle": "Wprowadzanie głosowe",
+    "voiceHotkeysInfo": "Skróty, które rozpoczynają nagrywanie mowy. Pytania głosowe do AI zawsze kończą się drugim naciśnięciem.",
+    "voiceHold": {
+      "voice": "Przytrzymuj skrót podczas dyktowania (Push-to-Talk)",
+      "voiceCommands": "Przytrzymuj skrót podczas wypowiadania polecenia (Push-to-Talk)"
+    },
+    "voiceHoldHint": {
+      "voice": "Domyślnie jedno naciśnięcie rozpoczyna dyktowanie, a następne je kończy. Włącz, aby dyktować tylko podczas przytrzymywania skrótu.",
+      "voiceCommands": "Domyślnie jedno naciśnięcie rozpoczyna polecenie głosowe, a następne je kończy. Włącz, aby wypowiadać polecenie tylko podczas przytrzymywania skrótu."
+    },
     "voiceTextCorrection": "Korekta tekstu z dyktowania",
     "webJinaApiKey": "Klucz API Jina AI",
     "webJinaApiKeyHint": "Opcjonalnie. Bez klucza żądania korzystają z bezpłatnego planu ze wspólnymi limitami.",

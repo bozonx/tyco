@@ -1213,8 +1213,16 @@
     "vaultUseDefault": "Standardordner verwenden",
     "vaultUseSubfolder": "Unterordner tyco-vault verwenden",
     "vision": "Bildeingabe",
-    "voiceHoldToRecord": "Tastenkombination zum Aufnehmen gedrückt halten (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Standardmäßig wird die Spracheingabe durch einmaliges Drücken ein- und ausgeschaltet. Aktivieren, um nur bei gehaltener Tastenkombination aufzunehmen.",
+    "voiceHotkeysTitle": "Spracheingabe",
+    "voiceHotkeysInfo": "Tastenkombinationen, die die Sprachaufnahme starten. Sprachfragen an die KI enden immer mit einem zweiten Drücken.",
+    "voiceHold": {
+      "voice": "Beim Diktieren Tastenkombination gedrückt halten (Push-to-Talk)",
+      "voiceCommands": "Beim Sprechen eines Befehls Tastenkombination gedrückt halten (Push-to-Talk)"
+    },
+    "voiceHoldHint": {
+      "voice": "Standardmäßig startet ein Drücken das Diktat und das nächste beendet es. Aktivieren, um nur bei gehaltener Tastenkombination zu diktieren.",
+      "voiceCommands": "Standardmäßig startet ein Drücken einen Sprachbefehl und das nächste beendet ihn. Aktivieren, um Befehle nur bei gehaltener Tastenkombination zu sprechen."
+    },
     "voiceTextCorrection": "Korrektur von Sprachtext",
     "webJinaApiKey": "Jina AI-API-Schlüssel",
     "webJinaApiKeyHint": "Optional. Ohne Schlüssel nutzen Anfragen das kostenlose Kontingent mit geteilten Limits.",

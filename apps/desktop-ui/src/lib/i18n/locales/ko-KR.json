@@ -1207,8 +1207,16 @@
     "vaultUseDefault": "기본 폴더 사용",
     "vaultUseSubfolder": "tyco-vault 하위 폴더 사용",
     "vision": "이미지 입력",
-    "voiceHoldToRecord": "단축키를 길게 눌러 녹음 (Push-to-Talk)",
-    "voiceHoldToRecordHint": "기본적으로 음성 입력은 한 번 눌러 켜고 끕니다. 활성화하면 단축키를 누르고 있는 동안에만 녹음됩니다.",
+    "voiceHotkeysTitle": "음성 입력",
+    "voiceHotkeysInfo": "음성 녹음을 시작하는 단축키입니다. AI에게 하는 음성 질문은 항상 한 번 더 눌러야 끝납니다.",
+    "voiceHold": {
+      "voice": "받아쓰기 중 단축키를 누르고 있기 (Push-to-Talk)",
+      "voiceCommands": "명령을 말하는 동안 단축키를 누르고 있기 (Push-to-Talk)"
+    },
+    "voiceHoldHint": {
+      "voice": "기본적으로 한 번 누르면 받아쓰기가 시작되고 다시 누르면 끝납니다. 단축키를 누르고 있는 동안에만 받아쓰려면 켜세요.",
+      "voiceCommands": "기본적으로 한 번 누르면 음성 명령이 시작되고 다시 누르면 끝납니다. 단축키를 누르고 있는 동안에만 명령을 녹음하려면 켜세요."
+    },
     "voiceTextCorrection": "음성 텍스트 교정",
     "webJinaApiKey": "Jina AI API 키",
     "webJinaApiKeyHint": "선택 사항입니다. 키가 없으면 공유 속도 제한이 있는 무료 요금제가 사용됩니다.",

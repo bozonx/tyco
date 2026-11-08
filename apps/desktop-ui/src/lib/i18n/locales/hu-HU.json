@@ -1210,8 +1210,16 @@
     "vaultUseDefault": "Alapértelmezett mappa használata",
     "vaultUseSubfolder": "tyco-vault almappa használata",
     "vision": "Képbevitel",
-    "voiceHoldToRecord": "Gyorsbillentyű nyomva tartása a rögzítéshez (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Alapértelmezés szerint a hangbevitel egyetlen gombnyomással kapcsolható be és ki. Engedélyezze, ha csak a billentyű nyomva tartása alatt szeretne rögzíteni.",
+    "voiceHotkeysTitle": "Hangbevitel",
+    "voiceHotkeysInfo": "A beszédrögzítést indító gyorsbillentyűk. Az MI-nek szóló hangos kérdés mindig egy második lenyomással ér véget.",
+    "voiceHold": {
+      "voice": "Gyorsbillentyű nyomva tartása diktálás közben (Push-to-Talk)",
+      "voiceCommands": "Gyorsbillentyű nyomva tartása parancs kimondása közben (Push-to-Talk)"
+    },
+    "voiceHoldHint": {
+      "voice": "Alapértelmezés szerint egy lenyomás elindítja a diktálást, a következő leállítja. Engedélyezze, ha csak a gyorsbillentyű nyomva tartása alatt szeretne diktálni.",
+      "voiceCommands": "Alapértelmezés szerint egy lenyomás elindítja a hangparancsot, a következő befejezi. Engedélyezze, ha csak a gyorsbillentyű nyomva tartása alatt szeretne parancsot mondani."
+    },
     "voiceTextCorrection": "Diktált szöveg javítása",
     "webJinaApiKey": "Jina AI API-kulcs",
     "webJinaApiKeyHint": "Opcionális. Kulcs nélkül a kérések az ingyenes szintet használják megosztott korlátokkal.",

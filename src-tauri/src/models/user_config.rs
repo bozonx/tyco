@@ -381,9 +381,14 @@ pub fn script_command(config: &Value, id: &str) -> Option<ScriptCommand> {
     })
 }
 
-/// Whether holding the voice hotkey records until released (Push-to-Talk).
-pub fn is_voice_hold_enabled(config: &Value) -> bool {
-    section_at::<SttConfig>(config, "/stt").is_voice_hold_enabled
+/// Whether holding the voice input hotkey records until released (Push-to-Talk).
+pub fn is_voice_input_hold_enabled(config: &Value) -> bool {
+    section_at::<SttConfig>(config, "/stt").is_voice_input_hold_enabled
+}
+
+/// Whether holding the voice commands hotkey records until released (Push-to-Talk).
+pub fn is_voice_commands_hold_enabled(config: &Value) -> bool {
+    section_at::<SttConfig>(config, "/stt").is_voice_commands_hold_enabled
 }
 
 /// The part of `stt` the backend reads.
@@ -391,7 +396,9 @@ pub fn is_voice_hold_enabled(config: &Value) -> bool {
 #[serde(rename_all = "camelCase")]
 struct SttConfig {
     #[serde(default, deserialize_with = "lenient")]
-    is_voice_hold_enabled: bool,
+    is_voice_input_hold_enabled: bool,
+    #[serde(default, deserialize_with = "lenient")]
+    is_voice_commands_hold_enabled: bool,
 }
 
 #[cfg(test)]
@@ -454,9 +461,15 @@ mod tests {
         assert!(action_pages(&broken).is_empty());
         assert!(!external_access(&broken).can_access_selection);
         assert_eq!(ai_vault(&json!({})), AiVaultConfig::default());
-        assert!(!is_voice_hold_enabled(&json!({})));
-        assert!(is_voice_hold_enabled(&json!({
-            "stt": { "isVoiceHoldEnabled": true }
+        assert!(!is_voice_input_hold_enabled(&json!({})));
+        assert!(is_voice_input_hold_enabled(&json!({
+            "stt": { "isVoiceInputHoldEnabled": true }
+        })));
+        assert!(!is_voice_commands_hold_enabled(&json!({
+            "stt": { "isVoiceInputHoldEnabled": true }
+        })));
+        assert!(is_voice_commands_hold_enabled(&json!({
+            "stt": { "isVoiceCommandsHoldEnabled": true }
         })));
     }
 

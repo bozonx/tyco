@@ -39,80 +39,48 @@
         icon="mdi:information-outline"
         :message="portalError"
       />
-      <FieldRow
-        v-for="row in rows"
+      <GlobalHotkeyRow
+        v-for="row in generalRows"
         :key="row.id"
-        :label="row.label"
+        :row="row"
+        :platform="providerState.platform"
+        :is-editable="isEditable"
         :error="rowError(row.id)"
-      >
-        <template #info>
-          <InfoPopover
-            :aria-label="t('settings.externalMethods')"
-            align="start"
-          >
-            <div class="hotkey-info">
-              <p v-if="row.description">{{ row.description }}</p>
-              <p class="hotkey-info-title">
-                {{ t('settings.externalMethods') }}
-              </p>
-              <p>{{ row.externalHint }}</p>
-              <div class="external-command">
-                <code>{{ row.command }}</code>
-                <CopyButton
-                  :value="row.command"
-                  :label="t('settings.copyActivationCommand')"
-                />
-              </div>
-            </div>
-          </InfoPopover>
-        </template>
-        <div class="hotkey-control">
-          <HotkeyInput
-            :model-value="row.value"
-            :aria-label="row.label"
-            :placeholder="t('settings.hotkeyNotAssigned')"
-            :readonly="!isEditable"
-            :platform="providerState.platform"
-            @update:model-value="setShortcut(row.id, $event)"
-            @recording="suspendHotkeys"
-          />
-          <IconButton
-            v-if="isEditable && row.value"
-            size="sm"
-            variant="ghost"
-            icon="mdi:close"
-            :label="t('settings.unassignHotkey')"
-            @click="setShortcut(row.id, '')"
-          />
-          <IconButton
-            v-if="
-              isEditable && row.defaultValue && row.value !== row.defaultValue
+        :external-command="providerState.statuses[row.id]?.externalCommand"
+        @set="setShortcut(row.id, $event)"
+        @recording="suspendHotkeys"
+      />
+    </SettingsSection>
+
+    <SettingsSection
+      v-if="voiceRows.length > 0"
+      :title="t('settings.voiceHotkeysTitle')"
+      :info="t('settings.voiceHotkeysInfo')"
+      device-scoped
+    >
+      <template v-for="row in voiceRows" :key="row.id">
+        <GlobalHotkeyRow
+          :row="row"
+          :platform="providerState.platform"
+          :is-editable="isEditable"
+          :error="rowError(row.id)"
+          :external-command="providerState.statuses[row.id]?.externalCommand"
+          @set="setShortcut(row.id, $event)"
+          @recording="suspendHotkeys"
+        />
+        <FieldRow
+          v-if="isHoldSupported && holdToggles[row.id]"
+          :label="holdToggles[row.id].label"
+          :hint="holdToggles[row.id].hint"
+        >
+          <FieldSwitch
+            :model-value="userConfig.stt[holdToggles[row.id].setting]"
+            @update:model-value="
+              userConfig.stt[holdToggles[row.id].setting] = $event
             "
-            size="sm"
-            variant="ghost"
-            icon="mdi:restore"
-            :label="t('settings.resetToDefault')"
-            @click="setShortcut(row.id, row.defaultValue)"
           />
-          <div
-            v-if="providerState.statuses[row.id]?.externalCommand"
-            class="external-command"
-          >
-            <code>{{ providerState.statuses[row.id].externalCommand }}</code>
-            <CopyButton
-              :value="providerState.statuses[row.id].externalCommand ?? ''"
-              :label="t('settings.copyHotkeyCommand')"
-            />
-          </div>
-        </div>
-      </FieldRow>
-      <FieldRow
-        v-if="isHoldSupported"
-        :label="t('settings.voiceHoldToRecord')"
-        :hint="t('settings.voiceHoldToRecordHint')"
-      >
-        <FieldSwitch v-model="userConfig.stt.isVoiceHoldEnabled" />
-      </FieldRow>
+        </FieldRow>
+      </template>
     </SettingsSection>
 
     <SettingsSection
@@ -215,6 +183,8 @@ import { useMainActionChoices } from '../../composables/use-main-action-choices'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import { resolveActionSelectionBehavior } from '../../lib/action-menu/action-selection-behavior'
 import {
+  type GlobalHotkeyRowModel,
+  VOICE_HOTKEY_IDS,
   activationCommand,
   isEditable as checkIsEditable,
   isSystemManaged as checkIsSystemManaged,
@@ -222,6 +192,7 @@ import {
   displayedShortcut,
   duplicateHotkey,
   hasConflict,
+  isVoiceHotkey,
   missingHotkeys,
   providerNoteKey,
 } from '../../lib/hotkeys/hotkey-settings'
@@ -236,6 +207,7 @@ import IconButton from '../common/IconButton.vue'
 import InfoPopover from '../common/InfoPopover.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import EditorShortcutsSettings from './EditorShortcutsSettings.vue'
+import GlobalHotkeyRow from './GlobalHotkeyRow.vue'
 import HotkeyInput from './HotkeyInput.vue'
 import SettingsSection from './SettingsSection.vue'
 import {
@@ -280,16 +252,7 @@ const MODE_ORDER: HotkeyId[] = [
   'history',
 ]
 
-interface HotkeyRow {
-  /** The id `applyHotkey` takes: a mode, a `replace.` action or a page */
-  id: string
-  label: string
-  value: string
-  defaultValue: string
-  command: string
-  externalHint: string
-  description?: string
-}
+type HotkeyRow = GlobalHotkeyRowModel
 
 const hotkeysStore = useGlobalHotkeysStore()
 const { portalError, isRebinding } = storeToRefs(hotkeysStore)
@@ -486,6 +449,41 @@ const rows = computed(() =>
       (userConfig.value.isInDevelopment ||
         !['voiceCommands', 'correction', 'history', inlineId].includes(row.id))
   )
+)
+
+const generalRows = computed(() =>
+  rows.value.filter((row) => !isVoiceHotkey(row.id))
+)
+const voiceRows = computed(() =>
+  VOICE_HOTKEY_IDS.flatMap(
+    (id) => rows.value.find((row) => row.id === id) ?? []
+  )
+)
+
+/**
+ * The Push-to-Talk switch under a voice hotkey, by hotkey id. Voice questions
+ * to the AI have none: their recording ends by a press only.
+ */
+const holdToggles = computed(
+  (): Record<
+    string,
+    {
+      setting: 'isVoiceInputHoldEnabled' | 'isVoiceCommandsHoldEnabled'
+      label: string
+      hint: string
+    }
+  > => ({
+    voice: {
+      setting: 'isVoiceInputHoldEnabled',
+      label: t('settings.voiceHold.voice'),
+      hint: t('settings.voiceHoldHint.voice'),
+    },
+    voiceCommands: {
+      setting: 'isVoiceCommandsHoldEnabled',
+      label: t('settings.voiceHold.voiceCommands'),
+      hint: t('settings.voiceHoldHint.voiceCommands'),
+    },
+  })
 )
 
 /** Rows whose new shortcut was refused here, with the reason */

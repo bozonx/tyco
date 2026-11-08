@@ -1213,8 +1213,16 @@
     "vaultUseDefault": "Use the default folder",
     "vaultUseSubfolder": "Use a tyco-vault subfolder",
     "vision": "Image input",
-    "voiceHoldToRecord": "Hold hotkey to record (Push-to-Talk)",
-    "voiceHoldToRecordHint": "By default, voice input toggles with a single press. Enable to record only while the hotkey is held down.",
+    "voiceHotkeysTitle": "Voice input",
+    "voiceHotkeysInfo": "Hotkeys that start recording speech. Voice questions to the AI always stop with a second press.",
+    "voiceHold": {
+      "voice": "Hold the hotkey while dictating (Push-to-Talk)",
+      "voiceCommands": "Hold the hotkey while speaking a command (Push-to-Talk)"
+    },
+    "voiceHoldHint": {
+      "voice": "By default, a press starts dictation and the next press stops it. Turn on to dictate only while the hotkey is held.",
+      "voiceCommands": "By default, a press starts a voice command and the next press ends it. Turn on to speak a command only while the hotkey is held."
+    },
     "voiceTextCorrection": "Voice text correction",
     "webJinaApiKey": "Jina AI API key",
     "webJinaApiKeyHint": "Optional. Without a key, requests use the free tier with shared rate limits.",

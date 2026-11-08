@@ -1213,8 +1213,16 @@
     "vaultUseDefault": "Usar a pasta padrão",
     "vaultUseSubfolder": "Usar uma subpasta tyco-vault",
     "vision": "Entrada de imagens",
-    "voiceHoldToRecord": "Segurar atalho para gravar (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Por padrão, a entrada de voz é ativada com um único toque. Ative para gravar apenas enquanto o atalho estiver pressionado.",
+    "voiceHotkeysTitle": "Entrada de voz",
+    "voiceHotkeysInfo": "Atalhos que iniciam a gravação de voz. Perguntas por voz à IA sempre terminam com um segundo toque.",
+    "voiceHold": {
+      "voice": "Manter o atalho pressionado ao ditar (Push-to-Talk)",
+      "voiceCommands": "Manter o atalho pressionado ao falar um comando (Push-to-Talk)"
+    },
+    "voiceHoldHint": {
+      "voice": "Por padrão, um toque inicia o ditado e o seguinte o encerra. Ative para ditar apenas enquanto o atalho estiver pressionado.",
+      "voiceCommands": "Por padrão, um toque inicia um comando de voz e o seguinte o encerra. Ative para falar um comando apenas enquanto o atalho estiver pressionado."
+    },
     "voiceTextCorrection": "Correção do texto ditado",
     "webJinaApiKey": "Chave de API do Jina AI",
     "webJinaApiKeyHint": "Opcional. Sem uma chave, as solicitações usam o nível gratuito com limites compartilhados.",

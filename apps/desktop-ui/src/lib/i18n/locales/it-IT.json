@@ -1213,8 +1213,16 @@
     "vaultUseDefault": "Usa la cartella predefinita",
     "vaultUseSubfolder": "Usa una sottocartella tyco-vault",
     "vision": "Input di immagini",
-    "voiceHoldToRecord": "Tieni premuta la scorciatoia per registrare (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Per impostazione predefinita, l'input vocale si attiva e disattiva con una singola pressione. Abilita per registrare solo mentre la scorciatoia è premuta.",
+    "voiceHotkeysTitle": "Input vocale",
+    "voiceHotkeysInfo": "Scorciatoie che avviano la registrazione vocale. Le domande vocali all’IA terminano sempre con una seconda pressione.",
+    "voiceHold": {
+      "voice": "Tieni premuta la scorciatoia durante la dettatura (Push-to-Talk)",
+      "voiceCommands": "Tieni premuta la scorciatoia mentre pronunci un comando (Push-to-Talk)"
+    },
+    "voiceHoldHint": {
+      "voice": "Per impostazione predefinita, una pressione avvia la dettatura e la successiva la interrompe. Abilita per dettare solo mentre la scorciatoia è premuta.",
+      "voiceCommands": "Per impostazione predefinita, una pressione avvia un comando vocale e la successiva lo termina. Abilita per pronunciare un comando solo mentre la scorciatoia è premuta."
+    },
     "voiceTextCorrection": "Correzione del testo dettato",
     "webJinaApiKey": "Chiave API Jina AI",
     "webJinaApiKeyHint": "Facoltativo. Senza chiave, le richieste utilizzano il piano gratuito con limiti condivisi.",

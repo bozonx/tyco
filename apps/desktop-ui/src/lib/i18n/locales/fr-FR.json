@@ -1213,8 +1213,16 @@
     "vaultUseDefault": "Utiliser le dossier par défaut",
     "vaultUseSubfolder": "Utiliser un sous-dossier tyco-vault",
     "vision": "Entrée d’images",
-    "voiceHoldToRecord": "Maintenir le raccourci enfoncé pour enregistrer (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Par défaut, la saisie vocale s'active et se désactive d'une simple pression. Activez pour n'enregistrer que pendant le maintien du raccourci.",
+    "voiceHotkeysTitle": "Saisie vocale",
+    "voiceHotkeysInfo": "Raccourcis qui lancent l’enregistrement de la parole. Les questions vocales à l’IA se terminent toujours par une seconde pression.",
+    "voiceHold": {
+      "voice": "Maintenir le raccourci pendant la dictée (Push-to-Talk)",
+      "voiceCommands": "Maintenir le raccourci pendant une commande vocale (Push-to-Talk)"
+    },
+    "voiceHoldHint": {
+      "voice": "Par défaut, une pression lance la dictée et la suivante l’arrête. Activez pour dicter uniquement pendant le maintien du raccourci.",
+      "voiceCommands": "Par défaut, une pression lance une commande vocale et la suivante la termine. Activez pour énoncer une commande uniquement pendant le maintien du raccourci."
+    },
     "voiceTextCorrection": "Correction du texte dicté",
     "webJinaApiKey": "Clé API Jina AI",
     "webJinaApiKeyHint": "Facultatif. Sans clé, les requêtes utilisent le niveau gratuit avec des limites partagées.",

@@ -1207,8 +1207,16 @@
     "vaultUseDefault": "Použít výchozí složku",
     "vaultUseSubfolder": "Použít podsložku tyco-vault",
     "vision": "Vstup obrázků",
-    "voiceHoldToRecord": "Držet klávesovou zkratku pro záznam (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Ve výchozím nastavení se hlasový vstup přepíná jedním stisknutím. Zapněte, chcete-li nahrávat pouze po dobu držení zkratky.",
+    "voiceHotkeysTitle": "Hlasový vstup",
+    "voiceHotkeysInfo": "Zkratky, které spouštějí nahrávání řeči. Hlasové dotazy na AI vždy končí druhým stisknutím.",
+    "voiceHold": {
+      "voice": "Při diktování držet zkratku (Push-to-Talk)",
+      "voiceCommands": "Při vyslovování příkazu držet zkratku (Push-to-Talk)"
+    },
+    "voiceHoldHint": {
+      "voice": "Ve výchozím nastavení jedno stisknutí spustí diktování a další ho ukončí. Zapněte, chcete-li diktovat jen po dobu držení zkratky.",
+      "voiceCommands": "Ve výchozím nastavení jedno stisknutí spustí hlasový příkaz a další ho ukončí. Zapněte, chcete-li příkaz vyslovovat jen po dobu držení zkratky."
+    },
     "voiceTextCorrection": "Oprava nadiktovaného textu",
     "webJinaApiKey": "Klíč API Jina AI",
     "webJinaApiKeyHint": "Volitelné. Bez klíče požadavky využívají bezplatný tarif se sdílenými limity.",

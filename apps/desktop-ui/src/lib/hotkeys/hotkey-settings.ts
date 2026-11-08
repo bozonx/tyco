@@ -1,5 +1,6 @@
 import type {
   HotkeyApplyResult,
+  HotkeyId,
   HotkeyPlatform,
   HotkeyProviderInfo,
   HotkeyProviderKind,
@@ -10,6 +11,30 @@ import {
   shortcutAlternatives,
   shortcutKeys,
 } from './hotkey-recorder'
+
+/** A global hotkey as the settings show it */
+export interface GlobalHotkeyRowModel {
+  /** The id `applyHotkey` takes: a mode, a `replace.` action or a page */
+  id: string
+  label: string
+  value: string
+  defaultValue: string
+  command: string
+  externalHint: string
+  description?: string
+}
+
+/** The hotkeys that start voice input, in display order */
+export const VOICE_HOTKEY_IDS: readonly HotkeyId[] = [
+  'voice',
+  'voiceCommands',
+  'voiceQuickAiRequest',
+  'voiceScreenshotQuickAiRequest',
+]
+
+export function isVoiceHotkey(id: string): boolean {
+  return (VOICE_HOTKEY_IDS as readonly string[]).includes(id)
+}
 
 export interface HotkeySettingsState {
   provider: HotkeyProviderKind | null

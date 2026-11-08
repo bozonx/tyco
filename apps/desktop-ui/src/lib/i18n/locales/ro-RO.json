@@ -1213,8 +1213,16 @@
     "vaultUseDefault": "Folosește dosarul implicit",
     "vaultUseSubfolder": "Folosește un subdosar tyco-vault",
     "vision": "Intrare de imagini",
-    "voiceHoldToRecord": "Țineți apăsată comanda rapidă pentru înregistrare (Push-to-Talk)",
-    "voiceHoldToRecordHint": "În mod prestabilit, introducerea vocală se comută printr-o singură apăsare. Activați pentru a înregistra doar cât timp comanda rapidă este apăsată.",
+    "voiceHotkeysTitle": "Introducere vocală",
+    "voiceHotkeysInfo": "Comenzi rapide care pornesc înregistrarea vocii. Întrebările vocale către AI se încheie mereu cu o a doua apăsare.",
+    "voiceHold": {
+      "voice": "Țineți apăsată comanda rapidă în timpul dictării (Push-to-Talk)",
+      "voiceCommands": "Țineți apăsată comanda rapidă când rostiți o comandă (Push-to-Talk)"
+    },
+    "voiceHoldHint": {
+      "voice": "Implicit, o apăsare pornește dictarea, iar următoarea o oprește. Activați pentru a dicta doar cât timp comanda rapidă este ținută apăsată.",
+      "voiceCommands": "Implicit, o apăsare pornește o comandă vocală, iar următoarea o încheie. Activați pentru a rosti o comandă doar cât timp comanda rapidă este ținută apăsată."
+    },
     "voiceTextCorrection": "Corectarea textului dictat",
     "webJinaApiKey": "Cheie API Jina AI",
     "webJinaApiKeyHint": "Opțional. Fără cheie, cererile folosesc nivelul gratuit cu limite partajate.",
