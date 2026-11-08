@@ -142,11 +142,11 @@ export const useToolsStore = defineStore('tools', () => {
       if (!tool || tool.getUnavailableReasonKey?.()) return undefined
       return toolInputSchema(tool, toolCallConfig(tool, command.toolConfig))
     },
-    runCommand: (command, input, { signal, source }) =>
+    runCommand: (command, input, options) =>
       transformCommand(
         command,
         typeof input.text === 'string' ? input.text : '',
-        { input, signal, source, output: 'return' }
+        { ...options, input, output: 'return' }
       ),
     getUnavailableReasonKey: () => getLlmUnavailableReasonKey('aiTask'),
     describeError: (error) => describeError(error, translate),

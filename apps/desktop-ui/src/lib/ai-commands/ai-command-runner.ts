@@ -45,6 +45,14 @@ export interface AiCommandRunOptions {
 const TOOL_NAME_LENGTH = 64
 
 /**
+ * What a call over the limit gets in place of a result: parallel calls of one
+ * step may exceed it, and the model must not take this for the output of the
+ * command
+ */
+export const CALL_LIMIT_NOTICE =
+  'NOT RUN: the command call limit is reached, so this command did not run and produced no output. Do not call more commands; answer using the results already available.'
+
+/**
  * A name the AI providers accept for the tool of a command: the index keeps
  * apart ids that differ only in characters a name cannot have
  */
@@ -57,7 +65,8 @@ const agentToolName = (index: number, commandId: string): string =>
 /**
  * Runs the agent of an AI command on `text`: the model follows the prompt and
  * may run the given commands as its tools. Resolves with its final answer, the
- * text written after the last command it ran
+ * text written after the last command it ran, or the output of that command
+ * when the model wrote nothing after it
  *
  * @throws LlmError
  */
@@ -69,6 +78,8 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
     options: AiCommandRunOptions
   ): Promise<string> => {
     let callsUsed = 0
+    /** What the last command that ran returned */
+    let lastResult = ''
     const byName = new Map<string, AiCommandAgentTool>()
     const toolSet: ToolSet = {}
     tools.forEach((tool, index) => {
@@ -81,15 +92,16 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
         ),
         execute: async (input, { abortSignal }) => {
           // Reserve before awaiting: parallel calls share the same budget.
-          if (callsUsed >= config.maxSteps)
-            return 'Command call limit reached. Do not call more commands; answer using the results already available.'
+          if (callsUsed >= config.maxSteps) return CALL_LIMIT_NOTICE
           callsUsed += 1
-          return toolResultForModel(
+          const result = toolResultForModel(
             await tool.execute(
               isRecord(input) ? input : {},
               abortSignal ?? options.signal
             )
           )
+          lastResult = result
+          return result
         },
       })
     })
@@ -134,6 +146,8 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
         if (tool) options.onStep?.(tool.label)
       }
     }
-    return cleanLlmOutput(answer, text)
+    const final = cleanLlmOutput(answer, text)
+    // commands ran but the model said nothing after them: their output is the answer
+    return final.trim() ? final : lastResult
   }
 }

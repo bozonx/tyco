@@ -43,6 +43,8 @@ export interface InvocationOptions {
   context?: { selectionText: string }
   /** The stages of a long run, see `ToolCall.onProgress` */
   onProgress?: (stage: string) => void
+  /** The AI commands that led to this run, see `HostToolCall` */
+  callerCommandIds?: readonly string[]
 }
 
 /** How a run ended; the user has been told already */

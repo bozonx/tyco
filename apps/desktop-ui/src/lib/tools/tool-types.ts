@@ -2,10 +2,22 @@ import type { CommandEnvironment } from '../variables/command-variables'
 import type {
   ToolDefinition as SdkToolDefinition,
   JsonSchema,
+  ToolCall,
+  ToolResult,
 } from '@tyco/plugin-sdk'
 export * from '@tyco/plugin-sdk'
 
+/** A call of a tool of the app: what the host knows beyond the plugin SDK */
+export interface HostToolCall extends ToolCall {
+  /**
+   * The AI commands that led to this call, outermost first; absent for a call
+   * made by the user
+   */
+  callerCommandIds?: readonly string[]
+}
+
 export interface ToolDefinition extends SdkToolDefinition {
+  run(call: HostToolCall): Promise<ToolResult>
   configPresets?: Record<string, Record<string, object>>
   inputSchemaFor?(config: Record<string, unknown>): JsonSchema
   getUnavailableReasonKey?(): string | undefined

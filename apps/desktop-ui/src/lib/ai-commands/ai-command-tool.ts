@@ -31,7 +31,12 @@ export interface AiCommandToolDependencies extends AiCommandRunnerDependencies {
   runCommand: (
     command: CommandConfig,
     input: Record<string, unknown>,
-    options: { signal: AbortSignal; source: CommandRunSource }
+    options: {
+      signal: AbortSignal
+      source: CommandRunSource
+      /** The AI commands that led to the run, the running one last */
+      callerCommandIds: readonly string[]
+    }
   ) => Promise<ToolResult>
   /** Why the agent cannot run, as an i18n key */
   getUnavailableReasonKey: () => string | undefined
@@ -54,17 +59,23 @@ const notice = (content: string): string => {
 const cancelled: ToolResult = { ok: false, cancelled: true }
 
 /**
+ * How many AI commands may run one inside another: the innermost one runs no
+ * commands, so a chain of agents cannot multiply the calls of the LLM without
+ * end
+ */
+export const AI_COMMAND_MAX_DEPTH = 3
+
+/**
  * The tool of AI commands: an LLM agent that follows the prompt of the command
  * and may run the commands the command allows. A command never runs itself, nor
- * a command that led to it, so AI commands cannot call each other in a loop.
- * The command decides what to do with the answer
+ * a command that led to it, so AI commands cannot call each other in a loop;
+ * nor do they nest deeper than `AI_COMMAND_MAX_DEPTH`. The command decides what
+ * to do with the answer
  */
 export function createAiCommandTool(
   deps: AiCommandToolDependencies
 ): ToolDefinition {
   const run = createAiCommandRunner(deps)
-  /** The AI commands up the chain of a nested run, by the signal it got */
-  const callers = new WeakMap<AbortSignal, readonly string[]>()
 
   const agentTools = (
     allowedCommandIds: readonly string[],
@@ -72,6 +83,7 @@ export function createAiCommandTool(
     runSignal: AbortSignal,
     source: CommandRunSource
   ): AiCommandAgentTool[] => {
+    if (chain.length >= AI_COMMAND_MAX_DEPTH) return []
     const commands = deps.commands()
     return allowedCommandIds.flatMap((id) => {
       if (chain.includes(id)) return []
@@ -94,11 +106,11 @@ export function createAiCommandTool(
               if (parent.aborted) abort()
               else parent.addEventListener('abort', abort, { once: true })
             }
-            callers.set(controller.signal, chain)
             try {
               return await deps.runCommand(command, input, {
                 signal: controller.signal,
                 source,
+                callerCommandIds: chain,
               })
             } finally {
               signal.removeEventListener('abort', abort)
@@ -139,7 +151,7 @@ export function createAiCommandTool(
         }
       const config = { ...saved, prompt: prompt.value }
       const chain = [
-        ...(callers.get(call.signal) ?? []),
+        ...(call.callerCommandIds ?? []),
         ...(call.command ? [call.command.id] : []),
       ]
       try {

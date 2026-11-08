@@ -4,10 +4,15 @@ import { describe, expect, it, vi } from 'vitest'
 import type { CommandConfig } from '@tyco/shared'
 
 import { createCommand } from '../commands/command-config'
+import { createCommandTransformer } from '../commands/command-runner'
 import type { LlmStreamEvent, LlmStreamOptions } from '../llm/llm-client'
 import type { LlmPrompt } from '../llm/llm-prompt'
-import { TEXT_INPUT_SCHEMA, type ToolCall } from '../tools/tool-types'
-import { createAiCommandTool } from './ai-command-tool'
+import {
+  TEXT_INPUT_SCHEMA,
+  type RegisteredTool,
+  type ToolCall,
+} from '../tools/tool-types'
+import { AI_COMMAND_MAX_DEPTH, createAiCommandTool } from './ai-command-tool'
 
 const aiCommand = (
   id: string,
@@ -102,24 +107,48 @@ function setup(
 ) {
   const model = fakeModel(turnsByPrompt)
   const ran: { id: string; input: Record<string, unknown> }[] = []
+  /** Stands for any tool but AI commands: it says which command it ran */
+  const scriptTool: RegisteredTool = {
+    id: 'script',
+    owner: { kind: 'core' },
+    labelKey: 'tools.script',
+    description: 'Runs a script',
+    inputSchema: TEXT_INPUT_SCHEMA,
+    run: async (call) => {
+      ran.push({ id: call.command?.id ?? '', input: call.input })
+      return { ok: true, content: `${call.command?.id} done` }
+    },
+  }
+  // nested runs go through the real command runner, as in the app
+  const transform = createCommandTransformer({
+    tools: {
+      get: (id) =>
+        id === 'script'
+          ? scriptTool
+          : id === 'core.aiTask'
+            ? { ...tool, owner: { kind: 'core' } }
+            : undefined,
+    },
+  })
   const tool = createAiCommandTool({
     stream: model.stream,
     instructions: () => 'App instructions',
     commands: () => commands,
     commandInputSchema: (command) =>
       command.toolId === 'gone' ? undefined : TEXT_INPUT_SCHEMA,
-    runCommand: async (command, input, { signal, source }) => {
-      ran.push({ id: command.id, input })
-      if (command.toolId !== 'core.aiTask')
-        return { ok: true, content: `${command.id} done` }
-      return tool.run({
-        input,
-        config: command.toolConfig,
-        source,
-        signal,
-        command: { id: command.id, name: command.name, isOutputLogged: false },
-        isOutputRequested: true,
-      })
+    runCommand: async (command, input, options) => {
+      if (command.toolId === 'core.aiTask') ran.push({ id: command.id, input })
+      return transform(
+        command,
+        typeof input.text === 'string' ? input.text : '',
+        // a wrapped signal, as a timeout would give: the chain must not ride on it
+        {
+          ...options,
+          signal: AbortSignal.any([options.signal]),
+          input,
+          output: 'return',
+        }
+      )
     },
     getUnavailableReasonKey: () => undefined,
     describeError: (error) => (error as Error).message,
@@ -187,6 +216,44 @@ describe('createAiCommandTool', () => {
     })
     expect(await run(a)).toMatchObject({ ok: true, content: 'A done' })
     expect(calls.map((call) => call.offered)).toEqual([['b', 'one'], ['one']])
+  })
+
+  it('keeps the chain when a nested run gets a signal of its own', async () => {
+    const a = aiCommand('a', ['b'])
+    const b = aiCommand('b', ['a'])
+    const { run, calls } = setup([a, b], {
+      'Prompt of a': [{ call: 'b' }, 'A done'],
+      'Prompt of b': ['B done'],
+    })
+    expect(await run(a)).toMatchObject({ ok: true, content: 'A done' })
+    expect(calls.map((call) => call.offered)).toEqual([['b'], []])
+  })
+
+  it('runs no commands deeper than the nesting limit', async () => {
+    const ids = Array.from(
+      { length: AI_COMMAND_MAX_DEPTH + 1 },
+      (_, index) => `n${index}`
+    )
+    const commands = ids.map((id, index) =>
+      aiCommand(id, ids[index + 1] ? [ids[index + 1]!] : [])
+    )
+    const { run, calls } = setup(
+      commands,
+      Object.fromEntries(
+        ids.map((id, index) => [
+          `Prompt of ${id}`,
+          [
+            ...(index < AI_COMMAND_MAX_DEPTH - 1
+              ? [{ call: ids[index + 1]! }]
+              : []),
+            `${id} done`,
+          ],
+        ])
+      )
+    )
+    expect(await run(commands[0]!)).toMatchObject({ ok: true })
+    expect(calls).toHaveLength(AI_COMMAND_MAX_DEPTH)
+    expect(calls.at(-1)?.offered).toEqual([])
   })
 
   it('leaves out commands that are disabled, gone or cannot run now', async () => {

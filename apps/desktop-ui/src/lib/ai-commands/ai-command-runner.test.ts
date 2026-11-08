@@ -3,7 +3,7 @@ import { expect, it, vi } from 'vitest'
 
 import type { LlmStreamEvent, LlmStreamOptions } from '../llm/llm-client'
 import type { LlmPrompt } from '../llm/llm-prompt'
-import { createAiCommandRunner } from './ai-command-runner'
+import { CALL_LIMIT_NOTICE, createAiCommandRunner } from './ai-command-runner'
 
 it('caps parallel command execution and disables tools for the final answer', async () => {
   const execute = vi.fn(async () => ({ ok: true, content: 'Done' }))
@@ -28,8 +28,8 @@ it('caps parallel command execution and disables tools for the final answer', as
       )
     )
     expect(execute).toHaveBeenCalledTimes(1)
-    expect(results[1]).toContain('Command call limit reached')
-    expect(results[2]).toContain('Command call limit reached')
+    expect(results[1]).toBe(CALL_LIMIT_NOTICE)
+    expect(results[2]).toBe(CALL_LIMIT_NOTICE)
     expect(options.maxSteps).toBe(2)
     expect(
       await options.prepareStep!({ stepNumber: 1 } as Parameters<
@@ -55,4 +55,42 @@ it('caps parallel command execution and disables tools for the final answer', as
       { signal: new AbortController().signal }
     )
   ).toBe('Finished')
+})
+
+it('answers with the output of the last command when the model says nothing after it', async () => {
+  async function* stream(
+    _task: string,
+    _prompt: LlmPrompt,
+    options: LlmStreamOptions = {}
+  ): AsyncGenerator<LlmStreamEvent> {
+    const tool = Object.values(options.tools as ToolSet)[0]!
+    yield { type: 'text', text: 'Running it. ' }
+    yield { type: 'tool-call', toolCallId: '1', toolName: 'c0_one', input: {} }
+    await tool.execute!(
+      {},
+      {
+        toolCallId: '1',
+        messages: [],
+        context: undefined,
+        abortSignal: options.signal,
+      }
+    )
+  }
+  const run = createAiCommandRunner({ stream, instructions: () => '' })
+  expect(
+    await run(
+      { prompt: 'Do it', allowedCommandIds: ['one'], maxSteps: 1 },
+      '',
+      [
+        {
+          commandId: 'one',
+          label: 'One',
+          description: 'Does it',
+          inputSchema: { type: 'object', properties: {} },
+          execute: async () => ({ ok: true, content: 'Output of one' }),
+        },
+      ],
+      { signal: new AbortController().signal }
+    )
+  ).toBe('Output of one')
 })
