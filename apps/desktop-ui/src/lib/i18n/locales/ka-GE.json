@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "ჩართვის შემთხვევაში, AI-ს შეუძლია გამოიძახოს სხვა ნებადართული ბრძანებები.",
     "createModalTitle": "ახალი ბრძანება",
     "toolTypeLabel": "ბრძანების ტიპი",
-    "templateLabel": "შაბლონი",
-    "templateNone": "შაბლონის გარეშე (მორგებული)",
     "templateFix": "შეცდომების გასწორება",
     "templateTranslate": "თარგმნა ენაზე…",
     "templateStyle": "სტილის მორგება…",

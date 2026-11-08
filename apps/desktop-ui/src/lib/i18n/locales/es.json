@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "Cuando está habilitado, la IA puede invocar otros comandos permitidos.",
     "createModalTitle": "Nuevo comando",
     "toolTypeLabel": "Tipo de comando",
-    "templateLabel": "Plantilla",
-    "templateNone": "Sin plantilla (personalizado)",
     "templateFix": "Corregir errores",
     "templateTranslate": "Traducir a…",
     "templateStyle": "Estilizar como…",

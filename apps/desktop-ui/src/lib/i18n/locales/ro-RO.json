@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "Când este activat, AI poate apela alte comenzi permise.",
     "createModalTitle": "Comandă nouă",
     "toolTypeLabel": "Tipul comenzii",
-    "templateLabel": "Șablon",
-    "templateNone": "Fără șablon (personalizat)",
     "templateFix": "Corectează erorile",
     "templateTranslate": "Tradu în…",
     "templateStyle": "Stilizează în stilul…",

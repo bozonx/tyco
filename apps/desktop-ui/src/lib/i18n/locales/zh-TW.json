@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "啟用後，AI 可以呼叫其他被允許的指令。",
     "createModalTitle": "新增指令",
     "toolTypeLabel": "指令類型",
-    "templateLabel": "範本",
-    "templateNone": "無範本 (自訂)",
     "templateFix": "修正錯誤",
     "templateTranslate": "翻譯為…",
     "templateStyle": "調整風格為…",

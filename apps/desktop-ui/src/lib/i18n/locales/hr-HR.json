@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "Kada je uključeno, AI može pozivati druge dopuštene naredbe.",
     "createModalTitle": "Nova naredba",
     "toolTypeLabel": "Vrsta naredbe",
-    "templateLabel": "Predložak",
-    "templateNone": "Bez predloška (prilagođeno)",
     "templateFix": "Ispravi pogreške",
     "templateTranslate": "Prevedi na…",
     "templateStyle": "Stiliziraj u stilu…",

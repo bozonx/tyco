@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "Когда включено, ИИ может вызывать другие разрешённые команды.",
     "createModalTitle": "Новая команда",
     "toolTypeLabel": "Тип команды",
-    "templateLabel": "Шаблон",
-    "templateNone": "Без шаблона (свой)",
     "templateFix": "Исправить ошибки",
     "templateTranslate": "Перевести на…",
     "templateStyle": "Стилизовать в духе…",

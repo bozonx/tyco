@@ -9,9 +9,17 @@ vi.mock('../../composables/use-i18n', () => ({
 
 describe('SettingsCreateCommandModal.vue', () => {
   const tools = [
-    { id: 'script', name: 'Script / Command' },
-    { id: 'webhook', name: 'Webhook' },
-    { id: 'core.aiTask', name: 'AI Command' },
+    {
+      id: 'script',
+      name: 'Script / Command',
+      description: 'Runs a shell command',
+    },
+    { id: 'webhook', name: 'Webhook', description: 'Sends HTTP request' },
+    {
+      id: 'core.aiTask',
+      name: 'AI Command',
+      description: 'AI performs prompt',
+    },
   ]
 
   const mountModal = (
@@ -32,50 +40,57 @@ describe('SettingsCreateCommandModal.vue', () => {
       },
     })
 
-  it('renders title, tool selector and buttons', () => {
+  it('renders title, close button, and tool options', () => {
     const wrapper = mountModal()
     expect(wrapper.text()).toContain('commands.createModalTitle')
     expect(wrapper.text()).toContain('commands.toolTypeLabel')
-    expect(wrapper.text()).toContain('common.cancel')
-    expect(wrapper.text()).toContain('common.confirm')
+
+    const closeBtn = wrapper.find('button[aria-label="common.cancel"]')
+    expect(closeBtn.exists()).toBe(true)
+
+    const items = wrapper.findAll('.create-command-item')
+    // script, webhook, ai (none), ai (fix), ai (translate), ai (style)
+    expect(items).toHaveLength(6)
   })
 
-  it('submits selected non-AI tool without template', async () => {
+  it('selects script tool on single click', async () => {
     const wrapper = mountModal()
-    await wrapper.find('form').trigger('submit')
+    const items = wrapper.findAll('.create-command-item')
+    await items[0].trigger('click')
+
     expect(wrapper.emitted('submit')?.[0]).toEqual([
       { toolId: 'script', template: undefined },
     ])
   })
 
-  it('shows template options when AI task is selected and submits with template', async () => {
+  it('selects webhook tool on single click', async () => {
     const wrapper = mountModal()
-    expect(wrapper.find('select').exists()).toBe(false)
-
-    // select core.aiTask (item at index 2)
     const items = wrapper.findAll('.create-command-item')
-    expect(items).toHaveLength(3)
-    await items[2].trigger('click')
+    await items[1].trigger('click')
 
-    // template select should now appear
-    const select = wrapper.find('select')
-    expect(select.exists()).toBe(true)
+    expect(wrapper.emitted('submit')?.[0]).toEqual([
+      { toolId: 'webhook', template: undefined },
+    ])
+  })
 
-    // select "fix" template (index 1: 0=none, 1=fix, 2=translate, 3=style)
-    await select.setValue('1')
+  it('selects AI tool template in single click', async () => {
+    const wrapper = mountModal()
+    const items = wrapper.findAll('.create-command-item')
+    // item 2: core.aiTask (none)
+    // item 3: core.aiTask (fix)
+    // item 4: core.aiTask (translate)
+    // item 5: core.aiTask (style)
+    await items[3].trigger('click')
 
-    await wrapper.find('form').trigger('submit')
     expect(wrapper.emitted('submit')?.[0]).toEqual([
       { toolId: 'core.aiTask', template: 'fix' },
     ])
   })
 
-  it('emits close when cancel is clicked', async () => {
+  it('emits close when header close button is clicked', async () => {
     const wrapper = mountModal()
-    const cancelBtn = wrapper
-      .findAll('button')
-      .find((b) => b.text().includes('common.cancel'))
-    await cancelBtn?.trigger('click')
+    const closeBtn = wrapper.find('button[aria-label="common.cancel"]')
+    await closeBtn.trigger('click')
     expect(wrapper.emitted('close')).toBeDefined()
   })
 })

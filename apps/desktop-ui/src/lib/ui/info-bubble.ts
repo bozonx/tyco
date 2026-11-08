@@ -5,4 +5,5 @@ export interface InfoBubbleProps {
   align?: 'start' | 'center' | 'end'
   size?: 'sm' | 'md'
   teleport?: boolean
+  panelClass?: string
 }

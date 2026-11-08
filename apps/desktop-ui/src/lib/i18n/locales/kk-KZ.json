@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "Қосулы болса, ЖИ басқа рұқсат етілген командаларды шақыра алады.",
     "createModalTitle": "Жаңа команда",
     "toolTypeLabel": "Команда түрі",
-    "templateLabel": "Үлгі",
-    "templateNone": "Үлгісіз (жеке)",
     "templateFix": "Қателерді түзету",
     "templateTranslate": "Тілге аудару…",
     "templateStyle": "Стильге бейімдеу…",

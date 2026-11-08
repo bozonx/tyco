@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "Ha be van kapcsolva, az MI meghívhat más engedélyezett parancsokat.",
     "createModalTitle": "Új parancs",
     "toolTypeLabel": "Parancstípus",
-    "templateLabel": "Sablon",
-    "templateNone": "Nincs sablon (egyéni)",
     "templateFix": "Hibák javítása",
     "templateTranslate": "Fordítás erre…",
     "templateStyle": "Stílus átalakítása…",

@@ -5,86 +5,59 @@
     :labelledby="titleId"
     @close="close"
   >
-    <form class="create-command-modal" @submit.prevent="handleSubmit">
-      <h3 :id="titleId" class="create-command-modal-title">
-        {{ t('commands.createModalTitle') }}
-      </h3>
+    <div class="create-command-modal">
+      <div class="create-command-modal-header">
+        <h3 :id="titleId" class="create-command-modal-title">
+          {{ t('commands.createModalTitle') }}
+        </h3>
+        <IconButton
+          icon="mdi:close"
+          size="sm"
+          variant="ghost"
+          :label="t('common.cancel')"
+          @click="close"
+        />
+      </div>
 
       <div class="create-command-section">
         <span class="create-command-label">{{
           t('commands.toolTypeLabel')
         }}</span>
-        <div class="create-command-list" role="radiogroup">
-          <button
-            v-for="tool in tools"
-            :key="tool.id"
-            type="button"
-            role="radio"
-            :aria-checked="selectedToolId === tool.id"
-            class="create-command-item"
-            :class="{ 'is-selected': selectedToolId === tool.id }"
-            @click="selectedToolId = tool.id"
-          >
-            <AppIcon
-              :icon="tool.icon ?? defaultIconForTool(tool.id)"
-              size="lg"
-              class="create-command-item-icon"
-              aria-hidden="true"
-            />
-            <span class="create-command-item-copy">
-              <span class="create-command-item-name">{{ tool.name }}</span>
-              <span v-if="tool.description" class="create-command-item-desc">
-                {{ tool.description }}
+
+        <div class="create-command-list" role="list">
+          <template v-for="item in commandItems" :key="item.key">
+            <button
+              type="button"
+              class="create-command-item"
+              @click="handleSelect(item)"
+            >
+              <AppIcon
+                :icon="item.icon"
+                size="lg"
+                class="create-command-item-icon"
+                aria-hidden="true"
+              />
+              <span class="create-command-item-copy">
+                <span class="create-command-item-name">{{ item.name }}</span>
+                <span v-if="item.description" class="create-command-item-desc">
+                  {{ item.description }}
+                </span>
               </span>
-            </span>
-            <AppIcon
-              v-if="selectedToolId === tool.id"
-              icon="mdi:check"
-              size="md"
-              class="create-command-item-check"
-              aria-hidden="true"
-            />
-          </button>
+            </button>
+          </template>
         </div>
       </div>
-
-      <FieldRow
-        v-if="selectedToolId === 'core.aiTask'"
-        class="create-command-field"
-        vertical
-        :separator="false"
-        :label="t('commands.templateLabel')"
-      >
-        <FieldSelect v-model="selectedTemplate" :options="templateOptions" />
-      </FieldRow>
-
-      <div class="create-command-modal-actions">
-        <Button size="sm" variant="ghost" type="button" @click="close">
-          {{ t('common.cancel') }}
-        </Button>
-        <Button
-          size="sm"
-          variant="primary"
-          type="submit"
-          :disabled="!selectedToolId"
-        >
-          {{ t('common.confirm') }}
-        </Button>
-      </div>
-    </form>
+    </div>
   </BaseDialog>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useId, watch } from 'vue'
+import { computed, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import type { ControlOption } from '../../lib/ui/control-option'
 import AppIcon from '../common/AppIcon.vue'
 import BaseDialog from '../common/BaseDialog.vue'
-import Button from '../common/Button.vue'
-import FieldRow from '../common/FieldRow.vue'
-import FieldSelect from '../common/FieldSelect.vue'
+import IconButton from '../common/IconButton.vue'
 
 export type AiCommandTemplate = 'none' | 'fix' | 'translate' | 'style'
 
@@ -100,6 +73,15 @@ export interface CreateCommandSubmitEvent {
   template?: AiCommandTemplate
 }
 
+interface CommandItemOption {
+  key: string
+  toolId: string
+  template?: AiCommandTemplate
+  name: string
+  description?: string
+  icon: string
+}
+
 const props = defineProps<{ open: boolean; tools: CreateCommandToolOption[] }>()
 
 const emit = defineEmits<{
@@ -110,9 +92,6 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const titleId = useId()
 
-const selectedToolId = ref(props.tools[0]?.id ?? '')
-const selectedTemplate = ref<AiCommandTemplate>('none')
-
 function defaultIconForTool(toolId: string): string {
   if (toolId === 'script') return 'mdi:console'
   if (toolId === 'webhook') return 'mdi:webhook'
@@ -120,33 +99,56 @@ function defaultIconForTool(toolId: string): string {
   return 'mdi:puzzle-outline'
 }
 
-const templateOptions = computed<ControlOption[]>(() => [
-  { id: 'none', name: t('commands.templateNone') },
-  { id: 'fix', name: t('commands.templateFix') },
-  { id: 'translate', name: t('commands.templateTranslate') },
-  { id: 'style', name: t('commands.templateStyle') },
-])
+const commandItems = computed<CommandItemOption[]>(() => {
+  const items: CommandItemOption[] = []
 
-watch(
-  () => props.open,
-  (isOpen) => {
-    if (isOpen) {
-      selectedToolId.value = props.tools[0]?.id ?? ''
-      selectedTemplate.value = 'none'
+  for (const tool of props.tools) {
+    if (tool.id === 'core.aiTask') {
+      items.push({
+        key: 'core.aiTask-none',
+        toolId: 'core.aiTask',
+        template: 'none',
+        name: tool.name,
+        description: tool.description,
+        icon: tool.icon ?? defaultIconForTool(tool.id),
+      })
+      items.push({
+        key: 'core.aiTask-fix',
+        toolId: 'core.aiTask',
+        template: 'fix',
+        name: `${tool.name}: ${t('commands.templateFix')}`,
+        icon: 'mdi:auto-fix',
+      })
+      items.push({
+        key: 'core.aiTask-translate',
+        toolId: 'core.aiTask',
+        template: 'translate',
+        name: `${tool.name}: ${t('commands.templateTranslate')}`,
+        icon: 'mdi:translate',
+      })
+      items.push({
+        key: 'core.aiTask-style',
+        toolId: 'core.aiTask',
+        template: 'style',
+        name: `${tool.name}: ${t('commands.templateStyle')}`,
+        icon: 'mdi:palette-outline',
+      })
+    } else {
+      items.push({
+        key: tool.id,
+        toolId: tool.id,
+        name: tool.name,
+        description: tool.description,
+        icon: tool.icon ?? defaultIconForTool(tool.id),
+      })
     }
-  },
-  { immediate: true }
-)
+  }
 
-function handleSubmit() {
-  if (!selectedToolId.value) return
-  emit('submit', {
-    toolId: selectedToolId.value,
-    template:
-      selectedToolId.value === 'core.aiTask'
-        ? selectedTemplate.value
-        : undefined,
-  })
+  return items
+})
+
+function handleSelect(item: CommandItemOption) {
+  emit('submit', { toolId: item.toolId, template: item.template })
 }
 
 function close() {
@@ -162,7 +164,14 @@ function close() {
 .create-command-modal {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-md);
+}
+
+.create-command-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
 }
 
 .create-command-modal-title {
@@ -189,7 +198,7 @@ function close() {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  max-height: 18rem;
+  max-height: 22rem;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-right: var(--space-xxs);
@@ -216,11 +225,6 @@ function close() {
   border-color: var(--app-border);
 }
 
-.create-command-item.is-selected {
-  border-color: var(--color-primary);
-  background-color: var(--app-surface-active, var(--app-hover));
-}
-
 .create-command-item-icon {
   flex-shrink: 0;
   color: var(--color-primary);
@@ -242,29 +246,5 @@ function close() {
 .create-command-item-desc {
   font-size: var(--text-caption);
   color: var(--app-text-muted);
-}
-
-.create-command-item-check {
-  flex-shrink: 0;
-  color: var(--color-primary);
-}
-
-.create-command-field {
-  padding: 0;
-}
-
-.create-command-field :deep(.field-row-control) {
-  width: 100%;
-}
-
-.create-command-field :deep(.select) {
-  width: 100%;
-  max-width: 100%;
-}
-
-.create-command-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-sm);
 }
 </style>

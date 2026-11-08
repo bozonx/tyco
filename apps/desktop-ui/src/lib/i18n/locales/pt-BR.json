@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "Quando ativado, a IA pode chamar outros comandos permitidos.",
     "createModalTitle": "Novo comando",
     "toolTypeLabel": "Tipo de comando",
-    "templateLabel": "Modelo",
-    "templateNone": "Sem modelo (personalizado)",
     "templateFix": "Corrigir erros",
     "templateTranslate": "Traduzir para…",
     "templateStyle": "Estilizar como…",

@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "启用后，AI 可以调用其他被允许的命令。",
     "createModalTitle": "新建命令",
     "toolTypeLabel": "命令类型",
-    "templateLabel": "模板",
-    "templateNone": "无模板 (自定义)",
     "templateFix": "纠正错误",
     "templateTranslate": "翻译为…",
     "templateStyle": "修改风格为…",

@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "When enabled, the AI can invoke other allowed commands.",
     "createModalTitle": "New command",
     "toolTypeLabel": "Command type",
-    "templateLabel": "Template",
-    "templateNone": "No template (custom)",
     "templateFix": "Fix errors",
     "templateTranslate": "Translate to…",
     "templateStyle": "Restyle as…",

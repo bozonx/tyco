@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "Gdy włączone, AI może wywoływać inne dozwolone polecenia.",
     "createModalTitle": "Nowe polecenie",
     "toolTypeLabel": "Typ polecenia",
-    "templateLabel": "Szablon",
-    "templateNone": "Brak szablonu (własny)",
     "templateFix": "Popraw błędy",
     "templateTranslate": "Przetłumacz na…",
     "templateStyle": "Zmień styl na…",

@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "Коли ввімкнено, ШІ може викликати інші дозволені команди.",
     "createModalTitle": "Нова команда",
     "toolTypeLabel": "Тип команди",
-    "templateLabel": "Шаблон",
-    "templateNone": "Без шаблону (власний)",
     "templateFix": "Виправити помилки",
     "templateTranslate": "Перекласти на…",
     "templateStyle": "Стилізувати в дусі…",

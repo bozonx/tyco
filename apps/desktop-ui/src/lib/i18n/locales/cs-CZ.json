@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "Pokud je povoleno, AI může volat další povolené příkazy.",
     "createModalTitle": "Nový příkaz",
     "toolTypeLabel": "Typ příkazu",
-    "templateLabel": "Šablona",
-    "templateNone": "Bez šablony (vlastní)",
     "templateFix": "Opravit chyby",
     "templateTranslate": "Přeložit do…",
     "templateStyle": "Stylizovat v duchu…",

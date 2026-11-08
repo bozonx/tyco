@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "Etkinleştirildiğinde, yapay zekâ izin verilen diğer komutları çağırabilir.",
     "createModalTitle": "Yeni komut",
     "toolTypeLabel": "Komut türü",
-    "templateLabel": "Şablon",
-    "templateNone": "Şablon yok (özel)",
     "templateFix": "Hataları düzelt",
     "templateTranslate": "Dile çevir…",
     "templateStyle": "Tarzda yeniden yaz…",

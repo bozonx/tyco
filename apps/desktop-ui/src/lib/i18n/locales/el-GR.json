@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "Όταν είναι ενεργοποιημένο, το AI μπορεί να καλεί άλλες επιτρεπόμενες εντολές.",
     "createModalTitle": "Νέα εντολή",
     "toolTypeLabel": "Τύπος εντολής",
-    "templateLabel": "Πρότυπο",
-    "templateNone": "Χωρίς πρότυπο (προσαρμοσμένο)",
     "templateFix": "Διόρθωση σφαλμάτων",
     "templateTranslate": "Μετάφραση σε…",
     "templateStyle": "Στυλιζάρισμα στο ύφος…",

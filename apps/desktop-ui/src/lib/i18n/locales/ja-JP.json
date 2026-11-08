@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "有効にすると、AIは許可された他のコマンドを呼び出すことができます。",
     "createModalTitle": "新規コマンド",
     "toolTypeLabel": "コマンドの種類",
-    "templateLabel": "テンプレート",
-    "templateNone": "テンプレートなし (カスタム)",
     "templateFix": "誤りを修正",
     "templateTranslate": "言語に翻訳…",
     "templateStyle": "スタイルを適用…",

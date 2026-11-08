@@ -36,6 +36,7 @@
               ? 'placement-bottom'
               : 'placement-top',
             alignClass,
+            panelClass,
           ]"
           :style="popoverStyle"
           :data-theme="panelTheme"

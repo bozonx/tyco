@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "Wenn aktiviert, kann die KI andere erlaubte Befehle aufrufen.",
     "createModalTitle": "Neuer Befehl",
     "toolTypeLabel": "Befehlstyp",
-    "templateLabel": "Vorlage",
-    "templateNone": "Keine Vorlage (benutzerdefiniert)",
     "templateFix": "Fehler korrigieren",
     "templateTranslate": "Übersetzen nach…",
     "templateStyle": "Stil anpassen…",

@@ -293,8 +293,6 @@
     "aiToolsEnabledInfo": "활성화하면 AI가 허용된 다른 명령을 호출할 수 있습니다.",
     "createModalTitle": "새 명령",
     "toolTypeLabel": "명령 유형",
-    "templateLabel": "템플릿",
-    "templateNone": "템플릿 없음 (사용자 지정)",
     "templateFix": "오류 수정",
     "templateTranslate": "언어로 번역…",
     "templateStyle": "스타일로 다시 쓰기…",
