@@ -85,7 +85,7 @@ describe('ChatPromptsKeypad.vue', () => {
   it('closes on Escape', async () => {
     const wrapper = mountKeypad()
     await wrapper
-      .find('.search-grid-search-input')
+      .find('.search-grid-grid')
       .trigger('keydown', { key: 'Escape' })
     expect(wrapper.emitted('close')).toHaveLength(1)
     wrapper.unmount()

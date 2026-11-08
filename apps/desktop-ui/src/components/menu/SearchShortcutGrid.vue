@@ -1,5 +1,8 @@
 <template>
-  <div class="search-grid" :class="{ 'is-dense': props.dense }">
+  <div
+    class="search-grid"
+    :class="{ 'is-dense': props.dense, 'is-tall': props.tall }"
+  >
     <div class="search-grid-search-row">
       <AppIcon icon="mdi:magnify" size="md" class="search-grid-search-icon" />
       <input
@@ -11,17 +14,32 @@
         :aria-label="props.placeholder"
         spellcheck="false"
         autocomplete="off"
+        @focus="isSearchFocused = true"
+        @blur="isSearchFocused = false"
         @keydown="onSearchKeyDown"
       />
-      <button
-        v-if="query"
-        type="button"
-        class="search-grid-search-clear"
-        :aria-label="t('editor.clear')"
-        @click="clearQuery"
-      >
-        <AppIcon icon="mdi:close" size="sm" />
-      </button>
+      <div class="search-grid-search-extra">
+        <span
+          v-if="pageCount > 1"
+          class="search-grid-page"
+          data-testid="search-grid-page"
+          >{{ currentPage }} / {{ pageCount }}</span
+        >
+        <button
+          v-if="query"
+          type="button"
+          class="search-grid-search-clear"
+          :aria-label="t('editor.clear')"
+          @click="clearQuery"
+        >
+          <AppIcon icon="mdi:close" size="sm" />
+        </button>
+        <KeyboardKey
+          v-else-if="!isSearchFocused && !props.dense"
+          class="search-grid-search-hint"
+          >Ctrl+F</KeyboardKey
+        >
+      </div>
     </div>
 
     <div
@@ -31,6 +49,7 @@
       tabindex="-1"
       role="grid"
       @keydown="onGridKeyDown"
+      @scroll="onGridScroll"
     >
       <div
         v-for="(item, index) in props.items"
@@ -38,17 +57,20 @@
         :ref="(el) => setItemRef(index, el)"
         role="row"
         class="search-grid-cell"
-        :class="{ 'is-selected': index === selectedIndex }"
+        :class="{
+          'is-selected': index === selectedIndex,
+          'is-page-start': index % PAGE === 0,
+        }"
         :aria-selected="index === selectedIndex"
         @click="emit('select', item)"
         @mouseenter="selectedIndex = index"
       >
         <div class="search-grid-cell-top">
           <KeyboardKey
-            v-if="index < SHORTCUT_SLOT_KEYS.length"
+            v-if="hasShortcut(index, pageStart, PAGE)"
             class="search-grid-slot-key"
           >
-            {{ SHORTCUT_SLOT_KEYS[index]?.toUpperCase() }}
+            {{ SHORTCUT_SLOT_KEYS[index - pageStart]?.toUpperCase() }}
           </KeyboardKey>
           <span v-else class="search-grid-slot-index">#{{ index + 1 }}</span>
           <slot name="title" :item="item" :index="index" />
@@ -63,17 +85,26 @@
 </template>
 
 <script setup lang="ts" generic="T extends { id: string }">
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import {
+  hasShortcut,
+  pageCountOf,
+  pageStartAtScroll,
+  pageStartOf,
+  shortcutTarget,
+} from '../../lib/shortcut-grid/shortcut-pages'
 import AppIcon from '../common/AppIcon.vue'
 import KeyboardKey from '../common/KeyboardKey.vue'
 import { SHORTCUT_SLOT_KEYS, type ShortcutSlotKey } from '@tyco/shared'
 
 /**
- * A searched grid of items: the search field has the focus and takes the
- * typing; in the grid, reached with ArrowDown or Tab, the shortcut keys pick
- * the first items, the arrows move, and other letters go back to the search
+ * A searched grid of items. The grid has the focus at first: the shortcut keys
+ * pick the items of the current page, the arrows move, PageUp/PageDown and
+ * scrolling switch pages. Ctrl+F, `/` or another letter go to the search; there
+ * Alt with a shortcut key still picks, and Escape clears the query, then
+ * returns to the grid.
  */
 const props = withDefaults(
   defineProps<{
@@ -83,8 +114,10 @@ const props = withDefaults(
     shortcutsDisabled?: boolean
     /** Smaller cells, e.g. in a popover */
     dense?: boolean
+    /** Taller cells filling the available height */
+    tall?: boolean
   }>(),
-  { shortcutsDisabled: false, dense: false }
+  { shortcutsDisabled: false, dense: false, tall: false }
 )
 
 const query = defineModel<string>('query', { default: '' })
@@ -101,9 +134,14 @@ const COLUMNS = 5
 const PAGE = SHORTCUT_SLOT_KEYS.length
 
 const selectedIndex = ref(0)
+const pageStart = ref(0)
+const isSearchFocused = ref(false)
 const inputRef = ref<HTMLInputElement | null>(null)
 const gridRef = ref<HTMLDivElement | null>(null)
 const itemRefs = ref<(HTMLElement | null)[]>([])
+
+const pageCount = computed(() => pageCountOf(props.items.length, PAGE))
+const currentPage = computed(() => pageStart.value / PAGE + 1)
 
 const setItemRef = (index: number, el: unknown) => {
   itemRefs.value[index] = el as HTMLElement | null
@@ -113,6 +151,8 @@ watch(
   () => props.items,
   () => {
     selectedIndex.value = 0
+    pageStart.value = 0
+    gridRef.value?.scrollTo?.({ top: 0 })
   }
 )
 
@@ -121,8 +161,20 @@ function select(index: number) {
   if (item) emit('select', item)
 }
 
+function showPage(start: number) {
+  if (start === pageStart.value) return
+  pageStart.value = start
+  void nextTick(() => {
+    itemRefs.value[start]?.scrollIntoView?.({
+      block: 'start',
+      inline: 'nearest',
+    })
+  })
+}
+
 function moveTo(index: number) {
   selectedIndex.value = index
+  showPage(pageStartOf(index, PAGE))
   void nextTick(() => {
     itemRefs.value[index]?.scrollIntoView?.({
       block: 'nearest',
@@ -131,14 +183,35 @@ function moveTo(index: number) {
   })
 }
 
+function onGridScroll() {
+  const grid = gridRef.value
+  const first = itemRefs.value[0]
+  const nextPage = itemRefs.value[PAGE]
+  if (!grid || !first) return
+  const start = pageStartAtScroll({
+    scrollTop: grid.scrollTop,
+    pageHeightPx: nextPage ? nextPage.offsetTop - first.offsetTop : 0,
+    isAtBottom: grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 1,
+    count: props.items.length,
+    pageSize: PAGE,
+  })
+  if (start === pageStart.value) return
+  pageStart.value = start
+  if (!hasShortcut(selectedIndex.value, start, PAGE))
+    selectedIndex.value = start
+}
+
 function focusSearch() {
   inputRef.value?.focus()
 }
 
 function focusGrid() {
+  if (!gridRef.value) {
+    focusSearch()
+    return
+  }
   inputRef.value?.blur()
-  gridRef.value?.focus()
-  moveTo(0)
+  gridRef.value.focus()
 }
 
 function clearQuery() {
@@ -152,15 +225,71 @@ function onEscape(event: KeyboardEvent) {
   emit('escape', event.shiftKey)
 }
 
+function isPlainKey(event: KeyboardEvent): boolean {
+  return !event.ctrlKey && !event.altKey && !event.metaKey
+}
+
+function isFindKey(event: KeyboardEvent): boolean {
+  return (
+    (event.ctrlKey || event.metaKey) &&
+    !event.altKey &&
+    event.key.toLowerCase() === 'f'
+  )
+}
+
+/** The shortcut slot of the key pressed, by its physical position first */
+function slotOf(event: KeyboardEvent): number {
+  const codeLetter =
+    event.code.length === 4 && event.code.startsWith('Key')
+      ? event.code.slice(3).toLowerCase()
+      : undefined
+  const letter = (codeLetter || event.key.toLowerCase()) as ShortcutSlotKey
+  return SHORTCUT_SLOT_KEYS.indexOf(letter)
+}
+
+function pickBySlot(event: KeyboardEvent): boolean {
+  const target = shortcutTarget(
+    slotOf(event),
+    pageStart.value,
+    props.items.length
+  )
+  if (target === undefined) return false
+  event.preventDefault()
+  select(target)
+  return true
+}
+
 function onSearchKeyDown(event: KeyboardEvent) {
   if (event.isComposing) return
   if (event.key === 'Escape') {
-    onEscape(event)
+    if (event.shiftKey) {
+      onEscape(event)
+      return
+    }
+    event.preventDefault()
+    event.stopPropagation()
+    if (query.value) query.value = ''
+    else if (props.items.length > 0) focusGrid()
+    else emit('escape', false)
     return
   }
+  if (isFindKey(event)) {
+    event.preventDefault()
+    inputRef.value?.select()
+    return
+  }
+  if (
+    event.altKey &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !props.shortcutsDisabled &&
+    pickBySlot(event)
+  )
+    return
   if (event.key === 'ArrowDown' || event.key === 'Tab') {
     event.preventDefault()
     focusGrid()
+    moveTo(pageStart.value)
     return
   }
   if (event.key === 'Enter') {
@@ -173,6 +302,11 @@ function onGridKeyDown(event: KeyboardEvent) {
   if (event.isComposing || props.shortcutsDisabled) return
   if (event.key === 'Escape') {
     onEscape(event)
+    return
+  }
+  if (isFindKey(event) || event.key === '/') {
+    event.preventDefault()
+    focusSearch()
     return
   }
 
@@ -190,8 +324,8 @@ function onGridKeyDown(event: KeyboardEvent) {
           ? count - 1
           : undefined,
     ArrowUp: () => (index >= COLUMNS ? index - COLUMNS : 'search'),
-    PageDown: () => Math.min(count - 1, index + PAGE),
-    PageUp: () => Math.max(0, index - PAGE),
+    PageDown: () => Math.min(count - 1, pageStart.value + PAGE),
+    PageUp: () => Math.max(0, pageStart.value - PAGE),
     Home: () => 0,
     End: () => count - 1,
   }
@@ -209,23 +343,7 @@ function onGridKeyDown(event: KeyboardEvent) {
     return
   }
 
-  const codeLetter =
-    event.code.length === 4 && event.code.startsWith('Key')
-      ? event.code.slice(3).toLowerCase()
-      : undefined
-  const letter = (codeLetter || event.key.toLowerCase()) as ShortcutSlotKey
-  const shortcutIndex = SHORTCUT_SLOT_KEYS.indexOf(letter)
-  if (
-    shortcutIndex >= 0 &&
-    shortcutIndex < count &&
-    !event.ctrlKey &&
-    !event.altKey &&
-    !event.metaKey
-  ) {
-    event.preventDefault()
-    select(shortcutIndex)
-    return
-  }
+  if (isPlainKey(event) && pickBySlot(event)) return
 
   if (event.key === 'Backspace') {
     event.preventDefault()
@@ -233,20 +351,28 @@ function onGridKeyDown(event: KeyboardEvent) {
     query.value = query.value.slice(0, -1)
     return
   }
-  if (
-    event.key.length === 1 &&
-    !event.ctrlKey &&
-    !event.altKey &&
-    !event.metaKey
-  ) {
+  if (event.key.length === 1 && isPlainKey(event)) {
     event.preventDefault()
     focusSearch()
     query.value += event.key
   }
 }
 
+/** Ctrl+F reaches the search from anywhere in the window */
+function onWindowKeyDown(event: KeyboardEvent) {
+  if (event.defaultPrevented || !isFindKey(event)) return
+  event.preventDefault()
+  focusSearch()
+  inputRef.value?.select()
+}
+
 onMounted(() => {
-  void nextTick(focusSearch)
+  window.addEventListener('keydown', onWindowKeyDown)
+  void nextTick(focusGrid)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onWindowKeyDown)
 })
 
 defineExpose({ focusSearch })
@@ -254,6 +380,7 @@ defineExpose({ focusSearch })
 
 <style scoped>
 .search-grid {
+  --search-grid-page-height: calc(3 * 4.25rem + 2 * var(--space-sm) + 4px);
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -306,9 +433,28 @@ defineExpose({ focusSearch })
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
-.search-grid-search-clear {
+.search-grid-search-extra {
   position: absolute;
   right: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.search-grid-page {
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+.search-grid-search-hint {
+  --key-font-size: var(--text-caption);
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.search-grid-search-clear {
   background: none;
   border: none;
   color: var(--app-text-muted);
@@ -331,10 +477,13 @@ defineExpose({ focusSearch })
   grid-auto-rows: 4.25rem;
   gap: var(--space-sm);
   align-content: start;
-  flex: 1 1 0%;
   min-height: 0;
-  max-height: calc(3 * 4.25rem + 2 * var(--space-sm) + 4px);
+  /* A fixed page of 3 rows, so the layout does not depend on the count */
+  flex: 0 0 auto;
+  height: var(--search-grid-page-height);
   overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-padding: 2px;
   overscroll-behavior: contain;
   padding: 2px;
   outline: none;
@@ -343,7 +492,18 @@ defineExpose({ focusSearch })
 .is-dense .search-grid-grid {
   grid-auto-rows: 2.5rem;
   gap: var(--space-xs);
+  height: auto;
   max-height: calc(4 * 2.5rem + 3 * var(--space-xs) + 4px);
+}
+
+.is-tall .search-grid-grid {
+  grid-auto-rows: 8.5rem;
+  flex: 1 1 0%;
+  height: auto;
+}
+
+.search-grid-cell.is-page-start {
+  scroll-snap-align: start;
 }
 
 .search-grid-cell {
@@ -406,12 +566,19 @@ defineExpose({ focusSearch })
   flex-shrink: 0;
 }
 
+.is-dense .search-grid-empty,
+.is-tall .search-grid-empty {
+  height: auto;
+}
+
 .search-grid-empty {
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 1 1 0%;
   min-height: 4rem;
+  height: var(--search-grid-page-height);
+  box-sizing: border-box;
   color: var(--app-text-muted);
   font-size: var(--text-control);
   text-align: center;
