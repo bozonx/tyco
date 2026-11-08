@@ -86,11 +86,11 @@ describe('web-tools', () => {
       }
     )
 
-    expect(run).toHaveBeenCalledWith('prof-1', {
-      operation: 'search',
-      query: 'test query',
-      count: 3,
-    })
+    expect(run).toHaveBeenCalledWith(
+      'prof-1',
+      { operation: 'search', query: 'test query', count: 3 },
+      'web-call-1'
+    )
     expect(result).toContain('[Test Title](https://test.com)')
   })
 
@@ -102,6 +102,8 @@ describe('web-tools', () => {
         url: 'https://example.com/page',
         title: 'Page Title',
         content: 'Page content here.',
+        offset: 0,
+        totalCharacters: 18,
       } satisfies AiWebToolOutput)
 
     const provider = createWebToolProvider({ run })
@@ -123,11 +125,16 @@ describe('web-tools', () => {
       }
     )
 
-    expect(run).toHaveBeenCalledWith('prof-1', {
-      operation: 'fetch',
-      url: 'https://example.com/page',
-      maxCharacters: 5000,
-    })
+    expect(run).toHaveBeenCalledWith(
+      'prof-1',
+      {
+        operation: 'fetch',
+        url: 'https://example.com/page',
+        maxCharacters: 4500,
+      },
+      'web-call-2'
+    )
+    expect(result).not.toContain('Characters')
     expect(result).toContain('# Page Title')
     expect(result).toContain('Source: https://example.com/page')
     expect(result).toContain('Page content here.')
@@ -141,6 +148,8 @@ describe('web-tools', () => {
         url: 'https://example.com/page',
         title: 'Page Title',
         content: 'Truncated page content.',
+        offset: 0,
+        totalCharacters: 23,
       } satisfies AiWebToolOutput)
 
     const provider = createWebToolProvider({
@@ -166,11 +175,15 @@ describe('web-tools', () => {
       }
     )
 
-    expect(run).toHaveBeenCalledWith('prof-1', {
-      operation: 'fetch',
-      url: 'https://example.com/page',
-      maxCharacters: 5000,
-    })
+    expect(run).toHaveBeenCalledWith(
+      'prof-1',
+      {
+        operation: 'fetch',
+        url: 'https://example.com/page',
+        maxCharacters: 4500,
+      },
+      'web-call-2'
+    )
 
     // When configured max is smaller than outputLimit, use configured max
     await fetchTool.execute(
@@ -182,11 +195,87 @@ describe('web-tools', () => {
       }
     )
 
-    expect(run).toHaveBeenCalledWith('prof-1', {
-      operation: 'fetch',
-      url: 'https://example.com/page',
-      maxCharacters: 8000,
+    expect(run).toHaveBeenCalledWith(
+      'prof-1',
+      {
+        operation: 'fetch',
+        url: 'https://example.com/page',
+        maxCharacters: 7500,
+      },
+      'web-call-3'
+    )
+  })
+
+  it('notes where a cut page goes on and passes the offset back', async () => {
+    const run = vi
+      .fn()
+      .mockResolvedValue({
+        operation: 'fetch',
+        url: 'https://example.com/page',
+        content: 'abc',
+        offset: 10,
+        totalCharacters: 20,
+      } satisfies AiWebToolOutput)
+    const provider = createWebToolProvider({ run })
+    const tools = await provider.tools({
+      profileId: 'prof-1',
+      modelId: 'gemini',
+      settings: undefined,
     })
+    const fetchTool = tools.find((t) => t.name === 'web_fetch')!
+
+    const result = await fetchTool.execute(
+      { url: 'https://example.com/page', offset: 10 },
+      {
+        signal: new AbortController().signal,
+        toolCallId: 'call-5',
+        outputLimitCharacters: 5000,
+      }
+    )
+
+    expect(run.mock.calls[0]?.[1]).toMatchObject({ offset: 10 })
+    expect(result).toContain(
+      '[Characters 10–13 of 20. Call web_fetch with offset 13 to read on.]'
+    )
+  })
+
+  it('scopes the session approval of web_fetch to the host', async () => {
+    const provider = createWebToolProvider({ run: vi.fn() })
+    const tools = await provider.tools({
+      profileId: 'prof-1',
+      modelId: 'gemini',
+      settings: undefined,
+    })
+    const fetchTool = tools.find((t) => t.name === 'web_fetch')!
+    expect(
+      fetchTool.approvalScope?.({ url: 'https://a.example.com/x?y' })
+    ).toBe('a.example.com')
+    expect(fetchTool.approvalScope?.({ url: 'nonsense' })).toBeUndefined()
+  })
+
+  it('cancels the backend request when the call is aborted', async () => {
+    const controller = new AbortController()
+    const cancel = vi.fn()
+    const run = vi.fn(() => new Promise<never>(() => {}))
+    const provider = createWebToolProvider({ run, cancel })
+    const tools = await provider.tools({
+      profileId: 'prof-1',
+      modelId: 'gemini',
+      settings: undefined,
+    })
+    const promise = tools
+      .find((t) => t.name === 'web_fetch')!
+      .execute(
+        { url: 'https://example.com' },
+        {
+          signal: controller.signal,
+          toolCallId: 'call-6',
+          outputLimitCharacters: 5000,
+        }
+      )
+    controller.abort()
+    await expect(promise).rejects.toThrow('The tool call was cancelled')
+    expect(cancel).toHaveBeenCalledWith('web-call-6')
   })
 
   it('rejects empty query in web_search', async () => {

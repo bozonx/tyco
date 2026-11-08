@@ -98,6 +98,7 @@ pub fn run() {
         tauri::Builder::default()
             .manage(services::background::BackgroundServices::default())
             .manage(services::custom_actions::ScriptRuns::default())
+            .manage(services::ai_tools::web::WebRuns::default())
             .manage(services::external::jobs::ExternalJobs::default())
             .manage(services::external::command_library::ToolCatalogState::default())
             .manage(services::chat_images::ChatImages::default())
@@ -227,6 +228,7 @@ pub fn run() {
             commands::ai_files::run_ai_file_tool,
             commands::ai_files::save_chat_file_to_workspace,
             commands::ai_web::run_ai_web_tool,
+            commands::ai_web::cancel_ai_web_tool,
             commands::ai_vault::add_ai_profile_memory_fact,
             commands::ai_vault::clear_ai_profile_memory,
             commands::ai_vault::create_ai_profile,

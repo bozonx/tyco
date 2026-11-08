@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 5920620ce1032a425bc1baef325ce409373df8909698294b96b40226f396de14
+// Source hash: da5ef5657950f1561edda4d35433b56c2ba4e45bc5a3be4f074ea9b4d51df934
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -203,11 +203,25 @@ export type AiProject = {
 
 export type AiWebToolOutput =
   | { operation: 'search'; results: Array<WebSearchResultItem> }
-  | { operation: 'fetch'; url: string; title?: string; content: string }
+  | {
+      operation: 'fetch'
+      url: string
+      title?: string
+      /** The page from `offset`, at most `maxCharacters` long */
+      content: string
+      offset: number
+      totalCharacters: number
+    }
 
 export type AiWebToolRequest =
   | { operation: 'search'; query: string; count?: number }
-  | { operation: 'fetch'; url: string; maxCharacters?: number }
+  | {
+      operation: 'fetch'
+      url: string
+      maxCharacters?: number
+      /** The character the returned page starts at, to read on after a cut */
+      offset?: number
+    }
 
 export type Chat = {
   id: string

@@ -1,5 +1,9 @@
 //! Web search and webpage reading tools using Jina AI.
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
+
+use tokio::sync::Notify;
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use serde::{Deserialize, Serialize};
@@ -38,6 +42,10 @@ pub enum AiWebToolRequest {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         max_characters: Option<usize>,
+        /// The character the returned page starts at, to read on after a cut
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        offset: Option<usize>,
     },
 }
 
@@ -67,7 +75,10 @@ pub enum AiWebToolOutput {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         title: Option<String>,
+        /// The page from `offset`, at most `maxCharacters` long
         content: String,
+        offset: usize,
+        total_characters: usize,
     },
 }
 
@@ -147,9 +158,7 @@ fn format_jina_http_error(
         AppError::Failed(format!("{service} resource not found (HTTP 404)."))
     } else {
         let trimmed = body_text.trim();
-        let is_html = trimmed.to_ascii_lowercase().starts_with("<!doctype")
-            || trimmed.to_ascii_lowercase().starts_with("<html");
-        if is_html || trimmed.is_empty() {
+        if is_html_body(trimmed) || trimmed.is_empty() {
             AppError::Failed(format!("{service} failed with HTTP {code}"))
         } else {
             let snippet: String = trimmed.chars().take(200).collect();
@@ -158,13 +167,58 @@ fn format_jina_http_error(
     }
 }
 
-pub(crate) fn truncate_with_note(content: &str, limit: usize) -> String {
-    let char_count = content.chars().count();
-    if char_count <= limit {
-        return content.to_string();
+fn is_html_body(body: &str) -> bool {
+    let start: String = body.trim_start().chars().take(16).collect();
+    let start = start.to_ascii_lowercase();
+    start.starts_with("<!doctype") || start.starts_with("<html")
+}
+
+/// The part of the page the model asked for and the length of the whole page.
+fn page_slice(content: &str, offset: usize, limit: usize) -> (String, usize) {
+    let total = content.chars().count();
+    (content.chars().skip(offset).take(limit).collect(), total)
+}
+
+/// Web tool calls in flight, so that the chat can stop them.
+#[derive(Default)]
+pub struct WebRuns {
+    runs: Mutex<HashMap<String, Arc<Notify>>>,
+}
+
+impl WebRuns {
+    /// Runs `future` until it ends or `cancel(run_id)` is called.
+    pub async fn run<T>(
+        &self,
+        run_id: Option<&str>,
+        future: impl std::future::Future<Output = Result<T, AppError>>,
+    ) -> Result<T, AppError> {
+        let Some(run_id) = run_id else {
+            return future.await;
+        };
+        let notify = Arc::new(Notify::new());
+        self.lock().insert(run_id.to_string(), notify.clone());
+        let result = tokio::select! {
+            result = future => result,
+            () = notify.notified() => Err(AppError::Failed("The tool call was cancelled".into())),
+        };
+        self.lock().remove(run_id);
+        result
     }
-    let truncated: String = content.chars().take(limit).collect();
-    format!("{truncated}\n\n[Content truncated: showing first {limit} of {char_count} characters]")
+
+    /// Stops a run; false when it is not running.
+    pub fn cancel(&self, run_id: &str) -> bool {
+        match self.lock().remove(run_id) {
+            Some(notify) => {
+                notify.notify_one();
+                true
+            }
+            None => false,
+        }
+    }
+
+    fn lock(&self) -> std::sync::MutexGuard<'_, HashMap<String, Arc<Notify>>> {
+        self.runs.lock().unwrap_or_else(|e| e.into_inner())
+    }
 }
 
 pub async fn run(
@@ -200,7 +254,6 @@ pub async fn run(
                 .get(&target_url)
                 .header("Accept", "application/json")
                 .header("User-Agent", USER_AGENT)
-                .header("X-No-Cache", "true")
                 .header("X-Respond-With", "no-content");
 
             if let Some(token) = secret.filter(|s| !s.trim().is_empty()) {
@@ -264,6 +317,7 @@ pub async fn run(
         AiWebToolRequest::Fetch {
             url,
             max_characters,
+            offset,
         } => {
             let trimmed = url.trim();
             let parsed = url::Url::parse(trimmed)
@@ -305,18 +359,21 @@ pub async fn run(
                 ));
             }
 
+            let offset = offset.unwrap_or(0);
             let limit = max_characters
                 .unwrap_or(DEFAULT_FETCH_MAX_CHARS)
                 .clamp(MIN_FETCH_CHARS, MAX_FETCH_CHARS);
 
             if let Ok(envelope) = serde_json::from_str::<JinaReaderEnvelope>(&body_text) {
                 if let Some(data) = envelope.data {
-                    let content = data.content.unwrap_or_default();
-                    let truncated_content = truncate_with_note(&content, limit);
+                    let (content, total_characters) =
+                        page_slice(&data.content.unwrap_or_default(), offset, limit);
                     return Ok(AiWebToolOutput::Fetch {
                         url: data.url.unwrap_or_else(|| trimmed.to_string()),
                         title: data.title,
-                        content: truncated_content,
+                        content,
+                        offset,
+                        total_characters,
                     });
                 }
                 if let Some(msg) = envelope.message {
@@ -324,22 +381,22 @@ pub async fn run(
                 }
             }
 
-            // Fallback for direct markdown response: check if it looks like HTML error
+            // Fallback for a plain Markdown response; an HTML page is an error page
             let trimmed_body = body_text.trim();
-            let is_html = trimmed_body.to_ascii_lowercase().starts_with("<!doctype")
-                || trimmed_body.to_ascii_lowercase().starts_with("<html");
-            if is_html {
+            if is_html_body(trimmed_body) {
                 return Err(AppError::Failed(
                     "Jina reader returned an unexpected HTML page instead of article content"
                         .into(),
                 ));
             }
 
-            let truncated_content = truncate_with_note(trimmed_body, limit);
+            let (content, total_characters) = page_slice(trimmed_body, offset, limit);
             Ok(AiWebToolOutput::Fetch {
                 url: trimmed.to_string(),
                 title: None,
-                content: truncated_content,
+                content,
+                offset,
+                total_characters,
             })
         }
     }
@@ -459,14 +516,39 @@ mod tests {
     }
 
     #[test]
-    fn test_truncate_with_note() {
-        let short = "Hello World";
-        assert_eq!(truncate_with_note(short, 20), "Hello World");
+    fn test_page_slice() {
+        assert_eq!(page_slice("Hello World", 0, 20), ("Hello World".into(), 11));
 
-        let long = "Привет, это длинный текст для проверки обрезки страниц.";
-        let truncated = truncate_with_note(long, 10);
-        assert!(truncated.starts_with("Привет, эт"));
-        assert!(truncated.contains("[Content truncated: showing first 10 of "));
+        let long = "Привет, это длинный текст";
+        assert_eq!(page_slice(long, 0, 10), ("Привет, эт".into(), 25));
+        assert_eq!(page_slice(long, 20, 10), ("текст".into(), 25));
+        assert_eq!(page_slice(long, 100, 10), (String::new(), 25));
+    }
+
+    #[test]
+    fn test_is_html_body() {
+        assert!(is_html_body("  <!DOCTYPE html><html>"));
+        assert!(is_html_body("<HTML>"));
+        assert!(!is_html_body("# Title"));
+    }
+
+    #[tokio::test]
+    async fn test_web_runs_cancel() {
+        let runs = Arc::new(WebRuns::default());
+        let pending = {
+            let runs = runs.clone();
+            tokio::spawn(async move {
+                runs.run(Some("r1"), std::future::pending::<Result<(), AppError>>())
+                    .await
+            })
+        };
+        while !runs.lock().contains_key("r1") {
+            tokio::task::yield_now().await;
+        }
+        assert!(runs.cancel("r1"));
+        assert!(pending.await.unwrap().is_err());
+        assert!(!runs.cancel("r1"));
+        assert!(runs.run(Some("r2"), async { Ok(1) }).await.is_ok());
     }
 
     #[test]
@@ -537,6 +619,7 @@ mod tests {
             AiWebToolRequest::Fetch {
                 url: "not a url".into(),
                 max_characters: None,
+                offset: None,
             },
         )
         .await;
@@ -548,6 +631,7 @@ mod tests {
             AiWebToolRequest::Fetch {
                 url: "ftp://example.com/file.txt".into(),
                 max_characters: None,
+                offset: None,
             },
         )
         .await;

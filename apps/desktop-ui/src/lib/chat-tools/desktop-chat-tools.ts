@@ -94,8 +94,9 @@ export interface DesktopChatToolsInvoke {
   ): Promise<ProfileMemoryTopic[]>
   (
     command: 'run_ai_web_tool',
-    args: { profileId: string; request: AiWebToolRequest }
+    args: { profileId: string; request: AiWebToolRequest; runId?: string }
   ): Promise<AiWebToolOutput>
+  (command: 'cancel_ai_web_tool', args: { runId: string }): Promise<boolean>
 }
 
 export interface DesktopChatToolsDependencies {
@@ -179,8 +180,13 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
     warn: deps.warn,
   })
   const webToolProvider = createWebToolProvider({
-    run: (profileId, request) =>
-      deps.invoke('run_ai_web_tool', { profileId, request }),
+    run: (profileId, request, runId) =>
+      deps.invoke('run_ai_web_tool', { profileId, request, runId }),
+    cancel: (runId) => {
+      deps.invoke('cancel_ai_web_tool', { runId }).catch((error: unknown) => {
+        deps.warn(`Could not cancel the web tool call: ${String(error)}`)
+      })
+    },
     getMaxCharacters: deps.getFetchMaxCharacters,
     warn: deps.warn,
   })

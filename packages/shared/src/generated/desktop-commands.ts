@@ -114,6 +114,7 @@ export interface DesktopCommands {
     args: { request: HotkeyApplyRequest }
     result: HotkeyApplyResult
   }
+  cancel_ai_web_tool: { args: { runId: string }; result: boolean }
   cancel_net_task: { args: { id: number }; result: void }
   cancel_screenshot_crop: { args: { selectionId: number }; result: void }
   cancel_script_action: { args: { runId: string }; result: boolean }
@@ -355,7 +356,11 @@ export interface DesktopCommands {
     result: AiFileToolOutput
   }
   run_ai_web_tool: {
-    args: { profileId: string; request: AiWebToolRequest }
+    args: {
+      profileId: string
+      request: AiWebToolRequest
+      runId?: string | null
+    }
     result: AiWebToolOutput
   }
   save_ai_profile: { args: { profile: AiProfile }; result: void }

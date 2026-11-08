@@ -1,10 +1,10 @@
 //! The web search and fetch tools of profile chats.
 
-use tauri::AppHandle;
+use tauri::{AppHandle, State};
 
 use crate::{
     errors::AppError,
-    services::ai_tools::web::{self, AiWebToolOutput, AiWebToolRequest},
+    services::ai_tools::web::{self, AiWebToolOutput, AiWebToolRequest, WebRuns},
     services::ai_vault,
     services::secrets::{with_store, SecretStore},
 };
@@ -12,8 +12,10 @@ use crate::{
 #[tauri::command]
 pub async fn run_ai_web_tool(
     app: AppHandle,
+    runs: State<'_, WebRuns>,
     profile_id: String,
     request: AiWebToolRequest,
+    run_id: Option<String>,
 ) -> Result<AiWebToolOutput, AppError> {
     let trimmed_id = profile_id.trim();
     if trimmed_id.is_empty() {
@@ -30,5 +32,11 @@ pub async fn run_ai_web_tool(
     })
     .await?;
 
-    web::run(secret.as_deref(), request).await
+    runs.run(run_id.as_deref(), web::run(secret.as_deref(), request))
+        .await
+}
+
+#[tauri::command]
+pub fn cancel_ai_web_tool(runs: State<'_, WebRuns>, run_id: String) -> bool {
+    runs.cancel(&run_id)
 }
