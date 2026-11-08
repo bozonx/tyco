@@ -49,36 +49,42 @@ describe('SearchShortcutGrid', () => {
     wrapper.unmount()
   })
 
-  it('moves the shortcut keys to the next page with PageDown', async () => {
+  it('moves the shortcut window by whole windows with PageDown', async () => {
     const wrapper = mountGrid(20)
     const grid = wrapper.find('.search-grid-grid')
-    expect(wrapper.find('[data-testid="search-grid-page"]').text()).toBe(
-      '1 / 2'
-    )
 
     await grid.trigger('keydown', { key: 'PageDown' })
     const cells = wrapper.findAll('.search-grid-cell')
-    expect(cells[0]?.find('.search-grid-slot-key').exists()).toBe(false)
-    expect(cells[15]?.find('.search-grid-slot-key').text()).toBe('Q')
-    expect(cells[15]?.classes()).toContain('is-selected')
-    expect(wrapper.find('[data-testid="search-grid-page"]').text()).toBe(
-      '2 / 2'
-    )
+    // The window stops at the last row: items 5..19
+    expect(cells[4]?.find('.search-grid-slot-key').exists()).toBe(false)
+    expect(cells[5]?.find('.search-grid-slot-key').text()).toBe('Q')
+    expect(cells[5]?.classes()).toContain('is-selected')
 
     await grid.trigger('keydown', { key: 'w', code: 'KeyW' })
-    expect(selectedIds(wrapper)).toEqual(['item-16'])
+    expect(selectedIds(wrapper)).toEqual(['item-6'])
 
     await grid.trigger('keydown', { key: 'PageUp' })
     await grid.trigger('keydown', { key: 'w', code: 'KeyW' })
-    expect(selectedIds(wrapper)).toEqual(['item-16', 'item-1'])
+    expect(selectedIds(wrapper)).toEqual(['item-6', 'item-1'])
     wrapper.unmount()
   })
 
-  it('ignores a shortcut key beyond the last item of the page', async () => {
-    const wrapper = mountGrid(17)
+  it('slides the window when the selection leaves it', async () => {
+    const wrapper = mountGrid(30)
     const grid = wrapper.find('.search-grid-grid')
-    await grid.trigger('keydown', { key: 'End' })
-    await grid.trigger('keydown', { key: 't', code: 'KeyT' })
+    for (let step = 0; step < 3; step++)
+      await grid.trigger('keydown', { key: 'ArrowDown' })
+    // Row 3 is selected, the window now starts at row 1
+    await grid.trigger('keydown', { key: 'q', code: 'KeyQ' })
+    expect(selectedIds(wrapper)).toEqual(['item-5'])
+    wrapper.unmount()
+  })
+
+  it('ignores a shortcut key without an item', async () => {
+    const wrapper = mountGrid(3)
+    await wrapper
+      .find('.search-grid-grid')
+      .trigger('keydown', { key: 't', code: 'KeyT' })
     expect(selectedIds(wrapper)).toEqual([])
     wrapper.unmount()
   })

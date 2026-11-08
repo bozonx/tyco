@@ -9,7 +9,7 @@
     "core:window:allow-set-size",
     "allow-answer-external-access",
     "allow-claim-external-job",
-    "allow-open-screenshot-chat",
+    "allow-open-transferred-chat",
     "allow-add-screenshot",
     "allow-retake-screenshot",
     "allow-remove-screenshot",

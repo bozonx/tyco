@@ -90,7 +90,7 @@ own, a view of the chat messages. It is stored with `isQuickRequest` once
 answered, unless `isQuickRequestSavingEnabled` of its scope is off; with it off,
 the recent questions of stored quick requests are not offered either; a question
 that got no answer is not stored and gives way to the next one. Moving it to
-the main chat goes through `open_screenshot_chat` for text and screenshots
+the main chat goes through `open_transferred_chat` for text and screenshots
 alike: the main chat starts it with the same id and saves it without the flag,
 as an ordinary chat. The answers inserted or copied from it are kept in the
 editor history with the `quickAiRequest` origin.

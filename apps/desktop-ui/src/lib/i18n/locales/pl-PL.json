@@ -1487,6 +1487,7 @@
   },
   "screenshot": {
     "failed": "Nie udało się przechwycić ekranu. Sprawdź uprawnienia do przechwytywania i obsługę portalu pulpitu.",
+    "imageLoadFailed": "Nie udało się wczytać zrzutu ekranu; wybór obszaru został anulowany.",
     "selectAreaInstruction": "Przeciągnij, aby zaznaczyć obszar. Escape anuluje.",
     "confirmArea": "Użyj obszaru",
     "confirmAreaInstruction": "Enter lub dwuklik zatwierdza, ponowne przeciągnięcie zmienia zaznaczenie. Escape anuluje.",

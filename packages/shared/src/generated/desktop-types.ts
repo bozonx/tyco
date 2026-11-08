@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 5da616e4728f7987af2457ba507f6606d248d9d3dbb362480e4b4b1eb938b5c9
+// Source hash: 711af9edf7756275f87c0ab9a70012a6dec382433bcf1e0f6d032f8a5a626524
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -292,6 +292,17 @@ export type ChatSummary = {
   /** Unix time in milliseconds. */
   lastMessageAt: number
   isQuickRequest?: boolean
+}
+
+/**
+ * A live conversation, with its images if any, transferred to the main chat
+ * without a history round trip.
+ */
+export type ChatTransfer = {
+  chat: Chat
+  question: string | null
+  /** The profile whose chat receives the conversation; none for Ask AI */
+  profileId: string | null
 }
 
 /**
@@ -639,6 +650,8 @@ export type ScreenshotAreaSelection = {
   /** Echoed by `confirm_screenshot_crop` / `cancel_screenshot_crop`. */
   selectionId: number
   imageId: string
+  /** How the bytes of `image_id` are encoded */
+  mediaType: ScreenshotPreviewMediaType
   screenX: number
   screenY: number
   width: number
@@ -648,13 +661,8 @@ export type ScreenshotAreaSelection = {
 
 export type ScreenshotCaptureMode = 'screen' | 'area'
 
-/** A live screenshot conversation transferred without a history round trip. */
-export type ScreenshotChatTransfer = {
-  chat: Chat
-  question: string | null
-  /** The profile whose chat receives the conversation; none for Ask AI */
-  profileId: string | null
-}
+/** The encoding of the frozen image the area selector shows. */
+export type ScreenshotPreviewMediaType = 'image/png'
 
 /** A request of the webview to run a saved script. */
 export type ScriptActionRequest = {
@@ -966,7 +974,7 @@ export interface DesktopEventPayloads {
   'app://plugins-changed': null
   'app://state-changed': DesktopSnapshot
   'app://hotkeys-changed': null
-  'app://open-screenshot-chat': ScreenshotChatTransfer
+  'app://open-transferred-chat': ChatTransfer
   'app://screenshot-failed': DesktopErrorCode
   'app://screenshot-select-area': ScreenshotAreaSelection
   'app://screenshot-select-area-closed': null

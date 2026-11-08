@@ -417,10 +417,10 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
   },
   transferChat: async ({ chat, question, profileId: pId }) => {
     resultOrThrow(
-      await ipcStore.call('open_screenshot_chat', {
+      await ipcStore.call('open_transferred_chat', {
         transfer: { chat, question: question ?? null, profileId: pId ?? null },
       }),
-      'open_screenshot_chat'
+      'open_transferred_chat'
     )
   },
   saveChat: async (chat: Chat, pId) => {
@@ -599,6 +599,7 @@ const promptHints = computed<QueryPanelHint[]>(() => [
   {
     keys: ['Ctrl', 'Enter'],
     label: t('action.askInChat'),
+    disabled: model.isGenerating.value,
     action: () => switchToChat(),
   },
   ...(model.sourceText.value && !editorNavigation.isEditorPage()
@@ -721,6 +722,8 @@ async function handleQuerySubmit(submitEvent?: QueryPanelSubmit) {
 }
 
 async function switchToChat() {
+  // like its button: the answer is not cut off by moving on
+  if (model.isGenerating.value) return
   isListening.value = false
   try {
     await model.switchToChat(prompt.value)

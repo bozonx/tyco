@@ -17,6 +17,7 @@ vi.mock('../../composables/use-i18n', () => ({
 const selection: ScreenshotAreaSelection = {
   selectionId: 1,
   imageId: 'test-image-id',
+  mediaType: 'image/png',
   screenX: 0,
   screenY: 0,
   // jsdom views are 1024 × 768, so the image is twice the view size
@@ -45,12 +46,27 @@ describe('ScreenshotSelector', () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:screenshot-test')
   })
 
-  it('emits cancel if image loading fails', async () => {
+  it('types the image by the media type of the selection', async () => {
+    mocks.getImage.mockResolvedValue(new Uint8Array([1, 2, 3]))
+    const blobs: Blob[] = []
+    URL.createObjectURL = vi.fn((blob: Blob | MediaSource) => {
+      blobs.push(blob as Blob)
+      return 'blob:screenshot-test'
+    })
+    const wrapper = mount(ScreenshotSelector, { props: { selection } })
+    await flushPromises()
+
+    expect(blobs[0].type).toBe('image/png')
+    wrapper.unmount()
+  })
+
+  it('emits failed if image loading fails', async () => {
     mocks.getImage.mockRejectedValue(new Error('Failed to load image'))
     const wrapper = mount(ScreenshotSelector, { props: { selection } })
     await flushPromises()
 
-    expect(wrapper.emitted('cancel')).toHaveLength(1)
+    expect(wrapper.emitted('failed')).toHaveLength(1)
+    expect(wrapper.emitted('cancel')).toBeUndefined()
   })
 
   it('cancels on Escape keydown', async () => {

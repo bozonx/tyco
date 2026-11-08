@@ -1484,6 +1484,7 @@
   },
   "screenshot": {
     "failed": "Nem sikerült rögzíteni a képernyőt. Ellenőrizze a képernyőrögzítési engedélyeket és az asztali portál támogatását.",
+    "imageLoadFailed": "A képernyőkép nem tölthető be, a területkijelölés megszakadt.",
     "selectAreaInstruction": "Húzással jelöljön ki egy területet. Az Escape megszakítja.",
     "confirmArea": "Terület használata",
     "confirmAreaInstruction": "Enter vagy dupla kattintás: jóváhagyás, újabb húzás: újrarajzolás. Az Escape megszakítja.",

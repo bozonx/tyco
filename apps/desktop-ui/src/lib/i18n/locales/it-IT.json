@@ -1487,6 +1487,7 @@
   },
   "screenshot": {
     "failed": "Impossibile acquisire lo schermo. Controlla le autorizzazioni di acquisizione e il supporto del portale desktop.",
+    "imageLoadFailed": "Impossibile caricare lo screenshot; la selezione dell’area è stata annullata.",
     "selectAreaInstruction": "Trascina per selezionare un’area. Esc per annullare.",
     "confirmArea": "Usa area",
     "confirmAreaInstruction": "Premi Invio o fai doppio clic per confermare, trascina di nuovo per ridisegnare. Esc annulla.",

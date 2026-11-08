@@ -1487,6 +1487,7 @@
   },
   "screenshot": {
     "failed": "Nije moguće snimiti zaslon. Provjerite dopuštenja za snimanje i podršku portala radne površine.",
+    "imageLoadFailed": "Snimka zaslona nije se mogla učitati; odabir područja je otkazan.",
     "selectAreaInstruction": "Povucite za odabir područja. Escape poništava.",
     "confirmArea": "Koristi područje",
     "confirmAreaInstruction": "Enter ili dvoklik potvrđuje, ponovno povlačenje mijenja odabir. Escape poništava.",

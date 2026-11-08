@@ -30,7 +30,7 @@ Stage 1 implementation notes:
   it; a first request that failed or was stopped without an answer keeps it
   replaceable.
 - Screenshot quick sessions are not saved to editor history; transfer to the
-  main chat (`open_screenshot_chat`) persists through normal chat history.
+  main chat (`open_transferred_chat`) persists through normal chat history.
 
 Stage 2 implementation notes:
 

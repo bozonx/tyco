@@ -26,6 +26,7 @@
       :selection="activeAreaSelection"
       @confirm="onConfirmCrop"
       @cancel="onCancelCrop"
+      @failed="onSelectorFailed"
     />
     <div
       v-show="!activeAreaSelection"
@@ -210,6 +211,18 @@ const onCancelCrop = async () => {
   activeAreaSelection.value = null
   await ipcStore.call('cancel_screenshot_crop', {
     selectionId: selection.selectionId,
+  })
+}
+
+/** Without the image there is nothing to select on: tell why it ended */
+const onSelectorFailed = async () => {
+  await onCancelCrop()
+  void ipcStore.call('show_status_overlay', {
+    request: {
+      kind: 'error',
+      text: t('screenshot.imageLoadFailed'),
+      hideAfterMs: 6000,
+    },
   })
 }
 

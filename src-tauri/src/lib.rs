@@ -324,7 +324,7 @@ pub fn run() {
             commands::system::show_status_overlay,
             commands::voice::start_voice_capture,
             commands::voice::stop_voice_capture,
-            commands::window::open_screenshot_chat,
+            commands::window::open_transferred_chat,
             commands::window::add_screenshot,
             commands::window::retake_screenshot,
             commands::window::remove_screenshot,

@@ -1487,6 +1487,7 @@
   },
   "screenshot": {
     "failed": "Der Bildschirm konnte nicht aufgenommen werden. Prüfen Sie die Aufnahmeberechtigungen und die Unterstützung des Desktop-Portals.",
+    "imageLoadFailed": "Der Screenshot konnte nicht geladen werden, die Bereichsauswahl wurde abgebrochen.",
     "selectAreaInstruction": "Ziehen Sie, um einen Bereich auszuwählen. Escape bricht ab.",
     "confirmArea": "Bereich verwenden",
     "confirmAreaInstruction": "Enter oder Doppelklick bestätigt, erneutes Ziehen wählt neu. Escape bricht ab.",

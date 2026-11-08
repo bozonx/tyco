@@ -20,6 +20,7 @@ import type {
   ChatImage,
   ChatImageMeta,
   ChatSummary,
+  ChatTransfer,
   ClientLogLevel,
   CommandRunRecord,
   CropRect,
@@ -40,7 +41,6 @@ import type {
   ProfileMemorySearchResult,
   ProfileMemoryTopic,
   ScreenshotCaptureMode,
-  ScreenshotChatTransfer,
   ScriptActionRequest,
   ScriptExecutionResult,
   SecretStatus,
@@ -240,16 +240,16 @@ export interface DesktopCommands {
     }
     result: void
   }
-  open_screenshot_chat: {
-    args: { transfer: ScreenshotChatTransfer; activationId: number }
-    result: void
-  }
   open_socket: {
     args: { request: SocketRequest; onEvent: DesktopChannel }
     result: number
   }
   open_storage_location: { args: { kind: StorageKind }; result: void }
   open_system_hotkey_settings: { args: undefined; result: void }
+  open_transferred_chat: {
+    args: { transfer: ChatTransfer; activationId: number }
+    result: void
+  }
   paste_into_target_and_hide: {
     args: { activationId: number; text: string }
     result: void
@@ -469,7 +469,7 @@ export const ACTIVATION_DESKTOP_COMMANDS = [
   'open_in_browser_and_hide',
   'open_main_chat',
   'open_main_editor',
-  'open_screenshot_chat',
+  'open_transferred_chat',
   'paste_into_target_and_hide',
   'remove_screenshot',
   'retake_screenshot',

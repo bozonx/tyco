@@ -1487,6 +1487,7 @@
   },
   "screenshot": {
     "failed": "Could not capture the screen. Check screen capture permissions and desktop portal support.",
+    "imageLoadFailed": "Could not load the screenshot; area selection was cancelled.",
     "selectAreaInstruction": "Drag to select an area. Press Escape to cancel.",
     "confirmArea": "Use area",
     "confirmAreaInstruction": "Press Enter or double-click to confirm, drag again to redraw. Escape cancels.",

@@ -95,7 +95,7 @@ vi.mock('../screenshot/ScreenshotSelector.vue', () => ({
   default: {
     name: 'ScreenshotSelector',
     props: ['selection'],
-    emits: ['confirm', 'cancel'],
+    emits: ['confirm', 'cancel', 'failed'],
     template: '<div class="mock-screenshot-selector" />',
   },
 }))
@@ -487,6 +487,7 @@ describe('quick overlay menus', () => {
         await desktop.emit(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA, {
           selectionId: 42,
           imageId: 'test-img',
+          mediaType: 'image/png',
           screenX: 0,
           screenY: 0,
           width: 1920,
@@ -531,6 +532,7 @@ describe('quick overlay menus', () => {
         await desktop.emit(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA, {
           selectionId: 42,
           imageId: 'test-img',
+          mediaType: 'image/png',
           screenX: 0,
           screenY: 0,
           width: 1920,
@@ -554,6 +556,39 @@ describe('quick overlay menus', () => {
       }
     })
 
+    it('cancels the selection and tells why when the image cannot be read', async () => {
+      stubResizeObserver()
+      desktop.setState({ isWindowShown: true })
+      desktop.backend.handle('show_status_overlay', () => undefined)
+      const wrapper = mount(QuickOverlay, {
+        global: { plugins: [desktop.pinia] },
+      })
+      await flushPromises()
+      try {
+        await desktop.emit(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA, {
+          selectionId: 42,
+          imageId: 'test-img',
+          mediaType: 'image/png',
+          screenX: 0,
+          screenY: 0,
+          width: 1920,
+          height: 1080,
+          scaleFactor: 1,
+        })
+        await flushPromises()
+
+        wrapper.findComponent({ name: 'ScreenshotSelector' }).vm.$emit('failed')
+        await flushPromises()
+
+        expect(
+          desktop.backend.callsOf('cancel_screenshot_crop')
+        ).toContainEqual({ selectionId: 42 })
+        expect(desktop.backend.callsOf('show_status_overlay')).toHaveLength(1)
+      } finally {
+        wrapper.unmount()
+      }
+    })
+
     it('closes the selector when the backend ends the selection', async () => {
       stubResizeObserver()
       desktop.setState({ isWindowShown: true })
@@ -565,6 +600,7 @@ describe('quick overlay menus', () => {
         await desktop.emit(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA, {
           selectionId: 42,
           imageId: 'test-img',
+          mediaType: 'image/png',
           screenX: 0,
           screenY: 0,
           width: 1920,

@@ -149,11 +149,11 @@ describe('application window events', () => {
     f.controller.stop()
   })
 
-  it('starts a transferred screenshot chat and leaves its question unsent', async () => {
+  it('starts a transferred chat and leaves its question unsent', async () => {
     const f = fixture()
     await f.controller.start()
     const messages = [{ role: 'user' as const, content: 'What is this?' }]
-    await f.deliver(DESKTOP_EVENTS.OPEN_SCREENSHOT_CHAT, {
+    await f.deliver(DESKTOP_EVENTS.OPEN_TRANSFERRED_CHAT, {
       chat: { id: 'c1', title: 'Shot', lastMessageAt: 1, messages },
       question: ' And this? ',
       profileId: null,
@@ -171,7 +171,7 @@ describe('application window events', () => {
     f.controller.stop()
   })
 
-  it('starts a transferred screenshot chat in its profile chat', async () => {
+  it('starts a transferred chat in its profile chat', async () => {
     const profileChatInstance = {
       startChat: vi.fn(async () => {}),
       openLastChat: vi.fn(async () => {}),
@@ -187,7 +187,7 @@ describe('application window events', () => {
     })
     await f.controller.start()
     const messages = [{ role: 'user' as const, content: 'What is this?' }]
-    await f.deliver(DESKTOP_EVENTS.OPEN_SCREENSHOT_CHAT, {
+    await f.deliver(DESKTOP_EVENTS.OPEN_TRANSFERRED_CHAT, {
       chat: { id: 'c1', title: 'Shot', lastMessageAt: 1, messages },
       question: null,
       profileId: 'assistant',

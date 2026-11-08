@@ -120,8 +120,8 @@ export function createAppWindowController(
     else chat.focusChatInput()
   }
 
-  async function openScreenshotChat(
-    payload: EventPayload<typeof DESKTOP_EVENTS.OPEN_SCREENSHOT_CHAT>
+  async function openTransferredChat(
+    payload: EventPayload<typeof DESKTOP_EVENTS.OPEN_TRANSFERRED_CHAT>
   ) {
     const isCurrent = beginChatRequest()
     const chat = await goToChatOf(payload.profileId)
@@ -176,7 +176,7 @@ export function createAppWindowController(
     } else {
       subscriptions.push(
         subscribe(DESKTOP_EVENTS.OPEN_MAIN_CHAT, openChat),
-        subscribe(DESKTOP_EVENTS.OPEN_SCREENSHOT_CHAT, openScreenshotChat),
+        subscribe(DESKTOP_EVENTS.OPEN_TRANSFERRED_CHAT, openTransferredChat),
         subscribe(DESKTOP_EVENTS.OPEN_MAIN_EDITOR, async (payload) => {
           deps.applyEditorTransfer(
             payload.text ?? undefined,

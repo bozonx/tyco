@@ -1487,6 +1487,7 @@
   },
   "screenshot": {
     "failed": "Não foi possível capturar a tela. Verifique as permissões de captura e o suporte ao portal da área de trabalho.",
+    "imageLoadFailed": "Não foi possível carregar a captura de tela; a seleção de área foi cancelada.",
     "selectAreaInstruction": "Arraste para selecionar uma área. Esc cancela.",
     "confirmArea": "Usar área",
     "confirmAreaInstruction": "Pressione Enter ou clique duas vezes para confirmar; arraste de novo para refazer. Esc cancela.",

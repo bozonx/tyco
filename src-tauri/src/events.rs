@@ -67,7 +67,7 @@ desktop_events! {
     PluginsChanged = "app://plugins-changed" => ();
     StateChanged = "app://state-changed" => DesktopSnapshot;
     HotkeysChanged = "app://hotkeys-changed" => ();
-    OpenScreenshotChat = "app://open-screenshot-chat" => crate::models::ScreenshotChatTransfer;
+    OpenTransferredChat = "app://open-transferred-chat" => crate::models::ChatTransfer;
     ScreenshotFailed = "app://screenshot-failed" => crate::errors::ErrorCode;
     ScreenshotSelectArea = "app://screenshot-select-area" => crate::models::ScreenshotAreaSelection;
     /// The area selector closed: answered, cancelled or no longer current.

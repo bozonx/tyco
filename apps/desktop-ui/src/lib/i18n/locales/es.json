@@ -1487,6 +1487,7 @@
   },
   "screenshot": {
     "failed": "No se pudo capturar la pantalla. Comprueba los permisos de captura y la compatibilidad del portal del escritorio.",
+    "imageLoadFailed": "No se pudo cargar la captura de pantalla; se canceló la selección de área.",
     "selectAreaInstruction": "Arrastra para seleccionar un área. Escape cancela.",
     "confirmArea": "Usar área",
     "confirmAreaInstruction": "Pulsa Intro o haz doble clic para confirmar; arrastra de nuevo para redibujar. Escape cancela.",

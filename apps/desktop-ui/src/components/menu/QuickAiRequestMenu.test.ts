@@ -269,6 +269,27 @@ describe('QuickAiRequestMenu', () => {
     )
   })
 
+  it('does not move to the chat while the answer is being generated', async () => {
+    const openChatSpy = vi.fn()
+    desktop.backend.handle('open_main_chat', openChatSpy)
+    desktop.backend.handle('start_fetch', () => new Promise(() => undefined))
+
+    const wrapper = mountMenu({ text: 'Context' })
+    const input = wrapper.find('.query-panel-input')
+    await input.setValue('First question')
+    await input.trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+    expect(wrapper.find('.stop-action-btn').exists()).toBe(true)
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true })
+    )
+    await flushPromises()
+    expect(openChatSpy).not.toHaveBeenCalled()
+    expect(wrapper.find('.stop-action-btn').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
   describe('voice input and send button', () => {
     it('opens with VoiceRecognitionMenu bar when inputMode is voice', () => {
       const wrapper = mountMenu({ inputMode: 'voice' })

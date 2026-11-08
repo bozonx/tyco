@@ -1487,6 +1487,7 @@
   },
   "screenshot": {
     "failed": "Impossible de capturer l’écran. Vérifiez les autorisations de capture et la prise en charge du portail du bureau.",
+    "imageLoadFailed": "Impossible de charger la capture d’écran ; la sélection de zone a été annulée.",
     "selectAreaInstruction": "Faites glisser pour sélectionner une zone. Échap pour annuler.",
     "confirmArea": "Utiliser la zone",
     "confirmAreaInstruction": "Entrée ou double-clic pour confirmer, glissez à nouveau pour redessiner. Échap annule.",

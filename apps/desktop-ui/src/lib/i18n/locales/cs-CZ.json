@@ -1481,6 +1481,7 @@
   },
   "screenshot": {
     "failed": "Obrazovku se nepodařilo zachytit. Zkontrolujte oprávnění k zachycení a podporu portálu plochy.",
+    "imageLoadFailed": "Snímek obrazovky se nepodařilo načíst, výběr oblasti byl zrušen.",
     "selectAreaInstruction": "Tažením vyberte oblast. Escape zruší.",
     "confirmArea": "Použít oblast",
     "confirmAreaInstruction": "Enter nebo dvojklik potvrdí, novým tažením výběr překreslíte. Escape zruší.",

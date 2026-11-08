@@ -114,7 +114,12 @@ import type { CropRect, ScreenshotAreaSelection } from '@tyco/shared'
 
 const props = defineProps<{ selection: ScreenshotAreaSelection }>()
 
-const emit = defineEmits<{ confirm: [crop: CropRect]; cancel: [] }>()
+const emit = defineEmits<{
+  confirm: [crop: CropRect]
+  cancel: []
+  /** The frozen image could not be read */
+  failed: []
+}>()
 
 const { t } = useI18n()
 
@@ -221,17 +226,11 @@ onMounted(async () => {
   rootRef.value?.focus()
   try {
     const bytes = await getChatImage(props.selection.imageId)
-    const isPng =
-      bytes.length >= 4 &&
-      bytes[0] === 0x89 &&
-      bytes[1] === 0x50 &&
-      bytes[2] === 0x4e &&
-      bytes[3] === 0x47
     imageUrl.value = URL.createObjectURL(
-      new Blob([bytes], { type: isPng ? 'image/png' : 'image/webp' })
+      new Blob([bytes], { type: props.selection.mediaType })
     )
   } catch {
-    onCancel()
+    emit('failed')
   }
 })
 

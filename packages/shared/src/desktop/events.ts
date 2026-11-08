@@ -8,7 +8,7 @@ export const DESKTOP_EVENTS = {
   STORAGE_CHANGED: 'app://storage-changed',
   STATE_CHANGED: 'app://state-changed',
   HOTKEYS_CHANGED: 'app://hotkeys-changed',
-  OPEN_SCREENSHOT_CHAT: 'app://open-screenshot-chat',
+  OPEN_TRANSFERRED_CHAT: 'app://open-transferred-chat',
   SCREENSHOT_FAILED: 'app://screenshot-failed',
   SCREENSHOT_SELECT_AREA: 'app://screenshot-select-area',
   /** The area selector closed: answered, cancelled or no longer current */

@@ -331,10 +331,11 @@ mod validation_tests {
     }
 }
 
-/// A live screenshot conversation transferred without a history round trip.
+/// A live conversation, with its images if any, transferred to the main chat
+/// without a history round trip.
 #[derive(Debug, Clone, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
-pub struct ScreenshotChatTransfer {
+pub struct ChatTransfer {
     pub chat: Chat,
     pub question: Option<String>,
     /// The profile whose chat receives the conversation; none for Ask AI

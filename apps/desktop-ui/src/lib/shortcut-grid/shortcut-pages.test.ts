@@ -2,59 +2,54 @@ import { describe, expect, it } from 'vitest'
 
 import {
   hasShortcut,
-  pageCountOf,
-  pageStartAtScroll,
-  pageStartOf,
+  maxWindowStart,
+  rowStartOf,
+  shiftWindow,
   shortcutTarget,
+  windowStartAtScroll,
+  windowStartFor,
 } from './shortcut-pages'
 
-describe('shortcut pages', () => {
-  it('finds the page start of an index', () => {
-    expect(pageStartOf(0, 15)).toBe(0)
-    expect(pageStartOf(14, 15)).toBe(0)
-    expect(pageStartOf(15, 15)).toBe(15)
-    expect(pageStartOf(31, 15)).toBe(30)
+const grid = { columns: 5, size: 15, count: 17 }
+
+describe('shortcut window', () => {
+  it('finds the row start of an index', () => {
+    expect(rowStartOf(0, 5)).toBe(0)
+    expect(rowStartOf(7, 5)).toBe(5)
   })
 
-  it('counts pages, at least one', () => {
-    expect(pageCountOf(0, 15)).toBe(1)
-    expect(pageCountOf(15, 15)).toBe(1)
-    expect(pageCountOf(16, 15)).toBe(2)
+  it('ends the latest window at the last row', () => {
+    expect(maxWindowStart(grid)).toBe(5)
+    expect(maxWindowStart({ ...grid, count: 15 })).toBe(0)
+    expect(maxWindowStart({ ...grid, count: 40 })).toBe(25)
   })
 
-  it('maps a slot to an item of the current page', () => {
-    expect(shortcutTarget(1, 15, 40)).toBe(16)
-    expect(shortcutTarget(10, 30, 35)).toBeUndefined()
+  it('starts the window at the first visible row', () => {
+    expect(windowStartAtScroll(0, 100, grid)).toBe(0)
+    expect(windowStartAtScroll(60, 100, grid)).toBe(5)
+    expect(windowStartAtScroll(900, 100, grid)).toBe(5)
+    expect(windowStartAtScroll(50, 0, grid)).toBe(0)
+  })
+
+  it('shifts by whole windows within the grid', () => {
+    const long = { ...grid, count: 40 }
+    expect(shiftWindow(0, 1, long)).toBe(15)
+    expect(shiftWindow(15, 1, long)).toBe(25)
+    expect(shiftWindow(5, -1, long)).toBe(0)
+  })
+
+  it('moves the window just enough to keep an index inside', () => {
+    const long = { ...grid, count: 40 }
+    expect(windowStartFor(3, 0, long)).toBe(0)
+    expect(windowStartFor(16, 0, long)).toBe(5)
+    expect(windowStartFor(7, 15, long)).toBe(5)
+  })
+
+  it('maps a slot to an item of the window', () => {
+    expect(shortcutTarget(0, 5, 17)).toBe(5)
+    expect(shortcutTarget(12, 5, 17)).toBeUndefined()
     expect(shortcutTarget(-1, 0, 5)).toBeUndefined()
-  })
-
-  it('marks only the items of the current page', () => {
-    expect(hasShortcut(14, 0, 15)).toBe(true)
-    expect(hasShortcut(15, 0, 15)).toBe(false)
-    expect(hasShortcut(15, 15, 15)).toBe(true)
-  })
-
-  it('takes the nearest page at a scroll offset', () => {
-    const base = { pageHeightPx: 300, count: 40, pageSize: 15 }
-    expect(
-      pageStartAtScroll({ ...base, scrollTop: 0, isAtBottom: false })
-    ).toBe(0)
-    expect(
-      pageStartAtScroll({ ...base, scrollTop: 160, isAtBottom: false })
-    ).toBe(15)
-    expect(
-      pageStartAtScroll({ ...base, scrollTop: 900, isAtBottom: false })
-    ).toBe(30)
-    expect(
-      pageStartAtScroll({ ...base, scrollTop: 100, isAtBottom: true })
-    ).toBe(30)
-    expect(
-      pageStartAtScroll({
-        ...base,
-        scrollTop: 50,
-        pageHeightPx: 0,
-        isAtBottom: false,
-      })
-    ).toBe(0)
+    expect(hasShortcut(5, 5, 15)).toBe(true)
+    expect(hasShortcut(4, 5, 15)).toBe(false)
   })
 })

@@ -1487,6 +1487,7 @@
   },
   "screenshot": {
     "failed": "Ecranul nu a putut fi capturat. Verifică permisiunile de captură și compatibilitatea portalului desktop.",
+    "imageLoadFailed": "Captura de ecran nu a putut fi încărcată; selecția zonei a fost anulată.",
     "selectAreaInstruction": "Trageți pentru a selecta o zonă. Escape anulează.",
     "confirmArea": "Folosește zona",
     "confirmAreaInstruction": "Enter sau dublu clic confirmă, trageți din nou pentru a redesena. Escape anulează.",

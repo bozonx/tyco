@@ -166,6 +166,8 @@ fn show_selector(
             crate::models::ScreenshotAreaSelection {
                 selection_id,
                 image_id,
+                // `ChatImageStore::prepare_selector_preview` encodes a PNG
+                media_type: crate::models::ScreenshotPreviewMediaType::Png,
                 screen_x: screen.map_or(0, |s| s.x),
                 screen_y: screen.map_or(0, |s| s.y),
                 width,
@@ -431,7 +433,7 @@ pub fn remove(
 
 pub fn open_chat(
     app: &AppHandle,
-    transfer: crate::models::ScreenshotChatTransfer,
+    transfer: crate::models::ChatTransfer,
     activation_id: u64,
 ) -> Result<(), AppError> {
     let handle = app.clone();
@@ -462,7 +464,7 @@ pub fn open_chat(
             images.hold_undo(&format!("main/undo/screenshot-{activation_id}"), id);
         }
         drop(images);
-        super::window_visibility::show_main_with::<crate::events::OpenScreenshotChat>(
+        super::window_visibility::show_main_with::<crate::events::OpenTransferredChat>(
             &handle,
             crate::models::ActivationMode::Chat,
             transfer,

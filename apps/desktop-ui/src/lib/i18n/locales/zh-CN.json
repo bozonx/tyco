@@ -1481,6 +1481,7 @@
   },
   "screenshot": {
     "failed": "无法截取屏幕。请检查屏幕捕获权限和桌面门户支持。",
+    "imageLoadFailed": "无法加载截图，已取消区域选择。",
     "selectAreaInstruction": "拖动以选择区域。按 Escape 取消。",
     "confirmArea": "使用此区域",
     "confirmAreaInstruction": "按 Enter 或双击确认，再次拖动可重新选择。按 Escape 取消。",

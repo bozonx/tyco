@@ -1484,6 +1484,7 @@
   },
   "screenshot": {
     "failed": "Ekran yakalanamadı. Ekran yakalama izinlerini ve masaüstü portalı desteğini kontrol edin.",
+    "imageLoadFailed": "Ekran görüntüsü yüklenemedi; alan seçimi iptal edildi.",
     "selectAreaInstruction": "Bir alan seçmek için sürükleyin. Escape iptal eder.",
     "confirmArea": "Alanı kullan",
     "confirmAreaInstruction": "Onaylamak için Enter'a basın veya çift tıklayın, yeniden çizmek için tekrar sürükleyin. Escape iptal eder.",

@@ -19,12 +19,6 @@
         @keydown="onSearchKeyDown"
       />
       <div class="search-grid-search-extra">
-        <span
-          v-if="pageCount > 1"
-          class="search-grid-page"
-          data-testid="search-grid-page"
-          >{{ currentPage }} / {{ pageCount }}</span
-        >
         <button
           v-if="query"
           type="button"
@@ -86,11 +80,12 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import {
+  type GridWindow,
   hasShortcut,
-  pageCountOf,
-  pageStartAtScroll,
-  pageStartOf,
+  shiftWindow,
   shortcutTarget,
+  windowStartAtScroll,
+  windowStartFor,
 } from '../../lib/shortcut-grid/shortcut-pages'
 import AppIcon from '../common/AppIcon.vue'
 import KeyboardKey from '../common/KeyboardKey.vue'
@@ -98,9 +93,9 @@ import { SHORTCUT_SLOT_KEYS, type ShortcutSlotKey } from '@tyco/shared'
 
 /**
  * A searched grid of items. The grid has the focus at first: the shortcut keys
- * pick the items of the current page, the arrows move, PageUp/PageDown and
- * scrolling switch pages. Ctrl+F, `/` or another letter go to the search; there
- * Alt with a shortcut key still picks, and Escape clears the query, then
+ * pick the 15 items from the first visible row; scrolling, PageUp/PageDown and
+ * the arrows move this window. Ctrl+F, `/` or another letter go to the search;
+ * there Alt with a shortcut key still picks, and Escape clears the query, then
  * returns to the grid.
  */
 const props = withDefaults(
@@ -137,8 +132,11 @@ const inputRef = ref<HTMLInputElement | null>(null)
 const gridRef = ref<HTMLDivElement | null>(null)
 const itemRefs = ref<(HTMLElement | null)[]>([])
 
-const pageCount = computed(() => pageCountOf(props.items.length, PAGE))
-const currentPage = computed(() => pageStart.value / PAGE + 1)
+const gridWindow = computed<GridWindow>(() => ({
+  columns: COLUMNS,
+  size: PAGE,
+  count: props.items.length,
+}))
 
 const setItemRef = (index: number, el: unknown) => {
   itemRefs.value[index] = el as HTMLElement | null
@@ -158,8 +156,9 @@ function select(index: number) {
   if (item) emit('select', item)
 }
 
-function showPage(start: number) {
-  if (start === pageStart.value) return
+/** Moves the shortcut window to `start` and scrolls it to the top */
+function showPage(start: number): number {
+  if (start === pageStart.value) return start
   pageStart.value = start
   void nextTick(() => {
     itemRefs.value[start]?.scrollIntoView?.({
@@ -167,11 +166,12 @@ function showPage(start: number) {
       inline: 'nearest',
     })
   })
+  return start
 }
 
 function moveTo(index: number) {
   selectedIndex.value = index
-  showPage(pageStartOf(index, PAGE))
+  showPage(windowStartFor(index, pageStart.value, gridWindow.value))
   void nextTick(() => {
     itemRefs.value[index]?.scrollIntoView?.({
       block: 'nearest',
@@ -183,15 +183,13 @@ function moveTo(index: number) {
 function onGridScroll() {
   const grid = gridRef.value
   const first = itemRefs.value[0]
-  const nextPage = itemRefs.value[PAGE]
+  const nextRow = itemRefs.value[COLUMNS]
   if (!grid || !first) return
-  const start = pageStartAtScroll({
-    scrollTop: grid.scrollTop,
-    pageHeightPx: nextPage ? nextPage.offsetTop - first.offsetTop : 0,
-    isAtBottom: grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 1,
-    count: props.items.length,
-    pageSize: PAGE,
-  })
+  const start = windowStartAtScroll(
+    grid.scrollTop,
+    nextRow ? nextRow.offsetTop - first.offsetTop : 0,
+    gridWindow.value
+  )
   if (start === pageStart.value) return
   pageStart.value = start
   if (!hasShortcut(selectedIndex.value, start, PAGE))
@@ -321,8 +319,8 @@ function onGridKeyDown(event: KeyboardEvent) {
           ? count - 1
           : undefined,
     ArrowUp: () => (index >= COLUMNS ? index - COLUMNS : 'search'),
-    PageDown: () => Math.min(count - 1, pageStart.value + PAGE),
-    PageUp: () => Math.max(0, pageStart.value - PAGE),
+    PageDown: () => showPage(shiftWindow(pageStart.value, 1, gridWindow.value)),
+    PageUp: () => showPage(shiftWindow(pageStart.value, -1, gridWindow.value)),
     Home: () => 0,
     End: () => count - 1,
   }
@@ -436,13 +434,6 @@ defineExpose({ focusSearch })
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-}
-
-.search-grid-page {
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-  font-variant-numeric: tabular-nums;
-  user-select: none;
 }
 
 .search-grid-search-hint {

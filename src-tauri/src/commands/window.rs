@@ -128,9 +128,9 @@ pub fn remove_screenshot(
 }
 
 #[tauri::command]
-pub fn open_screenshot_chat(
+pub fn open_transferred_chat(
     app: AppHandle,
-    transfer: crate::models::ScreenshotChatTransfer,
+    transfer: crate::models::ChatTransfer,
     activation_id: u64,
 ) -> Result<(), AppError> {
     runtime::screenshot::open_chat(&app, transfer, activation_id)
