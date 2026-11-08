@@ -38,7 +38,8 @@ pub fn open_main_editor(
 /// Opens `mode` as the user would with a hotkey, with `text` in place of the
 /// selection. `action_page_index` picks a page of the action menu or of the
 /// prompts;
-/// `history_origin` filters the history it opens.
+/// `history_origin` filters the history it opens; `settings_tab` is the tab
+/// the settings open on.
 #[tauri::command]
 pub fn activate_mode(
     app: AppHandle,
@@ -46,6 +47,7 @@ pub fn activate_mode(
     action_page_index: Option<usize>,
     history_origin: Option<crate::models::EditorHistoryOrigin>,
     text: Option<String>,
+    settings_tab: Option<String>,
 ) -> Result<(), AppError> {
     if !ActivationMode::PUBLIC_MODES.contains(&mode) {
         return Err(AppError::InvalidInput(format!(
@@ -64,6 +66,10 @@ pub fn activate_mode(
         return Err(AppError::InvalidInput("Invalid history filter".into()));
     }
     activation.history_origin = history_origin;
+    if settings_tab.is_some() && mode != ActivationMode::Config {
+        return Err(AppError::InvalidInput("Invalid settings tab".into()));
+    }
+    activation.settings_tab = settings_tab;
     activation.selected_text = text;
     runtime::activate(&app, activation)
 }

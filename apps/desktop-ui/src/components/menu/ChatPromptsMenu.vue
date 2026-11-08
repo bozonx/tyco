@@ -110,7 +110,10 @@ function runPrompt(view: ChatPromptView) {
 }
 
 function openSettings() {
-  void ipcStore.callOrNotify('activate_mode', { mode: 'config' })
+  void ipcStore.callOrNotify('activate_mode', {
+    mode: 'config',
+    settingsTab: 'chat-prompts',
+  })
 }
 </script>
 

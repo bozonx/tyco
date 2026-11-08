@@ -90,6 +90,7 @@ export class FakeDesktopBackend {
       actionPageIndex: null,
       customActionIndex: null,
       historyOrigin: null,
+      settingsTab: null,
       accessRequest: null,
       ...structuredClone(options.activation),
     }

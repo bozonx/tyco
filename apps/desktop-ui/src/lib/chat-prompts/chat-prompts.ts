@@ -1,8 +1,10 @@
 import type {
   ChatPromptConfig,
+  ChatPromptsConfig,
   CustomActionSlotConfig,
   MainActionConfig,
   ShortcutSlots,
+  UserConfig,
 } from '@tyco/shared'
 
 import { nameFromPrompt, nextNumberedId } from '../shortcut-slots/slot-prompt'
@@ -166,4 +168,78 @@ export function withoutPromptCustomActions(
   return slots.map((slot) =>
     runsPromptOf(slot.action, promptIds) ? { ...slot, action: null } : slot
   )
+}
+
+/** The labels of the profile choices the model cannot translate itself */
+export interface ChatPromptProfileLabels {
+  everyProfile: string
+  missingProfile: string
+}
+
+/**
+ * The profiles a prompt may be given: every profile first, then the profiles,
+ * and the profile the prompt names when it is not among them; before the
+ * profiles load it shows as its id
+ */
+export function chatPromptProfileOptions(
+  prompt: ChatPromptConfig,
+  options: DescribeChatPromptsOptions,
+  labels: ChatPromptProfileLabels
+): ChatPromptProfile[] {
+  const result: ChatPromptProfile[] = [
+    { id: '', name: labels.everyProfile },
+    ...options.profiles.map(({ id, name }) => ({ id, name })),
+  ]
+  if (
+    prompt.profileId &&
+    !result.some((item) => item.id === prompt.profileId)
+  ) {
+    result.push({
+      id: prompt.profileId,
+      name: options.areProfilesLoaded
+        ? labels.missingProfile
+        : prompt.profileId,
+    })
+  }
+  return result
+}
+
+/** The ids of the prompts left without a name and a text */
+export function emptyChatPromptIds(
+  items: readonly ChatPromptConfig[]
+): string[] {
+  return items
+    .filter((item) => !item.name.trim() && !item.rule.trim())
+    .map((item) => item.id)
+}
+
+type PromptConfigPart = Pick<
+  UserConfig,
+  'chatPrompts' | 'actionPages' | 'customActionSlots'
+>
+
+/**
+ * The parts of the config without the prompts of `promptIds` and the actions
+ * that run them
+ */
+export function withoutChatPrompts(
+  config: PromptConfigPart,
+  promptIds: readonly string[]
+): PromptConfigPart {
+  const removed = new Set(promptIds)
+  const chatPrompts: ChatPromptsConfig = {
+    ...config.chatPrompts,
+    items: config.chatPrompts.items.filter((item) => !removed.has(item.id)),
+  }
+  return {
+    chatPrompts,
+    actionPages: config.actionPages.map((page) => ({
+      ...page,
+      slots: withoutPromptActions(page.slots ?? {}, removed),
+    })),
+    customActionSlots: withoutPromptCustomActions(
+      config.customActionSlots,
+      removed
+    ),
+  }
 }

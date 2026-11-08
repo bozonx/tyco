@@ -4,11 +4,14 @@
       :title="t('settings.chatPromptsTab')"
       :info="t('settings.chatPromptsHint')"
     >
-      <FieldSwitch
-        :model-value="chatPrompts.isSentImmediately"
-        :label="t('settings.chatPromptsSentImmediately')"
-        @update:model-value="setSentImmediately"
-      />
+      <div class="flex items-center gap-2">
+        <FieldSwitch
+          :model-value="chatPrompts.isSentImmediately"
+          :label="t('settings.chatPromptsSentImmediately')"
+          @update:model-value="setSentImmediately"
+        />
+        <InfoTooltip :text="t('settings.chatPromptsSentImmediatelyInfo')" />
+      </div>
     </SettingsSection>
     <SettingsSection bare>
       <template #actions>
@@ -37,15 +40,6 @@
         >
           <div class="chat-prompt-card-drag">
             <DragHandle @drag="startDrag(index, $event)" />
-          </div>
-          <div class="chat-prompt-card-key">
-            <KeyboardKey
-              v-if="index < SHORTCUT_SLOT_KEYS.length"
-              class="chat-prompt-slot-key"
-            >
-              {{ SHORTCUT_SLOT_KEYS[index]?.toUpperCase() }}
-            </KeyboardKey>
-            <span v-else class="chat-prompt-slot-index">#{{ index + 1 }}</span>
           </div>
           <div class="chat-prompt-card-content">
             <div class="chat-prompt-card-row">
@@ -100,10 +94,12 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import { useSortableList } from '../../composables/use-sortable-list'
 import {
+  chatPromptProfileOptions,
+  describeChatPrompt,
+  emptyChatPromptIds,
   moveChatPrompt,
   newChatPrompt,
-  withoutPromptActions,
-  withoutPromptCustomActions,
+  withoutChatPrompts,
 } from '../../lib/chat-prompts/chat-prompts'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
@@ -113,15 +109,11 @@ import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
+import InfoTooltip from '../common/InfoTooltip.vue'
 import InlineNotice from '../common/InlineNotice.vue'
-import KeyboardKey from '../common/KeyboardKey.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsSection from './SettingsSection.vue'
-import {
-  type ChatPromptConfig,
-  type ChatPromptsConfig,
-  SHORTCUT_SLOT_KEYS,
-} from '@tyco/shared'
+import { type ChatPromptConfig, type ChatPromptsConfig } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig } = useSettingsContext()
@@ -151,26 +143,19 @@ const itemStyle = (index: number): CSSProperties | undefined => {
   return { transform: `translate3d(0, ${offset}px, 0)` }
 }
 
-const isProfileMissing = (prompt: ChatPromptConfig) =>
-  Boolean(prompt.profileId) &&
-  aiProfilesStore.isLoaded &&
-  !aiProfilesStore.profiles.some((profile) => profile.id === prompt.profileId)
+const profileSources = computed(() => ({
+  profiles: aiProfilesStore.profiles,
+  areProfilesLoaded: aiProfilesStore.isLoaded,
+}))
 
-function profileOptions(prompt: ChatPromptConfig) {
-  const options = [
-    { id: '', name: t('chatPrompts.everyProfile') },
-    ...aiProfilesStore.profiles.map((p) => ({ id: p.id, name: p.name })),
-  ]
-  if (prompt.profileId && !options.some((o) => o.id === prompt.profileId)) {
-    options.push({
-      id: prompt.profileId,
-      name: aiProfilesStore.isLoaded
-        ? t('chatPrompts.missingProfile')
-        : prompt.profileId,
-    })
-  }
-  return options
-}
+const isProfileMissing = (prompt: ChatPromptConfig) =>
+  describeChatPrompt(prompt, profileSources.value).isProfileMissing
+
+const profileOptions = (prompt: ChatPromptConfig) =>
+  chatPromptProfileOptions(prompt, profileSources.value, {
+    everyProfile: t('chatPrompts.everyProfile'),
+    missingProfile: t('chatPrompts.missingProfile'),
+  })
 
 function setSentImmediately(value: boolean) {
   userConfig.value.chatPrompts = {
@@ -202,28 +187,12 @@ function setProfile(index: number, value: string | number | undefined) {
 /** Removes the prompts and the actions that run them */
 function removePrompts(ids: readonly string[]) {
   if (!ids.length) return
-  const removed = new Set(ids)
-  setPrompts(prompts.value.filter((item) => !removed.has(item.id)))
-  const config = userConfig.value
-  config.actionPages = config.actionPages.map((page) => ({
-    ...page,
-    slots: withoutPromptActions(page.slots ?? {}, removed),
-  }))
-  if (config.customActionSlots) {
-    config.customActionSlots = withoutPromptCustomActions(
-      config.customActionSlots,
-      removed
-    )
-  }
+  Object.assign(userConfig.value, withoutChatPrompts(userConfig.value, ids))
 }
 
 /** A prompt left without a name and a text is dropped */
 onUnmounted(() => {
-  removePrompts(
-    prompts.value
-      .filter((item) => !item.name.trim() && !item.rule.trim())
-      .map((item) => item.id)
-  )
+  removePrompts(emptyChatPromptIds(prompts.value))
 })
 </script>
 
@@ -262,27 +231,9 @@ onUnmounted(() => {
   transition: none;
 }
 
-.chat-prompt-card-drag,
-.chat-prompt-card-key {
+.chat-prompt-card-drag {
   padding-top: var(--space-xs);
   flex-shrink: 0;
-}
-
-.chat-prompt-card-key {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.75rem;
-}
-
-.chat-prompt-slot-key {
-  --key-size: 1.5rem;
-}
-
-.chat-prompt-slot-index {
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-  user-select: none;
 }
 
 .chat-prompt-card-content {

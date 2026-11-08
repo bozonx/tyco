@@ -2,15 +2,18 @@ import { describe, expect, it } from 'vitest'
 
 import {
   chatPromptLabel,
+  chatPromptProfileOptions,
   chatPromptsOfProfile,
   describeChatPrompts,
+  emptyChatPromptIds,
   filterChatPrompts,
   moveChatPrompt,
   newChatPrompt,
   withoutPromptActions,
+  withoutChatPrompts,
   withoutPromptCustomActions,
 } from './chat-prompts'
-import type { ChatPromptConfig } from '@tyco/shared'
+import type { ChatPromptConfig, UserConfig } from '@tyco/shared'
 
 const prompt = (
   id: string,
@@ -165,5 +168,69 @@ describe('editing', () => {
       { action: null, takesSelection: true },
       { action: null, takesSelection: false },
     ])
+  })
+})
+
+describe('chatPromptProfileOptions', () => {
+  const labels = { everyProfile: 'Every', missingProfile: 'Gone' }
+  const names = (item: ChatPromptConfig, loaded = true) =>
+    chatPromptProfileOptions(
+      item,
+      { ...options, areProfilesLoaded: loaded },
+      labels
+    ).map((option) => option.name)
+
+  it('lists every profile, then the profiles', () => {
+    expect(names(prompt('a', 'writer'))).toEqual(['Every', 'Writer', 'Coder'])
+  })
+
+  it('keeps a missing profile, by its id until the profiles load', () => {
+    expect(names(prompt('a', 'old'))).toEqual([
+      'Every',
+      'Writer',
+      'Coder',
+      'Gone',
+    ])
+    expect(names(prompt('a', 'old'), false)).toEqual([
+      'Every',
+      'Writer',
+      'Coder',
+      'old',
+    ])
+  })
+})
+
+describe('withoutChatPrompts', () => {
+  it('removes the prompts and the actions that run them', () => {
+    const result = withoutChatPrompts(
+      {
+        chatPrompts: {
+          isSentImmediately: true,
+          items: [prompt('a'), prompt('b')],
+        },
+        actionPages: [
+          { slots: { q: { type: 'chatPrompt', promptId: 'a' } } },
+        ] as UserConfig['actionPages'],
+        customActionSlots: [
+          {
+            action: { type: 'chatPrompt', promptId: 'a' },
+            takesSelection: true,
+          },
+        ],
+      },
+      ['a']
+    )
+    expect(result.chatPrompts).toEqual({
+      isSentImmediately: true,
+      items: [prompt('b')],
+    })
+    expect(result.actionPages[0]?.slots).toEqual({})
+    expect(result.customActionSlots[0]?.action).toBeNull()
+  })
+
+  it('finds the prompts left without a name and a text', () => {
+    expect(
+      emptyChatPromptIds([prompt('a', '', ' ', ' '), prompt('b', '', '', 'x')])
+    ).toEqual(['a'])
   })
 })

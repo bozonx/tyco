@@ -20,6 +20,7 @@
       "actionPageIndex": null,
       "customActionIndex": null,
       "historyOrigin": null,
+      "settingsTab": null,
       "accessRequest": null
     },
     "window": { "isWindowShown": true, "windowProfile": "sheet" },

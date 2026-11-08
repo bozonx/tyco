@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 711af9edf7756275f87c0ab9a70012a6dec382433bcf1e0f6d032f8a5a626524
+// Source hash: 5920620ce1032a425bc1baef325ce409373df8909698294b96b40226f396de14
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -370,6 +370,8 @@ export type DesktopActivationState = {
   customActionIndex: number | null
   /** The source the history opens filtered by, e.g. from the quick input. */
   historyOrigin: EditorHistoryOrigin | null
+  /** The tab the settings open on, e.g. from a menu that has nothing to show. */
+  settingsTab: string | null
   accessRequest: AccessRequest | null
 }
 

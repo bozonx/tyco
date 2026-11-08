@@ -286,6 +286,7 @@ fn activate_on_main_thread(
         snapshot.activation.action_page_index = activation.action_page_index;
         snapshot.activation.custom_action_index = activation.custom_action_index;
         snapshot.activation.history_origin = activation.history_origin;
+        snapshot.activation.settings_tab = activation.settings_tab;
         snapshot.activation.access_request = activation.access_request;
         snapshot.window.is_window_shown = true;
         snapshot.window.window_profile = activation.mode.profile();

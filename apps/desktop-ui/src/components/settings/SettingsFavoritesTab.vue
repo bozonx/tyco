@@ -39,12 +39,6 @@
             <div class="favorite-card-drag">
               <DragHandle @drag="startDrag(index, $event)" />
             </div>
-            <div class="favorite-card-key">
-              <KeyboardKey v-if="index < 15" class="favorite-slot-key">
-                {{ SHORTCUT_SLOT_KEYS[index]?.toUpperCase() }}
-              </KeyboardKey>
-              <span v-else class="favorite-slot-index">#{{ index + 1 }}</span>
-            </div>
             <div class="favorite-card-content">
               <FieldInput
                 :model-value="favorite.name ?? ''"
@@ -91,10 +85,9 @@ import DragHandle from '../common/DragHandle.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import IconButton from '../common/IconButton.vue'
-import KeyboardKey from '../common/KeyboardKey.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsSection from './SettingsSection.vue'
-import { type FavoriteConfig, SHORTCUT_SLOT_KEYS } from '@tyco/shared'
+import type { FavoriteConfig } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig } = useSettingsContext()
@@ -210,25 +203,6 @@ function deleteFavorite(index: number) {
 .favorite-card-drag {
   padding-top: var(--space-xs);
   flex-shrink: 0;
-}
-
-.favorite-card-key {
-  padding-top: var(--space-xs);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.75rem;
-}
-
-.favorite-slot-key {
-  --key-size: 1.5rem;
-}
-
-.favorite-slot-index {
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-  user-select: none;
 }
 
 .favorite-card-content {

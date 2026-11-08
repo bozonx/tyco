@@ -47,6 +47,8 @@ pub struct Activation {
     pub custom_action_index: Option<usize>,
     /// The source the history opens filtered by; only for `History`.
     pub history_origin: Option<crate::models::EditorHistoryOrigin>,
+    /// The tab the settings open on; only for `Config`.
+    pub settings_tab: Option<String>,
     /// What the access prompt asks about, see `services::external::access`.
     pub access_request: Option<AccessRequest>,
 }
@@ -63,6 +65,7 @@ impl Activation {
             action_page_index: None,
             custom_action_index: None,
             history_origin: None,
+            settings_tab: None,
             access_request: None,
         }
     }

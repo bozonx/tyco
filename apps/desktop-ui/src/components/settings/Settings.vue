@@ -69,6 +69,11 @@
   </div>
 </template>
 
+<script lang="ts">
+/** The activation whose settings tab was last opened */
+let lastSettingsTabActivationId: number | undefined
+</script>
+
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import {
@@ -179,6 +184,21 @@ const currentTab = ref<string>(
     : DEFAULT_SETTINGS_TAB
 )
 const current = computed(() => parseSettingsTab(currentTab.value))
+
+// an activation may open the settings on a tab, e.g. from the prompt menu of
+// the quick window; each activation applies once, the page may mount later
+const desktopStore = useDesktopStore()
+watch(
+  () => desktopStore.desktopState.activationId,
+  (activationId) => {
+    const { mode, settingsTab } = desktopStore.desktopState
+    if (mode !== 'config' || !settingsTab) return
+    if (activationId === lastSettingsTabActivationId) return
+    lastSettingsTabActivationId = activationId
+    currentTab.value = settingsTab
+  },
+  { immediate: true }
+)
 
 const session = useSettingsSessionStore()
 const {
@@ -305,7 +325,7 @@ provide(SETTINGS_CONTEXT_KEY, {
     currentTab.value = 'commands'
   },
   variables: () =>
-    deviceVariableValues(userConfig.value, useDesktopStore().userData),
+    deviceVariableValues(userConfig.value, desktopStore.userData),
 })
 
 // the address keeps the open tab, e.g. for going back to it

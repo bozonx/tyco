@@ -88,6 +88,7 @@ export interface DesktopCommands {
       actionPageIndex?: number | null
       historyOrigin?: EditorHistoryOrigin | null
       text?: string | null
+      settingsTab?: string | null
     }
     result: void
   }

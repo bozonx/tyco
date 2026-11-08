@@ -31,6 +31,8 @@ pub struct ActivationSnapshot {
     pub custom_action_index: Option<usize>,
     /// The source the history opens filtered by, e.g. from the quick input.
     pub history_origin: Option<super::EditorHistoryOrigin>,
+    /// The tab the settings open on, e.g. from a menu that has nothing to show.
+    pub settings_tab: Option<String>,
     pub access_request: Option<AccessRequest>,
 }
 #[derive(Debug, Clone, Serialize, ts_rs::TS)]
