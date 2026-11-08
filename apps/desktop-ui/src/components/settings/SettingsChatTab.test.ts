@@ -26,7 +26,7 @@ describe('SettingsChatTab.vue', () => {
 
     expect(
       wrapper.findAll('.row').map((row) => row.attributes('data-label'))
-    ).toEqual(['settings.chatPrompt'])
+    ).toEqual(['settings.chatInstructions'])
     expect(wrapper.text()).toContain('settings.chatStorageLink')
     const section = wrapper.findComponent({ name: 'SettingsSection' })
     expect(section.props('title')).toBe('settings.chat')

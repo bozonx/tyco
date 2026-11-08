@@ -2,13 +2,13 @@
   <div class="settings-stack">
     <SettingsSection :title="t('settings.chat')" :info="t('settings.chatInfo')">
       <FieldRow
-        :label="t('settings.chatPrompt')"
-        :info="t('settings.chatPromptInfo')"
+        :label="t('settings.chatInstructions')"
+        :info="t('settings.chatInstructionsInfo')"
         vertical
       >
         <FieldPromptTextArea
           v-model="userConfig.llm.tasks.chat.rule"
-          :modal-title="t('settings.chatPrompt')"
+          :modal-title="t('settings.chatInstructions')"
         />
       </FieldRow>
     </SettingsSection>

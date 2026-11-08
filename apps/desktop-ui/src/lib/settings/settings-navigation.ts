@@ -84,7 +84,6 @@ export const SETTINGS_NAVIGATION_GROUPS = [
       {
         id: 'chat-prompts',
         labelKey: 'settings.chatPromptsTab',
-        navigationLabelKey: 'settings.chatPromptsNavTab',
         icon: 'mdi:lightning-bolt-outline',
       },
       {
