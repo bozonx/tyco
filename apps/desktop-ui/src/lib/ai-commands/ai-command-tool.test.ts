@@ -207,6 +207,26 @@ describe('createAiCommandTool', () => {
     expect(onProgress).toHaveBeenCalledWith('TWO')
   })
 
+  it('offers no tools when isToolsEnabled is false', async () => {
+    const command = {
+      ...aiCommand('a', ['one', 'two']),
+      toolConfig: {
+        prompt: 'Prompt of a',
+        allowedCommandIds: ['one', 'two'],
+        maxSteps: 4,
+        isToolsEnabled: false,
+      },
+    }
+    const { run, calls } = setup([command, script('one'), script('two')], {
+      'Prompt of a': ['Answer without tools'],
+    })
+    expect(await run(command, 'the text')).toMatchObject({
+      ok: true,
+      content: 'Answer without tools',
+    })
+    expect(calls[0].offered).toEqual([])
+  })
+
   it('never offers the command itself, nor a command up its chain', async () => {
     const a = aiCommand('a', ['a', 'b', 'one'])
     const b = aiCommand('b', ['a', 'b', 'one'])

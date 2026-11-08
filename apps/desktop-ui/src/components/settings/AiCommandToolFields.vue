@@ -22,36 +22,47 @@
     <VariableReferenceHints :templates="[config.prompt]" />
   </FieldRow>
   <FieldRow
-    vertical
-    density="compact"
-    :label="t('commands.aiAllowedCommands')"
-    :info="t('commands.aiAllowedCommandsInfo')"
+    :label="t('commands.aiToolsEnabledLabel')"
+    :info="t('commands.aiToolsEnabledInfo')"
   >
-    <div v-if="candidates.length" class="ai-command-list">
-      <FieldCheckbox
-        v-for="item in candidates"
-        :key="item.id"
-        :model-value="config.allowedCommandIds.includes(item.id)"
-        :label="item.name"
-        @update:model-value="toggleCommand(item.id, $event)"
-      />
-    </div>
-    <p v-else class="ai-command-empty">
-      {{ t('commands.aiNoOtherCommands') }}
-    </p>
-  </FieldRow>
-  <FieldRow
-    v-if="config.allowedCommandIds.length"
-    :label="t('commands.aiMaxSteps')"
-    :info="t('commands.aiMaxStepsInfo')"
-  >
-    <FieldNumber
-      min="1"
-      :max="AI_COMMAND_MAX_STEPS_MAX"
-      :model-value="config.maxSteps"
-      @update:model-value="setMaxSteps"
+    <FieldSwitch
+      :model-value="config.isToolsEnabled !== false"
+      @update:model-value="emit('update', 'isToolsEnabled', $event)"
     />
   </FieldRow>
+  <template v-if="config.isToolsEnabled !== false">
+    <FieldRow
+      vertical
+      density="compact"
+      :label="t('commands.aiAllowedCommands')"
+      :info="t('commands.aiAllowedCommandsInfo')"
+    >
+      <div v-if="candidates.length" class="ai-command-list">
+        <FieldCheckbox
+          v-for="item in candidates"
+          :key="item.id"
+          :model-value="config.allowedCommandIds.includes(item.id)"
+          :label="item.name"
+          @update:model-value="toggleCommand(item.id, $event)"
+        />
+      </div>
+      <p v-else class="ai-command-empty">
+        {{ t('commands.aiNoOtherCommands') }}
+      </p>
+    </FieldRow>
+    <FieldRow
+      v-if="config.allowedCommandIds.length"
+      :label="t('commands.aiMaxSteps')"
+      :info="t('commands.aiMaxStepsInfo')"
+    >
+      <FieldNumber
+        min="1"
+        :max="AI_COMMAND_MAX_STEPS_MAX"
+        :model-value="config.maxSteps"
+        @update:model-value="setMaxSteps"
+      />
+    </FieldRow>
+  </template>
 </template>
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -67,6 +78,7 @@ import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldNumber from '../common/FieldNumber.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import VariableInsertMenu from './VariableInsertMenu.vue'
 import VariableReferenceHints from './VariableReferenceHints.vue'
 import {

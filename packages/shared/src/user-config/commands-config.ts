@@ -110,6 +110,11 @@ export interface AiCommandToolConfig {
   allowedCommandIds: string[]
   /** Maximum command calls per run; the final answer does not consume a call. */
   maxSteps: number
+  /**
+   * Whether the agent is allowed to invoke tools (allowed commands). Defaults
+   * to true if omitted
+   */
+  isToolsEnabled?: boolean
 }
 
 /** `toolConfig` of a `webhook` command */

@@ -12,6 +12,23 @@ import {
 } from '@tyco/shared'
 import type { RegisteredTool } from '../tools/tool-types'
 
+/** Whether a tool can be chosen to create a command from in the commands library */
+export function isCommandTool(
+  tool: Pick<RegisteredTool, 'id' | 'owner' | 'configFields'>
+): boolean {
+  if (
+    tool.id === 'script' ||
+    tool.id === 'webhook' ||
+    tool.id === 'core.aiTask'
+  ) {
+    return true
+  }
+  if (tool.owner.kind === 'plugin' && (tool.configFields?.length ?? 0) > 0) {
+    return true
+  }
+  return false
+}
+
 /** The value if it is a string, otherwise an empty string */
 export const stringOr = (value: unknown): string =>
   typeof value === 'string' ? value : ''
@@ -105,17 +122,13 @@ function defaultToolConfig(toolId: string): Record<string, unknown> {
         payloadTemplate: '',
         isAuthEnabled: false,
       }
-    case 'core.translate':
-      return { language: '' }
     case 'core.aiTask':
       return {
         prompt: '',
         allowedCommandIds: [],
         maxSteps: AI_COMMAND_MAX_STEPS_DEFAULT,
+        isToolsEnabled: true,
       }
-    case 'core.transformation':
-    case 'core.styling':
-      return { prompt: '' }
     default:
       // a plugin tool falls back to the plugin settings for empty fields
       return {}

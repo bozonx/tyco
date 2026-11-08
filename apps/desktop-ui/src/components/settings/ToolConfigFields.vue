@@ -1,24 +1,7 @@
 <template>
   <div class="tool-config-fields">
-    <TranslationToolFields
-      v-if="command.toolId === 'core.translate'"
-      :command="command"
-      :user-config="userConfig"
-      :warnings="warningsOf('language')"
-      @update="update"
-    />
     <AiCommandToolFields
-      v-else-if="command.toolId === 'core.aiTask'"
-      :command="command"
-      :user-config="userConfig"
-      :warnings="warningsOf('prompt')"
-      @update="update"
-    />
-    <PromptToolFields
-      v-else-if="
-        command.toolId === 'core.transformation' ||
-        command.toolId === 'core.styling'
-      "
+      v-if="command.toolId === 'core.aiTask'"
       :command="command"
       :user-config="userConfig"
       :warnings="warningsOf('prompt')"
@@ -36,8 +19,6 @@ import type { RegisteredTool } from '../../lib/tools/tool-types'
 import { useToolsStore } from '../../stores/tools'
 import AiCommandToolFields from './AiCommandToolFields.vue'
 import PluginToolFields from './PluginToolFields.vue'
-import PromptToolFields from './PromptToolFields.vue'
-import TranslationToolFields from './TranslationToolFields.vue'
 import {
   type CommandConfig,
   ACTION_TEXT_PLACEHOLDER as TEXT,

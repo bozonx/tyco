@@ -76,6 +76,13 @@ const mountTab = (focusCommandId?: string, stubEditor = true) => {
         CommandEditor: stubEditor,
         CustomActionFields: true,
         CommandTestRun: true,
+        SettingsCreateCommandModal: {
+          name: 'SettingsCreateCommandModal',
+          props: ['open', 'tools'],
+          emits: ['close', 'submit'],
+          template:
+            '<div class="create-command-modal-stub" :data-open="open" />',
+        },
       },
     },
   })
@@ -213,18 +220,23 @@ describe('SettingsCommandsTab.vue', () => {
 
   it('adds a new command of the tool picked from the registry', async () => {
     const wrapper = mountTab()
-    expect(wrapper.find('.tool-picker').exists()).toBe(false)
+    const modal = wrapper.findComponent({ name: 'SettingsCreateCommandModal' })
+    expect(modal.props('open')).toBe(false)
     await wrapper.find('.add-btn').trigger('click')
-    const options = wrapper.findAll('.tool-option')
-    expect(options.map((option) => option.text())).toEqual([
-      expect.stringContaining('action.script'),
-      expect.stringContaining('action.webhook'),
-    ])
-    await options[1].trigger('click')
+    expect(modal.props('open')).toBe(true)
+    const availableTools = modal.props('tools') as {
+      id: string
+      name: string
+    }[]
+    expect(availableTools.map((tool) => tool.id)).toEqual(['script', 'webhook'])
+
+    modal.vm.$emit('submit', { toolId: 'webhook' })
+    await nextTick()
+
     expect(
       context.draft.value.commands.map((command) => command.toolId)
     ).toEqual(['webhook', 'webhook', 'script'])
-    expect(wrapper.find('.tool-picker').exists()).toBe(false)
+    expect(modal.props('open')).toBe(false)
 
     await nextTick()
     const firstCard = wrapper.findAllComponents({ name: 'CommandCard' })[0]
@@ -235,7 +247,9 @@ describe('SettingsCommandsTab.vue', () => {
   it('shows voice phrases when enabled immediately after creating a command', async () => {
     const wrapper = mountTab(undefined, false)
     await wrapper.get('.add-btn').trigger('click')
-    await wrapper.findAll('.tool-option')[0].trigger('click')
+    const modal = wrapper.findComponent({ name: 'SettingsCreateCommandModal' })
+    modal.vm.$emit('submit', { toolId: 'script' })
+    await nextTick()
     const card = wrapper.findAllComponents({ name: 'CommandCard' })[0]
     await card
       .findComponent({ name: 'CommandVoiceFields' })

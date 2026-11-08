@@ -155,15 +155,19 @@ export function createAiCommandTool(
         ...(call.command ? [call.command.id] : []),
       ]
       try {
-        const content = await run(
-          config,
-          text,
-          agentTools(config.allowedCommandIds, chain, call.signal, call.source),
-          {
-            signal: call.signal,
-            ...(call.onProgress ? { onStep: call.onProgress } : {}),
-          }
-        )
+        const tools =
+          config.isToolsEnabled !== false
+            ? agentTools(
+                config.allowedCommandIds,
+                chain,
+                call.signal,
+                call.source
+              )
+            : []
+        const content = await run(config, text, tools, {
+          signal: call.signal,
+          ...(call.onProgress ? { onStep: call.onProgress } : {}),
+        })
         if (call.signal.aborted) return cancelled
         if (!content.trim())
           return { ok: false, messageKey: 'selection.emptyResult' }

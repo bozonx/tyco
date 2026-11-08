@@ -28,6 +28,7 @@ import {
 import {
   externalTimeoutOf,
   createCommand,
+  isCommandTool,
   normalizeCommands,
   scriptToolConfigOf,
   toolConfigText,
@@ -370,42 +371,30 @@ describe('external names', () => {
 
 describe('commands of the core tools', () => {
   it('start with the settings and the output handling of their tool', () => {
-    const translate = createCommand('core.translate', 't', {
+    const aiTask = createCommand('core.aiTask', 'a', {
       defaultOutputAction: 'insertIntoWindow',
     })
-    expect(translate.toolConfig).toEqual({ language: '' })
-    expect(translate.outputAction).toBe('insertIntoWindow')
-    expect(createCommand('core.aiTask', 'a').toolConfig).toEqual({
+    expect(aiTask.toolConfig).toEqual({
       prompt: '',
       allowedCommandIds: [],
       maxSteps: 5,
+      isToolsEnabled: true,
     })
-    expect(createCommand('core.transformation', 'tr').toolConfig).toEqual({
-      prompt: '',
-    })
-    expect(createCommand('core.styling', 'st').toolConfig).toEqual({
-      prompt: '',
-    })
+    expect(aiTask.outputAction).toBe('insertIntoWindow')
     expect(createCommand('Notes.write', 'n').toolConfig).toEqual({})
   })
 
-  it('need a language or an instruction', () => {
+  it('need an instruction for AI command', () => {
     const coreTools = testTools({}, [
       {
-        id: 'core.translate',
+        id: 'core.aiTask',
         description: '',
         inputSchema: { type: 'object', properties: {} },
         run: async () => ({ ok: true }),
       },
     ])
     expect(
-      validateCommand(namedCommand('core.translate', 't'), coreTools)
-    ).toEqual([{ field: 'language', messageKey: 'commands.errorNoLanguage' }])
-    expect(
-      validateCommand(namedCommand('core.transformation', 'tr'), coreTools)
-    ).toEqual([{ field: 'prompt', messageKey: 'commands.errorNoPrompt' }])
-    expect(
-      validateCommand(namedCommand('core.styling', 'st'), coreTools)
+      validateCommand(namedCommand('core.aiTask', 'a'), coreTools)
     ).toEqual([{ field: 'prompt', messageKey: 'commands.errorNoPrompt' }])
     expect(
       validateCommand(
@@ -416,6 +405,43 @@ describe('commands of the core tools', () => {
     expect(validateCommand(namedCommand('Gone.tool', 'g'), coreTools)).toEqual([
       { field: 'toolId', messageKey: 'commands.errorUnknownTool' },
     ])
+  })
+
+  it('identifies selectable command tools', () => {
+    expect(isCommandTool({ id: 'script', owner: { kind: 'core' } })).toBe(true)
+    expect(isCommandTool({ id: 'webhook', owner: { kind: 'core' } })).toBe(true)
+    expect(isCommandTool({ id: 'core.aiTask', owner: { kind: 'core' } })).toBe(
+      true
+    )
+    expect(
+      isCommandTool({ id: 'core.translate', owner: { kind: 'core' } })
+    ).toBe(false)
+    expect(isCommandTool({ id: 'core.insert', owner: { kind: 'core' } })).toBe(
+      false
+    )
+    expect(isCommandTool({ id: 'core.copy', owner: { kind: 'core' } })).toBe(
+      false
+    )
+    expect(isCommandTool({ id: 'core.correct', owner: { kind: 'core' } })).toBe(
+      false
+    )
+    expect(
+      isCommandTool({ id: 'core.askInChat', owner: { kind: 'core' } })
+    ).toBe(false)
+    expect(
+      isCommandTool({
+        id: 'Plugin.action',
+        owner: { kind: 'plugin', pluginId: 'plugin' },
+        configFields: [],
+      })
+    ).toBe(false)
+    expect(
+      isCommandTool({
+        id: 'Plugin.action',
+        owner: { kind: 'plugin', pluginId: 'plugin' },
+        configFields: [{ name: 'folder', type: 'text' }],
+      })
+    ).toBe(true)
   })
 })
 

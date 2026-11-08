@@ -46,6 +46,7 @@ export function aiCommandToolConfigOf(
     prompt: stringOr(config.prompt),
     allowedCommandIds: [...new Set(ids)],
     maxSteps: maxStepsOf(config.maxSteps),
+    isToolsEnabled: config.isToolsEnabled !== false,
   }
 }
 

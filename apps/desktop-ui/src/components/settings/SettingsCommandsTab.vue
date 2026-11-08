@@ -11,39 +11,19 @@
           class="add-btn"
           size="sm"
           icon="mdi:plus"
-          :aria-expanded="pickingTool"
-          @click="pickingTool = !pickingTool"
+          :aria-expanded="isCreateModalOpen"
+          @click="isCreateModalOpen = true"
         >
           {{ t('commands.create') }}
         </Button>
       </template>
       <div class="commands-tab">
-        <div v-if="pickingTool" class="tool-picker">
-          <p class="tool-picker-hint">{{ t('commands.pickTool') }}</p>
-          <button
-            v-for="tool in tools"
-            :key="tool.id"
-            type="button"
-            class="tool-option"
-            :class="{ 'is-unavailable': tool.reason }"
-            @click="addCommand(tool.id)"
-          >
-            <AppIcon
-              :icon="tool.icon ?? 'mdi:puzzle-outline'"
-              size="lg"
-              class="shrink-0"
-            />
-            <span class="tool-option-text">
-              <span class="tool-option-name">{{ tool.name }}</span>
-              <span v-if="tool.description" class="tool-option-description">
-                {{ tool.description }}
-              </span>
-              <span v-if="tool.reason" class="tool-option-reason">
-                {{ tool.reason }}
-              </span>
-            </span>
-          </button>
-        </div>
+        <SettingsCreateCommandModal
+          :open="isCreateModalOpen"
+          :tools="availableTools"
+          @close="isCreateModalOpen = false"
+          @submit="handleCreateCommand"
+        />
         <InlineNotice
           v-if="removed"
           class="commands-notice"
@@ -143,6 +123,7 @@ import {
   createCommand,
   normalizeCommands,
 } from '../../lib/commands/command-config'
+import { isCommandTool } from '../../lib/commands/command-config'
 import { externalCommandNameConflicts } from '../../lib/commands/command-external'
 import { createCommandRemovalModel } from '../../lib/commands/command-removal-model'
 import { commandUnavailableReason } from '../../lib/commands/command-runtime'
@@ -153,7 +134,6 @@ import { toolLabel } from '../../lib/tools/tool-label'
 import { useSecretsStore } from '../../stores/secrets'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useToolsStore } from '../../stores/tools'
-import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
@@ -161,6 +141,9 @@ import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
 import CommandCard from './CommandCard.vue'
 import DeviceScopeBadge from './DeviceScopeBadge.vue'
+import SettingsCreateCommandModal, {
+  type CreateCommandSubmitEvent,
+} from './SettingsCreateCommandModal.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsTaskModel from './SettingsTaskModel.vue'
 import {
@@ -268,22 +251,47 @@ if (props.focusCommandId) void reveal(props.focusCommandId)
 const getUnavailableReasonKey = (command: CommandConfig) =>
   commandUnavailableReason(command, toolsStore)
 
-/** The tool picker of a new command is open */
-const pickingTool = ref(false)
+const isCreateModalOpen = ref(false)
 
-/** The tools a command can be made of, the unavailable ones with the reason */
-const tools = computed(() =>
-  toolsStore.list().map((tool) => {
-    const reason = tool.getUnavailableReasonKey?.()
-    return {
-      id: tool.id,
-      icon: tool.icon,
-      name: toolLabel(tool, t),
-      description: tool.descriptionKey ? t(tool.descriptionKey) : '',
-      reason: reason ? t(reason) : '',
-    }
-  })
+/** The tools a command can be created from */
+const availableTools = computed(() =>
+  toolsStore
+    .list()
+    .filter((tool) => isCommandTool(tool))
+    .map((tool) => ({ id: tool.id, name: toolLabel(tool, t) }))
 )
+
+function handleCreateCommand(event: CreateCommandSubmitEvent) {
+  isCreateModalOpen.value = false
+  const tool = toolsStore.get(event.toolId)
+  const command = createCommand(event.toolId, undefined, tool)
+
+  if (
+    event.toolId === 'core.aiTask' &&
+    event.template &&
+    event.template !== 'none'
+  ) {
+    let prompt = ''
+    if (event.template === 'fix') {
+      prompt = t('commands.templateFixPrompt')
+    } else if (event.template === 'translate') {
+      prompt = t('commands.templateTranslatePrompt')
+    } else if (event.template === 'style') {
+      prompt = t('commands.templateStylePrompt')
+    }
+    command.toolConfig = {
+      ...command.toolConfig,
+      prompt,
+      isToolsEnabled: false,
+    }
+    command.outputAction = 'insertIntoWindow'
+  }
+
+  focusedCommandId.value = command.id
+  setCommands([command, ...commands.value])
+  expanded.value = new Set([command.id, ...expanded.value])
+  void reveal(command.id)
+}
 
 const listRef = ref<HTMLElement | null>(null)
 const { draggedIndex, isSorting, startDrag, itemOffset } = useSortableList(
@@ -299,15 +307,6 @@ function moveCommand(from: number, to: number) {
 const itemStyle = (index: number) => {
   const offset = itemOffset(index)
   return offset ? { transform: `translateY(${offset}px)` } : undefined
-}
-
-function addCommand(toolId: string) {
-  pickingTool.value = false
-  const command = createCommand(toolId, undefined, toolsStore.get(toolId))
-  focusedCommandId.value = command.id
-  setCommands([command, ...commands.value])
-  expanded.value = new Set([command.id, ...expanded.value])
-  void reveal(command.id)
 }
 
 function updateCommand(index: number, command: CommandConfig) {
@@ -343,60 +342,6 @@ onBeforeUnmount(finishRemoval)
 </script>
 
 <style scoped>
-.tool-picker {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs, 0.25rem);
-  padding: var(--space-sm, 0.5rem);
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-lg);
-  background-color: var(--app-surface);
-  box-shadow: var(--app-shadow-sm);
-}
-
-.tool-picker-hint {
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-}
-
-.tool-option {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm, 0.5rem);
-  padding: var(--space-xs, 0.25rem) var(--space-sm, 0.5rem);
-  border-radius: var(--radius-sm);
-  text-align: left;
-}
-
-.tool-option:hover,
-.tool-option:focus-visible {
-  background: var(--app-hover);
-}
-
-.tool-option.is-unavailable {
-  opacity: 0.6;
-}
-
-.tool-option-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.tool-option-name {
-  font-size: var(--text-body);
-}
-
-.tool-option-description,
-.tool-option-reason {
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-}
-
-.tool-option-reason {
-  color: var(--color-warning);
-}
-
 .commands-tab {
   display: flex;
   flex-direction: column;

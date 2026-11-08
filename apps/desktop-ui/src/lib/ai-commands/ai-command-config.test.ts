@@ -20,8 +20,14 @@ describe('aiCommandToolConfigOf', () => {
         prompt: 'Do it',
         allowedCommandIds: ['a', 'a', ' ', 7, 'b'],
         maxSteps: 3,
+        isToolsEnabled: false,
       })
-    ).toEqual({ prompt: 'Do it', allowedCommandIds: ['a', 'b'], maxSteps: 3 })
+    ).toEqual({
+      prompt: 'Do it',
+      allowedCommandIds: ['a', 'b'],
+      maxSteps: 3,
+      isToolsEnabled: false,
+    })
   })
 
   it('falls back to the defaults', () => {
@@ -29,6 +35,7 @@ describe('aiCommandToolConfigOf', () => {
       prompt: '',
       allowedCommandIds: [],
       maxSteps: 5,
+      isToolsEnabled: true,
     })
   })
 })
