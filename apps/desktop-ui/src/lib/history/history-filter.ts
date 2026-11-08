@@ -7,6 +7,7 @@ export const HISTORY_ORIGIN_FILTERS: readonly HistoryOriginFilter[] = [
   'all',
   'quickInput',
   'voice',
+  'quickAiRequest',
 ]
 
 export interface HistoryFilter {

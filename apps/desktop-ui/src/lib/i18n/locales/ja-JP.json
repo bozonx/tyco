@@ -458,6 +458,7 @@
     "kindCorrection": "校正",
     "kindDraft": "未完了の入力",
     "kindOutput": "送信済み",
+    "kindQuickAiRequestOutput": "クイックリクエストの回答",
     "kindSource": "元のテキスト",
     "kindTranslate": "翻訳",
     "kindVoiceInput": "音声入力",
@@ -481,8 +482,7 @@
     "filterQuickInput": "クイック入力",
     "filterVoice": "音声",
     "filterUnsent": "未送信",
-    "filterUnsentHint": "挿入もコピーもされていないテキストのみ",
-    "requestTurns": "質問と回答: {count}"
+    "filterUnsentHint": "挿入もコピーもされていないテキストのみ"
   },
   "input": {
     "historySearchPlaceholder": "履歴を検索...",
@@ -938,6 +938,7 @@
     "pluginTrustNotice": "プラグインのコードは隔離されたWorkerで実行されます。信頼できる提供元からのみパッケージをインストールしてください。申告されたサービスがデータを読み書きする可能性があります。",
     "pluginsTab": "プラグイン",
     "profileChatHistoryHint": "プロファイルのチャットはプロファイルのフォルダーに保存されます。すべてのプロファイルと、それらへのクイックリクエストに適用されます。「AIに質問」のチャットは「履歴」タブで設定します。",
+    "profileChatHistoryLink": "プロファイルのチャットとそのクイックリクエストは、次のタブの設定に従って保存されます:",
     "profileCopyName": "{name} (コピー)",
     "profileDefaultSoul": "あなたは親切で有能なAIアシスタントです。",
     "profileFileToolsOff": "このプロファイルのファイルツールはオフです。上でオンにするまでプロジェクトにはアクセスできません。",
@@ -1243,7 +1244,7 @@
     "customActionNotAssigned": "未割り当て",
     "chatHistoryHint": "クイックリクエストを含みます。プロファイルのチャットはプロファイルのフォルダーに保存され、「AIプロファイル」タブで設定します。",
     "chatQuickRequestsSaved": "クイックリクエストを保存",
-    "chatQuickRequestsSavedInfo": "クイックリクエストはチャット内で別のグループとして表示されます。チャットで続けたリクエストは常に保存されます。",
+    "chatQuickRequestsSavedInfo": "クイックリクエストはチャット一覧に別グループとして表示され、最近の質問はクイックリクエストで候補として表示されます。チャットで続けたリクエストは通常のチャットになり、常に保存されます。",
     "chatStorageLink": "チャットの保存は次のタブで設定します:",
     "addChatPrompt": "プロンプトを追加",
     "chatPromptProfile": "プロファイル",

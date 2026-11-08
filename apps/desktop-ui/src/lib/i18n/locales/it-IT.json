@@ -458,6 +458,7 @@
     "kindCorrection": "Correzione",
     "kindDraft": "Inserimento incompleto",
     "kindOutput": "Inviato",
+    "kindQuickAiRequestOutput": "Risposta di una richiesta rapida",
     "kindSource": "Testo originale",
     "kindTranslate": "Traduzione",
     "kindVoiceInput": "Input vocale",
@@ -481,8 +482,7 @@
     "filterQuickInput": "Inserimento rapido",
     "filterVoice": "Voce",
     "filterUnsent": "Non inviati",
-    "filterUnsentHint": "Solo i testi mai inseriti né copiati",
-    "requestTurns": "Domande e risposte: {count}"
+    "filterUnsentHint": "Solo i testi mai inseriti né copiati"
   },
   "input": {
     "historySearchPlaceholder": "Cerca nella cronologia...",
@@ -941,6 +941,7 @@
     "pluginTrustNotice": "Il codice dei plugin viene eseguito in un worker isolato. Installa pacchetti solo da fonti attendibili; i servizi dichiarati possono leggere o modificare i tuoi dati.",
     "pluginsTab": "Plugin",
     "profileChatHistoryHint": "Le chat dei profili sono salvate nella cartella del profilo; vale per tutti i profili, incluse le richieste rapide. Le chat di «Chiedi all’IA» si impostano nella scheda «Cronologia».",
+    "profileChatHistoryLink": "Le chat dei profili e le loro richieste rapide vengono conservate secondo le impostazioni della scheda",
     "profileCopyName": "{name} (copia)",
     "profileDefaultSoul": "# Ruolo\nDescrivi chi è questo assistente e in cosa aiuta.\n\n# Regole\n- Rispondi nella lingua della domanda.\n",
     "profileFileToolsOff": "Gli strumenti file di questo profilo sono disattivati: non raggiunge i suoi progetti finché non li attivi qui sopra.",
@@ -1246,7 +1247,7 @@
     "customActionNotAssigned": "Non assegnato",
     "chatHistoryHint": "Incluse le richieste rapide. Le chat dei profili sono salvate nella cartella del profilo e si impostano nella scheda «Profili IA».",
     "chatQuickRequestsSaved": "Salva le richieste rapide",
-    "chatQuickRequestsSavedInfo": "Le richieste rapide compaiono nelle chat come gruppo a parte. Una richiesta proseguita in chat viene sempre salvata.",
+    "chatQuickRequestsSavedInfo": "Le richieste rapide compaiono nelle chat come un gruppo a parte e le loro domande recenti vengono suggerite nella richiesta rapida. Una richiesta proseguita nella chat diventa una chat normale e viene sempre salvata.",
     "chatStorageLink": "L’archiviazione delle chat si imposta nella scheda",
     "addChatPrompt": "Aggiungi prompt",
     "chatPromptProfile": "Profilo",

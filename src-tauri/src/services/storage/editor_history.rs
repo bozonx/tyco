@@ -300,14 +300,6 @@ fn save_editor_history_entry(
     if let Some(instruction) = &mut entry.instruction {
         instruction.text = policy.redact(instruction.text.clone());
     }
-    if let Some(turns) = &mut entry.turns {
-        for turn in turns {
-            turn.prompt = policy.redact(turn.prompt.clone());
-            if let Some(result) = &mut turn.result {
-                *result = policy.redact(result.clone());
-            }
-        }
-    }
 
     let before = history.load()?;
     let mut items = before.clone();
@@ -340,7 +332,6 @@ fn save_editor_history_entry(
         origin: entry.origin,
         instruction: entry.instruction,
         profile_id: entry.profile_id,
-        turns: entry.turns,
         created_at_ms,
         result: None,
         is_result_applied: false,

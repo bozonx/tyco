@@ -458,6 +458,7 @@
     "kindCorrection": "Javítás",
     "kindDraft": "Befejezetlen bevitel",
     "kindOutput": "Elküldve",
+    "kindQuickAiRequestOutput": "Gyors kérés válasza",
     "kindSource": "Eredeti szöveg",
     "kindTranslate": "Fordítás",
     "kindVoiceInput": "Hangbevitel",
@@ -481,8 +482,7 @@
     "filterQuickInput": "Gyors bevitel",
     "filterVoice": "Hang",
     "filterUnsent": "Nem elküldött",
-    "filterUnsentHint": "Csak a soha be nem illesztett vagy ki nem másolt szövegek",
-    "requestTurns": "Kérdések és válaszok: {count}"
+    "filterUnsentHint": "Csak a soha be nem illesztett vagy ki nem másolt szövegek"
   },
   "input": {
     "historySearchPlaceholder": "Keresés az előzményekben...",
@@ -938,6 +938,7 @@
     "pluginTrustNotice": "A bővítmények kódja elszigetelt workerben fut. Csak megbízható forrásból telepítsen csomagokat; a deklarált szolgáltatások olvashatják vagy módosíthatják az adatait.",
     "pluginsTab": "Bővítmények",
     "profileChatHistoryHint": "A profilok csevegései a profil mappájában vannak; ez minden profilra vonatkozik, a nekik küldött gyorskérésekre is. A „Kérdezze az MI-t” csevegések az „Előzmények” lapon állíthatók.",
+    "profileChatHistoryLink": "A profilok csevegései és a hozzájuk intézett gyors kérések ezen a lapon beállítottak szerint tárolódnak:",
     "profileCopyName": "{name} (másolat)",
     "profileDefaultSoul": "# Szerep\nÍrja le, ki ez az asszisztens, és miben segít.\n\n# Szabályok\n- A kérdés nyelvén válaszolj.\n",
     "profileFileToolsOff": "A profil fájleszközei ki vannak kapcsolva: nem éri el a projektjeit, amíg fent be nem kapcsolja őket.",
@@ -1243,7 +1244,7 @@
     "customActionNotAssigned": "Nincs hozzárendelve",
     "chatHistoryHint": "A gyorskérésekkel együtt. A profilok csevegései a profil mappájában vannak, és az „MI-profilok” lapon állíthatók.",
     "chatQuickRequestsSaved": "Gyorskérések mentése",
-    "chatQuickRequestsSavedInfo": "A gyorskérések külön csoportként jelennek meg a csevegések között. A csevegésben folytatott kérés mindig mentésre kerül.",
+    "chatQuickRequestsSavedInfo": "A gyors kérések külön csoportként jelennek meg a csevegések között, legutóbbi kérdéseiket pedig a gyors kérés felajánlja. A csevegésben folytatott kérés szokásos csevegéssé válik, és mindig mentésre kerül.",
     "chatStorageLink": "A csevegések tárolása ezen a lapon állítható:",
     "addChatPrompt": "Prompt hozzáadása",
     "chatPromptProfile": "Profil",

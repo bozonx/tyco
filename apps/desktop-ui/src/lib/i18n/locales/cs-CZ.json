@@ -458,6 +458,7 @@
     "kindCorrection": "Oprava",
     "kindDraft": "Nedokončený vstup",
     "kindOutput": "Odesláno",
+    "kindQuickAiRequestOutput": "Odpověď rychlého dotazu",
     "kindSource": "Původní text",
     "kindTranslate": "Překlad",
     "kindVoiceInput": "Hlasové zadávání",
@@ -481,8 +482,7 @@
     "filterQuickInput": "Rychlé zadávání",
     "filterVoice": "Hlas",
     "filterUnsent": "Neodeslané",
-    "filterUnsentHint": "Jen texty, které nebyly vloženy ani zkopírovány",
-    "requestTurns": "Otázky a odpovědi: {count}"
+    "filterUnsentHint": "Jen texty, které nebyly vloženy ani zkopírovány"
   },
   "input": {
     "historySearchPlaceholder": "Hledat v historii...",
@@ -935,6 +935,7 @@
     "pluginTrustNotice": "Kód pluginu běží v izolovaném workeru. Instalujte balíčky jen z důvěryhodných zdrojů; deklarované služby mohou číst nebo měnit vaše data.",
     "pluginsTab": "Pluginy",
     "profileChatHistoryHint": "Chaty profilů se ukládají do složky profilu; platí pro všechny profily včetně rychlých dotazů na ně. Chaty „Zeptat se AI“ se nastavují na kartě „Historie“.",
+    "profileChatHistoryLink": "Chaty profilů a rychlé dotazy na ně se ukládají podle nastavení na kartě",
     "profileCopyName": "{name} (kopie)",
     "profileDefaultSoul": "# Role\nPopište, kdo je tento asistent a s čím pomáhá.\n\n# Pravidla\n- Odpovídej v jazyce otázky.\n",
     "profileFileToolsOff": "Souborové nástroje tohoto profilu jsou vypnuté: k projektům se nedostane, dokud je výše nezapnete.",
@@ -1240,7 +1241,7 @@
     "customActionNotAssigned": "Nepřiřazeno",
     "chatHistoryHint": "Včetně rychlých dotazů. Chaty profilů se ukládají do složky profilu a nastavují se na kartě „Profily AI“.",
     "chatQuickRequestsSaved": "Ukládat rychlé dotazy",
-    "chatQuickRequestsSavedInfo": "Rychlé dotazy se v chatech zobrazují jako samostatná skupina. Dotaz, který pokračuje v chatu, se uloží vždy.",
+    "chatQuickRequestsSavedInfo": "Rychlé dotazy se v chatech zobrazují jako samostatná skupina a jejich nedávné otázky se nabízejí v rychlém dotazu. Dotaz pokračující v chatu se stane běžným chatem a ukládá se vždy.",
     "chatStorageLink": "Ukládání chatů se nastavuje na kartě",
     "addChatPrompt": "Přidat prompt",
     "chatPromptProfile": "Profil",

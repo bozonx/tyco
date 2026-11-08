@@ -458,6 +458,7 @@
     "kindCorrection": "Correction",
     "kindDraft": "Saisie inachevée",
     "kindOutput": "Envoyé",
+    "kindQuickAiRequestOutput": "Réponse d’une requête rapide",
     "kindSource": "Texte original",
     "kindTranslate": "Traduction",
     "kindVoiceInput": "Saisie vocale",
@@ -481,8 +482,7 @@
     "filterQuickInput": "Saisie rapide",
     "filterVoice": "Voix",
     "filterUnsent": "Non envoyés",
-    "filterUnsentHint": "Uniquement les textes jamais insérés ni copiés",
-    "requestTurns": "Questions et réponses : {count}"
+    "filterUnsentHint": "Uniquement les textes jamais insérés ni copiés"
   },
   "input": {
     "historySearchPlaceholder": "Rechercher dans l’historique...",
@@ -941,6 +941,7 @@
     "pluginTrustNotice": "Le code des plugins s’exécute dans un worker isolé. N’installez des paquets que depuis des sources de confiance ; les services déclarés peuvent lire ou modifier vos données.",
     "pluginsTab": "Plugins",
     "profileChatHistoryHint": "Les discussions des profils sont stockées dans le dossier du profil ; ce réglage s’applique à tous les profils, y compris aux requêtes rapides. Les discussions « Demander à l’IA » se règlent dans l’onglet « Historique ».",
+    "profileChatHistoryLink": "Les discussions des profils et leurs requêtes rapides sont conservées selon les réglages de l’onglet",
     "profileCopyName": "{name} (copie)",
     "profileDefaultSoul": "# Rôle\nDécrivez qui est cet assistant et en quoi il aide.\n\n# Règles\n- Réponds dans la langue de la question.\n",
     "profileFileToolsOff": "Les outils de fichiers de ce profil sont désactivés : il n’accède pas à ses projets tant que vous ne les activez pas ci-dessus.",
@@ -1246,7 +1247,7 @@
     "customActionNotAssigned": "Non attribué",
     "chatHistoryHint": "Y compris les requêtes rapides. Les discussions des profils sont stockées dans le dossier du profil et se règlent dans l’onglet « Profils IA ».",
     "chatQuickRequestsSaved": "Enregistrer les requêtes rapides",
-    "chatQuickRequestsSavedInfo": "Les requêtes rapides apparaissent dans les discussions comme un groupe à part. Une requête poursuivie dans la discussion est toujours enregistrée.",
+    "chatQuickRequestsSavedInfo": "Les requêtes rapides apparaissent dans les discussions comme un groupe à part, et leurs questions récentes sont proposées dans la requête rapide. Une requête poursuivie dans la discussion devient une discussion ordinaire et est toujours enregistrée.",
     "chatStorageLink": "Le stockage des discussions se règle dans l’onglet",
     "addChatPrompt": "Ajouter un prompt",
     "chatPromptProfile": "Profil",

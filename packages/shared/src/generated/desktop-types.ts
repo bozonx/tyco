@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: f42ce7367d69c3e16c0fefae0092250046f900c2998c0558faed518411655a98
+// Source hash: 8a53c811ab79856cf9c55199e3dac877123e887efc4a8b14fd5887bac7f06e38
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -425,7 +425,6 @@ export type EditorHistoryEntry = {
   origin?: EditorHistoryOrigin | null
   instruction?: EditorHistoryInstruction | null
   profileId?: string | null
-  turns?: Array<EditorHistoryTurn> | null
 }
 
 /** The input modality of an AI prompt. */
@@ -448,8 +447,6 @@ export type EditorHistoryItem = {
   instruction?: EditorHistoryInstruction
   /** Profile this operation ran under, if any. */
   profileId?: string
-  /** All turns of a multi-turn session. */
-  turns?: Array<EditorHistoryTurn>
   /** Unix time in milliseconds. */
   createdAt: number
   /** What the AI turned a `Source` entry into. */
@@ -463,17 +460,13 @@ export type EditorHistoryKind = 'output' | 'draft' | 'source'
 
 /** The AI transformation a `Source` entry was taken before. */
 export type EditorHistoryOperation =
-  'aiTask' | 'translation' | 'correction' | 'voiceCorrection' | 'quickAiRequest'
+  'aiTask' | 'translation' | 'correction' | 'voiceCorrection'
 
-/** Where the user typed or dictated the text. */
-export type EditorHistoryOrigin = 'quickInput' | 'voice'
-
-/** One turn of a multi-turn quick AI request session. */
-export type EditorHistoryTurn = {
-  prompt: string
-  result?: string
-  inputKind: EditorHistoryInputKind
-}
+/**
+ * Where the text came from: where the user typed or dictated it, or the quick
+ * request whose answer was inserted or copied.
+ */
+export type EditorHistoryOrigin = 'quickInput' | 'voice' | 'quickAiRequest'
 
 /** A text handed over to the editor of the main window. */
 export type EditorTransfer = {

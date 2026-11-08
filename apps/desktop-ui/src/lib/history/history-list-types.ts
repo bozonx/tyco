@@ -5,8 +5,6 @@ export interface HistoryListItem {
   meta?: { icon: string; label: string; note?: string }
   /** The text `value` was made from, shown collapsed under it. */
   original?: { label: string; text: string }
-  /** The questions and answers that led to `value`, shown with `original`. */
-  turns?: { prompt: string; result?: string; isVoice: boolean }[]
   /** Unix time in milliseconds; 0 or missing when unknown. */
   time?: number
   /** Additional localized terms included in search. */

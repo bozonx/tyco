@@ -1,635 +1,515 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { AppConfig, UserConfig } from '@tyco/shared'
+import type { ChatImage, ChatMessage } from '@tyco/shared'
 
+import type { ChatToolLoopState } from '../chat-tools/chat-tool-loop'
 import type { ChatLlmOption } from '../chat/chat-llm-selection'
-import type { LlmStreamEvent } from '../llm/llm-client'
 import { REPLY_BLOCKS_TOOL_NAME } from '../reply-blocks/reply-blocks-tool'
 import {
   createQuickAiRequestModel,
   type QuickAiRequestModelDependencies,
+  type QuickAiRequestTurnOptions,
 } from './quick-ai-request-model'
 
-const mockAppConfig: AppConfig = {
-  rulePrefix: 'Rules',
-  aiInstructions: { quickRequest: 'You are a quick AI assistant.' },
-} as unknown as AppConfig
-
-const mockUserConfig: UserConfig = {
-  llm: {
-    tasks: { quickRequest: { modelId: 'gpt-4' } },
-    models: [
-      { id: 'gpt-4', name: 'GPT 4', canUseTools: true },
-      { id: 'simple-model', name: 'Simple', canUseTools: false },
-    ],
-  },
-} as unknown as UserConfig
-
-/** The model options a config offers, as the overlay would list them */
-const optionsOf = (config: UserConfig): ChatLlmOption[] =>
-  (config.llm?.models ?? []).map((model) => ({
-    id: model.id,
-    name: model.name ?? model.id,
+const MODELS: ChatLlmOption[] = [
+  {
+    id: 'gpt-4',
+    name: 'GPT 4',
     providerLabel: 'Provider',
-    canUseImages: Boolean(model.canUseImages),
-    canUseTools: model.canUseTools,
+    canUseImages: false,
+    canUseTools: true,
     contextWindowTokens: 8000,
-  }))
+  },
+  {
+    id: 'vision',
+    name: 'Vision',
+    providerLabel: 'Provider',
+    canUseImages: true,
+    canUseTools: true,
+    contextWindowTokens: 8000,
+  },
+  {
+    id: 'simple-model',
+    name: 'Simple',
+    providerLabel: 'Provider',
+    canUseImages: false,
+    canUseTools: false,
+    contextWindowTokens: 8000,
+  },
+]
 
-function createSetup(overrides: Partial<QuickAiRequestModelDependencies> = {}) {
-  const config = overrides.getUserConfig?.() ?? mockUserConfig
-  let idCounter = 1
-
-  async function* mockStream(): AsyncGenerator<LlmStreamEvent> {
-    yield {
+/** An answer with one reply block, as the tool loop resolves it */
+const blockAnswer = (text = 'Here is the response'): ChatToolLoopState => ({
+  content: text,
+  parts: [
+    {
       type: 'tool-call',
       toolCallId: 'call-1',
       toolName: REPLY_BLOCKS_TOOL_NAME,
       input: { blocks: [{ title: 'Option 1', text: 'Transformed text' }] },
-    }
-    yield {
-      type: 'finish',
-      finishReason: 'stop',
-      text: 'Here is the response',
-      responseMessages: [],
-    }
-  }
+      state: 'done',
+    },
+    { type: 'text', text },
+  ],
+})
 
+type SendTurn = QuickAiRequestModelDependencies['sendTurn']
+
+function createSetup(overrides: Partial<QuickAiRequestModelDependencies> = {}) {
+  let idCounter = 1
+  const sendTurn = vi.fn<SendTurn>(async (_message, _messages, options) => {
+    const answer = blockAnswer()
+    options.onUpdate(answer)
+    return answer
+  })
   const deps: QuickAiRequestModelDependencies = {
     context: { kind: 'selection', text: 'Selected original text' },
-    getUserConfig: () => config,
-    getAppConfig: () => mockAppConfig,
-    getModelOptions: () => optionsOf(config),
-    getRememberedModelId: () =>
-      config.llm?.tasks?.quickRequest?.modelId || undefined,
+    getModelOptions: () => MODELS,
+    getRememberedModelId: () => 'gpt-4',
     rememberModelId: vi.fn(async () => {}),
-    turnTools: vi.fn(async () => undefined),
+    getRules: () => undefined,
+    resolveInstructions: vi.fn(async (id: string | null) =>
+      id ? `Quick\n\nSoul of ${id}` : 'Quick'
+    ),
+    sendTurn,
     answerToolApproval: vi.fn(),
     cancelToolApprovals: vi.fn(),
-    stream: vi.fn(() => mockStream()),
-    resolveProfileInstructions: vi.fn(async (id: string) => `Soul of ${id}`),
     insertText: vi.fn(async () => {}),
     copyText: vi.fn(async () => {}),
     toEditor: vi.fn(async () => {}),
     openMainChat: vi.fn(async () => {}),
+    transferChat: vi.fn(async () => {}),
     saveChat: vi.fn(async () => {}),
-    generateChatTitle: vi.fn(async () => 'Generated title'),
     renameChat: vi.fn(async () => {}),
+    generateChatTitle: vi.fn(async () => 'Generated title'),
+    isHistoryEnabled: () => true,
+    isQuickRequestSavingEnabled: () => true,
     createId: vi.fn(() => `id-${idCounter++}`),
-    closeOverlay: vi.fn(() => {}),
+    chatId: 'chat-1',
+    closeOverlay: vi.fn(),
     ...overrides,
   }
-
-  const model = createQuickAiRequestModel(deps)
-
-  return { model, deps }
+  return { model: createQuickAiRequestModel(deps), deps }
 }
 
-/** Lets the history writes queued by a turn finish */
-const flushHistory = () => new Promise((resolve) => setTimeout(resolve, 0))
+/** Lets the writes queued by a turn finish */
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
+
+const sentMessages = (deps: QuickAiRequestModelDependencies, call = 0) => {
+  const [message, history] = vi.mocked(deps.sendTurn).mock.calls[call]
+  return [...history, message]
+}
+
+const savedChats = (deps: QuickAiRequestModelDependencies) =>
+  vi.mocked(deps.saveChat).mock.calls.map(([chat]) => chat)
 
 describe('QuickAiRequestModel', () => {
   it('tells at once that no model is picked and refuses to send', async () => {
     const { model, deps } = createSetup({
-      getUserConfig: () =>
-        ({
-          llm: { tasks: { quickRequest: { modelId: '' } }, models: [] },
-        }) as unknown as UserConfig,
+      getRememberedModelId: () => undefined,
       noModelError: () => 'pick a model',
     })
 
     expect(model.modelIssue.value).toBe('noModel')
-    expect(await model.submitPrompt('Hello')).toBe(false)
+    expect(await model.submitPrompt('Hi')).toBe(false)
     expect(model.error.value).toBe('pick a model')
-    expect(deps.stream).not.toHaveBeenCalled()
+    expect(deps.sendTurn).not.toHaveBeenCalled()
   })
 
   it('refuses a model without tool calling, with an explicit message', async () => {
     const { model, deps } = createSetup({
+      getRememberedModelId: () => 'simple-model',
       toolsRequiredError: () => 'needs tools',
     })
 
-    await model.setModelId('simple-model')
     expect(model.modelIssue.value).toBe('toolsRequired')
-    expect(await model.submitPrompt('Hello')).toBe(false)
+    expect(await model.submitPrompt('Hi')).toBe(false)
     expect(model.error.value).toBe('needs tools')
-    expect(deps.stream).not.toHaveBeenCalled()
-  })
-
-  it('does not fall back to another model when the picked one is gone', async () => {
-    const { model } = createSetup({
-      getRememberedModelId: () => 'removed-model',
-    })
-
-    expect(model.selectedModel.value).toBeNull()
-    expect(model.modelIssue.value).toBe('noModel')
-    expect(await model.submitPrompt('Hello')).toBe(false)
+    expect(deps.sendTurn).not.toHaveBeenCalled()
   })
 
   it('remembers the picked model per profile', async () => {
-    const remembered: Record<string, string> = { 'prof-1': 'simple-model' }
-    const rememberModelId = vi.fn(async (pId: string | null, id: string) => {
-      remembered[pId ?? ''] = id
-    })
-    const { model } = createSetup({
-      getRememberedModelId: (pId) => remembered[pId ?? ''] ?? 'gpt-4',
-      rememberModelId,
+    const remembered: Record<string, string> = { writer: 'vision' }
+    const { model, deps } = createSetup({
+      getRememberedModelId: (id) => (id ? remembered[id] : 'gpt-4'),
     })
 
-    expect(model.modelId.value).toBe('gpt-4')
-    model.setProfileId('prof-1')
-    expect(model.modelId.value).toBe('simple-model')
-
+    model.setProfileId('writer')
+    expect(model.modelId.value).toBe('vision')
     await model.setModelId('gpt-4')
-    expect(rememberModelId).toHaveBeenCalledWith('prof-1', 'gpt-4')
+    expect(deps.rememberModelId).toHaveBeenCalledWith('writer', 'gpt-4')
   })
 
-  it('sends with the picked model and its tools', async () => {
+  it('sends the selection with the first question, the instructions and the model', async () => {
+    const { model, deps } = createSetup({ initialProfileId: 'writer' })
+
+    expect(await model.submitPrompt('Make it shorter')).toBe(true)
+
+    expect(deps.resolveInstructions).toHaveBeenCalledWith('writer')
+    const [, , options] = vi.mocked(deps.sendTurn).mock.calls[0]
+    expect(options).toMatchObject<Partial<QuickAiRequestTurnOptions>>({
+      modelId: 'gpt-4',
+      profileId: 'writer',
+      instructions: 'Quick\n\nSoul of writer',
+    })
+    // the selection goes into the question as the main chat sends it
+    const [question] = sentMessages(deps)
+    expect(question.content).toContain('Selected original text')
+    expect(question.content).toMatch(/Make it shorter$/)
+    expect(model.turns.value).toEqual([
+      expect.objectContaining({
+        prompt: 'Make it shorter',
+        status: 'done',
+        textResponse: 'Here is the response',
+        replyBlocks: [{ title: 'Option 1', text: 'Transformed text' }],
+      }),
+    ])
+  })
+
+  it('sends the earlier turns with a follow-up and the context only once', async () => {
     const { model, deps } = createSetup()
 
-    await model.submitPrompt('Hello')
+    await model.submitPrompt('First')
+    await model.submitPrompt('Second', 'voice')
 
-    expect(deps.turnTools).toHaveBeenCalledWith('gpt-4', null, undefined)
-    expect(vi.mocked(deps.stream).mock.calls[0][1]).toMatchObject({
-      modelId: 'gpt-4',
-    })
+    const messages = sentMessages(deps, 1)
+    expect(messages.map((message) => [message.role, message.content])).toEqual([
+      ['user', 'First'],
+      ['assistant', 'Here is the response'],
+      ['user', 'Second'],
+    ])
+    // the history keeps the selection beside the first question
+    expect(messages[0].attachments).toEqual([
+      { text: 'Selected original text', source: 'selection' },
+    ])
+    expect(messages[2].content).toBe('Second')
+    expect(model.turns.value.map((turn) => turn.inputKind)).toEqual([
+      'text',
+      'voice',
+    ])
   })
 
-  it('locks profile selection upon first turn generation', async () => {
+  it('locks the profile once a question is sent', async () => {
     const { model } = createSetup()
 
-    expect(model.isProfileLocked.value).toBe(false)
-    model.setProfileId('prof-1')
-    expect(model.profileId.value).toBe('prof-1')
+    await model.submitPrompt('Hi')
+    model.setProfileId('writer')
 
-    await model.submitPrompt('First prompt')
     expect(model.isProfileLocked.value).toBe(true)
-
-    model.setProfileId('prof-2')
-    expect(model.profileId.value).toBe('prof-1')
+    expect(model.profileId.value).toBeNull()
   })
 
-  it('saves the conversation as a quick request chat after the answer', async () => {
-    const { model, deps } = createSetup()
+  it('stores the conversation among the quick requests and names it', async () => {
+    const { model, deps } = createSetup({ initialProfileId: 'writer' })
 
-    expect(await model.submitPrompt('Make it concise')).toBe(true)
-    await flushHistory()
+    await model.submitPrompt('Make it shorter')
+    await flush()
 
-    const turn = model.turns.value[0]
-    expect(turn.status).toBe('done')
-    expect(turn.replyBlocks).toEqual([
-      { title: 'Option 1', text: 'Transformed text' },
-    ])
     expect(deps.saveChat).toHaveBeenCalledWith(
       expect.objectContaining({
+        id: 'chat-1',
+        title: 'Make it shorter',
         isQuickRequest: true,
-        title: 'Make it concise',
         messages: [
-          expect.objectContaining({ role: 'user', content: 'Make it concise' }),
-          expect.objectContaining({ role: 'assistant', status: 'complete' }),
+          expect.objectContaining({ role: 'user' }),
+          expect.objectContaining({ role: 'assistant' }),
         ],
       }),
-      undefined
+      'writer'
+    )
+    expect(deps.generateChatTitle).toHaveBeenCalledWith(
+      'Make it shorter',
+      'Here is the response',
+      'gpt-4',
+      expect.any(AbortSignal)
     )
     expect(deps.renameChat).toHaveBeenCalledWith(
-      'id-1',
+      'chat-1',
       'Generated title',
-      undefined
+      'writer'
     )
   })
 
-  it('saves nothing for a failed request', async () => {
-    const { model, deps } = createSetup({
-      stream: vi.fn(() => {
-        throw new Error('offline')
-      }),
-    })
-
-    expect(await model.submitPrompt('Hello')).toBe(false)
-    await flushHistory()
-
-    expect(model.turns.value[0].status).toBe('error')
-    expect(deps.saveChat).not.toHaveBeenCalled()
-  })
-
-  it('saves nothing for a cancelled request', async () => {
-    let release!: () => void
-    const gate = new Promise<void>((resolve) => (release = resolve))
-    const { model, deps } = createSetup({
-      resolveProfileInstructions: vi.fn(async () => {
-        await gate
-        return ''
-      }),
-      initialProfileId: 'prof-1',
-    })
-
-    const pending = model.submitPrompt('Hello')
-    model.stopGeneration()
-    release()
-    expect(await pending).toBe(false)
-    await flushHistory()
-
-    expect(model.turns.value[0].status).toBe('stopped')
-    expect(deps.cancelToolApprovals).toHaveBeenCalled()
-    expect(deps.saveChat).not.toHaveBeenCalled()
-  })
-
-  it('keeps every turn in one chat and its generated title', async () => {
+  it('keeps every turn in one chat', async () => {
     const { model, deps } = createSetup()
 
-    await model.submitPrompt('Turn 1')
-    await flushHistory()
-    await model.submitPrompt('Turn 2')
-    await flushHistory()
+    await model.submitPrompt('First')
+    await model.submitPrompt('Second')
+    await flush()
 
-    const saves = vi.mocked(deps.saveChat!).mock.calls.map(([chat]) => chat)
-    expect(saves).toHaveLength(2)
-    expect(saves[1].id).toBe(saves[0].id)
-    expect(saves[1].title).toBe('Generated title')
-    expect(saves[1].messages).toHaveLength(4)
+    const chats = savedChats(deps)
+    expect(new Set(chats.map((chat) => chat.id))).toEqual(new Set(['chat-1']))
+    expect(chats.at(-1)?.messages).toHaveLength(4)
     expect(deps.generateChatTitle).toHaveBeenCalledTimes(1)
   })
 
-  it.each(['window', 'editor', 'copy'] as const)(
-    'hands the %s block over',
-    async (target) => {
-      const { model, deps } = createSetup()
-      await model.submitPrompt('Test')
-      await flushHistory()
+  it('stores nothing and names nothing while quick requests are not saved', async () => {
+    const { model, deps } = createSetup({
+      isQuickRequestSavingEnabled: () => false,
+    })
 
-      await model.applyReplyBlock({ text: 'Picked variant' }, target)
+    await model.submitPrompt('Hi')
+    await flush()
 
-      const handOver = {
-        window: deps.insertText,
-        editor: deps.toEditor,
-        copy: deps.copyText,
-      }[target]
-      expect(handOver).toHaveBeenCalledWith(
-        'Picked variant',
-        ...(target === 'editor' ? ['Selected original text'] : [])
-      )
-      expect(deps.closeOverlay).toHaveBeenCalledTimes(target === 'copy' ? 0 : 1)
-    }
-  )
+    // the backend drops the write; the title stays with the conversation
+    expect(deps.renameChat).not.toHaveBeenCalled()
+    await model.switchToChat()
+    expect(deps.transferChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        chat: expect.objectContaining({ title: 'Generated title' }),
+      })
+    )
+  })
 
-  it('switches to chat before any generation has started', async () => {
-    const { model, deps } = createSetup()
+  it('shows a failed request without storing it or sending it again', async () => {
+    const { model, deps } = createSetup({ formatError: () => 'provider down' })
+    vi.mocked(deps.sendTurn).mockRejectedValueOnce(new Error('down'))
 
-    await model.switchToChat('My draft question')
+    expect(await model.submitPrompt('First')).toBe(false)
+    await flush()
+    expect(model.turns.value).toEqual([
+      expect.objectContaining({ status: 'error', error: 'provider down' }),
+    ])
+    expect(deps.saveChat).not.toHaveBeenCalled()
+
+    expect(await model.submitPrompt('Again')).toBe(true)
+    // the question without an answer gave way; the context went with the new one
+    const resent = sentMessages(deps, 1)
+    expect(resent).toHaveLength(1)
+    expect(resent[0].content).toContain('Selected original text')
+    expect(resent[0].content).toMatch(/Again$/)
+    expect(model.turns.value.map((turn) => turn.prompt)).toEqual(['Again'])
+  })
+
+  it('tells an empty answer as an error', async () => {
+    const { model, deps } = createSetup({
+      emptyResponseError: () => 'empty answer',
+    })
+    vi.mocked(deps.sendTurn).mockResolvedValueOnce({ content: '', parts: [] })
+
+    expect(await model.submitPrompt('Hi')).toBe(false)
+    expect(model.turns.value[0]).toMatchObject({
+      status: 'error',
+      error: 'empty answer',
+    })
+  })
+
+  it('keeps and stores what came of a stopped answer', async () => {
+    let release: () => void = () => {}
+    const { model, deps } = createSetup({
+      sendTurn: vi.fn<SendTurn>(async (_message, _history, options) => {
+        options.onUpdate({ content: 'Partial', parts: [] })
+        await new Promise<void>((resolve) => (release = resolve))
+        return { content: 'Partial', parts: [] }
+      }),
+    })
+
+    const pending = model.submitPrompt('Long one')
+    await flush()
+    model.stopGeneration()
+    release()
+
+    expect(await pending).toBe(false)
+    await flush()
+    expect(deps.cancelToolApprovals).toHaveBeenCalled()
+    expect(model.turns.value[0]).toMatchObject({
+      status: 'stopped',
+      textResponse: 'Partial',
+    })
+    expect(savedChats(deps).at(-1)?.messages.at(-1)).toMatchObject({
+      role: 'assistant',
+      content: 'Partial',
+      status: 'stopped',
+    })
+  })
+
+  it('drops a question stopped before any answer', async () => {
+    let release: () => void = () => {}
+    const { model, deps } = createSetup({
+      sendTurn: vi.fn<SendTurn>(async () => {
+        await new Promise<void>((resolve) => (release = resolve))
+        return { content: '', parts: [] }
+      }),
+    })
+
+    const pending = model.submitPrompt('Never mind')
+    await flush()
+    model.stopGeneration()
+    release()
+    await pending
+    await flush()
+
+    expect(deps.saveChat).not.toHaveBeenCalled()
+    expect(model.turns.value[0]?.status).toBe('stopped')
+    expect(model.isSourceTextLocked.value).toBe(false)
+  })
+
+  it('refuses a request longer than the model takes', async () => {
+    const { model, deps } = createSetup({
+      context: { kind: 'selection', text: 'x'.repeat(100_000) },
+      messageTooLongError: () => 'too long',
+    })
+
+    expect(await model.submitPrompt('Summarize')).toBe(false)
+    expect(model.error.value).toBe('too long')
+    expect(deps.sendTurn).not.toHaveBeenCalled()
+  })
+
+  it('opens a fresh chat with the selection before anything was answered', async () => {
+    const { model, deps } = createSetup({ initialProfileId: 'writer' })
+
+    await model.switchToChat(' Draft ')
+
     expect(deps.openMainChat).toHaveBeenCalledWith({
       attachment: { text: 'Selected original text', source: 'selection' },
-      question: 'My draft question',
-      profileId: undefined,
+      question: 'Draft',
+      profileId: 'writer',
     })
+    expect(deps.transferChat).not.toHaveBeenCalled()
     expect(deps.closeOverlay).toHaveBeenCalled()
   })
 
-  it('moves the conversation to the chat of its session', async () => {
-    const { model, deps } = createSetup({ chatId: 'session-chat' })
-    await model.submitPrompt('Make it formal')
+  it('moves the conversation to the main chat as an ordinary chat with its id', async () => {
+    const { model, deps } = createSetup({ initialProfileId: 'writer' })
 
-    await model.switchToChat()
+    await model.submitPrompt('First')
+    await model.switchToChat('Next question')
 
-    expect(vi.mocked(deps.saveChat!).mock.calls[0][0].id).toBe('session-chat')
-    expect(deps.openMainChat).toHaveBeenCalledWith(
-      expect.objectContaining({ chatId: 'session-chat' })
-    )
-  })
-
-  it('moves the conversation to a new chat and names it', async () => {
-    const { model, deps } = createSetup({
-      initialProfileId: 'prof-1',
-      // the quick request saves no title of its own
-      renameChat: undefined,
-    })
-    await model.submitPrompt('Make it formal')
-    await flushHistory()
-    deps.renameChat = vi.fn(async () => {})
-
-    await model.switchToChat()
-    await flushHistory()
-
-    expect(deps.saveChat).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        title: 'Make it formal',
+    expect(deps.transferChat).toHaveBeenCalledWith({
+      chat: expect.objectContaining({
+        id: 'chat-1',
         messages: [
-          expect.objectContaining({
-            role: 'user',
-            content: 'Make it formal',
-            attachments: [
-              { text: 'Selected original text', source: 'selection' },
-            ],
-          }),
-          expect.objectContaining({ role: 'assistant', status: 'complete' }),
+          expect.objectContaining({ role: 'user', content: 'First' }),
+          expect.objectContaining({ role: 'assistant' }),
         ],
       }),
-      'prof-1'
-    )
-    const moved = vi.mocked(deps.saveChat!).mock.lastCall![0]
-    // the chat leaves the quick requests
-    expect(moved.isQuickRequest).toBeUndefined()
-    const chatId = moved.id
-    expect(deps.openMainChat).toHaveBeenCalledWith(
-      expect.objectContaining({ chatId, profileId: 'prof-1' })
-    )
-    // the answer is the reply block alone
-    expect(deps.generateChatTitle).toHaveBeenCalledWith(
-      'Make it formal',
-      'Transformed text',
-      'gpt-4'
-    )
-    expect(deps.renameChat).toHaveBeenCalledWith(
-      chatId,
-      'Generated title',
-      'prof-1'
-    )
-    expect(deps.closeOverlay).toHaveBeenCalled()
+      question: 'Next question',
+      profileId: 'writer',
+    })
+    const [{ chat }] = vi.mocked(deps.transferChat).mock.calls[0]
+    expect(chat.isQuickRequest).toBeUndefined()
+    expect(deps.openMainChat).not.toHaveBeenCalled()
   })
 
-  it('keeps the draft title when no title comes out', async () => {
-    const { model, deps } = createSetup({
-      generateChatTitle: vi.fn(async () => {
-        throw new Error('offline')
-      }),
-    })
-    await model.submitPrompt('Make it formal')
+  it('disables and restores the selection until the model answers', async () => {
+    const { model, deps } = createSetup()
 
-    await model.switchToChat()
-    await flushHistory()
+    model.setSourceTextDisabled(true)
+    expect(model.sourceText.value).toBeUndefined()
+    model.setSourceTextDisabled(false)
+    model.setSourceTextDisabled(true)
+    await model.submitPrompt('No context')
 
-    expect(deps.saveChat).toHaveBeenCalled()
-    expect(deps.renameChat).not.toHaveBeenCalled()
+    expect(sentMessages(deps)[0].content).toBe('No context')
+    expect(model.isSourceTextLocked.value).toBe(true)
+    model.setSourceTextDisabled(false)
+    expect(model.sourceText.value).toBeUndefined()
+  })
+
+  it('inserts a reply block and closes the overlay', async () => {
+    const { model, deps } = createSetup()
+
+    await model.applyReplyBlock({ title: 'A', text: 'Result' }, 'window')
+    await model.applyReplyBlock({ title: 'A', text: 'Copied' }, 'copy')
+
+    expect(deps.insertText).toHaveBeenCalledWith('Result')
+    expect(deps.copyText).toHaveBeenCalledWith('Copied')
+    expect(deps.closeOverlay).toHaveBeenCalledTimes(1)
   })
 
   describe('screenshot mode', () => {
-    const screenshot = {
+    const screenshot: ChatImage = {
       id: 'shot-1',
-      mediaType: 'image/webp' as const,
-      width: 1920,
-      height: 1080,
-      size: 1000,
+      mediaType: 'image/webp',
+      width: 10,
+      height: 10,
+      size: 100,
     }
-    const visionConfig = {
-      llm: {
-        tasks: { quickRequest: { modelId: 'vision' } },
-        models: [
-          {
-            id: 'vision',
-            name: 'Vision',
-            canUseTools: true,
-            canUseImages: true,
-          },
-          { id: 'text', name: 'Text', canUseTools: true, canUseImages: false },
-        ],
-      },
-    } as unknown as UserConfig
-    const bytes = new Uint8Array([1, 2, 3])
-
     const screenshotSetup = (
       overrides: Partial<QuickAiRequestModelDependencies> = {}
     ) =>
       createSetup({
         context: { kind: 'screenshot', image: screenshot },
-        initialProfileId: 'prof-1',
-        getUserConfig: () => visionConfig,
-        loadImage: vi.fn(async () => bytes),
-        openScreenshotChat: vi.fn(async () => {}),
+        getRememberedModelId: () => 'vision',
         ...overrides,
       })
 
-    const userContents = (call: unknown[]) =>
-      (call[0] as { messages: { role: string; content: unknown }[] }).messages
-        .filter((m) => m.role === 'user')
-        .map((m) => m.content)
-
-    it('starts with the given profile and lets the user change it before the first question', async () => {
+    it('sends the screenshot with the first question and stores it', async () => {
       const { model, deps } = screenshotSetup()
-      expect(model.profileId.value).toBe('prof-1')
-      model.setProfileId('prof-2')
-      expect(model.profileId.value).toBe('prof-2')
 
-      await model.submitPrompt('What is on screen?')
-      expect(deps.resolveProfileInstructions).toHaveBeenCalledWith('prof-2')
-      model.setProfileId(null)
-      expect(model.profileId.value).toBe('prof-2')
-    })
+      expect(await model.submitPrompt('What is on screen?')).toBe(true)
+      expect(await model.submitPrompt('And the title?')).toBe(true)
+      await flush()
 
-    it.each(['text', 'voice'] as const)(
-      'sends the screenshot with the first %s question only',
-      async (mode) => {
-        const { model, deps } = screenshotSetup()
-        expect(await model.submitPrompt('What is on screen?', mode)).toBe(true)
-        expect(await model.submitPrompt('And the title?', mode)).toBe(true)
-
-        const stream = vi.mocked(deps.stream)
-        const first = userContents(stream.mock.calls[0])
-        expect(first).toEqual([
-          [
-            { type: 'text', text: 'What is on screen?' },
-            { type: 'file', data: bytes, mediaType: 'image/webp' },
-          ],
-        ])
-        const followUp = userContents(stream.mock.calls[1])
-        expect(followUp[0]).toEqual(first[0])
-        expect(followUp[1]).toBe('And the title?')
-        expect(deps.saveChat).not.toHaveBeenCalled()
-      }
-    )
-
-    it('does not send an empty question', async () => {
-      const { model, deps } = screenshotSetup()
-      expect(await model.submitPrompt('  ')).toBe(false)
-      expect(deps.stream).not.toHaveBeenCalled()
+      const first: ChatMessage = sentMessages(deps)[0]
+      expect(first).toEqual({
+        role: 'user',
+        content: 'What is on screen?',
+        images: [screenshot],
+      })
+      expect(sentMessages(deps, 1)[0]).toEqual(first)
+      expect(savedChats(deps).at(-1)).toMatchObject({
+        isQuickRequest: true,
+        messages: [{ images: [screenshot] }, {}, {}, {}],
+      })
     })
 
     it('rejects a model without image support before sending', async () => {
       const { model, deps } = screenshotSetup({
-        getUserConfig: () =>
-          ({
-            llm: {
-              ...visionConfig.llm,
-              tasks: { quickRequest: { modelId: 'text' } },
-            },
-          }) as unknown as UserConfig,
+        getRememberedModelId: () => 'gpt-4',
         imageModelError: () => 'needs vision',
       })
+
       expect(await model.submitPrompt('What is this?')).toBe(false)
       expect(model.error.value).toBe('needs vision')
       expect(model.turns.value).toHaveLength(0)
-      expect(deps.stream).not.toHaveBeenCalled()
+      expect(deps.sendTurn).not.toHaveBeenCalled()
     })
 
-    it('reports missing image bytes and keeps the screenshot for a retry', async () => {
-      const loadImage = vi
-        .fn<(id: string) => Promise<Uint8Array<ArrayBuffer>>>()
-        .mockRejectedValueOnce(new Error('gone'))
-        .mockResolvedValue(bytes)
-      const { model, deps } = screenshotSetup({
-        loadImage,
-        imageUnavailableError: () => 'image unavailable',
-      })
-      expect(await model.submitPrompt('What is this?')).toBe(false)
-      expect(model.error.value).toBe('image unavailable')
-      expect(deps.stream).not.toHaveBeenCalled()
-      expect(model.sourceImage.value).toEqual(screenshot)
-
-      expect(await model.submitPrompt('What is this?')).toBe(true)
-      expect(loadImage).toHaveBeenLastCalledWith('shot-1')
-    })
-
-    it('shows the provider error and keeps the image context', async () => {
-      const { model } = screenshotSetup({
-        stream: vi.fn(() => {
-          throw new Error('provider rejected the image')
-        }),
-      })
-      expect(await model.submitPrompt('What is this?')).toBe(false)
-      expect(model.error.value).toContain('provider rejected the image')
-      expect(model.sourceImage.value).toEqual(screenshot)
-    })
-
-    it('does not publish a cancelled answer', async () => {
-      let release!: () => void
-      const gate = new Promise<void>((resolve) => (release = resolve))
-      const { model } = screenshotSetup({
-        loadImage: vi.fn(async () => {
-          await gate
-          return bytes
-        }),
-      })
-      const pending = model.submitPrompt('What is this?')
-      model.stopGeneration()
-      release()
-      expect(await pending).toBe(false)
-      expect(model.isGenerating.value).toBe(false)
-    })
-
-    it('replaces or removes the screenshot only before the first question', async () => {
+    it('replaces or removes the screenshot only before the first answer', async () => {
       const { model } = screenshotSetup()
       const retaken = { ...screenshot, id: 'shot-2' }
+
       model.setSourceImage(retaken)
       expect(model.sourceImage.value).toEqual(retaken)
-      model.setSourceImage(undefined)
+      model.removeSourceImage('shot-2')
       expect(model.sourceImage.value).toBeUndefined()
-      model.setSourceImage(screenshot)
-
+      model.addSourceImage(screenshot)
       await model.submitPrompt('What is this?')
+
       expect(model.isSourceImageLocked.value).toBe(true)
       model.setSourceImage(retaken)
       expect(model.sourceImage.value).toEqual(screenshot)
-    })
-
-    it('adds and removes multiple screenshots individually before the first question', async () => {
-      const { model } = screenshotSetup()
-      const secondShot = { ...screenshot, id: 'shot-2' }
-      const thirdShot = { ...screenshot, id: 'shot-3' }
-      model.addSourceImage(secondShot)
-      model.addSourceImage(thirdShot)
-      expect(model.sourceImages.value).toEqual([
-        screenshot,
-        secondShot,
-        thirdShot,
-      ])
-
-      model.removeSourceImage('shot-2')
-      expect(model.sourceImages.value).toEqual([screenshot, thirdShot])
-
-      await model.submitPrompt('What is this?')
-      expect(model.isSourceImageLocked.value).toBe(true)
-      model.removeSourceImage('shot-3')
-      expect(model.sourceImages.value).toEqual([screenshot, thirdShot])
     })
 
     it('keeps the screenshot replaceable after a first request with no answer', async () => {
-      const { model } = screenshotSetup({
-        stream: vi.fn(() => {
-          throw new Error('network down')
-        }),
-      })
+      const { model, deps } = screenshotSetup()
+      vi.mocked(deps.sendTurn).mockRejectedValueOnce(new Error('failed'))
+
       expect(await model.submitPrompt('What is this?')).toBe(false)
       expect(model.isSourceImageLocked.value).toBe(false)
       const retaken = { ...screenshot, id: 'shot-2' }
       model.setSourceImage(retaken)
-      expect(model.sourceImage.value).toEqual(retaken)
+
+      await model.submitPrompt('What is this?')
+      expect(sentMessages(deps, 1)[0].images).toEqual([retaken])
     })
 
-    it('transfers the conversation with the screenshot to the main chat', async () => {
-      const { model, deps } = screenshotSetup()
-      await model.submitPrompt('What is this?')
-      await model.switchToChat('draft follow-up')
+    it('moves an unanswered screenshot with its draft question', async () => {
+      const { model, deps } = screenshotSetup({ imageTitle: () => 'Image' })
 
-      expect(deps.openScreenshotChat).toHaveBeenCalledWith({
+      await model.switchToChat('Explain')
+
+      expect(deps.transferChat).toHaveBeenCalledWith({
         chat: expect.objectContaining({
+          id: 'chat-1',
+          title: 'Explain',
           messages: [
-            expect.objectContaining({
-              role: 'user',
-              content: 'What is this?',
-              images: [screenshot],
-            }),
-            expect.objectContaining({ role: 'assistant' }),
+            { role: 'user', content: 'Explain', images: [screenshot] },
           ],
         }),
-        question: 'draft follow-up',
-        profileId: 'prof-1',
+        profileId: undefined,
       })
-      expect(deps.saveChat).not.toHaveBeenCalled()
       expect(deps.openMainChat).not.toHaveBeenCalled()
-      expect(deps.closeOverlay).toHaveBeenCalled()
     })
-
-    it('transfers an unanswered screenshot with its draft question', async () => {
-      const { model, deps } = screenshotSetup()
-      await model.switchToChat('What is this?')
-      expect(deps.openScreenshotChat).toHaveBeenCalledWith({
-        chat: expect.objectContaining({
-          title: 'What is this?',
-          messages: [
-            { role: 'user', content: 'What is this?', images: [screenshot] },
-          ],
-        }),
-        question: undefined,
-        profileId: 'prof-1',
-      })
-    })
-
-    it('transfers a screenshot to the Ask AI chat without a profile', async () => {
-      const { model, deps } = screenshotSetup({ initialProfileId: null })
-      await model.switchToChat('What is this?')
-      expect(deps.openScreenshotChat).toHaveBeenCalledWith(
-        expect.objectContaining({ profileId: undefined })
-      )
-    })
-
-    it('keeps the quick session when the transfer fails', async () => {
-      const { model, deps } = screenshotSetup({
-        openScreenshotChat: vi.fn(async () => {
-          throw new Error('transfer failed')
-        }),
-      })
-      await model.submitPrompt('What is this?')
-      await expect(model.switchToChat()).rejects.toThrow('transfer failed')
-      expect(deps.closeOverlay).not.toHaveBeenCalled()
-      expect(model.turns.value).toHaveLength(1)
-      expect(model.sourceImage.value).toEqual(screenshot)
-    })
-  })
-
-  it('disables and restores source text context', async () => {
-    const { model, deps } = createSetup({
-      context: { kind: 'selection', text: 'Selected source text' },
-    })
-    expect(model.sourceText.value).toBe('Selected source text')
-    expect(model.isSourceTextDisabled.value).toBe(false)
-
-    model.setSourceTextDisabled(true)
-    expect(model.sourceText.value).toBeUndefined()
-    expect(model.isSourceTextDisabled.value).toBe(true)
-
-    await model.submitPrompt('Explain')
-    const call = vi.mocked(deps.stream).mock.calls[0]?.[0]
-    expect(call?.messages[0]?.content).toBe('Explain')
-
-    expect(model.isSourceTextLocked.value).toBe(true)
-    model.setSourceTextDisabled(false)
-    expect(model.isSourceTextDisabled.value).toBe(true)
   })
 })

@@ -93,7 +93,9 @@ export function createChatSessionModel(
     if (disposed) return
     clearChat()
     const { messages: initialMessages, ...params } = chatParams
-    currentChatParams.value = { ...params, id: deps.createId() }
+    // a conversation moved from another window keeps its id: its stored copy
+    // is the same chat, not another one
+    currentChatParams.value = { ...params, id: params.id || deps.createId() }
     if (initialMessages?.length) {
       messages.value = initialMessages
       await persist(initialMessages, currentChatParams.value)

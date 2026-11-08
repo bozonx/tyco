@@ -458,6 +458,7 @@
     "kindCorrection": "Korekta",
     "kindDraft": "Niedokończony tekst",
     "kindOutput": "Wysłano",
+    "kindQuickAiRequestOutput": "Odpowiedź szybkiego zapytania",
     "kindSource": "Tekst oryginalny",
     "kindTranslate": "Tłumaczenie",
     "kindVoiceInput": "Wprowadzanie głosowe",
@@ -481,8 +482,7 @@
     "filterQuickInput": "Szybkie wprowadzanie",
     "filterVoice": "Głos",
     "filterUnsent": "Niewysłane",
-    "filterUnsentHint": "Tylko teksty, które nigdy nie zostały wstawione ani skopiowane",
-    "requestTurns": "Pytania i odpowiedzi: {count}"
+    "filterUnsentHint": "Tylko teksty, które nigdy nie zostały wstawione ani skopiowane"
   },
   "input": {
     "historySearchPlaceholder": "Szukaj w historii...",
@@ -941,6 +941,7 @@
     "pluginTrustNotice": "Kod wtyczki działa w izolowanym workerze. Instaluj pakiety tylko z zaufanych źródeł; zadeklarowane usługi mogą odczytywać lub zmieniać Twoje dane.",
     "pluginsTab": "Wtyczki",
     "profileChatHistoryHint": "Czaty profili są przechowywane w folderze profilu; dotyczy to wszystkich profili, także szybkich zapytań do nich. Czaty „Zapytaj AI” ustawia się na karcie „Historia”.",
+    "profileChatHistoryLink": "Czaty profili i szybkie zapytania do nich są przechowywane według ustawień na karcie",
     "profileCopyName": "{name} (kopia)",
     "profileDefaultSoul": "# Rola\nOpisz, kim jest ten asystent i w czym pomaga.\n\n# Zasady\n- Odpowiadaj w języku pytania.\n",
     "profileFileToolsOff": "Narzędzia plików tego profilu są wyłączone: nie ma on dostępu do projektów, dopóki ich nie włączysz powyżej.",
@@ -1246,7 +1247,7 @@
     "customActionNotAssigned": "Nie przypisano",
     "chatHistoryHint": "Łącznie z szybkimi zapytaniami. Czaty profili są przechowywane w folderze profilu i ustawiane na karcie „Profile AI”.",
     "chatQuickRequestsSaved": "Zapisuj szybkie zapytania",
-    "chatQuickRequestsSavedInfo": "Szybkie zapytania są widoczne w czatach jako osobna grupa. Zapytanie kontynuowane w czacie jest zawsze zapisywane.",
+    "chatQuickRequestsSavedInfo": "Szybkie zapytania są wyświetlane w czatach jako osobna grupa, a ich ostatnie pytania są podpowiadane w szybkim zapytaniu. Zapytanie kontynuowane w czacie staje się zwykłym czatem i jest zawsze zapisywane.",
     "chatStorageLink": "Przechowywanie czatów ustawia się na karcie",
     "addChatPrompt": "Dodaj prompt",
     "chatPromptProfile": "Profil",

@@ -5,6 +5,7 @@ import {
   chatHistoryConfig,
   chatHistoryRetentionChoices,
   isChatHistoryEnabled,
+  isQuickRequestSavingEnabled,
 } from './chat-history-settings'
 
 const withHistory = (
@@ -70,5 +71,23 @@ describe('chatHistoryRetentionChoices', () => {
 
   it('keeps a saved period that is not offered', () => {
     expect(chatHistoryRetentionChoices(14)).toEqual([0, 7, 14, 30, 90, 365])
+  })
+})
+
+describe('isQuickRequestSavingEnabled', () => {
+  it('saves quick requests unless their scope turns it off', () => {
+    expect(isQuickRequestSavingEnabled(DEFAULT_USER_CONFIG)).toBe(true)
+    const config = {
+      ...DEFAULT_USER_CONFIG,
+      aiProfiles: {
+        ...DEFAULT_USER_CONFIG.aiProfiles,
+        chatHistory: {
+          ...DEFAULT_USER_CONFIG.aiProfiles.chatHistory,
+          isQuickRequestSavingEnabled: false,
+        },
+      },
+    }
+    expect(isQuickRequestSavingEnabled(config, 'writer')).toBe(false)
+    expect(isQuickRequestSavingEnabled(config, null)).toBe(true)
   })
 })

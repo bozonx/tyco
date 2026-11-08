@@ -81,3 +81,16 @@ bytes from the session store or the history folder of that environment.
 The quick request owns one conversation session: its chat id, files and tool
 permissions. Opening it in the full chat hands over the same chat id with its
 messages and file references.
+
+A quick request is a chat with another face: `quick-ai-request-model.ts` runs
+its turns on the parts of the main chat (`createChatState`,
+`createChatGenerationModel`, `createChatPersistenceQueue`,
+`createChatTitleController`), so the context budget, errors, stopping, saving
+and titles behave the same; only the feed of turns with reply blocks is its
+own, a view of the chat messages. It is stored with `isQuickRequest` once
+answered, unless `isQuickRequestSavingEnabled` of its scope is off; a question
+that got no answer is not stored and gives way to the next one. Moving it to
+the main chat goes through `open_screenshot_chat` for text and screenshots
+alike: the main chat starts it with the same id and saves it without the flag,
+as an ordinary chat. The answers inserted or copied from it are kept in the
+editor history with the `quickAiRequest` origin.

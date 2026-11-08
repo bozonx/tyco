@@ -458,6 +458,7 @@
     "kindCorrection": "교정",
     "kindDraft": "완료되지 않은 입력",
     "kindOutput": "전송됨",
+    "kindQuickAiRequestOutput": "빠른 요청 답변",
     "kindSource": "원본 텍스트",
     "kindTranslate": "번역",
     "kindVoiceInput": "음성 입력",
@@ -481,8 +482,7 @@
     "filterQuickInput": "빠른 입력",
     "filterVoice": "음성",
     "filterUnsent": "보내지 않음",
-    "filterUnsentHint": "삽입하거나 복사한 적이 없는 텍스트만",
-    "requestTurns": "질문과 답변: {count}"
+    "filterUnsentHint": "삽입하거나 복사한 적이 없는 텍스트만"
   },
   "input": {
     "historySearchPlaceholder": "기록 검색...",
@@ -935,6 +935,7 @@
     "pluginTrustNotice": "플러그인 코드는 격리된 워커에서 실행됩니다. 신뢰할 수 있는 출처의 패키지만 설치하세요. 선언된 서비스는 데이터를 읽거나 수정할 수 있습니다.",
     "pluginsTab": "플러그인",
     "profileChatHistoryHint": "프로필 채팅은 프로필 폴더에 저장됩니다. 모든 프로필과 그 프로필에 대한 빠른 요청에 적용됩니다. 'AI에게 질문' 채팅은 '기록' 탭에서 설정합니다.",
+    "profileChatHistoryLink": "프로필 채팅과 그 빠른 요청은 다음 탭의 설정에 따라 저장됩니다:",
     "profileCopyName": "{name} (사본)",
     "profileDefaultSoul": "# 역할\n이 어시스턴트가 누구이며 어떤 도움을 주는지 설명하세요.\n\n# 규칙\n- 질문의 언어로 답변하세요.\n",
     "profileFileToolsOff": "이 프로필의 파일 도구가 꺼져 있습니다. 위에서 켜기 전까지 프로젝트에 접근할 수 없습니다.",
@@ -1240,7 +1241,7 @@
     "customActionNotAssigned": "할당되지 않음",
     "chatHistoryHint": "빠른 요청을 포함합니다. 프로필 채팅은 프로필 폴더에 저장되며 'AI 프로필' 탭에서 설정합니다.",
     "chatQuickRequestsSaved": "빠른 요청 저장",
-    "chatQuickRequestsSavedInfo": "빠른 요청은 채팅에서 별도 그룹으로 표시됩니다. 채팅에서 이어 간 요청은 항상 저장됩니다.",
+    "chatQuickRequestsSavedInfo": "빠른 요청은 채팅 목록에 별도 그룹으로 표시되며, 최근 질문은 빠른 요청에서 제안됩니다. 채팅에서 이어 간 요청은 일반 채팅이 되어 항상 저장됩니다.",
     "chatStorageLink": "채팅 저장은 다음 탭에서 설정합니다:",
     "addChatPrompt": "프롬프트 추가",
     "chatPromptProfile": "프로필",

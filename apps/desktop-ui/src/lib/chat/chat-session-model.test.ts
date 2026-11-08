@@ -50,6 +50,19 @@ describe('createChatSessionModel', () => {
       })
       expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.CHAT.path)
     })
+
+    it('keeps the id of a conversation moved from another window', async () => {
+      const { model, state, persist } = setup()
+      const messages = [{ role: 'user' as const, content: 'Question' }]
+
+      await model.startChat({ id: 'quick-1', title: 'Moved', messages })
+
+      expect(state.currentChatParams.value.id).toBe('quick-1')
+      expect(persist).toHaveBeenCalledWith(messages, {
+        id: 'quick-1',
+        title: 'Moved',
+      })
+    })
   })
 
   describe('createChatFromMessages', () => {

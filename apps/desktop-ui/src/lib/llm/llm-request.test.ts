@@ -174,4 +174,24 @@ describe('LLM request', () => {
 
     expect(fake.calls[0].prompt.system).toBe('Be kind\n\nRoots: workspace/')
   })
+
+  it('runs a turn on the model chain of its task', async () => {
+    const { deps, request } = setup()
+    const fake = createFakeLlmStream([textAnswer('Done'), textAnswer('Done')])
+    deps.client.stream.mockImplementation((_task, prompt, options) =>
+      fake.stream(prompt, options)
+    )
+    const messages: ChatMessage[] = [{ role: 'user', content: 'Hi' }]
+
+    await request.chatTurn(messages, { onUpdate: vi.fn() })
+    await request.chatTurn(messages, {
+      onUpdate: vi.fn(),
+      task: 'quickRequest',
+    })
+
+    expect(deps.client.stream.mock.calls.map(([task]) => task)).toEqual([
+      'chat',
+      'quickRequest',
+    ])
+  })
 })

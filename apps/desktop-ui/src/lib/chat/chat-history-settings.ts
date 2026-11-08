@@ -38,3 +38,15 @@ export function isChatHistoryEnabled(
 export function chatHistoryRetentionChoices(saved: unknown): number[] {
   return historyRetentionChoices(CHAT_HISTORY_RETENTION_DAYS, saved)
 }
+
+/**
+ * Quick requests are stored with the chats of their scope unless the settings
+ * turn it off; saving is the default, kept as no field
+ */
+export function isQuickRequestSavingEnabled(
+  config: ChatHistorySettingsSource,
+  profileId?: string | null
+): boolean {
+  const scope: ChatHistoryScope = profileId ? 'profiles' : 'askAi'
+  return chatHistoryConfig(config, scope).isQuickRequestSavingEnabled !== false
+}

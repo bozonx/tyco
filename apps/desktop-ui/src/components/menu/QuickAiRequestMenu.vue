@@ -172,6 +172,10 @@ import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
 import useToast from '../../composables/use-toast'
 import { createDesktopChatTools } from '../../lib/chat-tools/desktop-chat-tools'
+import {
+  isChatHistoryEnabled,
+  isQuickRequestSavingEnabled,
+} from '../../lib/chat/chat-history-settings'
 import { getChatImage } from '../../lib/chat/chat-image-storage'
 import { chatModelOptions } from '../../lib/chat/chat-llm-selection'
 import { resolveProfileInstructions } from '../../lib/chat/chat-profile-runtime'
@@ -180,6 +184,7 @@ import { invokeDesktop } from '../../lib/desktop/invoke'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { describeError } from '../../lib/errors/describe-error'
 import { resultOrThrow } from '../../lib/ipc/ipc-model'
+import { LlmError } from '../../lib/llm/llm-client'
 import { normalizeLlmConfig } from '../../lib/llm/llm-config'
 import { formatLlmError } from '../../lib/llm/llm-errors'
 import { clientLogger } from '../../lib/logger'
@@ -218,7 +223,6 @@ import {
   APP_CONFIG,
   type AiProfile,
   type Chat,
-  type ChatAttachment,
   llmSecretId,
 } from '@tyco/shared'
 
@@ -312,26 +316,15 @@ const session = createQuickAiRequestSession({
 })
 
 // Model instantiation with dependencies
+const profileOf = (pId: string | null) =>
+  pId ? aiProfilesStore.getProfile(pId) : undefined
+
 const model: QuickAiRequestModel = createQuickAiRequestModel({
   context: props.screenshotMode
     ? { kind: 'screenshot', image: props.screenshot, images: props.screenshots }
     : { kind: 'selection', text: props.text },
   initialInputMode: props.inputMode,
   initialProfileId: props.profileId,
-  loadImage: (id) => getChatImage(id),
-  imageModelError: () => t('chat.imageModelRequired'),
-  imageUnavailableError: () => t('chat.imageUnavailable'),
-  describeLlmError: (error) => formatLlmError(error, t),
-  openScreenshotChat: async ({ chat, question, profileId: pId }) => {
-    resultOrThrow(
-      await ipcStore.call('open_screenshot_chat', {
-        transfer: { chat, question: question ?? null, profileId: pId ?? null },
-      }),
-      'open_screenshot_chat'
-    )
-  },
-  getUserConfig: () => desktopStore.userConfig,
-  getAppConfig: () => APP_CONFIG,
   getModelOptions: () =>
     chatModelOptions(normalizeLlmConfig(desktopStore.userConfig?.llm), (id) =>
       isSecretUsable(secretsStore.secrets, llmSecretId(id))
@@ -350,79 +343,122 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
       : await saveQuickRequestTaskModel(modelId)
     if (!response.success) toastText(describeError(response.error, t), 'error')
   },
-  turnTools: async (modelId, pId, profile) => {
-    const tools = session.toolsFor(pId, profile)
-    const turn = await tools.turnTools(
-      modelId,
-      undefined,
-      profile?.tools,
-      profile?.memoryMode
+  getRules: () => desktopStore.userConfig?.llm?.tasks?.quickRequest?.rule,
+  resolveInstructions: async (pId) =>
+    [
+      APP_CONFIG.aiInstructions.quickRequest,
+      pId
+        ? await resolveProfileInstructions(pId, {
+            refreshProfile: (id) => aiProfilesStore.refreshProfile(id),
+            readSoul: (id) => aiProfilesStore.readSoul(id),
+            readCoreMemory: (id) => aiProfilesStore.readMemory(id, 'core.md'),
+            listMemoryTopics: (id) => aiProfilesStore.listMemoryTopics(id),
+            warn: (msg) => clientLogger.warn(msg, 'profile'),
+          })
+        : '',
+    ]
+      .filter(Boolean)
+      .join('\n\n'),
+  mayOfferTools: (pId) => {
+    const profile = profileOf(pId)
+    return session
+      .toolsFor(pId, profile)
+      .mayOfferTools({
+        canUseTools: true,
+        settings: profile?.tools,
+        memoryMode: profile?.memoryMode,
+      })
+  },
+  sendTurn: async (
+    message,
+    prevMessages,
+    { profileId: pId, instructions, toolOutputBudgetCharacters, ...options }
+  ) => {
+    const profile = profileOf(pId)
+    const turn = await session
+      .toolsFor(pId, profile)
+      .turnTools(
+        options.modelId,
+        toolOutputBudgetCharacters,
+        profile?.tools,
+        profile?.memoryMode
+      )
+    return llmStore.actions.sendChatMessage(
+      message,
+      prevMessages,
+      instructions,
+      {
+        ...options,
+        ...turn,
+        task: 'quickRequest',
+        rules: desktopStore.userConfig?.llm?.tasks?.quickRequest?.rule,
+        temperature: profile?.temperature,
+        maxOutputTokens: profile?.maxOutputTokens,
+        loadImage: getChatImage,
+      }
     )
-    return turn.tools
   },
   answerToolApproval: (approvalId, decision) =>
     session.currentTools()?.answerApproval(approvalId, decision),
   cancelToolApprovals: () => session.currentTools()?.dispose(),
-  stream: (llmPrompt, options) =>
-    llmStore.client.stream('quickRequest', llmPrompt, options),
-  resolveProfileInstructions: (pId: string) =>
-    resolveProfileInstructions(pId, {
-      refreshProfile: (id) => aiProfilesStore.refreshProfile(id),
-      readSoul: (id) => aiProfilesStore.readSoul(id),
-      readCoreMemory: (id) => aiProfilesStore.readMemory(id, 'core.md'),
-      listMemoryTopics: (id) => aiProfilesStore.listMemoryTopics(id),
-      warn: (msg) => clientLogger.warn(msg, 'profile'),
-    }),
-  getProfile: (pId: string) => aiProfilesStore.getProfile(pId),
   insertText: async (text: string) => {
     await ipcStore.callOrNotify('paste_into_target_and_hide', { text })
-    void historyStore.saveOutput(text)
+    void historyStore.saveOutput(text, 'quickAiRequest')
   },
   copyText: async (text: string) => {
     resultOrThrow(await ipcStore.call('copy_text', { text }), 'copy_text')
-    void historyStore.saveOutput(text)
+    void historyStore.saveOutput(text, 'quickAiRequest')
     toastKey('common.copied', 'success')
   },
   toEditor: async (text: string, src?: string) => {
     editorNavigation.toEditor(text, src)
-    void historyStore.saveOutput(text)
+    void historyStore.saveOutput(text, 'quickAiRequest')
   },
-  openMainChat: async (params: {
-    attachment?: ChatAttachment
-    question?: string
-    profileId?: string
-    chatId?: string
-    autoSend?: boolean
-  }) => {
+  openMainChat: async (params) => {
     resultOrThrow(
       await ipcStore.callOrNotify('open_main_chat', params),
       'open_main_chat'
     )
   },
-  saveChat: async (chat: Chat, pId?: string) => {
+  transferChat: async ({ chat, question, profileId: pId }) => {
     resultOrThrow(
-      await ipcStore.call('save_chat', { profileId: pId ?? null, chat }),
+      await ipcStore.call('open_screenshot_chat', {
+        transfer: { chat, question: question ?? null, profileId: pId ?? null },
+      }),
+      'open_screenshot_chat'
+    )
+  },
+  saveChat: async (chat: Chat, pId) => {
+    resultOrThrow(
+      await ipcStore.call('save_chat', { profileId: pId, chat }),
       'save_chat'
     )
   },
-  generateChatTitle: (question, answer, modelId) =>
-    llmStore.actions.generateChatTitle(question, answer, modelId),
   renameChat: async (chatId, title, pId) => {
     resultOrThrow(
-      await ipcStore.call('rename_chat', {
-        id: chatId,
-        title,
-        profileId: pId ?? null,
-      }),
+      await ipcStore.call('rename_chat', { id: chatId, title, profileId: pId }),
       'rename_chat'
     )
   },
-  imageTitle: () => t('chat.imageTitle'),
+  generateChatTitle: (question, answer, modelId, signal) =>
+    llmStore.actions.generateChatTitle(question, answer, modelId, signal),
+  isHistoryEnabled: (pId) => isChatHistoryEnabled(desktopStore.userConfig, pId),
+  isQuickRequestSavingEnabled: (pId) =>
+    isQuickRequestSavingEnabled(desktopStore.userConfig, pId),
   createId: () => crypto.randomUUID(),
   chatId: session.chatId,
   closeOverlay: () => menuModalsStore.closeAll(),
   noModelError: () => t('quickAiRequest.noModel'),
   toolsRequiredError: () => t('llmErrors.toolsRequired'),
+  imageModelError: () => t('chat.imageModelRequired'),
+  messageTooLongError: () => t('llmErrors.contextLength'),
+  emptyResponseError: () => t('selection.emptyResult'),
+  imageTitle: () => t('chat.imageTitle'),
+  imageOmittedText: () => t('chat.imageOmitted'),
+  formatError: (error) =>
+    error instanceof LlmError
+      ? formatLlmError(error, t)
+      : describeError(error, t),
 })
 
 /** "Ask AI" keeps its quick request model in the task settings */

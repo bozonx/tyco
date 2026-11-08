@@ -127,6 +127,7 @@ export function createAppWindowController(
     const chat = await goToChatOf(payload.profileId)
     if (!isCurrent()) return
     await chat.startChat({
+      id: payload.chat.id,
       title: payload.chat.title,
       messages: payload.chat.messages,
     })

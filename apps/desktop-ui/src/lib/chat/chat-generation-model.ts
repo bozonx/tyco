@@ -16,7 +16,7 @@ import {
   hasAnswer,
   settleUnfinishedToolCalls,
 } from '../chat-tools/chat-message-steps'
-type TurnResult =
+export type ChatTurnResult =
   | { status: 'answered'; content: string }
   /** No answer, or one an error cut short */
   | { status: 'failed'; content: string }
@@ -24,9 +24,9 @@ type TurnResult =
   | { status: 'aborted' }
   /** Never started: nothing to send, no model, too long */
   | { status: 'rejected' }
-const REJECTED: TurnResult = { status: 'rejected' }
-const ABORTED: TurnResult = { status: 'aborted' }
-const FAILED: TurnResult = { status: 'failed', content: '' }
+const REJECTED: ChatTurnResult = { status: 'rejected' }
+const ABORTED: ChatTurnResult = { status: 'aborted' }
+const FAILED: ChatTurnResult = { status: 'failed', content: '' }
 
 export function createChatGenerationModel(
   deps: Pick<
@@ -110,7 +110,7 @@ export function createChatGenerationModel(
       saveQuestion = true,
       onAccepted,
     }: { saveQuestion?: boolean; onAccepted?: () => void } = {}
-  ): Promise<TurnResult> => {
+  ): Promise<ChatTurnResult> => {
     if (!message?.trim() && !images.length && !attachments.length) {
       deps.notifyError(deps.emptyMessageError())
       return REJECTED
@@ -364,5 +364,12 @@ export function createChatGenerationModel(
     return result.status === 'aborted' ? '' : result.content
   }
 
-  return { halt, stopGeneration, sendMessage, retryLastTurn, regenerateMessage }
+  return {
+    halt,
+    stopGeneration,
+    runTurn,
+    sendMessage,
+    retryLastTurn,
+    regenerateMessage,
+  }
 }

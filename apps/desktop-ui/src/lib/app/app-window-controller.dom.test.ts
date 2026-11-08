@@ -159,7 +159,12 @@ describe('application window events', () => {
       profileId: null,
     })
     expect(f.deps.goToChat).toHaveBeenCalledOnce()
-    expect(f.deps.startChat).toHaveBeenCalledWith({ title: 'Shot', messages })
+    // the conversation keeps its id: its stored copy is the same chat
+    expect(f.deps.startChat).toHaveBeenCalledWith({
+      id: 'c1',
+      title: 'Shot',
+      messages,
+    })
     expect(f.deps.setChatInput).toHaveBeenCalledWith('And this?')
     expect(f.deps.sendChatInput).not.toHaveBeenCalled()
     expect(f.deps.focusChatInput).toHaveBeenCalledOnce()
@@ -190,6 +195,7 @@ describe('application window events', () => {
     expect(goToProfileChat).toHaveBeenCalledWith('assistant')
     expect(f.deps.startChat).not.toHaveBeenCalled()
     expect(profileChatInstance.startChat).toHaveBeenCalledWith({
+      id: 'c1',
       title: 'Shot',
       messages,
     })

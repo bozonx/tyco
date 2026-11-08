@@ -458,6 +458,7 @@
     "kindCorrection": "校對",
     "kindDraft": "未完成的輸入",
     "kindOutput": "已發送",
+    "kindQuickAiRequestOutput": "快速請求的回答",
     "kindSource": "原始文字",
     "kindTranslate": "翻譯",
     "kindVoiceInput": "語音輸入",
@@ -481,8 +482,7 @@
     "filterQuickInput": "快速輸入",
     "filterVoice": "語音",
     "filterUnsent": "未傳送",
-    "filterUnsentHint": "僅顯示從未插入或複製的文字",
-    "requestTurns": "問題與回答：{count}"
+    "filterUnsentHint": "僅顯示從未插入或複製的文字"
   },
   "input": {
     "historySearchPlaceholder": "搜尋歷史記錄...",
@@ -935,6 +935,7 @@
     "pluginTrustNotice": "外掛程式程式碼在隔離的 Worker 中執行。請僅安裝來自您信任來源的套件；宣告的服務可以讀取或修改您的資料。",
     "pluginsTab": "外掛程式",
     "profileChatHistoryHint": "設定檔的聊天儲存在設定檔資料夾中；此設定適用於所有設定檔及發給它們的快速請求。「詢問 AI」聊天於「歷史」分頁設定。",
+    "profileChatHistoryLink": "設定檔的聊天及其快速請求依下列分頁中的設定儲存：",
     "profileCopyName": "{name}（複本）",
     "profileDefaultSoul": "# 角色\n描述此助手的身分以及它能提供的協助。\n\n# 規則\n- 使用提問的語言回覆。\n",
     "profileFileToolsOff": "此設定檔的檔案工具已關閉：在上方開啟前，它無法存取專案。",
@@ -1240,7 +1241,7 @@
     "customActionNotAssigned": "未指派",
     "chatHistoryHint": "包含快速請求。設定檔的聊天儲存在設定檔資料夾中，於「AI 設定檔」分頁設定。",
     "chatQuickRequestsSaved": "儲存快速請求",
-    "chatQuickRequestsSavedInfo": "快速請求在聊天中顯示為獨立的群組。在聊天中繼續的請求一律會被儲存。",
+    "chatQuickRequestsSavedInfo": "快速請求在聊天中單獨成組顯示，其最近的問題會在快速請求中作為建議出現。在聊天中繼續的請求會成為一般聊天，並一律儲存。",
     "chatStorageLink": "聊天儲存於此分頁設定：",
     "addChatPrompt": "新增提示詞",
     "chatPromptProfile": "設定檔",

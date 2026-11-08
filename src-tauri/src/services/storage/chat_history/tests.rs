@@ -981,3 +981,49 @@ fn the_policy_reads_whether_quick_requests_are_saved() {
     assert!(!ChatHistoryPolicy::from_config(&config).saves_quick_requests);
     assert!(ChatHistoryPolicy::for_profiles(&config).saves_quick_requests);
 }
+
+#[test]
+fn the_list_carries_no_recent_prompts_while_the_index_keeps_them() {
+    let dir = TestDir::new("quick-prompts-index");
+    let dirs = dirs(&dir);
+    let mut quick = dated("q", 10);
+    quick.is_quick_request = Some(true);
+    quick.messages = vec![ChatMessage {
+        role: ChatRole::User,
+        content: "Question".into(),
+        attachments: vec![],
+        images: vec![],
+        parts: vec![],
+        status: None,
+    }];
+    write_json(&dirs.chats.join("q.json"), &quick).unwrap();
+
+    let listed = serde_json::to_value(list_chats(&dirs).unwrap()).unwrap();
+    assert_eq!(
+        listed,
+        json!([{"id": "q", "title": "chat", "lastMessageAt": 10, "isQuickRequest": true}])
+    );
+    // read back from the stored index, not rebuilt
+    assert_eq!(
+        list_recent_quick_request_prompts(&dirs, enabled_policy(), 5).unwrap(),
+        ["Question"]
+    );
+}
+
+#[test]
+fn the_indexes_of_earlier_versions_are_removed() {
+    let dir = TestDir::new("legacy-indexes");
+    let dirs = dirs(&dir);
+    let index_dir = dirs.index.parent().unwrap().to_path_buf();
+    fs::create_dir_all(&index_dir).unwrap();
+    for name in LEGACY_CHAT_INDEX_FILES {
+        fs::write(index_dir.join(name), "{}").unwrap();
+    }
+    write_json(&dirs.chats.join("a.json"), &dated("a", 1)).unwrap();
+
+    assert_eq!(ids(&dirs), ["a"]);
+    for name in LEGACY_CHAT_INDEX_FILES {
+        assert!(!index_dir.join(name).exists(), "{name} is left");
+    }
+    assert!(dirs.index.exists());
+}

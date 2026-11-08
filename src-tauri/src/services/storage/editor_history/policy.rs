@@ -81,12 +81,6 @@ impl EditorHistoryPolicy {
             if let Some(instruction) = &mut item.instruction {
                 instruction.text = redact_secrets(&instruction.text);
             }
-            if let Some(turns) = &mut item.turns {
-                for turn in turns.iter_mut() {
-                    turn.prompt = redact_secrets(&turn.prompt);
-                    turn.result = turn.result.take().map(|result| redact_secrets(&result));
-                }
-            }
         }
     }
 
@@ -127,7 +121,6 @@ mod tests {
             origin: None,
             instruction: None,
             profile_id: None,
-            turns: None,
             created_at_ms: 1,
             result: None,
             is_result_applied: false,
@@ -228,11 +221,6 @@ mod tests {
             text: "secret: hunter223344".into(),
             input_kind: crate::models::EditorHistoryInputKind::Typed,
         });
-        item.turns = Some(vec![crate::models::EditorHistoryTurn {
-            prompt: "token: hunter223344".into(),
-            input_kind: crate::models::EditorHistoryInputKind::Typed,
-            result: Some("api_key: hunter223344".into()),
-        }]);
         let mut history = vec![item];
 
         EditorHistoryPolicy {
@@ -249,14 +237,6 @@ mod tests {
         assert_eq!(
             history[0].instruction.as_ref().unwrap().text,
             "secret: [REDACTED SECRET]"
-        );
-        assert_eq!(
-            history[0].turns.as_ref().unwrap()[0].prompt,
-            "token: [REDACTED SECRET]"
-        );
-        assert_eq!(
-            history[0].turns.as_ref().unwrap()[0].result.as_deref(),
-            Some("api_key: [REDACTED SECRET]")
         );
     }
 }

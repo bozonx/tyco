@@ -458,6 +458,7 @@
     "kindCorrection": "Corectare",
     "kindDraft": "Introducere neterminată",
     "kindOutput": "Trimis",
+    "kindQuickAiRequestOutput": "Răspunsul unei cereri rapide",
     "kindSource": "Text original",
     "kindTranslate": "Traducere",
     "kindVoiceInput": "Introducere vocală",
@@ -481,8 +482,7 @@
     "filterQuickInput": "Introducere rapidă",
     "filterVoice": "Voce",
     "filterUnsent": "Netrimise",
-    "filterUnsentHint": "Doar textele care nu au fost niciodată inserate sau copiate",
-    "requestTurns": "Întrebări și răspunsuri: {count}"
+    "filterUnsentHint": "Doar textele care nu au fost niciodată inserate sau copiate"
   },
   "input": {
     "historySearchPlaceholder": "Caută în istoric...",
@@ -941,6 +941,7 @@
     "pluginTrustNotice": "Codul pluginului rulează într-un worker izolat. Instalați pachete doar din surse de încredere; serviciile declarate pot citi sau modifica datele dvs.",
     "pluginsTab": "Pluginuri",
     "profileChatHistoryHint": "Conversațiile profilurilor sunt stocate în dosarul profilului; se aplică tuturor profilurilor, inclusiv cererilor rapide către ele. Conversațiile „Întreabă AI” se setează în fila „Istoric”.",
+    "profileChatHistoryLink": "Conversațiile profilurilor și cererile rapide către ele se păstrează conform setărilor din fila",
     "profileCopyName": "{name} (copie)",
     "profileDefaultSoul": "# Rol\nDescrieți cine este acest asistent și la ce ajută.\n\n# Reguli\n- Răspunde în limba întrebării.\n",
     "profileFileToolsOff": "Instrumentele pentru fișiere ale acestui profil sunt oprite: nu ajunge la proiecte până nu le porniți mai sus.",
@@ -1246,7 +1247,7 @@
     "customActionNotAssigned": "Neatribuit",
     "chatHistoryHint": "Inclusiv cererile rapide. Conversațiile profilurilor sunt stocate în dosarul profilului și se setează în fila „Profiluri AI”.",
     "chatQuickRequestsSaved": "Salvează cererile rapide",
-    "chatQuickRequestsSavedInfo": "Cererile rapide apar în conversații ca un grup separat. O cerere continuată în conversație este salvată mereu.",
+    "chatQuickRequestsSavedInfo": "Cererile rapide apar în conversații ca un grup separat, iar întrebările lor recente sunt sugerate în cererea rapidă. O cerere continuată în conversație devine o conversație obișnuită și este salvată mereu.",
     "chatStorageLink": "Stocarea conversațiilor se setează în fila",
     "addChatPrompt": "Adăugați prompt",
     "chatPromptProfile": "Profil",

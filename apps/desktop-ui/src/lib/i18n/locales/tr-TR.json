@@ -458,6 +458,7 @@
     "kindCorrection": "Düzeltme",
     "kindDraft": "Tamamlanmamış giriş",
     "kindOutput": "Gönderildi",
+    "kindQuickAiRequestOutput": "Hızlı istek yanıtı",
     "kindSource": "Orijinal metin",
     "kindTranslate": "Çeviri",
     "kindVoiceInput": "Sesli giriş",
@@ -481,8 +482,7 @@
     "filterQuickInput": "Hızlı giriş",
     "filterVoice": "Ses",
     "filterUnsent": "Gönderilmemiş",
-    "filterUnsentHint": "Yalnızca hiç eklenmemiş veya kopyalanmamış metinler",
-    "requestTurns": "Sorular ve yanıtlar: {count}"
+    "filterUnsentHint": "Yalnızca hiç eklenmemiş veya kopyalanmamış metinler"
   },
   "input": {
     "historySearchPlaceholder": "Geçmişte ara...",
@@ -938,6 +938,7 @@
     "pluginTrustNotice": "Eklenti kodu yalıtılmış bir worker içinde çalışır. Güvendiğiniz kaynaklardan paket yükleyin; belirtilen hizmetler verilerinizi okuyabilir veya değiştirebilir.",
     "pluginsTab": "Eklentiler",
     "profileChatHistoryHint": "Profil sohbetleri profil klasöründe saklanır; bu ayar tüm profillere ve onlara yapılan hızlı isteklere uygulanır. “Yapay Zekâya Sor” sohbetleri “Geçmiş” sekmesinden ayarlanır.",
+    "profileChatHistoryLink": "Profillerin sohbetleri ve onlara yapılan hızlı istekler şu sekmedeki ayarlara göre saklanır:",
     "profileCopyName": "{name} (kopya)",
     "profileDefaultSoul": "# Rol\nBu asistanın kim olduğunu ve neye yardım ettiğini yazın.\n\n# Kurallar\n- Sorunun dilinde yanıt ver.\n",
     "profileFileToolsOff": "Bu profilin dosya araçları kapalı: yukarıdan açana kadar projelerine erişemez.",
@@ -1243,7 +1244,7 @@
     "customActionNotAssigned": "Atanmadı",
     "chatHistoryHint": "Hızlı istekler dahil. Profil sohbetleri profil klasöründe saklanır ve “Yapay Zekâ Profilleri” sekmesinden ayarlanır.",
     "chatQuickRequestsSaved": "Hızlı istekleri kaydet",
-    "chatQuickRequestsSavedInfo": "Hızlı istekler sohbetlerde ayrı bir grup olarak gösterilir. Sohbette sürdürülen bir istek her zaman kaydedilir.",
+    "chatQuickRequestsSavedInfo": "Hızlı istekler sohbetlerde ayrı bir grup olarak listelenir ve son soruları hızlı istekte önerilir. Sohbette sürdürülen bir istek sıradan bir sohbete dönüşür ve her zaman kaydedilir.",
     "chatStorageLink": "Sohbetlerin saklanması şu sekmeden ayarlanır:",
     "addChatPrompt": "İstem ekle",
     "chatPromptProfile": "Profil",

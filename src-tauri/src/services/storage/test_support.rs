@@ -11,7 +11,6 @@ pub(super) fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> Edi
         origin: None,
         instruction: None,
         profile_id: None,
-        turns: None,
         created_at_ms: 1,
         result: None,
         is_result_applied: false,

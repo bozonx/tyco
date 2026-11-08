@@ -458,6 +458,7 @@
     "kindCorrection": "Corrección",
     "kindDraft": "Entrada sin terminar",
     "kindOutput": "Enviado",
+    "kindQuickAiRequestOutput": "Respuesta de una consulta rápida",
     "kindSource": "Texto original",
     "kindTranslate": "Traducción",
     "kindVoiceInput": "Entrada de voz",
@@ -481,8 +482,7 @@
     "filterQuickInput": "Entrada rápida",
     "filterVoice": "Voz",
     "filterUnsent": "No enviados",
-    "filterUnsentHint": "Solo los textos que nunca se insertaron ni copiaron",
-    "requestTurns": "Preguntas y respuestas: {count}"
+    "filterUnsentHint": "Solo los textos que nunca se insertaron ni copiaron"
   },
   "input": {
     "historySearchPlaceholder": "Buscar en el historial...",
@@ -941,6 +941,7 @@
     "pluginTrustNotice": "El código del plugin se ejecuta en un worker aislado. Instala paquetes solo de fuentes de confianza: los servicios declarados pueden leer o modificar tus datos.",
     "pluginsTab": "Plugins",
     "profileChatHistoryHint": "Los chats de perfiles se guardan en la carpeta del perfil; se aplica a todos los perfiles, incluidas sus solicitudes rápidas. Los chats de «Preguntar a la IA» se configuran en la pestaña «Historial».",
+    "profileChatHistoryLink": "Los chats de los perfiles y sus consultas rápidas se guardan según los ajustes de la pestaña",
     "profileCopyName": "{name} (copia)",
     "profileDefaultSoul": "# Rol\nDescribe quién es este asistente y en qué ayuda.\n\n# Reglas\n- Responde en el idioma de la pregunta.\n",
     "profileFileToolsOff": "Las herramientas de archivos de este perfil están desactivadas: no llega a sus proyectos hasta que las actives arriba.",
@@ -1246,7 +1247,7 @@
     "customActionNotAssigned": "No asignado",
     "chatHistoryHint": "Incluye las solicitudes rápidas. Los chats de perfiles se guardan en la carpeta del perfil y se configuran en la pestaña «Perfiles de IA».",
     "chatQuickRequestsSaved": "Guardar solicitudes rápidas",
-    "chatQuickRequestsSavedInfo": "Las solicitudes rápidas aparecen en los chats como un grupo aparte. Una solicitud continuada en el chat se guarda siempre.",
+    "chatQuickRequestsSavedInfo": "Las consultas rápidas aparecen en los chats como un grupo aparte y sus preguntas recientes se sugieren en la consulta rápida. Una consulta continuada en el chat se convierte en un chat normal y siempre se guarda.",
     "chatStorageLink": "El almacenamiento de chats se configura en la pestaña",
     "addChatPrompt": "Añadir prompt",
     "chatPromptProfile": "Perfil",

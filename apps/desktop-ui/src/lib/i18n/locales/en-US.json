@@ -458,6 +458,7 @@
     "kindCorrection": "Correction",
     "kindDraft": "Unfinished input",
     "kindOutput": "Sent",
+    "kindQuickAiRequestOutput": "Quick request answer",
     "kindSource": "Original text",
     "kindTranslate": "Translation",
     "kindVoiceInput": "Voice input",
@@ -481,8 +482,7 @@
     "filterQuickInput": "Quick input",
     "filterVoice": "Voice",
     "filterUnsent": "Not sent",
-    "filterUnsentHint": "Only texts that were never inserted or copied",
-    "requestTurns": "Questions and answers: {count}"
+    "filterUnsentHint": "Only texts that were never inserted or copied"
   },
   "input": {
     "historySearchPlaceholder": "Search history...",
@@ -941,6 +941,7 @@
     "pluginTrustNotice": "Plugin code runs in an isolated worker. Install packages only from sources you trust; declared services can read or modify your data.",
     "pluginsTab": "Plugins",
     "profileChatHistoryHint": "Profile chats are stored in the profile folder; this applies to all profiles, including quick requests to them. “Ask AI” chats are set up on the History tab.",
+    "profileChatHistoryLink": "The chats of profiles and their quick requests are stored as set up on the tab",
     "profileCopyName": "{name} (copy)",
     "profileDefaultSoul": "# Role\nDescribe who this assistant is and what it helps with.\n\n# Rules\n- Answer in the language of the question.\n",
     "profileFileToolsOff": "File tools are off for this profile: it cannot reach its projects until you turn them on above.",
@@ -1246,7 +1247,7 @@
     "customActionNotAssigned": "Not assigned",
     "chatHistoryHint": "Including quick requests. Profile chats are stored in the profile folder and set up on the AI Profiles tab.",
     "chatQuickRequestsSaved": "Save quick requests",
-    "chatQuickRequestsSavedInfo": "Quick requests are listed as a separate group in the chats. A request continued in the chat is always saved.",
+    "chatQuickRequestsSavedInfo": "Quick requests are listed as a separate group in the chats, and their recent questions are suggested in the quick request. A request continued in the chat becomes an ordinary chat and is always saved.",
     "chatStorageLink": "Chat storage is set up on the tab",
     "addChatPrompt": "Add prompt",
     "chatPromptProfile": "Profile",

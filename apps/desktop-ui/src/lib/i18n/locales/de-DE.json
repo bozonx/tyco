@@ -458,6 +458,7 @@
     "kindCorrection": "Korrektur",
     "kindDraft": "Unfertige Eingabe",
     "kindOutput": "Gesendet",
+    "kindQuickAiRequestOutput": "Antwort einer Schnellanfrage",
     "kindSource": "Originaltext",
     "kindTranslate": "Übersetzung",
     "kindVoiceInput": "Spracheingabe",
@@ -481,8 +482,7 @@
     "filterQuickInput": "Schnelleingabe",
     "filterVoice": "Sprache",
     "filterUnsent": "Nicht gesendet",
-    "filterUnsentHint": "Nur Texte, die nie eingefügt oder kopiert wurden",
-    "requestTurns": "Fragen und Antworten: {count}"
+    "filterUnsentHint": "Nur Texte, die nie eingefügt oder kopiert wurden"
   },
   "input": {
     "historySearchPlaceholder": "Verlauf durchsuchen...",
@@ -941,6 +941,7 @@
     "pluginTrustNotice": "Plugin-Code läuft in einem isolierten Worker. Installieren Sie Pakete nur aus vertrauenswürdigen Quellen; deklarierte Dienste können Ihre Daten lesen oder ändern.",
     "pluginsTab": "Plugins",
     "profileChatHistoryHint": "Profil-Chats liegen im Profilordner; dies gilt für alle Profile, auch für Schnellanfragen an sie. „KI fragen“-Chats werden im Tab „Verlauf“ eingestellt.",
+    "profileChatHistoryLink": "Die Chats der Profile und ihre Schnellanfragen werden nach den Einstellungen auf dem Tab gespeichert",
     "profileCopyName": "{name} (Kopie)",
     "profileDefaultSoul": "# Rolle\nBeschreiben Sie, wer dieser Assistent ist und wobei er hilft.\n\n# Regeln\n- Antworte in der Sprache der Frage.\n",
     "profileFileToolsOff": "Die Dateiwerkzeuge dieses Profils sind aus: Es erreicht seine Projekte erst, wenn Sie sie oben einschalten.",
@@ -1246,7 +1247,7 @@
     "customActionNotAssigned": "Nicht zugewiesen",
     "chatHistoryHint": "Einschließlich Schnellanfragen. Profil-Chats liegen im Profilordner und werden im Tab „KI-Profile“ eingestellt.",
     "chatQuickRequestsSaved": "Schnellanfragen speichern",
-    "chatQuickRequestsSavedInfo": "Schnellanfragen erscheinen in den Chats als eigene Gruppe. Eine im Chat fortgesetzte Anfrage wird immer gespeichert.",
+    "chatQuickRequestsSavedInfo": "Schnellanfragen erscheinen in den Chats als eigene Gruppe, und ihre letzten Fragen werden in der Schnellanfrage vorgeschlagen. Eine im Chat fortgesetzte Anfrage wird zu einem normalen Chat und immer gespeichert.",
     "chatStorageLink": "Die Chat-Speicherung wird eingestellt im Tab",
     "addChatPrompt": "Prompt hinzufügen",
     "chatPromptProfile": "Profil",

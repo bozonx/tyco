@@ -207,7 +207,6 @@ export class FakeDesktopBackend {
         instruction,
         id: inputId,
         profileId,
-        turns,
         ...rest
       } = entry
       const id = inputId ?? this.generateId('history')
@@ -217,7 +216,6 @@ export class FakeDesktopBackend {
         ...(origin ? { origin } : {}),
         ...(instruction ? { instruction } : {}),
         ...(profileId ? { profileId } : {}),
-        ...(turns ? { turns } : {}),
         id,
         createdAt: Date.now(),
       })

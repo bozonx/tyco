@@ -97,12 +97,33 @@ struct IndexedFile {
     modified_ns: u128,
 }
 
+/// A chat as the index keeps it: its summary, which the list shows, and what
+/// only the backend reads.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct IndexedChat {
+    #[serde(flatten)]
+    summary: ChatSummary,
+    /// See `recent_prompts_of`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    recent_prompts: Vec<String>,
+}
+
+impl From<&Chat> for IndexedChat {
+    fn from(chat: &Chat) -> Self {
+        Self {
+            summary: ChatSummary::from(chat),
+            recent_prompts: crate::models::recent_prompts_of(chat),
+        }
+    }
+}
+
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ChatIndex {
     files: Vec<IndexedFile>,
-    /// The summary of each file of `files`, in the same order.
-    chats: Vec<ChatSummary>,
+    /// The chat of each file of `files`, in the same order.
+    chats: Vec<IndexedChat>,
 }
 
 /// The chat files of a folder as they are now.
@@ -141,7 +162,10 @@ fn read_index(path: &Path) -> Option<ChatIndex> {
 }
 
 pub fn list_chats(dirs: &ChatDirs) -> Result<Vec<ChatSummary>, AppError> {
-    load_chat_index(dirs)
+    Ok(load_chat_index(dirs)?
+        .into_iter()
+        .map(|chat| chat.summary)
+        .collect())
 }
 
 pub fn list_recent_quick_request_prompts(
@@ -152,15 +176,15 @@ pub fn list_recent_quick_request_prompts(
     if !policy.is_enabled || limit == 0 {
         return Ok(Vec::new());
     }
-    let summaries = list_chats(dirs)?;
+    let chats = load_chat_index(dirs)?;
     let mut prompts = Vec::new();
     let mut seen = std::collections::HashSet::new();
 
-    for summary in summaries
+    for chat in chats
         .into_iter()
-        .filter(|s| s.is_quick_request == Some(true))
+        .filter(|chat| chat.summary.is_quick_request == Some(true))
     {
-        for prompt in summary.recent_prompts {
+        for prompt in chat.recent_prompts {
             if seen.insert(prompt.clone()) {
                 prompts.push(prompt);
                 if prompts.len() >= limit {
@@ -177,7 +201,7 @@ pub fn list_recent_quick_request_prompts(
 /// as it is now keeps its summary; any other is read again. A file that
 /// cannot be parsed, or holds another chat, is set aside rather than listed
 /// as a chat that never opens.
-fn load_chat_index(dirs: &ChatDirs) -> Result<Vec<ChatSummary>, AppError> {
+fn load_chat_index(dirs: &ChatDirs) -> Result<Vec<IndexedChat>, AppError> {
     let files = chat_files(&dirs.chats)?;
     let stored = read_index(&dirs.index).unwrap_or_default();
     if stored.files.len() == files.len()
@@ -189,7 +213,7 @@ fn load_chat_index(dirs: &ChatDirs) -> Result<Vec<ChatSummary>, AppError> {
     {
         return Ok(sorted(stored.chats));
     }
-    let known: HashMap<&IndexedFile, &ChatSummary> =
+    let known: HashMap<&IndexedFile, &IndexedChat> =
         stored.files.iter().zip(&stored.chats).collect();
     let mut index = ChatIndex::default();
     for (file, path) in files {
@@ -207,7 +231,7 @@ fn load_chat_index(dirs: &ChatDirs) -> Result<Vec<ChatSummary>, AppError> {
         };
         match parse_stored_chat(&path, &raw) {
             Ok(chat) => {
-                index.chats.push(ChatSummary::from(&chat));
+                index.chats.push(IndexedChat::from(&chat));
                 index.files.push(file);
             }
             Err(error) => {
@@ -222,7 +246,21 @@ fn load_chat_index(dirs: &ChatDirs) -> Result<Vec<ChatSummary>, AppError> {
     if let Err(error) = write_index(&dirs.index, &index) {
         log::warn!("Could not save the chat index: {error}");
     }
+    remove_legacy_indexes(&dirs.index);
     Ok(sorted(index.chats))
+}
+
+/// The index files earlier versions kept beside the current one; rebuilt into
+/// the current one, they are only left over.
+const LEGACY_CHAT_INDEX_FILES: &[&str] = &["chats.json", "chats-v2.json"];
+
+fn remove_legacy_indexes(index: &Path) {
+    let Some(dir) = index.parent() else { return };
+    for name in LEGACY_CHAT_INDEX_FILES {
+        if let Err(error) = remove_file_if_exists(&dir.join(name)) {
+            log::warn!("Could not remove the old chat index {name}: {error}");
+        }
+    }
 }
 
 fn write_index(path: &Path, index: &ChatIndex) -> Result<(), AppError> {
@@ -233,11 +271,12 @@ fn write_index(path: &Path, index: &ChatIndex) -> Result<(), AppError> {
 }
 
 /// Newest first by the last message; a tie keeps a fixed order.
-fn sorted(mut chats: Vec<ChatSummary>) -> Vec<ChatSummary> {
+fn sorted(mut chats: Vec<IndexedChat>) -> Vec<IndexedChat> {
     chats.sort_by(|a, b| {
-        b.last_message_at_ms
-            .cmp(&a.last_message_at_ms)
-            .then_with(|| a.id.cmp(&b.id))
+        b.summary
+            .last_message_at_ms
+            .cmp(&a.summary.last_message_at_ms)
+            .then_with(|| a.summary.id.cmp(&b.summary.id))
     });
     chats
 }

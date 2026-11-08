@@ -458,6 +458,7 @@
     "kindCorrection": "Ispravak",
     "kindDraft": "Nedovršeni unos",
     "kindOutput": "Poslano",
+    "kindQuickAiRequestOutput": "Odgovor brzog upita",
     "kindSource": "Izvorni tekst",
     "kindTranslate": "Prijevod",
     "kindVoiceInput": "Glasovni unos",
@@ -481,8 +482,7 @@
     "filterQuickInput": "Brzi unos",
     "filterVoice": "Glas",
     "filterUnsent": "Neposlano",
-    "filterUnsentHint": "Samo tekstovi koji nikad nisu umetnuti ni kopirani",
-    "requestTurns": "Pitanja i odgovori: {count}"
+    "filterUnsentHint": "Samo tekstovi koji nikad nisu umetnuti ni kopirani"
   },
   "input": {
     "historySearchPlaceholder": "Pretraži povijest...",
@@ -941,6 +941,7 @@
     "pluginTrustNotice": "Kôd dodatka izvodi se u izoliranom workeru. Instalirajte pakete samo iz pouzdanih izvora; deklarirane usluge mogu čitati ili mijenjati vaše podatke.",
     "pluginsTab": "Dodaci",
     "profileChatHistoryHint": "Razgovori profila spremaju se u mapu profila; vrijedi za sve profile, uključujući brze upite prema njima. Razgovori „Pitaj AI” postavljaju se na kartici „Povijest”.",
+    "profileChatHistoryLink": "Razgovori profila i brzi upiti prema njima spremaju se prema postavkama na kartici",
     "profileCopyName": "{name} (kopija)",
     "profileDefaultSoul": "# Uloga\nOpišite tko je ovaj asistent i u čemu pomaže.\n\n# Pravila\n- Odgovaraj na jeziku pitanja.\n",
     "profileFileToolsOff": "Alati za datoteke ovog profila su isključeni: ne može doći do projekata dok ih ne uključite iznad.",
@@ -1246,7 +1247,7 @@
     "customActionNotAssigned": "Nije dodijeljeno",
     "chatHistoryHint": "Uključujući brze upite. Razgovori profila spremaju se u mapu profila i postavljaju na kartici „AI profili”.",
     "chatQuickRequestsSaved": "Spremaj brze upite",
-    "chatQuickRequestsSavedInfo": "Brzi upiti prikazuju se u razgovorima kao zasebna skupina. Upit nastavljen u razgovoru uvijek se sprema.",
+    "chatQuickRequestsSavedInfo": "Brzi upiti prikazuju se u razgovorima kao zasebna skupina, a njihova nedavna pitanja predlažu se u brzom upitu. Upit nastavljen u razgovoru postaje običan razgovor i uvijek se sprema.",
     "chatStorageLink": "Spremanje razgovora postavlja se na kartici",
     "addChatPrompt": "Dodaj prompt",
     "chatPromptProfile": "Profil",

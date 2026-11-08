@@ -153,6 +153,7 @@ const ORIGIN_FILTER_LABELS: Record<HistoryOriginFilter, string> = {
   all: 'history.filterAll',
   quickInput: 'history.filterQuickInput',
   voice: 'history.filterVoice',
+  quickAiRequest: 'chat.quickAiRequests',
 }
 const originOptions = computed(() =>
   HISTORY_ORIGIN_FILTERS.map((id) => ({
@@ -199,18 +200,7 @@ const editorItems = computed<HistoryListItem[]>(() =>
         label: t(view.original.labelKey),
         text: view.original.text,
       },
-      turns: view.turns?.map((turn) => ({
-        prompt: turn.prompt,
-        result: turn.result,
-        isVoice: turn.inputKind === 'voice',
-      })),
-      searchText: [
-        label,
-        ...(view.turns ?? []).flatMap((turn) => [
-          turn.prompt,
-          turn.result || '',
-        ]),
-      ].join(' '),
+      searchText: label,
       time: item.createdAt,
     }
   })

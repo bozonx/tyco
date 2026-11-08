@@ -458,6 +458,7 @@
     "kindCorrection": "纠错",
     "kindDraft": "未完成的输入",
     "kindOutput": "已发送",
+    "kindQuickAiRequestOutput": "快速请求的回答",
     "kindSource": "原始文本",
     "kindTranslate": "翻译",
     "kindVoiceInput": "语音输入",
@@ -481,8 +482,7 @@
     "filterQuickInput": "快速输入",
     "filterVoice": "语音",
     "filterUnsent": "未发送",
-    "filterUnsentHint": "仅显示从未插入或复制的文本",
-    "requestTurns": "问题与回答：{count}"
+    "filterUnsentHint": "仅显示从未插入或复制的文本"
   },
   "input": {
     "historySearchPlaceholder": "搜索历史记录…",
@@ -935,6 +935,7 @@
     "pluginTrustNotice": "插件代码在隔离的 Worker 中运行。请仅安装来自可信来源的扩展包；声明的服务可以读取或修改您的数据。",
     "pluginsTab": "插件",
     "profileChatHistoryHint": "配置文件的聊天保存在配置文件文件夹中；此设置适用于所有配置文件及发给它们的快速请求。“询问 AI”聊天在“历史”选项卡中设置。",
+    "profileChatHistoryLink": "配置文件的聊天及其快速请求按以下选项卡中的设置保存：",
     "profileCopyName": "{name} (副本)",
     "profileDefaultSoul": "# 角色\n描述此助手是谁以及能提供什么帮助。\n\n# 规则\n- 使用提问所用的语言进行回答。\n",
     "profileFileToolsOff": "此配置文件的文件工具已关闭：在上方开启前，它无法访问项目。",
@@ -1240,7 +1241,7 @@
     "customActionNotAssigned": "未分配",
     "chatHistoryHint": "包括快速请求。配置文件的聊天保存在配置文件文件夹中，在“AI 配置文件”选项卡中设置。",
     "chatQuickRequestsSaved": "保存快速请求",
-    "chatQuickRequestsSavedInfo": "快速请求在聊天中显示为单独的分组。在聊天中继续的请求始终会被保存。",
+    "chatQuickRequestsSavedInfo": "快速请求在聊天中单独成组显示，其最近的问题会在快速请求中作为建议出现。在聊天中继续的请求会成为普通聊天，并始终保存。",
     "chatStorageLink": "聊天存储在此选项卡中设置：",
     "addChatPrompt": "添加提示词",
     "chatPromptProfile": "配置文件",

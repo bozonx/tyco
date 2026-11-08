@@ -117,8 +117,9 @@
       </section>
     </div>
 
+    <!-- a search without matches among them hides the group -->
     <div
-      v-if="quickRequests.length > 0 || query"
+      v-if="quickRequestGroups.length > 0"
       class="quick-requests-container"
       :class="{ 'is-expanded': isQuickRequestsExpanded }"
     >
@@ -135,7 +136,7 @@
             class="shrink-0"
           />
           <span class="truncate">{{ t('chat.quickAiRequests') }}</span>
-          <span v-if="quickRequests.length > 0" class="quick-requests-badge">
+          <span class="quick-requests-badge">
             {{ quickRequests.length }}
           </span>
         </div>
@@ -152,11 +153,6 @@
         v-if="isQuickRequestsExpanded"
         class="chat-list-scroll quick-requests-scroll"
       >
-        <StateMessage
-          v-if="quickRequestGroups.length === 0"
-          class="chat-list-empty"
-          :message="query ? t('history.nothingFound') : t('history.empty')"
-        />
         <section
           v-for="group in quickRequestGroups"
           :key="group.key"
