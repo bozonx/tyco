@@ -165,6 +165,48 @@ describe('ShortcutList', () => {
     wrapper.unmount()
   })
 
+  it('leaves keys typed into a text field to the field, except Escape', () => {
+    const spaceAction = vi.fn()
+    const qAction = vi.fn()
+    const escAction = vi.fn()
+    const leftLetterKeys: any[] = new Array(15).fill(undefined)
+    leftLetterKeys[0] = { name: 'Action Q', action: qAction }
+    const wrapper = mount(ShortcutList, {
+      props: {
+        text: 'test text',
+        spaceKey: { name: 'Insert', action: spaceAction },
+        leftLetterKeys,
+        isEditorButtonVisible: true,
+        escAction,
+      },
+    })
+    const textarea = document.createElement('textarea')
+    document.body.append(textarea)
+
+    for (const code of ['Space', 'Enter', 'Tab']) {
+      const down = new KeyboardEvent('keydown', {
+        code,
+        bubbles: true,
+        cancelable: true,
+      })
+      textarea.dispatchEvent(down)
+      expect(down.defaultPrevented).toBe(false)
+      textarea.dispatchEvent(
+        new KeyboardEvent('keyup', { code, bubbles: true })
+      )
+    }
+    press('KeyQ', { bubbles: true }, textarea)
+    expect(spaceAction).not.toHaveBeenCalled()
+    expect(qAction).not.toHaveBeenCalled()
+    expect(mocks.toEditor).not.toHaveBeenCalled()
+
+    press('Escape', { bubbles: true }, textarea)
+    expect(escAction).toHaveBeenCalled()
+
+    textarea.remove()
+    wrapper.unmount()
+  })
+
   it('allows Shift+Tab for reverse focus navigation without triggering editor navigation', () => {
     const wrapper = mount(ShortcutList, {
       props: {

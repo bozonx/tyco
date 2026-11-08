@@ -63,6 +63,7 @@ import { computed, onMounted, onUnmounted } from 'vue'
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
+import { isTextEntryTarget } from '../../lib/ui/text-entry-target'
 import { type ActionItem } from '../../stores/action-menu'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
 import ShortcutButton from './ShortcutButton.vue'
@@ -152,8 +153,17 @@ onUnmounted(() => {
   window.removeEventListener('blur', handleWindowBlur)
 })
 
+/** Keys typed into a field belong to its text; only Escape stays a shortcut */
+function isTypingKey(event: KeyboardEvent) {
+  return event.code !== 'Escape' && isTextEntryTarget(event.target)
+}
+
 function handleKeyDown(event: KeyboardEvent) {
   if (props.shortcutsDisabled) return
+  if (isTypingKey(event)) {
+    pressedKeys.delete(event.code)
+    return
+  }
   if (
     event.code === 'Tab' &&
     (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)
@@ -178,6 +188,7 @@ function handleShortcutKeyUp(event: KeyboardEvent) {
   const textAtKeyDown = pressedKeys.get(event.code)
   pressedKeys.delete(event.code)
   if (props.shortcutsDisabled || textAtKeyDown === undefined) return
+  if (isTypingKey(event)) return
   if (textAtKeyDown !== props.text) return
   if (event.ctrlKey || event.altKey || event.metaKey) return
 
