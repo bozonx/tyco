@@ -1,6 +1,10 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsCreateVariableModal from './SettingsCreateVariableModal.vue'
 
@@ -9,14 +13,24 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 describe('SettingsCreateVariableModal.vue', () => {
-  const mountModal = (open = true) => {
+  let desktop: TestDesktop
+
+  beforeEach(() => {
+    desktop = installFakeDesktop()
+  })
+
+  afterEach(() => {
+    desktop.dispose()
+  })
+
+  const mountModal = (open = true, initialName?: string) => {
     const context = createTestSettingsContext({
       variables: [{ id: 'var-1', name: 'EXISTING_VAR', description: '' }],
     })
     return {
       context,
       wrapper: mount(SettingsCreateVariableModal, {
-        props: { open },
+        props: { open, initialName },
         global: {
           provide: context.provide,
           stubs: {
@@ -72,6 +86,24 @@ describe('SettingsCreateVariableModal.vue', () => {
     expect(context.draft.value.variables.map((v) => v.name)).toContain(
       'NEW_VAR'
     )
+  })
+
+  it('sets the value on this device together with the name', async () => {
+    const { wrapper, context } = mountModal()
+    await wrapper.find('[data-testid="variable-new-name"]').setValue('NOTES')
+    await wrapper.find('[data-testid="variable-new-value"]').setValue('/notes')
+    await wrapper.find('form').trigger('submit')
+
+    const variable = context.draft.value.variables.find(
+      (v) => v.name === 'NOTES'
+    )
+    expect(context.draft.value.variableValues[variable!.id]).toBe('/notes')
+  })
+
+  it('fills the name it is opened with', () => {
+    const { wrapper } = mountModal(true, 'FROM_HINT')
+    const input = wrapper.find('[data-testid="variable-new-name"]')
+    expect((input.element as HTMLInputElement).value).toBe('FROM_HINT')
   })
 
   it('emits close on cancel click', async () => {

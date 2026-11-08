@@ -6,6 +6,12 @@ import {
   installFakeDesktop,
   type TestDesktop,
 } from '../../test/install-fake-desktop'
+import {
+  DEFAULT_USER_CONFIG,
+  normalizeUserConfig,
+  type UserConfig,
+} from '@tyco/shared'
+
 import SettingsVariablesTab from './SettingsVariablesTab.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -27,9 +33,14 @@ describe('SettingsVariablesTab.vue', () => {
   })
 
   const mountTab = (
-    variables: Array<{ id: string; name: string; description: string }> = []
+    variables: Array<{ id: string; name: string; description: string }> = [],
+    commands: Partial<UserConfig>['commands'] = []
   ) => {
-    const context = createTestSettingsContext({ variables, variableValues: {} })
+    const context = createTestSettingsContext({
+      variables,
+      variableValues: {},
+      ...(commands.length ? { commands } : {}),
+    })
     return {
       context,
       wrapper: mount(SettingsVariablesTab, {
@@ -42,7 +53,12 @@ describe('SettingsVariablesTab.vue', () => {
               emits: ['close'],
               template: '<div class="create-modal-stub" :data-open="open" />',
             },
-            DirectoryPickerButton: true,
+            ConfirmModal: {
+              props: ['open', 'message'],
+              emits: ['confirm', 'cancel'],
+              template:
+                '<div v-if="open" class="confirm-stub">{{ message }}<button class="confirm-yes" @click="$emit(\'confirm\')" /></div>',
+            },
           },
         },
       }),
@@ -98,6 +114,29 @@ describe('SettingsVariablesTab.vue', () => {
     const removeBtn = wrapper.find('[data-testid="variable-v1"] button')
     await removeBtn.trigger('click')
 
+    expect(context.draft.value.variables).toHaveLength(0)
+  })
+
+  it('asks before removing a variable that commands use', async () => {
+    const { wrapper, context } = mountTab(
+      [{ id: 'v1', name: 'NOTES', description: '' }],
+      normalizeUserConfig({
+        ...DEFAULT_USER_CONFIG,
+        commands: [
+          {
+            id: 'c1',
+            name: 'Ask',
+            toolId: 'core.aiTask',
+            toolConfig: { prompt: '{{var:NOTES}}' },
+          },
+        ],
+      }).commands
+    )
+    await wrapper.find('[data-testid="variable-v1"] button').trigger('click')
+    expect(context.draft.value.variables).toHaveLength(1)
+    expect(wrapper.find('.confirm-stub').text()).toContain('"count":1')
+
+    await wrapper.find('.confirm-yes').trigger('click')
     expect(context.draft.value.variables).toHaveLength(0)
   })
 })

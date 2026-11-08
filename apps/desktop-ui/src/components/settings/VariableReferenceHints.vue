@@ -7,77 +7,79 @@
       :data-testid="`variable-hint-${issue.name}`"
     >
       <AppIcon icon="mdi:alert-outline" size="sm" aria-hidden="true" />
-      <span>
-        {{
-          t(
-            issue.isDeclared
-              ? 'variables.hintNotSet'
-              : 'variables.hintNotDeclared',
-            { name: issue.name }
-          )
-        }}
-      </span>
+      <span>{{ messageOf(issue) }}</span>
       <InlineAction
-        v-if="!issue.isDeclared && issue.canDeclare"
-        @click="declare(issue.name)"
+        v-if="issue.kind === 'notDeclared' && canDeclare(issue.name)"
+        @click="declaringName = issue.name"
       >
         {{ t('variables.declare') }}
       </InlineAction>
-      <InlineAction v-else-if="issue.isDeclared" @click="openVariables">
+      <InlineAction
+        v-else-if="issue.kind === 'notSet'"
+        @click="context?.editVariable(issue.variableId)"
+      >
         {{ t('variables.setValue') }}
       </InlineAction>
     </li>
   </ul>
+  <SettingsCreateVariableModal
+    v-if="context"
+    :open="declaringName !== undefined"
+    :initial-name="declaringName"
+    @close="declaringName = undefined"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed, inject } from 'vue'
+import { computed, inject, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { SETTINGS_CONTEXT_KEY } from '../../lib/settings/settings-context'
-import { addVariable } from '../../lib/variables/variables-settings'
+import {
+  type VariableReferenceIssue,
+  variableReferenceIssues,
+} from '../../lib/variables/variables-settings'
 import AppIcon from '../common/AppIcon.vue'
 import InlineAction from '../common/InlineAction.vue'
-import {
-  BUILTIN_VARIABLES,
-  variableNameIssue,
-  variableReferences,
-} from '@tyco/shared'
+import SettingsCreateVariableModal from './SettingsCreateVariableModal.vue'
+import { variableNameIssue } from '@tyco/shared'
 
 /**
  * What the `{{var:NAME}}` of `templates` need on this device: a variable that
- * is not declared, or one without a value here
+ * is not declared, one without a value here, or a name to correct
  */
 const props = defineProps<{ templates: readonly string[] }>()
 
 const { t } = useI18n()
 const context = inject(SETTINGS_CONTEXT_KEY, null)
-const builtins: readonly string[] = BUILTIN_VARIABLES
+
+/** The name the declare dialog is open for */
+const declaringName = ref<string>()
 
 const issues = computed(() => {
   const config = context?.draft.value
-  if (!config) return []
-  const names = new Set(props.templates.flatMap(variableReferences))
-  return [...names].flatMap((name) => {
-    if (builtins.includes(name)) return []
-    const variable = config.variables.find((item) => item.name === name)
-    if (variable && config.variableValues[variable.id]?.trim()) return []
-    return [
-      {
-        name,
-        isDeclared: Boolean(variable),
-        canDeclare: !variableNameIssue(name, config.variables),
-      },
-    ]
-  })
+  return config ? variableReferenceIssues(props.templates, config) : []
 })
 
-function declare(name: string) {
-  if (context) addVariable(context.draft.value, name)
+function canDeclare(name: string): boolean {
+  const config = context?.draft.value
+  return config ? !variableNameIssue(name, config.variables) : false
 }
 
-function openVariables() {
-  context?.navigate('variables')
+function messageOf(issue: VariableReferenceIssue): string {
+  switch (issue.kind) {
+    case 'notSet':
+      return t('variables.hintNotSet', { name: issue.name })
+    case 'notDeclared':
+      return t('variables.hintNotDeclared', { name: issue.name })
+    case 'invalidName':
+      return t('variables.hintInvalidName', { name: issue.name })
+    case 'wrongCase':
+      return t('variables.hintWrongCase', {
+        name: issue.name,
+        expected: issue.expected,
+      })
+  }
 }
 </script>
 

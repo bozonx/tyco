@@ -80,6 +80,21 @@
           @close="isCreateModalOpen = false"
         />
 
+        <ConfirmModal
+          :open="Boolean(pendingRemoval)"
+          danger
+          :title="t('variables.removeConfirmTitle')"
+          :message="
+            t('variables.removeConfirmMessage', {
+              name: pendingRemoval?.name ?? '',
+              count: pendingRemoval?.usageCount ?? 0,
+            })
+          "
+          :confirm-text="t('variables.remove')"
+          @confirm="confirmRemove"
+          @cancel="pendingRemoval = undefined"
+        />
+
         <InlineNotice
           v-if="unsetCount"
           class="variables-notice"
@@ -117,7 +132,7 @@
               icon="mdi:delete-outline"
               variant="danger-ghost"
               :label="t('variables.remove')"
-              @click="remove(variable.id)"
+              @click="requestRemove(variable.id)"
             />
           </div>
           <FieldRow :label="t('variables.description')" density="compact">
@@ -138,22 +153,12 @@
             "
           >
             <template #info><DeviceScopeBadge /></template>
-            <div class="flex flex-wrap items-center gap-2">
-              <FieldInput
-                class="flex-1 min-w-48"
-                :model-value="draft.variableValues[variable.id] ?? ''"
-                :placeholder="t('variables.valuePlaceholder')"
-                @update:model-value="
-                  setVariableValue(draft, variable.id, String($event))
-                "
-              />
-              <DirectoryPickerButton
-                @select="setVariableValue(draft, variable.id, $event)"
-              />
-              <Button size="sm" @click="pickFile(variable.id)">
-                {{ t('variables.browseFile') }}
-              </Button>
-            </div>
+            <VariableValueInput
+              :ref="(el) => setValueRef(variable.id, el)"
+              :model-value="draft.variableValues[variable.id] ?? ''"
+              :test-id="`variable-value-${variable.id}`"
+              @update:model-value="setVariableValue(draft, variable.id, $event)"
+            />
           </FieldRow>
           <p class="variable-usage">
             <code>{{ variablePlaceholder(variable.name) }}</code>
@@ -166,7 +171,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import {
+  type ComponentPublicInstance,
+  computed,
+  nextTick,
+  onMounted,
+  reactive,
+  ref,
+} from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
@@ -179,9 +191,9 @@ import {
   unsetVariables,
 } from '../../lib/variables/variables-settings'
 import { useDesktopStore } from '../../stores/desktop'
-import { useIpcStore } from '../../stores/ipc'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
+import ConfirmModal from '../common/ConfirmModal.vue'
 import CopyButton from '../common/CopyButton.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
@@ -189,15 +201,17 @@ import IconButton from '../common/IconButton.vue'
 import InfoPopover from '../common/InfoPopover.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import DeviceScopeBadge from './DeviceScopeBadge.vue'
-import DirectoryPickerButton from './DirectoryPickerButton.vue'
 import SettingsCreateVariableModal from './SettingsCreateVariableModal.vue'
 import SettingsSection from './SettingsSection.vue'
+import VariableValueInput from './VariableValueInput.vue'
 import { variablePlaceholder } from '@tyco/shared'
+
+/** `focusVariableId` opens the tab on the value of that variable */
+const props = defineProps<{ focusVariableId?: string }>()
 
 const { t } = useI18n()
 const { draft } = useSettingsContext()
 const desktop = useDesktopStore()
-const ipc = useIpcStore()
 
 const isCreateModalOpen = ref(false)
 
@@ -226,16 +240,45 @@ function remove(id: string) {
   delete nameErrors[id]
 }
 
-/** A file, by its path */
-async function pickFile(id: string) {
-  const result = await ipc.callOrNotify('pick_file')
-  if (typeof result.result === 'string')
-    setVariableValue(draft.value, id, result.result)
+/** The variable about to be removed while commands still use it */
+const pendingRemoval = ref<{ id: string; name: string; usageCount: number }>()
+
+function usageCountOf(name: string): number {
+  const usage = variableUsage(draft.value, name)
+  return usage.commandIds.length + usage.providerIds.length
 }
 
+/** Removes at once a variable nothing uses; asks first otherwise */
+function requestRemove(id: string) {
+  const variable = draft.value.variables.find((item) => item.id === id)
+  if (!variable) return
+  const usageCount = usageCountOf(variable.name)
+  if (!usageCount) return remove(id)
+  pendingRemoval.value = { id, name: variable.name, usageCount }
+}
+
+function confirmRemove() {
+  if (pendingRemoval.value) remove(pendingRemoval.value.id)
+  pendingRemoval.value = undefined
+}
+
+const valueRefs = new Map<string, { focus?: () => void; $el?: Element }>()
+
+function setValueRef(id: string, el: Element | ComponentPublicInstance | null) {
+  if (el) valueRefs.set(id, el as { focus?: () => void; $el?: Element })
+  else valueRefs.delete(id)
+}
+
+onMounted(async () => {
+  if (!props.focusVariableId) return
+  await nextTick()
+  const field = valueRefs.get(props.focusVariableId)
+  field?.$el?.scrollIntoView?.({ block: 'center' })
+  field?.focus?.()
+})
+
 function usageText(name: string): string {
-  const usage = variableUsage(draft.value, name)
-  const count = usage.commandIds.length + usage.providerIds.length
+  const count = usageCountOf(name)
   return count ? t('variables.usedBy', { count }) : t('variables.unused')
 }
 

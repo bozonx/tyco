@@ -43,6 +43,7 @@ export function createTestSettingsContext(
     ),
     navigate: vi.fn(),
     editCommand: vi.fn(),
+    editVariable: vi.fn(),
   }
   return {
     ...context,

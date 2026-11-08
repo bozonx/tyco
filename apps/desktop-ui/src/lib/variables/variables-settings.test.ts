@@ -8,6 +8,7 @@ import {
   renameVariableIn,
   setVariableValue,
   unsetVariables,
+  variableReferenceIssues,
 } from './variables-settings'
 import {
   commandMissingVariables,
@@ -91,6 +92,37 @@ describe('variables settings', () => {
       issueKey: 'variables.errorNameTaken',
     })
     expect(newVariableId('A', ['a', 'a-2'])).toBe('a-3')
+  })
+
+  it('sets the value on this device when a variable is declared with one', () => {
+    const draft = config()
+    const result = addVariable(draft, 'LOCAL_API', '', 'http://localhost')
+    expect(result.ok && draft.variableValues[result.variable.id]).toBe(
+      'http://localhost'
+    )
+    const blank = addVariable(draft, 'EMPTY', '', '  ')
+    expect(blank.ok && blank.variable.id in draft.variableValues).toBe(false)
+  })
+
+  it('tells what each reference of a template lacks', () => {
+    const draft = config()
+    addVariable(draft, 'SET_VAR', '', 'value')
+    addVariable(draft, 'UNSET_VAR')
+    const unsetId = draft.variables.find((v) => v.name === 'UNSET_VAR')!.id
+    expect(
+      variableReferenceIssues(
+        [
+          '{{var:SET_VAR}} {{var:UNSET_VAR}} {{var:TYCO_USER_DIR}}',
+          '{{var:NEW_VAR}} {{var:lower}} {{var:unset_var}} {{var:UNSET_VAR}}',
+        ],
+        draft
+      )
+    ).toEqual([
+      { kind: 'notSet', name: 'UNSET_VAR', variableId: unsetId },
+      { kind: 'notDeclared', name: 'NEW_VAR' },
+      { kind: 'invalidName', name: 'lower' },
+      { kind: 'wrongCase', name: 'unset_var', expected: 'UNSET_VAR' },
+    ])
   })
 
   it('renames the references of the commands and providers that fill them', () => {

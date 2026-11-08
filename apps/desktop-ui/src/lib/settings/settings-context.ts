@@ -16,6 +16,8 @@ export interface SettingsContext {
   navigate: (tab: string) => void
   /** Opens the commands tab on one command */
   editCommand: (commandId: string) => void
+  /** Opens the variables tab on the value of one variable */
+  editVariable: (variableId: string) => void
   /**
    * The values the variables of the draft have on this device, the built-in
    * ones included; none when the page does not know the device

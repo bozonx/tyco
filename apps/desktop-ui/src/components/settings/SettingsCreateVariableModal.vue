@@ -49,6 +49,20 @@
         />
       </FieldRow>
 
+      <FieldRow
+        class="create-variable-field"
+        vertical
+        :separator="false"
+        :label="t('variables.valueOnDevice')"
+        :hint="t('variables.valueOnDeviceHint')"
+      >
+        <VariableValueInput
+          ref="valueRef"
+          v-model="value"
+          test-id="variable-new-value"
+        />
+      </FieldRow>
+
       <div class="create-variable-modal-actions">
         <Button size="sm" variant="ghost" type="button" @click="close">
           {{ t('common.cancel') }}
@@ -77,8 +91,10 @@ import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import IconButton from '../common/IconButton.vue'
+import VariableValueInput from './VariableValueInput.vue'
 
-const props = defineProps<{ open: boolean }>()
+/** `initialName` fills the name, e.g. for a reference not declared yet */
+const props = defineProps<{ open: boolean; initialName?: string }>()
 
 const emit = defineEmits<{ close: []; created: [id: string] }>()
 
@@ -88,25 +104,35 @@ const titleId = useId()
 
 const name = ref('')
 const description = ref('')
+const value = ref('')
 const nameError = ref<string>()
 const inputRef = ref<{ focus?: () => void } | null>(null)
+const valueRef = ref<{ focus?: () => void } | null>(null)
 
 watch(
   () => props.open,
   (isOpen) => {
     if (isOpen) {
-      name.value = ''
+      name.value = props.initialName ?? ''
       description.value = ''
+      value.value = ''
       nameError.value = undefined
       void nextTick(() => {
-        inputRef.value?.focus?.()
+        const field = props.initialName ? valueRef.value : inputRef.value
+        field?.focus?.()
       })
     }
-  }
+  },
+  { immediate: true }
 )
 
 function handleSubmit() {
-  const result = addVariable(draft.value, name.value, description.value)
+  const result = addVariable(
+    draft.value,
+    name.value,
+    description.value,
+    value.value
+  )
   if (!result.ok) {
     nameError.value = t(result.issueKey)
     return

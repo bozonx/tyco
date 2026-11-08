@@ -1,5 +1,7 @@
 import {
+  BUILTIN_VARIABLES,
   variableNameIssue,
+  variableReferences,
   type UserConfig,
   type VariableConfig,
   type VariableNameIssue,
@@ -50,13 +52,14 @@ export function newVariableId(name: string, taken: readonly string[]): string {
 }
 
 /**
- * Declares a variable; returns why it cannot be, as an i18n key. Its value is
- * set on each device apart
+ * Declares a variable, with `value` as its value on this device; returns why it
+ * cannot be, as an i18n key. Other devices set their own value
  */
 export function addVariable(
   config: VariablesConfig,
   name: string,
-  description = ''
+  description = '',
+  value = ''
 ): { ok: true; variable: VariableConfig } | { ok: false; issueKey: string } {
   const trimmed = name.trim()
   const issueKey = nameIssueKey(trimmed, config.variables)
@@ -70,6 +73,7 @@ export function addVariable(
     description: description.trim(),
   }
   config.variables = [...config.variables, variable]
+  setVariableValue(config, variable.id, value)
   return { ok: true, variable }
 }
 
@@ -125,3 +129,40 @@ export const unsetVariables = (
   config.variables.filter(
     (variable) => !config.variableValues[variable.id]?.trim()
   )
+
+/**
+ * What a `{{var:NAME}}` of a template lacks on this device: a value (`notSet`),
+ * a declaration (`notDeclared`), a valid name (`invalidName`), or the case of a
+ * declared name (`wrongCase`)
+ */
+export type VariableReferenceIssue =
+  | { kind: 'notSet'; name: string; variableId: string }
+  | { kind: 'notDeclared'; name: string }
+  | { kind: 'invalidName'; name: string }
+  | { kind: 'wrongCase'; name: string; expected: string }
+
+const builtinNames: readonly string[] = BUILTIN_VARIABLES
+
+/** The issues of the references in `templates`, each name once */
+export function variableReferenceIssues(
+  templates: readonly string[],
+  config: Pick<UserConfig, 'variables' | 'variableValues'>
+): VariableReferenceIssue[] {
+  const names = new Set(templates.flatMap(variableReferences))
+  return [...names].flatMap((name): VariableReferenceIssue[] => {
+    if (builtinNames.includes(name)) return []
+    const variable = config.variables.find((item) => item.name === name)
+    if (variable)
+      return config.variableValues[variable.id]?.trim()
+        ? []
+        : [{ kind: 'notSet', name, variableId: variable.id }]
+    const upper = name.toUpperCase()
+    const sameName = config.variables.find(
+      (item) => item.name.toUpperCase() === upper
+    )
+    if (sameName) return [{ kind: 'wrongCase', name, expected: sameName.name }]
+    return variableNameIssue(name, config.variables) === 'invalidName'
+      ? [{ kind: 'invalidName', name }]
+      : [{ kind: 'notDeclared', name }]
+  })
+}

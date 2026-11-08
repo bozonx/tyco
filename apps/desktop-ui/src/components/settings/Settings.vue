@@ -45,6 +45,11 @@
               :key="focusCommandId"
               :focus-command-id="focusCommandId"
             />
+            <SettingsVariablesTab
+              v-else-if="current.id === 'variables'"
+              :key="focusVariableId"
+              :focus-variable-id="focusVariableId"
+            />
             <component :is="SECTION_TABS[current.id]" v-else />
           </template>
           <SettingsAiProfilesTab v-else-if="current.kind === 'ai-overview'" />
@@ -309,8 +314,12 @@ const operations = createSettingsOperations({
 /** The command the commands tab opens with */
 const focusCommandId = ref<string>()
 
+/** The variable the variables tab opens with */
+const focusVariableId = ref<string>()
+
 watch(currentTab, (tab) => {
   if (tab !== 'commands') focusCommandId.value = undefined
+  if (tab !== 'variables') focusVariableId.value = undefined
 })
 
 provide(SETTINGS_CONTEXT_KEY, {
@@ -323,6 +332,10 @@ provide(SETTINGS_CONTEXT_KEY, {
   editCommand: (commandId) => {
     focusCommandId.value = commandId
     currentTab.value = 'commands'
+  },
+  editVariable: (variableId) => {
+    focusVariableId.value = variableId
+    currentTab.value = 'variables'
   },
   variables: () =>
     deviceVariableValues(userConfig.value, desktopStore.userData),
