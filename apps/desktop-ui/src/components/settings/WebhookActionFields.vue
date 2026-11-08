@@ -158,7 +158,7 @@
         <Button
           v-if="hasAuth"
           size="sm"
-          variant="danger-ghost"
+          variant="ghost"
           @click="removeAuth"
         >
           {{ t('common.remove') }}

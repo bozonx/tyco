@@ -110,7 +110,7 @@
         <Button
           v-if="provider.type === 'openaiCompatible'"
           size="sm"
-          variant="danger-ghost"
+          variant="ghost"
           icon="mdi:trash-can-outline"
           class="ml-auto"
           @click="emit('remove', provider.id)"

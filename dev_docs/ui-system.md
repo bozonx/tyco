@@ -15,6 +15,9 @@ remain bundled and work offline.
   `variant="primary"` explicitly. `loading` blocks activation, exposes `aria-busy`
   and preserves the label beside a decorative spinner. Do not reintroduce boolean
   variant/size aliases. Shared types live in `lib/ui/control-types.ts`.
+  Delete and remove buttons must not be red: never use `danger` or `danger-ghost`
+  for delete actions; use regular buttons (`neutral` or `ghost`, or `primary` for
+  dialog confirmation).
 - `ShortcutButton`: use `variant="primary|ghost"` and `size="xs|sm|md"`;
   the default is ghost/md. Keep keyboard hints in this specialized control.
 - `DropdownMenu`: use the same size/variant names as `Button`; default ghost/sm.
@@ -157,7 +160,7 @@ effects outside visual primitives.
 
 | Requirement                                | Component                                     |
 | ------------------------------------------ | --------------------------------------------- |
-| An action with visible text                | `Button` (`danger`/`danger-ghost` to destroy) |
+| An action with visible text                | `Button`                                      |
 | An action with an icon only                | `IconButton`                                  |
 | Select an item or acknowledge a condition  | `FieldCheckbox`                               |
 | Enable or disable a feature                | `FieldSwitch`                                 |

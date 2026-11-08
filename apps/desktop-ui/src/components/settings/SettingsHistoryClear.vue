@@ -2,7 +2,7 @@
   <FieldRow :label="t('history.clear')" :hint="countHint" inline>
     <Button
       size="sm"
-      variant="danger-ghost"
+      variant="ghost"
       icon="mdi:trash-can-outline"
       :loading="isClearing"
       @click="isConfirmOpen = true"

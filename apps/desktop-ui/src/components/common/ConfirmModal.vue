@@ -28,7 +28,7 @@
         </Button>
         <Button
           size="sm"
-          :variant="danger ? 'danger' : 'primary'"
+          variant="primary"
           @click="onConfirm"
         >
           {{ confirmText || t('common.confirm') }}

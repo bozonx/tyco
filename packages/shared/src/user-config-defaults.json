@@ -157,7 +157,7 @@
         "name": "DeepSeek Flash",
         "temperature": 0.2,
         "contextWindowTokens": 128000,
-        "canUseImages": false,
+        "canUseImages": true,
         "canUseTools": true
       },
       {

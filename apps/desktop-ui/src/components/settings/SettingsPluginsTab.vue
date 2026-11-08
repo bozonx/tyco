@@ -92,7 +92,7 @@
         <Button
           v-if="!builtinPluginIds?.includes(plugin.pluginId)"
           :disabled="installation.isBusy.value"
-          variant="danger-ghost"
+          variant="ghost"
           size="sm"
           @click="installation.remove(plugin.pluginId)"
         >

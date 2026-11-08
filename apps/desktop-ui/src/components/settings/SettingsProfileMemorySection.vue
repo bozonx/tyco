@@ -37,7 +37,7 @@
             </Button>
             <Button
               size="xs"
-              variant="danger"
+              variant="neutral"
               icon="mdi:trash-can-outline"
               :disabled="
                 isLoading ||

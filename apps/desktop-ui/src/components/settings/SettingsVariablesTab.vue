@@ -130,7 +130,7 @@
             </FieldRow>
             <IconButton
               icon="mdi:delete-outline"
-              variant="danger-ghost"
+              variant="ghost"
               :label="t('variables.remove')"
               @click="requestRemove(variable.id)"
             />

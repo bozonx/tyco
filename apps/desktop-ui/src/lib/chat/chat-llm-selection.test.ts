@@ -90,7 +90,7 @@ describe('vision model options', () => {
     let options = chatModelOptions(llm, () => true)
     expect(
       options.filter((model) => model.canUseImages).map((model) => model.id)
-    ).toEqual(['gemini-flash', 'openrouter-gpt-4-1-mini'])
+    ).toEqual(['gemini-flash', 'deepseek-chat', 'openrouter-gpt-4-1-mini'])
     llm.models[0].canUseImages = true
     llm.models[1].canUseImages = false
     options = chatModelOptions(llm, () => true)
