@@ -1,4 +1,8 @@
-import type { EditorHistoryItem, EditorHistoryOperation } from '@tyco/shared'
+import type {
+  EditorHistoryFailureKind,
+  EditorHistoryItem,
+  EditorHistoryOperation,
+} from '@tyco/shared'
 
 export interface EditorHistoryMeta {
   icon: string
@@ -93,16 +97,23 @@ export interface EditorHistoryNote {
   labelKey: string
   tone: HistoryNoteTone
   icon?: string
+  /** The error the user was shown when the AI operation failed */
+  detail?: string
+}
+
+const FAILURE_LABELS: Record<EditorHistoryFailureKind, string> = {
+  error: 'history.requestFailed',
+  timeout: 'history.requestTimedOut',
+  cancelled: 'history.requestCancelled',
 }
 
 /**
- * Note and status indicator for an entry.
- * Normally sent items have no badge/checkmark.
- * Failed, interrupted, or unsent items are marked in red.
+ * Note and status indicator for an entry. Normally sent items have no
+ * badge/checkmark. Failed, interrupted, or unsent items are marked in red.
  */
 export function getEditorHistoryNote(
   item: Pick<EditorHistoryItem, 'kind' | 'operation' | 'result'> &
-    Partial<Pick<EditorHistoryItem, 'isResultApplied'>>
+    Partial<Pick<EditorHistoryItem, 'isResultApplied' | 'failure'>>
 ): EditorHistoryNote | undefined {
   if (item.kind === 'output' || item.isResultApplied) {
     return undefined
@@ -117,6 +128,17 @@ export function getEditorHistoryNote(
   }
 
   if (item.kind === 'source') {
+    if (!item.result && item.failure) {
+      return {
+        labelKey: FAILURE_LABELS[item.failure.kind],
+        tone: 'error',
+        icon:
+          item.failure.kind === 'cancelled'
+            ? 'mdi:cancel'
+            : 'mdi:alert-circle-outline',
+        ...(item.failure.message && { detail: item.failure.message }),
+      }
+    }
     if (!item.result) {
       return {
         labelKey:

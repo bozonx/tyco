@@ -1,10 +1,12 @@
 import { errorMessage } from '@tyco/shared/value-guards'
 import type {
+  EditorHistoryFailure,
   EditorHistoryInstruction,
   EditorHistoryOperation,
   EditorHistoryOrigin,
 } from '@tyco/shared'
 
+import { historyFailureOf } from '../history/history-failure'
 import type { ToolResult } from '../tools/tool-types'
 import type {
   BufferedPendingAction,
@@ -24,6 +26,11 @@ export interface MenuStepRunDependencies {
     instruction?: EditorHistoryInstruction
   ) => Promise<string | null>
   saveSourceResult: (id: string | null, result: string) => Promise<void>
+  /** Why the tool produced nothing for the source `id` */
+  saveSourceFailure?: (
+    id: string | null,
+    failure: EditorHistoryFailure
+  ) => Promise<void>
   /** The result was made but could not be kept in the history */
   reportHistoryError: () => void
   /** The text of a failed result, as the tool tells it */
@@ -90,8 +97,11 @@ export function createMenuStepRun(deps: MenuStepRunDependencies) {
           owner
         )
     }
+    let sourceId: string | null = null
+    // the history is a convenience: a failed write is only reported
+    const saveFailure = (failure: EditorHistoryFailure) =>
+      deps.saveSourceFailure?.(sourceId, failure).catch(deps.reportHistoryError)
     try {
-      // the history is a convenience: a failed write must not stop the tool
       const saveSourceArgs = [
         request.text,
         request.operation,
@@ -99,17 +109,25 @@ export function createMenuStepRun(deps: MenuStepRunDependencies) {
           ? [request.origin, request.instruction]
           : []),
       ] as const
-      const sourceId = await (
+      sourceId = await (
         deps.saveSource as (...args: unknown[]) => Promise<string | null>
       )(...saveSourceArgs).catch(() => {
         deps.reportHistoryError()
         return null
       })
-      if (controller.signal.aborted) return
+      if (controller.signal.aborted) {
+        await saveFailure({ kind: 'cancelled' })
+        return
+      }
       const result = await request.invoke(controller.signal, updatePending)
-      if (result.cancelled || controller.signal.aborted) return
+      if (result.cancelled || controller.signal.aborted) {
+        await saveFailure({ kind: 'cancelled' })
+        return
+      }
       if (!result.ok) {
-        deps.reportError(deps.describeResult(result))
+        const message = deps.describeResult(result)
+        deps.reportError(message)
+        await saveFailure(historyFailureOf(undefined, message))
         return
       }
       const text = request.read(result)
@@ -140,8 +158,13 @@ export function createMenuStepRun(deps: MenuStepRunDependencies) {
 
       request.show(text, result)
     } catch (error) {
-      if (controller.signal.aborted) return
-      deps.reportError(errorMessage(error))
+      if (controller.signal.aborted) {
+        await saveFailure({ kind: 'cancelled' })
+        return
+      }
+      const message = errorMessage(error)
+      deps.reportError(message)
+      await saveFailure(historyFailureOf(error, message))
     } finally {
       deps.clearPending(owner)
     }

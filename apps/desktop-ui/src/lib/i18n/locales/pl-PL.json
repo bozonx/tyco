@@ -22,9 +22,7 @@
     "removeContext": "Usuń kontekst",
     "restoreContext": "Przywróć kontekst"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Dołącz plik",
     "alertCaution": "Ostrożnie",
@@ -191,9 +189,7 @@
       "noCommands": "Nie skonfigurowano jeszcze poleceń użytkownika.",
       "noCommandsHint": "Najpierw utwórz polecenia w Ustawienia → Polecenia."
     },
-    "replyBlocks": {
-      "toolLabel": "Warianty odpowiedzi"
-    }
+    "replyBlocks": { "toolLabel": "Warianty odpowiedzi" }
   },
   "commands": {
     "advanced": "Zaawansowane",
@@ -453,10 +449,10 @@
     "emptyHint": "Tutaj zapisywane są wpisane teksty, wyniki przetwarzania i tłumaczenia. Każdy wpis można szybko skopiować lub przywrócić. Pytania do AI są przechowywane w czatach.",
     "expand": "Pokaż wszystko",
     "filterAll": "Wszystkie",
-    "filterOrigin": "Źródło",
+    "filterLabel": "Filtr historii",
     "filterQuickInput": "Szybkie wprowadzanie",
-    "filterUnsent": "Niewysłane",
-    "filterUnsentHint": "Tylko teksty, które nigdy nie zostały wstawione ani skopiowane",
+    "filterProblems": "Problemy",
+    "filterProblemsHint": "Niedokończone wpisy, nieudane lub anulowane żądania AI oraz wyniki, które nie zostały wstawione ani skopiowane",
     "filterVoice": "Głos",
     "interrupted": "przerwano",
     "itemRemoved": "Usunięto wpis",
@@ -481,7 +477,9 @@
     "originalTranscript": "Surowa transkrypcja",
     "placeIntoEditor": "Wstaw do edytora",
     "removeItem": "Usuń z historii",
+    "requestCancelled": "anulowano",
     "requestFailed": "błąd żądania",
+    "requestTimedOut": "brak odpowiedzi",
     "retry": "Ponów",
     "textsDisabled": "Zapisywanie tekstów jest wyłączone w ustawieniach.",
     "today": "Dzisiaj",
@@ -1272,9 +1270,7 @@
       "actionPages": "Strony menu akcji"
     }
   },
-  "shortcuts": {
-    "insertIntoEditor": "Wstaw do edytora"
-  },
+  "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
     "auto": "Jak w systemie",
     "dark": "Ciemny",
@@ -1414,9 +1410,7 @@
     "phrasesPlaceholder": "Przykładowe frazy, jedna na wiersz"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "zapytaj na czacie"
-    },
+    "actions": { "askInChat": "zapytaj na czacie" },
     "languages": {
       "cs-CZ": "Czeski",
       "de-DE": "niemiecki",
@@ -1446,9 +1440,7 @@
     },
     "translate": "przetłumacz na"
   },
-  "window": {
-    "clickToFocus": "Kliknij, aby kontynuować"
-  },
+  "window": { "clickToFocus": "Kliknij, aby kontynuować" },
   "write": {
     "alreadyCorrected": "Tekst jest już poprawiony",
     "cancel": "Anuluj",
@@ -1507,9 +1499,7 @@
     "valueOnDeviceHint": "Inne urządzenia ustawiają własną wartość. Można ją uzupełnić później.",
     "valuePlaceholder": "Ścieżka, adres lub inny tekst"
   },
-  "favorites": {
-    "noMatches": "Brak pasujących ulubionych"
-  },
+  "favorites": { "noMatches": "Brak pasujących ulubionych" },
   "replyBlocks": {
     "insertIntoWindow": "Wstaw do okna",
     "insertIntoEditor": "Do edytora",

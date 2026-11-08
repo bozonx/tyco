@@ -20,6 +20,7 @@ export function useMenuStepRun() {
     clearPending: menuModalsStore.clearPendingModal,
     saveSource: historyStore.saveSource,
     saveSourceResult: historyStore.saveSourceResult,
+    saveSourceFailure: historyStore.saveSourceFailure,
     reportHistoryError: () => toastKey('history.operationFailed', 'error'),
     describeResult: (result) => toolResultMessage(result, t),
     reportError: (message) => toastText(message, 'error'),

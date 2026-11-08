@@ -1,31 +1,27 @@
 import type { EditorHistoryItem, EditorHistoryOrigin } from '@tyco/shared'
 
-/** The source the history list shows; `all` includes entries without one */
-export type HistoryOriginFilter = 'all' | EditorHistoryOrigin
+/**
+ * What the history list shows: every entry, entries of one source, or the
+ * problem ones. `all` includes entries without a source.
+ */
+export type HistoryFilter = 'all' | EditorHistoryOrigin | 'problems'
 
-export const HISTORY_ORIGIN_FILTERS: readonly HistoryOriginFilter[] = [
+export const HISTORY_FILTERS: readonly HistoryFilter[] = [
   'all',
   'quickInput',
   'voice',
   'quickAiRequest',
+  'problems',
 ]
 
-export interface HistoryFilter {
-  origin: HistoryOriginFilter
-  /** Only texts that never left the app: they may be what the user lost */
-  isUnsentOnly: boolean
-}
-
-export const DEFAULT_HISTORY_FILTER: HistoryFilter = {
-  origin: 'all',
-  isUnsentOnly: false,
-}
+export const DEFAULT_HISTORY_FILTER: HistoryFilter = 'all'
 
 /**
- * A text that never left the app: a draft, or the source of an AI operation
- * whose result was not inserted or copied
+ * A text that may be what the user lost: a draft, or the source of an AI
+ * operation that failed, was cancelled, or whose result was not inserted or
+ * copied
  */
-export function isUnsentHistoryItem(
+export function isProblemHistoryItem(
   item: Pick<EditorHistoryItem, 'kind' | 'isResultApplied'>
 ): boolean {
   return (
@@ -36,9 +32,7 @@ export function isUnsentHistoryItem(
 export function filterEditorHistory<
   T extends Pick<EditorHistoryItem, 'kind' | 'isResultApplied' | 'origin'>,
 >(items: readonly T[], filter: HistoryFilter): T[] {
-  return items.filter(
-    (item) =>
-      (filter.origin === 'all' || item.origin === filter.origin) &&
-      (!filter.isUnsentOnly || isUnsentHistoryItem(item))
-  )
+  if (filter === 'all') return [...items]
+  if (filter === 'problems') return items.filter(isProblemHistoryItem)
+  return items.filter((item) => item.origin === filter)
 }

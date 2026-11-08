@@ -13,6 +13,7 @@
           v-if="item.meta.note"
           class="history-meta-note"
           :class="{ 'is-error': item.meta.noteTone === 'error' }"
+          :title="item.meta.noteDetail"
         >
           <AppIcon
             :icon="

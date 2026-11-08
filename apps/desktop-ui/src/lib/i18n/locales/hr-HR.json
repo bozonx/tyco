@@ -22,9 +22,7 @@
     "removeContext": "Ukloni kontekst",
     "restoreContext": "Vrati kontekst"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Priloži datoteku",
     "alertCaution": "Oprez",
@@ -191,9 +189,7 @@
       "noCommands": "Još nema konfiguriranih prilagođenih naredbi.",
       "noCommandsHint": "Prvo stvorite naredbe u Postavke → Naredbe."
     },
-    "replyBlocks": {
-      "toolLabel": "Blokovi odgovora"
-    }
+    "replyBlocks": { "toolLabel": "Blokovi odgovora" }
   },
   "commands": {
     "advanced": "Napredno",
@@ -453,10 +449,10 @@
     "emptyHint": "Ovdje se spremaju uneseni tekstovi, rezultati obrade i prijevodi. Svaki zapis može se brzo kopirati ili vratiti. Pitanja za AI čuvaju se u razgovorima.",
     "expand": "Prikaži sve",
     "filterAll": "Sve",
-    "filterOrigin": "Izvor",
+    "filterLabel": "Filtar povijesti",
     "filterQuickInput": "Brzi unos",
-    "filterUnsent": "Neposlano",
-    "filterUnsentHint": "Samo tekstovi koji nikad nisu umetnuti ni kopirani",
+    "filterProblems": "Problematični",
+    "filterProblemsHint": "Nedovršen unos, neuspjeli ili otkazani AI zahtjevi i rezultati koji nikad nisu umetnuti ni kopirani",
     "filterVoice": "Glas",
     "interrupted": "prekinuto",
     "itemRemoved": "Unos je uklonjen",
@@ -481,7 +477,9 @@
     "originalTranscript": "Neobrađeni transkript",
     "placeIntoEditor": "Stavi u uređivač",
     "removeItem": "Ukloni iz povijesti",
+    "requestCancelled": "otkazano",
     "requestFailed": "pogreška zahtjeva",
+    "requestTimedOut": "nema odgovora",
     "retry": "Pokušaj ponovno",
     "textsDisabled": "Spremanje tekstova isključeno je u postavkama.",
     "today": "Danas",
@@ -1272,9 +1270,7 @@
       "actionPages": "Stranice izbornika radnji"
     }
   },
-  "shortcuts": {
-    "insertIntoEditor": "Umetni u uređivač"
-  },
+  "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
     "auto": "Kao u sustavu",
     "dark": "Tamna",
@@ -1414,9 +1410,7 @@
     "phrasesPlaceholder": "Primjeri fraza, jedna po retku"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "pitaj u chatu"
-    },
+    "actions": { "askInChat": "pitaj u chatu" },
     "languages": {
       "cs-CZ": "Češki",
       "de-DE": "njemački",
@@ -1446,9 +1440,7 @@
     },
     "translate": "prevedi na"
   },
-  "window": {
-    "clickToFocus": "Kliknite za nastavak"
-  },
+  "window": { "clickToFocus": "Kliknite za nastavak" },
   "write": {
     "alreadyCorrected": "Tekst je već ispravljen",
     "cancel": "Odustani",
@@ -1507,9 +1499,7 @@
     "valueOnDeviceHint": "Drugi uređaji postavljaju vlastitu vrijednost. Može se unijeti kasnije.",
     "valuePlaceholder": "Putanja, adresa ili drugi tekst"
   },
-  "favorites": {
-    "noMatches": "Nema podudarnih favorita"
-  },
+  "favorites": { "noMatches": "Nema podudarnih favorita" },
   "replyBlocks": {
     "insertIntoWindow": "Umetni u prozor",
     "insertIntoEditor": "U uređivač",

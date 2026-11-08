@@ -55,6 +55,7 @@
     "allow-get-secret-statuses",
     "allow-get-secret-vault-state",
     "allow-set-editor-history-item-result",
+    "allow-set-editor-history-item-failure",
     "allow-show-status-overlay",
     "allow-start-voice-capture",
     "allow-stop-voice-capture",

@@ -1,7 +1,7 @@
 use super::run_blocking;
 use crate::{
     errors::AppError,
-    models::{EditorHistoryEntry, EditorHistoryItem},
+    models::{EditorHistoryEntry, EditorHistoryFailure, EditorHistoryItem},
     services::storage,
 };
 use tauri::AppHandle;
@@ -28,6 +28,16 @@ pub async fn set_editor_history_item_result(
     result: String,
 ) -> Result<(), AppError> {
     run_blocking(move || storage::set_editor_history_result(&app, id, result)).await?
+}
+
+/// Keeps why the AI produced nothing for the `source` item `id`.
+#[tauri::command]
+pub async fn set_editor_history_item_failure(
+    app: AppHandle,
+    id: String,
+    failure: EditorHistoryFailure,
+) -> Result<(), AppError> {
+    run_blocking(move || storage::set_editor_history_failure(&app, id, failure)).await?
 }
 
 /// Puts back an item deleted with `delete_editor_history_item`.

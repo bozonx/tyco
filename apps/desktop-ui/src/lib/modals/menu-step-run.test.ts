@@ -21,6 +21,7 @@ function setup() {
     clearPending: menu.clearPendingModal,
     saveSource: vi.fn().mockResolvedValue('source-1'),
     saveSourceResult: vi.fn().mockResolvedValue(undefined),
+    saveSourceFailure: vi.fn().mockResolvedValue(undefined),
     reportHistoryError: vi.fn(),
     describeResult: (result: ToolResult) => `failed: ${result.message}`,
     reportError: vi.fn(),
@@ -112,6 +113,9 @@ describe('menu step run', () => {
     expect(show).not.toHaveBeenCalled()
     expect(deps.saveSourceResult).not.toHaveBeenCalled()
     expect(deps.reportError).not.toHaveBeenCalled()
+    expect(deps.saveSourceFailure).toHaveBeenCalledWith('source-1', {
+      kind: 'cancelled',
+    })
   })
 
   it('reports a failed result in the words of the tool', async () => {
@@ -122,12 +126,20 @@ describe('menu step run', () => {
       })
     )
     expect(deps.reportError).toHaveBeenCalledWith('failed: no key')
+    expect(deps.saveSourceFailure).toHaveBeenCalledWith('source-1', {
+      kind: 'error',
+      message: 'failed: no key',
+    })
   })
 
   it('reports a thrown error', async () => {
     const { deps, run } = setup()
     await run(request({ invoke: vi.fn().mockRejectedValue(new Error('boom')) }))
     expect(deps.reportError).toHaveBeenCalledWith('boom')
+    expect(deps.saveSourceFailure).toHaveBeenCalledWith('source-1', {
+      kind: 'error',
+      message: 'boom',
+    })
   })
 
   it('leaves an unusable result to the caller', async () => {

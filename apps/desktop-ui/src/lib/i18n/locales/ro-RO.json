@@ -22,9 +22,7 @@
     "removeContext": "Elimină contextul",
     "restoreContext": "Restaurează contextul"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Atașează un fișier",
     "alertCaution": "Atenție",
@@ -191,9 +189,7 @@
       "noCommands": "Nu există încă comenzi personalizate configurate.",
       "noCommandsHint": "Creați mai întâi comenzi în Setări → Comenzi."
     },
-    "replyBlocks": {
-      "toolLabel": "Blocuri de răspuns"
-    }
+    "replyBlocks": { "toolLabel": "Blocuri de răspuns" }
   },
   "commands": {
     "advanced": "Avansat",
@@ -453,10 +449,10 @@
     "emptyHint": "Aici se salvează textele introduse, rezultatele procesării și traducerile. Orice intrare poate fi copiată sau restaurată rapid. Întrebările către IA rămân în conversații.",
     "expand": "Afișează tot",
     "filterAll": "Toate",
-    "filterOrigin": "Sursă",
+    "filterLabel": "Filtru istoric",
     "filterQuickInput": "Introducere rapidă",
-    "filterUnsent": "Netrimise",
-    "filterUnsentHint": "Doar textele care nu au fost niciodată inserate sau copiate",
+    "filterProblems": "Problematice",
+    "filterProblemsHint": "Introduceri neterminate, solicitări AI eșuate sau anulate și rezultate care nu au fost inserate sau copiate",
     "filterVoice": "Voce",
     "interrupted": "întrerupt",
     "itemRemoved": "Intrare eliminată",
@@ -481,7 +477,9 @@
     "originalTranscript": "Transcriere brută",
     "placeIntoEditor": "Pune în editor",
     "removeItem": "Elimină din istoric",
+    "requestCancelled": "anulat",
     "requestFailed": "eroare de solicitare",
+    "requestTimedOut": "fără răspuns",
     "retry": "Reîncearcă",
     "textsDisabled": "Salvarea textelor este dezactivată în setări.",
     "today": "Astăzi",
@@ -1272,9 +1270,7 @@
       "actionPages": "Pagini ale meniului de acțiuni"
     }
   },
-  "shortcuts": {
-    "insertIntoEditor": "Inserează în editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
     "auto": "Ca în sistem",
     "dark": "Întunecată",
@@ -1414,9 +1410,7 @@
     "phrasesPlaceholder": "Fraze demonstrative, câte una pe rând"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "întreabă în chat"
-    },
+    "actions": { "askInChat": "întreabă în chat" },
     "languages": {
       "cs-CZ": "Cehă",
       "de-DE": "germană",
@@ -1446,9 +1440,7 @@
     },
     "translate": "tradu în"
   },
-  "window": {
-    "clickToFocus": "Faceți clic pentru a continua"
-  },
+  "window": { "clickToFocus": "Faceți clic pentru a continua" },
   "write": {
     "alreadyCorrected": "Textul este deja corectat",
     "cancel": "Anulează",
@@ -1507,9 +1499,7 @@
     "valueOnDeviceHint": "Celelalte dispozitive își setează propria valoare. Poate fi completată mai târziu.",
     "valuePlaceholder": "O cale, o adresă sau alt text"
   },
-  "favorites": {
-    "noMatches": "Nu există favorite care să se potrivească"
-  },
+  "favorites": { "noMatches": "Nu există favorite care să se potrivească" },
   "replyBlocks": {
     "insertIntoWindow": "Inserează în fereastră",
     "insertIntoEditor": "În editor",

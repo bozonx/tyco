@@ -76,6 +76,7 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<models::CropRect>();
     visitor.visit::<models::ChatSummary>();
     visitor.visit::<models::EditorHistoryEntry>();
+    visitor.visit::<models::EditorHistoryFailure>();
     visitor.visit::<models::DesktopSnapshot>();
     visitor.visit::<models::EditorHistoryItem>();
     visitor.visit::<models::SessionState>();

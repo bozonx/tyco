@@ -22,9 +22,7 @@
     "removeContext": "Прибрати контекст",
     "restoreContext": "Відновити контекст"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Прикріпити файл",
     "alertCaution": "Обережно",
@@ -191,9 +189,7 @@
       "noCommands": "Користувацькі команди ще не налаштовано.",
       "noCommandsHint": "Спочатку створіть команди в Налаштування → Команди."
     },
-    "replyBlocks": {
-      "toolLabel": "Варіанти відповіді"
-    }
+    "replyBlocks": { "toolLabel": "Варіанти відповіді" }
   },
   "commands": {
     "advanced": "Додатково",
@@ -453,10 +449,10 @@
     "emptyHint": "Тут зберігаються введені тексти, результати обробки та переклади. Будь-який запис можна швидко скопіювати або відновити. Запитання до ШІ зберігаються в чатах.",
     "expand": "Показати все",
     "filterAll": "Усі",
-    "filterOrigin": "Джерело",
+    "filterLabel": "Фільтр історії",
     "filterQuickInput": "Швидке введення",
-    "filterUnsent": "Не надіслані",
-    "filterUnsentHint": "Лише тексти, які не були вставлені чи скопійовані",
+    "filterProblems": "Проблемні",
+    "filterProblemsHint": "Незавершене введення, невдалі або скасовані запити до ШІ та результати, які не було вставлено чи скопійовано",
     "filterVoice": "Голос",
     "interrupted": "перервано",
     "itemRemoved": "Запис видалено",
@@ -481,7 +477,9 @@
     "originalTranscript": "Сира транскрипція",
     "placeIntoEditor": "Помістити в редактор",
     "removeItem": "Прибрати з історії",
+    "requestCancelled": "скасовано",
     "requestFailed": "помилка запиту",
+    "requestTimedOut": "немає відповіді",
     "retry": "Повторити",
     "textsDisabled": "Збереження текстів вимкнено в налаштуваннях.",
     "today": "Сьогодні",
@@ -621,10 +619,7 @@
       "command": "Команда залишила текст без змін",
       "correction": "Помилок не знайдено"
     },
-    "working": {
-      "command": "Виконання команди…",
-      "correction": "Виправлення…"
-    }
+    "working": { "command": "Виконання команди…", "correction": "Виправлення…" }
   },
   "settings": {
     "accessAllow": "Дозволити",
@@ -1272,9 +1267,7 @@
       "actionPages": "Сторінки меню дій"
     }
   },
-  "shortcuts": {
-    "insertIntoEditor": "Вставити в редактор"
-  },
+  "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {
     "auto": "Як у системі",
     "dark": "Темна",
@@ -1414,9 +1407,7 @@
     "phrasesPlaceholder": "Приклади фраз построково"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "запитай у чаті"
-    },
+    "actions": { "askInChat": "запитай у чаті" },
     "languages": {
       "cs-CZ": "Чеська",
       "de-DE": "німецькою",
@@ -1446,9 +1437,7 @@
     },
     "translate": "переклади"
   },
-  "window": {
-    "clickToFocus": "Клацніть, щоб продовжити"
-  },
+  "window": { "clickToFocus": "Клацніть, щоб продовжити" },
   "write": {
     "alreadyCorrected": "Текст уже виправлено",
     "cancel": "Скасувати",
@@ -1507,9 +1496,7 @@
     "valueOnDeviceHint": "На інших пристроях значення задається окремо. Можна заповнити пізніше.",
     "valuePlaceholder": "Шлях, адреса або інший текст"
   },
-  "favorites": {
-    "noMatches": "Немає відповідних елементів вибраного"
-  },
+  "favorites": { "noMatches": "Немає відповідних елементів вибраного" },
   "replyBlocks": {
     "insertIntoWindow": "Вставити у вікно",
     "insertIntoEditor": "В редактор",

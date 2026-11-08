@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { createContextualCorrectionModel } from './contextual-correction'
-import type { EditorHistoryEntry } from '@tyco/shared'
+import type { EditorHistoryEntry, EditorHistoryFailure } from '@tyco/shared'
+import { historyFailureOf } from '../history/history-failure'
 import { createInputHistorySession } from '../history/input-history-session'
 import type { BufferedPendingAction } from '../modals/menu-modal-params'
 import {
@@ -72,6 +73,13 @@ export interface VoiceRecognitionDependencies extends TimerDependencies {
     action: 'voiceCorrection'
   ) => Promise<string | null>
   saveSourceResult: (sourceId: string | null, text: string) => Promise<unknown>
+  /** Why the correction of the transcript `sourceId` produced nothing */
+  saveSourceFailure?: (
+    sourceId: string | null,
+    failure: EditorHistoryFailure
+  ) => Promise<unknown>
+  /** The error text the user is shown, kept with a failed transcript */
+  describeError?: (error: unknown) => string
   setPendingModal: (options: {
     correction?: boolean
     styling?: boolean
@@ -123,6 +131,25 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   } = deps
   const postProcessTimeoutMs =
     deps.postProcessTimeoutMs ?? DEFAULT_POST_PROCESS_TIMEOUT_MS
+
+  /** Why the correction of the transcript `sourceId` produced nothing */
+  const saveFailure = async (
+    sourceId: string | null,
+    error: unknown,
+    status: { isTimedOut: boolean; isCancelled: boolean }
+  ) => {
+    if (!deps.saveSourceFailure || !sourceId) return
+    const failure: EditorHistoryFailure = status.isTimedOut
+      ? { kind: 'timeout' }
+      : historyFailureOf(
+          error,
+          error === undefined ? undefined : deps.describeError?.(error),
+          status.isCancelled
+        )
+    await deps.saveSourceFailure(sourceId, failure).catch(() => {
+      toastKey('history.operationFailed', 'error')
+    })
+  }
   const transcript = ref(createLiveTranscriptState())
   const hasText = computed(() => Boolean(liveTranscriptText(transcript.value)))
   const isFinishing = ref(false)
@@ -378,8 +405,13 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
             await deps.saveSourceResult(sourceId, processedText).catch(() => {
               toastKey('history.operationFailed', 'error')
             })
+          } else {
+            await saveFailure(sourceId, undefined, {
+              isTimedOut,
+              isCancelled: controller.signal.aborted,
+            })
           }
-        } catch {
+        } catch (error) {
           // the request has told the failure; keep available contextual text
           if (!isCurrent()) return
           if (correctContextually && correctContextually.text.trim()) {
@@ -387,6 +419,11 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
             correctedText = correctContextually.text
             await deps.saveSourceResult(sourceId, resultText).catch(() => {
               toastKey('history.operationFailed', 'error')
+            })
+          } else {
+            await saveFailure(sourceId, error, {
+              isTimedOut,
+              isCancelled: controller.signal.aborted,
             })
           }
         } finally {

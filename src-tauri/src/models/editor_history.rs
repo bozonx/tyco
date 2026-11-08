@@ -48,6 +48,29 @@ pub struct EditorHistoryInstruction {
     pub input_kind: EditorHistoryInputKind,
 }
 
+/// Why an AI transformation of a `Source` entry produced no result.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub enum EditorHistoryFailureKind {
+    /// The model or the connection to it failed.
+    Error,
+    /// The model did not answer in time.
+    Timeout,
+    /// The user stopped the operation or closed its window.
+    Cancelled,
+}
+
+/// What went wrong with the AI transformation of a `Source` entry.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct EditorHistoryFailure {
+    pub kind: EditorHistoryFailureKind,
+    /// The error the user was shown, if any.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub message: Option<String>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct EditorHistoryItem {
@@ -79,6 +102,10 @@ pub struct EditorHistoryItem {
     /// The `result` of a `Source` entry was inserted into a window or copied.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub is_result_applied: bool,
+    /// Why the AI produced no `result` for a `Source` entry.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub failure: Option<EditorHistoryFailure>,
 }
 
 /// What the UI sends to add a text; id and time are assigned by the backend.

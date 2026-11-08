@@ -1,3 +1,6 @@
+import type { EditorHistoryFailure } from '@tyco/shared'
+
+import { historyFailureOf } from '../history/history-failure'
 import type { BufferedPendingAction } from '../modals/menu-modal-params'
 
 export interface QuickInsertStepParams {
@@ -22,6 +25,13 @@ export interface QuickInsertDependencies {
     sourceId: string | null,
     result: string
   ) => Promise<unknown>
+  /** Why the correction of the source `sourceId` produced nothing */
+  saveSourceFailure?: (
+    sourceId: string | null,
+    failure: EditorHistoryFailure
+  ) => Promise<unknown>
+  /** The error text the user is shown, kept with a failed source */
+  describeError?: (error: unknown) => string
   /** A failed history write; the submission goes on without it */
   reportHistoryError?: (error: unknown) => void
   insert: (text: string) => Promise<void>
@@ -43,10 +53,16 @@ export interface QuickInsertDependencies {
   isAborted?: (error: unknown) => boolean
 }
 
+interface QuickInsertRun {
+  owner?: number | void
+  /** The history entry of the text before the correction */
+  sourceId?: string | null
+}
+
 /** Owns a submission until insertion starts; abandoned results cannot paste. */
 export function createQuickInsert(deps: QuickInsertDependencies) {
   let disposed = false
-  let active: { owner?: number | void } | null = null
+  let active: QuickInsertRun | null = null
 
   const cancel = () => {
     if (!active) return
@@ -75,6 +91,25 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
     }
   }
 
+  /** Marks the source of `run` as failed, or cancelled when `run` is over */
+  const saveFailure = async (run: QuickInsertRun, error?: unknown) => {
+    if (!deps.saveSourceFailure || !run.sourceId) return
+    const isCancelled =
+      active !== run || (error !== undefined && !!deps.isAborted?.(error))
+    const failure = historyFailureOf(
+      error,
+      error === undefined || isCancelled
+        ? undefined
+        : deps.describeError?.(error),
+      isCancelled
+    )
+    try {
+      await deps.saveSourceFailure(run.sourceId, failure)
+    } catch (historyError) {
+      deps.reportHistoryError?.(historyError)
+    }
+  }
+
   /** The history is a convenience: a failed write must not stop the insertion */
   const saveOutput = async (text: string) => {
     try {
@@ -89,10 +124,12 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
    * failed request or a closed window does not lose it
    */
   const correctWithHistory = async (
+    run: QuickInsertRun,
     text: string,
     customCorrect?: (text: string) => Promise<string>
   ): Promise<{ result: string; sourceId: string | null }> => {
     const sourceId = await saveSource(text)
+    run.sourceId = sourceId
     const result = customCorrect
       ? await customCorrect(text)
       : await deps.correct(text)
@@ -104,20 +141,31 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
     customCorrect?: (text: string) => Promise<string>
   ): Promise<void> => {
     if (disposed || active || !text.trim()) return
-    const run: { owner?: number | void } = {}
+    const run: QuickInsertRun = {}
     active = run
     run.owner = deps.setPending(cancel)
     try {
-      const { result, sourceId } = await correctWithHistory(text, customCorrect)
-      if (active !== run) return
+      const { result, sourceId } = await correctWithHistory(
+        run,
+        text,
+        customCorrect
+      )
+      if (active !== run) {
+        await saveFailure(run)
+        return
+      }
       if (!result.trim()) throw new Error('Correction returned empty text')
       if (result !== text) await saveSourceResult(sourceId, result)
-      if (active !== run) return
+      if (active !== run) {
+        await saveFailure(run)
+        return
+      }
       await deps.insert(result)
       // recorded once it left the app; the write does not hold up the insertion
       void saveOutput(result)
     } catch (error) {
       if (active === run && !deps.isAborted?.(error)) deps.reportError(error)
+      await saveFailure(run, error)
     } finally {
       if (active === run) {
         active = null
@@ -136,17 +184,27 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
     customCorrect?: (text: string) => Promise<string>
   ): Promise<void> => {
     if (disposed || active || !text.trim()) return
-    const run: { owner?: number | void } = {}
+    const run: QuickInsertRun = {}
     active = run
     run.owner = deps.setPending(cancel, { allowBufferedIntent: true })
     let step: QuickInsertStepParams
     let succeeded = false
     try {
-      const { result, sourceId } = await correctWithHistory(text, customCorrect)
-      if (active !== run) return
+      const { result, sourceId } = await correctWithHistory(
+        run,
+        text,
+        customCorrect
+      )
+      if (active !== run) {
+        await saveFailure(run)
+        return
+      }
       if (!result.trim()) throw new Error('Correction returned empty text')
       if (result !== text) await saveSourceResult(sourceId, result)
-      if (active !== run) return
+      if (active !== run) {
+        await saveFailure(run)
+        return
+      }
       succeeded = true
       step = {
         text: result,
@@ -155,6 +213,7 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
       }
     } catch (error) {
       // a cancelled step stays closed; a failed one falls back to the input
+      await saveFailure(run, error)
       if (active !== run) return
       if (!deps.isAborted?.(error)) deps.reportError(error)
       step = { text, oldText: '', isCorrectionUnchanged: false }
@@ -182,7 +241,7 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
 
   const insertDirect = async (text: string): Promise<void> => {
     if (disposed || active || !text.trim()) return
-    const run: { owner?: number | void } = {}
+    const run: QuickInsertRun = {}
     active = run
     run.owner = deps.setPending(cancel, { direct: true })
     try {

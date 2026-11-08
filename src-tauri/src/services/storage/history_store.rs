@@ -9,7 +9,9 @@ use tauri::{AppHandle, Manager};
 
 use super::{chat_history as chats, editor_history as editor};
 use crate::errors::AppError;
-use crate::models::{Chat, ChatSummary, EditorHistoryEntry, EditorHistoryItem};
+use crate::models::{
+    Chat, ChatSummary, EditorHistoryEntry, EditorHistoryFailure, EditorHistoryItem,
+};
 use crate::services::chat_images::ChatImages;
 use crate::state::AppState;
 
@@ -449,6 +451,16 @@ pub fn set_editor_history_result(
     })
 }
 
+pub fn set_editor_history_failure(
+    app: &AppHandle,
+    id: String,
+    failure: EditorHistoryFailure,
+) -> Result<(), AppError> {
+    change_editor(app, |config, memory| {
+        editor::set_editor_history_failure(app, config, memory, id, failure)
+    })
+}
+
 pub fn restore_editor_history_item(
     app: &AppHandle,
     item: EditorHistoryItem,
@@ -743,6 +755,7 @@ mod tests {
                         created_at_ms: 1,
                         result: None,
                         is_result_applied: false,
+                        failure: None,
                     });
                 });
             }

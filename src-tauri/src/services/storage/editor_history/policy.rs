@@ -81,6 +81,9 @@ impl EditorHistoryPolicy {
             if let Some(instruction) = &mut item.instruction {
                 instruction.text = redact_secrets(&instruction.text);
             }
+            if let Some(failure) = &mut item.failure {
+                failure.message = failure.message.take().map(|text| redact_secrets(&text));
+            }
         }
     }
 
@@ -124,6 +127,7 @@ mod tests {
             created_at_ms: 1,
             result: None,
             is_result_applied: false,
+            failure: None,
         }
     }
 

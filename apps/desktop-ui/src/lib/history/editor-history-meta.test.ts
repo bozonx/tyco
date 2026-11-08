@@ -107,11 +107,7 @@ describe('getEditorHistoryView', () => {
 
 describe('getEditorHistoryNote', () => {
   it('returns undefined for applied items and outputs', () => {
-    expect(
-      getEditorHistoryNote({
-        kind: 'output',
-      })
-    ).toBeUndefined()
+    expect(getEditorHistoryNote({ kind: 'output' })).toBeUndefined()
 
     expect(
       getEditorHistoryNote({
@@ -130,12 +126,42 @@ describe('getEditorHistoryNote', () => {
     })
   })
 
-  it('marks failed or cancelled AI requests in red', () => {
+  it('tells why an AI request produced nothing', () => {
+    expect(
+      getEditorHistoryNote({
+        kind: 'source',
+        operation: 'translation',
+        failure: { kind: 'error', message: 'No connection' },
+      })
+    ).toEqual({
+      labelKey: 'history.requestFailed',
+      tone: 'error',
+      icon: 'mdi:alert-circle-outline',
+      detail: 'No connection',
+    })
+    expect(
+      getEditorHistoryNote({
+        kind: 'source',
+        operation: 'voiceCorrection',
+        failure: { kind: 'timeout' },
+      })?.labelKey
+    ).toBe('history.requestTimedOut')
     expect(
       getEditorHistoryNote({
         kind: 'source',
         operation: 'aiTask',
+        failure: { kind: 'cancelled' },
       })
+    ).toEqual({
+      labelKey: 'history.requestCancelled',
+      tone: 'error',
+      icon: 'mdi:cancel',
+    })
+  })
+
+  it('marks failed or cancelled AI requests in red', () => {
+    expect(
+      getEditorHistoryNote({ kind: 'source', operation: 'aiTask' })
     ).toEqual({
       labelKey: 'history.requestFailed',
       tone: 'error',
@@ -143,10 +169,7 @@ describe('getEditorHistoryNote', () => {
     })
 
     expect(
-      getEditorHistoryNote({
-        kind: 'source',
-        operation: 'voiceCorrection',
-      })
+      getEditorHistoryNote({ kind: 'source', operation: 'voiceCorrection' })
     ).toEqual({
       labelKey: 'history.interrupted',
       tone: 'error',

@@ -22,15 +22,10 @@
           />
           <div class="history-filters">
             <SegmentedControl
-              v-model="filter.origin"
+              v-model="filter"
               size="sm"
-              :label="t('history.filterOrigin')"
-              :options="originOptions"
-            />
-            <FieldCheckbox
-              v-model="filter.isUnsentOnly"
-              :label="t('history.filterUnsent')"
-              :title="t('history.filterUnsentHint')"
+              :label="t('history.filterLabel')"
+              :options="filterOptions"
             />
           </div>
         </div>
@@ -86,10 +81,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import Button from '../components/common/Button.vue'
-import FieldCheckbox from '../components/common/FieldCheckbox.vue'
 import InlineNotice from '../components/common/InlineNotice.vue'
 import SearchInput from '../components/common/SearchInput.vue'
 import SegmentedControl from '../components/common/SegmentedControl.vue'
@@ -109,9 +103,8 @@ import {
 import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
 import {
   DEFAULT_HISTORY_FILTER,
-  HISTORY_ORIGIN_FILTERS,
+  HISTORY_FILTERS,
   type HistoryFilter,
-  type HistoryOriginFilter,
   filterEditorHistory,
 } from '../lib/history/history-filter'
 import { createRemovalUndo } from '../lib/history/removal-undo'
@@ -152,25 +145,23 @@ const isEditorHistoryDisabled = computed(() =>
 const searchQuery = ref<string>('')
 const searchInput = ref<HTMLInputElement | null>(null)
 
-const ORIGIN_FILTER_LABELS: Record<HistoryOriginFilter, string> = {
+const FILTER_LABELS: Record<HistoryFilter, string> = {
   all: 'history.filterAll',
   quickInput: 'history.filterQuickInput',
   voice: 'history.filterVoice',
   quickAiRequest: 'chat.quickAiRequests',
+  problems: 'history.filterProblems',
 }
-const originOptions = computed(() =>
-  HISTORY_ORIGIN_FILTERS.map((id) => ({
+const filterOptions = computed(() =>
+  HISTORY_FILTERS.map((id) => ({
     id,
-    name: t(ORIGIN_FILTER_LABELS[id]),
+    name: t(FILTER_LABELS[id]),
+    ...(id === 'problems' && { title: t('history.filterProblemsHint') }),
   }))
 )
 
-const filter = reactive<HistoryFilter>({ ...DEFAULT_HISTORY_FILTER })
-const isFiltered = computed(
-  () =>
-    filter.origin !== DEFAULT_HISTORY_FILTER.origin ||
-    filter.isUnsentOnly !== DEFAULT_HISTORY_FILTER.isUnsentOnly
-)
+const filter = ref<HistoryFilter>(DEFAULT_HISTORY_FILTER)
+const isFiltered = computed(() => filter.value !== DEFAULT_HISTORY_FILTER)
 // an activation may open the history filtered, e.g. from the quick input
 watch(
   () =>
@@ -179,15 +170,14 @@ watch(
       : undefined,
   (activationId) => {
     if (activationId === undefined) return
-    Object.assign(filter, DEFAULT_HISTORY_FILTER, {
-      origin: desktopStore.desktopState.historyOrigin ?? 'all',
-    })
+    filter.value =
+      desktopStore.desktopState.historyOrigin ?? DEFAULT_HISTORY_FILTER
   },
   { immediate: true }
 )
 
 const editorItems = computed<HistoryListItem[]>(() =>
-  filterEditorHistory(historyStore.editorHistory, filter).map((item) => {
+  filterEditorHistory(historyStore.editorHistory, filter.value).map((item) => {
     const view = getEditorHistoryView(item)
     const label = t(view.labelKey)
     const note = getEditorHistoryNote(item)
@@ -201,6 +191,7 @@ const editorItems = computed<HistoryListItem[]>(() =>
         note: note ? t(note.labelKey) : undefined,
         noteTone: note?.tone,
         noteIcon: note?.icon,
+        noteDetail: note?.detail,
       },
       original: view.original && {
         label: t(view.original.labelKey),

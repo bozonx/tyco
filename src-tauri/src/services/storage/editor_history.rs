@@ -2,7 +2,10 @@ mod entries;
 mod journals;
 mod policy;
 
-use entries::{apply_editor_history_result, insert_restored_item, push_editor_history};
+use entries::{
+    apply_editor_history_failure, apply_editor_history_result, insert_restored_item,
+    push_editor_history,
+};
 use journals::{changes, compact, merge_journals, HistoryRecord};
 pub use policy::EditorHistoryPolicy;
 
@@ -15,7 +18,7 @@ use tauri::{AppHandle, Manager};
 use super::json_files::{read_jsonl, remove_file_if_exists, write_jsonl};
 use super::new_history_id;
 use crate::errors::AppError;
-use crate::models::{EditorHistoryEntry, EditorHistoryItem};
+use crate::models::{EditorHistoryEntry, EditorHistoryFailure, EditorHistoryItem};
 use crate::services::clock::now_ms;
 
 pub(super) const DEFAULT_EDITOR_HISTORY_LIMIT: usize = 1000;
@@ -335,6 +338,7 @@ fn save_editor_history_entry(
         created_at_ms,
         result: None,
         is_result_applied: false,
+        failure: None,
     };
 
     let id = if is_checkpoint {
@@ -369,6 +373,40 @@ pub fn set_editor_history_result(
     }
 
     history.save(&before, items)
+}
+
+/// Records why the AI produced nothing for the `Source` entry `id`.
+pub fn set_editor_history_failure(
+    app: &AppHandle,
+    user_config: &Value,
+    memory: &mut Vec<EditorHistoryItem>,
+    id: String,
+    mut failure: EditorHistoryFailure,
+) -> Result<(), AppError> {
+    let mut history =
+        EditorHistorySession::open(HistoryLocation::of_app(app)?, user_config, memory)?;
+    failure.message = failure
+        .message
+        .map(|message| history.policy.redact(truncate_failure_message(message)))
+        .filter(|message| !message.trim().is_empty());
+    let before = history.load()?;
+    let mut items = before.clone();
+
+    if !apply_editor_history_failure(&mut items, &id, failure) {
+        return Ok(());
+    }
+
+    history.save(&before, items)
+}
+
+/// An error text is a hint for the user, not a log: a long one is cut.
+const FAILURE_MESSAGE_MAX_CHARS: usize = 500;
+
+fn truncate_failure_message(message: String) -> String {
+    match message.char_indices().nth(FAILURE_MESSAGE_MAX_CHARS) {
+        Some((end, _)) => format!("{}…", &message[..end]),
+        None => message,
+    }
 }
 
 /// Puts a removed entry back where it was (undo of a removal).

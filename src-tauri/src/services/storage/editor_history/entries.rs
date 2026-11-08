@@ -1,5 +1,5 @@
 //! Pure ordering, deduplication, result updates, and restoration of entries.
-use crate::models::{EditorHistoryItem, EditorHistoryKind};
+use crate::models::{EditorHistoryFailure, EditorHistoryItem, EditorHistoryKind};
 
 /// How much an entry says about the text: a text that was sent somewhere or
 /// fed to the AI must not turn into a plain draft just because it is still in
@@ -118,6 +118,31 @@ pub(super) fn apply_editor_history_result(
     };
 
     item.result = (!result.trim().is_empty()).then_some(result);
+    // a result supersedes an earlier failed attempt
+    if item.result.is_some() {
+        item.failure = None;
+    }
+    true
+}
+
+/// Records why the AI produced nothing for the `Source` entry `id`; an entry
+/// that already has a result keeps it and gets no failure.
+pub(super) fn apply_editor_history_failure(
+    history: &mut [EditorHistoryItem],
+    id: &str,
+    failure: EditorHistoryFailure,
+) -> bool {
+    let Some(item) = history
+        .iter_mut()
+        .find(|item| item.id == id && item.kind == EditorHistoryKind::Source)
+    else {
+        return false;
+    };
+    if item.result.is_some() {
+        return false;
+    }
+
+    item.failure = Some(failure);
     true
 }
 
@@ -345,6 +370,42 @@ mod tests {
         );
 
         assert_eq!(history_texts(&history), vec!["third", "second"]);
+    }
+
+    fn failure() -> EditorHistoryFailure {
+        EditorHistoryFailure {
+            kind: crate::models::EditorHistoryFailureKind::Error,
+            message: Some(String::from("No connection")),
+        }
+    }
+
+    #[test]
+    fn apply_editor_history_failure_marks_a_source_without_a_result() {
+        let mut history = vec![
+            history_item("a", "text", EditorHistoryKind::Source),
+            history_item("b", "draft", EditorHistoryKind::Draft),
+        ];
+
+        assert!(apply_editor_history_failure(&mut history, "a", failure()));
+        assert_eq!(history[0].failure, Some(failure()));
+        assert!(!apply_editor_history_failure(&mut history, "b", failure()));
+        assert!(!apply_editor_history_failure(
+            &mut history,
+            "missing",
+            failure()
+        ));
+    }
+
+    #[test]
+    fn a_result_supersedes_a_failure_and_is_not_overwritten_by_one() {
+        let mut history = vec![history_item("a", "text", EditorHistoryKind::Source)];
+        apply_editor_history_failure(&mut history, "a", failure());
+
+        apply_editor_history_result(&mut history, "a", String::from("Text."));
+
+        assert_eq!(history[0].failure, None);
+        assert!(!apply_editor_history_failure(&mut history, "a", failure()));
+        assert_eq!(history[0].failure, None);
     }
 
     #[test]

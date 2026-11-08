@@ -35,6 +35,7 @@ import useToast from '../../composables/use-toast'
 import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
 import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-meter'
 import { hasSeparateQuickWindow, isQuickWindow } from '../../lib/desktop/window'
+import { describeError } from '../../lib/errors/describe-error'
 import { isEditorHistoryOff } from '../../lib/history/editor-history-storage'
 import type { VoiceMenuParams } from '../../lib/modals/menu-modal-params'
 import { isModeOfWindow } from '../../lib/navigation/routes'
@@ -146,6 +147,9 @@ const model = createVoiceRecognition({
     ),
   saveSource: (text, action) => historyStore.saveSource(text, action, 'voice'),
   saveSourceResult: (id, text) => historyStore.saveSourceResult(id, text),
+  saveSourceFailure: (id, failure) =>
+    historyStore.saveSourceFailure(id, failure),
+  describeError: (error) => describeError(error, t),
   setPendingModal: (options) => menuModalsStore.setPendingModal(options),
   clearPendingModal: (owner) => menuModalsStore.clearPendingModal(owner),
   consumeBufferedIntent: () => menuModalsStore.consumeBufferedIntent(),

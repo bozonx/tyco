@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import type {
   EditorHistoryEntry,
+  EditorHistoryFailure,
   EditorHistoryInstruction,
   EditorHistoryItem,
   EditorHistoryOperation,
@@ -106,6 +107,16 @@ export function createEditorHistoryModel(
     await track(call('set_editor_history_item_result', { id, result }))
   }
 
+  /** Remembers why the AI produced nothing for the `source` entry `id`. */
+  const saveSourceFailure = async (
+    id: string | null,
+    failure: EditorHistoryFailure
+  ): Promise<void> => {
+    if (!canRecord() || !id) return
+
+    await track(call('set_editor_history_item_failure', { id, failure }))
+  }
+
   /** Resolves to the removed entry, so that the removal can be undone. */
   const removeFromEditorHistory = async (
     id: string
@@ -142,6 +153,7 @@ export function createEditorHistoryModel(
     onOutput,
     saveSource,
     saveSourceResult,
+    saveSourceFailure,
     removeFromEditorHistory,
     restoreEditorItem,
     clearEditorHistory,

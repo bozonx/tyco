@@ -26,6 +26,7 @@ import type {
   CropRect,
   DesktopSnapshot,
   EditorHistoryEntry,
+  EditorHistoryFailure,
   EditorHistoryItem,
   EditorHistoryOrigin,
   ExternalJob,
@@ -384,6 +385,10 @@ export interface DesktopCommands {
   }
   send_socket_binary: { args: BinaryArgs<SocketFrameMeta>; result: void }
   send_socket_text: { args: { id: number; text: string }; result: void }
+  set_editor_history_item_failure: {
+    args: { id: string; failure: EditorHistoryFailure }
+    result: void
+  }
   set_editor_history_item_result: {
     args: { id: string; result: string }
     result: void

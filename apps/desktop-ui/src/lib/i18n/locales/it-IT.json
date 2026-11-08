@@ -22,9 +22,7 @@
     "removeContext": "Rimuovi contesto",
     "restoreContext": "Ripristina contesto"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Allega file",
     "alertCaution": "Attenzione",
@@ -191,9 +189,7 @@
       "noCommands": "Nessun comando personalizzato ancora configurato.",
       "noCommandsHint": "Crea prima i comandi in Impostazioni → Comandi."
     },
-    "replyBlocks": {
-      "toolLabel": "Blocchi di risposta"
-    }
+    "replyBlocks": { "toolLabel": "Blocchi di risposta" }
   },
   "commands": {
     "advanced": "Avanzate",
@@ -453,10 +449,10 @@
     "emptyHint": "Qui vengono salvati testi inseriti, risultati delle elaborazioni e traduzioni. Ogni voce può essere copiata o ripristinata rapidamente. Le domande all’IA restano nelle chat.",
     "expand": "Mostra tutto",
     "filterAll": "Tutti",
-    "filterOrigin": "Origine",
+    "filterLabel": "Filtro cronologia",
     "filterQuickInput": "Inserimento rapido",
-    "filterUnsent": "Non inviati",
-    "filterUnsentHint": "Solo i testi mai inseriti né copiati",
+    "filterProblems": "Problematici",
+    "filterProblemsHint": "Input incompleti, richieste IA non riuscite o annullate e risultati mai inseriti né copiati",
     "filterVoice": "Voce",
     "interrupted": "interrotto",
     "itemRemoved": "Voce rimossa",
@@ -481,7 +477,9 @@
     "originalTranscript": "Trascrizione grezza",
     "placeIntoEditor": "Metti nell’editor",
     "removeItem": "Rimuovi dalla cronologia",
+    "requestCancelled": "annullato",
     "requestFailed": "errore di richiesta",
+    "requestTimedOut": "nessuna risposta",
     "retry": "Riprova",
     "textsDisabled": "Il salvataggio dei testi è disattivato nelle impostazioni.",
     "today": "Oggi",
@@ -1272,9 +1270,7 @@
       "actionPages": "Pagine del menu azioni"
     }
   },
-  "shortcuts": {
-    "insertIntoEditor": "Inserisci nell’editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {
     "auto": "Come nel sistema",
     "dark": "Scuro",
@@ -1414,9 +1410,7 @@
     "phrasesPlaceholder": "Frasi di esempio, una per riga"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "chiedi nella chat"
-    },
+    "actions": { "askInChat": "chiedi nella chat" },
     "languages": {
       "cs-CZ": "Ceco",
       "de-DE": "tedesco",
@@ -1446,9 +1440,7 @@
     },
     "translate": "traduci in"
   },
-  "window": {
-    "clickToFocus": "Fai clic per continuare"
-  },
+  "window": { "clickToFocus": "Fai clic per continuare" },
   "write": {
     "alreadyCorrected": "Il testo è già corretto",
     "cancel": "Annulla",
@@ -1507,9 +1499,7 @@
     "valueOnDeviceHint": "Gli altri dispositivi impostano il proprio valore. Può essere compilato più tardi.",
     "valuePlaceholder": "Un percorso, un indirizzo o altro testo"
   },
-  "favorites": {
-    "noMatches": "Nessun preferito corrispondente"
-  },
+  "favorites": { "noMatches": "Nessun preferito corrispondente" },
   "replyBlocks": {
     "insertIntoWindow": "Inserisci nella finestra",
     "insertIntoEditor": "Nell'editor",

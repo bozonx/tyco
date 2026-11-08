@@ -22,9 +22,7 @@
     "removeContext": "Remove context",
     "restoreContext": "Restore context"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Attach file",
     "alertCaution": "Caution",
@@ -191,9 +189,7 @@
       "noCommands": "No custom commands configured yet.",
       "noCommandsHint": "Create commands in Settings → Commands first."
     },
-    "replyBlocks": {
-      "toolLabel": "Reply Blocks"
-    }
+    "replyBlocks": { "toolLabel": "Reply Blocks" }
   },
   "commands": {
     "advanced": "Advanced",
@@ -453,10 +449,10 @@
     "emptyHint": "Entered texts, processing results, and translations will be saved here. Any entry can be quickly copied or restored. Questions to the AI are kept in the chats.",
     "expand": "Show all",
     "filterAll": "All",
-    "filterOrigin": "Source",
+    "filterLabel": "History filter",
     "filterQuickInput": "Quick input",
-    "filterUnsent": "Not sent",
-    "filterUnsentHint": "Only texts that were never inserted or copied",
+    "filterProblems": "Problems",
+    "filterProblemsHint": "Unfinished input, failed or cancelled AI requests, and results that were never inserted or copied",
     "filterVoice": "Voice",
     "interrupted": "interrupted",
     "itemRemoved": "Entry removed",
@@ -481,7 +477,9 @@
     "originalTranscript": "Raw transcript",
     "placeIntoEditor": "Put into editor",
     "removeItem": "Remove from history",
+    "requestCancelled": "cancelled",
     "requestFailed": "request failed",
+    "requestTimedOut": "no response",
     "retry": "Retry",
     "textsDisabled": "Saving texts is turned off in the settings.",
     "today": "Today",
@@ -1272,9 +1270,7 @@
       "actionPages": "Action menu pages"
     }
   },
-  "shortcuts": {
-    "insertIntoEditor": "Insert into editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
     "auto": "System default",
     "dark": "Dark",
@@ -1414,9 +1410,7 @@
     "phrasesPlaceholder": "Sample phrases, one per line"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "ask in chat"
-    },
+    "actions": { "askInChat": "ask in chat" },
     "languages": {
       "cs-CZ": "Czech",
       "de-DE": "German",
@@ -1446,9 +1440,7 @@
     },
     "translate": "translate to"
   },
-  "window": {
-    "clickToFocus": "Click to continue"
-  },
+  "window": { "clickToFocus": "Click to continue" },
   "write": {
     "alreadyCorrected": "Text is already corrected",
     "cancel": "Cancel",
@@ -1507,9 +1499,7 @@
     "valueOnDeviceHint": "Other devices set their own value. It can be filled in later.",
     "valuePlaceholder": "A path, an address or other text"
   },
-  "favorites": {
-    "noMatches": "No matching favorites"
-  },
+  "favorites": { "noMatches": "No matching favorites" },
   "replyBlocks": {
     "insertIntoWindow": "Insert into window",
     "insertIntoEditor": "To editor",

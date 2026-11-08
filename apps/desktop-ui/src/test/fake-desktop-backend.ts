@@ -236,6 +236,11 @@ export class FakeDesktopBackend {
     this.handle('set_editor_history_item_result', ({ id, result }) => {
       const item = this.history.find((entry) => entry.id === id)
       if (item) item.result = result
+      if (item && result.trim()) delete item.failure
+    })
+    this.handle('set_editor_history_item_failure', ({ id, failure }) => {
+      const item = this.history.find((entry) => entry.id === id)
+      if (item?.kind === 'source' && !item.result) item.failure = failure
     })
 
     this.handle('list_chats', () =>

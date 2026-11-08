@@ -92,6 +92,8 @@ export const useCorrectionWorkflowStore = defineStore(
       saveSource: (text: string) => quickInput.saveSource(text, 'correction'),
       saveDraft: () => quickInput.flushHistory(),
       saveSourceResult: historyStore.saveSourceResult,
+      saveSourceFailure: historyStore.saveSourceFailure,
+      describeError: (error: unknown) => describeError(error, translate),
       reportHistoryError: () => toastKey('history.operationFailed', 'error'),
       // a failed insertion is reported by the tool: the window may be gone
       insert: async (text: string) => {

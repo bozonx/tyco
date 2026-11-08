@@ -22,9 +22,7 @@
     "removeContext": "Мәтінмәнді алып тастау",
     "restoreContext": "Мәтінмәнді қалпына келтіру"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Файл тіркеу",
     "alertCaution": "Абайлаңыз",
@@ -191,9 +189,7 @@
       "noCommands": "Әзірше пайдаланушы пәрмендері конфигурацияланбаған.",
       "noCommandsHint": "Алдымен Баптаулар → Пәрмендер бөлімінде пәрмендер жасаңыз."
     },
-    "replyBlocks": {
-      "toolLabel": "Жауап нұсқалары"
-    }
+    "replyBlocks": { "toolLabel": "Жауап нұсқалары" }
   },
   "commands": {
     "advanced": "Қосымша",
@@ -453,10 +449,10 @@
     "emptyHint": "Мұнда енгізілген мәтіндер, өңдеу нәтижелері мен аудармалар сақталады. Кез келген жазбаны жылдам көшіруге немесе қалпына келтіруге болады. ЖИ-ге қойылған сұрақтар чаттарда сақталады.",
     "expand": "Барлығын көрсету",
     "filterAll": "Барлығы",
-    "filterOrigin": "Дереккөз",
+    "filterLabel": "Тарих сүзгісі",
     "filterQuickInput": "Жылдам енгізу",
-    "filterUnsent": "Жіберілмеген",
-    "filterUnsentHint": "Тек ешқашан қойылмаған немесе көшірілмеген мәтіндер",
+    "filterProblems": "Ақаулы",
+    "filterProblemsHint": "Аяқталмаған енгізу, сәтсіз немесе тоқтатылған AI сұраулары және кірістірілмеген не көшірілмеген нәтижелер",
     "filterVoice": "Дауыс",
     "interrupted": "үзілді",
     "itemRemoved": "Жазба жойылды",
@@ -481,7 +477,9 @@
     "originalTranscript": "Өңделмеген транскрипт",
     "placeIntoEditor": "Редакторға қою",
     "removeItem": "Тарихтан алып тастау",
+    "requestCancelled": "тоқтатылды",
     "requestFailed": "сұрау қатесі",
+    "requestTimedOut": "жауап жоқ",
     "retry": "Қайталау",
     "textsDisabled": "Мәтіндерді сақтау баптауларда өшірілген.",
     "today": "Бүгін",
@@ -621,10 +619,7 @@
       "command": "Команда мәтінді өзгертпей қалдырды",
       "correction": "Қате табылмады"
     },
-    "working": {
-      "command": "Команда орындалуда…",
-      "correction": "Түзетілуде…"
-    }
+    "working": { "command": "Команда орындалуда…", "correction": "Түзетілуде…" }
   },
   "settings": {
     "accessAllow": "Рұқсат ету",
@@ -1272,9 +1267,7 @@
       "actionPages": "Әрекеттер мәзірі беттері"
     }
   },
-  "shortcuts": {
-    "insertIntoEditor": "Редакторға кірістіру"
-  },
+  "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {
     "auto": "Жүйедегідей",
     "dark": "Қараңғы",
@@ -1414,9 +1407,7 @@
     "phrasesPlaceholder": "Үлгі фразалар, әр жолға біреуден"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "чатта сұра"
-    },
+    "actions": { "askInChat": "чатта сұра" },
     "languages": {
       "cs-CZ": "Чех;чех тілі",
       "de-DE": "неміс тіліне;немісше",
@@ -1446,9 +1437,7 @@
     },
     "translate": "{language} аудар;аудар"
   },
-  "window": {
-    "clickToFocus": "Жалғастыру үшін басыңыз"
-  },
+  "window": { "clickToFocus": "Жалғастыру үшін басыңыз" },
   "write": {
     "alreadyCorrected": "Мәтін бұрыннан түзетілген",
     "cancel": "Бас тарту",
@@ -1507,9 +1496,7 @@
     "valueOnDeviceHint": "Басқа құрылғылар өз мәнін орнатады. Кейін толтыруға болады.",
     "valuePlaceholder": "Жол, мекенжай немесе басқа мәтін"
   },
-  "favorites": {
-    "noMatches": "Сәйкес келетін фавориттер жоқ"
-  },
+  "favorites": { "noMatches": "Сәйкес келетін фавориттер жоқ" },
   "replyBlocks": {
     "insertIntoWindow": "Терезеге кірістіру",
     "insertIntoEditor": "Редакторға",

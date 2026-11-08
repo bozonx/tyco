@@ -216,6 +216,8 @@ describe('quick insertion history', () => {
       saveSourceResult: vi.fn(
         async (_id: string | null, _result: string) => {}
       ),
+      saveSourceFailure: vi.fn(async () => {}),
+      describeError: (error: unknown) => `described: ${String(error)}`,
       reportHistoryError: vi.fn(),
     }
     return { deps: historyDeps, model: createQuickInsert(historyDeps) }
@@ -242,6 +244,29 @@ describe('quick insertion history', () => {
     expect(deps.saveSource).toHaveBeenCalledWith('Typed text')
     expect(deps.saveSourceResult).not.toHaveBeenCalled()
     expect(deps.reportError).toHaveBeenCalledOnce()
+  })
+
+  it('records why the correction produced nothing', async () => {
+    const { deps, model } = setupWithHistory()
+    deps.correct.mockRejectedValueOnce(new Error('Offline'))
+    await model.start('Typed text')
+    expect(deps.saveSourceFailure).toHaveBeenCalledWith('source-1', {
+      kind: 'error',
+      message: 'described: Error: Offline',
+    })
+  })
+
+  it('records a cancelled correction as cancelled', async () => {
+    const { deps, model } = setupWithHistory()
+    const correction = deferred<string>()
+    const pending = model.next('Raw text', () => correction.promise)
+    await vi.waitFor(() => expect(deps.saveSource).toHaveBeenCalled())
+    model.cancel()
+    correction.resolve('Late result')
+    await pending
+    expect(deps.saveSourceFailure).toHaveBeenCalledWith('source-1', {
+      kind: 'cancelled',
+    })
   })
 
   it('does not record an unchanged correction as a result', async () => {

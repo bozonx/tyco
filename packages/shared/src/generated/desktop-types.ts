@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: da5ef5657950f1561edda4d35433b56c2ba4e45bc5a3be4f074ea9b4d51df934
+// Source hash: 4658f9127a719914e1aca14a630f9c580f64dc209beb7dbd7ebb75e7b96d8f1e
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -448,6 +448,16 @@ export type EditorHistoryEntry = {
   profileId?: string | null
 }
 
+/** What went wrong with the AI transformation of a `Source` entry. */
+export type EditorHistoryFailure = {
+  kind: EditorHistoryFailureKind
+  /** The error the user was shown, if any. */
+  message?: string
+}
+
+/** Why an AI transformation of a `Source` entry produced no result. */
+export type EditorHistoryFailureKind = 'error' | 'timeout' | 'cancelled'
+
 /** The input modality of an AI prompt. */
 export type EditorHistoryInputKind = 'typed' | 'voice'
 
@@ -474,6 +484,8 @@ export type EditorHistoryItem = {
   result?: string
   /** The `result` of a `Source` entry was inserted into a window or copied. */
   isResultApplied?: boolean
+  /** Why the AI produced no `result` for a `Source` entry. */
+  failure?: EditorHistoryFailure
 }
 
 /** Why a text got into the editor history. */

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { EditorHistoryItem } from '@tyco/shared'
 
-import { filterEditorHistory, isUnsentHistoryItem } from './history-filter'
+import { filterEditorHistory, isProblemHistoryItem } from './history-filter'
 
 const item = (
   id: string,
@@ -26,36 +26,46 @@ describe('history filter', () => {
       result: 'Applied.',
       isResultApplied: true,
     }),
+    item('failed', {
+      kind: 'source',
+      operation: 'translation',
+      failure: { kind: 'error', message: 'No connection' },
+    }),
     item('old'),
   ]
   const ids = (list: EditorHistoryItem[]) => list.map(({ id }) => id)
 
   it('shows every entry, old ones without an origin too, by default', () => {
-    expect(
-      ids(filterEditorHistory(items, { origin: 'all', isUnsentOnly: false }))
-    ).toEqual(['typed', 'sent', 'dictated', 'applied', 'old'])
+    expect(ids(filterEditorHistory(items, 'all'))).toEqual([
+      'typed',
+      'sent',
+      'dictated',
+      'applied',
+      'failed',
+      'old',
+    ])
   })
 
   it('filters by origin', () => {
-    expect(
-      ids(
-        filterEditorHistory(items, {
-          origin: 'quickInput',
-          isUnsentOnly: false,
-        })
-      )
-    ).toEqual(['typed', 'sent'])
-    expect(
-      ids(filterEditorHistory(items, { origin: 'voice', isUnsentOnly: false }))
-    ).toEqual(['dictated', 'applied'])
+    expect(ids(filterEditorHistory(items, 'quickInput'))).toEqual([
+      'typed',
+      'sent',
+    ])
+    expect(ids(filterEditorHistory(items, 'voice'))).toEqual([
+      'dictated',
+      'applied',
+    ])
   })
 
-  it('keeps only the texts that never left the app', () => {
+  it('keeps drafts, failed operations and results that never left the app', () => {
+    expect(ids(filterEditorHistory(items, 'problems'))).toEqual([
+      'typed',
+      'dictated',
+      'failed',
+      'old',
+    ])
     expect(
-      ids(filterEditorHistory(items, { origin: 'all', isUnsentOnly: true }))
-    ).toEqual(['typed', 'dictated', 'old'])
-    expect(
-      isUnsentHistoryItem({ kind: 'output', isResultApplied: false })
+      isProblemHistoryItem({ kind: 'output', isResultApplied: false })
     ).toBe(false)
   })
 })

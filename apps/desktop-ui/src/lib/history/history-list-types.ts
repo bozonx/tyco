@@ -8,6 +8,8 @@ export interface HistoryListItem {
     note?: string
     noteTone?: 'success' | 'error' | 'muted'
     noteIcon?: string
+    /** More about the note, e.g. the error text, shown on hover */
+    noteDetail?: string
   }
   /** The text `value` was made from, shown collapsed under it. */
   original?: { label: string; text: string }
