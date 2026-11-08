@@ -17,6 +17,9 @@ export function createEditorHistoryModel(
   const call = createHistoryCall(historyApi)
 
   const editorHistory = ref<EditorHistoryItem[]>([])
+  // false until the first load finished, so that "no entries" is not shown
+  // for a list that has merely not arrived yet
+  const isEditorHistoryLoaded = ref(false)
 
   // writes still on their way: a load must not overtake them, otherwise a
   // text saved just before the history page opened would be missing from it
@@ -37,6 +40,7 @@ export function createEditorHistoryModel(
 
     const loadedHistory = await call('get_editor_history')
     if (version === editorListVersion) editorHistory.value = loadedHistory || []
+    isEditorHistoryLoaded.value = true
   }
 
   /** Resolves to the id of the stored entry, null when nothing was stored. */
@@ -147,6 +151,7 @@ export function createEditorHistoryModel(
 
   return {
     editorHistory,
+    isEditorHistoryLoaded,
     loadEditorHistory,
     saveEditorHistory,
     saveOutput,

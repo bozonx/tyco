@@ -9,6 +9,7 @@
       :empty-hint="t('history.emptyHint')"
       :total-count="historyStore.editorHistory.length"
       :is-filtered="isFiltered"
+      :is-loading="isEditorHistoryLoading"
       @open="toEditor"
       @action="onEditorAction"
       @clear="clearEditorHistory"
@@ -137,6 +138,9 @@ const removedItem = removal.removed
 const undoRemove = removal.undo
 const clearEditorHistory = removal.clear
 const hasEditorLoadError = ref(false)
+const isEditorHistoryLoading = computed(
+  () => !historyStore.isEditorHistoryLoaded && !hasEditorLoadError.value
+)
 
 const isEditorHistoryDisabled = computed(() =>
   isEditorHistoryOff(desktopStore.userConfig)
@@ -291,9 +295,18 @@ const toEditor = (item: HistoryListItem) => {
 
 .history-filters {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-sm) var(--space-md);
+  /* a narrow window scrolls the filters instead of wrapping them */
+  overflow-x: auto;
+}
+
+.history-filters :deep(.segmented-control) {
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+.history-filters :deep(.segmented-option) {
+  white-space: nowrap;
 }
 
 .history-page {

@@ -11,8 +11,10 @@
       </div>
     </div>
 
+    <div v-if="isLoading" class="history-loading" aria-busy="true" />
+
     <StateMessage
-      v-if="filtered.length === 0"
+      v-else-if="filtered.length === 0"
       class="history-empty"
       :icon="isNarrowed ? 'mdi:text-search' : 'mdi:history'"
       :title="isNarrowed ? t('history.nothingFound') : t('history.empty')"
@@ -85,6 +87,8 @@ const props = withDefaults(
     totalCount?: number
     /** `items` are narrowed by a filter of the caller */
     isFiltered?: boolean
+    /** The items have not arrived yet: show neither the list nor "empty". */
+    isLoading?: boolean
   }>(),
   {
     searchQuery: '',
@@ -94,6 +98,7 @@ const props = withDefaults(
     emptyHint: '',
     totalCount: 0,
     isFiltered: false,
+    isLoading: false,
   }
 )
 const isNarrowed = computed(
@@ -128,6 +133,10 @@ const groups = computed(() =>
 </script>
 
 <style scoped>
+.history-loading {
+  flex: 1;
+}
+
 .history-list {
   display: flex;
   flex-direction: column;
@@ -146,7 +155,7 @@ const groups = computed(() =>
 }
 
 .history-search-col {
-  flex: 0 1 50%;
+  flex: 1 1 0;
   min-width: 0;
 }
 

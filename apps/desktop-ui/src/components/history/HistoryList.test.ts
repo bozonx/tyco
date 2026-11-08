@@ -191,4 +191,13 @@ describe('HistoryList.vue', () => {
     await actionButtons[0].trigger('click')
     expect(wrapper.emitted('action')?.[0]).toEqual(['copy', sampleItems[0]])
   })
+
+  it('shows no empty state while the items are loading', () => {
+    const wrapper = mount(HistoryList, {
+      props: { items: [], isLoading: true, emptyHint: 'No history yet' },
+    })
+
+    expect(wrapper.text()).not.toContain('history.empty')
+    expect(wrapper.find('[aria-busy="true"]').exists()).toBe(true)
+  })
 })
