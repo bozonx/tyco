@@ -329,7 +329,7 @@ Nextcloud, общий диск команды) или под git. Обе гру�
 4. **Ссылки из `config.json` указывают vault.** Id профилей — slug из имени,
    «assistant» легко окажется в обоих vault. В ссылки на профиль (элементы
    сеток `profileChat` / `profile`, `chatPrompts.items[].profileId`) и в
-   состояние сессии (`lastProfileChatIds`, `quickRequestModelIds`)
+   состояние сессии (`lastProfileChatIds`)
    добавляется необязательный `vaultId`; пустой — основной vault. На машине,
    где vault не подключён, ссылка скрывается, но не удаляется (как сейчас).
 5. **Что берётся из папки данных:** провайдеры моделей, ключи, команды,

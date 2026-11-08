@@ -57,6 +57,7 @@ function runtimeDependencies(profileId: string): ChatStoreRuntimeDependencies {
     getUserConfig: () => configWithToolModels(),
     getSessionState: () => structuredClone(DEFAULT_SESSION_STATE),
     saveSessionState: vi.fn(async () => ({ success: true })),
+    saveChatModelId: vi.fn(async () => ({ success: true })),
     hasSecret: () => true,
     externalSelection: () => '',
     windowLabel: () => 'main',
@@ -173,6 +174,7 @@ describe('chat-store-runtime', () => {
       getUserConfig: () => configWithToolModels(),
       getSessionState: () => structuredClone(DEFAULT_SESSION_STATE),
       saveSessionState: vi.fn(async () => ({ success: true })),
+      saveChatModelId: vi.fn(async () => ({ success: true })),
       hasSecret: () => true,
       externalSelection: () => '',
       windowLabel: () => 'main',
@@ -222,6 +224,20 @@ describe('chat-store-runtime', () => {
     runtime.dispose()
   })
 
+  it('keeps the model picked in "Ask AI" in the settings', async () => {
+    const deps: ChatStoreRuntimeDependencies = {
+      ...runtimeDependencies('unused'),
+      profileId: null,
+    }
+    const runtime = createChatStoreRuntime(deps)
+
+    await runtime.selectModel('deepseek-chat')
+
+    expect(deps.saveChatModelId).toHaveBeenCalledWith('deepseek-chat')
+    expect(deps.saveSessionState).not.toHaveBeenCalled()
+    runtime.dispose()
+  })
+
   it('reports toast error when selecting model fails for a profile', async () => {
     const history = createFakeHistory()
     const toastText = vi.fn()
@@ -253,6 +269,7 @@ describe('chat-store-runtime', () => {
       getUserConfig: () => configWithToolModels(),
       getSessionState: () => structuredClone(DEFAULT_SESSION_STATE),
       saveSessionState: vi.fn(async () => ({ success: true })),
+      saveChatModelId: vi.fn(async () => ({ success: true })),
       hasSecret: () => true,
       externalSelection: () => '',
       windowLabel: () => 'main',
@@ -317,6 +334,7 @@ describe('chat-store-runtime', () => {
       getUserConfig: () => configWithToolModels(),
       getSessionState: () => sessionState,
       saveSessionState,
+      saveChatModelId: vi.fn(async () => ({ success: true })),
       hasSecret: () => true,
       externalSelection: () => '',
       windowLabel: () => 'main',

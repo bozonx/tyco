@@ -4,9 +4,7 @@ use serde_json::Value;
 pub const VALID_SESSION_STATE_KEYS: &[&str] = &[
     "lastChatId",
     "lastMode",
-    "lastChatModelId",
     "lastProfileChatIds",
-    "quickRequestModelIds",
     "recentTranslateLanguages",
 ];
 
@@ -29,11 +27,6 @@ pub fn merge_session_state(
         &mut patch,
         "lastProfileChatIds",
         &current.last_profile_chat_ids,
-    )?;
-    merge_profile_ids(
-        &mut patch,
-        "quickRequestModelIds",
-        &current.quick_request_model_ids,
     )?;
     let mut merged = serde_json::to_value(current)?;
     if let Some(fields) = merged.as_object_mut() {
@@ -82,25 +75,6 @@ mod tests {
 
         assert!(!merged.last_profile_chat_ids.contains_key("writer"));
         assert_eq!(merged.last_profile_chat_ids["reviewer"], "chat-2");
-    }
-
-    #[test]
-    fn quick_request_models_merge_by_profile() {
-        let state: SessionState = serde_json::from_value(
-            json!({ "quickRequestModelIds": { "writer": "model-a", "reviewer": "model-b" } }),
-        )
-        .unwrap();
-        let merged = merge_session_state(
-            &state,
-            json!({ "quickRequestModelIds": { "writer": "model-c", "reviewer": "" } })
-                .as_object()
-                .unwrap()
-                .clone(),
-        )
-        .unwrap();
-
-        assert_eq!(merged.quick_request_model_ids["writer"], "model-c");
-        assert!(!merged.quick_request_model_ids.contains_key("reviewer"));
     }
 
     #[test]

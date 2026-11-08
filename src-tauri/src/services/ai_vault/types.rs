@@ -97,6 +97,11 @@ pub struct AiProfile {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub model_id: Option<String>,
+    /// The model last picked for quick AI requests in this profile; the
+    /// quick request model of the settings when unset.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub quick_request_model_id: Option<String>,
     /// Overrides the temperature of the model; the model's own when unset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

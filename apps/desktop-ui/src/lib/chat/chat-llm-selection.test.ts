@@ -58,7 +58,7 @@ describe('chat-llm-selection', () => {
     expect(
       pickScopedChatModel(options, {
         profileId: null,
-        lastChatModelId: 'deepseek-chat',
+        chatModelId: 'deepseek-chat',
       })?.id
     ).toBe('deepseek-chat')
 

@@ -424,6 +424,7 @@ mod tests {
             name: "Test Profile".into(),
             model_id: None,
             temperature: None,
+            quick_request_model_id: None,
             max_output_tokens: None,
             memory_mode: Default::default(),
             tools: Some(ProfileToolSettings {
@@ -445,6 +446,7 @@ mod tests {
             name: "Test Profile".into(),
             model_id: None,
             temperature: None,
+            quick_request_model_id: None,
             max_output_tokens: None,
             memory_mode: Default::default(),
             tools: None,
@@ -468,6 +470,7 @@ mod tests {
             name: "Test Profile".into(),
             model_id: None,
             temperature: None,
+            quick_request_model_id: None,
             max_output_tokens: None,
             memory_mode: Default::default(),
             tools: Some(ProfileToolSettings {

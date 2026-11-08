@@ -10,6 +10,7 @@ fn vault_with_profile(root: &std::path::Path) {
         name: "Writer".into(),
         model_id: None,
         temperature: None,
+        quick_request_model_id: None,
         max_output_tokens: None,
         project_permissions: Default::default(),
         tools: None,

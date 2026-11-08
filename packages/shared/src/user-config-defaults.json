@@ -172,7 +172,7 @@
       }
     ],
     "tasks": {
-      "chat": { "rule": "" },
+      "chat": { "modelId": "", "rule": "" },
       "correction": { "modelId": "ollama-qwen", "rule": "" },
       "translation": {
         "modelId": "ollama-qwen",

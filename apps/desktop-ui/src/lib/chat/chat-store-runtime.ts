@@ -68,6 +68,10 @@ export interface ChatStoreRuntimeDependencies {
   saveSessionState: (
     patch: Partial<SessionState>
   ) => Promise<{ success: boolean; error?: string }>
+  /** Keeps the model picked in "Ask AI" in the settings */
+  saveChatModelId: (
+    modelId: string
+  ) => Promise<{ success: boolean; error?: string }>
   hasSecret: (providerId: string) => boolean
   externalSelection: () => string | null | undefined
   windowLabel: () => string
@@ -148,7 +152,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
   const selectedModel = computed<ChatLlmOption | null>(() =>
     pickScopedChatModel(modelOptions.value, {
       profileId,
-      lastChatModelId: deps.getSessionState()?.lastChatModelId,
+      chatModelId: deps.getUserConfig()?.llm?.tasks.chat.modelId,
       profileModelId: profile.value?.modelId,
       profileMaxOutputTokens: profile.value?.maxOutputTokens,
     })
@@ -204,7 +208,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     },
     getLastChatId: () => deps.getSessionState()?.lastChatId,
     selectModel: async (id) => {
-      const result = await deps.saveSessionState({ lastChatModelId: id })
+      const result = await deps.saveChatModelId(id)
       if (!result.success) commandFailed(`: ${result.error ?? ''}`)
     },
   })

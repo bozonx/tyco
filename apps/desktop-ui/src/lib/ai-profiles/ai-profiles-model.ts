@@ -25,6 +25,7 @@ export type AiProfilePatch = Partial<
     AiProfile,
     | 'name'
     | 'modelId'
+    | 'quickRequestModelId'
     | 'temperature'
     | 'maxOutputTokens'
     | 'projectPermissions'
@@ -179,12 +180,14 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
     const source = getProfile(id)
     if (!source) throw new Error(`Profile not found: ${id}`)
     const soul = await deps.readSoul(id)
-    const { modelId, temperature, maxOutputTokens } = source
+    const { modelId, quickRequestModelId, temperature, maxOutputTokens } =
+      source
     return createProfile({
       name,
       soul,
       settings: {
         modelId,
+        quickRequestModelId,
         temperature,
         maxOutputTokens,
         projectPermissions: source.projectPermissions,

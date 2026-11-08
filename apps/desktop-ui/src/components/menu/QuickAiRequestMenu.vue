@@ -142,7 +142,10 @@ import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { describeError } from '../../lib/errors/describe-error'
 import { resultOrThrow } from '../../lib/ipc/ipc-model'
 import { LlmError } from '../../lib/llm/llm-client'
-import { normalizeLlmConfig } from '../../lib/llm/llm-config'
+import {
+  normalizeLlmConfig,
+  withPickedTaskModel,
+} from '../../lib/llm/llm-config'
 import { formatLlmError } from '../../lib/llm/llm-errors'
 import { clientLogger } from '../../lib/logger'
 import { filterOptions } from '../../lib/menu-query/menu-query'
@@ -276,17 +279,21 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
       isSecretUsable(secretsStore.secrets, llmSecretId(id))
     ),
   getRememberedModelId: (pId) =>
-    (pId
-      ? desktopStore.sessionState?.quickRequestModelIds?.[pId]
-      : undefined) ||
+    (pId ? aiProfilesStore.getProfile(pId)?.quickRequestModelId : undefined) ||
     desktopStore.userConfig?.llm?.tasks?.quickRequest?.modelId ||
     undefined,
   rememberModelId: async (pId, modelId) => {
-    const response = pId
-      ? await desktopStore.patchSessionState({
-          quickRequestModelIds: { [pId]: modelId },
+    if (pId) {
+      try {
+        await aiProfilesStore.updateProfile(pId, {
+          quickRequestModelId: modelId,
         })
-      : await saveQuickRequestTaskModel(modelId)
+      } catch (error) {
+        toastText(describeError(error, t), 'error')
+      }
+      return
+    }
+    const response = await saveQuickRequestTaskModel(modelId)
     if (!response.success) toastText(describeError(response.error, t), 'error')
   },
   getRules: () => desktopStore.userConfig?.llm?.tasks?.quickRequest?.rule,
@@ -409,15 +416,12 @@ const model: QuickAiRequestModel = createQuickAiRequestModel({
 
 /** "Ask AI" keeps its quick request model in the task settings */
 function saveQuickRequestTaskModel(modelId: string) {
-  const llm = desktopStore.userConfig.llm
   return desktopStore.updateUserConfig({
-    llm: {
-      ...llm,
-      tasks: {
-        ...llm.tasks,
-        quickRequest: { ...llm.tasks.quickRequest, modelId },
-      },
-    },
+    llm: withPickedTaskModel(
+      desktopStore.userConfig.llm,
+      'quickRequest',
+      modelId
+    ),
   })
 }
 

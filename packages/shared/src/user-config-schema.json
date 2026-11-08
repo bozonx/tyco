@@ -850,9 +850,12 @@
           "properties": {
             "chat": {
               "type": "object",
-              "properties": { "rule": { "type": "string", "default": "" } },
-              "required": ["rule"],
-              "default": { "rule": "" }
+              "properties": {
+                "modelId": { "type": "string", "default": "" },
+                "rule": { "type": "string", "default": "" }
+              },
+              "required": ["modelId", "rule"],
+              "default": { "modelId": "", "rule": "" }
             },
             "correction": {
               "type": "object",

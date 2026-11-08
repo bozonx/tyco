@@ -7,9 +7,11 @@ import { createIpcChatSessionStorageDriver } from '../lib/chat/chat-session-stor
 import { createChatStoreRuntime } from '../lib/chat/chat-store-runtime'
 import { desktopClient } from '../lib/desktop/client'
 import { invokeDesktop } from '../lib/desktop/invoke'
+import { describeError } from '../lib/errors/describe-error'
 import { getDesktopWindowLabel } from '../lib/desktop/window'
 import { createChatHistoryModel } from '../lib/history/chat-history'
 import { translate } from '../lib/i18n'
+import { normalizeLlmConfig, withPickedTaskModel } from '../lib/llm/llm-config'
 import { clientLogger } from '../lib/logger'
 import { appNavigation } from '../navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
@@ -88,6 +90,18 @@ function createChatStoreSetup(profileId: string | null) {
       environment: toolsStore.environment,
       getSessionState: () => desktopStore.sessionState,
       saveSessionState: desktopStore.patchSessionState,
+      saveChatModelId: async (modelId) => {
+        const response = await desktopStore.updateUserConfig({
+          llm: withPickedTaskModel(
+            normalizeLlmConfig(desktopStore.userConfig.llm),
+            'chat',
+            modelId
+          ),
+        })
+        return response.success
+          ? { success: true }
+          : { success: false, error: describeError(response.error, translate) }
+      },
       hasSecret: (providerId) =>
         isSecretUsable(secretsStore.secrets, llmSecretId(providerId)),
       externalSelection: () => desktopStore.desktopState.selectedText,

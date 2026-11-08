@@ -129,7 +129,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -321,7 +321,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -531,7 +531,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "missing",
@@ -725,7 +725,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": { "modelId": "", "rule": "", "qualityGateRule": "" },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
@@ -925,7 +925,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -1119,7 +1119,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -1323,7 +1323,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -1522,7 +1522,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -1726,7 +1726,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -1913,7 +1913,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -2117,7 +2117,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -2311,7 +2311,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -2516,7 +2516,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -2711,7 +2711,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -2921,7 +2921,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -3124,7 +3124,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -3337,7 +3337,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -3543,7 +3543,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -3772,7 +3772,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -4035,7 +4035,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -4286,7 +4286,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",
@@ -4555,7 +4555,7 @@
           }
         ],
         "tasks": {
-          "chat": { "rule": "" },
+          "chat": { "modelId": "", "rule": "" },
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
             "modelId": "ollama-qwen",

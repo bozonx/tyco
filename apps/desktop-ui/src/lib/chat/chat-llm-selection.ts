@@ -54,7 +54,8 @@ export function pickChatModel(
 
 export interface ScopedChatModelOptions {
   profileId: string | null
-  lastChatModelId?: string | null
+  /** The model picked in "Ask AI" */
+  chatModelId?: string | null
   profileModelId?: string
   profileMaxOutputTokens?: number
 }
@@ -68,7 +69,7 @@ export function pickScopedChatModel(
   scope: ScopedChatModelOptions
 ): ChatLlmOption | null {
   if (!scope.profileId) {
-    return pickChatModel(options, scope.lastChatModelId)
+    return pickChatModel(options, scope.chatModelId)
   }
   const picked = pickChatModel(options, scope.profileModelId)
   const cap = scope.profileMaxOutputTokens

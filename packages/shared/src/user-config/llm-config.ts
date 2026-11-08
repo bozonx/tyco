@@ -75,8 +75,8 @@ export interface LlmTaskConfig {
 
 /** The settings of each LLM task */
 export interface LlmTasksConfig {
-  /** The chat has no model of its own: it runs on the model picked in it */
-  chat: Pick<LlmTaskConfig, 'rule'>
+  /** The model last picked in the "Ask AI" chat; profile chats keep their own */
+  chat: LlmTaskConfig
   correction: LlmTaskConfig
   translation: LlmTaskConfig & {
     /** The review pass, see `TranslationConfig.qualityGate` */

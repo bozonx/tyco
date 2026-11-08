@@ -92,6 +92,7 @@ export function removeModel(config: LlmConfig, modelId: string) {
   for (const task of LLM_TASKS) {
     if (config.tasks[task].modelId === modelId) config.tasks[task].modelId = ''
   }
+  if (config.tasks.chat.modelId === modelId) config.tasks.chat.modelId = ''
 }
 
 /**
@@ -119,4 +120,19 @@ export function taskModel(
   return modelId
     ? config.models.find((model) => model.id === modelId)
     : undefined
+}
+
+/** The tasks whose model is the one last picked where they run */
+export type PickedModelTask = 'chat' | 'quickRequest'
+
+/** `config` with the model picked for `task` */
+export function withPickedTaskModel(
+  config: LlmConfig,
+  task: PickedModelTask,
+  modelId: string
+): LlmConfig {
+  return {
+    ...config,
+    tasks: { ...config.tasks, [task]: { ...config.tasks[task], modelId } },
+  }
 }

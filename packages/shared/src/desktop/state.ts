@@ -51,9 +51,7 @@ export const DEFAULT_USER_DATA_STATE: UserDataState = {
 export const DEFAULT_SESSION_STATE: SessionState = {
   lastChatId: null,
   lastMode: null,
-  lastChatModelId: null,
   lastProfileChatIds: {},
-  quickRequestModelIds: {},
   recentTranslateLanguages: [],
 }
 

@@ -29,9 +29,7 @@
       "sessionState": {
         "lastChatId": null,
         "lastMode": null,
-        "lastChatModelId": null,
         "lastProfileChatIds": {},
-        "quickRequestModelIds": {},
         "recentTranslateLanguages": []
       },
       "userData": {

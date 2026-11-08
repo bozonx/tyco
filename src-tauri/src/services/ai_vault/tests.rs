@@ -26,6 +26,7 @@ fn profile(id: &str, created_at: u64) -> AiProfile {
         name: format!("Profile {id}"),
         model_id: None,
         temperature: None,
+        quick_request_model_id: None,
         max_output_tokens: None,
         project_permissions: HashMap::new(),
         tools: None,

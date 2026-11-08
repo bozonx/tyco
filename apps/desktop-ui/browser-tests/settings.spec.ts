@@ -75,7 +75,7 @@ test('configures a connection and model through settings and uses them in chat',
 }) => {
   const llm = installLlm(desktop, false)
   desktop.userConfig.llm.models = []
-  desktop.sessionState.lastChatModelId = null
+  desktop.userConfig.llm.tasks.chat.modelId = ''
   await page.reload()
   await page
     .getByRole('banner')

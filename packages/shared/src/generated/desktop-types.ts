@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 4658f9127a719914e1aca14a630f9c580f64dc209beb7dbd7ebb75e7b96d8f1e
+// Source hash: b93d4951d9bb06954615e103662565123bf9ebe1b941ee1d6cadad284c0cc68a
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -178,6 +178,11 @@ export type AiProfile = {
   name: string
   /** The model the profile's chats run on; the first usable one when unset. */
   modelId?: string
+  /**
+   * The model last picked for quick AI requests in this profile; the quick
+   * request model of the settings when unset.
+   */
+  quickRequestModelId?: string
   /** Overrides the temperature of the model; the model's own when unset. */
   temperature?: number
   /** Caps the answer length below the model's own limit. */
@@ -754,12 +759,8 @@ export type SelectionRunEvent = {
 export type SessionState = {
   lastChatId: string | null
   lastMode: ActivationMode | null
-  /** The model the chat was last used with. */
-  lastChatModelId: string | null
   /** The chat last opened in each profile, by profile id. */
   lastProfileChatIds: { [key in string]: string }
-  /** The model last picked for quick AI requests in each profile, by profile id. */
-  quickRequestModelIds: { [key in string]: string }
   /** Languages picked from the full list in the translate menu, newest first. */
   recentTranslateLanguages: Array<string>
 }

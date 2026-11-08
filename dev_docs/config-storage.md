@@ -276,7 +276,10 @@ builds of different versions do not rewrite the shared file in turns.
 ## Lifetime and locations
 
 `SessionState` is shared across windows and lives only in backend memory. Last
-chat, last model, activation mode and recent menu inputs reset on restart.
+chat, activation mode and recent menu inputs reset on restart. The model picked
+in a chat or a quick request is kept: "Ask AI" in `llm.tasks.chat.modelId` and
+`llm.tasks.quickRequest.modelId`, a profile in `modelId` and
+`quickRequestModelId` of its `profile.json`.
 `editor.diffViewMode` and `translation.viewMode` are persistent user preferences
 in the config. The browser's `localStorage.appearance` is a bootstrap cache to
 avoid a flash before the authoritative config arrives.

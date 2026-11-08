@@ -7,15 +7,9 @@ use std::collections::HashMap;
 pub struct SessionState {
     pub last_chat_id: Option<String>,
     pub last_mode: Option<ActivationMode>,
-    /// The model the chat was last used with.
-    #[serde(default)]
-    pub last_chat_model_id: Option<String>,
     /// The chat last opened in each profile, by profile id.
     #[serde(default)]
     pub last_profile_chat_ids: HashMap<String, String>,
-    /// The model last picked for quick AI requests in each profile, by profile id.
-    #[serde(default)]
-    pub quick_request_model_ids: HashMap<String, String>,
     /// Languages picked from the full list in the translate menu, newest first.
     #[serde(default)]
     pub recent_translate_languages: Vec<String>,
