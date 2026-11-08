@@ -292,13 +292,7 @@
     "aiToolsEnabledLabel": "允许使用工具",
     "aiToolsEnabledInfo": "启用后，AI 可以调用其他被允许的命令。",
     "createModalTitle": "新建命令",
-    "toolTypeLabel": "命令类型",
-    "templateFix": "纠正错误",
-    "templateTranslate": "翻译为…",
-    "templateStyle": "修改风格为…",
-    "templateFixPrompt": "修正文本中的拼写、语法和标点符号错误。保留原始含义和格式。仅输出修改后的文本，不要添加任何解释。",
-    "templateTranslatePrompt": "将以下文本翻译为 [语言]。仅输出翻译结果，不要包含任何评论或引号。",
-    "templateStylePrompt": "以 [风格] 风格重写以下文本。保持原意和语言。仅输出重写后的文本，不要包含任何评论。"
+    "toolTypeLabel": "命令类型"
   },
   "common": {
     "add": "添加",

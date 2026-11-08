@@ -273,27 +273,6 @@ function handleCreateCommand(event: CreateCommandSubmitEvent) {
   const tool = toolsStore.get(event.toolId)
   const command = createCommand(event.toolId, undefined, tool)
 
-  if (
-    event.toolId === 'core.aiTask' &&
-    event.template &&
-    event.template !== 'none'
-  ) {
-    let prompt = ''
-    if (event.template === 'fix') {
-      prompt = t('commands.templateFixPrompt')
-    } else if (event.template === 'translate') {
-      prompt = t('commands.templateTranslatePrompt')
-    } else if (event.template === 'style') {
-      prompt = t('commands.templateStylePrompt')
-    }
-    command.toolConfig = {
-      ...command.toolConfig,
-      prompt,
-      isToolsEnabled: false,
-    }
-    command.outputAction = 'insertIntoWindow'
-  }
-
   focusedCommandId.value = command.id
   setCommands([command, ...commands.value])
   expanded.value = new Set([command.id, ...expanded.value])

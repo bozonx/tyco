@@ -49,8 +49,8 @@ describe('SettingsCreateCommandModal.vue', () => {
     expect(closeBtn.exists()).toBe(true)
 
     const items = wrapper.findAll('.create-command-item')
-    // script, webhook, ai (none), ai (fix), ai (translate), ai (style)
-    expect(items).toHaveLength(6)
+    // script, webhook, ai
+    expect(items).toHaveLength(3)
   })
 
   it('selects script tool on single click', async () => {
@@ -58,9 +58,7 @@ describe('SettingsCreateCommandModal.vue', () => {
     const items = wrapper.findAll('.create-command-item')
     await items[0].trigger('click')
 
-    expect(wrapper.emitted('submit')?.[0]).toEqual([
-      { toolId: 'script', template: undefined },
-    ])
+    expect(wrapper.emitted('submit')?.[0]).toEqual([{ toolId: 'script' }])
   })
 
   it('selects webhook tool on single click', async () => {
@@ -68,23 +66,15 @@ describe('SettingsCreateCommandModal.vue', () => {
     const items = wrapper.findAll('.create-command-item')
     await items[1].trigger('click')
 
-    expect(wrapper.emitted('submit')?.[0]).toEqual([
-      { toolId: 'webhook', template: undefined },
-    ])
+    expect(wrapper.emitted('submit')?.[0]).toEqual([{ toolId: 'webhook' }])
   })
 
-  it('selects AI tool template in single click', async () => {
+  it('selects AI tool on single click', async () => {
     const wrapper = mountModal()
     const items = wrapper.findAll('.create-command-item')
-    // item 2: core.aiTask (none)
-    // item 3: core.aiTask (fix)
-    // item 4: core.aiTask (translate)
-    // item 5: core.aiTask (style)
-    await items[3].trigger('click')
+    await items[2].trigger('click')
 
-    expect(wrapper.emitted('submit')?.[0]).toEqual([
-      { toolId: 'core.aiTask', template: 'fix' },
-    ])
+    expect(wrapper.emitted('submit')?.[0]).toEqual([{ toolId: 'core.aiTask' }])
   })
 
   it('emits close when header close button is clicked', async () => {

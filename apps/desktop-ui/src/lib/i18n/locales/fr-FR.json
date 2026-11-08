@@ -292,13 +292,7 @@
     "aiToolsEnabledLabel": "Autoriser les outils",
     "aiToolsEnabledInfo": "Lorsqu’il est activé, l’IA peut appeler d’autres commandes autorisées.",
     "createModalTitle": "Nouvelle commande",
-    "toolTypeLabel": "Type de commande",
-    "templateFix": "Corriger les erreurs",
-    "templateTranslate": "Traduire en…",
-    "templateStyle": "Styliser en…",
-    "templateFixPrompt": "Corrigez les fautes d’orthographe, de grammaire et de ponctuation dans le texte. Conservez le sens et le formatage d’origine. Renvoyez uniquement le texte corrigé sans explications.",
-    "templateTranslatePrompt": "Traduisez le texte suivant en [langue]. Renvoyez uniquement la traduction sans commentaires ni guillemets.",
-    "templateStylePrompt": "Réécrivez le texte suivant dans le style [style]. Conservez le sens et la langue. Renvoyez uniquement le texte réécrit sans commentaires."
+    "toolTypeLabel": "Type de commande"
   },
   "common": {
     "add": "Ajouter",

@@ -292,13 +292,7 @@
     "aiToolsEnabledLabel": "Allow tools",
     "aiToolsEnabledInfo": "When enabled, the AI can invoke other allowed commands.",
     "createModalTitle": "New command",
-    "toolTypeLabel": "Command type",
-    "templateFix": "Fix errors",
-    "templateTranslate": "Translate to…",
-    "templateStyle": "Restyle as…",
-    "templateFixPrompt": "Fix spelling, grammar, and punctuation errors in the text. Preserve original meaning and formatting. Output only the corrected text without explanations.",
-    "templateTranslatePrompt": "Translate the following text into [language]. Output only the translation without any comments or quotes.",
-    "templateStylePrompt": "Rewrite the following text in [style] style. Keep the meaning and language. Output only the rewritten text without comments."
+    "toolTypeLabel": "Command type"
   },
   "common": {
     "add": "Add",

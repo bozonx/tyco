@@ -292,13 +292,7 @@
     "aiToolsEnabledLabel": "Eszközök engedélyezése",
     "aiToolsEnabledInfo": "Ha be van kapcsolva, az MI meghívhat más engedélyezett parancsokat.",
     "createModalTitle": "Új parancs",
-    "toolTypeLabel": "Parancstípus",
-    "templateFix": "Hibák javítása",
-    "templateTranslate": "Fordítás erre…",
-    "templateStyle": "Stílus átalakítása…",
-    "templateFixPrompt": "Javítsa ki a helyesírási, nyelvtani és központozási hibákat a szövegben. Tartsa meg az eredeti jelentést és formázást. Csak a javított szöveget adja vissza magyarázatok nélkül.",
-    "templateTranslatePrompt": "Fordítsa le az alábbi szöveget a következő nyelvre: [nyelv]. Csak a fordítást adja vissza megjegyzések és idézőjelek nélkül.",
-    "templateStylePrompt": "Írja át az alábbi szöveget [stílus] stílusban. Tartsa meg a jelentést és a nyelvet. Csak az átírt szöveget adja vissza megjegyzések nélkül."
+    "toolTypeLabel": "Parancstípus"
   },
   "common": {
     "add": "Hozzáadás",

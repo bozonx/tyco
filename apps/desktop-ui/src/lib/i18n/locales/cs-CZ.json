@@ -292,13 +292,7 @@
     "aiToolsEnabledLabel": "Povolit nástroje",
     "aiToolsEnabledInfo": "Pokud je povoleno, AI může volat další povolené příkazy.",
     "createModalTitle": "Nový příkaz",
-    "toolTypeLabel": "Typ příkazu",
-    "templateFix": "Opravit chyby",
-    "templateTranslate": "Přeložit do…",
-    "templateStyle": "Stylizovat v duchu…",
-    "templateFixPrompt": "Opravte překlepy, gramatické a interpunkční chyby v textu. Zachovejte původní význam a formátování. Vraťte pouze opravený text bez vysvětlení.",
-    "templateTranslatePrompt": "Přeložte následující text do [jazyk]. Vraťte pouze hotový překlad bez komentářů a uvozovek.",
-    "templateStylePrompt": "Přepište následující text v duchu [styl]. Zachovejte smysl a jazyk textu. Vraťte pouze přepsaný text bez komentářů."
+    "toolTypeLabel": "Typ příkazu"
   },
   "common": {
     "add": "Přidat",

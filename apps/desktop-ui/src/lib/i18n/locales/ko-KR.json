@@ -292,13 +292,7 @@
     "aiToolsEnabledLabel": "도구 허용",
     "aiToolsEnabledInfo": "활성화하면 AI가 허용된 다른 명령을 호출할 수 있습니다.",
     "createModalTitle": "새 명령",
-    "toolTypeLabel": "명령 유형",
-    "templateFix": "오류 수정",
-    "templateTranslate": "언어로 번역…",
-    "templateStyle": "스타일로 다시 쓰기…",
-    "templateFixPrompt": "텍스트의 맞춤법, 문법, 문장 부호 오류를 수정하세요. 원래 의미와 서식을 유지하세요. 설명 없이 수정된 텍스트만 출력하세요.",
-    "templateTranslatePrompt": "다음 텍스트를 [언어]로 번역하세요. 설명이나 따옴표 없이 번역된 텍스트만 출력하세요.",
-    "templateStylePrompt": "다음 텍스트를 [스타일] 스타일로 다시 쓰세요. 의미와 언어를 유지하세요. 설명 없이 다시 작성된 텍스트만 출력하세요."
+    "toolTypeLabel": "명령 유형"
   },
   "common": {
     "add": "추가",

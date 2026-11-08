@@ -292,13 +292,7 @@
     "aiToolsEnabledLabel": "Werkzeuge erlauben",
     "aiToolsEnabledInfo": "Wenn aktiviert, kann die KI andere erlaubte Befehle aufrufen.",
     "createModalTitle": "Neuer Befehl",
-    "toolTypeLabel": "Befehlstyp",
-    "templateFix": "Fehler korrigieren",
-    "templateTranslate": "Übersetzen nach…",
-    "templateStyle": "Stil anpassen…",
-    "templateFixPrompt": "Korrigieren Sie Tippfehler, Grammatik- und Zeichensetzungsfehler im Text. Behalten Sie die ursprüngliche Bedeutung und Formatierung bei. Geben Sie nur den korrigierten Text ohne Erklärungen aus.",
-    "templateTranslatePrompt": "Übersetzen Sie den folgenden Text in [Sprache]. Geben Sie nur die Übersetzung ohne Kommentare und Anführungszeichen aus.",
-    "templateStylePrompt": "Schreiben Sie den folgenden Text im Stil von [Stil] um. Behalten Sie Bedeutung und Sprache bei. Geben Sie nur den umformulierten Text ohne Kommentare aus."
+    "toolTypeLabel": "Befehlstyp"
   },
   "common": {
     "add": "Hinzufügen",

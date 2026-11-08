@@ -59,8 +59,6 @@ import AppIcon from '../common/AppIcon.vue'
 import BaseDialog from '../common/BaseDialog.vue'
 import IconButton from '../common/IconButton.vue'
 
-export type AiCommandTemplate = 'none' | 'fix' | 'translate' | 'style'
-
 export interface CreateCommandToolOption {
   id: string
   name: string
@@ -70,13 +68,11 @@ export interface CreateCommandToolOption {
 
 export interface CreateCommandSubmitEvent {
   toolId: string
-  template?: AiCommandTemplate
 }
 
 interface CommandItemOption {
   key: string
   toolId: string
-  template?: AiCommandTemplate
   name: string
   description?: string
   icon: string
@@ -99,56 +95,18 @@ function defaultIconForTool(toolId: string): string {
   return 'mdi:puzzle-outline'
 }
 
-const commandItems = computed<CommandItemOption[]>(() => {
-  const items: CommandItemOption[] = []
-
-  for (const tool of props.tools) {
-    if (tool.id === 'core.aiTask') {
-      items.push({
-        key: 'core.aiTask-none',
-        toolId: 'core.aiTask',
-        template: 'none',
-        name: tool.name,
-        description: tool.description,
-        icon: tool.icon ?? defaultIconForTool(tool.id),
-      })
-      items.push({
-        key: 'core.aiTask-fix',
-        toolId: 'core.aiTask',
-        template: 'fix',
-        name: `${tool.name}: ${t('commands.templateFix')}`,
-        icon: 'mdi:auto-fix',
-      })
-      items.push({
-        key: 'core.aiTask-translate',
-        toolId: 'core.aiTask',
-        template: 'translate',
-        name: `${tool.name}: ${t('commands.templateTranslate')}`,
-        icon: 'mdi:translate',
-      })
-      items.push({
-        key: 'core.aiTask-style',
-        toolId: 'core.aiTask',
-        template: 'style',
-        name: `${tool.name}: ${t('commands.templateStyle')}`,
-        icon: 'mdi:palette-outline',
-      })
-    } else {
-      items.push({
-        key: tool.id,
-        toolId: tool.id,
-        name: tool.name,
-        description: tool.description,
-        icon: tool.icon ?? defaultIconForTool(tool.id),
-      })
-    }
-  }
-
-  return items
-})
+const commandItems = computed<CommandItemOption[]>(() =>
+  props.tools.map((tool) => ({
+    key: tool.id,
+    toolId: tool.id,
+    name: tool.name,
+    description: tool.description,
+    icon: tool.icon ?? defaultIconForTool(tool.id),
+  }))
+)
 
 function handleSelect(item: CommandItemOption) {
-  emit('submit', { toolId: item.toolId, template: item.template })
+  emit('submit', { toolId: item.toolId })
 }
 
 function close() {

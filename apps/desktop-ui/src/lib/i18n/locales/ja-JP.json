@@ -292,13 +292,7 @@
     "aiToolsEnabledLabel": "ツールの使用を許可",
     "aiToolsEnabledInfo": "有効にすると、AIは許可された他のコマンドを呼び出すことができます。",
     "createModalTitle": "新規コマンド",
-    "toolTypeLabel": "コマンドの種類",
-    "templateFix": "誤りを修正",
-    "templateTranslate": "言語に翻訳…",
-    "templateStyle": "スタイルを適用…",
-    "templateFixPrompt": "テキスト内の誤字、文法、句読点の誤りを修正してください。元の意味と書式を維持してください。説明は含めず、修正後のテキストのみを出力してください。",
-    "templateTranslatePrompt": "次のテキストを[言語]に翻訳してください。コメントや引用符は含めず、翻訳結果のみを出力してください。",
-    "templateStylePrompt": "次のテキストを[スタイル]調に書き直してください。意味と言語を維持してください。コメントは含めず、書き直したテキストのみを出力してください。"
+    "toolTypeLabel": "コマンドの種類"
   },
   "common": {
     "add": "追加",

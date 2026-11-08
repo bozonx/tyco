@@ -292,13 +292,7 @@
     "aiToolsEnabledLabel": "Zezwalaj na narzędzia",
     "aiToolsEnabledInfo": "Gdy włączone, AI może wywoływać inne dozwolone polecenia.",
     "createModalTitle": "Nowe polecenie",
-    "toolTypeLabel": "Typ polecenia",
-    "templateFix": "Popraw błędy",
-    "templateTranslate": "Przetłumacz na…",
-    "templateStyle": "Zmień styl na…",
-    "templateFixPrompt": "Popraw błędy ortograficzne, gramatyczne i interpunkcyjne w tekście. Zachowaj oryginalne znaczenie i formatowanie. Zwróć tylko poprawiony tekst bez wyjaśnień.",
-    "templateTranslatePrompt": "Przetłumacz poniższy tekst na język [język]. Zwróć wyłącznie tłumaczenie bez komentarzy i cudzysłowów.",
-    "templateStylePrompt": "Przepisz poniższy tekst w stylu [styl]. Zachowaj znaczenie i język tekstu. Zwróć wyłącznie przepisany tekst bez komentarzy."
+    "toolTypeLabel": "Typ polecenia"
   },
   "common": {
     "add": "Dodaj",

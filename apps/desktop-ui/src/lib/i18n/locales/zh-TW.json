@@ -292,13 +292,7 @@
     "aiToolsEnabledLabel": "允許使用工具",
     "aiToolsEnabledInfo": "啟用後，AI 可以呼叫其他被允許的指令。",
     "createModalTitle": "新增指令",
-    "toolTypeLabel": "指令類型",
-    "templateFix": "修正錯誤",
-    "templateTranslate": "翻譯為…",
-    "templateStyle": "調整風格為…",
-    "templateFixPrompt": "修正文字中的拼字、文法和標點符號錯誤。保留原始含義和格式。僅輸出修正後的文字，無需包含解釋。",
-    "templateTranslatePrompt": "將以下文字翻譯為 [語言]。僅輸出翻譯結果，不要包含任何評論或引號。",
-    "templateStylePrompt": "以 [風格] 風格重寫以下文字。保持原意與語言。僅輸出重寫後的文字，不要包含任何評論。"
+    "toolTypeLabel": "指令類型"
   },
   "common": {
     "add": "新增",

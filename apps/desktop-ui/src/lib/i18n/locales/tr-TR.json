@@ -292,13 +292,7 @@
     "aiToolsEnabledLabel": "Araçlara izin ver",
     "aiToolsEnabledInfo": "Etkinleştirildiğinde, yapay zekâ izin verilen diğer komutları çağırabilir.",
     "createModalTitle": "Yeni komut",
-    "toolTypeLabel": "Komut türü",
-    "templateFix": "Hataları düzelt",
-    "templateTranslate": "Dile çevir…",
-    "templateStyle": "Tarzda yeniden yaz…",
-    "templateFixPrompt": "Metindeki yazım, dilbilgisi ve noktalama hatalarını düzeltin. Özgün anlamı ve biçimlendirmeyi koruyun. Açıklama yapmadan yalnızca düzeltilmiş metni döndürün.",
-    "templateTranslatePrompt": "Aşağıdaki metni [dil] diline çevirin. Yorum veya tırnak işareti olmadan yalnızca çeviriyi döndürün.",
-    "templateStylePrompt": "Aşağıdaki metni [tarz] tarzında yeniden yazın. Anlamı ve dili koruyun. Yorum yapmadan yalnızca yeniden yazılan metni döndürün."
+    "toolTypeLabel": "Komut türü"
   },
   "common": {
     "add": "Ekle",

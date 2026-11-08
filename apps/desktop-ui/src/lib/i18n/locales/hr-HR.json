@@ -292,13 +292,7 @@
     "aiToolsEnabledLabel": "Dopusti alate",
     "aiToolsEnabledInfo": "Kada je uključeno, AI može pozivati druge dopuštene naredbe.",
     "createModalTitle": "Nova naredba",
-    "toolTypeLabel": "Vrsta naredbe",
-    "templateFix": "Ispravi pogreške",
-    "templateTranslate": "Prevedi na…",
-    "templateStyle": "Stiliziraj u stilu…",
-    "templateFixPrompt": "Ispravite pravopisne, gramatičke i interpunkcijske pogreške u tekstu. Zadržite izvorno značenje i oblikovanje. Vratite samo ispravljeni tekst bez objašnjenja.",
-    "templateTranslatePrompt": "Prevedite sljedeći tekst na [jezik]. Vratite samo prijevod bez komentara ili navodnika.",
-    "templateStylePrompt": "Preoblikujte sljedeći tekst u stilu [stil]. Zadržite značenje i jezik. Vratite samo prepisani tekst bez komentara."
+    "toolTypeLabel": "Vrsta naredbe"
   },
   "common": {
     "add": "Dodaj",

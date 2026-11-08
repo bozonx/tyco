@@ -292,13 +292,7 @@
     "aiToolsEnabledLabel": "Consenti strumenti",
     "aiToolsEnabledInfo": "Se abilitato, l’IA può richiamare altri comandi consentiti.",
     "createModalTitle": "Nuovo comando",
-    "toolTypeLabel": "Tipo di comando",
-    "templateFix": "Correggi errori",
-    "templateTranslate": "Traduci in…",
-    "templateStyle": "Stilizza in stile…",
-    "templateFixPrompt": "Correggi errori di ortografia, grammatica e punteggiatura nel testo. Mantieni il significato e la formattazione originali. Restituisci solo il testo corretto senza spiegazioni.",
-    "templateTranslatePrompt": "Traduci il testo seguente in [lingua]. Restituisci solo la traduzione senza commenti o virgolette.",
-    "templateStylePrompt": "Riscrivi il testo seguente in stile [stile]. Mantieni il significato e la lingua. Restituisci solo il testo riscritto senza commenti."
+    "toolTypeLabel": "Tipo di comando"
   },
   "common": {
     "add": "Aggiungi",

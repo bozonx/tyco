@@ -292,13 +292,7 @@
     "aiToolsEnabledLabel": "Permite instrumente",
     "aiToolsEnabledInfo": "Când este activat, AI poate apela alte comenzi permise.",
     "createModalTitle": "Comandă nouă",
-    "toolTypeLabel": "Tipul comenzii",
-    "templateFix": "Corectează erorile",
-    "templateTranslate": "Tradu în…",
-    "templateStyle": "Stilizează în stilul…",
-    "templateFixPrompt": "Corectați greșelile de ortografie, gramatică și punctuație din text. Păstrați sensul și formatarea originale. Returnați doar textul corectat, fără explicații.",
-    "templateTranslatePrompt": "Traduceți următorul text în [limbă]. Returnați doar traducerea, fără comentarii sau ghilimele.",
-    "templateStylePrompt": "Rescrieți următorul text în stilul [stil]. Păstrați sensul și limba. Returnați doar textul rescris, fără comentarii."
+    "toolTypeLabel": "Tipul comenzii"
   },
   "common": {
     "add": "Adaugă",
