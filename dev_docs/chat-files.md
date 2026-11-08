@@ -36,10 +36,8 @@ Conversation files are content-addressed: the name is the SHA-256 of the
 bytes, the chat JSON keeps only references (`{ id, size }` plus the name and
 media type of the attachment). Each history has its own folder, so files move
 with the AI vault, and clearing the general history cannot reach a profile.
-Orphan records stay in `index/` of the state folder, one per history.
-
-`workspace/uploads/` of earlier versions is left alone: those files are
-permanent materials now. `ChatAttachment.workspacePath` is still read.
+Orphan records stay in `index/orphan-images.json` of the state folder, keyed by
+the folder of each history.
 
 ## Ownership and lifetime
 
@@ -48,17 +46,18 @@ bytes under owners: imports, the chats shown by windows, the undo of a
 deletion. The webview syncs the ids its conversation shows, images and files
 alike (`sync_chat_images`).
 
-| Event              | What happens                                                                                                                            |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Attach             | The original goes to session memory under an import owner, whatever the tools of the profile allow (`store_chat_file`).                 |
-| Draft, history off | Bytes stay in memory only, while a window holds them.                                                                                   |
-| Save               | Referenced files are written once to the folder of the history.                                                                         |
-| Branch             | The branch copies references; the bytes are shared.                                                                                     |
-| Delete chat        | The JSON goes; files stay as orphans. Undo holds them in memory.                                                                        |
-| Retention, clear   | Expired chats go; `clear` removes the whole history folder, images and attachments included.                                            |
-| Orphan collection  | A file no chat of its history refers to is removed after seven days without a reference (a sync tool may bring a file before its chat). |
-| Save to workspace  | A copy goes to `workspace/` of the profile and is permanent from then on (`save_chat_file_to_workspace`).                               |
-| Export             | The user saves a copy wherever they choose.                                                                                             |
+| Event              | What happens                                                                                                                         |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Attach             | The original goes to session memory under an import owner, whatever the tools of the profile allow (`store_chat_file`).              |
+| Draft, history off | Bytes stay in memory only, while a window holds them.                                                                                |
+| Save               | Referenced files are written once to the folder of the history.                                                                      |
+| Branch             | The branch copies references; the bytes are shared.                                                                                  |
+| Delete chat        | The JSON goes, and so do the files no other chat of its history refers to. Undo holds the bytes in memory and writes them back.      |
+| Edit               | A saved version that no longer refers to a file removes it, unless another chat of the history does.                                 |
+| Retention, clear   | Expired chats go with their files, as on deletion; `clear` removes the whole history folder, images and attachments included.        |
+| Orphan collection  | A safety net for files no deletion accounted for: removed after seven days without a reference (a sync tool may bring a file early). |
+| Save to workspace  | A copy goes to `workspace/` of the profile and is permanent from then on (`save_chat_file_to_workspace`).                            |
+| Export             | The user saves a copy wherever they choose.                                                                                          |
 
 ## Tools
 
@@ -88,7 +87,8 @@ its turns on the parts of the main chat (`createChatState`,
 `createChatTitleController`), so the context budget, errors, stopping, saving
 and titles behave the same; only the feed of turns with reply blocks is its
 own, a view of the chat messages. It is stored with `isQuickRequest` once
-answered, unless `isQuickRequestSavingEnabled` of its scope is off; a question
+answered, unless `isQuickRequestSavingEnabled` of its scope is off; with it off,
+the recent questions of stored quick requests are not offered either; a question
 that got no answer is not stored and gives way to the next one. Moving it to
 the main chat goes through `open_screenshot_chat` for text and screenshots
 alike: the main chat starts it with the same id and saves it without the flag,

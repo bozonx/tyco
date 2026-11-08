@@ -48,19 +48,6 @@ describe('formatAttachmentsForPrompt', () => {
         '<attachment source="editorText">\nc\n</attachment>'
     )
   })
-  it('tells the model where a kept file is', () => {
-    expect(
-      formatAttachmentsForPrompt([
-        {
-          text: 'Report',
-          name: 'r.pdf',
-          workspacePath: 'workspace/uploads/r.pdf',
-        },
-      ])
-    ).toBe(
-      '<attachment name="r.pdf" path="workspace/uploads/r.pdf">\nReport\n</attachment>'
-    )
-  })
   it('names a kept original by its path under attachments/', () => {
     const file = { id: 'a'.repeat(64), size: 6 }
     expect(

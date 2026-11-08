@@ -7,6 +7,8 @@
 use crate::locks::MutexExt;
 use std::sync::Mutex;
 
+use crate::services::chat_images::ChatFileIds;
+
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -173,7 +175,8 @@ pub fn list_recent_quick_request_prompts(
     policy: ChatHistoryPolicy,
     limit: usize,
 ) -> Result<Vec<String>, AppError> {
-    if !policy.is_enabled || limit == 0 {
+    // with quick requests no longer saved, the stored ones are not offered
+    if !policy.is_enabled || !policy.saves_quick_requests || limit == 0 {
         return Ok(Vec::new());
     }
     let chats = load_chat_index(dirs)?;
@@ -246,21 +249,7 @@ fn load_chat_index(dirs: &ChatDirs) -> Result<Vec<IndexedChat>, AppError> {
     if let Err(error) = write_index(&dirs.index, &index) {
         log::warn!("Could not save the chat index: {error}");
     }
-    remove_legacy_indexes(&dirs.index);
     Ok(sorted(index.chats))
-}
-
-/// The index files earlier versions kept beside the current one; rebuilt into
-/// the current one, they are only left over.
-const LEGACY_CHAT_INDEX_FILES: &[&str] = &["chats.json", "chats-v2.json"];
-
-fn remove_legacy_indexes(index: &Path) {
-    let Some(dir) = index.parent() else { return };
-    for name in LEGACY_CHAT_INDEX_FILES {
-        if let Err(error) = remove_file_if_exists(&dir.join(name)) {
-            log::warn!("Could not remove the old chat index {name}: {error}");
-        }
-    }
 }
 
 fn write_index(path: &Path, index: &ChatIndex) -> Result<(), AppError> {
@@ -337,12 +326,15 @@ pub fn save_chat(
     // the chat being saved stays, whatever date its last message has
     let mut removed = policy.drop_expired(&mut history, now_ms());
     removed.retain(|id| *id != chat.id);
-    let drops_images = !removed.is_empty() || drops_images(&dirs.chats, &chat);
+    let mut dropped = stored_file_ids(&dirs.chats, &removed);
+    // what the stored version refers to and the new one does not goes too
+    dropped.extend(
+        stored_file_ids(&dirs.chats, std::slice::from_ref(&chat.id))
+            .without(&ChatFileIds::of(&chat)),
+    );
     write_json(&path, &chat)?;
     remove_chat_files(&dirs.chats, &removed)?;
-    if drops_images {
-        clean_images(dirs);
-    }
+    remove_dropped(dirs, &dropped);
     Ok(removed)
 }
 
@@ -367,32 +359,26 @@ fn clean_images(dirs: &ChatDirs) {
     }
 }
 
-/// Whether the stored version of `chat` refers to images or files the new one
-/// does not.
-/// A stored chat that cannot be read counts as one that does.
-fn drops_images(chats_dir: &Path, chat: &Chat) -> bool {
-    let stored = match read_chat(chats_dir, chat.id.clone()) {
-        Ok(Some(stored)) => stored,
-        Ok(None) => return false,
-        Err(_) => return true,
-    };
-    let stored_ids = chat_image_ids(&stored);
-    !stored_ids.is_subset(&chat_image_ids(chat))
+/// What the stored chats `ids` refer to; a chat that cannot be read adds
+/// nothing, its files wait for the orphan collection.
+fn stored_file_ids(chats_dir: &Path, ids: &[String]) -> ChatFileIds {
+    let mut stored = ChatFileIds::default();
+    for id in ids {
+        if let Ok(Some(chat)) = read_chat(chats_dir, id.clone()) {
+            stored.add(&chat);
+        }
+    }
+    stored
 }
 
-fn chat_image_ids(chat: &Chat) -> std::collections::HashSet<&str> {
-    chat.messages
-        .iter()
-        .flat_map(|message| {
-            let images = message.images.iter().map(|image| image.id.as_str());
-            let files = message
-                .attachments
-                .iter()
-                .filter_map(|attachment| attachment.file.as_ref())
-                .map(|file| file.id.as_str());
-            images.chain(files)
-        })
-        .collect()
+/// Removes the files the removed or changed chats no longer need, then
+/// collects older orphans. Both are the last step of a change: a failure
+/// only delays them.
+fn remove_dropped(dirs: &ChatDirs, dropped: &ChatFileIds) {
+    if let Err(error) = crate::services::chat_images::remove_dropped_files(&dirs.chats, dropped) {
+        log::warn!("Could not remove the files of removed chats: {error}");
+    }
+    clean_images(dirs);
 }
 
 pub fn read_chat(chats_dir: &Path, id: String) -> Result<Option<Chat>, AppError> {
@@ -694,8 +680,10 @@ fn chat_search_text(chat: &Chat) -> String {
 }
 
 pub fn delete_chat(dirs: &ChatDirs, id: String) -> Result<(), AppError> {
-    remove_chat_files(&dirs.chats, &[id])?;
-    clean_images(dirs);
+    let ids = [id];
+    let dropped = stored_file_ids(&dirs.chats, &ids);
+    remove_chat_files(&dirs.chats, &ids)?;
+    remove_dropped(dirs, &dropped);
     Ok(())
 }
 
@@ -769,8 +757,9 @@ pub(super) fn enforce_chat_history_policy(
     super::user_data::ensure_write_allowed(&dirs.chats)?;
     let mut history = list_chats(dirs)?;
     let removed = policy.drop_expired(&mut history, now_ms());
+    let dropped = stored_file_ids(&dirs.chats, &removed);
     remove_chat_files(&dirs.chats, &removed)?;
-    clean_images(dirs);
+    remove_dropped(dirs, &dropped);
     Ok(removed)
 }
 
@@ -791,8 +780,7 @@ pub fn clear_chats(dirs: &ChatDirs) -> Result<(), AppError> {
 }
 
 fn validate_chat_id(id: &str) -> Result<String, AppError> {
-    // `index.json` is the index an earlier version kept among the chats
-    let is_safe = crate::services::file_ids::is_file_id(id) && id != "index";
+    let is_safe = crate::services::file_ids::is_file_id(id);
 
     if !is_safe {
         return Err(AppError::InvalidInput(String::from("Invalid chat id")));

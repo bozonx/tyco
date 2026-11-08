@@ -10,8 +10,10 @@ results. Native reads keep the composer busy before disk IO begins.
 
 ## Formats and local processing
 
-- PNG, JPEG, and non-animated WebP are decoded, drawn into a canvas, and
-  normalized to PNG. Rust validates and re-encodes pixels, stripping metadata.
+- PNG, JPEG, and non-animated WebP are decoded and drawn into a canvas; the
+  webview hands the pixels to Rust as a lossless PNG. Rust validates them and
+  stores a WebP, stripping metadata. Screenshots go to Rust as raw pixels and
+  are encoded the same way, without an intermediate PNG.
 - Text files (including Markdown, CSV, JSON, configuration, and supported source
   code extensions) are read as UTF-8, or BOM-marked UTF-16. Invalid encodings and
   NUL-containing binary content are rejected. File names and media types are
@@ -38,13 +40,15 @@ Settings → language models → chat attachments controls new image imports:
 - Balanced (default): longest edge up to 2048 pixels.
 - No resizing: retain decoded pixel dimensions within safety limits.
 
-Every mode strips metadata and stores normalized PNG, not the original file.
+Every mode strips metadata and stores a normalized WebP, not the original file.
 Changing quality does not reconstruct previously reduced images. PDF scans are
 rendered at up to twice their PDF point dimensions, with a 3072-pixel longest
 edge, before the chosen normalization policy applies.
 
-Source files are limited to 10 MiB. Images are limited to 24 million pixels,
-16384 pixels per edge, and 20 MiB after normalization. Each new message accepts
+Source files are limited to 10 MiB. Images are limited to 24 million pixels and
+8000 pixels per edge; a larger screenshot is scaled down to fit. A stored WebP
+is at most 5 MB, the strictest provider limit: Rust lowers the WebP quality
+step by step until the image fits, and refuses it otherwise. Each new message accepts
 up to four images and sixteen file attachments (rendered pages consume image
 slots). Extracted text is limited to 500000 characters, DOCX document XML to
 4 MiB after decompression, and PDF documents to 100 pages. Scan PDFs exceeding
@@ -93,15 +97,25 @@ silently evicted. An active chat that itself exceeds the session quota receives
 an error; starting another chat releases its ownership. History-loaded images
 remain available to an active chat if saved history is deleted. Unsaved drafts
 never touch disk. History persistence stores validated hash-addressed images
-atomically; orphan collection scans surviving chat references. A sync tool may
-bring an image before the chat that refers to it, and Syncthing and rsync keep
-the modification time of the original, so the age of a file tells nothing: the
-collection records in `index/orphan-images.json` of the state folder when it
-first saw an image without references, and removes it only after seven days
-without one by that record. An image that gets a reference leaves the record.
-Collection runs when a saved chat drops an image and whenever the chat history
-is brought in line with its settings: at startup, in the background, and after
-the chat history settings change.
+atomically.
+
+Images belong to their chats. Deleting a chat, its expiry by the retention
+period, and a saved edit that drops an image remove the image files at once,
+unless another chat of the same history (e.g. a branch) still refers to them.
+Clearing the history removes the whole `images/` and `attachments/` folders.
+The undo of a deletion keeps the bytes in session memory and writes them back
+on restore.
+
+What remains is a safety net for files no deletion accounted for: a chat that
+could not be read when it was removed, a crash between steps, or a file a sync
+tool brought before its chat. Syncthing and rsync keep the modification time of
+the original, so the age of a file tells nothing: the collection records in
+`index/orphan-images.json` of the state folder when it first saw a file without
+references, and removes it only after seven days without one. A file that gets
+a reference leaves the record; the record of a history folder that no longer
+exists is dropped. Collection runs after every change of a history and whenever
+the chat history is brought in line with its settings: at startup, in the
+background, and after the chat history settings change.
 
 ## Verification
 
@@ -110,8 +124,9 @@ limits, mixed PDFs, scan rendering, cancellation, queues, ownership handoff,
 context trimming, explicit historical image omission, attachment-only messages,
 file metadata roundtrips, and provider image rejection. Rust tests cover owners
 across windows, cache eviction, quotas, bounded native reads, normalization,
-history persistence, and orphan collection by the time an image was first seen
-without references.
+history persistence, immediate removal of the files of deleted, expired and
+edited chats, and orphan collection by the time a file was first seen without
+references.
 
 Browser smoke checks exercise actual PDF text extraction, scan rendering, and
 image normalization under a CSP equivalent to the production directives used

@@ -139,7 +139,6 @@ fn search_finds_attachments_and_sees_a_changed_chat() {
             source: None,
             name: Some(String::from("report.pdf")),
             media_type: None,
-            workspace_path: None,
             file: None,
         }],
         images: Vec::new(),
@@ -496,11 +495,10 @@ fn a_chat_written_by_another_device_shows_without_a_save_here() {
 }
 
 #[test]
-fn an_index_of_an_earlier_version_and_copies_of_sync_tools_are_no_chats() {
+fn copies_of_sync_tools_are_no_chats() {
     let dir = TestDir::new("chat-foreign-files");
     let dirs = dirs(&dir);
     write_json(&dirs.chats.join("a.json"), &chat_item("a")).unwrap();
-    fs::write(dirs.chats.join("index.json"), "[]").unwrap();
     write_json(
         &dirs
             .chats
@@ -516,7 +514,6 @@ fn an_index_of_an_earlier_version_and_copies_of_sync_tools_are_no_chats() {
     write_json(&dirs.chats.join(".tyco-tmp-a.json-1-1"), &chat_item("a")).unwrap();
     assert_eq!(ids(&dirs), ["a"]);
     // nothing of them is set aside as a broken chat
-    assert!(dirs.chats.join("index.json").exists());
     assert!(dirs
         .chats
         .join("a.sync-conflict-20261101-120000-ABCDEFG.json")
@@ -541,7 +538,7 @@ fn rebuilding_quarantines_mismatched_ids_without_losing_their_bytes() {
 
 #[test]
 fn validate_chat_id_rejects_path_traversal_and_the_old_index() {
-    for id in ["", "..", "../x", "a/b", "index"] {
+    for id in ["", "..", "../x", "a/b"] {
         assert!(validate_chat_id(id).is_err(), "{id:?}");
     }
     assert!(validate_chat_id("2b9c0f4e-7d1a").is_ok());
@@ -561,17 +558,6 @@ fn a_rename_stores_a_trimmed_title_and_refuses_empty_or_long_ones() {
     let long = "x".repeat(MAX_CHAT_TITLE_CHARS + 1);
     assert!(rename_chat(&dirs, "a".into(), long).is_err());
     assert_eq!(list_chats(&dirs).unwrap()[0].title, "New title");
-}
-
-#[test]
-fn a_new_chat_or_one_that_keeps_its_images_drops_none() {
-    let dir = TestDir::new("drops-images");
-    let chat = chat_item("a");
-    assert!(!drops_images(&dir, &chat));
-    write_json(&dir.join("a.json"), &chat).unwrap();
-    assert!(!drops_images(&dir, &chat));
-    fs::write(dir.join("a.json"), "broken").unwrap();
-    assert!(drops_images(&dir, &chat));
 }
 
 #[test]
@@ -740,7 +726,6 @@ fn chat_with_file(id: &str, images: &Mutex<ChatImageStore>, bytes: &[u8]) -> Cha
             source: None,
             name: Some(String::from("report.txt")),
             media_type: Some(String::from("text/plain")),
-            workspace_path: None,
             file: Some(file),
         }],
         images: Vec::new(),
@@ -771,20 +756,60 @@ fn attached_originals_follow_the_chats_that_refer_to_them() {
     assert_eq!(fs::read_dir(dirs.attachments()).unwrap().count(), 1);
 
     delete_chat(&dirs, String::from("a")).unwrap();
-    let orphans = |now| {
-        crate::services::chat_images::remove_orphan_images(&dirs.chats, &dirs.orphans, now).unwrap()
-    };
-    let now = now_ms();
-    orphans(now + crate::services::chat_images::ORPHAN_IMAGE_GRACE_MS);
     assert!(path.exists(), "the branch still refers to the file");
 
+    // the deletion is explicit: the last chat referring to the file takes it
+    // along at once; the undo keeps the bytes in the session
     delete_chat(&dirs, String::from("b")).unwrap();
-    // removed only once it has been without a chat for the grace period,
-    // so that the undo of a deletion and sync tools find it
-    orphans(now + 1_000);
-    assert!(path.exists());
-    orphans(now + 1_000 + crate::services::chat_images::ORPHAN_IMAGE_GRACE_MS);
     assert!(!path.exists());
+}
+
+#[test]
+fn a_saved_chat_that_drops_a_file_removes_it_at_once() {
+    let dir = TestDir::new("chat-files-dropped");
+    let dirs = dirs(&dir);
+    let images = Mutex::new(ChatImageStore::default());
+    let chat = chat_with_file("a", &images, b"original");
+    let path = dirs.attachments().join(file_id(&chat));
+    save_chat(&dirs, enabled_policy(), &images, chat.clone()).unwrap();
+    assert!(path.exists());
+
+    let mut edited = chat;
+    edited.messages.clear();
+    save_chat(&dirs, enabled_policy(), &images, edited).unwrap();
+    assert!(!path.exists());
+}
+
+#[test]
+fn expired_chats_take_their_files_along() {
+    let dir = TestDir::new("chat-files-expired");
+    let dirs = dirs(&dir);
+    let images = Mutex::new(ChatImageStore::default());
+    let mut chat = chat_with_file("old", &images, b"original");
+    chat.last_message_at_ms = 1;
+    let path = dirs.attachments().join(file_id(&chat));
+    save_chat(&dirs, enabled_policy(), &images, chat).unwrap();
+    assert!(path.exists());
+
+    let policy = ChatHistoryPolicy {
+        retention_days: 1,
+        ..enabled_policy()
+    };
+    assert_eq!(enforce_chat_history_policy(&dirs, policy).unwrap(), ["old"]);
+    assert!(!path.exists());
+}
+
+#[test]
+fn recent_quick_requests_are_not_offered_once_they_are_no_longer_saved() {
+    let dir = TestDir::new("quick-prompts-off");
+    let dirs = dirs(&dir);
+    let policy = ChatHistoryPolicy {
+        saves_quick_requests: false,
+        ..enabled_policy()
+    };
+    assert!(list_recent_quick_request_prompts(&dirs, policy, 5)
+        .unwrap()
+        .is_empty());
 }
 
 #[test]
@@ -1008,22 +1033,4 @@ fn the_list_carries_no_recent_prompts_while_the_index_keeps_them() {
         list_recent_quick_request_prompts(&dirs, enabled_policy(), 5).unwrap(),
         ["Question"]
     );
-}
-
-#[test]
-fn the_indexes_of_earlier_versions_are_removed() {
-    let dir = TestDir::new("legacy-indexes");
-    let dirs = dirs(&dir);
-    let index_dir = dirs.index.parent().unwrap().to_path_buf();
-    fs::create_dir_all(&index_dir).unwrap();
-    for name in LEGACY_CHAT_INDEX_FILES {
-        fs::write(index_dir.join(name), "{}").unwrap();
-    }
-    write_json(&dirs.chats.join("a.json"), &dated("a", 1)).unwrap();
-
-    assert_eq!(ids(&dirs), ["a"]);
-    for name in LEGACY_CHAT_INDEX_FILES {
-        assert!(!index_dir.join(name).exists(), "{name} is left");
-    }
-    assert!(dirs.index.exists());
 }

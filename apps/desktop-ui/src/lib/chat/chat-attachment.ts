@@ -83,9 +83,9 @@ export function formatAttachmentsForPrompt(
 ): string {
   return attachments
     .map((attachment) => {
-      const { text, source, name, mediaType, workspacePath } = attachment
+      const { text, source, name, mediaType } = attachment
       // the file tools reach the file itself by this path
-      const path = attachmentPath(attachment, files) ?? workspacePath
+      const path = attachmentPath(attachment, files)
       const attribute =
         (source ? ` source="${escapeAttribute(source)}"` : '') +
         (name ? ` name="${escapeAttribute(name)}"` : '') +

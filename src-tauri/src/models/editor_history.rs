@@ -22,17 +22,6 @@ pub enum EditorHistoryOperation {
     VoiceCorrection,
 }
 
-/// The operation of a stored entry; one this version does not know, such as
-/// the `quickAiRequest` of the entries quick requests left before they were
-/// kept with the chats, reads as none: the entry stays a source with its result.
-fn lenient_operation<'de, D>(deserializer: D) -> Result<Option<EditorHistoryOperation>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let value = Option::<serde_json::Value>::deserialize(deserializer)?;
-    Ok(value.and_then(|value| serde_json::from_value(value).ok()))
-}
-
 /// Where the text came from: where the user typed or dictated it, or the
 /// quick request whose answer was inserted or copied.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
@@ -65,14 +54,10 @@ pub struct EditorHistoryItem {
     pub id: String,
     pub text: String,
     pub kind: EditorHistoryKind,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "lenient_operation"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub operation: Option<EditorHistoryOperation>,
-    /// Missing in entries written before the origin was recorded.
+    /// Where the text came from; none for an entry without one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub origin: Option<EditorHistoryOrigin>,
@@ -132,18 +117,6 @@ mod tests {
             })
         );
         assert_eq!(serde_json::to_value(record).unwrap(), value);
-    }
-
-    #[test]
-    fn a_legacy_quick_request_entry_reads_as_a_source_with_its_result() {
-        let value = serde_json::json!({"id":"old", "text":"question", "kind":"source", "operation":"quickAiRequest", "createdAt":5, "result":"answer", "turns":[{"prompt":"question","result":"answer","inputKind":"typed"}]});
-        let record: super::EditorHistoryItem = serde_json::from_value(value).unwrap();
-        assert_eq!(record.operation, None);
-        assert_eq!(record.result.as_deref(), Some("answer"));
-        assert_eq!(
-            serde_json::to_value(record).unwrap(),
-            serde_json::json!({"id":"old", "text":"question", "kind":"source", "createdAt":5, "result":"answer"})
-        );
     }
 
     #[test]

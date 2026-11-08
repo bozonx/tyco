@@ -24,8 +24,6 @@ pub use crate::desktop_contract::MAX_CHAT_FILE_BYTES as MAX_FILE_BYTES;
 pub use crate::desktop_contract::MAX_CHAT_IMAGE_SOURCE_BYTES as MAX_SOURCE_BYTES;
 /// A stored image; the strictest provider (Anthropic) accepts 5 MB per image.
 pub const MAX_IMAGE_BYTES: usize = 5 * 1024 * 1024;
-/// Images saved before WebP were PNGs of up to 20 MB.
-const MAX_STORED_BYTES: usize = 20 * 1024 * 1024;
 const MAX_SESSION_BYTES: usize = 128 * 1024 * 1024;
 /// Memory the PNG decoder may use for one image.
 const MAX_DECODER_BYTES: usize = 128 * 1024 * 1024;
@@ -536,9 +534,9 @@ impl ChatImageStore {
             .ok_or_else(|| std::io::Error::from(std::io::ErrorKind::NotFound))?;
         let mut bytes = Vec::new();
         fs::File::open(path)?
-            .take((MAX_STORED_BYTES + 1) as u64)
+            .take((MAX_IMAGE_BYTES + 1) as u64)
             .read_to_end(&mut bytes)?;
-        if bytes.len() > MAX_STORED_BYTES || sha256_hex(&bytes) != id {
+        if bytes.len() > MAX_IMAGE_BYTES || sha256_hex(&bytes) != id {
             return Err(AppError::InvalidData("Corrupted chat image".into()));
         }
         let (width, height) = stored_dimensions(&bytes)?;
@@ -596,6 +594,109 @@ impl ChatImageStore {
     }
 }
 
+/// The ids of the images and attachment originals chats refer to.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct ChatFileIds {
+    pub images: HashSet<String>,
+    pub files: HashSet<String>,
+}
+
+impl ChatFileIds {
+    pub fn of(chat: &Chat) -> Self {
+        let mut ids = Self::default();
+        ids.add(chat);
+        ids
+    }
+
+    pub fn add(&mut self, chat: &Chat) {
+        for message in &chat.messages {
+            self.images
+                .extend(message.images.iter().map(|image| image.id.clone()));
+            self.files.extend(
+                message
+                    .attachments
+                    .iter()
+                    .filter_map(|attachment| attachment.file.as_ref())
+                    .map(|file| file.id.clone()),
+            );
+        }
+    }
+
+    pub fn extend(&mut self, other: Self) {
+        self.images.extend(other.images);
+        self.files.extend(other.files);
+    }
+
+    /// The ids of `self` that `other` does not have.
+    pub fn without(&self, other: &Self) -> Self {
+        Self {
+            images: self.images.difference(&other.images).cloned().collect(),
+            files: self.files.difference(&other.files).cloned().collect(),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.images.is_empty() && self.files.is_empty()
+    }
+}
+
+/// What the chats of `chats_dir` refer to; none when a chat cannot be read,
+/// as its references are then unknown.
+fn live_file_ids(chats_dir: &Path) -> Result<Option<ChatFileIds>, AppError> {
+    let mut live = ChatFileIds::default();
+    let chats = crate::services::storage::user_files::list_own_files(chats_dir, |name| {
+        name.strip_suffix(".json")
+            .is_some_and(crate::services::file_ids::is_file_id)
+    })?;
+    for (_, path) in chats {
+        match serde_json::from_slice::<Chat>(&fs::read(&path)?) {
+            Ok(chat) => live.add(&chat),
+            Err(error) => {
+                log::warn!(
+                    "Keeping chat files: chat file {} is unreadable ({error})",
+                    path.display()
+                );
+                return Ok(None);
+            }
+        }
+    }
+    Ok(Some(live))
+}
+
+/// Removes at once the files of `dropped`, which removed or changed chats
+/// referred to, unless another chat of `chats_dir` still refers to them. The
+/// session keeps the bytes an undo needs.
+pub fn remove_dropped_files(chats_dir: &Path, dropped: &ChatFileIds) -> Result<(), AppError> {
+    if dropped.is_empty() {
+        return Ok(());
+    }
+    crate::services::storage::user_data::ensure_write_allowed(chats_dir)?;
+    let Some(live) = live_file_ids(chats_dir)? else {
+        return Ok(());
+    };
+    let unused = dropped.without(&live);
+    let images = chats_dir.join(IMAGES_DIR);
+    for id in &unused.images {
+        if validate_id(id).is_err() {
+            continue;
+        }
+        if let Some((path, _)) = stored_file(&images, id) {
+            fs::remove_file(path)?;
+        }
+    }
+    let files = chats_dir.join(ATTACHMENTS_DIR);
+    for id in &unused.files {
+        if validate_id(id).is_err() {
+            continue;
+        }
+        let path = files.join(id);
+        if path.is_file() {
+            fs::remove_file(path)?;
+        }
+    }
+    Ok(())
+}
+
 /// How long an image no chat refers to stays: a sync tool may bring an image
 /// before the chat that refers to it.
 pub const ORPHAN_IMAGE_GRACE_MS: u64 = 7 * 24 * 60 * 60 * 1000;
@@ -620,37 +721,14 @@ pub fn remove_orphan_images(
         .and_then(|raw| serde_json::from_slice(&raw).ok())
         .unwrap_or_default();
     let before = record.clone();
+    // a history that moved away, e.g. with the data folder, leaves its record
+    record.retain(|directory, _| Path::new(directory).is_dir());
 
-    let mut live_images = HashSet::new();
-    let mut live_files = HashSet::new();
-    let chats = crate::services::storage::user_files::list_own_files(chats_dir, |name| {
-        name.strip_suffix(".json")
-            .is_some_and(|id| crate::services::file_ids::is_file_id(id) && id != "index")
-    })?;
-    for (_, path) in chats {
-        let chat: Chat = match serde_json::from_slice(&fs::read(&path)?) {
-            Ok(chat) => chat,
-            Err(error) => {
-                log::warn!(
-                    "Keeping all chat files: chat file {} is unreadable ({error})",
-                    path.display()
-                );
-                return Ok(());
-            }
-        };
-        for message in chat.messages {
-            live_images.extend(message.images.into_iter().map(|image| image.id));
-            live_files.extend(
-                message
-                    .attachments
-                    .into_iter()
-                    .filter_map(|attachment| attachment.file)
-                    .map(|file| file.id),
-            );
-        }
-    }
+    let Some(live) = live_file_ids(chats_dir)? else {
+        return Ok(());
+    };
     let images = chats_dir.join(IMAGES_DIR);
-    collect_orphans(&mut record, &images, &live_images, now_ms, |name| {
+    collect_orphans(&mut record, &images, &live.images, now_ms, |name| {
         let path = Path::new(name);
         let is_known = path
             .extension()
@@ -665,7 +743,7 @@ pub fn remove_orphan_images(
             .flatten()
     })?;
     let files = chats_dir.join(ATTACHMENTS_DIR);
-    collect_orphans(&mut record, &files, &live_files, now_ms, |name| {
+    collect_orphans(&mut record, &files, &live.files, now_ms, |name| {
         validate_id(name).is_ok().then(|| name.to_owned())
     })?;
     if record != before {

@@ -45,18 +45,8 @@ pub struct ChatAttachment {
     #[serde(default, rename = "mediaType", skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub media_type: Option<String>,
-    /// Where earlier versions kept a file dropped into a profile chat, e.g.
-    /// `workspace/uploads/report.pdf`; new attachments keep `file` instead.
-    #[serde(
-        default,
-        rename = "workspacePath",
-        skip_serializing_if = "Option::is_none"
-    )]
-    #[ts(optional)]
-    pub workspace_path: Option<String>,
     /// The original of an attached file, kept with the conversation; none for
-    /// a text that is not a file and for attachments stored before originals
-    /// were kept.
+    /// a text that is not a file.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub file: Option<ChatAttachmentFile>,

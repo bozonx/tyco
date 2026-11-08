@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 8a53c811ab79856cf9c55199e3dac877123e887efc4a8b14fd5887bac7f06e38
+// Source hash: 5da616e4728f7987af2457ba507f6606d248d9d3dbb362480e4b4b1eb938b5c9
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -229,14 +229,8 @@ export type ChatAttachment = {
   name?: string
   mediaType?: string
   /**
-   * Where earlier versions kept a file dropped into a profile chat, e.g.
-   * `workspace/uploads/report.pdf`; new attachments keep `file` instead.
-   */
-  workspacePath?: string
-  /**
    * The original of an attached file, kept with the conversation; none for a
-   * text that is not a file and for attachments stored before originals were
-   * kept.
+   * text that is not a file.
    */
   file?: ChatAttachmentFile
 }
@@ -441,7 +435,7 @@ export type EditorHistoryItem = {
   text: string
   kind: EditorHistoryKind
   operation?: EditorHistoryOperation
-  /** Missing in entries written before the origin was recorded. */
+  /** Where the text came from; none for an entry without one. */
   origin?: EditorHistoryOrigin
   /** The prompt or instruction of a transformation. */
   instruction?: EditorHistoryInstruction
