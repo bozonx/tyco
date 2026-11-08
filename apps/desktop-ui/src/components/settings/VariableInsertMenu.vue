@@ -3,6 +3,8 @@
     icon="mdi:variable"
     square
     hide-chevron
+    variant="ghost"
+    size="sm"
     align="right"
     :label="t('variables.insert')"
     :title="t('variables.insert')"

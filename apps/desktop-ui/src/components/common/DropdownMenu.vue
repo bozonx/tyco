@@ -15,7 +15,7 @@
       :square="square"
       :tone="tone"
       :style="{ maxWidth: maxTriggerWidth }"
-      :title="title"
+      :title="title ?? (square ? label : undefined)"
       :aria-expanded="isOpen"
       aria-haspopup="menu"
       :aria-controls="isOpen ? menuId : undefined"
@@ -25,7 +25,7 @@
       @click="toggleMenu"
     >
       <AppIcon v-if="icon" :icon="icon" size="md" />
-      <span v-if="label" class="truncate max-w-44 sm:max-w-64">{{
+      <span v-if="label && !square" class="truncate max-w-44 sm:max-w-64">{{
         label
       }}</span>
       <AppIcon

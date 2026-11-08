@@ -16,6 +16,7 @@
       >
         <FieldTextArea
           :model-value="command.phrases.join('\n')"
+          :placeholder="t('voiceCommands.phrasesPlaceholder')"
           @update:model-value="emit('update', { phrases: $event.split('\n') })"
         />
       </FieldRow>

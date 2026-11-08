@@ -60,6 +60,23 @@ describe('DropdownMenu', () => {
     const panel = wrapper.find('.dropdown-panel')
     expect(panel.attributes('style')).toContain('position: fixed')
   })
+
+  it('hides visible label text when square is true, using it for aria-label and title', () => {
+    const wrapper = mount(DropdownMenu, {
+      props: {
+        icon: 'mdi:variable',
+        label: 'Insert variable',
+        square: true,
+        items: [{ label: 'Item 1', action: vi.fn() }],
+      },
+      global: { stubs: { Icon: true, Teleport: true } },
+    })
+
+    const trigger = wrapper.find('button')
+    expect(trigger.find('span').exists()).toBe(false)
+    expect(trigger.attributes('aria-label')).toBe('Insert variable')
+    expect(trigger.attributes('title')).toBe('Insert variable')
+  })
   it('opens from the keyboard, navigates items, and restores focus on Escape', async () => {
     const wrapper = mount(DropdownMenu, {
       attachTo: document.body,

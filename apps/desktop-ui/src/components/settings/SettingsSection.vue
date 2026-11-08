@@ -1,14 +1,22 @@
 <template>
   <section class="settings-section">
     <header
-      v-if="title || description || $slots.description || $slots.actions"
+      v-if="
+        title ||
+        description ||
+        $slots.description ||
+        $slots.actions ||
+        $slots.info
+      "
       class="settings-section-header"
       :class="{ 'has-description': description || $slots.description }"
     >
       <div class="min-w-0">
         <h3 v-if="title" class="settings-section-title">
           <span>{{ title }}</span>
-          <InfoTooltip v-if="info" :text="info" />
+          <slot name="info">
+            <InfoTooltip v-if="info" :text="info" />
+          </slot>
           <DeviceScopeBadge v-if="deviceScoped" />
         </h3>
         <p

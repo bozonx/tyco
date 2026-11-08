@@ -18,16 +18,25 @@
       @update:model-value="emit('update:modelValue', $event)"
       @select="handleSelect"
     />
-    <IconButton
-      v-if="!disabled"
-      class="field-prompt-expand-btn"
-      variant="ghost"
-      size="xs"
-      icon="mdi:arrow-expand"
-      :label="t('common.expandInEditor')"
-      :title="t('common.expandInEditor')"
-      @click="openModal"
-    />
+    <div v-if="!disabled" class="field-prompt-actions">
+      <CopyButton
+        v-if="modelValue"
+        class="field-prompt-copy-btn"
+        variant="ghost"
+        size="xs"
+        :value="modelValue"
+        :label="t('common.copy')"
+      />
+      <IconButton
+        class="field-prompt-expand-btn"
+        variant="ghost"
+        size="xs"
+        icon="mdi:arrow-expand"
+        :label="t('common.expandInEditor')"
+        :title="t('common.expandInEditor')"
+        @click="openModal"
+      />
+    </div>
 
     <BaseDialog
       v-if="isModalOpen"
@@ -169,18 +178,21 @@ defineExpose({
   width: 100%;
 }
 
-.field-prompt-expand-btn {
+.field-prompt-actions {
   position: absolute;
   top: 0.375rem;
   right: 0.375rem;
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--transition-fast, 120ms);
   z-index: 2;
 }
 
-.field-prompt-container:hover .field-prompt-expand-btn,
-.field-prompt-expand-btn:focus-visible {
+.field-prompt-container:hover .field-prompt-actions,
+.field-prompt-actions:focus-within {
   opacity: 1;
   pointer-events: auto;
 }

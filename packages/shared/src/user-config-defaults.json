@@ -137,7 +137,6 @@
         "name": "Qwen 2.5 7B",
         "temperature": 0.2,
         "contextWindowTokens": 4096,
-        "maxOutputTokens": 1024,
         "canUseImages": false,
         "canUseTools": false
       },

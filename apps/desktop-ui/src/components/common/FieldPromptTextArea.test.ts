@@ -10,6 +10,8 @@ const enUS: Record<string, string> = {
   'common.editorModalTitle': 'Text editor',
   'common.done': 'Done',
   'common.close': 'Close',
+  'common.copy': 'Copy',
+  'common.copied': 'Copied',
 }
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -64,6 +66,17 @@ describe('FieldPromptTextArea', () => {
 
     const expandBtn = wrapper.find('.field-prompt-expand-btn')
     expect(expandBtn.exists()).toBe(true)
+
+    const copyBtn = wrapper.find('.field-prompt-copy-btn')
+    expect(copyBtn.exists()).toBe(true)
+  })
+
+  it('does not render copy button when modelValue is empty', () => {
+    const wrapper = mount(FieldPromptTextArea, {
+      props: { modelValue: '', placeholder: 'Enter prompt...' },
+    })
+    expect(wrapper.find('.field-prompt-copy-btn').exists()).toBe(false)
+    expect(wrapper.find('.field-prompt-expand-btn').exists()).toBe(true)
   })
 
   it('opens full window modal on expand button click and updates model value', async () => {

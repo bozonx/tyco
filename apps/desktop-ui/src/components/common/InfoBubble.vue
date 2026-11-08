@@ -82,8 +82,16 @@ const props = withDefaults(
     align?: 'start' | 'center' | 'end'
     size?: 'sm' | 'md'
     teleport?: boolean
+    panelClass?: string
   }>(),
-  { text: '', placement: 'top', align: 'start', size: 'sm', teleport: true }
+  {
+    text: '',
+    placement: 'top',
+    align: 'start',
+    size: 'sm',
+    teleport: true,
+    panelClass: '',
+  }
 )
 
 const tooltipId = useId()
@@ -308,6 +316,10 @@ defineExpose({ isOpen, isPinned, close, updatePosition })
   pointer-events: auto;
   user-select: text;
   box-sizing: border-box;
+}
+
+.info-tooltip-popover.panel-wide {
+  max-width: min(28rem, calc(100vw - 1rem));
 }
 
 .info-tooltip-popover.is-teleported {
