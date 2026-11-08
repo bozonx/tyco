@@ -36,9 +36,7 @@ describe('SettingsChatPromptsTab', () => {
   }
 
   it('adds a prompt of every profile and sets its profile', async () => {
-    const { context, wrapper } = mountTab({
-      chatPrompts: { isSentImmediately: false, items: [] },
-    })
+    const { context, wrapper } = mountTab()
     await flushPromises()
     expect(wrapper.text()).toContain('chatPrompts.empty')
 

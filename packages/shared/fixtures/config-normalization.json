@@ -389,32 +389,13 @@
           {
             "id": "deep-edit",
             "name": "Deep edit",
-            "rule": "Input: a draft written in a hurry; it may be wordy or clumsy.\n\nTask:\n- Rephrase awkward sentences so they read naturally.\n- Remove repetition and filler words.\n- Add missing words (pronouns, connectors) where the meaning needs them.\n\nKeep: the meaning, facts, tone and language of the draft. Add no new ideas.\n\nOutput: the edited text only, no longer than the draft."
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
         "slots": { "q": "deep-edit" }
       },
-      "styling": {
-        "items": [
-          {
-            "id": "business",
-            "name": "Business",
-            "rule": "Style: polite, professional business correspondence.\n\n- A neutral, respectful tone; no slang, jokes or emoji.\n- Short, clear sentences; the main point first.\n- Keep the greeting and closing if the text has them; do not add new ones.\n\nOutput: the restyled text only, in the language of the original."
-          }
-        ],
-        "slots": { "q": "business" }
-      },
-      "chatPrompts": {
-        "isSentImmediately": false,
-        "items": [
-          {
-            "id": "explain",
-            "name": "Explain simply",
-            "profileId": "",
-            "rule": "Input: the text or question below.\n\nTask: explain it in plain words to someone new to the topic.\n\nOutput:\n- One sentence with the main idea.\n- Three to five bullet points with the key details.\n- A short everyday example, if it helps.\n\nAnswer in the language of the input."
-          }
-        ]
-      },
+      "styling": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "items": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
@@ -813,32 +794,13 @@
           {
             "id": "deep-edit",
             "name": "Deep edit",
-            "rule": "Input: a draft written in a hurry; it may be wordy or clumsy.\n\nTask:\n- Rephrase awkward sentences so they read naturally.\n- Remove repetition and filler words.\n- Add missing words (pronouns, connectors) where the meaning needs them.\n\nKeep: the meaning, facts, tone and language of the draft. Add no new ideas.\n\nOutput: the edited text only, no longer than the draft."
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
         "slots": { "q": "deep-edit" }
       },
-      "styling": {
-        "items": [
-          {
-            "id": "business",
-            "name": "Business",
-            "rule": "Style: polite, professional business correspondence.\n\n- A neutral, respectful tone; no slang, jokes or emoji.\n- Short, clear sentences; the main point first.\n- Keep the greeting and closing if the text has them; do not add new ones.\n\nOutput: the restyled text only, in the language of the original."
-          }
-        ],
-        "slots": { "q": "business" }
-      },
-      "chatPrompts": {
-        "isSentImmediately": false,
-        "items": [
-          {
-            "id": "explain",
-            "name": "Explain simply",
-            "profileId": "",
-            "rule": "Input: the text or question below.\n\nTask: explain it in plain words to someone new to the topic.\n\nOutput:\n- One sentence with the main idea.\n- Three to five bullet points with the key details.\n- A short everyday example, if it helps.\n\nAnswer in the language of the input."
-          }
-        ]
-      },
+      "styling": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "items": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
@@ -1230,32 +1192,13 @@
           {
             "id": "deep-edit",
             "name": "Deep edit",
-            "rule": "Input: a draft written in a hurry; it may be wordy or clumsy.\n\nTask:\n- Rephrase awkward sentences so they read naturally.\n- Remove repetition and filler words.\n- Add missing words (pronouns, connectors) where the meaning needs them.\n\nKeep: the meaning, facts, tone and language of the draft. Add no new ideas.\n\nOutput: the edited text only, no longer than the draft."
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
         "slots": { "q": "deep-edit" }
       },
-      "styling": {
-        "items": [
-          {
-            "id": "business",
-            "name": "Business",
-            "rule": "Style: polite, professional business correspondence.\n\n- A neutral, respectful tone; no slang, jokes or emoji.\n- Short, clear sentences; the main point first.\n- Keep the greeting and closing if the text has them; do not add new ones.\n\nOutput: the restyled text only, in the language of the original."
-          }
-        ],
-        "slots": { "q": "business" }
-      },
-      "chatPrompts": {
-        "isSentImmediately": false,
-        "items": [
-          {
-            "id": "explain",
-            "name": "Explain simply",
-            "profileId": "",
-            "rule": "Input: the text or question below.\n\nTask: explain it in plain words to someone new to the topic.\n\nOutput:\n- One sentence with the main idea.\n- Three to five bullet points with the key details.\n- A short everyday example, if it helps.\n\nAnswer in the language of the input."
-          }
-        ]
-      },
+      "styling": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "items": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
@@ -1657,32 +1600,13 @@
           {
             "id": "deep-edit",
             "name": "Deep edit",
-            "rule": "Input: a draft written in a hurry; it may be wordy or clumsy.\n\nTask:\n- Rephrase awkward sentences so they read naturally.\n- Remove repetition and filler words.\n- Add missing words (pronouns, connectors) where the meaning needs them.\n\nKeep: the meaning, facts, tone and language of the draft. Add no new ideas.\n\nOutput: the edited text only, no longer than the draft."
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
         "slots": { "q": "deep-edit" }
       },
-      "styling": {
-        "items": [
-          {
-            "id": "business",
-            "name": "Business",
-            "rule": "Style: polite, professional business correspondence.\n\n- A neutral, respectful tone; no slang, jokes or emoji.\n- Short, clear sentences; the main point first.\n- Keep the greeting and closing if the text has them; do not add new ones.\n\nOutput: the restyled text only, in the language of the original."
-          }
-        ],
-        "slots": { "q": "business" }
-      },
-      "chatPrompts": {
-        "isSentImmediately": false,
-        "items": [
-          {
-            "id": "explain",
-            "name": "Explain simply",
-            "profileId": "",
-            "rule": "Input: the text or question below.\n\nTask: explain it in plain words to someone new to the topic.\n\nOutput:\n- One sentence with the main idea.\n- Three to five bullet points with the key details.\n- A short everyday example, if it helps.\n\nAnswer in the language of the input."
-          }
-        ]
-      },
+      "styling": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "items": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
@@ -2062,32 +1986,13 @@
           {
             "id": "deep-edit",
             "name": "Deep edit",
-            "rule": "Input: a draft written in a hurry; it may be wordy or clumsy.\n\nTask:\n- Rephrase awkward sentences so they read naturally.\n- Remove repetition and filler words.\n- Add missing words (pronouns, connectors) where the meaning needs them.\n\nKeep: the meaning, facts, tone and language of the draft. Add no new ideas.\n\nOutput: the edited text only, no longer than the draft."
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
         "slots": { "q": "deep-edit" }
       },
-      "styling": {
-        "items": [
-          {
-            "id": "business",
-            "name": "Business",
-            "rule": "Style: polite, professional business correspondence.\n\n- A neutral, respectful tone; no slang, jokes or emoji.\n- Short, clear sentences; the main point first.\n- Keep the greeting and closing if the text has them; do not add new ones.\n\nOutput: the restyled text only, in the language of the original."
-          }
-        ],
-        "slots": { "q": "business" }
-      },
-      "chatPrompts": {
-        "isSentImmediately": false,
-        "items": [
-          {
-            "id": "explain",
-            "name": "Explain simply",
-            "profileId": "",
-            "rule": "Input: the text or question below.\n\nTask: explain it in plain words to someone new to the topic.\n\nOutput:\n- One sentence with the main idea.\n- Three to five bullet points with the key details.\n- A short everyday example, if it helps.\n\nAnswer in the language of the input."
-          }
-        ]
-      },
+      "styling": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "items": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
@@ -2479,32 +2384,13 @@
           {
             "id": "deep-edit",
             "name": "Deep edit",
-            "rule": "Input: a draft written in a hurry; it may be wordy or clumsy.\n\nTask:\n- Rephrase awkward sentences so they read naturally.\n- Remove repetition and filler words.\n- Add missing words (pronouns, connectors) where the meaning needs them.\n\nKeep: the meaning, facts, tone and language of the draft. Add no new ideas.\n\nOutput: the edited text only, no longer than the draft."
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
         "slots": { "q": "deep-edit" }
       },
-      "styling": {
-        "items": [
-          {
-            "id": "business",
-            "name": "Business",
-            "rule": "Style: polite, professional business correspondence.\n\n- A neutral, respectful tone; no slang, jokes or emoji.\n- Short, clear sentences; the main point first.\n- Keep the greeting and closing if the text has them; do not add new ones.\n\nOutput: the restyled text only, in the language of the original."
-          }
-        ],
-        "slots": { "q": "business" }
-      },
-      "chatPrompts": {
-        "isSentImmediately": false,
-        "items": [
-          {
-            "id": "explain",
-            "name": "Explain simply",
-            "profileId": "",
-            "rule": "Input: the text or question below.\n\nTask: explain it in plain words to someone new to the topic.\n\nOutput:\n- One sentence with the main idea.\n- Three to five bullet points with the key details.\n- A short everyday example, if it helps.\n\nAnswer in the language of the input."
-          }
-        ]
-      },
+      "styling": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "items": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
@@ -2898,32 +2784,13 @@
           {
             "id": "deep-edit",
             "name": "Deep edit",
-            "rule": "Input: a draft written in a hurry; it may be wordy or clumsy.\n\nTask:\n- Rephrase awkward sentences so they read naturally.\n- Remove repetition and filler words.\n- Add missing words (pronouns, connectors) where the meaning needs them.\n\nKeep: the meaning, facts, tone and language of the draft. Add no new ideas.\n\nOutput: the edited text only, no longer than the draft."
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
         "slots": { "q": "deep-edit" }
       },
-      "styling": {
-        "items": [
-          {
-            "id": "business",
-            "name": "Business",
-            "rule": "Style: polite, professional business correspondence.\n\n- A neutral, respectful tone; no slang, jokes or emoji.\n- Short, clear sentences; the main point first.\n- Keep the greeting and closing if the text has them; do not add new ones.\n\nOutput: the restyled text only, in the language of the original."
-          }
-        ],
-        "slots": { "q": "business" }
-      },
-      "chatPrompts": {
-        "isSentImmediately": false,
-        "items": [
-          {
-            "id": "explain",
-            "name": "Explain simply",
-            "profileId": "",
-            "rule": "Input: the text or question below.\n\nTask: explain it in plain words to someone new to the topic.\n\nOutput:\n- One sentence with the main idea.\n- Three to five bullet points with the key details.\n- A short everyday example, if it helps.\n\nAnswer in the language of the input."
-          }
-        ]
-      },
+      "styling": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "items": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
@@ -3330,27 +3197,8 @@
       ],
       "variables": [],
       "variableValues": {},
-      "styling": {
-        "items": [
-          {
-            "id": "business",
-            "name": "Business",
-            "rule": "Style: polite, professional business correspondence.\n\n- A neutral, respectful tone; no slang, jokes or emoji.\n- Short, clear sentences; the main point first.\n- Keep the greeting and closing if the text has them; do not add new ones.\n\nOutput: the restyled text only, in the language of the original."
-          }
-        ],
-        "slots": { "q": "business" }
-      },
-      "chatPrompts": {
-        "isSentImmediately": false,
-        "items": [
-          {
-            "id": "explain",
-            "name": "Explain simply",
-            "profileId": "",
-            "rule": "Input: the text or question below.\n\nTask: explain it in plain words to someone new to the topic.\n\nOutput:\n- One sentence with the main idea.\n- Three to five bullet points with the key details.\n- A short everyday example, if it helps.\n\nAnswer in the language of the input."
-          }
-        ]
-      },
+      "styling": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "items": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
       "customActionSlots": [
@@ -3768,27 +3616,8 @@
       ],
       "variables": [],
       "variableValues": {},
-      "styling": {
-        "items": [
-          {
-            "id": "business",
-            "name": "Business",
-            "rule": "Style: polite, professional business correspondence.\n\n- A neutral, respectful tone; no slang, jokes or emoji.\n- Short, clear sentences; the main point first.\n- Keep the greeting and closing if the text has them; do not add new ones.\n\nOutput: the restyled text only, in the language of the original."
-          }
-        ],
-        "slots": { "q": "business" }
-      },
-      "chatPrompts": {
-        "isSentImmediately": false,
-        "items": [
-          {
-            "id": "explain",
-            "name": "Explain simply",
-            "profileId": "",
-            "rule": "Input: the text or question below.\n\nTask: explain it in plain words to someone new to the topic.\n\nOutput:\n- One sentence with the main idea.\n- Three to five bullet points with the key details.\n- A short everyday example, if it helps.\n\nAnswer in the language of the input."
-          }
-        ]
-      },
+      "styling": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "items": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
       "customActionSlots": [
@@ -4279,32 +4108,13 @@
           {
             "id": "deep-edit",
             "name": "Deep edit",
-            "rule": "Input: a draft written in a hurry; it may be wordy or clumsy.\n\nTask:\n- Rephrase awkward sentences so they read naturally.\n- Remove repetition and filler words.\n- Add missing words (pronouns, connectors) where the meaning needs them.\n\nKeep: the meaning, facts, tone and language of the draft. Add no new ideas.\n\nOutput: the edited text only, no longer than the draft."
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
         "slots": { "q": "deep-edit" }
       },
-      "styling": {
-        "items": [
-          {
-            "id": "business",
-            "name": "Business",
-            "rule": "Style: polite, professional business correspondence.\n\n- A neutral, respectful tone; no slang, jokes or emoji.\n- Short, clear sentences; the main point first.\n- Keep the greeting and closing if the text has them; do not add new ones.\n\nOutput: the restyled text only, in the language of the original."
-          }
-        ],
-        "slots": { "q": "business" }
-      },
-      "chatPrompts": {
-        "isSentImmediately": false,
-        "items": [
-          {
-            "id": "explain",
-            "name": "Explain simply",
-            "profileId": "",
-            "rule": "Input: the text or question below.\n\nTask: explain it in plain words to someone new to the topic.\n\nOutput:\n- One sentence with the main idea.\n- Three to five bullet points with the key details.\n- A short everyday example, if it helps.\n\nAnswer in the language of the input."
-          }
-        ]
-      },
+      "styling": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "items": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
@@ -4816,32 +4626,13 @@
           {
             "id": "deep-edit",
             "name": "Deep edit",
-            "rule": "Input: a draft written in a hurry; it may be wordy or clumsy.\n\nTask:\n- Rephrase awkward sentences so they read naturally.\n- Remove repetition and filler words.\n- Add missing words (pronouns, connectors) where the meaning needs them.\n\nKeep: the meaning, facts, tone and language of the draft. Add no new ideas.\n\nOutput: the edited text only, no longer than the draft."
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
           }
         ],
         "slots": { "q": "deep-edit" }
       },
-      "styling": {
-        "items": [
-          {
-            "id": "business",
-            "name": "Business",
-            "rule": "Style: polite, professional business correspondence.\n\n- A neutral, respectful tone; no slang, jokes or emoji.\n- Short, clear sentences; the main point first.\n- Keep the greeting and closing if the text has them; do not add new ones.\n\nOutput: the restyled text only, in the language of the original."
-          }
-        ],
-        "slots": { "q": "business" }
-      },
-      "chatPrompts": {
-        "isSentImmediately": false,
-        "items": [
-          {
-            "id": "explain",
-            "name": "Explain simply",
-            "profileId": "",
-            "rule": "Input: the text or question below.\n\nTask: explain it in plain words to someone new to the topic.\n\nOutput:\n- One sentence with the main idea.\n- Three to five bullet points with the key details.\n- A short everyday example, if it helps.\n\nAnswer in the language of the input."
-          }
-        ]
-      },
+      "styling": { "items": [], "slots": {} },
+      "chatPrompts": { "isSentImmediately": false, "items": [] },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
