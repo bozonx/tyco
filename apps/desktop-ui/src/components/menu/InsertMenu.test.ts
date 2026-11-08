@@ -192,6 +192,22 @@ describe('InsertMenu correction step', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }))
     await wrapper.vm.$nextTick()
     expect(actionMenuStore.pageIndex).toBe(0)
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Tab', ctrlKey: true })
+    )
+    await wrapper.vm.$nextTick()
+    expect(actionMenuStore.pageIndex).toBe(1)
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Tab',
+        ctrlKey: true,
+        shiftKey: true,
+      })
+    )
+    await wrapper.vm.$nextTick()
+    expect(actionMenuStore.pageIndex).toBe(0)
   })
 
   it('saves text as a favorite when save button is clicked', async () => {

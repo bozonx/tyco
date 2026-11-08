@@ -272,7 +272,19 @@ const primaryAction = computed<ActionItem | undefined>(() => {
 
 function onKeyDown(event: KeyboardEvent) {
   if (props.shortcutsDisabled || actionMenuStore.pageCount <= 1) return
-  if (event.ctrlKey || event.altKey || event.metaKey || event.isComposing) {
+  if (event.isComposing) return
+
+  if (event.ctrlKey && !event.altKey && !event.metaKey && event.key === 'Tab') {
+    event.preventDefault()
+    if (event.shiftKey) {
+      actionMenuStore.prevPage()
+    } else {
+      actionMenuStore.nextPage()
+    }
+    return
+  }
+
+  if (event.ctrlKey || event.altKey || event.metaKey) {
     return
   }
   if (event.key === 'PageDown') {
