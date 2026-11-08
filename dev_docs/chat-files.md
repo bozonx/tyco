@@ -1,8 +1,8 @@
 # Conversation files
 
-Who owns the files of a conversation, where they live and when they go. Image
-import, normalization and vision are in `chat-images.md`; this note is about
-ownership and lifetime, shared by images and attachment originals.
+Who owns the files of a conversation, where they live and when they go, shared
+by images and attachment originals. How the webview holds images is described
+in `src-tauri/src/commands/chat_images.rs`.
 
 ## Entities
 

@@ -1,5 +1,8 @@
 # Plugin packages
 
+The user and plugin author guide is `docs/plugins.md`; this note covers the
+runtime, the package format and the host contracts.
+
 TyCo's bundled plugins use the same framework-independent SDK and package format
 as locally installed extensions. Bundled plugins are trusted application code and
 run in the host realm; their synchronous work is not isolated by worker timeouts.

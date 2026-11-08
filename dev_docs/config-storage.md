@@ -45,7 +45,7 @@ but saves nothing (`configIsNewer`).
 
 The backend rejects invalid IPC saves before storing credentials or writing the config:
 counts must be safe nonnegative integers, entity ids and translation languages
-must be unique, and command, task, provider, model and launcher references must
+must be unique, and command, task, provider, model and action slot references must
 exist. Opaque plugin settings and plugin tool config remain plugin-owned. A newer
 schema version is rejected without modifying the file.
 
@@ -59,30 +59,32 @@ from them.
 The normalized `UserConfig` type has every section present. Serialized input
 is untrusted `UserConfigInput` and must pass through normalization before use.
 
-| Section           | Contents                                                                                                                    |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `appearance`      | `theme`, `contrast`, `motion`, `uiScalePercent` (50–300; the settings offer presets)                                        |
-| `language`        | `ui` (interface locale or `auto`)                                                                                           |
-| `editor`          | `submitKey`, `diffViewMode`, `history` (`storage`, `maxItems`, `retentionDays`, `isSecretSanitizingEnabled`, `isLocalOnly`) |
-| `quickWindow`     | `isHiddenOnBlur`, `isCorrectionPrefetchEnabled`                                                                             |
-| `hotkeys`         | one shortcut per activation mode a hotkey opens, named as the mode, `selectionCorrection`                                   |
-| `externalAccess`  | `canAccessSelection`; each command allows external calls with `isAvailableExternally`                                       |
-| `windowInsertion` | `linux`: `pasteShortcut`, `terminalPasteShortcut`; `terminalApps`: extra window classes treated as terminals                |
-| `translation`     | `provider`, `providers.deepl.endpoint`, `qualityGate`, `glossary`, `targetLanguages` (a shortcut grid), `viewMode`          |
-| `actionPages`     | pages of the action menu: each has `inputMode` (`selection` or `none`) and `slots` (a shortcut grid)                        |
-| `commands`        | the commands of the user: `toolId`, `toolConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, `platforms`, …             |
-| `variables`       | the variables commands refer to as `{{var:NAME}}`: `id`, `name`, `description`                                              |
-| `variableValues`  | the value of each variable on this device, by variable id (device)                                                          |
-| `llm`             | `imageQuality`, `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below)                   |
-| `transformations` | `items`, the transformation library; `slots`, the transformation menu (a shortcut grid of transformation ids)               |
-| `styling`         | `items`, the styling library; `slots`, the styling menu (a shortcut grid of styling ids)                                    |
-| `chatPrompts`     | `isSentImmediately`; `items`, the prompt library: each prompt has `profileId`, empty for a prompt of every profile          |
-| `aiVault`         | `path`, empty for the default location                                                                                      |
-| `aiProfiles`      | `chatHistory` (`storage`: `off` or `disk`, `retentionDays`)                                                                 |
-| `markdown`        | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                                       |
-| `plugins`         | per plugin id: `isEnabled` and the plugin-owned `settings`                                                                  |
-| `chat`            | `history` (`storage`: `off` or `disk`, `retentionDays`)                                                                     |
-| `stt`             | `provider`, `correctionMode`, `providers.deepgram`, `providers.sherpaOnnx`, `providers.geminiLive`                          |
+| Section             | Contents                                                                                                                                                                           |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `appearance`        | `theme`, `contrast`, `motion`, `uiScalePercent` (50–300; the settings offer presets)                                                                                               |
+| `language`          | `ui` (interface locale or `auto`)                                                                                                                                                  |
+| `editor`            | `submitKey`, `diffViewMode`, `history` (`storage`, `maxItems`, `retentionDays`, `isSecretSanitizingEnabled`, `isLocalOnly`), `shortcuts` (editor key bindings, see `editor.md`)    |
+| `quickWindow`       | `isHiddenOnBlur`, `isCorrectionPrefetchEnabled`, `correctionMode` (`live`, `onSubmit`, `off`), `screenshotCaptureMode` (`screen`, `area`)                                          |
+| `hotkeys`           | one shortcut per activation mode a hotkey opens, named as the mode, `selectionCorrection`                                                                                          |
+| `externalAccess`    | `canAccessSelection`; each command allows external calls with `isAvailableExternally`                                                                                              |
+| `windowInsertion`   | `linux`: `pasteShortcut`, `terminalPasteShortcut`; `terminalApps`: extra window classes treated as terminals                                                                       |
+| `translation`       | `provider`, `providers.deepl.endpoint`, `qualityGate`, `glossary`, `targetLanguages` (a shortcut grid), `viewMode`                                                                 |
+| `actionPages`       | pages of the action menu: each has `inputMode` (`selection` or `none`) and `slots` (a shortcut grid)                                                                               |
+| `customActionSlots` | the five actions of the `customAction1`..`customAction5` hotkeys: `action` (a slot item or `null`), `takesSelection`                                                               |
+| `favorites`         | `items`, the favorites list                                                                                                                                                        |
+| `commands`          | the commands of the user: `toolId`, `toolConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, `platforms`, …                                                                    |
+| `variables`         | the variables commands refer to as `{{var:NAME}}`: `id`, `name`, `description`                                                                                                     |
+| `variableValues`    | the value of each variable on this device, by variable id (device)                                                                                                                 |
+| `llm`               | `imageQuality`, `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below)                                                                          |
+| `transformations`   | `items`, the transformation library; `slots`, the transformation menu (a shortcut grid of transformation ids)                                                                      |
+| `styling`           | `items`, the styling library; `slots`, the styling menu (a shortcut grid of styling ids)                                                                                           |
+| `chatPrompts`       | `isSentImmediately`; `items`, the prompt library: each prompt has `profileId`, empty for a prompt of every profile                                                                 |
+| `aiVault`           | `path`, empty for the default location                                                                                                                                             |
+| `aiProfiles`        | `chatHistory` (`storage`: `off` or `disk`, `retentionDays`)                                                                                                                        |
+| `markdown`          | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                                                                                              |
+| `plugins`           | per plugin id: `isEnabled` and the plugin-owned `settings`                                                                                                                         |
+| `chat`              | `history` (`storage`: `off` or `disk`, `retentionDays`)                                                                                                                            |
+| `stt`               | `provider`, `correctionMode`, `isVoiceHoldEnabled`, `isStylingBarEnabled`, `isStylingBarDirectInsertEnabled`, `providers.deepgram`, `providers.sherpaOnnx`, `providers.geminiLive` |
 
 The hotkeys of `hotkeys` are named as the activation modes they open
 (`quickInput`, `selectionActions`, `selectionActionsPage2`..`selectionActionsPage5`,
@@ -118,8 +120,9 @@ hold the items themselves. Action pages are addressed by 1-based index
 `llm.tasks` holds what each LLM task needs: `chat` (`rule`; the chat runs on
 the model picked in it), `correction`, `voiceCorrection` (`modelId`,
 `rule`; on when `stt.correctionMode !== 'off'`), `translation` (`modelId`, `rule`, `qualityGateRule` for the review
-pass) and `aiTask` (`modelId`; the model of every AI command, each of which
-has its own prompt). `modelId` is
+pass), `aiTask` (`modelId`; the model of every AI command, each of which
+has its own prompt), `transformation` and `styling` (`modelId`; each item has
+its own prompt) and `quickRequest` (`modelId`, `rule`; the quick AI request). `modelId` is
 the one model that answers the task, empty when none is picked; a call that
 fails is not retried on another model.
 
@@ -139,10 +142,10 @@ Conventions:
   `retentionDays`, which keeps everything without it). Zero is never a
   sentinel: a feature is turned off by its own field (`storage: "off"`).
 - Ids of the user's entities (commands, models, transformations, styles,
-  launcher pages)
-  match `^[a-z0-9][a-z0-9._-]{0,63}$`; provider ids are at most 60 characters,
+  action pages) match `^[a-z0-9][a-z0-9._-]{0,63}$`; provider ids are at most 60 characters,
   as they go into secret ids. An entity with a malformed id is dropped.
-- Locales are BCP 47 tags with a region: `en-US`, `ru-RU`.
+- Locales are BCP 47 tags, with a region where the language needs one:
+  `en-US`, `ru-RU`, `es` (`packages/plugin-sdk/src/locales.json`).
 - Booleans read as predicates: `is*`, `has*`, `can*`. A boolean that is not
   set is `false`; there is no hidden third state.
 - Enum values are camelCase; SDK-specific spellings (e.g. ai-kit's
@@ -209,7 +212,7 @@ Voice invocation is opt-in per command: `isVoiceEnabled` defaults to `false`.
 Whether a recognized command runs at once is a choice of the voice overlay, not
 of the command. `phrases` are literal strings, one synonym per entry.
 `hotkeys.voiceCommands` opens the separate voice command overlay and is
-unassigned by default. The voice catalog is independent of `launcherPages` and
+unassigned by default. The voice catalog is independent of `actionPages` and
 `isAvailableExternally`.
 
 Every save writes the whole config atomically. Concurrent window edits use a
@@ -238,8 +241,7 @@ either is newer than the build knows, the whole config is shown and never
 saved (`configIsNewer`).
 
 References go from the device to the user data only: a device value of an
-entity is kept by the entity id (the shortcuts of launcher pages, the values of
-variables, the notes folders of plugins, the folders of external projects), and
+entity is kept by the entity id (the values of variables, the notes folders of plugins, the folders of external projects), and
 one whose entity is gone is dropped on that device. A config that was not read
 (the folder is not connected, the file is broken or missing) says nothing about
 which entities are gone: the device keeps its values then.

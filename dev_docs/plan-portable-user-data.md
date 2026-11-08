@@ -9,8 +9,8 @@
 исправлены потеря путей внешних проектов, гонка маркера vault и обход файлов
 внутренних проектов watcher'ом; добавлены несколько vault).
 Связанные документы: `dev_docs/config-storage.md`, `dev_docs/cross-platform.md`,
-`dev_docs/desktop-api.md`, `dev_docs/state-management.md`,
-`dev_docs/plugin-packages.md`, `dev_docs/chat-images.md`,
+`dev_docs/desktop-api.md`, `dev_docs/plugin-packages.md`,
+`dev_docs/chat-files.md`,
 `docs/data-folder.md` (руководство пользователя).
 
 ## 1. Цель

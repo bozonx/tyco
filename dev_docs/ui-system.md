@@ -24,6 +24,12 @@ remain bundled and work offline.
   the selected option's original ID type; callers must not depend on DOM string
   coercion. `FieldNumber` returns a string so empty/intermediate input remains
   representable; business models parse and validate it.
+- `FieldInput`, `FieldTextArea` and `SearchInput` expose `TextControl`: `focus`,
+  `isFocused`, `getSelection` and `select`. A parameterless `select` selects all
+  text; explicit offsets set a range. Unsupported native selection returns null.
+  Use the plain field appearance inside a composer or preview and keep focus
+  visible. Specialized inputs reuse these controls and `useTextareaAutosize`
+  instead of implementing native input adapters again.
 - `FieldRow` provides labels, hints, errors, disabled and required state to common
   controls through `useFieldControl`. Put tooltip buttons outside native labels.
   Composite controls must forward native attributes to their actual control.
@@ -45,11 +51,23 @@ remain bundled and work offline.
 - `StateMessage` standardizes empty/loading/error/info presentation. Keep domain text
   and retry callbacks in the screen. Loading uses `status`, errors use `alert`.
 
+## Floating surfaces
+
+`useDismissibleLayer` coordinates global outside interaction and keyboard handling
+for the top open layer. `useAnchoredPanel` measures anchored surfaces, flips them
+near viewport edges, tracks resizing and scrolling, and preserves the anchor theme.
+Context menus reuse the same viewport constraints with their own anchor geometry.
+Keep tooltip, interactive popover and menu keyboard behavior separate. Teleported
+menus resume the trigger's document Tab order and restore its focus on Escape.
+Panels inside a native dialog stay inside that dialog's top layer.
+
 ## Styling
 
 Use Tailwind for layout and shared primitives for interaction. Scoped CSS should
 reference semantic `--app-*` tokens for appearance. Use the typography and
 control-size tokens rather than introducing slightly different values per screen.
+Add a token for a repeated design decision rather than duplicating local values;
+do not add a wrapper component solely to replace a utility class.
 Use the named z-index layers; native modal dialogs occupy the browser top layer.
 Quick surfaces use `--app-quick-surface`, `--app-quick-hint-surface` and
 `--app-quick-backdrop`; e-ink makes them opaque and removes blur. Focus states use
@@ -134,22 +152,39 @@ controls layout spacing. `NavigationList.isCollapsed` describes rail visibility.
 
 ## Choosing a component
 
-| Requirement                                | Component                              |
-| ------------------------------------------ | -------------------------------------- |
-| Select an item or acknowledge a condition  | `FieldCheckbox`                        |
-| Enable or disable a feature                | `FieldSwitch`                          |
-| Choose one value                           | `FieldSelect` or `SegmentedControl`    |
-| Navigate between settings pages            | `NavigationList`                       |
-| Show noninteractive explanatory text       | `InfoTooltip`                          |
-| Show help containing buttons or links      | `InfoPopover`                          |
-| Label a state or count                     | `Badge`                                |
-| Activate a compact labeled marker          | `Badge interactive`                    |
-| Show a keyboard hint, optionally clickable | `ShortcutHint`                         |
-| Show a full action with keyboard keys      | `ShortcutButton`                       |
-| Show an inline notification                | `InlineNotice`                         |
-| Show an empty, loading or error state      | `StateMessage`                         |
-| Display a modal dialog                     | `BaseDialog` and domain dialog content |
-| Display the action window surface          | `Overlay`                              |
+Domain components compose the shared controls and keep domain state and side
+effects outside visual primitives.
+
+| Requirement                                | Component                                     |
+| ------------------------------------------ | --------------------------------------------- |
+| An action with visible text                | `Button` (`danger`/`danger-ghost` to destroy) |
+| An action with an icon only                | `IconButton`                                  |
+| Select an item or acknowledge a condition  | `FieldCheckbox`                               |
+| Enable or disable a feature                | `FieldSwitch`                                 |
+| Choose one value                           | `FieldSelect` or `SegmentedControl`           |
+| Navigate between settings pages            | `NavigationList`                              |
+| A disclosure trigger / collapsible card    | `DisclosureHeader` / `DisclosurePanel`        |
+| Show noninteractive explanatory text       | `InfoTooltip`                                 |
+| Show help containing buttons or links      | `InfoPopover`                                 |
+| Label a state or count                     | `Badge`                                       |
+| Activate a compact labeled marker          | `Badge interactive`                           |
+| Show a keyboard hint, optionally clickable | `ShortcutHint`                                |
+| Show a full action with keyboard keys      | `ShortcutButton`                              |
+| Guidance or feedback beside content        | `InlineNotice`                                |
+| Show an empty, loading or error state      | `StateMessage`                                |
+| Transient feedback outside a region        | a toast                                       |
+| Display a modal dialog                     | `BaseDialog` and domain dialog content        |
+| Ask for confirmation                       | `ConfirmModal`                                |
+| Display the action window surface          | `Overlay`                                     |
+
+Introduce tabs only when a product screen needs tab panels and keyboard tabs.
+Keep action overlays separate from native modal dialogs.
+
+`InlineNotice` has `surface` or `sunken` appearance and compact density. Set its
+announcement explicitly: passive guidance stays silent, operation feedback uses
+polite status, urgent errors use assertive alerts. `DisclosurePanel` owns the
+body ID and border; put adjacent controls in its action slot rather than
+nesting buttons inside the trigger.
 
 `BooleanControl` and `InfoBubble` are implementation components. Screens use
 `FieldCheckbox`/`FieldSwitch` and `InfoTooltip`/`InfoPopover` respectively.

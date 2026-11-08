@@ -22,10 +22,15 @@ Rust backend and a Vue 3 frontend, organized as a pnpm + Turborepo monorepo.
 - `src-tauri/` — Rust backend: `commands/` (IPC adapters), `models/` (wire
   types), `services/` (domain logic), `crates/`, `tyco-ctl/` (external CLI).
 - `scripts/` — dev launcher, code generation, checks, container and VM tests.
-- `dev_docs/` — design notes; read the relevant one before changing an area:
-  `architecture.md`, `state-management.md`, `desktop-api.md`,
-  `config-storage.md`, `plugin-packages.md`, `cross-platform.md`, `testing.md`,
-  `ui-system.md`, `ui-components.md`, `editor.md`. `docs/external-control.md` — CLI/D-Bus API.
+- `dev_docs/` — design notes for developers; read the relevant one before
+  changing an area: `architecture.md`, `desktop-api.md`, `config-storage.md`,
+  `chat-files.md`, `plugin-packages.md`, `cross-platform.md`, `testing.md`,
+  `vm-testing.md`, `ui-system.md`, `editor.md`. `plan-*.md` are work plans:
+  when one is done, move its outcome into the matching note and delete it.
+- `docs/` — guides for users and integrators: `data-folder.md` (data folder
+  and sync), `external-control.md` (CLI/D-Bus API), `editor.md` (editor keys
+  and formatting), `plugins.md` (writing and installing plugins). Keep them
+  free of implementation details and link to `dev_docs/` for those.
 
 Toolchain: Node.js 24 (`.node-version`), pnpm 11, Rust pinned by
 `rust-toolchain.toml`. Always use `pnpm`; never add npm or Yarn lockfiles.
@@ -42,11 +47,12 @@ Run the desktop app with `pnpm tauri:dev`, not `pnpm tauri dev`.
 - **Place state by lifetime and audience:** a Pinia store for state shared
   across components or outliving a page; `provide`/`inject` for one component
   subtree (e.g. `use-markup-mode`); a composable for per-component wiring and
-  lifecycle (e.g. `use-quick-window-session`). See `dev_docs/state-management.md`.
+  lifecycle (e.g. `use-quick-window-session`).
 - Read desktop state (settings, session, activation, window) from
   `useDesktopStore`. `useIpcStore` only calls desktop commands by their Rust
   names (`call('copy_text', { text })`). Change settings with
-  `updateUserConfig(patch)`, never by spreading the whole config.
+  `updateUserConfig(patch)`, never by spreading the whole config. Settings
+  tabs edit the draft of `createSettingsSession` instead (`ui-system.md`).
 - Composables called from a store setup must not use lifecycle hooks or `inject`.
 - A lower-level store never imports a feature store; the feature hands itself
   in (e.g. the chat provides `core.askInChat` to the tool registry).

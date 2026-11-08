@@ -31,12 +31,16 @@ the selection; the view mirrors them.
 | Ctrl+K               | Link from the selection                                               |
 | Tab / Shift+Tab      | Indent or outdent the selected lines or the list item under the caret |
 | Ctrl+Shift+M         | Formatted view ↔ raw Markdown                                         |
+| Ctrl+F / Ctrl+H      | Search / replace panel (`editor-search.ts`)                           |
 | Ctrl+Shift+V         | Paste as plain text                                                   |
 | Ctrl+Enter           | Quick actions                                                         |
 | Ctrl+Z / Ctrl+Y      | Undo / redo on any keyboard layout (`history-keys.ts`)                |
 
-Formatting, indentation and Markdown display shortcuts are configurable in the
-Editor section at the bottom of Hotkeys settings. Empty bindings disable a
+The user guide is `docs/editor.md`. Formatting, indentation and Markdown
+display shortcuts are `editor.shortcuts` of the config (defaults in
+`user-config-defaults.json`; headings 4–6 unbound), edited in the Editor
+section at the bottom of Hotkeys settings. The other keys are fixed
+(`RESERVED_EDITOR_SHORTCUTS` of `editor-shortcuts.ts`). Empty bindings disable a
 shortcut. The menu shows current bindings; changes apply without recreating the
 editor. Capture and execution use the same key normalization: Latin layouts keep
 their letters, other layouts use the corresponding key position. Conflicting

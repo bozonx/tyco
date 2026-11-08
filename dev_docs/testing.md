@@ -171,7 +171,7 @@ CI runs the full Rust suite with all features on Linux and uploads a separate Ru
 fully exercised by a Linux unit runner. Reports exclude tagged integration tests,
 while all platforms continue to run the full Rust test suite across CI jobs.
 
-# Browser tests
+## Browser tests
 
 `pnpm test:browser` builds the plugins and runs Playwright against a dedicated
 production build in `apps/desktop-ui/dist-browser`. The Vite preview server serves
@@ -366,18 +366,11 @@ Windows/macOS adapters require their own OS; a VM is one way to provide it, not
 a requirement of integration testing. Real audio capture, full Wayland desktop
 behavior and hardware/GPU compatibility remain outside the deterministic smoke.
 
-## Full desktop sessions in virtual machines
-
-The [VM testing plan](vm-testing.md) defines the Windows/Linux OS matrix, reuse of
-local Left Hand Control base images, native acceptance scenarios and the planned
-runner. Fedora KDE automation and initial Ubuntu GNOME checks are implemented in
-`scripts/vm/`; other profiles and acceptance gaps remain explicit. See its
-[README](../scripts/vm/README.md) for executable commands.
-
 ## Native desktop sessions and virtual machines
 
-Use [vm-testing.md](vm-testing.md) for the current platform matrix and acceptance
-criteria, [the runner README](../scripts/vm/README.md) for commands, and
+Use [vm-testing.md](vm-testing.md) for the Windows/Linux OS matrix, reuse of
+local base images and acceptance criteria (Fedora KDE automation and initial
+Ubuntu GNOME checks are implemented in `scripts/vm/`), [the runner README](../scripts/vm/README.md) for commands, and
 [coverage.md](../scripts/vm/coverage.md) for implemented assertions. Dated reports
 record executions of specific binaries; an implemented case is not automatically
 a passed case, and a targeted run does not certify the full platform.
