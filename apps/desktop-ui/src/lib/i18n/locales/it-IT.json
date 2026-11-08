@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "Azioni",
-    "aiPromptPlaceholder": "Cosa fare con il testo?",
     "aiPromptRun": "Esegui",
     "aiRequest": "Richiesta all’IA",
     "cancelIntentHint": "Esc per annullare",
@@ -1483,7 +1482,14 @@
     "selectProfile": "Seleziona profilo",
     "profileLocked": "Profilo bloccato durante la sessione",
     "defaultProfile": "Domanda all'IA",
-    "noModel": "Scegli un modello per le richieste rapide."
+    "standardProfile": "Predefinito",
+    "noModel": "Scegli un modello per le richieste rapide.",
+    "placeholder": {
+      "empty": "Chiedi qualsiasi cosa, ad es. «Pianifica la mia giornata» o «Spiega come funziona il DNS»",
+      "selection": "Cosa fare con la selezione? Ad es. «Riassumi», «Rispondi con cortesia», «Trova le date»",
+      "screenshot": "Cosa chiedere sullo screenshot? Ad es. «Qual è l’errore qui?», «Estrai il testo»",
+      "followUp": "Fai una domanda di approfondimento"
+    }
   },
   "screenshot": {
     "failed": "Impossibile acquisire lo schermo. Controlla le autorizzazioni di acquisizione e il supporto del portale desktop.",

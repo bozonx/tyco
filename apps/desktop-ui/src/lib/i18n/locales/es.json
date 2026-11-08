@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "Acciones",
-    "aiPromptPlaceholder": "¿Qué hacer con el texto?",
     "aiPromptRun": "Ejecutar",
     "aiRequest": "Solicitud a la IA",
     "cancelIntentHint": "Esc para cancelar",
@@ -1483,7 +1482,14 @@
     "selectProfile": "Seleccionar perfil",
     "profileLocked": "Perfil bloqueado durante la sesión",
     "defaultProfile": "Pregunta a la IA",
-    "noModel": "Elige un modelo para las solicitudes rápidas."
+    "standardProfile": "Predeterminado",
+    "noModel": "Elige un modelo para las solicitudes rápidas.",
+    "placeholder": {
+      "empty": "Pregunta lo que quieras, p. ej. «Planifica mi día» o «Explica cómo funciona DNS»",
+      "selection": "¿Qué hacer con la selección? P. ej. «Resume», «Responde con cortesía», «Encuentra las fechas»",
+      "screenshot": "¿Qué preguntar sobre la captura? P. ej. «¿Cuál es el error aquí?», «Extrae el texto»",
+      "followUp": "Haz una pregunta de seguimiento"
+    }
   },
   "screenshot": {
     "failed": "No se pudo capturar la pantalla. Comprueba los permisos de captura y la compatibilidad del portal del escritorio.",

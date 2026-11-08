@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "操作",
-    "aiPromptPlaceholder": "对此文本做什么处理？",
     "aiPromptRun": "运行",
     "aiRequest": "AI 请求",
     "cancelIntentHint": "按 Esc 取消",
@@ -1477,7 +1476,14 @@
     "selectProfile": "选择配置文件",
     "profileLocked": "会话期间配置文件已锁定",
     "defaultProfile": "向 AI 提问",
-    "noModel": "请为快速请求选择模型。"
+    "standardProfile": "默认",
+    "noModel": "请为快速请求选择模型。",
+    "placeholder": {
+      "empty": "随便问,例如“帮我规划今天”或“解释 DNS 的工作原理”",
+      "selection": "要如何处理所选文本?例如“总结一下”“礼貌地回复”“找出日期”",
+      "screenshot": "想问截图什么?例如“这里的错误是什么?”“提取文字”",
+      "followUp": "继续追问"
+    }
   },
   "screenshot": {
     "failed": "无法截取屏幕。请检查屏幕捕获权限和桌面门户支持。",

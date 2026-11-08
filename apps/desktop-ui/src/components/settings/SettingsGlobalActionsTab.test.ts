@@ -325,6 +325,7 @@ describe('SettingsGlobalActionsTab.vue', () => {
     )
     expect(firstSwitch.props('disabled')).toBe(true)
     expect(firstSwitch.props('modelValue')).toBe(false)
+    expect(context.draft.value.customActionSlots[0].takesSelection).toBe(false)
 
     // Select quickAiRequest (flexible -> enabled switch)
     await firstSelect.vm.$emit('update:modelValue', 'standard:quickAiRequest')

@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "Acțiuni",
-    "aiPromptPlaceholder": "Ce să fac cu textul?",
     "aiPromptRun": "Rulează",
     "aiRequest": "Cerere AI",
     "cancelIntentHint": "Esc pentru anulare",
@@ -1483,7 +1482,14 @@
     "selectProfile": "Selectează profilul",
     "profileLocked": "Profil blocat în timpul sesiunii",
     "defaultProfile": "Întrebare pentru AI",
-    "noModel": "Alege un model pentru cererile rapide."
+    "standardProfile": "Implicit",
+    "noModel": "Alege un model pentru cererile rapide.",
+    "placeholder": {
+      "empty": "Întreabă orice, de ex. „Planifică-mi ziua” sau „Explică cum funcționează DNS”",
+      "selection": "Ce să fac cu selecția? De ex. „Rezumă”, „Răspunde politicos”, „Găsește datele”",
+      "screenshot": "Ce să întreb despre captură? De ex. „Care este eroarea aici?”, „Extrage textul”",
+      "followUp": "Pune o întrebare suplimentară"
+    }
   },
   "screenshot": {
     "failed": "Ecranul nu a putut fi capturat. Verifică permisiunile de captură și compatibilitatea portalului desktop.",

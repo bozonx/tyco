@@ -77,6 +77,11 @@ export interface ChatToolDefinition {
   /** How much of the output the model is given */
   outputLimitCharacters?: number
   /**
+   * The call is the answer itself: once it ran, the turn ends without another
+   * model step that would only repeat it in words
+   */
+  endsTurn?: boolean
+  /**
    * Runs the call. A thrown error is reported to the model as the call's
    * failure, which it can react to
    */

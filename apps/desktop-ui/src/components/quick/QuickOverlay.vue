@@ -185,7 +185,8 @@ const voiceResultShown = ref(false)
 const isPanelMode = computed(
   () =>
     currentMode.value === 'quickInput' ||
-    (currentMode.value === 'voice' && !voiceResultShown.value)
+    (currentMode.value === 'voice' && !voiceResultShown.value) ||
+    currentMode.value === 'customAction'
 )
 
 const activeAreaSelection = ref<ScreenshotAreaSelection | null>(null)

@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "작업",
-    "aiPromptPlaceholder": "텍스트로 무엇을 할까요?",
     "aiPromptRun": "실행",
     "aiRequest": "AI 요청",
     "cancelIntentHint": "Esc 키로 취소",
@@ -1477,7 +1476,14 @@
     "selectProfile": "프로필 선택",
     "profileLocked": "세션 중 프로필이 잠금되었습니다",
     "defaultProfile": "AI에게 질문",
-    "noModel": "빠른 요청에 사용할 모델을 선택하세요."
+    "standardProfile": "기본",
+    "noModel": "빠른 요청에 사용할 모델을 선택하세요.",
+    "placeholder": {
+      "empty": "무엇이든 물어보세요. 예: “오늘 일정 짜 줘”, “DNS 작동 방식을 설명해 줘”",
+      "selection": "선택한 텍스트로 무엇을 할까요? 예: “요약해 줘”, “정중하게 답장해 줘”, “날짜를 찾아 줘”",
+      "screenshot": "스크린샷에 대해 무엇을 물어볼까요? 예: “여기 오류가 뭐야?”, “텍스트를 추출해 줘”",
+      "followUp": "후속 질문을 입력하세요"
+    }
   },
   "screenshot": {
     "failed": "화면을 캡처하지 못했습니다. 화면 캡처 권한과 데스크톱 포털 지원을 확인하세요.",

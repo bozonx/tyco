@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "Aktionen",
-    "aiPromptPlaceholder": "Was soll mit dem Text geschehen?",
     "aiPromptRun": "Ausführen",
     "aiRequest": "KI-Anfrage",
     "cancelIntentHint": "Esc zum Abbrechen",
@@ -1483,7 +1482,14 @@
     "selectProfile": "Profil auswählen",
     "profileLocked": "Profil während der Sitzung gesperrt",
     "defaultProfile": "Frage an die KI",
-    "noModel": "Wähle ein Modell für Schnellanfragen."
+    "standardProfile": "Standard",
+    "noModel": "Wähle ein Modell für Schnellanfragen.",
+    "placeholder": {
+      "empty": "Fragen Sie etwas, z. B. „Plane meinen Tag“ oder „Erkläre, wie DNS funktioniert“",
+      "selection": "Was soll mit der Auswahl passieren? Z. B. „Zusammenfassen“, „Höflich antworten“, „Daten finden“",
+      "screenshot": "Was möchten Sie zum Screenshot fragen? Z. B. „Was ist hier der Fehler?“, „Text extrahieren“",
+      "followUp": "Stellen Sie eine Folgefrage"
+    }
   },
   "screenshot": {
     "failed": "Der Bildschirm konnte nicht aufgenommen werden. Prüfen Sie die Aufnahmeberechtigungen und die Unterstützung des Desktop-Portals.",

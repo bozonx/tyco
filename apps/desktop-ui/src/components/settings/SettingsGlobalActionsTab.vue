@@ -244,6 +244,7 @@ import {
   DEFAULT_USER_CONFIG,
   type HotkeyId,
   INLINE_CORRECTION_HOTKEY_ID,
+  type MainActionConfig,
   type SubmitKey,
 } from '@tyco/shared'
 
@@ -407,14 +408,30 @@ function updateCustomAction(
 ) {
   const slots = [...customActionSlots.value]
   const current = slots[index] ?? { action: null, takesSelection: true }
-  if (!optionValue || optionValue === '') {
-    slots[index] = { ...current, action: null }
-  } else {
+  let newAction: MainActionConfig | null = null
+  if (optionValue && optionValue !== '') {
     const selected = availableActions.value.find(
       ({ config }) => optionId(config) === optionValue
     )
-    slots[index] = { ...current, action: selected ? selected.config : null }
+    newAction = selected ? selected.config : null
   }
+  const behavior = resolveActionSelectionBehavior(
+    newAction,
+    commands.value,
+    toolsStore
+  )
+  const previousBehavior = resolveActionSelectionBehavior(
+    current.action,
+    commands.value,
+    toolsStore
+  )
+  const takesSelection =
+    behavior.forcedValue !== null
+      ? behavior.forcedValue
+      : previousBehavior.forcedValue !== null
+        ? true
+        : current.takesSelection
+  slots[index] = { action: newAction, takesSelection }
   userConfig.value.customActionSlots = slots
 }
 

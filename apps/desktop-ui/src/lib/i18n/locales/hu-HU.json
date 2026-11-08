@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "Műveletek",
-    "aiPromptPlaceholder": "Mit tegyen a szöveggel?",
     "aiPromptRun": "Futtatás",
     "aiRequest": "MI-kérés",
     "cancelIntentHint": "Esc a törléshez",
@@ -1480,7 +1479,14 @@
     "selectProfile": "Profil kiválasztása",
     "profileLocked": "A profil a munkamenet során zárolva van",
     "defaultProfile": "Kérdés az AI-hoz",
-    "noModel": "Válassz modellt a gyors kérésekhez."
+    "standardProfile": "Alapértelmezett",
+    "noModel": "Válassz modellt a gyors kérésekhez.",
+    "placeholder": {
+      "empty": "Kérdezzen bármit, pl. „Tervezd meg a napomat” vagy „Magyarázd el, hogyan működik a DNS”",
+      "selection": "Mit tegyen a kijelöléssel? Pl. „Foglald össze”, „Válaszolj udvariasan”, „Keresd meg a dátumokat”",
+      "screenshot": "Mit kérdezzen a képernyőképről? Pl. „Mi itt a hiba?”, „Nyerd ki a szöveget”",
+      "followUp": "Tegyen fel egy további kérdést"
+    }
   },
   "screenshot": {
     "failed": "Nem sikerült rögzíteni a képernyőt. Ellenőrizze a képernyőrögzítési engedélyeket és az asztali portál támogatását.",

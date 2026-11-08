@@ -123,4 +123,67 @@ describe('CustomActionView', () => {
     expect(mockAction).toHaveBeenCalledWith('Custom selected text')
     expect(hideWindowSpy).not.toHaveBeenCalled()
   })
+
+  it('waits for delayed selection capture when takesSelection is true', async () => {
+    desktop.setState({ selectedText: null, revision: 1 })
+    desktop.setUserConfig({
+      customActionSlots: [
+        {
+          action: { type: 'standard', actionId: 'copyToClipboard' },
+          takesSelection: true,
+        },
+      ],
+    })
+    const hideWindowSpy = vi.fn().mockResolvedValue(undefined)
+    desktop.backend.handle('hide_window', hideWindowSpy)
+
+    const actionMenu = useActionMenuStore()
+    const mockAction = vi.fn().mockResolvedValue(undefined)
+    vi.spyOn(actionMenu, 'resolveActionItem').mockReturnValue({
+      id: 'copyToClipboard',
+      name: 'Copy',
+      action: mockAction,
+    })
+
+    mountView()
+    await flushPromises()
+
+    expect(mockAction).not.toHaveBeenCalled()
+
+    // Simulate background capture completing and emitting state
+    desktop.setState({ selectedText: 'Late arrived selection', revision: 2 })
+    await flushPromises()
+
+    expect(mockAction).toHaveBeenCalledWith('Late arrived selection')
+    expect(hideWindowSpy).toHaveBeenCalled()
+  })
+
+  it('leaves window open when action switches to quick-window mode', async () => {
+    desktop.setUserConfig({
+      customActionSlots: [
+        {
+          action: { type: 'standard', actionId: 'voiceInput' },
+          takesSelection: false,
+        },
+      ],
+    })
+    const hideWindowSpy = vi.fn().mockResolvedValue(undefined)
+    desktop.backend.handle('hide_window', hideWindowSpy)
+
+    const actionMenu = useActionMenuStore()
+    const mockAction = vi.fn().mockImplementation(async () => {
+      desktop.setState({ mode: 'voice' })
+    })
+    vi.spyOn(actionMenu, 'resolveActionItem').mockReturnValue({
+      id: 'voiceInput',
+      name: 'Voice',
+      action: mockAction,
+    })
+
+    mountView()
+    await flushPromises()
+
+    expect(mockAction).toHaveBeenCalled()
+    expect(hideWindowSpy).not.toHaveBeenCalled()
+  })
 })

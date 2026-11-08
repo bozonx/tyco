@@ -662,6 +662,38 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
             });
         }
     }
+    if let Some(custom_slots) = config
+        .get_mut("customActionSlots")
+        .and_then(Value::as_array_mut)
+    {
+        for slot in custom_slots {
+            if let Some(action) = slot.get_mut("action").and_then(Value::as_object_mut) {
+                let is_valid = match action.get("type").and_then(Value::as_str) {
+                    Some("command") => action
+                        .get("commandId")
+                        .and_then(Value::as_str)
+                        .is_some_and(|id| command_ids.contains(id)),
+                    Some("transformation") => action
+                        .get("transformationId")
+                        .and_then(Value::as_str)
+                        .is_some_and(|id| transformation_ids.contains(id)),
+                    Some("styling") => action
+                        .get("stylingId")
+                        .and_then(Value::as_str)
+                        .is_some_and(|id| styling_ids.contains(id)),
+                    Some("chatPrompt") => action
+                        .get("promptId")
+                        .and_then(Value::as_str)
+                        .is_some_and(|id| prompt_ids.contains(id)),
+                    Some("launcherPage") => false,
+                    _ => true,
+                };
+                if !is_valid {
+                    slot["action"] = Value::Null;
+                }
+            }
+        }
+    }
     prune_device_references(config);
     *config != original
 }

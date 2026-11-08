@@ -70,6 +70,8 @@ tyco-ctl open selection-actions:2 --selection
 
 The action chooser opens on its first page by default. Specific pages (1 to 5) open with `selection-actions:<page>`. Settings → Hotkeys shows the CLI command for each page.
 
+Custom action slots (1 to 5) run with `custom-action:<slot>` (e.g. `custom-action:1`). Settings → Hotkeys shows the CLI command for each custom action slot.
+
 `chat-prompts` opens the prompt menu.
 
 On Linux the same windows can be opened through the session bus:
@@ -203,7 +205,7 @@ tyco-ctl open editor --selection
 ```
 
 Modes: `editor`, `quick-input`, `chat`, `voice-chat`, `voice-commands`, `voice`, `selection-actions`
-(optionally with `:page`, e.g. `selection-actions:2`), `chat-prompts`, `correction`, `translation`, `history`, `settings`.
+(optionally with `:page`, e.g. `selection-actions:2`), `custom-action` (with `:slot`, e.g. `custom-action:1`), `chat-prompts`, `correction`, `translation`, `history`, `settings`.
 The old camelCase spellings and `config` remain valid aliases.
 
 Opening UI does not implicitly capture a selection. `--selection` captures

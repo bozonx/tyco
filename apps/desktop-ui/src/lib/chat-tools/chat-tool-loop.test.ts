@@ -326,6 +326,65 @@ describe('chat-tool-loop', () => {
     })
   })
 
+  it('ends the turn after a tool that is the answer', async () => {
+    const { deps, input, fake } = setup([
+      [
+        { type: 'model', provider: 'fake', model: 'fake-model' },
+        { type: 'text', text: 'Here you go.' },
+        {
+          type: 'tool-call',
+          toolCallId: 'r1',
+          toolName: 'propose_replies',
+          input: { blocks: [{ text: 'Hi' }] },
+        },
+        {
+          type: 'tool-result',
+          toolCallId: 'r1',
+          toolName: 'propose_replies',
+          output: { ok: true },
+          isError: false,
+        },
+        { type: 'step-finish', step: 0, finishReason: 'tool-calls' },
+        // the step the model would take to repeat the blocks in words
+        { type: 'text', text: 'I proposed a reply.' },
+        { type: 'step-finish', step: 1, finishReason: 'stop' },
+        {
+          type: 'finish',
+          finishReason: 'stop',
+          text: 'I proposed a reply.',
+          responseMessages: [],
+        },
+      ],
+    ])
+    const definitions = new Map([
+      [
+        'propose_replies',
+        {
+          name: 'propose_replies',
+          groupId: 'reply-blocks',
+          description: '',
+          inputSchema: { type: 'object' as const },
+          endsTurn: true,
+          execute: async () => ({ ok: true }),
+        },
+      ],
+    ])
+
+    const result = await runChatToolLoop(deps, {
+      ...input,
+      tools: { ...toolSet, definitions },
+    })
+
+    expect(result.content).toBe('Here you go.')
+    expect(result.parts.map((part) => part.type)).toEqual([
+      'text',
+      'tool-call',
+      'tool-result',
+    ])
+    expect(fake.calls).toHaveLength(1)
+    expect(fake.calls[0].options.signal?.aborted).toBe(true)
+  })
+
   it('offers no tools on the last step', async () => {
     const { deps, input, fake } = setup([textAnswer('Done')])
 

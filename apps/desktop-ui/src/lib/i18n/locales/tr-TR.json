@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "Eylemler",
-    "aiPromptPlaceholder": "Metinle ne yapılsın?",
     "aiPromptRun": "Çalıştır",
     "aiRequest": "AI isteği",
     "cancelIntentHint": "İptal için Esc",
@@ -1480,7 +1479,14 @@
     "selectProfile": "Profil seç",
     "profileLocked": "Oturum sırasında profil kilitlendi",
     "defaultProfile": "Yapay Zekaya Soru",
-    "noModel": "Hızlı istekler için bir model seçin."
+    "standardProfile": "Varsayılan",
+    "noModel": "Hızlı istekler için bir model seçin.",
+    "placeholder": {
+      "empty": "Her şeyi sorun, ör. “Günümü planla” veya “DNS nasıl çalışır, açıkla”",
+      "selection": "Seçimle ne yapılsın? Ör. “Özetle”, “Kibarca yanıtla”, “Tarihleri bul”",
+      "screenshot": "Ekran görüntüsü hakkında ne sorulsun? Ör. “Buradaki hata ne?”, “Metni çıkar”",
+      "followUp": "Ek bir soru sorun"
+    }
   },
   "screenshot": {
     "failed": "Ekran yakalanamadı. Ekran yakalama izinlerini ve masaüstü portalı desteğini kontrol edin.",

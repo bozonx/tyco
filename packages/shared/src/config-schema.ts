@@ -387,6 +387,23 @@ function repairCommandIds(value: unknown): unknown {
         : page
     )
   }
+  if (Array.isArray(value.customActionSlots)) {
+    result.customActionSlots = value.customActionSlots.map((slot: unknown) =>
+      isRecord(slot) &&
+      isRecord(slot.action) &&
+      slot.action.type === 'command' &&
+      typeof slot.action.commandId === 'string' &&
+      repairs.has(slot.action.commandId)
+        ? {
+            ...slot,
+            action: {
+              ...slot.action,
+              commandId: repairs.get(slot.action.commandId),
+            },
+          }
+        : slot
+    )
+  }
   return result
 }
 
@@ -466,6 +483,37 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
       if (slot.type === 'chatPrompt') return promptIds.has(slot.promptId)
       return true
     })
+  }
+  if (Array.isArray(config.customActionSlots)) {
+    for (const slot of config.customActionSlots) {
+      if (isRecord(slot) && isRecord(slot.action)) {
+        const action = slot.action
+        const isValid =
+          (action.type === 'command' &&
+            typeof action.commandId === 'string' &&
+            commands.has(action.commandId)) ||
+          (action.type === 'transformation' &&
+            typeof action.transformationId === 'string' &&
+            transformationIds.has(action.transformationId)) ||
+          (action.type === 'styling' &&
+            typeof action.stylingId === 'string' &&
+            stylingIds.has(action.stylingId)) ||
+          (action.type === 'chatPrompt' &&
+            typeof action.promptId === 'string' &&
+            promptIds.has(action.promptId)) ||
+          (action.type === 'actionPage' &&
+            typeof action.pageIndex === 'number' &&
+            action.pageIndex < config.actionPages.length) ||
+          (action.type !== 'command' &&
+            action.type !== 'transformation' &&
+            action.type !== 'styling' &&
+            action.type !== 'chatPrompt' &&
+            action.type !== 'actionPage')
+        if (!isValid) {
+          slot.action = null
+        }
+      }
+    }
   }
   config.variables = normalizeVariables(config.variables)
   const variableIds = new Set(config.variables.map((variable) => variable.id))

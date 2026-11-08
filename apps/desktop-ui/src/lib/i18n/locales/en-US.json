@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "Actions",
-    "aiPromptPlaceholder": "What to do with the text?",
     "aiPromptRun": "Run",
     "aiRequest": "AI request",
     "cancelIntentHint": "Esc to cancel",
@@ -1483,7 +1482,14 @@
     "selectProfile": "Select profile",
     "profileLocked": "Profile locked during session",
     "defaultProfile": "Ask AI",
-    "noModel": "Choose a model for quick requests."
+    "standardProfile": "Default",
+    "noModel": "Choose a model for quick requests.",
+    "placeholder": {
+      "empty": "Ask anything, e.g. “Plan my day” or “Explain how DNS works”",
+      "selection": "What to do with the selection? E.g. “Summarize”, “Reply politely”, “Find the dates”",
+      "screenshot": "What to ask about the screenshot? E.g. “What is the error here?”, “Extract the text”",
+      "followUp": "Ask a follow-up question"
+    }
   },
   "screenshot": {
     "failed": "Could not capture the screen. Check screen capture permissions and desktop portal support.",

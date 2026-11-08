@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "アクション",
-    "aiPromptPlaceholder": "テキストに対して何をしますか？",
     "aiPromptRun": "実行",
     "aiRequest": "AIリクエスト",
     "cancelIntentHint": "Esc でキャンセル",
@@ -1480,7 +1479,14 @@
     "selectProfile": "プロファイルを選択",
     "profileLocked": "セッション中はプロファイルがロックされます",
     "defaultProfile": "AIへの質問",
-    "noModel": "クイックリクエスト用のモデルを選んでください。"
+    "standardProfile": "デフォルト",
+    "noModel": "クイックリクエスト用のモデルを選んでください。",
+    "placeholder": {
+      "empty": "何でも質問できます。例:「今日の予定を立てて」「DNS の仕組みを説明して」",
+      "selection": "選択したテキストをどうしますか?例:「要約して」「丁寧に返信して」「日付を探して」",
+      "screenshot": "スクリーンショットについて何を聞きますか?例:「ここのエラーは何?」「テキストを抽出して」",
+      "followUp": "追加の質問をどうぞ"
+    }
   },
   "screenshot": {
     "failed": "画面をキャプチャできませんでした。画面キャプチャの権限とデスクトップポータルの対応状況を確認してください。",

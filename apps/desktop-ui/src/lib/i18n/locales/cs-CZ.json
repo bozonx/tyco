@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "Akce",
-    "aiPromptPlaceholder": "Co udělat s textem?",
     "aiPromptRun": "Spustit",
     "aiRequest": "Požadavek na AI",
     "cancelIntentHint": "Esc pro zrušení",
@@ -1477,7 +1476,14 @@
     "selectProfile": "Vybrat profil",
     "profileLocked": "Profil je během relace uzamčen",
     "defaultProfile": "Dotaz na AI",
-    "noModel": "Vyberte model pro rychlé dotazy."
+    "standardProfile": "Výchozí",
+    "noModel": "Vyberte model pro rychlé dotazy.",
+    "placeholder": {
+      "empty": "Zeptejte se na cokoli, např. „Naplánuj mi den“ nebo „Vysvětli, jak funguje DNS“",
+      "selection": "Co udělat s výběrem? Např. „Shrň“, „Odpověz zdvořile“, „Najdi data“",
+      "screenshot": "Na co se zeptat ke snímku obrazovky? Např. „Jaká je tu chyba?“, „Vytáhni text“",
+      "followUp": "Položte doplňující otázku"
+    }
   },
   "screenshot": {
     "failed": "Obrazovku se nepodařilo zachytit. Zkontrolujte oprávnění k zachycení a podporu portálu plochy.",

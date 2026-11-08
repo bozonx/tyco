@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "動作",
-    "aiPromptPlaceholder": "要對文字做什麼處理？",
     "aiPromptRun": "執行",
     "aiRequest": "AI 請求",
     "cancelIntentHint": "按 Esc 取消",
@@ -1477,7 +1476,14 @@
     "selectProfile": "選取設定檔",
     "profileLocked": "工作階段期間設定檔已鎖定",
     "defaultProfile": "向 AI 提問",
-    "noModel": "請為快速請求選擇模型。"
+    "standardProfile": "預設",
+    "noModel": "請為快速請求選擇模型。",
+    "placeholder": {
+      "empty": "隨意提問,例如「幫我規劃今天」或「解釋 DNS 的運作方式」",
+      "selection": "要如何處理所選文字?例如「摘要一下」「禮貌地回覆」「找出日期」",
+      "screenshot": "想問截圖什麼?例如「這裡的錯誤是什麼?」「擷取文字」",
+      "followUp": "繼續追問"
+    }
   },
   "screenshot": {
     "failed": "無法擷取螢幕。請檢查螢幕擷取權限和桌面入口支援。",

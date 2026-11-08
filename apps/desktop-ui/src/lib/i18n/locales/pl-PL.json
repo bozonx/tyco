@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "Akcje",
-    "aiPromptPlaceholder": "Co zrobić z tekstem?",
     "aiPromptRun": "Uruchom",
     "aiRequest": "Zapytanie AI",
     "cancelIntentHint": "Esc, aby anulować",
@@ -1483,7 +1482,14 @@
     "selectProfile": "Wybierz profil",
     "profileLocked": "Profil zablokowany podczas sesji",
     "defaultProfile": "Pytanie do AI",
-    "noModel": "Wybierz model do szybkich zapytań."
+    "standardProfile": "Domyślny",
+    "noModel": "Wybierz model do szybkich zapytań.",
+    "placeholder": {
+      "empty": "Zapytaj o cokolwiek, np. „Zaplanuj mój dzień” lub „Wyjaśnij, jak działa DNS”",
+      "selection": "Co zrobić z zaznaczeniem? Np. „Streść”, „Odpowiedz uprzejmie”, „Znajdź daty”",
+      "screenshot": "O co zapytać w sprawie zrzutu ekranu? Np. „Jaki tu jest błąd?”, „Wyodrębnij tekst”",
+      "followUp": "Zadaj pytanie uzupełniające"
+    }
   },
   "screenshot": {
     "failed": "Nie udało się przechwycić ekranu. Sprawdź uprawnienia do przechwytywania i obsługę portalu pulpitu.",

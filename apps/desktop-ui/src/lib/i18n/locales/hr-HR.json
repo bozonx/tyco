@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "Radnje",
-    "aiPromptPlaceholder": "Što učiniti s tekstom?",
     "aiPromptRun": "Pokreni",
     "aiRequest": "AI zahtjev",
     "cancelIntentHint": "Esc za odustajanje",
@@ -1483,7 +1482,14 @@
     "selectProfile": "Odaberite profil",
     "profileLocked": "Profil je zaključan tijekom sesije",
     "defaultProfile": "Pitanje za AI",
-    "noModel": "Odaberite model za brze upite."
+    "standardProfile": "Zadano",
+    "noModel": "Odaberite model za brze upite.",
+    "placeholder": {
+      "empty": "Pitajte bilo što, npr. „Isplaniraj mi dan” ili „Objasni kako radi DNS”",
+      "selection": "Što učiniti s odabirom? Npr. „Sažmi”, „Odgovori pristojno”, „Pronađi datume”",
+      "screenshot": "Što pitati o snimci zaslona? Npr. „Koja je ovdje greška?”, „Izdvoji tekst”",
+      "followUp": "Postavite dodatno pitanje"
+    }
   },
   "screenshot": {
     "failed": "Nije moguće snimiti zaslon. Provjerite dopuštenja za snimanje i podršku portala radne površine.",

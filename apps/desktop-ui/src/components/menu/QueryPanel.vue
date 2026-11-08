@@ -91,20 +91,26 @@
       {{ props.emptyText }}
     </p>
 
-    <div class="query-panel-hints" :inert="props.disabled">
-      <ShortcutHint
-        v-for="hint in props.hints"
-        :key="hint.keys.join('+')"
-        :keys="hint.keys"
-        interactive
-        :disabled="
-          props.disabled ||
-          hint.disabled ||
-          (hint.requireOption && highlightedOptionIndex < 0)
-        "
-        @click="activateHint(hint)"
-        >{{ hint.label }}</ShortcutHint
-      >
+    <div class="query-panel-footer">
+      <div class="query-panel-hints" :inert="props.disabled">
+        <ShortcutHint
+          v-for="hint in props.hints"
+          :key="hint.keys.join('+')"
+          :keys="hint.keys"
+          interactive
+          :disabled="
+            props.disabled ||
+            hint.disabled ||
+            (hint.requireOption && highlightedOptionIndex < 0)
+          "
+          @click="activateHint(hint)"
+          >{{ hint.label }}</ShortcutHint
+        >
+      </div>
+      <!-- live while disabled, like the input slots: it owns its state -->
+      <div v-if="$slots['footer-end']" class="query-panel-footer-end">
+        <slot name="footer-end" />
+      </div>
     </div>
   </div>
 </template>
@@ -431,12 +437,27 @@ defineExpose(textControl)
   color: var(--app-text-muted);
 }
 
+.query-panel-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs) var(--space-md);
+  padding-top: var(--space-xs);
+  border-top: 1px solid var(--app-border-subtle);
+}
+
 .query-panel-hints {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-xs) var(--space-md);
-  padding-top: var(--space-xs);
-  border-top: 1px solid var(--app-border-subtle);
+}
+
+.query-panel-footer-end {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin-left: auto;
 }
 </style>

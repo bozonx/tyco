@@ -113,10 +113,39 @@ describe('QuickAiRequestMenu', () => {
     expect(wrapper.text()).toContain('Hello text to transform')
   })
 
-  it('renders profile selector in header extra', () => {
+  it('shows the profile and model selectors under the input, not in the header', () => {
     const wrapper = mountMenu()
-    const select = wrapper.find('select')
-    expect(select.exists()).toBe(true)
+    expect(wrapper.find('.action-overlay-header select').exists()).toBe(false)
+    const bar = wrapper.find('.query-panel-footer .quick-ai-model-bar')
+    expect(bar.findAll('select')).toHaveLength(2)
+    expect(bar.find('option').text()).toBe('quickAiRequest.standardProfile')
+    expect(wrapper.find('[aria-label="action.askInChat"]').exists()).toBe(false)
+  })
+
+  it('tells by the placeholder what the request is about', () => {
+    expect(
+      mountMenu().find('.query-panel-input').attributes('placeholder')
+    ).toBe('quickAiRequest.placeholder.selection')
+    expect(
+      mountMenu({ text: '' })
+        .find('.query-panel-input')
+        .attributes('placeholder')
+    ).toBe('quickAiRequest.placeholder.empty')
+  })
+
+  it('clears the input as soon as the question is sent', async () => {
+    desktop.backend.handle('start_fetch', () => new Promise(() => undefined))
+
+    const wrapper = mountMenu({ text: 'Context' })
+    const input = wrapper.find('.query-panel-input')
+    await input.setValue('First question')
+    await input.trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+
+    expect(wrapper.find('.stop-action-btn').exists()).toBe(true)
+    expect(wrapper.find('.turn-prompt-text').text()).toBe('First question')
+    expect((input.element as HTMLInputElement).value).toBe('')
+    wrapper.unmount()
   })
 
   it('shows error banner when model is not configured', async () => {

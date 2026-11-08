@@ -545,7 +545,6 @@
   },
   "menu": {
     "actions": "Actions",
-    "aiPromptPlaceholder": "Que faire du texte ?",
     "aiPromptRun": "Exécuter",
     "aiRequest": "Requête IA",
     "cancelIntentHint": "Échap pour annuler",
@@ -1483,7 +1482,14 @@
     "selectProfile": "Sélectionner un profil",
     "profileLocked": "Profil verrouillé pendant la session",
     "defaultProfile": "Question à l'IA",
-    "noModel": "Choisissez un modèle pour les requêtes rapides."
+    "standardProfile": "Par défaut",
+    "noModel": "Choisissez un modèle pour les requêtes rapides.",
+    "placeholder": {
+      "empty": "Demandez ce que vous voulez, p. ex. « Planifie ma journée » ou « Explique le fonctionnement du DNS »",
+      "selection": "Que faire de la sélection ? P. ex. « Résume », « Réponds poliment », « Trouve les dates »",
+      "screenshot": "Que demander à propos de la capture ? P. ex. « Quelle est l’erreur ici ? », « Extrais le texte »",
+      "followUp": "Posez une question complémentaire"
+    }
   },
   "screenshot": {
     "failed": "Impossible de capturer l’écran. Vérifiez les autorisations de capture et la prise en charge du portail du bureau.",

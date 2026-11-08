@@ -64,6 +64,8 @@ export function createReplyBlocksTool(): ChatToolDefinition {
     groupId: REPLY_BLOCKS_TOOL_GROUP_ID,
     labelKey: 'chatTools.replyBlocks.toolLabel',
     icon: 'mdi:format-list-checks',
+    // the blocks are the answer: a step after them only repeats them
+    endsTurn: true,
     description:
       'Proposes one or more reply or text transformation variants to the user as ready-to-insert blocks. ' +
       'Use this tool whenever you generate the final replacement text, paraphrasing, translation, or answer to be inserted. ' +

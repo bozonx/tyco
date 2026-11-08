@@ -133,10 +133,16 @@ export async function runChatToolLoop(
     }
     const requests: ChatToolApprovalRequest[] = []
     let finish: Extract<LlmStreamEvent, { type: 'finish' }> | undefined
+    // ends the call early once a tool that ends the turn has run
+    const callAbort = new AbortController()
+    const abortCall = () => callAbort.abort()
+    input.signal.addEventListener('abort', abortCall, { once: true })
+    let hasEndingResult = false
+    let isEndedByTool = false
 
     const options: LlmStreamOptions = {
       ...input.options,
-      signal: input.signal,
+      signal: callAbort.signal,
       ...(input.tools
         ? {
             tools: input.tools.tools,
@@ -147,89 +153,111 @@ export async function runChatToolLoop(
         : {}),
     }
 
-    for await (const event of deps.stream(
-      { ...input.prompt, messages },
-      options
-    )) {
-      switch (event.type) {
-        case 'model':
-          input.onModel?.({ provider: event.provider, model: event.model })
-          continue
-        case 'text':
-          if (open.text) open.text.text += event.text
-          else push({ type: 'text', text: event.text })
-          break
-        case 'reasoning':
-          // Not kept until the chat can show it: stored unseen, it only grows
-          // the history, and the model is not sent it back
-          continue
-        case 'tool-call': {
-          const tool = input.tools?.definitions.get(event.toolName)
-          const call: ToolCallPart = {
-            type: 'tool-call',
-            toolCallId: event.toolCallId,
-            toolName: event.toolName,
-            ...(tool?.labelKey ? { labelKey: tool.labelKey } : {}),
-            ...(tool?.label ? { label: tool.label } : {}),
-            ...(tool?.icon ? { icon: tool.icon } : {}),
-            input: event.input,
-            state: 'pending',
+    try {
+      for await (const event of deps.stream(
+        { ...input.prompt, messages },
+        options
+      )) {
+        switch (event.type) {
+          case 'model':
+            input.onModel?.({ provider: event.provider, model: event.model })
+            continue
+          case 'text':
+            if (open.text) open.text.text += event.text
+            else push({ type: 'text', text: event.text })
+            break
+          case 'reasoning':
+            // Not kept until the chat can show it: stored unseen, it only grows
+            // the history, and the model is not sent it back
+            continue
+          case 'tool-call': {
+            const tool = input.tools?.definitions.get(event.toolName)
+            const call: ToolCallPart = {
+              type: 'tool-call',
+              toolCallId: event.toolCallId,
+              toolName: event.toolName,
+              ...(tool?.labelKey ? { labelKey: tool.labelKey } : {}),
+              ...(tool?.label ? { label: tool.label } : {}),
+              ...(tool?.icon ? { icon: tool.icon } : {}),
+              input: event.input,
+              state: 'pending',
+            }
+            calls.set(event.toolCallId, call)
+            push(call)
+            break
           }
-          calls.set(event.toolCallId, call)
-          push(call)
-          break
-        }
-        case 'tool-result': {
-          setCallState(event.toolCallId, event.isError ? 'error' : 'done')
-          push({
-            type: 'tool-result',
-            toolCallId: event.toolCallId,
-            toolName: event.toolName,
-            // already cut to the tool's limit when it ran: kept as the model saw it
-            output: toolOutputText(event.output),
-            ...(event.isError ? { isError: true } : {}),
-            ...(input.tools?.truncatedCallIds.has(event.toolCallId)
-              ? { isTruncated: true }
-              : {}),
-          })
-          break
-        }
-        case 'tool-denied':
-          setCallState(event.toolCallId, 'denied')
-          break
-        case 'approval-request': {
-          const call = calls.get(event.toolCallId)
-          if (call) {
-            call.state = 'awaiting-approval'
-            call.approvalId = event.approvalId
+          case 'tool-result': {
+            setCallState(event.toolCallId, event.isError ? 'error' : 'done')
+            if (
+              !event.isError &&
+              input.tools?.definitions.get(event.toolName)?.endsTurn
+            ) {
+              hasEndingResult = true
+            }
+            push({
+              type: 'tool-result',
+              toolCallId: event.toolCallId,
+              toolName: event.toolName,
+              // already cut to the tool's limit when it ran: kept as the model saw it
+              output: toolOutputText(event.output),
+              ...(event.isError ? { isError: true } : {}),
+              ...(input.tools?.truncatedCallIds.has(event.toolCallId)
+                ? { isTruncated: true }
+                : {}),
+            })
+            break
           }
-          requests.push({
-            approvalId: event.approvalId,
-            toolCallId: event.toolCallId,
-            toolName: event.toolName,
-            input: event.input,
-            approvalKey:
-              input.tools?.approvalKey(event.toolName, event.input) ??
-              event.toolName,
-          })
-          break
+          case 'tool-denied':
+            setCallState(event.toolCallId, 'denied')
+            break
+          case 'approval-request': {
+            const call = calls.get(event.toolCallId)
+            if (call) {
+              call.state = 'awaiting-approval'
+              call.approvalId = event.approvalId
+            }
+            requests.push({
+              approvalId: event.approvalId,
+              toolCallId: event.toolCallId,
+              toolName: event.toolName,
+              input: event.input,
+              approvalKey:
+                input.tools?.approvalKey(event.toolName, event.input) ??
+                event.toolName,
+            })
+            break
+          }
+          case 'step-finish':
+            stepsUsed += 1
+            if (hasEndingResult && requests.length === 0) {
+              isEndedByTool = true
+              break
+            }
+            continue
+          case 'sources':
+            push({ type: 'sources', sources: event.sources })
+            break
+          case 'file':
+            // Files are kept from phase 6 on, once there is storage for them
+            continue
+          case 'finish':
+            finish = event
+            continue
         }
-        case 'step-finish':
-          stepsUsed += 1
-          continue
-        case 'sources':
-          push({ type: 'sources', sources: event.sources })
-          break
-        case 'file':
-          // Files are kept from phase 6 on, once there is storage for them
-          continue
-        case 'finish':
-          finish = event
-          continue
+        publish()
+        if (isEndedByTool) break
       }
-      publish()
+    } catch (error) {
+      // the early end aborts the call; anything else is a real failure
+      if (!isEndedByTool || input.signal.aborted) throw error
+    } finally {
+      input.signal.removeEventListener('abort', abortCall)
     }
 
+    if (isEndedByTool) {
+      callAbort.abort()
+      return state
+    }
     if (!finish || input.signal.aborted) return state
     if (finish.finishReason === 'stop' || requests.length === 0) return state
 

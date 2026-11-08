@@ -444,7 +444,9 @@ export function createQuickAiRequestModel(
 
   const submitPrompt = async (
     promptText: string,
-    mode: 'text' | 'voice' = inputMode.value
+    mode: 'text' | 'voice' = inputMode.value,
+    /** The question is in the feed: the prompt may be cleared at once */
+    onAccepted?: () => void
   ): Promise<boolean> => {
     const trimmed = promptText.trim()
     if (!trimmed || isGenerating.value) return false
@@ -473,6 +475,7 @@ export function createQuickAiRequestModel(
         isProfileLocked.value = true
         const kinds = inputKinds.value.slice(0, questionCount() - 1)
         inputKinds.value = [...kinds, mode]
+        onAccepted?.()
       },
     })
     return result.status === 'answered'

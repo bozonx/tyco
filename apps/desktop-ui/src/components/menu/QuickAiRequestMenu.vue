@@ -1,54 +1,5 @@
 <template>
   <ActionOverlayLayout :title="t('action.quickAiRequest')" :on-esc="handleEsc">
-    <template #header-extra>
-      <div class="quick-profile-picker">
-        <label class="quick-profile-label">
-          <AppIcon
-            icon="mdi:account-outline"
-            size="sm"
-            class="quick-profile-icon"
-          />
-          <FieldSelect
-            size="sm"
-            :model-value="model.profileId.value ?? ''"
-            :disabled="model.isProfileLocked.value"
-            :options="profileSelectOptions"
-            :title="
-              model.isProfileLocked.value
-                ? t('quickAiRequest.profileLocked')
-                : t('quickAiRequest.selectProfile')
-            "
-            @update:model-value="onProfileSelect"
-          />
-        </label>
-        <label class="quick-profile-label">
-          <AppIcon
-            icon="mdi:creation-outline"
-            size="sm"
-            class="quick-profile-icon"
-          />
-          <FieldSelect
-            size="sm"
-            :model-value="model.modelId.value ?? ''"
-            :disabled="model.isGenerating.value"
-            :options="modelSelectOptions"
-            :title="t('chat.selectModel')"
-            @update:model-value="onModelSelect"
-          />
-        </label>
-        <IconButton
-          icon="mdi:chat-question-outline"
-          size="sm"
-          variant="ghost"
-          class="switch-chat-btn"
-          :disabled="model.isGenerating.value"
-          :label="t('action.askInChat')"
-          :title="`${t('action.askInChat')} (Ctrl+Enter)`"
-          @click="switchToChat"
-        />
-      </div>
-    </template>
-
     <template #preview>
       <ContextPreview
         v-if="props.text"
@@ -115,7 +66,7 @@
         ref="queryPanelRef"
         v-model="prompt"
         :disabled="isInputBlocked || model.isGenerating.value"
-        :placeholder="t('menu.aiPromptPlaceholder')"
+        :placeholder="promptPlaceholder"
         :options="recentOptions"
         :hints="promptHints"
         @blur="handleInputBlur"
@@ -152,6 +103,17 @@
             :label="t('chat.stop')"
             :title="t('chat.stop')"
             @click="model.stopGeneration()"
+          />
+        </template>
+        <template #footer-end>
+          <QuickAiModelBar
+            :profile-id="model.profileId.value"
+            :model-id="model.modelId.value"
+            :models="model.modelOptions.value"
+            :is-profile-locked="model.isProfileLocked.value"
+            :is-model-disabled="model.isGenerating.value"
+            @update:profile-id="model.setProfileId"
+            @update:model-id="(id) => void model.setModelId(id)"
           />
         </template>
       </QueryPanel>
@@ -203,7 +165,6 @@ import { useSecretsStore } from '../../stores/secrets'
 import { useToolsStore } from '../../stores/tools'
 import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
 import AppIcon from '../common/AppIcon.vue'
-import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ContextPreview from '../overlay/ContextPreview.vue'
@@ -212,6 +173,7 @@ import QueryPanel, {
   type QueryPanelOption,
   type QueryPanelSubmit,
 } from './QueryPanel.vue'
+import QuickAiModelBar from './QuickAiModelBar.vue'
 import QuickAiRequestTurns from './QuickAiRequestTurns.vue'
 import VoiceRecognitionMenu from './VoiceRecognitionMenu.vue'
 import {
@@ -267,17 +229,6 @@ const voiceActivationMode = computed(() => {
   }
   return undefined
 })
-
-// Profile select options
-const profileSelectOptions = computed(() => [
-  { id: '', name: t('quickAiRequest.defaultProfile') },
-  ...aiProfilesStore.profiles.map((p) => ({ id: p.id, name: p.name })),
-])
-
-function onProfileSelect(val: string | number | undefined) {
-  const selected = typeof val === 'string' && val ? val : null
-  model.setProfileId(selected)
-}
 
 /**
  * The conversation of the request: its chat id, kept when it moves to the full
@@ -470,24 +421,14 @@ function saveQuickRequestTaskModel(modelId: string) {
   })
 }
 
-const modelSelectOptions = computed(() => [
-  // without a pick the select would show nothing at all
-  ...(model.modelId.value
-    ? []
-    : [{ id: '', name: t('chat.selectModel'), disabled: true }]),
-  ...model.modelOptions.value.map((option) => ({
-    id: option.id,
-    name: [
-      option.name,
-      option.providerLabel,
-      ...(option.canUseTools ? [] : [t('chat.noToolCalling')]),
-    ].join(' · '),
-  })),
-])
-
-function onModelSelect(val: string | number | undefined) {
-  if (typeof val === 'string' && val) void model.setModelId(val)
-}
+/** Tells what this request is about: the screenshot, the selection or nothing */
+const promptPlaceholder = computed(() => {
+  if (model.turns.value.length > 0)
+    return t('quickAiRequest.placeholder.followUp')
+  if (props.screenshotMode) return t('quickAiRequest.placeholder.screenshot')
+  if (model.sourceText.value) return t('quickAiRequest.placeholder.selection')
+  return t('quickAiRequest.placeholder.empty')
+})
 
 /** Shown at once: the user learns before asking that the model will not do */
 const modelIssueText = computed(() =>
@@ -682,10 +623,8 @@ async function handleVoiceCorrected(
 
   if (intent === 'submit') {
     const textToSend = prompt.value.trim()
-    if (textToSend && (await model.submitPrompt(textToSend, 'voice'))) {
-      prompt.value = ''
-      rememberedSelection.value = null
-      lastInputKind.value = 'text'
+    if (textToSend) {
+      await model.submitPrompt(textToSend, 'voice', clearPrompt)
       return
     }
   }
@@ -714,11 +653,14 @@ async function handleQuerySubmit(submitEvent?: QueryPanelSubmit) {
   if (!textToSend) return
 
   prompt.value = textToSend
-  if (await model.submitPrompt(textToSend, inputKind)) {
-    prompt.value = ''
-    rememberedSelection.value = null
-    lastInputKind.value = 'text'
-  }
+  await model.submitPrompt(textToSend, inputKind, clearPrompt)
+}
+
+/** The question moved to the feed: the input is ready for the next one */
+function clearPrompt() {
+  prompt.value = ''
+  rememberedSelection.value = null
+  lastInputKind.value = 'text'
 }
 
 async function switchToChat() {
@@ -757,9 +699,6 @@ function goToSettings() {
 
 onMounted(async () => {
   window.addEventListener('keydown', handleGeneratingEsc)
-  if (!aiProfilesStore.isLoaded) {
-    void aiProfilesStore.loadAll()
-  }
   // The models of a provider show up only when its key is known to be set;
   // the quick window has not read the keys yet, or they changed since then.
   await secretsStore.refreshSecrets().catch(() => undefined)
@@ -784,24 +723,6 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-sm);
   padding-block: var(--space-xs);
-}
-
-.quick-profile-picker {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-}
-
-.quick-profile-label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  cursor: pointer;
-}
-
-.quick-profile-icon {
-  color: var(--color-text-subtle);
 }
 
 .quick-error-banner {

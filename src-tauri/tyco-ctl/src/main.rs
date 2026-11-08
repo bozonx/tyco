@@ -20,7 +20,7 @@ const USAGE: &str = "Usage: tyco-ctl status
 
 Modes: editor, quick-input, chat, voice-chat, voice-commands, voice, selection-actions,
        chat-prompts, correction, translation, history, settings.
-Pages: selection-actions:N opens action page N.
+Pages: selection-actions:N opens action page N; custom-action:N runs custom action slot N.
 Use --stdin for private text. Input is preserved exactly.
 Run defaults to non-interactive execution and always returns output.
 Use --replace to replace a selection.
