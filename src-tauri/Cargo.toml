@@ -96,3 +96,11 @@ lto = true
 opt-level = "s"
 panic = "abort"
 strip = true
+
+# Regex matching in an unoptimized build makes masking secrets in the editor
+# history take a quarter of a second for a hundred entries.
+[profile.dev.package.regex-automata]
+opt-level = 3
+
+[profile.dev.package.regex-syntax]
+opt-level = 3
