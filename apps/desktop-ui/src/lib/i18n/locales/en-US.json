@@ -268,7 +268,7 @@
     "llmPreTransformPromptLabel": "Transformation prompt",
     "llmPreTransformPromptPlaceholder": "Prompt that transforms the text before the command receives it",
     "llmPreTransformPromptInfo": "Instruction for the LLM to transform the input text before sending it to the command.",
-    "externalTimeoutLabel": "Background run limit, seconds",
+    "externalTimeoutLabel": "Background timeout, seconds",
     "externalTimeoutInfo": "How long an external call may run in the background, counted from the start of the command; after that it is stopped and reported as timed out. {seconds} by default, at most {max}. Runs in a window have no limit: you see them and can cancel them.",
     "preTransformEmpty": "The LLM returned no text for the command",
     "aiTitle": "AI commands",
@@ -769,6 +769,7 @@
       "outdent": "Decrease indent",
       "reserved": "This shortcut is reserved for text editing or application actions."
     },
+    "editorHotkeyHint": "The hotkey to open the editor can be viewed and configured on the {tab} tab.",
     "editorTab": "Editor",
     "externalMethods": "Other activation methods",
     "externalMethodsHint": "Use this command from a terminal, script, or system shortcut. The tyco-ctl client must be installed and available in PATH. Linux also supports D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",

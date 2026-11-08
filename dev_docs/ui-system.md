@@ -158,27 +158,27 @@ controls layout spacing. `NavigationList.isCollapsed` describes rail visibility.
 Domain components compose the shared controls and keep domain state and side
 effects outside visual primitives.
 
-| Requirement                                | Component                                     |
-| ------------------------------------------ | --------------------------------------------- |
-| An action with visible text                | `Button`                                      |
-| An action with an icon only                | `IconButton`                                  |
-| Select an item or acknowledge a condition  | `FieldCheckbox`                               |
-| Enable or disable a feature                | `FieldSwitch`                                 |
-| Choose one value                           | `FieldSelect` or `SegmentedControl`           |
-| Navigate between settings pages            | `NavigationList`                              |
-| A disclosure trigger / collapsible card    | `DisclosureHeader` / `DisclosurePanel`        |
-| Show noninteractive explanatory text       | `InfoTooltip`                                 |
-| Show help containing buttons or links      | `InfoPopover`                                 |
-| Label a state or count                     | `Badge`                                       |
-| Activate a compact labeled marker          | `Badge interactive`                           |
-| Show a keyboard hint, optionally clickable | `ShortcutHint`                                |
-| Show a full action with keyboard keys      | `ShortcutButton`                              |
-| Guidance or feedback beside content        | `InlineNotice`                                |
-| Show an empty, loading or error state      | `StateMessage`                                |
-| Transient feedback outside a region        | a toast                                       |
-| Display a modal dialog                     | `BaseDialog` and domain dialog content        |
-| Ask for confirmation                       | `ConfirmModal`                                |
-| Display the action window surface          | `Overlay`                                     |
+| Requirement                                | Component                              |
+| ------------------------------------------ | -------------------------------------- |
+| An action with visible text                | `Button`                               |
+| An action with an icon only                | `IconButton`                           |
+| Select an item or acknowledge a condition  | `FieldCheckbox`                        |
+| Enable or disable a feature                | `FieldSwitch`                          |
+| Choose one value                           | `FieldSelect` or `SegmentedControl`    |
+| Navigate between settings pages            | `NavigationList`                       |
+| A disclosure trigger / collapsible card    | `DisclosureHeader` / `DisclosurePanel` |
+| Show noninteractive explanatory text       | `InfoTooltip`                          |
+| Show help containing buttons or links      | `InfoPopover`                          |
+| Label a state or count                     | `Badge`                                |
+| Activate a compact labeled marker          | `Badge interactive`                    |
+| Show a keyboard hint, optionally clickable | `ShortcutHint`                         |
+| Show a full action with keyboard keys      | `ShortcutButton`                       |
+| Guidance or feedback beside content        | `InlineNotice`                         |
+| Show an empty, loading or error state      | `StateMessage`                         |
+| Transient feedback outside a region        | a toast                                |
+| Display a modal dialog                     | `BaseDialog` and domain dialog content |
+| Ask for confirmation                       | `ConfirmModal`                         |
+| Display the action window surface          | `Overlay`                              |
 
 Introduce tabs only when a product screen needs tab panels and keyboard tabs.
 Keep action overlays separate from native modal dialogs.

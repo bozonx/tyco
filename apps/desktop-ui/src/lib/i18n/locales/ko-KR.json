@@ -268,7 +268,7 @@
     "llmPreTransformPromptLabel": "변환 프롬프트",
     "llmPreTransformPromptPlaceholder": "명령이 받기 전에 텍스트를 변환하는 프롬프트",
     "llmPreTransformPromptInfo": "명령으로 보내기 전에 입력 텍스트를 변환하기 위한 LLM 지침입니다.",
-    "externalTimeoutLabel": "백그라운드 실행 제한(초)",
+    "externalTimeoutLabel": "백그라운드 타임아웃(초)",
     "externalTimeoutInfo": "외부 호출이 명령 시작부터 백그라운드에서 실행될 수 있는 시간입니다. 이후에는 중지되고 시간 초과로 보고됩니다. 기본값 {seconds}, 최대 {max}. 창에서의 실행은 제한이 없습니다. 진행 상황이 보이고 취소할 수 있기 때문입니다.",
     "preTransformEmpty": "LLM이 명령에 사용할 텍스트를 반환하지 않았습니다",
     "aiTitle": "AI 명령",
@@ -763,6 +763,7 @@
       "outdent": "들여쓰기 줄이기",
       "reserved": "이 단축키는 텍스트 편집 또는 앱 작업에 예약되어 있습니다."
     },
+    "editorHotkeyHint": "편집기를 여는 단축키는 {tab} 탭에서 확인하고 설정할 수 있습니다.",
     "editorTab": "편집기",
     "externalMethods": "기타 실행 방법",
     "externalMethodsHint": "터미널, 스크립트 또는 시스템 단축키에서 이 명령을 사용하세요. tyco-ctl 클라이언트가 설치되어 PATH에 있어야 합니다. Linux는 D-Bus도 지원합니다: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",

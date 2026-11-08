@@ -89,6 +89,8 @@ export interface ChatHistoryConfig {
   retentionDays?: number
   /** Absent: quick requests are saved along with the chats */
   isQuickRequestSavingEnabled?: boolean
+  /** Absent: regular chats are saved */
+  isChatSavingEnabled?: boolean
 }
 
 /** The settings of the "Ask AI" chat */

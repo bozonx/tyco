@@ -268,7 +268,7 @@
     "llmPreTransformPromptLabel": "预处理提示词",
     "llmPreTransformPromptPlaceholder": "在命令接收之前转换文本的提示词",
     "llmPreTransformPromptInfo": "用于在将输入文本发送到命令之前由 LLM 进行转换的指令。",
-    "externalTimeoutLabel": "后台运行时限（秒）",
+    "externalTimeoutLabel": "后台运行超时（秒）",
     "externalTimeoutInfo": "外部调用在后台可运行的时长，从命令启动时开始计算；超时后将被停止并报告为超时。默认 {seconds}，最多 {max}。在窗口中运行没有时限：您可以看到运行过程并随时取消。",
     "preTransformEmpty": "LLM 未为该命令返回文本",
     "aiTitle": "AI 命令",
@@ -763,6 +763,7 @@
       "outdent": "减少缩进",
       "reserved": "此快捷键已保留用于文本编辑或应用操作。"
     },
+    "editorHotkeyHint": "可以在 {tab} 标签页中查看和配置打开编辑器的快捷键。",
     "editorTab": "编辑器",
     "externalMethods": "其他激活方式",
     "externalMethodsHint": "可从终端、脚本或系统快捷键运行此命令。必须已安装 tyco-ctl 客户端且可在 PATH 中找到。Linux 还支持 D-Bus：org.tyco.Service、/org/tyco/Object、org.tyco.Interface。",

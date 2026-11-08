@@ -268,7 +268,7 @@
     "llmPreTransformPromptLabel": "変換プロンプト",
     "llmPreTransformPromptPlaceholder": "コマンドに渡す前にテキストを変換するプロンプト",
     "llmPreTransformPromptInfo": "コマンドに送信する前に入力テキストを変換するためのLLM指示。",
-    "externalTimeoutLabel": "バックグラウンド実行の上限（秒）",
+    "externalTimeoutLabel": "バックグラウンドのタイムアウト（秒）",
     "externalTimeoutInfo": "外部呼び出しがバックグラウンドで実行できる時間（コマンドの開始から計測）。超えると停止され、タイムアウトとして報告されます。既定は {seconds}、最大 {max}。ウィンドウでの実行には上限がありません。実行状況が見え、キャンセルできるためです。",
     "preTransformEmpty": "LLM がコマンド用のテキストを返しませんでした",
     "aiTitle": "AI コマンド",
@@ -766,6 +766,7 @@
       "outdent": "インデントを減らす",
       "reserved": "このショートカットはテキスト編集またはアプリ操作用に予約されています。"
     },
+    "editorHotkeyHint": "エディターを開くショートカットは{tab}タブで確認および設定できます。",
     "editorTab": "エディター",
     "externalMethods": "その他の呼び出し方法",
     "externalMethodsHint": "ターミナル、スクリプト、またはシステムのショートカットからこのコマンドを実行します。tyco-ctlクライアントがインストールされ、PATHに含まれている必要があります。LinuxではD-Busもサポートされています: org.tyco.Service, /org/tyco/Object, org.tyco.Interface。",

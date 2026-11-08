@@ -205,9 +205,7 @@ export function createQuickAiRequestModel(
 
   /** Stored among the quick requests until it moves to the main chat */
   let isQuickRequest = true
-  const isStored = () =>
-    deps.isHistoryEnabled(profileId.value) &&
-    deps.isQuickRequestSavingEnabled(profileId.value)
+  const isStored = () => deps.isQuickRequestSavingEnabled(profileId.value)
 
   const persistence = createChatPersistenceQueue(
     {
@@ -230,7 +228,8 @@ export function createQuickAiRequestModel(
         if (isStored()) await persistence.renameChat(id, newTitle, options)
         else currentChatParams.value.title = newTitle
       },
-      isHistoryEnabled: () => deps.isHistoryEnabled(profileId.value),
+      isHistoryEnabled: () =>
+        isStored() || deps.isHistoryEnabled(profileId.value),
       imageTitle: deps.imageTitle,
     },
     state

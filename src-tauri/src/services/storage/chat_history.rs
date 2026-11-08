@@ -176,7 +176,7 @@ pub fn list_recent_quick_request_prompts(
     limit: usize,
 ) -> Result<Vec<String>, AppError> {
     // with quick requests no longer saved, the stored ones are not offered
-    if !policy.is_enabled || !policy.saves_quick_requests || limit == 0 {
+    if !policy.saves_quick_requests || limit == 0 {
         return Ok(Vec::new());
     }
     let chats = load_chat_index(dirs)?;
@@ -695,8 +695,10 @@ pub struct ChatHistoryPolicy {
     /// Chats without a message for this many days are dropped; 0 keeps them
     /// forever.
     pub retention_days: u64,
-    /// Quick requests are saved along with the chats.
+    /// Quick requests are saved.
     pub saves_quick_requests: bool,
+    /// Regular chats are saved.
+    pub saves_chats: bool,
 }
 
 impl ChatHistoryPolicy {
@@ -710,10 +712,14 @@ impl ChatHistoryPolicy {
         user_config::profile_chat_history(user_config).into()
     }
 
-    /// The chat is to be stored: chats are saved, and quick requests too if
-    /// it is one.
+    /// The chat is to be stored: quick requests follow `saves_quick_requests`,
+    /// and regular chats follow `saves_chats`.
     pub fn saves(&self, chat: &Chat) -> bool {
-        self.is_enabled && (self.saves_quick_requests || chat.is_quick_request != Some(true))
+        if chat.is_quick_request == Some(true) {
+            self.saves_quick_requests
+        } else {
+            self.saves_chats
+        }
     }
 
     /// Drops the chats whose last message is older than the retention period.
@@ -737,10 +743,15 @@ impl ChatHistoryPolicy {
 
 impl From<ChatHistoryConfig> for ChatHistoryPolicy {
     fn from(config: ChatHistoryConfig) -> Self {
+        let storage_enabled = config.storage != HistoryStorage::Off;
+        let saves_chats = storage_enabled && config.is_chat_saving_enabled.unwrap_or(true);
+        let saves_quick_requests =
+            storage_enabled && config.is_quick_request_saving_enabled.unwrap_or(true);
         Self {
-            is_enabled: config.storage != HistoryStorage::Off,
+            is_enabled: saves_chats || saves_quick_requests,
             retention_days: config.retention_days,
-            saves_quick_requests: config.is_quick_request_saving_enabled.unwrap_or(true),
+            saves_chats,
+            saves_quick_requests,
         }
     }
 }

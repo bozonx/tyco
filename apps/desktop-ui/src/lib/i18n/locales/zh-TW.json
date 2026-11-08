@@ -268,7 +268,7 @@
     "llmPreTransformPromptLabel": "預處理提示詞",
     "llmPreTransformPromptPlaceholder": "在命令接收之前轉換文字的提示詞",
     "llmPreTransformPromptInfo": "用於在將輸入文字發送到命令之前由 LLM 進行轉換的指示。",
-    "externalTimeoutLabel": "背景執行時限（秒）",
+    "externalTimeoutLabel": "背景執行逾時（秒）",
     "externalTimeoutInfo": "外部呼叫在背景可執行的時間，從指令啟動時開始計算；逾時後會被停止並回報為逾時。預設 {seconds}，最多 {max}。在視窗中執行沒有時限：您可以看到執行過程並隨時取消。",
     "preTransformEmpty": "LLM 未為此指令傳回文字",
     "aiTitle": "AI 指令",
@@ -763,6 +763,7 @@
       "outdent": "減少縮排",
       "reserved": "此快捷鍵已保留用於文字編輯或應用程式操作。"
     },
+    "editorHotkeyHint": "可以在 {tab} 分頁中檢視和設定開啟編輯器的快捷鍵。",
     "editorTab": "編輯器",
     "externalMethods": "其他喚醒方式",
     "externalMethodsHint": "從終端機、指令碼或系統快捷鍵使用此命令。必須安裝 tyco-ctl 用戶端並加入 PATH。Linux 亦支援 D-Bus：org.tyco.Service、/org/tyco/Object、org.tyco.Interface。",

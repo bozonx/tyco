@@ -84,6 +84,7 @@ import { storeToRefs } from 'pinia'
 import {
   type Component,
   computed,
+  nextTick,
   onMounted,
   onUnmounted,
   provide,
@@ -327,7 +328,14 @@ provide(SETTINGS_CONTEXT_KEY, {
   operations,
   effectiveAppLanguage,
   navigate: (tab) => {
-    currentTab.value = tab
+    const [targetTab, hash] = tab.split('#')
+    currentTab.value = targetTab
+    if (hash) {
+      void nextTick(() => {
+        const el = document.getElementById(hash)
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+    }
   },
   editCommand: (commandId) => {
     focusCommandId.value = commandId

@@ -82,11 +82,11 @@
 
     <SettingsSection
       :title="t('settings.sectionWebSearch')"
-      :description="t('settings.webSearchSectionHint')"
+      :info="t('settings.webSearchSectionHint')"
     >
       <FieldRow
         :label="t('settings.webJinaApiKey')"
-        :hint="t('settings.webJinaApiKeyHint')"
+        :info="t('settings.webJinaApiKeyHint')"
         vertical
       >
         <SecretKeyField
@@ -99,7 +99,7 @@
       </FieldRow>
       <FieldRow
         :label="t('settings.webFetchMaxCharacters')"
-        :hint="t('settings.webFetchMaxCharactersHint')"
+        :info="t('settings.webFetchMaxCharactersHint')"
         :error="
           webFetchMaxCharsError
             ? t('settings.webFetchMaxCharactersError')

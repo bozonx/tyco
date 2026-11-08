@@ -268,7 +268,7 @@
     "llmPreTransformPromptLabel": "Uputa za transformaciju",
     "llmPreTransformPromptPlaceholder": "Uputa koja transformira tekst prije nego što ga primi naredba",
     "llmPreTransformPromptInfo": "Uputa za LLM kojom se ulazni tekst transformira prije slanja naredbi.",
-    "externalTimeoutLabel": "Ograničenje izvođenja u pozadini, sekunde",
+    "externalTimeoutLabel": "Istek vremena u pozadini, sekunde",
     "externalTimeoutInfo": "Koliko dugo vanjski poziv smije raditi u pozadini, računajući od pokretanja naredbe; nakon toga se zaustavlja i prijavljuje kao isteklo vrijeme. Zadano {seconds}, najviše {max}. Izvođenja u prozoru nisu ograničena: vidite ih i možete ih otkazati.",
     "preTransformEmpty": "LLM nije vratio tekst za naredbu",
     "aiTitle": "AI naredbe",
@@ -769,6 +769,7 @@
       "outdent": "Smanji uvlaku",
       "reserved": "Ovaj je prečac rezerviran za uređivanje teksta ili radnje aplikacije."
     },
+    "editorHotkeyHint": "Prečac za otvaranje uređivača možete pregledati i prilagoditi na kartici {tab}.",
     "editorTab": "Uređivač",
     "externalMethods": "Drugi načini pokretanja",
     "externalMethodsHint": "Koristite ovu naredbu iz terminala, skripte ili prečaca sustava. Klijent tyco-ctl mora biti instaliran i dostupan u PATH-u. Linux podržava i D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",

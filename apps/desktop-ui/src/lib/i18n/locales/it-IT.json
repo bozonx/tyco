@@ -268,7 +268,7 @@
     "llmPreTransformPromptLabel": "Prompt di trasformazione",
     "llmPreTransformPromptPlaceholder": "Prompt che trasforma il testo prima che venga ricevuto dal comando",
     "llmPreTransformPromptInfo": "Istruzione per l’LLM con cui trasformare il testo di input prima di inviarlo al comando.",
-    "externalTimeoutLabel": "Limite di esecuzione in background, secondi",
+    "externalTimeoutLabel": "Timeout in background, secondi",
     "externalTimeoutInfo": "Per quanto tempo una chiamata esterna può essere eseguita in background, contando dall’avvio del comando; poi viene interrotta e segnalata come scaduta. {seconds} per impostazione predefinita, al massimo {max}. Le esecuzioni in una finestra non hanno limiti: le vedi e puoi annullarle.",
     "preTransformEmpty": "L’LLM non ha restituito alcun testo per il comando",
     "aiTitle": "Comandi IA",
@@ -769,6 +769,7 @@
       "outdent": "Riduci rientro",
       "reserved": "Questa scorciatoia è riservata alla modifica del testo o alle azioni dell’applicazione."
     },
+    "editorHotkeyHint": "La scorciatoia per aprire l’editor può essere visualizzata e personalizzata nella scheda {tab}.",
     "editorTab": "Editor",
     "externalMethods": "Altri metodi di attivazione",
     "externalMethodsHint": "Usa questo comando da un terminale, da uno script o da una scorciatoia di sistema. Il client tyco-ctl deve essere installato e disponibile nel PATH. Linux supporta anche D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",

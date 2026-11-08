@@ -3,7 +3,7 @@
     <p class="settings-danger-message">{{ message }}</p>
     <Button
       size="sm"
-      variant="danger"
+      variant="neutral"
       icon="mdi:trash-can-outline"
       @click="emit('action')"
     >

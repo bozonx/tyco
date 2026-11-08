@@ -153,20 +153,54 @@ describe('SettingsChatHistorySection.vue', () => {
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
   })
 
-  it('turns the chat history off without asking for confirmation', async () => {
+  it('toggles chat saving and quick request saving independently', async () => {
     const config = createConfig()
     const wrapper = mountTab(config)
 
     const chatSection = wrapper.get('.section-stub')
-    await chatSection.find('.field-checkbox-stub').setValue(false)
-    expect(config.chat.history.storage).toBe('off')
-    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
+    const checkboxes = chatSection.findAll('.field-checkbox-stub')
+    expect(checkboxes).toHaveLength(2)
+
+    // Initially both on, retention days visible
     expect(
-      wrapper
-        .get('.section-stub')
+      chatSection
+        .find('[data-label="settings.chatHistoryRetentionDays"]')
+        .exists()
+    ).toBe(true)
+
+    // Turn off chat saving (checkbox 0)
+    await checkboxes[0].setValue(false)
+    expect(config.chat.history.isChatSavingEnabled).toBe(false)
+    expect(config.chat.history.storage).toBe('disk')
+    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
+    // Quick requests still saved, retention still visible
+    expect(
+      chatSection
+        .find('[data-label="settings.chatHistoryRetentionDays"]')
+        .exists()
+    ).toBe(true)
+
+    // Turn off quick requests saving (checkbox 1)
+    await checkboxes[1].setValue(false)
+    expect(config.chat.history.isQuickRequestSavingEnabled).toBe(false)
+    expect(config.chat.history.storage).toBe('off')
+    // Both off: retention days is hidden!
+    expect(
+      chatSection
         .find('[data-label="settings.chatHistoryRetentionDays"]')
         .exists()
     ).toBe(false)
+
+    // Turn quick requests back on (checkbox 1)
+    await checkboxes[1].setValue(true)
+    expect(config.chat.history.storage).toBe('disk')
+    expect(config.chat.history.isQuickRequestSavingEnabled).toBeUndefined()
+    // Retention days is visible again!
+    expect(
+      chatSection
+        .find('[data-label="settings.chatHistoryRetentionDays"]')
+        .exists()
+    ).toBe(true)
   })
 
   it('turns the chat history on without asking', async () => {
@@ -174,10 +208,26 @@ describe('SettingsChatHistorySection.vue', () => {
     const wrapper = mountTab(config)
 
     const chatSection = wrapper.get('.section-stub')
-    await chatSection.find('.field-checkbox-stub').setValue(true)
+    const checkboxes = chatSection.findAll('.field-checkbox-stub')
+    expect(checkboxes).toHaveLength(2)
+    // Initially both off, retention days hidden
+    expect(
+      chatSection
+        .find('[data-label="settings.chatHistoryRetentionDays"]')
+        .exists()
+    ).toBe(false)
+
+    await checkboxes[0].setValue(true)
 
     expect(config.chat.history.storage).toBe('disk')
+    expect(config.chat.history.isChatSavingEnabled).toBeUndefined()
+    expect(config.chat.history.isQuickRequestSavingEnabled).toBe(false)
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
+    expect(
+      chatSection
+        .find('[data-label="settings.chatHistoryRetentionDays"]')
+        .exists()
+    ).toBe(true)
   })
 
   describe('for the profiles', () => {
@@ -192,7 +242,9 @@ describe('SettingsChatHistorySection.vue', () => {
       expect(section.attributes('data-info')).toBe(
         'settings.profileChatHistoryHint'
       )
-      await section.find('.field-checkbox-stub').setValue(false)
+      const checkboxes = section.findAll('.field-checkbox-stub')
+      await checkboxes[0].setValue(false)
+      await checkboxes[1].setValue(false)
       expect(config.aiProfiles.chatHistory.storage).toBe('off')
       expect(config.chat.history.storage).toBe('disk')
       expect(mockLoadChatHistory).not.toHaveBeenCalled()

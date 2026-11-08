@@ -26,11 +26,7 @@
         <Button size="sm" variant="ghost" autofocus @click="onCancel">
           {{ cancelText || t('common.cancel') }}
         </Button>
-        <Button
-          size="sm"
-          variant="primary"
-          @click="onConfirm"
-        >
+        <Button size="sm" variant="primary" @click="onConfirm">
           {{ confirmText || t('common.confirm') }}
         </Button>
       </div>

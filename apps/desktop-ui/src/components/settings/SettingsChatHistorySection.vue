@@ -9,25 +9,24 @@
       inline
     >
       <FieldSwitch
-        :model-value="isHistoryChecked"
-        @update:model-value="setHistoryEnabled"
+        :model-value="isChatSavingChecked"
+        @update:model-value="setChatSavingEnabled"
       />
     </FieldRow>
 
     <FieldRow
-      v-if="isHistoryChecked"
       :label="t('settings.chatQuickRequestsSaved')"
       :info="t('settings.chatQuickRequestsSavedInfo')"
       inline
     >
       <FieldSwitch
-        :model-value="history.isQuickRequestSavingEnabled ?? true"
+        :model-value="isQuickRequestSavingChecked"
         @update:model-value="setQuickRequestSaving"
       />
     </FieldRow>
 
     <FieldRow
-      v-if="isHistoryChecked"
+      v-if="isRetentionVisible"
       :label="t('settings.chatHistoryRetentionDays')"
       :info="t('settings.chatHistoryRetentionDaysHint')"
       inline
@@ -114,16 +113,56 @@ onMounted(() => {
 
 const chatCount = computed(() => scopeChats.count.value)
 
-const isHistoryChecked = computed(() => history.value.storage !== 'off')
+const isChatSavingChecked = computed(
+  () =>
+    history.value.storage !== 'off' &&
+    history.value.isChatSavingEnabled !== false
+)
 
-function setHistoryEnabled(isEnabled: boolean) {
-  history.value.storage = isEnabled ? 'disk' : 'off'
+const isQuickRequestSavingChecked = computed(
+  () =>
+    history.value.storage !== 'off' &&
+    history.value.isQuickRequestSavingEnabled !== false
+)
+
+const isRetentionVisible = computed(
+  () => isChatSavingChecked.value || isQuickRequestSavingChecked.value
+)
+
+function setChatSavingEnabled(isEnabled: boolean) {
+  if (isEnabled) {
+    if (
+      history.value.storage === 'off' &&
+      history.value.isQuickRequestSavingEnabled === undefined
+    ) {
+      history.value.isQuickRequestSavingEnabled = false
+    }
+    history.value.storage = 'disk'
+    delete history.value.isChatSavingEnabled
+  } else {
+    history.value.isChatSavingEnabled = false
+    if (!isQuickRequestSavingChecked.value) {
+      history.value.storage = 'off'
+    }
+  }
 }
 
-/** Saving is the default, kept as no field */
 function setQuickRequestSaving(isEnabled: boolean) {
-  if (isEnabled) delete history.value.isQuickRequestSavingEnabled
-  else history.value.isQuickRequestSavingEnabled = false
+  if (isEnabled) {
+    if (
+      history.value.storage === 'off' &&
+      history.value.isChatSavingEnabled === undefined
+    ) {
+      history.value.isChatSavingEnabled = false
+    }
+    history.value.storage = 'disk'
+    delete history.value.isQuickRequestSavingEnabled
+  } else {
+    history.value.isQuickRequestSavingEnabled = false
+    if (!isChatSavingChecked.value) {
+      history.value.storage = 'off'
+    }
+  }
 }
 
 const { pendingChange, confirmChange, cancelChange, setRetentionDays } =

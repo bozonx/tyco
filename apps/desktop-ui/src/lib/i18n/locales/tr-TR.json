@@ -268,7 +268,7 @@
     "llmPreTransformPromptLabel": "Dönüştürme istemi",
     "llmPreTransformPromptPlaceholder": "Metni komuta iletilmeden önce dönüştüren istem",
     "llmPreTransformPromptInfo": "Girdi metnini komuta göndermeden önce dönüştürmek için LLM talimatı.",
-    "externalTimeoutLabel": "Arka planda çalışma sınırı, saniye",
+    "externalTimeoutLabel": "Arka plan zaman aşımı, saniye",
     "externalTimeoutInfo": "Harici bir çağrının, komutun başlangıcından itibaren arka planda ne kadar çalışabileceği; sonrasında durdurulur ve zaman aşımı olarak bildirilir. Varsayılan {seconds}, en fazla {max}. Bir pencerede yapılan çalıştırmaların sınırı yoktur: onları görür ve iptal edebilirsiniz.",
     "preTransformEmpty": "LLM komut için metin döndürmedi",
     "aiTitle": "Yapay zekâ komutları",
@@ -766,6 +766,7 @@
       "outdent": "Girintiyi azalt",
       "reserved": "Bu kısayol metin düzenleme veya uygulama işlemleri için ayrılmıştır."
     },
+    "editorHotkeyHint": "Düzenleyiciyi açma kısayolunu {tab} sekmesinden görüntüleyebilir ve ayarlayabilirsiniz.",
     "editorTab": "Düzenleyici",
     "externalMethods": "Diğer etkinleştirme yöntemleri",
     "externalMethodsHint": "Bu komutu terminalden, betikten veya sistem kısayolundan kullanın. tyco-ctl istemcisi kurulu ve PATH içinde erişilebilir olmalıdır. Linux ayrıca D-Bus destekler: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",

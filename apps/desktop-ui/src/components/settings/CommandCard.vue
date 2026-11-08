@@ -149,7 +149,6 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
   {
     label: t('common.delete'),
     icon: 'mdi:trash-can-outline',
-    danger: true,
     action: () => emit('remove'),
   },
 ])

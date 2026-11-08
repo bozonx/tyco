@@ -99,14 +99,17 @@
       </FieldRow>
       <FieldRow
         :label="t('settings.showStylingBar')"
-        :hint="t('settings.showStylingBarHint')"
+        :info="t('settings.showStylingBarHint')"
       >
         <FieldSwitch v-model="userConfig.stt.isStylingBarEnabled" />
       </FieldRow>
       <FieldRow
         v-if="userConfig.stt.isStylingBarEnabled"
+        class="styling-bar-nested"
+        nested
+        :separator="false"
         :label="t('settings.stylingBarDirectInsert')"
-        :hint="t('settings.stylingBarDirectInsertHint')"
+        :info="t('settings.stylingBarDirectInsertHint')"
       >
         <FieldSwitch v-model="userConfig.stt.isStylingBarDirectInsertEnabled" />
       </FieldRow>
@@ -258,3 +261,17 @@ watch(
   }
 )
 </script>
+
+<style scoped>
+.styling-bar-nested {
+  background-color: var(--app-surface-sunken);
+  border-left: 2px solid var(--app-border-strong);
+  padding-top: var(--space-sm);
+  padding-bottom: var(--space-sm);
+}
+
+.styling-bar-nested :deep(.field-row-title) {
+  font-size: var(--text-control);
+  color: var(--app-text-muted);
+}
+</style>

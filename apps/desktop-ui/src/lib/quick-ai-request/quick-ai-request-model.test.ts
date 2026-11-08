@@ -260,6 +260,23 @@ describe('QuickAiRequestModel', () => {
     )
   })
 
+  it('stores and names quick requests even when regular chat history is disabled', async () => {
+    const { model, deps } = createSetup({
+      isHistoryEnabled: () => false,
+      isQuickRequestSavingEnabled: () => true,
+    })
+
+    await model.submitPrompt('Hi')
+    await flush()
+
+    expect(deps.saveChat).toHaveBeenCalled()
+    expect(deps.renameChat).toHaveBeenCalledWith(
+      'chat-1',
+      'Generated title',
+      null
+    )
+  })
+
   it('shows a failed request without storing it or sending it again', async () => {
     const { model, deps } = createSetup({ formatError: () => 'provider down' })
     vi.mocked(deps.sendTurn).mockRejectedValueOnce(new Error('down'))

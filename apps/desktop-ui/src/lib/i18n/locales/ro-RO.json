@@ -268,7 +268,7 @@
     "llmPreTransformPromptLabel": "Prompt de transformare",
     "llmPreTransformPromptPlaceholder": "Prompt care transformă textul înainte de a fi primit de comandă",
     "llmPreTransformPromptInfo": "Instrucțiune pentru LLM de transformare a textului de intrare înainte de a fi trimis comenzii.",
-    "externalTimeoutLabel": "Limită pentru rularea în fundal, secunde",
+    "externalTimeoutLabel": "Timp de expirare în fundal, secunde",
     "externalTimeoutInfo": "Cât timp poate rula în fundal un apel extern, socotind de la pornirea comenzii; apoi este oprit și raportat ca expirat. Implicit {seconds}, cel mult {max}. Rulările într-o fereastră nu sunt limitate: le vedeți și le puteți anula.",
     "preTransformEmpty": "LLM nu a returnat niciun text pentru comandă",
     "aiTitle": "Comenzi AI",
@@ -769,6 +769,7 @@
       "outdent": "Micșorează indentarea",
       "reserved": "Această scurtătură este rezervată editării textului sau acțiunilor aplicației."
     },
+    "editorHotkeyHint": "Comanda rapidă pentru deschiderea editorului poate fi vizualizată și personalizată în fila {tab}.",
     "editorTab": "Editor",
     "externalMethods": "Alte metode de activare",
     "externalMethodsHint": "Folosiți această comandă dintr-un terminal, un script sau o comandă rapidă de sistem. Clientul tyco-ctl trebuie să fie instalat și disponibil în PATH. Linux acceptă și D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",

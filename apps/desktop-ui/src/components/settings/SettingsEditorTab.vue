@@ -67,6 +67,20 @@
         <FieldSwitch v-model="markdownStrip.hasTaskCheckboxes" />
       </FieldRow>
     </SettingsSection>
+
+    <InlineNotice kind="info" appearance="surface">
+      <I18nText keypath="settings.editorHotkeyHint">
+        <template #tab>
+          <a
+            href="#hotkey-editor"
+            class="inline-action"
+            @click.prevent="navigate('global-actions#hotkey-editor')"
+          >
+            {{ t('settings.hotkeysTab') }}
+          </a>
+        </template>
+      </I18nText>
+    </InlineNotice>
   </div>
 </template>
 
@@ -78,11 +92,13 @@ import { useSettingsContext } from '../../composables/use-settings-context'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
+import I18nText from '../common/I18nText.vue'
+import InlineNotice from '../common/InlineNotice.vue'
 import SettingsSection from './SettingsSection.vue'
 import { type MarkdownFormatSettings, normalizeConfigValue } from '@tyco/shared'
 
 const { t } = useI18n()
-const { draft } = useSettingsContext()
+const { draft, navigate } = useSettingsContext()
 
 const markdown = computed(() => draft.value.markdown.format)
 const markdownStrip = computed(() => draft.value.markdown.strip)

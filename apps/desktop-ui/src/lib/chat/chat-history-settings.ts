@@ -31,7 +31,8 @@ export function isChatHistoryEnabled(
   profileId?: string | null
 ): boolean {
   const scope: ChatHistoryScope = profileId ? 'profiles' : 'askAi'
-  return chatHistoryConfig(config, scope).storage !== 'off'
+  const history = chatHistoryConfig(config, scope)
+  return history.storage !== 'off' && history.isChatSavingEnabled !== false
 }
 
 /** The offered retention periods plus the saved one if it is not among them */
@@ -48,5 +49,8 @@ export function isQuickRequestSavingEnabled(
   profileId?: string | null
 ): boolean {
   const scope: ChatHistoryScope = profileId ? 'profiles' : 'askAi'
-  return chatHistoryConfig(config, scope).isQuickRequestSavingEnabled !== false
+  const history = chatHistoryConfig(config, scope)
+  return (
+    history.storage !== 'off' && history.isQuickRequestSavingEnabled !== false
+  )
 }

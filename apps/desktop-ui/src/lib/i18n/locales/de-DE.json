@@ -268,7 +268,7 @@
     "llmPreTransformPromptLabel": "Transformations-Prompt",
     "llmPreTransformPromptPlaceholder": "Prompt, der den Text transformiert, bevor der Befehl ihn erhält",
     "llmPreTransformPromptInfo": "Anweisung an das LLM, um den Eingabetext vor dem Senden an den Befehl zu transformieren.",
-    "externalTimeoutLabel": "Limit für Hintergrundausführung, Sekunden",
+    "externalTimeoutLabel": "Hintergrund-Timeout, Sekunden",
     "externalTimeoutInfo": "Wie lange ein externer Aufruf im Hintergrund laufen darf, gezählt ab dem Start des Befehls; danach wird er gestoppt und als Zeitüberschreitung gemeldet. Standardmäßig {seconds}, höchstens {max}. Ausführungen in einem Fenster sind nicht begrenzt: Sie sehen sie und können sie abbrechen.",
     "preTransformEmpty": "Das LLM hat keinen Text für den Befehl zurückgegeben",
     "aiTitle": "KI-Befehle",
@@ -769,6 +769,7 @@
       "outdent": "Einzug verkleinern",
       "reserved": "Dieses Kürzel ist für die Textbearbeitung oder Anwendungsaktionen reserviert."
     },
+    "editorHotkeyHint": "Der Hotkey zum Öffnen des Editors kann auf dem Tab {tab} eingesehen und angepasst werden.",
     "editorTab": "Editor",
     "externalMethods": "Weitere Aufrufmöglichkeiten",
     "externalMethodsHint": "Verwenden Sie diesen Befehl aus einem Terminal, einem Skript oder über ein Systemkürzel. Der Client tyco-ctl muss installiert und im PATH verfügbar sein. Linux unterstützt auch D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",

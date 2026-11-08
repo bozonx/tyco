@@ -155,12 +155,7 @@
         >
           {{ t('common.save') }}
         </Button>
-        <Button
-          v-if="hasAuth"
-          size="sm"
-          variant="ghost"
-          @click="removeAuth"
-        >
+        <Button v-if="hasAuth" size="sm" variant="ghost" @click="removeAuth">
           {{ t('common.remove') }}
         </Button>
       </div>

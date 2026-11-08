@@ -45,6 +45,7 @@
         </div>
         <GlobalHotkeyRow
           v-for="row in group.rows"
+          :id="`hotkey-${row.id}`"
           :key="row.id"
           :row="row"
           :platform="providerState.platform"

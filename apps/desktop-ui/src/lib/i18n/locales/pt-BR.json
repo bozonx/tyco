@@ -268,7 +268,7 @@
     "llmPreTransformPromptLabel": "Prompt de transformação",
     "llmPreTransformPromptPlaceholder": "Prompt que transforma o texto antes de enviá-lo ao comando",
     "llmPreTransformPromptInfo": "Instrução para o LLM transformar o texto de entrada antes de enviá-lo ao comando.",
-    "externalTimeoutLabel": "Limite de execução em segundo plano, segundos",
+    "externalTimeoutLabel": "Tempo limite em segundo plano, segundos",
     "externalTimeoutInfo": "Quanto tempo uma chamada externa pode ser executada em segundo plano, contando a partir do início do comando; depois ela é interrompida e relatada como tempo esgotado. {seconds} por padrão, no máximo {max}. Execuções em uma janela não têm limite: você as vê e pode cancelá-las.",
     "preTransformEmpty": "O LLM não retornou texto para o comando",
     "aiTitle": "Comandos de IA",
@@ -769,6 +769,7 @@
       "outdent": "Diminuir recuo",
       "reserved": "Este atalho está reservado para edição de texto ou ações do aplicativo."
     },
+    "editorHotkeyHint": "O atalho para abrir o editor pode ser visualizado e personalizado na aba {tab}.",
     "editorTab": "Editor",
     "externalMethods": "Outros métodos de ativação",
     "externalMethodsHint": "Use este comando a partir de um terminal, script ou atalho do sistema. O cliente tyco-ctl precisa estar instalado e disponível no PATH. O Linux também oferece D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",

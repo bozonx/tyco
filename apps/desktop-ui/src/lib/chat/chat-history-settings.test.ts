@@ -38,6 +38,19 @@ describe('isChatHistoryEnabled', () => {
         },
       })
     ).toBe(false)
+    expect(
+      isChatHistoryEnabled({
+        ...DEFAULT_USER_CONFIG,
+        chat: {
+          ...DEFAULT_USER_CONFIG.chat,
+          history: {
+            ...DEFAULT_USER_CONFIG.chat.history,
+            storage: 'disk',
+            isChatSavingEnabled: false,
+          },
+        },
+      })
+    ).toBe(false)
   })
 
   it('reads the profile settings for a profile chat only', () => {
@@ -89,5 +102,32 @@ describe('isQuickRequestSavingEnabled', () => {
     }
     expect(isQuickRequestSavingEnabled(config, 'writer')).toBe(false)
     expect(isQuickRequestSavingEnabled(config, null)).toBe(true)
+    expect(
+      isQuickRequestSavingEnabled({
+        ...DEFAULT_USER_CONFIG,
+        chat: {
+          ...DEFAULT_USER_CONFIG.chat,
+          history: {
+            ...DEFAULT_USER_CONFIG.chat.history,
+            storage: 'disk',
+            isChatSavingEnabled: false,
+            isQuickRequestSavingEnabled: true,
+          },
+        },
+      })
+    ).toBe(true)
+    expect(
+      isQuickRequestSavingEnabled({
+        ...DEFAULT_USER_CONFIG,
+        chat: {
+          ...DEFAULT_USER_CONFIG.chat,
+          history: {
+            ...DEFAULT_USER_CONFIG.chat.history,
+            storage: 'off',
+            isQuickRequestSavingEnabled: true,
+          },
+        },
+      })
+    ).toBe(false)
   })
 })

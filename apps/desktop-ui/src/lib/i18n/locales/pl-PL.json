@@ -268,7 +268,7 @@
     "llmPreTransformPromptLabel": "Prompt transformacji",
     "llmPreTransformPromptPlaceholder": "Prompt przekształcający tekst przed przekazaniem do polecenia",
     "llmPreTransformPromptInfo": "Instrukcja dla LLM służąca do przekształcenia tekstu wejściowego przed wysłaniem do polecenia.",
-    "externalTimeoutLabel": "Limit uruchomienia w tle, sekundy",
+    "externalTimeoutLabel": "Limit czasu w tle, sekundy",
     "externalTimeoutInfo": "Jak długo wywołanie zewnętrzne może działać w tle, licząc od startu polecenia; potem jest zatrzymywane i zgłaszane jako przekroczenie czasu. Domyślnie {seconds}, najwyżej {max}. Uruchomienia w oknie nie mają limitu: widzisz je i możesz je anulować.",
     "preTransformEmpty": "LLM nie zwrócił tekstu dla polecenia",
     "aiTitle": "Polecenia AI",
@@ -769,6 +769,7 @@
       "outdent": "Zmniejsz wcięcie",
       "reserved": "Ten skrót jest zarezerwowany do edycji tekstu lub działań aplikacji."
     },
+    "editorHotkeyHint": "Skrót otwierający edytor można sprawdzić i dostosować na karcie {tab}.",
     "editorTab": "Edytor",
     "externalMethods": "Inne sposoby uruchamiania",
     "externalMethodsHint": "Używaj tego polecenia z terminala, skryptu lub skrótu systemowego. Klient tyco-ctl musi być zainstalowany i dostępny w PATH. Linux obsługuje też D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",

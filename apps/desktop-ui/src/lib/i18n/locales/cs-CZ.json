@@ -268,7 +268,7 @@
     "llmPreTransformPromptLabel": "Instrukce pro transformaci",
     "llmPreTransformPromptPlaceholder": "Instrukce, která transformuje text před odesláním do příkazu",
     "llmPreTransformPromptInfo": "Instrukce pro LLM k transformaci vstupního textu před odesláním do příkazu.",
-    "externalTimeoutLabel": "Limit běhu na pozadí, sekundy",
+    "externalTimeoutLabel": "Časový limit na pozadí, sekundy",
     "externalTimeoutInfo": "Jak dlouho může externí volání běžet na pozadí, počítáno od spuštění příkazu; poté je zastaveno a nahlášeno jako vypršení času. Výchozí hodnota {seconds}, nejvýše {max}. Běhy v okně nejsou omezeny: vidíte je a můžete je zrušit.",
     "preTransformEmpty": "LLM nevrátil pro příkaz žádný text",
     "aiTitle": "AI příkazy",
@@ -763,6 +763,7 @@
       "outdent": "Zmenšit odsazení",
       "reserved": "Tato zkratka je vyhrazena pro úpravy textu nebo akce aplikace."
     },
+    "editorHotkeyHint": "Klávesovou zkratku pro otevření editoru lze zobrazit a upravit na záložce {tab}.",
     "editorTab": "Editor",
     "externalMethods": "Další způsoby spuštění",
     "externalMethodsHint": "Použijte tento příkaz z terminálu, skriptu nebo systémové zkratky. Klient tyco-ctl musí být nainstalován a dostupný v PATH. Linux podporuje také D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",

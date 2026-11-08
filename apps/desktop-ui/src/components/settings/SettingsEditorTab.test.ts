@@ -144,4 +144,27 @@ describe('SettingsEditorTab.vue', () => {
     expect(userConfig.markdown.strip.codeBlockIndent).toBe('none')
     expect(userConfig.markdown.strip.hasThematicBreaks).toBe(true)
   })
+
+  it('navigates to global hotkeys tab with editor anchor from bottom hint', async () => {
+    const userConfig = structuredClone(DEFAULT_USER_CONFIG)
+    const context = createTestSettingsContext(userConfig)
+    const wrapper = mount(SettingsEditorTab, {
+      global: {
+        provide: context.provide,
+        stubs: {
+          SettingsSection: true,
+          FieldRow: true,
+          FieldSelect: true,
+          FieldSwitch: true,
+        },
+      },
+    })
+
+    const link = wrapper.find('a[href="#hotkey-editor"]')
+    expect(link.exists()).toBe(true)
+    await link.trigger('click')
+    expect(context.navigate).toHaveBeenCalledWith(
+      'global-actions#hotkey-editor'
+    )
+  })
 })

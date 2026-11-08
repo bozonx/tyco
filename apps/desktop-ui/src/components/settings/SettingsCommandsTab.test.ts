@@ -90,15 +90,19 @@ const mountTab = (focusCommandId?: string, stubEditor = true) => {
 
 const commandIds = () => context.draft.value.commands.map(({ id }) => id)
 
-/** Picks an item of the menu of the card, e.g. the danger one: delete */
+/** Picks an item of the menu of the card */
 async function pickMenuItem(
   wrapper: ReturnType<typeof mountTab>,
   card: number,
-  selector: string
+  selectorOrIndex: string | number
 ) {
   const header = wrapper.findAll('.disclosure-panel-header')[card]
   await header.find('.dropdown-trigger').trigger('click')
-  await header.find(selector).trigger('click')
+  if (typeof selectorOrIndex === 'number') {
+    await header.findAll('.dropdown-item')[selectorOrIndex].trigger('click')
+  } else {
+    await header.find(selectorOrIndex).trigger('click')
+  }
 }
 
 describe('SettingsCommandsTab.vue', () => {
@@ -206,7 +210,7 @@ describe('SettingsCommandsTab.vue', () => {
       configurable: true,
     })
     const wrapper = mountTab()
-    await pickMenuItem(wrapper, 1, '.dropdown-item:not(.is-danger)')
+    await pickMenuItem(wrapper, 1, 0)
     expect(writeText).toHaveBeenCalledWith('sc1')
     expect(toastKey).toHaveBeenCalledWith('common.copied', 'success')
   })
@@ -267,7 +271,7 @@ describe('SettingsCommandsTab.vue', () => {
   it('removes a command with its menu items and offers to undo it', async () => {
     removeSecret.mockClear()
     const wrapper = mountTab()
-    await pickMenuItem(wrapper, 0, '.dropdown-item.is-danger')
+    await pickMenuItem(wrapper, 0, 1)
 
     expect(commandIds()).toEqual(['sc1'])
     expect(context.draft.value.actionPages[0].slots).toEqual({
@@ -283,7 +287,7 @@ describe('SettingsCommandsTab.vue', () => {
   it('puts a removed command back where it was', async () => {
     removeSecret.mockClear()
     const wrapper = mountTab()
-    await pickMenuItem(wrapper, 0, '.dropdown-item.is-danger')
+    await pickMenuItem(wrapper, 0, 1)
     await wrapper.find('.commands-notice button').trigger('click')
 
     expect(commandIds()).toEqual(['wh1', 'sc1'])
@@ -299,7 +303,7 @@ describe('SettingsCommandsTab.vue', () => {
   it('removes the webhook token once undo is no longer offered', async () => {
     removeSecret.mockClear()
     const wrapper = mountTab()
-    await pickMenuItem(wrapper, 0, '.dropdown-item.is-danger')
+    await pickMenuItem(wrapper, 0, 1)
     wrapper.unmount()
     await vi.waitFor(() =>
       expect(removeSecret).toHaveBeenCalledWith('webhook.auth.wh1')

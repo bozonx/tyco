@@ -268,7 +268,7 @@
     "llmPreTransformPromptLabel": "Átalakítási utasítás",
     "llmPreTransformPromptPlaceholder": "Utasítás, amely átalakítja a szöveget, mielőtt a parancs megkapná",
     "llmPreTransformPromptInfo": "Utasítás az LLM számára a bemeneti szöveg átalakításához, mielőtt a parancsnak elküldené.",
-    "externalTimeoutLabel": "Háttérfuttatás korlátja, másodperc",
+    "externalTimeoutLabel": "Háttérbeli időtúllépés, másodperc",
     "externalTimeoutInfo": "Meddig futhat egy külső hívás a háttérben a parancs indításától számítva; utána leáll, és időtúllépésként jelenik meg. Alapértelmezés szerint {seconds}, legfeljebb {max}. Az ablakban futó parancsoknak nincs korlátja: látja őket, és megszakíthatja őket.",
     "preTransformEmpty": "Az LLM nem adott vissza szöveget a parancshoz",
     "aiTitle": "MI-parancsok",
@@ -766,6 +766,7 @@
       "outdent": "Behúzás csökkentése",
       "reserved": "Ez a gyorsbillentyű szövegszerkesztéshez vagy alkalmazásműveletekhez van fenntartva."
     },
+    "editorHotkeyHint": "A szerkesztő megnyitására szolgáló billentyűparancs a(z) {tab} fülön tekinthető meg és módosítható.",
     "editorTab": "Szerkesztő",
     "externalMethods": "Egyéb indítási módok",
     "externalMethodsHint": "Használja ezt a parancsot terminálból, szkriptből vagy rendszerszintű billentyűparancsból. A tyco-ctl kliensnek telepítve és a PATH-ban elérhetőnek kell lennie. Linuxon a D-Bus is támogatott: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",

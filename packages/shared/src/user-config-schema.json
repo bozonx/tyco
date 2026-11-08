@@ -1114,7 +1114,8 @@
               "minimum": 1,
               "maximum": 9007199254740991
             },
-            "isQuickRequestSavingEnabled": { "type": "boolean" }
+            "isQuickRequestSavingEnabled": { "type": "boolean" },
+            "isChatSavingEnabled": { "type": "boolean" }
           },
           "required": ["storage"],
           "default": { "storage": "disk" }
@@ -1237,7 +1238,8 @@
               "minimum": 1,
               "maximum": 9007199254740991
             },
-            "isQuickRequestSavingEnabled": { "type": "boolean" }
+            "isQuickRequestSavingEnabled": { "type": "boolean" },
+            "isChatSavingEnabled": { "type": "boolean" }
           },
           "required": ["storage"],
           "default": { "storage": "disk" }
