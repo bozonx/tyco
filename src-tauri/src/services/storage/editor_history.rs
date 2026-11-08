@@ -239,7 +239,7 @@ impl<'a> EditorHistorySession<'a> {
 
     fn load(&self) -> Result<Vec<EditorHistoryItem>, AppError> {
         let mut items = self.store.read()?;
-        self.policy.enforce(&mut items, now_ms());
+        self.policy.limit(&mut items, now_ms());
         Ok(items)
     }
 

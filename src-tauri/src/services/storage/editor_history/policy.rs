@@ -95,13 +95,20 @@ impl EditorHistoryPolicy {
         }
     }
 
+    /// Drops the entries past the retention period or over the limit. Reads
+    /// apply only this: secrets are masked when entries are written, and the
+    /// journal is rewritten masked when the setting is turned on.
+    pub(super) fn limit(&self, history: &mut Vec<EditorHistoryItem>, now_ms: u64) {
+        let cutoff = self.cutoff_ms(now_ms);
+        history.retain(|item| item.created_at_ms >= cutoff);
+        history.truncate(self.max_entries);
+    }
+
     /// Brings stored entries in line with the settings: drops those past the
     /// retention period or over the limit and masks secrets when asked, also
     /// in entries stored before the setting was turned on.
     pub(super) fn enforce(&self, history: &mut Vec<EditorHistoryItem>, now_ms: u64) {
-        let cutoff = self.cutoff_ms(now_ms);
-        history.retain(|item| item.created_at_ms >= cutoff);
-        history.truncate(self.max_entries);
+        self.limit(history, now_ms);
         for item in history.iter_mut() {
             self.redact_item(item);
         }

@@ -165,6 +165,27 @@ fn save_editor_history_entry_masks_secrets_when_enabled() {
 }
 
 #[test]
+fn enforcing_the_policy_masks_secrets_stored_before_and_reads_keep_them() {
+    let dir = TestDir::new("enforce-secrets");
+    let location = HistoryLocation::at(&dir, LAPTOP);
+    let secret = "Here is my key: sk-proj-1234567890abcdef1234567890";
+    write_items(&own(&location), &[recent("a", secret)]);
+
+    // a read masks nothing: secrets are masked on the way to the disk
+    assert_eq!(texts(&location), [secret]);
+
+    let masking = EditorHistoryPolicy {
+        should_redact_secrets: true,
+        ..policy()
+    };
+    enforce_policy(&location, &masking, now_ms()).unwrap();
+
+    let raw = fs::read_to_string(own(&location)).unwrap();
+    assert!(raw.contains("[REDACTED API KEY]"));
+    assert!(!raw.contains("sk-proj-"));
+}
+
+#[test]
 fn save_editor_history_entry_stores_nothing_when_the_history_is_off() {
     let dir = TestDir::new("save-off");
     let location = HistoryLocation::at(&dir, LAPTOP);
