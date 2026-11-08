@@ -50,18 +50,19 @@ describe('SettingsCreateCommandModal.vue', () => {
 
   it('shows template options when AI task is selected and submits with template', async () => {
     const wrapper = mountModal()
-    const selects = wrapper.findAll('select')
-    expect(selects).toHaveLength(1)
+    expect(wrapper.find('select').exists()).toBe(false)
 
-    // select core.aiTask (index 2 in tools)
-    await selects[0].setValue('2')
+    // select core.aiTask (item at index 2)
+    const items = wrapper.findAll('.create-command-item')
+    expect(items).toHaveLength(3)
+    await items[2].trigger('click')
 
     // template select should now appear
-    const updatedSelects = wrapper.findAll('select')
-    expect(updatedSelects).toHaveLength(2)
+    const select = wrapper.find('select')
+    expect(select.exists()).toBe(true)
 
     // select "fix" template (index 1: 0=none, 1=fix, 2=translate, 3=style)
-    await updatedSelects[1].setValue('1')
+    await select.setValue('1')
 
     await wrapper.find('form').trigger('submit')
     expect(wrapper.emitted('submit')?.[0]).toEqual([

@@ -194,9 +194,7 @@ test.describe('command configuration', () => {
       .getByRole('button', { name: 'Create a command', exact: true })
       .click()
     const createModal = page.locator('.create-command-modal')
-    await createModal
-      .getByRole('combobox')
-      .selectOption({ label: 'Script / Command' })
+    await createModal.getByRole('radio', { name: /Script \/ Command/ }).click()
     await createModal
       .getByRole('button', { name: 'Confirm', exact: true })
       .click()

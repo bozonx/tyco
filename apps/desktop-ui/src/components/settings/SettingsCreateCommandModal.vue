@@ -10,14 +10,43 @@
         {{ t('commands.createModalTitle') }}
       </h3>
 
-      <FieldRow
-        class="create-command-field"
-        vertical
-        :separator="false"
-        :label="t('commands.toolTypeLabel')"
-      >
-        <FieldSelect v-model="selectedToolId" :options="toolOptions" />
-      </FieldRow>
+      <div class="create-command-section">
+        <span class="create-command-label">{{
+          t('commands.toolTypeLabel')
+        }}</span>
+        <div class="create-command-list" role="radiogroup">
+          <button
+            v-for="tool in tools"
+            :key="tool.id"
+            type="button"
+            role="radio"
+            :aria-checked="selectedToolId === tool.id"
+            class="create-command-item"
+            :class="{ 'is-selected': selectedToolId === tool.id }"
+            @click="selectedToolId = tool.id"
+          >
+            <AppIcon
+              :icon="tool.icon ?? defaultIconForTool(tool.id)"
+              size="lg"
+              class="create-command-item-icon"
+              aria-hidden="true"
+            />
+            <span class="create-command-item-copy">
+              <span class="create-command-item-name">{{ tool.name }}</span>
+              <span v-if="tool.description" class="create-command-item-desc">
+                {{ tool.description }}
+              </span>
+            </span>
+            <AppIcon
+              v-if="selectedToolId === tool.id"
+              icon="mdi:check"
+              size="md"
+              class="create-command-item-check"
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+      </div>
 
       <FieldRow
         v-if="selectedToolId === 'core.aiTask'"
@@ -51,6 +80,7 @@ import { computed, ref, useId, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import type { ControlOption } from '../../lib/ui/control-option'
+import AppIcon from '../common/AppIcon.vue'
 import BaseDialog from '../common/BaseDialog.vue'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
@@ -58,15 +88,19 @@ import FieldSelect from '../common/FieldSelect.vue'
 
 export type AiCommandTemplate = 'none' | 'fix' | 'translate' | 'style'
 
+export interface CreateCommandToolOption {
+  id: string
+  name: string
+  description?: string
+  icon?: string
+}
+
 export interface CreateCommandSubmitEvent {
   toolId: string
   template?: AiCommandTemplate
 }
 
-const props = defineProps<{
-  open: boolean
-  tools: { id: string; name: string }[]
-}>()
+const props = defineProps<{ open: boolean; tools: CreateCommandToolOption[] }>()
 
 const emit = defineEmits<{
   close: []
@@ -79,9 +113,12 @@ const titleId = useId()
 const selectedToolId = ref(props.tools[0]?.id ?? '')
 const selectedTemplate = ref<AiCommandTemplate>('none')
 
-const toolOptions = computed<ControlOption[]>(() =>
-  props.tools.map((tool) => ({ id: tool.id, name: tool.name }))
-)
+function defaultIconForTool(toolId: string): string {
+  if (toolId === 'script') return 'mdi:console'
+  if (toolId === 'webhook') return 'mdi:webhook'
+  if (toolId === 'core.aiTask') return 'mdi:robot-outline'
+  return 'mdi:puzzle-outline'
+}
 
 const templateOptions = computed<ControlOption[]>(() => [
   { id: 'none', name: t('commands.templateNone') },
@@ -119,7 +156,7 @@ function close() {
 
 <style scoped>
 .create-command-dialog {
-  width: min(100% - 2 * var(--space-lg), 28rem);
+  width: min(100% - 2 * var(--space-lg), 32rem);
 }
 
 .create-command-modal {
@@ -134,6 +171,82 @@ function close() {
   font-size: var(--text-title);
   font-weight: 600;
   line-height: var(--leading-tight);
+}
+
+.create-command-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.create-command-label {
+  font-size: var(--text-caption);
+  font-weight: 500;
+  color: var(--app-text-muted);
+}
+
+.create-command-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  max-height: 18rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: var(--space-xxs);
+}
+
+.create-command-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--app-border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--app-surface-raised);
+  text-align: start;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.create-command-item:hover {
+  background-color: var(--app-hover);
+  border-color: var(--app-border);
+}
+
+.create-command-item.is-selected {
+  border-color: var(--color-primary);
+  background-color: var(--app-surface-active, var(--app-hover));
+}
+
+.create-command-item-icon {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.create-command-item-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.create-command-item-name {
+  font-size: var(--text-body);
+  font-weight: 500;
+  color: var(--color-base-content);
+}
+
+.create-command-item-desc {
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
+}
+
+.create-command-item-check {
+  flex-shrink: 0;
+  color: var(--color-primary);
 }
 
 .create-command-field {

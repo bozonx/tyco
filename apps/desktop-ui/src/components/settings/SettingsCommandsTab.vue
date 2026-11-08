@@ -258,7 +258,14 @@ const availableTools = computed(() =>
   toolsStore
     .list()
     .filter((tool) => isCommandTool(tool))
-    .map((tool) => ({ id: tool.id, name: toolLabel(tool, t) }))
+    .map((tool) => ({
+      id: tool.id,
+      name: toolLabel(tool, t),
+      description: tool.descriptionKey
+        ? t(tool.descriptionKey)
+        : tool.description,
+      icon: tool.icon,
+    }))
 )
 
 function handleCreateCommand(event: CreateCommandSubmitEvent) {
