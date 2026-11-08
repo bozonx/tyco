@@ -57,10 +57,7 @@
         :ref="(el) => setItemRef(index, el)"
         role="row"
         class="search-grid-cell"
-        :class="{
-          'is-selected': index === selectedIndex,
-          'is-page-start': index % PAGE === 0,
-        }"
+        :class="{ 'is-selected': index === selectedIndex }"
         :aria-selected="index === selectedIndex"
         @click="emit('select', item)"
         @mouseenter="selectedIndex = index"
@@ -482,8 +479,6 @@ defineExpose({ focusSearch })
   flex: 0 0 auto;
   height: var(--search-grid-page-height);
   overflow-y: auto;
-  scroll-snap-type: y mandatory;
-  scroll-padding: 2px;
   overscroll-behavior: contain;
   padding: 2px;
   outline: none;
@@ -500,10 +495,6 @@ defineExpose({ focusSearch })
   grid-auto-rows: 8.5rem;
   flex: 1 1 0%;
   height: auto;
-}
-
-.search-grid-cell.is-page-start {
-  scroll-snap-align: start;
 }
 
 .search-grid-cell {
