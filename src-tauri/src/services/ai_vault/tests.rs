@@ -395,12 +395,26 @@ fn an_external_project_has_its_folder_on_each_device() {
         test_dir.to_str()
     );
 
-    // the folder of a project removed elsewhere is dropped
+    // a description a sync has not brought yet, or cannot be read now, keeps
+    // the folder of this device
+    let description = vault_root.join("projects/site/project.json");
+    let raw = std::fs::read_to_string(&description).unwrap();
+    std::fs::write(&description, "{ half written").unwrap();
+    assert!(list_projects(&vault_root, &laptop_paths)
+        .unwrap()
+        .is_empty());
     std::fs::remove_dir_all(vault_root.join("projects/site")).unwrap();
     assert!(list_projects(&vault_root, &laptop_paths)
         .unwrap()
         .is_empty());
-    assert!(laptop.snapshot().ai_project_paths.is_empty());
+    std::fs::create_dir_all(vault_root.join("projects/site")).unwrap();
+    std::fs::write(&description, raw).unwrap();
+    assert_eq!(
+        list_projects(&vault_root, &laptop_paths).unwrap()[0]
+            .target_path
+            .as_deref(),
+        test_dir.to_str()
+    );
 }
 
 #[test]

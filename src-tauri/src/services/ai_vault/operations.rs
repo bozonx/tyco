@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -314,19 +313,6 @@ impl ProjectPaths<'_> {
             }
         })
     }
-
-    /// Drops the folders of the projects that are gone, e.g. removed on
-    /// another device.
-    fn retain(&self, ids: &HashSet<&str>) -> Result<(), AppError> {
-        self.device.update(|file| {
-            if let Some(paths) = file.ai_project_paths.get_mut(self.vault_id) {
-                paths.retain(|id, _| ids.contains(id.as_str()));
-                if paths.is_empty() {
-                    file.ai_project_paths.remove(self.vault_id);
-                }
-            }
-        })
-    }
 }
 
 fn validate_project(project: &AiProject) -> Result<(), AppError> {
@@ -396,7 +382,9 @@ pub fn project_files_dir(vault_root: &Path, project: &AiProject) -> Result<PathB
 }
 
 /// The projects of the vault, each external one with its folder on this
-/// device, if it has one.
+/// device, if it has one. The folders of projects not found are kept: a
+/// `project.json` a sync has not brought yet, or cannot be read now, is not a
+/// deleted project. Only `delete_project` here forgets a folder.
 pub fn list_projects(vault_root: &Path, paths: &ProjectPaths) -> Result<Vec<AiProject>, AppError> {
     ensure_vault_dirs(vault_root)?;
     let mut projects: Vec<AiProject> = read_entries(&vault_root.join("projects"), PROJECT_FILE)?;
@@ -406,10 +394,6 @@ pub fn list_projects(vault_root: &Path, paths: &ProjectPaths) -> Result<Vec<AiPr
             .is_external
             .then(|| paths.get(&project.id))
             .flatten();
-    }
-    let ids: HashSet<&str> = projects.iter().map(|project| project.id.as_str()).collect();
-    if let Err(error) = paths.retain(&ids) {
-        log::warn!("Could not drop the folders of removed projects: {error}");
     }
     Ok(projects)
 }

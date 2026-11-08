@@ -300,8 +300,9 @@ itself: `deviceId` (a UUID made on the first start), `machineId`, through which
 a copy of the device folder on another machine gets a new `deviceId`,
 `userDataPath`, and the notes folders of plugins.
 
-`tyco-user.json` (`{ "formatVersion": 1 }`) marks the user data folder; its
-version counts layouts of the folder, apart from `configVersion`. The default
+`tyco-user.json` (`{ "formatVersion": 1, "dataId": "<uuid>" }`) marks the
+user data folder; its version counts layouts of the folder, apart from
+`configVersion`, and `dataId` is made once with the marker. The default
 folder gets it when it has none, and what it holds already is used as it is. A
 chosen folder that is missing, empty or has no marker is not connected:
 nothing is created or written there, every write fails with
@@ -362,7 +363,10 @@ created with the profile; reading a profile does not recreate missing memory.
 
 The vault is known by its marker `tyco-vault.json` (`formatVersion`, a
 `vaultId` made once). The default vault, `ai-vault/` of the user data folder,
-is made with its marker when it is not there. `aiVault.path` of a device is a
+is made with its marker when it is not there; that marker's `vaultId` is
+`data-<dataId>` (`default` for a data folder marker without `dataId`), so a
+device that finds the vault before a sync has brought its marker writes the
+same file and no conflicting copy with another id comes up. `aiVault.path` of a device is a
 folder of its own, e.g. for git, Obsidian or a sync of its own; it may not lie
 inside the user data folder. Such a folder is used only when it is there with
 its marker. Folders without a marker are not adopted automatically. A missing
@@ -374,7 +378,9 @@ The description of a project (`projects/<id>/project.json`: `id`, `name`,
 `description`, `isExternal`) is synced with the vault; the folder of an
 external project is set on each device, in `aiProjectPaths` of `device.json`
 by vault id, then project id. The webview gets it as `targetPath` of the
-project; a save without one keeps the folder the device has. Creating an
+project; a save without one keeps the folder the device has. A folder is
+forgotten only when the project is deleted on this device: a description a
+sync has not brought yet, or one that cannot be read, does not drop it. Creating an
 external project asks for its folder; a project without one on this device is
 listed as such, and its file tools fail with `projectUnavailable`, which the
 model gets as the result of the tool. The model sees `projects/<id>/` whatever

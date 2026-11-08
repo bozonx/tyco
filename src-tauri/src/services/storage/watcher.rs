@@ -134,7 +134,14 @@ fn is_storage_entry(relative: &Path) -> bool {
     match first {
         "config.json" | "tyco-user.json" | "tyco-vault.json" => parts.next().is_none(),
         "history" => parts.next().is_none_or(|name| name == "editor"),
-        "chats" | "plugins" | "profiles" | "projects" => true,
+        "chats" | "plugins" | "profiles" => true,
+        // The files of an internal project are the user's, read on demand:
+        // only its description is data of the app.
+        "projects" => match (parts.next(), parts.next(), parts.next()) {
+            (None, _, _) | (Some(_), None, _) => true,
+            (Some(_), Some(file), None) => file == "project.json",
+            _ => false,
+        },
         "ai-vault" => {
             let rest: PathBuf = parts.collect();
             rest.as_os_str().is_empty() || is_storage_entry(&rest)
@@ -592,14 +599,18 @@ mod tests {
             "unrelated",
             "ai-vault/.git",
             "ai-vault/profiles/p/workspace",
+            "ai-vault/projects/p/src",
             "chats/images",
         ] {
             std::fs::create_dir_all(dir.join(folder)).unwrap();
             std::fs::write(dir.join(folder).join("payload"), b"skip").unwrap();
         }
+        std::fs::write(dir.join("ai-vault/projects/p/notes.md"), b"skip").unwrap();
+        std::fs::write(dir.join("ai-vault/projects/p/project.json"), b"{}").unwrap();
         let mut files = Snapshot::new();
         scan(&dir.join(""), &mut files).unwrap();
-        assert_eq!(files.len(), 1);
+        assert_eq!(files.len(), 2);
+        assert!(files.contains_key(&dir.join("ai-vault/projects/p/project.json")));
         let image = dir.join("chats/images/payload");
         assert!(files[&image].starts_with("image:"));
         assert_ne!(files[&image], content_hash(b"skip"));

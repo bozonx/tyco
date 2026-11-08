@@ -31,6 +31,10 @@ pub const USER_FORMAT_VERSION: u64 = 1;
 #[serde(rename_all = "camelCase")]
 struct UserMarker {
     format_version: u64,
+    /// Made once with the marker and never changed: every device of the
+    /// folder reads the same one, see [`marker_data_id`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    data_id: Option<String>,
 }
 
 /// What a folder's marker says.
@@ -65,11 +69,22 @@ pub fn marker_version(dir: &Path) -> Option<u64> {
     }
 }
 
+/// The id of the data folder in `dir`, when its marker has one; markers
+/// made before the id have none.
+pub fn marker_data_id(dir: &Path) -> Option<String> {
+    let raw = fs::read(dir.join(USER_MARKER_FILE)).ok()?;
+    serde_json::from_slice::<UserMarker>(&raw)
+        .ok()?
+        .data_id
+        .filter(|id| !id.trim().is_empty())
+}
+
 pub fn write_marker(dir: &Path) -> Result<(), AppError> {
     write_private(
         &dir.join(USER_MARKER_FILE),
         &serde_json::to_string_pretty(&UserMarker {
             format_version: USER_FORMAT_VERSION,
+            data_id: Some(crate::services::random_id::new_uuid()),
         })?,
     )
 }
