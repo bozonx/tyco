@@ -69,9 +69,9 @@ describe('SettingsGlobalActionsTab.vue', () => {
       `,
     },
     FieldRow: {
-      props: ['label'],
+      props: ['label', 'info'],
       template: `
-        <div class="field-row-stub" :data-label="label">
+        <div class="field-row-stub" :data-label="label" :data-info="info">
           <slot name="info" />
           <slot />
         </div>
@@ -268,6 +268,9 @@ describe('SettingsGlobalActionsTab.vue', () => {
       await flushPromises()
 
       const holdRow = wrapper.find(`[data-label="settings.voiceHold.${id}"]`)
+      expect(holdRow.attributes('data-info')).toBe(
+        `settings.voiceHoldHint.${id}`
+      )
       const switchComponent = holdRow.findComponent({ name: 'FieldSwitch' })
       expect(switchComponent.props('modelValue')).toBe(false)
 

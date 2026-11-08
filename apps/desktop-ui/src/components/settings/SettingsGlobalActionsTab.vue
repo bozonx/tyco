@@ -76,7 +76,7 @@
         <FieldRow
           v-if="isHoldSupported && holdToggles[row.id]"
           :label="holdToggles[row.id].label"
-          :hint="holdToggles[row.id].hint"
+          :info="holdToggles[row.id].info"
         >
           <FieldSwitch
             :model-value="userConfig.stt[holdToggles[row.id].setting]"
@@ -555,18 +555,18 @@ const holdToggles = computed(
     {
       setting: 'isVoiceInputHoldEnabled' | 'isVoiceCommandsHoldEnabled'
       label: string
-      hint: string
+      info: string
     }
   > => ({
     voice: {
       setting: 'isVoiceInputHoldEnabled',
       label: t('settings.voiceHold.voice'),
-      hint: t('settings.voiceHoldHint.voice'),
+      info: t('settings.voiceHoldHint.voice'),
     },
     voiceCommands: {
       setting: 'isVoiceCommandsHoldEnabled',
       label: t('settings.voiceHold.voiceCommands'),
-      hint: t('settings.voiceHoldHint.voiceCommands'),
+      info: t('settings.voiceHoldHint.voiceCommands'),
     },
   })
 )
