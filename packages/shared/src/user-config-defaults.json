@@ -114,7 +114,29 @@
     { "action": null, "takesSelection": true },
     { "action": null, "takesSelection": true }
   ],
-  "commands": [],
+  "commands": [
+    {
+      "id": "reply-draft",
+      "name": "Draft a reply",
+      "description": "Drafts a reply to the selected message.",
+      "phrases": [],
+      "isVoiceEnabled": false,
+      "toolId": "core.aiTask",
+      "toolConfig": {
+        "prompt": "Input: a message the user received (an email or a chat message).\n\nTask: write the user's reply to it.\n- Answer every question and request in the message.\n- Where the user must decide something, leave a placeholder such as [date] or [yes/no].\n- Match the formality of the message.\n\nOutput: the reply text only, ready to send, in the language of the message.",
+        "allowedCommandIds": [],
+        "maxSteps": 5
+      },
+      "isLlmArgumentParsingEnabled": false,
+      "isLlmPreTransformEnabled": false,
+      "llmPreTransformPrompt": "",
+      "outputAction": "showMenu",
+      "isOutputLogged": false,
+      "isAvailableExternally": false,
+      "externalTimeoutSec": 120,
+      "isEnabled": true
+    }
+  ],
   "variables": [],
   "variableValues": {},
   "llm": {
@@ -193,13 +215,32 @@
       {
         "id": "deep-edit",
         "name": "Deep edit",
-        "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+        "rule": "Input: a draft written in a hurry; it may be wordy or clumsy.\n\nTask:\n- Rephrase awkward sentences so they read naturally.\n- Remove repetition and filler words.\n- Add missing words (pronouns, connectors) where the meaning needs them.\n\nKeep: the meaning, facts, tone and language of the draft. Add no new ideas.\n\nOutput: the edited text only, no longer than the draft."
       }
     ],
     "slots": { "q": "deep-edit" }
   },
-  "styling": { "items": [], "slots": {} },
-  "chatPrompts": { "isSentImmediately": false, "items": [] },
+  "styling": {
+    "items": [
+      {
+        "id": "business",
+        "name": "Business",
+        "rule": "Style: polite, professional business correspondence.\n\n- A neutral, respectful tone; no slang, jokes or emoji.\n- Short, clear sentences; the main point first.\n- Keep the greeting and closing if the text has them; do not add new ones.\n\nOutput: the restyled text only, in the language of the original."
+      }
+    ],
+    "slots": { "q": "business" }
+  },
+  "chatPrompts": {
+    "isSentImmediately": false,
+    "items": [
+      {
+        "id": "explain",
+        "name": "Explain simply",
+        "profileId": "",
+        "rule": "Input: the text or question below.\n\nTask: explain it in plain words to someone new to the topic.\n\nOutput:\n- One sentence with the main idea.\n- Three to five bullet points with the key details.\n- A short everyday example, if it helps.\n\nAnswer in the language of the input."
+      }
+    ]
+  },
   "favorites": { "items": [] },
   "aiVault": { "path": "" },
   "aiProfiles": { "chatHistory": { "storage": "disk" } },
