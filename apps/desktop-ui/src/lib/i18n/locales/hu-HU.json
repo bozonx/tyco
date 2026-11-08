@@ -22,7 +22,9 @@
     "removeContext": "Kontextus eltávolítása",
     "restoreContext": "Kontextus visszaállítása"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Fájl csatolása",
     "alertCaution": "Vigyázat",
@@ -189,7 +191,9 @@
       "noCommands": "Még nincsenek egyéni parancsok konfigurálva.",
       "noCommandsHint": "Először hozzon létre parancsokat a Beállítások → Parancsok menüben."
     },
-    "replyBlocks": { "toolLabel": "Válaszblokkok" }
+    "replyBlocks": {
+      "toolLabel": "Válaszblokkok"
+    }
   },
   "commands": {
     "advanced": "Speciális",
@@ -448,6 +452,13 @@
     "empty": "Az előzmények üresek",
     "emptyHint": "Itt tárolódnak a beírt szövegek, a feldolgozás eredményei és a fordítások. Bármely bejegyzés gyorsan másolható vagy visszaállítható. Az MI-nek feltett kérdések a csevegésekben maradnak.",
     "expand": "Összes megjelenítése",
+    "filterAll": "Összes",
+    "filterOrigin": "Forrás",
+    "filterQuickInput": "Gyors bevitel",
+    "filterUnsent": "Nem elküldött",
+    "filterUnsentHint": "Csak a soha be nem illesztett vagy ki nem másolt szövegek",
+    "filterVoice": "Hang",
+    "interrupted": "megszakítva",
     "itemRemoved": "Bejegyzés eltávolítva",
     "kindAiTask": "MI-feladat",
     "kindBeforeAiTask": "MI-feladat előtt",
@@ -462,6 +473,7 @@
     "kindVoiceInput": "Hangbevitel",
     "kindVoiceTranscript": "Nyers átirat",
     "loadFailed": "Az előzményeket nem sikerült betölteni.",
+    "notSent": "nem küldve",
     "nothingFound": "Nincs találat",
     "operationFailed": "Az előzményekkel kapcsolatos művelet sikertelen. Az adatai nem változtak.",
     "original": "Eredeti",
@@ -469,18 +481,12 @@
     "originalTranscript": "Nyers átirat",
     "placeIntoEditor": "Betöltés a szerkesztőbe",
     "removeItem": "Eltávolítás az előzményekből",
+    "requestFailed": "kérési hiba",
     "retry": "Újra",
-    "sent": "elküldve",
     "textsDisabled": "A szövegek mentése ki van kapcsolva a beállításokban.",
     "today": "Ma",
     "undo": "Visszavonás",
-    "yesterday": "Tegnap",
-    "filterOrigin": "Forrás",
-    "filterAll": "Összes",
-    "filterQuickInput": "Gyors bevitel",
-    "filterVoice": "Hang",
-    "filterUnsent": "Nem elküldött",
-    "filterUnsentHint": "Csak a soha be nem illesztett vagy ki nem másolt szövegek"
+    "yesterday": "Tegnap"
   },
   "input": {
     "historySearchPlaceholder": "Keresés az előzményekben...",
@@ -615,7 +621,10 @@
       "command": "A parancs változatlanul hagyta a szöveget",
       "correction": "Nem található hiba"
     },
-    "working": { "command": "A parancs fut…", "correction": "Javítás…" }
+    "working": {
+      "command": "A parancs fut…",
+      "correction": "Javítás…"
+    }
   },
   "settings": {
     "accessAllow": "Engedélyezés",
@@ -1263,7 +1272,9 @@
       "actionPages": "Műveletmenü-oldalak"
     }
   },
-  "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
+  "shortcuts": {
+    "insertIntoEditor": "Beillesztés a szerkesztőbe"
+  },
   "theme": {
     "auto": "Rendszer szerint",
     "dark": "Sötét",
@@ -1403,7 +1414,9 @@
     "phrasesPlaceholder": "Példamondatok, soronként egy"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "kérdezd meg a csevegésben" },
+    "actions": {
+      "askInChat": "kérdezd meg a csevegésben"
+    },
     "languages": {
       "cs-CZ": "Cseh",
       "de-DE": "németre",
@@ -1433,7 +1446,9 @@
     },
     "translate": "fordítsd le"
   },
-  "window": { "clickToFocus": "Kattintson a folytatáshoz" },
+  "window": {
+    "clickToFocus": "Kattintson a folytatáshoz"
+  },
   "write": {
     "alreadyCorrected": "A szöveg már javítva van",
     "cancel": "Mégse",
@@ -1492,7 +1507,9 @@
     "valueOnDeviceHint": "A többi eszköz saját értéket állít be. Később is kitölthető.",
     "valuePlaceholder": "Útvonal, cím vagy más szöveg"
   },
-  "favorites": { "noMatches": "Nincsenek egyező kedvencek" },
+  "favorites": {
+    "noMatches": "Nincsenek egyező kedvencek"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Beszúrás az ablakba",
     "insertIntoEditor": "A szerkesztőbe",

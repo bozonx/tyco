@@ -22,7 +22,9 @@
     "removeContext": "Odebrat kontext",
     "restoreContext": "Obnovit kontext"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Přiložit soubor",
     "alertCaution": "Pozor",
@@ -189,7 +191,9 @@
       "noCommands": "Zatím nejsou nakonfigurovány žádné uživatelské příkazy.",
       "noCommandsHint": "Nejprve vytvořte příkazy v Nastavení → Příkazy."
     },
-    "replyBlocks": { "toolLabel": "Varianty odpovědí" }
+    "replyBlocks": {
+      "toolLabel": "Varianty odpovědí"
+    }
   },
   "commands": {
     "advanced": "Pokročilé",
@@ -448,6 +452,13 @@
     "empty": "Historie je prázdná",
     "emptyHint": "Zde se ukládají zadané texty, výsledky zpracování a překlady. Každý záznam lze rychle zkopírovat nebo obnovit. Dotazy na AI zůstávají v chatech.",
     "expand": "Zobrazit vše",
+    "filterAll": "Vše",
+    "filterOrigin": "Zdroj",
+    "filterQuickInput": "Rychlé zadávání",
+    "filterUnsent": "Neodeslané",
+    "filterUnsentHint": "Jen texty, které nebyly vloženy ani zkopírovány",
+    "filterVoice": "Hlas",
+    "interrupted": "přerušeno",
     "itemRemoved": "Záznam odstraněn",
     "kindAiTask": "Úloha AI",
     "kindBeforeAiTask": "Před úlohou AI",
@@ -462,6 +473,7 @@
     "kindVoiceInput": "Hlasové zadávání",
     "kindVoiceTranscript": "Surový přepis",
     "loadFailed": "Historii se nepodařilo načíst.",
+    "notSent": "neodesláno",
     "nothingFound": "Nic nenalezeno",
     "operationFailed": "Operace s historií selhala. Vaše data nebyla změněna.",
     "original": "Originál",
@@ -469,18 +481,12 @@
     "originalTranscript": "Surový přepis",
     "placeIntoEditor": "Vložit do editoru",
     "removeItem": "Odebrat z historie",
+    "requestFailed": "chyba požadavku",
     "retry": "Zkusit znovu",
-    "sent": "odesláno",
     "textsDisabled": "Ukládání textů je v nastavení vypnuto.",
     "today": "Dnes",
     "undo": "Zpět",
-    "yesterday": "Včera",
-    "filterOrigin": "Zdroj",
-    "filterAll": "Vše",
-    "filterQuickInput": "Rychlé zadávání",
-    "filterVoice": "Hlas",
-    "filterUnsent": "Neodeslané",
-    "filterUnsentHint": "Jen texty, které nebyly vloženy ani zkopírovány"
+    "yesterday": "Včera"
   },
   "input": {
     "historySearchPlaceholder": "Hledat v historii...",
@@ -601,7 +607,10 @@
     "cancelled": "Zrušeno",
     "done": "Hotovo",
     "emptyResult": "Model vrátil prázdný výsledek",
-    "failed": { "command": "Příkaz selhal", "correction": "Oprava selhala" },
+    "failed": {
+      "command": "Příkaz selhal",
+      "correction": "Oprava selhala"
+    },
     "focusChanged": "Mezitím se změnilo okno, proto byl výsledek zkopírován do schránky",
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
@@ -612,7 +621,10 @@
       "command": "Příkaz ponechal text beze změny",
       "correction": "Nenalezeny žádné chyby"
     },
-    "working": { "command": "Spouští se příkaz…", "correction": "Opravuje se…" }
+    "working": {
+      "command": "Spouští se příkaz…",
+      "correction": "Opravuje se…"
+    }
   },
   "settings": {
     "accessAllow": "Povolit",
@@ -1260,7 +1272,9 @@
       "actionPages": "Stránky nabídky akcí"
     }
   },
-  "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
+  "shortcuts": {
+    "insertIntoEditor": "Vložit do editoru"
+  },
   "theme": {
     "auto": "Podle systému",
     "dark": "Tmavý",
@@ -1400,7 +1414,9 @@
     "phrasesPlaceholder": "Příklady frází, jedna na řádek"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "zeptej se v chatu" },
+    "actions": {
+      "askInChat": "zeptej se v chatu"
+    },
     "languages": {
       "cs-CZ": "Czech",
       "de-DE": "němčiny",
@@ -1430,7 +1446,9 @@
     },
     "translate": "přelož do"
   },
-  "window": { "clickToFocus": "Klikněte pro pokračování" },
+  "window": {
+    "clickToFocus": "Klikněte pro pokračování"
+  },
   "write": {
     "alreadyCorrected": "Text je již opraven",
     "cancel": "Zrušit",
@@ -1489,7 +1507,9 @@
     "valueOnDeviceHint": "Ostatní zařízení si nastavují vlastní hodnotu. Lze ji vyplnit později.",
     "valuePlaceholder": "Cesta, adresa nebo jiný text"
   },
-  "favorites": { "noMatches": "Žádné odpovídající oblíbené" },
+  "favorites": {
+    "noMatches": "Žádné odpovídající oblíbené"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Vložit do okna",
     "insertIntoEditor": "Do editoru",

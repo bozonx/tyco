@@ -22,7 +22,9 @@
     "removeContext": "Rimuovi contesto",
     "restoreContext": "Ripristina contesto"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Allega file",
     "alertCaution": "Attenzione",
@@ -189,7 +191,9 @@
       "noCommands": "Nessun comando personalizzato ancora configurato.",
       "noCommandsHint": "Crea prima i comandi in Impostazioni → Comandi."
     },
-    "replyBlocks": { "toolLabel": "Blocchi di risposta" }
+    "replyBlocks": {
+      "toolLabel": "Blocchi di risposta"
+    }
   },
   "commands": {
     "advanced": "Avanzate",
@@ -448,6 +452,13 @@
     "empty": "La cronologia è vuota",
     "emptyHint": "Qui vengono salvati testi inseriti, risultati delle elaborazioni e traduzioni. Ogni voce può essere copiata o ripristinata rapidamente. Le domande all’IA restano nelle chat.",
     "expand": "Mostra tutto",
+    "filterAll": "Tutti",
+    "filterOrigin": "Origine",
+    "filterQuickInput": "Inserimento rapido",
+    "filterUnsent": "Non inviati",
+    "filterUnsentHint": "Solo i testi mai inseriti né copiati",
+    "filterVoice": "Voce",
+    "interrupted": "interrotto",
     "itemRemoved": "Voce rimossa",
     "kindAiTask": "Attività IA",
     "kindBeforeAiTask": "Prima dell’attività IA",
@@ -462,6 +473,7 @@
     "kindVoiceInput": "Input vocale",
     "kindVoiceTranscript": "Trascrizione grezza",
     "loadFailed": "Impossibile caricare la cronologia.",
+    "notSent": "non inviato",
     "nothingFound": "Nessun risultato",
     "operationFailed": "L’operazione sulla cronologia non è riuscita. I tuoi dati non sono stati modificati.",
     "original": "Originale",
@@ -469,18 +481,12 @@
     "originalTranscript": "Trascrizione grezza",
     "placeIntoEditor": "Metti nell’editor",
     "removeItem": "Rimuovi dalla cronologia",
+    "requestFailed": "errore di richiesta",
     "retry": "Riprova",
-    "sent": "inviato",
     "textsDisabled": "Il salvataggio dei testi è disattivato nelle impostazioni.",
     "today": "Oggi",
     "undo": "Annulla",
-    "yesterday": "Ieri",
-    "filterOrigin": "Origine",
-    "filterAll": "Tutti",
-    "filterQuickInput": "Inserimento rapido",
-    "filterVoice": "Voce",
-    "filterUnsent": "Non inviati",
-    "filterUnsentHint": "Solo i testi mai inseriti né copiati"
+    "yesterday": "Ieri"
   },
   "input": {
     "historySearchPlaceholder": "Cerca nella cronologia...",
@@ -1266,7 +1272,9 @@
       "actionPages": "Pagine del menu azioni"
     }
   },
-  "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserisci nell’editor"
+  },
   "theme": {
     "auto": "Come nel sistema",
     "dark": "Scuro",
@@ -1406,7 +1414,9 @@
     "phrasesPlaceholder": "Frasi di esempio, una per riga"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "chiedi nella chat" },
+    "actions": {
+      "askInChat": "chiedi nella chat"
+    },
     "languages": {
       "cs-CZ": "Ceco",
       "de-DE": "tedesco",
@@ -1436,7 +1446,9 @@
     },
     "translate": "traduci in"
   },
-  "window": { "clickToFocus": "Fai clic per continuare" },
+  "window": {
+    "clickToFocus": "Fai clic per continuare"
+  },
   "write": {
     "alreadyCorrected": "Il testo è già corretto",
     "cancel": "Annulla",
@@ -1495,7 +1507,9 @@
     "valueOnDeviceHint": "Gli altri dispositivi impostano il proprio valore. Può essere compilato più tardi.",
     "valuePlaceholder": "Un percorso, un indirizzo o altro testo"
   },
-  "favorites": { "noMatches": "Nessun preferito corrispondente" },
+  "favorites": {
+    "noMatches": "Nessun preferito corrispondente"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Inserisci nella finestra",
     "insertIntoEditor": "Nell'editor",

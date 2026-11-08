@@ -86,3 +86,53 @@ export function getEditorHistoryView(
     isResultApplied: !!item.isResultApplied,
   }
 }
+
+export type HistoryNoteTone = 'success' | 'error' | 'muted'
+
+export interface EditorHistoryNote {
+  labelKey: string
+  tone: HistoryNoteTone
+  icon?: string
+}
+
+/**
+ * Note and status indicator for an entry.
+ * Normally sent items have no badge/checkmark.
+ * Failed, interrupted, or unsent items are marked in red.
+ */
+export function getEditorHistoryNote(
+  item: Pick<EditorHistoryItem, 'kind' | 'operation' | 'result'> &
+    Partial<Pick<EditorHistoryItem, 'isResultApplied'>>
+): EditorHistoryNote | undefined {
+  if (item.kind === 'output' || item.isResultApplied) {
+    return undefined
+  }
+
+  if (item.kind === 'draft') {
+    return {
+      labelKey: 'history.interrupted',
+      tone: 'error',
+      icon: 'mdi:alert-circle-outline',
+    }
+  }
+
+  if (item.kind === 'source') {
+    if (!item.result) {
+      return {
+        labelKey:
+          item.operation === 'voiceCorrection'
+            ? 'history.interrupted'
+            : 'history.requestFailed',
+        tone: 'error',
+        icon: 'mdi:alert-circle-outline',
+      }
+    }
+    return {
+      labelKey: 'history.notSent',
+      tone: 'error',
+      icon: 'mdi:alert-circle-outline',
+    }
+  }
+
+  return undefined
+}

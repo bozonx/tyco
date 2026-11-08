@@ -22,7 +22,9 @@
     "removeContext": "移除上下文",
     "restoreContext": "還原上下文"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "附加檔案",
     "alertCaution": "注意",
@@ -189,7 +191,9 @@
       "noCommands": "尚未設定自訂命令。",
       "noCommandsHint": "請先在設定 → 命令中建立命令。"
     },
-    "replyBlocks": { "toolLabel": "回覆區塊" }
+    "replyBlocks": {
+      "toolLabel": "回覆區塊"
+    }
   },
   "commands": {
     "advanced": "進階",
@@ -448,6 +452,13 @@
     "empty": "歷史記錄為空",
     "emptyHint": "這裡會儲存輸入的文字、處理結果與翻譯。任何紀錄都能快速複製或還原。向 AI 提出的問題儲存在聊天中。",
     "expand": "顯示全部",
+    "filterAll": "全部",
+    "filterOrigin": "來源",
+    "filterQuickInput": "快速輸入",
+    "filterUnsent": "未傳送",
+    "filterUnsentHint": "僅顯示從未插入或複製的文字",
+    "filterVoice": "語音",
+    "interrupted": "已中斷",
     "itemRemoved": "已移除項目",
     "kindAiTask": "AI 任務",
     "kindBeforeAiTask": "AI 任務前",
@@ -462,6 +473,7 @@
     "kindVoiceInput": "語音輸入",
     "kindVoiceTranscript": "原始逐字稿",
     "loadFailed": "無法載入歷史記錄。",
+    "notSent": "未傳送",
     "nothingFound": "查無結果",
     "operationFailed": "歷史記錄操作失敗。您的資料未變更。",
     "original": "原始內容",
@@ -469,18 +481,12 @@
     "originalTranscript": "原始逐字稿",
     "placeIntoEditor": "放入編輯器",
     "removeItem": "從歷史記錄中移除",
+    "requestFailed": "請求失敗",
     "retry": "重試",
-    "sent": "已發送",
     "textsDisabled": "已在設定中關閉文字儲存。",
     "today": "今天",
     "undo": "復原",
-    "yesterday": "昨天",
-    "filterOrigin": "來源",
-    "filterAll": "全部",
-    "filterQuickInput": "快速輸入",
-    "filterVoice": "語音",
-    "filterUnsent": "未傳送",
-    "filterUnsentHint": "僅顯示從未插入或複製的文字"
+    "yesterday": "昨天"
   },
   "input": {
     "historySearchPlaceholder": "搜尋歷史記錄...",
@@ -601,7 +607,10 @@
     "cancelled": "已取消",
     "done": "完成",
     "emptyResult": "模型傳回了空白結果",
-    "failed": { "command": "命令執行失敗", "correction": "校對失敗" },
+    "failed": {
+      "command": "命令執行失敗",
+      "correction": "校對失敗"
+    },
     "focusChanged": "視窗在此期間已切換，因此結果已複製到剪貼簿",
     "noSelection": "未選取任何內容",
     "noTarget": "沒有任何應用程式視窗取得焦點",
@@ -612,7 +621,10 @@
       "command": "命令未對文字進行任何變更",
       "correction": "未發現任何錯誤"
     },
-    "working": { "command": "正在執行命令…", "correction": "正在校對…" }
+    "working": {
+      "command": "正在執行命令…",
+      "correction": "正在校對…"
+    }
   },
   "settings": {
     "accessAllow": "允許",
@@ -1260,7 +1272,9 @@
       "actionPages": "動作選單頁面"
     }
   },
-  "shortcuts": { "insertIntoEditor": "插入至編輯器" },
+  "shortcuts": {
+    "insertIntoEditor": "插入至編輯器"
+  },
   "theme": {
     "auto": "跟隨系統",
     "dark": "深色",
@@ -1400,7 +1414,9 @@
     "phrasesPlaceholder": "範例詞，每行一個"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "在聊天中提問;在對話中提問" },
+    "actions": {
+      "askInChat": "在聊天中提問;在對話中提問"
+    },
     "languages": {
       "cs-CZ": "捷克語",
       "de-DE": "德文;德語",
@@ -1430,7 +1446,9 @@
     },
     "translate": "翻譯成;翻譯為;翻譯到"
   },
-  "window": { "clickToFocus": "按一下以繼續" },
+  "window": {
+    "clickToFocus": "按一下以繼續"
+  },
   "write": {
     "alreadyCorrected": "文字已經過校對",
     "cancel": "取消",
@@ -1489,7 +1507,9 @@
     "valueOnDeviceHint": "其他裝置各自設定值。也可以稍後填寫。",
     "valuePlaceholder": "路徑、位址或其他文字"
   },
-  "favorites": { "noMatches": "沒有相符的收藏" },
+  "favorites": {
+    "noMatches": "沒有相符的收藏"
+  },
   "replyBlocks": {
     "insertIntoWindow": "插入至視窗",
     "insertIntoEditor": "至編輯器",

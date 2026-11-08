@@ -22,7 +22,9 @@
     "removeContext": "Ukloni kontekst",
     "restoreContext": "Vrati kontekst"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Priloži datoteku",
     "alertCaution": "Oprez",
@@ -189,7 +191,9 @@
       "noCommands": "Još nema konfiguriranih prilagođenih naredbi.",
       "noCommandsHint": "Prvo stvorite naredbe u Postavke → Naredbe."
     },
-    "replyBlocks": { "toolLabel": "Blokovi odgovora" }
+    "replyBlocks": {
+      "toolLabel": "Blokovi odgovora"
+    }
   },
   "commands": {
     "advanced": "Napredno",
@@ -448,6 +452,13 @@
     "empty": "Povijest je prazna",
     "emptyHint": "Ovdje se spremaju uneseni tekstovi, rezultati obrade i prijevodi. Svaki zapis može se brzo kopirati ili vratiti. Pitanja za AI čuvaju se u razgovorima.",
     "expand": "Prikaži sve",
+    "filterAll": "Sve",
+    "filterOrigin": "Izvor",
+    "filterQuickInput": "Brzi unos",
+    "filterUnsent": "Neposlano",
+    "filterUnsentHint": "Samo tekstovi koji nikad nisu umetnuti ni kopirani",
+    "filterVoice": "Glas",
+    "interrupted": "prekinuto",
     "itemRemoved": "Unos je uklonjen",
     "kindAiTask": "AI zadatak",
     "kindBeforeAiTask": "Prije AI zadatka",
@@ -462,6 +473,7 @@
     "kindVoiceInput": "Glasovni unos",
     "kindVoiceTranscript": "Neobrađeni transkript",
     "loadFailed": "Povijest se nije mogla učitati.",
+    "notSent": "nije poslano",
     "nothingFound": "Ništa nije pronađeno",
     "operationFailed": "Radnja s poviješću nije uspjela. Vaši podaci nisu promijenjeni.",
     "original": "Izvornik",
@@ -469,18 +481,12 @@
     "originalTranscript": "Neobrađeni transkript",
     "placeIntoEditor": "Stavi u uređivač",
     "removeItem": "Ukloni iz povijesti",
+    "requestFailed": "pogreška zahtjeva",
     "retry": "Pokušaj ponovno",
-    "sent": "poslano",
     "textsDisabled": "Spremanje tekstova isključeno je u postavkama.",
     "today": "Danas",
     "undo": "Poništi",
-    "yesterday": "Jučer",
-    "filterOrigin": "Izvor",
-    "filterAll": "Sve",
-    "filterQuickInput": "Brzi unos",
-    "filterVoice": "Glas",
-    "filterUnsent": "Neposlano",
-    "filterUnsentHint": "Samo tekstovi koji nikad nisu umetnuti ni kopirani"
+    "yesterday": "Jučer"
   },
   "input": {
     "historySearchPlaceholder": "Pretraži povijest...",
@@ -1266,7 +1272,9 @@
       "actionPages": "Stranice izbornika radnji"
     }
   },
-  "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
+  "shortcuts": {
+    "insertIntoEditor": "Umetni u uređivač"
+  },
   "theme": {
     "auto": "Kao u sustavu",
     "dark": "Tamna",
@@ -1406,7 +1414,9 @@
     "phrasesPlaceholder": "Primjeri fraza, jedna po retku"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "pitaj u chatu" },
+    "actions": {
+      "askInChat": "pitaj u chatu"
+    },
     "languages": {
       "cs-CZ": "Češki",
       "de-DE": "njemački",
@@ -1436,7 +1446,9 @@
     },
     "translate": "prevedi na"
   },
-  "window": { "clickToFocus": "Kliknite za nastavak" },
+  "window": {
+    "clickToFocus": "Kliknite za nastavak"
+  },
   "write": {
     "alreadyCorrected": "Tekst je već ispravljen",
     "cancel": "Odustani",
@@ -1495,7 +1507,9 @@
     "valueOnDeviceHint": "Drugi uređaji postavljaju vlastitu vrijednost. Može se unijeti kasnije.",
     "valuePlaceholder": "Putanja, adresa ili drugi tekst"
   },
-  "favorites": { "noMatches": "Nema podudarnih favorita" },
+  "favorites": {
+    "noMatches": "Nema podudarnih favorita"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Umetni u prozor",
     "insertIntoEditor": "U uređivač",

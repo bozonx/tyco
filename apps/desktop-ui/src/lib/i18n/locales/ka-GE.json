@@ -22,7 +22,9 @@
     "removeContext": "კონტექსტის ამოშლა",
     "restoreContext": "კონტექსტის აღდგენა"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "ფაილის მიმაგრება",
     "alertCaution": "ყურადღება",
@@ -189,7 +191,9 @@
       "noCommands": "მორგებული ბრძანებები ჯერ არ არის კონფიგურირებული.",
       "noCommandsHint": "ჯერ შექმენით ბრძანებები პარამეტრები → ბრძანებები განყოფილებაში."
     },
-    "replyBlocks": { "toolLabel": "პასუხის ბლოკები" }
+    "replyBlocks": {
+      "toolLabel": "პასუხის ბლოკები"
+    }
   },
   "commands": {
     "advanced": "დამატებითი",
@@ -448,6 +452,13 @@
     "empty": "ისტორია ცარიელია",
     "emptyHint": "აქ ინახება შეყვანილი ტექსტები, დამუშავების შედეგები და თარგმანები. ნებისმიერი ჩანაწერის სწრაფად კოპირება ან აღდგენაა შესაძლებელი. AI-სთვის დასმული კითხვები ჩატებში ინახება.",
     "expand": "ყველას ჩვენება",
+    "filterAll": "ყველა",
+    "filterOrigin": "წყარო",
+    "filterQuickInput": "სწრაფი შეყვანა",
+    "filterUnsent": "გაუგზავნელი",
+    "filterUnsentHint": "მხოლოდ ტექსტები, რომლებიც არასოდეს ჩასმულა ან დაკოპირებულა",
+    "filterVoice": "ხმა",
+    "interrupted": "შეწყდა",
     "itemRemoved": "ჩანაწერი მოცილდა",
     "kindAiTask": "AI დავალება",
     "kindBeforeAiTask": "AI დავალებამდე",
@@ -462,6 +473,7 @@
     "kindVoiceInput": "ხმოვანი შეყვანა",
     "kindVoiceTranscript": "ნედლი ტრანსკრიპტი",
     "loadFailed": "ისტორიის ჩატვირთვა ვერ მოხერხდა.",
+    "notSent": "არ გაიგზავნა",
     "nothingFound": "ვერაფერი მოიძებნა",
     "operationFailed": "ისტორიის ოპერაცია ვერ შესრულდა. თქვენი მონაცემები არ შეცვლილა.",
     "original": "ორიგინალი",
@@ -469,18 +481,12 @@
     "originalTranscript": "ნედლი ტრანსკრიპტი",
     "placeIntoEditor": "რედაქტორში ჩასმა",
     "removeItem": "ისტორიიდან მოცილება",
+    "requestFailed": "მოთხოვნის შეცდომა",
     "retry": "ხელახლა ცდა",
-    "sent": "გაგზავნილია",
     "textsDisabled": "ტექსტების შენახვა პარამეტრებში გამორთულია.",
     "today": "დღეს",
     "undo": "დაბრუნება",
-    "yesterday": "გუშინ",
-    "filterOrigin": "წყარო",
-    "filterAll": "ყველა",
-    "filterQuickInput": "სწრაფი შეყვანა",
-    "filterVoice": "ხმა",
-    "filterUnsent": "გაუგზავნელი",
-    "filterUnsentHint": "მხოლოდ ტექსტები, რომლებიც არასოდეს ჩასმულა ან დაკოპირებულა"
+    "yesterday": "გუშინ"
   },
   "input": {
     "historySearchPlaceholder": "ისტორიაში ძიება...",
@@ -615,7 +621,10 @@
       "command": "ბრძანებამ ტექსტი უცვლელად დატოვა",
       "correction": "შეცდომები ვერ მოიძებნა"
     },
-    "working": { "command": "ბრძანება სრულდება…", "correction": "სწორდება…" }
+    "working": {
+      "command": "ბრძანება სრულდება…",
+      "correction": "სწორდება…"
+    }
   },
   "settings": {
     "accessAllow": "დაშვება",
@@ -1263,7 +1272,9 @@
       "actionPages": "მოქმედებების მენიუს გვერდები"
     }
   },
-  "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
+  "shortcuts": {
+    "insertIntoEditor": "რედაქტორში ჩასმა"
+  },
   "theme": {
     "auto": "სისტემის მიხედვით",
     "dark": "მუქი",
@@ -1403,7 +1414,9 @@
     "phrasesPlaceholder": "სანიმუშო ფრაზები, თითო ხაზზე"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "იკითხე ჩატში" },
+    "actions": {
+      "askInChat": "იკითხე ჩატში"
+    },
     "languages": {
       "cs-CZ": "ჩეხური",
       "de-DE": "გერმანულად",
@@ -1433,7 +1446,9 @@
     },
     "translate": "თარგმნე"
   },
-  "window": { "clickToFocus": "დააწკაპუნეთ გასაგრძელებლად" },
+  "window": {
+    "clickToFocus": "დააწკაპუნეთ გასაგრძელებლად"
+  },
   "write": {
     "alreadyCorrected": "ტექსტი უკვე შესწორებულია",
     "cancel": "გაუქმება",
@@ -1492,7 +1507,9 @@
     "valueOnDeviceHint": "სხვა მოწყობილობები საკუთარ მნიშვნელობას აყენებენ. შეიძლება მოგვიანებით შეივსოს.",
     "valuePlaceholder": "გზა, მისამართი ან სხვა ტექსტი"
   },
-  "favorites": { "noMatches": "Შესატყვისი რჩეულები არ არის" },
+  "favorites": {
+    "noMatches": "Შესატყვისი რჩეულები არ არის"
+  },
   "replyBlocks": {
     "insertIntoWindow": "ფანჯარაში ჩასმა",
     "insertIntoEditor": "რედაქტორში",

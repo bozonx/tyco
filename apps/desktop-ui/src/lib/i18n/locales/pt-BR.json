@@ -22,7 +22,9 @@
     "removeContext": "Remover contexto",
     "restoreContext": "Restaurar contexto"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Anexar arquivo",
     "alertCaution": "Cuidado",
@@ -189,7 +191,9 @@
       "noCommands": "Nenhum comando personalizado configurado ainda.",
       "noCommandsHint": "Crie comandos primeiro em Configurações → Comandos."
     },
-    "replyBlocks": { "toolLabel": "Blocos de resposta" }
+    "replyBlocks": {
+      "toolLabel": "Blocos de resposta"
+    }
   },
   "commands": {
     "advanced": "Avançado",
@@ -448,6 +452,13 @@
     "empty": "O histórico está vazio",
     "emptyHint": "Aqui ficam os textos digitados, os resultados de processamento e as traduções. Qualquer entrada pode ser copiada ou restaurada rapidamente. Perguntas à IA ficam nos chats.",
     "expand": "Mostrar tudo",
+    "filterAll": "Todos",
+    "filterOrigin": "Origem",
+    "filterQuickInput": "Entrada rápida",
+    "filterUnsent": "Não enviados",
+    "filterUnsentHint": "Somente textos que nunca foram inseridos nem copiados",
+    "filterVoice": "Voz",
+    "interrupted": "interrompido",
     "itemRemoved": "Entrada removida",
     "kindAiTask": "Tarefa de IA",
     "kindBeforeAiTask": "Antes da tarefa de IA",
@@ -462,6 +473,7 @@
     "kindVoiceInput": "Entrada de voz",
     "kindVoiceTranscript": "Transcrição bruta",
     "loadFailed": "Não foi possível carregar o histórico.",
+    "notSent": "não enviado",
     "nothingFound": "Nada encontrado",
     "operationFailed": "A operação no histórico falhou. Seus dados não foram alterados.",
     "original": "Original",
@@ -469,18 +481,12 @@
     "originalTranscript": "Transcrição bruta",
     "placeIntoEditor": "Colocar no editor",
     "removeItem": "Remover do histórico",
+    "requestFailed": "falha na solicitação",
     "retry": "Tentar de novo",
-    "sent": "enviado",
     "textsDisabled": "O salvamento de textos está desativado nas configurações.",
     "today": "Hoje",
     "undo": "Desfazer",
-    "yesterday": "Ontem",
-    "filterOrigin": "Origem",
-    "filterAll": "Todos",
-    "filterQuickInput": "Entrada rápida",
-    "filterVoice": "Voz",
-    "filterUnsent": "Não enviados",
-    "filterUnsentHint": "Somente textos que nunca foram inseridos nem copiados"
+    "yesterday": "Ontem"
   },
   "input": {
     "historySearchPlaceholder": "Pesquisar no histórico...",
@@ -1266,7 +1272,9 @@
       "actionPages": "Páginas do menu de ações"
     }
   },
-  "shortcuts": { "insertIntoEditor": "Inserir no editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserir no editor"
+  },
   "theme": {
     "auto": "Seguir o sistema",
     "dark": "Escuro",
@@ -1406,7 +1414,9 @@
     "phrasesPlaceholder": "Frases de exemplo, uma por linha"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "pergunte no chat" },
+    "actions": {
+      "askInChat": "pergunte no chat"
+    },
     "languages": {
       "cs-CZ": "Tcheco",
       "de-DE": "alemão",
@@ -1436,7 +1446,9 @@
     },
     "translate": "traduza para"
   },
-  "window": { "clickToFocus": "Clique para continuar" },
+  "window": {
+    "clickToFocus": "Clique para continuar"
+  },
   "write": {
     "alreadyCorrected": "O texto já está corrigido",
     "cancel": "Cancelar",
@@ -1495,7 +1507,9 @@
     "valueOnDeviceHint": "Os outros dispositivos definem o próprio valor. Pode ser preenchido depois.",
     "valuePlaceholder": "Um caminho, um endereço ou outro texto"
   },
-  "favorites": { "noMatches": "Não há favoritos correspondentes" },
+  "favorites": {
+    "noMatches": "Não há favoritos correspondentes"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Inserir na janela",
     "insertIntoEditor": "No editor",

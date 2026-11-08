@@ -109,6 +109,11 @@ describe('HistoryList.vue', () => {
       global: {
         stubs: {
           Button: { props: ['variant'], template: '<button><slot /></button>' },
+          ConfirmModal: {
+            props: ['open', 'title', 'message'],
+            template:
+              '<div v-if="open" class="confirm-modal-stub"><button class="confirm-clear-btn" @click="$emit(\'confirm\')">Confirm</button></div>',
+          },
           IconButton: true,
           StateMessage: true,
           Icon: true,

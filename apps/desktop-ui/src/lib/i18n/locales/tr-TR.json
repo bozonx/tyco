@@ -22,7 +22,9 @@
     "removeContext": "Bağlamı kaldır",
     "restoreContext": "Bağlamı geri yükle"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Dosya ekle",
     "alertCaution": "Dikkat",
@@ -189,7 +191,9 @@
       "noCommands": "Henüz özel komut yapılandırılmadı.",
       "noCommandsHint": "Önce Ayarlar → Komutlar bölümünde komut oluşturun."
     },
-    "replyBlocks": { "toolLabel": "Yanıt blokları" }
+    "replyBlocks": {
+      "toolLabel": "Yanıt blokları"
+    }
   },
   "commands": {
     "advanced": "Gelişmiş",
@@ -448,6 +452,13 @@
     "empty": "Geçmiş boş",
     "emptyHint": "Girilen metinler, işleme sonuçları ve çeviriler burada saklanır. Her kayıt hızlıca kopyalanabilir veya geri yüklenebilir. Yapay zekâya sorulan sorular sohbetlerde saklanır.",
     "expand": "Tümünü göster",
+    "filterAll": "Tümü",
+    "filterOrigin": "Kaynak",
+    "filterQuickInput": "Hızlı giriş",
+    "filterUnsent": "Gönderilmemiş",
+    "filterUnsentHint": "Yalnızca hiç eklenmemiş veya kopyalanmamış metinler",
+    "filterVoice": "Ses",
+    "interrupted": "kesildi",
     "itemRemoved": "Kayıt silindi",
     "kindAiTask": "Yapay zekâ görevi",
     "kindBeforeAiTask": "Yapay zekâ görevinden önce",
@@ -462,6 +473,7 @@
     "kindVoiceInput": "Sesli giriş",
     "kindVoiceTranscript": "Ham transkript",
     "loadFailed": "Geçmiş yüklenemedi.",
+    "notSent": "gönderilmedi",
     "nothingFound": "Hiçbir şey bulunamadı",
     "operationFailed": "Geçmiş işlemi başarısız oldu. Verileriniz değiştirilmedi.",
     "original": "Orijinal",
@@ -469,18 +481,12 @@
     "originalTranscript": "Ham transkript",
     "placeIntoEditor": "Editöre yerleştir",
     "removeItem": "Geçmişten kaldır",
+    "requestFailed": "istek hatası",
     "retry": "Yeniden dene",
-    "sent": "gönderildi",
     "textsDisabled": "Metinlerin kaydedilmesi ayarlarda kapalı.",
     "today": "Bugün",
     "undo": "Geri al",
-    "yesterday": "Dün",
-    "filterOrigin": "Kaynak",
-    "filterAll": "Tümü",
-    "filterQuickInput": "Hızlı giriş",
-    "filterVoice": "Ses",
-    "filterUnsent": "Gönderilmemiş",
-    "filterUnsentHint": "Yalnızca hiç eklenmemiş veya kopyalanmamış metinler"
+    "yesterday": "Dün"
   },
   "input": {
     "historySearchPlaceholder": "Geçmişte ara...",
@@ -615,7 +621,10 @@
       "command": "Komut metni olduğu gibi bıraktı",
       "correction": "Hata bulunamadı"
     },
-    "working": { "command": "Komut çalışıyor…", "correction": "Düzeltiliyor…" }
+    "working": {
+      "command": "Komut çalışıyor…",
+      "correction": "Düzeltiliyor…"
+    }
   },
   "settings": {
     "accessAllow": "İzin Ver",
@@ -1263,7 +1272,9 @@
       "actionPages": "Eylem menüsü sayfaları"
     }
   },
-  "shortcuts": { "insertIntoEditor": "Editöre ekle" },
+  "shortcuts": {
+    "insertIntoEditor": "Editöre ekle"
+  },
   "theme": {
     "auto": "Sistem dili",
     "dark": "Koyu",
@@ -1403,7 +1414,9 @@
     "phrasesPlaceholder": "Örnek ifadeler, her satıra bir tane"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "sohbette sor" },
+    "actions": {
+      "askInChat": "sohbette sor"
+    },
     "languages": {
       "cs-CZ": "Çekçe;Çekçeye",
       "de-DE": "Almancaya;Almanca",
@@ -1433,7 +1446,9 @@
     },
     "translate": "{language} çevir;{language}ye çevir;{language}e çevir;çevir"
   },
-  "window": { "clickToFocus": "Devam etmek için tıklayın" },
+  "window": {
+    "clickToFocus": "Devam etmek için tıklayın"
+  },
   "write": {
     "alreadyCorrected": "Metin zaten düzeltildi",
     "cancel": "İptal",
@@ -1492,7 +1507,9 @@
     "valueOnDeviceHint": "Diğer cihazlar kendi değerini belirler. Daha sonra doldurulabilir.",
     "valuePlaceholder": "Bir yol, adres veya başka bir metin"
   },
-  "favorites": { "noMatches": "Eşleşen favori yok" },
+  "favorites": {
+    "noMatches": "Eşleşen favori yok"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Pencereye ekle",
     "insertIntoEditor": "Düzenleyiciye",

@@ -22,7 +22,9 @@
     "removeContext": "컨텍스트 제거",
     "restoreContext": "컨텍스트 복원"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "파일 첨부",
     "alertCaution": "주의",
@@ -189,7 +191,9 @@
       "noCommands": "아직 구성된 사용자 지정 명령어가 없습니다.",
       "noCommandsHint": "먼저 설정 → 명령어에서 명령어를 생성하세요."
     },
-    "replyBlocks": { "toolLabel": "답변 블록" }
+    "replyBlocks": {
+      "toolLabel": "답변 블록"
+    }
   },
   "commands": {
     "advanced": "고급",
@@ -448,6 +452,13 @@
     "empty": "기록이 비어 있습니다",
     "emptyHint": "입력한 텍스트, 처리 결과, 번역이 여기에 저장됩니다. 어떤 항목이든 빠르게 복사하거나 복원할 수 있습니다. AI에게 한 질문은 채팅에 저장됩니다.",
     "expand": "모두 표시",
+    "filterAll": "전체",
+    "filterOrigin": "출처",
+    "filterQuickInput": "빠른 입력",
+    "filterUnsent": "보내지 않음",
+    "filterUnsentHint": "삽입하거나 복사한 적이 없는 텍스트만",
+    "filterVoice": "음성",
+    "interrupted": "중단됨",
     "itemRemoved": "항목이 삭제되었습니다",
     "kindAiTask": "AI 작업",
     "kindBeforeAiTask": "AI 작업 전",
@@ -462,6 +473,7 @@
     "kindVoiceInput": "음성 입력",
     "kindVoiceTranscript": "원시 전사 텍스트",
     "loadFailed": "기록을 불러올 수 없습니다.",
+    "notSent": "전송되지 않음",
     "nothingFound": "결과 없음",
     "operationFailed": "기록 작업에 실패했습니다. 데이터는 변경되지 않았습니다.",
     "original": "원본",
@@ -469,18 +481,12 @@
     "originalTranscript": "원시 전사 텍스트",
     "placeIntoEditor": "편집기에 넣기",
     "removeItem": "기록에서 제거",
+    "requestFailed": "요청 실패",
     "retry": "다시 시도",
-    "sent": "전송됨",
     "textsDisabled": "텍스트 저장이 설정에서 꺼져 있습니다.",
     "today": "오늘",
     "undo": "실행 취소",
-    "yesterday": "어제",
-    "filterOrigin": "출처",
-    "filterAll": "전체",
-    "filterQuickInput": "빠른 입력",
-    "filterVoice": "음성",
-    "filterUnsent": "보내지 않음",
-    "filterUnsentHint": "삽입하거나 복사한 적이 없는 텍스트만"
+    "yesterday": "어제"
   },
   "input": {
     "historySearchPlaceholder": "기록 검색...",
@@ -601,7 +607,10 @@
     "cancelled": "취소됨",
     "done": "완료",
     "emptyResult": "모델이 빈 결과를 반환했습니다",
-    "failed": { "command": "명령 실패", "correction": "교정 실패" },
+    "failed": {
+      "command": "명령 실패",
+      "correction": "교정 실패"
+    },
     "focusChanged": "그 사이에 활성 창이 변경되어 결과가 클립보드에 복사되었습니다",
     "noSelection": "선택된 내용이 없습니다",
     "noTarget": "포커스가 있는 애플리케이션 창이 없습니다",
@@ -612,7 +621,10 @@
       "command": "명령 실행 후에도 텍스트가 변경되지 않았습니다",
       "correction": "오류를 찾지 못했습니다"
     },
-    "working": { "command": "명령 실행 중…", "correction": "교정 중…" }
+    "working": {
+      "command": "명령 실행 중…",
+      "correction": "교정 중…"
+    }
   },
   "settings": {
     "accessAllow": "허용",
@@ -1260,7 +1272,9 @@
       "actionPages": "작업 메뉴 페이지"
     }
   },
-  "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
+  "shortcuts": {
+    "insertIntoEditor": "편집기에 삽입"
+  },
   "theme": {
     "auto": "시스템 설정 따르기",
     "dark": "다크",
@@ -1400,7 +1414,9 @@
     "phrasesPlaceholder": "예시 문구 (한 줄에 하나씩)"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "채팅에서 질문" },
+    "actions": {
+      "askInChat": "채팅에서 질문"
+    },
     "languages": {
       "cs-CZ": "체코어;체코어로",
       "de-DE": "독일어;독일어로",
@@ -1430,7 +1446,9 @@
     },
     "translate": "{language}로 번역;{language}로 번역해;{language} 번역;번역"
   },
-  "window": { "clickToFocus": "계속하려면 클릭하세요" },
+  "window": {
+    "clickToFocus": "계속하려면 클릭하세요"
+  },
   "write": {
     "alreadyCorrected": "텍스트가 이미 교정되었습니다",
     "cancel": "취소",
@@ -1489,7 +1507,9 @@
     "valueOnDeviceHint": "다른 기기는 각자 값을 설정합니다. 나중에 입력해도 됩니다.",
     "valuePlaceholder": "경로, 주소 또는 다른 텍스트"
   },
-  "favorites": { "noMatches": "일치하는 즐겨찾기 없음" },
+  "favorites": {
+    "noMatches": "일치하는 즐겨찾기 없음"
+  },
   "replyBlocks": {
     "insertIntoWindow": "창에 삽입",
     "insertIntoEditor": "편집기로",

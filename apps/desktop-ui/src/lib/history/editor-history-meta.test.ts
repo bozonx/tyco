@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   getEditorHistoryMeta,
+  getEditorHistoryNote,
   getEditorHistoryView,
 } from './editor-history-meta'
 
@@ -100,6 +101,71 @@ describe('getEditorHistoryView', () => {
     ).toEqual({
       icon: 'mdi:auto-fix',
       labelKey: 'history.kindQuickAiRequestOutput',
+    })
+  })
+})
+
+describe('getEditorHistoryNote', () => {
+  it('returns undefined for applied items and outputs', () => {
+    expect(
+      getEditorHistoryNote({
+        kind: 'output',
+      })
+    ).toBeUndefined()
+
+    expect(
+      getEditorHistoryNote({
+        kind: 'source',
+        result: 'Result',
+        isResultApplied: true,
+      })
+    ).toBeUndefined()
+  })
+
+  it('marks drafts as interrupted in red', () => {
+    expect(getEditorHistoryNote({ kind: 'draft' })).toEqual({
+      labelKey: 'history.interrupted',
+      tone: 'error',
+      icon: 'mdi:alert-circle-outline',
+    })
+  })
+
+  it('marks failed or cancelled AI requests in red', () => {
+    expect(
+      getEditorHistoryNote({
+        kind: 'source',
+        operation: 'aiTask',
+      })
+    ).toEqual({
+      labelKey: 'history.requestFailed',
+      tone: 'error',
+      icon: 'mdi:alert-circle-outline',
+    })
+
+    expect(
+      getEditorHistoryNote({
+        kind: 'source',
+        operation: 'voiceCorrection',
+      })
+    ).toEqual({
+      labelKey: 'history.interrupted',
+      tone: 'error',
+      icon: 'mdi:alert-circle-outline',
+    })
+  })
+
+  it('marks unapplied results in red as not sent', () => {
+    expect(
+      getEditorHistoryNote({
+        kind: 'source',
+        operation: 'translation',
+        result: 'Hola',
+        isResultApplied: false,
+      })
+    ).toEqual({
+      labelKey: 'history.notSent',
+      tone: 'error',
+      icon: 'mdi:alert-circle-outline',
     })
   })
 })

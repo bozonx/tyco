@@ -22,7 +22,9 @@
     "removeContext": "移除上下文",
     "restoreContext": "恢复上下文"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "添加附件",
     "alertCaution": "小心",
@@ -189,7 +191,9 @@
       "noCommands": "尚未配置自定义命令。",
       "noCommandsHint": "请先在设置 → 命令中创建命令。"
     },
-    "replyBlocks": { "toolLabel": "回复块" }
+    "replyBlocks": {
+      "toolLabel": "回复块"
+    }
   },
   "commands": {
     "advanced": "高级",
@@ -448,6 +452,13 @@
     "empty": "历史记录为空",
     "emptyHint": "这里会保存输入的文本、处理结果和翻译。任何记录都可以快速复制或恢复。向 AI 提出的问题保存在聊天中。",
     "expand": "显示全部",
+    "filterAll": "全部",
+    "filterOrigin": "来源",
+    "filterQuickInput": "快速输入",
+    "filterUnsent": "未发送",
+    "filterUnsentHint": "仅显示从未插入或复制的文本",
+    "filterVoice": "语音",
+    "interrupted": "已中断",
     "itemRemoved": "记录已移除",
     "kindAiTask": "AI 任务",
     "kindBeforeAiTask": "AI 任务执行前",
@@ -462,6 +473,7 @@
     "kindVoiceInput": "语音输入",
     "kindVoiceTranscript": "原始转录文本",
     "loadFailed": "无法加载历史记录。",
+    "notSent": "未发送",
     "nothingFound": "未找到内容",
     "operationFailed": "历史记录操作失败。您的数据未发生更改。",
     "original": "原始",
@@ -469,18 +481,12 @@
     "originalTranscript": "原始转录文本",
     "placeIntoEditor": "放入编辑器",
     "removeItem": "从历史记录中移除",
+    "requestFailed": "请求失败",
     "retry": "重试",
-    "sent": "已发送",
     "textsDisabled": "已在设置中关闭文本保存。",
     "today": "今天",
     "undo": "撤消",
-    "yesterday": "昨天",
-    "filterOrigin": "来源",
-    "filterAll": "全部",
-    "filterQuickInput": "快速输入",
-    "filterVoice": "语音",
-    "filterUnsent": "未发送",
-    "filterUnsentHint": "仅显示从未插入或复制的文本"
+    "yesterday": "昨天"
   },
   "input": {
     "historySearchPlaceholder": "搜索历史记录…",
@@ -601,7 +607,10 @@
     "cancelled": "已取消",
     "done": "已完成",
     "emptyResult": "模型返回了空结果",
-    "failed": { "command": "命令执行失败", "correction": "纠错失败" },
+    "failed": {
+      "command": "命令执行失败",
+      "correction": "纠错失败"
+    },
     "focusChanged": "在此期间活动窗口已更改，结果已复制到剪贴板",
     "noSelection": "未选中任何内容",
     "noTarget": "没有具有焦点的应用程序窗口",
@@ -612,7 +621,10 @@
       "command": "命令未对文本做任何更改",
       "correction": "未发现错误"
     },
-    "working": { "command": "正在运行命令…", "correction": "正在纠错…" }
+    "working": {
+      "command": "正在运行命令…",
+      "correction": "正在纠错…"
+    }
   },
   "settings": {
     "accessAllow": "允许",
@@ -1260,7 +1272,9 @@
       "actionPages": "操作菜单页面"
     }
   },
-  "shortcuts": { "insertIntoEditor": "插入到编辑器" },
+  "shortcuts": {
+    "insertIntoEditor": "插入到编辑器"
+  },
   "theme": {
     "auto": "跟随系统",
     "dark": "深色",
@@ -1400,7 +1414,9 @@
     "phrasesPlaceholder": "示例短语，每行一条"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "在聊天中询问;在对话中提问" },
+    "actions": {
+      "askInChat": "在聊天中询问;在对话中提问"
+    },
     "languages": {
       "cs-CZ": "捷克语",
       "de-DE": "德语",
@@ -1430,7 +1446,9 @@
     },
     "translate": "翻译成;翻译为"
   },
-  "window": { "clickToFocus": "点击以继续" },
+  "window": {
+    "clickToFocus": "点击以继续"
+  },
   "write": {
     "alreadyCorrected": "文本已完成纠错",
     "cancel": "取消",
@@ -1489,7 +1507,9 @@
     "valueOnDeviceHint": "其他设备各自设置值。也可以稍后填写。",
     "valuePlaceholder": "路径、地址或其他文本"
   },
-  "favorites": { "noMatches": "没有匹配的收藏夹" },
+  "favorites": {
+    "noMatches": "没有匹配的收藏夹"
+  },
   "replyBlocks": {
     "insertIntoWindow": "插入到窗口",
     "insertIntoEditor": "到编辑器",

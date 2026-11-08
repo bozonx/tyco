@@ -102,7 +102,10 @@ import { useEditorHistoryChanges } from '../composables/use-editor-history-chang
 import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
-import { getEditorHistoryView } from '../lib/history/editor-history-meta'
+import {
+  getEditorHistoryNote,
+  getEditorHistoryView,
+} from '../lib/history/editor-history-meta'
 import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
 import {
   DEFAULT_HISTORY_FILTER,
@@ -187,6 +190,7 @@ const editorItems = computed<HistoryListItem[]>(() =>
   filterEditorHistory(historyStore.editorHistory, filter).map((item) => {
     const view = getEditorHistoryView(item)
     const label = t(view.labelKey)
+    const note = getEditorHistoryNote(item)
 
     return {
       id: item.id,
@@ -194,7 +198,9 @@ const editorItems = computed<HistoryListItem[]>(() =>
       meta: {
         icon: view.icon,
         label,
-        note: view.isResultApplied ? t('history.sent') : undefined,
+        note: note ? t(note.labelKey) : undefined,
+        noteTone: note?.tone,
+        noteIcon: note?.icon,
       },
       original: view.original && {
         label: t(view.original.labelKey),

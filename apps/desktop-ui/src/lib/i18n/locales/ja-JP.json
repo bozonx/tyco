@@ -22,7 +22,9 @@
     "removeContext": "コンテキストを削除",
     "restoreContext": "コンテキストを復元"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "ファイルを添付",
     "alertCaution": "注意",
@@ -189,7 +191,9 @@
       "noCommands": "カスタムコマンドはまだ設定されていません。",
       "noCommandsHint": "最初に「設定 → コマンド」でコマンドを作成してください。"
     },
-    "replyBlocks": { "toolLabel": "返答ブロック" }
+    "replyBlocks": {
+      "toolLabel": "返答ブロック"
+    }
   },
   "commands": {
     "advanced": "高度な設定",
@@ -448,6 +452,13 @@
     "empty": "履歴はありません",
     "emptyHint": "入力したテキスト、処理結果、翻訳がここに保存されます。どのエントリもすぐにコピーまたは復元できます。AIへの質問はチャットに保存されます。",
     "expand": "すべて表示",
+    "filterAll": "すべて",
+    "filterOrigin": "ソース",
+    "filterQuickInput": "クイック入力",
+    "filterUnsent": "未送信",
+    "filterUnsentHint": "挿入もコピーもされていないテキストのみ",
+    "filterVoice": "音声",
+    "interrupted": "中断",
     "itemRemoved": "項目を削除しました",
     "kindAiTask": "AIタスク",
     "kindBeforeAiTask": "AIタスク実行前",
@@ -462,6 +473,7 @@
     "kindVoiceInput": "音声入力",
     "kindVoiceTranscript": "音声文字起こし（未加工）",
     "loadFailed": "履歴を読み込めませんでした。",
+    "notSent": "未送信",
     "nothingFound": "見つかりませんでした",
     "operationFailed": "履歴の操作に失敗しました。データは変更されていません。",
     "original": "元のテキスト",
@@ -469,18 +481,12 @@
     "originalTranscript": "音声文字起こし（未加工）",
     "placeIntoEditor": "エディターに挿入",
     "removeItem": "履歴から削除",
+    "requestFailed": "リクエスト失敗",
     "retry": "再試行",
-    "sent": "送信済み",
     "textsDisabled": "テキストの保存は設定でオフになっています。",
     "today": "今日",
     "undo": "元に戻す",
-    "yesterday": "昨日",
-    "filterOrigin": "ソース",
-    "filterAll": "すべて",
-    "filterQuickInput": "クイック入力",
-    "filterVoice": "音声",
-    "filterUnsent": "未送信",
-    "filterUnsentHint": "挿入もコピーもされていないテキストのみ"
+    "yesterday": "昨日"
   },
   "input": {
     "historySearchPlaceholder": "履歴を検索...",
@@ -615,7 +621,10 @@
       "command": "コマンドによるテキストの変更はありませんでした",
       "correction": "修正箇所は見つかりませんでした"
     },
-    "working": { "command": "コマンドを実行中…", "correction": "校正中…" }
+    "working": {
+      "command": "コマンドを実行中…",
+      "correction": "校正中…"
+    }
   },
   "settings": {
     "accessAllow": "許可",
@@ -1263,7 +1272,9 @@
       "actionPages": "アクションメニューページ"
     }
   },
-  "shortcuts": { "insertIntoEditor": "エディターに挿入" },
+  "shortcuts": {
+    "insertIntoEditor": "エディターに挿入"
+  },
   "theme": {
     "auto": "システム設定に従う",
     "dark": "ダーク",
@@ -1403,7 +1414,9 @@
     "phrasesPlaceholder": "フレーズの例（1行に1つ）"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "チャットで質問" },
+    "actions": {
+      "askInChat": "チャットで質問"
+    },
     "languages": {
       "cs-CZ": "チェコ語",
       "de-DE": "ドイツ語",
@@ -1433,7 +1446,9 @@
     },
     "translate": "{language}に翻訳して;{language}に翻訳;翻訳"
   },
-  "window": { "clickToFocus": "クリックして続行" },
+  "window": {
+    "clickToFocus": "クリックして続行"
+  },
   "write": {
     "alreadyCorrected": "テキストはすでに修正済みです",
     "cancel": "キャンセル",
@@ -1492,7 +1507,9 @@
     "valueOnDeviceHint": "他のデバイスはそれぞれ独自の値を設定します。後から入力することもできます。",
     "valuePlaceholder": "パス、アドレス、その他のテキスト"
   },
-  "favorites": { "noMatches": "一致するお気に入りがありません" },
+  "favorites": {
+    "noMatches": "一致するお気に入りがありません"
+  },
   "replyBlocks": {
     "insertIntoWindow": "ウィンドウに挿入",
     "insertIntoEditor": "エディタへ",

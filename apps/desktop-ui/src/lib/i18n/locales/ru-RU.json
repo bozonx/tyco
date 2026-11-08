@@ -22,7 +22,9 @@
     "removeContext": "Убрать контекст",
     "restoreContext": "Восстановить контекст"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Прикрепить файл",
     "alertCaution": "Осторожно",
@@ -189,7 +191,9 @@
       "noCommands": "Пользовательские команды пока не настроены.",
       "noCommandsHint": "Сначала создайте команды в Настройки → Команды."
     },
-    "replyBlocks": { "toolLabel": "Варианты ответа" }
+    "replyBlocks": {
+      "toolLabel": "Варианты ответа"
+    }
   },
   "commands": {
     "advanced": "Дополнительно",
@@ -448,6 +452,13 @@
     "empty": "История пуста",
     "emptyHint": "Здесь сохраняются введённые тексты, результаты обработки и переводы. Любую запись можно быстро скопировать или восстановить. Вопросы к ИИ хранятся в чатах.",
     "expand": "Показать полностью",
+    "filterAll": "Все",
+    "filterOrigin": "Источник",
+    "filterQuickInput": "Быстрый ввод",
+    "filterUnsent": "Не отправленные",
+    "filterUnsentHint": "Только тексты, которые не были вставлены или скопированы",
+    "filterVoice": "Голос",
+    "interrupted": "прервано",
     "itemRemoved": "Запись удалена",
     "kindAiTask": "AI-задача",
     "kindBeforeAiTask": "До AI-задачи",
@@ -462,6 +473,7 @@
     "kindVoiceInput": "Голосовой ввод",
     "kindVoiceTranscript": "Исходное распознавание",
     "loadFailed": "Не удалось загрузить историю.",
+    "notSent": "не отправлено",
     "nothingFound": "Ничего не найдено",
     "operationFailed": "Операция с историей не выполнена. Данные не изменены.",
     "original": "Оригинал",
@@ -469,18 +481,12 @@
     "originalTranscript": "Исходное распознавание",
     "placeIntoEditor": "Поместить в редактор",
     "removeItem": "Удалить из истории",
+    "requestFailed": "ошибка запроса",
     "retry": "Повторить",
-    "sent": "отправлено",
     "textsDisabled": "Сохранение текстов отключено в настройках.",
     "today": "Сегодня",
     "undo": "Отменить",
-    "yesterday": "Вчера",
-    "filterOrigin": "Источник",
-    "filterAll": "Все",
-    "filterQuickInput": "Быстрый ввод",
-    "filterVoice": "Голос",
-    "filterUnsent": "Не отправленные",
-    "filterUnsentHint": "Только тексты, которые не были вставлены или скопированы"
+    "yesterday": "Вчера"
   },
   "input": {
     "historySearchPlaceholder": "Поиск в истории...",
@@ -615,7 +621,10 @@
       "command": "Команда оставила текст без изменений",
       "correction": "Ошибок не найдено"
     },
-    "working": { "command": "Выполняю команду…", "correction": "Исправляю…" }
+    "working": {
+      "command": "Выполняю команду…",
+      "correction": "Исправляю…"
+    }
   },
   "settings": {
     "accessAllow": "Разрешено",
@@ -1263,7 +1272,9 @@
       "actionPages": "Страницы меню действий"
     }
   },
-  "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
+  "shortcuts": {
+    "insertIntoEditor": "Вставить в редактор"
+  },
   "theme": {
     "auto": "Как в системе",
     "dark": "Темная",
@@ -1403,7 +1414,9 @@
     "phrasesPlaceholder": "Примеры фраз построчно"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "спроси в чате" },
+    "actions": {
+      "askInChat": "спроси в чате"
+    },
     "languages": {
       "cs-CZ": "Чешский",
       "de-DE": "немецкий",
@@ -1433,7 +1446,9 @@
     },
     "translate": "переведи на"
   },
-  "window": { "clickToFocus": "Нажмите, чтобы продолжить" },
+  "window": {
+    "clickToFocus": "Нажмите, чтобы продолжить"
+  },
   "write": {
     "alreadyCorrected": "Текст уже корректирован",
     "cancel": "Отмена",
@@ -1492,7 +1507,9 @@
     "valueOnDeviceHint": "На других устройствах значение задаётся отдельно. Можно заполнить позже.",
     "valuePlaceholder": "Путь, адрес или другой текст"
   },
-  "favorites": { "noMatches": "Ничего не найдено" },
+  "favorites": {
+    "noMatches": "Ничего не найдено"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Вставить в окно",
     "insertIntoEditor": "В редактор",

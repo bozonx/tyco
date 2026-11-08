@@ -4,21 +4,44 @@
       v-if="item.meta || item.time || visibleActions.length"
       class="history-item-header"
     >
-      <div v-if="item.meta || item.time" class="history-meta">
-        <template v-if="item.meta">
-          <span class="history-meta-badge">
-            <AppIcon :icon="item.meta.icon" size="sm" />
-            <span>{{ item.meta.label }}</span>
-          </span>
-          <span v-if="item.meta.note" class="history-meta-note">
-            <AppIcon icon="mdi:check" size="xs" />
-            {{ item.meta.note }}
-          </span>
-        </template>
+      <div v-if="item.meta" class="history-meta">
+        <span class="history-meta-badge">
+          <AppIcon :icon="item.meta.icon" size="sm" />
+          <span>{{ item.meta.label }}</span>
+        </span>
+        <span
+          v-if="item.meta.note"
+          class="history-meta-note"
+          :class="{ 'is-error': item.meta.noteTone === 'error' }"
+        >
+          <AppIcon
+            :icon="
+              item.meta.noteIcon ||
+              (item.meta.noteTone === 'error'
+                ? 'mdi:alert-circle-outline'
+                : 'mdi:check')
+            "
+            size="xs"
+          />
+          {{ item.meta.note }}
+        </span>
+      </div>
+
+      <div class="history-item-end">
+        <div v-if="visibleActions.length" class="history-item-actions">
+          <IconButton
+            v-for="action in visibleActions"
+            :key="action.id"
+            size="xs"
+            variant="ghost"
+            tone="muted"
+            @click="emit('action', action.id, item)"
+            :label="action.title"
+            :icon="action.icon"
+          />
+        </div>
+
         <span v-if="item.time" class="history-date">
-          <span v-if="item.meta" class="history-meta-divider" aria-hidden="true"
-            >•</span
-          >
           <time
             :datetime="new Date(item.time).toISOString()"
             :title="formatHistoryDateTime(item.time, locale)"
@@ -26,19 +49,6 @@
             {{ formatHistoryTime(item.time, locale) }}
           </time>
         </span>
-      </div>
-
-      <div v-if="visibleActions.length" class="history-item-actions">
-        <IconButton
-          v-for="action in visibleActions"
-          :key="action.id"
-          size="xs"
-          variant="ghost"
-          tone="muted"
-          @click="emit('action', action.id, item)"
-          :label="action.title"
-          :icon="action.icon"
-        />
       </div>
     </div>
 
@@ -193,16 +203,24 @@ const isLong = computed(
   color: var(--color-success);
 }
 
-.history-meta-divider {
-  color: var(--app-text-faint);
-  opacity: 0.6;
+.history-meta-note.is-error {
+  color: var(--color-error);
+}
+
+.history-item-end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .history-date {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-xs);
+  font-size: var(--text-caption);
   color: var(--app-text-faint);
+  user-select: none;
 }
 
 .history-content {
@@ -278,7 +296,6 @@ const isLong = computed(
   display: flex;
   align-items: center;
   gap: 2px;
-  margin-left: auto;
   flex-shrink: 0;
   opacity: 0;
   pointer-events: none;

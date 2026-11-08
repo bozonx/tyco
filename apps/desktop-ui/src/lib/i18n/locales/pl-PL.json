@@ -22,7 +22,9 @@
     "removeContext": "Usuń kontekst",
     "restoreContext": "Przywróć kontekst"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Dołącz plik",
     "alertCaution": "Ostrożnie",
@@ -189,7 +191,9 @@
       "noCommands": "Nie skonfigurowano jeszcze poleceń użytkownika.",
       "noCommandsHint": "Najpierw utwórz polecenia w Ustawienia → Polecenia."
     },
-    "replyBlocks": { "toolLabel": "Warianty odpowiedzi" }
+    "replyBlocks": {
+      "toolLabel": "Warianty odpowiedzi"
+    }
   },
   "commands": {
     "advanced": "Zaawansowane",
@@ -448,6 +452,13 @@
     "empty": "Historia jest pusta",
     "emptyHint": "Tutaj zapisywane są wpisane teksty, wyniki przetwarzania i tłumaczenia. Każdy wpis można szybko skopiować lub przywrócić. Pytania do AI są przechowywane w czatach.",
     "expand": "Pokaż wszystko",
+    "filterAll": "Wszystkie",
+    "filterOrigin": "Źródło",
+    "filterQuickInput": "Szybkie wprowadzanie",
+    "filterUnsent": "Niewysłane",
+    "filterUnsentHint": "Tylko teksty, które nigdy nie zostały wstawione ani skopiowane",
+    "filterVoice": "Głos",
+    "interrupted": "przerwano",
     "itemRemoved": "Usunięto wpis",
     "kindAiTask": "Zadanie AI",
     "kindBeforeAiTask": "Przed zadaniem AI",
@@ -462,6 +473,7 @@
     "kindVoiceInput": "Wprowadzanie głosowe",
     "kindVoiceTranscript": "Surowa transkrypcja",
     "loadFailed": "Nie udało się wczytać historii.",
+    "notSent": "niewysłane",
     "nothingFound": "Nic nie znaleziono",
     "operationFailed": "Operacja na historii nie powiodła się. Twoje dane nie zostały zmienione.",
     "original": "Oryginał",
@@ -469,18 +481,12 @@
     "originalTranscript": "Surowa transkrypcja",
     "placeIntoEditor": "Wstaw do edytora",
     "removeItem": "Usuń z historii",
+    "requestFailed": "błąd żądania",
     "retry": "Ponów",
-    "sent": "wysłano",
     "textsDisabled": "Zapisywanie tekstów jest wyłączone w ustawieniach.",
     "today": "Dzisiaj",
     "undo": "Cofnij",
-    "yesterday": "Wczoraj",
-    "filterOrigin": "Źródło",
-    "filterAll": "Wszystkie",
-    "filterQuickInput": "Szybkie wprowadzanie",
-    "filterVoice": "Głos",
-    "filterUnsent": "Niewysłane",
-    "filterUnsentHint": "Tylko teksty, które nigdy nie zostały wstawione ani skopiowane"
+    "yesterday": "Wczoraj"
   },
   "input": {
     "historySearchPlaceholder": "Szukaj w historii...",
@@ -1266,7 +1272,9 @@
       "actionPages": "Strony menu akcji"
     }
   },
-  "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
+  "shortcuts": {
+    "insertIntoEditor": "Wstaw do edytora"
+  },
   "theme": {
     "auto": "Jak w systemie",
     "dark": "Ciemny",
@@ -1406,7 +1414,9 @@
     "phrasesPlaceholder": "Przykładowe frazy, jedna na wiersz"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "zapytaj na czacie" },
+    "actions": {
+      "askInChat": "zapytaj na czacie"
+    },
     "languages": {
       "cs-CZ": "Czeski",
       "de-DE": "niemiecki",
@@ -1436,7 +1446,9 @@
     },
     "translate": "przetłumacz na"
   },
-  "window": { "clickToFocus": "Kliknij, aby kontynuować" },
+  "window": {
+    "clickToFocus": "Kliknij, aby kontynuować"
+  },
   "write": {
     "alreadyCorrected": "Tekst jest już poprawiony",
     "cancel": "Anuluj",
@@ -1495,7 +1507,9 @@
     "valueOnDeviceHint": "Inne urządzenia ustawiają własną wartość. Można ją uzupełnić później.",
     "valuePlaceholder": "Ścieżka, adres lub inny tekst"
   },
-  "favorites": { "noMatches": "Brak pasujących ulubionych" },
+  "favorites": {
+    "noMatches": "Brak pasujących ulubionych"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Wstaw do okna",
     "insertIntoEditor": "Do edytora",
