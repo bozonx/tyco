@@ -141,7 +141,7 @@ It checks real IPC permissions, stale config saves, plugin custom-protocol/CSP
 isolation and lazy route loading. It does not substitute for platform tests of
 microphone capture, global hotkeys, clipboard restoration or injection into
 foreign applications. These remain the platform-specific scenarios described
-in `cross-platform.md`. Failed smoke tests produce a screenshot for CI artifacts.
+in `vm-testing.md`. Failed smoke tests produce a screenshot for CI artifacts.
 
 Routes are loaded dynamically. Heavy optional renderers also use dynamic
 imports. Track startup and memory measurements in the actual system webview;

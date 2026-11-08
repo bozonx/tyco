@@ -243,7 +243,7 @@ Chromium/Linux. These are UI integration tests: native storage, system focus,
 actual microphones, OS insertion and provider connectivity are replaced at the
 IPC boundary. They do not prove native OS integration or production CSP behavior.
 `pnpm test:desktop` uses `tauri-driver` against the actual embedded application;
-additional platform checks are described in `cross-platform.md`.
+additional platform checks are described in `vm-testing.md`.
 
 ### Native binary smoke
 
