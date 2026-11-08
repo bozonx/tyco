@@ -27,6 +27,15 @@ describe('QueryPanel', () => {
       wrapper.unmount()
     }
   })
+  it('keeps the slots live while disabled, so a stop button still works', () => {
+    const wrapper = mount(QueryPanel, {
+      props: { modelValue: 'request', disabled: true },
+      slots: { 'after-input': '<button class="stop">Stop</button>' },
+    })
+    expect(wrapper.find('.query-panel').attributes('inert')).toBeUndefined()
+    expect(wrapper.find('.stop').element.closest('[inert]')).toBeNull()
+    expect(wrapper.find('input').element.closest('[inert]')).not.toBeNull()
+  })
   it('preserves forward and backward tab navigation', () => {
     const wrapper = mount(QueryPanel, { props: { modelValue: '' } })
     for (const shiftKey of [false, true]) {

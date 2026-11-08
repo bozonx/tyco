@@ -114,12 +114,7 @@
         v-else
         ref="queryPanelRef"
         v-model="prompt"
-        :disabled="
-          isCapturing ||
-          props.shortcutsDisabled ||
-          Boolean(menuModalsStore.pendingModal) ||
-          model.isGenerating.value
-        "
+        :disabled="isInputBlocked || model.isGenerating.value"
         :placeholder="t('menu.aiPromptPlaceholder')"
         :options="recentOptions"
         :hints="promptHints"
@@ -133,7 +128,7 @@
             size="md"
             variant="ghost"
             class="mic-action-btn"
-            :disabled="isCapturing || model.isGenerating.value"
+            :disabled="isInputBlocked || model.isGenerating.value"
             :label="t('chat.voiceInput')"
             :title="t('chat.voiceInput')"
             @click="startVoice"
@@ -545,10 +540,18 @@ async function addScreenshot() {
   }
 }
 
+/** The prompt cannot be edited or sent, the stop button stays live */
+const isInputBlocked = computed(
+  () =>
+    isCapturing.value ||
+    props.shortcutsDisabled ||
+    Boolean(menuModalsStore.pendingModal)
+)
+
 const canSend = computed(
   () =>
     Boolean(prompt.value.trim()) &&
-    !isCapturing.value &&
+    !isInputBlocked.value &&
     !model.isGenerating.value
 )
 
@@ -734,11 +737,23 @@ function handleEsc() {
   defaultHandleEsc()
 }
 
+/**
+ * The disabled prompt loses focus while the answer comes, so Esc reaches only
+ * the window: it stops the answer there
+ */
+function handleGeneratingEsc(event: KeyboardEvent) {
+  if (event.key !== 'Escape' || event.shiftKey || event.isComposing) return
+  if (!model.isGenerating.value || menuModalsStore.pendingModal) return
+  event.preventDefault()
+  model.stopGeneration()
+}
+
 function goToSettings() {
   void ipcStore.callOrNotify('activate_mode', { mode: 'config' })
 }
 
 onMounted(async () => {
+  window.addEventListener('keydown', handleGeneratingEsc)
   if (!aiProfilesStore.isLoaded) {
     void aiProfilesStore.loadAll()
   }
@@ -751,6 +766,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('keydown', handleGeneratingEsc)
   disposed = true
   if (model.isGenerating.value) {
     model.stopGeneration()

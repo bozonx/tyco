@@ -1,8 +1,9 @@
 <template>
-  <div class="query-panel" :inert="props.disabled" ref="rootRef">
+  <!-- The slots stay live when disabled: they own their state, e.g. a stop button -->
+  <div class="query-panel" ref="rootRef">
     <div class="query-panel-head">
       <slot name="before-input" />
-      <label class="query-panel-field">
+      <label class="query-panel-field" :inert="props.disabled">
         <span v-if="props.label" class="query-panel-label">{{
           props.label
         }}</span>
@@ -36,6 +37,7 @@
     <ul
       v-if="props.options.length > 0"
       class="query-panel-options"
+      :inert="props.disabled"
       role="listbox"
       :id="listboxId"
     >
@@ -89,7 +91,7 @@
       {{ props.emptyText }}
     </p>
 
-    <div class="query-panel-hints">
+    <div class="query-panel-hints" :inert="props.disabled">
       <ShortcutHint
         v-for="hint in props.hints"
         :key="hint.keys.join('+')"
