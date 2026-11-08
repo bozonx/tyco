@@ -63,7 +63,7 @@
       :info="t('settings.voiceHotkeysInfo')"
       device-scoped
     >
-      <template v-for="row in voiceRows" :key="row.id">
+      <div v-for="row in voiceRows" :key="row.id" class="voice-hotkey-item">
         <GlobalHotkeyRow
           :row="row"
           :platform="providerState.platform"
@@ -75,6 +75,9 @@
         />
         <FieldRow
           v-if="isHoldSupported && holdToggles[row.id]"
+          class="voice-hold-row"
+          nested
+          :separator="false"
           :label="holdToggles[row.id].label"
           :info="holdToggles[row.id].info"
         >
@@ -85,7 +88,7 @@
             "
           />
         </FieldRow>
-      </template>
+      </div>
     </SettingsSection>
 
     <SettingsSection
@@ -720,6 +723,27 @@ onMounted(async () => {
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  color: var(--app-text-muted);
+}
+
+.voice-hotkey-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.voice-hotkey-item + .voice-hotkey-item {
+  border-top: 1px solid var(--app-border-subtle);
+}
+
+.voice-hold-row {
+  background-color: var(--app-surface-sunken);
+  border-left: 2px solid var(--app-border-strong);
+  padding-top: var(--space-sm);
+  padding-bottom: var(--space-sm);
+}
+
+.voice-hold-row :deep(.field-row-title) {
+  font-size: var(--text-control);
   color: var(--app-text-muted);
 }
 </style>
