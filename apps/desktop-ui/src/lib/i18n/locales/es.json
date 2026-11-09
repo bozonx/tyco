@@ -484,7 +484,8 @@
     "textsDisabled": "El guardado de textos está desactivado en la configuración.",
     "today": "Hoy",
     "undo": "Deshacer",
-    "yesterday": "Ayer"
+    "yesterday": "Ayer",
+    "filterListen": "Escucha"
   },
   "input": {
     "historySearchPlaceholder": "Buscar en el historial...",
@@ -813,7 +814,8 @@
       "customAction2": "Acción personalizada 2",
       "customAction3": "Acción personalizada 3",
       "customAction4": "Acción personalizada 4",
-      "customAction5": "Acción personalizada 5"
+      "customAction5": "Acción personalizada 5",
+      "listen": "Transcribir el sonido del ordenador"
     },
     "hotkeyInput": {
       "cancelHint": "Esc para cancelar",
@@ -1440,7 +1442,10 @@
     },
     "translate": "traduce al"
   },
-  "window": { "clickToFocus": "Haz clic para continuar" },
+  "window": {
+    "clickToFocus": "Haz clic para continuar",
+    "moveOverlay": "Arrastra para mover"
+  },
   "write": {
     "alreadyCorrected": "El texto ya está corregido",
     "cancel": "Cancelar",
@@ -1537,5 +1542,26 @@
     "emptyHint": "Añada prompts en la configuración.",
     "everyProfile": "Sin perfil (Pregunta a la IA)",
     "actionName": "Prompt: {prompt}"
+  },
+  "listen": {
+    "title": "Escuchando",
+    "switchToListen": "Transcribir el sonido del ordenador",
+    "switchToVoice": "Volver a la entrada de voz",
+    "unavailable": "Para grabar el sonido del ordenador se necesita PipeWire en Linux o Windows 10 o posterior",
+    "systemMix": "Todo el sonido",
+    "noPlayingApps": "Ninguna aplicación está reproduciendo sonido",
+    "sourceLabel": "Fuente",
+    "sourceInfo": "Lo que graba el atajo: todo el sonido del ordenador o una aplicación. La aplicación se recuerda por su nombre; si aún no reproduce nada, la grabación espera su sonido.",
+    "appIdPlaceholder": "Nombre de la aplicación, p. ej. Telegram.exe",
+    "privacyHint": "Con el reconocimiento en la nube (Deepgram, Gemini), el sonido, incluida la voz de otras personas, se envía al proveedor elegido. El reconocimiento local (sherpa) no envía nada.",
+    "privacyHintLabel": "Adónde va el sonido",
+    "useSystemMix": "Grabar todo el sonido",
+    "sourceLost": "La aplicación se cerró: se graba todo el sonido",
+    "waitingFor": "Esperando sonido de {app}…",
+    "stop": "Detener",
+    "replyByVoice": "Responder por voz",
+    "nothingRecognized": "No se reconoció nada",
+    "retry": "Reintentar",
+    "replyingTo": "Respuesta a: {text}"
   }
 }

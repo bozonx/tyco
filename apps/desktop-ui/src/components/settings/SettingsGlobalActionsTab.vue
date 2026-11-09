@@ -74,6 +74,7 @@
           @set="setShortcut(row.id, $event)"
           @recording="suspendHotkeys"
         />
+        <ListenSourceField v-if="row.id === 'listen'" />
         <FieldRow
           v-if="isHoldSupported && holdToggles[row.id]"
           class="voice-hold-row"
@@ -218,6 +219,7 @@ import InlineNotice from '../common/InlineNotice.vue'
 import EditorShortcutsSettings from './EditorShortcutsSettings.vue'
 import GlobalHotkeyRow from './GlobalHotkeyRow.vue'
 import HotkeyInput from './HotkeyInput.vue'
+import ListenSourceField from './ListenSourceField.vue'
 import SettingsSection from './SettingsSection.vue'
 import {
   CUSTOM_ACTION_HOTKEY_IDS,
@@ -241,6 +243,7 @@ const submitKeyOptions = computed((): { id: SubmitKey; name: string }[] => [
 const MODE_ORDER: HotkeyId[] = [
   'quickInput',
   'voice',
+  'listen',
   'editor',
   'voiceCommands',
   'selectionActions',

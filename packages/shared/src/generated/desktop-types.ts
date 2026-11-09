@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: b93d4951d9bb06954615e103662565123bf9ebe1b941ee1d6cadad284c0cc68a
+// Source hash: 746acbcb3023a297c558e4b6ff48070f389fdd6ab8afd66889d0ec974f385b18
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -34,6 +34,7 @@ export type ActivationMode =
   | 'voiceChat'
   | 'voiceCommands'
   | 'voice'
+  | 'listen'
   | 'selectionActions'
   | 'correction'
   | 'translation'
@@ -227,6 +228,24 @@ export type AiWebToolRequest =
       /** The character the returned page starts at, to read on after a cut */
       offset?: number
     }
+
+/** An application that plays sound right now. */
+export type AudioApp = {
+  id: string
+  label: string
+  iconName?: string
+  /** The loudest of its streams, from 0 to 1. */
+  level: number
+}
+
+/** What a watch sends through its channel. */
+export type AudioAppsEvent = { type: 'apps'; apps: Array<AudioApp> }
+
+/** Where the audio of a capture comes from. */
+export type CaptureSource =
+  | { kind: 'microphone' }
+  | { kind: 'systemMix' }
+  | { kind: 'application'; appId: string }
 
 export type Chat = {
   id: string
@@ -439,6 +458,15 @@ export type DesktopSnapshot = {
 export type DesktopWindowState = {
   isWindowShown: boolean
   windowProfile: WindowProfile
+  /**
+   * The quick window can be dragged: not on a layer-shell surface, whose place
+   * only its anchor and margins set.
+   */
+  canMoveOverlay: boolean
+  /** The sound the computer plays can be recorded, see `platform::audio`. */
+  canListen: boolean
+  /** A single application can be recorded. */
+  canListenToApps: boolean
 }
 
 /** What the UI sends to add a text; id and time are assigned by the backend. */
@@ -504,7 +532,8 @@ export type EditorHistoryOperation =
  * Where the text came from: where the user typed or dictated it, or the quick
  * request whose answer was inserted or copied.
  */
-export type EditorHistoryOrigin = 'quickInput' | 'voice' | 'quickAiRequest'
+export type EditorHistoryOrigin =
+  'quickInput' | 'voice' | 'quickAiRequest' | 'listen'
 
 /** A text handed over to the editor of the main window. */
 export type EditorTransfer = {
@@ -951,7 +980,11 @@ export type VoiceAudioLevelPayload = { level: number; peak: number }
 
 /** Control messages on the audio channel; the audio itself goes as raw bytes. */
 export type VoiceCaptureEvent =
-  { type: 'end' } | { type: 'superseded' } | { type: 'error'; message: string }
+  | { type: 'end' }
+  | { type: 'superseded' }
+  | { type: 'error'; message: string }
+  | { type: 'sourceStatus'; isWaiting: boolean }
+  | { type: 'sourceLost'; source: CaptureSource }
 
 export type VoiceCaptureInfo = {
   /** Rate of the PCM16 mono chunks that follow. */

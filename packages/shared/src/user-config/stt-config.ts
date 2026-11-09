@@ -48,6 +48,13 @@ export interface SttConfig {
    * (Push-to-Talk)
    */
   isVoiceCommandsHoldEnabled: boolean
+  /**
+   * The application the listening hotkey records, by its `AudioAppId`; absent
+   * or empty records the whole computer sound
+   */
+  listenAppId?: string
+  /** What the user saw for `listenAppId` when choosing it */
+  listenAppLabel?: string
   /** Whether to show the 15-key styling keyboard during hotkey voice input */
   isStylingBarEnabled: boolean
   /** Whether pressing a style key inserts the result directly without preview */

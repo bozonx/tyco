@@ -123,6 +123,8 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<services::platform::TextInsertionStatus>();
     visitor.visit::<services::status_overlay::StatusOverlayRequest>();
     visitor.visit::<services::voice::CaptureEvent>();
+    visitor.visit::<services::voice::apps::AudioAppsEvent>();
+    visitor.visit::<services::voice::AudioApp>();
     visitor.visit::<services::voice::VoiceCaptureInfo>();
     visitor.visit::<tyco_activation_protocol::Job>();
 }

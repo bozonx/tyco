@@ -35,15 +35,36 @@ export function extractJsonFromResponse(raw: string): unknown {
   return JSON.parse(candidate)
 }
 
+/**
+ * The rules of a voice correction, with the message a voice reply answers: its
+ * names and terms are the ones the speaker most likely used
+ */
+export function voiceCorrectionRules(
+  rules: string | undefined,
+  replyTo: string | undefined
+): string | undefined {
+  const message = replyTo?.trim()
+  if (!message) return rules
+  const context = `The dictated text replies to this message; spell its names and terms the same way:\n<message>\n${message}\n</message>`
+  return rules?.trim() ? `${rules}\n\n${context}` : context
+}
+
 export function createLlmActions(deps: LlmActionsDependencies) {
   const { aiRequest } = deps
-  const voiceCorrection = async (text: string, signal?: AbortSignal) => {
+  const voiceCorrection = async (
+    text: string,
+    signal?: AbortSignal,
+    replyTo?: string
+  ) => {
     const userConfig = deps.getUserConfig()
 
     return await aiRequest(LlmInstructionKind.VOICE_CORRECTION, text, {
       instructions:
         deps.getAppConfig().aiInstructions[LlmInstructionKind.VOICE_CORRECTION],
-      rules: userConfig.llm?.tasks.voiceCorrection.rule,
+      rules: voiceCorrectionRules(
+        userConfig.llm?.tasks.voiceCorrection.rule,
+        replyTo
+      ),
       signal,
     })
   }
@@ -150,9 +171,13 @@ export function createLlmActions(deps: LlmActionsDependencies) {
     voiceCorrection,
     contextualVoiceCorrection: async (
       text: string,
-      signal: AbortSignal
+      signal: AbortSignal,
+      replyTo?: string
     ): Promise<unknown> => {
-      const rules = deps.getUserConfig().llm?.tasks.voiceCorrection.rule
+      const rules = voiceCorrectionRules(
+        deps.getUserConfig().llm?.tasks.voiceCorrection.rule,
+        replyTo
+      )
       try {
         const response = await aiRequest(
           LlmInstructionKind.VOICE_CORRECTION,

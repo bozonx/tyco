@@ -47,6 +47,12 @@ vi.mock('../components/menu/VoiceRecognitionMenu.vue', () => ({
   },
 }))
 
+vi.mock('../components/voice/QuickModeSwitch.vue', () => ({
+  default: { template: '<button class="mode-switch-stub" />' },
+}))
+vi.mock('../components/quick/OverlayDragHandle.vue', () => ({
+  default: { template: '<div />' },
+}))
 vi.mock('../components/menu/InsertMenu.vue', () => ({
   default: {
     name: 'InsertMenu',

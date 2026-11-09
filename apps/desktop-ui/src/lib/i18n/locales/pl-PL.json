@@ -484,7 +484,8 @@
     "textsDisabled": "Zapisywanie tekstów jest wyłączone w ustawieniach.",
     "today": "Dzisiaj",
     "undo": "Cofnij",
-    "yesterday": "Wczoraj"
+    "yesterday": "Wczoraj",
+    "filterListen": "Słuchanie"
   },
   "input": {
     "historySearchPlaceholder": "Szukaj w historii...",
@@ -813,7 +814,8 @@
       "customAction2": "Własna akcja 2",
       "customAction3": "Własna akcja 3",
       "customAction4": "Własna akcja 4",
-      "customAction5": "Własna akcja 5"
+      "customAction5": "Własna akcja 5",
+      "listen": "Transkrybuj dźwięk komputera"
     },
     "hotkeyInput": {
       "cancelHint": "Esc, aby anulować",
@@ -1440,7 +1442,10 @@
     },
     "translate": "przetłumacz na"
   },
-  "window": { "clickToFocus": "Kliknij, aby kontynuować" },
+  "window": {
+    "clickToFocus": "Kliknij, aby kontynuować",
+    "moveOverlay": "Przeciągnij, aby przenieść"
+  },
   "write": {
     "alreadyCorrected": "Tekst jest już poprawiony",
     "cancel": "Anuluj",
@@ -1537,5 +1542,26 @@
     "emptyHint": "Dodaj prompty w ustawieniach.",
     "everyProfile": "Bez profilu (Pytanie do AI)",
     "actionName": "Prompt: {prompt}"
+  },
+  "listen": {
+    "title": "Słucham",
+    "switchToListen": "Transkrybuj dźwięk komputera",
+    "switchToVoice": "Wróć do wprowadzania głosowego",
+    "unavailable": "Nagrywanie dźwięku komputera wymaga PipeWire w Linuksie lub Windows 10 lub nowszego",
+    "systemMix": "Cały dźwięk",
+    "noPlayingApps": "Żadna aplikacja nie odtwarza dźwięku",
+    "sourceLabel": "Źródło",
+    "sourceInfo": "Co nagrywa skrót: cały dźwięk komputera albo jedną aplikację. Aplikacja jest zapamiętywana po nazwie; jeśli jeszcze nic nie odtwarza, nagrywanie czeka na jej dźwięk.",
+    "appIdPlaceholder": "Nazwa aplikacji, np. Telegram.exe",
+    "privacyHint": "Przy rozpoznawaniu w chmurze (Deepgram, Gemini) dźwięk, także mowa innych osób, trafia do wybranego dostawcy. Rozpoznawanie lokalne (sherpa) niczego nie wysyła.",
+    "privacyHintLabel": "Dokąd trafia dźwięk",
+    "useSystemMix": "Nagrywaj cały dźwięk",
+    "sourceLost": "Aplikacja została zamknięta: nagrywany jest cały dźwięk",
+    "waitingFor": "Czekam na dźwięk z {app}…",
+    "stop": "Zatrzymaj",
+    "replyByVoice": "Odpowiedz głosem",
+    "nothingRecognized": "Nic nie rozpoznano",
+    "retry": "Ponów",
+    "replyingTo": "Odpowiedź na: {text}"
   }
 }

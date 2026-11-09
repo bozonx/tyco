@@ -484,7 +484,8 @@
     "textsDisabled": "텍스트 저장이 설정에서 꺼져 있습니다.",
     "today": "오늘",
     "undo": "실행 취소",
-    "yesterday": "어제"
+    "yesterday": "어제",
+    "filterListen": "듣기"
   },
   "input": {
     "historySearchPlaceholder": "기록 검색...",
@@ -807,7 +808,8 @@
       "customAction2": "사용자 지정 작업 2",
       "customAction3": "사용자 지정 작업 3",
       "customAction4": "사용자 지정 작업 4",
-      "customAction5": "사용자 지정 작업 5"
+      "customAction5": "사용자 지정 작업 5",
+      "listen": "컴퓨터 소리 받아쓰기"
     },
     "hotkeyInput": {
       "cancelHint": "취소하려면 Esc",
@@ -1434,7 +1436,10 @@
     },
     "translate": "{language}로 번역;{language}로 번역해;{language} 번역;번역"
   },
-  "window": { "clickToFocus": "계속하려면 클릭하세요" },
+  "window": {
+    "clickToFocus": "계속하려면 클릭하세요",
+    "moveOverlay": "드래그하여 이동"
+  },
   "write": {
     "alreadyCorrected": "텍스트가 이미 교정되었습니다",
     "cancel": "취소",
@@ -1531,5 +1536,26 @@
     "emptyHint": "설정에서 프롬프트를 추가하세요.",
     "everyProfile": "프로필 없음 (AI에게 질문)",
     "actionName": "프롬프트: {prompt}"
+  },
+  "listen": {
+    "title": "듣는 중",
+    "switchToListen": "컴퓨터 소리 받아쓰기",
+    "switchToVoice": "음성 입력으로 돌아가기",
+    "unavailable": "컴퓨터 소리를 녹음하려면 Linux에서는 PipeWire, 또는 Windows 10 이상이 필요합니다",
+    "systemMix": "모든 소리",
+    "noPlayingApps": "소리를 재생 중인 앱이 없습니다",
+    "sourceLabel": "소스",
+    "sourceInfo": "단축키가 녹음하는 대상: 컴퓨터의 모든 소리 또는 하나의 앱. 앱은 이름으로 기억되며, 아직 아무것도 재생하지 않으면 소리를 기다립니다.",
+    "appIdPlaceholder": "앱 이름(예: Telegram.exe)",
+    "privacyHint": "클라우드 인식(Deepgram, Gemini)에서는 다른 사람의 말을 포함한 소리가 선택한 제공업체로 전송됩니다. 로컬 인식(sherpa)은 아무것도 보내지 않습니다.",
+    "privacyHintLabel": "소리가 전송되는 곳",
+    "useSystemMix": "모든 소리 녹음",
+    "sourceLost": "앱이 닫혔습니다: 모든 소리를 녹음합니다",
+    "waitingFor": "{app}의 소리를 기다리는 중…",
+    "stop": "중지",
+    "replyByVoice": "음성으로 답장",
+    "nothingRecognized": "인식된 내용이 없습니다",
+    "retry": "다시 시도",
+    "replyingTo": "답장 대상: {text}"
   }
 }

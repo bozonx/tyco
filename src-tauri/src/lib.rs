@@ -338,6 +338,7 @@ pub fn run() {
             commands::window::confirm_screenshot_crop,
             commands::window::cancel_screenshot_crop,
             commands::window::hide_quick_window_on_blur,
+            commands::window::switch_quick_mode,
             commands::window::hide_window,
             commands::window::open_in_browser_and_hide,
             commands::window::paste_into_target_and_hide,

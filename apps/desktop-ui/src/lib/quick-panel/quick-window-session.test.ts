@@ -34,6 +34,8 @@ describe('quick window session', () => {
       true
     )
     expect(setup({ mode: 'voice' }).session.keepsOnFocusLoss()).toBe(true)
+    // the user clicks into the player while listening, and after it
+    expect(setup({ mode: 'listen' }).session.keepsOnFocusLoss()).toBe(true)
     // a correction on its way is past the first step
     expect(setup({ mode: 'correction' }).session.keepsOnFocusLoss()).toBe(true)
     expect(setup({ mode: 'styling' }).session.keepsOnFocusLoss()).toBe(false)

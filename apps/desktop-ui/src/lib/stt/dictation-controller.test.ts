@@ -21,6 +21,7 @@ function setup(stt: Partial<SttConfig> = {}) {
         .mockResolvedValue(undefined),
       finish: vi.fn().mockResolvedValue('dictated text'),
       cancel: vi.fn().mockResolvedValue(undefined),
+      switchSource: vi.fn().mockResolvedValue(undefined),
     },
     refreshSecrets: vi.fn().mockResolvedValue(undefined),
     getSecrets: () => secrets,

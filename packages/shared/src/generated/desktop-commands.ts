@@ -13,6 +13,7 @@ import type {
   AiProject,
   AiWebToolOutput,
   AiWebToolRequest,
+  CaptureSource,
   Chat,
   ChatAttachment,
   ChatAttachmentFile,
@@ -419,7 +420,7 @@ export interface DesktopCommands {
     result: number
   }
   start_voice_capture: {
-    args: { onAudio: DesktopChannel }
+    args: { onAudio: DesktopChannel; source?: CaptureSource | null }
     result: VoiceCaptureInfo
   }
   stop_voice_capture: { args: { sessionId?: number | null }; result: void }
@@ -433,6 +434,14 @@ export interface DesktopCommands {
     result: void
   }
   suspend_hotkeys: { args: { suspended: boolean }; result: void }
+  switch_capture_source: {
+    args: { sessionId: number; source: CaptureSource }
+    result: void
+  }
+  switch_quick_mode: {
+    args: { activationId: number; mode: ActivationMode }
+    result: void
+  }
   sync_chat_images: {
     args: {
       ids: Array<string>
@@ -446,6 +455,8 @@ export interface DesktopCommands {
     result: ProfileMemoryChange
   }
   uninstall_plugin_package: { args: { id: string }; result: void }
+  unwatch_audio_apps: { args: { watchId: number }; result: void }
+  watch_audio_apps: { args: { onApps: DesktopChannel }; result: number }
   write_ai_profile_soul: { args: { id: string; content: string }; result: void }
   write_plugin_note: {
     args: {
@@ -486,4 +497,5 @@ export const ACTIVATION_DESKTOP_COMMANDS = [
   'retake_screenshot',
   'reveal_quick_window',
   'set_quick_input_region',
+  'switch_quick_mode',
 ] as const satisfies readonly DesktopCommandName[]

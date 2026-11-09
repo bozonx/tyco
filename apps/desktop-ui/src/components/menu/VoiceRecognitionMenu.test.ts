@@ -707,7 +707,8 @@ describe('VoiceRecognitionMenu', () => {
     expect(mocks.shouldFormatRecognizedText).toHaveBeenCalledWith('external')
     expect(mocks.voiceCorrection).toHaveBeenCalledWith(
       'raw dictated text',
-      expect.anything()
+      expect.anything(),
+      undefined
     )
     expect(wrapper.emitted('corrected')?.[0]?.[0]).toBe('corrected text')
     wrapper.unmount()

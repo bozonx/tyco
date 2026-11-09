@@ -12,6 +12,8 @@ pub enum ActivationMode {
     VoiceChat,
     VoiceCommands,
     Voice,
+    /// Transcribes the sound the computer plays, see `services::voice`.
+    Listen,
     SelectionActions,
     Correction,
     Translation,
@@ -33,13 +35,14 @@ pub enum ActivationMode {
 
 impl ActivationMode {
     /// The modes a caller may name: every one but `ExternalAccess`.
-    pub const PUBLIC_MODES: [Self; 20] = [
+    pub const PUBLIC_MODES: [Self; 21] = [
         Self::Editor,
         Self::QuickInput,
         Self::Chat,
         Self::VoiceChat,
         Self::VoiceCommands,
         Self::Voice,
+        Self::Listen,
         Self::SelectionActions,
         Self::Correction,
         Self::Translation,
@@ -73,6 +76,7 @@ impl ActivationMode {
             Self::VoiceCommands => "voiceCommands",
             Self::VoiceChat => "voiceChat",
             Self::Voice => "voice",
+            Self::Listen => "listen",
             Self::SelectionActions => "selectionActions",
             Self::Correction => "correction",
             Self::Translation => "translation",
@@ -100,7 +104,7 @@ impl ActivationMode {
     pub fn profile(self) -> WindowProfile {
         match self {
             // the dictation bar leaves the screen above it in view
-            Self::QuickInput | Self::Voice => WindowProfile::Panel,
+            Self::QuickInput | Self::Voice | Self::Listen => WindowProfile::Panel,
             _ => WindowProfile::Sheet,
         }
     }

@@ -143,6 +143,8 @@ export interface HotkeysConfig {
   chat: string
   voiceChat: string
   voice: string
+  /** Transcribes the computer sound, see `stt.listenAppId` */
+  listen: string
   selectionActions: string
   selectionActionsPage2: string
   selectionActionsPage3: string

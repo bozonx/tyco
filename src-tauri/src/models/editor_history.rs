@@ -30,6 +30,8 @@ pub enum EditorHistoryOrigin {
     QuickInput,
     Voice,
     QuickAiRequest,
+    /// A transcript of the sound the computer played.
+    Listen,
 }
 
 /// The input modality of an AI prompt.

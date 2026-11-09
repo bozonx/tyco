@@ -81,10 +81,14 @@ pub enum CaptureEvent {
     /// The application a playback source records plays nothing yet, or has
     /// started to.
     #[serde(rename_all = "camelCase")]
-    SourceStatus { is_waiting: bool },
+    SourceStatus {
+        is_waiting: bool,
+    },
     /// The application of the source quit: the capture went on with the
     /// whole system sound.
-    SourceLost { source: CaptureSource },
+    SourceLost {
+        source: CaptureSource,
+    },
 }
 
 /// Device setup is separate from the capture lifecycle and its outputs.
@@ -148,9 +152,9 @@ pub async fn switch_capture_source(
     }
     let receiver = {
         let _operation = state.lock_capture_operation().await;
-        let slot = state.switch_slot(session_id).ok_or_else(|| {
-            AppError::Stale("The capture to switch is no longer running".into())
-        })?;
+        let slot = state
+            .switch_slot(session_id)
+            .ok_or_else(|| AppError::Stale("The capture to switch is no longer running".into()))?;
         let (reply, receiver) = std_mpsc::sync_channel(1);
         *slot.locked() = Some(SourceSwitch {
             source: capture_source,
@@ -554,14 +558,20 @@ pub(crate) struct StreamContext {
 
 /// Turns the interleaved float frames of a playback device into the
 /// samples of a `StreamContext`: mixed down and brought to its rate.
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 pub(crate) struct PlaybackConverter {
     downsampler: Downsampler,
     channels: usize,
     converted: Vec<i16>,
 }
 
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 impl PlaybackConverter {
-    pub(crate) fn new(device_sample_rate_hz: u32, output_sample_rate_hz: u32, channels: usize) -> Self {
+    pub(crate) fn new(
+        device_sample_rate_hz: u32,
+        output_sample_rate_hz: u32,
+        channels: usize,
+    ) -> Self {
         Self {
             downsampler: Downsampler::new(device_sample_rate_hz, output_sample_rate_hz),
             channels: channels.max(1),

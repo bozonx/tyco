@@ -14,17 +14,17 @@ use windows::core::{implement, Interface, Ref, HRESULT};
 use windows::Win32::Foundation::{CloseHandle, HANDLE, WAIT_OBJECT_0};
 use windows::Win32::Media::Audio::Endpoints::IAudioMeterInformation;
 use windows::Win32::Media::Audio::{
-    eConsole, eRender, ActivateAudioInterfaceAsync, AudioSessionStateActive, IAudioCaptureClient,
-    IAudioClient, IAudioSessionControl2, IAudioSessionManager2,
+    eConsole, eRender, ActivateAudioInterfaceAsync, AudioSessionStateActive,
     IActivateAudioInterfaceAsyncOperation, IActivateAudioInterfaceCompletionHandler,
-    IActivateAudioInterfaceCompletionHandler_Impl, IMMDeviceEnumerator, MMDeviceEnumerator,
+    IActivateAudioInterfaceCompletionHandler_Impl, IAudioCaptureClient, IAudioClient,
+    IAudioSessionControl2, IAudioSessionManager2, IMMDeviceEnumerator, MMDeviceEnumerator,
     AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM,
-    AUDCLNT_STREAMFLAGS_EVENTCALLBACK, AUDCLNT_STREAMFLAGS_LOOPBACK,
-    AUDIOCLIENT_ACTIVATION_PARAMS, AUDIOCLIENT_ACTIVATION_PARAMS_0,
-    AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK, AUDIOCLIENT_PROCESS_LOOPBACK_PARAMS,
-    PROCESS_LOOPBACK_MODE, PROCESS_LOOPBACK_MODE_EXCLUDE_TARGET_PROCESS_TREE,
+    AUDCLNT_STREAMFLAGS_EVENTCALLBACK, AUDCLNT_STREAMFLAGS_LOOPBACK, AUDIOCLIENT_ACTIVATION_PARAMS,
+    AUDIOCLIENT_ACTIVATION_PARAMS_0, AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK,
+    AUDIOCLIENT_PROCESS_LOOPBACK_PARAMS, PROCESS_LOOPBACK_MODE,
+    PROCESS_LOOPBACK_MODE_EXCLUDE_TARGET_PROCESS_TREE,
     PROCESS_LOOPBACK_MODE_INCLUDE_TARGET_PROCESS_TREE, VIRTUAL_AUDIO_DEVICE_PROCESS_LOOPBACK,
-    WAVEFORMATEX, WAVE_FORMAT_IEEE_FLOAT,
+    WAVEFORMATEX,
 };
 use windows::Win32::System::Com::StructuredStorage::{
     PROPVARIANT, PROPVARIANT_0, PROPVARIANT_0_0, PROPVARIANT_0_0_0,
@@ -33,8 +33,7 @@ use windows::Win32::System::Com::{
     CoCreateInstance, CoInitializeEx, CoUninitialize, BLOB, CLSCTX_ALL, COINIT_MULTITHREADED,
 };
 use windows::Win32::System::Diagnostics::ToolHelp::{
-    CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W,
-    TH32CS_SNAPPROCESS,
+    CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
 };
 use windows::Win32::System::Threading::{CreateEventW, WaitForSingleObject};
 use windows::Win32::System::Variant::VT_BLOB;
@@ -44,10 +43,11 @@ use super::CaptureStream;
 use crate::errors::AppError;
 use crate::locks::MutexExt;
 use crate::services::voice::{
-    AudioApp, CaptureSource, OpenedCapture, PlaybackConverter, StreamContext,
-    TARGET_SAMPLE_RATE_HZ,
+    AudioApp, CaptureSource, OpenedCapture, PlaybackConverter, StreamContext, TARGET_SAMPLE_RATE_HZ,
 };
 
+/// `WAVE_FORMAT_IEEE_FLOAT` of `mmreg.h`.
+const WAVE_FORMAT_IEEE_FLOAT: u16 = 3;
 const LOOPBACK_RATE_HZ: u32 = 48_000;
 const LOOPBACK_CHANNELS: u16 = 2;
 /// The buffer of the loopback stream, in 100 ns units: 200 ms.
@@ -87,8 +87,14 @@ fn windows_build() -> Option<u32> {
     if status != 0 {
         return None;
     }
-    let length = buffer.iter().position(|unit| *unit == 0).unwrap_or(buffer.len());
-    String::from_utf16_lossy(&buffer[..length]).trim().parse().ok()
+    let length = buffer
+        .iter()
+        .position(|unit| *unit == 0)
+        .unwrap_or(buffer.len());
+    String::from_utf16_lossy(&buffer[..length])
+        .trim()
+        .parse()
+        .ok()
 }
 
 fn com_error(error: windows::core::Error) -> AppError {
@@ -233,7 +239,7 @@ impl LoopbackStream {
     fn start(client: IAudioClient) -> Result<Self, AppError> {
         let block_align = LOOPBACK_CHANNELS * 4;
         let format = WAVEFORMATEX {
-            wFormatTag: WAVE_FORMAT_IEEE_FLOAT as u16,
+            wFormatTag: WAVE_FORMAT_IEEE_FLOAT,
             nChannels: LOOPBACK_CHANNELS,
             nSamplesPerSec: LOOPBACK_RATE_HZ,
             nAvgBytesPerSec: LOOPBACK_RATE_HZ * u32::from(block_align),
@@ -262,7 +268,10 @@ impl LoopbackStream {
                 client,
                 event,
             };
-            stream.client.SetEventHandle(stream.event).map_err(com_error)?;
+            stream
+                .client
+                .SetEventHandle(stream.event)
+                .map_err(com_error)?;
             stream.client.Start().map_err(com_error)?;
             Ok(stream)
         }
@@ -618,7 +627,7 @@ fn playing_apps(sessions: &[ActiveSession], processes: &[ProcessEntry]) -> Vec<A
             }),
         }
     }
-    apps.sort_by(|a, b| a.label.to_lowercase().cmp(&b.label.to_lowercase()));
+    apps.sort_by_key(|app| app.label.to_lowercase());
     apps
 }
 

@@ -153,6 +153,7 @@ const FILTER_LABELS: Record<HistoryFilter, string> = {
   all: 'history.filterAll',
   quickInput: 'history.filterQuickInput',
   voice: 'history.filterVoice',
+  listen: 'history.filterListen',
   quickAiRequest: 'chat.quickAiRequests',
   problems: 'history.filterProblems',
 }

@@ -140,6 +140,7 @@ impl Activation {
     pub fn can_take_selection(&self, user_config: &Value) -> bool {
         if self.mode.is_screenshot()
             || self.mode == ActivationMode::VoiceCommands
+            || self.mode == ActivationMode::Listen
             || self.mode == ActivationMode::Favorites
         {
             return false;
@@ -174,6 +175,7 @@ impl Activation {
         matches!(
             self.mode,
             ActivationMode::Voice
+                | ActivationMode::Listen
                 | ActivationMode::VoiceChat
                 | ActivationMode::VoiceCommands
                 | ActivationMode::VoiceQuickAiRequest

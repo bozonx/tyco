@@ -23,6 +23,10 @@ export interface VoiceRecordingProps {
   prefix?: string
   suffix?: string
   context?: string
+  /** The listened message this dictation replies to */
+  replyTo?: string
+  /** Shows the switch to listening, see `QuickModeSwitch` */
+  canSwitchMode?: boolean
   stylingPresets?: (StylingConfig | null)[]
   finish: (intent?: VoiceFinishIntent) => Promise<void>
   finishWithStyle?: (rule: string) => Promise<void>

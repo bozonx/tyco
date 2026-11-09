@@ -22,6 +22,7 @@ function setup(finishTimeoutMs?: number) {
       isSuperseded: () => superseded,
     })),
     stop: vi.fn(async () => audio.end()),
+    switchSource: vi.fn(async () => undefined),
   }
   const stt: SttClient = {
     transcribeLive: (request) => {

@@ -21,6 +21,17 @@ pub fn hide_quick_window_on_blur(app: AppHandle, activation_id: u64) -> Result<(
     runtime::hide_quick_window_on_blur(&app, activation_id)
 }
 
+/// Switches the shown quick window between voice input and listening in
+/// place, keeping where the user moved it.
+#[tauri::command]
+pub fn switch_quick_mode(
+    app: AppHandle,
+    activation_id: u64,
+    mode: crate::services::activation::ActivationMode,
+) -> Result<(), AppError> {
+    runtime::switch_quick_mode(&app, activation_id, mode)
+}
+
 #[tauri::command]
 pub fn reveal_quick_window(app: AppHandle, activation_id: u64) -> Result<(), AppError> {
     runtime::reveal_quick_window(&app, activation_id)

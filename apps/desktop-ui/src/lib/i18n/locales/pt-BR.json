@@ -484,7 +484,8 @@
     "textsDisabled": "O salvamento de textos está desativado nas configurações.",
     "today": "Hoje",
     "undo": "Desfazer",
-    "yesterday": "Ontem"
+    "yesterday": "Ontem",
+    "filterListen": "Escuta"
   },
   "input": {
     "historySearchPlaceholder": "Pesquisar no histórico...",
@@ -813,7 +814,8 @@
       "customAction2": "Ação personalizada 2",
       "customAction3": "Ação personalizada 3",
       "customAction4": "Ação personalizada 4",
-      "customAction5": "Ação personalizada 5"
+      "customAction5": "Ação personalizada 5",
+      "listen": "Transcrever o som do computador"
     },
     "hotkeyInput": {
       "cancelHint": "Esc para cancelar",
@@ -1440,7 +1442,10 @@
     },
     "translate": "traduza para"
   },
-  "window": { "clickToFocus": "Clique para continuar" },
+  "window": {
+    "clickToFocus": "Clique para continuar",
+    "moveOverlay": "Arraste para mover"
+  },
   "write": {
     "alreadyCorrected": "O texto já está corrigido",
     "cancel": "Cancelar",
@@ -1537,5 +1542,26 @@
     "emptyHint": "Adicione prompts nas configurações.",
     "everyProfile": "Sem perfil (Pergunta à IA)",
     "actionName": "Prompt: {prompt}"
+  },
+  "listen": {
+    "title": "Ouvindo",
+    "switchToListen": "Transcrever o som do computador",
+    "switchToVoice": "Voltar à entrada de voz",
+    "unavailable": "Gravar o som do computador requer PipeWire no Linux ou Windows 10 ou mais recente",
+    "systemMix": "Todo o som",
+    "noPlayingApps": "Nenhum app está tocando som",
+    "sourceLabel": "Fonte",
+    "sourceInfo": "O que o atalho grava: todo o som do computador ou um app. O app é lembrado pelo nome; se ainda não tocar nada, a gravação aguarda o som dele.",
+    "appIdPlaceholder": "Nome do app, ex.: Telegram.exe",
+    "privacyHint": "Com reconhecimento na nuvem (Deepgram, Gemini), o som, incluindo a fala de outras pessoas, vai para o provedor escolhido. O reconhecimento local (sherpa) não envia nada.",
+    "privacyHintLabel": "Para onde vai o som",
+    "useSystemMix": "Gravar todo o som",
+    "sourceLost": "O app foi fechado: gravando todo o som",
+    "waitingFor": "Aguardando som de {app}…",
+    "stop": "Parar",
+    "replyByVoice": "Responder por voz",
+    "nothingRecognized": "Nada reconhecido",
+    "retry": "Tentar novamente",
+    "replyingTo": "Resposta a: {text}"
   }
 }

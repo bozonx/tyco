@@ -238,6 +238,15 @@ KWin-активатор своего окна.
 Порталы (RemoteDesktop, GlobalShortcuts) доступны без отдельных прав.
 Сам манифест Flatpak пока не написан.
 
+### Звук компьютера (режим «Слушание»)
+
+- Linux: только PipeWire (`pipewire-rs`, сборка требует `libpipewire-0.3-dev`
+  и `libclang-dev`). Чистый PulseAudio не поддерживается: без сервера
+  PipeWire `canListen = false`, и режим недоступен.
+- Windows: process loopback (сборка 19041+), до неё — loopback устройства
+  вывода через CPAL, без выбора приложения (`canListenToApps = false`).
+- Оверлей перетаскивается (`canMoveOverlay`) везде, кроме layer-shell.
+
 ## 3. Linux: особенности окружений
 
 | Возможность        | KDE Wayland            | GNOME Wayland                  | wlroots (Sway, Hyprland)        | X11                   |

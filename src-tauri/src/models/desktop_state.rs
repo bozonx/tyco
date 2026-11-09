@@ -41,6 +41,13 @@ pub struct ActivationSnapshot {
 pub struct WindowSnapshot {
     pub is_window_shown: bool,
     pub window_profile: WindowProfile,
+    /// The quick window can be dragged: not on a layer-shell surface, whose
+    /// place only its anchor and margins set.
+    pub can_move_overlay: bool,
+    /// The sound the computer plays can be recorded, see `platform::audio`.
+    pub can_listen: bool,
+    /// A single application can be recorded.
+    pub can_listen_to_apps: bool,
 }
 #[derive(Debug, Clone, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]

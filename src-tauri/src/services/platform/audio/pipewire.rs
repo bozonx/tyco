@@ -203,16 +203,15 @@ fn take_samples(stream: &pw::stream::Stream, samples: &mut Vec<f32>) {
         let start = offset.min(end);
         samples.extend(
             bytes[start..end]
-                .chunks_exact(4)
-                .map(|sample| f32::from_le_bytes([sample[0], sample[1], sample[2], sample[3]])),
+                .as_chunks::<4>()
+                .0
+                .iter()
+                .map(|sample| f32::from_le_bytes(*sample)),
         );
     }
 }
 
-fn connect_capture(
-    stream: &pw::stream::Stream,
-    rate_hz: u32,
-) -> Result<(), AppError> {
+fn connect_capture(stream: &pw::stream::Stream, rate_hz: u32) -> Result<(), AppError> {
     let format = format_param(rate_hz);
     let pod = spa::pod::Pod::from_bytes(&format)
         .ok_or_else(|| AppError::Failed("cannot build the PipeWire format".into()))?;
@@ -674,7 +673,7 @@ fn group_apps<'a>(
             }),
         }
     }
-    apps.sort_by(|a, b| a.label.to_lowercase().cmp(&b.label.to_lowercase()));
+    apps.sort_by_key(|app| app.label.to_lowercase());
     apps
 }
 
@@ -760,7 +759,10 @@ fn peak_stream(
         core,
         "tyco-listen-meter",
         serial,
-        &[("resample.peaks", "true"), (*pw::keys::NODE_PASSIVE, "true")],
+        &[
+            ("resample.peaks", "true"),
+            (*pw::keys::NODE_PASSIVE, "true"),
+        ],
     )
     .ok()?;
     let mut samples = Vec::new();
@@ -880,7 +882,10 @@ mod live_tests {
         std::fs::create_dir_all(&dir).unwrap();
         let wav = dir.join("tone.wav");
         tone_wav(&wav);
-        let mut play = std::process::Command::new("pw-play").arg(&wav).spawn().unwrap();
+        let mut play = std::process::Command::new("pw-play")
+            .arg(&wav)
+            .spawn()
+            .unwrap();
         std::thread::sleep(Duration::from_millis(500));
         let stop = Arc::new(AtomicBool::new(false));
         let listed = Arc::new(Mutex::new(Vec::new()));

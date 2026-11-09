@@ -29,9 +29,7 @@ impl AudioSource for SystemAudioSource {
         stop_flag: &Arc<AtomicBool>,
     ) -> Result<OpenedCapture<Self::Stream>, AppError> {
         match source {
-            CaptureSource::Microphone => {
-                microphone::open_microphone(stop_flag).map(boxed)
-            }
+            CaptureSource::Microphone => microphone::open_microphone(stop_flag).map(boxed),
             playback => open_playback(playback, stop_flag),
         }
     }

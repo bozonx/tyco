@@ -1,10 +1,25 @@
 <template>
   <div
     class="voice-bar"
-    :class="{ 'with-styling': Boolean(slots) }"
+    :class="{
+      'with-styling': Boolean(slots),
+      'with-header': canSwitchMode || Boolean(replyTo),
+    }"
     role="region"
     :aria-label="ariaLabel"
   >
+    <div v-if="canSwitchMode || replyTo" class="voice-bar-header">
+      <OverlayDragHandle />
+      <QuickModeSwitch
+        v-if="canSwitchMode"
+        mode="voice"
+        :disabled="!desktopStore.desktopState.canListen"
+        @switch="emit('switch-mode')"
+      />
+      <span v-if="replyTo" class="voice-bar-reply" :title="replyTo">
+        {{ t('listen.replyingTo', { text: replyTo }) }}
+      </span>
+    </div>
     <LiveTranscript
       class="voice-bar-transcript"
       :committed="transcript.committed"
@@ -63,16 +78,21 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useDesktopStore } from '../../stores/desktop'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
+import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import AudioWaveform from './AudioWaveform.vue'
 import LiveTranscript from './LiveTranscript.vue'
+import QuickModeSwitch from './QuickModeSwitch.vue'
 import VoiceAutoStopNotice from './VoiceAutoStopNotice.vue'
 import VoiceRecordingActions from './VoiceRecordingActions.vue'
 import type { VoiceRecordingProps } from './voice-recording-props'
 import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 
 const props = defineProps<VoiceRecordingProps>()
+const emit = defineEmits<{ (e: 'switch-mode'): void }>()
 const { t } = useI18n()
+const desktopStore = useDesktopStore()
 
 const ariaLabel = computed(() => {
   if (props.isCorrecting) return t('menu.correction')
@@ -103,6 +123,26 @@ const slots = computed(() => {
   border-radius: var(--radius-lg);
   background-color: var(--app-surface);
   box-shadow: var(--app-shadow-md);
+}
+
+.voice-bar-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.voice-bar-reply {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--app-text-muted);
+}
+
+.voice-bar.with-header {
+  height: 9.5rem;
 }
 
 .voice-bar.with-styling {

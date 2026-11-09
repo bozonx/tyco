@@ -10,6 +10,7 @@ export const HISTORY_FILTERS: readonly HistoryFilter[] = [
   'all',
   'quickInput',
   'voice',
+  'listen',
   'quickAiRequest',
   'problems',
 ]

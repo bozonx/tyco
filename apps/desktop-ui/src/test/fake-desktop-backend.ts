@@ -97,6 +97,9 @@ export class FakeDesktopBackend {
     this.window = {
       isWindowShown: true,
       windowProfile: 'sheet',
+      canMoveOverlay: true,
+      canListen: true,
+      canListenToApps: true,
       ...options.window,
     }
     this.history = structuredClone(options.history ?? [])

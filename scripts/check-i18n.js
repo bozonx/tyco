@@ -205,6 +205,7 @@ const DYNAMIC_KEYS = new Set([
   ...[
     'quickInput',
     'voice',
+    'listen',
     'editor',
     'chat',
     'voiceChat',

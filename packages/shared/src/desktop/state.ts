@@ -15,6 +15,7 @@ export type ActivationMode = ActivationModeName
 export const ActivationMode = {
   SELECTION_ACTIONS: 'selectionActions',
   VOICE: 'voice',
+  LISTEN: 'listen',
   VOICE_COMMANDS: 'voiceCommands',
   CORRECTION: 'correction',
   TRANSLATION: 'translation',
@@ -77,6 +78,9 @@ export const DEFAULT_DESKTOP_VIEW_STATE: DesktopViewState = {
   userData: DEFAULT_USER_DATA_STATE,
   isWindowShown: false,
   windowProfile: 'sheet',
+  canMoveOverlay: false,
+  canListen: false,
+  canListenToApps: false,
 }
 
 export function desktopSnapshotToView(
@@ -105,6 +109,9 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
     accessRequest,
     isWindowShown,
     windowProfile,
+    canMoveOverlay,
+    canListen,
+    canListenToApps,
     userConfig,
     sessionState,
     userData,
@@ -123,7 +130,13 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
       settingsTab,
       accessRequest,
     },
-    window: { isWindowShown, windowProfile },
+    window: {
+      isWindowShown,
+      windowProfile,
+      canMoveOverlay,
+      canListen,
+      canListenToApps,
+    },
     settings: { userConfig, sessionState, userData },
   }
 }

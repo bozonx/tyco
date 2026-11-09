@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, useId, watchEffect } from 'vue'
+import { computed, nextTick, ref, useId, watch, watchEffect } from 'vue'
 
 import { useAnchoredPanel } from '../../composables/use-anchored-panel'
 import { usePopover } from '../../composables/use-popover'
@@ -109,6 +109,11 @@ const props = withDefaults(
   { size: 'sm', variant: 'ghost' }
 )
 
+const emit = defineEmits<{
+  /** The menu opened or closed, e.g. to watch what it lists only while open */
+  (e: 'open-change', open: boolean): void
+}>()
+
 const menuId = useId()
 const {
   isOpen,
@@ -120,6 +125,7 @@ const {
   onEscape,
 } = usePopover()
 
+watch(isOpen, (open) => emit('open-change', open))
 const surfaceRef = ref<InstanceType<typeof MenuSurface> | null>(null)
 watchEffect(() => {
   panelRef.value = surfaceRef.value?.element ?? null

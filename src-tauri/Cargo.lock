@@ -5522,6 +5522,8 @@ dependencies = [
  "wayland-protocols-wlr",
  "webkit2gtk",
  "webp",
+ "windows 0.62.2",
+ "windows-core 0.62.2",
  "windows-native-keyring-store",
  "windows-sys 0.61.2",
  "x11rb",

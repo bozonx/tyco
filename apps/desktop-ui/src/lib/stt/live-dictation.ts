@@ -8,7 +8,11 @@ import {
 } from './live-transcript'
 import type { SttClient } from './stt-client'
 import type { SttModel } from './stt-config'
-import type { VoiceCaptureControl } from './voice-capture'
+import type { CaptureSource } from '@tyco/shared'
+import type {
+  CaptureSourceHandlers,
+  VoiceCaptureControl,
+} from './voice-capture'
 import { asDictationError, DictationError } from './dictation-error'
 
 /** How long the provider may take for its last words once the audio ends */
@@ -42,7 +46,9 @@ export interface LiveDictationDependencies {
   cancelTimeoutMs?: number
 }
 
-export interface LiveDictationStart {
+export interface LiveDictationStart extends CaptureSourceHandlers {
+  /** What is recorded: the microphone by default */
+  source?: CaptureSource
   model: SttModel
   language?: string
   hasApiKey: boolean
@@ -62,6 +68,8 @@ export interface LiveDictation {
   /** Stops the microphone and waits for the provider's last words */
   finish: () => Promise<string>
   cancel: () => Promise<void>
+  /** Records another playback source; the provider hears one stream */
+  switchSource: (source: CaptureSource) => Promise<void>
 }
 
 /** One dictation at a time: the microphone streamed to a live transcription. */
@@ -92,7 +100,10 @@ export function createLiveDictation(
 
       let capture: Awaited<ReturnType<VoiceCaptureControl['start']>>
       try {
-        capture = await deps.capture.start()
+        capture = await deps.capture.start(request.source, {
+          onWaiting: request.onWaiting,
+          onSourceLost: request.onSourceLost,
+        })
       } catch (error) {
         throw asDictationError('microphone', error)
       }
@@ -187,6 +198,8 @@ export function createLiveDictation(
       if (failure && !liveTranscriptText(state)) throw failure
       return liveTranscriptText(state)
     },
+
+    switchSource: (source) => deps.capture.switchSource(source),
 
     async cancel() {
       controller?.abort()

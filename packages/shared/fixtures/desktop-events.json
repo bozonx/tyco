@@ -23,7 +23,13 @@
       "settingsTab": null,
       "accessRequest": null
     },
-    "window": { "isWindowShown": true, "windowProfile": "sheet" },
+    "window": {
+      "isWindowShown": true,
+      "windowProfile": "sheet",
+      "canMoveOverlay": false,
+      "canListen": false,
+      "canListenToApps": false
+    },
     "settings": {
       "userConfig": {},
       "sessionState": {

@@ -484,7 +484,8 @@
     "textsDisabled": "已在設定中關閉文字儲存。",
     "today": "今天",
     "undo": "復原",
-    "yesterday": "昨天"
+    "yesterday": "昨天",
+    "filterListen": "聆聽"
   },
   "input": {
     "historySearchPlaceholder": "搜尋歷史記錄...",
@@ -807,7 +808,8 @@
       "customAction2": "自訂動作 2",
       "customAction3": "自訂動作 3",
       "customAction4": "自訂動作 4",
-      "customAction5": "自訂動作 5"
+      "customAction5": "自訂動作 5",
+      "listen": "轉寫電腦聲音"
     },
     "hotkeyInput": {
       "cancelHint": "按 Esc 取消",
@@ -1434,7 +1436,7 @@
     },
     "translate": "翻譯成;翻譯為;翻譯到"
   },
-  "window": { "clickToFocus": "按一下以繼續" },
+  "window": { "clickToFocus": "按一下以繼續", "moveOverlay": "拖曳以移動" },
   "write": {
     "alreadyCorrected": "文字已經過校對",
     "cancel": "取消",
@@ -1531,5 +1533,26 @@
     "emptyHint": "請在設定中新增提示詞。",
     "everyProfile": "無設定檔（向 AI 提問）",
     "actionName": "提示詞：{prompt}"
+  },
+  "listen": {
+    "title": "正在聆聽",
+    "switchToListen": "轉寫電腦聲音",
+    "switchToVoice": "返回語音輸入",
+    "unavailable": "錄製電腦聲音需要 Linux 上的 PipeWire 或 Windows 10 以上版本",
+    "systemMix": "全部聲音",
+    "noPlayingApps": "目前沒有應用程式在播放聲音",
+    "sourceLabel": "來源",
+    "sourceInfo": "快速鍵錄製的內容：電腦的全部聲音或某個應用程式。應用程式依名稱記住；若尚未播放任何內容，錄製會等待它的聲音。",
+    "appIdPlaceholder": "應用程式名稱，例如 Telegram.exe",
+    "privacyHint": "使用雲端辨識（Deepgram、Gemini）時，聲音（包括他人的說話）會傳送給所選的服務商。本機辨識（sherpa）不會傳送任何內容。",
+    "privacyHintLabel": "聲音的去向",
+    "useSystemMix": "錄製全部聲音",
+    "sourceLost": "應用程式已關閉：正在錄製全部聲音",
+    "waitingFor": "正在等待 {app} 的聲音…",
+    "stop": "停止",
+    "replyByVoice": "語音回覆",
+    "nothingRecognized": "未辨識到任何內容",
+    "retry": "重試",
+    "replyingTo": "回覆：{text}"
   }
 }

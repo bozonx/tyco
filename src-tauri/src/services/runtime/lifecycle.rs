@@ -65,9 +65,29 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
         supported,
         keyboard: PanelKeyboardMode::from_env(),
     });
+    app.state::<AppState>().update_snapshot(|snapshot| {
+        snapshot.window.can_move_overlay = super::can_move_overlay(supported);
+    });
+    spawn_listen_probe(app.handle().clone());
     setup_tray(app)?;
     spawn_quick_warmup(app.handle().clone())?;
     Ok(())
+}
+
+/// Asks the sound server whether the computer sound can be recorded off the
+/// UI thread: connecting to it may take a moment.
+fn spawn_listen_probe(app: AppHandle) {
+    std::thread::spawn(move || {
+        let can_listen = crate::services::platform::audio::can_capture_playback();
+        let can_listen_to_apps = can_listen && crate::services::platform::audio::can_capture_apps();
+        app.state::<AppState>().update_snapshot(|snapshot| {
+            snapshot.window.can_listen = can_listen;
+            snapshot.window.can_listen_to_apps = can_listen_to_apps;
+        });
+        if let Err(error) = super::emit_state(&app, &app.state::<AppState>()) {
+            log::warn!("Could not publish the listening capabilities: {error}");
+        }
+    });
 }
 
 const SHUTDOWN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(3);

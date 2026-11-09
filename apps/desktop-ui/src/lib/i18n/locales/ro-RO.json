@@ -484,7 +484,8 @@
     "textsDisabled": "Salvarea textelor este dezactivată în setări.",
     "today": "Astăzi",
     "undo": "Anulează",
-    "yesterday": "Ieri"
+    "yesterday": "Ieri",
+    "filterListen": "Ascultare"
   },
   "input": {
     "historySearchPlaceholder": "Caută în istoric...",
@@ -813,7 +814,8 @@
       "customAction2": "Acțiune personalizată 2",
       "customAction3": "Acțiune personalizată 3",
       "customAction4": "Acțiune personalizată 4",
-      "customAction5": "Acțiune personalizată 5"
+      "customAction5": "Acțiune personalizată 5",
+      "listen": "Transcrie sunetul computerului"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pentru anulare",
@@ -1440,7 +1442,10 @@
     },
     "translate": "tradu în"
   },
-  "window": { "clickToFocus": "Faceți clic pentru a continua" },
+  "window": {
+    "clickToFocus": "Faceți clic pentru a continua",
+    "moveOverlay": "Trageți pentru a muta"
+  },
   "write": {
     "alreadyCorrected": "Textul este deja corectat",
     "cancel": "Anulează",
@@ -1537,5 +1542,26 @@
     "emptyHint": "Adăugați prompturi în setări.",
     "everyProfile": "Fără profil (Întrebare pentru AI)",
     "actionName": "Prompt: {prompt}"
+  },
+  "listen": {
+    "title": "Ascult",
+    "switchToListen": "Transcrie sunetul computerului",
+    "switchToVoice": "Înapoi la introducerea vocală",
+    "unavailable": "Înregistrarea sunetului computerului necesită PipeWire pe Linux sau Windows 10 ori mai nou",
+    "systemMix": "Tot sunetul",
+    "noPlayingApps": "Nicio aplicație nu redă sunet",
+    "sourceLabel": "Sursă",
+    "sourceInfo": "Ce înregistrează scurtătura: tot sunetul computerului sau o aplicație. Aplicația este reținută după nume; dacă nu redă încă nimic, înregistrarea așteaptă sunetul ei.",
+    "appIdPlaceholder": "Numele aplicației, de ex. Telegram.exe",
+    "privacyHint": "Cu recunoașterea în cloud (Deepgram, Gemini), sunetul, inclusiv vorbirea altora, ajunge la furnizorul ales. Recunoașterea locală (sherpa) nu trimite nimic.",
+    "privacyHintLabel": "Unde ajunge sunetul",
+    "useSystemMix": "Înregistrează tot sunetul",
+    "sourceLost": "Aplicația s-a închis: se înregistrează tot sunetul",
+    "waitingFor": "Se așteaptă sunet de la {app}…",
+    "stop": "Oprește",
+    "replyByVoice": "Răspunde vocal",
+    "nothingRecognized": "Nu s-a recunoscut nimic",
+    "retry": "Reîncearcă",
+    "replyingTo": "Răspuns la: {text}"
   }
 }

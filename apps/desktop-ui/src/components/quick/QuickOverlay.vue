@@ -34,6 +34,8 @@
       class="quick-overlay-card"
       :inert="Boolean(activeAreaSelection) || isAwaitingCaptureOutcome"
     >
+      <!-- the bars carry their own grip; a sheet is moved by this one -->
+      <OverlayDragHandle v-if="isSheet" class="quick-sheet-drag-handle" />
       <div v-show="currentMode === 'quickInput'" class="quick-mode-layer">
         <WriteView />
       </div>
@@ -42,6 +44,18 @@
           v-if="currentMode === 'voice'"
           bar
           @result-shown="voiceResultShown = $event"
+        />
+      </div>
+      <!-- each activation listens anew, from the source of its hotkey -->
+      <div
+        v-if="
+          currentMode === 'listen' && desktopStore.desktopState.isWindowShown
+        "
+        class="quick-mode-layer"
+      >
+        <ListenView
+          :key="activationId"
+          @result-shown="listenResultShown = $event"
         />
       </div>
       <!-- Hiding preserves the view until its next activation. A new activation
@@ -145,6 +159,7 @@ import CorrectionView from '../../views/CorrectionView.vue'
 import CustomActionView from '../../views/CustomActionView.vue'
 import ExternalAccessView from '../../views/ExternalAccessView.vue'
 import FavoritesView from '../../views/FavoritesView.vue'
+import ListenView from '../../views/ListenView.vue'
 import QuickAiRequestView from '../../views/QuickAiRequestView.vue'
 import SelectionView from '../../views/SelectionView.vue'
 import StylingView from '../../views/StylingView.vue'
@@ -154,6 +169,7 @@ import VoiceCommandsView from '../../views/VoiceCommandsView.vue'
 import VoiceView from '../../views/VoiceView.vue'
 import WriteView from '../../views/WriteView.vue'
 import ScreenshotSelector from '../screenshot/ScreenshotSelector.vue'
+import OverlayDragHandle from './OverlayDragHandle.vue'
 import {
   type CropRect,
   DESKTOP_EVENTS,
@@ -180,12 +196,15 @@ const hasModal = computed(
 
 /** The dictation is over: its result takes the whole window */
 const voiceResultShown = ref(false)
+/** The listening is over: its transcript or its outcome takes the window */
+const listenResultShown = ref(false)
 
 /** Modes shown as a panel at the bottom while nothing else is open */
 const isPanelMode = computed(
   () =>
     currentMode.value === 'quickInput' ||
     (currentMode.value === 'voice' && !voiceResultShown.value) ||
+    (currentMode.value === 'listen' && !listenResultShown.value) ||
     currentMode.value === 'customAction'
 )
 
@@ -546,7 +565,16 @@ watch(
   align-items: center;
 }
 
+.quick-sheet-drag-handle {
+  position: absolute;
+  top: var(--space-2xs, 0.125rem);
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+}
+
 .quick-overlay-card {
+  position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;

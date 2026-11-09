@@ -484,7 +484,8 @@
     "textsDisabled": "Das Speichern von Texten ist in den Einstellungen deaktiviert.",
     "today": "Heute",
     "undo": "Rückgängig",
-    "yesterday": "Gestern"
+    "yesterday": "Gestern",
+    "filterListen": "Zuhören"
   },
   "input": {
     "historySearchPlaceholder": "Verlauf durchsuchen...",
@@ -813,7 +814,8 @@
       "customAction2": "Benutzerdefinierte Aktion 2",
       "customAction3": "Benutzerdefinierte Aktion 3",
       "customAction4": "Benutzerdefinierte Aktion 4",
-      "customAction5": "Benutzerdefinierte Aktion 5"
+      "customAction5": "Benutzerdefinierte Aktion 5",
+      "listen": "Computerton transkribieren"
     },
     "hotkeyInput": {
       "cancelHint": "Esc zum Abbrechen",
@@ -1440,7 +1442,10 @@
     },
     "translate": "übersetze auf"
   },
-  "window": { "clickToFocus": "Zum Fortfahren klicken" },
+  "window": {
+    "clickToFocus": "Zum Fortfahren klicken",
+    "moveOverlay": "Zum Verschieben ziehen"
+  },
   "write": {
     "alreadyCorrected": "Der Text ist bereits korrigiert",
     "cancel": "Abbrechen",
@@ -1537,5 +1542,26 @@
     "emptyHint": "Fügen Sie Prompts in den Einstellungen hinzu.",
     "everyProfile": "Kein Profil (Frage an die KI)",
     "actionName": "Prompt: {prompt}"
+  },
+  "listen": {
+    "title": "Zuhören",
+    "switchToListen": "Computerton transkribieren",
+    "switchToVoice": "Zurück zur Spracheingabe",
+    "unavailable": "Für die Aufnahme des Computertons ist PipeWire unter Linux oder Windows 10 oder neuer nötig",
+    "systemMix": "Gesamter Ton",
+    "noPlayingApps": "Keine App gibt gerade Ton wieder",
+    "sourceLabel": "Quelle",
+    "sourceInfo": "Was das Tastenkürzel aufnimmt: den gesamten Computerton oder eine App. Eine App wird über ihren Namen gemerkt; spielt sie noch nichts, wird auf ihren Ton gewartet.",
+    "appIdPlaceholder": "App-Name, z. B. Telegram.exe",
+    "privacyHint": "Bei Cloud-Erkennung (Deepgram, Gemini) geht der Ton, auch die Sprache anderer, an den gewählten Anbieter. Lokale Erkennung (sherpa) sendet nichts.",
+    "privacyHintLabel": "Wohin der Ton geht",
+    "useSystemMix": "Gesamten Ton aufnehmen",
+    "sourceLost": "Die App wurde geschlossen: Der gesamte Ton wird aufgenommen",
+    "waitingFor": "Warte auf Ton von {app}…",
+    "stop": "Stopp",
+    "replyByVoice": "Per Sprache antworten",
+    "nothingRecognized": "Nichts erkannt",
+    "retry": "Erneut versuchen",
+    "replyingTo": "Antwort auf: {text}"
   }
 }

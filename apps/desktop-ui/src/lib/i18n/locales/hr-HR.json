@@ -484,7 +484,8 @@
     "textsDisabled": "Spremanje tekstova isključeno je u postavkama.",
     "today": "Danas",
     "undo": "Poništi",
-    "yesterday": "Jučer"
+    "yesterday": "Jučer",
+    "filterListen": "Slušanje"
   },
   "input": {
     "historySearchPlaceholder": "Pretraži povijest...",
@@ -813,7 +814,8 @@
       "customAction2": "Prilagođena radnja 2",
       "customAction3": "Prilagođena radnja 3",
       "customAction4": "Prilagođena radnja 4",
-      "customAction5": "Prilagođena radnja 5"
+      "customAction5": "Prilagođena radnja 5",
+      "listen": "Prepiši zvuk računala"
     },
     "hotkeyInput": {
       "cancelHint": "Esc za odustajanje",
@@ -1440,7 +1442,10 @@
     },
     "translate": "prevedi na"
   },
-  "window": { "clickToFocus": "Kliknite za nastavak" },
+  "window": {
+    "clickToFocus": "Kliknite za nastavak",
+    "moveOverlay": "Povucite za pomicanje"
+  },
   "write": {
     "alreadyCorrected": "Tekst je već ispravljen",
     "cancel": "Odustani",
@@ -1537,5 +1542,26 @@
     "emptyHint": "Dodajte promptove u postavkama.",
     "everyProfile": "Bez profila (Pitanje za AI)",
     "actionName": "Prompt: {prompt}"
+  },
+  "listen": {
+    "title": "Slušam",
+    "switchToListen": "Prepiši zvuk računala",
+    "switchToVoice": "Natrag na glasovni unos",
+    "unavailable": "Snimanje zvuka računala zahtijeva PipeWire na Linuxu ili Windows 10 ili noviji",
+    "systemMix": "Sav zvuk",
+    "noPlayingApps": "Nijedna aplikacija ne reproducira zvuk",
+    "sourceLabel": "Izvor",
+    "sourceInfo": "Što prečac snima: sav zvuk računala ili jednu aplikaciju. Aplikacija se pamti po nazivu; ako još ništa ne svira, snimanje čeka njezin zvuk.",
+    "appIdPlaceholder": "Naziv aplikacije, npr. Telegram.exe",
+    "privacyHint": "Pri prepoznavanju u oblaku (Deepgram, Gemini) zvuk, uključujući tuđi govor, ide odabranom pružatelju. Lokalno prepoznavanje (sherpa) ništa ne šalje.",
+    "privacyHintLabel": "Kamo ide zvuk",
+    "useSystemMix": "Snimaj sav zvuk",
+    "sourceLost": "Aplikacija je zatvorena: snima se sav zvuk",
+    "waitingFor": "Čekam zvuk iz {app}…",
+    "stop": "Zaustavi",
+    "replyByVoice": "Odgovori glasom",
+    "nothingRecognized": "Ništa nije prepoznato",
+    "retry": "Pokušaj ponovno",
+    "replyingTo": "Odgovor na: {text}"
   }
 }

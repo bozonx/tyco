@@ -484,7 +484,8 @@
     "textsDisabled": "Il salvataggio dei testi è disattivato nelle impostazioni.",
     "today": "Oggi",
     "undo": "Annulla",
-    "yesterday": "Ieri"
+    "yesterday": "Ieri",
+    "filterListen": "Ascolto"
   },
   "input": {
     "historySearchPlaceholder": "Cerca nella cronologia...",
@@ -813,7 +814,8 @@
       "customAction2": "Azione personalizzata 2",
       "customAction3": "Azione personalizzata 3",
       "customAction4": "Azione personalizzata 4",
-      "customAction5": "Azione personalizzata 5"
+      "customAction5": "Azione personalizzata 5",
+      "listen": "Trascrivi l’audio del computer"
     },
     "hotkeyInput": {
       "cancelHint": "Esc per annullare",
@@ -1440,7 +1442,10 @@
     },
     "translate": "traduci in"
   },
-  "window": { "clickToFocus": "Fai clic per continuare" },
+  "window": {
+    "clickToFocus": "Fai clic per continuare",
+    "moveOverlay": "Trascina per spostare"
+  },
   "write": {
     "alreadyCorrected": "Il testo è già corretto",
     "cancel": "Annulla",
@@ -1537,5 +1542,26 @@
     "emptyHint": "Aggiungi i prompt nelle impostazioni.",
     "everyProfile": "Nessun profilo (Domanda all'IA)",
     "actionName": "Prompt: {prompt}"
+  },
+  "listen": {
+    "title": "In ascolto",
+    "switchToListen": "Trascrivi l’audio del computer",
+    "switchToVoice": "Torna all’input vocale",
+    "unavailable": "Per registrare l’audio del computer serve PipeWire su Linux o Windows 10 o successivo",
+    "systemMix": "Tutto l’audio",
+    "noPlayingApps": "Nessuna app sta riproducendo audio",
+    "sourceLabel": "Sorgente",
+    "sourceInfo": "Cosa registra la scorciatoia: tutto l’audio del computer o un’app. L’app viene ricordata per nome; se non riproduce ancora nulla, la registrazione attende il suo audio.",
+    "appIdPlaceholder": "Nome dell’app, ad es. Telegram.exe",
+    "privacyHint": "Con il riconoscimento nel cloud (Deepgram, Gemini) l’audio, compresa la voce di altre persone, va al provider scelto. Il riconoscimento locale (sherpa) non invia nulla.",
+    "privacyHintLabel": "Dove va l’audio",
+    "useSystemMix": "Registra tutto l’audio",
+    "sourceLost": "L’app è stata chiusa: si registra tutto l’audio",
+    "waitingFor": "In attesa dell’audio di {app}…",
+    "stop": "Interrompi",
+    "replyByVoice": "Rispondi a voce",
+    "nothingRecognized": "Nulla di riconosciuto",
+    "retry": "Riprova",
+    "replyingTo": "Risposta a: {text}"
   }
 }

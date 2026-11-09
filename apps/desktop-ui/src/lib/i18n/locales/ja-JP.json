@@ -484,7 +484,8 @@
     "textsDisabled": "テキストの保存は設定でオフになっています。",
     "today": "今日",
     "undo": "元に戻す",
-    "yesterday": "昨日"
+    "yesterday": "昨日",
+    "filterListen": "聞き取り"
   },
   "input": {
     "historySearchPlaceholder": "履歴を検索...",
@@ -810,7 +811,8 @@
       "customAction2": "カスタムアクション 2",
       "customAction3": "カスタムアクション 3",
       "customAction4": "カスタムアクション 4",
-      "customAction5": "カスタムアクション 5"
+      "customAction5": "カスタムアクション 5",
+      "listen": "PCの音声を文字起こし"
     },
     "hotkeyInput": {
       "cancelHint": "Escでキャンセル",
@@ -1437,7 +1439,10 @@
     },
     "translate": "{language}に翻訳して;{language}に翻訳;翻訳"
   },
-  "window": { "clickToFocus": "クリックして続行" },
+  "window": {
+    "clickToFocus": "クリックして続行",
+    "moveOverlay": "ドラッグして移動"
+  },
   "write": {
     "alreadyCorrected": "テキストはすでに修正済みです",
     "cancel": "キャンセル",
@@ -1534,5 +1539,26 @@
     "emptyHint": "設定でプロンプトを追加してください。",
     "everyProfile": "プロファイルなし（AIへの質問）",
     "actionName": "プロンプト: {prompt}"
+  },
+  "listen": {
+    "title": "聞き取り中",
+    "switchToListen": "PCの音声を文字起こし",
+    "switchToVoice": "音声入力に戻る",
+    "unavailable": "PCの音声を録音するには、LinuxではPipeWire、またはWindows 10以降が必要です",
+    "systemMix": "すべての音声",
+    "noPlayingApps": "音声を再生しているアプリはありません",
+    "sourceLabel": "ソース",
+    "sourceInfo": "ホットキーで録音する対象：PC のすべての音声、または1つのアプリ。アプリは名前で記憶され、まだ何も再生していない場合は音声を待ちます。",
+    "appIdPlaceholder": "アプリ名（例：Telegram.exe）",
+    "privacyHint": "クラウド認識（Deepgram、Gemini）では、他人の発話を含む音声が選択したプロバイダーに送られます。ローカル認識（sherpa）は何も送信しません。",
+    "privacyHintLabel": "音声の送信先",
+    "useSystemMix": "すべての音声を録音",
+    "sourceLost": "アプリが終了しました：すべての音声を録音しています",
+    "waitingFor": "{app} の音声を待っています…",
+    "stop": "停止",
+    "replyByVoice": "音声で返信",
+    "nothingRecognized": "何も認識されませんでした",
+    "retry": "再試行",
+    "replyingTo": "返信先：{text}"
   }
 }

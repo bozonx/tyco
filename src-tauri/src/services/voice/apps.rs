@@ -39,7 +39,12 @@ impl AudioAppsWatches {
 
     /// Ends every watch, e.g. on shutdown.
     pub fn clear(&self) {
-        let watches: Vec<_> = self.watches.locked().drain().map(|(_, watch)| watch).collect();
+        let watches: Vec<_> = self
+            .watches
+            .locked()
+            .drain()
+            .map(|(_, watch)| watch)
+            .collect();
         drop(watches);
     }
 }

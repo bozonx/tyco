@@ -484,7 +484,8 @@
     "textsDisabled": "ტექსტების შენახვა პარამეტრებში გამორთულია.",
     "today": "დღეს",
     "undo": "დაბრუნება",
-    "yesterday": "გუშინ"
+    "yesterday": "გუშინ",
+    "filterListen": "მოსმენა"
   },
   "input": {
     "historySearchPlaceholder": "ისტორიაში ძიება...",
@@ -810,7 +811,8 @@
       "customAction2": "მორგებული მოქმედება 2",
       "customAction3": "მორგებული მოქმედება 3",
       "customAction4": "მორგებული მოქმედება 4",
-      "customAction5": "მორგებული მოქმედება 5"
+      "customAction5": "მორგებული მოქმედება 5",
+      "listen": "კომპიუტერის ხმის ტრანსკრიფცია"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — გაუქმება",
@@ -1437,7 +1439,10 @@
     },
     "translate": "თარგმნე"
   },
-  "window": { "clickToFocus": "დააწკაპუნეთ გასაგრძელებლად" },
+  "window": {
+    "clickToFocus": "დააწკაპუნეთ გასაგრძელებლად",
+    "moveOverlay": "გადაათრიეთ გადასაადგილებლად"
+  },
   "write": {
     "alreadyCorrected": "ტექსტი უკვე შესწორებულია",
     "cancel": "გაუქმება",
@@ -1534,5 +1539,26 @@
     "emptyHint": "დაამატეთ პრომპტები პარამეტრებში.",
     "everyProfile": "პროფილის გარეშე (კითხვა AI-ს)",
     "actionName": "პრომპტი: {prompt}"
+  },
+  "listen": {
+    "title": "ვუსმენ",
+    "switchToListen": "კომპიუტერის ხმის ტრანსკრიფცია",
+    "switchToVoice": "ხმოვან შეყვანაზე დაბრუნება",
+    "unavailable": "კომპიუტერის ხმის ჩაწერას სჭირდება PipeWire Linux-ზე ან Windows 10 ან უფრო ახალი",
+    "systemMix": "მთელი ხმა",
+    "noPlayingApps": "ამჟამად არცერთი აპი არ უკრავს ხმას",
+    "sourceLabel": "წყარო",
+    "sourceInfo": "რას იწერს ცხელი ღილაკი: კომპიუტერის მთელ ხმას ან ერთ აპს. აპი სახელით ინახება; თუ ჯერ არაფერს უკრავს, ჩაწერა მის ხმას ელოდება.",
+    "appIdPlaceholder": "აპის სახელი, მაგ. Telegram.exe",
+    "privacyHint": "ღრუბლოვანი ამოცნობისას (Deepgram, Gemini) ხმა, სხვისი მეტყველების ჩათვლით, არჩეულ პროვაიდერს ეგზავნება. ლოკალური ამოცნობა (sherpa) არაფერს აგზავნის.",
+    "privacyHintLabel": "სად მიდის ხმა",
+    "useSystemMix": "მთელი ხმის ჩაწერა",
+    "sourceLost": "აპი დაიხურა: იწერება მთელი ხმა",
+    "waitingFor": "ველოდებით ხმას {app}-დან…",
+    "stop": "შეჩერება",
+    "replyByVoice": "ხმით პასუხი",
+    "nothingRecognized": "ვერაფერი ამოიცნო",
+    "retry": "თავიდან ცდა",
+    "replyingTo": "პასუხი: {text}"
   }
 }

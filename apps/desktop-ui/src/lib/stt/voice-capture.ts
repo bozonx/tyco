@@ -1,9 +1,17 @@
 import type { AudioChunk } from '@bozonx/ai-kit'
-import { type VoiceCaptureEvent } from '@tyco/shared'
+import { type CaptureSource, type VoiceCaptureEvent } from '@tyco/shared'
 
 import { createAsyncQueue } from '../net/async-queue'
 import { errorMessage, isArrayBuffer, type NetIpc } from '../net/net-ipc'
 import { DictationError } from './dictation-error'
+
+/** What a playback source reports while it records */
+export interface CaptureSourceHandlers {
+  /** Its application plays nothing yet, or has started to */
+  onWaiting?: (isWaiting: boolean) => void
+  /** Its application quit: the capture went on with `source` */
+  onSourceLost?: (source: CaptureSource) => void
+}
 
 interface VoiceCapture {
   /** Rate of the PCM16 mono audio, in hertz */
@@ -15,7 +23,13 @@ interface VoiceCapture {
 }
 
 export interface VoiceCaptureControl {
-  start: () => Promise<VoiceCapture>
+  /** Records `source`, the microphone by default */
+  start: (
+    source?: CaptureSource,
+    handlers?: CaptureSourceHandlers
+  ) => Promise<VoiceCapture>
+  /** Records another playback source in the running capture */
+  switchSource: (source: CaptureSource) => Promise<void>
   /** Resolves once the microphone is off; `audio` then drains and ends */
   stop: () => Promise<void>
 }
@@ -27,7 +41,7 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
   let sessionId: number | undefined
 
   return {
-    async start() {
+    async start(source, handlers = {}) {
       let overflowed = false
       let superseded = false
       let captureSessionId: number | undefined
@@ -48,7 +62,10 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
           return
         }
         const event = message as VoiceCaptureEvent
-        if (event.type === 'end') queue.end()
+        if (event.type === 'sourceStatus') handlers.onWaiting?.(event.isWaiting)
+        else if (event.type === 'sourceLost')
+          handlers.onSourceLost?.(event.source)
+        else if (event.type === 'end') queue.end()
         else if (event.type === 'superseded') {
           // the audio before it is complete: it ends as usual
           superseded = true
@@ -62,6 +79,7 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
       try {
         const started = await ipc.invoke('start_voice_capture', {
           onAudio: ipc.createChannel(onMessage),
+          ...(source && { source }),
         })
         captureSessionId = started.sessionId
         sessionId = captureSessionId
@@ -83,6 +101,16 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
           })(),
           isSuperseded: () => superseded,
         }
+      } catch (error) {
+        throw new Error(errorMessage(error), { cause: error })
+      }
+    },
+
+    async switchSource(source) {
+      if (sessionId === undefined)
+        throw new Error('No capture is running to switch')
+      try {
+        await ipc.invoke('switch_capture_source', { sessionId, source })
       } catch (error) {
         throw new Error(errorMessage(error), { cause: error })
       }

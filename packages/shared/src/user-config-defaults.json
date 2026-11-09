@@ -49,6 +49,7 @@
     "quickInput": "Ctrl+Alt+Shift+W",
     "chat": "",
     "voiceChat": "",
+    "listen": "",
     "voice": "Ctrl+Alt+Shift+V",
     "selectionActions": "Ctrl+Alt+Shift+S",
     "selectionActionsPage2": "Ctrl+Alt+Shift+D",

@@ -14,6 +14,7 @@ function setup() {
     start: vi.fn().mockResolvedValue(undefined),
     finish: vi.fn().mockResolvedValue('New words'),
     cancel: vi.fn().mockResolvedValue(undefined),
+    switchSource: vi.fn().mockResolvedValue(undefined),
   }
   const owners = createDictationOwnership(dictation)
   return {

@@ -27,25 +27,25 @@ pub(super) fn open_input_device(
     device: &cpal::Device,
     stop_flag: &Arc<AtomicBool>,
 ) -> Result<OpenedCapture<cpal::Stream>, AppError> {
-        let default_config = device
-            .default_input_config()
-            .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
-        // the device or the sound server converts better than our filter, and
-        // a mono stream is mixed down properly by it
-        let speech = device
-            .supported_input_configs()
-            .ok()
-            .and_then(|configs| speech_config(configs, &default_config));
-        if let Some(config) = speech {
-            match open_with(device, config, stop_flag) {
-                Ok(opened) => return Ok(opened),
-                // a device may list a rate it then refuses
-                Err(error) => log::warn!(
-                    "Could not record at {TARGET_SAMPLE_RATE_HZ} Hz, using the default: {error}"
-                ),
-            }
+    let default_config = device
+        .default_input_config()
+        .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
+    // the device or the sound server converts better than our filter, and
+    // a mono stream is mixed down properly by it
+    let speech = device
+        .supported_input_configs()
+        .ok()
+        .and_then(|configs| speech_config(configs, &default_config));
+    if let Some(config) = speech {
+        match open_with(device, config, stop_flag) {
+            Ok(opened) => return Ok(opened),
+            // a device may list a rate it then refuses
+            Err(error) => log::warn!(
+                "Could not record at {TARGET_SAMPLE_RATE_HZ} Hz, using the default: {error}"
+            ),
         }
-        open_with(device, default_config, stop_flag)
+    }
+    open_with(device, default_config, stop_flag)
 }
 
 fn open_with(
@@ -76,6 +76,18 @@ fn open_with(
         context,
         output_sample_rate_hz,
     })
+}
+
+/// Records what `device`, an output device, plays: WASAPI loopback.
+#[cfg(target_os = "windows")]
+pub(super) fn open_loopback_device(
+    device: &cpal::Device,
+    stop_flag: &Arc<AtomicBool>,
+) -> Result<OpenedCapture<cpal::Stream>, AppError> {
+    let config = device
+        .default_output_config()
+        .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
+    open_with(device, config, stop_flag)
 }
 
 /// Sample formats the capture can read, see `build_input_stream`

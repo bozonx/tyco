@@ -484,7 +484,8 @@
     "textsDisabled": "Metinlerin kaydedilmesi ayarlarda kapalı.",
     "today": "Bugün",
     "undo": "Geri al",
-    "yesterday": "Dün"
+    "yesterday": "Dün",
+    "filterListen": "Dinleme"
   },
   "input": {
     "historySearchPlaceholder": "Geçmişte ara...",
@@ -810,7 +811,8 @@
       "customAction2": "Özel eylem 2",
       "customAction3": "Özel eylem 3",
       "customAction4": "Özel eylem 4",
-      "customAction5": "Özel eylem 5"
+      "customAction5": "Özel eylem 5",
+      "listen": "Bilgisayar sesini yazıya dök"
     },
     "hotkeyInput": {
       "cancelHint": "İptal için Esc",
@@ -1437,7 +1439,10 @@
     },
     "translate": "{language} çevir;{language}ye çevir;{language}e çevir;çevir"
   },
-  "window": { "clickToFocus": "Devam etmek için tıklayın" },
+  "window": {
+    "clickToFocus": "Devam etmek için tıklayın",
+    "moveOverlay": "Taşımak için sürükleyin"
+  },
   "write": {
     "alreadyCorrected": "Metin zaten düzeltildi",
     "cancel": "İptal",
@@ -1534,5 +1539,26 @@
     "emptyHint": "İstemleri ayarlardan ekleyin.",
     "everyProfile": "Profil yok (Yapay Zekaya Soru)",
     "actionName": "İstem: {prompt}"
+  },
+  "listen": {
+    "title": "Dinleniyor",
+    "switchToListen": "Bilgisayar sesini yazıya dök",
+    "switchToVoice": "Sesli girişe dön",
+    "unavailable": "Bilgisayar sesini kaydetmek için Linux'ta PipeWire ya da Windows 10 veya daha yenisi gerekir",
+    "systemMix": "Tüm ses",
+    "noPlayingApps": "Şu anda hiçbir uygulama ses çalmıyor",
+    "sourceLabel": "Kaynak",
+    "sourceInfo": "Kısayolun kaydettiği: bilgisayarın tüm sesi ya da tek bir uygulama. Uygulama adıyla hatırlanır; henüz bir şey çalmıyorsa kayıt onun sesini bekler.",
+    "appIdPlaceholder": "Uygulama adı, ör. Telegram.exe",
+    "privacyHint": "Bulut tanımada (Deepgram, Gemini) ses, başkalarının konuşması dahil, seçilen sağlayıcıya gider. Yerel tanıma (sherpa) hiçbir şey göndermez.",
+    "privacyHintLabel": "Ses nereye gidiyor",
+    "useSystemMix": "Tüm sesi kaydet",
+    "sourceLost": "Uygulama kapandı: tüm ses kaydediliyor",
+    "waitingFor": "{app} sesini bekliyor…",
+    "stop": "Durdur",
+    "replyByVoice": "Sesle yanıtla",
+    "nothingRecognized": "Hiçbir şey tanınmadı",
+    "retry": "Yeniden dene",
+    "replyingTo": "Yanıt: {text}"
   }
 }

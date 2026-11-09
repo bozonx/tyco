@@ -484,7 +484,8 @@
     "textsDisabled": "A szövegek mentése ki van kapcsolva a beállításokban.",
     "today": "Ma",
     "undo": "Visszavonás",
-    "yesterday": "Tegnap"
+    "yesterday": "Tegnap",
+    "filterListen": "Hallgatás"
   },
   "input": {
     "historySearchPlaceholder": "Keresés az előzményekben...",
@@ -810,7 +811,8 @@
       "customAction2": "Egyéni művelet 2",
       "customAction3": "Egyéni művelet 3",
       "customAction4": "Egyéni művelet 4",
-      "customAction5": "Egyéni művelet 5"
+      "customAction5": "Egyéni művelet 5",
+      "listen": "A számítógép hangjának átírása"
     },
     "hotkeyInput": {
       "cancelHint": "Esc: megszakítás",
@@ -1437,7 +1439,10 @@
     },
     "translate": "fordítsd le"
   },
-  "window": { "clickToFocus": "Kattintson a folytatáshoz" },
+  "window": {
+    "clickToFocus": "Kattintson a folytatáshoz",
+    "moveOverlay": "Húzza az áthelyezéshez"
+  },
   "write": {
     "alreadyCorrected": "A szöveg már javítva van",
     "cancel": "Mégse",
@@ -1534,5 +1539,26 @@
     "emptyHint": "Adjon hozzá promptokat a beállításokban.",
     "everyProfile": "Profil nélkül (Kérdés az AI-hoz)",
     "actionName": "Prompt: {prompt}"
+  },
+  "listen": {
+    "title": "Hallgatás",
+    "switchToListen": "A számítógép hangjának átírása",
+    "switchToVoice": "Vissza a hangbevitelhez",
+    "unavailable": "A számítógép hangjának rögzítéséhez PipeWire kell Linuxon, vagy Windows 10 vagy újabb",
+    "systemMix": "Teljes hang",
+    "noPlayingApps": "Egy alkalmazás sem játszik le hangot",
+    "sourceLabel": "Forrás",
+    "sourceInfo": "Mit rögzít a billentyűparancs: a számítógép teljes hangját vagy egy alkalmazást. Az alkalmazást a neve alapján jegyzi meg; ha még nem játszik le semmit, a rögzítés megvárja a hangját.",
+    "appIdPlaceholder": "Alkalmazás neve, pl. Telegram.exe",
+    "privacyHint": "Felhőalapú felismerésnél (Deepgram, Gemini) a hang – mások beszédét is beleértve – a választott szolgáltatóhoz kerül. A helyi felismerés (sherpa) semmit sem küld.",
+    "privacyHintLabel": "Hová kerül a hang",
+    "useSystemMix": "Teljes hang rögzítése",
+    "sourceLost": "Az alkalmazás bezárult: a teljes hang rögzítése folyik",
+    "waitingFor": "Várakozás a(z) {app} hangjára…",
+    "stop": "Leállítás",
+    "replyByVoice": "Válasz hanggal",
+    "nothingRecognized": "Nincs felismert szöveg",
+    "retry": "Újra",
+    "replyingTo": "Válasz erre: {text}"
   }
 }

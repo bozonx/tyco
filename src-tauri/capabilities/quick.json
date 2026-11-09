@@ -5,6 +5,7 @@
   "windows": ["quick"],
   "permissions": [
     "core:window:allow-is-focused",
+    "core:window:allow-start-dragging",
     "core:window:allow-is-visible",
     "core:window:allow-set-size",
     "allow-answer-external-access",

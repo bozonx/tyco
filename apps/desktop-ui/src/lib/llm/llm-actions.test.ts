@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { APP_CONFIG, DEFAULT_USER_CONFIG, type ChatMessage } from '@tyco/shared'
-import { createLlmActions } from './llm-actions'
+import { createLlmActions, voiceCorrectionRules } from './llm-actions'
 import { CHAT_TITLE_INSTRUCTIONS } from '../chat/chat-title'
 import { chatAnswer } from '../chat/testing'
 
@@ -191,5 +191,15 @@ describe('LLM application actions', () => {
     const error = new Error('Provider unavailable')
     f.aiRequest.mockRejectedValue(error)
     await expect(f.actions.correctText('Sample')).rejects.toBe(error)
+  })
+})
+
+describe('voice correction rules', () => {
+  it('add the message a voice reply answers', () => {
+    expect(voiceCorrectionRules('Be brief', undefined)).toBe('Be brief')
+    const rules = voiceCorrectionRules('Be brief', 'Meet Zoë at 5')
+    expect(rules).toContain('Be brief')
+    expect(rules).toContain('Meet Zoë at 5')
+    expect(voiceCorrectionRules(undefined, ' ')).toBeUndefined()
   })
 })

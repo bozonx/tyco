@@ -138,3 +138,41 @@ it('keeps a newer capture running when an old audio queue overflows', async () =
     { sessionId: 1 },
   ])
 })
+
+describe('playback sources', () => {
+  it('records a playback source and reports its waits and loss', async () => {
+    const fake = createFakeNetIpc({
+      ['start_voice_capture']: () => ({ sampleRate: 16_000, sessionId: 3 }),
+      ['switch_capture_source']: () => undefined,
+    })
+    const control = createVoiceCaptureControl(fake.ipc)
+    const waits: boolean[] = []
+    const lost: unknown[] = []
+
+    await control.start(
+      { kind: 'application', appId: 'telegram-desktop' },
+      {
+        onWaiting: (isWaiting) => waits.push(isWaiting),
+        onSourceLost: (source) => lost.push(source),
+      }
+    )
+    fake.emit({ type: 'sourceStatus', isWaiting: true })
+    fake.emit({ type: 'sourceLost', source: { kind: 'systemMix' } })
+    await control.switchSource({ kind: 'systemMix' })
+
+    expect(fake.callsOf('start_voice_capture')[0]).toEqual(
+      expect.objectContaining({
+        args: expect.objectContaining({
+          source: { kind: 'application', appId: 'telegram-desktop' },
+        }),
+      })
+    )
+    expect(waits).toEqual([true])
+    expect(lost).toEqual([{ kind: 'systemMix' }])
+    expect(fake.callsOf('switch_capture_source')).toEqual([
+      expect.objectContaining({
+        args: { sessionId: 3, source: { kind: 'systemMix' } },
+      }),
+    ])
+  })
+})

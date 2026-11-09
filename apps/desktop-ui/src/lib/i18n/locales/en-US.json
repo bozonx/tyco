@@ -484,7 +484,8 @@
     "textsDisabled": "Saving texts is turned off in the settings.",
     "today": "Today",
     "undo": "Undo",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "filterListen": "Listening"
   },
   "input": {
     "historySearchPlaceholder": "Search history...",
@@ -813,7 +814,8 @@
       "customAction2": "Custom action 2",
       "customAction3": "Custom action 3",
       "customAction4": "Custom action 4",
-      "customAction5": "Custom action 5"
+      "customAction5": "Custom action 5",
+      "listen": "Transcribe the computer sound"
     },
     "hotkeyInput": {
       "cancelHint": "Esc to cancel",
@@ -1440,7 +1442,10 @@
     },
     "translate": "translate to"
   },
-  "window": { "clickToFocus": "Click to continue" },
+  "window": {
+    "clickToFocus": "Click to continue",
+    "moveOverlay": "Drag to move"
+  },
   "write": {
     "alreadyCorrected": "Text is already corrected",
     "cancel": "Cancel",
@@ -1537,5 +1542,26 @@
     "emptyHint": "Add prompts in the settings.",
     "everyProfile": "No profile (Ask AI)",
     "actionName": "Prompt: {prompt}"
+  },
+  "listen": {
+    "title": "Listening",
+    "switchToListen": "Transcribe the computer sound",
+    "switchToVoice": "Back to voice input",
+    "unavailable": "Recording the computer sound needs PipeWire on Linux or Windows 10 or newer",
+    "systemMix": "All sound",
+    "noPlayingApps": "No app is playing sound",
+    "sourceLabel": "Source",
+    "sourceInfo": "What the hotkey records: all the sound of the computer, or one app. An app is remembered by its name and waited for if it plays nothing yet.",
+    "appIdPlaceholder": "App name, e.g. Telegram.exe",
+    "privacyHint": "With cloud recognition (Deepgram, Gemini) the sound, including other people's speech, goes to the chosen provider. Local recognition (sherpa) sends nothing.",
+    "privacyHintLabel": "Where the sound goes",
+    "useSystemMix": "Record all sound",
+    "sourceLost": "The app closed: recording all sound",
+    "waitingFor": "Waiting for sound from {app}…",
+    "stop": "Stop",
+    "replyByVoice": "Reply by voice",
+    "nothingRecognized": "Nothing recognized",
+    "retry": "Retry",
+    "replyingTo": "Reply to: {text}"
   }
 }

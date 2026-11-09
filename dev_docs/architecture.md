@@ -93,8 +93,19 @@ through a supplied backend; clipboard and focused-window effects live in
 `platform/selection.rs`. Paste and hotkey policies accept substitutable input
 and registration adapters, including rollback after a shortcut conflict.
 Voice capture accepts an audio source, level output and polling runtime;
-`platform/audio.rs` opens the CPAL device. Lifecycle tests use fake streams and
-outputs to check setup failure, timeout, final audio ordering and stale stops.
+`platform/audio.rs` opens the microphone through CPAL and the sound the
+computer plays natively: PipeWire on Linux (`audio/pipewire.rs`: the default
+sink's monitor, or every output stream of one application, mixed by
+`voice/mixer.rs`) and WASAPI process loopback on Windows (`audio/wasapi.rs`).
+A playback source delivers nothing while nothing plays, so the capture loop
+fills the gap with silence (`voice/source.rs`), switches the source in place
+(`switch_capture_source`) and falls back to the whole sound when the
+application quits. An application is identified by its binary (Flatpak app
+id on Linux, the executable of its process tree's root on Windows), never by
+a process id. Lifecycle tests use fake streams and outputs to check setup
+failure, timeout, final audio ordering, stale stops, source switches and gap
+filling; `integration_records_the_system_sound_and_one_application` runs
+against a real PipeWire server.
 Retention and polling tests supply timestamps or virtual time instead of sleeping.
 The remaining device and compositor behavior belongs to desktop smoke tests.
 

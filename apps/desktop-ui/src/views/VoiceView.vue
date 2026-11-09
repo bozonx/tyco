@@ -6,6 +6,8 @@
       target="external"
       finish-behavior="insertIntoTarget"
       :activation-mode="activationMode"
+      :reply-to="replyTo"
+      :can-switch-mode="isQuickWindow()"
       @corrected="handleCorrected"
       @cancelled="handleCancelled"
     />
@@ -19,23 +21,35 @@
       @corrected="handleCorrected"
       @cancelled="handleCancelled"
     />
-    <InsertMenu
-      v-else
-      :text="dictationResultText"
-      :old-text="dictationOldText"
-      :allow-insert-button="true"
-      :shortcuts-disabled="menuModalsStore.hasOpenModal"
-    />
+    <template v-else>
+      <div v-if="isQuickWindow()" class="voice-result-header">
+        <OverlayDragHandle />
+        <QuickModeSwitch
+          mode="voice"
+          :disabled="!desktopStore.desktopState.canListen"
+          @switch="switchToListen"
+        />
+      </div>
+      <InsertMenu
+        :text="dictationResultText"
+        :old-text="dictationOldText"
+        :allow-insert-button="true"
+        :shortcuts-disabled="menuModalsStore.hasOpenModal"
+      />
+    </template>
   </ContentPadding>
 </template>
 
 <script setup lang="ts">
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 
 import ContentPadding from '../components/common/ContentPadding.vue'
 import InsertMenu from '../components/menu/InsertMenu.vue'
 import VoiceRecognitionMenu from '../components/menu/VoiceRecognitionMenu.vue'
+import OverlayDragHandle from '../components/quick/OverlayDragHandle.vue'
+import QuickModeSwitch from '../components/voice/QuickModeSwitch.vue'
 import { useEditorNavigation } from '../composables/use-editor-navigation'
+import { useQuickModeSwitch } from '../composables/use-quick-mode-switch'
 import { useVoiceResultStep } from '../composables/use-voice-result-step'
 import { isQuickWindow } from '../lib/desktop/window'
 import { APP_ROUTES } from '../lib/navigation/routes'
@@ -43,6 +57,7 @@ import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
 import { appNavigation } from '../navigation'
 import { useActionMenuStore } from '../stores/action-menu'
 import { useDesktopStore } from '../stores/desktop'
+import { useListenReplyStore } from '../stores/listen-reply'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
 import { useVoiceResultStore } from '../stores/voice-result'
@@ -69,6 +84,20 @@ const actionMenuStore = useActionMenuStore()
 const editorNavigation = useEditorNavigation()
 
 navPanelStore.resetNavPanelState({ panelVisible: false })
+const listenReplyStore = useListenReplyStore()
+const modeSwitch = useQuickModeSwitch()
+/** The listened message this dictation answers, see "Reply by voice" */
+const replyTo = computed(() =>
+  isQuickWindow()
+    ? listenReplyStore.contextFor(desktopStore.desktopState.activationId)
+    : undefined
+)
+
+/** Leaves the result for listening; the result is not inserted */
+async function switchToListen() {
+  resetResult()
+  await modeSwitch.switchTo('listen')
+}
 
 /** Only the quick window is opened by the `voice` activation */
 const activationMode = isQuickWindow() ? ('voice' as const) : undefined
@@ -152,6 +181,13 @@ function handleCancelled() {
 </script>
 
 <style scoped>
+.voice-result-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
+}
+
 .voice-bar-layer {
   display: flex;
   flex-direction: column;

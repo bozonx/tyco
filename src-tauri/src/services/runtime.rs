@@ -17,6 +17,7 @@ pub use tray::set_tray_menu_labels;
 pub use window_visibility::{
     handle_window_event, hide_active_window, hide_quick_window_on_blur, hide_window,
     hide_window_without_refocus, open_main_chat, open_main_editor, show_application,
+    switch_quick_mode,
 };
 
 use self::panel_layer::{is_quick_window_shown, panel_layer, PanelLayerState};
@@ -38,6 +39,12 @@ use crate::state::AppState;
 pub const MAIN_WINDOW_LABEL: &str = "main";
 pub const QUICK_WINDOW_LABEL: &str = "quick";
 pub const FOCUS_RELEASE_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(300);
+
+/// Whether the quick window can be dragged: Tauri's `startDragging` moves a
+/// regular window (Windows, X11, GNOME on Wayland), not a layer-shell one.
+pub(crate) fn can_move_overlay(is_layer_shell: bool) -> bool {
+    !is_layer_shell
+}
 
 pub fn emit_state(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
     let snapshot = state.snapshot();
@@ -315,6 +322,7 @@ fn window_label_for_mode(mode: ActivationMode) -> &'static str {
     match mode {
         ActivationMode::QuickInput
         | ActivationMode::Voice
+        | ActivationMode::Listen
         | ActivationMode::SelectionActions
         | ActivationMode::VoiceCommands
         | ActivationMode::Correction

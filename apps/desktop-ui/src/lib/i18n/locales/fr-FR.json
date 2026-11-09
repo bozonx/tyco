@@ -484,7 +484,8 @@
     "textsDisabled": "L’enregistrement des textes est désactivé dans les paramètres.",
     "today": "Aujourd’hui",
     "undo": "Annuler",
-    "yesterday": "Hier"
+    "yesterday": "Hier",
+    "filterListen": "Écoute"
   },
   "input": {
     "historySearchPlaceholder": "Rechercher dans l’historique...",
@@ -813,7 +814,8 @@
       "customAction2": "Action personnalisée 2",
       "customAction3": "Action personnalisée 3",
       "customAction4": "Action personnalisée 4",
-      "customAction5": "Action personnalisée 5"
+      "customAction5": "Action personnalisée 5",
+      "listen": "Transcrire le son de l’ordinateur"
     },
     "hotkeyInput": {
       "cancelHint": "Échap pour annuler",
@@ -1440,7 +1442,10 @@
     },
     "translate": "traduis en"
   },
-  "window": { "clickToFocus": "Cliquez pour continuer" },
+  "window": {
+    "clickToFocus": "Cliquez pour continuer",
+    "moveOverlay": "Faites glisser pour déplacer"
+  },
   "write": {
     "alreadyCorrected": "Le texte est déjà corrigé",
     "cancel": "Annuler",
@@ -1537,5 +1542,26 @@
     "emptyHint": "Ajoutez des prompts dans les paramètres.",
     "everyProfile": "Sans profil (Question à l'IA)",
     "actionName": "Prompt : {prompt}"
+  },
+  "listen": {
+    "title": "Écoute",
+    "switchToListen": "Transcrire le son de l’ordinateur",
+    "switchToVoice": "Revenir à la saisie vocale",
+    "unavailable": "L’enregistrement du son de l’ordinateur nécessite PipeWire sous Linux ou Windows 10 ou ultérieur",
+    "systemMix": "Tout le son",
+    "noPlayingApps": "Aucune application ne joue de son",
+    "sourceLabel": "Source",
+    "sourceInfo": "Ce que le raccourci enregistre : tout le son de l’ordinateur ou une application. L’application est retenue par son nom ; si elle ne joue rien encore, l’enregistrement attend son son.",
+    "appIdPlaceholder": "Nom de l’application, p. ex. Telegram.exe",
+    "privacyHint": "Avec la reconnaissance dans le cloud (Deepgram, Gemini), le son, y compris la parole d’autrui, est envoyé au fournisseur choisi. La reconnaissance locale (sherpa) n’envoie rien.",
+    "privacyHintLabel": "Où va le son",
+    "useSystemMix": "Enregistrer tout le son",
+    "sourceLost": "L’application s’est fermée : tout le son est enregistré",
+    "waitingFor": "En attente du son de {app}…",
+    "stop": "Arrêter",
+    "replyByVoice": "Répondre à la voix",
+    "nothingRecognized": "Rien n’a été reconnu",
+    "retry": "Réessayer",
+    "replyingTo": "Réponse à : {text}"
   }
 }

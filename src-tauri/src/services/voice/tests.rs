@@ -318,7 +318,11 @@ fn recurring_callbacks_keep_capture_alive_even_when_samples_are_silent() {
     struct SilentSource(Arc<AtomicU64>);
     impl AudioSource for SilentSource {
         type Stream = TestStream;
-        fn open(&self, source: &CaptureSource, stop: &Arc<AtomicBool>) -> Result<OpenedCapture<TestStream>, AppError> {
+        fn open(
+            &self,
+            source: &CaptureSource,
+            stop: &Arc<AtomicBool>,
+        ) -> Result<OpenedCapture<TestStream>, AppError> {
             let mut opened = TestSource::default().open(source, stop)?;
             opened.context.callback_count = Arc::clone(&self.0);
             opened.context.pending_pcm_samples.locked().fill(0);
@@ -423,7 +427,11 @@ fn setup_timeout_signals_stop_without_joining_a_blocked_device() {
     }
     impl AudioSource for BlockedSource {
         type Stream = ();
-        fn open(&self, _source: &CaptureSource, stop: &Arc<AtomicBool>) -> Result<OpenedCapture<()>, AppError> {
+        fn open(
+            &self,
+            _source: &CaptureSource,
+            stop: &Arc<AtomicBool>,
+        ) -> Result<OpenedCapture<()>, AppError> {
             self.release.lock().unwrap().recv().unwrap();
             self.done.send(stop.load(Ordering::SeqCst)).unwrap();
             Err(AppError::Failed("device released".into()))
@@ -593,7 +601,11 @@ struct RecoverableErrorSource {
 
 impl AudioSource for RecoverableErrorSource {
     type Stream = TestStream;
-    fn open(&self, source: &CaptureSource, stop: &Arc<AtomicBool>) -> Result<OpenedCapture<TestStream>, AppError> {
+    fn open(
+        &self,
+        source: &CaptureSource,
+        stop: &Arc<AtomicBool>,
+    ) -> Result<OpenedCapture<TestStream>, AppError> {
         let mut opened = TestSource {
             trace: self.trace.clone(),
             ..TestSource::default()
@@ -714,7 +726,8 @@ impl AudioSource for PlaybackSource {
         stop_flag: &Arc<AtomicBool>,
     ) -> Result<OpenedCapture<()>, AppError> {
         let opens = self.trace.values().len();
-        self.trace.push(format!("open:{}", serde_json::to_string(source).unwrap()));
+        self.trace
+            .push(format!("open:{}", serde_json::to_string(source).unwrap()));
         let mut context =
             StreamContext::new(stop_flag, TARGET_SAMPLE_RATE_HZ, TARGET_SAMPLE_RATE_HZ);
         context.fills_gaps = true;
@@ -761,7 +774,12 @@ fn poll_clock(polls: u32, stop: &Arc<AtomicBool>, on_poll: impl Fn(u32) + 'stati
 }
 
 fn sent_samples(sink: &RecordingSink) -> usize {
-    sink.chunks.lock().unwrap().iter().map(|chunk| chunk.len() / 2).sum()
+    sink.chunks
+        .lock()
+        .unwrap()
+        .iter()
+        .map(|chunk| chunk.len() / 2)
+        .sum()
 }
 
 #[test]

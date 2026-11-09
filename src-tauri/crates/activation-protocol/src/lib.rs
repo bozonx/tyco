@@ -12,6 +12,7 @@ pub const START_MODES: &[&str] = &[
     "voiceChat",
     "voiceCommands",
     "voice",
+    "listen",
     "selectionActions",
     "correction",
     "translation",

@@ -38,6 +38,12 @@ export function createDictationOwnership(dictation: LiveDictation) {
           return dictation.finish()
         })
       },
+      switchSource(source) {
+        return enqueue(async () => {
+          if (captureOwner !== owner || desiredOwner !== owner) return
+          await dictation.switchSource(source)
+        })
+      },
       cancel() {
         if (desiredOwner === owner) desiredOwner = undefined
         return enqueue(async () => {

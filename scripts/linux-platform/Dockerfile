@@ -1,7 +1,7 @@
 FROM rust:1-trixie
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev \
-    librsvg2-dev libgtk-layer-shell-dev libasound2-dev \
+    librsvg2-dev libgtk-layer-shell-dev libasound2-dev libpipewire-0.3-dev libclang-dev \
     xvfb openbox xdotool xclip x11-utils dbus-x11 \
     kwin-wayland xwayland sway seatd udev wl-clipboard cmake scdoc \
     python3-gi gir1.2-gtk-3.0 libgl1-mesa-dri libegl-mesa0 \

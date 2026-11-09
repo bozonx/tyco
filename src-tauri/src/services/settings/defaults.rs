@@ -50,6 +50,9 @@ pub fn default_desktop_snapshot(
         window: WindowSnapshot {
             is_window_shown: false,
             window_profile: WindowProfile::Sheet,
+            can_move_overlay: false,
+            can_listen: false,
+            can_listen_to_apps: false,
         },
         settings: SettingsSnapshot {
             user_config: std::sync::Arc::new(user_config),

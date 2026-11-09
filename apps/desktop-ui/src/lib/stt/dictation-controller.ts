@@ -3,12 +3,15 @@ import type { SecretsStatus } from '../net/secrets'
 import { assertSttKeyAvailable } from './stt-readiness'
 import { dictationLanguageFor } from './dictation-language'
 import type { LiveTranscriptState } from './live-transcript'
-import type { LiveDictation } from './live-dictation'
+import type { LiveDictation, LiveDictationStart } from './live-dictation'
 import { buildSttCatalog, isKeyRequiredForSttProvider } from './stt-client'
 import { activeSttModel, type SttModel } from './stt-config'
 import type { DictationTarget } from './dictation-target'
 
-export interface DictationHandlers {
+export interface DictationHandlers extends Pick<
+  LiveDictationStart,
+  'source' | 'onWaiting' | 'onSourceLost'
+> {
   onText: (state: LiveTranscriptState) => void
   onError: (error: Error) => void
 }
@@ -69,6 +72,8 @@ export function createDictationController(
   }
 
   const finishDictation = () => deps.dictation.finish()
+  const switchSource: LiveDictation['switchSource'] = (source) =>
+    deps.dictation.switchSource(source)
 
   const cancelDictation = () => {
     generation += 1
@@ -82,5 +87,6 @@ export function createDictationController(
     startDictation,
     finishDictation,
     cancelDictation,
+    switchSource,
   }
 }

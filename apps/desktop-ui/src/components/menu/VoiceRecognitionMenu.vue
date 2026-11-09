@@ -20,7 +20,10 @@
     :finish="finish"
     :finish-with-style="finishWithStyle"
     :cancel="cancel"
+    :reply-to="props.replyTo"
+    :can-switch-mode="props.canSwitchMode"
     @remove-context="emit('removeContext')"
+    @switch-mode="switchToListen"
   />
 </template>
 
@@ -31,6 +34,7 @@ import { useCopyText } from '../../composables/use-copy-text'
 import { useDictationActions } from '../../composables/use-dictation-actions'
 import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useI18n } from '../../composables/use-i18n'
+import { useQuickModeSwitch } from '../../composables/use-quick-mode-switch'
 import useToast from '../../composables/use-toast'
 import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
 import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-meter'
@@ -40,6 +44,7 @@ import { isEditorHistoryOff } from '../../lib/history/editor-history-storage'
 import type { VoiceMenuParams } from '../../lib/modals/menu-modal-params'
 import { isModeOfWindow } from '../../lib/navigation/routes'
 import { resolveDictationTarget } from '../../lib/stt/dictation-target'
+import { liveTranscriptText } from '../../lib/stt/live-transcript'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import { createVoiceRecognition } from '../../lib/stt/voice-recognition'
 import { stylingSlotList } from '../../lib/styling/styling-library'
@@ -54,7 +59,14 @@ import VoiceRecordingBar from '../voice/VoiceRecordingBar.vue'
 import VoiceRecordingSheet from '../voice/VoiceRecordingSheet.vue'
 import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 
-const props = defineProps<VoiceMenuParams>()
+const props = defineProps<
+  VoiceMenuParams & {
+    /** The listened message this dictation replies to */
+    replyTo?: string
+    /** The quick window may switch to listening from here */
+    canSwitchMode?: boolean
+  }
+>()
 const emit = defineEmits<{
   (
     e: 'corrected',
@@ -136,9 +148,12 @@ const model = createVoiceRecognition({
     shouldFormatRecognizedText(dictationTarget.value),
   shouldInsertStyleDirectly: () =>
     desktopStore.userConfig.stt?.isStylingBarDirectInsertEnabled ?? false,
-  voiceCorrection,
+  // a voice reply is corrected with the message it answers
+  voiceCorrection: (text, signal) =>
+    voiceCorrection(text, signal, props.replyTo),
   shouldCorrectContextually,
-  contextualVoiceCorrection,
+  contextualVoiceCorrection: (text, signal) =>
+    contextualVoiceCorrection(text, signal, props.replyTo),
   voiceStyling: (text, rule, signal) => stylingPrompt(rule, text, { signal }),
   createHistorySession: () =>
     historyStore.createInputSession(
@@ -185,6 +200,15 @@ const {
   finishWithStyle,
   startSession,
 } = model
+const modeSwitch = useQuickModeSwitch()
+/** Leaves for listening; words already dictated are kept as a result first */
+async function switchToListen() {
+  if (liveTranscriptText(transcript.value).trim()) {
+    await finish('next')
+    return
+  }
+  await modeSwitch.switchTo('listen')
+}
 const isVoiceActivation = computed(() => props.activationMode === 'voice')
 const isStylingBarEnabled = computed(
   () => desktopStore.userConfig.stt?.isStylingBarEnabled ?? false

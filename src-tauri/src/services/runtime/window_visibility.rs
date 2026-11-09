@@ -182,6 +182,50 @@ pub fn hide_quick_window_on_blur(app: &AppHandle, activation_id: u64) -> Result<
     })
 }
 
+/// Whether the quick window may switch from `from` to `to` in place: only
+/// between voice input and listening, which share the panel.
+pub(crate) fn can_switch_quick_mode(from: Option<ActivationMode>, to: ActivationMode) -> bool {
+    const SWITCHABLE: [ActivationMode; 2] = [ActivationMode::Voice, ActivationMode::Listen];
+    from.is_some_and(|from| from != to && SWITCHABLE.contains(&from)) && SWITCHABLE.contains(&to)
+}
+
+/// Shows `mode` in the quick window that shows activation `activation_id`,
+/// without hiding or moving it: a new activation of the same target window.
+pub fn switch_quick_mode(
+    app: &AppHandle,
+    activation_id: u64,
+    mode: ActivationMode,
+) -> Result<(), AppError> {
+    on_main_thread(app, move |app| {
+        let state = app.state::<AppState>();
+        let snapshot = state.snapshot();
+        if !is_current_quick_activation(
+            app.state::<RuntimeWindows>().active_label(),
+            snapshot.window.is_window_shown,
+            snapshot.activation.activation_id,
+            activation_id,
+        ) {
+            return Err(AppError::Stale(
+                "The window activation is no longer current".into(),
+            ));
+        }
+        if !can_switch_quick_mode(snapshot.activation.mode, mode) {
+            return Err(AppError::InvalidInput(format!(
+                "The quick window cannot switch to {}",
+                mode.as_str()
+            )));
+        }
+        // a capture started for the old mode must not deliver into the new one
+        app.state::<ActivationCoordinator>().invalidate();
+        state.update_snapshot(|snapshot| {
+            snapshot.activation.activation_id = snapshot.activation.activation_id.wrapping_add(1);
+            snapshot.activation.mode = Some(mode);
+            snapshot.window.window_profile = mode.profile();
+        });
+        emit_state(app, &state)
+    })
+}
+
 fn should_dismiss_after_blur(is_focused: bool, is_relocating: bool) -> bool {
     !is_focused && !is_relocating
 }
@@ -356,8 +400,20 @@ fn matches_window_activation(
 #[cfg(test)]
 mod window_command_tests {
     use super::{
-        matches_window_activation, should_dismiss_after_blur, should_restore_target_focus,
+        can_switch_quick_mode, matches_window_activation, should_dismiss_after_blur,
+        should_restore_target_focus,
     };
+
+    #[test]
+    fn only_voice_input_and_listening_switch_in_place() {
+        use crate::services::activation::ActivationMode::{Listen, QuickInput, Voice};
+        assert!(can_switch_quick_mode(Some(Voice), Listen));
+        assert!(can_switch_quick_mode(Some(Listen), Voice));
+        assert!(!can_switch_quick_mode(Some(Voice), Voice));
+        assert!(!can_switch_quick_mode(Some(QuickInput), Listen));
+        assert!(!can_switch_quick_mode(None, Listen));
+        assert!(!can_switch_quick_mode(Some(Listen), QuickInput));
+    }
 
     #[test]
     fn output_relocation_and_delayed_blur_cannot_dismiss_a_recovered_panel() {
