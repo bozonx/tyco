@@ -3,18 +3,20 @@ use tauri::State;
 
 use crate::errors::AppError;
 use crate::services::voice;
+use crate::services::voice::apps::AudioAppsWatches;
 use crate::services::voice::session::VoiceSessionState;
-use crate::services::voice::VoiceCaptureInfo;
+use crate::services::voice::{CaptureSource, VoiceCaptureInfo};
 
-/// Starts the microphone; PCM16 chunks, then `end` or `error`, arrive
-/// through `on_audio`.
+/// Starts recording `source`, the microphone by default; PCM16 chunks, then
+/// `end` or `error`, arrive through `on_audio`.
 #[tauri::command]
 pub async fn start_voice_capture(
     app: tauri::AppHandle,
     state: State<'_, VoiceSessionState>,
     on_audio: Channel<InvokeResponseBody>,
+    source: Option<CaptureSource>,
 ) -> Result<VoiceCaptureInfo, AppError> {
-    voice::start_capture(&app, &state, on_audio).await
+    voice::start_capture(&app, &state, source.unwrap_or_default(), on_audio).await
 }
 
 #[tauri::command]
@@ -23,4 +25,34 @@ pub async fn stop_voice_capture(
     session_id: Option<u64>,
 ) -> Result<(), AppError> {
     voice::stop_capture(&state, session_id).await
+}
+
+/// Records another playback source in the running capture `session_id`.
+#[tauri::command]
+pub async fn switch_capture_source(
+    state: State<'_, VoiceSessionState>,
+    session_id: u64,
+    source: CaptureSource,
+) -> Result<(), AppError> {
+    voice::switch_capture_source(&state, session_id, source).await
+}
+
+/// Sends the applications that play sound through `on_apps` until
+/// `unwatch_audio_apps`; returns the watch id.
+#[tauri::command]
+pub async fn watch_audio_apps(
+    watches: State<'_, AudioAppsWatches>,
+    on_apps: Channel<InvokeResponseBody>,
+) -> Result<u64, AppError> {
+    let watches = watches.inner();
+    voice::apps::watch(watches, on_apps)
+}
+
+#[tauri::command]
+pub async fn unwatch_audio_apps(
+    watches: State<'_, AudioAppsWatches>,
+    watch_id: u64,
+) -> Result<(), AppError> {
+    voice::apps::unwatch(watches.inner(), watch_id);
+    Ok(())
 }

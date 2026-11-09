@@ -142,6 +142,9 @@ pub fn shutdown(app: &AppHandle) {
         if let Some(voice) = app.try_state::<crate::services::voice::session::VoiceSessionState>() {
             crate::services::voice::stop_capture_on_shutdown(&voice, deadline);
         }
+        if let Some(watches) = app.try_state::<crate::services::voice::apps::AudioAppsWatches>() {
+            watches.clear();
+        }
         let remaining = deadline.saturating_duration_since(std::time::Instant::now());
         let portal = tauri::async_runtime::block_on(async {
             tokio::time::timeout(remaining, crate::services::platform::hotkeys::shutdown(app)).await

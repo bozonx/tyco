@@ -1,175 +1,116 @@
-//! CPAL device adapter. Capture policy and delivery live in the voice service.
-use std::sync::atomic::{AtomicBool, AtomicU64};
-use std::sync::{Arc, Mutex};
-
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+//! Audio capture devices: the microphone through CPAL, the sound the computer
+//! plays natively (PipeWire on Linux, WASAPI loopback on Windows). Capture
+//! policy and delivery live in the voice service.
+use std::any::Any;
+use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
 
 use crate::errors::AppError;
-use crate::services::voice::{
-    build_input_stream, AudioSource, OpenedCapture, StreamContext, TARGET_SAMPLE_RATE_HZ,
-};
+use crate::services::voice::{AudioApp, AudioSource, CaptureSource, OpenedCapture};
+
+mod microphone;
+#[cfg(target_os = "linux")]
+mod pipewire;
+mod process_tree;
+#[cfg(target_os = "windows")]
+mod wasapi;
+
+/// Whatever keeps a capture running; dropping it ends the capture.
+pub(crate) type CaptureStream = Box<dyn Any>;
 
 pub(crate) struct SystemAudioSource;
 
 impl AudioSource for SystemAudioSource {
-    type Stream = cpal::Stream;
+    type Stream = CaptureStream;
 
-    fn open(&self, stop_flag: &Arc<AtomicBool>) -> Result<OpenedCapture<Self::Stream>, AppError> {
-        let host = cpal::default_host();
-        let device = host
-            .default_input_device()
-            .ok_or_else(|| AppError::ServiceUnavailable("No default input device found".into()))?;
-        let default_config = device
-            .default_input_config()
-            .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
-        // the device or the sound server converts better than our filter, and
-        // a mono stream is mixed down properly by it
-        let speech = device
-            .supported_input_configs()
-            .ok()
-            .and_then(|configs| speech_config(configs, &default_config));
-        if let Some(config) = speech {
-            match open_with(&device, config, stop_flag) {
-                Ok(opened) => return Ok(opened),
-                // a device may list a rate it then refuses
-                Err(error) => log::warn!(
-                    "Could not record at {TARGET_SAMPLE_RATE_HZ} Hz, using the default: {error}"
-                ),
+    fn open(
+        &self,
+        source: &CaptureSource,
+        stop_flag: &Arc<AtomicBool>,
+    ) -> Result<OpenedCapture<Self::Stream>, AppError> {
+        match source {
+            CaptureSource::Microphone => {
+                microphone::open_microphone(stop_flag).map(boxed)
             }
+            playback => open_playback(playback, stop_flag),
         }
-        open_with(&device, default_config, stop_flag)
     }
 }
 
-fn open_with(
-    device: &cpal::Device,
-    supported_config: cpal::SupportedStreamConfig,
+fn boxed<T: 'static>(opened: OpenedCapture<T>) -> OpenedCapture<CaptureStream> {
+    OpenedCapture {
+        stream: Box::new(opened.stream),
+        context: opened.context,
+        output_sample_rate_hz: opened.output_sample_rate_hz,
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn open_playback(
+    source: &CaptureSource,
     stop_flag: &Arc<AtomicBool>,
-) -> Result<OpenedCapture<cpal::Stream>, AppError> {
-    let device_sample_rate_hz = supported_config.sample_rate().0;
-    let output_sample_rate_hz = device_sample_rate_hz.min(TARGET_SAMPLE_RATE_HZ);
-    let context = StreamContext {
-        pending_pcm_samples: Arc::new(Mutex::new(Vec::new())),
-        stream_error: Arc::new(Mutex::new(None)),
-        recoverable_error: Arc::new(Mutex::new(None)),
-        current_level: Arc::new(Mutex::new((0.0, 0.0))),
-        callback_count: Arc::new(AtomicU64::new(0)),
-        stop_flag: Arc::clone(stop_flag),
-        device_sample_rate_hz,
-        output_sample_rate_hz,
-    };
-    let config = supported_config.config();
-    let stream = match supported_config.sample_format() {
-        cpal::SampleFormat::F32 => build_input_stream::<f32>(device, &config, &context)?,
-        cpal::SampleFormat::I16 => build_input_stream::<i16>(device, &config, &context)?,
-        cpal::SampleFormat::U16 => build_input_stream::<u16>(device, &config, &context)?,
-        cpal::SampleFormat::I32 => build_input_stream::<i32>(device, &config, &context)?,
-        format => {
-            return Err(AppError::ServiceUnavailable(format!(
-                "Unsupported sample format: {format:?}"
-            )))
-        }
-    };
-    stream
-        .play()
-        .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
-    Ok(OpenedCapture {
-        stream,
-        context,
-        output_sample_rate_hz,
-    })
+) -> Result<OpenedCapture<CaptureStream>, AppError> {
+    pipewire::open_playback(source, stop_flag).map(boxed)
 }
 
-/// Sample formats the capture can read, see `build_input_stream`
-const READABLE_FORMATS: [cpal::SampleFormat; 4] = [
-    cpal::SampleFormat::F32,
-    cpal::SampleFormat::I16,
-    cpal::SampleFormat::U16,
-    cpal::SampleFormat::I32,
-];
-
-/// A configuration that records at the speech rate itself, mono where the
-/// device offers it; `None` leaves the default one.
-fn speech_config(
-    configs: impl Iterator<Item = cpal::SupportedStreamConfigRange>,
-    default_config: &cpal::SupportedStreamConfig,
-) -> Option<cpal::SupportedStreamConfig> {
-    let target = cpal::SampleRate(TARGET_SAMPLE_RATE_HZ);
-    configs
-        .filter(|range| {
-            range.min_sample_rate() <= target
-                && target <= range.max_sample_rate()
-                && range.channels() > 0
-                && READABLE_FORMATS.contains(&range.sample_format())
-        })
-        .min_by_key(|range| {
-            (
-                range.channels(),
-                range.sample_format() != default_config.sample_format(),
-            )
-        })
-        .map(|range| range.with_sample_rate(target))
+#[cfg(target_os = "windows")]
+fn open_playback(
+    source: &CaptureSource,
+    stop_flag: &Arc<AtomicBool>,
+) -> Result<OpenedCapture<CaptureStream>, AppError> {
+    wasapi::open_playback(source, stop_flag)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use cpal::{SampleFormat, SampleRate, SupportedBufferSize, SupportedStreamConfigRange};
+#[cfg(not(any(target_os = "linux", target_os = "windows")))]
+fn open_playback(
+    _source: &CaptureSource,
+    _stop_flag: &Arc<AtomicBool>,
+) -> Result<OpenedCapture<CaptureStream>, AppError> {
+    Err(unsupported())
+}
 
-    fn range(
-        channels: u16,
-        min: u32,
-        max: u32,
-        format: SampleFormat,
-    ) -> SupportedStreamConfigRange {
-        SupportedStreamConfigRange::new(
-            channels,
-            SampleRate(min),
-            SampleRate(max),
-            SupportedBufferSize::Unknown,
-            format,
-        )
-    }
+#[cfg(not(any(target_os = "linux", target_os = "windows")))]
+fn unsupported() -> AppError {
+    AppError::ServiceUnavailable("Recording the computer sound is not supported here".into())
+}
 
-    fn default_config() -> cpal::SupportedStreamConfig {
-        cpal::SupportedStreamConfig::new(
-            2,
-            SampleRate(48_000),
-            SupportedBufferSize::Unknown,
-            SampleFormat::F32,
-        )
-    }
+/// Whether the sound the computer plays can be recorded: on Linux only with
+/// a PipeWire server, see `dev_docs/cross-platform.md`.
+pub(crate) fn can_capture_playback() -> bool {
+    #[cfg(target_os = "linux")]
+    return pipewire::is_available();
+    #[cfg(target_os = "windows")]
+    return true;
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    return false;
+}
 
-    #[test]
-    fn prefers_mono_at_the_speech_rate() {
-        let config = speech_config(
-            [
-                range(2, 8_000, 48_000, SampleFormat::F32),
-                range(1, 8_000, 48_000, SampleFormat::I16),
-            ]
-            .into_iter(),
-            &default_config(),
-        )
-        .unwrap();
-        assert_eq!(config.channels(), 1);
-        assert_eq!(config.sample_rate(), SampleRate(TARGET_SAMPLE_RATE_HZ));
-    }
+/// Whether a single application can be recorded: Windows needs process
+/// loopback, build 19041 or newer.
+pub(crate) fn can_capture_apps() -> bool {
+    #[cfg(target_os = "linux")]
+    return pipewire::is_available();
+    #[cfg(target_os = "windows")]
+    return wasapi::has_process_loopback();
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    return false;
+}
 
-    #[test]
-    fn keeps_the_default_when_the_speech_rate_is_not_offered() {
-        assert!(speech_config(
-            [range(2, 44_100, 48_000, SampleFormat::F32)].into_iter(),
-            &default_config(),
-        )
-        .is_none());
-    }
+/// Watches the applications that play sound; dropping it stops watching.
+pub(crate) type AudioAppsWatch = Box<dyn Any + Send>;
 
-    #[test]
-    fn skips_formats_the_capture_cannot_read() {
-        assert!(speech_config(
-            [range(1, 8_000, 48_000, SampleFormat::U8)].into_iter(),
-            &default_config(),
-        )
-        .is_none());
+/// Calls `on_change` with the applications that play sound, now and on each
+/// change, until the returned watch is dropped.
+pub(crate) fn watch_audio_apps(
+    on_change: Box<dyn Fn(Vec<AudioApp>) + Send>,
+) -> Result<AudioAppsWatch, AppError> {
+    #[cfg(target_os = "linux")]
+    return pipewire::watch_apps(on_change).map(|watch| Box::new(watch) as AudioAppsWatch);
+    #[cfg(target_os = "windows")]
+    return wasapi::watch_apps(on_change).map(|watch| Box::new(watch) as AudioAppsWatch);
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    {
+        let _ = on_change;
+        Err(unsupported())
     }
 }

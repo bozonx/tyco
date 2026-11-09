@@ -12,6 +12,33 @@ fn capture_info_preserves_the_frontend_wire_names() {
 
 use super::*;
 
+/// The capture loop of a microphone that nobody switches.
+fn run_capture<A: AudioSource, L: AudioLevelSink, S: EventSink>(
+    source: &A,
+    levels: &L,
+    clock: &impl MonotonicClock,
+    sink: &S,
+    stop_flag: &Arc<AtomicBool>,
+    superseded: &AtomicBool,
+    setup_tx: &std_mpsc::SyncSender<Result<u32, AppError>>,
+) -> Result<(), AppError> {
+    let switch = SourceSwitchSlot::default();
+    let control = CaptureControl {
+        stop_flag,
+        superseded,
+        switch: &switch,
+    };
+    run_capture_thread(
+        source,
+        CaptureSource::Microphone,
+        levels,
+        clock,
+        sink,
+        &control,
+        setup_tx,
+    )
+}
+
 #[derive(Default)]
 struct RecordingSink {
     chunks: Mutex<Vec<Vec<u8>>>,
@@ -86,7 +113,11 @@ struct TestSource {
 
 impl AudioSource for TestSource {
     type Stream = TestStream;
-    fn open(&self, stop_flag: &Arc<AtomicBool>) -> Result<OpenedCapture<TestStream>, AppError> {
+    fn open(
+        &self,
+        _source: &CaptureSource,
+        stop_flag: &Arc<AtomicBool>,
+    ) -> Result<OpenedCapture<TestStream>, AppError> {
         self.trace.push("open");
         if self.fail {
             return Err(AppError::Failed("device unavailable".into()));
@@ -108,6 +139,8 @@ impl AudioSource for TestSource {
                 stop_flag: Arc::clone(stop_flag),
                 device_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
                 output_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
+                fills_gaps: false,
+                status: Arc::default(),
             },
         })
     }
@@ -141,7 +174,7 @@ fn stream_stops_before_final_samples_and_end_and_resets_the_audio_level() {
         stop: Arc::clone(&stop),
     };
     let (tx, rx) = std_mpsc::sync_channel(1);
-    run_capture_thread(
+    run_capture(
         &source,
         &trace,
         &runtime,
@@ -181,7 +214,7 @@ fn stream_failure_sends_the_final_audio_then_an_error_instead_of_end() {
         stop: Arc::clone(&stop),
     };
     let (tx, _rx) = std_mpsc::sync_channel(1);
-    run_capture_thread(
+    run_capture(
         &source,
         &trace,
         &runtime,
@@ -217,7 +250,7 @@ fn a_superseded_capture_sends_its_final_audio_then_superseded() {
         stop: Arc::clone(&stop),
     };
     let (tx, _rx) = std_mpsc::sync_channel(1);
-    run_capture_thread(
+    run_capture(
         &source,
         &trace,
         &runtime,
@@ -257,7 +290,7 @@ fn a_device_that_stops_callbacks_emits_error_and_releases_the_stream() {
     };
     let stop = Arc::new(AtomicBool::new(false));
     let (tx, _rx) = std_mpsc::sync_channel(1);
-    run_capture_thread(
+    run_capture(
         &source,
         &trace,
         &StalledRuntime(std::cell::Cell::new(Instant::now())),
@@ -285,8 +318,8 @@ fn recurring_callbacks_keep_capture_alive_even_when_samples_are_silent() {
     struct SilentSource(Arc<AtomicU64>);
     impl AudioSource for SilentSource {
         type Stream = TestStream;
-        fn open(&self, stop: &Arc<AtomicBool>) -> Result<OpenedCapture<TestStream>, AppError> {
-            let mut opened = TestSource::default().open(stop)?;
+        fn open(&self, source: &CaptureSource, stop: &Arc<AtomicBool>) -> Result<OpenedCapture<TestStream>, AppError> {
+            let mut opened = TestSource::default().open(source, stop)?;
             opened.context.callback_count = Arc::clone(&self.0);
             opened.context.pending_pcm_samples.locked().fill(0);
             Ok(opened)
@@ -317,7 +350,7 @@ fn recurring_callbacks_keep_capture_alive_even_when_samples_are_silent() {
     };
     let sink = RecordingSink::default();
     let (tx, _rx) = std_mpsc::sync_channel(1);
-    run_capture_thread(
+    run_capture(
         &SilentSource(callbacks),
         &Trace::default(),
         &runtime,
@@ -348,7 +381,7 @@ fn a_closed_listener_stops_capture_without_sending_end() {
         stop: Arc::clone(&stop),
     };
     let (tx, _rx) = std_mpsc::sync_channel(1);
-    run_capture_thread(
+    run_capture(
         &source,
         &trace,
         &runtime,
@@ -371,6 +404,7 @@ fn device_setup_errors_are_returned_without_a_tauri_runtime() {
     };
     let error = create_capture_session(
         source,
+        CaptureSource::Microphone,
         Trace::default(),
         Trace::default(),
         1,
@@ -389,7 +423,7 @@ fn setup_timeout_signals_stop_without_joining_a_blocked_device() {
     }
     impl AudioSource for BlockedSource {
         type Stream = ();
-        fn open(&self, stop: &Arc<AtomicBool>) -> Result<OpenedCapture<()>, AppError> {
+        fn open(&self, _source: &CaptureSource, stop: &Arc<AtomicBool>) -> Result<OpenedCapture<()>, AppError> {
             self.release.lock().unwrap().recv().unwrap();
             self.done.send(stop.load(Ordering::SeqCst)).unwrap();
             Err(AppError::Failed("device released".into()))
@@ -403,6 +437,7 @@ fn setup_timeout_signals_stop_without_joining_a_blocked_device() {
     };
     let error = create_capture_session(
         source,
+        CaptureSource::Microphone,
         Trace::default(),
         Trace::default(),
         1,
@@ -425,6 +460,7 @@ async fn new_capture_replaces_the_old_one_and_a_stale_stop_leaves_it_running() {
             trace: trace.clone(),
             ..TestSource::default()
         },
+        CaptureSource::Microphone,
         trace.clone(),
         &state,
         trace.clone(),
@@ -437,6 +473,7 @@ async fn new_capture_replaces_the_old_one_and_a_stale_stop_leaves_it_running() {
             trace: trace.clone(),
             ..TestSource::default()
         },
+        CaptureSource::Microphone,
         trace.clone(),
         &state,
         trace.clone(),
@@ -476,15 +513,15 @@ fn flushes_only_full_chunks_until_forced() {
     let sink = RecordingSink::default();
     let pending_pcm_samples = Mutex::new(vec![1_i16, 2, 3]);
 
-    assert!(flush_pending(&pending_pcm_samples, &sink, 4));
+    assert!(flush_pending(&pending_pcm_samples, &sink, 4).is_some());
     assert!(sink.chunks.lock().unwrap().is_empty());
 
-    assert!(flush_pending(&pending_pcm_samples, &sink, 1));
+    assert!(flush_pending(&pending_pcm_samples, &sink, 1).is_some());
     assert_eq!(sink.chunks.lock().unwrap().len(), 1);
     assert!(pending_pcm_samples.lock().unwrap().is_empty());
 
     // nothing left: no empty frame goes out
-    assert!(flush_pending(&pending_pcm_samples, &sink, 1));
+    assert!(flush_pending(&pending_pcm_samples, &sink, 1).is_some());
     assert_eq!(sink.chunks.lock().unwrap().len(), 1);
 }
 
@@ -494,7 +531,7 @@ fn reports_a_gone_listener() {
         closed: true,
         ..RecordingSink::default()
     };
-    assert!(!flush_pending(&Mutex::new(vec![1_i16]), &sink, 1));
+    assert!(flush_pending(&Mutex::new(vec![1_i16]), &sink, 1).is_none());
 }
 
 #[test]
@@ -522,6 +559,7 @@ async fn a_running_capture_is_told_when_a_new_one_takes_the_microphone() {
     let first_sink = Trace::default();
     start_capture_with(
         TestSource::default(),
+        CaptureSource::Microphone,
         Trace::default(),
         &state,
         first_sink.clone(),
@@ -533,6 +571,7 @@ async fn a_running_capture_is_told_when_a_new_one_takes_the_microphone() {
             stop_on_open: true,
             ..TestSource::default()
         },
+        CaptureSource::Microphone,
         Trace::default(),
         &state,
         Trace::default(),
@@ -554,12 +593,12 @@ struct RecoverableErrorSource {
 
 impl AudioSource for RecoverableErrorSource {
     type Stream = TestStream;
-    fn open(&self, stop: &Arc<AtomicBool>) -> Result<OpenedCapture<TestStream>, AppError> {
+    fn open(&self, source: &CaptureSource, stop: &Arc<AtomicBool>) -> Result<OpenedCapture<TestStream>, AppError> {
         let mut opened = TestSource {
             trace: self.trace.clone(),
             ..TestSource::default()
         }
-        .open(stop)?;
+        .open(source, stop)?;
         opened.context.callback_count = Arc::clone(&self.callbacks);
         *opened.context.recoverable_error.locked() = Some("Audio input stream failed: read".into());
         Ok(opened)
@@ -593,7 +632,7 @@ fn a_stream_error_followed_by_samples_does_not_end_the_capture() {
     };
     let sink = RecordingSink::default();
     let (tx, _rx) = std_mpsc::sync_channel(1);
-    run_capture_thread(
+    run_capture(
         &RecoverableErrorSource {
             callbacks,
             trace: Trace::default(),
@@ -624,7 +663,7 @@ fn a_stream_error_without_samples_after_it_ends_the_capture_with_that_error() {
     let sink = RecordingSink::default();
     let stop = Arc::new(AtomicBool::new(false));
     let (tx, _rx) = std_mpsc::sync_channel(1);
-    run_capture_thread(
+    run_capture(
         &RecoverableErrorSource {
             callbacks: Arc::new(AtomicU64::new(0)),
             trace: Trace::default(),
@@ -656,4 +695,209 @@ fn only_a_lost_device_is_a_fatal_stream_error() {
             },
         }
     ));
+}
+
+/// A playback source that records which source it opened and delivers
+/// nothing, as a sink monitor does while nothing plays.
+#[derive(Default)]
+struct PlaybackSource {
+    trace: Trace,
+    /// Marks the source of the first open as lost, as when its app quits.
+    lose_first: bool,
+}
+
+impl AudioSource for PlaybackSource {
+    type Stream = ();
+    fn open(
+        &self,
+        source: &CaptureSource,
+        stop_flag: &Arc<AtomicBool>,
+    ) -> Result<OpenedCapture<()>, AppError> {
+        let opens = self.trace.values().len();
+        self.trace.push(format!("open:{}", serde_json::to_string(source).unwrap()));
+        let mut context =
+            StreamContext::new(stop_flag, TARGET_SAMPLE_RATE_HZ, TARGET_SAMPLE_RATE_HZ);
+        context.fills_gaps = true;
+        context.status.locked().is_waiting = matches!(source, CaptureSource::Application { .. });
+        context.status.locked().is_lost = self.lose_first && opens == 0;
+        Ok(OpenedCapture {
+            stream: (),
+            context,
+            output_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
+        })
+    }
+}
+
+/// A clock that moves on by the poll interval and stops after `polls`.
+struct PollClock {
+    now: std::cell::Cell<Instant>,
+    polls: std::cell::Cell<u32>,
+    stop: Arc<AtomicBool>,
+    on_poll: Box<dyn Fn(u32)>,
+}
+
+impl MonotonicClock for PollClock {
+    fn now(&self) -> Instant {
+        self.now.get()
+    }
+    fn sleep(&self, duration: Duration) {
+        self.now.set(self.now.get() + duration);
+        let left = self.polls.get().saturating_sub(1);
+        self.polls.set(left);
+        (self.on_poll)(left);
+        if left == 0 {
+            self.stop.store(true, Ordering::SeqCst);
+        }
+    }
+}
+
+fn poll_clock(polls: u32, stop: &Arc<AtomicBool>, on_poll: impl Fn(u32) + 'static) -> PollClock {
+    PollClock {
+        now: std::cell::Cell::new(Instant::now()),
+        polls: std::cell::Cell::new(polls),
+        stop: Arc::clone(stop),
+        on_poll: Box::new(on_poll),
+    }
+}
+
+fn sent_samples(sink: &RecordingSink) -> usize {
+    sink.chunks.lock().unwrap().iter().map(|chunk| chunk.len() / 2).sum()
+}
+
+#[test]
+fn silence_keeps_a_silent_playback_source_in_step_with_real_time() {
+    let source = PlaybackSource::default();
+    let stop = Arc::new(AtomicBool::new(false));
+    let sink = RecordingSink::default();
+    // a second of polls without a single callback
+    let clock = poll_clock(50, &stop, |_| {});
+    let switch = SourceSwitchSlot::default();
+    let (tx, _rx) = std_mpsc::sync_channel(1);
+    run_capture_thread(
+        &source,
+        CaptureSource::SystemMix,
+        &Trace::default(),
+        &clock,
+        &sink,
+        &CaptureControl {
+            stop_flag: &stop,
+            superseded: &AtomicBool::new(false),
+            switch: &switch,
+        },
+        &tx,
+    )
+    .unwrap();
+    // no error for the missing callbacks, and most of the second as silence
+    let events = sink.events.lock().unwrap().clone();
+    assert_eq!(events, [r#"{"type":"end"}"#]);
+    let samples = sent_samples(&sink);
+    assert!((12_000..=16_000).contains(&samples), "{samples}");
+}
+
+#[test]
+fn a_switch_of_the_source_keeps_one_stream_and_reports_the_wait() {
+    let trace = Trace::default();
+    let source = PlaybackSource {
+        trace: trace.clone(),
+        ..PlaybackSource::default()
+    };
+    let stop = Arc::new(AtomicBool::new(false));
+    let sink = RecordingSink::default();
+    let switch = SourceSwitchSlot::default();
+    let (reply, replied) = std_mpsc::sync_channel(1);
+    let request_slot = Arc::clone(&switch);
+    let request = std::cell::RefCell::new(Some(SourceSwitch {
+        source: CaptureSource::Application {
+            app_id: "telegram-desktop".into(),
+        },
+        reply,
+    }));
+    let clock = poll_clock(10, &stop, move |left| {
+        if left == 5 {
+            *request_slot.locked() = request.borrow_mut().take();
+        }
+    });
+    let (tx, _rx) = std_mpsc::sync_channel(1);
+    run_capture_thread(
+        &source,
+        CaptureSource::SystemMix,
+        &Trace::default(),
+        &clock,
+        &sink,
+        &CaptureControl {
+            stop_flag: &stop,
+            superseded: &AtomicBool::new(false),
+            switch: &switch,
+        },
+        &tx,
+    )
+    .unwrap();
+    assert!(replied.try_recv().unwrap().is_ok());
+    assert_eq!(
+        trace.values(),
+        [
+            r#"open:{"kind":"systemMix"}"#,
+            r#"open:{"kind":"application","appId":"telegram-desktop"}"#,
+        ]
+    );
+    let events = sink.events.lock().unwrap().clone();
+    assert_eq!(
+        events,
+        [
+            r#"{"type":"sourceStatus","isWaiting":true}"#,
+            r#"{"type":"end"}"#
+        ]
+    );
+}
+
+#[test]
+fn a_lost_application_falls_back_to_the_whole_sound() {
+    let trace = Trace::default();
+    let source = PlaybackSource {
+        trace: trace.clone(),
+        lose_first: true,
+    };
+    let stop = Arc::new(AtomicBool::new(false));
+    let sink = RecordingSink::default();
+    let clock = poll_clock(3, &stop, |_| {});
+    let switch = SourceSwitchSlot::default();
+    let (tx, _rx) = std_mpsc::sync_channel(1);
+    run_capture_thread(
+        &source,
+        CaptureSource::Application {
+            app_id: "telegram-desktop".into(),
+        },
+        &Trace::default(),
+        &clock,
+        &sink,
+        &CaptureControl {
+            stop_flag: &stop,
+            superseded: &AtomicBool::new(false),
+            switch: &switch,
+        },
+        &tx,
+    )
+    .unwrap();
+    assert_eq!(trace.values()[1], r#"open:{"kind":"systemMix"}"#);
+    let events = sink.events.lock().unwrap().clone();
+    assert_eq!(
+        events,
+        [
+            r#"{"type":"sourceLost","source":{"kind":"systemMix"}}"#,
+            r#"{"type":"end"}"#
+        ]
+    );
+}
+
+#[tokio::test]
+async fn only_playback_sources_are_switched_to() {
+    let state = VoiceSessionState::default();
+    let error = switch_capture_source(&state, 1, CaptureSource::Microphone)
+        .await
+        .unwrap_err();
+    assert!(matches!(error, AppError::InvalidInput(_)));
+    let error = switch_capture_source(&state, 1, CaptureSource::SystemMix)
+        .await
+        .unwrap_err();
+    assert!(matches!(error, AppError::Stale(_)));
 }

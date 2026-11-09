@@ -75,6 +75,7 @@ wayland-client = "0.31"
 wayland-protocols-wlr = { version = "0.3", features = ["client"] }
 # the webview settings tao and wry do not expose
 webkit2gtk = "2.0"
+pipewire = "0.10"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

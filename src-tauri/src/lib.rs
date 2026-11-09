@@ -106,6 +106,7 @@ pub fn run() {
             .manage(services::dropped_files::DroppedFiles::default())
             .manage(services::plugins::PluginInspection::default())
             .manage(services::voice::session::VoiceSessionState::default())
+            .manage(services::voice::apps::AudioAppsWatches::default())
             .manage(services::external::access::AccessPrompt::default()),
     ));
     let app = builder
@@ -327,6 +328,9 @@ pub fn run() {
             commands::system::show_status_overlay,
             commands::voice::start_voice_capture,
             commands::voice::stop_voice_capture,
+            commands::voice::switch_capture_source,
+            commands::voice::watch_audio_apps,
+            commands::voice::unwatch_audio_apps,
             commands::window::open_transferred_chat,
             commands::window::add_screenshot,
             commands::window::retake_screenshot,

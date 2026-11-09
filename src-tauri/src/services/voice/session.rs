@@ -1,6 +1,18 @@
 use crate::locks::MutexExt;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{mpsc, Arc, Mutex};
+
+use crate::errors::AppError;
+use crate::services::voice::CaptureSource;
+
+/// A request to record another source, answered once it records.
+pub struct SourceSwitch {
+    pub source: CaptureSource,
+    pub reply: mpsc::SyncSender<Result<(), AppError>>,
+}
+
+/// Where the capture thread picks a switch of the source up.
+pub type SourceSwitchSlot = Arc<Mutex<Option<SourceSwitch>>>;
 
 pub struct VoiceCaptureSession {
     /// Lets a stop request name the capture it belongs to, see
@@ -9,6 +21,7 @@ pub struct VoiceCaptureSession {
     pub stop_flag: Arc<AtomicBool>,
     /// Set before a stop when a newer capture takes the microphone over.
     pub superseded: Arc<AtomicBool>,
+    pub switch: SourceSwitchSlot,
     pub thread: std::thread::JoinHandle<()>,
 }
 
@@ -81,6 +94,16 @@ impl VoiceSessionState {
         }
     }
 
+    /// Where a switch of the source reaches the running capture `id`.
+    pub fn switch_slot(&self, id: u64) -> Option<SourceSwitchSlot> {
+        let guard = self.session.locked();
+        guard
+            .session
+            .as_ref()
+            .filter(|session| session.id == id)
+            .map(|session| Arc::clone(&session.switch))
+    }
+
     pub fn allocate_session_id(&self) -> u64 {
         self.next_id.fetch_add(1, Ordering::SeqCst)
     }
@@ -99,6 +122,7 @@ mod tests {
             id,
             stop_flag: Arc::new(AtomicBool::new(false)),
             superseded: Arc::new(AtomicBool::new(false)),
+            switch: Arc::default(),
             thread: std::thread::spawn(|| {}),
         }
     }
@@ -127,6 +151,7 @@ mod tests {
             id: 1,
             stop_flag: stop_flag.clone(),
             superseded: Arc::new(AtomicBool::new(false)),
+            switch: Arc::default(),
             thread: std::thread::spawn(move || {
                 let _ = waiting.recv();
             }),

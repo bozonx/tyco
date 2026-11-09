@@ -1,11 +1,17 @@
-//! Microphone capture for live dictation.
+//! Audio capture for live transcription: the microphone for dictation, the
+//! sound the computer plays for listening.
 //!
 //! Nothing is kept: the audio leaves as PCM16 mono chunks through the channel
 //! the webview passed in, which hands it on to the speech provider's socket.
 //! A dictation can therefore last as long as the user keeps talking.
 
+pub mod apps;
 mod audio_processing;
+pub mod mixer;
 pub mod session;
+pub mod source;
+
+pub use source::{silence_gap, AudioApp, AudioAppId, CaptureSource, SourceStatus};
 
 pub use audio_processing::compute_audio_level;
 use audio_processing::{mix_frame, pcm16_to_le_bytes, Downsampler};
@@ -23,8 +29,8 @@ use crate::errors::AppError;
 use crate::locks::MutexExt;
 use crate::services::clock::{MonotonicClock, SystemClock};
 use crate::services::net::EventSink;
-use crate::services::voice::session::VoiceCaptureSession;
 use crate::services::voice::session::VoiceSessionState;
+use crate::services::voice::session::{SourceSwitch, SourceSwitchSlot, VoiceCaptureSession};
 
 /// What speech models are trained on; a higher device rate is averaged down.
 pub(crate) const TARGET_SAMPLE_RATE_HZ: u32 = 16_000;
@@ -39,6 +45,8 @@ const CALLBACK_TIMEOUT: Duration = Duration::from_secs(10);
 /// on their own (ALSA retries a failed read), others end the stream with it.
 const STREAM_ERROR_GRACE: Duration = Duration::from_secs(1);
 const STOP_TIMEOUT: Duration = Duration::from_secs(2);
+/// How long a switch of the source may take before the request gives up.
+const SWITCH_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[derive(Clone, Serialize, Debug, PartialEq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
@@ -70,12 +78,23 @@ pub enum CaptureEvent {
     Error {
         message: String,
     },
+    /// The application a playback source records plays nothing yet, or has
+    /// started to.
+    #[serde(rename_all = "camelCase")]
+    SourceStatus { is_waiting: bool },
+    /// The application of the source quit: the capture went on with the
+    /// whole system sound.
+    SourceLost { source: CaptureSource },
 }
 
 /// Device setup is separate from the capture lifecycle and its outputs.
 pub(crate) trait AudioSource {
     type Stream;
-    fn open(&self, stop_flag: &Arc<AtomicBool>) -> Result<OpenedCapture<Self::Stream>, AppError>;
+    fn open(
+        &self,
+        source: &CaptureSource,
+        stop_flag: &Arc<AtomicBool>,
+    ) -> Result<OpenedCapture<Self::Stream>, AppError>;
 }
 
 pub(crate) struct OpenedCapture<T> {
@@ -97,10 +116,17 @@ impl AudioLevelSink for AppHandle {
 pub async fn start_capture<S: EventSink>(
     app: &AppHandle,
     state: &VoiceSessionState,
+    capture_source: CaptureSource,
     sink: S,
 ) -> Result<VoiceCaptureInfo, AppError> {
+    if capture_source.is_playback() && !super::platform::audio::can_capture_playback() {
+        return Err(AppError::ServiceUnavailable(
+            "Recording the computer sound is not available on this system".into(),
+        ));
+    }
     start_capture_with(
         super::platform::audio::SystemAudioSource,
+        capture_source,
         app.clone(),
         state,
         sink,
@@ -108,8 +134,42 @@ pub async fn start_capture<S: EventSink>(
     .await
 }
 
+/// Records another source in the running capture: the provider goes on
+/// receiving one stream. Only a playback source changes to another one.
+pub async fn switch_capture_source(
+    state: &VoiceSessionState,
+    session_id: u64,
+    capture_source: CaptureSource,
+) -> Result<(), AppError> {
+    if !capture_source.is_playback() {
+        return Err(AppError::InvalidInput(
+            "A capture switches only between playback sources".into(),
+        ));
+    }
+    let receiver = {
+        let _operation = state.lock_capture_operation().await;
+        let slot = state.switch_slot(session_id).ok_or_else(|| {
+            AppError::Stale("The capture to switch is no longer running".into())
+        })?;
+        let (reply, receiver) = std_mpsc::sync_channel(1);
+        *slot.locked() = Some(SourceSwitch {
+            source: capture_source,
+            reply,
+        });
+        receiver
+    };
+    tokio::task::spawn_blocking(move || {
+        receiver
+            .recv_timeout(SWITCH_TIMEOUT)
+            .unwrap_or_else(|_| Err(AppError::Failed("The source did not switch in time".into())))
+    })
+    .await
+    .map_err(|error| AppError::Failed(format!("source switch task failed: {error}")))?
+}
+
 async fn start_capture_with<A, L, S>(
     source: A,
+    capture_source: CaptureSource,
     levels: L,
     state: &VoiceSessionState,
     sink: S,
@@ -129,7 +189,14 @@ where
     supersede_capture_unlocked(state).await?;
     let session_id = state.allocate_session_id();
     let (session, sample_rate_hz) = tokio::task::spawn_blocking(move || {
-        create_capture_session(source, levels, sink, session_id, SETUP_TIMEOUT)
+        create_capture_session(
+            source,
+            capture_source,
+            levels,
+            sink,
+            session_id,
+            SETUP_TIMEOUT,
+        )
     })
     .await
     .map_err(|error| AppError::Failed(format!("capture setup task failed: {error}")))??;
@@ -199,6 +266,7 @@ pub fn stop_capture_on_shutdown(state: &VoiceSessionState, deadline: Instant) {
 
 fn create_capture_session<A, L, S>(
     source: A,
+    capture_source: CaptureSource,
     levels: L,
     sink: S,
     id: u64,
@@ -213,16 +281,23 @@ where
     let thread_stop_flag = Arc::clone(&stop_flag);
     let superseded = Arc::new(AtomicBool::new(false));
     let thread_superseded = Arc::clone(&superseded);
+    let switch: SourceSwitchSlot = Arc::default();
+    let thread_switch = Arc::clone(&switch);
     let (setup_tx, setup_rx) = std_mpsc::sync_channel::<Result<u32, AppError>>(1);
     let thread = thread::spawn(move || {
         // only setup can fail; later failures go through the channel
+        let control = CaptureControl {
+            stop_flag: &thread_stop_flag,
+            superseded: &thread_superseded,
+            switch: &thread_switch,
+        };
         if let Err(error) = run_capture_thread(
             &source,
+            capture_source,
             &levels,
             &SystemClock,
             &sink,
-            &thread_stop_flag,
-            &thread_superseded,
+            &control,
             &setup_tx,
         ) {
             log::error!("Voice capture error: {error}");
@@ -236,6 +311,7 @@ where
                 id,
                 stop_flag,
                 superseded,
+                switch,
                 thread,
             },
             sample_rate_hz,
@@ -257,31 +333,91 @@ where
     }
 }
 
+/// What the capture thread is told from outside while it records.
+struct CaptureControl<'a> {
+    stop_flag: &'a Arc<AtomicBool>,
+    superseded: &'a AtomicBool,
+    switch: &'a SourceSwitchSlot,
+}
+
 fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
     source: &A,
+    capture_source: CaptureSource,
     levels: &L,
     clock: &impl MonotonicClock,
     sink: &S,
-    stop_flag: &Arc<AtomicBool>,
-    superseded: &AtomicBool,
+    control: &CaptureControl<'_>,
     setup_tx: &std_mpsc::SyncSender<Result<u32, AppError>>,
 ) -> Result<(), AppError> {
+    let stop_flag = control.stop_flag;
     let OpenedCapture {
-        stream,
-        context,
+        mut stream,
+        mut context,
         output_sample_rate_hz,
-    } = source.open(stop_flag)?;
+    } = source.open(&capture_source, stop_flag)?;
 
     setup_tx
         .send(Ok(output_sample_rate_hz))
         .map_err(|error| AppError::Failed(error.to_string()))?;
 
     let chunk_samples = output_sample_rate_hz as usize * CHUNK_MS / 1_000;
-    let mut last_level = clock.now();
+    let started = clock.now();
+    let mut delivered_samples: u64 = 0;
+    let mut last_level = started;
     let mut last_callback = last_level;
     let mut callback_count = context.callback_count.load(Ordering::Relaxed);
+    let mut reported_status = SourceStatus::default();
     while !stop_flag.load(Ordering::SeqCst) {
         clock.sleep(POLL_INTERVAL);
+
+        let requested = control.switch.locked().take();
+        let lost = context.status.locked().is_lost;
+        let next = match requested {
+            Some(request) => Some((request.source, Some(request.reply))),
+            None if lost => Some((CaptureSource::SystemMix, None)),
+            None => None,
+        };
+        if let Some((next_source, reply)) = next {
+            match source.open(&next_source, stop_flag) {
+                Ok(opened) if opened.output_sample_rate_hz == output_sample_rate_hz => {
+                    // the old stream's last samples go out before the new ones
+                    drop(std::mem::replace(&mut stream, opened.stream));
+                    let old = std::mem::replace(&mut context, opened.context);
+                    let tail = std::mem::take(&mut *old.pending_pcm_samples.locked());
+                    context.pending_pcm_samples.locked().splice(0..0, tail);
+                    callback_count = context.callback_count.load(Ordering::Relaxed);
+                    last_callback = clock.now();
+                    reported_status = SourceStatus::default();
+                    if lost && reply.is_none() {
+                        sink.send_event(&CaptureEvent::SourceLost {
+                            source: next_source,
+                        });
+                    }
+                    if let Some(reply) = reply {
+                        let _ = reply.send(Ok(()));
+                    }
+                }
+                Ok(_) => {
+                    let error = AppError::Failed("The new source records at another rate".into());
+                    match reply {
+                        Some(reply) => {
+                            let _ = reply.send(Err(error));
+                        }
+                        None => context.status.locked().is_lost = false,
+                    }
+                }
+                Err(error) => match reply {
+                    Some(reply) => {
+                        let _ = reply.send(Err(error));
+                    }
+                    None => {
+                        *context.stream_error.locked() = Some(error.to_string());
+                        stop_flag.store(true, Ordering::SeqCst);
+                        break;
+                    }
+                },
+            }
+        }
 
         let received = context.callback_count.load(Ordering::Relaxed);
         if received != callback_count {
@@ -295,7 +431,8 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
             let recoverable_error = context.recoverable_error.locked().clone();
             let is_failed = match recoverable_error {
                 Some(_) => silent_for >= STREAM_ERROR_GRACE,
-                None => silent_for >= CALLBACK_TIMEOUT,
+                // a playback source has no callbacks while nothing plays
+                None => !context.fills_gaps && silent_for >= CALLBACK_TIMEOUT,
             };
             if is_failed {
                 // Some audio backends cork a disconnected device without
@@ -309,11 +446,38 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
                 break;
             }
         }
-
-        if !flush_pending(&context.pending_pcm_samples, sink, chunk_samples) {
-            // nobody is listening any more: the webview went away
+        if context.stream_error.locked().is_some() {
             stop_flag.store(true, Ordering::SeqCst);
             break;
+        }
+
+        let status = *context.status.locked();
+        if status.is_waiting != reported_status.is_waiting {
+            sink.send_event(&CaptureEvent::SourceStatus {
+                is_waiting: status.is_waiting,
+            });
+        }
+        reported_status = status;
+
+        if context.fills_gaps {
+            let elapsed = clock.now().saturating_duration_since(started);
+            let expected = elapsed.as_millis() as u64 * u64::from(output_sample_rate_hz) / 1_000;
+            let mut pending = context.pending_pcm_samples.locked();
+            let gap = silence_gap(
+                expected,
+                delivered_samples + pending.len() as u64,
+                output_sample_rate_hz,
+            );
+            pending.extend(std::iter::repeat_n(0, gap));
+        }
+
+        match flush_pending(&context.pending_pcm_samples, sink, chunk_samples) {
+            Some(sent) => delivered_samples += sent as u64,
+            None => {
+                // nobody is listening any more: the webview went away
+                stop_flag.store(true, Ordering::SeqCst);
+                break;
+            }
         }
 
         if clock.now().saturating_duration_since(last_level) >= LEVEL_INTERVAL {
@@ -322,6 +486,12 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
             let (level, peak) = std::mem::take(&mut *context.current_level.locked());
             levels.publish(VoiceAudioLevelPayload { level, peak });
         }
+    }
+    // a switch that came too late is answered: the capture is over
+    if let Some(request) = control.switch.locked().take() {
+        let _ = request.reply.send(Err(AppError::Stale(
+            "The capture stopped before the source switched".into(),
+        )));
     }
 
     // no sample may arrive after the final flush
@@ -333,33 +503,35 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
 
     // what was captured goes out first, whatever ended the capture: the
     // words spoken last are still transcribed
-    if !flush_pending(&context.pending_pcm_samples, sink, 1) {
+    if flush_pending(&context.pending_pcm_samples, sink, 1).is_none() {
         return Ok(());
     }
     let stream_error = context.stream_error.locked().take();
     let event = match stream_error {
         Some(message) => CaptureEvent::Error { message },
-        None if superseded.load(Ordering::SeqCst) => CaptureEvent::Superseded,
+        None if control.superseded.load(Ordering::SeqCst) => CaptureEvent::Superseded,
         None => CaptureEvent::End,
     };
     sink.send_event(&event);
     Ok(())
 }
 
-/// Sends what has accumulated once it reaches `min_samples`; false when the
-/// receiving side is gone.
+/// Sends what has accumulated once it reaches `min_samples`: the number of
+/// samples sent, `None` when the receiving side is gone.
 fn flush_pending<S: EventSink>(
     pending_pcm_samples: &Mutex<Vec<i16>>,
     sink: &S,
     min_samples: usize,
-) -> bool {
+) -> Option<usize> {
     let samples = match pending_pcm_samples.lock() {
         Ok(mut pending_pcm_samples) if pending_pcm_samples.len() >= min_samples => {
             std::mem::take(&mut *pending_pcm_samples)
         }
-        _ => return true,
+        _ => return Some(0),
     };
+    let count = samples.len();
     sink.send_bytes(pcm16_to_le_bytes(&samples))
+        .then_some(count)
 }
 
 pub(crate) struct StreamContext {
@@ -374,6 +546,86 @@ pub(crate) struct StreamContext {
     pub stop_flag: Arc<AtomicBool>,
     pub device_sample_rate_hz: u32,
     pub output_sample_rate_hz: u32,
+    /// A playback source: silence stands in for the samples it does not
+    /// deliver while nothing plays, see `silence_gap`
+    pub fills_gaps: bool,
+    pub status: Arc<Mutex<SourceStatus>>,
+}
+
+/// Turns the interleaved float frames of a playback device into the
+/// samples of a `StreamContext`: mixed down and brought to its rate.
+pub(crate) struct PlaybackConverter {
+    downsampler: Downsampler,
+    channels: usize,
+    converted: Vec<i16>,
+}
+
+impl PlaybackConverter {
+    pub(crate) fn new(device_sample_rate_hz: u32, output_sample_rate_hz: u32, channels: usize) -> Self {
+        Self {
+            downsampler: Downsampler::new(device_sample_rate_hz, output_sample_rate_hz),
+            channels: channels.max(1),
+            converted: Vec::new(),
+        }
+    }
+
+    pub(crate) fn deliver(&mut self, context: &StreamContext, interleaved: &[f32]) {
+        context.callback_count.fetch_add(1, Ordering::Relaxed);
+        self.converted.clear();
+        for frame in interleaved.chunks(self.channels) {
+            self.downsampler.push(mix_frame(frame), &mut self.converted);
+        }
+        if self.converted.is_empty() {
+            return;
+        }
+        if let Ok(mut level) = context.current_level.lock() {
+            let (rms, peak) = compute_audio_level(&self.converted);
+            *level = (level.0.max(rms), level.1.max(peak));
+        }
+        if let Ok(mut pending) = context.pending_pcm_samples.lock() {
+            pending.extend_from_slice(&self.converted);
+        }
+    }
+}
+
+impl StreamContext {
+    pub(crate) fn new(
+        stop_flag: &Arc<AtomicBool>,
+        device_sample_rate_hz: u32,
+        output_sample_rate_hz: u32,
+    ) -> Self {
+        Self {
+            pending_pcm_samples: Arc::default(),
+            stream_error: Arc::default(),
+            recoverable_error: Arc::default(),
+            current_level: Arc::default(),
+            callback_count: Arc::default(),
+            stop_flag: Arc::clone(stop_flag),
+            device_sample_rate_hz,
+            output_sample_rate_hz,
+            fills_gaps: false,
+            status: Arc::default(),
+        }
+    }
+
+    /// Adds samples a playback backend converted to the output format.
+    pub(crate) fn deliver(&self, samples: &[f32]) {
+        self.callback_count.fetch_add(1, Ordering::Relaxed);
+        if samples.is_empty() {
+            return;
+        }
+        let converted: Vec<i16> = samples
+            .iter()
+            .map(|sample| (sample.clamp(-1.0, 1.0) * f32::from(i16::MAX)) as i16)
+            .collect();
+        if let Ok(mut level) = self.current_level.lock() {
+            let (rms, peak) = compute_audio_level(&converted);
+            *level = (level.0.max(rms), level.1.max(peak));
+        }
+        if let Ok(mut pending) = self.pending_pcm_samples.lock() {
+            pending.extend_from_slice(&converted);
+        }
+    }
 }
 
 /// A device that is gone does not come back; other errors may pass, see
