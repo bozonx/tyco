@@ -1477,8 +1477,6 @@
     "openHistory": "Historique de la saisie rapide"
   },
   "variables": {
-    "add": "Ajouter",
-    "addTitle": "Nouvelle variable",
     "browse": "Parcourir…",
     "browseFile": "Fichier",
     "browseFolder": "Dossier",
@@ -1486,7 +1484,6 @@
     "builtinTitle": "Variables intégrées",
     "create": "Créer une variable",
     "declare": "Déclarer la variable",
-    "description": "Description",
     "empty": "Aucune variable pour l’instant.",
     "errorBuiltinName": "Les noms commençant par TYCO_ sont réservés aux variables intégrées",
     "errorInvalidName": "Utilisez des lettres latines majuscules, des chiffres et _, en commençant par une lettre",
@@ -1512,8 +1509,6 @@
     "usedBy": "Utilisée par : {count}",
     "value": "Valeur",
     "valueNotSet": "Aucune valeur sur cet appareil : les commandes qui l’utilisent ne s’exécutent pas",
-    "valueOnDevice": "Valeur sur cet appareil",
-    "valueOnDeviceHint": "Les autres appareils définissent leur propre valeur. Vous pouvez la renseigner plus tard.",
     "valuePlaceholder": "Un chemin, une adresse ou un autre texte"
   },
   "favorites": { "noMatches": "Aucun favori correspondant" },

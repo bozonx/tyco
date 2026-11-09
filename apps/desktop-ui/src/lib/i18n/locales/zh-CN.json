@@ -1468,8 +1468,6 @@
     "openHistory": "快速输入历史"
   },
   "variables": {
-    "add": "添加",
-    "addTitle": "新建变量",
     "browse": "浏览…",
     "browseFile": "文件",
     "browseFolder": "文件夹",
@@ -1477,7 +1475,6 @@
     "builtinTitle": "内置变量",
     "create": "创建变量",
     "declare": "声明变量",
-    "description": "描述",
     "empty": "还没有变量。",
     "errorBuiltinName": "以 TYCO_ 开头的名称保留给内置变量",
     "errorInvalidName": "请使用大写拉丁字母、数字和 _，并以字母开头",
@@ -1503,8 +1500,6 @@
     "usedBy": "使用者：{count}",
     "value": "值",
     "valueNotSet": "此设备上没有值：使用它的命令不会运行",
-    "valueOnDevice": "此设备上的值",
-    "valueOnDeviceHint": "其他设备各自设置值。也可以稍后填写。",
     "valuePlaceholder": "路径、地址或其他文本"
   },
   "favorites": { "noMatches": "没有匹配的收藏夹" },

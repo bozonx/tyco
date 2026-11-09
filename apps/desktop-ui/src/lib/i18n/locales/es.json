@@ -1477,8 +1477,6 @@
     "openHistory": "Historial de la entrada rápida"
   },
   "variables": {
-    "add": "Añadir",
-    "addTitle": "Nueva variable",
     "browse": "Examinar…",
     "browseFile": "Archivo",
     "browseFolder": "Carpeta",
@@ -1486,7 +1484,6 @@
     "builtinTitle": "Variables integradas",
     "create": "Crear una variable",
     "declare": "Declarar variable",
-    "description": "Descripción",
     "empty": "Aún no hay variables.",
     "errorBuiltinName": "Los nombres que empiezan por TYCO_ están reservados para variables integradas",
     "errorInvalidName": "Usa letras latinas mayúsculas, cifras y _, empezando por una letra",
@@ -1512,8 +1509,6 @@
     "usedBy": "Usada por: {count}",
     "value": "Valor",
     "valueNotSet": "Sin valor en este dispositivo: los comandos que la usan no se ejecutan",
-    "valueOnDevice": "Valor en este dispositivo",
-    "valueOnDeviceHint": "Los demás dispositivos definen su propio valor. Puede rellenarse más tarde.",
     "valuePlaceholder": "Una ruta, una dirección u otro texto"
   },
   "favorites": { "noMatches": "No hay favoritos que coincidan" },

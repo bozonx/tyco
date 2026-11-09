@@ -1474,8 +1474,6 @@
     "openHistory": "クイック入力の履歴"
   },
   "variables": {
-    "add": "追加",
-    "addTitle": "新しい変数",
     "browse": "参照…",
     "browseFile": "ファイル",
     "browseFolder": "フォルダー",
@@ -1483,7 +1481,6 @@
     "builtinTitle": "組み込み変数",
     "create": "変数を作成",
     "declare": "変数を宣言",
-    "description": "説明",
     "empty": "まだ変数はありません。",
     "errorBuiltinName": "TYCO_ で始まる名前は組み込み変数用に予約されています",
     "errorInvalidName": "ラテン文字の大文字、数字、_ を使い、文字で始めてください",
@@ -1509,8 +1506,6 @@
     "usedBy": "使用箇所: {count}",
     "value": "値",
     "valueNotSet": "このデバイスに値がありません: この変数を使うコマンドは実行されません",
-    "valueOnDevice": "このデバイスでの値",
-    "valueOnDeviceHint": "他のデバイスはそれぞれ独自の値を設定します。後から入力することもできます。",
     "valuePlaceholder": "パス、アドレス、その他のテキスト"
   },
   "favorites": { "noMatches": "一致するお気に入りがありません" },

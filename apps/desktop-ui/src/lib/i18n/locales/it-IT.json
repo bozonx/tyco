@@ -1477,8 +1477,6 @@
     "openHistory": "Cronologia dell’inserimento rapido"
   },
   "variables": {
-    "add": "Aggiungi",
-    "addTitle": "Nuova variabile",
     "browse": "Sfoglia…",
     "browseFile": "File",
     "browseFolder": "Cartella",
@@ -1486,7 +1484,6 @@
     "builtinTitle": "Variabili integrate",
     "create": "Crea una variabile",
     "declare": "Dichiara variabile",
-    "description": "Descrizione",
     "empty": "Ancora nessuna variabile.",
     "errorBuiltinName": "I nomi che iniziano con TYCO_ sono riservati alle variabili integrate",
     "errorInvalidName": "Usa lettere latine maiuscole, cifre e _, iniziando con una lettera",
@@ -1512,8 +1509,6 @@
     "usedBy": "Usata da: {count}",
     "value": "Valore",
     "valueNotSet": "Nessun valore su questo dispositivo: i comandi che la usano non vengono eseguiti",
-    "valueOnDevice": "Valore su questo dispositivo",
-    "valueOnDeviceHint": "Gli altri dispositivi impostano il proprio valore. Può essere compilato più tardi.",
     "valuePlaceholder": "Un percorso, un indirizzo o altro testo"
   },
   "favorites": { "noMatches": "Nessun preferito corrispondente" },

@@ -10,7 +10,7 @@
         "providers": { "deepgram": { "modelId": "nova-3" } }
       },
       "commands": [{ "id": "note", "toolId": "script" }],
-      "variables": [{ "id": "notes", "name": "NOTES_DIR", "description": "" }]
+      "variables": [{ "id": "notes", "name": "NOTES_DIR" }]
     },
     "device": {
       "isInDevelopment": true,
@@ -52,7 +52,7 @@
       },
       "externalAccess": { "canAccessSelection": true },
       "windowInsertion": { "terminalApps": ["kitty"] },
-      "variables": [{ "id": "notes", "name": "NOTES_DIR", "description": "" }],
+      "variables": [{ "id": "notes", "name": "NOTES_DIR" }],
       "variableValues": { "notes": "/home/user/notes" }
     },
     "deviceUnknownPaths": []

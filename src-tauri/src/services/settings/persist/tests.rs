@@ -426,7 +426,7 @@ fn device_with_variable_values() -> DeviceFile {
 fn variable_values_stay_on_the_device_and_go_with_their_variable() {
     let setup = Setup::new("config-variables");
     let mut config = setup.load().value;
-    config["variables"] = json!([{"id": "notes", "name": "NOTES_DIR", "description": ""}]);
+    config["variables"] = json!([{"id": "notes", "name": "NOTES_DIR"}]);
     config["variableValues"] = json!({"notes": "/notes"});
     setup.save(&config);
     assert_eq!(setup.user_file()["variables"][0]["name"], "NOTES_DIR");

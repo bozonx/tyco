@@ -750,10 +750,9 @@
             "minLength": 1,
             "maxLength": 64,
             "pattern": "^[A-Z][A-Z0-9_]*$"
-          },
-          "description": { "type": "string", "default": "" }
+          }
         },
-        "required": ["id", "name", "description"]
+        "required": ["id", "name"]
       },
       "defaultPath": "variables"
     },

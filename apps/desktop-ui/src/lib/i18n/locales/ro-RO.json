@@ -1477,8 +1477,6 @@
     "openHistory": "Istoricul introducerii rapide"
   },
   "variables": {
-    "add": "Adaugă",
-    "addTitle": "Variabilă nouă",
     "browse": "Răsfoiește…",
     "browseFile": "Fișier",
     "browseFolder": "Dosar",
@@ -1486,7 +1484,6 @@
     "builtinTitle": "Variabile integrate",
     "create": "Creează o variabilă",
     "declare": "Declară variabila",
-    "description": "Descriere",
     "empty": "Încă nu există variabile.",
     "errorBuiltinName": "Numele care încep cu TYCO_ sunt rezervate variabilelor integrate",
     "errorInvalidName": "Folosiți litere latine mari, cifre și _, începând cu o literă",
@@ -1512,8 +1509,6 @@
     "usedBy": "Folosită de: {count}",
     "value": "Valoare",
     "valueNotSet": "Nicio valoare pe acest dispozitiv: comenzile care o folosesc nu rulează",
-    "valueOnDevice": "Valoare pe acest dispozitiv",
-    "valueOnDeviceHint": "Celelalte dispozitive își setează propria valoare. Poate fi completată mai târziu.",
     "valuePlaceholder": "O cale, o adresă sau alt text"
   },
   "favorites": { "noMatches": "Nu există favorite care să se potrivească" },

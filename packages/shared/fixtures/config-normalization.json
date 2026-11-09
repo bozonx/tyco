@@ -4237,11 +4237,11 @@
         }
       ],
       "variables": [
-        { "id": "notes", "name": "NOTES_DIR", "description": "Notes" },
-        { "id": "dup", "name": "NOTES_DIR", "description": "" },
-        { "id": "builtin", "name": "TYCO_X", "description": "" },
-        { "id": "bad", "name": "lower", "description": "" },
-        { "id": "notes", "name": "OTHER", "description": "" },
+        { "id": "notes", "name": "NOTES_DIR" },
+        { "id": "dup", "name": "NOTES_DIR" },
+        { "id": "builtin", "name": "TYCO_X" },
+        { "id": "bad", "name": "lower" },
+        { "id": "notes", "name": "OTHER" },
         { "id": "api", "name": "LOCAL_API" }
       ],
       "variableValues": {
@@ -4517,8 +4517,8 @@
         }
       ],
       "variables": [
-        { "id": "notes", "name": "NOTES_DIR", "description": "Notes" },
-        { "id": "api", "name": "LOCAL_API", "description": "" }
+        { "id": "notes", "name": "NOTES_DIR" },
+        { "id": "api", "name": "LOCAL_API" }
       ],
       "variableValues": { "notes": "/n" },
       "llm": {

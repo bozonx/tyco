@@ -1477,8 +1477,6 @@
     "openHistory": "Povijest brzog unosa"
   },
   "variables": {
-    "add": "Dodaj",
-    "addTitle": "Nova varijabla",
     "browse": "Pregledaj…",
     "browseFile": "Datoteka",
     "browseFolder": "Mapa",
@@ -1486,7 +1484,6 @@
     "builtinTitle": "Ugrađene varijable",
     "create": "Stvori varijablu",
     "declare": "Deklariraj varijablu",
-    "description": "Opis",
     "empty": "Još nema varijabli.",
     "errorBuiltinName": "Nazivi koji počinju s TYCO_ rezervirani su za ugrađene varijable",
     "errorInvalidName": "Koristite velika latinična slova, znamenke i _, s početnim slovom",
@@ -1512,8 +1509,6 @@
     "usedBy": "Koristi: {count}",
     "value": "Vrijednost",
     "valueNotSet": "Nema vrijednosti na ovom uređaju: naredbe koje je koriste ne izvršavaju se",
-    "valueOnDevice": "Vrijednost na ovom uređaju",
-    "valueOnDeviceHint": "Drugi uređaji postavljaju vlastitu vrijednost. Može se unijeti kasnije.",
     "valuePlaceholder": "Putanja, adresa ili drugi tekst"
   },
   "favorites": { "noMatches": "Nema podudarnih favorita" },

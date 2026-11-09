@@ -1477,8 +1477,6 @@
     "openHistory": "Historia szybkiego wprowadzania"
   },
   "variables": {
-    "add": "Dodaj",
-    "addTitle": "Nowa zmienna",
     "browse": "Przeglądaj…",
     "browseFile": "Plik",
     "browseFolder": "Folder",
@@ -1486,7 +1484,6 @@
     "builtinTitle": "Zmienne wbudowane",
     "create": "Utwórz zmienną",
     "declare": "Zadeklaruj zmienną",
-    "description": "Opis",
     "empty": "Brak zmiennych.",
     "errorBuiltinName": "Nazwy zaczynające się od TYCO_ są zarezerwowane dla zmiennych wbudowanych",
     "errorInvalidName": "Użyj wielkich liter łacińskich, cyfr i _, zaczynając od litery",
@@ -1512,8 +1509,6 @@
     "usedBy": "Używana przez: {count}",
     "value": "Wartość",
     "valueNotSet": "Brak wartości na tym urządzeniu: polecenia, które jej używają, nie są wykonywane",
-    "valueOnDevice": "Wartość na tym urządzeniu",
-    "valueOnDeviceHint": "Inne urządzenia ustawiają własną wartość. Można ją uzupełnić później.",
     "valuePlaceholder": "Ścieżka, adres lub inny tekst"
   },
   "favorites": { "noMatches": "Brak pasujących ulubionych" },

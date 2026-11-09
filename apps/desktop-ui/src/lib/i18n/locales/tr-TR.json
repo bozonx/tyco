@@ -1474,8 +1474,6 @@
     "openHistory": "Hızlı giriş geçmişi"
   },
   "variables": {
-    "add": "Ekle",
-    "addTitle": "Yeni değişken",
     "browse": "Gözat…",
     "browseFile": "Dosya",
     "browseFolder": "Klasör",
@@ -1483,7 +1481,6 @@
     "builtinTitle": "Yerleşik değişkenler",
     "create": "Değişken oluştur",
     "declare": "Değişkeni tanımla",
-    "description": "Açıklama",
     "empty": "Henüz değişken yok.",
     "errorBuiltinName": "TYCO_ ile başlayan adlar yerleşik değişkenlere ayrılmıştır",
     "errorInvalidName": "Büyük Latin harfleri, rakamlar ve _ kullanın; bir harfle başlayın",
@@ -1509,8 +1506,6 @@
     "usedBy": "Kullanan: {count}",
     "value": "Değer",
     "valueNotSet": "Bu cihazda değer yok: onu kullanan komutlar çalışmaz",
-    "valueOnDevice": "Bu cihazdaki değer",
-    "valueOnDeviceHint": "Diğer cihazlar kendi değerini belirler. Daha sonra doldurulabilir.",
     "valuePlaceholder": "Bir yol, adres veya başka bir metin"
   },
   "favorites": { "noMatches": "Eşleşen favori yok" },

@@ -10,7 +10,7 @@
       <span>{{ messageOf(issue) }}</span>
       <InlineAction
         v-if="issue.kind === 'notDeclared' && canDeclare(issue.name)"
-        @click="declaringName = issue.name"
+        @click="declare(issue.name)"
       >
         {{ t('variables.declare') }}
       </InlineAction>
@@ -22,26 +22,20 @@
       </InlineAction>
     </li>
   </ul>
-  <SettingsCreateVariableModal
-    v-if="context"
-    :open="declaringName !== undefined"
-    :initial-name="declaringName"
-    @close="declaringName = undefined"
-  />
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref } from 'vue'
+import { computed, inject } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { SETTINGS_CONTEXT_KEY } from '../../lib/settings/settings-context'
 import {
   type VariableReferenceIssue,
+  addVariable,
   variableReferenceIssues,
 } from '../../lib/variables/variables-settings'
 import AppIcon from '../common/AppIcon.vue'
 import InlineAction from '../common/InlineAction.vue'
-import SettingsCreateVariableModal from './SettingsCreateVariableModal.vue'
 import { variableNameIssue } from '@tyco/shared'
 
 /**
@@ -53,9 +47,6 @@ const props = defineProps<{ templates: readonly string[] }>()
 const { t } = useI18n()
 const context = inject(SETTINGS_CONTEXT_KEY, null)
 
-/** The name the declare dialog is open for */
-const declaringName = ref<string>()
-
 const issues = computed(() => {
   const config = context?.draft.value
   return config ? variableReferenceIssues(props.templates, config) : []
@@ -64,6 +55,14 @@ const issues = computed(() => {
 function canDeclare(name: string): boolean {
   const config = context?.draft.value
   return config ? !variableNameIssue(name, config.variables) : false
+}
+
+function declare(name: string) {
+  if (!context) return
+  const result = addVariable(context.draft.value, name)
+  if (result.ok) {
+    context.editVariable(result.variable.id)
+  }
 }
 
 function messageOf(issue: VariableReferenceIssue): string {

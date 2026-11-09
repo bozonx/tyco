@@ -1474,8 +1474,6 @@
     "openHistory": "Gyors bevitel előzményei"
   },
   "variables": {
-    "add": "Hozzáadás",
-    "addTitle": "Új változó",
     "browse": "Tallózás…",
     "browseFile": "Fájl",
     "browseFolder": "Mappa",
@@ -1483,7 +1481,6 @@
     "builtinTitle": "Beépített változók",
     "create": "Változó létrehozása",
     "declare": "Változó deklarálása",
-    "description": "Leírás",
     "empty": "Még nincsenek változók.",
     "errorBuiltinName": "A TYCO_ kezdetű nevek a beépített változók számára vannak fenntartva",
     "errorInvalidName": "Használjon latin nagybetűket, számjegyeket és _ jelet, betűvel kezdve",
@@ -1509,8 +1506,6 @@
     "usedBy": "Használja: {count}",
     "value": "Érték",
     "valueNotSet": "Nincs érték ezen az eszközön: az ezt használó parancsok nem futnak",
-    "valueOnDevice": "Érték ezen az eszközön",
-    "valueOnDeviceHint": "A többi eszköz saját értéket állít be. Később is kitölthető.",
     "valuePlaceholder": "Útvonal, cím vagy más szöveg"
   },
   "favorites": { "noMatches": "Nincsenek egyező kedvencek" },

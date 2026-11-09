@@ -20,7 +20,7 @@ import {
 const config = () =>
   normalizeUserConfig({
     ...DEFAULT_USER_CONFIG,
-    variables: [{ id: 'notes', name: 'NOTES_DIR', description: '' }],
+    variables: [{ id: 'notes', name: 'NOTES_DIR' }],
     variableValues: { notes: '/n' },
     commands: [
       {
@@ -75,7 +75,7 @@ const config = () =>
 describe('variables settings', () => {
   it('declares a variable with a stable id and refuses a bad name', () => {
     const draft = config()
-    expect(addVariable(draft, ' LOCAL_API ', 'Local API')).toMatchObject({
+    expect(addVariable(draft, ' LOCAL_API ')).toMatchObject({
       ok: true,
       variable: { id: 'local_api', name: 'LOCAL_API' },
     })
@@ -96,17 +96,17 @@ describe('variables settings', () => {
 
   it('sets the value on this device when a variable is declared with one', () => {
     const draft = config()
-    const result = addVariable(draft, 'LOCAL_API', '', 'http://localhost')
+    const result = addVariable(draft, 'LOCAL_API', 'http://localhost')
     expect(result.ok && draft.variableValues[result.variable.id]).toBe(
       'http://localhost'
     )
-    const blank = addVariable(draft, 'EMPTY', '', '  ')
+    const blank = addVariable(draft, 'EMPTY', '  ')
     expect(blank.ok && blank.variable.id in draft.variableValues).toBe(false)
   })
 
   it('tells what each reference of a template lacks', () => {
     const draft = config()
-    addVariable(draft, 'SET_VAR', '', 'value')
+    addVariable(draft, 'SET_VAR', 'value')
     addVariable(draft, 'UNSET_VAR')
     const unsetId = draft.variables.find((v) => v.name === 'UNSET_VAR')!.id
     expect(

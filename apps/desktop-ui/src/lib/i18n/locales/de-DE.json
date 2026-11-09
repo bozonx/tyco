@@ -1477,8 +1477,6 @@
     "openHistory": "Verlauf der Schnelleingabe"
   },
   "variables": {
-    "add": "Hinzufügen",
-    "addTitle": "Neue Variable",
     "browse": "Durchsuchen…",
     "browseFile": "Datei",
     "browseFolder": "Ordner",
@@ -1486,7 +1484,6 @@
     "builtinTitle": "Integrierte Variablen",
     "create": "Variable erstellen",
     "declare": "Variable deklarieren",
-    "description": "Beschreibung",
     "empty": "Noch keine Variablen.",
     "errorBuiltinName": "Namen mit dem Präfix TYCO_ sind für integrierte Variablen reserviert",
     "errorInvalidName": "Verwenden Sie lateinische Großbuchstaben, Ziffern und _, beginnend mit einem Buchstaben",
@@ -1512,8 +1509,6 @@
     "usedBy": "Verwendet von: {count}",
     "value": "Wert",
     "valueNotSet": "Kein Wert auf diesem Gerät: Befehle, die sie nutzen, werden nicht ausgeführt",
-    "valueOnDevice": "Wert auf diesem Gerät",
-    "valueOnDeviceHint": "Andere Geräte legen ihren eigenen Wert fest. Er kann später eingetragen werden.",
     "valuePlaceholder": "Ein Pfad, eine Adresse oder anderer Text"
   },
   "favorites": { "noMatches": "Keine passenden Favoriten" },

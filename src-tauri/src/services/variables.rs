@@ -213,9 +213,9 @@ mod tests {
     fn values_come_from_the_declarations_and_the_device() {
         let config = json!({
             "variables": [
-                {"id": "notes", "name": "NOTES_DIR", "description": ""},
-                {"id": "api", "name": "LOCAL_API", "description": ""},
-                {"id": "blank", "name": "BLANK", "description": ""}
+                {"id": "notes", "name": "NOTES_DIR"},
+                {"id": "api", "name": "LOCAL_API"},
+                {"id": "blank", "name": "BLANK"}
             ],
             "variableValues": {"notes": "/n", "blank": "  ", "gone": "x"}
         });

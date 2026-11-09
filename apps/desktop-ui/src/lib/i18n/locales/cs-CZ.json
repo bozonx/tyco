@@ -1471,8 +1471,6 @@
     "openHistory": "Historie rychlého zadávání"
   },
   "variables": {
-    "add": "Přidat",
-    "addTitle": "Nová proměnná",
     "browse": "Procházet…",
     "browseFile": "Soubor",
     "browseFolder": "Složka",
@@ -1480,7 +1478,6 @@
     "builtinTitle": "Vestavěné proměnné",
     "create": "Vytvořit proměnnou",
     "declare": "Deklarovat proměnnou",
-    "description": "Popis",
     "empty": "Zatím žádné proměnné.",
     "errorBuiltinName": "Názvy začínající TYCO_ jsou vyhrazeny pro vestavěné proměnné",
     "errorInvalidName": "Použijte velká latinská písmena, číslice a _, na začátku písmeno",
@@ -1506,8 +1503,6 @@
     "usedBy": "Používá: {count}",
     "value": "Hodnota",
     "valueNotSet": "Žádná hodnota na tomto zařízení: příkazy, které ji používají, se nespustí",
-    "valueOnDevice": "Hodnota na tomto zařízení",
-    "valueOnDeviceHint": "Ostatní zařízení si nastavují vlastní hodnotu. Lze ji vyplnit později.",
     "valuePlaceholder": "Cesta, adresa nebo jiný text"
   },
   "favorites": { "noMatches": "Žádné odpovídající oblíbené" },

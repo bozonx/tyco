@@ -1477,8 +1477,6 @@
     "openHistory": "Histórico da entrada rápida"
   },
   "variables": {
-    "add": "Adicionar",
-    "addTitle": "Nova variável",
     "browse": "Procurar…",
     "browseFile": "Arquivo",
     "browseFolder": "Pasta",
@@ -1486,7 +1484,6 @@
     "builtinTitle": "Variáveis integradas",
     "create": "Criar uma variável",
     "declare": "Declarar variável",
-    "description": "Descrição",
     "empty": "Ainda não há variáveis.",
     "errorBuiltinName": "Nomes que começam com TYCO_ são reservados para variáveis integradas",
     "errorInvalidName": "Use letras latinas maiúsculas, dígitos e _, começando por uma letra",
@@ -1512,8 +1509,6 @@
     "usedBy": "Usada por: {count}",
     "value": "Valor",
     "valueNotSet": "Sem valor neste dispositivo: os comandos que a usam não são executados",
-    "valueOnDevice": "Valor neste dispositivo",
-    "valueOnDeviceHint": "Os outros dispositivos definem o próprio valor. Pode ser preenchido depois.",
     "valuePlaceholder": "Um caminho, um endereço ou outro texto"
   },
   "favorites": { "noMatches": "Não há favoritos correspondentes" },

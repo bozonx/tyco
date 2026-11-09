@@ -67,19 +67,13 @@
           class="add-btn"
           size="sm"
           icon="mdi:plus"
-          :aria-expanded="isCreateModalOpen"
-          @click="isCreateModalOpen = true"
+          @click="handleCreateVariable"
         >
           {{ t('variables.create') }}
         </Button>
       </template>
 
       <div class="variables-tab">
-        <SettingsCreateVariableModal
-          :open="isCreateModalOpen"
-          @close="isCreateModalOpen = false"
-        />
-
         <ConfirmModal
           :open="Boolean(pendingRemoval)"
           danger
@@ -108,62 +102,105 @@
           {{ t('variables.empty') }}
         </p>
 
-        <div
-          v-for="variable in variables"
-          :key="variable.id"
-          class="variable-row"
-          :data-testid="`variable-${variable.id}`"
-        >
-          <div class="variable-row-head">
-            <FieldRow
-              :label="t('variables.name')"
-              density="compact"
-              :error="nameErrors[variable.id]"
-            >
-              <FieldInput
-                :model-value="nameDrafts[variable.id] ?? variable.name"
-                class="font-mono"
-                @update:model-value="nameDrafts[variable.id] = String($event)"
-                @blur="commitName(variable.id)"
-                @keydown.enter="commitName(variable.id)"
-              />
-            </FieldRow>
-            <IconButton
-              icon="mdi:delete-outline"
-              variant="ghost"
-              :label="t('variables.remove')"
-              @click="requestRemove(variable.id)"
-            />
-          </div>
-          <FieldRow :label="t('variables.description')" density="compact">
-            <FieldInput
-              :model-value="variable.description"
-              @update:model-value="
-                setVariableDescription(draft, variable.id, String($event))
-              "
-            />
-          </FieldRow>
-          <FieldRow
-            :label="t('variables.value')"
-            density="compact"
-            :warning="
-              draft.variableValues[variable.id]?.trim()
-                ? undefined
-                : t('variables.valueNotSet')
-            "
+        <div ref="listRef" class="variables-list">
+          <div
+            v-for="(variable, index) in variables"
+            :key="variable.id"
+            :ref="(el) => setItemRef(variable.id, el)"
+            data-sortable-item
+            class="variable-card"
+            :class="{
+              'is-sorting': isSorting,
+              'is-dragged': draggedIndex === index,
+              'is-new': newlyCreatedId === variable.id,
+            }"
+            :style="itemStyle(index)"
+            :data-testid="`variable-${variable.id}`"
+            @animationend="onAnimationEnd(variable.id)"
           >
-            <template #info><DeviceScopeBadge /></template>
-            <VariableValueInput
-              :ref="(el) => setValueRef(variable.id, el)"
-              :model-value="draft.variableValues[variable.id] ?? ''"
-              :test-id="`variable-value-${variable.id}`"
-              @update:model-value="setVariableValue(draft, variable.id, $event)"
-            />
-          </FieldRow>
-          <p class="variable-usage">
-            <code>{{ variablePlaceholder(variable.name) }}</code>
-            · {{ usageText(variable.name) }}
-          </p>
+            <div class="variable-card-drag">
+              <DragHandle @drag="startDrag(index, $event)" />
+            </div>
+
+            <div class="variable-card-content">
+              <div class="variable-card-header">
+                <div class="variable-card-header-main">
+                  <div class="variable-name-row">
+                    <FieldInput
+                      :ref="(el) => setNameInputRef(variable.id, el)"
+                      :model-value="nameDrafts[variable.id] ?? variable.name"
+                      class="font-mono variable-name-input"
+                      :placeholder="t('variables.name')"
+                      :aria-label="t('variables.name')"
+                      :title="t('variables.nameHint')"
+                      size="sm"
+                      @update:model-value="
+                        setNameDraft(variable.id, String($event))
+                      "
+                      @blur="commitName(variable.id)"
+                      @keydown.enter="commitName(variable.id)"
+                    />
+                    <div class="variable-usage">
+                      <code>{{ variablePlaceholder(variable.name) }}</code>
+                      <span class="variable-usage-divider">·</span>
+                      <span>{{ usageText(variable.name) }}</span>
+                    </div>
+                  </div>
+                  <span
+                    v-if="nameErrors[variable.id]"
+                    class="variable-name-error"
+                  >
+                    {{ nameErrors[variable.id] }}
+                  </span>
+                </div>
+                <IconButton
+                  icon="mdi:trash-can-outline"
+                  variant="ghost"
+                  size="sm"
+                  :label="t('variables.remove')"
+                  :title="t('variables.remove')"
+                  @click="requestRemove(variable.id)"
+                />
+              </div>
+
+              <div class="variable-value-section">
+                <div class="variable-value-header">
+                  <div class="variable-value-meta">
+                    <span class="variable-value-label">{{
+                      t('variables.value')
+                    }}</span>
+                    <DeviceScopeBadge />
+                    <span
+                      v-if="!draft.variableValues[variable.id]?.trim()"
+                      class="variable-value-warning"
+                    >
+                      {{ t('variables.valueNotSet') }}
+                    </span>
+                  </div>
+                  <DropdownMenu
+                    size="xs"
+                    align="right"
+                    icon="mdi:folder-search-outline"
+                    :label="t('variables.browse')"
+                    :items="browseItems(variable.id)"
+                  />
+                </div>
+                <FieldPromptTextArea
+                  :ref="(el) => setValueRef(variable.id, el)"
+                  class="variable-value-field"
+                  :model-value="draft.variableValues[variable.id] ?? ''"
+                  :placeholder="t('variables.valuePlaceholder')"
+                  :modal-title="variable.name"
+                  :rows="2"
+                  auto-resize
+                  :data-testid="`variable-value-${variable.id}`"
+                  @update:model-value="
+                    setVariableValue(draft, variable.id, $event)
+                  "
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </SettingsSection>
@@ -171,40 +208,36 @@
 </template>
 
 <script setup lang="ts">
-import {
-  type ComponentPublicInstance,
-  computed,
-  nextTick,
-  onMounted,
-  reactive,
-  ref,
-} from 'vue'
+import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
+import { useSortableList } from '../../composables/use-sortable-list'
+import { moveItem } from '../../lib/sortable/sortable-list'
 import { variableUsage } from '../../lib/variables/command-variables'
 import {
+  addVariable,
   removeVariable,
   renameVariableIn,
-  setVariableDescription,
   setVariableValue,
   unsetVariables,
 } from '../../lib/variables/variables-settings'
 import { useDesktopStore } from '../../stores/desktop'
+import { useIpcStore } from '../../stores/ipc'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import CopyButton from '../common/CopyButton.vue'
+import DragHandle from '../common/DragHandle.vue'
+import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldInput from '../common/FieldInput.vue'
-import FieldRow from '../common/FieldRow.vue'
+import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoPopover from '../common/InfoPopover.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import DeviceScopeBadge from './DeviceScopeBadge.vue'
-import SettingsCreateVariableModal from './SettingsCreateVariableModal.vue'
 import SettingsSection from './SettingsSection.vue'
-import VariableValueInput from './VariableValueInput.vue'
-import { variablePlaceholder } from '@tyco/shared'
+import { type VariableConfig, variablePlaceholder } from '@tyco/shared'
 
 /** `focusVariableId` opens the tab on the value of that variable */
 const props = defineProps<{ focusVariableId?: string }>()
@@ -212,15 +245,65 @@ const props = defineProps<{ focusVariableId?: string }>()
 const { t } = useI18n()
 const { draft } = useSettingsContext()
 const desktop = useDesktopStore()
-
-const isCreateModalOpen = ref(false)
+const ipc = useIpcStore()
 
 const variables = computed(() => draft.value.variables)
 const unsetCount = computed(() => unsetVariables(draft.value).length)
 
+const listRef = ref<HTMLElement | null>(null)
+const { draggedIndex, isSorting, startDrag, itemOffset } = useSortableList(
+  listRef,
+  moveVariable,
+  { getItemKeys: () => variables.value.map((v) => v.id) }
+)
+
+function moveVariable(from: number, to: number) {
+  draft.value.variables = moveItem(draft.value.variables, from, to)
+}
+
+const itemStyle = (index: number) => {
+  const offset = itemOffset(index)
+  return offset ? { transform: `translateY(${offset}px)` } : undefined
+}
+
+const newlyCreatedId = ref<string | null>(null)
+
+function onAnimationEnd(id: string) {
+  if (newlyCreatedId.value === id) {
+    newlyCreatedId.value = null
+  }
+}
+
+function nextVariableName(
+  existingVariables: readonly VariableConfig[]
+): string {
+  const taken = new Set(existingVariables.map((v) => v.name.toUpperCase()))
+  if (!taken.has('VAR')) return 'VAR'
+  for (let i = 1; ; i += 1) {
+    const candidate = `VAR_${i}`
+    if (!taken.has(candidate)) return candidate
+  }
+}
+
+async function handleCreateVariable() {
+  const name = nextVariableName(draft.value.variables)
+  const result = addVariable(draft.value, name)
+  if (!result.ok) return
+  newlyCreatedId.value = result.variable.id
+  await nextTick()
+  const nameInput = nameInputRefs.get(result.variable.id)
+  nameInput?.focus?.()
+  nameInput?.select?.()
+}
+
 /** Names being typed: a rename is applied when the field is left */
 const nameDrafts = reactive<Record<string, string>>({})
 const nameErrors = reactive<Record<string, string>>({})
+
+function setNameDraft(id: string, name: string) {
+  nameDrafts[id] = name
+  delete nameErrors[id]
+}
 
 function commitName(id: string) {
   const name = nameDrafts[id]
@@ -262,9 +345,24 @@ function confirmRemove() {
   pendingRemoval.value = undefined
 }
 
-const valueRefs = new Map<string, { focus?: () => void; $el?: Element }>()
+const itemRefs = new Map<string, HTMLElement>()
+function setItemRef(id: string, el: unknown) {
+  if (el instanceof HTMLElement) itemRefs.set(id, el)
+  else itemRefs.delete(id)
+}
 
-function setValueRef(id: string, el: Element | ComponentPublicInstance | null) {
+const nameInputRefs = new Map<
+  string,
+  { focus?: () => void; select?: () => void }
+>()
+function setNameInputRef(id: string, el: unknown) {
+  if (el)
+    nameInputRefs.set(id, el as { focus?: () => void; select?: () => void })
+  else nameInputRefs.delete(id)
+}
+
+const valueRefs = new Map<string, { focus?: () => void; $el?: Element }>()
+function setValueRef(id: string, el: unknown) {
   if (el) valueRefs.set(id, el as { focus?: () => void; $el?: Element })
   else valueRefs.delete(id)
 }
@@ -276,6 +374,30 @@ onMounted(async () => {
   field?.$el?.scrollIntoView?.({ block: 'center' })
   field?.focus?.()
 })
+
+async function pick(
+  variableId: string,
+  command: 'pick_directory' | 'pick_file'
+) {
+  const result = await ipc.callOrNotify(command)
+  if (typeof result.result === 'string')
+    setVariableValue(draft.value, variableId, result.result)
+}
+
+function browseItems(variableId: string): DropdownMenuItem[] {
+  return [
+    {
+      label: t('variables.browseFolder'),
+      icon: 'mdi:folder-outline',
+      action: () => pick(variableId, 'pick_directory'),
+    },
+    {
+      label: t('variables.browseFile'),
+      icon: 'mdi:file-outline',
+      action: () => pick(variableId, 'pick_file'),
+    },
+  ]
+}
 
 function usageText(name: string): string {
   const count = usageCountOf(name)
@@ -378,36 +500,183 @@ const builtins = computed(() => [
   overflow-wrap: anywhere;
 }
 
+.variables-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
 .variables-notice {
   margin: var(--space-md);
   margin-bottom: 0;
 }
 
-.variable-row {
+.variables-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
   padding: var(--space-md);
 }
 
-.variable-row + .variable-row {
-  border-top: 1px solid var(--app-border);
-}
-
-.variable-row-head {
+.variable-card {
   display: flex;
   align-items: flex-start;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--app-surface-raised);
+  border: 1px solid var(--app-border-subtle);
+  border-radius: var(--radius-lg);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-fast),
+    border-color var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.variable-card.is-sorting {
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-base);
+}
+
+.variable-card.is-dragged {
+  position: relative;
+  z-index: 10;
+  box-shadow: var(--app-shadow-lg);
+  border-color: var(--color-primary);
+  background-color: var(--app-surface-elevated, var(--app-surface-raised));
+  transition: none;
+}
+
+.variable-card.is-new {
+  animation: variable-card-created 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes variable-card-created {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px
+      color-mix(in oklab, var(--color-primary) 35%, transparent);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px
+      color-mix(in oklab, var(--color-primary) 25%, transparent);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    border-color: var(--app-border-subtle);
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .variable-card.is-new {
+    animation: none;
+  }
+}
+
+.variable-card-drag {
+  padding-top: var(--space-xs);
+  flex-shrink: 0;
+}
+
+.variable-card-content {
+  flex: 1 1 0%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-sm);
 }
 
-.variable-row-head > :first-child {
-  flex: 1;
+.variable-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.variable-card-header-main {
+  flex: 1 1 0%;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.variable-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.variable-name-input {
+  max-width: 16rem;
+  font-weight: 600;
+}
+
+.variable-name-error {
+  color: var(--color-error);
+  font-size: var(--text-caption);
+  line-height: var(--leading-normal);
 }
 
 .variable-usage {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
   color: var(--app-text-muted);
   font-size: var(--text-small);
+}
+
+.variable-usage code {
+  font-size: var(--text-caption);
+}
+
+.variable-usage-divider {
+  opacity: 0.5;
+}
+
+.variable-value-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.variable-value-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.variable-value-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.variable-value-label {
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-base-content);
+}
+
+.variable-value-warning {
+  font-size: var(--text-caption);
+  color: var(--color-warning, #f59e0b);
+}
+
+.variable-value-field {
+  width: 100%;
 }
 
 .variables-empty {

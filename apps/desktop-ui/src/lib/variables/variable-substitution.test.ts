@@ -49,8 +49,8 @@ describe('variable substitution', () => {
       variableValuesOf(
         {
           variables: [
-            { id: 'notes', name: 'NOTES_DIR', description: '' },
-            { id: 'api', name: 'LOCAL_API', description: '' },
+            { id: 'notes', name: 'NOTES_DIR' },
+            { id: 'api', name: 'LOCAL_API' },
           ],
           variableValues: { notes: '/n', api: ' ', gone: 'x' },
         },
@@ -60,7 +60,7 @@ describe('variable substitution', () => {
   })
 
   it('checks a new name: pattern, built-in prefix, case-insensitive repeats', () => {
-    const variables = [{ id: 'a', name: 'NOTES_DIR', description: '' }]
+    const variables = [{ id: 'a', name: 'NOTES_DIR' }]
     expect(variableNameIssue('', variables)).toBe('noName')
     expect(variableNameIssue('notes', variables)).toBe('invalidName')
     expect(variableNameIssue('TYCO_X', variables)).toBe('builtinName')

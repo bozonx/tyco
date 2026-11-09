@@ -1468,8 +1468,6 @@
     "openHistory": "快速輸入歷史"
   },
   "variables": {
-    "add": "新增",
-    "addTitle": "新增變數",
     "browse": "瀏覽…",
     "browseFile": "檔案",
     "browseFolder": "資料夾",
@@ -1477,7 +1475,6 @@
     "builtinTitle": "內建變數",
     "create": "建立變數",
     "declare": "宣告變數",
-    "description": "說明",
     "empty": "尚無變數。",
     "errorBuiltinName": "以 TYCO_ 開頭的名稱保留給內建變數",
     "errorInvalidName": "請使用大寫拉丁字母、數字和 _，並以字母開頭",
@@ -1503,8 +1500,6 @@
     "usedBy": "使用者：{count}",
     "value": "值",
     "valueNotSet": "此裝置上沒有值：使用它的命令不會執行",
-    "valueOnDevice": "此裝置上的值",
-    "valueOnDeviceHint": "其他裝置各自設定值。也可以稍後填寫。",
     "valuePlaceholder": "路徑、位址或其他文字"
   },
   "favorites": { "noMatches": "沒有相符的收藏" },

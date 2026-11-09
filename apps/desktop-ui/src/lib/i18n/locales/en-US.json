@@ -1477,8 +1477,6 @@
     "openHistory": "Quick input history"
   },
   "variables": {
-    "add": "Add",
-    "addTitle": "New variable",
     "browse": "Browse…",
     "browseFile": "File",
     "browseFolder": "Folder",
@@ -1486,7 +1484,6 @@
     "builtinTitle": "Built-in variables",
     "create": "Create variable",
     "declare": "Declare variable",
-    "description": "Description",
     "empty": "No variables yet.",
     "errorBuiltinName": "Names starting with TYCO_ are reserved for built-in variables",
     "errorInvalidName": "Use capital Latin letters, digits and _, starting with a letter",
@@ -1512,8 +1509,6 @@
     "usedBy": "Used by: {count}",
     "value": "Value",
     "valueNotSet": "No value on this device: commands that use it do not run",
-    "valueOnDevice": "Value on this device",
-    "valueOnDeviceHint": "Other devices set their own value. It can be filled in later.",
     "valuePlaceholder": "A path, an address or other text"
   },
   "favorites": { "noMatches": "No matching favorites" },

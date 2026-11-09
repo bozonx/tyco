@@ -58,7 +58,6 @@ export function newVariableId(name: string, taken: readonly string[]): string {
 export function addVariable(
   config: VariablesConfig,
   name: string,
-  description = '',
   value = ''
 ): { ok: true; variable: VariableConfig } | { ok: false; issueKey: string } {
   const trimmed = name.trim()
@@ -70,9 +69,8 @@ export function addVariable(
       config.variables.map((item) => item.id)
     ),
     name: trimmed,
-    description: description.trim(),
   }
-  config.variables = [...config.variables, variable]
+  config.variables = [variable, ...config.variables]
   setVariableValue(config, variable.id, value)
   return { ok: true, variable }
 }
@@ -94,16 +92,6 @@ export function renameVariableIn(
   config.commands = renamed.commands
   config.llm = renamed.llm
   return undefined
-}
-
-export function setVariableDescription(
-  config: VariablesConfig,
-  id: string,
-  description: string
-): void {
-  config.variables = config.variables.map((variable) =>
-    variable.id === id ? { ...variable, description } : variable
-  )
 }
 
 /** Removes the declaration and the value this device has for it */

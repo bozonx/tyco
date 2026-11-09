@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 
 import { createTestSettingsContext } from '../../test/settings-context'
 import {
@@ -33,7 +34,7 @@ describe('SettingsVariablesTab.vue', () => {
   })
 
   const mountTab = (
-    variables: Array<{ id: string; name: string; description: string }> = [],
+    variables: Array<{ id: string; name: string }> = [],
     commands: Partial<UserConfig>['commands'] = []
   ) => {
     const context = createTestSettingsContext({
@@ -48,10 +49,15 @@ describe('SettingsVariablesTab.vue', () => {
           provide: context.provide,
           stubs: {
             Teleport: true,
-            SettingsCreateVariableModal: {
-              props: ['open'],
-              emits: ['close'],
-              template: '<div class="create-modal-stub" :data-open="open" />',
+            DragHandle: {
+              emits: ['drag'],
+              template: '<button class="drag-handle-stub" />',
+            },
+            FieldPromptTextArea: {
+              props: ['modelValue', 'placeholder', 'modalTitle', 'dataTestid'],
+              emits: ['update:modelValue'],
+              template:
+                '<textarea class="prompt-textarea-stub" :data-testid="dataTestid" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
             },
             ConfirmModal: {
               props: ['open', 'message'],
@@ -89,13 +95,21 @@ describe('SettingsVariablesTab.vue', () => {
     expect(popover.text()).toContain('{{var:TYCO_DEVICE_ID}}')
   })
 
-  it('opens create modal when create button is clicked', async () => {
-    const { wrapper } = mountTab()
-    const modalStub = wrapper.find('.create-modal-stub')
-    expect(modalStub.attributes('data-open')).toBe('false')
+  it('creates a new variable directly at the start of the list with animation when create button is clicked', async () => {
+    const { wrapper, context } = mountTab([{ id: 'v1', name: 'EXISTING' }])
+    expect(context.draft.value.variables).toHaveLength(1)
 
     await wrapper.find('.add-btn').trigger('click')
-    expect(modalStub.attributes('data-open')).toBe('true')
+    await nextTick()
+
+    expect(context.draft.value.variables).toHaveLength(2)
+    // Newly created variable is at index 0 (start of the list)
+    const firstVar = context.draft.value.variables[0]!
+    expect(firstVar.name).toBe('VAR')
+
+    const cards = wrapper.findAll('.variable-card')
+    expect(cards).toHaveLength(2)
+    expect(cards[0]?.classes()).toContain('is-new')
   })
 
   it('shows empty message when there are no variables', () => {
@@ -104,14 +118,24 @@ describe('SettingsVariablesTab.vue', () => {
     expect(wrapper.find('.variables-empty').text()).toBe('variables.empty')
   })
 
-  it('lists existing variables and allows removing one', async () => {
-    const { wrapper, context } = mountTab([
-      { id: 'v1', name: 'CUSTOM_VAR', description: 'My variable' },
-    ])
+  it('lists existing variables and allows updating value via textarea', async () => {
+    const { wrapper, context } = mountTab([{ id: 'v1', name: 'CUSTOM_VAR' }])
     expect(wrapper.find('.variables-empty').exists()).toBe(false)
     expect(wrapper.find('[data-testid="variable-v1"]').exists()).toBe(true)
+    expect(wrapper.find('.drag-handle-stub').exists()).toBe(true)
 
-    const removeBtn = wrapper.find('[data-testid="variable-v1"] button')
+    const textarea = wrapper.find('[data-testid="variable-value-v1"]')
+    expect(textarea.exists()).toBe(true)
+    await textarea.setValue('my-new-value')
+
+    expect(context.draft.value.variableValues['v1']).toBe('my-new-value')
+  })
+
+  it('allows removing a variable', async () => {
+    const { wrapper, context } = mountTab([{ id: 'v1', name: 'CUSTOM_VAR' }])
+    const removeBtn = wrapper.find(
+      '[data-testid="variable-v1"] .variable-card-header button'
+    )
     await removeBtn.trigger('click')
 
     expect(context.draft.value.variables).toHaveLength(0)
@@ -119,7 +143,7 @@ describe('SettingsVariablesTab.vue', () => {
 
   it('asks before removing a variable that commands use', async () => {
     const { wrapper, context } = mountTab(
-      [{ id: 'v1', name: 'NOTES', description: '' }],
+      [{ id: 'v1', name: 'NOTES' }],
       normalizeUserConfig({
         ...DEFAULT_USER_CONFIG,
         commands: [
@@ -132,7 +156,9 @@ describe('SettingsVariablesTab.vue', () => {
         ],
       }).commands
     )
-    await wrapper.find('[data-testid="variable-v1"] button').trigger('click')
+    await wrapper
+      .find('[data-testid="variable-v1"] .variable-card-header button')
+      .trigger('click')
     expect(context.draft.value.variables).toHaveLength(1)
     expect(wrapper.find('.confirm-stub').text()).toContain('"count":1')
 

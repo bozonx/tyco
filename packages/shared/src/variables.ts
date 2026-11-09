@@ -14,7 +14,6 @@ export interface VariableConfig {
   id: string
   /** What templates refer to, e.g. `NOTES_DIR` */
   name: string
-  description: string
 }
 
 /** What a variable name looks like */
