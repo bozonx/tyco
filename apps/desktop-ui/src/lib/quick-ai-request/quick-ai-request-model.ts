@@ -2,12 +2,13 @@ import { computed, ref } from 'vue'
 import {
   APP_CONFIG,
   type Chat,
+  type AiAttachedFile,
   type ChatAttachment,
   type ChatImage,
   type ChatMessage,
-  type ChatMessagePart,
 } from '@tyco/shared'
 
+import { conversationAttachedFiles } from '../chat/chat-attached-files'
 import type { ChatToolDecision } from '../chat-tools/chat-tool-policy'
 import type { ChatToolLoopState } from '../chat-tools/chat-tool-loop'
 import { hasAnswer } from '../chat-tools/chat-message-steps'
@@ -20,11 +21,7 @@ import { createChatPersistenceQueue } from '../chat/chat-persistence-queue'
 import { createChatState } from '../chat/chat-state'
 import { draftTitleOf } from '../chat/chat-title'
 import { createChatTitleController } from '../chat/chat-title-controller'
-import {
-  extractReplyBlocks,
-  REPLY_BLOCKS_TOOL_NAME,
-  type ReplyBlockData,
-} from '../reply-blocks/reply-blocks-tool'
+import type { ReplyBlockData } from '../reply-blocks/reply-blocks-tool'
 
 /**
  * One question of the request and its answer, as the quick feed shows them. It
@@ -34,9 +31,8 @@ export interface QuickAiRequestTurn {
   id: string
   prompt: string
   inputKind: 'text' | 'voice'
-  parts: ChatMessagePart[]
-  replyBlocks: ReplyBlockData[]
-  textResponse: string
+  /** The answer so far, shown as the main chat shows it; none before it comes */
+  answer?: ChatMessage
   /** `stopped`: the user cancelled it; what came so far is kept */
   status: 'generating' | 'done' | 'stopped' | 'error'
   error?: string
@@ -46,12 +42,12 @@ export interface QuickAiRequestTurn {
 export type QuickAiRequestModelIssue = 'noModel' | 'toolsRequired'
 
 /**
- * What the request is about. The selection may be empty; the screenshot may be
- * removed or retaken until the model answers over it.
+ * What the request is about. The selection may be empty; screenshots may be
+ * removed or added until the model answers over them.
  */
 export type QuickAiRequestContext =
   | { kind: 'selection'; text?: string }
-  | { kind: 'screenshot'; image?: ChatImage; images?: ChatImage[] }
+  | { kind: 'screenshot'; images?: ChatImage[] }
 
 /** A conversation the main window takes over, with its id and images */
 export interface QuickAiRequestTransfer {
@@ -103,7 +99,6 @@ export interface QuickAiRequestModelDependencies {
   cancelToolApprovals: () => void
 
   insertText: (text: string) => Promise<void>
-  copyText: (text: string) => Promise<void>
   toEditor: (text: string, sourceText?: string) => Promise<void>
 
   /** Opens the main chat fresh, before anything was asked here */
@@ -128,8 +123,6 @@ export interface QuickAiRequestModelDependencies {
     modelId: string,
     signal?: AbortSignal
   ) => Promise<string>
-  /** Whether chats of the profile are stored at all */
-  isHistoryEnabled: (profileId: string | null) => boolean
   /** Whether quick requests of the profile are stored with its chats */
   isQuickRequestSavingEnabled: (profileId: string | null) => boolean
 
@@ -159,13 +152,6 @@ const MODEL_ISSUE_FALLBACK: Record<QuickAiRequestModelIssue, string> = {
     'The model cannot call tools. Quick requests and chats need a model with tool calling.',
 }
 
-const replyBlocksOf = (parts: ChatMessagePart[]): ReplyBlockData[] =>
-  parts.flatMap((part) =>
-    part.type === 'tool-call' && part.toolName === REPLY_BLOCKS_TOOL_NAME
-      ? extractReplyBlocks(part.input)
-      : []
-  )
-
 /**
  * A quick request is a chat with another face: its turns run, are stored and
  * named by the same parts as the main chat; it is stored among the quick
@@ -187,11 +173,8 @@ export function createQuickAiRequestModel(
     deps.getRememberedModelId(profileId.value) ?? null
   )
   const sourceImages = ref<ChatImage[]>(
-    context.kind === 'screenshot'
-      ? (context.images ?? (context.image ? [context.image] : []))
-      : []
+    context.kind === 'screenshot' ? [...(context.images ?? [])] : []
   )
-  const sourceImage = computed(() => sourceImages.value[0])
   const isProfileLocked = ref(false)
   /** Why the last request was not sent: no model, too long and the like */
   const notice = ref<string | null>(null)
@@ -222,14 +205,10 @@ export function createQuickAiRequestModel(
   const title = createChatTitleController(
     {
       generateChatTitle: deps.generateChatTitle,
-      // a request kept in memory only is named too: the title goes with it
-      // when it moves to the main chat
-      renameChat: async (id, newTitle, options) => {
-        if (isStored()) await persistence.renameChat(id, newTitle, options)
-        else currentChatParams.value.title = newTitle
-      },
-      isHistoryEnabled: () =>
-        isStored() || deps.isHistoryEnabled(profileId.value),
+      renameChat: persistence.renameChat,
+      // a request kept in memory only is not named: nobody sees its title,
+      // and one moved to the main chat takes the draft title
+      isHistoryEnabled: isStored,
       imageTitle: deps.imageTitle,
     },
     state
@@ -338,15 +317,12 @@ export function createQuickAiRequestModel(
             : !answer || answer.status === 'stopped'
               ? 'stopped'
               : 'done'
-      const parts = answer?.parts ?? []
       return [
         {
           id: `${chatId}-${questionIndex}`,
           prompt: message.content,
           inputKind: inputKinds.value[questionIndex] ?? 'text',
-          parts,
-          replyBlocks: replyBlocksOf(parts),
-          textResponse: answer?.content ?? '',
+          ...(answer ? { answer } : {}),
           status,
           ...(failure ? { error: failure } : {}),
         },
@@ -372,11 +348,6 @@ export function createQuickAiRequestModel(
   const setSourceTextDisabled = (disabled: boolean) => {
     if (isSourceTextLocked.value) return
     isSourceTextDisabled.value = disabled
-  }
-
-  const setSourceImage = (image: ChatImage | undefined) => {
-    if (isSourceImageLocked.value) return
-    sourceImages.value = image ? [image] : []
   }
 
   const setSourceImages = (images: ChatImage[]) => {
@@ -480,14 +451,16 @@ export function createQuickAiRequestModel(
     return result.status === 'answered'
   }
 
+  /** The files of the conversation the file tools may read, by name */
+  const attachedFiles = (): readonly AiAttachedFile[] =>
+    conversationAttachedFiles(
+      messages.value.flatMap((message) => message.attachments || [])
+    )
+
   const applyReplyBlock = async (
     block: ReplyBlockData,
-    target: 'window' | 'editor' | 'copy'
+    target: 'window' | 'editor'
   ) => {
-    if (target === 'copy') {
-      await deps.copyText(block.text)
-      return
-    }
     if (target === 'window') await deps.insertText(block.text)
     else await deps.toEditor(block.text, sourceText.value)
     deps.closeOverlay()
@@ -541,10 +514,16 @@ export function createQuickAiRequestModel(
 
     await persistence.whenSaved()
     isQuickRequest = false
+    const firstQuestion = messages.value.find((item) => item.role === 'user')
     await deps.transferChat({
       chat: {
         id: chatId,
-        title: currentChatParams.value.title || '',
+        // a request not stored was not named: it takes the draft title
+        title:
+          currentChatParams.value.title ||
+          (firstQuestion
+            ? draftTitleOf(firstQuestion, deps.imageTitle?.() || 'Image')
+            : ''),
         lastMessageAt: Date.now(),
         messages: [...messages.value],
       },
@@ -566,16 +545,15 @@ export function createQuickAiRequestModel(
     isSourceTextDisabled,
     isSourceTextLocked,
     setSourceTextDisabled,
-    sourceImage,
     sourceImages,
     isSourceImageLocked,
-    setSourceImage,
     setSourceImages,
     addSourceImage,
     removeSourceImage,
     isProfileLocked,
     isGenerating,
     turns,
+    attachedFiles,
     error,
     setInputMode,
     setProfileId,

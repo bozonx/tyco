@@ -3,9 +3,6 @@
     <QuickAiRequestMenu
       :text="props.screenshotMode ? '' : text"
       :screenshot-mode="props.screenshotMode"
-      :screenshot="
-        props.screenshotMode ? desktopStore.desktopState.screenshot : undefined
-      "
       :screenshots="
         props.screenshotMode ? desktopStore.desktopState.screenshots : undefined
       "

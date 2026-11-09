@@ -37,6 +37,7 @@ import {
 } from './chat-llm-selection'
 import { createChatModel } from './chat-model'
 import { createChatProfileRuntime } from './chat-profile-runtime'
+import { profileTurnOptions } from './chat-profile-turn'
 import { createChatRemoval } from './chat-removal'
 
 type SendChatOptions = NonNullable<
@@ -219,17 +220,12 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     instructions: () => fullInstructions.value,
     rules: () => undefined,
     turnOptions: async (modelId, toolOutputBudgetCharacters) => {
-      const stored = turnProfile ?? profile.value
-      return {
-        ...(await chatTools.turnTools(
-          modelId,
-          toolOutputBudgetCharacters,
-          stored?.tools,
-          stored?.memoryMode
-        )),
-        temperature: stored?.temperature,
-        maxOutputTokens: stored?.maxOutputTokens,
-      }
+      return profileTurnOptions(
+        chatTools,
+        modelId,
+        toolOutputBudgetCharacters,
+        turnProfile ?? profile.value
+      )
     },
     saveLastChatId: async (lastChatId) => {
       // an empty id forgets the profile's last chat

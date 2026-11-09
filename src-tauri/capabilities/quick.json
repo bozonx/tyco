@@ -12,7 +12,6 @@
     "allow-claim-external-job",
     "allow-open-transferred-chat",
     "allow-add-screenshot",
-    "allow-retake-screenshot",
     "allow-remove-screenshot",
     "allow-confirm-screenshot-crop",
     "allow-cancel-screenshot-crop",

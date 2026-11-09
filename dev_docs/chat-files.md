@@ -85,10 +85,15 @@ A quick request is a chat with another face: `quick-ai-request-model.ts` runs
 its turns on the parts of the main chat (`createChatState`,
 `createChatGenerationModel`, `createChatPersistenceQueue`,
 `createChatTitleController`), so the context budget, errors, stopping, saving
-and titles behave the same; only the feed of turns with reply blocks is its
-own, a view of the chat messages. It is stored with `isQuickRequest` once
-answered, unless `isQuickRequestSavingEnabled` of its scope is off; with it off,
-the recent questions of stored quick requests are not offered either; a question
+and titles behave the same. `quick-ai-request-runtime.ts` wires it to the
+desktop; a turn of a profile takes its tools, temperature and output limit from
+`profileTurnOptions`, as the main chat does. Only the feed of turns is its own:
+a view of the chat messages that shows each answer with the steps of the main
+chat (markdown, tool calls with their approvals, reply blocks). It is stored
+with `isQuickRequest` once answered, unless `isQuickRequestSavingEnabled` of its
+scope is off; with it off, no title is generated (the request moves to the main
+chat with its draft title) and the recent questions of stored quick requests
+are not offered either; a question
 that got no answer is not stored and gives way to the next one. Moving it to
 the main chat goes through `open_transferred_chat` for text and screenshots
 alike: the main chat starts it with the same id and saves it without the flag,

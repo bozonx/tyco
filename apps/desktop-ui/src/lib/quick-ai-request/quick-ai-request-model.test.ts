@@ -74,14 +74,12 @@ function createSetup(overrides: Partial<QuickAiRequestModelDependencies> = {}) {
     answerToolApproval: vi.fn(),
     cancelToolApprovals: vi.fn(),
     insertText: vi.fn(async () => {}),
-    copyText: vi.fn(async () => {}),
     toEditor: vi.fn(async () => {}),
     openMainChat: vi.fn(async () => {}),
     transferChat: vi.fn(async () => {}),
     saveChat: vi.fn(async () => {}),
     renameChat: vi.fn(async () => {}),
     generateChatTitle: vi.fn(async () => 'Generated title'),
-    isHistoryEnabled: () => true,
     isQuickRequestSavingEnabled: () => true,
     createId: vi.fn(() => `id-${idCounter++}`),
     chatId: 'chat-1',
@@ -159,8 +157,10 @@ describe('QuickAiRequestModel', () => {
       expect.objectContaining({
         prompt: 'Make it shorter',
         status: 'done',
-        textResponse: 'Here is the response',
-        replyBlocks: [{ title: 'Option 1', text: 'Transformed text' }],
+        answer: expect.objectContaining({
+          role: 'assistant',
+          content: 'Here is the response',
+        }),
       }),
     ])
   })
@@ -250,19 +250,19 @@ describe('QuickAiRequestModel', () => {
     await model.submitPrompt('Hi')
     await flush()
 
-    // the backend drops the write; the title stays with the conversation
+    // nobody sees the title of a request not stored: no model is asked
+    expect(deps.generateChatTitle).not.toHaveBeenCalled()
     expect(deps.renameChat).not.toHaveBeenCalled()
     await model.switchToChat()
     expect(deps.transferChat).toHaveBeenCalledWith(
       expect.objectContaining({
-        chat: expect.objectContaining({ title: 'Generated title' }),
+        chat: expect.objectContaining({ title: 'Hi' }),
       })
     )
   })
 
   it('stores and names quick requests even when regular chat history is disabled', async () => {
     const { model, deps } = createSetup({
-      isHistoryEnabled: () => false,
       isQuickRequestSavingEnabled: () => true,
     })
 
@@ -330,7 +330,7 @@ describe('QuickAiRequestModel', () => {
     expect(deps.cancelToolApprovals).toHaveBeenCalled()
     expect(model.turns.value[0]).toMatchObject({
       status: 'stopped',
-      textResponse: 'Partial',
+      answer: expect.objectContaining({ content: 'Partial' }),
     })
     expect(savedChats(deps).at(-1)?.messages.at(-1)).toMatchObject({
       role: 'assistant',
@@ -426,11 +426,14 @@ describe('QuickAiRequestModel', () => {
     const { model, deps } = createSetup()
 
     await model.applyReplyBlock({ title: 'A', text: 'Result' }, 'window')
-    await model.applyReplyBlock({ title: 'A', text: 'Copied' }, 'copy')
+    await model.applyReplyBlock({ title: 'A', text: 'Edited' }, 'editor')
 
     expect(deps.insertText).toHaveBeenCalledWith('Result')
-    expect(deps.copyText).toHaveBeenCalledWith('Copied')
-    expect(deps.closeOverlay).toHaveBeenCalledTimes(1)
+    expect(deps.toEditor).toHaveBeenCalledWith(
+      'Edited',
+      'Selected original text'
+    )
+    expect(deps.closeOverlay).toHaveBeenCalledTimes(2)
   })
 
   describe('screenshot mode', () => {
@@ -445,7 +448,7 @@ describe('QuickAiRequestModel', () => {
       overrides: Partial<QuickAiRequestModelDependencies> = {}
     ) =>
       createSetup({
-        context: { kind: 'screenshot', image: screenshot },
+        context: { kind: 'screenshot', images: [screenshot] },
         getRememberedModelId: () => 'vision',
         ...overrides,
       })
@@ -482,30 +485,31 @@ describe('QuickAiRequestModel', () => {
       expect(deps.sendTurn).not.toHaveBeenCalled()
     })
 
-    it('replaces or removes the screenshot only before the first answer', async () => {
+    it('adds or removes screenshots only before the first answer', async () => {
       const { model } = screenshotSetup()
-      const retaken = { ...screenshot, id: 'shot-2' }
+      const another = { ...screenshot, id: 'shot-2' }
 
-      model.setSourceImage(retaken)
-      expect(model.sourceImage.value).toEqual(retaken)
-      model.removeSourceImage('shot-2')
-      expect(model.sourceImage.value).toBeUndefined()
-      model.addSourceImage(screenshot)
+      model.addSourceImage(another)
+      expect(model.sourceImages.value).toEqual([screenshot, another])
+      model.removeSourceImage('shot-1')
+      expect(model.sourceImages.value).toEqual([another])
       await model.submitPrompt('What is this?')
 
       expect(model.isSourceImageLocked.value).toBe(true)
-      model.setSourceImage(retaken)
-      expect(model.sourceImage.value).toEqual(screenshot)
+      model.addSourceImage(screenshot)
+      model.removeSourceImage('shot-2')
+      expect(model.sourceImages.value).toEqual([another])
     })
 
-    it('keeps the screenshot replaceable after a first request with no answer', async () => {
+    it('keeps the screenshots editable after a first request with no answer', async () => {
       const { model, deps } = screenshotSetup()
       vi.mocked(deps.sendTurn).mockRejectedValueOnce(new Error('failed'))
 
       expect(await model.submitPrompt('What is this?')).toBe(false)
       expect(model.isSourceImageLocked.value).toBe(false)
       const retaken = { ...screenshot, id: 'shot-2' }
-      model.setSourceImage(retaken)
+      model.removeSourceImage('shot-1')
+      model.addSourceImage(retaken)
 
       await model.submitPrompt('What is this?')
       expect(sentMessages(deps, 1)[0].images).toEqual([retaken])

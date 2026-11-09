@@ -3,6 +3,7 @@
  * when the conversation moves there, and its tools with the permissions the
  * user gave "for this session". See `dev_docs/chat-files.md`
  */
+import { shallowRef } from 'vue'
 
 /** The tools of one conversation, as `createDesktopChatTools` makes them */
 export interface QuickAiRequestTools {
@@ -27,7 +28,8 @@ export function createQuickAiRequestSession<
   Profile,
 >(deps: QuickAiRequestSessionDependencies<Tools, Profile>) {
   const chatId = deps.createId()
-  let scope: { profileId: string | null; tools: Tools } | undefined
+  /** Reactive, so that the feed sees the calls waiting for the user */
+  const scope = shallowRef<{ profileId: string | null; tools: Tools }>()
   let isDisposed = false
 
   /**
@@ -36,10 +38,10 @@ export function createQuickAiRequestSession<
    */
   function toolsFor(profileId: string | null, profile?: Profile): Tools {
     if (isDisposed) throw new Error('The quick request session has ended')
-    if (scope?.profileId === profileId) return scope.tools
-    scope?.tools.dispose()
+    if (scope.value?.profileId === profileId) return scope.value.tools
+    scope.value?.tools.dispose()
     const tools = deps.createTools({ chatId, profileId, profile })
-    scope = { profileId, tools }
+    scope.value = { profileId, tools }
     return tools
   }
 
@@ -47,12 +49,12 @@ export function createQuickAiRequestSession<
     chatId,
     toolsFor,
     /** The tools made last, if any */
-    currentTools: (): Tools | undefined => scope?.tools,
+    currentTools: (): Tools | undefined => scope.value?.tools,
     /** Ends the session: calls waiting for the user are cancelled */
     dispose: () => {
       isDisposed = true
-      scope?.tools.dispose()
-      scope = undefined
+      scope.value?.tools.dispose()
+      scope.value = undefined
     },
   }
 }

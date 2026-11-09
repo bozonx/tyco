@@ -333,7 +333,6 @@ pub fn run() {
             commands::voice::unwatch_audio_apps,
             commands::window::open_transferred_chat,
             commands::window::add_screenshot,
-            commands::window::retake_screenshot,
             commands::window::remove_screenshot,
             commands::window::confirm_screenshot_crop,
             commands::window::cancel_screenshot_crop,

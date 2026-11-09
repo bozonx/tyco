@@ -55,3 +55,9 @@ if (typeof window.localStorage === 'undefined' || !window.localStorage.clear) {
     configurable: true,
   })
 }
+
+// jsdom lays nothing out and has no scrolling; the feeds that follow their
+// content call it
+if (!HTMLElement.prototype.scrollTo) {
+  HTMLElement.prototype.scrollTo = () => {}
+}

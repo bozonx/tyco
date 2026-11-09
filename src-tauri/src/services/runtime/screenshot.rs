@@ -355,15 +355,6 @@ pub fn add(app: &AppHandle, activation_id: u64) -> Result<Option<ChatImage>, App
         .map_err(|e| AppError::Failed(e.to_string()))?
 }
 
-/// Retake without replacing the activation or its frontend question/conversation.
-pub fn retake(
-    app: &AppHandle,
-    activation_id: u64,
-    _mode: Option<ScreenshotCaptureMode>,
-) -> Result<Option<ChatImage>, AppError> {
-    add(app, activation_id)
-}
-
 pub fn confirm_crop(app: &AppHandle, selection_id: u64, crop: CropRect) -> Result<(), AppError> {
     if crop.width == 0 || crop.height == 0 {
         return Err(AppError::invalid_input("Empty screenshot selection"));

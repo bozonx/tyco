@@ -36,7 +36,7 @@ const mountView = (props: Record<string, unknown>) =>
             'inputMode',
             'profileId',
             'screenshotMode',
-            'screenshot',
+            'screenshots',
           ],
           template: '<div />',
         },
@@ -50,7 +50,9 @@ describe('QuickAiRequestView', () => {
   it.each(['text', 'voice'] as const)(
     'passes selection and %s input mode to the request menu',
     async (inputMode) => {
-      desktop = await loadFakeDesktop({ activation: { screenshot } })
+      desktop = await loadFakeDesktop({
+        activation: { screenshots: [screenshot] },
+      })
       const wrapper = mountView({ inputMode, profileId: 'profile-1' })
       expect(
         wrapper.findComponent({ name: 'QuickAiRequestMenu' }).props()
@@ -60,7 +62,7 @@ describe('QuickAiRequestView', () => {
         inputMode,
         profileId: 'profile-1',
         screenshotMode: false,
-        screenshot: undefined,
+        screenshots: undefined,
       })
       wrapper.unmount()
     }
@@ -69,11 +71,18 @@ describe('QuickAiRequestView', () => {
   it.each(['text', 'voice'] as const)(
     'passes the activation screenshot instead of the selection in %s mode',
     async (inputMode) => {
-      desktop = await loadFakeDesktop({ activation: { screenshot } })
+      desktop = await loadFakeDesktop({
+        activation: { screenshots: [screenshot] },
+      })
       const wrapper = mountView({ inputMode, screenshotMode: true })
       expect(
         wrapper.findComponent({ name: 'QuickAiRequestMenu' }).props()
-      ).toMatchObject({ text: '', inputMode, screenshotMode: true, screenshot })
+      ).toMatchObject({
+        text: '',
+        inputMode,
+        screenshotMode: true,
+        screenshots: [screenshot],
+      })
       wrapper.unmount()
     }
   )

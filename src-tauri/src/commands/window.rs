@@ -101,20 +101,6 @@ pub async fn add_screenshot(
         .await?
 }
 
-/// Retakes the screen while retaining the quick request activation and draft.
-#[tauri::command]
-pub async fn retake_screenshot(
-    app: AppHandle,
-    activation_id: u64,
-    mode: Option<crate::models::ScreenshotCaptureMode>,
-) -> Result<Option<crate::models::ChatImage>, AppError> {
-    let services = app.state::<crate::services::background::BackgroundServices>();
-    let handle = app.clone();
-    services
-        .run_blocking(move || runtime::screenshot::retake(&handle, activation_id, mode))
-        .await?
-}
-
 #[tauri::command]
 pub fn confirm_screenshot_crop(
     app: AppHandle,

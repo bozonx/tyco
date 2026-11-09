@@ -29,6 +29,7 @@
       <QuickAiRequestTurns
         :turns="model.turns.value"
         :source-text="model.sourceText.value"
+        :pending-approvals="runtime.pendingApprovals.value"
         @apply-reply-block="
           (block, target) => model.applyReplyBlock(block, target)
         "
@@ -64,7 +65,7 @@
       <QueryPanel
         v-else
         ref="queryPanelRef"
-        v-model="prompt"
+        v-model="input.value.value"
         :disabled="isInputBlocked || model.isGenerating.value"
         :placeholder="promptPlaceholder"
         :options="recentOptions"
@@ -128,34 +129,15 @@ import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
 import useToast from '../../composables/use-toast'
-import { createDesktopChatTools } from '../../lib/chat-tools/desktop-chat-tools'
-import {
-  isChatHistoryEnabled,
-  isQuickRequestSavingEnabled,
-} from '../../lib/chat/chat-history-settings'
 import { getChatImage } from '../../lib/chat/chat-image-storage'
-import { chatModelOptions } from '../../lib/chat/chat-llm-selection'
-import { resolveProfileInstructions } from '../../lib/chat/chat-profile-runtime'
-import { type TextRange, insertAtCursor } from '../../lib/chat/insert-at-cursor'
+import { createChatInputModel } from '../../lib/chat/chat-input-model'
 import { invokeDesktop } from '../../lib/desktop/invoke'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { describeError } from '../../lib/errors/describe-error'
-import { resultOrThrow } from '../../lib/ipc/ipc-model'
-import { LlmError } from '../../lib/llm/llm-client'
-import {
-  normalizeLlmConfig,
-  withPickedTaskModel,
-} from '../../lib/llm/llm-config'
-import { formatLlmError } from '../../lib/llm/llm-errors'
 import { clientLogger } from '../../lib/logger'
 import { filterOptions } from '../../lib/menu-query/menu-query'
 import type { QuickAiRequestMenuParams } from '../../lib/modals/menu-modal-params'
-import { isSecretUsable } from '../../lib/net/secrets'
-import {
-  type QuickAiRequestModel,
-  createQuickAiRequestModel,
-} from '../../lib/quick-ai-request/quick-ai-request-model'
-import { createQuickAiRequestSession } from '../../lib/quick-ai-request/quick-ai-request-session'
+import { createQuickAiRequestRuntime } from '../../lib/quick-ai-request/quick-ai-request-runtime'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import { useActionMenuStore } from '../../stores/action-menu'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
@@ -179,12 +161,6 @@ import QueryPanel, {
 import QuickAiModelBar from './QuickAiModelBar.vue'
 import QuickAiRequestTurns from './QuickAiRequestTurns.vue'
 import VoiceRecognitionMenu from './VoiceRecognitionMenu.vue'
-import {
-  APP_CONFIG,
-  type AiProfile,
-  type Chat,
-  llmSecretId,
-} from '@tyco/shared'
 
 const props = withDefaults(defineProps<QuickAiRequestMenuParams>(), {
   text: '',
@@ -210,7 +186,9 @@ const { t } = useI18n()
 const { handleEsc: defaultHandleEsc } = useOverlayNav()
 
 const isQuickWindow = isInQuickWindow()
-const prompt = ref(props.prompt)
+/** The prompt and its caret, kept as the main chat keeps its input */
+const input = createChatInputModel()
+input.setValue(props.prompt)
 const isCapturing = ref(false)
 const queryPanelRef = ref<InstanceType<typeof QueryPanel>>()
 let disposed = false
@@ -218,8 +196,8 @@ const isListening = ref(props.inputMode === 'voice')
 const lastInputKind = ref<'text' | 'voice'>(
   props.inputMode === 'voice' ? 'voice' : 'text'
 )
-const rememberedSelection = ref<TextRange | null>(null)
-const voiceRange = ref({ start: 0, end: 0, prefix: '', suffix: '' })
+/** What stays around the dictated text in the live preview */
+const voiceRange = ref({ prefix: '', suffix: '' })
 
 const voiceActivationMode = computed(() => {
   if (!isQuickWindow) return undefined
@@ -233,197 +211,37 @@ const voiceActivationMode = computed(() => {
   return undefined
 })
 
-/**
- * The conversation of the request: its chat id, kept when it moves to the full
- * chat, and its tools, so that a call allowed "for this session" stays allowed
- * for the follow-up questions
- */
-const session = createQuickAiRequestSession({
-  createId: () => crypto.randomUUID(),
-  createTools: ({
-    chatId,
-    profileId: pId,
-    profile,
-  }: {
-    chatId: string
-    profileId: string | null
-    profile?: AiProfile
-  }) =>
-    createDesktopChatTools({
-      profileId: pId,
-      invoke: invokeDesktop,
-      canUseTools: () => true,
-      getMemoryMode: () => profile?.memoryMode,
-      getChatId: () => chatId,
-      getFetchMaxCharacters: () =>
-        desktopStore.userConfig?.llm?.webSearch?.fetchMaxCharacters,
-      warn: (msg) => clientLogger.warn(msg, 'tools'),
-      commands: () => desktopStore.userConfig?.commands ?? [],
-      tools: toolsStore,
-      environment: toolsStore.environment,
-    }),
-})
-
-// Model instantiation with dependencies
-const profileOf = (pId: string | null) =>
-  pId ? aiProfilesStore.getProfile(pId) : undefined
-
-const model: QuickAiRequestModel = createQuickAiRequestModel({
+const runtime = createQuickAiRequestRuntime({
   context: props.screenshotMode
-    ? { kind: 'screenshot', image: props.screenshot, images: props.screenshots }
+    ? { kind: 'screenshot', images: props.screenshots }
     : { kind: 'selection', text: props.text },
   initialInputMode: props.inputMode,
   initialProfileId: props.profileId,
-  getModelOptions: () =>
-    chatModelOptions(normalizeLlmConfig(desktopStore.userConfig?.llm), (id) =>
-      isSecretUsable(secretsStore.secrets, llmSecretId(id))
-    ),
-  getRememberedModelId: (pId) =>
-    (pId ? aiProfilesStore.getProfile(pId)?.quickRequestModelId : undefined) ||
-    desktopStore.userConfig?.llm?.tasks?.quickRequest?.modelId ||
-    undefined,
-  rememberModelId: async (pId, modelId) => {
-    if (pId) {
-      try {
-        await aiProfilesStore.updateProfile(pId, {
-          quickRequestModelId: modelId,
-        })
-      } catch (error) {
-        toastText(describeError(error, t), 'error')
-      }
-      return
-    }
-    const response = await saveQuickRequestTaskModel(modelId)
-    if (!response.success) toastText(describeError(response.error, t), 'error')
-  },
-  getRules: () => desktopStore.userConfig?.llm?.tasks?.quickRequest?.rule,
-  resolveInstructions: async (pId) =>
-    [
-      APP_CONFIG.aiInstructions.quickRequest,
-      pId
-        ? await resolveProfileInstructions(pId, {
-            refreshProfile: (id) => aiProfilesStore.refreshProfile(id),
-            readSoul: (id) => aiProfilesStore.readSoul(id),
-            readCoreMemory: (id) => aiProfilesStore.readMemory(id, 'core.md'),
-            listMemoryTopics: (id) => aiProfilesStore.listMemoryTopics(id),
-            warn: (msg) => clientLogger.warn(msg, 'profile'),
-          })
-        : '',
-    ]
-      .filter(Boolean)
-      .join('\n\n'),
-  mayOfferTools: (pId) => {
-    const profile = profileOf(pId)
-    return session
-      .toolsFor(pId, profile)
-      .mayOfferTools({
-        canUseTools: true,
-        settings: profile?.tools,
-        memoryMode: profile?.memoryMode,
-      })
-  },
-  sendTurn: async (
-    message,
-    prevMessages,
-    { profileId: pId, instructions, toolOutputBudgetCharacters, ...options }
-  ) => {
-    const profile = profileOf(pId)
-    const turn = await session
-      .toolsFor(pId, profile)
-      .turnTools(
-        options.modelId,
-        toolOutputBudgetCharacters,
-        profile?.tools,
-        profile?.memoryMode
-      )
-    return llmStore.actions.sendChatMessage(
-      message,
-      prevMessages,
-      instructions,
-      {
-        ...options,
-        ...turn,
-        task: 'quickRequest',
-        rules: desktopStore.userConfig?.llm?.tasks?.quickRequest?.rule,
-        temperature: profile?.temperature,
-        maxOutputTokens: profile?.maxOutputTokens,
-        loadImage: getChatImage,
-      }
-    )
-  },
-  answerToolApproval: (approvalId, decision) =>
-    session.currentTools()?.answerApproval(approvalId, decision),
-  cancelToolApprovals: () => session.currentTools()?.dispose(),
-  insertText: async (text: string) => {
-    await ipcStore.callOrNotify('paste_into_target_and_hide', { text })
-    void historyStore.saveOutput(text, 'quickAiRequest')
-  },
-  copyText: async (text: string) => {
-    resultOrThrow(await ipcStore.call('copy_text', { text }), 'copy_text')
-    void historyStore.saveOutput(text, 'quickAiRequest')
-    toastKey('common.copied', 'success')
-  },
-  toEditor: async (text: string, src?: string) => {
-    editorNavigation.toEditor(text, src)
-    void historyStore.saveOutput(text, 'quickAiRequest')
-  },
-  openMainChat: async (params) => {
-    resultOrThrow(
-      await ipcStore.callOrNotify('open_main_chat', params),
-      'open_main_chat'
-    )
-  },
-  transferChat: async ({ chat, question, profileId: pId }) => {
-    resultOrThrow(
-      await ipcStore.call('open_transferred_chat', {
-        transfer: { chat, question: question ?? null, profileId: pId ?? null },
-      }),
-      'open_transferred_chat'
-    )
-  },
-  saveChat: async (chat: Chat, pId) => {
-    resultOrThrow(
-      await ipcStore.call('save_chat', { profileId: pId, chat }),
-      'save_chat'
-    )
-  },
-  renameChat: async (chatId, title, pId) => {
-    resultOrThrow(
-      await ipcStore.call('rename_chat', { id: chatId, title, profileId: pId }),
-      'rename_chat'
-    )
-  },
-  generateChatTitle: (question, answer, modelId, signal) =>
-    llmStore.actions.generateChatTitle(question, answer, modelId, signal),
-  isHistoryEnabled: (pId) => isChatHistoryEnabled(desktopStore.userConfig, pId),
-  isQuickRequestSavingEnabled: (pId) =>
-    isQuickRequestSavingEnabled(desktopStore.userConfig, pId),
-  createId: () => crypto.randomUUID(),
-  chatId: session.chatId,
+  invoke: invokeDesktop,
+  call: ipcStore.call,
+  callOrNotify: ipcStore.callOrNotify,
+  llmActions: llmStore.actions,
+  loadImage: (id) => getChatImage(id),
+  getUserConfig: () => desktopStore.userConfig,
+  updateUserConfig: (patch) => desktopStore.updateUserConfig(patch),
+  getSecrets: () => secretsStore.secrets,
+  getProfile: (id) => aiProfilesStore.getProfile(id),
+  updateProfile: (id, patch) => aiProfilesStore.updateProfile(id, patch),
+  refreshProfile: (id) => aiProfilesStore.refreshProfile(id),
+  readSoul: (id) => aiProfilesStore.readSoul(id),
+  readMemory: (id, file) => aiProfilesStore.readMemory(id, file),
+  listMemoryTopics: (id) => aiProfilesStore.listMemoryTopics(id),
+  tools: toolsStore,
+  environment: toolsStore.environment,
+  saveOutput: (text) => void historyStore.saveOutput(text, 'quickAiRequest'),
+  toEditor: (text, sourceText) => editorNavigation.toEditor(text, sourceText),
   closeOverlay: () => menuModalsStore.closeAll(),
-  noModelError: () => t('quickAiRequest.noModel'),
-  toolsRequiredError: () => t('llmErrors.toolsRequired'),
-  imageModelError: () => t('chat.imageModelRequired'),
-  messageTooLongError: () => t('llmErrors.contextLength'),
-  emptyResponseError: () => t('selection.emptyResult'),
-  imageTitle: () => t('chat.imageTitle'),
-  imageOmittedText: () => t('chat.imageOmitted'),
-  formatError: (error) =>
-    error instanceof LlmError
-      ? formatLlmError(error, t)
-      : describeError(error, t),
+  translate: t,
+  toastError: (message) => toastText(message, 'error'),
+  warn: (message, scope) => clientLogger.warn(message, scope),
+  createId: () => crypto.randomUUID(),
 })
-
-/** "Ask AI" keeps its quick request model in the task settings */
-function saveQuickRequestTaskModel(modelId: string) {
-  return desktopStore.updateUserConfig({
-    llm: withPickedTaskModel(
-      desktopStore.userConfig.llm,
-      'quickRequest',
-      modelId
-    ),
-  })
-}
+const { model } = runtime
 
 /** Tells what this request is about: the screenshot, the selection or nothing */
 const promptPlaceholder = computed(() => {
@@ -446,19 +264,11 @@ const bannerText = computed(
     (model.turns.value.at(-1)?.status === 'error' ? '' : model.error.value)
 )
 
+// the activation keeps the list: screenshots added or removed show up here
 watch(
   () => props.screenshots,
   (images) => {
     if (images) model.setSourceImages(images)
-  }
-)
-
-watch(
-  () => props.screenshot,
-  (image) => {
-    if (image && !model.sourceImages.value.some((img) => img.id === image.id)) {
-      model.addSourceImage(image)
-    }
   }
 )
 
@@ -495,7 +305,7 @@ const isInputBlocked = computed(
 
 const canSend = computed(
   () =>
-    Boolean(prompt.value.trim()) &&
+    Boolean(input.value.value.trim()) &&
     !isInputBlocked.value &&
     !model.isGenerating.value
 )
@@ -503,19 +313,12 @@ const canSend = computed(
 // Query options suggestions filtered by profile
 const recentPrompts = ref<string[]>([])
 async function loadRecentPrompts(pId: string | null) {
-  try {
-    const res = await ipcStore.call('list_recent_quick_request_prompts', {
-      profileId: pId ?? null,
-      limit: 5,
-    })
-    if (res.success && Array.isArray(res.result)) {
-      recentPrompts.value = res.result
-      return
-    }
-  } catch {
-    // fall back to empty
-  }
-  recentPrompts.value = []
+  const res = await ipcStore.call('list_recent_quick_request_prompts', {
+    profileId: pId ?? null,
+    limit: 5,
+  })
+  recentPrompts.value =
+    res.success && Array.isArray(res.result) ? res.result : []
 }
 
 watch(
@@ -529,11 +332,10 @@ watch(
 const recentOptions = computed<QueryPanelOption[]>(() =>
   filterOptions(
     recentPrompts.value.map((entry) => ({ id: entry, label: entry })),
-    prompt.value
-  ).filter((option) => option.label !== prompt.value.trim())
+    input.value.value
+  ).filter((option) => option.label !== input.value.value.trim())
 )
 
-// Hints
 const promptHints = computed<QueryPanelHint[]>(() => [
   {
     keys: ['Enter'],
@@ -544,7 +346,6 @@ const promptHints = computed<QueryPanelHint[]>(() => [
   {
     keys: ['Ctrl', 'Enter'],
     label: t('action.askInChat'),
-    disabled: model.isGenerating.value,
     action: () => switchToChat(),
   },
   ...(model.sourceText.value && !editorNavigation.isEditorPage()
@@ -559,28 +360,13 @@ const promptHints = computed<QueryPanelHint[]>(() => [
 ])
 
 function handleInputBlur(event: FocusEvent) {
-  const input = event.target as HTMLInputElement | null
-  if (!input) return
-  rememberedSelection.value = {
-    start: input.selectionStart ?? prompt.value.length,
-    end: input.selectionEnd ?? prompt.value.length,
-  }
-}
-
-function captureVoiceRange() {
-  const raw = queryPanelRef.value?.getSelection() ??
-    rememberedSelection.value ?? {
-      start: prompt.value.length,
-      end: prompt.value.length,
-    }
-  const start = Math.max(0, Math.min(raw.start, prompt.value.length))
-  const end = Math.max(start, Math.min(raw.end, prompt.value.length))
-  voiceRange.value = {
-    start,
-    end,
-    prefix: prompt.value.slice(0, start),
-    suffix: prompt.value.slice(end),
-  }
+  const element = event.target as HTMLInputElement | null
+  if (!element) return
+  const length = input.value.value.length
+  input.rememberSelection({
+    start: element.selectionStart ?? length,
+    end: element.selectionEnd ?? length,
+  })
 }
 
 function startVoice() {
@@ -591,13 +377,29 @@ function startVoice() {
     disposed
   )
     return
-  captureVoiceRange()
+  const live = queryPanelRef.value?.getSelection()
+  if (live) input.rememberSelection(live)
+  const value = input.value.value
+  const range = input.selection.value
+  voiceRange.value = {
+    prefix: range ? value.slice(0, range.start) : value,
+    suffix: range ? value.slice(range.end) : '',
+  }
   isListening.value = true
+}
+
+function focusPrompt() {
+  void nextTick(() => {
+    if (disposed) return
+    queryPanelRef.value?.focus()
+    const caret = input.takePendingCaret()
+    if (caret !== null) queryPanelRef.value?.select(caret, caret)
+  })
 }
 
 function handleVoiceCancelled() {
   isListening.value = false
-  void nextTick(() => queryPanelRef.value?.focus())
+  focusPrompt()
 }
 
 async function handleVoiceCorrected(
@@ -611,33 +413,16 @@ async function handleVoiceCorrected(
     void actionMenuStore.runDefaultAction('copyToClipboard', resultText)
     return
   }
-
-  let caret = voiceRange.value.end
   if (resultText.trim()) {
-    const inserted = insertAtCursor(
-      prompt.value,
-      { start: voiceRange.value.start, end: voiceRange.value.end },
-      resultText
-    )
-    prompt.value = inserted.value
-    caret = inserted.caret
-    rememberedSelection.value = { start: caret, end: caret }
+    input.insertText(resultText)
     lastInputKind.value = 'voice'
   }
-
-  if (intent === 'submit') {
-    const textToSend = prompt.value.trim()
-    if (textToSend) {
-      await model.submitPrompt(textToSend, 'voice', clearPrompt)
-      return
-    }
+  const textToSend = input.value.value.trim()
+  if (intent === 'submit' && textToSend) {
+    await model.submitPrompt(textToSend, 'voice', clearPrompt)
+    return
   }
-
-  await nextTick()
-  if (!disposed) {
-    queryPanelRef.value?.focus()
-    queryPanelRef.value?.select(caret, caret)
-  }
+  focusPrompt()
 }
 
 async function handleQuerySubmit(submitEvent?: QueryPanelSubmit) {
@@ -646,7 +431,7 @@ async function handleQuerySubmit(submitEvent?: QueryPanelSubmit) {
     return
   }
 
-  let textToSend = prompt.value.trim()
+  let textToSend = input.value.value.trim()
   let inputKind: 'text' | 'voice' = lastInputKind.value
 
   if (submitEvent?.option) {
@@ -656,23 +441,21 @@ async function handleQuerySubmit(submitEvent?: QueryPanelSubmit) {
 
   if (!textToSend) return
 
-  prompt.value = textToSend
+  input.value.value = textToSend
   await model.submitPrompt(textToSend, inputKind, clearPrompt)
 }
 
 /** The question moved to the feed: the input is ready for the next one */
 function clearPrompt() {
-  prompt.value = ''
-  rememberedSelection.value = null
+  input.clear()
   lastInputKind.value = 'text'
 }
 
+/** Moves on to the main chat; an answer still coming stops there */
 async function switchToChat() {
-  // like its button: the answer is not cut off by moving on
-  if (model.isGenerating.value) return
   isListening.value = false
   try {
-    await model.switchToChat(prompt.value)
+    await model.switchToChat(input.value.value)
   } catch (error) {
     toastText(describeError(error, t), 'error')
   }
@@ -687,12 +470,19 @@ function handleEsc() {
 }
 
 /**
- * The disabled prompt loses focus while the answer comes, so Esc reaches only
- * the window: it stops the answer there
+ * The disabled prompt loses focus while the answer comes, so the keys reach
+ * only the window: Esc stops the answer there, Ctrl+Enter moves on to the chat
  */
-function handleGeneratingEsc(event: KeyboardEvent) {
-  if (event.key !== 'Escape' || event.shiftKey || event.isComposing) return
+function handleGeneratingKeys(event: KeyboardEvent) {
+  if (event.key !== 'Escape' && event.key !== 'Enter') return
+  if (event.shiftKey || event.isComposing) return
   if (!model.isGenerating.value || menuModalsStore.pendingModal) return
+  if (event.key === 'Enter') {
+    if (!event.ctrlKey) return
+    event.preventDefault()
+    void switchToChat()
+    return
+  }
   event.preventDefault()
   model.stopGeneration()
 }
@@ -702,22 +492,19 @@ function goToSettings() {
 }
 
 onMounted(async () => {
-  window.addEventListener('keydown', handleGeneratingEsc)
+  window.addEventListener('keydown', handleGeneratingKeys)
   // The models of a provider show up only when its key is known to be set;
   // the quick window has not read the keys yet, or they changed since then.
   await secretsStore.refreshSecrets().catch(() => undefined)
-  if (props.isPromptSent && prompt.value.trim() && !disposed) {
+  if (props.isPromptSent && input.value.value.trim() && !disposed) {
     await handleQuerySubmit()
   }
 })
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleGeneratingEsc)
+  window.removeEventListener('keydown', handleGeneratingKeys)
   disposed = true
-  if (model.isGenerating.value) {
-    model.stopGeneration()
-  }
-  session.dispose()
+  runtime.dispose()
 })
 </script>
 

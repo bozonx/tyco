@@ -298,7 +298,7 @@ describe('QuickAiRequestMenu', () => {
     )
   })
 
-  it('does not move to the chat while the answer is being generated', async () => {
+  it('stops the answer being generated and moves to the chat', async () => {
     const openChatSpy = vi.fn()
     desktop.backend.handle('open_main_chat', openChatSpy)
     desktop.backend.handle('start_fetch', () => new Promise(() => undefined))
@@ -314,8 +314,13 @@ describe('QuickAiRequestMenu', () => {
       new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true })
     )
     await flushPromises()
-    expect(openChatSpy).not.toHaveBeenCalled()
-    expect(wrapper.find('.stop-action-btn').exists()).toBe(true)
+    // nothing was answered: the chat starts fresh with the context
+    expect(openChatSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attachment: { text: 'Context', source: 'selection' },
+      })
+    )
+    expect(wrapper.find('.stop-action-btn').exists()).toBe(false)
     wrapper.unmount()
   })
 
@@ -404,7 +409,7 @@ describe('QuickAiRequestMenu', () => {
     }
     const mountScreenshotMenu = () =>
       mount(QuickAiRequestMenu, {
-        props: { screenshotMode: true, screenshot },
+        props: { screenshotMode: true, screenshots: [screenshot] },
         global: {
           plugins: [desktop.pinia],
           stubs: {

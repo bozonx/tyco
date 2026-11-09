@@ -47,7 +47,7 @@ export interface TransformationMenuParams {
 }
 export interface QuickAiRequestMenuParams {
   screenshotMode?: boolean
-  screenshot?: ChatImage
+  /** The screenshots of the activation, in the order they were taken */
   screenshots?: ChatImage[]
   text?: string
   shortcutsDisabled?: boolean

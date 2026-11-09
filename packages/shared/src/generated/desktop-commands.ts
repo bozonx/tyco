@@ -42,7 +42,6 @@ import type {
   ProfileMemoryChange,
   ProfileMemorySearchResult,
   ProfileMemoryTopic,
-  ScreenshotCaptureMode,
   ScriptActionRequest,
   ScriptExecutionResult,
   SecretStatus,
@@ -335,10 +334,6 @@ export interface DesktopCommands {
     result: void
   }
   restore_previous_plugin_package: { args: { id: string }; result: void }
-  retake_screenshot: {
-    args: { activationId: number; mode?: ScreenshotCaptureMode | null }
-    result: ChatImage | null
-  }
   reveal_quick_window: { args: { activationId: number }; result: void }
   rewrite_ai_profile_memory: {
     args: {
@@ -494,7 +489,6 @@ export const ACTIVATION_DESKTOP_COMMANDS = [
   'open_transferred_chat',
   'paste_into_target_and_hide',
   'remove_screenshot',
-  'retake_screenshot',
   'reveal_quick_window',
   'set_quick_input_region',
   'switch_quick_mode',
