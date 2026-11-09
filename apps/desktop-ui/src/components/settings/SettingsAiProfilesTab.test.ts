@@ -122,39 +122,28 @@ describe('SettingsAiProfilesTab.vue', () => {
     expect(wrapper.text()).toContain('settings.noProjectsYet')
   })
 
-  it('describes each profile by its tools and opens it', async () => {
+  it('describes each profile with its custom folder or none, and opens it', async () => {
     store.profiles.push(
-      profile({}),
-      profile({
-        id: 'coder',
-        name: 'Coder',
-        tools: { groups: { files: { isEnabled: true, access: 'allow' } } },
-      })
+      profile({ id: 'profile-standard', name: 'Standard' }),
+      profile({ id: 'custom-folder', name: 'Custom' })
     )
     const wrapper = mountTab()
     const items = wrapper.findAllComponents({ name: 'SettingsEntityItem' })
-    expect(items[0]!.text()).toContain('settings.profileNoTools')
-    expect(items[1]!.text()).toContain('chatTools.files')
+    expect(items[0]!.props('description')).toBe('')
+    expect(items[1]!.props('description')).toBe('custom-folder')
     await items[0]!.vm.$emit('open')
-    expect(context.navigate).toHaveBeenCalledWith('ai-profile:writer')
+    expect(context.navigate).toHaveBeenCalledWith('ai-profile:profile-standard')
   })
 
-  it('describes each project by its assigned profiles', () => {
-    store.profiles.push(
-      profile({
-        id: 'writer',
-        name: 'Writer',
-        projectPermissions: { 'proj-1': { read: 'allow', write: 'allow' } },
-      })
-    )
+  it('describes each project by its description', () => {
     store.projects.push(
-      { id: 'proj-1', name: 'Project 1' },
+      { id: 'proj-1', name: 'Project 1', description: 'Main repo' },
       { id: 'proj-2', name: 'Project 2' }
     )
     const wrapper = mountTab()
     const items = wrapper.findAllComponents({ name: 'SettingsEntityItem' })
-    expect(items[1]!.text()).toContain('Writer')
-    expect(items[2]!.text()).toContain('settings.noProfilesWithAccess')
+    expect(items[0]!.props('description')).toBe('Main repo')
+    expect(items[1]!.props('description')).toBe('')
   })
 
   it('creates and opens a new profile through the modal', async () => {

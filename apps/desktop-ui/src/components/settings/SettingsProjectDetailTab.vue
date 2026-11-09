@@ -56,7 +56,11 @@
             <code class="vault-folder">projects/{{ projectId }}</code>
           </FieldRow>
           <FieldRow :label="t('settings.projectDescription')">
-            <FieldInput v-model="description" @update:model-value="change" />
+            <FieldTextArea
+              v-model="description"
+              :rows="3"
+              @update:model-value="change"
+            />
           </FieldRow>
           <FieldRow :label="t('settings.projectType')">
             <SegmentedControl
@@ -100,20 +104,83 @@
           :title="t('settings.projectProfileAccess')"
           :info="t('settings.projectProfileAccessHint')"
         >
-          <div class="settings-section-content">
-            <SettingsAccessList
-              :entries="accessEntries"
-              :candidates="accessCandidates"
-              :add-label="t('settings.grantProfileAccess')"
-              :empty-message="
-                profiles.length === 0
-                  ? t('settings.noProfilesYet')
-                  : t('settings.noProfilesWithAccess')
-              "
-              :openable="!isNew"
-              @change="changeAccess"
-              @open="(profileId) => navigate(profileTab(profileId))"
+          <div v-if="isNew" class="settings-section-content">
+            <StateMessage
+              v-if="profiles.length === 0"
+              density="compact"
+              :message="t('settings.noProfilesYet')"
             />
+            <div v-else class="settings-entity-list">
+              <SettingsEntityItem
+                v-for="p in profiles"
+                :key="p.id"
+                icon="mdi:account-outline"
+                icon-tone="secondary"
+                :title="p.name"
+              >
+                <FieldCheckbox
+                  :aria-label="p.name"
+                  :model-value="Boolean(pendingAccess[p.id])"
+                  @update:model-value="togglePendingAccess(p.id, $event)"
+                />
+              </SettingsEntityItem>
+            </div>
+          </div>
+          <div v-else class="settings-section-content">
+            <div class="settings-entity-list">
+              <SettingsEntityItem
+                v-for="entry in accessEntries"
+                :key="entry.id"
+                icon="mdi:account-outline"
+                icon-tone="secondary"
+                :title="entry.title"
+                openable
+                @open="navigate(profileTab(entry.id))"
+              >
+                <span
+                  v-if="entry.warning"
+                  class="settings-entity-meta access-warning"
+                  :title="entry.warning"
+                >
+                  <AppIcon
+                    icon="mdi:alert-outline"
+                    size="sm"
+                    aria-hidden="true"
+                  />
+                  {{ entry.warning }}
+                </span>
+                <Badge :tone="accessLevelTone(entry.level)">
+                  {{ t(PROJECT_ACCESS_LABEL_KEYS[entry.level]) }}
+                </Badge>
+                <template #actions>
+                  <IconButton
+                    size="xs"
+                    icon="mdi:link-variant-off"
+                    :label="t('settings.accessRemove')"
+                    :title="t('settings.accessRemove')"
+                    @click="changeAccess(entry.id, undefined)"
+                  />
+                </template>
+              </SettingsEntityItem>
+              <StateMessage
+                v-if="accessEntries.length === 0"
+                density="compact"
+                :message="
+                  profiles.length === 0
+                    ? t('settings.noProfilesYet')
+                    : t('settings.noProfilesWithAccess')
+                "
+              />
+              <div v-if="accessCandidates.length > 0" class="access-add">
+                <DropdownMenu
+                  size="sm"
+                  variant="neutral"
+                  icon="mdi:plus"
+                  :label="t('settings.grantProfileAccess')"
+                  :items="addCandidateItems"
+                />
+              </div>
+            </div>
           </div>
         </SettingsSection>
       </fieldset>
@@ -144,6 +211,8 @@ import { useSettingsDraft } from '../../composables/use-settings-draft'
 import useToast from '../../composables/use-toast'
 import { vaultOfRef } from '../../lib/ai-profiles/profile-ref'
 import {
+  DEFAULT_PROJECT_ACCESS_LEVEL,
+  PROJECT_ACCESS_LABEL_KEYS,
   type ProjectAccessLevel,
   hasFileToolsOff,
   projectAccessLevelOf,
@@ -156,19 +225,22 @@ import {
   projectTab,
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
+import AppIcon from '../common/AppIcon.vue'
+import Badge from '../common/Badge.vue'
 import Button from '../common/Button.vue'
+import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
+import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
+import FieldTextArea from '../common/FieldTextArea.vue'
+import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import StateMessage from '../common/StateMessage.vue'
 import DeviceScopeBadge from './DeviceScopeBadge.vue'
-import SettingsAccessList, {
-  type AccessListCandidate,
-  type AccessListEntry,
-} from './SettingsAccessList.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
+import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsSection from './SettingsSection.vue'
 import type { ProjectPermission } from '@tyco/shared'
 
@@ -274,7 +346,45 @@ function accessLevelOf(profile: {
     : projectAccessLevelOf(profile.projectPermissions[props.projectId])
 }
 
-const accessEntries = computed<AccessListEntry[]>(() =>
+interface AccessEntry {
+  id: string
+  title: string
+  level: ProjectAccessLevel
+  warning?: string
+}
+
+interface AccessCandidate {
+  id: string
+  label: string
+}
+
+function accessLevelTone(
+  level: ProjectAccessLevel
+): 'neutral' | 'accent' | 'success' {
+  switch (level) {
+    case 'full':
+      return 'success'
+    case 'readWriteAsk':
+      return 'accent'
+    case 'read':
+    default:
+      return 'neutral'
+  }
+}
+
+function togglePendingAccess(profileId: string, enabled: boolean) {
+  if (enabled) {
+    pendingAccess.value = {
+      ...pendingAccess.value,
+      [profileId]: DEFAULT_PROJECT_ACCESS_LEVEL,
+    }
+  } else {
+    const { [profileId]: _removed, ...rest } = pendingAccess.value
+    pendingAccess.value = rest
+  }
+}
+
+const accessEntries = computed<AccessEntry[]>(() =>
   profiles.value.flatMap((profile) => {
     const level = accessLevelOf(profile)
     if (!level) return []
@@ -291,10 +401,18 @@ const accessEntries = computed<AccessListEntry[]>(() =>
   })
 )
 
-const accessCandidates = computed<AccessListCandidate[]>(() =>
+const accessCandidates = computed<AccessCandidate[]>(() =>
   profiles.value
     .filter((profile) => !accessLevelOf(profile))
     .map((profile) => ({ id: profile.id, label: profile.name }))
+)
+
+const addCandidateItems = computed<DropdownMenuItem[]>(() =>
+  accessCandidates.value.map((candidate) => ({
+    label: candidate.label,
+    icon: 'mdi:account-outline',
+    action: () => changeAccess(candidate.id, DEFAULT_PROJECT_ACCESS_LEVEL),
+  }))
 )
 
 function changeAccess(
@@ -346,5 +464,16 @@ async function handleCreate() {
 .vault-folder {
   overflow-wrap: anywhere;
   font-size: var(--text-control);
+}
+
+.access-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  color: var(--color-warning);
+}
+
+.access-add {
+  display: flex;
 }
 </style>

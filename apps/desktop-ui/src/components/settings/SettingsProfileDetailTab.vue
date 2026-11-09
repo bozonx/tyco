@@ -80,22 +80,23 @@
         </FieldRow>
 
         <SettingsAdvancedFields v-model:expanded="isAdvancedExpanded">
-          <ModelNumberField
-            kind="temperature"
-            :model-value="temperatureText"
-            :is-invalid="temperatureError"
-            :placeholder="t('settings.profileUseModelValue')"
-            @update:model-value="changeTemperature"
-            @invalid-input="temperatureError = true"
-          />
-          <ModelNumberField
-            kind="maxOutputTokens"
-            :model-value="maxOutputTokensText"
-            :is-invalid="maxOutputTokensError"
-            :placeholder="t('settings.profileUseModelValue')"
-            @update:model-value="changeMaxOutputTokens"
-            @invalid-input="maxOutputTokensError = true"
-          />
+          <FieldRow
+            :label="t('settings.profileToolSteps')"
+            :hint="t('settings.profileToolStepsHint')"
+            :error="
+              stepCountError ? t('settings.profileToolStepsInvalid') : undefined
+            "
+          >
+            <FieldNumber
+              min="1"
+              :max="MAX_TOOL_STEP_COUNT"
+              :model-value="stepCountText"
+              :placeholder="String(DEFAULT_TOOL_STEP_COUNT)"
+              :aria-invalid="stepCountError || undefined"
+              @update:model-value="changeStepCount"
+              @invalid-input="stepCountError = true"
+            />
+          </FieldRow>
         </SettingsAdvancedFields>
       </SettingsSection>
 
@@ -103,11 +104,7 @@
         v-if="CHAT_TOOL_GROUPS.length > 0"
         :groups="CHAT_TOOL_GROUPS"
         :tools="profile.tools"
-        :step-count-text="stepCountText"
-        :step-count-error="stepCountError"
         @update="changeSettings({ tools: $event })"
-        @change-step-count="changeStepCount"
-        @invalid-step-count="stepCountError = true"
       >
         <template #group="{ group, settings }">
           <InlineNotice
@@ -225,6 +222,7 @@ import {
   COMMANDS_TOOL_GROUP_ID,
   type ChatToolGroup,
   FILES_TOOL_GROUP_ID,
+  MAX_TOOL_STEP_COUNT,
   WEB_TOOL_GROUP_ID,
   toolGroupSettings,
   withToolGroup,
@@ -238,11 +236,11 @@ import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useDesktopStore } from '../../stores/desktop'
 import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
+import FieldNumber from '../common/FieldNumber.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
-import ModelNumberField from './ModelNumberField.vue'
 import SettingsAdvancedFields from './SettingsAdvancedFields.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
@@ -251,6 +249,7 @@ import SettingsProfileMemorySection from './SettingsProfileMemorySection.vue'
 import SettingsProfileProjectAccess from './SettingsProfileProjectAccess.vue'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
 import SettingsSection from './SettingsSection.vue'
+import { DEFAULT_TOOL_STEP_COUNT } from '@tyco/shared'
 
 const props = defineProps<{ profileId: string }>()
 const { navigate } = useSettingsContext()
@@ -348,16 +347,10 @@ async function resolveConflict(keepMine: boolean) {
 }
 const {
   name,
-  temperatureText,
-  maxOutputTokensText,
   stepCountText,
-  temperatureError,
-  maxOutputTokensError,
   stepCountError,
   soulPrompt,
   changeName,
-  changeTemperature,
-  changeMaxOutputTokens,
   changeStepCount,
   changeSoul,
   changeMemoryMode,

@@ -208,13 +208,8 @@ import { useBusyAction } from '../../composables/use-busy-action'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
-import { projectAccessLevelOf } from '../../lib/ai-profiles/project-access'
+import { splitRef } from '../../lib/ai-profiles/profile-ref'
 import { groupByVault, vaultLabel } from '../../lib/ai-profiles/vault-groups'
-import {
-  CHAT_TOOL_GROUPS,
-  type ProfileToolSettingsLike,
-  toolGroupSettings,
-} from '../../lib/chat-tools/chat-tool-groups'
 import { profileTab, projectTab } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
@@ -269,28 +264,30 @@ async function setProjectFolder(project: AiProject) {
   }
 }
 
-/** The tools a profile may use, in one line */
-function describeProfile(profile: {
-  tools?: ProfileToolSettingsLike | undefined
-}): string {
-  const tools = CHAT_TOOL_GROUPS.filter(
-    (group) => toolGroupSettings(profile.tools, group).isEnabled
-  ).map((group) => t(group.labelKey))
-  return tools.length > 0 ? tools.join(' · ') : t('settings.profileNoTools')
+/**
+ * The folder of a profile when it is outside the main vault or has a custom
+ * folder
+ */
+function describeProfile(profile: { id: string }): string {
+  const { vaultId, id } = splitRef(profile.id)
+  if (vaultId) {
+    const vault = aiProfilesStore.vaults.find((v) => v.vaultId === vaultId)
+    if (vault && !vault.isMain) {
+      return vaultLabel(vault, '')
+    }
+  }
+  if (!id.startsWith('profile-')) {
+    return id
+  }
+  return ''
 }
 
-/** The profiles assigned to the project, or a fallback when none are connected */
+/** The description of a project or folder setup notices */
 function describeProject(project: AiProject): string {
   if (isWithoutFolder(project)) return t('settings.projectFolderNotSetOnDevice')
   if (project.isInsideSyncedFolder)
     return t('settings.projectInsideSyncedFolder')
-  const assigned = profiles.value.filter(
-    (profile) =>
-      projectAccessLevelOf(profile.projectPermissions[project.id]) !== undefined
-  )
-  return assigned.length > 0
-    ? assigned.map((p) => p.name).join(', ')
-    : t('settings.noProfilesWithAccess')
+  return project.description?.trim() || ''
 }
 
 onMounted(() => {

@@ -35,24 +35,6 @@
         </div>
       </template>
     </div>
-    <FieldRow
-      v-if="hasEnabledGroup"
-      :label="t('settings.profileToolSteps')"
-      :hint="t('settings.profileToolStepsHint')"
-      :error="
-        stepCountError ? t('settings.profileToolStepsInvalid') : undefined
-      "
-    >
-      <FieldNumber
-        min="1"
-        :max="MAX_TOOL_STEP_COUNT"
-        :model-value="stepCountText"
-        :placeholder="String(DEFAULT_TOOL_STEP_COUNT)"
-        :aria-invalid="stepCountError || undefined"
-        @update:model-value="emit('changeStepCount', $event)"
-        @invalid-input="emit('invalidStepCount')"
-      />
-    </FieldRow>
   </SettingsSection>
 </template>
 
@@ -62,13 +44,9 @@ import { computed } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import {
   type ChatToolGroup,
-  DEFAULT_TOOL_STEP_COUNT,
-  MAX_TOOL_STEP_COUNT,
   toolGroupSettings,
   withToolGroup,
 } from '../../lib/chat-tools/chat-tool-groups'
-import FieldNumber from '../common/FieldNumber.vue'
-import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
@@ -82,16 +60,8 @@ import type {
 const props = defineProps<{
   groups: readonly ChatToolGroup[]
   tools: ProfileToolSettings | undefined
-  /** The step limit as typed; the editor checks and stores it */
-  stepCountText: string
-  stepCountError: boolean
 }>()
-const emit = defineEmits<{
-  update: [tools: ProfileToolSettings]
-  changeStepCount: [text: string]
-  /** The browser holds text that is no number at all */
-  invalidStepCount: []
-}>()
+const emit = defineEmits<{ update: [tools: ProfileToolSettings] }>()
 defineSlots<{
   /** More settings of a group, shown while it is on */
   group?: (props: {
@@ -108,11 +78,6 @@ const accessOptions = computed(() => [
 
 const groupSettings = (group: ChatToolGroup) =>
   toolGroupSettings(props.tools, group)
-
-/** The step limit only matters once the model has a tool to call */
-const hasEnabledGroup = computed(() =>
-  props.groups.some((group) => groupSettings(group).isEnabled)
-)
 
 function emitGroup(group: ChatToolGroup, patch: Partial<ToolGroupSettings>) {
   emit('update', withToolGroup(props.tools, group, patch))

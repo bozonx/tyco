@@ -124,8 +124,8 @@ describe('SettingsProjectDetailTab.vue', () => {
     const wrapper = mountTab('new')
     await wrapper.get('input').setValue('Docs')
     await wrapper
-      .findComponent({ name: 'SettingsAccessList' })
-      .vm.$emit('change', 'writer', 'read')
+      .findComponent({ name: 'FieldCheckbox' })
+      .vm.$emit('update:modelValue', true)
     await wrapper.get('form').trigger('submit')
     await flushPromises()
     expect(
@@ -176,21 +176,21 @@ describe('SettingsProjectDetailTab.vue', () => {
       name: 'Reader',
     })
     const wrapper = mountTab()
-    const list = wrapper.findComponent({ name: 'SettingsAccessList' })
-    expect(list.props('entries')).toEqual([
-      expect.objectContaining({
-        id: 'writer',
-        level: 'readWriteAsk',
-        warning: 'settings.projectAccessFileToolsOff',
-      }),
-    ])
-    expect(list.props('candidates')).toEqual([
-      expect.objectContaining({ id: 'reader' }),
-    ])
-    await list.vm.$emit('change', 'reader', 'full')
-    await list.vm.$emit('change', 'writer', undefined)
+    const badge = wrapper.findComponent({ name: 'Badge' })
+    expect(badge.text()).toBe('settings.accessLevelReadWriteAsk')
+    expect(wrapper.text()).toContain('settings.projectAccessFileToolsOff')
+
+    const menu = wrapper.findComponent({ name: 'DropdownMenu' })
+    const items = menu.props('items') as Array<{ action: () => void }>
+    items[0]!.action()
+
+    const removeBtn = wrapper
+      .findAllComponents({ name: 'IconButton' })
+      .find((b) => b.props('icon') === 'mdi:link-variant-off')!
+    await removeBtn.trigger('click')
+
     expect(store.setProjectAccess.mock.calls).toEqual([
-      ['reader', 'notes', 'full'],
+      ['reader', 'notes', 'read'],
       ['writer', 'notes', undefined],
     ])
   })
@@ -199,11 +199,9 @@ describe('SettingsProjectDetailTab.vue', () => {
     store.profiles.push(profile({}))
     const wrapper = mountTab('new')
     await wrapper.get('input').setValue('Docs')
-    const list = wrapper.findComponent({ name: 'SettingsAccessList' })
-    await list.vm.$emit('change', 'writer', 'read')
-    expect(list.props('entries')).toEqual([
-      expect.objectContaining({ id: 'writer', level: 'read' }),
-    ])
+    const checkbox = wrapper.findComponent({ name: 'FieldCheckbox' })
+    await checkbox.vm.$emit('update:modelValue', true)
+    expect(checkbox.props('modelValue')).toBe(true)
     expect(store.setProjectAccess).not.toHaveBeenCalled()
     await button(wrapper, 'settings.saveProject').trigger('click')
     await flushPromises()
