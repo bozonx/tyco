@@ -281,6 +281,8 @@ export interface TranslationMainAction {
 export interface ProfileChatMainAction {
   type: 'profileChat'
   profileId: string
+  /** The vault of an attached one; absent for the main vault */
+  vaultId?: string
 }
 
 export const PROFILE_ACTION_KINDS = [
@@ -296,6 +298,8 @@ export type ProfileActionKind = (typeof PROFILE_ACTION_KINDS)[number]
 export interface ProfileMainAction {
   type: 'profile'
   profileId: string
+  /** The vault of an attached one; absent for the main vault */
+  vaultId?: string
   action: ProfileActionKind
 }
 

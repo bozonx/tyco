@@ -1,6 +1,6 @@
 import { errorMessage } from '@tyco/shared/value-guards'
 import { computed, ref } from 'vue'
-import type { AiProfile, ProfileMemoryMode } from '@tyco/shared'
+import type { AiProfile, ProfileMemoryMode, ProfileSoul } from '@tyco/shared'
 
 import {
   parseToolStepCount,
@@ -14,6 +14,7 @@ import {
   type AutosaveSummary,
   type AutosaveTimers,
 } from '../settings/autosave'
+import { isIpcErrorCode } from '../ipc/ipc-model'
 import type { AiProfilePatch } from './ai-profiles-model'
 import {
   parseModelTokenCount,
@@ -24,8 +25,13 @@ export interface ProfileEditorDependencies extends AutosaveTimers {
   /** The profile as the app holds it now */
   getProfile: () => AiProfile | undefined
   updateProfile: (patch: AiProfilePatch) => Promise<void>
-  readSoul: () => Promise<string>
-  writeSoul: (content: string) => Promise<void>
+  readSoul: () => Promise<ProfileSoul>
+  /** Writes over the file of `expectedRevision`; the new revision */
+  writeSoul: (content: string, expectedRevision: string) => Promise<string>
+  /** Whether a save of the profile found it changed elsewhere */
+  hasProfileConflict: () => boolean
+  /** Takes the profile on disk, or stores the one of this window over it */
+  resolveProfileConflict: (keepMine: boolean) => Promise<void>
   /** `retry` repeats what failed */
   reportError: (message: string, retry: () => void) => void
 }
@@ -52,6 +58,13 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
   const isSoulLoaded = ref(false)
   const isSoulLoading = ref(false)
   const soulLoadError = ref('')
+  /** The revision of `SOUL.md` the field shows */
+  let soulRevision = ''
+  /** A write of `SOUL.md` found it changed on another device or outside TyCo */
+  const hasSoulConflict = ref(false)
+  const hasConflict = computed(
+    () => hasSoulConflict.value || deps.hasProfileConflict()
+  )
   let hasLoadedProfile = false
   let soulRead: Promise<void> | null = null
   const timers: AutosaveTimers = {
@@ -84,8 +97,13 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     ...timers,
     save: async () => {
       // the field shows the file only once it has been read
-      if (!isSoulLoaded.value) return
-      await deps.writeSoul(soulPrompt.value)
+      if (!isSoulLoaded.value || hasSoulConflict.value) return
+      try {
+        soulRevision = await deps.writeSoul(soulPrompt.value, soulRevision)
+      } catch (error) {
+        if (isIpcErrorCode(error, 'staleRevision')) hasSoulConflict.value = true
+        throw error
+      }
     },
   })
 
@@ -97,7 +115,10 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
 
   const autosaves = createAutosaveGroup({
     parts: [profileAutosave, soulAutosave, pickedSaves],
-    reportError: deps.reportError,
+    // a conflict is shown with its own choice, not as a failure
+    reportError: (message, retry) => {
+      if (!hasConflict.value) deps.reportError(message, retry)
+    },
   })
 
   const loadSoul = (): Promise<void> => {
@@ -108,8 +129,9 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     soulRead = Promise.resolve()
       .then(deps.readSoul)
       .then(
-        (content) => {
+        ({ content, revision }) => {
           if (soulPrompt.value === initialPrompt) soulPrompt.value = content
+          soulRevision = revision
           isSoulLoaded.value = true
         },
         (error: unknown) => {
@@ -155,12 +177,14 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     if (!isSoulLoaded.value || !isSettled(soulAutosave.status.value)) return
     const shownPrompt = soulPrompt.value
     try {
-      const content = await deps.readSoul()
+      const { content, revision } = await deps.readSoul()
       if (
         soulPrompt.value === shownPrompt &&
         isSettled(soulAutosave.status.value)
-      )
+      ) {
         soulPrompt.value = content
+        soulRevision = revision
+      }
     } catch {
       // the field keeps what it shows; the next save writes it back
     }
@@ -205,6 +229,29 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     void changeSettings({ memoryMode: mode })
   }
 
+  /**
+   * Ends a conflict: rereads the profile and `SOUL.md` from disk, or stores
+   * what this window shows over them
+   */
+  const resolveConflict = async (keepMine: boolean): Promise<void> => {
+    if (deps.hasProfileConflict()) await deps.resolveProfileConflict(keepMine)
+    if (hasSoulConflict.value) {
+      const stored = await deps.readSoul()
+      soulRevision = stored.revision
+      if (!keepMine) soulPrompt.value = stored.content
+      hasSoulConflict.value = false
+    }
+    if (keepMine) {
+      profileAutosave.schedule()
+      soulAutosave.schedule()
+      await autosaves.flush()
+      return
+    }
+    autosaves.cancel()
+    const profile = deps.getProfile()
+    if (profile) fillFields(profile)
+  }
+
   /** Saves the waiting changes now, e.g. when the page is left */
   const flush = async () => (await autosaves.flush()) && !soulLoadError.value
 
@@ -221,6 +268,8 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     isSoulLoaded,
     isSoulLoading,
     soulLoadError,
+    hasConflict,
+    resolveConflict,
     loadSoul,
     saveStatus,
     load,

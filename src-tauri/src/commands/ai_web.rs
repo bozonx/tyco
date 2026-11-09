@@ -22,8 +22,9 @@ pub async fn run_ai_web_tool(
         return Err(AppError::InvalidInput("Profile ID cannot be empty".into()));
     }
 
-    ai_vault::with_projects(&app, |dir, _| {
-        let profile = ai_vault::get_profile(dir, trimmed_id)?;
+    let (vault_id, profile_id) = ai_vault::split_ref(trimmed_id);
+    ai_vault::with_vault(&app, vault_id, |dir| {
+        let profile = ai_vault::get_profile(dir, profile_id)?;
         web::ensure_web_enabled(&profile)
     })?;
 

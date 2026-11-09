@@ -253,13 +253,11 @@ fn refusal(target: &Path, kind: &UserDataTargetKind) -> AppError {
 pub fn execute(
     plan: &RelocationPlan,
     current: &Path,
-    moves_vault: bool,
     commit: impl FnOnce(&Path) -> Result<(), AppError>,
 ) -> Result<(), AppError> {
+    // the main vault is always inside the data folder and moves with it
     let mut entries: Vec<&str> = USER_DATA_ENTRIES.to_vec();
-    if moves_vault {
-        entries.push(VAULT_ENTRY);
-    }
+    entries.push(VAULT_ENTRY);
     match plan {
         RelocationPlan::Move { to } => relocate_with(
             Some(RootMove {
@@ -273,20 +271,29 @@ pub fn execute(
     }
 }
 
-/// The folders of the app the data must stay out of, and whether the vault
-/// lives in the user data folder, as the config of the app says.
-fn app_folders(paths: &super::app_paths::AppPaths, vault_path: &str) -> (Vec<PathBuf>, bool) {
-    let mut forbidden = vec![
+/// Refuses a data folder inside an attached vault or holding one.
+fn check_against_vaults(config: &serde_json::Value, target: &Path) -> Result<(), AppError> {
+    use super::sync_roots::{check_sync_roots, SyncRootKind};
+    let vaults = crate::models::user_config::attached_vaults(config);
+    let roots: Vec<(PathBuf, SyncRootKind)> = vaults
+        .iter()
+        .map(|vault| (PathBuf::from(&vault.path), SyncRootKind::Vault))
+        .collect();
+    let others: Vec<(&Path, SyncRootKind)> = roots
+        .iter()
+        .map(|(path, kind)| (path.as_path(), *kind))
+        .collect();
+    check_sync_roots(target, SyncRootKind::DataFolder, &others)
+}
+
+/// The folders of the app the data must stay out of.
+fn app_folders(paths: &super::app_paths::AppPaths) -> Vec<PathBuf> {
+    vec![
         paths.device_dir.clone(),
         paths.state_dir.clone(),
         paths.cache_dir.clone(),
         paths.log_dir.clone(),
-    ];
-    let vault = vault_path.trim();
-    if !vault.is_empty() {
-        forbidden.push(PathBuf::from(vault));
-    }
-    (forbidden, vault.is_empty())
+    ]
 }
 
 /// What a folder holds, for the user to choose what to do with it; `None`
@@ -295,12 +302,15 @@ pub fn inspect(app: &tauri::AppHandle, path: Option<&str>) -> Result<UserDataTar
     use tauri::Manager;
     let data = app.state::<super::user_data::UserData>();
     let paths = super::app_paths::AppPaths::resolve(app)?;
-    let config = app.state::<crate::state::AppState>().user_config();
-    let (forbidden, _) = app_folders(&paths, &crate::models::user_config::ai_vault(&config).path);
+    let forbidden = app_folders(&paths);
     let target = path
         .map(str::trim)
         .filter(|path| !path.is_empty())
         .map_or_else(|| data.default_dir.clone(), PathBuf::from);
+    check_against_vaults(
+        &app.state::<crate::state::AppState>().user_config(),
+        &target,
+    )?;
     let contents = inspect_target(
         &data.dir,
         &target,
@@ -329,13 +339,15 @@ pub fn relocate(
     {
         let _vault = state.write_vault();
         let _settings = state.lock_settings_update();
-        let config = state.user_config();
-        let (forbidden, vault_inside) =
-            app_folders(&paths, &crate::models::user_config::ai_vault(&config).path);
+        let forbidden = app_folders(&paths);
         let target = path
             .map(str::trim)
             .filter(|path| !path.is_empty())
             .map(PathBuf::from);
+        check_against_vaults(
+            &state.user_config(),
+            target.as_deref().unwrap_or(&data.default_dir),
+        )?;
         let plan = plan(
             mode,
             &data.dir,
@@ -350,7 +362,7 @@ pub fn relocate(
             )));
         }
         state.history.while_locked(|| {
-            execute(&plan, &data.dir, vault_inside, |to| {
+            execute(&plan, &data.dir, |to| {
                 let configured = if normalized(to) == normalized(&data.default_dir) {
                     String::new()
                 } else {
@@ -479,7 +491,7 @@ mod tests {
             .plan(UserDataRelocationMode::Move, Some(&target))
             .unwrap();
         let mut committed = None;
-        execute(&plan, &folders.current, true, |to| {
+        execute(&plan, &folders.current, |to| {
             committed = Some(to.to_path_buf());
             Ok(())
         })
@@ -498,7 +510,7 @@ mod tests {
         let plan = folders
             .plan(UserDataRelocationMode::Move, Some(&target))
             .unwrap();
-        let result = execute(&plan, &folders.current, false, |_| {
+        let result = execute(&plan, &folders.current, |_| {
             Err(AppError::Failed("Injected device file failure".into()))
         });
         assert!(result.is_err());
@@ -570,7 +582,7 @@ mod tests {
         let plan = folders
             .plan(UserDataRelocationMode::Connect, Some(&synced))
             .unwrap();
-        execute(&plan, &folders.current, true, |_| Ok(())).unwrap();
+        execute(&plan, &folders.current, |_| Ok(())).unwrap();
         assert!(folders.current.join("chats/a.json").is_file());
     }
 

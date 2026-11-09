@@ -323,14 +323,38 @@ fn differences(
         .collect()
 }
 
-fn vault_root(app: &AppHandle, user: &UserData) -> PathBuf {
-    let config = app.state::<AppState>().user_config();
-    let configured = crate::models::user_config::ai_vault(&config).path;
-    if configured.trim().is_empty() {
-        user.dir.join("ai-vault")
-    } else {
-        PathBuf::from(configured)
-    }
+/// A vault the watcher follows: the vault part of its references, its root
+/// and the id of its marker.
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct WatchedVault {
+    vault_ref: String,
+    root: PathBuf,
+    marker_id: String,
+}
+
+/// The main vault, inside the data folder, and every attached one there now.
+fn watched_vaults(app: &AppHandle) -> Vec<WatchedVault> {
+    crate::services::ai_vault::connected_vaults(app)
+        .into_iter()
+        .map(|(vault_ref, vault)| WatchedVault {
+            vault_ref,
+            root: vault.root,
+            marker_id: vault.id,
+        })
+        .collect()
+}
+
+/// The data folder and the attached vaults; the main vault is inside the
+/// data folder and is not watched apart.
+fn watched_roots(user: &UserData, vaults: &[WatchedVault]) -> Vec<PathBuf> {
+    let mut roots = vec![user.dir.clone()];
+    roots.extend(
+        vaults
+            .iter()
+            .filter(|vault| !vault.root.starts_with(&user.dir))
+            .map(|vault| vault.root.clone()),
+    );
+    roots
 }
 
 pub fn setup(app: &AppHandle) -> Result<(), AppError> {
@@ -344,6 +368,8 @@ pub fn setup(app: &AppHandle) -> Result<(), AppError> {
         .spawn_thread("storage-watcher", move |stop| {
             let mut previous = Snapshot::new();
             let mut watched: Vec<PathBuf> = Vec::new();
+            let mut vaults: Vec<WatchedVault> = Vec::new();
+            let mut refresh_roots = true;
             let wake = sender.clone();
             let mut watcher =
                 notify::recommended_watcher(move |event: notify::Result<notify::Event>| {
@@ -360,42 +386,47 @@ pub fn setup(app: &AppHandle) -> Result<(), AppError> {
             let mut schedule = ScanSchedule::new(Instant::now());
             let mut pending_config = false;
             while !stop.is_stopped() {
-                let vault = vault_root(&handle, &user);
-                let roots = if vault.starts_with(&user.dir) {
-                    vec![user.dir.clone()]
-                } else {
-                    vec![user.dir.clone(), vault.clone()]
-                };
-                if roots != watched {
-                    if let Some(watcher) = watcher.as_mut() {
-                        for root in &watched {
-                            let _ = watcher.unwatch(root);
-                        }
-                        for root in &roots {
-                            if let Err(error) = watcher.watch(root, RecursiveMode::Recursive) {
-                                log::warn!(
-                                    "Could not watch {}: {error}; polling remains enabled",
-                                    root.display()
-                                );
+                if refresh_roots {
+                    refresh_roots = false;
+                    vaults = watched_vaults(&handle);
+                    let roots = watched_roots(&user, &vaults);
+                    if roots != watched {
+                        if let Some(watcher) = watcher.as_mut() {
+                            for root in &watched {
+                                let _ = watcher.unwatch(root);
+                            }
+                            for root in &roots {
+                                if let Err(error) = watcher.watch(root, RecursiveMode::Recursive) {
+                                    log::warn!(
+                                        "Could not watch {}: {error}; polling remains enabled",
+                                        root.display()
+                                    );
+                                }
                             }
                         }
-                    }
-                    bus().locked().roots.clone_from(&roots);
-                    watched = roots;
-                    previous.clear();
-                    for root in &watched {
-                        let _ = scan(root, &mut previous);
-                    }
-                    schedule.scanned(Instant::now());
-                    let _ = announce(
-                        &handle,
-                        &user,
-                        &vault,
-                        &[
+                        let is_first = watched.is_empty();
+                        bus().locked().roots.clone_from(&roots);
+                        // a vault attached or back: its files are announced
+                        let added: Vec<PathBuf> = roots
+                            .iter()
+                            .filter(|root| !watched.contains(root))
+                            .cloned()
+                            .collect();
+                        watched = roots;
+                        previous.clear();
+                        for root in &watched {
+                            let _ = scan(root, &mut previous);
+                        }
+                        schedule.scanned(Instant::now());
+                        let mut changed = vec![
                             user.dir.join("config.json"),
                             user.dir.join("tyco-user.json"),
-                        ],
-                    );
+                        ];
+                        if !is_first {
+                            changed.extend(added.iter().map(|root| root.join(VAULT_MARKER)));
+                        }
+                        let _ = announce(&handle, &user, &vaults, &changed);
+                    }
                 }
                 // Local revisions are immediate; disk echoes are suppressed by hash.
                 while let Ok(event) = local.try_recv() {
@@ -403,12 +434,13 @@ pub fn setup(app: &AppHandle) -> Result<(), AppError> {
                         StorageEvent::EntityChanged { path, .. }
                         | StorageEvent::EntityDeleted { path } => path,
                     };
-                    if path.starts_with(&vault) {
-                        announce(&handle, &user, &vault, &[path]);
+                    if vault_of(&vaults, &path).is_some() {
+                        announce(&handle, &user, &vaults, &[path]);
                     }
                 }
                 if receiver.try_recv().is_ok() {
                     schedule.notify(Instant::now());
+                    refresh_roots = true;
                 }
                 if schedule.is_due(Instant::now()) {
                     let state = handle.state::<AppState>();
@@ -431,7 +463,7 @@ pub fn setup(app: &AppHandle) -> Result<(), AppError> {
                                 changed.push(config_path);
                             }
                             if !changed.is_empty() {
-                                pending_config = !announce(&handle, &user, &vault, &changed);
+                                pending_config = !announce(&handle, &user, &vaults, &changed);
                             }
                             previous = current;
                             let mut bus = bus().locked();
@@ -440,6 +472,8 @@ pub fn setup(app: &AppHandle) -> Result<(), AppError> {
                         Err(error) => log::warn!("Could not scan storage: {error}"),
                     }
                     schedule.scanned(Instant::now());
+                    // a vault folder that came or went shows at the next poll
+                    refresh_roots = true;
                 }
                 if stop.wait(Duration::from_millis(50)) {
                     break;
@@ -448,7 +482,40 @@ pub fn setup(app: &AppHandle) -> Result<(), AppError> {
         })
 }
 
-fn announce(app: &AppHandle, user: &UserData, vault: &Path, paths: &[PathBuf]) -> bool {
+const VAULT_MARKER: &str = "tyco-vault.json";
+
+/// The vault `path` belongs to, the innermost one.
+fn vault_of<'a>(vaults: &'a [WatchedVault], path: &Path) -> Option<&'a WatchedVault> {
+    vaults
+        .iter()
+        .filter(|vault| path.starts_with(&vault.root))
+        .max_by_key(|vault| vault.root.components().count())
+}
+
+/// Splits changed paths into those of the data folder and those of vaults.
+fn describe_changes(
+    user_dir: &Path,
+    vaults: &[WatchedVault],
+    paths: &[PathBuf],
+) -> crate::models::StorageChangedEvent {
+    let slashed = |path: &Path| path.to_string_lossy().replace('\\', "/");
+    let mut event = crate::models::StorageChangedEvent::default();
+    for path in paths {
+        if let Some(vault) = vault_of(vaults, path) {
+            if let Ok(relative) = path.strip_prefix(&vault.root) {
+                event.vault_changes.push(crate::models::VaultChange {
+                    vault_id: vault.vault_ref.clone(),
+                    path: slashed(relative),
+                });
+            }
+        } else if let Ok(relative) = path.strip_prefix(user_dir) {
+            event.paths.push(slashed(relative));
+        }
+    }
+    event
+}
+
+fn announce(app: &AppHandle, user: &UserData, vaults: &[WatchedVault], paths: &[PathBuf]) -> bool {
     let mut applied = true;
     if paths
         .iter()
@@ -460,45 +527,38 @@ fn announce(app: &AppHandle, user: &UserData, vault: &Path, paths: &[PathBuf]) -
             applied = false;
         }
     }
-    let relative: Vec<String> = paths
+    let shown: Vec<PathBuf> = paths
         .iter()
         .filter(|path| {
             path.file_name().is_none_or(|name| name != "tyco-user.json")
                 || super::user_data::has_marker(&user.dir)
         })
-        .filter_map(|path| {
-            if let Ok(relative) = path.strip_prefix(vault) {
-                Some(format!(
-                    "ai-vault/{}",
-                    relative.to_string_lossy().replace('\\', "/")
-                ))
-            } else {
-                path.strip_prefix(&user.dir)
-                    .ok()
-                    .map(|relative| relative.to_string_lossy().replace('\\', "/"))
-            }
-        })
+        .cloned()
         .collect();
+    let event = describe_changes(&user.dir, vaults, &shown);
     // Derived indexes and search text must ignore preserved timestamps.
     for path in paths {
         app.state::<AppState>().history.invalidate_chat_search(path);
-        if path.starts_with(user.dir.join("chats")) {
+        if vault_of(vaults, path).is_none() && path.starts_with(user.dir.join("chats")) {
             if let Ok(dirs) = super::chat_history::app_chat_dirs(app) {
                 let _ = std::fs::remove_file(dirs.index);
             }
         }
     }
     for path in paths {
-        if let Ok(relative) = path.strip_prefix(vault.join("profiles")) {
+        let Some(vault) = vault_of(vaults, path) else {
+            continue;
+        };
+        if let Ok(relative) = path.strip_prefix(vault.root.join("profiles")) {
             let mut parts = relative.components();
             if let (Some(profile), Some(folder)) = (parts.next(), parts.next()) {
                 if folder.as_os_str() == "chats" {
                     if let Some(id) = profile.as_os_str().to_str() {
                         if let Ok(dirs) = super::chat_history::profile_chat_dirs(
                             app,
-                            vault,
+                            &vault.marker_id,
                             id,
-                            vault.join("profiles").join(id).join("chats"),
+                            vault.root.join("profiles").join(id).join("chats"),
                         ) {
                             let _ = std::fs::remove_file(dirs.index);
                         }
@@ -507,16 +567,16 @@ fn announce(app: &AppHandle, user: &UserData, vault: &Path, paths: &[PathBuf]) -
             }
         }
     }
-    if relative.iter().any(|path| path.starts_with("plugins/")) {
+    if event.paths.iter().any(|path| path.starts_with("plugins/")) {
         let _ = crate::events::emit::<crate::events::PluginsChanged, _>(app, ());
     }
-    if relative.iter().any(|path| {
+    if event.paths.iter().any(|path| {
         path.starts_with("history/editor/")
             && path != &format!("history/editor/{}.jsonl", user.device_id)
     }) {
         let _ = crate::events::emit::<crate::events::EditorHistoryChanged, _>(app, ());
     }
-    if let Err(error) = crate::events::emit::<crate::events::StorageChanged, _>(app, relative) {
+    if let Err(error) = crate::events::emit::<crate::events::StorageChanged, _>(app, event) {
         log::warn!("Could not announce storage changes: {error}");
     }
     applied
@@ -525,6 +585,51 @@ fn announce(app: &AppHandle, user: &UserData, vault: &Path, paths: &[PathBuf]) -
 mod tests {
     use super::*;
     use crate::services::test_support::TestDir;
+
+    #[test]
+    fn vault_changes_carry_their_vault_and_a_path_inside_it() {
+        let user = PathBuf::from("/data");
+        let vaults = [
+            WatchedVault {
+                vault_ref: String::new(),
+                root: user.join("ai-vault"),
+                marker_id: "data-1".into(),
+            },
+            WatchedVault {
+                vault_ref: "w1".into(),
+                root: PathBuf::from("/work/vault"),
+                marker_id: "w1".into(),
+            },
+        ];
+        let event = describe_changes(
+            &user,
+            &vaults,
+            &[
+                user.join("chats/a.json"),
+                user.join("ai-vault/profiles/p/profile.json"),
+                PathBuf::from("/work/vault/profiles/q/chats/c.json"),
+            ],
+        );
+        assert_eq!(event.paths, vec!["chats/a.json"]);
+        assert_eq!(
+            event.vault_changes,
+            vec![
+                crate::models::VaultChange {
+                    vault_id: String::new(),
+                    path: "profiles/p/profile.json".into(),
+                },
+                crate::models::VaultChange {
+                    vault_id: "w1".into(),
+                    path: "profiles/q/chats/c.json".into(),
+                },
+            ]
+        );
+        // the main vault is watched with the data folder
+        assert_eq!(
+            watched_roots(&UserData::resolve(&user, ""), &vaults),
+            vec![user.clone(), PathBuf::from("/work/vault")]
+        );
+    }
 
     #[test]
     fn content_revisions_suppress_only_matching_local_writes() {

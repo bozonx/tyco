@@ -97,7 +97,7 @@ let disposed = false
 let stopListening: (() => void) | undefined
 if (desktopClient.isAvailable()) {
   void desktopClient
-    .listen(DESKTOP_EVENTS.STORAGE_CHANGED, (paths) => {
+    .listen(DESKTOP_EVENTS.STORAGE_CHANGED, ({ paths }) => {
       if (paths.includes('tyco-user.json')) {
         isAvailable.value = true
       }

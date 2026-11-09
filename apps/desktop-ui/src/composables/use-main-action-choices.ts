@@ -35,6 +35,11 @@ import { usePluginRuntimeStore } from '../stores/plugin-runtime'
 import { useToolsStore } from '../stores/tools'
 import { useI18n } from './use-i18n'
 import { useSettingsContext } from './use-settings-context'
+import { entityLabel } from '../lib/ai-profiles/vault-groups'
+import {
+  configProfileFields,
+  configProfileKey,
+} from '../lib/ai-profiles/profile-ref'
 
 const OPENS_DIALOG = new Set<StandardActionId>([
   'translationMenu',
@@ -88,6 +93,7 @@ export function useMainActionChoices(
     describeChatPrompts(userConfig.value.chatPrompts.items, {
       profiles: aiProfilesStore.profiles,
       areProfilesLoaded: aiProfilesStore.isLoaded,
+      connectedVaultIds: aiProfilesStore.connectedVaultIds,
     })
   )
 
@@ -105,16 +111,30 @@ export function useMainActionChoices(
     })
 
   const availableActions = computed((): MainActionChoice[] => [
-    ...aiProfilesStore.profiles.flatMap((profile) =>
-      PROFILE_ACTION_KINDS.map((action) => ({
-        config: { type: 'profile' as const, profileId: profile.id, action },
+    ...aiProfilesStore.profiles.flatMap((entry) => {
+      // the vault is named when another profile has the same name
+      const profile = {
+        ...entry,
+        name: entityLabel(
+          entry,
+          aiProfilesStore.profiles,
+          aiProfilesStore.vaults,
+          t('settings.aiVaults.main')
+        ),
+      }
+      return PROFILE_ACTION_KINDS.map((action) => ({
+        config: {
+          type: 'profile' as const,
+          ...configProfileFields(profile.id),
+          action,
+        },
         name:
           action === 'chat'
             ? t('settings.askInProfileChat', { profile: profile.name })
             : `${t(`action.${action}`)}: ${profile.name}…`,
         group: { kind: 'profile' as const, profileId: profile.id },
       }))
-    ),
+    }),
     ...prompts.value.map((view) => ({
       config: { type: 'chatPrompt' as const, promptId: view.prompt.id },
       name: t('chatPrompts.actionName', { prompt: view.label }),
@@ -233,13 +253,13 @@ export function useMainActionChoices(
 
   function unavailableName(slot: MainActionConfig): string {
     if (slot.type === 'profileChat') {
-      const profile = aiProfilesStore.getProfile(slot.profileId)
+      const profile = aiProfilesStore.getProfile(configProfileKey(slot))
       return profile
         ? t('settings.askInProfileChat', { profile: profile.name })
         : t('settings.mainActionProfileRemoved')
     }
     if (slot.type === 'profile') {
-      const profile = aiProfilesStore.getProfile(slot.profileId)
+      const profile = aiProfilesStore.getProfile(configProfileKey(slot))
       const actionName =
         slot.action === 'chat'
           ? t('action.askInChat')

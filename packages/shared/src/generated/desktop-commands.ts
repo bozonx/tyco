@@ -26,6 +26,7 @@ import type {
   CommandRunRecord,
   CropRect,
   DesktopSnapshot,
+  DeviceHistoryJournal,
   EditorHistoryEntry,
   EditorHistoryFailure,
   EditorHistoryItem,
@@ -42,6 +43,7 @@ import type {
   ProfileMemoryChange,
   ProfileMemorySearchResult,
   ProfileMemoryTopic,
+  ProfileSoul,
   ScriptActionRequest,
   ScriptExecutionResult,
   SecretStatus,
@@ -56,8 +58,9 @@ import type {
   ToolCatalogEntry,
   UserDataRelocationMode,
   UserDataTarget,
+  VaultFolder,
+  VaultInfo,
   VaultState,
-  VaultTarget,
   VoiceCaptureInfo,
 } from './desktop-types'
 import type { UserConfig } from '../user-config'
@@ -115,6 +118,7 @@ export interface DesktopCommands {
     args: { request: HotkeyApplyRequest }
     result: HotkeyApplyResult
   }
+  attach_ai_vault: { args: { path: string; name: string }; result: VaultInfo }
   cancel_ai_web_tool: { args: { runId: string }; result: boolean }
   cancel_net_task: { args: { id: number }; result: void }
   cancel_screenshot_crop: { args: { selectionId: number }; result: void }
@@ -143,8 +147,10 @@ export interface DesktopCommands {
     args: { id: string; profileId?: string | null }
     result: Chat | null
   }
+  delete_device_history: { args: { deviceId: string }; result: void }
   delete_editor_history_item: { args: { id: string }; result: void }
   delete_secret: { args: { id: string }; result: void }
+  detach_ai_vault: { args: { vaultId: string }; result: void }
   execute_script_action: {
     args: { request: ScriptActionRequest }
     result: ScriptExecutionResult
@@ -176,10 +182,7 @@ export interface DesktopCommands {
   get_text_insertion_status: { args: undefined; result: TextInsertionStatus }
   hide_quick_window_on_blur: { args: { activationId: number }; result: void }
   hide_window: { args: { activationId: number }; result: void }
-  inspect_ai_vault_target: {
-    args: { path?: string | null }
-    result: VaultTarget
-  }
+  inspect_ai_vault_folder: { args: { path: string }; result: VaultFolder }
   inspect_user_data_target: {
     args: { path?: string | null }
     result: UserDataTarget
@@ -198,9 +201,14 @@ export interface DesktopCommands {
   }
   list_ai_profiles: { args: undefined; result: Array<AiProfile> }
   list_ai_projects: { args: undefined; result: Array<AiProject> }
+  list_ai_vaults: { args: undefined; result: Array<VaultInfo> }
   list_chats: {
     args: { profileId?: string | null }
     result: Array<ChatSummary>
+  }
+  list_device_history_journals: {
+    args: undefined
+    result: Array<DeviceHistoryJournal>
   }
   list_installed_plugins: { args: undefined; result: Array<InstalledPlugin> }
   list_recent_quick_request_prompts: {
@@ -218,7 +226,10 @@ export interface DesktopCommands {
     result: void
   }
   open_action_log: { args: undefined; result: boolean }
-  open_ai_vault_location: { args: { profileId?: string | null }; result: void }
+  open_ai_vault_location: {
+    args: { vaultId?: string | null; profileId?: string | null }
+    result: void
+  }
   open_in_browser: { args: { url: string }; result: void }
   open_in_browser_and_hide: {
     args: { url: string; activationId: number }
@@ -285,7 +296,7 @@ export interface DesktopCommands {
     args: { profileId: string; file: string }
     result: string
   }
-  read_ai_profile_soul: { args: { id: string }; result: string }
+  read_ai_profile_soul: { args: { id: string }; result: ProfileSoul }
   read_chat_file: {
     args: { id: string; profileId?: string | null }
     result: ArrayBuffer
@@ -297,9 +308,9 @@ export interface DesktopCommands {
   read_dropped_file: { args: { path: string }; result: ArrayBuffer }
   rebind_hotkeys: { args: undefined; result: void }
   release_deleted_chat_images: { args: { id: string }; result: void }
-  relocate_ai_vault: {
-    args: { path?: string | null; moveData: boolean }
-    result: void
+  relink_ai_vault: {
+    args: { vaultId: string; path: string }
+    result: VaultInfo
   }
   relocate_user_data: {
     args: { mode: UserDataRelocationMode; path?: string | null }
@@ -309,6 +320,7 @@ export interface DesktopCommands {
     args: { activationId: number; imageId?: string | null }
     result: void
   }
+  rename_ai_vault: { args: { vaultId: string; name: string }; result: void }
   rename_chat: {
     args: { id: string; title: string; profileId?: string | null }
     result: void
@@ -360,8 +372,14 @@ export interface DesktopCommands {
     }
     result: AiWebToolOutput
   }
-  save_ai_profile: { args: { profile: AiProfile }; result: void }
-  save_ai_project: { args: { project: AiProject }; result: void }
+  save_ai_profile: {
+    args: { profile: AiProfile; expectedRevision?: string | null }
+    result: string
+  }
+  save_ai_project: {
+    args: { project: AiProject; expectedRevision?: string | null }
+    result: string
+  }
   save_chat: { args: { chat: Chat; profileId?: string | null }; result: void }
   save_chat_file_to_workspace: {
     args: { profileId: string; fileId: string; name: string }
@@ -452,7 +470,10 @@ export interface DesktopCommands {
   uninstall_plugin_package: { args: { id: string }; result: void }
   unwatch_audio_apps: { args: { watchId: number }; result: void }
   watch_audio_apps: { args: { onApps: DesktopChannel }; result: number }
-  write_ai_profile_soul: { args: { id: string; content: string }; result: void }
+  write_ai_profile_soul: {
+    args: { id: string; content: string; expectedRevision?: string | null }
+    result: string
+  }
   write_plugin_note: {
     args: {
       pluginId: string

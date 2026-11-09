@@ -201,7 +201,7 @@
   "styling": { "items": [], "slots": {} },
   "chatPrompts": { "isSentImmediately": false, "items": [] },
   "favorites": { "items": [] },
-  "aiVault": { "path": "" },
+  "aiVaults": { "attached": [] },
   "aiProfiles": { "chatHistory": { "storage": "disk" } },
   "markdown": {
     "format": {

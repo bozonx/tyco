@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::types::{AiProfile, AiProject};
+use super::types::{AiProfile, AiProject, ProfileSoul};
 use crate::errors::AppError;
 use crate::services::atomic_file::{create_private_dir, write_private};
 use crate::services::file_ids::{is_file_id, MAX_FILE_ID_LEN};
@@ -16,6 +16,39 @@ const PROFILE_CHATS_DIR: &str = "chats";
 pub(super) use crate::desktop_contract::{
     MAX_PROFILE_TEMPERATURE as MAX_TEMPERATURE, MAX_TOOL_STEP_COUNT,
 };
+
+/// Saves that check a revision run one at a time, so no two of them pass
+/// the check on one file.
+static SAVE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+/// The revision of a file: the SHA-256 of its bytes, empty when there is none.
+pub fn file_revision(path: &Path) -> Result<String, AppError> {
+    match fs::read(path) {
+        Ok(bytes) => Ok(crate::services::storage::watcher::content_hash(&bytes)),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(String::new()),
+        Err(error) => Err(error.into()),
+    }
+}
+
+/// Writes `content` over `path` when the file is still at `expected`, the
+/// revision the caller read; no revision writes without a check. Returns the
+/// new revision.
+fn write_checked(path: &Path, content: &str, expected: Option<&str>) -> Result<String, AppError> {
+    use crate::locks::MutexExt;
+    let _save = SAVE_LOCK.locked();
+    if let Some(expected) = expected {
+        if file_revision(path)? != expected {
+            return Err(AppError::StaleRevision(format!(
+                "{} was changed on another device or outside TyCo",
+                path.display()
+            )));
+        }
+    }
+    write_private(path, content)?;
+    Ok(crate::services::storage::watcher::content_hash(
+        content.as_bytes(),
+    ))
+}
 
 pub fn validate_id(id: &str) -> Result<(), AppError> {
     if id.is_empty() {
@@ -56,7 +89,7 @@ fn not_found(what: &str, id: &str) -> AppError {
 fn read_entries<T: serde::de::DeserializeOwned>(
     dir: &Path,
     file: &str,
-) -> Result<Vec<T>, AppError> {
+) -> Result<Vec<(T, String)>, AppError> {
     let mut entries = Vec::new();
     let listing = match fs::read_dir(dir) {
         Ok(listing) => listing,
@@ -70,9 +103,11 @@ fn read_entries<T: serde::de::DeserializeOwned>(
         }
         match fs::read_to_string(&path)
             .map_err(AppError::from)
-            .and_then(|raw| Ok(serde_json::from_str::<T>(&raw)?))
-        {
-            Ok(value) => entries.push(value),
+            .and_then(|raw| {
+                let revision = crate::services::storage::watcher::content_hash(raw.as_bytes());
+                Ok((serde_json::from_str::<T>(&raw)?, revision))
+            }) {
+            Ok(entry) => entries.push(entry),
             Err(error) => log::warn!("Skipping unreadable {}: {error}", path.display()),
         }
     }
@@ -130,16 +165,27 @@ fn validate_profile(profile: &AiProfile) -> Result<(), AppError> {
     Ok(())
 }
 
+fn profile_file_content(profile: &AiProfile) -> Result<String, AppError> {
+    let stored = AiProfile {
+        revision: None,
+        ..profile.clone()
+    };
+    Ok(serde_json::to_string_pretty(&stored)?)
+}
+
 fn write_profile_file(dir: &Path, profile: &AiProfile) -> Result<(), AppError> {
-    write_private(
-        &dir.join(PROFILE_FILE),
-        &serde_json::to_string_pretty(profile)?,
-    )
+    write_private(&dir.join(PROFILE_FILE), &profile_file_content(profile)?)
 }
 
 pub fn list_profiles(vault_root: &Path) -> Result<Vec<AiProfile>, AppError> {
     ensure_vault_dirs(vault_root)?;
-    let mut profiles: Vec<AiProfile> = read_entries(&vault_root.join("profiles"), PROFILE_FILE)?;
+    let mut profiles: Vec<AiProfile> = read_entries(&vault_root.join("profiles"), PROFILE_FILE)?
+        .into_iter()
+        .map(|(profile, revision)| AiProfile {
+            revision: Some(revision),
+            ..profile
+        })
+        .collect();
     profiles.sort_by_key(|a| a.created_at);
     Ok(profiles)
 }
@@ -147,20 +193,26 @@ pub fn list_profiles(vault_root: &Path) -> Result<Vec<AiProfile>, AppError> {
 /// The profile as it is on disk now: the user may edit the file by hand.
 pub fn get_profile(vault_root: &Path, id: &str) -> Result<AiProfile, AppError> {
     let dir = existing_profile_dir(vault_root, id)?;
-    Ok(serde_json::from_str(&fs::read_to_string(
-        dir.join(PROFILE_FILE),
-    )?)?)
+    let raw = fs::read_to_string(dir.join(PROFILE_FILE))?;
+    let profile: AiProfile = serde_json::from_str(&raw)?;
+    Ok(AiProfile {
+        revision: Some(crate::services::storage::watcher::content_hash(
+            raw.as_bytes(),
+        )),
+        ..profile
+    })
 }
 
-/// Creates the profile folder with its root instruction. An existing profile
-/// is never overwritten.
+/// Creates the profile folder with its root instruction. An existing folder
+/// of that id is never written into: the caller picks another id.
 pub fn create_profile(vault_root: &Path, profile: AiProfile, soul: &str) -> Result<(), AppError> {
     validate_profile(&profile)?;
     ensure_vault_dirs(vault_root)?;
 
     let dir = profile_dir(vault_root, &profile.id)?;
-    if dir.join(PROFILE_FILE).exists() {
-        return Err(AppError::InvalidInput(format!(
+    // any folder of that id, e.g. one a sync is still bringing, is taken
+    if dir.symlink_metadata().is_ok() {
+        return Err(AppError::AlreadyExists(format!(
             "Profile already exists: {}",
             profile.id
         )));
@@ -177,11 +229,21 @@ pub fn create_profile(vault_root: &Path, profile: AiProfile, soul: &str) -> Resu
     write_profile_file(&dir, &profile)
 }
 
-/// Updates a profile that exists; a deleted one is not brought back.
-pub fn save_profile(vault_root: &Path, profile: AiProfile) -> Result<(), AppError> {
+/// Updates a profile that exists; a deleted one is not brought back. With
+/// `expected_revision` the file must be as the caller read it, see
+/// [`write_checked`]. Returns the new revision.
+pub fn save_profile(
+    vault_root: &Path,
+    profile: AiProfile,
+    expected_revision: Option<&str>,
+) -> Result<String, AppError> {
     validate_profile(&profile)?;
     let dir = existing_profile_dir(vault_root, &profile.id)?;
-    write_profile_file(&dir, &profile)
+    write_checked(
+        &dir.join(PROFILE_FILE),
+        &profile_file_content(&profile)?,
+        expected_revision,
+    )
 }
 
 pub fn delete_profile(
@@ -207,9 +269,23 @@ pub fn read_profile_soul(vault_root: &Path, id: &str) -> Result<String, AppError
     }
 }
 
-pub fn write_profile_soul(vault_root: &Path, id: &str, content: &str) -> Result<(), AppError> {
+/// The root instruction with its revision; an empty one for no file.
+pub fn read_profile_soul_revision(vault_root: &Path, id: &str) -> Result<ProfileSoul, AppError> {
+    let content = read_profile_soul(vault_root, id)?;
+    let revision = file_revision(&existing_profile_dir(vault_root, id)?.join(SOUL_FILE))?;
+    Ok(ProfileSoul { content, revision })
+}
+
+/// Writes the root instruction, checking `expected_revision` as
+/// [`save_profile`] does; an empty revision expects no file.
+pub fn write_profile_soul(
+    vault_root: &Path,
+    id: &str,
+    content: &str,
+    expected_revision: Option<&str>,
+) -> Result<String, AppError> {
     let dir = existing_profile_dir(vault_root, id)?;
-    write_private(&dir.join(SOUL_FILE), content)
+    write_checked(&dir.join(SOUL_FILE), content, expected_revision)
 }
 
 /// Where the profile keeps its chats; only an existing profile has one.
@@ -347,15 +423,18 @@ fn checked_target(project: &AiProject) -> Result<Option<&str>, AppError> {
 
 /// The file holds the description only: the folder of an external project
 /// belongs to the device.
-fn write_project_file(dir: &Path, project: &AiProject) -> Result<(), AppError> {
+fn project_file_content(project: &AiProject) -> Result<String, AppError> {
     let shared = AiProject {
         target_path: None,
+        revision: None,
+        is_inside_synced_folder: None,
         ..project.clone()
     };
-    write_private(
-        &dir.join(PROJECT_FILE),
-        &serde_json::to_string_pretty(&shared)?,
-    )
+    Ok(serde_json::to_string_pretty(&shared)?)
+}
+
+fn write_project_file(dir: &Path, project: &AiProject) -> Result<(), AppError> {
+    write_private(&dir.join(PROJECT_FILE), &project_file_content(project)?)
 }
 
 /// Where the files of a project are: its own folder in the vault, or the
@@ -387,7 +466,13 @@ pub fn project_files_dir(vault_root: &Path, project: &AiProject) -> Result<PathB
 /// deleted project. Only `delete_project` here forgets a folder.
 pub fn list_projects(vault_root: &Path, paths: &ProjectPaths) -> Result<Vec<AiProject>, AppError> {
     ensure_vault_dirs(vault_root)?;
-    let mut projects: Vec<AiProject> = read_entries(&vault_root.join("projects"), PROJECT_FILE)?;
+    let mut projects: Vec<AiProject> = read_entries(&vault_root.join("projects"), PROJECT_FILE)?
+        .into_iter()
+        .map(|(project, revision)| AiProject {
+            revision: Some(revision),
+            ..project
+        })
+        .collect();
     projects.sort_by_key(|a| a.created_at);
     for project in &mut projects {
         project.target_path = project
@@ -413,8 +498,8 @@ pub fn create_project(
     }
     ensure_vault_dirs(vault_root)?;
     let dir = project_dir(vault_root, &project.id)?;
-    if dir.join(PROJECT_FILE).exists() {
-        return Err(AppError::InvalidInput(format!(
+    if dir.symlink_metadata().is_ok() {
+        return Err(AppError::AlreadyExists(format!(
             "Project already exists: {}",
             project.id
         )));
@@ -428,24 +513,32 @@ pub fn create_project(
 }
 
 /// Updates the project. The folder given for an external project becomes
-/// its folder on this device; none given leaves the one it has here.
+/// its folder on this device; none given leaves the one it has here. The
+/// description is checked against `expected_revision` as [`save_profile`]
+/// does. Returns the new revision.
 pub fn save_project(
     vault_root: &Path,
     paths: &ProjectPaths,
     project: AiProject,
-) -> Result<(), AppError> {
+    expected_revision: Option<&str>,
+) -> Result<String, AppError> {
     validate_project(&project)?;
     let target = checked_target(&project)?;
     let dir = project_dir(vault_root, &project.id)?;
     if !dir.join(PROJECT_FILE).is_file() {
         return Err(not_found("Project", &project.id));
     }
-    write_project_file(&dir, &project)?;
+    let revision = write_checked(
+        &dir.join(PROJECT_FILE),
+        &project_file_content(&project)?,
+        expected_revision,
+    )?;
     match (project.is_external, target) {
-        (true, Some(target)) => paths.set(&project.id, Some(target)),
-        (true, None) => Ok(()),
-        (false, _) => paths.set(&project.id, None),
+        (true, Some(target)) => paths.set(&project.id, Some(target))?,
+        (true, None) => {}
+        (false, _) => paths.set(&project.id, None)?,
     }
+    Ok(revision)
 }
 
 /// Removes the project and every profile's permissions for it. The files of
@@ -458,6 +551,7 @@ pub fn delete_project(vault_root: &Path, paths: &ProjectPaths, id: &str) -> Resu
     paths.set(id, None)?;
 
     for mut profile in list_profiles(vault_root)? {
+        profile.revision = None;
         if profile.project_permissions.remove(id).is_some() {
             let profile_dir = existing_profile_dir(vault_root, &profile.id)?;
             write_profile_file(&profile_dir, &profile)?;

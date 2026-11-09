@@ -52,7 +52,7 @@
               />
               <FieldSelect
                 class="chat-prompt-card-profile"
-                :model-value="prompt.profileId"
+                :model-value="configProfileKey(prompt)"
                 :options="profileOptions(prompt)"
                 :aria-label="t('settings.chatPromptProfile')"
                 :title="t('settings.chatPromptProfile')"
@@ -93,6 +93,10 @@ import { type CSSProperties, computed, nextTick, onUnmounted, ref } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import { useSortableList } from '../../composables/use-sortable-list'
+import {
+  configProfileFields,
+  configProfileKey,
+} from '../../lib/ai-profiles/profile-ref'
 import {
   chatPromptProfileOptions,
   describeChatPrompt,
@@ -146,6 +150,7 @@ const itemStyle = (index: number): CSSProperties | undefined => {
 const profileSources = computed(() => ({
   profiles: aiProfilesStore.profiles,
   areProfilesLoaded: aiProfilesStore.isLoaded,
+  connectedVaultIds: aiProfilesStore.connectedVaultIds,
 }))
 
 const isProfileMissing = (prompt: ChatPromptConfig) =>
@@ -181,7 +186,11 @@ function updatePrompt(index: number, patch: Partial<ChatPromptConfig>) {
 }
 
 function setProfile(index: number, value: string | number | undefined) {
-  updatePrompt(index, { profileId: typeof value === 'string' ? value : '' })
+  // the main vault is left out, so the prompt has one form of its reference
+  const { profileId, vaultId } = configProfileFields(
+    typeof value === 'string' ? value : ''
+  )
+  updatePrompt(index, { profileId, vaultId })
 }
 
 /** Removes the prompts and the actions that run them */

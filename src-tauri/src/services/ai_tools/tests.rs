@@ -713,6 +713,7 @@ fn profile(tools: Option<ProfileToolSettings>) -> AiProfile {
         memory_mode: ai_vault::ProfileMemoryMode::Auto,
         created_at: 1,
         updated_at: 1,
+        revision: None,
     }
 }
 
@@ -725,6 +726,8 @@ fn project(id: &str, created_at: u64) -> AiProject {
         target_path: None,
         created_at,
         updated_at: created_at,
+        revision: None,
+        is_inside_synced_folder: None,
     }
 }
 
@@ -776,7 +779,7 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
     assert!(error.contains("not available"), "{error}");
 
     // with its file tools off a profile reaches its attachments only
-    ai_vault::save_profile(&vault, profile(None)).unwrap();
+    ai_vault::save_profile(&vault, profile(None), None).unwrap();
     let files = ConversationFiles::load(&vault, &paths, "writer", Attachments::none()).unwrap();
     assert!(files.roots().is_empty());
     let error = message(run(

@@ -669,13 +669,14 @@ fn renaming_an_unreadable_chat_sets_it_aside() {
 #[test]
 fn every_vault_keeps_its_indexes_apart() {
     let dir = TestDir::new("vault-index-dirs");
-    fs::create_dir_all(dir.join("one")).unwrap();
-    fs::create_dir_all(dir.join("two")).unwrap();
     let index = dir.join("index");
-    let one = vault_index_dir(&index, &dir.join("one"));
-    assert_ne!(one, vault_index_dir(&index, &dir.join("two")));
-    assert_eq!(one, vault_index_dir(&index, &dir.join("one/../one")));
-    assert!(one.starts_with(index.join("ai-vault")));
+    // named by the vault id, so a vault that moves keeps them
+    let one = vault_index_dir(&index, "data-1");
+    assert_eq!(one, index.join("ai-vault/data-1"));
+    assert_ne!(one, vault_index_dir(&index, "4f6c"));
+    // an id that is no plain name never leaves the folder
+    let odd = vault_index_dir(&index, "../x");
+    assert_eq!(odd.parent(), Some(index.join("ai-vault").as_path()));
 }
 
 #[test]

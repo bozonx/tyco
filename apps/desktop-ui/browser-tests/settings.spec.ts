@@ -133,7 +133,7 @@ test('creates a project with Enter and explains invalid edits', async ({
 }) => {
   desktop.userConfig.isInDevelopment = true
   desktop.handle('create_ai_project', () => {})
-  desktop.handle('save_ai_project', () => {})
+  desktop.handle('save_ai_project', () => 'r1')
   await page.reload()
   await page
     .getByRole('banner')

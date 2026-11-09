@@ -22,6 +22,9 @@ pub const VAULT_FORMAT_VERSION: u32 = 1;
 struct Marker {
     format_version: u32,
     vault_id: String,
+    /// The name the user gave an attached vault, the same on every device.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    name: Option<String>,
 }
 
 /// A vault that can be used: its folder and its id.
@@ -29,6 +32,8 @@ struct Marker {
 pub struct Vault {
     pub root: PathBuf,
     pub id: String,
+    /// The name of an attached vault; none for the main one.
+    pub name: Option<String>,
 }
 
 fn read_marker(dir: &Path) -> Result<Option<Marker>, AppError> {
@@ -53,14 +58,19 @@ fn read_marker(dir: &Path) -> Result<Option<Marker>, AppError> {
     }
 }
 
-fn write_marker(dir: &Path) -> Result<Marker, AppError> {
-    write_marker_with_id(dir, crate::services::random_id::new_uuid())
+fn write_marker_with_id(dir: &Path, vault_id: String) -> Result<Marker, AppError> {
+    write_marker_with(dir, vault_id, None)
 }
 
-fn write_marker_with_id(dir: &Path, vault_id: String) -> Result<Marker, AppError> {
+fn write_marker_with(
+    dir: &Path,
+    vault_id: String,
+    name: Option<String>,
+) -> Result<Marker, AppError> {
     let marker = Marker {
         format_version: VAULT_FORMAT_VERSION,
         vault_id,
+        name,
     };
     write_private(
         &dir.join(VAULT_MARKER_FILE),
@@ -93,6 +103,7 @@ pub fn open_default(dir: &Path) -> Result<Vault, AppError> {
     Ok(Vault {
         root: dir.to_path_buf(),
         id: marker.vault_id,
+        name: None,
     })
 }
 
@@ -105,58 +116,92 @@ pub fn open_read_only(dir: &Path) -> Result<Vault, AppError> {
     Ok(Vault {
         root: dir.to_owned(),
         id: marker.vault_id,
+        name: None,
     })
 }
 
-/// Opens the chosen vault only when its marker exists, without creating files.
-pub fn open_external(path: &Path, user_dir: Option<&Path>) -> Result<Vault, AppError> {
-    check_external_path(path, user_dir)?;
+/// Opens an attached vault only when its marker exists, without creating
+/// files: a disk not mounted, or a folder a sync has not brought yet, is "not
+/// connected", never replaced by an empty vault.
+pub fn open_attached(path: &Path) -> Result<Vault, AppError> {
     let not_connected = || {
         AppError::VaultUnavailable(format!(
             "The AI vault is not connected on this device: {}",
             path.display()
         ))
     };
-    if !path.is_dir() {
+    if !path.is_absolute() || !path.is_dir() {
         return Err(not_connected());
     }
-    let marker = match read_marker(path)? {
-        Some(marker) => marker,
-        None => return Err(not_connected()),
-    };
+    let marker = read_marker(path)?.ok_or_else(not_connected)?;
     Ok(Vault {
         root: path.to_path_buf(),
         id: marker.vault_id,
+        name: marker.name,
     })
 }
 
-/// A path the vault may be set to on this device: absolute, and not inside
-/// the user data folder, where it would be the default vault in disguise.
-pub fn check_external_path(path: &Path, user_dir: Option<&Path>) -> Result<(), AppError> {
+/// What a folder offered as a vault to attach holds.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AttachTarget {
+    /// A vault already: its marker is there.
+    Vault(Vault),
+    /// Missing or empty: a new vault is made there.
+    Empty,
+    /// Other files: a subfolder is offered instead.
+    Occupied,
+}
+
+/// What `path` holds, read without creating anything.
+pub fn inspect_attach_target(path: &Path) -> Result<AttachTarget, AppError> {
     if !path.is_absolute() {
         return Err(AppError::InvalidInput(format!(
             "The AI vault path is not absolute: {}",
             path.display()
         )));
     }
-    if let Some(user_dir) = user_dir {
-        use crate::services::storage::data_root_relocation::normalized;
-        if normalized(path).starts_with(normalized(user_dir)) {
-            return Err(AppError::InvalidInput(format!(
-                "The AI vault cannot be inside the data folder {}; leave its path empty to keep it there",
-                user_dir.display()
-            )));
-        }
+    if read_marker(path)?.is_some() {
+        return open_attached(path).map(AttachTarget::Vault);
     }
-    Ok(())
+    match fs::read_dir(path) {
+        Ok(mut entries) => Ok(if entries.next().is_none() {
+            AttachTarget::Empty
+        } else {
+            AttachTarget::Occupied
+        }),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(AttachTarget::Empty),
+        Err(error) => Err(error.into()),
+    }
 }
 
-/// Gives the folder `dir`, where a vault has just been moved or made, its
-/// marker when it has none.
-pub fn ensure_marker(dir: &Path) -> Result<(), AppError> {
-    if read_marker(dir)?.is_none() {
-        write_marker(dir)?;
+/// Makes a new vault in the empty folder `path`: a random id and `name`.
+pub fn create_attached(path: &Path, name: &str) -> Result<Vault, AppError> {
+    if inspect_attach_target(path)? != AttachTarget::Empty {
+        return Err(AppError::InvalidInput(format!(
+            "A new AI vault needs an empty folder: {}",
+            path.display()
+        )));
     }
+    fs::create_dir_all(path)?;
+    let name = Some(name.trim().to_owned()).filter(|name| !name.is_empty());
+    let marker = write_marker_with(path, crate::services::random_id::new_uuid(), name)?;
+    Ok(Vault {
+        root: path.to_path_buf(),
+        id: marker.vault_id,
+        name: marker.name,
+    })
+}
+
+/// Renames an attached vault on every device: its marker holds the name.
+pub fn rename_attached(path: &Path, name: &str) -> Result<(), AppError> {
+    let marker = read_marker(path)?.ok_or_else(|| {
+        AppError::VaultUnavailable(format!(
+            "The AI vault is not connected on this device: {}",
+            path.display()
+        ))
+    })?;
+    let name = Some(name.trim().to_owned()).filter(|name| !name.is_empty());
+    write_marker_with(path, marker.vault_id, name)?;
     Ok(())
 }
 
@@ -214,59 +259,56 @@ mod tests {
     }
 
     #[test]
-    fn a_chosen_vault_that_is_not_there_is_not_made() {
-        let dir = TestDir::new("vault-external-missing");
+    fn an_attached_vault_that_is_not_there_is_not_made() {
+        let dir = TestDir::new("vault-attached-missing");
         let missing = dir.join("missing");
         assert!(matches!(
-            open_external(&missing, None),
+            open_attached(&missing),
             Err(AppError::VaultUnavailable(_))
         ));
         assert!(!missing.exists());
         let empty = dir.join("empty");
         fs::create_dir(&empty).unwrap();
         assert!(matches!(
-            open_external(&empty, None),
+            open_attached(&empty),
             Err(AppError::VaultUnavailable(_))
         ));
         assert_eq!(fs::read_dir(&empty).unwrap().count(), 0);
     }
 
     #[test]
-    fn a_chosen_vault_requires_its_marker() {
-        let dir = TestDir::new("vault-external");
-        let marked = dir.join("marked");
-        fs::create_dir(&marked).unwrap();
-        ensure_marker(&marked).unwrap();
-        let vault = open_external(&marked, None).unwrap();
-        assert_eq!(open_external(&marked, None).unwrap().id, vault.id);
+    fn a_folder_to_attach_is_a_vault_empty_or_occupied() {
+        let dir = TestDir::new("vault-attach-target");
+        assert_eq!(
+            inspect_attach_target(&dir.join("new")).unwrap(),
+            AttachTarget::Empty
+        );
+        let vault = create_attached(&dir.join("new"), " Work ").unwrap();
+        assert_eq!(vault.name.as_deref(), Some("Work"));
+        assert_eq!(
+            inspect_attach_target(&dir.join("new")).unwrap(),
+            AttachTarget::Vault(vault.clone())
+        );
+        // another vault gets another id
+        let other = create_attached(&dir.join("other"), "").unwrap();
+        assert_ne!(other.id, vault.id);
+        assert_eq!(other.name, None);
 
-        let earlier = dir.join("earlier");
-        fs::create_dir_all(earlier.join("profiles")).unwrap();
-        assert!(matches!(
-            open_external(&earlier, None),
-            Err(AppError::VaultUnavailable(_))
-        ));
-        assert!(!earlier.join(VAULT_MARKER_FILE).exists());
-    }
+        fs::create_dir_all(dir.join("notes")).unwrap();
+        fs::write(dir.join("notes/todo.md"), "x").unwrap();
+        assert_eq!(
+            inspect_attach_target(&dir.join("notes")).unwrap(),
+            AttachTarget::Occupied
+        );
+        assert!(create_attached(&dir.join("notes"), "x").is_err());
+        assert!(inspect_attach_target(Path::new("relative")).is_err());
 
-    #[test]
-    fn a_chosen_vault_inside_the_data_folder_or_relative_is_refused() {
-        let dir = TestDir::new("vault-external-nested");
-        let user = dir.join("user");
-        fs::create_dir_all(user.join("notes/profiles")).unwrap();
-        assert!(matches!(
-            open_external(&user.join("notes"), Some(&user)),
-            Err(AppError::InvalidInput(_))
-        ));
-        assert!(!user.join("notes").join(VAULT_MARKER_FILE).exists());
-        assert!(matches!(
-            open_external(Path::new("relative/vault"), None),
-            Err(AppError::InvalidInput(_))
-        ));
-        // a folder next to the data folder is fine
-        fs::create_dir_all(dir.join("user-vault/profiles")).unwrap();
-        ensure_marker(&dir.join("user-vault")).unwrap();
-        assert!(open_external(&dir.join("user-vault"), Some(&user)).is_ok());
+        rename_attached(&vault.root, "Office").unwrap();
+        let renamed = open_attached(&vault.root).unwrap();
+        assert_eq!(
+            (renamed.id, renamed.name.as_deref()),
+            (vault.id, Some("Office"))
+        );
     }
 
     #[test]
@@ -281,7 +323,7 @@ mod tests {
         )
         .unwrap();
         assert!(matches!(
-            open_external(&dir, None),
+            open_attached(&dir),
             Err(AppError::VaultUnavailable(_))
         ));
     }

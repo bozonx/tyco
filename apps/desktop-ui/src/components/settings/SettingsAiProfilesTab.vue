@@ -1,22 +1,5 @@
 <template>
   <div class="settings-stack">
-    <InlineNotice
-      v-if="isVaultNotConnected"
-      kind="warning"
-      appearance="surface"
-      icon="mdi:folder-alert-outline"
-      :message="
-        t('settings.aiVaultNotConnected', { path: userConfig.aiVault.path })
-      "
-      data-testid="vault-not-connected"
-    >
-      <Button size="sm" @click="showVaultModal = true">
-        {{ t('settings.selectFolder') }}
-      </Button>
-      <Button size="sm" variant="ghost" @click="useDefaultVault">
-        {{ t('settings.aiVaultUseDefault') }}
-      </Button>
-    </InlineNotice>
     <SettingsSection
       :title="t('settings.aiProfilesTab')"
       :info="t('settings.aiProfilesHint')"
@@ -38,28 +21,39 @@
           density="compact"
           :message="t('settings.noProfilesYet')"
         />
-        <div v-else class="settings-entity-list">
-          <SettingsEntityItem
-            v-for="profile in profiles"
-            :key="profile.id"
-            :title="profile.name"
-            :description="describeProfile(profile)"
-            openable
-            @open="navigate(profileTab(profile.id))"
+        <template v-else>
+          <div
+            v-for="group in profileGroups"
+            :key="group.vault.vaultId"
+            class="vault-group"
           >
-            <template #actions>
-              <DropdownMenu
-                size="xs"
-                square
-                hide-chevron
-                align="right"
-                icon="mdi:dots-vertical"
-                :title="t('commands.moreActions')"
-                :items="profileMenuItems(profile)"
-              />
-            </template>
-          </SettingsEntityItem>
-        </div>
+            <h4 v-if="profileGroups.length > 1" class="vault-group-title">
+              {{ vaultLabel(group.vault, t('settings.aiVaults.main')) }}
+            </h4>
+            <div class="settings-entity-list">
+              <SettingsEntityItem
+                v-for="profile in group.items"
+                :key="profile.id"
+                :title="profile.name"
+                :description="describeProfile(profile)"
+                openable
+                @open="navigate(profileTab(profile.id))"
+              >
+                <template #actions>
+                  <DropdownMenu
+                    size="xs"
+                    square
+                    hide-chevron
+                    align="right"
+                    icon="mdi:dots-vertical"
+                    :title="t('commands.moreActions')"
+                    :items="profileMenuItems(profile)"
+                  />
+                </template>
+              </SettingsEntityItem>
+            </div>
+          </div>
+        </template>
       </div>
     </SettingsSection>
 
@@ -94,39 +88,45 @@
           density="compact"
           :message="t('settings.noProjectsYet')"
         />
-        <div v-else class="settings-entity-list">
-          <SettingsEntityItem
-            v-for="project in projects"
-            :key="project.id"
-            :title="project.name"
-            :description="describeProject(project)"
-            openable
-            @open="navigate(projectTab(project.id))"
+        <template v-else>
+          <div
+            v-for="group in projectGroups"
+            :key="group.vault.vaultId"
+            class="vault-group"
           >
-            <template #actions>
-              <DropdownMenu
-                size="xs"
-                square
-                hide-chevron
-                align="right"
-                icon="mdi:dots-vertical"
-                :title="t('commands.moreActions')"
-                :items="projectMenuItems(project)"
-              />
-            </template>
-          </SettingsEntityItem>
-        </div>
+            <h4 v-if="projectGroups.length > 1" class="vault-group-title">
+              {{ vaultLabel(group.vault, t('settings.aiVaults.main')) }}
+            </h4>
+            <div class="settings-entity-list">
+              <SettingsEntityItem
+                v-for="project in group.items"
+                :key="project.id"
+                :title="project.name"
+                :description="describeProject(project)"
+                openable
+                @open="navigate(projectTab(project.id))"
+              >
+                <template #actions>
+                  <DropdownMenu
+                    size="xs"
+                    square
+                    hide-chevron
+                    align="right"
+                    icon="mdi:dots-vertical"
+                    :title="t('commands.moreActions')"
+                    :items="projectMenuItems(project)"
+                  />
+                </template>
+              </SettingsEntityItem>
+            </div>
+          </div>
+        </template>
       </div>
     </SettingsSection>
 
-    <SettingsChatHistorySection scope="profiles" />
+    <SettingsAiVaultsSection />
 
-    <SettingsVaultLocationModal
-      :open="showVaultModal"
-      :current-path="vaultPath || userConfig.aiVault.path"
-      :is-custom="Boolean(userConfig.aiVault.path)"
-      @close="showVaultModal = false"
-    />
+    <SettingsChatHistorySection scope="profiles" />
 
     <SettingsCreateEntityModal
       :open="showCreateProfileModal"
@@ -136,7 +136,16 @@
       :is-submitting="isCreatingProfile"
       @submit="handleCreateProfile"
       @close="showCreateProfileModal = false"
-    />
+    >
+      <FieldRow
+        v-if="vaultOptions.length > 1"
+        vertical
+        :separator="false"
+        :label="t('settings.aiVaults.vault')"
+      >
+        <FieldSelect v-model="targetVaultId" :options="vaultOptions" />
+      </FieldRow>
+    </SettingsCreateEntityModal>
 
     <SettingsCreateEntityModal
       :open="showCreateProjectModal"
@@ -146,7 +155,16 @@
       :is-submitting="isCreatingProject"
       @submit="handleCreateProject"
       @close="showCreateProjectModal = false"
-    />
+    >
+      <FieldRow
+        v-if="vaultOptions.length > 1"
+        vertical
+        :separator="false"
+        :label="t('settings.aiVaults.vault')"
+      >
+        <FieldSelect v-model="targetVaultId" :options="vaultOptions" />
+      </FieldRow>
+    </SettingsCreateEntityModal>
 
     <ConfirmModal
       :open="showDuplicateProfileConfirm"
@@ -191,6 +209,7 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { projectAccessLevelOf } from '../../lib/ai-profiles/project-access'
+import { groupByVault, vaultLabel } from '../../lib/ai-profiles/vault-groups'
 import {
   CHAT_TOOL_GROUPS,
   type ProfileToolSettingsLike,
@@ -201,24 +220,39 @@ import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
+import FieldRow from '../common/FieldRow.vue'
+import FieldSelect from '../common/FieldSelect.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
+import SettingsAiVaultsSection from './SettingsAiVaultsSection.vue'
 import SettingsChatHistorySection from './SettingsChatHistorySection.vue'
 import SettingsCreateEntityModal from './SettingsCreateEntityModal.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsSection from './SettingsSection.vue'
-import SettingsVaultLocationModal from './SettingsVaultLocationModal.vue'
 import type { AiProject } from '@tyco/shared'
 
 const { t } = useI18n()
-const { draft: userConfig, navigate } = useSettingsContext()
+const { navigate } = useSettingsContext()
 const { toastError } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 
 const profiles = computed(() => aiProfilesStore.profiles)
 const projects = computed(() => aiProfilesStore.projects)
-const vaultPath = computed(() => aiProfilesStore.vaultPath)
-const isVaultNotConnected = computed(() => aiProfilesStore.isVaultNotConnected)
+const profileGroups = computed(() =>
+  groupByVault(profiles.value, aiProfilesStore.vaults)
+)
+const projectGroups = computed(() =>
+  groupByVault(projects.value, aiProfilesStore.vaults)
+)
+/** The vaults something can be made in now */
+const vaultOptions = computed(() =>
+  profileGroups.value.map(({ vault }) => ({
+    id: vault.vaultId,
+    name: vaultLabel(vault, t('settings.aiVaults.main')),
+  }))
+)
+/** The vault a new profile or project goes to */
+const targetVaultId = ref('')
 
 /** An external project with no folder on this device */
 const isWithoutFolder = (project: AiProject) =>
@@ -230,14 +264,6 @@ const projectsWithoutFolder = computed(() =>
 async function setProjectFolder(project: AiProject) {
   try {
     await aiProfilesStore.setProjectFolder(project.id)
-  } catch (error) {
-    toastError(error)
-  }
-}
-
-async function useDefaultVault() {
-  try {
-    await aiProfilesStore.relocateVault(undefined, false)
   } catch (error) {
     toastError(error)
   }
@@ -256,6 +282,8 @@ function describeProfile(profile: {
 /** The profiles assigned to the project, or a fallback when none are connected */
 function describeProject(project: AiProject): string {
   if (isWithoutFolder(project)) return t('settings.projectFolderNotSetOnDevice')
+  if (project.isInsideSyncedFolder)
+    return t('settings.projectInsideSyncedFolder')
   const assigned = profiles.value.filter(
     (profile) =>
       projectAccessLevelOf(profile.projectPermissions[project.id]) !== undefined
@@ -404,6 +432,7 @@ async function handleCreateProfile(name: string) {
   await runCreatingProfile(async () => {
     const created = await aiProfilesStore.createProfile({
       name,
+      vaultId: targetVaultId.value,
       soul: t('settings.profileDefaultSoul'),
       settings: {},
     })
@@ -419,12 +448,23 @@ async function handleCreateProject(name: string) {
   await runCreatingProject(async () => {
     const created = await aiProfilesStore.createProject({
       name,
+      vaultId: targetVaultId.value,
       isExternal: false,
     })
     showCreateProjectModal.value = false
     navigate(projectTab(created.id))
   })
 }
-
-const showVaultModal = ref(false)
 </script>
+
+<style scoped>
+.vault-group + .vault-group {
+  margin-top: var(--space-md);
+}
+
+.vault-group-title {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--text-caption);
+  color: var(--app-text-faint);
+}
+</style>

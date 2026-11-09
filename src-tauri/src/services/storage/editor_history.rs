@@ -37,6 +37,8 @@ pub(super) struct HistoryLocation {
     shared_dir: Result<PathBuf, String>,
     local_path: PathBuf,
     device_id: String,
+    /// The name of this computer, recorded in its shared journal.
+    device_name: Option<String>,
 }
 
 impl HistoryLocation {
@@ -52,6 +54,7 @@ impl HistoryLocation {
             shared_dir,
             local_path: super::paths::state_dir(app)?.join(LOCAL_JOURNAL),
             device_id,
+            device_name: crate::services::platform::machine::host_name(),
         })
     }
 
@@ -61,6 +64,7 @@ impl HistoryLocation {
             shared_dir: Ok(dir.join("user").join(SHARED_JOURNALS_DIR)),
             local_path: dir.join("state").join(LOCAL_JOURNAL),
             device_id: device_id.to_owned(),
+            device_name: Some(format!("host-{device_id}")),
         }
     }
 
@@ -103,6 +107,91 @@ impl HistoryLocation {
         paths.push(own.to_path_buf());
         paths
     }
+}
+
+/// The editor history journal of one device in the data folder.
+#[derive(Debug, Clone, serde::Serialize, PartialEq, Eq, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceHistoryJournal {
+    pub device_id: String,
+    /// The name the device last recorded; empty when it recorded none.
+    pub device_name: String,
+    pub is_current_device: bool,
+    pub entry_count: u32,
+    /// When the device last wrote an entry, in ms; 0 for none.
+    pub last_written_ms: u64,
+}
+
+impl HistoryLocation {
+    /// The journals of every device in the data folder.
+    pub(super) fn device_journals(&self) -> Result<Vec<DeviceHistoryJournal>, AppError> {
+        let dir = self.shared_dir()?;
+        let mut journals = Vec::new();
+        for (name, path) in super::user_files::list_own_files(dir, |name| {
+            name.strip_suffix(".jsonl")
+                .is_some_and(super::device::is_device_id)
+        })? {
+            let device_id = name.trim_end_matches(".jsonl").to_owned();
+            let records = match read_records(&path) {
+                Ok(records) => records,
+                Err(error) => {
+                    log::warn!("Skipping the journal {}: {error}", path.display());
+                    continue;
+                }
+            };
+            let items: Vec<_> = records.iter().filter_map(HistoryRecord::item).collect();
+            journals.push(DeviceHistoryJournal {
+                is_current_device: device_id == self.device_id,
+                device_name: journals::device_name(&records).unwrap_or_default(),
+                entry_count: u32::try_from(items.len()).unwrap_or(u32::MAX),
+                last_written_ms: items
+                    .iter()
+                    .map(|item| item.created_at_ms)
+                    .max()
+                    .unwrap_or(0),
+                device_id,
+            });
+        }
+        journals.sort_by_key(|journal| {
+            (
+                !journal.is_current_device,
+                std::cmp::Reverse(journal.last_written_ms),
+            )
+        });
+        Ok(journals)
+    }
+
+    /// Removes the journal of another device, e.g. one no longer used; the
+    /// journal of this device is not removed this way.
+    pub(super) fn delete_device_journal(&self, device_id: &str) -> Result<(), AppError> {
+        if device_id == self.device_id || !super::device::is_device_id(device_id) {
+            return Err(AppError::InvalidInput(format!(
+                "The history of the device {device_id} cannot be removed here"
+            )));
+        }
+        let path = self.shared_dir()?.join(format!("{device_id}.jsonl"));
+        super::user_data::ensure_write_allowed(&path)?;
+        remove_journal(&path)?;
+        super::watcher::deleted(&path);
+        Ok(())
+    }
+}
+
+/// The editor history journals of every device in the data folder.
+pub fn list_device_history_journals(
+    app: &AppHandle,
+) -> Result<Vec<DeviceHistoryJournal>, AppError> {
+    HistoryLocation::of_app(app)?.device_journals()
+}
+
+/// Removes the editor history of another device.
+pub fn delete_device_history(app: &AppHandle, device_id: &str) -> Result<(), AppError> {
+    let state = app.state::<crate::state::AppState>();
+    state
+        .history
+        .while_locked(|| HistoryLocation::of_app(app)?.delete_device_journal(device_id))?;
+    super::history_store::notify_editor_history_changed(app);
+    Ok(())
 }
 
 fn read_records(path: &Path) -> Result<Vec<HistoryRecord>, AppError> {
@@ -192,7 +281,24 @@ impl EditorHistoryTarget<'_> {
         after: Vec<EditorHistoryItem>,
     ) -> Result<(), AppError> {
         match self {
-            Self::Journals { own, .. } => append_records(own, changes(before, &after, now_ms())),
+            Self::Journals { own, location } => {
+                let mut records = changes(before, &after, now_ms());
+                // the shared journal tells which computer wrote it, once per
+                // name, for the list of devices in the settings
+                if !records.is_empty() && *own != location.local_path {
+                    if let Some(name) = &location.device_name {
+                        if journals::device_name(&read_records(own)?).as_ref() != Some(name) {
+                            records.insert(
+                                0,
+                                HistoryRecord::Event(journals::HistoryEvent::Device {
+                                    name: name.clone(),
+                                }),
+                            );
+                        }
+                    }
+                }
+                append_records(own, records)
+            }
             Self::Memory(memory) => {
                 **memory = after;
                 Ok(())

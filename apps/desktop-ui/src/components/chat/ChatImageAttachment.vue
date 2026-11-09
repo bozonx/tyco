@@ -46,6 +46,7 @@ import { onBeforeUnmount, ref, watch } from 'vue'
 import { useChatScopeProfileId } from '../../composables/use-chat-scope'
 import { useI18n } from '../../composables/use-i18n'
 import { getChatImage } from '../../lib/chat/chat-image-storage'
+import { changedChatFiles } from '../../lib/chat/chat-storage-changes'
 import { desktopClient } from '../../lib/desktop/client'
 import { clientLogger } from '../../lib/logger'
 import BaseDialog from '../common/BaseDialog.vue'
@@ -88,15 +89,14 @@ watch(() => props.image.id, load, { immediate: true })
 let disposed = false
 let stopListening: (() => void) | undefined
 if (desktopClient.isAvailable()) {
-  const prefix = profileId
-    ? `ai-vault/profiles/${profileId}/chats/images/`
-    : 'chats/images/'
   void desktopClient
-    .listen(DESKTOP_EVENTS.STORAGE_CHANGED, (paths) => {
+    .listen(DESKTOP_EVENTS.STORAGE_CHANGED, (event) => {
       if (
         !disposed &&
         !url.value &&
-        paths.some((path) => path.startsWith(`${prefix}${props.image.id}.`))
+        changedChatFiles(event, profileId ?? null).some((file) =>
+          file.startsWith(`images/${props.image.id}.`)
+        )
       )
         void load()
     })

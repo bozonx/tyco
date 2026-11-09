@@ -76,6 +76,26 @@ describe('createActionMenuModel', () => {
     expect(mainActions.q.actionId).toBe('askInChat')
   })
 
+  it('hides the slot of a profile of a vault away without its place', () => {
+    const { deps } = setup()
+    const mainActions = {
+      q: { type: 'profileChat' as const, profileId: 'writer', vaultId: 'w1' },
+      w: { type: 'standard' as const, actionId: 'correction' as const },
+    }
+    let connected: string[] = []
+    const store = createActionMenuModel({
+      ...deps,
+      mainActions: () => mainActions,
+      profiles: () => [{ id: 'w1:writer', name: 'Writer' }],
+      connectedVaultIds: () => connected,
+    })
+    expect(store.getShortcutActions()[0]?.id).toBe('correction')
+    // the saved slot is kept and comes back with its vault
+    expect(mainActions.q.vaultId).toBe('w1')
+    connected = ['w1']
+    expect(store.getShortcutActions()[0]?.id).toBe('profileChat:w1:writer')
+  })
+
   it('supports multiple action pages and determines takesText per page', () => {
     const { deps } = setup()
     const store = createActionMenuModel({

@@ -53,3 +53,23 @@ fn read_machine_id() -> Option<String> {
 fn read_machine_id() -> Option<String> {
     None
 }
+
+/// The name of this computer as the user knows it, for telling devices apart
+/// in the settings; `None` when the system does not tell it.
+pub fn host_name() -> Option<String> {
+    read_host_name()
+        .map(|name| name.trim().to_owned())
+        .filter(|name| !name.is_empty())
+}
+
+#[cfg(target_os = "windows")]
+fn read_host_name() -> Option<String> {
+    std::env::var("COMPUTERNAME").ok()
+}
+
+#[cfg(not(target_os = "windows"))]
+fn read_host_name() -> Option<String> {
+    std::fs::read_to_string("/etc/hostname")
+        .ok()
+        .or_else(|| std::env::var("HOSTNAME").ok())
+}

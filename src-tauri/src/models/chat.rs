@@ -30,6 +30,26 @@ pub struct ChatsChangedEvent {
     pub is_cleared: bool,
 }
 
+/// Files of the app that changed on disk, outside this window or in it.
+#[derive(Debug, Clone, Default, Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct StorageChangedEvent {
+    /// Paths relative to the data folder, with `/`.
+    pub paths: Vec<String>,
+    /// Files of the vaults, each with its vault.
+    pub vault_changes: Vec<VaultChange>,
+}
+
+/// A file of a vault that changed.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct VaultChange {
+    /// The vault part of references: empty for the main vault.
+    pub vault_id: String,
+    /// Relative to the root of the vault, with `/`.
+    pub path: String,
+}
+
 /// A text the user attached to a chat message.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 pub struct ChatAttachment {

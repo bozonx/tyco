@@ -51,7 +51,13 @@ function createStore() {
     duplicateProfile: vi.fn(async () => ({ id: 'copy' })),
     updateProfile: vi.fn(async () => {}),
     readSoul: vi.fn(async () => 'Be kind'),
-    writeSoul: vi.fn(async () => {}),
+    readSoulWithRevision: vi.fn(async () => ({
+      content: 'Be kind',
+      revision: 's1',
+    })),
+    writeSoul: vi.fn(async () => 's2'),
+    profileConflicts: {} as Record<string, unknown>,
+    resolveProfileConflict: vi.fn(async () => {}),
     refreshProfile: vi.fn(async () => undefined),
     openVaultDir: vi.fn(async () => {}),
     countChats: vi.fn(async () => 3),
@@ -102,10 +108,10 @@ describe('SettingsProfileDetailTab.vue', () => {
     await wrapper.get('input').setValue('Editor')
     await wrapper.get('form').trigger('submit')
     await flushPromises()
-    expect(wrapper.text()).toContain('profiles/editor')
+    // the folder is made by the app, not typed
+    expect(wrapper.findAll('input')).toHaveLength(1)
     expect(store.createProfile).toHaveBeenCalledWith({
       name: 'Editor',
-      id: 'editor',
       soul: 'settings.profileDefaultSoul',
       settings: {},
     })
@@ -145,16 +151,6 @@ describe('SettingsProfileDetailTab.vue', () => {
     })
     await list.vm.$emit('open', 'docs')
     expect(context.navigate).toHaveBeenCalledWith('ai-project:docs')
-  })
-
-  it('refuses a folder another profile has', async () => {
-    const wrapper = mountTab('new')
-    const [nameInput, folderInput] = wrapper.findAll('input')
-    await nameInput!.setValue('Editor')
-    await folderInput!.setValue('Writer')
-    expect(wrapper.text()).toContain('settings.vaultFolderTaken')
-    await wrapper.get('form').trigger('submit')
-    expect(store.createProfile).not.toHaveBeenCalled()
   })
 
   it('shows the folder of an existing profile', async () => {

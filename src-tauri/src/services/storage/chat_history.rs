@@ -64,29 +64,44 @@ pub fn app_chat_dirs(app: &AppHandle) -> Result<ChatDirs, AppError> {
     })
 }
 
-/// The chats of a profile of the vault at `vault_root`. The indexes of each
-/// vault have a folder of their own, named by the digest of its path, so that
-/// two vaults never share one.
+/// The chats of a profile of the vault `vault_id`, the id of its marker. The
+/// indexes of each vault have a folder of their own named by that id: a vault
+/// that moves keeps its indexes, and two vaults never share one.
 pub fn profile_chat_dirs(
     app: &AppHandle,
-    vault_root: &Path,
+    vault_id: &str,
     profile_id: &str,
     chats_dir: PathBuf,
 ) -> Result<ChatDirs, AppError> {
     let index_dir = super::paths::state_sub_dir(app, INDEX_DIR)?;
     Ok(ChatDirs {
         chats: chats_dir,
-        index: vault_index_dir(&index_dir, vault_root)
+        index: vault_index_dir(&index_dir, vault_id)
             .join(profile_id)
             .join(CHAT_INDEX_FILE),
         orphans: index_dir.join(ORPHAN_IMAGES_FILE),
     })
 }
 
-pub(super) fn vault_index_dir(index_dir: &Path, vault_root: &Path) -> PathBuf {
-    let canonical = fs::canonicalize(vault_root).unwrap_or_else(|_| vault_root.to_path_buf());
-    let digest = crate::services::sha256::sha256_hex(canonical.to_string_lossy().as_bytes());
-    index_dir.join("ai-vault").join(&digest[..16])
+pub(super) fn vault_index_dir(index_dir: &Path, vault_id: &str) -> PathBuf {
+    // an id read from a marker the user may have edited is used as a folder
+    // name only when it is a plain one
+    let name = if crate::services::file_ids::is_file_id(vault_id) {
+        vault_id.to_owned()
+    } else {
+        crate::services::sha256::sha256_hex(vault_id.as_bytes())[..16].to_owned()
+    };
+    index_dir.join("ai-vault").join(name)
+}
+
+/// Forgets the indexes of the chats of the vault `vault_id`, e.g. once it is
+/// removed from this device; they are rebuilt when it comes back.
+pub fn remove_vault_indexes(app: &AppHandle, vault_id: &str) -> Result<(), AppError> {
+    let index_dir = super::paths::state_sub_dir(app, INDEX_DIR)?;
+    match fs::remove_dir_all(vault_index_dir(&index_dir, vault_id)) {
+        Err(error) if error.kind() != std::io::ErrorKind::NotFound => Err(error.into()),
+        _ => Ok(()),
+    }
 }
 
 /// A chat file as the index last saw it.

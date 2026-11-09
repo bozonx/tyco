@@ -274,7 +274,7 @@ fn chosen_dir_status(dir: &Path) -> UserDataStatus {
 /// Whether other users may write into `dir` or its parent: then they may
 /// change the commands Tyco runs. Checked on Linux only.
 #[cfg(unix)]
-fn is_writable_by_others(dir: &Path) -> bool {
+pub fn is_writable_by_others(dir: &Path) -> bool {
     use std::os::unix::fs::MetadataExt;
     // SAFETY: geteuid has no preconditions and cannot fail.
     let user = unsafe { libc::geteuid() };
@@ -291,7 +291,7 @@ fn is_writable_by_others(dir: &Path) -> bool {
 }
 
 #[cfg(not(unix))]
-fn is_writable_by_others(_dir: &Path) -> bool {
+pub fn is_writable_by_others(_dir: &Path) -> bool {
     false
 }
 
@@ -376,13 +376,6 @@ pub fn variable_values(app: &AppHandle, config: &serde_json::Value) -> VariableV
             device_id: &device_id,
         },
     )
-}
-
-/// A folder of the user data folder, created for writing.
-pub fn user_sub_dir(app: &AppHandle, sub: &str) -> Result<PathBuf, AppError> {
-    let dir = user_dir(app)?.join(sub);
-    create_private_dir(&dir)?;
-    Ok(dir)
 }
 
 #[cfg(test)]

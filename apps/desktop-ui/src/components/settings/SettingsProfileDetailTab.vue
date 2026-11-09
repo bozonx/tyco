@@ -20,20 +20,13 @@
               :disabled="isCreating"
             />
           </FieldRow>
-          <VaultFolderField
-            :disabled="isCreating"
-            :field="folder"
-            @update:typed-id="folder.typedId.value = $event"
-            directory="profiles"
-            :info="t('settings.vaultFolderHint')"
-          />
           <div class="profile-form-actions">
             <Button
               type="submit"
               size="sm"
               variant="primary"
               icon="mdi:plus"
-              :disabled="!newName.trim() || Boolean(folderError)"
+              :disabled="!newName.trim()"
               :loading="isCreating"
             >
               {{ t('settings.createProfile') }}
@@ -44,6 +37,21 @@
     </template>
 
     <template v-else-if="profile">
+      <InlineNotice
+        v-if="editor.hasConflict.value"
+        kind="warning"
+        appearance="surface"
+        icon="mdi:sync-alert"
+        :message="t('settings.profileChangedElsewhere')"
+        data-testid="profile-conflict"
+      >
+        <Button size="sm" @click="resolveConflict(false)">
+          {{ t('settings.conflictReload') }}
+        </Button>
+        <Button size="sm" variant="ghost" @click="resolveConflict(true)">
+          {{ t('settings.conflictKeepMine') }}
+        </Button>
+      </InlineNotice>
       <SettingsSection
         :title="t('settings.aiEntityGeneral')"
         :info="t('settings.profileGenerationHint')"
@@ -206,12 +214,12 @@ import { useSettingsContext } from '../../composables/use-settings-context'
 import { useSettingsDraft } from '../../composables/use-settings-draft'
 import useToast from '../../composables/use-toast'
 import { createProfileEditor } from '../../lib/ai-profiles/profile-editor'
+import { vaultOfRef } from '../../lib/ai-profiles/profile-ref'
 import {
   type ProjectAccessLevel,
   hasFileToolsOff,
   withProjectAccess,
 } from '../../lib/ai-profiles/project-access'
-import { createVaultFolderField } from '../../lib/ai-profiles/vault-folder-field'
 import {
   CHAT_TOOL_GROUPS,
   COMMANDS_TOOL_GROUP_ID,
@@ -243,7 +251,6 @@ import SettingsProfileMemorySection from './SettingsProfileMemorySection.vue'
 import SettingsProfileProjectAccess from './SettingsProfileProjectAccess.vue'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
 import SettingsSection from './SettingsSection.vue'
-import VaultFolderField from './VaultFolderField.vue'
 
 const props = defineProps<{ profileId: string }>()
 const { navigate } = useSettingsContext()
@@ -272,7 +279,12 @@ function toggleProfileCommand(
 
 const isNew = computed(() => props.profileId === NEW_ENTITY_ID)
 const profile = computed(() => aiProfilesStore.getProfile(props.profileId))
-const projects = computed(() => aiProfilesStore.projects)
+// a profile reaches only the projects of its own vault
+const projects = computed(() =>
+  aiProfilesStore.projects.filter(
+    (project) => vaultOfRef(project.id) === vaultOfRef(props.profileId)
+  )
+)
 
 // ---------------------------------------------------------------------------
 // Creation
@@ -290,21 +302,11 @@ onMounted(() => {
   }
 })
 
-const folder = createVaultFolderField({
-  name: () => newName.value,
-  fallback: 'profile',
-  takenIds: () => aiProfilesStore.profiles.map(({ id }) => id),
-})
-const folderError = computed(() =>
-  folder.errorKey.value ? t(folder.errorKey.value) : undefined
-)
-
 async function handleCreate() {
-  if (!newName.value.trim() || folderError.value || isCreating.value) return
+  if (!newName.value.trim() || isCreating.value) return
   await runCreating(async () => {
     const created = await aiProfilesStore.createProfile({
       name: newName.value,
-      id: folder.folderId.value,
       soul: t('settings.profileDefaultSoul'),
       settings: {},
     })
@@ -327,10 +329,23 @@ const editor = createProfileEditor({
   getProfile: () => aiProfilesStore.getProfile(props.profileId),
   updateProfile: (patch) =>
     aiProfilesStore.updateProfile(props.profileId, patch),
-  readSoul: () => aiProfilesStore.readSoul(props.profileId),
-  writeSoul: (content) => aiProfilesStore.writeSoul(props.profileId, content),
+  readSoul: () => aiProfilesStore.readSoulWithRevision(props.profileId),
+  writeSoul: (content, expectedRevision) =>
+    aiProfilesStore.writeSoul(props.profileId, content, expectedRevision),
+  hasProfileConflict: () =>
+    Boolean(aiProfilesStore.profileConflicts[props.profileId]),
+  resolveProfileConflict: (keepMine) =>
+    aiProfilesStore.resolveProfileConflict(props.profileId, keepMine),
   reportError: useRetryToast(),
 })
+
+async function resolveConflict(keepMine: boolean) {
+  try {
+    await editor.resolveConflict(keepMine)
+  } catch (error) {
+    toastError(error)
+  }
+}
 const {
   name,
   temperatureText,
@@ -372,6 +387,15 @@ async function syncFromDisk() {
     // the page keeps what it shows; the profile may be gone meanwhile
   }
 }
+// a change another device or editor made, read when the watcher reported it:
+// a page without edits takes it silently
+watch(
+  () => profile.value?.revision,
+  (revision, previous) => {
+    if (previous && revision !== previous && !editor.hasConflict.value)
+      void syncFromDisk()
+  }
+)
 function syncWhenVisible() {
   if (document.visibilityState === 'visible') void syncFromDisk()
 }

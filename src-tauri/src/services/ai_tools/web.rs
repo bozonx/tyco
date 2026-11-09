@@ -434,6 +434,7 @@ mod tests {
             project_permissions: HashMap::new(),
             created_at: 1,
             updated_at: 1,
+            revision: None,
         };
 
         assert!(ensure_web_enabled(&profile).is_ok());
@@ -453,6 +454,7 @@ mod tests {
             project_permissions: HashMap::new(),
             created_at: 1,
             updated_at: 1,
+            revision: None,
         };
         assert!(ensure_web_enabled(&profile_no_tools).is_err());
 
@@ -480,6 +482,7 @@ mod tests {
             project_permissions: HashMap::new(),
             created_at: 1,
             updated_at: 1,
+            revision: None,
         };
         assert!(ensure_web_enabled(&profile_disabled).is_err());
     }

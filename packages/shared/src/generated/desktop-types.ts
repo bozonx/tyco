@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 746acbcb3023a297c558e4b6ff48070f389fdd6ab8afd66889d0ec974f385b18
+// Source hash: 710582b320ee1db31aae42d1be6efb131471da1f06336d031aa77c2ad1489ddc
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -195,6 +195,11 @@ export type AiProfile = {
   memoryMode: ProfileMemoryMode
   createdAt: number
   updatedAt: number
+  /**
+   * The SHA-256 of the file as it was read, for a save to check that no other
+   * device or editor changed it since; never stored in the file.
+   */
+  revision?: string
 }
 
 export type AiProject = {
@@ -205,6 +210,16 @@ export type AiProject = {
   targetPath?: string
   createdAt: number
   updatedAt: number
+  /**
+   * The SHA-256 of the file as it was read, for a save to check that no other
+   * device or editor changed it since; never stored in the file.
+   */
+  revision?: string
+  /**
+   * The folder of an external project lies inside the data folder or a vault
+   * and is synced with it; never stored in the file.
+   */
+  isInsideSyncedFolder?: boolean
 }
 
 export type AiWebToolOutput =
@@ -433,6 +448,8 @@ export type DesktopErrorCode =
   | 'vaultUnavailable'
   | 'projectUnavailable'
   | 'stale'
+  | 'alreadyExists'
+  | 'staleRevision'
   | 'runtimeError'
   | 'ioError'
   | 'invalidData'
@@ -467,6 +484,17 @@ export type DesktopWindowState = {
   canListen: boolean
   /** A single application can be recorded. */
   canListenToApps: boolean
+}
+
+/** The editor history journal of one device in the data folder. */
+export type DeviceHistoryJournal = {
+  deviceId: string
+  /** The name the device last recorded; empty when it recorded none. */
+  deviceName: string
+  isCurrentDevice: boolean
+  entryCount: number
+  /** When the device last wrote an entry, in ms; 0 for none. */
+  lastWrittenMs: number
 }
 
 /** What the UI sends to add a text; id and time are assigned by the backend. */
@@ -690,6 +718,9 @@ export type ProfileMemoryTopic = {
   updatedAt: number
 }
 
+/** The root instruction of a profile with its revision, empty for no file. */
+export type ProfileSoul = { content: string; revision: string }
+
 /** The tools a profile's chat may use. */
 export type ProfileToolSettings = {
   /** By tool group id; a group that is not listed is off. */
@@ -838,6 +869,14 @@ export type StatusOverlayRequest = {
   onlyIfVisible?: boolean
 }
 
+/** Files of the app that changed on disk, outside this window or in it. */
+export type StorageChangedEvent = {
+  /** Paths relative to the data folder, with `/`. */
+  paths: Array<string>
+  /** Files of the vaults, each with its vault. */
+  vaultChanges: Array<VaultChange>
+}
+
 export type StorageInfo = {
   /** The system folders of the app; the user data folder is `user_data`. */
   locations: Array<StorageLocation>
@@ -958,23 +997,44 @@ export type UserDataTargetKind =
   | { kind: 'occupied'; subfolderPath: string }
   | { kind: 'forbidden' }
 
+/** A file of a vault that changed. */
+export type VaultChange = {
+  /** The vault part of references: empty for the main vault. */
+  vaultId: string
+  /** Relative to the root of the vault, with `/`. */
+  path: string
+}
+
+export type VaultFolder = { path: string; kind: VaultFolderKind }
+
+/** What a folder offered for a vault holds. */
+export type VaultFolderKind =
+  | { kind: 'vault'; name: string }
+  | { kind: 'empty' }
+  | { kind: 'occupied'; subfolder: string }
+  | { kind: 'duplicate' }
+  | { kind: 'nested'; message: string }
+
+/** A vault as the settings show it. */
+export type VaultInfo = {
+  /**
+   * The vault part of the references of its profiles and projects; empty for
+   * the main vault.
+   */
+  vaultId: string
+  name: string
+  path: string
+  isMain: boolean
+  status: VaultStatus
+  /** Others may write to it: its profiles run the commands of this device. */
+  isWritableByOthers: boolean
+}
+
 /** Whether the system credential store can be reached. */
 export type VaultState = 'available' | 'unavailable'
 
-export type VaultTarget = {
-  path: string
-  /** The app data folder the vault is in by default. */
-  isDefault: boolean
-  contents: VaultTargetKind
-}
-
-/** What a folder the vault may go to holds. */
-export type VaultTargetKind =
-  | { kind: 'current' }
-  | { kind: 'empty' }
-  | { kind: 'vault'; profileCount: number; projectCount: number }
-  | { kind: 'occupied'; subfolderPath: string }
-  | { kind: 'nested' }
+/** Where an attached vault stands on this device. */
+export type VaultStatus = 'connected' | 'notConnected' | 'newer'
 
 export type VoiceAudioLevelPayload = { level: number; peak: number }
 
@@ -1023,6 +1083,8 @@ export const DESKTOP_ERROR_CODES = [
   'vaultUnavailable',
   'projectUnavailable',
   'stale',
+  'alreadyExists',
+  'staleRevision',
   'runtimeError',
   'ioError',
   'invalidData',
@@ -1032,7 +1094,7 @@ export const DESKTOP_ERROR_CODES = [
 export interface DesktopEventPayloads {
   'app://quit-requested': number
   'app://quit-cancelled': null
-  'app://storage-changed': Array<string>
+  'app://storage-changed': StorageChangedEvent
   'app://plugins-changed': null
   'app://state-changed': DesktopSnapshot
   'app://hotkeys-changed': null

@@ -4,7 +4,7 @@
 //! section that does not fit reads as its default: the schema has checked
 //! the config already, so that happens only for a config Tyco repairs.
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 
 /// The section of `config` under `key`, or its default.
@@ -242,17 +242,30 @@ pub fn external_access(config: &Value) -> ExternalAccessConfig {
     section(config, "externalAccess")
 }
 
-/// `aiVault`: where the AI profiles and projects live.
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Eq)]
+/// A vault this device attached besides the main one, `aiVaults.attached`.
+#[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-pub struct AiVaultConfig {
-    /// The vault folder the user chose; empty for the app data folder.
+pub struct AttachedVault {
     #[serde(default)]
     pub path: String,
+    /// The id of its marker when it was attached, known while it is away.
+    #[serde(default)]
+    pub vault_id: String,
 }
 
-pub fn ai_vault(config: &Value) -> AiVaultConfig {
-    section(config, "aiVault")
+#[derive(Clone, Debug, Default, Deserialize)]
+struct AiVaultsConfig {
+    #[serde(default)]
+    attached: Vec<AttachedVault>,
+}
+
+/// The vaults this device attached; entries without a path are skipped.
+pub fn attached_vaults(config: &Value) -> Vec<AttachedVault> {
+    section::<AiVaultsConfig>(config, "aiVaults")
+        .attached
+        .into_iter()
+        .filter(|vault| !vault.path.trim().is_empty())
+        .collect()
 }
 
 /// `toolConfig` of a command of the `script` tool.
@@ -450,20 +463,17 @@ mod tests {
                 {"inputMode": "selection", "slots": {}},
             ],
             "externalAccess": {"canAccessSelection": true},
-            "aiVault": {"path": "/vault"},
         });
         let pages = action_pages(&config);
         assert_eq!(pages[0].input_mode, ActionInputMode::None);
         assert_eq!(pages[1].input_mode, ActionInputMode::Selection);
         assert!(external_access(&config).can_access_selection);
-        assert_eq!(ai_vault(&config).path, "/vault");
 
         let partly = json!({"actionPages": [{"inputMode": "none"}, {"slots": {}}]});
         assert_eq!(action_pages(&partly).len(), 2);
         let broken = json!({"actionPages": "pages", "externalAccess": 1});
         assert!(action_pages(&broken).is_empty());
         assert!(!external_access(&broken).can_access_selection);
-        assert_eq!(ai_vault(&json!({})), AiVaultConfig::default());
         assert!(!is_voice_input_hold_enabled(&json!({})));
         assert!(is_voice_input_hold_enabled(&json!({
             "stt": { "isVoiceInputHoldEnabled": true }

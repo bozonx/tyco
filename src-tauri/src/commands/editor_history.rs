@@ -58,3 +58,17 @@ pub async fn delete_editor_history_item(app: AppHandle, id: String) -> Result<()
 pub async fn clear_editor_history(app: AppHandle) -> Result<(), AppError> {
     run_blocking(move || storage::clear_editor_history(&app)).await?
 }
+
+/// The editor history journals of every device in the data folder.
+#[tauri::command]
+pub async fn list_device_history_journals(
+    app: AppHandle,
+) -> Result<Vec<storage::DeviceHistoryJournal>, AppError> {
+    run_blocking(move || storage::list_device_history_journals(&app)).await?
+}
+
+/// Removes the editor history of another device, e.g. one no longer used.
+#[tauri::command]
+pub async fn delete_device_history(app: AppHandle, device_id: String) -> Result<(), AppError> {
+    run_blocking(move || storage::delete_device_history(&app, &device_id)).await?
+}

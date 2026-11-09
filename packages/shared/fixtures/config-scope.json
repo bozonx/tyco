@@ -4,7 +4,7 @@
     "user": {
       "appearance": { "theme": "dark" },
       "editor": { "submitKey": "Enter", "history": { "storage": "disk" } },
-      "aiVault": {},
+      "aiVaults": {},
       "stt": {
         "provider": "sherpaOnnx",
         "providers": { "deepgram": { "modelId": "nova-3" } }
@@ -22,7 +22,9 @@
       },
       "externalAccess": { "canAccessSelection": true },
       "windowInsertion": { "terminalApps": ["kitty"] },
-      "aiVault": { "path": "/home/user/vault" },
+      "aiVaults": {
+        "attached": [{ "path": "/home/user/work", "vaultId": "w1" }]
+      },
       "stt": { "providers": { "sherpaOnnx": { "baseUrl": "ws://pc:6006" } } },
       "variableValues": { "notes": "/home/user/notes" }
     },
@@ -32,7 +34,9 @@
         "submitKey": "Enter",
         "history": { "storage": "disk", "isLocalOnly": true }
       },
-      "aiVault": { "path": "/home/user/vault" },
+      "aiVaults": {
+        "attached": [{ "path": "/home/user/work", "vaultId": "w1" }]
+      },
       "stt": {
         "provider": "sherpaOnnx",
         "providers": {

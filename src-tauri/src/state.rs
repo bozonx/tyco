@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn vault_relocation_excludes_io_until_the_new_path_is_published() {
         let state = AppState::new(default_desktop_snapshot(
-            serde_json::json!({"aiVault": {"path": "/old"}}),
+            serde_json::json!({"language": {"ui": "old"}}),
             SessionState::default(),
         ));
         let operation = state.read_vault();
@@ -110,14 +110,14 @@ mod tests {
         std::thread::scope(|scope| {
             let reader = scope.spawn(|| {
                 let _access = state.read_vault();
-                state.user_config()["aiVault"]["path"].clone()
+                state.user_config()["language"]["ui"].clone()
             });
             state.update_snapshot(|snapshot| {
                 snapshot.settings.user_config =
-                    std::sync::Arc::new(serde_json::json!({"aiVault": {"path": "/new"}}));
+                    std::sync::Arc::new(serde_json::json!({"language": {"ui": "new"}}));
             });
             drop(relocating);
-            assert_eq!(reader.join().unwrap(), "/new");
+            assert_eq!(reader.join().unwrap(), "new");
         });
     }
 

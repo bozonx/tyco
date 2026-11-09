@@ -18,6 +18,7 @@ export function useChatPrompts() {
     describeChatPrompts(desktopStore.userConfig.chatPrompts?.items, {
       profiles: aiProfilesStore.profiles,
       areProfilesLoaded: aiProfilesStore.isLoaded,
+      connectedVaultIds: aiProfilesStore.connectedVaultIds,
     })
   )
 

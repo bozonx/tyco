@@ -2,16 +2,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import type { AiProfile } from '@tyco/shared'
 
+import { IpcCallError } from '../ipc/ipc-model'
 import { createProfileEditor } from './profile-editor'
 
 const profile = { id: 'writer', name: 'Writer', temperature: 0.5 } as AiProfile
 
-function setup(overrides: { readSoul?: () => Promise<string> } = {}) {
+function setup(
+  overrides: {
+    readSoul?: () => Promise<string>
+    hasProfileConflict?: () => boolean
+  } = {}
+) {
+  const readContent = overrides.readSoul ?? (async () => 'Be brief')
   const deps = {
     getProfile: vi.fn((): AiProfile | undefined => profile),
     updateProfile: vi.fn().mockResolvedValue(undefined),
-    readSoul: overrides.readSoul ?? vi.fn().mockResolvedValue('Be brief'),
-    writeSoul: vi.fn().mockResolvedValue(undefined),
+    readSoul: async () => ({ content: await readContent(), revision: 's1' }),
+    writeSoul: vi.fn().mockResolvedValue('s2'),
+    hasProfileConflict: overrides.hasProfileConflict ?? (() => false),
+    resolveProfileConflict: vi.fn().mockResolvedValue(undefined),
     reportError: vi.fn(),
     delayMs: 100,
   }
@@ -94,7 +103,7 @@ describe('profile editor', () => {
     editor.soulPrompt.value = 'New instructions'
     editor.changeSoul()
     expect(await editor.flush()).toBe(true)
-    expect(deps.writeSoul).toHaveBeenCalledWith('New instructions')
+    expect(deps.writeSoul).toHaveBeenCalledWith('New instructions', 's1')
   })
 
   it('does not replace text changed during an instruction read', async () => {
@@ -229,5 +238,38 @@ describe('profile editor', () => {
     editor.changeMemoryMode('ask')
     expect(editor.memoryMode.value).toBe('ask')
     expect(deps.updateProfile).toHaveBeenCalledWith({ memoryMode: 'ask' })
+  })
+
+  it('stops at a SOUL.md changed elsewhere and saves mine over it', async () => {
+    const { deps, editor } = setup()
+    await editor.load(profile)
+    deps.writeSoul.mockRejectedValueOnce(
+      new IpcCallError('changed', 'staleRevision')
+    )
+    editor.soulPrompt.value = 'Mine'
+    editor.changeSoul()
+    await vi.runAllTimersAsync()
+    expect(editor.hasConflict.value).toBe(true)
+    expect(deps.reportError).not.toHaveBeenCalled()
+
+    await editor.resolveConflict(true)
+    expect(deps.writeSoul).toHaveBeenLastCalledWith('Mine', 's1')
+    expect(editor.hasConflict.value).toBe(false)
+  })
+
+  it('rereads a SOUL.md changed elsewhere', async () => {
+    let content = 'Be brief'
+    const { deps, editor } = setup({ readSoul: async () => content })
+    await editor.load(profile)
+    deps.writeSoul.mockRejectedValueOnce(
+      new IpcCallError('changed', 'staleRevision')
+    )
+    editor.soulPrompt.value = 'Mine'
+    editor.changeSoul()
+    await vi.runAllTimersAsync()
+    content = 'Remote'
+    await editor.resolveConflict(false)
+    expect(editor.soulPrompt.value).toBe('Remote')
+    expect(editor.hasConflict.value).toBe(false)
   })
 })

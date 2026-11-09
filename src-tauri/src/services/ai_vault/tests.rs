@@ -33,6 +33,15 @@ fn profile(id: &str, created_at: u64) -> AiProfile {
         memory_mode: ProfileMemoryMode::Auto,
         created_at,
         updated_at: created_at,
+        revision: None,
+    }
+}
+
+/// The profile without the revision it was read with.
+fn without_revision(profile: AiProfile) -> AiProfile {
+    AiProfile {
+        revision: None,
+        ..profile
     }
 }
 
@@ -45,52 +54,9 @@ fn project(id: &str, created_at: u64) -> AiProject {
         target_path: None,
         created_at,
         updated_at: created_at,
+        revision: None,
+        is_inside_synced_folder: None,
     }
-}
-
-#[test]
-fn the_default_vault_is_used_when_no_path_is_set_and_gets_a_marker() {
-    let test_dir = TestDir::new("ai_vault_fallback");
-    let fallback_path = test_dir.join("default-ai-vault");
-    for configured in [None, Some(""), Some("   ")] {
-        let vault = open_vault(configured, None, || Ok(fallback_path.clone())).unwrap();
-        assert_eq!(vault.root, fallback_path);
-    }
-    assert!(fallback_path.join(marker::VAULT_MARKER_FILE).is_file());
-}
-
-#[test]
-fn a_relative_or_unusable_path_is_an_error_instead_of_the_default_vault() {
-    let test_dir = TestDir::new("ai_vault_unusable");
-    let blocker = test_dir.join("file");
-    std::fs::write(&blocker, "not a folder").unwrap();
-    let fallback_path = test_dir.join("default-ai-vault");
-    for configured in [
-        String::from("relative/path/to/vault"),
-        blocker.join("vault").to_string_lossy().into_owned(),
-    ] {
-        assert!(open_vault(Some(&configured), None, || Ok(fallback_path.clone())).is_err());
-    }
-    assert!(!fallback_path.exists());
-}
-
-#[test]
-fn a_chosen_vault_that_is_not_there_is_not_connected_and_not_made() {
-    let test_dir = TestDir::new("ai_vault_custom");
-    let custom_vault = test_dir.join("my-custom-vault");
-    let fallback_path = test_dir.join("default-ai-vault");
-    let result = open_vault(Some(custom_vault.to_str().unwrap()), None, || {
-        Ok(fallback_path.clone())
-    });
-    assert!(matches!(result, Err(AppError::VaultUnavailable(_))));
-    assert!(!custom_vault.exists());
-    std::fs::create_dir_all(&custom_vault).unwrap();
-    marker::ensure_marker(&custom_vault).unwrap();
-    let vault = open_vault(Some(custom_vault.to_str().unwrap()), None, || {
-        Ok(fallback_path.clone())
-    })
-    .unwrap();
-    assert_eq!(vault.root, custom_vault);
 }
 
 #[cfg(unix)]
@@ -139,7 +105,11 @@ fn a_created_profile_has_its_folders_and_soul() {
         "# Writer\n"
     );
     assert_eq!(
-        list_profiles(&vault_root).unwrap(),
+        list_profiles(&vault_root)
+            .unwrap()
+            .into_iter()
+            .map(without_revision)
+            .collect::<Vec<_>>(),
         vec![profile("writer", 1000)]
     );
 }
@@ -165,6 +135,115 @@ fn creating_never_overwrites_an_existing_profile() {
 }
 
 #[test]
+fn creating_never_writes_into_a_folder_of_the_same_id() {
+    let test_dir = TestDir::new("ai_vault_profile_folder_taken");
+    let vault_root = test_dir.join("vault");
+    // a folder a sync is still bringing: no profile.json yet
+    fs::create_dir_all(vault_root.join("profiles/profile-1a2b3c4d/chats")).unwrap();
+    assert!(matches!(
+        create_profile(&vault_root, profile("profile-1a2b3c4d", 1000), ""),
+        Err(AppError::AlreadyExists(_))
+    ));
+    assert!(!vault_root
+        .join("profiles/profile-1a2b3c4d/profile.json")
+        .exists());
+
+    fs::create_dir_all(vault_root.join("projects/project-1a2b3c4d")).unwrap();
+    assert!(matches!(
+        create_project(&vault_root, &paths(), project("project-1a2b3c4d", 1000)),
+        Err(AppError::AlreadyExists(_))
+    ));
+    // ids of any form are still read and used
+    create_profile(&vault_root, profile("assistant", 1000), "").unwrap();
+    assert_eq!(
+        get_profile(&vault_root, "assistant").unwrap().id,
+        "assistant"
+    );
+}
+
+#[test]
+fn a_save_over_an_outside_edit_is_refused() {
+    let test_dir = TestDir::new("ai_vault_profile_revision");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("writer", 1000), "soul").unwrap();
+    let read = get_profile(&vault_root, "writer").unwrap();
+    let revision = read.revision.clone().unwrap();
+    assert_eq!(
+        list_profiles(&vault_root).unwrap()[0].revision.as_deref(),
+        Some(revision.as_str())
+    );
+
+    // no edit meanwhile: the save passes and returns the next revision
+    let mut edited = read.clone();
+    edited.name = "First".into();
+    let next = save_profile(&vault_root, edited.clone(), Some(&revision)).unwrap();
+    assert_eq!(
+        get_profile(&vault_root, "writer").unwrap().revision,
+        Some(next.clone())
+    );
+    // the revision is not stored in the file
+    let raw = fs::read_to_string(vault_root.join("profiles/writer/profile.json")).unwrap();
+    assert!(!raw.contains("revision"));
+    // a second save from the same form, with the returned revision
+    edited.name = "Second".into();
+    let next = save_profile(&vault_root, edited.clone(), Some(&next)).unwrap();
+
+    // another device changes the file
+    let path = vault_root.join("profiles/writer/profile.json");
+    let outside = fs::read_to_string(&path)
+        .unwrap()
+        .replace("Second", "Remote");
+    fs::write(&path, &outside).unwrap();
+    edited.name = "Mine".into();
+    assert!(matches!(
+        save_profile(&vault_root, edited.clone(), Some(&next)),
+        Err(AppError::StaleRevision(_))
+    ));
+    assert_eq!(fs::read_to_string(&path).unwrap(), outside);
+    // without a revision, e.g. an internal write, there is no check
+    save_profile(&vault_root, edited, None).unwrap();
+}
+
+#[test]
+fn the_soul_and_the_project_check_their_revision() {
+    let test_dir = TestDir::new("ai_vault_soul_revision");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("writer", 1000), "soul").unwrap();
+    let soul = read_profile_soul_revision(&vault_root, "writer").unwrap();
+    assert_eq!(soul.content, "soul");
+    fs::write(vault_root.join("profiles/writer/SOUL.md"), "remote").unwrap();
+    assert!(matches!(
+        write_profile_soul(&vault_root, "writer", "mine", Some(&soul.revision)),
+        Err(AppError::StaleRevision(_))
+    ));
+    // a missing file has the empty revision
+    fs::remove_file(vault_root.join("profiles/writer/SOUL.md")).unwrap();
+    let missing = read_profile_soul_revision(&vault_root, "writer").unwrap();
+    assert_eq!(missing.revision, "");
+    let written = write_profile_soul(&vault_root, "writer", "new", Some("")).unwrap();
+    assert!(!written.is_empty());
+    assert!(matches!(
+        write_profile_soul(&vault_root, "writer", "again", Some("")),
+        Err(AppError::StaleRevision(_))
+    ));
+
+    create_project(&vault_root, &paths(), project("docs", 1000)).unwrap();
+    let listed = list_projects(&vault_root, &paths()).unwrap().remove(0);
+    let revision = listed.revision.clone().unwrap();
+    let mut renamed = listed.clone();
+    renamed.name = "Renamed".into();
+    let next = save_project(&vault_root, &paths(), renamed, Some(&revision)).unwrap();
+    assert!(matches!(
+        save_project(&vault_root, &paths(), listed, Some(&revision)),
+        Err(AppError::StaleRevision(_))
+    ));
+    assert_eq!(
+        list_projects(&vault_root, &paths()).unwrap()[0].revision,
+        Some(next)
+    );
+}
+
+#[test]
 fn saving_never_brings_back_a_deleted_profile() {
     let versions = MemoryReadVersions::default();
     let test_dir = TestDir::new("ai_vault_profile_resurrect");
@@ -172,8 +251,8 @@ fn saving_never_brings_back_a_deleted_profile() {
     create_profile(&vault_root, profile("writer", 1000), "").unwrap();
     delete_profile(&vault_root, &versions, "writer").unwrap();
 
-    assert!(save_profile(&vault_root, profile("writer", 1000)).is_err());
-    assert!(write_profile_soul(&vault_root, "writer", "soul").is_err());
+    assert!(save_profile(&vault_root, profile("writer", 1000), None).is_err());
+    assert!(write_profile_soul(&vault_root, "writer", "soul", None).is_err());
     assert!(profile_chats_dir(&vault_root, "writer").is_err());
     assert!(!vault_root.join("profiles").join("writer").exists());
 }
@@ -188,18 +267,21 @@ fn profile_settings_round_trip_and_are_validated() {
     updated.model_id = Some("model-a".into());
     updated.temperature = Some(0.4);
     updated.max_output_tokens = Some(2048);
-    save_profile(&vault_root, updated.clone()).unwrap();
-    assert_eq!(get_profile(&vault_root, "writer").unwrap(), updated);
+    save_profile(&vault_root, updated.clone(), None).unwrap();
+    assert_eq!(
+        without_revision(get_profile(&vault_root, "writer").unwrap()),
+        updated
+    );
 
     let mut hot = updated.clone();
     hot.temperature = Some(2.5);
-    assert!(save_profile(&vault_root, hot).is_err());
+    assert!(save_profile(&vault_root, hot, None).is_err());
     let mut empty = updated.clone();
     empty.max_output_tokens = Some(0);
-    assert!(save_profile(&vault_root, empty).is_err());
+    assert!(save_profile(&vault_root, empty, None).is_err());
     let mut unnamed = updated;
     unnamed.name = "  ".into();
-    assert!(save_profile(&vault_root, unnamed).is_err());
+    assert!(save_profile(&vault_root, unnamed, None).is_err());
 }
 
 #[test]
@@ -209,10 +291,13 @@ fn profile_temperature_accepts_the_contract_boundary_and_rejects_larger_values()
     create_profile(&vault_root, profile("writer", 1000), "").unwrap();
     let mut updated = profile("writer", 1000);
     updated.temperature = Some(operations::MAX_TEMPERATURE);
-    save_profile(&vault_root, updated.clone()).unwrap();
-    assert_eq!(get_profile(&vault_root, "writer").unwrap(), updated);
+    save_profile(&vault_root, updated.clone(), None).unwrap();
+    assert_eq!(
+        without_revision(get_profile(&vault_root, "writer").unwrap()),
+        updated
+    );
     updated.temperature = Some(operations::MAX_TEMPERATURE + 0.1);
-    assert!(save_profile(&vault_root, updated).is_err());
+    assert!(save_profile(&vault_root, updated, None).is_err());
 }
 
 #[test]
@@ -233,8 +318,11 @@ fn profile_tool_settings_round_trip_and_the_step_count_is_bounded() {
         )]),
         max_step_count: Some(8),
     });
-    save_profile(&vault_root, updated.clone()).unwrap();
-    assert_eq!(get_profile(&vault_root, "writer").unwrap(), updated);
+    save_profile(&vault_root, updated.clone(), None).unwrap();
+    assert_eq!(
+        without_revision(get_profile(&vault_root, "writer").unwrap()),
+        updated
+    );
     let stored: serde_json::Value = serde_json::from_str(
         &std::fs::read_to_string(vault_root.join("profiles/writer/profile.json")).unwrap(),
     )
@@ -245,13 +333,16 @@ fn profile_tool_settings_round_trip_and_the_step_count_is_bounded() {
     );
 
     updated.tools.as_mut().unwrap().max_step_count = Some(operations::MAX_TOOL_STEP_COUNT);
-    save_profile(&vault_root, updated.clone()).unwrap();
-    assert_eq!(get_profile(&vault_root, "writer").unwrap(), updated);
+    save_profile(&vault_root, updated.clone(), None).unwrap();
+    assert_eq!(
+        without_revision(get_profile(&vault_root, "writer").unwrap()),
+        updated
+    );
 
     for count in [0, operations::MAX_TOOL_STEP_COUNT + 1] {
         let mut invalid = updated.clone();
         invalid.tools.as_mut().unwrap().max_step_count = Some(count);
-        assert!(save_profile(&vault_root, invalid).is_err());
+        assert!(save_profile(&vault_root, invalid, None).is_err());
     }
 }
 
@@ -335,7 +426,7 @@ fn test_project_crud() {
     bad_ext.is_external = true;
     bad_ext.target_path = Some("non_existent_folder".to_string());
     assert!(create_project(&vault_root, &paths(), bad_ext).is_err());
-    assert!(save_project(&vault_root, &paths(), project("missing", 3000)).is_err());
+    assert!(save_project(&vault_root, &paths(), project("missing", 3000), None).is_err());
 
     // the folder is the device's own: the file holds the description only
     let file = std::fs::read_to_string(vault_root.join("projects/external/project.json")).unwrap();
@@ -377,7 +468,7 @@ fn an_external_project_has_its_folder_on_each_device() {
     // renaming it there needs no folder and keeps that of the first device
     let mut renamed = listed[0].clone();
     renamed.name = "Site".into();
-    save_project(&vault_root, &laptop_paths, renamed.clone()).unwrap();
+    save_project(&vault_root, &laptop_paths, renamed.clone(), None).unwrap();
     assert_eq!(
         list_projects(&vault_root, &paths()).unwrap()[0]
             .target_path
@@ -386,9 +477,9 @@ fn an_external_project_has_its_folder_on_each_device() {
     );
     // setting the folder there checks it
     renamed.target_path = Some("relative".into());
-    assert!(save_project(&vault_root, &laptop_paths, renamed.clone()).is_err());
+    assert!(save_project(&vault_root, &laptop_paths, renamed.clone(), None).is_err());
     renamed.target_path = Some(test_dir.to_str().unwrap().into());
-    save_project(&vault_root, &laptop_paths, renamed).unwrap();
+    save_project(&vault_root, &laptop_paths, renamed, None).unwrap();
     assert_eq!(
         list_projects(&vault_root, &laptop_paths).unwrap()[0]
             .target_path
@@ -466,7 +557,7 @@ fn profile_folders_exist_only_for_existing_profiles_with_valid_ids() {
     }
     assert!(!vault_root.join("profiles/missing").exists());
     assert!(matches!(
-        write_profile_soul(&vault_root, "missing", "soul"),
+        write_profile_soul(&vault_root, "missing", "soul", None),
         Err(AppError::NotFound(_))
     ));
     for id in ["../escape", "a/b", ".", ""] {
@@ -580,7 +671,10 @@ fn reading_profile_does_not_recreate_missing_memory() {
     let memory_dir = vault_root.join("profiles/assistant/memory");
     fs::remove_dir_all(&memory_dir).unwrap();
 
-    assert_eq!(get_profile(&vault_root, "assistant").unwrap(), saved);
+    assert_eq!(
+        without_revision(get_profile(&vault_root, "assistant").unwrap()),
+        saved
+    );
     assert_eq!(
         profile_memory_dir(&vault_root, "assistant").unwrap(),
         memory_dir

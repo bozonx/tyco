@@ -1,40 +1,56 @@
 import { describe, expect, it } from 'vitest'
 
-import { createVaultId, slugifyVaultName } from './vault-id'
+import { IpcCallError } from '../ipc/ipc-model'
+import { createVaultId, createWithFreshId } from './vault-id'
+
+const suffixes = (...values: string[]) => {
+  let index = 0
+  return () => values[index++ % values.length]
+}
 
 describe('createVaultId', () => {
-  it('takes the id from a Latin name', () => {
-    expect(createVaultId('Code Reviewer!', 'profile', [])).toBe('code-reviewer')
+  it('is random and never made from the name', () => {
+    expect(createVaultId('profile', [])).toMatch(/^profile-[0-9a-f]{8}$/)
+    expect(createVaultId('project', [])).toMatch(/^project-[0-9a-f]{8}$/)
+    expect(createVaultId('profile', [])).not.toBe(createVaultId('profile', []))
   })
 
-  it('counts up past taken ids', () => {
+  it('skips taken ids', () => {
     expect(
-      createVaultId('Writer', 'profile', ['writer', 'writer-1'], () => 'x')
-    ).toBe('writer-2')
+      createVaultId(
+        'profile',
+        ['profile-aaaaaaaa'],
+        suffixes('aaaaaaaa', 'bbbbbbbb')
+      )
+    ).toBe('profile-bbbbbbbb')
   })
+})
 
-  it('spells other alphabets in Latin letters', () => {
-    expect(createVaultId('Технический писатель', 'profile', [])).toBe(
-      'tekhnicheskiy-pisatel'
+describe('createWithFreshId', () => {
+  it('tries another id when the folder turns out to be taken', async () => {
+    const tried: string[] = []
+    const id = await createWithFreshId(
+      'profile',
+      [],
+      async (candidate) => {
+        tried.push(candidate)
+        if (tried.length === 1) throw new IpcCallError('taken', 'alreadyExists')
+        return candidate
+      },
+      suffixes('aaaaaaaa', 'bbbbbbbb')
     )
-    expect(slugifyVaultName('Мой помощник №1')).toBe('moy-pomoshchnik-1')
-    expect(slugifyVaultName('Їжак і ґанок')).toBe('yizhak-i-ganok')
-    expect(slugifyVaultName('Çeviri Yardımcısı')).toBe('ceviri-yardimcisi')
-    expect(slugifyVaultName('Español: corrección')).toBe('espanol-correccion')
-    expect(slugifyVaultName('Straße')).toBe('strasse')
-    expect(slugifyVaultName('Βοηθός')).toBe('voithos')
-    expect(slugifyVaultName('თარჯიმანი')).toBe('tarjimani')
+    expect(tried).toEqual(['profile-aaaaaaaa', 'profile-bbbbbbbb'])
+    expect(id).toBe('profile-bbbbbbbb')
   })
 
-  it('gives a name with no Latin spelling a random id', () => {
-    expect(createVaultId('翻译助手', 'profile', [], () => 'a1b2c3d4')).toBe(
-      'profile-a1b2c3d4'
-    )
-  })
-
-  it('keeps a long name within the id limit', () => {
-    const id = createVaultId('a'.repeat(100), 'profile', [])
-    expect(id.length).toBeLessThanOrEqual(56)
-    expect(id).toMatch(/^[a-z0-9_-]+$/)
+  it('passes other failures on', async () => {
+    let calls = 0
+    await expect(
+      createWithFreshId('project', [], async () => {
+        calls++
+        throw new IpcCallError('no', 'invalidInput')
+      })
+    ).rejects.toThrow('no')
+    expect(calls).toBe(1)
   })
 })

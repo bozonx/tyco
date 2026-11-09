@@ -121,6 +121,11 @@ pub struct AiProfile {
     pub memory_mode: ProfileMemoryMode,
     pub created_at: u64,
     pub updated_at: u64,
+    /// The SHA-256 of the file as it was read, for a save to check that no
+    /// other device or editor changed it since; never stored in the file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub revision: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, ts_rs::TS)]
@@ -137,4 +142,22 @@ pub struct AiProject {
     pub target_path: Option<String>,
     pub created_at: u64,
     pub updated_at: u64,
+    /// The SHA-256 of the file as it was read, for a save to check that no
+    /// other device or editor changed it since; never stored in the file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub revision: Option<String>,
+    /// The folder of an external project lies inside the data folder or a
+    /// vault and is synced with it; never stored in the file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub is_inside_synced_folder: Option<bool>,
+}
+
+/// The root instruction of a profile with its revision, empty for no file.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfileSoul {
+    pub content: String,
+    pub revision: String,
 }

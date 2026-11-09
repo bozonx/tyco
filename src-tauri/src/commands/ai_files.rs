@@ -36,14 +36,18 @@ fn with_conversation_files<T>(
     };
     match profile_id {
         None => operation(&ConversationFiles::general(attachments)),
-        Some(profile_id) => ai_vault::with_projects(app, |dir, paths| {
-            operation(&ConversationFiles::load(
-                dir,
-                paths,
-                &profile_id,
-                attachments,
-            )?)
-        }),
+        // a profile reaches the projects and files of its own vault only
+        Some(profile_id) => {
+            let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
+            ai_vault::with_projects(app, vault_id, |dir, paths| {
+                operation(&ConversationFiles::load(
+                    dir,
+                    paths,
+                    profile_id,
+                    attachments,
+                )?)
+            })
+        }
     }
 }
 
@@ -119,8 +123,9 @@ pub async fn save_chat_file_to_workspace(
     run_blocking(move || {
         let scope = ChatScope::from_profile_id(Some(profile_id.clone()));
         let bytes = storage::read_chat_file(&app, &scope, &file_id)?;
-        ai_vault::with_projects(&app, |dir, _| {
-            ConversationFiles::workspace(dir, &profile_id)?.save_copy(&name, &bytes)
+        let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
+        ai_vault::with_vault(&app, vault_id, |dir| {
+            ConversationFiles::workspace(dir, profile_id)?.save_copy(&name, &bytes)
         })
     })
     .await?

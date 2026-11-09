@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { AiProfile } from '@tyco/shared'
 import { createAiProfilesModel } from './ai-profiles-model'
+import { IpcCallError } from '../ipc/ipc-model'
 
 describe('ai-profiles-model', () => {
   const mockProfile: AiProfile = {
@@ -17,10 +18,11 @@ describe('ai-profiles-model', () => {
     listProfiles: vi.fn().mockResolvedValue([mockProfile]),
     getProfile: vi.fn().mockResolvedValue(mockProfile),
     createProfile: vi.fn().mockResolvedValue(undefined),
-    saveProfile: vi.fn().mockResolvedValue(undefined),
+    saveProfile: vi.fn().mockResolvedValue('r2'),
     deleteProfile: vi.fn().mockResolvedValue(undefined),
-    readSoul: vi.fn().mockResolvedValue('# Writer Prompt'),
-    writeSoul: vi.fn().mockResolvedValue(undefined),
+    readSoul: vi
+      .fn()
+      .mockResolvedValue({ content: '# Writer Prompt', revision: 's1' }),
     now: vi.fn().mockReturnValue(2000),
     randomSuffix: () => 'abcd1234',
   })
@@ -37,7 +39,8 @@ describe('ai-profiles-model', () => {
     expect(deps.reportError).toHaveBeenCalledWith(error)
     await model.updateProfile('tech-writer', { name: 'Second' })
     expect(deps.saveProfile).toHaveBeenLastCalledWith(
-      expect.objectContaining({ name: 'Second' })
+      expect.objectContaining({ name: 'Second' }),
+      undefined
     )
   })
 
@@ -105,7 +108,7 @@ describe('ai-profiles-model', () => {
         })
     )
     const creating = model.createProfile({ name: 'New', soul: '' })
-    const created = { ...mockProfile, id: 'new', name: 'New' }
+    const created = { ...mockProfile, id: 'profile-abcd1234', name: 'New' }
     let resolveList!: (items: AiProfile[]) => void
     deps.listProfiles.mockImplementationOnce(
       () =>
@@ -119,7 +122,7 @@ describe('ai-profiles-model', () => {
     finishCreate()
     await creating
     expect(
-      model.profiles.value.filter((item) => item.id === 'new')
+      model.profiles.value.filter((item) => item.id === 'profile-abcd1234')
     ).toHaveLength(1)
   })
 
@@ -155,7 +158,7 @@ describe('ai-profiles-model', () => {
     })
 
     expect(created).toEqual({
-      id: 'code-reviewer',
+      id: 'profile-abcd1234',
       name: 'Code Reviewer',
       memoryMode: 'auto',
       projectPermissions: {},
@@ -166,27 +169,37 @@ describe('ai-profiles-model', () => {
     expect(model.profiles.value).toContainEqual(created)
   })
 
-  it('spells the folder of a profile named in another script', async () => {
+  it('gives two profiles of one name different folders', async () => {
     const deps = createDeps()
-    const model = createAiProfilesModel(deps)
+    let suffix = 0
+    const model = createAiProfilesModel({
+      ...deps,
+      randomSuffix: () => `0000000${++suffix}`,
+    })
 
-    const created = await model.createProfile({ name: 'Писатель', soul: '' })
-    expect(created.id).toBe('pisatel')
-
-    const chinese = await model.createProfile({ name: '作家', soul: '' })
-    expect(chinese.id).toBe('profile-abcd1234')
+    const first = await model.createProfile({ name: 'Assistant', soul: '' })
+    const second = await model.createProfile({ name: 'Assistant', soul: '' })
+    expect(first.id).toBe('profile-00000001')
+    expect(second.id).toBe('profile-00000002')
   })
 
-  it('takes the folder the user chose', async () => {
+  it('takes another id when the folder is there already', async () => {
     const deps = createDeps()
-    const model = createAiProfilesModel(deps)
-
-    const created = await model.createProfile({
-      name: 'Writer',
-      id: 'my-writer',
-      soul: '',
+    deps.createProfile.mockRejectedValueOnce(
+      new IpcCallError('Profile already exists', 'alreadyExists')
+    )
+    let suffix = 0
+    const model = createAiProfilesModel({
+      ...deps,
+      randomSuffix: () => `0000000${++suffix}`,
     })
-    expect(created.id).toBe('my-writer')
+
+    const created = await model.createProfile({ name: 'Writer', soul: '' })
+    expect(created.id).toBe('profile-00000002')
+    expect(deps.createProfile).toHaveBeenCalledTimes(2)
+    expect(model.profiles.value.map(({ id }) => id)).toEqual([
+      'profile-00000002',
+    ])
   })
 
   it('keeps a profile out of the state when it cannot be created', async () => {
@@ -209,11 +222,11 @@ describe('ai-profiles-model', () => {
     expect(model.getProfile('tech-writer')?.name).toBe('Senior')
     await saved
 
-    expect(deps.saveProfile).toHaveBeenCalledWith({
-      ...mockProfile,
-      name: 'Senior',
-      updatedAt: 2000,
-    })
+    expect(deps.saveProfile).toHaveBeenCalledWith(
+      { ...mockProfile, name: 'Senior', updatedAt: 2000 },
+      undefined
+    )
+    expect(model.getProfile('tech-writer')?.revision).toBe('r2')
   })
 
   it('stores quick changes one after another without losing any', async () => {
@@ -232,7 +245,8 @@ describe('ai-profiles-model', () => {
     await Promise.all([first, second])
 
     expect(deps.saveProfile).toHaveBeenLastCalledWith(
-      expect.objectContaining({ name: 'Senior', temperature: 0.3 })
+      expect.objectContaining({ name: 'Senior', temperature: 0.3 }),
+      undefined
     )
   })
 
@@ -266,7 +280,8 @@ describe('ai-profiles-model', () => {
     expect(model.getProfile('tech-writer')?.name).toBe('Saved edit')
     await model.updateProfile('tech-writer', { temperature: 0.7 })
     expect(deps.saveProfile).toHaveBeenLastCalledWith(
-      expect.objectContaining({ name: 'Saved edit', temperature: 0.7 })
+      expect.objectContaining({ name: 'Saved edit', temperature: 0.7 }),
+      'r2'
     )
   })
 
@@ -326,14 +341,16 @@ describe('ai-profiles-model', () => {
           'docs-proj': { read: 'allow', write: 'ask' },
           'new-proj': { read: 'allow', write: 'allow' },
         },
-      })
+      }),
+      undefined
     )
 
     await model.setProjectAccess('tech-writer', 'docs-proj', undefined)
     expect(deps.saveProfile).toHaveBeenLastCalledWith(
       expect.objectContaining({
         projectPermissions: { 'new-proj': { read: 'allow', write: 'allow' } },
-      })
+      }),
+      'r2'
     )
   })
 
@@ -350,7 +367,7 @@ describe('ai-profiles-model', () => {
 
     expect(deps.readSoul).toHaveBeenCalledWith('tech-writer')
     expect(copy).toEqual({
-      id: 'tech-writer-2',
+      id: 'profile-abcd1234',
       name: 'Tech Writer 2',
       memoryMode: 'auto',
       modelId: 'gpt-4o',
@@ -382,12 +399,72 @@ describe('ai-profiles-model', () => {
     expect(model.profiles.value).toEqual([])
   })
 
-  it('reads and writes the root instruction', async () => {
+  it('reads the root instruction', async () => {
     const deps = createDeps()
     const model = createAiProfilesModel(deps)
-
     expect(await model.readSoul('tech-writer')).toBe('# Writer Prompt')
-    await model.writeSoul('tech-writer', '# New')
-    expect(deps.writeSoul).toHaveBeenCalledWith('tech-writer', '# New')
+  })
+
+  it('saves with the revision it read and keeps the new one', async () => {
+    const deps = createDeps()
+    deps.saveProfile.mockResolvedValueOnce('r2').mockResolvedValueOnce('r3')
+    const model = createAiProfilesModel(deps)
+    model.profiles.value = [{ ...mockProfile, revision: 'r1' }]
+
+    await model.updateProfile('tech-writer', { name: 'First' })
+    await model.updateProfile('tech-writer', { name: 'Second' })
+    expect(deps.saveProfile.mock.calls.map(([, revision]) => revision)).toEqual(
+      ['r1', 'r2']
+    )
+    // the revision is never stored in the file
+    expect(deps.saveProfile.mock.calls[0]![0]).not.toHaveProperty('revision')
+    expect(model.getProfile('tech-writer')?.revision).toBe('r3')
+  })
+
+  it('keeps a profile changed elsewhere for the user to decide', async () => {
+    const deps = { ...createDeps(), reportError: vi.fn() }
+    deps.saveProfile.mockRejectedValueOnce(
+      new IpcCallError('changed', 'staleRevision')
+    )
+    const model = createAiProfilesModel(deps)
+    model.profiles.value = [{ ...mockProfile, revision: 'r1' }]
+
+    await expect(
+      model.updateProfile('tech-writer', { name: 'Mine' })
+    ).rejects.toThrow('changed')
+    expect(deps.reportError).not.toHaveBeenCalled()
+    expect(model.conflicts.value['tech-writer']?.name).toBe('Mine')
+    // a reload of the list keeps what was not stored
+    await model.loadProfiles()
+    expect(model.getProfile('tech-writer')?.name).toBe('Mine')
+
+    // save mine: over the revision on disk now
+    deps.getProfile.mockResolvedValueOnce({
+      ...mockProfile,
+      name: 'Remote',
+      revision: 'remote',
+    })
+    await model.resolveConflict('tech-writer', true)
+    expect(deps.saveProfile).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: 'Mine' }),
+      'remote'
+    )
+    expect(model.conflicts.value).toEqual({})
+  })
+
+  it('rereads a profile changed elsewhere', async () => {
+    const deps = createDeps()
+    deps.saveProfile.mockRejectedValueOnce(
+      new IpcCallError('changed', 'staleRevision')
+    )
+    const model = createAiProfilesModel(deps)
+    model.profiles.value = [{ ...mockProfile, revision: 'r1' }]
+    await model.updateProfile('tech-writer', { name: 'Mine' }).catch(() => {})
+
+    const remote = { ...mockProfile, name: 'Remote', revision: 'remote' }
+    deps.getProfile.mockResolvedValueOnce(remote)
+    await model.resolveConflict('tech-writer', false)
+    expect(model.getProfile('tech-writer')).toEqual(remote)
+    expect(deps.saveProfile).toHaveBeenCalledOnce()
   })
 })

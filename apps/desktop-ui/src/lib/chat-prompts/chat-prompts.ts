@@ -8,6 +8,7 @@ import type {
 } from '@tyco/shared'
 
 import { nameFromPrompt, nextNumberedId } from '../shortcut-slots/slot-prompt'
+import { configProfileKey } from '../ai-profiles/profile-ref'
 
 const ID_PREFIX = 'chat-prompt'
 
@@ -40,6 +41,11 @@ export interface DescribeChatPromptsOptions {
    * missing its profile
    */
   areProfilesLoaded: boolean
+  /**
+   * The attached vaults that are there; the prompts of a profile of another one
+   * are hidden until it is back. Unset: every vault counts
+   */
+  connectedVaultIds?: readonly string[]
 }
 
 /** The label of a prompt: its name, or the start of its text */
@@ -53,6 +59,7 @@ export function describeChatPrompt(
   options: DescribeChatPromptsOptions
 ): ChatPromptView {
   const label = chatPromptLabel(prompt)
+  const profileKey = configProfileKey(prompt)
   if (!prompt.profileId) {
     return {
       prompt,
@@ -62,14 +69,14 @@ export function describeChatPrompt(
       runProfileId: null,
     }
   }
-  const profile = options.profiles.find((item) => item.id === prompt.profileId)
+  const profile = options.profiles.find((item) => item.id === profileKey)
   const isProfileMissing = options.areProfilesLoaded && !profile
   return {
     prompt,
     label,
     profileName: profile?.name ?? '',
     isProfileMissing,
-    runProfileId: isProfileMissing ? null : prompt.profileId,
+    runProfileId: isProfileMissing ? null : profileKey,
   }
 }
 
@@ -78,8 +85,13 @@ export function describeChatPrompts(
   items: readonly ChatPromptConfig[] | undefined,
   options: DescribeChatPromptsOptions
 ): ChatPromptView[] {
+  const connected = options.connectedVaultIds
   return (items ?? [])
     .filter((prompt) => prompt.rule.trim())
+    .filter(
+      (prompt) =>
+        !connected || !prompt.vaultId || connected.includes(prompt.vaultId)
+    )
     .map((prompt) => describeChatPrompt(prompt, options))
 }
 
@@ -96,7 +108,7 @@ export function chatPromptsOfProfile(
     (view) =>
       !view.prompt.profileId ||
       view.isProfileMissing ||
-      view.prompt.profileId === (profileId ?? '')
+      configProfileKey(view.prompt) === (profileId ?? '')
   )
 }
 
@@ -190,15 +202,11 @@ export function chatPromptProfileOptions(
     { id: '', name: labels.everyProfile },
     ...options.profiles.map(({ id, name }) => ({ id, name })),
   ]
-  if (
-    prompt.profileId &&
-    !result.some((item) => item.id === prompt.profileId)
-  ) {
+  const profileKey = configProfileKey(prompt)
+  if (prompt.profileId && !result.some((item) => item.id === profileKey)) {
     result.push({
-      id: prompt.profileId,
-      name: options.areProfilesLoaded
-        ? labels.missingProfile
-        : prompt.profileId,
+      id: profileKey,
+      name: options.areProfilesLoaded ? labels.missingProfile : profileKey,
     })
   }
   return result

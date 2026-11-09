@@ -6,6 +6,7 @@ import type {
 
 import { commandTool } from '../commands/command-runtime'
 import type { ToolLookup } from '../tools/tool-types'
+import { configProfileKey } from '../ai-profiles/profile-ref'
 
 /**
  * A group of the main action picker, by what the action does for the user
@@ -64,8 +65,10 @@ export function mainActionOptionId(
 ): string {
   if (!item) return ''
   if (item.type === 'actionPage') return `actionPage:${item.pageIndex}`
-  if (item.type === 'profileChat') return `profileChat:${item.profileId}`
-  if (item.type === 'profile') return `profile:${item.profileId}:${item.action}`
+  if (item.type === 'profileChat')
+    return `profileChat:${configProfileKey(item)}`
+  if (item.type === 'profile')
+    return `profile:${configProfileKey(item)}:${item.action}`
   if (item.type === 'command') return `command:${item.commandId}`
   if (item.type === 'transformation')
     return `transformation:${item.transformationId}`

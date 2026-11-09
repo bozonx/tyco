@@ -25,6 +25,8 @@
         />
       </FieldRow>
 
+      <slot />
+
       <div class="create-entity-modal-actions">
         <Button
           size="sm"

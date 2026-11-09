@@ -58,6 +58,14 @@ pub enum AppError {
     /// activation a newer one replaced.
     #[error("{0}")]
     Stale(String),
+    /// What the request would create is there already, e.g. a folder of
+    /// that id: pick another one.
+    #[error("{0}")]
+    AlreadyExists(String),
+    /// The file changed since the request read it, e.g. on another device:
+    /// nothing was written.
+    #[error("{0}")]
+    StaleRevision(String),
     #[error(transparent)]
     Tauri(#[from] tauri::Error),
     #[error(transparent)]
@@ -125,6 +133,10 @@ error_codes! {
     ProjectUnavailable,
     /// The request was made for a state that has changed since.
     Stale,
+    /// What the request would create is there already.
+    AlreadyExists,
+    /// The file changed since the request read it; nothing was written.
+    StaleRevision,
     /// The runtime of the app failed.
     RuntimeError,
     /// Reading or writing a file failed.
@@ -152,6 +164,8 @@ impl AppError {
             Self::VaultUnavailable(_) => ErrorCode::VaultUnavailable,
             Self::ProjectUnavailable(_) => ErrorCode::ProjectUnavailable,
             Self::Stale(_) => ErrorCode::Stale,
+            Self::AlreadyExists(_) => ErrorCode::AlreadyExists,
+            Self::StaleRevision(_) => ErrorCode::StaleRevision,
             Self::Tauri(_) => ErrorCode::RuntimeError,
             Self::Io(_) => ErrorCode::IoError,
         }

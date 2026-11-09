@@ -7,7 +7,10 @@ use serde_json::{Map, Value};
 use tauri::{Emitter, EventTarget, Runtime};
 use ts_rs::TS;
 
-use crate::models::{ChatsChangedEvent, DesktopSnapshot, OpenMainChatEvent, SettingsConflictEvent};
+use crate::models::{
+    ChatsChangedEvent, DesktopSnapshot, OpenMainChatEvent, SettingsConflictEvent,
+    StorageChangedEvent,
+};
 use crate::services::selection_replace::SelectionRunEvent;
 use crate::services::voice::VoiceAudioLevelPayload;
 
@@ -63,7 +66,7 @@ desktop_events! {
     QuitRequested = "app://quit-requested" => u64;
     QuitCancelled = "app://quit-cancelled" => ();
     /// Relative paths changed by synchronization, or local vault writes.
-    StorageChanged = "app://storage-changed" => Vec<String>;
+    StorageChanged = "app://storage-changed" => StorageChangedEvent;
     PluginsChanged = "app://plugins-changed" => ();
     StateChanged = "app://state-changed" => DesktopSnapshot;
     HotkeysChanged = "app://hotkeys-changed" => ();

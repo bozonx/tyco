@@ -398,7 +398,7 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "isSentImmediately": false, "items": [] },
-      "aiVault": { "path": "" },
+      "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
       "customActionSlots": [
@@ -805,7 +805,7 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "isSentImmediately": false, "items": [] },
-      "aiVault": { "path": "" },
+      "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
       "customActionSlots": [
@@ -1205,7 +1205,7 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "isSentImmediately": false, "items": [] },
-      "aiVault": { "path": "" },
+      "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
       "customActionSlots": [
@@ -1615,7 +1615,7 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "isSentImmediately": false, "items": [] },
-      "aiVault": { "path": "" },
+      "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
       "customActionSlots": [
@@ -2003,7 +2003,7 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "isSentImmediately": false, "items": [] },
-      "aiVault": { "path": "" },
+      "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
       "customActionSlots": [
@@ -2403,7 +2403,7 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "isSentImmediately": false, "items": [] },
-      "aiVault": { "path": "" },
+      "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
       "customActionSlots": [
@@ -2805,7 +2805,7 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "isSentImmediately": false, "items": [] },
-      "aiVault": { "path": "" },
+      "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
       "customActionSlots": [
@@ -2979,7 +2979,7 @@
         "isVoiceInputHoldEnabled": false,
         "isVoiceCommandsHoldEnabled": false
       },
-      "aiVault": { "path": "" },
+      "aiVaults": { "attached": [] },
       "transformations": {
         "items": [
           { "id": "a", "name": "A", "rule": "x" },
@@ -3189,7 +3189,7 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
-      "aiVault": { "path": "" },
+      "aiVaults": { "attached": [] },
       "transformations": {
         "items": [{ "id": "a", "name": "A", "rule": "x" }],
         "slots": { "q": "a" }
@@ -3397,7 +3397,7 @@
         "isVoiceInputHoldEnabled": false,
         "isVoiceCommandsHoldEnabled": false
       },
-      "aiVault": { "path": "" },
+      "aiVaults": { "attached": [] },
       "transformations": {
         "items": [{ "id": "a", "name": "A", "rule": "x" }],
         "slots": { "q": "a" }
@@ -3610,7 +3610,7 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
-      "aiVault": { "path": "" },
+      "aiVaults": { "attached": [] },
       "transformations": {
         "items": [{ "id": "a", "name": "A", "rule": "x" }],
         "slots": { "q": "a" }
@@ -4135,7 +4135,7 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "isSentImmediately": false, "items": [] },
-      "aiVault": { "path": "" },
+      "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
       "customActionSlots": [
@@ -4655,7 +4655,7 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "isSentImmediately": false, "items": [] },
-      "aiVault": { "path": "" },
+      "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "favorites": { "items": [] },
       "customActionSlots": [

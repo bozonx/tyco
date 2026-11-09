@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { AiProject } from '@tyco/shared'
+import { IpcCallError } from '../ipc/ipc-model'
 import { createAiProjectsModel } from './ai-projects-model'
 
 describe('ai-projects-model', () => {
@@ -16,10 +17,11 @@ describe('ai-projects-model', () => {
   const createDeps = () => ({
     listProjects: vi.fn().mockResolvedValue([mockProject]),
     createProject: vi.fn().mockResolvedValue(undefined),
-    saveProject: vi.fn().mockResolvedValue(undefined),
+    saveProject: vi.fn().mockResolvedValue('r2'),
     deleteProject: vi.fn().mockResolvedValue(undefined),
     pickExternalFolder: vi.fn().mockResolvedValue('/path/to/folder'),
     now: vi.fn().mockReturnValue(2000),
+    randomSuffix: () => 'abcd1234',
   })
 
   it('ignores older list responses and invalidated loads', async () => {
@@ -86,7 +88,7 @@ describe('ai-projects-model', () => {
         })
     )
     const creating = model.createProject({ name: 'New', isExternal: false })
-    const created = { ...mockProject, id: 'new', name: 'New' }
+    const created = { ...mockProject, id: 'project-abcd1234', name: 'New' }
     let resolveList!: (items: AiProject[]) => void
     deps.listProjects.mockImplementationOnce(
       () =>
@@ -100,7 +102,7 @@ describe('ai-projects-model', () => {
     finishCreate()
     await creating
     expect(
-      model.projects.value.filter((item) => item.id === 'new')
+      model.projects.value.filter((item) => item.id === 'project-abcd1234')
     ).toHaveLength(1)
   })
 
@@ -134,23 +136,29 @@ describe('ai-projects-model', () => {
       isExternal: false,
     })
 
-    expect(created.id).toBe('backend-api')
+    expect(created.id).toBe('project-abcd1234')
     expect(created.isExternal).toBe(false)
     expect(created.targetPath).toBeUndefined()
     expect(deps.createProject).toHaveBeenCalledWith(created)
     expect(model.projects.value).toContainEqual(created)
   })
 
-  it('takes the folder the user chose', async () => {
+  it('takes another id when the folder is there already', async () => {
     const deps = createDeps()
-    const model = createAiProjectsModel(deps)
+    deps.createProject.mockRejectedValueOnce(
+      new IpcCallError('Project already exists', 'alreadyExists')
+    )
+    let suffix = 0
+    const model = createAiProjectsModel({
+      ...deps,
+      randomSuffix: () => `0000000${++suffix}`,
+    })
 
     const created = await model.createProject({
       name: 'Backend API',
-      id: 'api',
       isExternal: false,
     })
-    expect(created.id).toBe('api')
+    expect(created.id).toBe('project-00000002')
   })
 
   it('creates an external project with target path', async () => {
@@ -182,8 +190,33 @@ describe('ai-projects-model', () => {
       expect.objectContaining({
         name: 'Updated Documentation App',
         updatedAt: 2000,
-      })
+      }),
+      undefined
     )
+    expect(model.getProject('docs-app')?.revision).toBe('r2')
+  })
+
+  it('keeps a project changed elsewhere until the user decides', async () => {
+    const deps = createDeps()
+    deps.saveProject.mockRejectedValueOnce(
+      new IpcCallError('changed', 'staleRevision')
+    )
+    const model = createAiProjectsModel(deps)
+    model.projects.value = [{ ...mockProject, revision: 'r1' }]
+    await expect(
+      model.saveProject({ ...mockProject, revision: 'r1', name: 'Mine' })
+    ).rejects.toThrow('changed')
+    expect(model.conflicts.value['docs-app']?.name).toBe('Mine')
+
+    deps.listProjects.mockResolvedValueOnce([
+      { ...mockProject, name: 'Remote', revision: 'remote' },
+    ])
+    await model.resolveConflict('docs-app', true)
+    expect(deps.saveProject).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: 'Mine' }),
+      'remote'
+    )
+    expect(model.conflicts.value).toEqual({})
   })
 
   it('deletes a project and removes it from state', async () => {

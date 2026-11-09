@@ -397,7 +397,7 @@ const CONFIG_SECTION_TABS: Record<string, SettingsSectionId> = {
   styling: 'styling',
   chatPrompts: 'chat-prompts',
   favorites: 'favorites',
-  aiVault: 'ai-profiles',
+  aiVaults: 'ai-profiles',
   aiProfiles: 'ai-profiles',
   plugins: 'plugins',
   chat: 'chat',

@@ -1,21 +1,29 @@
 import { ref, type Ref } from 'vue'
-import type { AiProfile } from '@tyco/shared'
+import type { AiProfile, ProfileSoul } from '@tyco/shared'
 
+import { isIpcErrorCode } from '../ipc/ipc-model'
 import { type ProjectAccessLevel, withProjectAccess } from './project-access'
-import { createVaultId } from './vault-id'
+import { vaultOfRef } from './profile-ref'
+import { createWithFreshId } from './vault-id'
 
 export interface AiProfilesModelDependencies {
   listProfiles: () => Promise<AiProfile[]>
   /** The profile as it is on disk now */
   getProfile: (id: string) => Promise<AiProfile>
   createProfile: (profile: AiProfile, soul: string) => Promise<void>
-  saveProfile: (profile: AiProfile) => Promise<void>
+  /**
+   * Stores the profile over the file of `expectedRevision`, failing with
+   * `staleRevision` when it changed meanwhile; returns the new revision
+   */
+  saveProfile: (
+    profile: AiProfile,
+    expectedRevision: string | undefined
+  ) => Promise<string>
   deleteProfile: (id: string) => Promise<void>
-  readSoul: (id: string) => Promise<string>
-  writeSoul: (id: string, content: string) => Promise<void>
+  readSoul: (id: string) => Promise<ProfileSoul>
   reportError?: (error: unknown) => void
   now?: () => number
-  /** A random suffix for an id the name gives none for */
+  /** The random part of the id of a new profile */
   randomSuffix?: () => string
 }
 
@@ -36,8 +44,8 @@ export type AiProfilePatch = Partial<
 
 export interface CreateProfileData {
   name: string
-  /** The folder; one is made from the name when unset */
-  id?: string
+  /** The vault the profile goes to; the main one when unset */
+  vaultId?: string
   /** The root instruction the profile starts with */
   soul: string
   /** Settings the profile starts with instead of the defaults */
@@ -46,6 +54,11 @@ export interface CreateProfileData {
 
 export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
   const profiles: Ref<AiProfile[]> = ref([])
+  /**
+   * Profiles whose save found the file changed on another device or outside
+   * TyCo, with the version that was not stored
+   */
+  const conflicts: Ref<Record<string, AiProfile>> = ref({})
   const now = deps.now ?? (() => Date.now())
   /** Writes of each profile, one after another, so the last change wins */
   const pendingSaves = new Map<string, Promise<void>>()
@@ -76,7 +89,9 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
       !pendingSaves.size &&
       isCurrent()
     )
-      profiles.value = loaded
+      profiles.value = loaded.map(
+        (profile) => conflicts.value[profile.id] ?? profile
+      )
   }
 
   const getProfile = (id: string): AiProfile | undefined => {
@@ -91,29 +106,30 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
 
   const createProfile = async (data: CreateProfileData): Promise<AiProfile> => {
     const timestamp = now()
-    const newProfile: AiProfile = {
-      id:
-        data.id ||
-        createVaultId(
-          data.name,
-          'profile',
-          profiles.value.map((p) => p.id),
-          deps.randomSuffix
-        ),
-      name: data.name.trim(),
-      memoryMode: 'auto',
-      projectPermissions: {},
-      // a plain copy: the source may be another profile's reactive state
-      ...(data.settings
-        ? (JSON.parse(JSON.stringify(data.settings)) as AiProfilePatch)
-        : {}),
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    }
-
-    await persistChange(() => deps.createProfile(newProfile, data.soul))
-    profiles.value = [...profiles.value, newProfile]
-    return newProfile
+    const created = await createWithFreshId(
+      'profile',
+      profiles.value.map((p) => p.id),
+      async (id) => {
+        const newProfile: AiProfile = {
+          id,
+          name: data.name.trim(),
+          memoryMode: 'auto',
+          projectPermissions: {},
+          // a plain copy: the source may be another profile's reactive state
+          ...(data.settings
+            ? (JSON.parse(JSON.stringify(data.settings)) as AiProfilePatch)
+            : {}),
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        }
+        await persistChange(() => deps.createProfile(newProfile, data.soul))
+        return newProfile
+      },
+      deps.randomSuffix,
+      data.vaultId
+    )
+    profiles.value = [...profiles.value, created]
+    return created
   }
 
   /**
@@ -131,7 +147,17 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
       .then(async () => {
         const latest = getProfile(id)
         try {
-          if (latest) await deps.saveProfile(latest)
+          if (!latest) return
+          const { revision: expected, ...stored } = latest
+          try {
+            const revision = await deps.saveProfile(stored, expected)
+            const saved = getProfile(id)
+            if (saved) replace({ ...saved, revision })
+          } catch (error) {
+            if (isIpcErrorCode(error, 'staleRevision'))
+              conflicts.value = { ...conflicts.value, [id]: latest }
+            throw error
+          }
         } finally {
           ++loadRequest
         }
@@ -142,7 +168,8 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
     }
     void save.then(cleanup, (error: unknown) => {
       cleanup()
-      deps.reportError?.(error)
+      // a conflict is shown with its own choice, not as a failure
+      if (!isIpcErrorCode(error, 'staleRevision')) deps.reportError?.(error)
     })
     return save
   }
@@ -179,11 +206,13 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
   ): Promise<AiProfile> => {
     const source = getProfile(id)
     if (!source) throw new Error(`Profile not found: ${id}`)
-    const soul = await deps.readSoul(id)
+    const { content: soul } = await deps.readSoul(id)
     const { modelId, quickRequestModelId, temperature, maxOutputTokens } =
       source
     return createProfile({
       name,
+      // a copy stays in the vault of the original
+      vaultId: vaultOfRef(id),
       soul,
       settings: {
         modelId,
@@ -219,9 +248,35 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
     })
   }
 
-  const readSoul = (id: string): Promise<string> => deps.readSoul(id)
-  const writeSoul = (id: string, content: string): Promise<void> =>
-    deps.writeSoul(id, content)
+  const forgetConflict = (id: string) => {
+    const { [id]: _resolved, ...rest } = conflicts.value
+    conflicts.value = rest
+  }
+
+  /**
+   * Ends a conflict of `id`: takes the profile on disk, or stores the version
+   * of this window over it
+   */
+  const resolveConflict = async (
+    id: string,
+    keepMine: boolean
+  ): Promise<void> => {
+    const mine = conflicts.value[id]
+    if (!mine) return
+    await pendingSaves.get(id)?.catch(() => {})
+    const stored = await deps.getProfile(id)
+    forgetConflict(id)
+    ++loadRequest
+    if (!keepMine) {
+      replace(stored)
+      return
+    }
+    replace({ ...(getProfile(id) ?? mine), revision: stored.revision })
+    await updateProfile(id, {})
+  }
+
+  const readSoul = async (id: string): Promise<string> =>
+    (await deps.readSoul(id)).content
 
   return {
     profiles,
@@ -234,6 +289,7 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
     deleteProfile,
     setProjectAccess,
     readSoul,
-    writeSoul,
+    conflicts,
+    resolveConflict,
   }
 }

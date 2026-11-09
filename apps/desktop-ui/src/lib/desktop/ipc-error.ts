@@ -23,6 +23,8 @@ export const DESKTOP_ERROR_KEYS: Readonly<Record<DesktopErrorCode, string>> = {
   vaultUnavailable: 'desktopErrors.vaultUnavailable',
   projectUnavailable: 'desktopErrors.projectUnavailable',
   stale: 'desktopErrors.stale',
+  alreadyExists: 'desktopErrors.alreadyExists',
+  staleRevision: 'desktopErrors.staleRevision',
   runtimeError: 'desktopErrors.runtimeError',
   ioError: 'desktopErrors.ioError',
   invalidData: 'desktopErrors.invalidData',

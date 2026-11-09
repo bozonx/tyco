@@ -42,8 +42,17 @@ function createStore() {
     projects: [] as Array<Record<string, unknown>>,
     vaultPath: '/vault',
     vaultError: '',
-    isVaultNotConnected: false,
-    relocateVault: vi.fn(async () => {}),
+    vaults: [
+      {
+        vaultId: '',
+        name: '',
+        path: '/vault',
+        isMain: true,
+        status: 'connected',
+        isWritableByOthers: false,
+      },
+    ],
+    connectedVaultIds: [] as string[],
     setProjectFolder: vi.fn(async () => true),
     loadAll: vi.fn(async () => {}),
     openVaultDir: vi.fn(async () => {}),
@@ -86,11 +95,7 @@ describe('SettingsAiProfilesTab.vue', () => {
       global: {
         provide: context.provide,
         stubs: {
-          SettingsVaultLocationModal: {
-            name: 'SettingsVaultLocationModal',
-            props: ['open', 'currentPath', 'isCustom'],
-            template: '<div />',
-          },
+          SettingsAiVaultsSection: true,
           SettingsCreateEntityModal: {
             name: 'SettingsCreateEntityModal',
             props: ['open', 'title', 'label', 'confirmText', 'isSubmitting'],
@@ -168,6 +173,7 @@ describe('SettingsAiProfilesTab.vue', () => {
 
     expect(store.createProfile).toHaveBeenCalledWith({
       name: 'New Writer',
+      vaultId: '',
       soul: expect.any(String),
       settings: {},
     })
@@ -191,6 +197,7 @@ describe('SettingsAiProfilesTab.vue', () => {
 
     expect(store.createProject).toHaveBeenCalledWith({
       name: 'New Workspace',
+      vaultId: '',
       isExternal: false,
     })
     expect(context.navigate).toHaveBeenCalledWith('ai-project:created-project')
@@ -215,19 +222,6 @@ describe('SettingsAiProfilesTab.vue', () => {
       [new Error('Profile creation failed')],
     ])
     expect(profileModal.props('open')).toBe(true)
-  })
-
-  it('offers a folder or the default one when the vault is not connected', async () => {
-    store.isVaultNotConnected = true
-    const wrapper = mountTab()
-    const notice = wrapper.get('[data-testid="vault-not-connected"]')
-    expect(notice.text()).toContain('settings.aiVaultNotConnected')
-    const modal = wrapper.findComponent({ name: 'SettingsVaultLocationModal' })
-    await button(wrapper, 'settings.selectFolder').trigger('click')
-    expect(modal.props('open')).toBe(true)
-    await button(wrapper, 'settings.aiVaultUseDefault').trigger('click')
-    expect(store.relocateVault).toHaveBeenCalledWith(undefined, false)
-    expect(context.draft.value.aiVault.path).toBe('')
   })
 
   it('tells about external projects without a folder on this device', async () => {

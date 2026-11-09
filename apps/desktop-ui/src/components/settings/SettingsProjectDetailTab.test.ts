@@ -53,6 +53,8 @@ function createStore() {
   return Object.assign(state, {
     getProject: (id: string) => state.projects.find((item) => item.id === id),
     saveProject: vi.fn(async () => {}),
+    projectConflicts: {} as Record<string, unknown>,
+    resolveProjectConflict: vi.fn(async () => undefined),
     createProject: vi.fn(async () => ({ id: 'created' })),
     deleteProject: vi.fn(async () => {}),
     pickFolder: vi.fn(async (): Promise<string | null> => '/work'),
@@ -102,7 +104,6 @@ describe('SettingsProjectDetailTab.vue', () => {
     expect(store.createProject).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'Docs',
-        id: 'docs',
         isExternal: true,
         targetPath: '/work',
       })

@@ -78,7 +78,7 @@
 
     <SettingsAdvancedFields v-model:expanded="isAdvancedOpen">
       <div class="user-data-advanced">
-        <AiVaultLocation />
+        <DeviceHistoryJournals v-if="isAdvancedOpen" />
       </div>
     </SettingsAdvancedFields>
 
@@ -101,7 +101,7 @@ import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
-import AiVaultLocation from './AiVaultLocation.vue'
+import DeviceHistoryJournals from './DeviceHistoryJournals.vue'
 import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import SettingsAdvancedFields from './SettingsAdvancedFields.vue'
 import SettingsSection from './SettingsSection.vue'
@@ -113,8 +113,7 @@ const store = useUserDataStore()
 const userData = computed(() => store.state())
 const settingsSession = useSettingsSessionStore()
 const folder = useUserDataFolder(() => settingsSession.flushAll())
-/** Open when the vault is set apart on this device, so it is not missed */
-const isAdvancedOpen = ref(Boolean(userConfig.value.aiVault.path))
+const isAdvancedOpen = ref(false)
 
 async function open() {
   // a failure leaves nothing open, which tells enough

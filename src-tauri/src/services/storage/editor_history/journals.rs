@@ -31,6 +31,9 @@ pub(super) enum HistoryEvent {
     },
     /// The user cleared the history: every entry made before `before` goes.
     Clear { before: u64 },
+    /// The name of the device of the journal, written when it changes; the
+    /// latest one counts.
+    Device { name: String },
 }
 
 /// A line of a journal.
@@ -42,12 +45,20 @@ pub(super) enum HistoryRecord {
 }
 
 impl HistoryRecord {
-    fn item(&self) -> Option<&EditorHistoryItem> {
+    pub(super) fn item(&self) -> Option<&EditorHistoryItem> {
         match self {
             Self::Item(item) => Some(item),
             Self::Event(_) => None,
         }
     }
+}
+
+/// The latest name of the device a journal tells.
+pub(super) fn device_name(records: &[HistoryRecord]) -> Option<String> {
+    records.iter().rev().find_map(|record| match record {
+        HistoryRecord::Event(HistoryEvent::Device { name }) => Some(name.clone()),
+        _ => None,
+    })
 }
 
 /// The latest `clear` of all journals.
@@ -91,7 +102,7 @@ pub(super) fn merge_journals(journals: &[Vec<HistoryRecord>]) -> Vec<EditorHisto
                     results.insert(id, (*at, result));
                 }
             }
-            HistoryRecord::Event(HistoryEvent::Clear { .. }) => {}
+            HistoryRecord::Event(HistoryEvent::Clear { .. } | HistoryEvent::Device { .. }) => {}
         }
     }
     let mut merged: Vec<EditorHistoryItem> = items
@@ -209,6 +220,9 @@ pub(super) fn compact(
     }
 
     let mut kept = Vec::new();
+    if let Some(name) = device_name(own) {
+        kept.push(HistoryRecord::Event(HistoryEvent::Device { name }));
+    }
     if let Some(before) = own_clear {
         kept.push(HistoryRecord::Event(HistoryEvent::Clear { before }));
     }

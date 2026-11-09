@@ -168,7 +168,10 @@ for (const decision of ['Allow', 'Deny'] as const) {
     }
     desktop.handle('list_ai_profiles', () => [profile])
     desktop.handle('get_ai_profile', () => profile)
-    desktop.handle('read_ai_profile_soul', () => '')
+    desktop.handle('read_ai_profile_soul', () => ({
+      content: '',
+      revision: '',
+    }))
     desktop.handle('list_ai_file_roots', () => [
       { path: 'workspace', read: 'ask', write: 'ask' },
     ])

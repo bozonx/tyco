@@ -165,7 +165,7 @@ fn device_fields_found_in_the_user_file_move_to_the_device() {
         json!({
             "appearance": {"theme": "dark", "uiScalePercent": 150},
             "hotkeys": {"voice": "Ctrl+Alt+9"},
-            "aiVault": {"path": "/vault"}
+            "externalAccess": {"canAccessSelection": true}
         })
         .to_string(),
     )
@@ -177,7 +177,7 @@ fn device_fields_found_in_the_user_file_move_to_the_device() {
     let device = setup.device.snapshot().config;
     assert_eq!(device["hotkeys"]["voice"], "Ctrl+Alt+9");
     assert_eq!(device["appearance"]["uiScalePercent"], 150);
-    assert_eq!(device["aiVault"]["path"], "/vault");
+    assert_eq!(device["externalAccess"]["canAccessSelection"], true);
     let user = setup.user_file();
     assert!(user.get("hotkeys").is_none());
     assert!(user["appearance"].get("uiScalePercent").is_none());

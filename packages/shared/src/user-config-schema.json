@@ -491,7 +491,8 @@
                   "type": "object",
                   "properties": {
                     "type": { "enum": ["profileChat"] },
-                    "profileId": { "type": "string", "minLength": 1 }
+                    "profileId": { "type": "string", "minLength": 1 },
+                    "vaultId": { "type": "string" }
                   },
                   "required": ["type", "profileId"]
                 },
@@ -500,6 +501,7 @@
                   "properties": {
                     "type": { "enum": ["profile"] },
                     "profileId": { "type": "string", "minLength": 1 },
+                    "vaultId": { "type": "string" },
                     "action": {
                       "enum": [
                         "quickAiRequest",
@@ -617,7 +619,8 @@
                 "type": "object",
                 "properties": {
                   "type": { "enum": ["profileChat"] },
-                  "profileId": { "type": "string", "minLength": 1 }
+                  "profileId": { "type": "string", "minLength": 1 },
+                  "vaultId": { "type": "string" }
                 },
                 "required": ["type", "profileId"]
               },
@@ -626,6 +629,7 @@
                 "properties": {
                   "type": { "enum": ["profile"] },
                   "profileId": { "type": "string", "minLength": 1 },
+                  "vaultId": { "type": "string" },
                   "action": {
                     "enum": [
                       "quickAiRequest",
@@ -1062,7 +1066,8 @@
               },
               "name": { "type": "string", "default": "" },
               "rule": { "type": "string", "default": "" },
-              "profileId": { "type": "string", "default": "" }
+              "profileId": { "type": "string", "default": "" },
+              "vaultId": { "type": "string" }
             },
             "required": ["id", "name", "rule", "profileId"]
           },
@@ -1099,13 +1104,25 @@
       "default": { "items": [] },
       "defaultPath": "favorites"
     },
-    "aiVault": {
+    "aiVaults": {
       "type": "object",
       "properties": {
-        "path": { "type": "string", "default": "", "x-scope": "device" }
+        "attached": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": { "type": "string", "default": "" },
+              "vaultId": { "type": "string", "default": "" }
+            },
+            "required": ["path", "vaultId"]
+          },
+          "default": [],
+          "x-scope": "device"
+        }
       },
-      "required": ["path"],
-      "defaultPath": "aiVault"
+      "required": ["attached"],
+      "defaultPath": "aiVaults"
     },
     "aiProfiles": {
       "type": "object",
@@ -1354,7 +1371,7 @@
     "plugins",
     "chat",
     "stt",
-    "aiVault",
+    "aiVaults",
     "aiProfiles"
   ],
   "$defs": {

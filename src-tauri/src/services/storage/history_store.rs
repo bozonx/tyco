@@ -21,7 +21,6 @@ pub struct HistorySettings {
     pub editor: editor::EditorHistoryPolicy,
     pub chat: chats::ChatHistoryPolicy,
     pub profile_chat: chats::ChatHistoryPolicy,
-    pub vault_path: String,
 }
 
 impl HistorySettings {
@@ -30,7 +29,6 @@ impl HistorySettings {
             editor: editor::EditorHistoryPolicy::from_config(config),
             chat: chats::ChatHistoryPolicy::from_config(config),
             profile_chat: chats::ChatHistoryPolicy::for_profiles(config),
-            vault_path: crate::models::user_config::ai_vault(config).path,
         }
     }
 }
@@ -97,9 +95,8 @@ impl HistoryStorageCoordinator {
         if before.editor != after.editor {
             notify_editor_history_changed(app);
         }
-        let chat_settings_changed = before.chat != after.chat
-            || before.profile_chat != after.profile_chat
-            || before.vault_path != after.vault_path;
+        let chat_settings_changed =
+            before.chat != after.chat || before.profile_chat != after.profile_chat;
         if chat_settings_changed || self.chat_cleanup_pending.load(Ordering::SeqCst) {
             let chat_cleanup = enforce_chat_history_policies(app, &after);
             self.chat_cleanup_pending
@@ -239,29 +236,27 @@ fn enforce_chat_history_policies(
         .map(|removed| notify_chats_removed(app, &ChatScope::AskAi, removed));
     // an unavailable vault has no chats to clean up now; they are trimmed once
     // a profile chat is saved there again
-    let user_dir = super::user_data::user_dir_for(app, super::UserDirAccess::Read).ok();
-    let profiles = match crate::services::ai_vault::open_vault(
-        Some(&settings.vault_path),
-        user_dir.as_deref(),
-        || crate::services::storage::user_sub_dir(app, crate::services::ai_vault::VAULT_DIR_NAME),
-    ) {
-        Ok(vault) => enforce_profile_chat_history_policy(app, &vault.root, settings.profile_chat),
-        Err(error) => {
-            log::warn!("Skipping the profile chat cleanup: {error}");
-            Ok(())
-        }
-    };
+    let mut profiles = Ok(());
+    for (vault_ref, vault) in crate::services::ai_vault::connected_vaults(app) {
+        profiles = profiles.and(enforce_profile_chat_history_policy(
+            app,
+            &vault_ref,
+            &vault,
+            settings.profile_chat,
+        ));
+    }
     ask_ai.and(profiles)
 }
 
 /// Applies the policy all profiles share to the chats of each of them.
 fn enforce_profile_chat_history_policy(
     app: &AppHandle,
-    vault_root: &Path,
+    vault_ref: &str,
+    vault: &crate::services::ai_vault::Vault,
     policy: chats::ChatHistoryPolicy,
 ) -> Result<(), AppError> {
     let mut result = Ok(());
-    for chats_dir in crate::services::ai_vault::all_profile_chats_dirs(vault_root)? {
+    for chats_dir in crate::services::ai_vault::all_profile_chats_dirs(&vault.root)? {
         // the profile folder is named by the profile id
         let Some(profile_id) = chats_dir
             .parent()
@@ -271,10 +266,11 @@ fn enforce_profile_chat_history_policy(
         else {
             continue;
         };
-        let dirs = chats::profile_chat_dirs(app, vault_root, &profile_id, chats_dir.clone())?;
+        let dirs = chats::profile_chat_dirs(app, &vault.id, &profile_id, chats_dir.clone())?;
         match chats::enforce_chat_history_policy(&dirs, policy) {
             Ok(removed) => {
-                notify_chats_removed(app, &ChatScope::Profile(profile_id), removed);
+                let key = crate::services::ai_vault::join_ref(vault_ref, &profile_id);
+                notify_chats_removed(app, &ChatScope::Profile(key), removed);
             }
             Err(error) => {
                 log::warn!(
@@ -311,7 +307,7 @@ fn notify_chats_changed(
 
 /// Tells every window that the editor history changed; a failure is only
 /// logged, as for the chats.
-fn notify_editor_history_changed(app: &AppHandle) {
+pub(super) fn notify_editor_history_changed(app: &AppHandle) {
     if let Err(error) = crate::events::emit::<crate::events::EditorHistoryChanged, _>(app, ()) {
         log::warn!("Could not announce an editor history change: {error}");
     }
@@ -366,24 +362,24 @@ enum ChatAccess {
 
 fn scope_chat_dirs(
     app: &AppHandle,
-    state: &AppState,
     scope: &ChatScope,
     access: ChatAccess,
 ) -> Result<chats::ChatDirs, AppError> {
     match scope {
         ChatScope::AskAi => chats::app_chat_dirs(app),
-        ChatScope::Profile(profile_id) => {
-            let vault_root =
-                crate::services::ai_vault::resolve_vault_path(app, &state.user_config())?;
+        // the scope names the profile by its reference `[vaultId:]id`
+        ChatScope::Profile(key) => {
+            let (vault_ref, profile_id) = crate::services::ai_vault::split_ref(key);
+            let vault = crate::services::ai_vault::resolve_vault(app, vault_ref)?;
             let chats_dir = match access {
                 ChatAccess::Read => {
-                    crate::services::ai_vault::existing_profile_chats_path(&vault_root, profile_id)
+                    crate::services::ai_vault::existing_profile_chats_path(&vault.root, profile_id)
                 }
                 ChatAccess::Write => {
-                    crate::services::ai_vault::profile_chats_dir(&vault_root, profile_id)
+                    crate::services::ai_vault::profile_chats_dir(&vault.root, profile_id)
                 }
             }?;
-            chats::profile_chat_dirs(app, &vault_root, profile_id, chats_dir)
+            chats::profile_chat_dirs(app, &vault.id, profile_id, chats_dir)
         }
     }
 }
@@ -408,7 +404,7 @@ fn with_chats_in_vault<T>(
 ) -> Result<T, AppError> {
     let state = app.state::<AppState>();
     let _guard = state.history.lock_chat_history();
-    let dirs = scope_chat_dirs(app, &state, scope, access)?;
+    let dirs = scope_chat_dirs(app, scope, access)?;
     if access == ChatAccess::Write {
         super::user_data::ensure_write_allowed(&dirs.chats)?;
     }

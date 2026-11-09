@@ -303,7 +303,9 @@ describe('saved config', () => {
     expect(model.userConfig.value.editor.submitKey).toBe('Ctrl+Enter')
     expect(model.savedUserConfig.value).toBe(stored)
     // a patch is stored over the saved config, never over the run's one
-    await model.updateUserConfig({ aiVault: { path: '/vault' } })
+    await model.updateUserConfig({
+      aiVaults: { attached: [{ path: '/vault', vaultId: 'v' }] },
+    })
     const [, args] = call.mock.calls.at(-1)!
     const { userConfig, baseConfig } = args as {
       userConfig: typeof stored
@@ -311,6 +313,6 @@ describe('saved config', () => {
     }
     expect(baseConfig).toBe(stored)
     expect(userConfig.editor.submitKey).toBe(stored.editor.submitKey)
-    expect(userConfig.aiVault.path).toBe('/vault')
+    expect(userConfig.aiVaults.attached[0]?.path).toBe('/vault')
   })
 })

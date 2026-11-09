@@ -218,6 +218,8 @@ export interface ChatPromptConfig {
    * which runs as the plain quick AI request outside a chat
    */
   profileId: string
+  /** The vault of a profile of an attached one; absent for the main vault */
+  vaultId?: string
 }
 
 export interface ChatPromptsConfig {
@@ -293,7 +295,7 @@ export interface UserConfig {
   styling: StylingsConfig
   chatPrompts: ChatPromptsConfig
   favorites: FavoritesConfig
-  aiVault: AiVaultLocationConfig
+  aiVaults: AiVaultsConfig
   aiProfiles: AiProfilesConfig
   markdown: MarkdownConfig
   plugins: Record<string, PluginEntryConfig>
@@ -301,9 +303,16 @@ export interface UserConfig {
   stt: SttConfig
 }
 
-export interface AiVaultLocationConfig {
-  /** Empty for the default location in the app data */
+/** The vaults this device has attached besides the main one */
+export interface AiVaultsConfig {
+  attached: AttachedVaultConfig[]
+}
+
+export interface AttachedVaultConfig {
+  /** The folder of the vault on this device */
   path: string
+  /** The id its marker had when it was attached, for a vault not there now */
+  vaultId: string
 }
 
 /** Untrusted serialized input; normalize before reading any field. */

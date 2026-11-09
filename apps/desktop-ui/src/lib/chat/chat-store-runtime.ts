@@ -5,11 +5,13 @@ import {
   type ChatSummary,
   type ChatsChangedEvent,
   type SessionState,
+  type StorageChangedEvent,
   type UserConfig,
 } from '@tyco/shared'
 import { computed, watch, type Ref } from 'vue'
 
 import { LlmInstructionKind } from '../../types'
+import { changedChatFiles } from './chat-storage-changes'
 import { createDesktopChatTools } from '../chat-tools/desktop-chat-tools'
 import type { invokeDesktop } from '../desktop/invoke'
 import type { createChatHistoryModel } from '../history/chat-history'
@@ -92,7 +94,7 @@ export interface ChatStoreRuntimeDependencies {
   saveRetryDelaysMs?: readonly number[]
   /** Hears every change of a chat history, from any window */
   listenStorageChanged?: (
-    handler: (paths: string[]) => void
+    handler: (event: StorageChangedEvent) => void
   ) => Promise<() => void>
   listenChatsChanged?: (
     handler: (event: ChatsChangedEvent) => void
@@ -455,20 +457,16 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
   }
   let stopStorageListening: (() => void) | undefined
   void deps
-    .listenStorageChanged?.((paths) => {
+    .listenStorageChanged?.((event) => {
       if (disposed) return
-      const prefix = profileId
-        ? `ai-vault/profiles/${profileId}/chats/`
-        : 'chats/'
-      if (!paths.some((path) => path.startsWith(prefix))) return
+      const files = changedChatFiles(event, profileId)
+      if (!files.length) return
       void history.loadChatHistory().catch((error) => warn(String(error)))
       const id = model.currentChatParams.value.id
       if (
         id &&
-        paths.some(
-          (path) =>
-            path === `${prefix}${id}.json` ||
-            path.startsWith(`${prefix}images/`)
+        files.some(
+          (file) => file === `${id}.json` || file.startsWith('images/')
         )
       ) {
         void model.reloadExternal().catch((error) => warn(String(error)))

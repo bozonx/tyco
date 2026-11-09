@@ -3,6 +3,7 @@ import {
   type DesktopCommandArgs,
   type DesktopCommandName,
   type DesktopCommandResult,
+  type DesktopErrorCode,
   type DesktopInvokeArgs,
   type DesktopViewState,
   type IpcResult,
@@ -53,9 +54,28 @@ export type DesktopCall = <K extends DesktopCommandName>(
  */
 export function resultOrThrow<T>(response: IpcResult<T>, fallback?: string): T {
   if (!response.success)
-    throw new Error(response.error || fallback || 'Desktop command failed')
+    throw new IpcCallError(
+      response.error || fallback || 'Desktop command failed',
+      response.errorCode
+    )
   return response.result as T
 }
+
+/** A failed call, with the code a caller may act on */
+export class IpcCallError extends Error {
+  constructor(
+    message: string,
+    readonly errorCode?: DesktopErrorCode
+  ) {
+    super(message)
+  }
+}
+
+/** Whether `error` is a failed call of the code `code` */
+export const isIpcErrorCode = (
+  error: unknown,
+  code: DesktopErrorCode
+): boolean => error instanceof IpcCallError && error.errorCode === code
 
 /**
  * Commands that press keys in the window Tyco hides: keys the user still holds

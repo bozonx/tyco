@@ -11,7 +11,7 @@
         icon="mdi:content-save"
         type="submit"
         :form="formId"
-        :disabled="!isValid || Boolean(folderError)"
+        :disabled="!isValid"
         :loading="isCreating"
       >
         {{ t('settings.saveProject') }}
@@ -26,6 +26,21 @@
       @submit.prevent="handleCreate"
     >
       <fieldset class="contents" :disabled="isCreating">
+        <InlineNotice
+          v-if="!isNew && hasConflict"
+          kind="warning"
+          appearance="surface"
+          icon="mdi:sync-alert"
+          :message="t('settings.projectChangedElsewhere')"
+          data-testid="project-conflict"
+        >
+          <Button size="sm" @click="resolveConflict(false)">
+            {{ t('settings.conflictReload') }}
+          </Button>
+          <Button size="sm" variant="ghost" @click="resolveConflict(true)">
+            {{ t('settings.conflictKeepMine') }}
+          </Button>
+        </InlineNotice>
         <SettingsSection :title="t('settings.aiEntityGeneral')">
           <FieldRow
             :label="t('settings.projectName')"
@@ -33,15 +48,8 @@
           >
             <FieldInput v-model="name" @update:model-value="change" />
           </FieldRow>
-          <VaultFolderField
-            v-if="isNew"
-            :field="folder"
-            @update:typed-id="folder.typedId.value = $event"
-            directory="projects"
-            :info="t('settings.projectFolderHint')"
-          />
           <FieldRow
-            v-else
+            v-if="!isNew"
             :label="t('settings.vaultFolder')"
             :info="t('settings.projectFolderFixedHint')"
           >
@@ -71,7 +79,9 @@
             :warning="
               !targetPath.trim() && isStored
                 ? t('settings.projectFolderNotSetOnDevice')
-                : undefined
+                : isInsideSyncedFolder
+                  ? t('settings.projectInsideSyncedFolder')
+                  : undefined
             "
           >
             <template #info><DeviceScopeBadge /></template>
@@ -132,13 +142,13 @@ import { useRetryToast } from '../../composables/use-retry-toast'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import { useSettingsDraft } from '../../composables/use-settings-draft'
 import useToast from '../../composables/use-toast'
+import { vaultOfRef } from '../../lib/ai-profiles/profile-ref'
 import {
   type ProjectAccessLevel,
   hasFileToolsOff,
   projectAccessLevelOf,
 } from '../../lib/ai-profiles/project-access'
 import { createProjectEditor } from '../../lib/ai-profiles/project-editor'
-import { createVaultFolderField } from '../../lib/ai-profiles/vault-folder-field'
 import {
   AI_OVERVIEW_TAB,
   NEW_ENTITY_ID,
@@ -149,6 +159,7 @@ import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
+import InlineNotice from '../common/InlineNotice.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import StateMessage from '../common/StateMessage.vue'
 import DeviceScopeBadge from './DeviceScopeBadge.vue'
@@ -159,7 +170,6 @@ import SettingsAccessList, {
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsSection from './SettingsSection.vue'
-import VaultFolderField from './VaultFolderField.vue'
 import type { ProjectPermission } from '@tyco/shared'
 
 const props = defineProps<{ projectId: string }>()
@@ -173,7 +183,12 @@ const aiProfilesStore = useAiProfilesStore()
 const { isBusy: isCreating, run: runCreating } = useBusyAction()
 const isNew = computed(() => props.projectId === NEW_ENTITY_ID)
 
-const profiles = computed(() => aiProfilesStore.profiles)
+// only the profiles of the vault of the project may reach it
+const profiles = computed(() =>
+  aiProfilesStore.profiles.filter(
+    (profile) => vaultOfRef(profile.id) === vaultOfRef(props.projectId)
+  )
+)
 
 const projectTypeOptions = computed(() => [
   { id: 'internal', name: t('settings.projectTypeInternal') },
@@ -185,8 +200,33 @@ const editor = createProjectEditor({
     const current = aiProfilesStore.getProject(props.projectId)
     if (current) await aiProfilesStore.saveProject({ ...current, ...fields })
   },
-  reportError: useRetryToast(),
+  // a conflict is shown with its own choice, not as a failure
+  reportError: (message, retry) => {
+    if (!hasConflict.value) reportSaveError(message, retry)
+  },
 })
+const reportSaveError = useRetryToast()
+/** The folder, as stored, is synced with the data folder or a vault */
+const isInsideSyncedFolder = computed(
+  () =>
+    Boolean(project.value?.isInsideSyncedFolder) &&
+    targetPath.value.trim() === (project.value?.targetPath ?? '')
+)
+const hasConflict = computed(() =>
+  Boolean(aiProfilesStore.projectConflicts[props.projectId])
+)
+
+async function resolveConflict(keepMine: boolean) {
+  try {
+    const stored = await aiProfilesStore.resolveProjectConflict(
+      props.projectId,
+      keepMine
+    )
+    if (!keepMine && stored) editor.load(stored)
+  } catch (error) {
+    toastError(error)
+  }
+}
 const {
   name,
   description,
@@ -283,23 +323,10 @@ async function handlePickFolder() {
   }
 }
 
-const folder = createVaultFolderField({
-  name: () => name.value,
-  fallback: 'project',
-  takenIds: () => aiProfilesStore.projects.map(({ id }) => id),
-})
-const folderError = computed(() =>
-  folder.errorKey.value ? t(folder.errorKey.value) : undefined
-)
-
 async function handleCreate() {
-  if (!isNew.value || !isValid.value || folderError.value || isCreating.value)
-    return
+  if (!isNew.value || !isValid.value || isCreating.value) return
   await runCreating(async () => {
-    const created = await aiProfilesStore.createProject({
-      ...editor.fields(),
-      id: folder.folderId.value,
-    })
+    const created = await aiProfilesStore.createProject(editor.fields())
     // the project is there either way: a failed grant is reported, not undone
     const grants = await Promise.allSettled(
       Object.entries(pendingAccess.value).map(([profileId, level]) =>

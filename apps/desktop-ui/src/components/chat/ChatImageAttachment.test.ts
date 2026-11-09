@@ -73,9 +73,18 @@ describe('image attachment preview', () => {
     'retries a missing image when its file arrives (profile: %s)',
     async (profileId) => {
       mocks.profileId = profileId
-      const prefix = profileId
-        ? `ai-vault/profiles/${profileId}/chats/images/`
-        : 'chats/images/'
+      const changed = (file: string) =>
+        profileId
+          ? {
+              paths: [],
+              vaultChanges: [
+                {
+                  vaultId: '',
+                  path: `profiles/${profileId}/chats/images/${file}`,
+                },
+              ],
+            }
+          : { paths: [`chats/images/${file}`], vaultChanges: [] }
       const desktop = installFakeDesktop()
       mocks.get
         .mockRejectedValueOnce(new Error('Missing image'))
@@ -84,19 +93,22 @@ describe('image attachment preview', () => {
       try {
         await flushPromises()
         expect(wrapper.text()).toContain('chat.imageUnavailable')
-        await desktop.emit(DESKTOP_EVENTS.STORAGE_CHANGED, [
-          `${prefix}another.webp`,
-        ])
+        await desktop.emit(
+          DESKTOP_EVENTS.STORAGE_CHANGED,
+          changed('another.webp')
+        )
         await flushPromises()
         expect(mocks.get).toHaveBeenCalledTimes(1)
-        await desktop.emit(DESKTOP_EVENTS.STORAGE_CHANGED, [
-          `${prefix}image.webp`,
-        ])
+        await desktop.emit(
+          DESKTOP_EVENTS.STORAGE_CHANGED,
+          changed('image.webp')
+        )
         await flushPromises()
         expect(wrapper.get('img').attributes('src')).toBe('blob:preview')
-        await desktop.emit(DESKTOP_EVENTS.STORAGE_CHANGED, [
-          `${prefix}image.webp`,
-        ])
+        await desktop.emit(
+          DESKTOP_EVENTS.STORAGE_CHANGED,
+          changed('image.webp')
+        )
         await flushPromises()
         expect(mocks.get).toHaveBeenCalledTimes(2)
       } finally {

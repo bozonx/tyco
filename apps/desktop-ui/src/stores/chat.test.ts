@@ -151,7 +151,10 @@ describe('profile chats', () => {
         case 'get_ai_profile':
           return { success: true, result: files.profile }
         case 'read_ai_profile_soul':
-          return { success: true, result: files.soul }
+          return {
+            success: true,
+            result: { content: files.soul, revision: '' },
+          }
         case 'list_chats':
           return { success: true, result: [] }
         default:
@@ -261,6 +264,7 @@ describe('profile chats', () => {
 
     expect(call).toHaveBeenCalledWith('save_ai_profile', {
       profile: expect.objectContaining({ id: 'writer', modelId }),
+      expectedRevision: undefined,
     })
     expect(desktopStore.patchSessionState).not.toHaveBeenCalled()
   })

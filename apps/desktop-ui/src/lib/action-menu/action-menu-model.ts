@@ -33,6 +33,7 @@ import {
 import { getLanguageLabelKey } from '../locale/language'
 import type { PendingModalParams } from '../modals/menu-modal-params'
 import { normalizeMainActions } from './main-actions'
+import { configProfileKey } from '../ai-profiles/profile-ref'
 
 export type { ActionItem } from '../../types/plugins'
 export interface ActionMenuDependencies extends InvocationRunnerDependencies {
@@ -81,6 +82,11 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   transformations?: () => readonly { id: string; name: string }[] | undefined
   styling?: () => readonly { id: string; name: string }[] | undefined
   profiles?: () => readonly { id: string; name: string }[] | undefined
+  /**
+   * The attached vaults that are there now: a slot of a profile of another one
+   * is hidden and takes no place until its vault is back
+   */
+  connectedVaultIds?: () => readonly string[]
   /** Whether `profiles` is known; until then a prompt keeps its profile */
   areProfilesLoaded?: () => boolean
   /** The prompt library the items of the `chatPrompt` type refer to */
@@ -623,10 +629,10 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       return createTranslationActionItem(item.language)
     }
     if (item.type === 'profileChat') {
-      return createProfileChatActionItem(item.profileId)
+      return createProfileChatActionItem(configProfileKey(item))
     }
     if (item.type === 'profile') {
-      return createProfileActionItem(item.profileId, item.action)
+      return createProfileActionItem(configProfileKey(item), item.action)
     }
     if (item.type === 'actionPage') {
       return createActionPageActionItem(item.pageIndex)
@@ -637,9 +643,15 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
   const getShortcutActions = (
     targetPageIndex = pageIndex.value
   ): (ActionItem | undefined)[] => {
-    const slots = resolveMainActions(undefined, targetPageIndex).map(
-      resolveActionItem
-    )
+    const connected = deps.connectedVaultIds?.()
+    const isAway = (item: MainActionConfig | null | undefined) =>
+      connected !== undefined &&
+      (item?.type === 'profile' || item?.type === 'profileChat') &&
+      Boolean(item.vaultId) &&
+      !connected.includes(item.vaultId!)
+    const slots = resolveMainActions(undefined, targetPageIndex)
+      .filter((item) => !isAway(item))
+      .map(resolveActionItem)
     while (slots.length && !slots.at(-1)) slots.pop()
     return [
       ...slots,
