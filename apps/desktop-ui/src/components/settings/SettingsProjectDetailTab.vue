@@ -48,13 +48,6 @@
           >
             <FieldInput v-model="name" @update:model-value="change" />
           </FieldRow>
-          <FieldRow
-            v-if="!isNew"
-            :label="t('settings.vaultFolder')"
-            :info="t('settings.projectFolderFixedHint')"
-          >
-            <code class="vault-folder">projects/{{ projectId }}</code>
-          </FieldRow>
           <FieldRow :label="t('settings.projectDescription')">
             <FieldTextArea
               v-model="description"
@@ -72,7 +65,14 @@
             />
           </FieldRow>
           <FieldRow
-            v-if="isExternal"
+            v-if="!isExternal && !isNew"
+            :label="t('settings.vaultFolder')"
+            :info="t('settings.projectFolderFixedHint')"
+          >
+            <code class="vault-folder">projects/{{ projectId }}</code>
+          </FieldRow>
+          <FieldRow
+            v-else-if="isExternal"
             :label="t('settings.projectTargetPath')"
             :hint="targetPath || undefined"
             :error="

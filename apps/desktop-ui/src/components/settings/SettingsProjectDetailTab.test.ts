@@ -155,8 +155,13 @@ describe('SettingsProjectDetailTab.vue', () => {
     expect(store.saveProject).not.toHaveBeenCalled()
   })
 
-  it('shows the folder of an existing project', () => {
-    expect(mountTab().text()).toContain('projects/notes')
+  it('shows the folder of an existing internal project and hides it for external', async () => {
+    const wrapper = mountTab()
+    expect(wrapper.text()).toContain('projects/notes')
+    await wrapper
+      .findComponent({ name: 'SegmentedControl' })
+      .vm.$emit('update:modelValue', 'external')
+    expect(wrapper.text()).not.toContain('projects/notes')
   })
 
   it('stores an edited project', async () => {
