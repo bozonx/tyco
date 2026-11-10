@@ -17,10 +17,6 @@ pub(super) use crate::desktop_contract::{
     MAX_PROFILE_TEMPERATURE as MAX_TEMPERATURE, MAX_TOOL_STEP_COUNT,
 };
 
-/// Saves that check a revision run one at a time, so no two of them pass
-/// the check on one file.
-static SAVE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-
 /// The revision of a file: the SHA-256 of its bytes, empty when there is none.
 pub fn file_revision(path: &Path) -> Result<String, AppError> {
     match fs::read(path) {
@@ -34,8 +30,6 @@ pub fn file_revision(path: &Path) -> Result<String, AppError> {
 /// revision the caller read; no revision writes without a check. Returns the
 /// new revision.
 fn write_checked(path: &Path, content: &str, expected: Option<&str>) -> Result<String, AppError> {
-    use crate::locks::MutexExt;
-    let _save = SAVE_LOCK.locked();
     if let Some(expected) = expected {
         if file_revision(path)? != expected {
             return Err(AppError::StaleRevision(format!(
@@ -80,13 +74,30 @@ pub fn ensure_vault_dirs(vault_root: &Path) -> Result<(), AppError> {
     Ok(())
 }
 
+fn create_entity_dir(path: &Path) -> Result<(), AppError> {
+    crate::services::storage::user_data::ensure_write_allowed(path)?;
+    let mut builder = fs::DirBuilder::new();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::DirBuilderExt;
+        builder.mode(0o700);
+    }
+    builder.create(path).map_err(|error| {
+        if error.kind() == std::io::ErrorKind::AlreadyExists {
+            AppError::AlreadyExists(format!("Entity already exists: {}", path.display()))
+        } else {
+            error.into()
+        }
+    })
+}
+
 fn not_found(what: &str, id: &str) -> AppError {
     AppError::NotFound(format!("{what} not found: {id}"))
 }
 
 /// Reads every `<dir>/<id>/<file>` of the folder; an unreadable one is
 /// skipped and logged, leaving the file for the user to fix.
-fn read_entries<T: serde::de::DeserializeOwned>(
+fn read_entries<T: serde::de::DeserializeOwned + serde::Serialize>(
     dir: &Path,
     file: &str,
 ) -> Result<Vec<(T, String)>, AppError> {
@@ -96,8 +107,15 @@ fn read_entries<T: serde::de::DeserializeOwned>(
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(entries),
         Err(error) => return Err(error.into()),
     };
+    let listing = listing.collect::<Result<Vec<_>, _>>()?;
     for entry in listing {
-        let path = entry?.path().join(file);
+        let Ok(id) = entry.file_name().into_string() else {
+            continue;
+        };
+        if !entry.file_type()?.is_dir() || !is_file_id(&id) {
+            continue;
+        }
+        let path = entry.path().join(file);
         if !path.is_file() {
             continue;
         }
@@ -105,7 +123,14 @@ fn read_entries<T: serde::de::DeserializeOwned>(
             .map_err(AppError::from)
             .and_then(|raw| {
                 let revision = crate::services::storage::watcher::content_hash(raw.as_bytes());
-                Ok((serde_json::from_str::<T>(&raw)?, revision))
+                let value: T = serde_json::from_str(&raw)?;
+                if serde_json::to_value(&value)?["id"].as_str() != Some(&id) {
+                    return Err(AppError::InvalidInput(format!(
+                        "Entity id does not match its folder: {}",
+                        path.display()
+                    )));
+                }
+                Ok((value, revision))
             }) {
             Ok(entry) => entries.push(entry),
             Err(error) => log::warn!("Skipping unreadable {}: {error}", path.display()),
@@ -173,10 +198,6 @@ fn profile_file_content(profile: &AiProfile) -> Result<String, AppError> {
     Ok(serde_json::to_string_pretty(&stored)?)
 }
 
-fn write_profile_file(dir: &Path, profile: &AiProfile) -> Result<(), AppError> {
-    write_private(&dir.join(PROFILE_FILE), &profile_file_content(profile)?)
-}
-
 pub fn list_profiles(vault_root: &Path) -> Result<Vec<AiProfile>, AppError> {
     ensure_vault_dirs(vault_root)?;
     let mut profiles: Vec<AiProfile> = read_entries(&vault_root.join("profiles"), PROFILE_FILE)?
@@ -195,6 +216,11 @@ pub fn get_profile(vault_root: &Path, id: &str) -> Result<AiProfile, AppError> {
     let dir = existing_profile_dir(vault_root, id)?;
     let raw = fs::read_to_string(dir.join(PROFILE_FILE))?;
     let profile: AiProfile = serde_json::from_str(&raw)?;
+    if profile.id != id {
+        return Err(AppError::InvalidInput(
+            "Profile id does not match its folder".into(),
+        ));
+    }
     Ok(AiProfile {
         revision: Some(crate::services::storage::watcher::content_hash(
             raw.as_bytes(),
@@ -205,7 +231,11 @@ pub fn get_profile(vault_root: &Path, id: &str) -> Result<AiProfile, AppError> {
 
 /// Creates the profile folder with its root instruction. An existing folder
 /// of that id is never written into: the caller picks another id.
-pub fn create_profile(vault_root: &Path, profile: AiProfile, soul: &str) -> Result<(), AppError> {
+pub fn create_profile(
+    vault_root: &Path,
+    profile: AiProfile,
+    soul: &str,
+) -> Result<String, AppError> {
     validate_profile(&profile)?;
     ensure_vault_dirs(vault_root)?;
 
@@ -217,7 +247,7 @@ pub fn create_profile(vault_root: &Path, profile: AiProfile, soul: &str) -> Resu
             profile.id
         )));
     }
-    create_private_dir(&dir)?;
+    create_entity_dir(&dir)?;
     create_private_dir(&dir.join(PROFILE_CHATS_DIR))?;
     let workspace = dir.join("workspace");
     for sub in ["generated", "downloads"] {
@@ -226,7 +256,11 @@ pub fn create_profile(vault_root: &Path, profile: AiProfile, soul: &str) -> Resu
     let memory = dir.join(super::memory::PROFILE_MEMORY_DIR);
     super::memory::ensure_memory_dir_initialized(&memory)?;
     write_private(&dir.join(SOUL_FILE), soul)?;
-    write_profile_file(&dir, &profile)
+    let content = profile_file_content(&profile)?;
+    write_private(&dir.join(PROFILE_FILE), &content)?;
+    Ok(crate::services::storage::watcher::content_hash(
+        content.as_bytes(),
+    ))
 }
 
 /// Updates a profile that exists; a deleted one is not brought back. With
@@ -253,27 +287,26 @@ pub fn delete_profile(
 ) -> Result<(), AppError> {
     let dir = profile_dir(vault_root, id)?;
     if dir.exists() {
-        versions.clear_profile(id);
+        versions.clear_profile(vault_root, id);
         crate::services::storage::watcher::remove_tree(&dir)?;
     }
     Ok(())
 }
 
-/// The root instruction; a missing file is an empty one.
-pub fn read_profile_soul(vault_root: &Path, id: &str) -> Result<String, AppError> {
-    let soul_file = existing_profile_dir(vault_root, id)?.join(SOUL_FILE);
-    match fs::read_to_string(soul_file) {
-        Ok(content) => Ok(content),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(String::new()),
-        Err(error) => Err(error.into()),
-    }
-}
-
 /// The root instruction with its revision; an empty one for no file.
 pub fn read_profile_soul_revision(vault_root: &Path, id: &str) -> Result<ProfileSoul, AppError> {
-    let content = read_profile_soul(vault_root, id)?;
-    let revision = file_revision(&existing_profile_dir(vault_root, id)?.join(SOUL_FILE))?;
-    Ok(ProfileSoul { content, revision })
+    let path = existing_profile_dir(vault_root, id)?.join(SOUL_FILE);
+    match fs::read_to_string(path) {
+        Ok(content) => {
+            let revision = crate::services::storage::watcher::content_hash(content.as_bytes());
+            Ok(ProfileSoul { content, revision })
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(ProfileSoul {
+            content: String::new(),
+            revision: String::new(),
+        }),
+        Err(error) => Err(error.into()),
+    }
 }
 
 /// Writes the root instruction, checking `expected_revision` as
@@ -433,10 +466,6 @@ fn project_file_content(project: &AiProject) -> Result<String, AppError> {
     Ok(serde_json::to_string_pretty(&shared)?)
 }
 
-fn write_project_file(dir: &Path, project: &AiProject) -> Result<(), AppError> {
-    write_private(&dir.join(PROJECT_FILE), &project_file_content(project)?)
-}
-
 /// Where the files of a project are: its own folder in the vault, or the
 /// folder an external project has on this device. An external project
 /// without one here is not connected: the model gets that as the result of
@@ -488,7 +517,7 @@ pub fn create_project(
     vault_root: &Path,
     paths: &ProjectPaths,
     project: AiProject,
-) -> Result<(), AppError> {
+) -> Result<String, AppError> {
     validate_project(&project)?;
     let target = checked_target(&project)?;
     if project.is_external && target.is_none() {
@@ -504,12 +533,15 @@ pub fn create_project(
             project.id
         )));
     }
-    create_private_dir(&dir)?;
-    write_project_file(&dir, &project)?;
+    create_entity_dir(&dir)?;
+    let content = project_file_content(&project)?;
+    write_private(&dir.join(PROJECT_FILE), &content)?;
     if project.is_external {
         paths.set(&project.id, target)?;
     }
-    Ok(())
+    Ok(crate::services::storage::watcher::content_hash(
+        content.as_bytes(),
+    ))
 }
 
 /// Updates the project. The folder given for an external project becomes
@@ -551,10 +583,9 @@ pub fn delete_project(vault_root: &Path, paths: &ProjectPaths, id: &str) -> Resu
     paths.set(id, None)?;
 
     for mut profile in list_profiles(vault_root)? {
-        profile.revision = None;
         if profile.project_permissions.remove(id).is_some() {
-            let profile_dir = existing_profile_dir(vault_root, &profile.id)?;
-            write_profile_file(&profile_dir, &profile)?;
+            let expected = profile.revision.clone();
+            save_profile(vault_root, profile, expected.as_deref())?;
         }
     }
 

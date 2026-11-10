@@ -383,10 +383,29 @@ missing memory.
 missing `SOUL.md`); it is never stored. A save with `expectedRevision` checks
 it under a lock and fails with `staleRevision`, writing nothing, when the file
 changed since, e.g. on another device; it returns the new revision, which the
-form keeps for its next save. Internal writes pass no revision. The settings
+form keeps for its next save. Creation commands return the revision of the bytes
+written, so the first edit is checked too. A form retains the revision of its
+displayed fields while it has pending edits; refreshing a store cannot advance
+that baseline. Clean forms refresh their fields and revision together. Immediate
+profile picks are serialized with typed profile saves. `SOUL.md` content and its
+hash come from one read, and its storage events refresh the instruction even
+when `profile.json` is unchanged. Internal callers may omit a revision. The settings
 offer to reload the file or to save theirs over it; a page without unsaved
 changes takes the change silently. Writes into the memory of a profile are
-refused the same way when the file changed since the model read it.
+refused the same way when the file changed since the model read it. Memory read
+versions are keyed by vault root, profile id and file, so matching legacy ids in
+different vaults do not share a baseline or clear each other's checks.
+
+These checks serialize TyCo's own operations, not external filesystem writers.
+An external process can still replace a file between the hash check and rename;
+plain files provide no cross-device CAS. Truly simultaneous external writes still
+need conflict-copy recovery. Cloud revision CAS remains a separate future feature.
+
+Profile and project listings accept only real directories with valid entity ids,
+and the embedded JSON id must equal the folder name. Conflict folders, symlink
+folders and mismatched copies are ignored without modifying them. Creation
+reserves the entity directory with an exclusive `mkdir` before writing its files;
+a concurrently arriving folder returns `alreadyExists`.
 
 ### Vaults
 
@@ -410,7 +429,10 @@ connected on this device": nothing is made in its place, its operations fail
 with `vaultUnavailable`, and the settings offer `relink_ai_vault` (a folder
 that holds that very vault) or `detach_ai_vault`, which removes it from the
 list and its chat indexes and leaves its files. `rename_ai_vault` writes the
-name into the marker. A marker of a newer layout is shown as such and not used.
+name into the marker. A marker of a newer layout is shown as such and not used:
+update TyCo before opening it. This is deliberately stricter than the data
+folder's read-only compatibility path; an unknown vault layout is not interpreted.
+There is no separate read-only vault mode.
 
 The webview names a profile or a project by a reference `[vaultId:]id`
 (`ai_vault::split_ref`): the vault part is left out for the main vault.
@@ -421,7 +443,11 @@ the projects, files and tools root of its own vault. This is logical
 isolation: commands, scripts and plugins are shared by all profiles. In
 `config.json` a profile reference is `profileId` with an optional `vaultId`
 (grid items `profileChat` and `profile`, `chatPrompts.items[]`); the webview
-writes no vault for the main one. A reference to a vault that is not
+writes no vault for the main one. Both config normalizers canonicalize an explicit
+main marker id to an omitted `vaultId`, using the main vault identity published
+in `UserDataState.mainVaultId`. Persistence canonicalizes all three merge sides;
+opaque plugin settings and unknown nested fields remain untouched. The removed
+`aiVault.path` section is discarded during normalization. A reference to a vault that is not
 connected is kept and hidden: its grid slot takes no place and its prompts are
 not offered until the vault is back.
 
@@ -438,7 +464,13 @@ drop it. A project without a folder on this device is listed as such, and its
 file tools fail with `projectUnavailable`, which the model gets as the result
 of the tool. The model sees `projects/<id>/` whatever the folder is.
 
-Vault operations acquire shared access before resolving a vault; attaching and
+Vault operations acquire the shared relocation gate before resolving a vault,
+then hold a mutex for that vault's canonical root for the complete operation,
+including profile permission cleanup on project deletion. Different vaults have
+independent mutexes; list-all operations lock each vault individually. The
+path-based service primitives expect the caller to hold that I/O lock when used
+concurrently. The lock order is relocation gate, vault I/O, settings/history,
+then file writes. Attaching and
 removing vaults, and relocating the data folder, hold exclusive access through
 settings publication. Settings saves and history maintenance acquire vault
 access before the settings and history locks. Timestamps in the stored files

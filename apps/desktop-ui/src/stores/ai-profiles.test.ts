@@ -80,3 +80,22 @@ it('does not start obsolete list requests after a delayed vault path read', asyn
   expect(desktop.backend.callsOf('list_ai_profiles')).toHaveLength(1)
   expect(store.vaultPath).toBe('/new-vault')
 })
+
+it('announces SOUL changes separately from the profile JSON revision and isolates vaults', async () => {
+  const { DESKTOP_EVENTS } = await import('@tyco/shared')
+  const store = useAiProfilesStore()
+  await store.loadAll()
+  await desktop.emit(DESKTOP_EVENTS.STORAGE_CHANGED, {
+    paths: [],
+    vaultChanges: [{ vaultId: 'work', path: 'profiles/writer/SOUL.md' }],
+  })
+  await vi.waitFor(() =>
+    expect(store.profileStorageRevisions['work:writer']).toBe(1)
+  )
+  expect(store.profileStorageRevisions.writer).toBeUndefined()
+  await desktop.emit(DESKTOP_EVENTS.STORAGE_CHANGED, {
+    paths: [],
+    vaultChanges: [{ vaultId: '', path: 'profiles/writer/SOUL.md' }],
+  })
+  await vi.waitFor(() => expect(store.profileStorageRevisions.writer).toBe(1))
+})

@@ -122,7 +122,7 @@ pub async fn create_ai_profile(
     app: AppHandle,
     profile: AiProfile,
     soul: String,
-) -> Result<(), AppError> {
+) -> Result<String, AppError> {
     run_blocking(move || {
         let vault_id = ai_vault::split_ref(&profile.id).0.to_owned();
         let profile = ai_vault::profile_from_ref(&vault_id, profile)?;
@@ -202,7 +202,7 @@ pub async fn list_ai_projects(app: AppHandle) -> Result<Vec<AiProject>, AppError
 }
 
 #[tauri::command]
-pub async fn create_ai_project(app: AppHandle, project: AiProject) -> Result<(), AppError> {
+pub async fn create_ai_project(app: AppHandle, project: AiProject) -> Result<String, AppError> {
     run_blocking(move || {
         let vault_id = ai_vault::split_ref(&project.id).0.to_owned();
         ai_vault::with_projects(&app, &vault_id, |dir, paths| {

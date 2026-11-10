@@ -145,6 +145,19 @@ impl ConfigFiles {
         }
     }
 
+    fn main_vault_id(&self) -> String {
+        self.user_path
+            .as_deref()
+            .and_then(Path::parent)
+            .map(crate::services::ai_vault::marker::main_vault_id)
+            .unwrap_or_default()
+    }
+
+    fn normalize(&self, config: &mut Value) {
+        schema::normalize_user_config(config);
+        schema::normalize_profile_references(config, &self.main_vault_id());
+    }
+
     fn user_data_key(&self) -> String {
         self.user_path
             .as_deref()
@@ -198,7 +211,7 @@ impl ConfigFiles {
 
         let (mut value, unknown) = join_scopes(&user_raw, &device_raw);
         put_note_paths(&mut value, &device_file, notes);
-        schema::normalize_user_config(&mut value);
+        self.normalize(&mut value);
         let mut parts = Parts::of(&value, &unknown, notes);
         // a config that was not read says nothing about the commands: the
         // folders of this device stay until a config that was read drops them
@@ -271,6 +284,9 @@ impl ConfigFiles {
         let Some(path) = self.user_path.as_deref().filter(|_| self.is_writable) else {
             return Err(AppError::UserDataUnavailable(self.unavailable.clone()).into());
         };
+        let mut canonical = config.clone();
+        schema::normalize_profile_references(&mut canonical, &self.main_vault_id());
+        let config = &canonical;
         let unknown = self.device_unknown.locked().clone();
         let mut parts = Parts::of(config, &unknown, notes);
         parts.keep_device_paths(&device.snapshot(), false);
@@ -336,6 +352,9 @@ impl ConfigFiles {
         let Some(path) = self.user_path.as_deref().filter(|_| self.is_writable) else {
             return Err(AppError::UserDataUnavailable(self.unavailable.clone()));
         };
+        let mut canonical = config.clone();
+        schema::normalize_profile_references(&mut canonical, &self.main_vault_id());
+        let config = &canonical;
         let unknown = self.device_unknown.locked().clone();
         let mut parts = Parts::of(config, &unknown, notes);
         parts.keep_device_paths(&device.snapshot(), false);
@@ -376,6 +395,9 @@ impl ConfigFiles {
         if !disk.is_object() {
             return Err(AppError::InvalidInput("Config must be an object".into()));
         }
+        let mut canonical = config.clone();
+        schema::normalize_profile_references(&mut canonical, &self.main_vault_id());
+        let config = &canonical;
         let unknown = self.device_unknown.locked().clone();
         let mut parts = Parts::of(config, &unknown, notes);
         parts.keep_device_paths(&device.snapshot(), false);
@@ -385,10 +407,11 @@ impl ConfigFiles {
             if version::is_newer_than_supported(&disk) {
                 return Err(newer_config_error());
             }
-            let user = normalized_user_part(&disk, &parts.device, &unknown, notes);
+            let user =
+                normalized_user_part(&disk, &parts.device, &unknown, notes, &self.main_vault_id());
             let (mut value, _) = join_scopes(&user, &parts.device);
             put_note_paths(&mut value, &parts.as_device_file(), notes);
-            schema::normalize_user_config(&mut value);
+            self.normalize(&mut value);
             Merged {
                 disk: Some(disk.clone()),
                 user,
@@ -452,8 +475,10 @@ impl ConfigFiles {
         };
         if disk != base {
             let device_part = &parts.device;
-            let disk_part = normalized_user_part(&disk, device_part, unknown, notes);
-            let base_part = normalized_user_part(&base, device_part, unknown, notes);
+            let disk_part =
+                normalized_user_part(&disk, device_part, unknown, notes, &self.main_vault_id());
+            let base_part =
+                normalized_user_part(&base, device_part, unknown, notes, &self.main_vault_id());
             let (user, lost) = merge::merge_preferring_next(&disk_part, &base_part, &merged.user)?;
             if keeps_copies && !lost.is_empty() {
                 if let Some(raw) = raw {
@@ -470,7 +495,7 @@ impl ConfigFiles {
             // one dangling: the merge is repaired like a file read
             let (mut joined, _) = join_scopes(&user, device_part);
             put_note_paths(&mut joined, &parts.as_device_file(), notes);
-            schema::normalize_user_config(&mut joined);
+            self.normalize(&mut joined);
             merged.user = Parts::of(&joined, unknown, notes).user;
             merged.value = joined;
         }
@@ -692,9 +717,11 @@ fn normalized_user_part(
     device: &Value,
     device_unknown: &HashSet<ConfigPath>,
     notes: NotesFields,
+    main_vault_id: &str,
 ) -> Value {
     let (mut joined, _) = join_scopes(user, device);
     schema::normalize_user_config(&mut joined);
+    schema::normalize_profile_references(&mut joined, main_vault_id);
     Parts::of(&joined, device_unknown, notes).user
 }
 

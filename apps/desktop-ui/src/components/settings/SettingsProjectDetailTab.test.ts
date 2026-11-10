@@ -174,6 +174,22 @@ describe('SettingsProjectDetailTab.vue', () => {
     )
   })
 
+  it('flushes the latest typed fields before saving mine after a conflict', async () => {
+    store.projectConflicts.notes = project()
+    const wrapper = mountTab()
+    await wrapper.get('input').setValue('Latest local name')
+    await button(wrapper, 'settings.conflictKeepMine').trigger('click')
+    await flushPromises()
+    expect(store.saveProject).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Latest local name' })
+    )
+    expect(store.resolveProjectConflict).toHaveBeenCalledWith('notes', true)
+    expect(store.saveProject.mock.invocationCallOrder[0]).toBeLessThan(
+      store.resolveProjectConflict.mock.invocationCallOrder[0]!
+    )
+    wrapper.unmount()
+  })
+
   it('lists the profiles with access and offers the others', async () => {
     store.profiles.push(profile({ notes: { read: 'allow', write: 'ask' } }), {
       ...profile({}),

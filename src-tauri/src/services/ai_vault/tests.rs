@@ -101,7 +101,9 @@ fn a_created_profile_has_its_folders_and_soul() {
         assert!(dir.join("workspace").join(sub).is_dir());
     }
     assert_eq!(
-        read_profile_soul(&vault_root, "writer").unwrap(),
+        read_profile_soul_revision(&vault_root, "writer")
+            .unwrap()
+            .content,
         "# Writer\n"
     );
     assert_eq!(
@@ -129,7 +131,9 @@ fn creating_never_overwrites_an_existing_profile() {
         "Profile writer"
     );
     assert_eq!(
-        read_profile_soul(&vault_root, "writer").unwrap(),
+        read_profile_soul_revision(&vault_root, "writer")
+            .unwrap()
+            .content,
         "original"
     );
 }
@@ -353,7 +357,12 @@ fn a_missing_soul_is_an_empty_instruction() {
     create_profile(&vault_root, profile("writer", 1000), "soul").unwrap();
     std::fs::remove_file(vault_root.join("profiles/writer/SOUL.md")).unwrap();
 
-    assert_eq!(read_profile_soul(&vault_root, "writer").unwrap(), "");
+    assert_eq!(
+        read_profile_soul_revision(&vault_root, "writer")
+            .unwrap()
+            .content,
+        ""
+    );
 }
 
 #[test]
@@ -1028,5 +1037,105 @@ fn memory_undo_restores_snapshots_per_chat() {
     assert_eq!(
         search_capped.len(),
         crate::services::ai_vault::memory::MAX_MEMORY_SEARCH_RESULTS
+    );
+}
+
+#[test]
+fn entity_listings_ignore_conflict_folders_and_mismatched_ids() {
+    let dir = TestDir::new("vault-conflict-folders");
+    create_profile(&dir, profile("writer", 1), "").unwrap();
+    create_project(&dir, &paths(), project("notes", 1)).unwrap();
+    for (folder, file, id) in [
+        ("profiles", "profile.json", "writer"),
+        ("projects", "project.json", "notes"),
+    ] {
+        let raw = fs::read(dir.join(folder).join(id).join(file)).unwrap();
+        for name in [
+            format!("{id}.sync-conflict-20261110-XYZ"),
+            format!("{id}-LAPTOP"),
+            "other".into(),
+        ] {
+            let copy = dir.join(folder).join(name);
+            fs::create_dir(&copy).unwrap();
+            fs::write(copy.join(file), &raw).unwrap();
+        }
+    }
+    assert_eq!(list_profiles(&dir).unwrap().len(), 1);
+    assert_eq!(list_projects(&dir, &paths()).unwrap().len(), 1);
+    assert!(get_profile(&dir, "other").is_err());
+    // A distinct legacy id is legitimate even when its name resembles a sync copy.
+    create_profile(&dir, profile("writer-DESKTOP", 2), "").unwrap();
+    assert_eq!(list_profiles(&dir).unwrap().len(), 2);
+}
+
+#[test]
+fn creation_returns_the_revision_of_the_bytes_written() {
+    let dir = TestDir::new("vault-create-revision");
+    let revision = create_profile(&dir, profile("writer", 1), "Instructions").unwrap();
+    assert_eq!(
+        get_profile(&dir, "writer").unwrap().revision,
+        Some(revision)
+    );
+    let revision = create_project(&dir, &paths(), project("notes", 1)).unwrap();
+    assert_eq!(
+        list_projects(&dir, &paths()).unwrap()[0].revision,
+        Some(revision)
+    );
+    let soul = read_profile_soul_revision(&dir, "writer").unwrap();
+    assert_eq!(soul.revision, memory::hash_content(&soul.content));
+    fs::remove_file(dir.join("profiles/writer/SOUL.md")).unwrap();
+    assert_eq!(
+        read_profile_soul_revision(&dir, "writer").unwrap(),
+        ProfileSoul {
+            content: String::new(),
+            revision: String::new()
+        }
+    );
+    fs::write(dir.join("profiles/writer/SOUL.md"), "").unwrap();
+    assert_eq!(
+        read_profile_soul_revision(&dir, "writer").unwrap().revision,
+        memory::hash_content("")
+    );
+}
+
+#[test]
+fn concurrent_creation_reserves_a_folder_without_overwriting_it() {
+    let dir = TestDir::new("vault-create-reservation");
+    let barrier = std::sync::Barrier::new(2);
+    let results = std::thread::scope(|scope| {
+        let create = || {
+            barrier.wait();
+            create_profile(&dir, profile("writer", 1), "")
+        };
+        let first = scope.spawn(create);
+        let second = scope.spawn(create);
+        [first.join().unwrap(), second.join().unwrap()]
+    });
+    assert_eq!(results.iter().filter(|result| result.is_ok()).count(), 1);
+    assert!(results
+        .iter()
+        .any(|result| matches!(result, Err(AppError::AlreadyExists(_)))));
+}
+
+#[test]
+fn memory_revision_checks_are_isolated_by_vault_even_for_equal_profile_ids() {
+    let personal = TestDir::new("vault-memory-personal");
+    let work = TestDir::new("vault-memory-work");
+    let versions = MemoryReadVersions::default();
+    for root in [&personal, &work] {
+        create_profile(root, profile("writer", 1), "").unwrap();
+    }
+    rewrite_profile_memory(&personal, &versions, "writer", None, "core.md", "Personal").unwrap();
+    rewrite_profile_memory(&work, &versions, "writer", None, "core.md", "Work").unwrap();
+    read_profile_memory(&personal, &versions, "writer", "core.md").unwrap();
+    read_profile_memory(&work, &versions, "writer", "core.md").unwrap();
+    fs::write(personal.join("profiles/writer/memory/core.md"), "External").unwrap();
+    delete_profile(&work, &versions, "writer").unwrap();
+    assert!(
+        rewrite_profile_memory(&personal, &versions, "writer", None, "core.md", "Mine").is_err()
+    );
+    assert_eq!(
+        fs::read_to_string(personal.join("profiles/writer/memory/core.md")).unwrap(),
+        "External"
     );
 }

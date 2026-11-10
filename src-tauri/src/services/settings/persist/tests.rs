@@ -781,3 +781,37 @@ fn a_lossy_repair_does_not_overwrite_a_file_when_recovery_is_unavailable() {
     assert_eq!(loaded.value["appearance"]["theme"], "auto");
     assert_eq!(fs::read(setup.user_path()).unwrap(), raw);
 }
+
+#[test]
+fn main_vault_references_are_canonical_on_load_save_and_external_merge() {
+    let setup = Setup::new("config-main-vault-references");
+    let user_dir = setup.dir.join("user");
+    crate::services::storage::user_data::write_marker(&user_dir).unwrap();
+    let main_id = crate::services::ai_vault::marker::main_vault_id(&user_dir);
+    let reference = json!({"type":"profileChat", "profileId":"writer", "vaultId":main_id});
+    let mut config = default_user_config();
+    config["actionPages"][0]["slots"]["q"] = reference.clone();
+    fs::write(setup.user_path(), config.to_string()).unwrap();
+    let loaded = setup.load().value;
+    assert!(loaded["actionPages"][0]["slots"]["q"]
+        .get("vaultId")
+        .is_none());
+    let mut local = loaded;
+    local["actionPages"][0]["slots"]["q"] = reference.clone();
+    let saved = setup.save(&local);
+    assert!(saved.value["actionPages"][0]["slots"]["q"]
+        .get("vaultId")
+        .is_none());
+    assert!(setup.user_file()["actionPages"][0]["slots"]["q"]
+        .get("vaultId")
+        .is_none());
+    let mut remote = setup.user_file();
+    remote["actionPages"][0]["slots"]["q"] = reference;
+    remote["appearance"]["theme"] = json!("dark");
+    fs::write(setup.user_path(), remote.to_string()).unwrap();
+    let saved = setup.save(&saved.value);
+    assert_eq!(saved.value["appearance"]["theme"], "dark");
+    assert!(setup.user_file()["actionPages"][0]["slots"]["q"]
+        .get("vaultId")
+        .is_none());
+}

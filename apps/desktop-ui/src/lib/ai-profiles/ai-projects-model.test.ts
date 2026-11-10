@@ -16,7 +16,7 @@ describe('ai-projects-model', () => {
 
   const createDeps = () => ({
     listProjects: vi.fn().mockResolvedValue([mockProject]),
-    createProject: vi.fn().mockResolvedValue(undefined),
+    createProject: vi.fn().mockResolvedValue('r1'),
     saveProject: vi.fn().mockResolvedValue('r2'),
     deleteProject: vi.fn().mockResolvedValue(undefined),
     pickExternalFolder: vi.fn().mockResolvedValue('/path/to/folder'),
@@ -80,10 +80,10 @@ describe('ai-projects-model', () => {
     const deps = createDeps()
     const model = createAiProjectsModel(deps)
     await model.loadProjects()
-    let finishCreate!: () => void
+    let finishCreate!: (revision: string) => void
     deps.createProject.mockImplementationOnce(
       () =>
-        new Promise<void>((resolve) => {
+        new Promise<string>((resolve) => {
           finishCreate = resolve
         })
     )
@@ -99,7 +99,7 @@ describe('ai-projects-model', () => {
     const loading = model.loadProjects()
     resolveList([mockProject, created])
     await loading
-    finishCreate()
+    finishCreate('r1')
     await creating
     expect(
       model.projects.value.filter((item) => item.id === 'project-abcd1234')
@@ -139,7 +139,8 @@ describe('ai-projects-model', () => {
     expect(created.id).toBe('project-abcd1234')
     expect(created.isExternal).toBe(false)
     expect(created.targetPath).toBeUndefined()
-    expect(deps.createProject).toHaveBeenCalledWith(created)
+    const { revision: _revision, ...input } = created
+    expect(deps.createProject).toHaveBeenCalledWith(input)
     expect(model.projects.value).toContainEqual(created)
   })
 
@@ -173,7 +174,8 @@ describe('ai-projects-model', () => {
 
     expect(created.isExternal).toBe(true)
     expect(created.targetPath).toBe('/home/user/docs')
-    expect(deps.createProject).toHaveBeenCalledWith(created)
+    const { revision: _revision, ...input } = created
+    expect(deps.createProject).toHaveBeenCalledWith(input)
   })
 
   it('updates an existing project', async () => {

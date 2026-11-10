@@ -139,9 +139,9 @@ export interface DesktopCommands {
   copy_text: { args: { text: string }; result: void }
   create_ai_profile: {
     args: { profile: AiProfile; soul: string }
-    result: void
+    result: string
   }
-  create_ai_project: { args: { project: AiProject }; result: void }
+  create_ai_project: { args: { project: AiProject }; result: string }
   delete_ai_profile: { args: { id: string }; result: void }
   delete_ai_project: { args: { id: string }; result: void }
   delete_chat: {

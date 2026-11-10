@@ -24,33 +24,47 @@ pub const MAX_MEMORY_SEARCH_RESULTS: usize = 100;
 /// The hash of each memory file as the AI last read it, per profile, so that
 /// a write based on a stale read is refused. Managed by Tauri.
 #[derive(Default)]
-pub struct MemoryReadVersions(RwLock<HashMap<(String, String), String>>);
+pub struct MemoryReadVersions(RwLock<HashMap<(PathBuf, String, String), String>>);
 
 impl MemoryReadVersions {
-    fn key(profile_id: &str, file: &str) -> (String, String) {
-        (profile_id.to_owned(), file.to_owned())
+    fn key(vault_root: &Path, profile_id: &str, file: &str) -> (PathBuf, String, String) {
+        (
+            crate::services::storage::data_root_relocation::normalized(vault_root),
+            profile_id.to_owned(),
+            file.to_owned(),
+        )
     }
 
-    fn record(&self, profile_id: &str, file: &str, content: &str) {
+    fn record(&self, vault_root: &Path, profile_id: &str, file: &str, content: &str) {
+        self.0.write_locked().insert(
+            Self::key(vault_root, profile_id, file),
+            hash_content(content),
+        );
+    }
+
+    fn forget(&self, vault_root: &Path, profile_id: &str, file: &str) {
         self.0
             .write_locked()
-            .insert(Self::key(profile_id, file), hash_content(content));
+            .remove(&Self::key(vault_root, profile_id, file));
     }
 
-    fn forget(&self, profile_id: &str, file: &str) {
-        self.0.write_locked().remove(&Self::key(profile_id, file));
-    }
-
-    pub fn clear_profile(&self, profile_id: &str) {
+    pub fn clear_profile(&self, vault_root: &Path, profile_id: &str) {
+        let root = crate::services::storage::data_root_relocation::normalized(vault_root);
         self.0
             .write_locked()
-            .retain(|(profile, _), _| profile != profile_id);
+            .retain(|(vault, profile, _), _| vault != &root || profile != profile_id);
     }
 
     /// Fails when the file on disk differs from the version last read.
-    fn check(&self, profile_id: &str, file: &str, disk_content: &str) -> Result<(), AppError> {
+    fn check(
+        &self,
+        vault_root: &Path,
+        profile_id: &str,
+        file: &str,
+        disk_content: &str,
+    ) -> Result<(), AppError> {
         let versions = self.0.read_locked();
-        match versions.get(&Self::key(profile_id, file)) {
+        match versions.get(&Self::key(vault_root, profile_id, file)) {
             Some(last_hash) if *last_hash != hash_content(disk_content) => {
                 Err(AppError::InvalidInput(
                     "The memory file was modified after it was read. Read it again before modifying.".into(),
@@ -251,7 +265,7 @@ pub fn read_profile_memory(
     }
 
     let content = fs::read_to_string(&target_path)?;
-    versions.record(profile_id, &normalized, &content);
+    versions.record(vault_root, profile_id, &normalized, &content);
     Ok(content)
 }
 
@@ -282,7 +296,7 @@ pub fn add_profile_memory_fact(
 
     let (before, after) = if target_path.exists() {
         let existing = fs::read_to_string(&target_path)?;
-        versions.check(profile_id, &normalized, &existing)?;
+        versions.check(vault_root, profile_id, &normalized, &existing)?;
         save_snapshot_if_needed(&memory_dir, chat_id, &normalized, &target_path)?;
 
         let mut next = existing.clone();
@@ -329,7 +343,7 @@ pub fn add_profile_memory_fact(
     }
 
     write_private(&target_path, &after)?;
-    versions.record(profile_id, &normalized, &after);
+    versions.record(vault_root, profile_id, &normalized, &after);
 
     Ok(ProfileMemoryChange {
         file: normalized,
@@ -409,7 +423,7 @@ pub fn replace_profile_memory(
     }
 
     let before = fs::read_to_string(&target_path)?;
-    versions.check(profile_id, &normalized, &before)?;
+    versions.check(vault_root, profile_id, &normalized, &before)?;
 
     let after = apply_memory_replace(&before, old_text, new_text)?;
     if after.len() > MAX_MEMORY_FILE_BYTES {
@@ -420,7 +434,7 @@ pub fn replace_profile_memory(
 
     save_snapshot_if_needed(&memory_dir, chat_id, &normalized, &target_path)?;
     write_private(&target_path, &after)?;
-    versions.record(profile_id, &normalized, &after);
+    versions.record(vault_root, profile_id, &normalized, &after);
 
     Ok(ProfileMemoryChange {
         file: normalized,
@@ -451,7 +465,7 @@ pub fn rewrite_profile_memory(
 
     let before = if target_path.exists() {
         let existing = fs::read_to_string(&target_path)?;
-        versions.check(profile_id, &normalized, &existing)?;
+        versions.check(vault_root, profile_id, &normalized, &existing)?;
         save_snapshot_if_needed(&memory_dir, chat_id, &normalized, &target_path)?;
         Some(existing)
     } else {
@@ -468,7 +482,7 @@ pub fn rewrite_profile_memory(
     };
 
     write_private(&target_path, content)?;
-    versions.record(profile_id, &normalized, content);
+    versions.record(vault_root, profile_id, &normalized, content);
 
     Ok(ProfileMemoryChange {
         file: normalized,
@@ -508,7 +522,7 @@ pub fn undo_profile_memory(
         if fs::remove_file(&absent_file).is_ok() {
             crate::services::storage::watcher::deleted(&absent_file);
         }
-        versions.forget(profile_id, &normalized);
+        versions.forget(vault_root, profile_id, &normalized);
         return Ok(ProfileMemoryChange {
             file: normalized,
             before,
@@ -524,7 +538,7 @@ pub fn undo_profile_memory(
         };
         let restored = fs::read_to_string(&snapshot_file)?;
         write_private(&target_path, &restored)?;
-        versions.record(profile_id, &normalized, &restored);
+        versions.record(vault_root, profile_id, &normalized, &restored);
         if fs::remove_file(&snapshot_file).is_ok() {
             crate::services::storage::watcher::deleted(&snapshot_file);
         }
@@ -685,6 +699,6 @@ pub fn clear_profile_memory(
     }
 
     write_private(&memory_dir.join(MEMORY_CORE_FILE), DEFAULT_MEMORY_CORE)?;
-    versions.clear_profile(profile_id);
+    versions.clear_profile(vault_root, profile_id);
     Ok(())
 }

@@ -10,7 +10,7 @@ export interface AiProfilesModelDependencies {
   listProfiles: () => Promise<AiProfile[]>
   /** The profile as it is on disk now */
   getProfile: (id: string) => Promise<AiProfile>
-  createProfile: (profile: AiProfile, soul: string) => Promise<void>
+  createProfile: (profile: AiProfile, soul: string) => Promise<string>
   /**
    * Stores the profile over the file of `expectedRevision`, failing with
    * `staleRevision` when it changed meanwhile; returns the new revision
@@ -61,7 +61,7 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
   const conflicts: Ref<Record<string, AiProfile>> = ref({})
   const now = deps.now ?? (() => Date.now())
   /** Writes of each profile, one after another, so the last change wins */
-  const pendingSaves = new Map<string, Promise<void>>()
+  const pendingSaves = new Map<string, Promise<string | undefined>>()
 
   const refreshRequests = new Map<string, number>()
   let loadRequest = 0
@@ -122,8 +122,11 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
           createdAt: timestamp,
           updatedAt: timestamp,
         }
-        await persistChange(() => deps.createProfile(newProfile, data.soul))
-        return newProfile
+        let revision = ''
+        await persistChange(async () => {
+          revision = await deps.createProfile(newProfile, data.soul)
+        })
+        return { ...newProfile, revision }
       },
       deps.randomSuffix,
       data.vaultId
@@ -136,9 +139,13 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
    * Applies the change at once and stores it after the writes started before,
    * so quick edits never undo one another
    */
-  const updateProfile = (id: string, patch: AiProfilePatch): Promise<void> => {
+  const updateProfile = (
+    id: string,
+    patch: AiProfilePatch,
+    expectedRevision?: string
+  ): Promise<string | undefined> => {
     const current = getProfile(id)
-    if (!current) return Promise.resolve()
+    if (!current) return Promise.resolve(undefined)
     ++loadRequest
     replace({ ...current, ...patch, updatedAt: now() })
     const previous = pendingSaves.get(id) ?? Promise.resolve()
@@ -150,9 +157,13 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
           if (!latest) return
           const { revision: expected, ...stored } = latest
           try {
-            const revision = await deps.saveProfile(stored, expected)
+            const revision = await deps.saveProfile(
+              stored,
+              expectedRevision ?? expected
+            )
             const saved = getProfile(id)
             if (saved) replace({ ...saved, revision })
+            return revision
           } catch (error) {
             if (isIpcErrorCode(error, 'staleRevision'))
               conflicts.value = { ...conflicts.value, [id]: latest }
@@ -245,7 +256,7 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
         projectId,
         level
       ),
-    })
+    }).then(() => {})
   }
 
   const forgetConflict = (id: string) => {
@@ -260,19 +271,19 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
   const resolveConflict = async (
     id: string,
     keepMine: boolean
-  ): Promise<void> => {
+  ): Promise<string | undefined> => {
     const mine = conflicts.value[id]
-    if (!mine) return
+    if (!mine) return getProfile(id)?.revision
     await pendingSaves.get(id)?.catch(() => {})
     const stored = await deps.getProfile(id)
     forgetConflict(id)
     ++loadRequest
     if (!keepMine) {
       replace(stored)
-      return
+      return stored.revision
     }
     replace({ ...(getProfile(id) ?? mine), revision: stored.revision })
-    await updateProfile(id, {})
+    return updateProfile(id, {})
   }
 
   const readSoul = async (id: string): Promise<string> =>

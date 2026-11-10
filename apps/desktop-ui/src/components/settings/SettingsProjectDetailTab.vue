@@ -268,9 +268,14 @@ const projectTypeOptions = computed(() => [
 ])
 
 const editor = createProjectEditor({
-  saveProject: async (fields) => {
+  saveProject: async (fields, expectedRevision) => {
     const current = aiProfilesStore.getProject(props.projectId)
-    if (current) await aiProfilesStore.saveProject({ ...current, ...fields })
+    if (!current) throw new Error(`Project not found: ${props.projectId}`)
+    return aiProfilesStore.saveProject({
+      ...current,
+      ...fields,
+      revision: expectedRevision,
+    })
   },
   // a conflict is shown with its own choice, not as a failure
   reportError: (message, retry) => {
@@ -290,11 +295,14 @@ const hasConflict = computed(() =>
 
 async function resolveConflict(keepMine: boolean) {
   try {
+    // Include edits typed after the conflict appeared before choosing a version.
+    if (keepMine) await editor.flush()
+    else editor.cancel()
     const stored = await aiProfilesStore.resolveProjectConflict(
       props.projectId,
       keepMine
     )
-    if (!keepMine && stored) editor.load(stored)
+    if (stored) editor.load(stored)
   } catch (error) {
     toastError(error)
   }
@@ -315,9 +323,9 @@ const project = computed(() =>
   isNew.value ? undefined : aiProfilesStore.getProject(props.projectId)
 )
 watch(
-  () => Boolean(project.value),
-  (isThere) => {
-    if (isThere) editor.load(project.value)
+  () => project.value,
+  (stored) => {
+    if (stored && !hasConflict.value) editor.syncFromStored(stored)
   },
   { immediate: true }
 )

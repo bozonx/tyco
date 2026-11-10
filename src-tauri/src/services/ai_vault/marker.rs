@@ -83,6 +83,14 @@ fn write_marker_with(
 /// made from the id of that folder, so every device that finds the vault
 /// without its marker, e.g. before a sync has brought it, writes the same
 /// file and no conflicting copy with another id comes up.
+pub fn main_vault_id(user_dir: &Path) -> String {
+    let dir = user_dir.join(super::VAULT_DIR_NAME);
+    read_marker(&dir)
+        .ok()
+        .flatten()
+        .map_or_else(|| default_vault_id(&dir), |marker| marker.vault_id)
+}
+
 fn default_vault_id(dir: &Path) -> String {
     dir.parent()
         .and_then(crate::services::storage::user_data::marker_data_id)

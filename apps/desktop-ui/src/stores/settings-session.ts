@@ -23,6 +23,7 @@ export const useSettingsSessionStore = defineStore('settingsSession', () => {
   const config = createSettingsConfig({
     pluginFactories: () => pluginFactories,
     appearance: () => theme.settings,
+    mainVaultId: () => desktop.userData.mainVaultId,
   })
   const session = createSettingsSession({
     initialConfig: desktop.savedUserConfig,

@@ -24,14 +24,17 @@ import {
 export interface ProfileEditorDependencies extends AutosaveTimers {
   /** The profile as the app holds it now */
   getProfile: () => AiProfile | undefined
-  updateProfile: (patch: AiProfilePatch) => Promise<void>
+  updateProfile: (
+    patch: AiProfilePatch,
+    expectedRevision?: string
+  ) => Promise<string | undefined>
   readSoul: () => Promise<ProfileSoul>
   /** Writes over the file of `expectedRevision`; the new revision */
   writeSoul: (content: string, expectedRevision: string) => Promise<string>
   /** Whether a save of the profile found it changed elsewhere */
   hasProfileConflict: () => boolean
   /** Takes the profile on disk, or stores the one of this window over it */
-  resolveProfileConflict: (keepMine: boolean) => Promise<void>
+  resolveProfileConflict: (keepMine: boolean) => Promise<string | undefined>
   /** `retry` repeats what failed */
   reportError: (message: string, retry: () => void) => void
 }
@@ -46,6 +49,17 @@ const isSettled = (status: AutosaveStatus) =>
  * stored at once. Every save shows in one status
  */
 export function createProfileEditor(deps: ProfileEditorDependencies) {
+  let profileRevision: string | undefined
+  let profileWrites: Promise<void> = Promise.resolve()
+  const updateProfile = (patch: AiProfilePatch): Promise<void> => {
+    const write = profileWrites
+      .catch(() => {})
+      .then(async () => {
+        profileRevision = await deps.updateProfile(patch, profileRevision)
+      })
+    profileWrites = write
+    return write
+  }
   const name = ref('')
   const temperatureText = ref('')
   const maxOutputTokensText = ref('')
@@ -80,7 +94,7 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
       const maxOutputTokens = parseModelTokenCount(maxOutputTokensText.value)
       const stepCount = parseToolStepCount(stepCountText.value)
       const tools = deps.getProfile()?.tools
-      await deps.updateProfile({
+      await updateProfile({
         ...(name.value.trim() ? { name: name.value.trim() } : {}),
         ...(temperature.isValid ? { temperature: temperature.value } : {}),
         ...(maxOutputTokens.isValid
@@ -109,9 +123,7 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
 
   // the profile in the app already holds a failed pick: storing it again
   // stores the pick
-  const pickedSaves = createSaveTracker({
-    resave: () => deps.updateProfile({}),
-  })
+  const pickedSaves = createSaveTracker({ resave: () => updateProfile({}) })
 
   const autosaves = createAutosaveGroup({
     parts: [profileAutosave, soulAutosave, pickedSaves],
@@ -147,6 +159,7 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
   }
 
   const fillFields = (profile: AiProfile) => {
+    profileRevision = profile.revision
     name.value = profile.name
     temperatureText.value = String(profile.temperature ?? '')
     maxOutputTokensText.value = String(profile.maxOutputTokens ?? '')
@@ -172,7 +185,15 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
    * was typed
    */
   const syncFromStored = async (profile: AiProfile): Promise<void> => {
-    if (hasLoadedProfile && isSettled(profileAutosave.status.value))
+    if (
+      hasLoadedProfile &&
+      isSettled(profileAutosave.status.value) &&
+      isSettled(pickedSaves.status.value) &&
+      !temperatureError.value &&
+      !maxOutputTokensError.value &&
+      !stepCountError.value &&
+      Boolean(name.value.trim())
+    )
       fillFields(profile)
     if (!isSoulLoaded.value || !isSettled(soulAutosave.status.value)) return
     const shownPrompt = soulPrompt.value
@@ -218,7 +239,7 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
 
   /** A picked value: the model, a switch or an access mode */
   const changeSettings = (patch: AiProfilePatch): Promise<boolean> =>
-    pickedSaves.track(deps.updateProfile(patch))
+    pickedSaves.track(updateProfile(patch))
 
   const saveStatus = computed<AutosaveSummary>(() =>
     soulLoadError.value ? 'error' : autosaves.status.value
@@ -234,22 +255,30 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
    * what this window shows over them
    */
   const resolveConflict = async (keepMine: boolean): Promise<void> => {
-    if (deps.hasProfileConflict()) await deps.resolveProfileConflict(keepMine)
-    if (hasSoulConflict.value) {
+    const hasProfileConflict = deps.hasProfileConflict()
+    const hadSoulConflict = hasSoulConflict.value
+    if (hasProfileConflict) {
+      profileRevision = await deps.resolveProfileConflict(keepMine)
+    }
+    if (hadSoulConflict) {
       const stored = await deps.readSoul()
       soulRevision = stored.revision
       if (!keepMine) soulPrompt.value = stored.content
       hasSoulConflict.value = false
     }
     if (keepMine) {
-      profileAutosave.schedule()
-      soulAutosave.schedule()
+      if (hasProfileConflict) profileAutosave.schedule()
+      if (hadSoulConflict) soulAutosave.schedule()
       await autosaves.flush()
       return
     }
-    autosaves.cancel()
-    const profile = deps.getProfile()
-    if (profile) fillFields(profile)
+    if (hadSoulConflict) soulAutosave.cancel()
+    if (hasProfileConflict) {
+      profileAutosave.cancel()
+      pickedSaves.cancel()
+      const profile = deps.getProfile()
+      if (profile) fillFields(profile)
+    }
   }
 
   /** Saves the waiting changes now, e.g. when the page is left */

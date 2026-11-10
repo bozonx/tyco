@@ -17,7 +17,7 @@ describe('ai-profiles-model', () => {
   const createDeps = () => ({
     listProfiles: vi.fn().mockResolvedValue([mockProfile]),
     getProfile: vi.fn().mockResolvedValue(mockProfile),
-    createProfile: vi.fn().mockResolvedValue(undefined),
+    createProfile: vi.fn().mockResolvedValue('r1'),
     saveProfile: vi.fn().mockResolvedValue('r2'),
     deleteProfile: vi.fn().mockResolvedValue(undefined),
     readSoul: vi
@@ -100,10 +100,10 @@ describe('ai-profiles-model', () => {
     const deps = createDeps()
     const model = createAiProfilesModel(deps)
     await model.loadProfiles()
-    let finishCreate!: () => void
+    let finishCreate!: (revision: string) => void
     deps.createProfile.mockImplementationOnce(
       () =>
-        new Promise<void>((resolve) => {
+        new Promise<string>((resolve) => {
           finishCreate = resolve
         })
     )
@@ -119,7 +119,7 @@ describe('ai-profiles-model', () => {
     const loading = model.loadProfiles()
     resolveList([mockProfile, created])
     await loading
-    finishCreate()
+    finishCreate('r1')
     await creating
     expect(
       model.profiles.value.filter((item) => item.id === 'profile-abcd1234')
@@ -159,13 +159,15 @@ describe('ai-profiles-model', () => {
 
     expect(created).toEqual({
       id: 'profile-abcd1234',
+      revision: 'r1',
       name: 'Code Reviewer',
       memoryMode: 'auto',
       projectPermissions: {},
       createdAt: 2000,
       updatedAt: 2000,
     })
-    expect(deps.createProfile).toHaveBeenCalledWith(created, '# Reviewer')
+    const { revision: _revision, ...input } = created
+    expect(deps.createProfile).toHaveBeenCalledWith(input, '# Reviewer')
     expect(model.profiles.value).toContainEqual(created)
   })
 
@@ -369,6 +371,7 @@ describe('ai-profiles-model', () => {
     expect(copy).toEqual({
       id: 'profile-abcd1234',
       name: 'Tech Writer 2',
+      revision: 'r1',
       memoryMode: 'auto',
       modelId: 'gpt-4o',
       temperature: 0.3,
@@ -377,7 +380,8 @@ describe('ai-profiles-model', () => {
       createdAt: 2000,
       updatedAt: 2000,
     })
-    expect(deps.createProfile).toHaveBeenCalledWith(copy, '# Writer Prompt')
+    const { revision: _revision, ...input } = copy
+    expect(deps.createProfile).toHaveBeenCalledWith(input, '# Writer Prompt')
     // the copy does not share state with the original
     copy.projectPermissions['docs-proj']!.write = 'deny'
     expect(

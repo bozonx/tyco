@@ -44,6 +44,7 @@ function createStore() {
     profiles: [profile()] as AiProfile[],
     projects: [] as AiProject[],
     isLoaded: true,
+    profileStorageRevisions: {} as Record<string, number>,
   })
   return Object.assign(state, {
     getProfile: (id: string) => state.profiles.find((item) => item.id === id),
@@ -58,7 +59,9 @@ function createStore() {
     writeSoul: vi.fn(async () => 's2'),
     profileConflicts: {} as Record<string, unknown>,
     resolveProfileConflict: vi.fn(async () => {}),
-    refreshProfile: vi.fn(async () => undefined),
+    refreshProfile: vi.fn(
+      async (): Promise<AiProfile | undefined> => undefined
+    ),
     openVaultDir: vi.fn(async () => {}),
     countChats: vi.fn(async () => 3),
     deleteProfile: vi.fn(async () => {}),
@@ -143,12 +146,17 @@ describe('SettingsProfileDetailTab.vue', () => {
       expect.objectContaining({ id: 'site' }),
     ])
     await list.vm.$emit('change', 'site', 'full')
-    expect(store.updateProfile).toHaveBeenLastCalledWith('writer', {
-      projectPermissions: {
-        docs: { read: 'allow', write: 'deny' },
-        site: { read: 'allow', write: 'allow' },
+    await flushPromises()
+    expect(store.updateProfile).toHaveBeenLastCalledWith(
+      'writer',
+      {
+        projectPermissions: {
+          docs: { read: 'allow', write: 'deny' },
+          site: { read: 'allow', write: 'allow' },
+        },
       },
-    })
+      undefined
+    )
     await list.vm.$emit('open', 'docs')
     expect(context.navigate).toHaveBeenCalledWith('ai-project:docs')
   })
@@ -194,6 +202,23 @@ describe('SettingsProfileDetailTab.vue', () => {
     window.dispatchEvent(new Event('focus'))
     await flushPromises()
     expect(store.refreshProfile).toHaveBeenCalledWith('writer')
+  })
+
+  it('refreshes a clean SOUL field on a storage event without a profile revision change', async () => {
+    const wrapper = mountTab()
+    await flushPromises()
+    store.refreshProfile.mockImplementation(async () => store.profiles[0])
+    store.readSoulWithRevision.mockResolvedValue({
+      content: 'Remote instructions',
+      revision: 's2',
+    })
+    store.profileStorageRevisions.writer = 1
+    await flushPromises()
+    expect(
+      wrapper.findComponent({ name: 'FieldPromptTextArea' }).props('modelValue')
+    ).toBe('Remote instructions')
+    expect(store.writeSoul).not.toHaveBeenCalled()
+    wrapper.unmount()
   })
 
   it('tells when the profile does not exist', () => {

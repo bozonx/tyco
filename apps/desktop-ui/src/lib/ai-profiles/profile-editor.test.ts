@@ -58,10 +58,10 @@ describe('profile editor', () => {
     await vi.advanceTimersByTimeAsync(100)
 
     expect(deps.updateProfile).toHaveBeenCalledOnce()
-    expect(deps.updateProfile).toHaveBeenCalledWith({
-      name: 'Editor',
-      temperature: 0.7,
-    })
+    expect(deps.updateProfile).toHaveBeenCalledWith(
+      { name: 'Editor', temperature: 0.7 },
+      undefined
+    )
     expect(editor.saveStatus.value).toBe('saved')
   })
 
@@ -154,11 +154,14 @@ describe('profile editor', () => {
     expect(editor.stepCountError.value).toBe(false)
     await vi.advanceTimersByTimeAsync(100)
 
-    expect(deps.updateProfile).toHaveBeenCalledWith({
-      name: 'Writer',
-      temperature: 0.5,
-      tools: { ...tools, maxStepCount: 12 },
-    })
+    expect(deps.updateProfile).toHaveBeenCalledWith(
+      {
+        name: 'Writer',
+        temperature: 0.5,
+        tools: { ...tools, maxStepCount: 12 },
+      },
+      undefined
+    )
   })
 
   it('shows picked values in the same save status', async () => {
@@ -196,7 +199,7 @@ describe('profile editor', () => {
     retry()
     await vi.advanceTimersByTimeAsync(0)
 
-    expect(deps.updateProfile).toHaveBeenLastCalledWith({})
+    expect(deps.updateProfile).toHaveBeenLastCalledWith({}, undefined)
     expect(editor.saveStatus.value).toBe('saved')
   })
 
@@ -237,7 +240,43 @@ describe('profile editor', () => {
 
     editor.changeMemoryMode('ask')
     expect(editor.memoryMode.value).toBe('ask')
-    expect(deps.updateProfile).toHaveBeenCalledWith({ memoryMode: 'ask' })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(deps.updateProfile).toHaveBeenCalledWith(
+      { memoryMode: 'ask' },
+      undefined
+    )
+  })
+
+  it('uses the returned profile revision for queued picks instead of a newer store snapshot', async () => {
+    const { deps, editor } = setup()
+    await editor.load({ ...profile, revision: 'r1' })
+    deps.getProfile.mockReturnValue({ ...profile, revision: 'unseen' })
+    deps.updateProfile.mockResolvedValueOnce('r2').mockResolvedValueOnce('r3')
+    const first = editor.changeSettings({ modelId: 'first' })
+    const second = editor.changeSettings({ modelId: 'second' })
+    expect(await first).toBe(true)
+    expect(await second).toBe(true)
+    expect(deps.updateProfile).toHaveBeenNthCalledWith(
+      1,
+      { modelId: 'first' },
+      'r1'
+    )
+    expect(deps.updateProfile).toHaveBeenNthCalledWith(
+      2,
+      { modelId: 'second' },
+      'r2'
+    )
+  })
+
+  it('uses the conflict resolution revision rather than a newer unshown store revision', async () => {
+    const { deps, editor } = setup({ hasProfileConflict: () => true })
+    await editor.load({ ...profile, revision: 'r1' })
+    deps.getProfile.mockReturnValue({ ...profile, revision: 'unseen' })
+    deps.resolveProfileConflict.mockResolvedValue('r2')
+    deps.updateProfile.mockResolvedValue('r3')
+    await editor.resolveConflict(true)
+    expect(deps.updateProfile).toHaveBeenLastCalledWith(expect.anything(), 'r2')
+    expect(deps.writeSoul).not.toHaveBeenCalled()
   })
 
   it('stops at a SOUL.md changed elsewhere and saves mine over it', async () => {
@@ -254,7 +293,28 @@ describe('profile editor', () => {
 
     await editor.resolveConflict(true)
     expect(deps.writeSoul).toHaveBeenLastCalledWith('Mine', 's1')
+    expect(deps.updateProfile).not.toHaveBeenCalled()
     expect(editor.hasConflict.value).toBe(false)
+  })
+
+  it('keeps an unrelated pending profile draft when reloading a SOUL conflict', async () => {
+    const { deps, editor } = setup()
+    await editor.load(profile)
+    deps.writeSoul.mockRejectedValueOnce(
+      new IpcCallError('changed', 'staleRevision')
+    )
+    editor.soulPrompt.value = 'Mine'
+    editor.changeSoul()
+    expect(await editor.flush()).toBe(false)
+    editor.name.value = 'Pending name'
+    editor.changeName()
+    await editor.resolveConflict(false)
+    expect(editor.name.value).toBe('Pending name')
+    expect(await editor.flush()).toBe(true)
+    expect(deps.updateProfile).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: 'Pending name' }),
+      undefined
+    )
   })
 
   it('rereads a SOUL.md changed elsewhere', async () => {

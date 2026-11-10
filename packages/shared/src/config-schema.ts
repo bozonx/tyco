@@ -438,11 +438,49 @@ export function normalizeCommands(value: unknown): UserConfig['commands'] {
 }
 
 /**
+ * Canonicalizes config-owned profile references in place; opaque plugin fields
+ * stay intact.
+ */
+export function normalizeMainVaultReferences(
+  config: unknown,
+  mainVaultId: string
+): void {
+  if (!isRecord(config) || !mainVaultId) return
+  const canonicalize = (value: unknown, isSlot = false): void => {
+    if (
+      !isRecord(value) ||
+      (isSlot && value.type !== 'profile' && value.type !== 'profileChat')
+    )
+      return
+    if (typeof value.profileId === 'string' && value.vaultId === mainVaultId)
+      delete value.vaultId
+  }
+  if (Array.isArray(config.actionPages)) {
+    for (const page of config.actionPages) {
+      if (isRecord(page) && isRecord(page.slots))
+        Object.values(page.slots).forEach((value) => canonicalize(value, true))
+    }
+  }
+  if (Array.isArray(config.customActionSlots)) {
+    for (const slot of config.customActionSlots) {
+      if (isRecord(slot)) canonicalize(slot.action, true)
+    }
+  }
+  if (isRecord(config.chatPrompts) && Array.isArray(config.chatPrompts.items))
+    config.chatPrompts.items.forEach((value) => canonicalize(value))
+}
+
+/**
  * Repairs known fields; unknown ones, e.g. of a newer build, are kept as they
  * are, as are the opaque plugin and tool settings
  */
-export function normalizeUserConfig(value: UserConfigInput): UserConfig {
+export function normalizeUserConfig(
+  value: UserConfigInput,
+  mainVaultId = ''
+): UserConfig {
   const config = repair(repairCommandIds(value), schema) as UserConfig
+  delete (config as unknown as Record<string, unknown>).aiVault
+  normalizeMainVaultReferences(config, mainVaultId)
   config.configVersion = configVersion
   config.commands = normalizeCommands(config.commands)
   config.llm = normalizeLlmConfig(config.llm)

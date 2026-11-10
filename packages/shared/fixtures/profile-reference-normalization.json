@@ -1,0 +1,74 @@
+{
+  "mainVaultId": "data-personal",
+  "input": {
+    "actionPages": [
+      {
+        "slots": {
+          "q": {
+            "type": "profileChat",
+            "profileId": "writer",
+            "vaultId": "data-personal",
+            "opaque": { "profileId": "writer", "vaultId": "data-personal" }
+          },
+          "w": {
+            "type": "profileChat",
+            "profileId": "writer",
+            "vaultId": "data-work"
+          }
+        }
+      }
+    ],
+    "customActionSlots": [
+      {
+        "action": {
+          "type": "profile",
+          "profileId": "writer",
+          "vaultId": "data-personal"
+        }
+      }
+    ],
+    "favorites": {
+      "items": [
+        { "id": "fav", "profileId": "writer", "vaultId": "data-personal" }
+      ]
+    },
+    "chatPrompts": {
+      "items": [
+        { "id": "prompt", "profileId": "writer", "vaultId": "data-personal" }
+      ]
+    },
+    "plugins": {
+      "opaque": { "profileId": "writer", "vaultId": "data-personal" }
+    }
+  },
+  "expected": {
+    "actionPages": [
+      {
+        "slots": {
+          "q": {
+            "type": "profileChat",
+            "profileId": "writer",
+            "opaque": { "profileId": "writer", "vaultId": "data-personal" }
+          },
+          "w": {
+            "type": "profileChat",
+            "profileId": "writer",
+            "vaultId": "data-work"
+          }
+        }
+      }
+    ],
+    "customActionSlots": [
+      { "action": { "type": "profile", "profileId": "writer" } }
+    ],
+    "favorites": {
+      "items": [
+        { "id": "fav", "profileId": "writer", "vaultId": "data-personal" }
+      ]
+    },
+    "chatPrompts": { "items": [{ "id": "prompt", "profileId": "writer" }] },
+    "plugins": {
+      "opaque": { "profileId": "writer", "vaultId": "data-personal" }
+    }
+  }
+}

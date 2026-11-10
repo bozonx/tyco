@@ -140,6 +140,8 @@ impl UserData {
 
     pub fn state(&self) -> UserDataState {
         UserDataState {
+            main_vault_id: (self.current_status() != UserDataStatus::NotConnected)
+                .then(|| crate::services::ai_vault::marker::main_vault_id(&self.dir)),
             path: self.dir.to_string_lossy().into_owned(),
             default_path: self.default_dir.to_string_lossy().into_owned(),
             is_default: self.is_default(),

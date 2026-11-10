@@ -6,7 +6,7 @@ import { createWithFreshId } from './vault-id'
 
 export interface AiProjectsModelDependencies {
   listProjects: () => Promise<AiProject[]>
-  createProject: (project: AiProject) => Promise<void>
+  createProject: (project: AiProject) => Promise<string>
   /**
    * Stores the project over the file of `expectedRevision`, failing with
    * `staleRevision` when it changed meanwhile; returns the new revision
@@ -84,8 +84,11 @@ export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
           createdAt: timestamp,
           updatedAt: timestamp,
         }
-        await persistChange(() => deps.createProject(newProject))
-        return newProject
+        let revision = ''
+        await persistChange(async () => {
+          revision = await deps.createProject(newProject)
+        })
+        return { ...newProject, revision }
       },
       deps.randomSuffix,
       data.vaultId
@@ -94,7 +97,7 @@ export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
     return created
   }
 
-  const saveProject = async (project: AiProject): Promise<void> => {
+  const saveProject = async (project: AiProject): Promise<string> => {
     const { revision: expected, ...rest } = project
     const updated: AiProject = { ...rest, updatedAt: now() }
     let revision = ''
@@ -109,6 +112,7 @@ export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
     }
     const saved = { ...updated, revision }
     projects.value = projects.value.map((p) => (p.id === saved.id ? saved : p))
+    return revision
   }
 
   /**

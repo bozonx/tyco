@@ -1,6 +1,7 @@
 import { DESKTOP_EVENTS, type VaultFolder, type VaultInfo } from '@tyco/shared'
 
 import { clientLogger } from '../lib/logger'
+import { joinRef } from '../lib/ai-profiles/profile-ref'
 import { defineStore } from 'pinia'
 import { computed, onScopeDispose, readonly, ref, watch } from 'vue'
 import { desktopClient } from '../lib/desktop/client'
@@ -26,9 +27,8 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     listProfiles: async () => resultOrThrow(await call('list_ai_profiles')),
     getProfile: async (id) =>
       resultOrThrow(await call('get_ai_profile', { id })),
-    createProfile: async (profile, soul) => {
-      resultOrThrow(await call('create_ai_profile', { profile, soul }))
-    },
+    createProfile: async (profile, soul) =>
+      resultOrThrow(await call('create_ai_profile', { profile, soul })),
     saveProfile: async (profile, expectedRevision) =>
       resultOrThrow(
         await call('save_ai_profile', { profile, expectedRevision })
@@ -56,9 +56,8 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
 
   const projectsModel = createAiProjectsModel({
     listProjects: async () => resultOrThrow(await call('list_ai_projects')),
-    createProject: async (project) => {
-      resultOrThrow(await call('create_ai_project', { project }))
-    },
+    createProject: async (project) =>
+      resultOrThrow(await call('create_ai_project', { project })),
     saveProject: async (project, expectedRevision) =>
       resultOrThrow(
         await call('save_ai_project', { project, expectedRevision })
@@ -116,11 +115,22 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     }
   }
 
+  const profileStorageRevisions = ref<Record<string, number>>({})
   let disposed = false
   let stopStorageListening: (() => void) | undefined
   if (desktopClient.isAvailable()) {
     void desktopClient
       .listen(DESKTOP_EVENTS.STORAGE_CHANGED, ({ vaultChanges }) => {
+        for (const change of vaultChanges) {
+          const match = /^profiles\/([^/]+)\/(profile\.json|SOUL\.md)$/.exec(
+            change.path
+          )
+          if (match) {
+            const key = joinRef(change.vaultId, match[1]!)
+            profileStorageRevisions.value[key] =
+              (profileStorageRevisions.value[key] ?? 0) + 1
+          }
+        }
         if (vaultChanges.length) void loadAll()
       })
       .then((stop) => {
@@ -269,6 +279,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     readSoul: profilesModel.readSoul,
     readSoulWithRevision,
     writeSoul,
+    profileStorageRevisions: readonly(profileStorageRevisions),
     profileConflicts: readonly(profilesModel.conflicts),
     resolveProfileConflict: profilesModel.resolveConflict,
     // Memory

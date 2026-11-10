@@ -417,19 +417,13 @@ describe('QuickAiRequestMenu', () => {
         mode: 'voiceQuickAiRequest',
         userConfig: {
           ...desktop.backend.userConfig,
-          stt: {
-            ...desktop.backend.userConfig.stt,
-            provider: 'geminiLive',
-          },
+          stt: { ...desktop.backend.userConfig.stt, provider: 'geminiLive' },
         },
       })
 
       const wrapper = mount(QuickAiRequestMenu, {
         props: { text: '', inputMode: 'voice' },
-        global: {
-          plugins: [desktop.pinia],
-          stubs: { AppIcon: true },
-        },
+        global: { plugins: [desktop.pinia], stubs: { AppIcon: true } },
       })
       await flushPromises()
 

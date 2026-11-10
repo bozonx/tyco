@@ -123,6 +123,7 @@ mod tests {
                 path: "/state".into(),
             }],
             user_data: crate::models::UserDataState {
+                main_vault_id: None,
                 path: "/sync/tyco".into(),
                 default_path: "/data".into(),
                 is_default: false,

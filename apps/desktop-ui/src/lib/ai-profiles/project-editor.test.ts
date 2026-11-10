@@ -16,7 +16,7 @@ const project: AiProject = {
 
 function setup() {
   const deps = {
-    saveProject: vi.fn().mockResolvedValue(undefined),
+    saveProject: vi.fn().mockResolvedValue('r2'),
     reportError: vi.fn(),
     delayMs: 100,
   }
@@ -51,12 +51,15 @@ describe('project editor', () => {
     await vi.advanceTimersByTimeAsync(100)
 
     expect(deps.saveProject).toHaveBeenCalledOnce()
-    expect(deps.saveProject).toHaveBeenCalledWith({
-      name: 'Journal',
-      description: 'Daily notes',
-      isExternal: false,
-      targetPath: undefined,
-    })
+    expect(deps.saveProject).toHaveBeenCalledWith(
+      {
+        name: 'Journal',
+        description: 'Daily notes',
+        isExternal: false,
+        targetPath: undefined,
+      },
+      undefined
+    )
     expect(editor.saveStatus.value).toBe('saved')
   })
 
@@ -74,7 +77,8 @@ describe('project editor', () => {
     editor.change()
     await vi.advanceTimersByTimeAsync(100)
     expect(deps.saveProject).toHaveBeenCalledWith(
-      expect.objectContaining({ isExternal: true, targetPath: '/home/notes' })
+      expect.objectContaining({ isExternal: true, targetPath: '/home/notes' }),
+      undefined
     )
   })
 
@@ -86,7 +90,8 @@ describe('project editor', () => {
     await vi.advanceTimersByTimeAsync(100)
     // no folder given leaves the one the device has, if any
     expect(deps.saveProject).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'Renamed', targetPath: undefined })
+      expect.objectContaining({ name: 'Renamed', targetPath: undefined }),
+      undefined
     )
   })
 

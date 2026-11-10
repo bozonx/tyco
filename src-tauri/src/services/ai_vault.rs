@@ -15,6 +15,7 @@ use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
 
+mod locking;
 mod registry;
 pub use registry::*;
 
@@ -101,6 +102,9 @@ pub fn with_vault_of<T>(
     let state = app.state::<crate::state::AppState>();
     let _access = state.read_vault();
     let vault = resolve_vault(app, vault_id)?;
+    let lock = locking::vault_lock(&vault.root);
+    use crate::locks::MutexExt;
+    let _io = lock.locked();
     operation(&vault)
 }
 

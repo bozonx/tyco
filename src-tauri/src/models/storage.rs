@@ -49,6 +49,10 @@ pub enum UserDataStatus {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct UserDataState {
+    /// Marker identity of the main vault; absent while the data folder is unavailable.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub main_vault_id: Option<String>,
     pub path: String,
     /// The folder the data is in when the user has chosen none.
     pub default_path: String,

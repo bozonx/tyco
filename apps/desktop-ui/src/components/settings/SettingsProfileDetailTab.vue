@@ -318,8 +318,8 @@ const isAdvancedExpanded = ref(false)
 
 const editor = createProfileEditor({
   getProfile: () => aiProfilesStore.getProfile(props.profileId),
-  updateProfile: (patch) =>
-    aiProfilesStore.updateProfile(props.profileId, patch),
+  updateProfile: (patch, expectedRevision) =>
+    aiProfilesStore.updateProfile(props.profileId, patch, expectedRevision),
   readSoul: () => aiProfilesStore.readSoulWithRevision(props.profileId),
   writeSoul: (content, expectedRevision) =>
     aiProfilesStore.writeSoul(props.profileId, content, expectedRevision),
@@ -375,10 +375,12 @@ async function syncFromDisk() {
 // a change another device or editor made, read when the watcher reported it:
 // a page without edits takes it silently
 watch(
-  () => profile.value?.revision,
-  (revision, previous) => {
-    if (previous && revision !== previous && !editor.hasConflict.value)
-      void syncFromDisk()
+  [
+    () => profile.value?.revision,
+    () => aiProfilesStore.profileStorageRevisions?.[props.profileId],
+  ],
+  () => {
+    if (!editor.hasConflict.value) void syncFromDisk()
   }
 )
 function syncWhenVisible() {

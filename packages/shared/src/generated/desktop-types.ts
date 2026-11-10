@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 77501f3caa0b19715f97ccbcb41c1cc66a1e4935a8d7d7c0e6fc5d62ed4cb90d
+// Source hash: d9f9461bb13bd5848d04018b64a64d6d4609471158a7e5d3a5c24538a72247af
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -965,6 +965,11 @@ export type UserDataRelocationMode =
  * restarts the app.
  */
 export type UserDataState = {
+  /**
+   * Marker identity of the main vault; absent while the data folder is
+   * unavailable.
+   */
+  mainVaultId?: string
   path: string
   /** The folder the data is in when the user has chosen none. */
   defaultPath: string

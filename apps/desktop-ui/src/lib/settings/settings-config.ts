@@ -12,6 +12,7 @@ import type { PluginFactory } from '../../types/plugins'
 export interface SettingsConfigDependencies {
   pluginFactories: () => PluginFactory[]
   appearance: () => AppearanceSettings
+  mainVaultId?: () => string | undefined
 }
 
 const recordOf = (value: unknown): Record<string, unknown> =>
@@ -27,14 +28,17 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
     const input = recordOf(cloned)
     // `normalizeUserConfig` applies the rules the backend applies; here only
     // what the webview knows: the cached appearance and the plugin defaults
-    return normalizeUserConfig({
-      ...input,
-      appearance: normalizeAppearance(input.appearance ?? deps.appearance()),
-      plugins: applyPluginDefaults(
-        deps.pluginFactories(),
-        recordOf(input.plugins)
-      ),
-    })
+    return normalizeUserConfig(
+      {
+        ...input,
+        appearance: normalizeAppearance(input.appearance ?? deps.appearance()),
+        plugins: applyPluginDefaults(
+          deps.pluginFactories(),
+          recordOf(input.plugins)
+        ),
+      },
+      deps.mainVaultId?.()
+    )
   }
   return { prepare }
 }

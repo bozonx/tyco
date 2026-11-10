@@ -13,7 +13,10 @@ export type ProjectFields = Pick<
 >
 
 export interface ProjectEditorDependencies extends AutosaveTimers {
-  saveProject: (fields: ProjectFields) => Promise<void>
+  saveProject: (
+    fields: ProjectFields,
+    expectedRevision?: string
+  ) => Promise<string>
   /** `retry` saves the fields again */
   reportError: (message: string, retry: () => void) => void
 }
@@ -23,6 +26,8 @@ export interface ProjectEditorDependencies extends AutosaveTimers {
  * is stored a moment after a change that leaves it valid
  */
 export function createProjectEditor(deps: ProjectEditorDependencies) {
+  let revision: string | undefined
+  let hasInvalidChanges = false
   const name = ref('')
   const description = ref('')
   const isExternal = ref(false)
@@ -53,7 +58,9 @@ export function createProjectEditor(deps: ProjectEditorDependencies) {
     setTimer: deps.setTimer,
     clearTimer: deps.clearTimer,
     delayMs: deps.delayMs,
-    save: () => deps.saveProject(fields()),
+    save: async () => {
+      revision = await deps.saveProject(fields(), revision)
+    },
   })
   const autosaves = createAutosaveGroup({
     parts: [autosave],
@@ -63,6 +70,8 @@ export function createProjectEditor(deps: ProjectEditorDependencies) {
   /** Fills the fields from a stored project, or clears them for a new one */
   const load = (project?: AiProject) => {
     autosave.cancel()
+    revision = project?.revision
+    hasInvalidChanges = false
     name.value = project?.name ?? ''
     description.value = project?.description ?? ''
     isExternal.value = project?.isExternal ?? false
@@ -72,6 +81,7 @@ export function createProjectEditor(deps: ProjectEditorDependencies) {
 
   /** Stores a change of an existing project once it is valid */
   const change = () => {
+    hasInvalidChanges = !isValid.value
     if (isValid.value) autosave.schedule()
     else autosave.cancel()
   }
@@ -86,6 +96,13 @@ export function createProjectEditor(deps: ProjectEditorDependencies) {
     fields,
     saveStatus: autosaves.status,
     load,
+    syncFromStored: (project: AiProject) => {
+      if (
+        !hasInvalidChanges &&
+        ['idle', 'saved'].includes(autosave.status.value)
+      )
+        load(project)
+    },
     change,
     flush: autosaves.flush,
     cancel: autosaves.cancel,

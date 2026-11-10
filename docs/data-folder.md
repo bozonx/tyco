@@ -100,6 +100,9 @@ connected on this device", with **Choose folder…** and **Remove from list**.
 Nothing is created in its place. Its profiles disappear from menus and grids
 without leaving gaps, and come back to their places when the vault does.
 
+A vault created by a newer TyCo version requires updating TyCo before opening
+it; its files are left untouched.
+
 A copy of a vault that is attached already, including a copy of the main
 `ai-vault` folder, cannot be attached: attach the original folder instead.
 
@@ -130,12 +133,14 @@ whatever is already in the standard location, or creates a new collection
 there; it does not recover or copy the missing folder's data.
 
 Settings changes already delivered by another computer are merged when you
-save. A profile, its `SOUL.md` and a project are never saved over a change made
-on another computer or outside TyCo meanwhile: TyCo tells you and offers
+save. Before saving a profile, its `SOUL.md` or a project, TyCo checks whether its
+file changed since the version you edited. If it did, TyCo tells you and offers
 **Reload** or **Save mine**. A page without unsaved changes picks up such a
 change by itself. Chats have no such check: avoid editing the same chat on two
 computers at once. An idle, saved open chat refreshes automatically; an
-actively edited chat is preserved.
+actively edited chat is preserved. Fully simultaneous writes by another program
+or computer can still produce synchronization conflicts: the check does not lock
+other programs or devices.
 
 If your synchronization program reports a conflict, stop TyCo on the affected
 computers and back up the entire folder, including all conflict copies. Compare

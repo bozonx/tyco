@@ -406,6 +406,9 @@ pub fn list_all_profiles(app: &AppHandle) -> Result<Vec<super::AiProfile>, AppEr
     let _access = state.read_vault();
     let mut profiles = Vec::new();
     for (vault_id, vault) in connected_vaults(app) {
+        let lock = super::locking::vault_lock(&vault.root);
+        use crate::locks::MutexExt;
+        let _io = lock.locked();
         match super::list_profiles(&vault.root) {
             Ok(listed) => profiles.extend(
                 listed
@@ -440,6 +443,9 @@ pub fn list_all_projects(app: &AppHandle) -> Result<Vec<super::AiProject>, AppEr
             device: &device,
             vault_id: &vault.id,
         };
+        let lock = super::locking::vault_lock(&vault.root);
+        use crate::locks::MutexExt;
+        let _io = lock.locked();
         match super::list_projects(&vault.root, &paths) {
             Ok(listed) => projects.extend(
                 listed
