@@ -123,16 +123,23 @@ describe('listen model', () => {
     })
   })
 
-  it('keeps the old source when a switch fails', async () => {
-    const { model } = setup({
-      switchSource: vi.fn(async () => {
-        throw new Error('gone')
-      }),
-    })
+  it('keeps the old source when a switch fails and clears the error on a later switch', async () => {
+    const switchSource = vi
+      .fn<ListenModelDependencies['switchSource']>()
+      .mockRejectedValueOnce(new Error('gone'))
+      .mockResolvedValueOnce(undefined)
+    const { model } = setup({ switchSource })
     await model.start({ kind: 'systemMix' })
     await model.selectSource({ kind: 'application', appId: 'firefox' })
     expect(model.source.value).toEqual({ kind: 'systemMix' })
     expect(model.errorText.value).toContain('gone')
+
+    await model.selectSource({ kind: 'application', appId: 'firefox' })
+    expect(model.errorText.value).toBe('')
+    expect(model.source.value).toEqual({
+      kind: 'application',
+      appId: 'firefox',
+    })
   })
 
   it('stops by itself after a long silence, music included', async () => {

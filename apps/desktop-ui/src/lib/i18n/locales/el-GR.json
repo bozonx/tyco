@@ -490,7 +490,7 @@
     "today": "Σήμερα",
     "undo": "Αναίρεση",
     "yesterday": "Χθες",
-    "filterListen": "Ακρόαση"
+    "filterListen": "Ήχος συστήματος"
   },
   "input": {
     "historySearchPlaceholder": "Αναζήτηση στο ιστορικό...",
@@ -812,7 +812,7 @@
       "customAction3": "Προσαρμοσμένη ενέργεια 3",
       "customAction4": "Προσαρμοσμένη ενέργεια 4",
       "customAction5": "Προσαρμοσμένη ενέργεια 5",
-      "listen": "Μεταγραφή του ήχου του υπολογιστή"
+      "listen": "Ήχος συστήματος"
     },
     "hotkeyInput": {
       "cancelHint": "Esc για ακύρωση",
@@ -1545,8 +1545,8 @@
     "actionName": "Προτροπή: {prompt}"
   },
   "listen": {
-    "title": "Ακρόαση",
-    "switchToListen": "Μεταγραφή του ήχου του υπολογιστή",
+    "title": "Ήχος συστήματος",
+    "switchToListen": "Εναλλαγή στον ήχο συστήματος",
     "switchToVoice": "Επιστροφή στη φωνητική εισαγωγή",
     "unavailable": "Η εγγραφή του ήχου του υπολογιστή απαιτεί PipeWire στο Linux ή Windows 10 ή νεότερα",
     "systemMix": "Όλος ο ήχος",
@@ -1563,6 +1563,8 @@
     "replyByVoice": "Απάντηση με φωνή",
     "nothingRecognized": "Δεν αναγνωρίστηκε τίποτα",
     "retry": "Επανάληψη",
-    "replyingTo": "Απάντηση σε: {text}"
+    "replyingTo": "Απάντηση σε: {text}",
+    "listeningPlaceholder": "Ακρόαση ήχου…",
+    "waitingPlaceholder": "Αναμονή για ήχο…"
   }
 }

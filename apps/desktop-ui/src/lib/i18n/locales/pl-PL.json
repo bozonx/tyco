@@ -490,7 +490,7 @@
     "today": "Dzisiaj",
     "undo": "Cofnij",
     "yesterday": "Wczoraj",
-    "filterListen": "Słuchanie"
+    "filterListen": "Dźwięk systemu"
   },
   "input": {
     "historySearchPlaceholder": "Szukaj w historii...",
@@ -815,7 +815,7 @@
       "customAction3": "Własna akcja 3",
       "customAction4": "Własna akcja 4",
       "customAction5": "Własna akcja 5",
-      "listen": "Transkrybuj dźwięk komputera"
+      "listen": "Dźwięk systemu"
     },
     "hotkeyInput": {
       "cancelHint": "Esc, aby anulować",
@@ -1548,8 +1548,8 @@
     "actionName": "Prompt: {prompt}"
   },
   "listen": {
-    "title": "Słucham",
-    "switchToListen": "Transkrybuj dźwięk komputera",
+    "title": "Dźwięk systemu",
+    "switchToListen": "Przełącz na dźwięk systemu",
     "switchToVoice": "Wróć do wprowadzania głosowego",
     "unavailable": "Nagrywanie dźwięku komputera wymaga PipeWire w Linuksie lub Windows 10 lub nowszego",
     "systemMix": "Cały dźwięk",
@@ -1566,6 +1566,8 @@
     "replyByVoice": "Odpowiedz głosem",
     "nothingRecognized": "Nic nie rozpoznano",
     "retry": "Ponów",
-    "replyingTo": "Odpowiedź na: {text}"
+    "replyingTo": "Odpowiedź na: {text}",
+    "listeningPlaceholder": "Słucham dźwięku…",
+    "waitingPlaceholder": "Oczekiwanie na dźwięk…"
   }
 }

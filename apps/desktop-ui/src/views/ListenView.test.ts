@@ -2,9 +2,11 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { i18n } from '../lib/i18n'
+import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
+import { useVoiceResultStore } from '../stores/voice-result'
 import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import ListenView from './ListenView.vue'
-import { DEFAULT_USER_CONFIG } from '@tyco/shared'
+import { DEFAULT_USER_CONFIG, DESKTOP_EVENTS } from '@tyco/shared'
 
 const dictation = vi.hoisted(() => ({
   startDictation: vi.fn(),
@@ -39,8 +41,13 @@ const mountView = () =>
     attachTo: document.body,
   })
 
-const pressEnter = async () => {
-  document.dispatchEvent(new KeyboardEvent('keyup', { code: 'Enter' }))
+const pressEnter = async (target: EventTarget = document) => {
+  target.dispatchEvent(
+    new KeyboardEvent('keydown', { code: 'Enter', bubbles: true })
+  )
+  target.dispatchEvent(
+    new KeyboardEvent('keyup', { code: 'Enter', bubbles: true })
+  )
   await flushPromises()
 }
 
@@ -116,5 +123,70 @@ describe('ListenView', () => {
     await flushPromises()
     expect(dictation.startDictation).toHaveBeenCalledTimes(2)
     wrapper.unmount()
+  })
+
+  it('ignores Enter inside buttons or menus and stray Enter keyup', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+
+    // Stray keyup without prior keydown must not stop recording
+    document.dispatchEvent(new KeyboardEvent('keyup', { code: 'Enter' }))
+    await flushPromises()
+    expect(dictation.finishDictation).not.toHaveBeenCalled()
+
+    const button = document.createElement('button')
+    document.body.appendChild(button)
+    try {
+      await pressEnter(button)
+      expect(dictation.finishDictation).not.toHaveBeenCalled()
+    } finally {
+      button.remove()
+    }
+
+    await pressEnter()
+    expect(dictation.finishDictation).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  it('resets stale voice result when replying by voice and closes open modals on close', async () => {
+    desktop.backend.handle('switch_quick_mode', () => undefined)
+    desktop.backend.handle('hide_window', () => undefined)
+    const voiceResult = useVoiceResultStore()
+    voiceResult.step.showResult('Old voice result', '')
+    expect(voiceResult.step.isInsertMenuVisible.value).toBe(true)
+
+    const wrapper = mountView()
+    await flushPromises()
+    await pressEnter()
+
+    const replyBtn = wrapper
+      .findAll('button')
+      .find((b) => b.text().includes(i18n.global.t('listen.replyByVoice')))
+    expect(replyBtn).toBeDefined()
+    await replyBtn!.trigger('click')
+    await flushPromises()
+
+    expect(voiceResult.step.isInsertMenuVisible.value).toBe(false)
+    expect(desktop.backend.callsOf('switch_quick_mode')).toContainEqual(
+      expect.objectContaining({ mode: 'voice' })
+    )
+    wrapper.unmount()
+
+    // Closing via repeat hotkey with an open modal cancels the modal before hiding
+    const modals = useMenuModalsStore()
+    const wrapper2 = mountView()
+    await flushPromises()
+    await pressEnter()
+    modals.nextModal(MenuModals.TRANSLATE, { text: 'Voice message text' })
+    expect(modals.hasOpenModal).toBe(true)
+
+    await desktop.emit(
+      DESKTOP_EVENTS.VOICE_FINISH,
+      desktop.backend.activation.activationId
+    )
+    await flushPromises()
+    expect(modals.hasOpenModal).toBe(false)
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
+    wrapper2.unmount()
   })
 })

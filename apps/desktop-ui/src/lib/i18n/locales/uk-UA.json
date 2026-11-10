@@ -490,7 +490,7 @@
     "today": "Сьогодні",
     "undo": "Скасувати",
     "yesterday": "Учора",
-    "filterListen": "Слухання"
+    "filterListen": "Звук системи"
   },
   "input": {
     "historySearchPlaceholder": "Пошук в історії...",
@@ -812,7 +812,7 @@
       "customAction3": "Користувацька дія 3",
       "customAction4": "Користувацька дія 4",
       "customAction5": "Користувацька дія 5",
-      "listen": "Розшифрувати звук комп’ютера"
+      "listen": "Звук системи"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — скасувати",
@@ -1545,8 +1545,8 @@
     "actionName": "Промпт: {prompt}"
   },
   "listen": {
-    "title": "Слухаю",
-    "switchToListen": "Розшифрувати звук комп’ютера",
+    "title": "Звук системи",
+    "switchToListen": "Перемкнутися на звук системи",
     "switchToVoice": "Повернутися до голосового введення",
     "unavailable": "Для запису звуку комп’ютера потрібен PipeWire у Linux або Windows 10 і новіші",
     "systemMix": "Увесь звук",
@@ -1563,6 +1563,8 @@
     "replyByVoice": "Відповісти голосом",
     "nothingRecognized": "Нічого не розпізнано",
     "retry": "Повторити",
-    "replyingTo": "Відповідь на: {text}"
+    "replyingTo": "Відповідь на: {text}",
+    "listeningPlaceholder": "Слухаю звук…",
+    "waitingPlaceholder": "Очікую на звук…"
   }
 }

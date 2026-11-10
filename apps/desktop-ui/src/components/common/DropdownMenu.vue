@@ -14,6 +14,7 @@
       :active="isOpen"
       :square="square"
       :tone="tone"
+      :disabled="disabled"
       :style="{ maxWidth: maxTriggerWidth }"
       :title="title ?? (square ? label : undefined)"
       :aria-expanded="isOpen"
@@ -104,9 +105,10 @@ const props = withDefaults(
     hideChevron?: boolean
     placement?: 'bottom' | 'top'
     align?: 'left' | 'right'
+    disabled?: boolean
     items: DropdownMenuItem[]
   }>(),
-  { size: 'sm', variant: 'ghost' }
+  { size: 'sm', variant: 'ghost', disabled: false }
 )
 
 const emit = defineEmits<{
@@ -145,6 +147,7 @@ const {
 
 /** Focuses the enabled item at `index`; a negative index counts from the end */
 async function openAndFocus(index: number) {
+  if (props.disabled) return
   isOpen.value = true
   await nextTick()
   panelRef.value = surfaceRef.value?.element ?? null
@@ -154,6 +157,7 @@ async function openAndFocus(index: number) {
   items.at(index)?.focus()
 }
 function toggleMenu() {
+  if (props.disabled) return
   if (isOpen.value) close(true)
   else void openAndFocus(0)
 }

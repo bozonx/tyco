@@ -490,7 +490,7 @@
     "today": "今日",
     "undo": "元に戻す",
     "yesterday": "昨日",
-    "filterListen": "聞き取り"
+    "filterListen": "システム音声"
   },
   "input": {
     "historySearchPlaceholder": "履歴を検索...",
@@ -812,7 +812,7 @@
       "customAction3": "カスタムアクション 3",
       "customAction4": "カスタムアクション 4",
       "customAction5": "カスタムアクション 5",
-      "listen": "PCの音声を文字起こし"
+      "listen": "システム音声"
     },
     "hotkeyInput": {
       "cancelHint": "Escでキャンセル",
@@ -1545,8 +1545,8 @@
     "actionName": "プロンプト: {prompt}"
   },
   "listen": {
-    "title": "聞き取り中",
-    "switchToListen": "PCの音声を文字起こし",
+    "title": "システム音声",
+    "switchToListen": "システム音声に切り替え",
     "switchToVoice": "音声入力に戻る",
     "unavailable": "PCの音声を録音するには、LinuxではPipeWire、またはWindows 10以降が必要です",
     "systemMix": "すべての音声",
@@ -1563,6 +1563,8 @@
     "replyByVoice": "音声で返信",
     "nothingRecognized": "何も認識されませんでした",
     "retry": "再試行",
-    "replyingTo": "返信先：{text}"
+    "replyingTo": "返信先：{text}",
+    "listeningPlaceholder": "音声を聞き取り中…",
+    "waitingPlaceholder": "音声を待機中…"
   }
 }

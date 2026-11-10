@@ -2,6 +2,7 @@ import type { MainActionConfig } from '@tyco/shared'
 
 const QUICK_WINDOW_MODE_SWITCHING_STANDARD_ACTIONS = new Set([
   'voiceInput',
+  'listen',
   'screenshotQuickAiRequest',
   'voiceScreenshotQuickAiRequest',
 ])

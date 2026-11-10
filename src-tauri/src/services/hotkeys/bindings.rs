@@ -377,7 +377,7 @@ fn mode_description(mode: ActivationMode) -> &'static str {
         ActivationMode::VoiceCommands => "Run a command by voice",
         ActivationMode::VoiceChat => "Ask the chat by voice",
         ActivationMode::Voice => "Start voice input",
-        ActivationMode::Listen => "Transcribe the computer sound",
+        ActivationMode::Listen => "System audio",
         ActivationMode::SelectionActions => "Open selection actions",
         ActivationMode::Correction => "Correct selected text with review",
         ActivationMode::Translation => "Translate selected text",

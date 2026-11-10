@@ -23,7 +23,6 @@
     />
     <template v-else>
       <div v-if="isQuickWindow()" class="voice-result-header">
-        <OverlayDragHandle />
         <QuickModeSwitch
           mode="voice"
           :disabled="!desktopStore.desktopState.canListen"
@@ -46,7 +45,6 @@ import { computed, watch } from 'vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import InsertMenu from '../components/menu/InsertMenu.vue'
 import VoiceRecognitionMenu from '../components/menu/VoiceRecognitionMenu.vue'
-import OverlayDragHandle from '../components/quick/OverlayDragHandle.vue'
 import QuickModeSwitch from '../components/voice/QuickModeSwitch.vue'
 import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useQuickModeSwitch } from '../composables/use-quick-mode-switch'

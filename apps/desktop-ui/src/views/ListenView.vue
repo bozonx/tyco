@@ -13,7 +13,6 @@
   <ContentPadding v-else>
     <div class="listen-result">
       <div class="listen-result-header">
-        <OverlayDragHandle />
         <QuickModeSwitch mode="listen" @switch="switchToVoice" />
         <span class="listen-result-title">{{ t('listen.title') }}</span>
         <Button
@@ -61,7 +60,6 @@ import Button from '../components/common/Button.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import ListenRecordingBar from '../components/listen/ListenRecordingBar.vue'
 import InsertMenu from '../components/menu/InsertMenu.vue'
-import OverlayDragHandle from '../components/quick/OverlayDragHandle.vue'
 import QuickModeSwitch from '../components/voice/QuickModeSwitch.vue'
 import { useDictationActions } from '../composables/use-dictation-actions'
 import { useDismissibleLayer } from '../composables/use-dismissible-layer'
@@ -76,11 +74,14 @@ import {
   createListenModel,
 } from '../lib/listen/listen-model'
 import { describeDictationError } from '../lib/stt/dictation-error'
+import { createKeyPressTracker } from '../lib/ui/key-press-tracker'
+import { isTextEntryTarget } from '../lib/ui/text-entry-target'
 import { useDesktopStore } from '../stores/desktop'
 import { useHistoryStore } from '../stores/history'
 import { useListenReplyStore } from '../stores/listen-reply'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useQuickDismissStore } from '../stores/quick-dismiss'
+import { useVoiceResultStore } from '../stores/voice-result'
 import { useWindowStore } from '../stores/window'
 
 const emit = defineEmits<{
@@ -122,7 +123,10 @@ const model = createListenModel({
       'warn'
     ),
   describeError: (error) => describeDictationError(error, translate),
-  onClose: () => void windowStore.hide(),
+  onClose: () => {
+    menuModalsStore.cancelAndCloseAll()
+    void windowStore.hide()
+  },
 })
 
 const isBar = computed(
@@ -130,7 +134,12 @@ const isBar = computed(
 )
 watch(isBar, (bar) => emit('result-shown', !bar), { immediate: true })
 
-const appLabel = computed(() => desktopStore.userConfig.stt?.listenAppLabel)
+const appLabel = computed(() =>
+  model.source.value.kind === 'application' &&
+  model.source.value.appId === desktopStore.userConfig.stt?.listenAppId?.trim()
+    ? desktopStore.userConfig.stt?.listenAppLabel
+    : undefined
+)
 const configuredSource = () =>
   configuredListenSource(desktopStore.userConfig.stt?.listenAppId)
 
@@ -152,14 +161,40 @@ useDismissibleLayer({
   dismiss: () => void model.close(),
 })
 
+const keyPresses = createKeyPressTracker()
+const isInteractiveOrTypingTarget = (target: EventTarget | null) =>
+  isTextEntryTarget(target) ||
+  (target instanceof Element &&
+    Boolean(target.closest('button, [role="menu"], [role="menuitem"], a')))
+
+function onKeyDown(event: KeyboardEvent) {
+  if (
+    event.isComposing ||
+    event.keyCode === 229 ||
+    isInteractiveOrTypingTarget(event.target)
+  ) {
+    return
+  }
+  keyPresses.press(event.code)
+}
+
 function onKeyUp(event: KeyboardEvent) {
+  if (!keyPresses.release(event.code)) return
   if (
     event.code === 'Enter' &&
     model.isRecording.value &&
-    !event.defaultPrevented
-  )
+    !event.defaultPrevented &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    !event.metaKey &&
+    !event.shiftKey &&
+    !isInteractiveOrTypingTarget(event.target)
+  ) {
     void model.stop()
+  }
 }
+
+const forgetKeys = () => keyPresses.clear()
 
 /** Leaves for voice input; what was heard is offered there, not lost */
 async function switchToVoice() {
@@ -169,6 +204,7 @@ async function switchToVoice() {
     if ((model.phase.value as string) === 'result') return
   }
   await model.cancel()
+  useVoiceResultStore().step.resetResult()
   await modeSwitch.switchTo('voice')
 }
 
@@ -176,16 +212,21 @@ async function switchToVoice() {
 async function replyByVoice() {
   replyStore.offer(model.resultText.value, modeSwitch.nextActivationId())
   await model.cancel()
+  useVoiceResultStore().step.resetResult()
   await modeSwitch.switchTo('voice')
 }
 
 onMounted(() => {
+  document.addEventListener('keydown', onKeyDown, true)
   document.addEventListener('keyup', onKeyUp)
+  window.addEventListener('blur', forgetKeys)
   void model.start(configuredSource())
 })
 
 onUnmounted(() => {
+  document.removeEventListener('keydown', onKeyDown, true)
   document.removeEventListener('keyup', onKeyUp)
+  window.removeEventListener('blur', forgetKeys)
   releaseDismissHold()
   model.dispose()
 })
@@ -230,7 +271,13 @@ onUnmounted(() => {
   justify-content: center;
   gap: var(--space-md);
   flex: 1;
+  text-align: center;
   color: var(--app-text-muted);
+}
+
+.listen-empty p {
+  margin: 0;
+  max-width: 32rem;
 }
 
 .listen-empty-actions {

@@ -59,6 +59,7 @@ describe('resolveActionSelectionBehavior', () => {
       'favoritesMenu',
       'openHistory',
       'voiceInput',
+      'listen',
     ] as const) {
       expect(
         resolveActionSelectionBehavior({ type: 'standard', actionId })

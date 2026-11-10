@@ -255,6 +255,7 @@ describe('quick overlay input region', () => {
     'write-frame': new DOMRect(8, 420, 784, 40),
     'write-hint': new DOMRect(8, 468, 300, 24),
     'voice-bar': new DOMRect(8, 372, 784, 120),
+    'dropdown-panel': new DOMRect(120, 200, 220, 160),
   }
 
   it('takes clicks only on the input while nothing else is shown', async () => {
@@ -294,6 +295,32 @@ describe('quick overlay input region', () => {
         expect(
           desktop.backend.callsOf('set_quick_input_region')
         ).toContainEqual({
+          activationId: 1,
+          region: { x: 0, y: 364, width: 800, height: 136 },
+        })
+      )
+
+      // a teleported dropdown menu above the bar stays clickable
+      const dropdown = document.createElement('div')
+      dropdown.className = 'dropdown-panel'
+      document.body.appendChild(dropdown)
+      try {
+        await vi.waitFor(() =>
+          expect(
+            desktop.backend.callsOf('set_quick_input_region')
+          ).toContainEqual({
+            activationId: 1,
+            region: { x: 0, y: 192, width: 800, height: 308 },
+          })
+        )
+      } finally {
+        dropdown.remove()
+      }
+
+      await vi.waitFor(() =>
+        expect(
+          desktop.backend.callsOf('set_quick_input_region').at(-1)
+        ).toEqual({
           activationId: 1,
           region: { x: 0, y: 364, width: 800, height: 136 },
         })

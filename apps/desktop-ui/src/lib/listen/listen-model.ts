@@ -181,6 +181,7 @@ export function createListenModel(deps: ListenModelDependencies) {
     }
     const previous = source.value
     source.value = next
+    errorText.value = ''
     isSourceLost.value = false
     isWaiting.value = next.kind === 'application'
     isSwitching.value = true

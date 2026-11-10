@@ -37,6 +37,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       pendingProfileId.value = profileId ?? null
       await useIpcStore().callOrNotify('activate_mode', { mode })
     },
+    canListen: () => Boolean(desktopStore.desktopState.canListen),
     saveOutput: async (text: string) => {
       await historyStore.saveOutput(text)
     },
@@ -133,14 +134,14 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
   })
 
   watch(
-    () => [
-      desktopStore.desktopState.activationId,
-      desktopStore.desktopState.actionPageIndex,
-    ],
-    ([, index]) => {
-      if (typeof index === 'number') {
-        model.openPage(index)
-      }
+    () =>
+      [
+        desktopStore.desktopState.activationId,
+        desktopStore.desktopState.actionPageIndex,
+      ] as const,
+    ([id, index], previous) => {
+      if (previous && id === previous[0] && index === previous[1]) return
+      model.openPage(typeof index === 'number' ? index : 0)
     },
     { immediate: true }
   )

@@ -34,6 +34,7 @@ const LOCKED_FALSE_STANDARD_ACTIONS = new Set([
   'favoritesMenu',
   'openHistory',
   'voiceInput',
+  'listen',
 ])
 
 export function resolveActionSelectionBehavior(

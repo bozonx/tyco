@@ -490,7 +490,7 @@
     "today": "今天",
     "undo": "復原",
     "yesterday": "昨天",
-    "filterListen": "聆聽"
+    "filterListen": "系統音訊"
   },
   "input": {
     "historySearchPlaceholder": "搜尋歷史記錄...",
@@ -809,7 +809,7 @@
       "customAction3": "自訂動作 3",
       "customAction4": "自訂動作 4",
       "customAction5": "自訂動作 5",
-      "listen": "轉寫電腦聲音"
+      "listen": "系統音訊"
     },
     "hotkeyInput": {
       "cancelHint": "按 Esc 取消",
@@ -1539,8 +1539,8 @@
     "actionName": "提示詞：{prompt}"
   },
   "listen": {
-    "title": "正在聆聽",
-    "switchToListen": "轉寫電腦聲音",
+    "title": "系統音訊",
+    "switchToListen": "切換至系統音訊",
     "switchToVoice": "返回語音輸入",
     "unavailable": "錄製電腦聲音需要 Linux 上的 PipeWire 或 Windows 10 以上版本",
     "systemMix": "全部聲音",
@@ -1557,6 +1557,8 @@
     "replyByVoice": "語音回覆",
     "nothingRecognized": "未辨識到任何內容",
     "retry": "重試",
-    "replyingTo": "回覆：{text}"
+    "replyingTo": "回覆：{text}",
+    "listeningPlaceholder": "正在聆聽音訊…",
+    "waitingPlaceholder": "等待音訊…"
   }
 }

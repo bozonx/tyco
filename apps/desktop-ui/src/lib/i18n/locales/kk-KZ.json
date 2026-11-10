@@ -490,7 +490,7 @@
     "today": "Бүгін",
     "undo": "Болдырмау",
     "yesterday": "Кеше",
-    "filterListen": "Тыңдау"
+    "filterListen": "Жүйе дыбысы"
   },
   "input": {
     "historySearchPlaceholder": "Тарихтан іздеу...",
@@ -812,7 +812,7 @@
       "customAction3": "Пайдаланушы әрекеті 3",
       "customAction4": "Пайдаланушы әрекеті 4",
       "customAction5": "Пайдаланушы әрекеті 5",
-      "listen": "Компьютер дыбысын мәтінге айналдыру"
+      "listen": "Жүйе дыбысы"
     },
     "hotkeyInput": {
       "cancelHint": "Болдырмау үшін Esc",
@@ -1545,8 +1545,8 @@
     "actionName": "Промпт: {prompt}"
   },
   "listen": {
-    "title": "Тыңдап жатырмын",
-    "switchToListen": "Компьютер дыбысын мәтінге айналдыру",
+    "title": "Жүйе дыбысы",
+    "switchToListen": "Жүйе дыбысына ауысу",
     "switchToVoice": "Дауыспен енгізуге оралу",
     "unavailable": "Компьютер дыбысын жазу үшін Linux-та PipeWire немесе Windows 10 не одан жаңасы қажет",
     "systemMix": "Барлық дыбыс",
@@ -1563,6 +1563,8 @@
     "replyByVoice": "Дауыспен жауап беру",
     "nothingRecognized": "Ештеңе танылмады",
     "retry": "Қайталау",
-    "replyingTo": "Жауап: {text}"
+    "replyingTo": "Жауап: {text}",
+    "listeningPlaceholder": "Дыбысты тыңдау…",
+    "waitingPlaceholder": "Дыбысты күту…"
   }
 }

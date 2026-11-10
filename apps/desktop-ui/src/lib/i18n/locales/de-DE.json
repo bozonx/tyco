@@ -490,7 +490,7 @@
     "today": "Heute",
     "undo": "Rückgängig",
     "yesterday": "Gestern",
-    "filterListen": "Zuhören"
+    "filterListen": "Systemaudio"
   },
   "input": {
     "historySearchPlaceholder": "Verlauf durchsuchen...",
@@ -815,7 +815,7 @@
       "customAction3": "Benutzerdefinierte Aktion 3",
       "customAction4": "Benutzerdefinierte Aktion 4",
       "customAction5": "Benutzerdefinierte Aktion 5",
-      "listen": "Computerton transkribieren"
+      "listen": "Systemaudio"
     },
     "hotkeyInput": {
       "cancelHint": "Esc zum Abbrechen",
@@ -1548,8 +1548,8 @@
     "actionName": "Prompt: {prompt}"
   },
   "listen": {
-    "title": "Zuhören",
-    "switchToListen": "Computerton transkribieren",
+    "title": "Systemaudio",
+    "switchToListen": "Zu Systemaudio wechseln",
     "switchToVoice": "Zurück zur Spracheingabe",
     "unavailable": "Für die Aufnahme des Computertons ist PipeWire unter Linux oder Windows 10 oder neuer nötig",
     "systemMix": "Gesamter Ton",
@@ -1566,6 +1566,8 @@
     "replyByVoice": "Per Sprache antworten",
     "nothingRecognized": "Nichts erkannt",
     "retry": "Erneut versuchen",
-    "replyingTo": "Antwort auf: {text}"
+    "replyingTo": "Antwort auf: {text}",
+    "listeningPlaceholder": "Audio wird abgehört…",
+    "waitingPlaceholder": "Warte auf Audio…"
   }
 }

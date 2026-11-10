@@ -24,11 +24,11 @@
       <div class="waveform-meta">
         <div class="waveform-status">
           <AppIcon
-            icon="mdi:microphone"
+            :icon="props.icon"
             class="mic-icon"
             :class="{ 'animate-pulse': !isReducedMotion }"
           />
-          <span>{{ t('menu.listening') }}</span>
+          <span>{{ props.statusLabel ?? t('menu.listening') }}</span>
         </div>
         <div class="waveform-timer">{{ formattedDuration }}</div>
       </div>
@@ -56,6 +56,8 @@ const props = withDefaults(
     isStyling?: boolean
     layout?: 'stacked' | 'inline'
     compact?: boolean
+    icon?: string
+    statusLabel?: string
   }>(),
   {
     level: 0,
@@ -65,6 +67,8 @@ const props = withDefaults(
     isCorrecting: false,
     isStyling: false,
     compact: true,
+    icon: 'mdi:microphone',
+    statusLabel: undefined,
   }
 )
 

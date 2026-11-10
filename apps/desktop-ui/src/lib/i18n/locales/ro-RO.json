@@ -490,7 +490,7 @@
     "today": "Astăzi",
     "undo": "Anulează",
     "yesterday": "Ieri",
-    "filterListen": "Ascultare"
+    "filterListen": "Sunet sistem"
   },
   "input": {
     "historySearchPlaceholder": "Caută în istoric...",
@@ -815,7 +815,7 @@
       "customAction3": "Acțiune personalizată 3",
       "customAction4": "Acțiune personalizată 4",
       "customAction5": "Acțiune personalizată 5",
-      "listen": "Transcrie sunetul computerului"
+      "listen": "Sunet sistem"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pentru anulare",
@@ -1548,8 +1548,8 @@
     "actionName": "Prompt: {prompt}"
   },
   "listen": {
-    "title": "Ascult",
-    "switchToListen": "Transcrie sunetul computerului",
+    "title": "Sunet sistem",
+    "switchToListen": "Comută la sunetul sistemului",
     "switchToVoice": "Înapoi la introducerea vocală",
     "unavailable": "Înregistrarea sunetului computerului necesită PipeWire pe Linux sau Windows 10 ori mai nou",
     "systemMix": "Tot sunetul",
@@ -1566,6 +1566,8 @@
     "replyByVoice": "Răspunde vocal",
     "nothingRecognized": "Nu s-a recunoscut nimic",
     "retry": "Reîncearcă",
-    "replyingTo": "Răspuns la: {text}"
+    "replyingTo": "Răspuns la: {text}",
+    "listeningPlaceholder": "Ascult sunetul…",
+    "waitingPlaceholder": "Aștept sunet…"
   }
 }

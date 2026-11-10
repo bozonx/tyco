@@ -24,6 +24,12 @@ describe('custom-action-executor', () => {
       expect(
         isQuickWindowModeSwitchingAction({
           type: 'standard',
+          actionId: 'listen',
+        })
+      ).toBe(true)
+      expect(
+        isQuickWindowModeSwitchingAction({
+          type: 'standard',
           actionId: 'screenshotQuickAiRequest',
         })
       ).toBe(true)

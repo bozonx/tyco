@@ -11,6 +11,7 @@
     "
     :label="sourceLabel"
     :title="t('listen.sourceLabel')"
+    :disabled="disabled"
     :items="items"
     @open-change="onOpenChange"
   />
@@ -36,6 +37,7 @@ const props = defineProps<{
   source: CaptureSource
   /** What the user knows the source's application by, if not listed */
   appLabel?: string
+  disabled?: boolean
 }>()
 const emit = defineEmits<{
   /** `label` is what the user knows the application by */

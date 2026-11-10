@@ -257,6 +257,8 @@ const isSheet = computed(() => {
 
 /** What stays clickable while only the input or the voice bar is shown. */
 const INPUT_PARTS = '.write-live-preview, .write-frame, .write-hint, .voice-bar'
+/** Teleported popovers opened from the bar live in `document.body`. */
+const FLOATING_PARTS = '.dropdown-panel, .info-tooltip-popover'
 
 // The window keeps one size; while it shows only the input, the rest of it
 // lets clicks through to the windows below
@@ -302,14 +304,21 @@ const scheduleQuickWindowReveal = () => {
   })
 }
 
+const clickableElements = (): Element[] => [
+  ...(cardRef.value
+    ? Array.from(cardRef.value.querySelectorAll(INPUT_PARTS))
+    : []),
+  ...Array.from(document.querySelectorAll(FLOATING_PARTS)),
+]
+
 const handleRootPointerDown = (event: PointerEvent) => {
   // a click around the input lands in this window; a menu takes them all
   if (!cardRef.value || isSheet.value || keepsOnFocusLoss.value) return
   const target = event.target as Node | null
   if (!cardRef.value.querySelector('.write-frame')) return
-  const isInputPart = Array.from(
-    cardRef.value.querySelectorAll(INPUT_PARTS)
-  ).some((part) => target && part.contains(target))
+  const isInputPart = clickableElements().some(
+    (part) => target && part.contains(target)
+  )
   if (target && !isInputPart) session.dismiss()
 }
 
@@ -359,7 +368,7 @@ const measureInputRegion = (): InputRegion | null => {
   ) {
     return null
   }
-  const rects = Array.from(cardRef.value.querySelectorAll(INPUT_PARTS))
+  const rects = clickableElements()
     .map((element) => element.getBoundingClientRect())
     .filter((rect) => rect.width > 0 && rect.height > 0)
     .map(({ x, y, width, height }) => ({ x, y, width, height }))
@@ -383,12 +392,23 @@ const updateInputRegionAfterRender = () => {
 
 let inputResizeObserver: ResizeObserver | undefined
 let inputMutationObserver: MutationObserver | undefined
+let bodyMutationObserver: MutationObserver | undefined
+let floatingStyleObserver: MutationObserver | undefined
 
 function observeInputParts() {
   inputResizeObserver?.disconnect()
-  cardRef.value
-    ?.querySelectorAll(INPUT_PARTS)
-    .forEach((element) => inputResizeObserver?.observe(element))
+  floatingStyleObserver?.disconnect()
+  clickableElements().forEach((element) =>
+    inputResizeObserver?.observe(element)
+  )
+  document
+    .querySelectorAll(FLOATING_PARTS)
+    .forEach((element) =>
+      floatingStyleObserver?.observe(element, {
+        attributes: true,
+        attributeFilter: ['style'],
+      })
+    )
 }
 
 const syncFocus = () => {
@@ -402,15 +422,23 @@ onMounted(() => {
   scheduleQuickWindowReveal()
   inputResizeObserver = new ResizeObserver(updateInputRegion)
   observeInputParts()
-  if (cardRef.value && typeof MutationObserver !== 'undefined') {
-    inputMutationObserver = new MutationObserver(() => {
+  if (typeof MutationObserver !== 'undefined') {
+    const onMutation = () => {
       observeInputParts()
       updateInputRegion()
-    })
-    inputMutationObserver.observe(cardRef.value, {
-      childList: true,
-      subtree: true,
-    })
+    }
+    floatingStyleObserver = new MutationObserver(updateInputRegion)
+    if (cardRef.value) {
+      inputMutationObserver = new MutationObserver(onMutation)
+      inputMutationObserver.observe(cardRef.value, {
+        childList: true,
+        subtree: true,
+      })
+    }
+    if (document.body) {
+      bodyMutationObserver = new MutationObserver(onMutation)
+      bodyMutationObserver.observe(document.body, { childList: true })
+    }
   }
   window.addEventListener('resize', updateInputRegion)
   updateInputRegionAfterRender()
@@ -465,6 +493,8 @@ onUnmounted(() => {
   cancelPendingReveal()
   inputResizeObserver?.disconnect()
   inputMutationObserver?.disconnect()
+  bodyMutationObserver?.disconnect()
+  floatingStyleObserver?.disconnect()
   window.removeEventListener('resize', updateInputRegion)
   regionSync.dispose()
   focusLoss.dispose()
@@ -525,7 +555,9 @@ watch(
 
 watch(
   () => currentMode.value,
-  async () => {
+  async (mode) => {
+    if (mode !== 'voice') voiceResultShown.value = false
+    if (mode !== 'listen') listenResultShown.value = false
     await nextTick()
     syncFocus()
   }

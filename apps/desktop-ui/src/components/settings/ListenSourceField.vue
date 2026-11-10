@@ -69,7 +69,10 @@ function setAppId(value: string) {
 <style scoped>
 .listen-source-field {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-xs);
+  min-width: 0;
+  width: 100%;
 }
 </style>

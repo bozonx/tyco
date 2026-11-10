@@ -490,7 +490,7 @@
     "today": "დღეს",
     "undo": "დაბრუნება",
     "yesterday": "გუშინ",
-    "filterListen": "მოსმენა"
+    "filterListen": "სისტემის ხმა"
   },
   "input": {
     "historySearchPlaceholder": "ისტორიაში ძიება...",
@@ -812,7 +812,7 @@
       "customAction3": "მორგებული მოქმედება 3",
       "customAction4": "მორგებული მოქმედება 4",
       "customAction5": "მორგებული მოქმედება 5",
-      "listen": "კომპიუტერის ხმის ტრანსკრიფცია"
+      "listen": "სისტემის ხმა"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — გაუქმება",
@@ -1545,8 +1545,8 @@
     "actionName": "პრომპტი: {prompt}"
   },
   "listen": {
-    "title": "ვუსმენ",
-    "switchToListen": "კომპიუტერის ხმის ტრანსკრიფცია",
+    "title": "სისტემის ხმა",
+    "switchToListen": "სისტემის ხმაზე გადართვა",
     "switchToVoice": "ხმოვან შეყვანაზე დაბრუნება",
     "unavailable": "კომპიუტერის ხმის ჩაწერას სჭირდება PipeWire Linux-ზე ან Windows 10 ან უფრო ახალი",
     "systemMix": "მთელი ხმა",
@@ -1563,6 +1563,8 @@
     "replyByVoice": "ხმით პასუხი",
     "nothingRecognized": "ვერაფერი ამოიცნო",
     "retry": "თავიდან ცდა",
-    "replyingTo": "პასუხი: {text}"
+    "replyingTo": "პასუხი: {text}",
+    "listeningPlaceholder": "ხმის მოსმენა…",
+    "waitingPlaceholder": "ხმის მოლოდინში…"
   }
 }

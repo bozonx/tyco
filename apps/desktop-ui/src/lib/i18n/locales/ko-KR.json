@@ -490,7 +490,7 @@
     "today": "오늘",
     "undo": "실행 취소",
     "yesterday": "어제",
-    "filterListen": "듣기"
+    "filterListen": "시스템 오디오"
   },
   "input": {
     "historySearchPlaceholder": "기록 검색...",
@@ -809,7 +809,7 @@
       "customAction3": "사용자 지정 작업 3",
       "customAction4": "사용자 지정 작업 4",
       "customAction5": "사용자 지정 작업 5",
-      "listen": "컴퓨터 소리 받아쓰기"
+      "listen": "시스템 오디오"
     },
     "hotkeyInput": {
       "cancelHint": "취소하려면 Esc",
@@ -1542,8 +1542,8 @@
     "actionName": "프롬프트: {prompt}"
   },
   "listen": {
-    "title": "듣는 중",
-    "switchToListen": "컴퓨터 소리 받아쓰기",
+    "title": "시스템 오디오",
+    "switchToListen": "시스템 오디오로 전환",
     "switchToVoice": "음성 입력으로 돌아가기",
     "unavailable": "컴퓨터 소리를 녹음하려면 Linux에서는 PipeWire, 또는 Windows 10 이상이 필요합니다",
     "systemMix": "모든 소리",
@@ -1560,6 +1560,8 @@
     "replyByVoice": "음성으로 답장",
     "nothingRecognized": "인식된 내용이 없습니다",
     "retry": "다시 시도",
-    "replyingTo": "답장 대상: {text}"
+    "replyingTo": "답장 대상: {text}",
+    "listeningPlaceholder": "오디오 듣는 중…",
+    "waitingPlaceholder": "오디오 대기 중…"
   }
 }

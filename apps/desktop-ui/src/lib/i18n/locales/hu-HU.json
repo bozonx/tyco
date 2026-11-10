@@ -490,7 +490,7 @@
     "today": "Ma",
     "undo": "Visszavonás",
     "yesterday": "Tegnap",
-    "filterListen": "Hallgatás"
+    "filterListen": "Rendszerhang"
   },
   "input": {
     "historySearchPlaceholder": "Keresés az előzményekben...",
@@ -812,7 +812,7 @@
       "customAction3": "Egyéni művelet 3",
       "customAction4": "Egyéni művelet 4",
       "customAction5": "Egyéni művelet 5",
-      "listen": "A számítógép hangjának átírása"
+      "listen": "Rendszerhang"
     },
     "hotkeyInput": {
       "cancelHint": "Esc: megszakítás",
@@ -1545,8 +1545,8 @@
     "actionName": "Prompt: {prompt}"
   },
   "listen": {
-    "title": "Hallgatás",
-    "switchToListen": "A számítógép hangjának átírása",
+    "title": "Rendszerhang",
+    "switchToListen": "Váltás rendszerhangra",
     "switchToVoice": "Vissza a hangbevitelhez",
     "unavailable": "A számítógép hangjának rögzítéséhez PipeWire kell Linuxon, vagy Windows 10 vagy újabb",
     "systemMix": "Teljes hang",
@@ -1563,6 +1563,8 @@
     "replyByVoice": "Válasz hanggal",
     "nothingRecognized": "Nincs felismert szöveg",
     "retry": "Újra",
-    "replyingTo": "Válasz erre: {text}"
+    "replyingTo": "Válasz erre: {text}",
+    "listeningPlaceholder": "Hang figyelése…",
+    "waitingPlaceholder": "Várakozás hangra…"
   }
 }

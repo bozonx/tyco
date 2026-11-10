@@ -151,9 +151,11 @@ export function useMainActionChoices(
             ? t('nav.history')
             : actionId === 'voiceInput'
               ? t('menu.voiceInput')
-              : OPENS_DIALOG.has(actionId)
-                ? `${t(`action.${actionId}`)}…`
-                : t(`action.${actionId}`),
+              : actionId === 'listen'
+                ? t('listen.title')
+                : OPENS_DIALOG.has(actionId)
+                  ? `${t(`action.${actionId}`)}…`
+                  : t(`action.${actionId}`),
       group: standardActionGroup(actionId),
     })),
     ...actionPages.value.map((_, index) => ({

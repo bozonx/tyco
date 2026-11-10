@@ -64,10 +64,12 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
     mode:
       | 'history'
       | 'voice'
+      | 'listen'
       | 'screenshotQuickAiRequest'
       | 'voiceScreenshotQuickAiRequest',
     profileId?: string
   ) => Promise<void>
+  canListen?: () => boolean
   /** With `language` the dialog translates into it at once */
   openTranslateModal: (text: string, language?: string) => void
   /** `extra` goes to the params of the correction step, see `InsertMenu` */
@@ -454,6 +456,17 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           icon: 'mdi:microphone-outline',
           action: async () => {
             await deps.activateMode?.('voice')
+          },
+        },
+        {
+          id: 'listen',
+          labelKey: 'listen.title',
+          icon: 'mdi:volume-high',
+          ...(deps.canListen && !deps.canListen()
+            ? { disabled: true, hint: translate('listen.unavailable') }
+            : {}),
+          action: async () => {
+            await deps.activateMode?.('listen')
           },
         },
         {

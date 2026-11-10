@@ -490,7 +490,7 @@
     "today": "Dnes",
     "undo": "Zpět",
     "yesterday": "Včera",
-    "filterListen": "Poslech"
+    "filterListen": "Systémový zvuk"
   },
   "input": {
     "historySearchPlaceholder": "Hledat v historii...",
@@ -809,7 +809,7 @@
       "customAction3": "Vlastní akce 3",
       "customAction4": "Vlastní akce 4",
       "customAction5": "Vlastní akce 5",
-      "listen": "Přepsat zvuk počítače"
+      "listen": "Systémový zvuk"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pro zrušení",
@@ -1542,8 +1542,8 @@
     "actionName": "Prompt: {prompt}"
   },
   "listen": {
-    "title": "Poslouchám",
-    "switchToListen": "Přepsat zvuk počítače",
+    "title": "Systémový zvuk",
+    "switchToListen": "Přepnout na systémový zvuk",
     "switchToVoice": "Zpět na hlasový vstup",
     "unavailable": "Nahrávání zvuku počítače vyžaduje PipeWire v Linuxu nebo Windows 10 a novější",
     "systemMix": "Veškerý zvuk",
@@ -1560,6 +1560,8 @@
     "replyByVoice": "Odpovědět hlasem",
     "nothingRecognized": "Nic nerozpoznáno",
     "retry": "Zkusit znovu",
-    "replyingTo": "Odpověď na: {text}"
+    "replyingTo": "Odpověď na: {text}",
+    "listeningPlaceholder": "Poslouchám zvuk…",
+    "waitingPlaceholder": "Čekám na zvuk…"
   }
 }

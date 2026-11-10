@@ -490,7 +490,7 @@
     "today": "Bugün",
     "undo": "Geri al",
     "yesterday": "Dün",
-    "filterListen": "Dinleme"
+    "filterListen": "Sistem sesi"
   },
   "input": {
     "historySearchPlaceholder": "Geçmişte ara...",
@@ -812,7 +812,7 @@
       "customAction3": "Özel eylem 3",
       "customAction4": "Özel eylem 4",
       "customAction5": "Özel eylem 5",
-      "listen": "Bilgisayar sesini yazıya dök"
+      "listen": "Sistem sesi"
     },
     "hotkeyInput": {
       "cancelHint": "İptal için Esc",
@@ -1545,8 +1545,8 @@
     "actionName": "İstem: {prompt}"
   },
   "listen": {
-    "title": "Dinleniyor",
-    "switchToListen": "Bilgisayar sesini yazıya dök",
+    "title": "Sistem sesi",
+    "switchToListen": "Sistem sesine geç",
     "switchToVoice": "Sesli girişe dön",
     "unavailable": "Bilgisayar sesini kaydetmek için Linux'ta PipeWire ya da Windows 10 veya daha yenisi gerekir",
     "systemMix": "Tüm ses",
@@ -1563,6 +1563,8 @@
     "replyByVoice": "Sesle yanıtla",
     "nothingRecognized": "Hiçbir şey tanınmadı",
     "retry": "Yeniden dene",
-    "replyingTo": "Yanıt: {text}"
+    "replyingTo": "Yanıt: {text}",
+    "listeningPlaceholder": "Ses dinleniyor…",
+    "waitingPlaceholder": "Ses bekleniyor…"
   }
 }

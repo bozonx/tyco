@@ -490,7 +490,7 @@
     "today": "Oggi",
     "undo": "Annulla",
     "yesterday": "Ieri",
-    "filterListen": "Ascolto"
+    "filterListen": "Audio di sistema"
   },
   "input": {
     "historySearchPlaceholder": "Cerca nella cronologia...",
@@ -815,7 +815,7 @@
       "customAction3": "Azione personalizzata 3",
       "customAction4": "Azione personalizzata 4",
       "customAction5": "Azione personalizzata 5",
-      "listen": "Trascrivi l’audio del computer"
+      "listen": "Audio di sistema"
     },
     "hotkeyInput": {
       "cancelHint": "Esc per annullare",
@@ -1548,8 +1548,8 @@
     "actionName": "Prompt: {prompt}"
   },
   "listen": {
-    "title": "In ascolto",
-    "switchToListen": "Trascrivi l’audio del computer",
+    "title": "Audio di sistema",
+    "switchToListen": "Passa all’audio di sistema",
     "switchToVoice": "Torna all’input vocale",
     "unavailable": "Per registrare l’audio del computer serve PipeWire su Linux o Windows 10 o successivo",
     "systemMix": "Tutto l’audio",
@@ -1566,6 +1566,8 @@
     "replyByVoice": "Rispondi a voce",
     "nothingRecognized": "Nulla di riconosciuto",
     "retry": "Riprova",
-    "replyingTo": "Risposta a: {text}"
+    "replyingTo": "Risposta a: {text}",
+    "listeningPlaceholder": "In ascolto dell’audio…",
+    "waitingPlaceholder": "In attesa dell’audio…"
   }
 }

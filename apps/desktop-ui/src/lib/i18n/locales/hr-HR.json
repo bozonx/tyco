@@ -490,7 +490,7 @@
     "today": "Danas",
     "undo": "Poništi",
     "yesterday": "Jučer",
-    "filterListen": "Slušanje"
+    "filterListen": "Zvuk sustava"
   },
   "input": {
     "historySearchPlaceholder": "Pretraži povijest...",
@@ -815,7 +815,7 @@
       "customAction3": "Prilagođena radnja 3",
       "customAction4": "Prilagođena radnja 4",
       "customAction5": "Prilagođena radnja 5",
-      "listen": "Prepiši zvuk računala"
+      "listen": "Zvuk sustava"
     },
     "hotkeyInput": {
       "cancelHint": "Esc za odustajanje",
@@ -1548,8 +1548,8 @@
     "actionName": "Prompt: {prompt}"
   },
   "listen": {
-    "title": "Slušam",
-    "switchToListen": "Prepiši zvuk računala",
+    "title": "Zvuk sustava",
+    "switchToListen": "Prebaci na zvuk sustava",
     "switchToVoice": "Natrag na glasovni unos",
     "unavailable": "Snimanje zvuka računala zahtijeva PipeWire na Linuxu ili Windows 10 ili noviji",
     "systemMix": "Sav zvuk",
@@ -1566,6 +1566,8 @@
     "replyByVoice": "Odgovori glasom",
     "nothingRecognized": "Ništa nije prepoznato",
     "retry": "Pokušaj ponovno",
-    "replyingTo": "Odgovor na: {text}"
+    "replyingTo": "Odgovor na: {text}",
+    "listeningPlaceholder": "Slušam zvuk…",
+    "waitingPlaceholder": "Čekam zvuk…"
   }
 }

@@ -12,6 +12,7 @@ export const STANDARD_ACTION_IDS = [
   'directCorrection',
   'openHistory',
   'voiceInput',
+  'listen',
   'voiceCommands',
   'translationMenu',
   'transformationMenu',

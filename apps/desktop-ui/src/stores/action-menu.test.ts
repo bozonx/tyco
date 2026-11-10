@@ -102,6 +102,7 @@ describe('window actions', () => {
   it.each([
     ['openHistory', 'history'],
     ['voiceInput', 'voice'],
+    ['listen', 'listen'],
   ] as const)(
     'activates %s without passing the selected text',
     async (action, mode) => {
@@ -111,4 +112,37 @@ describe('window actions', () => {
       expect(desktop.backend.callsOf('activate_mode')).toEqual([{ mode }])
     }
   )
+
+  it('disables the listen action when system audio capture is unavailable', async () => {
+    desktop = await loadFakeDesktop({
+      mode: 'selectionActions',
+      window: { canListen: false },
+    })
+    const listenAction = useActionMenuStore()
+      .getDefaultActions()
+      .find((item) => item.id === 'listen')
+    expect(listenAction?.disabled).toBe(true)
+    expect(listenAction?.hint).toBeTruthy()
+  })
+
+  it('resets to the first page on activations without an action page index', async () => {
+    desktop = await loadFakeDesktop({
+      mode: 'selectionActions',
+      activation: { activationId: 1, actionPageIndex: 1 },
+    })
+    desktop.setUserConfig({
+      actionPages: [
+        { inputMode: 'selection', slots: {} },
+        { inputMode: 'none', slots: {} },
+      ],
+    })
+    const actions = useActionMenuStore()
+    expect(actions.pageIndex).toBe(1)
+    expect(actions.takesText).toBe(false)
+
+    desktop.setState({ mode: 'listen', activationId: 2, actionPageIndex: null })
+    await Promise.resolve()
+    expect(actions.pageIndex).toBe(0)
+    expect(actions.takesText).toBe(true)
+  })
 })
