@@ -18,9 +18,7 @@ describe('Editor actions shortcut', () => {
   afterEach(() => desktop.dispose())
 
   it('does not hide the editor when Escape was handled by its search panel', async () => {
-    const wrapper = mount(EditorView, {
-      global: { stubs: { Editor: true, ContentPadding: true } },
-    })
+    const wrapper = mount(EditorView, { global: { stubs: { Editor: true } } })
     const event = new KeyboardEvent('keydown', {
       code: 'Escape',
       cancelable: true,
@@ -37,14 +35,7 @@ describe('Editor actions shortcut', () => {
     editor.setValue('Editor text', 'plain')
     const modals = useMenuModalsStore()
     const open = vi.spyOn(modals, 'nextModal')
-    const wrapper = mount(EditorView, {
-      global: {
-        stubs: {
-          Editor: true,
-          ContentPadding: { template: '<div><slot /></div>' },
-        },
-      },
-    })
+    const wrapper = mount(EditorView, { global: { stubs: { Editor: true } } })
     expect(useNavPanelStore().navPanelState.escapeButtonLabelKey).toBe(
       'menu.actions'
     )
@@ -75,9 +66,7 @@ describe('Editor actions shortcut', () => {
   it('ignores bare Tab so editor indentation is not hijacked', () => {
     const modals = useMenuModalsStore()
     const open = vi.spyOn(modals, 'nextModal')
-    const wrapper = mount(EditorView, {
-      global: { stubs: { Editor: true, ContentPadding: true } },
-    })
+    const wrapper = mount(EditorView, { global: { stubs: { Editor: true } } })
     const tabEvent = new KeyboardEvent('keydown', {
       code: 'Tab',
       cancelable: true,
@@ -93,9 +82,7 @@ describe('Editor actions shortcut', () => {
       editor: { ...desktop.backend.userConfig.editor, submitKey: 'Ctrl+Enter' },
     })
     const open = vi.spyOn(useMenuModalsStore(), 'nextModal')
-    const wrapper = mount(EditorView, {
-      global: { stubs: { Editor: true, ContentPadding: true } },
-    })
+    const wrapper = mount(EditorView, { global: { stubs: { Editor: true } } })
     const enter = new KeyboardEvent('keydown', {
       code: 'Enter',
       cancelable: true,
@@ -114,9 +101,7 @@ describe('Editor actions shortcut', () => {
     const editor = useEditorInputStore()
     editor.setValue('Unsaved text', 'plain')
 
-    const wrapper = mount(EditorView, {
-      global: { stubs: { Editor: true, ContentPadding: true } },
-    })
+    const wrapper = mount(EditorView, { global: { stubs: { Editor: true } } })
 
     window.dispatchEvent(
       new KeyboardEvent('keydown', {
@@ -134,9 +119,7 @@ describe('Editor actions shortcut', () => {
   })
 
   it('closes editor window on Shift+Escape even when an action modal is open', async () => {
-    const wrapper = mount(EditorView, {
-      global: { stubs: { Editor: true, ContentPadding: true } },
-    })
+    const wrapper = mount(EditorView, { global: { stubs: { Editor: true } } })
     const modals = useMenuModalsStore()
     modals.nextModal(MenuModals.INSERT, { text: 'Some action text' })
     expect(modals.hasOpenModal).toBe(true)
@@ -161,14 +144,7 @@ describe('Editor actions shortcut', () => {
     editor.setSelection('Selected favorite', 0, 16)
     const modals = useMenuModalsStore()
     const open = vi.spyOn(modals, 'nextModal')
-    const wrapper = mount(EditorView, {
-      global: {
-        stubs: {
-          Editor: true,
-          ContentPadding: { template: '<div><slot /></div>' },
-        },
-      },
-    })
+    const wrapper = mount(EditorView, { global: { stubs: { Editor: true } } })
     window.dispatchEvent(
       new KeyboardEvent('keydown', { code: 'Enter', ctrlKey: true })
     )

@@ -1,15 +1,12 @@
 <template>
-  <ContentPadding>
-    <div class="editor-view">
-      <Editor v-if="desktopStore.desktopState" :compact="false" />
-    </div>
-  </ContentPadding>
+  <div class="editor-view">
+    <Editor v-if="desktopStore.desktopState" :compact="false" />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, onScopeDispose, onUnmounted } from 'vue'
 
-import ContentPadding from '../components/common/ContentPadding.vue'
 import Editor from '../components/editor/Editor.vue'
 import { useDismissibleLayer } from '../composables/use-dismissible-layer'
 import { isCtrlEnter } from '../lib/input-keys/input-keys'

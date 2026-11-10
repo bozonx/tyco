@@ -39,15 +39,16 @@
       </div>
     </div>
 
-    <VoiceRecognitionMenu
-      v-if="isInlineVoice"
-      variant="bar"
-      v-bind="voiceParams"
-      @cancelled="menuModalsStore.closeAll()"
-      @corrected="menuModalsStore.closeAll()"
-    />
+    <div v-if="isInlineVoice" class="editor-voice-bar">
+      <VoiceRecognitionMenu
+        variant="bar"
+        v-bind="voiceParams"
+        @cancelled="menuModalsStore.closeAll()"
+        @corrected="menuModalsStore.closeAll()"
+      />
+    </div>
 
-    <div class="editor-footer">
+    <div v-if="hasFooter" class="editor-footer">
       <div
         v-if="!compact && otherEditItems.length > 0"
         class="flex gap-1.5 w-full flex-wrap"
@@ -72,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useSlots } from 'vue'
 
 import { useCopyText } from '../../composables/use-copy-text'
 import { useEditorActions } from '../../composables/use-editor-actions'
@@ -93,7 +94,10 @@ import EditorInput from './EditorInput.vue'
 import EditorRail from './EditorRail.vue'
 import EditorToolbar from './EditorToolbar.vue'
 
-withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
+const props = withDefaults(defineProps<{ compact?: boolean }>(), {
+  compact: false,
+})
+const slots = useSlots()
 
 const actionMenuStore = useActionMenuStore()
 const editorInputStore = useEditorInputStore()
@@ -111,6 +115,11 @@ const { voiceParams, isInlineVoice } = useInlineVoiceStep()
 const copyText = useCopyText({ saveOutput: true })
 
 const otherEditItems = computed(() => editMenuStore.getOtherEditItems())
+const hasFooter = computed(
+  () =>
+    (!props.compact && (otherEditItems.value.length > 0 || isDev)) ||
+    Boolean(slots.default)
+)
 
 const runMenuAction = async (id: string) => {
   const item =
@@ -159,19 +168,33 @@ const handleCopy = async () => {
   --button-ghost-color: var(--app-text-muted);
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
   width: 100%;
   height: 100%;
   min-height: 0;
+  background-color: var(--app-surface);
 }
 
 .editor-root.is-compact {
   height: auto;
   gap: var(--space-xs);
+  background-color: transparent;
 }
 
 .is-compact .editor-frame {
   flex: 0 1 auto;
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--app-shadow-sm);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.is-compact .editor-frame:focus-within {
+  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
+  box-shadow:
+    var(--app-shadow-sm),
+    0 0 0 3px color-mix(in oklab, var(--color-primary) 12%, transparent);
 }
 
 .is-compact .editor-body {
@@ -181,6 +204,8 @@ const handleCopy = async () => {
 
 .is-compact .editor-footer {
   gap: 0;
+  padding: 0;
+  border-top: none;
 }
 
 .editor-frame {
@@ -188,21 +213,8 @@ const handleCopy = async () => {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-lg);
   background-color: var(--app-surface);
-  box-shadow: var(--app-shadow-sm);
   overflow: hidden;
-  transition:
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast);
-}
-
-.editor-frame:focus-within {
-  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
-  box-shadow:
-    var(--app-shadow-sm),
-    0 0 0 3px color-mix(in oklab, var(--color-primary) 12%, transparent);
 }
 
 .editor-body {
@@ -219,8 +231,8 @@ const handleCopy = async () => {
 
 .selection-chip {
   position: absolute;
-  right: 0.5rem;
-  bottom: 0.5rem;
+  right: var(--space-md);
+  bottom: var(--space-md);
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -234,10 +246,18 @@ const handleCopy = async () => {
   pointer-events: none;
 }
 
+.editor-voice-bar {
+  flex-shrink: 0;
+  padding: var(--space-sm) var(--space-lg) var(--space-md);
+}
+
 .editor-footer {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   flex-shrink: 0;
+  padding: var(--space-sm) var(--space-lg) var(--space-md);
+  border-top: 1px solid var(--app-border-subtle);
+  background-color: var(--app-surface);
 }
 </style>

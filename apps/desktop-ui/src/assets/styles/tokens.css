@@ -80,7 +80,7 @@
   --editor-font-family: var(--font-sans);
   --editor-font-size: 0.875rem;
   --editor-line-height: 1.55;
-  --editor-padding: 0.75rem 0.875rem;
+  --editor-padding: 1rem 1.25rem;
 }
 
 /* Semantic tokens, derived from the active palette.

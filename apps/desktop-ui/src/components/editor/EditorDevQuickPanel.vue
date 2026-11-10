@@ -1,6 +1,6 @@
 <template>
   <div
-    class="dev-quick-panel flex items-center gap-1.5 w-full flex-wrap pt-2 border-t border-[var(--app-border-subtle)] text-xs text-[var(--app-text-muted)]"
+    class="dev-quick-panel flex items-center gap-1.5 w-full flex-wrap text-xs text-[var(--app-text-muted)]"
   >
     <span class="font-mono font-medium">DEV Quick:</span>
     <Button

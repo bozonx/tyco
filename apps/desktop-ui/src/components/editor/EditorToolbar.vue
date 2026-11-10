@@ -162,9 +162,9 @@ const scoped = (label: string) =>
 
 <style scoped>
 .editor-toolbar {
-  padding: 0.3125rem 0.375rem;
+  padding: var(--space-xs) 0.375rem var(--space-xs) var(--space-md);
   border-bottom: 1px solid var(--app-border-subtle);
-  background-color: var(--app-surface-raised);
+  background-color: var(--app-surface);
 }
 
 .editor-toolbar > div:first-child {

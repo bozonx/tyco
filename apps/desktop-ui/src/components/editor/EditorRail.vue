@@ -93,7 +93,7 @@ const scoped = (label: string) =>
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 0.375rem;
+  padding: var(--space-sm) 0.375rem;
   border-left: 1px solid var(--app-border-subtle);
 }
 
