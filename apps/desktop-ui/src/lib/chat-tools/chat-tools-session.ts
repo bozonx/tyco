@@ -16,6 +16,7 @@ import { withReplyBlocksToolGroup } from '../reply-blocks/reply-blocks-tool'
 import { withDebugToolGroup } from './debug-chat-tools'
 import { ATTACHMENTS_TOOL_GROUP_ID } from './file-tools'
 import { withMemoryToolGroup } from './memory-tools'
+import { withWebToolGroup } from './web-tools'
 
 export interface ChatToolsSessionDependencies {
   providers: () => readonly ChatToolProvider[]
@@ -75,10 +76,12 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
     const baseSettings = deps.isDebugEnabled?.()
       ? withDebugToolGroup(request.settings)
       : request.settings
-    // reply blocks are part of every chat that can call tools
-    const settings = withAttachmentsToolGroup(
-      withReplyBlocksToolGroup(
-        withMemoryToolGroup(baseSettings, request.memoryMode)
+    // reply blocks, attachments and web tools are part of every chat that can call tools
+    const settings = withWebToolGroup(
+      withAttachmentsToolGroup(
+        withReplyBlocksToolGroup(
+          withMemoryToolGroup(baseSettings, request.memoryMode)
+        )
       )
     )
     const tools = await registry.resolve({

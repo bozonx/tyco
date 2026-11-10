@@ -6,6 +6,7 @@ import {
   createWebToolProvider,
   formatFetchedPage,
   formatSearchResults,
+  withWebToolGroup,
 } from './web-tools'
 
 describe('web-tools', () => {
@@ -28,15 +29,54 @@ describe('web-tools', () => {
     expect(formatSearchResults([])).toBe('No results found.')
   })
 
-  it('returns no tools when profileId is null', async () => {
-    const run = vi.fn()
+  it('provides web tools when profileId is null (general chat)', async () => {
+    const run = vi
+      .fn()
+      .mockResolvedValue({
+        operation: 'search',
+        results: [],
+      } satisfies AiWebToolOutput)
     const provider = createWebToolProvider({ run })
     const tools = await provider.tools({
       profileId: null,
       modelId: 'gemini',
       settings: undefined,
     })
-    expect(tools).toEqual([])
+    expect(tools.map((t) => t.name)).toEqual(['web_search', 'web_fetch'])
+
+    await tools[0].execute(
+      { query: 'weather' },
+      {
+        signal: new AbortController().signal,
+        toolCallId: 'call-general',
+        outputLimitCharacters: 5000,
+      }
+    )
+    expect(run).toHaveBeenCalledWith(
+      null,
+      { operation: 'search', query: 'weather' },
+      'web-call-general'
+    )
+  })
+
+  it('withWebToolGroup defaults web group to enabled and preserves explicit settings', () => {
+    expect(withWebToolGroup(undefined)).toEqual({
+      groups: { web: { isEnabled: true, access: 'allow' } },
+    })
+    expect(
+      withWebToolGroup({
+        groups: { files: { isEnabled: true, access: 'ask' } },
+      })
+    ).toEqual({
+      groups: {
+        files: { isEnabled: true, access: 'ask' },
+        web: { isEnabled: true, access: 'allow' },
+      },
+    })
+    const explicitDisabled = {
+      groups: { web: { isEnabled: false, access: 'allow' as const } },
+    }
+    expect(withWebToolGroup(explicitDisabled)).toBe(explicitDisabled)
   })
 
   it('formats fetched webpage', () => {
@@ -78,7 +118,15 @@ describe('web-tools', () => {
     expect(searchTool).toBeDefined()
 
     const result = await searchTool!.execute(
-      { query: 'test query', count: 3 },
+      {
+        query: 'test query',
+        count: 3,
+        country: 'ru',
+        language: 'ru',
+        location: 'Moscow, Russia',
+        page: 2,
+        site: 'example.ru',
+      },
       {
         signal: new AbortController().signal,
         toolCallId: 'call-1',
@@ -88,7 +136,16 @@ describe('web-tools', () => {
 
     expect(run).toHaveBeenCalledWith(
       'prof-1',
-      { operation: 'search', query: 'test query', count: 3 },
+      {
+        operation: 'search',
+        query: 'test query',
+        count: 3,
+        country: 'ru',
+        language: 'ru',
+        location: 'Moscow, Russia',
+        page: 2,
+        site: 'example.ru',
+      },
       'web-call-1'
     )
     expect(result).toContain('[Test Title](https://test.com)')
@@ -117,7 +174,7 @@ describe('web-tools', () => {
     expect(fetchTool).toBeDefined()
 
     const result = await fetchTool!.execute(
-      { url: 'https://example.com/page' },
+      { url: 'https://example.com/page', locale: 'ru-RU' },
       {
         signal: new AbortController().signal,
         toolCallId: 'call-2',
@@ -131,6 +188,7 @@ describe('web-tools', () => {
         operation: 'fetch',
         url: 'https://example.com/page',
         maxCharacters: 4500,
+        locale: 'ru-RU',
       },
       'web-call-2'
     )
@@ -326,5 +384,19 @@ describe('web-tools', () => {
     )
     controller.abort()
     await expect(promise).rejects.toThrow('The tool call was cancelled')
+  })
+
+  it('provides grounding instructions to avoid fabricating unverified facts or URLs', () => {
+    const provider = createWebToolProvider({ run: vi.fn() })
+    const instructions = provider.instructions?.({
+      profileId: null,
+      modelId: 'gemini',
+      settings: undefined,
+    })
+
+    expect(instructions).toContain('web_search')
+    expect(instructions).toContain('web_fetch')
+    expect(instructions).toMatch(/strictly on the retrieved/i)
+    expect(instructions).toMatch(/do not invent/i)
   })
 })

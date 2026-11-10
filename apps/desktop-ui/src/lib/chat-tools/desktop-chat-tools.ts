@@ -94,7 +94,11 @@ export interface DesktopChatToolsInvoke {
   ): Promise<ProfileMemoryTopic[]>
   (
     command: 'run_ai_web_tool',
-    args: { profileId: string; request: AiWebToolRequest; runId?: string }
+    args: {
+      profileId: string | null
+      request: AiWebToolRequest
+      runId?: string
+    }
   ): Promise<AiWebToolOutput>
   (command: 'cancel_ai_web_tool', args: { runId: string }): Promise<boolean>
 }

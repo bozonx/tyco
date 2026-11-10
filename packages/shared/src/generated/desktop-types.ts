@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: d9f9461bb13bd5848d04018b64a64d6d4609471158a7e5d3a5c24538a72247af
+// Source hash: f22be3386bde0795634b4fd48470ef31f9c78a31569e488cc86481f4565266fa
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -235,13 +235,38 @@ export type AiWebToolOutput =
     }
 
 export type AiWebToolRequest =
-  | { operation: 'search'; query: string; count?: number }
+  | {
+      operation: 'search'
+      query: string
+      count?: number
+      /**
+       * Two-letter country code for regional results (Jina `gl`, e.g. `us`,
+       * `ru`).
+       */
+      country?: string
+      /** Language code for search results (Jina `hl`, e.g. `en`, `ru`). */
+      language?: string
+      /** City or region name for localized search (e.g. `Moscow, Russia`). */
+      location?: string
+      /** 1-based search results page number. */
+      page?: number
+      /**
+       * Restrict search results to a single domain or URL prefix (Jina
+       * `X-Site`).
+       */
+      site?: string
+    }
   | {
       operation: 'fetch'
       url: string
       maxCharacters?: number
       /** The character the returned page starts at, to read on after a cut */
       offset?: number
+      /**
+       * Preferred browser locale for rendering the page (Jina `X-Locale`, e.g.
+       * `en-US`).
+       */
+      locale?: string
     }
 
 /** An application that plays sound right now. */

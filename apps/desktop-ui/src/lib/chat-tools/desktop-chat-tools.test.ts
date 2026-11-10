@@ -89,10 +89,23 @@ describe('desktop-chat-tools', () => {
     expect(toolNames).toContain('memory_add')
   })
 
-  it('resolves web tools for a profile with web group enabled', async () => {
+  it('resolves web tools by default in general chat and profiles, unless disabled', async () => {
     const invoke = vi.fn(async () => []) as unknown as DesktopChatToolsInvoke
 
-    const chatTools = createDesktopChatTools({
+    const generalChatTools = createDesktopChatTools({
+      profileId: null,
+      invoke,
+      canUseTools: () => true,
+      warn: vi.fn(),
+      isDebugEnabled: () => false,
+    })
+
+    const generalResult = await generalChatTools.turnTools('gpt-4', 5000)
+    const generalToolNames = Object.keys(generalResult.tools!.tools!.tools)
+    expect(generalToolNames).toContain('web_search')
+    expect(generalToolNames).toContain('web_fetch')
+
+    const profileChatTools = createDesktopChatTools({
       profileId: 'researcher',
       invoke,
       canUseTools: () => true,
@@ -100,14 +113,23 @@ describe('desktop-chat-tools', () => {
       isDebugEnabled: () => false,
     })
 
-    const result = await chatTools.turnTools('gpt-4', 5000, {
-      groups: { web: { isEnabled: true, access: 'allow' } },
-    })
+    const defaultProfileResult = await profileChatTools.turnTools('gpt-4', 5000)
+    const defaultProfileToolNames = Object.keys(
+      defaultProfileResult.tools!.tools!.tools
+    )
+    expect(defaultProfileToolNames).toContain('web_search')
+    expect(defaultProfileToolNames).toContain('web_fetch')
 
-    expect(result.canUseTools).toBe(true)
-    const toolNames = Object.keys(result.tools!.tools!.tools)
-    expect(toolNames).toContain('web_search')
-    expect(toolNames).toContain('web_fetch')
+    const disabledProfileResult = await profileChatTools.turnTools(
+      'gpt-4',
+      5000,
+      { groups: { web: { isEnabled: false, access: 'allow' } } }
+    )
+    const disabledProfileToolNames = Object.keys(
+      disabledProfileResult.tools!.tools!.tools
+    )
+    expect(disabledProfileToolNames).not.toContain('web_search')
+    expect(disabledProfileToolNames).not.toContain('web_fetch')
   })
 
   it('resolves user commands when commands group is enabled with selected command IDs', async () => {

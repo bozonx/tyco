@@ -3,19 +3,23 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use tokio::sync::Notify;
-
-use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+use reqwest::header::HeaderValue;
 use serde::{Deserialize, Serialize};
+use tokio::sync::Notify;
 
 use crate::errors::AppError;
 use crate::services::ai_vault::{AiProfile, ProjectAccessMode};
 
 pub use crate::desktop_contract::WEB_TOOL_GROUP_ID as WEB_TOOL_GROUP;
 
+const JINA_SEARCH_ENDPOINT: &str = "https://s.jina.ai/";
 const DEFAULT_SEARCH_COUNT: usize = 5;
 const MAX_SEARCH_COUNT: usize = 20;
+const MAX_SEARCH_PAGE: usize = 100;
 const MAX_QUERY_LEN: usize = 1000;
+const MAX_LOCATION_LEN: usize = 200;
+const MAX_LANGUAGE_LEN: usize = 16;
+const MAX_LOCALE_LEN: usize = 35;
 const WEB_TIMEOUT: Duration = Duration::from_secs(30);
 const USER_AGENT: &str = concat!("TyCo/", env!("CARGO_PKG_VERSION"));
 
@@ -36,6 +40,26 @@ pub enum AiWebToolRequest {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         count: Option<usize>,
+        /// Two-letter country code for regional results (Jina `gl`, e.g. `us`, `ru`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        country: Option<String>,
+        /// Language code for search results (Jina `hl`, e.g. `en`, `ru`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        language: Option<String>,
+        /// City or region name for localized search (e.g. `Moscow, Russia`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        location: Option<String>,
+        /// 1-based search results page number.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        page: Option<usize>,
+        /// Restrict search results to a single domain or URL prefix (Jina `X-Site`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        site: Option<String>,
     },
     Fetch {
         url: String,
@@ -46,6 +70,10 @@ pub enum AiWebToolRequest {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         offset: Option<usize>,
+        /// Preferred browser locale for rendering the page (Jina `X-Locale`, e.g. `en-US`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        locale: Option<String>,
     },
 }
 
@@ -118,7 +146,34 @@ struct JinaReaderData {
     content: Option<String>,
 }
 
+#[derive(Serialize)]
+struct JinaSearchPayload {
+    q: String,
+    num: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    gl: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    hl: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    location: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    page: Option<usize>,
+}
+
+struct PreparedSearch {
+    payload: JinaSearchPayload,
+    site: Option<HeaderValue>,
+}
+
+struct PreparedFetch {
+    url: url::Url,
+    offset: usize,
+    limit: usize,
+    locale: Option<HeaderValue>,
+}
+
 /// Checks that the profile has the web tool group enabled and not set to `deny`.
+/// When the profile has no explicit `web` entry, defaults to enabled (matching the UI default).
 pub fn ensure_web_enabled(profile: &AiProfile) -> Result<(), AppError> {
     let group = profile
         .tools
@@ -126,7 +181,7 @@ pub fn ensure_web_enabled(profile: &AiProfile) -> Result<(), AppError> {
         .and_then(|tools| tools.groups.get(WEB_TOOL_GROUP));
     let is_allowed = group
         .map(|g| g.is_enabled && g.access != ProjectAccessMode::Deny)
-        .unwrap_or(false);
+        .unwrap_or(true);
     if is_allowed {
         Ok(())
     } else {
@@ -151,8 +206,13 @@ fn format_jina_http_error(
         };
         AppError::Failed(format!("{service} rate limit exceeded (HTTP 429). {hint}"))
     } else if code == 401 || code == 403 {
+        let hint = if secret_present {
+            "Please check your Jina API key in LLM settings."
+        } else {
+            "This request may require a Jina API key. Please add one in LLM settings."
+        };
         AppError::Failed(format!(
-            "{service} authentication failed (HTTP {code}). Please check your Jina API key in LLM settings."
+            "{service} authentication failed (HTTP {code}). {hint}"
         ))
     } else if code == 404 {
         AppError::Failed(format!("{service} resource not found (HTTP 404)."))
@@ -165,6 +225,190 @@ fn format_jina_http_error(
             AppError::Failed(format!("{service} failed with HTTP {code}: {snippet}"))
         }
     }
+}
+
+fn non_empty_trimmed(value: Option<String>) -> Option<String> {
+    value
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+}
+
+fn parse_country(value: Option<String>) -> Result<Option<String>, AppError> {
+    let Some(raw) = non_empty_trimmed(value) else {
+        return Ok(None);
+    };
+    if raw.len() != 2 || !raw.chars().all(|c| c.is_ascii_alphabetic()) {
+        return Err(AppError::InvalidInput(
+            "Country code must be a 2-letter ISO code (e.g. us, ru)".into(),
+        ));
+    }
+    Ok(Some(raw.to_ascii_lowercase()))
+}
+
+fn parse_language(value: Option<String>) -> Result<Option<String>, AppError> {
+    let Some(raw) = non_empty_trimmed(value) else {
+        return Ok(None);
+    };
+    if raw.len() > MAX_LANGUAGE_LEN
+        || !raw
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err(AppError::InvalidInput(
+            "Language code must be a short code like en or ru".into(),
+        ));
+    }
+    Ok(Some(raw))
+}
+
+fn parse_location(value: Option<String>) -> Result<Option<String>, AppError> {
+    let Some(raw) = non_empty_trimmed(value) else {
+        return Ok(None);
+    };
+    if raw.chars().count() > MAX_LOCATION_LEN || raw.chars().any(char::is_control) {
+        return Err(AppError::InvalidInput(format!(
+            "Location must be at most {MAX_LOCATION_LEN} characters without control characters"
+        )));
+    }
+    Ok(Some(raw))
+}
+
+fn parse_header_token(
+    value: Option<String>,
+    field: &str,
+    max_len: Option<usize>,
+) -> Result<Option<HeaderValue>, AppError> {
+    let Some(raw) = non_empty_trimmed(value) else {
+        return Ok(None);
+    };
+    if raw.chars().any(char::is_whitespace) || max_len.is_some_and(|max| raw.len() > max) {
+        return Err(AppError::InvalidInput(format!(
+            "Invalid {field} value: \"{raw}\""
+        )));
+    }
+    let header = HeaderValue::from_str(&raw)
+        .map_err(|_| AppError::InvalidInput(format!("Invalid {field} header value")))?;
+    Ok(Some(header))
+}
+
+fn prepare_search(
+    query: String,
+    count: Option<usize>,
+    country: Option<String>,
+    language: Option<String>,
+    location: Option<String>,
+    page: Option<usize>,
+    site: Option<String>,
+) -> Result<PreparedSearch, AppError> {
+    let trimmed = query.trim();
+    if trimmed.is_empty() {
+        return Err(AppError::InvalidInput(
+            "Search query cannot be empty".into(),
+        ));
+    }
+    if trimmed.chars().count() > MAX_QUERY_LEN {
+        return Err(AppError::InvalidInput(format!(
+            "Search query is too long (max {MAX_QUERY_LEN} characters)"
+        )));
+    }
+
+    let num = count
+        .unwrap_or(DEFAULT_SEARCH_COUNT)
+        .clamp(1, MAX_SEARCH_COUNT);
+    let site = site.map(|s| {
+        s.trim()
+            .strip_prefix("site:")
+            .unwrap_or(s.trim())
+            .to_string()
+    });
+
+    Ok(PreparedSearch {
+        payload: JinaSearchPayload {
+            q: trimmed.to_string(),
+            num,
+            gl: parse_country(country)?,
+            hl: parse_language(language)?,
+            location: parse_location(location)?,
+            page: page.map(|p| p.clamp(1, MAX_SEARCH_PAGE)),
+        },
+        site: parse_header_token(site, "site", None)?,
+    })
+}
+
+fn prepare_fetch(
+    url: String,
+    max_characters: Option<usize>,
+    offset: Option<usize>,
+    locale: Option<String>,
+) -> Result<PreparedFetch, AppError> {
+    let trimmed = url.trim();
+    let parsed = url::Url::parse(trimmed)
+        .map_err(|e| AppError::InvalidInput(format!("Invalid URL: {e}")))?;
+    if parsed.scheme() != "http" && parsed.scheme() != "https" {
+        return Err(AppError::InvalidInput(
+            "URL must start with http:// or https://".into(),
+        ));
+    }
+    Ok(PreparedFetch {
+        url: parsed,
+        offset: offset.unwrap_or(0),
+        limit: max_characters
+            .unwrap_or(DEFAULT_FETCH_MAX_CHARS)
+            .clamp(MIN_FETCH_CHARS, MAX_FETCH_CHARS),
+        locale: parse_header_token(locale, "locale", Some(MAX_LOCALE_LEN))?,
+    })
+}
+
+fn with_auth(req: reqwest::RequestBuilder, secret: Option<&str>) -> reqwest::RequestBuilder {
+    match secret.filter(|s| !s.trim().is_empty()) {
+        Some(token) => req.header("Authorization", format!("Bearer {token}")),
+        None => req,
+    }
+}
+
+fn build_search_request(
+    client: &reqwest::Client,
+    secret: Option<&str>,
+    prepared: &PreparedSearch,
+) -> Result<reqwest::Request, AppError> {
+    let body = serde_json::to_vec(&prepared.payload)
+        .map_err(|e| AppError::Failed(format!("Failed to serialize Jina search payload: {e}")))?;
+    let mut req = client
+        .post(JINA_SEARCH_ENDPOINT)
+        .header("Accept", "application/json")
+        .header("Content-Type", "application/json")
+        .header("User-Agent", USER_AGENT)
+        .header("X-Respond-With", "no-content")
+        .body(body);
+
+    if let Some(site) = &prepared.site {
+        req = req.header("X-Site", site);
+    }
+
+    with_auth(req, secret)
+        .build()
+        .map_err(|e| AppError::Failed(format!("Failed to build Jina search request: {e}")))
+}
+
+fn build_fetch_request(
+    client: &reqwest::Client,
+    secret: Option<&str>,
+    prepared: &PreparedFetch,
+) -> Result<reqwest::Request, AppError> {
+    let target_url = format!("https://r.jina.ai/{}", prepared.url.as_str());
+    let mut req = client
+        .get(&target_url)
+        .header("Accept", "application/json")
+        .header("User-Agent", USER_AGENT)
+        .header("X-Return-Format", "markdown");
+
+    if let Some(locale) = &prepared.locale {
+        req = req.header("X-Locale", locale);
+    }
+
+    with_auth(req, secret)
+        .build()
+        .map_err(|e| AppError::Failed(format!("Failed to build Jina reader request: {e}")))
 }
 
 fn is_html_body(body: &str) -> bool {
@@ -229,39 +473,24 @@ pub async fn run(
         .timeout(WEB_TIMEOUT)
         .build()
         .map_err(|e| AppError::Failed(format!("Failed to build HTTP client: {e}")))?;
+    let has_secret = secret.map(|s| !s.trim().is_empty()).unwrap_or(false);
 
     match request {
-        AiWebToolRequest::Search { query, count } => {
-            let trimmed = query.trim();
-            if trimmed.is_empty() {
-                return Err(AppError::InvalidInput(
-                    "Search query cannot be empty".into(),
-                ));
-            }
-            if trimmed.len() > MAX_QUERY_LEN {
-                return Err(AppError::InvalidInput(format!(
-                    "Search query is too long (max {MAX_QUERY_LEN} characters)"
-                )));
-            }
+        AiWebToolRequest::Search {
+            query,
+            count,
+            country,
+            language,
+            location,
+            page,
+            site,
+        } => {
+            let prepared = prepare_search(query, count, country, language, location, page, site)?;
+            let count = prepared.payload.num;
+            let req = build_search_request(&client, secret, &prepared)?;
 
-            let count = count
-                .unwrap_or(DEFAULT_SEARCH_COUNT)
-                .clamp(1, MAX_SEARCH_COUNT);
-            let encoded_query = utf8_percent_encode(trimmed, NON_ALPHANUMERIC).to_string();
-            let target_url = format!("https://s.jina.ai/{encoded_query}");
-
-            let mut req = client
-                .get(&target_url)
-                .header("Accept", "application/json")
-                .header("User-Agent", USER_AGENT)
-                .header("X-Respond-With", "no-content");
-
-            if let Some(token) = secret.filter(|s| !s.trim().is_empty()) {
-                req = req.header("Authorization", format!("Bearer {token}"));
-            }
-
-            let response = req
-                .send()
+            let response = client
+                .execute(req)
                 .await
                 .map_err(|e| AppError::Failed(format!("Jina search request failed: {e}")))?;
 
@@ -270,7 +499,6 @@ pub async fn run(
                 AppError::Failed(format!("Failed to read Jina search response: {e}"))
             })?;
 
-            let has_secret = secret.map(|s| !s.trim().is_empty()).unwrap_or(false);
             if !status.is_success() {
                 return Err(format_jina_http_error(
                     "Jina search",
@@ -318,29 +546,13 @@ pub async fn run(
             url,
             max_characters,
             offset,
+            locale,
         } => {
-            let trimmed = url.trim();
-            let parsed = url::Url::parse(trimmed)
-                .map_err(|e| AppError::InvalidInput(format!("Invalid URL: {e}")))?;
-            if parsed.scheme() != "http" && parsed.scheme() != "https" {
-                return Err(AppError::InvalidInput(
-                    "URL must start with http:// or https://".into(),
-                ));
-            }
+            let prepared = prepare_fetch(url, max_characters, offset, locale)?;
+            let req = build_fetch_request(&client, secret, &prepared)?;
 
-            let target_url = format!("https://r.jina.ai/{}", parsed.as_str());
-            let mut req = client
-                .get(&target_url)
-                .header("Accept", "application/json")
-                .header("User-Agent", USER_AGENT)
-                .header("X-Return-Format", "markdown");
-
-            if let Some(token) = secret.filter(|s| !s.trim().is_empty()) {
-                req = req.header("Authorization", format!("Bearer {token}"));
-            }
-
-            let response = req
-                .send()
+            let response = client
+                .execute(req)
                 .await
                 .map_err(|e| AppError::Failed(format!("Jina reader request failed: {e}")))?;
 
@@ -349,7 +561,6 @@ pub async fn run(
                 AppError::Failed(format!("Failed to read Jina reader response: {e}"))
             })?;
 
-            let has_secret = secret.map(|s| !s.trim().is_empty()).unwrap_or(false);
             if !status.is_success() {
                 return Err(format_jina_http_error(
                     "Jina reader",
@@ -359,17 +570,16 @@ pub async fn run(
                 ));
             }
 
-            let offset = offset.unwrap_or(0);
-            let limit = max_characters
-                .unwrap_or(DEFAULT_FETCH_MAX_CHARS)
-                .clamp(MIN_FETCH_CHARS, MAX_FETCH_CHARS);
+            let fallback_url = prepared.url.as_str().to_string();
+            let offset = prepared.offset;
+            let limit = prepared.limit;
 
             if let Ok(envelope) = serde_json::from_str::<JinaReaderEnvelope>(&body_text) {
                 if let Some(data) = envelope.data {
                     let (content, total_characters) =
                         page_slice(&data.content.unwrap_or_default(), offset, limit);
                     return Ok(AiWebToolOutput::Fetch {
-                        url: data.url.unwrap_or_else(|| trimmed.to_string()),
+                        url: data.url.unwrap_or(fallback_url),
                         title: data.title,
                         content,
                         offset,
@@ -392,7 +602,7 @@ pub async fn run(
 
             let (content, total_characters) = page_slice(trimmed_body, offset, limit);
             Ok(AiWebToolOutput::Fetch {
-                url: trimmed.to_string(),
+                url: fallback_url,
                 title: None,
                 content,
                 offset,
@@ -408,8 +618,34 @@ mod tests {
     use crate::services::ai_vault::{ProfileToolSettings, ToolGroupSettings};
     use std::collections::HashMap;
 
+    fn profile_with_tools(tools: Option<ProfileToolSettings>) -> AiProfile {
+        AiProfile {
+            id: "p1".into(),
+            name: "Test Profile".into(),
+            model_id: None,
+            temperature: None,
+            quick_request_model_id: None,
+            max_output_tokens: None,
+            memory_mode: Default::default(),
+            tools,
+            project_permissions: HashMap::new(),
+            created_at: 1,
+            updated_at: 1,
+            revision: None,
+        }
+    }
+
     #[test]
-    fn test_ensure_web_enabled_allows_when_configured() {
+    fn test_ensure_web_enabled_allows_by_default_and_when_configured() {
+        let profile_no_tools = profile_with_tools(None);
+        assert!(ensure_web_enabled(&profile_no_tools).is_ok());
+
+        let profile_without_web = profile_with_tools(Some(ProfileToolSettings {
+            groups: HashMap::new(),
+            max_step_count: None,
+        }));
+        assert!(ensure_web_enabled(&profile_without_web).is_ok());
+
         let mut groups = HashMap::new();
         groups.insert(
             WEB_TOOL_GROUP.to_string(),
@@ -419,47 +655,17 @@ mod tests {
                 command_ids: None,
             },
         );
-        let profile = AiProfile {
-            id: "p1".into(),
-            name: "Test Profile".into(),
-            model_id: None,
-            temperature: None,
-            quick_request_model_id: None,
-            max_output_tokens: None,
-            memory_mode: Default::default(),
-            tools: Some(ProfileToolSettings {
-                groups,
-                max_step_count: None,
-            }),
-            project_permissions: HashMap::new(),
-            created_at: 1,
-            updated_at: 1,
-            revision: None,
-        };
-
+        let profile = profile_with_tools(Some(ProfileToolSettings {
+            groups,
+            max_step_count: None,
+        }));
         assert!(ensure_web_enabled(&profile).is_ok());
     }
 
     #[test]
-    fn test_ensure_web_enabled_denies_when_disabled_or_missing() {
-        let profile_no_tools = AiProfile {
-            id: "p1".into(),
-            name: "Test Profile".into(),
-            model_id: None,
-            temperature: None,
-            quick_request_model_id: None,
-            max_output_tokens: None,
-            memory_mode: Default::default(),
-            tools: None,
-            project_permissions: HashMap::new(),
-            created_at: 1,
-            updated_at: 1,
-            revision: None,
-        };
-        assert!(ensure_web_enabled(&profile_no_tools).is_err());
-
-        let mut groups = HashMap::new();
-        groups.insert(
+    fn test_ensure_web_enabled_denies_when_disabled_or_denied() {
+        let mut groups_disabled = HashMap::new();
+        groups_disabled.insert(
             WEB_TOOL_GROUP.to_string(),
             ToolGroupSettings {
                 is_enabled: false,
@@ -467,24 +673,104 @@ mod tests {
                 command_ids: None,
             },
         );
-        let profile_disabled = AiProfile {
-            id: "p1".into(),
-            name: "Test Profile".into(),
-            model_id: None,
-            temperature: None,
-            quick_request_model_id: None,
-            max_output_tokens: None,
-            memory_mode: Default::default(),
-            tools: Some(ProfileToolSettings {
-                groups,
-                max_step_count: None,
-            }),
-            project_permissions: HashMap::new(),
-            created_at: 1,
-            updated_at: 1,
-            revision: None,
-        };
+        let profile_disabled = profile_with_tools(Some(ProfileToolSettings {
+            groups: groups_disabled,
+            max_step_count: None,
+        }));
         assert!(ensure_web_enabled(&profile_disabled).is_err());
+
+        let mut groups_denied = HashMap::new();
+        groups_denied.insert(
+            WEB_TOOL_GROUP.to_string(),
+            ToolGroupSettings {
+                is_enabled: true,
+                access: ProjectAccessMode::Deny,
+                command_ids: None,
+            },
+        );
+        let profile_denied = profile_with_tools(Some(ProfileToolSettings {
+            groups: groups_denied,
+            max_step_count: None,
+        }));
+        assert!(ensure_web_enabled(&profile_denied).is_err());
+    }
+
+    #[test]
+    fn test_prepare_and_build_search_request() {
+        let prepared = prepare_search(
+            "  rust async  ".into(),
+            Some(12),
+            Some("RU".into()),
+            Some("ru".into()),
+            Some("Moscow, Russia".into()),
+            Some(2),
+            Some("site:doc.rust-lang.org".into()),
+        )
+        .unwrap();
+        assert_eq!(prepared.payload.q, "rust async");
+        assert_eq!(prepared.payload.num, 12);
+        assert_eq!(prepared.payload.gl.as_deref(), Some("ru"));
+        assert_eq!(prepared.payload.hl.as_deref(), Some("ru"));
+        assert_eq!(prepared.payload.location.as_deref(), Some("Moscow, Russia"));
+        assert_eq!(prepared.payload.page, Some(2));
+
+        let client = crate::services::net::client_builder().build().unwrap();
+        let req = build_search_request(&client, Some("secret-key"), &prepared).unwrap();
+        assert_eq!(req.method(), reqwest::Method::POST);
+        assert_eq!(req.url().as_str(), "https://s.jina.ai/");
+        assert_eq!(req.headers().get("X-Respond-With").unwrap(), "no-content");
+        assert_eq!(req.headers().get("X-Site").unwrap(), "doc.rust-lang.org");
+        assert_eq!(
+            req.headers().get("Authorization").unwrap(),
+            "Bearer secret-key"
+        );
+        let body: serde_json::Value =
+            serde_json::from_slice(req.body().unwrap().as_bytes().unwrap()).unwrap();
+        assert_eq!(
+            body,
+            serde_json::json!({
+                "q": "rust async",
+                "num": 12,
+                "gl": "ru",
+                "hl": "ru",
+                "location": "Moscow, Russia",
+                "page": 2
+            })
+        );
+    }
+
+    #[test]
+    fn test_prepare_search_counts_unicode_characters_not_bytes() {
+        let cyrillic_1000 = "я".repeat(MAX_QUERY_LEN);
+        assert!(cyrillic_1000.len() > MAX_QUERY_LEN);
+        assert!(prepare_search(cyrillic_1000, None, None, None, None, None, None).is_ok());
+
+        let cyrillic_1001 = "я".repeat(MAX_QUERY_LEN + 1);
+        assert!(matches!(
+            prepare_search(cyrillic_1001, None, None, None, None, None, None),
+            Err(AppError::InvalidInput(_))
+        ));
+    }
+
+    #[test]
+    fn test_prepare_and_build_fetch_request_with_locale() {
+        let prepared = prepare_fetch(
+            "https://example.com/shop".into(),
+            None,
+            Some(50),
+            Some("ru-RU".into()),
+        )
+        .unwrap();
+        let client = crate::services::net::client_builder().build().unwrap();
+        let req = build_fetch_request(&client, None, &prepared).unwrap();
+        assert_eq!(req.method(), reqwest::Method::GET);
+        assert_eq!(
+            req.url().as_str(),
+            "https://r.jina.ai/https://example.com/shop"
+        );
+        assert_eq!(req.headers().get("X-Return-Format").unwrap(), "markdown");
+        assert_eq!(req.headers().get("X-Locale").unwrap(), "ru-RU");
+        assert!(req.headers().get("Authorization").is_none());
     }
 
     #[test]
@@ -575,15 +861,25 @@ mod tests {
         );
         assert!(err_429_paid.to_string().contains("quota limits"));
 
-        let err_401 = format_jina_http_error(
+        let err_401_paid = format_jina_http_error(
             "Jina reader",
             reqwest::StatusCode::UNAUTHORIZED,
             "unauthorized",
             true,
         );
-        assert!(err_401
+        assert!(err_401_paid
             .to_string()
-            .contains("authentication failed (HTTP 401)"));
+            .contains("Please check your Jina API key"));
+
+        let err_401_free = format_jina_http_error(
+            "Jina search",
+            reqwest::StatusCode::UNAUTHORIZED,
+            "unauthorized",
+            false,
+        );
+        assert!(err_401_free
+            .to_string()
+            .contains("Please add one in LLM settings"));
 
         let err_html = format_jina_http_error(
             "Jina search",
@@ -602,18 +898,43 @@ mod tests {
             AiWebToolRequest::Search {
                 query: "   ".into(),
                 count: None,
+                country: None,
+                language: None,
+                location: None,
+                page: None,
+                site: None,
             },
         )
         .await;
         assert!(matches!(res, Err(AppError::InvalidInput(_))));
 
-        // Query too long
-        let long_query = "x".repeat(MAX_QUERY_LEN + 1);
+        // Invalid country code
         let res = run(
             None,
             AiWebToolRequest::Search {
-                query: long_query,
+                query: "rust".into(),
                 count: None,
+                country: Some("USA".into()),
+                language: None,
+                location: None,
+                page: None,
+                site: None,
+            },
+        )
+        .await;
+        assert!(matches!(res, Err(AppError::InvalidInput(_))));
+
+        // Invalid site with whitespace
+        let res = run(
+            None,
+            AiWebToolRequest::Search {
+                query: "rust".into(),
+                count: None,
+                country: None,
+                language: None,
+                location: None,
+                page: None,
+                site: Some("a.com b.com".into()),
             },
         )
         .await;
@@ -626,6 +947,7 @@ mod tests {
                 url: "not a url".into(),
                 max_characters: None,
                 offset: None,
+                locale: None,
             },
         )
         .await;
@@ -638,6 +960,7 @@ mod tests {
                 url: "ftp://example.com/file.txt".into(),
                 max_characters: None,
                 offset: None,
+                locale: None,
             },
         )
         .await;

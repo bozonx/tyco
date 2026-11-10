@@ -53,7 +53,7 @@ export const CHAT_TOOL_GROUPS: readonly ChatToolGroup[] = [
     icon: 'mdi:search-web',
     defaultAccess: 'allow',
     defaultEnabled: true,
-    hasAccessControl: false,
+    hasAccessControl: true,
   },
   {
     id: COMMANDS_TOOL_GROUP_ID,

@@ -1,6 +1,11 @@
-import { shallowMount } from '@vue/test-utils'
+import type { ChatMessage } from '@tyco/shared'
+import { mount, shallowMount } from '@vue/test-utils'
 import { expect, it, vi } from 'vitest'
+import { nextTick, reactive } from 'vue'
 
+import { applyAnswerState } from '../../lib/chat-tools/chat-message-steps'
+import { runChatToolLoop } from '../../lib/chat-tools/chat-tool-loop'
+import { createChatToolPolicy } from '../../lib/chat-tools/chat-tool-policy'
 import ChatMessageItem from './ChatMessageItem.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -188,6 +193,79 @@ it('hides message actions on reply-blocks-only messages when regeneration is una
   expect(wrapper.findComponent({ name: 'IconButton' }).props('label')).toBe(
     'chat.copy'
   )
+
+  wrapper.unmount()
+})
+
+it('updates tool call status badge in reactive message as tool results arrive', async () => {
+  const message = reactive<ChatMessage>({ role: 'assistant', content: '' })
+  const wrapper = mount(ChatMessageItem, {
+    props: { message, streaming: true },
+    global: {
+      stubs: {
+        ChatMarkdown: true,
+        AppIcon: true,
+        IconButton: true,
+        DropdownMenu: true,
+      },
+    },
+  })
+
+  let emitResult!: () => void
+  const waitForResult = new Promise<void>((resolve) => {
+    emitResult = resolve
+  })
+
+  const loopPromise = runChatToolLoop(
+    {
+      stream: async function* () {
+        yield { type: 'model', provider: 'fake', model: 'fake-model' }
+        yield {
+          type: 'tool-call',
+          toolCallId: 'c1',
+          toolName: 'web_search',
+          input: { query: 'test' },
+        }
+        await waitForResult
+        yield {
+          type: 'tool-result',
+          toolCallId: 'c1',
+          toolName: 'web_search',
+          output: 'Result',
+          isError: false,
+        }
+        yield { type: 'step-finish', step: 0, finishReason: 'tool-calls' }
+        yield { type: 'text', text: 'Done.' }
+        yield { type: 'step-finish', step: 1, finishReason: 'stop' }
+        yield {
+          type: 'finish',
+          finishReason: 'stop',
+          text: 'Done.',
+          responseMessages: [],
+        }
+      },
+      requestApproval: async () => 'allow-once',
+      policy: createChatToolPolicy({ canAsk: true }),
+    },
+    {
+      prompt: { messages: [{ role: 'user', content: 'hi' }], system: '' },
+      tools: null,
+      maxStepCount: 4,
+      signal: new AbortController().signal,
+      onUpdate: (answer) => applyAnswerState(message, answer),
+    }
+  )
+
+  await vi.waitFor(() => {
+    expect(wrapper.text()).toContain('chat.toolState.pending')
+  })
+
+  emitResult()
+  await loopPromise
+  await nextTick()
+
+  expect(wrapper.text()).toContain('chat.toolState.done')
+  expect(wrapper.text()).not.toContain('chat.toolState.pending')
 
   wrapper.unmount()
 })

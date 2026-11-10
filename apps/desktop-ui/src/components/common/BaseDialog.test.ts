@@ -55,4 +55,15 @@ describe('BaseDialog', () => {
     await nextTick()
     expect(document.querySelector('dialog')?.open).toBe(false)
   })
+  it('does not force display on closed full dialogs and applies frameless class', async () => {
+    mount(BaseDialog, {
+      props: { open: false, size: 'full', frameless: true, label: 'Viewer' },
+    })
+    await nextTick()
+    const dialog = document.querySelector('dialog')!
+    expect(dialog.hasAttribute('open')).toBe(false)
+    expect(dialog.classList.contains('app-dialog--full')).toBe(true)
+    expect(dialog.classList.contains('app-dialog--frameless')).toBe(true)
+    expect(getComputedStyle(dialog).display).not.toBe('flex')
+  })
 })

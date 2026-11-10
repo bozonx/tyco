@@ -114,11 +114,30 @@ export async function runChatToolLoop(
     open.text = part.type === 'text' ? part : null
   }
 
-  const setCallState = (toolCallId: string, callState: ChatToolCallState) => {
+  // Replace parts instead of mutating published objects in place so reactive
+  // UI proxies see a new reference and update tool call state immediately.
+  const replacePart = <T extends ChatMessagePart>(current: T, next: T) => {
+    const index = state.parts.indexOf(current)
+    if (index !== -1) state.parts[index] = next
+  }
+
+  const updateCall = (
+    toolCallId: string,
+    patch: (call: ToolCallPart) => ToolCallPart
+  ) => {
     const call = calls.get(toolCallId)
     if (!call) return
-    call.state = callState
-    if (callState !== 'awaiting-approval') delete call.approvalId
+    const next = patch(call)
+    calls.set(toolCallId, next)
+    replacePart(call, next)
+  }
+
+  const setCallState = (toolCallId: string, callState: ChatToolCallState) => {
+    updateCall(toolCallId, (call) => {
+      const next: ToolCallPart = { ...call, state: callState }
+      if (callState !== 'awaiting-approval') delete next.approvalId
+      return next
+    })
   }
 
   for (;;) {
@@ -163,8 +182,13 @@ export async function runChatToolLoop(
             input.onModel?.({ provider: event.provider, model: event.model })
             continue
           case 'text':
-            if (open.text) open.text.text += event.text
-            else push({ type: 'text', text: event.text })
+            if (open.text) {
+              const next = { ...open.text, text: open.text.text + event.text }
+              replacePart(open.text, next)
+              open.text = next
+            } else {
+              push({ type: 'text', text: event.text })
+            }
             break
           case 'reasoning':
             // Not kept until the chat can show it: stored unseen, it only grows
@@ -211,11 +235,11 @@ export async function runChatToolLoop(
             setCallState(event.toolCallId, 'denied')
             break
           case 'approval-request': {
-            const call = calls.get(event.toolCallId)
-            if (call) {
-              call.state = 'awaiting-approval'
-              call.approvalId = event.approvalId
-            }
+            updateCall(event.toolCallId, (call) => ({
+              ...call,
+              state: 'awaiting-approval',
+              approvalId: event.approvalId,
+            }))
             requests.push({
               approvalId: event.approvalId,
               toolCallId: event.toolCallId,

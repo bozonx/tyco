@@ -2,6 +2,7 @@
   <BaseDialog
     :open="open"
     size="full"
+    frameless
     :label="dialogLabel"
     class="image-viewer-dialog"
     @close="emit('close')"
@@ -214,15 +215,6 @@ function handleDoubleClick(event: MouseEvent) {
 </script>
 
 <style scoped>
-.app-dialog.image-viewer-dialog {
-  padding: 0;
-  overflow: hidden;
-  background: transparent;
-  box-shadow: none;
-  border: none;
-  border-radius: 0;
-}
-
 .image-viewer-stage {
   position: relative;
   width: 100%;

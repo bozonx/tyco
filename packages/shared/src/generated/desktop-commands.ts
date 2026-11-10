@@ -368,7 +368,7 @@ export interface DesktopCommands {
   }
   run_ai_web_tool: {
     args: {
-      profileId: string
+      profileId?: string | null
       request: AiWebToolRequest
       runId?: string | null
     }

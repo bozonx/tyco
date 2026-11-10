@@ -8,6 +8,7 @@
       :class="{
         'app-dialog--content': size === 'content',
         'app-dialog--full': size === 'full',
+        'app-dialog--frameless': frameless,
       }"
       :aria-labelledby="labelledby"
       :aria-describedby="describedby"
@@ -27,6 +28,7 @@ defineOptions({ inheritAttrs: false })
 const props = defineProps<{
   open: boolean
   size?: 'sm' | 'content' | 'full'
+  frameless?: boolean
   label?: string
   labelledby?: string
   describedby?: string
@@ -111,9 +113,19 @@ onBeforeUnmount(() => {
   border: none;
   border-radius: 0;
   padding: var(--space-md) var(--space-lg);
+  box-sizing: border-box;
+}
+.app-dialog--full[open] {
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
+}
+.app-dialog--frameless {
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 .app-dialog::backdrop {
   background: var(--app-overlay-bg);
