@@ -18,6 +18,12 @@
         :disabled="isFinishing"
         @select="onSelectSource"
       />
+      <SttLanguagePicker
+        placement="top"
+        align="right"
+        :disabled="isFinishing"
+        @change="emit('language-change')"
+      />
       <InfoTooltip
         class="listen-bar-info"
         :text="t('listen.privacyHint')"
@@ -105,6 +111,7 @@ import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import AudioWaveform from '../voice/AudioWaveform.vue'
 import LiveTranscript from '../voice/LiveTranscript.vue'
 import QuickModeSwitch from '../voice/QuickModeSwitch.vue'
+import SttLanguagePicker from '../voice/SttLanguagePicker.vue'
 import VoiceAutoStopNotice from '../voice/VoiceAutoStopNotice.vue'
 import ListenSourcePicker from './ListenSourcePicker.vue'
 import type { CaptureSource } from '@tyco/shared'
@@ -118,7 +125,10 @@ const props = defineProps<{
   stopHotkey?: string
   appLabel?: string
 }>()
-const emit = defineEmits<{ (e: 'switch-mode'): void }>()
+const emit = defineEmits<{
+  (e: 'switch-mode'): void
+  (e: 'language-change'): void
+}>()
 const { t } = useI18n()
 
 const pickedLabel = ref<{ appId: string; label: string }>()

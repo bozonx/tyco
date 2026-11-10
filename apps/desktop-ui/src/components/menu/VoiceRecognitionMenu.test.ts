@@ -45,6 +45,7 @@ vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey: mocks.toastKey, toastText: mocks.toastText }),
 }))
 
+import { DictationError } from '../../lib/stt/dictation-error'
 import { useHistoryStore } from '../../stores/history'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 
@@ -72,6 +73,7 @@ describe('VoiceRecognitionMenu', () => {
             template: '<div class="live-transcript" />',
           },
           AudioWaveform: true,
+          SttLanguagePicker: true,
           ShortcutButton: {
             props: ['keys', 'icon'],
             template: '<button class="shortcut-btn"><slot /></button>',
@@ -778,5 +780,92 @@ describe('VoiceRecognitionMenu', () => {
       'raw dictated text'
     )
     editorWrapper.unmount()
+  })
+
+  it('offers Open settings toast action when API key is missing in inline mode', async () => {
+    const activateMode = vi.fn()
+    desktop.backend.handle('activate_mode', activateMode)
+    mocks.startDictation.mockRejectedValueOnce(
+      new DictationError('missingKey', 'Missing Deepgram API key')
+    )
+
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar', chat: true },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+          AudioWaveform: true,
+          SttLanguagePicker: true,
+          ShortcutButton: true,
+        },
+      },
+    })
+    await flushPromises()
+
+    expect(wrapper.emitted('cancelled')).toBeTruthy()
+    expect(mocks.toastText).toHaveBeenCalledWith(
+      'Missing Deepgram API key',
+      'error',
+      expect.objectContaining({
+        action: expect.objectContaining({
+          label: 'common.openSettings',
+          run: expect.any(Function),
+        }),
+      })
+    )
+    const toastOptions = mocks.toastText.mock.calls[0]?.[2] as {
+      action: { run: () => void }
+    }
+    toastOptions.action.run()
+    await flushPromises()
+    expect(activateMode).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: 'config', settingsTab: 'stt' })
+    )
+    wrapper.unmount()
+  })
+
+  it('keeps quick bar open with Open settings and Retry buttons when keepErrorVisible is true', async () => {
+    const activateMode = vi.fn()
+    desktop.backend.handle('activate_mode', activateMode)
+    mocks.startDictation.mockRejectedValueOnce(
+      new DictationError('missingKey', 'Missing Deepgram API key')
+    )
+
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar', target: 'external', keepErrorVisible: true },
+      global: {
+        stubs: {
+          OverlayDragHandle: true,
+          QuickModeSwitch: true,
+          AppIcon: true,
+          ShortcutButton: {
+            template: '<button @click="$emit(\'click\')"><slot /></button>',
+          },
+          Button: {
+            template: '<button @click="$emit(\'click\')"><slot /></button>',
+          },
+        },
+      },
+    })
+    await flushPromises()
+
+    expect(wrapper.emitted('cancelled')).toBeUndefined()
+    expect(wrapper.text()).toContain('Missing Deepgram API key')
+
+    const settingsBtn = wrapper
+      .findAll('button')
+      .find((b) => b.text().includes('common.openSettings'))
+    expect(settingsBtn).toBeDefined()
+    await settingsBtn!.trigger('click')
+    await flushPromises()
+
+    expect(activateMode).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: 'config', settingsTab: 'stt' })
+    )
+    expect(wrapper.emitted('cancelled')).toHaveLength(1)
+    wrapper.unmount()
   })
 })

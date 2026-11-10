@@ -1,6 +1,7 @@
 import { sttSecretId, type SttProvider } from '@tyco/shared'
 
 import { isSecretUsable, type SecretsStatus } from '../net/secrets'
+import { DictationError } from './dictation-error'
 
 /** How the user knows the providers that take a key */
 const STT_PROVIDER_LABELS: Record<SttProvider, string> = {
@@ -17,11 +18,13 @@ export function assertSttKeyAvailable(
 ): void {
   const id = sttSecretId(provider)
   if (isSecretUsable(secrets, id)) return
-  const key = Object.hasOwn(secrets, id)
-    ? 'toast.voiceKeyUnavailable'
-    : 'toast.voiceKeyMissing'
+  const hasSaved = Object.hasOwn(secrets, id)
+  const key = hasSaved ? 'toast.voiceKeyUnavailable' : 'toast.voiceKeyMissing'
   const providerLabel = Object.hasOwn(STT_PROVIDER_LABELS, provider)
     ? STT_PROVIDER_LABELS[provider]
     : provider
-  throw new Error(translate(key, { provider: providerLabel }))
+  throw new DictationError(
+    hasSaved ? 'keyUnavailable' : 'missingKey',
+    translate(key, { provider: providerLabel })
+  )
 }

@@ -72,6 +72,14 @@ function errorText(
   describe?: (cause: unknown) => string
 ): string {
   const key = dictationErrorKey(cause)
+  if (
+    cause instanceof Error &&
+    key &&
+    ((cause as DictationError).kind === 'missingKey' ||
+      (cause as DictationError).kind === 'keyUnavailable')
+  ) {
+    return cause.message
+  }
   // a failure with details is told with them: the view cannot add them to
   // a bare key
   if (key && !(cause as DictationError).details) return key
@@ -96,6 +104,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   const selected = shallowRef<VoiceCandidate>()
   /** A message key (`voiceCommands.*`, `toast.*`) or a message as it came */
   const error = ref('')
+  const errorCause = shallowRef<unknown>(undefined)
   const autoStopWarning = shallowRef<AutoStopWarning>()
   const explicitContext = shallowRef<VoiceCommandContext | undefined>()
   const context = computed(() => {
@@ -349,6 +358,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     const current = ++generation
     stage.value = 'recording'
     error.value = ''
+    errorCause.value = undefined
     interruption = undefined
     // Preserve the previous text until new recognition explicitly replaces it.
     selected.value = undefined
@@ -390,6 +400,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
             void review(heard, 'review', errorText(cause, deps.describeError))
             return
           }
+          errorCause.value = cause
           error.value = errorText(cause, deps.describeError)
           stage.value = 'review'
         },
@@ -405,6 +416,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       .catch((cause: unknown) => {
         if (current !== generation || disposed) return
         voiceSession.abort()
+        errorCause.value = cause
         error.value = errorText(cause, deps.describeError)
         stage.value = 'review'
       })
@@ -421,6 +433,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     controller?.abort()
     stage.value = 'idle'
     error.value = ''
+    errorCause.value = undefined
     transcript.value = ''
     inputText.value = ''
     selected.value = undefined
@@ -447,6 +460,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     inputText,
     selected,
     error,
+    errorCause,
     routes,
     catalogRoutes,
     unavailableReason: (command: CommandConfig) =>

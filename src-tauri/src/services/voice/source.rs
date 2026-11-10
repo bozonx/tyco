@@ -41,6 +41,15 @@ pub struct AudioApp {
     pub level: f32,
 }
 
+/// An input device (microphone) available on this machine.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct AudioInputDevice {
+    pub id: String,
+    pub label: String,
+    pub is_default: bool,
+}
+
 /// What a playback source reports about itself while it records.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct SourceStatus {

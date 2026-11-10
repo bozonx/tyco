@@ -1,16 +1,38 @@
 import { createPinia, setActivePinia } from 'pinia'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 import { DEFAULT_USER_CONFIG, type UserConfig } from '@tyco/shared'
 
+import type * as InputDevices from '../../lib/stt/input-devices'
 import { useSecretsStore } from '../../stores/secrets'
 import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsVoiceTab from './SettingsVoiceTab.vue'
 
+const micMocks = vi.hoisted(() => ({
+  listInputDevices: vi.fn().mockResolvedValue([
+    { id: 'Built-in Mic', label: 'Built-in Mic', isDefault: true },
+    { id: 'USB Mic', label: 'USB Mic', isDefault: false },
+  ]),
+  startTest: vi.fn().mockResolvedValue(undefined),
+  stopTest: vi.fn().mockResolvedValue(undefined),
+}))
+
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
+
+vi.mock('../../lib/stt/input-devices', async (importOriginal) => {
+  const actual = await importOriginal<typeof InputDevices>()
+  return {
+    ...actual,
+    listInputDevices: micMocks.listInputDevices,
+    createMicrophoneTester: () => ({
+      start: micMocks.startTest,
+      stop: micMocks.stopTest,
+    }),
+  }
+})
 
 describe('SettingsVoiceTab.vue', () => {
   let pinia: ReturnType<typeof createPinia>
@@ -84,6 +106,25 @@ describe('SettingsVoiceTab.vue', () => {
             template:
               '<div class="secret-key-stub" :data-has-key="hasKey"><input class="secret-draft" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" /><button class="save-key-btn" @click="save?.()">Save</button><button class="remove-key-btn" @click="remove?.()">Remove</button></div>',
           },
+          ListenSourceField: { template: '<div class="listen-source-stub" />' },
+          DeviceScopeBadge: { template: '<span class="device-scope-stub" />' },
+          Button: {
+            props: ['icon', 'variant', 'size'],
+            emits: ['click'],
+            template:
+              '<button class="btn-stub" @click="$emit(\'click\')"><slot /></button>',
+          },
+          IconButton: {
+            props: ['label', 'disabled'],
+            emits: ['click'],
+            template:
+              '<button class="icon-btn-stub" :aria-label="label" :disabled="disabled" @click="$emit(\'click\')" />',
+          },
+          InlineAction: {
+            emits: ['click'],
+            template:
+              '<button class="inline-action-stub" @click="$emit(\'click\')"><slot /></button>',
+          },
         },
       },
     })
@@ -96,13 +137,19 @@ describe('SettingsVoiceTab.vue', () => {
     const sections = wrapper.findAll('.section-stub')
     expect(sections[0].attributes('data-title')).toBe('settings.sttTab')
     expect(sections[0].attributes('data-info')).toBe('settings.sttTabInfo')
-    expect(sections[1].attributes('data-title')).toBeUndefined()
+    expect(sections[1].attributes('data-title')).toBe(
+      'settings.sttDictationSection'
+    )
+    expect(sections[2].attributes('data-title')).toBe(
+      'settings.sttListenSection'
+    )
 
     const labels = wrapper
       .findAll('.field-row-stub')
       .map((f) => f.attributes('data-label'))
     expect(labels).toContain('settings.sttProvider')
     expect(labels).toContain('settings.sttServerUrl')
+    expect(labels).toContain('settings.microphoneLabel')
     expect(labels).not.toContain('settings.apiKey')
     expect(labels).not.toContain('settings.model')
   })
@@ -115,7 +162,9 @@ describe('SettingsVoiceTab.vue', () => {
     const sections = wrapper.findAll('.section-stub')
     expect(sections[0].attributes('data-title')).toBe('settings.sttTab')
     expect(sections[0].attributes('data-info')).toBe('settings.sttTabInfo')
-    expect(sections[1].attributes('data-title')).toBeUndefined()
+    expect(sections[1].attributes('data-title')).toBe(
+      'settings.sttDictationSection'
+    )
 
     const labels = wrapper
       .findAll('.field-row-stub')
@@ -228,5 +277,37 @@ describe('SettingsVoiceTab.vue', () => {
     const saveBtn = wrapper.find('.save-key-btn')
     await saveBtn.trigger('click')
     expect(setSecretSpy).toHaveBeenCalledWith('llm.google', 'gemini-key')
+  })
+
+  it('selects a microphone and toggles the microphone level test meter', async () => {
+    const config = createConfig()
+    const wrapper = mountTab(config)
+    await flushPromises()
+
+    const micRow = wrapper
+      .findAll('.field-row-stub')
+      .find(
+        (row) => row.attributes('data-label') === 'settings.microphoneLabel'
+      )
+    expect(micRow).toBeDefined()
+    const micSelect = micRow!.find('.field-select-stub')
+    await micSelect.setValue('USB Mic')
+    expect(config.stt.microphoneId).toBe('USB Mic')
+
+    const testButton = micRow!.find('.btn-stub')
+    expect(wrapper.find('[role="meter"]').exists()).toBe(false)
+    await testButton.trigger('click')
+    await flushPromises()
+
+    expect(micMocks.startTest).toHaveBeenCalledWith('USB Mic')
+    expect(wrapper.find('[role="meter"]').exists()).toBe(true)
+
+    await testButton.trigger('click')
+    await flushPromises()
+    expect(micMocks.stopTest).toHaveBeenCalled()
+    expect(wrapper.find('[role="meter"]').exists()).toBe(false)
+
+    await micSelect.setValue('')
+    expect(config.stt.microphoneId).toBeUndefined()
   })
 })

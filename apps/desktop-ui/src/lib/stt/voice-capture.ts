@@ -26,7 +26,8 @@ export interface VoiceCaptureControl {
   /** Records `source`, the microphone by default */
   start: (
     source?: CaptureSource,
-    handlers?: CaptureSourceHandlers
+    handlers?: CaptureSourceHandlers,
+    microphoneId?: string
   ) => Promise<VoiceCapture>
   /** Records another playback source in the running capture */
   switchSource: (source: CaptureSource) => Promise<void>
@@ -41,7 +42,7 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
   let sessionId: number | undefined
 
   return {
-    async start(source, handlers = {}) {
+    async start(source, handlers = {}, microphoneId) {
       let overflowed = false
       let superseded = false
       let captureSessionId: number | undefined
@@ -77,9 +78,11 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
       }
 
       try {
+        const trimmedMic = microphoneId?.trim()
         const started = await ipc.invoke('start_voice_capture', {
           onAudio: ipc.createChannel(onMessage),
           ...(source && { source }),
+          ...(trimmedMic && { microphoneId: trimmedMic }),
         })
         captureSessionId = started.sessionId
         sessionId = captureSessionId

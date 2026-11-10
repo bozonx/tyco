@@ -1,5 +1,6 @@
 //! CPAL microphone adapter. Capture policy and delivery live in the voice
 //! service.
+use std::collections::HashSet;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
@@ -7,17 +8,64 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
 use crate::errors::AppError;
 use crate::services::voice::{
-    build_input_stream, OpenedCapture, StreamContext, TARGET_SAMPLE_RATE_HZ,
+    build_input_stream, AudioInputDevice, OpenedCapture, StreamContext, TARGET_SAMPLE_RATE_HZ,
 };
 
-/// Opens the default input device.
+/// Lists available input devices, placing the system default first.
+pub(super) fn list_input_devices() -> Result<Vec<AudioInputDevice>, AppError> {
+    let host = cpal::default_host();
+    let default_name = host
+        .default_input_device()
+        .and_then(|device| device.name().ok());
+    let devices = host
+        .input_devices()
+        .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
+    let names = devices.filter_map(|device| device.name().ok());
+    Ok(collect_input_devices(names, default_name.as_deref()))
+}
+
+fn collect_input_devices(
+    names: impl IntoIterator<Item = String>,
+    default_name: Option<&str>,
+) -> Vec<AudioInputDevice> {
+    let mut seen = HashSet::new();
+    let mut devices = Vec::new();
+    for raw_name in names {
+        let name = raw_name.trim();
+        if name.is_empty() || !seen.insert(name.to_owned()) {
+            continue;
+        }
+        devices.push(AudioInputDevice {
+            id: name.to_owned(),
+            label: name.to_owned(),
+            is_default: default_name == Some(name),
+        });
+    }
+    devices.sort_by_key(|device| !device.is_default);
+    devices
+}
+
+/// Opens `device_id` when given and present, otherwise the default input device.
 pub(super) fn open_microphone(
+    device_id: Option<&str>,
     stop_flag: &Arc<AtomicBool>,
 ) -> Result<OpenedCapture<cpal::Stream>, AppError> {
     let host = cpal::default_host();
-    let device = host
-        .default_input_device()
-        .ok_or_else(|| AppError::ServiceUnavailable("No default input device found".into()))?;
+    let requested = device_id.map(str::trim).filter(|id| !id.is_empty());
+    let selected = requested.and_then(|id| {
+        host.input_devices()
+            .ok()?
+            .find(|device| device.name().ok().as_deref() == Some(id))
+    });
+    if let (Some(id), None) = (requested, selected.as_ref()) {
+        log::warn!("Configured microphone \"{id}\" not found; falling back to default");
+    }
+    let device = match selected {
+        Some(device) => device,
+        None => host
+            .default_input_device()
+            .ok_or_else(|| AppError::ServiceUnavailable("No default input device found".into()))?,
+    };
     open_input_device(&device, stop_flag)
 }
 
@@ -181,5 +229,33 @@ mod tests {
             &default_config(),
         )
         .is_none());
+    }
+
+    #[test]
+    fn deduplicates_input_devices_and_puts_default_first() {
+        let devices = collect_input_devices(
+            [
+                "Built-in Mic".to_owned(),
+                " ".to_owned(),
+                "USB Headset".to_owned(),
+                "Built-in Mic".to_owned(),
+            ],
+            Some("USB Headset"),
+        );
+        assert_eq!(
+            devices,
+            vec![
+                AudioInputDevice {
+                    id: "USB Headset".into(),
+                    label: "USB Headset".into(),
+                    is_default: true,
+                },
+                AudioInputDevice {
+                    id: "Built-in Mic".into(),
+                    label: "Built-in Mic".into(),
+                    is_default: false,
+                },
+            ]
+        );
     }
 }

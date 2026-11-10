@@ -15,6 +15,7 @@
     "allow-get-ai-profile",
     "allow-get-ai-vault-path",
     "allow-list-device-history-journals",
+    "allow-list-input-devices",
     "allow-delete-device-history",
     "allow-list-ai-vaults",
     "allow-inspect-ai-vault-folder",

@@ -49,6 +49,11 @@ export interface SttConfig {
    */
   isVoiceCommandsHoldEnabled: boolean
   /**
+   * The preferred microphone on this device (by CPAL device name); absent or
+   * empty uses the system default input device
+   */
+  microphoneId?: string
+  /**
    * The application the listening hotkey records, by its `AudioAppId`; absent
    * or empty records the whole computer sound
    */

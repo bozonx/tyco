@@ -164,6 +164,7 @@ fn main() {
             "show_desktop_notification",
             "show_status_overlay",
             "start_fetch",
+            "list_input_devices",
             "start_voice_capture",
             "stop_voice_capture",
             "switch_capture_source",

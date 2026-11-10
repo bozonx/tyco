@@ -8,6 +8,7 @@
       :activation-mode="activationMode"
       :reply-to="replyTo"
       :can-switch-mode="isQuickWindow()"
+      :keep-error-visible="isQuickWindow()"
       @corrected="handleCorrected"
       @cancelled="handleCancelled"
     />

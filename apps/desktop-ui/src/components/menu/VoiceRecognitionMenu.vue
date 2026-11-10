@@ -1,5 +1,51 @@
 <template>
+  <div
+    v-if="startError"
+    class="voice-bar voice-error-bar"
+    role="alert"
+    aria-live="assertive"
+  >
+    <div class="voice-error-header">
+      <OverlayDragHandle />
+      <QuickModeSwitch
+        v-if="props.canSwitchMode"
+        mode="voice"
+        :disabled="!desktopStore.desktopState.canListen"
+        @switch="switchToListen"
+      />
+      <AppIcon
+        icon="mdi:alert-circle-outline"
+        size="md"
+        class="voice-error-icon"
+      />
+      <span class="voice-error-text">{{ startError.message }}</span>
+    </div>
+    <div class="voice-error-actions">
+      <ShortcutButton size="sm" :keys="['Esc']" @click="dismissStartError">
+        {{ t('common.close') }}
+      </ShortcutButton>
+      <Button
+        v-if="startError.canRetry"
+        size="sm"
+        :variant="startError.canOpenSettings ? 'ghost' : 'primary'"
+        icon="mdi:refresh"
+        @click="retryAfterError"
+      >
+        {{ t('listen.retry') }}
+      </Button>
+      <Button
+        v-if="startError.canOpenSettings"
+        size="sm"
+        variant="primary"
+        icon="mdi:cog-outline"
+        @click="openSttSettings"
+      >
+        {{ t('common.openSettings') }}
+      </Button>
+    </div>
+  </div>
   <component
+    v-else
     :is="props.variant === 'bar' ? VoiceRecordingBar : VoiceRecordingSheet"
     :transcript="transcript"
     :audio-level="audioLevel"
@@ -24,11 +70,12 @@
     :can-switch-mode="props.canSwitchMode"
     @remove-context="emit('removeContext')"
     @switch-mode="switchToListen"
+    @language-change="handleLanguageChange"
   />
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useCopyText } from '../../composables/use-copy-text'
 import { useDictationActions } from '../../composables/use-dictation-actions'
@@ -43,6 +90,10 @@ import { describeError } from '../../lib/errors/describe-error'
 import { isEditorHistoryOff } from '../../lib/history/editor-history-storage'
 import type { VoiceMenuParams } from '../../lib/modals/menu-modal-params'
 import { isModeOfWindow } from '../../lib/navigation/routes'
+import {
+  isRetryableDictationError,
+  isSettingsFixableDictationError,
+} from '../../lib/stt/dictation-error'
 import { resolveDictationTarget } from '../../lib/stt/dictation-target'
 import { liveTranscriptText } from '../../lib/stt/live-transcript'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
@@ -52,9 +103,15 @@ import { createKeyPressTracker } from '../../lib/ui/key-press-tracker'
 import { isTextEntryTarget } from '../../lib/ui/text-entry-target'
 import { useDesktopStore } from '../../stores/desktop'
 import { useHistoryStore } from '../../stores/history'
+import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickDismissStore } from '../../stores/quick-dismiss'
+import AppIcon from '../common/AppIcon.vue'
+import Button from '../common/Button.vue'
+import ShortcutButton from '../overlay/ShortcutButton.vue'
+import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
+import QuickModeSwitch from '../voice/QuickModeSwitch.vue'
 import VoiceRecordingBar from '../voice/VoiceRecordingBar.vue'
 import VoiceRecordingSheet from '../voice/VoiceRecordingSheet.vue'
 import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
@@ -65,6 +122,8 @@ const props = defineProps<
     replyTo?: string
     /** The quick window may switch to listening from here */
     canSwitchMode?: boolean
+    /** Keep a start failure visible inline instead of hiding the quick bar */
+    keepErrorVisible?: boolean
   }
 >()
 const emit = defineEmits<{
@@ -91,6 +150,33 @@ const { voiceCorrection, contextualVoiceCorrection, stylingPrompt } =
 const { toastKey, toastText } = useToast()
 const { t } = useI18n()
 const desktopStore = useDesktopStore()
+const ipcStore = useIpcStore()
+const startError = ref<{
+  message: string
+  canOpenSettings: boolean
+  canRetry: boolean
+} | null>(null)
+
+function openSttSettings() {
+  void ipcStore.callOrNotify('activate_mode', {
+    mode: 'config',
+    settingsTab: 'stt',
+  })
+  if (startError.value) {
+    startError.value = null
+    emit('cancelled')
+  }
+}
+
+function dismissStartError() {
+  startError.value = null
+  emit('cancelled')
+}
+
+function retryAfterError() {
+  startError.value = null
+  void startSession()
+}
 let sessionActivationId = desktopStore.desktopState.activationId
 const isSameActivation = () =>
   sessionActivationId === desktopStore.desktopState.activationId
@@ -170,9 +256,29 @@ const model = createVoiceRecognition({
   consumeBufferedIntent: () => menuModalsStore.consumeBufferedIntent(),
   options: () => props,
   onCancelled: () => {
+    startError.value = null
     if (!ownsActivation()) return
     invokeCallback(props.onCancel)
     emit('cancelled')
+  },
+  onStartError: (error, message) => {
+    const canOpenSettings = isSettingsFixableDictationError(error)
+    if (props.keepErrorVisible) {
+      startError.value = {
+        message,
+        canOpenSettings,
+        canRetry: !canOpenSettings || isRetryableDictationError(error),
+      }
+      return 'keep'
+    }
+    if (canOpenSettings) {
+      toastText(message, 'error', {
+        durationMs: 10_000,
+        action: { label: t('common.openSettings'), run: openSttSettings },
+      })
+      return 'handled'
+    }
+    return undefined
   },
   // the text is delivered even if the window was hidden while it was being
   // transcribed or corrected: it cannot be dictated the same way twice
@@ -203,11 +309,28 @@ const {
 const modeSwitch = useQuickModeSwitch()
 /** Leaves for listening; words already dictated are kept as a result first */
 async function switchToListen() {
+  if (startError.value) {
+    startError.value = null
+    await modeSwitch.switchTo('listen')
+    return
+  }
   if (liveTranscriptText(transcript.value).trim()) {
     await finish('next')
     return
   }
   await modeSwitch.switchTo('listen')
+}
+
+function handleLanguageChange() {
+  if (startError.value) {
+    retryAfterError()
+    return
+  }
+  if (!liveTranscriptText(transcript.value).trim() && !isFinishing.value) {
+    void model.restartSession()
+    return
+  }
+  toastKey('stt.languageSavedForNext', 'info')
 }
 const isVoiceActivation = computed(() => props.activationMode === 'voice')
 const isStylingBarEnabled = computed(
@@ -231,6 +354,10 @@ const primaryIntent = (): VoiceFinishIntent =>
 const finishHotkey = useVoiceFinishSignal(
   () => props.activationMode,
   () => {
+    if (startError.value) {
+      dismissStartError()
+      return
+    }
     if (ownsActivation()) void finish(primaryIntent())
   },
   // Push-to-Talk: letting go ends the recording this hold started
@@ -248,6 +375,10 @@ useDismissibleLayer({
   elements: () => [],
   canDismissOutside: false,
   dismiss: () => {
+    if (startError.value) {
+      dismissStartError()
+      return
+    }
     void cancel()
   },
 })
@@ -375,18 +506,21 @@ watch(
     )
       return
     sessionActivationId = activationId
+    startError.value = null
     void startSession()
   }
 )
 
 watch(isOwnWindowShown, (isShown) => {
   if (!isShown) {
+    startError.value = null
     void model
       .flushHistory()
       .catch(() => toastKey('history.operationFailed', 'error'))
     return
   }
   sessionActivationId = desktopStore.desktopState.activationId
+  startError.value = null
   void startSession()
 })
 
@@ -416,3 +550,43 @@ onUnmounted(() => {
   window.removeEventListener('blur', forgetKeys)
 })
 </script>
+
+<style scoped>
+.voice-error-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  box-sizing: border-box;
+  border: 1px solid color-mix(in oklab, var(--color-error) 55%, transparent);
+  border-radius: var(--radius-lg);
+  background-color: var(--app-surface);
+  box-shadow: var(--app-shadow-md);
+}
+
+.voice-error-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.voice-error-icon {
+  flex-shrink: 0;
+  color: var(--color-error);
+}
+
+.voice-error-text {
+  font-size: var(--text-control);
+  color: var(--color-base-content);
+  line-height: 1.4;
+}
+
+.voice-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-xs);
+}
+</style>

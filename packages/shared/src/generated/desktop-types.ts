@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 710582b320ee1db31aae42d1be6efb131471da1f06336d031aa77c2ad1489ddc
+// Source hash: 77501f3caa0b19715f97ccbcb41c1cc66a1e4935a8d7d7c0e6fc5d62ed4cb90d
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -255,6 +255,9 @@ export type AudioApp = {
 
 /** What a watch sends through its channel. */
 export type AudioAppsEvent = { type: 'apps'; apps: Array<AudioApp> }
+
+/** An input device (microphone) available on this machine. */
+export type AudioInputDevice = { id: string; label: string; isDefault: boolean }
 
 /** Where the audio of a capture comes from. */
 export type CaptureSource =

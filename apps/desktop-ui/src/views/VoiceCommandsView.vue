@@ -2,6 +2,12 @@
   <ContentPadding>
     <ActionOverlayLayout :title="t('voiceCommands.title')" :on-esc="close">
       <template #header-extra>
+        <SttLanguagePicker
+          placement="bottom"
+          align="right"
+          :disabled="voice.stage === 'finishing' || voice.stage === 'running'"
+          @change="handleLanguageChange"
+        />
         <InfoTooltip :text="t('voiceCommands.hint')" placement="bottom" />
       </template>
 
@@ -73,7 +79,17 @@
                 :message="notice.message"
                 density="compact"
                 announcement="polite"
-              />
+              >
+                <Button
+                  v-if="canOpenSttSettings"
+                  size="xs"
+                  variant="ghost"
+                  icon="mdi:cog-outline"
+                  @click="openSttSettings"
+                >
+                  {{ t('common.openSettings') }}
+                </Button>
+              </InlineNotice>
               <FieldTextArea
                 ref="textRef"
                 class="voice-text"
@@ -153,6 +169,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import AppIcon from '../components/common/AppIcon.vue'
 import Badge from '../components/common/Badge.vue'
+import Button from '../components/common/Button.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import FieldSelect from '../components/common/FieldSelect.vue'
 import FieldTextArea from '../components/common/FieldTextArea.vue'
@@ -163,10 +180,12 @@ import ContextPreview from '../components/overlay/ContextPreview.vue'
 import ShortcutButton from '../components/overlay/ShortcutButton.vue'
 import AudioWaveform from '../components/voice/AudioWaveform.vue'
 import LiveTranscript from '../components/voice/LiveTranscript.vue'
+import SttLanguagePicker from '../components/voice/SttLanguagePicker.vue'
 import VoiceAutoStopNotice from '../components/voice/VoiceAutoStopNotice.vue'
 import VoiceCommandCatalog from '../components/voice/VoiceCommandCatalog.vue'
 import { useI18n } from '../composables/use-i18n'
 import { useOverlayNav } from '../composables/use-overlay-nav'
+import useToast from '../composables/use-toast'
 import { useVoiceFinishSignal } from '../composables/use-voice-finish-signal'
 import { useVoiceRecordingMeter } from '../composables/use-voice-recording-meter'
 import {
@@ -174,6 +193,8 @@ import {
   commandLabel,
   commandTarget,
 } from '../lib/commands/command-runtime'
+import { isSettingsFixableDictationError } from '../lib/stt/dictation-error'
+import { liveTranscriptText } from '../lib/stt/live-transcript'
 import type { TextControl } from '../lib/ui/text-control'
 import {
   type VoiceCatalogEntry,
@@ -189,6 +210,7 @@ import {
   voiceCommandLanguageLabel,
 } from '../lib/voice-commands/voice-view-presenter'
 import { useDesktopStore } from '../stores/desktop'
+import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useQuickDismissStore } from '../stores/quick-dismiss'
 import { useToolsStore } from '../stores/tools'
@@ -204,7 +226,9 @@ const props = withDefaults(
 )
 
 const { t } = useI18n()
+const { toastKey } = useToast()
 const desktopStore = useDesktopStore()
+const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
 const tools = useToolsStore()
 const voice = useVoiceCommandsStore()
@@ -308,6 +332,32 @@ const notice = computed(() =>
     t
   )
 )
+const canOpenSttSettings = computed(
+  () =>
+    notice.value?.kind === 'error' &&
+    Boolean(voice.error) &&
+    isSettingsFixableDictationError(voice.errorCause)
+)
+
+function openSttSettings() {
+  void ipcStore.callOrNotify('activate_mode', {
+    mode: 'config',
+    settingsTab: 'stt',
+  })
+  close()
+}
+
+async function handleLanguageChange() {
+  if (
+    voice.stage === 'recording' &&
+    !liveTranscriptText(voice.liveTranscript).trim()
+  ) {
+    await voice.cancel()
+    await voice.start()
+    return
+  }
+  toastKey('stt.languageSavedForNext', 'info')
+}
 
 const canPick = (entry: VoiceCatalogEntry) =>
   voice.stage === 'review' && !voice.unavailableReason(entry.commands[0]!)

@@ -61,6 +61,12 @@
         />
       </div>
       <VoiceAutoStopNotice :deadline-ms="autoStopDeadlineMs" />
+      <SttLanguagePicker
+        placement="top"
+        align="right"
+        :disabled="isFinishing"
+        @change="emit('language-change')"
+      />
       <VoiceRecordingActions
         class="voice-bar-actions"
         compact
@@ -84,13 +90,17 @@ import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import AudioWaveform from './AudioWaveform.vue'
 import LiveTranscript from './LiveTranscript.vue'
 import QuickModeSwitch from './QuickModeSwitch.vue'
+import SttLanguagePicker from './SttLanguagePicker.vue'
 import VoiceAutoStopNotice from './VoiceAutoStopNotice.vue'
 import VoiceRecordingActions from './VoiceRecordingActions.vue'
 import type { VoiceRecordingProps } from './voice-recording-props'
 import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 
 const props = defineProps<VoiceRecordingProps>()
-const emit = defineEmits<{ (e: 'switch-mode'): void }>()
+const emit = defineEmits<{
+  (e: 'switch-mode'): void
+  (e: 'language-change'): void
+}>()
 const { t } = useI18n()
 const desktopStore = useDesktopStore()
 

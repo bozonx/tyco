@@ -131,6 +131,7 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<services::voice::CaptureEvent>();
     visitor.visit::<services::voice::apps::AudioAppsEvent>();
     visitor.visit::<services::voice::AudioApp>();
+    visitor.visit::<services::voice::AudioInputDevice>();
     visitor.visit::<services::voice::VoiceCaptureInfo>();
     visitor.visit::<tyco_activation_protocol::Job>();
 }

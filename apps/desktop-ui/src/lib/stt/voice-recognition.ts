@@ -113,6 +113,13 @@ export interface VoiceRecognitionDependencies extends TimerDependencies {
    * that the user can still take it. Not called after a cancellation
    */
   onAbandoned?: (text: string) => void
+  /**
+   * Called when starting or recording fails with no text.
+   *
+   * - `'keep'`: caller renders the error inline (skips toast and `onCancelled`).
+   * - `'handled'`: caller already notified the user (skips default toast).
+   */
+  onStartError?: (error: unknown, message: string) => 'keep' | 'handled' | void
   t: (key: string) => string
   toastKey: (key: string, kind: 'warn' | 'error') => void
   toastText: (text: string, kind: 'error') => void
@@ -484,9 +491,16 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     if (!hasText.value) {
       hasSession = false
       const message = describeVoiceError(error)
-      if (message) toastText(message, 'error')
-      else toastKey('toast.voiceRecognitionFailed', 'error')
       voiceSession.abort()
+      const outcome = deps.onStartError?.(
+        error,
+        message || t('toast.voiceRecognitionFailed')
+      )
+      if (outcome === 'keep') return
+      if (outcome !== 'handled') {
+        if (message) toastText(message, 'error')
+        else toastKey('toast.voiceRecognitionFailed', 'error')
+      }
       notifyCancelled()
       return
     }
@@ -575,10 +589,17 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       } catch (error) {
         if (generation !== sessionGeneration) return
         const message = describeVoiceError(error)
-        if (message) toastText(message, 'error')
-        else toastKey('toast.voiceRecognitionFailed', 'error')
         voiceSession.abort()
         contextual?.cancel()
+        const outcome = deps.onStartError?.(
+          error,
+          message || t('toast.voiceRecognitionFailed')
+        )
+        if (outcome === 'keep') return
+        if (outcome !== 'handled') {
+          if (message) toastText(message, 'error')
+          else toastKey('toast.voiceRecognitionFailed', 'error')
+        }
         notifyCancelled()
       }
     })().finally(() => {

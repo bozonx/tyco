@@ -13,6 +13,7 @@ import type {
   AiProject,
   AiWebToolOutput,
   AiWebToolRequest,
+  AudioInputDevice,
   CaptureSource,
   Chat,
   ChatAttachment,
@@ -210,6 +211,7 @@ export interface DesktopCommands {
     args: undefined
     result: Array<DeviceHistoryJournal>
   }
+  list_input_devices: { args: undefined; result: Array<AudioInputDevice> }
   list_installed_plugins: { args: undefined; result: Array<InstalledPlugin> }
   list_recent_quick_request_prompts: {
     args: { profileId?: string | null; limit: number }
@@ -433,7 +435,11 @@ export interface DesktopCommands {
     result: number
   }
   start_voice_capture: {
-    args: { onAudio: DesktopChannel; source?: CaptureSource | null }
+    args: {
+      onAudio: DesktopChannel
+      source?: CaptureSource | null
+      microphoneId?: string | null
+    }
     result: VoiceCaptureInfo
   }
   stop_voice_capture: { args: { sessionId?: number | null }; result: void }

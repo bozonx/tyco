@@ -1,5 +1,13 @@
 <template>
   <ActionOverlayLayout :title="title" :on-esc="cancel">
+    <template #header-extra>
+      <SttLanguagePicker
+        placement="bottom"
+        align="right"
+        :disabled="isFinishing"
+        @change="emit('language-change')"
+      />
+    </template>
     <template #preview>
       <!-- the question goes to the chat with this text: the user sees what
            the answer will be about -->
@@ -49,12 +57,16 @@ import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import SelectionContextPreview from '../overlay/SelectionContextPreview.vue'
 import AudioWaveform from './AudioWaveform.vue'
 import LiveTranscript from './LiveTranscript.vue'
+import SttLanguagePicker from './SttLanguagePicker.vue'
 import VoiceAutoStopNotice from './VoiceAutoStopNotice.vue'
 import VoiceRecordingActions from './VoiceRecordingActions.vue'
 import type { VoiceRecordingProps } from './voice-recording-props'
 
 const props = defineProps<VoiceRecordingProps>()
-const emit = defineEmits<{ (e: 'removeContext'): void }>()
+const emit = defineEmits<{
+  (e: 'removeContext'): void
+  (e: 'language-change'): void
+}>()
 const { t } = useI18n()
 
 const title = computed(() => {

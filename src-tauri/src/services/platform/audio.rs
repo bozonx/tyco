@@ -6,7 +6,9 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use crate::errors::AppError;
-use crate::services::voice::{AudioApp, AudioSource, CaptureSource, OpenedCapture};
+use crate::services::voice::{
+    AudioApp, AudioInputDevice, AudioSource, CaptureSource, OpenedCapture,
+};
 
 mod microphone;
 #[cfg(target_os = "linux")]
@@ -18,7 +20,9 @@ mod wasapi;
 /// Whatever keeps a capture running; dropping it ends the capture.
 pub(crate) type CaptureStream = Box<dyn Any>;
 
-pub(crate) struct SystemAudioSource;
+pub(crate) struct SystemAudioSource {
+    pub microphone_id: Option<String>,
+}
 
 impl AudioSource for SystemAudioSource {
     type Stream = CaptureStream;
@@ -29,10 +33,16 @@ impl AudioSource for SystemAudioSource {
         stop_flag: &Arc<AtomicBool>,
     ) -> Result<OpenedCapture<Self::Stream>, AppError> {
         match source {
-            CaptureSource::Microphone => microphone::open_microphone(stop_flag).map(boxed),
+            CaptureSource::Microphone => {
+                microphone::open_microphone(self.microphone_id.as_deref(), stop_flag).map(boxed)
+            }
             playback => open_playback(playback, stop_flag),
         }
     }
+}
+
+pub(crate) fn list_input_devices() -> Result<Vec<AudioInputDevice>, AppError> {
+    microphone::list_input_devices()
 }
 
 fn boxed<T: 'static>(opened: OpenedCapture<T>) -> OpenedCapture<CaptureStream> {

@@ -332,6 +332,7 @@ pub fn run() {
             commands::system::restart_app,
             commands::system::show_desktop_notification,
             commands::system::show_status_overlay,
+            commands::voice::list_input_devices,
             commands::voice::start_voice_capture,
             commands::voice::stop_voice_capture,
             commands::voice::switch_capture_source,

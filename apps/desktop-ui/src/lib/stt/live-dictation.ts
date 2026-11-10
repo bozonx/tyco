@@ -49,6 +49,8 @@ export interface LiveDictationDependencies {
 export interface LiveDictationStart extends CaptureSourceHandlers {
   /** What is recorded: the microphone by default */
   source?: CaptureSource
+  /** Preferred input device when recording the microphone */
+  microphoneId?: string
   model: SttModel
   language?: string
   hasApiKey: boolean
@@ -100,10 +102,11 @@ export function createLiveDictation(
 
       let capture: Awaited<ReturnType<VoiceCaptureControl['start']>>
       try {
-        capture = await deps.capture.start(request.source, {
-          onWaiting: request.onWaiting,
-          onSourceLost: request.onSourceLost,
-        })
+        capture = await deps.capture.start(
+          request.source,
+          { onWaiting: request.onWaiting, onSourceLost: request.onSourceLost },
+          request.microphoneId
+        )
       } catch (error) {
         throw asDictationError('microphone', error)
       }

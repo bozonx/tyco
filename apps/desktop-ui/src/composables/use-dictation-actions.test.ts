@@ -51,7 +51,7 @@ describe('dictation credential preflight', () => {
   it('explains how to configure a missing key before starting capture', async () => {
     await expect(
       useDictationActions().startDictation(handlers)
-    ).rejects.toThrow('Open Settings → STT')
+    ).rejects.toThrow('Open Settings → Transcription')
     expect(mocks.start).not.toHaveBeenCalled()
   })
 

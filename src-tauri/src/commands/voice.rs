@@ -5,7 +5,15 @@ use crate::errors::AppError;
 use crate::services::voice;
 use crate::services::voice::apps::AudioAppsWatches;
 use crate::services::voice::session::VoiceSessionState;
-use crate::services::voice::{CaptureSource, VoiceCaptureInfo};
+use crate::services::voice::{AudioInputDevice, CaptureSource, VoiceCaptureInfo};
+
+/// Lists the microphones available on this machine.
+#[tauri::command]
+pub async fn list_input_devices() -> Result<Vec<AudioInputDevice>, AppError> {
+    tokio::task::spawn_blocking(voice::list_input_devices)
+        .await
+        .map_err(|error| AppError::Failed(format!("input device list task failed: {error}")))?
+}
 
 /// Starts recording `source`, the microphone by default; PCM16 chunks, then
 /// `end` or `error`, arrive through `on_audio`.
@@ -15,8 +23,16 @@ pub async fn start_voice_capture(
     state: State<'_, VoiceSessionState>,
     on_audio: Channel<InvokeResponseBody>,
     source: Option<CaptureSource>,
+    microphone_id: Option<String>,
 ) -> Result<VoiceCaptureInfo, AppError> {
-    voice::start_capture(&app, &state, source.unwrap_or_default(), on_audio).await
+    voice::start_capture(
+        &app,
+        &state,
+        source.unwrap_or_default(),
+        microphone_id,
+        on_audio,
+    )
+    .await
 }
 
 #[tauri::command]

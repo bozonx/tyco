@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { i18n } from '../lib/i18n'
+import { DictationError } from '../lib/stt/dictation-error'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useVoiceResultStore } from '../stores/voice-result'
 import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
@@ -188,5 +189,30 @@ describe('ListenView', () => {
     expect(modals.hasOpenModal).toBe(false)
     expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
     wrapper2.unmount()
+  })
+
+  it('offers Open settings button when starting fails due to a missing key', async () => {
+    const activateMode = vi.fn()
+    desktop.backend.handle('activate_mode', activateMode)
+    desktop.backend.handle('hide_window', () => undefined)
+    dictation.startDictation.mockRejectedValueOnce(
+      new DictationError('missingKey', 'Missing Deepgram key')
+    )
+
+    const wrapper = mountView()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Missing Deepgram key')
+    const settingsBtn = wrapper
+      .findAll('button')
+      .find((b) => b.text().includes(i18n.global.t('common.openSettings')))
+    expect(settingsBtn).toBeDefined()
+    await settingsBtn!.trigger('click')
+    await flushPromises()
+
+    expect(activateMode).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: 'config', settingsTab: 'stt' })
+    )
+    wrapper.unmount()
   })
 })

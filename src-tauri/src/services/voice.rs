@@ -11,7 +11,9 @@ pub mod mixer;
 pub mod session;
 pub mod source;
 
-pub use source::{silence_gap, AudioApp, AudioAppId, CaptureSource, SourceStatus};
+pub use source::{
+    silence_gap, AudioApp, AudioAppId, AudioInputDevice, CaptureSource, SourceStatus,
+};
 
 pub use audio_processing::compute_audio_level;
 use audio_processing::{mix_frame, pcm16_to_le_bytes, Downsampler};
@@ -117,10 +119,15 @@ impl AudioLevelSink for AppHandle {
     }
 }
 
+pub fn list_input_devices() -> Result<Vec<AudioInputDevice>, AppError> {
+    super::platform::audio::list_input_devices()
+}
+
 pub async fn start_capture<S: EventSink>(
     app: &AppHandle,
     state: &VoiceSessionState,
     capture_source: CaptureSource,
+    microphone_id: Option<String>,
     sink: S,
 ) -> Result<VoiceCaptureInfo, AppError> {
     if capture_source.is_playback() && !super::platform::audio::can_capture_playback() {
@@ -129,7 +136,7 @@ pub async fn start_capture<S: EventSink>(
         ));
     }
     start_capture_with(
-        super::platform::audio::SystemAudioSource,
+        super::platform::audio::SystemAudioSource { microphone_id },
         capture_source,
         app.clone(),
         state,

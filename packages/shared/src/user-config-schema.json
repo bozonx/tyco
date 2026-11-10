@@ -1285,8 +1285,9 @@
         },
         "isVoiceInputHoldEnabled": { "type": "boolean", "default": false },
         "isVoiceCommandsHoldEnabled": { "type": "boolean", "default": false },
-        "listenAppId": { "type": "string" },
-        "listenAppLabel": { "type": "string" },
+        "microphoneId": { "type": "string", "x-scope": "device" },
+        "listenAppId": { "type": "string", "x-scope": "device" },
+        "listenAppLabel": { "type": "string", "x-scope": "device" },
         "isStylingBarEnabled": { "type": "boolean", "default": false },
         "isStylingBarDirectInsertEnabled": {
           "type": "boolean",

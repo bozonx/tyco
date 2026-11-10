@@ -546,9 +546,14 @@ describe('Settings.vue', () => {
     await selectTab(wrapper, 'settings.sttNavTab')
 
     const sections = wrapper.findAll('.settings-section-stub')
-    expect(sections).toHaveLength(2)
+    expect(sections).toHaveLength(3)
     expect(sections[0].attributes('data-title')).toBe('settings.sttTab')
-    expect(sections[1].attributes('data-title')).toBeFalsy()
+    expect(sections[1].attributes('data-title')).toBe(
+      'settings.sttDictationSection'
+    )
+    expect(sections[2].attributes('data-title')).toBe(
+      'settings.sttListenSection'
+    )
     expect(
       sections[1].find('[data-label="settings.voiceTextCorrection"]').exists()
     ).toBe(true)

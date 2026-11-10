@@ -3,6 +3,10 @@ import { computed, ref } from 'vue'
 import type { CaptureSource } from '@tyco/shared'
 import type { DictationHandlers } from '../stt/dictation-controller'
 import {
+  isRetryableDictationError,
+  isSettingsFixableDictationError,
+} from '../stt/dictation-error'
+import {
   createLiveTranscriptState,
   hasNewTranscriptSpeech,
   type LiveTranscriptState,
@@ -69,9 +73,17 @@ export function createListenModel(deps: ListenModelDependencies) {
   const autoStopWarning = ref<AutoStopWarning | undefined>()
   const resultText = ref('')
   const errorText = ref('')
+  const errorCause = ref<unknown>(undefined)
   let generation = 0
   let lastState = createLiveTranscriptState()
   let lastStartSource: CaptureSource = SYSTEM_MIX_SOURCE
+
+  const canOpenSettings = computed(() =>
+    isSettingsFixableDictationError(errorCause.value)
+  )
+  const canRetry = computed(
+    () => !canOpenSettings.value || isRetryableDictationError(errorCause.value)
+  )
 
   const session = createVoiceSession({
     setTimer: deps.setTimer,
@@ -93,6 +105,7 @@ export function createListenModel(deps: ListenModelDependencies) {
 
   const fail = (error: unknown) => {
     session.stopTimer()
+    errorCause.value = error
     errorText.value = deps.describeError(error)
     phase.value = 'failed'
   }
@@ -106,6 +119,7 @@ export function createListenModel(deps: ListenModelDependencies) {
     isWaiting.value = startSource.kind === 'application'
     isSourceLost.value = false
     resultText.value = ''
+    errorCause.value = undefined
     errorText.value = ''
     phase.value = 'recording'
     session.begin()
@@ -220,11 +234,14 @@ export function createListenModel(deps: ListenModelDependencies) {
     autoStopWarning,
     resultText,
     errorText,
+    canOpenSettings,
+    canRetry,
     start,
     stop,
     cancel,
     close,
     retry: () => start(lastStartSource),
+    restartWithCurrentSource: () => start(source.value),
     selectSource,
     repeatHotkey,
     dispose: () => {

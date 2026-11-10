@@ -8,6 +8,7 @@
       :stop-hotkey="stopHotkey"
       :app-label="appLabel"
       @switch-mode="switchToVoice"
+      @language-change="handleLanguageChange"
     />
   </div>
   <ContentPadding v-else>
@@ -44,8 +45,22 @@
           <Button size="sm" @click="void model.close()">
             {{ t('common.close') }}
           </Button>
-          <Button size="sm" variant="primary" @click="void model.retry()">
+          <Button
+            v-if="model.phase.value !== 'failed' || model.canRetry.value"
+            size="sm"
+            :variant="model.canOpenSettings.value ? 'ghost' : 'primary'"
+            @click="void model.retry()"
+          >
             {{ t('listen.retry') }}
+          </Button>
+          <Button
+            v-if="model.phase.value === 'failed' && model.canOpenSettings.value"
+            size="sm"
+            variant="primary"
+            icon="mdi:cog-outline"
+            @click="openSttSettings"
+          >
+            {{ t('common.openSettings') }}
           </Button>
         </div>
       </div>
@@ -74,10 +89,12 @@ import {
   createListenModel,
 } from '../lib/listen/listen-model'
 import { describeDictationError } from '../lib/stt/dictation-error'
+import { liveTranscriptText } from '../lib/stt/live-transcript'
 import { createKeyPressTracker } from '../lib/ui/key-press-tracker'
 import { isTextEntryTarget } from '../lib/ui/text-entry-target'
 import { useDesktopStore } from '../stores/desktop'
 import { useHistoryStore } from '../stores/history'
+import { useIpcStore } from '../stores/ipc'
 import { useListenReplyStore } from '../stores/listen-reply'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useQuickDismissStore } from '../stores/quick-dismiss'
@@ -93,6 +110,7 @@ const { t } = useI18n()
 const { toastKey } = useToast()
 const desktopStore = useDesktopStore()
 const historyStore = useHistoryStore()
+const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
 const windowStore = useWindowStore()
 const replyStore = useListenReplyStore()
@@ -214,6 +232,29 @@ async function replyByVoice() {
   await model.cancel()
   useVoiceResultStore().step.resetResult()
   await modeSwitch.switchTo('voice')
+}
+
+function handleLanguageChange() {
+  if (
+    model.phase.value === 'recording' &&
+    !liveTranscriptText(model.transcript.value).trim()
+  ) {
+    void model.restartWithCurrentSource()
+    return
+  }
+  if (model.phase.value === 'failed') {
+    void model.restartWithCurrentSource()
+    return
+  }
+  toastKey('stt.languageSavedForNext', 'info')
+}
+
+function openSttSettings() {
+  void ipcStore.callOrNotify('activate_mode', {
+    mode: 'config',
+    settingsTab: 'stt',
+  })
+  void model.close()
 }
 
 onMounted(() => {

@@ -1,5 +1,6 @@
 import type { UserConfig } from '@tyco/shared'
 import type { SecretsStatus } from '../net/secrets'
+import { DictationError } from './dictation-error'
 import { assertSttKeyAvailable } from './stt-readiness'
 import { dictationLanguageFor } from './dictation-language'
 import type { LiveTranscriptState } from './live-transcript'
@@ -42,11 +43,15 @@ export function createDictationController(
 
   const startDictation = async (handlers: DictationHandlers) => {
     const runGeneration = ++generation
-    const model = activeSttModel(deps.getConfig().stt)
+    const sttConfig = deps.getConfig().stt
+    const model = activeSttModel(sttConfig)
     try {
       buildSttCatalog(model)
     } catch {
-      throw new Error(deps.translate('toast.sttModelIncomplete'))
+      throw new DictationError(
+        'incompleteConfig',
+        deps.translate('toast.sttModelIncomplete')
+      )
     }
     const needsKey = isKeyRequiredForSttProvider(model.provider)
     if (needsKey) {
@@ -61,6 +66,7 @@ export function createDictationController(
     if (runGeneration !== generation) return
     await deps.dictation.start({
       model,
+      microphoneId: sttConfig.microphoneId,
       language: currentDictationLanguage(model),
       hasApiKey: needsKey,
       ...handlers,

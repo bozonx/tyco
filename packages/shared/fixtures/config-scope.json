@@ -25,7 +25,12 @@
       "aiVaults": {
         "attached": [{ "path": "/home/user/work", "vaultId": "w1" }]
       },
-      "stt": { "providers": { "sherpaOnnx": { "baseUrl": "ws://pc:6006" } } },
+      "stt": {
+        "microphoneId": "USB Mic",
+        "listenAppId": "firefox",
+        "listenAppLabel": "Firefox",
+        "providers": { "sherpaOnnx": { "baseUrl": "ws://pc:6006" } }
+      },
       "variableValues": { "notes": "/home/user/notes" }
     },
     "joined": {
@@ -39,6 +44,9 @@
       },
       "stt": {
         "provider": "sherpaOnnx",
+        "microphoneId": "USB Mic",
+        "listenAppId": "firefox",
+        "listenAppLabel": "Firefox",
         "providers": {
           "deepgram": { "modelId": "nova-3" },
           "sherpaOnnx": { "baseUrl": "ws://pc:6006" }
