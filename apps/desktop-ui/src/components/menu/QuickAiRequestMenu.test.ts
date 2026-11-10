@@ -4,6 +4,7 @@ import {
   installFakeDesktop,
   type TestDesktop,
 } from '../../test/install-fake-desktop'
+import { useToastStore } from '../../stores/toast'
 import QuickAiRequestMenu from './QuickAiRequestMenu.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -396,6 +397,45 @@ describe('QuickAiRequestMenu', () => {
       await flushPromises()
 
       expect(wrapper.find('.turn-prompt-text').text()).toBe('Make it shorter')
+    })
+
+    it('starts voice capture with Gemini Live key when opened in voice mode with empty secret cache', async () => {
+      desktop.backend.handle('get_secret_statuses', () => ({
+        'llm.google': {
+          available: true,
+          origins: ['https://generativelanguage.googleapis.com'],
+        },
+      }))
+      desktop.backend.handle('start_voice_capture', () => ({
+        sessionId: 1,
+        sampleRate: 16000,
+      }))
+      desktop.backend.handle('stop_voice_capture', () => undefined)
+      desktop.backend.handle('open_socket', () => new Promise(() => undefined))
+      desktop.setState({
+        isWindowShown: true,
+        mode: 'voiceQuickAiRequest',
+        userConfig: {
+          ...desktop.backend.userConfig,
+          stt: {
+            ...desktop.backend.userConfig.stt,
+            provider: 'geminiLive',
+          },
+        },
+      })
+
+      const wrapper = mount(QuickAiRequestMenu, {
+        props: { text: '', inputMode: 'voice' },
+        global: {
+          plugins: [desktop.pinia],
+          stubs: { AppIcon: true },
+        },
+      })
+      await flushPromises()
+
+      expect(desktop.backend.callsOf('start_voice_capture')).toHaveLength(1)
+      expect(useToastStore().toasts).toHaveLength(0)
+      wrapper.unmount()
     })
   })
 

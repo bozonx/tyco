@@ -14,6 +14,7 @@ export function createSecretsState(deps: SecretsStateDependencies) {
   const secrets = ref<SecretsStatus>({})
   const vaultState = ref<VaultState | null>(null)
   let revision = 0
+  let appliedRevision = 0
 
   const refreshSecrets = async () => {
     const request = ++revision
@@ -21,18 +22,21 @@ export function createSecretsState(deps: SecretsStateDependencies) {
       deps.status(),
       deps.vaultState(),
     ])
-    if (request !== revision) return
+    if (request <= appliedRevision) return
+    appliedRevision = request
     secrets.value = status
     vaultState.value = state
   }
 
   const setSecret = async (id: string, value: string, origins?: string[]) => {
     await deps.set(id, value, origins)
+    appliedRevision = revision
     await refreshSecrets()
   }
 
   const removeSecret = async (id: string) => {
     await deps.remove(id)
+    appliedRevision = revision
     await refreshSecrets()
   }
 
