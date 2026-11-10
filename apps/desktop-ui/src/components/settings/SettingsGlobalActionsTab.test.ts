@@ -250,7 +250,6 @@ describe('SettingsGlobalActionsTab.vue', () => {
       'settings.hotkeyActions.voice',
       'settings.voiceHold.voice',
       'settings.hotkeyActions.listen',
-      'listen.sourceLabel',
       'settings.hotkeyActions.voiceCommands',
       'settings.voiceHold.voiceCommands',
       'settings.hotkeyActions.voiceQuickAiRequest',

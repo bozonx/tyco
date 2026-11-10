@@ -191,8 +191,8 @@ describe('InProgressMessage', () => {
       props: { allowBufferedIntent: true, correction: true },
     })
 
-    // Default slot 3 ('r') is correction
-    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR' }))
+    // Default slot 7 ('d') is correction
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyD' }))
     expect(menuModalsStore.bufferedIntent).toBeNull()
   })
 

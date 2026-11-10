@@ -98,12 +98,31 @@
         "q": { "type": "standard", "actionId": "copyToClipboard" },
         "w": { "type": "plugin", "actionId": "FastNote:write" },
         "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
+        "r": { "type": "standard", "actionId": "voiceCommands" },
         "t": { "type": "standard", "actionId": "translationMenu" },
-        "a": { "type": "standard", "actionId": "askInChat" },
+        "a": { "type": "standard", "actionId": "quickAiRequest" },
         "s": { "type": "standard", "actionId": "stylingMenu" },
         "d": { "type": "standard", "actionId": "correction" },
         "f": { "type": "standard", "actionId": "transformationMenu" },
-        "g": { "type": "standard", "actionId": "quickAiRequest" },
+        "g": { "type": "standard", "actionId": "chatPromptsMenu" },
+        "z": { "type": "standard", "actionId": "askInChat" },
+        "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
+      }
+    },
+    {
+      "inputMode": "none",
+      "slots": {
+        "w": { "type": "standard", "actionId": "screenshotQuickAiRequest" },
+        "e": {
+          "type": "standard",
+          "actionId": "voiceScreenshotQuickAiRequest"
+        },
+        "r": { "type": "standard", "actionId": "voiceCommands" },
+        "a": { "type": "standard", "actionId": "quickAiRequest" },
+        "s": { "type": "standard", "actionId": "openHistory" },
+        "f": { "type": "standard", "actionId": "favoritesMenu" },
+        "g": { "type": "standard", "actionId": "listen" },
+        "z": { "type": "standard", "actionId": "askInChat" },
         "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
       }
     }

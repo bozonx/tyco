@@ -66,6 +66,7 @@
     >
       <div v-for="row in voiceRows" :key="row.id" class="voice-hotkey-item">
         <GlobalHotkeyRow
+          :id="`hotkey-${row.id}`"
           :row="row"
           :platform="providerState.platform"
           :is-editable="isEditable"
@@ -74,7 +75,6 @@
           @set="setShortcut(row.id, $event)"
           @recording="suspendHotkeys"
         />
-        <ListenSourceField v-if="row.id === 'listen'" />
         <FieldRow
           v-if="isHoldSupported && holdToggles[row.id]"
           class="voice-hold-row"
@@ -219,7 +219,6 @@ import InlineNotice from '../common/InlineNotice.vue'
 import EditorShortcutsSettings from './EditorShortcutsSettings.vue'
 import GlobalHotkeyRow from './GlobalHotkeyRow.vue'
 import HotkeyInput from './HotkeyInput.vue'
-import ListenSourceField from './ListenSourceField.vue'
 import SettingsSection from './SettingsSection.vue'
 import {
   CUSTOM_ACTION_HOTKEY_IDS,

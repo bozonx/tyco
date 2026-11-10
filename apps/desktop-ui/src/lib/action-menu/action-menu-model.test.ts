@@ -374,7 +374,7 @@ describe('createActionMenuModel', () => {
       }),
     })
     const slots = computed(() => store.getShortcutActions())
-    expect(slots.value).toHaveLength(10)
+    expect(slots.value).toHaveLength(11)
     const original = { id: 'Search:search', action: vi.fn() }
     const replacement = { ...original, action: vi.fn() }
     store.registerActionsItems([original])
@@ -385,7 +385,7 @@ describe('createActionMenuModel', () => {
     expect(original.action).not.toHaveBeenCalled()
     expect(store.getRegisteredActions()).toHaveLength(1)
     dispose()
-    expect(slots.value).toHaveLength(10)
+    expect(slots.value).toHaveLength(11)
   })
 
   it('places plugin actions only where the menu holds them', () => {
