@@ -68,7 +68,7 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
     app.state::<AppState>().update_snapshot(|snapshot| {
         snapshot.window.can_move_overlay = super::can_move_overlay(supported);
     });
-    spawn_listen_probe(app.handle().clone());
+    spawn_listen_probe(app.handle().clone())?;
     setup_tray(app)?;
     spawn_quick_warmup(app.handle().clone())?;
     Ok(())
@@ -76,18 +76,34 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
 
 /// Asks the sound server whether the computer sound can be recorded off the
 /// UI thread: connecting to it may take a moment.
-fn spawn_listen_probe(app: AppHandle) {
-    std::thread::spawn(move || {
-        let can_listen = crate::services::platform::audio::can_capture_playback();
-        let can_listen_to_apps = can_listen && crate::services::platform::audio::can_capture_apps();
-        app.state::<AppState>().update_snapshot(|snapshot| {
-            snapshot.window.can_listen = can_listen;
-            snapshot.window.can_listen_to_apps = can_listen_to_apps;
-        });
-        if let Err(error) = super::emit_state(&app, &app.state::<AppState>()) {
-            log::warn!("Could not publish the listening capabilities: {error}");
-        }
-    });
+fn spawn_listen_probe(app: AppHandle) -> Result<(), AppError> {
+    let handle = app.clone();
+    app.state::<crate::services::background::BackgroundServices>()
+        .spawn_thread("listening-capabilities", move |stop| {
+            let app = handle;
+            while !stop.is_stopped() {
+                let can_listen = crate::services::platform::audio::can_capture_playback();
+                let can_listen_to_apps =
+                    can_listen && crate::services::platform::audio::can_capture_apps();
+                if stop.is_stopped() {
+                    break;
+                }
+                let state = app.state::<AppState>();
+                let snapshot = state.snapshot();
+                if snapshot.window.can_listen != can_listen
+                    || snapshot.window.can_listen_to_apps != can_listen_to_apps
+                {
+                    state.update_snapshot(|snapshot| {
+                        snapshot.window.can_listen = can_listen;
+                        snapshot.window.can_listen_to_apps = can_listen_to_apps;
+                    });
+                    super::publish_state(&app, &state);
+                }
+                if stop.wait(std::time::Duration::from_secs(5)) {
+                    break;
+                }
+            }
+        })
 }
 
 const SHUTDOWN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(3);

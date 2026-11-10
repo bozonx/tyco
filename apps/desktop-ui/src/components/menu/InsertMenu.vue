@@ -67,11 +67,12 @@ import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
 import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
+import { voiceReplyActionParams } from '../../lib/listen/listen-reply-actions'
 import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
-import { useMenuModalsStore } from '../../stores/menu-modals'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import AppIcon from '../common/AppIcon.vue'
 import KeyboardKey from '../common/KeyboardKey.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
@@ -130,7 +131,18 @@ const actionsMenu = computed(() => {
       .getDefaultActions()
       .filter((action) => action.id === 'insertIntoWindow')
   }
-  const actions = actionMenuStore.getShortcutActions()
+  const actions = actionMenuStore.getShortcutActions().map((action) => {
+    if (!action || !voiceReplyActionParams(action.id, '', props.replyTo))
+      return action
+    return {
+      ...action,
+      action: async (text: string) => {
+        const params = voiceReplyActionParams(action.id, text, props.replyTo)
+        if (params)
+          menuModalsStore.nextModal(MenuModals.QUICK_AI_REQUEST, params)
+      },
+    }
+  })
   if (!props.allowInsertButton) {
     return actions.filter((action) => action?.id !== 'insertIntoWindow')
   }

@@ -49,6 +49,7 @@ const desktopStore = useDesktopStore()
 const apps = ref<AudioApp[]>([])
 let watch: AudioAppsWatch | undefined
 let isOpen = false
+let generation = 0
 
 const sourceLabel = computed(() => {
   if (props.source.kind !== 'application') return t('listen.systemMix')
@@ -91,16 +92,17 @@ function stopWatching() {
 /** The streams are followed only while the list is open */
 function onOpenChange(open: boolean) {
   isOpen = open
+  const run = ++generation
   if (!open) {
     stopWatching()
     return
   }
   if (watch || !desktopStore.desktopState.canListenToApps) return
   void watchAudioApps(tauriNetIpc, (next) => {
-    apps.value = next
+    if (isOpen && run === generation) apps.value = next
   })
     .then((started) => {
-      if (isOpen) watch = started
+      if (isOpen && run === generation) watch = started
       else started.stop()
     })
     .catch((error: unknown) =>
@@ -112,5 +114,9 @@ function onOpenChange(open: boolean) {
     )
 }
 
-onUnmounted(stopWatching)
+onUnmounted(() => {
+  isOpen = false
+  generation += 1
+  stopWatching()
+})
 </script>

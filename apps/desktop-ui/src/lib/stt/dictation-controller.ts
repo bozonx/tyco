@@ -11,7 +11,7 @@ import type { DictationTarget } from './dictation-target'
 
 export interface DictationHandlers extends Pick<
   LiveDictationStart,
-  'source' | 'onWaiting' | 'onSourceLost'
+  'source' | 'onWaiting' | 'onSourceLost' | 'isContinuous'
 > {
   onText: (state: LiveTranscriptState) => void
   onError: (error: Error) => void
@@ -58,8 +58,10 @@ export function createDictationController(
       try {
         await deps.refreshSecrets()
       } catch {
+        if (runGeneration !== generation) return
         throw new Error(deps.translate('toast.voiceKeyCheckFailed'))
       }
+      if (runGeneration !== generation) return
       assertSttKeyAvailable(deps.getSecrets(), model.provider, deps.translate)
     }
 
@@ -77,7 +79,11 @@ export function createDictationController(
     })
   }
 
-  const finishDictation = () => deps.dictation.finish()
+  const finishDictation = () => {
+    // A stop during credential preflight must revoke that pending start too.
+    generation += 1
+    return deps.dictation.finish()
+  }
   const switchSource: LiveDictation['switchSource'] = (source) =>
     deps.dictation.switchSource(source)
 

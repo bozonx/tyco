@@ -1,10 +1,11 @@
 //! The sound the computer plays, through WASAPI process loopback: the whole
 //! sound without Tyco's own process tree, or the tree of one application.
-//! Process loopback needs Windows 10 2004 (build 19041); before it the whole
+//! Process loopback is probed at runtime. When unavailable, the whole
 //! sound comes from the loopback of the default output device.
 //!
 //! Process loopback reports no mix format: the stream asks for float32 at
 //! 48 kHz in stereo and is mixed down and resampled here.
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc, Mutex, OnceLock};
 use std::thread;
@@ -17,11 +18,11 @@ use windows::Win32::Media::Audio::{
     eConsole, eRender, ActivateAudioInterfaceAsync, AudioSessionStateActive,
     IActivateAudioInterfaceAsyncOperation, IActivateAudioInterfaceCompletionHandler,
     IActivateAudioInterfaceCompletionHandler_Impl, IAudioCaptureClient, IAudioClient,
-    IAudioSessionControl2, IAudioSessionManager2, IMMDeviceEnumerator, MMDeviceEnumerator,
-    AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM,
+    IAudioSessionControl2, IAudioSessionManager2, IMMDevice, IMMDeviceEnumerator,
+    MMDeviceEnumerator, AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM,
     AUDCLNT_STREAMFLAGS_EVENTCALLBACK, AUDCLNT_STREAMFLAGS_LOOPBACK, AUDIOCLIENT_ACTIVATION_PARAMS,
     AUDIOCLIENT_ACTIVATION_PARAMS_0, AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK,
-    AUDIOCLIENT_PROCESS_LOOPBACK_PARAMS, PROCESS_LOOPBACK_MODE,
+    AUDIOCLIENT_PROCESS_LOOPBACK_PARAMS, DEVICE_STATE_ACTIVE, PROCESS_LOOPBACK_MODE,
     PROCESS_LOOPBACK_MODE_EXCLUDE_TARGET_PROCESS_TREE,
     PROCESS_LOOPBACK_MODE_INCLUDE_TARGET_PROCESS_TREE, VIRTUAL_AUDIO_DEVICE_PROCESS_LOOPBACK,
     WAVEFORMATEX,
@@ -30,7 +31,8 @@ use windows::Win32::System::Com::StructuredStorage::{
     PROPVARIANT, PROPVARIANT_0, PROPVARIANT_0_0, PROPVARIANT_0_0_0,
 };
 use windows::Win32::System::Com::{
-    CoCreateInstance, CoInitializeEx, CoUninitialize, BLOB, CLSCTX_ALL, COINIT_MULTITHREADED,
+    CoCreateInstance, CoInitializeEx, CoTaskMemFree, CoUninitialize, BLOB, CLSCTX_ALL,
+    COINIT_MULTITHREADED,
 };
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
@@ -42,6 +44,7 @@ use super::process_tree::{app_label, app_root, app_roots, is_in_tree, ProcessEnt
 use super::CaptureStream;
 use crate::errors::AppError;
 use crate::locks::MutexExt;
+use crate::services::voice::mixer::StreamMixer;
 use crate::services::voice::{
     AudioApp, CaptureSource, OpenedCapture, PlaybackConverter, StreamContext, TARGET_SAMPLE_RATE_HZ,
 };
@@ -58,43 +61,28 @@ const WAIT_INTERVAL_MS: u32 = 100;
 const APP_CHECK_INTERVAL: Duration = Duration::from_millis(500);
 const APPS_EMIT_INTERVAL: Duration = Duration::from_millis(250);
 
-/// Whether process loopback exists: Windows 10 2004, build 19041, or newer.
+/// Probe activation and initialization instead of guessing from the OS build.
 pub(super) fn has_process_loopback() -> bool {
-    static AVAILABLE: OnceLock<bool> = OnceLock::new();
-    *AVAILABLE.get_or_init(|| windows_build().is_some_and(|build| build >= 19_041))
-}
-
-fn windows_build() -> Option<u32> {
-    use windows_sys::Win32::System::Registry::{RegGetValueW, HKEY_LOCAL_MACHINE, RRF_RT_REG_SZ};
-    let key: Vec<u16> = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\0"
-        .encode_utf16()
-        .collect();
-    let value: Vec<u16> = "CurrentBuildNumber\0".encode_utf16().collect();
-    let mut buffer = [0_u16; 32];
-    let mut size = std::mem::size_of_val(&buffer) as u32;
-    // SAFETY: the strings are NUL-terminated and the buffer size is given
-    let status = unsafe {
-        RegGetValueW(
-            HKEY_LOCAL_MACHINE,
-            key.as_ptr(),
-            value.as_ptr(),
-            RRF_RT_REG_SZ,
-            std::ptr::null_mut(),
-            buffer.as_mut_ptr().cast(),
-            &mut size,
-        )
-    };
-    if status != 0 {
-        return None;
+    static AVAILABLE: OnceLock<Mutex<bool>> = OnceLock::new();
+    let mut available = AVAILABLE.get_or_init(|| Mutex::new(false)).locked();
+    if *available {
+        return true;
     }
-    let length = buffer
-        .iter()
-        .position(|unit| *unit == 0)
-        .unwrap_or(buffer.len());
-    String::from_utf16_lossy(&buffer[..length])
-        .trim()
-        .parse()
-        .ok()
+    // A negative probe may only mean the audio service is temporarily down.
+    *available = thread::spawn(|| {
+        let Ok(_com) = ComScope::enter() else {
+            return false;
+        };
+        activate_process_loopback(
+            std::process::id(),
+            PROCESS_LOOPBACK_MODE_EXCLUDE_TARGET_PROCESS_TREE,
+        )
+        .and_then(LoopbackStream::start)
+        .is_ok()
+    })
+    .join()
+    .unwrap_or(false);
+    *available
 }
 
 fn com_error(error: windows::core::Error) -> AppError {
@@ -262,9 +250,10 @@ impl LoopbackStream {
                     None,
                 )
                 .map_err(com_error)?;
+            let capture = client.GetService().map_err(com_error)?;
             let event = CreateEventW(None, false, false, None).map_err(com_error)?;
             let stream = Self {
-                capture: client.GetService().map_err(com_error)?,
+                capture,
                 client,
                 event,
             };
@@ -278,10 +267,10 @@ impl LoopbackStream {
     }
 
     /// Waits for the next buffer and hands its frames to `deliver`.
-    fn read(&self, mut deliver: impl FnMut(&[f32])) -> Result<(), AppError> {
+    fn read(&self, wait_ms: u32, mut deliver: impl FnMut(&[f32])) -> Result<(), AppError> {
         // SAFETY: the buffer is read within GetBuffer and ReleaseBuffer
         unsafe {
-            if WaitForSingleObject(self.event, WAIT_INTERVAL_MS) != WAIT_OBJECT_0 {
+            if WaitForSingleObject(self.event, wait_ms) != WAIT_OBJECT_0 {
                 return Ok(());
             }
             loop {
@@ -344,12 +333,12 @@ pub(super) fn open_playback(
         }
         CaptureSource::Application { .. } => {
             return Err(AppError::ServiceUnavailable(
-                "Recording one application needs Windows 10 2004 or newer".into(),
+                "Process loopback is unavailable on this Windows system".into(),
             ))
         }
         _ if has_process_loopback() => Target::AllButOwn,
         // before process loopback: the whole sound of the default output
-        _ => return open_device_loopback(stop_flag),
+        _ => Target::Device,
     };
     let mut context = StreamContext::new(stop_flag, LOOPBACK_RATE_HZ, TARGET_SAMPLE_RATE_HZ);
     context.fills_gaps = true;
@@ -378,21 +367,96 @@ pub(super) fn open_playback(
     }
 }
 
-fn open_device_loopback(
-    stop_flag: &Arc<AtomicBool>,
-) -> Result<OpenedCapture<CaptureStream>, AppError> {
-    use cpal::traits::HostTrait;
-    let device = cpal::default_host()
-        .default_output_device()
-        .ok_or_else(|| AppError::ServiceUnavailable("No default output device found".into()))?;
-    let mut opened = super::microphone::open_loopback_device(&device, stop_flag)?;
-    opened.context.fills_gaps = true;
-    Ok(super::boxed(opened))
-}
-
 enum Target {
     AllButOwn,
     Application(String),
+    Device,
+}
+
+fn default_output_device() -> Result<(String, IMMDevice), AppError> {
+    // SAFETY: the caller has entered COM; GetId allocates with CoTaskMemAlloc.
+    unsafe {
+        let enumerator: IMMDeviceEnumerator =
+            CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL).map_err(com_error)?;
+        let device = enumerator
+            .GetDefaultAudioEndpoint(eRender, eConsole)
+            .map_err(com_error)?;
+        let raw_id = device.GetId().map_err(com_error)?;
+        let id = raw_id.to_string();
+        CoTaskMemFree(Some(raw_id.0.cast()));
+        Ok((
+            id.map_err(|error| AppError::Failed(format!("Invalid output device id: {error}")))?,
+            device,
+        ))
+    }
+}
+
+fn device_stream(device: &IMMDevice) -> Result<LoopbackStream, AppError> {
+    // SAFETY: plain COM calls on this capture thread.
+    let client = unsafe { device.Activate::<IAudioClient>(CLSCTX_ALL, None) }.map_err(com_error)?;
+    LoopbackStream::start(client)
+}
+
+/// Old Windows fallback: reopen when the default endpoint changes.
+fn run_device_capture(
+    context: &StreamContext,
+    quit: &AtomicBool,
+    setup_tx: &mpsc::SyncSender<Result<(), AppError>>,
+) {
+    let opened = default_output_device().and_then(|(id, device)| Ok((id, device_stream(&device)?)));
+    let (mut id, mut stream) = match opened {
+        Ok(opened) => opened,
+        Err(error) => {
+            let _ = setup_tx.send(Err(error));
+            return;
+        }
+    };
+    let _ = setup_tx.send(Ok(()));
+    let mut converter = PlaybackConverter::new(
+        LOOPBACK_RATE_HZ,
+        TARGET_SAMPLE_RATE_HZ,
+        usize::from(LOOPBACK_CHANNELS),
+    );
+    let mut checked = Instant::now();
+    while !quit.load(Ordering::SeqCst) {
+        if checked.elapsed() >= APP_CHECK_INTERVAL {
+            checked = Instant::now();
+            match default_output_device() {
+                Ok((next_id, device)) if next_id != id => match device_stream(&device) {
+                    Ok(next) => {
+                        stream = next;
+                        id = next_id;
+                    }
+                    Err(error) => {
+                        *context.stream_error.locked() = Some(error.to_string());
+                        return;
+                    }
+                },
+                Err(error) => {
+                    *context.stream_error.locked() = Some(error.to_string());
+                    return;
+                }
+                _ => {}
+            }
+        }
+        if let Err(error) = stream.read(WAIT_INTERVAL_MS, |frames| {
+            converter.deliver(context, frames)
+        }) {
+            // An endpoint can disappear before the next default-device poll.
+            // Try the current endpoint immediately before reporting a failure.
+            match default_output_device().and_then(|(id, device)| Ok((id, device_stream(&device)?)))
+            {
+                Ok((next_id, next)) => {
+                    id = next_id;
+                    stream = next;
+                }
+                Err(_) => {
+                    *context.stream_error.locked() = Some(error.to_string());
+                    return;
+                }
+            }
+        }
+    }
 }
 
 /// The parts of `StreamContext` the capture thread writes to.
@@ -448,36 +512,43 @@ fn run_capture(
             let stream = match stream {
                 Ok(stream) => stream,
                 Err(error) => {
-                    let _ = setup_tx.send(Err(error));
+                    log::info!("Process loopback unavailable, using the output device: {error}");
+                    run_device_capture(context, quit, setup_tx);
                     return;
                 }
             };
             let _ = setup_tx.send(Ok(()));
             while !quit.load(Ordering::SeqCst) {
-                if let Err(error) = stream.read(|frames| converter.deliver(context, frames)) {
+                if let Err(error) = stream.read(WAIT_INTERVAL_MS, |frames| {
+                    converter.deliver(context, frames)
+                }) {
                     *context.stream_error.locked() = Some(error.to_string());
                     return;
                 }
             }
         }
+        Target::Device => run_device_capture(context, quit, setup_tx),
         Target::Application(app_id) => {
             context.status.locked().is_waiting = true;
             let _ = setup_tx.send(Ok(()));
-            run_application_capture(&app_id, context, &mut converter, quit);
+            run_application_capture(&app_id, context, quit);
         }
     }
 }
 
 /// Records the tree of `app_id` while it runs: waits for it to start and
 /// reports when it quits, see `SourceStatus`.
-fn run_application_capture(
-    app_id: &str,
-    context: &StreamContext,
-    converter: &mut PlaybackConverter,
-    quit: &AtomicBool,
-) {
-    let sessions = SessionMeter::new().ok();
-    let mut recording: Option<(u32, LoopbackStream)> = None;
+fn run_application_capture(app_id: &str, context: &StreamContext, quit: &AtomicBool) {
+    let sessions = match SessionMeter::new() {
+        Ok(sessions) => sessions,
+        Err(error) => {
+            *context.stream_error.locked() = Some(error.to_string());
+            return;
+        }
+    };
+    let mut recordings: HashMap<u32, LoopbackStream> = HashMap::new();
+    let mut mixer = StreamMixer::new(u64::from(LOOPBACK_RATE_HZ) / 5);
+    let mut converter = PlaybackConverter::new(LOOPBACK_RATE_HZ, TARGET_SAMPLE_RATE_HZ, 1);
     let mut has_seen = false;
     let mut last_check: Option<Instant> = None;
     while !quit.load(Ordering::SeqCst) {
@@ -485,60 +556,82 @@ fn run_application_capture(
             last_check = Some(Instant::now());
             let processes = process_snapshot();
             let roots = app_roots(&processes, app_id);
-            if recording
-                .as_ref()
-                .is_some_and(|(pid, _)| !roots.contains(pid))
-            {
-                recording = None;
-            }
+            recordings.retain(|pid, _| {
+                if roots.contains(pid) {
+                    true
+                } else {
+                    mixer.remove_stream(*pid);
+                    false
+                }
+            });
             if roots.is_empty() {
                 if has_seen {
                     context.status.locked().is_lost = true;
                 }
+                has_seen = false;
             } else {
                 has_seen = true;
             }
-            if recording.is_none() {
-                if let Some(&root) = roots.first() {
+            for root in roots {
+                if let std::collections::hash_map::Entry::Vacant(entry) = recordings.entry(root) {
                     match activate_process_loopback(
                         root,
                         PROCESS_LOOPBACK_MODE_INCLUDE_TARGET_PROCESS_TREE,
                     )
                     .and_then(LoopbackStream::start)
                     {
-                        Ok(stream) => recording = Some((root, stream)),
-                        Err(error) => log::warn!("Could not record {app_id}: {error}"),
+                        Ok(stream) => {
+                            entry.insert(stream);
+                            mixer.add_stream(root);
+                        }
+                        Err(error) => {
+                            *context.stream_error.locked() =
+                                Some(format!("Could not record {app_id}: {error}"));
+                            return;
+                        }
                     }
                 }
             }
-            let is_playing = match (&recording, &sessions) {
-                (Some((root, _)), Some(sessions)) => sessions
-                    .active_pids()
-                    .into_iter()
-                    .any(|pid| is_in_tree(&processes, pid, *root)),
-                (Some(_), None) => true,
-                (None, _) => false,
-            };
-            context.status.locked().is_waiting = !is_playing;
-        }
-        match &recording {
-            Some((_, stream)) => {
-                if let Err(error) = stream.read(|frames| converter.deliver(context, frames)) {
-                    log::warn!("The capture of {app_id} failed: {error}");
-                    recording = None;
+            match sessions.active_pids() {
+                Ok(pids) => {
+                    context.status.locked().is_waiting = !pids.into_iter().any(|pid| {
+                        recordings
+                            .keys()
+                            .any(|root| is_in_tree(&processes, pid, *root))
+                    })
+                }
+                Err(error) => {
+                    *context.stream_error.locked() = Some(error.to_string());
+                    return;
                 }
             }
-            None => thread::sleep(Duration::from_millis(u64::from(WAIT_INTERVAL_MS))),
         }
+        for (pid, stream) in &recordings {
+            // Poll every tree without a per-tree wait, so a silent instance
+            // cannot make another instance overrun its 200 ms capture buffer.
+            if let Err(error) = stream.read(0, |frames| {
+                let mono: Vec<f32> = frames
+                    .chunks(usize::from(LOOPBACK_CHANNELS))
+                    .map(|frame| frame.iter().sum::<f32>() / frame.len() as f32)
+                    .collect();
+                mixer.push(*pid, &mono);
+            }) {
+                *context.stream_error.locked() =
+                    Some(format!("The capture of {app_id} failed: {error}"));
+                return;
+            }
+        }
+        converter.deliver(context, &mixer.drain());
+        thread::sleep(Duration::from_millis(10));
     }
 }
 
-/// The audio sessions of the default output device.
+/// All active render endpoints, re-enumerated on each poll to follow routing
+/// changes and newly attached devices without keeping stale session managers.
 struct SessionMeter {
-    manager: IAudioSessionManager2,
+    enumerator: IMMDeviceEnumerator,
 }
 
-/// An active session: the process playing it and how loud it is.
 struct ActiveSession {
     pid: u32,
     peak: f32,
@@ -546,60 +639,61 @@ struct ActiveSession {
 
 impl SessionMeter {
     fn new() -> Result<Self, AppError> {
-        // SAFETY: plain COM calls on this COM thread
-        unsafe {
-            let enumerator: IMMDeviceEnumerator =
-                CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL).map_err(com_error)?;
-            let device = enumerator
-                .GetDefaultAudioEndpoint(eRender, eConsole)
-                .map_err(com_error)?;
-            let manager = device
-                .Activate::<IAudioSessionManager2>(CLSCTX_ALL, None)
-                .map_err(com_error)?;
-            Ok(Self { manager })
-        }
+        // SAFETY: the caller has entered COM on this thread.
+        let enumerator = unsafe { CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL) }
+            .map_err(com_error)?;
+        Ok(Self { enumerator })
     }
 
-    fn active_sessions(&self) -> Vec<ActiveSession> {
+    fn active_sessions(&self) -> Result<Vec<ActiveSession>, AppError> {
         let mut sessions = Vec::new();
-        // SAFETY: plain COM calls on this COM thread
+        // SAFETY: these interfaces belong to the current COM thread.
         unsafe {
-            let Ok(list) = self.manager.GetSessionEnumerator() else {
-                return sessions;
-            };
-            let count = list.GetCount().unwrap_or(0);
-            for index in 0..count {
-                let Ok(control) = list.GetSession(index) else {
+            let devices = self
+                .enumerator
+                .EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE)
+                .map_err(com_error)?;
+            for index in 0..devices.GetCount().map_err(com_error)? {
+                let device = devices.Item(index).map_err(com_error)?;
+                let Ok(manager) = device.Activate::<IAudioSessionManager2>(CLSCTX_ALL, None) else {
                     continue;
                 };
-                if control.GetState().ok() != Some(AudioSessionStateActive) {
+                let Ok(list) = manager.GetSessionEnumerator() else {
                     continue;
+                };
+                for index in 0..list.GetCount().unwrap_or(0) {
+                    let Ok(control) = list.GetSession(index) else {
+                        continue;
+                    };
+                    if control.GetState().ok() != Some(AudioSessionStateActive) {
+                        continue;
+                    }
+                    let Ok(control) = control.cast::<IAudioSessionControl2>() else {
+                        continue;
+                    };
+                    if control.IsSystemSoundsSession() == HRESULT(0) {
+                        continue;
+                    }
+                    let Ok(pid) = control.GetProcessId() else {
+                        continue;
+                    };
+                    let peak = control
+                        .cast::<IAudioMeterInformation>()
+                        .and_then(|meter| meter.GetPeakValue())
+                        .unwrap_or(0.0);
+                    sessions.push(ActiveSession { pid, peak });
                 }
-                let Ok(control) = control.cast::<IAudioSessionControl2>() else {
-                    continue;
-                };
-                // S_OK, not S_FALSE: the session of the system sounds
-                if control.IsSystemSoundsSession() == HRESULT(0) {
-                    continue;
-                }
-                let Ok(pid) = control.GetProcessId() else {
-                    continue;
-                };
-                let peak = control
-                    .cast::<IAudioMeterInformation>()
-                    .and_then(|meter| meter.GetPeakValue())
-                    .unwrap_or(0.0);
-                sessions.push(ActiveSession { pid, peak });
             }
         }
-        sessions
+        Ok(sessions)
     }
 
-    fn active_pids(&self) -> Vec<u32> {
-        self.active_sessions()
+    fn active_pids(&self) -> Result<Vec<u32>, AppError> {
+        Ok(self
+            .active_sessions()?
             .into_iter()
             .map(|session| session.pid)
-            .collect()
+            .collect())
     }
 }
 
@@ -653,7 +747,14 @@ pub(super) fn watch_apps(
             let _ = setup_tx.send(Ok(()));
             let mut last: Option<Vec<AudioApp>> = None;
             while !thread_quit.load(Ordering::SeqCst) {
-                let apps = playing_apps(&meter.active_sessions(), &process_snapshot());
+                let sessions = match meter.active_sessions() {
+                    Ok(sessions) => sessions,
+                    Err(error) => {
+                        log::warn!("Could not enumerate audio sessions: {error}");
+                        Vec::new()
+                    }
+                };
+                let apps = playing_apps(&sessions, &process_snapshot());
                 if last.as_ref() != Some(&apps) {
                     on_change(apps.clone());
                     last = Some(apps);
@@ -662,10 +763,12 @@ pub(super) fn watch_apps(
             }
         })
         .map_err(|error| AppError::Failed(format!("cannot start the apps thread: {error}")))?;
-    let watch = AppsWatch(CaptureThread {
-        quit,
-        thread: Some(thread),
-    });
+    let watch = AppsWatch {
+        _thread: CaptureThread {
+            quit,
+            thread: Some(thread),
+        },
+    };
     match setup_rx.recv_timeout(ACTIVATION_TIMEOUT) {
         Ok(Ok(())) => Ok(watch),
         Ok(Err(error)) => Err(error),
@@ -676,4 +779,6 @@ pub(super) fn watch_apps(
 }
 
 /// Watches the applications; dropping it stops watching.
-pub(super) struct AppsWatch(CaptureThread);
+pub(super) struct AppsWatch {
+    _thread: CaptureThread,
+}

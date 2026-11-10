@@ -86,8 +86,8 @@ pub enum CaptureEvent {
     SourceStatus {
         is_waiting: bool,
     },
-    /// The application of the source quit: the capture went on with the
-    /// whole system sound.
+    /// The application quit: capture waits for the same source without
+    /// recording other applications.
     SourceLost {
         source: CaptureSource,
     },
@@ -371,6 +371,7 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
         .send(Ok(output_sample_rate_hz))
         .map_err(|error| AppError::Failed(error.to_string()))?;
 
+    let mut active_source = capture_source;
     let chunk_samples = output_sample_rate_hz as usize * CHUNK_MS / 1_000;
     let started = clock.now();
     let mut delivered_samples: u64 = 0;
@@ -378,55 +379,48 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
     let mut last_callback = last_level;
     let mut callback_count = context.callback_count.load(Ordering::Relaxed);
     let mut reported_status = SourceStatus::default();
+    let mut has_reported_status = !active_source.is_playback();
     while !stop_flag.load(Ordering::SeqCst) {
         clock.sleep(POLL_INTERVAL);
 
         let requested = control.switch.locked().take();
         let lost = context.status.locked().is_lost;
-        let next = match requested {
-            Some(request) => Some((request.source, Some(request.reply))),
-            None if lost => Some((CaptureSource::SystemMix, None)),
-            None => None,
-        };
-        if let Some((next_source, reply)) = next {
+        if lost {
+            // Losing an application must not expand recording to other apps.
+            context.status.locked().is_lost = false;
+            sink.send_event(&CaptureEvent::SourceLost {
+                source: active_source.clone(),
+            });
+        }
+        if let Some(SourceSwitch {
+            source: next_source,
+            reply,
+        }) = requested
+        {
             match source.open(&next_source, stop_flag) {
                 Ok(opened) if opened.output_sample_rate_hz == output_sample_rate_hz => {
                     // the old stream's last samples go out before the new ones
                     drop(std::mem::replace(&mut stream, opened.stream));
+                    // The new stream ran during setup while the old stream still
+                    // recorded. Discard that overlap at the handover boundary.
+                    opened.context.pending_pcm_samples.locked().clear();
+                    active_source = next_source;
                     let old = std::mem::replace(&mut context, opened.context);
                     let tail = std::mem::take(&mut *old.pending_pcm_samples.locked());
                     context.pending_pcm_samples.locked().splice(0..0, tail);
                     callback_count = context.callback_count.load(Ordering::Relaxed);
                     last_callback = clock.now();
                     reported_status = SourceStatus::default();
-                    if lost && reply.is_none() {
-                        sink.send_event(&CaptureEvent::SourceLost {
-                            source: next_source,
-                        });
-                    }
-                    if let Some(reply) = reply {
-                        let _ = reply.send(Ok(()));
-                    }
+                    has_reported_status = false;
+                    let _ = reply.send(Ok(()));
                 }
                 Ok(_) => {
                     let error = AppError::Failed("The new source records at another rate".into());
-                    match reply {
-                        Some(reply) => {
-                            let _ = reply.send(Err(error));
-                        }
-                        None => context.status.locked().is_lost = false,
-                    }
+                    let _ = reply.send(Err(error));
                 }
-                Err(error) => match reply {
-                    Some(reply) => {
-                        let _ = reply.send(Err(error));
-                    }
-                    None => {
-                        *context.stream_error.locked() = Some(error.to_string());
-                        stop_flag.store(true, Ordering::SeqCst);
-                        break;
-                    }
-                },
+                Err(error) => {
+                    let _ = reply.send(Err(error));
+                }
             }
         }
 
@@ -463,12 +457,13 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
         }
 
         let status = *context.status.locked();
-        if status.is_waiting != reported_status.is_waiting {
+        if !has_reported_status || status.is_waiting != reported_status.is_waiting {
             sink.send_event(&CaptureEvent::SourceStatus {
                 is_waiting: status.is_waiting,
             });
         }
         reported_status = status;
+        has_reported_status = true;
 
         if context.fills_gaps {
             let elapsed = clock.now().saturating_duration_since(started);

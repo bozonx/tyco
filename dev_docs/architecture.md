@@ -99,13 +99,54 @@ sink's monitor, or every output stream of one application, mixed by
 `voice/mixer.rs`) and WASAPI process loopback on Windows (`audio/wasapi.rs`).
 A playback source delivers nothing while nothing plays, so the capture loop
 fills the gap with silence (`voice/source.rs`), switches the source in place
-(`switch_capture_source`) and falls back to the whole sound when the
-application quits. An application is identified by its binary (Flatpak app
+(`switch_capture_source`) and waits for the same application when it quits.
+Recording other applications requires an explicit source selection. The new
+stream's overlapping setup audio is discarded at handover, so that it cannot
+repeat the old stream's tail. An application is identified by its binary (Flatpak app
 id on Linux, the executable of its process tree's root on Windows), never by
 a process id. Lifecycle tests use fake streams and outputs to check setup
 failure, timeout, final audio ordering, stale stops, source switches and gap
 filling; `integration_records_the_system_sound_and_one_application` runs
 against a real PipeWire server.
+Listening capabilities are probed off the UI thread, initially and every five
+seconds, under the background-service shutdown barrier. Linux probes a completed
+PipeWire round trip with a one-second deadline rather than caching login-time
+availability. Capture stream errors are reported, including asynchronous
+PipeWire stream failures. Windows probes process-loopback activation and stream
+initialization instead of guessing from an OS build number; whole-system
+capture falls back to default-device WASAPI loopback, following endpoint
+changes. Application capture mixes all matching independent process trees.
+Session meters enumerate all active render endpoints on each poll, including
+applications routed away from the default device. Opening and dropping source
+watches runs on the blocking pool, not the async executor.
+
+Live STT connection policy is separate from capture lifetime. Gemini rotates
+connections gracefully after eight minutes of wall time or audio, and earlier
+on `goAway`. The capture and its bounded in-memory queue remain alive while the
+old connection drains and the next one opens. No audio or settled transcript is
+replayed; timestamps gain the preceding audio duration, and an outstanding
+recognized draft is retained at a rotation boundary. Rotation applies to voice
+input too. Cancellation or a genuine provider failure ends the workflow rather
+than retrying indefinitely. Tests use short limits and controlled queues to
+exercise multiple connections, final draining, cancellation and exact audio
+ownership without waiting eight minutes.
+
+The policy was checked against the [Gemini session-management guide](https://ai.google.dev/gemini-api/docs/live-api/session-management)
+(approximately ten minutes per connection and fifteen minutes of audio without
+compression), [Deepgram streaming timeout guidance](https://developers.deepgram.com/docs/stt-troubleshooting-websocket-data-and-net-errors)
+and the [sherpa streaming-server protocol](https://k2-fsa.github.io/sherpa/onnx/websocket/online-websocket.html).
+Deepgram continues receiving PCM silence through playback gaps; no shorter fixed
+session limit is assumed. Sherpa session limits depend on the configured server.
+A custom server or proxy that closes early produces an explicit error and keeps
+recognized text. No claim is made that arbitrary server policies can be bypassed.
+
+Listening asks for continuous endpointing: Gemini receives quiet chunks and soft
+speech too, without the dictation-only 1.5-second silence cutoff. Provider turns
+are bounded to thirty seconds while capture continues. A voice reply passes the
+heard message to correction and, when an AI request is chosen in the result menu
+or through a buffered shortcut, uses it as context and the dictated text as the
+request. This context belongs to one activation only.
+
 Retention and polling tests supply timestamps or virtual time instead of sleeping.
 The remaining device and compositor behavior belongs to desktop smoke tests.
 

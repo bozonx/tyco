@@ -216,22 +216,25 @@ const forgetKeys = () => keyPresses.clear()
 
 /** Leaves for voice input; what was heard is offered there, not lost */
 async function switchToVoice() {
+  if (model.phase.value === 'finishing') return
   if (model.phase.value === 'recording') {
     await model.stop()
     // a transcript stays shown here with the switch at hand
     if ((model.phase.value as string) === 'result') return
   }
-  await model.cancel()
   useVoiceResultStore().step.resetResult()
   await modeSwitch.switchTo('voice')
 }
 
 /** Dictates an answer to what was heard: the transcript is its context */
 async function replyByVoice() {
-  replyStore.offer(model.resultText.value, modeSwitch.nextActivationId())
-  await model.cancel()
+  const text = model.resultText.value
+  const nextActivationId = modeSwitch.nextActivationId()
   useVoiceResultStore().step.resetResult()
-  await modeSwitch.switchTo('voice')
+  const switched = await modeSwitch.switchTo('voice')
+  // Publish context only after the native activation check succeeded. A
+  // competing activation must never inherit a guessed next activation's text.
+  if (switched.success) replyStore.offer(text, nextActivationId)
 }
 
 function handleLanguageChange() {
@@ -254,7 +257,6 @@ function openSttSettings() {
     mode: 'config',
     settingsTab: 'stt',
   })
-  void model.close()
 }
 
 onMounted(() => {

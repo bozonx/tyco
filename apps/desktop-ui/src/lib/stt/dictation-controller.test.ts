@@ -53,6 +53,33 @@ describe('dictation controller', () => {
     await starting
     expect(deps.dictation.start).not.toHaveBeenCalled()
   })
+  it('revokes a pending credential preflight when finished, including a late failure', async () => {
+    const { deps, handlers, controller } = setup()
+    let release!: () => void
+    deps.refreshSecrets.mockReturnValue(
+      new Promise<void>((resolve) => {
+        release = resolve
+      })
+    )
+    const starting = controller.startDictation(handlers)
+    await controller.finishDictation()
+    release()
+    await starting
+    expect(deps.dictation.start).not.toHaveBeenCalled()
+
+    let reject!: (error: Error) => void
+    deps.refreshSecrets.mockReturnValue(
+      new Promise<void>((_, fail) => {
+        reject = fail
+      })
+    )
+    const next = controller.startDictation(handlers)
+    await controller.finishDictation()
+    reject(new Error('late credential error'))
+    await expect(next).resolves.toBeUndefined()
+    expect(deps.dictation.start).not.toHaveBeenCalled()
+  })
+
   it('checks credentials before opening the microphone and lets the provider detect the language', async () => {
     const { deps, handlers, controller } = setup()
     await controller.startDictation(handlers)

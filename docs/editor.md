@@ -64,3 +64,35 @@ nothing is selected:
 - with the Diacritics plugin: adding accents to letters and removing them.
 
 Every change can be undone with Ctrl+Z.
+
+## Transcribing computer audio
+
+Assign **Listen to computer audio** in **Settings → Hotkeys**, or switch from
+the voice-input overlay with **Alt+L**. Choose all computer sound or a playing
+application. A source chosen in the overlay lasts for that listening session;
+the next hotkey activation uses the source saved in settings.
+
+The overlay remains visible when you click into a player. Press the listening
+hotkey again, **Enter** while the overlay has focus, or **Stop** to finish.
+The transcript opens an action menu for copying, insertion, the editor, chat or
+AI actions. It is not inserted automatically. **Reply by voice** uses the heard
+message as context for correction; an AI request selected from the dictated
+result also receives that message as context. **Alt+L** switches modes. If a
+recording already contains text, the switch first shows its result.
+
+If an application closes, listening waits for it to return. It does not start
+recording other applications automatically. You can choose **Record all sound**
+manually. Listening stops after three minutes without recognized speech or one
+hour overall. Speech connections are renewed when required while capture and
+the recognized text are preserved.
+
+With cloud recognition (Deepgram or Gemini), captured sound, including other
+people's speech, goes to the selected provider. Sherpa sends sound to the server
+you configured: it stays on this computer only when that server is local.
+The information icon in the listening overlay explains this. Audio is not saved
+to disk; the final transcript follows your history settings.
+
+Linux listening requires PipeWire. Windows offers application capture when its
+process-loopback API is available and otherwise offers all-sound capture.
+The move handle is available on regular overlay windows; layer-shell overlays
+cannot be dragged. Developer details are in [Architecture](../dev_docs/architecture.md).

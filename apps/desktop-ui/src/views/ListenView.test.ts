@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { i18n } from '../lib/i18n'
 import { DictationError } from '../lib/stt/dictation-error'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
+import { useListenReplyStore } from '../stores/listen-reply'
 import { useVoiceResultStore } from '../stores/voice-result'
 import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import ListenView from './ListenView.vue'
@@ -28,7 +29,10 @@ vi.mock('../components/menu/InsertMenu.vue', () => ({
   },
 }))
 vi.mock('../components/voice/QuickModeSwitch.vue', () => ({
-  default: { template: '<button class="mode-switch-stub" />' },
+  default: {
+    name: 'QuickModeSwitch',
+    template: '<button class="mode-switch-stub" />',
+  },
 }))
 vi.mock('../components/quick/OverlayDragHandle.vue', () => ({
   default: { template: '<div />' },
@@ -189,6 +193,63 @@ describe('ListenView', () => {
     expect(modals.hasOpenModal).toBe(false)
     expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
     wrapper2.unmount()
+  })
+
+  it('keeps the transcript visible while a mode switch is pending', async () => {
+    let complete!: () => void
+    desktop.backend.handle(
+      'switch_quick_mode',
+      () =>
+        new Promise<void>((resolve) => {
+          complete = resolve
+        })
+    )
+    const wrapper = mountView()
+    try {
+      await flushPromises()
+      await pressEnter()
+      wrapper.findComponent({ name: 'QuickModeSwitch' }).vm.$emit('switch')
+      await flushPromises()
+      expect(wrapper.find('.insert-menu-stub').attributes('data-text')).toBe(
+        'Voice message text'
+      )
+      complete()
+      await flushPromises()
+    } finally {
+      wrapper.unmount()
+    }
+  })
+
+  it('publishes reply context only after the native mode switch succeeds', async () => {
+    let complete!: () => void
+    desktop.backend.handle(
+      'switch_quick_mode',
+      () =>
+        new Promise<void>((resolve) => {
+          complete = resolve
+        })
+    )
+    const nextId = desktop.backend.activation.activationId + 1
+    const wrapper = mountView()
+    try {
+      await flushPromises()
+      await pressEnter()
+      const button = wrapper
+        .findAll('button')
+        .find((item) =>
+          item.text().includes(i18n.global.t('listen.replyByVoice'))
+        )!
+      await button.trigger('click')
+      await flushPromises()
+      const reply = useListenReplyStore()
+      expect(reply.contextFor(nextId)).toBeUndefined()
+      complete()
+      await flushPromises()
+      expect(reply.contextFor(nextId)).toBe('Voice message text')
+      expect(reply.contextFor(nextId + 1)).toBeUndefined()
+    } finally {
+      wrapper.unmount()
+    }
   })
 
   it('offers Open settings button when starting fails due to a missing key', async () => {

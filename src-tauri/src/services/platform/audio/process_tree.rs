@@ -108,6 +108,14 @@ mod tests {
     }
 
     #[test]
+    fn independent_instances_are_all_captured_without_duplicate_children() {
+        let mut processes = browser();
+        processes.push(process(30, 1, "chrome.exe"));
+        processes.push(process(31, 30, "chrome.exe"));
+        assert_eq!(app_roots(&processes, "chrome.exe"), vec![10, 30]);
+    }
+
+    #[test]
     fn a_tree_holds_its_descendants_only() {
         let processes = browser();
         assert!(is_in_tree(&processes, 12, 10));

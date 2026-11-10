@@ -69,8 +69,7 @@ pub(super) fn open_microphone(
     open_input_device(&device, stop_flag)
 }
 
-/// Opens `device` for input; on Windows an output device records what it
-/// plays, see `windows_loopback`.
+/// Opens a microphone device for input.
 pub(super) fn open_input_device(
     device: &cpal::Device,
     stop_flag: &Arc<AtomicBool>,
@@ -124,18 +123,6 @@ fn open_with(
         context,
         output_sample_rate_hz,
     })
-}
-
-/// Records what `device`, an output device, plays: WASAPI loopback.
-#[cfg(target_os = "windows")]
-pub(super) fn open_loopback_device(
-    device: &cpal::Device,
-    stop_flag: &Arc<AtomicBool>,
-) -> Result<OpenedCapture<cpal::Stream>, AppError> {
-    let config = device
-        .default_output_config()
-        .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
-    open_with(device, config, stop_flag)
 }
 
 /// Sample formats the capture can read, see `build_input_stream`

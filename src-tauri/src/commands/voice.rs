@@ -60,8 +60,8 @@ pub async fn watch_audio_apps(
     watches: State<'_, AudioAppsWatches>,
     on_apps: Channel<InvokeResponseBody>,
 ) -> Result<u64, AppError> {
-    let watches = watches.inner();
-    voice::apps::watch(watches, on_apps)
+    let watches = watches.inner().clone();
+    crate::services::background::run_blocking(move || voice::apps::watch(&watches, on_apps)).await?
 }
 
 #[tauri::command]
@@ -69,6 +69,7 @@ pub async fn unwatch_audio_apps(
     watches: State<'_, AudioAppsWatches>,
     watch_id: u64,
 ) -> Result<(), AppError> {
-    voice::apps::unwatch(watches.inner(), watch_id);
-    Ok(())
+    let watches = watches.inner().clone();
+    crate::services::background::run_blocking(move || voice::apps::unwatch(&watches, watch_id))
+        .await
 }

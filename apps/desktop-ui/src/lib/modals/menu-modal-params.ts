@@ -24,6 +24,8 @@ export enum MenuModals {
 }
 
 export interface InsertMenuParams {
+  /** The message a dictated AI request replies to. */
+  replyTo?: string
   text?: string
   oldText?: string
   actions?: ActionItem[]

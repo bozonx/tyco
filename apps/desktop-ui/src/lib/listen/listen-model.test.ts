@@ -92,7 +92,7 @@ describe('listen model', () => {
     expect(deps.startDictation).toHaveBeenCalledTimes(2)
   })
 
-  it('waits for an application and falls back when it quits', async () => {
+  it('waits for the same application when it quits and clears the notice when it resumes', async () => {
     const { model, handlers } = setup()
     await model.start({ kind: 'application', appId: 'telegram-desktop' })
     expect(model.isWaiting.value).toBe(true)
@@ -100,9 +100,18 @@ describe('listen model', () => {
     handlers().onWaiting?.(false)
     expect(model.isWaiting.value).toBe(false)
 
-    handlers().onSourceLost?.({ kind: 'systemMix' })
-    expect(model.source.value).toEqual({ kind: 'systemMix' })
+    handlers().onSourceLost?.({
+      kind: 'application',
+      appId: 'telegram-desktop',
+    })
+    expect(model.source.value).toEqual({
+      kind: 'application',
+      appId: 'telegram-desktop',
+    })
     expect(model.isSourceLost.value).toBe(true)
+    expect(model.isWaiting.value).toBe(true)
+    handlers().onWaiting?.(false)
+    expect(model.isSourceLost.value).toBe(false)
   })
 
   it('switches the source without losing the transcript', async () => {
@@ -121,6 +130,20 @@ describe('listen model', () => {
       kind: 'application',
       appId: 'firefox',
     })
+  })
+
+  it('keeps a ready source status received before the switch response', async () => {
+    const { model, deps, handlers } = setup()
+    await model.start()
+    vi.mocked(deps.switchSource).mockImplementationOnce(async () => {
+      handlers().onWaiting?.(false)
+    })
+    await model.selectSource({ kind: 'application', appId: 'ready-app' })
+    expect(model.source.value).toEqual({
+      kind: 'application',
+      appId: 'ready-app',
+    })
+    expect(model.isWaiting.value).toBe(false)
   })
 
   it('keeps the old source when a switch fails and clears the error on a later switch', async () => {
@@ -184,5 +207,38 @@ describe('listen model', () => {
     handlers().onError(new Error('no device'))
     expect(model.phase.value).toBe('failed')
     expect(model.errorText.value).toContain('no device')
+  })
+  it('serializes source switches and ignores a late response after cancellation', async () => {
+    let reject!: (error: Error) => void
+    const pending = new Promise<void>((_, fail) => {
+      reject = fail
+    })
+    const { model, deps } = setup({ switchSource: vi.fn(() => pending) })
+    await model.start()
+    const first = model.selectSource({ kind: 'application', appId: 'a' })
+    await model.selectSource({ kind: 'application', appId: 'b' })
+    expect(deps.switchSource).toHaveBeenCalledTimes(1)
+    expect(model.source.value).toEqual({ kind: 'systemMix' })
+    await model.cancel()
+    reject(new Error('late error'))
+    await first
+    expect(model.phase.value).toBe('idle')
+    expect(model.errorText.value).toBe('')
+  })
+
+  it('does not replace an already stopped result with a late start failure', async () => {
+    let reject!: (error: Error) => void
+    const { model } = setup({
+      startDictation: () =>
+        new Promise<void>((_, fail) => {
+          reject = fail
+        }),
+    })
+    const starting = model.start()
+    await model.stop()
+    reject(new Error('late setup failure'))
+    await starting
+    expect(model.phase.value).toBe('result')
+    expect(model.resultText.value).toBe('Hello there')
   })
 })

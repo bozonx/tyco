@@ -62,6 +62,8 @@ export interface SttLiveRequest {
   /** Omitted: the provider's multilingual model follows the speech */
   language?: string
   hasApiKey?: boolean
+  /** Keep pauses and soft speech when listening to playback. */
+  isContinuous?: boolean
   signal?: AbortSignal
 }
 
@@ -121,11 +123,12 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
     },
   }
 
-  const kitFor = (model: SttModel): AiKit => {
+  const kitFor = (model: SttModel, isContinuous = false): AiKit => {
     const key = JSON.stringify({
       provider: model.provider,
       model: model.modelId,
       baseUrl: model.baseUrl,
+      isContinuous,
     })
     const cached = kits.get(key)
     if (cached) return cached
@@ -137,7 +140,9 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
       sttProviders: {
         [KIT_PROVIDERS.deepgram]: createDeepgramProvider,
         [KIT_PROVIDERS.sherpaOnnx]: createSherpaProvider,
-        [KIT_PROVIDERS.geminiLive]: createGeminiLiveProvider(),
+        [KIT_PROVIDERS.geminiLive]: createGeminiLiveProvider(undefined, {
+          isContinuous,
+        }),
       },
       retry: { totalTimeoutMs: CONNECT_TIMEOUT_MS },
     })
@@ -156,7 +161,7 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
             ? MULTILINGUAL_LANGUAGE
             : DEEPGRAM_DEFAULT_LANGUAGE
           : undefined)
-      return kitFor(request.model).transcribeStream({
+      return kitFor(request.model, request.isContinuous).transcribeStream({
         audio: request.audio,
         sampleRate: request.sampleRate,
         policy: {

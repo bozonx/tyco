@@ -1,4 +1,5 @@
 import { createSmartEndpoint } from './smart-endpoint'
+import { createRotatingSttStream } from './rotating-stt-stream'
 import { AiError } from '@bozonx/ai-kit'
 import type {
   ProviderStreamRequest,
@@ -44,6 +45,7 @@ interface GeminiLiveMessage {
   error?: { message?: string; code?: number }
   serverContent?: GeminiServerContent
   setupComplete?: Record<string, unknown>
+  goAway?: { timeLeft?: string }
 }
 
 export function parseGeminiLiveMessage(raw: string): GeminiLiveMessage {
@@ -58,8 +60,38 @@ export function parseGeminiLiveMessage(raw: string): GeminiLiveMessage {
   }
 }
 
+/** Rotate before Google's approximately ten-minute WebSocket lifetime. */
+export const GEMINI_CONNECTION_MS = 8 * 60_000
+
 export const createGeminiLiveProvider =
-  (systemInstruction?: string): SttProviderFactory =>
+  (
+    systemInstruction?: string,
+    options: { isContinuous?: boolean; maxConnectionMs?: number } = {}
+  ): SttProviderFactory =>
+  (init) => {
+    const single = (requestRotation: () => void) =>
+      createGeminiConnection(
+        systemInstruction,
+        Boolean(options.isContinuous),
+        requestRotation
+      )(init)
+    return {
+      transcribe: (request) => single(() => {}).transcribe(request),
+      transcribeStream: (request) =>
+        createRotatingSttStream(
+          request,
+          (segment, rotate) => single(rotate).transcribeStream!(segment),
+          options.maxConnectionMs ?? GEMINI_CONNECTION_MS
+        ),
+    }
+  }
+
+const createGeminiConnection =
+  (
+    systemInstruction: string | undefined,
+    isContinuous: boolean,
+    requestRotation: () => void
+  ): SttProviderFactory =>
   (init) => {
     return {
       async transcribe(_request: ProviderTranscribeRequest) {
@@ -92,8 +124,11 @@ export const createGeminiLiveProvider =
           ? rawModelId
           : `models/${rawModelId}`
 
-        const manualEndpointing = rawModelId.includes('transcribe')
-        const endpoint = createSmartEndpoint(request.sampleRate)
+        const isTranscriptionModel = rawModelId.includes('transcribe')
+        const manualEndpointing = isTranscriptionModel || isContinuous
+        const endpoint = createSmartEndpoint(request.sampleRate, {
+          isContinuous,
+        })
         let pendingTurns = 0
         const sendActivity = (activity: 'activityStart' | 'activityEnd') => {
           session.send(JSON.stringify({ realtimeInput: { [activity]: {} } }))
@@ -104,7 +139,7 @@ export const createGeminiLiveProvider =
         const isAuto = !language || language === 'auto' || language === 'multi'
 
         const transcriptionConfig: Record<string, unknown> = {
-          ...(manualEndpointing ? { mode: 'SMART' } : {}),
+          ...(isTranscriptionModel ? { mode: 'SMART' } : {}),
           ...(isAuto ? {} : { languageCodes: [language] }),
         }
 
@@ -265,6 +300,11 @@ export const createGeminiLiveProvider =
 
                 if (message.setupComplete) {
                   resolveSetup()
+                  continue
+                }
+
+                if (message.goAway) {
+                  requestRotation()
                   continue
                 }
 

@@ -716,6 +716,7 @@ struct PlaybackSource {
     trace: Trace,
     /// Marks the source of the first open as lost, as when its app quits.
     lose_first: bool,
+    overlap_samples: bool,
 }
 
 impl AudioSource for PlaybackSource {
@@ -733,6 +734,12 @@ impl AudioSource for PlaybackSource {
         context.fills_gaps = true;
         context.status.locked().is_waiting = matches!(source, CaptureSource::Application { .. });
         context.status.locked().is_lost = self.lose_first && opens == 0;
+        if self.overlap_samples {
+            context
+                .pending_pcm_samples
+                .locked()
+                .extend(std::iter::repeat_n(opens as i16 + 1, 100));
+        }
         Ok(OpenedCapture {
             stream: (),
             context,
@@ -807,7 +814,13 @@ fn silence_keeps_a_silent_playback_source_in_step_with_real_time() {
     .unwrap();
     // no error for the missing callbacks, and most of the second as silence
     let events = sink.events.lock().unwrap().clone();
-    assert_eq!(events, [r#"{"type":"end"}"#]);
+    assert_eq!(
+        events,
+        [
+            r#"{"type":"sourceStatus","isWaiting":false}"#,
+            r#"{"type":"end"}"#
+        ]
+    );
     let samples = sent_samples(&sink);
     assert!((12_000..=16_000).contains(&samples), "{samples}");
 }
@@ -862,6 +875,7 @@ fn a_switch_of_the_source_keeps_one_stream_and_reports_the_wait() {
     assert_eq!(
         events,
         [
+            r#"{"type":"sourceStatus","isWaiting":false}"#,
             r#"{"type":"sourceStatus","isWaiting":true}"#,
             r#"{"type":"end"}"#
         ]
@@ -869,11 +883,12 @@ fn a_switch_of_the_source_keeps_one_stream_and_reports_the_wait() {
 }
 
 #[test]
-fn a_lost_application_falls_back_to_the_whole_sound() {
+fn a_lost_application_waits_without_expanding_the_recorded_source() {
     let trace = Trace::default();
     let source = PlaybackSource {
         trace: trace.clone(),
         lose_first: true,
+        ..PlaybackSource::default()
     };
     let stop = Arc::new(AtomicBool::new(false));
     let sink = RecordingSink::default();
@@ -896,12 +911,13 @@ fn a_lost_application_falls_back_to_the_whole_sound() {
         &tx,
     )
     .unwrap();
-    assert_eq!(trace.values()[1], r#"open:{"kind":"systemMix"}"#);
+    assert_eq!(trace.values().len(), 1);
     let events = sink.events.lock().unwrap().clone();
     assert_eq!(
         events,
         [
-            r#"{"type":"sourceLost","source":{"kind":"systemMix"}}"#,
+            r#"{"type":"sourceLost","source":{"kind":"application","appId":"telegram-desktop"}}"#,
+            r#"{"type":"sourceStatus","isWaiting":true}"#,
             r#"{"type":"end"}"#
         ]
     );
@@ -918,4 +934,52 @@ async fn only_playback_sources_are_switched_to() {
         .await
         .unwrap_err();
     assert!(matches!(error, AppError::Stale(_)));
+}
+
+#[test]
+fn a_source_switch_discards_audio_recorded_twice_during_setup() {
+    let source = PlaybackSource {
+        overlap_samples: true,
+        ..PlaybackSource::default()
+    };
+    let stop = Arc::new(AtomicBool::new(false));
+    let sink = RecordingSink::default();
+    let switch = SourceSwitchSlot::default();
+    let slot = Arc::clone(&switch);
+    let (reply, _replied) = std_mpsc::sync_channel(1);
+    *slot.locked() = Some(SourceSwitch {
+        source: CaptureSource::Application {
+            app_id: "app".into(),
+        },
+        reply,
+    });
+    let clock = poll_clock(3, &stop, |_| {});
+    let (tx, _rx) = std_mpsc::sync_channel(1);
+    run_capture_thread(
+        &source,
+        CaptureSource::SystemMix,
+        &Trace::default(),
+        &clock,
+        &sink,
+        &CaptureControl {
+            stop_flag: &stop,
+            superseded: &AtomicBool::new(false),
+            switch: &switch,
+        },
+        &tx,
+    )
+    .unwrap();
+    let samples: Vec<i16> = sink
+        .chunks
+        .locked()
+        .iter()
+        .flat_map(|chunk| {
+            chunk
+                .as_chunks::<2>()
+                .0
+                .iter()
+                .map(|pair| i16::from_le_bytes([pair[0], pair[1]]))
+        })
+        .collect();
+    assert_eq!(samples, vec![1; 100]);
 }

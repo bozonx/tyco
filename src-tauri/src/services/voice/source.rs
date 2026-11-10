@@ -56,8 +56,8 @@ pub struct SourceStatus {
     /// The application of the source plays nothing yet: its streams are
     /// waited for.
     pub is_waiting: bool,
-    /// The application of the source has quit: the capture falls back to the
-    /// whole system sound.
+    /// The application of the source has quit: the capture waits for it
+    /// without broadening the recorded source.
     pub is_lost: bool,
 }
 

@@ -9,7 +9,7 @@ import { DictationError } from './dictation-error'
 export interface CaptureSourceHandlers {
   /** Its application plays nothing yet, or has started to */
   onWaiting?: (isWaiting: boolean) => void
-  /** Its application quit: the capture went on with `source` */
+  /** Its application quit: capture waits for the same `source` */
   onSourceLost?: (source: CaptureSource) => void
 }
 

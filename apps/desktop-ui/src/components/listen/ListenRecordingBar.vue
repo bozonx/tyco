@@ -7,7 +7,11 @@
   >
     <div class="listen-bar-header">
       <OverlayDragHandle />
-      <QuickModeSwitch mode="listen" @switch="emit('switch-mode')" />
+      <QuickModeSwitch
+        mode="listen"
+        :disabled="isFinishing"
+        @switch="emit('switch-mode')"
+      />
       <span class="listen-bar-title">
         <AppIcon icon="mdi:volume-high" />
         {{ t('listen.title') }}
@@ -15,7 +19,9 @@
       <ListenSourcePicker
         :source="model.source.value"
         :app-label="activeAppLabel"
-        :disabled="isFinishing"
+        :disabled="
+          isFinishing || model.isStarting.value || model.isSwitching.value
+        "
         @select="onSelectSource"
       />
       <SttLanguagePicker

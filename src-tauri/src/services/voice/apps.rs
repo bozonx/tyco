@@ -47,9 +47,9 @@ impl Drop for DropCountGuard {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct AudioAppsWatches {
-    next_id: AtomicU64,
+    next_id: Arc<AtomicU64>,
     shared: Arc<SharedWatches>,
 }
 

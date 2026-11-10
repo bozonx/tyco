@@ -54,6 +54,7 @@ export interface LiveDictationStart extends CaptureSourceHandlers {
   model: SttModel
   language?: string
   hasApiKey: boolean
+  isContinuous?: boolean
   /** Every change of the text shown while dictating */
   onText: (state: LiveTranscriptState) => void
   /**
@@ -135,6 +136,7 @@ export function createLiveDictation(
           sampleRate,
           language: request.language,
           hasApiKey: request.hasApiKey,
+          isContinuous: request.isContinuous,
           signal: current.signal,
         })
       } catch (error) {

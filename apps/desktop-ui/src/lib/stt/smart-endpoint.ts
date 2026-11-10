@@ -9,7 +9,10 @@ const SPEECH_RMS = 0.008
  * PCM16 mono endpointing; time comes from samples, independent of delivery
  * jitter.
  */
-export function createSmartEndpoint(sampleRate: number) {
+export function createSmartEndpoint(
+  sampleRate: number,
+  options: { isContinuous?: boolean } = {}
+) {
   let durationMs = 0
   let silenceMs = 0
   let active = false
@@ -24,14 +27,15 @@ export function createSmartEndpoint(sampleRate: number) {
       }
       const duration = (sampleCount / sampleRate) * 1000
       const isSpeech =
-        sampleCount > 0 && Math.sqrt(energy / sampleCount) >= SPEECH_RMS
+        sampleCount > 0 &&
+        (options.isContinuous || Math.sqrt(energy / sampleCount) >= SPEECH_RMS)
       if (!active && !isSpeech) return { start: false, end: false, skip: true }
       const start = !active
       active = true
       durationMs += duration
       silenceMs = isSpeech ? 0 : silenceMs + duration
       const end =
-        silenceMs >= SMART_SILENCE_MS ||
+        (!options.isContinuous && silenceMs >= SMART_SILENCE_MS) ||
         (durationMs >= SMART_SOFT_MAX_UTTERANCE_MS &&
           silenceMs >= SMART_INTER_WORD_SILENCE_MS) ||
         durationMs >= SMART_MAX_UTTERANCE_MS

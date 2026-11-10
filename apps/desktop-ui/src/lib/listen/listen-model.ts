@@ -67,9 +67,13 @@ export function createListenModel(deps: ListenModelDependencies) {
   const source = ref<CaptureSource>(SYSTEM_MIX_SOURCE)
   /** The source's application plays nothing yet */
   const isWaiting = ref(false)
-  /** The application of the chosen source quit: the whole sound is recorded */
+  /**
+   * The chosen application quit: capture waits for it without recording other
+   * apps
+   */
   const isSourceLost = ref(false)
   const isSwitching = ref(false)
+  const isStarting = ref(false)
   const autoStopWarning = ref<AutoStopWarning | undefined>()
   const resultText = ref('')
   const errorText = ref('')
@@ -112,6 +116,8 @@ export function createListenModel(deps: ListenModelDependencies) {
 
   async function start(startSource: CaptureSource = lastStartSource) {
     const run = ++generation
+    isStarting.value = true
+    isSwitching.value = false
     lastStartSource = startSource
     source.value = startSource
     transcript.value = createLiveTranscriptState()
@@ -126,6 +132,7 @@ export function createListenModel(deps: ListenModelDependencies) {
     try {
       await deps.startDictation({
         source: startSource,
+        isContinuous: true,
         onText: (state) => {
           if (run !== generation) return
           // music and silence are no speech: only new words hold the session
@@ -140,17 +147,21 @@ export function createListenModel(deps: ListenModelDependencies) {
           else fail(error)
         },
         onWaiting: (waiting) => {
-          if (run === generation) isWaiting.value = waiting
+          if (run !== generation) return
+          isWaiting.value = waiting
+          if (!waiting) isSourceLost.value = false
         },
         onSourceLost: (next) => {
           if (run !== generation) return
           source.value = next
-          isWaiting.value = false
+          isWaiting.value = true
           isSourceLost.value = true
         },
       })
     } catch (error) {
-      if (run === generation) fail(error)
+      if (run === generation && phase.value === 'recording') fail(error)
+    } finally {
+      if (run === generation) isStarting.value = false
     }
   }
 
@@ -188,25 +199,29 @@ export function createListenModel(deps: ListenModelDependencies) {
 
   /** Records `next` from now on; the transcript so far stays */
   async function selectSource(next: CaptureSource) {
-    if (isSameSource(next, source.value)) return
-    if (phase.value !== 'recording') {
-      source.value = next
+    if (
+      isStarting.value ||
+      isSwitching.value ||
+      isSameSource(next, source.value)
+    )
       return
-    }
-    const previous = source.value
-    source.value = next
-    errorText.value = ''
-    isSourceLost.value = false
-    isWaiting.value = next.kind === 'application'
+    if (phase.value !== 'recording') return
+    const run = generation
+    const previousWaiting = isWaiting.value
     isSwitching.value = true
+    errorText.value = ''
+    isWaiting.value = next.kind === 'application'
     try {
       await deps.switchSource(next)
+      if (run !== generation || phase.value !== 'recording') return
+      source.value = next
+      isSourceLost.value = false
     } catch (error) {
-      source.value = previous
-      isWaiting.value = false
+      if (run !== generation || phase.value !== 'recording') return
+      isWaiting.value = previousWaiting
       errorText.value = deps.describeError(error)
     } finally {
-      isSwitching.value = false
+      if (run === generation) isSwitching.value = false
     }
   }
 
@@ -230,6 +245,7 @@ export function createListenModel(deps: ListenModelDependencies) {
     isWaiting,
     isSourceLost,
     isSwitching,
+    isStarting,
     isRecording,
     autoStopWarning,
     resultText,

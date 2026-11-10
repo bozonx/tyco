@@ -2,7 +2,7 @@ import { config, flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useEditorInputStore } from '../../stores/editor-input'
-import { useMenuModalsStore } from '../../stores/menu-modals'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import CopyButton from '../common/CopyButton.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
 import {
@@ -150,6 +150,38 @@ describe('InsertMenu correction step', () => {
     })
     const list = wrapper.findComponent(ShortcutList)
     expect(list.props('spaceKey')?.id).toBe('insertIntoWindow')
+  })
+
+  it('passes the heard message as context and dictated text as the AI prompt', async () => {
+    mocks.editorPage = false
+    desktop.setUserConfig({
+      actionPages: [
+        {
+          inputMode: 'selection',
+          slots: { q: { type: 'standard', actionId: 'quickAiRequest' } },
+        },
+      ],
+    })
+    const wrapper = mountMenu({
+      text: 'Decline politely',
+      replyTo: 'Can you come tomorrow?',
+    })
+    const list = wrapper.findComponent(ShortcutList)
+    const actions = list.props('leftLetterKeys') as {
+      id?: string
+      action: (text: string) => Promise<void>
+    }[]
+    const action = actions.find((item) => item?.id === 'quickAiRequest')
+    expect(action).toBeDefined()
+    await action!.action('Decline politely')
+    const modals = useMenuModalsStore()
+    expect(modals.currentModal).toBe(MenuModals.QUICK_AI_REQUEST)
+    expect(modals.currentModalParams).toMatchObject({
+      text: 'Can you come tomorrow?',
+      prompt: 'Decline politely',
+      inputMode: 'text',
+    })
+    wrapper.unmount()
   })
 
   it('renders page buttons and switches pages with keys when multiple pages exist', async () => {

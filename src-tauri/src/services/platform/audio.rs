@@ -94,7 +94,7 @@ pub(crate) fn can_capture_playback() -> bool {
 }
 
 /// Whether a single application can be recorded: Windows needs process
-/// loopback, build 19041 or newer.
+/// loopback, checked by actual activation and initialization.
 pub(crate) fn can_capture_apps() -> bool {
     #[cfg(target_os = "linux")]
     return pipewire::is_available();

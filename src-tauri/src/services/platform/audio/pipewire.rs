@@ -9,7 +9,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
-use std::sync::{mpsc, Arc, Mutex, OnceLock};
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
@@ -35,29 +35,56 @@ const PEAK_RATE_HZ: u32 = 25;
 const APPS_EMIT_INTERVAL: Duration = Duration::from_millis(250);
 const OUTPUT_STREAM_CLASS: &str = "Stream/Output/Audio";
 
-/// Whether a PipeWire server answers. Asked once: the sound server does not
-/// change while the application runs.
+/// Probe the server on each request: it may restart or appear after login.
 pub(super) fn is_available() -> bool {
-    static AVAILABLE: OnceLock<bool> = OnceLock::new();
-    *AVAILABLE.get_or_init(|| {
-        // a thread of its own: the loop and its context must not outlive it
-        thread::spawn(|| {
-            pw::init();
-            let Ok(main_loop) = pw::main_loop::MainLoopRc::new(None) else {
-                return false;
-            };
-            let Ok(context) = pw::context::ContextRc::new(&main_loop, None) else {
-                return false;
-            };
-            let available = context.connect_rc(None).is_ok();
-            if !available {
-                log::info!("No PipeWire server: the computer sound cannot be recorded");
+    thread::spawn(|| {
+        pw::init();
+        let Ok(main_loop) = pw::main_loop::MainLoopRc::new(None) else {
+            return false;
+        };
+        let Ok(context) = pw::context::ContextRc::new(&main_loop, None) else {
+            return false;
+        };
+        let Ok(core) = context.connect_rc(None) else {
+            return false;
+        };
+        let available = Rc::new(std::cell::Cell::new(false));
+        let done_available = Rc::clone(&available);
+        let done_loop = main_loop.downgrade();
+        let error_loop = main_loop.downgrade();
+        let _listener = core
+            .add_listener_local()
+            .done(move |_, _| {
+                done_available.set(true);
+                if let Some(main_loop) = done_loop.upgrade() {
+                    main_loop.quit();
+                }
+            })
+            .error(move |_, _, _, _| {
+                if let Some(main_loop) = error_loop.upgrade() {
+                    main_loop.quit();
+                }
+            })
+            .register();
+        let timeout_loop = main_loop.downgrade();
+        let timer = main_loop.loop_().add_timer(move |_| {
+            if let Some(main_loop) = timeout_loop.upgrade() {
+                main_loop.quit();
             }
-            available
-        })
-        .join()
-        .unwrap_or(false)
+        });
+        if timer
+            .update_timer(Some(Duration::from_secs(1)), None)
+            .into_result()
+            .is_err()
+            || core.sync(0).is_err()
+        {
+            return false;
+        }
+        main_loop.run();
+        available.get()
     })
+    .join()
+    .unwrap_or(false)
 }
 
 /// The identity of the application a node or client belongs to, see
@@ -69,8 +96,11 @@ pub(super) fn app_id_of(get: impl Fn(&str) -> Option<String>) -> Option<AudioApp
         "application.name",
     ]
     .into_iter()
-    .find_map(|key| get(key).map(|value| value.trim().to_owned()))
-    .filter(|value| !value.is_empty())
+    .find_map(|key| {
+        get(key)
+            .map(|value| value.trim().to_owned())
+            .filter(|value| !value.is_empty())
+    })
 }
 
 fn app_id_in(props: &DictRef) -> Option<AudioAppId> {
@@ -341,9 +371,15 @@ fn capture_system_mix(
     )
     .map_err(pipewire_error)?;
     let process_output = output.clone();
+    let error_output = output.clone();
     let mut samples = Vec::new();
     let listener = stream
         .add_local_listener::<()>()
+        .state_changed(move |_, _, _, state| {
+            if let pw::stream::StreamState::Error(message) = state {
+                error_output.fail(format!("PipeWire capture failed: {message}"));
+            }
+        })
         .process(move |stream, _| {
             take_samples(stream, &mut samples);
             process_output.deliver(&samples);
@@ -570,20 +606,27 @@ impl AppCapture {
         self.output.status.locked().is_waiting = self.streams.borrow().is_empty();
         if directory.has_client_of(&self.app_id) {
             self.has_seen_client.set(true);
-        } else if self.has_seen_client.get() {
+        } else if self.has_seen_client.replace(false) {
             self.output.status.locked().is_lost = true;
         }
     }
 
     fn add(self: &Rc<Self>, id: u32, serial: &str) {
         let Ok(stream) = stream_of_target(&self.core, "tyco-listen-app", serial, &[]) else {
-            log::warn!("Could not create a capture stream for node {id}");
+            self.output
+                .fail(format!("Could not create a capture stream for node {id}"));
             return;
         };
         let weak = Rc::downgrade(self);
+        let error_output = self.output.clone();
         let mut samples = Vec::new();
         let listener = stream
             .add_local_listener::<()>()
+            .state_changed(move |_, _, _, state| {
+                if let pw::stream::StreamState::Error(message) = state {
+                    error_output.fail(format!("PipeWire application capture failed: {message}"));
+                }
+            })
             .process(move |stream, _| {
                 take_samples(stream, &mut samples);
                 if let Some(capture) = weak.upgrade() {
@@ -597,10 +640,13 @@ impl AppCapture {
             })
             .register();
         let Ok(listener) = listener else {
+            self.output
+                .fail(format!("Could not observe capture stream {id}"));
             return;
         };
         if let Err(error) = connect_capture(&stream, TARGET_SAMPLE_RATE_HZ) {
-            log::warn!("Could not record node {id}: {error}");
+            self.output
+                .fail(format!("Could not record node {id}: {error}"));
             return;
         }
         self.mixer.borrow_mut().add_stream(id);
@@ -813,6 +859,17 @@ mod tests {
                 ("pipewire.access.portal.app_id", "org.telegram.desktop"),
             ])),
             Some("org.telegram.desktop".into())
+        );
+    }
+
+    #[test]
+    fn empty_portal_metadata_does_not_hide_a_native_application() {
+        assert_eq!(
+            app_id_of(lookup(&[
+                ("pipewire.access.portal.app_id", "  "),
+                ("application.process.binary", "firefox"),
+            ])),
+            Some("firefox".into())
         );
     }
 

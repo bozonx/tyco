@@ -11,6 +11,6 @@ export function useQuickModeSwitch() {
     /** The activation the window shows once it has switched */
     nextActivationId: () => desktopStore.desktopState.activationId + 1,
     switchTo: (mode: 'voice' | 'listen') =>
-      ipcStore.call('switch_quick_mode', { mode }),
+      ipcStore.callOrNotify('switch_quick_mode', { mode }),
   }
 }

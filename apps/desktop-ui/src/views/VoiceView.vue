@@ -32,6 +32,7 @@
       </div>
       <InsertMenu
         :text="dictationResultText"
+        :reply-to="replyTo"
         :old-text="dictationOldText"
         :allow-insert-button="true"
         :shortcuts-disabled="menuModalsStore.hasOpenModal"
@@ -51,13 +52,14 @@ import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useQuickModeSwitch } from '../composables/use-quick-mode-switch'
 import { useVoiceResultStep } from '../composables/use-voice-result-step'
 import { isQuickWindow } from '../lib/desktop/window'
+import { voiceReplyActionParams } from '../lib/listen/listen-reply-actions'
 import { APP_ROUTES } from '../lib/navigation/routes'
 import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
 import { appNavigation } from '../navigation'
 import { useActionMenuStore } from '../stores/action-menu'
 import { useDesktopStore } from '../stores/desktop'
 import { useListenReplyStore } from '../stores/listen-reply'
-import { useMenuModalsStore } from '../stores/menu-modals'
+import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
 import { useVoiceResultStore } from '../stores/voice-result'
 import { useWindowStore } from '../stores/window'
@@ -94,8 +96,8 @@ const replyTo = computed(() =>
 
 /** Leaves the result for listening; the result is not inserted */
 async function switchToListen() {
-  resetResult()
-  await modeSwitch.switchTo('listen')
+  const switched = await modeSwitch.switchTo('listen')
+  if (switched.success) resetResult()
 }
 
 /** Only the quick window is opened by the `voice` activation */
@@ -149,7 +151,14 @@ function handleCorrected(
     showResult(resultText, recognizedText !== resultText ? recognizedText : '')
     const slotAction = actionMenuStore.getShortcutActions()[intent.slotIndex]
     if (slotAction && !slotAction.disabled) {
-      void slotAction.action(resultText)
+      const replyParams = voiceReplyActionParams(
+        slotAction.id,
+        resultText,
+        replyTo.value
+      )
+      if (replyParams)
+        menuModalsStore.nextModal(MenuModals.QUICK_AI_REQUEST, replyParams)
+      else void slotAction.action(resultText)
     }
     return
   }

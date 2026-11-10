@@ -310,8 +310,8 @@ const modeSwitch = useQuickModeSwitch()
 /** Leaves for listening; words already dictated are kept as a result first */
 async function switchToListen() {
   if (startError.value) {
-    startError.value = null
-    await modeSwitch.switchTo('listen')
+    const switched = await modeSwitch.switchTo('listen')
+    if (switched.success) startError.value = null
     return
   }
   if (liveTranscriptText(transcript.value).trim()) {

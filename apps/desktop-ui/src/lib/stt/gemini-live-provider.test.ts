@@ -268,6 +268,151 @@ describe('gemini-live-provider', () => {
     }
   )
 
+  it('drains an early GoAway and carries pending audio to the next connection', async () => {
+    const audio = createAsyncQueue<{ data: Uint8Array }>()
+    const queues: ReturnType<typeof createAsyncQueue<string>>[] = []
+    const chunks: number[][] = []
+    let firstSent!: () => void
+    const sent = new Promise<void>((resolve) => {
+      firstSent = resolve
+    })
+    let rotated!: () => void
+    const rotationRead = new Promise<void>((resolve) => {
+      rotated = resolve
+    })
+    const provider = createGeminiLiveProvider(undefined, {
+      isContinuous: true,
+    })({
+      apiKey: 'test-key',
+      openSocket: async () => {
+        const index = chunks.length
+        chunks.push([])
+        const queue = createAsyncQueue<string>()
+        queues.push(queue)
+        queue.push(JSON.stringify({ setupComplete: {} }))
+        return {
+          messages: {
+            async *[Symbol.asyncIterator]() {
+              for await (const message of queue.values) {
+                yield message
+                if (JSON.parse(message).goAway) rotated()
+              }
+            },
+          },
+          close: () => queue.end(),
+          send: (raw) => {
+            const frame = JSON.parse(raw as string)
+            const data = frame.realtimeInput?.mediaChunks?.[0]?.data
+            if (data) {
+              chunks[index].push(Buffer.from(data, 'base64')[0])
+              if (index === 0) firstSent()
+            }
+            if (frame.realtimeInput?.activityEnd)
+              queue.push(
+                JSON.stringify({
+                  serverContent: {
+                    inputTranscription: { text: `Part ${index}` },
+                    turnComplete: true,
+                  },
+                })
+              )
+          },
+        }
+      },
+    })
+    const events = await provider.transcribeStream!({
+      modelId: 'gemini-3.5-transcribe-live',
+      sampleRate: 10,
+      options: {},
+      signal: new AbortController().signal,
+      audio: audio.values,
+    })
+    const texts: string[] = []
+    const reading = (async () => {
+      for await (const event of events)
+        if (event.type === 'final') texts.push(event.segment.text)
+    })()
+    audio.push({ data: new Uint8Array(20).fill(1) })
+    await sent
+    queues[0].push(JSON.stringify({ goAway: { timeLeft: '60s' } }))
+    await rotationRead
+    audio.push({ data: new Uint8Array(20).fill(2) })
+    audio.end()
+    await reading
+    expect(chunks).toEqual([[1], [2]])
+    expect(texts).toEqual(['Part 0', 'Part 1'])
+  })
+
+  it('rotates continuous listening without dropping silence, audio, or final text', async () => {
+    const chunks: number[][] = []
+    const frames: Record<string, unknown>[][] = []
+    const closed: number[] = []
+    const provider = createGeminiLiveProvider(undefined, {
+      isContinuous: true,
+      maxConnectionMs: 1000,
+    })({
+      apiKey: 'test-key',
+      openSocket: async () => {
+        const index = chunks.length
+        chunks.push([])
+        frames.push([])
+        const messages = createAsyncQueue<string>()
+        messages.push(JSON.stringify({ setupComplete: {} }))
+        return {
+          messages: messages.values,
+          close: () => {
+            closed.push(index)
+            messages.end()
+          },
+          send: (raw) => {
+            const frame = JSON.parse(raw as string)
+            frames[index].push(frame)
+            const data = frame.realtimeInput?.mediaChunks?.[0]?.data
+            if (data) chunks[index].push(Buffer.from(data, 'base64')[0])
+            if (frame.realtimeInput?.activityEnd)
+              messages.push(
+                JSON.stringify({
+                  serverContent: {
+                    inputTranscription: { text: `Part ${index}` },
+                    turnComplete: true,
+                  },
+                })
+              )
+          },
+        }
+      },
+    })
+    const stream = await provider.transcribeStream!({
+      modelId: 'gemini-3.5-transcribe-live',
+      options: {},
+      sampleRate: 10,
+      signal: new AbortController().signal,
+      audio: {
+        async *[Symbol.asyncIterator]() {
+          for (const value of [0, 1, 2])
+            yield { data: new Uint8Array(20).fill(value) }
+        },
+      },
+    })
+    const events = []
+    for await (const event of stream) events.push(event)
+    expect(chunks).toEqual([[0], [1], [2]])
+    expect(closed).toEqual([0, 1, 2])
+    expect(
+      events.map((event) => event.type === 'final' && event.segment.text)
+    ).toEqual(['Part 0', 'Part 1', 'Part 2'])
+    expect(
+      frames.every(
+        (sent) =>
+          sent.filter(
+            (frame) =>
+              (frame.realtimeInput as { activityEnd?: unknown } | undefined)
+                ?.activityEnd
+          ).length === 1
+      )
+    ).toBe(true)
+  })
+
   it('converts uint8array to base64', () => {
     const bytes = new Uint8Array([72, 101, 108, 108, 111])
     expect(uint8ArrayToBase64(bytes)).toBe('SGVsbG8=')
