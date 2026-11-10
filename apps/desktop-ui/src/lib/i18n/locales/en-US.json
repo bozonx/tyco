@@ -189,7 +189,8 @@
       "noCommands": "No custom commands configured yet.",
       "noCommandsHint": "Create commands in Settings → Commands first.",
       "selectAll": "Select all",
-      "deselectAll": "Deselect all"
+      "deselectAll": "Deselect all",
+      "unsupportedCommands": "Unsupported commands"
     },
     "replyBlocks": { "toolLabel": "Reply Blocks" }
   },
@@ -970,7 +971,6 @@
     "profileMemoryModeAuto": "Automatic (saves without asking)",
     "profileMemoryModeOff": "Off",
     "profileMemoryModeReadOnly": "Read-only",
-    "profileMemoryRefresh": "Refresh",
     "profileMemoryTitle": "Long-term memory",
     "profileMemoryTokens": "~{tokens} tokens",
     "profileMemoryWarnCore": "Warning threshold exceeded (~1,000 tokens)",

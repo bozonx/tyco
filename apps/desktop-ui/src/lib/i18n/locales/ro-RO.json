@@ -189,7 +189,8 @@
       "noCommands": "Nu există încă comenzi personalizate configurate.",
       "noCommandsHint": "Creați mai întâi comenzi în Setări → Comenzi.",
       "selectAll": "Selectează tot",
-      "deselectAll": "Deselectează tot"
+      "deselectAll": "Deselectează tot",
+      "unsupportedCommands": "Comenzi neacceptate"
     },
     "replyBlocks": { "toolLabel": "Blocuri de răspuns" }
   },
@@ -970,7 +971,6 @@
     "profileMemoryModeAuto": "Automat (salvează fără confirmare)",
     "profileMemoryModeOff": "Dezactivat",
     "profileMemoryModeReadOnly": "Doar citire",
-    "profileMemoryRefresh": "Reîmprospătează",
     "profileMemoryTitle": "Memorie pe termen lung",
     "profileMemoryTokens": "~{tokens} jetoane",
     "profileMemoryWarnCore": "Prag de avertizare depășit (~1.000 jetoane)",

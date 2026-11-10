@@ -189,7 +189,8 @@
       "noCommands": "カスタムコマンドはまだ設定されていません。",
       "noCommandsHint": "最初に「設定 → コマンド」でコマンドを作成してください。",
       "selectAll": "すべて選択",
-      "deselectAll": "すべて選択解除"
+      "deselectAll": "すべて選択解除",
+      "unsupportedCommands": "サポートされていないコマンド"
     },
     "replyBlocks": { "toolLabel": "返答ブロック" }
   },
@@ -967,7 +968,6 @@
     "profileMemoryModeAuto": "自動（確認なしで保存）",
     "profileMemoryModeOff": "オフ",
     "profileMemoryModeReadOnly": "読み取り専用",
-    "profileMemoryRefresh": "更新",
     "profileMemoryTitle": "長期記憶",
     "profileMemoryTokens": "約{tokens}トークン",
     "profileMemoryWarnCore": "警告しきい値超過（約1,000トークン）",

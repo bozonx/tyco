@@ -48,11 +48,7 @@ describe('SettingsEntityItem.vue', () => {
 
   it('emits open only on title click when openTarget is title', async () => {
     const wrapper = mount(SettingsEntityItem, {
-      props: {
-        title: 'Project A',
-        openable: true,
-        openTarget: 'title',
-      },
+      props: { title: 'Project A', openable: true, openTarget: 'title' },
     })
 
     // Card should not have is-openable class
@@ -70,10 +66,7 @@ describe('SettingsEntityItem.vue', () => {
 
   it('renders info tooltip when info prop is provided', () => {
     const wrapper = mount(SettingsEntityItem, {
-      props: {
-        title: 'Tool Name',
-        info: 'Tool description in tooltip',
-      },
+      props: { title: 'Tool Name', info: 'Tool description in tooltip' },
       global: {
         stubs: {
           InfoTooltip: {

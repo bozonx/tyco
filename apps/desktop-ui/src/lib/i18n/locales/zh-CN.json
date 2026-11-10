@@ -189,7 +189,8 @@
       "noCommands": "尚未配置自定义命令。",
       "noCommandsHint": "请先在设置 → 命令中创建命令。",
       "selectAll": "全选",
-      "deselectAll": "取消全选"
+      "deselectAll": "取消全选",
+      "unsupportedCommands": "不支持的命令"
     },
     "replyBlocks": { "toolLabel": "回复块" }
   },
@@ -964,7 +965,6 @@
     "profileMemoryModeAuto": "自动（无需确认即可保存）",
     "profileMemoryModeOff": "关闭",
     "profileMemoryModeReadOnly": "只读",
-    "profileMemoryRefresh": "刷新",
     "profileMemoryTitle": "长期记忆",
     "profileMemoryTokens": "约 {tokens} 词元",
     "profileMemoryWarnCore": "超出警告阈值（约 1,000 词元）",

@@ -87,36 +87,21 @@ const forwardAttrs = computed(() => {
 })
 
 const fieldRef = ref<InstanceType<typeof FieldTextArea> | null>(null)
-const modalTextareaRef = ref<HTMLTextAreaElement | null>(null)
 const isModalOpen = ref(false)
 
 const dialogTitle = computed(
   () => props.modalTitle || props.placeholder || t('common.editorModalTitle')
 )
 
-const charCount = computed(() => (props.modelValue ?? '').length)
-const lineCount = computed(() => {
-  const val = props.modelValue ?? ''
-  return val.length === 0 ? 0 : val.split('\n').length
-})
-
-async function openModal() {
+function openModal() {
   if (props.disabled) return
   isModalOpen.value = true
-  await nextTick()
-  await nextTick()
-  modalTextareaRef.value?.focus()
 }
 
 async function closeModal() {
   isModalOpen.value = false
   await nextTick()
   fieldRef.value?.focus()
-}
-
-function handleModalInput(event: Event) {
-  const next = (event.target as HTMLTextAreaElement).value
-  emit('update:modelValue', next)
 }
 
 function handleSelect(value: string, start: number, end: number) {

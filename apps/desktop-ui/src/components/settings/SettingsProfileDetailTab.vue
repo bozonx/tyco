@@ -107,15 +107,7 @@
         @update="changeSettings({ tools: $event })"
       >
         <template #group="{ group, settings }">
-          <div v-if="group.id === WEB_TOOL_GROUP_ID" class="pt-2">
-            <InlineNotice
-              density="compact"
-              kind="info"
-              icon="mdi:information-outline"
-              :message="t('settings.profileWebSearchLlmNotice')"
-            />
-          </div>
-          <div v-else-if="group.id === COMMANDS_TOOL_GROUP_ID" class="pt-2">
+          <div v-if="group.id === COMMANDS_TOOL_GROUP_ID" class="pt-2">
             <SettingsProfileCommandTools
               :commands="commands"
               :selected-ids="settings.commandIds ?? []"
@@ -218,7 +210,6 @@ import {
   COMMANDS_TOOL_GROUP_ID,
   type ChatToolGroup,
   MAX_TOOL_STEP_COUNT,
-  WEB_TOOL_GROUP_ID,
   toolGroupSettings,
   withToolGroup,
 } from '../../lib/chat-tools/chat-tool-groups'

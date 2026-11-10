@@ -189,7 +189,8 @@
       "noCommands": "尚未設定自訂命令。",
       "noCommandsHint": "請先在設定 → 命令中建立命令。",
       "selectAll": "全選",
-      "deselectAll": "取消全選"
+      "deselectAll": "取消全選",
+      "unsupportedCommands": "不支援的指令"
     },
     "replyBlocks": { "toolLabel": "回覆區塊" }
   },
@@ -964,7 +965,6 @@
     "profileMemoryModeAuto": "自動（無需確認即可儲存）",
     "profileMemoryModeOff": "關閉",
     "profileMemoryModeReadOnly": "唯讀",
-    "profileMemoryRefresh": "重新整理",
     "profileMemoryTitle": "長期記憶",
     "profileMemoryTokens": "約 {tokens} 權標",
     "profileMemoryWarnCore": "超出警告閾值（約 1,000 權標）",

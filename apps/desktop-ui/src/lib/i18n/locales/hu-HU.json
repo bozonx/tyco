@@ -189,7 +189,8 @@
       "noCommands": "Még nincsenek egyéni parancsok konfigurálva.",
       "noCommandsHint": "Először hozzon létre parancsokat a Beállítások → Parancsok menüben.",
       "selectAll": "Mindet kijelöli",
-      "deselectAll": "Kijelölés törlése"
+      "deselectAll": "Kijelölés törlése",
+      "unsupportedCommands": "Nem támogatott parancsok"
     },
     "replyBlocks": { "toolLabel": "Válaszblokkok" }
   },
@@ -967,7 +968,6 @@
     "profileMemoryModeAuto": "Automatikus (mentés jóváhagyás nélkül)",
     "profileMemoryModeOff": "Kikapcsolva",
     "profileMemoryModeReadOnly": "Csak olvasható",
-    "profileMemoryRefresh": "Frissítés",
     "profileMemoryTitle": "Hosszú távú memória",
     "profileMemoryTokens": "~{tokens} token",
     "profileMemoryWarnCore": "Figyelmeztetési küszöb túllépve (~1 000 token)",

@@ -45,14 +45,8 @@ describe('FullTextEditorDialog', () => {
 
   it('renders custom actions slot', () => {
     const wrapper = mount(FullTextEditorDialog, {
-      props: {
-        open: true,
-        title: 'Custom Actions',
-        modelValue: 'content',
-      },
-      slots: {
-        actions: '<button class="custom-save">Save</button>',
-      },
+      props: { open: true, title: 'Custom Actions', modelValue: 'content' },
+      slots: { actions: '<button class="custom-save">Save</button>' },
       global: {
         stubs: {
           BaseDialog: {

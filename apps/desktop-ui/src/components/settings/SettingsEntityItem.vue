@@ -89,9 +89,7 @@ const props = withDefaults(
      * default slot
      */
     openable?: boolean
-    /**
-     * Where the click target is located: the whole card or just the title link
-     */
+    /** Where the click target is located: the whole card or just the title link */
     openTarget?: 'card' | 'title'
   }>(),
   { iconTone: 'primary', openTarget: 'card' }

@@ -189,7 +189,8 @@
       "noCommands": "Aucune commande personnalisée configurée pour le moment.",
       "noCommandsHint": "Créez d'abord des commandes dans Paramètres → Commandes.",
       "selectAll": "Tout sélectionner",
-      "deselectAll": "Tout désélectionner"
+      "deselectAll": "Tout désélectionner",
+      "unsupportedCommands": "Commandes non prises en charge"
     },
     "replyBlocks": { "toolLabel": "Blocs de réponse" }
   },
@@ -970,7 +971,6 @@
     "profileMemoryModeAuto": "Automatique (enregistrement sans confirmation)",
     "profileMemoryModeOff": "Désactivé",
     "profileMemoryModeReadOnly": "Lecture seule",
-    "profileMemoryRefresh": "Actualiser",
     "profileMemoryTitle": "Mémoire à long terme",
     "profileMemoryTokens": "~{tokens} jetons",
     "profileMemoryWarnCore": "Seuil d’avertissement dépassé (~1 000 jetons)",

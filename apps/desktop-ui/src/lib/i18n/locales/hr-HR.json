@@ -189,7 +189,8 @@
       "noCommands": "Još nema konfiguriranih prilagođenih naredbi.",
       "noCommandsHint": "Prvo stvorite naredbe u Postavke → Naredbe.",
       "selectAll": "Odaberi sve",
-      "deselectAll": "Poništi odabir"
+      "deselectAll": "Poništi odabir",
+      "unsupportedCommands": "Nepodržane naredbe"
     },
     "replyBlocks": { "toolLabel": "Blokovi odgovora" }
   },
@@ -970,7 +971,6 @@
     "profileMemoryModeAuto": "Automatski (sprema bez pitanja)",
     "profileMemoryModeOff": "Isključeno",
     "profileMemoryModeReadOnly": "Samo za čitanje",
-    "profileMemoryRefresh": "Osvježi",
     "profileMemoryTitle": "Dugotrajna memorija",
     "profileMemoryTokens": "~{tokens} tokena",
     "profileMemoryWarnCore": "Premašen prag upozorenja (~1.000 tokena)",

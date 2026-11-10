@@ -189,7 +189,8 @@
       "noCommands": "მორგებული ბრძანებები ჯერ არ არის კონფიგურირებული.",
       "noCommandsHint": "ჯერ შექმენით ბრძანებები პარამეტრები → ბრძანებები განყოფილებაში.",
       "selectAll": "ყველას არჩევა",
-      "deselectAll": "არჩევის გაუქმება"
+      "deselectAll": "არჩევის გაუქმება",
+      "unsupportedCommands": "მხარდაუჭერელი ბრძანებები"
     },
     "replyBlocks": { "toolLabel": "პასუხის ბლოკები" }
   },
@@ -967,7 +968,6 @@
     "profileMemoryModeAuto": "ავტომატური (შენახვა კითხვის გარეშე)",
     "profileMemoryModeOff": "გამორთულია",
     "profileMemoryModeReadOnly": "მხოლოდ წაკითხვა",
-    "profileMemoryRefresh": "განახლება",
     "profileMemoryTitle": "გრძელვადიანი მეხსიერება",
     "profileMemoryTokens": "~{tokens} ტოკენი",
     "profileMemoryWarnCore": "გაფრთხილების ზღვარი გადაჭარბებულია (~1 000 ტოკენი)",

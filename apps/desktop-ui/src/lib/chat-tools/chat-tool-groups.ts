@@ -26,6 +26,8 @@ export interface ChatToolGroup {
   defaultEnabled?: boolean
   /** Whether to show Ask/Allow access control switch */
   hasAccessControl?: boolean
+  /** Whether the group renders extra details below its row */
+  hasDetails?: boolean
 }
 
 export {
@@ -60,6 +62,7 @@ export const CHAT_TOOL_GROUPS: readonly ChatToolGroup[] = [
     icon: 'mdi:console-line',
     defaultAccess: 'ask',
     hasAccessControl: true,
+    hasDetails: true,
   },
 ]
 

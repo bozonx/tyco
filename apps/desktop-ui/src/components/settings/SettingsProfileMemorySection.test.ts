@@ -156,12 +156,7 @@ describe('SettingsProfileMemorySection', () => {
   it('opens FullTextEditorDialog when edit button is clicked', async () => {
     mocks.readMemory.mockResolvedValue('Current core facts content')
     const topics: ProfileMemoryTopic[] = [
-      {
-        file: 'core.md',
-        title: 'Core facts',
-        bytes: 100,
-        updatedAt: 1000,
-      },
+      { file: 'core.md', title: 'Core facts', bytes: 100, updatedAt: 1000 },
     ]
     mocks.listMemoryTopics.mockResolvedValueOnce(topics)
 

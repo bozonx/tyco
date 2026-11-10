@@ -189,7 +189,8 @@
       "noCommands": "Користувацькі команди ще не налаштовано.",
       "noCommandsHint": "Спочатку створіть команди в Налаштування → Команди.",
       "selectAll": "Вибрати все",
-      "deselectAll": "Зняти все"
+      "deselectAll": "Зняти все",
+      "unsupportedCommands": "Непідтримувані команди"
     },
     "replyBlocks": { "toolLabel": "Варіанти відповіді" }
   },
@@ -967,7 +968,6 @@
     "profileMemoryModeAuto": "Автоматично (запис без підтвердження)",
     "profileMemoryModeOff": "Вимкнено",
     "profileMemoryModeReadOnly": "Тільки читання",
-    "profileMemoryRefresh": "Оновити",
     "profileMemoryTitle": "Довготривала памʼять",
     "profileMemoryTokens": "~{tokens} токенів",
     "profileMemoryWarnCore": "Перевищено поріг попередження (~1 000 токенів)",

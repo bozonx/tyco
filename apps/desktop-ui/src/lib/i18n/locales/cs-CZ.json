@@ -189,7 +189,8 @@
       "noCommands": "Zatím nejsou nakonfigurovány žádné uživatelské příkazy.",
       "noCommandsHint": "Nejprve vytvořte příkazy v Nastavení → Příkazy.",
       "selectAll": "Vybrat vše",
-      "deselectAll": "Zrušit výběr"
+      "deselectAll": "Zrušit výběr",
+      "unsupportedCommands": "Nepodporované příkazy"
     },
     "replyBlocks": { "toolLabel": "Varianty odpovědí" }
   },
@@ -964,7 +965,6 @@
     "profileMemoryModeAuto": "Automaticky (zápis bez ptaní)",
     "profileMemoryModeOff": "Vypnuto",
     "profileMemoryModeReadOnly": "Pouze pro čtení",
-    "profileMemoryRefresh": "Obnovit",
     "profileMemoryTitle": "Dlouhodobá paměť",
     "profileMemoryTokens": "~{tokens} tokenů",
     "profileMemoryWarnCore": "Překročen varovný limit (~1 000 tokenů)",

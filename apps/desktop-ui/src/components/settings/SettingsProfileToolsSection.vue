@@ -9,7 +9,7 @@
           :icon="group.icon"
           icon-tone="secondary"
           :title="t(group.labelKey)"
-          :description="t(group.descriptionKey)"
+          :info="groupInfo(group)"
         >
           <SegmentedControl
             v-if="groupSettings(group).isEnabled && group.hasAccessControl"
@@ -28,7 +28,9 @@
           />
         </SettingsEntityItem>
         <div
-          v-if="groupSettings(group).isEnabled && $slots.group"
+          v-if="
+            groupSettings(group).isEnabled && group.hasDetails && $slots.group
+          "
           class="tool-group-details"
         >
           <slot name="group" :group="group" :settings="groupSettings(group)" />
@@ -44,6 +46,7 @@ import { computed } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import {
   type ChatToolGroup,
+  WEB_TOOL_GROUP_ID,
   toolGroupSettings,
   withToolGroup,
 } from '../../lib/chat-tools/chat-tool-groups'
@@ -78,6 +81,13 @@ const accessOptions = computed(() => [
 
 const groupSettings = (group: ChatToolGroup) =>
   toolGroupSettings(props.tools, group)
+
+function groupInfo(group: ChatToolGroup): string {
+  if (group.id === WEB_TOOL_GROUP_ID) {
+    return `${t(group.descriptionKey)}\n\n${t('settings.profileWebSearchLlmNotice')}`
+  }
+  return t(group.descriptionKey)
+}
 
 function emitGroup(group: ChatToolGroup, patch: Partial<ToolGroupSettings>) {
   emit('update', withToolGroup(props.tools, group, patch))

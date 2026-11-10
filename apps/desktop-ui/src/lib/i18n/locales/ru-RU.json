@@ -189,7 +189,8 @@
       "noCommands": "Пользовательские команды пока не настроены.",
       "noCommandsHint": "Сначала создайте команды в Настройки → Команды.",
       "selectAll": "Выбрать все",
-      "deselectAll": "Снять все"
+      "deselectAll": "Снять все",
+      "unsupportedCommands": "Неподдерживаемые команды"
     },
     "replyBlocks": { "toolLabel": "Варианты ответа" }
   },
@@ -967,7 +968,6 @@
     "profileMemoryModeAuto": "Автоматически (запись без подтверждения)",
     "profileMemoryModeOff": "Выключена",
     "profileMemoryModeReadOnly": "Только чтение",
-    "profileMemoryRefresh": "Обновить",
     "profileMemoryTitle": "Долговременная память",
     "profileMemoryTokens": "~{tokens} токенов",
     "profileMemoryWarnCore": "Превышен порог предупреждения (~1 000 токенов)",

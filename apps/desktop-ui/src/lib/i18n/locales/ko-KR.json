@@ -189,7 +189,8 @@
       "noCommands": "아직 구성된 사용자 지정 명령어가 없습니다.",
       "noCommandsHint": "먼저 설정 → 명령어에서 명령어를 생성하세요.",
       "selectAll": "모두 선택",
-      "deselectAll": "모두 선택 해제"
+      "deselectAll": "모두 선택 해제",
+      "unsupportedCommands": "지원되지 않는 명령어"
     },
     "replyBlocks": { "toolLabel": "답변 블록" }
   },
@@ -964,7 +965,6 @@
     "profileMemoryModeAuto": "자동 (확인 없이 저장)",
     "profileMemoryModeOff": "꺼짐",
     "profileMemoryModeReadOnly": "읽기 전용",
-    "profileMemoryRefresh": "새로고침",
     "profileMemoryTitle": "장기 기억",
     "profileMemoryTokens": "~{tokens} 토큰",
     "profileMemoryWarnCore": "경고 임계값 초과 (~1,000 토큰)",

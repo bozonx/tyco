@@ -189,7 +189,8 @@
       "noCommands": "Aún no se han configurado comandos personalizados.",
       "noCommandsHint": "Cree comandos primero en Configuración → Comandos.",
       "selectAll": "Seleccionar todo",
-      "deselectAll": "Deseleccionar todo"
+      "deselectAll": "Deseleccionar todo",
+      "unsupportedCommands": "Comandos no compatibles"
     },
     "replyBlocks": { "toolLabel": "Bloques de respuesta" }
   },
@@ -970,7 +971,6 @@
     "profileMemoryModeAuto": "Automático (guarda sin preguntar)",
     "profileMemoryModeOff": "Desactivado",
     "profileMemoryModeReadOnly": "Solo lectura",
-    "profileMemoryRefresh": "Actualizar",
     "profileMemoryTitle": "Memoria a largo plazo",
     "profileMemoryTokens": "~{tokens} tokens",
     "profileMemoryWarnCore": "Umbral de advertencia superado (~1.000 tokens)",

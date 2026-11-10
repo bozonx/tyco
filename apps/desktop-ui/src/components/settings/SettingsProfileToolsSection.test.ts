@@ -29,9 +29,10 @@ describe('SettingsProfileToolsSection', () => {
     ])
   })
 
-  it('shows group details only for a group that is on', async () => {
+  it('shows group details only for a group with hasDetails that is on', async () => {
+    const webWithDetails = { ...web, hasDetails: true }
     const wrapper = mount(SettingsProfileToolsSection, {
-      props: { groups: [web], tools: { groups: {} } },
+      props: { groups: [webWithDetails], tools: { groups: {} } },
       slots: { group: '<p class="details">details</p>' },
     })
     expect(wrapper.find('.details').exists()).toBe(false)
@@ -40,6 +41,25 @@ describe('SettingsProfileToolsSection', () => {
       tools: { groups: { web: { isEnabled: true, access: 'ask' } } },
     })
     expect(wrapper.find('.details').exists()).toBe(true)
+  })
+
+  it('does not render group details when group has no hasDetails flag', async () => {
+    const files = {
+      id: 'files',
+      labelKey: 'files.label',
+      descriptionKey: 'files.description',
+      icon: 'mdi:folder',
+      defaultAccess: 'allow' as const,
+    }
+    const wrapper = mount(SettingsProfileToolsSection, {
+      props: {
+        groups: [files],
+        tools: { groups: { files: { isEnabled: true, access: 'allow' } } },
+      },
+      slots: { group: '<p class="details">details</p>' },
+    })
+    expect(wrapper.find('.details').exists()).toBe(false)
+    expect(wrapper.find('.tool-group-details').exists()).toBe(false)
   })
 
   it('renders access control only for groups that enable it', () => {

@@ -189,7 +189,8 @@
       "noCommands": "Noch keine benutzerdefinierten Befehle konfiguriert.",
       "noCommandsHint": "Erstellen Sie zuerst Befehle unter Einstellungen → Befehle.",
       "selectAll": "Alle auswählen",
-      "deselectAll": "Auswahl aufheben"
+      "deselectAll": "Auswahl aufheben",
+      "unsupportedCommands": "Nicht unterstützte Befehle"
     },
     "replyBlocks": { "toolLabel": "Antwortblöcke" }
   },
@@ -970,7 +971,6 @@
     "profileMemoryModeAuto": "Automatisch (ohne Nachfrage)",
     "profileMemoryModeOff": "Aus",
     "profileMemoryModeReadOnly": "Schreibgeschützt",
-    "profileMemoryRefresh": "Aktualisieren",
     "profileMemoryTitle": "Langzeitgedächtnis",
     "profileMemoryTokens": "~{tokens} Tokens",
     "profileMemoryWarnCore": "Warnschwelle überschritten (~1.000 Tokens)",

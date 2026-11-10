@@ -189,7 +189,8 @@
       "noCommands": "Δεν έχουν ρυθμιστεί ακόμη προσαρμοσμένες εντολές.",
       "noCommandsHint": "Δημιουργήστε πρώτα εντολές στις Ρυθμίσεις → Εντολές.",
       "selectAll": "Επιλογή όλων",
-      "deselectAll": "Αποεπιλογή όλων"
+      "deselectAll": "Αποεπιλογή όλων",
+      "unsupportedCommands": "Μη υποστηριζόμενες εντολές"
     },
     "replyBlocks": { "toolLabel": "Μπλοκ απαντήσεων" }
   },
@@ -967,7 +968,6 @@
     "profileMemoryModeAuto": "Αυτόματα (αποθήκευση χωρίς ερώτηση)",
     "profileMemoryModeOff": "Απενεργοποιημένη",
     "profileMemoryModeReadOnly": "Μόνο για ανάγνωση",
-    "profileMemoryRefresh": "Ανανέωση",
     "profileMemoryTitle": "Μακροπρόθεσμη μνήμη",
     "profileMemoryTokens": "~{tokens} διακριτικά",
     "profileMemoryWarnCore": "Υπέρβαση ορίου προειδοποίησης (~1.000 διακριτικά)",

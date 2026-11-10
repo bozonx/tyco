@@ -189,7 +189,8 @@
       "noCommands": "Әзірше пайдаланушы пәрмендері конфигурацияланбаған.",
       "noCommandsHint": "Алдымен Баптаулар → Пәрмендер бөлімінде пәрмендер жасаңыз.",
       "selectAll": "Барлығын таңдау",
-      "deselectAll": "Барлығын алып тастау"
+      "deselectAll": "Барлығын алып тастау",
+      "unsupportedCommands": "Қолдау көрсетілмейтін командалар"
     },
     "replyBlocks": { "toolLabel": "Жауап нұсқалары" }
   },
@@ -967,7 +968,6 @@
     "profileMemoryModeAuto": "Автоматты түрде (растаусыз жазу)",
     "profileMemoryModeOff": "Өшірулі",
     "profileMemoryModeReadOnly": "Тек оқу",
-    "profileMemoryRefresh": "Жаңарту",
     "profileMemoryTitle": "Ұзақ мерзімді жады",
     "profileMemoryTokens": "~{tokens} токен",
     "profileMemoryWarnCore": "Ескерту шегінен асты (~1 000 токен)",

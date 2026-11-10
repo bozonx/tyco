@@ -189,7 +189,8 @@
       "noCommands": "Henüz özel komut yapılandırılmadı.",
       "noCommandsHint": "Önce Ayarlar → Komutlar bölümünde komut oluşturun.",
       "selectAll": "Tümünü seç",
-      "deselectAll": "Tüm seçimi kaldır"
+      "deselectAll": "Tüm seçimi kaldır",
+      "unsupportedCommands": "Desteklenmeyen komutlar"
     },
     "replyBlocks": { "toolLabel": "Yanıt blokları" }
   },
@@ -967,7 +968,6 @@
     "profileMemoryModeAuto": "Otomatik (sormadan kaydeder)",
     "profileMemoryModeOff": "Kapalı",
     "profileMemoryModeReadOnly": "Salt okunur",
-    "profileMemoryRefresh": "Yenile",
     "profileMemoryTitle": "Uzun süreli bellek",
     "profileMemoryTokens": "~{tokens} belirteç",
     "profileMemoryWarnCore": "Uyarı eşiği aşıldı (~1.000 belirteç)",

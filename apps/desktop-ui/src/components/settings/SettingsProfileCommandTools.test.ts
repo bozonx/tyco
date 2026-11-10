@@ -49,7 +49,7 @@ describe('SettingsProfileCommandTools', () => {
     expect(wrapper.text()).toContain('chatTools.commands.noCommands')
   })
 
-  it('renders commands with checkboxes and description or warning', async () => {
+  it('renders supported commands with checkboxes and hides unsupported behind toggle', async () => {
     const wrapper = mount(SettingsProfileCommandTools, {
       props: {
         commands: [commandWithDesc, commandWithoutDesc],
@@ -59,22 +59,24 @@ describe('SettingsProfileCommandTools', () => {
 
     expect(wrapper.text()).toContain('Format Code')
     expect(wrapper.text()).toContain('Formats selected code')
-    expect(wrapper.text()).toContain('No Description')
-    expect(wrapper.text()).toContain('chatTools.commands.needsDescription')
+    // Unsupported toggle is shown
+    expect(wrapper.text()).toContain('chatTools.commands.unsupportedCommands')
 
     const checkboxes = wrapper.findAll('input[type="checkbox"]')
-    expect(checkboxes).toHaveLength(2)
-
-    // cmd-1 is selected and enabled
+    expect(checkboxes).toHaveLength(1)
     expect((checkboxes[0]!.element as HTMLInputElement).checked).toBe(true)
-    expect((checkboxes[0]!.element as HTMLInputElement).disabled).toBe(false)
-
-    // cmd-2 has no description, so it is disabled
-    expect((checkboxes[1]!.element as HTMLInputElement).disabled).toBe(true)
 
     // Toggling cmd-1 emits toggle event
     await checkboxes[0]!.setValue(false)
     expect(wrapper.emitted('toggle')?.[0]).toEqual(['cmd-1', false])
+
+    // Expanding unsupported commands section reveals cmd-2
+    expect(wrapper.text()).not.toContain('chatTools.commands.needsDescription')
+    const toggleBtn = wrapper.find('.profile-command-unsupported-btn')
+    await toggleBtn.trigger('click')
+
+    expect(wrapper.text()).toContain('No Description')
+    expect(wrapper.text()).toContain('chatTools.commands.needsDescription')
   })
 
   it('selects and deselects all selectable commands', async () => {
@@ -90,19 +92,21 @@ describe('SettingsProfileCommandTools', () => {
       },
     })
 
-    const buttons = wrapper.findAllComponents({ name: 'Button' })
-    expect(buttons.length).toBe(2)
+    const actionButtons = wrapper.findAll(
+      '.profile-command-tools-actions button'
+    )
+    expect(actionButtons.length).toBe(2)
 
     // Select all
-    await buttons[0]!.trigger('click')
+    await actionButtons[0]!.trigger('click')
     expect(wrapper.emitted('updateSelected')?.[0]).toEqual([['cmd-1', 'cmd-3']])
 
     // Deselect all
-    await buttons[1]!.trigger('click')
+    await actionButtons[1]!.trigger('click')
     expect(wrapper.emitted('updateSelected')?.[1]).toEqual([[]])
   })
 
-  it('displays platform badge and notice when command is for another platform', () => {
+  it('places command for another platform into unsupported section with badge and notice', async () => {
     const windowsCmd: CommandConfig = {
       ...commandWithDesc,
       id: 'cmd-win',
@@ -116,6 +120,10 @@ describe('SettingsProfileCommandTools', () => {
         currentPlatform: 'linux',
       },
     })
+
+    expect(wrapper.text()).toContain('chatTools.commands.unsupportedCommands')
+    const toggleBtn = wrapper.find('.profile-command-unsupported-btn')
+    await toggleBtn.trigger('click')
 
     expect(wrapper.text()).toContain('Windows')
     expect(wrapper.text()).toContain('commands.otherPlatform')
