@@ -9,6 +9,7 @@
       :title="entry.title"
       :description="entry.description"
       :openable="openable"
+      open-target="title"
       @open="emit('open', entry.id)"
     >
       <span

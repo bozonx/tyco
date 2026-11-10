@@ -154,7 +154,7 @@
       "deletePath": "Mover a la papelera",
       "editFile": "Editar archivo",
       "group": "Archivos",
-      "groupHint": "Leer, buscar y modificar archivos en el espacio de trabajo del perfil y en los proyectos de abajo, según sus permisos. «Preguntar» pide confirmación antes de cada llamada.",
+      "groupHint": "Lectura, búsqueda y modificación de archivos en el espacio de trabajo del perfil y proyectos conectados",
       "hiddenLines": "… más líneas modificadas: {count}",
       "listFiles": "Listar archivos",
       "movePath": "Mover",
@@ -187,7 +187,9 @@
       "groupHint": "Permitir que el modelo ejecute los comandos personalizados y las herramientas de complementos seleccionados. «Preguntar» pide confirmación antes de cada llamada.",
       "needsDescription": "Requiere una descripción en la configuración del comando",
       "noCommands": "Aún no se han configurado comandos personalizados.",
-      "noCommandsHint": "Cree comandos primero en Configuración → Comandos."
+      "noCommandsHint": "Cree comandos primero en Configuración → Comandos.",
+      "selectAll": "Seleccionar todo",
+      "deselectAll": "Deseleccionar todo"
     },
     "replyBlocks": { "toolLabel": "Bloques de respuesta" }
   },
@@ -945,7 +947,6 @@
     "profileCopyName": "{name} (copia)",
     "profileDefaultSoul": "# Rol\nDescribe quién es este asistente y en qué ayuda.\n\n# Reglas\n- Responde en el idioma de la pregunta.\n",
     "profileFileToolsOff": "Las herramientas de archivos de este perfil están desactivadas: no llega a sus proyectos hasta que las actives arriba.",
-    "profileFilesAskAll": "«Archivos» está configurado como «Preguntar»: cada llamada espera confirmación, incluso donde el proyecto la permite.",
     "profileGenerationHint": "El modelo y los parámetros de los chats de este perfil. Los campos vacíos usan los valores del modelo.",
     "profileMemoryApplyCompact": "Aplicar",
     "profileMemoryClear": "Borrar memoria",
@@ -986,9 +987,6 @@
     "profileToolStepsInvalid": "Introduce un número entero del 1 al 50",
     "profileTools": "Herramientas",
     "profileToolsHint": "Lo que el modelo del perfil puede hacer por su cuenta en el chat. Las llamadas configuradas como «Preguntar» esperan tu aprobación en el mensaje.",
-    "profileWorkspace": "Espacio de trabajo del perfil",
-    "profileWorkspaceAccess": "Lectura y escritura, siempre",
-    "profileWorkspaceHint": "Contiene los archivos adjuntos a los chats y lo que crea el modelo.",
     "projectAccessFileToolsOff": "Herramientas de archivos desactivadas",
     "projectDescription": "Descripción del proyecto",
     "projectFolderFixedHint": "El modelo ve los archivos del proyecto en esta ruta. No cambia al renombrar el proyecto.",
@@ -1280,7 +1278,8 @@
         "occupied": "{detail} tiene otros archivos: elegí una carpeta vacía."
       }
     },
-    "projectInsideSyncedFolder": "La carpeta está dentro de la carpeta de datos de TyCo (o una bóveda) y se sincronizará con ella. Si no lo querés, elegí una carpeta afuera."
+    "projectInsideSyncedFolder": "La carpeta está dentro de la carpeta de datos de TyCo (o una bóveda) y se sincronizará con ella. Si no lo querés, elegí una carpeta afuera.",
+    "accessLevelAskAll": "Preguntar para leer y escribir"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

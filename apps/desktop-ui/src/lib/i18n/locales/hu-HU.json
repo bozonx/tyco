@@ -154,7 +154,7 @@
       "deletePath": "Áthelyezés a kukába",
       "editFile": "Fájl szerkesztése",
       "group": "Fájlok",
-      "groupHint": "Fájlok olvasása, keresése és módosítása a profil munkaterületén és az alábbi projektekben, azok jogosultságai szerint. A „Kérdés” minden hívás előtt rákérdez.",
+      "groupHint": "Fájlok olvasása, keresése és módosítása a profil munkaterületén és a csatolt projektekben",
       "hiddenLines": "… további módosított sorok: {count}",
       "listFiles": "Fájlok listázása",
       "movePath": "Áthelyezés",
@@ -187,7 +187,9 @@
       "groupHint": "A modell futtathatja a kiválasztott egyéni parancsokat és beépülő modulok eszközeit. A „Kérdezés” minden hívás előtt megerősítést kér.",
       "needsDescription": "Leírás szükséges a parancs beállításaiban",
       "noCommands": "Még nincsenek egyéni parancsok konfigurálva.",
-      "noCommandsHint": "Először hozzon létre parancsokat a Beállítások → Parancsok menüben."
+      "noCommandsHint": "Először hozzon létre parancsokat a Beállítások → Parancsok menüben.",
+      "selectAll": "Mindet kijelöli",
+      "deselectAll": "Kijelölés törlése"
     },
     "replyBlocks": { "toolLabel": "Válaszblokkok" }
   },
@@ -942,7 +944,6 @@
     "profileCopyName": "{name} (másolat)",
     "profileDefaultSoul": "# Szerep\nÍrja le, ki ez az asszisztens, és miben segít.\n\n# Szabályok\n- A kérdés nyelvén válaszolj.\n",
     "profileFileToolsOff": "A profil fájleszközei ki vannak kapcsolva: nem éri el a projektjeit, amíg fent be nem kapcsolja őket.",
-    "profileFilesAskAll": "A „Fájlok” beállítása „Kérdés”: minden hívás megerősítésre vár, ott is, ahol a projekt engedélyezi.",
     "profileGenerationHint": "A profil csevegéseinek modellje és paraméterei. Az üres mezők a modell értékeit használják.",
     "profileMemoryApplyCompact": "Alkalmazás",
     "profileMemoryClear": "Memória törlése",
@@ -983,9 +984,6 @@
     "profileToolStepsInvalid": "Adjon meg egy egész számot 1 és 50 között",
     "profileTools": "Eszközök",
     "profileToolsHint": "Mit tehet a profil modellje önállóan a csevegésben. A „Kérdés” beállítású hívások az üzenetben várnak a jóváhagyására.",
-    "profileWorkspace": "A profil munkaterülete",
-    "profileWorkspaceAccess": "Olvasás és írás – mindig",
-    "profileWorkspaceHint": "A csevegésekhez csatolt fájlokat és a modell által létrehozott tartalmat tárolja.",
     "projectAccessFileToolsOff": "A fájleszközök ki vannak kapcsolva",
     "projectDescription": "Projekt leírása",
     "projectFolderFixedHint": "A modell ezen az útvonalon látja a projekt fájljait. Nem változik a projekt átnevezésekor.",
@@ -1277,7 +1275,8 @@
         "occupied": "{detail} más fájlokat tartalmaz: válasszon üres mappát."
       }
     },
-    "projectInsideSyncedFolder": "A mappa a TyCo adatmappáján (vagy egy tárolón) belül van, és vele együtt szinkronizálódik. Ha ezt nem szeretné, válasszon azon kívüli mappát."
+    "projectInsideSyncedFolder": "A mappa a TyCo adatmappáján (vagy egy tárolón) belül van, és vele együtt szinkronizálódik. Ha ezt nem szeretné, válasszon azon kívüli mappát.",
+    "accessLevelAskAll": "Kérdezzen rá az olvasásra és az írásra"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

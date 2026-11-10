@@ -154,7 +154,7 @@
       "deletePath": "Mettre à la corbeille",
       "editFile": "Modifier un fichier",
       "group": "Fichiers",
-      "groupHint": "Lire, rechercher et modifier des fichiers dans l’espace de travail du profil et dans les projets ci-dessous, selon leurs autorisations. « Demander » demande avant chaque appel.",
+      "groupHint": "Lecture, recherche et modification de fichiers dans l’espace de travail du profil et les projets connectés",
       "hiddenLines": "… autres lignes modifiées : {count}",
       "listFiles": "Lister les fichiers",
       "movePath": "Déplacer",
@@ -187,7 +187,9 @@
       "groupHint": "Autoriser le modèle à exécuter les commandes personnalisées et les outils de plugins sélectionnés. « Demander » demande confirmation avant chaque appel.",
       "needsDescription": "Nécessite une description dans les paramètres de la commande",
       "noCommands": "Aucune commande personnalisée configurée pour le moment.",
-      "noCommandsHint": "Créez d'abord des commandes dans Paramètres → Commandes."
+      "noCommandsHint": "Créez d'abord des commandes dans Paramètres → Commandes.",
+      "selectAll": "Tout sélectionner",
+      "deselectAll": "Tout désélectionner"
     },
     "replyBlocks": { "toolLabel": "Blocs de réponse" }
   },
@@ -945,7 +947,6 @@
     "profileCopyName": "{name} (copie)",
     "profileDefaultSoul": "# Rôle\nDécrivez qui est cet assistant et en quoi il aide.\n\n# Règles\n- Réponds dans la langue de la question.\n",
     "profileFileToolsOff": "Les outils de fichiers de ce profil sont désactivés : il n’accède pas à ses projets tant que vous ne les activez pas ci-dessus.",
-    "profileFilesAskAll": "« Fichiers » est réglé sur « Demander » : chaque appel attend une confirmation, même là où le projet l’autorise.",
     "profileGenerationHint": "Le modèle et les paramètres des chats de ce profil. Les champs vides utilisent les valeurs du modèle.",
     "profileMemoryApplyCompact": "Appliquer",
     "profileMemoryClear": "Effacer la mémoire",
@@ -986,9 +987,6 @@
     "profileToolStepsInvalid": "Saisissez un nombre entier de 1 à 50",
     "profileTools": "Outils",
     "profileToolsHint": "Ce que le modèle du profil peut faire seul dans le chat. Les appels réglés sur « Demander » attendent votre approbation dans le message.",
-    "profileWorkspace": "Espace de travail du profil",
-    "profileWorkspaceAccess": "Lecture et écriture, toujours",
-    "profileWorkspaceHint": "Contient les fichiers joints aux chats et ce que crée le modèle.",
     "projectAccessFileToolsOff": "Outils de fichiers désactivés",
     "projectDescription": "Description du projet",
     "projectFolderFixedHint": "Le modèle voit les fichiers du projet sous ce chemin. Il ne change pas quand le projet est renommé.",
@@ -1280,7 +1278,8 @@
         "occupied": "{detail} contient d’autres fichiers : choisissez un dossier vide."
       }
     },
-    "projectInsideSyncedFolder": "Le dossier est dans le dossier de données TyCo (ou un coffre) et sera synchronisé avec lui. Si ce n’est pas voulu, choisissez un dossier à l’extérieur."
+    "projectInsideSyncedFolder": "Le dossier est dans le dossier de données TyCo (ou un coffre) et sera synchronisé avec lui. Si ce n’est pas voulu, choisissez un dossier à l’extérieur.",
+    "accessLevelAskAll": "Demander pour lire et écrire"
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {

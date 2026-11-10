@@ -154,7 +154,7 @@
       "deletePath": "移至垃圾桶",
       "editFile": "編輯檔案",
       "group": "檔案",
-      "groupHint": "在設定檔的工作區以及下方專案中讀取、搜尋與修改檔案（視其權限而定）。「詢問」會在每次呼叫前先進行確認。",
+      "groupHint": "讀取、搜尋和修改設定檔工作區及已關聯專案中的檔案",
       "hiddenLines": "… 更多已變更的行數：{count}",
       "listFiles": "列出檔案",
       "movePath": "移動",
@@ -187,7 +187,9 @@
       "groupHint": "允許模型執行選定的自訂命令與外掛程式工具。「詢問」會在每次呼叫前確認。",
       "needsDescription": "需要在命令設定中填寫描述",
       "noCommands": "尚未設定自訂命令。",
-      "noCommandsHint": "請先在設定 → 命令中建立命令。"
+      "noCommandsHint": "請先在設定 → 命令中建立命令。",
+      "selectAll": "全選",
+      "deselectAll": "取消全選"
     },
     "replyBlocks": { "toolLabel": "回覆區塊" }
   },
@@ -939,7 +941,6 @@
     "profileCopyName": "{name}（複本）",
     "profileDefaultSoul": "# 角色\n描述此助手的身分以及它能提供的協助。\n\n# 規則\n- 使用提問的語言回覆。\n",
     "profileFileToolsOff": "此設定檔的檔案工具已關閉：在上方開啟前，它無法存取專案。",
-    "profileFilesAskAll": "「檔案」已設為「詢問」：即使專案允許，每次呼叫仍會等待確認。",
     "profileGenerationHint": "此設定檔聊天的模型與參數。留空的欄位將使用模型的預設值。",
     "profileMemoryApplyCompact": "套用",
     "profileMemoryClear": "清除記憶",
@@ -980,9 +981,6 @@
     "profileToolStepsInvalid": "請輸入 1 至 50 之間的整數",
     "profileTools": "工具",
     "profileToolsHint": "設定檔模型可在聊天中自行執行的操作。設為「詢問」的呼叫會在訊息中等待您的核准。",
-    "profileWorkspace": "設定檔工作區",
-    "profileWorkspaceAccess": "讀取與寫入 — 始終允許",
-    "profileWorkspaceHint": "存放聊天附件檔案以及模型建立的內容。",
     "projectAccessFileToolsOff": "檔案工具已關閉",
     "projectDescription": "專案說明",
     "projectFolderFixedHint": "模型透過此路徑查看專案檔案。重新命名專案時不會改變。",
@@ -1274,7 +1272,8 @@
         "occupied": "{detail} 包含其他檔案：請選擇空資料夾。"
       }
     },
-    "projectInsideSyncedFolder": "該資料夾位於 TyCo 資料夾（或庫）內，將隨之同步。如不需要，請選擇其外部的資料夾。"
+    "projectInsideSyncedFolder": "該資料夾位於 TyCo 資料夾（或庫）內，將隨之同步。如不需要，請選擇其外部的資料夾。",
+    "accessLevelAskAll": "讀寫時均詢問"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

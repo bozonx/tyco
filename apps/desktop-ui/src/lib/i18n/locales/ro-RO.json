@@ -154,7 +154,7 @@
       "deletePath": "Mută în coșul de gunoi",
       "editFile": "Editează fișierul",
       "group": "Fișiere",
-      "groupHint": "Citirea, căutarea și modificarea fișierelor din spațiul de lucru al profilului și din proiectele de mai jos, conform permisiunilor lor. „Întreabă” cere confirmare înainte de fiecare apel.",
+      "groupHint": "Citirea, căutarea și modificarea fișierelor din spațiul de lucru al profilului și proiectele conectate",
       "hiddenLines": "… alte rânduri modificate: {count}",
       "listFiles": "Listează fișierele",
       "movePath": "Mută",
@@ -187,7 +187,9 @@
       "groupHint": "Permiteți modelului să execute comenzile personalizate și instrumentele de plugin selectate. „Întreabă” cere confirmare înainte de fiecare apel.",
       "needsDescription": "Necesită o descriere în setările comenzii",
       "noCommands": "Nu există încă comenzi personalizate configurate.",
-      "noCommandsHint": "Creați mai întâi comenzi în Setări → Comenzi."
+      "noCommandsHint": "Creați mai întâi comenzi în Setări → Comenzi.",
+      "selectAll": "Selectează tot",
+      "deselectAll": "Deselectează tot"
     },
     "replyBlocks": { "toolLabel": "Blocuri de răspuns" }
   },
@@ -945,7 +947,6 @@
     "profileCopyName": "{name} (copie)",
     "profileDefaultSoul": "# Rol\nDescrieți cine este acest asistent și la ce ajută.\n\n# Reguli\n- Răspunde în limba întrebării.\n",
     "profileFileToolsOff": "Instrumentele pentru fișiere ale acestui profil sunt oprite: nu ajunge la proiecte până nu le porniți mai sus.",
-    "profileFilesAskAll": "„Fișiere” este setat pe „Întreabă”: fiecare apel așteaptă confirmare, chiar și acolo unde proiectul îl permite.",
     "profileGenerationHint": "Modelul și parametrii chaturilor acestui profil. Câmpurile goale folosesc valorile modelului.",
     "profileMemoryApplyCompact": "Aplică",
     "profileMemoryClear": "Șterge memoria",
@@ -986,9 +987,6 @@
     "profileToolStepsInvalid": "Introduceți un număr întreg de la 1 la 50",
     "profileTools": "Instrumente",
     "profileToolsHint": "Ce poate face singur modelul profilului în chat. Apelurile setate pe „Întreabă” așteaptă aprobarea dvs. în mesaj.",
-    "profileWorkspace": "Spațiul de lucru al profilului",
-    "profileWorkspaceAccess": "Citire și scriere – întotdeauna",
-    "profileWorkspaceHint": "Conține fișierele atașate chaturilor și ce creează modelul.",
     "projectAccessFileToolsOff": "Instrumentele pentru fișiere sunt oprite",
     "projectDescription": "Descrierea proiectului",
     "projectFolderFixedHint": "Modelul vede fișierele proiectului la această cale. Nu se schimbă la redenumirea proiectului.",
@@ -1280,7 +1278,8 @@
         "occupied": "{detail} conține alte fișiere: alegeți un dosar gol."
       }
     },
-    "projectInsideSyncedFolder": "Dosarul se află în dosarul de date TyCo (sau într-un seif) și va fi sincronizat cu acesta. Dacă nu doriți, alegeți un dosar din afară."
+    "projectInsideSyncedFolder": "Dosarul se află în dosarul de date TyCo (sau într-un seif) și va fi sincronizat cu acesta. Dacă nu doriți, alegeți un dosar din afară.",
+    "accessLevelAskAll": "Întreabă pentru citire și scriere"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

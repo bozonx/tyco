@@ -154,7 +154,7 @@
       "deletePath": "Premjesti u smeće",
       "editFile": "Uredi datoteku",
       "group": "Datoteke",
-      "groupHint": "Čitanje, pretraživanje i mijenjanje datoteka u radnom prostoru profila i u projektima ispod, u skladu s njihovim dopuštenjima. „Pitaj” traži potvrdu prije svakog poziva.",
+      "groupHint": "Čitanje, pretraživanje i mijenjanje datoteka u radnoj mapi profila i povezanim projektima",
       "hiddenLines": "… još promijenjenih redaka: {count}",
       "listFiles": "Popis datoteka",
       "movePath": "Premjesti",
@@ -187,7 +187,9 @@
       "groupHint": "Dopustite modelu pokretanje odabranih prilagođenih naredbi i alata dodataka. „Pitaj” traži potvrdu prije svakog poziva.",
       "needsDescription": "Potreban je opis u postavkama naredbe",
       "noCommands": "Još nema konfiguriranih prilagođenih naredbi.",
-      "noCommandsHint": "Prvo stvorite naredbe u Postavke → Naredbe."
+      "noCommandsHint": "Prvo stvorite naredbe u Postavke → Naredbe.",
+      "selectAll": "Odaberi sve",
+      "deselectAll": "Poništi odabir"
     },
     "replyBlocks": { "toolLabel": "Blokovi odgovora" }
   },
@@ -945,7 +947,6 @@
     "profileCopyName": "{name} (kopija)",
     "profileDefaultSoul": "# Uloga\nOpišite tko je ovaj asistent i u čemu pomaže.\n\n# Pravila\n- Odgovaraj na jeziku pitanja.\n",
     "profileFileToolsOff": "Alati za datoteke ovog profila su isključeni: ne može doći do projekata dok ih ne uključite iznad.",
-    "profileFilesAskAll": "„Datoteke” su postavljene na „Pitaj”: svaki poziv čeka potvrdu, čak i ondje gdje ga projekt dopušta.",
     "profileGenerationHint": "Model i parametri chatova ovog profila. Prazna polja koriste vrijednosti modela.",
     "profileMemoryApplyCompact": "Primijeni",
     "profileMemoryClear": "Očisti memoriju",
@@ -986,9 +987,6 @@
     "profileToolStepsInvalid": "Unesite cijeli broj od 1 do 50",
     "profileTools": "Alati",
     "profileToolsHint": "Što model profila smije sam raditi u chatu. Pozivi postavljeni na „Pitaj” čekaju vaše odobrenje u poruci.",
-    "profileWorkspace": "Radni prostor profila",
-    "profileWorkspaceAccess": "Čitanje i pisanje – uvijek",
-    "profileWorkspaceHint": "Sadrži datoteke priložene chatovima i ono što model stvara.",
     "projectAccessFileToolsOff": "Alati za datoteke su isključeni",
     "projectDescription": "Opis projekta",
     "projectFolderFixedHint": "Na ovoj putanji model vidi datoteke projekta. Ne mijenja se kad se projekt preimenuje.",
@@ -1280,7 +1278,8 @@
         "occupied": "{detail} sadrži druge datoteke: odaberite praznu mapu."
       }
     },
-    "projectInsideSyncedFolder": "Mapa je unutar mape podataka TyCo-a (ili spremišta) i sinkronizirat će se s njom. Ako to ne želite, odaberite mapu izvan nje."
+    "projectInsideSyncedFolder": "Mapa je unutar mape podataka TyCo-a (ili spremišta) i sinkronizirat će se s njom. Ako to ne želite, odaberite mapu izvan nje.",
+    "accessLevelAskAll": "Pitaj za čitanje i pisanje"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

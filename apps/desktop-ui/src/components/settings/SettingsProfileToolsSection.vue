@@ -12,7 +12,7 @@
           :description="t(group.descriptionKey)"
         >
           <SegmentedControl
-            v-if="groupSettings(group).isEnabled"
+            v-if="groupSettings(group).isEnabled && group.hasAccessControl"
             size="sm"
             :label="`${t(group.labelKey)}: ${t('settings.profileToolAccess')}`"
             :model-value="groupSettings(group).access"

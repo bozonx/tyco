@@ -1,11 +1,11 @@
 <template>
   <div
     class="settings-entity"
-    :class="{ 'is-openable': openable }"
+    :class="{ 'is-openable': openable && openTarget !== 'title' }"
     @click="handleCardClick"
   >
     <button
-      v-if="openable"
+      v-if="openable && openTarget !== 'title'"
       type="button"
       class="settings-entity-target"
       @click="emit('open')"
@@ -19,7 +19,10 @@
         aria-hidden="true"
       />
       <span class="settings-entity-copy">
-        <span class="settings-entity-title">{{ title }}</span>
+        <span class="settings-entity-title">
+          <span class="settings-entity-title-text">{{ title }}</span>
+          <InfoTooltip v-if="info" :text="info" class="settings-entity-info" />
+        </span>
         <span v-if="description" class="settings-entity-description">
           {{ description }}
         </span>
@@ -35,7 +38,24 @@
         aria-hidden="true"
       />
       <span class="settings-entity-copy">
-        <span class="settings-entity-title">{{ title }}</span>
+        <span class="settings-entity-title">
+          <button
+            v-if="openable && openTarget === 'title'"
+            type="button"
+            class="settings-entity-title-btn"
+            @click.stop="emit('open')"
+          >
+            <span class="settings-entity-title-text">{{ title }}</span>
+            <AppIcon
+              icon="mdi:open-in-new"
+              size="xs"
+              class="settings-entity-open-icon"
+              aria-hidden="true"
+            />
+          </button>
+          <span v-else class="settings-entity-title-text">{{ title }}</span>
+          <InfoTooltip v-if="info" :text="info" class="settings-entity-info" />
+        </span>
         <span v-if="description" class="settings-entity-description">
           {{ description }}
         </span>
@@ -55,25 +75,31 @@
 
 <script setup lang="ts">
 import AppIcon from '../common/AppIcon.vue'
+import InfoTooltip from '../common/InfoTooltip.vue'
 
 const props = withDefaults(
   defineProps<{
     icon?: string
     title: string
     description?: string
+    info?: string
     iconTone?: 'primary' | 'secondary'
     /**
      * The row opens the entity; trailing content is placed in the actions or
      * default slot
      */
     openable?: boolean
+    /**
+     * Where the click target is located: the whole card or just the title link
+     */
+    openTarget?: 'card' | 'title'
   }>(),
-  { iconTone: 'primary' }
+  { iconTone: 'primary', openTarget: 'card' }
 )
 const emit = defineEmits<{ open: [] }>()
 
 function handleCardClick(event: MouseEvent) {
-  if (!props.openable) return
+  if (!props.openable || props.openTarget === 'title') return
   const target = event.target as HTMLElement | null
   if (
     target?.closest('.settings-entity-trailing') ||
@@ -163,11 +189,65 @@ function handleCardClick(event: MouseEvent) {
 }
 
 .settings-entity-title {
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
   font-size: var(--text-body);
   font-weight: 500;
+  color: var(--app-text);
+}
+
+.settings-entity-title-text {
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.settings-entity-title-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 500;
+  color: var(--app-text);
+  cursor: pointer;
+  text-align: start;
+  text-decoration: none;
+  min-width: 0;
+  transition: color var(--transition-fast);
+}
+
+.settings-entity-title-btn:hover {
+  color: var(--color-primary);
+}
+
+.settings-entity-title-btn:hover .settings-entity-title-text {
+  text-decoration: underline;
+}
+
+.settings-entity-title-btn:focus-visible {
+  outline: none;
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.settings-entity-open-icon {
+  opacity: 0.6;
+  flex-shrink: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.settings-entity-title-btn:hover .settings-entity-open-icon {
+  opacity: 1;
+}
+
+.settings-entity-info {
+  flex-shrink: 0;
 }
 
 .settings-entity-description {

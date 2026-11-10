@@ -107,13 +107,7 @@
         @update="changeSettings({ tools: $event })"
       >
         <template #group="{ group, settings }">
-          <InlineNotice
-            v-if="group.id === FILES_TOOL_GROUP_ID && settings.access === 'ask'"
-            density="compact"
-            icon="mdi:information-outline"
-            :message="t('settings.profileFilesAskAll')"
-          />
-          <div v-else-if="group.id === WEB_TOOL_GROUP_ID" class="pt-2">
+          <div v-if="group.id === WEB_TOOL_GROUP_ID" class="pt-2">
             <InlineNotice
               density="compact"
               kind="info"
@@ -125,9 +119,11 @@
             <SettingsProfileCommandTools
               :commands="commands"
               :selected-ids="settings.commandIds ?? []"
+              :current-platform="desktopStore.userData?.platform"
               @toggle="
                 (id, enabled) => toggleProfileCommand(group, id, enabled)
               "
+              @update-selected="(ids) => setProfileCommands(group, ids)"
             />
           </div>
         </template>
@@ -221,7 +217,6 @@ import {
   CHAT_TOOL_GROUPS,
   COMMANDS_TOOL_GROUP_ID,
   type ChatToolGroup,
-  FILES_TOOL_GROUP_ID,
   MAX_TOOL_STEP_COUNT,
   WEB_TOOL_GROUP_ID,
   toolGroupSettings,
@@ -273,6 +268,12 @@ function toggleProfileCommand(
     : current.filter((id) => id !== commandId)
   void changeSettings({
     tools: withToolGroup(profile.value?.tools, group, { commandIds: next }),
+  })
+}
+
+function setProfileCommands(group: ChatToolGroup, commandIds: string[]) {
+  void changeSettings({
+    tools: withToolGroup(profile.value?.tools, group, { commandIds }),
   })
 }
 

@@ -41,4 +41,30 @@ describe('SettingsProfileToolsSection', () => {
     })
     expect(wrapper.find('.details').exists()).toBe(true)
   })
+
+  it('renders access control only for groups that enable it', () => {
+    const commands = {
+      id: 'commands',
+      labelKey: 'commands.label',
+      descriptionKey: 'commands.description',
+      icon: 'mdi:console',
+      defaultAccess: 'ask' as const,
+      hasAccessControl: true,
+    }
+    const wrapper = mount(SettingsProfileToolsSection, {
+      props: {
+        groups: [web, commands],
+        tools: {
+          groups: {
+            web: { isEnabled: true, access: 'allow' },
+            commands: { isEnabled: true, access: 'ask' },
+          },
+        },
+      },
+    })
+
+    const segmented = wrapper.findAllComponents({ name: 'SegmentedControl' })
+    expect(segmented).toHaveLength(1)
+    expect(segmented[0]!.props('label')).toContain('commands.label')
+  })
 })

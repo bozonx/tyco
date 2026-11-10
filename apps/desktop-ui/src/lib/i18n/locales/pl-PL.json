@@ -154,7 +154,7 @@
       "deletePath": "Przenieś do kosza",
       "editFile": "Edytuj plik",
       "group": "Pliki",
-      "groupHint": "Odczyt, wyszukiwanie i zmiana plików w przestrzeni roboczej profilu i w projektach poniżej, zgodnie z ich uprawnieniami. „Pytaj” pyta przed każdym wywołaniem.",
+      "groupHint": "Odczyt, wyszukiwanie i modyfikacja plików w przestrzeni roboczej profilu i połączonych projektach",
       "hiddenLines": "… więcej zmienionych wierszy: {count}",
       "listFiles": "Wyświetl pliki",
       "movePath": "Przenieś",
@@ -187,7 +187,9 @@
       "groupHint": "Zezwól modelowi na uruchamianie wybranych poleceń użytkownika i narzędzi wtyczek. „Pytaj” wymaga potwierdzenia przed każdym wywołaniem.",
       "needsDescription": "Wymaga opisu w ustawieniach polecenia",
       "noCommands": "Nie skonfigurowano jeszcze poleceń użytkownika.",
-      "noCommandsHint": "Najpierw utwórz polecenia w Ustawienia → Polecenia."
+      "noCommandsHint": "Najpierw utwórz polecenia w Ustawienia → Polecenia.",
+      "selectAll": "Zaznacz wszystko",
+      "deselectAll": "Odznacz wszystko"
     },
     "replyBlocks": { "toolLabel": "Warianty odpowiedzi" }
   },
@@ -945,7 +947,6 @@
     "profileCopyName": "{name} (kopia)",
     "profileDefaultSoul": "# Rola\nOpisz, kim jest ten asystent i w czym pomaga.\n\n# Zasady\n- Odpowiadaj w języku pytania.\n",
     "profileFileToolsOff": "Narzędzia plików tego profilu są wyłączone: nie ma on dostępu do projektów, dopóki ich nie włączysz powyżej.",
-    "profileFilesAskAll": "„Pliki” ustawiono na „Pytaj”: każde wywołanie czeka na potwierdzenie, nawet tam, gdzie projekt na nie zezwala.",
     "profileGenerationHint": "Model i parametry czatów tego profilu. Puste pola używają wartości modelu.",
     "profileMemoryApplyCompact": "Zastosuj",
     "profileMemoryClear": "Wyczyść pamięć",
@@ -986,9 +987,6 @@
     "profileToolStepsInvalid": "Wpisz liczbę całkowitą od 1 do 50",
     "profileTools": "Narzędzia",
     "profileToolsHint": "Co model profilu może robić samodzielnie na czacie. Wywołania ustawione na „Pytaj” czekają w wiadomości na Twoją zgodę.",
-    "profileWorkspace": "Przestrzeń robocza profilu",
-    "profileWorkspaceAccess": "Odczyt i zapis — zawsze",
-    "profileWorkspaceHint": "Zawiera pliki dołączone do czatów i to, co tworzy model.",
     "projectAccessFileToolsOff": "Narzędzia plików są wyłączone",
     "projectDescription": "Opis projektu",
     "projectFolderFixedHint": "Pod tą ścieżką model widzi pliki projektu. Nie zmienia się po zmianie nazwy projektu.",
@@ -1280,7 +1278,8 @@
         "occupied": "{detail} zawiera inne pliki: wybierz pusty folder."
       }
     },
-    "projectInsideSyncedFolder": "Folder leży w folderze danych TyCo (lub magazynie) i będzie z nim synchronizowany. Jeśli tego nie chcesz, wybierz folder na zewnątrz."
+    "projectInsideSyncedFolder": "Folder leży w folderze danych TyCo (lub magazynie) i będzie z nim synchronizowany. Jeśli tego nie chcesz, wybierz folder na zewnątrz.",
+    "accessLevelAskAll": "Pytaj o odczyt i zapis"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

@@ -22,6 +22,10 @@ export interface ChatToolGroup {
   icon: string
   /** How freely the group's tools run once it is switched on */
   defaultAccess: ProjectAccessMode
+  /** Whether the group is enabled when a profile has no explicit settings */
+  defaultEnabled?: boolean
+  /** Whether to show Ask/Allow access control switch */
+  hasAccessControl?: boolean
 }
 
 export {
@@ -37,15 +41,17 @@ export const CHAT_TOOL_GROUPS: readonly ChatToolGroup[] = [
     labelKey: 'chatTools.files.group',
     descriptionKey: 'chatTools.files.groupHint',
     icon: 'mdi:folder-outline',
-    // the permissions of each project decide; `ask` asks before every call
     defaultAccess: 'allow',
+    hasAccessControl: false,
   },
   {
     id: WEB_TOOL_GROUP_ID,
     labelKey: 'chatTools.web.group',
     descriptionKey: 'chatTools.web.groupHint',
     icon: 'mdi:search-web',
-    defaultAccess: 'ask',
+    defaultAccess: 'allow',
+    defaultEnabled: true,
+    hasAccessControl: false,
   },
   {
     id: COMMANDS_TOOL_GROUP_ID,
@@ -53,6 +59,7 @@ export const CHAT_TOOL_GROUPS: readonly ChatToolGroup[] = [
     descriptionKey: 'chatTools.commands.groupHint',
     icon: 'mdi:console-line',
     defaultAccess: 'ask',
+    hasAccessControl: true,
   },
 ]
 
@@ -67,14 +74,22 @@ export interface ProfileToolSettingsLike {
   readonly maxStepCount?: number
 }
 
-/** A group's settings in a profile; off when the profile never set them */
+/**
+ * A group's settings in a profile; uses defaultEnabled/defaultAccess when not
+ * set
+ */
 export function toolGroupSettings(
   settings: ProfileToolSettings | ProfileToolSettingsLike | undefined,
-  group: Pick<ChatToolGroup, 'id' | 'defaultAccess'>
+  group: Pick<ChatToolGroup, 'id' | 'defaultAccess'> & {
+    defaultEnabled?: boolean
+  }
 ): ToolGroupSettings {
   const current = settings?.groups?.[group.id]
   if (!current) {
-    return { isEnabled: false, access: group.defaultAccess }
+    return {
+      isEnabled: Boolean(group.defaultEnabled),
+      access: group.defaultAccess,
+    }
   }
   return {
     isEnabled: current.isEnabled,
@@ -86,7 +101,9 @@ export function toolGroupSettings(
 /** The settings with one group changed */
 export function withToolGroup(
   settings: ProfileToolSettings | undefined,
-  group: Pick<ChatToolGroup, 'id' | 'defaultAccess'>,
+  group: Pick<ChatToolGroup, 'id' | 'defaultAccess'> & {
+    defaultEnabled?: boolean
+  },
   patch: Partial<ToolGroupSettings>
 ): ProfileToolSettings {
   return {

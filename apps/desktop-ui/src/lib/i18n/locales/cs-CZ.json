@@ -154,7 +154,7 @@
       "deletePath": "Přesunout do koše",
       "editFile": "Upravit soubor",
       "group": "Soubory",
-      "groupHint": "Čtení, vyhledávání a změny souborů v pracovním prostoru profilu a v projektech níže podle jejich oprávnění. „Ptát se“ se ptá před každým voláním.",
+      "groupHint": "Čtení, vyhledávání a úprava souborů v pracovní složce profilu a připojených projektech",
       "hiddenLines": "… další změněné řádky: {count}",
       "listFiles": "Vypsat soubory",
       "movePath": "Přesunout",
@@ -187,7 +187,9 @@
       "groupHint": "Povolit modelu spouštět vybrané uživatelské příkazy a nástroje doplňků. „Zeptat se“ se zeptá před každým voláním.",
       "needsDescription": "Vyžaduje popis v nastavení příkazu",
       "noCommands": "Zatím nejsou nakonfigurovány žádné uživatelské příkazy.",
-      "noCommandsHint": "Nejprve vytvořte příkazy v Nastavení → Příkazy."
+      "noCommandsHint": "Nejprve vytvořte příkazy v Nastavení → Příkazy.",
+      "selectAll": "Vybrat vše",
+      "deselectAll": "Zrušit výběr"
     },
     "replyBlocks": { "toolLabel": "Varianty odpovědí" }
   },
@@ -939,7 +941,6 @@
     "profileCopyName": "{name} (kopie)",
     "profileDefaultSoul": "# Role\nPopište, kdo je tento asistent a s čím pomáhá.\n\n# Pravidla\n- Odpovídej v jazyce otázky.\n",
     "profileFileToolsOff": "Souborové nástroje tohoto profilu jsou vypnuté: k projektům se nedostane, dokud je výše nezapnete.",
-    "profileFilesAskAll": "„Soubory“ jsou nastaveny na „Ptát se“: každé volání čeká na potvrzení, i tam, kde ho projekt povoluje.",
     "profileGenerationHint": "Model a parametry chatů tohoto profilu. Prázdná pole použijí hodnoty modelu.",
     "profileMemoryApplyCompact": "Použít",
     "profileMemoryClear": "Vymazat paměť",
@@ -980,9 +981,6 @@
     "profileToolStepsInvalid": "Zadejte celé číslo od 1 do 50",
     "profileTools": "Nástroje",
     "profileToolsHint": "Co smí model profilu v chatu dělat sám. Volání nastavená na „Ptát se“ čekají ve zprávě na vaše schválení.",
-    "profileWorkspace": "Pracovní prostor profilu",
-    "profileWorkspaceAccess": "Čtení a zápis – vždy",
-    "profileWorkspaceHint": "Obsahuje soubory přiložené k chatům a to, co model vytvoří.",
     "projectAccessFileToolsOff": "Souborové nástroje jsou vypnuté",
     "projectDescription": "Popis projektu",
     "projectFolderFixedHint": "Pod touto cestou model vidí soubory projektu. Při přejmenování projektu se nemění.",
@@ -1274,7 +1272,8 @@
         "occupied": "{detail} obsahuje jiné soubory: vyberte prázdnou složku."
       }
     },
-    "projectInsideSyncedFolder": "Složka je uvnitř složky dat TyCo (nebo úložiště) a bude se s ní synchronizovat. Pokud to nechcete, vyberte složku mimo ni."
+    "projectInsideSyncedFolder": "Složka je uvnitř složky dat TyCo (nebo úložiště) a bude se s ní synchronizovat. Pokud to nechcete, vyberte složku mimo ni.",
+    "accessLevelAskAll": "Ptát se na čtení a zápis"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

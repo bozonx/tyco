@@ -11,20 +11,7 @@
     openable
     @change="(projectId, level) => emit('change', projectId, level)"
     @open="(projectId) => emit('open', projectId)"
-  >
-    <template #leading>
-      <SettingsEntityItem
-        icon="mdi:folder-account-outline"
-        icon-tone="secondary"
-        :title="t('settings.profileWorkspace')"
-        :description="t('settings.profileWorkspaceHint')"
-      >
-        <span class="settings-entity-meta">{{
-          t('settings.profileWorkspaceAccess')
-        }}</span>
-      </SettingsEntityItem>
-    </template>
-  </SettingsAccessList>
+  />
 </template>
 
 <script setup lang="ts">
@@ -40,7 +27,6 @@ import SettingsAccessList, {
   type AccessListCandidate,
   type AccessListEntry,
 } from './SettingsAccessList.vue'
-import SettingsEntityItem from './SettingsEntityItem.vue'
 import type { AiProject, ProjectPermission } from '@tyco/shared'
 
 const props = defineProps<{

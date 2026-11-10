@@ -154,7 +154,7 @@
       "deletePath": "ゴミ箱へ移動",
       "editFile": "ファイルを編集",
       "group": "ファイル",
-      "groupHint": "権限に応じて、プロファイルのワークスペースおよび以下のプロジェクト内のファイルを読み取り、検索し、変更します。「確認」に設定すると、実行ごとに確認を求めます。",
+      "groupHint": "プロファイルのワークスペースおよび接続されたプロジェクト内のファイルの読み取り、検索、変更",
       "hiddenLines": "… その他の変更行: {count}",
       "listFiles": "ファイル一覧",
       "movePath": "移動",
@@ -187,7 +187,9 @@
       "groupHint": "選択したカスタムコマンドおよびプラグインツールの実行をモデルに許可します。「確認」は呼び出しごとに確認します。",
       "needsDescription": "コマンド設定で説明が必要です",
       "noCommands": "カスタムコマンドはまだ設定されていません。",
-      "noCommandsHint": "最初に「設定 → コマンド」でコマンドを作成してください。"
+      "noCommandsHint": "最初に「設定 → コマンド」でコマンドを作成してください。",
+      "selectAll": "すべて選択",
+      "deselectAll": "すべて選択解除"
     },
     "replyBlocks": { "toolLabel": "返答ブロック" }
   },
@@ -942,7 +944,6 @@
     "profileCopyName": "{name} (コピー)",
     "profileDefaultSoul": "あなたは親切で有能なAIアシスタントです。",
     "profileFileToolsOff": "このプロファイルのファイルツールはオフです。上でオンにするまでプロジェクトにはアクセスできません。",
-    "profileFilesAskAll": "「ファイル」が「確認」に設定されているため、プロジェクトで許可されている場合でも、すべての呼び出しで確認を待ちます。",
     "profileGenerationHint": "モデル固有の生成パラメーター。",
     "profileMemoryApplyCompact": "適用",
     "profileMemoryClear": "メモリを消去",
@@ -983,9 +984,6 @@
     "profileToolStepsInvalid": "1 から 50 までの整数を入力してください",
     "profileTools": "利用可能なツール",
     "profileToolsHint": "プロファイルのモデルがチャット内で自律的に実行できる操作です。「確認」に設定された呼び出しはメッセージ内であなたの承認を待ちます。",
-    "profileWorkspace": "ワークスペースフォルダー",
-    "profileWorkspaceAccess": "ワークスペースへのアクセス権限",
-    "profileWorkspaceHint": "モデルがファイルを読み書きできるフォルダー。空のままにすると、プロファイル独自のフォルダーが使用されます。",
     "projectAccessFileToolsOff": "ファイルツールがオフです",
     "projectDescription": "プロジェクトの説明",
     "projectFolderFixedHint": "モデルはこのパスでプロジェクトのファイルを参照します。プロジェクト名を変えても変わりません。",
@@ -1277,7 +1275,8 @@
         "occupied": "{detail} に他のファイルがあります。空のフォルダーを選んでください。"
       }
     },
-    "projectInsideSyncedFolder": "このフォルダーは TyCo のデータフォルダー（またはボールト）の中にあり、一緒に同期されます。不要なら外側のフォルダーを選んでください。"
+    "projectInsideSyncedFolder": "このフォルダーは TyCo のデータフォルダー（またはボールト）の中にあり、一緒に同期されます。不要なら外側のフォルダーを選んでください。",
+    "accessLevelAskAll": "読み取りと書き込み時に確認"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

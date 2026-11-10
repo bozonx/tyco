@@ -154,7 +154,7 @@
       "deletePath": "Move to trash",
       "editFile": "Edit file",
       "group": "Files",
-      "groupHint": "Read, search and change files in the profile's workspace and in the projects below, as their permissions allow. “Ask” asks before every call.",
+      "groupHint": "Read, search and modify files in the profile workspace and connected projects",
       "hiddenLines": "… more changed lines: {count}",
       "listFiles": "List files",
       "movePath": "Move",
@@ -187,7 +187,9 @@
       "groupHint": "Allow the model to run selected custom commands and plugin tools. “Ask” asks before every call.",
       "needsDescription": "Requires a description in command settings",
       "noCommands": "No custom commands configured yet.",
-      "noCommandsHint": "Create commands in Settings → Commands first."
+      "noCommandsHint": "Create commands in Settings → Commands first.",
+      "selectAll": "Select all",
+      "deselectAll": "Deselect all"
     },
     "replyBlocks": { "toolLabel": "Reply Blocks" }
   },
@@ -945,7 +947,6 @@
     "profileCopyName": "{name} (copy)",
     "profileDefaultSoul": "# Role\nDescribe who this assistant is and what it helps with.\n\n# Rules\n- Answer in the language of the question.\n",
     "profileFileToolsOff": "File tools are off for this profile: it cannot reach its projects until you turn them on above.",
-    "profileFilesAskAll": "“Files” is set to “Ask”: every call waits for confirmation, even where the project allows it.",
     "profileGenerationHint": "The model and parameters of this profile's chats. Empty fields use the values of the model.",
     "profileMemoryApplyCompact": "Apply",
     "profileMemoryClear": "Clear memory",
@@ -986,9 +987,6 @@
     "profileToolStepsInvalid": "Enter a whole number from 1 to 50",
     "profileTools": "Tools",
     "profileToolsHint": "What the profile's model may do in the chat on its own. Calls set to “Ask” wait for your approval in the message.",
-    "profileWorkspace": "Profile workspace",
-    "profileWorkspaceAccess": "Read and write — always",
-    "profileWorkspaceHint": "Holds the files attached to chats and what the model creates.",
     "projectAccessFileToolsOff": "File tools are off",
     "projectDescription": "Project Description",
     "projectFolderFixedHint": "The model sees the files of the project under this path. It does not change when the project is renamed.",
@@ -1280,7 +1278,8 @@
         "occupied": "{detail} holds other files: choose an empty folder."
       }
     },
-    "projectInsideSyncedFolder": "The folder is inside the TyCo data folder (or a vault) and will be synced with it. If you do not want that, choose a folder outside it."
+    "projectInsideSyncedFolder": "The folder is inside the TyCo data folder (or a vault) and will be synced with it. If you do not want that, choose a folder outside it.",
+    "accessLevelAskAll": "Ask for read and write"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

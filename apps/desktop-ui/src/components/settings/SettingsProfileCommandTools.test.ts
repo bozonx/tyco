@@ -76,4 +76,48 @@ describe('SettingsProfileCommandTools', () => {
     await checkboxes[0]!.setValue(false)
     expect(wrapper.emitted('toggle')?.[0]).toEqual(['cmd-1', false])
   })
+
+  it('selects and deselects all selectable commands', async () => {
+    const cmd3: CommandConfig = {
+      ...commandWithDesc,
+      id: 'cmd-3',
+      name: 'Lint Code',
+    }
+    const wrapper = mount(SettingsProfileCommandTools, {
+      props: {
+        commands: [commandWithDesc, commandWithoutDesc, cmd3],
+        selectedIds: ['cmd-1'],
+      },
+    })
+
+    const buttons = wrapper.findAllComponents({ name: 'Button' })
+    expect(buttons.length).toBe(2)
+
+    // Select all
+    await buttons[0]!.trigger('click')
+    expect(wrapper.emitted('updateSelected')?.[0]).toEqual([['cmd-1', 'cmd-3']])
+
+    // Deselect all
+    await buttons[1]!.trigger('click')
+    expect(wrapper.emitted('updateSelected')?.[1]).toEqual([[]])
+  })
+
+  it('displays platform badge and notice when command is for another platform', () => {
+    const windowsCmd: CommandConfig = {
+      ...commandWithDesc,
+      id: 'cmd-win',
+      name: 'Windows Script',
+      platforms: ['windows'],
+    }
+    const wrapper = mount(SettingsProfileCommandTools, {
+      props: {
+        commands: [windowsCmd],
+        selectedIds: [],
+        currentPlatform: 'linux',
+      },
+    })
+
+    expect(wrapper.text()).toContain('Windows')
+    expect(wrapper.text()).toContain('commands.otherPlatform')
+  })
 })

@@ -154,7 +154,7 @@
       "deletePath": "Çöp kutusuna taşı",
       "editFile": "Dosya düzenle",
       "group": "Dosyalar",
-      "groupHint": "Profilin çalışma klasöründeki ve aşağıdaki projelerdeki dosyaları izinlerin elverdiği ölçüde okuma, arama ve değiştirme. “Sor” her çağrıdan önce onay ister.",
+      "groupHint": "Profil çalışma alanındaki ve bağlı projelerdeki dosyaları okuma, arama ve değiştirme",
       "hiddenLines": "… daha fazla değişen satır: {count}",
       "listFiles": "Dosyaları listele",
       "movePath": "Taşı",
@@ -187,7 +187,9 @@
       "groupHint": "Modelin seçilen özel komutları ve eklenti araçlarını çalıştırmasına izin verin. \"Sor\", her çağrıdan önce onay ister.",
       "needsDescription": "Komut ayarlarında bir açıklama gereklidir",
       "noCommands": "Henüz özel komut yapılandırılmadı.",
-      "noCommandsHint": "Önce Ayarlar → Komutlar bölümünde komut oluşturun."
+      "noCommandsHint": "Önce Ayarlar → Komutlar bölümünde komut oluşturun.",
+      "selectAll": "Tümünü seç",
+      "deselectAll": "Tüm seçimi kaldır"
     },
     "replyBlocks": { "toolLabel": "Yanıt blokları" }
   },
@@ -942,7 +944,6 @@
     "profileCopyName": "{name} (kopya)",
     "profileDefaultSoul": "# Rol\nBu asistanın kim olduğunu ve neye yardım ettiğini yazın.\n\n# Kurallar\n- Sorunun dilinde yanıt ver.\n",
     "profileFileToolsOff": "Bu profilin dosya araçları kapalı: yukarıdan açana kadar projelerine erişemez.",
-    "profileFilesAskAll": "«Dosyalar» için «Sor» seçili: proje izin verse bile her çağrı onay bekler.",
     "profileGenerationHint": "Bu profilin sohbetlerinin modeli ve parametreleri. Boş alanlar modelin değerlerini kullanır.",
     "profileMemoryApplyCompact": "Uygula",
     "profileMemoryClear": "Belleği temizle",
@@ -983,9 +984,6 @@
     "profileToolStepsInvalid": "1 ile 50 arasında bir tam sayı girin",
     "profileTools": "Araçlar",
     "profileToolsHint": "Profil modelinin sohbette kendi başına yapabilecekleri. “Sor” olarak ayarlanan çağrılar mesajda onayınızı bekler.",
-    "profileWorkspace": "Profilin çalışma klasörü",
-    "profileWorkspaceAccess": "Okuma ve yazma — her zaman",
-    "profileWorkspaceHint": "Sohbetlere eklenen dosyaları ve modelin oluşturduklarını tutar.",
     "projectAccessFileToolsOff": "Dosya araçları kapalı",
     "projectDescription": "Proje Açıklaması",
     "projectFolderFixedHint": "Model projenin dosyalarını bu yolda görür. Proje yeniden adlandırıldığında değişmez.",
@@ -1277,7 +1275,8 @@
         "occupied": "{detail} başka dosyalar içeriyor: boş bir klasör seçin."
       }
     },
-    "projectInsideSyncedFolder": "Klasör TyCo veri klasörünün (veya bir kasanın) içinde ve onunla birlikte eşitlenecek. İstemiyorsanız dışarıda bir klasör seçin."
+    "projectInsideSyncedFolder": "Klasör TyCo veri klasörünün (veya bir kasanın) içinde ve onunla birlikte eşitlenecek. İstemiyorsanız dışarıda bir klasör seçin.",
+    "accessLevelAskAll": "Okuma ve yazma için sor"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

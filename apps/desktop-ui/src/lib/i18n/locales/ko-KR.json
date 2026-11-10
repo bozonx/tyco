@@ -154,7 +154,7 @@
       "deletePath": "휴지통으로 이동",
       "editFile": "파일 편집",
       "group": "파일",
-      "groupHint": "프로필의 작업 공간 및 아래 프로젝트에서 권한이 허용하는 범위 내에서 파일을 읽고 검색하고 변경합니다. “확인 필요”는 호출할 때마다 매번 확인합니다.",
+      "groupHint": "프로필 워크스페이스 및 연결된 프로젝트의 파일 읽기, 검색 및 수정",
       "hiddenLines": "… 추가로 변경된 줄: {count}",
       "listFiles": "파일 목록",
       "movePath": "이동",
@@ -187,7 +187,9 @@
       "groupHint": "모델이 선택한 사용자 지정 명령 및 플러그인 도구를 실행하도록 허용합니다. '확인'은 호출할 때마다 확인합니다.",
       "needsDescription": "명령어 설정에 설명이 필요합니다",
       "noCommands": "아직 구성된 사용자 지정 명령어가 없습니다.",
-      "noCommandsHint": "먼저 설정 → 명령어에서 명령어를 생성하세요."
+      "noCommandsHint": "먼저 설정 → 명령어에서 명령어를 생성하세요.",
+      "selectAll": "모두 선택",
+      "deselectAll": "모두 선택 해제"
     },
     "replyBlocks": { "toolLabel": "답변 블록" }
   },
@@ -939,7 +941,6 @@
     "profileCopyName": "{name} (사본)",
     "profileDefaultSoul": "# 역할\n이 어시스턴트가 누구이며 어떤 도움을 주는지 설명하세요.\n\n# 규칙\n- 질문의 언어로 답변하세요.\n",
     "profileFileToolsOff": "이 프로필의 파일 도구가 꺼져 있습니다. 위에서 켜기 전까지 프로젝트에 접근할 수 없습니다.",
-    "profileFilesAskAll": "“파일”이 “확인 필요”로 설정되어 있어 프로젝트에서 허용하더라도 모든 호출 시 확인을 기다립니다.",
     "profileGenerationHint": "이 프로필의 채팅에 사용할 모델 및 매개변수입니다. 빈 필드는 모델의 값을 사용합니다.",
     "profileMemoryApplyCompact": "적용",
     "profileMemoryClear": "메모리 지우기",
@@ -980,9 +981,6 @@
     "profileToolStepsInvalid": "1에서 50 사이의 정수를 입력하세요",
     "profileTools": "도구",
     "profileToolsHint": "프로필의 모델이 채팅에서 스스로 수행할 수 있는 작업입니다. “확인 필요”로 설정된 호출은 메시지에서 사용자의 승인을 기다립니다.",
-    "profileWorkspace": "프로필 작업 공간",
-    "profileWorkspaceAccess": "항상 읽기 및 쓰기 허용",
-    "profileWorkspaceHint": "채팅에 첨부된 파일과 모델이 생성한 파일을 보관합니다.",
     "projectAccessFileToolsOff": "파일 도구가 꺼져 있음",
     "projectDescription": "프로젝트 설명",
     "projectFolderFixedHint": "모델은 이 경로에서 프로젝트 파일을 봅니다. 프로젝트 이름을 바꿔도 변하지 않습니다.",
@@ -1274,7 +1272,8 @@
         "occupied": "{detail}에 다른 파일이 있습니다. 빈 폴더를 선택하세요."
       }
     },
-    "projectInsideSyncedFolder": "이 폴더는 TyCo 데이터 폴더(또는 보관함) 안에 있어 함께 동기화됩니다. 원하지 않으면 바깥 폴더를 선택하세요."
+    "projectInsideSyncedFolder": "이 폴더는 TyCo 데이터 폴더(또는 보관함) 안에 있어 함께 동기화됩니다. 원하지 않으면 바깥 폴더를 선택하세요.",
+    "accessLevelAskAll": "읽기 및 쓰기 시 확인"
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {

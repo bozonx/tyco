@@ -153,6 +153,63 @@ describe('SettingsProfileMemorySection', () => {
     expect(wrapper.text()).toContain('preferences.md — User style')
   })
 
+  it('opens FullTextEditorDialog when edit button is clicked', async () => {
+    mocks.readMemory.mockResolvedValue('Current core facts content')
+    const topics: ProfileMemoryTopic[] = [
+      {
+        file: 'core.md',
+        title: 'Core facts',
+        bytes: 100,
+        updatedAt: 1000,
+      },
+    ]
+    mocks.listMemoryTopics.mockResolvedValueOnce(topics)
+
+    const wrapper = mount(SettingsProfileMemorySection, {
+      props: { profile: baseProfile },
+      global: {
+        stubs: {
+          SettingsSection: { template: '<div><slot /></div>' },
+          FieldRow: { template: '<div><slot /></div>' },
+          FieldSelect: true,
+          SettingsEntityItem: {
+            template: `
+              <div class="entity-item">
+                <slot name="actions" />
+              </div>
+            `,
+          },
+          IconButton: {
+            props: ['icon'],
+            template: '<button class="icon-btn" :data-icon="icon" />',
+          },
+          FullTextEditorDialog: {
+            props: ['open', 'title', 'modelValue', 'model-value'],
+            template:
+              '<div v-if="open" class="full-editor">{{ title }}: {{ modelValue ?? $attrs["model-value"] }}</div>',
+          },
+          BaseDialog: true,
+          ConfirmModal: true,
+          Diff: true,
+        },
+      },
+    })
+
+    await vi.waitFor(() => {
+      expect(wrapper.findAll('.icon-btn')).toHaveLength(2)
+    })
+
+    const editBtn = wrapper.find('[data-icon="mdi:square-edit-outline"]')
+    await editBtn.trigger('click')
+
+    await vi.waitFor(() => {
+      expect(wrapper.find('.full-editor').exists()).toBe(true)
+      expect(wrapper.find('.full-editor').text()).toContain(
+        'core.md: Current core facts content'
+      )
+    })
+  })
+
   it('emits update:memoryMode when mode changes', () => {
     const wrapper = mount(SettingsProfileMemorySection, {
       props: { profile: baseProfile },

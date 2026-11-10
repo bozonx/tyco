@@ -8,15 +8,17 @@ import {
 } from '../chat-tools/chat-tool-groups'
 
 /** How far a profile may go in a project it is connected to */
-export type ProjectAccessLevel = 'read' | 'readWriteAsk' | 'full'
+export type ProjectAccessLevel = 'askAll' | 'read' | 'readWriteAsk' | 'full'
 
 export const PROJECT_ACCESS_LEVELS: readonly ProjectAccessLevel[] = [
+  'askAll',
   'read',
   'readWriteAsk',
   'full',
 ]
 
 export const PROJECT_ACCESS_LABEL_KEYS: Record<ProjectAccessLevel, string> = {
+  askAll: 'settings.accessLevelAskAll',
   read: 'settings.accessLevelRead',
   readWriteAsk: 'settings.accessLevelReadWriteAsk',
   full: 'settings.accessLevelFull',
@@ -26,6 +28,7 @@ export const PROJECT_ACCESS_LABEL_KEYS: Record<ProjectAccessLevel, string> = {
 export const DEFAULT_PROJECT_ACCESS_LEVEL: ProjectAccessLevel = 'read'
 
 const PERMISSIONS: Record<ProjectAccessLevel, ProjectPermission> = {
+  askAll: { read: 'ask', write: 'ask' },
   read: { read: 'allow', write: 'deny' },
   readWriteAsk: { read: 'allow', write: 'ask' },
   full: { read: 'allow', write: 'allow' },
@@ -47,7 +50,9 @@ export function projectAccessLevelOf(
 ): ProjectAccessLevel | undefined {
   if (!permission) return undefined
   if (permission.write === 'allow') return 'full'
-  if (permission.write === 'ask') return 'readWriteAsk'
+  if (permission.write === 'ask') {
+    return permission.read === 'ask' ? 'askAll' : 'readWriteAsk'
+  }
   return permission.read === 'deny' ? undefined : 'read'
 }
 

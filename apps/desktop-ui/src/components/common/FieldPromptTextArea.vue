@@ -38,51 +38,14 @@
       />
     </div>
 
-    <BaseDialog
-      v-if="isModalOpen"
+    <FullTextEditorDialog
       :open="isModalOpen"
-      size="full"
-      :label="dialogTitle"
+      :title="dialogTitle"
+      :placeholder="placeholder"
+      :model-value="modelValue"
+      @update:model-value="emit('update:modelValue', $event)"
       @close="closeModal"
-    >
-      <div class="field-prompt-modal">
-        <header class="field-prompt-modal-header">
-          <div class="field-prompt-modal-title">
-            <AppIcon icon="mdi:pencil-outline" size="md" aria-hidden="true" />
-            <span>{{ dialogTitle }}</span>
-          </div>
-          <div class="field-prompt-modal-actions">
-            <CopyButton
-              v-if="modelValue"
-              :value="modelValue"
-              :label="t('common.copied')"
-            />
-            <Button size="sm" variant="primary" @click="closeModal">
-              {{ t('common.done') }}
-            </Button>
-          </div>
-        </header>
-
-        <div class="field-prompt-modal-body">
-          <textarea
-            ref="modalTextareaRef"
-            autofocus
-            class="field-prompt-modal-textarea textarea"
-            :placeholder="placeholder"
-            :value="modelValue ?? ''"
-            @input="handleModalInput"
-          />
-        </div>
-
-        <footer class="field-prompt-modal-footer">
-          <div class="field-prompt-modal-stats">
-            <span>{{ t('common.linesCount', { count: lineCount }) }}</span>
-            <span class="field-prompt-modal-stats-divider">•</span>
-            <span>{{ t('common.charsCount', { count: charCount }) }}</span>
-          </div>
-        </footer>
-      </div>
-    </BaseDialog>
+    />
   </div>
 </template>
 
@@ -91,11 +54,9 @@ import { computed, nextTick, ref, useAttrs } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import type { ControlSize } from '../../lib/ui/control-types'
-import AppIcon from './AppIcon.vue'
-import BaseDialog from './BaseDialog.vue'
-import Button from './Button.vue'
 import CopyButton from './CopyButton.vue'
 import FieldTextArea from './FieldTextArea.vue'
+import FullTextEditorDialog from './FullTextEditorDialog.vue'
 import IconButton from './IconButton.vue'
 
 defineOptions({ inheritAttrs: false })

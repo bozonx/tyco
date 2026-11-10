@@ -29,15 +29,6 @@
             <Button
               size="xs"
               variant="neutral"
-              icon="mdi:refresh"
-              :disabled="isLoading || isClearing"
-              @click="loadTopics"
-            >
-              {{ t('settings.profileMemoryRefresh') }}
-            </Button>
-            <Button
-              size="xs"
-              variant="neutral"
               icon="mdi:trash-can-outline"
               :disabled="
                 isLoading ||
@@ -118,50 +109,47 @@
     </div>
 
     <!-- Edit modal -->
-    <BaseDialog :open="isEditorOpen" :label="editingFile" @close="closeEditor">
-      <div class="memory-dialog-box">
-        <div class="memory-dialog-header">
-          <AppIcon icon="mdi:square-edit-outline" size="lg" />
-          <h3 class="memory-dialog-title">{{ editingFile }}</h3>
-        </div>
-        <div class="memory-dialog-body">
-          <FieldTextArea
-            v-model="editorContent"
-            :rows="14"
-            auto-resize
-            :max-auto-height="500"
-            :aria-label="editingFile"
-          />
-        </div>
-        <div class="memory-dialog-actions">
-          <Button size="sm" variant="ghost" @click="closeEditor">
-            {{ t('common.cancel') }}
-          </Button>
-          <Button
-            size="sm"
-            variant="neutral"
-            icon="mdi:auto-fix"
-            :loading="isCompacting"
-            :disabled="
-              isCompacting || isApplying || isSaving || !editorContent.trim()
-            "
-            @click="compactCurrentEditor"
-          >
-            {{ t('settings.profileMemoryCompact') }}
-          </Button>
-          <Button
-            size="sm"
-            variant="primary"
-            icon="mdi:content-save-outline"
-            :loading="isSaving"
-            :disabled="isApplying || isClearing"
-            @click="saveEditor"
-          >
-            {{ t('common.save') }}
-          </Button>
-        </div>
-      </div>
-    </BaseDialog>
+    <FullTextEditorDialog
+      :open="isEditorOpen"
+      :title="editingFile"
+      icon="mdi:file-document-outline"
+      :model-value="editorContent"
+      @update:model-value="editorContent = $event"
+      @close="closeEditor"
+    >
+      <template #actions>
+        <CopyButton
+          v-if="editorContent"
+          :value="editorContent"
+          :label="t('common.copied')"
+        />
+        <Button
+          size="sm"
+          variant="neutral"
+          icon="mdi:auto-fix"
+          :loading="isCompacting"
+          :disabled="
+            isCompacting || isApplying || isSaving || !editorContent.trim()
+          "
+          @click="compactCurrentEditor"
+        >
+          {{ t('settings.profileMemoryCompact') }}
+        </Button>
+        <Button size="sm" variant="ghost" @click="closeEditor">
+          {{ t('common.cancel') }}
+        </Button>
+        <Button
+          size="sm"
+          variant="primary"
+          icon="mdi:content-save-outline"
+          :loading="isSaving"
+          :disabled="isApplying || isClearing"
+          @click="saveEditor"
+        >
+          {{ t('common.save') }}
+        </Button>
+      </template>
+    </FullTextEditorDialog>
 
     <!-- Compaction Diff Modal -->
     <BaseDialog
@@ -247,10 +235,11 @@ import Badge from '../common/Badge.vue'
 import BaseDialog from '../common/BaseDialog.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
+import CopyButton from '../common/CopyButton.vue'
 import Diff from '../common/Diff.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
-import FieldTextArea from '../common/FieldTextArea.vue'
+import FullTextEditorDialog from '../common/FullTextEditorDialog.vue'
 import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'

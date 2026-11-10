@@ -45,4 +45,47 @@ describe('SettingsEntityItem.vue', () => {
     await wrapper.get('.action-btn').trigger('click')
     expect(wrapper.emitted('open')).toBeUndefined()
   })
+
+  it('emits open only on title click when openTarget is title', async () => {
+    const wrapper = mount(SettingsEntityItem, {
+      props: {
+        title: 'Project A',
+        openable: true,
+        openTarget: 'title',
+      },
+    })
+
+    // Card should not have is-openable class
+    expect(wrapper.classes()).not.toContain('is-openable')
+
+    // Clicking the card does not emit open
+    await wrapper.trigger('click')
+    expect(wrapper.emitted('open')).toBeUndefined()
+
+    // Clicking the title button emits open
+    const titleBtn = wrapper.get('.settings-entity-title-btn')
+    await titleBtn.trigger('click')
+    expect(wrapper.emitted('open')).toHaveLength(1)
+  })
+
+  it('renders info tooltip when info prop is provided', () => {
+    const wrapper = mount(SettingsEntityItem, {
+      props: {
+        title: 'Tool Name',
+        info: 'Tool description in tooltip',
+      },
+      global: {
+        stubs: {
+          InfoTooltip: {
+            props: ['text'],
+            template: '<span class="info-stub">{{ text }}</span>',
+          },
+        },
+      },
+    })
+
+    expect(wrapper.find('.info-stub').text()).toBe(
+      'Tool description in tooltip'
+    )
+  })
 })

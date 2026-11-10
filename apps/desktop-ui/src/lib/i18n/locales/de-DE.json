@@ -154,7 +154,7 @@
       "deletePath": "In den Papierkorb verschieben",
       "editFile": "Datei bearbeiten",
       "group": "Dateien",
-      "groupHint": "Dateien im Arbeitsbereich des Profils und in den unten aufgeführten Projekten lesen, durchsuchen und ändern, soweit deren Berechtigungen es erlauben. „Fragen“ fragt vor jedem Aufruf nach.",
+      "groupHint": "Lesen, Durchsuchen und Ändern von Dateien im Profil-Arbeitsbereich und in verknüpften Projekten",
       "hiddenLines": "… weitere geänderte Zeilen: {count}",
       "listFiles": "Dateien auflisten",
       "movePath": "Verschieben",
@@ -187,7 +187,9 @@
       "groupHint": "Dem Modell erlauben, ausgewählte benutzerdefinierte Befehle und Plugin-Tools auszuführen. „Fragen“ fragt vor jedem Aufruf nach.",
       "needsDescription": "Erfordert eine Beschreibung in den Befehlseinstellungen",
       "noCommands": "Noch keine benutzerdefinierten Befehle konfiguriert.",
-      "noCommandsHint": "Erstellen Sie zuerst Befehle unter Einstellungen → Befehle."
+      "noCommandsHint": "Erstellen Sie zuerst Befehle unter Einstellungen → Befehle.",
+      "selectAll": "Alle auswählen",
+      "deselectAll": "Auswahl aufheben"
     },
     "replyBlocks": { "toolLabel": "Antwortblöcke" }
   },
@@ -945,7 +947,6 @@
     "profileCopyName": "{name} (Kopie)",
     "profileDefaultSoul": "# Rolle\nBeschreiben Sie, wer dieser Assistent ist und wobei er hilft.\n\n# Regeln\n- Antworte in der Sprache der Frage.\n",
     "profileFileToolsOff": "Die Dateiwerkzeuge dieses Profils sind aus: Es erreicht seine Projekte erst, wenn Sie sie oben einschalten.",
-    "profileFilesAskAll": "„Dateien“ steht auf „Fragen“: Jeder Aufruf wartet auf Bestätigung, auch wo das Projekt ihn erlaubt.",
     "profileGenerationHint": "Modell und Parameter der Chats dieses Profils. Leere Felder verwenden die Werte des Modells.",
     "profileMemoryApplyCompact": "Anwenden",
     "profileMemoryClear": "Speicher löschen",
@@ -986,9 +987,6 @@
     "profileToolStepsInvalid": "Geben Sie eine ganze Zahl von 1 bis 50 ein",
     "profileTools": "Werkzeuge",
     "profileToolsHint": "Was das Modell des Profils im Chat selbstständig tun darf. Aufrufe mit „Fragen“ warten in der Nachricht auf Ihre Freigabe.",
-    "profileWorkspace": "Arbeitsbereich des Profils",
-    "profileWorkspaceAccess": "Lesen und Schreiben – immer",
-    "profileWorkspaceHint": "Enthält die an Chats angehängten Dateien und das, was das Modell erstellt.",
     "projectAccessFileToolsOff": "Dateiwerkzeuge sind aus",
     "projectDescription": "Projektbeschreibung",
     "projectFolderFixedHint": "Unter diesem Pfad sieht das Modell die Dateien des Projekts. Er ändert sich nicht, wenn das Projekt umbenannt wird.",
@@ -1280,7 +1278,8 @@
         "occupied": "{detail} enthält andere Dateien: Wählen Sie einen leeren Ordner."
       }
     },
-    "projectInsideSyncedFolder": "Der Ordner liegt im TyCo-Datenordner (oder einem Tresor) und wird mit ihm synchronisiert. Wenn Sie das nicht möchten, wählen Sie einen Ordner außerhalb."
+    "projectInsideSyncedFolder": "Der Ordner liegt im TyCo-Datenordner (oder einem Tresor) und wird mit ihm synchronisiert. Wenn Sie das nicht möchten, wählen Sie einen Ordner außerhalb.",
+    "accessLevelAskAll": "Vor Lesen und Schreiben fragen"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

@@ -18,14 +18,24 @@ describe('chat-tool-groups', () => {
       'commands',
     ])
     const webGroup = CHAT_TOOL_GROUPS.find((g) => g.id === 'web')
-    expect(webGroup?.defaultAccess).toBe('ask')
+    expect(webGroup?.defaultAccess).toBe('allow')
+    expect(webGroup?.defaultEnabled).toBe(true)
     const commands = CHAT_TOOL_GROUPS.find((g) => g.id === 'commands')
     expect(commands?.defaultAccess).toBe('ask')
   })
 
-  it('reads a group as off until the profile sets it', () => {
+  it('reads a group as off until the profile sets it unless defaultEnabled is set', () => {
     expect(toolGroupSettings(undefined, web)).toEqual({
       isEnabled: false,
+      access: 'allow',
+    })
+    const defaultOn = {
+      id: 'web',
+      defaultAccess: 'allow' as const,
+      defaultEnabled: true,
+    }
+    expect(toolGroupSettings(undefined, defaultOn)).toEqual({
+      isEnabled: true,
       access: 'allow',
     })
     expect(

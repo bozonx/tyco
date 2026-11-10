@@ -154,7 +154,7 @@
       "deletePath": "Sposta nel cestino",
       "editFile": "Modifica file",
       "group": "File",
-      "groupHint": "Leggere, cercare e modificare file nello spazio di lavoro del profilo e nei progetti qui sotto, secondo i loro permessi. «Chiedi» chiede conferma prima di ogni chiamata.",
+      "groupHint": "Lettura, ricerca e modifica di file nell’area di lavoro del profilo e nei progetti collegati",
       "hiddenLines": "… altre righe modificate: {count}",
       "listFiles": "Elenca i file",
       "movePath": "Sposta",
@@ -187,7 +187,9 @@
       "groupHint": "Consenti al modello di eseguire comandi personalizzati e strumenti di plugin selezionati. \"Chiedi\" richiede conferma prima di ogni chiamata.",
       "needsDescription": "Richiede una descrizione nelle impostazioni del comando",
       "noCommands": "Nessun comando personalizzato ancora configurato.",
-      "noCommandsHint": "Crea prima i comandi in Impostazioni → Comandi."
+      "noCommandsHint": "Crea prima i comandi in Impostazioni → Comandi.",
+      "selectAll": "Seleziona tutto",
+      "deselectAll": "Deseleziona tutto"
     },
     "replyBlocks": { "toolLabel": "Blocchi di risposta" }
   },
@@ -945,7 +947,6 @@
     "profileCopyName": "{name} (copia)",
     "profileDefaultSoul": "# Ruolo\nDescrivi chi è questo assistente e in cosa aiuta.\n\n# Regole\n- Rispondi nella lingua della domanda.\n",
     "profileFileToolsOff": "Gli strumenti file di questo profilo sono disattivati: non raggiunge i suoi progetti finché non li attivi qui sopra.",
-    "profileFilesAskAll": "«File» è impostato su «Chiedi»: ogni chiamata attende conferma, anche dove il progetto la consente.",
     "profileGenerationHint": "Il modello e i parametri delle chat di questo profilo. I campi vuoti usano i valori del modello.",
     "profileMemoryApplyCompact": "Applica",
     "profileMemoryClear": "Cancella memoria",
@@ -986,9 +987,6 @@
     "profileToolStepsInvalid": "Inserisci un numero intero da 1 a 50",
     "profileTools": "Strumenti",
     "profileToolsHint": "Cosa può fare da solo il modello del profilo nella chat. Le chiamate impostate su «Chiedi» attendono la tua approvazione nel messaggio.",
-    "profileWorkspace": "Spazio di lavoro del profilo",
-    "profileWorkspaceAccess": "Lettura e scrittura, sempre",
-    "profileWorkspaceHint": "Contiene i file allegati alle chat e ciò che crea il modello.",
     "projectAccessFileToolsOff": "Strumenti file disattivati",
     "projectDescription": "Descrizione del progetto",
     "projectFolderFixedHint": "Il modello vede i file del progetto in questo percorso. Non cambia quando il progetto viene rinominato.",
@@ -1280,7 +1278,8 @@
         "occupied": "{detail} contiene altri file: scegli una cartella vuota."
       }
     },
-    "projectInsideSyncedFolder": "La cartella è dentro la cartella dati di TyCo (o un archivio) e verrà sincronizzata con essa. Se non lo vuoi, scegli una cartella esterna."
+    "projectInsideSyncedFolder": "La cartella è dentro la cartella dati di TyCo (o un archivio) e verrà sincronizzata con essa. Se non lo vuoi, scegli una cartella esterna.",
+    "accessLevelAskAll": "Chiedi per lettura e scrittura"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {

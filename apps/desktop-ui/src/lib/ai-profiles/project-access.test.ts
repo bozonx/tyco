@@ -22,9 +22,7 @@ describe('project access levels', () => {
       undefined
     )
     expect(projectAccessLevelOf({ read: 'ask', write: 'deny' })).toBe('read')
-    expect(projectAccessLevelOf({ read: 'ask', write: 'ask' })).toBe(
-      'readWriteAsk'
-    )
+    expect(projectAccessLevelOf({ read: 'ask', write: 'ask' })).toBe('askAll')
     expect(projectAccessLevelOf({ read: 'deny', write: 'allow' })).toBe('full')
   })
 
