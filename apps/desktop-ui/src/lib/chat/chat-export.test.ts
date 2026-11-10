@@ -94,3 +94,52 @@ it('lists the tool calls of an answer in a short block', () => {
     '### Assistant\n\n> Tool `get_current_time`: done\n> Tool `delete_file`: denied\n\nIt is noon.'
   )
 })
+
+it('exports propose_replies blocks with their text and falls back to tool status when empty', () => {
+  const markdown = formatChatToMarkdown([
+    {
+      role: 'assistant',
+      content: 'Here are a couple of options:',
+      parts: [
+        { type: 'text', text: 'Here are a couple of options:' },
+        {
+          type: 'tool-call',
+          toolCallId: 'pr1',
+          toolName: 'propose_replies',
+          input: {
+            blocks: [
+              { title: 'Short', text: 'Line 1\nLine 2' },
+              { text: 'Plain option' },
+            ],
+          },
+          state: 'done',
+        },
+      ],
+    },
+    {
+      role: 'assistant',
+      content: '',
+      parts: [
+        {
+          type: 'tool-call',
+          toolCallId: 'pr2',
+          toolName: 'propose_replies',
+          input: { blocks: [] },
+          state: 'error',
+        },
+      ],
+    },
+  ])
+
+  expect(markdown).toBe(
+    [
+      '### Assistant',
+      'Here are a couple of options:',
+      '**Short**',
+      '> Line 1\n> Line 2',
+      '> Plain option',
+      '### Assistant',
+      '> Tool `propose_replies`: error',
+    ].join('\n\n')
+  )
+})

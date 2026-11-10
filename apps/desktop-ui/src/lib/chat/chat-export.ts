@@ -1,3 +1,7 @@
+import {
+  REPLY_BLOCKS_TOOL_NAME,
+  extractReplyBlocks,
+} from '../reply-blocks/reply-blocks-tool'
 import type { ChatMessage } from '@tyco/shared'
 
 export interface ExportChatOptions {
@@ -6,6 +10,13 @@ export interface ExportChatOptions {
 
 /** The text as Markdown shows it, without its marks taking effect */
 const escapeMarkdown = (text: string) => text.replace(/[\\`*_[\]<>#|]/g, '\\$&')
+
+const formatBlockquote = (text: string) =>
+  text
+    .trim()
+    .split('\n')
+    .map((line) => `> ${line}`)
+    .join('\n')
 
 /** Formats a chat dialogue into a clean Markdown string. */
 export function formatChatToMarkdown(
@@ -29,11 +40,7 @@ export function formatChatToMarkdown(
         if (trimmed) {
           if (attachment.name)
             section.push(`**${escapeMarkdown(attachment.name)}**`)
-          const quoted = trimmed
-            .split('\n')
-            .map((line) => `> ${line}`)
-            .join('\n')
-          section.push(quoted)
+          section.push(formatBlockquote(trimmed))
         }
       }
     }
@@ -47,16 +54,36 @@ export function formatChatToMarkdown(
     const toolCalls = (message.parts || []).filter(
       (part) => part.type === 'tool-call'
     )
-    if (toolCalls.length) {
-      section.push(
-        toolCalls
-          .map((call) => `> Tool \`${call.toolName}\`: ${call.state}`)
-          .join('\n')
-      )
+    const toolLines: string[] = []
+    const replyBlocksSections: string[] = []
+    for (const call of toolCalls) {
+      const blocks =
+        call.toolName === REPLY_BLOCKS_TOOL_NAME
+          ? extractReplyBlocks(call.input)
+          : []
+      if (blocks.length > 0) {
+        for (const block of blocks) {
+          const quoted = formatBlockquote(block.text)
+          replyBlocksSections.push(
+            block.title
+              ? `**${escapeMarkdown(block.title)}**\n\n${quoted}`
+              : quoted
+          )
+        }
+      } else {
+        toolLines.push(`> Tool \`${call.toolName}\`: ${call.state}`)
+      }
+    }
+    if (toolLines.length) {
+      section.push(toolLines.join('\n'))
     }
 
     if (message.content?.trim()) {
       section.push(message.content.trim())
+    }
+
+    if (replyBlocksSections.length) {
+      section.push(...replyBlocksSections)
     }
 
     parts.push(section.join('\n\n'))

@@ -111,8 +111,13 @@ it('renders propose_replies as ReplyBlock components and emits block actions', (
           },
         ],
       },
+      canRegenerate: true,
     },
   })
+
+  expect(wrapper.find('.reply-blocks-label').text()).toContain(
+    'chatTools.replyBlocks.toolLabel'
+  )
 
   const blocks = wrapper.findAllComponents({ name: 'ReplyBlock' })
   expect(blocks).toHaveLength(2)
@@ -128,5 +133,61 @@ it('renders propose_replies as ReplyBlock components and emits block actions', (
   expect(wrapper.emitted('insert-editor-reply-block')).toEqual([
     ['Second answer'],
   ])
+
+  expect(wrapper.findComponent({ name: 'DropdownMenu' }).exists()).toBe(false)
+  const regenerateBtn = wrapper.findComponent({ name: 'IconButton' })
+  expect(regenerateBtn.exists()).toBe(true)
+  expect(regenerateBtn.props('label')).toBe('chat.regenerate')
+  regenerateBtn.vm.$emit('click')
+  expect(wrapper.emitted('regenerate')).toHaveLength(1)
+
+  wrapper.unmount()
+})
+
+it('hides message actions on reply-blocks-only messages when regeneration is unavailable and keeps full menu for mixed messages', async () => {
+  const wrapper = shallowMount(ChatMessageItem, {
+    props: {
+      message: {
+        role: 'assistant',
+        content: '',
+        parts: [
+          {
+            type: 'tool-call',
+            toolCallId: 'pr1',
+            toolName: 'propose_replies',
+            input: { blocks: [{ text: 'Only block' }] },
+            state: 'done',
+          },
+        ],
+      },
+      canRegenerate: false,
+    },
+  })
+
+  expect(wrapper.find('.message-actions').exists()).toBe(false)
+
+  await wrapper.setProps({
+    canRegenerate: true,
+    message: {
+      role: 'assistant',
+      content: 'Here are two options:',
+      parts: [
+        { type: 'text', text: 'Here are two options:' },
+        {
+          type: 'tool-call',
+          toolCallId: 'pr1',
+          toolName: 'propose_replies',
+          input: { blocks: [{ text: 'Block with intro' }] },
+          state: 'done',
+        },
+      ],
+    },
+  })
+
+  expect(wrapper.findComponent({ name: 'DropdownMenu' }).exists()).toBe(true)
+  expect(wrapper.findComponent({ name: 'IconButton' }).props('label')).toBe(
+    'chat.copy'
+  )
+
   wrapper.unmount()
 })

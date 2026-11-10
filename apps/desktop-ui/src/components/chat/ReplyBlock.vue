@@ -1,6 +1,11 @@
 <template>
   <div class="reply-block" :data-block-index="index">
     <div v-if="block.title" class="reply-block-header">
+      <AppIcon
+        icon="mdi:text-box-plus-outline"
+        size="xs"
+        class="reply-block-icon"
+      />
       <span class="reply-block-title">{{ block.title }}</span>
     </div>
 
@@ -62,6 +67,7 @@ import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import type { ReplyBlockData } from '../../lib/reply-blocks/reply-blocks-tool'
+import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import CopyButton from '../common/CopyButton.vue'
 import Diff from '../common/Diff.vue'
@@ -99,10 +105,11 @@ const hasDiffOption = computed(
 
 <style scoped>
 .reply-block {
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--app-border);
+  border-left: 3px solid var(--color-primary);
   border-radius: var(--radius-md);
-  background-color: var(--surface-bg);
-  padding: var(--space-sm);
+  background-color: var(--app-surface-raised);
+  padding: var(--space-sm) var(--space-md);
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -110,18 +117,31 @@ const hasDiffOption = computed(
 }
 
 .reply-block:hover {
-  border-color: var(--border-color-hover, var(--color-primary));
+  border-color: color-mix(
+    in oklab,
+    var(--color-primary) 50%,
+    var(--app-border)
+  );
+  border-left-color: var(--color-primary);
 }
 
 .reply-block-header {
-  font-size: var(--text-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-caption);
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--app-text-muted);
+}
+
+.reply-block-icon {
+  color: var(--color-primary);
+  flex-shrink: 0;
 }
 
 .reply-block-content {
-  font-size: var(--text-sm);
-  line-height: var(--leading-normal);
+  font-size: var(--text-body);
+  line-height: 1.55;
 }
 
 .reply-block-text {
@@ -135,7 +155,7 @@ const hasDiffOption = computed(
   align-items: center;
   gap: var(--space-xs);
   margin-top: var(--space-xs);
-  padding-top: var(--space-xs);
-  border-top: 1px solid var(--border-color-subtle, var(--border-color));
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--app-border-subtle);
 }
 </style>

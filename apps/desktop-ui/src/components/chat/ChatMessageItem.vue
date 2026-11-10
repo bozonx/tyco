@@ -31,11 +31,18 @@
             @content-resized="emit('content-resized')"
           />
           <div
-            v-else-if="step.call.toolName === REPLY_BLOCKS_TOOL_NAME"
+            v-else-if="
+              step.call.toolName === REPLY_BLOCKS_TOOL_NAME &&
+              replyBlocksOf(step.call.input).length > 0
+            "
             class="reply-blocks-container"
           >
+            <div class="reply-blocks-label">
+              <AppIcon icon="mdi:text-box-plus-outline" size="sm" />
+              <span>{{ t('chatTools.replyBlocks.toolLabel') }}</span>
+            </div>
             <ReplyBlock
-              v-for="(block, bIndex) in extractReplyBlocks(step.call.input)"
+              v-for="(block, bIndex) in replyBlocksOf(step.call.input)"
               :key="bIndex"
               :block="block"
               :index="bIndex"
@@ -64,30 +71,36 @@
         {{ message.content }}
       </div>
 
-      <div
-        v-if="message.content || message.images?.length || steps"
-        class="message-actions"
-      >
+      <div v-if="hasMessageActions" class="message-actions">
         <span v-if="message.status === 'stopped'" class="message-status">
           {{ t('chat.stopped') }}
         </span>
         <IconButton
-          v-if="message.content"
+          v-if="isReplyBlocksOnly && canRegenerate"
           class="message-action"
-          @click="copyMessage"
-          :label="isCopied() ? t('common.copied') : t('chat.copy')"
-          :icon="isCopied() ? 'mdi:check' : 'mdi:content-copy'"
+          @click="emit('regenerate')"
+          :label="t('chat.regenerate')"
+          icon="mdi:reload"
         />
-        <DropdownMenu
-          size="xs"
-          square
-          hide-chevron
-          placement="top"
-          align="right"
-          icon="mdi:dots-horizontal"
-          :title="t('common.more')"
-          :items="moreMenuItems"
-        />
+        <template v-else-if="!isReplyBlocksOnly">
+          <IconButton
+            v-if="message.content"
+            class="message-action"
+            @click="copyMessage"
+            :label="isCopied() ? t('common.copied') : t('chat.copy')"
+            :icon="isCopied() ? 'mdi:check' : 'mdi:content-copy'"
+          />
+          <DropdownMenu
+            size="xs"
+            square
+            hide-chevron
+            placement="top"
+            align="right"
+            icon="mdi:dots-horizontal"
+            :title="t('common.more')"
+            :items="moreMenuItems"
+          />
+        </template>
       </div>
     </div>
   </article>
@@ -105,6 +118,7 @@ import {
   REPLY_BLOCKS_TOOL_NAME,
   extractReplyBlocks,
 } from '../../lib/reply-blocks/reply-blocks-tool'
+import AppIcon from '../common/AppIcon.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
 import ChatAttachment from './ChatAttachment.vue'
@@ -141,6 +155,30 @@ const pendingApproval = (
 
 /** The answer's text and tool calls in order; null for a plain answer */
 const steps = computed(() => messageSteps(props.message))
+const replyBlocksOf = (input: unknown) => extractReplyBlocks(input)
+
+/** True when the assistant answer consists solely of insertion reply blocks */
+const isReplyBlocksOnly = computed(() => {
+  if (props.message.role !== 'assistant') return false
+  if (props.message.content.trim() || props.message.images?.length) return false
+  if (!steps.value?.length) return false
+  return steps.value.every(
+    (step) =>
+      step.type === 'tool' &&
+      step.call.toolName === REPLY_BLOCKS_TOOL_NAME &&
+      replyBlocksOf(step.call.input).length > 0
+  )
+})
+
+const hasMessageActions = computed(() => {
+  if (isReplyBlocksOnly.value) {
+    return props.message.status === 'stopped' || Boolean(props.canRegenerate)
+  }
+  return Boolean(
+    props.message.content || props.message.images?.length || steps.value
+  )
+})
+
 const { t } = useI18n()
 const { copy: copyText, isCopied } = useCopyValue()
 
@@ -244,9 +282,17 @@ function copyMessage() {
 .reply-blocks-container {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
   margin-top: var(--space-xs);
   margin-bottom: var(--space-xs);
+}
+.reply-blocks-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--app-text-faint);
+  font-size: var(--text-caption);
+  font-weight: 500;
 }
 @media (hover: none) {
   .message-actions {
