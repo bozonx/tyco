@@ -118,5 +118,7 @@ onBeforeUnmount(() => {
 .app-dialog::backdrop {
   background: var(--app-overlay-bg);
   backdrop-filter: var(--app-overlay-backdrop);
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 </style>

@@ -1555,7 +1555,9 @@
     "selectAreaInstruction": "Trageți pentru a selecta o zonă. Escape anulează.",
     "confirmArea": "Folosește zona",
     "confirmAreaInstruction": "Enter sau dublu clic confirmă, trageți din nou pentru a redesena. Escape anulează.",
-    "addArea": "Adaugă captură de zonă"
+    "addArea": "Adaugă captură de zonă",
+    "deleteConfirmTitle": "Ștergi captura de ecran?",
+    "deleteConfirmMessage": "Această captură de ecran va fi eliminată din solicitare."
   },
   "chatPrompts": {
     "missingProfile": "Profil șters",

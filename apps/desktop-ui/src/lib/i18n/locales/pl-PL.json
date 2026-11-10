@@ -1555,7 +1555,9 @@
     "selectAreaInstruction": "Przeciągnij, aby zaznaczyć obszar. Escape anuluje.",
     "confirmArea": "Użyj obszaru",
     "confirmAreaInstruction": "Enter lub dwuklik zatwierdza, ponowne przeciągnięcie zmienia zaznaczenie. Escape anuluje.",
-    "addArea": "Dodaj zrzut obszaru"
+    "addArea": "Dodaj zrzut obszaru",
+    "deleteConfirmTitle": "Usunąć zrzut ekranu?",
+    "deleteConfirmMessage": "Ten zrzut ekranu zostanie usunięty z zapytania."
   },
   "chatPrompts": {
     "missingProfile": "Usunięty profil",

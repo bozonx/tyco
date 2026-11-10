@@ -1552,7 +1552,9 @@
     "selectAreaInstruction": "ドラッグして範囲を選択します。Escape でキャンセル。",
     "confirmArea": "この範囲を使う",
     "confirmAreaInstruction": "Enter またはダブルクリックで確定、再度ドラッグで選び直します。Escape でキャンセル。",
-    "addArea": "領域のスクリーンショットを追加"
+    "addArea": "領域のスクリーンショットを追加",
+    "deleteConfirmTitle": "スクリーンショットを削除しますか？",
+    "deleteConfirmMessage": "このスクリーンショットはリクエストから削除されます。"
   },
   "chatPrompts": {
     "missingProfile": "削除されたプロファイル",

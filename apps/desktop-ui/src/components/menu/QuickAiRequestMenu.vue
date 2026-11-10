@@ -8,23 +8,43 @@
         :allow-disable="!model.isSourceTextLocked.value"
         @update:disabled="(disabled) => model.setSourceTextDisabled(disabled)"
       />
-      <div v-if="props.screenshotMode" class="screenshot-preview">
+      <div
+        v-if="props.screenshotMode"
+        class="screenshot-preview"
+        :class="{ 'is-with-turns': model.turns.value.length > 0 }"
+      >
         <ChatImageAttachment
           v-for="img in model.sourceImages.value"
           :key="img.id"
           :image="img"
           :removable="!model.isSourceImageLocked.value && !isCapturing"
-          compact
-          @remove="removeScreenshot(img.id)"
+          size="large"
+          @remove="requestRemoveScreenshot(img.id)"
         />
-        <IconButton
-          icon="mdi:selection-drag"
-          :label="t('screenshot.addArea')"
+        <button
+          type="button"
+          class="add-screenshot-btn"
+          :aria-label="t('screenshot.addArea')"
           :title="t('screenshot.addArea')"
           :disabled="isCapturing || model.isSourceImageLocked.value"
           @click="addScreenshot"
-        />
+        >
+          <AppIcon icon="mdi:selection-drag" size="lg" aria-hidden="true" />
+          <span class="add-screenshot-label">{{
+            t('screenshot.addArea')
+          }}</span>
+        </button>
       </div>
+
+      <ConfirmModal
+        :open="Boolean(screenshotToDelete)"
+        :title="t('screenshot.deleteConfirmTitle')"
+        :message="t('screenshot.deleteConfirmMessage')"
+        :confirm-text="t('common.delete')"
+        danger
+        @confirm="confirmRemoveScreenshot"
+        @cancel="cancelRemoveScreenshot"
+      />
 
       <QuickAiRequestTurns
         :turns="model.turns.value"
@@ -150,6 +170,7 @@ import { useSecretsStore } from '../../stores/secrets'
 import { useToolsStore } from '../../stores/tools'
 import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
 import AppIcon from '../common/AppIcon.vue'
+import ConfirmModal from '../common/ConfirmModal.vue'
 import IconButton from '../common/IconButton.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ContextPreview from '../overlay/ContextPreview.vue'
@@ -190,6 +211,7 @@ const isQuickWindow = isInQuickWindow()
 const input = createChatInputModel()
 input.setValue(props.prompt)
 const isCapturing = ref(false)
+const screenshotToDelete = ref<string | null>(null)
 const queryPanelRef = ref<InstanceType<typeof QueryPanel>>()
 let disposed = false
 const isListening = ref(props.inputMode === 'voice')
@@ -271,6 +293,29 @@ watch(
     if (images) model.setSourceImages(images)
   }
 )
+
+watch(
+  () => model.isSourceImageLocked.value,
+  (locked) => {
+    if (locked) screenshotToDelete.value = null
+  }
+)
+
+function requestRemoveScreenshot(imageId: string) {
+  if (model.isSourceImageLocked.value || isCapturing.value) return
+  screenshotToDelete.value = imageId
+}
+
+function cancelRemoveScreenshot() {
+  screenshotToDelete.value = null
+}
+
+async function confirmRemoveScreenshot() {
+  const imageId = screenshotToDelete.value
+  screenshotToDelete.value = null
+  if (!imageId) return
+  await removeScreenshot(imageId)
+}
 
 async function removeScreenshot(imageId: string) {
   if (model.isSourceImageLocked.value) return
@@ -511,9 +556,58 @@ onUnmounted(() => {
 <style scoped>
 .screenshot-preview {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-sm);
-  padding-block: var(--space-xs);
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+
+.screenshot-preview.is-with-turns {
+  border-bottom: 1px solid var(--app-border-subtle);
+}
+
+.add-screenshot-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  height: 7.5rem;
+  min-width: 7.5rem;
+  max-width: 11rem;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px dashed var(--app-border-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--app-text-muted);
+  font-size: var(--text-caption);
+  line-height: 1.3;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.add-screenshot-btn:hover:not(:disabled) {
+  color: var(--color-base-content);
+  background: var(--app-hover);
+  border-color: var(--color-primary);
+}
+
+.add-screenshot-btn:focus-visible {
+  outline: var(--app-focus-outline-width) solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.add-screenshot-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.add-screenshot-label {
+  overflow-wrap: anywhere;
 }
 
 .quick-error-banner {

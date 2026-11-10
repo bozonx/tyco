@@ -1552,7 +1552,9 @@
     "selectAreaInstruction": "Húzással jelöljön ki egy területet. Az Escape megszakítja.",
     "confirmArea": "Terület használata",
     "confirmAreaInstruction": "Enter vagy dupla kattintás: jóváhagyás, újabb húzás: újrarajzolás. Az Escape megszakítja.",
-    "addArea": "Területképernyőkép hozzáadása"
+    "addArea": "Területképernyőkép hozzáadása",
+    "deleteConfirmTitle": "Eltávolítja a képernyőképet?",
+    "deleteConfirmMessage": "Ez a képernyőkép el lesz távolítva a kérésből."
   },
   "chatPrompts": {
     "missingProfile": "Törölt profil",

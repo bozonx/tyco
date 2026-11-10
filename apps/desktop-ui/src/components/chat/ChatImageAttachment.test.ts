@@ -32,6 +32,18 @@ describe('image attachment preview', () => {
     mocks.profileId = undefined
     URL.createObjectURL = vi.fn(() => 'blob:preview')
     URL.revokeObjectURL = vi.fn()
+    Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+      configurable: true,
+      value: vi.fn(function (this: HTMLDialogElement) {
+        this.setAttribute('open', '')
+      }),
+    })
+    Object.defineProperty(HTMLDialogElement.prototype, 'close', {
+      configurable: true,
+      value: vi.fn(function (this: HTMLDialogElement) {
+        this.removeAttribute('open')
+      }),
+    })
   })
   it('loads local bytes and releases the object URL on unmount', async () => {
     mocks.get.mockResolvedValue(new Uint8Array([1, 2, 3]))
@@ -129,5 +141,27 @@ describe('image attachment preview', () => {
     finish(new Uint8Array([1]))
     await flushPromises()
     expect(URL.createObjectURL).not.toHaveBeenCalled()
+  })
+
+  it('opens the fullscreen image viewer on click and supports large thumbnails', async () => {
+    mocks.get.mockResolvedValue(new Uint8Array([1, 2, 3]))
+    const wrapper = mount(ChatImageAttachment, {
+      props: { image, size: 'large' },
+    })
+    await flushPromises()
+    expect(wrapper.find('.image-attachment.is-large').exists()).toBe(true)
+
+    await wrapper.get('.image-preview-btn').trigger('click')
+    await flushPromises()
+    const dialog = document.body.querySelector('dialog.image-viewer-dialog')!
+    expect(dialog.hasAttribute('open')).toBe(true)
+    expect(dialog.querySelector('img')?.getAttribute('src')).toBe(
+      'blob:preview'
+    )
+
+    dialog.querySelector<HTMLButtonElement>('.image-viewer-close')!.click()
+    await flushPromises()
+    expect(dialog.hasAttribute('open')).toBe(false)
+    wrapper.unmount()
   })
 })

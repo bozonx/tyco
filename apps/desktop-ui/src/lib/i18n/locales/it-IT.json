@@ -1555,7 +1555,9 @@
     "selectAreaInstruction": "Trascina per selezionare un’area. Esc per annullare.",
     "confirmArea": "Usa area",
     "confirmAreaInstruction": "Premi Invio o fai doppio clic per confermare, trascina di nuovo per ridisegnare. Esc annulla.",
-    "addArea": "Aggiungi screenshot dell'area"
+    "addArea": "Aggiungi screenshot dell'area",
+    "deleteConfirmTitle": "Rimuovere la schermata?",
+    "deleteConfirmMessage": "Questa schermata verrà rimossa dalla richiesta."
   },
   "chatPrompts": {
     "missingProfile": "Profilo eliminato",

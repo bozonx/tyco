@@ -1552,7 +1552,9 @@
     "selectAreaInstruction": "Bir alan seçmek için sürükleyin. Escape iptal eder.",
     "confirmArea": "Alanı kullan",
     "confirmAreaInstruction": "Onaylamak için Enter'a basın veya çift tıklayın, yeniden çizmek için tekrar sürükleyin. Escape iptal eder.",
-    "addArea": "Alan ekran görüntüsü ekle"
+    "addArea": "Alan ekran görüntüsü ekle",
+    "deleteConfirmTitle": "Ekran görüntüsü kaldırılsın mı?",
+    "deleteConfirmMessage": "Bu ekran görüntüsü istekten kaldırılacak."
   },
   "chatPrompts": {
     "missingProfile": "Silinen profil",

@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { i18n, setI18nLocale } from '../../lib/i18n/index'
+import { useImageViewerStore } from '../../stores/image-viewer'
 import {
   installFakeDesktop,
   type TestDesktop,
@@ -131,5 +132,17 @@ describe('ChatMarkdown.vue', () => {
     await wrapper.setProps({ content: '**Three**', streaming: false })
     await flushPromises()
     expect(wrapper.find('strong').text()).toBe('Three')
+  })
+
+  it('opens the shared image viewer when a diagram image is clicked', async () => {
+    const source = '```mermaid\ngraph TD; A-->B\n```'
+    const wrapper = render(source)
+    await settle()
+    const viewer = useImageViewerStore()
+    expect(viewer.isOpen).toBe(false)
+    await wrapper.find('figure img').trigger('click')
+    expect(viewer.isOpen).toBe(true)
+    expect(viewer.src).toBe('blob:preview')
+    expect(viewer.lightSurface).toBe(true)
   })
 })

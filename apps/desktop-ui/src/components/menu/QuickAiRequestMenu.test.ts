@@ -441,28 +441,59 @@ describe('QuickAiRequestMenu', () => {
       height: 1080,
       size: 1000,
     }
-    const mountScreenshotMenu = () =>
-      mount(QuickAiRequestMenu, {
+    const mountScreenshotMenu = () => {
+      Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+        configurable: true,
+        value: vi.fn(function (this: HTMLDialogElement) {
+          this.setAttribute('open', '')
+        }),
+      })
+      Object.defineProperty(HTMLDialogElement.prototype, 'close', {
+        configurable: true,
+        value: vi.fn(function (this: HTMLDialogElement) {
+          this.removeAttribute('open')
+        }),
+      })
+      return mount(QuickAiRequestMenu, {
         props: { screenshotMode: true, screenshots: [screenshot] },
         global: {
           plugins: [desktop.pinia],
           stubs: {
             AppIcon: true,
             ChatImageAttachment: {
-              props: ['image', 'removable'],
+              props: ['image', 'removable', 'size'],
               template:
-                '<div class="shot" :data-id="image.id"><button v-if="removable" class="remove-shot" @click="$emit(\'remove\')" /></div>',
+                '<div class="shot" :data-id="image.id" :data-size="size"><button v-if="removable" class="remove-shot" @click="$emit(\'remove\')" /></div>',
             },
           },
         },
       })
+    }
 
-    it('previews the screenshot and removes it', async () => {
+    it('previews the screenshot in large size and deletes it only after confirmation', async () => {
       desktop.backend.handle('remove_screenshot', () => undefined)
       const wrapper = mountScreenshotMenu()
       expect(wrapper.find('.shot').attributes('data-id')).toBe('shot-1')
+      expect(wrapper.find('.shot').attributes('data-size')).toBe('large')
 
       await wrapper.find('.remove-shot').trigger('click')
+      await flushPromises()
+      expect(desktop.backend.callsOf('remove_screenshot')).toHaveLength(0)
+
+      const cancelBtn = document.body.querySelector<HTMLButtonElement>(
+        '.confirm-modal-actions button:first-child'
+      )!
+      cancelBtn.click()
+      await flushPromises()
+      expect(desktop.backend.callsOf('remove_screenshot')).toHaveLength(0)
+      expect(wrapper.find('.shot').exists()).toBe(true)
+
+      await wrapper.find('.remove-shot').trigger('click')
+      await flushPromises()
+      const confirmBtn = document.body.querySelector<HTMLButtonElement>(
+        '.confirm-modal-actions button:last-child'
+      )!
+      confirmBtn.click()
       await flushPromises()
       expect(
         desktop.backend

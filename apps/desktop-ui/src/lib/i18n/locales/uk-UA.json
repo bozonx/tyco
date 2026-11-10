@@ -1552,7 +1552,9 @@
     "selectAreaInstruction": "Виділіть область курсором. Escape — скасувати.",
     "confirmArea": "Використати область",
     "confirmAreaInstruction": "Enter або подвійне клацання — підтвердити, нове виділення — перемалювати. Escape — скасувати.",
-    "addArea": "Додати знімок області"
+    "addArea": "Додати знімок області",
+    "deleteConfirmTitle": "Видалити знімок екрана?",
+    "deleteConfirmMessage": "Цей знімок екрана буде видалено із запиту."
   },
   "chatPrompts": {
     "missingProfile": "Видалений профіль",

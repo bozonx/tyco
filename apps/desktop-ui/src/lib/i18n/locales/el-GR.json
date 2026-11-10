@@ -1552,7 +1552,9 @@
     "selectAreaInstruction": "Σύρετε για να επιλέξετε περιοχή. Το Escape ακυρώνει.",
     "confirmArea": "Χρήση περιοχής",
     "confirmAreaInstruction": "Enter ή διπλό κλικ για επιβεβαίωση, σύρετε ξανά για νέα επιλογή. Το Escape ακυρώνει.",
-    "addArea": "Προσθήκη στιγμιότυπου περιοχής"
+    "addArea": "Προσθήκη στιγμιότυπου περιοχής",
+    "deleteConfirmTitle": "Αφαίρεση στιγμιότυπου οθόνης;",
+    "deleteConfirmMessage": "Αυτό το στιγμιότυπο οθόνης θα αφαιρεθεί από το αίτημα."
   },
   "chatPrompts": {
     "missingProfile": "Διαγραμμένο προφίλ",

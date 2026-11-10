@@ -16,6 +16,7 @@ interface ViewDependencies {
   createObjectUrl: (blob: Blob) => string
   revokeObjectUrl: (url: string) => void
   openLink: (url: string) => Promise<void>
+  openImage?: (image: { src: string; alt: string; isDiagram: boolean }) => void
   copyCode: (source: string) => void
   labels: () => ViewLabels
 }
@@ -167,29 +168,40 @@ export function createChatMarkdownView(deps: ViewDependencies) {
       return
     }
     const button = event.target.closest<HTMLButtonElement>('button')
-    if (!button || !root.contains(button)) return
-    if (button.dataset.codeCopy) {
-      deps.copyCode(
-        button.parentElement?.querySelector('code')?.textContent ?? ''
-      )
+    if (button && root.contains(button)) {
+      if (button.dataset.codeCopy) {
+        deps.copyCode(
+          button.parentElement?.querySelector('code')?.textContent ?? ''
+        )
+        return
+      }
+      const url = button.dataset.imageUrl
+      if (!url || button.disabled || !isChatWebUrl(url)) return
+      const version = revision
+      button.disabled = true
+      button.textContent = deps.labels().loadingImage
+      try {
+        const blob = await deps.loadImage(url, controller.signal)
+        if (version !== revision) return
+        if (images.size >= 16) images.clear()
+        images.set(url, blob)
+        attachImage(button, blob)
+      } catch {
+        if (version !== revision) return
+        button.disabled = false
+        button.textContent = deps.labels().imageError
+      }
       return
     }
-    const url = button.dataset.imageUrl
-    if (!url || button.disabled || !isChatWebUrl(url)) return
-    const version = revision
-    button.disabled = true
-    button.textContent = deps.labels().loadingImage
-    try {
-      const blob = await deps.loadImage(url, controller.signal)
-      if (version !== revision) return
-      if (images.size >= 16) images.clear()
-      images.set(url, blob)
-      attachImage(button, blob)
-    } catch {
-      if (version !== revision) return
-      button.disabled = false
-      button.textContent = deps.labels().imageError
-    }
+    const image = event.target.closest<HTMLImageElement>('img')
+    if (!image || !root.contains(image) || image.hidden) return
+    const src = image.currentSrc || image.getAttribute('src') || ''
+    if (!src) return
+    deps.openImage?.({
+      src,
+      alt: image.alt || '',
+      isDiagram: Boolean(image.closest('.chat-diagram-preview')),
+    })
   }
 
   return {

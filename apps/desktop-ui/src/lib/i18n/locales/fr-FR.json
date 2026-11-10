@@ -1555,7 +1555,9 @@
     "selectAreaInstruction": "Faites glisser pour sélectionner une zone. Échap pour annuler.",
     "confirmArea": "Utiliser la zone",
     "confirmAreaInstruction": "Entrée ou double-clic pour confirmer, glissez à nouveau pour redessiner. Échap annule.",
-    "addArea": "Ajouter une capture de zone"
+    "addArea": "Ajouter une capture de zone",
+    "deleteConfirmTitle": "Supprimer la capture d’écran ?",
+    "deleteConfirmMessage": "Cette capture d’écran sera retirée de la demande."
   },
   "chatPrompts": {
     "missingProfile": "Profil supprimé",

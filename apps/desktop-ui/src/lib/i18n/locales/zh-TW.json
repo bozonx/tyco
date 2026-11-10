@@ -1546,7 +1546,9 @@
     "selectAreaInstruction": "拖曳以選取區域。按 Escape 取消。",
     "confirmArea": "使用此區域",
     "confirmAreaInstruction": "按 Enter 或按兩下確認，再次拖曳可重新選取。按 Escape 取消。",
-    "addArea": "新增區域截圖"
+    "addArea": "新增區域截圖",
+    "deleteConfirmTitle": "移除截圖？",
+    "deleteConfirmMessage": "此截圖將從請求中移除。"
   },
   "chatPrompts": {
     "missingProfile": "已刪除的設定檔",

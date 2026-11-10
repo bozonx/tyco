@@ -1552,7 +1552,9 @@
     "selectAreaInstruction": "Выделите область курсором. Escape — отмена.",
     "confirmArea": "Использовать область",
     "confirmAreaInstruction": "Enter или двойной щелчок — подтвердить, новое выделение — перерисовать. Escape — отмена.",
-    "addArea": "Добавить область экрана"
+    "addArea": "Добавить область экрана",
+    "deleteConfirmTitle": "Удалить скриншот?",
+    "deleteConfirmMessage": "Этот скриншот будет удалён из запроса."
   },
   "chatPrompts": {
     "missingProfile": "Удалённый профиль",

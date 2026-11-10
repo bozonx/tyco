@@ -1555,7 +1555,9 @@
     "selectAreaInstruction": "Ziehen Sie, um einen Bereich auszuwählen. Escape bricht ab.",
     "confirmArea": "Bereich verwenden",
     "confirmAreaInstruction": "Enter oder Doppelklick bestätigt, erneutes Ziehen wählt neu. Escape bricht ab.",
-    "addArea": "Bereichsscreenshot hinzufügen"
+    "addArea": "Bereichsscreenshot hinzufügen",
+    "deleteConfirmTitle": "Screenshot entfernen?",
+    "deleteConfirmMessage": "Dieser Screenshot wird aus der Anfrage entfernt."
   },
   "chatPrompts": {
     "missingProfile": "Gelöschtes Profil",

@@ -1555,7 +1555,9 @@
     "selectAreaInstruction": "Povucite za odabir područja. Escape poništava.",
     "confirmArea": "Koristi područje",
     "confirmAreaInstruction": "Enter ili dvoklik potvrđuje, ponovno povlačenje mijenja odabir. Escape poništava.",
-    "addArea": "Dodaj snimku područja"
+    "addArea": "Dodaj snimku područja",
+    "deleteConfirmTitle": "Ukloniti snimku zaslona?",
+    "deleteConfirmMessage": "Ova će snimka zaslona biti uklonjena iz zahtjeva."
   },
   "chatPrompts": {
     "missingProfile": "Izbrisani profil",

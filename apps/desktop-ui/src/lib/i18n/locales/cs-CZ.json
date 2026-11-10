@@ -1549,7 +1549,9 @@
     "selectAreaInstruction": "Tažením vyberte oblast. Escape zruší.",
     "confirmArea": "Použít oblast",
     "confirmAreaInstruction": "Enter nebo dvojklik potvrdí, novým tažením výběr překreslíte. Escape zruší.",
-    "addArea": "Přidat snímek oblasti"
+    "addArea": "Přidat snímek oblasti",
+    "deleteConfirmTitle": "Odstranit snímek obrazovky?",
+    "deleteConfirmMessage": "Tento snímek obrazovky bude z požadavku odstraněn."
   },
   "chatPrompts": {
     "missingProfile": "Smazaný profil",

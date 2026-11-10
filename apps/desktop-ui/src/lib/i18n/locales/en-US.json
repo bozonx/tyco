@@ -1555,7 +1555,9 @@
     "selectAreaInstruction": "Drag to select an area. Press Escape to cancel.",
     "confirmArea": "Use area",
     "confirmAreaInstruction": "Press Enter or double-click to confirm, drag again to redraw. Escape cancels.",
-    "addArea": "Add area screenshot"
+    "addArea": "Add area screenshot",
+    "deleteConfirmTitle": "Remove screenshot?",
+    "deleteConfirmMessage": "This screenshot will be removed from the request."
   },
   "chatPrompts": {
     "missingProfile": "Deleted profile",

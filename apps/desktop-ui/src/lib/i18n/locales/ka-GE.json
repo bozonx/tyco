@@ -1552,7 +1552,9 @@
     "selectAreaInstruction": "გადაათრიეთ არეალის მოსანიშნად. Escape — გაუქმება.",
     "confirmArea": "არეალის გამოყენება",
     "confirmAreaInstruction": "Enter ან ორმაგი დაწკაპუნება — დადასტურება, ხელახლა გადათრევა — ახალი მონიშვნა. Escape — გაუქმება.",
-    "addArea": "არეალის სკრინშოტის დამატება"
+    "addArea": "არეალის სკრინშოტის დამატება",
+    "deleteConfirmTitle": "წავშალოთ ეკრანის ანაბეჭდი?",
+    "deleteConfirmMessage": "ეს ეკრანის ანაბეჭდი მოთხოვნიდან წაიშლება."
   },
   "chatPrompts": {
     "missingProfile": "წაშლილი პროფილი",

@@ -1555,7 +1555,9 @@
     "selectAreaInstruction": "Arrastra para seleccionar un área. Escape cancela.",
     "confirmArea": "Usar área",
     "confirmAreaInstruction": "Pulsa Intro o haz doble clic para confirmar; arrastra de nuevo para redibujar. Escape cancela.",
-    "addArea": "Añadir captura de área"
+    "addArea": "Añadir captura de área",
+    "deleteConfirmTitle": "¿Eliminar captura de pantalla?",
+    "deleteConfirmMessage": "Esta captura de pantalla se eliminará de la solicitud."
   },
   "chatPrompts": {
     "missingProfile": "Perfil eliminado",

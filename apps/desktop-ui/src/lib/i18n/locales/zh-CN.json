@@ -1546,7 +1546,9 @@
     "selectAreaInstruction": "拖动以选择区域。按 Escape 取消。",
     "confirmArea": "使用此区域",
     "confirmAreaInstruction": "按 Enter 或双击确认，再次拖动可重新选择。按 Escape 取消。",
-    "addArea": "添加区域截图"
+    "addArea": "添加区域截图",
+    "deleteConfirmTitle": "移除截图？",
+    "deleteConfirmMessage": "此截图将从请求中移除。"
   },
   "chatPrompts": {
     "missingProfile": "已删除的配置文件",

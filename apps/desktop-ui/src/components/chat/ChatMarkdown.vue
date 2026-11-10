@@ -19,6 +19,7 @@ import { renderChatMarkdown } from '../../lib/chat/chat-markdown'
 import { createChatMarkdownView } from '../../lib/chat/chat-markdown-view'
 import { createTauriFetch } from '../../lib/net/tauri-fetch'
 import { tauriNetIpc } from '../../lib/net/tauri-net'
+import { useImageViewerStore } from '../../stores/image-viewer'
 import { useIpcStore } from '../../stores/ipc'
 
 const props = defineProps<{ content: string; streaming?: boolean }>()
@@ -29,6 +30,7 @@ const emit = defineEmits<{
 const root = ref<HTMLElement | null>(null)
 const { t, locale } = useI18n()
 const ipc = useIpcStore()
+const imageViewer = useImageViewerStore()
 const scope = useId()
 const markdownLabels = computed(() => ({
   reasoning: t('chat.reasoning'),
@@ -92,6 +94,9 @@ const view = createChatMarkdownView({
   revokeObjectUrl: (url) => URL.revokeObjectURL(url),
   async openLink(url) {
     await ipc.callOrNotify('open_in_browser', { url })
+  },
+  openImage: ({ src, alt, isDiagram }) => {
+    imageViewer.open({ src, alt, lightSurface: isDiagram })
   },
   copyCode: (source) => emit('copy-code', source),
   labels: () => ({
@@ -340,6 +345,7 @@ onBeforeUnmount(() => {
 .chat-markdown :deep(img) {
   max-width: 100%;
   height: auto;
+  cursor: zoom-in;
 }
 .chat-markdown :deep(.chat-image) {
   display: block;
@@ -411,6 +417,7 @@ onBeforeUnmount(() => {
   display: block;
   max-width: none;
   height: auto;
+  cursor: zoom-in;
 }
 .chat-markdown :deep(.chat-render-error) {
   color: var(--color-error);

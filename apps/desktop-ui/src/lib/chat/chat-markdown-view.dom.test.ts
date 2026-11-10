@@ -17,6 +17,7 @@ function setup(markup: string) {
     createObjectUrl: vi.fn(() => 'blob:preview'),
     revokeObjectUrl: vi.fn(),
     openLink: vi.fn(async () => undefined),
+    openImage: vi.fn(),
     copyCode: vi.fn(),
     labels: () => ({
       copyCode: 'Copy code',
@@ -206,5 +207,33 @@ describe('chat-markdown-view', () => {
     resolve(new Blob(['image']))
     await pending
     expect(deps.createObjectUrl).not.toHaveBeenCalled()
+  })
+
+  it('opens visible loaded images and diagrams in the viewer on click', async () => {
+    const { root, deps, view, click } = setup(image)
+    await view.enhance(root, false)
+    const img = root.querySelector('img')!
+    img.hidden = true
+    await click(img)
+    expect(deps.openImage).not.toHaveBeenCalled()
+
+    await click(root.querySelector('button')!)
+    await click(img)
+    expect(deps.openImage).toHaveBeenCalledWith({
+      src: 'blob:preview',
+      alt: 'Example',
+      isDiagram: false,
+    })
+    view.dispose()
+
+    const diagramCase = setup(diagram)
+    await diagramCase.view.enhance(diagramCase.root, false)
+    await diagramCase.click(diagramCase.root.querySelector('figure img')!)
+    expect(diagramCase.deps.openImage).toHaveBeenCalledWith({
+      src: 'blob:preview',
+      alt: 'Diagram',
+      isDiagram: true,
+    })
+    diagramCase.view.dispose()
   })
 })

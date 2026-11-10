@@ -1552,7 +1552,9 @@
     "selectAreaInstruction": "Аймақты таңдау үшін сүйреңіз. Escape — бас тарту.",
     "confirmArea": "Аймақты пайдалану",
     "confirmAreaInstruction": "Растау үшін Enter немесе қос шерту, қайта сызу үшін қайта сүйреңіз. Escape — бас тарту.",
-    "addArea": "Аумақ скриншотын қосу"
+    "addArea": "Аумақ скриншотын қосу",
+    "deleteConfirmTitle": "Скриншотты өшіру керек пе?",
+    "deleteConfirmMessage": "Бұл скриншот сұраудан өшіріледі."
   },
   "chatPrompts": {
     "missingProfile": "Жойылған профиль",
