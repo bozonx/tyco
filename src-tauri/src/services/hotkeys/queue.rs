@@ -53,7 +53,8 @@ pub(super) fn start(app: &AppHandle) -> Result<(), AppError> {
                 handle_event(&handle, event);
             }
         })?;
-    let mut state = app.state::<HotkeyQueue>().0.locked();
+    let queue = app.state::<HotkeyQueue>();
+    let mut state = queue.0.locked();
     if !state.is_stopping {
         state.sender = Some(sender);
     }
@@ -69,7 +70,8 @@ pub(crate) fn dispatch(app: &AppHandle, event: HotkeyEvent) {
         return;
     }
     let event = {
-        let state = app.state::<HotkeyQueue>().0.locked();
+        let queue = app.state::<HotkeyQueue>();
+        let state = queue.0.locked();
         if state.is_stopping {
             return;
         }

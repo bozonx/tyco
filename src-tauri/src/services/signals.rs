@@ -5,6 +5,7 @@ use tauri::AppHandle;
 
 /// Fallback exit status of a process stopped by an interrupt when no POSIX
 /// signal number applies (128 + SIGINT).
+#[cfg(not(unix))]
 const EXIT_CODE_INTERRUPTED: i32 = 130;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

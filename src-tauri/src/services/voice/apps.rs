@@ -87,21 +87,18 @@ impl StoppableService for AudioAppsWatches {
         if watches.is_empty() {
             return;
         }
-        let shared = Arc::clone(&self.shared);
-        let count = watches.len();
+        let guard = DropCountGuard {
+            shared: Arc::clone(&self.shared),
+            count: watches.len(),
+        };
         let spawned = std::thread::Builder::new()
             .name("audio-apps-watch-shutdown".into())
             .spawn(move || {
-                let _guard = DropCountGuard { shared, count };
+                let _guard = guard;
                 drop(watches);
             });
         if let Err(error) = spawned {
             log::warn!("Could not start audio apps watch shutdown thread: {error}");
-            let _guard = DropCountGuard {
-                shared: Arc::clone(&self.shared),
-                count,
-            };
-            drop(watches);
         }
     }
 
