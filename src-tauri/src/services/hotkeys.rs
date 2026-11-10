@@ -6,7 +6,7 @@ pub use config_transaction::with_config_changes;
 mod global_shortcut;
 mod queue;
 mod status;
-pub(crate) use queue::{dispatch, HotkeyEvent};
+pub(crate) use queue::{dispatch, HotkeyEvent, HotkeyQueue};
 pub(crate) mod voice_gesture;
 pub use status::{provider_info, HotkeyApplyResult, HotkeyApplyStatus, HotkeyProviderInfo};
 
@@ -138,17 +138,20 @@ pub fn set_suspended(app: &AppHandle, suspended: bool) {
     // a settings window that reloads or crashes while recording never
     // resumes the hotkeys itself
     let handle = app.clone();
-    let spawned = std::thread::Builder::new()
-        .name(String::from("hotkey-resume"))
-        .spawn(move || {
-            std::thread::sleep(MAX_SUSPENSION);
+    if let Some(services) = app.try_state::<crate::services::background::BackgroundServices>() {
+        if let Err(error) = services.spawn_thread("hotkey-resume", move |stop| {
+            if stop.wait(MAX_SUSPENSION) {
+                return;
+            }
             if handle.state::<SuspendGeneration>().0.load(Ordering::SeqCst) == generation {
                 log::warn!("Hotkeys were suspended too long; resuming them");
                 set_suspended(&handle, false);
             }
-        });
-    if let Err(error) = spawned {
-        log::warn!("Could not watch the hotkey suspension: {error}");
+        }) {
+            if !matches!(error, AppError::ServiceUnavailable(_)) {
+                log::warn!("Could not watch the hotkey suspension: {error}");
+            }
+        }
     }
 }
 

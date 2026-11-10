@@ -71,7 +71,15 @@ impl ShutdownState {
     }
 }
 
+fn is_quitting(app: &AppHandle) -> bool {
+    app.try_state::<crate::state::AppState>()
+        .is_some_and(|state| state.is_quitting())
+}
+
 fn cancel_exit(app: &AppHandle) {
+    if is_quitting(app) {
+        return;
+    }
     if let Err(error) = events::emit::<events::QuitCancelled, _>(app, ()) {
         log::warn!("Could not publish cancelled shutdown: {error}");
     }
@@ -81,6 +89,9 @@ fn cancel_exit(app: &AppHandle) {
 }
 
 pub fn request(app: &AppHandle) {
+    if is_quitting(app) {
+        return;
+    }
     let windows = [super::MAIN_WINDOW_LABEL, super::QUICK_WINDOW_LABEL]
         .into_iter()
         .filter(|label| app.get_webview_window(label).is_some())
@@ -135,6 +146,13 @@ pub fn request(app: &AppHandle) {
 }
 
 pub fn acknowledge(app: &AppHandle, request_id: u64, window: &str, saved: bool) {
+    if is_quitting(app) {
+        app.state::<SettingsShutdown>()
+            .0
+            .locked()
+            .expire(request_id);
+        return;
+    }
     let result = app
         .state::<SettingsShutdown>()
         .0

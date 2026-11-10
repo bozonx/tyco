@@ -64,9 +64,15 @@ struct Config {
 }
 
 static CONFIG: OnceLock<Config> = OnceLock::new();
+static WORKER: Mutex<Option<Sender<Queued>>> = Mutex::new(None);
 
 pub fn init(state_dir: PathBuf, app_id: String) {
     let _ = CONFIG.set(Config { state_dir, app_id });
+}
+
+/// Closes the RemoteDesktop portal worker so any active session shuts down cleanly.
+pub fn shutdown() {
+    drop(WORKER.locked().take());
 }
 
 pub fn state() -> PortalState {
@@ -86,8 +92,6 @@ pub fn press(keys: Vec<KeyEvent>) -> Result<(), AppError> {
 }
 
 fn call<T>(request: impl FnOnce(Sender<T>) -> Request, timeout: Duration) -> Result<T, AppError> {
-    static WORKER: Mutex<Option<Sender<Queued>>> = Mutex::new(None);
-
     let (reply, answer) = mpsc::channel();
     let request = Queued {
         request: request(reply),

@@ -101,3 +101,9 @@ pub fn start_session_services(
         Ok(())
     }
 }
+
+/// Releases session-scoped platform workers that are not tied to `BackgroundServices`.
+pub fn shutdown_session_services() {
+    #[cfg(target_os = "linux")]
+    linux::remote_desktop::shutdown();
+}

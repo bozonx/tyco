@@ -126,17 +126,22 @@ fn end(app: &AppHandle, restarts: bool) {
 
 /// Cancellation is issued to every service before any bounded wait begins.
 pub fn shutdown(app: &AppHandle) {
-    if !app.state::<AppState>().begin_shutdown() {
+    let Some(state) = app.try_state::<AppState>() else {
+        return;
+    };
+    if !state.begin_shutdown() {
         return;
     }
-    let services = app.state::<crate::services::background::BackgroundServices>();
+    let services = app.try_state::<crate::services::background::BackgroundServices>();
     let deadline = std::time::Instant::now() + SHUTDOWN_TIMEOUT;
     log::info!("Initiating application graceful shutdown");
-    let cleanup_app = app.clone();
-    if let Err(error) = services.spawn_thread("selection-shutdown", move |_| {
-        crate::services::selection_replace::shutdown(&cleanup_app)
-    }) {
-        log::warn!("Could not start selection shutdown: {error}");
+    if let Some(services) = services.as_ref() {
+        let cleanup_app = app.clone();
+        if let Err(error) = services.spawn_thread("selection-shutdown", move |_| {
+            crate::services::selection_replace::shutdown(&cleanup_app)
+        }) {
+            log::warn!("Could not start selection shutdown: {error}");
+        }
     }
     // a start that failed halfway may not have managed every service
     let scripts = app.try_state::<ScriptRuns>();
@@ -144,16 +149,26 @@ pub fn shutdown(app: &AppHandle) {
     let notifications = app
         .try_state::<std::sync::Arc<crate::services::platform::notifications::NotificationService>>(
         );
+    let watches = app.try_state::<crate::services::voice::apps::AudioAppsWatches>();
+    let hotkey_queue = app.try_state::<crate::services::hotkeys::HotkeyQueue>();
     let stoppable: Vec<(&str, &dyn StoppableService)> = [
         notifications
             .as_ref()
             .map(|service| ("Notifications", &***service as &dyn StoppableService)),
-        Some(("Background service", &*services as &dyn StoppableService)),
+        services
+            .as_ref()
+            .map(|services| ("Background service", &**services as &dyn StoppableService)),
         scripts
             .as_ref()
             .map(|scripts| ("Script", &**scripts as &dyn StoppableService)),
         net.as_ref()
             .map(|net| ("Network", &**net as &dyn StoppableService)),
+        watches
+            .as_ref()
+            .map(|watches| ("Audio apps watch", &**watches as &dyn StoppableService)),
+        hotkey_queue
+            .as_ref()
+            .map(|queue| ("Hotkey queue", &**queue as &dyn StoppableService)),
     ]
     .into_iter()
     .flatten()
@@ -162,9 +177,7 @@ pub fn shutdown(app: &AppHandle) {
         if let Some(voice) = app.try_state::<crate::services::voice::session::VoiceSessionState>() {
             crate::services::voice::stop_capture_on_shutdown(&voice, deadline);
         }
-        if let Some(watches) = app.try_state::<crate::services::voice::apps::AudioAppsWatches>() {
-            watches.clear();
-        }
+        crate::services::platform::shutdown_session_services();
         let remaining = deadline.saturating_duration_since(std::time::Instant::now());
         let portal = tauri::async_runtime::block_on(async {
             tokio::time::timeout(remaining, crate::services::platform::hotkeys::shutdown(app)).await
