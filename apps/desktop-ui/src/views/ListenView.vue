@@ -147,6 +147,15 @@ const model = createListenModel({
 const isBar = computed(
   () => model.phase.value === 'recording' || model.phase.value === 'finishing'
 )
+watch(
+  () =>
+    desktopStore.desktopState.isWindowShown &&
+    desktopStore.desktopState.mode === 'listen',
+  (active) => {
+    if (!active) void model.cancel()
+  },
+  { flush: 'sync' }
+)
 watch(isBar, (bar) => emit('result-shown', !bar), { immediate: true })
 
 const appLabel = computed(() =>
@@ -215,14 +224,9 @@ function onKeyUp(event: KeyboardEvent) {
 
 const forgetKeys = () => keyPresses.clear()
 
-/** Leaves for voice input; what was heard is offered there, not lost */
+/** Starts voice input with a fresh recording session. */
 async function switchToVoice() {
-  if (model.phase.value === 'finishing') return
-  if (model.phase.value === 'recording') {
-    await model.stop()
-    // a transcript stays shown here with the switch at hand
-    if ((model.phase.value as string) === 'result') return
-  }
+  await model.cancel()
   useVoiceResultStore().step.resetResult()
   await modeSwitch.switchTo('voice')
 }

@@ -308,17 +308,10 @@ const {
   startSession,
 } = model
 const modeSwitch = useQuickModeSwitch()
-/** Leaves for listening; words already dictated are kept as a result first */
+/** Starts system audio with a fresh recording session. */
 async function switchToListen() {
-  if (startError.value) {
-    const switched = await modeSwitch.switchTo('listen')
-    if (switched.success) startError.value = null
-    return
-  }
-  if (liveTranscriptText(transcript.value).trim()) {
-    await finish('next')
-    return
-  }
+  await model.cancelWithoutClosing()
+  startError.value = null
   await modeSwitch.switchTo('listen')
 }
 
@@ -514,6 +507,7 @@ watch(
 
 watch(isOwnWindowShown, (isShown) => {
   if (!isShown) {
+    void model.cancelWithoutClosing()
     startError.value = null
     void model
       .flushHistory()

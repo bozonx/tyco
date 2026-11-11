@@ -648,6 +648,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   }
 
   return {
+    cancelWithoutClosing: () => cancelSession(false),
     flushHistory: () => historySession?.flush() ?? Promise.resolve(null),
     transcript,
     autoStopWarning,

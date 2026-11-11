@@ -50,6 +50,25 @@ function setup(overrides: Partial<ListenModelDependencies> = {}) {
 }
 
 describe('listen model', () => {
+  it('ignores recognition completed after closing the recording', async () => {
+    let resolveFinish!: (text: string) => void
+    const { model, deps } = setup({
+      finishDictation: () =>
+        new Promise<string>((resolve) => {
+          resolveFinish = resolve
+        }),
+    })
+    await model.start()
+    const finishing = model.stop()
+    await model.close()
+    resolveFinish('Late transcript')
+    await finishing
+    expect(model.phase.value).toBe('idle')
+    expect(model.resultText.value).toBe('')
+    expect(deps.cancelDictation).toHaveBeenCalled()
+    expect(deps.saveTranscript).not.toHaveBeenCalled()
+  })
+
   it('starts with the configured source', () => {
     expect(configuredListenSource(undefined)).toEqual({ kind: 'systemMix' })
     expect(configuredListenSource(' ')).toEqual({ kind: 'systemMix' })

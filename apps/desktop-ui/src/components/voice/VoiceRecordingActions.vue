@@ -6,6 +6,7 @@
         :keys="primaryKeys"
         :icon="insertIcon"
         variant="primary"
+        class="voice-action-primary"
         :disabled="isFinishing"
         @click="() => finish('insert')"
       >
@@ -35,6 +36,7 @@
         :keys="['Ctrl+Enter']"
         icon="mdi:send"
         variant="primary"
+        class="voice-action-primary"
         :title="t('chat.voiceSendHint')"
         :disabled="isFinishing"
         @click="() => finish('submit')"
@@ -43,12 +45,22 @@
       </ShortcutButton>
     </template>
     <template v-else>
+      <ShortcutButton
+        v-if="compact"
+        :size="compact ? 'sm' : 'md'"
+        :keys="['Esc']"
+        icon="mdi:close"
+        @click="cancel"
+      >
+        {{ t('common.cancel') }}
+      </ShortcutButton>
       <template v-if="finishBehavior === 'submitToChat'">
         <ShortcutButton
           :size="compact ? 'sm' : 'md'"
           :keys="primaryKeys"
           icon="mdi:send"
           variant="primary"
+          class="voice-action-primary"
           :disabled="isFinishing"
           @click="() => finish('submit')"
         >
@@ -79,6 +91,7 @@
           :keys="primaryKeys"
           :icon="insertIcon"
           variant="primary"
+          class="voice-action-primary"
           :disabled="isFinishing"
           @click="() => finish('insert')"
         >
@@ -95,15 +108,6 @@
           {{ t('write.next') }}
         </ShortcutButton>
       </template>
-      <ShortcutButton
-        v-if="compact"
-        :size="compact ? 'sm' : 'md'"
-        :keys="['Esc']"
-        icon="mdi:close"
-        @click="cancel"
-      >
-        {{ t('common.cancel') }}
-      </ShortcutButton>
     </template>
   </div>
 </template>
@@ -147,3 +151,9 @@ const primaryKeys = computed(() =>
 )
 const secondaryKeys = ['Shift', 'Space', 'Enter']
 </script>
+
+<style scoped>
+.voice-action-primary {
+  order: 1;
+}
+</style>
