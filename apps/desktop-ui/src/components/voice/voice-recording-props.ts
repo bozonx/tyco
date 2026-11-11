@@ -20,6 +20,11 @@ export interface VoiceRecordingProps {
   /** The global hotkey that also confirms the input, see `VoiceRecordingActions` */
   finishHotkey?: string
   chat?: boolean
+  /**
+   * Shows a labelled Cancel button with the Esc key instead of an icon cross in
+   * compact chat mode.
+   */
+  cancelShortcut?: boolean
   prefix?: string
   suffix?: string
   context?: string

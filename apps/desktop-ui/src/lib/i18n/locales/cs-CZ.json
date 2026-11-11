@@ -805,7 +805,7 @@
     "editorHistoryStorageHint": "Na disku – historie přetrvá restarty v nešifrovaném souboru. Dokud běží Tyco – historie je jen v paměti a zmizí po ukončení aplikace, ať skončí jakkoli. Nezaznamenávat – nové texty se neukládají, uložené záznamy zůstávají, dokud je nesmažete.",
     "editorHistoryStorageOff": "Nezaznamenávat",
     "editorHistoryStorageSession": "Dokud běží Tyco",
-    "editorHotkeyHint": "Klávesovou zkratku pro otevření editoru lze zobrazit a upravit na záložce {tab}.",
+    "editorHotkeyHint": "Klávesové zkratky pro ovládání editoru lze zobrazit a upravit na záložce {tab}.",
     "editorShortcuts": {
       "hint": "Klikněte na zkratku a stiskněte nové klávesy. Escape zruší záznam. Tyto zkratky platí pouze v editoru.",
       "indent": "Zvětšit odsazení",
@@ -1284,7 +1284,7 @@
       "voiceCommands": "Ve výchozím nastavení jedno stisknutí spustí hlasový příkaz a další ho ukončí. Zapněte, chcete-li příkaz vyslovovat jen po dobu držení zkratky."
     },
     "voiceHotkeysInfo": "Zkratky, které spouštějí nahrávání řeči. Hlasové dotazy na AI vždy končí druhým stisknutím.",
-    "voiceHotkeysTitle": "Hlasový vstup",
+    "voiceHotkeysTitle": "Přepis řeči",
     "voiceTextCorrection": "Oprava nadiktovaného textu",
     "webFetchMaxCharacters": "Limit velikosti stránky",
     "webFetchMaxCharactersError": "Zadejte číslo od 1 000 do 100 000",
@@ -1547,9 +1547,9 @@
     "failed": "Obrazovku se nepodařilo zachytit. Zkontrolujte oprávnění k zachycení a podporu portálu plochy.",
     "imageLoadFailed": "Snímek obrazovky se nepodařilo načíst, výběr oblasti byl zrušen.",
     "selectAreaInstruction": "Tažením vyberte oblast. Escape zruší.",
-    "confirmArea": "Použít oblast",
-    "confirmAreaInstruction": "Enter nebo dvojklik potvrdí, novým tažením výběr překreslíte. Escape zruší.",
-    "addArea": "Přidat snímek oblasti",
+    "confirmArea": "Použít oblast (Enter, Mezerník)",
+    "confirmAreaInstruction": "Enter, Mezerník nebo dvojklik potvrdí, novým tažením výběr překreslíte. Escape zruší.",
+    "addArea": "Pořiďte další snímek obrazovky",
     "deleteConfirmTitle": "Odstranit snímek obrazovky?",
     "deleteConfirmMessage": "Tento snímek obrazovky bude z požadavku odstraněn."
   },

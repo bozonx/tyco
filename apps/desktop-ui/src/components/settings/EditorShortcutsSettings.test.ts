@@ -30,6 +30,11 @@ describe('editor shortcut settings', () => {
     return { context, wrapper, bold: wrapper.findAllComponents(HotkeyInput)[0] }
   }
 
+  it('renders an anchor id on the section for direct navigation', () => {
+    const { wrapper } = setup()
+    expect(wrapper.find('#editor-shortcuts').exists()).toBe(true)
+  })
+
   it('records a new shortcut into the persistent settings draft', async () => {
     const { context, bold } = setup()
     await bold.trigger('click')

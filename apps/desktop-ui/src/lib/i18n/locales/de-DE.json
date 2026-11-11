@@ -811,7 +811,7 @@
     "editorHistoryStorageHint": "Auf der Festplatte – der Verlauf übersteht Neustarts in einer unverschlüsselten Datei. Solange Tyco läuft – der Verlauf liegt nur im Arbeitsspeicher und ist weg, sobald die App beendet wird, egal wie. Nicht aufzeichnen – neue Texte werden nicht gespeichert, vorhandene Einträge bleiben, bis du sie löschst.",
     "editorHistoryStorageOff": "Nicht aufzeichnen",
     "editorHistoryStorageSession": "Solange Tyco läuft",
-    "editorHotkeyHint": "Der Hotkey zum Öffnen des Editors kann auf dem Tab {tab} eingesehen und angepasst werden.",
+    "editorHotkeyHint": "Tastenkombinationen zur Steuerung des Editors können auf dem Tab {tab} eingesehen und angepasst werden.",
     "editorShortcuts": {
       "hint": "Klicken Sie auf ein Kürzel und drücken Sie neue Tasten. Escape bricht die Aufnahme ab. Diese Kürzel gelten nur im Editor.",
       "indent": "Einzug vergrößern",
@@ -1290,7 +1290,7 @@
       "voiceCommands": "Standardmäßig startet ein Drücken einen Sprachbefehl und das nächste beendet ihn. Aktivieren, um Befehle nur bei gehaltener Tastenkombination zu sprechen."
     },
     "voiceHotkeysInfo": "Tastenkombinationen, die die Sprachaufnahme starten. Sprachfragen an die KI enden immer mit einem zweiten Drücken.",
-    "voiceHotkeysTitle": "Spracheingabe",
+    "voiceHotkeysTitle": "Transkription",
     "voiceTextCorrection": "Korrektur von Sprachtext",
     "webFetchMaxCharacters": "Seiteninhaltslimit",
     "webFetchMaxCharactersError": "Geben Sie eine Zahl von 1.000 bis 100.000 ein",
@@ -1553,9 +1553,9 @@
     "failed": "Der Bildschirm konnte nicht aufgenommen werden. Prüfen Sie die Aufnahmeberechtigungen und die Unterstützung des Desktop-Portals.",
     "imageLoadFailed": "Der Screenshot konnte nicht geladen werden, die Bereichsauswahl wurde abgebrochen.",
     "selectAreaInstruction": "Ziehen Sie, um einen Bereich auszuwählen. Escape bricht ab.",
-    "confirmArea": "Bereich verwenden",
-    "confirmAreaInstruction": "Enter oder Doppelklick bestätigt, erneutes Ziehen wählt neu. Escape bricht ab.",
-    "addArea": "Bereichsscreenshot hinzufügen",
+    "confirmArea": "Bereich verwenden (Enter, Leertaste)",
+    "confirmAreaInstruction": "Enter, Leertaste oder Doppelklick bestätigt, erneutes Ziehen wählt neu. Escape bricht ab.",
+    "addArea": "Weiteren Screenshot aufnehmen",
     "deleteConfirmTitle": "Screenshot entfernen?",
     "deleteConfirmMessage": "Dieser Screenshot wird aus der Anfrage entfernt."
   },

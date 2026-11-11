@@ -1,5 +1,6 @@
 <template>
   <SettingsSection
+    id="editor-shortcuts"
     :title="t('settings.editorShortcuts.title')"
     :info="t('settings.editorShortcuts.hint')"
   >

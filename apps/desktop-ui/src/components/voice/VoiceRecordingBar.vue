@@ -71,6 +71,7 @@
         class="voice-bar-actions"
         compact
         :chat="chat"
+        :cancel-shortcut="cancelShortcut"
         :finish-behavior="finishBehavior"
         :finish-hotkey="finishHotkey"
         :is-finishing="isFinishing"

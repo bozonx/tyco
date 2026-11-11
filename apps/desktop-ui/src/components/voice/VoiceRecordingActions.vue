@@ -11,7 +11,18 @@
       >
         {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
       </ShortcutButton>
+      <ShortcutButton
+        v-if="cancelShortcut"
+        :size="compact ? 'sm' : 'md'"
+        :keys="['Esc']"
+        icon="mdi:close"
+        :disabled="isFinishing"
+        @click="cancel"
+      >
+        {{ t('common.cancel') }}
+      </ShortcutButton>
       <IconButton
+        v-else
         :size="compact ? 'sm' : undefined"
         variant="ghost"
         :disabled="isFinishing"
@@ -108,6 +119,7 @@ import ShortcutButton from '../overlay/ShortcutButton.vue'
 const props = defineProps<{
   compact?: boolean
   chat?: boolean
+  cancelShortcut?: boolean
   finishBehavior?: VoiceFinishBehavior
   /** The global hotkey that also presses the primary button */
   finishHotkey?: string

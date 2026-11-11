@@ -808,7 +808,7 @@
     "editorHistoryStorageHint": "ディスク — 履歴は暗号化されていないファイルに保存され、再起動後も保持されます。Tycoの実行中のみ — 履歴はメモリにのみ保持され、終了方法に関わらずアプリ終了時に破棄されます。記録しない — 新しいテキストは保存されず、保存済みの項目は消去するまで残ります。",
     "editorHistoryStorageOff": "記録しない",
     "editorHistoryStorageSession": "Tycoの実行中のみ",
-    "editorHotkeyHint": "エディターを開くショートカットは{tab}タブで確認および設定できます。",
+    "editorHotkeyHint": "エディターを操作するショートカットは{tab}タブで確認および設定できます。",
     "editorShortcuts": {
       "hint": "ショートカットをクリックして新しいキーを押します。Escape で記録をキャンセルします。これらはエディター内でのみ有効です。",
       "indent": "インデントを増やす",
@@ -1287,7 +1287,7 @@
       "voiceCommands": "デフォルトでは、1回押すと音声コマンドが始まり、もう一度押すと終了します。有効にすると、ショートカットを押している間だけコマンドを録音します。"
     },
     "voiceHotkeysInfo": "音声の録音を開始するショートカット。AIへの音声質問は常にもう一度押すと終了します。",
-    "voiceHotkeysTitle": "音声入力",
+    "voiceHotkeysTitle": "文字起こし",
     "voiceTextCorrection": "音声テキストの校正",
     "webFetchMaxCharacters": "ページサイズ制限",
     "webFetchMaxCharactersError": "1,000から100,000までの数値を入力してください",
@@ -1550,9 +1550,9 @@
     "failed": "画面をキャプチャできませんでした。画面キャプチャの権限とデスクトップポータルの対応状況を確認してください。",
     "imageLoadFailed": "スクリーンショットを読み込めなかったため、範囲の選択をキャンセルしました。",
     "selectAreaInstruction": "ドラッグして範囲を選択します。Escape でキャンセル。",
-    "confirmArea": "この範囲を使う",
-    "confirmAreaInstruction": "Enter またはダブルクリックで確定、再度ドラッグで選び直します。Escape でキャンセル。",
-    "addArea": "領域のスクリーンショットを追加",
+    "confirmArea": "この範囲を使う (Enter, Space)",
+    "confirmAreaInstruction": "Enter、Space、またはダブルクリックで確定、再度ドラッグで選び直します。Escape でキャンセル。",
+    "addArea": "もう1枚スクリーンショットを撮る",
     "deleteConfirmTitle": "スクリーンショットを削除しますか？",
     "deleteConfirmMessage": "このスクリーンショットはリクエストから削除されます。"
   },

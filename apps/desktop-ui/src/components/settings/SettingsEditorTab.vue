@@ -72,9 +72,9 @@
       <I18nText keypath="settings.editorHotkeyHint">
         <template #tab>
           <a
-            href="#hotkey-editor"
+            href="#editor-shortcuts"
             class="inline-action"
-            @click.prevent="navigate('global-actions#hotkey-editor')"
+            @click.prevent="navigate('global-actions#editor-shortcuts')"
           >
             {{ t('settings.hotkeysTab') }}
           </a>

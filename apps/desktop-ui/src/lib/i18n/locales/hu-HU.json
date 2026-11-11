@@ -808,7 +808,7 @@
     "editorHistoryStorageHint": "Lemezen – az előzmények titkosítatlan fájlban túlélik az újraindítást. Amíg a Tyco fut – az előzmények csak a memóriában vannak, és az alkalmazás bezárásakor eltűnnek, bárhogyan záródik is be. Nincs rögzítés – az új szövegek nem mentődnek, a tárolt bejegyzések megmaradnak, amíg nem törli őket.",
     "editorHistoryStorageOff": "Nincs rögzítés",
     "editorHistoryStorageSession": "Amíg a Tyco fut",
-    "editorHotkeyHint": "A szerkesztő megnyitására szolgáló billentyűparancs a(z) {tab} fülön tekinthető meg és módosítható.",
+    "editorHotkeyHint": "A szerkesztő vezérlésére szolgáló billentyűparancsok a(z) {tab} fülön tekinthetők meg és módosíthatók.",
     "editorShortcuts": {
       "hint": "Kattintson egy gyorsbillentyűre, és nyomja meg az új billentyűket. Az Escape megszakítja a rögzítést. Ezek csak a szerkesztőben működnek.",
       "indent": "Behúzás növelése",
@@ -1287,7 +1287,7 @@
       "voiceCommands": "Alapértelmezés szerint egy lenyomás elindítja a hangparancsot, a következő befejezi. Engedélyezze, ha csak a gyorsbillentyű nyomva tartása alatt szeretne parancsot mondani."
     },
     "voiceHotkeysInfo": "A beszédrögzítést indító gyorsbillentyűk. Az MI-nek szóló hangos kérdés mindig egy második lenyomással ér véget.",
-    "voiceHotkeysTitle": "Hangbevitel",
+    "voiceHotkeysTitle": "Átírás",
     "voiceTextCorrection": "Diktált szöveg javítása",
     "webFetchMaxCharacters": "Oldalméret korlátja",
     "webFetchMaxCharactersError": "Adjon meg egy számot 1 000 és 100 000 között",
@@ -1550,9 +1550,9 @@
     "failed": "Nem sikerült rögzíteni a képernyőt. Ellenőrizze a képernyőrögzítési engedélyeket és az asztali portál támogatását.",
     "imageLoadFailed": "A képernyőkép nem tölthető be, a területkijelölés megszakadt.",
     "selectAreaInstruction": "Húzással jelöljön ki egy területet. Az Escape megszakítja.",
-    "confirmArea": "Terület használata",
-    "confirmAreaInstruction": "Enter vagy dupla kattintás: jóváhagyás, újabb húzás: újrarajzolás. Az Escape megszakítja.",
-    "addArea": "Területképernyőkép hozzáadása",
+    "confirmArea": "Terület használata (Enter, Szóköz)",
+    "confirmAreaInstruction": "Enter, Szóköz vagy dupla kattintás: jóváhagyás, újabb húzás: újrarajzolás. Az Escape megszakítja.",
+    "addArea": "Készítsen még egy képernyőképet",
     "deleteConfirmTitle": "Eltávolítja a képernyőképet?",
     "deleteConfirmMessage": "Ez a képernyőkép el lesz távolítva a kérésből."
   },

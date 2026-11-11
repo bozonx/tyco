@@ -811,7 +811,7 @@
     "editorHistoryStorageHint": "Sur le disque : l’historique survit aux redémarrages dans un fichier non chiffré. Tant que Tyco est ouvert : l’historique reste uniquement en mémoire et disparaît à la fermeture de l’application, quelle qu’en soit la manière. Ne pas enregistrer : les nouveaux textes ne sont pas sauvegardés ; les entrées existantes restent jusqu’à ce que vous les effaciez.",
     "editorHistoryStorageOff": "Ne pas enregistrer",
     "editorHistoryStorageSession": "Tant que Tyco est ouvert",
-    "editorHotkeyHint": "Le raccourci pour ouvrir l’éditeur peut être consulté et modifié dans l’onglet {tab}.",
+    "editorHotkeyHint": "Les raccourcis pour contrôler l’éditeur peuvent être consultés et modifiés dans l’onglet {tab}.",
     "editorShortcuts": {
       "hint": "Cliquez sur un raccourci et appuyez sur les nouvelles touches. Échap annule la saisie. Ces raccourcis ne fonctionnent que dans l’éditeur.",
       "indent": "Augmenter le retrait",
@@ -1290,7 +1290,7 @@
       "voiceCommands": "Par défaut, une pression lance une commande vocale et la suivante la termine. Activez pour énoncer une commande uniquement pendant le maintien du raccourci."
     },
     "voiceHotkeysInfo": "Raccourcis qui lancent l’enregistrement de la parole. Les questions vocales à l’IA se terminent toujours par une seconde pression.",
-    "voiceHotkeysTitle": "Saisie vocale",
+    "voiceHotkeysTitle": "Transcription",
     "voiceTextCorrection": "Correction du texte dicté",
     "webFetchMaxCharacters": "Limite de taille de page",
     "webFetchMaxCharactersError": "Entrez un nombre entre 1 000 et 100 000",
@@ -1553,9 +1553,9 @@
     "failed": "Impossible de capturer l’écran. Vérifiez les autorisations de capture et la prise en charge du portail du bureau.",
     "imageLoadFailed": "Impossible de charger la capture d’écran ; la sélection de zone a été annulée.",
     "selectAreaInstruction": "Faites glisser pour sélectionner une zone. Échap pour annuler.",
-    "confirmArea": "Utiliser la zone",
-    "confirmAreaInstruction": "Entrée ou double-clic pour confirmer, glissez à nouveau pour redessiner. Échap annule.",
-    "addArea": "Ajouter une capture de zone",
+    "confirmArea": "Utiliser la zone (Entrée, Espace)",
+    "confirmAreaInstruction": "Entrée, Espace ou double-clic pour confirmer, glissez à nouveau pour redessiner. Échap annule.",
+    "addArea": "Prendre une autre capture d’écran",
     "deleteConfirmTitle": "Supprimer la capture d’écran ?",
     "deleteConfirmMessage": "Cette capture d’écran sera retirée de la demande."
   },

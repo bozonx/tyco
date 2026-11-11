@@ -811,7 +811,7 @@
     "editorHistoryStorageHint": "Na dysku — historia przetrwa ponowne uruchomienia w niezaszyfrowanym pliku. Póki działa Tyco — historia jest tylko w pamięci i znika po zamknięciu aplikacji, niezależnie od sposobu. Nie zapisuj — nowe teksty nie są zapisywane, zapisane wpisy zostają, dopóki ich nie wyczyścisz.",
     "editorHistoryStorageOff": "Nie zapisuj",
     "editorHistoryStorageSession": "Póki działa Tyco",
-    "editorHotkeyHint": "Skrót otwierający edytor można sprawdzić i dostosować na karcie {tab}.",
+    "editorHotkeyHint": "Skróty do obsługi edytora można sprawdzić i dostosować na karcie {tab}.",
     "editorShortcuts": {
       "hint": "Kliknij skrót i naciśnij nowe klawisze. Escape anuluje nagrywanie. Te skróty działają tylko w edytorze.",
       "indent": "Zwiększ wcięcie",
@@ -1290,7 +1290,7 @@
       "voiceCommands": "Domyślnie jedno naciśnięcie rozpoczyna polecenie głosowe, a następne je kończy. Włącz, aby wypowiadać polecenie tylko podczas przytrzymywania skrótu."
     },
     "voiceHotkeysInfo": "Skróty, które rozpoczynają nagrywanie mowy. Pytania głosowe do AI zawsze kończą się drugim naciśnięciem.",
-    "voiceHotkeysTitle": "Wprowadzanie głosowe",
+    "voiceHotkeysTitle": "Transkrypcja",
     "voiceTextCorrection": "Korekta tekstu z dyktowania",
     "webFetchMaxCharacters": "Limit rozmiaru strony",
     "webFetchMaxCharactersError": "Wpisz liczbę od 1 000 do 100 000",
@@ -1553,9 +1553,9 @@
     "failed": "Nie udało się przechwycić ekranu. Sprawdź uprawnienia do przechwytywania i obsługę portalu pulpitu.",
     "imageLoadFailed": "Nie udało się wczytać zrzutu ekranu; wybór obszaru został anulowany.",
     "selectAreaInstruction": "Przeciągnij, aby zaznaczyć obszar. Escape anuluje.",
-    "confirmArea": "Użyj obszaru",
-    "confirmAreaInstruction": "Enter lub dwuklik zatwierdza, ponowne przeciągnięcie zmienia zaznaczenie. Escape anuluje.",
-    "addArea": "Dodaj zrzut obszaru",
+    "confirmArea": "Użyj obszaru (Enter, Spacja)",
+    "confirmAreaInstruction": "Enter, Spacja lub dwuklik zatwierdza, ponowne przeciągnięcie zmienia zaznaczenie. Escape anuluje.",
+    "addArea": "Zrób kolejny zrzut ekranu",
     "deleteConfirmTitle": "Usunąć zrzut ekranu?",
     "deleteConfirmMessage": "Ten zrzut ekranu zostanie usunięty z zapytania."
   },

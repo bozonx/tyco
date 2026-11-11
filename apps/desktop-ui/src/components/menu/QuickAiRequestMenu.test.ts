@@ -67,15 +67,16 @@ describe('QuickAiRequestMenu', () => {
           KeyboardKey: { template: '<kbd class="kbd"><slot /></kbd>' },
           VoiceRecognitionMenu: {
             name: 'VoiceRecognitionMenu',
-            props: [
-              'variant',
-              'chat',
-              'target',
-              'finishBehavior',
-              'activationMode',
-              'prefix',
-              'suffix',
-            ],
+            props: {
+              variant: String,
+              chat: Boolean,
+              cancelShortcut: Boolean,
+              target: String,
+              finishBehavior: String,
+              activationMode: String,
+              prefix: String,
+              suffix: String,
+            },
             emits: ['cancelled', 'corrected'],
             template:
               '<div class="voice-bar" :data-prefix="prefix" :data-suffix="suffix" />',
@@ -330,6 +331,8 @@ describe('QuickAiRequestMenu', () => {
       const wrapper = mountMenu({ inputMode: 'voice' })
       expect(wrapper.find('.voice-bar').exists()).toBe(true)
       expect(wrapper.find('.query-panel-input').exists()).toBe(false)
+      const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+      expect(voiceMenu.props('cancelShortcut')).toBe(true)
     })
 
     it('switches to VoiceRecognitionMenu with prefix and suffix from cursor position', async () => {

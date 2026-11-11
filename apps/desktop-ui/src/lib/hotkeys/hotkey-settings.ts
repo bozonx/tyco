@@ -27,8 +27,8 @@ export interface GlobalHotkeyRowModel {
 /** The hotkeys that start voice input, in display order */
 export const VOICE_HOTKEY_IDS: readonly HotkeyId[] = [
   'voice',
-  'listen',
   'voiceCommands',
+  'listen',
   'voiceQuickAiRequest',
   'voiceScreenshotQuickAiRequest',
 ]

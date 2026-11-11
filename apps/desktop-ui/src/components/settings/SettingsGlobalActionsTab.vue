@@ -242,9 +242,9 @@ const submitKeyOptions = computed((): { id: SubmitKey; name: string }[] => [
 const MODE_ORDER: HotkeyId[] = [
   'quickInput',
   'voice',
-  'listen',
   'editor',
   'voiceCommands',
+  'listen',
   'selectionActions',
   'quickAiRequest',
   'voiceQuickAiRequest',

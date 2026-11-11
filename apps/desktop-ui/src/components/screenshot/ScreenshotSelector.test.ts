@@ -120,15 +120,21 @@ describe('ScreenshotSelector', () => {
   const pressEnter = () =>
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
 
+  const pressSpace = () =>
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: ' ', code: 'Space' })
+    )
+
   it('ignores drags shorter than the minimum selection', async () => {
     const wrapper = await mountLoaded()
     await drag(wrapper, [10, 10], [12, 12])
     pressEnter()
+    pressSpace()
     expect(wrapper.emitted('confirm')).toBeUndefined()
     expect(wrapper.find('.selection-box').exists()).toBe(false)
   })
 
-  it('keeps a finished drag until it is confirmed with Enter', async () => {
+  it('keeps a finished drag until it is confirmed with Enter or Space', async () => {
     const wrapper = await mountLoaded()
     await drag(wrapper, [100, 100], [300, 200])
     expect(wrapper.emitted('confirm')).toBeUndefined()
@@ -136,6 +142,14 @@ describe('ScreenshotSelector', () => {
 
     pressEnter()
     expect(wrapper.emitted('confirm')?.[0]?.[0]).toEqual({
+      x: 200,
+      y: 200,
+      width: 400,
+      height: 200,
+    })
+
+    pressSpace()
+    expect(wrapper.emitted('confirm')?.[1]?.[0]).toEqual({
       x: 200,
       y: 200,
       width: 400,

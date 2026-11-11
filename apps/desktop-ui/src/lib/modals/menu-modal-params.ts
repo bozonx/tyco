@@ -103,6 +103,11 @@ export interface VoiceMenuParams {
   /** The host editor renders the voice input with these params. */
   inline?: boolean
   chat?: boolean
+  /**
+   * Shows a labelled Cancel button with the Esc key instead of an icon cross in
+   * compact chat mode.
+   */
+  cancelShortcut?: boolean
   /** Text before the caret when dictation started. */
   prefix?: string
   /** Text after the caret when dictation started. */

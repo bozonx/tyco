@@ -59,6 +59,7 @@
     :finish-behavior="props.finishBehavior"
     :finish-hotkey="finishHotkey"
     :chat="props.chat"
+    :cancel-shortcut="props.cancelShortcut"
     :prefix="props.prefix"
     :suffix="props.suffix"
     :context="props.context"

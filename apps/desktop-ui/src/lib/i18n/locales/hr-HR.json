@@ -811,7 +811,7 @@
     "editorHistoryStorageHint": "Na disku – povijest preživljava ponovna pokretanja u nešifriranoj datoteci. Dok Tyco radi – povijest je samo u memoriji i nestaje kad se aplikacija zatvori, kako god se zatvorila. Ne bilježi – novi tekstovi se ne spremaju, pohranjeni unosi ostaju dok ih ne obrišete.",
     "editorHistoryStorageOff": "Ne bilježi",
     "editorHistoryStorageSession": "Dok Tyco radi",
-    "editorHotkeyHint": "Prečac za otvaranje uređivača možete pregledati i prilagoditi na kartici {tab}.",
+    "editorHotkeyHint": "Prečace za upravljanje uređivačem možete pregledati i prilagoditi na kartici {tab}.",
     "editorShortcuts": {
       "hint": "Kliknite prečac i pritisnite nove tipke. Escape otkazuje snimanje. Ovi prečaci vrijede samo u uređivaču.",
       "indent": "Povećaj uvlaku",
@@ -1290,7 +1290,7 @@
       "voiceCommands": "Prema zadanim postavkama jedan pritisak pokreće glasovnu naredbu, a sljedeći je završava. Uključite za izgovaranje naredbe samo dok držite prečac."
     },
     "voiceHotkeysInfo": "Prečaci koji pokreću snimanje govora. Glasovna pitanja AI-ju uvijek završavaju drugim pritiskom.",
-    "voiceHotkeysTitle": "Glasovni unos",
+    "voiceHotkeysTitle": "Transkripcija",
     "voiceTextCorrection": "Ispravak izdiktiranog teksta",
     "webFetchMaxCharacters": "Ograničenje veličine stranice",
     "webFetchMaxCharactersError": "Unesite broj od 1.000 do 100.000",
@@ -1553,9 +1553,9 @@
     "failed": "Nije moguće snimiti zaslon. Provjerite dopuštenja za snimanje i podršku portala radne površine.",
     "imageLoadFailed": "Snimka zaslona nije se mogla učitati; odabir područja je otkazan.",
     "selectAreaInstruction": "Povucite za odabir područja. Escape poništava.",
-    "confirmArea": "Koristi područje",
-    "confirmAreaInstruction": "Enter ili dvoklik potvrđuje, ponovno povlačenje mijenja odabir. Escape poništava.",
-    "addArea": "Dodaj snimku područja",
+    "confirmArea": "Koristi područje (Enter, Razmak)",
+    "confirmAreaInstruction": "Enter, Razmak ili dvoklik potvrđuje, ponovno povlačenje mijenja odabir. Escape poništava.",
+    "addArea": "Snimite još jednu snimku zaslona",
     "deleteConfirmTitle": "Ukloniti snimku zaslona?",
     "deleteConfirmMessage": "Ova će snimka zaslona biti uklonjena iz zahtjeva."
   },

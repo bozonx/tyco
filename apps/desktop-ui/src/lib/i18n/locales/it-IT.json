@@ -811,7 +811,7 @@
     "editorHistoryStorageHint": "Su disco: la cronologia sopravvive ai riavvii in un file non crittografato. Finché Tyco è in esecuzione: la cronologia resta solo in memoria e scompare alla chiusura dell’app, in qualunque modo avvenga. Non registrare: i nuovi testi non vengono salvati; le voci salvate restano finché non le cancelli.",
     "editorHistoryStorageOff": "Non registrare",
     "editorHistoryStorageSession": "Finché Tyco è in esecuzione",
-    "editorHotkeyHint": "La scorciatoia per aprire l’editor può essere visualizzata e personalizzata nella scheda {tab}.",
+    "editorHotkeyHint": "Le scorciatoie per controllare l’editor possono essere visualizzate e personalizzate nella scheda {tab}.",
     "editorShortcuts": {
       "hint": "Fai clic su una scorciatoia e premi i nuovi tasti. Escape annulla la registrazione. Queste scorciatoie funzionano solo nell’editor.",
       "indent": "Aumenta rientro",
@@ -1290,7 +1290,7 @@
       "voiceCommands": "Per impostazione predefinita, una pressione avvia un comando vocale e la successiva lo termina. Abilita per pronunciare un comando solo mentre la scorciatoia è premuta."
     },
     "voiceHotkeysInfo": "Scorciatoie che avviano la registrazione vocale. Le domande vocali all’IA terminano sempre con una seconda pressione.",
-    "voiceHotkeysTitle": "Input vocale",
+    "voiceHotkeysTitle": "Trascrizione",
     "voiceTextCorrection": "Correzione del testo dettato",
     "webFetchMaxCharacters": "Limite dimensione pagina",
     "webFetchMaxCharactersError": "Inserisci un numero compreso tra 1.000 e 100.000",
@@ -1553,9 +1553,9 @@
     "failed": "Impossibile acquisire lo schermo. Controlla le autorizzazioni di acquisizione e il supporto del portale desktop.",
     "imageLoadFailed": "Impossibile caricare lo screenshot; la selezione dell’area è stata annullata.",
     "selectAreaInstruction": "Trascina per selezionare un’area. Esc per annullare.",
-    "confirmArea": "Usa area",
-    "confirmAreaInstruction": "Premi Invio o fai doppio clic per confermare, trascina di nuovo per ridisegnare. Esc annulla.",
-    "addArea": "Aggiungi screenshot dell'area",
+    "confirmArea": "Usa area (Invio, Spazio)",
+    "confirmAreaInstruction": "Premi Invio, Spazio o fai doppio clic per confermare, trascina di nuovo per ridisegnare. Esc annulla.",
+    "addArea": "Acquisisci un altro screenshot",
     "deleteConfirmTitle": "Rimuovere la schermata?",
     "deleteConfirmMessage": "Questa schermata verrà rimossa dalla richiesta."
   },

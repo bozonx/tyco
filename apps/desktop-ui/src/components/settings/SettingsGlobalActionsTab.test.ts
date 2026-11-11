@@ -249,9 +249,9 @@ describe('SettingsGlobalActionsTab.vue', () => {
     expect(labels).toEqual([
       'settings.hotkeyActions.voice',
       'settings.voiceHold.voice',
-      'settings.hotkeyActions.listen',
       'settings.hotkeyActions.voiceCommands',
       'settings.voiceHold.voiceCommands',
+      'settings.hotkeyActions.listen',
       'settings.hotkeyActions.voiceQuickAiRequest',
       'settings.hotkeyActions.voiceScreenshotQuickAiRequest',
     ])

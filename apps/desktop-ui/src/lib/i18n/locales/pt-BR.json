@@ -811,7 +811,7 @@
     "editorHistoryStorageHint": "No disco: o histórico sobrevive a reinicializações em um arquivo sem criptografia. Enquanto o Tyco estiver aberto: o histórico fica só na memória e some quando o aplicativo é fechado, de qualquer forma que seja. Não registrar: textos novos não são salvos; as entradas armazenadas permanecem até você limpá-las.",
     "editorHistoryStorageOff": "Não registrar",
     "editorHistoryStorageSession": "Enquanto o Tyco estiver aberto",
-    "editorHotkeyHint": "O atalho para abrir o editor pode ser visualizado e personalizado na aba {tab}.",
+    "editorHotkeyHint": "Os atalhos para controlar o editor podem ser visualizados e personalizados na aba {tab}.",
     "editorShortcuts": {
       "hint": "Clique em um atalho e pressione as novas teclas. Escape cancela a captura. Estes atalhos funcionam apenas no editor.",
       "indent": "Aumentar recuo",
@@ -1290,7 +1290,7 @@
       "voiceCommands": "Por padrão, um toque inicia um comando de voz e o seguinte o encerra. Ative para falar um comando apenas enquanto o atalho estiver pressionado."
     },
     "voiceHotkeysInfo": "Atalhos que iniciam a gravação de voz. Perguntas por voz à IA sempre terminam com um segundo toque.",
-    "voiceHotkeysTitle": "Entrada de voz",
+    "voiceHotkeysTitle": "Transcrição",
     "voiceTextCorrection": "Correção do texto ditado",
     "webFetchMaxCharacters": "Limite de tamanho da página",
     "webFetchMaxCharactersError": "Insira um número de 1.000 a 100.000",
@@ -1553,9 +1553,9 @@
     "failed": "Não foi possível capturar a tela. Verifique as permissões de captura e o suporte ao portal da área de trabalho.",
     "imageLoadFailed": "Não foi possível carregar a captura de tela; a seleção de área foi cancelada.",
     "selectAreaInstruction": "Arraste para selecionar uma área. Esc cancela.",
-    "confirmArea": "Usar área",
-    "confirmAreaInstruction": "Pressione Enter ou clique duas vezes para confirmar; arraste de novo para refazer. Esc cancela.",
-    "addArea": "Adicionar captura de área",
+    "confirmArea": "Usar área (Enter, Espaço)",
+    "confirmAreaInstruction": "Pressione Enter, Espaço ou clique duas vezes para confirmar; arraste de novo para refazer. Esc cancela.",
+    "addArea": "Faça outra captura de tela",
     "deleteConfirmTitle": "Remover captura de tela?",
     "deleteConfirmMessage": "Esta captura de tela será removida da solicitação."
   },

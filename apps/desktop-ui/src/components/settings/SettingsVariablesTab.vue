@@ -141,8 +141,6 @@
                       @keydown.enter="commitName(variable.id)"
                     />
                     <div class="variable-usage">
-                      <code>{{ variablePlaceholder(variable.name) }}</code>
-                      <span class="variable-usage-divider">·</span>
                       <span>{{ usageText(variable.name) }}</span>
                     </div>
                   </div>
@@ -634,14 +632,6 @@ const builtins = computed(() => [
   gap: var(--space-xs);
   color: var(--app-text-muted);
   font-size: var(--text-small);
-}
-
-.variable-usage code {
-  font-size: var(--text-caption);
-}
-
-.variable-usage-divider {
-  opacity: 0.5;
 }
 
 .variable-value-section {

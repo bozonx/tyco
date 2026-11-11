@@ -805,7 +805,7 @@
     "editorHistoryStorageHint": "保存在磁盘上 — 历史记录在未加密的文件中持久保存，重启后依然存在。仅在 Tyco 运行时 — 历史记录仅存在于内存中，退出应用（无论以何种方式退出）即清除。不记录 — 不再保存新文本，已保存的记录会一直保留，直到你清除。",
     "editorHistoryStorageOff": "不记录",
     "editorHistoryStorageSession": "仅在 Tyco 运行时",
-    "editorHotkeyHint": "可以在 {tab} 标签页中查看和配置打开编辑器的快捷键。",
+    "editorHotkeyHint": "可以在 {tab} 标签页中查看和配置用于控制编辑器的快捷键。",
     "editorShortcuts": {
       "hint": "点击快捷键并按下新的组合键。Escape 取消录制。这些快捷键仅在编辑器中生效。",
       "indent": "增加缩进",
@@ -1284,7 +1284,7 @@
       "voiceCommands": "默认情况下，按一次开始语音命令，再按一次结束。开启后仅在按住快捷键时录制命令。"
     },
     "voiceHotkeysInfo": "用于开始录制语音的快捷键。向 AI 提出的语音问题始终通过再次按下结束。",
-    "voiceHotkeysTitle": "语音输入",
+    "voiceHotkeysTitle": "转录",
     "voiceTextCorrection": "语音文本纠错",
     "webFetchMaxCharacters": "页面大小限制",
     "webFetchMaxCharactersError": "请输入 1,000 到 100,000 之间的数字",
@@ -1544,9 +1544,9 @@
     "failed": "无法截取屏幕。请检查屏幕捕获权限和桌面门户支持。",
     "imageLoadFailed": "无法加载截图，已取消区域选择。",
     "selectAreaInstruction": "拖动以选择区域。按 Escape 取消。",
-    "confirmArea": "使用此区域",
-    "confirmAreaInstruction": "按 Enter 或双击确认，再次拖动可重新选择。按 Escape 取消。",
-    "addArea": "添加区域截图",
+    "confirmArea": "使用此区域 (Enter, 空格)",
+    "confirmAreaInstruction": "按 Enter、空格或双击确认，再次拖动可重新选择。按 Escape 取消。",
+    "addArea": "再截一张图",
     "deleteConfirmTitle": "移除截图？",
     "deleteConfirmMessage": "此截图将从请求中移除。"
   },

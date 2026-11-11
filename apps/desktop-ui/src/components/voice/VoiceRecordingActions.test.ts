@@ -41,4 +41,23 @@ describe('VoiceRecordingActions', () => {
       .map((key) => key.text())
     expect(secondaryKeyTexts).toEqual(['Shift', 'Space', 'Enter'])
   })
+
+  it('shows a labelled Esc cancel button in compact chat mode when cancelShortcut is enabled', async () => {
+    let cancelled = false
+    const wrapper = mountActions({
+      compact: true,
+      chat: true,
+      cancelShortcut: true,
+      cancel: async () => {
+        cancelled = true
+      },
+    })
+    const shortcutButtons = wrapper.findAll('.shortcut')
+    expect(shortcutButtons).toHaveLength(2)
+    expect(shortcutButtons[1]?.findAll('kbd').map((k) => k.text())).toEqual([
+      'Esc',
+    ])
+    await shortcutButtons[1]?.trigger('click')
+    expect(cancelled).toBe(true)
+  })
 })

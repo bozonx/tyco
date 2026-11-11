@@ -811,7 +811,7 @@
     "editorHistoryStorageHint": "Pe disc – istoricul supraviețuiește repornirilor într-un fișier necriptat. Cât timp rulează Tyco – istoricul este doar în memorie și dispare la închiderea aplicației, indiferent cum se închide. Nu înregistra – textele noi nu se salvează, intrările stocate rămân până le ștergeți.",
     "editorHistoryStorageOff": "Nu înregistra",
     "editorHistoryStorageSession": "Cât timp rulează Tyco",
-    "editorHotkeyHint": "Comanda rapidă pentru deschiderea editorului poate fi vizualizată și personalizată în fila {tab}.",
+    "editorHotkeyHint": "Comenzile rapide pentru controlul editorului pot fi vizualizate și personalizate în fila {tab}.",
     "editorShortcuts": {
       "hint": "Faceți clic pe o scurtătură și apăsați tastele noi. Escape anulează înregistrarea. Aceste scurtături funcționează doar în editor.",
       "indent": "Mărește indentarea",
@@ -1290,7 +1290,7 @@
       "voiceCommands": "Implicit, o apăsare pornește o comandă vocală, iar următoarea o încheie. Activați pentru a rosti o comandă doar cât timp comanda rapidă este ținută apăsată."
     },
     "voiceHotkeysInfo": "Comenzi rapide care pornesc înregistrarea vocii. Întrebările vocale către AI se încheie mereu cu o a doua apăsare.",
-    "voiceHotkeysTitle": "Introducere vocală",
+    "voiceHotkeysTitle": "Transcriere",
     "voiceTextCorrection": "Corectarea textului dictat",
     "webFetchMaxCharacters": "Limită dimensiune pagină",
     "webFetchMaxCharactersError": "Introduceți un număr între 1.000 și 100.000",
@@ -1553,9 +1553,9 @@
     "failed": "Ecranul nu a putut fi capturat. Verifică permisiunile de captură și compatibilitatea portalului desktop.",
     "imageLoadFailed": "Captura de ecran nu a putut fi încărcată; selecția zonei a fost anulată.",
     "selectAreaInstruction": "Trageți pentru a selecta o zonă. Escape anulează.",
-    "confirmArea": "Folosește zona",
-    "confirmAreaInstruction": "Enter sau dublu clic confirmă, trageți din nou pentru a redesena. Escape anulează.",
-    "addArea": "Adaugă captură de zonă",
+    "confirmArea": "Folosește zona (Enter, Spațiu)",
+    "confirmAreaInstruction": "Enter, Spațiu sau dublu clic confirmă, trageți din nou pentru a redesena. Escape anulează.",
+    "addArea": "Faceți încă o captură de ecran",
     "deleteConfirmTitle": "Ștergi captura de ecran?",
     "deleteConfirmMessage": "Această captură de ecran va fi eliminată din solicitare."
   },

@@ -205,7 +205,7 @@ function handleKeyDown(e: KeyboardEvent) {
     e.preventDefault()
     e.stopImmediatePropagation()
     onCancel()
-  } else if (e.key === 'Enter') {
+  } else if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
     e.preventDefault()
     e.stopImmediatePropagation()
     onConfirm()

@@ -74,6 +74,7 @@
         v-if="isListening"
         variant="bar"
         chat
+        cancel-shortcut
         target="chat"
         finish-behavior="confirm"
         :activation-mode="voiceActivationMode"

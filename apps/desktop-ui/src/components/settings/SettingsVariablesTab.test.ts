@@ -121,7 +121,10 @@ describe('SettingsVariablesTab.vue', () => {
   it('lists existing variables and allows updating value via textarea', async () => {
     const { wrapper, context } = mountTab([{ id: 'v1', name: 'CUSTOM_VAR' }])
     expect(wrapper.find('.variables-empty').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="variable-v1"]').exists()).toBe(true)
+    const card = wrapper.find('[data-testid="variable-v1"]')
+    expect(card.exists()).toBe(true)
+    expect(card.text()).toContain('variables.unused')
+    expect(card.text()).not.toContain('{{var:CUSTOM_VAR}}')
     expect(wrapper.find('.drag-handle-stub').exists()).toBe(true)
 
     const textarea = wrapper.find('[data-testid="variable-value-v1"]')
