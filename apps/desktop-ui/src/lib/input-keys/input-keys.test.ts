@@ -69,8 +69,8 @@ describe('input keys', () => {
 
   it('labels the keys of each mode', () => {
     expect(submitShortcut('Enter')).toBe('Enter')
-    expect(newlineShortcut('Enter')).toBe('Shift+Enter')
+    expect(newlineShortcut()).toBe('Shift+Enter')
     expect(submitShortcut('Ctrl+Enter')).toBe('Ctrl+Enter')
-    expect(newlineShortcut('Ctrl+Enter')).toBe('Enter')
+    expect(newlineShortcut()).toBe('Shift+Enter')
   })
 })

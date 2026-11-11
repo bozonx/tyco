@@ -168,7 +168,7 @@
 
     <SettingsSection
       :title="t('settings.appHotkeysTitle')"
-      :info="t('settings.appHotkeysHint')"
+      :info="`${t('settings.submitKey.enter')} · ${t('settings.submitKey.ctrlEnter')}`"
     >
       <FieldRow :label="t('settings.submitKey.label')">
         <FieldSelect

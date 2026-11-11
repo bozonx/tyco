@@ -22,9 +22,7 @@
     "removeContext": "컨텍스트 제거",
     "restoreContext": "컨텍스트 복원"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "파일 첨부",
     "alertCaution": "주의",
@@ -144,7 +142,6 @@
     "voiceCancelHint": "녹음 취소 (Esc)",
     "voiceContext": "이 텍스트에 대한 질문이 됩니다",
     "voiceInput": "음성 입력",
-    "voiceSendHint": "바로 보내기 (Ctrl+Enter)",
     "promptPresets": "프롬프트 사전 설정",
     "noPromptsConfigured": "구성된 프롬프트 사전 설정이 없습니다",
     "noToolCalling": "도구 없음",
@@ -195,9 +192,7 @@
       "deselectAll": "모두 선택 해제",
       "unsupportedCommands": "지원되지 않는 명령어"
     },
-    "replyBlocks": {
-      "toolLabel": "답변 블록"
-    }
+    "replyBlocks": { "toolLabel": "답변 블록" }
   },
   "commands": {
     "advanced": "고급",
@@ -619,10 +614,7 @@
     "cancelled": "취소됨",
     "done": "완료",
     "emptyResult": "모델이 빈 결과를 반환했습니다",
-    "failed": {
-      "command": "명령 실패",
-      "correction": "교정 실패"
-    },
+    "failed": { "command": "명령 실패", "correction": "교정 실패" },
     "focusChanged": "그 사이에 활성 창이 변경되어 결과가 클립보드에 복사되었습니다",
     "noSelection": "선택된 내용이 없습니다",
     "noTarget": "포커스가 있는 애플리케이션 창이 없습니다",
@@ -633,10 +625,7 @@
       "command": "명령 실행 후에도 텍스트가 변경되지 않았습니다",
       "correction": "오류를 찾지 못했습니다"
     },
-    "working": {
-      "command": "명령 실행 중…",
-      "correction": "교정 중…"
-    }
+    "working": { "command": "명령 실행 중…", "correction": "교정 중…" }
   },
   "settings": {
     "accessAllow": "허용",
@@ -717,7 +706,6 @@
     "apiKeyNotSetPlaceholder": "이 기기에는 아직 키가 없습니다. 붙여넣으세요",
     "apiKeyOptional": "대부분의 로컬 서버는 키가 필요하지 않습니다.",
     "apiKeyReplacePlaceholder": "저장된 키를 바꾸려면 새 키를 붙여넣으세요",
-    "appHotkeysHint": "빠른 입력과 채팅에서 텍스트를 전송하는 키입니다. 쌍을 이루는 다른 키는 줄 바꿈을 삽입합니다. 다른 키는 고정되어 있습니다. 빠른 입력에서 Tab은 작업 메뉴를 열고 Esc는 취소하며, 편집기에서 Ctrl+Enter는 빠른 작업을 엽니다.",
     "appHotkeysTitle": "애플리케이션 단축키",
     "appLanguage": "인터페이스 언어",
     "appLanguageSystem": "시스템 설정 따르기",
@@ -1287,9 +1275,7 @@
     "webJinaApiKeyHint": "선택 사항입니다. 키가 없으면 공유 속도 제한이 있는 무료 요금제가 사용됩니다.",
     "webSearchSectionHint": "AI 모델 및 프로필에서 사용하는 웹 검색 및 페이지 읽기 도구 설정입니다."
   },
-  "shortcuts": {
-    "insertIntoEditor": "편집기에 삽입"
-  },
+  "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {
     "auto": "시스템 설정 따르기",
     "dark": "다크",
@@ -1432,9 +1418,7 @@
     "phrasesPlaceholder": "예시 문구 (한 줄에 하나씩)"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "채팅에서 질문"
-    },
+    "actions": { "askInChat": "채팅에서 질문" },
     "languages": {
       "cs-CZ": "체코어;체코어로",
       "de-DE": "독일어;독일어로",
@@ -1475,7 +1459,6 @@
     "correctAndInsert": "교정 후 삽입",
     "correctionFailed": "텍스트를 교정할 수 없습니다",
     "newLine": "줄 바꿈",
-    "next": "다음",
     "nothingToCorrect": "교정할 내용이 없습니다",
     "textTooShortForCorrection": "교정하기에 텍스트가 너무 짧습니다",
     "insert": "삽입",
@@ -1522,9 +1505,7 @@
     "valueNotSet": "이 기기에 값이 없음: 이 변수를 쓰는 명령은 실행되지 않습니다",
     "valuePlaceholder": "경로, 주소 또는 다른 텍스트"
   },
-  "favorites": {
-    "noMatches": "일치하는 즐겨찾기 없음"
-  },
+  "favorites": { "noMatches": "일치하는 즐겨찾기 없음" },
   "replyBlocks": {
     "insertIntoWindow": "창에 삽입",
     "insertIntoEditor": "편집기로",

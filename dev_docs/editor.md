@@ -33,7 +33,6 @@ the selection; the view mirrors them.
 | Ctrl+Shift+M         | Formatted view ↔ raw Markdown                                         |
 | Ctrl+F / Ctrl+H      | Search / replace panel (`editor-search.ts`)                           |
 | Ctrl+Shift+V         | Paste as plain text                                                   |
-| Ctrl+Enter           | Quick actions                                                         |
 | Ctrl+Z / Ctrl+Y      | Undo / redo on any keyboard layout (`history-keys.ts`)                |
 
 The user guide is `docs/editor.md`. Formatting, indentation and Markdown

@@ -22,9 +22,7 @@
     "removeContext": "Usuń kontekst",
     "restoreContext": "Przywróć kontekst"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Dołącz plik",
     "alertCaution": "Ostrożnie",
@@ -144,7 +142,6 @@
     "voiceCancelHint": "Anuluj nagrywanie (Esc)",
     "voiceContext": "Pytanie będzie dotyczyć tego tekstu",
     "voiceInput": "Wprowadzanie głosowe",
-    "voiceSendHint": "Wyślij od razu (Ctrl+Enter)",
     "promptPresets": "Zestawy promptów",
     "noPromptsConfigured": "Brak skonfigurowanych promptów",
     "noToolCalling": "bez narzędzi",
@@ -195,9 +192,7 @@
       "deselectAll": "Odznacz wszystko",
       "unsupportedCommands": "Nieobsługiwane polecenia"
     },
-    "replyBlocks": {
-      "toolLabel": "Warianty odpowiedzi"
-    }
+    "replyBlocks": { "toolLabel": "Warianty odpowiedzi" }
   },
   "commands": {
     "advanced": "Zaawansowane",
@@ -717,7 +712,6 @@
     "apiKeyNotSetPlaceholder": "Na tym urządzeniu nie ma jeszcze klucza: wklej go",
     "apiKeyOptional": "Większość serwerów lokalnych nie wymaga klucza.",
     "apiKeyReplacePlaceholder": "Wklej nowy klucz, aby zastąpić zapisany",
-    "appHotkeysHint": "Klawisz wysyłający tekst w szybkim wprowadzaniu i na czacie; drugi klawisz z pary wstawia nowy wiersz. Pozostałe klawisze są stałe: w szybkim wprowadzaniu Tab otwiera menu akcji, a Esc anuluje; w edytorze Ctrl+Enter otwiera szybkie akcje.",
     "appHotkeysTitle": "Skróty aplikacji",
     "appLanguage": "Język interfejsu",
     "appLanguageSystem": "Jak w systemie",
@@ -1287,9 +1281,7 @@
     "webJinaApiKeyHint": "Opcjonalnie. Bez klucza żądania korzystają z bezpłatnego planu ze wspólnymi limitami.",
     "webSearchSectionHint": "Ustawienia wyszukiwania w sieci i czytania stron używanych przez modele i profile AI."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Wstaw do edytora"
-  },
+  "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
     "auto": "Jak w systemie",
     "dark": "Ciemny",
@@ -1432,9 +1424,7 @@
     "phrasesPlaceholder": "Przykładowe frazy, jedna na wiersz"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "zapytaj na czacie"
-    },
+    "actions": { "askInChat": "zapytaj na czacie" },
     "languages": {
       "cs-CZ": "Czeski",
       "de-DE": "niemiecki",
@@ -1475,7 +1465,6 @@
     "correctAndInsert": "Popraw i wstaw",
     "correctionFailed": "Nie udało się poprawić tekstu",
     "newLine": "Nowy wiersz",
-    "next": "Dalej",
     "nothingToCorrect": "Nie ma czego poprawiać",
     "textTooShortForCorrection": "Tekst jest za krótki do korekty",
     "insert": "Wstaw",
@@ -1522,9 +1511,7 @@
     "valueNotSet": "Brak wartości na tym urządzeniu: polecenia, które jej używają, nie są wykonywane",
     "valuePlaceholder": "Ścieżka, adres lub inny tekst"
   },
-  "favorites": {
-    "noMatches": "Brak pasujących ulubionych"
-  },
+  "favorites": { "noMatches": "Brak pasujących ulubionych" },
   "replyBlocks": {
     "insertIntoWindow": "Wstaw do okna",
     "insertIntoEditor": "Do edytora",

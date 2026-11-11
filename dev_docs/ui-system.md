@@ -240,7 +240,7 @@ answer's completed `propose_replies` blocks supply insertion: one block is selec
 automatically; multiple blocks require an explicit choice. Plain informational
 answers have no primary insertion action. Another request reopens and focuses the
 composer with the conversation context preserved; errors and stopped turns keep
-the composer available. Ctrl+Enter continues in the main chat.
+the composer available. The chat button continues in the main chat.
 
 Enter and Space insert the selected result only outside interactive controls,
 after generation completes. Repeated keys, composition, modifiers and selected
@@ -256,3 +256,14 @@ text displayed as a scrollable reference. The reference belongs to that voice
 activation only; it is neither inserted with the transcript nor sent as an AI
 instruction. Listening results use the same action menu without a separate
 reply-by-voice primary button.
+
+## Quick surface keyboard actions
+
+Request composers share the configured Enter/Ctrl+Enter submit key. Shift+Enter
+always inserts a newline; bare Enter also inserts one in Ctrl+Enter mode.
+Outside text entry, Enter/Space runs the primary action and Shift+Space runs
+the secondary action. Tab opens the next action menu in quick input and voice
+flows. Moving text to the editor is an explicit button without a dedicated
+shortcut. Escape returns or cancels; Shift+Escape closes the whole flow.
+Ctrl+Enter is reserved for configured request submission, not editor actions
+or immediate voice completion.

@@ -22,9 +22,7 @@
     "removeContext": "Remove context",
     "restoreContext": "Restore context"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Attach file",
     "alertCaution": "Caution",
@@ -144,7 +142,6 @@
     "voiceCancelHint": "Cancel recording (Esc)",
     "voiceContext": "The question will be about this text",
     "voiceInput": "Voice input",
-    "voiceSendHint": "Send right away (Ctrl+Enter)",
     "promptPresets": "Prompt presets",
     "noPromptsConfigured": "No prompt presets configured",
     "noToolCalling": "no tool calling",
@@ -195,9 +192,7 @@
       "deselectAll": "Deselect all",
       "unsupportedCommands": "Unsupported commands"
     },
-    "replyBlocks": {
-      "toolLabel": "Reply Blocks"
-    }
+    "replyBlocks": { "toolLabel": "Reply Blocks" }
   },
   "commands": {
     "advanced": "Advanced",
@@ -717,7 +712,6 @@
     "apiKeyNotSetPlaceholder": "No key on this device yet: paste one",
     "apiKeyOptional": "Most local servers need no key.",
     "apiKeyReplacePlaceholder": "Paste a new key to replace the saved one",
-    "appHotkeysHint": "The key that sends text in the quick input and the chat; the other key of the pair inserts a new line. The other keys are fixed: in the quick input Tab opens the actions menu and Esc cancels; in the editor Ctrl+Enter opens the quick actions.",
     "appHotkeysTitle": "Application hotkeys",
     "appLanguage": "Interface language",
     "appLanguageSystem": "System default",
@@ -1287,9 +1281,7 @@
     "webJinaApiKeyHint": "Optional. Without a key, requests use the free tier with shared rate limits.",
     "webSearchSectionHint": "Settings for web search and page reading tools used by AI models and profiles."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Insert into editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
     "auto": "System default",
     "dark": "Dark",
@@ -1432,9 +1424,7 @@
     "phrasesPlaceholder": "Sample phrases, one per line"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "ask in chat"
-    },
+    "actions": { "askInChat": "ask in chat" },
     "languages": {
       "cs-CZ": "Czech",
       "de-DE": "German",
@@ -1475,7 +1465,6 @@
     "correctAndInsert": "Correct and insert",
     "correctionFailed": "Could not correct the text",
     "newLine": "New line",
-    "next": "Next",
     "nothingToCorrect": "Nothing to correct",
     "textTooShortForCorrection": "Text is too short for correction",
     "insert": "Insert",
@@ -1522,9 +1511,7 @@
     "valueNotSet": "No value on this device: commands that use it do not run",
     "valuePlaceholder": "A path, an address or other text"
   },
-  "favorites": {
-    "noMatches": "No matching favorites"
-  },
+  "favorites": { "noMatches": "No matching favorites" },
   "replyBlocks": {
     "insertIntoWindow": "Insert into window",
     "insertIntoEditor": "To editor",

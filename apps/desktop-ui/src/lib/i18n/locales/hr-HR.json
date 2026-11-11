@@ -22,9 +22,7 @@
     "removeContext": "Ukloni kontekst",
     "restoreContext": "Vrati kontekst"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Priloži datoteku",
     "alertCaution": "Oprez",
@@ -144,7 +142,6 @@
     "voiceCancelHint": "Prekini snimanje (Esc)",
     "voiceContext": "Pitanje će se odnositi na ovaj tekst",
     "voiceInput": "Glasovni unos",
-    "voiceSendHint": "Pošalji odmah (Ctrl+Enter)",
     "promptPresets": "Unaprijed postavljeni upiti",
     "noPromptsConfigured": "Nema konfiguriranih upita",
     "noToolCalling": "bez alata",
@@ -195,9 +192,7 @@
       "deselectAll": "Poništi odabir",
       "unsupportedCommands": "Nepodržane naredbe"
     },
-    "replyBlocks": {
-      "toolLabel": "Blokovi odgovora"
-    }
+    "replyBlocks": { "toolLabel": "Blokovi odgovora" }
   },
   "commands": {
     "advanced": "Napredno",
@@ -717,7 +712,6 @@
     "apiKeyNotSetPlaceholder": "Na ovom uređaju još nema ključa: zalijepite ga",
     "apiKeyOptional": "Većina lokalnih poslužitelja ne treba ključ.",
     "apiKeyReplacePlaceholder": "Zalijepite novi ključ umjesto spremljenog",
-    "appHotkeysHint": "Tipka koja šalje tekst u brzom unosu i chatu; druga tipka iz para umeće novi redak. Ostale tipke su fiksne: u brzom unosu Tab otvara izbornik radnji, a Esc odustaje; u uređivaču Ctrl+Enter otvara brze radnje.",
     "appHotkeysTitle": "Tipkovnički prečaci aplikacije",
     "appLanguage": "Jezik sučelja",
     "appLanguageSystem": "Kao u sustavu",
@@ -1287,9 +1281,7 @@
     "webJinaApiKeyHint": "Neobavezno. Bez ključa, zahtjevi koriste besplatnu razinu sa zajedničkim ograničenjima.",
     "webSearchSectionHint": "Postavke za alate za pretraživanje weba i čitanje stranica koje koriste AI modeli i profili."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Umetni u uređivač"
-  },
+  "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
     "auto": "Kao u sustavu",
     "dark": "Tamna",
@@ -1432,9 +1424,7 @@
     "phrasesPlaceholder": "Primjeri fraza, jedna po retku"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "pitaj u chatu"
-    },
+    "actions": { "askInChat": "pitaj u chatu" },
     "languages": {
       "cs-CZ": "Češki",
       "de-DE": "njemački",
@@ -1475,7 +1465,6 @@
     "correctAndInsert": "Ispravi i umetni",
     "correctionFailed": "Tekst se nije mogao ispraviti",
     "newLine": "Novi redak",
-    "next": "Dalje",
     "nothingToCorrect": "Nema se što ispraviti",
     "textTooShortForCorrection": "Tekst je prekratak za ispravak",
     "insert": "Umetni",
@@ -1522,9 +1511,7 @@
     "valueNotSet": "Nema vrijednosti na ovom uređaju: naredbe koje je koriste ne izvršavaju se",
     "valuePlaceholder": "Putanja, adresa ili drugi tekst"
   },
-  "favorites": {
-    "noMatches": "Nema podudarnih favorita"
-  },
+  "favorites": { "noMatches": "Nema podudarnih favorita" },
   "replyBlocks": {
     "insertIntoWindow": "Umetni u prozor",
     "insertIntoEditor": "U uređivač",

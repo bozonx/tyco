@@ -117,7 +117,7 @@
           "
           @click="openNextStep"
         >
-          {{ t('write.next') }}
+          {{ t('menu.actions') }}
         </Button>
         <Button
           variant="ghost"
@@ -140,6 +140,9 @@
         ref="queryPanelRef"
         v-model="input.value.value"
         multiline
+        :submit-key="
+          resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey)
+        "
         :disabled="isInputBlocked || model.isGenerating.value"
         :placeholder="promptPlaceholder"
         :options="recentOptions"
@@ -212,7 +215,9 @@
             variant="primary"
             size="sm"
             class="run-action-btn"
-            :keys="['Enter']"
+            :keys="[
+              resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey),
+            ]"
             :disabled="!canSend"
             @click="handleQuerySubmit({ ctrl: false })"
           >
@@ -246,6 +251,7 @@ import { createChatInputModel } from '../../lib/chat/chat-input-model'
 import { invokeDesktop } from '../../lib/desktop/invoke'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { describeError } from '../../lib/errors/describe-error'
+import { resolveSubmitKey } from '../../lib/input-keys/input-keys'
 import { clientLogger } from '../../lib/logger'
 import type { QuickAiRequestMenuParams } from '../../lib/modals/menu-modal-params'
 import { createQuickAiRequestRuntime } from '../../lib/quick-ai-request/quick-ai-request-runtime'
@@ -728,6 +734,15 @@ function handleWindowKeys(event: KeyboardEvent) {
     )
       return
     if (window.getSelection()?.toString()) return
+    if (
+      event.key === 'Tab' &&
+      !event.ctrlKey &&
+      model.selectedReplyBlock.value
+    ) {
+      event.preventDefault()
+      openNextStep()
+      return
+    }
     if (
       !event.ctrlKey &&
       (event.key === 'Enter' || event.key === ' ') &&

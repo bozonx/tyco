@@ -22,9 +22,7 @@
     "removeContext": "Odebrat kontext",
     "restoreContext": "Obnovit kontext"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Přiložit soubor",
     "alertCaution": "Pozor",
@@ -144,7 +142,6 @@
     "voiceCancelHint": "Zrušit nahrávání (Esc)",
     "voiceContext": "Otázka se bude týkat tohoto textu",
     "voiceInput": "Hlasové zadávání",
-    "voiceSendHint": "Odeslat hned (Ctrl+Enter)",
     "promptPresets": "Předvolby promptů",
     "noPromptsConfigured": "Nejsou nastaveny žádné předvolby promptů",
     "noToolCalling": "bez nástrojů",
@@ -195,9 +192,7 @@
       "deselectAll": "Zrušit výběr",
       "unsupportedCommands": "Nepodporované příkazy"
     },
-    "replyBlocks": {
-      "toolLabel": "Varianty odpovědí"
-    }
+    "replyBlocks": { "toolLabel": "Varianty odpovědí" }
   },
   "commands": {
     "advanced": "Pokročilé",
@@ -619,10 +614,7 @@
     "cancelled": "Zrušeno",
     "done": "Hotovo",
     "emptyResult": "Model vrátil prázdný výsledek",
-    "failed": {
-      "command": "Příkaz selhal",
-      "correction": "Oprava selhala"
-    },
+    "failed": { "command": "Příkaz selhal", "correction": "Oprava selhala" },
     "focusChanged": "Mezitím se změnilo okno, proto byl výsledek zkopírován do schránky",
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
@@ -633,10 +625,7 @@
       "command": "Příkaz ponechal text beze změny",
       "correction": "Nenalezeny žádné chyby"
     },
-    "working": {
-      "command": "Spouští se příkaz…",
-      "correction": "Opravuje se…"
-    }
+    "working": { "command": "Spouští se příkaz…", "correction": "Opravuje se…" }
   },
   "settings": {
     "accessAllow": "Povolit",
@@ -717,7 +706,6 @@
     "apiKeyNotSetPlaceholder": "Na tomto zařízení zatím klíč není: vložte ho",
     "apiKeyOptional": "Většina místních serverů klíč nepotřebuje.",
     "apiKeyReplacePlaceholder": "Vložte nový klíč místo uloženého",
-    "appHotkeysHint": "Klávesa, která odesílá text v rychlém zadávání a v chatu; druhá klávesa z dvojice vkládá nový řádek. Ostatní klávesy jsou pevné: v rychlém zadávání Tab otevře nabídku akcí a Esc zruší; v editoru Ctrl+Enter otevře rychlé akce.",
     "appHotkeysTitle": "Klávesové zkratky aplikace",
     "appLanguage": "Jazyk rozhraní",
     "appLanguageSystem": "Podle systému",
@@ -1287,9 +1275,7 @@
     "webJinaApiKeyHint": "Volitelné. Bez klíče požadavky využívají bezplatný tarif se sdílenými limity.",
     "webSearchSectionHint": "Nastavení nástrojů pro vyhledávání na webu a čtení stránek používaných modely a profily AI."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Vložit do editoru"
-  },
+  "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
     "auto": "Podle systému",
     "dark": "Tmavý",
@@ -1432,9 +1418,7 @@
     "phrasesPlaceholder": "Příklady frází, jedna na řádek"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "zeptej se v chatu"
-    },
+    "actions": { "askInChat": "zeptej se v chatu" },
     "languages": {
       "cs-CZ": "Czech",
       "de-DE": "němčiny",
@@ -1475,7 +1459,6 @@
     "correctAndInsert": "Opravit a vložit",
     "correctionFailed": "Text se nepodařilo opravit",
     "newLine": "Nový řádek",
-    "next": "Další",
     "nothingToCorrect": "Není co opravit",
     "textTooShortForCorrection": "Text je na opravu příliš krátký",
     "insert": "Vložit",
@@ -1522,9 +1505,7 @@
     "valueNotSet": "Žádná hodnota na tomto zařízení: příkazy, které ji používají, se nespustí",
     "valuePlaceholder": "Cesta, adresa nebo jiný text"
   },
-  "favorites": {
-    "noMatches": "Žádné odpovídající oblíbené"
-  },
+  "favorites": { "noMatches": "Žádné odpovídající oblíbené" },
   "replyBlocks": {
     "insertIntoWindow": "Vložit do okna",
     "insertIntoEditor": "Do editoru",

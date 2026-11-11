@@ -96,7 +96,7 @@ describe('VoiceRecognitionMenu', () => {
     const cancelBtn = wrapper.find('button[title="chat.voiceCancelHint"]')
     expect(cancelBtn.exists()).toBe(true)
 
-    const sendBtn = wrapper.find('button[title="chat.voiceSendHint"]')
+    const sendBtn = wrapper.find('button[title="chat.voiceSendNow"]')
     expect(sendBtn.exists()).toBe(true)
   })
 
@@ -126,12 +126,11 @@ describe('VoiceRecognitionMenu', () => {
     })
     await flushPromises()
 
-    const sendBtn = wrapper.find('button[title="chat.voiceSendHint"]')
+    const sendBtn = wrapper.find('button[title="chat.voiceSendNow"]')
     await sendBtn.trigger('click')
     await flushPromises()
 
     expect(mocks.finishDictation).toHaveBeenCalled()
-    expect(wrapper.emitted('corrected')).toBeTruthy()
     expect(wrapper.emitted('corrected')?.[0]?.[3]).toBe('submit')
   })
 
@@ -191,9 +190,8 @@ describe('VoiceRecognitionMenu', () => {
     )
     await flushPromises()
 
-    expect(mocks.finishDictation).toHaveBeenCalled()
-    expect(wrapper.emitted('corrected')).toBeTruthy()
-    expect(wrapper.emitted('corrected')?.[0]?.[3]).toBe('submit')
+    expect(mocks.finishDictation).not.toHaveBeenCalled()
+    expect(wrapper.emitted('corrected')).toBeFalsy()
   })
   describe('voice completion shortcuts', () => {
     const mountVoiceInput = (
@@ -244,12 +242,12 @@ describe('VoiceRecognitionMenu', () => {
     it.each([
       ['submitToChat', { code: 'Enter' }, 'submit'],
       ['submitToChat', { code: 'Space' }, 'submit'],
-      ['submitToChat', { code: 'Enter', shiftKey: true }, 'insert'],
+
       ['submitToChat', { code: 'Space', shiftKey: true }, 'insert'],
       ['submitToChat', { code: 'Tab' }, 'next'],
       ['insertIntoTarget', { code: 'Enter' }, 'insert'],
       ['insertIntoTarget', { code: 'Space' }, 'insert'],
-      ['insertIntoTarget', { code: 'Enter', shiftKey: true }, 'next'],
+      ['insertIntoTarget', { code: 'Tab' }, 'next'],
       ['confirm', { code: 'Enter' }, 'insert'],
       ['confirm', { code: 'Space' }, 'insert'],
     ] as const)('%s finishes %o with %s', async (behavior, init, intent) => {
@@ -295,7 +293,7 @@ describe('VoiceRecognitionMenu', () => {
       wrapper.unmount()
     })
 
-    it.each(['confirm', 'insertIntoTarget'] as const)(
+    it.each(['confirm'] as const)(
       'keeps Tab available for focus navigation in %s mode',
       async (mode) => {
         const wrapper = mountVoiceInput(mode)
@@ -378,7 +376,7 @@ describe('VoiceRecognitionMenu', () => {
     )
     const wrapper = mountChat()
     await flushPromises()
-    await wrapper.find('button[title="chat.voiceSendHint"]').trigger('click')
+    await wrapper.find('button[title="chat.voiceSendNow"]').trigger('click')
     await flushPromises()
     desktop.setState({
       activationId: desktop.backend.activation.activationId + 1,
@@ -400,7 +398,7 @@ describe('VoiceRecognitionMenu', () => {
     )
     const wrapper = mountChat()
     await flushPromises()
-    await wrapper.find('button[title="chat.voiceSendHint"]').trigger('click')
+    await wrapper.find('button[title="chat.voiceSendNow"]').trigger('click')
     await flushPromises()
     wrapper.unmount()
     resolve('Late transcript')
@@ -421,7 +419,7 @@ describe('VoiceRecognitionMenu', () => {
     const save = vi.spyOn(history, 'saveSourceResult').mockResolvedValue()
     const wrapper = mountChat()
     await flushPromises()
-    await wrapper.find('button[title="chat.voiceSendHint"]').trigger('click')
+    await wrapper.find('button[title="chat.voiceSendNow"]').trigger('click')
     await flushPromises()
     const menu = useMenuModalsStore()
     menu.cancelPending()
@@ -757,9 +755,7 @@ describe('VoiceRecognitionMenu', () => {
       },
     })
     await flushPromises()
-    await chatWrapper
-      .find('button[title="chat.voiceSendHint"]')
-      .trigger('click')
+    await chatWrapper.find('button[title="chat.voiceSendNow"]').trigger('click')
     await flushPromises()
 
     expect(mocks.shouldFormatRecognizedText).toHaveBeenCalledWith('chat')

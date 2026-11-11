@@ -22,9 +22,7 @@
     "removeContext": "Kontextus eltávolítása",
     "restoreContext": "Kontextus visszaállítása"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Fájl csatolása",
     "alertCaution": "Vigyázat",
@@ -144,7 +142,6 @@
     "voiceCancelHint": "Felvétel megszakítása (Esc)",
     "voiceContext": "A kérdés erre a szövegre vonatkozik",
     "voiceInput": "Hangbevitel",
-    "voiceSendHint": "Azonnali küldés (Ctrl+Enter)",
     "promptPresets": "Prompt-sablonok",
     "noPromptsConfigured": "Nincsenek beállítva prompt-sablonok",
     "noToolCalling": "eszközök nélkül",
@@ -195,9 +192,7 @@
       "deselectAll": "Kijelölés törlése",
       "unsupportedCommands": "Nem támogatott parancsok"
     },
-    "replyBlocks": {
-      "toolLabel": "Válaszblokkok"
-    }
+    "replyBlocks": { "toolLabel": "Válaszblokkok" }
   },
   "commands": {
     "advanced": "Speciális",
@@ -633,10 +628,7 @@
       "command": "A parancs változatlanul hagyta a szöveget",
       "correction": "Nem található hiba"
     },
-    "working": {
-      "command": "A parancs fut…",
-      "correction": "Javítás…"
-    }
+    "working": { "command": "A parancs fut…", "correction": "Javítás…" }
   },
   "settings": {
     "accessAllow": "Engedélyezés",
@@ -717,7 +709,6 @@
     "apiKeyNotSetPlaceholder": "Ezen az eszközön még nincs kulcs: illesszen be egyet",
     "apiKeyOptional": "A legtöbb helyi szervernek nincs szüksége kulcsra.",
     "apiKeyReplacePlaceholder": "Illesszen be új kulcsot a mentett helyett",
-    "appHotkeysHint": "A billentyű, amely elküldi a szöveget a gyorsbevitelben és a csevegésben; a pár másik billentyűje új sort szúr be. A többi billentyű rögzített: a gyorsbevitelben a Tab megnyitja a műveletmenüt, az Esc megszakít; a szerkesztőben a Ctrl+Enter megnyitja a gyorsműveleteket.",
     "appHotkeysTitle": "Az alkalmazás billentyűparancsai",
     "appLanguage": "A felület nyelve",
     "appLanguageSystem": "Rendszer szerint",
@@ -1287,9 +1278,7 @@
     "webJinaApiKeyHint": "Opcionális. Kulcs nélkül a kérések az ingyenes szintet használják megosztott korlátokkal.",
     "webSearchSectionHint": "Az AI modellek és profilok által használt webes keresési és oldalolvasási eszközök beállításai."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Beillesztés a szerkesztőbe"
-  },
+  "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
     "auto": "Rendszer szerint",
     "dark": "Sötét",
@@ -1432,9 +1421,7 @@
     "phrasesPlaceholder": "Példamondatok, soronként egy"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "kérdezd meg a csevegésben"
-    },
+    "actions": { "askInChat": "kérdezd meg a csevegésben" },
     "languages": {
       "cs-CZ": "Cseh",
       "de-DE": "németre",
@@ -1475,7 +1462,6 @@
     "correctAndInsert": "Javítás és beillesztés",
     "correctionFailed": "A szöveget nem sikerült kijavítani",
     "newLine": "Új sor",
-    "next": "Tovább",
     "nothingToCorrect": "Nincs mit javítani",
     "textTooShortForCorrection": "A szöveg túl rövid a javításhoz",
     "insert": "Beillesztés",
@@ -1522,9 +1508,7 @@
     "valueNotSet": "Nincs érték ezen az eszközön: az ezt használó parancsok nem futnak",
     "valuePlaceholder": "Útvonal, cím vagy más szöveg"
   },
-  "favorites": {
-    "noMatches": "Nincsenek egyező kedvencek"
-  },
+  "favorites": { "noMatches": "Nincsenek egyező kedvencek" },
   "replyBlocks": {
     "insertIntoWindow": "Beszúrás az ablakba",
     "insertIntoEditor": "A szerkesztőbe",

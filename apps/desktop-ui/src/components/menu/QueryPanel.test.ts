@@ -10,6 +10,33 @@ const options = [
 ]
 
 describe('QueryPanel', () => {
+  it.each(['Enter', 'Ctrl+Enter'] as const)(
+    'uses %s for multiline submission and preserves Shift+Enter',
+    async (submitKey) => {
+      const wrapper = mount(QueryPanel, {
+        props: { modelValue: 'request', multiline: true, submitKey },
+      })
+      const input = wrapper.find('textarea')
+      await input.trigger('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        shiftKey: true,
+      })
+      expect(wrapper.emitted('submit')).toBeUndefined()
+      if (submitKey === 'Ctrl+Enter') {
+        await input.trigger('keydown', { key: 'Enter', code: 'Enter' })
+        expect(wrapper.emitted('submit')).toBeUndefined()
+      }
+      await input.trigger('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        ctrlKey: submitKey === 'Ctrl+Enter',
+      })
+      expect(wrapper.emitted('submit')).toEqual([
+        [{ ctrl: false, option: undefined }],
+      ])
+    }
+  )
   it('blocks query submission while another operation is pending and restores focus afterwards', async () => {
     const wrapper = mount(QueryPanel, {
       attachTo: document.body,

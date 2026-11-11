@@ -62,14 +62,7 @@
         icon="mdi:lightning-bolt-outline"
         class="mr-1"
         @click="navPanelStore.navPanelState.onEscape"
-        >{{ escapeButtonText
-        }}<template
-          v-if="
-            navPanelStore.navPanelState.escapeButtonLabelKey === 'menu.actions'
-          "
-        >
-          ({{ actionsShortcut }})</template
-        ></Button
+        >{{ escapeButtonText }}</Button
       >
       <IconButton
         size="sm"
@@ -104,7 +97,6 @@ import {
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
-import { EDITOR_ACTIONS_SHORTCUT } from '../../lib/input-keys/input-keys'
 import { APP_ROUTES } from '../../lib/navigation/routes'
 import { appNavigation } from '../../navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
@@ -158,8 +150,6 @@ onMounted(() => {
   if (!aiProfilesStore.isLoaded) void aiProfilesStore.loadAll()
 })
 onBeforeUnmount(() => resizeObserver?.disconnect())
-
-const actionsShortcut = EDITOR_ACTIONS_SHORTCUT.toUpperCase()
 
 const escapeButtonText = computed(() => {
   return t(navPanelStore.navPanelState.escapeButtonLabelKey)

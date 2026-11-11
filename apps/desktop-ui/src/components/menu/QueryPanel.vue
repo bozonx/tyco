@@ -161,6 +161,10 @@ import { nextTick, onMounted, ref, useId, watch } from 'vue'
 import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useTextControl } from '../../composables/use-text-control'
 import {
+  resolveInputKeyAction,
+  resolveSubmitKey,
+} from '../../lib/input-keys/input-keys'
+import {
   type QueryOption,
   moveHighlight,
 } from '../../lib/menu-query/menu-query'
@@ -168,6 +172,7 @@ import type { TextControl } from '../../lib/ui/text-control'
 import AppIcon from '../common/AppIcon.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import ShortcutHint from '../overlay/ShortcutHint.vue'
+import type { SubmitKey } from '@tyco/shared'
 
 export interface QueryPanelOption extends QueryOption {
   /** Shown on the right of the label */
@@ -197,6 +202,7 @@ export interface QueryPanelSubmit {
 
 const props = withDefaults(
   defineProps<{
+    submitKey?: SubmitKey
     modelValue: string
     placeholder?: string
     /** A caption above the input */
@@ -346,10 +352,24 @@ const onKeyDown = (event: KeyboardEvent) => {
       if (highlightedOptionIndex.value >= 0) scrollToHighlighted()
       return
     case 'Enter':
-      if (props.multiline && (event.shiftKey || event.altKey)) return
+      if (
+        props.multiline &&
+        resolveInputKeyAction(
+          {
+            code: event.code || event.key,
+            shiftKey: event.shiftKey,
+            ctrlKey: event.ctrlKey,
+            metaKey: event.metaKey,
+            altKey: event.altKey,
+            isComposing: event.isComposing,
+          },
+          resolveSubmitKey(props.submitKey)
+        ) !== 'submit'
+      )
+        return
       event.preventDefault()
       if (event.repeat) return
-      submit(event.ctrlKey || event.metaKey)
+      submit(props.multiline ? false : event.ctrlKey || event.metaKey)
       return
     case 'Tab': {
       if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)

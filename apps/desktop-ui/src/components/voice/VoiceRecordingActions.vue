@@ -33,11 +33,9 @@
       />
       <ShortcutButton
         :size="compact ? 'sm' : 'md'"
-        :keys="['Ctrl+Enter']"
+        :keys="['Shift', 'Space']"
         icon="mdi:send"
-        variant="primary"
-        class="voice-action-primary"
-        :title="t('chat.voiceSendHint')"
+        :title="t('chat.voiceSendNow')"
         :disabled="isFinishing"
         @click="() => finish('submit')"
       >
@@ -82,7 +80,7 @@
           :disabled="isFinishing"
           @click="() => finish('next')"
         >
-          {{ t('write.next') }}
+          {{ t('menu.actions') }}
         </ShortcutButton>
       </template>
       <template v-else>
@@ -100,7 +98,7 @@
         <ShortcutButton
           v-if="finishBehavior === 'insertIntoTarget'"
           :size="compact ? 'sm' : 'md'"
-          :keys="['Shift', 'Enter']"
+          :keys="['Tab']"
           icon="mdi:arrow-right"
           :disabled="isFinishing"
           @click="() => finish('next')"
@@ -149,7 +147,7 @@ const primaryKeys = computed(() =>
     ? ['Space', 'Enter', props.finishHotkey]
     : ['Space', 'Enter']
 )
-const secondaryKeys = ['Shift', 'Space', 'Enter']
+const secondaryKeys = ['Shift', 'Space']
 </script>
 
 <style scoped>

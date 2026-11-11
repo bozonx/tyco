@@ -22,9 +22,7 @@
     "removeContext": "Убрать контекст",
     "restoreContext": "Восстановить контекст"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Прикрепить файл",
     "alertCaution": "Осторожно",
@@ -144,7 +142,6 @@
     "voiceCancelHint": "Отменить запись (Esc)",
     "voiceContext": "Вопрос будет задан об этом тексте",
     "voiceInput": "Голосовой ввод",
-    "voiceSendHint": "Отправить сразу (Ctrl+Enter)",
     "promptPresets": "Заготовленные промпты",
     "noPromptsConfigured": "Заготовленные промпты не настроены",
     "noToolCalling": "без инструментов",
@@ -195,9 +192,7 @@
       "deselectAll": "Снять все",
       "unsupportedCommands": "Неподдерживаемые команды"
     },
-    "replyBlocks": {
-      "toolLabel": "Варианты ответа"
-    }
+    "replyBlocks": { "toolLabel": "Варианты ответа" }
   },
   "commands": {
     "advanced": "Дополнительно",
@@ -633,10 +628,7 @@
       "command": "Команда оставила текст без изменений",
       "correction": "Ошибок не найдено"
     },
-    "working": {
-      "command": "Выполняю команду…",
-      "correction": "Исправляю…"
-    }
+    "working": { "command": "Выполняю команду…", "correction": "Исправляю…" }
   },
   "settings": {
     "accessAllow": "Разрешено",
@@ -717,7 +709,6 @@
     "apiKeyNotSetPlaceholder": "На этом устройстве ключа ещё нет: вставьте его",
     "apiKeyOptional": "Большинству локальных серверов ключ не нужен.",
     "apiKeyReplacePlaceholder": "Вставьте новый ключ, чтобы заменить сохранённый",
-    "appHotkeysHint": "Клавиша отправки текста в быстром вводе и чате; вторая клавиша пары вставляет новую строку. Остальные клавиши постоянные: в быстром вводе Tab открывает меню действий, Esc отменяет ввод; в редакторе Ctrl+Enter открывает быстрые действия.",
     "appHotkeysTitle": "Хоткеи приложения",
     "appLanguage": "Язык интерфейса",
     "appLanguageSystem": "Как в системе",
@@ -1287,9 +1278,7 @@
     "webJinaApiKeyHint": "Необязательно. Без ключа запросы работают через бесплатный тариф с общими лимитами.",
     "webSearchSectionHint": "Параметры инструментов поиска в интернете и чтения веб-страниц для ИИ-моделей и профилей."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Вставить в редактор"
-  },
+  "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {
     "auto": "Как в системе",
     "dark": "Темная",
@@ -1432,9 +1421,7 @@
     "phrasesPlaceholder": "Примеры фраз построчно"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "спроси в чате"
-    },
+    "actions": { "askInChat": "спроси в чате" },
     "languages": {
       "cs-CZ": "Чешский",
       "de-DE": "немецкий",
@@ -1475,7 +1462,6 @@
     "correctAndInsert": "Исправить и вставить",
     "correctionFailed": "Не удалось исправить текст",
     "newLine": "Новая строка",
-    "next": "Далее",
     "nothingToCorrect": "Исправлять нечего",
     "textTooShortForCorrection": "Слишком короткий текст для коррекции",
     "insert": "Вставить",
@@ -1522,9 +1508,7 @@
     "valueNotSet": "Нет значения на этом устройстве: команды с этой переменной не выполняются",
     "valuePlaceholder": "Путь, адрес или другой текст"
   },
-  "favorites": {
-    "noMatches": "Ничего не найдено"
-  },
+  "favorites": { "noMatches": "Ничего не найдено" },
   "replyBlocks": {
     "insertIntoWindow": "Вставить в окно",
     "insertIntoEditor": "В редактор",

@@ -20,7 +20,6 @@ switch between the formatted view and raw Markdown.
 | Ctrl+Shift+M         | Formatted view ↔ raw Markdown                        |
 | Ctrl+F / Ctrl+H      | Search / search and replace                          |
 | Ctrl+Shift+V         | Paste as plain text                                  |
-| Ctrl+Enter           | Quick actions                                        |
 | Ctrl+Z / Ctrl+Y      | Undo / redo (any keyboard layout)                    |
 
 The formatting, indentation and view shortcuts can be changed in **Settings →

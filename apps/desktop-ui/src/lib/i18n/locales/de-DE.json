@@ -22,9 +22,7 @@
     "removeContext": "Kontext entfernen",
     "restoreContext": "Kontext wiederherstellen"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Datei anhängen",
     "alertCaution": "Vorsicht",
@@ -144,7 +142,6 @@
     "voiceCancelHint": "Aufnahme abbrechen (Esc)",
     "voiceContext": "Die Frage bezieht sich auf diesen Text",
     "voiceInput": "Spracheingabe",
-    "voiceSendHint": "Sofort senden (Strg+Enter)",
     "promptPresets": "Prompt-Vorlagen",
     "noPromptsConfigured": "Keine Prompt-Vorlagen konfiguriert",
     "noToolCalling": "ohne Tools",
@@ -195,9 +192,7 @@
       "deselectAll": "Auswahl aufheben",
       "unsupportedCommands": "Nicht unterstützte Befehle"
     },
-    "replyBlocks": {
-      "toolLabel": "Antwortblöcke"
-    }
+    "replyBlocks": { "toolLabel": "Antwortblöcke" }
   },
   "commands": {
     "advanced": "Erweitert",
@@ -717,7 +712,6 @@
     "apiKeyNotSetPlaceholder": "Noch kein Schlüssel auf diesem Gerät: einfügen",
     "apiKeyOptional": "Die meisten lokalen Server brauchen keinen Schlüssel.",
     "apiKeyReplacePlaceholder": "Neuen Schlüssel einfügen, um den gespeicherten zu ersetzen",
-    "appHotkeysHint": "Die Taste, die Text in der Schnelleingabe und im Chat sendet; die andere Taste des Paars fügt eine neue Zeile ein. Die übrigen Tasten sind fest: In der Schnelleingabe öffnet Tab das Aktionsmenü und Esc bricht ab; im Editor öffnet Strg+Enter die Schnellaktionen.",
     "appHotkeysTitle": "Tastenkürzel der App",
     "appLanguage": "Sprache der Oberfläche",
     "appLanguageSystem": "Wie im System",
@@ -1287,9 +1281,7 @@
     "webJinaApiKeyHint": "Optional. Ohne Schlüssel nutzen Anfragen das kostenlose Kontingent mit geteilten Limits.",
     "webSearchSectionHint": "Einstellungen für Websuche und das Abrufen von Webseiten durch KI-Modelle und Profile."
   },
-  "shortcuts": {
-    "insertIntoEditor": "In den Editor einfügen"
-  },
+  "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {
     "auto": "Wie im System",
     "dark": "Dunkel",
@@ -1432,9 +1424,7 @@
     "phrasesPlaceholder": "Beispielphrasen, eine pro Zeile"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "frage im chat"
-    },
+    "actions": { "askInChat": "frage im chat" },
     "languages": {
       "cs-CZ": "Tschechisch",
       "de-DE": "Deutsch",
@@ -1475,7 +1465,6 @@
     "correctAndInsert": "Korrigieren und einfügen",
     "correctionFailed": "Der Text konnte nicht korrigiert werden",
     "newLine": "Neue Zeile",
-    "next": "Weiter",
     "nothingToCorrect": "Nichts zu korrigieren",
     "textTooShortForCorrection": "Der Text ist für eine Korrektur zu kurz",
     "insert": "Einfügen",
@@ -1522,9 +1511,7 @@
     "valueNotSet": "Kein Wert auf diesem Gerät: Befehle, die sie nutzen, werden nicht ausgeführt",
     "valuePlaceholder": "Ein Pfad, eine Adresse oder anderer Text"
   },
-  "favorites": {
-    "noMatches": "Keine passenden Favoriten"
-  },
+  "favorites": { "noMatches": "Keine passenden Favoriten" },
   "replyBlocks": {
     "insertIntoWindow": "In Fenster einfügen",
     "insertIntoEditor": "In Editor",

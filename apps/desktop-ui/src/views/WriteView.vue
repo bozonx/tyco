@@ -47,7 +47,7 @@
         @click="nextFromHint"
       >
         <KeyboardKey>Tab</KeyboardKey>
-        <span>{{ t('write.next') }}</span>
+        <span>{{ t('menu.actions') }}</span>
       </button>
       <span class="text-faint">•</span>
       <button
@@ -177,7 +177,7 @@ const prefetch = computed(
     desktopStore.userConfig?.quickWindow?.isCorrectionPrefetchEnabled === true
 )
 const submitShortcutLabel = computed(() => submitShortcut(submitKey.value))
-const newlineShortcutLabel = computed(() => newlineShortcut(submitKey.value))
+const newlineShortcutLabel = computed(() => newlineShortcut())
 
 const containerRef = ref<HTMLElement | null>(null)
 const inputRef = ref<InstanceType<typeof WriteModeInput> | null>(null)

@@ -51,7 +51,8 @@ describe('Editor actions shortcut', () => {
     }
     press(true)
     expect(open).not.toHaveBeenCalled()
-    expect(press().defaultPrevented).toBe(true)
+    expect(press().defaultPrevented).toBe(false)
+    useNavPanelStore().navPanelState.onEscape?.()
     expect(open).toHaveBeenCalledWith(MenuModals.INSERT, {
       text: 'Editor text',
     })
@@ -77,7 +78,7 @@ describe('Editor actions shortcut', () => {
     wrapper.unmount()
   })
 
-  it('keeps Ctrl+Enter for actions whatever sends the text', () => {
+  it('leaves Ctrl+Enter unassigned in the editor', () => {
     desktop.setUserConfig({
       editor: { ...desktop.backend.userConfig.editor, submitKey: 'Ctrl+Enter' },
     })
@@ -93,7 +94,7 @@ describe('Editor actions shortcut', () => {
     window.dispatchEvent(
       new KeyboardEvent('keydown', { code: 'Enter', ctrlKey: true })
     )
-    expect(open).toHaveBeenCalledTimes(1)
+    expect(open).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 
@@ -145,9 +146,7 @@ describe('Editor actions shortcut', () => {
     const modals = useMenuModalsStore()
     const open = vi.spyOn(modals, 'nextModal')
     const wrapper = mount(EditorView, { global: { stubs: { Editor: true } } })
-    window.dispatchEvent(
-      new KeyboardEvent('keydown', { code: 'Enter', ctrlKey: true })
-    )
+    useNavPanelStore().navPanelState.onEscape?.()
     expect(open).toHaveBeenCalledWith(MenuModals.INSERT, {
       text: 'Selected favorite',
     })

@@ -445,20 +445,18 @@ function handleKeyUp(event: KeyboardEvent) {
     return
   }
 
-  if ((event.ctrlKey || event.metaKey) && event.code === 'Enter') {
-    event.preventDefault()
-    void finish('submit')
+  if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing)
     return
-  }
 
-  // as in a chat input, Shift+Enter or Shift+Space keeps the text without sending it
+  // Shift+Space keeps the text in the input without sending it
   if (
-    props.finishBehavior === 'submitToChat' &&
+    (props.finishBehavior === 'submitToChat' ||
+      (props.variant === 'bar' && props.chat)) &&
     event.shiftKey &&
-    (event.code === 'Enter' || event.code === 'Space')
+    event.code === 'Space'
   ) {
     event.preventDefault()
-    void finish('insert')
+    void finish(props.variant === 'bar' && props.chat ? 'submit' : 'insert')
     return
   }
 
@@ -467,8 +465,8 @@ function handleKeyUp(event: KeyboardEvent) {
       event.code === 'Tab' &&
       !event.shiftKey) ||
     (props.finishBehavior === 'insertIntoTarget' &&
-      event.code === 'Enter' &&
-      event.shiftKey &&
+      event.code === 'Tab' &&
+      !event.shiftKey &&
       !event.ctrlKey &&
       !event.metaKey &&
       !event.altKey)
@@ -478,7 +476,7 @@ function handleKeyUp(event: KeyboardEvent) {
     return
   }
 
-  if (event.code === 'Space' || event.code === 'Enter') {
+  if (!event.shiftKey && (event.code === 'Space' || event.code === 'Enter')) {
     void finish(primaryIntent())
   }
 }
@@ -491,11 +489,8 @@ function handleKeyDown(event: KeyboardEvent) {
     return
   }
 
-  if ((event.ctrlKey || event.metaKey) && event.code === 'Enter') {
-    event.preventDefault()
-    void finish('submit')
+  if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing)
     return
-  }
 
   // Consume the secondary completion shortcut before the browser handles it
   if (
@@ -503,8 +498,8 @@ function handleKeyDown(event: KeyboardEvent) {
       event.code === 'Tab' &&
       !event.shiftKey) ||
     (props.finishBehavior === 'insertIntoTarget' &&
-      event.code === 'Enter' &&
-      event.shiftKey &&
+      event.code === 'Tab' &&
+      !event.shiftKey &&
       !event.ctrlKey &&
       !event.metaKey &&
       !event.altKey)
@@ -517,7 +512,7 @@ function handleKeyDown(event: KeyboardEvent) {
     event.code === 'Space' ||
     (props.finishBehavior === 'submitToChat' &&
       event.shiftKey &&
-      (event.code === 'Enter' || event.code === 'Space'))
+      event.code === 'Space')
   ) {
     event.preventDefault()
   }

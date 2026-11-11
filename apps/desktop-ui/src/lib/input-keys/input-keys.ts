@@ -15,9 +15,6 @@ export interface InputKeyEvent {
  */
 export type InputKeyAction = 'submit' | 'newline' | 'actions' | 'cancel'
 
-/** Opens the quick actions panel of the editor, whatever sends the text. */
-export const EDITOR_ACTIONS_SHORTCUT = 'Ctrl+Enter'
-
 export function resolveSubmitKey(saved: unknown): SubmitKey {
   return SUBMIT_KEYS.includes(saved as SubmitKey)
     ? (saved as SubmitKey)
@@ -29,8 +26,8 @@ export function submitShortcut(submitKey: SubmitKey): string {
   return submitKey
 }
 
-export function newlineShortcut(submitKey: SubmitKey): string {
-  return submitKey === 'Ctrl+Enter' ? 'Enter' : 'Shift+Enter'
+export function newlineShortcut(): string {
+  return 'Shift+Enter'
 }
 
 const isEnter = (event: InputKeyEvent) =>

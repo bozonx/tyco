@@ -22,9 +22,7 @@
     "removeContext": "Elimină contextul",
     "restoreContext": "Restaurează contextul"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Atașează un fișier",
     "alertCaution": "Atenție",
@@ -144,7 +142,6 @@
     "voiceCancelHint": "Anulează înregistrarea (Esc)",
     "voiceContext": "Întrebarea se va referi la acest text",
     "voiceInput": "Introducere vocală",
-    "voiceSendHint": "Trimite imediat (Ctrl+Enter)",
     "promptPresets": "Presetări prompturi",
     "noPromptsConfigured": "Nicio presetare de prompt configurată",
     "noToolCalling": "fără instrumente",
@@ -195,9 +192,7 @@
       "deselectAll": "Deselectează tot",
       "unsupportedCommands": "Comenzi neacceptate"
     },
-    "replyBlocks": {
-      "toolLabel": "Blocuri de răspuns"
-    }
+    "replyBlocks": { "toolLabel": "Blocuri de răspuns" }
   },
   "commands": {
     "advanced": "Avansat",
@@ -717,7 +712,6 @@
     "apiKeyNotSetPlaceholder": "Încă nu există o cheie pe acest dispozitiv: lipiți una",
     "apiKeyOptional": "Majoritatea serverelor locale nu au nevoie de cheie.",
     "apiKeyReplacePlaceholder": "Lipiți o cheie nouă pentru a o înlocui pe cea salvată",
-    "appHotkeysHint": "Tasta care trimite textul în introducerea rapidă și în chat; cealaltă tastă din pereche inserează un rând nou. Celelalte taste sunt fixe: în introducerea rapidă, Tab deschide meniul de acțiuni și Esc anulează; în editor, Ctrl+Enter deschide acțiunile rapide.",
     "appHotkeysTitle": "Comenzi rapide ale aplicației",
     "appLanguage": "Limba interfeței",
     "appLanguageSystem": "Ca în sistem",
@@ -1287,9 +1281,7 @@
     "webJinaApiKeyHint": "Opțional. Fără cheie, cererile folosesc nivelul gratuit cu limite partajate.",
     "webSearchSectionHint": "Setări pentru instrumentele de căutare web și citire a paginilor utilizate de modelele și profilurile AI."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Inserează în editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
     "auto": "Ca în sistem",
     "dark": "Întunecată",
@@ -1432,9 +1424,7 @@
     "phrasesPlaceholder": "Fraze demonstrative, câte una pe rând"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "întreabă în chat"
-    },
+    "actions": { "askInChat": "întreabă în chat" },
     "languages": {
       "cs-CZ": "Cehă",
       "de-DE": "germană",
@@ -1475,7 +1465,6 @@
     "correctAndInsert": "Corectează și inserează",
     "correctionFailed": "Textul nu a putut fi corectat",
     "newLine": "Rând nou",
-    "next": "Înainte",
     "nothingToCorrect": "Nimic de corectat",
     "textTooShortForCorrection": "Textul este prea scurt pentru corectare",
     "insert": "Inserează",
@@ -1522,9 +1511,7 @@
     "valueNotSet": "Nicio valoare pe acest dispozitiv: comenzile care o folosesc nu rulează",
     "valuePlaceholder": "O cale, o adresă sau alt text"
   },
-  "favorites": {
-    "noMatches": "Nu există favorite care să se potrivească"
-  },
+  "favorites": { "noMatches": "Nu există favorite care să se potrivească" },
   "replyBlocks": {
     "insertIntoWindow": "Inserează în fereastră",
     "insertIntoEditor": "În editor",

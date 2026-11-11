@@ -139,7 +139,11 @@
           </template>
           <template v-else>
             <ShortcutButton
-              :keys="withHotkey(['Enter'])"
+              :keys="
+                withHotkey([
+                  resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey),
+                ])
+              "
               icon="mdi:play"
               variant="primary"
               :disabled="!voice.canRun"
@@ -193,6 +197,10 @@ import {
   commandLabel,
   commandTarget,
 } from '../lib/commands/command-runtime'
+import {
+  resolveInputKeyAction,
+  resolveSubmitKey,
+} from '../lib/input-keys/input-keys'
 import { isSettingsFixableDictationError } from '../lib/stt/dictation-error'
 import { liveTranscriptText } from '../lib/stt/live-transcript'
 import type { TextControl } from '../lib/ui/text-control'
@@ -452,6 +460,7 @@ const onKeyDown = (event: KeyboardEvent) => {
     return
   }
   if (voice.stage === 'recording') {
+    if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return
     if (event.code === 'Tab') {
       if (event.shiftKey) return
       event.preventDefault()
@@ -471,7 +480,13 @@ const onKeyDown = (event: KeyboardEvent) => {
   const isOnRow = (event.target as HTMLElement | null)?.closest?.(
     '.voice-entry'
   )
-  if (event.code === 'Enter' && !event.shiftKey && !isOnRow) {
+  if (
+    resolveInputKeyAction(
+      event,
+      resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey)
+    ) === 'submit' &&
+    !isOnRow
+  ) {
     event.preventDefault()
     void voice.run()
   }

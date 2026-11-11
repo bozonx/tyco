@@ -9,7 +9,6 @@ import { onMounted, onScopeDispose, onUnmounted } from 'vue'
 
 import Editor from '../components/editor/Editor.vue'
 import { useDismissibleLayer } from '../composables/use-dismissible-layer'
-import { isCtrlEnter } from '../lib/input-keys/input-keys'
 import { useDesktopStore } from '../stores/desktop'
 import { useEditorInputStore } from '../stores/editor-input'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
@@ -60,14 +59,6 @@ function handleKeyDown(event: KeyboardEvent) {
     event.preventDefault()
     void closeEditor()
     return
-  }
-  if (menuModalsStore.hasOpenModal || menuModalsStore.pendingModal) return
-  // Enter breaks lines in the editor whatever the submit key is
-  if (isCtrlEnter(event)) {
-    event.preventDefault()
-    if (!event.repeat) {
-      openInsertMenu()
-    }
   }
 }
 

@@ -149,11 +149,11 @@ describe('ShortcutList', () => {
       cancelable: true,
     })
     window.dispatchEvent(tabEvent)
-    expect(tabEvent.defaultPrevented).toBe(true)
+    expect(tabEvent.defaultPrevented).toBe(false)
 
     // Keyup Tab should navigate to editor with replacement
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Tab' }))
-    expect(mocks.toEditor).toHaveBeenCalledWith('test text')
+    expect(mocks.toEditor).not.toHaveBeenCalled()
 
     // Keyup Space should trigger primary space action
     press('Space')
@@ -244,7 +244,7 @@ describe('ShortcutList', () => {
     })
     const tabButton = wrapper
       .findAllComponents({ name: 'ShortcutButton' })
-      .find((b) => b.text().includes('Tab'))
+      .find((b) => b.text().includes('Put original into editor'))
     expect(tabButton?.text()).toContain('Put original into editor')
     wrapper.unmount()
   })

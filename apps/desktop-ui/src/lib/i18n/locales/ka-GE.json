@@ -22,9 +22,7 @@
     "removeContext": "კონტექსტის ამოშლა",
     "restoreContext": "კონტექსტის აღდგენა"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "ფაილის მიმაგრება",
     "alertCaution": "ყურადღება",
@@ -144,7 +142,6 @@
     "voiceCancelHint": "ჩაწერის გაუქმება (Esc)",
     "voiceContext": "კითხვა ამ ტექსტს შეეხება",
     "voiceInput": "ხმოვანი შეყვანა",
-    "voiceSendHint": "დაუყოვნებლივ გაგზავნა (Ctrl+Enter)",
     "promptPresets": "პრომპტების წინასწარი პარამეტრები",
     "noPromptsConfigured": "პრომპტების წინასწარი პარამეტრები არ არის კონფიგურირებული",
     "noToolCalling": "ხელსაწყოების გარეშე",
@@ -195,9 +192,7 @@
       "deselectAll": "არჩევის გაუქმება",
       "unsupportedCommands": "მხარდაუჭერელი ბრძანებები"
     },
-    "replyBlocks": {
-      "toolLabel": "პასუხის ბლოკები"
-    }
+    "replyBlocks": { "toolLabel": "პასუხის ბლოკები" }
   },
   "commands": {
     "advanced": "დამატებითი",
@@ -633,10 +628,7 @@
       "command": "ბრძანებამ ტექსტი უცვლელად დატოვა",
       "correction": "შეცდომები ვერ მოიძებნა"
     },
-    "working": {
-      "command": "ბრძანება სრულდება…",
-      "correction": "სწორდება…"
-    }
+    "working": { "command": "ბრძანება სრულდება…", "correction": "სწორდება…" }
   },
   "settings": {
     "accessAllow": "დაშვება",
@@ -717,7 +709,6 @@
     "apiKeyNotSetPlaceholder": "ამ მოწყობილობაზე გასაღები ჯერ არ არის: ჩასვით",
     "apiKeyOptional": "ლოკალური სერვერების უმეტესობას გასაღები არ სჭირდება.",
     "apiKeyReplacePlaceholder": "ჩასვით ახალი გასაღები შენახულის ნაცვლად",
-    "appHotkeysHint": "კლავიში, რომელიც სწრაფ შეყვანასა და ჩატში ტექსტს აგზავნის; წყვილის მეორე კლავიში ახალ ხაზს სვამს. დანარჩენი კლავიშები ფიქსირებულია: სწრაფ შეყვანაში Tab მოქმედებების მენიუს ხსნის, Esc კი აუქმებს; რედაქტორში Ctrl+Enter სწრაფ მოქმედებებს ხსნის.",
     "appHotkeysTitle": "აპის კლავიშთა კომბინაციები",
     "appLanguage": "ინტერფეისის ენა",
     "appLanguageSystem": "სისტემის მიხედვით",
@@ -1287,9 +1278,7 @@
     "webJinaApiKeyHint": "არასავალდებულო. გასაღების გარეშე, მოთხოვნები იყენებს უფასო ტარიფს საერთო ლიმიტებით.",
     "webSearchSectionHint": "AI მოდელებისა და პროფილების მიერ გამოყენებული ვებ-ძიებისა და გვერდის წაკითხვის ხელსაწყოების პარამეტრები."
   },
-  "shortcuts": {
-    "insertIntoEditor": "რედაქტორში ჩასმა"
-  },
+  "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {
     "auto": "სისტემის მიხედვით",
     "dark": "მუქი",
@@ -1432,9 +1421,7 @@
     "phrasesPlaceholder": "სანიმუშო ფრაზები, თითო ხაზზე"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "იკითხე ჩატში"
-    },
+    "actions": { "askInChat": "იკითხე ჩატში" },
     "languages": {
       "cs-CZ": "ჩეხური",
       "de-DE": "გერმანულად",
@@ -1475,7 +1462,6 @@
     "correctAndInsert": "შესწორება და ჩასმა",
     "correctionFailed": "ტექსტის შესწორება ვერ მოხერხდა",
     "newLine": "ახალი ხაზი",
-    "next": "შემდეგი",
     "nothingToCorrect": "შესასწორებელი არაფერია",
     "textTooShortForCorrection": "ტექსტი შესასწორებლად ზედმეტად მოკლეა",
     "insert": "ჩასმა",
@@ -1522,9 +1508,7 @@
     "valueNotSet": "ამ მოწყობილობაზე მნიშვნელობა არ არის: მისი გამომყენებელი ბრძანებები არ სრულდება",
     "valuePlaceholder": "გზა, მისამართი ან სხვა ტექსტი"
   },
-  "favorites": {
-    "noMatches": "Შესატყვისი რჩეულები არ არის"
-  },
+  "favorites": { "noMatches": "Შესატყვისი რჩეულები არ არის" },
   "replyBlocks": {
     "insertIntoWindow": "ფანჯარაში ჩასმა",
     "insertIntoEditor": "რედაქტორში",

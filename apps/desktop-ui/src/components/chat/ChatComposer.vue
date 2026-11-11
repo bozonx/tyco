@@ -179,7 +179,7 @@ const inputHint = computed(() => {
   const submitKey = resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey)
   return t('chat.inputHint', {
     send: submitShortcut(submitKey),
-    newline: newlineShortcut(submitKey),
+    newline: newlineShortcut(),
   })
 })
 /** Chats need tool calling; the user learns it before sending */

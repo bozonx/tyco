@@ -23,7 +23,7 @@
 
       <ShortcutButton
         v-if="props.isEditorButtonVisible"
-        :keys="['Tab']"
+        :keys="[]"
         icon="mdi:pencil-outline"
         :title="props.editorButtonLabel ?? t('shortcuts.insertIntoEditor')"
         @click="goToEditor"
@@ -173,9 +173,7 @@ function handleKeyDown(event: KeyboardEvent) {
   if (!event.repeat) pressedKeys.set(event.code, props.text)
 
   // Prevent browser default tab focus movement and space scroll
-  if (event.code === 'Tab' && props.isEditorButtonVisible) {
-    event.preventDefault()
-  } else if (
+  if (
     (event.code === 'Space' || event.code === 'Enter') &&
     props.spaceKey &&
     !props.spaceKey.disabled
@@ -190,7 +188,13 @@ function handleShortcutKeyUp(event: KeyboardEvent) {
   if (props.shortcutsDisabled || textAtKeyDown === undefined) return
   if (isTypingKey(event)) return
   if (textAtKeyDown !== props.text) return
-  if (event.ctrlKey || event.altKey || event.metaKey) return
+  if (
+    event.ctrlKey ||
+    event.altKey ||
+    event.metaKey ||
+    (event.shiftKey && event.code !== 'Escape')
+  )
+    return
 
   if (
     (event.code === 'Space' || event.code === 'Enter') &&
@@ -198,12 +202,6 @@ function handleShortcutKeyUp(event: KeyboardEvent) {
     !props.spaceKey.disabled
   ) {
     void props.spaceKey.action(props.text || '')
-  } else if (
-    event.code === 'Tab' &&
-    !event.shiftKey &&
-    props.isEditorButtonVisible
-  ) {
-    goToEditor()
   } else if (event.code === 'Escape' && props.escVisible) {
     event.preventDefault()
     if (event.shiftKey) {

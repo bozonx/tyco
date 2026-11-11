@@ -146,7 +146,9 @@ describe('SettingsGlobalActionsTab.vue', () => {
       (s) => s.attributes('data-title') === 'settings.appHotkeysTitle'
     )
     expect(appSection).toBeDefined()
-    expect(appSection?.attributes('data-info')).toBe('settings.appHotkeysHint')
+    expect(appSection?.attributes('data-info')).toBe(
+      'settings.submitKey.enter · settings.submitKey.ctrlEnter'
+    )
   })
 
   it('renders submitKey row inside application hotkeys section and stores the submit key', async () => {

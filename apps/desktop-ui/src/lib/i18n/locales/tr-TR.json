@@ -22,9 +22,7 @@
     "removeContext": "Bağlamı kaldır",
     "restoreContext": "Bağlamı geri yükle"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Dosya ekle",
     "alertCaution": "Dikkat",
@@ -144,7 +142,6 @@
     "voiceCancelHint": "Kaydı iptal et (Esc)",
     "voiceContext": "Soru bu metin hakkında sorulacak",
     "voiceInput": "Ses girişi",
-    "voiceSendHint": "Hemen gönder (Ctrl+Enter)",
     "promptPresets": "İstem önayarları",
     "noPromptsConfigured": "Yapılandırılmış istem önayarı yok",
     "noToolCalling": "araçsız",
@@ -195,9 +192,7 @@
       "deselectAll": "Tüm seçimi kaldır",
       "unsupportedCommands": "Desteklenmeyen komutlar"
     },
-    "replyBlocks": {
-      "toolLabel": "Yanıt blokları"
-    }
+    "replyBlocks": { "toolLabel": "Yanıt blokları" }
   },
   "commands": {
     "advanced": "Gelişmiş",
@@ -633,10 +628,7 @@
       "command": "Komut metni olduğu gibi bıraktı",
       "correction": "Hata bulunamadı"
     },
-    "working": {
-      "command": "Komut çalışıyor…",
-      "correction": "Düzeltiliyor…"
-    }
+    "working": { "command": "Komut çalışıyor…", "correction": "Düzeltiliyor…" }
   },
   "settings": {
     "accessAllow": "İzin Ver",
@@ -717,7 +709,6 @@
     "apiKeyNotSetPlaceholder": "Bu cihazda henüz anahtar yok: bir tane yapıştırın",
     "apiKeyOptional": "Çoğu yerel sunucu anahtar gerektirmez.",
     "apiKeyReplacePlaceholder": "Kayıtlı anahtarı değiştirmek için yenisini yapıştırın",
-    "appHotkeysHint": "Hızlı girişte ve sohbette metni gönderen tuş; çiftin diğer tuşu yeni satır ekler. Diğer tuşlar sabittir: hızlı girişte Tab eylemler menüsünü açar, Esc iptal eder; düzenleyicide Ctrl+Enter hızlı eylemleri açar.",
     "appHotkeysTitle": "Uygulama kısayolları",
     "appLanguage": "Arayüz dili",
     "appLanguageSystem": "Sistem dili",
@@ -1287,9 +1278,7 @@
     "webJinaApiKeyHint": "İsteğe bağlı. Anahtar olmadan istekler paylaşılan hız sınırlarına sahip ücretsiz katmanı kullanır.",
     "webSearchSectionHint": "Yapay zeka modelleri ve profilleri tarafından kullanılan web araması ve sayfa okuma araçları için ayarlar."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Editöre ekle"
-  },
+  "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
     "auto": "Sistem dili",
     "dark": "Koyu",
@@ -1432,9 +1421,7 @@
     "phrasesPlaceholder": "Örnek ifadeler, her satıra bir tane"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "sohbette sor"
-    },
+    "actions": { "askInChat": "sohbette sor" },
     "languages": {
       "cs-CZ": "Çekçe;Çekçeye",
       "de-DE": "Almancaya;Almanca",
@@ -1475,7 +1462,6 @@
     "correctAndInsert": "Düzelt ve ekle",
     "correctionFailed": "Metin düzeltilemedi",
     "newLine": "Yeni satır",
-    "next": "Devam",
     "nothingToCorrect": "Düzeltilecek bir şey yok",
     "textTooShortForCorrection": "Metin düzeltme için çok kısa",
     "insert": "Ekle",
@@ -1522,9 +1508,7 @@
     "valueNotSet": "Bu cihazda değer yok: onu kullanan komutlar çalışmaz",
     "valuePlaceholder": "Bir yol, adres veya başka bir metin"
   },
-  "favorites": {
-    "noMatches": "Eşleşen favori yok"
-  },
+  "favorites": { "noMatches": "Eşleşen favori yok" },
   "replyBlocks": {
     "insertIntoWindow": "Pencereye ekle",
     "insertIntoEditor": "Düzenleyiciye",

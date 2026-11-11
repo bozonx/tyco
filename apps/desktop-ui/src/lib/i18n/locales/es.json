@@ -22,9 +22,7 @@
     "removeContext": "Quitar contexto",
     "restoreContext": "Restaurar contexto"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Adjuntar archivo",
     "alertCaution": "Precaución",
@@ -144,7 +142,6 @@
     "voiceCancelHint": "Cancelar la grabación (Esc)",
     "voiceContext": "La pregunta será sobre este texto",
     "voiceInput": "Entrada de voz",
-    "voiceSendHint": "Enviar de inmediato (Ctrl+Enter)",
     "promptPresets": "Prompts predefinidos",
     "noPromptsConfigured": "No hay prompts predefinidos configurados",
     "noToolCalling": "sin herramientas",
@@ -195,9 +192,7 @@
       "deselectAll": "Deseleccionar todo",
       "unsupportedCommands": "Comandos no compatibles"
     },
-    "replyBlocks": {
-      "toolLabel": "Bloques de respuesta"
-    }
+    "replyBlocks": { "toolLabel": "Bloques de respuesta" }
   },
   "commands": {
     "advanced": "Avanzado",
@@ -717,7 +712,6 @@
     "apiKeyNotSetPlaceholder": "Aún no hay clave en este dispositivo: pega una",
     "apiKeyOptional": "La mayoría de los servidores locales no necesitan clave.",
     "apiKeyReplacePlaceholder": "Pega una clave nueva para reemplazar la guardada",
-    "appHotkeysHint": "La tecla que envía el texto en la entrada rápida y en el chat; la otra tecla del par inserta una nueva línea. Las demás teclas son fijas: en la entrada rápida, Tab abre el menú de acciones y Esc cancela; en el editor, Ctrl+Enter abre las acciones rápidas.",
     "appHotkeysTitle": "Atajos de la aplicación",
     "appLanguage": "Idioma de la interfaz",
     "appLanguageSystem": "Como en el sistema",
@@ -1287,9 +1281,7 @@
     "webJinaApiKeyHint": "Opcional. Sin una clave, las solicitudes usan el nivel gratuito con límites compartidos.",
     "webSearchSectionHint": "Configuración para la búsqueda web y lectura de páginas usadas por los modelos y perfiles de IA."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Insertar en el editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {
     "auto": "Como en el sistema",
     "dark": "Oscuro",
@@ -1432,9 +1424,7 @@
     "phrasesPlaceholder": "Frases de ejemplo, una por línea"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "pregunta en el chat"
-    },
+    "actions": { "askInChat": "pregunta en el chat" },
     "languages": {
       "cs-CZ": "Checo",
       "de-DE": "alemán",
@@ -1475,7 +1465,6 @@
     "correctAndInsert": "Corregir e insertar",
     "correctionFailed": "No se pudo corregir el texto",
     "newLine": "Nueva línea",
-    "next": "Siguiente",
     "nothingToCorrect": "No hay nada que corregir",
     "textTooShortForCorrection": "El texto es demasiado corto para corregirlo",
     "insert": "Insertar",
@@ -1522,9 +1511,7 @@
     "valueNotSet": "Sin valor en este dispositivo: los comandos que la usan no se ejecutan",
     "valuePlaceholder": "Una ruta, una dirección u otro texto"
   },
-  "favorites": {
-    "noMatches": "No hay favoritos que coincidan"
-  },
+  "favorites": { "noMatches": "No hay favoritos que coincidan" },
   "replyBlocks": {
     "insertIntoWindow": "Insertar en la ventana",
     "insertIntoEditor": "Al editor",

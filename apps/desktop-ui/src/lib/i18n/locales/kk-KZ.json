@@ -22,9 +22,7 @@
     "removeContext": "Мәтінмәнді алып тастау",
     "restoreContext": "Мәтінмәнді қалпына келтіру"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Файл тіркеу",
     "alertCaution": "Абайлаңыз",
@@ -144,7 +142,6 @@
     "voiceCancelHint": "Жазуды болдырмау (Esc)",
     "voiceContext": "Сұрақ осы мәтінге қатысты болады",
     "voiceInput": "Дауыспен енгізу",
-    "voiceSendHint": "Бірден жіберу (Ctrl+Enter)",
     "promptPresets": "Промпт алдын ала орнатулары",
     "noPromptsConfigured": "Реттелген промпт алдын ала орнатулары жоқ",
     "noToolCalling": "құралдарсыз",
@@ -195,9 +192,7 @@
       "deselectAll": "Барлығын алып тастау",
       "unsupportedCommands": "Қолдау көрсетілмейтін командалар"
     },
-    "replyBlocks": {
-      "toolLabel": "Жауап нұсқалары"
-    }
+    "replyBlocks": { "toolLabel": "Жауап нұсқалары" }
   },
   "commands": {
     "advanced": "Қосымша",
@@ -633,10 +628,7 @@
       "command": "Команда мәтінді өзгертпей қалдырды",
       "correction": "Қате табылмады"
     },
-    "working": {
-      "command": "Команда орындалуда…",
-      "correction": "Түзетілуде…"
-    }
+    "working": { "command": "Команда орындалуда…", "correction": "Түзетілуде…" }
   },
   "settings": {
     "accessAllow": "Рұқсат ету",
@@ -717,7 +709,6 @@
     "apiKeyNotSetPlaceholder": "Бұл құрылғыда әзірге кілт жоқ: кілтті қойыңыз",
     "apiKeyOptional": "Жергілікті серверлердің көбіне кілт қажет емес.",
     "apiKeyReplacePlaceholder": "Сақталған кілттің орнына жаңасын қойыңыз",
-    "appHotkeysHint": "Жылдам енгізу мен чатта мәтінді жіберетін перне; жұптың екінші пернесі жаңа жол қосады. Қалған пернелер бекітілген: жылдам енгізуде Tab әрекеттер мәзірін ашады, Esc болдырмайды; редакторда Ctrl+Enter жылдам әрекеттерді ашады.",
     "appHotkeysTitle": "Қолданбаның жылдам пернелері",
     "appLanguage": "Интерфейс тілі",
     "appLanguageSystem": "Жүйедегідей",
@@ -1287,9 +1278,7 @@
     "webJinaApiKeyHint": "Міндетті емес. Кілті жоқ сұраулар ортақ лимиттері бар тегін тарифті пайдаланады.",
     "webSearchSectionHint": "AI үлгілері мен профильдері қолданатын веб-іздеу және беттерді оқу құралдарының параметрлері."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Редакторға кірістіру"
-  },
+  "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {
     "auto": "Жүйедегідей",
     "dark": "Қараңғы",
@@ -1432,9 +1421,7 @@
     "phrasesPlaceholder": "Үлгі фразалар, әр жолға біреуден"
   },
   "voiceGrammar": {
-    "actions": {
-      "askInChat": "чатта сұра"
-    },
+    "actions": { "askInChat": "чатта сұра" },
     "languages": {
       "cs-CZ": "Чех;чех тілі",
       "de-DE": "неміс тіліне;немісше",
@@ -1475,7 +1462,6 @@
     "correctAndInsert": "Түзетіп, кірістіру",
     "correctionFailed": "Мәтінді түзету мүмкін болмады",
     "newLine": "Жаңа жол",
-    "next": "Келесі",
     "nothingToCorrect": "Түзететін ештеңе жоқ",
     "textTooShortForCorrection": "Мәтін түзету үшін тым қысқа",
     "insert": "Қою",
@@ -1522,9 +1508,7 @@
     "valueNotSet": "Бұл құрылғыда мән жоқ: оны қолданатын командалар орындалмайды",
     "valuePlaceholder": "Жол, мекенжай немесе басқа мәтін"
   },
-  "favorites": {
-    "noMatches": "Сәйкес келетін фавориттер жоқ"
-  },
+  "favorites": { "noMatches": "Сәйкес келетін фавориттер жоқ" },
   "replyBlocks": {
     "insertIntoWindow": "Терезеге кірістіру",
     "insertIntoEditor": "Редакторға",
