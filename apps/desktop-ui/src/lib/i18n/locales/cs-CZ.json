@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "Systémový zvuk",
     "switchToListen": "Přepnout na systémový zvuk",
-    "switchToVoice": "Zpět na hlasový vstup",
+    "switchToVoice": "Přepnout na hlasový vstup",
     "unavailable": "Nahrávání zvuku počítače vyžaduje PipeWire v Linuxu nebo Windows 10 a novější",
     "systemMix": "Veškerý zvuk",
     "noPlayingApps": "Žádná aplikace nepřehrává zvuk",

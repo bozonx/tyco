@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "Zvuk sustava",
     "switchToListen": "Prebaci na zvuk sustava",
-    "switchToVoice": "Natrag na glasovni unos",
+    "switchToVoice": "Prijeđi na glasovni unos",
     "unavailable": "Snimanje zvuka računala zahtijeva PipeWire na Linuxu ili Windows 10 ili noviji",
     "systemMix": "Sav zvuk",
     "noPlayingApps": "Nijedna aplikacija ne reproducira zvuk",

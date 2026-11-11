@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "Жүйе дыбысы",
     "switchToListen": "Жүйе дыбысына ауысу",
-    "switchToVoice": "Дауыспен енгізуге оралу",
+    "switchToVoice": "Дауыспен енгізуге ауысу",
     "unavailable": "Компьютер дыбысын жазу үшін Linux-та PipeWire немесе Windows 10 не одан жаңасы қажет",
     "systemMix": "Барлық дыбыс",
     "noPlayingApps": "Қазір ешбір қолданба дыбыс ойнатпайды",

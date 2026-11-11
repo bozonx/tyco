@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "Audio del sistema",
     "switchToListen": "Cambiar a audio del sistema",
-    "switchToVoice": "Volver a la entrada de voz",
+    "switchToVoice": "Ir a la entrada de voz",
     "unavailable": "Para grabar el sonido del ordenador se necesita PipeWire en Linux o Windows 10 o posterior",
     "systemMix": "Todo el sonido",
     "noPlayingApps": "Ninguna aplicación está reproduciendo sonido",

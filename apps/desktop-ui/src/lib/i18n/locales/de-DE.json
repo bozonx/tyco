@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "Systemaudio",
     "switchToListen": "Zu Systemaudio wechseln",
-    "switchToVoice": "Zurück zur Spracheingabe",
+    "switchToVoice": "Zur Spracheingabe wechseln",
     "unavailable": "Für die Aufnahme des Computertons ist PipeWire unter Linux oder Windows 10 oder neuer nötig",
     "systemMix": "Gesamter Ton",
     "noPlayingApps": "Keine App gibt gerade Ton wieder",

@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "시스템 오디오",
     "switchToListen": "시스템 오디오로 전환",
-    "switchToVoice": "음성 입력으로 돌아가기",
+    "switchToVoice": "음성 입력으로 전환",
     "unavailable": "컴퓨터 소리를 녹음하려면 Linux에서는 PipeWire, 또는 Windows 10 이상이 필요합니다",
     "systemMix": "모든 소리",
     "noPlayingApps": "소리를 재생 중인 앱이 없습니다",

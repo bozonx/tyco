@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "Звук системы",
     "switchToListen": "Переключиться на звук системы",
-    "switchToVoice": "Вернуться к голосовому вводу",
+    "switchToVoice": "Перейти к голосовому вводу",
     "unavailable": "Для записи звука компьютера нужен PipeWire в Linux или Windows 10 и новее",
     "systemMix": "Весь звук",
     "noPlayingApps": "Сейчас ни одно приложение не воспроизводит звук",

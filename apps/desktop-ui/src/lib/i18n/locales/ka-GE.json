@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "სისტემის ხმა",
     "switchToListen": "სისტემის ხმაზე გადართვა",
-    "switchToVoice": "ხმოვან შეყვანაზე დაბრუნება",
+    "switchToVoice": "ხმოვან შეყვანაზე გადასვლა",
     "unavailable": "კომპიუტერის ხმის ჩაწერას სჭირდება PipeWire Linux-ზე ან Windows 10 ან უფრო ახალი",
     "systemMix": "მთელი ხმა",
     "noPlayingApps": "ამჟამად არცერთი აპი არ უკრავს ხმას",

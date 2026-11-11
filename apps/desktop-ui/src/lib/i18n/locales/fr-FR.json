@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "Audio système",
     "switchToListen": "Passer à l’audio système",
-    "switchToVoice": "Revenir à la saisie vocale",
+    "switchToVoice": "Passer à la saisie vocale",
     "unavailable": "L’enregistrement du son de l’ordinateur nécessite PipeWire sous Linux ou Windows 10 ou ultérieur",
     "systemMix": "Tout le son",
     "noPlayingApps": "Aucune application ne joue de son",

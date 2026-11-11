@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "Audio di sistema",
     "switchToListen": "Passa all’audio di sistema",
-    "switchToVoice": "Torna all’input vocale",
+    "switchToVoice": "Passa all’input vocale",
     "unavailable": "Per registrare l’audio del computer serve PipeWire su Linux o Windows 10 o successivo",
     "systemMix": "Tutto l’audio",
     "noPlayingApps": "Nessuna app sta riproducendo audio",

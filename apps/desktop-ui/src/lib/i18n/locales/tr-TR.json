@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "Sistem sesi",
     "switchToListen": "Sistem sesine geç",
-    "switchToVoice": "Sesli girişe dön",
+    "switchToVoice": "Sesli girişe geç",
     "unavailable": "Bilgisayar sesini kaydetmek için Linux'ta PipeWire ya da Windows 10 veya daha yenisi gerekir",
     "systemMix": "Tüm ses",
     "noPlayingApps": "Şu anda hiçbir uygulama ses çalmıyor",

@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "系統音訊",
     "switchToListen": "切換至系統音訊",
-    "switchToVoice": "返回語音輸入",
+    "switchToVoice": "切換至語音輸入",
     "unavailable": "錄製電腦聲音需要 Linux 上的 PipeWire 或 Windows 10 以上版本",
     "systemMix": "全部聲音",
     "noPlayingApps": "目前沒有應用程式在播放聲音",

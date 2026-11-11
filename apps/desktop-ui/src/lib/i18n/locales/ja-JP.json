@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "システム音声",
     "switchToListen": "システム音声に切り替え",
-    "switchToVoice": "音声入力に戻る",
+    "switchToVoice": "音声入力に切り替える",
     "unavailable": "PCの音声を録音するには、LinuxではPipeWire、またはWindows 10以降が必要です",
     "systemMix": "すべての音声",
     "noPlayingApps": "音声を再生しているアプリはありません",

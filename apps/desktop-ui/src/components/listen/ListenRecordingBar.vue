@@ -3,11 +3,6 @@
   <RecordingBarFrame class="voice-bar listen-bar" :label="t('listen.title')">
     <div class="listen-bar-header">
       <OverlayDragHandle />
-      <QuickModeSwitch
-        mode="listen"
-        :disabled="isFinishing"
-        @switch="emit('switch-mode')"
-      />
       <span class="listen-bar-title">
         <AppIcon icon="mdi:volume-high" />
         {{ t('listen.title') }}
@@ -74,7 +69,21 @@
       <VoiceAutoStopNotice
         :deadline-ms="model.autoStopWarning.value?.deadlineMs"
       />
+      <QuickModeSwitch
+        mode="listen"
+        :disabled="isFinishing"
+        @switch="emit('switch-mode')"
+      />
       <div class="listen-bar-actions">
+        <ShortcutButton
+          size="sm"
+          :keys="['Esc']"
+          icon="mdi:close"
+          :disabled="isFinishing"
+          @click="void model.close()"
+        >
+          {{ t('common.cancel') }}
+        </ShortcutButton>
         <ShortcutButton
           size="sm"
           :keys="stopKeys"
@@ -84,15 +93,6 @@
           @click="void model.stop()"
         >
           {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
-        </ShortcutButton>
-        <ShortcutButton
-          size="sm"
-          :keys="['Esc']"
-          icon="mdi:close"
-          :disabled="isFinishing"
-          @click="void model.close()"
-        >
-          {{ t('common.cancel') }}
         </ShortcutButton>
       </div>
     </div>

@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "Sunet sistem",
     "switchToListen": "Comută la sunetul sistemului",
-    "switchToVoice": "Înapoi la introducerea vocală",
+    "switchToVoice": "Treci la introducerea vocală",
     "unavailable": "Înregistrarea sunetului computerului necesită PipeWire pe Linux sau Windows 10 ori mai nou",
     "systemMix": "Tot sunetul",
     "noPlayingApps": "Nicio aplicație nu redă sunet",

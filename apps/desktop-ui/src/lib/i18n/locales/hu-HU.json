@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "Rendszerhang",
     "switchToListen": "Váltás rendszerhangra",
-    "switchToVoice": "Vissza a hangbevitelhez",
+    "switchToVoice": "Váltás hangbevitelre",
     "unavailable": "A számítógép hangjának rögzítéséhez PipeWire kell Linuxon, vagy Windows 10 vagy újabb",
     "systemMix": "Teljes hang",
     "noPlayingApps": "Egy alkalmazás sem játszik le hangot",

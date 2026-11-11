@@ -1572,7 +1572,7 @@
   "listen": {
     "title": "Dźwięk systemu",
     "switchToListen": "Przełącz na dźwięk systemu",
-    "switchToVoice": "Wróć do wprowadzania głosowego",
+    "switchToVoice": "Przełącz na wprowadzanie głosowe",
     "unavailable": "Nagrywanie dźwięku komputera wymaga PipeWire w Linuksie lub Windows 10 lub nowszego",
     "systemMix": "Cały dźwięk",
     "noPlayingApps": "Żadna aplikacja nie odtwarza dźwięku",
