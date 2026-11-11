@@ -350,13 +350,23 @@ impl Output {
     }
 }
 
+/// Core protocol errors also report requests for objects removed meanwhile.
+/// Those races do not mean the server connection or capture stream failed.
+fn handle_core_error(output: &Output, id: u32, result: i32, message: &str) {
+    if id != 0 {
+        return;
+    }
+    if result == -libc::ENOENT || result == -libc::ENODEV {
+        log::debug!("PipeWire object disappeared during a request: {message}");
+        return;
+    }
+    output.fail(format!("PipeWire connection failed: {message}"));
+}
+
 fn on_core_error(core: &pw::core::CoreRc, output: Output) -> pw::core::Listener {
     core.add_listener_local()
-        .error(move |id, _seq, _res, message| {
-            // id 0 is the connection itself: the server went away
-            if id == 0 {
-                output.fail(format!("PipeWire connection failed: {message}"));
-            }
+        .error(move |id, _seq, res, message| {
+            handle_core_error(&output, id, res, message);
         })
         .register()
 }
@@ -990,5 +1000,33 @@ mod live_tests {
         assert!(app_samples > 8_000, "{app_samples}");
         assert!(app_level.is_some_and(|level| level > 0.0), "{app_level:?}");
         assert!(status.is_waiting && status.is_lost, "{status:?}");
+    }
+}
+
+#[cfg(test)]
+mod core_error_tests {
+    use super::*;
+
+    #[test]
+    fn disappearing_objects_do_not_end_capture_but_connection_failures_do() {
+        let context = StreamContext::new(&Arc::new(AtomicBool::new(false)), 16000, 16000);
+        let output = Output {
+            pending: Arc::clone(&context.pending_pcm_samples),
+            level: Arc::clone(&context.current_level),
+            callback_count: Arc::clone(&context.callback_count),
+            stream_error: Arc::clone(&context.stream_error),
+            status: Arc::clone(&context.status),
+        };
+        handle_core_error(&output, 0, -libc::ENOENT, "unknown resource 15 op:7");
+        handle_core_error(&output, 0, -libc::ENODEV, "node removed");
+        handle_core_error(&output, 15, -libc::EPIPE, "object failed");
+        assert!(context.stream_error.locked().is_none());
+        handle_core_error(&output, 0, -libc::EPIPE, "connection closed");
+        assert!(context
+            .stream_error
+            .locked()
+            .as_ref()
+            .unwrap()
+            .contains("connection closed"));
     }
 }
