@@ -1,13 +1,19 @@
 <template>
   <section class="storage-details">
-    <DisclosureHeader
-      class="storage-summary"
-      density="compact"
-      :expanded="isOpen"
-      :controls="bodyId"
-      :title="t('settings.storageLocations')"
-      @toggle="isOpen = !isOpen"
-    />
+    <div class="storage-header">
+      <DisclosureHeader
+        class="storage-summary"
+        density="compact"
+        :expanded="isOpen"
+        :controls="bodyId"
+        :title="t('settings.storageLocations')"
+        @toggle="isOpen = !isOpen"
+      />
+      <InfoTooltip
+        :text="t('settings.storageLocationsInfo')"
+        panel-class="panel-wide"
+      />
+    </div>
     <StateMessage
       v-if="isOpen && !storageInfo"
       :id="bodyId"
@@ -26,16 +32,21 @@
           <div class="storage-path-actions">
             <CopyButton
               class="storage-copy-btn"
+              size="xs"
               :value="item.value"
               :label="t('settings.storageCopyPath')"
               :copied-label="t('settings.storagePathCopied')"
             />
-            <IconButton
-              class="storage-copy-btn"
-              @click="openStorageLocation(item.kind)"
-              :label="t('settings.storageOpenFolder')"
+            <Button
+              class="storage-open-btn"
+              size="xs"
+              variant="ghost"
+              tone="muted"
               icon="mdi:folder-open-outline"
-            />
+              @click="openStorageLocation(item.kind)"
+            >
+              {{ t('common.open') }}
+            </Button>
           </div>
         </div>
       </div>
@@ -47,9 +58,10 @@ import { computed, onMounted, ref, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useIpcStore } from '../../stores/ipc'
+import Button from '../common/Button.vue'
 import CopyButton from '../common/CopyButton.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
-import IconButton from '../common/IconButton.vue'
+import InfoTooltip from '../common/InfoTooltip.vue'
 import StateMessage from '../common/StateMessage.vue'
 import type { StorageInfo, StorageKind } from '@tyco/shared'
 
@@ -101,7 +113,15 @@ onMounted(() => {
   padding: 0 var(--space-xs);
 }
 
+.storage-header {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  max-width: 100%;
+}
+
 .storage-summary {
+  flex: 0 1 auto;
   font-size: var(--text-control);
   color: var(--app-text-muted);
   transition: color var(--transition-fast);
@@ -111,7 +131,7 @@ onMounted(() => {
   color: var(--color-base-content);
 }
 
-.storage-details > :not(.storage-summary) {
+.storage-details > :not(.storage-header) {
   margin-top: var(--space-md);
 }
 
@@ -136,6 +156,7 @@ onMounted(() => {
 
 .storage-path-box {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
@@ -147,7 +168,7 @@ onMounted(() => {
 }
 
 .storage-path {
-  flex: 1 1 auto;
+  flex: 1 1 12rem;
   font-family: var(--font-mono);
   font-size: var(--text-caption);
   color: var(--color-base-content);

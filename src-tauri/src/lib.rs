@@ -280,8 +280,6 @@ pub fn run() {
             commands::editor_history::clear_editor_history,
             commands::editor_history::delete_editor_history_item,
             commands::editor_history::get_editor_history,
-            commands::editor_history::list_device_history_journals,
-            commands::editor_history::delete_device_history,
             commands::editor_history::restore_editor_history_item,
             commands::editor_history::set_editor_history_item_result,
             commands::editor_history::set_editor_history_item_failure,

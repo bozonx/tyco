@@ -507,16 +507,14 @@ describe('Settings.vue', () => {
     ])
     expect(storageItems[1].find('.storage-path').text()).toBe('/test/local')
 
-    const firstItemButtons = storageItems[0].findAll(
+    const copyBtn = storageItems[0].get(
       '.storage-path-actions .storage-copy-btn'
     )
-    expect(firstItemButtons).toHaveLength(2)
-    expect(firstItemButtons[0].attributes('aria-label')).toBe(
-      'settings.storageCopyPath'
+    expect(copyBtn.attributes('aria-label')).toBe('settings.storageCopyPath')
+    const openBtn = storageItems[0].get(
+      '.storage-path-actions .storage-open-btn'
     )
-    expect(firstItemButtons[1].attributes('aria-label')).toBe(
-      'settings.storageOpenFolder'
-    )
+    expect(openBtn.text()).toContain('common.open')
   })
 
   it('renders stt provider and llm formatting sections in stt tab', async () => {

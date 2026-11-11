@@ -103,7 +103,6 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<services::ai_vault::VaultFolder>();
     visitor.visit::<services::ai_vault::VaultFolderKind>();
     visitor.visit::<models::StorageChangedEvent>();
-    visitor.visit::<services::storage::DeviceHistoryJournal>();
     visitor.visit::<models::VaultChange>();
     visitor.visit::<services::ai_vault::ProfileMemoryChange>();
     visitor.visit::<services::ai_vault::ProfileMemoryMode>();

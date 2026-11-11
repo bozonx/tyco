@@ -281,7 +281,6 @@ export class FakeDesktopBackend {
 
     this.handle('get_ai_vault_path', () => '/home/tester/.local/share/tyco/ai')
     this.handle('list_ai_profiles', () => [])
-    this.handle('list_device_history_journals', () => [])
     this.handle('list_ai_vaults', () => [
       {
         vaultId: '',

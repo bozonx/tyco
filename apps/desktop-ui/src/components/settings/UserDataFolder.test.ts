@@ -47,22 +47,28 @@ describe('UserDataFolder.vue', () => {
             props: ['text'],
             template: '<span class="info-tooltip-stub" :data-text="text" />',
           },
-          DeviceHistoryJournals: true,
         },
       },
     })
     return { desktop, wrapper }
   }
 
-  it('shows one folder picker button and puts all guidance with default path in the section info', async () => {
-    const { wrapper } = await mountSection(false)
+  it('shows copy, open and change actions without a default badge', async () => {
+    const { wrapper } = await mountSection(true)
 
     expect(wrapper.get('.info-tooltip-stub').attributes('data-text')).toBe(
       'settings.userData.info:{"defaultPath":"/home/u/.local/share/com.tyco.app"}'
     )
-    const actionButtons = wrapper.findAll('.user-data-actions button')
-    expect(actionButtons).toHaveLength(1)
-    expect(actionButtons[0].text()).toContain('settings.selectFolder')
+    expect(wrapper.find('.badge').exists()).toBe(false)
+    expect(wrapper.find('.advanced-toggle').exists()).toBe(false)
+
+    const actionButtons = wrapper.findAll('.user-data-path-actions button')
+    expect(actionButtons).toHaveLength(3)
+    expect(actionButtons[0].attributes('aria-label')).toBe(
+      'settings.storageCopyPath'
+    )
+    expect(actionButtons[1].text()).toContain('common.open')
+    expect(actionButtons[2].text()).toContain('common.change')
     expect(wrapper.find('input[type="checkbox"]').exists()).toBe(false)
   })
 
@@ -76,7 +82,8 @@ describe('UserDataFolder.vue', () => {
     }))
     d.backend.handle('relocate_user_data', () => undefined)
 
-    await wrapper.get('.user-data-actions button').trigger('click')
+    const actionButtons = wrapper.findAll('.user-data-path-actions button')
+    await actionButtons[2].trigger('click')
     await flushPromises()
 
     const dialog = wrapper.get('.dialog-stub')

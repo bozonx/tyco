@@ -87,8 +87,6 @@ fn main() {
             "get_chat",
             "get_desktop_state",
             "get_editor_history",
-            "list_device_history_journals",
-            "delete_device_history",
             "get_hotkey_provider_info",
             "get_secret_statuses",
             "get_secret_vault_state",

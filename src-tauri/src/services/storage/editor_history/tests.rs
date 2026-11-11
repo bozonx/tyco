@@ -559,35 +559,3 @@ fn disk_checkpoints_keep_only_the_latest_text_in_the_own_journal() {
     assert_eq!(records.len(), 2);
     assert_eq!(history.load().unwrap()[0].text, "final");
 }
-
-#[test]
-fn the_journals_of_old_devices_are_listed_and_removed() {
-    let dir = TestDir::new("device-journals");
-    let laptop = HistoryLocation::at(&dir, LAPTOP);
-    let mut history = session(&laptop, policy());
-    save_editor_history_entry(&mut history, entry("first")).unwrap();
-    save_editor_history_entry(&mut history, entry("second")).unwrap();
-    let desktop = HistoryLocation::at(&dir, DESKTOP);
-    let mut other = session(&desktop, policy());
-    save_editor_history_entry(&mut other, entry("there")).unwrap();
-
-    // the name is recorded once
-    let raw = fs::read_to_string(own(&laptop)).unwrap();
-    assert_eq!(raw.matches(r#""type":"device""#).count(), 1);
-
-    let journals = laptop.device_journals().unwrap();
-    assert_eq!(journals.len(), 2);
-    assert_eq!(journals[0].device_id, LAPTOP);
-    assert!(journals[0].is_current_device);
-    assert_eq!(journals[0].entry_count, 2);
-    assert_eq!(journals[0].device_name, format!("host-{LAPTOP}"));
-    assert_eq!(journals[1].device_name, format!("host-{DESKTOP}"));
-    assert!(journals[1].last_written_ms > 0);
-
-    // the own journal is not removed this way; another one is
-    assert!(laptop.delete_device_journal(LAPTOP).is_err());
-    assert!(laptop.delete_device_journal("../x").is_err());
-    laptop.delete_device_journal(DESKTOP).unwrap();
-    assert_eq!(laptop.device_journals().unwrap().len(), 1);
-    assert_eq!(texts(&laptop), ["second", "first"]);
-}

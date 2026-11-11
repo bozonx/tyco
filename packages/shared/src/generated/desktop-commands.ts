@@ -27,7 +27,6 @@ import type {
   CommandRunRecord,
   CropRect,
   DesktopSnapshot,
-  DeviceHistoryJournal,
   EditorHistoryEntry,
   EditorHistoryFailure,
   EditorHistoryItem,
@@ -148,7 +147,6 @@ export interface DesktopCommands {
     args: { id: string; profileId?: string | null }
     result: Chat | null
   }
-  delete_device_history: { args: { deviceId: string }; result: void }
   delete_editor_history_item: { args: { id: string }; result: void }
   delete_secret: { args: { id: string }; result: void }
   detach_ai_vault: { args: { vaultId: string }; result: void }
@@ -206,10 +204,6 @@ export interface DesktopCommands {
   list_chats: {
     args: { profileId?: string | null }
     result: Array<ChatSummary>
-  }
-  list_device_history_journals: {
-    args: undefined
-    result: Array<DeviceHistoryJournal>
   }
   list_input_devices: { args: undefined; result: Array<AudioInputDevice> }
   list_installed_plugins: { args: undefined; result: Array<InstalledPlugin> }

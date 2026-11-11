@@ -150,11 +150,3 @@ copies until recovery is verified. Do not simply rename a copied chat into a
 new chat filename: its embedded id must match the filename. Restart TyCo after
 manual recovery. Recovery copies from settings repairs and merges are stored
 in the local state directory's `recovery` folder; they are not synchronized.
-
-## Old devices
-
-Every computer keeps its own editor history journal in the data folder. The
-journal of a computer you no longer use stays until you remove it: **Settings →
-Data folder → Advanced** lists the journals with their number of entries and
-last write, and **Delete device history** removes the journal of another
-device everywhere the folder is synchronized.

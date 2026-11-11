@@ -9,19 +9,29 @@
         <code class="user-data-path" :title="userData.path">{{
           userData.path
         }}</code>
-        <Badge v-if="userData.isDefault" tone="muted">{{
-          t('settings.userData.default')
-        }}</Badge>
-        <CopyButton
-          :value="userData.path"
-          :label="t('settings.storageCopyPath')"
-          :copied-label="t('settings.storagePathCopied')"
-        />
-        <IconButton
-          :label="t('settings.userData.open')"
-          icon="mdi:folder-open-outline"
-          @click="open"
-        />
+        <div class="user-data-path-actions">
+          <CopyButton
+            :value="userData.path"
+            :label="t('settings.storageCopyPath')"
+            :copied-label="t('settings.storagePathCopied')"
+          />
+          <Button
+            size="sm"
+            variant="ghost"
+            icon="mdi:folder-open-outline"
+            @click="open"
+          >
+            {{ t('common.open') }}
+          </Button>
+          <Button
+            size="sm"
+            icon="mdi:folder-search-outline"
+            :loading="folder.isBusy.value"
+            @click="folder.start('choose')"
+          >
+            {{ t('common.change') }}
+          </Button>
+        </div>
       </div>
 
       <InlineNotice
@@ -36,44 +46,23 @@
         kind="warning"
         :message="t('settings.userData.writableByOthers')"
       />
-
-      <div class="user-data-actions">
-        <Button
-          size="sm"
-          icon="mdi:folder-search-outline"
-          :loading="folder.isBusy.value"
-          @click="folder.start('choose')"
-        >
-          {{ t('settings.selectFolder') }}
-        </Button>
-      </div>
     </div>
-
-    <SettingsAdvancedFields v-model:expanded="isAdvancedOpen">
-      <div class="user-data-advanced">
-        <DeviceHistoryJournals v-if="isAdvancedOpen" />
-      </div>
-    </SettingsAdvancedFields>
 
     <UserDataRelocationModal :model="folder" :current-path="userData.path" />
   </SettingsSection>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useUserDataFolder } from '../../composables/use-user-data-folder'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useUserDataStore } from '../../stores/user-data'
-import Badge from '../common/Badge.vue'
 import Button from '../common/Button.vue'
 import CopyButton from '../common/CopyButton.vue'
-import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import InlineNotice from '../common/InlineNotice.vue'
-import DeviceHistoryJournals from './DeviceHistoryJournals.vue'
-import SettingsAdvancedFields from './SettingsAdvancedFields.vue'
 import SettingsSection from './SettingsSection.vue'
 import UserDataRelocationModal from './UserDataRelocationModal.vue'
 
@@ -82,7 +71,6 @@ const store = useUserDataStore()
 const userData = computed(() => store.state())
 const settingsSession = useSettingsSessionStore()
 const folder = useUserDataFolder(() => settingsSession.flushAll())
-const isAdvancedOpen = ref(false)
 
 const sectionInfo = computed(() =>
   t('settings.userData.info', {
@@ -106,8 +94,10 @@ async function open() {
 
 .user-data-path-box {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-xs);
+  justify-content: space-between;
+  gap: var(--space-sm);
   padding: 0.375rem 0.5rem 0.375rem 0.75rem;
   border-radius: var(--radius-md);
   background-color: var(--app-surface-sunken);
@@ -116,7 +106,7 @@ async function open() {
 }
 
 .user-data-path {
-  flex: 1 1 auto;
+  flex: 1 1 12rem;
   min-width: 0;
   font-family: var(--font-mono);
   font-size: var(--text-caption);
@@ -124,13 +114,11 @@ async function open() {
   user-select: all;
 }
 
-.user-data-advanced {
-  padding: 0 var(--space-lg) var(--space-md);
-}
-
-.user-data-actions {
+.user-data-path-actions {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-xs);
+  margin-left: auto;
+  flex-shrink: 0;
 }
 </style>

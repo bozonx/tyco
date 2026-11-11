@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: e7b33484d9119ed8198607e1a229452e45ce6a7112614bdab6a088ce8a523d41
+// Source hash: 6ac7a5ccc9b6f2895b816a56b2a0c48fe194ad932ebbfa72bade6a61d9c8588f
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -512,17 +512,6 @@ export type DesktopWindowState = {
   canListen: boolean
   /** A single application can be recorded. */
   canListenToApps: boolean
-}
-
-/** The editor history journal of one device in the data folder. */
-export type DeviceHistoryJournal = {
-  deviceId: string
-  /** The name the device last recorded; empty when it recorded none. */
-  deviceName: string
-  isCurrentDevice: boolean
-  entryCount: number
-  /** When the device last wrote an entry, in ms; 0 for none. */
-  lastWrittenMs: number
 }
 
 /** What the UI sends to add a text; id and time are assigned by the backend. */

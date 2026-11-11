@@ -359,9 +359,7 @@ written when it changes; the latest one names the journal); no journal of anothe
 rewritten. The limits apply to the merged history when it is read; a device
 compacts its own journal, keeping the records that still name an entry and its
 latest `clear`. Times are the clocks of the devices: a clock that is off moves
-entries in the order, nothing more. The settings list the journals
-(`list_device_history_journals`) and remove the journal of another device
-(`delete_device_history`); the journal of this device is not removed that way.
+entries in the order, nothing more.
 
 A chat is its file, `chats/<id>.json`. The list is an index of the state folder
 (`index/chats.json`, and `index/ai-vault/<vault id>/<profile>/` for the chats

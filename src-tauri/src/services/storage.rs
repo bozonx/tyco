@@ -16,9 +16,6 @@ pub mod user_files;
 pub mod watcher;
 
 pub use chat_history::remove_vault_indexes;
-pub use editor_history::{
-    delete_device_history, list_device_history_journals, DeviceHistoryJournal,
-};
 pub use history_store::*;
 pub use paths::{app_log_dir, get_storage_info, storage_dir};
 pub use user_data::{open_user_data, variable_values, UserDirAccess};
