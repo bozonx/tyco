@@ -1,12 +1,11 @@
 <template>
-  <div
+  <RecordingBarFrame
     class="voice-bar"
     :class="{
       'with-styling': Boolean(slots),
       'with-header': canSwitchMode || Boolean(replyTo),
     }"
-    role="region"
-    :aria-label="ariaLabel"
+    :label="ariaLabel"
   >
     <div v-if="canSwitchMode || replyTo" class="voice-bar-header">
       <OverlayDragHandle />
@@ -79,7 +78,7 @@
         :cancel="cancel"
       />
     </div>
-  </div>
+  </RecordingBarFrame>
 </template>
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -91,6 +90,7 @@ import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import AudioWaveform from './AudioWaveform.vue'
 import LiveTranscript from './LiveTranscript.vue'
 import QuickModeSwitch from './QuickModeSwitch.vue'
+import RecordingBarFrame from './RecordingBarFrame.vue'
 import SttLanguagePicker from './SttLanguagePicker.vue'
 import VoiceAutoStopNotice from './VoiceAutoStopNotice.vue'
 import VoiceRecordingActions from './VoiceRecordingActions.vue'
@@ -123,17 +123,7 @@ const slots = computed(() => {
 </script>
 <style scoped>
 .voice-bar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  width: 100%;
   height: 7.5rem;
-  padding: var(--space-sm);
-  box-sizing: border-box;
-  border: 1px solid color-mix(in oklab, var(--color-primary) 45%, transparent);
-  border-radius: var(--radius-lg);
-  background-color: var(--app-surface);
-  box-shadow: var(--app-shadow-md);
 }
 
 .voice-bar-header {

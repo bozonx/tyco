@@ -50,9 +50,7 @@
         :turns="model.turns.value"
         :source-text="model.sourceText.value"
         :pending-approvals="runtime.pendingApprovals.value"
-        @apply-reply-block="
-          (block, target) => model.applyReplyBlock(block, target)
-        "
+        @apply-reply-block="(block, target) => applyReply(block, target)"
         @answer-tool-approval="
           (approvalId, decision) =>
             model.answerToolApproval(approvalId, decision)
@@ -389,6 +387,21 @@ function openFollowUp() {
   focusPrompt()
 }
 
+async function applyReply(
+  block: { text: string; title?: string },
+  target: 'window' | 'editor'
+) {
+  if (isApplying.value || isInputBlocked.value) return
+  isApplying.value = true
+  try {
+    await model.applyReplyBlock(block, target)
+  } catch (error) {
+    toastText(describeError(error, t), 'error')
+  } finally {
+    isApplying.value = false
+  }
+}
+
 async function insertSelectedReply() {
   const block = model.selectedReplyBlock.value
   if (
@@ -526,11 +539,15 @@ const RECENT_PROMPTS_MENU_LIMIT = 15
 // Query options suggestions filtered by profile
 const recentPrompts = ref<string[]>([])
 const isRecentMenuOpen = ref(false)
+let recentGeneration = 0
 async function loadRecentPrompts(pId: string | null) {
+  const run = ++recentGeneration
+  recentPrompts.value = []
   const res = await ipcStore.call('list_recent_quick_request_prompts', {
     profileId: pId ?? null,
     limit: RECENT_PROMPTS_MENU_LIMIT,
   })
+  if (disposed || run !== recentGeneration) return
   recentPrompts.value =
     res.success && Array.isArray(res.result) ? res.result : []
 }

@@ -203,7 +203,10 @@ export function createQuickAiRequestRuntime(
       session.currentTools()?.answerApproval(approvalId, decision),
     cancelToolApprovals: () => session.currentTools()?.dispose(),
     insertText: async (text) => {
-      await deps.callOrNotify('paste_into_target_and_hide', { text })
+      resultOrThrow(
+        await deps.callOrNotify('paste_into_target_and_hide', { text }),
+        'paste_into_target_and_hide'
+      )
       deps.saveOutput(text)
     },
     toEditor: async (text, sourceText) => {

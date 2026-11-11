@@ -1,10 +1,6 @@
 <template>
   <!-- `voice-bar`: the input region keeps it clickable, see `QuickOverlay` -->
-  <div
-    class="voice-bar listen-bar"
-    role="region"
-    :aria-label="t('listen.title')"
-  >
+  <RecordingBarFrame class="voice-bar listen-bar" :label="t('listen.title')">
     <div class="listen-bar-header">
       <OverlayDragHandle />
       <QuickModeSwitch
@@ -100,7 +96,7 @@
         </ShortcutButton>
       </div>
     </div>
-  </div>
+  </RecordingBarFrame>
 </template>
 
 <script setup lang="ts">
@@ -119,6 +115,7 @@ import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import AudioWaveform from '../voice/AudioWaveform.vue'
 import LiveTranscript from '../voice/LiveTranscript.vue'
 import QuickModeSwitch from '../voice/QuickModeSwitch.vue'
+import RecordingBarFrame from '../voice/RecordingBarFrame.vue'
 import SttLanguagePicker from '../voice/SttLanguagePicker.vue'
 import VoiceAutoStopNotice from '../voice/VoiceAutoStopNotice.vue'
 import ListenSourcePicker from './ListenSourcePicker.vue'
@@ -158,9 +155,7 @@ function onSelectSource(next: CaptureSource, label?: string) {
 
 const isFinishing = computed(() => props.model.phase.value === 'finishing')
 const stopKeys = computed(() =>
-  props.stopHotkey
-    ? ['Space', 'Enter', props.stopHotkey]
-    : ['Space', 'Enter']
+  props.stopHotkey ? ['Space', 'Enter', props.stopHotkey] : ['Space', 'Enter']
 )
 
 const isWaitingForApp = computed(
@@ -195,18 +190,8 @@ const notice = computed(() => {
 
 <style scoped>
 .listen-bar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  width: 100%;
   min-height: 9.5rem;
   max-height: 15rem;
-  padding: var(--space-sm);
-  box-sizing: border-box;
-  border: 1px solid color-mix(in oklab, var(--color-primary) 45%, transparent);
-  border-radius: var(--radius-lg);
-  background-color: var(--app-surface);
-  box-shadow: var(--app-shadow-md);
 }
 
 .listen-bar-header {

@@ -1034,4 +1034,34 @@ describe('QuickAiRequestMenu', () => {
       expect((input.element as HTMLTextAreaElement).value).toBe('What is this?')
     })
   })
+  it('does not close the request when insertion fails', async () => {
+    desktop.backend.handle('paste_into_target_and_hide', () => {
+      throw new Error('Target unavailable')
+    })
+    const wrapper = await answerRequest([{ text: 'Ready' }])
+    const close = vi.spyOn(useMenuModalsStore(), 'closeAll')
+    await wrapper.find('.quick-insert-action').trigger('click')
+    await flushPromises()
+    expect(close).not.toHaveBeenCalled()
+  })
+  it('serializes insertions from reply cards', async () => {
+    const releases: (() => void)[] = []
+    desktop.backend.handle(
+      'paste_into_target_and_hide',
+      () => new Promise<void>((done) => releases.push(done))
+    )
+    const wrapper = await answerRequest([{ text: 'Ready' }])
+    const turns = wrapper.findComponent({ name: 'QuickAiRequestTurns' })
+    try {
+      turns.vm.$emit('applyReplyBlock', { text: 'Ready' }, 'window')
+      turns.vm.$emit('applyReplyBlock', { text: 'Ready' }, 'window')
+      await flushPromises()
+      expect(
+        desktop.backend.callsOf('paste_into_target_and_hide')
+      ).toHaveLength(1)
+    } finally {
+      releases.forEach((release) => release())
+      await flushPromises()
+    }
+  })
 })

@@ -164,6 +164,7 @@ pub async fn switch_capture_source(
             .ok_or_else(|| AppError::Stale("The capture to switch is no longer running".into()))?;
         let (reply, receiver) = std_mpsc::sync_channel(1);
         *slot.locked() = Some(SourceSwitch {
+            deadline: Instant::now() + Duration::from_secs(10),
             source: capture_source,
             reply,
         });
@@ -393,11 +394,16 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
             });
         }
         if let Some(SourceSwitch {
+            deadline,
             source: next_source,
             reply,
         }) = requested
         {
             match source.open(&next_source, stop_flag) {
+                Ok(opened) if Instant::now() >= deadline => {
+                    drop(opened);
+                    let _ = reply.send(Err(AppError::Stale("Source switch expired".into())));
+                }
                 Ok(opened) if opened.output_sample_rate_hz == output_sample_rate_hz => {
                     // the old stream's last samples go out before the new ones
                     drop(std::mem::replace(&mut stream, opened.stream));

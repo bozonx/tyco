@@ -69,6 +69,11 @@ impl StreamMixer {
 
     /// The samples every stream has written, or that one stream got ahead
     /// of the others by more than the lag allows.
+    pub fn finish(&mut self) -> Vec<f32> {
+        self.cursors.clear();
+        self.drain()
+    }
+
     pub fn drain(&mut self) -> Vec<f32> {
         let head = self.head();
         let slowest = self.cursors.values().copied().min().unwrap_or(head);
@@ -85,6 +90,17 @@ impl StreamMixer {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn finishing_releases_the_tail_held_for_a_silent_stream() {
+        let mut mixer = StreamMixer::new(3200);
+        mixer.add_stream(1);
+        mixer.add_stream(2);
+        mixer.push(1, &vec![0.5; 16000]);
+        assert_eq!(mixer.drain().len(), 12800);
+        assert_eq!(mixer.finish(), vec![0.5; 3200]);
+        assert!(mixer.finish().is_empty());
+    }
 
     #[test]
     fn a_single_stream_passes_through() {

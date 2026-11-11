@@ -647,3 +647,42 @@ describe('quick overlay menus', () => {
     })
   })
 })
+
+it('restores the screenshot selector after a failed confirmation', async () => {
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      disconnect() {}
+    }
+  )
+  desktop.backend.handle('confirm_screenshot_crop', () => {
+    throw new Error('Unavailable')
+  })
+  desktop.setState({ isWindowShown: true })
+  const wrapper = mount(QuickOverlay, { global: { plugins: [desktop.pinia] } })
+  try {
+    await flushPromises()
+    await desktop.emit(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA, {
+      selectionId: 42,
+      imageId: 'test-img',
+      mediaType: 'image/png',
+      screenX: 0,
+      screenY: 0,
+      width: 1920,
+      height: 1080,
+      scaleFactor: 1,
+    })
+    await flushPromises()
+    wrapper
+      .findComponent({ name: 'ScreenshotSelector' })
+      .vm.$emit('confirm', { x: 1, y: 1, width: 100, height: 100 })
+    await flushPromises()
+    expect(wrapper.find('.mock-screenshot-selector').exists()).toBe(true)
+    expect(wrapper.find('.quick-overlay-root').classes()).not.toContain(
+      'is-hidden'
+    )
+  } finally {
+    wrapper.unmount()
+  }
+})

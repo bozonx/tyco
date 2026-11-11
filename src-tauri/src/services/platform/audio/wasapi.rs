@@ -317,7 +317,15 @@ impl Drop for CaptureThread {
     fn drop(&mut self) {
         self.quit.store(true, Ordering::SeqCst);
         if let Some(thread) = self.thread.take() {
-            let _ = thread.join();
+            let deadline = std::time::Instant::now() + Duration::from_secs(1);
+            while !thread.is_finished() && std::time::Instant::now() < deadline {
+                std::thread::sleep(Duration::from_millis(5));
+            }
+            if thread.is_finished() {
+                let _ = thread.join();
+            } else {
+                log::warn!("Audio worker did not stop before its deadline");
+            }
         }
     }
 }
@@ -624,6 +632,7 @@ fn run_application_capture(app_id: &str, context: &StreamContext, quit: &AtomicB
         converter.deliver(context, &mixer.drain());
         thread::sleep(Duration::from_millis(10));
     }
+    converter.deliver(context, &mixer.finish());
 }
 
 /// All active render endpoints, re-enumerated on each poll to follow routing

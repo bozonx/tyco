@@ -838,6 +838,7 @@ fn a_switch_of_the_source_keeps_one_stream_and_reports_the_wait() {
     let (reply, replied) = std_mpsc::sync_channel(1);
     let request_slot = Arc::clone(&switch);
     let request = std::cell::RefCell::new(Some(SourceSwitch {
+        deadline: Instant::now() + Duration::from_secs(10),
         source: CaptureSource::Application {
             app_id: "telegram-desktop".into(),
         },
@@ -948,6 +949,7 @@ fn a_source_switch_discards_audio_recorded_twice_during_setup() {
     let slot = Arc::clone(&switch);
     let (reply, _replied) = std_mpsc::sync_channel(1);
     *slot.locked() = Some(SourceSwitch {
+        deadline: Instant::now() + Duration::from_secs(10),
         source: CaptureSource::Application {
             app_id: "app".into(),
         },

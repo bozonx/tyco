@@ -593,3 +593,22 @@ describe('QuickAiRequestModel', () => {
     })
   })
 })
+
+it('keeps the profile fixed while preparing instructions', async () => {
+  let resolve!: (instructions: string) => void
+  const { model, deps } = createSetup({
+    initialProfileId: 'profile-a',
+    resolveInstructions: () =>
+      new Promise<string>((done) => {
+        resolve = done
+      }),
+  })
+  const pending = model.submitPrompt('Question')
+  model.setProfileId('profile-b')
+  resolve('Instructions of profile-a')
+  await pending
+  expect(vi.mocked(deps.sendTurn).mock.calls[0][2]).toMatchObject({
+    profileId: 'profile-a',
+    instructions: 'Instructions of profile-a',
+  })
+})

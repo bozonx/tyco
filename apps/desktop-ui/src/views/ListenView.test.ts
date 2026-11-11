@@ -176,7 +176,7 @@ describe('ListenView', () => {
 
     const replyBtn = wrapper
       .findAll('button')
-      .find((b) => b.text().includes(i18n.global.t('listen.replyByVoice')))
+      .find((b) => b.text().includes('listen.replyByVoice'))
     expect(replyBtn).toBeDefined()
     await replyBtn!.trigger('click')
     await flushPromises()
@@ -218,7 +218,7 @@ describe('ListenView', () => {
     try {
       await flushPromises()
       await pressEnter()
-      wrapper.findComponent({ name: 'QuickModeSwitch' }).vm.$emit('switch')
+      await wrapper.find('.primary-action-stub').trigger('click')
       await flushPromises()
       expect(wrapper.find('.insert-menu-stub').attributes('data-text')).toBe(
         'Voice message text'
@@ -246,9 +246,7 @@ describe('ListenView', () => {
       await pressEnter()
       const button = wrapper
         .findAll('button')
-        .find((item) =>
-          item.text().includes(i18n.global.t('listen.replyByVoice'))
-        )!
+        .find((item) => item.text().includes('listen.replyByVoice'))!
       await button.trigger('click')
       await flushPromises()
       const reply = useListenReplyStore()

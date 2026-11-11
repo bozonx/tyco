@@ -13,6 +13,12 @@
   </div>
   <ContentPadding v-else>
     <div class="listen-result">
+      <p
+        v-if="model.errorText.value && model.phase.value === 'result'"
+        role="alert"
+      >
+        {{ model.errorText.value }}
+      </p>
       <InsertMenu
         v-if="model.phase.value === 'result'"
         :text="model.resultText.value"
@@ -21,14 +27,16 @@
         :allow-remove-context="false"
         :shortcuts-disabled="menuModalsStore.hasOpenModal"
       />
-      <div v-else class="listen-empty" role="status">
-        <p>
-          {{
-            model.phase.value === 'failed'
-              ? model.errorText.value
-              : t('listen.nothingRecognized')
-          }}
-        </p>
+      <StateMessage
+        v-else
+        class="listen-empty"
+        :kind="model.phase.value === 'failed' ? 'error' : 'empty'"
+        :message="
+          model.phase.value === 'failed'
+            ? model.errorText.value
+            : t('listen.nothingRecognized')
+        "
+      >
         <div class="listen-empty-actions">
           <Button size="sm" @click="void model.close()">
             {{ t('common.close') }}
@@ -51,7 +59,7 @@
             {{ t('common.openSettings') }}
           </Button>
         </div>
-      </div>
+      </StateMessage>
     </div>
   </ContentPadding>
 </template>
@@ -61,9 +69,9 @@ import { computed, onMounted, onUnmounted, watch } from 'vue'
 
 import Button from '../components/common/Button.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
+import StateMessage from '../components/common/StateMessage.vue'
 import ListenRecordingBar from '../components/listen/ListenRecordingBar.vue'
 import InsertMenu from '../components/menu/InsertMenu.vue'
-import type { ActionItem } from '../stores/action-menu'
 import { useDictationActions } from '../composables/use-dictation-actions'
 import { useDismissibleLayer } from '../composables/use-dismissible-layer'
 import { useI18n } from '../composables/use-i18n'
@@ -80,6 +88,7 @@ import { describeDictationError } from '../lib/stt/dictation-error'
 import { liveTranscriptText } from '../lib/stt/live-transcript'
 import { createKeyPressTracker } from '../lib/ui/key-press-tracker'
 import { isTextEntryTarget } from '../lib/ui/text-entry-target'
+import type { ActionItem } from '../stores/action-menu'
 import { useDesktopStore } from '../stores/desktop'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'

@@ -218,10 +218,14 @@ const onConfirmCrop = async (crop: CropRect) => {
   if (!selection) return
   isAwaitingCaptureOutcome.value = true
   activeAreaSelection.value = null
-  await ipcStore.call('confirm_screenshot_crop', {
+  const result = await ipcStore.call('confirm_screenshot_crop', {
     selectionId: selection.selectionId,
     crop,
   })
+  if (!result.success) {
+    isAwaitingCaptureOutcome.value = false
+    activeAreaSelection.value = selection
+  }
 }
 
 const onCancelCrop = async () => {
@@ -229,9 +233,13 @@ const onCancelCrop = async () => {
   if (!selection) return
   isAwaitingCaptureOutcome.value = true
   activeAreaSelection.value = null
-  await ipcStore.call('cancel_screenshot_crop', {
+  const result = await ipcStore.call('cancel_screenshot_crop', {
     selectionId: selection.selectionId,
   })
+  if (!result.success) {
+    isAwaitingCaptureOutcome.value = false
+    activeAreaSelection.value = selection
+  }
 }
 
 /** Without the image there is nothing to select on: tell why it ended */

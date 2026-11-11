@@ -128,7 +128,15 @@ impl Drop for LoopThread {
             let _ = quit.send(());
         }
         if let Some(thread) = self.thread.take() {
-            let _ = thread.join();
+            let deadline = std::time::Instant::now() + Duration::from_secs(1);
+            while !thread.is_finished() && std::time::Instant::now() < deadline {
+                std::thread::sleep(Duration::from_millis(5));
+            }
+            if thread.is_finished() {
+                let _ = thread.join();
+            } else {
+                log::warn!("Audio worker did not stop before its deadline");
+            }
         }
     }
 }
@@ -577,6 +585,12 @@ struct AppCapture {
     mixer: RefCell<StreamMixer>,
     streams: RefCell<HashMap<u32, CaptureStreamEntry>>,
     has_seen_client: std::cell::Cell<bool>,
+}
+
+impl Drop for AppCapture {
+    fn drop(&mut self) {
+        self.output.deliver(&self.mixer.get_mut().finish());
+    }
 }
 
 impl AppCapture {

@@ -235,6 +235,7 @@ export function createQuickAiRequestModel(
 
   /** The instructions the current turn read, see `prepareTurn` */
   let turnInstructions = ''
+  const isPreparing = ref(false)
 
   const generation = createChatGenerationModel(
     {
@@ -251,7 +252,12 @@ export function createQuickAiRequestModel(
           }
         ),
       prepareTurn: async () => {
-        turnInstructions = await deps.resolveInstructions(profileId.value)
+        isPreparing.value = true
+        try {
+          turnInstructions = await deps.resolveInstructions(profileId.value)
+        } finally {
+          isPreparing.value = false
+        }
       },
       getChatInstructions: () => turnInstructions,
       getChatModel: () => {
@@ -374,7 +380,7 @@ export function createQuickAiRequestModel(
 
   /** The selection and the screenshot are fixed once the model answered */
   const isSourceTextLocked = computed(
-    () => isGenerating.value || hasAnyAnswer.value
+    () => isPreparing.value || isGenerating.value || hasAnyAnswer.value
   )
   const isSourceImageLocked = isSourceTextLocked
 
@@ -405,7 +411,7 @@ export function createQuickAiRequestModel(
   }
 
   const setProfileId = (id: string | null) => {
-    if (isProfileLocked.value) return
+    if (isProfileLocked.value || isPreparing.value) return
     profileId.value = id
     // every profile keeps the model it was last asked with
     modelId.value = deps.getRememberedModelId(id) ?? null
@@ -414,7 +420,7 @@ export function createQuickAiRequestModel(
 
   /** Picks the model of the next requests and remembers it for the profile */
   const setModelId = async (id: string) => {
-    if (isGenerating.value || id === modelId.value) return
+    if (isPreparing.value || isGenerating.value || id === modelId.value) return
     modelId.value = id
     notice.value = null
     await deps.rememberModelId(profileId.value, id)

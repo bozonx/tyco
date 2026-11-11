@@ -143,8 +143,11 @@ export function createListenModel(deps: ListenModelDependencies) {
         onError: (error) => {
           if (run !== generation || phase.value !== 'recording') return
           // what was heard before the failure is not lost
-          if (liveTranscriptText(transcript.value)) void stop()
-          else fail(error)
+          if (liveTranscriptText(transcript.value)) {
+            errorCause.value = error
+            errorText.value = deps.describeError(error)
+            void stop()
+          } else fail(error)
         },
         onWaiting: (waiting) => {
           if (run !== generation) return
@@ -215,6 +218,7 @@ export function createListenModel(deps: ListenModelDependencies) {
       await deps.switchSource(next)
       if (run !== generation || phase.value !== 'recording') return
       source.value = next
+      lastStartSource = next
       isSourceLost.value = false
     } catch (error) {
       if (run !== generation || phase.value !== 'recording') return

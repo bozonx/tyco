@@ -7,6 +7,7 @@ use crate::services::voice::CaptureSource;
 
 /// A request to record another source, answered once it records.
 pub struct SourceSwitch {
+    pub deadline: std::time::Instant,
     pub source: CaptureSource,
     pub reply: mpsc::SyncSender<Result<(), AppError>>,
 }

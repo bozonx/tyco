@@ -242,3 +242,16 @@ describe('listen model', () => {
     expect(model.resultText.value).toBe('Hello there')
   })
 })
+
+it('retries the last explicitly selected source', async () => {
+  const { model } = setup({ finishDictation: async () => '' })
+  try {
+    await model.start()
+    await model.selectSource({ kind: 'application', appId: 'player' })
+    await model.stop()
+    await model.retry()
+    expect(model.source.value).toEqual({ kind: 'application', appId: 'player' })
+  } finally {
+    model.dispose()
+  }
+})
