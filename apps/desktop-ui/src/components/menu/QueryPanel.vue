@@ -11,7 +11,33 @@
         <span v-if="props.label" class="query-panel-label">{{
           props.label
         }}</span>
+        <FieldTextArea
+          v-if="props.multiline"
+          ref="textareaRef"
+          class="query-panel-input is-multiline"
+          auto-resize
+          :max-auto-height="props.maxAutoHeight"
+          :disabled="props.disabled"
+          :model-value="props.modelValue"
+          :placeholder="props.placeholder"
+          :aria-label="props.placeholder"
+          role="combobox"
+          aria-autocomplete="list"
+          :aria-expanded="props.options.length > 0"
+          :aria-controls="props.options.length ? listboxId : undefined"
+          :aria-activedescendant="
+            highlightedOptionIndex >= 0
+              ? `${listboxId}-option-${highlightedOptionIndex}`
+              : undefined
+          "
+          spellcheck="false"
+          autocomplete="off"
+          @update:model-value="(value) => emit('update:modelValue', value)"
+          @keydown="onKeyDown"
+          @blur="onBlur"
+        />
         <input
+          v-else
           ref="inputRef"
           class="query-panel-input"
           type="text"
@@ -138,7 +164,9 @@ import {
   type QueryOption,
   moveHighlight,
 } from '../../lib/menu-query/menu-query'
+import type { TextControl } from '../../lib/ui/text-control'
 import AppIcon from '../common/AppIcon.vue'
+import FieldTextArea from '../common/FieldTextArea.vue'
 import ShortcutHint from '../overlay/ShortcutHint.vue'
 
 export interface QueryPanelOption extends QueryOption {
@@ -183,6 +211,8 @@ const props = withDefaults(
     autoHighlight?: boolean
     emptyText?: string
     disabled?: boolean
+    multiline?: boolean
+    maxAutoHeight?: number
   }>(),
   {
     placeholder: '',
@@ -193,6 +223,8 @@ const props = withDefaults(
     autoHighlight: false,
     emptyText: '',
     disabled: false,
+    multiline: false,
+    maxAutoHeight: 160,
   }
 )
 
@@ -206,8 +238,25 @@ const emit = defineEmits<{
 
 const listboxId = useId()
 const inputRef = ref<HTMLInputElement | null>(null)
+const textareaRef = ref<TextControl | null>(null)
 const highlightedOptionIndex = ref(-1)
-const textControl = useTextControl(inputRef)
+const inputTextControl = useTextControl(inputRef)
+const textControl: TextControl = {
+  focus: () =>
+    props.multiline ? textareaRef.value?.focus() : inputTextControl.focus(),
+  isFocused: () =>
+    props.multiline
+      ? (textareaRef.value?.isFocused() ?? false)
+      : inputTextControl.isFocused(),
+  getSelection: () =>
+    props.multiline
+      ? (textareaRef.value?.getSelection() ?? null)
+      : inputTextControl.getSelection(),
+  select: (start, end) =>
+    props.multiline
+      ? textareaRef.value?.select(start, end)
+      : inputTextControl.select(start, end),
+}
 
 const resetHighlight = () => {
   const selectedOptionIndex = props.options.findIndex(
@@ -272,6 +321,7 @@ const onKeyDown = (event: KeyboardEvent) => {
   switch (event.key) {
     case 'ArrowDown':
     case 'ArrowUp':
+      if (props.multiline && !props.options.length) return
       event.preventDefault()
       if (props.optionsPlacement === 'above-popover') {
         if (!props.options.length) return
@@ -296,6 +346,7 @@ const onKeyDown = (event: KeyboardEvent) => {
       if (highlightedOptionIndex.value >= 0) scrollToHighlighted()
       return
     case 'Enter':
+      if (props.multiline && (event.shiftKey || event.altKey)) return
       event.preventDefault()
       if (event.repeat) return
       submit(event.ctrlKey || event.metaKey)
@@ -387,7 +438,19 @@ defineExpose(textControl)
   outline: none;
 }
 
-.query-panel-input:focus {
+.query-panel-input.is-multiline {
+  height: auto;
+  min-height: 2.25rem;
+  padding: 0.4375rem 0.75rem;
+  line-height: 1.4;
+  font-family: inherit;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.query-panel-input:focus,
+.query-panel-input.is-multiline:focus {
+  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
   box-shadow: 0 0 0 3px
     color-mix(in oklab, var(--color-primary) 16%, transparent);
 }
@@ -521,6 +584,7 @@ defineExpose(textControl)
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-xs);
+  min-width: 0;
   --shortcut-width: auto;
 }
 
@@ -534,7 +598,10 @@ defineExpose(textControl)
 .query-panel-footer-end {
   display: flex;
   align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
   min-width: 0;
   margin-left: auto;
+  --shortcut-width: auto;
 }
 </style>

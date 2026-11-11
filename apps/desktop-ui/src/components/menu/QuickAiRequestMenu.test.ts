@@ -197,7 +197,7 @@ describe('QuickAiRequestMenu', () => {
 
     const chatBtn = wrapper
       .findAll('button')
-      .find((button) => button.text().includes('action.askInChat'))!
+      .find((button) => button.text().includes('quickAiRequest.goToChat'))!
     await chatBtn.trigger('click')
     await flushPromises()
     expect(desktop.backend.callsOf('open_transferred_chat')).toHaveLength(1)
@@ -326,12 +326,19 @@ describe('QuickAiRequestMenu', () => {
     expect(wrapper.text()).toContain('Hello text to transform')
   })
 
-  it('shows the profile and model selectors under the input, not in the header', () => {
+  it('shows the profile, model, chat and editor buttons on the left and run button on the right', () => {
     const wrapper = mountMenu()
     expect(wrapper.find('.action-overlay-header select').exists()).toBe(false)
-    const bar = wrapper.find('.query-panel-footer .quick-ai-model-bar')
+    const footerStart = wrapper.find('.query-panel-footer-start')
+    const footerEnd = wrapper.find('.query-panel-footer-end')
+    const bar = footerStart.find('.quick-ai-model-bar')
     expect(bar.findAll('select')).toHaveLength(2)
     expect(bar.find('option').text()).toBe('quickAiRequest.standardProfile')
+    expect(footerStart.findAll('button').map((b) => b.text())).toEqual([
+      'quickAiRequest.goToChat',
+      'shortcuts.insertIntoEditor',
+    ])
+    expect(footerEnd.find('.run-action-btn').exists()).toBe(true)
     expect(wrapper.find('[aria-label="action.askInChat"]').exists()).toBe(false)
   })
 
@@ -506,7 +513,7 @@ describe('QuickAiRequestMenu', () => {
 
     const chatBtn = wrapper
       .findAll('button')
-      .find((button) => button.text().includes('action.askInChat'))!
+      .find((button) => button.text().includes('quickAiRequest.goToChat'))!
     await chatBtn.trigger('click')
     await flushPromises()
 
@@ -554,7 +561,7 @@ describe('QuickAiRequestMenu', () => {
 
     const chatBtn = wrapper
       .findAll('button')
-      .find((button) => button.text().includes('action.askInChat'))!
+      .find((button) => button.text().includes('quickAiRequest.goToChat'))!
     await chatBtn.trigger('click')
     await flushPromises()
     // nothing was answered: the chat starts fresh with the context
@@ -749,6 +756,92 @@ describe('QuickAiRequestMenu', () => {
       expect(desktop.backend.callsOf('start_voice_capture')).toHaveLength(1)
       expect(useToastStore().toasts).toHaveLength(0)
       wrapper.unmount()
+    })
+
+    it('closes the overlay when voice is cancelled after opening directly in voice mode', async () => {
+      const wrapper = mountMenu({ inputMode: 'voice' })
+      const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+      voiceMenu.vm.$emit('cancelled')
+      await flushPromises()
+
+      expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
+      expect(wrapper.find('.query-panel-input').exists()).toBe(false)
+    })
+
+    it('goes back in modal stack when voice is cancelled after opening in voice mode from action menu', async () => {
+      const menuModals = useMenuModalsStore()
+      menuModals.nextModal(MenuModals.QUICK_AI_REQUEST, {
+        text: 'Source',
+        inputMode: 'voice',
+      })
+      const backSpy = vi.spyOn(menuModals, 'back')
+
+      const wrapper = mountMenu({ inputMode: 'voice' })
+      const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+      voiceMenu.vm.$emit('cancelled')
+      await flushPromises()
+
+      expect(backSpy).toHaveBeenCalledTimes(1)
+      expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
+    })
+
+    it('returns to the text input when voice is cancelled after starting from the mic button', async () => {
+      const wrapper = mountMenu()
+      await wrapper.find('.query-panel-input').setValue('Draft')
+      await wrapper.find('[title="chat.voiceInput"]').trigger('click')
+      expect(wrapper.find('.voice-bar').exists()).toBe(true)
+
+      const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+      voiceMenu.vm.$emit('cancelled')
+      await flushPromises()
+
+      expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
+      expect(wrapper.find('.voice-bar').exists()).toBe(false)
+      expect(
+        (wrapper.find('.query-panel-input').element as HTMLTextAreaElement)
+          .value
+      ).toBe('Draft')
+    })
+
+    it('returns to the text input on a second voice cancel after inserting from initial voice mode', async () => {
+      const wrapper = mountMenu({ inputMode: 'voice' })
+      const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+      voiceMenu.vm.$emit(
+        'corrected',
+        'First part',
+        'First part',
+        undefined,
+        'insert'
+      )
+      await flushPromises()
+
+      await wrapper.find('[title="chat.voiceInput"]').trigger('click')
+      const secondVoiceMenu = wrapper.findComponent({
+        name: 'VoiceRecognitionMenu',
+      })
+      secondVoiceMenu.vm.$emit('cancelled')
+      await flushPromises()
+
+      expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
+      expect(
+        (wrapper.find('.query-panel-input').element as HTMLTextAreaElement)
+          .value
+      ).toBe('First part')
+    })
+
+    it('does not submit on Shift+Enter and allows multiline prompts', async () => {
+      const wrapper = mountMenu()
+      const input = wrapper.find('.query-panel-input')
+      expect(input.element.tagName).toBe('TEXTAREA')
+
+      await input.setValue('Line 1\nLine 2')
+      await input.trigger('keydown', { key: 'Enter', shiftKey: true })
+      await flushPromises()
+
+      expect(wrapper.find('.turn-prompt-text').exists()).toBe(false)
+      expect((input.element as HTMLTextAreaElement).value).toBe(
+        'Line 1\nLine 2'
+      )
     })
   })
 

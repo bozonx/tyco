@@ -1512,6 +1512,7 @@
     "hideDiff": "隐藏更改"
   },
   "quickAiRequest": {
+    "goToChat": "前往聊天",
     "followUp": "继续提问",
     "chooseVariant": "选择一个版本",
     "selectProfile": "选择配置文件",

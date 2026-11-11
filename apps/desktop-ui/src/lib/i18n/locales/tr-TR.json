@@ -1518,6 +1518,7 @@
     "hideDiff": "Değişiklikleri gizle"
   },
   "quickAiRequest": {
+    "goToChat": "Sohbete git",
     "followUp": "Yeni istek",
     "chooseVariant": "Bir seçenek belirleyin",
     "selectProfile": "Profil seç",

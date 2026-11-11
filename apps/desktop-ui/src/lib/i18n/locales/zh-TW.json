@@ -1512,6 +1512,7 @@
     "hideDiff": "隱藏變更"
   },
   "quickAiRequest": {
+    "goToChat": "前往聊天",
     "followUp": "繼續提問",
     "chooseVariant": "選擇一個版本",
     "selectProfile": "選取設定檔",

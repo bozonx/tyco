@@ -1521,6 +1521,7 @@
     "hideDiff": "Sakrij promjene"
   },
   "quickAiRequest": {
+    "goToChat": "Idi na chat",
     "followUp": "Još jedan upit",
     "chooseVariant": "Odaberite varijantu",
     "selectProfile": "Odaberite profil",

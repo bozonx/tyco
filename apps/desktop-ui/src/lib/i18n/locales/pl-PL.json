@@ -1521,6 +1521,7 @@
     "hideDiff": "Ukryj zmiany"
   },
   "quickAiRequest": {
+    "goToChat": "Przejdź do czatu",
     "followUp": "Kolejne zapytanie",
     "chooseVariant": "Wybierz wariant",
     "selectProfile": "Wybierz profil",

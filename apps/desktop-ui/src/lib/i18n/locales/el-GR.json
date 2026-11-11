@@ -1518,6 +1518,7 @@
     "hideDiff": "Απόκρυψη αλλαγών"
   },
   "quickAiRequest": {
+    "goToChat": "Μετάβαση στη συνομιλία",
     "followUp": "Νέο αίτημα",
     "chooseVariant": "Επιλέξτε παραλλαγή",
     "selectProfile": "Επιλογή προφίλ",

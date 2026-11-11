@@ -1521,6 +1521,7 @@
     "hideDiff": "Ascunde modificările"
   },
   "quickAiRequest": {
+    "goToChat": "Mergi la chat",
     "followUp": "Încă o cerere",
     "chooseVariant": "Alegeți o variantă",
     "selectProfile": "Selectează profilul",

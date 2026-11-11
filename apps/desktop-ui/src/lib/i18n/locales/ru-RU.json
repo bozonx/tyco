@@ -1518,6 +1518,7 @@
     "hideDiff": "Скрыть изменения"
   },
   "quickAiRequest": {
+    "goToChat": "Перейти в чат",
     "followUp": "Ещё запрос",
     "chooseVariant": "Выберите вариант",
     "selectProfile": "Выбрать профиль",

@@ -1515,6 +1515,7 @@
     "hideDiff": "변경 사항 숨기기"
   },
   "quickAiRequest": {
+    "goToChat": "채팅으로 이동",
     "followUp": "추가 요청",
     "chooseVariant": "후보 선택",
     "selectProfile": "프로필 선택",

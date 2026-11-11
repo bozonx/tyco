@@ -163,7 +163,7 @@ const { scroller, handleScroll, handleContentResized } = useChatScroll({
 
 .turn-user-message {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-xs);
   font-weight: 500;
   color: var(--color-text);
@@ -175,7 +175,13 @@ const { scroller, handleScroll, handleContentResized } = useChatScroll({
 
 .turn-prompt-icon {
   display: inline-flex;
+  margin-top: 0.125rem;
   color: var(--color-primary);
+}
+
+.turn-prompt-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .turn-assistant-message {

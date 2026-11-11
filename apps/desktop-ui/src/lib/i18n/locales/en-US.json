@@ -1521,6 +1521,7 @@
     "hideDiff": "Hide changes"
   },
   "quickAiRequest": {
+    "goToChat": "Go to chat",
     "followUp": "Another request",
     "chooseVariant": "Choose a variant",
     "selectProfile": "Select profile",

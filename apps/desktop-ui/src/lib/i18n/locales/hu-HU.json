@@ -1518,6 +1518,7 @@
     "hideDiff": "Módosítások elrejtése"
   },
   "quickAiRequest": {
+    "goToChat": "Ugrás a csevegéshez",
     "followUp": "Újabb kérés",
     "chooseVariant": "Válasszon egy változatot",
     "selectProfile": "Profil kiválasztása",

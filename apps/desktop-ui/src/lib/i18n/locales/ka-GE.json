@@ -1518,6 +1518,7 @@
     "hideDiff": "ცვლილებების დამალვა"
   },
   "quickAiRequest": {
+    "goToChat": "ჩატში გადასვლა",
     "followUp": "კიდევ ერთი მოთხოვნა",
     "chooseVariant": "აირჩიეთ ვარიანტი",
     "selectProfile": "პროფილის არჩევა",

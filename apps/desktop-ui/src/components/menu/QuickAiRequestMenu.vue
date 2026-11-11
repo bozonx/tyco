@@ -134,13 +134,14 @@
           :disabled="isInputBlocked || isApplying"
           @click="switchToChat"
         >
-          {{ t('action.askInChat') }}
+          {{ t('quickAiRequest.goToChat') }}
         </Button>
       </div>
       <QueryPanel
         v-else
         ref="queryPanelRef"
         v-model="input.value.value"
+        multiline
         :disabled="isInputBlocked || model.isGenerating.value"
         :placeholder="promptPlaceholder"
         :options="recentOptions"
@@ -162,6 +163,36 @@
           />
         </template>
         <template #footer-start>
+          <QuickAiModelBar
+            :profile-id="model.profileId.value"
+            :model-id="model.modelId.value"
+            :models="model.modelOptions.value"
+            :is-profile-locked="model.isProfileLocked.value"
+            :is-model-disabled="model.isGenerating.value"
+            @update:profile-id="model.setProfileId"
+            @update:model-id="(id) => void model.setModelId(id)"
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            icon="mdi:chat-question-outline"
+            :disabled="isInputBlocked"
+            @click="switchToChat"
+          >
+            {{ t('quickAiRequest.goToChat') }}
+          </Button>
+          <Button
+            v-if="model.sourceText.value && !editorNavigation.isEditorPage()"
+            variant="ghost"
+            size="sm"
+            icon="mdi:pencil-outline"
+            :disabled="isInputBlocked || model.isGenerating.value"
+            @click="insertSourceIntoEditor"
+          >
+            {{ t('shortcuts.insertIntoEditor') }}
+          </Button>
+        </template>
+        <template #footer-end>
           <ShortcutButton
             v-if="!model.isGenerating.value"
             variant="primary"
@@ -183,36 +214,6 @@
           >
             {{ t('chat.stop') }}
           </ShortcutButton>
-          <Button
-            variant="ghost"
-            size="sm"
-            icon="mdi:chat-question-outline"
-            :disabled="isInputBlocked"
-            @click="switchToChat"
-          >
-            {{ t('action.askInChat') }}
-          </Button>
-          <Button
-            v-if="model.sourceText.value && !editorNavigation.isEditorPage()"
-            variant="ghost"
-            size="sm"
-            icon="mdi:pencil-outline"
-            :disabled="isInputBlocked || model.isGenerating.value"
-            @click="insertSourceIntoEditor"
-          >
-            {{ t('shortcuts.insertIntoEditor') }}
-          </Button>
-        </template>
-        <template #footer-end>
-          <QuickAiModelBar
-            :profile-id="model.profileId.value"
-            :model-id="model.modelId.value"
-            :models="model.modelOptions.value"
-            :is-profile-locked="model.isProfileLocked.value"
-            :is-model-disabled="model.isGenerating.value"
-            @update:profile-id="model.setProfileId"
-            @update:model-id="(id) => void model.setModelId(id)"
-          />
         </template>
       </QueryPanel>
     </template>
@@ -293,6 +294,13 @@ const screenshotToDelete = ref<string | null>(null)
 const queryPanelRef = ref<InstanceType<typeof QueryPanel>>()
 let disposed = false
 const isListening = ref(props.inputMode === 'voice')
+/**
+ * Overlay-opened voice cancels the overlay; mic-opened voice returns to the
+ * prompt input
+ */
+const voiceEntrySource = ref<'overlay' | 'input'>(
+  props.inputMode === 'voice' ? 'overlay' : 'input'
+)
 const lastInputKind = ref<'text' | 'voice'>(
   props.inputMode === 'voice' ? 'voice' : 'text'
 )
@@ -466,6 +474,7 @@ async function addScreenshot() {
   if (isCapturing.value || model.isSourceImageLocked.value) return
   isCapturing.value = true
   try {
+    voiceEntrySource.value = 'input'
     isListening.value = false
     const result = await ipcStore.call('add_screenshot')
     if (disposed) return
@@ -522,7 +531,7 @@ const recentOptions = computed<QueryPanelOption[]>(() =>
 )
 
 function handleInputBlur(event: FocusEvent) {
-  const element = event.target as HTMLInputElement | null
+  const element = event.target as HTMLInputElement | HTMLTextAreaElement | null
   if (!element) return
   const length = input.value.value.length
   input.rememberSelection({
@@ -547,6 +556,7 @@ function startVoice() {
     prefix: range ? value.slice(0, range.start) : value,
     suffix: range ? value.slice(range.end) : '',
   }
+  voiceEntrySource.value = 'input'
   isListening.value = true
 }
 
@@ -560,6 +570,10 @@ function focusPrompt() {
 }
 
 function handleVoiceCancelled() {
+  if (voiceEntrySource.value === 'overlay') {
+    defaultHandleEsc()
+    return
+  }
   isListening.value = false
   focusPrompt()
 }
@@ -570,6 +584,7 @@ async function handleVoiceCorrected(
   _correctedText: string | undefined,
   intent: VoiceFinishIntent
 ) {
+  voiceEntrySource.value = 'input'
   isListening.value = false
   if (intent === 'copy') {
     void actionMenuStore.runDefaultAction('copyToClipboard', resultText)
@@ -632,6 +647,13 @@ function handleEsc() {
   if (model.isGenerating.value) {
     model.stopGeneration()
     return
+  }
+  if (isListening.value) {
+    isListening.value = false
+    if (voiceEntrySource.value === 'input') {
+      focusPrompt()
+      return
+    }
   }
   defaultHandleEsc()
 }

@@ -226,4 +226,43 @@ describe('QueryPanel', () => {
     expect(wrapper.find('.is-highlighted').exists()).toBe(false)
     expect(wrapper.emitted('blur')).toHaveLength(1)
   })
+
+  it('supports multiline input: allows Shift+Enter and vertical arrows without options', async () => {
+    const wrapper = mount(QueryPanel, {
+      attachTo: document.body,
+      props: { modelValue: 'line 1\nline 2', multiline: true },
+    })
+    try {
+      const textarea = wrapper.find('textarea')
+      expect(textarea.exists()).toBe(true)
+
+      const shiftEnter = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        shiftKey: true,
+        bubbles: true,
+        cancelable: true,
+      })
+      textarea.element.dispatchEvent(shiftEnter)
+      expect(shiftEnter.defaultPrevented).toBe(false)
+      expect(wrapper.emitted('submit')).toBeUndefined()
+
+      const arrowUp = new KeyboardEvent('keydown', {
+        key: 'ArrowUp',
+        bubbles: true,
+        cancelable: true,
+      })
+      textarea.element.dispatchEvent(arrowUp)
+      expect(arrowUp.defaultPrevented).toBe(false)
+
+      await textarea.trigger('keydown', { key: 'Enter' })
+      expect(wrapper.emitted('submit')).toEqual([
+        [{ option: undefined, ctrl: false }],
+      ])
+
+      wrapper.vm.select(2, 5)
+      expect(wrapper.vm.getSelection()).toEqual({ start: 2, end: 5 })
+    } finally {
+      wrapper.unmount()
+    }
+  })
 })

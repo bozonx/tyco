@@ -1515,6 +1515,7 @@
     "hideDiff": "Skrýt změny"
   },
   "quickAiRequest": {
+    "goToChat": "Přejít do chatu",
     "followUp": "Další dotaz",
     "chooseVariant": "Vyberte variantu",
     "selectProfile": "Vybrat profil",
