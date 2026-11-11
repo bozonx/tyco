@@ -1,5 +1,5 @@
 <template>
-  <ActionOverlayLayout :title="t('menu.reviewResult')" esc-mode="close">
+  <ActionOverlayLayout :title="t('menu.reviewResult')" esc-mode="auto">
     <template #header-extra>
       <div class="translation-header-tools">
         <ResultViewModeToggle
@@ -44,7 +44,7 @@
         :left-letter-keys="leftLetterKeys"
         :space-key="spaceKey"
         :is-editor-button-visible="!isEditorTarget"
-        esc-mode="close"
+        esc-mode="auto"
       />
     </template>
   </ActionOverlayLayout>

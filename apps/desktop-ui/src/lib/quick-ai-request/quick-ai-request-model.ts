@@ -356,8 +356,8 @@ export function createQuickAiRequestModel(
   const selectedReplyBlockIndex = computed(() => {
     if (replyBlocks.value.length === 1) return 0
     return replySelection.value?.turnId === turns.value.at(-1)?.id
-      ? (replySelection.value?.index ?? -1)
-      : -1
+      ? (replySelection.value?.index ?? 0)
+      : 0
   })
   const selectedReplyBlock = computed(
     () => replyBlocks.value[selectedReplyBlockIndex.value]

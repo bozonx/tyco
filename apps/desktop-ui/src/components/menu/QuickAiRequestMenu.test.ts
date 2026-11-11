@@ -164,25 +164,16 @@ describe('QuickAiRequestMenu', () => {
     expect(wrapper.find('.query-panel-input').exists()).toBe(true)
   })
 
-  it('requires selection before inserting multiple variants', async () => {
-    const wrapper = await answerRequest([
+  it('inserts the first of multiple variants by default', async () => {
+    await answerRequest([
       { title: 'A', text: 'First' },
       { title: 'B', text: 'Second' },
     ])
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
-    await flushPromises()
-    expect(desktop.backend.callsOf('paste_into_target_and_hide')).toHaveLength(
-      0
-    )
-    await wrapper
-      .find('select[aria-label="quickAiRequest.chooseVariant"]')
-      .setValue('2')
     window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }))
-    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' }))
     window.dispatchEvent(new KeyboardEvent('keyup', { key: ' ' }))
     await flushPromises()
     expect(desktop.backend.callsOf('paste_into_target_and_hide')).toEqual([
-      expect.objectContaining({ text: 'Second' }),
+      expect.objectContaining({ text: 'First' }),
     ])
   })
 

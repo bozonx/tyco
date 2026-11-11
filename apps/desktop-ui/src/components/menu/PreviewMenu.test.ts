@@ -137,7 +137,7 @@ describe('PreviewMenu', () => {
     expect(wrapper.findComponent({ name: 'TextPreview' }).exists()).toBe(true)
   })
 
-  it('configures escape mode to close the window on Escape', () => {
+  it('configures Escape to follow the navigation stack', () => {
     const wrapper = mount(PreviewMenu, {
       props: { text: 'Some result' },
       global: {
@@ -161,9 +161,9 @@ describe('PreviewMenu', () => {
 
     expect(
       wrapper.find('.action-overlay-layout').attributes('data-esc-mode')
-    ).toBe('close')
+    ).toBe('auto')
     expect(wrapper.find('.shortcut-list').attributes('data-esc-mode')).toBe(
-      'close'
+      'auto'
     )
   })
 })

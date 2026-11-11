@@ -439,7 +439,7 @@ describe('QuickAiRequestModel', () => {
     expect(model.selectedReplyBlock.value).toBeUndefined()
   })
 
-  it('requires an explicit variant choice again for each answer', async () => {
+  it('selects the first variant by default for each answer', async () => {
     const { model } = createSetup({
       sendTurn: async (_message, _history, options) => {
         const answer = blockAnswer()
@@ -452,13 +452,13 @@ describe('QuickAiRequestModel', () => {
       },
     })
     await model.submitPrompt('Give two variants')
-    expect(model.selectedReplyBlock.value).toBeUndefined()
+    expect(model.selectedReplyBlock.value?.text).toBe('First')
     model.selectReplyBlock(1)
     expect(model.selectedReplyBlock.value?.text).toBe('Second')
     model.selectReplyBlock(99)
     expect(model.selectedReplyBlock.value?.text).toBe('Second')
     await model.submitPrompt('Two more')
-    expect(model.selectedReplyBlock.value).toBeUndefined()
+    expect(model.selectedReplyBlock.value?.text).toBe('First')
   })
 
   it('does not offer streamed or stopped blocks as the primary insertion', async () => {
