@@ -39,6 +39,24 @@ function setup(stt: Partial<SttConfig> = {}) {
 }
 
 describe('dictation controller', () => {
+  it('uses a session microphone without changing the saved preference', async () => {
+    const { config, deps, handlers, controller } = setup({
+      microphoneId: 'Saved mic',
+    })
+    await controller.startDictation({
+      ...handlers,
+      microphoneId: 'Session mic',
+    })
+    expect(deps.dictation.start).toHaveBeenLastCalledWith(
+      expect.objectContaining({ microphoneId: 'Session mic' })
+    )
+    expect(config.stt.microphoneId).toBe('Saved mic')
+    await controller.startDictation(handlers)
+    expect(deps.dictation.start).toHaveBeenLastCalledWith(
+      expect.objectContaining({ microphoneId: 'Saved mic' })
+    )
+  })
+
   it('does not open capture after cancellation during credential preflight', async () => {
     const { deps, handlers, controller } = setup()
     let resolve!: () => void

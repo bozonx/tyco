@@ -11,7 +11,7 @@ import type { DictationTarget } from './dictation-target'
 
 export interface DictationHandlers extends Pick<
   LiveDictationStart,
-  'source' | 'onWaiting' | 'onSourceLost' | 'isContinuous'
+  'microphoneId' | 'source' | 'onWaiting' | 'onSourceLost' | 'isContinuous'
 > {
   onText: (state: LiveTranscriptState) => void
   onError: (error: Error) => void

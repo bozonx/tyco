@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import {
@@ -27,6 +27,7 @@ import {
   watchAudioApps,
 } from '../../lib/listen/audio-apps'
 import { SYSTEM_MIX_SOURCE } from '../../lib/listen/listen-model'
+import { isModeSwitchKey } from '../../lib/listen/quick-mode-switch'
 import { clientLogger } from '../../lib/logger'
 import { tauriNetIpc } from '../../lib/net/tauri-net'
 import { useDesktopStore } from '../../stores/desktop'
@@ -41,6 +42,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
   /** `label` is what the user knows the application by */
+  (e: 'switch-mode'): void
   (e: 'select', source: CaptureSource, label?: string): void
 }>()
 const { t } = useI18n()
@@ -61,6 +63,11 @@ const sourceLabel = computed(() => {
 
 const items = computed<DropdownMenuItem[]>(() => {
   const list: DropdownMenuItem[] = [
+    {
+      label: t('listen.switchToVoice'),
+      icon: 'mdi:microphone',
+      action: () => emit('switch-mode'),
+    },
     {
       label: t('listen.systemMix'),
       icon: 'mdi:volume-high',
@@ -119,4 +126,11 @@ onUnmounted(() => {
   generation += 1
   stopWatching()
 })
+function handleModeSwitch(event: KeyboardEvent) {
+  if (props.disabled || !isModeSwitchKey(event)) return
+  event.preventDefault()
+  emit('switch-mode')
+}
+onMounted(() => window.addEventListener('keydown', handleModeSwitch))
+onUnmounted(() => window.removeEventListener('keydown', handleModeSwitch))
 </script>

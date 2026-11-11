@@ -14,6 +14,7 @@
           isFinishing || model.isStarting.value || model.isSwitching.value
         "
         @select="onSelectSource"
+        @switch-mode="emit('switch-mode')"
       />
       <SttLanguagePicker
         placement="top"
@@ -69,11 +70,7 @@
       <VoiceAutoStopNotice
         :deadline-ms="model.autoStopWarning.value?.deadlineMs"
       />
-      <QuickModeSwitch
-        mode="listen"
-        :disabled="isFinishing"
-        @switch="emit('switch-mode')"
-      />
+
       <div class="listen-bar-actions">
         <ShortcutButton
           size="sm"
@@ -114,7 +111,6 @@ import ShortcutButton from '../overlay/ShortcutButton.vue'
 import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import AudioWaveform from '../voice/AudioWaveform.vue'
 import LiveTranscript from '../voice/LiveTranscript.vue'
-import QuickModeSwitch from '../voice/QuickModeSwitch.vue'
 import RecordingBarFrame from '../voice/RecordingBarFrame.vue'
 import SttLanguagePicker from '../voice/SttLanguagePicker.vue'
 import VoiceAutoStopNotice from '../voice/VoiceAutoStopNotice.vue'

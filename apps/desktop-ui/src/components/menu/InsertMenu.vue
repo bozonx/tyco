@@ -272,7 +272,9 @@ const primaryAction = computed<ActionItem | undefined>(() => {
   if (props.primaryAction) {
     const custom = props.primaryAction
     const disabled = custom.disabled || shouldDisableAction(custom)
-    const hint = isContextDisabled.value ? t('menu.contextRequired') : custom.hint
+    const hint = isContextDisabled.value
+      ? t('menu.contextRequired')
+      : custom.hint
     return { ...custom, disabled, hint }
   }
   if (!props.allowInsertButton) return undefined

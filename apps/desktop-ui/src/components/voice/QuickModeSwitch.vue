@@ -30,7 +30,9 @@ const emit = defineEmits<{ (e: 'switch'): void }>()
 const { t } = useI18n()
 
 const buttonLabel = computed(() =>
-  props.mode === 'voice' ? t('listen.switchToListen') : t('listen.switchToVoice')
+  props.mode === 'voice'
+    ? t('listen.switchToListen')
+    : t('listen.switchToVoice')
 )
 const title = computed(() =>
   props.disabled ? t('listen.unavailable') : `${buttonLabel.value} (Alt+L)`

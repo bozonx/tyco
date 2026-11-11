@@ -9,10 +9,11 @@
   >
     <div v-if="canSwitchMode || replyTo" class="voice-bar-header">
       <OverlayDragHandle />
-      <QuickModeSwitch
+      <MicrophoneSourcePicker
         v-if="canSwitchMode"
-        mode="voice"
-        :disabled="!desktopStore.desktopState.canListen"
+        :microphone-id="microphoneId"
+        @select="selectMicrophone"
+        :disabled="isFinishing"
         @switch="emit('switch-mode')"
       />
       <span v-if="replyTo" class="voice-bar-reply" :title="replyTo">
@@ -84,12 +85,11 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { useDesktopStore } from '../../stores/desktop'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import AudioWaveform from './AudioWaveform.vue'
 import LiveTranscript from './LiveTranscript.vue'
-import QuickModeSwitch from './QuickModeSwitch.vue'
+import MicrophoneSourcePicker from './MicrophoneSourcePicker.vue'
 import RecordingBarFrame from './RecordingBarFrame.vue'
 import SttLanguagePicker from './SttLanguagePicker.vue'
 import VoiceAutoStopNotice from './VoiceAutoStopNotice.vue'
@@ -103,7 +103,6 @@ const emit = defineEmits<{
   (e: 'language-change'): void
 }>()
 const { t } = useI18n()
-const desktopStore = useDesktopStore()
 
 const ariaLabel = computed(() => {
   if (props.isCorrecting) return t('menu.correction')

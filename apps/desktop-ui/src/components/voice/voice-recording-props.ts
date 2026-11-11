@@ -32,6 +32,8 @@ export interface VoiceRecordingProps {
   replyTo?: string
   /** Shows the switch to listening, see `QuickModeSwitch` */
   canSwitchMode?: boolean
+  microphoneId?: string
+  selectMicrophone?: (id: string) => Promise<void>
   stylingPresets?: (StylingConfig | null)[]
   finish: (intent?: VoiceFinishIntent) => Promise<void>
   finishWithStyle?: (rule: string) => Promise<void>

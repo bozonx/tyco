@@ -69,6 +69,8 @@
     :cancel="cancel"
     :reply-to="props.replyTo"
     :can-switch-mode="props.canSwitchMode"
+    :microphone-id="sessionMicrophoneId"
+    :select-microphone="selectMicrophone"
     @remove-context="emit('removeContext')"
     @switch-mode="switchToListen"
     @language-change="handleLanguageChange"
@@ -227,9 +229,30 @@ function offerOrphanedResult(text: string) {
   )
 }
 const dictationTarget = computed(() => resolveDictationTarget(props))
+const sessionMicrophoneId = ref(desktopStore.userConfig.stt.microphoneId ?? '')
+let microphoneTranscript = ''
+async function selectMicrophone(id: string) {
+  microphoneTranscript = liveTranscriptText(transcript.value)
+  sessionMicrophoneId.value = id
+  await model.restartSession()
+  if (!liveTranscriptText(transcript.value).trim())
+    transcript.value = { committed: microphoneTranscript, draft: '' }
+}
 const model = createVoiceRecognition({
-  startDictation,
-  finishDictation,
+  startDictation: (handlers) =>
+    startDictation({
+      ...handlers,
+      microphoneId: sessionMicrophoneId.value,
+      onText: (state) =>
+        handlers.onText({
+          ...state,
+          committed: [microphoneTranscript, state.committed]
+            .filter(Boolean)
+            .join(' '),
+        }),
+    }),
+  finishDictation: async () =>
+    [microphoneTranscript, await finishDictation()].filter(Boolean).join(' '),
   cancelDictation,
   shouldFormatRecognizedText: () =>
     shouldFormatRecognizedText(dictationTarget.value),
@@ -500,6 +523,8 @@ watch(
     )
       return
     sessionActivationId = activationId
+    sessionMicrophoneId.value = desktopStore.userConfig.stt.microphoneId ?? ''
+    microphoneTranscript = ''
     startError.value = null
     void startSession()
   }
@@ -515,6 +540,8 @@ watch(isOwnWindowShown, (isShown) => {
     return
   }
   sessionActivationId = desktopStore.desktopState.activationId
+  sessionMicrophoneId.value = desktopStore.userConfig.stt.microphoneId ?? ''
+  microphoneTranscript = ''
   startError.value = null
   void startSession()
 })

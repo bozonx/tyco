@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import Button from '../components/common/Button.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
@@ -144,8 +144,12 @@ const model = createListenModel({
   },
 })
 
+const isChangingMode = ref(false)
 const isBar = computed(
-  () => model.phase.value === 'recording' || model.phase.value === 'finishing'
+  () =>
+    isChangingMode.value ||
+    model.phase.value === 'recording' ||
+    model.phase.value === 'finishing'
 )
 watch(
   () =>
@@ -226,9 +230,11 @@ const forgetKeys = () => keyPresses.clear()
 
 /** Starts voice input with a fresh recording session. */
 async function switchToVoice() {
+  isChangingMode.value = true
   await model.cancel()
   useVoiceResultStore().step.resetResult()
-  await modeSwitch.switchTo('voice')
+  const switched = await modeSwitch.switchTo('voice')
+  if (!switched.success) isChangingMode.value = false
 }
 
 /** Dictates an answer to what was heard: the transcript is its context */
