@@ -1529,6 +1529,8 @@
     "hideDiff": "隐藏更改"
   },
   "quickAiRequest": {
+    "followUp": "继续提问",
+    "chooseVariant": "选择一个版本",
     "selectProfile": "选择配置文件",
     "profileLocked": "会话期间配置文件已锁定",
     "defaultProfile": "向 AI 提问",

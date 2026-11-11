@@ -83,6 +83,47 @@
         @cancelled="handleVoiceCancelled"
         @corrected="handleVoiceCorrected"
       />
+      <div
+        v-else-if="isResultVisible"
+        ref="resultActionsRef"
+        class="quick-result-actions"
+        tabindex="-1"
+      >
+        <FieldSelect
+          v-if="model.replyBlocks.value.length > 1"
+          :aria-label="t('quickAiRequest.chooseVariant')"
+          :model-value="model.selectedReplyBlockIndex.value"
+          :options="replyOptions"
+          :disabled="isInputBlocked || isApplying"
+          @update:model-value="(index) => model.selectReplyBlock(Number(index))"
+        />
+        <ShortcutButton
+          v-if="model.replyBlocks.value.length"
+          class="quick-insert-action"
+          variant="primary"
+          :keys="['Enter', 'Space']"
+          :disabled="
+            !model.selectedReplyBlock.value || isInputBlocked || isApplying
+          "
+          @click="insertSelectedReply"
+        >
+          {{ t('replyBlocks.insertIntoWindow') }}
+        </ShortcutButton>
+        <Button
+          variant="ghost"
+          :disabled="isInputBlocked || isApplying"
+          @click="openFollowUp"
+        >
+          {{ t('quickAiRequest.followUp') }}
+        </Button>
+        <ShortcutButton
+          :keys="['Ctrl', 'Enter']"
+          :disabled="isInputBlocked || isApplying"
+          @click="switchToChat"
+        >
+          {{ t('action.askInChat') }}
+        </ShortcutButton>
+      </div>
       <QueryPanel
         v-else
         ref="queryPanelRef"
@@ -171,10 +212,13 @@ import { useSecretsStore } from '../../stores/secrets'
 import { useToolsStore } from '../../stores/tools'
 import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
 import AppIcon from '../common/AppIcon.vue'
+import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
+import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ContextPreview from '../overlay/ContextPreview.vue'
+import ShortcutButton from '../overlay/ShortcutButton.vue'
 import QueryPanel, {
   type QueryPanelHint,
   type QueryPanelOption,
@@ -265,6 +309,46 @@ const runtime = createQuickAiRequestRuntime({
   createId: () => crypto.randomUUID(),
 })
 const { model } = runtime
+const replyOptions = computed(() => [
+  { id: -1, name: t('quickAiRequest.chooseVariant'), disabled: true },
+  ...model.replyBlocks.value.map((block, index) => ({
+    id: index,
+    name: block.title || block.text.slice(0, 80),
+  })),
+])
+const isFollowUpOpen = ref(false)
+const isApplying = ref(false)
+const resultActionsRef = ref<HTMLElement>()
+const isResultVisible = computed(
+  () => model.turns.value.at(-1)?.status === 'done' && !isFollowUpOpen.value
+)
+watch(isResultVisible, (visible) => {
+  if (visible) void nextTick(() => resultActionsRef.value?.focus())
+})
+
+function openFollowUp() {
+  isFollowUpOpen.value = true
+  focusPrompt()
+}
+
+async function insertSelectedReply() {
+  const block = model.selectedReplyBlock.value
+  if (
+    !isResultVisible.value ||
+    !block ||
+    isInputBlocked.value ||
+    isApplying.value
+  )
+    return
+  isApplying.value = true
+  try {
+    await model.applyReplyBlock(block, 'window')
+  } catch (error) {
+    toastText(describeError(error, t), 'error')
+  } finally {
+    isApplying.value = false
+  }
+}
 
 /** Tells what this request is about: the screenshot, the selection or nothing */
 const promptPlaceholder = computed(() => {
@@ -493,6 +577,7 @@ async function handleQuerySubmit(submitEvent?: QueryPanelSubmit) {
 
 /** The question moved to the feed: the input is ready for the next one */
 function clearPrompt() {
+  isFollowUpOpen.value = false
   input.clear()
   lastInputKind.value = 'text'
 }
@@ -515,13 +600,42 @@ function handleEsc() {
   defaultHandleEsc()
 }
 
-/**
- * The disabled prompt loses focus while the answer comes, so the keys reach
- * only the window: Esc stops the answer there, Ctrl+Enter moves on to the chat
- */
-function handleGeneratingKeys(event: KeyboardEvent) {
+/** The result surface owns insertion keys; the composer owns text input. */
+function handleWindowKeys(event: KeyboardEvent) {
+  if (event.defaultPrevented || event.repeat || event.isComposing) return
+  if (event.shiftKey || event.altKey || event.metaKey) return
+  if (isResultVisible.value && !isInputBlocked.value) {
+    if (isApplying.value) return
+    if (event.key === 'Escape' && !event.ctrlKey) {
+      event.preventDefault()
+      handleEsc()
+      return
+    }
+    if (event.key === 'Enter' && event.ctrlKey) {
+      event.preventDefault()
+      void switchToChat()
+      return
+    }
+    const target = event.target
+    if (
+      target instanceof Element &&
+      target.closest(
+        'input, textarea, select, button, a, [contenteditable="true"], [role="button"]'
+      )
+    )
+      return
+    if (window.getSelection()?.toString()) return
+    if (
+      !event.ctrlKey &&
+      (event.key === 'Enter' || event.key === ' ') &&
+      model.selectedReplyBlock.value
+    ) {
+      event.preventDefault()
+      void insertSelectedReply()
+    }
+    return
+  }
   if (event.key !== 'Escape' && event.key !== 'Enter') return
-  if (event.shiftKey || event.isComposing) return
   if (!model.isGenerating.value || menuModalsStore.pendingModal) return
   if (event.key === 'Enter') {
     if (!event.ctrlKey) return
@@ -538,7 +652,7 @@ function goToSettings() {
 }
 
 onMounted(async () => {
-  window.addEventListener('keydown', handleGeneratingKeys)
+  window.addEventListener('keydown', handleWindowKeys)
   // The models of a provider show up only when its key is known to be set;
   // the quick window has not read the keys yet, or they changed since then.
   await secretsStore.refreshSecrets().catch(() => undefined)
@@ -548,13 +662,25 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleGeneratingKeys)
+  window.removeEventListener('keydown', handleWindowKeys)
   disposed = true
   runtime.dispose()
 })
 </script>
 
 <style scoped>
+.quick-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.quick-result-actions .select {
+  width: 100%;
+  min-width: 0;
+}
+
 .screenshot-preview {
   display: flex;
   flex-wrap: wrap;

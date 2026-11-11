@@ -1535,6 +1535,8 @@
     "hideDiff": "Değişiklikleri gizle"
   },
   "quickAiRequest": {
+    "followUp": "Yeni istek",
+    "chooseVariant": "Bir seçenek belirleyin",
     "selectProfile": "Profil seç",
     "profileLocked": "Oturum sırasında profil kilitlendi",
     "defaultProfile": "Yapay Zekaya Soru",

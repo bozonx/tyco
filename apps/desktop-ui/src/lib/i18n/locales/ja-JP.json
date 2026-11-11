@@ -1535,6 +1535,8 @@
     "hideDiff": "変更を非表示"
   },
   "quickAiRequest": {
+    "followUp": "追加のリクエスト",
+    "chooseVariant": "候補を選択",
     "selectProfile": "プロファイルを選択",
     "profileLocked": "セッション中はプロファイルがロックされます",
     "defaultProfile": "AIへの質問",

@@ -1529,6 +1529,8 @@
     "hideDiff": "隱藏變更"
   },
   "quickAiRequest": {
+    "followUp": "繼續提問",
+    "chooseVariant": "選擇一個版本",
     "selectProfile": "選取設定檔",
     "profileLocked": "工作階段期間設定檔已鎖定",
     "defaultProfile": "向 AI 提問",

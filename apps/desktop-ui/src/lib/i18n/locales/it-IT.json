@@ -1538,6 +1538,8 @@
     "hideDiff": "Nascondi modifiche"
   },
   "quickAiRequest": {
+    "followUp": "Altra richiesta",
+    "chooseVariant": "Scegli una variante",
     "selectProfile": "Seleziona profilo",
     "profileLocked": "Profilo bloccato durante la sessione",
     "defaultProfile": "Domanda all'IA",

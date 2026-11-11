@@ -232,3 +232,18 @@ a named container, split previews stack below 40rem, and result controls
 hide their labels below a 40rem ancestor container. Field rows stack below 40rem. These thresholds
 represent different content constraints, not different global device categories.
 Viewport queries remain appropriate for application-level window layout.
+
+## Quick AI request results
+
+A completed quick request collapses its composer into result actions. The latest
+answer's completed `propose_replies` blocks supply insertion: one block is selected
+automatically; multiple blocks require an explicit choice. Plain informational
+answers have no primary insertion action. Another request reopens and focuses the
+composer with the conversation context preserved; errors and stopped turns keep
+the composer available. Ctrl+Enter continues in the main chat.
+
+Enter and Space insert the selected result only outside interactive controls,
+after generation completes. Repeated keys, composition, modifiers and selected
+text must not trigger insertion. Insertion is guarded while it is in progress.
+Reply-tool instructions are English and request one complete variant by default;
+multiple variants require an explicit user request.

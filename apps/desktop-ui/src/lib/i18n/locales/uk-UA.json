@@ -1535,6 +1535,8 @@
     "hideDiff": "Сховати зміни"
   },
   "quickAiRequest": {
+    "followUp": "Ще запит",
+    "chooseVariant": "Виберіть варіант",
     "selectProfile": "Вибрати профіль",
     "profileLocked": "Профіль заблоковано під час сесії",
     "defaultProfile": "Спитати ШІ",

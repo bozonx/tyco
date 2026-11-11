@@ -1535,6 +1535,8 @@
     "hideDiff": "Módosítások elrejtése"
   },
   "quickAiRequest": {
+    "followUp": "Újabb kérés",
+    "chooseVariant": "Válasszon egy változatot",
     "selectProfile": "Profil kiválasztása",
     "profileLocked": "A profil a munkamenet során zárolva van",
     "defaultProfile": "Kérdés az AI-hoz",

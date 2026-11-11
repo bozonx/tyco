@@ -1535,6 +1535,8 @@
     "hideDiff": "ცვლილებების დამალვა"
   },
   "quickAiRequest": {
+    "followUp": "კიდევ ერთი მოთხოვნა",
+    "chooseVariant": "აირჩიეთ ვარიანტი",
     "selectProfile": "პროფილის არჩევა",
     "profileLocked": "პროფილი დაბლოკილია სესიის განმავლობაში",
     "defaultProfile": "კითხვა AI-ს",

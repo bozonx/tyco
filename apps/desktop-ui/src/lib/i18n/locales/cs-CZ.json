@@ -1532,6 +1532,8 @@
     "hideDiff": "Skrýt změny"
   },
   "quickAiRequest": {
+    "followUp": "Další dotaz",
+    "chooseVariant": "Vyberte variantu",
     "selectProfile": "Vybrat profil",
     "profileLocked": "Profil je během relace uzamčen",
     "defaultProfile": "Dotaz na AI",

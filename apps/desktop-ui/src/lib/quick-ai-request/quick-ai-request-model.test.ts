@@ -422,6 +422,65 @@ describe('QuickAiRequestModel', () => {
     expect(model.sourceText.value).toBeUndefined()
   })
 
+  it('selects a sole completed insertion block and clears it for a plain follow-up', async () => {
+    const { model, deps } = createSetup()
+    await model.submitPrompt('Rewrite this')
+    expect(model.selectedReplyBlock.value?.text).toBe('Transformed text')
+
+    vi.mocked(deps.sendTurn).mockImplementationOnce(
+      async (_message, _history, options) => {
+        const answer = { content: 'An explanation', parts: [] }
+        options.onUpdate(answer)
+        return answer
+      }
+    )
+    await model.submitPrompt('Why?')
+    expect(model.replyBlocks.value).toEqual([])
+    expect(model.selectedReplyBlock.value).toBeUndefined()
+  })
+
+  it('requires an explicit variant choice again for each answer', async () => {
+    const { model } = createSetup({
+      sendTurn: async (_message, _history, options) => {
+        const answer = blockAnswer()
+        const call = answer.parts[0]
+        if (call.type === 'tool-call') {
+          call.input = { blocks: [{ text: 'First' }, { text: 'Second' }] }
+        }
+        options.onUpdate(answer)
+        return answer
+      },
+    })
+    await model.submitPrompt('Give two variants')
+    expect(model.selectedReplyBlock.value).toBeUndefined()
+    model.selectReplyBlock(1)
+    expect(model.selectedReplyBlock.value?.text).toBe('Second')
+    model.selectReplyBlock(99)
+    expect(model.selectedReplyBlock.value?.text).toBe('Second')
+    await model.submitPrompt('Two more')
+    expect(model.selectedReplyBlock.value).toBeUndefined()
+  })
+
+  it('does not offer streamed or stopped blocks as the primary insertion', async () => {
+    let release!: (answer: ChatToolLoopState) => void
+    const { model } = createSetup({
+      sendTurn: async (_message, _history, options) => {
+        options.onUpdate(blockAnswer())
+        return new Promise((resolve) => {
+          release = resolve
+        })
+      },
+    })
+    const request = model.submitPrompt('Rewrite')
+    await flush()
+    expect(model.isGenerating.value).toBe(true)
+    expect(model.replyBlocks.value).toEqual([])
+    model.stopGeneration()
+    release(blockAnswer())
+    await request
+    expect(model.replyBlocks.value).toEqual([])
+  })
+
   it('inserts a reply block and closes the overlay', async () => {
     const { model, deps } = createSetup()
 

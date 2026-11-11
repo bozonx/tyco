@@ -67,7 +67,7 @@ export function createReplyBlocksTool(): ChatToolDefinition {
     // the blocks are the answer: a step after them only repeats them
     endsTurn: true,
     description:
-      'Proposes one or more reply or text transformation variants to the user as ready-to-insert blocks. ' +
+      'Proposes ready-to-insert text for a reply or text transformation. Provide exactly one complete block by default; provide multiple variants only when the user explicitly asks for them. ' +
       'Use this tool whenever you generate the final replacement text, paraphrasing, translation, or answer to be inserted. ' +
       'Provide each variant in its own block containing only the exact text.',
     inputSchema: {
@@ -76,7 +76,7 @@ export function createReplyBlocksTool(): ChatToolDefinition {
         blocks: {
           type: 'array',
           description:
-            'One or more reply variants/blocks to offer for insertion',
+            'One complete text block by default; multiple variants only when explicitly requested',
           items: {
             type: 'object',
             properties: {
@@ -107,7 +107,9 @@ export function createReplyBlocksTool(): ChatToolDefinition {
 
 const REPLY_BLOCKS_INSTRUCTIONS =
   `When the user asks for text to send or paste — a reply to a message, a rewrite, a translation — call ${REPLY_BLOCKS_TOOL_NAME} with that text instead of writing it in the answer. ` +
-  'Give one block per variant the user asked for; keep explanations, if any, in the answer itself.'
+  'Provide exactly one complete, ready-to-insert block by default. Offer multiple variants only when the user explicitly asks for alternatives. ' +
+  'Answer informational questions in ordinary text without this tool. If the intent is ambiguous, do not assume the user wants text to insert. ' +
+  'Keep explanations, if any, in the answer itself, outside the insertion blocks.'
 
 /** Offers propose_replies to every turn that can call tools */
 export function createReplyBlocksToolProvider(): ChatToolProvider {

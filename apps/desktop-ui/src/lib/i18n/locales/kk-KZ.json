@@ -1535,6 +1535,8 @@
     "hideDiff": "Өзгерістерді жасыру"
   },
   "quickAiRequest": {
+    "followUp": "Тағы бір сұрау",
+    "chooseVariant": "Нұсқаны таңдаңыз",
     "selectProfile": "Профильді таңдау",
     "profileLocked": "Сессия кезінде профиль бұғатталған",
     "defaultProfile": "ЖИ-ға сұрақ",

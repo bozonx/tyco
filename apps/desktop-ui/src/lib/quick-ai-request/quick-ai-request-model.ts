@@ -21,7 +21,11 @@ import { createChatPersistenceQueue } from '../chat/chat-persistence-queue'
 import { createChatState } from '../chat/chat-state'
 import { draftTitleOf } from '../chat/chat-title'
 import { createChatTitleController } from '../chat/chat-title-controller'
-import type { ReplyBlockData } from '../reply-blocks/reply-blocks-tool'
+import {
+  extractReplyBlocks,
+  REPLY_BLOCKS_TOOL_NAME,
+  type ReplyBlockData,
+} from '../reply-blocks/reply-blocks-tool'
 
 /**
  * One question of the request and its answer, as the quick feed shows them. It
@@ -330,6 +334,35 @@ export function createQuickAiRequestModel(
     })
   })
 
+  /** Only the latest completed answer can supply the primary insertion. */
+  const replyBlocks = computed(() => {
+    const turn = turns.value.at(-1)
+    if (turn?.status !== 'done') return []
+    return (turn.answer?.parts ?? []).flatMap((part) =>
+      part.type === 'tool-call' &&
+      part.toolName === REPLY_BLOCKS_TOOL_NAME &&
+      part.state === 'done'
+        ? extractReplyBlocks(part.input)
+        : []
+    )
+  })
+  const replySelection = ref<{ turnId: string; index: number } | null>(null)
+  const selectedReplyBlockIndex = computed(() => {
+    if (replyBlocks.value.length === 1) return 0
+    return replySelection.value?.turnId === turns.value.at(-1)?.id
+      ? (replySelection.value?.index ?? -1)
+      : -1
+  })
+  const selectedReplyBlock = computed(
+    () => replyBlocks.value[selectedReplyBlockIndex.value]
+  )
+  function selectReplyBlock(index: number) {
+    const turn = turns.value.at(-1)
+    if (turn && replyBlocks.value[index]) {
+      replySelection.value = { turnId: turn.id, index }
+    }
+  }
+
   const error = computed(() => notice.value ?? (state.error.value || null))
 
   /** The model answered something: the context is part of the chat now */
@@ -553,6 +586,10 @@ export function createQuickAiRequestModel(
     isProfileLocked,
     isGenerating,
     turns,
+    replyBlocks,
+    selectedReplyBlockIndex,
+    selectedReplyBlock,
+    selectReplyBlock,
     attachedFiles,
     error,
     setInputMode,

@@ -1535,6 +1535,8 @@
     "hideDiff": "Απόκρυψη αλλαγών"
   },
   "quickAiRequest": {
+    "followUp": "Νέο αίτημα",
+    "chooseVariant": "Επιλέξτε παραλλαγή",
     "selectProfile": "Επιλογή προφίλ",
     "profileLocked": "Το προφίλ είναι κλειδωμένο κατά τη συνεδρία",
     "defaultProfile": "Ερώτηση στο AI",

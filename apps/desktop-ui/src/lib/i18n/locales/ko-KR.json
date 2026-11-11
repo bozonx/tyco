@@ -1532,6 +1532,8 @@
     "hideDiff": "변경 사항 숨기기"
   },
   "quickAiRequest": {
+    "followUp": "추가 요청",
+    "chooseVariant": "후보 선택",
     "selectProfile": "프로필 선택",
     "profileLocked": "세션 중 프로필이 잠금되었습니다",
     "defaultProfile": "AI에게 질문",

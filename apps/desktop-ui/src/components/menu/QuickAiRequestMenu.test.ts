@@ -4,12 +4,14 @@ import {
   installFakeDesktop,
   type TestDesktop,
 } from '../../test/install-fake-desktop'
+import { useLlmStore } from '../../stores/llm'
 import { useToastStore } from '../../stores/toast'
 import QuickAiRequestMenu from './QuickAiRequestMenu.vue'
 
-vi.mock('../../composables/use-i18n', () => ({
-  useI18n: () => ({ t: (key: string) => key }),
-}))
+vi.mock('../../composables/use-i18n', async () => {
+  const { ref } = await import('vue')
+  return { useI18n: () => ({ t: (key: string) => key, locale: ref('en-US') }) }
+})
 
 describe('QuickAiRequestMenu', () => {
   let desktop: TestDesktop
@@ -89,6 +91,156 @@ describe('QuickAiRequestMenu', () => {
         },
       },
     })
+
+  async function answerRequest(
+    blocks: { title?: string; text: string }[] = []
+  ) {
+    vi.spyOn(useLlmStore().actions, 'sendChatMessage').mockImplementationOnce(
+      async (_message, _history, _instructions, options) => {
+        const answer = {
+          content: blocks.length ? '' : 'An explanation',
+          parts: blocks.length
+            ? [
+                {
+                  type: 'tool-call' as const,
+                  toolCallId: 'reply-1',
+                  toolName: 'propose_replies',
+                  input: { blocks },
+                  state: 'done' as const,
+                },
+              ]
+            : [],
+        }
+        options.onUpdate?.(answer)
+        return answer
+      }
+    )
+    const wrapper = mountMenu()
+    await wrapper.find('.query-panel-input').setValue('Help me')
+    await wrapper
+      .find('.query-panel-input')
+      .trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+    return wrapper
+  }
+
+  it.each(['Enter', ' '])('inserts a completed result with %j', async (key) => {
+    const wrapper = await answerRequest([{ text: 'Ready to paste' }])
+    expect(wrapper.find('.query-panel-input').exists()).toBe(false)
+    expect(wrapper.find('.quick-insert-action').exists()).toBe(true)
+    window.dispatchEvent(new KeyboardEvent('keydown', { key }))
+    window.dispatchEvent(new KeyboardEvent('keyup', { key }))
+    await flushPromises()
+    expect(desktop.backend.callsOf('paste_into_target_and_hide')).toEqual([
+      expect.objectContaining({ text: 'Ready to paste' }),
+    ])
+  })
+
+  it('keeps plain answers without insertion and reopens the composer for a follow-up', async () => {
+    const wrapper = await answerRequest()
+    expect(wrapper.find('.quick-insert-action').exists()).toBe(false)
+    expect(wrapper.find('.query-panel-input').exists()).toBe(false)
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
+    await flushPromises()
+    expect(desktop.backend.callsOf('paste_into_target_and_hide')).toHaveLength(
+      0
+    )
+    const followUp = wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'quickAiRequest.followUp')!
+    await followUp.trigger('click')
+    await flushPromises()
+    expect(wrapper.find('.query-panel-input').exists()).toBe(true)
+    expect(wrapper.find('.turn-prompt-text').text()).toBe('Help me')
+    await wrapper.find('.query-panel-input').setValue('Why?')
+    await wrapper
+      .find('.query-panel-input')
+      .trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+    expect(
+      wrapper.findAll('.turn-prompt-text').map((item) => item.text())
+    ).toEqual(['Help me', 'Why?'])
+    expect(wrapper.find('.query-panel-input').exists()).toBe(true)
+  })
+
+  it('requires selection before inserting multiple variants', async () => {
+    const wrapper = await answerRequest([
+      { title: 'A', text: 'First' },
+      { title: 'B', text: 'Second' },
+    ])
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
+    await flushPromises()
+    expect(desktop.backend.callsOf('paste_into_target_and_hide')).toHaveLength(
+      0
+    )
+    await wrapper
+      .find('select[aria-label="quickAiRequest.chooseVariant"]')
+      .setValue('2')
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }))
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' }))
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: ' ' }))
+    await flushPromises()
+    expect(desktop.backend.callsOf('paste_into_target_and_hide')).toEqual([
+      expect.objectContaining({ text: 'Second' }),
+    ])
+  })
+
+  it('continues a completed result in the main chat with Ctrl+Enter', async () => {
+    desktop.backend.handle('open_transferred_chat', () => undefined)
+    await answerRequest([{ text: 'Ready' }])
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true })
+    )
+    await flushPromises()
+    expect(desktop.backend.callsOf('open_transferred_chat')).toHaveLength(1)
+    expect(desktop.backend.callsOf('paste_into_target_and_hide')).toHaveLength(
+      0
+    )
+  })
+
+  it('does not insert twice while a paste is pending', async () => {
+    let finishPaste!: () => void
+    desktop.backend.handle(
+      'paste_into_target_and_hide',
+      () =>
+        new Promise<void>((resolve) => {
+          finishPaste = resolve
+        })
+    )
+    const wrapper = await answerRequest([{ text: 'Ready' }])
+    await wrapper.find('.quick-insert-action').trigger('click')
+    await flushPromises()
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' }))
+    await flushPromises()
+    expect(desktop.backend.callsOf('paste_into_target_and_hide')).toHaveLength(
+      1
+    )
+    finishPaste()
+    await flushPromises()
+  })
+
+  it('ignores held keys, modifiers, composition and events from controls', async () => {
+    const wrapper = await answerRequest([{ text: 'Ready' }])
+    for (const options of [
+      { repeat: true },
+      { shiftKey: true },
+      { altKey: true },
+      { metaKey: true },
+      { isComposing: true },
+    ]) {
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', ...options })
+      )
+    }
+    await wrapper
+      .find('.quick-result-actions button')
+      .trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+    expect(desktop.backend.callsOf('paste_into_target_and_hide')).toHaveLength(
+      0
+    )
+  })
 
   it('renders preview with source text', () => {
     const wrapper = mountMenu({ text: 'Hello text to transform' })

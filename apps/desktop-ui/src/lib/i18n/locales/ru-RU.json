@@ -1535,6 +1535,8 @@
     "hideDiff": "Скрыть изменения"
   },
   "quickAiRequest": {
+    "followUp": "Ещё запрос",
+    "chooseVariant": "Выберите вариант",
     "selectProfile": "Выбрать профиль",
     "profileLocked": "Профиль заблокирован во время сессии",
     "defaultProfile": "Спросить ИИ",

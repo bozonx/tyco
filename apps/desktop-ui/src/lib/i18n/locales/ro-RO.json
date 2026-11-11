@@ -1538,6 +1538,8 @@
     "hideDiff": "Ascunde modificările"
   },
   "quickAiRequest": {
+    "followUp": "Încă o cerere",
+    "chooseVariant": "Alegeți o variantă",
     "selectProfile": "Selectează profilul",
     "profileLocked": "Profil blocat în timpul sesiunii",
     "defaultProfile": "Întrebare pentru AI",
