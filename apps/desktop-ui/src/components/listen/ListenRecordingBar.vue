@@ -81,20 +81,22 @@
       <div class="listen-bar-actions">
         <ShortcutButton
           size="sm"
+          :keys="stopKeys"
+          icon="mdi:check"
+          variant="primary"
+          :disabled="isFinishing"
+          @click="void model.stop()"
+        >
+          {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
+        </ShortcutButton>
+        <ShortcutButton
+          size="sm"
           :keys="['Esc']"
+          icon="mdi:close"
           :disabled="isFinishing"
           @click="void model.close()"
         >
           {{ t('common.cancel') }}
-        </ShortcutButton>
-        <ShortcutButton
-          size="sm"
-          variant="primary"
-          :keys="stopKeys"
-          :disabled="isFinishing"
-          @click="void model.stop()"
-        >
-          {{ t('listen.stop') }}
         </ShortcutButton>
       </div>
     </div>
@@ -156,7 +158,9 @@ function onSelectSource(next: CaptureSource, label?: string) {
 
 const isFinishing = computed(() => props.model.phase.value === 'finishing')
 const stopKeys = computed(() =>
-  props.stopHotkey ? ['Enter', props.stopHotkey] : ['Enter']
+  props.stopHotkey
+    ? ['Space', 'Enter', props.stopHotkey]
+    : ['Space', 'Enter']
 )
 
 const isWaitingForApp = computed(
@@ -199,7 +203,7 @@ const notice = computed(() => {
   max-height: 15rem;
   padding: var(--space-sm);
   box-sizing: border-box;
-  border: 1px solid color-mix(in oklab, var(--color-secondary) 55%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-primary) 45%, transparent);
   border-radius: var(--radius-lg);
   background-color: var(--app-surface);
   box-shadow: var(--app-shadow-md);
@@ -218,7 +222,7 @@ const notice = computed(() => {
   align-items: center;
   gap: var(--space-2xs, 0.25rem);
   font-weight: 600;
-  color: var(--color-secondary);
+  color: var(--color-base-content);
   white-space: nowrap;
   flex-shrink: 0;
 }

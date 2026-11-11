@@ -22,7 +22,9 @@
     "removeContext": "Remover contexto",
     "restoreContext": "Restaurar contexto"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Anexar arquivo",
     "alertCaution": "Cuidado",
@@ -193,7 +195,9 @@
       "deselectAll": "Desmarcar tudo",
       "unsupportedCommands": "Comandos não suportados"
     },
-    "replyBlocks": { "toolLabel": "Blocos de resposta" }
+    "replyBlocks": {
+      "toolLabel": "Blocos de resposta"
+    }
   },
   "commands": {
     "advanced": "Avançado",
@@ -1283,7 +1287,9 @@
     "webJinaApiKeyHint": "Opcional. Sem uma chave, as solicitações usam o nível gratuito com limites compartilhados.",
     "webSearchSectionHint": "Configurações para ferramentas de pesquisa na Web e leitura de páginas usadas por modelos e perfis de IA."
   },
-  "shortcuts": { "insertIntoEditor": "Inserir no editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserir no editor"
+  },
   "theme": {
     "auto": "Seguir o sistema",
     "dark": "Escuro",
@@ -1426,7 +1432,9 @@
     "phrasesPlaceholder": "Frases de exemplo, uma por linha"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "pergunte no chat" },
+    "actions": {
+      "askInChat": "pergunte no chat"
+    },
     "languages": {
       "cs-CZ": "Tcheco",
       "de-DE": "alemão",
@@ -1514,7 +1522,9 @@
     "valueNotSet": "Sem valor neste dispositivo: os comandos que a usam não são executados",
     "valuePlaceholder": "Um caminho, um endereço ou outro texto"
   },
-  "favorites": { "noMatches": "Não há favoritos correspondentes" },
+  "favorites": {
+    "noMatches": "Não há favoritos correspondentes"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Inserir na janela",
     "insertIntoEditor": "No editor",
@@ -1574,7 +1584,6 @@
     "useSystemMix": "Gravar todo o som",
     "sourceLost": "O aplicativo foi fechado. Aguardando seu áudio; você pode escolher outra fonte manualmente.",
     "waitingFor": "Aguardando som de {app}…",
-    "stop": "Parar",
     "replyByVoice": "Responder por voz",
     "nothingRecognized": "Nada reconhecido",
     "retry": "Tentar novamente",

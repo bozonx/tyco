@@ -22,7 +22,9 @@
     "removeContext": "Usuń kontekst",
     "restoreContext": "Przywróć kontekst"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Dołącz plik",
     "alertCaution": "Ostrożnie",
@@ -193,7 +195,9 @@
       "deselectAll": "Odznacz wszystko",
       "unsupportedCommands": "Nieobsługiwane polecenia"
     },
-    "replyBlocks": { "toolLabel": "Warianty odpowiedzi" }
+    "replyBlocks": {
+      "toolLabel": "Warianty odpowiedzi"
+    }
   },
   "commands": {
     "advanced": "Zaawansowane",
@@ -1283,7 +1287,9 @@
     "webJinaApiKeyHint": "Opcjonalnie. Bez klucza żądania korzystają z bezpłatnego planu ze wspólnymi limitami.",
     "webSearchSectionHint": "Ustawienia wyszukiwania w sieci i czytania stron używanych przez modele i profile AI."
   },
-  "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
+  "shortcuts": {
+    "insertIntoEditor": "Wstaw do edytora"
+  },
   "theme": {
     "auto": "Jak w systemie",
     "dark": "Ciemny",
@@ -1426,7 +1432,9 @@
     "phrasesPlaceholder": "Przykładowe frazy, jedna na wiersz"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "zapytaj na czacie" },
+    "actions": {
+      "askInChat": "zapytaj na czacie"
+    },
     "languages": {
       "cs-CZ": "Czeski",
       "de-DE": "niemiecki",
@@ -1514,7 +1522,9 @@
     "valueNotSet": "Brak wartości na tym urządzeniu: polecenia, które jej używają, nie są wykonywane",
     "valuePlaceholder": "Ścieżka, adres lub inny tekst"
   },
-  "favorites": { "noMatches": "Brak pasujących ulubionych" },
+  "favorites": {
+    "noMatches": "Brak pasujących ulubionych"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Wstaw do okna",
     "insertIntoEditor": "Do edytora",
@@ -1574,7 +1584,6 @@
     "useSystemMix": "Nagrywaj cały dźwięk",
     "sourceLost": "Aplikacja została zamknięta. Oczekiwanie na jej dźwięk; inne źródło można wybrać ręcznie.",
     "waitingFor": "Czekam na dźwięk z {app}…",
-    "stop": "Zatrzymaj",
     "replyByVoice": "Odpowiedz głosem",
     "nothingRecognized": "Nic nie rozpoznano",
     "retry": "Ponów",

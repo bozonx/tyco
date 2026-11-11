@@ -22,7 +22,9 @@
     "removeContext": "Odebrat kontext",
     "restoreContext": "Obnovit kontext"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Přiložit soubor",
     "alertCaution": "Pozor",
@@ -193,7 +195,9 @@
       "deselectAll": "Zrušit výběr",
       "unsupportedCommands": "Nepodporované příkazy"
     },
-    "replyBlocks": { "toolLabel": "Varianty odpovědí" }
+    "replyBlocks": {
+      "toolLabel": "Varianty odpovědí"
+    }
   },
   "commands": {
     "advanced": "Pokročilé",
@@ -615,7 +619,10 @@
     "cancelled": "Zrušeno",
     "done": "Hotovo",
     "emptyResult": "Model vrátil prázdný výsledek",
-    "failed": { "command": "Příkaz selhal", "correction": "Oprava selhala" },
+    "failed": {
+      "command": "Příkaz selhal",
+      "correction": "Oprava selhala"
+    },
     "focusChanged": "Mezitím se změnilo okno, proto byl výsledek zkopírován do schránky",
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
@@ -626,7 +633,10 @@
       "command": "Příkaz ponechal text beze změny",
       "correction": "Nenalezeny žádné chyby"
     },
-    "working": { "command": "Spouští se příkaz…", "correction": "Opravuje se…" }
+    "working": {
+      "command": "Spouští se příkaz…",
+      "correction": "Opravuje se…"
+    }
   },
   "settings": {
     "accessAllow": "Povolit",
@@ -1277,7 +1287,9 @@
     "webJinaApiKeyHint": "Volitelné. Bez klíče požadavky využívají bezplatný tarif se sdílenými limity.",
     "webSearchSectionHint": "Nastavení nástrojů pro vyhledávání na webu a čtení stránek používaných modely a profily AI."
   },
-  "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
+  "shortcuts": {
+    "insertIntoEditor": "Vložit do editoru"
+  },
   "theme": {
     "auto": "Podle systému",
     "dark": "Tmavý",
@@ -1420,7 +1432,9 @@
     "phrasesPlaceholder": "Příklady frází, jedna na řádek"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "zeptej se v chatu" },
+    "actions": {
+      "askInChat": "zeptej se v chatu"
+    },
     "languages": {
       "cs-CZ": "Czech",
       "de-DE": "němčiny",
@@ -1508,7 +1522,9 @@
     "valueNotSet": "Žádná hodnota na tomto zařízení: příkazy, které ji používají, se nespustí",
     "valuePlaceholder": "Cesta, adresa nebo jiný text"
   },
-  "favorites": { "noMatches": "Žádné odpovídající oblíbené" },
+  "favorites": {
+    "noMatches": "Žádné odpovídající oblíbené"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Vložit do okna",
     "insertIntoEditor": "Do editoru",
@@ -1568,7 +1584,6 @@
     "useSystemMix": "Nahrávat veškerý zvuk",
     "sourceLost": "Aplikace se zavřela. Čeká se na její zvuk; jiný zdroj můžete vybrat ručně.",
     "waitingFor": "Čekám na zvuk z {app}…",
-    "stop": "Zastavit",
     "replyByVoice": "Odpovědět hlasem",
     "nothingRecognized": "Nic nerozpoznáno",
     "retry": "Zkusit znovu",

@@ -22,7 +22,9 @@
     "removeContext": "移除上下文",
     "restoreContext": "恢复上下文"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "添加附件",
     "alertCaution": "小心",
@@ -193,7 +195,9 @@
       "deselectAll": "取消全选",
       "unsupportedCommands": "不支持的命令"
     },
-    "replyBlocks": { "toolLabel": "回复块" }
+    "replyBlocks": {
+      "toolLabel": "回复块"
+    }
   },
   "commands": {
     "advanced": "高级",
@@ -615,7 +619,10 @@
     "cancelled": "已取消",
     "done": "已完成",
     "emptyResult": "模型返回了空结果",
-    "failed": { "command": "命令执行失败", "correction": "纠错失败" },
+    "failed": {
+      "command": "命令执行失败",
+      "correction": "纠错失败"
+    },
     "focusChanged": "在此期间活动窗口已更改，结果已复制到剪贴板",
     "noSelection": "未选中任何内容",
     "noTarget": "没有具有焦点的应用程序窗口",
@@ -626,7 +633,10 @@
       "command": "命令未对文本做任何更改",
       "correction": "未发现错误"
     },
-    "working": { "command": "正在运行命令…", "correction": "正在纠错…" }
+    "working": {
+      "command": "正在运行命令…",
+      "correction": "正在纠错…"
+    }
   },
   "settings": {
     "accessAllow": "允许",
@@ -1277,7 +1287,9 @@
     "webJinaApiKeyHint": "可选。未配置密钥时，请求将使用具有共享速率限制的免费层级。",
     "webSearchSectionHint": "AI 模型和配置文件使用的网页搜索与页面读取工具的设置。"
   },
-  "shortcuts": { "insertIntoEditor": "插入到编辑器" },
+  "shortcuts": {
+    "insertIntoEditor": "插入到编辑器"
+  },
   "theme": {
     "auto": "跟随系统",
     "dark": "深色",
@@ -1420,7 +1432,9 @@
     "phrasesPlaceholder": "示例短语，每行一条"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "在聊天中询问;在对话中提问" },
+    "actions": {
+      "askInChat": "在聊天中询问;在对话中提问"
+    },
     "languages": {
       "cs-CZ": "捷克语",
       "de-DE": "德语",
@@ -1450,7 +1464,10 @@
     },
     "translate": "翻译成;翻译为"
   },
-  "window": { "clickToFocus": "点击以继续", "moveOverlay": "拖动以移动" },
+  "window": {
+    "clickToFocus": "点击以继续",
+    "moveOverlay": "拖动以移动"
+  },
   "write": {
     "alreadyCorrected": "文本已完成纠错",
     "cancel": "取消",
@@ -1505,7 +1522,9 @@
     "valueNotSet": "此设备上没有值：使用它的命令不会运行",
     "valuePlaceholder": "路径、地址或其他文本"
   },
-  "favorites": { "noMatches": "没有匹配的收藏夹" },
+  "favorites": {
+    "noMatches": "没有匹配的收藏夹"
+  },
   "replyBlocks": {
     "insertIntoWindow": "插入到窗口",
     "insertIntoEditor": "到编辑器",
@@ -1565,7 +1584,6 @@
     "useSystemMix": "录制全部声音",
     "sourceLost": "应用已关闭，正在等待其音频；你可以手动选择其他音频源。",
     "waitingFor": "正在等待 {app} 的声音…",
-    "stop": "停止",
     "replyByVoice": "语音回复",
     "nothingRecognized": "未识别到任何内容",
     "retry": "重试",

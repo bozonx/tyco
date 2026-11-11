@@ -22,7 +22,9 @@
     "removeContext": "Quitar contexto",
     "restoreContext": "Restaurar contexto"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Adjuntar archivo",
     "alertCaution": "Precaución",
@@ -193,7 +195,9 @@
       "deselectAll": "Deseleccionar todo",
       "unsupportedCommands": "Comandos no compatibles"
     },
-    "replyBlocks": { "toolLabel": "Bloques de respuesta" }
+    "replyBlocks": {
+      "toolLabel": "Bloques de respuesta"
+    }
   },
   "commands": {
     "advanced": "Avanzado",
@@ -1283,7 +1287,9 @@
     "webJinaApiKeyHint": "Opcional. Sin una clave, las solicitudes usan el nivel gratuito con límites compartidos.",
     "webSearchSectionHint": "Configuración para la búsqueda web y lectura de páginas usadas por los modelos y perfiles de IA."
   },
-  "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Insertar en el editor"
+  },
   "theme": {
     "auto": "Como en el sistema",
     "dark": "Oscuro",
@@ -1426,7 +1432,9 @@
     "phrasesPlaceholder": "Frases de ejemplo, una por línea"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "pregunta en el chat" },
+    "actions": {
+      "askInChat": "pregunta en el chat"
+    },
     "languages": {
       "cs-CZ": "Checo",
       "de-DE": "alemán",
@@ -1514,7 +1522,9 @@
     "valueNotSet": "Sin valor en este dispositivo: los comandos que la usan no se ejecutan",
     "valuePlaceholder": "Una ruta, una dirección u otro texto"
   },
-  "favorites": { "noMatches": "No hay favoritos que coincidan" },
+  "favorites": {
+    "noMatches": "No hay favoritos que coincidan"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Insertar en la ventana",
     "insertIntoEditor": "Al editor",
@@ -1574,7 +1584,6 @@
     "useSystemMix": "Grabar todo el sonido",
     "sourceLost": "La aplicación se cerró. Esperando su audio; puedes elegir otra fuente manualmente.",
     "waitingFor": "Esperando sonido de {app}…",
-    "stop": "Detener",
     "replyByVoice": "Responder por voz",
     "nothingRecognized": "No se reconoció nada",
     "retry": "Reintentar",

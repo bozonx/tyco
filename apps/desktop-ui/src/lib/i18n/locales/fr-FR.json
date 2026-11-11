@@ -22,7 +22,9 @@
     "removeContext": "Supprimer le contexte",
     "restoreContext": "Restaurer le contexte"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Joindre un fichier",
     "alertCaution": "Attention",
@@ -193,7 +195,9 @@
       "deselectAll": "Tout désélectionner",
       "unsupportedCommands": "Commandes non prises en charge"
     },
-    "replyBlocks": { "toolLabel": "Blocs de réponse" }
+    "replyBlocks": {
+      "toolLabel": "Blocs de réponse"
+    }
   },
   "commands": {
     "advanced": "Avancé",
@@ -1283,7 +1287,9 @@
     "webJinaApiKeyHint": "Facultatif. Sans clé, les requêtes utilisent le niveau gratuit avec des limites partagées.",
     "webSearchSectionHint": "Paramètres de recherche Web et de lecture de pages utilisés par les modèles et profils d'IA."
   },
-  "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
+  "shortcuts": {
+    "insertIntoEditor": "Insérer dans l’éditeur"
+  },
   "theme": {
     "auto": "Comme le système",
     "dark": "Sombre",
@@ -1426,7 +1432,9 @@
     "phrasesPlaceholder": "Exemples de phrases, une par ligne"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "demande dans le chat" },
+    "actions": {
+      "askInChat": "demande dans le chat"
+    },
     "languages": {
       "cs-CZ": "Tchèque",
       "de-DE": "allemand",
@@ -1514,7 +1522,9 @@
     "valueNotSet": "Aucune valeur sur cet appareil : les commandes qui l’utilisent ne s’exécutent pas",
     "valuePlaceholder": "Un chemin, une adresse ou un autre texte"
   },
-  "favorites": { "noMatches": "Aucun favori correspondant" },
+  "favorites": {
+    "noMatches": "Aucun favori correspondant"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Insérer dans la fenêtre",
     "insertIntoEditor": "Vers l'éditeur",
@@ -1574,7 +1584,6 @@
     "useSystemMix": "Enregistrer tout le son",
     "sourceLost": "L’application s’est fermée. En attente de son audio ; vous pouvez choisir une autre source manuellement.",
     "waitingFor": "En attente du son de {app}…",
-    "stop": "Arrêter",
     "replyByVoice": "Répondre à la voix",
     "nothingRecognized": "Rien n’a été reconnu",
     "retry": "Réessayer",

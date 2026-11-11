@@ -22,7 +22,9 @@
     "removeContext": "Elimină contextul",
     "restoreContext": "Restaurează contextul"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Atașează un fișier",
     "alertCaution": "Atenție",
@@ -193,7 +195,9 @@
       "deselectAll": "Deselectează tot",
       "unsupportedCommands": "Comenzi neacceptate"
     },
-    "replyBlocks": { "toolLabel": "Blocuri de răspuns" }
+    "replyBlocks": {
+      "toolLabel": "Blocuri de răspuns"
+    }
   },
   "commands": {
     "advanced": "Avansat",
@@ -1283,7 +1287,9 @@
     "webJinaApiKeyHint": "Opțional. Fără cheie, cererile folosesc nivelul gratuit cu limite partajate.",
     "webSearchSectionHint": "Setări pentru instrumentele de căutare web și citire a paginilor utilizate de modelele și profilurile AI."
   },
-  "shortcuts": { "insertIntoEditor": "Inserează în editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserează în editor"
+  },
   "theme": {
     "auto": "Ca în sistem",
     "dark": "Întunecată",
@@ -1426,7 +1432,9 @@
     "phrasesPlaceholder": "Fraze demonstrative, câte una pe rând"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "întreabă în chat" },
+    "actions": {
+      "askInChat": "întreabă în chat"
+    },
     "languages": {
       "cs-CZ": "Cehă",
       "de-DE": "germană",
@@ -1514,7 +1522,9 @@
     "valueNotSet": "Nicio valoare pe acest dispozitiv: comenzile care o folosesc nu rulează",
     "valuePlaceholder": "O cale, o adresă sau alt text"
   },
-  "favorites": { "noMatches": "Nu există favorite care să se potrivească" },
+  "favorites": {
+    "noMatches": "Nu există favorite care să se potrivească"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Inserează în fereastră",
     "insertIntoEditor": "În editor",
@@ -1574,7 +1584,6 @@
     "useSystemMix": "Înregistrează tot sunetul",
     "sourceLost": "Aplicația s-a închis. Se așteaptă sunetul ei; poți alege manual altă sursă.",
     "waitingFor": "Se așteaptă sunet de la {app}…",
-    "stop": "Oprește",
     "replyByVoice": "Răspunde vocal",
     "nothingRecognized": "Nu s-a recunoscut nimic",
     "retry": "Reîncearcă",

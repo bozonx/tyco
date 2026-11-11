@@ -22,7 +22,9 @@
     "removeContext": "Прибрати контекст",
     "restoreContext": "Відновити контекст"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Прикріпити файл",
     "alertCaution": "Обережно",
@@ -193,7 +195,9 @@
       "deselectAll": "Зняти все",
       "unsupportedCommands": "Непідтримувані команди"
     },
-    "replyBlocks": { "toolLabel": "Варіанти відповіді" }
+    "replyBlocks": {
+      "toolLabel": "Варіанти відповіді"
+    }
   },
   "commands": {
     "advanced": "Додатково",
@@ -629,7 +633,10 @@
       "command": "Команда залишила текст без змін",
       "correction": "Помилок не знайдено"
     },
-    "working": { "command": "Виконання команди…", "correction": "Виправлення…" }
+    "working": {
+      "command": "Виконання команди…",
+      "correction": "Виправлення…"
+    }
   },
   "settings": {
     "accessAllow": "Дозволити",
@@ -1280,7 +1287,9 @@
     "webJinaApiKeyHint": "Необов'язково. Без ключа запити працюють через безкоштовний тариф зі спільними лімітами.",
     "webSearchSectionHint": "Параметри інструментів пошуку в інтернеті та завантаження веб-сторінок для ШІ-моделей і профілів."
   },
-  "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
+  "shortcuts": {
+    "insertIntoEditor": "Вставити в редактор"
+  },
   "theme": {
     "auto": "Як у системі",
     "dark": "Темна",
@@ -1423,7 +1432,9 @@
     "phrasesPlaceholder": "Приклади фраз построково"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "запитай у чаті" },
+    "actions": {
+      "askInChat": "запитай у чаті"
+    },
     "languages": {
       "cs-CZ": "Чеська",
       "de-DE": "німецькою",
@@ -1511,7 +1522,9 @@
     "valueNotSet": "Немає значення на цьому пристрої: команди з цією змінною не виконуються",
     "valuePlaceholder": "Шлях, адреса або інший текст"
   },
-  "favorites": { "noMatches": "Немає відповідних елементів вибраного" },
+  "favorites": {
+    "noMatches": "Немає відповідних елементів вибраного"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Вставити у вікно",
     "insertIntoEditor": "В редактор",
@@ -1571,7 +1584,6 @@
     "useSystemMix": "Записувати весь звук",
     "sourceLost": "Програму закрито. Очікуємо її звук; інше джерело можна вибрати вручну.",
     "waitingFor": "Чекаємо звук із {app}…",
-    "stop": "Стоп",
     "replyByVoice": "Відповісти голосом",
     "nothingRecognized": "Нічого не розпізнано",
     "retry": "Повторити",

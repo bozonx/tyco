@@ -22,7 +22,9 @@
     "removeContext": "Remove context",
     "restoreContext": "Restore context"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Attach file",
     "alertCaution": "Caution",
@@ -193,7 +195,9 @@
       "deselectAll": "Deselect all",
       "unsupportedCommands": "Unsupported commands"
     },
-    "replyBlocks": { "toolLabel": "Reply Blocks" }
+    "replyBlocks": {
+      "toolLabel": "Reply Blocks"
+    }
   },
   "commands": {
     "advanced": "Advanced",
@@ -1283,7 +1287,9 @@
     "webJinaApiKeyHint": "Optional. Without a key, requests use the free tier with shared rate limits.",
     "webSearchSectionHint": "Settings for web search and page reading tools used by AI models and profiles."
   },
-  "shortcuts": { "insertIntoEditor": "Insert into editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Insert into editor"
+  },
   "theme": {
     "auto": "System default",
     "dark": "Dark",
@@ -1426,7 +1432,9 @@
     "phrasesPlaceholder": "Sample phrases, one per line"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "ask in chat" },
+    "actions": {
+      "askInChat": "ask in chat"
+    },
     "languages": {
       "cs-CZ": "Czech",
       "de-DE": "German",
@@ -1514,7 +1522,9 @@
     "valueNotSet": "No value on this device: commands that use it do not run",
     "valuePlaceholder": "A path, an address or other text"
   },
-  "favorites": { "noMatches": "No matching favorites" },
+  "favorites": {
+    "noMatches": "No matching favorites"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Insert into window",
     "insertIntoEditor": "To editor",
@@ -1574,7 +1584,6 @@
     "useSystemMix": "Record all sound",
     "sourceLost": "The app closed. Waiting for its audio; you can choose another source manually.",
     "waitingFor": "Waiting for sound from {app}…",
-    "stop": "Stop",
     "replyByVoice": "Reply by voice",
     "nothingRecognized": "Nothing recognized",
     "retry": "Retry",

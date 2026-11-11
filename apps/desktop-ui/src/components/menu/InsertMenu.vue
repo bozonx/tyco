@@ -21,6 +21,7 @@
           :text="props.text"
           :old-text="props.oldText"
           :diff-mode="diffMode"
+          :allow-disable="props.allowRemoveContext"
         />
       </div>
     </template>
@@ -89,7 +90,9 @@ const props = withDefaults(defineProps<InsertMenuParams>(), {
   text: '',
   oldText: '',
   actions: undefined,
+  primaryAction: undefined,
   allowInsertButton: true,
+  allowRemoveContext: true,
   shortcutsDisabled: false,
   isEditorButtonVisible: undefined,
   correction: false,
@@ -265,6 +268,12 @@ const primaryAction = computed<ActionItem | undefined>(() => {
       }
     }
     return applyToEditorAction
+  }
+  if (props.primaryAction) {
+    const custom = props.primaryAction
+    const disabled = custom.disabled || shouldDisableAction(custom)
+    const hint = isContextDisabled.value ? t('menu.contextRequired') : custom.hint
+    return { ...custom, disabled, hint }
   }
   if (!props.allowInsertButton) return undefined
   const insertAction =

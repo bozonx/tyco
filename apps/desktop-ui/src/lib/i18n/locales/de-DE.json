@@ -22,7 +22,9 @@
     "removeContext": "Kontext entfernen",
     "restoreContext": "Kontext wiederherstellen"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Datei anhängen",
     "alertCaution": "Vorsicht",
@@ -193,7 +195,9 @@
       "deselectAll": "Auswahl aufheben",
       "unsupportedCommands": "Nicht unterstützte Befehle"
     },
-    "replyBlocks": { "toolLabel": "Antwortblöcke" }
+    "replyBlocks": {
+      "toolLabel": "Antwortblöcke"
+    }
   },
   "commands": {
     "advanced": "Erweitert",
@@ -1283,7 +1287,9 @@
     "webJinaApiKeyHint": "Optional. Ohne Schlüssel nutzen Anfragen das kostenlose Kontingent mit geteilten Limits.",
     "webSearchSectionHint": "Einstellungen für Websuche und das Abrufen von Webseiten durch KI-Modelle und Profile."
   },
-  "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
+  "shortcuts": {
+    "insertIntoEditor": "In den Editor einfügen"
+  },
   "theme": {
     "auto": "Wie im System",
     "dark": "Dunkel",
@@ -1426,7 +1432,9 @@
     "phrasesPlaceholder": "Beispielphrasen, eine pro Zeile"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "frage im chat" },
+    "actions": {
+      "askInChat": "frage im chat"
+    },
     "languages": {
       "cs-CZ": "Tschechisch",
       "de-DE": "Deutsch",
@@ -1514,7 +1522,9 @@
     "valueNotSet": "Kein Wert auf diesem Gerät: Befehle, die sie nutzen, werden nicht ausgeführt",
     "valuePlaceholder": "Ein Pfad, eine Adresse oder anderer Text"
   },
-  "favorites": { "noMatches": "Keine passenden Favoriten" },
+  "favorites": {
+    "noMatches": "Keine passenden Favoriten"
+  },
   "replyBlocks": {
     "insertIntoWindow": "In Fenster einfügen",
     "insertIntoEditor": "In Editor",
@@ -1574,7 +1584,6 @@
     "useSystemMix": "Gesamten Ton aufnehmen",
     "sourceLost": "Die App wurde geschlossen. Warte auf ihren Ton; eine andere Quelle kann manuell gewählt werden.",
     "waitingFor": "Warte auf Ton von {app}…",
-    "stop": "Stopp",
     "replyByVoice": "Per Sprache antworten",
     "nothingRecognized": "Nichts erkannt",
     "retry": "Erneut versuchen",

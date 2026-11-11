@@ -29,7 +29,9 @@ export interface InsertMenuParams {
   text?: string
   oldText?: string
   actions?: ActionItem[]
+  primaryAction?: ActionItem
   allowInsertButton?: boolean
+  allowRemoveContext?: boolean
   shortcutsDisabled?: boolean
   isEditorButtonVisible?: boolean
   /** Esc returns from a correction step to its original text. */

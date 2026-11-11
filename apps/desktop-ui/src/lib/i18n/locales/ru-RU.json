@@ -22,7 +22,9 @@
     "removeContext": "Убрать контекст",
     "restoreContext": "Восстановить контекст"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Прикрепить файл",
     "alertCaution": "Осторожно",
@@ -193,7 +195,9 @@
       "deselectAll": "Снять все",
       "unsupportedCommands": "Неподдерживаемые команды"
     },
-    "replyBlocks": { "toolLabel": "Варианты ответа" }
+    "replyBlocks": {
+      "toolLabel": "Варианты ответа"
+    }
   },
   "commands": {
     "advanced": "Дополнительно",
@@ -629,7 +633,10 @@
       "command": "Команда оставила текст без изменений",
       "correction": "Ошибок не найдено"
     },
-    "working": { "command": "Выполняю команду…", "correction": "Исправляю…" }
+    "working": {
+      "command": "Выполняю команду…",
+      "correction": "Исправляю…"
+    }
   },
   "settings": {
     "accessAllow": "Разрешено",
@@ -1280,7 +1287,9 @@
     "webJinaApiKeyHint": "Необязательно. Без ключа запросы работают через бесплатный тариф с общими лимитами.",
     "webSearchSectionHint": "Параметры инструментов поиска в интернете и чтения веб-страниц для ИИ-моделей и профилей."
   },
-  "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
+  "shortcuts": {
+    "insertIntoEditor": "Вставить в редактор"
+  },
   "theme": {
     "auto": "Как в системе",
     "dark": "Темная",
@@ -1423,7 +1432,9 @@
     "phrasesPlaceholder": "Примеры фраз построчно"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "спроси в чате" },
+    "actions": {
+      "askInChat": "спроси в чате"
+    },
     "languages": {
       "cs-CZ": "Чешский",
       "de-DE": "немецкий",
@@ -1511,7 +1522,9 @@
     "valueNotSet": "Нет значения на этом устройстве: команды с этой переменной не выполняются",
     "valuePlaceholder": "Путь, адрес или другой текст"
   },
-  "favorites": { "noMatches": "Ничего не найдено" },
+  "favorites": {
+    "noMatches": "Ничего не найдено"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Вставить в окно",
     "insertIntoEditor": "В редактор",
@@ -1571,7 +1584,6 @@
     "useSystemMix": "Записывать весь звук",
     "sourceLost": "Приложение закрыто. Ждём его звук; другой источник можно выбрать вручную.",
     "waitingFor": "Ждём звук из {app}…",
-    "stop": "Стоп",
     "replyByVoice": "Ответить голосом",
     "nothingRecognized": "Ничего не распознано",
     "retry": "Повторить",

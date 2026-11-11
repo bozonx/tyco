@@ -22,7 +22,9 @@
     "removeContext": "Bağlamı kaldır",
     "restoreContext": "Bağlamı geri yükle"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Dosya ekle",
     "alertCaution": "Dikkat",
@@ -193,7 +195,9 @@
       "deselectAll": "Tüm seçimi kaldır",
       "unsupportedCommands": "Desteklenmeyen komutlar"
     },
-    "replyBlocks": { "toolLabel": "Yanıt blokları" }
+    "replyBlocks": {
+      "toolLabel": "Yanıt blokları"
+    }
   },
   "commands": {
     "advanced": "Gelişmiş",
@@ -629,7 +633,10 @@
       "command": "Komut metni olduğu gibi bıraktı",
       "correction": "Hata bulunamadı"
     },
-    "working": { "command": "Komut çalışıyor…", "correction": "Düzeltiliyor…" }
+    "working": {
+      "command": "Komut çalışıyor…",
+      "correction": "Düzeltiliyor…"
+    }
   },
   "settings": {
     "accessAllow": "İzin Ver",
@@ -1280,7 +1287,9 @@
     "webJinaApiKeyHint": "İsteğe bağlı. Anahtar olmadan istekler paylaşılan hız sınırlarına sahip ücretsiz katmanı kullanır.",
     "webSearchSectionHint": "Yapay zeka modelleri ve profilleri tarafından kullanılan web araması ve sayfa okuma araçları için ayarlar."
   },
-  "shortcuts": { "insertIntoEditor": "Editöre ekle" },
+  "shortcuts": {
+    "insertIntoEditor": "Editöre ekle"
+  },
   "theme": {
     "auto": "Sistem dili",
     "dark": "Koyu",
@@ -1423,7 +1432,9 @@
     "phrasesPlaceholder": "Örnek ifadeler, her satıra bir tane"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "sohbette sor" },
+    "actions": {
+      "askInChat": "sohbette sor"
+    },
     "languages": {
       "cs-CZ": "Çekçe;Çekçeye",
       "de-DE": "Almancaya;Almanca",
@@ -1511,7 +1522,9 @@
     "valueNotSet": "Bu cihazda değer yok: onu kullanan komutlar çalışmaz",
     "valuePlaceholder": "Bir yol, adres veya başka bir metin"
   },
-  "favorites": { "noMatches": "Eşleşen favori yok" },
+  "favorites": {
+    "noMatches": "Eşleşen favori yok"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Pencereye ekle",
     "insertIntoEditor": "Düzenleyiciye",
@@ -1571,7 +1584,6 @@
     "useSystemMix": "Tüm sesi kaydet",
     "sourceLost": "Uygulama kapandı. Sesi bekleniyor; başka bir kaynağı elle seçebilirsiniz.",
     "waitingFor": "{app} sesini bekliyor…",
-    "stop": "Durdur",
     "replyByVoice": "Sesle yanıtla",
     "nothingRecognized": "Hiçbir şey tanınmadı",
     "retry": "Yeniden dene",

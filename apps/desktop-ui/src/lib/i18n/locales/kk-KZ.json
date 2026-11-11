@@ -22,7 +22,9 @@
     "removeContext": "Мәтінмәнді алып тастау",
     "restoreContext": "Мәтінмәнді қалпына келтіру"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Файл тіркеу",
     "alertCaution": "Абайлаңыз",
@@ -193,7 +195,9 @@
       "deselectAll": "Барлығын алып тастау",
       "unsupportedCommands": "Қолдау көрсетілмейтін командалар"
     },
-    "replyBlocks": { "toolLabel": "Жауап нұсқалары" }
+    "replyBlocks": {
+      "toolLabel": "Жауап нұсқалары"
+    }
   },
   "commands": {
     "advanced": "Қосымша",
@@ -629,7 +633,10 @@
       "command": "Команда мәтінді өзгертпей қалдырды",
       "correction": "Қате табылмады"
     },
-    "working": { "command": "Команда орындалуда…", "correction": "Түзетілуде…" }
+    "working": {
+      "command": "Команда орындалуда…",
+      "correction": "Түзетілуде…"
+    }
   },
   "settings": {
     "accessAllow": "Рұқсат ету",
@@ -1280,7 +1287,9 @@
     "webJinaApiKeyHint": "Міндетті емес. Кілті жоқ сұраулар ортақ лимиттері бар тегін тарифті пайдаланады.",
     "webSearchSectionHint": "AI үлгілері мен профильдері қолданатын веб-іздеу және беттерді оқу құралдарының параметрлері."
   },
-  "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
+  "shortcuts": {
+    "insertIntoEditor": "Редакторға кірістіру"
+  },
   "theme": {
     "auto": "Жүйедегідей",
     "dark": "Қараңғы",
@@ -1423,7 +1432,9 @@
     "phrasesPlaceholder": "Үлгі фразалар, әр жолға біреуден"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "чатта сұра" },
+    "actions": {
+      "askInChat": "чатта сұра"
+    },
     "languages": {
       "cs-CZ": "Чех;чех тілі",
       "de-DE": "неміс тіліне;немісше",
@@ -1511,7 +1522,9 @@
     "valueNotSet": "Бұл құрылғыда мән жоқ: оны қолданатын командалар орындалмайды",
     "valuePlaceholder": "Жол, мекенжай немесе басқа мәтін"
   },
-  "favorites": { "noMatches": "Сәйкес келетін фавориттер жоқ" },
+  "favorites": {
+    "noMatches": "Сәйкес келетін фавориттер жоқ"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Терезеге кірістіру",
     "insertIntoEditor": "Редакторға",
@@ -1571,7 +1584,6 @@
     "useSystemMix": "Барлық дыбысты жазу",
     "sourceLost": "Қолданба жабылды. Оның дыбысы күтілуде; басқа көзді қолмен таңдауға болады.",
     "waitingFor": "{app} дыбысын күтудеміз…",
-    "stop": "Тоқтату",
     "replyByVoice": "Дауыспен жауап беру",
     "nothingRecognized": "Ештеңе танылмады",
     "retry": "Қайталау",

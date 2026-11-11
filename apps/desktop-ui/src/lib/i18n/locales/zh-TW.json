@@ -22,7 +22,9 @@
     "removeContext": "移除上下文",
     "restoreContext": "還原上下文"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "附加檔案",
     "alertCaution": "注意",
@@ -193,7 +195,9 @@
       "deselectAll": "取消全選",
       "unsupportedCommands": "不支援的指令"
     },
-    "replyBlocks": { "toolLabel": "回覆區塊" }
+    "replyBlocks": {
+      "toolLabel": "回覆區塊"
+    }
   },
   "commands": {
     "advanced": "進階",
@@ -615,7 +619,10 @@
     "cancelled": "已取消",
     "done": "完成",
     "emptyResult": "模型傳回了空白結果",
-    "failed": { "command": "命令執行失敗", "correction": "校對失敗" },
+    "failed": {
+      "command": "命令執行失敗",
+      "correction": "校對失敗"
+    },
     "focusChanged": "視窗在此期間已切換，因此結果已複製到剪貼簿",
     "noSelection": "未選取任何內容",
     "noTarget": "沒有任何應用程式視窗取得焦點",
@@ -626,7 +633,10 @@
       "command": "命令未對文字進行任何變更",
       "correction": "未發現任何錯誤"
     },
-    "working": { "command": "正在執行命令…", "correction": "正在校對…" }
+    "working": {
+      "command": "正在執行命令…",
+      "correction": "正在校對…"
+    }
   },
   "settings": {
     "accessAllow": "允許",
@@ -1277,7 +1287,9 @@
     "webJinaApiKeyHint": "選填。未配置金鑰時，請求將使用具有共用速率限制的免費層級。",
     "webSearchSectionHint": "AI 模型與設定檔使用的網頁搜尋與頁面讀取工具設定。"
   },
-  "shortcuts": { "insertIntoEditor": "插入至編輯器" },
+  "shortcuts": {
+    "insertIntoEditor": "插入至編輯器"
+  },
   "theme": {
     "auto": "跟隨系統",
     "dark": "深色",
@@ -1420,7 +1432,9 @@
     "phrasesPlaceholder": "範例詞，每行一個"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "在聊天中提問;在對話中提問" },
+    "actions": {
+      "askInChat": "在聊天中提問;在對話中提問"
+    },
     "languages": {
       "cs-CZ": "捷克語",
       "de-DE": "德文;德語",
@@ -1450,7 +1464,10 @@
     },
     "translate": "翻譯成;翻譯為;翻譯到"
   },
-  "window": { "clickToFocus": "按一下以繼續", "moveOverlay": "拖曳以移動" },
+  "window": {
+    "clickToFocus": "按一下以繼續",
+    "moveOverlay": "拖曳以移動"
+  },
   "write": {
     "alreadyCorrected": "文字已經過校對",
     "cancel": "取消",
@@ -1505,7 +1522,9 @@
     "valueNotSet": "此裝置上沒有值：使用它的命令不會執行",
     "valuePlaceholder": "路徑、位址或其他文字"
   },
-  "favorites": { "noMatches": "沒有相符的收藏" },
+  "favorites": {
+    "noMatches": "沒有相符的收藏"
+  },
   "replyBlocks": {
     "insertIntoWindow": "插入至視窗",
     "insertIntoEditor": "至編輯器",
@@ -1565,7 +1584,6 @@
     "useSystemMix": "錄製全部聲音",
     "sourceLost": "應用程式已關閉，正在等待其音訊；你可以手動選擇其他音訊來源。",
     "waitingFor": "正在等待 {app} 的聲音…",
-    "stop": "停止",
     "replyByVoice": "語音回覆",
     "nothingRecognized": "未辨識到任何內容",
     "retry": "重試",

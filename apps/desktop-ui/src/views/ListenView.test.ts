@@ -24,8 +24,18 @@ vi.mock('../components/listen/ListenRecordingBar.vue', () => ({
 }))
 vi.mock('../components/menu/InsertMenu.vue', () => ({
   default: {
-    props: ['text', 'allowInsertButton'],
-    template: '<div class="insert-menu-stub" :data-text="text" />',
+    props: ['text', 'allowInsertButton', 'primaryAction'],
+    template: `
+      <div class="insert-menu-stub" :data-text="text">
+        <button
+          v-if="primaryAction"
+          class="primary-action-stub"
+          @click="primaryAction.action(text)"
+        >
+          {{ primaryAction.label ?? primaryAction.labelKey }}
+        </button>
+      </div>
+    `,
   },
 }))
 vi.mock('../components/voice/QuickModeSwitch.vue', () => ({

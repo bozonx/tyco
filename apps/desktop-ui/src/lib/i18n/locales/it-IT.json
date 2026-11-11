@@ -22,7 +22,9 @@
     "removeContext": "Rimuovi contesto",
     "restoreContext": "Ripristina contesto"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Allega file",
     "alertCaution": "Attenzione",
@@ -193,7 +195,9 @@
       "deselectAll": "Deseleziona tutto",
       "unsupportedCommands": "Comandi non supportati"
     },
-    "replyBlocks": { "toolLabel": "Blocchi di risposta" }
+    "replyBlocks": {
+      "toolLabel": "Blocchi di risposta"
+    }
   },
   "commands": {
     "advanced": "Avanzate",
@@ -1283,7 +1287,9 @@
     "webJinaApiKeyHint": "Facoltativo. Senza chiave, le richieste utilizzano il piano gratuito con limiti condivisi.",
     "webSearchSectionHint": "Impostazioni per la ricerca sul web e la lettura delle pagine utilizzate dai modelli e profili IA."
   },
-  "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserisci nell’editor"
+  },
   "theme": {
     "auto": "Come nel sistema",
     "dark": "Scuro",
@@ -1426,7 +1432,9 @@
     "phrasesPlaceholder": "Frasi di esempio, una per riga"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "chiedi nella chat" },
+    "actions": {
+      "askInChat": "chiedi nella chat"
+    },
     "languages": {
       "cs-CZ": "Ceco",
       "de-DE": "tedesco",
@@ -1514,7 +1522,9 @@
     "valueNotSet": "Nessun valore su questo dispositivo: i comandi che la usano non vengono eseguiti",
     "valuePlaceholder": "Un percorso, un indirizzo o altro testo"
   },
-  "favorites": { "noMatches": "Nessun preferito corrispondente" },
+  "favorites": {
+    "noMatches": "Nessun preferito corrispondente"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Inserisci nella finestra",
     "insertIntoEditor": "Nell'editor",
@@ -1574,7 +1584,6 @@
     "useSystemMix": "Registra tutto l’audio",
     "sourceLost": "L’app si è chiusa. In attesa del suo audio; puoi scegliere un’altra sorgente manualmente.",
     "waitingFor": "In attesa dell’audio di {app}…",
-    "stop": "Interrompi",
     "replyByVoice": "Rispondi a voce",
     "nothingRecognized": "Nulla di riconosciuto",
     "retry": "Riprova",

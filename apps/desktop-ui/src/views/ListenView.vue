@@ -13,24 +13,12 @@
   </div>
   <ContentPadding v-else>
     <div class="listen-result">
-      <div class="listen-result-header">
-        <QuickModeSwitch mode="listen" @switch="switchToVoice" />
-        <span class="listen-result-title">{{ t('listen.title') }}</span>
-        <Button
-          v-if="model.phase.value === 'result'"
-          class="listen-reply"
-          size="sm"
-          variant="primary"
-          icon="mdi:microphone-message"
-          @click="replyByVoice"
-        >
-          {{ t('listen.replyByVoice') }}
-        </Button>
-      </div>
       <InsertMenu
         v-if="model.phase.value === 'result'"
         :text="model.resultText.value"
+        :primary-action="replyByVoicePrimaryAction"
         :allow-insert-button="true"
+        :allow-remove-context="false"
         :shortcuts-disabled="menuModalsStore.hasOpenModal"
       />
       <div v-else class="listen-empty" role="status">
@@ -75,7 +63,7 @@ import Button from '../components/common/Button.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import ListenRecordingBar from '../components/listen/ListenRecordingBar.vue'
 import InsertMenu from '../components/menu/InsertMenu.vue'
-import QuickModeSwitch from '../components/voice/QuickModeSwitch.vue'
+import type { ActionItem } from '../stores/action-menu'
 import { useDictationActions } from '../composables/use-dictation-actions'
 import { useDismissibleLayer } from '../composables/use-dismissible-layer'
 import { useI18n } from '../composables/use-i18n'
@@ -193,13 +181,16 @@ function onKeyDown(event: KeyboardEvent) {
   ) {
     return
   }
+  if (event.code === 'Space' && model.isRecording.value) {
+    event.preventDefault()
+  }
   keyPresses.press(event.code)
 }
 
 function onKeyUp(event: KeyboardEvent) {
   if (!keyPresses.release(event.code)) return
   if (
-    event.code === 'Enter' &&
+    (event.code === 'Enter' || event.code === 'Space') &&
     model.isRecording.value &&
     !event.defaultPrevented &&
     !event.ctrlKey &&
@@ -208,6 +199,7 @@ function onKeyUp(event: KeyboardEvent) {
     !event.shiftKey &&
     !isInteractiveOrTypingTarget(event.target)
   ) {
+    if (event.code === 'Space') event.preventDefault()
     void model.stop()
   }
 }
@@ -236,6 +228,13 @@ async function replyByVoice() {
   // competing activation must never inherit a guessed next activation's text.
   if (switched.success) replyStore.offer(text, nextActivationId)
 }
+
+const replyByVoicePrimaryAction = computed<ActionItem>(() => ({
+  id: 'replyByVoice',
+  labelKey: 'listen.replyByVoice',
+  icon: 'mdi:microphone-message',
+  action: async () => replyByVoice(),
+}))
 
 function handleLanguageChange() {
   if (
@@ -290,21 +289,6 @@ onUnmounted(() => {
   gap: var(--space-sm);
   height: 100%;
   min-height: 0;
-}
-
-.listen-result-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-}
-
-.listen-result-title {
-  font-weight: 600;
-  color: var(--color-secondary);
-}
-
-.listen-reply {
-  margin-left: auto;
 }
 
 .listen-empty {
