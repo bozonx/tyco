@@ -24,38 +24,6 @@
     <p ref="hintRef" class="write-hint">
       <ShortcutButton
         size="sm"
-        :keys="[submitShortcutLabel]"
-        type="button"
-        class="write-hint-action"
-        @mousedown.prevent
-        @click="submitFromHint"
-      >
-        <span>{{
-          isOffMode ? t('write.insert') : t('write.correctAndInsert')
-        }}</span>
-      </ShortcutButton>
-      <ShortcutButton
-        size="sm"
-        :keys="['Tab']"
-        type="button"
-        class="write-hint-action"
-        @mousedown.prevent
-        @click="nextFromHint"
-      >
-        <span>{{ t('menu.actions') }}</span>
-      </ShortcutButton>
-      <ShortcutButton
-        size="sm"
-        :keys="[newlineShortcutLabel]"
-        type="button"
-        class="write-hint-action"
-        @mousedown.prevent
-        @click="insertNewline"
-      >
-        <span>{{ t('write.newLine') }}</span>
-      </ShortcutButton>
-      <ShortcutButton
-        size="sm"
         :keys="['Esc']"
         type="button"
         class="write-hint-action"
@@ -90,6 +58,39 @@
           >{{ t('write.openHistory') }}</ShortcutButton
         >
       </template>
+      <ShortcutButton
+        size="sm"
+        :keys="[newlineShortcutLabel]"
+        type="button"
+        class="write-hint-action"
+        @mousedown.prevent
+        @click="insertNewline"
+      >
+        <span>{{ t('write.newLine') }}</span>
+      </ShortcutButton>
+      <ShortcutButton
+        size="sm"
+        :keys="['Tab']"
+        type="button"
+        class="write-hint-action"
+        @mousedown.prevent
+        @click="nextFromHint"
+      >
+        <span>{{ t('menu.actions') }}</span>
+      </ShortcutButton>
+      <ShortcutButton
+        size="sm"
+        :keys="[submitShortcutLabel]"
+        variant="primary"
+        type="button"
+        class="write-hint-action"
+        @mousedown.prevent
+        @click="submitFromHint"
+      >
+        <span>{{
+          isOffMode ? t('write.insert') : t('write.correctAndInsert')
+        }}</span>
+      </ShortcutButton>
     </p>
   </div>
 </template>
@@ -445,7 +446,7 @@ function submit() {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  align-self: flex-start;
+  align-self: flex-end;
   gap: var(--space-sm);
   margin: 0;
   padding: 0.25rem 0.625rem 0.25rem 0.25rem;

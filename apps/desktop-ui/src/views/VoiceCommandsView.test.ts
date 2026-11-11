@@ -188,7 +188,7 @@ describe('separate voice command overlay', () => {
     const wrapper = mountView()
     await flushPromises()
     expect(hotkeys.load).toHaveBeenCalled()
-    const keys = wrapper.findAll('.shortcut')[0]!.findAll('kbd')
+    const keys = wrapper.find('.shortcut.is-primary').findAll('kbd')
     expect(keys.map((key) => key.text())).toEqual([
       'Space',
       'Enter',

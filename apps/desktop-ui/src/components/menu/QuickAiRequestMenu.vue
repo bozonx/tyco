@@ -96,16 +96,20 @@
           @update:model-value="(index) => model.selectReplyBlock(Number(index))"
         />
         <ShortcutButton
-          v-if="model.replyBlocks.value.length"
-          class="quick-insert-action"
-          variant="primary"
-          :keys="['Enter', 'Space']"
-          :disabled="
-            !model.selectedReplyBlock.value || isInputBlocked || isApplying
-          "
-          @click="insertSelectedReply"
+          :keys="[]"
+          variant="ghost"
+          :disabled="isInputBlocked || isApplying"
+          @click="switchToChat"
         >
-          {{ t('replyBlocks.insertIntoWindow') }}
+          {{ t('quickAiRequest.goToChat') }}
+        </ShortcutButton>
+        <ShortcutButton
+          :keys="[]"
+          variant="ghost"
+          :disabled="isInputBlocked || isApplying"
+          @click="openFollowUp"
+        >
+          {{ t('quickAiRequest.followUp') }}
         </ShortcutButton>
         <ShortcutButton
           :keys="['Tab']"
@@ -120,20 +124,16 @@
           {{ t('menu.actions') }}
         </ShortcutButton>
         <ShortcutButton
-          :keys="[]"
-          variant="ghost"
-          :disabled="isInputBlocked || isApplying"
-          @click="openFollowUp"
+          v-if="model.replyBlocks.value.length"
+          class="quick-insert-action"
+          variant="primary"
+          :keys="['Enter', 'Space']"
+          :disabled="
+            !model.selectedReplyBlock.value || isInputBlocked || isApplying
+          "
+          @click="insertSelectedReply"
         >
-          {{ t('quickAiRequest.followUp') }}
-        </ShortcutButton>
-        <ShortcutButton
-          :keys="[]"
-          variant="ghost"
-          :disabled="isInputBlocked || isApplying"
-          @click="switchToChat"
-        >
-          {{ t('quickAiRequest.goToChat') }}
+          {{ t('replyBlocks.insertIntoWindow') }}
         </ShortcutButton>
       </div>
       <QueryPanel
@@ -788,6 +788,7 @@ onUnmounted(() => {
 }
 
 .quick-result-actions {
+  justify-content: flex-end;
   display: flex;
   flex-wrap: wrap;
   align-items: center;

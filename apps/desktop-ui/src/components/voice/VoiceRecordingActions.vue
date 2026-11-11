@@ -2,16 +2,6 @@
   <div class="voice-actions">
     <template v-if="compact && chat">
       <ShortcutButton
-        :size="compact ? 'sm' : 'md'"
-        :keys="primaryKeys"
-        variant="primary"
-        class="voice-action-primary"
-        :disabled="isFinishing"
-        @click="() => finish('insert')"
-      >
-        {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
-      </ShortcutButton>
-      <ShortcutButton
         v-if="cancelShortcut"
         :size="compact ? 'sm' : 'md'"
         :keys="['Esc']"
@@ -38,6 +28,15 @@
       >
         {{ t('chat.voiceSendNow') }}
       </ShortcutButton>
+      <ShortcutButton
+        :size="compact ? 'sm' : 'md'"
+        :keys="primaryKeys"
+        variant="primary"
+        :disabled="isFinishing"
+        @click="() => finish('insert')"
+      >
+        {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
+      </ShortcutButton>
     </template>
     <template v-else>
       <ShortcutButton
@@ -51,13 +50,11 @@
       <template v-if="finishBehavior === 'submitToChat'">
         <ShortcutButton
           :size="compact ? 'sm' : 'md'"
-          :keys="primaryKeys"
-          variant="primary"
-          class="voice-action-primary"
+          :keys="['Tab']"
           :disabled="isFinishing"
-          @click="() => finish('submit')"
+          @click="() => finish('next')"
         >
-          {{ isFinishing ? t('common.inProgress') : t('menu.voiceSend') }}
+          {{ t('menu.actions') }}
         </ShortcutButton>
         <ShortcutButton
           :size="compact ? 'sm' : 'md'"
@@ -69,24 +66,15 @@
         </ShortcutButton>
         <ShortcutButton
           :size="compact ? 'sm' : 'md'"
-          :keys="['Tab']"
+          :keys="primaryKeys"
+          variant="primary"
           :disabled="isFinishing"
-          @click="() => finish('next')"
+          @click="() => finish('submit')"
         >
-          {{ t('menu.actions') }}
+          {{ isFinishing ? t('common.inProgress') : t('menu.voiceSend') }}
         </ShortcutButton>
       </template>
       <template v-else>
-        <ShortcutButton
-          :size="compact ? 'sm' : 'md'"
-          :keys="primaryKeys"
-          variant="primary"
-          class="voice-action-primary"
-          :disabled="isFinishing"
-          @click="() => finish('insert')"
-        >
-          {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
-        </ShortcutButton>
         <ShortcutButton
           v-if="finishBehavior === 'insertIntoTarget'"
           :size="compact ? 'sm' : 'md'"
@@ -95,6 +83,15 @@
           @click="() => finish('next')"
         >
           {{ t('menu.actions') }}
+        </ShortcutButton>
+        <ShortcutButton
+          :size="compact ? 'sm' : 'md'"
+          :keys="primaryKeys"
+          variant="primary"
+          :disabled="isFinishing"
+          @click="() => finish('insert')"
+        >
+          {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
         </ShortcutButton>
       </template>
     </template>
@@ -139,11 +136,8 @@ const secondaryKeys = ['Shift', 'Space']
 .voice-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: var(--space-sm);
-}
-
-.voice-action-primary {
-  order: 1;
 }
 </style>

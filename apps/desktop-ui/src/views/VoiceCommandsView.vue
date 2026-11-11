@@ -116,6 +116,13 @@
         <div class="voice-actions">
           <template v-if="isListening">
             <ShortcutButton
+              :keys="['Tab']"
+              :disabled="voice.stage === 'finishing'"
+              @click="void voice.finish('review')"
+            >
+              {{ t('voiceCommands.edit') }}
+            </ShortcutButton>
+            <ShortcutButton
               :keys="withHotkey(['Space', 'Enter'])"
               variant="primary"
               :disabled="!canRunLive || voice.stage === 'finishing'"
@@ -127,15 +134,17 @@
                   : t('voiceCommands.run')
               }}
             </ShortcutButton>
-            <ShortcutButton
-              :keys="['Tab']"
-              :disabled="voice.stage === 'finishing'"
-              @click="void voice.finish('review')"
-            >
-              {{ t('voiceCommands.edit') }}
-            </ShortcutButton>
           </template>
           <template v-else>
+            <ShortcutButton
+              :keys="[]"
+              :disabled="voice.stage === 'running'"
+              data-testid="voice-record-again"
+              @click="void voice.start()"
+            >
+              {{ t('voiceCommands.recordAgain') }}
+            </ShortcutButton>
+            <!-- the text stays until the new recording replaces it -->
             <ShortcutButton
               :keys="
                 withHotkey([
@@ -147,15 +156,6 @@
               @click="void voice.run()"
             >
               {{ t('voiceCommands.run') }}
-            </ShortcutButton>
-            <!-- the text stays until the new recording replaces it -->
-            <ShortcutButton
-              :keys="[]"
-              :disabled="voice.stage === 'running'"
-              data-testid="voice-record-again"
-              @click="void voice.start()"
-            >
-              {{ t('voiceCommands.recordAgain') }}
             </ShortcutButton>
           </template>
         </div>
@@ -565,6 +565,7 @@ onUnmounted(() => {
 }
 
 .voice-actions {
+  justify-content: flex-end;
   display: flex;
   flex-wrap: wrap;
   align-items: center;

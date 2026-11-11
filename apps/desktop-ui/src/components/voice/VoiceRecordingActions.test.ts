@@ -54,20 +54,20 @@ describe('VoiceRecordingActions', () => {
     })
     const shortcutButtons = wrapper.findAll('.shortcut')
     expect(shortcutButtons).toHaveLength(3)
-    expect(shortcutButtons[0]?.findAll('kbd').map((k) => k.text())).toEqual([
+    expect(shortcutButtons[2]?.findAll('kbd').map((k) => k.text())).toEqual([
       'Space',
       'Enter',
     ])
-    expect(shortcutButtons[0]?.text()).toContain('Finish')
-    expect(shortcutButtons[1]?.findAll('kbd').map((k) => k.text())).toEqual([
+    expect(shortcutButtons[2]?.text()).toContain('Finish')
+    expect(shortcutButtons[0]?.findAll('kbd').map((k) => k.text())).toEqual([
       'Esc',
     ])
-    expect(shortcutButtons[2]?.findAll('kbd').map((k) => k.text())).toEqual([
+    expect(shortcutButtons[1]?.findAll('kbd').map((k) => k.text())).toEqual([
       'Shift',
       'Space',
     ])
-    expect(shortcutButtons[2]?.text()).toContain('Send right away')
-    await shortcutButtons[1]?.trigger('click')
+    expect(shortcutButtons[1]?.text()).toContain('Send right away')
+    await shortcutButtons[0]?.trigger('click')
     expect(cancelled).toBe(true)
   })
 
@@ -82,11 +82,11 @@ describe('VoiceRecordingActions', () => {
     })
     const shortcutButtons = wrapper.findAll('.shortcut')
     expect(shortcutButtons).toHaveLength(3)
-    expect(shortcutButtons[2]?.findAll('kbd').map((k) => k.text())).toEqual([
+    expect(shortcutButtons[1]?.findAll('kbd').map((k) => k.text())).toEqual([
       'Shift',
       'Space',
     ])
-    await shortcutButtons[2]?.trigger('click')
+    await shortcutButtons[1]?.trigger('click')
     expect(intents).toEqual(['submit'])
   })
 })

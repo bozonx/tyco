@@ -269,3 +269,7 @@ flows. Moving text to the editor is an explicit button without a dedicated
 shortcut. Escape returns or cancels; Shift+Escape closes the whole flow.
 Ctrl+Enter is reserved for configured request submission, not editor actions
 or immediate voice completion.
+
+Quick surface action rows follow DOM and visual order from left to right:
+Escape/cancel, other actions, Tab/action menu, secondary action, primary action.
+Rows align to the right; avoid CSS order overrides so focus follows the display.

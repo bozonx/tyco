@@ -6,6 +6,15 @@
       class="shortcuts-primary"
     >
       <ShortcutButton
+        v-if="props.isEditorButtonVisible"
+        :keys="[]"
+        :title="props.editorButtonLabel ?? t('shortcuts.insertIntoEditor')"
+        @click="goToEditor"
+      >
+        {{ props.editorButtonLabel ?? t('shortcuts.insertIntoEditor') }}
+      </ShortcutButton>
+
+      <ShortcutButton
         v-if="props.spaceKey"
         :keys="['Space', 'Enter']"
         :disabled="props.spaceKey.disabled"
@@ -18,15 +27,6 @@
         @click="props.spaceKey.action(props.text || '')"
       >
         {{ getActionLabel(props.spaceKey) }}
-      </ShortcutButton>
-
-      <ShortcutButton
-        v-if="props.isEditorButtonVisible"
-        :keys="[]"
-        :title="props.editorButtonLabel ?? t('shortcuts.insertIntoEditor')"
-        @click="goToEditor"
-      >
-        {{ props.editorButtonLabel ?? t('shortcuts.insertIntoEditor') }}
       </ShortcutButton>
     </div>
 
@@ -242,6 +242,7 @@ function getActionLabel(item?: ActionItem) {
 }
 
 .shortcuts-primary {
+  justify-content: flex-end;
   display: flex;
   align-items: center;
   gap: var(--space-xs);
