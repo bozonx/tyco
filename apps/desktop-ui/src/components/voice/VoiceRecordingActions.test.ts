@@ -81,12 +81,12 @@ describe('VoiceRecordingActions', () => {
       },
     })
     const shortcutButtons = wrapper.findAll('.shortcut')
-    expect(shortcutButtons).toHaveLength(2)
-    expect(shortcutButtons[1]?.findAll('kbd').map((k) => k.text())).toEqual([
+    expect(shortcutButtons).toHaveLength(3)
+    expect(shortcutButtons[2]?.findAll('kbd').map((k) => k.text())).toEqual([
       'Shift',
       'Space',
     ])
-    await shortcutButtons[1]?.trigger('click')
+    await shortcutButtons[2]?.trigger('click')
     expect(intents).toEqual(['submit'])
   })
 })

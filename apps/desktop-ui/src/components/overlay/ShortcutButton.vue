@@ -10,48 +10,25 @@
     :disabled="disabled"
     @click="emit('click')"
   >
-    <span class="shortcut-keys">
-      <KeyboardKey v-for="key in keys" :key="key">{{ key }}</KeyboardKey>
-    </span>
-    <AppIcon
-      v-if="icon"
-      :icon="icon"
-      :size="size === 'sm' || size === 'xs' ? 'sm' : 'md'"
-      class="shortcut-icon"
-    />
+    <ShortcutKeys :keys="keys" />
     <span class="shortcut-label">
       <slot />
     </span>
-    <AppIcon
-      v-if="trailingIcon"
-      :icon="trailingIcon"
-      :size="size === 'sm' || size === 'xs' ? 'sm' : 'md'"
-      class="shortcut-trailing-icon"
-    />
   </button>
 </template>
 
 <script setup lang="ts">
 import type { ControlSize } from '../../lib/ui/control-types'
-import AppIcon from '../common/AppIcon.vue'
-import KeyboardKey from '../common/KeyboardKey.vue'
+import ShortcutKeys from './ShortcutKeys.vue'
 
 withDefaults(
   defineProps<{
     keys: string[]
-    icon?: string
-    trailingIcon?: string
     disabled?: boolean
     variant?: 'primary' | 'ghost'
     size?: ControlSize
   }>(),
-  {
-    icon: undefined,
-    trailingIcon: undefined,
-    disabled: false,
-    variant: 'ghost',
-    size: 'md',
-  }
+  { disabled: false, variant: 'ghost', size: 'md' }
 )
 
 const emit = defineEmits<{ (e: 'click'): void }>()
@@ -68,7 +45,8 @@ const emit = defineEmits<{ (e: 'click'): void }>()
   max-width: var(--shortcut-max-width, 20rem);
   min-width: 0;
   padding: 0.375rem 0.625rem 0.375rem 0.375rem;
-  border: 1px solid transparent;
+  border: 1px solid var(--app-border);
+  background-color: var(--app-surface);
   border-radius: var(--radius-md);
   font-size: var(--text-body);
   text-align: left;
@@ -102,17 +80,6 @@ const emit = defineEmits<{ (e: 'click'): void }>()
   --key-color: var(--app-text-muted);
 }
 
-.shortcut-keys {
-  display: inline-flex;
-  gap: 0.25rem;
-  flex-shrink: 0;
-}
-
-.shortcut-icon {
-  flex-shrink: 0;
-  color: var(--app-text-muted);
-}
-
 .shortcut-label {
   overflow: hidden;
   display: -webkit-box;
@@ -123,12 +90,6 @@ const emit = defineEmits<{ (e: 'click'): void }>()
   line-height: 1.15;
   flex: 1 1 0%;
   min-width: 0;
-}
-
-.shortcut-trailing-icon {
-  flex-shrink: 0;
-  margin-left: auto;
-  color: var(--app-text-muted);
 }
 
 .shortcut.is-primary {

@@ -8,7 +8,6 @@
       <ShortcutButton
         v-if="props.spaceKey"
         :keys="['Space', 'Enter']"
-        :icon="props.spaceKey.icon"
         :disabled="props.spaceKey.disabled"
         :title="
           props.spaceKey.hint
@@ -24,7 +23,6 @@
       <ShortcutButton
         v-if="props.isEditorButtonVisible"
         :keys="[]"
-        icon="mdi:pencil-outline"
         :title="props.editorButtonLabel ?? t('shortcuts.insertIntoEditor')"
         @click="goToEditor"
       >
@@ -39,8 +37,6 @@
           v-if="slot.action"
           size="sm"
           :keys="[slot.key.toUpperCase()]"
-          :icon="slot.action.icon"
-          :trailing-icon="slot.action.trailingIcon"
           :disabled="slot.action.disabled"
           :title="
             slot.action.hint

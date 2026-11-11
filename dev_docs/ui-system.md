@@ -19,7 +19,9 @@ remain bundled and work offline.
   for delete actions; use regular buttons (`neutral` or `ghost`, or `primary` for
   dialog confirmation).
 - `ShortcutButton`: use `variant="primary|ghost"` and `size="xs|sm|md"`;
-  the default is ghost/md. Keep keyboard hints in this specialized control.
+  the default is ghost/md. Quick surface footer actions use this control with
+  visible borders and text labels, without icons. `ShortcutKeys` separates
+  alternative shortcuts with commas and modifier chords with plus signs.
 - `DropdownMenu`: use the same size/variant names as `Button`; default ghost/sm.
 - `IconButton`: provide a localized `label` and an `icon`. The label supplies the
   accessible name and native tooltip. Use this for icon-only actions.

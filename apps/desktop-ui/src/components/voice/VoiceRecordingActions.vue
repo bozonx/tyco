@@ -4,7 +4,6 @@
       <ShortcutButton
         :size="compact ? 'sm' : 'md'"
         :keys="primaryKeys"
-        :icon="insertIcon"
         variant="primary"
         class="voice-action-primary"
         :disabled="isFinishing"
@@ -16,25 +15,23 @@
         v-if="cancelShortcut"
         :size="compact ? 'sm' : 'md'"
         :keys="['Esc']"
-        icon="mdi:close"
         :disabled="isFinishing"
         @click="cancel"
       >
         {{ t('common.cancel') }}
       </ShortcutButton>
-      <IconButton
+      <ShortcutButton
         v-else
-        :size="compact ? 'sm' : undefined"
-        variant="ghost"
+        size="sm"
+        :keys="[]"
         :disabled="isFinishing"
+        :title="t('chat.voiceCancelHint')"
         @click="cancel"
-        :label="t('chat.voiceCancelHint')"
-        icon="mdi:close"
-      />
+        >{{ t('common.cancel') }}</ShortcutButton
+      >
       <ShortcutButton
         :size="compact ? 'sm' : 'md'"
         :keys="['Shift', 'Space']"
-        icon="mdi:send"
         :title="t('chat.voiceSendNow')"
         :disabled="isFinishing"
         @click="() => finish('submit')"
@@ -47,7 +44,6 @@
         v-if="compact"
         :size="compact ? 'sm' : 'md'"
         :keys="['Esc']"
-        icon="mdi:close"
         @click="cancel"
       >
         {{ t('common.cancel') }}
@@ -56,7 +52,6 @@
         <ShortcutButton
           :size="compact ? 'sm' : 'md'"
           :keys="primaryKeys"
-          icon="mdi:send"
           variant="primary"
           class="voice-action-primary"
           :disabled="isFinishing"
@@ -67,7 +62,6 @@
         <ShortcutButton
           :size="compact ? 'sm' : 'md'"
           :keys="secondaryKeys"
-          icon="mdi:form-textbox"
           :disabled="isFinishing"
           @click="() => finish('insert')"
         >
@@ -76,7 +70,6 @@
         <ShortcutButton
           :size="compact ? 'sm' : 'md'"
           :keys="['Tab']"
-          icon="mdi:arrow-right"
           :disabled="isFinishing"
           @click="() => finish('next')"
         >
@@ -87,7 +80,6 @@
         <ShortcutButton
           :size="compact ? 'sm' : 'md'"
           :keys="primaryKeys"
-          :icon="insertIcon"
           variant="primary"
           class="voice-action-primary"
           :disabled="isFinishing"
@@ -99,7 +91,6 @@
           v-if="finishBehavior === 'insertIntoTarget'"
           :size="compact ? 'sm' : 'md'"
           :keys="['Tab']"
-          icon="mdi:arrow-right"
           :disabled="isFinishing"
           @click="() => finish('next')"
         >
@@ -117,7 +108,6 @@ import type {
   VoiceFinishBehavior,
   VoiceFinishIntent,
 } from '../../lib/stt/voice-finish-intent'
-import IconButton from '../common/IconButton.vue'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 
 const props = defineProps<{
@@ -137,11 +127,6 @@ const insertLabelKey = computed(() =>
     ? 'action.insertIntoWindow'
     : 'menu.finish'
 )
-const insertIcon = computed(() =>
-  props.finishBehavior === 'insertIntoTarget'
-    ? 'mdi:application-export'
-    : 'mdi:check'
-)
 const primaryKeys = computed(() =>
   props.finishHotkey
     ? ['Space', 'Enter', props.finishHotkey]
@@ -151,6 +136,13 @@ const secondaryKeys = ['Shift', 'Space']
 </script>
 
 <style scoped>
+.voice-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
 .voice-action-primary {
   order: 1;
 }

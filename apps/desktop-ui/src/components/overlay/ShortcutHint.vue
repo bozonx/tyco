@@ -7,12 +7,12 @@
     @mousedown="preserveFocus"
     @click="emit('click', $event)"
   >
-    <KeyboardKey v-for="key in keys" :key="key">{{ key }}</KeyboardKey>
+    <ShortcutKeys :keys="keys" />
     <span v-if="$slots.default"><slot /></span>
   </component>
 </template>
 <script setup lang="ts">
-import KeyboardKey from '../common/KeyboardKey.vue'
+import ShortcutKeys from './ShortcutKeys.vue'
 
 withDefaults(
   defineProps<{ keys: string[]; interactive?: boolean; disabled?: boolean }>(),
@@ -28,8 +28,8 @@ function preserveFocus(event: MouseEvent) {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: 0.125rem 0.25rem;
-  border: none;
+  padding: 0.25rem 0.375rem;
+  border: 1px solid var(--app-border);
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--app-text-muted);

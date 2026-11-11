@@ -117,7 +117,6 @@
           <template v-if="isListening">
             <ShortcutButton
               :keys="withHotkey(['Space', 'Enter'])"
-              icon="mdi:play"
               variant="primary"
               :disabled="!canRunLive || voice.stage === 'finishing'"
               @click="void voice.finish('run')"
@@ -130,7 +129,6 @@
             </ShortcutButton>
             <ShortcutButton
               :keys="['Tab']"
-              icon="mdi:pencil-outline"
               :disabled="voice.stage === 'finishing'"
               @click="void voice.finish('review')"
             >
@@ -144,7 +142,6 @@
                   resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey),
                 ])
               "
-              icon="mdi:play"
               variant="primary"
               :disabled="!voice.canRun"
               @click="void voice.run()"
@@ -154,7 +151,6 @@
             <!-- the text stays until the new recording replaces it -->
             <ShortcutButton
               :keys="[]"
-              icon="mdi:microphone"
               :disabled="voice.stage === 'running'"
               data-testid="voice-record-again"
               @click="void voice.start()"

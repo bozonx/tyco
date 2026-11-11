@@ -144,7 +144,6 @@ describe('VoiceRecognitionMenu', () => {
             template: '<div class="live-transcript" />',
           },
           AudioWaveform: true,
-          ShortcutButton: true,
           Button: {
             props: ['square', 'ghost', 'title', 'disabled'],
             template:

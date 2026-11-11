@@ -107,33 +107,34 @@
         >
           {{ t('replyBlocks.insertIntoWindow') }}
         </ShortcutButton>
-        <Button
+        <ShortcutButton
+          :keys="['Tab']"
           v-if="model.replyBlocks.value.length"
           class="quick-next-action"
-          variant="neutral"
-          icon="mdi:arrow-right"
+          variant="ghost"
           :disabled="
             !model.selectedReplyBlock.value || isInputBlocked || isApplying
           "
           @click="openNextStep"
         >
           {{ t('menu.actions') }}
-        </Button>
-        <Button
+        </ShortcutButton>
+        <ShortcutButton
+          :keys="[]"
           variant="ghost"
           :disabled="isInputBlocked || isApplying"
           @click="openFollowUp"
         >
           {{ t('quickAiRequest.followUp') }}
-        </Button>
-        <Button
+        </ShortcutButton>
+        <ShortcutButton
+          :keys="[]"
           variant="ghost"
-          icon="mdi:chat-question-outline"
           :disabled="isInputBlocked || isApplying"
           @click="switchToChat"
         >
           {{ t('quickAiRequest.goToChat') }}
-        </Button>
+        </ShortcutButton>
       </div>
       <QueryPanel
         v-else

@@ -75,7 +75,6 @@
         <ShortcutButton
           size="sm"
           :keys="['Esc']"
-          icon="mdi:close"
           :disabled="isFinishing"
           @click="void model.close()"
         >
@@ -84,7 +83,6 @@
         <ShortcutButton
           size="sm"
           :keys="stopKeys"
-          icon="mdi:check"
           variant="primary"
           :disabled="isFinishing"
           @click="void model.stop()"

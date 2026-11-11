@@ -22,55 +22,51 @@
     </div>
     <!-- mousedown.prevent keeps the focus and the caret in the input -->
     <p ref="hintRef" class="write-hint">
-      <button
+      <ShortcutButton
+        size="sm"
+        :keys="[submitShortcutLabel]"
         type="button"
         class="write-hint-action"
         @mousedown.prevent
         @click="submitFromHint"
       >
-        <KeyboardKey>{{ submitShortcutLabel }}</KeyboardKey>
-        <AppIcon
-          v-if="!isOffMode"
-          icon="mdi:creation-outline"
-          size="xs"
-          class="text-primary"
-        />
         <span>{{
           isOffMode ? t('write.insert') : t('write.correctAndInsert')
         }}</span>
-      </button>
-      <span class="text-faint">•</span>
-      <button
+      </ShortcutButton>
+      <ShortcutButton
+        size="sm"
+        :keys="['Tab']"
         type="button"
         class="write-hint-action"
         @mousedown.prevent
         @click="nextFromHint"
       >
-        <KeyboardKey>Tab</KeyboardKey>
         <span>{{ t('menu.actions') }}</span>
-      </button>
-      <span class="text-faint">•</span>
-      <button
+      </ShortcutButton>
+      <ShortcutButton
+        size="sm"
+        :keys="[newlineShortcutLabel]"
         type="button"
         class="write-hint-action"
         @mousedown.prevent
         @click="insertNewline"
       >
-        <KeyboardKey>{{ newlineShortcutLabel }}</KeyboardKey>
         <span>{{ t('write.newLine') }}</span>
-      </button>
-      <span class="text-faint">•</span>
-      <button
+      </ShortcutButton>
+      <ShortcutButton
+        size="sm"
+        :keys="['Esc']"
         type="button"
         class="write-hint-action"
         @mousedown.prevent
         @click="cancelFromHint"
       >
-        <KeyboardKey>Esc</KeyboardKey>
         <span>{{ t('write.cancel') }}</span>
-      </button>
-      <span class="text-faint">•</span>
-      <button
+      </ShortcutButton>
+      <ShortcutButton
+        size="sm"
+        :keys="[]"
         type="button"
         class="write-hint-action write-mode-switch"
         :class="{ 'is-active': !isOffMode }"
@@ -79,25 +75,20 @@
         @mousedown.prevent
         @click="cycleCorrectionMode"
       >
-        <AppIcon
-          icon="mdi:creation-outline"
-          size="xs"
-          :class="isOffMode ? 'text-faint' : 'text-primary'"
-        />
         <span>{{ correctionModeLabel }}</span>
-      </button>
+      </ShortcutButton>
       <template v-if="isHistoryOn">
-        <span class="text-faint">•</span>
-        <button
+        <ShortcutButton
+          size="sm"
+          :keys="[]"
           type="button"
           class="write-hint-action write-history-action"
           :title="t('write.openHistory')"
           :aria-label="t('write.openHistory')"
           @mousedown.prevent
           @click="openHistory"
+          >{{ t('write.openHistory') }}</ShortcutButton
         >
-          <AppIcon icon="mdi:history" size="xs" />
-        </button>
       </template>
     </p>
   </div>
@@ -106,8 +97,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import AppIcon from '../components/common/AppIcon.vue'
-import KeyboardKey from '../components/common/KeyboardKey.vue'
+import ShortcutButton from '../components/overlay/ShortcutButton.vue'
 import WriteLivePreview from '../components/quick/WriteLivePreview.vue'
 import WriteModeInput from '../components/quick/WriteModeInput.vue'
 import { useDismissibleLayer } from '../composables/use-dismissible-layer'
@@ -469,25 +459,8 @@ function submit() {
   flex-shrink: 0;
 }
 
-.write-hint-action.write-history-action {
-  padding: 0.125rem;
-}
-
-.write-hint-action {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: 0.125rem 0.375rem 0.125rem 0.125rem;
-  border-radius: var(--radius-md);
-  color: inherit;
-  cursor: pointer;
-  transition:
-    background-color var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.write-hint-action:hover {
-  background-color: var(--app-hover);
-  color: var(--color-base-content);
+.write-hint-action.shortcut {
+  width: auto;
+  max-width: none;
 }
 </style>
