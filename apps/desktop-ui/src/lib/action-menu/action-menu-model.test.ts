@@ -52,6 +52,21 @@ describe('createActionMenuModel', () => {
     return { store, deps, services }
   }
 
+  it('passes the source text to voice input and assigns it to B by default', async () => {
+    const { deps } = setup()
+    const openVoiceInput = vi.fn()
+    const model = createActionMenuModel({ ...deps, openVoiceInput })
+    const action = model
+      .getDefaultActions()
+      .find((item) => item.id === 'voiceInput')
+    await action!.action('Source message')
+    expect(openVoiceInput).toHaveBeenCalledWith('Source message')
+    expect(DEFAULT_MAIN_ACTIONS.b).toEqual({
+      type: 'standard',
+      actionId: 'voiceInput',
+    })
+  })
+
   it('hides development actions without moving other shortcuts or changing saved slots', () => {
     const { deps } = setup()
     const mainActions = {
@@ -374,7 +389,7 @@ describe('createActionMenuModel', () => {
       }),
     })
     const slots = computed(() => store.getShortcutActions())
-    expect(slots.value).toHaveLength(11)
+    expect(slots.value).toHaveLength(15)
     const original = { id: 'Search:search', action: vi.fn() }
     const replacement = { ...original, action: vi.fn() }
     store.registerActionsItems([original])
@@ -385,13 +400,13 @@ describe('createActionMenuModel', () => {
     expect(original.action).not.toHaveBeenCalled()
     expect(store.getRegisteredActions()).toHaveLength(1)
     dispose()
-    expect(slots.value).toHaveLength(11)
+    expect(slots.value).toHaveLength(15)
   })
 
   it('places plugin actions only where the menu holds them', () => {
     const { store } = setup()
     store.registerActionsItems([{ id: 'Search:search', action: vi.fn() }])
-    expect(store.getShortcutActions()).toHaveLength(14)
+    expect(store.getShortcutActions()).toHaveLength(15)
   })
 
   it('restores saved plugin positions after disabling and re-enabling', () => {

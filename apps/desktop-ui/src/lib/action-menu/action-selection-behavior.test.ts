@@ -58,7 +58,6 @@ describe('resolveActionSelectionBehavior', () => {
       'voiceCommands',
       'favoritesMenu',
       'openHistory',
-      'voiceInput',
       'listen',
     ] as const) {
       expect(
@@ -69,6 +68,7 @@ describe('resolveActionSelectionBehavior', () => {
 
   it('allows toggling for flexible standard actions', () => {
     for (const actionId of [
+      'voiceInput',
       'quickAiRequest',
       'voiceQuickAiRequest',
       'askInChat',

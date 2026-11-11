@@ -29,6 +29,7 @@ export interface VoiceRecordingProps {
   suffix?: string
   context?: string
   /** The listened message this dictation replies to */
+  referenceText?: string
   replyTo?: string
   /** Shows the switch to listening, see `QuickModeSwitch` */
   canSwitchMode?: boolean

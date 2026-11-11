@@ -22,7 +22,6 @@
       <InsertMenu
         v-if="model.phase.value === 'result'"
         :text="model.resultText.value"
-        :primary-action="replyByVoicePrimaryAction"
         :allow-insert-button="true"
         :allow-remove-context="false"
         :shortcuts-disabled="menuModalsStore.hasOpenModal"
@@ -88,11 +87,9 @@ import { describeDictationError } from '../lib/stt/dictation-error'
 import { liveTranscriptText } from '../lib/stt/live-transcript'
 import { createKeyPressTracker } from '../lib/ui/key-press-tracker'
 import { isTextEntryTarget } from '../lib/ui/text-entry-target'
-import type { ActionItem } from '../stores/action-menu'
 import { useDesktopStore } from '../stores/desktop'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
-import { useListenReplyStore } from '../stores/listen-reply'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useQuickDismissStore } from '../stores/quick-dismiss'
 import { useVoiceResultStore } from '../stores/voice-result'
@@ -110,7 +107,6 @@ const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
 const windowStore = useWindowStore()
-const replyStore = useListenReplyStore()
 const modeSwitch = useQuickModeSwitch()
 const { startDictation, finishDictation, cancelDictation, switchSource } =
   useDictationActions()
@@ -236,24 +232,6 @@ async function switchToVoice() {
   const switched = await modeSwitch.switchTo('voice')
   if (!switched.success) isChangingMode.value = false
 }
-
-/** Dictates an answer to what was heard: the transcript is its context */
-async function replyByVoice() {
-  const text = model.resultText.value
-  const nextActivationId = modeSwitch.nextActivationId()
-  useVoiceResultStore().step.resetResult()
-  const switched = await modeSwitch.switchTo('voice')
-  // Publish context only after the native activation check succeeded. A
-  // competing activation must never inherit a guessed next activation's text.
-  if (switched.success) replyStore.offer(text, nextActivationId)
-}
-
-const replyByVoicePrimaryAction = computed<ActionItem>(() => ({
-  id: 'replyByVoice',
-  labelKey: 'listen.replyByVoice',
-  icon: 'mdi:microphone-message',
-  action: async () => replyByVoice(),
-}))
 
 function handleLanguageChange() {
   if (

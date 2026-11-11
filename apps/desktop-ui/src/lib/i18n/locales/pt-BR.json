@@ -1584,7 +1584,6 @@
     "useSystemMix": "Gravar todo o som",
     "sourceLost": "O aplicativo foi fechado. Aguardando seu áudio; você pode escolher outra fonte manualmente.",
     "waitingFor": "Aguardando som de {app}…",
-    "replyByVoice": "Responder por voz",
     "nothingRecognized": "Nada reconhecido",
     "retry": "Tentar novamente",
     "replyingTo": "Resposta a: {text}",

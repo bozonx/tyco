@@ -20,6 +20,9 @@
         {{ t('listen.replyingTo', { text: replyTo }) }}
       </span>
     </div>
+    <div v-if="referenceText" class="voice-reference-text">
+      {{ referenceText }}
+    </div>
     <LiveTranscript
       class="voice-bar-transcript"
       :committed="transcript.committed"
@@ -121,6 +124,13 @@ const slots = computed(() => {
 })
 </script>
 <style scoped>
+.voice-reference-text {
+  max-height: 10rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: var(--app-text-muted);
+}
+
 .voice-bar {
   height: 7.5rem;
 }
@@ -198,5 +208,8 @@ const slots = computed(() => {
 .voice-bar-actions {
   --shortcut-flex: 0 0 auto;
   --shortcut-width: auto;
+}
+.voice-bar:has(.voice-reference-text) {
+  height: auto;
 }
 </style>

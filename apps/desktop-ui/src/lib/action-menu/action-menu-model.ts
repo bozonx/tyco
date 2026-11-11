@@ -73,6 +73,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
       | 'voiceScreenshotQuickAiRequest',
     profileId?: string
   ) => Promise<void>
+  openVoiceInput?: (text: string) => Promise<void>
   canListen?: () => boolean
   /** With `language` the dialog translates into it at once */
   openTranslateModal: (text: string, language?: string) => void
@@ -465,8 +466,8 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           id: 'voiceInput',
           labelKey: 'menu.voiceInput',
           icon: 'mdi:microphone-outline',
-          action: async () => {
-            await deps.activateMode?.('voice')
+          action: async (text: string) => {
+            await deps.openVoiceInput?.(text)
           },
         },
         {

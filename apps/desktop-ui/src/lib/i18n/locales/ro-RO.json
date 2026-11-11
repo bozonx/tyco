@@ -1584,7 +1584,6 @@
     "useSystemMix": "Înregistrează tot sunetul",
     "sourceLost": "Aplicația s-a închis. Se așteaptă sunetul ei; poți alege manual altă sursă.",
     "waitingFor": "Se așteaptă sunet de la {app}…",
-    "replyByVoice": "Răspunde vocal",
     "nothingRecognized": "Nu s-a recunoscut nimic",
     "retry": "Reîncearcă",
     "replyingTo": "Răspuns la: {text}",

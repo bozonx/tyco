@@ -105,7 +105,8 @@
         "f": { "type": "standard", "actionId": "transformationMenu" },
         "g": { "type": "standard", "actionId": "chatPromptsMenu" },
         "z": { "type": "standard", "actionId": "askInChat" },
-        "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
+        "v": { "type": "standard", "actionId": "voiceQuickAiRequest" },
+        "b": { "type": "standard", "actionId": "voiceInput" }
       }
     },
     {

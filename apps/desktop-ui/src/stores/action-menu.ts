@@ -17,6 +17,8 @@ import { useIpcStore } from './ipc'
 import { MenuModals, useMenuModalsStore } from './menu-modals'
 import { useAiProfilesStore } from './ai-profiles'
 import { useProfileChatStore } from './chat'
+import { useVoiceReferenceStore } from './voice-reference'
+import { useVoiceResultStore } from './voice-result'
 
 export type { ActionItem }
 
@@ -38,6 +40,16 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     activateMode: async (mode, profileId) => {
       pendingProfileId.value = profileId ?? null
       await useIpcStore().callOrNotify('activate_mode', { mode })
+    },
+    openVoiceInput: async (text) => {
+      const nextActivationId = desktopStore.desktopState.activationId + 1
+      useVoiceResultStore().step.resetResult()
+      const result = await useIpcStore().callOrNotify('activate_mode', {
+        mode: 'voice',
+      })
+      if (result.success) {
+        useVoiceReferenceStore().offer(text, nextActivationId)
+      }
     },
     canListen: () => Boolean(desktopStore.desktopState.canListen),
     saveOutput: async (text: string) => {

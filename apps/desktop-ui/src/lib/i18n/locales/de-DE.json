@@ -1584,7 +1584,6 @@
     "useSystemMix": "Gesamten Ton aufnehmen",
     "sourceLost": "Die App wurde geschlossen. Warte auf ihren Ton; eine andere Quelle kann manuell gewählt werden.",
     "waitingFor": "Warte auf Ton von {app}…",
-    "replyByVoice": "Per Sprache antworten",
     "nothingRecognized": "Nichts erkannt",
     "retry": "Erneut versuchen",
     "replyingTo": "Antwort auf: {text}",

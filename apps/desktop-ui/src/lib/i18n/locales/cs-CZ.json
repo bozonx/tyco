@@ -1584,7 +1584,6 @@
     "useSystemMix": "Nahrávat veškerý zvuk",
     "sourceLost": "Aplikace se zavřela. Čeká se na její zvuk; jiný zdroj můžete vybrat ručně.",
     "waitingFor": "Čekám na zvuk z {app}…",
-    "replyByVoice": "Odpovědět hlasem",
     "nothingRecognized": "Nic nerozpoznáno",
     "retry": "Zkusit znovu",
     "replyingTo": "Odpověď na: {text}",

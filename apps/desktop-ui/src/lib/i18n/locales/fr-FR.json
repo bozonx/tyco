@@ -1584,7 +1584,6 @@
     "useSystemMix": "Enregistrer tout le son",
     "sourceLost": "L’application s’est fermée. En attente de son audio ; vous pouvez choisir une autre source manuellement.",
     "waitingFor": "En attente du son de {app}…",
-    "replyByVoice": "Répondre à la voix",
     "nothingRecognized": "Rien n’a été reconnu",
     "retry": "Réessayer",
     "replyingTo": "Réponse à : {text}",

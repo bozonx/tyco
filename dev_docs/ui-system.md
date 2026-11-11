@@ -247,3 +247,12 @@ after generation completes. Repeated keys, composition, modifiers and selected
 text must not trigger insertion. Insertion is guarded while it is in progress.
 Reply-tool instructions are English and request one complete variant by default;
 multiple variants require an explicit user request.
+
+## Voice input from actions
+
+The standard `voiceInput` action is assignable in the action picker and occupies
+B on the first default action page. It opens dictation with the action's source
+text displayed as a scrollable reference. The reference belongs to that voice
+activation only; it is neither inserted with the transcript nor sent as an AI
+instruction. Listening results use the same action menu without a separate
+reply-by-voice primary button.

@@ -1584,7 +1584,6 @@
     "useSystemMix": "すべての音声を録音",
     "sourceLost": "アプリが終了しました。音声を待機中です。別の音声ソースを手動で選択できます。",
     "waitingFor": "{app} の音声を待っています…",
-    "replyByVoice": "音声で返信",
     "nothingRecognized": "何も認識されませんでした",
     "retry": "再試行",
     "replyingTo": "返信先：{text}",

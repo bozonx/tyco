@@ -1584,7 +1584,6 @@
     "useSystemMix": "錄製全部聲音",
     "sourceLost": "應用程式已關閉，正在等待其音訊；你可以手動選擇其他音訊來源。",
     "waitingFor": "正在等待 {app} 的聲音…",
-    "replyByVoice": "語音回覆",
     "nothingRecognized": "未辨識到任何內容",
     "retry": "重試",
     "replyingTo": "回覆：{text}",

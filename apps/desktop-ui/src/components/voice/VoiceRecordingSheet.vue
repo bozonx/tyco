@@ -9,6 +9,12 @@
       />
     </template>
     <template #preview>
+      <div
+        v-if="referenceText"
+        class="max-h-40 overflow-auto whitespace-pre-wrap"
+      >
+        {{ referenceText }}
+      </div>
       <!-- the question goes to the chat with this text: the user sees what
            the answer will be about -->
       <SelectionContextPreview

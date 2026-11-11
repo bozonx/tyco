@@ -1584,7 +1584,6 @@
     "useSystemMix": "Snimaj sav zvuk",
     "sourceLost": "Aplikacija je zatvorena. Čeka se njezin zvuk; drugi izvor možete odabrati ručno.",
     "waitingFor": "Čekam zvuk iz {app}…",
-    "replyByVoice": "Odgovori glasom",
     "nothingRecognized": "Ništa nije prepoznato",
     "retry": "Pokušaj ponovno",
     "replyingTo": "Odgovor na: {text}",

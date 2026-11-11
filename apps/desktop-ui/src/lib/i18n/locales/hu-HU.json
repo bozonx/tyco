@@ -1584,7 +1584,6 @@
     "useSystemMix": "Teljes hang rögzítése",
     "sourceLost": "Az alkalmazás bezárult. Várakozás a hangjára; másik forrás kézzel választható.",
     "waitingFor": "Várakozás a(z) {app} hangjára…",
-    "replyByVoice": "Válasz hanggal",
     "nothingRecognized": "Nincs felismert szöveg",
     "retry": "Újra",
     "replyingTo": "Válasz erre: {text}",

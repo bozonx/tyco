@@ -1584,7 +1584,6 @@
     "useSystemMix": "Grabar todo el sonido",
     "sourceLost": "La aplicación se cerró. Esperando su audio; puedes elegir otra fuente manualmente.",
     "waitingFor": "Esperando sonido de {app}…",
-    "replyByVoice": "Responder por voz",
     "nothingRecognized": "No se reconoció nada",
     "retry": "Reintentar",
     "replyingTo": "Respuesta a: {text}",

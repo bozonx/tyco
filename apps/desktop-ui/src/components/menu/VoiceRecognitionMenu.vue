@@ -68,6 +68,7 @@
     :finish-with-style="finishWithStyle"
     :cancel="cancel"
     :reply-to="props.replyTo"
+    :reference-text="props.referenceText"
     :can-switch-mode="props.canSwitchMode"
     :microphone-id="sessionMicrophoneId"
     :select-microphone="selectMicrophone"
@@ -122,6 +123,7 @@ import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 const props = defineProps<
   VoiceMenuParams & {
     /** The listened message this dictation replies to */
+    referenceText?: string
     replyTo?: string
     /** The quick window may switch to listening from here */
     canSwitchMode?: boolean

@@ -1584,7 +1584,6 @@
     "useSystemMix": "Tüm sesi kaydet",
     "sourceLost": "Uygulama kapandı. Sesi bekleniyor; başka bir kaynağı elle seçebilirsiniz.",
     "waitingFor": "{app} sesini bekliyor…",
-    "replyByVoice": "Sesle yanıtla",
     "nothingRecognized": "Hiçbir şey tanınmadı",
     "retry": "Yeniden dene",
     "replyingTo": "Yanıt: {text}",

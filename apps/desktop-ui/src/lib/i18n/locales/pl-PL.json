@@ -1584,7 +1584,6 @@
     "useSystemMix": "Nagrywaj cały dźwięk",
     "sourceLost": "Aplikacja została zamknięta. Oczekiwanie na jej dźwięk; inne źródło można wybrać ręcznie.",
     "waitingFor": "Czekam na dźwięk z {app}…",
-    "replyByVoice": "Odpowiedz głosem",
     "nothingRecognized": "Nic nie rozpoznano",
     "retry": "Ponów",
     "replyingTo": "Odpowiedź na: {text}",
