@@ -150,6 +150,13 @@ request. This context belongs to one activation only.
 Retention and polling tests supply timestamps or virtual time instead of sleeping.
 The remaining device and compositor behavior belongs to desktop smoke tests.
 
+The screenshot area selector temporarily reuses the quick window. On Wayland,
+its layer-shell surface anchors to all output edges with exclusive zone `-1`,
+so desktop panels do not offset or shrink the frozen image. Ordinary panel and
+sheet profiles restore zone `0` when selection ends. Native verification should
+check selection and cancellation with a visible desktop panel: the frozen image
+must align with the screen, and the restored quick window must respect panels.
+
 `build.rs` declares every app command in `AppManifest`. Capability files grant
 explicit command permissions to `main`, `quick`, or both, without remote or
 wildcard window access. The core event listener permissions are shared; native

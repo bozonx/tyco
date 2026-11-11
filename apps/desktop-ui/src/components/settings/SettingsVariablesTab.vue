@@ -125,25 +125,20 @@
             <div class="variable-card-content">
               <div class="variable-card-header">
                 <div class="variable-card-header-main">
-                  <div class="variable-name-row">
-                    <FieldInput
-                      :ref="(el) => setNameInputRef(variable.id, el)"
-                      :model-value="nameDrafts[variable.id] ?? variable.name"
-                      class="font-mono variable-name-input"
-                      :placeholder="t('variables.name')"
-                      :aria-label="t('variables.name')"
-                      :title="t('variables.nameHint')"
-                      size="sm"
-                      @update:model-value="
-                        setNameDraft(variable.id, String($event))
-                      "
-                      @blur="commitName(variable.id)"
-                      @keydown.enter="commitName(variable.id)"
-                    />
-                    <div class="variable-usage">
-                      <span>{{ usageText(variable.name) }}</span>
-                    </div>
-                  </div>
+                  <FieldInput
+                    :ref="(el) => setNameInputRef(variable.id, el)"
+                    :model-value="nameDrafts[variable.id] ?? variable.name"
+                    class="font-mono variable-name-input"
+                    :placeholder="t('variables.name')"
+                    :aria-label="t('variables.name')"
+                    :title="t('variables.nameHint')"
+                    size="sm"
+                    @update:model-value="
+                      setNameDraft(variable.id, String($event))
+                    "
+                    @blur="commitName(variable.id)"
+                    @keydown.enter="commitName(variable.id)"
+                  />
                   <span
                     v-if="nameErrors[variable.id]"
                     class="variable-name-error"
@@ -151,14 +146,28 @@
                     {{ nameErrors[variable.id] }}
                   </span>
                 </div>
-                <IconButton
-                  icon="mdi:trash-can-outline"
-                  variant="ghost"
-                  size="sm"
-                  :label="t('variables.remove')"
-                  :title="t('variables.remove')"
-                  @click="requestRemove(variable.id)"
-                />
+                <div class="variable-card-actions">
+                  <Badge
+                    class="variable-usage-badge"
+                    :tone="
+                      usageByVariableId[variable.id]?.count
+                        ? 'neutral'
+                        : 'muted'
+                    "
+                    :title="usageByVariableId[variable.id]?.label"
+                    :aria-label="usageByVariableId[variable.id]?.label"
+                  >
+                    {{ usageByVariableId[variable.id]?.count ?? 0 }}
+                  </Badge>
+                  <IconButton
+                    icon="mdi:trash-can-outline"
+                    variant="ghost"
+                    size="sm"
+                    :label="t('variables.remove')"
+                    :title="t('variables.remove')"
+                    @click="requestRemove(variable.id)"
+                  />
+                </div>
               </div>
 
               <div class="variable-value-section">
@@ -226,6 +235,7 @@ import {
 import { useDesktopStore } from '../../stores/desktop'
 import { useIpcStore } from '../../stores/ipc'
 import AppIcon from '../common/AppIcon.vue'
+import Badge from '../common/Badge.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import CopyButton from '../common/CopyButton.vue'
@@ -404,10 +414,17 @@ function browseItems(variableId: string): DropdownMenuItem[] {
   ]
 }
 
-function usageText(name: string): string {
-  const count = usageCountOf(name)
-  return count ? t('variables.usedBy', { count }) : t('variables.unused')
-}
+const usageByVariableId = computed(() =>
+  Object.fromEntries(
+    variables.value.map((variable) => {
+      const count = usageCountOf(variable.name)
+      const label = count
+        ? t('variables.usedBy', { count })
+        : t('variables.unused')
+      return [variable.id, { count, label }]
+    })
+  )
+)
 
 const builtins = computed(() => [
   { name: 'TYCO_USER_DIR', value: desktop.userData?.path ?? '' },
@@ -615,15 +632,7 @@ const builtins = computed(() => [
   gap: var(--space-2xs);
 }
 
-.variable-name-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-}
-
 .variable-name-input {
-  max-width: 16rem;
   font-weight: 600;
 }
 
@@ -633,12 +642,18 @@ const builtins = computed(() => [
   line-height: var(--leading-normal);
 }
 
-.variable-usage {
-  display: inline-flex;
+.variable-card-actions {
+  display: flex;
   align-items: center;
   gap: var(--space-xs);
-  color: var(--app-text-muted);
-  font-size: var(--text-small);
+  flex-shrink: 0;
+  min-height: var(--control-size-sm);
+}
+
+.variable-usage-badge {
+  min-width: var(--control-size-xs);
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .variable-value-section {

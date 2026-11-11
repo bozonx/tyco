@@ -123,7 +123,12 @@ describe('SettingsVariablesTab.vue', () => {
     expect(wrapper.find('.variables-empty').exists()).toBe(false)
     const card = wrapper.find('[data-testid="variable-v1"]')
     expect(card.exists()).toBe(true)
-    expect(card.text()).toContain('variables.unused')
+    const badge = card.find('.variable-card-actions .variable-usage-badge')
+    expect(badge.exists()).toBe(true)
+    expect(badge.text()).toBe('0')
+    expect(badge.classes()).toContain('ui-badge--muted')
+    expect(badge.attributes('title')).toBe('variables.unused')
+    expect(badge.attributes('aria-label')).toBe('variables.unused')
     expect(card.text()).not.toContain('{{var:CUSTOM_VAR}}')
     expect(wrapper.find('.drag-handle-stub').exists()).toBe(true)
 
@@ -180,6 +185,14 @@ describe('SettingsVariablesTab.vue', () => {
         ],
       }).commands
     )
+    const badge = wrapper.find(
+      '[data-testid="variable-v1"] .variable-card-actions .variable-usage-badge'
+    )
+    expect(badge.text()).toBe('1')
+    expect(badge.classes()).toContain('ui-badge--neutral')
+    expect(badge.attributes('title')).toBe('variables.usedBy {"count":1}')
+    expect(badge.attributes('aria-label')).toBe('variables.usedBy {"count":1}')
+
     await wrapper
       .find('[data-testid="variable-v1"] .variable-card-header button')
       .trigger('click')

@@ -79,6 +79,7 @@ pub fn set_panel_profile(window: &impl IsA<gtk::Window>, margin_bottom: i32) {
     let pointer = raw(window);
     // SAFETY: the window was initialized by `attach` and remains alive.
     unsafe {
+        gtk_layer_set_exclusive_zone(pointer, 0);
         gtk_layer_set_anchor(pointer, EDGE_BOTTOM, 1);
         gtk_layer_set_anchor(pointer, EDGE_TOP, 0);
         gtk_layer_set_anchor(pointer, EDGE_LEFT, 0);
@@ -92,6 +93,7 @@ pub fn set_sheet_profile(window: &impl IsA<gtk::Window>, margin_top: i32) {
     // Anchor to top with margin to center vertically; unanchored left/right centers horizontally.
     // SAFETY: the window was initialized by `attach` and remains alive.
     unsafe {
+        gtk_layer_set_exclusive_zone(pointer, 0);
         gtk_layer_set_anchor(pointer, EDGE_TOP, 1);
         gtk_layer_set_anchor(pointer, EDGE_BOTTOM, 0);
         gtk_layer_set_anchor(pointer, EDGE_LEFT, 0);
@@ -103,11 +105,14 @@ pub fn set_sheet_profile(window: &impl IsA<gtk::Window>, margin_top: i32) {
     }
 }
 
-/// Anchors the surface to every edge, so it covers its whole output.
+/// Covers the whole output, including space reserved by desktop panels.
 pub fn set_cover_profile(window: &impl IsA<gtk::Window>) {
     let pointer = raw(window);
     // SAFETY: the window was initialized by `attach` and remains alive.
     unsafe {
+        // Zero avoids other surfaces' exclusive zones and shifts the frozen
+        // screenshot below desktop panels. -1 uses the full output instead.
+        gtk_layer_set_exclusive_zone(pointer, -1);
         for edge in [EDGE_TOP, EDGE_BOTTOM, EDGE_LEFT, EDGE_RIGHT] {
             gtk_layer_set_anchor(pointer, edge, 1);
             gtk_layer_set_margin(pointer, edge, 0);
