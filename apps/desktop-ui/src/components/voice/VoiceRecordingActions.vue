@@ -100,12 +100,12 @@
         <ShortcutButton
           v-if="finishBehavior === 'insertIntoTarget'"
           :size="compact ? 'sm' : 'md'"
-          :keys="['Tab']"
+          :keys="['Shift', 'Enter']"
           icon="mdi:arrow-right"
           :disabled="isFinishing"
           @click="() => finish('next')"
         >
-          {{ t('write.next') }}
+          {{ t('menu.actions') }}
         </ShortcutButton>
       </template>
     </template>

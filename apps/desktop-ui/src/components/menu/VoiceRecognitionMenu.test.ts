@@ -249,7 +249,7 @@ describe('VoiceRecognitionMenu', () => {
       ['submitToChat', { code: 'Tab' }, 'next'],
       ['insertIntoTarget', { code: 'Enter' }, 'insert'],
       ['insertIntoTarget', { code: 'Space' }, 'insert'],
-      ['insertIntoTarget', { code: 'Tab' }, 'next'],
+      ['insertIntoTarget', { code: 'Enter', shiftKey: true }, 'next'],
       ['confirm', { code: 'Enter' }, 'insert'],
       ['confirm', { code: 'Space' }, 'insert'],
     ] as const)('%s finishes %o with %s', async (behavior, init, intent) => {
@@ -295,21 +295,24 @@ describe('VoiceRecognitionMenu', () => {
       wrapper.unmount()
     })
 
-    it('keeps Tab available for focus navigation in confirm mode', async () => {
-      const wrapper = mountVoiceInput('confirm')
-      await flushPromises()
-      const event = new KeyboardEvent('keydown', {
-        code: 'Tab',
-        cancelable: true,
-      })
-      window.dispatchEvent(event)
-      await keyUp({ code: 'Tab' })
+    it.each(['confirm', 'insertIntoTarget'] as const)(
+      'keeps Tab available for focus navigation in %s mode',
+      async (mode) => {
+        const wrapper = mountVoiceInput(mode)
+        await flushPromises()
+        const event = new KeyboardEvent('keydown', {
+          code: 'Tab',
+          cancelable: true,
+        })
+        window.dispatchEvent(event)
+        await keyUp({ code: 'Tab' })
 
-      expect(event.defaultPrevented).toBe(false)
-      expect(mocks.finishDictation).not.toHaveBeenCalled()
-      expect(wrapper.emitted('corrected')).toBeUndefined()
-      wrapper.unmount()
-    })
+        expect(event.defaultPrevented).toBe(false)
+        expect(mocks.finishDictation).not.toHaveBeenCalled()
+        expect(wrapper.emitted('corrected')).toBeUndefined()
+        wrapper.unmount()
+      }
+    )
   })
 
   const mountChat = () =>
@@ -350,7 +353,7 @@ describe('VoiceRecognitionMenu', () => {
     wrapper.unmount()
   })
 
-  it('keeps recording when an activation of the other window hides this one', async () => {
+  it('cancels recording when an activation of the other window hides this one', async () => {
     const wrapper = mountChat()
     await flushPromises()
     expect(mocks.startDictation).toHaveBeenCalledOnce()
@@ -362,7 +365,7 @@ describe('VoiceRecognitionMenu', () => {
     })
     await flushPromises()
     expect(mocks.startDictation).toHaveBeenCalledOnce()
-    expect(mocks.cancelDictation).not.toHaveBeenCalled()
+    expect(mocks.cancelDictation).toHaveBeenCalled()
     wrapper.unmount()
   })
 

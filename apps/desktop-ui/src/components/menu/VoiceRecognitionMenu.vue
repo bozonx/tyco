@@ -461,10 +461,15 @@ function handleKeyUp(event: KeyboardEvent) {
   }
 
   if (
-    (props.finishBehavior === 'submitToChat' ||
-      props.finishBehavior === 'insertIntoTarget') &&
-    event.code === 'Tab' &&
-    !event.shiftKey
+    (props.finishBehavior === 'submitToChat' &&
+      event.code === 'Tab' &&
+      !event.shiftKey) ||
+    (props.finishBehavior === 'insertIntoTarget' &&
+      event.code === 'Enter' &&
+      event.shiftKey &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey)
   ) {
     event.preventDefault()
     void finish('next')
@@ -490,12 +495,17 @@ function handleKeyDown(event: KeyboardEvent) {
     return
   }
 
-  // Tab finishes the dictation; it must not move the focus first
+  // Consume the secondary completion shortcut before the browser handles it
   if (
-    (props.finishBehavior === 'submitToChat' ||
-      props.finishBehavior === 'insertIntoTarget') &&
-    event.code === 'Tab' &&
-    !event.shiftKey
+    (props.finishBehavior === 'submitToChat' &&
+      event.code === 'Tab' &&
+      !event.shiftKey) ||
+    (props.finishBehavior === 'insertIntoTarget' &&
+      event.code === 'Enter' &&
+      event.shiftKey &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey)
   ) {
     event.preventDefault()
   }
