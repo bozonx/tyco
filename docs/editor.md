@@ -95,3 +95,12 @@ Linux listening requires PipeWire. Windows offers application capture when its
 process-loopback API is available and otherwise offers all-sound capture.
 The move handle is available on regular overlay windows; layer-shell overlays
 cannot be dragged. Developer details are in [Architecture](../dev_docs/architecture.md).
+
+### Recording computer sound
+
+System audio records the default output device on Linux and Windows, including
+sound played by Tyco. Applications routed to another output are not included;
+select an application to record it independently of the default output.
+Linux requires PipeWire. Application capture on Windows requires process-loopback
+support, checked at runtime. Separate installations are separate application
+sources on Windows; helpers installed in another directory may appear separately.

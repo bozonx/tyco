@@ -88,7 +88,7 @@ pub(crate) fn can_capture_playback() -> bool {
     #[cfg(target_os = "linux")]
     return pipewire::is_available();
     #[cfg(target_os = "windows")]
-    return true;
+    return wasapi::has_device_loopback();
     #[cfg(not(any(target_os = "linux", target_os = "windows")))]
     return false;
 }

@@ -7,7 +7,7 @@
 pub(crate) struct ProcessEntry {
     pub pid: u32,
     pub parent_pid: u32,
-    /// The executable file name, e.g. `Telegram.exe`.
+    /// The full executable path on Windows; empty when access is denied.
     pub exe_name: String,
 }
 
@@ -15,13 +15,16 @@ pub(crate) struct ProcessEntry {
 /// the root of its tree, see `AudioAppId`.
 pub(crate) fn app_root(processes: &[ProcessEntry], pid: u32) -> Option<&ProcessEntry> {
     let mut current = processes.iter().find(|process| process.pid == pid)?;
-    // a parent of the same executable is the same application: walk up to
+    if current.exe_name.is_empty() {
+        return None;
+    }
+    // Executables in the same installation directory share an application: walk up to
     // the topmost one, guarding against a loop of reused ids
     for _ in 0..processes.len() {
         let parent = processes.iter().find(|process| {
             process.pid == current.parent_pid
                 && process.pid != current.pid
-                && process.exe_name.eq_ignore_ascii_case(&current.exe_name)
+                && same_application(&process.exe_name, &current.exe_name)
         });
         match parent {
             Some(parent) => current = parent,
@@ -29,6 +32,20 @@ pub(crate) fn app_root(processes: &[ProcessEntry], pid: u32) -> Option<&ProcessE
         }
     }
     Some(current)
+}
+
+fn same_application(left: &str, right: &str) -> bool {
+    if left.is_empty() || right.is_empty() {
+        return false;
+    }
+    if left.eq_ignore_ascii_case(right) {
+        return true;
+    }
+    let directory = |path: &str| {
+        path.rsplit_once('\\')
+            .map(|(directory, _)| directory.to_ascii_lowercase())
+    };
+    matches!((directory(left), directory(right)), (Some(left), Some(right)) if left == right && !left.ends_with("\\windows\\system32"))
 }
 
 /// The roots of the trees of the application `app_id`, an executable name.
@@ -63,6 +80,7 @@ pub(crate) fn is_in_tree(processes: &[ProcessEntry], pid: u32, ancestor: u32) ->
 
 /// What the user sees for an executable: `Telegram` for `Telegram.exe`.
 pub(crate) fn app_label(exe_name: &str) -> String {
+    let exe_name = exe_name.rsplit(['\\', '/']).next().unwrap_or(exe_name);
     let stem = exe_name
         .strip_suffix(".exe")
         .or_else(|| exe_name.strip_suffix(".EXE"))
@@ -90,6 +108,19 @@ mod tests {
             process(12, 10, "chrome.exe"),
             process(20, 1, "Telegram.exe"),
         ]
+    }
+
+    #[test]
+    fn full_paths_isolate_installations_and_group_helpers() {
+        let processes = vec![
+            process(10, 0, r"C:\Apps\One\app.exe"),
+            process(11, 10, r"C:\Apps\One\helper.exe"),
+            process(12, 11, r"C:\Apps\One\app.exe"),
+            process(20, 0, r"C:\Apps\Two\app.exe"),
+        ];
+        assert_eq!(app_root(&processes, 11).unwrap().pid, 10);
+        assert_eq!(app_roots(&processes, r"C:\Apps\One\app.exe"), vec![10]);
+        assert_eq!(app_label(r"C:\Apps\One\app.exe"), "app");
     }
 
     #[test]

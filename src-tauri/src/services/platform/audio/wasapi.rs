@@ -1,17 +1,13 @@
-//! The sound the computer plays, through WASAPI process loopback: the whole
-//! sound without Tyco's own process tree, or the tree of one application.
-//! Process loopback is probed at runtime. When unavailable, the whole
-//! sound comes from the loopback of the default output device.
-//!
-//! Process loopback reports no mix format: the stream asks for float32 at
-//! 48 kHz in stereo and is mixed down and resampled here.
+//! Default-output WASAPI loopback for system sound and process loopback for
+//! application capture. Application support is probed at runtime.
+//! Streams request float32 stereo at 48 kHz, then mix down and resample.
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc, Mutex, OnceLock};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use windows::core::{implement, Interface, Ref, HRESULT};
+use windows::core::{implement, Interface, Ref, HRESULT, PWSTR};
 use windows::Win32::Foundation::{CloseHandle, HANDLE, WAIT_OBJECT_0};
 use windows::Win32::Media::Audio::Endpoints::IAudioMeterInformation;
 use windows::Win32::Media::Audio::{
@@ -37,7 +33,10 @@ use windows::Win32::System::Com::{
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
 };
-use windows::Win32::System::Threading::{CreateEventW, WaitForSingleObject};
+use windows::Win32::System::Threading::{
+    CreateEventW, OpenProcess, QueryFullProcessImageNameW, WaitForSingleObject, PROCESS_NAME_WIN32,
+    PROCESS_QUERY_LIMITED_INFORMATION,
+};
 use windows::Win32::System::Variant::VT_BLOB;
 
 use super::process_tree::{app_label, app_root, app_roots, is_in_tree, ProcessEntry};
@@ -123,21 +122,48 @@ fn process_snapshot() -> Vec<ProcessEntry> {
         };
         let mut found = Process32FirstW(snapshot, &mut entry).is_ok();
         while found {
-            let length = entry
-                .szExeFile
-                .iter()
-                .position(|unit| *unit == 0)
-                .unwrap_or(entry.szExeFile.len());
             processes.push(ProcessEntry {
                 pid: entry.th32ProcessID,
                 parent_pid: entry.th32ParentProcessID,
-                exe_name: String::from_utf16_lossy(&entry.szExeFile[..length]),
+                exe_name: process_image(entry.th32ProcessID).unwrap_or_default(),
             });
             found = Process32NextW(snapshot, &mut entry).is_ok();
         }
         let _ = CloseHandle(snapshot);
     }
     processes
+}
+
+/// Resolve an executable without falling back to an ambiguous basename.
+fn process_image(pid: u32) -> Option<String> {
+    // SAFETY: the process handle is closed after the query; the buffer stays valid.
+    unsafe {
+        let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
+        let mut buffer = vec![0u16; 32768];
+        let mut length = buffer.len() as u32;
+        let result = QueryFullProcessImageNameW(
+            handle,
+            PROCESS_NAME_WIN32,
+            PWSTR(buffer.as_mut_ptr()),
+            &mut length,
+        );
+        let _ = CloseHandle(handle);
+        result.ok()?;
+        Some(String::from_utf16_lossy(&buffer[..length as usize]))
+    }
+}
+
+pub(super) fn has_device_loopback() -> bool {
+    thread::spawn(|| {
+        let Ok(_com) = ComScope::enter() else {
+            return false;
+        };
+        default_output_device()
+            .and_then(|(_, device)| device_stream(&device))
+            .is_ok()
+    })
+    .join()
+    .unwrap_or(false)
 }
 
 #[implement(IActivateAudioInterfaceCompletionHandler)]
@@ -344,8 +370,6 @@ pub(super) fn open_playback(
                 "Process loopback is unavailable on this Windows system".into(),
             ))
         }
-        _ if has_process_loopback() => Target::AllButOwn,
-        // before process loopback: the whole sound of the default output
         _ => Target::Device,
     };
     let mut context = StreamContext::new(stop_flag, LOOPBACK_RATE_HZ, TARGET_SAMPLE_RATE_HZ);
@@ -376,7 +400,6 @@ pub(super) fn open_playback(
 }
 
 enum Target {
-    AllButOwn,
     Application(String),
     Device,
 }
@@ -505,36 +528,7 @@ fn run_capture(
         }
     };
     let context = &shared.context;
-    let mut converter = PlaybackConverter::new(
-        LOOPBACK_RATE_HZ,
-        TARGET_SAMPLE_RATE_HZ,
-        usize::from(LOOPBACK_CHANNELS),
-    );
     match target {
-        Target::AllButOwn => {
-            let stream = activate_process_loopback(
-                std::process::id(),
-                PROCESS_LOOPBACK_MODE_EXCLUDE_TARGET_PROCESS_TREE,
-            )
-            .and_then(LoopbackStream::start);
-            let stream = match stream {
-                Ok(stream) => stream,
-                Err(error) => {
-                    log::info!("Process loopback unavailable, using the output device: {error}");
-                    run_device_capture(context, quit, setup_tx);
-                    return;
-                }
-            };
-            let _ = setup_tx.send(Ok(()));
-            while !quit.load(Ordering::SeqCst) {
-                if let Err(error) = stream.read(WAIT_INTERVAL_MS, |frames| {
-                    converter.deliver(context, frames)
-                }) {
-                    *context.stream_error.locked() = Some(error.to_string());
-                    return;
-                }
-            }
-        }
         Target::Device => run_device_capture(context, quit, setup_tx),
         Target::Application(app_id) => {
             context.status.locked().is_waiting = true;

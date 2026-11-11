@@ -96,14 +96,14 @@ Voice capture accepts an audio source, level output and polling runtime;
 `platform/audio.rs` opens the microphone through CPAL and the sound the
 computer plays natively: PipeWire on Linux (`audio/pipewire.rs`: the default
 sink's monitor, or every output stream of one application, mixed by
-`voice/mixer.rs`) and WASAPI process loopback on Windows (`audio/wasapi.rs`).
+`voice/mixer.rs`) and WASAPI loopback on Windows (`audio/wasapi.rs`).
 A playback source delivers nothing while nothing plays, so the capture loop
 fills the gap with silence (`voice/source.rs`), switches the source in place
 (`switch_capture_source`) and waits for the same application when it quits.
 Recording other applications requires an explicit source selection. The new
 stream's overlapping setup audio is discarded at handover, so that it cannot
 repeat the old stream's tail. An application is identified by its binary (Flatpak app
-id on Linux, the executable of its process tree's root on Windows), never by
+id on Linux, the full executable path of its process tree's root on Windows), never by
 a process id. Lifecycle tests use fake streams and outputs to check setup
 failure, timeout, final audio ordering, stale stops, source switches and gap
 filling; `integration_records_the_system_sound_and_one_application` runs
@@ -113,9 +113,8 @@ seconds, under the background-service shutdown barrier. Linux probes a completed
 PipeWire round trip with a one-second deadline rather than caching login-time
 availability. Capture stream errors are reported, including asynchronous
 PipeWire stream failures. Windows probes process-loopback activation and stream
-initialization instead of guessing from an OS build number; whole-system
-capture falls back to default-device WASAPI loopback, following endpoint
-changes. Application capture mixes all matching independent process trees.
+initialization instead of guessing from an OS build number; system capture uses default-device WASAPI loopback, following endpoint
+changes, matching Linux default-sink capture. It includes Tyco playback. Application capture mixes all matching independent process trees.
 Session meters enumerate all active render endpoints on each poll, including
 applications routed away from the default device. Opening and dropping source
 watches runs on the blocking pool, not the async executor.
@@ -205,3 +204,10 @@ in `vm-testing.md`. Failed smoke tests produce a screenshot for CI artifacts.
 Routes are loaded dynamically. Heavy optional renderers also use dynamic
 imports. Track startup and memory measurements in the actual system webview;
 chunk size alone is not an estimate of total memory or startup latency.
+
+Windows application identity uses full executable paths; inaccessible processes
+are omitted instead of grouped under ambiguous basenames. Helpers in the same
+installation directory belong to their parent application (except System32).
+Helpers installed in separate directories remain separate sources. System sound
+means the default output device on both platforms, including Tyco playback;
+applications routed to other outputs require application capture.
