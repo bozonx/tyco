@@ -90,9 +90,21 @@ describe('ScreenshotSelector', () => {
 
   async function mountLoaded() {
     mocks.getImage.mockResolvedValue(new Uint8Array([1, 2, 3]))
-    const wrapper = mount(ScreenshotSelector, { props: { selection } })
+    const wrapper = mount(ScreenshotSelector, {
+      props: { selection },
+      attachTo: document.body,
+    })
     await flushPromises()
     return wrapper
+  }
+
+  async function pointer(
+    wrapper: Awaited<ReturnType<typeof mountLoaded>>,
+    type: string,
+    init: PointerEventInit
+  ) {
+    wrapper.element.dispatchEvent(new PointerEvent(type, init))
+    await nextTick()
   }
 
   async function drag(
@@ -182,6 +194,150 @@ describe('ScreenshotSelector', () => {
       y: 0,
       width: 100,
       height: 100,
+    })
+  })
+  it('continues from the screen edge and confirms the final position', async () => {
+    const wrapper = await mountLoaded()
+    await pointer(wrapper, 'pointerdown', {
+      pointerId: 1,
+      button: 0,
+      clientX: 100,
+      clientY: 100,
+    })
+    await pointer(wrapper, 'pointermove', {
+      pointerId: 1,
+      buttons: 1,
+      clientX: 1200,
+      clientY: 900,
+    })
+    expect(wrapper.get('.selection-badge').text()).toBe('1848 × 1336 px')
+    await pointer(wrapper, 'pointermove', {
+      pointerId: 1,
+      buttons: 1,
+      clientX: 800,
+      clientY: 600,
+    })
+    await pointer(wrapper, 'pointerup', {
+      pointerId: 1,
+      button: 0,
+      clientX: 800,
+      clientY: 600,
+    })
+    pressEnter()
+    expect(wrapper.emitted('confirm')?.[0]?.[0]).toEqual({
+      x: 200,
+      y: 200,
+      width: 1400,
+      height: 1000,
+    })
+  })
+
+  it.each(['lostpointercapture', 'pointercancel'])(
+    'finishes a drag on %s without using its empty coordinates',
+    async (event) => {
+      const wrapper = await mountLoaded()
+      await pointer(wrapper, 'pointerdown', {
+        pointerId: 1,
+        button: 0,
+        clientX: 100,
+        clientY: 100,
+      })
+      await pointer(wrapper, 'pointermove', {
+        pointerId: 1,
+        buttons: 1,
+        clientX: 1024,
+        clientY: 768,
+      })
+      await pointer(wrapper, event, { pointerId: 1 })
+      pressEnter()
+      expect(wrapper.emitted('confirm')?.[0]?.[0]).toEqual({
+        x: 200,
+        y: 200,
+        width: 1848,
+        height: 1336,
+      })
+      await drag(wrapper, [10, 10], [50, 50])
+      pressEnter()
+      expect(wrapper.emitted('confirm')?.[1]?.[0]).toEqual({
+        x: 20,
+        y: 20,
+        width: 80,
+        height: 80,
+      })
+    }
+  )
+
+  it('recovers when the mouse returns after an unobserved release', async () => {
+    const wrapper = await mountLoaded()
+    await pointer(wrapper, 'pointerdown', {
+      pointerId: 1,
+      button: 0,
+      clientX: 100,
+      clientY: 100,
+    })
+    await pointer(wrapper, 'pointermove', {
+      pointerId: 1,
+      pointerType: 'mouse',
+      buttons: 1,
+      clientX: 1024,
+      clientY: 768,
+    })
+    await pointer(wrapper, 'pointermove', {
+      pointerId: 1,
+      pointerType: 'mouse',
+      buttons: 0,
+      clientX: 500,
+      clientY: 500,
+    })
+    pressEnter()
+    expect(wrapper.emitted('confirm')?.[0]?.[0]).toEqual({
+      x: 200,
+      y: 200,
+      width: 1848,
+      height: 1336,
+    })
+  })
+
+  it('ignores other pointers while dragging', async () => {
+    const wrapper = await mountLoaded()
+    await pointer(wrapper, 'pointerdown', {
+      pointerId: 1,
+      button: 0,
+      clientX: 100,
+      clientY: 100,
+    })
+    await pointer(wrapper, 'pointermove', {
+      pointerId: 1,
+      buttons: 1,
+      clientX: 300,
+      clientY: 200,
+    })
+    await pointer(wrapper, 'pointerdown', {
+      pointerId: 2,
+      button: 0,
+      clientX: 0,
+      clientY: 0,
+    })
+    await pointer(wrapper, 'pointerup', {
+      pointerId: 2,
+      button: 0,
+      clientX: 0,
+      clientY: 0,
+    })
+    pressEnter()
+    expect(wrapper.emitted('confirm')).toBeUndefined()
+    await pointer(wrapper, 'pointerup', {
+      pointerId: 1,
+      button: 0,
+      clientX: 300,
+      clientY: 200,
+    })
+    pressEnter()
+    expect(wrapper.emitted('confirm')?.[0]?.[0]).toEqual({
+      x: 200,
+      y: 200,
+      width: 400,
+      height: 200,
     })
   })
 })

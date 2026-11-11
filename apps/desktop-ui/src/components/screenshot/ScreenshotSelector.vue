@@ -3,9 +3,8 @@
     ref="rootRef"
     class="screenshot-selector-root"
     tabindex="-1"
-    @pointerdown="onPointerDown"
-    @pointermove="onPointerMove"
-    @pointerup="onPointerUp"
+    @pointerdown.stop="onPointerDown"
+    @lostpointercapture="onLostPointerCapture"
     @dblclick="onConfirm"
     @contextmenu.prevent="onCancel"
   >
@@ -70,10 +69,27 @@
           width: px(shownRect.width),
           height: px(shownRect.height),
         }"
+      />
+      <div
+        class="selection-label-row"
+        :style="{
+          top: `clamp(8px, ${px(shownRect.y < 32 ? shownRect.y + 6 : shownRect.y - 28)}, calc(100% - 28px))`,
+          '--selection-gap': px(Math.max(0, shownRect.x - 8)),
+        }"
       >
         <div class="selection-badge">{{ badgeText }}</div>
+      </div>
+      <div
+        v-if="!isDragging"
+        class="selection-action-row"
+        :style="{
+          bottom: `max(8px, ${px(view.height - shownRect.y - shownRect.height - 38)})`,
+          '--selection-gap': px(
+            Math.max(0, view.width - shownRect.x - shownRect.width - 8)
+          ),
+        }"
+      >
         <button
-          v-if="!isDragging"
           type="button"
           class="selection-confirm"
           @pointerdown.stop
@@ -125,7 +141,8 @@ const { t } = useI18n()
 
 const rootRef = ref<HTMLElement>()
 const imageUrl = ref('')
-const isDragging = ref(false)
+const activePointerId = ref<number | null>(null)
+const isDragging = computed(() => activePointerId.value !== null)
 const dragStart = ref({ x: 0, y: 0 })
 const dragEnd = ref({ x: 0, y: 0 })
 /** The finished selection, kept until confirmed or redrawn. */
@@ -167,27 +184,47 @@ const badgeText = computed(() => {
 const px = (value: number) => `${value}px`
 
 function onPointerDown(e: PointerEvent) {
-  if (e.button !== 0) return
+  if (e.button !== 0 || isDragging.value) return
+  e.preventDefault()
   updateView()
-  isDragging.value = true
+  activePointerId.value = e.pointerId
   dragStart.value = { x: e.clientX, y: e.clientY }
   dragEnd.value = { x: e.clientX, y: e.clientY }
   ;(e.currentTarget as HTMLElement | null)?.setPointerCapture?.(e.pointerId)
 }
 
 function onPointerMove(e: PointerEvent) {
-  if (!isDragging.value) return
+  if (e.pointerId !== activePointerId.value) return
+  // Recover if the button was released outside the webview without pointerup.
+  if (e.pointerType === 'mouse' && (e.buttons & 1) === 0) {
+    finishDrag()
+    return
+  }
+  e.preventDefault()
   dragEnd.value = { x: e.clientX, y: e.clientY }
 }
 
 function onPointerUp(e: PointerEvent) {
-  if (!isDragging.value) return
+  if (e.pointerId !== activePointerId.value || e.button !== 0) return
   dragEnd.value = { x: e.clientX, y: e.clientY }
+  finishDrag()
+}
+
+function finishDrag() {
+  const pointerId = activePointerId.value
+  if (pointerId === null) return
   const rect = dragRect(dragStart.value, dragEnd.value, imageRect.value)
-  isDragging.value = false
-  ;(e.currentTarget as HTMLElement | null)?.releasePointerCapture?.(e.pointerId)
+  activePointerId.value = null
+  const root = rootRef.value
+  if (root?.hasPointerCapture?.(pointerId)) {
+    root.releasePointerCapture(pointerId)
+  }
   // A click keeps the previous selection, so a double-click can confirm it.
   if (isSelection(rect)) selected.value = rect
+}
+
+function onLostPointerCapture(e: PointerEvent) {
+  if (e.pointerId === activePointerId.value) finishDrag()
 }
 
 function onConfirm() {
@@ -222,8 +259,12 @@ onMounted(async () => {
   window.addEventListener('keydown', handleKeyDown, true)
   window.addEventListener('keyup', handleKeyUp, true)
   window.addEventListener('resize', updateView)
+  window.addEventListener('pointermove', onPointerMove, true)
+  window.addEventListener('pointerup', onPointerUp, true)
+  window.addEventListener('pointercancel', onLostPointerCapture, true)
+  window.addEventListener('blur', finishDrag)
   updateView()
-  rootRef.value?.focus()
+  rootRef.value?.focus({ preventScroll: true })
   try {
     const bytes = await getChatImage(props.selection.imageId)
     imageUrl.value = URL.createObjectURL(
@@ -238,6 +279,11 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeyDown, true)
   window.removeEventListener('keyup', handleKeyUp, true)
   window.removeEventListener('resize', updateView)
+  window.removeEventListener('pointermove', onPointerMove, true)
+  window.removeEventListener('pointerup', onPointerUp, true)
+  window.removeEventListener('pointercancel', onLostPointerCapture, true)
+  window.removeEventListener('blur', finishDrag)
+  finishDrag()
   if (imageUrl.value) {
     URL.revokeObjectURL(imageUrl.value)
     imageUrl.value = ''
@@ -252,6 +298,7 @@ onBeforeUnmount(() => {
   width: 100vw;
   height: 100vh;
   user-select: none;
+  touch-action: none;
   cursor: crosshair;
   overflow: hidden;
   outline: none;
@@ -285,10 +332,33 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-.selection-badge {
+.selection-label-row,
+.selection-action-row {
   position: absolute;
-  bottom: calc(100% + 4px);
-  left: 0;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  pointer-events: none;
+}
+
+/* Shrink the empty gap before clipping a label or a translated button. */
+.selection-label-row::before,
+.selection-action-row::before {
+  content: '';
+  flex: 0 1 var(--selection-gap);
+}
+
+.selection-action-row {
+  flex-direction: row-reverse;
+}
+
+.selection-badge,
+.selection-confirm {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+
+.selection-badge {
   padding: 2px 6px;
   font-size: 11px;
   font-family: monospace;
@@ -299,9 +369,6 @@ onBeforeUnmount(() => {
 }
 
 .selection-confirm {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
   padding: 4px 12px;
   font-size: 13px;
   color: var(--color-primary-content);

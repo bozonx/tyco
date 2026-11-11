@@ -116,6 +116,14 @@ failing tests retain screenshots and traces. The standard-controls section also 
 in the CI image, see `dev_docs/testing.md`. Native Tauri smoke tests remain
 necessary for webview-specific behavior.
 
+The screenshot selector tracks one pointer and listens for movement and release
+on the window while it holds pointer capture. Capture loss, cancellation, window
+blur and a mouse returning with its button released finish the current rectangle
+without resetting its endpoint. Pointer defaults and touch panning are disabled
+during selection; the size badge and confirmation stay within the viewport even
+when a rectangle touches its edges. `screenshot-selector.spec.ts` exercises edge
+drags and direction changes in Chromium and WebKit.
+
 ## Settings models
 
 `Settings.vue` provides a `SettingsContext` (`lib/settings/settings-context.ts`)

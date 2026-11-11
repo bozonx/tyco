@@ -24,8 +24,15 @@ export class FakeDesktop extends FakeDesktopBackend {
     page.on('framenavigated', (frame) => {
       if (frame === page.mainFrame()) this.channelIndices.clear()
     })
-    await page.exposeFunction(BRIDGE_NAME, (command: string, args: unknown) =>
-      this.dispatch(command, args)
+    await page.exposeFunction(
+      BRIDGE_NAME,
+      async (command: string, args: unknown) => {
+        const result = await this.dispatch(command, args)
+        // The browser bridge serializes JSON; preserve binary IPC responses.
+        return result.ok && result.value instanceof ArrayBuffer
+          ? { ...result, value: [...new Uint8Array(result.value)] }
+          : result
+      }
     )
     await page.addInitScript(installTauriInternals, {
       bridgeName: BRIDGE_NAME,
