@@ -79,6 +79,7 @@ function createScriptTool(
     inputSchemaFor: (config) =>
       textSchema(scriptTakesText(scriptToolConfigOf(config))),
     canLogOutput: true,
+    canSelectPlatforms: true,
     run: async (call) => {
       const config = scriptToolConfigOf(call.config)
       if (!config.command.trim()) {

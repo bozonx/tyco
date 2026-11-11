@@ -36,6 +36,7 @@ export function validateContribution(
     'selectionOnly',
     'useFullEditorText',
     'preserveWhitespace',
+    'canSelectPlatforms',
   ])
     if (value[field] !== undefined && typeof value[field] !== 'boolean')
       throw new Error(`Invalid contribution ${field}`)

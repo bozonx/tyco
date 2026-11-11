@@ -1,8 +1,10 @@
 import { isRecord } from '@tyco/shared/value-guards'
 import {
   COMMAND_OUTPUT_ACTIONS,
+  COMMAND_PLATFORMS,
   type CommandConfig,
   type CommandOutputAction,
+  type CommandPlatform,
   AI_COMMAND_MAX_STEPS_DEFAULT,
   EXTERNAL_TIMEOUT_DEFAULT_SEC,
   EXTERNAL_TIMEOUT_MAX_SEC,
@@ -137,13 +139,20 @@ function defaultToolConfig(toolId: string): Record<string, unknown> {
 
 /**
  * A new command of the library with the defaults for its tool; `tool` gives
- * what to do with the output of a tool that returns a text
+ * what to do with the output of a tool that returns a text, and
+ * `currentPlatform` initializes the platform filter when the tool uses one
  */
 export function createCommand(
   toolId: string,
   id: string = newCommandId(),
-  tool?: Pick<RegisteredTool, 'defaultOutputAction'>
+  tool?: Pick<RegisteredTool, 'defaultOutputAction' | 'canSelectPlatforms'>,
+  currentPlatform?: string
 ): CommandConfig {
+  const defaultPlatforms =
+    tool?.canSelectPlatforms &&
+    COMMAND_PLATFORMS.includes(currentPlatform as CommandPlatform)
+      ? [currentPlatform as CommandPlatform]
+      : undefined
   return {
     id,
     name: '',
@@ -160,5 +169,6 @@ export function createCommand(
     isAvailableExternally: false,
     externalTimeoutSec: EXTERNAL_TIMEOUT_DEFAULT_SEC,
     isEnabled: true,
+    ...(defaultPlatforms ? { platforms: defaultPlatforms } : {}),
   }
 }

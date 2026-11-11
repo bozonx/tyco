@@ -22,21 +22,23 @@
       @update:model-value="emit('update:modelValue', $event)"
     />
     <!-- mousedown.prevent: the field keeps its focus and caret -->
-    <IconButton
-      v-if="!withoutText"
-      variant="ghost"
-      size="sm"
-      @mousedown.prevent
-      @click="insert(TEXT)"
-      :label="t('settings.actionInsertText', { placeholder: TEXT })"
-      icon="mdi:code-braces"
-    />
-    <VariableInsertMenu
-      v-if="canUseVariables"
-      @mousedown.prevent
-      @insert="insert"
-    />
-    <slot />
+    <div class="template-field-actions" :class="{ 'is-vertical': multiline }">
+      <IconButton
+        v-if="!withoutText"
+        variant="ghost"
+        size="sm"
+        @mousedown.prevent
+        @click="insert(TEXT)"
+        :label="t('settings.actionInsertText', { placeholder: TEXT })"
+        icon="mdi:code-braces"
+      />
+      <VariableInsertMenu
+        v-if="canUseVariables"
+        @mousedown.prevent
+        @insert="insert"
+      />
+      <slot />
+    </div>
     <InfoTooltip
       v-if="info"
       class="template-field-info"
@@ -113,6 +115,17 @@ defineExpose({ insert })
 
 .template-field-info {
   align-self: center;
+}
+
+.template-field-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs, 0.25rem);
+  flex-shrink: 0;
+}
+
+.template-field-actions.is-vertical {
+  flex-direction: column;
 }
 
 .template-field-control {

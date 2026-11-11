@@ -119,7 +119,9 @@ describe('CommandEditor.vue', () => {
   })
 
   it('keeps placement settings inside advanced and uses one external toggle', () => {
-    const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
+    const wrapper = mountEditor(
+      script({ command: 'ls' }, { name: 'ls', platforms: ['linux'] })
+    )
     const advanced = wrapper.get('.command-group-advanced')
     expect(advanced.get('[aria-expanded]').attributes('aria-expanded')).toBe(
       'false'
@@ -136,9 +138,50 @@ describe('CommandEditor.vue', () => {
     expect(wrapper.findAll('.command-place')).toHaveLength(0)
   })
 
-  it('toggles LLM pre-transformation and shows the prompt textarea', async () => {
-    const wrapper = mountEditor(script({ command: 'ls' }, { name: 'List' }))
+  it('shows platform selection only for tools with canSelectPlatforms and does not link the group label', async () => {
+    const scriptEditor = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
+    const linuxCheckbox = scriptEditor.get(
+      'input[data-testid="command-platform-linux"]'
+    )
+    const platformsLabel = scriptEditor
+      .findAll('.field-row-title span')
+      .find((el) => el.text() === 'commands.platforms')
+    expect(platformsLabel).toBeDefined()
+    await platformsLabel!.trigger('click')
+    expect((linuxCheckbox.element as HTMLInputElement).checked).toBe(false)
+    expect(scriptEditor.emitted('update')).toBeUndefined()
+
+    const webhookEditor = mountEditor({
+      ...createCommand('webhook', 'wh1'),
+      name: 'Hook',
+      toolConfig: { url: 'https://x.test' },
+    })
+    expect(
+      webhookEditor.find('[data-testid="command-platform-linux"]').exists()
+    ).toBe(false)
+    expect(webhookEditor.find('.command-open-log').exists()).toBe(true)
+
+    const unknownToolEditor = mountEditor({
+      ...createCommand('other.plugin', 'p1'),
+      name: 'Other',
+    })
+    expect(
+      unknownToolEditor.find('[data-testid="command-platform-linux"]').exists()
+    ).toBe(false)
+    expect(unknownToolEditor.find('.command-open-log').exists()).toBe(false)
+  })
+
+  it('places description outside advanced and does not show inline prompt warning on enable', async () => {
+    const wrapper = mountEditor(
+      script({ command: 'ls' }, { name: 'List', description: 'Lists files' })
+    )
     const advanced = wrapper.get('.command-group-advanced')
+    // description alone no longer opens advanced and lives outside it
+    expect(advanced.get('[aria-expanded]').attributes('aria-expanded')).toBe(
+      'false'
+    )
+    expect(advanced.find('.command-description').exists()).toBe(false)
+    expect(wrapper.find('.command-description').exists()).toBe(true)
     expect(advanced.find('.command-llm-pre-transform-prompt').exists()).toBe(
       false
     )
@@ -151,7 +194,7 @@ describe('CommandEditor.vue', () => {
 
     expect(lastUpdate(wrapper).isLlmPreTransformEnabled).toBe(true)
 
-    // With pre-transformation enabled
+    // With pre-transformation enabled, no inline warning is shown on the prompt label
     await wrapper.setProps({
       command: {
         ...script({ command: 'ls' }, { name: 'List' }),
@@ -162,7 +205,7 @@ describe('CommandEditor.vue', () => {
     expect(advanced.find('.command-llm-pre-transform-prompt').exists()).toBe(
       true
     )
-    expect(advanced.text()).toContain('commands.errorNoPrompt')
+    expect(advanced.text()).not.toContain('commands.errorNoPrompt')
 
     const textarea = advanced.get('textarea.command-llm-pre-transform-prompt')
     await textarea.setValue('Translate to French')
@@ -227,9 +270,12 @@ describe('CommandEditor.vue', () => {
       .get('textarea')
     await phrases.setValue('save note\nmake note')
     expect(lastUpdate(wrapper).phrases).toEqual(['save note', 'make note'])
-    expect(wrapper.findComponent(InfoTooltip).props('text')).toBe(
-      'voiceCommands.phrasesInfo'
-    )
+    expect(
+      wrapper
+        .findComponent({ name: 'CommandVoiceFields' })
+        .findComponent(InfoTooltip)
+        .props('text')
+    ).toBe('voiceCommands.phrasesInfo')
     expect(wrapper.findAll('input[type="text"]')).toHaveLength(1)
     expect(
       wrapper

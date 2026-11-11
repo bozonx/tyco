@@ -31,6 +31,9 @@ describe('ActionTemplateField', () => {
       expect(element).toBe(document.activeElement)
       expect(field.attributes('aria-label')).toBe('Template')
       expect(field.attributes('maxlength')).toBe('120')
+      expect(
+        wrapper.get('.template-field-actions').classes('is-vertical')
+      ).toBe(multiline)
     })
   }
 })

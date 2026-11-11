@@ -10,6 +10,7 @@ import {
   type ActionPageConfig,
   type ChatPromptConfig,
   type CommandConfig,
+  type CommandRunRecord,
   type CoreToolId,
   type MainActionConfig,
   type ProfileActionKind,
@@ -22,6 +23,7 @@ import {
   commandTakesText,
   isMenuCommand,
 } from '../commands/command-runtime'
+import { commandRunRecord, logCommandRun } from '../commands/command-run-record'
 import { createCommandRunner } from '../commands/command-runner'
 import { i18n, translate } from '../i18n'
 import { messages } from '../i18n/messages'
@@ -39,6 +41,8 @@ export type { ActionItem } from '../../types/plugins'
 export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** Records a text that leaves the app; runs before the window closes. */
   saveOutput: (text: string) => Promise<void>
+  logRun?: (record: CommandRunRecord) => Promise<void> | void
+  reportError?: (error: unknown) => void
   setPendingModal?: (params: PendingModalParams, owner?: number) => number
   clearPendingModal?: (owner: number) => void
   openTransformationModal?: (text: string, transformationId?: string) => void
@@ -133,17 +137,24 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     name: commandLabel(command),
     icon: 'mdi:console-line',
     action: async (text: string) => {
-      if (commandTakesText(command, deps.tools)) await deps.saveOutput(text)
+      const takesText = commandTakesText(command, deps.tools)
+      if (takesText) await deps.saveOutput(text)
       const controller = new AbortController()
       const owner = deps.setPendingModal?.({
         label: translate('commands.running', { name: commandLabel(command) }),
         onCancel: () => controller.abort(),
       })
       try {
-        await commandRunner.run(command, text, {
+        const outcome = await commandRunner.run(command, text, {
           source: 'menu',
           signal: controller.signal,
         })
+        if (!outcome.cancelled) {
+          logCommandRun(
+            deps,
+            commandRunRecord(command, 'menu', takesText ? text : null, outcome)
+          )
+        }
       } finally {
         if (owner !== undefined) deps.clearPendingModal?.(owner)
       }

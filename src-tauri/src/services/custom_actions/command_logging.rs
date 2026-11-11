@@ -162,14 +162,16 @@ fn format_command_run(record: &CommandRunRecord) -> String {
             "failed"
         },
     );
-    if let Some(text) = &record.text {
-        entry.push_str(&format!("Text:\n{}\n", or_empty(&redact_secrets(text))));
-    }
-    if let Some(message) = record.message.as_deref().filter(|m| !m.trim().is_empty()) {
-        entry.push_str(&format!(
-            "Message: {}\n",
-            or_empty(&redact_secrets(message))
-        ));
+    if !record.is_success {
+        if let Some(text) = &record.text {
+            entry.push_str(&format!("Text:\n{}\n", or_empty(&redact_secrets(text))));
+        }
+        if let Some(message) = record.message.as_deref().filter(|m| !m.trim().is_empty()) {
+            entry.push_str(&format!(
+                "Message: {}\n",
+                or_empty(&redact_secrets(message))
+            ));
+        }
     }
     entry.push_str(&"=".repeat(80));
     entry.push('\n');
@@ -275,15 +277,17 @@ mod tests {
         assert!(entry.contains("Message: exit code 1"));
         assert!(!entry.contains("sk-proj-"));
 
-        let without_text = format_command_run(&CommandRunRecord {
-            text: None,
-            message: None,
+        let succeeded = format_command_run(&CommandRunRecord {
+            text: Some(String::from("input text")),
+            message: Some(String::from("Done")),
             is_success: true,
             ..record
         });
-        assert!(without_text.contains("Result: success"));
-        assert!(!without_text.contains("Text:"));
-        assert!(!without_text.contains("Message:"));
+        assert!(succeeded.contains("Result: success"));
+        assert!(!succeeded.contains("Text:"));
+        assert!(!succeeded.contains("Message:"));
+        assert!(!succeeded.contains("input text"));
+        assert!(!succeeded.contains("Done"));
     }
     #[test]
     fn rotates_a_full_log() {

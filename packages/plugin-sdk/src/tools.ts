@@ -155,6 +155,11 @@ export interface ToolDefinition {
    */
   canRunFromChat?: boolean
   /**
+   * Whether commands using this tool offer a per-platform filter in settings.
+   * Defaults to false so cross-platform tools run on every OS.
+   */
+  canSelectPlatforms?: boolean
+  /**
    * Turns the text from voice, the editor or an external call into an input
    * that matches `inputSchema`; needed only for a structured schema
    */

@@ -131,6 +131,7 @@ import { clientLogger } from '../../lib/logger'
 import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
 import { moveItem } from '../../lib/sortable/sortable-list'
 import { toolLabel } from '../../lib/tools/tool-label'
+import { useDesktopStore } from '../../stores/desktop'
 import { useSecretsStore } from '../../stores/secrets'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useToolsStore } from '../../stores/tools'
@@ -160,6 +161,7 @@ const { draft: userConfig, navigate } = useSettingsContext()
 
 const { t } = useI18n()
 const { toastKey, toastError } = useToast()
+const desktopStore = useDesktopStore()
 const secretsStore = useSecretsStore()
 const toolsStore = useToolsStore()
 
@@ -271,7 +273,12 @@ const availableTools = computed(() =>
 function handleCreateCommand(event: CreateCommandSubmitEvent) {
   isCreateModalOpen.value = false
   const tool = toolsStore.get(event.toolId)
-  const command = createCommand(event.toolId, undefined, tool)
+  const command = createCommand(
+    event.toolId,
+    undefined,
+    tool,
+    desktopStore.userData?.platform
+  )
 
   focusedCommandId.value = command.id
   setCommands([command, ...commands.value])

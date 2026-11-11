@@ -20,12 +20,6 @@
       />
     </FieldRow>
 
-    <CommandVoiceFields
-      :command="command"
-      :user-config="userConfig"
-      @update="update"
-    />
-
     <!-- focusout: a command left without a name takes one from what it runs -->
     <div class="command-tool-fields" @focusout="suggestName">
       <CustomActionFields
@@ -46,6 +40,30 @@
         {{ t('commands.unknownTool', { tool: command.toolId }) }}
       </p>
     </div>
+
+    <FieldRow
+      class="command-field"
+      vertical
+      density="compact"
+      :label="t('commands.descriptionLabel')"
+    >
+      <FieldTextArea
+        class="command-description"
+        :model-value="command.description ?? ''"
+        :placeholder="t('commands.descriptionPlaceholder')"
+        @update:model-value="updateDescription"
+      />
+
+      <template #info
+        ><InfoTooltip :text="t('commands.descriptionInfo')"
+      /></template>
+    </FieldRow>
+
+    <CommandVoiceFields
+      :command="command"
+      :user-config="userConfig"
+      @update="update"
+    />
 
     <section v-if="canTest" class="command-group">
       <DisclosureHeader
@@ -100,23 +118,8 @@
           </p>
         </section>
         <FieldRow
-          class="command-field"
-          vertical
-          density="compact"
-          :label="t('commands.descriptionLabel')"
-        >
-          <FieldTextArea
-            class="command-description"
-            :model-value="command.description ?? ''"
-            :placeholder="t('commands.descriptionPlaceholder')"
-            @update:model-value="updateDescription"
-          />
-
-          <template #info
-            ><InfoTooltip :text="t('commands.descriptionInfo')"
-          /></template>
-        </FieldRow>
-        <FieldRow
+          v-if="tool?.canSelectPlatforms"
+          group
           class="command-field"
           density="compact"
           :label="t('commands.platforms')"
@@ -133,15 +136,13 @@
             />
           </div>
         </FieldRow>
-        <div class="command-field-row">
-          <template v-if="tool?.canLogOutput">
-            <FieldSwitch
-              :model-value="command.isOutputLogged"
-              :label="t('settings.actionLogOutput')"
-              @update:model-value="update({ isOutputLogged: $event })"
-            />
-            <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
-          </template>
+        <div v-if="tool?.canLogOutput" class="command-field-row">
+          <FieldSwitch
+            :model-value="command.isOutputLogged"
+            :label="t('settings.actionLogOutput')"
+            @update:model-value="update({ isOutputLogged: $event })"
+          />
+          <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
           <Button
             class="command-open-log"
             size="xs"
@@ -216,7 +217,6 @@
           vertical
           density="compact"
           :label="t('commands.llmPreTransformPromptLabel')"
-          :warning="preTransformWarnings"
         >
           <FieldPromptTextArea
             class="command-llm-pre-transform-prompt"
@@ -323,9 +323,6 @@ const warningsFor = (field: string) =>
     .filter((issue) => issue.field === field)
     .map((issue) => t(issue.messageKey))
 const nameWarnings = computed(() => warningsFor('name'))
-const preTransformWarnings = computed(() =>
-  warningsFor('llmPreTransformPrompt')
-)
 
 const {
   update,
@@ -372,11 +369,9 @@ const isTestOpen = ref(false)
 const testBodyId = useId()
 const advancedBodyId = useId()
 const isAdvancedOpen = ref<boolean>(
-  Boolean(props.command.description) ||
-    Boolean(props.command.isOutputLogged) ||
+  Boolean(props.command.isOutputLogged) ||
     Boolean(props.command.isAvailableExternally) ||
-    Boolean(props.command.isLlmPreTransformEnabled) ||
-    Boolean(props.command.platforms?.length)
+    Boolean(props.command.isLlmPreTransformEnabled)
 )
 
 const platformLabels = computed<Record<CommandPlatform, string>>(() => ({

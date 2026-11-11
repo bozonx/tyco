@@ -381,7 +381,16 @@ describe('commands of the core tools', () => {
       isToolsEnabled: true,
     })
     expect(aiTask.outputAction).toBe('insertIntoWindow')
+    expect(aiTask.platforms).toBeUndefined()
     expect(createCommand('Notes.write', 'n').toolConfig).toEqual({})
+    expect(
+      createCommand('script', 's', { canSelectPlatforms: true }, 'windows')
+        .platforms
+    ).toEqual(['windows'])
+    expect(
+      createCommand('script', 's', { canSelectPlatforms: true }, 'macos')
+        .platforms
+    ).toBeUndefined()
   })
 
   it('need an instruction for AI command', () => {

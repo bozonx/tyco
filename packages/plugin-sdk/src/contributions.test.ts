@@ -35,6 +35,18 @@ describe('plugin contribution validation', () => {
       validateContribution({ id: 'edit', toolId: 'search' }, 'edit')
     ).toThrow()
     expect(() => validateContribution({ id: 'button' }, 'toolbar')).toThrow()
+    expect(() =>
+      validateContribution(
+        { id: 'localTool', canSelectPlatforms: true },
+        'tool'
+      )
+    ).not.toThrow()
+    expect(() =>
+      validateContribution(
+        { id: 'localTool', canSelectPlatforms: 'linux' },
+        'tool'
+      )
+    ).toThrow()
   })
   it.each([
     null,

@@ -240,12 +240,17 @@ describe('SettingsCommandsTab.vue', () => {
     expect(
       context.draft.value.commands.map((command) => command.toolId)
     ).toEqual(['webhook', 'webhook', 'script'])
+    expect(context.draft.value.commands[0].platforms).toBeUndefined()
     expect(modal.props('open')).toBe(false)
 
     await nextTick()
     const firstCard = wrapper.findAllComponents({ name: 'CommandCard' })[0]
     expect(firstCard.props('autofocusName')).toBe(true)
     expect(firstCard.props('expanded')).toBe(true)
+
+    modal.vm.$emit('submit', { toolId: 'script' })
+    await nextTick()
+    expect(context.draft.value.commands[0].platforms).toEqual(['linux'])
   })
 
   it('shows voice phrases when enabled immediately after creating a command', async () => {

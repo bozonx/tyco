@@ -490,8 +490,10 @@ describe('createActionMenuModel', () => {
         stderr: '',
         running: false,
       })
+    const logRun = vi.fn()
     const store = createActionMenuModel({
       ...deps,
+      logRun,
       tools: testTools({ executeScriptAction }),
       mainActions: () => ({
         q: { type: 'command', commandId: 'sc1' },
@@ -519,6 +521,13 @@ describe('createActionMenuModel', () => {
       commandId: 'sc1',
       text: 'menu text',
     })
+    expect(logRun).toHaveBeenCalledWith({
+      commandId: 'sc1',
+      name: 'Echo',
+      source: 'menu',
+      text: 'menu text',
+      success: true,
+    })
   })
 
   it('shows and clears pending modal while a command action runs and aborts on cancel', async () => {
@@ -530,6 +539,7 @@ describe('createActionMenuModel', () => {
     }
     const setPendingModal = vi.fn().mockReturnValue(7)
     const clearPendingModal = vi.fn()
+    const logRun = vi.fn()
     const cancelScriptAction = vi.fn().mockResolvedValue(undefined)
     const executeScriptAction = vi.fn().mockImplementation(async () => {
       const pending = setPendingModal.mock.calls[0]?.[0]
@@ -544,6 +554,7 @@ describe('createActionMenuModel', () => {
     })
     const store = createActionMenuModel({
       ...deps,
+      logRun,
       setPendingModal,
       clearPendingModal,
       tools: testTools({ executeScriptAction, cancelScriptAction }),
@@ -562,6 +573,7 @@ describe('createActionMenuModel', () => {
     )
     expect(cancelScriptAction).toHaveBeenCalledOnce()
     expect(clearPendingModal).toHaveBeenCalledWith(7)
+    expect(logRun).not.toHaveBeenCalled()
   })
 
   it('builds the items of transformations and languages, which open their dialog', async () => {
