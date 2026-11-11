@@ -146,7 +146,8 @@
     "promptPresets": "Preset di prompt",
     "noPromptsConfigured": "Nessun preset di prompt configurato",
     "noToolCalling": "senza strumenti",
-    "quickAiRequests": "Richieste rapide"
+    "quickAiRequests": "Richieste rapide",
+    "voiceSendNow": "Invia subito"
   },
   "chatTools": {
     "files": {
@@ -556,7 +557,7 @@
   },
   "menu": {
     "actions": "Azioni",
-    "aiPromptRun": "Esegui",
+    "aiPromptRun": "Invia",
     "aiRequest": "Richiesta all’IA",
     "cancelIntentHint": "Esc per annullare",
     "compareResult": "Confronta il risultato",
@@ -1534,7 +1535,8 @@
       "selection": "Cosa fare con la selezione? Ad es. «Riassumi», «Rispondi con cortesia», «Trova le date»",
       "screenshot": "Cosa chiedere sullo screenshot? Ad es. «Qual è l’errore qui?», «Estrai il testo»",
       "followUp": "Fai una domanda di approfondimento"
-    }
+    },
+    "recentPrompts": "Richieste recenti"
   },
   "screenshot": {
     "failed": "Impossibile acquisire lo schermo. Controlla le autorizzazioni di acquisizione e il supporto del portale desktop.",

@@ -146,7 +146,8 @@
     "promptPresets": "프롬프트 사전 설정",
     "noPromptsConfigured": "구성된 프롬프트 사전 설정이 없습니다",
     "noToolCalling": "도구 없음",
-    "quickAiRequests": "빠른 요청"
+    "quickAiRequests": "빠른 요청",
+    "voiceSendNow": "바로 보내기"
   },
   "chatTools": {
     "files": {
@@ -556,7 +557,7 @@
   },
   "menu": {
     "actions": "작업",
-    "aiPromptRun": "실행",
+    "aiPromptRun": "보내기",
     "aiRequest": "AI 요청",
     "cancelIntentHint": "Esc 키로 취소",
     "compareResult": "결과 비교",
@@ -1528,7 +1529,8 @@
       "selection": "선택한 텍스트로 무엇을 할까요? 예: “요약해 줘”, “정중하게 답장해 줘”, “날짜를 찾아 줘”",
       "screenshot": "스크린샷에 대해 무엇을 물어볼까요? 예: “여기 오류가 뭐야?”, “텍스트를 추출해 줘”",
       "followUp": "후속 질문을 입력하세요"
-    }
+    },
+    "recentPrompts": "최근 요청"
   },
   "screenshot": {
     "failed": "화면을 캡처하지 못했습니다. 화면 캡처 권한과 데스크톱 포털 지원을 확인하세요.",

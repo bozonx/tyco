@@ -146,7 +146,8 @@
     "promptPresets": "Prompt presets",
     "noPromptsConfigured": "No prompt presets configured",
     "noToolCalling": "no tool calling",
-    "quickAiRequests": "Quick requests"
+    "quickAiRequests": "Quick requests",
+    "voiceSendNow": "Send right away"
   },
   "chatTools": {
     "files": {
@@ -556,7 +557,7 @@
   },
   "menu": {
     "actions": "Actions",
-    "aiPromptRun": "Run",
+    "aiPromptRun": "Send",
     "aiRequest": "AI request",
     "cancelIntentHint": "Esc to cancel",
     "compareResult": "Compare the result",
@@ -1534,7 +1535,8 @@
       "selection": "What to do with the selection? E.g. “Summarize”, “Reply politely”, “Find the dates”",
       "screenshot": "What to ask about the screenshot? E.g. “What is the error here?”, “Extract the text”",
       "followUp": "Ask a follow-up question"
-    }
+    },
+    "recentPrompts": "Recent requests"
   },
   "screenshot": {
     "failed": "Could not capture the screen. Check screen capture permissions and desktop portal support.",

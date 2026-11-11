@@ -146,7 +146,8 @@
     "promptPresets": "Préréglages de prompts",
     "noPromptsConfigured": "Aucun préréglage de prompt configuré",
     "noToolCalling": "sans outils",
-    "quickAiRequests": "Requêtes rapides"
+    "quickAiRequests": "Requêtes rapides",
+    "voiceSendNow": "Envoyer tout de suite"
   },
   "chatTools": {
     "files": {
@@ -556,7 +557,7 @@
   },
   "menu": {
     "actions": "Actions",
-    "aiPromptRun": "Exécuter",
+    "aiPromptRun": "Envoyer",
     "aiRequest": "Requête IA",
     "cancelIntentHint": "Échap pour annuler",
     "compareResult": "Comparer le résultat",
@@ -1534,7 +1535,8 @@
       "selection": "Que faire de la sélection ? P. ex. « Résume », « Réponds poliment », « Trouve les dates »",
       "screenshot": "Que demander à propos de la capture ? P. ex. « Quelle est l’erreur ici ? », « Extrais le texte »",
       "followUp": "Posez une question complémentaire"
-    }
+    },
+    "recentPrompts": "Requêtes récentes"
   },
   "screenshot": {
     "failed": "Impossible de capturer l’écran. Vérifiez les autorisations de capture et la prise en charge du portail du bureau.",

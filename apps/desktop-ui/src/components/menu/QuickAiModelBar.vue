@@ -1,7 +1,10 @@
 <template>
   <!-- The profile and the model a quick AI request is asked with, shown under its input -->
   <div class="quick-ai-model-bar">
-    <label class="quick-ai-model-field">
+    <label
+      class="quick-ai-model-field"
+      :class="{ 'is-locked': props.isProfileLocked }"
+    >
       <AppIcon
         icon="mdi:account-outline"
         size="sm"
@@ -9,6 +12,8 @@
       />
       <FieldSelect
         size="sm"
+        class="quick-ai-select"
+        :class="{ 'is-locked': props.isProfileLocked }"
         :model-value="props.profileId ?? ''"
         :disabled="props.isProfileLocked"
         :options="profileOptions"
@@ -121,6 +126,16 @@ onMounted(() => {
   min-width: 0;
   max-width: 18rem;
   cursor: pointer;
+}
+
+.quick-ai-model-field.is-locked {
+  cursor: default;
+}
+
+.quick-ai-select.is-locked {
+  background-image: none;
+  padding-inline-end: 0.75rem;
+  cursor: default;
 }
 
 .quick-ai-model-icon {

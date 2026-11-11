@@ -146,7 +146,8 @@
     "promptPresets": "İstem önayarları",
     "noPromptsConfigured": "Yapılandırılmış istem önayarı yok",
     "noToolCalling": "araçsız",
-    "quickAiRequests": "Hızlı istekler"
+    "quickAiRequests": "Hızlı istekler",
+    "voiceSendNow": "Hemen gönder"
   },
   "chatTools": {
     "files": {
@@ -556,7 +557,7 @@
   },
   "menu": {
     "actions": "Eylemler",
-    "aiPromptRun": "Çalıştır",
+    "aiPromptRun": "Gönder",
     "aiRequest": "AI isteği",
     "cancelIntentHint": "İptal için Esc",
     "compareResult": "Sonucu karşılaştırın",
@@ -1531,7 +1532,8 @@
       "selection": "Seçimle ne yapılsın? Ör. “Özetle”, “Kibarca yanıtla”, “Tarihleri bul”",
       "screenshot": "Ekran görüntüsü hakkında ne sorulsun? Ör. “Buradaki hata ne?”, “Metni çıkar”",
       "followUp": "Ek bir soru sorun"
-    }
+    },
+    "recentPrompts": "Son istekler"
   },
   "screenshot": {
     "failed": "Ekran yakalanamadı. Ekran yakalama izinlerini ve masaüstü portalı desteğini kontrol edin.",

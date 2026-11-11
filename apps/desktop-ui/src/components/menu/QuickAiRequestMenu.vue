@@ -151,6 +151,22 @@
         @back="handleEsc"
       >
         <template #after-input>
+          <DropdownMenu
+            v-if="recentPrompts.length > 0"
+            square
+            hide-chevron
+            size="md"
+            variant="ghost"
+            placement="top"
+            align="right"
+            icon="mdi:history"
+            class="recent-prompts-menu"
+            :label="t('quickAiRequest.recentPrompts')"
+            :title="t('quickAiRequest.recentPrompts')"
+            :disabled="isInputBlocked || model.isGenerating.value"
+            :items="recentMenuItems"
+            @open-change="isRecentMenuOpen = $event"
+          />
           <IconButton
             icon="mdi:microphone-outline"
             size="md"
@@ -249,6 +265,7 @@ import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
+import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
@@ -503,12 +520,16 @@ const canSend = computed(
     !model.isGenerating.value
 )
 
+const RECENT_PROMPTS_INLINE_LIMIT = 5
+const RECENT_PROMPTS_MENU_LIMIT = 15
+
 // Query options suggestions filtered by profile
 const recentPrompts = ref<string[]>([])
+const isRecentMenuOpen = ref(false)
 async function loadRecentPrompts(pId: string | null) {
   const res = await ipcStore.call('list_recent_quick_request_prompts', {
     profileId: pId ?? null,
-    limit: 5,
+    limit: RECENT_PROMPTS_MENU_LIMIT,
   })
   recentPrompts.value =
     res.success && Array.isArray(res.result) ? res.result : []
@@ -522,13 +543,32 @@ watch(
   { immediate: true }
 )
 
+/** Auto-suggested only before the first request, when the input is empty */
 const recentOptions = computed<QueryPanelOption[]>(() =>
-  input.value.value
+  input.value.value || model.turns.value.length > 0 || isRecentMenuOpen.value
     ? []
-    : [...recentPrompts.value]
+    : [...recentPrompts.value.slice(0, RECENT_PROMPTS_INLINE_LIMIT)]
         .reverse()
         .map((entry) => ({ id: entry, label: entry, icon: 'mdi:history' }))
 )
+
+const recentMenuItems = computed<DropdownMenuItem[]>(() =>
+  recentPrompts.value.map((entry) => ({
+    label: entry,
+    icon: 'mdi:history',
+    action: () => applyRecentPrompt(entry),
+  }))
+)
+
+function applyRecentPrompt(picked: string) {
+  input.setValue(picked)
+  lastInputKind.value = 'text'
+  void nextTick(() => {
+    if (disposed) return
+    queryPanelRef.value?.focus()
+    queryPanelRef.value?.select(picked.length, picked.length)
+  })
+}
 
 function handleInputBlur(event: FocusEvent) {
   const element = event.target as HTMLInputElement | HTMLTextAreaElement | null
@@ -606,14 +646,7 @@ async function handleQuerySubmit(submitEvent?: QueryPanelSubmit) {
   if (submitEvent?.ctrl) return
 
   if (submitEvent?.option) {
-    const picked = submitEvent.option.label
-    input.setValue(picked)
-    lastInputKind.value = 'text'
-    void nextTick(() => {
-      if (disposed) return
-      queryPanelRef.value?.focus()
-      queryPanelRef.value?.select(picked.length, picked.length)
-    })
+    applyRecentPrompt(submitEvent.option.label)
     return
   }
 
@@ -716,6 +749,11 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.recent-prompts-menu {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
 .quick-result-actions {
   display: flex;
   flex-wrap: wrap;

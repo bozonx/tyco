@@ -146,7 +146,8 @@
     "promptPresets": "Předvolby promptů",
     "noPromptsConfigured": "Nejsou nastaveny žádné předvolby promptů",
     "noToolCalling": "bez nástrojů",
-    "quickAiRequests": "Rychlé dotazy"
+    "quickAiRequests": "Rychlé dotazy",
+    "voiceSendNow": "Odeslat hned"
   },
   "chatTools": {
     "files": {
@@ -556,7 +557,7 @@
   },
   "menu": {
     "actions": "Akce",
-    "aiPromptRun": "Spustit",
+    "aiPromptRun": "Odeslat",
     "aiRequest": "Požadavek na AI",
     "cancelIntentHint": "Esc pro zrušení",
     "compareResult": "Porovnat výsledek",
@@ -1528,7 +1529,8 @@
       "selection": "Co udělat s výběrem? Např. „Shrň“, „Odpověz zdvořile“, „Najdi data“",
       "screenshot": "Na co se zeptat ke snímku obrazovky? Např. „Jaká je tu chyba?“, „Vytáhni text“",
       "followUp": "Položte doplňující otázku"
-    }
+    },
+    "recentPrompts": "Předchozí požadavky"
   },
   "screenshot": {
     "failed": "Obrazovku se nepodařilo zachytit. Zkontrolujte oprávnění k zachycení a podporu portálu plochy.",

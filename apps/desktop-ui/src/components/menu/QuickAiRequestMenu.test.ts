@@ -645,6 +645,83 @@ describe('QuickAiRequestMenu', () => {
       expect(wrapper.find('.turn-prompt-text').text()).toBe('Older prompt')
       wrapper.unmount()
     })
+
+    it('hides inline recent prompts after an immediate voice submit and on follow-up', async () => {
+      desktop.backend.handle('list_recent_quick_request_prompts', () => [
+        'Newest prompt',
+        'Older prompt',
+      ])
+      vi.spyOn(useLlmStore().actions, 'sendChatMessage').mockImplementationOnce(
+        async (_message, _history, _instructions, options) => {
+          const answer = { content: 'Done', parts: [] }
+          options.onUpdate?.(answer)
+          return answer
+        }
+      )
+
+      const wrapper = mountMenu({ inputMode: 'voice' })
+      await flushPromises()
+
+      const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+      voiceMenu.vm.$emit(
+        'corrected',
+        'Voice question',
+        'Voice question',
+        undefined,
+        'submit'
+      )
+      await flushPromises()
+
+      expect(wrapper.find('.query-panel-options').exists()).toBe(false)
+
+      const followUp = wrapper
+        .findAll('button')
+        .find((button) => button.text() === 'quickAiRequest.followUp')!
+      await followUp.trigger('click')
+      await flushPromises()
+
+      expect(wrapper.find('.query-panel-input').exists()).toBe(true)
+      expect(wrapper.find('.query-panel-options').exists()).toBe(false)
+      expect(wrapper.find('.quick-ai-select').classes()).toContain('is-locked')
+      wrapper.unmount()
+    })
+
+    it('shows up to 5 inline prompts initially and opens a menu with up to 15 prompts via the history button', async () => {
+      const prompts = Array.from(
+        { length: 15 },
+        (_, index) => `Prompt ${index + 1}`
+      )
+      desktop.backend.handle('list_recent_quick_request_prompts', () => prompts)
+
+      const wrapper = mountMenu()
+      await flushPromises()
+
+      expect(
+        wrapper.findAll('.query-panel-option').map((item) => item.text())
+      ).toEqual(['Prompt 5', 'Prompt 4', 'Prompt 3', 'Prompt 2', 'Prompt 1'])
+
+      const trigger = wrapper.find('.recent-prompts-menu button')
+      expect(trigger.exists()).toBe(true)
+      await trigger.trigger('click')
+      await flushPromises()
+
+      // inline suggestions close while the full history menu is open
+      expect(wrapper.find('.query-panel-options').exists()).toBe(false)
+      const menuItems = Array.from(
+        document.body.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')
+      )
+      expect(menuItems).toHaveLength(15)
+      expect(menuItems[14]?.textContent).toContain('Prompt 15')
+
+      menuItems[14]?.click()
+      await flushPromises()
+
+      expect(
+        (wrapper.find('.query-panel-input').element as HTMLTextAreaElement)
+          .value
+      ).toBe('Prompt 15')
+      wrapper.unmount()
+    })
   })
 
   describe('voice input and run button', () => {

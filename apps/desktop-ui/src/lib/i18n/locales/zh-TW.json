@@ -146,7 +146,8 @@
     "promptPresets": "提示詞預設",
     "noPromptsConfigured": "未設定提示詞預設",
     "noToolCalling": "不支援工具",
-    "quickAiRequests": "快捷請求"
+    "quickAiRequests": "快捷請求",
+    "voiceSendNow": "立即發送"
   },
   "chatTools": {
     "files": {
@@ -556,7 +557,7 @@
   },
   "menu": {
     "actions": "動作",
-    "aiPromptRun": "執行",
+    "aiPromptRun": "發送",
     "aiRequest": "AI 請求",
     "cancelIntentHint": "按 Esc 取消",
     "compareResult": "比較結果",
@@ -1525,7 +1526,8 @@
       "selection": "要如何處理所選文字?例如「摘要一下」「禮貌地回覆」「找出日期」",
       "screenshot": "想問截圖什麼?例如「這裡的錯誤是什麼?」「擷取文字」",
       "followUp": "繼續追問"
-    }
+    },
+    "recentPrompts": "最近請求"
   },
   "screenshot": {
     "failed": "無法擷取螢幕。請檢查螢幕擷取權限和桌面入口支援。",

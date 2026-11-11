@@ -75,8 +75,9 @@ describe('VoiceRecognitionMenu', () => {
           AudioWaveform: true,
           SttLanguagePicker: true,
           ShortcutButton: {
-            props: ['keys', 'icon'],
-            template: '<button class="shortcut-btn"><slot /></button>',
+            props: ['keys', 'icon', 'title'],
+            template:
+              '<button class="shortcut-btn" :title="title"><slot /></button>',
           },
           Button: {
             props: ['square', 'ghost', 'title', 'disabled'],
@@ -109,7 +110,11 @@ describe('VoiceRecognitionMenu', () => {
             template: '<div class="live-transcript" />',
           },
           AudioWaveform: true,
-          ShortcutButton: true,
+          ShortcutButton: {
+            props: ['keys', 'icon', 'title'],
+            template:
+              '<button class="shortcut-btn" :title="title" @click="$emit(\'click\')"><slot /></button>',
+          },
           Button: {
             props: ['square', 'ghost', 'title', 'disabled'],
             template:
@@ -317,7 +322,11 @@ describe('VoiceRecognitionMenu', () => {
             template: '<div />',
           },
           AudioWaveform: true,
-          ShortcutButton: true,
+          ShortcutButton: {
+            props: ['keys', 'icon', 'title'],
+            template:
+              '<button class="shortcut-btn" :title="title" @click="$emit(\'click\')"><slot /></button>',
+          },
           Icon: true,
           Button: {
             props: ['title'],
@@ -731,7 +740,11 @@ describe('VoiceRecognitionMenu', () => {
             template: '<div />',
           },
           AudioWaveform: true,
-          ShortcutButton: true,
+          ShortcutButton: {
+            props: ['keys', 'icon', 'title'],
+            template:
+              '<button class="shortcut-btn" :title="title" @click="$emit(\'click\')"><slot /></button>',
+          },
           Button: {
             props: ['title'],
             template:

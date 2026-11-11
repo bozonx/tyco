@@ -146,7 +146,8 @@
     "promptPresets": "Zestawy promptów",
     "noPromptsConfigured": "Brak skonfigurowanych promptów",
     "noToolCalling": "bez narzędzi",
-    "quickAiRequests": "Szybkie zapytania"
+    "quickAiRequests": "Szybkie zapytania",
+    "voiceSendNow": "Wyślij od razu"
   },
   "chatTools": {
     "files": {
@@ -556,7 +557,7 @@
   },
   "menu": {
     "actions": "Akcje",
-    "aiPromptRun": "Uruchom",
+    "aiPromptRun": "Wyślij",
     "aiRequest": "Zapytanie AI",
     "cancelIntentHint": "Esc, aby anulować",
     "compareResult": "Porównaj wynik",
@@ -1534,7 +1535,8 @@
       "selection": "Co zrobić z zaznaczeniem? Np. „Streść”, „Odpowiedz uprzejmie”, „Znajdź daty”",
       "screenshot": "O co zapytać w sprawie zrzutu ekranu? Np. „Jaki tu jest błąd?”, „Wyodrębnij tekst”",
       "followUp": "Zadaj pytanie uzupełniające"
-    }
+    },
+    "recentPrompts": "Poprzednie zapytania"
   },
   "screenshot": {
     "failed": "Nie udało się przechwycić ekranu. Sprawdź uprawnienia do przechwytywania i obsługę portalu pulpitu.",

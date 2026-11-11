@@ -146,7 +146,8 @@
     "promptPresets": "Presetări prompturi",
     "noPromptsConfigured": "Nicio presetare de prompt configurată",
     "noToolCalling": "fără instrumente",
-    "quickAiRequests": "Interogări rapide"
+    "quickAiRequests": "Interogări rapide",
+    "voiceSendNow": "Trimite imediat"
   },
   "chatTools": {
     "files": {
@@ -556,7 +557,7 @@
   },
   "menu": {
     "actions": "Acțiuni",
-    "aiPromptRun": "Rulează",
+    "aiPromptRun": "Trimite",
     "aiRequest": "Cerere AI",
     "cancelIntentHint": "Esc pentru anulare",
     "compareResult": "Compară rezultatul",
@@ -1534,7 +1535,8 @@
       "selection": "Ce să fac cu selecția? De ex. „Rezumă”, „Răspunde politicos”, „Găsește datele”",
       "screenshot": "Ce să întreb despre captură? De ex. „Care este eroarea aici?”, „Extrage textul”",
       "followUp": "Pune o întrebare suplimentară"
-    }
+    },
+    "recentPrompts": "Solicitări recente"
   },
   "screenshot": {
     "failed": "Ecranul nu a putut fi capturat. Verifică permisiunile de captură și compatibilitatea portalului desktop.",

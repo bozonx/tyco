@@ -146,7 +146,8 @@
     "promptPresets": "Prompt-sablonok",
     "noPromptsConfigured": "Nincsenek beállítva prompt-sablonok",
     "noToolCalling": "eszközök nélkül",
-    "quickAiRequests": "Gyors kérések"
+    "quickAiRequests": "Gyors kérések",
+    "voiceSendNow": "Azonnali küldés"
   },
   "chatTools": {
     "files": {
@@ -556,7 +557,7 @@
   },
   "menu": {
     "actions": "Műveletek",
-    "aiPromptRun": "Futtatás",
+    "aiPromptRun": "Küldés",
     "aiRequest": "MI-kérés",
     "cancelIntentHint": "Esc a törléshez",
     "compareResult": "Eredmény összehasonlítása",
@@ -1531,7 +1532,8 @@
       "selection": "Mit tegyen a kijelöléssel? Pl. „Foglald össze”, „Válaszolj udvariasan”, „Keresd meg a dátumokat”",
       "screenshot": "Mit kérdezzen a képernyőképről? Pl. „Mi itt a hiba?”, „Nyerd ki a szöveget”",
       "followUp": "Tegyen fel egy további kérdést"
-    }
+    },
+    "recentPrompts": "Korábbi kérések"
   },
   "screenshot": {
     "failed": "Nem sikerült rögzíteni a képernyőt. Ellenőrizze a képernyőrögzítési engedélyeket és az asztali portál támogatását.",

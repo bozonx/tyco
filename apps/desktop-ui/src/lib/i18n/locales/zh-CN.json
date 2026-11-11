@@ -146,7 +146,8 @@
     "promptPresets": "提示词预设",
     "noPromptsConfigured": "未配置提示词预设",
     "noToolCalling": "不支持工具",
-    "quickAiRequests": "快捷请求"
+    "quickAiRequests": "快捷请求",
+    "voiceSendNow": "立即发送"
   },
   "chatTools": {
     "files": {
@@ -556,7 +557,7 @@
   },
   "menu": {
     "actions": "操作",
-    "aiPromptRun": "运行",
+    "aiPromptRun": "发送",
     "aiRequest": "AI 请求",
     "cancelIntentHint": "按 Esc 取消",
     "compareResult": "对比结果",
@@ -1525,7 +1526,8 @@
       "selection": "要如何处理所选文本?例如“总结一下”“礼貌地回复”“找出日期”",
       "screenshot": "想问截图什么?例如“这里的错误是什么?”“提取文字”",
       "followUp": "继续追问"
-    }
+    },
+    "recentPrompts": "最近请求"
   },
   "screenshot": {
     "failed": "无法截取屏幕。请检查屏幕捕获权限和桌面门户支持。",

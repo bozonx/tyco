@@ -30,15 +30,17 @@
         :label="t('chat.voiceCancelHint')"
         icon="mdi:close"
       />
-      <IconButton
-        :size="compact ? 'sm' : undefined"
+      <ShortcutButton
+        :size="compact ? 'sm' : 'md'"
+        :keys="['Ctrl+Enter']"
+        icon="mdi:send"
         variant="primary"
         :title="t('chat.voiceSendHint')"
         :disabled="isFinishing"
         @click="() => finish('submit')"
-        :label="t('chat.voiceSendHint')"
-        icon="mdi:arrow-up"
-      />
+      >
+        {{ t('chat.voiceSendNow') }}
+      </ShortcutButton>
     </template>
     <template v-else>
       <template v-if="finishBehavior === 'submitToChat'">

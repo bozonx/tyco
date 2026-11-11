@@ -146,7 +146,8 @@
     "promptPresets": "プロンプトプリセット",
     "noPromptsConfigured": "設定されたプロンプトプリセットはありません",
     "noToolCalling": "ツールなし",
-    "quickAiRequests": "クイックリクエスト"
+    "quickAiRequests": "クイックリクエスト",
+    "voiceSendNow": "すぐに送信"
   },
   "chatTools": {
     "files": {
@@ -556,7 +557,7 @@
   },
   "menu": {
     "actions": "アクション",
-    "aiPromptRun": "実行",
+    "aiPromptRun": "送信",
     "aiRequest": "AIリクエスト",
     "cancelIntentHint": "Esc でキャンセル",
     "compareResult": "結果を比較",
@@ -1531,7 +1532,8 @@
       "selection": "選択したテキストをどうしますか?例:「要約して」「丁寧に返信して」「日付を探して」",
       "screenshot": "スクリーンショットについて何を聞きますか?例:「ここのエラーは何?」「テキストを抽出して」",
       "followUp": "追加の質問をどうぞ"
-    }
+    },
+    "recentPrompts": "最近のリクエスト"
   },
   "screenshot": {
     "failed": "画面をキャプチャできませんでした。画面キャプチャの権限とデスクトップポータルの対応状況を確認してください。",

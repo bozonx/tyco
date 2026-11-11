@@ -146,7 +146,8 @@
     "promptPresets": "Prompt-Vorlagen",
     "noPromptsConfigured": "Keine Prompt-Vorlagen konfiguriert",
     "noToolCalling": "ohne Tools",
-    "quickAiRequests": "Schnellanfragen"
+    "quickAiRequests": "Schnellanfragen",
+    "voiceSendNow": "Sofort senden"
   },
   "chatTools": {
     "files": {
@@ -556,7 +557,7 @@
   },
   "menu": {
     "actions": "Aktionen",
-    "aiPromptRun": "Ausführen",
+    "aiPromptRun": "Senden",
     "aiRequest": "KI-Anfrage",
     "cancelIntentHint": "Esc zum Abbrechen",
     "compareResult": "Ergebnis vergleichen",
@@ -1534,7 +1535,8 @@
       "selection": "Was soll mit der Auswahl passieren? Z. B. „Zusammenfassen“, „Höflich antworten“, „Daten finden“",
       "screenshot": "Was möchten Sie zum Screenshot fragen? Z. B. „Was ist hier der Fehler?“, „Text extrahieren“",
       "followUp": "Stellen Sie eine Folgefrage"
-    }
+    },
+    "recentPrompts": "Letzte Anfragen"
   },
   "screenshot": {
     "failed": "Der Bildschirm konnte nicht aufgenommen werden. Prüfen Sie die Aufnahmeberechtigungen und die Unterstützung des Desktop-Portals.",
