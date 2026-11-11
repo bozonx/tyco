@@ -148,6 +148,31 @@ describe('variables settings', () => {
     )
   })
 
+  it('renames nested references and counts dependent variables', () => {
+    const draft = config()
+    addVariable(draft, 'CHILD', '{{var:NOTES_DIR}}/child')
+    expect(variableUsage(draft, 'NOTES_DIR').variableIds).toEqual(['child'])
+    renameVariableIn(draft, 'notes', 'ROOT')
+    expect(draft.variableValues.child).toBe('{{var:ROOT}}/child')
+    removeVariable(draft, 'notes')
+    expect(variableReferenceIssues(['{{var:CHILD}}'], draft)).toEqual([
+      { kind: 'notDeclared', name: 'ROOT' },
+    ])
+  })
+
+  it('reports nested missing values and cycles', () => {
+    const draft = config()
+    setVariableValue(draft, 'notes', '')
+    addVariable(draft, 'CHILD', '{{var:NOTES_DIR}}/child')
+    expect(variableReferenceIssues(['{{var:CHILD}}'], draft)).toEqual([
+      { kind: 'notSet', name: 'NOTES_DIR', variableId: 'notes' },
+    ])
+    setVariableValue(draft, 'notes', '{{var:CHILD}}')
+    expect(variableReferenceIssues(['{{var:CHILD}}'], draft)).toEqual([
+      { kind: 'cycle', name: 'CHILD' },
+    ])
+  })
+
   it('keeps a value on this device and drops it with its variable', () => {
     const draft = config()
     setVariableValue(draft, 'notes', '  ')
@@ -167,6 +192,7 @@ describe('variables settings', () => {
     expect(variableUsage(draft, 'NOTES_DIR')).toEqual({
       commandIds: ['save', 'hook', 'ask'],
       providerIds: ['local'],
+      variableIds: [],
     })
     // the body of a GET request is not sent
     expect(commandMissingVariables(draft.commands[1]!, {})).toEqual([

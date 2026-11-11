@@ -45,6 +45,8 @@ function filled(
     selectionText
   )
   if (result.ok) return result.value
+  if ('cycles' in result)
+    throw new Error(`Cyclic variable references: ${result.cycles.join(', ')}`)
   throw new Error(
     result.missing.length
       ? `Variables not set on this device: ${result.missing.join(', ')}`

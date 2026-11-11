@@ -2,6 +2,8 @@ import {
   BUILTIN_VARIABLES,
   variableNameIssue,
   variableReferences,
+  resolveVariables,
+  renameVariableReferences,
   type UserConfig,
   type VariableConfig,
   type VariableNameIssue,
@@ -88,6 +90,14 @@ export function renameVariableIn(
   const issueKey = nameIssueKey(trimmed, config.variables, id)
   if (issueKey) return issueKey
   const renamed = renameVariable(config, id, trimmed)
+  const from = config.variables.find((variable) => variable.id === id)?.name
+  if (from)
+    config.variableValues = Object.fromEntries(
+      Object.entries(config.variableValues).map(([key, value]) => [
+        key,
+        renameVariableReferences(value, from, trimmed),
+      ])
+    )
   config.variables = renamed.variables
   config.commands = renamed.commands
   config.llm = renamed.llm
@@ -124,6 +134,7 @@ export const unsetVariables = (
  * declared name (`wrongCase`)
  */
 export type VariableReferenceIssue =
+  | { kind: 'cycle'; name: string }
   | { kind: 'notSet'; name: string; variableId: string }
   | { kind: 'notDeclared'; name: string }
   | { kind: 'invalidName'; name: string }
@@ -136,8 +147,20 @@ export function variableReferenceIssues(
   templates: readonly string[],
   config: Pick<UserConfig, 'variables' | 'variableValues'>
 ): VariableReferenceIssue[] {
-  const names = new Set(templates.flatMap(variableReferences))
+  const values = Object.fromEntries(
+    config.variables.flatMap((variable) => {
+      const value = config.variableValues[variable.id]
+      return value?.trim() ? [[variable.name, value]] : []
+    })
+  )
+  for (const name of builtinNames) values[name] = ''
+  const resolved = resolveVariables(
+    templates.flatMap(variableReferences),
+    values
+  )
+  const names = new Set([...resolved.missing, ...resolved.cycles])
   return [...names].flatMap((name): VariableReferenceIssue[] => {
+    if (resolved.cycles.includes(name)) return [{ kind: 'cycle', name }]
     if (builtinNames.includes(name)) return []
     const variable = config.variables.find((item) => item.name === name)
     if (variable)

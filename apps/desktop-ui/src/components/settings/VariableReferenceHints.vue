@@ -67,6 +67,8 @@ function declare(name: string) {
 
 function messageOf(issue: VariableReferenceIssue): string {
   switch (issue.kind) {
+    case 'cycle':
+      return t('variables.hintCycle', { name: issue.name })
     case 'notSet':
       return t('variables.hintNotSet', { name: issue.name })
     case 'notDeclared':

@@ -134,6 +134,27 @@ describe('SettingsVariablesTab.vue', () => {
     expect(context.draft.value.variableValues['v1']).toBe('my-new-value')
   })
 
+  it('shows nested reference errors without device badges', async () => {
+    const { wrapper, context } = mountTab([
+      { id: 'root', name: 'ROOT' },
+      { id: 'child', name: 'CHILD' },
+    ])
+    context.draft.value.variableValues = {
+      root: '{{var:CHILD}}',
+      child: '{{var:ROOT}}',
+    }
+    await nextTick()
+    expect(wrapper.text()).toContain('variables.hintCycle')
+    expect(wrapper.findComponent({ name: 'DeviceScopeBadge' }).exists()).toBe(
+      false
+    )
+    await wrapper
+      .find('[data-testid="variable-root"] .variable-card-header button')
+      .trigger('click')
+    expect(wrapper.find('.confirm-stub').text()).toContain('"count":1')
+    expect(context.draft.value.variables).toHaveLength(2)
+  })
+
   it('allows removing a variable', async () => {
     const { wrapper, context } = mountTab([{ id: 'v1', name: 'CUSTOM_VAR' }])
     const removeBtn = wrapper.find(

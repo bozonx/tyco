@@ -142,6 +142,11 @@ export function createAiCommandTool(
         deps.variables?.() ?? {},
         'text'
       )
+      if (!prompt.ok && 'cycles' in prompt)
+        return {
+          ok: false,
+          message: `Cyclic variable references: ${prompt.cycles.join(', ')}`,
+        }
       // an empty value is never put in quietly: the run says what is missing
       if (!prompt.ok)
         return {

@@ -173,7 +173,7 @@ to it.
 
 A variable gives a command, or the base URL of an `openaiCompatible` provider,
 a value that differs between devices: a folder, a local server. Its declaration
-is the user's (`variables: [{ id, name, description }]`), its value the
+is the user's (`variables: [{ id, name }]`), its value the
 device's (`variableValues: { "<variable id>": "<value>" }`, `x-scope: device`):
 a device refers to the shared entity, and the value of a variable that is gone
 is dropped. A name matches `^[A-Z][A-Z0-9_]*$`, is unique without case and
@@ -181,8 +181,14 @@ never starts with `TYCO_`, the prefix of the built-in `TYCO_USER_DIR` (the user
 data folder) and `TYCO_DEVICE_ID`. Values are plain text and may go into a
 prompt or a URL; keys stay in the secret store.
 
-A template refers to a variable as `{{var:NAME}}` and is filled once before it
-is used: what a value holds, `{{TEXT}}` or another `{{var:…}}`, stays text. A
+A template refers to a variable as `{{var:NAME}}`. User variable values may
+reference other variables with the same syntax, including built-in variables;
+dependencies are resolved before escaping for the destination. Built-in values
+and `{{TEXT}}` / `{{SELECTION}}` inside values remain literal. Missing nested
+dependencies and cycles stop the run. Unused invalid variables do not block
+unrelated commands; only successfully resolved values enter a script's
+environment. Renaming a variable updates references in local variable values,
+commands and provider URLs; deletion also counts dependent variables. A
 variable without a value on this device (or not declared) stops the run, and the
 error names it; an empty value is never put in quietly. The escaping follows the
 place, as for `{{TEXT}}`:

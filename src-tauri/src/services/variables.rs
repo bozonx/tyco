@@ -4,8 +4,8 @@
 //! `@tyco/shared`, which follows the same rules, and the shared fixtures that
 //! check both.
 //!
-//! A template is filled once: what a value holds, `{{TEXT}}` or another
-//! `{{var:…}}`, stays text. A variable without a value on this device stops
+//! Nested variable references are resolved before escaping. Text and selection
+//! placeholders inside values stay literal. A variable without a value on this device stops
 //! the run instead of leaving an empty string in its place.
 use std::collections::{BTreeMap, HashSet};
 use std::sync::LazyLock;
@@ -59,6 +59,13 @@ impl Place {
 pub struct VariableValues {
     user: BTreeMap<String, String>,
     builtin: BTreeMap<String, String>,
+}
+
+#[derive(Default)]
+struct Resolution {
+    values: BTreeMap<String, String>,
+    missing: Vec<String>,
+    cycles: Vec<String>,
 }
 
 /// What the built-in variables stand for on this device.
@@ -124,12 +131,74 @@ impl VariableValues {
         }
     }
 
-    /// The environment of a script: every variable with a value.
+    /// Resolve only the requested dependencies; built-in values stay literal.
+    fn resolve_names(&self, names: &[&str]) -> Resolution {
+        let mut result = Resolution::default();
+        let mut visiting = HashSet::new();
+        let mut visited = HashSet::new();
+        for name in names {
+            self.visit(name, &mut visiting, &mut visited, &mut result);
+        }
+        result
+    }
+
+    fn visit(
+        &self,
+        name: &str,
+        visiting: &mut HashSet<String>,
+        visited: &mut HashSet<String>,
+        result: &mut Resolution,
+    ) {
+        if visiting.contains(name) {
+            if !result.cycles.iter().any(|item| item == name) {
+                result.cycles.push(name.to_owned());
+            }
+            return;
+        }
+        if !visited.insert(name.to_owned()) {
+            return;
+        }
+        let Some(value) = self.get(name) else {
+            result.missing.push(name.to_owned());
+            return;
+        };
+        if name.starts_with(BUILTIN_PREFIX) {
+            result.values.insert(name.to_owned(), value.to_owned());
+            return;
+        }
+        visiting.insert(name.to_owned());
+        let dependencies = references(value);
+        for dependency in &dependencies {
+            self.visit(dependency, visiting, visited, result);
+        }
+        visiting.remove(name);
+        if dependencies
+            .iter()
+            .all(|dependency| result.values.contains_key(*dependency))
+        {
+            let value = REFERENCE
+                .replace_all(value, |captures: &regex::Captures| {
+                    result.values.get(&captures[1]).cloned().unwrap_or_default()
+                })
+                .into_owned();
+            result.values.insert(name.to_owned(), value);
+        }
+    }
+
+    /// A nested value, absent when a dependency is missing or cyclic.
+    pub fn resolve(&self, name: &str) -> Option<String> {
+        self.resolve_names(&[name]).values.remove(name)
+    }
+
+    /// The environment of a script: every successfully resolved variable.
     pub fn env(&self) -> Vec<(String, String)> {
         self.builtin
             .iter()
             .chain(&self.user)
-            .map(|(name, value)| (Self::env_name(name), value.clone()))
+            .filter_map(|(name, _)| {
+                self.resolve(name)
+                    .map(|value| (Self::env_name(name), value))
+            })
             .collect()
     }
 }
@@ -144,18 +213,15 @@ pub fn references(template: &str) -> Vec<&str> {
         .collect()
 }
 
-/// The names `templates` refer to that have no value on this device.
+/// Missing dependencies and cyclic references, each once.
+#[cfg(test)]
 pub fn missing<'a>(
     templates: impl IntoIterator<Item = &'a str>,
     values: &VariableValues,
 ) -> Vec<String> {
-    let mut seen = HashSet::new();
-    templates
-        .into_iter()
-        .flat_map(references)
-        .filter(|name| values.get(name).is_none() && seen.insert(*name))
-        .map(str::to_owned)
-        .collect()
+    let names: Vec<&str> = templates.into_iter().flat_map(references).collect();
+    let result = values.resolve_names(&names);
+    result.missing.into_iter().chain(result.cycles).collect()
 }
 
 /// The error of a run that refers to variables without a value here.
@@ -177,14 +243,21 @@ pub fn substitute(
     values: &VariableValues,
     place: Place,
 ) -> Result<String, AppError> {
-    let missing = missing([template], values);
-    if !missing.is_empty() {
-        return Err(not_set_error(&missing));
+    let resolved = values.resolve_names(&references(template));
+    if !resolved.cycles.is_empty() {
+        return Err(AppError::InvalidInput(format!(
+            "Cyclic variable references: {}",
+            resolved.cycles.join(", ")
+        )));
+    }
+    if !resolved.missing.is_empty() {
+        return Err(not_set_error(&resolved.missing));
     }
     if place == Place::Header {
         if let Some(name) = references(template).into_iter().find(|name| {
-            values
-                .get(name)
+            resolved
+                .values
+                .get(*name)
                 .is_some_and(|value| value.contains(['\r', '\n']))
         }) {
             return Err(AppError::InvalidInput(format!(
@@ -194,7 +267,11 @@ pub fn substitute(
     }
     Ok(REFERENCE
         .replace_all(template, |captures: &regex::Captures| {
-            values.get(&captures[1]).unwrap_or_default().to_owned()
+            resolved
+                .values
+                .get(&captures[1])
+                .cloned()
+                .unwrap_or_default()
         })
         .into_owned())
 }
@@ -236,6 +313,23 @@ mod tests {
                 (String::from("TYCO_DEVICE_ID"), String::from("d1")),
                 (String::from("TYCO_USER_DIR"), String::from("/sync/tyco")),
                 (String::from("TYCO_VAR_NOTES_DIR"), String::from("/n")),
+            ]
+        );
+    }
+
+    #[test]
+    fn script_environment_resolves_dependencies_and_omits_invalid_values() {
+        let values = VariableValues::from_pairs(&[
+            ("ROOT", "/a b"),
+            ("CHILD", "{{var:ROOT}}/notes"),
+            ("CYCLE", "{{var:CYCLE}}"),
+            ("MISSING", "{{var:UNSET}}"),
+        ]);
+        assert_eq!(
+            values.env(),
+            vec![
+                ("TYCO_VAR_CHILD".to_owned(), "/a b/notes".to_owned()),
+                ("TYCO_VAR_ROOT".to_owned(), "/a b".to_owned()),
             ]
         );
     }
@@ -283,6 +377,8 @@ mod tests {
             let result = substitute(template, &values, place);
             if let Some(expected) = case["expected"].as_str() {
                 assert_eq!(result.unwrap(), expected, "{name}");
+            } else if case.get("cycles").is_some() {
+                assert!(matches!(result, Err(AppError::InvalidInput(_))), "{name}");
             } else if let Some(names) = case["missing"].as_array() {
                 let names: Vec<&str> = names.iter().filter_map(Value::as_str).collect();
                 assert_eq!(missing([template], &values), names, "{name}");

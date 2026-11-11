@@ -321,20 +321,13 @@ pub fn execute_script(
         AppError::Failed(message)
     };
 
-    let missing = variables::missing(
-        [request.command, request.working_dir.unwrap_or_default()],
-        request.variables,
-    );
-    if !missing.is_empty() {
-        let error = variables::not_set_error(&missing);
-        log.write(&empty_result(), Some(&error.to_string()));
-        return Err(error);
-    }
+    variables::substitute(request.command, request.variables, variables::Place::Text)
+        .inspect_err(|error| log.write(&empty_result(), Some(&error.to_string())))?;
     let working_dir = request
         .working_dir
         .map(|dir| variables::substitute(dir, request.variables, variables::Place::Text))
         .transpose()
-        .map_err(|error| fail(&log, error.to_string()))?;
+        .inspect_err(|error| log.write(&empty_result(), Some(&error.to_string())))?;
     let cwd = resolve_working_dir(working_dir.as_deref())
         .map_err(|error| fail(&log, error.to_string()))?;
     let mut command = script_command(request);
@@ -415,12 +408,12 @@ fn script_command(request: &ScriptRequest) -> std::process::Command {
             value: selection,
         },
     ];
-    for ((token, env), name) in tokens.iter().zip(&names) {
-        placeholders.push(shell::Placeholder {
-            token,
-            env,
-            value: request.variables.get(name).unwrap_or_default(),
-        });
+    let resolved: Vec<String> = names
+        .iter()
+        .map(|name| request.variables.resolve(name).unwrap_or_default())
+        .collect();
+    for ((token, env), value) in tokens.iter().zip(&resolved) {
+        placeholders.push(shell::Placeholder { token, env, value });
     }
     let mut command = shell::command(&shell::substitute_all(request.command, &placeholders));
     command.env(shell::TEXT_ENV, request.text);
@@ -622,7 +615,8 @@ mod tests {
             ("NOTES_DIR", nasty),
             ("OTHER", "other"),
             (variables::USER_DIR, "/sync/tyco"),
-            ("WORK", dir.to_str().unwrap()),
+            ("ROOT", dir.to_str().unwrap()),
+            ("WORK", "{{var:ROOT}}"),
         ]);
         let result = execute_script(
             &ScriptRuns::default(),
@@ -638,7 +632,13 @@ mod tests {
         )
         .unwrap();
         let (printed, cwd) = result.stdout.rsplit_once('|').unwrap();
-        assert_eq!(printed, format!("{nasty}|other|/sync/tyco|text"));
+        assert_eq!(
+            printed,
+            format!(
+                "{}|other|/sync/tyco|text",
+                nasty.replace("{{var:OTHER}}", "other")
+            )
+        );
         assert_eq!(
             PathBuf::from(cwd.trim()).canonicalize().unwrap(),
             dir.canonicalize().unwrap()
@@ -661,6 +661,32 @@ mod tests {
         )
         .unwrap();
         assert_eq!(result.stdout, "selected quote's|selected quote's");
+    }
+
+    #[test]
+    fn cyclic_or_missing_nested_values_stop_scripts_before_starting() {
+        for (value, cyclic) in [("{{var:CHILD}}", true), ("{{var:UNSET}}", false)] {
+            let variables =
+                VariableValues::from_pairs(&[("ROOT", value), ("CHILD", "{{var:ROOT}}")]);
+            let error = execute_script(
+                &ScriptRuns::default(),
+                &ScriptRequest {
+                    variables: &variables,
+                    ..request("{{var:ROOT}}", "")
+                },
+                None,
+            )
+            .unwrap_err();
+            if cyclic {
+                assert!(
+                    matches!(error, AppError::InvalidInput(message) if message.contains("ROOT"))
+                );
+            } else {
+                assert!(
+                    matches!(error, AppError::VariableNotSet(message) if message.contains("UNSET"))
+                );
+            }
+        }
     }
 
     #[test]

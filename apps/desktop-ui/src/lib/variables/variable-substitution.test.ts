@@ -18,6 +18,7 @@ interface SubstitutionCase {
   values: Record<string, string>
   expected?: string
   missing?: string[]
+  cycles?: string[]
 }
 
 describe('variable substitution', () => {
@@ -30,6 +31,12 @@ describe('variable substitution', () => {
     )
     if (testCase.expected !== undefined)
       expect(result).toEqual({ ok: true, value: testCase.expected })
+    else if (testCase.cycles)
+      expect(result).toEqual({
+        ok: false,
+        missing: [],
+        cycles: testCase.cycles,
+      })
     else if (testCase.missing)
       expect(result).toEqual({ ok: false, missing: testCase.missing })
     else expect(result).toMatchObject({ ok: false, missing: [] })

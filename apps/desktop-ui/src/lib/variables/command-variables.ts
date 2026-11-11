@@ -159,11 +159,19 @@ export function renameVariable(
 
 /** The commands and providers that refer to the variable `name` */
 export function variableUsage(
-  config: Pick<UserConfig, 'commands' | 'llm'>,
+  config: Pick<UserConfig, 'commands' | 'llm'> &
+    Partial<Pick<UserConfig, 'variables' | 'variableValues'>>,
   name: string
-): { commandIds: string[]; providerIds: string[] } {
+): { commandIds: string[]; providerIds: string[]; variableIds: string[] } {
   const refers = (text: string) => text.includes(`{{var:${name}}}`)
   return {
+    variableIds: (config.variables ?? [])
+      .filter(
+        (variable) =>
+          variable.name !== name &&
+          refers(config.variableValues?.[variable.id] ?? '')
+      )
+      .map((variable) => variable.id),
     commandIds: config.commands
       .filter((command) =>
         commandVariableTemplates(command.toolId, command.toolConfig).some(

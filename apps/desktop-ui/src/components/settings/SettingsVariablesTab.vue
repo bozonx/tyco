@@ -167,7 +167,6 @@
                     <span class="variable-value-label">{{
                       t('variables.value')
                     }}</span>
-                    <DeviceScopeBadge />
                     <span
                       v-if="!draft.variableValues[variable.id]?.trim()"
                       class="variable-value-warning"
@@ -197,6 +196,10 @@
                   "
                 />
               </div>
+              <VariableReferenceHints
+                v-if="draft.variableValues[variable.id]?.trim()"
+                :templates="[variablePlaceholder(variable.name)]"
+              />
             </div>
           </div>
         </div>
@@ -233,8 +236,8 @@ import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoPopover from '../common/InfoPopover.vue'
 import InlineNotice from '../common/InlineNotice.vue'
-import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import SettingsSection from './SettingsSection.vue'
+import VariableReferenceHints from './VariableReferenceHints.vue'
 import { type VariableConfig, variablePlaceholder } from '@tyco/shared'
 
 /** `focusVariableId` opens the tab on the value of that variable */
@@ -326,7 +329,11 @@ const pendingRemoval = ref<{ id: string; name: string; usageCount: number }>()
 
 function usageCountOf(name: string): number {
   const usage = variableUsage(draft.value, name)
-  return usage.commandIds.length + usage.providerIds.length
+  return (
+    usage.commandIds.length +
+    usage.providerIds.length +
+    usage.variableIds.length
+  )
 }
 
 /** Removes at once a variable nothing uses; asks first otherwise */

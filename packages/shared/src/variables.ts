@@ -49,16 +49,57 @@ export function variableReferences(template: string): string[] {
   return [...names]
 }
 
-/** The names `templates` refer to that have no value in `values` */
+/** Resolve only the requested dependencies; built-in values remain literal. */
+export function resolveVariables(
+  names: readonly string[],
+  values: VariableValues
+) {
+  const resolved: Record<string, string> = {}
+  const missing = new Set<string>()
+  const cycles = new Set<string>()
+  const visiting = new Set<string>()
+  const visited = new Set<string>()
+  const visit = (name: string): void => {
+    if (visiting.has(name)) {
+      cycles.add(name)
+      return
+    }
+    if (visited.has(name)) return
+    visited.add(name)
+    if (!Object.hasOwn(values, name)) {
+      missing.add(name)
+      return
+    }
+    const value = values[name]!
+    if (name.startsWith(BUILTIN_VARIABLE_PREFIX)) {
+      resolved[name] = value
+      return
+    }
+    visiting.add(name)
+    const dependencies = variableReferences(value)
+    for (const dependency of dependencies) visit(dependency)
+    visiting.delete(name)
+    if (dependencies.every((dependency) => Object.hasOwn(resolved, dependency)))
+      resolved[name] = value.replace(
+        new RegExp(REFERENCE_SOURCE, 'g'),
+        (_token, dependency: string) => resolved[dependency]!
+      )
+  }
+  for (const name of names) visit(name)
+  return {
+    values: resolved as VariableValues,
+    missing: [...missing],
+    cycles: [...cycles],
+  }
+}
+
+/** Missing dependencies and cyclic references, each once. */
 export function missingVariables(
   templates: readonly string[],
   values: VariableValues
 ): string[] {
-  const names = new Set<string>()
-  for (const template of templates)
-    for (const name of variableReferences(template))
-      if (!Object.hasOwn(values, name)) names.add(name)
-  return [...names]
+  const result = resolveVariables(templates.flatMap(variableReferences), values)
+  return [...new Set([...result.missing, ...result.cycles])]
 }
 
 /** Why a name cannot name a variable of the user */
@@ -125,6 +166,7 @@ export type VariableSubstitution =
   | { ok: false; missing: string[] }
   /** A value cannot go there, e.g. a line break into a header */
   | { ok: false; missing: []; invalidName: string }
+  | { ok: false; missing: []; cycles: string[] }
 
 const TOKEN_SOURCE = String.raw`\{\{TEXT\}\}|\{\{SELECTION\}\}|${REFERENCE_SOURCE}`
 
@@ -138,10 +180,10 @@ function isJson(value: string): boolean {
 }
 
 /**
- * `template` with the variables filled for `place`, once: what a value holds
- * stays text. `text` fills `{{TEXT}}` too, `null` with nothing; without it
- * `{{TEXT}}` stays as it is. In a URL the text is encoded, a variable is not,
- * so that it may hold a base address
+ * `template` with nested variable references resolved before escaping. Text and
+ * selection placeholders inside values remain literal. `text` fills `{{TEXT}}`
+ * too, `null` with nothing; without it `{{TEXT}}` stays as it is. In a URL the
+ * text is encoded, a variable is not, so that it may hold a base address
  */
 export function substituteVariables(
   template: string,
@@ -150,8 +192,11 @@ export function substituteVariables(
   text?: string | null,
   selection?: string | null
 ): VariableSubstitution {
-  const missing = missingVariables([template], values)
-  if (missing.length) return { ok: false, missing }
+  const resolved = resolveVariables(variableReferences(template), values)
+  if (resolved.cycles.length)
+    return { ok: false, missing: [], cycles: resolved.cycles }
+  if (resolved.missing.length) return { ok: false, missing: resolved.missing }
+  values = resolved.values
   if (place === 'header') {
     const invalidName = variableReferences(template).find((name) =>
       /[\r\n]/.test(values[name]!)

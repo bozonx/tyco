@@ -7,11 +7,11 @@
     "expected": "Save it to /home/me/notes now"
   },
   {
-    "name": "a value is not parsed again",
+    "name": "nested variables resolve but text placeholders remain literal",
     "place": "text",
     "template": "{{var:A}}|{{var:B}}",
     "values": { "A": "{{TEXT}} {{var:B}}", "B": "b" },
-    "expected": "{{TEXT}} {{var:B}}|b"
+    "expected": "{{TEXT}} b|b"
   },
   {
     "name": "the text placeholder stays without a text",
@@ -108,5 +108,71 @@
     "text": "",
     "values": {},
     "missing": ["P"]
+  },
+  {
+    "name": "multiple levels and shared dependencies",
+    "place": "text",
+    "template": "{{var:A}}|{{var:B}}",
+    "values": { "A": "{{var:B}}/{{var:C}}", "B": "{{var:C}}/b", "C": "root" },
+    "expected": "root/b/root|root/b"
+  },
+  {
+    "name": "nested built-in variable",
+    "place": "text",
+    "template": "{{var:NOTES}}",
+    "values": {
+      "NOTES": "{{var:TYCO_USER_DIR}}/notes",
+      "TYCO_USER_DIR": "/sync/{{var:LITERAL}}"
+    },
+    "expected": "/sync/{{var:LITERAL}}/notes"
+  },
+  {
+    "name": "all missing dependencies are named once",
+    "place": "text",
+    "template": "{{var:A}} {{var:C}}",
+    "values": { "A": "{{var:B}} {{var:C}} {{var:B}}" },
+    "missing": ["B", "C"]
+  },
+  {
+    "name": "self reference fails",
+    "place": "text",
+    "template": "{{var:A}}",
+    "values": { "A": "{{var:A}}" },
+    "cycles": ["A"]
+  },
+  {
+    "name": "indirect cycle fails",
+    "place": "url",
+    "template": "{{var:A}}",
+    "values": { "A": "{{var:B}}", "B": "{{var:C}}", "C": "{{var:A}}" },
+    "cycles": ["A"]
+  },
+  {
+    "name": "unused cycles do not block substitution",
+    "place": "text",
+    "template": "{{var:A}}",
+    "values": { "A": "ok", "B": "{{var:B}}" },
+    "expected": "ok"
+  },
+  {
+    "name": "nested header line breaks are rejected",
+    "place": "header",
+    "template": "{{var:A}}",
+    "values": { "A": "{{var:B}}", "B": "x\r\nInjected: yes" }
+  },
+  {
+    "name": "nested JSON values are escaped once",
+    "place": "json",
+    "template": "{\"path\":\"{{var:A}}\"}",
+    "values": { "A": "{{var:B}}/notes", "B": "C:\\a \"b\"" },
+    "expected": "{\"path\":\"C:\\\\a \\\"b\\\"/notes\"}"
+  },
+  {
+    "name": "text input is not expanded as a variable",
+    "place": "text",
+    "template": "{{TEXT}}|{{var:A}}",
+    "text": "{{var:MISSING}}",
+    "values": { "A": "{{SELECTION}} {{TEXT}}" },
+    "expected": "{{var:MISSING}}|{{SELECTION}} {{TEXT}}"
   }
 ]

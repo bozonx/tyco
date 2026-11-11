@@ -385,8 +385,12 @@ describe('createAiCommandTool', () => {
       messageKey: 'toast.variablesNotSet',
       message: 'NOTES_DIR',
     })
+    expect(await make({ NOTES_DIR: '{{var:NOTES_DIR}}' }).run(call)).toEqual({
+      ok: false,
+      message: 'Cyclic variable references: NOTES_DIR',
+    })
     expect(prompts).toEqual([])
-    await make({ NOTES_DIR: '/home/me/notes' }).run(call)
+    await make({ NOTES_DIR: '{{var:ROOT}}/notes', ROOT: '/home/me' }).run(call)
     expect(prompts.join('')).toContain('Look in /home/me/notes')
     expect(prompts.join('')).not.toContain('{{var:')
   })
