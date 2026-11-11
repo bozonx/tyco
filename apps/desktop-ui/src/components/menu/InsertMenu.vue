@@ -45,6 +45,7 @@
       </div>
 
       <ShortcutList
+        editor-shortcut
         :key="actionMenuStore.pageIndex"
         :text="activeActionText"
         :source-text="activeSourceText"

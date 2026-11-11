@@ -265,11 +265,12 @@ Request composers share the configured Enter/Ctrl+Enter submit key. Shift+Enter
 always inserts a newline; bare Enter also inserts one in Ctrl+Enter mode.
 Outside text entry, Enter/Space runs the primary action and Shift+Space runs
 the secondary action. Tab opens the next action menu in quick input and voice
-flows. Moving text to the editor is an explicit button without a dedicated
-shortcut. Escape returns or cancels; Shift+Escape closes the whole flow.
+flows. On the action menu, Tab moves the text to the editor. Result views
+keep an explicit editor button; intermediate input and picker views do not. Escape returns or cancels; Shift+Escape closes the whole flow.
 Ctrl+Enter is reserved for configured request submission, not editor actions
 or immediate voice completion.
 
 Quick surface action rows follow DOM and visual order from left to right:
-Escape/cancel, other actions, Tab/action menu, secondary action, primary action.
+Other actions, Tab/action menu, secondary action, primary action.
+Escape/cancel appears once in the header, not in the footer.
 Rows align to the right; avoid CSS order overrides so focus follows the display.

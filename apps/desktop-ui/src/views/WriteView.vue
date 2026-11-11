@@ -1,5 +1,17 @@
 <template>
   <div ref="containerRef" class="write-mode-container">
+    <div class="write-header">
+      <ShortcutButton
+        size="sm"
+        :keys="['Esc']"
+        type="button"
+        class="write-hint-action"
+        @mousedown.prevent
+        @click="cancelFromHint"
+      >
+        <span>{{ t('write.cancel') }}</span>
+      </ShortcutButton>
+    </div>
     <WriteLivePreview
       v-if="
         isLiveMode &&
@@ -22,16 +34,6 @@
     </div>
     <!-- mousedown.prevent keeps the focus and the caret in the input -->
     <p ref="hintRef" class="write-hint">
-      <ShortcutButton
-        size="sm"
-        :keys="['Esc']"
-        type="button"
-        class="write-hint-action"
-        @mousedown.prevent
-        @click="cancelFromHint"
-      >
-        <span>{{ t('write.cancel') }}</span>
-      </ShortcutButton>
       <ShortcutButton
         size="sm"
         :keys="[]"
@@ -411,6 +413,10 @@ function submit() {
 </script>
 
 <style scoped>
+.write-header {
+  display: flex;
+  justify-content: flex-end;
+}
 .write-mode-container {
   display: flex;
   flex-direction: column;

@@ -128,6 +128,22 @@ describe('ShortcutList', () => {
     wrapper.unmount()
   })
 
+  it('opens the editor with Tab only when enabled on the action page', () => {
+    const wrapper = mount(ShortcutList, {
+      props: {
+        text: 'result',
+        isEditorButtonVisible: true,
+        editorShortcut: true,
+      },
+    })
+    const down = new KeyboardEvent('keydown', { code: 'Tab', cancelable: true })
+    window.dispatchEvent(down)
+    expect(down.defaultPrevented).toBe(true)
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Tab' }))
+    expect(mocks.toEditor).toHaveBeenCalledWith('result')
+    wrapper.unmount()
+  })
+
   it('handles Tab, Space/Enter, and custom escAction keyboard shortcuts', async () => {
     const spaceAction = vi.fn()
     const escAction = vi.fn()

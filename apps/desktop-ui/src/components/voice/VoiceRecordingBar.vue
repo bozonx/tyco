@@ -3,11 +3,12 @@
     class="voice-bar"
     :class="{
       'with-styling': Boolean(slots),
-      'with-header': canSwitchMode || Boolean(replyTo),
+      'with-header':
+        canSwitchMode || Boolean(replyTo) || props.showCancelButton,
     }"
     :label="ariaLabel"
   >
-    <div v-if="canSwitchMode || replyTo" class="voice-bar-header">
+    <div class="voice-bar-header">
       <OverlayDragHandle />
       <MicrophoneSourcePicker
         v-if="canSwitchMode"
@@ -19,6 +20,15 @@
       <span v-if="replyTo" class="voice-bar-reply" :title="replyTo">
         {{ t('listen.replyingTo', { text: replyTo }) }}
       </span>
+      <ShortcutButton
+        v-if="props.showCancelButton !== false"
+        size="sm"
+        :keys="cancelShortcut ? ['Esc'] : []"
+        :disabled="isFinishing"
+        :title="t('chat.voiceCancelHint')"
+        @click="cancel"
+        >{{ t('common.cancel') }}</ShortcutButton
+      >
     </div>
     <div v-if="referenceText" class="voice-reference-text">
       {{ referenceText }}
@@ -100,7 +110,9 @@ import VoiceRecordingActions from './VoiceRecordingActions.vue'
 import type { VoiceRecordingProps } from './voice-recording-props'
 import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 
-const props = defineProps<VoiceRecordingProps>()
+const props = withDefaults(defineProps<VoiceRecordingProps>(), {
+  showCancelButton: true,
+})
 const emit = defineEmits<{
   (e: 'switch-mode'): void
   (e: 'language-change'): void
@@ -133,6 +145,11 @@ const slots = computed(() => {
 
 .voice-bar {
   height: 7.5rem;
+}
+
+.voice-bar-header > .shortcut {
+  margin-left: auto;
+  width: auto;
 }
 
 .voice-bar-header {

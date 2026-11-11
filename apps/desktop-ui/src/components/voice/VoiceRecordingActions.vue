@@ -2,24 +2,6 @@
   <div class="voice-actions">
     <template v-if="compact && chat">
       <ShortcutButton
-        v-if="cancelShortcut"
-        :size="compact ? 'sm' : 'md'"
-        :keys="['Esc']"
-        :disabled="isFinishing"
-        @click="cancel"
-      >
-        {{ t('common.cancel') }}
-      </ShortcutButton>
-      <ShortcutButton
-        v-else
-        size="sm"
-        :keys="[]"
-        :disabled="isFinishing"
-        :title="t('chat.voiceCancelHint')"
-        @click="cancel"
-        >{{ t('common.cancel') }}</ShortcutButton
-      >
-      <ShortcutButton
         :size="compact ? 'sm' : 'md'"
         :keys="['Shift', 'Space']"
         :title="t('chat.voiceSendNow')"
@@ -39,14 +21,6 @@
       </ShortcutButton>
     </template>
     <template v-else>
-      <ShortcutButton
-        v-if="compact"
-        :size="compact ? 'sm' : 'md'"
-        :keys="['Esc']"
-        @click="cancel"
-      >
-        {{ t('common.cancel') }}
-      </ShortcutButton>
       <template v-if="finishBehavior === 'submitToChat'">
         <ShortcutButton
           :size="compact ? 'sm' : 'md'"

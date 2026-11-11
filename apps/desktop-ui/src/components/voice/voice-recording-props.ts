@@ -25,6 +25,7 @@ export interface VoiceRecordingProps {
    * compact chat mode.
    */
   cancelShortcut?: boolean
+  showCancelButton?: boolean
   prefix?: string
   suffix?: string
   context?: string

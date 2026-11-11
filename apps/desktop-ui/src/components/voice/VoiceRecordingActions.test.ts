@@ -42,33 +42,14 @@ describe('VoiceRecordingActions', () => {
     expect(secondaryKeyTexts).toEqual(['Shift', 'Space'])
   })
 
-  it('shows a labelled Esc cancel button in compact chat mode when cancelShortcut is enabled', async () => {
-    let cancelled = false
+  it('keeps cancellation out of the footer', () => {
     const wrapper = mountActions({
       compact: true,
       chat: true,
       cancelShortcut: true,
-      cancel: async () => {
-        cancelled = true
-      },
     })
-    const shortcutButtons = wrapper.findAll('.shortcut')
-    expect(shortcutButtons).toHaveLength(3)
-    expect(shortcutButtons[2]?.findAll('kbd').map((k) => k.text())).toEqual([
-      'Space',
-      'Enter',
-    ])
-    expect(shortcutButtons[2]?.text()).toContain('Finish')
-    expect(shortcutButtons[0]?.findAll('kbd').map((k) => k.text())).toEqual([
-      'Esc',
-    ])
-    expect(shortcutButtons[1]?.findAll('kbd').map((k) => k.text())).toEqual([
-      'Shift',
-      'Space',
-    ])
-    expect(shortcutButtons[1]?.text()).toContain('Send right away')
-    await shortcutButtons[0]?.trigger('click')
-    expect(cancelled).toBe(true)
+    expect(wrapper.findAll('.shortcut')).toHaveLength(2)
+    expect(wrapper.text()).not.toContain('Cancel')
   })
 
   it('triggers submit when clicking the send-right-away button in compact chat mode', async () => {
@@ -81,12 +62,12 @@ describe('VoiceRecordingActions', () => {
       },
     })
     const shortcutButtons = wrapper.findAll('.shortcut')
-    expect(shortcutButtons).toHaveLength(3)
-    expect(shortcutButtons[1]?.findAll('kbd').map((k) => k.text())).toEqual([
+    expect(shortcutButtons).toHaveLength(2)
+    expect(shortcutButtons[0]?.findAll('kbd').map((k) => k.text())).toEqual([
       'Shift',
       'Space',
     ])
-    await shortcutButtons[1]?.trigger('click')
+    await shortcutButtons[0]?.trigger('click')
     expect(intents).toEqual(['submit'])
   })
 })

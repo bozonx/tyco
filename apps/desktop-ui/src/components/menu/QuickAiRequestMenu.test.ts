@@ -327,7 +327,6 @@ describe('QuickAiRequestMenu', () => {
     expect(bar.find('option').text()).toBe('quickAiRequest.standardProfile')
     expect(footerStart.findAll('button').map((b) => b.text())).toEqual([
       'quickAiRequest.goToChat',
-      'shortcuts.insertIntoEditor',
     ])
     expect(footerEnd.find('.run-action-btn').exists()).toBe(true)
     expect(wrapper.find('[aria-label="action.askInChat"]').exists()).toBe(false)
@@ -353,7 +352,7 @@ describe('QuickAiRequestMenu', () => {
     await input.trigger('keydown', { key: 'Enter' })
     await flushPromises()
 
-    expect(wrapper.find('.stop-action-btn').exists()).toBe(true)
+    expect(wrapper.find('.action-overlay-esc').text()).toContain('chat.stop')
     expect(wrapper.find('.turn-prompt-text').text()).toBe('First question')
     expect((input.element as HTMLInputElement).value).toBe('')
     wrapper.unmount()
@@ -524,12 +523,11 @@ describe('QuickAiRequestMenu', () => {
     await flushPromises()
     expect(desktop.backend.callsOf('open_main_editor')).toHaveLength(0)
 
-    const editorBtn = wrapper
-      .findAll('button')
-      .find((button) => button.text().includes('shortcuts.insertIntoEditor'))!
-    await editorBtn.trigger('click')
-    await flushPromises()
-    expect(desktop.backend.callsOf('open_main_editor')).toHaveLength(1)
+    expect(
+      wrapper
+        .findAll('button')
+        .some((button) => button.text().includes('shortcuts.insertIntoEditor'))
+    ).toBe(false)
   })
 
   it('stops the answer being generated and moves to the chat when clicking ask in chat', async () => {
@@ -542,7 +540,7 @@ describe('QuickAiRequestMenu', () => {
     await input.setValue('First question')
     await input.trigger('keydown', { key: 'Enter' })
     await flushPromises()
-    expect(wrapper.find('.stop-action-btn').exists()).toBe(true)
+    expect(wrapper.find('.action-overlay-esc').text()).toContain('chat.stop')
 
     window.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true })
@@ -561,7 +559,9 @@ describe('QuickAiRequestMenu', () => {
         attachment: { text: 'Context', source: 'selection' },
       })
     )
-    expect(wrapper.find('.stop-action-btn').exists()).toBe(false)
+    expect(wrapper.find('.action-overlay-esc').text()).not.toContain(
+      'chat.stop'
+    )
     wrapper.unmount()
   })
 

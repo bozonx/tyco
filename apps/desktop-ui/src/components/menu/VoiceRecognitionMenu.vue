@@ -19,11 +19,11 @@
         class="voice-error-icon"
       />
       <span class="voice-error-text">{{ startError.message }}</span>
-    </div>
-    <div class="voice-error-actions">
       <ShortcutButton size="sm" :keys="['Esc']" @click="dismissStartError">
         {{ t('common.close') }}
       </ShortcutButton>
+    </div>
+    <div class="voice-error-actions">
       <Button
         v-if="startError.canRetry"
         size="sm"
@@ -60,6 +60,7 @@
     :finish-hotkey="finishHotkey"
     :chat="props.chat"
     :cancel-shortcut="props.cancelShortcut"
+    :show-cancel-button="props.showCancelButton"
     :prefix="props.prefix"
     :suffix="props.suffix"
     :context="props.context"
@@ -120,17 +121,21 @@ import VoiceRecordingBar from '../voice/VoiceRecordingBar.vue'
 import VoiceRecordingSheet from '../voice/VoiceRecordingSheet.vue'
 import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 
-const props = defineProps<
-  VoiceMenuParams & {
-    /** The listened message this dictation replies to */
-    referenceText?: string
-    replyTo?: string
-    /** The quick window may switch to listening from here */
-    canSwitchMode?: boolean
-    /** Keep a start failure visible inline instead of hiding the quick bar */
-    keepErrorVisible?: boolean
-  }
->()
+const props = withDefaults(
+  defineProps<
+    VoiceMenuParams & {
+      /** The listened message this dictation replies to */
+      referenceText?: string
+      replyTo?: string
+      /** The quick window may switch to listening from here */
+      canSwitchMode?: boolean
+      /** Keep a start failure visible inline instead of hiding the quick bar */
+      keepErrorVisible?: boolean
+      showCancelButton?: boolean
+    }
+  >(),
+  { showCancelButton: true }
+)
 const emit = defineEmits<{
   (
     e: 'corrected',

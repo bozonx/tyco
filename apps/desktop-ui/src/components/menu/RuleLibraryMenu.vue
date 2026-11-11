@@ -9,7 +9,6 @@
         :text="props.text"
         :left-letter-keys="leftLetterKeys"
         :shortcuts-disabled="props.shortcutsDisabled"
-        :is-editor-button-visible="!editorNavigation.isEditorPage()"
       />
     </template>
   </ActionOverlayLayout>
@@ -18,7 +17,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { useMenuStartup } from '../../composables/use-menu-startup'
 import { useMenuStepRun } from '../../composables/use-menu-step-run'
@@ -49,7 +47,6 @@ const props = withDefaults(
   { text: '', shortcutsDisabled: false, itemId: undefined }
 )
 
-const editorNavigation = useEditorNavigation()
 const menuModalsStore = useMenuModalsStore()
 const desktopStore = useDesktopStore()
 const invocations = useInvocationsStore()

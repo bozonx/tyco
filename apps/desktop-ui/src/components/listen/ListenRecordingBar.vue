@@ -29,6 +29,14 @@
         placement="top"
         align="end"
       />
+      <ShortcutButton
+        size="sm"
+        :keys="['Esc']"
+        :disabled="isFinishing"
+        @click="void model.close()"
+      >
+        {{ t('common.cancel') }}
+      </ShortcutButton>
     </div>
     <div
       v-if="notice"
@@ -72,14 +80,6 @@
       />
 
       <div class="listen-bar-actions">
-        <ShortcutButton
-          size="sm"
-          :keys="['Esc']"
-          :disabled="isFinishing"
-          @click="void model.close()"
-        >
-          {{ t('common.cancel') }}
-        </ShortcutButton>
         <ShortcutButton
           size="sm"
           :keys="stopKeys"
@@ -186,6 +186,11 @@ const notice = computed(() => {
 .listen-bar {
   min-height: 9.5rem;
   max-height: 15rem;
+}
+
+.listen-bar-header > .shortcut {
+  margin-left: auto;
+  width: auto;
 }
 
 .listen-bar-header {

@@ -1,5 +1,9 @@
 <template>
-  <ActionOverlayLayout :title="t('action.quickAiRequest')" :on-esc="handleEsc">
+  <ActionOverlayLayout
+    :title="t('action.quickAiRequest')"
+    :on-esc="handleEsc"
+    :esc-label="model.isGenerating.value ? t('chat.stop') : undefined"
+  >
     <template #preview>
       <ContextPreview
         v-if="props.text"
@@ -72,6 +76,7 @@
         v-if="isListening"
         variant="bar"
         chat
+        :show-cancel-button="false"
         cancel-shortcut
         target="chat"
         finish-behavior="confirm"
@@ -95,6 +100,20 @@
           :disabled="isInputBlocked || isApplying"
           @update:model-value="(index) => model.selectReplyBlock(Number(index))"
         />
+        <ShortcutButton
+          v-if="
+            model.selectedReplyBlock.value && !editorNavigation.isEditorPage()
+          "
+          :keys="[]"
+          :disabled="isInputBlocked || isApplying"
+          @click="
+            editorNavigation.toEditor(
+              model.selectedReplyBlock.value!.text,
+              model.sourceText.value || undefined
+            )
+          "
+          >{{ t('shortcuts.insertIntoEditor') }}</ShortcutButton
+        >
         <ShortcutButton
           :keys="[]"
           variant="ghost"
@@ -199,16 +218,6 @@
           >
             {{ t('quickAiRequest.goToChat') }}
           </Button>
-          <Button
-            v-if="model.sourceText.value && !editorNavigation.isEditorPage()"
-            variant="ghost"
-            size="sm"
-            icon="mdi:pencil-outline"
-            :disabled="isInputBlocked || model.isGenerating.value"
-            @click="insertSourceIntoEditor"
-          >
-            {{ t('shortcuts.insertIntoEditor') }}
-          </Button>
         </template>
         <template #footer-end>
           <ShortcutButton
@@ -223,16 +232,6 @@
             @click="handleQuerySubmit({ ctrl: false })"
           >
             {{ t('menu.aiPromptRun') }}
-          </ShortcutButton>
-          <ShortcutButton
-            v-else
-            size="sm"
-            class="stop-action-btn"
-            :keys="['Esc']"
-            :disabled="isInputBlocked"
-            @click="model.stopGeneration()"
-          >
-            {{ t('chat.stop') }}
           </ShortcutButton>
         </template>
       </QueryPanel>
@@ -442,11 +441,6 @@ function openNextStep() {
     oldText: model.sourceText.value || undefined,
     escMode: 'back',
   })
-}
-
-function insertSourceIntoEditor() {
-  if (isInputBlocked.value || model.isGenerating.value) return
-  void editorNavigation.toEditor(model.sourceText.value ?? '')
 }
 
 /** Tells what this request is about: the screenshot, the selection or nothing */

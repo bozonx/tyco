@@ -55,7 +55,6 @@
         :space-key="otherLanguageAction"
         :left-letter-keys="leftLetterKeys"
         :shortcuts-disabled="props.shortcutsDisabled"
-        :is-editor-button-visible="!editorNavigation.isEditorPage()"
       />
     </template>
   </ActionOverlayLayout>
@@ -64,7 +63,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { useMenuStartup } from '../../composables/use-menu-startup'
 import { useMenuStepRun } from '../../composables/use-menu-step-run'
@@ -109,7 +107,6 @@ const props = withDefaults(defineProps<TranslateMenuParams>(), {
 })
 
 const desktopStore = useDesktopStore()
-const editorNavigation = useEditorNavigation()
 const invocations = useInvocationsStore()
 const menuModalsStore = useMenuModalsStore()
 const runStep = useMenuStepRun()
@@ -259,7 +256,6 @@ const pickerHints = computed<QueryPanelHint[]>(() => [
     requireOption: true,
   },
   { keys: [], label: t('menu.translateSwitchField'), action: switchField },
-  { keys: ['Esc'], label: t('common.back'), action: closePicker },
 ])
 
 function switchField() {
