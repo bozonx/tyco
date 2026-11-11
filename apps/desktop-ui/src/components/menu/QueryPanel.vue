@@ -3,7 +3,11 @@
   <div class="query-panel" ref="rootRef">
     <div class="query-panel-head">
       <slot name="before-input" />
-      <label class="query-panel-field" :inert="props.disabled">
+      <label
+        class="query-panel-field"
+        :inert="props.disabled"
+        @mousedown="clearAbovePopoverHighlight"
+      >
         <span v-if="props.label" class="query-panel-label">{{
           props.label
         }}</span>
@@ -28,7 +32,7 @@
           autocomplete="off"
           @input="onInput"
           @keydown="onKeyDown"
-          @blur="emit('blur', $event)"
+          @blur="onBlur"
         />
       </label>
       <slot name="after-input" />
@@ -37,6 +41,9 @@
     <ul
       v-if="props.options.length > 0"
       class="query-panel-options"
+      :class="{
+        'is-above-popover': props.optionsPlacement === 'above-popover',
+      }"
       :inert="props.disabled"
       role="listbox"
       :id="listboxId"
@@ -60,7 +67,6 @@
             'is-selected': option.selected,
           }"
           :aria-selected="index === highlightedOptionIndex"
-          @mouseenter="highlightedOptionIndex = index"
           @mousedown.prevent
           @click="emit('submit', { option, ctrl: false })"
         >
@@ -92,7 +98,15 @@
     </p>
 
     <div class="query-panel-footer">
-      <div class="query-panel-hints" :inert="props.disabled">
+      <!-- live while disabled, like the input slots: it owns its state -->
+      <div v-if="$slots['footer-start']" class="query-panel-footer-start">
+        <slot name="footer-start" />
+      </div>
+      <div
+        v-if="props.hints.length > 0"
+        class="query-panel-hints"
+        :inert="props.disabled"
+      >
         <ShortcutHint
           v-for="hint in props.hints"
           :key="hint.keys.join('+')"
@@ -160,6 +174,7 @@ const props = withDefaults(
     /** A caption above the input */
     label?: string
     options?: QueryPanelOption[]
+    optionsPlacement?: 'below' | 'above-popover'
     hints?: QueryPanelHint[]
     /**
      * The first option is highlighted as the list changes, so Enter picks it.
@@ -173,6 +188,7 @@ const props = withDefaults(
     placeholder: '',
     label: '',
     options: () => [],
+    optionsPlacement: 'below',
     hints: () => [],
     autoHighlight: false,
     emptyText: '',
@@ -220,6 +236,17 @@ const onInput = (event: Event) => {
   emit('update:modelValue', (event.target as HTMLInputElement).value)
 }
 
+const clearAbovePopoverHighlight = () => {
+  if (props.optionsPlacement === 'above-popover') {
+    highlightedOptionIndex.value = -1
+  }
+}
+
+const onBlur = (event: FocusEvent) => {
+  clearAbovePopoverHighlight()
+  emit('blur', event)
+}
+
 function submit(ctrl = false) {
   emit('submit', { option: props.options[highlightedOptionIndex.value], ctrl })
 }
@@ -246,12 +273,27 @@ const onKeyDown = (event: KeyboardEvent) => {
     case 'ArrowDown':
     case 'ArrowUp':
       event.preventDefault()
-      highlightedOptionIndex.value = moveHighlight(
-        highlightedOptionIndex.value,
-        event.key === 'ArrowDown' ? 1 : -1,
-        props.options.length
-      )
-      scrollToHighlighted()
+      if (props.optionsPlacement === 'above-popover') {
+        if (!props.options.length) return
+        if (event.key === 'ArrowUp') {
+          highlightedOptionIndex.value =
+            highlightedOptionIndex.value < 0
+              ? props.options.length - 1
+              : Math.max(0, highlightedOptionIndex.value - 1)
+        } else if (highlightedOptionIndex.value >= 0) {
+          highlightedOptionIndex.value =
+            highlightedOptionIndex.value >= props.options.length - 1
+              ? -1
+              : highlightedOptionIndex.value + 1
+        }
+      } else {
+        highlightedOptionIndex.value = moveHighlight(
+          highlightedOptionIndex.value,
+          event.key === 'ArrowDown' ? 1 : -1,
+          props.options.length
+        )
+      }
+      if (highlightedOptionIndex.value >= 0) scrollToHighlighted()
       return
     case 'Enter':
       event.preventDefault()
@@ -302,6 +344,7 @@ defineExpose(textControl)
 
 <style scoped>
 .query-panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -362,6 +405,18 @@ defineExpose(textControl)
   border-radius: var(--radius-md);
 }
 
+.query-panel-options.is-above-popover {
+  position: absolute;
+  bottom: calc(100% + var(--space-xs));
+  left: 0;
+  right: 0;
+  z-index: var(--z-popover);
+  max-height: 11rem;
+  background-color: var(--app-surface-raised);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow-md);
+}
+
 .query-panel-option {
   display: flex;
   align-items: center;
@@ -372,6 +427,20 @@ defineExpose(textControl)
   border-radius: var(--radius-sm);
   font-size: var(--text-body);
   cursor: pointer;
+}
+
+.query-panel-options.is-above-popover .query-panel-option {
+  color: var(--app-text-muted);
+  font-size: var(--text-control);
+}
+
+.query-panel-option:hover:not(.is-highlighted) {
+  background-color: var(--app-hover);
+}
+
+.query-panel-options.is-above-popover
+  .query-panel-option:hover:not(.is-highlighted) {
+  color: var(--color-base-content);
 }
 
 .query-panel-option.is-highlighted {
@@ -445,6 +514,14 @@ defineExpose(textControl)
   gap: var(--space-xs) var(--space-md);
   padding-top: var(--space-xs);
   border-top: 1px solid var(--app-border-subtle);
+}
+
+.query-panel-footer-start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+  --shortcut-width: auto;
 }
 
 .query-panel-hints {

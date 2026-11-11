@@ -23,7 +23,6 @@ describe('config scopes', () => {
   it('tells the fields of this device apart', () => {
     expect(isDeviceScopedPath('hotkeys.quickInput')).toBe(true)
     expect(isDeviceScopedPath('appearance.uiScalePercent')).toBe(true)
-    expect(isDeviceScopedPath('editor.history.isLocalOnly')).toBe(true)
     expect(isDeviceScopedPath('appearance.theme')).toBe(false)
     expect(isDeviceScopedPath('commands')).toBe(false)
   })

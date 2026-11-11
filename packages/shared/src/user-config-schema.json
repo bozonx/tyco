@@ -65,25 +65,14 @@
               "minimum": 1,
               "maximum": 9007199254740991
             },
-            "isSecretSanitizingEnabled": { "type": "boolean", "default": true },
-            "isLocalOnly": {
-              "type": "boolean",
-              "default": false,
-              "x-scope": "device"
-            }
+            "isSecretSanitizingEnabled": { "type": "boolean", "default": true }
           },
-          "required": [
-            "storage",
-            "maxItems",
-            "isSecretSanitizingEnabled",
-            "isLocalOnly"
-          ],
+          "required": ["storage", "maxItems", "isSecretSanitizingEnabled"],
           "default": {
             "storage": "disk",
             "maxItems": 1000,
             "retentionDays": 30,
-            "isSecretSanitizingEnabled": true,
-            "isLocalOnly": false
+            "isSecretSanitizingEnabled": true
           }
         },
         "shortcuts": {

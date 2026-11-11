@@ -16,21 +16,6 @@
         <code class="user-data-modal-path">{{ currentPath || '—' }}</code>
       </div>
 
-      <div
-        v-if="model.action.value !== 'resetToDefault'"
-        class="user-data-modal-actions user-data-modal-actions--start"
-      >
-        <Button
-          size="sm"
-          variant="neutral"
-          icon="mdi:folder-search-outline"
-          :disabled="model.isBusy.value"
-          @click="model.pickFolder"
-        >
-          {{ t('settings.selectFolder') }}
-        </Button>
-      </div>
-
       <template v-if="model.target.value && relocation">
         <div class="user-data-modal-row">
           <span class="user-data-modal-label">{{
@@ -85,12 +70,23 @@
           {{ t('common.cancel') }}
         </Button>
         <Button
+          v-if="relocation?.mode"
           size="sm"
           variant="primary"
-          :disabled="!relocation?.mode || model.isBusy.value"
+          :disabled="model.isBusy.value"
           @click="model.apply"
         >
           {{ applyLabel }}
+        </Button>
+        <Button
+          v-else
+          size="sm"
+          variant="neutral"
+          icon="mdi:folder-search-outline"
+          :disabled="model.isBusy.value"
+          @click="model.pickFolder"
+        >
+          {{ t('settings.selectFolder') }}
         </Button>
       </div>
     </div>
@@ -113,19 +109,17 @@ const titleId = useId()
 const relocation = computed(() => props.model.relocation.value)
 
 const title = computed(() => {
-  switch (props.model.action.value) {
-    case 'connect':
-      return t('settings.userData.connectTitle')
-    case 'resetToDefault':
-      return t('settings.userData.resetTitle')
-    default:
-      return t('settings.userData.moveTitle')
-  }
+  if (relocation.value?.mode === 'move') return t('settings.userData.moveTitle')
+  if (
+    relocation.value?.mode === 'connect' ||
+    props.model.action.value === 'connect'
+  )
+    return t('settings.userData.connectTitle')
+  return t('settings.userData.title')
 })
 
 const applyLabel = computed(() =>
-  relocation.value?.mode === 'move' ||
-  relocation.value?.mode === 'resetToDefault'
+  relocation.value?.mode === 'move'
     ? t('settings.userData.applyMove')
     : t('settings.userData.applyConnect')
 )
@@ -169,9 +163,5 @@ const applyLabel = computed(() =>
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--space-xs);
-}
-
-.user-data-modal-actions--start {
-  justify-content: flex-start;
 }
 </style>

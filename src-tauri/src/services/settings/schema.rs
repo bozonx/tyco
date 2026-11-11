@@ -1088,7 +1088,6 @@ mod tests {
     fn device_scope_marks_sections_and_fields_never_entities() {
         assert!(is_device_scoped(&["hotkeys", "quickInput"]));
         assert!(is_device_scoped(&["appearance", "uiScalePercent"]));
-        assert!(is_device_scoped(&["editor", "history", "isLocalOnly"]));
         assert!(!is_device_scoped(&["appearance", "theme"]));
         assert!(!is_device_scoped(&["editor", "shortcuts", "bold"]));
         fn visit(node: &Value, in_entity: bool, path: &str, found: &mut Vec<String>) {

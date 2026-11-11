@@ -87,9 +87,6 @@ pub struct EditorHistoryConfig {
     pub retention_days: u64,
     #[serde(default, deserialize_with = "lenient")]
     pub is_secret_sanitizing_enabled: bool,
-    /// The journal of this device stays out of the user data folder.
-    #[serde(default, deserialize_with = "lenient")]
-    pub is_local_only: bool,
 }
 
 pub fn editor_history(config: &Value) -> EditorHistoryConfig {

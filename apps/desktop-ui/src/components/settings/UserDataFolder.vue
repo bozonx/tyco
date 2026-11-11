@@ -1,8 +1,9 @@
 <template>
-  <SettingsSection
-    :title="t('settings.userData.title')"
-    :description="t('settings.userData.hint')"
-  >
+  <SettingsSection :title="t('settings.userData.title')">
+    <template #info>
+      <InfoTooltip :text="sectionInfo" panel-class="panel-wide" />
+    </template>
+
     <div class="user-data">
       <div class="user-data-path-box">
         <code class="user-data-path" :title="userData.path">{{
@@ -35,46 +36,18 @@
         kind="warning"
         :message="t('settings.userData.writableByOthers')"
       />
-      <InlineNotice
-        density="compact"
-        kind="info"
-        :message="t('settings.userData.privacyWarning')"
-      />
 
       <div class="user-data-actions">
         <Button
           size="sm"
-          icon="mdi:folder-move-outline"
-          @click="folder.start('move')"
+          icon="mdi:folder-search-outline"
+          :loading="folder.isBusy.value"
+          @click="folder.start('choose')"
         >
-          {{ t('settings.userData.move') }}
-        </Button>
-        <Button
-          size="sm"
-          icon="mdi:folder-sync-outline"
-          @click="folder.start('connect')"
-        >
-          {{ t('settings.userData.connect') }}
-        </Button>
-        <Button
-          v-if="!userData.isDefault"
-          size="sm"
-          variant="ghost"
-          icon="mdi:restore"
-          @click="folder.start('resetToDefault')"
-        >
-          {{ t('settings.userData.resetToDefault') }}
+          {{ t('settings.selectFolder') }}
         </Button>
       </div>
     </div>
-
-    <FieldRow
-      :label="t('settings.userData.localHistory')"
-      :hint="t('settings.userData.localHistoryHint')"
-    >
-      <template #info><DeviceScopeBadge /></template>
-      <FieldSwitch v-model="userConfig.editor.history.isLocalOnly" />
-    </FieldRow>
 
     <SettingsAdvancedFields v-model:expanded="isAdvancedOpen">
       <div class="user-data-advanced">
@@ -90,30 +63,32 @@
 import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { useSettingsContext } from '../../composables/use-settings-context'
 import { useUserDataFolder } from '../../composables/use-user-data-folder'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useUserDataStore } from '../../stores/user-data'
 import Badge from '../common/Badge.vue'
 import Button from '../common/Button.vue'
 import CopyButton from '../common/CopyButton.vue'
-import FieldRow from '../common/FieldRow.vue'
-import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
+import InfoTooltip from '../common/InfoTooltip.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import DeviceHistoryJournals from './DeviceHistoryJournals.vue'
-import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import SettingsAdvancedFields from './SettingsAdvancedFields.vue'
 import SettingsSection from './SettingsSection.vue'
 import UserDataRelocationModal from './UserDataRelocationModal.vue'
 
 const { t } = useI18n()
-const { draft: userConfig } = useSettingsContext()
 const store = useUserDataStore()
 const userData = computed(() => store.state())
 const settingsSession = useSettingsSessionStore()
 const folder = useUserDataFolder(() => settingsSession.flushAll())
 const isAdvancedOpen = ref(false)
+
+const sectionInfo = computed(() =>
+  t('settings.userData.info', {
+    defaultPath: userData.value.defaultPath || '—',
+  })
+)
 
 async function open() {
   // a failure leaves nothing open, which tells enough

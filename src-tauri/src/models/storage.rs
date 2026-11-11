@@ -77,8 +77,6 @@ pub enum UserDataRelocationMode {
     Move,
     /// Uses a folder that holds Tyco data already; the current data stays.
     Connect,
-    /// Moves the data back into the default folder, when that is empty.
-    ResetToDefault,
     /// Uses the default folder with what it holds, moving nothing: after a
     /// chosen folder went missing, or to use the data left in the default one.
     UseDefault,

@@ -1,6 +1,7 @@
 <template>
   <ActionOverlayLayout
     :title="props.correction ? t('menu.correction') : t('menu.actions')"
+    :esc-mode="resolvedEscMode"
   >
     <template v-if="statusVisible || hasDiff" #header-extra>
       <ResultViewModeToggle preset="diff" v-if="hasDiff" v-model="diffMode" />
@@ -54,7 +55,7 @@
           !editorTarget &&
           (props.isEditorButtonVisible ?? !editorNavigation.isEditorPage())
         "
-        :esc-mode="props.correction ? 'back' : 'auto'"
+        :esc-mode="resolvedEscMode"
       />
     </template>
   </ActionOverlayLayout>
@@ -92,6 +93,7 @@ const props = withDefaults(defineProps<InsertMenuParams>(), {
   shortcutsDisabled: false,
   isEditorButtonVisible: undefined,
   correction: false,
+  escMode: undefined,
   originalText: undefined,
   isCorrectionUnchanged: false,
   insertOnly: false,
@@ -101,6 +103,10 @@ const desktopStore = useDesktopStore()
 const actionMenuStore = useActionMenuStore()
 const menuModalsStore = useMenuModalsStore()
 const editorInputStore = useEditorInputStore()
+
+const resolvedEscMode = computed(
+  () => props.escMode ?? (props.correction ? 'back' : 'auto')
+)
 
 /**
  * A correction made over the editor goes back where its text came from: the

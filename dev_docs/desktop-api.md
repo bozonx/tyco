@@ -133,7 +133,7 @@ the same `userData` in `settings`; it is fixed for the life of the process.
 `inspect_user_data_target({ path })` tells what a folder holds (`empty`,
 `userData`, `unfinished`, `occupied`, `forbidden`, `current`); no path asks
 about the default folder. `relocate_user_data({ mode, path })` changes the
-folder as the user said (`move`, `connect`, `resetToDefault`, `useDefault`),
+folder as the user said (`move`, `connect`, `useDefault`),
 writes it into `device.json` and restarts the app; the webview saves its drafts
 first. `restart_app` restarts without changing anything, e.g. to look again for
 a folder that was missing. The CLI and D-Bus have none of these.

@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: f22be3386bde0795634b4fd48470ef31f9c78a31569e488cc86481f4565266fa
+// Source hash: e7b33484d9119ed8198607e1a229452e45ce6a7112614bdab6a088ce8a523d41
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -981,8 +981,7 @@ export type ToolGroupSettings = {
  * How `relocate_user_data` changes the user data folder; the user says it, the
  * backend never guesses it from what a folder holds.
  */
-export type UserDataRelocationMode =
-  'move' | 'connect' | 'resetToDefault' | 'useDefault'
+export type UserDataRelocationMode = 'move' | 'connect' | 'useDefault'
 
 /**
  * Where the user data folder is and whether it can be used, and the device it

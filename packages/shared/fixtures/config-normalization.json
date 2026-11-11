@@ -188,8 +188,7 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true,
-          "isLocalOnly": false
+          "isSecretSanitizingEnabled": true
         },
         "shortcuts": {
           "bold": "Alt+B",
@@ -594,8 +593,7 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true,
-          "isLocalOnly": false
+          "isSecretSanitizingEnabled": true
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -1009,8 +1007,7 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true,
-          "isLocalOnly": false
+          "isSecretSanitizingEnabled": true
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -1433,8 +1430,7 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true,
-          "isLocalOnly": false
+          "isSecretSanitizingEnabled": true
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -1852,8 +1848,7 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true,
-          "isLocalOnly": false
+          "isSecretSanitizingEnabled": true
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -2264,8 +2259,7 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true,
-          "isLocalOnly": false
+          "isSecretSanitizingEnabled": true
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -2684,8 +2678,7 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true,
-          "isLocalOnly": false
+          "isSecretSanitizingEnabled": true
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -3119,8 +3112,7 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true,
-          "isLocalOnly": false
+          "isSecretSanitizingEnabled": true
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -3552,8 +3544,7 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true,
-          "isLocalOnly": false
+          "isSecretSanitizingEnabled": true
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -4003,8 +3994,7 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true,
-          "isLocalOnly": false
+          "isSecretSanitizingEnabled": true
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -4538,8 +4528,7 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true,
-          "isLocalOnly": false
+          "isSecretSanitizingEnabled": true
         },
         "shortcuts": {
           "bold": "Ctrl+B",

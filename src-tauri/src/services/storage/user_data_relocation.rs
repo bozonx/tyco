@@ -6,8 +6,6 @@
 //! - `move` moves the data into an empty or missing folder;
 //! - `connect` uses a folder that holds Tyco data, its marker of a version
 //!   this build knows; the data of the current folder stays where it is;
-//! - `resetToDefault` moves the data back into the default folder, when that
-//!   holds no data of its own;
 //! - `useDefault` uses the default folder with what it holds, moving nothing:
 //!   after the chosen folder went missing, or to use the data left there.
 //!
@@ -185,24 +183,6 @@ pub fn plan(
                 ))),
                 kind => Err(refusal(&to, &kind)),
             }
-        }
-        UserDataRelocationMode::ResetToDefault => {
-            if normalized(current) == normalized(default_dir) {
-                return Err(AppError::InvalidInput(
-                    "The data is in the default folder already".into(),
-                ));
-            }
-            // whatever else the default folder holds, e.g. the webview of an
-            // earlier version, is not data and stays
-            if has_marker(default_dir) || has_known_entries(default_dir) {
-                return Err(AppError::Stale(format!(
-                    "The default folder {} holds data of its own: use it or keep the current folder",
-                    default_dir.display()
-                )));
-            }
-            Ok(RelocationPlan::Move {
-                to: default_dir.to_path_buf(),
-            })
         }
         UserDataRelocationMode::UseDefault => {
             if normalized(current) == normalized(default_dir) {
@@ -587,24 +567,9 @@ mod tests {
     }
 
     #[test]
-    fn data_in_the_default_folder_is_never_connected_without_asking() {
+    fn use_default_uses_the_default_folder_only_when_supported() {
         let folders = Folders::new("user-data-reset");
-        fs::create_dir_all(&folders.default).unwrap();
-        // the webview of an earlier version is not data
-        fs::create_dir_all(folders.default.join("webview")).unwrap();
-        assert_eq!(
-            folders
-                .plan(UserDataRelocationMode::ResetToDefault, None)
-                .unwrap(),
-            RelocationPlan::Move {
-                to: folders.default.clone()
-            }
-        );
         fs::create_dir_all(folders.default.join("chats")).unwrap();
-        assert!(matches!(
-            folders.plan(UserDataRelocationMode::ResetToDefault, None),
-            Err(AppError::Stale(_))
-        ));
         assert_eq!(
             folders
                 .plan(UserDataRelocationMode::UseDefault, None)

@@ -72,11 +72,6 @@ export interface EditorHistoryConfig {
   /** Absent: entries are kept indefinitely */
   retentionDays?: number
   isSecretSanitizingEnabled: boolean
-  /**
-   * The history of this device stays on it, out of the user data folder that
-   * may be synced; the histories of other devices are still shown
-   */
-  isLocalOnly: boolean
 }
 
 /** Chats live on the disk or are not kept at all */

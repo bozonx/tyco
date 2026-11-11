@@ -27,9 +27,12 @@ export function createUserDataFolderModel(deps: UserDataFolderDependencies) {
   const action = ref<UserDataAction | null>(null)
   const target = ref<UserDataTarget | null>(null)
   const errorMessage = ref('')
+  const isPicking = ref(false)
   const isInspecting = ref(false)
   const isApplying = ref(false)
-  const isBusy = computed(() => isInspecting.value || isApplying.value)
+  const isBusy = computed(
+    () => isPicking.value || isInspecting.value || isApplying.value
+  )
 
   const relocation = computed(() =>
     action.value && target.value
@@ -50,12 +53,23 @@ export function createUserDataFolderModel(deps: UserDataFolderDependencies) {
     }
   }
 
-  /** Starts `next`; going back to the default folder looks at it at once */
+  /** Opens the folder picker first; cancels silently if no folder was chosen */
   async function start(next: UserDataAction) {
-    action.value = next
-    target.value = null
+    if (isBusy.value) return
+    isPicking.value = true
     errorMessage.value = ''
-    if (next === 'resetToDefault') await inspect()
+    target.value = null
+    try {
+      const picked = await deps.pickFolder()
+      if (!picked) return
+      action.value = next
+      await inspect(picked)
+    } catch (error) {
+      action.value = next
+      errorMessage.value = deps.describeError(error)
+    } finally {
+      isPicking.value = false
+    }
   }
 
   function cancel() {
@@ -66,11 +80,15 @@ export function createUserDataFolderModel(deps: UserDataFolderDependencies) {
   }
 
   async function pickFolder() {
+    if (isBusy.value) return
+    isPicking.value = true
     try {
       const picked = await deps.pickFolder()
       if (picked) await inspect(picked)
     } catch (error) {
       errorMessage.value = deps.describeError(error)
+    } finally {
+      isPicking.value = false
     }
   }
 
@@ -90,11 +108,7 @@ export function createUserDataFolderModel(deps: UserDataFolderDependencies) {
         errorMessage.value = deps.draftsNotSavedMessage()
         return false
       }
-      const path =
-        mode === 'resetToDefault' || mode === 'useDefault'
-          ? undefined
-          : target.value.path
-      await deps.relocate(mode, path)
+      await deps.relocate(mode, target.value.path)
       return true
     } catch (error) {
       errorMessage.value = deps.describeError(error)

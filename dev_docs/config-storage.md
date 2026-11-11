@@ -63,7 +63,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `appearance`        | `theme`, `contrast`, `motion`, `uiScalePercent` (50–300; the settings offer presets)                                                                                                                                                                                                              |
 | `language`          | `ui` (interface locale or `auto`)                                                                                                                                                                                                                                                                 |
-| `editor`            | `submitKey`, `diffViewMode`, `history` (`storage`, `maxItems`, `retentionDays`, `isSecretSanitizingEnabled`, `isLocalOnly`), `shortcuts` (editor key bindings, see `editor.md`)                                                                                                                   |
+| `editor`            | `submitKey`, `diffViewMode`, `history` (`storage`, `maxItems`, `retentionDays`, `isSecretSanitizingEnabled`), `shortcuts` (editor key bindings, see `editor.md`)                                                                                                                                  |
 | `quickWindow`       | `isHiddenOnBlur`, `isCorrectionPrefetchEnabled`, `correctionMode` (`live`, `onSubmit`, `off`), `screenshotCaptureMode` (`screen`, `area`)                                                                                                                                                         |
 | `hotkeys`           | one shortcut per activation mode a hotkey opens, named as the mode, `selectionCorrection`                                                                                                                                                                                                         |
 | `externalAccess`    | `canAccessSelection`; each command allows external calls with `isAvailableExternally`                                                                                                                                                                                                             |
@@ -241,7 +241,7 @@ section (`appearance.uiScalePercent`), never in a user entity.
 The device fields are `hotkeys`, `windowInsertion`, `externalAccess`,
 `appearance.uiScalePercent`, `aiVaults.attached`, `stt.microphoneId`,
 `stt.listenAppId`, `stt.listenAppLabel`, `stt.providers.sherpaOnnx`,
-`isInDevelopment`, `editor.history.isLocalOnly` and `variableValues`. An unknown field goes back
+`isInDevelopment` and `variableValues`. An unknown field goes back
 to the file it was read from, so a device field of a newer build never reaches
 `config.json` through an older one. Both parts carry `configVersion`; when
 either is newer than the build knows, the whole config is shown and never
@@ -298,7 +298,7 @@ in `services/storage/app_paths.rs`; `TYCO_DEV_HOME` isolates development storage
 | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | User data (`~/.local/share/com.tyco.app` by default, or a folder the user chose) | `tyco-user.json`; `config.json`; `history/editor/<device id>.jsonl`; `chats/<id>.json`, `images/`; `plugins/<key>.json` and `<key>.previous`; `ai-vault/` |
 | Device (`~/.config/com.tyco.app`; `%LOCALAPPDATA%\com.tyco.app\device`)          | `device.json`, `secrets.json`                                                                                                                             |
-| State (`~/.local/state/com.tyco.app`)                                            | `logs/`; `webview/`; `config.base.json`; `history/editor/local.jsonl`; `index/` (chat indexes, `orphan-images.json`); `recovery/`                         |
+| State (`~/.local/state/com.tyco.app`)                                            | `logs/`; `webview/`; `config.base.json`; `index/` (chat indexes, `orphan-images.json`); `recovery/`                                                       |
 | Cache (`~/.cache/com.tyco.app`)                                                  | Platform cache directory, created when opened; no application-owned model downloads                                                                       |
 | User-selected paths                                                              | Plugin note files; attached vaults                                                                                                                        |
 
@@ -333,10 +333,9 @@ a settings save, and the app restarts. `move` moves the known entries into an
 empty folder; `connect` uses a folder with a marker of a known version and
 leaves the current data where it is; a folder with Tyco files but no marker is
 refused as a sync that has not finished; a folder with files of its own, or a
-folder of the app, is refused. `resetToDefault` moves the data back only when
-the default folder holds none; otherwise the user chooses `useDefault`, which
-uses that data and moves nothing. The main vault, `ai-vault/`, moves with it
-(`storage::data_root_relocation`). The new folder may not lie inside an
+folder of the app, is refused. `useDefault` uses the default folder with what
+it holds, moving nothing. The main vault, `ai-vault/`, moves with the data
+folder (`storage::data_root_relocation`). The new folder may not lie inside an
 attached vault or hold one (`storage::sync_roots::check_sync_roots`: symlinks
 resolved, on Windows without case and the `\\?\` prefix).
 
@@ -359,9 +358,7 @@ own journal (`delete`, `result`, `clear`, and `device` with the host name,
 written when it changes; the latest one names the journal); no journal of another device is
 rewritten. The limits apply to the merged history when it is read; a device
 compacts its own journal, keeping the records that still name an entry and its
-latest `clear`. With `editor.history.isLocalOnly` the journal of the device is
-`history/editor/local.jsonl` of the state folder, and moves over when the
-setting changes. Times are the clocks of the devices: a clock that is off moves
+latest `clear`. Times are the clocks of the devices: a clock that is off moves
 entries in the order, nothing more. The settings list the journals
 (`list_device_history_journals`) and remove the journal of another device
 (`delete_device_history`); the journal of this device is not removed that way.

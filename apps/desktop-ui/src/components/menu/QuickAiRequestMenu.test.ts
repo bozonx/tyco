@@ -5,6 +5,7 @@ import {
   type TestDesktop,
 } from '../../test/install-fake-desktop'
 import { useLlmStore } from '../../stores/llm'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useToastStore } from '../../stores/toast'
 import QuickAiRequestMenu from './QuickAiRequestMenu.vue'
 
@@ -185,17 +186,75 @@ describe('QuickAiRequestMenu', () => {
     ])
   })
 
-  it('continues a completed result in the main chat with Ctrl+Enter', async () => {
+  it('continues a completed result in the main chat only via button click, not Ctrl+Enter', async () => {
     desktop.backend.handle('open_transferred_chat', () => undefined)
-    await answerRequest([{ text: 'Ready' }])
+    const wrapper = await answerRequest([{ text: 'Ready' }])
     window.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true })
     )
+    await flushPromises()
+    expect(desktop.backend.callsOf('open_transferred_chat')).toHaveLength(0)
+
+    const chatBtn = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('action.askInChat'))!
+    await chatBtn.trigger('click')
     await flushPromises()
     expect(desktop.backend.callsOf('open_transferred_chat')).toHaveLength(1)
     expect(desktop.backend.callsOf('paste_into_target_and_hide')).toHaveLength(
       0
     )
+  })
+
+  it('opens InsertMenu with diff and back escMode when clicking Next on result', async () => {
+    const wrapper = await answerRequest([{ text: 'Improved text' }])
+    const menuModals = useMenuModalsStore()
+    const nextSpy = vi.spyOn(menuModals, 'nextModal')
+
+    await wrapper.find('.quick-next-action').trigger('click')
+    expect(nextSpy).toHaveBeenCalledWith(MenuModals.INSERT, {
+      text: 'Improved text',
+      oldText: 'Source text for AI',
+      escMode: 'back',
+    })
+  })
+
+  it('opens InsertMenu without oldText when source context was disabled', async () => {
+    vi.spyOn(useLlmStore().actions, 'sendChatMessage').mockImplementationOnce(
+      async (_message, _history, _instructions, options) => {
+        const answer = {
+          content: '',
+          parts: [
+            {
+              type: 'tool-call' as const,
+              toolCallId: 'reply-1',
+              toolName: 'propose_replies',
+              input: { blocks: [{ text: 'Fresh answer' }] },
+              state: 'done' as const,
+            },
+          ],
+        }
+        options.onUpdate?.(answer)
+        return answer
+      }
+    )
+    const wrapper = mountMenu()
+    await wrapper
+      .find('button[aria-label="action.removeContext"]')
+      .trigger('click')
+    await wrapper.find('.query-panel-input').setValue('Write something')
+    await wrapper
+      .find('.query-panel-input')
+      .trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+
+    const nextSpy = vi.spyOn(useMenuModalsStore(), 'nextModal')
+    await wrapper.find('.quick-next-action').trigger('click')
+    expect(nextSpy).toHaveBeenCalledWith(MenuModals.INSERT, {
+      text: 'Fresh answer',
+      oldText: undefined,
+      escMode: 'back',
+    })
   })
 
   it('does not insert twice while a paste is pending', async () => {
@@ -434,7 +493,7 @@ describe('QuickAiRequestMenu', () => {
     )
   })
 
-  it('calls open_main_chat when switching to chat', async () => {
+  it('calls open_main_chat when clicking ask in chat, not on Ctrl+Enter', async () => {
     const openChatSpy = vi.fn()
     desktop.backend.handle('open_main_chat', openChatSpy)
 
@@ -442,6 +501,13 @@ describe('QuickAiRequestMenu', () => {
     const input = wrapper.find('.query-panel-input')
     await input.setValue('Draft question')
     await input.trigger('keydown', { key: 'Enter', ctrlKey: true })
+    await flushPromises()
+    expect(openChatSpy).not.toHaveBeenCalled()
+
+    const chatBtn = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('action.askInChat'))!
+    await chatBtn.trigger('click')
     await flushPromises()
 
     expect(openChatSpy).toHaveBeenCalledWith(
@@ -452,7 +518,23 @@ describe('QuickAiRequestMenu', () => {
     )
   })
 
-  it('stops the answer being generated and moves to the chat', async () => {
+  it('does not insert into editor on Tab, only on button click', async () => {
+    desktop.backend.handle('open_main_editor', () => undefined)
+    const wrapper = mountMenu({ text: 'Source text' })
+    const input = wrapper.find('.query-panel-input')
+    await input.trigger('keydown', { key: 'Tab' })
+    await flushPromises()
+    expect(desktop.backend.callsOf('open_main_editor')).toHaveLength(0)
+
+    const editorBtn = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('shortcuts.insertIntoEditor'))!
+    await editorBtn.trigger('click')
+    await flushPromises()
+    expect(desktop.backend.callsOf('open_main_editor')).toHaveLength(1)
+  })
+
+  it('stops the answer being generated and moves to the chat when clicking ask in chat', async () => {
     const openChatSpy = vi.fn()
     desktop.backend.handle('open_main_chat', openChatSpy)
     desktop.backend.handle('start_fetch', () => new Promise(() => undefined))
@@ -468,6 +550,13 @@ describe('QuickAiRequestMenu', () => {
       new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true })
     )
     await flushPromises()
+    expect(openChatSpy).not.toHaveBeenCalled()
+
+    const chatBtn = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('action.askInChat'))!
+    await chatBtn.trigger('click')
+    await flushPromises()
     // nothing was answered: the chat starts fresh with the context
     expect(openChatSpy).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -478,7 +567,80 @@ describe('QuickAiRequestMenu', () => {
     wrapper.unmount()
   })
 
-  describe('voice input and send button', () => {
+  describe('recent prompts popup', () => {
+    it('shows recent prompts above the input while empty, hides on typing, and inserts on ArrowUp + Enter before sending', async () => {
+      desktop.backend.handle('list_recent_quick_request_prompts', () => [
+        'Newest prompt',
+        'Older prompt',
+      ])
+      desktop.backend.handle('start_fetch', () => new Promise(() => undefined))
+
+      const wrapper = mountMenu()
+      await flushPromises()
+
+      const list = wrapper.find('.query-panel-options')
+      expect(list.classes()).toContain('is-above-popover')
+      expect(
+        wrapper.findAll('.query-panel-option').map((item) => item.text())
+      ).toEqual(['Older prompt', 'Newest prompt'])
+
+      const input = wrapper.find('.query-panel-input')
+      await input.setValue('New')
+      expect(wrapper.find('.query-panel-options').exists()).toBe(false)
+
+      await input.setValue('')
+      expect(wrapper.find('.query-panel-options').exists()).toBe(true)
+
+      await input.trigger('keydown', { key: 'ArrowUp' })
+      expect(wrapper.findAll('.query-panel-option')[1].classes()).toContain(
+        'is-highlighted'
+      )
+
+      await input.trigger('keydown', { key: 'Enter' })
+      await flushPromises()
+      expect((input.element as HTMLInputElement).value).toBe('Newest prompt')
+      expect(wrapper.find('.query-panel-options').exists()).toBe(false)
+      expect(wrapper.find('.turn-prompt-text').exists()).toBe(false)
+
+      await input.trigger('keydown', { key: 'Enter' })
+      await flushPromises()
+      expect(wrapper.find('.turn-prompt-text').text()).toBe('Newest prompt')
+      wrapper.unmount()
+    })
+
+    it('inserts into the input on mouse click without sending immediately and does not keep mouseenter highlight for Enter', async () => {
+      desktop.backend.handle('list_recent_quick_request_prompts', () => [
+        'Newest prompt',
+        'Older prompt',
+      ])
+      desktop.backend.handle('start_fetch', () => new Promise(() => undefined))
+
+      const wrapper = mountMenu()
+      await flushPromises()
+
+      const options = wrapper.findAll('.query-panel-option')
+      await options[0].trigger('mouseenter')
+      expect(options[0].classes()).not.toContain('is-highlighted')
+
+      const input = wrapper.find('.query-panel-input')
+      await input.trigger('keydown', { key: 'Enter' })
+      await flushPromises()
+      expect(wrapper.find('.turn-prompt-text').exists()).toBe(false)
+
+      await options[0].trigger('click')
+      await flushPromises()
+      expect((input.element as HTMLInputElement).value).toBe('Older prompt')
+      expect(wrapper.find('.query-panel-options').exists()).toBe(false)
+      expect(wrapper.find('.turn-prompt-text').exists()).toBe(false)
+
+      await input.trigger('keydown', { key: 'Enter' })
+      await flushPromises()
+      expect(wrapper.find('.turn-prompt-text').text()).toBe('Older prompt')
+      wrapper.unmount()
+    })
+  })
+
+  describe('voice input and run button', () => {
     it('opens with VoiceRecognitionMenu bar when inputMode is voice', () => {
       const wrapper = mountMenu({ inputMode: 'voice' })
       expect(wrapper.find('.voice-bar').exists()).toBe(true)
@@ -502,8 +664,10 @@ describe('QuickAiRequestMenu', () => {
       expect(voiceBar.attributes('data-suffix')).toBe(' please')
     })
 
-    it('inserts recognized text into the input and shows enabled send button on insert intent', async () => {
+    it('inserts recognized text into the input and enables the footer run button without a duplicate send icon', async () => {
       const wrapper = mountMenu()
+      expect(wrapper.find('[title="chat.sendMessage"]').exists()).toBe(false)
+
       const input = wrapper.find('.query-panel-input')
       await input.setValue('Hello ')
       const el = input.element as HTMLInputElement
@@ -520,9 +684,9 @@ describe('QuickAiRequestMenu', () => {
         'Hello world'
       )
 
-      const sendBtn = wrapper.find('[title="chat.sendMessage"]')
-      expect(sendBtn.exists()).toBe(true)
-      expect((sendBtn.element as HTMLButtonElement).disabled).toBe(false)
+      const runBtn = wrapper.find('.run-action-btn')
+      expect(runBtn.exists()).toBe(true)
+      expect((runBtn.element as HTMLButtonElement).disabled).toBe(false)
     })
 
     it('submits immediately when voice recognition finishes with submit intent', async () => {
@@ -540,15 +704,15 @@ describe('QuickAiRequestMenu', () => {
       expect(wrapper.find('.turn-prompt-text').text()).toBe('Summarize this')
     })
 
-    it('disables the send button when prompt is empty and submits on click when non-empty', async () => {
+    it('disables the run button when prompt is empty and submits on click when non-empty', async () => {
       const wrapper = mountMenu()
-      const sendBtn = wrapper.find('[title="chat.sendMessage"]')
-      expect((sendBtn.element as HTMLButtonElement).disabled).toBe(true)
+      const runBtn = wrapper.find('.run-action-btn')
+      expect((runBtn.element as HTMLButtonElement).disabled).toBe(true)
 
       await wrapper.find('.query-panel-input').setValue('Make it shorter')
-      expect((sendBtn.element as HTMLButtonElement).disabled).toBe(false)
+      expect((runBtn.element as HTMLButtonElement).disabled).toBe(false)
 
-      await sendBtn.trigger('click')
+      await runBtn.trigger('click')
       await flushPromises()
 
       expect(wrapper.find('.turn-prompt-text').text()).toBe('Make it shorter')

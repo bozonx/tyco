@@ -10,9 +10,9 @@ const target = (contents: UserDataTarget['contents']): UserDataTarget => ({
 })
 
 describe('describeUserDataRelocation', () => {
-  it('moves into an empty folder and connects one with data, never the other way', () => {
+  it('moves into an empty folder or connects one with data when choosing, and only connects when restoring a missing folder', () => {
     expect(
-      describeUserDataRelocation('move', target({ kind: 'empty' }))
+      describeUserDataRelocation('choose', target({ kind: 'empty' }))
     ).toMatchObject({ mode: 'move' })
     expect(
       describeUserDataRelocation('connect', target({ kind: 'empty' }))
@@ -25,18 +25,18 @@ describe('describeUserDataRelocation', () => {
       formatVersion: 1,
       isSupported: true,
     })
+    expect(describeUserDataRelocation('choose', data)).toMatchObject({
+      mode: 'connect',
+      notice: { kind: 'warning' },
+    })
     expect(describeUserDataRelocation('connect', data)).toMatchObject({
       mode: 'connect',
       notice: { kind: 'warning' },
     })
-    expect(describeUserDataRelocation('move', data)).toMatchObject({
-      mode: null,
-      notice: { messageKey: 'settings.userData.targetUserDataMove' },
-    })
   })
 
-  it('refuses a folder of a newer layout, an unfinished sync and app folders', () => {
-    for (const action of ['move', 'connect'] as const) {
+  it('refuses a folder of a newer layout, an unfinished sync, current and app folders', () => {
+    for (const action of ['choose', 'connect'] as const) {
       expect(
         describeUserDataRelocation(
           action,
@@ -50,6 +50,12 @@ describe('describeUserDataRelocation', () => {
         notice: { messageKey: 'settings.userData.targetUnfinished' },
       })
       expect(
+        describeUserDataRelocation(action, target({ kind: 'current' }))
+      ).toMatchObject({
+        mode: null,
+        notice: { kind: 'info', messageKey: 'settings.userData.targetCurrent' },
+      })
+      expect(
         describeUserDataRelocation(action, target({ kind: 'forbidden' }))
       ).toMatchObject({ mode: null, notice: { kind: 'error' } })
     }
@@ -58,44 +64,9 @@ describe('describeUserDataRelocation', () => {
   it('offers a subfolder of a folder holding other files', () => {
     expect(
       describeUserDataRelocation(
-        'move',
+        'choose',
         target({ kind: 'occupied', subfolderPath: '/docs/TyCo' })
       )
     ).toMatchObject({ mode: null, subfolderPath: '/docs/TyCo' })
-  })
-
-  it('goes back to the default folder, or uses its own data when it has some', () => {
-    expect(
-      describeUserDataRelocation('resetToDefault', target({ kind: 'empty' }))
-        .mode
-    ).toBe('resetToDefault')
-    expect(
-      describeUserDataRelocation(
-        'resetToDefault',
-        target({ kind: 'occupied', subfolderPath: '/x' })
-      ).mode
-    ).toBe('resetToDefault')
-    expect(
-      describeUserDataRelocation(
-        'resetToDefault',
-        target({ kind: 'userData', formatVersion: 1, isSupported: true })
-      )
-    ).toMatchObject({
-      mode: 'useDefault',
-      notice: { messageKey: 'settings.userData.resetHasData' },
-    })
-    expect(
-      describeUserDataRelocation('resetToDefault', target({ kind: 'current' }))
-        .mode
-    ).toBeNull()
-    expect(
-      describeUserDataRelocation(
-        'resetToDefault',
-        target({ kind: 'userData', formatVersion: 2, isSupported: false })
-      )
-    ).toMatchObject({
-      mode: null,
-      notice: { kind: 'error', messageKey: 'settings.userData.targetNewer' },
-    })
   })
 })

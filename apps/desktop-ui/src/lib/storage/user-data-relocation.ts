@@ -1,7 +1,7 @@
 import type { UserDataRelocationMode, UserDataTarget } from '@tyco/shared'
 
 /** What the user asked to do with the data folder */
-export type UserDataAction = 'move' | 'connect' | 'resetToDefault'
+export type UserDataAction = 'choose' | 'connect'
 
 export interface UserDataNotice {
   kind: 'info' | 'warning' | 'error'
@@ -23,42 +23,20 @@ const refusal = (
 ): UserDataRelocation => ({ mode: null, notice: { kind, messageKey } })
 
 /**
- * What `action` does with the folder `target`. The user decides between moving
- * and connecting; a folder that does not fit the action says why rather than
- * doing the other one
+ * What `action` does with the folder `target`: `choose` moves into an empty
+ * folder or connects one that already holds TyCo data; `connect` (used when the
+ * configured folder is missing) only connects an existing folder.
  */
 export function describeUserDataRelocation(
   action: UserDataAction,
   target: UserDataTarget
 ): UserDataRelocation {
   const contents = target.contents
-  if (action === 'resetToDefault') {
-    // data of a newer layout would only be read, as with `connect`
-    if (contents.kind === 'userData' && !contents.isSupported)
-      return refusal('settings.userData.targetNewer', 'error')
-    // the default folder takes the data only when it holds none of its own
-    return contents.kind === 'empty' || contents.kind === 'occupied'
-      ? {
-          mode: 'resetToDefault',
-          notice: { kind: 'info', messageKey: 'settings.userData.resetMove' },
-        }
-      : contents.kind === 'current'
-        ? refusal('settings.userData.targetCurrent', 'info')
-        : contents.kind === 'forbidden'
-          ? refusal('settings.userData.targetForbidden', 'error')
-          : {
-              mode: 'useDefault',
-              notice: {
-                kind: 'warning',
-                messageKey: 'settings.userData.resetHasData',
-              },
-            }
-  }
   switch (contents.kind) {
     case 'current':
       return refusal('settings.userData.targetCurrent', 'info')
     case 'empty':
-      return action === 'move'
+      return action === 'choose'
         ? {
             mode: 'move',
             notice: {
@@ -70,15 +48,13 @@ export function describeUserDataRelocation(
     case 'userData':
       if (!contents.isSupported)
         return refusal('settings.userData.targetNewer', 'error')
-      return action === 'connect'
-        ? {
-            mode: 'connect',
-            notice: {
-              kind: 'warning',
-              messageKey: 'settings.userData.targetUserData',
-            },
-          }
-        : refusal('settings.userData.targetUserDataMove')
+      return {
+        mode: 'connect',
+        notice: {
+          kind: 'warning',
+          messageKey: 'settings.userData.targetUserData',
+        },
+      }
     case 'unfinished':
       return refusal('settings.userData.targetUnfinished')
     case 'occupied':

@@ -42,9 +42,6 @@ pub struct EditorHistoryPolicy {
     pub retention_days: u64,
     /// What looks like a password or a key is masked before it is stored.
     pub should_redact_secrets: bool,
-    /// This device writes its journal into the state folder rather than into
-    /// the user data folder, which may be synced.
-    pub is_local_only: bool,
 }
 
 impl EditorHistoryPolicy {
@@ -60,7 +57,6 @@ impl EditorHistoryPolicy {
             is_memory_only: storage == EditorHistoryStorageMode::Session,
             retention_days: if on_disk { history.retention_days } else { 0 },
             should_redact_secrets: on_disk && history.is_secret_sanitizing_enabled,
-            is_local_only: history.is_local_only,
         }
     }
 
@@ -149,13 +145,12 @@ mod tests {
             is_memory_only: false,
             retention_days: 0,
             should_redact_secrets: false,
-            is_local_only: false,
         }
     }
 
     #[test]
     fn policy_reads_the_settings() {
-        let config = json!({"editor":{"history":{"storage":"disk","maxItems":20,"retentionDays":7,"isSecretSanitizingEnabled":true,"isLocalOnly":true}}});
+        let config = json!({"editor":{"history":{"storage":"disk","maxItems":20,"retentionDays":7,"isSecretSanitizingEnabled":true}}});
 
         assert_eq!(
             EditorHistoryPolicy::from_config(&config),
@@ -165,7 +160,6 @@ mod tests {
                 is_memory_only: false,
                 retention_days: 7,
                 should_redact_secrets: true,
-                is_local_only: true,
             }
         );
         assert_eq!(

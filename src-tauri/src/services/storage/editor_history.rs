@@ -24,10 +24,6 @@ use crate::services::clock::now_ms;
 pub(super) const DEFAULT_EDITOR_HISTORY_LIMIT: usize = 1000;
 /// The folder of the device journals in the user data folder.
 const SHARED_JOURNALS_DIR: &str = "history/editor";
-/// The journal of this device when its history stays on it, in the state
-/// folder: named apart from the device id, which may change (see
-/// `device::ensure_identity`) without the local history being lost.
-const LOCAL_JOURNAL: &str = "history/editor/local.jsonl";
 
 /// Where the journals of the editor history are.
 #[derive(Clone, Debug)]
@@ -35,7 +31,6 @@ pub(super) struct HistoryLocation {
     /// The journals of every device; an error while the user data folder
     /// cannot be used.
     shared_dir: Result<PathBuf, String>,
-    local_path: PathBuf,
     device_id: String,
     /// The name of this computer, recorded in its shared journal.
     device_name: Option<String>,
@@ -52,7 +47,6 @@ impl HistoryLocation {
             .ok_or_else(|| AppError::ServiceUnavailable("The device is not known yet".into()))?;
         Ok(Self {
             shared_dir,
-            local_path: super::paths::state_dir(app)?.join(LOCAL_JOURNAL),
             device_id,
             device_name: crate::services::platform::machine::host_name(),
         })
@@ -62,7 +56,6 @@ impl HistoryLocation {
     pub(super) fn at(dir: &Path, device_id: &str) -> Self {
         Self {
             shared_dir: Ok(dir.join("user").join(SHARED_JOURNALS_DIR)),
-            local_path: dir.join("state").join(LOCAL_JOURNAL),
             device_id: device_id.to_owned(),
             device_name: Some(format!("host-{device_id}")),
         }
@@ -75,16 +68,11 @@ impl HistoryLocation {
     }
 
     /// The journal this device writes.
-    fn own_path(&self, is_local_only: bool) -> Result<PathBuf, AppError> {
-        if is_local_only {
-            Ok(self.local_path.clone())
-        } else {
-            Ok(self.shared_dir()?.join(format!("{}.jsonl", self.device_id)))
-        }
+    fn own_path(&self) -> Result<PathBuf, AppError> {
+        Ok(self.shared_dir()?.join(format!("{}.jsonl", self.device_id)))
     }
 
-    /// The journals of every device in a fixed order, this device's last:
-    /// those of the user data folder, when it can be read, and the local one.
+    /// The journals of every device in a fixed order, this device's last.
     fn journal_paths(&self, own: &Path) -> Vec<PathBuf> {
         let mut paths: Vec<PathBuf> = match &self.shared_dir {
             Ok(dir) => super::user_files::list_own_files(dir, |name| {
@@ -100,9 +88,6 @@ impl HistoryLocation {
             .collect(),
             Err(_) => Vec::new(),
         };
-        if !paths.contains(&self.local_path) {
-            paths.push(self.local_path.clone());
-        }
         paths.retain(|path| path != own);
         paths.push(own.to_path_buf());
         paths
@@ -285,7 +270,7 @@ impl EditorHistoryTarget<'_> {
                 let mut records = changes(before, &after, now_ms());
                 // the shared journal tells which computer wrote it, once per
                 // name, for the list of devices in the settings
-                if !records.is_empty() && *own != location.local_path {
+                if !records.is_empty() {
                     if let Some(name) = &location.device_name {
                         if journals::device_name(&read_records(own)?).as_ref() != Some(name) {
                             records.insert(
@@ -336,7 +321,7 @@ impl<'a> EditorHistorySession<'a> {
         let store = if is_in_memory(&policy, memory) {
             EditorHistoryTarget::Memory(memory)
         } else {
-            let own = location.own_path(policy.is_local_only)?;
+            let own = location.own_path()?;
             EditorHistoryTarget::Journals { location, own }
         };
 
@@ -609,12 +594,12 @@ pub fn clear_editor_history(
 
 fn clear_history(
     location: &HistoryLocation,
-    policy: &EditorHistoryPolicy,
+    _policy: &EditorHistoryPolicy,
     memory: &mut Vec<EditorHistoryItem>,
     now_ms: u64,
 ) -> Result<(), AppError> {
     memory.clear();
-    let own = location.own_path(policy.is_local_only)?;
+    let own = location.own_path()?;
     remove_journal(&own)?;
     write_records(
         &own,
@@ -641,7 +626,7 @@ fn enforce_policy(
     policy: &EditorHistoryPolicy,
     now_ms: u64,
 ) -> Result<(), AppError> {
-    let own = location.own_path(policy.is_local_only)?;
+    let own = location.own_path()?;
     if policy.is_memory_only {
         remove_journal(&own)
     } else {
@@ -705,35 +690,27 @@ fn commit_history_transition<T>(
 ) -> Result<HistoryCommit<T>, AppError> {
     // a history that is off or kept in memory needs no journal; one that
     // cannot be reached then must not hold up the settings
-    let own_before = location.own_path(before.is_local_only);
-    let own_after = location.own_path(after.is_local_only);
+    let own = location.own_path();
     let was_in_memory = is_in_memory(before, memory);
     // a history turned off stays where it was
     let stays_in_memory = after.is_memory_only || (!after.is_recording && was_in_memory);
     let to_memory = !was_in_memory && after.is_memory_only;
     let to_disk = was_in_memory && !stays_in_memory;
-    // the own journal goes into or out of the user data folder
-    let moves =
-        !was_in_memory && !stays_in_memory && own_before.as_ref().ok() != own_after.as_ref().ok();
-    let needs_journals = to_memory || to_disk || moves;
-    let (own_before, own_after) = if needs_journals {
-        (own_before?, own_after?)
+    let own = if to_memory || to_disk {
+        own?
     } else {
-        (
-            own_before.unwrap_or_default(),
-            own_after.unwrap_or_default(),
-        )
+        own.unwrap_or_default()
     };
     let prepared_memory = if to_memory {
-        let paths = location.journal_paths(&own_before);
-        let mut items = merge_journals(&read_journals(&paths, &own_before)?);
+        let paths = location.journal_paths(&own);
+        let mut items = merge_journals(&read_journals(&paths, &own)?);
         after.enforce(&mut items, now_ms());
         Some(items)
     } else {
         None
     };
-    let original_target = if to_disk || moves {
-        match fs::read(&own_after) {
+    let original_target = if to_disk {
+        match fs::read(&own) {
             Ok(bytes) => Some(bytes),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
             Err(error) => return Err(error.into()),
@@ -741,22 +718,19 @@ fn commit_history_transition<T>(
     } else {
         None
     };
-    // Persist a session-to-disk migration, or the move of the journal,
-    // before publishing the new policy. Until config commits, the source
-    // remains where it was and is authoritative.
+    // Persist a session-to-disk migration before publishing the new policy.
+    // Until config commits, memory remains authoritative.
     let prepared = if to_disk {
         let mut items = memory.clone();
         after.enforce(&mut items, now_ms());
         write_records(
-            &own_after,
+            &own,
             &items
                 .into_iter()
                 .rev()
                 .map(HistoryRecord::Item)
                 .collect::<Vec<_>>(),
         )
-    } else if moves {
-        read_records(&own_before).and_then(|records| append_records(&own_after, records))
     } else {
         Ok(())
     };
@@ -764,12 +738,10 @@ fn commit_history_transition<T>(
     let committed = match result {
         Ok(committed) => committed,
         Err(error) => {
-            if to_disk || moves {
+            if to_disk {
                 let rollback = match original_target {
-                    Some(bytes) => {
-                        crate::services::atomic_file::write_private_bytes(&own_after, &bytes)
-                    }
-                    None => remove_file_if_exists(&own_after),
+                    Some(bytes) => crate::services::atomic_file::write_private_bytes(&own, &bytes),
+                    None => remove_file_if_exists(&own),
                 };
                 if let Err(rollback) = rollback {
                     return Err(AppError::Failed(format!(
@@ -782,15 +754,12 @@ fn commit_history_transition<T>(
     };
     let cleanup = if let Some(items) = prepared_memory {
         *memory = items;
-        remove_journal(&own_before)
+        remove_journal(&own)
     } else if to_disk {
         memory.clear();
         Ok(())
-    } else if moves {
-        remove_journal(&own_before)
-            .and_then(|()| compact_journal(location, &own_after, after, now_ms()))
     } else if after.is_memory_only {
-        remove_journal(&own_after)
+        remove_journal(&own)
     } else if stays_in_memory {
         after.enforce(memory, now_ms());
         Ok(())
@@ -799,7 +768,7 @@ fn commit_history_transition<T>(
     } else {
         // what the new policy no longer keeps goes at once, not with the next
         // write
-        compact_journal(location, &own_after, after, now_ms())
+        compact_journal(location, &own, after, now_ms())
     };
     let cleanup_failed = cleanup.is_err();
     if let Err(error) = cleanup {

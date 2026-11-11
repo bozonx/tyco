@@ -34,6 +34,8 @@ export interface InsertMenuParams {
   isEditorButtonVisible?: boolean
   /** Esc returns from a correction step to its original text. */
   correction?: boolean
+  /** Overrides Esc behavior when opened from an overlay that should go back. */
+  escMode?: 'close' | 'back' | 'auto'
   /** The text before correction. */
   originalText?: string
   /** The correction returned the same text. */

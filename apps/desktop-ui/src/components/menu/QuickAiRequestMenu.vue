@@ -110,19 +110,32 @@
           {{ t('replyBlocks.insertIntoWindow') }}
         </ShortcutButton>
         <Button
+          v-if="model.replyBlocks.value.length"
+          class="quick-next-action"
+          variant="neutral"
+          icon="mdi:arrow-right"
+          :disabled="
+            !model.selectedReplyBlock.value || isInputBlocked || isApplying
+          "
+          @click="openNextStep"
+        >
+          {{ t('write.next') }}
+        </Button>
+        <Button
           variant="ghost"
           :disabled="isInputBlocked || isApplying"
           @click="openFollowUp"
         >
           {{ t('quickAiRequest.followUp') }}
         </Button>
-        <ShortcutButton
-          :keys="['Ctrl', 'Enter']"
+        <Button
+          variant="ghost"
+          icon="mdi:chat-question-outline"
           :disabled="isInputBlocked || isApplying"
           @click="switchToChat"
         >
           {{ t('action.askInChat') }}
-        </ShortcutButton>
+        </Button>
       </div>
       <QueryPanel
         v-else
@@ -131,7 +144,7 @@
         :disabled="isInputBlocked || model.isGenerating.value"
         :placeholder="promptPlaceholder"
         :options="recentOptions"
-        :hints="promptHints"
+        options-placement="above-popover"
         @blur="handleInputBlur"
         @submit="handleQuerySubmit"
         @back="handleEsc"
@@ -147,26 +160,48 @@
             :title="t('chat.voiceInput')"
             @click="startVoice"
           />
-          <IconButton
+        </template>
+        <template #footer-start>
+          <ShortcutButton
             v-if="!model.isGenerating.value"
-            icon="mdi:arrow-up"
-            size="md"
             variant="primary"
-            class="send-action-btn"
+            size="sm"
+            class="run-action-btn"
+            :keys="['Enter']"
             :disabled="!canSend"
-            :label="t('chat.sendMessage')"
-            :title="t('chat.sendMessage')"
             @click="handleQuerySubmit({ ctrl: false })"
-          />
-          <IconButton
+          >
+            {{ t('menu.aiPromptRun') }}
+          </ShortcutButton>
+          <ShortcutButton
             v-else
-            icon="mdi:stop"
-            size="md"
+            size="sm"
             class="stop-action-btn"
-            :label="t('chat.stop')"
-            :title="t('chat.stop')"
+            :keys="['Esc']"
+            :disabled="isInputBlocked"
             @click="model.stopGeneration()"
-          />
+          >
+            {{ t('chat.stop') }}
+          </ShortcutButton>
+          <Button
+            variant="ghost"
+            size="sm"
+            icon="mdi:chat-question-outline"
+            :disabled="isInputBlocked"
+            @click="switchToChat"
+          >
+            {{ t('action.askInChat') }}
+          </Button>
+          <Button
+            v-if="model.sourceText.value && !editorNavigation.isEditorPage()"
+            variant="ghost"
+            size="sm"
+            icon="mdi:pencil-outline"
+            :disabled="isInputBlocked || model.isGenerating.value"
+            @click="insertSourceIntoEditor"
+          >
+            {{ t('shortcuts.insertIntoEditor') }}
+          </Button>
         </template>
         <template #footer-end>
           <QuickAiModelBar
@@ -197,7 +232,6 @@ import { invokeDesktop } from '../../lib/desktop/invoke'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { describeError } from '../../lib/errors/describe-error'
 import { clientLogger } from '../../lib/logger'
-import { filterOptions } from '../../lib/menu-query/menu-query'
 import type { QuickAiRequestMenuParams } from '../../lib/modals/menu-modal-params'
 import { createQuickAiRequestRuntime } from '../../lib/quick-ai-request/quick-ai-request-runtime'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
@@ -207,7 +241,7 @@ import { useDesktopStore } from '../../stores/desktop'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
-import { useMenuModalsStore } from '../../stores/menu-modals'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useSecretsStore } from '../../stores/secrets'
 import { useToolsStore } from '../../stores/tools'
 import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
@@ -220,7 +254,6 @@ import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ContextPreview from '../overlay/ContextPreview.vue'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 import QueryPanel, {
-  type QueryPanelHint,
   type QueryPanelOption,
   type QueryPanelSubmit,
 } from './QueryPanel.vue'
@@ -350,6 +383,27 @@ async function insertSelectedReply() {
   }
 }
 
+function openNextStep() {
+  const block = model.selectedReplyBlock.value
+  if (
+    !isResultVisible.value ||
+    !block ||
+    isInputBlocked.value ||
+    isApplying.value
+  )
+    return
+  menuModalsStore.nextModal(MenuModals.INSERT, {
+    text: block.text,
+    oldText: model.sourceText.value || undefined,
+    escMode: 'back',
+  })
+}
+
+function insertSourceIntoEditor() {
+  if (isInputBlocked.value || model.isGenerating.value) return
+  void editorNavigation.toEditor(model.sourceText.value ?? '')
+}
+
 /** Tells what this request is about: the screenshot, the selection or nothing */
 const promptPlaceholder = computed(() => {
   if (model.turns.value.length > 0)
@@ -460,34 +514,12 @@ watch(
 )
 
 const recentOptions = computed<QueryPanelOption[]>(() =>
-  filterOptions(
-    recentPrompts.value.map((entry) => ({ id: entry, label: entry })),
-    input.value.value
-  ).filter((option) => option.label !== input.value.value.trim())
+  input.value.value
+    ? []
+    : [...recentPrompts.value]
+        .reverse()
+        .map((entry) => ({ id: entry, label: entry, icon: 'mdi:history' }))
 )
-
-const promptHints = computed<QueryPanelHint[]>(() => [
-  {
-    keys: ['Enter'],
-    label: t('menu.aiPromptRun'),
-    disabled: !canSend.value,
-    action: () => handleQuerySubmit({ ctrl: false }),
-  },
-  {
-    keys: ['Ctrl', 'Enter'],
-    label: t('action.askInChat'),
-    action: () => switchToChat(),
-  },
-  ...(model.sourceText.value && !editorNavigation.isEditorPage()
-    ? [
-        {
-          keys: ['Tab'],
-          label: t('shortcuts.insertIntoEditor'),
-          action: () => editorNavigation.toEditor(model.sourceText.value ?? ''),
-        },
-      ]
-    : []),
-])
 
 function handleInputBlur(event: FocusEvent) {
   const element = event.target as HTMLInputElement | null
@@ -556,18 +588,22 @@ async function handleVoiceCorrected(
 }
 
 async function handleQuerySubmit(submitEvent?: QueryPanelSubmit) {
-  if (submitEvent?.ctrl) {
-    await switchToChat()
+  if (submitEvent?.ctrl) return
+
+  if (submitEvent?.option) {
+    const picked = submitEvent.option.label
+    input.setValue(picked)
+    lastInputKind.value = 'text'
+    void nextTick(() => {
+      if (disposed) return
+      queryPanelRef.value?.focus()
+      queryPanelRef.value?.select(picked.length, picked.length)
+    })
     return
   }
 
-  let textToSend = input.value.value.trim()
-  let inputKind: 'text' | 'voice' = lastInputKind.value
-
-  if (submitEvent?.option) {
-    textToSend = submitEvent.option.label
-    inputKind = 'text'
-  }
+  const textToSend = input.value.value.trim()
+  const inputKind: 'text' | 'voice' = lastInputKind.value
 
   if (!textToSend) return
 
@@ -611,11 +647,6 @@ function handleWindowKeys(event: KeyboardEvent) {
       handleEsc()
       return
     }
-    if (event.key === 'Enter' && event.ctrlKey) {
-      event.preventDefault()
-      void switchToChat()
-      return
-    }
     const target = event.target
     if (
       target instanceof Element &&
@@ -635,14 +666,8 @@ function handleWindowKeys(event: KeyboardEvent) {
     }
     return
   }
-  if (event.key !== 'Escape' && event.key !== 'Enter') return
+  if (event.key !== 'Escape') return
   if (!model.isGenerating.value || menuModalsStore.pendingModal) return
-  if (event.key === 'Enter') {
-    if (!event.ctrlKey) return
-    event.preventDefault()
-    void switchToChat()
-    return
-  }
   event.preventDefault()
   model.stopGeneration()
 }
@@ -674,6 +699,7 @@ onUnmounted(() => {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-sm);
+  --shortcut-width: auto;
 }
 
 .quick-result-actions .select {

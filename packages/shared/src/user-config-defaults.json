@@ -13,8 +13,7 @@
       "storage": "disk",
       "maxItems": 1000,
       "retentionDays": 30,
-      "isSecretSanitizingEnabled": true,
-      "isLocalOnly": false
+      "isSecretSanitizingEnabled": true
     },
     "shortcuts": {
       "bold": "Ctrl+B",

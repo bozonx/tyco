@@ -308,6 +308,11 @@ describe('InsertMenu correction step', () => {
       'Some text to transform'
     )
   })
+
+  it('forwards explicit escMode to layout and shortcut list', () => {
+    const wrapper = mountMenu({ text: 'Result', escMode: 'back' })
+    expect(wrapper.findComponent(ShortcutList).props('escMode')).toBe('back')
+  })
 })
 
 afterEach(() => {

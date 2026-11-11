@@ -138,7 +138,6 @@ fn a_save_splits_the_config_and_a_load_joins_it() {
     config["hotkeys"]["voice"] = json!("Ctrl+Alt+1");
     config["appearance"]["uiScalePercent"] = json!(150);
     config["appearance"]["theme"] = json!("dark");
-    config["editor"]["history"]["isLocalOnly"] = json!(true);
 
     setup.save(&config);
 
@@ -148,7 +147,6 @@ fn a_save_splits_the_config_and_a_load_joins_it() {
         json!({"theme": "dark", "contrast": "auto", "motion": "auto"})
     );
     assert!(user.get("hotkeys").is_none());
-    assert!(user["editor"]["history"].get("isLocalOnly").is_none());
     let device = setup.device.snapshot().config;
     assert_eq!(device["hotkeys"]["voice"], "Ctrl+Alt+1");
     assert_eq!(device["appearance"], json!({"uiScalePercent": 150}));

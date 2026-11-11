@@ -14,7 +14,6 @@ fn policy() -> EditorHistoryPolicy {
         is_memory_only: false,
         retention_days: 0,
         should_redact_secrets: false,
-        is_local_only: false,
     }
 }
 
@@ -36,7 +35,7 @@ fn recent(id: &str, text: &str) -> EditorHistoryItem {
 }
 
 fn own(location: &HistoryLocation) -> PathBuf {
-    location.own_path(false).unwrap()
+    location.own_path().unwrap()
 }
 
 fn write_items(path: &Path, items: &[EditorHistoryItem]) {
@@ -59,7 +58,7 @@ fn session<'a>(
     EditorHistorySession {
         store: EditorHistoryTarget::Journals {
             location: location.clone(),
-            own: location.own_path(policy.is_local_only).unwrap(),
+            own: location.own_path().unwrap(),
         },
         policy,
     }
@@ -300,79 +299,6 @@ fn clearing_on_one_device_hides_the_entries_of_every_device() {
     std::thread::sleep(std::time::Duration::from_millis(2));
     save_editor_history_entry(&mut session(&desktop, policy()), entry("later")).unwrap();
     assert_eq!(texts(&laptop), ["later"]);
-}
-
-#[test]
-fn a_local_history_stays_out_of_the_user_data_folder() {
-    let dir = TestDir::new("local-only");
-    let location = HistoryLocation::at(&dir, LAPTOP);
-    let desktop = HistoryLocation::at(&dir, DESKTOP);
-    write_items(&own(&desktop), &[recent("other", "from the desktop")]);
-    let local = EditorHistoryPolicy {
-        is_local_only: true,
-        ..policy()
-    };
-
-    save_editor_history_entry(&mut session(&location, local), entry("private")).unwrap();
-
-    assert!(!own(&location).exists());
-    assert!(location
-        .own_path(true)
-        .unwrap()
-        .starts_with(dir.join("state")));
-    let mut texts: Vec<_> = session(&location, local)
-        .load()
-        .unwrap()
-        .into_iter()
-        .map(|item| item.text)
-        .collect();
-    texts.sort();
-    assert_eq!(texts, ["from the desktop", "private"]);
-}
-
-#[test]
-fn turning_local_only_on_and_off_moves_the_own_journal() {
-    let dir = TestDir::new("local-only-move");
-    let location = HistoryLocation::at(&dir, LAPTOP);
-    let shared = own(&location);
-    let local_path = location.own_path(true).unwrap();
-    write_items(&shared, &[recent("a", "mine")]);
-    let local = EditorHistoryPolicy {
-        is_local_only: true,
-        ..policy()
-    };
-
-    commit_history_transition(&location, &policy(), &local, &mut Vec::new(), || Ok(())).unwrap();
-    assert!(!shared.exists());
-    assert_eq!(
-        history_texts(&merge_journals(&[read_records(&local_path).unwrap()])),
-        ["mine"]
-    );
-
-    commit_history_transition(&location, &local, &policy(), &mut Vec::new(), || Ok(())).unwrap();
-    assert!(!local_path.exists());
-    assert_eq!(
-        history_texts(&merge_journals(&[read_records(&shared).unwrap()])),
-        ["mine"]
-    );
-}
-
-#[test]
-fn a_failed_commit_leaves_the_journal_where_it_was() {
-    let dir = TestDir::new("local-only-failed");
-    let location = HistoryLocation::at(&dir, LAPTOP);
-    let shared = own(&location);
-    write_items(&shared, &[recent("a", "mine")]);
-    let local = EditorHistoryPolicy {
-        is_local_only: true,
-        ..policy()
-    };
-    let result = commit_history_transition(&location, &policy(), &local, &mut Vec::new(), || {
-        Err::<(), _>(AppError::Failed("Config storage failed".into()))
-    });
-    assert!(result.is_err());
-    assert!(shared.exists());
-    assert!(!location.own_path(true).unwrap().exists());
 }
 
 #[test]

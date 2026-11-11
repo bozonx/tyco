@@ -15,7 +15,6 @@
     "device": {
       "isInDevelopment": true,
       "appearance": { "uiScalePercent": 125 },
-      "editor": { "history": { "isLocalOnly": true } },
       "hotkeys": {
         "quickInput": "Ctrl+Alt+W",
         "selectionActionsPage2": "Ctrl+Alt+Q"
@@ -35,10 +34,7 @@
     },
     "joined": {
       "appearance": { "theme": "dark", "uiScalePercent": 125 },
-      "editor": {
-        "submitKey": "Enter",
-        "history": { "storage": "disk", "isLocalOnly": true }
-      },
+      "editor": { "submitKey": "Enter", "history": { "storage": "disk" } },
       "aiVaults": {
         "attached": [{ "path": "/home/user/work", "vaultId": "w1" }]
       },
