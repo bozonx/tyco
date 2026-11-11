@@ -601,7 +601,10 @@
     "favorites": "Kedvencek",
     "transcribing": "Átírás...",
     "contextRemoved": "Kontextus eltávolítva",
-    "contextRequired": "Kontextus szükséges"
+    "contextRequired": "Kontextus szükséges",
+    "typeText": "Szöveg beírása",
+    "toPrompt": "A kérés mezőjébe",
+    "editText": "Szöveg szerkesztése"
   },
   "nav": {
     "aiChat": "Kérdezze az MI-t",

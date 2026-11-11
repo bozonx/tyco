@@ -601,7 +601,10 @@
     "favorites": "Favoriti",
     "transcribing": "Pretvaranje govora u tekst...",
     "contextRemoved": "Kontekst uklonjen",
-    "contextRequired": "Potreban kontekst"
+    "contextRequired": "Potreban kontekst",
+    "typeText": "Upiši tekst",
+    "toPrompt": "U polje upita",
+    "editText": "Uredi tekst"
   },
   "nav": {
     "aiChat": "Pitaj AI",

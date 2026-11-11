@@ -306,6 +306,21 @@ describe('separate voice command overlay', () => {
     expect(mocks.run).toHaveBeenCalledOnce()
     wrapper.unmount()
   })
+  it('opens actions for reviewed speech without running a command', () => {
+    voice.stage = 'review'
+    voice.inputText = 'Use these words elsewhere'
+    const wrapper = mountView()
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Tab', cancelable: true })
+    )
+    expect(useMenuModalsStore().currentModalParams).toMatchObject({
+      text: 'Use these words elsewhere',
+      escMode: 'back',
+    })
+    expect(mocks.run).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
   it('records again from the review', async () => {
     voice.stage = 'review'
     const wrapper = mountView()

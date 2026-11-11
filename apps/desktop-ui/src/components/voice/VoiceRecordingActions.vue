@@ -1,6 +1,36 @@
 <template>
   <div class="voice-actions">
-    <template v-if="compact && chat">
+    <template v-if="finishBehavior === 'prompt'">
+      <ShortcutButton
+        v-if="hasText"
+        :size="compact ? 'sm' : 'md'"
+        :keys="['Tab']"
+        :disabled="isFinishing"
+        @click="() => finish('next')"
+        >{{ t('menu.actions') }}</ShortcutButton
+      >
+      <ShortcutButton
+        v-if="hasText"
+        :size="compact ? 'sm' : 'md'"
+        :keys="['Shift', 'Space']"
+        :disabled="isFinishing"
+        @click="() => finish('submit')"
+        >{{ t('chat.voiceSendNow') }}</ShortcutButton
+      >
+      <ShortcutButton
+        :size="compact ? 'sm' : 'md'"
+        :keys="primaryKeys"
+        variant="primary"
+        :disabled="isFinishing"
+        @click="() => finish('insert')"
+        >{{
+          isFinishing
+            ? t('common.inProgress')
+            : t(hasText ? 'menu.toPrompt' : 'menu.typeText')
+        }}</ShortcutButton
+      >
+    </template>
+    <template v-else-if="compact && chat">
       <ShortcutButton
         :size="compact ? 'sm' : 'md'"
         :keys="['Shift', 'Space']"
@@ -59,6 +89,14 @@
           {{ t('menu.actions') }}
         </ShortcutButton>
         <ShortcutButton
+          v-if="finishBehavior === 'insertIntoTarget'"
+          :size="compact ? 'sm' : 'md'"
+          :keys="['Shift', 'Space']"
+          :disabled="isFinishing"
+          @click="() => finish('edit')"
+          >{{ t('menu.editText') }}</ShortcutButton
+        >
+        <ShortcutButton
           :size="compact ? 'sm' : 'md'"
           :keys="primaryKeys"
           variant="primary"
@@ -82,6 +120,7 @@ import type {
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 
 const props = defineProps<{
+  hasText?: boolean
   compact?: boolean
   chat?: boolean
   cancelShortcut?: boolean

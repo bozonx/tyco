@@ -601,7 +601,10 @@
     "favorites": "Сүйіктілер",
     "transcribing": "Тану жүруде...",
     "contextRemoved": "Мәтінмән алынып тасталды",
-    "contextRequired": "Мәтінмән қажет"
+    "contextRequired": "Мәтінмән қажет",
+    "typeText": "Мәтін енгізу",
+    "toPrompt": "Сұрау өрісіне",
+    "editText": "Мәтінді өңдеу"
   },
   "nav": {
     "aiChat": "ЖИ-ден сұрау",

@@ -50,6 +50,34 @@ function setup(overrides: Partial<ListenModelDependencies> = {}) {
 }
 
 describe('listen model', () => {
+  it('keeps transferred words actionable when the new source fails to start', async () => {
+    const { model } = setup({
+      initialText: 'Keep these words',
+      startDictation: vi.fn().mockRejectedValue(new Error('Unavailable')),
+    })
+    await model.start()
+    expect(model.phase.value).toBe('result')
+    expect(model.resultText.value).toBe('Keep these words')
+    model.dispose()
+  })
+
+  it('keeps a draft from the previous source in live display and final text', async () => {
+    const { model, handlers, deps } = setup({ initialText: 'From microphone.' })
+    await model.start()
+    expect(model.transcript.value.committed).toBe('From microphone.')
+    handlers().onText({ committed: 'From audio', draft: 'now' })
+    expect(model.transcript.value).toEqual({
+      committed: 'From microphone. From audio',
+      draft: 'now',
+    })
+    await model.stop()
+    expect(model.resultText.value).toBe('From microphone. Hello there')
+    expect(deps.saveTranscript).toHaveBeenCalledWith(
+      'From microphone. Hello there'
+    )
+    model.dispose()
+  })
+
   it('ignores recognition completed after closing the recording', async () => {
     let resolveFinish!: (text: string) => void
     const { model, deps } = setup({

@@ -54,6 +54,15 @@ pub struct Activation {
 }
 
 impl Activation {
+    /// Captured selections never replace an unfinished quick-input draft.
+    pub fn initial_quick_input_text(&self) -> Option<String> {
+        if self.mode == ActivationMode::QuickInput && self.source == ActivationSource::Ui {
+            self.selected_text.clone()
+        } else {
+            None
+        }
+    }
+
     pub fn new(mode: ActivationMode, source: ActivationSource) -> Self {
         Self {
             mode,
@@ -224,6 +233,21 @@ impl Activation {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn only_explicit_ui_text_initializes_quick_input() {
+        let mut activation = Activation::new(ActivationMode::QuickInput, ActivationSource::Ui);
+        activation.selected_text = Some("Dictated text".into());
+        assert_eq!(
+            activation.initial_quick_input_text().as_deref(),
+            Some("Dictated text")
+        );
+        activation.source = ActivationSource::Hotkey;
+        assert_eq!(activation.initial_quick_input_text(), None);
+        activation.source = ActivationSource::Ui;
+        activation.mode = ActivationMode::Voice;
+        assert_eq!(activation.initial_quick_input_text(), None);
+    }
 
     #[test]
     fn an_action_page_set_without_text_takes_no_selection_unless_first_page() {

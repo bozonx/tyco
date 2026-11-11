@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue'
 
+import { joinWords } from '../text/word-spacing'
 import type { CaptureSource } from '@tyco/shared'
 import type { DictationHandlers } from '../stt/dictation-controller'
 import {
@@ -45,6 +46,7 @@ export function isSameSource(a: CaptureSource, b: CaptureSource): boolean {
 }
 
 export interface ListenModelDependencies extends TimerDependencies {
+  initialText?: string
   now?: () => number
   startDictation: (handlers: DictationHandlers) => Promise<void>
   finishDictation: () => Promise<string>
@@ -62,6 +64,7 @@ export interface ListenModelDependencies extends TimerDependencies {
 
 /** One listening of the computer sound: no commands, no correction. */
 export function createListenModel(deps: ListenModelDependencies) {
+  let carriedText = deps.initialText ?? ''
   const phase = ref<ListenPhase>('idle')
   const transcript = ref<LiveTranscriptState>(createLiveTranscriptState())
   const source = ref<CaptureSource>(SYSTEM_MIX_SOURCE)
@@ -111,7 +114,12 @@ export function createListenModel(deps: ListenModelDependencies) {
     session.stopTimer()
     errorCause.value = error
     errorText.value = deps.describeError(error)
-    phase.value = 'failed'
+    const text = liveTranscriptText(transcript.value).trim()
+    if (text) {
+      resultText.value = text
+      phase.value = 'result'
+      void deps.saveTranscript(text).catch(() => undefined)
+    } else phase.value = 'failed'
   }
 
   async function start(startSource: CaptureSource = lastStartSource) {
@@ -120,7 +128,7 @@ export function createListenModel(deps: ListenModelDependencies) {
     isSwitching.value = false
     lastStartSource = startSource
     source.value = startSource
-    transcript.value = createLiveTranscriptState()
+    transcript.value = { committed: carriedText, draft: '' }
     lastState = transcript.value
     isWaiting.value = startSource.kind === 'application'
     isSourceLost.value = false
@@ -138,7 +146,10 @@ export function createListenModel(deps: ListenModelDependencies) {
           // music and silence are no speech: only new words hold the session
           if (hasNewTranscriptSpeech(lastState, state)) session.markActivity()
           lastState = state
-          transcript.value = state
+          transcript.value = {
+            ...state,
+            committed: joinWords(carriedText, state.committed),
+          }
         },
         onError: (error) => {
           if (run !== generation || phase.value !== 'recording') return
@@ -175,7 +186,7 @@ export function createListenModel(deps: ListenModelDependencies) {
     session.stopTimer()
     let text: string
     try {
-      text = (await deps.finishDictation()).trim()
+      text = joinWords(carriedText, (await deps.finishDictation()).trim())
     } catch (error) {
       text = liveTranscriptText(transcript.value).trim()
       if (!text) {
@@ -188,6 +199,7 @@ export function createListenModel(deps: ListenModelDependencies) {
       phase.value = 'empty'
       return
     }
+    carriedText = ''
     resultText.value = text
     phase.value = 'result'
     void deps.saveTranscript(text).catch(() => undefined)

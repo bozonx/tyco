@@ -31,6 +31,36 @@ function setup(overrides: Partial<VoiceRecognitionDependencies> = {}) {
 afterEach(() => vi.useRealTimers())
 
 describe('voice recognition model', () => {
+  it('hands raw dictated text to editing without running correction', async () => {
+    const { deps, model } = setup()
+    await model.startSession()
+    await model.finish('edit')
+    expect(deps.voiceCorrection).not.toHaveBeenCalled()
+    expect(deps.onCorrected).toHaveBeenCalledWith(
+      'Raw words',
+      'Raw words',
+      undefined,
+      'edit'
+    )
+    model.dispose()
+  })
+
+  it('opens a prompt input after silent dictation without cancelling the request', async () => {
+    const { deps, model } = setup({
+      options: () => ({ chat: true, allowEmptyInput: true }),
+      finishDictation: vi.fn().mockResolvedValue(''),
+    })
+    await model.startSession()
+    await model.finish('insert')
+    expect(deps.onCorrected).toHaveBeenCalledWith('', '', undefined, 'insert')
+    expect(deps.onCancelled).not.toHaveBeenCalled()
+    expect(deps.toastKey).not.toHaveBeenCalledWith(
+      'toast.nothingRecognized',
+      'warn'
+    )
+    model.dispose()
+  })
+
   it('restarts for a new activation without emitting cancellation', async () => {
     vi.useFakeTimers()
     const { deps, model } = setup()

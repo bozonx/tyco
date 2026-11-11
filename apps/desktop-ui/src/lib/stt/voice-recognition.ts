@@ -94,6 +94,7 @@ export interface VoiceRecognitionDependencies extends TimerDependencies {
   postProcessTimeoutMs?: number
   now?: () => number
   options: () => {
+    allowEmptyInput?: boolean
     chat?: boolean
     inline?: boolean
     target?: DictationTarget
@@ -299,7 +300,16 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       isTranscribing.value = false
 
       if (!recognizedText.trim()) {
-        const { chat, prefix = '', suffix = '' } = deps.options()
+        const {
+          chat,
+          prefix = '',
+          suffix = '',
+          allowEmptyInput,
+        } = deps.options()
+        if ((allowEmptyInput && intent === 'insert') || intent === 'edit') {
+          deps.onCorrected('', '', undefined, intent)
+          return
+        }
         if (chat && intent === 'submit' && `${prefix}${suffix}`.trim()) {
           deps.onCorrected('', '', undefined, 'submit')
           return
@@ -335,34 +345,36 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       const voiceStyling = deps.voiceStyling
       const correctContextually = contextual
       const postProcess =
-        styleRule && voiceStyling
-          ? {
-              pending: { styling: true },
-              run: (postSignal: AbortSignal) =>
-                (async () => {
-                  const text = correctContextually
-                    ? await correctContextually.finish(
-                        recognizedText,
-                        postSignal
-                      )
-                    : recognizedText
-                  if (postSignal.aborted) return text
-                  return voiceStyling(text, styleRule, postSignal)
-                })(),
-            }
-          : correctContextually
+        intent === 'edit'
+          ? null
+          : styleRule && voiceStyling
             ? {
-                pending: { correction: true },
+                pending: { styling: true },
                 run: (postSignal: AbortSignal) =>
-                  correctContextually.finish(recognizedText, postSignal),
+                  (async () => {
+                    const text = correctContextually
+                      ? await correctContextually.finish(
+                          recognizedText,
+                          postSignal
+                        )
+                      : recognizedText
+                    if (postSignal.aborted) return text
+                    return voiceStyling(text, styleRule, postSignal)
+                  })(),
               }
-            : shouldFormatRecognizedText()
+            : correctContextually
               ? {
                   pending: { correction: true },
                   run: (postSignal: AbortSignal) =>
-                    voiceCorrection(recognizedText, postSignal),
+                    correctContextually.finish(recognizedText, postSignal),
                 }
-              : null
+              : shouldFormatRecognizedText()
+                ? {
+                    pending: { correction: true },
+                    run: (postSignal: AbortSignal) =>
+                      voiceCorrection(recognizedText, postSignal),
+                  }
+                : null
 
       if (postProcess) {
         if ('styling' in postProcess.pending && postProcess.pending.styling) {

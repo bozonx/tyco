@@ -601,7 +601,10 @@
     "favorites": "즐겨찾기",
     "transcribing": "텍스트 변환 중...",
     "contextRemoved": "컨텍스트 제거됨",
-    "contextRequired": "컨텍스트 필요"
+    "contextRequired": "컨텍스트 필요",
+    "typeText": "텍스트 입력",
+    "toPrompt": "요청 입력란으로",
+    "editText": "텍스트 편집"
   },
   "nav": {
     "aiChat": "AI에게 질문",

@@ -86,6 +86,7 @@
         :chat="chat"
         :cancel-shortcut="cancelShortcut"
         :finish-behavior="finishBehavior"
+        :has-text="Boolean(liveTranscriptText(transcript).trim())"
         :finish-hotkey="finishHotkey"
         :is-finishing="isFinishing"
         :finish="finish"
@@ -98,6 +99,7 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { liveTranscriptText } from '../../lib/stt/live-transcript'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import AudioWaveform from './AudioWaveform.vue'

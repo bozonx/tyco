@@ -274,3 +274,24 @@ Quick surface action rows follow DOM and visual order from left to right:
 Other actions, Tab/action menu, secondary action, primary action.
 Escape/cancel appears once in the header, not in the footer.
 Rows align to the right; avoid CSS order overrides so focus follows the display.
+
+## Changing a quick text workflow
+
+A quick AI voice request always offers returning to its composer, including
+silent recordings and STT start errors. Once words arrive, Tab opens actions
+for the dictated prompt and Shift+Space sends it immediately. Prompt composers
+also expose Tab/actions, preserving the draft when returning from the menu.
+Completed plain answers expose actions even without proposed reply variants;
+when variants exist, actions use the selected variant.
+
+External dictation uses Shift+Space to finish into quick text input without
+correction or insertion. Explicit UI text travels as `quickInputText` in the
+activation snapshot, so transfer also works across windows; captured selections
+do not overwrite the quick-input draft. Reviewed voice commands expose Tab/actions for their
+editable text and restore the review when returning from the action menu.
+
+Switching microphone/system-audio sources finalizes the current recording first.
+The finalized text is handed to the next activation and prepended to its live
+transcript and final result. A failed switch keeps text in the source's result
+step; a failed destination start keeps the carried text actionable. Handoffs are
+single-use and scoped to the destination mode and activation ID.

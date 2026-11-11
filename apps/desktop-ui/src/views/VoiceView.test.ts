@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { APP_ROUTES } from '../lib/navigation/routes'
+import { useQuickInputStore } from '../stores/quick-input'
 import { useHistoryStore } from '../stores/history'
 import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import VoiceView from './VoiceView.vue'
@@ -141,6 +142,27 @@ describe('VoiceView.vue', () => {
     expect(wrapper.find('.voice-bar-layer').exists()).toBe(true)
     const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
     expect(voiceMenu.props('variant')).toBe('bar')
+  })
+
+  it('keeps dictated text in quick input instead of inserting it when editing', async () => {
+    desktop.backend.handle('activate_mode', () => undefined)
+    const wrapper = mount(VoiceView)
+    wrapper
+      .findComponent({ name: 'VoiceRecognitionMenu' })
+      .vm.$emit(
+        'corrected',
+        'Edit these words',
+        'Edit these words',
+        undefined,
+        'edit'
+      )
+    await flushPromises()
+    expect(useQuickInputStore().value).toBe('Edit these words')
+    expect(desktop.backend.callsOf('activate_mode')).toEqual([
+      { mode: 'quickInput', text: 'Edit these words' },
+    ])
+    expect(mocks.insertAction).not.toHaveBeenCalled()
+    wrapper.unmount()
   })
 
   it('inserts into target window directly when canInsertIntoWindow is true and intent is not next', async () => {

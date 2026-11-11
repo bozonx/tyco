@@ -601,7 +601,10 @@
     "favorites": "Oblíbené",
     "transcribing": "Přepisování...",
     "contextRemoved": "Kontext odebrán",
-    "contextRequired": "Vyžadován kontext"
+    "contextRequired": "Vyžadován kontext",
+    "typeText": "Napsat text",
+    "toPrompt": "Do pole dotazu",
+    "editText": "Upravit text"
   },
   "nav": {
     "aiChat": "Zeptat se AI",

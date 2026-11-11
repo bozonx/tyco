@@ -234,6 +234,8 @@ watch(
       menuModalsStore.closeAll()
       resetNav()
       quickInputStore.startSession()
+      if (desktopStore.desktopState.quickInputText !== undefined)
+        quickInputStore.setValue(desktopStore.desktopState.quickInputText)
       quickInputStore.requestFocus()
     }
   },

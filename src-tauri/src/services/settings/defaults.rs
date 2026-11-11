@@ -38,6 +38,7 @@ pub fn default_desktop_snapshot(
             activation_id: 0,
             target_window_id: None,
             selected_text: None,
+            quick_input_text: None,
             screenshots: Vec::new(),
             screenshot: None,
             mode: session_state.last_mode.or(Some(ActivationMode::Editor)),

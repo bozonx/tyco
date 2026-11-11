@@ -79,7 +79,9 @@
         :show-cancel-button="false"
         cancel-shortcut
         target="chat"
-        finish-behavior="confirm"
+        finish-behavior="prompt"
+        allow-empty-input
+        keep-error-visible
         :activation-mode="voiceActivationMode"
         :prefix="voiceRange.prefix"
         :suffix="voiceRange.suffix"
@@ -132,12 +134,10 @@
         </ShortcutButton>
         <ShortcutButton
           :keys="['Tab']"
-          v-if="model.replyBlocks.value.length"
+          v-if="resultActionText"
           class="quick-next-action"
           variant="ghost"
-          :disabled="
-            !model.selectedReplyBlock.value || isInputBlocked || isApplying
-          "
+          :disabled="!resultActionText || isInputBlocked || isApplying"
           @click="openNextStep"
         >
           {{ t('menu.actions') }}
@@ -166,6 +166,14 @@
         :disabled="isInputBlocked || model.isGenerating.value"
         :placeholder="promptPlaceholder"
         :options="recentOptions"
+        :hints="[
+          {
+            keys: ['Tab'],
+            label: t('menu.actions'),
+            disabled: !input.value.value.trim(),
+            action: openPromptActions,
+          },
+        ]"
         options-placement="above-popover"
         @blur="handleInputBlur"
         @submit="handleQuerySubmit"
@@ -427,17 +435,40 @@ async function insertSelectedReply() {
   }
 }
 
+const resultActionText = computed(
+  () =>
+    model.selectedReplyBlock.value?.text ??
+    (model.replyBlocks.value.length
+      ? ''
+      : (model.turns.value.at(-1)?.answer?.content ?? ''))
+)
+
+function openPromptActions() {
+  const text = input.value.value.trim()
+  if (!text || isInputBlocked.value || model.isGenerating.value) return
+  if (
+    menuModalsStore.currentModal === MenuModals.QUICK_AI_REQUEST &&
+    menuModalsStore.currentStepId !== undefined
+  ) {
+    menuModalsStore.updateStep(
+      menuModalsStore.currentStepId,
+      MenuModals.QUICK_AI_REQUEST,
+      { prompt: input.value.value, inputMode: 'text', isPromptSent: false }
+    )
+  }
+  menuModalsStore.nextModal(MenuModals.INSERT, { text, escMode: 'back' })
+}
+
 function openNextStep() {
-  const block = model.selectedReplyBlock.value
   if (
     !isResultVisible.value ||
-    !block ||
+    !resultActionText.value ||
     isInputBlocked.value ||
     isApplying.value
   )
     return
   menuModalsStore.nextModal(MenuModals.INSERT, {
-    text: block.text,
+    text: resultActionText.value,
     oldText: model.sourceText.value || undefined,
     escMode: 'back',
   })
@@ -653,6 +684,10 @@ async function handleVoiceCorrected(
     lastInputKind.value = 'voice'
   }
   const textToSend = input.value.value.trim()
+  if (intent === 'next') {
+    openPromptActions()
+    return
+  }
   if (intent === 'submit' && textToSend) {
     await model.submitPrompt(textToSend, 'voice', clearPrompt)
     return
@@ -729,11 +764,7 @@ function handleWindowKeys(event: KeyboardEvent) {
     )
       return
     if (window.getSelection()?.toString()) return
-    if (
-      event.key === 'Tab' &&
-      !event.ctrlKey &&
-      model.selectedReplyBlock.value
-    ) {
+    if (event.key === 'Tab' && !event.ctrlKey && resultActionText.value) {
       event.preventDefault()
       openNextStep()
       return

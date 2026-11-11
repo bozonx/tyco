@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 6ac7a5ccc9b6f2895b816a56b2a0c48fe194ad932ebbfa72bade6a61d9c8588f
+// Source hash: 89693612a7b788cc6163a92d705c118697459045d8d75359a143eb92199f2cc7
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -439,6 +439,8 @@ export type DesktopActivationState = {
   activationId: number
   windowId: string | null
   selectedText: string | null
+  /** Explicit text passed when opening quick input from another workflow. */
+  quickInputText?: string
   screenshots?: Array<ChatImage>
   screenshot?: ChatImage
   mode: ActivationMode | null

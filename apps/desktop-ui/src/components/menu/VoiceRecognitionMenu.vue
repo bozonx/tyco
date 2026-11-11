@@ -24,6 +24,20 @@
       </ShortcutButton>
     </div>
     <div class="voice-error-actions">
+      <ShortcutButton
+        v-if="liveTranscriptText(transcript).trim()"
+        :keys="['Tab']"
+        @click="preserveErrorDraft('next')"
+        >{{ t('menu.actions') }}</ShortcutButton
+      >
+
+      <Button
+        v-if="props.allowEmptyInput"
+        variant="primary"
+        @click="openEmptyInput"
+        >{{ t('menu.typeText') }}</Button
+      >
+
       <Button
         v-if="startError.canRetry"
         size="sm"
@@ -107,6 +121,7 @@ import { stylingSlotList } from '../../lib/styling/styling-library'
 import { createKeyPressTracker } from '../../lib/ui/key-press-tracker'
 import { isTextEntryTarget } from '../../lib/ui/text-entry-target'
 import { useDesktopStore } from '../../stores/desktop'
+import { useDictationHandoffStore } from '../../stores/dictation-handoff'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
@@ -132,6 +147,7 @@ const props = withDefaults(
       /** Keep a start failure visible inline instead of hiding the quick bar */
       keepErrorVisible?: boolean
       showCancelButton?: boolean
+      allowEmptyInput?: boolean
     }
   >(),
   { showCancelButton: true }
@@ -176,6 +192,19 @@ function openSttSettings() {
     startError.value = null
     emit('cancelled')
   }
+}
+
+async function preserveErrorDraft(intent: VoiceFinishIntent) {
+  const text = liveTranscriptText(transcript.value)
+  await model.cancelWithoutClosing()
+  startError.value = null
+  emit('corrected', text, text, undefined, intent)
+}
+
+async function openEmptyInput() {
+  await model.cancelWithoutClosing()
+  startError.value = null
+  emit('corrected', '', '', undefined, 'insert')
 }
 
 function dismissStartError() {
@@ -237,7 +266,13 @@ function offerOrphanedResult(text: string) {
 }
 const dictationTarget = computed(() => resolveDictationTarget(props))
 const sessionMicrophoneId = ref(desktopStore.userConfig.stt.microphoneId ?? '')
-let microphoneTranscript = ''
+const handoff = useDictationHandoffStore()
+let microphoneTranscript =
+  props.activationMode === 'voice'
+    ? handoff.take('voice', desktopStore.desktopState.activationId)
+    : ''
+let isSwitchingSource = false
+let switchedText: string | undefined
 async function selectMicrophone(id: string) {
   microphoneTranscript = liveTranscriptText(transcript.value)
   sessionMicrophoneId.value = id
@@ -287,6 +322,7 @@ const model = createVoiceRecognition({
   consumeBufferedIntent: () => menuModalsStore.consumeBufferedIntent(),
   options: () => props,
   onCancelled: () => {
+    if (isSwitchingSource) return
     startError.value = null
     if (!ownsActivation()) return
     invokeCallback(props.onCancel)
@@ -314,6 +350,10 @@ const model = createVoiceRecognition({
   // the text is delivered even if the window was hidden while it was being
   // transcribed or corrected: it cannot be dictated the same way twice
   onCorrected: (result, recognized, corrected, intent) => {
+    if (isSwitchingSource) {
+      switchedText = result
+      return
+    }
     if (isSameActivation())
       emit('corrected', result, recognized, corrected, intent)
     // inserting into a window the user has left would hit the wrong target
@@ -340,9 +380,26 @@ const {
 const modeSwitch = useQuickModeSwitch()
 /** Starts system audio with a fresh recording session. */
 async function switchToListen() {
-  await model.cancelWithoutClosing()
-  startError.value = null
-  await modeSwitch.switchTo('listen')
+  if (isSwitchingSource || isFinishing.value) return
+  const activationId = desktopStore.desktopState.activationId
+  const draft = liveTranscriptText(transcript.value).trim()
+  isSwitchingSource = true
+  switchedText = undefined
+  try {
+    await model.finish('edit')
+    if (desktopStore.desktopState.activationId !== activationId) return
+    const text = switchedText ?? draft
+    handoff.set(text, 'listen', modeSwitch.nextActivationId())
+    startError.value = null
+    const result = await modeSwitch.switchTo('listen')
+    if (!result.success) {
+      handoff.clear()
+      if (text) emit('corrected', text, text, undefined, 'next')
+      else await startSession()
+    }
+  } finally {
+    isSwitchingSource = false
+  }
 }
 
 function handleLanguageChange() {
@@ -443,6 +500,19 @@ function handleKeyUp(event: KeyboardEvent) {
   if (isTypingKey(event)) return
   if (event.defaultPrevented) return
 
+  if (startError.value) {
+    const hasDraft = Boolean(liveTranscriptText(transcript.value).trim())
+    if (event.code === 'Tab' && !event.shiftKey && hasDraft)
+      void preserveErrorDraft('next')
+    else if (
+      (event.code === 'Enter' || event.code === 'Space') &&
+      !event.shiftKey &&
+      props.allowEmptyInput
+    )
+      void preserveErrorDraft('insert')
+    return
+  }
+
   const matchingStyle = findMatchingStyle(event)
   if (matchingStyle) {
     event.preventDefault()
@@ -453,31 +523,39 @@ function handleKeyUp(event: KeyboardEvent) {
   if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing)
     return
 
-  // Shift+Space keeps the text in the input without sending it
-  if (
-    (props.finishBehavior === 'submitToChat' ||
-      (props.variant === 'bar' && props.chat)) &&
-    event.shiftKey &&
-    event.code === 'Space'
-  ) {
-    event.preventDefault()
-    void finish(props.variant === 'bar' && props.chat ? 'submit' : 'insert')
+  if (event.shiftKey && event.code === 'Space') {
+    const intent =
+      props.finishBehavior === 'insertIntoTarget'
+        ? 'edit'
+        : props.finishBehavior === 'submitToChat'
+          ? 'insert'
+          : props.chat
+            ? 'submit'
+            : undefined
+    if (
+      intent &&
+      (props.finishBehavior !== 'prompt' ||
+        liveTranscriptText(transcript.value).trim())
+    ) {
+      event.preventDefault()
+      void finish(intent)
+    }
     return
   }
-
   if (
-    (props.finishBehavior === 'submitToChat' &&
-      event.code === 'Tab' &&
-      !event.shiftKey) ||
-    (props.finishBehavior === 'insertIntoTarget' &&
-      event.code === 'Tab' &&
-      !event.shiftKey &&
-      !event.ctrlKey &&
-      !event.metaKey &&
-      !event.altKey)
+    event.code === 'Tab' &&
+    !event.shiftKey &&
+    ['submitToChat', 'insertIntoTarget', 'prompt'].includes(
+      props.finishBehavior ?? ''
+    )
   ) {
-    event.preventDefault()
-    void finish('next')
+    if (
+      props.finishBehavior !== 'prompt' ||
+      liveTranscriptText(transcript.value).trim()
+    ) {
+      event.preventDefault()
+      void finish('next')
+    }
     return
   }
 
@@ -499,7 +577,9 @@ function handleKeyDown(event: KeyboardEvent) {
 
   // Consume the secondary completion shortcut before the browser handles it
   if (
-    (props.finishBehavior === 'submitToChat' &&
+    ((props.finishBehavior === 'submitToChat' ||
+      (props.finishBehavior === 'prompt' &&
+        Boolean(liveTranscriptText(transcript.value).trim()))) &&
       event.code === 'Tab' &&
       !event.shiftKey) ||
     (props.finishBehavior === 'insertIntoTarget' &&
@@ -571,6 +651,8 @@ onMounted(async () => {
     isOwnWindowShown()
   ) {
     await startSession()
+    if (microphoneTranscript && !liveTranscriptText(transcript.value).trim())
+      transcript.value = { committed: microphoneTranscript, draft: '' }
   }
 })
 

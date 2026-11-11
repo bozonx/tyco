@@ -1,6 +1,10 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import ListenRecordingBar from '../components/listen/ListenRecordingBar.vue'
+import { useDictationHandoffStore } from '../stores/dictation-handoff'
+import { useVoiceResultStore } from '../stores/voice-result'
+import { useDesktopStore } from '../stores/desktop'
 import { i18n } from '../lib/i18n'
 import { DictationError } from '../lib/stt/dictation-error'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
@@ -71,6 +75,46 @@ describe('ListenView', () => {
     dictation.finishDictation.mockResolvedValue('Voice message text')
     dictation.cancelDictation.mockResolvedValue(undefined)
     desktop = await loadFakeDesktop({ mode: 'listen' }, 'quick')
+  })
+
+  it('does not switch a newer activation after late recognition completes', async () => {
+    let finish!: (text: string) => void
+    dictation.finishDictation.mockReturnValueOnce(
+      new Promise<string>((resolve) => {
+        finish = resolve
+      })
+    )
+    desktop.backend.handle('switch_quick_mode', () => undefined)
+    const wrapper = mountView()
+    await flushPromises()
+    wrapper.findComponent(ListenRecordingBar).vm.$emit('switch-mode')
+    await flushPromises()
+    desktop.setState({
+      activationId: useDesktopStore().desktopState.activationId + 1,
+    })
+    finish('Late words')
+    await flushPromises()
+    expect(desktop.backend.callsOf('switch_quick_mode')).toHaveLength(0)
+    wrapper.unmount()
+  })
+
+  it('finalizes audio and hands it to microphone input when switching sources', async () => {
+    useVoiceResultStore().step.showResult('Previous dictation')
+    desktop.backend.handle('switch_quick_mode', () => undefined)
+    const wrapper = mountView()
+    await flushPromises()
+    const nextId = useDesktopStore().desktopState.activationId + 1
+    wrapper.findComponent(ListenRecordingBar).vm.$emit('switch-mode')
+    await flushPromises()
+    expect(dictation.finishDictation).toHaveBeenCalledOnce()
+    expect(useVoiceResultStore().step.isInsertMenuVisible.value).toBe(false)
+    expect(desktop.backend.callsOf('switch_quick_mode')).toEqual([
+      expect.objectContaining({ mode: 'voice' }),
+    ])
+    expect(useDictationHandoffStore().take('voice', nextId)).toBe(
+      'Voice message text'
+    )
+    wrapper.unmount()
   })
 
   it('records the whole sound by default, in a bar', async () => {

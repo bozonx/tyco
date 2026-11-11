@@ -601,7 +601,10 @@
     "favorites": "Избранное",
     "transcribing": "Распознавание...",
     "contextRemoved": "Контекст убран",
-    "contextRequired": "Требуется контекст"
+    "contextRequired": "Требуется контекст",
+    "typeText": "Ввести текст",
+    "toPrompt": "В поле запроса",
+    "editText": "Редактировать текст"
   },
   "nav": {
     "aiChat": "Спросить ИИ",

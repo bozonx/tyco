@@ -601,7 +601,10 @@
     "favorites": "お気に入り",
     "transcribing": "文字起こし中...",
     "contextRemoved": "コンテキストを削除しました",
-    "contextRequired": "コンテキストが必要です"
+    "contextRequired": "コンテキストが必要です",
+    "typeText": "テキストを入力",
+    "toPrompt": "質問入力欄へ",
+    "editText": "テキストを編集"
   },
   "nav": {
     "aiChat": "AIに質問",

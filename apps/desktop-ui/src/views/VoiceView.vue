@@ -48,8 +48,10 @@ import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
 import { appNavigation } from '../navigation'
 import { useActionMenuStore } from '../stores/action-menu'
 import { useDesktopStore } from '../stores/desktop'
+import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
+import { useQuickInputStore } from '../stores/quick-input'
 import { useVoiceReferenceStore } from '../stores/voice-reference'
 import { useVoiceResultStore } from '../stores/voice-result'
 import { useWindowStore } from '../stores/window'
@@ -73,6 +75,8 @@ const windowStore = useWindowStore()
 const desktopStore = useDesktopStore()
 const actionMenuStore = useActionMenuStore()
 const editorNavigation = useEditorNavigation()
+const quickInput = useQuickInputStore()
+const ipc = useIpcStore()
 
 navPanelStore.resetNavPanelState({ panelVisible: false })
 const voiceReferenceStore = useVoiceReferenceStore()
@@ -116,12 +120,22 @@ watch(
   }
 )
 
-function handleCorrected(
+async function handleCorrected(
   resultText: string,
   recognizedText: string,
   _correctedText: string | undefined,
   intent: VoiceFinishIntent
 ) {
+  if (intent === 'edit') {
+    quickInput.startSession()
+    quickInput.setValue(resultText)
+    const transferred = await ipc.callOrNotify('activate_mode', {
+      mode: 'quickInput',
+      text: resultText,
+    })
+    if (!transferred.success) showResult(resultText, recognizedText)
+    return
+  }
   if (intent === 'copy') {
     void actionMenuStore.runDefaultAction('copyToClipboard', resultText)
     return

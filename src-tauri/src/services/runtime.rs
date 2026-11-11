@@ -283,7 +283,9 @@ fn activate_on_main_thread(
         }
     }
 
+    let quick_input_text = activation.initial_quick_input_text();
     state.update_snapshot(|snapshot| {
+        snapshot.activation.quick_input_text = quick_input_text;
         snapshot.activation.activation_id = snapshot.activation.activation_id.wrapping_add(1);
         snapshot.activation.mode = Some(activation.mode);
         snapshot.activation.target_window_id = activation.target_window_id;

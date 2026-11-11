@@ -601,7 +601,10 @@
     "favorites": "Favorite",
     "transcribing": "Se transcrie...",
     "contextRemoved": "Context eliminat",
-    "contextRequired": "Context necesar"
+    "contextRequired": "Context necesar",
+    "typeText": "Introdu text",
+    "toPrompt": "În câmpul solicitării",
+    "editText": "Editează textul"
   },
   "nav": {
     "aiChat": "Întreabă AI",

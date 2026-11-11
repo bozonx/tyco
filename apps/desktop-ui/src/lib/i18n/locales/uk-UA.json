@@ -601,7 +601,10 @@
     "favorites": "Улюблене",
     "transcribing": "Розпізнавання...",
     "contextRemoved": "Контекст прибрано",
-    "contextRequired": "Потрібен контекст"
+    "contextRequired": "Потрібен контекст",
+    "typeText": "Ввести текст",
+    "toPrompt": "У поле запиту",
+    "editText": "Редагувати текст"
   },
   "nav": {
     "aiChat": "Запитати ШІ",

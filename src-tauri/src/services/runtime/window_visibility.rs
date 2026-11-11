@@ -146,6 +146,7 @@ fn show_application_mode_on_main_thread(
     state.update_snapshot(|snapshot| {
         snapshot.activation.activation_id = snapshot.activation.activation_id.wrapping_add(1);
         snapshot.activation.selected_text = None;
+        snapshot.activation.quick_input_text = None;
         snapshot.activation.mode = Some(mode);
         snapshot.window.is_window_shown = true;
         snapshot.window.window_profile = WindowProfile::Sheet;

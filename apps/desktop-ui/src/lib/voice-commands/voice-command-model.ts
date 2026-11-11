@@ -486,6 +486,11 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     run,
     start,
     finish,
+    restoreReview: async (text: string, commandId?: string) => {
+      await review(text, 'review')
+      inputText.value = text
+      if (commandId) chooseCommand(commandId)
+    },
     cancel,
     dispose() {
       disposed = true

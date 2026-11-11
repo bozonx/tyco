@@ -125,6 +125,57 @@ describe('QuickAiRequestMenu', () => {
     return wrapper
   }
 
+  it('keeps an empty voice request open as a text composer', async () => {
+    const wrapper = mountMenu({ inputMode: 'voice' })
+    wrapper
+      .findComponent({ name: 'VoiceRecognitionMenu' })
+      .vm.$emit('corrected', '', '', undefined, 'insert')
+    await flushPromises()
+    expect(wrapper.find('.query-panel-input').exists()).toBe(true)
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
+  })
+
+  it('takes dictated prompt text to actions without sending it', async () => {
+    const wrapper = mountMenu({ inputMode: 'voice' })
+    wrapper
+      .findComponent({ name: 'VoiceRecognitionMenu' })
+      .vm.$emit(
+        'corrected',
+        'Use my words elsewhere',
+        'Use my words elsewhere',
+        undefined,
+        'next'
+      )
+    await flushPromises()
+    expect(useMenuModalsStore().currentModalParams).toMatchObject({
+      text: 'Use my words elsewhere',
+      escMode: 'back',
+    })
+    expect(desktop.backend.callsOf('start_fetch')).toHaveLength(0)
+  })
+
+  it('opens actions for a plain answer without reply variants', async () => {
+    const wrapper = await answerRequest()
+    await wrapper.find('.quick-next-action').trigger('click')
+    expect(useMenuModalsStore().currentModalParams).toMatchObject({
+      text: 'An explanation',
+      escMode: 'back',
+    })
+  })
+
+  it('opens actions for the prompt without submitting it', async () => {
+    const wrapper = mountMenu()
+    await wrapper.find('.query-panel-input').setValue('Keep my draft')
+    await wrapper
+      .find('.query-panel-input')
+      .trigger('keydown', { key: 'Tab', code: 'Tab' })
+    expect(useMenuModalsStore().currentModalParams).toMatchObject({
+      text: 'Keep my draft',
+      escMode: 'back',
+    })
+    expect(desktop.backend.callsOf('start_fetch')).toHaveLength(0)
+  })
+
   it.each(['Enter', ' '])('inserts a completed result with %j', async (key) => {
     const wrapper = await answerRequest([{ text: 'Ready to paste' }])
     expect(wrapper.find('.query-panel-input').exists()).toBe(false)

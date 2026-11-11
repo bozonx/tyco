@@ -601,7 +601,10 @@
     "favorites": "Favoritos",
     "transcribing": "Transcribiendo...",
     "contextRemoved": "Contexto quitado",
-    "contextRequired": "Contexto requerido"
+    "contextRequired": "Contexto requerido",
+    "typeText": "Escribir texto",
+    "toPrompt": "Al campo de consulta",
+    "editText": "Editar texto"
   },
   "nav": {
     "aiChat": "Preguntar a la IA",

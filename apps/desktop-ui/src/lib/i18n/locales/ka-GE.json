@@ -601,7 +601,10 @@
     "favorites": "Რჩეულები",
     "transcribing": "მიმდინარეობს ტრანსკრიფცია...",
     "contextRemoved": "კონტექსტი ამოშლილია",
-    "contextRequired": "საჭიროა კონტექსტი"
+    "contextRequired": "საჭიროა კონტექსტი",
+    "typeText": "ტექსტის შეყვანა",
+    "toPrompt": "მოთხოვნის ველში",
+    "editText": "ტექსტის რედაქტირება"
   },
   "nav": {
     "aiChat": "ჰკითხეთ AI-ს",

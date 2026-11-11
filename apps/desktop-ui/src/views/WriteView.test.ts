@@ -130,6 +130,12 @@ afterEach(() => {
 })
 
 describe('quick input screen', () => {
+  it('loads explicit text delivered with a new activation', async () => {
+    desktop.setState({ activationId: 2, quickInputText: 'Transferred words' })
+    await nextTick()
+    expect(mocks.writer.setValue).toHaveBeenCalledWith('Transferred words')
+  })
+
   it('opens the quick input history with the typed text saved first', async () => {
     desktop.backend.handle('activate_mode', () => undefined)
     await wrapper.find('.write-history-action').trigger('click')

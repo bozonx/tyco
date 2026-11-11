@@ -47,6 +47,7 @@
       <VoiceRecordingActions
         class="voice-shortcuts"
         :finish-behavior="finishBehavior"
+        :has-text="Boolean(liveTranscriptText(transcript).trim())"
         :finish-hotkey="finishHotkey"
         :is-finishing="isFinishing"
         :finish="finish"
@@ -59,6 +60,7 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { liveTranscriptText } from '../../lib/stt/live-transcript'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import SelectionContextPreview from '../overlay/SelectionContextPreview.vue'
 import AudioWaveform from './AudioWaveform.vue'

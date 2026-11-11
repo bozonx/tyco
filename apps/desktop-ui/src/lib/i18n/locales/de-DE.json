@@ -601,7 +601,10 @@
     "favorites": "Favoriten",
     "transcribing": "Transkribieren...",
     "contextRemoved": "Kontext entfernt",
-    "contextRequired": "Kontext erforderlich"
+    "contextRequired": "Kontext erforderlich",
+    "typeText": "Text eingeben",
+    "toPrompt": "Zum Eingabefeld",
+    "editText": "Text bearbeiten"
   },
   "nav": {
     "aiChat": "KI fragen",

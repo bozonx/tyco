@@ -88,6 +88,7 @@ import { liveTranscriptText } from '../lib/stt/live-transcript'
 import { createKeyPressTracker } from '../lib/ui/key-press-tracker'
 import { isTextEntryTarget } from '../lib/ui/text-entry-target'
 import { useDesktopStore } from '../stores/desktop'
+import { useDictationHandoffStore } from '../stores/dictation-handoff'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menu-modals'
@@ -113,7 +114,9 @@ const { startDictation, finishDictation, cancelDictation, switchSource } =
 // a click into the player must not end the listening, nor its result
 const releaseDismissHold = useQuickDismissStore().hold()
 
+const handoff = useDictationHandoffStore()
 const model = createListenModel({
+  initialText: handoff.take('listen', desktopStore.desktopState.activationId),
   startDictation,
   finishDictation,
   cancelDictation,
@@ -226,11 +229,21 @@ const forgetKeys = () => keyPresses.clear()
 
 /** Starts voice input with a fresh recording session. */
 async function switchToVoice() {
+  if (isChangingMode.value || model.phase.value === 'finishing') return
   isChangingMode.value = true
-  await model.cancel()
+  const activationId = desktopStore.desktopState.activationId
+  const draft = liveTranscriptText(model.transcript.value).trim()
+  await model.stop()
+  if (desktopStore.desktopState.activationId !== activationId) return
+  const text = model.resultText.value || draft
   useVoiceResultStore().step.resetResult()
+  handoff.set(text, 'voice', modeSwitch.nextActivationId())
   const switched = await modeSwitch.switchTo('voice')
-  if (!switched.success) isChangingMode.value = false
+  if (!switched.success) {
+    handoff.clear()
+    isChangingMode.value = false
+    if (!text) await model.start(configuredSource())
+  }
 }
 
 function handleLanguageChange() {

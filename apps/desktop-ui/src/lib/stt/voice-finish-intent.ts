@@ -7,8 +7,8 @@ import type { BufferedPendingAction } from '../modals/menu-modal-params'
  * directly.
  */
 export type VoiceFinishIntent =
-  'insert' | 'submit' | 'next' | BufferedPendingAction
+  'insert' | 'submit' | 'next' | 'edit' | BufferedPendingAction
 
 /** Default completion behavior and available shortcuts of a voice input. */
 export type VoiceFinishBehavior =
-  'submitToChat' | 'insertIntoTarget' | 'confirm'
+  'submitToChat' | 'insertIntoTarget' | 'confirm' | 'prompt'

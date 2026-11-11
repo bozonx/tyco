@@ -59,6 +59,17 @@ function setup(overrides: Partial<VoiceCommandDependencies> = {}) {
 }
 
 describe('voice command session', () => {
+  it('restores edited speech after an action-menu detour without recording or running', async () => {
+    const { model, deps } = setup()
+    await model.restoreReview('save note Keep this edited wording', 'note')
+    expect(model.stage.value).toBe('review')
+    expect(model.inputText.value).toBe('save note Keep this edited wording')
+    expect(model.command.value?.id).toBe('note')
+    expect(deps.startDictation).not.toHaveBeenCalled()
+    expect(deps.run).not.toHaveBeenCalled()
+    model.dispose()
+  })
+
   it('stops a forgotten recording at the limit and waits for review', async () => {
     vi.useFakeTimers()
     try {

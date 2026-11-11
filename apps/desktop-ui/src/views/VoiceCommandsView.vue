@@ -144,6 +144,12 @@
             >
               {{ t('voiceCommands.recordAgain') }}
             </ShortcutButton>
+            <ShortcutButton
+              :keys="['Tab']"
+              :disabled="voice.stage === 'running' || !voice.inputText.trim()"
+              @click="openTextActions"
+              >{{ t('menu.actions') }}</ShortcutButton
+            >
             <!-- the text stays until the new recording replaces it -->
             <ShortcutButton
               :keys="
@@ -215,13 +221,15 @@ import {
 } from '../lib/voice-commands/voice-view-presenter'
 import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
-import { useMenuModalsStore } from '../stores/menu-modals'
+import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useQuickDismissStore } from '../stores/quick-dismiss'
 import { useToolsStore } from '../stores/tools'
 import { useVoiceCommandsStore } from '../stores/voice-commands'
 
 const props = withDefaults(
   defineProps<{
+    reviewText?: string
+    reviewCommandId?: string
     text?: string
     shortcutsDisabled?: boolean
     selectionActivationId?: number
@@ -446,9 +454,32 @@ const finishHotkey = useVoiceFinishSignal(
 const withHotkey = (keys: string[]) =>
   finishHotkey.value ? [...keys, finishHotkey.value] : keys
 
+function openTextActions() {
+  if (voice.stage !== 'review' || !voice.inputText.trim()) return
+  if (
+    menuModalsStore.currentModal === MenuModals.VOICE_COMMANDS &&
+    menuModalsStore.currentStepId !== undefined
+  )
+    menuModalsStore.updateStep(
+      menuModalsStore.currentStepId,
+      MenuModals.VOICE_COMMANDS,
+      { reviewText: voice.inputText, reviewCommandId: voice.command?.id }
+    )
+  menuModalsStore.nextModal(MenuModals.INSERT, {
+    text: voice.inputText,
+    escMode: 'back',
+  })
+}
+
 const onKeyDown = (event: KeyboardEvent) => {
   // Enter that confirms an IME composition belongs to the text
   if (event.repeat || event.isComposing || event.keyCode === 229) return
+  if (
+    props.shortcutsDisabled ||
+    (menuModalsStore.hasOpenModal &&
+      menuModalsStore.currentModal !== MenuModals.VOICE_COMMANDS)
+  )
+    return
   if (voice.stage === 'running') return
   if (event.code === 'Escape') {
     event.preventDefault()
@@ -472,6 +503,18 @@ const onKeyDown = (event: KeyboardEvent) => {
     return
   }
   if (voice.stage !== 'review') return
+  if (
+    event.code === 'Tab' &&
+    !event.shiftKey &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.altKey &&
+    voice.inputText.trim()
+  ) {
+    event.preventDefault()
+    openTextActions()
+    return
+  }
   // a focused row takes Enter itself; Shift+Enter starts a new line
   const isOnRow = (event.target as HTMLElement | null)?.closest?.(
     '.voice-entry'
@@ -490,7 +533,9 @@ const onKeyDown = (event: KeyboardEvent) => {
 
 onMounted(() => {
   window.addEventListener('keydown', onKeyDown)
-  void voice.start()
+  if (props.reviewText !== undefined)
+    void voice.restoreReview(props.reviewText, props.reviewCommandId)
+  else void voice.start()
 })
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeyDown)

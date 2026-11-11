@@ -601,7 +601,10 @@
     "favorites": "我的最愛",
     "transcribing": "正在轉錄...",
     "contextRemoved": "上下文已移除",
-    "contextRequired": "需要上下文"
+    "contextRequired": "需要上下文",
+    "typeText": "輸入文字",
+    "toPrompt": "前往提問輸入框",
+    "editText": "編輯文字"
   },
   "nav": {
     "aiChat": "詢問 AI",
