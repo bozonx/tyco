@@ -72,6 +72,7 @@ import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
 import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
 import { voiceReplyActionParams } from '../../lib/listen/listen-reply-actions'
 import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
+import { isTextEntryTarget } from '../../lib/ui/text-entry-target'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
@@ -302,7 +303,7 @@ const primaryAction = computed<ActionItem | undefined>(() => {
 
 function onKeyDown(event: KeyboardEvent) {
   if (props.shortcutsDisabled || actionMenuStore.pageCount <= 1) return
-  if (event.isComposing) return
+  if (event.isComposing || isTextEntryTarget(event.target)) return
 
   if (event.ctrlKey && !event.altKey && !event.metaKey && event.key === 'Tab') {
     event.preventDefault()

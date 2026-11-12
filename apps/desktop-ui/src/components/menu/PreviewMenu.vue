@@ -50,6 +50,7 @@
 
     <template #actions>
       <ShortcutList
+        editor-shortcut
         :text="currentText"
         :source-text="props.sourceText"
         :left-letter-keys="leftLetterKeys"

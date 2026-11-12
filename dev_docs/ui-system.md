@@ -309,3 +309,11 @@ draft and still checks the editor snapshot before applying it.
 Translation review (`PreviewMenu`) and `ParallelTextPreview` use the same
 `ResultTextEditor` as diff review. Both review screens reset their draft to the
 incoming result and pass the current draft to subsequent actions.
+
+## Result editing keys
+
+Preview and diff result fields keep typing keys, including Tab, inside the
+field. Escape blurs the result field; the next Escape follows overlay navigation.
+Shift+Escape reaches the overlay to close all menus even while editing.
+Outside text fields, Tab inserts the result into the editor; its action button
+shows the binding in both preview and diff menus.

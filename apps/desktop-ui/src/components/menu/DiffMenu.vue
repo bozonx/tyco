@@ -27,6 +27,7 @@
 
     <template #actions>
       <ShortcutList
+        editor-shortcut
         :text="draftText"
         :source-text="props.oldText"
         :left-letter-keys="props.replaceEditor ? [] : leftLetterKeys"

@@ -21,7 +21,7 @@
       spellcheck="false"
       @update:model-value="emit('update:modelValue', $event)"
       @scroll="syncScroll"
-      @keydown.stop
+      @keydown="onKeyDown"
       @keyup.stop
     />
   </div>
@@ -35,6 +35,14 @@ import FieldTextArea from './FieldTextArea.vue'
 defineProps<{ modelValue: string; label: string; parts?: DiffPart[] }>()
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 const highlight = ref<HTMLElement | null>(null)
+function onKeyDown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && event.shiftKey) return
+  event.stopPropagation()
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    ;(event.target as HTMLElement).blur()
+  }
+}
 function syncScroll(event: Event) {
   if (!highlight.value) return
   const target = event.target as HTMLElement

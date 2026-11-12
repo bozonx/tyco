@@ -157,7 +157,7 @@ function isTypingKey(event: KeyboardEvent) {
 }
 
 function handleKeyDown(event: KeyboardEvent) {
-  if (props.shortcutsDisabled) return
+  if (props.shortcutsDisabled || event.defaultPrevented) return
   if (isTypingKey(event)) {
     pressedKeys.delete(event.code)
     return
