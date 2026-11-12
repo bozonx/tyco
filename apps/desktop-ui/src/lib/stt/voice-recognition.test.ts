@@ -162,7 +162,7 @@ describe('voice recognition model', () => {
     expect(vi.getTimerCount()).toBe(0)
     expect(deps.onCorrected).not.toHaveBeenCalled()
   })
-  it('can submit existing chat input even when no new speech was recognized', async () => {
+  it('returns existing chat input to editing when no speech was recognized', async () => {
     vi.useFakeTimers()
     const { deps, model } = setup({
       options: () => ({ chat: true, prefix: 'Existing question' }),
@@ -170,7 +170,7 @@ describe('voice recognition model', () => {
     })
     await model.startSession()
     await model.finish('submit')
-    expect(deps.onCorrected).toHaveBeenCalledWith('', '', undefined, 'submit')
+    expect(deps.onCorrected).toHaveBeenCalledWith('', '', undefined, 'edit')
     expect(deps.onCancelled).not.toHaveBeenCalled()
     model.dispose()
   })
@@ -489,6 +489,21 @@ describe('voice recognition failures', () => {
     expect(deps.onCancelled).toHaveBeenCalledOnce()
   })
 
+  it('keeps silent recordings available for retry when supported', async () => {
+    const onEmptyInput = vi.fn()
+    const { deps, model } = await started({
+      finishDictation: async () => '',
+      onEmptyInput,
+    })
+    await model.finish('submit')
+    expect(onEmptyInput).toHaveBeenCalledOnce()
+    expect(deps.onCancelled).not.toHaveBeenCalled()
+    expect(deps.onCorrected).not.toHaveBeenCalled()
+    await model.startSession()
+    expect(model.isStarted.value).toBe(true)
+    model.dispose()
+  })
+
   it('reports a failed transcription', async () => {
     vi.useFakeTimers()
     const { deps, model } = await started({
@@ -602,7 +617,7 @@ describe('voice recognition failures', () => {
     expect(deps.onCorrected).not.toHaveBeenCalled()
   })
 
-  it('submits chat input that is only after the caret', async () => {
+  it('preserves chat input that is only after the caret', async () => {
     vi.useFakeTimers()
     const { deps, model } = setup({
       finishDictation: vi.fn().mockResolvedValue(''),
@@ -610,7 +625,7 @@ describe('voice recognition failures', () => {
     })
     await model.startSession()
     await model.finish('submit')
-    expect(deps.onCorrected).toHaveBeenCalledWith('', '', undefined, 'submit')
+    expect(deps.onCorrected).toHaveBeenCalledWith('', '', undefined, 'edit')
   })
 
   it('stops at the recording limit', async () => {

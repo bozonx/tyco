@@ -18,7 +18,9 @@
         size="md"
         class="voice-error-icon"
       />
-      <span class="voice-error-text">{{ startError.message }}</span>
+      <span v-if="startError.message" class="voice-error-text">{{
+        startError.message
+      }}</span>
       <ShortcutButton size="sm" :keys="['Esc']" @click="dismissStartError">
         {{ t('common.close') }}
       </ShortcutButton>
@@ -324,6 +326,9 @@ const model = createVoiceRecognition({
   clearPendingModal: (owner) => menuModalsStore.clearPendingModal(owner),
   consumeBufferedIntent: () => menuModalsStore.consumeBufferedIntent(),
   options: () => props,
+  onEmptyInput: () => {
+    startError.value = { message: '', canOpenSettings: false, canRetry: true }
+  },
   onCancelled: () => {
     if (isSwitchingSource) return
     startError.value = null

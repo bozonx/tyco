@@ -107,6 +107,7 @@ export interface VoiceRecognitionDependencies extends TimerDependencies {
     corrected: string | undefined,
     intent: VoiceFinishIntent
   ) => void
+  onEmptyInput?: () => void
   onCancelled: () => void
   /**
    * The dictation was going on or being finished when the recognition was
@@ -311,17 +312,19 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           return
         }
         if (chat && intent === 'submit' && `${prefix}${suffix}`.trim()) {
-          deps.onCorrected('', '', undefined, 'submit')
+          deps.onCorrected('', '', undefined, 'edit')
           return
         }
         toastKey('toast.nothingRecognized', 'warn')
-        notifyCancelled()
+        if (deps.onEmptyInput) deps.onEmptyInput()
+        else notifyCancelled()
         return
       }
 
       let resultText = recognizedText
       let correctedText: string | undefined
       let postProcessAborted = false
+      let postProcessFailed = false
 
       // the raw transcript is the only copy of what was said: the LLM may
       // distort it, the insertion may fail, and it cannot be dictated the
@@ -425,12 +428,14 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
               toastKey('history.operationFailed', 'error')
             })
           } else {
+            postProcessFailed = true
             await saveFailure(sourceId, undefined, {
               isTimedOut,
               isCancelled: controller.signal.aborted,
             })
           }
         } catch (error) {
+          postProcessFailed = true
           // the request has told the failure; keep available contextual text
           if (!isCurrent()) return
           if (correctContextually && correctContextually.text.trim()) {
@@ -469,6 +474,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       ) {
         intent = buffered
       }
+      if (postProcessFailed && intent === 'submit') intent = 'edit'
       finishingText = ''
       deps.onCorrected(resultText, recognizedText, correctedText, intent)
     } catch (error) {

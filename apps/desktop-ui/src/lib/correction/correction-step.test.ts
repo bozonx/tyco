@@ -44,6 +44,20 @@ function setup(overrides: Record<string, unknown> = {}) {
 }
 
 describe('createCorrectionStep', () => {
+  it('keeps the source step when correction returns empty text', async () => {
+    const { menu, request, deps, step } = setup()
+    menu.nextModal(MenuModals.INSERT, { text: 'Original' })
+    const done = step.start('Original')
+    request.resolve('  ')
+    await done
+    expect(menu.pendingModal.value).toBeNull()
+    expect(menu.menuBreadcrumbs.value).toHaveLength(1)
+    expect(menu.currentModalParams.value).toMatchObject({ text: 'Original' })
+    expect(deps.saveResult).not.toHaveBeenCalled()
+    expect(deps.reportError).toHaveBeenCalledOnce()
+    step.dispose()
+  })
+
   it('shows pending overlay while correcting and opens diff on success', async () => {
     const { menu, request, deps, step } = setup()
     menu.nextModal(MenuModals.INSERT, { text: 'helo' })

@@ -91,6 +91,7 @@ export function createCorrectionStep(deps: CorrectionStepDependencies) {
     let result: string
     try {
       result = await deps.correct(text, controller.signal)
+      if (!result.trim()) throw new Error('Correction returned empty text')
     } catch (error) {
       // clearing the pending screen drops an action buffered on it
       deps.clearPending(owner)

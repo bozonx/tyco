@@ -46,7 +46,7 @@ export function useChatVoiceInput() {
           void actionMenuStore.runDefaultAction('copyToClipboard', text)
           return
         }
-        chatInputStore.insertText(text)
+        if (text) chatInputStore.insertText(text)
         // during a reply the text stays in the input
         if (intent === 'submit') void chatStore.sendInput()
       },

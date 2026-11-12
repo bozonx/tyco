@@ -3,12 +3,8 @@
     :title="props.correction ? t('menu.correction') : t('menu.actions')"
     :esc-mode="resolvedEscMode"
   >
-    <template v-if="statusVisible || hasDiff" #header-extra>
+    <template v-if="hasDiff" #header-extra>
       <ResultViewModeToggle preset="diff" v-if="hasDiff" v-model="diffMode" />
-      <span v-if="statusVisible" class="correction-status">
-        <AppIcon icon="mdi:check" size="sm" />
-        {{ t('write.nothingToCorrect') }}
-      </span>
     </template>
 
     <template #preview>
@@ -64,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
@@ -77,7 +73,7 @@ import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
-import AppIcon from '../common/AppIcon.vue'
+import { useToastStore } from '../../stores/toast'
 import KeyboardKey from '../common/KeyboardKey.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ContextPreview from '../overlay/ContextPreview.vue'
@@ -163,7 +159,14 @@ const { t } = useI18n()
 const hasDiff = computed(() => Boolean(props.oldText))
 const { diffMode, stepMode } = usePersistedDiffMode()
 
-const statusVisible = computed(() => props.isCorrectionUnchanged)
+const { toastKey } = useToastStore()
+watch(
+  () => props.isCorrectionUnchanged,
+  (unchanged) => {
+    if (unchanged) toastKey('write.nothingToCorrect')
+  },
+  { immediate: true }
+)
 
 useViewModeArrowKeys((step) => {
   if (hasDiff.value) {
@@ -364,18 +367,6 @@ onUnmounted(() => {
   background-color: var(--app-surface-raised);
   border-color: var(--color-primary);
   font-weight: 500;
-}
-
-.correction-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  max-width: 16rem;
-  overflow: hidden;
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 .preview-area {

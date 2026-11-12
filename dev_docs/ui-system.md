@@ -318,3 +318,9 @@ field. Escape blurs the result field; the next Escape follows overlay navigation
 Shift+Escape reaches the overlay to close all menus even while editing.
 Outside text fields, Tab inserts the result into the editor; its action button
 shows the binding in both preview and diff menus.
+
+Silent voice completion keeps the stopped voice surface available for retry and
+reports the empty recognition in a toast. Existing chat input returns to editing
+when submission contains no new speech. An unchanged correction is a successful
+result; its status is shown in a toast rather than the result header. Empty
+correction responses are failures and must not replace the source text.
