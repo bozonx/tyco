@@ -21,6 +21,7 @@
         {{ t('listen.replyingTo', { text: replyTo }) }}
       </span>
       <IconButton
+        class="voice-bar-close"
         v-if="props.showCancelButton !== false"
         size="sm"
         icon="mdi:close"
@@ -152,7 +153,7 @@ const slots = computed(() => {
   height: 7.5rem;
 }
 
-.voice-bar-header > .shortcut {
+.voice-bar-close {
   margin-left: auto;
   width: auto;
 }

@@ -202,7 +202,15 @@ function onKeyDown(event: KeyboardEvent) {
   ) {
     return
   }
-  if (event.code === 'Space' && model.isRecording.value) {
+  if (
+    (event.code === 'Space' ||
+      (event.code === 'Tab' &&
+        !event.shiftKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !event.metaKey)) &&
+    model.isRecording.value
+  ) {
     event.preventDefault()
   }
   keyPresses.press(event.code)
@@ -211,7 +219,9 @@ function onKeyDown(event: KeyboardEvent) {
 function onKeyUp(event: KeyboardEvent) {
   if (!keyPresses.release(event.code)) return
   if (
-    (event.code === 'Enter' || event.code === 'Space') &&
+    (event.code === 'Enter' ||
+      event.code === 'Space' ||
+      event.code === 'Tab') &&
     model.isRecording.value &&
     !event.defaultPrevented &&
     !event.ctrlKey &&

@@ -68,6 +68,19 @@ describe('ListenRecordingBar', () => {
     )
     expect(wrapper.text()).not.toContain(i18n.global.t('menu.speakNow'))
 
+    expect(
+      wrapper
+        .get('.listen-bar-title')
+        .element.nextElementSibling?.classList.contains('listen-bar-info')
+    ).toBe(true)
+    expect(wrapper.get('.listen-bar-close').attributes('aria-label')).toBe(
+      i18n.global.t('common.close')
+    )
+    expect(wrapper.get('.listen-bar-actions').text()).toContain('Tab')
+    expect(wrapper.get('.listen-bar-actions').text()).toContain(
+      i18n.global.t('menu.actions')
+    )
+
     // Selecting an application updates the waiting label dynamically
     const picker = wrapper.findComponent({ name: 'ListenSourcePicker' })
     picker.vm.$emit(

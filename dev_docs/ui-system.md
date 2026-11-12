@@ -335,3 +335,8 @@ offers it only for an original selection. Input, recording and result surfaces
 do not offer this scenario switch. Other actions preserves the source text and
 replaces the stack with the action menu, so Back cannot restore the old scenario.
 The action menu text is editable and its draft persists when returning from a step.
+
+System-audio recording keeps its privacy hint immediately after the title and
+the close cross at the right edge, matching voice input. Tab finalizes recording
+and opens transcript actions; Enter/Space retain their completion behavior.
+Shift+Tab and Tab from interactive controls keep normal focus navigation.

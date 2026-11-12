@@ -165,6 +165,36 @@ describe('ListenView', () => {
     wrapper.unmount()
   })
 
+  it('opens transcript actions with Tab while preserving Shift+Tab navigation', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        code: 'Tab',
+        shiftKey: true,
+        cancelable: true,
+      })
+    )
+    document.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'Tab', shiftKey: true })
+    )
+    await flushPromises()
+    expect(dictation.finishDictation).not.toHaveBeenCalled()
+    const event = new KeyboardEvent('keydown', {
+      code: 'Tab',
+      cancelable: true,
+    })
+    document.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(true)
+    document.dispatchEvent(new KeyboardEvent('keyup', { code: 'Tab' }))
+    await flushPromises()
+    expect(dictation.finishDictation).toHaveBeenCalledTimes(1)
+    expect(wrapper.get('.insert-menu-stub').attributes('data-text')).toBe(
+      'Voice message text'
+    )
+    wrapper.unmount()
+  })
+
   it('tells that nothing was heard and offers to retry', async () => {
     dictation.finishDictation.mockResolvedValue('')
     const wrapper = mountView()

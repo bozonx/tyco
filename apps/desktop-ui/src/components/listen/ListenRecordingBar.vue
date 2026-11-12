@@ -7,6 +7,13 @@
         <AppIcon icon="mdi:volume-high" />
         {{ t('listen.title') }}
       </span>
+      <InfoTooltip
+        class="listen-bar-info"
+        :text="t('listen.privacyHint')"
+        :aria-label="t('listen.privacyHintLabel')"
+        placement="top"
+        align="end"
+      />
       <ListenSourcePicker
         :source="model.source.value"
         :app-label="activeAppLabel"
@@ -22,21 +29,14 @@
         :disabled="isFinishing"
         @change="emit('language-change')"
       />
-      <InfoTooltip
-        class="listen-bar-info"
-        :text="t('listen.privacyHint')"
-        :aria-label="t('listen.privacyHintLabel')"
-        placement="top"
-        align="end"
-      />
-      <ShortcutButton
-        size="sm"
-        :keys="['Esc']"
+      <IconButton
+        class="listen-bar-close"
+        icon="mdi:close"
+        :label="t('common.close')"
+        :title="t('common.closeAllHint')"
         :disabled="isFinishing"
         @click="void model.close()"
-      >
-        {{ t('common.cancel') }}
-      </ShortcutButton>
+      />
     </div>
     <div
       v-if="notice"
@@ -82,6 +82,14 @@
       <div class="listen-bar-actions">
         <ShortcutButton
           size="sm"
+          :keys="['Tab']"
+          :disabled="isFinishing"
+          @click="void model.stop()"
+        >
+          {{ t('menu.actions') }}
+        </ShortcutButton>
+        <ShortcutButton
+          size="sm"
           :keys="stopKeys"
           variant="primary"
           :disabled="isFinishing"
@@ -104,6 +112,7 @@ import {
 } from '../../lib/listen/listen-model'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
+import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
@@ -188,7 +197,7 @@ const notice = computed(() => {
   max-height: 15rem;
 }
 
-.listen-bar-header > .shortcut {
+.listen-bar-close {
   margin-left: auto;
   width: auto;
 }
@@ -212,7 +221,7 @@ const notice = computed(() => {
 }
 
 .listen-bar-info {
-  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .listen-bar-notice {
