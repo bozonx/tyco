@@ -477,7 +477,6 @@
     "kindVoiceInput": "음성 입력",
     "kindVoiceTranscript": "원시 전사 텍스트",
     "loadFailed": "기록을 불러올 수 없습니다.",
-    "notSent": "전송되지 않음",
     "nothingFound": "결과 없음",
     "operationFailed": "기록 작업에 실패했습니다. 데이터는 변경되지 않았습니다.",
     "original": "원본",

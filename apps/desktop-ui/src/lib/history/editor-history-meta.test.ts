@@ -177,7 +177,7 @@ describe('getEditorHistoryNote', () => {
     })
   })
 
-  it('marks unapplied results in red as not sent', () => {
+  it('does not mark unapplied results', () => {
     expect(
       getEditorHistoryNote({
         kind: 'source',
@@ -185,10 +185,6 @@ describe('getEditorHistoryNote', () => {
         result: 'Hola',
         isResultApplied: false,
       })
-    ).toEqual({
-      labelKey: 'history.notSent',
-      tone: 'error',
-      icon: 'mdi:alert-circle-outline',
-    })
+    ).toBeUndefined()
   })
 })

@@ -477,7 +477,6 @@
     "kindVoiceInput": "音声入力",
     "kindVoiceTranscript": "音声文字起こし（未加工）",
     "loadFailed": "履歴を読み込めませんでした。",
-    "notSent": "未送信",
     "nothingFound": "見つかりませんでした",
     "operationFailed": "履歴の操作に失敗しました。データは変更されていません。",
     "original": "元のテキスト",

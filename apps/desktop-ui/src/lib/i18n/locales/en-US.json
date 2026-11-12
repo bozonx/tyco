@@ -477,7 +477,6 @@
     "kindVoiceInput": "Voice input",
     "kindVoiceTranscript": "Raw transcript",
     "loadFailed": "Could not load history.",
-    "notSent": "not sent",
     "nothingFound": "Nothing found",
     "operationFailed": "The history operation failed. Your data was not changed.",
     "original": "Original",

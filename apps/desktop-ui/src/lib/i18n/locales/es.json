@@ -477,7 +477,6 @@
     "kindVoiceInput": "Entrada de voz",
     "kindVoiceTranscript": "Transcripción sin procesar",
     "loadFailed": "No se pudo cargar el historial.",
-    "notSent": "no enviado",
     "nothingFound": "No se encontró nada",
     "operationFailed": "La operación del historial falló. Tus datos no se modificaron.",
     "original": "Original",

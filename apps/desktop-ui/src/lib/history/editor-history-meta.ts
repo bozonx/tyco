@@ -109,7 +109,7 @@ const FAILURE_LABELS: Record<EditorHistoryFailureKind, string> = {
 
 /**
  * Note and status indicator for an entry. Normally sent items have no
- * badge/checkmark. Failed, interrupted, or unsent items are marked in red.
+ * badge/checkmark. Failed or interrupted items are marked in red.
  */
 export function getEditorHistoryNote(
   item: Pick<EditorHistoryItem, 'kind' | 'operation' | 'result'> &
@@ -148,11 +148,6 @@ export function getEditorHistoryNote(
         tone: 'error',
         icon: 'mdi:alert-circle-outline',
       }
-    }
-    return {
-      labelKey: 'history.notSent',
-      tone: 'error',
-      icon: 'mdi:alert-circle-outline',
     }
   }
 
