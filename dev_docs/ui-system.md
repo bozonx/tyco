@@ -285,8 +285,8 @@ selection, independently of the prompt draft. Without a selection it is hidden.
 Completed plain answers expose actions even without proposed reply variants;
 when variants exist, actions use the selected variant.
 
-External dictation uses Shift+Space to finish into quick text input without
-correction or insertion. Explicit UI text travels as `quickInputText` in the
+External dictation keeps Tab to finish into the action menu. The recording
+surface has no separate edit-text action; text can be edited in the action menu. Explicit UI text travels as `quickInputText` in the
 activation snapshot, so transfer also works across windows; captured selections
 do not overwrite the quick-input draft. Reviewed voice commands expose Tab/actions for their
 editable text and restore the review when returning from the action menu.
@@ -324,3 +324,14 @@ reports the empty recognition in a toast. Existing chat input returns to editing
 when submission contains no new speech. An unchanged correction is a successful
 result; its status is shown in a toast rather than the result header. Empty
 correction responses are failures and must not replace the source text.
+
+## Overlay navigation
+
+Overlay headers separate Back (Esc) from the close cross (Shift+Esc). Escape
+returns one step and closes at the root. The cross closes the entire scenario.
+Directly opened translation, transformation, styling, favorites, chat prompts and
+voice commands offer Other actions without a shortcut. A root quick AI composer
+offers it only for an original selection. Input, recording and result surfaces
+do not offer this scenario switch. Other actions preserves the source text and
+replaces the stack with the action menu, so Back cannot restore the old scenario.
+The action menu text is editable and its draft persists when returning from a step.

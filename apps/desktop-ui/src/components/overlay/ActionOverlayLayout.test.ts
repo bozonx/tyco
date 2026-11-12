@@ -1,166 +1,91 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { h } from 'vue'
-
-import TextPreview from '../common/TextPreview.vue'
-import Diff from '../common/Diff.vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import {
   loadFakeDesktop,
   type TestDesktop,
 } from '../../test/install-fake-desktop'
 import ActionOverlayLayout from './ActionOverlayLayout.vue'
 
-const mocks = vi.hoisted(() => ({
-  currentModal: 'insert',
-  breadcrumbs: [] as string[],
-  closeAll: vi.fn(),
-  back: vi.fn(),
-  discardQuickInput: vi.fn(),
-}))
-
-vi.mock('../../stores/menu-modals', () => ({
-  MenuModals: { NONE: 'none', INSERT: 'insert', AI_TASK: 'ai-task' },
-  useMenuModalsStore: () => ({
-    currentModal: mocks.currentModal,
-    menuBreadcrumbs: mocks.breadcrumbs,
-    closeAll: mocks.closeAll,
-    back: mocks.back,
-    cancelPending: vi.fn(),
-  }),
-}))
-
-vi.mock('../../stores/quick-input', () => ({
-  useQuickInputStore: () => ({ discard: mocks.discardQuickInput }),
-}))
-
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-describe('ActionOverlayLayout', () => {
+describe('ActionOverlayLayout navigation', () => {
   let desktop: TestDesktop
-  const hideCalls = async () => {
-    await flushPromises()
-    return desktop.backend.callsOf('hide_window')
-  }
-
   beforeEach(async () => {
-    vi.clearAllMocks()
     desktop = await loadFakeDesktop({ mode: 'quickInput' }, 'quick')
     desktop.backend.handle('hide_window', () => undefined)
-    mocks.currentModal = 'insert'
-    mocks.breadcrumbs = []
   })
-
   afterEach(() => desktop.dispose())
-
-  it('renders title and Esc button in the header', () => {
-    const wrapper = mount(ActionOverlayLayout, {
-      props: { title: 'Test Title' },
+  const mountLayout = () =>
+    mount(ActionOverlayLayout, {
+      props: { title: 'Translate' },
+      global: { plugins: [desktop.pinia] },
     })
 
-    expect(wrapper.find('.action-overlay-title').text()).toBe('Test Title')
-    const escButton = wrapper.find('.action-overlay-esc')
-    expect(escButton.exists()).toBe(true)
-    expect(escButton.text()).toContain('Esc')
-    expect(escButton.text()).toContain('common.cancel')
-  })
-
-  it('shows back label when breadcrumbs exist', () => {
-    mocks.breadcrumbs = ['insert', 'preview']
-    const wrapper = mount(ActionOverlayLayout, {
-      props: { title: 'Test Title' },
-    })
-
-    expect(wrapper.find('.action-overlay-esc').text()).toContain('common.back')
-  })
-
-  it('hides Esc button when escVisible is false', () => {
-    const wrapper = mount(ActionOverlayLayout, {
-      props: { title: 'Test Title', escVisible: false },
-    })
-
+  it('offers close and other actions at a directly opened picker', async () => {
+    const menus = useMenuModalsStore()
+    menus.nextModal(MenuModals.TRANSLATE, { text: 'Source' })
+    const wrapper = mountLayout()
     expect(wrapper.find('.action-overlay-esc').exists()).toBe(false)
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
+    const other = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('menu.otherActions'))!
+    await other.trigger('click')
+    expect(menus.menuBreadcrumbs).toEqual([MenuModals.INSERT])
+    expect(menus.currentModalParams).toMatchObject({ text: 'Source' })
+    menus.back()
+    expect(menus.currentModal).toBe(MenuModals.NONE)
   })
 
-  it('triggers onEsc when clicked', async () => {
-    const onEsc = vi.fn()
+  it('switches a directly rendered quick surface to root actions', async () => {
+    const menus = useMenuModalsStore()
     const wrapper = mount(ActionOverlayLayout, {
-      props: { title: 'Test Title', onEsc },
+      props: { title: 'Translate', otherActionsText: 'Selection' },
+      global: { plugins: [desktop.pinia] },
     })
-
-    await wrapper.find('.action-overlay-esc').trigger('click')
-    expect(onEsc).toHaveBeenCalled()
-    expect(await hideCalls()).toEqual([])
+    const other = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('menu.otherActions'))!
+    await other.trigger('click')
+    expect(menus.menuBreadcrumbs).toEqual([MenuModals.INSERT])
+    expect(menus.currentModalParams).toMatchObject({ text: 'Selection' })
   })
 
-  it('triggers hideWindow when clicked in quick window without breadcrumbs', async () => {
-    const wrapper = mount(ActionOverlayLayout, {
-      props: { title: 'Test Title' },
-    })
-
-    await wrapper.find('.action-overlay-esc').trigger('click')
-    expect(mocks.closeAll).toHaveBeenCalled()
-    expect(mocks.discardQuickInput).toHaveBeenCalled()
-    expect(await hideCalls()).toHaveLength(1)
+  it('returns to the previous step and keeps a separate close button', async () => {
+    const menus = useMenuModalsStore()
+    menus.nextModal(MenuModals.INSERT, { text: 'Source' })
+    menus.nextModal(MenuModals.TRANSLATE, { text: 'Source' })
+    const wrapper = mountLayout()
+    expect(wrapper.text()).not.toContain('menu.otherActions')
+    await wrapper.get('.action-overlay-esc').trigger('click')
+    expect(menus.currentModal).toBe(MenuModals.INSERT)
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
   })
 
-  it('triggers hideWindow when only current modal is in breadcrumbs', async () => {
-    mocks.breadcrumbs = ['insert']
-    const wrapper = mount(ActionOverlayLayout, {
-      props: { title: 'Test Title' },
-    })
-
-    expect(wrapper.find('.action-overlay-esc').text()).toContain(
-      'common.cancel'
-    )
-    await wrapper.find('.action-overlay-esc').trigger('click')
-    expect(await hideCalls()).toHaveLength(1)
+  it('closes the complete scenario with the cross', async () => {
+    const menus = useMenuModalsStore()
+    menus.nextModal(MenuModals.INSERT, {})
+    menus.nextModal(MenuModals.TRANSLATE, {})
+    const wrapper = mountLayout()
+    await wrapper.get('.action-overlay-close').trigger('click')
+    await flushPromises()
+    expect(menus.menuBreadcrumbs).toEqual([])
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
   })
 
-  it('triggers closeAll and hides window when Esc button clicked with shiftKey', async () => {
-    mocks.breadcrumbs = ['insert', 'preview']
-    const wrapper = mount(ActionOverlayLayout, {
-      props: { title: 'Test Title' },
-    })
-
-    await wrapper
-      .find('.action-overlay-esc')
-      .trigger('click', { shiftKey: true })
-    expect(mocks.closeAll).toHaveBeenCalled()
-    expect(await hideCalls()).toHaveLength(1)
-    wrapper.unmount()
-  })
-
-  it('triggers closeAll and hides window on Shift+Escape keydown', async () => {
-    mocks.breadcrumbs = ['insert', 'preview']
-    const wrapper = mount(ActionOverlayLayout, {
-      props: { title: 'Test Title' },
-    })
-
+  it('closes the complete scenario with Shift+Escape', async () => {
+    const menus = useMenuModalsStore()
+    menus.nextModal(MenuModals.TRANSLATE, {})
+    mountLayout()
     window.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Escape', shiftKey: true })
     )
-    expect(mocks.closeAll).toHaveBeenCalled()
-    expect(await hideCalls()).toHaveLength(1)
-    wrapper.unmount()
-  })
-
-  it('provides a plain preview default while preserving explicit frames', () => {
-    const wrapper = mount(ActionOverlayLayout, {
-      slots: {
-        preview: () => [
-          h(TextPreview, { text: 'Embedded text' }),
-          h(Diff, { oldText: 'Old', newText: 'New' }),
-          h(TextPreview, { text: 'Explicit frame', appearance: 'framed' }),
-        ],
-      },
-    })
-    const previews = wrapper.findAllComponents(TextPreview)
-    expect(previews[0].classes()).toContain('is-plain')
-    expect(wrapper.getComponent(Diff).classes()).toContain('is-plain')
-    expect(previews[1].classes()).not.toContain('is-plain')
-    wrapper.unmount()
+    await flushPromises()
+    expect(menus.menuBreadcrumbs).toEqual([])
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
   })
 })

@@ -554,6 +554,7 @@
     "unknown": "Το αίτημα προς την ΤΝ απέτυχε"
   },
   "menu": {
+    "otherActions": "Άλλες ενέργειες",
     "actions": "Ενέργειες",
     "aiPromptRun": "Αποστολή",
     "aiRequest": "Αίτημα ΤΝ",
@@ -1459,7 +1460,6 @@
   },
   "write": {
     "alreadyCorrected": "Το κείμενο είναι ήδη διορθωμένο",
-    "cancel": "Ακύρωση",
     "correct": "Διόρθωση",
     "correctAndInsert": "Διόρθωση και εισαγωγή",
     "correctionFailed": "Δεν ήταν δυνατή η διόρθωση του κειμένου",

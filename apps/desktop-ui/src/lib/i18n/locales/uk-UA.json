@@ -554,6 +554,7 @@
     "unknown": "Помилка запиту до ШІ"
   },
   "menu": {
+    "otherActions": "Інші дії",
     "actions": "Дії",
     "aiPromptRun": "Надіслати",
     "aiRequest": "Запит до ШІ",
@@ -1459,7 +1460,6 @@
   },
   "write": {
     "alreadyCorrected": "Текст уже виправлено",
-    "cancel": "Скасувати",
     "correct": "Виправити",
     "correctAndInsert": "Виправити й вставити",
     "correctionFailed": "Не вдалося виправити текст",

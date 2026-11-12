@@ -613,9 +613,11 @@ describe('QuickAiRequestMenu', () => {
         attachment: { text: 'Context', source: 'selection' },
       })
     )
-    expect(wrapper.find('.action-overlay-esc').text()).not.toContain(
-      'chat.stop'
-    )
+    expect(
+      wrapper.find('.action-overlay-esc').exists()
+        ? wrapper.find('.action-overlay-esc').text()
+        : ''
+    ).not.toContain('chat.stop')
     wrapper.unmount()
   })
 
@@ -892,6 +894,7 @@ describe('QuickAiRequestMenu', () => {
 
     it('goes back in modal stack when voice is cancelled after opening in voice mode from action menu', async () => {
       const menuModals = useMenuModalsStore()
+      menuModals.nextModal(MenuModals.INSERT, { text: 'Source' })
       menuModals.nextModal(MenuModals.QUICK_AI_REQUEST, {
         text: 'Source',
         inputMode: 'voice',

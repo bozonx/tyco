@@ -554,6 +554,7 @@
     "unknown": "AI 请求失败"
   },
   "menu": {
+    "otherActions": "其他操作",
     "actions": "操作",
     "aiPromptRun": "发送",
     "aiRequest": "AI 请求",
@@ -1453,7 +1454,6 @@
   "window": { "clickToFocus": "点击以继续", "moveOverlay": "拖动以移动" },
   "write": {
     "alreadyCorrected": "文本已完成纠错",
-    "cancel": "取消",
     "correct": "纠错",
     "correctAndInsert": "纠错并插入",
     "correctionFailed": "无法纠错文本",

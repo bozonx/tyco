@@ -554,6 +554,7 @@
     "unknown": "La solicitud a la IA falló"
   },
   "menu": {
+    "otherActions": "Otras acciones",
     "actions": "Acciones",
     "aiPromptRun": "Enviar",
     "aiRequest": "Solicitud a la IA",
@@ -1462,7 +1463,6 @@
   },
   "write": {
     "alreadyCorrected": "El texto ya está corregido",
-    "cancel": "Cancelar",
     "correct": "Corregir",
     "correctAndInsert": "Corregir e insertar",
     "correctionFailed": "No se pudo corregir el texto",

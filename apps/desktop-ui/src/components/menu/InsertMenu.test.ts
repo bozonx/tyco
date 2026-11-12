@@ -58,6 +58,20 @@ describe('InsertMenu correction step', () => {
     mocks.editorPage = true
   })
 
+  it('uses edited text for actions and restores it after returning', async () => {
+    const menus = useMenuModalsStore()
+    menus.nextModal(MenuModals.INSERT, { text: 'Original' })
+    const wrapper = mountMenu({ text: 'Original' })
+    await wrapper.get('textarea').setValue('Edited')
+    expect(wrapper.findComponent(ShortcutList).props('text')).toBe('Edited')
+    menus.nextModal(MenuModals.TRANSLATE, { text: 'Edited' })
+    menus.back()
+    expect(menus.currentModalParams).toMatchObject({ text: 'Edited' })
+    await wrapper.get('textarea').setValue('')
+    expect(wrapper.find('textarea').exists()).toBe(true)
+    expect(wrapper.findComponent(ShortcutList).props('text')).toBe('')
+  })
+
   it('over the editor, only puts the correction back in place', async () => {
     const editor = useEditorInputStore()
     editor.setValue('Before Original text after', 'plain')

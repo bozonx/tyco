@@ -554,6 +554,7 @@
     "unknown": "AI zahtjev nije uspio"
   },
   "menu": {
+    "otherActions": "Druge radnje",
     "actions": "Radnje",
     "aiPromptRun": "Pošalji",
     "aiRequest": "AI zahtjev",
@@ -1462,7 +1463,6 @@
   },
   "write": {
     "alreadyCorrected": "Tekst je već ispravljen",
-    "cancel": "Odustani",
     "correct": "Ispravi",
     "correctAndInsert": "Ispravi i umetni",
     "correctionFailed": "Tekst se nije mogao ispraviti",

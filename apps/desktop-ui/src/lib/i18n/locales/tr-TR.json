@@ -554,6 +554,7 @@
     "unknown": "Yapay zekâ isteği başarısız oldu"
   },
   "menu": {
+    "otherActions": "Diğer işlemler",
     "actions": "Eylemler",
     "aiPromptRun": "Gönder",
     "aiRequest": "AI isteği",
@@ -1459,7 +1460,6 @@
   },
   "write": {
     "alreadyCorrected": "Metin zaten düzeltildi",
-    "cancel": "İptal",
     "correct": "Düzelt",
     "correctAndInsert": "Düzelt ve ekle",
     "correctionFailed": "Metin düzeltilemedi",

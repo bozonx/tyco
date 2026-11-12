@@ -554,6 +554,7 @@
     "unknown": "Zapytanie do AI nie powiodło się"
   },
   "menu": {
+    "otherActions": "Inne działania",
     "actions": "Akcje",
     "aiPromptRun": "Wyślij",
     "aiRequest": "Zapytanie AI",
@@ -1462,7 +1463,6 @@
   },
   "write": {
     "alreadyCorrected": "Tekst jest już poprawiony",
-    "cancel": "Anuluj",
     "correct": "Popraw",
     "correctAndInsert": "Popraw i wstaw",
     "correctionFailed": "Nie udało się poprawić tekstu",

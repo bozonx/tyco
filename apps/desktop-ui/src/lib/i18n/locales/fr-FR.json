@@ -554,6 +554,7 @@
     "unknown": "La requête à l’IA a échoué"
   },
   "menu": {
+    "otherActions": "Autres actions",
     "actions": "Actions",
     "aiPromptRun": "Envoyer",
     "aiRequest": "Requête IA",
@@ -1462,7 +1463,6 @@
   },
   "write": {
     "alreadyCorrected": "Le texte est déjà corrigé",
-    "cancel": "Annuler",
     "correct": "Corriger",
     "correctAndInsert": "Corriger et insérer",
     "correctionFailed": "Impossible de corriger le texte",

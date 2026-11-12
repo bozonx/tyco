@@ -1,7 +1,9 @@
 <template>
   <ActionOverlayLayout
+    :other-actions-text="props.text"
     :title="t('menu.translate')"
     :on-esc="isPickerMode ? closePicker : undefined"
+    :esc-mode="isPickerMode ? 'back' : 'auto'"
   >
     <template #preview>
       <TextPreview :text="props.text" />

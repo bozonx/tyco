@@ -554,6 +554,7 @@
     "unknown": "Požadavek na AI selhal"
   },
   "menu": {
+    "otherActions": "Další akce",
     "actions": "Akce",
     "aiPromptRun": "Odeslat",
     "aiRequest": "Požadavek na AI",
@@ -1456,7 +1457,6 @@
   },
   "write": {
     "alreadyCorrected": "Text je již opraven",
-    "cancel": "Zrušit",
     "correct": "Opravit",
     "correctAndInsert": "Opravit a vložit",
     "correctionFailed": "Text se nepodařilo opravit",

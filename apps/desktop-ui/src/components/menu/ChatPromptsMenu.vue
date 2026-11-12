@@ -1,5 +1,9 @@
 <template>
-  <ActionOverlayLayout :title="t('menu.chatPrompts')" :on-esc="close">
+  <ActionOverlayLayout
+    :other-actions-text="props.text"
+    :title="t('menu.chatPrompts')"
+    :on-esc="close"
+  >
     <template #preview>
       <ContextPreview
         v-if="props.text"

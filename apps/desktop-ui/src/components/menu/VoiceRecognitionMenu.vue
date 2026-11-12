@@ -537,14 +537,13 @@ function handleKeyUp(event: KeyboardEvent) {
     return
 
   if (event.shiftKey && event.code === 'Space') {
+    if (props.finishBehavior === 'insertIntoTarget') return
     const intent =
-      props.finishBehavior === 'insertIntoTarget'
-        ? 'edit'
-        : props.finishBehavior === 'submitToChat'
-          ? 'insert'
-          : props.chat
-            ? 'submit'
-            : undefined
+      props.finishBehavior === 'submitToChat'
+        ? 'insert'
+        : props.chat
+          ? 'submit'
+          : undefined
     if (
       intent &&
       (props.finishBehavior !== 'prompt' ||

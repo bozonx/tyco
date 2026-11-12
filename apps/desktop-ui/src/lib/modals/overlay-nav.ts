@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 
-import { MenuModals } from './menu-modals-model'
+import type { MenuModals } from './menu-modals-model'
 
 export interface OverlayNavDependencies {
   currentModal: () => MenuModals
@@ -28,28 +28,7 @@ export function createOverlayNavModel(
       return opts.escMode
     }
 
-    if (deps.canGoBack()) {
-      return 'back'
-    }
-
-    const modal = deps.currentModal()
-    if (modal === MenuModals.NONE) {
-      return 'close'
-    }
-
-    if (
-      modal === MenuModals.TRANSLATE ||
-      modal === MenuModals.ACTION_SELECT ||
-      modal === MenuModals.QUICK_AI_REQUEST ||
-      modal === MenuModals.TRANSFORMATION ||
-      modal === MenuModals.STYLING ||
-      modal === MenuModals.FAVORITES ||
-      modal === MenuModals.CHAT_PROMPTS
-    ) {
-      return 'back'
-    }
-
-    return 'close'
+    return deps.canGoBack() ? 'back' : 'close'
   })
 
   const escLabel = computed<string>(() => {

@@ -42,6 +42,22 @@ describe('VoiceRecordingActions', () => {
     expect(wrapper.find('.is-primary').text()).toContain('To prompt input')
   })
 
+  it('keeps Tab actions without a separate edit-text action for dictation', async () => {
+    const intents: unknown[] = []
+    const wrapper = mountActions({
+      finishBehavior: 'insertIntoTarget',
+      finish: async (intent: unknown) => {
+        intents.push(intent)
+      },
+    })
+    const buttons = wrapper.findAll('.shortcut')
+    expect(buttons).toHaveLength(2)
+    expect(buttons[0]?.find('kbd').text()).toBe('Tab')
+    expect(wrapper.text()).not.toContain('Shift')
+    await buttons[0]!.trigger('click')
+    expect(intents).toEqual(['next'])
+  })
+
   it('adds the hotkey that opened the input to the primary button', () => {
     for (const finishBehavior of ['insertIntoTarget', 'submitToChat']) {
       expect(

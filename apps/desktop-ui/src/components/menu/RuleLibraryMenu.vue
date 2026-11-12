@@ -1,5 +1,8 @@
 <template>
-  <ActionOverlayLayout :title="t(props.kind.titleKey)">
+  <ActionOverlayLayout
+    :other-actions-text="props.text"
+    :title="t(props.kind.titleKey)"
+  >
     <template #preview>
       <TextPreview :text="props.text" />
     </template>

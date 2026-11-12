@@ -12,7 +12,7 @@
         size="sm"
         :disabled="isInputBlocked || model.isGenerating.value || isApplying"
         @click="openSelectionActions"
-        >{{ t('menu.actions') }}</Button
+        >{{ t('menu.otherActions') }}</Button
       >
     </template>
     <template #preview>
@@ -449,13 +449,14 @@ const resultActionText = computed(
 )
 
 const canReturnToPrevious = computed(
-  () => menuModalsStore.currentModal === MenuModals.QUICK_AI_REQUEST
+  () => menuModalsStore.menuBreadcrumbs.length > 1
 )
 const canOpenSelectionActions = computed(
   () =>
-    isQuickWindow && !canReturnToPrevious.value && Boolean(props.text.trim())
+    !canReturnToPrevious.value &&
+    Boolean(props.text.trim()) &&
+    !isResultVisible.value
 )
-
 function openSelectionActions() {
   if (
     !canOpenSelectionActions.value ||
@@ -464,10 +465,9 @@ function openSelectionActions() {
     isApplying.value
   )
     return
-  menuModalsStore.nextModal(MenuModals.INSERT, {
-    text: props.text,
-    escMode: 'back',
-  })
+  const text = props.text
+  menuModalsStore.cancelAndCloseAll()
+  menuModalsStore.nextModal(MenuModals.INSERT, { text })
 }
 
 function openNextStep() {

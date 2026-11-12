@@ -14,15 +14,32 @@
         </div>
 
         <button
-          v-if="escVisible"
+          v-if="escVisible && (resolvedEscMode === 'back' || props.escLabel)"
           type="button"
           class="action-overlay-esc"
-          :title="escTitle"
+          :title="escLabel"
           @click="onEscClick"
         >
+          <AppIcon icon="mdi:arrow-left" size="sm" />
           <KeyboardKey>Esc</KeyboardKey>
           <span>{{ escLabel }}</span>
         </button>
+        <Button
+          v-if="canOpenOtherActions"
+          size="sm"
+          variant="ghost"
+          @click="openOtherActions"
+        >
+          {{ t('menu.otherActions') }}
+        </Button>
+        <IconButton
+          v-if="escVisible"
+          class="action-overlay-close"
+          icon="mdi:close"
+          :label="t('common.close')"
+          :title="escTitle"
+          @click="handleCloseAll"
+        />
       </div>
 
       <div class="action-overlay-preview-box">
@@ -40,16 +57,22 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, provide } from 'vue'
+import { computed, onMounted, onUnmounted, provide } from 'vue'
 
+import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
 import { previewAppearanceKey } from '../../lib/ui/preview-context'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import AppIcon from '../common/AppIcon.vue'
+import Button from '../common/Button.vue'
+import IconButton from '../common/IconButton.vue'
 import KeyboardKey from '../common/KeyboardKey.vue'
 
 provide(previewAppearanceKey, 'plain')
 
 const props = withDefaults(
   defineProps<{
+    otherActionsText?: string
     title?: string
     escVisible?: boolean
     escMode?: 'close' | 'back' | 'auto'
@@ -57,6 +80,7 @@ const props = withDefaults(
     onEsc?: () => void
   }>(),
   {
+    otherActionsText: undefined,
     title: undefined,
     escVisible: true,
     escMode: 'auto',
@@ -65,11 +89,37 @@ const props = withDefaults(
   }
 )
 
-const { escLabel, escTitle, handleEsc, handleCloseAll } = useOverlayNav(() => ({
-  escMode: props.escMode,
-  escLabel: props.escLabel,
-  onEsc: props.onEsc,
-}))
+const { resolvedEscMode, escLabel, escTitle, handleEsc, handleCloseAll } =
+  useOverlayNav(() => ({
+    escMode: props.escMode,
+    escLabel: props.escLabel,
+    onEsc: props.onEsc,
+  }))
+
+const { t } = useI18n()
+const menuModalsStore = useMenuModalsStore()
+const otherActionModals = new Set([
+  MenuModals.TRANSLATE,
+  MenuModals.TRANSFORMATION,
+  MenuModals.STYLING,
+  MenuModals.FAVORITES,
+  MenuModals.CHAT_PROMPTS,
+  MenuModals.VOICE_COMMANDS,
+])
+const canOpenOtherActions = computed(
+  () =>
+    (menuModalsStore.menuBreadcrumbs.length === 1 &&
+      otherActionModals.has(menuModalsStore.currentModal)) ||
+    (menuModalsStore.menuBreadcrumbs.length === 0 &&
+      props.otherActionsText !== undefined)
+)
+function openOtherActions() {
+  const params = menuModalsStore.currentModalParams
+  const text =
+    props.otherActionsText ?? ('text' in params ? params.text : undefined)
+  menuModalsStore.cancelAndCloseAll()
+  menuModalsStore.nextModal(MenuModals.INSERT, { text })
+}
 
 function onEscClick(event: MouseEvent) {
   if (event.shiftKey) {

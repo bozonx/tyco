@@ -81,14 +81,6 @@
           {{ t('menu.actions') }}
         </ShortcutButton>
         <ShortcutButton
-          v-if="finishBehavior === 'insertIntoTarget'"
-          :size="compact ? 'sm' : 'md'"
-          :keys="['Shift', 'Space']"
-          :disabled="isFinishing"
-          @click="() => finish('edit')"
-          >{{ t('menu.editText') }}</ShortcutButton
-        >
-        <ShortcutButton
           :size="compact ? 'sm' : 'md'"
           :keys="primaryKeys"
           variant="primary"

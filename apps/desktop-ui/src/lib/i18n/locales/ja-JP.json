@@ -554,6 +554,7 @@
     "unknown": "AIリクエストに失敗しました"
   },
   "menu": {
+    "otherActions": "その他のアクション",
     "actions": "アクション",
     "aiPromptRun": "送信",
     "aiRequest": "AIリクエスト",
@@ -1459,7 +1460,6 @@
   },
   "write": {
     "alreadyCorrected": "テキストはすでに修正済みです",
-    "cancel": "キャンセル",
     "correct": "校正",
     "correctAndInsert": "校正して挿入",
     "correctionFailed": "テキストを校正できませんでした",

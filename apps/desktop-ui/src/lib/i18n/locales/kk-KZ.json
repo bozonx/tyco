@@ -554,6 +554,7 @@
     "unknown": "ЖИ сұрауы сәтсіз аяқталды"
   },
   "menu": {
+    "otherActions": "Басқа әрекеттер",
     "actions": "Әрекеттер",
     "aiPromptRun": "Жіберу",
     "aiRequest": "ЖИ сұрауы",
@@ -1459,7 +1460,6 @@
   },
   "write": {
     "alreadyCorrected": "Мәтін бұрыннан түзетілген",
-    "cancel": "Бас тарту",
     "correct": "Түзету",
     "correctAndInsert": "Түзетіп, кірістіру",
     "correctionFailed": "Мәтінді түзету мүмкін болмады",

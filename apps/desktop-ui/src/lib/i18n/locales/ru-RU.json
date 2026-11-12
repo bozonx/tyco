@@ -554,6 +554,7 @@
     "unknown": "Запрос к AI не удался"
   },
   "menu": {
+    "otherActions": "Другие действия",
     "actions": "Действия",
     "aiPromptRun": "Отправить",
     "aiRequest": "Запрос к AI",
@@ -1459,7 +1460,6 @@
   },
   "write": {
     "alreadyCorrected": "Текст уже корректирован",
-    "cancel": "Отмена",
     "correct": "Исправить",
     "correctAndInsert": "Исправить и вставить",
     "correctionFailed": "Не удалось исправить текст",

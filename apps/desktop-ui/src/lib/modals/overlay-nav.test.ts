@@ -62,7 +62,7 @@ describe('createOverlayNavModel', () => {
     expect(deps.hideWindow).not.toHaveBeenCalled()
   })
 
-  it('resolves to back for intermediate modals even without breadcrumbs', () => {
+  it('closes directly opened modals without a previous step', () => {
     const intermediateModals = [
       MenuModals.TRANSLATE,
       MenuModals.ACTION_SELECT,
@@ -79,8 +79,8 @@ describe('createOverlayNavModel', () => {
       })
       const nav = createOverlayNavModel(deps)
 
-      expect(nav.resolvedEscMode.value).toBe('back')
-      expect(nav.escLabel.value).toBe('common.back')
+      expect(nav.resolvedEscMode.value).toBe('close')
+      expect(nav.escLabel.value).toBe('common.cancel')
     }
   })
 

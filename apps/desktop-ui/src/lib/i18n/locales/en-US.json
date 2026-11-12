@@ -554,6 +554,7 @@
     "unknown": "The AI request failed"
   },
   "menu": {
+    "otherActions": "Other actions",
     "actions": "Actions",
     "aiPromptRun": "Send",
     "aiRequest": "AI request",
@@ -1462,7 +1463,6 @@
   },
   "write": {
     "alreadyCorrected": "Text is already corrected",
-    "cancel": "Cancel",
     "correct": "Correct",
     "correctAndInsert": "Correct and insert",
     "correctionFailed": "Could not correct the text",

@@ -25,6 +25,14 @@
       :old-text="props.oldText"
       :new-text="props.text"
       :mode="props.diffMode"
+      :editable="editable"
+      @update:new-text="emit('update:text', $event)"
+    />
+    <ResultTextEditor
+      v-else-if="editable"
+      :model-value="props.text"
+      :label="t('menu.editText')"
+      @update:model-value="emit('update:text', $event)"
     />
     <TextPreview v-else :text="props.text" />
 
@@ -76,10 +84,12 @@ import Button from '../common/Button.vue'
 import CopyButton from '../common/CopyButton.vue'
 import Diff from '../common/Diff.vue'
 import IconButton from '../common/IconButton.vue'
+import ResultTextEditor from '../common/ResultTextEditor.vue'
 import TextPreview from '../common/TextPreview.vue'
 
 const props = withDefaults(
   defineProps<{
+    editable?: boolean
     text?: string
     oldText?: string
     diffMode?: DiffViewMode
@@ -89,6 +99,7 @@ const props = withDefaults(
     allowDisable?: boolean
   }>(),
   {
+    editable: false,
     text: '',
     oldText: '',
     diffMode: 'split',
@@ -101,6 +112,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'update:disabled', value: boolean): void
+  (e: 'update:text', value: string): void
   (e: 'remove'): void
   (e: 'restore'): void
 }>()

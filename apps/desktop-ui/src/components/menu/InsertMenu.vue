@@ -8,13 +8,11 @@
     </template>
 
     <template #preview>
-      <div
-        v-if="actionMenuStore.takesText && (props.oldText || props.text)"
-        class="preview-area"
-      >
+      <div v-if="actionMenuStore.takesText" class="preview-area">
         <ContextPreview
           v-model:disabled="isContextDisabled"
-          :text="props.text"
+          v-model:text="draftText"
+          :editable="!props.correction"
           :old-text="props.oldText"
           :diff-mode="diffMode"
           :allow-disable="props.allowRemoveContext"
@@ -100,6 +98,19 @@ const props = withDefaults(defineProps<InsertMenuParams>(), {
   insertOnly: false,
 })
 
+const draftStepId = useMenuModalsStore().currentStepId
+const draftText = ref(props.text)
+watch(
+  () => props.text,
+  (text) => {
+    draftText.value = text
+  }
+)
+watch(draftText, (text) => {
+  const id = draftStepId
+  if (id !== undefined)
+    menuModalsStore.updateStep(id, MenuModals.INSERT, { text })
+})
 const desktopStore = useDesktopStore()
 const actionMenuStore = useActionMenuStore()
 const menuModalsStore = useMenuModalsStore()
@@ -183,7 +194,7 @@ useViewModeArrowKeys((step) => {
 const activeActionText = computed(() => {
   if (isContextDisabled.value) return ''
   if (!actionMenuStore.takesText) return ''
-  return props.text
+  return draftText.value
 })
 
 const activeSourceText = computed(() => {

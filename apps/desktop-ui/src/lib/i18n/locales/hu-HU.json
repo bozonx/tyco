@@ -554,6 +554,7 @@
     "unknown": "Az MI-kérés sikertelen"
   },
   "menu": {
+    "otherActions": "Más műveletek",
     "actions": "Műveletek",
     "aiPromptRun": "Küldés",
     "aiRequest": "MI-kérés",
@@ -1459,7 +1460,6 @@
   },
   "write": {
     "alreadyCorrected": "A szöveg már javítva van",
-    "cancel": "Mégse",
     "correct": "Javítás",
     "correctAndInsert": "Javítás és beillesztés",
     "correctionFailed": "A szöveget nem sikerült kijavítani",

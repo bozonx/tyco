@@ -554,6 +554,7 @@
     "unknown": "AI მოთხოვნა ვერ შესრულდა"
   },
   "menu": {
+    "otherActions": "სხვა მოქმედებები",
     "actions": "მოქმედებები",
     "aiPromptRun": "გაგზავნა",
     "aiRequest": "AI მოთხოვნა",
@@ -1459,7 +1460,6 @@
   },
   "write": {
     "alreadyCorrected": "ტექსტი უკვე შესწორებულია",
-    "cancel": "გაუქმება",
     "correct": "შესწორება",
     "correctAndInsert": "შესწორება და ჩასმა",
     "correctionFailed": "ტექსტის შესწორება ვერ მოხერხდა",

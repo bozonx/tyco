@@ -1,6 +1,10 @@
 <template>
   <ContentPadding>
-    <ActionOverlayLayout :title="t('voiceCommands.title')" :on-esc="close">
+    <ActionOverlayLayout
+      :other-actions-text="contextText"
+      :title="t('voiceCommands.title')"
+      :on-esc="close"
+    >
       <template #header-extra>
         <SttLanguagePicker
           placement="bottom"

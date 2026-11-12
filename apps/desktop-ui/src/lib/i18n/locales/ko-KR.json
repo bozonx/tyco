@@ -554,6 +554,7 @@
     "unknown": "AI 요청이 실패했습니다"
   },
   "menu": {
+    "otherActions": "다른 작업",
     "actions": "작업",
     "aiPromptRun": "보내기",
     "aiRequest": "AI 요청",
@@ -1456,7 +1457,6 @@
   },
   "write": {
     "alreadyCorrected": "텍스트가 이미 교정되었습니다",
-    "cancel": "취소",
     "correct": "교정",
     "correctAndInsert": "교정 후 삽입",
     "correctionFailed": "텍스트를 교정할 수 없습니다",
