@@ -347,6 +347,7 @@
     "staleRevision": "ფაილი შეიცვალა სხვა მოწყობილობაზე ან TyCo-ს გარეთ"
   },
   "diff": {
+    "resetResult": "შედეგის აღდგენა",
     "modeOriginal": "მხოლოდ ორიგინალი",
     "modeResult": "მხოლოდ შედეგი",
     "modeSplit": "გვერდიგვერდ",

@@ -347,6 +347,7 @@
     "staleRevision": "다른 기기나 TyCo 밖에서 파일이 변경되었습니다"
   },
   "diff": {
+    "resetResult": "결과 초기화",
     "modeOriginal": "원본만",
     "modeResult": "결과만",
     "modeSplit": "나란히 보기",

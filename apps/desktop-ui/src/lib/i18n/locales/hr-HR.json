@@ -347,6 +347,7 @@
     "staleRevision": "Datoteka je promijenjena na drugom uređaju ili izvan TyCo-a"
   },
   "diff": {
+    "resetResult": "Vrati rezultat",
     "modeOriginal": "Samo izvornik",
     "modeResult": "Samo rezultat",
     "modeSplit": "Jedno uz drugo",

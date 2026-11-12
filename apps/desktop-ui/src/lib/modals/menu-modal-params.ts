@@ -135,7 +135,7 @@ export interface DiffMenuParams {
   oldText: string
   newText: string
   /** Explicit replacement after reviewing a conflicting editor transfer. */
-  replaceEditor?: () => void
+  replaceEditor?: (text?: string) => void
 }
 export interface PreviewMenuParams {
   text: string

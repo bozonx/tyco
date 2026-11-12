@@ -347,6 +347,7 @@
     "staleRevision": "Файл змінено на іншому пристрої або поза TyCo"
   },
   "diff": {
+    "resetResult": "Відновити результат",
     "modeOriginal": "Лише оригінал",
     "modeResult": "Лише результат",
     "modeSplit": "Поруч",

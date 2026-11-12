@@ -295,3 +295,13 @@ The finalized text is handed to the next activation and prepended to its live
 transcript and final result. A failed switch keeps text in the source's result
 step; a failed destination start keeps the carried text actionable. Handoffs are
 single-use and scoped to the destination mode and activation ID.
+
+## Result review editing
+
+`DiffMenu` owns a result draft shared by all view modes and result actions.
+Split and result views allow editing; original and unified views remain read-only.
+Reset restores the incoming result. `Diff` stays read-only unless `editable` is
+set. `DiffResultEditor` layers diff backgrounds behind a plain text control so
+typing preserves native selection, undo and multiline input. Keyboard events
+stay inside the control while editing. Conflict replacement receives the reviewed
+draft and still checks the editor snapshot before applying it.

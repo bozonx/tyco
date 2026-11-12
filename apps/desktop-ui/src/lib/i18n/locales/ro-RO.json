@@ -347,6 +347,7 @@
     "staleRevision": "Fișierul a fost modificat pe alt dispozitiv sau în afara TyCo"
   },
   "diff": {
+    "resetResult": "Resetează rezultatul",
     "modeOriginal": "Doar original",
     "modeResult": "Doar rezultatul",
     "modeSplit": "Alăturat",

@@ -347,6 +347,7 @@
     "staleRevision": "文件已在其他设备上或 TyCo 之外被更改"
   },
   "diff": {
+    "resetResult": "重置结果",
     "modeOriginal": "仅原始内容",
     "modeResult": "仅结果",
     "modeSplit": "双栏对照",

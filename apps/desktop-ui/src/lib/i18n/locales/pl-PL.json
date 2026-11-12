@@ -347,6 +347,7 @@
     "staleRevision": "Plik zmieniono na innym urządzeniu lub poza TyCo"
   },
   "diff": {
+    "resetResult": "Przywróć wynik",
     "modeOriginal": "Tylko oryginał",
     "modeResult": "Tylko wynik",
     "modeSplit": "Obok siebie",

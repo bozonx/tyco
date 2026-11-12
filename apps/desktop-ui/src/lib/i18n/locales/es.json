@@ -347,6 +347,7 @@
     "staleRevision": "El archivo se cambió en otro dispositivo o fuera de TyCo"
   },
   "diff": {
+    "resetResult": "Restablecer resultado",
     "modeOriginal": "Solo original",
     "modeResult": "Solo el resultado",
     "modeSplit": "Lado a lado",

@@ -17,8 +17,10 @@ export function useEditorNavigation() {
     const stepId = menuModalsStore.nextModal(MenuModals.DIFF, {
       oldText: snapshot.value,
       newText: text,
-      replaceEditor: () => {
-        if (!editorInputStore.applySnapshotEdit(snapshot, text, 'document')) {
+      replaceEditor: (resultText = text) => {
+        if (
+          !editorInputStore.applySnapshotEdit(snapshot, resultText, 'document')
+        ) {
           toastKey('toast.textTransformStale', 'warn')
           snapshot = editorInputStore.getSnapshot()
           menuModalsStore.updateStep(stepId, MenuModals.DIFF, {

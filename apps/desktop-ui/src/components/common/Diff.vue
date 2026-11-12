@@ -12,7 +12,14 @@
 
     <!-- Mode: Clean Result -->
     <div v-else-if="effectiveMode === 'result'" class="diff-result-view">
-      <div class="diff-text-block">
+      <DiffResultEditor
+        v-if="editable"
+        :text="newText"
+        :label="t('diff.modified')"
+        :parts="[]"
+        @update:text="emit('update:newText', $event)"
+      />
+      <div v-else class="diff-text-block">
         {{ props.newText }}
       </div>
     </div>
@@ -26,7 +33,7 @@
 
     <!-- Mode: Split (Side by Side) -->
     <div v-else-if="effectiveMode === 'split'" class="diff-split-view">
-      <div v-if="!hasDiff" class="no-diff">
+      <div v-if="!hasDiff && !editable" class="no-diff">
         {{ t('diff.noDiff') }}
       </div>
       <SplitPanePreview
@@ -34,6 +41,7 @@
         class="diff-panes"
         :left-title="t('diff.original')"
         :right-title="t('diff.modified')"
+        :flush-right="editable"
       >
         <template #left>
           <span
@@ -44,8 +52,15 @@
           >
         </template>
         <template #right>
+          <DiffResultEditor
+            v-if="editable"
+            :text="newText"
+            :label="t('diff.modified')"
+            :parts="splitResult.newParts"
+            @update:text="emit('update:newText', $event)"
+          />
           <span
-            v-for="(part, index) in splitResult.newParts"
+            v-for="(part, index) in editable ? [] : splitResult.newParts"
             :key="`new-${index}`"
             :class="part.added ? 'added' : 'unchanged'"
             >{{ part.value }}</span
@@ -88,14 +103,18 @@ import {
   type PreviewAppearance,
   previewAppearanceKey,
 } from '../../lib/ui/preview-context'
+import DiffResultEditor from './DiffResultEditor.vue'
 import SplitPanePreview from './SplitPanePreview.vue'
 
 const props = defineProps<{
+  editable?: boolean
   oldText: string
   newText: string
   appearance?: PreviewAppearance
   mode?: DiffViewMode
 }>()
+
+const emit = defineEmits<{ (e: 'update:newText', value: string): void }>()
 
 const inheritedAppearance = inject(previewAppearanceKey, 'framed')
 const resolvedAppearance = computed(

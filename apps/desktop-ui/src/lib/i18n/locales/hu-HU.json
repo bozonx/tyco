@@ -347,6 +347,7 @@
     "staleRevision": "A fájl egy másik eszközön vagy a TyCo-n kívül módosult"
   },
   "diff": {
+    "resetResult": "Eredmény visszaállítása",
     "modeOriginal": "Csak eredeti",
     "modeResult": "Csak az eredmény",
     "modeSplit": "Egymás mellett",

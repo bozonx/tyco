@@ -347,6 +347,7 @@
     "staleRevision": "Dosya başka bir cihazda veya TyCo dışında değiştirildi"
   },
   "diff": {
+    "resetResult": "Sonucu sıfırla",
     "modeOriginal": "Yalnızca orijinal",
     "modeResult": "Yalnızca sonuç",
     "modeSplit": "İki sütun",

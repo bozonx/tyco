@@ -9,6 +9,24 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 describe('Diff', () => {
+  it('edits the result in split and result modes, including identical texts', async () => {
+    const wrapper = mount(Diff, {
+      props: {
+        oldText: 'Same',
+        newText: 'Same',
+        mode: 'split',
+        editable: true,
+      },
+    })
+    await wrapper.get('textarea').setValue('Edited\ntext')
+    expect(wrapper.emitted('update:newText')?.[0]).toEqual(['Edited\ntext'])
+    await wrapper.setProps({ newText: 'Edited\ntext', mode: 'result' })
+    expect(wrapper.get('textarea').element.value).toBe('Edited\ntext')
+    await wrapper.setProps({ mode: 'unified' })
+    expect(wrapper.find('textarea').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Edited')
+  })
+
   it('renders unified diff with added and removed classes', () => {
     const wrapper = mount(Diff, {
       props: {

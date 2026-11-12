@@ -347,6 +347,7 @@
     "staleRevision": "Файл басқа құрылғыда немесе TyCo-дан тыс өзгертілген"
   },
   "diff": {
+    "resetResult": "Нәтижені қалпына келтіру",
     "modeOriginal": "Тек түпнұсқа",
     "modeResult": "Тек нәтиже",
     "modeSplit": "Қатар",
