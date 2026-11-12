@@ -301,7 +301,11 @@ single-use and scoped to the destination mode and activation ID.
 `DiffMenu` owns a result draft shared by all view modes and result actions.
 Split and result views allow editing; original and unified views remain read-only.
 Reset restores the incoming result. `Diff` stays read-only unless `editable` is
-set. `DiffResultEditor` layers diff backgrounds behind a plain text control so
+set. `ResultTextEditor` layers optional diff backgrounds behind a plain text control so
 typing preserves native selection, undo and multiline input. Keyboard events
 stay inside the control while editing. Conflict replacement receives the reviewed
 draft and still checks the editor snapshot before applying it.
+
+Translation review (`PreviewMenu`) and `ParallelTextPreview` use the same
+`ResultTextEditor` as diff review. Both review screens reset their draft to the
+incoming result and pass the current draft to subsequent actions.

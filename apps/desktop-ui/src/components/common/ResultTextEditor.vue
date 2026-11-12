@@ -1,6 +1,11 @@
 <template>
   <div class="result-editor">
-    <div ref="highlight" class="highlight" aria-hidden="true">
+    <div
+      v-if="parts?.length"
+      ref="highlight"
+      class="highlight"
+      aria-hidden="true"
+    >
       <span
         v-for="(part, index) in parts"
         :key="index"
@@ -11,10 +16,10 @@
     <FieldTextArea
       class="editor"
       appearance="plain"
-      :model-value="text"
+      :model-value="modelValue"
       :aria-label="label"
       spellcheck="false"
-      @update:model-value="emit('update:text', $event)"
+      @update:model-value="emit('update:modelValue', $event)"
       @scroll="syncScroll"
       @keydown.stop
       @keyup.stop
@@ -27,8 +32,8 @@ import { ref } from 'vue'
 import type { DiffPart } from '../../lib/diff/diff-model'
 import FieldTextArea from './FieldTextArea.vue'
 
-defineProps<{ text: string; label: string; parts: DiffPart[] }>()
-const emit = defineEmits<{ (e: 'update:text', value: string): void }>()
+defineProps<{ modelValue: string; label: string; parts?: DiffPart[] }>()
+const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 const highlight = ref<HTMLElement | null>(null)
 function syncScroll(event: Event) {
   if (!highlight.value) return

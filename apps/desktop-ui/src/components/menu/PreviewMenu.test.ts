@@ -151,6 +151,16 @@ describe('PreviewMenu', () => {
     expect(wrapper.findComponent({ name: 'ShortcutList' }).props('text')).toBe(
       'Edited in split'
     )
+    const reset = wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'diff.resetResult')
+    expect(reset).toBeDefined()
+    await reset!.trigger('click')
+    expect(wrapper.get('textarea').element.value).toBe('Translation text')
+    expect(wrapper.findComponent({ name: 'ShortcutList' }).props('text')).toBe(
+      'Translation text'
+    )
+    expect(wrapper.text()).not.toContain('diff.resetResult')
   })
 
   it('configures Escape to follow the navigation stack', () => {

@@ -12,12 +12,11 @@
 
     <!-- Mode: Clean Result -->
     <div v-else-if="effectiveMode === 'result'" class="diff-result-view">
-      <DiffResultEditor
+      <ResultTextEditor
         v-if="editable"
-        :text="newText"
+        :model-value="newText"
         :label="t('diff.modified')"
-        :parts="[]"
-        @update:text="emit('update:newText', $event)"
+        @update:model-value="emit('update:newText', $event)"
       />
       <div v-else class="diff-text-block">
         {{ props.newText }}
@@ -52,12 +51,12 @@
           >
         </template>
         <template #right>
-          <DiffResultEditor
+          <ResultTextEditor
             v-if="editable"
-            :text="newText"
+            :model-value="newText"
             :label="t('diff.modified')"
             :parts="splitResult.newParts"
-            @update:text="emit('update:newText', $event)"
+            @update:model-value="emit('update:newText', $event)"
           />
           <span
             v-for="(part, index) in editable ? [] : splitResult.newParts"
@@ -103,7 +102,7 @@ import {
   type PreviewAppearance,
   previewAppearanceKey,
 } from '../../lib/ui/preview-context'
-import DiffResultEditor from './DiffResultEditor.vue'
+import ResultTextEditor from './ResultTextEditor.vue'
 import SplitPanePreview from './SplitPanePreview.vue'
 
 const props = defineProps<{

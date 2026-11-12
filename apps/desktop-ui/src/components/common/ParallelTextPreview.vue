@@ -8,13 +8,10 @@
       ><div class="column-text selectable">{{ leftText }}</div></template
     >
     <template #right>
-      <FieldTextArea
+      <ResultTextEditor
         v-if="editable"
-        class="column-textarea"
-        appearance="plain"
         :model-value="rightText"
-        :aria-label="rightTitle || t('diff.modified')"
-        :placeholder="t('diff.modified')"
+        :label="rightTitle || t('diff.modified')"
         @update:model-value="emit('update:rightText', $event)"
       />
       <div v-else class="column-text readonly-text selectable">
@@ -25,7 +22,7 @@
 </template>
 <script setup lang="ts">
 import { useI18n } from '../../composables/use-i18n'
-import FieldTextArea from './FieldTextArea.vue'
+import ResultTextEditor from './ResultTextEditor.vue'
 import SplitPanePreview from './SplitPanePreview.vue'
 
 withDefaults(
@@ -46,22 +43,6 @@ const { t } = useI18n()
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--color-base-content);
-}
-
-.column-textarea {
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  border: none;
-  background: transparent;
-  color: var(--color-base-content);
-  font-family: var(--font-sans);
-  font-size: var(--preview-font-size);
-  line-height: var(--preview-line-height);
-  padding: var(--space-sm) var(--space-md);
-  box-sizing: border-box;
-  resize: none;
 }
 
 .readonly-text {
