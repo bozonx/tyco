@@ -348,7 +348,6 @@
   },
   "diff": {
     "resetResult": "결과 초기화",
-    "modeOriginal": "원본만",
     "modeResult": "결과만",
     "modeSplit": "나란히 보기",
     "modeUnified": "인라인",

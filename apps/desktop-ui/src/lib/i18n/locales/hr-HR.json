@@ -348,7 +348,6 @@
   },
   "diff": {
     "resetResult": "Vrati rezultat",
-    "modeOriginal": "Samo izvornik",
     "modeResult": "Samo rezultat",
     "modeSplit": "Jedno uz drugo",
     "modeUnified": "Objedinjeno",

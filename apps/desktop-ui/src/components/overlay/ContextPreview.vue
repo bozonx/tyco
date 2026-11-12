@@ -112,12 +112,7 @@ const desktopStore = useDesktopStore()
 const isSavedAsFavorite = ref(false)
 let savedTimer: ReturnType<typeof setTimeout> | null = null
 
-const activeText = computed(() => {
-  if (props.oldText && props.diffMode === 'original') {
-    return props.oldText
-  }
-  return props.text
-})
+const activeText = computed(() => props.text)
 
 async function saveAsFavorite() {
   const text = activeText.value.trim()

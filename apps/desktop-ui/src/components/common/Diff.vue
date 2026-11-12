@@ -23,13 +23,6 @@
       </div>
     </div>
 
-    <!-- Mode: Clean Original -->
-    <div v-else-if="effectiveMode === 'original'" class="diff-result-view">
-      <div class="diff-text-block">
-        {{ props.oldText }}
-      </div>
-    </div>
-
     <!-- Mode: Split (Side by Side) -->
     <div v-else-if="effectiveMode === 'split'" class="diff-split-view">
       <div v-if="!hasDiff && !editable" class="no-diff">
@@ -131,10 +124,7 @@ const diffData = computed<{
   error: string | null
 }>(() => {
   try {
-    if (
-      effectiveMode.value === 'result' ||
-      effectiveMode.value === 'original'
-    ) {
+    if (effectiveMode.value === 'result') {
       return { unified: [], split: { oldParts: [], newParts: [] }, error: null }
     }
     if (

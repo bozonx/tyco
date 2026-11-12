@@ -348,7 +348,6 @@
   },
   "diff": {
     "resetResult": "結果をリセット",
-    "modeOriginal": "元のテキストのみ",
     "modeResult": "結果のみ",
     "modeSplit": "左右に並べて表示",
     "modeUnified": "インライン表示",

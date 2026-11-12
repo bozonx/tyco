@@ -32,15 +32,7 @@ describe('result view mode toggle', () => {
     expect((inputs[1].element as HTMLInputElement).checked).toBe(true)
   })
   it.each([
-    [
-      'diff',
-      [
-        'diff.modeUnified',
-        'diff.modeSplit',
-        'diff.modeResult',
-        'diff.modeOriginal',
-      ],
-    ],
+    ['diff', ['diff.modeUnified', 'diff.modeSplit', 'diff.modeResult']],
     ['parallel', ['diff.modeSplit', 'diff.modeResult']],
   ] as const)('renders the %s preset', (preset, labels) => {
     const wrapper = mount(ResultViewModeToggle, {

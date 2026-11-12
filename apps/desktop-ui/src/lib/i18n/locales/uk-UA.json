@@ -348,7 +348,6 @@
   },
   "diff": {
     "resetResult": "Відновити результат",
-    "modeOriginal": "Лише оригінал",
     "modeResult": "Лише результат",
     "modeSplit": "Поруч",
     "modeUnified": "Суміщено",

@@ -348,7 +348,6 @@
   },
   "diff": {
     "resetResult": "Επαναφορά αποτελέσματος",
-    "modeOriginal": "Μόνο αρχικό",
     "modeResult": "Μόνο αποτέλεσμα",
     "modeSplit": "Δίπλα-δίπλα",
     "modeUnified": "Ενοποιημένη",

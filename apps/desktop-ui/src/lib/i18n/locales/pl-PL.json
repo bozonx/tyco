@@ -348,7 +348,6 @@
   },
   "diff": {
     "resetResult": "Przywróć wynik",
-    "modeOriginal": "Tylko oryginał",
     "modeResult": "Tylko wynik",
     "modeSplit": "Obok siebie",
     "modeUnified": "W jednym widoku",

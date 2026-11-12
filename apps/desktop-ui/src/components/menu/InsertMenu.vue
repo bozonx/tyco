@@ -49,7 +49,7 @@
         :key="actionMenuStore.pageIndex"
         :text="activeActionText"
         :source-text="activeSourceText"
-        :editor-button-label="editorButtonLabel"
+        :editor-button-label="t('shortcuts.insertIntoEditor')"
         :left-letter-keys="leftLetterKeys"
         :space-key="primaryAction"
         :shortcuts-disabled="props.shortcutsDisabled"
@@ -177,26 +177,16 @@ useViewModeArrowKeys((step) => {
   }
 })
 
-const isShowingOriginal = computed(
-  () => diffMode.value === 'original' && Boolean(props.oldText)
-)
-
 const activeActionText = computed(() => {
   if (isContextDisabled.value) return ''
   if (!actionMenuStore.takesText) return ''
-  return isShowingOriginal.value ? props.oldText : props.text
+  return props.text
 })
 
 const activeSourceText = computed(() => {
   if (isContextDisabled.value) return undefined
-  return isShowingOriginal.value ? undefined : props.oldText
+  return props.oldText
 })
-
-const editorButtonLabel = computed(() =>
-  isShowingOriginal.value
-    ? t('history.originalToEditor')
-    : t('shortcuts.insertIntoEditor')
-)
 
 const minCorrectionLength = APP_CONFIG.minCorrectionLength
 

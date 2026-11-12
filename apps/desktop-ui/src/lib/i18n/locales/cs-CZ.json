@@ -348,7 +348,6 @@
   },
   "diff": {
     "resetResult": "Obnovit výsledek",
-    "modeOriginal": "Pouze originál",
     "modeResult": "Jen výsledek",
     "modeSplit": "Vedle sebe",
     "modeUnified": "V jednom",

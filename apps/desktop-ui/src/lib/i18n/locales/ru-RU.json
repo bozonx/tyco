@@ -348,7 +348,6 @@
   },
   "diff": {
     "resetResult": "Вернуть исходный результат",
-    "modeOriginal": "Только оригинал",
     "modeResult": "Только результат",
     "modeSplit": "В две колонки",
     "modeUnified": "В одну строку",
