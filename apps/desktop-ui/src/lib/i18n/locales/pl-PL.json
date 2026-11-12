@@ -740,6 +740,8 @@
     "chatInfo": "Szybki czat z AI do codziennych zadań. W przeciwieństwie do profili AI z odrębnymi rolami i narzędziami jest to uniwersalna konwersacja niepowiązana z konkretnym profilem. Możesz zadawać pytania, przekazywać zaznaczony tekst jako kontekst, dołączać obrazy, ustawiać ogólny prompt systemowy i zarządzać lokalną historią czatów.",
     "chatInstructions": "Instrukcje czatu",
     "chatInstructionsInfo": "Dodawany do instrukcji czatu, gdy nie wybrano w nim profilu.",
+    "quickRequestInstructions": "Instrukcje szybkich zapytań",
+    "quickRequestInstructionsInfo": "Dotyczy szybkich zapytań do AI. Instrukcje wybranego profilu AI są dodawane osobno.",
     "chatPromptProfile": "Profil",
     "chatPromptsHint": "Prompty do szybkich zapytań AI. Prompt z profilem działa w tym profilu i jest proponowany tylko w jego czatach; prompt bez profilu działa jako „Zapytaj AI” i jest proponowany w każdym czacie. Przeciągaj karty, aby zmienić ich kolejność w menu.",
     "chatPromptsSentImmediately": "Wysyłaj prompt od razu",

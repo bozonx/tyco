@@ -740,6 +740,8 @@
     "chatInfo": "A quick AI chat for everyday tasks. Unlike AI profiles with isolated roles and tools, this is a universal conversation not tied to a specific profile. You can ask questions, use selected text as context, attach images, set a general system prompt, and manage local chat history.",
     "chatInstructions": "Chat instructions",
     "chatInstructionsInfo": "Added to the chat instructions when no profile is selected in the chat.",
+    "quickRequestInstructions": "Quick request instructions",
+    "quickRequestInstructionsInfo": "Applies to quick AI requests. The selected AI profile’s instructions are added separately.",
     "chatPromptProfile": "Profile",
     "chatPromptsHint": "Prompts for quick AI requests. A prompt with a profile runs in that profile and is offered only in its chats; a prompt without one runs as Ask AI and is offered in every chat. Drag the cards to change their order in the menus.",
     "chatPromptsSentImmediately": "Send the prompt at once",

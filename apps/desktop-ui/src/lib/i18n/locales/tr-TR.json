@@ -737,6 +737,8 @@
     "chatInfo": "Günlük görevler için hızlı bir yapay zeka sohbeti. İzole rollere ve araçlara sahip yapay zeka profillerinin aksine bu, belirli bir profile bağlı olmayan evrensel bir sohbettir. Soru sorabilir, seçili metni bağlam olarak kullanabilir, görsel ekleyebilir, genel bir sistem istemi ayarlayabilir ve yerel sohbet geçmişini yönetebilirsiniz.",
     "chatInstructions": "Sohbet talimatları",
     "chatInstructionsInfo": "Sohbette profil seçilmediğinde sohbet talimatlarına eklenir.",
+    "quickRequestInstructions": "Hızlı istek talimatları",
+    "quickRequestInstructionsInfo": "Hızlı yapay zekâ isteklerine uygulanır. Seçilen yapay zekâ profilinin talimatları ayrıca eklenir.",
     "chatPromptProfile": "Profil",
     "chatPromptsHint": "Hızlı yapay zekâ istekleri için istemler. Profili olan bir istem o profilde çalışır ve yalnızca onun sohbetlerinde sunulur; profili olmayan bir istem “Yapay zekâya sor” olarak çalışır ve her sohbette sunulur. Menülerdeki sırayı değiştirmek için kartları sürükleyin.",
     "chatPromptsSentImmediately": "İstemi hemen gönder",

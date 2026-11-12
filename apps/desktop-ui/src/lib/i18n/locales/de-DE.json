@@ -740,6 +740,8 @@
     "chatInfo": "Ein schneller KI-Chat für alltägliche Aufgaben. Im Gegensatz zu KI-Profilen mit isolierten Rollen und Werkzeugen ist dies ein universeller Chat ohne Bindung an ein Profil. Sie können Fragen stellen, markierten Text als Kontext nutzen, Bilder anhängen, einen allgemeinen Systemprompt festlegen und den lokalen Chatverlauf verwalten.",
     "chatInstructions": "Chat-Anweisungen",
     "chatInstructionsInfo": "Wird den Chat-Anweisungen hinzugefügt, wenn im Chat kein Profil ausgewählt ist.",
+    "quickRequestInstructions": "Anweisungen für Schnellanfragen",
+    "quickRequestInstructionsInfo": "Gilt für schnelle KI-Anfragen. Die Anweisungen des ausgewählten KI-Profils werden separat hinzugefügt.",
     "chatPromptProfile": "Profil",
     "chatPromptsHint": "Prompts für schnelle KI-Anfragen. Ein Prompt mit Profil läuft in diesem Profil und wird nur in dessen Chats angeboten; ein Prompt ohne Profil läuft als „KI fragen“ und wird in jedem Chat angeboten. Ziehen Sie die Karten, um ihre Reihenfolge in den Menüs zu ändern.",
     "chatPromptsSentImmediately": "Prompt sofort senden",

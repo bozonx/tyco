@@ -740,6 +740,8 @@
     "chatInfo": "Un chat rápido con IA para tareas cotidianas. A diferencia de los perfiles de IA con roles y herramientas aislados, esta es una conversación universal no vinculada a un perfil específico. Puede hacer preguntas, usar texto seleccionado como contexto, adjuntar imágenes, configurar un prompt general del sistema y administrar el historial local de chats.",
     "chatInstructions": "Instrucciones del chat",
     "chatInstructionsInfo": "Se añade a las instrucciones del chat cuando no hay un perfil seleccionado en él.",
+    "quickRequestInstructions": "Instrucciones de consultas rápidas",
+    "quickRequestInstructionsInfo": "Se aplica a las consultas rápidas a la IA. Las instrucciones del perfil de IA seleccionado se añaden por separado.",
     "chatPromptProfile": "Perfil",
     "chatPromptsHint": "Prompts para solicitudes rápidas a la IA. Un prompt con perfil se ejecuta en ese perfil y solo se ofrece en sus chats; un prompt sin perfil se ejecuta como «Preguntar a la IA» y se ofrece en todos los chats. Arrastre las tarjetas para cambiar su orden en los menús.",
     "chatPromptsSentImmediately": "Enviar el prompt al instante",

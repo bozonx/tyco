@@ -734,6 +734,8 @@
     "chatInfo": "用于日常任务的快速 AI 对话。与拥有独立角色和工具的 AI 配置文件不同，这是不绑定任何配置文件的通用对话。你可以提问、将所选文本作为上下文、附加图片、配置通用系统提示词并管理本地对话历史记录。",
     "chatInstructions": "聊天指令",
     "chatInstructionsInfo": "聊天中未选择配置档案时，会添加到聊天指令中。",
+    "quickRequestInstructions": "快速请求指令",
+    "quickRequestInstructionsInfo": "适用于 AI 快速请求。所选 AI 配置的指令会单独添加。",
     "chatPromptProfile": "配置文件",
     "chatPromptsHint": "用于快速 AI 请求的提示词。带配置文件的提示词在该配置文件中运行，并且只在其聊天中提供；不带配置文件的提示词以“询问 AI”运行，并在所有聊天中提供。拖动卡片可调整它们在菜单中的顺序。",
     "chatPromptsSentImmediately": "立即发送提示词",

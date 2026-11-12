@@ -740,6 +740,8 @@
     "chatInfo": "Brzi AI chat za svakodnevne zadatke. Za razliku od AI profila s izoliranim ulogama i alatima, ovo je univerzalni razgovor bez vezivanja uz određeni profil. Možete postavljati pitanja, koristiti označeni tekst kao kontekst, priložiti slike, postaviti opći sistemski prompt i upravljati lokalnom poviješću razgovora.",
     "chatInstructions": "Upute chata",
     "chatInstructionsInfo": "Dodaje se uputama chata ako u njemu nije odabran profil.",
+    "quickRequestInstructions": "Upute za brze upite",
+    "quickRequestInstructionsInfo": "Primjenjuje se na brze upite AI-ju. Upute odabranog AI profila dodaju se zasebno.",
     "chatPromptProfile": "Profil",
     "chatPromptsHint": "Promptovi za brze AI upite. Prompt s profilom pokreće se u tom profilu i nudi se samo u njegovim chatovima; prompt bez profila pokreće se kao „Pitaj AI” i nudi se u svakom chatu. Povucite kartice da promijenite njihov redoslijed u izbornicima.",
     "chatPromptsSentImmediately": "Odmah pošalji prompt",

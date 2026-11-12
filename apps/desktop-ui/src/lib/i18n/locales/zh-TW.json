@@ -734,6 +734,8 @@
     "chatInfo": "用於日常任務的快速 AI 對話。與擁有獨立角色和工具的 AI 設定檔不同，這是未綁定任何特定設定檔的通用對話。您可以發問、將選取的文字作為上下文、附加圖片、設定通用系統提示詞並管理本機對話歷程記錄。",
     "chatInstructions": "聊天指示",
     "chatInstructionsInfo": "聊天中未選擇設定檔時，會加入聊天指示中。",
+    "quickRequestInstructions": "快速請求指令",
+    "quickRequestInstructionsInfo": "適用於 AI 快速請求。所選 AI 設定檔的指令會另外加入。",
     "chatPromptProfile": "設定檔",
     "chatPromptsHint": "用於快速 AI 請求的提示詞。帶設定檔的提示詞在該設定檔中執行，且只在其聊天中提供；不帶設定檔的提示詞以「詢問 AI」執行，並在所有聊天中提供。拖曳卡片可調整它們在選單中的順序。",
     "chatPromptsSentImmediately": "立即傳送提示詞",

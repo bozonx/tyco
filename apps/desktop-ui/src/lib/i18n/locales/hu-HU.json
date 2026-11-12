@@ -737,6 +737,8 @@
     "chatInfo": "Gyors AI-csevegés a mindennapi feladatokhoz. Az izolált szerepkörökkel és eszközökkel rendelkező AI-profilokkal ellentétben ez egy univerzális beszélgetés, amely nem kötődik konkrét profilhoz. Feltehet kérdéseket, használhatja a kijelölt szöveget kontextusként, csatolhat képeket, beállíthat általános rendszerpromptot és kezelheti a helyi csevegési előzményeket.",
     "chatInstructions": "Csevegési utasítások",
     "chatInstructionsInfo": "A csevegés utasításaihoz adódik, ha nincs kiválasztva profil a csevegésben.",
+    "quickRequestInstructions": "Gyors kérések utasításai",
+    "quickRequestInstructionsInfo": "A gyors AI-kérésekre vonatkozik. A kiválasztott AI-profil utasításai külön kerülnek hozzáadásra.",
     "chatPromptProfile": "Profil",
     "chatPromptsHint": "Promptok gyors MI-kérésekhez. A profillal rendelkező prompt abban a profilban fut, és csak annak csevegéseiben jelenik meg; a profil nélküli prompt „Kérdezd az MI-t” módon fut, és minden csevegésben elérhető. A menükben látható sorrend módosításához húzza a kártyákat.",
     "chatPromptsSentImmediately": "A prompt azonnali küldése",

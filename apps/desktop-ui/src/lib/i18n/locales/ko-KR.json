@@ -734,6 +734,8 @@
     "chatInfo": "일상적인 작업을 위한 빠른 AI 채팅입니다. 분리된 역할과 도구를 갖춘 AI 프로필과 달리 특정 프로필에 종속되지 않는 범용 대화입니다. 질문하기, 선택한 텍스트를 컨텍스트로 전달하기, 이미지 첨부, 일반 시스템 프롬프트 설정 및 로컬 대화 기록 관리가 가능합니다.",
     "chatInstructions": "채팅 지시 사항",
     "chatInstructionsInfo": "채팅에서 프로필을 선택하지 않은 경우 채팅 지시 사항에 추가됩니다.",
+    "quickRequestInstructions": "빠른 요청 지시 사항",
+    "quickRequestInstructionsInfo": "AI 빠른 요청에 적용됩니다. 선택한 AI 프로필의 지시 사항은 별도로 추가됩니다.",
     "chatPromptProfile": "프로필",
     "chatPromptsHint": "빠른 AI 요청용 프롬프트입니다. 프로필이 있는 프롬프트는 해당 프로필에서 실행되며 그 프로필의 채팅에서만 표시됩니다. 프로필이 없는 프롬프트는 'AI에게 묻기'로 실행되며 모든 채팅에서 표시됩니다. 카드를 끌어 메뉴에서의 순서를 바꾸세요.",
     "chatPromptsSentImmediately": "프롬프트 바로 보내기",
