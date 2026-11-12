@@ -219,7 +219,10 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
   /** The profile as the current turn read it, see `prepareTurn` */
   let turnProfile: AiProfile | undefined
   const createProfileScope = (id: string): ChatScope => ({
-    instructions: () => fullInstructions.value,
+    instructions: () =>
+      ['Current environment: chat.', fullInstructions.value]
+        .filter(Boolean)
+        .join('\n\n'),
     rules: () => undefined,
     turnOptions: async (modelId, toolOutputBudgetCharacters) => {
       return profileTurnOptions(

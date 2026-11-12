@@ -11,16 +11,6 @@
           :modal-title="t('settings.chatInstructions')"
         />
       </FieldRow>
-      <FieldRow
-        :label="t('settings.quickRequestInstructions')"
-        :info="t('settings.quickRequestInstructionsInfo')"
-        vertical
-      >
-        <FieldPromptTextArea
-          v-model="userConfig.llm.tasks.quickRequest.rule"
-          :modal-title="t('settings.quickRequestInstructions')"
-        />
-      </FieldRow>
     </SettingsSection>
 
     <SettingsSection bare>

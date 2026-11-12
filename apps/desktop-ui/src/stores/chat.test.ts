@@ -208,7 +208,7 @@ describe('profile chats', () => {
     expect(ai.sendChatMessage).toHaveBeenCalledWith(
       'Hello',
       [],
-      '# Edited by hand',
+      'Current environment: chat.\n\n# Edited by hand',
       expect.objectContaining({ temperature: 1.1, maxOutputTokens: 500 })
     )
     const [, , , options] = ai.sendChatMessage.mock.calls[0] as unknown[]

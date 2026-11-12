@@ -117,12 +117,12 @@ elsewhere and refers to them by id; `actionPages` and `targetLanguages`
 hold the items themselves. Action pages are addressed by 1-based index
 (`selectionActions` or `selectionActions:1` for page 1, `selectionActions:2` for page 2, etc.).
 
-`llm.tasks` holds what each LLM task needs: `chat` (`rule`; the chat runs on
+`llm.tasks` holds what each LLM task needs: `chat` (`rule` shared by chat and quick requests without a profile; the chat runs on
 the model picked in it), `correction`, `voiceCorrection` (`modelId`,
 `rule`; on when `stt.correctionMode !== 'off'`), `translation` (`modelId`, `rule`, `qualityGateRule` for the review
 pass), `aiTask` (`modelId`; the model of every AI command, each of which
 has its own prompt), `transformation` and `styling` (`modelId`; each item has
-its own prompt) and `quickRequest` (`modelId`, `rule`; the quick AI request). `modelId` is
+its own prompt) and `quickRequest` (`modelId`; the quick AI request, with legacy `rule` ignored). `modelId` is
 the one model that answers the task, empty when none is picked; a call that
 fails is not retried on another model.
 

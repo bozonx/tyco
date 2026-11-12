@@ -32,7 +32,12 @@
             :right-text="currentText"
             @update:right-text="currentText = $event"
           />
-          <TextPreview v-else :text="currentText" />
+          <DiffResultEditor
+            v-else
+            v-model:text="currentText"
+            :label="t('diff.modified')"
+            :parts="[]"
+          />
         </div>
       </div>
     </template>
@@ -59,9 +64,9 @@ import { useResultActions } from '../../composables/use-result-actions'
 import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
 import type { PreviewMenuParams } from '../../lib/modals/menu-modal-params'
 import AppIcon from '../common/AppIcon.vue'
+import DiffResultEditor from '../common/DiffResultEditor.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import ParallelTextPreview from '../common/ParallelTextPreview.vue'
-import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
 import ResultViewModeToggle from './ResultViewModeToggle.vue'

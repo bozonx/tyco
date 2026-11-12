@@ -130,11 +130,27 @@ describe('PreviewMenu', () => {
       },
     })
 
-    // When viewMode is 'result', ParallelTextPreview is not rendered, TextPreview is rendered
+    // Result mode edits the same draft as the split view.
     expect(
       wrapper.findComponent({ name: 'ParallelTextPreview' }).exists()
     ).toBe(false)
-    expect(wrapper.findComponent({ name: 'TextPreview' }).exists()).toBe(true)
+    await wrapper.get('textarea').setValue('Edited result\nwith a new line')
+    expect(wrapper.findComponent({ name: 'ShortcutList' }).props('text')).toBe(
+      'Edited result\nwith a new line'
+    )
+    const toggle = wrapper.findComponent({ name: 'ResultViewModeToggle' })
+    toggle.vm.$emit('update:modelValue', 'split')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('textarea').element.value).toBe(
+      'Edited result\nwith a new line'
+    )
+    await wrapper.get('textarea').setValue('Edited in split')
+    toggle.vm.$emit('update:modelValue', 'result')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('textarea').element.value).toBe('Edited in split')
+    expect(wrapper.findComponent({ name: 'ShortcutList' }).props('text')).toBe(
+      'Edited in split'
+    )
   })
 
   it('configures Escape to follow the navigation stack', () => {

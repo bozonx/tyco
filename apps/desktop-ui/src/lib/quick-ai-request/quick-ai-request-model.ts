@@ -83,7 +83,7 @@ export interface QuickAiRequestModelDependencies {
   getRememberedModelId: (profileId: string | null) => string | undefined
   rememberModelId: (profileId: string | null, modelId: string) => Promise<void>
   /** The rules of the quick request task */
-  getRules: () => string | undefined
+  getRules: (profileId: string | null) => string | undefined
 
   /**
    * The instructions of a turn: those of the quick request and, with a profile,
@@ -269,7 +269,7 @@ export function createQuickAiRequestModel(
               canUseTools: picked.canUseTools,
               budgetCharacters: chatRequestBudgetCharacters(picked, {
                 instructions: turnInstructions,
-                rules: deps.getRules(),
+                rules: deps.getRules(profileId.value),
                 rulePrefix: APP_CONFIG.rulePrefix,
               }),
               reservesToolSteps:

@@ -99,3 +99,12 @@ the main chat goes through `open_transferred_chat` for text and screenshots
 alike: the main chat starts it with the same id and saves it without the flag,
 as an ordinary chat. The answers inserted or copied from it are kept in the
 editor history with the `quickAiRequest` origin.
+
+## Conversation instructions
+
+The built-in system prompt identifies the current environment as chat or quick
+request. Without a profile, both environments use the user instructions stored in
+`llm.tasks.chat.rule`. With a profile, both use its SOUL.md and memory instead;
+the general user instructions do not apply. Users can put environment-specific
+requirements in either instruction source. The legacy `quickRequest.rule` field
+is no longer read; `quickRequest.modelId` still selects the quick request model.

@@ -151,7 +151,8 @@ export function createQuickAiRequestRuntime(
       quickRequestTask()?.modelId ||
       undefined,
     rememberModelId,
-    getRules: () => quickRequestTask()?.rule,
+    getRules: (profileId) =>
+      profileId ? undefined : deps.getUserConfig()?.llm?.tasks.chat.rule,
     resolveInstructions: async (profileId) =>
       [
         APP_CONFIG.aiInstructions.quickRequest,
@@ -194,7 +195,9 @@ export function createQuickAiRequestRuntime(
           ...options,
           ...turn,
           task: 'quickRequest',
-          rules: quickRequestTask()?.rule,
+          rules: profileId
+            ? undefined
+            : deps.getUserConfig()?.llm?.tasks.chat.rule,
           loadImage: deps.loadImage,
         }
       )
