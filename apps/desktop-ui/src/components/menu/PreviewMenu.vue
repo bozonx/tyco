@@ -2,13 +2,13 @@
   <ActionOverlayLayout :title="t('menu.reviewResult')" esc-mode="auto">
     <template #header-extra>
       <div class="translation-header-tools">
-        <Button
+        <IconButton
           v-if="currentText !== props.text"
-          size="xs"
-          variant="ghost"
+          icon="mdi:restore"
+          :label="t('diff.resetResult')"
+          size="sm"
           @click="currentText = props.text"
-          >{{ t('diff.resetResult') }}</Button
-        >
+        />
         <ResultViewModeToggle
           preset="parallel"
           v-if="props.sourceText"
@@ -71,7 +71,7 @@ import { useResultActions } from '../../composables/use-result-actions'
 import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
 import type { PreviewMenuParams } from '../../lib/modals/menu-modal-params'
 import AppIcon from '../common/AppIcon.vue'
-import Button from '../common/Button.vue'
+import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import ParallelTextPreview from '../common/ParallelTextPreview.vue'
 import ResultTextEditor from '../common/ResultTextEditor.vue'
@@ -176,6 +176,8 @@ const { leftLetterKeys, spaceKey, isEditorTarget } = useResultActions(
 
 .translation-header-tools {
   display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
   align-items: center;
   gap: var(--space-sm);
 }

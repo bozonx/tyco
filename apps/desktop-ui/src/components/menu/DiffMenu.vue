@@ -6,13 +6,13 @@
     esc-mode="auto"
   >
     <template #header-extra>
-      <Button
+      <IconButton
         v-if="draftText !== props.newText"
-        size="xs"
-        variant="ghost"
+        icon="mdi:restore"
+        :label="t('diff.resetResult')"
+        size="sm"
         @click="draftText = props.newText"
-        >{{ t('diff.resetResult') }}</Button
-      >
+      />
       <ResultViewModeToggle preset="diff" v-model="diffMode" />
     </template>
 
@@ -47,8 +47,8 @@ import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
 import { useResultActions } from '../../composables/use-result-actions'
 import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
 import type { DiffMenuParams } from '../../lib/modals/menu-modal-params'
-import Button from '../common/Button.vue'
 import Diff from '../common/Diff.vue'
+import IconButton from '../common/IconButton.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
 import ResultViewModeToggle from './ResultViewModeToggle.vue'

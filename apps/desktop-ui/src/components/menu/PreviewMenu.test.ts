@@ -153,7 +153,7 @@ describe('PreviewMenu', () => {
     )
     const reset = wrapper
       .findAll('button')
-      .find((button) => button.text() === 'diff.resetResult')
+      .find((button) => button.attributes('aria-label') === 'diff.resetResult')
     expect(reset).toBeDefined()
     await reset!.trigger('click')
     expect(wrapper.get('textarea').element.value).toBe('Translation text')

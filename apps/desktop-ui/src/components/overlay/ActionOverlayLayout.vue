@@ -126,12 +126,15 @@ onUnmounted(() => {
 
 .action-overlay-header-left {
   display: flex;
+  flex-wrap: wrap;
+  flex: 1;
   align-items: center;
   gap: var(--space-md);
   min-width: 0;
 }
 
 .action-overlay-title {
+  flex-shrink: 0;
   margin: 0;
   font-size: var(--text-lead);
   font-weight: 600;
@@ -141,6 +144,8 @@ onUnmounted(() => {
 
 .action-overlay-extra {
   display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
   align-items: center;
   gap: var(--space-sm);
   font-size: var(--text-control);
