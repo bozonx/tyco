@@ -25,7 +25,10 @@
     </div>
     <div class="voice-error-actions">
       <ShortcutButton
-        v-if="liveTranscriptText(transcript).trim()"
+        v-if="
+          props.finishBehavior !== 'prompt' &&
+          liveTranscriptText(transcript).trim()
+        "
         :keys="['Tab']"
         @click="preserveErrorDraft('next')"
         >{{ t('menu.actions') }}</ShortcutButton
@@ -502,7 +505,12 @@ function handleKeyUp(event: KeyboardEvent) {
 
   if (startError.value) {
     const hasDraft = Boolean(liveTranscriptText(transcript.value).trim())
-    if (event.code === 'Tab' && !event.shiftKey && hasDraft)
+    if (
+      event.code === 'Tab' &&
+      !event.shiftKey &&
+      hasDraft &&
+      props.finishBehavior !== 'prompt'
+    )
       void preserveErrorDraft('next')
     else if (
       (event.code === 'Enter' || event.code === 'Space') &&
@@ -545,9 +553,7 @@ function handleKeyUp(event: KeyboardEvent) {
   if (
     event.code === 'Tab' &&
     !event.shiftKey &&
-    ['submitToChat', 'insertIntoTarget', 'prompt'].includes(
-      props.finishBehavior ?? ''
-    )
+    ['submitToChat', 'insertIntoTarget'].includes(props.finishBehavior ?? '')
   ) {
     if (
       props.finishBehavior !== 'prompt' ||

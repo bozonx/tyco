@@ -4,14 +4,6 @@
       <ShortcutButton
         v-if="hasText"
         :size="compact ? 'sm' : 'md'"
-        :keys="['Tab']"
-        :disabled="isFinishing"
-        @click="() => finish('next')"
-        >{{ t('menu.actions') }}</ShortcutButton
-      >
-      <ShortcutButton
-        v-if="hasText"
-        :size="compact ? 'sm' : 'md'"
         :keys="['Shift', 'Space']"
         :disabled="isFinishing"
         @click="() => finish('submit')"

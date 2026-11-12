@@ -2,8 +2,19 @@
   <ActionOverlayLayout
     :title="t('action.quickAiRequest')"
     :on-esc="handleEsc"
+    :esc-mode="canReturnToPrevious ? 'back' : 'close'"
     :esc-label="model.isGenerating.value ? t('chat.stop') : undefined"
   >
+    <template #header-extra>
+      <Button
+        v-if="canOpenSelectionActions"
+        variant="ghost"
+        size="sm"
+        :disabled="isInputBlocked || model.isGenerating.value || isApplying"
+        @click="openSelectionActions"
+        >{{ t('menu.actions') }}</Button
+      >
+    </template>
     <template #preview>
       <ContextPreview
         v-if="props.text"
@@ -166,14 +177,6 @@
         :disabled="isInputBlocked || model.isGenerating.value"
         :placeholder="promptPlaceholder"
         :options="recentOptions"
-        :hints="[
-          {
-            keys: ['Tab'],
-            label: t('menu.actions'),
-            disabled: !input.value.value.trim(),
-            action: openPromptActions,
-          },
-        ]"
         options-placement="above-popover"
         @blur="handleInputBlur"
         @submit="handleQuerySubmit"
@@ -312,7 +315,9 @@ const secretsStore = useSecretsStore()
 const editorNavigation = useEditorNavigation()
 const { toastKey, toastText } = useToast()
 const { t } = useI18n()
-const { handleEsc: defaultHandleEsc } = useOverlayNav()
+const { handleEsc: defaultHandleEsc } = useOverlayNav(() => ({
+  escMode: canReturnToPrevious.value ? 'back' : 'close',
+}))
 
 const isQuickWindow = isInQuickWindow()
 /** The prompt and its caret, kept as the main chat keeps its input */
@@ -443,20 +448,26 @@ const resultActionText = computed(
       : (model.turns.value.at(-1)?.answer?.content ?? ''))
 )
 
-function openPromptActions() {
-  const text = input.value.value.trim()
-  if (!text || isInputBlocked.value || model.isGenerating.value) return
+const canReturnToPrevious = computed(
+  () => menuModalsStore.currentModal === MenuModals.QUICK_AI_REQUEST
+)
+const canOpenSelectionActions = computed(
+  () =>
+    isQuickWindow && !canReturnToPrevious.value && Boolean(props.text.trim())
+)
+
+function openSelectionActions() {
   if (
-    menuModalsStore.currentModal === MenuModals.QUICK_AI_REQUEST &&
-    menuModalsStore.currentStepId !== undefined
-  ) {
-    menuModalsStore.updateStep(
-      menuModalsStore.currentStepId,
-      MenuModals.QUICK_AI_REQUEST,
-      { prompt: input.value.value, inputMode: 'text', isPromptSent: false }
-    )
-  }
-  menuModalsStore.nextModal(MenuModals.INSERT, { text, escMode: 'back' })
+    !canOpenSelectionActions.value ||
+    isInputBlocked.value ||
+    model.isGenerating.value ||
+    isApplying.value
+  )
+    return
+  menuModalsStore.nextModal(MenuModals.INSERT, {
+    text: props.text,
+    escMode: 'back',
+  })
 }
 
 function openNextStep() {
@@ -684,10 +695,6 @@ async function handleVoiceCorrected(
     lastInputKind.value = 'voice'
   }
   const textToSend = input.value.value.trim()
-  if (intent === 'next') {
-    openPromptActions()
-    return
-  }
   if (intent === 'submit' && textToSend) {
     await model.submitPrompt(textToSend, 'voice', clearPrompt)
     return

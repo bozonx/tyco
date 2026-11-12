@@ -278,9 +278,10 @@ Rows align to the right; avoid CSS order overrides so focus follows the display.
 ## Changing a quick text workflow
 
 A quick AI voice request always offers returning to its composer, including
-silent recordings and STT start errors. Once words arrive, Tab opens actions
-for the dictated prompt and Shift+Space sends it immediately. Prompt composers
-also expose Tab/actions, preserving the draft when returning from the menu.
+silent recordings and STT start errors. Shift+Space sends the dictated prompt immediately. Unsent AI prompts do not
+expose actions. The request header offers Back when there is a previous step;
+a directly opened quick request with a selection offers Actions for that original
+selection, independently of the prompt draft. Without a selection it is hidden.
 Completed plain answers expose actions even without proposed reply variants;
 when variants exist, actions use the selected variant.
 

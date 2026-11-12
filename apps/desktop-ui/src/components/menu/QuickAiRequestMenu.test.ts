@@ -135,25 +135,6 @@ describe('QuickAiRequestMenu', () => {
     expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
   })
 
-  it('takes dictated prompt text to actions without sending it', async () => {
-    const wrapper = mountMenu({ inputMode: 'voice' })
-    wrapper
-      .findComponent({ name: 'VoiceRecognitionMenu' })
-      .vm.$emit(
-        'corrected',
-        'Use my words elsewhere',
-        'Use my words elsewhere',
-        undefined,
-        'next'
-      )
-    await flushPromises()
-    expect(useMenuModalsStore().currentModalParams).toMatchObject({
-      text: 'Use my words elsewhere',
-      escMode: 'back',
-    })
-    expect(desktop.backend.callsOf('start_fetch')).toHaveLength(0)
-  })
-
   it('opens actions for a plain answer without reply variants', async () => {
     const wrapper = await answerRequest()
     await wrapper.find('.quick-next-action').trigger('click')
@@ -163,17 +144,39 @@ describe('QuickAiRequestMenu', () => {
     })
   })
 
-  it('opens actions for the prompt without submitting it', async () => {
+  it.each(['', 'Keep my draft'])(
+    'opens header actions with the selection for draft %j',
+    async (draft) => {
+      const wrapper = mountMenu()
+      await wrapper.find('.query-panel-input').setValue(draft)
+      await wrapper.find('.action-overlay-extra button').trigger('click')
+      expect(useMenuModalsStore().currentModalParams).toMatchObject({
+        text: 'Source text for AI',
+      })
+    }
+  )
+
+  it('does not open prompt actions with Tab', async () => {
     const wrapper = mountMenu()
     await wrapper.find('.query-panel-input').setValue('Keep my draft')
     await wrapper
       .find('.query-panel-input')
       .trigger('keydown', { key: 'Tab', code: 'Tab' })
-    expect(useMenuModalsStore().currentModalParams).toMatchObject({
-      text: 'Keep my draft',
-      escMode: 'back',
-    })
-    expect(desktop.backend.callsOf('start_fetch')).toHaveLength(0)
+    expect(useMenuModalsStore().currentModal).toBe(MenuModals.NONE)
+  })
+
+  it('hides selection navigation without a selection', () => {
+    const wrapper = mountMenu({ text: '' })
+    expect(wrapper.find('.action-overlay-extra button').exists()).toBe(false)
+  })
+
+  it('uses back navigation when opened from actions', () => {
+    const menus = useMenuModalsStore()
+    menus.nextModal(MenuModals.INSERT, { text: 'Selection' })
+    menus.nextModal(MenuModals.QUICK_AI_REQUEST, {})
+    const wrapper = mountMenu()
+    expect(wrapper.find('.action-overlay-extra button').exists()).toBe(false)
+    expect(wrapper.find('.action-overlay-esc').text()).toContain('common.back')
   })
 
   it.each(['Enter', ' '])('inserts a completed result with %j', async (key) => {

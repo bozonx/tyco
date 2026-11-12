@@ -21,7 +21,7 @@ const primaryKeys = (wrapper: ReturnType<typeof mountActions>) =>
     .map((key) => key.text())
 
 describe('VoiceRecordingActions', () => {
-  it('offers typing for an empty AI recording and actions once words arrive', async () => {
+  it('offers typing and submission without actions for an AI prompt', async () => {
     const wrapper = mountActions({
       compact: true,
       chat: true,
@@ -35,7 +35,10 @@ describe('VoiceRecordingActions', () => {
       wrapper
         .findAll('.shortcut')
         .map((button) => button.findAll('kbd').map((key) => key.text()))
-    ).toEqual([['Tab'], ['Shift', 'Space'], ['Space', 'Enter']])
+    ).toEqual([
+      ['Shift', 'Space'],
+      ['Space', 'Enter'],
+    ])
     expect(wrapper.find('.is-primary').text()).toContain('To prompt input')
   })
 
