@@ -315,9 +315,11 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           deps.onCorrected('', '', undefined, 'edit')
           return
         }
-        toastKey('toast.nothingRecognized', 'warn')
         if (deps.onEmptyInput) deps.onEmptyInput()
-        else notifyCancelled()
+        else {
+          toastKey('toast.nothingRecognized', 'warn')
+          notifyCancelled()
+        }
         return
       }
 
@@ -481,8 +483,15 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       if (!isCurrent()) return
       if (!signal?.aborted) {
         const message = describeVoiceError(error)
-        if (message) toastText(message, 'error')
-        else toastKey('toast.voiceRecognitionFailed', 'error')
+        const outcome = deps.onStartError?.(
+          error,
+          message || t('toast.voiceRecognitionFailed')
+        )
+        if (outcome === 'keep') return
+        if (outcome !== 'handled') {
+          if (message) toastText(message, 'error')
+          else toastKey('toast.voiceRecognitionFailed', 'error')
+        }
       }
       notifyCancelled()
     } finally {

@@ -9,6 +9,7 @@
       :app-label="appLabel"
       @switch-mode="switchToVoice"
       @language-change="handleLanguageChange"
+      @open-settings="openSttSettings"
     />
   </div>
   <ContentPadding v-else>
@@ -148,7 +149,7 @@ const isBar = computed(
   () =>
     isChangingMode.value ||
     model.phase.value === 'recording' ||
-    model.phase.value === 'finishing'
+    model.phase.value !== 'result'
 )
 watch(
   () =>

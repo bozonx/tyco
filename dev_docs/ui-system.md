@@ -320,7 +320,9 @@ Outside text fields, Tab inserts the result into the editor; its action button
 shows the binding in both preview and diff menus.
 
 Silent voice completion keeps the stopped voice surface available for retry and
-reports the empty recognition in a toast. Existing chat input returns to editing
+shows the empty recognition inline. System audio also keeps its compact stopped
+surface for empty recognition and failures; only a transcript opens the full result.
+Recognition failures remain visible with retry or settings actions. Existing chat input returns to editing
 when submission contains no new speech. An unchanged correction is a successful
 result; its status is shown in a toast rather than the result header. Empty
 correction responses are failures and must not replace the source text.

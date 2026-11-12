@@ -220,6 +220,11 @@ export function createListenModel(deps: ListenModelDependencies) {
       isSameSource(next, source.value)
     )
       return
+    if (phase.value === 'empty' || phase.value === 'failed') {
+      source.value = next
+      lastStartSource = next
+      return
+    }
     if (phase.value !== 'recording') return
     const run = generation
     const previousWaiting = isWaiting.value

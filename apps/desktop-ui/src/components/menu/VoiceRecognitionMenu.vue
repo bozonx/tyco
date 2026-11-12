@@ -2,8 +2,9 @@
   <div
     v-if="startError"
     class="voice-bar voice-error-bar"
-    role="alert"
-    aria-live="assertive"
+    :class="{ 'is-empty': startError.isEmpty }"
+    :role="startError.isEmpty ? 'status' : 'alert'"
+    :aria-live="startError.isEmpty ? 'polite' : 'assertive'"
   >
     <div class="voice-error-header">
       <OverlayDragHandle />
@@ -185,6 +186,7 @@ const ipcStore = useIpcStore()
 const startError = ref<{
   message: string
   canOpenSettings: boolean
+  isEmpty?: boolean
   canRetry: boolean
 } | null>(null)
 
@@ -327,7 +329,12 @@ const model = createVoiceRecognition({
   consumeBufferedIntent: () => menuModalsStore.consumeBufferedIntent(),
   options: () => props,
   onEmptyInput: () => {
-    startError.value = { message: '', canOpenSettings: false, canRetry: true }
+    startError.value = {
+      message: t('listen.nothingRecognized'),
+      isEmpty: true,
+      canOpenSettings: false,
+      canRetry: true,
+    }
   },
   onCancelled: () => {
     if (isSwitchingSource) return
@@ -696,6 +703,7 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-xs);
   min-width: 0;
+  flex-wrap: wrap;
 }
 
 .voice-error-icon {
@@ -707,6 +715,8 @@ onUnmounted(() => {
   font-size: var(--text-control);
   color: var(--color-base-content);
   line-height: 1.4;
+  flex: 1 1 16rem;
+  overflow-wrap: anywhere;
 }
 
 .voice-error-actions {
@@ -714,5 +724,12 @@ onUnmounted(() => {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--space-xs);
+}
+
+.voice-error-bar.is-empty {
+  border-color: var(--app-border-subtle);
+}
+.voice-error-bar.is-empty .voice-error-icon {
+  color: var(--app-text-muted);
 }
 </style>

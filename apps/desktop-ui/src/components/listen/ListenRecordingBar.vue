@@ -1,6 +1,10 @@
 <template>
   <!-- `voice-bar`: the input region keeps it clickable, see `QuickOverlay` -->
-  <RecordingBarFrame class="voice-bar listen-bar" :label="t('listen.title')">
+  <RecordingBarFrame
+    class="voice-bar listen-bar"
+    :label="t('listen.title')"
+    :class="{ 'is-stopped': isStopped }"
+  >
     <div class="listen-bar-header">
       <OverlayDragHandle />
       <span class="listen-bar-title">
@@ -58,6 +62,7 @@
       </Button>
     </div>
     <LiveTranscript
+      v-if="!isStopped"
       class="voice-bar-transcript"
       :committed="model.transcript.value.committed"
       :draft="model.transcript.value.draft"
@@ -65,7 +70,7 @@
       :is-finishing="isFinishing"
     />
     <div class="voice-bar-footer">
-      <div class="voice-bar-wave">
+      <div v-if="!isStopped" class="voice-bar-wave">
         <AudioWaveform
           layout="inline"
           icon="mdi:volume-high"
@@ -76,28 +81,44 @@
         />
       </div>
       <VoiceAutoStopNotice
-        :deadline-ms="model.autoStopWarning.value?.deadlineMs"
+        :deadline-ms="
+          isStopped ? undefined : model.autoStopWarning.value?.deadlineMs
+        "
       />
 
       <div class="listen-bar-actions">
         <ShortcutButton
+          v-if="!isStopped"
           size="sm"
           :keys="['Tab']"
-          :disabled="isFinishing"
-          @click="void model.stop()"
+          :disabled="isFinishing || (isStopped && !model.canRetry.value)"
+          @click="isStopped ? void model.retry() : void model.stop()"
         >
           {{ t('menu.actions') }}
         </ShortcutButton>
         <ShortcutButton
           size="sm"
-          :keys="stopKeys"
+          :keys="isStopped ? [] : stopKeys"
           variant="primary"
-          :disabled="isFinishing"
-          @click="void model.stop()"
+          :disabled="isFinishing || (isStopped && !model.canRetry.value)"
+          @click="isStopped ? void model.retry() : void model.stop()"
         >
-          {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
+          {{
+            isStopped
+              ? t('listen.retry')
+              : isFinishing
+                ? t('common.inProgress')
+                : t('menu.finish')
+          }}
         </ShortcutButton>
       </div>
+      <Button
+        v-if="isStopped && model.canOpenSettings.value"
+        size="sm"
+        variant="primary"
+        @click="emit('open-settings')"
+        >{{ t('common.openSettings') }}</Button
+      >
     </div>
   </RecordingBarFrame>
 </template>
@@ -136,6 +157,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'switch-mode'): void
   (e: 'language-change'): void
+  (e: 'open-settings'): void
 }>()
 const { t } = useI18n()
 
@@ -156,6 +178,9 @@ function onSelectSource(next: CaptureSource, label?: string) {
   void props.model.selectSource(next)
 }
 
+const isStopped = computed(() =>
+  ['empty', 'failed'].includes(props.model.phase.value)
+)
 const isFinishing = computed(() => props.model.phase.value === 'finishing')
 const stopKeys = computed(() =>
   props.stopHotkey ? ['Space', 'Enter', props.stopHotkey] : ['Space', 'Enter']
@@ -181,6 +206,8 @@ const isErrorNotice = computed(
 )
 
 const notice = computed(() => {
+  if (props.model.phase.value === 'empty') return t('listen.nothingRecognized')
+  if (props.model.phase.value === 'failed') return props.model.errorText.value
   const { source, isSourceLost, errorText } = props.model
   if (isSourceLost.value) return t('listen.sourceLost')
   if (isWaitingForApp.value && source.value.kind === 'application')
@@ -195,6 +222,10 @@ const notice = computed(() => {
 .listen-bar {
   min-height: 9.5rem;
   max-height: 15rem;
+}
+
+.listen-bar.is-stopped {
+  min-height: 0;
 }
 
 .listen-bar-close {

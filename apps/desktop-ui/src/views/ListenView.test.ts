@@ -21,9 +21,6 @@ const dictation = vi.hoisted(() => ({
 vi.mock('../composables/use-dictation-actions', () => ({
   useDictationActions: () => dictation,
 }))
-vi.mock('../components/listen/ListenRecordingBar.vue', () => ({
-  default: { props: ['model'], template: '<div class="listen-bar-stub" />' },
-}))
 vi.mock('../components/menu/InsertMenu.vue', () => ({
   default: {
     props: ['text', 'allowInsertButton', 'primaryAction'],
@@ -124,7 +121,7 @@ describe('ListenView', () => {
     expect(dictation.startDictation).toHaveBeenCalledWith(
       expect.objectContaining({ source: { kind: 'systemMix' } })
     )
-    expect(wrapper.find('.listen-bar-stub').exists()).toBe(true)
+    expect(wrapper.findComponent(ListenRecordingBar).exists()).toBe(true)
     expect(wrapper.emitted('result-shown')?.at(-1)).toEqual([false])
     wrapper.unmount()
   })
@@ -203,6 +200,7 @@ describe('ListenView', () => {
 
     expect(wrapper.find('.insert-menu-stub').exists()).toBe(false)
     expect(wrapper.text()).toContain(i18n.global.t('listen.nothingRecognized'))
+    expect(wrapper.emitted('result-shown')?.at(-1)).toEqual([false])
     const retry = wrapper
       .findAll('button')
       .find((button) => button.text() === i18n.global.t('listen.retry'))
