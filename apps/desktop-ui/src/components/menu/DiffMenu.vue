@@ -47,6 +47,7 @@ import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
 import { useResultActions } from '../../composables/use-result-actions'
 import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
 import type { DiffMenuParams } from '../../lib/modals/menu-modal-params'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import Diff from '../common/Diff.vue'
 import IconButton from '../common/IconButton.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
@@ -56,7 +57,13 @@ import type { ActionItem } from '@tyco/plugin-sdk'
 
 const props = defineProps<DiffMenuParams>()
 const { t } = useI18n()
-const draftText = ref(props.newText)
+const menus = useMenuModalsStore()
+const draftStepId = menus.currentStepId
+const draftText = ref(props.draftText ?? props.newText)
+watch(draftText, (value) => {
+  if (draftStepId !== undefined)
+    menus.updateStep(draftStepId, MenuModals.DIFF, { draftText: value })
+})
 watch(
   () => props.newText,
   (value) => {

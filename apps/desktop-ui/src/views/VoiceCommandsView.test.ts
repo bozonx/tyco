@@ -197,11 +197,13 @@ describe('separate voice command overlay', () => {
     hotkeys.shortcutLabel.mockImplementation(() => '')
     wrapper.unmount()
   })
-  it('runs on Space only once recognized and stops for review on Tab at any time', async () => {
+  it('runs on Space only once recognized and stops for review on Shift+Space at any time', async () => {
     const wrapper = mountView()
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
     expect(mocks.finish).not.toHaveBeenCalled()
-    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Tab' }))
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Space', shiftKey: true })
+    )
     expect(mocks.finish).toHaveBeenLastCalledWith('review')
     mocks.finish.mockClear()
 
@@ -210,7 +212,9 @@ describe('separate voice command overlay', () => {
     await flushPromises()
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
     expect(mocks.finish).toHaveBeenLastCalledWith('run')
-    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Tab' }))
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Space', shiftKey: true })
+    )
     expect(mocks.finish).toHaveBeenLastCalledWith('review')
     wrapper.unmount()
   })
@@ -311,7 +315,11 @@ describe('separate voice command overlay', () => {
     voice.inputText = 'Use these words elsewhere'
     const wrapper = mountView()
     window.dispatchEvent(
-      new KeyboardEvent('keydown', { code: 'Tab', cancelable: true })
+      new KeyboardEvent('keydown', {
+        code: 'Space',
+        shiftKey: true,
+        cancelable: true,
+      })
     )
     expect(useMenuModalsStore().currentModalParams).toMatchObject({
       text: 'Use these words elsewhere',

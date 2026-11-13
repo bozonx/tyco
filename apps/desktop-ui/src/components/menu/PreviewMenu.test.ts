@@ -5,6 +5,7 @@ import {
   loadFakeDesktop,
   type TestDesktop,
 } from '../../test/install-fake-desktop'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import PreviewMenu from './PreviewMenu.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -18,6 +19,36 @@ describe('PreviewMenu', () => {
     desktop = await loadFakeDesktop()
     config.global.plugins = [desktop.pinia]
     localStorage.clear()
+  })
+
+  it('restores its own draft after discarding a child step', async () => {
+    const menus = useMenuModalsStore()
+    menus.nextModal(MenuModals.PREVIEW, { text: 'Original result' })
+    const render = () =>
+      mount(PreviewMenu, {
+        props: menus.currentModalParams as { text: string; draftText?: string },
+        global: { stubs: { ShortcutList: true } },
+      })
+    let wrapper = render()
+    wrapper
+      .findComponent({ name: 'ResultTextEditor' })
+      .vm.$emit('update:modelValue', 'Reviewed result')
+    await wrapper.vm.$nextTick()
+    wrapper.unmount()
+    menus.nextModal(MenuModals.INSERT, { text: 'Child result' })
+    menus.updateStep(menus.currentStepId!, MenuModals.INSERT, {
+      text: 'Edited child',
+    })
+    menus.back()
+    wrapper = render()
+    expect(
+      wrapper.findComponent({ name: 'ResultTextEditor' }).props('modelValue')
+    ).toBe('Reviewed result')
+    expect(
+      wrapper.findComponent({ name: 'ResultTextEditor' }).props('modelValue')
+    ).not.toBe('Edited child')
+    expect(menus.currentModalParams).toMatchObject({ text: 'Original result' })
+    wrapper.unmount()
   })
 
   it('does not display quality alert when translation is clean', () => {

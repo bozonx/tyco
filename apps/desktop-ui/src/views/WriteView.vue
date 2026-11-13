@@ -70,7 +70,7 @@
       </ShortcutButton>
       <ShortcutButton
         size="sm"
-        :keys="['Tab']"
+        :keys="['Shift', 'Space']"
         type="button"
         class="write-hint-action"
         @mousedown.prevent

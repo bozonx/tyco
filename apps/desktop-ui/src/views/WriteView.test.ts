@@ -166,12 +166,12 @@ describe('quick input screen', () => {
     expect(mocks.modals.nextModal).not.toHaveBeenCalled()
   })
 
-  it('opens actions on Tab with original text and ignores other Enters', () => {
+  it('opens actions on Shift+Space with original text and ignores other Enters', () => {
     press('Enter', { altKey: true })
     press('Enter', { ctrlKey: true })
     expect(mocks.correction.insert).not.toHaveBeenCalled()
     expect(mocks.modals.nextModal).not.toHaveBeenCalled()
-    press('Tab')
+    press('Space', { shiftKey: true })
     expect(mocks.modals.nextModal).toHaveBeenCalledWith('insert', {
       text: 'Original text',
     })
@@ -192,7 +192,7 @@ describe('quick input screen', () => {
     reactive(mocks.modals).pendingModal = {}
     await nextTick()
     press('Enter')
-    press('Tab')
+    press('Space', { shiftKey: true })
     expect(mocks.correction.insert).not.toHaveBeenCalled()
     expect(mocks.modals.nextModal).not.toHaveBeenCalled()
     press('Escape')
@@ -262,7 +262,7 @@ describe('quick input screen', () => {
     press('Enter')
     expect(mocks.correction.insertLive).toHaveBeenCalledWith('Live input')
 
-    press('Tab')
+    press('Space', { shiftKey: true })
     expect(mocks.correction.nextLive).toHaveBeenCalledWith('Live input')
     expect(mocks.modals.nextModal).not.toHaveBeenCalled()
   })

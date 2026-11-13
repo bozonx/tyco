@@ -33,9 +33,11 @@ describe('input keys', () => {
     )
   })
 
-  it('keeps Tab and Esc fixed in both modes', () => {
+  it('uses Shift+Space for actions and leaves Tab to focus in both modes', () => {
     for (const mode of ['Enter', 'Ctrl+Enter'] as const) {
-      expect(resolveInputKeyAction({ code: 'Tab' }, mode)).toBe('actions')
+      expect(
+        resolveInputKeyAction({ code: 'Space', shiftKey: true }, mode)
+      ).toBe('actions')
       expect(resolveInputKeyAction({ code: 'Escape' }, mode)).toBe('cancel')
     }
     expect(resolveInputKeyAction({ code: 'Tab', shiftKey: true })).toBe('none')

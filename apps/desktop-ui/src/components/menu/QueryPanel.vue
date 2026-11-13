@@ -371,18 +371,8 @@ const onKeyDown = (event: KeyboardEvent) => {
       if (event.repeat) return
       submit(props.multiline ? false : event.ctrlKey || event.metaKey)
       return
-    case 'Tab': {
-      if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)
-        return
-      const tabHint = props.hints.find(
-        (h) => !h.disabled && h.keys.length === 1 && h.keys[0] === 'Tab'
-      )
-      if (tabHint) {
-        event.preventDefault()
-        activateHint(tabHint)
-      }
+    case 'Tab':
       return
-    }
     case 'Escape':
       // acted on at keyup, like the shortcut lists
       event.preventDefault()

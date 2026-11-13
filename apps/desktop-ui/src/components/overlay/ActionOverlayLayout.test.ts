@@ -50,6 +50,20 @@ describe('ActionOverlayLayout navigation', () => {
     expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
   })
 
+  it('keeps Back and Close at the editor root', async () => {
+    desktop.dispose()
+    desktop = await loadFakeDesktop({ mode: 'editor' }, 'main')
+    const menus = useMenuModalsStore()
+    menus.nextModal(MenuModals.INSERT, { text: 'Editor draft' })
+    const wrapper = mountLayout()
+    expect(wrapper.get('.action-overlay-esc').text()).toContain('common.back')
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
+    await wrapper.get('.action-overlay-esc').trigger('click')
+    expect(menus.menuBreadcrumbs).toEqual([])
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
+    wrapper.unmount()
+  })
+
   it('switches a directly rendered quick surface to root actions', async () => {
     const menus = useMenuModalsStore()
     const wrapper = mount(ActionOverlayLayout, {

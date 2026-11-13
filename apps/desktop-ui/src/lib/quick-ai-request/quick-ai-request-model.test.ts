@@ -101,6 +101,17 @@ const savedChats = (deps: QuickAiRequestModelDependencies) =>
   vi.mocked(deps.saveChat).mock.calls.map(([chat]) => chat)
 
 describe('QuickAiRequestModel', () => {
+  it('restores conversation text from an independent navigation snapshot', async () => {
+    const { model } = createSetup()
+    await model.submitPrompt('Keep this question')
+    const saved = model.getNavigationMessages()
+    const { model: restored } = createSetup()
+    restored.restoreNavigationMessages(saved)
+    expect(restored.turns.value[0]?.prompt).toBe('Keep this question')
+    await model.submitPrompt('A later question')
+    expect(restored.turns.value).toHaveLength(1)
+  })
+
   it('tells at once that no model is picked and refuses to send', async () => {
     const { model, deps } = createSetup({
       getRememberedModelId: () => undefined,

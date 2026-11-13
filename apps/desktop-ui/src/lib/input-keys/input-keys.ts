@@ -10,8 +10,8 @@ export interface InputKeyEvent {
 }
 
 /**
- * What a key does in a multi-line input. `actions` is Tab in the quick input;
- * the other inputs leave it to the browser
+ * What a key does in a multi-line input. `actions` is Shift+Space in quick
+ * input; the other inputs leave it to the browser
  */
 export type InputKeyAction = 'submit' | 'newline' | 'actions' | 'cancel'
 
@@ -50,7 +50,14 @@ export function resolveInputKeyAction(
 ): InputKeyAction | 'none' {
   if (event.isComposing) return 'none'
   if (event.code === 'Escape' && noModifiers(event)) return 'cancel'
-  if (event.code === 'Tab' && noModifiers(event)) return 'actions'
+  if (
+    event.code === 'Space' &&
+    event.shiftKey &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    !event.metaKey
+  )
+    return 'actions'
   if (!isEnter(event)) return 'none'
 
   if (noModifiers(event)) return submitKey === 'Enter' ? 'submit' : 'newline'

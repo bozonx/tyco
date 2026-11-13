@@ -573,6 +573,11 @@ export function createQuickAiRequestModel(
   }
 
   return {
+    getNavigationMessages: () =>
+      JSON.parse(JSON.stringify(messages.value)) as ChatMessage[],
+    restoreNavigationMessages: (saved: ChatMessage[]) => {
+      messages.value = saved
+    },
     inputMode,
     profileId,
     modelId,

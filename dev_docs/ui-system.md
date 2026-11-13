@@ -264,14 +264,13 @@ reply-by-voice primary button.
 Request composers share the configured Enter/Ctrl+Enter submit key. Shift+Enter
 always inserts a newline; bare Enter also inserts one in Ctrl+Enter mode.
 Outside text entry, Enter/Space runs the primary action and Shift+Space runs
-the secondary action. Tab opens the next action menu in quick input and voice
-flows. On the action menu, Tab moves the text to the editor. Result views
+the secondary action. Tab and Shift+Tab move focus. Shift+Space opens actions in quick input and external recording flows. The editor button has no shortcut. Result views
 keep an explicit editor button; intermediate input and picker views do not. Escape returns or cancels; Shift+Escape closes the whole flow.
 Ctrl+Enter is reserved for configured request submission, not editor actions
 or immediate voice completion.
 
 Quick surface action rows follow DOM and visual order from left to right:
-Other actions, Tab/action menu, secondary action, primary action.
+Additional actions without shortcuts, editor without a shortcut, secondary action, primary action.
 Escape/cancel appears once in the header, not in the footer.
 Rows align to the right; avoid CSS order overrides so focus follows the display.
 
@@ -285,10 +284,10 @@ selection, independently of the prompt draft. Without a selection it is hidden.
 Completed plain answers expose actions even without proposed reply variants;
 when variants exist, actions use the selected variant.
 
-External dictation keeps Tab to finish into the action menu. The recording
+External dictation uses Shift+Space to finish into the action menu. The recording
 surface has no separate edit-text action; text can be edited in the action menu. Explicit UI text travels as `quickInputText` in the
 activation snapshot, so transfer also works across windows; captured selections
-do not overwrite the quick-input draft. Reviewed voice commands expose Tab/actions for their
+do not overwrite the quick-input draft. Reviewed voice commands expose Shift+Space/actions for their
 editable text and restore the review when returning from the action menu.
 
 Switching microphone/system-audio sources finalizes the current recording first.
@@ -313,11 +312,9 @@ incoming result and pass the current draft to subsequent actions.
 
 ## Result editing keys
 
-Preview and diff result fields keep typing keys, including Tab, inside the
-field. Escape blurs the result field; the next Escape follows overlay navigation.
+Preview and diff result fields keep typing keys inside the field; Tab moves focus. Escape blurs the result field; the next Escape follows overlay navigation.
 Shift+Escape reaches the overlay to close all menus even while editing.
-Outside text fields, Tab inserts the result into the editor; its action button
-shows the binding in both preview and diff menus.
+Tab moves focus in result views; the editor action is an explicit button without a shortcut.
 
 Silent voice completion keeps the stopped voice surface available for retry and
 shows the empty recognition inline. System audio also keeps its compact stopped
@@ -339,6 +336,8 @@ replaces the stack with the action menu, so Back cannot restore the old scenario
 The action menu text is editable and its draft persists when returning from a step.
 
 System-audio recording keeps its privacy hint immediately after the title and
-the close cross at the right edge, matching voice input. Tab finalizes recording
+Close (Esc) at the right edge, matching voice input. Shift+Space finalizes recording
 and opens transcript actions; Enter/Space retain their completion behavior.
 Shift+Tab and Tab from interactive controls keep normal focus navigation.
+
+Overlays in the main editor always offer Back (Esc) and Close (Shift+Esc). At the root, Back dismisses the overlay and returns to the editor. Each navigation step owns its text draft; edits on a child step never replace its parent draft. Preview and diff drafts persist separately from their original result so Reset remains available.

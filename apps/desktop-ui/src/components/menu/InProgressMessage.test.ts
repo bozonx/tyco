@@ -160,7 +160,7 @@ describe('InProgressMessage', () => {
     expect(wrapper.text()).toContain('menu.willInsertOnFinish')
   })
 
-  it('buffers next-menu shortcut slot actions (e.g. KeyF for transformationMenu) and Tab for editor', async () => {
+  it('buffers next-menu shortcut slot actions (e.g. KeyF for transformationMenu) and leaves Tab to focus navigation', async () => {
     const menuModalsStore = useMenuModalsStore()
     const wrapper = mount(InProgressMessage, {
       props: { allowBufferedIntent: true },
@@ -178,11 +178,11 @@ describe('InProgressMessage', () => {
     expect(wrapper.text()).toContain('F')
     expect(wrapper.text()).toContain('action.transformationMenu')
 
-    // Tab buffers 'editor'
+    // Tab keeps focus navigation and does not buffer an editor action.
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Tab' }))
-    expect(menuModalsStore.bufferedIntent).toBe('editor')
+    expect(menuModalsStore.bufferedIntent).not.toBe('editor')
     await wrapper.vm.$nextTick()
-    expect(wrapper.text()).toContain('shortcuts.insertIntoEditor')
+    expect(wrapper.text()).not.toContain('shortcuts.insertIntoEditor')
   })
 
   it('does not buffer correction slot action when already running a correction', () => {

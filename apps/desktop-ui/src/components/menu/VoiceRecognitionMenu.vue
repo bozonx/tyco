@@ -32,7 +32,7 @@
           props.finishBehavior !== 'prompt' &&
           liveTranscriptText(transcript).trim()
         "
-        :keys="['Tab']"
+        :keys="['Shift', 'Space']"
         @click="preserveErrorDraft('next')"
         >{{ t('menu.actions') }}</ShortcutButton
       >
@@ -518,8 +518,8 @@ function handleKeyUp(event: KeyboardEvent) {
   if (startError.value) {
     const hasDraft = Boolean(liveTranscriptText(transcript.value).trim())
     if (
-      event.code === 'Tab' &&
-      !event.shiftKey &&
+      event.code === 'Space' &&
+      event.shiftKey &&
       hasDraft &&
       props.finishBehavior !== 'prompt'
     )
@@ -544,7 +544,11 @@ function handleKeyUp(event: KeyboardEvent) {
     return
 
   if (event.shiftKey && event.code === 'Space') {
-    if (props.finishBehavior === 'insertIntoTarget') return
+    if (props.finishBehavior === 'insertIntoTarget') {
+      event.preventDefault()
+      void finish('next')
+      return
+    }
     const intent =
       props.finishBehavior === 'submitToChat'
         ? 'insert'
@@ -561,21 +565,6 @@ function handleKeyUp(event: KeyboardEvent) {
     }
     return
   }
-  if (
-    event.code === 'Tab' &&
-    !event.shiftKey &&
-    ['submitToChat', 'insertIntoTarget'].includes(props.finishBehavior ?? '')
-  ) {
-    if (
-      props.finishBehavior !== 'prompt' ||
-      liveTranscriptText(transcript.value).trim()
-    ) {
-      event.preventDefault()
-      void finish('next')
-    }
-    return
-  }
-
   if (!event.shiftKey && (event.code === 'Space' || event.code === 'Enter')) {
     void finish(primaryIntent())
   }
@@ -591,23 +580,6 @@ function handleKeyDown(event: KeyboardEvent) {
 
   if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing)
     return
-
-  // Consume the secondary completion shortcut before the browser handles it
-  if (
-    ((props.finishBehavior === 'submitToChat' ||
-      (props.finishBehavior === 'prompt' &&
-        Boolean(liveTranscriptText(transcript.value).trim()))) &&
-      event.code === 'Tab' &&
-      !event.shiftKey) ||
-    (props.finishBehavior === 'insertIntoTarget' &&
-      event.code === 'Tab' &&
-      !event.shiftKey &&
-      !event.ctrlKey &&
-      !event.metaKey &&
-      !event.altKey)
-  ) {
-    event.preventDefault()
-  }
 
   // Prevent default scroll when Space or Shift+Space is pressed
   if (

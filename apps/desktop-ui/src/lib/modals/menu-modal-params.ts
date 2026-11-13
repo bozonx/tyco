@@ -1,5 +1,5 @@
 import type { ActionItem } from '@tyco/plugin-sdk'
-import type { ChatImage } from '@tyco/shared'
+import type { ChatImage, ChatMessage } from '@tyco/shared'
 import type { DictationTarget } from '../stt/dictation-target'
 import type {
   VoiceFinishBehavior,
@@ -52,6 +52,8 @@ export interface TransformationMenuParams {
   transformationId?: string
 }
 export interface QuickAiRequestMenuParams {
+  draftMessages?: ChatMessage[]
+  draftPrompt?: string
   screenshotMode?: boolean
   /** The screenshots of the activation, in the order they were taken */
   screenshots?: ChatImage[]
@@ -132,12 +134,14 @@ export interface VoiceMenuParams {
     | 'voiceScreenshotQuickAiRequest'
 }
 export interface DiffMenuParams {
+  draftText?: string
   oldText: string
   newText: string
   /** Explicit replacement after reviewing a conflicting editor transfer. */
   replaceEditor?: (text?: string) => void
 }
 export interface PreviewMenuParams {
+  draftText?: string
   text: string
   sourceText?: string
   translationMeta?: TranslationMeta

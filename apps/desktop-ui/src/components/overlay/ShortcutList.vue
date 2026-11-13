@@ -7,7 +7,7 @@
     >
       <ShortcutButton
         v-if="props.isEditorButtonVisible"
-        :keys="props.editorShortcut ? ['Tab'] : []"
+        :keys="[]"
         :title="props.editorButtonLabel ?? t('shortcuts.insertIntoEditor')"
         @click="goToEditor"
       >
@@ -176,13 +176,6 @@ function handleKeyDown(event: KeyboardEvent) {
   }
   if (!event.repeat) pressedKeys.set(event.code, props.text)
 
-  if (
-    event.code === 'Tab' &&
-    props.editorShortcut &&
-    props.isEditorButtonVisible
-  )
-    event.preventDefault()
-
   // Prevent browser default tab focus movement and space scroll
   if (
     (event.code === 'Space' || event.code === 'Enter') &&
@@ -213,12 +206,6 @@ function handleShortcutKeyUp(event: KeyboardEvent) {
     !props.spaceKey.disabled
   ) {
     void props.spaceKey.action(props.text || '')
-  } else if (
-    event.code === 'Tab' &&
-    props.editorShortcut &&
-    props.isEditorButtonVisible
-  ) {
-    goToEditor()
   } else if (event.code === 'Escape' && props.escVisible) {
     event.preventDefault()
     if (event.shiftKey) {

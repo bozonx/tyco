@@ -46,7 +46,7 @@
       <template v-if="finishBehavior === 'submitToChat'">
         <ShortcutButton
           :size="compact ? 'sm' : 'md'"
-          :keys="['Tab']"
+          :keys="[]"
           :disabled="isFinishing"
           @click="() => finish('next')"
         >
@@ -74,7 +74,7 @@
         <ShortcutButton
           v-if="finishBehavior === 'insertIntoTarget'"
           :size="compact ? 'sm' : 'md'"
-          :keys="['Tab']"
+          :keys="['Shift', 'Space']"
           :disabled="isFinishing"
           @click="() => finish('next')"
         >

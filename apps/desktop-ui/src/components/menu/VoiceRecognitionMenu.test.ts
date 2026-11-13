@@ -243,10 +243,10 @@ describe('VoiceRecognitionMenu', () => {
       ['submitToChat', { code: 'Space' }, 'submit'],
 
       ['submitToChat', { code: 'Space', shiftKey: true }, 'insert'],
-      ['submitToChat', { code: 'Tab' }, 'next'],
+
       ['insertIntoTarget', { code: 'Enter' }, 'insert'],
       ['insertIntoTarget', { code: 'Space' }, 'insert'],
-      ['insertIntoTarget', { code: 'Tab' }, 'next'],
+      ['insertIntoTarget', { code: 'Space', shiftKey: true }, 'next'],
       ['confirm', { code: 'Enter' }, 'insert'],
       ['confirm', { code: 'Space' }, 'insert'],
     ] as const)('%s finishes %o with %s', async (behavior, init, intent) => {

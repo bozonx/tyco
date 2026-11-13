@@ -203,32 +203,20 @@ function onKeyDown(event: KeyboardEvent) {
   ) {
     return
   }
-  if (
-    (event.code === 'Space' ||
-      (event.code === 'Tab' &&
-        !event.shiftKey &&
-        !event.ctrlKey &&
-        !event.altKey &&
-        !event.metaKey)) &&
-    model.isRecording.value
-  ) {
-    event.preventDefault()
-  }
+  if (event.code === 'Space' && model.isRecording.value) event.preventDefault()
   keyPresses.press(event.code)
 }
 
 function onKeyUp(event: KeyboardEvent) {
   if (!keyPresses.release(event.code)) return
   if (
-    (event.code === 'Enter' ||
-      event.code === 'Space' ||
-      event.code === 'Tab') &&
+    (event.code === 'Enter' || event.code === 'Space') &&
     model.isRecording.value &&
     !event.defaultPrevented &&
     !event.ctrlKey &&
     !event.altKey &&
     !event.metaKey &&
-    !event.shiftKey &&
+    (!event.shiftKey || event.code === 'Space') &&
     !isInteractiveOrTypingTarget(event.target)
   ) {
     if (event.code === 'Space') event.preventDefault()

@@ -70,6 +70,7 @@ import { usePersistedTranslationViewMode } from '../../composables/use-persisted
 import { useResultActions } from '../../composables/use-result-actions'
 import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
 import type { PreviewMenuParams } from '../../lib/modals/menu-modal-params'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import AppIcon from '../common/AppIcon.vue'
 import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
@@ -81,7 +82,13 @@ import ResultViewModeToggle from './ResultViewModeToggle.vue'
 
 const props = defineProps<PreviewMenuParams>()
 
-const currentText = ref(props.text)
+const menus = useMenuModalsStore()
+const draftStepId = menus.currentStepId
+const currentText = ref(props.draftText ?? props.text)
+watch(currentText, (value) => {
+  if (draftStepId !== undefined)
+    menus.updateStep(draftStepId, MenuModals.PREVIEW, { draftText: value })
+})
 watch(
   () => props.text,
   (newText) => {

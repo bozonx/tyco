@@ -120,7 +120,7 @@
         <div class="voice-actions">
           <template v-if="isListening">
             <ShortcutButton
-              :keys="['Tab']"
+              :keys="['Shift', 'Space']"
               :disabled="voice.stage === 'finishing'"
               @click="void voice.finish('review')"
             >
@@ -149,7 +149,7 @@
               {{ t('voiceCommands.recordAgain') }}
             </ShortcutButton>
             <ShortcutButton
-              :keys="['Tab']"
+              :keys="['Shift', 'Space']"
               :disabled="voice.stage === 'running' || !voice.inputText.trim()"
               @click="openTextActions"
               >{{ t('menu.actions') }}</ShortcutButton
@@ -491,9 +491,8 @@ const onKeyDown = (event: KeyboardEvent) => {
     return
   }
   if (voice.stage === 'recording') {
-    if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return
-    if (event.code === 'Tab') {
-      if (event.shiftKey) return
+    if (event.ctrlKey || event.metaKey || event.altKey) return
+    if (event.code === 'Space' && event.shiftKey) {
       event.preventDefault()
       // stops the recording for review even when no command was heard: the
       // text can then be edited and a command picked by hand
@@ -508,8 +507,8 @@ const onKeyDown = (event: KeyboardEvent) => {
   }
   if (voice.stage !== 'review') return
   if (
-    event.code === 'Tab' &&
-    !event.shiftKey &&
+    event.code === 'Space' &&
+    event.shiftKey &&
     !event.ctrlKey &&
     !event.metaKey &&
     !event.altKey &&

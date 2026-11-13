@@ -94,9 +94,6 @@ const canBufferInsert = computed(
 const canBufferCopy = computed(
   () => props.allowBufferedCopy && !isEditorCorrection.value
 )
-const canBufferEditor = computed(
-  () => !isEditorTarget.value && canBufferCopy.value
-)
 
 const bufferedBadgeIcon = computed(() => {
   const intent = menuModalsStore.bufferedIntent
@@ -164,7 +161,7 @@ function handleKeyDown(event: KeyboardEvent) {
     handleCloseAll()
     return
   }
-  if (!props.allowBufferedIntent) return
+  if (!props.allowBufferedIntent || event.shiftKey) return
   if (event.ctrlKey || event.altKey || event.metaKey || event.isComposing)
     return
 
@@ -189,7 +186,6 @@ function handleKeyDown(event: KeyboardEvent) {
     if (
       event.code === 'Space' ||
       event.code === 'Enter' ||
-      (event.code === 'Tab' && !event.shiftKey && canBufferEditor.value) ||
       (slotIndex >= 0 && canBufferCopy.value)
     ) {
       event.preventDefault()
@@ -202,13 +198,6 @@ function handleKeyDown(event: KeyboardEvent) {
     event.preventDefault()
     event.stopImmediatePropagation()
     requestBufferedInsert()
-    return
-  }
-
-  if (event.code === 'Tab' && !event.shiftKey && canBufferEditor.value) {
-    event.preventDefault()
-    event.stopImmediatePropagation()
-    menuModalsStore.setBufferedIntent('editor')
     return
   }
 

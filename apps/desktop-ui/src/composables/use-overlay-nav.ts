@@ -6,6 +6,7 @@ import {
 } from '../lib/modals/overlay-nav'
 import { appNavigation } from '../navigation'
 import { useDesktopStore } from '../stores/desktop'
+import { useEditorInputStore } from '../stores/editor-input'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useQuickInputStore } from '../stores/quick-input'
@@ -16,12 +17,20 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
   const menuModalsStore = useMenuModalsStore()
   const ipcStore = useIpcStore()
   const desktopStore = useDesktopStore()
+  const editorInputStore = useEditorInputStore()
   const quickInputStore = useQuickInputStore()
   const voiceResultStore = useVoiceResultStore()
   const { t } = useI18n()
 
   const goBack = () => {
-    if (menuModalsStore.currentModal !== MenuModals.NONE) {
+    if (menuModalsStore.menuBreadcrumbs.length > 1) {
+      menuModalsStore.back()
+    } else if (!isQuickWindow()) {
+      menuModalsStore.cancelPending()
+      menuModalsStore.closeAll()
+      void appNavigation.goToEditor()
+      editorInputStore.requestFocus()
+    } else {
       menuModalsStore.back()
     }
   }
@@ -66,13 +75,16 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
       currentModal: () => menuModalsStore.currentModal,
       canGoBack: () =>
         menuModalsStore.currentModal !== MenuModals.NONE &&
-        menuModalsStore.menuBreadcrumbs.length > 1,
+        (menuModalsStore.menuBreadcrumbs.length > 1 || !isQuickWindow()),
       isQuickWindow,
       t,
       goBack,
       hideWindow,
       closeAll,
     },
-    options
+    () => ({
+      ...options?.(),
+      ...(!isQuickWindow() ? { escMode: 'back' as const } : {}),
+    })
   )
 }

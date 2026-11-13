@@ -128,7 +128,7 @@ describe('ShortcutList', () => {
     wrapper.unmount()
   })
 
-  it('opens the editor with Tab only when enabled on the action page', () => {
+  it('leaves Tab to focus even when the editor action is available', () => {
     const wrapper = mount(ShortcutList, {
       props: {
         text: 'result',
@@ -138,9 +138,9 @@ describe('ShortcutList', () => {
     })
     const down = new KeyboardEvent('keydown', { code: 'Tab', cancelable: true })
     window.dispatchEvent(down)
-    expect(down.defaultPrevented).toBe(true)
+    expect(down.defaultPrevented).toBe(false)
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Tab' }))
-    expect(mocks.toEditor).toHaveBeenCalledWith('result')
+    expect(mocks.toEditor).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 
@@ -159,7 +159,7 @@ describe('ShortcutList', () => {
       },
     })
 
-    // Keydown Tab should be preventDefaulted
+    // Tab belongs to focus navigation.
     const tabEvent = new KeyboardEvent('keydown', {
       code: 'Tab',
       cancelable: true,
@@ -167,7 +167,7 @@ describe('ShortcutList', () => {
     window.dispatchEvent(tabEvent)
     expect(tabEvent.defaultPrevented).toBe(false)
 
-    // Keyup Tab should navigate to editor with replacement
+    // Releasing Tab must not replace the editor.
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Tab' }))
     expect(mocks.toEditor).not.toHaveBeenCalled()
 
@@ -345,7 +345,7 @@ describe('ShortcutList', () => {
     })
 
     press('Escape')
-    expect(mocks.back).toHaveBeenCalled()
+    expect(mocks.goToEditor).toHaveBeenCalled()
     wrapper.unmount()
   })
 

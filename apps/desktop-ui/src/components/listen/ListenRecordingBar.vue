@@ -33,14 +33,14 @@
         :disabled="isFinishing"
         @change="emit('language-change')"
       />
-      <IconButton
+      <ShortcutButton
         class="listen-bar-close"
-        icon="mdi:close"
-        :label="t('common.close')"
         :title="t('common.closeAllHint')"
         :disabled="isFinishing"
         @click="void model.close()"
-      />
+        :keys="['Esc']"
+        >{{ t('common.close') }}</ShortcutButton
+      >
     </div>
     <div
       v-if="notice"
@@ -90,7 +90,7 @@
         <ShortcutButton
           v-if="!isStopped"
           size="sm"
-          :keys="['Tab']"
+          :keys="['Shift', 'Space']"
           :disabled="isFinishing || (isStopped && !model.canRetry.value)"
           @click="isStopped ? void model.retry() : void model.stop()"
         >
@@ -133,7 +133,6 @@ import {
 } from '../../lib/listen/listen-model'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
-import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 import OverlayDragHandle from '../quick/OverlayDragHandle.vue'

@@ -143,7 +143,7 @@
           {{ t('quickAiRequest.followUp') }}
         </ShortcutButton>
         <ShortcutButton
-          :keys="['Tab']"
+          :keys="['Shift', 'Space']"
           v-if="resultActionText"
           class="quick-next-action"
           variant="ghost"
@@ -321,7 +321,8 @@ const { handleEsc: defaultHandleEsc } = useOverlayNav(() => ({
 const isQuickWindow = isInQuickWindow()
 /** The prompt and its caret, kept as the main chat keeps its input */
 const input = createChatInputModel()
-input.setValue(props.prompt)
+input.setValue(props.draftPrompt ?? props.prompt)
+const navigationStepId = menuModalsStore.currentStepId
 const isCapturing = ref(false)
 const screenshotToDelete = ref<string | null>(null)
 const queryPanelRef = ref<InstanceType<typeof QueryPanel>>()
@@ -383,6 +384,7 @@ const runtime = createQuickAiRequestRuntime({
   createId: () => crypto.randomUUID(),
 })
 const { model } = runtime
+if (props.draftMessages) model.restoreNavigationMessages(props.draftMessages)
 const replyOptions = computed(() => [
   { id: -1, name: t('quickAiRequest.chooseVariant'), disabled: true },
   ...model.replyBlocks.value.map((block, index) => ({
@@ -753,7 +755,12 @@ function handleEsc() {
 /** The result surface owns insertion keys; the composer owns text input. */
 function handleWindowKeys(event: KeyboardEvent) {
   if (event.defaultPrevented || event.repeat || event.isComposing) return
-  if (event.shiftKey || event.altKey || event.metaKey) return
+  if (
+    (event.shiftKey && event.code !== 'Space') ||
+    event.altKey ||
+    event.metaKey
+  )
+    return
   if (isResultVisible.value && !isInputBlocked.value) {
     if (isApplying.value) return
     if (event.key === 'Escape' && !event.ctrlKey) {
@@ -770,13 +777,19 @@ function handleWindowKeys(event: KeyboardEvent) {
     )
       return
     if (window.getSelection()?.toString()) return
-    if (event.key === 'Tab' && !event.ctrlKey && resultActionText.value) {
+    if (
+      event.code === 'Space' &&
+      event.shiftKey &&
+      !event.ctrlKey &&
+      resultActionText.value
+    ) {
       event.preventDefault()
       openNextStep()
       return
     }
     if (
       !event.ctrlKey &&
+      !event.shiftKey &&
       (event.key === 'Enter' || event.key === ' ') &&
       model.selectedReplyBlock.value
     ) {
@@ -808,6 +821,13 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('keydown', handleWindowKeys)
   disposed = true
+  if (navigationStepId !== undefined) {
+    menuModalsStore.updateStep(navigationStepId, MenuModals.QUICK_AI_REQUEST, {
+      draftMessages: model.getNavigationMessages(),
+      draftPrompt: input.value.value,
+      isPromptSent: false,
+    })
+  }
   runtime.dispose()
 })
 </script>
