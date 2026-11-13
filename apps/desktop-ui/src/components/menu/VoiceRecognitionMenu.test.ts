@@ -681,6 +681,33 @@ describe('VoiceRecognitionMenu', () => {
     wrapper.unmount()
   })
 
+  it('keeps the bar after silent dictation and records again with Space', async () => {
+    mocks.finishDictation.mockResolvedValue('')
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar', finishBehavior: 'insertIntoTarget' },
+      global: { stubs: { AudioWaveform: true } },
+    })
+    await flushPromises()
+    const press = async (code: string) => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { code }))
+      document.dispatchEvent(new KeyboardEvent('keyup', { code }))
+      await flushPromises()
+    }
+
+    await press('Enter')
+    const notice = wrapper.find('.recording-stopped[role="status"]')
+    expect(notice.text()).toContain('listen.nothingRecognized')
+    // no sound reached the microphone at all
+    expect(notice.text()).toContain('listen.quietMicrophoneHint')
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    expect(wrapper.emitted('cancelled')).toBeUndefined()
+
+    await press('Space')
+    expect(mocks.startDictation).toHaveBeenCalledTimes(2)
+    expect(wrapper.find('.recording-stopped').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
   it('queries shouldFormatRecognizedText with external target and formats text', async () => {
     mocks.shouldFormatRecognizedText.mockImplementation(
       (target) => target === 'external'

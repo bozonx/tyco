@@ -1,12 +1,11 @@
 <template>
-  <div
+  <RecordingBarFrame
     v-if="startError"
-    class="voice-bar voice-error-bar"
-    :class="{ 'is-empty': startError.isEmpty }"
-    :role="startError.isEmpty ? 'status' : 'alert'"
-    :aria-live="startError.isEmpty ? 'polite' : 'assertive'"
+    class="voice-stopped-bar"
+    :class="{ 'is-error': !startError.isEmpty }"
+    :label="t('menu.voiceInput')"
   >
-    <div class="voice-error-header">
+    <div class="voice-stopped-header">
       <OverlayDragHandle />
       <QuickModeSwitch
         v-if="props.canSwitchMode"
@@ -14,56 +13,59 @@
         :disabled="!desktopStore.desktopState.canListen"
         @switch="switchToListen"
       />
-      <AppIcon
-        icon="mdi:alert-circle-outline"
-        size="md"
-        class="voice-error-icon"
-      />
-      <span v-if="startError.message" class="voice-error-text">{{
-        startError.message
-      }}</span>
-      <ShortcutButton size="sm" :keys="['Esc']" @click="dismissStartError">
+      <ShortcutButton
+        class="voice-stopped-close"
+        size="sm"
+        :keys="['Esc']"
+        @click="dismissStartError"
+      >
         {{ t('common.close') }}
       </ShortcutButton>
     </div>
-    <div class="voice-error-actions">
+    <RecordingStoppedNotice
+      :kind="startError.isEmpty ? 'empty' : 'error'"
+      :message="startError.message"
+      :hint="startError.hint"
+      source="microphone"
+    />
+    <div class="voice-stopped-actions">
       <ShortcutButton
         v-if="
           props.finishBehavior !== 'prompt' &&
           liveTranscriptText(transcript).trim()
         "
+        size="sm"
         :keys="['Shift', 'Space']"
         @click="preserveErrorDraft('next')"
         >{{ t('menu.actions') }}</ShortcutButton
       >
-
       <Button
         v-if="props.allowEmptyInput"
-        variant="primary"
+        size="sm"
+        :variant="startError.canRetry ? 'ghost' : 'primary'"
         @click="openEmptyInput"
         >{{ t('menu.typeText') }}</Button
       >
-
-      <Button
-        v-if="startError.canRetry"
-        size="sm"
-        :variant="startError.canOpenSettings ? 'ghost' : 'primary'"
-        icon="mdi:refresh"
-        @click="retryAfterError"
-      >
-        {{ t('listen.retry') }}
-      </Button>
       <Button
         v-if="startError.canOpenSettings"
         size="sm"
-        variant="primary"
+        :variant="startError.canRetry ? 'ghost' : 'primary'"
         icon="mdi:cog-outline"
         @click="openSttSettings"
       >
         {{ t('common.openSettings') }}
       </Button>
+      <ShortcutButton
+        v-if="startError.canRetry"
+        size="sm"
+        variant="primary"
+        :keys="['Space']"
+        @click="retryAfterError"
+      >
+        {{ t('listen.retry') }}
+      </ShortcutButton>
     </div>
-  </div>
+  </RecordingBarFrame>
   <component
     v-else
     :is="props.variant === 'bar' ? VoiceRecordingBar : VoiceRecordingSheet"
@@ -133,11 +135,12 @@ import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickDismissStore } from '../../stores/quick-dismiss'
-import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import QuickModeSwitch from '../voice/QuickModeSwitch.vue'
+import RecordingBarFrame from '../voice/RecordingBarFrame.vue'
+import RecordingStoppedNotice from '../voice/RecordingStoppedNotice.vue'
 import VoiceRecordingBar from '../voice/VoiceRecordingBar.vue'
 import VoiceRecordingSheet from '../voice/VoiceRecordingSheet.vue'
 import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
@@ -187,6 +190,8 @@ const startError = ref<{
   message: string
   canOpenSettings: boolean
   isEmpty?: boolean
+  /** A likely cause of the empty result */
+  hint?: string
   canRetry: boolean
 } | null>(null)
 
@@ -331,6 +336,11 @@ const model = createVoiceRecognition({
   onEmptyInput: () => {
     startError.value = {
       message: t('listen.nothingRecognized'),
+      hint: t(
+        maxAudioPeak < QUIET_MICROPHONE_PEAK
+          ? 'listen.quietMicrophoneHint'
+          : 'listen.nothingRecognizedHint'
+      ),
       isEmpty: true,
       canOpenSettings: false,
       canRetry: true,
@@ -465,6 +475,18 @@ const finishHotkey = useVoiceFinishSignal(
 const { audioLevel, audioPeak, recordingDurationMs } = useVoiceRecordingMeter(
   () => isStarted.value
 )
+/**
+ * Below this sample peak (about -34 dBFS) the microphone hardly heard anything:
+ * an empty result then points at the microphone, not the speech
+ */
+const QUIET_MICROPHONE_PEAK = 0.02
+let maxAudioPeak = 0
+watch(audioPeak, (peak) => {
+  maxAudioPeak = Math.max(maxAudioPeak, peak)
+})
+watch(isStarted, (started) => {
+  if (started) maxAudioPeak = 0
+})
 
 useDismissibleLayer({
   isOpen: ownsActivation,
@@ -526,10 +548,12 @@ function handleKeyUp(event: KeyboardEvent) {
       void preserveErrorDraft('next')
     else if (
       (event.code === 'Enter' || event.code === 'Space') &&
-      !event.shiftKey &&
-      props.allowEmptyInput
-    )
-      void preserveErrorDraft('insert')
+      !event.shiftKey
+    ) {
+      // the key that started the recording records again
+      if (startError.value.canRetry) retryAfterError()
+      else if (props.allowEmptyInput) void preserveErrorDraft('insert')
+    }
     return
   }
 
@@ -657,51 +681,30 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.voice-error-bar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  width: 100%;
-  padding: var(--space-sm) var(--space-md);
-  box-sizing: border-box;
-  border: 1px solid color-mix(in oklab, var(--color-error) 55%, transparent);
-  border-radius: var(--radius-lg);
-  background-color: var(--app-surface);
-  box-shadow: var(--app-shadow-md);
+.voice-stopped-bar.is-error {
+  border-color: color-mix(in oklab, var(--color-error) 55%, transparent);
 }
 
-.voice-error-header {
+.voice-stopped-header {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
   min-width: 0;
-  flex-wrap: wrap;
 }
 
-.voice-error-icon {
-  flex-shrink: 0;
-  color: var(--color-error);
+.voice-stopped-close {
+  margin-left: auto;
+  width: auto;
 }
 
-.voice-error-text {
-  font-size: var(--text-control);
-  color: var(--color-base-content);
-  line-height: 1.4;
-  flex: 1 1 16rem;
-  overflow-wrap: anywhere;
-}
-
-.voice-error-actions {
+.voice-stopped-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--space-xs);
-}
-
-.voice-error-bar.is-empty {
-  border-color: var(--app-border-subtle);
-}
-.voice-error-bar.is-empty .voice-error-icon {
-  color: var(--app-text-muted);
+  padding-top: var(--space-xs);
+  border-top: 1px solid var(--app-border-subtle);
+  --shortcut-flex: 0 0 auto;
+  --shortcut-width: auto;
 }
 </style>

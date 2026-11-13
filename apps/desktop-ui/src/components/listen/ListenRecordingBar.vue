@@ -42,8 +42,21 @@
         >{{ t('common.close') }}</ShortcutButton
       >
     </div>
+    <RecordingStoppedNotice
+      v-if="isStopped"
+      :kind="model.phase.value === 'failed' ? 'error' : 'empty'"
+      :message="
+        model.phase.value === 'failed'
+          ? model.errorText.value
+          : t('listen.nothingRecognized')
+      "
+      :hint="
+        model.phase.value === 'empty' ? t('listen.nothingHeardHint') : undefined
+      "
+      source="system"
+    />
     <div
-      v-if="notice"
+      v-else-if="notice"
       class="listen-bar-notice"
       :class="{ 'is-error': isErrorNotice }"
       role="status"
@@ -98,7 +111,7 @@
         </ShortcutButton>
         <ShortcutButton
           size="sm"
-          :keys="isStopped ? [] : stopKeys"
+          :keys="isStopped ? ['Space'] : stopKeys"
           variant="primary"
           :disabled="isFinishing || (isStopped && !model.canRetry.value)"
           @click="isStopped ? void model.retry() : void model.stop()"
@@ -139,6 +152,7 @@ import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import AudioWaveform from '../voice/AudioWaveform.vue'
 import LiveTranscript from '../voice/LiveTranscript.vue'
 import RecordingBarFrame from '../voice/RecordingBarFrame.vue'
+import RecordingStoppedNotice from '../voice/RecordingStoppedNotice.vue'
 import SttLanguagePicker from '../voice/SttLanguagePicker.vue'
 import VoiceAutoStopNotice from '../voice/VoiceAutoStopNotice.vue'
 import ListenSourcePicker from './ListenSourcePicker.vue'
@@ -205,8 +219,6 @@ const isErrorNotice = computed(
 )
 
 const notice = computed(() => {
-  if (props.model.phase.value === 'empty') return t('listen.nothingRecognized')
-  if (props.model.phase.value === 'failed') return props.model.errorText.value
   const { source, isSourceLost, errorText } = props.model
   if (isSourceLost.value) return t('listen.sourceLost')
   if (isWaitingForApp.value && source.value.kind === 'application')

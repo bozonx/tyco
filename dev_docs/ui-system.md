@@ -316,11 +316,26 @@ Preview and diff result fields keep typing keys inside the field; Tab moves focu
 Shift+Escape reaches the overlay to close all menus even while editing.
 Tab moves focus in result views; the editor action is an explicit button without a shortcut.
 
-Silent voice completion keeps the stopped voice surface available for retry and
-shows the empty recognition inline. System audio also keeps its compact stopped
-surface for empty recognition and failures; only a transcript opens the full result.
-Recognition failures remain visible with retry or settings actions. Existing chat input returns to editing
-when submission contains no new speech. An unchanged correction is a successful
+## Recording outcomes without text
+
+A recording that yields no text never swaps its surface for a separate panel.
+Microphone and system-audio bars switch to a stopped state in the same frame and
+show `RecordingStoppedNotice` in place of the live transcript:
+
+- **Empty** (silence, noise) is a normal outcome, not an error: muted icon,
+  `role="status"`, and a hint at the likely cause. A microphone whose peak
+  never rose above `QUIET_MICROPHONE_PEAK` points at the microphone itself.
+- **Failed** sessions (start or recognition errors) use the error tone and
+  `role="alert"`, plus Open settings when settings can fix them.
+- Retry is the primary action, bound to Space (Enter too): the key that ended
+  the recording records again. Esc closes; Shift+Space keeps a partial draft;
+  Type text opens an empty input where the flow allows one.
+- When an empty result opens an input anyway (empty prompt, edit intent, chat
+  with existing text), a warning toast says nothing was recognized.
+
+Toasts are for outcomes that still produce a result (failed correction or
+styling, post-process timeout, recording limit, history failures) and for errors
+after the surface is gone, with Open settings as the toast action when it helps. An unchanged correction is a successful
 result; its status is shown in a toast rather than the result header. Empty
 correction responses are failures and must not replace the source text.
 

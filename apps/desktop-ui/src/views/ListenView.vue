@@ -27,39 +27,6 @@
         :allow-remove-context="false"
         :shortcuts-disabled="menuModalsStore.hasOpenModal"
       />
-      <StateMessage
-        v-else
-        class="listen-empty"
-        :kind="model.phase.value === 'failed' ? 'error' : 'empty'"
-        :message="
-          model.phase.value === 'failed'
-            ? model.errorText.value
-            : t('listen.nothingRecognized')
-        "
-      >
-        <div class="listen-empty-actions">
-          <Button size="sm" @click="void model.close()">
-            {{ t('common.close') }}
-          </Button>
-          <Button
-            v-if="model.phase.value !== 'failed' || model.canRetry.value"
-            size="sm"
-            :variant="model.canOpenSettings.value ? 'ghost' : 'primary'"
-            @click="void model.retry()"
-          >
-            {{ t('listen.retry') }}
-          </Button>
-          <Button
-            v-if="model.phase.value === 'failed' && model.canOpenSettings.value"
-            size="sm"
-            variant="primary"
-            icon="mdi:cog-outline"
-            @click="openSttSettings"
-          >
-            {{ t('common.openSettings') }}
-          </Button>
-        </div>
-      </StateMessage>
     </div>
   </ContentPadding>
 </template>
@@ -67,14 +34,11 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import Button from '../components/common/Button.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
-import StateMessage from '../components/common/StateMessage.vue'
 import ListenRecordingBar from '../components/listen/ListenRecordingBar.vue'
 import InsertMenu from '../components/menu/InsertMenu.vue'
 import { useDictationActions } from '../composables/use-dictation-actions'
 import { useDismissibleLayer } from '../composables/use-dismissible-layer'
-import { useI18n } from '../composables/use-i18n'
 import { useQuickModeSwitch } from '../composables/use-quick-mode-switch'
 import useToast from '../composables/use-toast'
 import { useVoiceFinishSignal } from '../composables/use-voice-finish-signal'
@@ -102,7 +66,6 @@ const emit = defineEmits<{
   (e: 'result-shown', shown: boolean): void
 }>()
 
-const { t } = useI18n()
 const { toastKey } = useToast()
 const desktopStore = useDesktopStore()
 const historyStore = useHistoryStore()
@@ -221,6 +184,23 @@ function onKeyUp(event: KeyboardEvent) {
   ) {
     if (event.code === 'Space') event.preventDefault()
     void model.stop()
+    return
+  }
+  // the key that ended the recording records again after an empty one
+  if (
+    isBar.value &&
+    (event.code === 'Enter' || event.code === 'Space') &&
+    !event.defaultPrevented &&
+    !event.shiftKey &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    !event.metaKey &&
+    !isInteractiveOrTypingTarget(event.target) &&
+    (model.phase.value === 'empty' ||
+      (model.phase.value === 'failed' && model.canRetry.value))
+  ) {
+    event.preventDefault()
+    void model.retry()
   }
 }
 
@@ -298,26 +278,5 @@ onUnmounted(() => {
   gap: var(--space-sm);
   height: 100%;
   min-height: 0;
-}
-
-.listen-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-md);
-  flex: 1;
-  text-align: center;
-  color: var(--app-text-muted);
-}
-
-.listen-empty p {
-  margin: 0;
-  max-width: 32rem;
-}
-
-.listen-empty-actions {
-  display: flex;
-  gap: var(--space-sm);
 }
 </style>

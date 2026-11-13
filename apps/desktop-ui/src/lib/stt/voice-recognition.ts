@@ -307,11 +307,14 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           suffix = '',
           allowEmptyInput,
         } = deps.options()
+        // the input opens empty: say why nothing was put into it
         if ((allowEmptyInput && intent === 'insert') || intent === 'edit') {
+          toastKey('toast.nothingRecognized', 'warn')
           deps.onCorrected('', '', undefined, intent)
           return
         }
         if (chat && intent === 'submit' && `${prefix}${suffix}`.trim()) {
+          toastKey('toast.nothingRecognized', 'warn')
           deps.onCorrected('', '', undefined, 'edit')
           return
         }

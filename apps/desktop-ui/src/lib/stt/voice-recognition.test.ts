@@ -45,7 +45,7 @@ describe('voice recognition model', () => {
     model.dispose()
   })
 
-  it('opens a prompt input after silent dictation without cancelling the request', async () => {
+  it('opens a prompt input after silent dictation and tells nothing was recognized', async () => {
     const { deps, model } = setup({
       options: () => ({ chat: true, allowEmptyInput: true }),
       finishDictation: vi.fn().mockResolvedValue(''),
@@ -54,7 +54,8 @@ describe('voice recognition model', () => {
     await model.finish('insert')
     expect(deps.onCorrected).toHaveBeenCalledWith('', '', undefined, 'insert')
     expect(deps.onCancelled).not.toHaveBeenCalled()
-    expect(deps.toastKey).not.toHaveBeenCalledWith(
+    // the input opens empty, so the user is told why
+    expect(deps.toastKey).toHaveBeenCalledWith(
       'toast.nothingRecognized',
       'warn'
     )

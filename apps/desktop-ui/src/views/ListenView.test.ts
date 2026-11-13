@@ -206,10 +206,15 @@ describe('ListenView', () => {
     expect(wrapper.emitted('result-shown')?.at(-1)).toEqual([false])
     const retry = wrapper
       .findAll('button')
-      .find((button) => button.text() === i18n.global.t('listen.retry'))
+      .find((button) => button.text().includes(i18n.global.t('listen.retry')))
     await retry!.trigger('click')
     await flushPromises()
     expect(dictation.startDictation).toHaveBeenCalledTimes(2)
+
+    // the key that ended the empty recording records again
+    await pressEnter()
+    await pressEnter()
+    expect(dictation.startDictation).toHaveBeenCalledTimes(3)
     wrapper.unmount()
   })
 
