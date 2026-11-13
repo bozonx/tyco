@@ -71,6 +71,27 @@ describe('CustomActionView', () => {
     expect(hideWindowSpy).toHaveBeenCalled()
   })
 
+  it('opens the editor from a custom slot without exporting selected text', async () => {
+    desktop.setUserConfig({
+      customActionSlots: [
+        {
+          action: { type: 'standard', actionId: 'openEditor' },
+          takesSelection: false,
+        },
+      ],
+    })
+    desktop.backend.handle('activate_mode', () => {
+      desktop.setState({ mode: 'editor', activationId: 43 })
+    })
+    desktop.backend.handle('hide_window', () => undefined)
+    mountView()
+    await flushPromises()
+    expect(desktop.backend.callsOf('activate_mode')).toEqual([
+      { mode: 'editor' },
+    ])
+    expect(desktop.backend.callsOf('hide_window')).toEqual([])
+  })
+
   it('executes modal action and leaves window open', async () => {
     desktop.setUserConfig({
       customActionSlots: [

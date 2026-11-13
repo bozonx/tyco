@@ -4,6 +4,16 @@ import type { HotkeyId, UserConfig } from './user-config'
 /** The hotkey id of the in-place correction of the selection, as in `hotkeys` */
 export const INLINE_CORRECTION_HOTKEY_ID = 'selectionCorrection'
 
+/** Global entry points available even when their shortcut is unassigned. */
+export const PRIMARY_HOTKEY_IDS: readonly HotkeyId[] = [
+  'voice',
+  'quickInput',
+  'history',
+  'selectionActions',
+  'selectionCorrection',
+  'voiceCommands',
+]
+
 /** Hotkeys corresponding to action pages by index */
 export const ACTION_PAGE_HOTKEY_IDS: readonly [
   HotkeyId,

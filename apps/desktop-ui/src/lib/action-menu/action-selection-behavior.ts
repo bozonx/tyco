@@ -33,6 +33,7 @@ const LOCKED_FALSE_STANDARD_ACTIONS = new Set([
   'voiceCommands',
   'favoritesMenu',
   'openHistory',
+  'openEditor',
   'listen',
 ])
 

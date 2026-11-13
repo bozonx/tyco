@@ -147,15 +147,17 @@ export function useMainActionChoices(
       name:
         actionId === 'directCorrection'
           ? t('settings.hotkeyActions.selectionCorrection')
-          : actionId === 'openHistory'
-            ? t('nav.history')
-            : actionId === 'voiceInput'
-              ? t('menu.voiceInput')
-              : actionId === 'listen'
-                ? t('listen.title')
-                : OPENS_DIALOG.has(actionId)
-                  ? `${t(`action.${actionId}`)}…`
-                  : t(`action.${actionId}`),
+          : actionId === 'openEditor'
+            ? t('nav.editor')
+            : actionId === 'openHistory'
+              ? t('nav.history')
+              : actionId === 'voiceInput'
+                ? t('menu.voiceInput')
+                : actionId === 'listen'
+                  ? t('listen.title')
+                  : OPENS_DIALOG.has(actionId)
+                    ? `${t(`action.${actionId}`)}…`
+                    : t(`action.${actionId}`),
       group: standardActionGroup(actionId),
     })),
     ...actionPages.value.map((_, index) => ({

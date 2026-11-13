@@ -42,7 +42,7 @@ describe('VoiceRecordingActions', () => {
     expect(wrapper.find('.is-primary').text()).toContain('To prompt input')
   })
 
-  it('keeps Tab actions without a separate edit-text action for dictation', async () => {
+  it('opens dictation actions with Shift+Space without a separate edit-text action', async () => {
     const intents: unknown[] = []
     const wrapper = mountActions({
       finishBehavior: 'insertIntoTarget',
@@ -52,8 +52,11 @@ describe('VoiceRecordingActions', () => {
     })
     const buttons = wrapper.findAll('.shortcut')
     expect(buttons).toHaveLength(2)
-    expect(buttons[0]?.find('kbd').text()).toBe('Tab')
-    expect(wrapper.text()).not.toContain('Shift')
+    expect(buttons[0]?.findAll('kbd').map((key) => key.text())).toEqual([
+      'Shift',
+      'Space',
+    ])
+    expect(wrapper.text()).not.toContain('Tab')
     await buttons[0]!.trigger('click')
     expect(intents).toEqual(['next'])
   })

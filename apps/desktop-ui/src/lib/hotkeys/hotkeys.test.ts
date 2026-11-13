@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_USER_CONFIG,
   ActivationMode,
+  PRIMARY_HOTKEY_IDS,
   hotkeyFromKeyboardEvent,
   normalizeHotkey,
 } from '@tyco/shared'
@@ -36,12 +37,20 @@ describe('hotkeys', () => {
     expect(DEFAULT_USER_CONFIG.hotkeys.selectionActions).toBe(
       'Ctrl+Alt+Shift+S'
     )
-    expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage2).toBe(
-      'Ctrl+Alt+Shift+D'
-    )
+    expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage2).toBe('')
     expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage3).toBe('')
     expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage4).toBe('')
     expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage5).toBe('')
+  })
+
+  it('assigns exactly the six primary entry points by default', () => {
+    expect(
+      Object.entries(DEFAULT_USER_CONFIG.hotkeys)
+        .filter(([, shortcut]) => shortcut)
+        .map(([id]) => id)
+        .sort()
+    ).toEqual([...PRIMARY_HOTKEY_IDS].sort())
+    expect(DEFAULT_USER_CONFIG.hotkeys.history).toBe('Ctrl+Alt+Shift+H')
   })
 
   it('normalizes aliases and modifier order', () => {

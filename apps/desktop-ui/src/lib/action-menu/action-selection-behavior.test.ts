@@ -58,6 +58,7 @@ describe('resolveActionSelectionBehavior', () => {
       'voiceCommands',
       'favoritesMenu',
       'openHistory',
+      'openEditor',
       'listen',
     ] as const) {
       expect(

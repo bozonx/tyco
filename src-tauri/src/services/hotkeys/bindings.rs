@@ -159,8 +159,9 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 18] = [
     ActivationMode::History,
 ];
 
-/// Every global hotkey, assigned or not: a configured shortcut wins, an
-/// empty string unassigns it, and a missing one falls back to the default.
+/// Six primary entry points and five custom slots. Previously configured
+/// shortcuts remain available, but unassigned secondary targets are not
+/// advertised to the desktop portal.
 pub(crate) fn bindings_from_config(config: &Value) -> Vec<HotkeyBinding> {
     let configured = config.get(HOTKEYS_CONFIG_KEY).and_then(Value::as_object);
 
@@ -225,7 +226,22 @@ pub(crate) fn bindings_from_config(config: &Value) -> Vec<HotkeyBinding> {
         .chain(action_pages)
         .chain(custom_actions)
         .chain([selection_binding(config)])
+        .filter(|binding| is_primary_target(&binding.target) || binding.shortcut.is_some())
         .collect()
+}
+
+fn is_primary_target(target: &HotkeyTarget) -> bool {
+    matches!(
+        target,
+        HotkeyTarget::Mode(
+            ActivationMode::Voice
+                | ActivationMode::QuickInput
+                | ActivationMode::History
+                | ActivationMode::VoiceCommands
+        ) | HotkeyTarget::ActionPage(0)
+            | HotkeyTarget::InlineCorrection
+            | HotkeyTarget::CustomAction(_)
+    )
 }
 
 /// Only the correction replaces the selection from a hotkey.
@@ -283,15 +299,14 @@ pub(crate) fn global_target(id: &str) -> Option<HotkeyTarget> {
     global.then_some(target)
 }
 
-/// Only the hotkeys that act on what the user is doing in another window,
-/// and quick input that writes into it, are assigned by default: every
-/// default may collide with a shortcut of the desktop or another
-/// application, and the rest open Tyco windows that the tray reaches as well.
+/// Defaults for the primary entry points; specialized workflows use the
+/// action menu or the five custom slots to avoid reserving unused shortcuts.
 fn default_key(mode: ActivationMode) -> Option<&'static str> {
     match mode {
         ActivationMode::Voice => Some("V"),
         ActivationMode::VoiceCommands => Some("X"),
         ActivationMode::QuickInput => Some("W"),
+        ActivationMode::History => Some("H"),
         ActivationMode::Editor
         | ActivationMode::Listen
         | ActivationMode::Chat
@@ -307,7 +322,6 @@ fn default_key(mode: ActivationMode) -> Option<&'static str> {
         | ActivationMode::VoiceScreenshotQuickAiRequest
         | ActivationMode::ChatPrompts
         | ActivationMode::Favorites
-        | ActivationMode::History
         | ActivationMode::Config
         | ActivationMode::CustomAction
         | ActivationMode::ExternalAccess => None,
@@ -407,7 +421,10 @@ mod tests {
             default_shortcut(ActivationMode::Voice).as_deref(),
             Some(expected)
         );
-        assert_eq!(default_shortcut(ActivationMode::History), None);
+        assert_eq!(
+            default_shortcut(ActivationMode::History).as_deref(),
+            Some("Ctrl+Alt+Shift+H")
+        );
         assert_eq!(
             default_hotkeys_config().get("voice"),
             Some(&Value::String(expected.to_owned()))
@@ -421,13 +438,19 @@ mod tests {
     }
 
     #[test]
-    fn assigns_only_selection_and_voice_hotkeys_by_default() {
+    fn assigns_only_six_primary_hotkeys_by_default() {
         let assigned = default_bindings()
             .into_iter()
             .filter(|binding| binding.shortcut.is_some())
             .map(|binding| binding.target.id())
             .collect::<Vec<_>>();
-        let mut expected = vec!["quickInput", "voiceCommands", "voice", "selectionActions"];
+        let mut expected = vec![
+            "quickInput",
+            "voiceCommands",
+            "voice",
+            "history",
+            "selectionActions",
+        ];
         if !cfg!(target_os = "macos") {
             expected.push("selectionCorrection");
         }
@@ -438,27 +461,47 @@ mod tests {
         );
         assert_eq!(
             default_hotkeys_config().get("history"),
-            Some(&Value::String(String::new()))
+            Some(&Value::String("Ctrl+Alt+Shift+H".to_owned()))
         );
     }
 
     #[test]
-    fn reports_every_hotkey_with_its_default() {
+    fn advertises_only_primary_hotkeys_and_custom_slots() {
         let defaults = default_bindings()
             .into_iter()
             .map(|binding| binding.target.id())
             .collect::<Vec<_>>();
-        assert_eq!(defaults.len(), GLOBAL_HOTKEY_MODES.len() + 1 + 5 + 5);
-        assert!(defaults.contains(&String::from("chatPrompts")));
-        assert!(!defaults.contains(&String::from("chatPromptsPage2")));
-        assert!(defaults.contains(&String::from("selectionCorrection")));
-        assert!(defaults.contains(&String::from("selectionActions")));
-        assert!(defaults.contains(&String::from("selectionActionsPage2")));
-        assert!(defaults.contains(&String::from("selectionActionsPage3")));
-        assert!(defaults.contains(&String::from("selectionActionsPage4")));
-        assert!(defaults.contains(&String::from("selectionActionsPage5")));
-        assert!(defaults.contains(&String::from("customAction1")));
-        assert!(defaults.contains(&String::from("customAction5")));
+        assert_eq!(defaults.len(), 11);
+        for id in [
+            "voice",
+            "quickInput",
+            "history",
+            "voiceCommands",
+            "selectionCorrection",
+            "selectionActions",
+            "customAction1",
+            "customAction5",
+        ] {
+            assert!(defaults.contains(&id.to_owned()), "Missing {id}");
+        }
+        for id in [
+            "editor",
+            "chat",
+            "voiceChat",
+            "translation",
+            "selectionActionsPage2",
+        ] {
+            assert!(!defaults.contains(&id.to_owned()), "Unexpected {id}");
+        }
+    }
+
+    #[test]
+    fn portable_defaults_match_native_defaults_on_supported_platforms() {
+        if cfg!(target_os = "macos") {
+            return;
+        }
+        let portable = crate::services::settings::defaults::portable_user_config();
+        assert_eq!(portable["hotkeys"], default_hotkeys_config());
     }
 
     #[test]
@@ -479,7 +522,7 @@ mod tests {
                 .find(|binding| binding.target.id() == id)
                 .and_then(|binding| binding.shortcut.clone())
         };
-        assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len() + 1 + 5 + 5);
+        assert_eq!(bindings.len(), 14);
         assert_eq!(shortcut("editor").as_deref(), Some("Super+Space"));
         assert_eq!(shortcut("chatPrompts").as_deref(), Some("Ctrl+Alt+P"));
         assert_eq!(shortcut("customAction1").as_deref(), Some("Ctrl+Alt+C"));

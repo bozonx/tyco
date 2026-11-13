@@ -68,7 +68,7 @@ tyco-ctl open selection-actions --text 'Please improve this text.'
 tyco-ctl open selection-actions:2 --selection
 ```
 
-The action chooser opens on its first page by default. Specific pages (1 to 5) open with `selection-actions:<page>`. Settings → Hotkeys shows the CLI command for each page.
+The action chooser opens on its first page by default. Specific pages (1 to 5) open with `selection-actions:<page>`. A custom hotkey slot can open any of these pages.
 
 Custom action slots (1 to 5) run with `custom-action:<slot>` (e.g. `custom-action:1`). Settings → Hotkeys shows the CLI command for each custom action slot.
 

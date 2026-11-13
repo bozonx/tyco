@@ -340,6 +340,16 @@ describe('createActionMenuModel', () => {
     })
   })
 
+  it('opens the editor without requiring or passing source text', async () => {
+    const { deps } = setup()
+    const activateMode = vi.fn()
+    const model = createActionMenuModel({ ...deps, activateMode })
+    await model
+      .resolveActionItem({ type: 'standard', actionId: 'openEditor' })
+      ?.action('selected text')
+    expect(activateMode).toHaveBeenCalledWith('editor')
+  })
+
   it('opens the chat with or without text for askInChat action', async () => {
     const { store, deps, services } = setup()
     const actions = store.getDefaultActions()

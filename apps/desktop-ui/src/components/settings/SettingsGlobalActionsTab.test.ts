@@ -106,26 +106,29 @@ describe('SettingsGlobalActionsTab.vue', () => {
     Icon: true,
   }
 
-  it('hides development hotkeys without changing their saved values', () => {
+  it('shows six primary hotkeys outside development mode', () => {
     delete context.draft.value.isInDevelopment
     const wrapper = mount(SettingsGlobalActionsTab, {
       global: { provide: context.provide, stubs: globalStubs },
     })
     const rowLabels = wrapper
       .findAll('.field-row-stub')
-      .map((r) => r.attributes('data-label'))
-    for (const key of [
-      'chat',
-      'voiceChat',
-      'voiceCommands',
-      'correction',
-      'history',
-      'selectionCorrection',
-    ]) {
-      expect(rowLabels).not.toContain(`settings.hotkeyActions.${key}`)
-    }
-    expect(context.draft.value.hotkeys.selectionCorrection).toBe(
-      DEFAULT_USER_CONFIG.hotkeys.selectionCorrection
+      .map((row) => row.attributes('data-label'))
+    expect(
+      rowLabels
+        .filter((label) => label?.startsWith('settings.hotkeyActions.'))
+        .sort()
+    ).toEqual(
+      [
+        'voice',
+        'quickInput',
+        'history',
+        'selectionActions',
+        'selectionCorrection',
+        'voiceCommands',
+      ]
+        .map((id) => `settings.hotkeyActions.${id}`)
+        .sort()
     )
   })
 
@@ -201,15 +204,14 @@ describe('SettingsGlobalActionsTab.vue', () => {
     expect(desktop.backend.callsOf('apply_hotkey')).toEqual([])
     expect(context.draft.value.hotkeys.voice).toBe('')
     // an unassigned hotkey offers no removal
-    const editorRow = wrapper.find(
-      '[data-label="settings.hotkeyActions.editor"]'
-    )
-    expect(editorRow.find('[title="settings.unassignHotkey"]').exists()).toBe(
+    expect(voiceRow.find('[title="settings.unassignHotkey"]').exists()).toBe(
       false
     )
   })
 
-  it('renders styling and transformation hotkey rows', () => {
+  it('preserves additional saved hotkeys without advertising unassigned ones', () => {
+    context.draft.value.hotkeys.styling = 'Ctrl+Alt+Shift+P'
+    context.draft.value.hotkeys.transformation = 'Ctrl+Alt+Shift+T'
     const wrapper = mount(SettingsGlobalActionsTab, {
       global: { provide: context.provide, stubs: globalStubs },
     })
@@ -227,12 +229,12 @@ describe('SettingsGlobalActionsTab.vue', () => {
     const customTransformationRow = wrapper.find(
       '[data-label="settings.hotkeyActions.quickAiRequest"]'
     )
-    expect(customTransformationRow.exists()).toBe(true)
+    expect(customTransformationRow.exists()).toBe(false)
 
     const voiceTransformationRow = wrapper.find(
       '[data-label="settings.hotkeyActions.voiceQuickAiRequest"]'
     )
-    expect(voiceTransformationRow.exists()).toBe(true)
+    expect(voiceTransformationRow.exists()).toBe(false)
   })
 
   it('groups the voice hotkeys into their own section', async () => {
@@ -253,9 +255,6 @@ describe('SettingsGlobalActionsTab.vue', () => {
       'settings.voiceHold.voice',
       'settings.hotkeyActions.voiceCommands',
       'settings.voiceHold.voiceCommands',
-      'settings.hotkeyActions.listen',
-      'settings.hotkeyActions.voiceQuickAiRequest',
-      'settings.hotkeyActions.voiceScreenshotQuickAiRequest',
     ])
   })
 
@@ -301,7 +300,7 @@ describe('SettingsGlobalActionsTab.vue', () => {
     )
   })
 
-  it('renders rows for all 3 action pages', () => {
+  it('shows only the first action page as a dedicated hotkey', () => {
     delete context.draft.value.isInDevelopment
 
     const wrapper = mount(SettingsGlobalActionsTab, {
@@ -322,14 +321,14 @@ describe('SettingsGlobalActionsTab.vue', () => {
           r.attributes('data-label') ===
           'settings.hotkeyActions.selectionActionsPage2'
       )
-    ).toBe(true)
+    ).toBe(false)
     expect(
       rows.some(
         (r) =>
           r.attributes('data-label') ===
           'settings.hotkeyActions.selectionActionsPage3'
       )
-    ).toBe(true)
+    ).toBe(false)
   })
 
   it('renders 5 custom action slots and handles action selection with takesSelection locking', async () => {
@@ -374,6 +373,23 @@ describe('SettingsGlobalActionsTab.vue', () => {
     expect(context.draft.value.customActionSlots[0].takesSelection).toBe(false)
   })
 
+  it('assigns opening the editor without capturing selected text', async () => {
+    const wrapper = mount(SettingsGlobalActionsTab, {
+      global: { provide: context.provide, stubs: globalStubs },
+    })
+    const slot = wrapper.find('.custom-action-slot')
+    await slot
+      .findComponent({ name: 'FieldSelect' })
+      .vm.$emit('update:modelValue', 'standard:openEditor')
+    expect(context.draft.value.customActionSlots[0]).toEqual({
+      action: { type: 'standard', actionId: 'openEditor' },
+      takesSelection: false,
+    })
+    expect(slot.findComponent({ name: 'FieldSwitch' }).props('disabled')).toBe(
+      true
+    )
+  })
+
   it('renders visual group headers for global hotkeys', () => {
     const wrapper = mount(SettingsGlobalActionsTab, {
       global: { provide: context.provide, stubs: globalStubs },
@@ -383,12 +399,6 @@ describe('SettingsGlobalActionsTab.vue', () => {
       .findAll('.hotkey-group-title')
       .map((el) => el.text())
 
-    expect(groupTitles).toEqual([
-      'settings.hotkeyGroups.primary',
-      'settings.hotkeyGroups.ai',
-      'settings.hotkeyGroups.text',
-      'settings.hotkeyGroups.tools',
-      'settings.hotkeyGroups.actionPages',
-    ])
+    expect(groupTitles).toEqual(['settings.hotkeyGroups.primary'])
   })
 })

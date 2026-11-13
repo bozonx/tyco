@@ -73,10 +73,15 @@ describe('ListenRecordingBar', () => {
         .get('.listen-bar-title')
         .element.nextElementSibling?.classList.contains('listen-bar-info')
     ).toBe(true)
-    expect(wrapper.get('.listen-bar-close').attributes('aria-label')).toBe(
+    expect(wrapper.get('.listen-bar-close .shortcut-label').text()).toBe(
       i18n.global.t('common.close')
     )
-    expect(wrapper.get('.listen-bar-actions').text()).toContain('Tab')
+    expect(
+      wrapper
+        .get('.listen-bar-actions')
+        .findAll('kbd')
+        .map((key) => key.text())
+    ).toEqual(['Shift', 'Space', 'Space', 'Enter'])
     expect(wrapper.get('.listen-bar-actions').text()).toContain(
       i18n.global.t('menu.actions')
     )

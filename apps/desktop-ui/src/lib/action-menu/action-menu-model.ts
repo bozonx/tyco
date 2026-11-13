@@ -66,6 +66,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   openFavoritesModal?: () => void
   activateMode?: (
     mode:
+      | 'editor'
       | 'history'
       | 'voice'
       | 'listen'
@@ -452,6 +453,14 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
               return
             }
             deps.openChatPromptsModal?.(text)
+          },
+        },
+        {
+          id: 'openEditor',
+          labelKey: 'nav.editor',
+          icon: 'mdi:file-document-edit-outline',
+          action: async () => {
+            await deps.activateMode?.('editor')
           },
         },
         {

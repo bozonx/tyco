@@ -64,9 +64,30 @@ nothing is selected:
 
 Every change can be undone with Ctrl+Z.
 
+## Global shortcuts
+
+The default global shortcuts use **Ctrl+Alt+Shift** with:
+
+| Key | Action                         |
+| --- | ------------------------------ |
+| V   | Voice input                    |
+| W   | Text input                     |
+| H   | History                        |
+| S   | First action page              |
+| F   | Correct the selection in place |
+| X   | Voice commands                 |
+
+Change or clear these shortcuts in **Settings → Hotkeys**. On desktops that
+manage shortcuts themselves, use the system shortcut settings opened from there.
+Five custom slots let you assign other actions, including the editor, translation,
+AI requests, computer audio, and other action pages. Choose an action and a shortcut
+for each slot; the slots start unassigned. Previously saved additional shortcuts
+remain available until you clear them.
+
 ## Transcribing computer audio
 
-Assign **Listen to computer audio** in **Settings → Hotkeys**, or switch from
+Choose **Listen to computer audio** for one of the five custom slots in
+**Settings → Hotkeys** and assign a shortcut, or switch from
 the voice-input overlay with **Alt+L**. Choose all computer sound or a playing
 application. A source chosen in the overlay lasts for that listening session;
 the next hotkey activation uses the source saved in settings.

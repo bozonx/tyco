@@ -327,6 +327,27 @@ mod tests {
     }
 
     #[test]
+    fn clearing_a_secondary_shortcut_removes_its_portal_target() {
+        let config = serde_json::json!({"hotkeys": {"translation": "Ctrl+Alt+T"}});
+        let before = bindings_from_config(&config);
+        let next = serde_json::json!({"hotkeys": {"translation": ""}});
+        assert!(targets_changed(&before, &next));
+        assert_eq!(
+            binding_changes(&before, bindings_from_config(&next)),
+            vec![(
+                HotkeyTarget::Mode(crate::services::activation::ActivationMode::Translation),
+                None
+            )]
+        );
+        // Primary entries remain in the portal even when their keys are cleared.
+        let primary = serde_json::json!({"hotkeys": {"voice": ""}});
+        assert!(!targets_changed(
+            &bindings_from_config(&serde_json::json!({})),
+            &primary
+        ));
+    }
+
+    #[test]
     fn successful_storage_keeps_the_new_registration() {
         let calls = RefCell::new(Vec::new());
         let changes: Vec<Change> = vec![("quickInput".into(), "old".into(), "new".into())];

@@ -227,6 +227,7 @@ import {
   type HotkeyId,
   INLINE_CORRECTION_HOTKEY_ID,
   type MainActionConfig,
+  PRIMARY_HOTKEY_IDS,
   type SubmitKey,
 } from '@tyco/shared'
 
@@ -272,7 +273,13 @@ const GENERAL_HOTKEY_GROUPS: readonly {
   {
     id: 'primary',
     labelKey: 'settings.hotkeyGroups.primary',
-    hotkeyIds: ['quickInput', 'editor', 'selectionActions'],
+    hotkeyIds: [
+      'quickInput',
+      'selectionActions',
+      'selectionCorrection',
+      'history',
+      'editor',
+    ],
   },
   {
     id: 'ai',
@@ -282,18 +289,12 @@ const GENERAL_HOTKEY_GROUPS: readonly {
   {
     id: 'text',
     labelKey: 'settings.hotkeyGroups.text',
-    hotkeyIds: [
-      'selectionCorrection',
-      'correction',
-      'translation',
-      'styling',
-      'transformation',
-    ],
+    hotkeyIds: ['correction', 'translation', 'styling', 'transformation'],
   },
   {
     id: 'tools',
     labelKey: 'settings.hotkeyGroups.tools',
-    hotkeyIds: ['chatPrompts', 'favorites', 'history'],
+    hotkeyIds: ['chatPrompts', 'favorites'],
   },
   {
     id: 'actionPages',
@@ -497,12 +498,10 @@ const allRows = computed<HotkeyRow[]>(() => [
 const rows = computed(() =>
   allRows.value.filter(
     (row) =>
-      !['chat', 'voiceChat'].includes(row.id) &&
-      !CUSTOM_ACTION_HOTKEY_IDS.includes(
-        row.id as (typeof CUSTOM_ACTION_HOTKEY_IDS)[number]
-      ) &&
-      (userConfig.value.isInDevelopment ||
-        !['voiceCommands', 'correction', 'history', inlineId].includes(row.id))
+      !CUSTOM_ACTION_HOTKEY_IDS.includes(row.id as HotkeyId) &&
+      (PRIMARY_HOTKEY_IDS.includes(row.id as HotkeyId) ||
+        Boolean(userConfig.value.hotkeys[row.id as HotkeyId]?.trim()) ||
+        Boolean(displayedShortcut(providerState, row.id, '')))
   )
 )
 
@@ -614,7 +613,7 @@ function suspendHotkeys(suspended: boolean) {
 const missing = computed(() =>
   missingHotkeys(
     providerState,
-    rows.value.map((row) => row.id)
+    [...rows.value, ...customActionRows.value].map((row) => row.id)
   )
 )
 

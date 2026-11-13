@@ -58,7 +58,7 @@ describe('FavoritesMenu', () => {
     expect(items[2]?.find('.search-grid-slot-key').text()).toBe('E')
   })
 
-  it('returns to the underlying menu on Escape and closes the window on Shift-click', async () => {
+  it('returns to the underlying menu on Escape and closes the window with the close button', async () => {
     const hidden = vi.fn()
     desktop.backend.handle('hide_window', hidden)
     const menus = useMenuModalsStore(desktop.pinia)
@@ -72,9 +72,8 @@ describe('FavoritesMenu', () => {
     expect(hidden).not.toHaveBeenCalled()
     menus.nextModal(MenuModals.STYLING, { text: '' })
     menus.nextModal(MenuModals.FAVORITES, {})
-    await wrapper
-      .find('.action-overlay-close')
-      .trigger('click', { shiftKey: true })
+    await flushPromises()
+    await wrapper.find('.action-overlay-close').trigger('click')
     await flushPromises()
     expect(hidden).toHaveBeenCalled()
     wrapper.unmount()

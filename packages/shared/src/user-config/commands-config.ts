@@ -11,6 +11,7 @@ export const STANDARD_ACTION_IDS = [
   'correction',
   'directCorrection',
   'openHistory',
+  'openEditor',
   'voiceInput',
   'listen',
   'voiceCommands',

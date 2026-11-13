@@ -89,8 +89,21 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 The hotkeys of `hotkeys` are named as the activation modes they open
 (`quickInput`, `selectionActions`, `selectionActionsPage2`..`selectionActionsPage5`,
 `translation`, …); the name is also the hotkey id the UI and the system portal use.
-`selectionCorrection` corrects the selection in place. All five action page hotkeys
-are configurable regardless of how many action pages currently exist.
+`selectionCorrection` corrects the selection in place. The six primary entry
+points are `voice`, `quickInput`, `history`, `selectionActions`,
+`selectionCorrection` and `voiceCommands`. Their defaults are Ctrl+Alt+Shift
+with V, W, H, S, F and X respectively. The portal advertises these six even
+when unassigned, plus the five initially unassigned `customAction1`..`customAction5`
+slots. Secondary targets are advertised and shown in hotkey settings only while
+assigned, preserving saved custom bindings without filling the system dialog
+with unused entries. New assignments use the five custom slots instead.
+Portable and Rust defaults must agree on supported platforms.
+
+Custom slots and action pages share the action picker. The standard `openEditor`
+action opens the existing editor without capturing or importing the selection;
+it uses the localized `nav.editor` label. `voiceQuickAiRequest` is the quick
+voice AI composer; the older `voiceChat` activation uses the chat UI and is
+retained for existing bindings and external activation.
 
 The prompts are one list, like the favorites: the prompt menu (`chatPrompts`)
 searches it, and its first fifteen prompts get the shortcut keys. A prompt
