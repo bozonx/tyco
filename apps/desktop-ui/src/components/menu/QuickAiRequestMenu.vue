@@ -118,12 +118,7 @@
           "
           :keys="[]"
           :disabled="isInputBlocked || isApplying"
-          @click="
-            editorNavigation.toEditor(
-              model.selectedReplyBlock.value!.text,
-              model.sourceText.value || undefined
-            )
-          "
+          @click="applyReply(model.selectedReplyBlock.value!, 'editor')"
           >{{ t('shortcuts.insertIntoEditor') }}</ShortcutButton
         >
         <ShortcutButton
