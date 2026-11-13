@@ -12,7 +12,7 @@
         <ContextPreview
           v-model:disabled="isContextDisabled"
           v-model:text="draftText"
-          :editable="!props.correction"
+          editable
           :old-text="props.oldText"
           :diff-mode="diffMode"
           :allow-disable="props.allowRemoveContext"

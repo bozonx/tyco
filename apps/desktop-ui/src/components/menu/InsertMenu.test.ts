@@ -1,9 +1,11 @@
 import { config, flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 
 import { useEditorInputStore } from '../../stores/editor-input'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import CopyButton from '../common/CopyButton.vue'
+import Diff from '../common/Diff.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
 import {
   installFakeDesktop,
@@ -70,6 +72,17 @@ describe('InsertMenu correction step', () => {
     await wrapper.get('textarea').setValue('')
     expect(wrapper.find('textarea').exists()).toBe(true)
     expect(wrapper.findComponent(ShortcutList).props('text')).toBe('')
+  })
+
+  it('lets the corrected text be edited before acting on it', async () => {
+    const wrapper = mountMenu(correctionStep)
+    const diff = wrapper.findComponent(Diff)
+    expect(diff.props('editable')).toBe(true)
+    diff.vm.$emit('update:newText', 'Corrected text, edited')
+    await nextTick()
+    expect(wrapper.findComponent(ShortcutList).props('text')).toBe(
+      'Corrected text, edited'
+    )
   })
 
   it('over the editor, only puts the correction back in place', async () => {
