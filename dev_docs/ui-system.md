@@ -330,7 +330,7 @@ correction responses are failures and must not replace the source text.
 ## Overlay navigation
 
 Overlay headers separate Back (Esc) from the close cross (Shift+Esc). Escape
-returns one step and closes at the root. The cross closes the entire scenario.
+returns one step and closes at the root. The cross closes the entire scenario. At the root, a single Close (Esc) button replaces both Back and the cross; Shift+Esc still closes. Header actions follow Other actions, Back, Close order.
 Directly opened translation, transformation, styling, favorites, chat prompts and
 voice commands offer Other actions without a shortcut. A root quick AI composer
 offers it only for an original selection. Input, recording and result surfaces

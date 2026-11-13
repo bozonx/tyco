@@ -13,17 +13,12 @@
           </div>
         </div>
 
-        <button
-          v-if="escVisible && (resolvedEscMode === 'back' || props.escLabel)"
-          type="button"
-          class="action-overlay-esc"
-          :title="escLabel"
-          @click="onEscClick"
+        <div
+          v-if="$slots['header-actions']"
+          class="action-overlay-header-actions"
         >
-          <AppIcon icon="mdi:arrow-left" size="sm" />
-          <KeyboardKey>Esc</KeyboardKey>
-          <span>{{ escLabel }}</span>
-        </button>
+          <slot name="header-actions" />
+        </div>
         <Button
           v-if="canOpenOtherActions"
           size="sm"
@@ -32,8 +27,31 @@
         >
           {{ t('menu.otherActions') }}
         </Button>
-        <IconButton
+        <button
           v-if="escVisible"
+          type="button"
+          class="action-overlay-esc"
+          :title="
+            resolvedEscMode === 'back' || props.escLabel
+              ? escLabel
+              : t('common.close')
+          "
+          @click="onEscClick"
+        >
+          <AppIcon
+            v-if="resolvedEscMode === 'back'"
+            icon="mdi:arrow-left"
+            size="sm"
+          />
+          <KeyboardKey>Esc</KeyboardKey>
+          <span>{{
+            resolvedEscMode === 'back' || props.escLabel
+              ? escLabel
+              : t('common.close')
+          }}</span>
+        </button>
+        <IconButton
+          v-if="escVisible && resolvedEscMode === 'back'"
           class="action-overlay-close"
           icon="mdi:close"
           :label="t('common.close')"
@@ -57,8 +75,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, provide } from 'vue'
+import { computed, provide } from 'vue'
 
+import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
 import { previewAppearanceKey } from '../../lib/ui/preview-context'
@@ -125,22 +144,26 @@ function onEscClick(event: MouseEvent) {
   if (event.shiftKey) {
     handleCloseAll()
   } else {
-    handleEsc()
+    if (resolvedEscMode.value === 'close' && !props.escLabel) handleCloseAll()
+    else handleEsc()
   }
 }
 
-function handleKeyDown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && props.escVisible && event.shiftKey) {
-    event.preventDefault()
-    handleCloseAll()
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', handleKeyDown)
-})
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown)
+useDismissibleLayer({
+  dismiss: handleEsc,
+  isOpen: () => props.escVisible,
+  elements: () => [],
+  canDismissOutside: false,
+  keyboardPhase: 'bubble',
+  keydown: (event) => {
+    if (event.key !== 'Escape') return
+    if (
+      !props.escLabel &&
+      (event.shiftKey || resolvedEscMode.value === 'close')
+    )
+      handleCloseAll()
+    else handleEsc()
+  },
 })
 </script>
 

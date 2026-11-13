@@ -3,9 +3,8 @@
     :title="t('action.quickAiRequest')"
     :on-esc="handleEsc"
     :esc-mode="canReturnToPrevious ? 'back' : 'close'"
-    :esc-label="model.isGenerating.value ? t('chat.stop') : undefined"
   >
-    <template #header-extra>
+    <template #header-actions>
       <Button
         v-if="canOpenSelectionActions"
         variant="ghost"

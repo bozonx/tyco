@@ -20,18 +20,18 @@
       <span v-if="replyTo" class="voice-bar-reply" :title="replyTo">
         {{ t('listen.replyingTo', { text: replyTo }) }}
       </span>
-      <IconButton
+      <ShortcutButton
         class="voice-bar-close"
         v-if="props.showCancelButton !== false"
         size="sm"
-        icon="mdi:close"
-        :label="t('common.close')"
         :disabled="isFinishing"
         :title="
           t(cancelShortcut ? 'common.closeAllHint' : 'chat.voiceCancelHint')
         "
         @click="cancel"
-      />
+        :keys="['Esc']"
+        >{{ t('common.close') }}</ShortcutButton
+      >
     </div>
     <div v-if="referenceText" class="voice-reference-text">
       {{ referenceText }}
@@ -103,7 +103,6 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { liveTranscriptText } from '../../lib/stt/live-transcript'
-import IconButton from '../common/IconButton.vue'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import AudioWaveform from './AudioWaveform.vue'

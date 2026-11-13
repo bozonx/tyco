@@ -149,7 +149,9 @@ describe('QuickAiRequestMenu', () => {
     async (draft) => {
       const wrapper = mountMenu()
       await wrapper.find('.query-panel-input').setValue(draft)
-      await wrapper.find('.action-overlay-extra button').trigger('click')
+      await wrapper
+        .find('.action-overlay-header-actions button')
+        .trigger('click')
       expect(useMenuModalsStore().currentModalParams).toMatchObject({
         text: 'Source text for AI',
       })
@@ -167,7 +169,9 @@ describe('QuickAiRequestMenu', () => {
 
   it('hides selection navigation without a selection', () => {
     const wrapper = mountMenu({ text: '' })
-    expect(wrapper.find('.action-overlay-extra button').exists()).toBe(false)
+    expect(wrapper.find('.action-overlay-header-actions button').exists()).toBe(
+      false
+    )
   })
 
   it('uses back navigation when opened from actions', () => {
@@ -175,7 +179,9 @@ describe('QuickAiRequestMenu', () => {
     menus.nextModal(MenuModals.INSERT, { text: 'Selection' })
     menus.nextModal(MenuModals.QUICK_AI_REQUEST, {})
     const wrapper = mountMenu()
-    expect(wrapper.find('.action-overlay-extra button').exists()).toBe(false)
+    expect(wrapper.find('.action-overlay-header-actions button').exists()).toBe(
+      false
+    )
     expect(wrapper.find('.action-overlay-esc').text()).toContain('common.back')
   })
 
@@ -406,7 +412,7 @@ describe('QuickAiRequestMenu', () => {
     await input.trigger('keydown', { key: 'Enter' })
     await flushPromises()
 
-    expect(wrapper.find('.action-overlay-esc').text()).toContain('chat.stop')
+    expect(wrapper.find('.action-overlay-esc').text()).toContain('common.close')
     expect(wrapper.find('.turn-prompt-text').text()).toBe('First question')
     expect((input.element as HTMLInputElement).value).toBe('')
     wrapper.unmount()
@@ -594,7 +600,7 @@ describe('QuickAiRequestMenu', () => {
     await input.setValue('First question')
     await input.trigger('keydown', { key: 'Enter' })
     await flushPromises()
-    expect(wrapper.find('.action-overlay-esc').text()).toContain('chat.stop')
+    expect(wrapper.find('.action-overlay-esc').text()).toContain('common.close')
 
     window.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true })

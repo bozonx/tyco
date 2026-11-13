@@ -153,11 +153,17 @@ onUnmounted(() => {
 
 /** Keys typed into a field belong to its text; only Escape stays a shortcut */
 function isTypingKey(event: KeyboardEvent) {
-  return event.code !== 'Escape' && isTextEntryTarget(event.target)
+  return (
+    event.code !== 'Escape' &&
+    (isTextEntryTarget(event.target) ||
+      (event.target instanceof Element &&
+        Boolean(event.target.closest('button, a, [role=button]'))))
+  )
 }
 
 function handleKeyDown(event: KeyboardEvent) {
-  if (props.shortcutsDisabled || event.defaultPrevented) return
+  if (props.shortcutsDisabled || event.defaultPrevented || event.isComposing)
+    return
   if (isTypingKey(event)) {
     pressedKeys.delete(event.code)
     return

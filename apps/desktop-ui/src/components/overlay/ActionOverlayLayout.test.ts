@@ -29,8 +29,8 @@ describe('ActionOverlayLayout navigation', () => {
     const menus = useMenuModalsStore()
     menus.nextModal(MenuModals.TRANSLATE, { text: 'Source' })
     const wrapper = mountLayout()
-    expect(wrapper.find('.action-overlay-esc').exists()).toBe(false)
-    expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
+    expect(wrapper.find('.action-overlay-esc').exists()).toBe(true)
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(false)
     const other = wrapper
       .findAll('button')
       .find((button) => button.text().includes('menu.otherActions'))!
@@ -39,6 +39,15 @@ describe('ActionOverlayLayout navigation', () => {
     expect(menus.currentModalParams).toMatchObject({ text: 'Source' })
     menus.back()
     expect(menus.currentModal).toBe(MenuModals.NONE)
+  })
+
+  it('closes at the root with one visible Escape action', async () => {
+    const wrapper = mountLayout()
+    expect(wrapper.get('.action-overlay-esc').text()).toContain('common.close')
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(false)
+    await wrapper.get('.action-overlay-esc').trigger('click')
+    await flushPromises()
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
   })
 
   it('switches a directly rendered quick surface to root actions', async () => {

@@ -1,14 +1,14 @@
 <template>
   <div ref="containerRef" class="write-mode-container">
     <div class="write-header">
-      <IconButton
+      <ShortcutButton
         class="write-hint-action"
-        icon="mdi:close"
-        :label="t('common.close')"
         :title="t('common.closeAllHint')"
         @mousedown.prevent
         @click="cancelFromHint"
-      />
+        :keys="['Esc']"
+        >{{ t('common.close') }}</ShortcutButton
+      >
     </div>
     <WriteLivePreview
       v-if="
@@ -98,7 +98,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import IconButton from '../components/common/IconButton.vue'
 import ShortcutButton from '../components/overlay/ShortcutButton.vue'
 import WriteLivePreview from '../components/quick/WriteLivePreview.vue'
 import WriteModeInput from '../components/quick/WriteModeInput.vue'
