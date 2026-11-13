@@ -138,9 +138,17 @@ describe('file-tool-format', () => {
       { path: 'projects/site', name: 'Site', read: 'ask', write: 'deny' },
     ])
     expect(text).toContain('- attachments/ — the files the user attached')
-    expect(text).toContain('- workspace/ — your own folder')
+    expect(text).toContain("- workspace/ — the profile's own folder")
     expect(text).toContain(
-      '- projects/site/ — the project "Site"; reading asks the user first, changing not allowed.'
+      `- projects/site/ — the user's project "Site"; reading asks the user first, changing not allowed.`
     )
+    expect(text).toContain('it goes to workspace/')
+  })
+
+  it('gives no saving rules without a workspace', () => {
+    const text = formatFileRoots([
+      { path: 'attachments', read: 'allow', write: 'deny' },
+    ])
+    expect(text).not.toContain('Where things go')
   })
 })

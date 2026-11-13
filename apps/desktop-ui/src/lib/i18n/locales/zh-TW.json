@@ -146,7 +146,14 @@
     "noPromptsConfigured": "未設定提示詞預設",
     "noToolCalling": "不支援工具",
     "quickAiRequests": "快捷請求",
-    "voiceSendNow": "立即發送"
+    "voiceSendNow": "立即發送",
+    "fileLocation": {
+      "attachments": "聊天檔案",
+      "attachmentsHint": "附加到此聊天的檔案；會隨聊天一起刪除",
+      "projectHint": "專案「{name}」：你自己的檔案",
+      "workspace": "工作區",
+      "workspaceHint": "設定檔的工作區：保存在聊天記錄之外、可在該設定檔的所有聊天中使用的檔案"
+    }
   },
   "chatTools": {
     "files": {
@@ -154,7 +161,7 @@
       "deletePath": "移至垃圾桶",
       "editFile": "編輯檔案",
       "group": "檔案",
-      "groupHint": "讀取、搜尋和修改設定檔工作區及已關聯專案中的檔案",
+      "groupHint": "讀取與建立檔案。你要求儲存的內容會放入設定檔的工作區；已連接的專案存放你自己的工作",
       "hiddenLines": "… 更多已變更的行數：{count}",
       "listFiles": "列出檔案",
       "movePath": "移動",

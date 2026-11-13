@@ -146,7 +146,14 @@
     "noPromptsConfigured": "Nema konfiguriranih upita",
     "noToolCalling": "bez alata",
     "quickAiRequests": "Brzi upiti",
-    "voiceSendNow": "Pošalji odmah"
+    "voiceSendNow": "Pošalji odmah",
+    "fileLocation": {
+      "attachments": "Datoteka razgovora",
+      "attachmentsHint": "Datoteka priložena ovom razgovoru; briše se zajedno s razgovorom",
+      "projectHint": "Projekt „{name}”: vaše vlastite datoteke",
+      "workspace": "Radna mapa",
+      "workspaceHint": "Radna mapa profila: datoteke izvan povijesti razgovora, dostupne u svim razgovorima profila"
+    }
   },
   "chatTools": {
     "files": {
@@ -154,7 +161,7 @@
       "deletePath": "Premjesti u smeće",
       "editFile": "Uredi datoteku",
       "group": "Datoteke",
-      "groupHint": "Čitanje, pretraživanje i mijenjanje datoteka u radnoj mapi profila i povezanim projektima",
+      "groupHint": "Čitanje i stvaranje datoteka. Ono što zatražite da se spremi ide u radnu mapu profila; povezani projekti sadrže vaš vlastiti rad",
       "hiddenLines": "… još promijenjenih redaka: {count}",
       "listFiles": "Popis datoteka",
       "movePath": "Premjesti",

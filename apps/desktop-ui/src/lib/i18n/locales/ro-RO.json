@@ -146,7 +146,14 @@
     "noPromptsConfigured": "Nicio presetare de prompt configurată",
     "noToolCalling": "fără instrumente",
     "quickAiRequests": "Interogări rapide",
-    "voiceSendNow": "Trimite imediat"
+    "voiceSendNow": "Trimite imediat",
+    "fileLocation": {
+      "attachments": "Fișier din chat",
+      "attachmentsHint": "Un fișier atașat acestui chat; se șterge odată cu chatul",
+      "projectHint": "Proiectul „{name}”: fișierele tale",
+      "workspace": "Spațiu de lucru",
+      "workspaceHint": "Spațiul de lucru al profilului: fișiere păstrate în afara istoricului de chat, disponibile în toate chaturile profilului"
+    }
   },
   "chatTools": {
     "files": {
@@ -154,7 +161,7 @@
       "deletePath": "Mută în coșul de gunoi",
       "editFile": "Editează fișierul",
       "group": "Fișiere",
-      "groupHint": "Citirea, căutarea și modificarea fișierelor din spațiul de lucru al profilului și proiectele conectate",
+      "groupHint": "Citire și creare de fișiere. Ce ceri să fie salvat ajunge în spațiul de lucru al profilului; proiectele conectate conțin munca ta",
       "hiddenLines": "… alte rânduri modificate: {count}",
       "listFiles": "Listează fișierele",
       "movePath": "Mută",

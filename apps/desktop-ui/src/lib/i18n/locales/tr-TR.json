@@ -146,7 +146,14 @@
     "noPromptsConfigured": "Yapılandırılmış istem önayarı yok",
     "noToolCalling": "araçsız",
     "quickAiRequests": "Hızlı istekler",
-    "voiceSendNow": "Hemen gönder"
+    "voiceSendNow": "Hemen gönder",
+    "fileLocation": {
+      "attachments": "Sohbet dosyası",
+      "attachmentsHint": "Bu sohbete eklenmiş bir dosya; sohbetle birlikte silinir",
+      "projectHint": "“{name}” projesi: kendi dosyalarınız",
+      "workspace": "Çalışma klasörü",
+      "workspaceHint": "Profilin çalışma klasörü: sohbet geçmişi dışında tutulan ve profilin tüm sohbetlerinde kullanılabilen dosyalar"
+    }
   },
   "chatTools": {
     "files": {
@@ -154,7 +161,7 @@
       "deletePath": "Çöp kutusuna taşı",
       "editFile": "Dosya düzenle",
       "group": "Dosyalar",
-      "groupHint": "Profil çalışma alanındaki ve bağlı projelerdeki dosyaları okuma, arama ve değiştirme",
+      "groupHint": "Dosya okuma ve oluşturma. Kaydetmesini istedikleriniz profilin çalışma klasörüne gider; bağlı projelerde kendi çalışmanız bulunur",
       "hiddenLines": "… daha fazla değişen satır: {count}",
       "listFiles": "Dosyaları listele",
       "movePath": "Taşı",

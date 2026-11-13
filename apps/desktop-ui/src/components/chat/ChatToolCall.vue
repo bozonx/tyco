@@ -14,6 +14,16 @@
     >
       <span class="tool-call-summary">
         <span class="tool-call-name" :title="call.toolName">{{ label }}</span>
+        <span
+          v-for="location in locations"
+          :key="location.key"
+          class="tool-call-location"
+          :class="`is-${location.kind}`"
+          :title="location.title"
+        >
+          <AppIcon :icon="location.icon" size="sm" class="shrink-0" />
+          {{ location.label }}
+        </span>
         <span v-if="argumentsPreview" class="tool-call-args">
           {{ argumentsPreview }}
         </span>
@@ -63,6 +73,9 @@ import { computed, ref, useId, watch } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import type { ChatToolDecision } from '../../lib/chat-tools/chat-tool-policy'
 import type { ChatToolPreview } from '../../lib/chat-tools/chat-tool-registry'
+import { fileLocationsOfInput } from '../../lib/chat-tools/file-location'
+import { FILE_TOOL_NAMES } from '../../lib/chat-tools/file-tools'
+import { useAiProfilesStore } from '../../stores/ai-profiles'
 import AppIcon from '../common/AppIcon.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
 import ChatMemoryChangeCard from './ChatMemoryChangeCard.vue'
@@ -110,6 +123,51 @@ const label = computed(
     props.call.label ||
     props.call.toolName
 )
+
+const LOCATION_ICONS = {
+  attachments: 'mdi:paperclip',
+  workspace: 'mdi:briefcase-outline',
+  project: 'mdi:folder-outline',
+} as const
+
+const LOCATION_KEYS = {
+  attachments: {
+    label: 'chat.fileLocation.attachments',
+    hint: 'chat.fileLocation.attachmentsHint',
+  },
+  workspace: {
+    label: 'chat.fileLocation.workspace',
+    hint: 'chat.fileLocation.workspaceHint',
+  },
+} as const
+
+const aiProfilesStore = useAiProfilesStore()
+
+/** Where a file tool call works: the chat's files, the workspace or a project */
+const locations = computed(() => {
+  if (!FILE_TOOL_NAMES.has(props.call.toolName)) return []
+  return fileLocationsOfInput(props.call.input).map((location) => {
+    if (location.kind !== 'project')
+      return {
+        key: location.kind,
+        kind: location.kind,
+        icon: LOCATION_ICONS[location.kind],
+        label: t(LOCATION_KEYS[location.kind].label),
+        title: t(LOCATION_KEYS[location.kind].hint),
+      }
+    const projectName =
+      aiProfilesStore.projects.find(
+        (project) => project.id === location.projectId
+      )?.name ?? location.projectId
+    return {
+      key: `project:${location.projectId}`,
+      kind: location.kind,
+      icon: LOCATION_ICONS.project,
+      label: projectName,
+      title: t('chat.fileLocation.projectHint', { name: projectName }),
+    }
+  })
+})
 
 const STATE_ICONS = {
   pending: 'mdi:progress-clock',
@@ -164,6 +222,20 @@ const argumentsPreview = computed(() => {
 }
 .tool-call-name {
   font-weight: 500;
+}
+.tool-call-location {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  max-width: 12rem;
+  overflow: hidden;
+  padding: 0 var(--space-xs);
+  border-radius: var(--radius-sm);
+  background: var(--app-surface-raised);
+  color: var(--app-text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .tool-call-args {
   overflow: hidden;

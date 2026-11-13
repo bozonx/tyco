@@ -146,7 +146,14 @@
     "noPromptsConfigured": "設定されたプロンプトプリセットはありません",
     "noToolCalling": "ツールなし",
     "quickAiRequests": "クイックリクエスト",
-    "voiceSendNow": "すぐに送信"
+    "voiceSendNow": "すぐに送信",
+    "fileLocation": {
+      "attachments": "チャットのファイル",
+      "attachmentsHint": "このチャットに添付されたファイル。チャットと一緒に削除されます",
+      "projectHint": "プロジェクト「{name}」：あなた自身のファイル",
+      "workspace": "ワークスペース",
+      "workspaceHint": "プロファイルのワークスペース：チャット履歴とは別に保存され、プロファイルのすべてのチャットで使えるファイル"
+    }
   },
   "chatTools": {
     "files": {
@@ -154,7 +161,7 @@
       "deletePath": "ゴミ箱へ移動",
       "editFile": "ファイルを編集",
       "group": "ファイル",
-      "groupHint": "プロファイルのワークスペースおよび接続されたプロジェクト内のファイルの読み取り、検索、変更",
+      "groupHint": "ファイルの読み取りと作成。保存を頼んだものはプロファイルのワークスペースに入り、接続したプロジェクトにはあなた自身の作業があります",
       "hiddenLines": "… その他の変更行: {count}",
       "listFiles": "ファイル一覧",
       "movePath": "移動",

@@ -144,17 +144,27 @@ const ACCESS_TEXT = {
 
 /** What the model is told about the folders it reaches */
 export function formatFileRoots(roots: readonly AiFileRoot[]): string {
+  const hasWorkspace = roots.some((root) => root.path === 'workspace')
   const lines = roots.map((root) => {
     if (root.path === 'attachments')
-      return `- attachments/ — the files the user attached to this conversation, by their names; read-only, write a copy into another folder to change one.`
+      return `- attachments/ — the files the user attached to this conversation, by their names. Read-only, and they go when the chat is deleted; write a copy elsewhere to change or keep one.`
     if (!root.name)
-      return `- ${root.path}/ — your own folder for notes, drafts and files to keep.`
+      return `- ${root.path}/ — the profile's own folder. It outlives this chat and is reachable from every chat of the profile; you manage it, the user rarely looks inside.`
     const about = root.description ? ` (${root.description})` : ''
-    return `- ${root.path}/ — the project "${root.name}"${about}; reading ${ACCESS_TEXT[root.read]}, changing ${ACCESS_TEXT[root.write]}.`
+    return `- ${root.path}/ — the user's project "${root.name}"${about}; reading ${ACCESS_TEXT[root.read]}, changing ${ACCESS_TEXT[root.write]}.`
   })
   return [
     'You can work with files through the file tools. Every path starts with one of these folders:',
     ...lines,
+    ...(hasWorkspace
+      ? [
+          'Where things go:',
+          '- Your answer in the chat is text, not a file: show code, notes or a draft in the answer unless a file is asked for.',
+          '- When the user asks to save, keep, download or create a file without naming a place, it goes to workspace/. Any text format works: Markdown, code, JSON, CSV and so on. Also keep there what you will need in later chats.',
+          "- A project holds only the user's own work: change it only for a task about that project, never put notes or scratch files there.",
+          '- Name the path of every file you create or change in your answer.',
+        ]
+      : []),
     'Read a file before you change it: edit_file needs text copied exactly from the file. Deleted files go to the trash.',
   ].join('\n')
 }

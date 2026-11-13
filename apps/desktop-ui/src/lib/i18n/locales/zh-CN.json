@@ -146,7 +146,14 @@
     "noPromptsConfigured": "未配置提示词预设",
     "noToolCalling": "不支持工具",
     "quickAiRequests": "快捷请求",
-    "voiceSendNow": "立即发送"
+    "voiceSendNow": "立即发送",
+    "fileLocation": {
+      "attachments": "聊天文件",
+      "attachmentsHint": "附加到此聊天的文件；随聊天一起删除",
+      "projectHint": "项目“{name}”：你自己的文件",
+      "workspace": "工作区",
+      "workspaceHint": "配置文件的工作区：保存在聊天记录之外、可在该配置文件的所有聊天中使用的文件"
+    }
   },
   "chatTools": {
     "files": {
@@ -154,7 +161,7 @@
       "deletePath": "移至回收站",
       "editFile": "编辑文件",
       "group": "文件",
-      "groupHint": "读取、搜索和修改配置文件工作区及已关联项目中的文件",
+      "groupHint": "读取和创建文件。你要求保存的内容放入配置文件的工作区；已连接的项目存放你自己的工作",
       "hiddenLines": "… 更多已更改行数：{count}",
       "listFiles": "列出文件",
       "movePath": "移动",

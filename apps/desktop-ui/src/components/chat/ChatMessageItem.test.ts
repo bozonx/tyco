@@ -1,11 +1,12 @@
 import type { ChatMessage } from '@tyco/shared'
 import { mount, shallowMount } from '@vue/test-utils'
-import { expect, it, vi } from 'vitest'
+import { expect, it, onTestFinished, vi } from 'vitest'
 import { nextTick, reactive } from 'vue'
 
 import { applyAnswerState } from '../../lib/chat-tools/chat-message-steps'
 import { runChatToolLoop } from '../../lib/chat-tools/chat-tool-loop'
 import { createChatToolPolicy } from '../../lib/chat-tools/chat-tool-policy'
+import { installFakeDesktop } from '../../test/install-fake-desktop'
 import ChatMessageItem from './ChatMessageItem.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -198,6 +199,8 @@ it('hides message actions on reply-blocks-only messages when regeneration is una
 })
 
 it('updates tool call status badge in reactive message as tool results arrive', async () => {
+  const desktop = installFakeDesktop()
+  onTestFinished(() => desktop.dispose())
   const message = reactive<ChatMessage>({ role: 'assistant', content: '' })
   const wrapper = mount(ChatMessageItem, {
     props: { message, streaming: true },

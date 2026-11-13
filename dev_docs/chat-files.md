@@ -18,6 +18,26 @@ in `src-tauri/src/commands/chat_images.rs`.
 - **Profile materials**: `workspace/`, projects and `memory/` of a profile. They
   are permanent and never touched by chat history cleanup.
 
+## Boundaries
+
+| Place     | Holds                                                             | Lives                         | Written by                        |
+| --------- | ----------------------------------------------------------------- | ----------------------------- | --------------------------------- |
+| Chat      | Attachments and images of messages; answers are text, not files   | With the history of a chat    | The user (attach)                 |
+| Workspace | What the user asks to save, keep, download or create; agent notes | Permanent, every chat sees it | The agent; "Save to workspace"    |
+| Project   | The user's own work                                               | Permanent                     | The user; the agent for its tasks |
+
+- A request to save or create a file without a place means `workspace/`. Any
+  text format may be written there, code included.
+- The agent cannot write into a chat: `attachments/` is read-only, and a copy
+  goes to `workspace/`.
+- A project never gets notes or scratch files of the agent.
+- There is no workspace UI: the user opens the folder in a file manager.
+
+The model learns these rules from `formatFileRoots`
+(`lib/chat-tools/file-tool-format.ts`). The chat marks every file tool call
+with the place of its paths (`lib/chat-tools/file-location.ts`,
+`ChatToolCall.vue`): chat file, workspace or the project's name.
+
 ## Paths
 
 ```

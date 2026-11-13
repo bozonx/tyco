@@ -146,7 +146,14 @@
     "noPromptsConfigured": "Keine Prompt-Vorlagen konfiguriert",
     "noToolCalling": "ohne Tools",
     "quickAiRequests": "Schnellanfragen",
-    "voiceSendNow": "Sofort senden"
+    "voiceSendNow": "Sofort senden",
+    "fileLocation": {
+      "attachments": "Chatdatei",
+      "attachmentsHint": "Eine an diesen Chat angehängte Datei; sie wird mit dem Chat gelöscht",
+      "projectHint": "Projekt „{name}“: deine eigenen Dateien",
+      "workspace": "Arbeitsordner",
+      "workspaceHint": "Der Arbeitsordner des Profils: Dateien außerhalb des Chatverlaufs, in jedem Chat des Profils verfügbar"
+    }
   },
   "chatTools": {
     "files": {
@@ -154,7 +161,7 @@
       "deletePath": "In den Papierkorb verschieben",
       "editFile": "Datei bearbeiten",
       "group": "Dateien",
-      "groupHint": "Lesen, Durchsuchen und Ändern von Dateien im Profil-Arbeitsbereich und in verknüpften Projekten",
+      "groupHint": "Dateien lesen und erstellen. Was du speichern lässt, landet im Arbeitsordner des Profils; verbundene Projekte enthalten deine eigene Arbeit",
       "hiddenLines": "… weitere geänderte Zeilen: {count}",
       "listFiles": "Dateien auflisten",
       "movePath": "Verschieben",

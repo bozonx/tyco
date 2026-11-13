@@ -146,7 +146,14 @@
     "noPromptsConfigured": "Nincsenek beállítva prompt-sablonok",
     "noToolCalling": "eszközök nélkül",
     "quickAiRequests": "Gyors kérések",
-    "voiceSendNow": "Azonnali küldés"
+    "voiceSendNow": "Azonnali küldés",
+    "fileLocation": {
+      "attachments": "Csevegőfájl",
+      "attachmentsHint": "A csevegéshez csatolt fájl; a csevegéssel együtt törlődik",
+      "projectHint": "„{name}” projekt: a saját fájljai",
+      "workspace": "Munkamappa",
+      "workspaceHint": "A profil munkamappája: a csevegési előzményeken kívül tárolt fájlok, a profil minden csevegésében elérhetők"
+    }
   },
   "chatTools": {
     "files": {
@@ -154,7 +161,7 @@
       "deletePath": "Áthelyezés a kukába",
       "editFile": "Fájl szerkesztése",
       "group": "Fájlok",
-      "groupHint": "Fájlok olvasása, keresése és módosítása a profil munkaterületén és a csatolt projektekben",
+      "groupHint": "Fájlok olvasása és létrehozása. Amit menteni kér, a profil munkamappájába kerül; a csatolt projektekben a saját munkája van",
       "hiddenLines": "… további módosított sorok: {count}",
       "listFiles": "Fájlok listázása",
       "movePath": "Áthelyezés",

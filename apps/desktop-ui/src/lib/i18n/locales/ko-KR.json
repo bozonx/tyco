@@ -146,7 +146,14 @@
     "noPromptsConfigured": "구성된 프롬프트 사전 설정이 없습니다",
     "noToolCalling": "도구 없음",
     "quickAiRequests": "빠른 요청",
-    "voiceSendNow": "바로 보내기"
+    "voiceSendNow": "바로 보내기",
+    "fileLocation": {
+      "attachments": "채팅 파일",
+      "attachmentsHint": "이 채팅에 첨부된 파일이며 채팅과 함께 삭제됩니다",
+      "projectHint": "프로젝트 “{name}”: 사용자의 파일",
+      "workspace": "작업 공간",
+      "workspaceHint": "프로필 작업 공간: 채팅 기록과 별도로 보관되며 프로필의 모든 채팅에서 사용할 수 있는 파일"
+    }
   },
   "chatTools": {
     "files": {
@@ -154,7 +161,7 @@
       "deletePath": "휴지통으로 이동",
       "editFile": "파일 편집",
       "group": "파일",
-      "groupHint": "프로필 워크스페이스 및 연결된 프로젝트의 파일 읽기, 검색 및 수정",
+      "groupHint": "파일 읽기 및 만들기. 저장을 요청한 것은 프로필 작업 공간에 들어가고, 연결된 프로젝트에는 사용자의 작업이 있습니다",
       "hiddenLines": "… 추가로 변경된 줄: {count}",
       "listFiles": "파일 목록",
       "movePath": "이동",

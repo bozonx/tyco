@@ -320,9 +320,11 @@ describe('file-tools', () => {
       'move_path',
       'delete_path',
     ])
-    expect(set!.instructions).toContain('- workspace/ — your own folder')
     expect(set!.instructions).toContain(
-      '- projects/book/ — the project "Book" (The novel); reading allowed, changing asks the user first.'
+      "- workspace/ — the profile's own folder"
+    )
+    expect(set!.instructions).toContain(
+      `- projects/book/ — the user's project "Book" (The novel); reading allowed, changing asks the user first.`
     )
   })
 })

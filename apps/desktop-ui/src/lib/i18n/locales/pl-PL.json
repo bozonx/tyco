@@ -146,7 +146,14 @@
     "noPromptsConfigured": "Brak skonfigurowanych promptów",
     "noToolCalling": "bez narzędzi",
     "quickAiRequests": "Szybkie zapytania",
-    "voiceSendNow": "Wyślij od razu"
+    "voiceSendNow": "Wyślij od razu",
+    "fileLocation": {
+      "attachments": "Plik czatu",
+      "attachmentsHint": "Plik dołączony do tego czatu; jest usuwany razem z czatem",
+      "projectHint": "Projekt „{name}”: twoje własne pliki",
+      "workspace": "Folder roboczy",
+      "workspaceHint": "Folder roboczy profilu: pliki przechowywane poza historią czatów, dostępne we wszystkich czatach profilu"
+    }
   },
   "chatTools": {
     "files": {
@@ -154,7 +161,7 @@
       "deletePath": "Przenieś do kosza",
       "editFile": "Edytuj plik",
       "group": "Pliki",
-      "groupHint": "Odczyt, wyszukiwanie i modyfikacja plików w przestrzeni roboczej profilu i połączonych projektach",
+      "groupHint": "Odczyt i tworzenie plików. To, co poprosisz zapisać, trafia do folderu roboczego profilu; podłączone projekty zawierają twoją własną pracę",
       "hiddenLines": "… więcej zmienionych wierszy: {count}",
       "listFiles": "Wyświetl pliki",
       "movePath": "Przenieś",

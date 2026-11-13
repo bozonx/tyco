@@ -146,7 +146,14 @@
     "noPromptsConfigured": "Aucun préréglage de prompt configuré",
     "noToolCalling": "sans outils",
     "quickAiRequests": "Requêtes rapides",
-    "voiceSendNow": "Envoyer tout de suite"
+    "voiceSendNow": "Envoyer tout de suite",
+    "fileLocation": {
+      "attachments": "Fichier du chat",
+      "attachmentsHint": "Un fichier joint à ce chat ; il est supprimé avec le chat",
+      "projectHint": "Projet « {name} » : vos propres fichiers",
+      "workspace": "Espace de travail",
+      "workspaceHint": "L’espace de travail du profil : des fichiers conservés hors de l’historique des chats, disponibles dans tous les chats du profil"
+    }
   },
   "chatTools": {
     "files": {
@@ -154,7 +161,7 @@
       "deletePath": "Mettre à la corbeille",
       "editFile": "Modifier un fichier",
       "group": "Fichiers",
-      "groupHint": "Lecture, recherche et modification de fichiers dans l’espace de travail du profil et les projets connectés",
+      "groupHint": "Lire et créer des fichiers. Ce que vous demandez d’enregistrer va dans l’espace de travail du profil ; les projets connectés contiennent votre propre travail",
       "hiddenLines": "… autres lignes modifiées : {count}",
       "listFiles": "Lister les fichiers",
       "movePath": "Déplacer",

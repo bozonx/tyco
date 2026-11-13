@@ -146,7 +146,14 @@
     "noPromptsConfigured": "Nejsou nastaveny žádné předvolby promptů",
     "noToolCalling": "bez nástrojů",
     "quickAiRequests": "Rychlé dotazy",
-    "voiceSendNow": "Odeslat hned"
+    "voiceSendNow": "Odeslat hned",
+    "fileLocation": {
+      "attachments": "Soubor chatu",
+      "attachmentsHint": "Soubor připojený k tomuto chatu; smaže se spolu s chatem",
+      "projectHint": "Projekt „{name}“: vaše vlastní soubory",
+      "workspace": "Pracovní složka",
+      "workspaceHint": "Pracovní složka profilu: soubory uložené mimo historii chatů, dostupné ve všech chatech profilu"
+    }
   },
   "chatTools": {
     "files": {
@@ -154,7 +161,7 @@
       "deletePath": "Přesunout do koše",
       "editFile": "Upravit soubor",
       "group": "Soubory",
-      "groupHint": "Čtení, vyhledávání a úprava souborů v pracovní složce profilu a připojených projektech",
+      "groupHint": "Čtení a vytváření souborů. Co požádáte uložit, jde do pracovní složky profilu; připojené projekty obsahují vaši vlastní práci",
       "hiddenLines": "… další změněné řádky: {count}",
       "listFiles": "Vypsat soubory",
       "movePath": "Přesunout",

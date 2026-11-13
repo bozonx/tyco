@@ -9,6 +9,7 @@ import type {
 import type { JsonSchema } from '@tyco/plugin-sdk'
 
 import { FILES_TOOL_GROUP_ID } from './chat-tool-groups'
+import { fileRootPathOf } from './file-location'
 import type {
   ChatToolContext,
   ChatToolDefinition,
@@ -86,13 +87,7 @@ export function fileRootOf(
   roots: readonly AiFileRoot[],
   path: string
 ): AiFileRoot | undefined {
-  const parts = path.split(/[\\/]/).filter((part) => part && part !== '.')
-  const rootPath =
-    parts[0] === 'projects' && parts[1]
-      ? `projects/${parts[1]}`
-      : parts[0] === 'workspace' || parts[0] === 'attachments'
-        ? parts[0]
-        : undefined
+  const rootPath = fileRootPathOf(path)
   return roots.find((root) => root.path === rootPath)
 }
 
@@ -241,7 +236,7 @@ const FILE_TOOLS: readonly FileToolSpec[] = [
     labelKey: 'chatTools.files.writeFile',
     icon: 'mdi:file-edit-outline',
     description:
-      'Creates a file, or replaces the whole content of one. Folders on the way are created. To change part of a file, use edit_file.',
+      'Creates a text file of any format (Markdown, code, JSON, CSV…), or replaces the whole content of one. Folders on the way are created. Files the user asks to save go to workspace/ unless they name a project. To change part of a file, use edit_file.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -459,3 +454,8 @@ export function createFileToolProvider(
     },
   }
 }
+
+/** The names of the file tools, to tell their calls in a chat */
+export const FILE_TOOL_NAMES: ReadonlySet<string> = new Set(
+  FILE_TOOLS.map((spec) => spec.name)
+)

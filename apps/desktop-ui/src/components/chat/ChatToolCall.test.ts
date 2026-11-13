@@ -1,6 +1,10 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import ChatToolCall from './ChatToolCall.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -19,6 +23,30 @@ const call = {
 }
 
 describe('ChatToolCall', () => {
+  let desktop: TestDesktop
+
+  beforeEach(() => {
+    desktop = installFakeDesktop()
+  })
+
+  afterEach(() => desktop.dispose())
+
+  it('marks a file call with the places of its paths', () => {
+    const locations = (input: object, toolName = 'move_path') =>
+      mount(ChatToolCall, { props: { call: { ...call, toolName, input } } })
+        .findAll('.tool-call-location')
+        .map((badge) => badge.text())
+
+    expect(
+      locations({ from: 'attachments/a.md', to: 'workspace/a.md' })
+    ).toEqual(['chat.fileLocation.attachments', 'chat.fileLocation.workspace'])
+    // a project not loaded yet is named by its id
+    expect(locations({ path: 'projects/site/index.md' }, 'write_file')).toEqual(
+      ['site']
+    )
+    expect(locations({ path: 'workspace/a.md' }, 'web_fetch')).toEqual([])
+  })
+
   it('names the call as its tool does', () => {
     const named = (extra: object) =>
       mount(ChatToolCall, { props: { call: { ...call, ...extra } } })

@@ -116,6 +116,26 @@ the commands of this computer.
 When creating a profile or a project, choose the vault it goes to. Two profiles
 of one name in different vaults are shown with the name of their vault.
 
+## Chats, workspace and projects
+
+A profile keeps files in three places:
+
+- **Chat**: what you attach to a message and the images in it. These files
+  belong to their chat and are deleted with it, by history retention too. The
+  AI's answers are text in the chat, not files.
+- **Workspace**: the profile's own folder,
+  `profiles/<profile-id>/workspace/` in its vault. When you ask the AI to
+  save, keep, download or create a file without naming a place, it goes here:
+  Markdown notes, code, tables and any other text. The files outlive the chat
+  and are available in every chat of the profile. The AI manages this folder;
+  open it in your file manager when you need a file. A chat attachment can be
+  copied here with its **Copy to the profile workspace** button.
+- **Project**: your own work. The AI changes it only for a task about that
+  project and within the profile's permissions.
+
+In a chat, every file action of the AI is marked with where it happened: the
+chat file, the workspace or the project's name.
+
 ## Folders inside folders
 
 The data folder and the attached vaults never lie inside one another: TyCo
