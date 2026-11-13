@@ -863,7 +863,6 @@
       "transformation": "Трансформация",
       "translation": "Перевод выделенного текста",
       "voice": "Голосовой ввод",
-      "voiceChat": "Голосовой вопрос по выделенному тексту в чате с ИИ",
       "voiceCommands": "Голосовые команды",
       "voiceQuickAiRequest": "Голосом к ИИ",
       "voiceScreenshotQuickAiRequest": "Скриншот, голосом к ИИ"

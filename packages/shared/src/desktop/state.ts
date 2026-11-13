@@ -30,7 +30,6 @@ export const ActivationMode = {
   EDITOR: 'editor',
   QUICK_INPUT: 'quickInput',
   CHAT: 'chat',
-  VOICE_CHAT: 'voiceChat',
   HISTORY: 'history',
   CONFIG: 'config',
   /** Asks whether an external call may use the selection; Tyco opens it itself */

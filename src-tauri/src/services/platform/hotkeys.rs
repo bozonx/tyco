@@ -331,18 +331,18 @@ mod tests {
     #[test]
     fn generates_complete_compositor_bindings() {
         use crate::services::activation::ActivationMode;
-        let target = HotkeyTarget::Mode(ActivationMode::VoiceChat);
+        let target = HotkeyTarget::Mode(ActivationMode::VoiceQuickAiRequest);
         assert_eq!(
             external_command_for(Desktop::Sway, &target, "Ctrl+Alt+E"),
-            "bindsym Control+Mod1+e exec tyco-ctl open voice-chat"
+            "bindsym Control+Mod1+e exec tyco-ctl open voice-quick-ai-request"
         );
         assert_eq!(
             external_command_for(Desktop::Hyprland, &target, "Super+Shift+Comma"),
-            "bind = SUPER SHIFT, comma, exec, tyco-ctl open voice-chat"
+            "bind = SUPER SHIFT, comma, exec, tyco-ctl open voice-quick-ai-request"
         );
         assert_eq!(
             external_command_for(Desktop::Other, &target, "Ctrl+Alt+E"),
-            "tyco-ctl open voice-chat"
+            "tyco-ctl open voice-quick-ai-request"
         );
     }
 

@@ -863,7 +863,6 @@
       "transformation": "テキスト変換",
       "translation": "選択テキストを翻訳",
       "voice": "音声入力",
-      "voiceChat": "選択テキストについてAIチャットで音声質問",
       "voiceCommands": "音声コマンド",
       "voiceQuickAiRequest": "音声AIクイックリクエスト",
       "voiceScreenshotQuickAiRequest": "スクリーンショットとAIへの音声質問"

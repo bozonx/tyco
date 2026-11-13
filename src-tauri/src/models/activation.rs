@@ -9,7 +9,6 @@ pub enum ActivationMode {
     Editor,
     QuickInput,
     Chat,
-    VoiceChat,
     VoiceCommands,
     Voice,
     /// Transcribes the sound the computer plays, see `services::voice`.
@@ -35,11 +34,10 @@ pub enum ActivationMode {
 
 impl ActivationMode {
     /// The modes a caller may name: every one but `ExternalAccess`.
-    pub const PUBLIC_MODES: [Self; 21] = [
+    pub const PUBLIC_MODES: [Self; 20] = [
         Self::Editor,
         Self::QuickInput,
         Self::Chat,
-        Self::VoiceChat,
         Self::VoiceCommands,
         Self::Voice,
         Self::Listen,
@@ -74,7 +72,6 @@ impl ActivationMode {
             Self::QuickInput => "quickInput",
             Self::Chat => "chat",
             Self::VoiceCommands => "voiceCommands",
-            Self::VoiceChat => "voiceChat",
             Self::Voice => "voice",
             Self::Listen => "listen",
             Self::SelectionActions => "selectionActions",

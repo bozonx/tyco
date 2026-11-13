@@ -866,7 +866,6 @@
       "transformation": "Texttransformation",
       "translation": "Ausgewählten Text übersetzen",
       "voice": "Spracheingabe",
-      "voiceChat": "Sprachfrage zum ausgewählten Text im KI-Chat",
       "voiceCommands": "Sprachbefehle",
       "voiceQuickAiRequest": "Sprach-Schnellanfrage an KI",
       "voiceScreenshotQuickAiRequest": "Bildschirmfoto und KI-Sprachfrage"

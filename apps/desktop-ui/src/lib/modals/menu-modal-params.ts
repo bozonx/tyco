@@ -128,10 +128,7 @@ export interface VoiceMenuParams {
    * external call confirms the input.
    */
   activationMode?:
-    | 'voice'
-    | 'voiceChat'
-    | 'voiceQuickAiRequest'
-    | 'voiceScreenshotQuickAiRequest'
+    'voice' | 'voiceQuickAiRequest' | 'voiceScreenshotQuickAiRequest'
 }
 export interface DiffMenuParams {
   draftText?: string

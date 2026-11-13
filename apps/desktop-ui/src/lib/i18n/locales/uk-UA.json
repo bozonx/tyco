@@ -863,7 +863,6 @@
       "transformation": "Трансформація тексту",
       "translation": "Перекласти виділений текст",
       "voice": "Голосове введення",
-      "voiceChat": "Голосове запитання про виділений текст у ШІ-чаті",
       "voiceCommands": "Голосові команди",
       "voiceQuickAiRequest": "Голосовий швидкий запит до ШІ",
       "voiceScreenshotQuickAiRequest": "Знімок екрана й голосове запитання ШІ"

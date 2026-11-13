@@ -113,7 +113,6 @@ fn is_hold_enabled(app: &AppHandle, mode: ActivationMode) -> bool {
 pub(crate) fn pressed(app: &AppHandle, target: &HotkeyTarget, id: &str) -> Result<(), AppError> {
     let HotkeyTarget::Mode(
         mode @ (ActivationMode::Voice
-        | ActivationMode::VoiceChat
         | ActivationMode::VoiceCommands
         | ActivationMode::VoiceQuickAiRequest
         | ActivationMode::VoiceScreenshotQuickAiRequest),

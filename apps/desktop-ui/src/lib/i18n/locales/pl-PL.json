@@ -866,7 +866,6 @@
       "transformation": "Transformacja tekstu",
       "translation": "Przetłumacz zaznaczony tekst",
       "voice": "Wprowadzanie głosowe",
-      "voiceChat": "Pytanie głosowe o zaznaczony tekst w czacie AI",
       "voiceCommands": "Polecenia głosowe",
       "voiceQuickAiRequest": "Głosowe szybkie zapytanie do SI",
       "voiceScreenshotQuickAiRequest": "Zrzut ekranu i głosowe pytanie do AI"

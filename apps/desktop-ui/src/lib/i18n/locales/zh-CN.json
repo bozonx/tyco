@@ -860,7 +860,6 @@
       "transformation": "文本转换",
       "translation": "翻译选中文本",
       "voice": "语音输入",
-      "voiceChat": "在 AI 对话中针对选中文本进行语音提问",
       "voiceCommands": "语音命令",
       "voiceQuickAiRequest": "语音 AI 快速请求",
       "voiceScreenshotQuickAiRequest": "截图并向 AI 语音提问"

@@ -18,7 +18,7 @@ const USAGE: &str = "Usage: tyco-ctl status
        tyco-ctl jobs list [--json]
        tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
 
-Modes: editor, quick-input, chat, voice-chat, voice-commands, voice, selection-actions,
+Modes: editor, quick-input, chat, voice-commands, voice, selection-actions,
        chat-prompts, correction, translation, history, settings.
 Pages: selection-actions:N opens action page N; custom-action:N runs custom action slot N.
 Use --stdin for private text. Input is preserved exactly.

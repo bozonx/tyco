@@ -860,7 +860,6 @@
       "transformation": "Transformace textu",
       "translation": "Přeložit vybraný text",
       "voice": "Hlasové zadávání",
-      "voiceChat": "Hlasová otázka k vybranému textu v chatu AI",
       "voiceCommands": "Hlasové příkazy",
       "voiceQuickAiRequest": "Hlasový rychlý dotaz na AI",
       "voiceScreenshotQuickAiRequest": "Snímek obrazovky a hlasový dotaz AI"

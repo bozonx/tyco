@@ -185,7 +185,6 @@ impl Activation {
             self.mode,
             ActivationMode::Voice
                 | ActivationMode::Listen
-                | ActivationMode::VoiceChat
                 | ActivationMode::VoiceCommands
                 | ActivationMode::VoiceQuickAiRequest
                 | ActivationMode::VoiceScreenshotQuickAiRequest
@@ -235,6 +234,12 @@ mod tests {
     use serde_json::json;
 
     #[test]
+    fn rejects_removed_voice_chat_mode() {
+        assert!(ActivationMode::parse("voiceChat").is_err());
+        assert!(ActivationMode::parse("voice-chat").is_err());
+    }
+
+    #[test]
     fn only_explicit_ui_text_initializes_quick_input() {
         let mut activation = Activation::new(ActivationMode::QuickInput, ActivationSource::Ui);
         activation.selected_text = Some("Dictated text".into());
@@ -267,12 +272,10 @@ mod tests {
     #[test]
     fn a_repeated_external_activation_finishes_the_open_voice_input() {
         use ActivationMode::{
-            Chat, Voice, VoiceChat, VoiceCommands, VoiceQuickAiRequest,
-            VoiceScreenshotQuickAiRequest,
+            Chat, Voice, VoiceCommands, VoiceQuickAiRequest, VoiceScreenshotQuickAiRequest,
         };
         for mode in [
             Voice,
-            VoiceChat,
             VoiceCommands,
             VoiceQuickAiRequest,
             VoiceScreenshotQuickAiRequest,
@@ -297,7 +300,7 @@ mod tests {
         let chat = Activation::new(Chat, ActivationSource::Hotkey);
         assert!(!chat.finishes_open_voice_input(Some(Chat), true));
         let voice = Activation::new(Voice, ActivationSource::Hotkey);
-        assert!(!voice.finishes_open_voice_input(Some(VoiceChat), true));
+        assert!(!voice.finishes_open_voice_input(Some(VoiceQuickAiRequest), true));
     }
 
     #[test]
@@ -355,7 +358,6 @@ mod tests {
             "editor",
             "quickInput",
             "chat",
-            "voiceChat",
             "voice",
             "selectionActions",
             "correction",
@@ -394,7 +396,6 @@ mod tests {
             ActivationMode::VoiceQuickAiRequest,
             ActivationMode::ChatPrompts,
             ActivationMode::Chat,
-            ActivationMode::VoiceChat,
             ActivationMode::History,
             ActivationMode::Config,
         ] {

@@ -860,7 +860,6 @@
       "transformation": "文字轉換",
       "translation": "翻譯選取的文字",
       "voice": "語音輸入",
-      "voiceChat": "在 AI 聊天中針對選取的文字進行語音提問",
       "voiceCommands": "語音命令",
       "voiceQuickAiRequest": "語音 AI 快速請求",
       "voiceScreenshotQuickAiRequest": "擷取螢幕並向 AI 語音提問"

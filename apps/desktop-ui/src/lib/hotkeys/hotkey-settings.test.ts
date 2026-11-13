@@ -150,9 +150,11 @@ describe('hotkey settings', () => {
 
   it('takes commands from the backend and finds duplicates', () => {
     const state = createHotkeySettingsState()
-    state.commands = { voiceChat: 'tyco-ctl open voice-chat' }
-    expect(activationCommand(state, 'voiceChat', 'x')).toBe(
-      'tyco-ctl open voice-chat'
+    state.commands = {
+      voiceQuickAiRequest: 'tyco-ctl open voice-quick-ai-request',
+    }
+    expect(activationCommand(state, 'voiceQuickAiRequest', 'x')).toBe(
+      'tyco-ctl open voice-quick-ai-request'
     )
     expect(activationCommand(state, 'editor', 'fallback')).toBe('fallback')
     const rows = [
@@ -194,6 +196,8 @@ describe('hotkey settings', () => {
       registered: true,
     })
     expect(activationShortcutLabel(state, 'voice', 'Ctrl+Alt+V')).toBe('Meta+V')
-    expect(activationShortcutLabel(state, 'voiceChat', 'Ctrl+Alt+C')).toBe('')
+    expect(
+      activationShortcutLabel(state, 'voiceQuickAiRequest', 'Ctrl+Alt+C')
+    ).toBe('')
   })
 })

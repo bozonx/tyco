@@ -77,7 +77,6 @@ export const MODE_ROUTE_MAP: Record<ActivationMode, AppRoutePath> = {
   [ActivationMode.EDITOR]: APP_ROUTES.EDITOR.path,
   [ActivationMode.QUICK_INPUT]: APP_ROUTES.WRITE.path,
   [ActivationMode.CHAT]: APP_ROUTES.CHAT.path,
-  [ActivationMode.VOICE_CHAT]: APP_ROUTES.CHAT.path,
   [ActivationMode.HISTORY]: APP_ROUTES.HISTORY.path,
   [ActivationMode.CONFIG]: APP_ROUTES.CONFIG.path,
   // the quick window renders it by the mode, see `QuickOverlay`
@@ -96,7 +95,6 @@ const QUICK_WINDOW_MODES: ReadonlySet<ActivationMode> = new Set([
   ActivationMode.SELECTION_ACTIONS,
   ActivationMode.VOICE_COMMANDS,
   ActivationMode.CORRECTION,
-  ActivationMode.VOICE_CHAT,
   ActivationMode.TRANSLATION,
   ActivationMode.STYLING,
   ActivationMode.TRANSFORMATION,

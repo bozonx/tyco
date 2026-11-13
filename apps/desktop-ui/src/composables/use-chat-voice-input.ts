@@ -6,10 +6,7 @@ import { useActionMenuStore } from '../stores/action-menu'
 import { useChatScope } from './use-chat-scope'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 
-/**
- * Voice input into the chat. The text goes to the caret of the chat input; the
- * quick variant, opened by the voice chat hotkey, sends it right away.
- */
+/** Voice input into the chat. The text goes to the caret of the chat input. */
 export function useChatVoiceInput() {
   const { chat: chatStore, input: chatInputStore } = useChatScope()
   const actionMenuStore = useActionMenuStore()

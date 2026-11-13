@@ -863,7 +863,6 @@
       "transformation": "Szövegátalakítás",
       "translation": "Kijelölt szöveg fordítása",
       "voice": "Hangbevitel",
-      "voiceChat": "Hangos kérdés a kijelölt szövegről az MI-csevegésben",
       "voiceCommands": "Hangparancsok",
       "voiceQuickAiRequest": "Hangalapú gyors MI kérés",
       "voiceScreenshotQuickAiRequest": "Képernyőkép és hangos kérdés az MI-nek"

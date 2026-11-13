@@ -860,7 +860,6 @@
       "transformation": "텍스트 변환",
       "translation": "선택한 텍스트 번역",
       "voice": "음성 입력",
-      "voiceChat": "선택한 텍스트에 대해 AI 채팅에 음성으로 질문",
       "voiceCommands": "음성 명령",
       "voiceQuickAiRequest": "음성 AI 빠른 요청",
       "voiceScreenshotQuickAiRequest": "스크린샷과 AI 음성 질문"

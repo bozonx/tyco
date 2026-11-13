@@ -328,7 +328,6 @@ fn window_label_for_mode(mode: ActivationMode) -> &'static str {
         | ActivationMode::SelectionActions
         | ActivationMode::VoiceCommands
         | ActivationMode::Correction
-        | ActivationMode::VoiceChat
         | ActivationMode::Translation
         | ActivationMode::Styling
         | ActivationMode::Transformation
@@ -365,7 +364,6 @@ mod tests {
             ActivationMode::Voice,
             ActivationMode::SelectionActions,
             ActivationMode::Correction,
-            ActivationMode::VoiceChat,
             ActivationMode::Translation,
             ActivationMode::Styling,
             ActivationMode::Transformation,

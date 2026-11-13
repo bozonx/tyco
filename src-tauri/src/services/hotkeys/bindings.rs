@@ -138,11 +138,10 @@ pub(crate) struct HotkeyBinding {
     pub(crate) description: String,
 }
 
-pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 18] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 17] = [
     ActivationMode::Editor,
     ActivationMode::QuickInput,
     ActivationMode::Chat,
-    ActivationMode::VoiceChat,
     ActivationMode::VoiceCommands,
     ActivationMode::Voice,
     ActivationMode::Listen,
@@ -310,7 +309,6 @@ fn default_key(mode: ActivationMode) -> Option<&'static str> {
         ActivationMode::Editor
         | ActivationMode::Listen
         | ActivationMode::Chat
-        | ActivationMode::VoiceChat
         | ActivationMode::SelectionActions
         | ActivationMode::Correction
         | ActivationMode::Translation
@@ -389,7 +387,6 @@ fn mode_description(mode: ActivationMode) -> &'static str {
         ActivationMode::QuickInput => "Open writing mode",
         ActivationMode::Chat => "Open chat",
         ActivationMode::VoiceCommands => "Run a command by voice",
-        ActivationMode::VoiceChat => "Ask the chat by voice",
         ActivationMode::Voice => "Start voice input",
         ActivationMode::Listen => "System audio",
         ActivationMode::SelectionActions => "Open selection actions",
@@ -484,13 +481,7 @@ mod tests {
         ] {
             assert!(defaults.contains(&id.to_owned()), "Missing {id}");
         }
-        for id in [
-            "editor",
-            "chat",
-            "voiceChat",
-            "translation",
-            "selectionActionsPage2",
-        ] {
+        for id in ["editor", "chat", "translation", "selectionActionsPage2"] {
             assert!(!defaults.contains(&id.to_owned()), "Unexpected {id}");
         }
     }
@@ -623,8 +614,8 @@ mod tests {
     #[test]
     fn modes_open_with_their_cli_spelling() {
         assert_eq!(
-            HotkeyTarget::Mode(ActivationMode::VoiceChat).cli_command(),
-            "tyco-ctl open voice-chat"
+            HotkeyTarget::Mode(ActivationMode::VoiceQuickAiRequest).cli_command(),
+            "tyco-ctl open voice-quick-ai-request"
         );
     }
 

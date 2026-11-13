@@ -136,7 +136,6 @@ export interface HotkeysConfig {
   editor: string
   quickInput: string
   chat: string
-  voiceChat: string
   voice: string
   /** Transcribes the computer sound, see `stt.listenAppId` */
   listen: string

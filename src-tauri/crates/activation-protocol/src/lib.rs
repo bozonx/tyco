@@ -9,7 +9,6 @@ pub const START_MODES: &[&str] = &[
     "editor",
     "quickInput",
     "chat",
-    "voiceChat",
     "voiceCommands",
     "voice",
     "listen",
@@ -34,7 +33,6 @@ pub fn canonical_mode(value: &str) -> &str {
         "quick-input" => "quickInput",
         "selection-actions" => "selectionActions",
         "voice-commands" => "voiceCommands",
-        "voice-chat" => "voiceChat",
         "quick-ai-request" | "custom-transformation" | "customTransformation" => "quickAiRequest",
         "voice-quick-ai-request" | "voice-transformation" | "voiceTransformation" => {
             "voiceQuickAiRequest"
@@ -48,14 +46,12 @@ pub fn canonical_mode(value: &str) -> &str {
     }
 }
 
-/// The spelling of a mode the CLI documents, e.g. `voice-chat` for
-/// `voiceChat`; the inverse of `canonical_mode`.
+/// The CLI spelling of a mode; the inverse of `canonical_mode`.
 pub fn cli_mode(mode: &str) -> &str {
     match mode {
         "quickInput" => "quick-input",
         "selectionActions" => "selection-actions",
         "voiceCommands" => "voice-commands",
-        "voiceChat" => "voice-chat",
         "quickAiRequest" | "customTransformation" => "quick-ai-request",
         "voiceQuickAiRequest" | "voiceTransformation" => "voice-quick-ai-request",
         "screenshotQuickAiRequest" => "screenshot-quick-ai-request",

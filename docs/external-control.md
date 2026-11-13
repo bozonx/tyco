@@ -119,7 +119,7 @@ is shown at a time; another such call meanwhile fails with `AccessDenied`. A
 prompt left unanswered ends with the start limit of the job, see below. `open --selection` still
 requires the permission and does not ask.
 
-Opening a mode that records, such as `voice`, `voice-chat` or `quick-input`, needs no
+Opening a mode that records, such as `voice` or `quick-input`, needs no
 permission: the recording happens in a visible Tyco window and nothing of it is
 returned to the caller. Hotkeys bound in the desktop's own configuration, as on
 Hyprland and Sway, run `tyco-ctl open voice` and rely on that.
@@ -204,7 +204,7 @@ tyco-ctl open chat --text 'Explain this paragraph'
 tyco-ctl open editor --selection
 ```
 
-Modes: `editor`, `quick-input`, `chat`, `voice-chat`, `voice-commands`, `voice`, `selection-actions`
+Modes: `editor`, `quick-input`, `chat`, `voice-commands`, `voice`, `selection-actions`
 (optionally with `:page`, e.g. `selection-actions:2`), `custom-action` (with `:slot`, e.g. `custom-action:1`), `chat-prompts`, `correction`, `translation`, `history`, `settings`.
 The old camelCase spellings and `config` remain valid aliases.
 

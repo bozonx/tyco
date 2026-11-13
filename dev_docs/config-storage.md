@@ -102,8 +102,9 @@ Portable and Rust defaults must agree on supported platforms.
 Custom slots and action pages share the action picker. The standard `openEditor`
 action opens the existing editor without capturing or importing the selection;
 it uses the localized `nav.editor` label. `voiceQuickAiRequest` is the quick
-voice AI composer; the older `voiceChat` activation uses the chat UI and is
-retained for existing bindings and external activation.
+voice AI composer. The removed development-only `voiceChat` mode is no longer
+accepted by activation or registered as a shortcut. Any old config key remains
+opaque under the normal unknown-field policy; it has no runtime effect.
 
 The prompts are one list, like the favorites: the prompt menu (`chatPrompts`)
 searches it, and its first fifteen prompts get the shortcut keys. A prompt

@@ -866,7 +866,6 @@
       "transformation": "Text transformation",
       "translation": "Translate selected text",
       "voice": "Voice input",
-      "voiceChat": "Voice question about selected text in AI chat",
       "voiceCommands": "Voice commands",
       "voiceQuickAiRequest": "Voice quick AI request",
       "voiceScreenshotQuickAiRequest": "Screenshot and voice AI question"
