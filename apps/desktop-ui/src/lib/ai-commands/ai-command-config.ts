@@ -1,24 +1,15 @@
 import {
   AI_COMMAND_MAX_STEPS_DEFAULT,
   AI_COMMAND_MAX_STEPS_MAX,
-  type ActionPageConfig,
   type AiCommandToolConfig,
   type CommandConfig,
   type CoreToolId,
-  SHORTCUT_SLOT_KEYS,
 } from '@tyco/shared'
 
-import { createCommand, stringOr } from '../commands/command-config'
-import {
-  firstFreeSlotIndex,
-  nameFromPrompt,
-} from '../shortcut-slots/slot-prompt'
+import { stringOr } from '../commands/command-config'
 
 /** The tool of AI commands */
 export const AI_COMMAND_TOOL_ID = 'core.aiTask' satisfies CoreToolId
-
-/** The id of a request typed in the command overlay and run without saving */
-export const AD_HOC_AI_COMMAND_ID = 'ad-hoc-ai-command'
 
 export const isAiCommand = (command: Pick<CommandConfig, 'toolId'>) =>
   command.toolId === AI_COMMAND_TOOL_ID
@@ -55,77 +46,3 @@ export const callableCommands = (
   command: Pick<CommandConfig, 'id'>,
   commands: readonly CommandConfig[]
 ): CommandConfig[] => commands.filter((item) => item.id !== command.id)
-
-/**
- * An AI command made from a request typed in the command overlay: named by its
- * first line, it replaces the selection like a new command of the tool does
- */
-export function aiCommandFromPrompt(
-  prompt: string,
-  id?: string
-): CommandConfig {
-  const command = createCommand(AI_COMMAND_TOOL_ID, id, {
-    defaultOutputAction: 'insertIntoWindow',
-  })
-  return {
-    ...command,
-    name: nameFromPrompt(prompt),
-    toolConfig: { ...command.toolConfig, prompt: prompt.trim() },
-  }
-}
-
-/**
- * A typed request run once, without saving: the result menu shows its output,
- * since such a command has nothing to hand a selection run over to
- */
-export const adHocAiCommand = (prompt: string): CommandConfig => ({
-  ...aiCommandFromPrompt(prompt, AD_HOC_AI_COMMAND_ID),
-  outputAction: 'showMenu',
-})
-
-export interface SavedPrompt {
-  commands: CommandConfig[]
-  actionPages: ActionPageConfig[]
-  /** False when an AI command with this prompt is in the library already */
-  isAdded: boolean
-}
-
-/**
- * The library with a typed request saved as an AI command. A page that lays its
- * keys out gets it on its first free key; a page without a layout lists every
- * command anyway
- */
-export function savePromptAsCommand(
-  library: {
-    commands: readonly CommandConfig[]
-    actionPages: readonly ActionPageConfig[]
-  },
-  prompt: string,
-  pageIndex: number,
-  id?: string
-): SavedPrompt {
-  const commands = [...library.commands]
-  const actionPages = [...library.actionPages]
-  const text = prompt.trim()
-  const isSaved = commands.some(
-    (command) =>
-      isAiCommand(command) &&
-      aiCommandToolConfigOf(command.toolConfig).prompt.trim() === text
-  )
-  if (!text || isSaved) return { commands, actionPages, isAdded: false }
-  const command = aiCommandFromPrompt(text, id)
-  commands.push(command)
-  const page = actionPages[pageIndex]
-  if (page && Object.keys(page.slots).length) {
-    const key = SHORTCUT_SLOT_KEYS[firstFreeSlotIndex(page.slots)]
-    if (key)
-      actionPages[pageIndex] = {
-        ...page,
-        slots: {
-          ...page.slots,
-          [key]: { type: 'command', commandId: command.id },
-        },
-      }
-  }
-  return { commands, actionPages, isAdded: true }
-}

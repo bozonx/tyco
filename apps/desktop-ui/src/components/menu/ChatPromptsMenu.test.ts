@@ -21,7 +21,6 @@ describe('ChatPromptsMenu', () => {
     desktop.backend.handle('list_ai_profiles', () => [])
     desktop.setUserConfig({
       chatPrompts: {
-        isSentImmediately: true,
         items: [
           {
             id: 'item-1',
@@ -93,7 +92,6 @@ describe('ChatPromptsMenu', () => {
         text: 'Some sample text',
         profileId: null,
         prompt: 'Critique this code',
-        isPromptSent: true,
       })
     )
     wrapper.unmount()
@@ -129,7 +127,7 @@ describe('ChatPromptsMenu', () => {
 
   it('points to the settings when there are no prompts', async () => {
     desktop.setUserConfig({
-      chatPrompts: { isSentImmediately: false, items: [] },
+      chatPrompts: { items: [] },
     })
     const wrapper = mountMenu()
     await flushPromises()

@@ -63,8 +63,6 @@ export interface QuickAiRequestMenuParams {
   profileId?: string | null
   /** The request the input starts with, e.g. from a prompt */
   prompt?: string
-  /** Sends `prompt` at once instead of leaving it in the input */
-  isPromptSent?: boolean
 }
 export interface VoiceCommandsMenuParams {
   /** Restores a reviewed command after visiting its text actions. */

@@ -78,7 +78,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `llm`               | `imageQuality`, `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below)                                                                                                                                                                                         |
 | `transformations`   | `items`, the transformation library; `slots`, the transformation menu (a shortcut grid of transformation ids)                                                                                                                                                                                     |
 | `styling`           | `items`, the styling library; `slots`, the styling menu (a shortcut grid of styling ids)                                                                                                                                                                                                          |
-| `chatPrompts`       | `isSentImmediately`; `items`, the prompt library: each prompt has `profileId`, empty for a prompt of every profile                                                                                                                                                                                |
+| `chatPrompts`       | `items`, the prompt library: each prompt has `profileId`, empty for a prompt of every profile                                                                                                                                                                                                     |
 | `aiVaults`          | `attached`: `[{ path, vaultId }]`, the vaults this device attached                                                                                                                                                                                                                                |
 | `aiProfiles`        | `chatHistory` (`storage`: `off` or `disk`, `retentionDays`)                                                                                                                                                                                                                                       |
 | `markdown`          | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                                                                                                                                                                                                             |
@@ -113,7 +113,8 @@ it, and the chat composer offers it only in the chats of that profile. A prompt
 without one, or whose profile is gone, opens the plain quick AI request and is
 offered in every chat. A slot of `actionPages` or `customActionSlots` runs a
 single prompt as `{ "type": "chatPrompt", "promptId" }`. A picked prompt is
-sent at once when `isSentImmediately` is set.
+always only inserted into the request input, never sent at once: prompts start
+a conversation, while processing text in one step is the job of AI commands.
 
 The glossary is one for every target language: `{ "term", "translation" }`,
 where a term kept as it is has itself as its translation. ai-kit's

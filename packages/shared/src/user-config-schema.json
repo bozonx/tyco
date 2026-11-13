@@ -1041,7 +1041,6 @@
     "chatPrompts": {
       "type": "object",
       "properties": {
-        "isSentImmediately": { "type": "boolean", "default": false },
         "items": {
           "type": "array",
           "items": {
@@ -1064,7 +1063,7 @@
           "default": []
         }
       },
-      "required": ["isSentImmediately", "items"],
+      "required": ["items"],
       "defaultPath": "chatPrompts"
     },
     "favorites": {

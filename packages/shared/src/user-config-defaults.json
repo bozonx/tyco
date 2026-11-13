@@ -217,7 +217,7 @@
     "slots": { "q": "deep-edit" }
   },
   "styling": { "items": [], "slots": {} },
-  "chatPrompts": { "isSentImmediately": false, "items": [] },
+  "chatPrompts": { "items": [] },
   "favorites": { "items": [] },
   "aiVaults": { "attached": [] },
   "aiProfiles": { "chatHistory": { "storage": "disk" } },

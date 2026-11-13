@@ -113,7 +113,6 @@ describe('SettingsMainActionsTab.vue', () => {
   it('offers each prompt in the group of its profile and runs it from a slot', async () => {
     configure({
       chatPrompts: {
-        isSentImmediately: false,
         items: [
           { id: 'fix', name: 'Fix', rule: 'Fix it', profileId: 'assistant' },
           { id: 'sum', name: 'Sum', rule: 'Sum up', profileId: '' },

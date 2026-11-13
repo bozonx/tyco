@@ -17,7 +17,6 @@ describe('ChatPromptsKeypad.vue', () => {
     desktop = installFakeDesktop({}, 'chat')
     desktop.setUserConfig({
       chatPrompts: {
-        isSentImmediately: false,
         items: [
           { id: 'p0', name: 'Poem', rule: 'Write a poem', profileId: 'writer' },
           {
@@ -93,7 +92,7 @@ describe('ChatPromptsKeypad.vue', () => {
 
   it('shows the empty hint when the chat has no prompts', async () => {
     desktop.setUserConfig({
-      chatPrompts: { isSentImmediately: false, items: [] },
+      chatPrompts: { items: [] },
     })
     await flushPromises()
     const wrapper = mountKeypad()

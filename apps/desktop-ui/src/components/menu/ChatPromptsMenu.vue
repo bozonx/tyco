@@ -57,7 +57,6 @@ import {
   filterChatPrompts,
 } from '../../lib/chat-prompts/chat-prompts'
 import type { ChatPromptsMenuParams } from '../../lib/modals/menu-modal-params'
-import { useDesktopStore } from '../../stores/desktop'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import ChatPromptProfileBadge from '../chat/ChatPromptProfileBadge.vue'
@@ -77,7 +76,6 @@ const activeText = computed(() => (isContextDisabled.value ? '' : props.text))
 const query = ref('')
 
 const menuModalsStore = useMenuModalsStore()
-const desktopStore = useDesktopStore()
 const ipcStore = useIpcStore()
 const { t } = useI18n()
 const { handleEsc, handleCloseAll } = useOverlayNav()
@@ -107,9 +105,6 @@ function runPrompt(view: ChatPromptView) {
     text: activeText.value,
     profileId: view.runProfileId,
     prompt,
-    isPromptSent: Boolean(
-      desktopStore.userConfig.chatPrompts?.isSentImmediately
-    ),
   })
 }
 

@@ -217,8 +217,6 @@ export interface ChatPromptConfig {
 }
 
 export interface ChatPromptsConfig {
-  /** Whether a picked prompt is sent at once instead of waiting in the input */
-  isSentImmediately: boolean
   /**
    * The prompt library, in display order; the first prompts get the shortcut
    * keys of the prompt menu

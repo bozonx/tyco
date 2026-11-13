@@ -102,9 +102,6 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
         text,
         profileId,
         prompt,
-        isPromptSent: Boolean(
-          desktopStore.userConfig.chatPrompts?.isSentImmediately
-        ),
       })
     },
     openFavoritesModal: () => {

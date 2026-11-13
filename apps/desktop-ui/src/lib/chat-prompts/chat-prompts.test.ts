@@ -205,7 +205,6 @@ describe('withoutChatPrompts', () => {
     const result = withoutChatPrompts(
       {
         chatPrompts: {
-          isSentImmediately: true,
           items: [prompt('a'), prompt('b')],
         },
         actionPages: [
@@ -221,7 +220,6 @@ describe('withoutChatPrompts', () => {
       ['a']
     )
     expect(result.chatPrompts).toEqual({
-      isSentImmediately: true,
       items: [prompt('b')],
     })
     expect(result.actionPages[0]?.slots).toEqual({})

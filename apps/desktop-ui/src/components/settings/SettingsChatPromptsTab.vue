@@ -4,14 +4,6 @@
       :title="t('settings.chatPromptsTab')"
       :info="t('settings.chatPromptsHint')"
     >
-      <div class="flex items-center gap-2">
-        <FieldSwitch
-          :model-value="chatPrompts.isSentImmediately"
-          :label="t('settings.chatPromptsSentImmediately')"
-          @update:model-value="setSentImmediately"
-        />
-        <InfoTooltip :text="t('settings.chatPromptsSentImmediatelyInfo')" />
-      </div>
     </SettingsSection>
     <SettingsSection bare>
       <template #actions>
@@ -111,9 +103,7 @@ import DragHandle from '../common/DragHandle.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldSelect from '../common/FieldSelect.vue'
-import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
-import InfoTooltip from '../common/InfoTooltip.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsSection from './SettingsSection.vue'
@@ -161,13 +151,6 @@ const profileOptions = (prompt: ChatPromptConfig) =>
     everyProfile: t('chatPrompts.everyProfile'),
     missingProfile: t('chatPrompts.missingProfile'),
   })
-
-function setSentImmediately(value: boolean) {
-  userConfig.value.chatPrompts = {
-    ...chatPrompts.value,
-    isSentImmediately: value,
-  }
-}
 
 function addPrompt() {
   setPrompts([...prompts.value, newChatPrompt(prompts.value)])

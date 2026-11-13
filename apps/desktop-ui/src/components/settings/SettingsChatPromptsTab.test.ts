@@ -60,7 +60,6 @@ describe('SettingsChatPromptsTab', () => {
   it('warns about a prompt whose profile is gone', async () => {
     const { wrapper } = mountTab({
       chatPrompts: {
-        isSentImmediately: true,
         items: [{ id: 'a', name: 'A', rule: 'Do it', profileId: 'gone' }],
       },
     })
@@ -77,7 +76,6 @@ describe('SettingsChatPromptsTab', () => {
   it('removes a prompt together with the actions that run it', async () => {
     const { context, wrapper } = mountTab({
       chatPrompts: {
-        isSentImmediately: false,
         items: [
           { id: 'a', name: 'A', rule: 'Do it', profileId: '' },
           { id: 'b', name: 'B', rule: 'Do that', profileId: '' },
@@ -114,7 +112,6 @@ describe('SettingsChatPromptsTab', () => {
   it('drops the prompts left empty when it closes', async () => {
     const { context, wrapper } = mountTab({
       chatPrompts: {
-        isSentImmediately: false,
         items: [
           { id: 'a', name: '', rule: ' ', profileId: '' },
           { id: 'b', name: 'B', rule: '', profileId: '' },

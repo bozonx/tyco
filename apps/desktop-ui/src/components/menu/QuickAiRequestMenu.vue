@@ -299,7 +299,6 @@ const props = withDefaults(defineProps<QuickAiRequestMenuParams>(), {
   inputMode: 'text',
   profileId: null,
   prompt: '',
-  isPromptSent: false,
 })
 
 const actionMenuStore = useActionMenuStore()
@@ -813,9 +812,6 @@ onMounted(async () => {
   // The models of a provider show up only when its key is known to be set;
   // the quick window has not read the keys yet, or they changed since then.
   await secretsStore.refreshSecrets().catch(() => undefined)
-  if (props.isPromptSent && input.value.value.trim() && !disposed) {
-    await handleQuerySubmit()
-  }
 })
 
 onUnmounted(() => {
@@ -825,7 +821,6 @@ onUnmounted(() => {
     menuModalsStore.updateStep(navigationStepId, MenuModals.QUICK_AI_REQUEST, {
       draftMessages: model.getNavigationMessages(),
       draftPrompt: input.value.value,
-      isPromptSent: false,
     })
   }
   runtime.dispose()
