@@ -117,20 +117,13 @@ const { resolvedEscMode, escLabel, escTitle, handleEsc, handleCloseAll } =
 
 const { t } = useI18n()
 const menuModalsStore = useMenuModalsStore()
-const otherActionModals = new Set([
-  MenuModals.TRANSLATE,
-  MenuModals.TRANSFORMATION,
-  MenuModals.STYLING,
-  MenuModals.FAVORITES,
-  MenuModals.CHAT_PROMPTS,
-  MenuModals.VOICE_COMMANDS,
-])
+// Only a screen that explicitly supplies source text can switch scenarios.
+// Inferring this from the shared stack leaks another screen's capabilities.
 const canOpenOtherActions = computed(
   () =>
-    (menuModalsStore.menuBreadcrumbs.length === 1 &&
-      otherActionModals.has(menuModalsStore.currentModal)) ||
-    (menuModalsStore.menuBreadcrumbs.length === 0 &&
-      props.otherActionsText !== undefined)
+    menuModalsStore.menuBreadcrumbs.length <= 1 &&
+    menuModalsStore.currentModal !== MenuModals.INSERT &&
+    props.otherActionsText !== undefined
 )
 function openOtherActions() {
   const params = menuModalsStore.currentModalParams
@@ -158,8 +151,8 @@ useDismissibleLayer({
   keydown: (event) => {
     if (event.key !== 'Escape') return
     if (
-      !props.escLabel &&
-      (event.shiftKey || resolvedEscMode.value === 'close')
+      event.shiftKey ||
+      (!props.escLabel && resolvedEscMode.value === 'close')
     )
       handleCloseAll()
     else handleEsc()

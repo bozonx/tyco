@@ -28,7 +28,10 @@ describe('ActionOverlayLayout navigation', () => {
   it('offers close and other actions at a directly opened picker', async () => {
     const menus = useMenuModalsStore()
     menus.nextModal(MenuModals.TRANSLATE, { text: 'Source' })
-    const wrapper = mountLayout()
+    const wrapper = mount(ActionOverlayLayout, {
+      props: { otherActionsText: 'Source' },
+      global: { plugins: [desktop.pinia] },
+    })
     expect(wrapper.find('.action-overlay-esc').exists()).toBe(true)
     expect(wrapper.find('.action-overlay-close').exists()).toBe(false)
     const other = wrapper
@@ -39,6 +42,32 @@ describe('ActionOverlayLayout navigation', () => {
     expect(menus.currentModalParams).toMatchObject({ text: 'Source' })
     menus.back()
     expect(menus.currentModal).toBe(MenuModals.NONE)
+  })
+
+  it.each([MenuModals.NONE, MenuModals.INSERT, MenuModals.TRANSLATE])(
+    'does not infer other actions from the shared stack (%s)',
+    (modal) => {
+      const menus = useMenuModalsStore()
+      if (modal === MenuModals.INSERT)
+        menus.nextModal(MenuModals.INSERT, { text: 'Source' })
+      if (modal === MenuModals.TRANSLATE)
+        menus.nextModal(MenuModals.TRANSLATE, { text: 'Source' })
+      const wrapper = mountLayout()
+      expect(wrapper.text()).not.toContain('menu.otherActions')
+      wrapper.unmount()
+    }
+  )
+
+  it('never offers other actions on the root action menu', () => {
+    useMenuModalsStore().nextModal(MenuModals.INSERT, { text: 'Source' })
+    const wrapper = mount(ActionOverlayLayout, {
+      props: { otherActionsText: 'Source' },
+      global: { plugins: [desktop.pinia] },
+    })
+    expect(wrapper.text()).not.toContain('menu.otherActions')
+    expect(wrapper.get('.action-overlay-esc').text()).toContain('common.close')
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(false)
+    wrapper.unmount()
   })
 
   it('closes at the root with one visible Escape action', async () => {
