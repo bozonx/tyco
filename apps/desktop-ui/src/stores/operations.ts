@@ -130,7 +130,7 @@ export const useOperationsStore = defineStore('tools', () => {
 
   // the agent runs commands through the registry it is a tool of
   const transformCommand = createCommandTransformer({
-    tools: { get: (id) => registry.get(id), environment },
+    operations: { get: (id) => registry.get(id), environment },
   })
   const aiCommandOperation = createAiCommandOperation({
     stream: (task, prompt, options) =>

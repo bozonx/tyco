@@ -228,9 +228,10 @@ controls use `group` and each control supplies its own accessible name.
 `ConfigFieldControl` renders a normalized control description. `ConfigFields`
 adapts plugin settings. `PluginOperationFields` adapts command overrides, preserving
 inheritance and explicit `false`. These value semantics must stay separate.
-`TranslationToolFields`, `AiCommandOperationFields` (AI commands) and
-`PromptToolFields` (transformations and styles) own the built-in operation forms;
-`OperationConfigFields` selects the form.
+`AiCommandOperationFields` owns the built-in AI command form.
+`OperationConfigFields` selects it for `core.aiTask` and uses
+`PluginOperationFields` for other operations, including translations,
+transformations and styles.
 
 Keep parsing and asynchronous settings behavior in injected models under
 `src/lib/`, with focused unit tests. Views wire dependencies and translate

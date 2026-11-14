@@ -143,7 +143,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     name: commandLabel(command),
     icon: 'mdi:console-line',
     action: async (text: string) => {
-      const takesText = commandTakesText(command, deps.tools)
+      const takesText = commandTakesText(command, deps.operations)
       if (takesText) await deps.saveOutput(text)
       const controller = new AbortController()
       const owner = deps.setPendingModal?.({
@@ -651,7 +651,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     if (item.type === 'command') {
       // a disabled or unavailable command leaves its slot empty
       const command = commands.get(item.commandId)
-      return command && isMenuCommand(command, deps.tools)
+      return command && isMenuCommand(command, deps.operations)
         ? createCommandActionItem(command)
         : undefined
     }

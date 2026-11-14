@@ -324,12 +324,12 @@ function resolveFrom(
 
 export function isVoiceCommand(
   command: CommandConfig,
-  tools: OperationLookup
+  operations: OperationLookup
 ): boolean {
   return (
     command.isEnabled &&
     command.isVoiceEnabled &&
-    isCommandAvailable(command, tools)
+    isCommandAvailable(command, operations)
   )
 }
 
@@ -384,10 +384,10 @@ function parameterRoute(
  */
 function commandRoutes(
   command: CommandConfig,
-  tools: OperationLookup
+  operations: OperationLookup
 ): VoiceRoute[] {
   const own = command.phrases.filter((phrase) => words(phrase).length)
-  const tool = tools.get(command.operationId)
+  const tool = operations.get(command.operationId)
   const [parameter] = openCommandParameters(tool, command.operationConfig)
   if (!parameter)
     return own.map((phrase) => ({
@@ -419,7 +419,7 @@ function commandRoutes(
 
 export function compileVoiceRoutes(
   commands: readonly CommandConfig[],
-  tools: OperationLookup,
+  operations: OperationLookup,
   includeUnavailable = false
 ): VoiceRoute[] {
   return commands
@@ -427,9 +427,9 @@ export function compileVoiceRoutes(
       (item) =>
         item.isEnabled &&
         item.isVoiceEnabled &&
-        (includeUnavailable || isCommandAvailable(item, tools))
+        (includeUnavailable || isCommandAvailable(item, operations))
     )
-    .flatMap((command) => commandRoutes(command, tools))
+    .flatMap((command) => commandRoutes(command, operations))
 }
 
 /** Nested phrases and identical routes deserve a warning before saving. */
@@ -478,7 +478,7 @@ export type VoiceInputIssue =
 export function voiceInputIssue(
   command: CommandConfig,
   text: string,
-  tools: OperationLookup,
+  operations: OperationLookup,
   context?: { selectionText: string },
   parameters: Readonly<Record<string, string>> = {}
 ): VoiceInputIssue | undefined {
@@ -487,13 +487,13 @@ export function voiceInputIssue(
   }
   if (
     openCommandParameters(
-      tools.get(command.operationId),
+      operations.get(command.operationId),
       command.operationConfig
     ).some((parameter) => !parameters[parameter.name])
   )
     return 'missing-parameter'
 
-  if (commandTakesText(command, tools))
+  if (commandTakesText(command, operations))
     return text.trim() ? undefined : 'missing-text'
   return text.trim() ? 'extra-text' : undefined
 }

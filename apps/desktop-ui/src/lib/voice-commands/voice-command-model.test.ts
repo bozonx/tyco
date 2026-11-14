@@ -36,7 +36,7 @@ function setup(overrides: Partial<VoiceCommandDependencies> = {}) {
     Parameters<VoiceCommandDependencies['startDictation']>[0] | undefined
   const deps: VoiceCommandDependencies = {
     commands: () => commands,
-    tools,
+    operations: tools,
     startDictation: vi.fn(async (next) => {
       handlers = next
     }),

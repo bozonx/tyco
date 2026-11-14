@@ -40,8 +40,8 @@ const isCoreOperationId = (
 /** The tool the command runs, if the registry has it */
 export const commandOperation = (
   command: CommandConfig,
-  tools: OperationLookup
-): RegisteredOperation | undefined => tools.get(command.operationId)
+  operations: OperationLookup
+): RegisteredOperation | undefined => operations.get(command.operationId)
 
 /**
  * How the command gets its input from a text, or `null` when its tool is
@@ -49,9 +49,9 @@ export const commandOperation = (
  */
 function commandInputKind(
   command: CommandConfig,
-  tools: OperationLookup
+  operations: OperationLookup
 ): OperationInputKind | null {
-  const tool = commandOperation(command, tools)
+  const tool = commandOperation(command, operations)
   return tool
     ? operationInputKind(
         tool,
@@ -67,38 +67,38 @@ function commandInputKind(
  */
 export const commandUnavailableReason = (
   command: CommandConfig,
-  tools: OperationLookup
+  operations: OperationLookup
 ): string | undefined =>
-  invocationUnavailableReason(commandInvocation(command), tools)
+  invocationUnavailableReason(commandInvocation(command), operations)
 
 /** Whether the tool of the command can run it now */
 export const isCommandAvailable = (
   command: CommandConfig,
-  tools: OperationLookup
-): boolean => !commandUnavailableReason(command, tools)
+  operations: OperationLookup
+): boolean => !commandUnavailableReason(command, operations)
 
 /** Whether the command gets the text it is invoked on */
 export function commandTakesText(
   command: CommandConfig,
-  tools: OperationLookup
+  operations: OperationLookup
 ): boolean {
-  const kind = commandInputKind(command, tools)
+  const kind = commandInputKind(command, operations)
   return kind === 'text' || kind === 'parsed'
 }
 
 /** Whether the command can be an item of the action menu */
 export function isMenuCommand(
   command: CommandConfig,
-  tools: OperationLookup
+  operations: OperationLookup
 ): boolean {
-  return command.isEnabled && isCommandAvailable(command, tools)
+  return command.isEnabled && isCommandAvailable(command, operations)
 }
 
 export function commandIcon(
   command: CommandConfig,
-  tools: OperationLookup
+  operations: OperationLookup
 ): string {
-  return commandOperation(command, tools)?.icon ?? 'mdi:puzzle-outline'
+  return commandOperation(command, operations)?.icon ?? 'mdi:puzzle-outline'
 }
 
 /** The last part of a path, without quotes */
@@ -188,7 +188,7 @@ export interface CommandIssue {
 /** What keeps the command from running as the user expects */
 export function validateCommand(
   command: CommandConfig,
-  tools: OperationLookup
+  operations: OperationLookup
 ): CommandIssue[] {
   const issues: CommandIssue[] = []
   // a translation is named well enough by its tool
@@ -226,7 +226,7 @@ export function validateCommand(
     if (!stringOr(command.operationConfig.prompt).trim()) {
       issues.push({ field: 'prompt', messageKey: 'commands.errorNoPrompt' })
     }
-  } else if (!commandOperation(command, tools)) {
+  } else if (!commandOperation(command, operations)) {
     issues.push({
       field: 'operationId',
       messageKey: 'commands.errorUnknownType',
@@ -254,7 +254,7 @@ const PRE_TRANSFORM_EMPTY_KEY = 'commands.preTransformEmpty'
 export async function preTransformCommandText(
   command: CommandConfig,
   text: string,
-  tools: OperationLookup,
+  operations: OperationLookup,
   options: {
     signal?: AbortSignal
     source?: CommandRunSource
@@ -265,7 +265,10 @@ export async function preTransformCommandText(
     ) => Promise<string>
   } = {}
 ): Promise<PreTransformResult> {
-  if (!command.isLlmPreTransformEnabled || !commandTakesText(command, tools)) {
+  if (
+    !command.isLlmPreTransformEnabled ||
+    !commandTakesText(command, operations)
+  ) {
     return { ok: true, text }
   }
   const prompt = stringOr(command.llmPreTransformPrompt).trim()
@@ -292,7 +295,7 @@ export async function preTransformCommandText(
       return { ok: false, message: errorMessage(error) }
     }
   }
-  const tool = tools.get('core.transformation')
+  const tool = operations.get('core.transformation')
   if (!tool) {
     return { ok: false, messageKey: 'commands.typeMissing' }
   }

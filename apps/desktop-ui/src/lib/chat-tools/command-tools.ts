@@ -19,7 +19,7 @@ export interface CommandToolProviderDependencies {
   /** All user commands configured in the app */
   commands: () => readonly CommandConfig[]
   /** Tool registry to look up tools by command.operationId */
-  tools: OperationLookup
+  operations: OperationLookup
   /** The platform and the variable values of this device */
   environment?: () => CommandEnvironment
   /** Optional logger for skipped or problematic tools */
@@ -57,7 +57,7 @@ export function createCommandToolProvider(
 
         if (env && !isOnPlatform(command.platforms, env.platform)) continue
 
-        const tool = deps.tools.get(command.operationId)
+        const tool = deps.operations.get(command.operationId)
         if (!tool) {
           deps.warn?.(
             `Tool "${command.operationId}" for command "${command.name}" not found`
@@ -68,7 +68,8 @@ export function createCommandToolProvider(
         // Tools that cannot run from chat (e.g. editor paste/copy) are omitted.
         if (tool.canRunFromChat === false) continue
         if (tool.getUnavailableReasonKey?.()) continue
-        if (env && invocationUnavailableReason(command, deps.tools)) continue
+        if (env && invocationUnavailableReason(command, deps.operations))
+          continue
 
         const chatTool = await adaptCommand(command, tool, {
           groupId: COMMANDS_TOOL_GROUP_ID,

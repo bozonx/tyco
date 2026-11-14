@@ -57,7 +57,7 @@ export interface QuickAiRequestRuntimeDependencies {
   readMemory: (id: string, file: string) => Promise<string>
   listMemoryTopics: (id: string) => Promise<ProfileMemoryTopic[]>
 
-  tools?: OperationLookup
+  operations?: OperationLookup
   environment?: () => CommandEnvironment
 
   /** Keeps an answer the user took in the editor history */
@@ -111,7 +111,7 @@ export function createQuickAiRequestRuntime(
           deps.getUserConfig()?.llm?.webSearch?.fetchMaxCharacters,
         warn: (message) => deps.warn(message, 'tools'),
         commands: () => deps.getUserConfig()?.commands ?? [],
-        tools: deps.tools,
+        operations: deps.operations,
         environment: deps.environment,
       }),
   })

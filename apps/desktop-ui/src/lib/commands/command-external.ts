@@ -18,12 +18,12 @@ export function normalizeCommandName(name: string): string {
 /** Whether an external call may run the command */
 function canRunCommandExternally(
   command: CommandConfig,
-  tools: OperationLookup
+  operations: OperationLookup
 ): boolean {
   return (
     command.isEnabled &&
     command.isAvailableExternally &&
-    isCommandAvailable(command, tools)
+    isCommandAvailable(command, operations)
   )
 }
 
@@ -33,12 +33,12 @@ function canRunCommandExternally(
  */
 export function externalCommandNameConflicts(
   commands: readonly CommandConfig[],
-  tools: OperationLookup
+  operations: OperationLookup
 ): Map<string, CommandConfig[]> {
   const byName = new Map<string, CommandConfig[]>()
   for (const command of commands) {
     const name = normalizeCommandName(command.name)
-    if (!name || !canRunCommandExternally(command, tools)) continue
+    if (!name || !canRunCommandExternally(command, operations)) continue
     byName.set(name, [...(byName.get(name) ?? []), command])
   }
   const conflicts = new Map<string, CommandConfig[]>()

@@ -32,7 +32,7 @@ const builtin: Invocation = {
 function setup(tool: OperationDefinition = echoTool()) {
   const copyText = vi.fn(async (_text: string) => {})
   const deps = {
-    tools: createOperationRegistry([tool, testCopyOperation(copyText)]),
+    operations: createOperationRegistry([tool, testCopyOperation(copyText)]),
     showToast: vi.fn(),
     showError: vi.fn(),
     showText: vi.fn(),

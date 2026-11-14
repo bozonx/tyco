@@ -34,7 +34,7 @@ export interface VoiceCommandContext {
 
 export interface VoiceCommandDependencies extends TimerDependencies {
   commands: () => readonly CommandConfig[]
-  tools: OperationLookup
+  operations: OperationLookup
   context?: VoiceCommandContext | (() => VoiceCommandContext | undefined)
   startDictation: (handlers: DictationHandlers) => Promise<void>
   finishDictation: () => Promise<string>
@@ -139,7 +139,9 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   const commands = computed(() => deps.commands())
   const findCommand = (id: string | undefined) =>
     commands.value.find((item) => item.id === id)
-  const routes = computed(() => compileVoiceRoutes(commands.value, deps.tools))
+  const routes = computed(() =>
+    compileVoiceRoutes(commands.value, deps.operations)
+  )
   const activeTranscriptText = computed(() => {
     if (stage.value === 'recording' || stage.value === 'finishing') {
       return liveTranscriptText(liveTranscript.value)
@@ -165,7 +167,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     return hasMatchedCommand.value ? 'capturing-args' : 'awaiting-command'
   })
   const catalogRoutes = computed(() =>
-    compileVoiceRoutes(commands.value, deps.tools, true)
+    compileVoiceRoutes(commands.value, deps.operations, true)
   )
   const catalog = computed(() =>
     commands.value.filter((command) =>
@@ -181,7 +183,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       ? voiceInputIssue(
           command.value,
           inputText.value,
-          deps.tools,
+          deps.operations,
           context.value,
           selected.value?.parameters
         )
@@ -195,7 +197,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     () =>
       stage.value === 'review' &&
       command.value &&
-      isVoiceCommand(command.value, deps.tools) &&
+      isVoiceCommand(command.value, deps.operations) &&
       !inputIssue.value
   )
   const canRunLive = computed(() => {
@@ -205,13 +207,13 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     if (!activeCommand.value || !activeCandidate.value) {
       return false
     }
-    if (!isVoiceCommand(activeCommand.value, deps.tools)) {
+    if (!isVoiceCommand(activeCommand.value, deps.operations)) {
       return false
     }
     const issue = voiceInputIssue(
       activeCommand.value,
       activeCandidate.value.text,
-      deps.tools,
+      deps.operations,
       context.value,
       activeCandidate.value.parameters
     )
@@ -241,11 +243,11 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     if (
       stage.value !== 'review' ||
       !target ||
-      !isVoiceCommand(target, deps.tools) ||
+      !isVoiceCommand(target, deps.operations) ||
       voiceInputIssue(
         target,
         inputText.value,
-        deps.tools,
+        deps.operations,
         context.value,
         parameters
       )
@@ -477,7 +479,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     routes,
     catalogRoutes,
     unavailableReason: (command: CommandConfig) =>
-      commandUnavailableReason(command, deps.tools),
+      commandUnavailableReason(command, deps.operations),
     resolution,
     catalog,
     command,

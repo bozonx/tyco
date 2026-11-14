@@ -367,7 +367,7 @@ const runtime = createQuickAiRequestRuntime({
   readSoul: (id) => aiProfilesStore.readSoul(id),
   readMemory: (id, file) => aiProfilesStore.readMemory(id, file),
   listMemoryTopics: (id) => aiProfilesStore.listMemoryTopics(id),
-  tools: operationsStore,
+  operations: operationsStore,
   environment: operationsStore.environment,
   saveOutput: (text) => void historyStore.saveOutput(text, 'quickAiRequest'),
   toEditor: (text, sourceText) => editorNavigation.toEditor(text, sourceText),

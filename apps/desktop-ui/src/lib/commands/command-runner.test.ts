@@ -81,7 +81,7 @@ function setup(
     ...rest
   } = extra
   const deps = {
-    tools: testOperations(
+    operations: testOperations(
       { executeScriptAction, cancelScriptAction, executeWebhook, newRunId },
       [...tools, testCopyOperation(copyText), testInsertOperation(insertText)]
     ),
@@ -707,7 +707,7 @@ it('opens a result menu for a voice translation without inserting or copying the
   const command = createCommand(
     'core.translate',
     'translation',
-    deps.tools.get('core.translate')
+    deps.operations.get('core.translate')
   )
   command.operationConfig = { language: 'en-US' }
   const outcome = await runner.run(command, 'Original text', {

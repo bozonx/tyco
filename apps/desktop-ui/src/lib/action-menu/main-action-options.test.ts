@@ -39,32 +39,32 @@ describe('main action groups', () => {
 
   it('groups a command by what it does', () => {
     const notes = { owner: { kind: 'plugin', pluginId: 'Notes' } }
-    const tools: OperationLookup = {
+    const operations: OperationLookup = {
       get: (operationId) =>
         operationId === 'Notes.write'
           ? (notes as RegisteredOperation)
           : ({ owner: { kind: 'core' } } as RegisteredOperation),
     }
 
-    expect(commandGroup(createCommand('core.translate'), tools)).toEqual({
+    expect(commandGroup(createCommand('core.translate'), operations)).toEqual({
       kind: 'translation',
     })
-    expect(commandGroup(createCommand('core.aiTask'), tools)).toEqual({
+    expect(commandGroup(createCommand('core.aiTask'), operations)).toEqual({
       kind: 'aiCommands',
     })
-    expect(commandGroup(createCommand('core.transformation'), tools)).toEqual({
-      kind: 'transformation',
-    })
-    expect(commandGroup(createCommand('core.styling'), tools)).toEqual({
+    expect(
+      commandGroup(createCommand('core.transformation'), operations)
+    ).toEqual({ kind: 'transformation' })
+    expect(commandGroup(createCommand('core.styling'), operations)).toEqual({
       kind: 'styling',
     })
-    expect(commandGroup(createCommand('script'), tools)).toEqual({
+    expect(commandGroup(createCommand('script'), operations)).toEqual({
       kind: 'commands',
     })
-    expect(commandGroup(createCommand('webhook'), tools)).toEqual({
+    expect(commandGroup(createCommand('webhook'), operations)).toEqual({
       kind: 'commands',
     })
-    expect(commandGroup(createCommand('Notes.write'), tools)).toEqual({
+    expect(commandGroup(createCommand('Notes.write'), operations)).toEqual({
       kind: 'plugin',
       plugin: 'Notes',
     })

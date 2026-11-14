@@ -158,7 +158,7 @@ describe('desktop-chat-tools', () => {
           isEnabled: true,
         },
       ],
-      tools: {
+      operations: {
         get: (id) =>
           id === 'script'
             ? {

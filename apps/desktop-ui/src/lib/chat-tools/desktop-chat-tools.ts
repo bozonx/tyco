@@ -118,7 +118,7 @@ export interface DesktopChatToolsDependencies {
   extractDocumentText?: typeof readDocumentText
   isDebugEnabled?: () => boolean
   commands?: () => readonly CommandConfig[]
-  tools?: OperationLookup
+  operations?: OperationLookup
   environment?: () => CommandEnvironment
 }
 
@@ -199,10 +199,10 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
     warn: deps.warn,
   })
   const commandToolProvider =
-    deps.commands && deps.tools
+    deps.commands && deps.operations
       ? createCommandToolProvider({
           commands: deps.commands,
-          tools: deps.tools,
+          operations: deps.operations,
           environment: deps.environment,
           warn: deps.warn,
         })

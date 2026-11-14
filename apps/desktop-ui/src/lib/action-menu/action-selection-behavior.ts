@@ -40,7 +40,7 @@ const LOCKED_FALSE_STANDARD_ACTIONS = new Set([
 export function resolveActionSelectionBehavior(
   action: MainActionConfig | null | undefined,
   commands?: readonly CommandConfig[],
-  tools?: OperationLookup
+  operations?: OperationLookup
 ): ActionSelectionBehavior {
   if (!action) {
     return { disabled: true, forcedValue: true }
@@ -81,7 +81,7 @@ export function resolveActionSelectionBehavior(
         if (commandTakesSelection(command)) {
           return { disabled: true, forcedValue: true }
         }
-        if (tools && !commandTakesText(command, tools)) {
+        if (operations && !commandTakesText(command, operations)) {
           return { disabled: true, forcedValue: false }
         }
       }

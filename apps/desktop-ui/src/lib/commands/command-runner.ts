@@ -32,7 +32,7 @@ export interface CommandRunnerDependencies extends InvocationRunnerDependencies 
 
 type CommandTransformDependencies = Pick<
   CommandRunnerDependencies,
-  'tools' | 'language' | 'transformTextWithLlm'
+  'operations' | 'language' | 'transformTextWithLlm'
 >
 
 function createInputPreparation(deps: CommandTransformDependencies) {
@@ -41,7 +41,7 @@ function createInputPreparation(deps: CommandTransformDependencies) {
     text: string,
     options: InvocationOptions
   ) => {
-    const pre = await preTransformCommandText(command, text, deps.tools, {
+    const pre = await preTransformCommandText(command, text, deps.operations, {
       signal: options.signal,
       source: options.source,
       transformTextWithLlm: deps.transformTextWithLlm,

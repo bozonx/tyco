@@ -27,7 +27,7 @@ export function useInvocationRunnerDependencies(): InvocationRunnerDependencies 
   const { toastKey, toastText } = useToastStore()
 
   return {
-    tools: operationsStore,
+    operations: operationsStore,
     showToast: (message, type) => {
       toastKey(message, type)
     },

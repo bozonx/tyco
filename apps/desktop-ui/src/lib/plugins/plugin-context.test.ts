@@ -414,7 +414,7 @@ it('shares structured input preparation between toolbar tools and commands', asy
   const registry = createOperationRegistry()
   deps.registerOperations = (tools, config) =>
     registry.registerPluginOperations('Example', tools, config)
-  const invoke = createOperationInvoker({ tools: registry })
+  const invoke = createOperationInvoker({ operations: registry })
   deps.invokeOperation = (operationId, snapshot, signal) =>
     invoke(
       {

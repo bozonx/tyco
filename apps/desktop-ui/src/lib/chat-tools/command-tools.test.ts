@@ -63,7 +63,7 @@ describe('command-tools', () => {
   it('returns no tools when the group is disabled or denied', async () => {
     const provider = createCommandToolProvider({
       commands: () => [mockCommand()],
-      tools: createLookup(),
+      operations: createLookup(),
     })
 
     expect(
@@ -94,7 +94,7 @@ describe('command-tools', () => {
   it('returns no tools when no commandIds are selected', async () => {
     const provider = createCommandToolProvider({
       commands: () => [mockCommand()],
-      tools: createLookup(),
+      operations: createLookup(),
     })
 
     expect(
@@ -119,7 +119,7 @@ describe('command-tools', () => {
     const cmd2 = mockCommand({ id: 'cmd-2', name: 'Command 2' })
     const provider = createCommandToolProvider({
       commands: () => [cmd1, cmd2],
-      tools: createLookup(),
+      operations: createLookup(),
     })
 
     const tools = await provider.tools({
@@ -138,7 +138,7 @@ describe('command-tools', () => {
     const cmdEmpty = mockCommand({ id: 'cmd-2', description: '' })
     const provider = createCommandToolProvider({
       commands: () => [cmdBlank, cmdEmpty],
-      tools: createLookup(),
+      operations: createLookup(),
     })
 
     const tools = await provider.tools({
@@ -154,7 +154,7 @@ describe('command-tools', () => {
     const disabledCmd = mockCommand({ id: 'cmd-1', isEnabled: false })
     const provider = createCommandToolProvider({
       commands: () => [disabledCmd],
-      tools: createLookup(),
+      operations: createLookup(),
     })
 
     const tools = await provider.tools({
@@ -170,7 +170,7 @@ describe('command-tools', () => {
     const restrictedTool = mockTool({ canRunFromChat: false })
     const provider = createCommandToolProvider({
       commands: () => [mockCommand({ operationId: 'restricted' })],
-      tools: createLookup({ restricted: restrictedTool }),
+      operations: createLookup({ restricted: restrictedTool }),
     })
 
     const tools = await provider.tools({
@@ -186,7 +186,7 @@ describe('command-tools', () => {
     const linuxCmd = mockCommand({ platforms: ['linux'] })
     const provider = createCommandToolProvider({
       commands: () => [linuxCmd],
-      tools: createLookup(),
+      operations: createLookup(),
       environment: () => ({ platform: 'windows', variables: {} }),
     })
 
@@ -209,7 +209,7 @@ describe('command-tools', () => {
         mockCommand({ id: 'cmd-1', operationId: 'missing' }),
         mockCommand({ id: 'cmd-2', operationId: 'unavailable' }),
       ],
-      tools: createLookup({ unavailable: unavailableTool }),
+      operations: createLookup({ unavailable: unavailableTool }),
       warn,
     })
 
@@ -238,7 +238,7 @@ describe('command-tools', () => {
     })
     const provider = createCommandToolProvider({
       commands: () => [command],
-      tools: createLookup({ script: tool }),
+      operations: createLookup({ script: tool }),
     })
 
     const [chatTool] = await provider.tools({

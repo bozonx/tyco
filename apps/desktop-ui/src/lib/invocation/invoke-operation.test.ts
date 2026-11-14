@@ -32,12 +32,12 @@ const invocation: Invocation = {
 }
 
 const invokerOf = (definition: OperationDefinition) =>
-  createOperationInvoker({ tools: createOperationRegistry([definition]) })
+  createOperationInvoker({ operations: createOperationRegistry([definition]) })
 
 describe('createOperationInvoker', () => {
   it('tells a missing or unavailable tool by its reason', async () => {
     const missing = createOperationInvoker({
-      tools: createOperationRegistry([]),
+      operations: createOperationRegistry([]),
     })
     for (const options of [{}, { input: { text: 'x' } }]) {
       expect(await missing(invocation, 'x', options)).toMatchObject({
@@ -61,7 +61,7 @@ describe('createOperationInvoker', () => {
     const run = vi.fn(async (): Promise<OperationResult> => ({ ok: true }))
     const registry = createOperationRegistry([tool(run, { id: 'webhook' })])
     const invoke = createOperationInvoker({
-      tools: {
+      operations: {
         get: registry.get,
         environment: () => ({
           platform: 'linux',

@@ -7,14 +7,14 @@ import { createCoreOperations } from '../operations/core-operations'
 import { testOperations } from '../operations/testing'
 import { createActionMenuModel } from './action-menu-model'
 
-/** The core tools the built-in actions run, over mocks of what the app does */
+/** The core operations the built-in actions run, over mocks of what the app does */
 function coreOperations() {
   const services = {
     insertText: vi.fn(async (_text: string) => {}),
     copyText: vi.fn(async (_text: string) => {}),
     askInChat: vi.fn(async (_text: string) => {}),
   }
-  const tools = testOperations(
+  const operations = testOperations(
     {},
     createCoreOperations({
       ...services,
@@ -27,12 +27,12 @@ function coreOperations() {
       describeError: String,
     })
   )
-  return { services, tools }
+  return { services, operations }
 }
 
 describe('createActionMenuModel', () => {
   const setup = () => {
-    const { services, tools } = coreOperations()
+    const { services, operations } = coreOperations()
     const deps = {
       saveOutput: vi.fn().mockResolvedValue(undefined),
       openTranslateModal: vi.fn(),
@@ -46,7 +46,7 @@ describe('createActionMenuModel', () => {
       showToast: vi.fn(),
       hideWindow: vi.fn(),
       minCorrectionLength: () => 10,
-      tools,
+      operations,
     }
     const store = createActionMenuModel(deps)
     return { store, deps, services }
@@ -446,7 +446,7 @@ describe('createActionMenuModel', () => {
       correctAndInsert: vi.fn().mockResolvedValue(undefined),
       showToast: vi.fn(),
       mainActions: () => mainActions,
-      tools: testOperations(),
+      operations: testOperations(),
     }
     const store = createActionMenuModel(deps)
 
@@ -479,7 +479,7 @@ describe('createActionMenuModel', () => {
       })
     const store = createActionMenuModel({
       ...deps,
-      tools: testOperations({ executeScriptAction }),
+      operations: testOperations({ executeScriptAction }),
       mainActions: () => ({ q: { type: 'command', commandId: 'sc1' } }),
       commands: () => [noText],
     })
@@ -519,7 +519,7 @@ describe('createActionMenuModel', () => {
     const store = createActionMenuModel({
       ...deps,
       logRun,
-      tools: testOperations({ executeScriptAction }),
+      operations: testOperations({ executeScriptAction }),
       mainActions: () => ({
         q: { type: 'command', commandId: 'sc1' },
         w: { type: 'command', commandId: 'wh1' },
@@ -582,7 +582,7 @@ describe('createActionMenuModel', () => {
       logRun,
       setPendingModal,
       clearPendingModal,
-      tools: testOperations({ executeScriptAction, cancelScriptAction }),
+      operations: testOperations({ executeScriptAction, cancelScriptAction }),
       mainActions: () => ({ q: { type: 'command', commandId: 'sc1' } }),
       commands: () => [script],
     })

@@ -124,7 +124,7 @@ function setup(
   }
   // nested runs go through the real command runner, as in the app
   const transform = createCommandTransformer({
-    tools: {
+    operations: {
       get: (id) =>
         id === 'script'
           ? scriptTool

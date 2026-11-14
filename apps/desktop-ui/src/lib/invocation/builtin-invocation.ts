@@ -8,11 +8,11 @@ import type { Invocation } from './invocation-types'
  */
 export function builtinInvocation(
   operationId: string,
-  tools: OperationLookup,
+  operations: OperationLookup,
   t: (key: string) => string,
   operationConfig: Record<string, unknown> = {}
 ): Invocation {
-  const tool = tools.get(operationId)
+  const tool = operations.get(operationId)
   return {
     operationId,
     operationConfig,

@@ -20,7 +20,7 @@ export default function usePluginContext() {
   const edits = useEditMenuStore()
   const toolbar = useToolbarStore()
   const tools = useOperationsStore()
-  const invokeOperation = createOperationInvoker({ tools })
+  const invokeOperation = createOperationInvoker({ operations: tools })
   const invocationRunner = createInvocationRunner(
     useInvocationRunnerDependencies()
   )

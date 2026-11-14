@@ -25,9 +25,12 @@ export interface VoiceNotice {
 /** The parameters the phrase of the command names, see `commandParameters` */
 export const voiceParameters = (
   command: CommandConfig,
-  tools: OperationLookup
+  operations: OperationLookup
 ): readonly OperationCommandParameter[] =>
-  openCommandParameters(tools.get(command.operationId), command.operationConfig)
+  openCommandParameters(
+    operations.get(command.operationId),
+    command.operationConfig
+  )
 
 /** The values a parameter can take, to pick one by hand */
 export const voiceParameterOptions = (
@@ -43,10 +46,10 @@ export const voiceParameterOptions = (
 export const voiceParameterLabels = (
   command: CommandConfig,
   parameters: Readonly<Record<string, string>>,
-  tools: OperationLookup,
+  operations: OperationLookup,
   t: Translate
 ): string[] =>
-  voiceParameters(command, tools).flatMap((parameter) => {
+  voiceParameters(command, operations).flatMap((parameter) => {
     const value = parameters[parameter.name]
     return value ? [t(parameter.valueLabelKey(value))] : []
   })
@@ -65,14 +68,14 @@ const rawMessage = (t: Translate, key: string, name: string) =>
  */
 export const voiceCommandPhrases = (
   command: CommandConfig,
-  tools: OperationLookup,
+  operations: OperationLookup,
   t: Translate
 ): string[] => {
   const own = command.phrases.map((phrase) => phrase.trim()).filter(Boolean)
-  const [parameter] = voiceParameters(command, tools)
+  const [parameter] = voiceParameters(command, operations)
   if (!parameter) return [...new Set(own)]
   const slot = `{${parameter.name}}`
-  const key = tools.get(command.operationId)?.voicePhrasesKey
+  const key = operations.get(command.operationId)?.voicePhrasesKey
   const templates = own.length
     ? own
     : key

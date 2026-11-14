@@ -69,7 +69,7 @@ export const canTestCommand = (command: CommandConfig): boolean =>
 export async function runCommandTest(
   command: CommandConfig,
   text: string,
-  tools: OperationLookup,
+  operations: OperationLookup,
   deps: CommandTestDependencies & {
     transformTextWithLlm?: (
       prompt: string,
@@ -100,7 +100,7 @@ export async function runCommandTest(
       return { kind: 'error', messageKey: 'commands.testNeedsSave' }
     }
   }
-  const pre = await preTransformCommandText(command, text, tools, {
+  const pre = await preTransformCommandText(command, text, operations, {
     signal,
     source: 'menu',
     transformTextWithLlm: deps.transformTextWithLlm,
@@ -110,7 +110,7 @@ export async function runCommandTest(
     return { kind: 'error', messageKey: pre.messageKey, message: pre.message }
   }
   const resolvedText = pre.text ?? text
-  const input = commandTakesText(command, tools) ? resolvedText : null
+  const input = commandTakesText(command, operations) ? resolvedText : null
   if (command.operationId === 'script') {
     const runId = deps.newRunId()
     let over = false
@@ -139,7 +139,7 @@ export async function runCommandTest(
     }
   }
 
-  const tool = commandOperation(command, tools)
+  const tool = commandOperation(command, operations)
   if (!tool) return { kind: 'error', messageKey: 'commands.typeMissing' }
   try {
     const result = await tool.run({

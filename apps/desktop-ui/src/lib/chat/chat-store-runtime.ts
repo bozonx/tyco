@@ -87,7 +87,7 @@ export interface ChatStoreRuntimeDependencies {
   toastKey: (key: string, kind: 'error' | 'warn') => void
   warn: (message: string) => void
   /** Tool registry to look up tools for custom commands in chat */
-  tools?: OperationLookup
+  operations?: OperationLookup
   /** The platform and variable values of this device */
   environment?: () => CommandEnvironment
   /** Waits before each retry of a failed chat write */
@@ -176,7 +176,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
       deps.getUserConfig()?.llm?.webSearch?.fetchMaxCharacters,
     warn,
     commands: () => deps.getUserConfig()?.commands ?? [],
-    tools: deps.tools,
+    operations: deps.operations,
     environment: deps.environment,
   })
 

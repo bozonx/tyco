@@ -109,14 +109,14 @@ export function pluginActionGroup(
 
 export function commandGroup(
   command: CommandConfig,
-  tools: OperationLookup
+  operations: OperationLookup
 ): MainActionGroup {
   if (command.operationId === 'core.translate') return { kind: 'translation' }
   if (command.operationId === 'core.aiTask') return { kind: 'aiCommands' }
   if (command.operationId === 'core.transformation')
     return { kind: 'transformation' }
   if (command.operationId === 'core.styling') return { kind: 'styling' }
-  const owner = commandOperation(command, tools)?.owner
+  const owner = commandOperation(command, operations)?.owner
   if (owner?.kind === 'plugin')
     return { kind: 'plugin', plugin: owner.pluginId }
   return { kind: 'commands' }

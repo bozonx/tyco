@@ -29,7 +29,7 @@ import {
 
 export interface OperationInvokerDependencies {
   /** The tools the invocations run */
-  tools: OperationLookup
+  operations: OperationLookup
   /** The dictation language, for tools that parse the text */
   language?: () => string | undefined
 }
@@ -57,13 +57,13 @@ export function invocationUnavailableReason(
     | 'isLlmArgumentParsingEnabled'
     | 'platforms'
   >,
-  tools: OperationLookup
+  operations: OperationLookup
 ): string | undefined {
-  const tool = tools.get(invocation.operationId)
+  const tool = operations.get(invocation.operationId)
   if (!tool) return 'commands.typeMissing'
   const reason = tool.getUnavailableReasonKey?.()
   if (reason) return reason
-  const environment = tools.environment?.()
+  const environment = operations.environment?.()
   if (environment) {
     // the config is shared by devices: a command of another platform, or one
     // whose variables this device has no values for, stays but does not run
@@ -108,19 +108,19 @@ export function createOperationInvoker(deps: OperationInvokerDependencies) {
     text: string,
     options: InvocationOptions = {}
   ): Promise<InvokeResult> => {
-    const tool = deps.tools.get(invocation.operationId)
+    const tool = deps.operations.get(invocation.operationId)
     // an explicit input needs no text, so only the tool itself can be missing
     const reason =
       options.input !== undefined
         ? tool
           ? tool.getUnavailableReasonKey?.()
           : 'commands.typeMissing'
-        : invocationUnavailableReason(invocation, deps.tools)
+        : invocationUnavailableReason(invocation, deps.operations)
     if (reason === 'commands.variablesNotSet') {
       // the user is told which values to set here
       const names = invocationMissingVariables(
         invocation,
-        deps.tools.environment!()
+        deps.operations.environment!()
       )
       return {
         ok: false,

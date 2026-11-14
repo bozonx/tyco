@@ -24,7 +24,7 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
   const runner = createCommandRunner(useInvocationRunnerDependencies())
   const model = createVoiceCommandModel({
     commands: () => desktop.userConfig.commands,
-    tools,
+    operations: tools,
     ...useDictationActions(),
     describeError: (cause) => describeDictationError(cause, translate),
     saveTranscript: (text) =>
