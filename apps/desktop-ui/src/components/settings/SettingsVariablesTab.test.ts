@@ -139,7 +139,7 @@ describe('SettingsVariablesTab.vue', () => {
     expect(context.draft.value.variableValues['v1']).toBe('my-new-value')
   })
 
-  it('shows nested reference errors without device badges', async () => {
+  it('shows nested reference errors', async () => {
     const { wrapper, context } = mountTab([
       { id: 'root', name: 'ROOT' },
       { id: 'child', name: 'CHILD' },
@@ -150,9 +150,6 @@ describe('SettingsVariablesTab.vue', () => {
     }
     await nextTick()
     expect(wrapper.text()).toContain('variables.hintCycle')
-    expect(wrapper.findComponent({ name: 'DeviceScopeBadge' }).exists()).toBe(
-      false
-    )
     await wrapper
       .find('[data-testid="variable-root"] .variable-card-header button')
       .trigger('click')

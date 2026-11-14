@@ -598,6 +598,18 @@ export function isDeviceScopedPath(path: string): boolean {
   return false
 }
 
+/** The paths of the fields of this device, e.g. `appearance.uiScalePercent` */
+export function deviceScopedPaths(
+  shape: Schema = schema,
+  path: string[] = []
+): string[] {
+  return Object.entries(shape.properties ?? {}).flatMap(([key, child]) =>
+    isDeviceSchema(child)
+      ? [[...path, key].join('.')]
+      : deviceScopedPaths(child, [...path, key])
+  )
+}
+
 /** A path of an unknown field, its keys in order */
 export type ConfigPath = readonly string[]
 

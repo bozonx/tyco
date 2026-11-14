@@ -1,7 +1,7 @@
 <template>
   <SettingsSection
     :title="t('settings.aiVaults.title')"
-    :info="t('settings.aiVaults.hint')"
+    :info="`${t('settings.aiVaults.hint')}\n\n${t('settings.aiVaults.attachedDeviceScopedHint')}`"
   >
     <template #actions>
       <Button

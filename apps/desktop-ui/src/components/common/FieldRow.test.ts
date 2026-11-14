@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest'
 import FieldInput from './FieldInput.vue'
 import FieldRow from './FieldRow.vue'
 import FieldCheckbox from './FieldCheckbox.vue'
+import InfoTooltip from './InfoTooltip.vue'
+import { translate } from '../../lib/i18n'
 
 const Form = defineComponent({
   components: { FieldRow, FieldInput, FieldCheckbox },
@@ -133,5 +135,36 @@ describe('FieldRow', () => {
     await wrapper.setProps({ disabled: false })
     expect(wrapper.attributes('disabled')).toBeUndefined()
     expect(inputs[0].attributes('disabled')).toBeUndefined()
+  })
+
+  it('tells in the info that a value of this device is not synced', async () => {
+    const wrapper = mount(FieldRow, {
+      props: {
+        label: 'Scale',
+        info: 'Size of the interface',
+        deviceScoped: true,
+      },
+    })
+    const tooltip = wrapper.findComponent(InfoTooltip)
+    expect(tooltip.props('text')).toBe(
+      `Size of the interface\n\n${translate('settings.deviceScopedHint')}`
+    )
+    await wrapper.setProps({ info: undefined })
+    expect(tooltip.props('text')).toBe(translate('settings.deviceScopedHint'))
+    await wrapper.setProps({ deviceScoped: false })
+    expect(wrapper.findComponent(InfoTooltip).exists()).toBe(false)
+  })
+
+  it('hands the device note to a custom info', () => {
+    const wrapper = mount(FieldRow, {
+      props: { label: 'Folder', deviceScoped: true },
+      slots: {
+        info: '<template #info="{ deviceScopeNote }"><p class="custom-info">{{ deviceScopeNote }}</p></template>',
+      },
+    })
+    expect(wrapper.get('.custom-info').text()).toBe(
+      translate('settings.deviceScopedHint')
+    )
+    expect(wrapper.findComponent(InfoTooltip).exists()).toBe(false)
   })
 })

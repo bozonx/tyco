@@ -93,8 +93,8 @@
       <FieldRow
         :label="t('commands.externalSelection')"
         :info="t('commands.externalSelectionInfo')"
+        device-scoped
       >
-        <template #info><DeviceScopeBadge /></template>
         <FieldSwitch
           :model-value="externalAccess.canAccessSelection"
           :title="t('commands.externalSelection')"
@@ -141,7 +141,6 @@ import FieldSwitch from '../common/FieldSwitch.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
 import CommandCard from './CommandCard.vue'
-import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import SettingsCreateCommandModal, {
   type CreateCommandSubmitEvent,
 } from './SettingsCreateCommandModal.vue'

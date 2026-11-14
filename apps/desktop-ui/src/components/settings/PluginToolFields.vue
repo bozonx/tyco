@@ -7,10 +7,8 @@
     :info="fieldInfo(field)"
     vertical
     density="compact"
+    :device-scoped="field.name === tool.directoryFieldName"
   >
-    <template v-if="field.name === tool.directoryFieldName" #info>
-      <DeviceScopeBadge />
-    </template>
     <ConfigFieldControl
       :control="controlFor(field)"
       auto-resize
@@ -48,7 +46,6 @@ import type { ConfigFieldControl as Control } from '../../lib/ui/config-field-co
 import type { InputConfigItem } from '../../types'
 import FieldRow from '../common/FieldRow.vue'
 import ConfigFieldControl from './ConfigFieldControl.vue'
-import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import DirectoryPickerButton from './DirectoryPickerButton.vue'
 import ToolConfigPreview from './ToolConfigPreview.vue'
 import { isConfigFieldVisible } from '@tyco/plugin-sdk'

@@ -61,8 +61,7 @@
     <SettingsSection
       v-if="voiceRows.length > 0"
       :title="t('settings.voiceHotkeysTitle')"
-      :info="t('settings.voiceHotkeysInfo')"
-      device-scoped
+      :info="withHotkeysScope(t('settings.voiceHotkeysInfo'))"
     >
       <div v-for="row in voiceRows" :key="row.id" class="voice-hotkey-item">
         <GlobalHotkeyRow
@@ -95,8 +94,7 @@
 
     <SettingsSection
       :title="t('settings.customActionsTitle')"
-      :info="t('settings.customActionsInfo')"
-      device-scoped
+      :info="withHotkeysScope(t('settings.customActionsInfo'))"
     >
       <div
         v-for="(slot, index) in customActionSlots"
@@ -318,6 +316,10 @@ const isEditable = computed(() => checkIsEditable(providerState))
 const isSystemManaged = computed(() => checkIsSystemManaged(providerState))
 const isHoldSupported = computed(() => providerState.provider !== 'external')
 const providerNote = computed(() => providerNoteKey(providerState))
+/** A mixed section: only its shortcuts belong to this device */
+const withHotkeysScope = (info: string) =>
+  `${info}\n\n${t('settings.hotkeysDeviceScopedHint')}`
+
 const globalInfo = computed(() =>
   [t('settings.globalActionsHint'), providerNote.value && t(providerNote.value)]
     .filter(Boolean)

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { createCommand } from '../../lib/commands/command-config'
 import type { RegisteredTool } from '../../lib/tools/tool-types'
 import { installFakeDesktop } from '../../test/install-fake-desktop'
+import DirectoryPickerButton from './DirectoryPickerButton.vue'
 import ToolConfigFields from './ToolConfigFields.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -103,7 +104,7 @@ describe('ToolConfigFields', () => {
     })
     await flushPromises()
     expect(wrapper.text()).not.toContain('Template')
-    expect(wrapper.findAll('button')).toHaveLength(1)
+    expect(wrapper.findAllComponents(DirectoryPickerButton)).toHaveLength(1)
     expect(wrapper.get('pre').text()).toBe('/notes:base')
 
     await wrapper.setProps({

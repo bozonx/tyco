@@ -262,6 +262,14 @@ to the file it was read from, so a device field of a newer build never reaches
 either is newer than the build knows, the whole config is shown and never
 saved (`configIsNewer`).
 
+The settings tell a device field by a line in its info, not by a badge:
+`device-scoped` of `FieldRow` (or of `SettingsSection` when every field of the
+section is the device's) adds `settings.deviceScopedHint`; a custom `info` slot
+gets it as `deviceScopeNote`. A section mixing both parts names what stays on
+the device instead, e.g. `settings.hotkeysDeviceScopedHint`. The device folders
+of plugins and external projects are marked the same way. `config-scope.test.ts`
+lists where each device field of the schema is marked and fails on a new one.
+
 References go from the device to the user data only: a device value of an
 entity is kept by the entity id (the values of variables, the notes folders of plugins, the folders of external projects), and
 one whose entity is gone is dropped on that device. A config that was not read

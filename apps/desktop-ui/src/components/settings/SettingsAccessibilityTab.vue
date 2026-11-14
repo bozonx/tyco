@@ -22,8 +22,7 @@
         :options="motionOptions"
       />
     </FieldRow>
-    <FieldRow :label="t('settings.uiScale')">
-      <template #info><DeviceScopeBadge /></template>
+    <FieldRow :label="t('settings.uiScale')" device-scoped>
       <FieldSelect
         :model-value="appearance.uiScalePercent"
         :options="uiScaleOptions"
@@ -39,7 +38,6 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
-import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import SettingsSection from './SettingsSection.vue'
 import {
   type ContrastMode,

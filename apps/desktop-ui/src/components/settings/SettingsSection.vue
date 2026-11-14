@@ -15,9 +15,8 @@
         <h3 v-if="title" class="settings-section-title">
           <span>{{ title }}</span>
           <slot name="info">
-            <InfoTooltip v-if="info" :text="info" />
+            <InfoTooltip v-if="infoText" :text="infoText" />
           </slot>
-          <DeviceScopeBadge v-if="deviceScoped" />
         </h3>
         <p
           v-if="description || $slots.description"
@@ -37,19 +36,27 @@
 </template>
 
 <script setup lang="ts">
-import InfoTooltip from '../common/InfoTooltip.vue'
-import DeviceScopeBadge from './DeviceScopeBadge.vue'
+import { computed } from 'vue'
 
-withDefaults(
+import { translate } from '../../lib/i18n'
+import InfoTooltip from '../common/InfoTooltip.vue'
+
+const props = withDefaults(
   defineProps<{
     title?: string
     description?: string
     info?: string
     bare?: boolean
-    /** The settings of the section belong to this device: never synced */
+    /** Every setting of the section belongs to this device: never synced */
     deviceScoped?: boolean
   }>(),
   { title: '', description: '', info: '', bare: false, deviceScoped: false }
+)
+
+const infoText = computed(() =>
+  [props.info, props.deviceScoped && translate('settings.deviceScopedHint')]
+    .filter(Boolean)
+    .join('\n\n')
 )
 </script>
 

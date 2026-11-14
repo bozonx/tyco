@@ -115,8 +115,8 @@
                   ? t('settings.projectInsideSyncedFolder')
                   : undefined
             "
+            device-scoped
           >
-            <template #info><DeviceScopeBadge /></template>
             <Button
               size="sm"
               variant="neutral"
@@ -278,7 +278,6 @@ import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import StateMessage from '../common/StateMessage.vue'
-import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'

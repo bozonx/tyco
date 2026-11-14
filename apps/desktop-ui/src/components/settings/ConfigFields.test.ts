@@ -5,6 +5,7 @@ import {
   installFakeDesktop,
   type TestDesktop,
 } from '../../test/install-fake-desktop'
+import DirectoryPickerButton from './DirectoryPickerButton.vue'
 import ConfigFields from './ConfigFields.vue'
 import type { InputConfigItem } from '@/types'
 
@@ -50,12 +51,14 @@ describe('ConfigFields', () => {
 
   it('offers a folder picker only for the directory field', () => {
     expect(
-      mount(ConfigFields, { props: { config: fields('a') } }).findAll('button')
+      mount(ConfigFields, { props: { config: fields('a') } }).findAllComponents(
+        DirectoryPickerButton
+      )
     ).toHaveLength(0)
     expect(
       mount(ConfigFields, {
         props: { config: fields('a'), directoryField: 'folder' },
-      }).findAll('button')
+      }).findAllComponents(DirectoryPickerButton)
     ).toHaveLength(1)
   })
 })

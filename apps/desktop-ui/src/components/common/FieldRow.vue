@@ -21,8 +21,9 @@
           :for="group ? undefined : controlId"
           >{{ label }}</component
         >
-        <InfoTooltip v-if="info" :text="info" />
-        <slot name="info" />
+        <slot name="info" :device-scope-note="deviceScopeNote">
+          <InfoTooltip v-if="infoText" :text="infoText" />
+        </slot>
       </div>
       <div v-if="hint" :id="hintId" class="field-row-hint">{{ hint }}</div>
       <FieldMessages
@@ -41,9 +42,10 @@
 </template>
 
 <script setup lang="ts">
-import { useSlots } from 'vue'
+import { computed, useSlots } from 'vue'
 
 import { useFieldContext } from '../../composables/use-field-context'
+import { translate } from '../../lib/i18n'
 import FieldMessages from './FieldMessages.vue'
 import InfoTooltip from './InfoTooltip.vue'
 
@@ -63,11 +65,22 @@ const props = withDefaults(
     nested?: boolean
     inline?: boolean
     flow?: boolean
+    /**
+     * The value belongs to this device and is never synced: the info says so. A
+     * custom `info` slot gets the note as `deviceScopeNote` to show it
+     */
+    deviceScoped?: boolean
   }>(),
   { separator: true }
 )
 
 const slots = useSlots()
+const deviceScopeNote = computed(() =>
+  props.deviceScoped ? translate('settings.deviceScopedHint') : ''
+)
+const infoText = computed(() =>
+  [props.info, deviceScopeNote.value].filter(Boolean).join('\n\n')
+)
 const { errors, warnings, labelId, hintId, errorId, warningId, controlId } =
   useFieldContext(props, () => Boolean(slots.messages))
 </script>

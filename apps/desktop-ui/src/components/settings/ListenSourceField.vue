@@ -6,8 +6,8 @@
     :label="t('listen.sourceLabel')"
     :info="t('listen.sourceInfo')"
     :warning="canListen ? undefined : t('listen.unavailable')"
+    :device-scoped="deviceScoped"
   >
-    <template v-if="showDeviceScope" #info><DeviceScopeBadge /></template>
     <div class="listen-source-field">
       <ListenSourcePicker
         :source="source"
@@ -35,16 +35,16 @@ import { useDesktopStore } from '../../stores/desktop'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import ListenSourcePicker from '../listen/ListenSourcePicker.vue'
-import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import type { CaptureSource } from '@tyco/shared'
 
 withDefaults(
   defineProps<{
     nested?: boolean
     separator?: boolean
-    showDeviceScope?: boolean
+    /** The info says the source belongs to this device and is not synced */
+    deviceScoped?: boolean
   }>(),
-  { nested: true, separator: false, showDeviceScope: false }
+  { nested: true, separator: false, deviceScoped: false }
 )
 
 const { t } = useI18n()

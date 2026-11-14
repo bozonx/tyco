@@ -16,8 +16,8 @@
         :label="t('settings.sttServerUrl')"
         :hint="t('settings.sttServerUrlHint')"
         :error="sttServerUrlError"
+        device-scoped
       >
-        <template #info><DeviceScopeBadge /></template>
         <FieldInput
           :model-value="userConfig.stt.providers.sherpaOnnx.baseUrl"
           placeholder="ws://localhost:6006"
@@ -83,8 +83,8 @@
         :info="t('settings.microphoneHint')"
         :warning="microphoneWarning"
         :error="micTestError"
+        device-scoped
       >
-        <template #info><DeviceScopeBadge /></template>
         <div class="mic-picker">
           <div class="mic-picker-row">
             <FieldSelect
@@ -180,7 +180,7 @@
       :title="t('settings.sttListenSection')"
       :info="t('settings.sttListenSectionInfo')"
     >
-      <ListenSourceField :nested="false" :separator="true" show-device-scope />
+      <ListenSourceField :nested="false" :separator="true" device-scoped />
       <FieldRow :label="t('settings.listenHotkeyLabel')" :separator="false">
         <InlineAction @click="navigate('global-actions#hotkey-listen')">
           {{ t('settings.configureInHotkeys') }}
@@ -224,7 +224,6 @@ import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
 import InlineAction from '../common/InlineAction.vue'
-import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import ListenSourceField from './ListenSourceField.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import SettingsSection from './SettingsSection.vue'
