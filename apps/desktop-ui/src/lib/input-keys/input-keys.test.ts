@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  isCloseWindowEvent,
   isCtrlEnter,
   newlineShortcut,
   resolveInputKeyAction,
@@ -74,5 +75,32 @@ describe('input keys', () => {
     expect(newlineShortcut()).toBe('Shift+Enter')
     expect(submitShortcut('Ctrl+Enter')).toBe('Ctrl+Enter')
     expect(newlineShortcut()).toBe('Shift+Enter')
+  })
+
+  it('recognizes close window shortcuts (Ctrl+Q or Cmd+Q) on any layout', () => {
+    expect(isCloseWindowEvent({ code: 'KeyQ', ctrlKey: true })).toBe(true)
+    expect(isCloseWindowEvent({ code: 'KeyQ', metaKey: true })).toBe(true)
+    expect(isCloseWindowEvent({ key: 'q', code: 'KeyQ', ctrlKey: true })).toBe(
+      true
+    )
+    expect(isCloseWindowEvent({ key: 'й', code: 'KeyQ', ctrlKey: true })).toBe(
+      true
+    )
+    expect(isCloseWindowEvent({ key: 'q', code: 'KeyA', ctrlKey: true })).toBe(
+      true
+    )
+    expect(isCloseWindowEvent({ key: 'w', code: 'KeyW', ctrlKey: true })).toBe(
+      false
+    )
+    expect(
+      isCloseWindowEvent({ code: 'KeyQ', ctrlKey: true, shiftKey: true })
+    ).toBe(false)
+    expect(
+      isCloseWindowEvent({ code: 'KeyQ', ctrlKey: true, altKey: true })
+    ).toBe(false)
+    expect(
+      isCloseWindowEvent({ code: 'KeyQ', ctrlKey: true, isComposing: true })
+    ).toBe(false)
+    expect(isCloseWindowEvent({ code: 'KeyQ' })).toBe(false)
   })
 })

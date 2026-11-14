@@ -119,6 +119,37 @@ describe('ImageViewerDialog', () => {
     expect(wrapper.emitted('close')).toBeUndefined()
   })
 
+  it('closes when clicking the image without dragging', async () => {
+    const wrapper = mountViewer({ open: true, src: 'blob:test' })
+    await nextTick()
+
+    const img =
+      document.body.querySelector<HTMLImageElement>('.image-viewer-img')!
+    const stage = document.body.querySelector<HTMLElement>(
+      '.image-viewer-stage'
+    )!
+
+    img.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        button: 0,
+        pointerId: 3,
+        clientX: 500,
+        clientY: 400,
+        bubbles: true,
+      })
+    )
+    stage.dispatchEvent(
+      new PointerEvent('pointerup', {
+        pointerId: 3,
+        clientX: 500,
+        clientY: 400,
+        bubbles: true,
+      })
+    )
+    await nextTick()
+    expect(wrapper.emitted('close')).toHaveLength(1)
+  })
+
   it('closes when clicking empty backdrop outside the image without dragging', async () => {
     const wrapper = mountViewer({ open: true, src: 'blob:test' })
     await nextTick()

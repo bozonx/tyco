@@ -70,7 +70,6 @@ const viewState = ref(model.getState())
 const isDragging = ref(false)
 
 let activePointerId: number | null = null
-let pressedOnImage = false
 let didDrag = false
 let dragStartX = 0
 let dragStartY = 0
@@ -89,7 +88,6 @@ const imageStyle = computed(() => ({
 
 function resetInteraction() {
   activePointerId = null
-  pressedOnImage = false
   didDrag = false
   isDragging.value = false
 }
@@ -139,8 +137,6 @@ function handlePointerDown(event: PointerEvent) {
   if (event.button !== 0) return
   if (event.target instanceof Element && event.target.closest('button')) return
   activePointerId = event.pointerId
-  pressedOnImage =
-    event.target instanceof Element && event.target.closest('img') !== null
   didDrag = false
   dragStartX = event.clientX
   dragStartY = event.clientY
@@ -175,7 +171,7 @@ function releaseCapture(pointerId: number) {
 
 function handlePointerUp(event: PointerEvent) {
   if (activePointerId !== event.pointerId) return
-  const shouldClose = !didDrag && !pressedOnImage
+  const shouldClose = !didDrag
   releaseCapture(event.pointerId)
   resetInteraction()
   if (shouldClose) emit('close')

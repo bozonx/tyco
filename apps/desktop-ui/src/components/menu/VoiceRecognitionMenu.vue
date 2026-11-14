@@ -284,7 +284,6 @@ let microphoneTranscript =
     ? handoff.take('voice', desktopStore.desktopState.activationId)
     : ''
 let isSwitchingSource = false
-let switchedText: string | undefined
 async function selectMicrophone(id: string) {
   microphoneTranscript = liveTranscriptText(transcript.value)
   sessionMicrophoneId.value = id
@@ -375,10 +374,6 @@ const model = createVoiceRecognition({
   // the text is delivered even if the window was hidden while it was being
   // transcribed or corrected: it cannot be dictated the same way twice
   onCorrected: (result, recognized, corrected, intent) => {
-    if (isSwitchingSource) {
-      switchedText = result
-      return
-    }
     if (isSameActivation())
       emit('corrected', result, recognized, corrected, intent)
     // inserting into a window the user has left would hit the wrong target
@@ -406,21 +401,13 @@ const modeSwitch = useQuickModeSwitch()
 /** Starts system audio with a fresh recording session. */
 async function switchToListen() {
   if (isSwitchingSource || isFinishing.value) return
-  const activationId = desktopStore.desktopState.activationId
-  const draft = liveTranscriptText(transcript.value).trim()
   isSwitchingSource = true
-  switchedText = undefined
   try {
-    await model.finish('edit')
-    if (desktopStore.desktopState.activationId !== activationId) return
-    const text = switchedText ?? draft
-    handoff.set(text, 'listen', modeSwitch.nextActivationId())
+    await model.cancelWithoutClosing()
     startError.value = null
     const result = await modeSwitch.switchTo('listen')
     if (!result.success) {
-      handoff.clear()
-      if (text) emit('corrected', text, text, undefined, 'next')
-      else await startSession()
+      await startSession()
     }
   } finally {
     isSwitchingSource = false

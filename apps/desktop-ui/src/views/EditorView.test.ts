@@ -139,6 +139,23 @@ describe('Editor actions shortcut', () => {
     wrapper.unmount()
   })
 
+  it('closes editor window on Ctrl+Q or Cmd+Q', async () => {
+    const wrapper = mount(EditorView, { global: { stubs: { Editor: true } } })
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'q',
+        code: 'KeyQ',
+        ctrlKey: true,
+        cancelable: true,
+      })
+    )
+    await flushPromises()
+
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
   it('opens actions with selected editor text when selection exists', () => {
     const editor = useEditorInputStore()
     editor.setValue('Full text', 'plain')

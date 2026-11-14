@@ -9,6 +9,7 @@ import { onMounted, onScopeDispose, onUnmounted } from 'vue'
 
 import Editor from '../components/editor/Editor.vue'
 import { useDismissibleLayer } from '../composables/use-dismissible-layer'
+import { isCloseWindowEvent } from '../lib/input-keys/input-keys'
 import { useDesktopStore } from '../stores/desktop'
 import { useEditorInputStore } from '../stores/editor-input'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
@@ -55,6 +56,11 @@ useDismissibleLayer({
 
 function handleKeyDown(event: KeyboardEvent) {
   if (event.defaultPrevented) return
+  if (isCloseWindowEvent(event)) {
+    event.preventDefault()
+    void closeEditor()
+    return
+  }
   if (event.key === 'Escape' && event.shiftKey) {
     event.preventDefault()
     void closeEditor()

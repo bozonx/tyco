@@ -116,7 +116,8 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
   const createBuiltinActionItem = (
     item: Required<Pick<ActionItem, 'id' | 'labelKey' | 'icon'>>,
     toolId: CoreToolId,
-    leavesApp: boolean
+    leavesApp: boolean,
+    notifySuccess?: boolean
   ): ActionItem => ({
     ...item,
     action: async (text: string) => {
@@ -128,7 +129,10 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       await invocationRunner.run(
         { toolId, toolConfig: {}, label: translate(item.labelKey) },
         text,
-        { source: 'menu' }
+        {
+          source: 'menu',
+          ...(notifySuccess !== undefined ? { notifySuccess } : {}),
+        }
       )
     },
   })
@@ -368,7 +372,8 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
             icon: 'mdi:clipboard-arrow-right-outline',
           },
           'core.copy',
-          true
+          true,
+          false
         ),
         {
           id: 'transformationMenu',

@@ -8,7 +8,7 @@
         size="xs"
         variant="ghost"
         :label="removeTitle"
-        icon="mdi:close"
+        icon="mdi:broom"
         @mousedown.prevent
         @click="emit('remove')"
       />

@@ -210,18 +210,12 @@ const forgetKeys = () => keyPresses.clear()
 async function switchToVoice() {
   if (isChangingMode.value || model.phase.value === 'finishing') return
   isChangingMode.value = true
-  const activationId = desktopStore.desktopState.activationId
-  const draft = liveTranscriptText(model.transcript.value).trim()
-  await model.stop()
-  if (desktopStore.desktopState.activationId !== activationId) return
-  const text = model.resultText.value || draft
+  await model.cancel()
   useVoiceResultStore().step.resetResult()
-  handoff.set(text, 'voice', modeSwitch.nextActivationId())
   const switched = await modeSwitch.switchTo('voice')
   if (!switched.success) {
-    handoff.clear()
     isChangingMode.value = false
-    if (!text) await model.start(configuredSource())
+    await model.start(configuredSource())
   }
 }
 

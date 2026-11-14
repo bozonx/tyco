@@ -113,6 +113,19 @@ describe('built-in invocations', () => {
     expect(deps.hideWindow).toHaveBeenCalled()
   })
 
+  it('suppresses success toast when notifySuccess is false', async () => {
+    const { runner, deps, copyText } = setup()
+    const outcome = await runner.run(
+      { ...builtin, outputAction: 'copyToClipboard' },
+      'hello',
+      { source: 'launcher', notifySuccess: false }
+    )
+    expect(outcome).toEqual({ success: true, result: undefined })
+    expect(copyText).toHaveBeenCalledWith('ECHO')
+    expect(deps.showToast).not.toHaveBeenCalled()
+    expect(deps.hideWindow).toHaveBeenCalled()
+  })
+
   it('reports a clipboard that fails and keeps the window', async () => {
     const { runner, deps, copyText } = setup()
     copyText.mockRejectedValue(new Error('No clipboard'))

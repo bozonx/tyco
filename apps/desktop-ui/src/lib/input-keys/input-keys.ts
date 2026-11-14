@@ -1,7 +1,8 @@
 import { DEFAULT_SUBMIT_KEY, SUBMIT_KEYS, type SubmitKey } from '@tyco/shared'
 
 export interface InputKeyEvent {
-  code: string
+  code?: string
+  key?: string
   shiftKey?: boolean
   altKey?: boolean
   ctrlKey?: boolean
@@ -42,6 +43,18 @@ const noModifiers = (event: InputKeyEvent) =>
 /** Ctrl+Enter, or Cmd+Enter on macOS. */
 export function isCtrlEnter(event: InputKeyEvent): boolean {
   return isEnter(event) && !event.isComposing && onlyCtrl(event)
+}
+
+/**
+ * Checks whether an event represents a shortcut to close the window (Ctrl+Q or
+ * Cmd+Q on macOS), regardless of active keyboard layout (e.g. Cyrillic KeyQ).
+ */
+export function isCloseWindowEvent(event: InputKeyEvent): boolean {
+  if (event.isComposing || !onlyCtrl(event)) return false
+  if (event.key && /^[a-z]$/i.test(event.key)) {
+    return event.key.toLowerCase() === 'q'
+  }
+  return event.code === 'KeyQ'
 }
 
 export function resolveInputKeyAction(

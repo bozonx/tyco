@@ -74,28 +74,7 @@ describe('ListenView', () => {
     desktop = await loadFakeDesktop({ mode: 'listen' }, 'quick')
   })
 
-  it('does not switch a newer activation after late recognition completes', async () => {
-    let finish!: (text: string) => void
-    dictation.finishDictation.mockReturnValueOnce(
-      new Promise<string>((resolve) => {
-        finish = resolve
-      })
-    )
-    desktop.backend.handle('switch_quick_mode', () => undefined)
-    const wrapper = mountView()
-    await flushPromises()
-    wrapper.findComponent(ListenRecordingBar).vm.$emit('switch-mode')
-    await flushPromises()
-    desktop.setState({
-      activationId: useDesktopStore().desktopState.activationId + 1,
-    })
-    finish('Late words')
-    await flushPromises()
-    expect(desktop.backend.callsOf('switch_quick_mode')).toHaveLength(0)
-    wrapper.unmount()
-  })
-
-  it('finalizes audio and hands it to microphone input when switching sources', async () => {
+  it('cancels audio and switches to microphone input without handing over text', async () => {
     useVoiceResultStore().step.showResult('Previous dictation')
     desktop.backend.handle('switch_quick_mode', () => undefined)
     const wrapper = mountView()
@@ -103,14 +82,12 @@ describe('ListenView', () => {
     const nextId = useDesktopStore().desktopState.activationId + 1
     wrapper.findComponent(ListenRecordingBar).vm.$emit('switch-mode')
     await flushPromises()
-    expect(dictation.finishDictation).toHaveBeenCalledOnce()
+    expect(dictation.cancelDictation).toHaveBeenCalled()
     expect(useVoiceResultStore().step.isInsertMenuVisible.value).toBe(false)
     expect(desktop.backend.callsOf('switch_quick_mode')).toEqual([
       expect.objectContaining({ mode: 'voice' }),
     ])
-    expect(useDictationHandoffStore().take('voice', nextId)).toBe(
-      'Voice message text'
-    )
+    expect(useDictationHandoffStore().take('voice', nextId)).toBe('')
     wrapper.unmount()
   })
 

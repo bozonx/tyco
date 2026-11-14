@@ -9,7 +9,7 @@
     <div class="full-editor-modal field-prompt-modal">
       <header class="full-editor-header field-prompt-modal-header">
         <div class="full-editor-title field-prompt-modal-title">
-          <AppIcon :icon="icon" size="md" aria-hidden="true" />
+          <AppIcon v-if="icon" :icon="icon" size="md" aria-hidden="true" />
           <span>{{ title }}</span>
         </div>
         <div class="full-editor-actions field-prompt-modal-actions">
@@ -71,13 +71,13 @@ const props = withDefaults(
     title: string
     modelValue: string | null | undefined
     placeholder?: string
-    icon?: string
+    icon?: string | null
     readonly?: boolean
     lineCount?: number
     charCount?: number
   }>(),
   {
-    icon: 'mdi:pencil-outline',
+    icon: null,
     readonly: false,
     placeholder: undefined,
     lineCount: undefined,

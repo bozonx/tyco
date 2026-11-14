@@ -121,13 +121,16 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
   /** Puts the output into the clipboard, or warns that there is none */
   const copyOutput = async (
     output: string,
-    keepWindow?: boolean
+    keepWindow?: boolean,
+    notifySuccess?: boolean
   ): Promise<InvocationOutcome> => {
     const text = outputText(output)
     if (text === null) return emptyOutput()
     const result = await invoke(copyInvocation, text, { output: 'return' })
     if (result.cancelled) return cancelled
-    report(result)
+    if (notifySuccess !== false || !result.ok) {
+      report(result)
+    }
     if (!result.ok) {
       return failed(result.failure ?? result.message ?? 'Copy failed')
     }
@@ -152,8 +155,13 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
   }
 
   /** Reports a run that ended without output to hand on */
-  const finish = (result: ToolResult): InvocationOutcome => {
-    report(result)
+  const finish = (
+    result: ToolResult,
+    options?: InvocationOptions
+  ): InvocationOutcome => {
+    if (options?.notifySuccess !== false || !result.ok) {
+      report(result)
+    }
     if (!result.keepWindow) deps.hideWindow?.()
     return succeeded
   }
@@ -180,18 +188,18 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
       // instead, see `transform`; here there is nothing to replace
       case 'insertIntoWindow':
         return result.content === undefined
-          ? finish(result)
+          ? finish(result, options)
           : insertOutput(result.content)
       case 'showMenu':
         return result.content === undefined
-          ? finish(result)
+          ? finish(result, options)
           : showOutput(result.content, result.sourceText ?? '', result.meta)
       case 'copyToClipboard':
         return result.content === undefined
-          ? finish(result)
-          : copyOutput(result.content, result.keepWindow)
+          ? finish(result, options)
+          : copyOutput(result.content, result.keepWindow, options.notifySuccess)
       case 'none':
-        return finish(result)
+        return finish(result, options)
     }
   }
 

@@ -34,6 +34,7 @@ describe('FullTextEditorDialog', () => {
     })
 
     expect(wrapper.text()).toContain('Edit file.md')
+    expect(wrapper.findComponent({ name: 'AppIcon' }).exists()).toBe(false)
     expect(wrapper.text()).toContain('common.linesCount:2')
     expect(wrapper.text()).toContain('common.charsCount:13')
 

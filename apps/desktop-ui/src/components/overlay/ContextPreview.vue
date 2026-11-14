@@ -61,7 +61,7 @@
         class="preview-action-btn"
         size="sm"
         :label="t('action.removeContext')"
-        icon="mdi:close"
+        icon="mdi:broom"
         @click="handleRemove"
       />
     </div>

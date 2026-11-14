@@ -59,6 +59,7 @@ import { computed, onMounted, onUnmounted } from 'vue'
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
+import { isCloseWindowEvent } from '../../lib/input-keys/input-keys'
 import { isTextEntryTarget } from '../../lib/ui/text-entry-target'
 import { type ActionItem } from '../../stores/action-menu'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
@@ -164,6 +165,11 @@ function isTypingKey(event: KeyboardEvent) {
 function handleKeyDown(event: KeyboardEvent) {
   if (props.shortcutsDisabled || event.defaultPrevented || event.isComposing)
     return
+  if (isCloseWindowEvent(event)) {
+    event.preventDefault()
+    handleCloseAll()
+    return
+  }
   if (isTypingKey(event)) {
     pressedKeys.delete(event.code)
     return

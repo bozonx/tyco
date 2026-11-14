@@ -45,6 +45,8 @@ export interface InvocationOptions {
   onProgress?: (stage: string) => void
   /** The AI commands that led to this run, see `HostToolCall` */
   callerCommandIds?: readonly string[]
+  /** Whether to report successful execution to the user (e.g. via toast) */
+  notifySuccess?: boolean
 }
 
 /** How a run ended; the user has been told already */
