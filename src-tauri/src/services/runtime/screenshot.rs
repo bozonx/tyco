@@ -25,10 +25,13 @@ use tauri::{AppHandle, Manager};
 #[derive(Default)]
 pub struct ScreenshotCropCoordinator {
     pending: std::sync::Mutex<Option<(u64, std::sync::mpsc::SyncSender<Option<CropRect>>)>>,
+    dismiss_on_restore: std::sync::atomic::AtomicBool,
 }
 
 impl ScreenshotCropCoordinator {
     fn wait_for_crop(&self, selection_id: u64) -> std::sync::mpsc::Receiver<Option<CropRect>> {
+        self.dismiss_on_restore
+            .store(false, std::sync::atomic::Ordering::SeqCst);
         let (sender, receiver) = std::sync::mpsc::sync_channel(1);
         *self.pending.lock().unwrap() = Some((selection_id, sender));
         receiver
@@ -49,6 +52,16 @@ impl ScreenshotCropCoordinator {
         let (_, sender) = guard.take().expect("checked above");
         let _ = sender.send(crop);
         true
+    }
+
+    fn take_dismiss_on_restore(&self) -> bool {
+        self.dismiss_on_restore
+            .swap(false, std::sync::atomic::Ordering::SeqCst)
+    }
+
+    fn set_dismiss_on_restore(&self, dismiss: bool) {
+        self.dismiss_on_restore
+            .store(dismiss, std::sync::atomic::Ordering::SeqCst);
     }
 }
 
@@ -73,6 +86,10 @@ impl ScreenshotWindows for Windows<'_> {
 
     fn restore(&self) -> Result<(), AppError> {
         let app = self.0;
+        let crops = app.state::<ScreenshotCropCoordinator>();
+        if crops.take_dismiss_on_restore() {
+            return super::window_visibility::hide_active_window(app);
+        }
         let snapshot = app.state::<AppState>().snapshot();
         if !snapshot.window.is_window_shown {
             return Ok(());
@@ -368,9 +385,12 @@ pub fn confirm_crop(app: &AppHandle, selection_id: u64, crop: CropRect) -> Resul
     Ok(())
 }
 
-pub fn cancel_crop(app: &AppHandle, selection_id: u64) -> Result<(), AppError> {
-    app.state::<ScreenshotCropCoordinator>()
-        .answer(selection_id, None);
+pub fn cancel_crop(app: &AppHandle, selection_id: u64, close_all: bool) -> Result<(), AppError> {
+    let crops = app.state::<ScreenshotCropCoordinator>();
+    if close_all {
+        crops.set_dismiss_on_restore(true);
+    }
+    crops.answer(selection_id, None);
     Ok(())
 }
 
@@ -495,5 +515,15 @@ mod tests {
         assert_eq!(wait_for_crop(&receiver, &|| true), None);
         crops.clear(1);
         assert!(crops.answer(2, None));
+    }
+
+    #[test]
+    fn dismiss_on_restore_is_preserved_until_taken() {
+        let crops = ScreenshotCropCoordinator::default();
+        let _receiver = crops.wait_for_crop(1);
+        assert!(!crops.take_dismiss_on_restore());
+        crops.set_dismiss_on_restore(true);
+        assert!(crops.take_dismiss_on_restore());
+        assert!(!crops.take_dismiss_on_restore());
     }
 }

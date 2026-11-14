@@ -123,7 +123,10 @@ export interface DesktopCommands {
   attach_ai_vault: { args: { path: string; name: string }; result: VaultInfo }
   cancel_ai_web_tool: { args: { runId: string }; result: boolean }
   cancel_net_task: { args: { id: number }; result: void }
-  cancel_screenshot_crop: { args: { selectionId: number }; result: void }
+  cancel_screenshot_crop: {
+    args: { selectionId: number; closeAll?: boolean | null }
+    result: void
+  }
   cancel_script_action: { args: { runId: string }; result: boolean }
   claim_external_job: { args: { id: string }; result: boolean }
   clear_ai_profile_memory: { args: { profileId: string }; result: void }

@@ -577,7 +577,42 @@ describe('quick overlay menus', () => {
         expect(wrapper.find('.mock-screenshot-selector').exists()).toBe(false)
         expect(
           desktop.backend.callsOf('cancel_screenshot_crop')
-        ).toContainEqual({ selectionId: 42 })
+        ).toContainEqual({ selectionId: 42, closeAll: false })
+      } finally {
+        wrapper.unmount()
+      }
+    })
+
+    it('cancels the selection with closeAll: true when closeAll is emitted', async () => {
+      stubResizeObserver()
+      desktop.setState({ isWindowShown: true })
+      const wrapper = mount(QuickOverlay, {
+        global: { plugins: [desktop.pinia] },
+      })
+      await flushPromises()
+      try {
+        await desktop.emit(DESKTOP_EVENTS.SCREENSHOT_SELECT_AREA, {
+          selectionId: 42,
+          imageId: 'test-img',
+          mediaType: 'image/png',
+          screenX: 0,
+          screenY: 0,
+          width: 1920,
+          height: 1080,
+          scaleFactor: 1,
+        })
+        await flushPromises()
+        await nextTick()
+
+        const selector = wrapper.findComponent({ name: 'ScreenshotSelector' })
+        selector.vm.$emit('cancel', { closeAll: true })
+        await flushPromises()
+        await nextTick()
+
+        expect(wrapper.find('.mock-screenshot-selector').exists()).toBe(false)
+        expect(
+          desktop.backend.callsOf('cancel_screenshot_crop')
+        ).toContainEqual({ selectionId: 42, closeAll: true })
       } finally {
         wrapper.unmount()
       }
@@ -609,7 +644,7 @@ describe('quick overlay menus', () => {
 
         expect(
           desktop.backend.callsOf('cancel_screenshot_crop')
-        ).toContainEqual({ selectionId: 42 })
+        ).toContainEqual({ selectionId: 42, closeAll: false })
         expect(desktop.backend.callsOf('show_status_overlay')).toHaveLength(1)
       } finally {
         wrapper.unmount()

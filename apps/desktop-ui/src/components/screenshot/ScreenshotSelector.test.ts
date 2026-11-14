@@ -75,8 +75,18 @@ describe('ScreenshotSelector', () => {
     await flushPromises()
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
-    await wrapper.trigger('keydown', { key: 'Escape' })
-    expect(wrapper.emitted('cancel')).toHaveLength(1)
+    expect(wrapper.emitted('cancel')?.[0]).toEqual([{ closeAll: false }])
+  })
+
+  it('cancels with closeAll on Shift + Escape keydown', async () => {
+    mocks.getImage.mockResolvedValue(new Uint8Array([1, 2, 3]))
+    const wrapper = mount(ScreenshotSelector, { props: { selection } })
+    await flushPromises()
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', shiftKey: true })
+    )
+    expect(wrapper.emitted('cancel')?.[0]).toEqual([{ closeAll: true }])
   })
 
   it('cancels on contextmenu (right click)', async () => {
@@ -85,7 +95,7 @@ describe('ScreenshotSelector', () => {
     await flushPromises()
 
     await wrapper.trigger('contextmenu')
-    expect(wrapper.emitted('cancel')).toHaveLength(1)
+    expect(wrapper.emitted('cancel')?.[0]).toEqual([{ closeAll: false }])
   })
 
   async function mountLoaded() {

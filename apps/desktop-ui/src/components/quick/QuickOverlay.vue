@@ -228,13 +228,14 @@ const onConfirmCrop = async (crop: CropRect) => {
   }
 }
 
-const onCancelCrop = async () => {
+const onCancelCrop = async (options?: { closeAll?: boolean }) => {
   const selection = activeAreaSelection.value
   if (!selection) return
   isAwaitingCaptureOutcome.value = true
   activeAreaSelection.value = null
   const result = await ipcStore.call('cancel_screenshot_crop', {
     selectionId: selection.selectionId,
+    closeAll: options?.closeAll ?? false,
   })
   if (!result.success) {
     isAwaitingCaptureOutcome.value = false

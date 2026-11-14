@@ -6,7 +6,7 @@
     @pointerdown.stop="onPointerDown"
     @lostpointercapture="onLostPointerCapture"
     @dblclick="onConfirm"
-    @contextmenu.prevent="onCancel"
+    @contextmenu.prevent="onCancel()"
   >
     <img
       v-if="imageUrl"
@@ -132,7 +132,7 @@ const props = defineProps<{ selection: ScreenshotAreaSelection }>()
 
 const emit = defineEmits<{
   confirm: [crop: CropRect]
-  cancel: []
+  cancel: [options?: { closeAll?: boolean }]
   /** The frozen image could not be read */
   failed: []
 }>()
@@ -233,15 +233,15 @@ function onConfirm() {
   if (crop) emit('confirm', crop)
 }
 
-function onCancel() {
-  emit('cancel')
+function onCancel(closeAll = false) {
+  emit('cancel', { closeAll })
 }
 
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     e.preventDefault()
     e.stopImmediatePropagation()
-    onCancel()
+    onCancel(e.shiftKey)
   } else if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
     e.preventDefault()
     e.stopImmediatePropagation()

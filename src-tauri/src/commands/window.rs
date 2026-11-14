@@ -111,8 +111,12 @@ pub fn confirm_screenshot_crop(
 }
 
 #[tauri::command]
-pub fn cancel_screenshot_crop(app: AppHandle, selection_id: u64) -> Result<(), AppError> {
-    runtime::screenshot::cancel_crop(&app, selection_id)
+pub fn cancel_screenshot_crop(
+    app: AppHandle,
+    selection_id: u64,
+    close_all: Option<bool>,
+) -> Result<(), AppError> {
+    runtime::screenshot::cancel_crop(&app, selection_id, close_all.unwrap_or(false))
 }
 
 #[tauri::command]
