@@ -57,6 +57,17 @@ function createStore() {
     resolveProjectConflict: vi.fn(async () => undefined),
     createProject: vi.fn(async () => ({ id: 'created' })),
     deleteProject: vi.fn(async () => {}),
+    convertProject: vi.fn(
+      async (id: string, options: { targetPath?: string }) => {
+        const converted = {
+          ...state.projects.find((item) => item.id === id)!,
+          isExternal: true,
+          targetPath: options.targetPath,
+        }
+        state.projects = [converted]
+        return converted
+      }
+    ),
     pickFolder: vi.fn(async (): Promise<string | null> => '/work'),
     setProjectAccess: vi.fn(async () => {}),
   })
@@ -79,6 +90,7 @@ describe('SettingsProjectDetailTab.vue', () => {
       global: {
         provide: context.provide,
         stubs: {
+          SettingsProjectConvertDialog: true,
           ConfirmModal: {
             props: ['open'],
             template:
@@ -140,14 +152,12 @@ describe('SettingsProjectDetailTab.vue', () => {
   })
 
   it('explains why an invalid project cannot be saved', async () => {
+    // the folder of a stored project is set on each device: one without it
+    // here is told so, not refused
+    store.projects[0]!.isExternal = true
     const wrapper = mountTab()
     await wrapper.get('input').setValue('')
     expect(wrapper.text()).toContain('settings.projectNameRequired')
-    // the folder of a stored project is set on each device: one without it
-    // here is told so, not refused
-    await wrapper
-      .findComponent({ name: 'SegmentedControl' })
-      .vm.$emit('update:modelValue', 'external')
     expect(wrapper.text()).not.toContain('settings.projectPathRequired')
     expect(wrapper.text()).toContain('settings.projectFolderNotSetOnDevice')
     wrapper.unmount()
@@ -155,12 +165,38 @@ describe('SettingsProjectDetailTab.vue', () => {
     expect(store.saveProject).not.toHaveBeenCalled()
   })
 
-  it('shows the folder of an existing internal project and hides it for external', async () => {
+  it('shows the folder of an existing internal project and hides it for external', () => {
+    const internal = mountTab()
+    expect(internal.text()).toContain('projects/notes')
+    expect(internal.findComponent({ name: 'SegmentedControl' }).exists()).toBe(
+      false
+    )
+    internal.unmount()
+    store.projects[0]!.isExternal = true
+    expect(mountTab().text()).not.toContain('projects/notes')
+  })
+
+  it('converts an existing project through its dialog', async () => {
     const wrapper = mountTab()
-    expect(wrapper.text()).toContain('projects/notes')
-    await wrapper
-      .findComponent({ name: 'SegmentedControl' })
-      .vm.$emit('update:modelValue', 'external')
+    await wrapper.get('[data-testid="project-convert"]').trigger('click')
+    const dialog = wrapper.findComponent({
+      name: 'SettingsProjectConvertDialog',
+    })
+    expect(dialog.props()).toMatchObject({
+      open: true,
+      toExternal: true,
+      hasSourceFolder: false,
+    })
+    await dialog.vm.$emit('confirm', {
+      targetPath: '/work',
+      transferFiles: true,
+    })
+    await flushPromises()
+    expect(store.convertProject).toHaveBeenCalledWith('notes', {
+      targetPath: '/work',
+      transferFiles: true,
+    })
+    expect(dialog.props('open')).toBe(false)
     expect(wrapper.text()).not.toContain('projects/notes')
   })
 

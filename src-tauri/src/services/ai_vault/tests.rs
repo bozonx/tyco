@@ -1199,3 +1199,105 @@ fn new_memory_topic_keeps_its_description_for_the_outline() {
         Some("Diet, allergies and conditions")
     );
 }
+
+#[test]
+fn the_type_of_a_project_is_changed_only_by_converting_it() {
+    let test_dir = TestDir::new("ai_vault_project_type_save");
+    let vault_root = test_dir.join("vault");
+    create_project(&vault_root, &paths(), project("docs", 1)).unwrap();
+    let mut changed = list_projects(&vault_root, &paths()).unwrap()[0].clone();
+    changed.is_external = true;
+    changed.target_path = Some(test_dir.to_str().unwrap().into());
+    let error = save_project(&vault_root, &paths(), changed, None).unwrap_err();
+    assert!(matches!(error, AppError::InvalidInput(_)), "{error}");
+}
+
+#[test]
+fn converting_a_project_moves_its_files_out_and_copies_them_back() {
+    let test_dir = TestDir::new("ai_vault_project_convert");
+    let vault_root = test_dir.join("vault");
+    let site = test_dir.join("site");
+    fs::create_dir_all(&site).unwrap();
+    create_project(&vault_root, &paths(), project("docs", 1)).unwrap();
+    let own = vault_root.join("projects/docs");
+    fs::create_dir_all(own.join("notes")).unwrap();
+    fs::write(own.join("notes/a.md"), "a").unwrap();
+    fs::write(own.join("b.md"), "b").unwrap();
+    let revision = list_projects(&vault_root, &paths()).unwrap()[0]
+        .revision
+        .clone();
+
+    // a stale revision is refused
+    assert!(matches!(
+        convert_project(
+            &vault_root,
+            &paths(),
+            "docs",
+            site.to_str(),
+            true,
+            Some("old")
+        ),
+        Err(AppError::StaleRevision(_))
+    ));
+    // a folder inside the vault folder of the project is refused
+    assert!(convert_project(
+        &vault_root,
+        &paths(),
+        "docs",
+        own.join("notes").to_str(),
+        true,
+        None
+    )
+    .is_err());
+
+    convert_project(
+        &vault_root,
+        &paths(),
+        "docs",
+        site.to_str(),
+        true,
+        revision.as_deref(),
+    )
+    .unwrap();
+    let listed = list_projects(&vault_root, &paths()).unwrap();
+    assert!(listed[0].is_external);
+    assert_eq!(listed[0].target_path.as_deref(), site.to_str());
+    assert_eq!(fs::read_to_string(site.join("notes/a.md")).unwrap(), "a");
+    assert_eq!(fs::read_to_string(site.join("b.md")).unwrap(), "b");
+    assert!(!site.join(PROJECT_FILE).exists());
+    assert!(!own.join("b.md").exists() && !own.join("notes").exists());
+    assert!(own.join(PROJECT_FILE).is_file());
+
+    // back: copied into the vault, the folder of the user stays
+    fs::write(own.join("b.md"), "taken").unwrap();
+    assert!(matches!(
+        convert_project(&vault_root, &paths(), "docs", None, true, None),
+        Err(AppError::AlreadyExists(_))
+    ));
+    assert!(!own.join("notes").exists(), "nothing copied on a refusal");
+    fs::remove_file(own.join("b.md")).unwrap();
+    convert_project(&vault_root, &paths(), "docs", None, true, None).unwrap();
+    let listed = list_projects(&vault_root, &paths()).unwrap();
+    assert!(!listed[0].is_external);
+    assert_eq!(listed[0].target_path, None);
+    assert_eq!(fs::read_to_string(own.join("notes/a.md")).unwrap(), "a");
+    assert!(site.join("b.md").is_file());
+    assert_eq!(listed[0].target_path, None);
+}
+
+#[test]
+fn converting_without_transfer_leaves_the_files_and_needs_a_folder() {
+    let test_dir = TestDir::new("ai_vault_project_convert_plain");
+    let vault_root = test_dir.join("vault");
+    let site = test_dir.join("site");
+    fs::create_dir_all(&site).unwrap();
+    create_project(&vault_root, &paths(), project("docs", 1)).unwrap();
+    let own = vault_root.join("projects/docs");
+    fs::write(own.join("b.md"), "b").unwrap();
+
+    assert!(convert_project(&vault_root, &paths(), "docs", None, false, None).is_err());
+    convert_project(&vault_root, &paths(), "docs", site.to_str(), false, None).unwrap();
+    assert!(own.join("b.md").is_file());
+    assert!(!site.join("b.md").exists());
+    assert!(list_projects(&vault_root, &paths()).unwrap()[0].is_external);
+}

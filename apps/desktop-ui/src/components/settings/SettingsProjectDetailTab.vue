@@ -55,7 +55,7 @@
               @update:model-value="change"
             />
           </FieldRow>
-          <FieldRow :label="t('settings.projectType')">
+          <FieldRow v-if="isNew" :label="t('settings.projectType')">
             <SegmentedControl
               size="sm"
               :label="t('settings.projectType')"
@@ -63,6 +63,34 @@
               :options="projectTypeOptions"
               @update:model-value="changeType($event === 'external')"
             />
+          </FieldRow>
+          <FieldRow
+            v-else
+            :label="t('settings.projectType')"
+            :info="t('settings.projectTypeConvertHint')"
+          >
+            <div class="project-type">
+              <span>
+                {{
+                  isExternal
+                    ? t('settings.projectTypeExternal')
+                    : t('settings.projectTypeInternal')
+                }}
+              </span>
+              <Button
+                size="sm"
+                variant="neutral"
+                icon="mdi:swap-horizontal"
+                data-testid="project-convert"
+                @click="isConverting = true"
+              >
+                {{
+                  isExternal
+                    ? t('settings.projectConvertToInternal')
+                    : t('settings.projectConvertToExternal')
+                }}
+              </Button>
+            </div>
           </FieldRow>
           <FieldRow
             v-if="!isExternal && !isNew"
@@ -93,6 +121,7 @@
               size="sm"
               variant="neutral"
               icon="mdi:folder-open-outline"
+              :title="t('settings.projectFolderRelinkHint')"
               @click="handlePickFolder"
             >
               {{ t('settings.selectFolder') }}
@@ -186,6 +215,17 @@
       </fieldset>
     </form>
 
+    <SettingsProjectConvertDialog
+      v-if="project"
+      :open="isConverting"
+      :to-external="!project.isExternal"
+      :has-source-folder="Boolean(project.targetPath)"
+      :is-busy="isConvertBusy"
+      :select-folder="pickFolderSafely"
+      @confirm="handleConvert"
+      @cancel="isConverting = false"
+    />
+
     <StateMessage
       v-else-if="aiProfilesStore.isLoaded"
       icon="mdi:folder-question-outline"
@@ -209,6 +249,7 @@ import { useRetryToast } from '../../composables/use-retry-toast'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import { useSettingsDraft } from '../../composables/use-settings-draft'
 import useToast from '../../composables/use-toast'
+import type { ConvertProjectOptions } from '../../lib/ai-profiles/ai-projects-model'
 import { vaultOfRef } from '../../lib/ai-profiles/profile-ref'
 import {
   DEFAULT_PROJECT_ACCESS_LEVEL,
@@ -241,6 +282,7 @@ import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
+import SettingsProjectConvertDialog from './SettingsProjectConvertDialog.vue'
 import SettingsSection from './SettingsSection.vue'
 import type { ProjectPermission } from '@tyco/shared'
 
@@ -449,6 +491,31 @@ async function handlePickFolder() {
   }
 }
 
+const isConverting = ref(false)
+const { isBusy: isConvertBusy, run: runConverting } = useBusyAction()
+
+async function pickFolderSafely(): Promise<string | null> {
+  try {
+    return await aiProfilesStore.pickFolder()
+  } catch (error) {
+    toastError(error)
+    return null
+  }
+}
+
+/** Changes the type after the edits typed so far are stored */
+async function handleConvert(options: ConvertProjectOptions) {
+  await runConverting(async () => {
+    await editor.flush()
+    const converted = await aiProfilesStore.convertProject(
+      props.projectId,
+      options
+    )
+    editor.load(converted)
+    isConverting.value = false
+  })
+}
+
 async function handleCreate() {
   if (!isNew.value || !isValid.value || isCreating.value) return
   await runCreating(async () => {
@@ -469,6 +536,14 @@ async function handleCreate() {
 </script>
 
 <style scoped>
+.project-type {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-control);
+}
+
 .vault-folder {
   overflow-wrap: anywhere;
   font-size: var(--text-control);

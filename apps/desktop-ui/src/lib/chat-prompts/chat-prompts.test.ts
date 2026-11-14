@@ -204,9 +204,7 @@ describe('withoutChatPrompts', () => {
   it('removes the prompts and the actions that run them', () => {
     const result = withoutChatPrompts(
       {
-        chatPrompts: {
-          items: [prompt('a'), prompt('b')],
-        },
+        chatPrompts: { items: [prompt('a'), prompt('b')] },
         actionPages: [
           { slots: { q: { type: 'chatPrompt', promptId: 'a' } } },
         ] as UserConfig['actionPages'],
@@ -219,9 +217,7 @@ describe('withoutChatPrompts', () => {
       },
       ['a']
     )
-    expect(result.chatPrompts).toEqual({
-      items: [prompt('b')],
-    })
+    expect(result.chatPrompts).toEqual({ items: [prompt('b')] })
     expect(result.actionPages[0]?.slots).toEqual({})
     expect(result.customActionSlots[0]?.action).toBeNull()
   })

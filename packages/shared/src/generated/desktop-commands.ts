@@ -137,6 +137,15 @@ export interface DesktopCommands {
     args: { selectionId: number; crop: CropRect }
     result: void
   }
+  convert_ai_project: {
+    args: {
+      id: string
+      targetPath?: string | null
+      transferFiles: boolean
+      expectedRevision?: string | null
+    }
+    result: string
+  }
   copy_text: { args: { text: string }; result: void }
   create_ai_profile: {
     args: { profile: AiProfile; soul: string }

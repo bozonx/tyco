@@ -64,6 +64,7 @@ fn main() {
             "clear_chats",
             "clear_editor_history",
             "close_socket",
+            "convert_ai_project",
             "copy_text",
             "create_ai_profile",
             "create_ai_project",

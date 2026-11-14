@@ -234,6 +234,33 @@ pub async fn save_ai_project(
     .await?
 }
 
+/// Turns an internal project into an external one with its folder at
+/// `target_path`, or back; `transfer_files` moves or copies its files.
+/// Returns the new revision.
+#[tauri::command]
+pub async fn convert_ai_project(
+    app: AppHandle,
+    id: String,
+    target_path: Option<String>,
+    transfer_files: bool,
+    expected_revision: Option<String>,
+) -> Result<String, AppError> {
+    run_blocking(move || {
+        let (vault_id, project_id) = ai_vault::split_ref(&id);
+        ai_vault::with_projects(&app, vault_id, |dir, paths| {
+            ai_vault::convert_project(
+                dir,
+                paths,
+                project_id,
+                target_path.as_deref(),
+                transfer_files,
+                expected_revision.as_deref(),
+            )
+        })
+    })
+    .await?
+}
+
 #[tauri::command]
 pub async fn delete_ai_project(app: AppHandle, id: String) -> Result<(), AppError> {
     run_blocking(move || {

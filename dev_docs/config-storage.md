@@ -480,6 +480,19 @@ drop it. A project without a folder on this device is listed as such, and its
 file tools fail with `projectUnavailable`, which the model gets as the result
 of the tool. The model sees `projects/<id>/` whatever the folder is.
 
+The type of a project is chosen when it is created; `save_ai_project` refuses
+to change `isExternal`. `convert_ai_project` changes it on purpose, from a
+dialog of the settings. With `transferFiles`, an internal project moves its
+files (all but `project.json`) to the new folder, and an external one copies
+the files of its folder on this device into the vault; the folder of the user
+is never deleted. The files are copied before the description is written, a
+name taken in the destination or a symbolic link refuses the conversion before
+anything is copied, and a failed copy removes what it copied. Without
+`transferFiles` only the type changes. Other devices see the new type with the
+next sync: an internal project turned external is not connected there until
+its folder is set. Changing the folder of an external project only relinks
+it: its files are not moved.
+
 Vault operations acquire the shared relocation gate before resolving a vault,
 then hold a mutex for that vault's canonical root for the complete operation,
 including profile permission cleanup on project deletion. Different vaults have

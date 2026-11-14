@@ -62,6 +62,15 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
       resultOrThrow(
         await call('save_ai_project', { project, expectedRevision })
       ),
+    convertProject: async (id, options, expectedRevision) =>
+      resultOrThrow(
+        await call('convert_ai_project', {
+          id,
+          targetPath: options.targetPath,
+          transferFiles: options.transferFiles,
+          expectedRevision,
+        })
+      ),
     deleteProject: async (id) => {
       resultOrThrow(await call('delete_ai_project', { id }))
     },
@@ -292,6 +301,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     getProject: projectsModel.getProject,
     createProject: projectsModel.createProject,
     saveProject: projectsModel.saveProject,
+    convertProject: projectsModel.convertProject,
     projectConflicts: readonly(projectsModel.conflicts),
     resolveProjectConflict: projectsModel.resolveConflict,
     deleteProject,

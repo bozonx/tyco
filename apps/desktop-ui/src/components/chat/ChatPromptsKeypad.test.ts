@@ -91,9 +91,7 @@ describe('ChatPromptsKeypad.vue', () => {
   })
 
   it('shows the empty hint when the chat has no prompts', async () => {
-    desktop.setUserConfig({
-      chatPrompts: { items: [] },
-    })
+    desktop.setUserConfig({ chatPrompts: { items: [] } })
     await flushPromises()
     const wrapper = mountKeypad()
     expect(wrapper.find('.search-grid-empty').text()).toBe(

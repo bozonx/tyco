@@ -24,7 +24,10 @@ the general rules in a few common programs.
    on its own and attached only on the computers that need it.
 4. **A project with code.** An external project: its description lives in the
    vault, its folder is set on each computer, or not set ("not connected on
-   this device").
+   this device"). The type of a project is chosen when it is created. To
+   change it later, use "Make external…" or "Make internal…" in the project
+   settings: the files can be moved to the new folder, or copied back into
+   the vault; the external folder itself is never deleted.
 
 ## General rules
 

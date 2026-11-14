@@ -126,9 +126,7 @@ describe('ChatPromptsMenu', () => {
   })
 
   it('points to the settings when there are no prompts', async () => {
-    desktop.setUserConfig({
-      chatPrompts: { items: [] },
-    })
+    desktop.setUserConfig({ chatPrompts: { items: [] } })
     const wrapper = mountMenu()
     await flushPromises()
     expect(wrapper.find('.search-grid-empty').text()).toBe('chatPrompts.empty')

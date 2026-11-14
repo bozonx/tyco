@@ -18,6 +18,7 @@ describe('ai-projects-model', () => {
     listProjects: vi.fn().mockResolvedValue([mockProject]),
     createProject: vi.fn().mockResolvedValue('r1'),
     saveProject: vi.fn().mockResolvedValue('r2'),
+    convertProject: vi.fn().mockResolvedValue('r3'),
     deleteProject: vi.fn().mockResolvedValue(undefined),
     pickExternalFolder: vi.fn().mockResolvedValue('/path/to/folder'),
     now: vi.fn().mockReturnValue(2000),
@@ -238,5 +239,42 @@ describe('ai-projects-model', () => {
     const picked = await model.pickExternalFolder()
     expect(picked).toBe('/path/to/folder')
     expect(deps.pickExternalFolder).toHaveBeenCalledOnce()
+  })
+
+  it('converts a project to external and back', async () => {
+    const deps = createDeps()
+    const model = createAiProjectsModel(deps)
+    model.projects.value = [{ ...mockProject, revision: 'r1' }]
+
+    const external = await model.convertProject('docs-app', {
+      targetPath: '/work/docs',
+      transferFiles: true,
+    })
+    expect(deps.convertProject).toHaveBeenCalledWith(
+      'docs-app',
+      { targetPath: '/work/docs', transferFiles: true },
+      'r1'
+    )
+    expect(external).toMatchObject({
+      isExternal: true,
+      targetPath: '/work/docs',
+      revision: 'r3',
+    })
+    expect(model.getProject('docs-app')).toEqual(external)
+
+    deps.convertProject.mockResolvedValueOnce('r4')
+    const internal = await model.convertProject('docs-app', {
+      transferFiles: false,
+    })
+    expect(deps.convertProject).toHaveBeenLastCalledWith(
+      'docs-app',
+      { transferFiles: false },
+      'r3'
+    )
+    expect(internal).toMatchObject({
+      isExternal: false,
+      targetPath: undefined,
+      revision: 'r4',
+    })
   })
 })

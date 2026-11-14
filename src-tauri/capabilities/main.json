@@ -55,6 +55,7 @@
     "allow-restore-previous-plugin-package",
     "allow-save-ai-profile",
     "allow-save-ai-project",
+    "allow-convert-ai-project",
     "allow-delete-secret",
     "allow-set-secret",
     "allow-set-tray-menu-labels",

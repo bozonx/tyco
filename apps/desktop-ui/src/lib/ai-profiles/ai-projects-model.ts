@@ -15,6 +15,16 @@ export interface AiProjectsModelDependencies {
     project: AiProject,
     expectedRevision: string | undefined
   ) => Promise<string>
+  /**
+   * Turns an internal project into an external one with its folder at
+   * `targetPath`, or back; `transferFiles` moves or copies its files. Returns
+   * the new revision
+   */
+  convertProject: (
+    id: string,
+    options: ConvertProjectOptions,
+    expectedRevision: string | undefined
+  ) => Promise<string>
   deleteProject: (id: string) => Promise<void>
   pickExternalFolder: () => Promise<string | null>
   now?: () => number
@@ -28,6 +38,13 @@ export interface CreateProjectData {
   description?: string
   isExternal: boolean
   targetPath?: string
+}
+
+export interface ConvertProjectOptions {
+  /** The folder of the project once external; unused for an internal one */
+  targetPath?: string
+  /** Moves the files to the folder, or copies them from it into the vault */
+  transferFiles: boolean
 }
 
 export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
@@ -137,6 +154,29 @@ export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
     return getProject(id)
   }
 
+  /** Changes the type of the project; returns the project as it is now */
+  const convertProject = async (
+    id: string,
+    options: ConvertProjectOptions
+  ): Promise<AiProject> => {
+    const project = getProject(id)
+    if (!project) throw new Error(`Project not found: ${id}`)
+    const isExternal = !project.isExternal
+    let revision = ''
+    await persistChange(async () => {
+      revision = await deps.convertProject(id, options, project.revision)
+    })
+    const converted: AiProject = {
+      ...project,
+      isExternal,
+      targetPath: isExternal ? options.targetPath : undefined,
+      isInsideSyncedFolder: undefined,
+      revision,
+    }
+    projects.value = projects.value.map((p) => (p.id === id ? converted : p))
+    return converted
+  }
+
   const deleteProject = async (id: string): Promise<void> => {
     await persistChange(() => deps.deleteProject(id))
     projects.value = projects.value.filter((p) => p.id !== id)
@@ -151,6 +191,7 @@ export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
     getProject,
     createProject,
     saveProject,
+    convertProject,
     deleteProject,
     pickExternalFolder,
     conflicts,

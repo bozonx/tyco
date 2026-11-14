@@ -254,6 +254,7 @@ pub fn run() {
             commands::ai_vault::rewrite_ai_profile_memory,
             commands::ai_vault::save_ai_profile,
             commands::ai_vault::save_ai_project,
+            commands::ai_vault::convert_ai_project,
             commands::ai_vault::search_ai_profile_memory,
             commands::ai_vault::undo_ai_profile_memory,
             commands::ai_vault::write_ai_profile_soul,

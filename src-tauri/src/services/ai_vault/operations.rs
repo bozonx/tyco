@@ -560,6 +560,11 @@ pub fn save_project(
     if !dir.join(PROJECT_FILE).is_file() {
         return Err(not_found("Project", &project.id));
     }
+    if read_project(&dir)?.is_external != project.is_external {
+        return Err(AppError::InvalidInput(
+            "The type of a project is changed by converting it".into(),
+        ));
+    }
     let revision = write_checked(
         &dir.join(PROJECT_FILE),
         &project_file_content(&project)?,
@@ -571,6 +576,182 @@ pub fn save_project(
         (false, _) => paths.set(&project.id, None)?,
     }
     Ok(revision)
+}
+
+fn read_project(dir: &Path) -> Result<AiProject, AppError> {
+    Ok(serde_json::from_str(&fs::read_to_string(
+        dir.join(PROJECT_FILE),
+    )?)?)
+}
+
+/// Turns an internal project into an external one with its folder at
+/// `target_path`, or an external one into an internal one. With
+/// `transfer_files` an internal project moves its files to the folder, and
+/// an external one copies the files of its folder on this device into the
+/// vault: the folder of the user is never removed. Files are copied first,
+/// so a failure leaves the project as it was; a name taken in the
+/// destination is refused, not overwritten. Returns the new revision.
+pub fn convert_project(
+    vault_root: &Path,
+    paths: &ProjectPaths,
+    id: &str,
+    target_path: Option<&str>,
+    transfer_files: bool,
+    expected_revision: Option<&str>,
+) -> Result<String, AppError> {
+    let dir = project_dir(vault_root, id)?;
+    if !dir.join(PROJECT_FILE).is_file() {
+        return Err(not_found("Project", id));
+    }
+    if let Some(expected) = expected_revision {
+        if file_revision(&dir.join(PROJECT_FILE))? != expected {
+            return Err(AppError::StaleRevision(format!(
+                "The project {id} was changed on another device or outside TyCo"
+            )));
+        }
+    }
+    let stored = read_project(&dir)?;
+    let converted = AiProject {
+        is_external: !stored.is_external,
+        target_path: if stored.is_external {
+            None
+        } else {
+            target_path.map(str::to_owned)
+        },
+        ..stored.clone()
+    };
+
+    if converted.is_external {
+        let target = checked_target(&converted)?.ok_or_else(|| {
+            AppError::InvalidInput("External project requires a target path".into())
+        })?;
+        let target = Path::new(target);
+        if transfer_files {
+            if fs::canonicalize(target)?.starts_with(fs::canonicalize(&dir)?) {
+                return Err(AppError::InvalidInput(
+                    "The folder of the project cannot be inside its vault folder".into(),
+                ));
+            }
+            copy_project_files(&dir, target)?;
+        }
+        let revision = write_checked(
+            &dir.join(PROJECT_FILE),
+            &project_file_content(&converted)?,
+            None,
+        )?;
+        paths.set(id, target.to_str())?;
+        if transfer_files {
+            remove_project_files(&dir)?;
+        }
+        Ok(revision)
+    } else {
+        if transfer_files {
+            let source = project_files_dir(
+                vault_root,
+                &AiProject {
+                    target_path: paths.get(id),
+                    ..stored
+                },
+            )?;
+            copy_project_files(&source, &dir)?;
+        }
+        let revision = write_checked(
+            &dir.join(PROJECT_FILE),
+            &project_file_content(&converted)?,
+            None,
+        )?;
+        paths.set(id, None)?;
+        Ok(revision)
+    }
+}
+
+/// The entries of a project folder, without the description of the project.
+fn project_entries(dir: &Path) -> Result<Vec<fs::DirEntry>, AppError> {
+    let mut entries = Vec::new();
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        if entry.file_name() != PROJECT_FILE {
+            entries.push(entry);
+        }
+    }
+    Ok(entries)
+}
+
+/// Copies the files of the project folder `from` into `to`. Refuses before
+/// copying anything when a name is taken in `to` or a link is found; on a
+/// failure removes what it copied.
+fn copy_project_files(from: &Path, to: &Path) -> Result<(), AppError> {
+    let entries = project_entries(from)?;
+    for entry in &entries {
+        let destination = to.join(entry.file_name());
+        if destination.symlink_metadata().is_ok() {
+            return Err(AppError::AlreadyExists(format!(
+                "{} already exists",
+                destination.display()
+            )));
+        }
+        check_no_links(&entry.path())?;
+    }
+    let mut copied = Vec::new();
+    for entry in &entries {
+        let destination = to.join(entry.file_name());
+        copied.push(destination.clone());
+        if let Err(error) = copy_tree(&entry.path(), &destination) {
+            for path in &copied {
+                let _ = if path.is_dir() {
+                    fs::remove_dir_all(path)
+                } else {
+                    fs::remove_file(path)
+                };
+            }
+            return Err(error);
+        }
+    }
+    Ok(())
+}
+
+fn check_no_links(path: &Path) -> Result<(), AppError> {
+    let kind = path.symlink_metadata()?.file_type();
+    if kind.is_symlink() {
+        return Err(AppError::InvalidInput(format!(
+            "{} is a link: move it by hand",
+            path.display()
+        )));
+    }
+    if kind.is_dir() {
+        for entry in fs::read_dir(path)? {
+            check_no_links(&entry?.path())?;
+        }
+    }
+    Ok(())
+}
+
+fn copy_tree(from: &Path, to: &Path) -> Result<(), AppError> {
+    if from.is_dir() {
+        fs::create_dir(to)?;
+        for entry in fs::read_dir(from)? {
+            let entry = entry?;
+            copy_tree(&entry.path(), &to.join(entry.file_name()))?;
+        }
+    } else {
+        fs::copy(from, to)?;
+    }
+    Ok(())
+}
+
+/// Removes the files of an internal project folder, keeping its description.
+fn remove_project_files(dir: &Path) -> Result<(), AppError> {
+    for entry in project_entries(dir)? {
+        let path = entry.path();
+        if entry.file_type()?.is_dir() {
+            crate::services::storage::watcher::remove_tree(&path)?;
+        } else {
+            crate::services::storage::user_data::ensure_write_allowed(&path)?;
+            fs::remove_file(&path)?;
+            crate::services::storage::watcher::deleted(&path);
+        }
+    }
+    Ok(())
 }
 
 /// Removes the project and every profile's permissions for it. The files of
