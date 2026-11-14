@@ -149,6 +149,12 @@ describe('duplicatesDirectChoice', () => {
     toolConfig,
   })
 
+  it('treats a translation without a language as the translation menu', () => {
+    expect(duplicatesDirectChoice(command('core.translate', {}), direct)).toBe(
+      true
+    )
+  })
+
   it('finds commands that do what a language, transformation or style does', () => {
     expect(
       duplicatesDirectChoice(

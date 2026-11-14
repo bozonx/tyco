@@ -5,77 +5,69 @@
     :aria-label="t('voiceCommands.catalog')"
     @keydown="onCatalogKeyDown"
   >
-    <template v-for="group in groups" :key="group.id">
-      <h2 class="voice-group">{{ group.label }}</h2>
-      <button
-        v-for="entry in group.entries"
-        :key="entry.key"
-        type="button"
-        class="voice-entry"
-        :class="{
-          'is-marked': marks.has(entry.key),
-          'is-pickable': canPick(entry),
-          'is-unavailable': unavailable(entry),
-        }"
-        :data-key="entry.key"
-        :aria-current="marks.has(entry.key) || undefined"
-        :aria-disabled="!canPick(entry) || undefined"
-        :title="entry.commands[0]!.description || undefined"
-        @click="emit('pick', entry)"
-      >
-        <AppIcon
-          class="voice-entry-icon"
-          :icon="commandIcon(entry.commands[0]!, tools)"
-          size="lg"
-          aria-hidden="true"
-        />
-        <span class="voice-entry-body">
-          <span class="voice-entry-name">
-            {{ entryLabel(entry) }}
-            <Badge
-              v-if="marks.has(entry.key) && entryLanguage(entry)"
-              tone="accent"
-              >{{ entryLanguage(entry) }}</Badge
-            >
-          </span>
-          <span
-            v-for="phrase in entryPhrases(entry)"
-            :key="phrase"
-            class="voice-entry-phrase"
-            >{{ phrase }}</span
+    <button
+      v-for="command in commands"
+      :key="command.id"
+      type="button"
+      class="voice-entry"
+      :class="{
+        'is-marked': marks.has(command.id),
+        'is-pickable': canPick(command),
+        'is-unavailable': unavailableReason(command),
+      }"
+      :data-key="command.id"
+      :aria-current="marks.has(command.id) || undefined"
+      :aria-disabled="!canPick(command) || undefined"
+      :title="command.description || undefined"
+      @click="emit('pick', command)"
+    >
+      <AppIcon
+        class="voice-entry-icon"
+        :icon="commandIcon(command, tools)"
+        size="lg"
+        aria-hidden="true"
+      />
+      <span class="voice-entry-body">
+        <span class="voice-entry-name">
+          {{ commandLabel(command) }}
+          <Badge
+            v-for="label in parameterLabels(command)"
+            :key="label"
+            tone="accent"
+            >{{ label }}</Badge
           >
         </span>
-        <AppIcon
-          v-if="unavailable(entry)"
-          class="voice-entry-warning"
-          icon="mdi:alert-circle-outline"
-          size="md"
-          :title="t(unavailable(entry)!)"
-          :aria-label="t(unavailable(entry)!)"
-        />
-      </button>
-      <p
-        v-if="group.id === 'custom' && !group.entries.length"
-        class="voice-empty"
-      >
-        {{ t('voiceCommands.empty') }}
-      </p>
-    </template>
+        <span
+          v-for="phrase in voiceCommandPhrases(command, tools, t)"
+          :key="phrase"
+          class="voice-entry-phrase"
+          >{{ phrase }}</span
+        >
+      </span>
+      <AppIcon
+        v-if="unavailableReason(command)"
+        class="voice-entry-warning"
+        icon="mdi:alert-circle-outline"
+        size="md"
+        :title="t(unavailableReason(command)!)"
+        :aria-label="t(unavailableReason(command)!)"
+      />
+    </button>
+    <p v-if="!commands.length" class="voice-empty">
+      {{ t('voiceCommands.empty') }}
+    </p>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { nextTick, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { commandIcon } from '../../lib/commands/command-runtime'
-import type { VoiceCatalogEntry } from '../../lib/voice-commands/voice-catalog'
+import { commandIcon, commandLabel } from '../../lib/commands/command-runtime'
 import type { VoiceCandidate } from '../../lib/voice-commands/voice-resolver'
 import {
-  type VoiceRouteLike,
-  voiceEntryLabel,
-  voiceEntryLanguage,
-  voiceEntryPhrases,
+  voiceCommandPhrases,
+  voiceParameterLabels,
 } from '../../lib/voice-commands/voice-view-presenter'
 import { useToolsStore } from '../../stores/tools'
 import AppIcon from '../common/AppIcon.vue'
@@ -83,42 +75,28 @@ import Badge from '../common/Badge.vue'
 import type { CommandConfig } from '@tyco/shared'
 
 const props = defineProps<{
-  entries: VoiceCatalogEntry[]
+  commands: readonly CommandConfig[]
   marks: ReadonlyMap<string, VoiceCandidate>
-  routes: readonly VoiceRouteLike[]
   stage: string
   unavailableReason: (command: CommandConfig) => string | undefined
 }>()
 
-const emit = defineEmits<{ pick: [entry: VoiceCatalogEntry] }>()
+const emit = defineEmits<{ pick: [command: CommandConfig] }>()
 
 const { t } = useI18n()
 const tools = useToolsStore()
 const catalogRef = ref<HTMLElement | null>(null)
 
-const groups = computed(() => [
-  {
-    id: 'builtIn',
-    label: t('voiceCommands.builtInCatalog'),
-    entries: props.entries.filter((entry) => entry.group === 'builtIn'),
-  },
-  {
-    id: 'custom',
-    label: t('voiceCommands.customCatalog'),
-    entries: props.entries.filter((entry) => entry.group === 'custom'),
-  },
-])
-
-const entryLabel = (entry: VoiceCatalogEntry) => voiceEntryLabel(entry, t)
-const entryLanguage = (entry: VoiceCatalogEntry) =>
-  voiceEntryLanguage(entry, props.marks, t)
-const entryPhrases = (entry: VoiceCatalogEntry) =>
-  voiceEntryPhrases(entry, props.routes, t)
-const unavailable = (entry: VoiceCatalogEntry) =>
-  props.unavailableReason(entry.commands[0]!)
+/** The values the recognizer heard for a marked command */
+const parameterLabels = (command: CommandConfig) => {
+  const candidate = props.marks.get(command.id)
+  return candidate
+    ? voiceParameterLabels(command, candidate.parameters, tools, t)
+    : []
+}
 // rows stay focusable and keep their hints while they cannot be picked
-const canPick = (entry: VoiceCatalogEntry) =>
-  props.stage === 'review' && !unavailable(entry)
+const canPick = (command: CommandConfig) =>
+  props.stage === 'review' && !props.unavailableReason(command)
 
 // the marked row may sit below the fold of a long list
 watch(
@@ -153,19 +131,6 @@ const onCatalogKeyDown = (event: KeyboardEvent) => {
   overscroll-behavior: contain;
   padding: var(--space-xs);
   border-left: 1px solid var(--app-border-subtle);
-}
-
-.voice-group {
-  margin: var(--space-sm) var(--space-sm) var(--space-xs);
-  font-size: var(--text-caption);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--app-text-muted);
-}
-
-.voice-group:first-child {
-  margin-top: var(--space-xs);
 }
 
 .voice-entry {

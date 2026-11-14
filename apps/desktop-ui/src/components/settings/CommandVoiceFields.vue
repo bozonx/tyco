@@ -16,7 +16,7 @@
       >
         <FieldTextArea
           :model-value="command.phrases.join('\n')"
-          :placeholder="t('voiceCommands.phrasesPlaceholder')"
+          :placeholder="phrasesPlaceholder"
           @update:model-value="emit('update', { phrases: $event.split('\n') })"
         />
       </FieldRow>
@@ -32,11 +32,12 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { createBuiltInVoiceCommands } from '../../lib/voice-commands/built-in-voice-commands'
 import {
   compileVoiceRoutes,
   findVoiceConflicts,
+  grammarVariants,
 } from '../../lib/voice-commands/voice-resolver'
+import { voiceParameters } from '../../lib/voice-commands/voice-view-presenter'
 import { useDesktopStore } from '../../stores/desktop'
 import { useToolsStore } from '../../stores/tools'
 import FieldRow from '../common/FieldRow.vue'
@@ -53,7 +54,6 @@ const toolsStore = useToolsStore()
 const voiceRoutes = computed(() =>
   compileVoiceRoutes(
     [
-      ...createBuiltInVoiceCommands(toolsStore, t),
       ...(
         props.userConfig?.commands ??
         desktopStore.userConfig.commands ??
@@ -64,6 +64,18 @@ const voiceRoutes = computed(() =>
     toolsStore
   )
 )
+/**
+ * A command whose phrase names a parameter shows the phrases of its tool, the
+ * ones it is spoken with when it has none of its own
+ */
+const phrasesPlaceholder = computed(() => {
+  const [parameter] = voiceParameters(props.command, toolsStore)
+  const key = toolsStore.get(props.command.toolId)?.voicePhrasesKey
+  if (!parameter || !key) return t('voiceCommands.phrasesPlaceholder')
+  return grammarVariants(
+    t(key, { [parameter.name]: `{${parameter.name}}` })
+  ).join('\n')
+})
 const voiceConflicts = computed(() =>
   findVoiceConflicts(voiceRoutes.value, props.command.id)
 )

@@ -52,7 +52,9 @@ schema version is rejected without modifying the file.
 The config holds settings only, no state: nothing records what the app added
 by itself, because it adds nothing. Tools (core and plugin) are registered at
 runtime and are not stored; `commands` holds only the commands the user made
-from them.
+from them. A new config starts with one of them, `translate` (a `core.translate`
+command without a language); deleting it is final, and the user makes another
+one from the same tool.
 
 ## Structure
 
@@ -234,7 +236,18 @@ Whether a recognized command runs at once is a choice of the voice overlay, not
 of the command. `phrases` are literal strings, one synonym per entry.
 `hotkeys.voiceCommands` opens the separate voice command overlay and is
 unassigned by default. The voice catalog is independent of `actionPages` and
-`isAvailableExternally`.
+`isAvailableExternally`; it lists only the commands of the library, there are
+no voice functions apart from them.
+
+A tool may leave a setting to the caller of its command (`commandParameters`
+of the tool definition): a command without a value for it, such as a
+`core.translate` command without `language`, gets it from the call. A voice
+phrase names it: `{language}` in a phrase marks where, otherwise it follows the
+phrase, and a command without phrases uses those of its tool
+(`voiceGrammar.translate` of every locale). An AI command, a chat and an
+external caller give it in the input, whose schema then requires it. The
+action menu does not offer such a command: the translation menu is that
+choice already.
 
 Every save writes the whole config atomically. Concurrent window edits use a
 three-way merge: objects merge field by field, entity lists (items with an

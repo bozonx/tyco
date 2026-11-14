@@ -1371,7 +1371,6 @@
     "copyDescription": "Stavlja tekst u međuspremnik",
     "correct": "Ispravi",
     "correctDescription": "Ispravlja pravopis, gramatiku i interpunkciju pomoću LLM-a, bez načina ispravka",
-    "defaultTranslate": "Prevedi: {language}",
     "insert": "Umetni u prozor",
     "insertDescription": "Upisuje tekst u prethodno aktivni prozor",
     "noApiKey": "Nije konfiguriran API ključ za pružatelja prijevoda",
@@ -1419,16 +1418,14 @@
   },
   "voiceCommands": {
     "ambiguous": "Podudara se više naredbi. Odaberite pravu s popisa.",
-    "builtInCatalog": "Standardne",
     "catalog": "Registrirane glasovne naredbe",
     "conflicts": "Fraze u sukobu ili ugniježđene fraze",
-    "customCatalog": "Vaše",
     "edit": "Uredi",
     "empty": "Uključite glas u postavkama naredbe da bi se pojavila ovdje.",
     "enabled": "Glasovno pokretanje",
     "extraText": "Ova naredba ne prima tekst. Prije pokretanja izbrišite višak teksta.",
     "failed": "Naredba nije uspjela ili više nije dostupna. Vaš unos je sačuvan.",
-    "hint": "Izgovorite frazu naredbe, a zatim tekst. Ako naredba nije prepoznata, napravite stanku i izgovorite je ponovno od početka. Ponovni pritisak prečaca završava snimanje i pokreće naredbu. Standardne funkcije uvijek su uključene; prijevod koristi postavljeni prevoditelj.",
+    "hint": "Izgovorite frazu naredbe, a zatim tekst. Ako naredba nije prepoznata, napravite stanku i izgovorite je ponovno od početka. Ponovni pritisak prečaca završava snimanje i pokreće naredbu.",
     "languageMissing": "Jezik nije prepoznat. Odaberite prijevod s popisa i navedite jezik.",
     "languagePlaceholder": "jezik",
     "missingText": "Potreban je tekst.",
@@ -1442,10 +1439,10 @@
     "textPlaceholder": "vaš tekst",
     "title": "Glasovne naredbe",
     "missingSelection": "Potreban je odabrani tekst.",
-    "phrasesPlaceholder": "Primjeri fraza, jedna po retku"
+    "phrasesPlaceholder": "Primjeri fraza, jedna po retku",
+    "parameterMissing": "Odaberite vrijednost parametra pokraj naziva naredbe."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "pitaj u chatu" },
     "languages": {
       "cs-CZ": "Češki",
       "de-DE": "njemački",

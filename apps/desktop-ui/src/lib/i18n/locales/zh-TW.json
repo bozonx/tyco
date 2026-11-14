@@ -1365,7 +1365,6 @@
     "copyDescription": "將文字存入剪貼簿",
     "correct": "校對",
     "correctDescription": "透過 LLM 修正拼字、文法與標點符號，不啟用校對模式",
-    "defaultTranslate": "翻譯為 {language}",
     "insert": "插入至視窗",
     "insertDescription": "將文字輸入至您剛才操作的視窗中",
     "noApiKey": "未為翻譯提供商設定 API 金鑰",
@@ -1413,16 +1412,14 @@
   },
   "voiceCommands": {
     "ambiguous": "有多個相符的命令。請從清單中選擇正確的命令。",
-    "builtInCatalog": "標準",
     "catalog": "已註冊的語音命令",
     "conflicts": "衝突或巢狀片語",
-    "customCatalog": "自訂",
     "edit": "編輯",
     "empty": "在命令的設定中開啟語音功能，即可在此處看到該命令。",
     "enabled": "語音啟動",
     "extraText": "此命令不需要文字。請在執行前清除多餘的文字。",
     "failed": "命令執行失敗或已無法使用。您的輸入內容已保留。",
-    "hint": "說出命令片語，隨後說出文字。若命令未被辨識，請稍停後從頭再說一次。再次按下快速鍵即可完成錄音並執行命令。標準功能一律開啟；翻譯使用已設定的翻譯器。",
+    "hint": "說出命令片語，隨後說出文字。若命令未被辨識，請稍停後從頭再說一次。再次按下快速鍵即可完成錄音並執行命令。",
     "languageMissing": "無法辨識語言。請從清單中選擇翻譯並選取語言。",
     "languagePlaceholder": "語言",
     "missingText": "必須提供文字。",
@@ -1436,10 +1433,10 @@
     "textPlaceholder": "您的文字",
     "title": "語音命令",
     "missingSelection": "必須提供選取的文字。",
-    "phrasesPlaceholder": "範例詞，每行一個"
+    "phrasesPlaceholder": "範例詞，每行一個",
+    "parameterMissing": "請在命令名稱旁選擇參數值。"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "在聊天中提問;在對話中提問" },
     "languages": {
       "cs-CZ": "捷克語",
       "de-DE": "德文;德語",

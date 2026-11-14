@@ -5,7 +5,11 @@ import {
   isCommandAvailable,
 } from '../commands/command-runtime'
 import type { ToolLookup } from '../tools/tool-types'
-import { isBuiltInVoiceCommand } from './built-in-voice-commands'
+import {
+  localeMessage,
+  openCommandParameters,
+  parameterVariants,
+} from '../tools/command-parameters'
 
 export interface VoiceParameter {
   name: string
@@ -337,29 +341,25 @@ export function grammarVariants(value: string): string[] {
     .filter(Boolean)
 }
 
-/** `{language}` (or `~`) marks where the language is spoken in a template */
-const LANGUAGE_SLOT = /\{language\}|~/u
+/** `{name}` marks where a parameter is spoken in a phrase */
+const slotOf = (name: string) => `{${name}}`
 
 /**
- * One translation template as a route. Text glued to the slot, such as the
- * Korean `{language}로` or the Japanese `{language}に翻訳`, is spoken as one word
- * with the language, so it becomes part of every language variant rather than a
- * word of its own.
+ * One phrase with one value of the parameter as a route. Text glued to the
+ * slot, such as the Korean `{language}로` or the Japanese `{language}に翻訳`, is
+ * spoken as one word with the value, so it becomes part of every variant rather
+ * than a word of its own. Without a slot the value follows the phrase.
  */
-function translateRoute(
+function parameterRoute(
   commandId: string,
   template: string,
-  language: string,
-  languageVariants: string
+  parameter: VoiceParameter
 ): VoiceRoute {
-  const variants = grammarVariants(languageVariants)
-  if (!LANGUAGE_SLOT.test(template))
-    return {
-      commandId,
-      phrase: template,
-      parameters: [{ name: 'language', value: language, variants }],
-    }
-  const [before = '', after = ''] = template.split(LANGUAGE_SLOT)
+  const slot = slotOf(parameter.name)
+  const at = template.indexOf(slot)
+  if (at < 0) return { commandId, phrase: template, parameters: [parameter] }
+  const before = template.slice(0, at)
+  const after = template.slice(at + slot.length)
   const gluedBefore = before.match(/\S+$/u)?.[0] ?? ''
   const gluedAfter = after.match(/^\S+/u)?.[0] ?? ''
   return {
@@ -368,9 +368,8 @@ function translateRoute(
     suffix: after.slice(gluedAfter.length).trim(),
     parameters: [
       {
-        name: 'language',
-        value: language,
-        variants: variants.map(
+        ...parameter,
+        variants: parameter.variants.map(
           (variant) => `${gluedBefore}${variant}${gluedAfter}`
         ),
       },
@@ -378,42 +377,59 @@ function translateRoute(
   }
 }
 
-/** All spoken languages are compiled, independently of the UI language. */
+/**
+ * The routes of a command: its phrases, or the phrases of its tool when it has
+ * none and leaves a parameter to the caller. The first parameter it leaves is
+ * spoken, in the words of every locale, independently of the UI language.
+ */
+function commandRoutes(
+  command: CommandConfig,
+  tools: ToolLookup
+): VoiceRoute[] {
+  const own = command.phrases.filter((phrase) => words(phrase).length)
+  const tool = tools.get(command.toolId)
+  const [parameter] = openCommandParameters(tool, command.toolConfig)
+  if (!parameter)
+    return own.map((phrase) => ({
+      commandId: command.id,
+      phrase,
+      parameters: [],
+    }))
+  const routes: VoiceRoute[] = []
+  for (const locale of Object.values(messages)) {
+    const defaults = tool?.voicePhrasesKey
+      ? localeMessage(locale, tool.voicePhrasesKey)
+      : undefined
+    const templates = own.length
+      ? own
+      : grammarVariants(typeof defaults === 'string' ? defaults : '')
+    const values = Object.entries(parameterVariants(locale, parameter))
+    for (const template of templates)
+      for (const [value, spoken] of values)
+        routes.push(
+          parameterRoute(command.id, template, {
+            name: parameter.name,
+            value,
+            variants: grammarVariants(spoken),
+          })
+        )
+  }
+  return routes
+}
+
 export function compileVoiceRoutes(
   commands: readonly CommandConfig[],
   tools: ToolLookup,
   includeUnavailable = false
 ): VoiceRoute[] {
-  const routes: VoiceRoute[] = []
-  for (const command of commands.filter(
-    (item) =>
-      item.isEnabled &&
-      item.isVoiceEnabled &&
-      (includeUnavailable || isCommandAvailable(item, tools))
-  )) {
-    for (const phrase of command.phrases) {
-      if (words(phrase).length)
-        routes.push({ commandId: command.id, phrase, parameters: [] })
-    }
-    if (!isBuiltInVoiceCommand(command)) continue
-    for (const locale of Object.values(messages)) {
-      const grammar = locale.voiceGrammar
-      if (command.toolId === 'core.translate') {
-        const language = String(command.toolConfig.language ?? '')
-        const variants =
-          grammar.languages[language as keyof typeof grammar.languages]
-        if (!variants) continue
-        for (const template of grammarVariants(grammar.translate)) {
-          routes.push(translateRoute(command.id, template, language, variants))
-        }
-      } else if (command.toolId === 'core.askInChat') {
-        for (const phrase of grammarVariants(grammar.actions.askInChat)) {
-          routes.push({ commandId: command.id, phrase, parameters: [] })
-        }
-      }
-    }
-  }
-  return routes
+  return commands
+    .filter(
+      (item) =>
+        item.isEnabled &&
+        item.isVoiceEnabled &&
+        (includeUnavailable || isCommandAvailable(item, tools))
+    )
+    .flatMap((command) => commandRoutes(command, tools))
 }
 
 /** Nested phrases and identical routes deserve a warning before saving. */
@@ -455,15 +471,27 @@ export function findVoiceConflicts(
   ]
 }
 
+export type VoiceInputIssue =
+  'missing-text' | 'extra-text' | 'missing-selection' | 'missing-parameter'
+
+/** What keeps the command from running on the text and the parameters */
 export function voiceInputIssue(
   command: CommandConfig,
   text: string,
   tools: ToolLookup,
-  context?: { selectionText: string }
-): 'missing-text' | 'extra-text' | 'missing-selection' | undefined {
+  context?: { selectionText: string },
+  parameters: Readonly<Record<string, string>> = {}
+): VoiceInputIssue | undefined {
   if (commandTakesSelection(command) && !context?.selectionText?.trim()) {
     return 'missing-selection'
   }
+  if (
+    openCommandParameters(tools.get(command.toolId), command.toolConfig).some(
+      (parameter) => !parameters[parameter.name]
+    )
+  )
+    return 'missing-parameter'
+
   if (commandTakesText(command, tools))
     return text.trim() ? undefined : 'missing-text'
   return text.trim() ? 'extra-text' : undefined

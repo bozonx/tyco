@@ -17,9 +17,11 @@ export function testTools(
 
 /** A core tool over the given dependencies; the others fail */
 function testCoreTool(
-  id: 'core.copy' | 'core.insert',
-  deps: { copyText?: (text: string) => Promise<void> } & {
+  id: 'core.copy' | 'core.insert' | 'core.translate',
+  deps: {
+    copyText?: (text: string) => Promise<void>
     insertText?: (text: string) => Promise<void>
+    translateTo?: (language: string, text: string) => Promise<string>
   }
 ): ToolDefinition {
   const unused = () => Promise.reject(new Error('Not in this test'))
@@ -28,7 +30,10 @@ function testCoreTool(
     copyText: deps.copyText ?? unused,
     askInChat: unused,
     correctText: unused,
-    translateTo: unused,
+    translateTo: async (language, text) =>
+      deps.translateTo
+        ? { text: await deps.translateTo(language, text) }
+        : unused(),
     transformationPrompt: unused,
     stylingPrompt: unused,
     getLlmUnavailableReasonKey: () => undefined,
@@ -49,4 +54,11 @@ export function testInsertTool(
   insertText: (text: string) => Promise<void>
 ): ToolDefinition {
   return testCoreTool('core.insert', { insertText })
+}
+
+/** `core.translate` over `translateTo`; it fails without one */
+export function testTranslateTool(
+  translateTo?: (language: string, text: string) => Promise<string>
+): ToolDefinition {
+  return testCoreTool('core.translate', translateTo ? { translateTo } : {})
 }

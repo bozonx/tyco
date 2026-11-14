@@ -16,7 +16,7 @@ import { createScriptAndWebhookTools } from '../lib/tools/script-and-webhook-too
 import { createAiCommandTool } from '../lib/ai-commands/ai-command-tool'
 import { createCommandTransformer } from '../lib/commands/command-runner'
 import { createCoreTools } from '../lib/tools/core-tools'
-import { toolCallConfig, toolInputSchema } from '../lib/tools/tool-input'
+import { commandInputSchema } from '../lib/tools/command-parameters'
 import { createToolRegistry } from '../lib/tools/tool-registry'
 import type { TranslationMeta } from '../lib/translation/translation-meta'
 import { useSecretsStore } from './secrets'
@@ -140,7 +140,7 @@ export const useToolsStore = defineStore('tools', () => {
     commandInputSchema: (command) => {
       const tool = registry.get(command.toolId)
       if (!tool || tool.getUnavailableReasonKey?.()) return undefined
-      return toolInputSchema(tool, toolCallConfig(tool, command.toolConfig))
+      return commandInputSchema(tool, command.toolConfig)
     },
     runCommand: (command, input, options) =>
       transformCommand(

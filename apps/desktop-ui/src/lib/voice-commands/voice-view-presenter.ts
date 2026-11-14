@@ -1,102 +1,89 @@
 import type { CommandConfig } from '@tyco/shared'
 
-import { isBuiltInVoiceCommand } from './built-in-voice-commands'
-import { commandLabel } from '../commands/command-runtime'
-import { getLanguageLabelKey } from '../locale/language'
-import { isTranslateEntry, type VoiceCatalogEntry } from './voice-catalog'
+import {
+  openCommandParameters,
+  parameterValues,
+} from '../tools/command-parameters'
+import type { ToolCommandParameter, ToolLookup } from '../tools/tool-types'
 import {
   grammarVariants,
   type VoiceCandidate,
+  type VoiceInputIssue,
   type VoiceResolution,
 } from './voice-resolver'
 
-export const DEFAULT_TRANSLATION_ID = 'builtin:voice:translate:en-US'
-
-export interface VoiceRouteLike {
-  commandId: string
-  phrase: string
-  parameters: ReadonlyArray<{ variants: readonly string[] }>
-}
+type Translate = (key: string, params?: Record<string, string>) => string
 
 export interface VoiceNotice {
   kind: 'info' | 'warning' | 'error'
   message: string
 }
 
-/** The standard translation, one command per language */
-export const isTranslationCommand = (command: CommandConfig): boolean =>
-  command.toolId === 'core.translate' && isBuiltInVoiceCommand(command)
-
-export const voiceCommandLanguageLabel = (
+/** The parameters the phrase of the command names, see `commandParameters` */
+export const voiceParameters = (
   command: CommandConfig,
-  t: (key: string) => string
-): string => t(getLanguageLabelKey(String(command.toolConfig.language)))
+  tools: ToolLookup
+): readonly ToolCommandParameter[] =>
+  openCommandParameters(tools.get(command.toolId), command.toolConfig)
 
-export const voiceEntryLabel = (
-  entry: VoiceCatalogEntry,
-  t: (key: string) => string
-): string =>
-  entry.group === 'custom'
-    ? commandLabel(entry.commands[0]!)
-    : isTranslateEntry(entry)
-      ? t('tools.translate')
-      : t('tools.askInChat')
+/** The values a parameter can take, to pick one by hand */
+export const voiceParameterOptions = (
+  parameter: ToolCommandParameter,
+  t: Translate
+): { id: string; name: string }[] =>
+  parameterValues(parameter).map((value) => ({
+    id: value,
+    name: t(parameter.valueLabelKey(value)),
+  }))
 
-export const voiceEntryLanguage = (
-  entry: VoiceCatalogEntry,
-  marks: ReadonlyMap<string, VoiceCandidate>,
-  t: (key: string) => string
-): string => {
-  if (!isTranslateEntry(entry)) return ''
-  const id = marks.get(entry.key)?.commandId
-  const command = entry.commands.find((item) => item.id === id)
-  return command ? voiceCommandLanguageLabel(command, t) : ''
-}
-
-/** The language slot of a translation template, see `compileVoiceRoutes` */
-const LANGUAGE_SLOT = /\{language\}|~/u
+/** The named values of the parameters of the command, as they are shown */
+export const voiceParameterLabels = (
+  command: CommandConfig,
+  parameters: Readonly<Record<string, string>>,
+  tools: ToolLookup,
+  t: Translate
+): string[] =>
+  voiceParameters(command, tools).flatMap((parameter) => {
+    const value = parameters[parameter.name]
+    return value ? [t(parameter.valueLabelKey(value))] : []
+  })
 
 /**
- * A grammar entry as written: `t` would interpolate its `{language}` slot. The
- * slot is passed back to itself to keep it.
+ * A message as written: `t` would interpolate its slot. The slot is passed back
+ * to itself to keep it.
  */
-const rawGrammar = (
-  t: (key: string, params?: Record<string, string>) => string,
-  key: string
-) => t(key, { language: '{language}' })
+const rawMessage = (t: Translate, key: string, name: string) =>
+  t(key, { [name]: `{${name}}` })
 
-export const voiceEntryPhrases = (
-  entry: VoiceCatalogEntry,
-  routes: readonly VoiceRouteLike[],
-  t: (key: string, params?: Record<string, string>) => string
+/**
+ * How the command is spoken, as samples: its phrases, or the first phrase of
+ * its tool in the UI language, with the parameter and the text shown as
+ * placeholders
+ */
+export const voiceCommandPhrases = (
+  command: CommandConfig,
+  tools: ToolLookup,
+  t: Translate
 ): string[] => {
+  const own = command.phrases.map((phrase) => phrase.trim()).filter(Boolean)
+  const [parameter] = voiceParameters(command, tools)
+  if (!parameter) return [...new Set(own)]
+  const slot = `{${parameter.name}}`
+  const key = tools.get(command.toolId)?.voicePhrasesKey
+  const templates = own.length
+    ? own
+    : key
+      ? grammarVariants(rawMessage(t, key, parameter.name)).slice(0, 1)
+      : []
+  const placeholder = t(parameter.placeholderKey)
   const text = t('voiceCommands.textPlaceholder')
-  if (isTranslateEntry(entry)) {
-    const language = t('voiceCommands.languagePlaceholder')
-    return grammarVariants(rawGrammar(t, 'voiceGrammar.translate'))
-      .slice(0, 1)
-      .map((template) =>
-        LANGUAGE_SLOT.test(template)
-          ? `${template.replace(LANGUAGE_SLOT, language)} ${text}`
-          : `${template} ${language} ${text}`
-      )
-  }
-  if (entry.group === 'builtIn')
-    return grammarVariants(rawGrammar(t, 'voiceGrammar.actions.askInChat'))
-      .slice(0, 1)
-      .map((phrase) => `${phrase} ${text}`)
   return [
     ...new Set(
-      routes
-        .filter((route) => route.commandId === entry.key)
-        .map((route) =>
-          [
-            route.phrase,
-            ...route.parameters.map((parameter) =>
-              parameter.variants.join(' / ')
-            ),
-          ].join(' ')
-        )
+      templates.map((template) =>
+        template.includes(slot)
+          ? `${template.replace(slot, placeholder)} ${text}`
+          : `${template} ${placeholder} ${text}`
+      )
     ),
   ]
 }
@@ -109,7 +96,7 @@ export function resolveVoiceNotice(
     error: string
     command: CommandConfig | undefined
     unavailableReason: (command: CommandConfig) => string | undefined
-    inputIssue: 'missing-text' | 'extra-text' | 'missing-selection' | undefined
+    inputIssue: VoiceInputIssue | undefined
     stage: string
     resolutionKind: VoiceResolution['kind']
   },
@@ -130,7 +117,9 @@ export function resolveVoiceNotice(
             ? t('voiceCommands.missingText')
             : state.inputIssue === 'missing-selection'
               ? t('voiceCommands.missingSelection')
-              : t('voiceCommands.extraText'),
+              : state.inputIssue === 'missing-parameter'
+                ? t('voiceCommands.parameterMissing')
+                : t('voiceCommands.extraText'),
       }
     return undefined
   }
@@ -142,20 +131,20 @@ export function resolveVoiceNotice(
   return { kind: 'info', message: t('voiceCommands.noMatch') }
 }
 
-/** A row picked by hand takes the recognized parameters when it has them */
-export function pickVoiceCatalogEntry(
-  entry: VoiceCatalogEntry,
+/** A command picked by hand takes the recognized parameters when it has them */
+export function pickVoiceCommand(
+  command: CommandConfig,
   deps: {
-    canPick: (entry: VoiceCatalogEntry) => boolean
+    canPick: (command: CommandConfig) => boolean
     marks: ReadonlyMap<string, VoiceCandidate>
     selected: VoiceCandidate | undefined
     choose: (candidate: VoiceCandidate) => void
     chooseCommand: (commandId: string) => void
   }
 ): boolean {
-  if (!deps.canPick(entry)) return false
-  const candidate = deps.marks.get(entry.key)
+  if (!deps.canPick(command)) return false
+  const candidate = deps.marks.get(command.id)
   if (candidate && candidate !== deps.selected) deps.choose(candidate)
-  else if (!candidate) deps.chooseCommand(entry.commands[0]!.id)
+  else if (!candidate) deps.chooseCommand(command.id)
   return true
 }

@@ -1371,7 +1371,6 @@
     "copyDescription": "Pune textul în clipboard",
     "correct": "Corectează",
     "correctDescription": "Corectează ortografia, gramatica și punctuația cu ajutorul LLM, fără modul de corectare",
-    "defaultTranslate": "Tradu: {language}",
     "insert": "Inserează în fereastră",
     "insertDescription": "Tastează textul în fereastra activă anterior",
     "noApiKey": "Nu este configurată nicio cheie API pentru furnizorul de traducere",
@@ -1419,16 +1418,14 @@
   },
   "voiceCommands": {
     "ambiguous": "Se potrivesc mai multe comenzi. Alegeți-o pe cea corectă din listă.",
-    "builtInCatalog": "Standard",
     "catalog": "Comenzi vocale înregistrate",
     "conflicts": "Fraze în conflict sau imbricate",
-    "customCatalog": "Ale dvs.",
     "edit": "Editează",
     "empty": "Activați vocea în setările unei comenzi pentru a o vedea aici.",
     "enabled": "Pornire vocală",
     "extraText": "Această comandă nu acceptă text. Ștergeți textul în plus înainte de rulare.",
     "failed": "Comanda a eșuat sau nu mai este disponibilă. Introducerea dvs. a fost păstrată.",
-    "hint": "Rostiți fraza comenzii, apoi textul. Dacă comanda nu a fost recunoscută, faceți o pauză și spuneți-o din nou de la început. Apăsarea din nou a comenzii rapide încheie înregistrarea și rulează comanda. Funcțiile standard sunt întotdeauna active; traducerea folosește traducătorul configurat.",
+    "hint": "Rostiți fraza comenzii, apoi textul. Dacă comanda nu a fost recunoscută, faceți o pauză și spuneți-o din nou de la început. Apăsarea din nou a comenzii rapide încheie înregistrarea și rulează comanda.",
     "languageMissing": "Limba nu a fost recunoscută. Alegeți traducerea din listă și selectați o limbă.",
     "languagePlaceholder": "limba",
     "missingText": "Este necesar un text.",
@@ -1442,10 +1439,10 @@
     "textPlaceholder": "textul dvs.",
     "title": "Comenzi vocale",
     "missingSelection": "Este necesar textul selectat.",
-    "phrasesPlaceholder": "Fraze demonstrative, câte una pe rând"
+    "phrasesPlaceholder": "Fraze demonstrative, câte una pe rând",
+    "parameterMissing": "Alegeți valoarea parametrului lângă numele comenzii."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "întreabă în chat" },
     "languages": {
       "cs-CZ": "Cehă",
       "de-DE": "germană",

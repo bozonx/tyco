@@ -1371,7 +1371,6 @@
     "copyDescription": "Puts the text into the clipboard",
     "correct": "Correct",
     "correctDescription": "Fixes spelling, grammar and punctuation with the LLM, without the correction mode",
-    "defaultTranslate": "Translate into {language}",
     "insert": "Insert into the window",
     "insertDescription": "Types the text into the window you were working in",
     "noApiKey": "No API key configured for the translation provider",
@@ -1419,16 +1418,14 @@
   },
   "voiceCommands": {
     "ambiguous": "Several commands match. Pick the right one from the list.",
-    "builtInCatalog": "Standard",
     "catalog": "Registered voice commands",
     "conflicts": "Conflicting or nested phrases",
-    "customCatalog": "Yours",
     "edit": "Edit",
     "empty": "Turn on voice in a command's settings to see it here.",
     "enabled": "Voice launch",
     "extraText": "This command takes no text. Clear the extra text before running.",
     "failed": "Command failed or is no longer available. Your input is preserved.",
-    "hint": "Say the command phrase, then the text. If the command was not recognized, pause and say it again from the start. Pressing the hotkey again finishes recording and runs the command. Standard functions are always on; translation uses the configured translator.",
+    "hint": "Say the command phrase, then the text. If the command was not recognized, pause and say it again from the start. Pressing the hotkey again finishes recording and runs the command.",
     "languageMissing": "Language not recognized. Pick translation from the list and choose a language.",
     "languagePlaceholder": "language",
     "missingText": "Text is required.",
@@ -1442,10 +1439,10 @@
     "textPlaceholder": "your text",
     "title": "Voice commands",
     "missingSelection": "Selection is required.",
-    "phrasesPlaceholder": "Sample phrases, one per line"
+    "phrasesPlaceholder": "Sample phrases, one per line",
+    "parameterMissing": "Choose the parameter value next to the command name."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "ask in chat" },
     "languages": {
       "cs-CZ": "Czech",
       "de-DE": "German",

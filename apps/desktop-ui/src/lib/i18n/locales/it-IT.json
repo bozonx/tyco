@@ -1371,7 +1371,6 @@
     "copyDescription": "Mette il testo negli appunti",
     "correct": "Correggi",
     "correctDescription": "Corregge ortografia, grammatica e punteggiatura con l’LLM, senza la modalità correzione",
-    "defaultTranslate": "Traduci: {language}",
     "insert": "Inserisci nella finestra",
     "insertDescription": "Digita il testo nella finestra in cui stavi lavorando",
     "noApiKey": "Nessuna chiave API configurata per il provider di traduzione",
@@ -1419,16 +1418,14 @@
   },
   "voiceCommands": {
     "ambiguous": "Corrispondono più comandi. Scegli quello giusto dall’elenco.",
-    "builtInCatalog": "Standard",
     "catalog": "Comandi vocali registrati",
     "conflicts": "Frasi in conflitto o annidate",
-    "customCatalog": "Tuoi",
     "edit": "Modifica",
     "empty": "Attiva la voce nelle impostazioni di un comando per vederlo qui.",
     "enabled": "Avvio vocale",
     "extraText": "Questo comando non accetta testo. Cancella il testo in eccesso prima di eseguirlo.",
     "failed": "Il comando non è riuscito o non è più disponibile. Il tuo input è stato conservato.",
-    "hint": "Pronuncia la frase del comando, poi il testo. Se il comando non è stato riconosciuto, fai una pausa e ripetilo dall’inizio. Premere di nuovo la scorciatoia termina la registrazione ed esegue il comando. Le funzioni standard sono sempre attive; la traduzione usa il traduttore configurato.",
+    "hint": "Pronuncia la frase del comando, poi il testo. Se il comando non è stato riconosciuto, fai una pausa e ripetilo dall’inizio. Premere di nuovo la scorciatoia termina la registrazione ed esegue il comando.",
     "languageMissing": "Lingua non riconosciuta. Scegli la traduzione dall’elenco e seleziona una lingua.",
     "languagePlaceholder": "lingua",
     "missingText": "Il testo è obbligatorio.",
@@ -1442,10 +1439,10 @@
     "textPlaceholder": "il tuo testo",
     "title": "Comandi vocali",
     "missingSelection": "Il testo selezionato è obbligatorio.",
-    "phrasesPlaceholder": "Frasi di esempio, una per riga"
+    "phrasesPlaceholder": "Frasi di esempio, una per riga",
+    "parameterMissing": "Scegli il valore del parametro accanto al nome del comando."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "chiedi nella chat" },
     "languages": {
       "cs-CZ": "Ceco",
       "de-DE": "tedesco",

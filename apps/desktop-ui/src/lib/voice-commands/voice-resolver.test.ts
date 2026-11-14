@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createCommand } from '../commands/command-config'
-import { testTools } from '../tools/testing'
+import { testTools, testTranslateTool } from '../tools/testing'
 import {
   compileVoiceRoutes,
   findVoiceConflicts,
@@ -400,6 +400,62 @@ describe('voice resolver CJK and SOV languages', () => {
     expect(
       voiceInputIssue(selectionScript, 'some text', tools, {
         selectionText: 'selected text',
+      })
+    ).toBeUndefined()
+  })
+})
+
+describe('voice routes of a command parameter', () => {
+  const tools = testTools({}, [testTranslateTool()])
+  const translate = {
+    ...createCommand('core.translate', 'translate'),
+    isVoiceEnabled: true,
+  }
+
+  it('speaks the language in the phrases of every locale', () => {
+    const routes = compileVoiceRoutes([translate], tools)
+    for (const [text, language] of [
+      ['переведи на немецкий Привет', 'de-DE'],
+      ['translate to French Hello', 'fr-FR'],
+      ['英語に翻訳してこんにちは', 'en-US'],
+    ] as const) {
+      const result = resolveVoice(routes, text)
+      expect(result.kind).toBe('match')
+      expect(result.candidates[0]).toMatchObject({
+        commandId: 'translate',
+        parameters: { language },
+      })
+    }
+  })
+
+  it('takes the slot of an own phrase, or puts the value after it', () => {
+    const own = { ...translate, phrases: ['say it in {language} please', 'in'] }
+    const routes = compileVoiceRoutes([own], tools)
+    expect(resolveVoice(routes, 'translate to German Hi').kind).toBe('none')
+    expect(
+      resolveVoice(routes, 'say it in German please Hi').candidates[0]
+    ).toMatchObject({ parameters: { language: 'de-DE' }, text: 'Hi' })
+    expect(resolveVoice(routes, 'in Spanish Hola').candidates[0]).toMatchObject(
+      { parameters: { language: 'es' }, text: 'Hola' }
+    )
+  })
+
+  it('names no parameter of a command that has a value for it', () => {
+    const fixed = {
+      ...translate,
+      phrases: ['to german'],
+      toolConfig: { language: 'de-DE' },
+    }
+    expect(compileVoiceRoutes([fixed], tools)).toEqual([
+      { commandId: 'translate', phrase: 'to german', parameters: [] },
+    ])
+  })
+
+  it('needs the parameter before the command runs', () => {
+    expect(voiceInputIssue(translate, 'Hello', tools)).toBe('missing-parameter')
+    expect(
+      voiceInputIssue(translate, 'Hello', tools, undefined, {
+        language: 'de-DE',
       })
     ).toBeUndefined()
   })

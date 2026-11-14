@@ -28,6 +28,34 @@ export interface ToolDefinition extends SdkToolDefinition {
    * that grants a notes plugin its notes root
    */
   directoryFieldName?: string
+  /**
+   * The settings a command may leave to its caller: a voice phrase names the
+   * value, an agent or an external caller gives it in the input
+   */
+  commandParameters?: readonly ToolCommandParameter[]
+  /**
+   * The i18n key of the voice phrases of a command without phrases of its own,
+   * separated by `;`; `{name}` marks where a parameter is spoken, otherwise it
+   * follows the phrase
+   */
+  voicePhrasesKey?: string
+}
+
+/** A setting of a command its caller gives, see `commandParameters` */
+export interface ToolCommandParameter {
+  /** The key in the config of the command and in the input of a call */
+  name: string
+  /** What the value is, for an agent and an external caller */
+  description: string
+  labelKey: string
+  /** How the parameter is shown in a sample phrase */
+  placeholderKey: string
+  /**
+   * The i18n key of an object of the values, each with its spoken variants
+   * separated by `;`; the keys of `en-US` are the values
+   */
+  voiceValuesKey: string
+  valueLabelKey: (value: string) => string
 }
 
 /** Who provides a tool of the registry */

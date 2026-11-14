@@ -1,8 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createCommand } from '../commands/command-config'
-import { testTools } from '../tools/testing'
-import { createBuiltInVoiceCommands } from './built-in-voice-commands'
-import { translate } from '../i18n'
+import { testTools, testTranslateTool } from '../tools/testing'
 import { DictationError } from '../stt/dictation-error'
 import {
   createVoiceCommandModel,
@@ -10,7 +8,7 @@ import {
 } from './voice-command-model'
 
 function setup(overrides: Partial<VoiceCommandDependencies> = {}) {
-  const baseTools = testTools()
+  const baseTools = testTools({}, [testTranslateTool()])
   const scriptTool = baseTools.get('script')!
   const tools = {
     get: (id: string) =>
@@ -25,7 +23,6 @@ function setup(overrides: Partial<VoiceCommandDependencies> = {}) {
         },
       },
   }
-  const builtInCommands = createBuiltInVoiceCommands(tools, translate)
   const commands = [
     {
       ...createCommand('script', 'note'),
@@ -33,12 +30,12 @@ function setup(overrides: Partial<VoiceCommandDependencies> = {}) {
       phrases: ['save note'],
       toolConfig: { command: 'echo {{TEXT}}' },
     },
+    { ...createCommand('core.translate', 'translate'), isVoiceEnabled: true },
   ]
   let handlers:
     Parameters<VoiceCommandDependencies['startDictation']>[0] | undefined
   const deps: VoiceCommandDependencies = {
     commands: () => commands,
-    builtInCommands: () => builtInCommands,
     tools,
     startDictation: vi.fn(async (next) => {
       handlers = next
@@ -184,7 +181,9 @@ describe('voice command session', () => {
     expect(deps.run).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'note' }),
       'Hello!',
-      expect.any(AbortSignal)
+      expect.any(AbortSignal),
+      undefined,
+      {}
     )
   })
   it('runs only exact final valid input when finished to run', async () => {
@@ -249,7 +248,9 @@ describe('voice command session', () => {
     expect(deps.run).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'note' }),
       '',
-      expect.any(AbortSignal)
+      expect.any(AbortSignal),
+      undefined,
+      {}
     )
   })
 
@@ -405,7 +406,9 @@ it('automatically runs the final exact command by default', async () => {
   expect(deps.run).toHaveBeenCalledExactlyOnceWith(
     expect.objectContaining({ id: 'note' }),
     'Hello!',
-    expect.any(AbortSignal)
+    expect.any(AbortSignal),
+    undefined,
+    {}
   )
 })
 
@@ -418,7 +421,39 @@ it('waits for review when the final transcript names another command', async () 
   await model.finish()
   expect(deps.run).not.toHaveBeenCalled()
   expect(model.stage.value).toBe('review')
-  expect(model.command.value?.id).toBe('builtin:voice:translate:en-US')
+  expect(model.command.value?.id).toBe('translate')
+  expect(model.selected.value?.parameters).toEqual({ language: 'en-US' })
+})
+
+it('runs a translation with the language the phrase named', async () => {
+  const { model, deps } = setup({
+    finishDictation: vi.fn(async () => 'переведи на немецкий Привет'),
+  })
+  await model.start()
+  await model.finish('review')
+  expect(model.command.value?.id).toBe('translate')
+  model.setParameter('language', 'fr-FR')
+  await model.run()
+  expect(deps.run).toHaveBeenCalledWith(
+    expect.objectContaining({ id: 'translate' }),
+    'Привет',
+    expect.any(AbortSignal),
+    undefined,
+    { language: 'fr-FR' }
+  )
+})
+
+it('waits for the language of a translation picked by hand', async () => {
+  const { model, deps } = setup({ finishDictation: vi.fn(async () => 'Hello') })
+  await model.start()
+  await model.finish('review')
+  model.chooseCommand('translate')
+  expect(model.inputIssue.value).toBe('missing-parameter')
+  expect(model.canRun.value).toBe(false)
+  model.setParameter('language', 'de-DE')
+  expect(model.canRun.value).toBe(true)
+  await model.run()
+  expect(deps.run).toHaveBeenCalledOnce()
 })
 
 it('does not run a command that was not recognized when finished to run', async () => {
@@ -460,14 +495,16 @@ it('reports an empty recording without choosing a command', async () => {
   expect(model.selected.value).toBeUndefined()
 })
 
-it('switches the chosen command without losing the edited text', async () => {
-  const { model, commands } = setup()
-  commands.push({ ...commands[0]!, id: 'sibling', phrases: ['other'] })
+it('sets a parameter of the chosen command without losing the edited text', async () => {
+  const { model } = setup({
+    finishDictation: vi.fn(async () => 'translate to English Hello'),
+  })
   await model.start()
   await model.finish('review')
   model.inputText.value = 'Edited'
-  model.switchCommand('sibling')
-  expect(model.command.value?.id).toBe('sibling')
+  model.setParameter('language', 'de-DE')
+  expect(model.command.value?.id).toBe('translate')
+  expect(model.selected.value?.parameters).toEqual({ language: 'de-DE' })
   expect(model.inputText.value).toBe('Edited')
 })
 
@@ -606,6 +643,7 @@ it('passes selection context to deps.run and blocks commands requiring selection
     expect.objectContaining({ id: 'with-sel' }),
     'details',
     expect.any(AbortSignal),
-    { selectionText: 'Selected passage' }
+    { selectionText: 'Selected passage' },
+    {}
   )
 })

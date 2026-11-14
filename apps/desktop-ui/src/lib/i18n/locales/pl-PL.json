@@ -1371,7 +1371,6 @@
     "copyDescription": "Umieszcza tekst w schowku",
     "correct": "Popraw",
     "correctDescription": "Poprawia pisownię, gramatykę i interpunkcję za pomocą LLM, bez trybu korekty",
-    "defaultTranslate": "Tłumacz: {language}",
     "insert": "Wstaw do okna",
     "insertDescription": "Wpisuje tekst w poprzednio aktywnym oknie",
     "noApiKey": "Brak skonfigurowanego klucza API dla dostawcy tłumaczeń",
@@ -1419,16 +1418,14 @@
   },
   "voiceCommands": {
     "ambiguous": "Pasuje kilka poleceń. Wybierz właściwe z listy.",
-    "builtInCatalog": "Standardowe",
     "catalog": "Zarejestrowane polecenia głosowe",
     "conflicts": "Kolidujące lub zagnieżdżone frazy",
-    "customCatalog": "Twoje",
     "edit": "Edytuj",
     "empty": "Włącz głos w ustawieniach polecenia, aby pojawiło się tutaj.",
     "enabled": "Uruchamianie głosem",
     "extraText": "To polecenie nie przyjmuje tekstu. Usuń nadmiarowy tekst przed uruchomieniem.",
     "failed": "Polecenie nie powiodło się lub nie jest już dostępne. Twoje dane zostały zachowane.",
-    "hint": "Wypowiedz frazę polecenia, a potem tekst. Jeśli polecenie nie zostało rozpoznane, zrób pauzę i powtórz je od początku. Ponowne naciśnięcie skrótu kończy nagrywanie i wykonuje polecenie. Funkcje standardowe są zawsze włączone; tłumaczenie używa skonfigurowanego tłumacza.",
+    "hint": "Wypowiedz frazę polecenia, a potem tekst. Jeśli polecenie nie zostało rozpoznane, zrób pauzę i powtórz je od początku. Ponowne naciśnięcie skrótu kończy nagrywanie i wykonuje polecenie.",
     "languageMissing": "Nie rozpoznano języka. Wybierz tłumaczenie z listy i wskaż język.",
     "languagePlaceholder": "język",
     "missingText": "Wymagany jest tekst.",
@@ -1442,10 +1439,10 @@
     "textPlaceholder": "twój tekst",
     "title": "Polecenia głosowe",
     "missingSelection": "Wymagany jest zaznaczony tekst.",
-    "phrasesPlaceholder": "Przykładowe frazy, jedna na wiersz"
+    "phrasesPlaceholder": "Przykładowe frazy, jedna na wiersz",
+    "parameterMissing": "Wybierz wartość parametru obok nazwy polecenia."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "zapytaj na czacie" },
     "languages": {
       "cs-CZ": "Czeski",
       "de-DE": "niemiecki",

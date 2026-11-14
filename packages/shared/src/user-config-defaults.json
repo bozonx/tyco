@@ -133,7 +133,25 @@
     { "action": null, "takesSelection": true },
     { "action": null, "takesSelection": true }
   ],
-  "commands": [],
+  "commands": [
+    {
+      "id": "translate",
+      "name": "",
+      "description": "",
+      "phrases": [],
+      "isVoiceEnabled": true,
+      "toolId": "core.translate",
+      "toolConfig": {},
+      "isLlmArgumentParsingEnabled": false,
+      "isLlmPreTransformEnabled": false,
+      "llmPreTransformPrompt": "",
+      "outputAction": "insertIntoWindow",
+      "isOutputLogged": false,
+      "isAvailableExternally": false,
+      "externalTimeoutSec": 120,
+      "isEnabled": true
+    }
+  ],
   "variables": [],
   "variableValues": {},
   "llm": {

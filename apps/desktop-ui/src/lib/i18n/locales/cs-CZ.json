@@ -1365,7 +1365,6 @@
     "copyDescription": "Vloží text do schránky",
     "correct": "Opravit",
     "correctDescription": "Opraví pravopis, gramatiku a interpunkci pomocí LLM, bez režimu opravy",
-    "defaultTranslate": "Přeložit: {language}",
     "insert": "Vložit do okna",
     "insertDescription": "Napíše text do dříve aktivního okna",
     "noApiKey": "Pro poskytovatele překladu není nakonfigurován žádný klíč API",
@@ -1413,16 +1412,14 @@
   },
   "voiceCommands": {
     "ambiguous": "Odpovídá více příkazů. Vyberte ze seznamu ten správný.",
-    "builtInCatalog": "Standardní",
     "catalog": "Zaregistrované hlasové příkazy",
     "conflicts": "Kolidující nebo vnořené fráze",
-    "customCatalog": "Vaše",
     "edit": "Upravit",
     "empty": "Zapněte hlas v nastavení příkazu, aby se zde zobrazil.",
     "enabled": "Spuštění hlasem",
     "extraText": "Tento příkaz nepřijímá text. Před spuštěním smažte přebytečný text.",
     "failed": "Příkaz selhal nebo už není dostupný. Váš vstup zůstal zachován.",
-    "hint": "Vyslovte frázi příkazu a pak text. Pokud příkaz nebyl rozpoznán, udělejte pauzu a řekněte ho znovu od začátku. Opětovné stisknutí zkratky ukončí nahrávání a spustí příkaz. Standardní funkce jsou vždy zapnuté; překlad používá nastavený překladač.",
+    "hint": "Vyslovte frázi příkazu a pak text. Pokud příkaz nebyl rozpoznán, udělejte pauzu a řekněte ho znovu od začátku. Opětovné stisknutí zkratky ukončí nahrávání a spustí příkaz.",
     "languageMissing": "Jazyk nebyl rozpoznán. Vyberte ze seznamu překlad a zvolte jazyk.",
     "languagePlaceholder": "jazyk",
     "missingText": "Je vyžadován text.",
@@ -1436,10 +1433,10 @@
     "textPlaceholder": "váš text",
     "title": "Hlasové příkazy",
     "missingSelection": "Je vyžadován výběr textu.",
-    "phrasesPlaceholder": "Příklady frází, jedna na řádek"
+    "phrasesPlaceholder": "Příklady frází, jedna na řádek",
+    "parameterMissing": "Vyberte hodnotu parametru vedle názvu příkazu."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "zeptej se v chatu" },
     "languages": {
       "cs-CZ": "Czech",
       "de-DE": "němčiny",

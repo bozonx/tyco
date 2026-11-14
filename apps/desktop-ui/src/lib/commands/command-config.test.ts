@@ -187,8 +187,11 @@ describe('normalizeCommands', () => {
     expect(commands.map((command) => command.name)).toEqual(['First'])
   })
 
-  it('reads a missing library as empty', () => {
-    expect(normalizeCommands(undefined)).toEqual([])
+  it('reads a missing library as the default one, an empty one as it is', () => {
+    expect(normalizeCommands(undefined).map((command) => command.id)).toEqual([
+      'translate',
+    ])
+    expect(normalizeCommands([])).toEqual([])
   })
 })
 
@@ -424,7 +427,7 @@ describe('commands of the core tools', () => {
     )
     expect(
       isCommandTool({ id: 'core.translate', owner: { kind: 'core' } })
-    ).toBe(false)
+    ).toBe(true)
     expect(isCommandTool({ id: 'core.insert', owner: { kind: 'core' } })).toBe(
       false
     )

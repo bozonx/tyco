@@ -21,7 +21,8 @@ export function isCommandTool(
   if (
     tool.id === 'script' ||
     tool.id === 'webhook' ||
-    tool.id === 'core.aiTask'
+    tool.id === 'core.aiTask' ||
+    tool.id === 'core.translate'
   ) {
     return true
   }

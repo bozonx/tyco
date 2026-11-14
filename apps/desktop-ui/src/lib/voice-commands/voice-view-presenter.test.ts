@@ -1,45 +1,60 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createCommand } from '../commands/command-config'
+import { testTools, testTranslateTool } from '../tools/testing'
 import {
-  DEFAULT_TRANSLATION_ID,
-  isTranslationCommand,
-  pickVoiceCatalogEntry,
+  pickVoiceCommand,
   resolveVoiceNotice,
-  voiceEntryLabel,
-  voiceEntryPhrases,
+  voiceCommandPhrases,
+  voiceParameterLabels,
+  voiceParameterOptions,
+  voiceParameters,
 } from './voice-view-presenter'
-import { buildVoiceCatalog } from './voice-catalog'
 
-const t = (key: string) => key
+const t = (key: string, params?: Record<string, string>) =>
+  key === 'voiceGrammar.translate'
+    ? `translate to {language};into {language}`
+    : params
+      ? `${key}:${JSON.stringify(params)}`
+      : key
+const tools = testTools({}, [testTranslateTool()])
 
 describe('voice-view-presenter', () => {
-  it('identifies built-in translation commands and formats entry labels', () => {
-    const translateCmd = {
-      ...createCommand('core.translate', DEFAULT_TRANSLATION_ID),
-      toolConfig: { language: 'en-US' },
-    }
-    const customCmd = {
+  it('shows the phrases of a command as they are', () => {
+    const command = {
       ...createCommand('script', 'custom-1'),
-      name: 'Deploy',
-      phrases: ['deploy now'],
+      phrases: ['deploy now', ' ', 'deploy now'],
     }
-    expect(isTranslationCommand(translateCmd)).toBe(true)
-    expect(isTranslationCommand(customCmd)).toBe(false)
+    expect(voiceParameters(command, tools)).toEqual([])
+    expect(voiceCommandPhrases(command, tools, t)).toEqual(['deploy now'])
+  })
 
-    const entries = buildVoiceCatalog(
-      [translateCmd, customCmd],
-      DEFAULT_TRANSLATION_ID
-    )
-    expect(voiceEntryLabel(entries[0]!, t)).toBe('tools.translate')
-    expect(voiceEntryLabel(entries[1]!, t)).toBe('Deploy')
+  it('shows the first phrase of the tool with the parameter it names', () => {
+    const command = createCommand('core.translate', 'translate')
+    expect(voiceParameters(command, tools).map((item) => item.name)).toEqual([
+      'language',
+    ])
+    expect(voiceCommandPhrases(command, tools, t)).toEqual([
+      'translate to voiceCommands.languagePlaceholder voiceCommands.textPlaceholder',
+    ])
+    const own = { ...command, phrases: ['render as'] }
+    expect(voiceCommandPhrases(own, tools, t)).toEqual([
+      'render as voiceCommands.languagePlaceholder voiceCommands.textPlaceholder',
+    ])
+  })
+
+  it('names the values of a parameter and leaves a fixed one out', () => {
+    const command = createCommand('core.translate', 'translate')
+    const [parameter] = voiceParameters(command, tools)
+    expect(voiceParameterOptions(parameter!, t)).toContainEqual({
+      id: 'de-DE',
+      name: 'language.de-DE',
+    })
     expect(
-      voiceEntryPhrases(
-        entries[1]!,
-        [{ commandId: 'custom-1', phrase: 'deploy now', parameters: [] }],
-        t
-      )
-    ).toEqual(['deploy now'])
+      voiceParameterLabels(command, { language: 'de-DE' }, tools, t)
+    ).toEqual(['language.de-DE'])
+    const fixed = { ...command, toolConfig: { language: 'de-DE' } }
+    expect(voiceParameters(fixed, tools)).toEqual([])
   })
 
   it('resolves notices by priority: error, command issue, or review resolution', () => {
@@ -85,11 +100,24 @@ describe('voice-view-presenter', () => {
         t
       )
     ).toEqual({ kind: 'info', message: 'voiceCommands.ambiguous' })
+
+    expect(
+      resolveVoiceNotice(
+        {
+          error: '',
+          command: cmd,
+          unavailableReason: () => undefined,
+          inputIssue: 'missing-parameter',
+          stage: 'review',
+          resolutionKind: 'match',
+        },
+        t
+      )
+    ).toEqual({ kind: 'warning', message: 'voiceCommands.parameterMissing' })
   })
 
   it('picks marked candidate when available or falls back to command id', () => {
     const cmd = createCommand('script', 'cmd-1')
-    const entry = buildVoiceCatalog([cmd], DEFAULT_TRANSLATION_ID)[0]!
     const candidate = {
       commandId: 'cmd-1',
       text: 'hello',
@@ -102,7 +130,7 @@ describe('voice-view-presenter', () => {
     const chooseCommand = vi.fn()
 
     expect(
-      pickVoiceCatalogEntry(entry, {
+      pickVoiceCommand(cmd, {
         canPick: () => true,
         marks: new Map([['cmd-1', candidate]]),
         selected: undefined,
@@ -114,7 +142,7 @@ describe('voice-view-presenter', () => {
     expect(chooseCommand).not.toHaveBeenCalled()
 
     expect(
-      pickVoiceCatalogEntry(entry, {
+      pickVoiceCommand(cmd, {
         canPick: () => true,
         marks: new Map(),
         selected: undefined,

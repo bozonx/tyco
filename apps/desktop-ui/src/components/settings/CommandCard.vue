@@ -15,10 +15,10 @@
         class="command-name"
         :class="{
           'is-empty':
-            !command.name || !command.isEnabled || unavailableReasonKey,
+            !displayName || !command.isEnabled || unavailableReasonKey,
         }"
       >
-        {{ command.name || t('commands.unnamed') }}
+        {{ displayName || t('commands.unnamed') }}
       </span>
       <Badge v-if="!commandTakesText(command, toolsStore)">
         {{ t('commands.badgeNoText') }}
@@ -91,6 +91,7 @@ import { computed } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import {
   commandIcon,
+  commandLabel,
   commandTakesText,
   commandUnavailableReason,
   validateCommand,
@@ -128,6 +129,12 @@ const { t } = useI18n()
 const toolsStore = useToolsStore()
 const slotKey = (index: number) =>
   SHORTCUT_SLOT_KEYS[index]?.toUpperCase() ?? ''
+// a translation without a name of its own is named by its tool
+const displayName = computed(() =>
+  props.command.name.trim() || props.command.toolId !== 'core.translate'
+    ? props.command.name
+    : commandLabel(props.command)
+)
 const unavailableReasonKey = computed(() =>
   commandUnavailableReason(props.command, toolsStore)
 )

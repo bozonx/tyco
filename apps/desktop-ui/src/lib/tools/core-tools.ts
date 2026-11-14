@@ -1,5 +1,7 @@
 import type { CoreToolId, LlmTask } from '@tyco/shared'
 
+import { getLanguageLabelKey } from '../locale/language'
+import { parameterValue } from './command-parameters'
 import {
   TEXT_INPUT_SCHEMA,
   type ToolCall,
@@ -184,11 +186,22 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
       descriptionKey: 'tools.translateDescription',
       icon: 'mdi:translate',
       description:
-        'Translates the text into the language of the command; `sourceLanguage` of the config skips detecting it',
+        'Translates the text into the language of the command or of the call; `sourceLanguage` of the config skips detecting it',
       getUnavailableReasonKey: () => deps.getTranslatorUnavailableReasonKey(),
+      commandParameters: [
+        {
+          name: 'language',
+          description: 'The language to translate into, as a BCP 47 tag',
+          labelKey: 'commands.languageLabel',
+          placeholderKey: 'voiceCommands.languagePlaceholder',
+          voiceValuesKey: 'voiceGrammar.languages',
+          valueLabelKey: getLanguageLabelKey,
+        },
+      ],
+      voicePhrasesKey: 'voiceGrammar.translate',
     },
     (call, text) => {
-      const language = stringOf(call.config.language)
+      const language = parameterValue(call, 'language')
       if (!language) {
         return { ok: false, messageKey: 'commands.errorNoLanguage' }
       }

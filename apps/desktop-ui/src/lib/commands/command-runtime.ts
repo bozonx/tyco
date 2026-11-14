@@ -1,9 +1,12 @@
 import {
+  CORE_TOOL_IDS,
+  type CoreToolId,
   sampleUrlTemplate,
   type CommandConfig,
   type CommandRunSource,
 } from '@tyco/shared'
 import { errorMessage } from '@tyco/shared/value-guards'
+import { translate } from '../i18n'
 import type { Invocation, ResultSink } from '../invocation/invocation-types'
 import { invocationUnavailableReason } from '../invocation/invoke-tool'
 import { resolveSink } from '../invocation/result-sinks'
@@ -24,6 +27,9 @@ export function commandAfterRun(
 ): ResultSink {
   return resolveSink(commandInvocation(command), { source })
 }
+
+const isCoreToolId = (toolId: string): toolId is CoreToolId =>
+  CORE_TOOL_IDS.includes(toolId as CoreToolId)
 
 /** The tool the command runs, if the registry has it */
 export const commandTool = (
@@ -116,10 +122,12 @@ export function suggestCommandName(command: CommandConfig): string {
 
 /**
  * The name shown for the command, never empty. Without a name of its own it is
- * named by what it runs, never by a fixed word that would need a translation
+ * named by what it runs: a command of a core tool by the name of the tool
  */
 export function commandLabel(command: CommandConfig): string {
   if (command.name.trim()) return command.name
+  if (isCoreToolId(command.toolId))
+    return translate(`tools.${command.toolId.slice('core.'.length)}`)
   if (command.toolId === 'script') {
     return scriptToolConfig(command).command.trim() || command.id
   }
@@ -173,7 +181,8 @@ export function validateCommand(
   tools: ToolLookup
 ): CommandIssue[] {
   const issues: CommandIssue[] = []
-  if (!command.name.trim()) {
+  // a translation is named well enough by its tool
+  if (!command.name.trim() && command.toolId !== 'core.translate') {
     issues.push({ field: 'name', messageKey: 'commands.errorNoName' })
   }
   if (
@@ -198,9 +207,7 @@ export function validateCommand(
       issues.push({ field: 'url', messageKey: 'commands.errorInvalidUrl' })
     }
   } else if (command.toolId === 'core.translate') {
-    if (!stringOr(command.toolConfig.language).trim()) {
-      issues.push({ field: 'language', messageKey: 'commands.errorNoLanguage' })
-    }
+    // without a language of its own, the caller names it
   } else if (
     command.toolId === 'core.aiTask' ||
     command.toolId === 'core.transformation' ||

@@ -1371,7 +1371,6 @@
     "copyDescription": "Legt den Text in die Zwischenablage",
     "correct": "Korrigieren",
     "correctDescription": "Korrigiert Rechtschreibung, Grammatik und Zeichensetzung mit dem LLM, ohne den Korrekturmodus",
-    "defaultTranslate": "Übersetzen: {language}",
     "insert": "In das Fenster einfügen",
     "insertDescription": "Tippt den Text in das Fenster, in dem Sie gearbeitet haben",
     "noApiKey": "Kein API-Schlüssel für den Übersetzungsanbieter konfiguriert",
@@ -1419,16 +1418,14 @@
   },
   "voiceCommands": {
     "ambiguous": "Mehrere Befehle passen. Wählen Sie den richtigen aus der Liste.",
-    "builtInCatalog": "Standard",
     "catalog": "Registrierte Sprachbefehle",
     "conflicts": "Kollidierende oder verschachtelte Phrasen",
-    "customCatalog": "Eigene",
     "edit": "Bearbeiten",
     "empty": "Aktivieren Sie die Sprache in den Einstellungen eines Befehls, damit er hier erscheint.",
     "enabled": "Per Stimme starten",
     "extraText": "Dieser Befehl nimmt keinen Text an. Entfernen Sie den überzähligen Text vor dem Ausführen.",
     "failed": "Der Befehl ist fehlgeschlagen oder nicht mehr verfügbar. Ihre Eingabe bleibt erhalten.",
-    "hint": "Sprechen Sie die Befehlsphrase und danach den Text. Wurde der Befehl nicht erkannt, machen Sie eine Pause und sprechen Sie ihn noch einmal von vorn. Erneutes Drücken des Tastenkürzels beendet die Aufnahme und führt den Befehl aus. Standardfunktionen sind immer aktiv; die Übersetzung nutzt den eingerichteten Übersetzer.",
+    "hint": "Sprechen Sie die Befehlsphrase und danach den Text. Wurde der Befehl nicht erkannt, machen Sie eine Pause und sprechen Sie ihn noch einmal von vorn. Erneutes Drücken des Tastenkürzels beendet die Aufnahme und führt den Befehl aus.",
     "languageMissing": "Sprache nicht erkannt. Wählen Sie die Übersetzung in der Liste und eine Sprache.",
     "languagePlaceholder": "Sprache",
     "missingText": "Text erforderlich.",
@@ -1442,10 +1439,10 @@
     "textPlaceholder": "Ihr Text",
     "title": "Sprachbefehle",
     "missingSelection": "Ausgewählter Text erforderlich.",
-    "phrasesPlaceholder": "Beispielphrasen, eine pro Zeile"
+    "phrasesPlaceholder": "Beispielphrasen, eine pro Zeile",
+    "parameterMissing": "Wählen Sie den Parameterwert neben dem Befehlsnamen."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "frage im chat" },
     "languages": {
       "cs-CZ": "Tschechisch",
       "de-DE": "Deutsch",

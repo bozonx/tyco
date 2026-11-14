@@ -1368,7 +1368,6 @@
     "copyDescription": "A vágólapra helyezi a szöveget",
     "correct": "Javítás",
     "correctDescription": "Az LLM segítségével javítja a helyesírást, a nyelvtant és a központozást, a javítási mód nélkül",
-    "defaultTranslate": "Fordítás: {language}",
     "insert": "Beillesztés az ablakba",
     "insertDescription": "Begépeli a szöveget az előzőleg aktív ablakba",
     "noApiKey": "Nincs konfigurálva API-kulcs a fordítási szolgáltatóhoz",
@@ -1416,16 +1415,14 @@
   },
   "voiceCommands": {
     "ambiguous": "Több parancs is egyezik. Válassza ki a megfelelőt a listából.",
-    "builtInCatalog": "Alapértelmezett",
     "catalog": "Regisztrált hangparancsok",
     "conflicts": "Ütköző vagy egymásba ágyazott kifejezések",
-    "customCatalog": "Sajátok",
     "edit": "Szerkesztés",
     "empty": "Kapcsolja be a hangot egy parancs beállításaiban, hogy itt megjelenjen.",
     "enabled": "Hangos indítás",
     "extraText": "Ez a parancs nem fogad szöveget. Futtatás előtt törölje a felesleges szöveget.",
     "failed": "A parancs sikertelen vagy már nem érhető el. A bevitele megmaradt.",
-    "hint": "Mondja ki a parancs kifejezését, majd a szöveget. Ha a parancs nem lett felismerve, tartson szünetet, és mondja el újra az elejétől. A billentyűparancs ismételt megnyomása befejezi a felvételt és lefuttatja a parancsot. A szokásos funkciók mindig be vannak kapcsolva; a fordítás a beállított fordítót használja.",
+    "hint": "Mondja ki a parancs kifejezését, majd a szöveget. Ha a parancs nem lett felismerve, tartson szünetet, és mondja el újra az elejétől. A billentyűparancs ismételt megnyomása befejezi a felvételt és lefuttatja a parancsot.",
     "languageMissing": "A nyelv nem lett felismerve. Válassza a fordítást a listából, és adjon meg egy nyelvet.",
     "languagePlaceholder": "nyelv",
     "missingText": "Szöveg szükséges.",
@@ -1439,10 +1436,10 @@
     "textPlaceholder": "az Ön szövege",
     "title": "Hangparancsok",
     "missingSelection": "Kijelölt szöveg szükséges.",
-    "phrasesPlaceholder": "Példamondatok, soronként egy"
+    "phrasesPlaceholder": "Példamondatok, soronként egy",
+    "parameterMissing": "Válassza ki a paraméter értékét a parancs neve mellett."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "kérdezd meg a csevegésben" },
     "languages": {
       "cs-CZ": "Cseh",
       "de-DE": "németre",

@@ -2,7 +2,8 @@ import { watch } from 'vue'
 
 import type { CommandConfig, ToolCatalogEntry } from '@tyco/shared'
 
-import { schemaShape, toolCallConfig, toolInputSchema } from './tool-input'
+import { commandInputSchema } from './command-parameters'
+import { schemaShape } from './tool-input'
 import type { RegisteredTool } from './tool-types'
 import { backoffDelayMs } from '../timers/backoff'
 
@@ -37,10 +38,7 @@ export function buildToolCatalog(
     if (matchingCommands.length) {
       entry.commandInputs = Object.fromEntries(
         matchingCommands.map((command) => {
-          const inputSchema = toolInputSchema(
-            tool,
-            toolCallConfig(tool, command.toolConfig)
-          )
+          const inputSchema = commandInputSchema(tool, command.toolConfig)
           const shape = schemaShape(inputSchema)
           return [
             command.id,

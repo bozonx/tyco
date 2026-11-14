@@ -124,8 +124,8 @@ export function commandGroup(
 
 /**
  * Whether the command does just what an item of the picker does already: a
- * translation into one of the translation languages, or the rule of a
- * transformation or a style
+ * translation into one of the translation languages or into the language the
+ * caller names, or the rule of a transformation or a style
  */
 export function duplicatesDirectChoice(
   command: CommandConfig,
@@ -140,7 +140,8 @@ export function duplicatesDirectChoice(
     return typeof field === 'string' ? field.trim() : ''
   }
   if (command.toolId === 'core.translate') {
-    return direct.languages.includes(value('language'))
+    // without a language of its own it is the translation menu itself
+    return !value('language') || direct.languages.includes(value('language'))
   }
   if (command.toolId === 'core.transformation') {
     return (direct.transformations ?? []).some(

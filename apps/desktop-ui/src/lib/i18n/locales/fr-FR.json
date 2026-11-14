@@ -1371,7 +1371,6 @@
     "copyDescription": "Place le texte dans le presse-papiers",
     "correct": "Corriger",
     "correctDescription": "Corrige l’orthographe, la grammaire et la ponctuation avec le LLM, sans le mode correction",
-    "defaultTranslate": "Traduire : {language}",
     "insert": "Insérer dans la fenêtre",
     "insertDescription": "Tape le texte dans la fenêtre où vous travailliez",
     "noApiKey": "Aucune clé d'API n'est configurée pour le fournisseur de traduction",
@@ -1419,16 +1418,14 @@
   },
   "voiceCommands": {
     "ambiguous": "Plusieurs commandes correspondent. Choisissez la bonne dans la liste.",
-    "builtInCatalog": "Standard",
     "catalog": "Commandes vocales enregistrées",
     "conflicts": "Phrases en conflit ou imbriquées",
-    "customCatalog": "Les vôtres",
     "edit": "Modifier",
     "empty": "Activez la voix dans les paramètres d’une commande pour la voir ici.",
     "enabled": "Lancement vocal",
     "extraText": "Cette commande ne prend pas de texte. Effacez le texte en trop avant de l’exécuter.",
     "failed": "La commande a échoué ou n’est plus disponible. Votre saisie est conservée.",
-    "hint": "Prononcez la phrase de la commande, puis le texte. Si la commande n’a pas été reconnue, faites une pause et répétez-la depuis le début. Appuyer de nouveau sur le raccourci termine l’enregistrement et exécute la commande. Les fonctions standard sont toujours actives ; la traduction utilise le traducteur configuré.",
+    "hint": "Prononcez la phrase de la commande, puis le texte. Si la commande n’a pas été reconnue, faites une pause et répétez-la depuis le début. Appuyer de nouveau sur le raccourci termine l’enregistrement et exécute la commande.",
     "languageMissing": "Langue non reconnue. Choisissez la traduction dans la liste et sélectionnez une langue.",
     "languagePlaceholder": "langue",
     "missingText": "Un texte est nécessaire.",
@@ -1442,10 +1439,10 @@
     "textPlaceholder": "votre texte",
     "title": "Commandes vocales",
     "missingSelection": "Un texte sélectionné est nécessaire.",
-    "phrasesPlaceholder": "Exemples de phrases, une par ligne"
+    "phrasesPlaceholder": "Exemples de phrases, une par ligne",
+    "parameterMissing": "Choisissez la valeur du paramètre à côté du nom de la commande."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "demande dans le chat" },
     "languages": {
       "cs-CZ": "Tchèque",
       "de-DE": "allemand",

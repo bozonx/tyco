@@ -8,13 +8,15 @@
       class="command-field"
       vertical
       density="compact"
-      required
+      :required="!isNamedByTool"
       :label="t('commands.nameLabel')"
       :warning="nameWarnings"
     >
       <FieldInput
         :model-value="command.name"
-        :placeholder="t('commands.namePlaceholder')"
+        :placeholder="
+          isNamedByTool ? commandLabel(command) : t('commands.namePlaceholder')
+        "
         :autofocus="autofocusName"
         @update:model-value="update({ name: $event })"
       />
@@ -313,6 +315,8 @@ const customActionTool = computed(
   () => props.command.toolId === 'script' || props.command.toolId === 'webhook'
 )
 const canTest = computed(() => canTestCommand(props.command))
+/** A translation needs no name: its tool names it, see `commandLabel` */
+const isNamedByTool = computed(() => props.command.toolId === 'core.translate')
 /** Why the command cannot run, unless its tool is missing altogether */
 const unavailableReason = computed(() =>
   tool.value ? commandUnavailableReason(props.command, toolsStore) : undefined

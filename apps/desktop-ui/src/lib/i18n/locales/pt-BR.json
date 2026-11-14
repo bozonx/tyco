@@ -1371,7 +1371,6 @@
     "copyDescription": "Coloca o texto na área de transferência",
     "correct": "Corrigir",
     "correctDescription": "Corrige ortografia, gramática e pontuação com o LLM, sem o modo de correção",
-    "defaultTranslate": "Traduzir: {language}",
     "insert": "Inserir na janela",
     "insertDescription": "Digita o texto na janela em que você estava trabalhando",
     "noApiKey": "Nenhuma chave de API configurada para o provedor de tradução",
@@ -1419,16 +1418,14 @@
   },
   "voiceCommands": {
     "ambiguous": "Vários comandos correspondem. Escolha o certo na lista.",
-    "builtInCatalog": "Padrão",
     "catalog": "Comandos de voz registrados",
     "conflicts": "Frases conflitantes ou aninhadas",
-    "customCatalog": "Seus",
     "edit": "Editar",
     "empty": "Ative a voz nas configurações de um comando para vê-lo aqui.",
     "enabled": "Início por voz",
     "extraText": "Este comando não aceita texto. Apague o texto extra antes de executar.",
     "failed": "O comando falhou ou não está mais disponível. Sua entrada foi preservada.",
-    "hint": "Diga a frase do comando e depois o texto. Se o comando não for reconhecido, faça uma pausa e diga de novo desde o início. Pressionar o atalho de novo encerra a gravação e executa o comando. As funções padrão estão sempre ativas; a tradução usa o tradutor configurado.",
+    "hint": "Diga a frase do comando e depois o texto. Se o comando não for reconhecido, faça uma pausa e diga de novo desde o início. Pressionar o atalho de novo encerra a gravação e executa o comando.",
     "languageMissing": "Idioma não reconhecido. Escolha a tradução na lista e selecione um idioma.",
     "languagePlaceholder": "idioma",
     "missingText": "É necessário um texto.",
@@ -1442,10 +1439,10 @@
     "textPlaceholder": "seu texto",
     "title": "Comandos de voz",
     "missingSelection": "É necessário texto selecionado.",
-    "phrasesPlaceholder": "Frases de exemplo, uma por linha"
+    "phrasesPlaceholder": "Frases de exemplo, uma por linha",
+    "parameterMissing": "Escolha o valor do parâmetro ao lado do nome do comando."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "pergunte no chat" },
     "languages": {
       "cs-CZ": "Tcheco",
       "de-DE": "alemão",

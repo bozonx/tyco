@@ -1,4 +1,3 @@
-import { isBuiltInVoiceCommand } from './built-in-voice-commands'
 import { commandUnavailableReason } from '../commands/command-runtime'
 import { computed, ref, shallowRef } from 'vue'
 import type { CommandConfig } from '@tyco/shared'
@@ -35,17 +34,18 @@ export interface VoiceCommandContext {
 
 export interface VoiceCommandDependencies extends TimerDependencies {
   commands: () => readonly CommandConfig[]
-  builtInCommands?: () => readonly CommandConfig[]
   tools: ToolLookup
   context?: VoiceCommandContext | (() => VoiceCommandContext | undefined)
   startDictation: (handlers: DictationHandlers) => Promise<void>
   finishDictation: () => Promise<string>
   cancelDictation: () => Promise<void>
+  /** `parameters` are the settings the phrase named, see `commandParameters` */
   run: (
     command: CommandConfig,
     text: string,
     signal: AbortSignal,
-    context?: VoiceCommandContext
+    context: VoiceCommandContext | undefined,
+    parameters: Readonly<Record<string, string>>
   ) => Promise<InvocationOutcome>
   /** The recognized speech, kept in the history before anything runs */
   saveTranscript?: (text: string) => Promise<unknown>
@@ -136,10 +136,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       void finish('review')
     },
   })
-  const commands = computed(() => [
-    ...(deps.builtInCommands?.() ?? []),
-    ...deps.commands().filter((item) => !isBuiltInVoiceCommand(item)),
-  ])
+  const commands = computed(() => deps.commands())
   const findCommand = (id: string | undefined) =>
     commands.value.find((item) => item.id === id)
   const routes = computed(() => compileVoiceRoutes(commands.value, deps.tools))
@@ -185,7 +182,8 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
           command.value,
           inputText.value,
           deps.tools,
-          context.value
+          context.value,
+          selected.value?.parameters
         )
       : undefined
   )
@@ -214,7 +212,8 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       activeCommand.value,
       activeCandidate.value.text,
       deps.tools,
-      context.value
+      context.value,
+      activeCandidate.value.parameters
     )
     return !issue
   })
@@ -238,11 +237,18 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
 
   const run = async () => {
     const target = findCommand(selected.value?.commandId)
+    const parameters = selected.value?.parameters ?? {}
     if (
       stage.value !== 'review' ||
       !target ||
       !isVoiceCommand(target, deps.tools) ||
-      voiceInputIssue(target, inputText.value, deps.tools, context.value)
+      voiceInputIssue(
+        target,
+        inputText.value,
+        deps.tools,
+        context.value,
+        parameters
+      )
     )
       return
     const current = generation
@@ -251,9 +257,13 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     error.value = ''
     stage.value = 'running'
     try {
-      const result = await (context.value
-        ? deps.run(target, text, controller.signal, context.value)
-        : deps.run(target, text, controller.signal))
+      const result = await deps.run(
+        target,
+        text,
+        controller.signal,
+        context.value,
+        parameters
+      )
       if (current !== generation || disposed) return
       if (!result.success)
         error.value = result.message || 'voiceCommands.failed'
@@ -269,10 +279,13 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     }
   }
 
-  /** Swaps the chosen command for a sibling, such as another language */
-  const switchCommand = (commandId: string) => {
+  /** Sets a parameter of the chosen command, such as the language */
+  const setParameter = (name: string, value: string) => {
     if (stage.value !== 'review' || !selected.value) return
-    selected.value = { ...selected.value, commandId }
+    selected.value = {
+      ...selected.value,
+      parameters: { ...selected.value.parameters, [name]: value },
+    }
     error.value = ''
   }
 
@@ -467,10 +480,6 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       commandUnavailableReason(command, deps.tools),
     resolution,
     catalog,
-    builtInCatalog: computed(() => catalog.value.filter(isBuiltInVoiceCommand)),
-    customCatalog: computed(() =>
-      catalog.value.filter((item) => !isBuiltInVoiceCommand(item))
-    ),
     command,
     inputIssue,
     discardedText,
@@ -478,7 +487,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     canRunLive,
     choose,
     chooseCommand,
-    switchCommand,
+    setParameter,
     context,
     setContext: (ctx?: VoiceCommandContext) => {
       explicitContext.value = ctx

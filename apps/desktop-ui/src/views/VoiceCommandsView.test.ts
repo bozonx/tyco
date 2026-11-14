@@ -2,8 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 import { createCommand } from '../lib/commands/command-config'
-import { createBuiltInVoiceCommands } from '../lib/voice-commands/built-in-voice-commands'
-import { testTools } from '../lib/tools/testing'
+import { testTools, testTranslateTool } from '../lib/tools/testing'
 import { translate } from '../lib/i18n'
 import { i18n } from '../lib/i18n'
 import { getLanguageLabelKey } from '../lib/locale/language'
@@ -24,12 +23,15 @@ const mocks = vi.hoisted(() => ({
   run: vi.fn(),
   chooseCommand: vi.fn(),
   choose: vi.fn(),
-  switchCommand: vi.fn(),
+  setParameter: vi.fn(),
   setContext: vi.fn(),
   hide: vi.fn(),
   release: vi.fn(),
 }))
-const builtInCommands = createBuiltInVoiceCommands(testTools(), translate)
+const translation = {
+  ...createCommand('core.translate', 'translate'),
+  isVoiceEnabled: true,
+}
 const commands = Array.from({ length: 40 }, (_, index) => ({
   ...createCommand('script', `command-${index}`),
   name: `Command ${index}`,
@@ -51,13 +53,8 @@ const voice = reactive({
   command: undefined as CommandConfig | undefined,
   canRun: false,
   inputIssue: undefined,
-  catalog: [...builtInCommands, ...commands] as CommandConfig[],
+  catalog: [translation, ...commands] as CommandConfig[],
   unavailableReason: vi.fn<() => string | undefined>(() => undefined),
-  catalogRoutes: commands.map((command) => ({
-    commandId: command.id,
-    phrase: command.phrases[0],
-    parameters: [],
-  })),
 })
 vi.mock('../stores/voice-commands', () => ({
   useVoiceCommandsStore: () => voice,
@@ -75,7 +72,9 @@ vi.mock('../stores/quick-dismiss', () => ({
 vi.mock('../composables/use-overlay-nav', () => ({
   useOverlayNav: () => ({ handleEsc: mocks.hide }),
 }))
-vi.mock('../stores/tools', () => ({ useToolsStore: () => testTools() }))
+vi.mock('../stores/tools', () => ({
+  useToolsStore: () => testTools({}, [testTranslateTool()]),
+}))
 vi.mock('../components/overlay/ActionOverlayLayout.vue', () => ({
   default: {
     template:
@@ -102,7 +101,7 @@ const mountView = (
   })
 const entry = (wrapper: ReturnType<typeof mountView>, key: string) =>
   wrapper.find(`.voice-entry[data-key="${key}"]`)
-const TRANSLATE_KEY = 'builtin:core.translate'
+const TRANSLATE_KEY = 'translate'
 
 describe('separate voice command overlay', () => {
   beforeEach(async () => {
@@ -122,18 +121,16 @@ describe('separate voice command overlay', () => {
     voice.hasMatchedCommand = false
     voice.canRunLive = false
     voice.activeCommand = undefined
-    voice.catalog = [...builtInCommands, ...commands]
+    voice.catalog = [translation, ...commands]
   })
   afterEach(() => desktop.dispose())
-  it('lists the standard functions and user commands in one feed and starts recording', () => {
+  it('lists the voice commands as one list and starts recording', () => {
     const wrapper = mountView()
-    const groups = wrapper.findAll('.voice-group').map((item) => item.text())
-    expect(groups).toEqual([
-      translate('voiceCommands.builtInCatalog'),
-      translate('voiceCommands.customCatalog'),
-    ])
-    // one row for the chat, one for every translation language, 40 custom
-    expect(wrapper.findAll('.voice-entry')).toHaveLength(42)
+    // the translation is one row whatever the language
+    expect(wrapper.findAll('.voice-entry')).toHaveLength(41)
+    expect(entry(wrapper, TRANSLATE_KEY).text()).toContain(
+      translate('tools.translate')
+    )
     expect(wrapper.text()).toContain('save note 39')
     expect(entry(wrapper, 'command-39').attributes('title')).toBe(
       'Description 39'
@@ -256,7 +253,7 @@ describe('separate voice command overlay', () => {
   })
   it('recovers an unrecognized language through the translation row', async () => {
     const choice = {
-      ...candidate('builtin:voice:translate:es-AR', 'Klingon Hello!'),
+      ...candidate('translate', 'Klingon Hello!'),
       parameters: { language: 'es-AR' },
     }
     voice.stage = 'review'
@@ -273,11 +270,12 @@ describe('separate voice command overlay', () => {
     wrapper.unmount()
   })
   it('switches the translation language of the chosen command', async () => {
-    const chosen = builtInCommands.find(
-      (item) => item.id === 'builtin:voice:translate:en-US'
-    )!
+    const chosen = translation
     voice.stage = 'review'
-    voice.selected = candidate(chosen.id)
+    voice.selected = {
+      ...candidate(chosen.id),
+      parameters: { language: 'en-US' },
+    }
     voice.command = chosen
     const wrapper = mountView()
     expect(entry(wrapper, TRANSLATE_KEY).text()).toContain(
@@ -288,9 +286,7 @@ describe('separate voice command overlay', () => {
       (option) => option.text === translate(getLanguageLabelKey('es-AR'))
     )
     await select.setValue(String(index))
-    expect(mocks.switchCommand).toHaveBeenCalledWith(
-      'builtin:voice:translate:es-AR'
-    )
+    expect(mocks.setParameter).toHaveBeenCalledWith('language', 'es-AR')
     expect(mocks.run).not.toHaveBeenCalled()
     wrapper.unmount()
   })
@@ -338,11 +334,9 @@ describe('separate voice command overlay', () => {
     expect(mocks.start).toHaveBeenCalledOnce()
     wrapper.unmount()
   })
-  it('shows a short hint when no user commands are enabled', () => {
-    voice.catalog = builtInCommands
+  it('shows a short hint when no commands are enabled', () => {
+    voice.catalog = []
     const wrapper = mountView()
-    expect(wrapper.text()).toContain(translate('tools.askInChat'))
-    expect(wrapper.text()).toContain(translate('tools.translate'))
     expect(wrapper.text()).toContain(translate('voiceCommands.empty'))
     wrapper.unmount()
   })

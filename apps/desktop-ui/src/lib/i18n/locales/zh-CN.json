@@ -1365,7 +1365,6 @@
     "copyDescription": "将文本复制到剪贴板",
     "correct": "纠错",
     "correctDescription": "通过 LLM 修复拼写、语法和标点符号，不进入纠错模式",
-    "defaultTranslate": "翻译为 {language}",
     "insert": "插入到窗口",
     "insertDescription": "将文本键入到您当前操作的窗口中",
     "noApiKey": "未为翻译提供商配置 API 密钥",
@@ -1413,16 +1412,14 @@
   },
   "voiceCommands": {
     "ambiguous": "匹配到多个命令。请从列表中选择正确的命令。",
-    "builtInCatalog": "内置",
     "catalog": "已注册的语音命令",
     "conflicts": "存在冲突或嵌套的短语",
-    "customCatalog": "自定义",
     "edit": "编辑",
     "empty": "在命令的设置中开启语音后即可在此显示。",
     "enabled": "语音启动",
     "extraText": "此命令不需要文本。运行前请清除多余的文本。",
     "failed": "命令执行失败或已不再可用。您输入的内容已保留。",
-    "hint": "说出命令短语，接着说出文本。如果未识别出命令，请停顿并从头重新说一遍。再次按下快捷键可结束录制并运行命令。标准功能始终开启；翻译功能使用已配置的翻译器。",
+    "hint": "说出命令短语，接着说出文本。如果未识别出命令，请停顿并从头重新说一遍。再次按下快捷键可结束录制并运行命令。",
     "languageMissing": "未识别出语言。请从列表中选择翻译并选择一种语言。",
     "languagePlaceholder": "语言",
     "missingText": "需要提供文本。",
@@ -1436,10 +1433,10 @@
     "textPlaceholder": "您的文本",
     "title": "语音命令",
     "missingSelection": "需要提供选中的文本。",
-    "phrasesPlaceholder": "示例短语，每行一条"
+    "phrasesPlaceholder": "示例短语，每行一条",
+    "parameterMissing": "请在命令名称旁选择参数值。"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "在聊天中询问;在对话中提问" },
     "languages": {
       "cs-CZ": "捷克语",
       "de-DE": "德语",

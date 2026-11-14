@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
-import { computed, onScopeDispose } from 'vue'
+import { onScopeDispose } from 'vue'
 import { translate } from '../lib/i18n'
 import { describeDictationError } from '../lib/stt/dictation-error'
-import { createBuiltInVoiceCommands } from '../lib/voice-commands/built-in-voice-commands'
 import { useDictationActions } from '../composables/use-dictation-actions'
 import { createVoiceCommandModel } from '../lib/voice-commands/voice-command-model'
 import { createCommandRunner } from '../lib/commands/command-runner'
@@ -23,35 +22,34 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
   const history = useHistoryStore()
   const tools = useToolsStore()
   const runner = createCommandRunner(useInvocationRunnerDependencies())
-  const builtInCommands = computed(() =>
-    createBuiltInVoiceCommands(tools, translate)
-  )
   const model = createVoiceCommandModel({
-    builtInCommands: () => builtInCommands.value,
     commands: () => desktop.userConfig.commands,
     tools,
     ...useDictationActions(),
     describeError: (cause) => describeDictationError(cause, translate),
     saveTranscript: (text) =>
       history.saveSource(text, 'voiceCorrection', 'voice'),
-    run: async (command, text, signal, context) => {
+    run: async (command, text, signal, context, parameters) => {
       if (signal.aborted) return { success: false, cancelled: true }
-      const current = [
-        ...builtInCommands.value,
-        ...desktop.userConfig.commands,
-      ].find((item) => item.id === command.id)
+      const current = desktop.userConfig.commands.find(
+        (item) => item.id === command.id
+      )
       if (
         !current ||
         !isVoiceCommand(current, tools) ||
-        voiceInputIssue(current, text, tools, context)
+        voiceInputIssue(current, text, tools, context, parameters)
       )
         return { success: false }
       await history.saveOutput(text).catch(() => undefined)
       if (signal.aborted) return { success: false, cancelled: true }
+      // the named parameters come as the input, as an agent gives them
       const outcome = await runner.run(current, text, {
         source: 'voice',
         signal,
-        context,
+        ...(context ? { context } : {}),
+        ...(Object.keys(parameters).length
+          ? { input: { text, ...parameters } }
+          : {}),
       })
       await ipc
         .call('log_command_run', {

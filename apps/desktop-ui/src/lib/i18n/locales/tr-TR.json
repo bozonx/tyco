@@ -1368,7 +1368,6 @@
     "copyDescription": "Metni panoya koyar",
     "correct": "Düzelt",
     "correctDescription": "Yazım, dil bilgisi ve noktalamayı LLM ile düzeltir, düzeltme modu olmadan",
-    "defaultTranslate": "Çevir: {language}",
     "insert": "Pencereye ekle",
     "insertDescription": "Metni çalıştığınız pencereye yazar",
     "noApiKey": "Çeviri sağlayıcısı için yapılandırılmış bir API anahtarı yok",
@@ -1416,16 +1415,14 @@
   },
   "voiceCommands": {
     "ambiguous": "Birden fazla komut eşleşiyor. Listeden doğru olanı seçin.",
-    "builtInCatalog": "Standart",
     "catalog": "Kayıtlı sesli komutlar",
     "conflicts": "Çakışan veya iç içe ifadeler",
-    "customCatalog": "Sizinkiler",
     "edit": "Düzenle",
     "empty": "Burada görmek için bir komutun ayarlarında sesi açın.",
     "enabled": "Sesle başlat",
     "extraText": "Bu komut metin kabul etmiyor. Çalıştırmadan önce fazla metni silin.",
     "failed": "Komut başarısız oldu veya artık kullanılamıyor. Metniniz korundu.",
-    "hint": "Önce komut ifadesini, ardından metni söyleyin. Komut tanınmadıysa durup baştan tekrar söyleyin. Kısayola tekrar basmak kaydı bitirir ve komutu çalıştırır. Standart işlevler her zaman açıktır; çeviri ayarlı çevirmeni kullanır.",
+    "hint": "Önce komut ifadesini, ardından metni söyleyin. Komut tanınmadıysa durup baştan tekrar söyleyin. Kısayola tekrar basmak kaydı bitirir ve komutu çalıştırır.",
     "languageMissing": "Dil tanınmadı. Listeden çeviriyi seçin ve dili belirtin.",
     "languagePlaceholder": "dil",
     "missingText": "Metin gerekli.",
@@ -1439,10 +1436,10 @@
     "textPlaceholder": "metniniz",
     "title": "Sesli komutlar",
     "missingSelection": "Seçili metin gerekli.",
-    "phrasesPlaceholder": "Örnek ifadeler, her satıra bir tane"
+    "phrasesPlaceholder": "Örnek ifadeler, her satıra bir tane",
+    "parameterMissing": "Komut adının yanından parametre değerini seçin."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "sohbette sor" },
     "languages": {
       "cs-CZ": "Çekçe;Çekçeye",
       "de-DE": "Almancaya;Almanca",

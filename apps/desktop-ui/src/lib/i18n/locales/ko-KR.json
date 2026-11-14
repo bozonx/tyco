@@ -1365,7 +1365,6 @@
     "copyDescription": "텍스트를 클립보드에 복사합니다",
     "correct": "교정",
     "correctDescription": "교정 모드 없이 LLM을 사용하여 맞춤법, 문법 및 문장 부호를 수정합니다",
-    "defaultTranslate": "{language}(으)로 번역",
     "insert": "창에 삽입",
     "insertDescription": "작업 중이던 창에 텍스트를 입력합니다",
     "noApiKey": "번역 공급자에 대한 API 키가 구성되지 않았습니다",
@@ -1413,16 +1412,14 @@
   },
   "voiceCommands": {
     "ambiguous": "여러 명령이 일치합니다. 목록에서 알맞은 명령을 선택하세요.",
-    "builtInCatalog": "기본",
     "catalog": "등록된 음성 명령",
     "conflicts": "충돌하거나 중첩되는 문구",
-    "customCatalog": "사용자 정의",
     "edit": "편집",
     "empty": "명령 설정에서 음성을 켜면 여기에 표시됩니다.",
     "enabled": "음성 실행",
     "extraText": "이 명령은 텍스트를 사용하지 않습니다. 실행하기 전에 추가 텍스트를 지우세요.",
     "failed": "명령이 실패했거나 더 이상 사용할 수 없습니다. 입력 내용은 보존됩니다.",
-    "hint": "명령 문구를 말한 다음 텍스트를 말하세요. 명령이 인식되지 않으면 잠시 멈췄다가 처음부터 다시 말하세요. 단축키를 다시 누르면 녹음이 종료되고 명령이 실행됩니다. 기본 기능은 항상 켜져 있으며, 번역은 설정된 번역기를 사용합니다.",
+    "hint": "명령 문구를 말한 다음 텍스트를 말하세요. 명령이 인식되지 않으면 잠시 멈췄다가 처음부터 다시 말하세요. 단축키를 다시 누르면 녹음이 종료되고 명령이 실행됩니다.",
     "languageMissing": "언어가 인식되지 않았습니다. 목록에서 번역을 선택하고 언어를 지정하세요.",
     "languagePlaceholder": "언어",
     "missingText": "텍스트가 필요합니다.",
@@ -1436,10 +1433,10 @@
     "textPlaceholder": "입력할 텍스트",
     "title": "음성 명령",
     "missingSelection": "선택한 텍스트가 필요합니다.",
-    "phrasesPlaceholder": "예시 문구 (한 줄에 하나씩)"
+    "phrasesPlaceholder": "예시 문구 (한 줄에 하나씩)",
+    "parameterMissing": "명령 이름 옆에서 매개변수 값을 선택하세요."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "채팅에서 질문" },
     "languages": {
       "cs-CZ": "체코어;체코어로",
       "de-DE": "독일어;독일어로",

@@ -30,10 +30,15 @@
                   size="xl"
                   aria-hidden="true"
                 />
-                <span class="voice-chosen-name">{{ liveChosenName }}</span>
-                <Badge v-if="liveLanguageBadge" tone="accent">{{
-                  liveLanguageBadge
-                }}</Badge>
+                <span class="voice-chosen-name">{{
+                  commandLabel(voice.activeCommand)
+                }}</span>
+                <Badge
+                  v-for="label in liveParameterLabels"
+                  :key="label"
+                  tone="accent"
+                  >{{ label }}</Badge
+                >
               </div>
               <p v-else class="voice-phase-hint">
                 <AppIcon icon="mdi:microphone" size="md" aria-hidden="true" />
@@ -62,17 +67,21 @@
                   size="xl"
                   aria-hidden="true"
                 />
-                <span class="voice-chosen-name">{{ chosenName }}</span>
+                <span class="voice-chosen-name">{{
+                  commandLabel(voice.command)
+                }}</span>
                 <FieldSelect
-                  v-if="isTranslationCommand(voice.command)"
+                  v-for="parameter in chosenParameters"
+                  :key="parameter.name"
                   size="sm"
                   class="voice-language"
-                  :title="t('commands.languageLabel')"
-                  :aria-label="t('commands.languageLabel')"
-                  :model-value="voice.command.id"
-                  :options="languageOptions"
+                  :title="t(parameter.labelKey)"
+                  :aria-label="t(parameter.labelKey)"
+                  :model-value="voice.selected?.parameters[parameter.name]"
+                  :options="voiceParameterOptions(parameter, t)"
                   @update:model-value="
-                    (id) => id && voice.switchCommand(String(id))
+                    (value) =>
+                      value && voice.setParameter(parameter.name, String(value))
                   "
                 />
               </div>
@@ -106,9 +115,8 @@
           </section>
 
           <VoiceCommandCatalog
-            :entries="entries"
+            :commands="voice.catalog"
             :marks="marks"
-            :routes="voice.catalogRoutes"
             :stage="voice.stage"
             :unavailable-reason="voice.unavailableReason"
             @pick="pick"
@@ -210,18 +218,13 @@ import {
 import { isSettingsFixableDictationError } from '../lib/stt/dictation-error'
 import { liveTranscriptText } from '../lib/stt/live-transcript'
 import type { TextControl } from '../lib/ui/text-control'
+import { matchVoiceCatalog } from '../lib/voice-commands/voice-catalog'
 import {
-  type VoiceCatalogEntry,
-  buildVoiceCatalog,
-  isTranslateEntry,
-  matchVoiceCatalog,
-} from '../lib/voice-commands/voice-catalog'
-import {
-  DEFAULT_TRANSLATION_ID,
-  isTranslationCommand,
-  pickVoiceCatalogEntry,
+  pickVoiceCommand,
   resolveVoiceNotice,
-  voiceCommandLanguageLabel,
+  voiceParameterLabels,
+  voiceParameterOptions,
+  voiceParameters,
 } from '../lib/voice-commands/voice-view-presenter'
 import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
@@ -229,6 +232,7 @@ import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useQuickDismissStore } from '../stores/quick-dismiss'
 import { useToolsStore } from '../stores/tools'
 import { useVoiceCommandsStore } from '../stores/voice-commands'
+import type { CommandConfig } from '@tyco/shared'
 
 const props = withDefaults(
   defineProps<{
@@ -284,14 +288,10 @@ const isListening = computed(
   () => voice.stage === 'recording' || voice.stage === 'finishing'
 )
 
-const entries = computed(() =>
-  buildVoiceCatalog(voice.catalog, DEFAULT_TRANSLATION_ID)
-)
-
 /** Rows the recognizer points at: live while recording, the choice after */
 const marks = computed(() =>
   matchVoiceCatalog(
-    entries.value,
+    voice.catalog,
     voice.selected
       ? [voice.selected]
       : [
@@ -301,36 +301,23 @@ const marks = computed(() =>
   )
 )
 
-const translateEntry = computed(() => entries.value.find(isTranslateEntry))
-const languageOptions = computed(() =>
-  (translateEntry.value?.commands ?? []).map((command) => ({
-    id: command.id,
-    name: voiceCommandLanguageLabel(command, t),
-  }))
-)
-
 const canRunLive = computed(() => Boolean(voice.canRunLive))
 
-const liveChosenName = computed(() => {
-  const command = voice.activeCommand
-  if (!command) return ''
-  return isTranslationCommand(command)
-    ? t('tools.translate')
-    : commandLabel(command)
-})
-const liveLanguageBadge = computed(() => {
-  const command = voice.activeCommand
-  if (!command || !isTranslationCommand(command)) return ''
-  return voiceCommandLanguageLabel(command, t)
-})
+const liveParameterLabels = computed(() =>
+  voice.activeCommand && voice.activeCandidate
+    ? voiceParameterLabels(
+        voice.activeCommand,
+        voice.activeCandidate.parameters,
+        tools,
+        t
+      )
+    : []
+)
 
-const chosenName = computed(() => {
-  const command = voice.command
-  if (!command) return ''
-  return isTranslationCommand(command)
-    ? t('tools.translate')
-    : commandLabel(command)
-})
+/** The parameters of the chosen command the user can set by hand */
+const chosenParameters = computed(() =>
+  voice.command ? voiceParameters(voice.command, tools) : []
+)
 const target = computed(() =>
   voice.command ? commandTarget(voice.command).trim() : ''
 )
@@ -375,13 +362,13 @@ async function handleLanguageChange() {
   toastKey('stt.languageSavedForNext', 'info')
 }
 
-const canPick = (entry: VoiceCatalogEntry) =>
-  voice.stage === 'review' && !voice.unavailableReason(entry.commands[0]!)
+const canPick = (command: CommandConfig) =>
+  voice.stage === 'review' && !voice.unavailableReason(command)
 
 /** A row picked by hand takes the recognized parameters when it has them */
-const pick = (entry: VoiceCatalogEntry) => {
+const pick = (command: CommandConfig) => {
   if (
-    pickVoiceCatalogEntry(entry, {
+    pickVoiceCommand(command, {
       canPick,
       marks: marks.value,
       selected: voice.selected,

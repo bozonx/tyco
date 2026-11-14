@@ -1,6 +1,8 @@
 import type { CommandConfig } from '@tyco/shared'
 import type { JsonSchema, ToolCallCommand } from '@tyco/plugin-sdk'
-import { toolCallConfig, toolInputSchema } from '../tools/tool-input'
+import { commandLabel } from '../commands/command-runtime'
+import { commandInputSchema } from '../tools/command-parameters'
+import { toolCallConfig } from '../tools/tool-input'
 import { toolCallCommand } from '../tools/tool-call'
 import type { RegisteredTool, ToolResult } from '../tools/tool-types'
 import type { ChatToolDefinition } from './chat-tool-registry'
@@ -136,11 +138,11 @@ export async function adaptCommand(
   options: { groupId: string }
 ): Promise<ChatToolDefinition> {
   const config = toolCallConfig(tool, command.toolConfig)
-  const inputSchema = toolInputSchema(tool, config)
+  const inputSchema = commandInputSchema(tool, command.toolConfig)
   return adaptRegisteredTool(tool, {
     groupId: options.groupId,
     name: await chatToolName(command.id),
-    label: command.name,
+    label: commandLabel(command),
     description: command.description.trim(),
     inputSchema,
     config,
