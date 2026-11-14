@@ -22,8 +22,9 @@ remain bundled and work offline.
   the default is ghost/md. The label comes first, its keys sit at the right.
   Quick surface footer actions use this control with visible borders and text
   labels, without icons; the main action is `primary` (filled) and comes last.
-  `size="sm"` is an action tile of a keyboard grid: filled, borderless, one
-  line with an ellipsis, and it takes the action's `icon`. `ShortcutKeys` separates
+  `tile` makes an action tile of a keyboard grid: filled, borderless, one
+  line with an ellipsis, and it takes the action's `icon`. Sizes never change
+  the look, only the dimensions. `ShortcutKeys` separates
   alternative shortcuts with commas and modifier chords with plus signs.
 - `DropdownMenu`: use the same size/variant names as `Button`; default ghost/sm.
 - `IconButton`: provide a localized `label` and an `icon`. The label supplies the

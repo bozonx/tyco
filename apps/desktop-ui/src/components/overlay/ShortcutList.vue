@@ -6,6 +6,7 @@
         <ShortcutButton
           v-if="slot.action"
           size="sm"
+          tile
           :icon="slot.action.icon"
           :keys="[slot.key.toUpperCase()]"
           :disabled="slot.action.disabled"

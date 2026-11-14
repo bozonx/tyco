@@ -6,6 +6,7 @@
       'is-primary': variant === 'primary',
       'is-sm': size === 'sm',
       'is-xs': size === 'xs',
+      'is-tile': tile,
     }"
     :disabled="disabled"
     @click="emit('click')"
@@ -31,8 +32,16 @@ withDefaults(
     size?: ControlSize
     /** Decorative `mdi:*` icon before the label, for action tiles */
     icon?: string
+    /** Action tile of a keyboard grid: filled, borderless, fixed height */
+    tile?: boolean
   }>(),
-  { disabled: false, variant: 'ghost', size: 'md', icon: undefined }
+  {
+    disabled: false,
+    variant: 'ghost',
+    size: 'md',
+    icon: undefined,
+    tile: false,
+  }
 )
 
 const emit = defineEmits<{ (e: 'click'): void }>()
@@ -55,7 +64,7 @@ const emit = defineEmits<{ (e: 'click'): void }>()
   min-height: var(--control-size-sm);
   padding: var(--space-xs) var(--space-sm) var(--space-xs) var(--space-md);
   border: 1px solid var(--app-border);
-  background-color: transparent;
+  background-color: var(--app-surface);
   border-radius: var(--quick-tile-radius);
   font-size: var(--text-control);
   text-align: left;
@@ -105,6 +114,24 @@ const emit = defineEmits<{ (e: 'click'): void }>()
   margin-left: auto;
 }
 
+.shortcut.is-sm {
+  max-width: none;
+}
+
+/* Action tile of a keyboard grid: filled, borderless */
+.shortcut.is-tile {
+  height: var(--quick-tile-height);
+  padding: var(--quick-tile-padding);
+  border-color: var(--quick-tile-border);
+  background-color: var(--quick-tile-bg);
+}
+
+.shortcut.is-xs {
+  min-height: var(--control-size-xs);
+  padding: var(--space-2xs) var(--space-xs) var(--space-2xs) var(--space-sm);
+  font-size: var(--text-caption);
+}
+
 /* The main action: a filled button */
 .shortcut.is-primary {
   border-color: transparent;
@@ -126,20 +153,5 @@ const emit = defineEmits<{ (e: 'click'): void }>()
 
 .shortcut.is-primary:disabled {
   color: var(--quick-primary-fg);
-}
-
-/* Action tile of a keyboard grid: filled, borderless */
-.shortcut.is-sm {
-  max-width: none;
-  height: var(--quick-tile-height);
-  padding: var(--quick-tile-padding);
-  border-color: var(--quick-tile-border);
-  background-color: var(--quick-tile-bg);
-}
-
-.shortcut.is-xs {
-  min-height: var(--control-size-xs);
-  padding: var(--space-2xs) var(--space-xs) var(--space-2xs) var(--space-sm);
-  font-size: var(--text-caption);
 }
 </style>
