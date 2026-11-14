@@ -1077,6 +1077,7 @@
     "projectConvertToInternalTitle": "プロジェクトを内部にする",
     "projectDescription": "プロジェクトの説明",
     "projectFolderFixedHint": "モデルはこのパスでプロジェクトのファイルを参照します。プロジェクト名を変えても変わりません。",
+    "projectFolderNotSelected": "フォルダーが選択されていません",
     "projectFolderNotSetOnDevice": "このデバイスではフォルダーが未設定です",
     "projectFolderRelinkHint": "プロジェクトを別のフォルダーに関連付けます。ファイルは移動されません。ファイルがすでにあるフォルダーを選択してください。",
     "projectInsideSyncedFolder": "このフォルダーは TyCo のデータフォルダー（またはボールト）の中にあり、一緒に同期されます。不要なら外側のフォルダーを選んでください。",

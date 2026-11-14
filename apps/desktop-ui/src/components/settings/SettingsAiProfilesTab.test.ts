@@ -98,10 +98,17 @@ describe('SettingsAiProfilesTab.vue', () => {
           SettingsAiVaultsSection: true,
           SettingsCreateEntityModal: {
             name: 'SettingsCreateEntityModal',
-            props: ['open', 'title', 'label', 'confirmText', 'isSubmitting'],
+            props: [
+              'open',
+              'title',
+              'label',
+              'confirmText',
+              'isSubmitting',
+              'canSubmit',
+            ],
             emits: ['close', 'submit'],
             template:
-              '<div class="create-entity-modal" :data-title="title" :data-open="open" />',
+              '<div class="create-entity-modal" :data-title="title" :data-open="open"><slot /></div>',
           },
           ConfirmModal: {
             name: 'ConfirmModal',
@@ -191,6 +198,32 @@ describe('SettingsAiProfilesTab.vue', () => {
     })
     expect(context.navigate).toHaveBeenCalledWith('ai-project:created-project')
     expect(projectModal.props('open')).toBe(false)
+  })
+
+  it('creates an external project with its folder', async () => {
+    const wrapper = mountTab()
+    const projectModal = wrapper.findAllComponents({
+      name: 'SettingsCreateEntityModal',
+    })[1]!
+    await button(wrapper, 'settings.newProject').trigger('click')
+    await projectModal
+      .findComponent({ name: 'SegmentedControl' })
+      .vm.$emit('update:modelValue', 'external')
+    expect(projectModal.props('canSubmit')).toBe(false)
+    await projectModal
+      .get('[data-testid="project-folder-pick"]')
+      .trigger('click')
+    await flushPromises()
+    expect(projectModal.props('canSubmit')).toBe(true)
+
+    await projectModal.vm.$emit('submit', 'Site')
+    await flushPromises()
+    expect(store.createProject).toHaveBeenCalledWith({
+      name: 'Site',
+      vaultId: '',
+      isExternal: true,
+      targetPath: '/elsewhere',
+    })
   })
 
   it('reports creation errors without closing modal', async () => {

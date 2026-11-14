@@ -41,7 +41,7 @@
           size="sm"
           variant="primary"
           type="submit"
-          :disabled="!name.trim() || isSubmitting"
+          :disabled="!name.trim() || !canSubmit || isSubmitting"
         >
           {{ confirmText || t('common.confirm') }}
         </Button>
@@ -59,14 +59,19 @@ import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 
-const props = defineProps<{
-  open: boolean
-  title: string
-  label: string
-  placeholder?: string
-  confirmText?: string
-  isSubmitting?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    open: boolean
+    title: string
+    label: string
+    placeholder?: string
+    confirmText?: string
+    isSubmitting?: boolean
+    /** The extra fields of the slot are complete */
+    canSubmit?: boolean
+  }>(),
+  { canSubmit: true }
+)
 
 const emit = defineEmits<{ close: []; submit: [name: string] }>()
 
@@ -90,7 +95,7 @@ watch(
 
 function handleSubmit() {
   const trimmed = name.value.trim()
-  if (!trimmed || props.isSubmitting) return
+  if (!trimmed || !props.canSubmit || props.isSubmitting) return
   emit('submit', trimmed)
 }
 

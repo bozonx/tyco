@@ -27,7 +27,7 @@ describe('SettingsProjectConvertDialog.vue', () => {
     await wrapper.setProps({ open: true })
     const confirm = wrapper.get('[data-testid="convert-confirm"]')
     expect(confirm.attributes('disabled')).toBeDefined()
-    await wrapper.get('[data-testid="convert-pick-folder"]').trigger('click')
+    await wrapper.get('[data-testid="project-folder-pick"]').trigger('click')
     await vi.waitFor(() =>
       expect(confirm.attributes('disabled')).toBeUndefined()
     )
@@ -55,8 +55,10 @@ describe('SettingsProjectConvertDialog.vue', () => {
     const wrapper = mountDialog({ toExternal: false })
     await wrapper.setProps({ open: true })
     expect(
-      wrapper.findComponent({ name: 'FieldCheckbox' }).props('disabled')
-    ).toBe(true)
+      wrapper
+        .get('input[data-testid="convert-transfer"]')
+        .attributes('disabled')
+    ).toBeDefined()
     await wrapper.get('form').trigger('submit')
     expect(wrapper.emitted('confirm')).toEqual([
       [{ targetPath: undefined, transferFiles: false }],

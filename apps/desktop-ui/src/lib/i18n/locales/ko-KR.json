@@ -1074,6 +1074,7 @@
     "projectConvertToInternalTitle": "프로젝트를 내부로 전환",
     "projectDescription": "프로젝트 설명",
     "projectFolderFixedHint": "모델은 이 경로에서 프로젝트 파일을 봅니다. 프로젝트 이름을 바꿔도 변하지 않습니다.",
+    "projectFolderNotSelected": "선택한 폴더가 없습니다",
     "projectFolderNotSetOnDevice": "이 기기에 폴더가 설정되지 않음",
     "projectFolderRelinkHint": "프로젝트를 다른 폴더에 연결합니다. 파일은 이동되지 않으니 파일이 이미 있는 폴더를 선택하세요.",
     "projectInsideSyncedFolder": "이 폴더는 TyCo 데이터 폴더(또는 보관함) 안에 있어 함께 동기화됩니다. 원하지 않으면 바깥 폴더를 선택하세요.",

@@ -1077,6 +1077,7 @@
     "projectConvertToInternalTitle": "Projeyi dahili yap",
     "projectDescription": "Proje Açıklaması",
     "projectFolderFixedHint": "Model projenin dosyalarını bu yolda görür. Proje yeniden adlandırıldığında değişmez.",
+    "projectFolderNotSelected": "Klasör seçilmedi",
     "projectFolderNotSetOnDevice": "Klasör bu cihazda ayarlanmamış",
     "projectFolderRelinkHint": "Projeyi başka bir klasöre bağlar. Dosyalar taşınmaz: dosyaların zaten bulunduğu klasörü seçin.",
     "projectInsideSyncedFolder": "Klasör TyCo veri klasörünün (veya bir kasanın) içinde ve onunla birlikte eşitlenecek. İstemiyorsanız dışarıda bir klasör seçin.",

@@ -1074,6 +1074,7 @@
     "projectConvertToInternalTitle": "將專案設為內部",
     "projectDescription": "專案說明",
     "projectFolderFixedHint": "模型透過此路徑查看專案檔案。重新命名專案時不會改變。",
+    "projectFolderNotSelected": "未選擇資料夾",
     "projectFolderNotSetOnDevice": "此裝置上未設定資料夾",
     "projectFolderRelinkHint": "將專案連結到另一個資料夾。檔案不會被移動：請選擇檔案已經所在的資料夾。",
     "projectInsideSyncedFolder": "該資料夾位於 TyCo 資料夾（或庫）內，將隨之同步。如不需要，請選擇其外部的資料夾。",

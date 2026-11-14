@@ -1080,6 +1080,7 @@
     "projectConvertToInternalTitle": "Fă proiectul intern",
     "projectDescription": "Descrierea proiectului",
     "projectFolderFixedHint": "Modelul vede fișierele proiectului la această cale. Nu se schimbă la redenumirea proiectului.",
+    "projectFolderNotSelected": "Niciun dosar selectat",
     "projectFolderNotSetOnDevice": "Dosar nesetat pe acest dispozitiv",
     "projectFolderRelinkHint": "Leagă proiectul de alt dosar. Fișierele nu sunt mutate: alege dosarul în care se află deja.",
     "projectInsideSyncedFolder": "Dosarul se află în dosarul de date TyCo (sau într-un seif) și va fi sincronizat cu acesta. Dacă nu doriți, alegeți un dosar din afară.",

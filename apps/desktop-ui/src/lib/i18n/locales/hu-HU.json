@@ -1077,6 +1077,7 @@
     "projectConvertToInternalTitle": "A projekt legyen belső",
     "projectDescription": "Projekt leírása",
     "projectFolderFixedHint": "A modell ezen az útvonalon látja a projekt fájljait. Nem változik a projekt átnevezésekor.",
+    "projectFolderNotSelected": "Nincs kiválasztott mappa",
     "projectFolderNotSetOnDevice": "A mappa nincs beállítva ezen az eszközön",
     "projectFolderRelinkHint": "Másik mappához kapcsolja a projektet. A fájlok nem kerülnek áthelyezésre: válassza azt a mappát, ahol már vannak.",
     "projectInsideSyncedFolder": "A mappa a TyCo adatmappáján (vagy egy tárolón) belül van, és vele együtt szinkronizálódik. Ha ezt nem szeretné, válasszon azon kívüli mappát.",

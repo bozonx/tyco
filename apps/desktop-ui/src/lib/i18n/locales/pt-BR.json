@@ -1080,6 +1080,7 @@
     "projectConvertToInternalTitle": "Tornar o projeto interno",
     "projectDescription": "Descrição do projeto",
     "projectFolderFixedHint": "O modelo vê os arquivos do projeto neste caminho. Não muda quando o projeto é renomeado.",
+    "projectFolderNotSelected": "Nenhuma pasta selecionada",
     "projectFolderNotSetOnDevice": "Pasta não definida neste dispositivo",
     "projectFolderRelinkHint": "Vincula o projeto a outra pasta. Os arquivos não são movidos: escolha a pasta onde eles já estão.",
     "projectInsideSyncedFolder": "A pasta está dentro da pasta de dados do TyCo (ou de um cofre) e será sincronizada com ela. Se não quiser, escolha uma pasta fora dela.",

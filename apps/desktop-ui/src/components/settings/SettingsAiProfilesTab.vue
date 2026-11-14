@@ -153,9 +153,30 @@
       :label="t('settings.projectName')"
       :confirm-text="t('settings.createProject')"
       :is-submitting="isCreatingProject"
+      :can-submit="!newProjectIsExternal || Boolean(newProjectPath)"
       @submit="handleCreateProject"
       @close="showCreateProjectModal = false"
     >
+      <FieldRow
+        vertical
+        :separator="false"
+        :label="t('settings.projectType')"
+        :info="t('settings.projectTypeConvertHint')"
+      >
+        <SegmentedControl
+          size="sm"
+          :label="t('settings.projectType')"
+          :model-value="newProjectIsExternal ? 'external' : 'internal'"
+          :options="projectTypeOptions"
+          @update:model-value="newProjectIsExternal = $event === 'external'"
+        />
+      </FieldRow>
+      <SettingsProjectFolderField
+        v-if="newProjectIsExternal"
+        :path="newProjectPath"
+        :disabled="isCreatingProject"
+        @pick="pickNewProjectFolder"
+      />
       <FieldRow
         v-if="vaultOptions.length > 1"
         vertical
@@ -202,7 +223,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import { useBusyAction } from '../../composables/use-busy-action'
 import { useI18n } from '../../composables/use-i18n'
@@ -218,11 +239,13 @@ import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import InlineNotice from '../common/InlineNotice.vue'
+import SegmentedControl from '../common/SegmentedControl.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsAiVaultsSection from './SettingsAiVaultsSection.vue'
 import SettingsChatHistorySection from './SettingsChatHistorySection.vue'
 import SettingsCreateEntityModal from './SettingsCreateEntityModal.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
+import SettingsProjectFolderField from './SettingsProjectFolderField.vue'
 import SettingsSection from './SettingsSection.vue'
 import type { AiProject } from '@tyco/shared'
 
@@ -440,13 +463,35 @@ async function handleCreateProfile(name: string) {
 
 const showCreateProjectModal = ref(false)
 const { isBusy: isCreatingProject, run: runCreatingProject } = useBusyAction()
+const newProjectIsExternal = ref(false)
+const newProjectPath = ref('')
+const projectTypeOptions = computed(() => [
+  { id: 'internal', name: t('settings.projectTypeInternal') },
+  { id: 'external', name: t('settings.projectTypeExternal') },
+])
+
+watch(showCreateProjectModal, (open) => {
+  if (!open) return
+  newProjectIsExternal.value = false
+  newProjectPath.value = ''
+})
+
+async function pickNewProjectFolder() {
+  try {
+    const picked = await aiProfilesStore.pickFolder()
+    if (picked) newProjectPath.value = picked
+  } catch (error) {
+    toastError(error)
+  }
+}
 
 async function handleCreateProject(name: string) {
   await runCreatingProject(async () => {
     const created = await aiProfilesStore.createProject({
       name,
       vaultId: targetVaultId.value,
-      isExternal: false,
+      isExternal: newProjectIsExternal.value,
+      targetPath: newProjectIsExternal.value ? newProjectPath.value : undefined,
     })
     showCreateProjectModal.value = false
     navigate(projectTab(created.id))

@@ -1077,6 +1077,7 @@
     "projectConvertToInternalTitle": "Сделать проект внутренним",
     "projectDescription": "Описание проекта",
     "projectFolderFixedHint": "По этому пути модель видит файлы проекта. Не меняется при переименовании проекта.",
+    "projectFolderNotSelected": "Папка не выбрана",
     "projectFolderNotSetOnDevice": "Папка не указана на этом устройстве",
     "projectFolderRelinkHint": "Привязывает проект к другой папке. Файлы не переносятся: выберите папку, где они уже лежат.",
     "projectInsideSyncedFolder": "Папка лежит внутри папки данных TyCo (хранилища) и будет синхронизироваться вместе с ней. Если это не нужно, выберите папку снаружи.",

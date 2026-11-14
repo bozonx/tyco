@@ -1074,6 +1074,7 @@
     "projectConvertToInternalTitle": "将项目设为内部",
     "projectDescription": "项目描述",
     "projectFolderFixedHint": "模型通过此路径查看项目文件。重命名项目时不会改变。",
+    "projectFolderNotSelected": "未选择文件夹",
     "projectFolderNotSetOnDevice": "此设备上未设置文件夹",
     "projectFolderRelinkHint": "将项目关联到另一个文件夹。文件不会被移动：请选择文件已所在的文件夹。",
     "projectInsideSyncedFolder": "该文件夹位于 TyCo 数据文件夹（或库）内，将随之同步。如不需要，请选择其外部的文件夹。",

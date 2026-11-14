@@ -1080,6 +1080,7 @@
     "projectConvertToInternalTitle": "Učini projekt unutarnjim",
     "projectDescription": "Opis projekta",
     "projectFolderFixedHint": "Na ovoj putanji model vidi datoteke projekta. Ne mijenja se kad se projekt preimenuje.",
+    "projectFolderNotSelected": "Mapa nije odabrana",
     "projectFolderNotSetOnDevice": "Mapa nije postavljena na ovom uređaju",
     "projectFolderRelinkHint": "Povezuje projekt s drugom mapom. Datoteke se ne premještaju: odaberite mapu u kojoj već jesu.",
     "projectInsideSyncedFolder": "Mapa je unutar mape podataka TyCo-a (ili spremišta) i sinkronizirat će se s njom. Ako to ne želite, odaberite mapu izvan nje.",

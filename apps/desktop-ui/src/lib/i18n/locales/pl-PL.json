@@ -1080,6 +1080,7 @@
     "projectConvertToInternalTitle": "Ustaw projekt jako wewnętrzny",
     "projectDescription": "Opis projektu",
     "projectFolderFixedHint": "Pod tą ścieżką model widzi pliki projektu. Nie zmienia się po zmianie nazwy projektu.",
+    "projectFolderNotSelected": "Nie wybrano folderu",
     "projectFolderNotSetOnDevice": "Folder nieustawiony na tym urządzeniu",
     "projectFolderRelinkHint": "Wiąże projekt z innym folderem. Pliki nie są przenoszone: wybierz folder, w którym już się znajdują.",
     "projectInsideSyncedFolder": "Folder leży w folderze danych TyCo (lub magazynie) i będzie z nim synchronizowany. Jeśli tego nie chcesz, wybierz folder na zewnątrz.",

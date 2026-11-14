@@ -3,6 +3,7 @@
     :open="open"
     :labelledby="titleId"
     :describedby="messageId"
+    class="convert-dialog-box"
     @close="emit('cancel')"
   >
     <form class="convert-dialog" @submit.prevent="submit">
@@ -21,21 +22,12 @@
         }}
       </p>
 
-      <FieldRow
+      <SettingsProjectFolderField
         v-if="toExternal"
-        :label="t('settings.projectTargetPath')"
-        :hint="targetPath || undefined"
-      >
-        <Button
-          size="sm"
-          variant="neutral"
-          icon="mdi:folder-open-outline"
-          data-testid="convert-pick-folder"
-          @click="pickFolder"
-        >
-          {{ t('settings.selectFolder') }}
-        </Button>
-      </FieldRow>
+        :path="targetPath"
+        :disabled="isBusy"
+        @pick="pickFolder"
+      />
 
       <FieldCheckbox
         v-model="transferFiles"
@@ -80,8 +72,8 @@ import type { ConvertProjectOptions } from '../../lib/ai-profiles/ai-projects-mo
 import BaseDialog from '../common/BaseDialog.vue'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
-import FieldRow from '../common/FieldRow.vue'
 import InlineNotice from '../common/InlineNotice.vue'
+import SettingsProjectFolderField from './SettingsProjectFolderField.vue'
 
 const props = defineProps<{
   open: boolean
@@ -133,10 +125,14 @@ function submit() {
 </script>
 
 <style scoped>
+.convert-dialog-box {
+  width: min(100% - 2 * var(--space-lg), 30rem);
+}
+
 .convert-dialog {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-md);
 }
 
 .convert-dialog-title {
@@ -156,7 +152,6 @@ function submit() {
 .convert-dialog-actions {
   display: flex;
   justify-content: flex-end;
-  gap: var(--space-xs);
-  margin-top: var(--space-sm);
+  gap: var(--space-sm);
 }
 </style>

@@ -1080,6 +1080,7 @@
     "projectConvertToInternalTitle": "Make the project internal",
     "projectDescription": "Project Description",
     "projectFolderFixedHint": "The model sees the files of the project under this path. It does not change when the project is renamed.",
+    "projectFolderNotSelected": "No folder selected",
     "projectFolderNotSetOnDevice": "Folder not set on this device",
     "projectFolderRelinkHint": "Points the project to another folder. Files are not moved: select the folder where they already are.",
     "projectInsideSyncedFolder": "The folder is inside the TyCo data folder (or a vault) and will be synced with it. If you do not want that, choose a folder outside it.",

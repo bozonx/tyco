@@ -1080,6 +1080,7 @@
     "projectConvertToInternalTitle": "Hacer interno el proyecto",
     "projectDescription": "Descripción del proyecto",
     "projectFolderFixedHint": "El modelo ve los archivos del proyecto en esta ruta. No cambia al renombrar el proyecto.",
+    "projectFolderNotSelected": "No se ha elegido ninguna carpeta",
     "projectFolderNotSetOnDevice": "Carpeta no definida en este dispositivo",
     "projectFolderRelinkHint": "Vincula el proyecto a otra carpeta. Los archivos no se mueven: elige la carpeta donde ya están.",
     "projectInsideSyncedFolder": "La carpeta está dentro de la carpeta de datos de TyCo (o una bóveda) y se sincronizará con ella. Si no lo querés, elegí una carpeta afuera.",
