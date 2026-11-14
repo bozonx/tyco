@@ -3,8 +3,29 @@
     :title="props.correction ? t('menu.correction') : t('menu.actions')"
     :esc-mode="resolvedEscMode"
   >
-    <template v-if="hasDiff" #header-extra>
-      <ResultViewModeToggle preset="diff" v-if="hasDiff" v-model="diffMode" />
+    <template v-if="hasDiff || actionMenuStore.pageCount > 1" #header-extra>
+      <div
+        v-if="actionMenuStore.pageCount > 1"
+        class="action-pages-bar"
+        role="group"
+        :aria-label="t('settings.mainActionGroups.actionPages')"
+      >
+        <button
+          v-for="index in actionMenuStore.pageCount"
+          :key="index"
+          type="button"
+          class="action-page-button"
+          :class="{ 'is-active': actionMenuStore.pageIndex === index - 1 }"
+          :aria-pressed="actionMenuStore.pageIndex === index - 1"
+          @click="actionMenuStore.setPage(index - 1)"
+        >
+          <KeyboardKey v-if="index <= 10">{{
+            index === 10 ? 0 : index
+          }}</KeyboardKey>
+          <span>{{ t('settings.actionPage', { page: index }) }}</span>
+        </button>
+      </div>
+      <ResultViewModeToggle v-if="hasDiff" v-model="diffMode" preset="diff" />
     </template>
 
     <template #preview>
@@ -21,23 +42,6 @@
     </template>
 
     <template #actions>
-      <div v-if="actionMenuStore.pageCount > 1" class="action-pages-bar">
-        <button
-          v-for="index in actionMenuStore.pageCount"
-          :key="index"
-          type="button"
-          class="action-page-button"
-          :class="{ 'is-active': actionMenuStore.pageIndex === index - 1 }"
-          :aria-pressed="actionMenuStore.pageIndex === index - 1"
-          @click="actionMenuStore.setPage(index - 1)"
-        >
-          <KeyboardKey v-if="index <= 10">{{
-            index === 10 ? 0 : index
-          }}</KeyboardKey>
-          <span>{{ t('settings.actionPage', { page: index }) }}</span>
-        </button>
-      </div>
-
       <ShortcutList
         editor-shortcut
         :key="actionMenuStore.pageIndex"
@@ -346,38 +350,50 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* Page tabs: a segmented control with the page number keys */
 .action-pages-bar {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-xs);
-  margin-bottom: var(--space-xs);
+  gap: var(--segment-gap);
+  padding: var(--segment-padding);
+  border-radius: var(--radius-md);
+  background-color: var(--app-surface-sunken);
+
+  --key-size: var(--quick-kbd-size);
+  --key-font-size: var(--quick-kbd-font-size);
 }
 
 .action-page-button {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: 0.25rem 0.5rem;
+  padding: var(--space-2xs) var(--space-sm) var(--space-2xs) var(--space-2xs);
+  border: none;
   border-radius: var(--radius-sm);
   font-size: var(--text-caption);
   color: var(--app-text-muted);
-  background: var(--app-surface-sunken);
-  border: 1px solid var(--app-border-subtle);
+  background: transparent;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .action-page-button:hover {
-  background: var(--app-hover);
   color: var(--color-base-content);
 }
 
 .action-page-button.is-active {
-  color: var(--color-primary);
+  color: var(--color-base-content);
   background-color: var(--app-surface-raised);
-  border-color: var(--color-primary);
+  box-shadow: var(--app-shadow-segment);
   font-weight: 500;
+}
+
+.action-page-button:focus-visible {
+  outline: var(--app-focus-outline-width) solid var(--color-primary);
+  outline-offset: 1px;
 }
 
 .preview-area {

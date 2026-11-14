@@ -422,12 +422,12 @@ defineExpose(textControl)
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: var(--space-2xs);
   min-width: 0;
 }
 
 .query-panel-label {
-  padding-left: 0.125rem;
+  padding-left: var(--space-2xs);
   font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -438,11 +438,11 @@ defineExpose(textControl)
 .query-panel-input {
   width: 100%;
   min-width: 0;
-  height: 2.25rem;
-  padding: 0 0.75rem;
-  border: 1px solid color-mix(in oklab, var(--color-primary) 55%, transparent);
-  border-radius: var(--radius-md);
-  background-color: var(--app-surface);
+  height: var(--control-size-md);
+  padding: 0 var(--space-md);
+  border: 1px solid var(--quick-field-border);
+  border-radius: var(--quick-tile-radius);
+  background-color: var(--quick-field-bg);
   color: var(--color-base-content);
   font-size: var(--text-title);
   outline: none;
@@ -450,8 +450,8 @@ defineExpose(textControl)
 
 .query-panel-input.is-multiline {
   height: auto;
-  min-height: 2.25rem;
-  padding: 0.4375rem 0.75rem;
+  min-height: var(--control-size-md);
+  padding: var(--space-sm) var(--space-md);
   line-height: 1.4;
   font-family: inherit;
   resize: none;
@@ -460,9 +460,8 @@ defineExpose(textControl)
 
 .query-panel-input:focus,
 .query-panel-input.is-multiline:focus {
-  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
-  box-shadow: 0 0 0 3px
-    color-mix(in oklab, var(--color-primary) 16%, transparent);
+  border-color: var(--quick-field-border-focus);
+  box-shadow: var(--app-focus-ring);
 }
 
 .query-panel-options {
@@ -470,7 +469,7 @@ defineExpose(textControl)
   flex-direction: column;
   max-height: 9.5rem;
   margin: 0;
-  padding: 0.25rem;
+  padding: var(--space-xs);
   overflow-y: auto;
   overscroll-behavior: contain;
   list-style: none;
@@ -495,8 +494,8 @@ defineExpose(textControl)
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
-  min-height: 1.875rem;
-  padding: 0 0.5rem;
+  min-height: var(--control-size-sm);
+  padding: 0 var(--space-sm);
   border-radius: var(--radius-sm);
   font-size: var(--text-body);
   cursor: pointer;
@@ -522,7 +521,7 @@ defineExpose(textControl)
 }
 
 .query-panel-group {
-  padding: 0.375rem 0.5rem 0.125rem;
+  padding: var(--space-sm) var(--space-sm) var(--space-2xs);
   font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -531,7 +530,7 @@ defineExpose(textControl)
 }
 
 .query-panel-group:first-child {
-  padding-top: 0.125rem;
+  padding-top: var(--space-2xs);
 }
 
 .query-panel-option.is-selected {
@@ -541,7 +540,7 @@ defineExpose(textControl)
 .query-panel-option-label {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: var(--space-xs);
   min-width: 0;
 }
 

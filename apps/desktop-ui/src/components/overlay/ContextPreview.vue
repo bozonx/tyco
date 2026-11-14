@@ -224,17 +224,16 @@ onUnmounted(() => {
 }
 
 .preview-action-btn {
-  background-color: var(--app-surface-raised);
-  border: 1px solid var(--app-border-subtle);
+  color: var(--app-text-faint);
+  background-color: color-mix(in oklab, var(--quick-field-bg) 85%, transparent);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  opacity: 0.85;
   transition:
-    opacity var(--transition-fast),
+    color var(--transition-fast),
     background-color var(--transition-fast);
 }
 
 .preview-action-btn:hover {
-  opacity: 1;
+  color: var(--color-base-content);
+  background-color: var(--quick-tile-hover-bg);
 }
 </style>

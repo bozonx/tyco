@@ -133,7 +133,7 @@ onUnmounted(() => {
 .chat-prompts-surface {
   width: min(92vw, 32rem);
   max-width: 32rem;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--app-shadow-lg);
   border: 1px solid var(--app-border-subtle);
   border-radius: var(--radius-lg);
   background: var(--app-surface-elevated, var(--app-surface));

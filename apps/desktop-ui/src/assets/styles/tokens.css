@@ -141,6 +141,51 @@
     transparent
   );
 
+  /* Quick surfaces (action overlay and its menus): surfaces differ by fill,
+     borders stay hairline. Scoped styles of quick components reference
+     these instead of raw sizes. */
+  --quick-radius: var(--radius-lg);
+  --quick-gap: var(--space-md);
+  --quick-section-gap: var(--space-sm);
+  --quick-title-size: var(--text-title);
+  --quick-field-bg: var(--app-surface-sunken);
+  --quick-field-border: var(--app-border-subtle);
+  --quick-field-border-focus: color-mix(
+    in oklab,
+    var(--color-primary) 55%,
+    transparent
+  );
+  --quick-divider: var(--app-border-subtle);
+  --quick-tile-height: 2.5rem;
+  --quick-tile-gap: var(--space-xs);
+  --quick-tile-padding: 0 var(--space-sm);
+  --quick-tile-radius: var(--radius-md);
+  --quick-tile-bg: color-mix(
+    in oklab,
+    var(--color-base-content) 4%,
+    transparent
+  );
+  --quick-tile-border: transparent;
+  --quick-tile-hover-bg: color-mix(
+    in oklab,
+    var(--color-base-content) 8%,
+    transparent
+  );
+  --quick-tile-icon-color: var(--app-text-faint);
+  --quick-tile-empty-border: var(--app-border-subtle);
+  --quick-primary-bg: var(--color-primary);
+  --quick-primary-fg: var(--color-primary-content);
+  --quick-primary-hover-bg: color-mix(
+    in oklab,
+    var(--color-primary) 88%,
+    var(--color-base-content)
+  );
+  --quick-kbd-size: 1.25rem;
+  --quick-kbd-font-size: var(--text-micro);
+  --quick-kbd-bg: transparent;
+  --quick-kbd-border: var(--app-border);
+  --quick-kbd-color: var(--app-text-faint);
+
   --app-diff-added-decoration: none;
   /* Translucent, so it stands out on whatever surface the editor sits on */
   --editor-selection-bg: color-mix(
@@ -225,6 +270,13 @@
   --app-quick-backdrop: none;
   --app-quick-surface: var(--app-surface);
   --app-quick-hint-surface: var(--app-surface);
+  --quick-field-bg: var(--app-surface);
+  --quick-field-border: var(--app-border-strong);
+  --quick-tile-bg: var(--app-surface);
+  --quick-tile-border: var(--app-border-strong);
+  --quick-tile-hover-bg: var(--color-base-300);
+  --quick-kbd-border: var(--app-border-strong);
+  --quick-kbd-color: var(--color-base-content);
   --editor-selection-bg: var(--color-base-300);
 
   --app-diff-added-bg: transparent;

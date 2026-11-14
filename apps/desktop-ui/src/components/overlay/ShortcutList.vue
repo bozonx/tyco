@@ -1,5 +1,26 @@
 <template>
   <div class="shortcuts-list">
+    <!-- 5 columns x 3 rows grid for physical keyboard layout: qwert / asdfg / zxcvb -->
+    <div v-if="hasPresetActions" class="shortcuts-grid-5x3">
+      <template v-for="slot in slots" :key="slot.key">
+        <ShortcutButton
+          v-if="slot.action"
+          size="sm"
+          :icon="slot.action.icon"
+          :keys="[slot.key.toUpperCase()]"
+          :disabled="slot.action.disabled"
+          :title="
+            slot.action.hint
+              ? `${slot.label} (${slot.action.hint})`
+              : slot.label
+          "
+          @click="slot.action.action(props.text || '')"
+        >
+          {{ slot.label }}
+        </ShortcutButton>
+        <div v-else class="shortcut-empty-slot" aria-hidden="true" />
+      </template>
+    </div>
     <!-- Primary / System actions row: Space/Enter, Tab, Esc -->
     <div
       v-if="props.spaceKey || props.isEditorButtonVisible"
@@ -28,27 +49,6 @@
       >
         {{ getActionLabel(props.spaceKey) }}
       </ShortcutButton>
-    </div>
-
-    <!-- 5 columns x 3 rows grid for physical keyboard layout: qwert / asdfg / zxcvb -->
-    <div v-if="hasPresetActions" class="shortcuts-grid-5x3">
-      <template v-for="slot in slots" :key="slot.key">
-        <ShortcutButton
-          v-if="slot.action"
-          size="sm"
-          :keys="[slot.key.toUpperCase()]"
-          :disabled="slot.action.disabled"
-          :title="
-            slot.action.hint
-              ? `${slot.label} (${slot.action.hint})`
-              : slot.label
-          "
-          @click="slot.action.action(props.text || '')"
-        >
-          {{ slot.label }}
-        </ShortcutButton>
-        <div v-else class="shortcut-empty-slot" aria-hidden="true" />
-      </template>
     </div>
   </div>
 </template>
@@ -251,30 +251,33 @@ function getActionLabel(item?: ActionItem) {
 .shortcuts-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--quick-section-gap);
   width: 100%;
 }
 
+/* Footer: the main action sits last, at the right, like a dialog's confirm */
 .shortcuts-primary {
-  justify-content: flex-end;
   display: flex;
+  justify-content: flex-end;
   align-items: center;
-  gap: var(--space-xs);
-  min-height: 2.25rem;
+  gap: var(--space-sm);
+  padding-top: var(--quick-section-gap);
+  border-top: 1px solid var(--quick-divider);
+
+  --shortcut-width: auto;
 }
 
+/* 5 x 3 tiles mirror the physical keys: an empty slot keeps its place */
 .shortcuts-grid-5x3 {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-template-rows: repeat(3, 2.75rem);
-  gap: var(--space-xs);
-  padding-top: var(--space-xs);
-  border-top: 1px solid var(--app-border-subtle);
+  grid-auto-rows: var(--quick-tile-height);
+  gap: var(--quick-tile-gap);
 }
 
 .shortcut-empty-slot {
-  min-height: 2.75rem;
-  border-radius: var(--radius-md);
-  border: 1px dashed transparent;
+  border: 1px dashed var(--quick-tile-empty-border);
+  border-radius: var(--quick-tile-radius);
+  opacity: 0.6;
 }
 </style>

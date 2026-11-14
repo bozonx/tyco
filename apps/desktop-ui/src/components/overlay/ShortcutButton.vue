@@ -10,15 +10,17 @@
     :disabled="disabled"
     @click="emit('click')"
   >
-    <ShortcutKeys :keys="keys" />
+    <AppIcon v-if="icon" :icon="icon" size="sm" class="shortcut-icon" />
     <span class="shortcut-label">
       <slot />
     </span>
+    <ShortcutKeys :keys="keys" class="shortcut-keys" />
   </button>
 </template>
 
 <script setup lang="ts">
 import type { ControlSize } from '../../lib/ui/control-types'
+import AppIcon from '../common/AppIcon.vue'
 import ShortcutKeys from './ShortcutKeys.vue'
 
 withDefaults(
@@ -27,8 +29,10 @@ withDefaults(
     disabled?: boolean
     variant?: 'primary' | 'ghost'
     size?: ControlSize
+    /** Decorative `mdi:*` icon before the label, for action tiles */
+    icon?: string
   }>(),
-  { disabled: false, variant: 'ghost', size: 'md' }
+  { disabled: false, variant: 'ghost', size: 'md', icon: undefined }
 )
 
 const emit = defineEmits<{ (e: 'click'): void }>()
@@ -36,30 +40,35 @@ const emit = defineEmits<{ (e: 'click'): void }>()
 
 <style scoped>
 .shortcut {
-  --key-size: 1.75rem;
+  --key-size: var(--quick-kbd-size);
+  --key-font-size: var(--quick-kbd-font-size);
+  --key-background: var(--quick-kbd-bg);
+  --key-border-color: var(--quick-kbd-border);
+  --key-color: var(--quick-kbd-color);
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   width: var(--shortcut-width, 100%);
   flex: var(--shortcut-flex, initial);
   max-width: var(--shortcut-max-width, 20rem);
   min-width: 0;
-  padding: 0.375rem 0.625rem 0.375rem 0.375rem;
+  min-height: var(--control-size-sm);
+  padding: var(--space-xs) var(--space-sm) var(--space-xs) var(--space-md);
   border: 1px solid var(--app-border);
-  background-color: var(--app-surface);
-  border-radius: var(--radius-md);
-  font-size: var(--text-body);
+  background-color: transparent;
+  border-radius: var(--quick-tile-radius);
+  font-size: var(--text-control);
   text-align: left;
   color: var(--color-base-content);
   cursor: pointer;
   transition:
     background-color var(--transition-fast),
-    border-color var(--transition-fast);
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .shortcut:hover:not(:disabled) {
-  background-color: var(--app-hover);
-  border-color: var(--app-border-subtle);
+  background-color: var(--quick-tile-hover-bg);
 }
 
 .shortcut:focus-visible {
@@ -70,59 +79,67 @@ const emit = defineEmits<{ (e: 'click'): void }>()
 .shortcut:disabled {
   cursor: not-allowed;
   color: var(--app-text-faint);
+  opacity: 0.6;
 }
 
-.shortcut.is-primary:disabled {
-  border-color: var(--app-border-subtle);
-  background-color: color-mix(in oklab, var(--app-surface) 60%, transparent);
+.shortcut-icon {
+  flex-shrink: 0;
+  color: var(--quick-tile-icon-color);
+  transition: color var(--transition-fast);
+}
 
-  --key-border-color: var(--app-border);
-  --key-color: var(--app-text-muted);
+.shortcut:hover:not(:disabled) .shortcut-icon {
+  color: var(--color-primary);
 }
 
 .shortcut-label {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  word-break: break-word;
-  line-height: 1.15;
   flex: 1 1 0%;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.25;
 }
 
+.shortcut-keys {
+  margin-left: auto;
+}
+
+/* The main action: a filled button */
 .shortcut.is-primary {
-  border-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
-  background-color: color-mix(in oklab, var(--color-primary) 14%, transparent);
+  border-color: transparent;
+  background-color: var(--quick-primary-bg);
+  color: var(--quick-primary-fg);
+  font-weight: 500;
 
   --key-border-color: color-mix(
     in oklab,
-    var(--color-primary) 60%,
+    var(--quick-primary-fg) 35%,
     transparent
   );
-  --key-color: var(--color-primary);
+  --key-color: var(--quick-primary-fg);
 }
 
 .shortcut.is-primary:hover:not(:disabled) {
-  background-color: color-mix(in oklab, var(--color-primary) 22%, transparent);
-  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
+  background-color: var(--quick-primary-hover-bg);
 }
 
-.shortcut.is-sm {
-  gap: 0.3125rem;
-  padding: 0.25rem 0.375rem;
-  font-size: var(--text-control);
-  max-width: none;
+.shortcut.is-primary:disabled {
+  color: var(--quick-primary-fg);
+}
 
-  --key-size: 1.4rem;
-  --key-font-size: var(--text-caption);
+/* Action tile of a keyboard grid: filled, borderless */
+.shortcut.is-sm {
+  max-width: none;
+  height: var(--quick-tile-height);
+  padding: var(--quick-tile-padding);
+  border-color: var(--quick-tile-border);
+  background-color: var(--quick-tile-bg);
 }
 
 .shortcut.is-xs {
-  padding: var(--space-xs);
+  min-height: var(--control-size-xs);
+  padding: var(--space-2xs) var(--space-xs) var(--space-2xs) var(--space-sm);
   font-size: var(--text-caption);
-
-  --key-size: var(--control-size-xs);
 }
 </style>

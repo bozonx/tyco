@@ -398,18 +398,19 @@ defineExpose({ focusSearch })
 
 .search-grid-search-icon {
   position: absolute;
-  left: 0.75rem;
-  color: var(--app-text-muted);
+  left: var(--space-md);
+  color: var(--app-text-faint);
   pointer-events: none;
 }
 
 .search-grid-search-input {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.5rem 2.25rem;
-  background-color: var(--app-surface-raised);
-  border: 1px solid var(--app-border-subtle);
-  border-radius: var(--radius-md);
+  height: var(--control-size-sm);
+  padding: 0 calc(var(--space-md) + var(--space-xl));
+  background-color: var(--quick-field-bg);
+  border: 1px solid var(--quick-field-border);
+  border-radius: var(--quick-tile-radius);
   color: var(--color-base-content);
   font-size: var(--text-control);
   outline: none;
@@ -419,25 +420,28 @@ defineExpose({ focusSearch })
 }
 
 .is-dense .search-grid-search-input {
-  padding-top: 0.3rem;
-  padding-bottom: 0.3rem;
+  height: var(--control-size-xs);
 }
 
 .search-grid-search-input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 1px var(--color-primary);
+  border-color: var(--quick-field-border-focus);
+  box-shadow: var(--app-focus-ring);
 }
 
 .search-grid-search-extra {
   position: absolute;
-  right: 0.75rem;
+  right: var(--space-sm);
   display: flex;
   align-items: center;
   gap: var(--space-sm);
 }
 
 .search-grid-search-hint {
-  --key-font-size: var(--text-caption);
+  --key-size: var(--quick-kbd-size);
+  --key-font-size: var(--quick-kbd-font-size);
+  --key-background: var(--quick-kbd-bg);
+  --key-border-color: var(--quick-kbd-border);
+  --key-color: var(--quick-kbd-color);
   pointer-events: none;
   opacity: 0.7;
 }
@@ -447,7 +451,7 @@ defineExpose({ focusSearch })
   border: none;
   color: var(--app-text-muted);
   cursor: pointer;
-  padding: 0.25rem;
+  padding: var(--space-xs);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -463,7 +467,7 @@ defineExpose({ focusSearch })
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-auto-rows: 4.25rem;
-  gap: var(--space-sm);
+  gap: var(--quick-tile-gap);
   align-content: start;
   min-height: 0;
   /* A fixed page of 3 rows, so the layout does not depend on the count */
@@ -494,9 +498,9 @@ defineExpose({ focusSearch })
   flex-direction: column;
   gap: var(--space-xs);
   padding: var(--space-sm);
-  background-color: var(--app-surface-raised);
-  border: 1px solid var(--app-border-subtle);
-  border-radius: var(--radius-md);
+  background-color: var(--quick-tile-bg);
+  border: 1px solid var(--quick-tile-border);
+  border-radius: var(--quick-tile-radius);
   cursor: pointer;
   user-select: none;
   box-sizing: border-box;
@@ -513,18 +517,12 @@ defineExpose({ focusSearch })
 }
 
 .search-grid-cell:hover {
-  background-color: var(--app-hover);
-  border-color: var(--app-border);
+  background-color: var(--quick-tile-hover-bg);
 }
 
 .search-grid-cell.is-selected {
-  border-color: var(--color-primary);
-  background-color: color-mix(
-    in oklab,
-    var(--color-primary) 10%,
-    var(--app-surface-raised)
-  );
-  box-shadow: 0 0 0 1px var(--color-primary);
+  border-color: var(--quick-field-border-focus);
+  background-color: var(--app-accent-soft);
 }
 
 .search-grid-cell-top {
@@ -537,8 +535,11 @@ defineExpose({ focusSearch })
 }
 
 .search-grid-slot-key {
-  --key-size: 1.35rem;
-  --key-font-size: var(--text-caption);
+  --key-size: var(--quick-kbd-size);
+  --key-font-size: var(--quick-kbd-font-size);
+  --key-background: var(--quick-kbd-bg);
+  --key-border-color: var(--quick-kbd-border);
+  --key-color: var(--quick-kbd-color);
   flex-shrink: 0;
 }
 

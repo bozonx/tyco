@@ -19,8 +19,11 @@ remain bundled and work offline.
   for delete actions; use regular buttons (`neutral` or `ghost`, or `primary` for
   dialog confirmation).
 - `ShortcutButton`: use `variant="primary|ghost"` and `size="xs|sm|md"`;
-  the default is ghost/md. Quick surface footer actions use this control with
-  visible borders and text labels, without icons. `ShortcutKeys` separates
+  the default is ghost/md. The label comes first, its keys sit at the right.
+  Quick surface footer actions use this control with visible borders and text
+  labels, without icons; the main action is `primary` (filled) and comes last.
+  `size="sm"` is an action tile of a keyboard grid: filled, borderless, one
+  line with an ellipsis, and it takes the action's `icon`. `ShortcutKeys` separates
   alternative shortcuts with commas and modifier chords with plus signs.
 - `DropdownMenu`: use the same size/variant names as `Button`; default ghost/sm.
 - `IconButton`: provide a localized `label` and an `icon`. The label supplies the
@@ -75,7 +78,14 @@ Add a token for a repeated design decision rather than duplicating local values;
 do not add a wrapper component solely to replace a utility class.
 Use the named z-index layers; native modal dialogs occupy the browser top layer.
 Quick surfaces use `--app-quick-surface`, `--app-quick-hint-surface` and
-`--app-quick-backdrop`; e-ink makes them opaque and removes blur. Focus states use
+`--app-quick-backdrop`; e-ink makes them opaque and removes blur. Their content
+(`ActionOverlayLayout`, `ShortcutList`, `SearchShortcutGrid`, `QueryPanel` and the
+menus) styles itself only with the `--quick-*` tokens of `tokens.css`: the text
+field is a sunken fill (`--quick-field-*`) whose focus the box shows, action
+tiles are fills without borders (`--quick-tile-*`), keys are small and muted
+(`--quick-kbd-*`), sections are split by `--quick-divider`. Surfaces differ by
+fill, not by more borders. Raw sizes stay only for structural layout (a page
+height, a 2px hairline). Focus states use
 `--app-focus-ring`. Use `--text-micro` for metadata and `--text-heading` for larger
 page headings.
 

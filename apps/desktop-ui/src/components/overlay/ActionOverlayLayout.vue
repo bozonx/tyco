@@ -162,10 +162,15 @@ useDismissibleLayer({
 
 <style scoped>
 .action-overlay-layout {
+  --key-size: var(--quick-kbd-size);
+  --key-font-size: var(--quick-kbd-font-size);
+  --key-background: var(--quick-kbd-bg);
+  --key-border-color: var(--quick-kbd-border);
+  --key-color: var(--quick-kbd-color);
   container-type: inline-size;
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--quick-gap);
   width: 100%;
   height: 100%;
   flex: 1 1 0%;
@@ -176,7 +181,7 @@ useDismissibleLayer({
 .action-overlay-top {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--quick-section-gap);
   flex: 1 1 0%;
   min-height: 0;
 }
@@ -187,7 +192,7 @@ useDismissibleLayer({
   justify-content: space-between;
   gap: var(--space-md);
   flex-shrink: 0;
-  min-height: 1.75rem;
+  min-height: var(--control-size-sm);
 }
 
 .action-overlay-header-left {
@@ -202,8 +207,9 @@ useDismissibleLayer({
 .action-overlay-title {
   flex-shrink: 0;
   margin: 0;
-  font-size: var(--text-lead);
+  font-size: var(--quick-title-size);
   font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--color-base-content);
   line-height: 1.25;
 }
@@ -220,8 +226,8 @@ useDismissibleLayer({
 .action-overlay-esc {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-md);
   font-size: var(--text-control);
   color: var(--app-text-muted);
@@ -250,10 +256,23 @@ useDismissibleLayer({
   flex-direction: column;
   flex: 1 1 0%;
   min-height: 0;
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-lg);
-  background-color: var(--app-surface);
+  border: 1px solid var(--quick-field-border);
+  border-radius: var(--quick-radius);
+  background-color: var(--quick-field-bg);
   overflow: hidden;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.action-overlay-preview-box:has(:is(textarea, [contenteditable]):focus) {
+  border-color: var(--quick-field-border-focus);
+  box-shadow: var(--app-focus-ring);
+}
+
+/* The box shows the text field's focus, so the field draws no second ring */
+.action-overlay-preview-box :deep(:is(textarea, [contenteditable]):focus) {
+  outline: none;
 }
 
 .action-overlay-bottom {
