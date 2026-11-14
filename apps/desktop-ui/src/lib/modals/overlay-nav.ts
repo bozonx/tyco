@@ -41,9 +41,7 @@ export function createOverlayNavModel(
       return deps.t('common.back')
     }
 
-    return deps.isQuickWindow()
-      ? deps.t('common.cancel')
-      : deps.t('common.close')
+    return deps.t('common.close')
   })
 
   const escTitle = computed<string>(() => deps.t('common.closeAllHint'))

@@ -355,12 +355,29 @@ correction responses are failures and must not replace the source text.
 
 Overlay headers separate Back (Esc) from the close cross (Shift+Esc). Escape
 returns one step and closes at the root. The cross closes the entire scenario. At the root, a single Close (Esc) button replaces both Back and the cross; Shift+Esc still closes. Header actions follow Other actions, Back, Close order.
-Directly opened translation, transformation, styling, favorites, chat prompts and
-voice commands offer Other actions without a shortcut. A root quick AI composer
-offers it only for an original selection. Input, recording and result surfaces
-do not offer this scenario switch. Other actions preserves the source text and
-replaces the stack with the action menu, so Back cannot restore the old scenario.
-The action menu text is editable and its draft persists when returning from a step.
+
+What counts as the root:
+
+- In the quick window the view of a menu mode (selection actions, translation,
+  styling, transformation, quick AI request, chat prompts, favorites;
+  `isMenuRootMode`) stays under the steps it opens, so Esc on its first step
+  returns to it.
+- Quick input, voice input, system audio and voice commands opened by their
+  hotkey are special modes: only Close (Esc), Esc and Shift+Esc both close.
+  The action menu or a result opened from them is the root of the scenario;
+  Back cannot return to the input. Voice commands opened from the action menu
+  are an ordinary step: Esc returns to the menu, and their text actions return
+  to the review.
+- Other actions starts a scenario anew (`startScenario`): it clears the stack,
+  and its action menu is the root even over the view of a menu mode.
+- While an operation is in progress, Esc cancels it and stays on the step it
+  was started from; Shift+Esc cancels it and closes the window.
+  Directly opened translation, transformation, styling, favorites, chat prompts and
+  voice commands offer Other actions without a shortcut. A root quick AI composer
+  offers it only for an original selection. Input, recording and result surfaces
+  do not offer this scenario switch. Other actions preserves the source text and
+  replaces the stack with the action menu, so Back cannot restore the old scenario.
+  The action menu text is editable and its draft persists when returning from a step.
 
 System-audio recording keeps its privacy hint immediately after the title and
 Close (Esc) at the right edge, matching voice input. Shift+Space finalizes recording

@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   start: vi.fn(),
   finish: vi.fn(),
   cancel: vi.fn(),
+  cancelRun: vi.fn(),
   run: vi.fn(),
   chooseCommand: vi.fn(),
   choose: vi.fn(),
@@ -322,8 +323,10 @@ describe('separate voice command overlay', () => {
     )
     expect(useMenuModalsStore().currentModalParams).toMatchObject({
       text: 'Use these words elsewhere',
-      escMode: 'back',
     })
+    expect(useMenuModalsStore().currentModalParams).not.toHaveProperty(
+      'escMode'
+    )
     expect(mocks.run).not.toHaveBeenCalled()
     wrapper.unmount()
   })
@@ -434,8 +437,11 @@ describe('separate voice command overlay', () => {
       label: translate('commands.running', { name: 'Command 0' }),
     })
 
+    // cancelling the run keeps the overlay on its review
     menuModalsStore.pendingModal?.onCancel?.()
-    expect(mocks.cancel).toHaveBeenCalledOnce()
+    expect(mocks.cancelRun).toHaveBeenCalledOnce()
+    expect(mocks.cancel).not.toHaveBeenCalled()
+    expect(mocks.hide).not.toHaveBeenCalled()
 
     voice.stage = 'review'
     await flushPromises()

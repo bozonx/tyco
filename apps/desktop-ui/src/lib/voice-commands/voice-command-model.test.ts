@@ -647,3 +647,25 @@ it('passes selection context to deps.run and blocks commands requiring selection
     {}
   )
 })
+
+it('returns to the review when a running command is cancelled', async () => {
+  const { model, deps } = setup()
+  let signal: AbortSignal | undefined
+  deps.run = vi.fn(
+    (_command, _text, runSignal: AbortSignal) =>
+      new Promise<{ success: boolean }>((resolve) => {
+        signal = runSignal
+        runSignal.addEventListener('abort', () => resolve({ success: false }))
+      })
+  )
+  await model.start()
+  await model.finish('review')
+  const running = model.run()
+  expect(model.stage.value).toBe('running')
+  model.cancelRun()
+  await running
+  expect(signal?.aborted).toBe(true)
+  expect(model.stage.value).toBe('review')
+  expect(model.inputText.value).toBe('Hello!')
+  expect(model.error.value).toBe('')
+})

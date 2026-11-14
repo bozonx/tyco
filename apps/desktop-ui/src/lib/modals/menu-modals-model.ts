@@ -19,6 +19,8 @@ export function createMenuModalsModel(deps: MenuModalsDependencies = {}) {
   const pendingModal = ref<PendingModalParams | null>(null)
   const bufferedIntent = ref<BufferedPendingAction | null>(null)
   const steps = ref<MenuStep[]>([])
+  /** The step a scenario was started from anew; nothing lies under it */
+  const rootStepId = ref<number | null>(null)
   let lastStepId = 0
   let pendingId = 0
 
@@ -53,15 +55,28 @@ export function createMenuModalsModel(deps: MenuModalsDependencies = {}) {
     const removed = topStep.value
     steps.value = steps.value.slice(0, -1)
     pendingModal.value = null
+    if (removed?.id === rootStepId.value) rootStepId.value = null
     leave(removed)
   }
 
   const closeAll = () => {
     const removed = [...steps.value].reverse()
     steps.value = []
+    rootStepId.value = null
     pendingModal.value = null
     bufferedIntent.value = null
     removed.forEach(leave)
+  }
+
+  /**
+   * Replaces the whole stack with a step that starts a new scenario: Back
+   * cannot return to what was open before, nor to the view under the stack.
+   */
+  const startScenario = (...request: OpenModalArgs): number => {
+    cancelAndCloseAll()
+    const id = nextModal(...request)
+    rootStepId.value = id
+    return id
   }
 
   const setBufferedIntent = (intent: BufferedPendingAction | null) => {
@@ -152,6 +167,10 @@ export function createMenuModalsModel(deps: MenuModalsDependencies = {}) {
     back,
     closeAll,
     cancelAndCloseAll,
+    startScenario,
+    isScenarioRoot: computed(
+      () => topStep.value !== undefined && topStep.value.id === rootStepId.value
+    ),
     setPendingModal,
     clearPendingModal,
     isPendingModal: (owner: number) =>

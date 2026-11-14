@@ -281,6 +281,15 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     }
   }
 
+  /** Aborts a running command and returns to its review */
+  const cancelRun = () => {
+    if (stage.value !== 'running') return
+    generation += 1
+    controller?.abort()
+    controller = undefined
+    stage.value = 'review'
+  }
+
   /** Sets a parameter of the chosen command, such as the language */
   const setParameter = (name: string, value: string) => {
     if (stage.value !== 'review' || !selected.value) return
@@ -503,6 +512,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       if (commandId) chooseCommand(commandId)
     },
     cancel,
+    cancelRun,
     dispose() {
       disposed = true
       void cancel().catch(() => undefined)

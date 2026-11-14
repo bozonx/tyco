@@ -398,7 +398,8 @@ const syncRunningPending = () => {
         label: t('commands.running', {
           name: voice.command ? commandLabel(voice.command) : '',
         }),
-        onCancel: close,
+        // Esc during a run aborts it and stays on its review
+        onCancel: () => voice.cancelRun(),
       },
       runningPendingOwner
     )
@@ -456,10 +457,9 @@ function openTextActions() {
       MenuModals.VOICE_COMMANDS,
       { reviewText: voice.inputText, reviewCommandId: voice.command?.id }
     )
-  menuModalsStore.nextModal(MenuModals.INSERT, {
-    text: voice.inputText,
-    escMode: 'back',
-  })
+  // opened by its hotkey, the text actions start the scenario anew; opened
+  // from the action menu, Esc returns to this review
+  menuModalsStore.nextModal(MenuModals.INSERT, { text: voice.inputText })
 }
 
 const onKeyDown = (event: KeyboardEvent) => {
@@ -472,11 +472,7 @@ const onKeyDown = (event: KeyboardEvent) => {
   )
     return
   if (voice.stage === 'running') return
-  if (event.code === 'Escape') {
-    event.preventDefault()
-    close(event.shiftKey)
-    return
-  }
+  // Escape belongs to `ActionOverlayLayout`, which calls `close`
   if (voice.stage === 'recording') {
     if (event.ctrlKey || event.metaKey || event.altKey) return
     if (event.code === 'Space' && event.shiftKey) {

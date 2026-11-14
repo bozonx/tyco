@@ -70,6 +70,38 @@ describe('ActionOverlayLayout navigation', () => {
     wrapper.unmount()
   })
 
+  it('goes back from a step over the selection action menu', async () => {
+    desktop.setState({ mode: 'selectionActions' })
+    const menus = useMenuModalsStore()
+    menus.nextModal(MenuModals.VOICE_COMMANDS, { text: '' })
+    const wrapper = mount(ActionOverlayLayout, {
+      props: { otherActionsText: 'Source' },
+      global: { plugins: [desktop.pinia] },
+    })
+    // a step, not the root: Back and the cross, no scenario switch
+    expect(wrapper.get('.action-overlay-esc').text()).toContain('common.back')
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('menu.otherActions')
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await flushPromises()
+    expect(menus.currentModal).toBe(MenuModals.NONE)
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
+    wrapper.unmount()
+  })
+
+  it('makes the action menu opened by other actions the root', async () => {
+    desktop.setState({ mode: 'translation' })
+    const menus = useMenuModalsStore()
+    menus.startScenario(MenuModals.INSERT, { text: 'Source' })
+    const wrapper = mountLayout()
+    expect(wrapper.get('.action-overlay-esc').text()).toContain('common.close')
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(false)
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await flushPromises()
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
   it('closes at the root with one visible Escape action', async () => {
     const wrapper = mountLayout()
     expect(wrapper.get('.action-overlay-esc').text()).toContain('common.close')

@@ -108,12 +108,18 @@ const props = withDefaults(
   }
 )
 
-const { resolvedEscMode, escLabel, escTitle, handleEsc, handleCloseAll } =
-  useOverlayNav(() => ({
-    escMode: props.escMode,
-    escLabel: props.escLabel,
-    onEsc: props.onEsc,
-  }))
+const {
+  resolvedEscMode,
+  escLabel,
+  escTitle,
+  handleEsc,
+  handleCloseAll,
+  isAtRoot,
+} = useOverlayNav(() => ({
+  escMode: props.escMode,
+  escLabel: props.escLabel,
+  onEsc: props.onEsc,
+}))
 
 const { t } = useI18n()
 const menuModalsStore = useMenuModalsStore()
@@ -121,7 +127,7 @@ const menuModalsStore = useMenuModalsStore()
 // Inferring this from the shared stack leaks another screen's capabilities.
 const canOpenOtherActions = computed(
   () =>
-    menuModalsStore.menuBreadcrumbs.length <= 1 &&
+    isAtRoot() &&
     menuModalsStore.currentModal !== MenuModals.INSERT &&
     props.otherActionsText !== undefined
 )
@@ -129,8 +135,7 @@ function openOtherActions() {
   const params = menuModalsStore.currentModalParams
   const text =
     props.otherActionsText ?? ('text' in params ? params.text : undefined)
-  menuModalsStore.cancelAndCloseAll()
-  menuModalsStore.nextModal(MenuModals.INSERT, { text })
+  menuModalsStore.startScenario(MenuModals.INSERT, { text })
 }
 
 function onEscClick(event: MouseEvent) {

@@ -127,3 +127,25 @@ export function isModeOfWindow(
 export function resolveModeRoute(mode: ActivationMode | null): AppRoutePath {
   return mode ? MODE_ROUTE_MAP[mode] : APP_ROUTES.HOME.path
 }
+
+/**
+ * Quick window modes whose view is itself a menu that stays under the steps it
+ * opens: Esc on such a step returns to it. Input and recording modes are not
+ * here: a step opened from them starts the scenario anew.
+ */
+const MENU_ROOT_MODES: ReadonlySet<ActivationMode> = new Set([
+  ActivationMode.SELECTION_ACTIONS,
+  ActivationMode.TRANSLATION,
+  ActivationMode.STYLING,
+  ActivationMode.TRANSFORMATION,
+  ActivationMode.QUICK_AI_REQUEST,
+  ActivationMode.VOICE_QUICK_AI_REQUEST,
+  ActivationMode.SCREENSHOT_QUICK_AI_REQUEST,
+  ActivationMode.VOICE_SCREENSHOT_QUICK_AI_REQUEST,
+  ActivationMode.CHAT_PROMPTS,
+  ActivationMode.FAVORITES,
+])
+
+export function isMenuRootMode(mode: ActivationMode | null): boolean {
+  return mode !== null && MENU_ROOT_MODES.has(mode)
+}

@@ -4,6 +4,7 @@ import {
   createOverlayNavModel,
   type OverlayNavOptions,
 } from '../lib/modals/overlay-nav'
+import { isMenuRootMode } from '../lib/navigation/routes'
 import { appNavigation } from '../navigation'
 import { useDesktopStore } from '../stores/desktop'
 import { useEditorInputStore } from '../stores/editor-input'
@@ -21,6 +22,17 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
   const quickInputStore = useQuickInputStore()
   const voiceResultStore = useVoiceResultStore()
   const { t } = useI18n()
+
+  /** A single step over the menu view of its quick window mode */
+  const isOverModeMenu = () =>
+    isQuickWindow() &&
+    menuModalsStore.menuBreadcrumbs.length === 1 &&
+    !menuModalsStore.isScenarioRoot &&
+    isMenuRootMode(desktopStore.desktopState?.mode ?? null)
+
+  /** No step to return to: Esc closes, Other actions may switch scenarios */
+  const isAtRoot = () =>
+    menuModalsStore.menuBreadcrumbs.length <= 1 && !isOverModeMenu()
 
   const goBack = () => {
     if (menuModalsStore.menuBreadcrumbs.length > 1) {
@@ -70,12 +82,12 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
     }
   }
 
-  return createOverlayNavModel(
+  const nav = createOverlayNavModel(
     {
       currentModal: () => menuModalsStore.currentModal,
       canGoBack: () =>
         menuModalsStore.currentModal !== MenuModals.NONE &&
-        (menuModalsStore.menuBreadcrumbs.length > 1 || !isQuickWindow()),
+        (!isAtRoot() || !isQuickWindow()),
       isQuickWindow,
       t,
       goBack,
@@ -87,4 +99,5 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
       ...(!isQuickWindow() ? { escMode: 'back' as const } : {}),
     })
   )
+  return { ...nav, isAtRoot }
 }

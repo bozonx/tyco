@@ -308,7 +308,7 @@ const secretsStore = useSecretsStore()
 const editorNavigation = useEditorNavigation()
 const { toastKey, toastText } = useToast()
 const { t } = useI18n()
-const { handleEsc: defaultHandleEsc } = useOverlayNav(() => ({
+const { handleEsc: defaultHandleEsc, isAtRoot } = useOverlayNav(() => ({
   escMode: canReturnToPrevious.value ? 'back' : 'close',
 }))
 
@@ -443,9 +443,7 @@ const resultActionText = computed(
       : (model.turns.value.at(-1)?.answer?.content ?? ''))
 )
 
-const canReturnToPrevious = computed(
-  () => menuModalsStore.menuBreadcrumbs.length > 1
-)
+const canReturnToPrevious = computed(() => !isAtRoot())
 const canOpenSelectionActions = computed(
   () =>
     !canReturnToPrevious.value &&
@@ -461,8 +459,7 @@ function openSelectionActions() {
   )
     return
   const text = props.text
-  menuModalsStore.cancelAndCloseAll()
-  menuModalsStore.nextModal(MenuModals.INSERT, { text })
+  menuModalsStore.startScenario(MenuModals.INSERT, { text })
 }
 
 function openNextStep() {

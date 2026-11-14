@@ -23,7 +23,11 @@ vi.mock('../stores/nav-panel', () => ({
 vi.mock('../composables/use-overlay-nav', () => ({
   useOverlayNav: (
     options: () => { escLabel?: string; onEsc?: () => void }
-  ) => ({ escLabel: options().escLabel, handleEsc: () => options().onEsc?.() }),
+  ) => ({
+    escLabel: options().escLabel,
+    handleEsc: () => options().onEsc?.(),
+    isAtRoot: () => true,
+  }),
 }))
 
 let desktop: TestDesktop

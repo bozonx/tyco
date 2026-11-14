@@ -19,7 +19,7 @@ describe('createOverlayNavModel', () => {
     ...overrides,
   })
 
-  it('resolves to close and common.cancel in quick window when cannot go back', () => {
+  it('resolves to close and common.close in quick window when cannot go back', () => {
     const deps = createDeps({
       canGoBack: () => false,
       isQuickWindow: () => true,
@@ -28,7 +28,7 @@ describe('createOverlayNavModel', () => {
     const nav = createOverlayNavModel(deps)
 
     expect(nav.resolvedEscMode.value).toBe('close')
-    expect(nav.escLabel.value).toBe('common.cancel')
+    expect(nav.escLabel.value).toBe('common.close')
 
     nav.handleEsc()
     expect(deps.hideWindow).toHaveBeenCalled()
@@ -80,7 +80,7 @@ describe('createOverlayNavModel', () => {
       const nav = createOverlayNavModel(deps)
 
       expect(nav.resolvedEscMode.value).toBe('close')
-      expect(nav.escLabel.value).toBe('common.cancel')
+      expect(nav.escLabel.value).toBe('common.close')
     }
   })
 
