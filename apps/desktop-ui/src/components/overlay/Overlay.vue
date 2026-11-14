@@ -1,7 +1,11 @@
 <template>
   <!-- The overlay is dark: it is a keyboard HUD on top of the app, not a page
        of it. E-ink keeps its own flat palette instead. -->
-  <div class="overlay" :data-theme="overlayTheme">
+  <div
+    class="overlay"
+    :class="{ 'is-compact': !navBarVisible }"
+    :data-theme="overlayTheme"
+  >
     <div class="overlay-panel" :class="{ 'is-compact': !navBarVisible }">
       <div class="overlay-body">
         <slot />
@@ -58,6 +62,15 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   align-items: center;
 }
 
+/* A compact overlay is a blocking status card: the dim keeps the text under
+   it readable, so no blur. */
+.overlay.is-compact,
+:global([data-window='quick'] .overlay.is-compact) {
+  background-color: var(--app-overlay-dim) !important;
+  backdrop-filter: none;
+  cursor: progress;
+}
+
 .overlay-panel {
   position: relative;
   display: flex;
@@ -75,11 +88,22 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
 
 .overlay-panel.is-compact {
   align-self: center;
+  min-width: min(280px, 100%);
   max-width: 360px;
-  padding: var(--space-2xl);
+  padding: var(--space-lg) var(--space-xl);
   border: 1px solid var(--app-border);
-  border-radius: var(--radius-lg);
-  background-color: var(--app-quick-surface);
+  border-radius: var(--radius-xl);
+  background-color: var(--app-surface-raised);
+  box-shadow: var(--app-shadow-overlay);
+  cursor: default;
+  animation: panel-in 160ms ease-out;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
 }
 
 .overlay-body {

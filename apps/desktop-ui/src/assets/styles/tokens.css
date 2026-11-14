@@ -131,6 +131,8 @@
   --app-shadow-overlay:
     0 24px 64px -12px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.04);
   --app-overlay-backdrop: blur(6px);
+  /* Behind a blocking status card: light enough to keep the text readable */
+  --app-overlay-dim: rgb(0 0 0 / 0.28);
   --app-quick-backdrop: blur(16px);
   --app-quick-surface: color-mix(in oklab, var(--app-surface) 96%, transparent);
   --app-quick-hint-surface: color-mix(
@@ -219,6 +221,7 @@
   --app-shadow-overlay: none;
   --app-overlay-bg: var(--color-base-100);
   --app-overlay-backdrop: none;
+  --app-overlay-dim: transparent;
   --app-quick-backdrop: none;
   --app-quick-surface: var(--app-surface);
   --app-quick-hint-surface: var(--app-surface);

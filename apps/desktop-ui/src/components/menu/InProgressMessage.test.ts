@@ -77,6 +77,27 @@ describe('InProgressMessage', () => {
     expect(defaultWrapper.text()).toContain('common.inProgress')
   })
 
+  it('keeps typed keys from reaching the app underneath', () => {
+    const wrapper = mount(InProgressMessage, { attachTo: document.body })
+    const input = document.createElement('input')
+    document.body.append(input)
+    const reached = vi.fn()
+    input.addEventListener('keydown', reached)
+
+    const typed = new KeyboardEvent('keydown', {
+      key: 'x',
+      code: 'KeyX',
+      bubbles: true,
+      cancelable: true,
+    })
+    input.dispatchEvent(typed)
+
+    expect(typed.defaultPrevented).toBe(true)
+    expect(reached).not.toHaveBeenCalled()
+    input.remove()
+    wrapper.unmount()
+  })
+
   it('invokes onCancel callback on button click', async () => {
     const onCancel = vi.fn()
     const wrapper = mount(InProgressMessage, { props: { onCancel } })

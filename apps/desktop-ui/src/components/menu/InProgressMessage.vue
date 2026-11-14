@@ -1,5 +1,5 @@
 <template>
-  <div class="in-progress">
+  <div ref="rootEl" class="in-progress">
     <StateMessage
       kind="loading"
       :message="
@@ -15,6 +15,7 @@
                 : t('common.inProgress'))
       "
       icon="mdi:progress-clock"
+      density="compact"
     />
 
     <Button
@@ -50,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
@@ -83,6 +84,7 @@ const desktopStore = useDesktopStore()
 const editorNavigation = useEditorNavigation()
 const { toastKey } = useToast()
 const { t } = useI18n()
+const rootEl = ref<HTMLElement | null>(null)
 
 const isEditorTarget = computed(() => editorNavigation.isEditorPage())
 const isEditorCorrection = computed(
@@ -154,7 +156,18 @@ function handleCancel() {
   }
 }
 
+/** The panel is modal: only its own keys and Escape reach the app. */
 function handleKeyDown(event: KeyboardEvent) {
+  handleBufferedKey(event)
+  if (event.defaultPrevented || event.key === 'Escape') return
+  const isOwnControl =
+    event.target instanceof Node && rootEl.value?.contains(event.target)
+  if (isOwnControl && ['Tab', 'Enter', ' '].includes(event.key)) return
+  event.preventDefault()
+  event.stopImmediatePropagation()
+}
+
+function handleBufferedKey(event: KeyboardEvent) {
   if ((event.key === 'Escape' || event.code === 'Escape') && event.shiftKey) {
     event.preventDefault()
     event.stopImmediatePropagation()
@@ -260,9 +273,13 @@ useDismissibleLayer({
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   width: 100%;
   height: 100%;
+}
+
+.in-progress :deep(.ui-state) {
+  padding-bottom: 0;
 }
 
 .buffered-intent-slot {
