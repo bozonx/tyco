@@ -6,33 +6,40 @@ import type {
   ScriptExecutionResult,
 } from '@tyco/shared'
 
-import type { ScriptAndWebhookToolDependencies } from '../tools/script-and-webhook-tools'
-import { testCopyTool, testInsertTool, testTools } from '../tools/testing'
-import { TEXT_INPUT_SCHEMA, type ToolDefinition } from '../tools/tool-types'
+import type { ScriptAndWebhookOperationDependencies } from '../operations/script-and-webhook-operations'
+import {
+  testCopyOperation,
+  testInsertOperation,
+  testOperations,
+} from '../operations/testing'
+import {
+  TEXT_INPUT_SCHEMA,
+  type OperationDefinition,
+} from '../operations/operation-types'
 import { createCommand } from './command-config'
 import type { InvocationRunnerDependencies } from '../invocation/invocation-runner'
 import type { InvocationOptions } from '../invocation/invocation-types'
 import { createCommandRunner, createCommandTransformer } from './command-runner'
 
 const script = (
-  toolConfig: Record<string, unknown> = {},
+  operationConfig: Record<string, unknown> = {},
   extra: Partial<CommandConfig> = {}
 ): CommandConfig => ({
   ...createCommand('script', 's-1'),
   name: 'Echo',
-  toolConfig: { command: 'echo {{TEXT}}', ...toolConfig },
+  operationConfig: { command: 'echo {{TEXT}}', ...operationConfig },
   ...extra,
 })
 
 const webhook = (
-  toolConfig: Record<string, unknown> = {},
+  operationConfig: Record<string, unknown> = {},
   extra: Partial<CommandConfig> = {}
 ): CommandConfig => ({
   ...createCommand('webhook', 'wh-1'),
   name: 'My Webhook',
-  toolConfig: {
+  operationConfig: {
     url: 'https://api.example.com/endpoint?q={{TEXT}}',
-    ...toolConfig,
+    ...operationConfig,
   },
   ...extra,
 })
@@ -50,7 +57,7 @@ const result = (
 
 function setup(
   extra: Partial<InvocationRunnerDependencies> &
-    ScriptAndWebhookToolDependencies & {
+    ScriptAndWebhookOperationDependencies & {
       /** What `core.copy` does: the clipboard sink runs it */
       copyText?: (text: string) => Promise<void>
       /** What `core.insert` does: the paste sink runs it */
@@ -61,7 +68,7 @@ function setup(
         options?: { signal?: AbortSignal }
       ) => Promise<string>
     } = {},
-  tools: readonly ToolDefinition[] = []
+  tools: readonly OperationDefinition[] = []
 ) {
   const {
     executeScriptAction,
@@ -74,9 +81,9 @@ function setup(
     ...rest
   } = extra
   const deps = {
-    tools: testTools(
+    tools: testOperations(
       { executeScriptAction, cancelScriptAction, executeWebhook, newRunId },
-      [...tools, testCopyTool(copyText), testInsertTool(insertText)]
+      [...tools, testCopyOperation(copyText), testInsertOperation(insertText)]
     ),
     showToast: vi.fn(),
     showError: vi.fn(),
@@ -282,7 +289,10 @@ describe('commands that cannot run', () => {
 
   it('reports a tool this build does not know', async () => {
     const { deps, runner } = setup()
-    await runner.run(script({}, { toolId: 'notes.write', name: 'Note' }), 'x')
+    await runner.run(
+      script({}, { operationId: 'notes.write', name: 'Note' }),
+      'x'
+    )
     expect(deps.showError).toHaveBeenCalledWith(
       'toast.commandUnavailable',
       'Note'
@@ -356,7 +366,9 @@ describe('cancellation', () => {
 })
 
 describe('plugin tools', () => {
-  const noteTool = (extra: Partial<ToolDefinition> = {}): ToolDefinition => ({
+  const noteTool = (
+    extra: Partial<OperationDefinition> = {}
+  ): OperationDefinition => ({
     id: 'Notes.write',
     description: 'Writes a note',
     inputSchema: TEXT_INPUT_SCHEMA,
@@ -366,8 +378,8 @@ describe('plugin tools', () => {
   const note = (extra: Partial<CommandConfig> = {}): CommandConfig => ({
     ...createCommand('script', 'n-1'),
     name: 'Note',
-    toolId: 'Notes.write',
-    toolConfig: { dir: '~/work' },
+    operationId: 'Notes.write',
+    operationConfig: { dir: '~/work' },
     ...extra,
   })
 
@@ -458,7 +470,7 @@ describe('plugin tools', () => {
 })
 
 describe('the output of a command', () => {
-  const echo = (output: string): ToolDefinition => ({
+  const echo = (output: string): OperationDefinition => ({
     id: 'Test.echo',
     description: 'Echo',
     inputSchema: TEXT_INPUT_SCHEMA,
@@ -590,7 +602,7 @@ describe('the output of a command', () => {
 
   it('reports a tool without output instead of an empty copy', async () => {
     const copyText = vi.fn(async () => {})
-    const tool: ToolDefinition = {
+    const tool: OperationDefinition = {
       ...echo('unused'),
       run: vi.fn(async () => ({ ok: true, messageKey: 'toast.saved' })),
     }
@@ -659,7 +671,7 @@ describe('external returned output', () => {
         run,
       },
     ])
-    const config = script({}, { toolId: 'structured' })
+    const config = script({}, { operationId: 'structured' })
     expect(
       (
         await runner.run(config, '', {
@@ -685,7 +697,7 @@ it('opens a result menu for a voice translation without inserting or copying the
   const { runner, deps } = setup({ insertText, copyText }, [
     {
       id: 'core.translate',
-      labelKey: 'tools.translate',
+      labelKey: 'operations.translate',
       description: 'Translates input text',
       inputSchema: TEXT_INPUT_SCHEMA,
       defaultOutputAction: 'insertIntoWindow',
@@ -697,7 +709,7 @@ it('opens a result menu for a voice translation without inserting or copying the
     'translation',
     deps.tools.get('core.translate')
   )
-  command.toolConfig = { language: 'en-US' }
+  command.operationConfig = { language: 'en-US' }
   const outcome = await runner.run(command, 'Original text', {
     source: 'voice',
   })
@@ -752,7 +764,7 @@ describe('LLM pre-transformation', () => {
     const { runner } = setup({ executeScriptAction }, [
       {
         id: 'core.transformation',
-        labelKey: 'tools.transformation',
+        labelKey: 'operations.transformation',
         description: 'Transform',
         inputSchema: TEXT_INPUT_SCHEMA,
         run: runTransformation,
@@ -786,7 +798,7 @@ describe('LLM pre-transformation', () => {
     const { runner } = setup({ executeScriptAction }, [
       {
         id: 'core.transformation',
-        labelKey: 'tools.transformation',
+        labelKey: 'operations.transformation',
         description: 'Transform',
         inputSchema: TEXT_INPUT_SCHEMA,
         run: vi.fn().mockRejectedValue(new Error('model offline')),

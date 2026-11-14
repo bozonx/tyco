@@ -21,7 +21,7 @@ import { clientLogger } from '../lib/logger'
 import { useActionMenuStore } from './action-menu'
 import { useEditMenuStore } from './edit-menu'
 import { useToolbarStore } from './toolbar'
-import { useToolsStore } from './tools'
+import { useOperationsStore } from './operations'
 import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
 
@@ -30,7 +30,7 @@ export const usePluginRuntimeStore = defineStore('pluginRuntime', () => {
   const actions = useActionMenuStore()
   const edits = useEditMenuStore()
   const toolbar = useToolbarStore()
-  const tools = useToolsStore()
+  const tools = useOperationsStore()
   const ipc = useIpcStore()
   const desktopStore = useDesktopStore()
   const loader = createPluginPackageLoader({

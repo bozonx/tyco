@@ -4,9 +4,9 @@ import {
   type PluginContext,
   type PluginDefinition,
   TEXT_INPUT_SCHEMA,
-  type ToolConfigIssue,
-  type ToolDefinition,
-  type ToolResult,
+  type OperationConfigIssue,
+  type OperationDefinition,
+  type OperationResult,
 } from '@tyco/plugin-sdk'
 import {
   type FastNoteConfig,
@@ -112,7 +112,7 @@ const SAVE_ERROR_KEYS: Readonly<Record<string, string>> = {
   fileTooLarge: 'local.noteTooLarge',
 }
 
-const issueMessage = (issue: FastNoteIssue): ToolConfigIssue => ({
+const issueMessage = (issue: FastNoteIssue): OperationConfigIssue => ({
   messageKey: `local.${issue.code}`,
   ...(issue.token === undefined ? {} : { params: { token: issue.token } }),
 })
@@ -147,9 +147,9 @@ export default function pluginIndex(): PluginDefinition {
         }
       }
 
-      const write: ToolDefinition = {
+      const write: OperationDefinition = {
         id: 'write',
-        labelKey: 'local.toolLabel',
+        labelKey: 'local.operationLabel',
         descriptionKey: 'local.toolDescription',
         icon: 'mdi:note-plus-outline',
         description:
@@ -186,7 +186,7 @@ export default function pluginIndex(): PluginDefinition {
           source,
           signal,
           editorSnapshot,
-        }): Promise<ToolResult> => {
+        }): Promise<OperationResult> => {
           const text = String(input.text ?? '').trim()
           if (!text)
             return {
@@ -266,14 +266,14 @@ export default function pluginIndex(): PluginDefinition {
         },
       }
 
-      ctx.registerTools([write])
+      ctx.registerOperations([write])
 
       ctx.registerActionsItems([
         {
           id: 'write',
           labelKey: 'local.label',
           icon: 'mdi:note-plus-outline',
-          toolId: write.id,
+          operationId: write.id,
         },
       ])
 
@@ -283,7 +283,7 @@ export default function pluginIndex(): PluginDefinition {
           icon: 'mdi:note-plus-outline',
           tooltipKey: 'local.label',
           position: 'right',
-          toolId: write.id,
+          operationId: write.id,
         },
       ])
     },

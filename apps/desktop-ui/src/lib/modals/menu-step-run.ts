@@ -7,7 +7,7 @@ import type {
 } from '@tyco/shared'
 
 import { historyFailureOf } from '../history/history-failure'
-import type { ToolResult } from '../tools/tool-types'
+import type { OperationResult } from '../operations/operation-types'
 import type {
   BufferedPendingAction,
   PendingModalParams,
@@ -34,7 +34,7 @@ export interface MenuStepRunDependencies {
   /** The result was made but could not be kept in the history */
   reportHistoryError: () => void
   /** The text of a failed result, as the tool tells it */
-  describeResult: (result: ToolResult) => string
+  describeResult: (result: OperationResult) => string
   reportError: (message: string) => void
   consumeBufferedIntent?: () => BufferedPendingAction | null
   executeBufferedIntent?: (
@@ -64,14 +64,14 @@ export interface MenuStepRunRequest {
   invoke: (
     signal: AbortSignal,
     updatePending: (params: Omit<PendingModalParams, 'onCancel'>) => void
-  ) => Promise<ToolResult>
+  ) => Promise<OperationResult>
   /**
    * The text of a successful result to show; null when there is nothing to
    * show, and the caller has said why
    */
-  read: (result: ToolResult) => string | null
+  read: (result: OperationResult) => string | null
   /** Opens the step with the result */
-  show: (text: string, result: ToolResult) => void
+  show: (text: string, result: OperationResult) => void
 }
 
 /**

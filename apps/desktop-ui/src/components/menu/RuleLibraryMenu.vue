@@ -107,9 +107,9 @@ async function runRule(rule: string, itemLabel?: string) {
       ? { ...props.kind.pending, label: itemLabel }
       : props.kind.pending,
     invoke: (signal) =>
-      invocations.call(props.kind.toolId, trimmedText, {
+      invocations.call(props.kind.operationId, trimmedText, {
         signal,
-        toolConfig: { prompt: rule },
+        operationConfig: { prompt: rule },
       }),
     // an empty result is a failed one: the tool has said so already
     read: (result) => result.content ?? null,

@@ -1,6 +1,6 @@
 import {
   CORE_TOOL_IDS,
-  type CoreToolId,
+  type CoreOperationId,
   sampleUrlTemplate,
   type CommandConfig,
   type CommandRunSource,
@@ -8,17 +8,21 @@ import {
 import { errorMessage } from '@tyco/shared/value-guards'
 import { translate } from '../i18n'
 import type { Invocation, ResultSink } from '../invocation/invocation-types'
-import { invocationUnavailableReason } from '../invocation/invoke-tool'
+import { invocationUnavailableReason } from '../invocation/invoke-operation'
 import { resolveSink } from '../invocation/result-sinks'
-import { toolInputKind } from '../tools/tool-input'
+import { operationInputKind } from '../operations/operation-input'
 import type {
-  RegisteredTool,
-  ToolInputKind,
-  ToolLookup,
-} from '../tools/tool-types'
+  RegisteredOperation,
+  OperationInputKind,
+  OperationLookup,
+} from '../operations/operation-types'
 import { httpOrigin } from '../net/secrets'
-import { outputRequest } from '../tools/tool-call'
-import { scriptToolConfig, stringOr, webhookToolConfig } from './command-config'
+import { outputRequest } from '../operations/operation-call'
+import {
+  scriptOperationConfig,
+  stringOr,
+  webhookOperationConfig,
+} from './command-config'
 
 /** Output handling belongs to the invocation context, not the tool. */
 export function commandAfterRun(
@@ -28,14 +32,16 @@ export function commandAfterRun(
   return resolveSink(commandInvocation(command), { source })
 }
 
-const isCoreToolId = (toolId: string): toolId is CoreToolId =>
-  CORE_TOOL_IDS.includes(toolId as CoreToolId)
+const isCoreOperationId = (
+  operationId: string
+): operationId is CoreOperationId =>
+  CORE_TOOL_IDS.includes(operationId as CoreOperationId)
 
 /** The tool the command runs, if the registry has it */
-export const commandTool = (
+export const commandOperation = (
   command: CommandConfig,
-  tools: ToolLookup
-): RegisteredTool | undefined => tools.get(command.toolId)
+  tools: OperationLookup
+): RegisteredOperation | undefined => tools.get(command.operationId)
 
 /**
  * How the command gets its input from a text, or `null` when its tool is
@@ -43,13 +49,13 @@ export const commandTool = (
  */
 function commandInputKind(
   command: CommandConfig,
-  tools: ToolLookup
-): ToolInputKind | null {
-  const tool = commandTool(command, tools)
+  tools: OperationLookup
+): OperationInputKind | null {
+  const tool = commandOperation(command, tools)
   return tool
-    ? toolInputKind(
+    ? operationInputKind(
         tool,
-        command.toolConfig,
+        command.operationConfig,
         command.isLlmArgumentParsingEnabled
       )
     : null
@@ -61,20 +67,20 @@ function commandInputKind(
  */
 export const commandUnavailableReason = (
   command: CommandConfig,
-  tools: ToolLookup
+  tools: OperationLookup
 ): string | undefined =>
   invocationUnavailableReason(commandInvocation(command), tools)
 
 /** Whether the tool of the command can run it now */
 export const isCommandAvailable = (
   command: CommandConfig,
-  tools: ToolLookup
+  tools: OperationLookup
 ): boolean => !commandUnavailableReason(command, tools)
 
 /** Whether the command gets the text it is invoked on */
 export function commandTakesText(
   command: CommandConfig,
-  tools: ToolLookup
+  tools: OperationLookup
 ): boolean {
   const kind = commandInputKind(command, tools)
   return kind === 'text' || kind === 'parsed'
@@ -83,13 +89,16 @@ export function commandTakesText(
 /** Whether the command can be an item of the action menu */
 export function isMenuCommand(
   command: CommandConfig,
-  tools: ToolLookup
+  tools: OperationLookup
 ): boolean {
   return command.isEnabled && isCommandAvailable(command, tools)
 }
 
-export function commandIcon(command: CommandConfig, tools: ToolLookup): string {
-  return commandTool(command, tools)?.icon ?? 'mdi:puzzle-outline'
+export function commandIcon(
+  command: CommandConfig,
+  tools: OperationLookup
+): string {
+  return commandOperation(command, tools)?.icon ?? 'mdi:puzzle-outline'
 }
 
 /** The last part of a path, without quotes */
@@ -105,14 +114,14 @@ const baseName = (path: string): string =>
  * script, the host of a webhook; empty when there is nothing to take it from
  */
 export function suggestCommandName(command: CommandConfig): string {
-  if (command.toolId === 'script') {
-    const line = scriptToolConfig(command).command.trim()
+  if (command.operationId === 'script') {
+    const line = scriptOperationConfig(command).command.trim()
     const program = line.match(/^(['"])(.*?)\1|^\S+/)
     return program ? baseName(program[2] ?? program[0]) : ''
   }
-  if (command.toolId === 'webhook') {
+  if (command.operationId === 'webhook') {
     try {
-      return new URL(webhookToolConfig(command).url.trim()).hostname
+      return new URL(webhookOperationConfig(command).url.trim()).hostname
     } catch {
       return ''
     }
@@ -126,27 +135,27 @@ export function suggestCommandName(command: CommandConfig): string {
  */
 export function commandLabel(command: CommandConfig): string {
   if (command.name.trim()) return command.name
-  if (isCoreToolId(command.toolId))
-    return translate(`tools.${command.toolId.slice('core.'.length)}`)
-  if (command.toolId === 'script') {
-    return scriptToolConfig(command).command.trim() || command.id
+  if (isCoreOperationId(command.operationId))
+    return translate(`operations.${command.operationId.slice('core.'.length)}`)
+  if (command.operationId === 'script') {
+    return scriptOperationConfig(command).command.trim() || command.id
   }
-  if (command.toolId === 'webhook') {
+  if (command.operationId === 'webhook') {
     return (
       suggestCommandName(command) ||
-      webhookToolConfig(command).url.trim() ||
+      webhookOperationConfig(command).url.trim() ||
       command.id
     )
   }
   // the tool says more than the generated id of the command
-  return command.toolId.trim() || command.id
+  return command.operationId.trim() || command.id
 }
 
 /** The invocation that runs the command */
 export function commandInvocation(command: CommandConfig): Invocation {
   return {
-    toolId: command.toolId,
-    toolConfig: command.toolConfig,
+    operationId: command.operationId,
+    operationConfig: command.operationConfig,
     label: commandLabel(command),
     commandId: command.id,
     isLlmArgumentParsingEnabled: command.isLlmArgumentParsingEnabled,
@@ -161,9 +170,10 @@ export function commandInvocation(command: CommandConfig): Invocation {
  * the method and URL of a webhook
  */
 export function commandTarget(command: CommandConfig): string {
-  if (command.toolId === 'script') return scriptToolConfig(command).command
-  if (command.toolId === 'webhook') {
-    const config = webhookToolConfig(command)
+  if (command.operationId === 'script')
+    return scriptOperationConfig(command).command
+  if (command.operationId === 'webhook') {
+    const config = webhookOperationConfig(command)
     return `${config.method} ${config.url}`
   }
   return ''
@@ -178,11 +188,11 @@ export interface CommandIssue {
 /** What keeps the command from running as the user expects */
 export function validateCommand(
   command: CommandConfig,
-  tools: ToolLookup
+  tools: OperationLookup
 ): CommandIssue[] {
   const issues: CommandIssue[] = []
   // a translation is named well enough by its tool
-  if (!command.name.trim() && command.toolId !== 'core.translate') {
+  if (!command.name.trim() && command.operationId !== 'core.translate') {
     issues.push({ field: 'name', messageKey: 'commands.errorNoName' })
   }
   if (
@@ -194,30 +204,33 @@ export function validateCommand(
       messageKey: 'commands.errorNoPrompt',
     })
   }
-  if (command.toolId === 'script') {
-    const config = scriptToolConfig(command)
+  if (command.operationId === 'script') {
+    const config = scriptOperationConfig(command)
     if (!config.command.trim()) {
       issues.push({ field: 'command', messageKey: 'commands.errorNoCommand' })
     }
-  } else if (command.toolId === 'webhook') {
-    const config = webhookToolConfig(command)
+  } else if (command.operationId === 'webhook') {
+    const config = webhookOperationConfig(command)
     if (!config.url.trim()) {
       issues.push({ field: 'url', messageKey: 'commands.errorNoUrl' })
     } else if (!httpOrigin(sampleUrlTemplate(config.url))) {
       issues.push({ field: 'url', messageKey: 'commands.errorInvalidUrl' })
     }
-  } else if (command.toolId === 'core.translate') {
+  } else if (command.operationId === 'core.translate') {
     // without a language of its own, the caller names it
   } else if (
-    command.toolId === 'core.aiTask' ||
-    command.toolId === 'core.transformation' ||
-    command.toolId === 'core.styling'
+    command.operationId === 'core.aiTask' ||
+    command.operationId === 'core.transformation' ||
+    command.operationId === 'core.styling'
   ) {
-    if (!stringOr(command.toolConfig.prompt).trim()) {
+    if (!stringOr(command.operationConfig.prompt).trim()) {
       issues.push({ field: 'prompt', messageKey: 'commands.errorNoPrompt' })
     }
-  } else if (!commandTool(command, tools)) {
-    issues.push({ field: 'toolId', messageKey: 'commands.errorUnknownTool' })
+  } else if (!commandOperation(command, tools)) {
+    issues.push({
+      field: 'operationId',
+      messageKey: 'commands.errorUnknownType',
+    })
   }
   return issues
 }
@@ -241,7 +254,7 @@ const PRE_TRANSFORM_EMPTY_KEY = 'commands.preTransformEmpty'
 export async function preTransformCommandText(
   command: CommandConfig,
   text: string,
-  tools: ToolLookup,
+  tools: OperationLookup,
   options: {
     signal?: AbortSignal
     source?: CommandRunSource
@@ -281,7 +294,7 @@ export async function preTransformCommandText(
   }
   const tool = tools.get('core.transformation')
   if (!tool) {
-    return { ok: false, messageKey: 'commands.toolMissing' }
+    return { ok: false, messageKey: 'commands.typeMissing' }
   }
   const reason = tool.getUnavailableReasonKey?.()
   if (reason) {

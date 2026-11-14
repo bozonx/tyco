@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { createCommand } from '../commands/command-config'
-import type { RegisteredTool, ToolLookup } from '../tools/tool-types'
+import type {
+  RegisteredOperation,
+  OperationLookup,
+} from '../operations/operation-types'
 import {
   buildMainActionOptions,
   commandGroup,
@@ -36,11 +39,11 @@ describe('main action groups', () => {
 
   it('groups a command by what it does', () => {
     const notes = { owner: { kind: 'plugin', pluginId: 'Notes' } }
-    const tools: ToolLookup = {
-      get: (toolId) =>
-        toolId === 'Notes.write'
-          ? (notes as RegisteredTool)
-          : ({ owner: { kind: 'core' } } as RegisteredTool),
+    const tools: OperationLookup = {
+      get: (operationId) =>
+        operationId === 'Notes.write'
+          ? (notes as RegisteredOperation)
+          : ({ owner: { kind: 'core' } } as RegisteredOperation),
     }
 
     expect(commandGroup(createCommand('core.translate'), tools)).toEqual({
@@ -144,10 +147,10 @@ describe('duplicatesDirectChoice', () => {
     transformations: [' Rewrite clearly '],
     styling: [' Formal tone '],
   }
-  const command = (toolId: string, toolConfig: Record<string, unknown>) => ({
-    ...createCommand(toolId),
-    toolConfig,
-  })
+  const command = (
+    operationId: string,
+    operationConfig: Record<string, unknown>
+  ) => ({ ...createCommand(operationId), operationConfig })
 
   it('treats a translation without a language as the translation menu', () => {
     expect(duplicatesDirectChoice(command('core.translate', {}), direct)).toBe(

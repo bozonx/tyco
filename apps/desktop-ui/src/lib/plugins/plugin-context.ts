@@ -3,7 +3,7 @@ import {
   type ActionContribution,
   type PluginDisposer,
   type ToolbarContribution,
-  type ToolResult,
+  type OperationResult,
   isPluginError,
   PluginError,
   PluginCancellation,
@@ -14,11 +14,11 @@ import {
 
 import type { ActionItem, EditItem, ToolbarItem } from '../../types/plugins'
 import { createPluginAction } from './plugin-action'
-import type { ToolDefinition as HostToolDefinition } from '../tools/tool-types'
+import type { OperationDefinition as HostOperationDefinition } from '../operations/operation-types'
 import type { PluginLifecycle } from './plugin-manager'
 import { pluginMessageKey } from './plugin-resources'
 import { createPluginRegistration } from './plugin-registration'
-import { createPluginToolAdapter } from './plugin-tool-adapter'
+import { createPluginOperationAdapter } from './plugin-operation-adapter'
 
 export interface PluginContextDependencies {
   registerActionsItems(items: ActionItem[]): PluginDisposer | void
@@ -26,17 +26,17 @@ export interface PluginContextDependencies {
   registerCaseItems(items: EditItem[]): PluginDisposer | void
   registerFormatItems(items: EditItem[]): PluginDisposer | void
   registerToolbarItems(items: ToolbarItem[]): PluginDisposer | void
-  registerTools(
-    tools: HostToolDefinition[],
+  registerOperations(
+    tools: HostOperationDefinition[],
     config: () => Record<string, unknown>
   ): PluginDisposer | void
-  invokeTool?(
-    toolId: string,
+  invokeOperation?(
+    operationId: string,
     snapshot: EditorInputSnapshot,
     signal: AbortSignal
-  ): Promise<ToolResult>
-  invokeActionTool?(
-    toolId: string,
+  ): Promise<OperationResult>
+  invokeActionOperation?(
+    operationId: string,
     text: string,
     signal: AbortSignal
   ): Promise<void>
@@ -99,7 +99,7 @@ export function createPluginContext(
       return fn(...args)
     }
   const registration = createPluginRegistration(id, lifecycle, check)
-  const tools = createPluginToolAdapter(id, lifecycle, check)
+  const tools = createPluginOperationAdapter(id, lifecycle, check)
 
   function uiAction<A extends unknown[]>(
     action: (...args: A) => void | Promise<void>,
@@ -157,19 +157,19 @@ export function createPluginContext(
         (scoped) =>
           scoped.map((item): ActionItem => {
             const action =
-              item.toolId !== undefined
+              item.operationId !== undefined
                 ? async (text: string) => {
                     check()
-                    if (!deps.invokeActionTool)
+                    if (!deps.invokeActionOperation)
                       throw new Error('Tool invocation is unavailable')
-                    await deps.invokeActionTool(
-                      `${id}.${item.toolId}`,
+                    await deps.invokeActionOperation(
+                      `${id}.${item.operationId}`,
                       text,
                       lifecycle.signal
                     )
                   }
                 : item.action!
-            const execution = uiAction(action, item.toolId !== undefined)
+            const execution = uiAction(action, item.operationId !== undefined)
             return {
               ...item,
               get disabled() {
@@ -193,14 +193,14 @@ export function createPluginContext(
         (scoped) =>
           scoped.map((item): ToolbarItem => {
             const action =
-              item.toolId !== undefined
+              item.operationId !== undefined
                 ? async () => {
                     check('editor')
                     const snapshot = deps.getEditorInputSnapshot()
-                    if (!deps.invokeTool)
+                    if (!deps.invokeOperation)
                       throw new Error('Tool invocation is unavailable')
-                    const result = await deps.invokeTool(
-                      `${id}.${item.toolId}`,
+                    const result = await deps.invokeOperation(
+                      `${id}.${item.operationId}`,
                       snapshot,
                       lifecycle.signal
                     )
@@ -212,7 +212,7 @@ export function createPluginContext(
                     if (result.message) deps.toastText(result.message, level)
                   }
                 : item.action!
-            const execution = uiAction(action, item.toolId !== undefined)
+            const execution = uiAction(action, item.operationId !== undefined)
             return {
               ...item,
               tooltipKey: item.tooltipKey ? key(item.tooltipKey) : undefined,
@@ -227,14 +227,14 @@ export function createPluginContext(
           }),
         deps.registerToolbarItems
       ),
-    registerTools: (items) => {
+    registerOperations: (items) => {
       tools.validate(items)
       // Tools use dot-separated IDs; reserve them in the same owned registry.
       return registration(
         'tool',
         items,
         () => items.map(tools.adapt),
-        (definitions) => deps.registerTools(definitions, config)
+        (definitions) => deps.registerOperations(definitions, config)
       )
     },
     getEditorInputValue: async () =>

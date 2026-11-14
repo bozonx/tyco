@@ -27,7 +27,7 @@
   "contentTemplate": "Modelo de conteúdo",
   "contentTemplateInfo": "Suporta tokens de data, {'{'}title{'}'} e o obrigatório {'{'}content{'}'}. Escreva {'{'}{'{'} ou {'}'}{'}'} para uma chave literal. Se um título usar {'{'}title{'}'}, a primeira linha não é repetida abaixo dele. O modo de anexar cria o arquivo se ele não existir.",
   "clearInputAfterSave": "Limpar o campo de entrada após salvar",
-  "toolLabel": "Escrever uma nota",
+  "operationLabel": "Escrever uma nota",
   "toolDescription": "Salva o texto como uma nova nota ou o adiciona a uma existente, na sua pasta de notas",
   "noNotesPath": "A pasta de notas não está configurada nas configurações do plugin Nota rápida",
   "noteSaved": "Nota salva",

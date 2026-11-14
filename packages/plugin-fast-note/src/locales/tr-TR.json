@@ -27,7 +27,7 @@
   "contentTemplate": "İçerik şablonu",
   "contentTemplateInfo": "Tarih belirteçlerini, {'{'}title{'}'} ve zorunlu {'{'}content{'}'} belirtecini destekler. Süslü parantez yazmak için {'{'}{'{'} veya {'}'}{'}'} kullanın. Bir başlık {'{'}title{'}'} kullanıyorsa ilk satır altında tekrarlanmaz. Ekleme modu dosya yoksa oluşturur.",
   "clearInputAfterSave": "Kaydettikten sonra giriş alanını temizle",
-  "toolLabel": "Not yaz",
+  "operationLabel": "Not yaz",
   "toolDescription": "Metni not klasörünüzde yeni bir not olarak kaydeder veya bir nota ekler",
   "noNotesPath": "Hızlı not eklentisinin ayarlarında not klasörü belirtilmemiş",
   "noteSaved": "Not kaydedildi",

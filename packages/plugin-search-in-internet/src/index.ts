@@ -5,7 +5,7 @@ import type { InputConfigItem } from '@tyco/plugin-sdk'
 import {
   type PluginContext,
   TEXT_INPUT_SCHEMA,
-  type ToolDefinition,
+  type OperationDefinition,
 } from '@tyco/plugin-sdk'
 
 export const DEFAULT_SEARCH_URL = 'https://duckduckgo.com/?q='
@@ -45,7 +45,7 @@ export default function pluginIndex(): PluginDefinition {
     descriptionKey: 'local.description',
     defaultConfig: { fields: [urlField] },
     init: (ctx: PluginContext) => {
-      const search: ToolDefinition = {
+      const search: OperationDefinition = {
         id: 'search',
         labelKey: 'local.label',
         descriptionKey: 'local.description',
@@ -89,14 +89,14 @@ export default function pluginIndex(): PluginDefinition {
         },
       }
 
-      ctx.registerTools([search])
+      ctx.registerOperations([search])
 
       ctx.registerActionsItems([
         {
           id: 'search',
           labelKey: 'local.label',
           icon: 'mdi:search-web',
-          toolId: search.id,
+          operationId: search.id,
         },
       ])
 
@@ -106,7 +106,7 @@ export default function pluginIndex(): PluginDefinition {
           icon: 'mdi:search-web',
           tooltipKey: 'local.label',
           position: 'right',
-          toolId: search.id,
+          operationId: search.id,
         },
       ])
     },

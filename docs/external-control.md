@@ -135,7 +135,7 @@ The corresponding user configuration is:
 { "externalAccess": { "canAccessSelection": false } }
 ```
 
-A command's external grant does not bypass its tool's availability or permission
+A command's external grant does not bypass its operation's availability or permission
 checks. Permission and command configuration are checked again when the
 quick webview claims a job. A command changed after submission is rejected
 with `ConfigurationChanged` instead of executing a stale configuration.
@@ -224,8 +224,8 @@ tyco-ctl commands describe --name 'My command'
 full list instead. Descriptions are always JSON. The list includes the commands
 that are currently callable, with `id`, `name`, `input`,
 `canReplaceSelection`, and `output` (`"return"`). A structured input is marked `structured`; a description also
-includes `textAccepted` and the tool's `inputSchema` when the catalog provides
-one. Command-specific schema overrides are validated by the executing tool
+includes `textAccepted` and the operation's `inputSchema` when the catalog provides
+one. Command-specific schema overrides are validated by the executing operation
 registry. Disabled, denied, missing, or unavailable commands return a coded
 error when described.
 
@@ -247,7 +247,7 @@ For example, a text command description can look like:
 
 - `input: "none"`: omit input flags.
 - `input: "text"`: use `--text`, `--stdin`, or an explicit selection.
-- `input: "structured"`: use `--input-json` with an object matching the tool's
+- `input: "structured"`: use `--input-json` with an object matching the operation's
   schema. Text is also accepted when `textAccepted` is true (LLM argument
   parsing is enabled). Selection input is not supported for structured commands.
 - `canReplaceSelection` describes command compatibility, not the current
@@ -256,12 +256,12 @@ For example, a text command description can look like:
   the library command's configured `afterRun` action.
 - `inputSchema` is the effective schema after command-specific overrides,
   presets, and plugin defaults, or `null` when no schema has been published.
-  It is the schema used by the tool registry to validate explicit JSON input.
+  It is the schema used by the operation registry to validate explicit JSON input.
   While updated command settings are waiting for catalog synchronization,
   discovery/execution can return `NotReady`; retry after synchronization.
 
 An empty list does not prove the library is empty: commands without grants,
-disabled commands, and unavailable tools are omitted. During startup the tool
+disabled commands, and unavailable operations are omitted. During startup the operation
 catalog may still be loading; execution can return `NotReady` even when a
 backend-known script or webhook appears in the list.
 
@@ -290,13 +290,13 @@ against the effective tool input schema without LLM argument parsing. Explicit
 JSON is useful for structured tools that cannot parse ordinary text.
 
 Input sources are mutually exclusive. Supplying input to a command with no
-input is an error. Explicitly empty text remains an input; the tool decides
+input is an error. Explicitly empty text remains an input; the operation decides
 whether it is valid. The CLI does not trim, normalize, or silently drop it.
 Use stdin for private text; command-line arguments may appear in process lists.
 
 Tool content is always returned in the job's `output`. `--wait` writes that
 content to stdout exactly, without adding a newline. `--wait --json` instead
-prints the complete final job object. A tool can have its own intrinsic side
+prints the complete final job object. An operation can have its own intrinsic side
 effects (for example a webhook, script, `core.copy`, or `core.insert`); choosing
 returned output does not undo or disable those effects. For custom scripts and
 webhooks, Tyco substitutes `{{TEXT}}` with the provided input text (`TYCO_TEXT`
@@ -408,12 +408,12 @@ tyco-ctl jobs wait "$job_id" --timeout 60 > corrected.txt
 ```
 
 States: `accepted`, `running`, `succeeded`, `failed`, `cancelled`. `accepted`
-means dispatch succeeded, not that the tool completed. A job has optional
+means dispatch succeeded, not that the operation completed. A job has optional
 `output`, `error`, and `code` fields. Completion is single-use; late results
 cannot overwrite cancellation. Cancel is idempotent for a retained terminal job.
 
-Cancellation aborts the tool signal and restores an outstanding selection
-snapshot. A tool may already have performed irreversible side effects; cancel
+Cancellation aborts the operation signal and restores an outstanding selection
+snapshot. An operation may already have performed irreversible side effects; cancel
 is not rollback. Leaving a prepared interactive request cancels it.
 
 Jobs are in-memory and disappear when Tyco exits. At most 32 jobs may be active;
@@ -450,7 +450,7 @@ do not block the listener; connections are bounded.
 | 6    | Timeout                                                 |
 | 7    | Cancellation                                            |
 
-Use `--wait` when the calling script needs the tool's success or failure.
+Use `--wait` when the calling script needs the operation's success or failure.
 Machine error codes are stable identifiers separate from human-readable text.
 
 ## D-Bus

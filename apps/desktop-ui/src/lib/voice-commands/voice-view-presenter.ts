@@ -3,8 +3,11 @@ import type { CommandConfig } from '@tyco/shared'
 import {
   openCommandParameters,
   parameterValues,
-} from '../tools/command-parameters'
-import type { ToolCommandParameter, ToolLookup } from '../tools/tool-types'
+} from '../operations/command-parameters'
+import type {
+  OperationCommandParameter,
+  OperationLookup,
+} from '../operations/operation-types'
 import {
   grammarVariants,
   type VoiceCandidate,
@@ -22,13 +25,13 @@ export interface VoiceNotice {
 /** The parameters the phrase of the command names, see `commandParameters` */
 export const voiceParameters = (
   command: CommandConfig,
-  tools: ToolLookup
-): readonly ToolCommandParameter[] =>
-  openCommandParameters(tools.get(command.toolId), command.toolConfig)
+  tools: OperationLookup
+): readonly OperationCommandParameter[] =>
+  openCommandParameters(tools.get(command.operationId), command.operationConfig)
 
 /** The values a parameter can take, to pick one by hand */
 export const voiceParameterOptions = (
-  parameter: ToolCommandParameter,
+  parameter: OperationCommandParameter,
   t: Translate
 ): { id: string; name: string }[] =>
   parameterValues(parameter).map((value) => ({
@@ -40,7 +43,7 @@ export const voiceParameterOptions = (
 export const voiceParameterLabels = (
   command: CommandConfig,
   parameters: Readonly<Record<string, string>>,
-  tools: ToolLookup,
+  tools: OperationLookup,
   t: Translate
 ): string[] =>
   voiceParameters(command, tools).flatMap((parameter) => {
@@ -62,14 +65,14 @@ const rawMessage = (t: Translate, key: string, name: string) =>
  */
 export const voiceCommandPhrases = (
   command: CommandConfig,
-  tools: ToolLookup,
+  tools: OperationLookup,
   t: Translate
 ): string[] => {
   const own = command.phrases.map((phrase) => phrase.trim()).filter(Boolean)
   const [parameter] = voiceParameters(command, tools)
   if (!parameter) return [...new Set(own)]
   const slot = `{${parameter.name}}`
-  const key = tools.get(command.toolId)?.voicePhrasesKey
+  const key = tools.get(command.operationId)?.voicePhrasesKey
   const templates = own.length
     ? own
     : key

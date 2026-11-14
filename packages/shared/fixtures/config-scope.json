@@ -9,7 +9,7 @@
         "provider": "sherpaOnnx",
         "providers": { "deepgram": { "modelId": "nova-3" } }
       },
-      "commands": [{ "id": "note", "toolId": "script" }],
+      "commands": [{ "id": "note", "operationId": "script" }],
       "variables": [{ "id": "notes", "name": "NOTES_DIR" }]
     },
     "device": {
@@ -48,7 +48,7 @@
           "sherpaOnnx": { "baseUrl": "ws://pc:6006" }
         }
       },
-      "commands": [{ "id": "note", "toolId": "script" }],
+      "commands": [{ "id": "note", "operationId": "script" }],
       "isInDevelopment": true,
       "hotkeys": {
         "quickInput": "Ctrl+Alt+W",

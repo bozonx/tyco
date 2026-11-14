@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useToolsStore } from '../../stores/tools'
+import { useOperationsStore } from '../../stores/operations'
 import {
   installFakeDesktop,
   type TestDesktop,
@@ -142,7 +142,7 @@ describe('SettingsPluginDetailTab.vue', () => {
       issues: [{ messageKey: 'plugin.sample.problem' }],
       samples: [`${String(config.folder)}/note.md`],
     }))
-    useToolsStore().registerPluginTools('SamplePlugin', [
+    useOperationsStore().registerPluginOperations('SamplePlugin', [
       {
         id: 'write',
         description: 'Writes',

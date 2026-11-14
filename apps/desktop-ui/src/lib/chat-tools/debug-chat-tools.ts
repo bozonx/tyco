@@ -1,8 +1,8 @@
 import type { ProfileToolSettings } from '@tyco/shared'
 
-import type { RegisteredTool } from '../tools/tool-types'
+import type { RegisteredOperation } from '../operations/operation-types'
 import type { ChatToolProvider } from './chat-tool-registry'
-import { adaptRegisteredTool } from './registered-tool-adapter'
+import { adaptRegisteredOperation } from './registered-operation-adapter'
 
 /** The group of the debug tools */
 const DEBUG_TOOL_GROUP_ID = 'debug'
@@ -15,7 +15,7 @@ export function isDebugChatToolsEnabled(
 }
 
 /** Tells the current time; it asks first, to try the approval on a real model */
-export const CURRENT_TIME_TOOL: RegisteredTool = {
+export const CURRENT_TIME_TOOL: RegisteredOperation = {
   id: 'get_current_time',
   label: 'Current time',
   icon: 'mdi:clock-outline',
@@ -56,7 +56,7 @@ export function createDebugChatToolProvider(): ChatToolProvider {
   return {
     id: 'debug',
     tools: async () => [
-      await adaptRegisteredTool(CURRENT_TIME_TOOL, {
+      await adaptRegisteredOperation(CURRENT_TIME_TOOL, {
         groupId: DEBUG_TOOL_GROUP_ID,
       }),
     ],

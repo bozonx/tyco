@@ -24,7 +24,7 @@ const menuModalsStore = useMenuModalsStore()
 
 const kind: RuleLibraryMenuKind = {
   titleKey: 'menu.styling',
-  toolId: 'core.styling',
+  operationId: 'core.styling',
   minTextLength: APP_CONFIG.minStylingLength,
   pending: { styling: true },
   getLibrary: (config) => config?.styling,

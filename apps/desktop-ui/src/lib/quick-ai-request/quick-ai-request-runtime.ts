@@ -21,7 +21,7 @@ import { LlmError } from '../llm/llm-client'
 import { normalizeLlmConfig, withPickedTaskModel } from '../llm/llm-config'
 import { formatLlmError } from '../llm/llm-errors'
 import { isSecretUsable, type SecretsStatus } from '../net/secrets'
-import type { ToolLookup } from '../tools/tool-types'
+import type { OperationLookup } from '../operations/operation-types'
 import type { CommandEnvironment } from '../variables/command-variables'
 import {
   createQuickAiRequestModel,
@@ -57,7 +57,7 @@ export interface QuickAiRequestRuntimeDependencies {
   readMemory: (id: string, file: string) => Promise<string>
   listMemoryTopics: (id: string) => Promise<ProfileMemoryTopic[]>
 
-  tools?: ToolLookup
+  tools?: OperationLookup
   environment?: () => CommandEnvironment
 
   /** Keeps an answer the user took in the editor history */

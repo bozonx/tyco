@@ -1,4 +1,4 @@
-import type { CoreToolId, UserConfig } from '@tyco/shared'
+import type { CoreOperationId, UserConfig } from '@tyco/shared'
 
 import type {
   SavePromptResult,
@@ -12,7 +12,7 @@ type Library = SlotLibrary<SlotLibraryItem>
 /** What sets a rule library menu apart: the styles or the transformations */
 export interface RuleLibraryMenuKind {
   titleKey: string
-  toolId: CoreToolId
+  operationId: CoreOperationId
   minTextLength: number
   pending: Omit<PendingModalParams, 'onCancel'>
   getLibrary: (config: UserConfig | undefined) => Library | undefined

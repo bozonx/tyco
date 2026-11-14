@@ -27,7 +27,7 @@
   "contentTemplate": "Modello del contenuto",
   "contentTemplateInfo": "Supporta i token di data, {'{'}title{'}'} e l'obbligatorio {'{'}content{'}'}. Scrivi {'{'}{'{'} o {'}'}{'}'} per una parentesi graffa letterale. Se un titolo usa {'{'}title{'}'}, la prima riga non viene ripetuta sotto. La modalità di aggiunta crea il file se manca.",
   "clearInputAfterSave": "Cancella il campo di inserimento dopo il salvataggio",
-  "toolLabel": "Scrivi una nota",
+  "operationLabel": "Scrivi una nota",
   "toolDescription": "Salva il testo come nuova nota o lo aggiunge a una esistente, nella cartella delle note",
   "noNotesPath": "La cartella delle note non è configurata nelle impostazioni del plugin Nota rapida",
   "noteSaved": "Nota salvata",

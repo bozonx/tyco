@@ -64,7 +64,7 @@ export default function plugin(): PluginDefinition {
 }
 ```
 
-Plugin IDs and tool IDs are immutable and distinct from translated labels.
+Plugin IDs and operation IDs are immutable and distinct from translated labels.
 Existing IDs such as `Diacritics` and `FastNote.write` are current contract
 identities. Plugin settings are keyed only by the current plugin ID; the plugin
 SDK does not support identity aliases or executable schema-version callbacks.
@@ -72,7 +72,7 @@ Settings migrations use the declarative versioned rename chain described below.
 Changing an ID starts a new plugin identity.
 
 Use `local.*` for plugin-owned messages. The host namespaces these keys in metadata,
-settings, contributions, tool results and portable `PluginError` instances. Common
+settings, contributions, operation results and portable `PluginError` instances. Common
 host notification keys such as `toast.textNotSelected` and `toast.commandFailed`
 are also supported. `ctx.t` translates plugin messages; `ctx.toastText` accepts
 already resolved text. A package must include a complete dictionary for every
@@ -82,8 +82,8 @@ rejected; the host never falls back to another locale. Messages use vue-i18n
 syntax, so a literal brace is written `{'{'}` and `{'}'}` (see the FastNote and
 SearchInInternet setting hints).
 
-Toolbar/edit/action IDs are local to the plugin and are scoped by the host. Tool
-IDs become `<pluginId>.<toolId>`. Duplicate registrations are rejected. Registration methods return an idempotent
+Toolbar/edit/action IDs are local to the plugin and are scoped by the host. Operation
+IDs become `<pluginId>.<operationId>`. Duplicate registrations are rejected. Registration methods return an idempotent
 function that removes only that registration; disposing a registration releases its
 IDs for reuse. Await the returned disposer before re-registering the same IDs
 from an external worker. Host UI registries store the plugin owner explicitly. Contributions
@@ -140,7 +140,7 @@ plugin-specific settings components. Plugins describe the form declaratively:
 - The text field named by `notesDirectoryField` gets a folder picker. The
   native dialog returns a path the user chose; it grants nothing until the
   setting is saved.
-- A tool may implement `previewConfig(config)` to report problems
+- An operation may implement `previewConfig(config)` to report problems
   (`issues` with message keys and params) and sample output (`samples`) for the
   settings being edited. The host shows it under the plugin settings and in
   the command editor. It must have no side effects; results are validated and
@@ -152,7 +152,7 @@ removing or updating a plugin aborts its lifetime and removes all its contributi
 Only plugins whose effective settings or package revision changed are restarted.
 An activation failure rolls back partial registrations without stopping other
 plugins. A late async activation cannot register after disposal; its returned
-cleanup is still called. Tool execution combines the caller's cancellation signal
+cleanup is still called. Operation execution combines the caller's cancellation signal
 with the plugin lifetime and suppresses cancelled output. A run that already
 changed something outside the app (for example wrote a note) returns
 `isCommitted: true`; its result is then reported even when the call was
@@ -182,14 +182,14 @@ For delayed editor mutations, use `getEditorInputSnapshot()` followed by
 `applyEditorInputEdit(snapshot, text, 'selection' | 'document')`. The host compares
 the document, selection and revision atomically and returns `false` on a conflict;
 do not retry with an unconditional setter. Revisions also detect changes that were
-subsequently undone. Toolbar tools receive the same snapshot used to capture their
-input in `ToolCall.editorSnapshot`. FastNote clears only the saved selection when
+subsequently undone. Toolbar operations receive the same snapshot used to capture their
+input in `OperationCall.editorSnapshot`. FastNote clears only the saved selection when
 there is one, and preserves subsequent edits while the file is being written.
 
 The `notes` capability does not grant arbitrary filesystem writes. Declare a text
 setting with an empty default and name it using `notesDirectoryField` (the legacy
 default is `pathToNotes`). The user must save a directory in that setting or in an
-enabled command's corresponding tool setting. The Rust `write_plugin_note` command
+enabled command's corresponding operation setting. The Rust `write_plugin_note` command
 binds the request to the host-selected plugin identity and reads authorized roots
 from persisted settings; runtime arguments cannot grant another root. Subfolders
 are supported, parent traversal and descendant symlinks are rejected, and only
@@ -204,7 +204,7 @@ device: the host knows the field by `notesDirectoryField` and moves its value
 out of the shared config into `device.json` (`pluginPaths.<plugin id>` for the
 plugin settings, `pluginCommandPaths.<command id>` for a command), leaving an
 empty string in `config.json`; loading puts it back, so plugins and
-`write_plugin_note` see one config as before. A tool that has the field and no
+`write_plugin_note` see one config as before. An operation that has the field and no
 folder on this device is unavailable there (`commands.notesFolderMissing`), and
 the field is marked as one of this device. The package format and the SDK do
 not change.
@@ -224,7 +224,7 @@ updates it; a new native revision invalidates the ESM module cache.
 
 Installed packages live under the app data directory's `plugins` folder. Removal
 unloads contributions in both windows, but retains saved settings and user commands
-so reinstalling can restore them. Their tools are unavailable while the package is
+so reinstalling can restore them. Their operations are unavailable while the package is
 absent. Changes propagate through the `plugins-changed` desktop event.
 
 The `tyco-plugin` protocol serves only a package's current JavaScript entry
@@ -249,27 +249,27 @@ Chromium check separately verifies worker isolation under CSP.
 
 ## UI contributions and execution
 
-Prefer declarative toolbar tool references for operations also used by commands:
+Prefer declarative toolbar operation references for operations also used by commands:
 
 ```ts
-ctx.registerTools([search])
+ctx.registerOperations([search])
 const removeButton = ctx.registerToolbarItems([
   {
     id: 'search',
-    toolId: search.id,
+    operationId: search.id,
     tooltipKey: 'local.label',
     position: 'right',
   },
 ])
 ```
 
-`toolId` is local to the plugin. The host captures an editor snapshot and uses the
+`operationId` is local to the plugin. The host captures an editor snapshot and uses the
 same invoker as commands, including input parsing, validation, plugin config,
-cancellation and portable error handling. A missing tool is unavailable. Toolbar
-results report notifications and keep output handling within the tool; they do not
-implicitly paste text or close the window. `toolId` and `action` are mutually
+cancellation and portable error handling. A missing operation is unavailable. Toolbar
+results report notifications and keep output handling within the operation; they do not
+implicitly paste text or close the window. `operationId` and `action` are mutually
 exclusive. Callback buttons remain supported for editor-specific interactions.
-The SDK `runToolFromToolbar` helper remains compatible and shares the input resolver.
+The SDK `runOperationFromToolbar` helper remains compatible and shares the input resolver.
 
 UI callbacks drop repeated clicks while running. Their running state disables the
 button; cancellation is silent, and other errors are logged and reported. Explicit
@@ -307,6 +307,6 @@ only afterwards. Saving settings persists `settingsVersion` beside `settings`.
 Existing target values win over renamed values. A downgrade cannot discard newer
 settings; unsupported versions are reported and preserved. Migrations cannot
 introduce values, rename plugin identities, or rename the authorized notes-directory
-field. Per-command tool configuration is a separate persisted contract: keep its
+field. Per-command operation configuration is a separate persisted contract: keep its
 field names stable. No plugin code executes during settings migration or package
 inspection.

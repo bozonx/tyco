@@ -123,18 +123,18 @@ import {
   createCommand,
   normalizeCommands,
 } from '../../lib/commands/command-config'
-import { isCommandTool } from '../../lib/commands/command-config'
+import { isCommandOperation } from '../../lib/commands/command-config'
 import { externalCommandNameConflicts } from '../../lib/commands/command-external'
 import { createCommandRemovalModel } from '../../lib/commands/command-removal-model'
 import { commandUnavailableReason } from '../../lib/commands/command-runtime'
 import { clientLogger } from '../../lib/logger'
+import { operationLabel } from '../../lib/operations/operation-label'
 import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
 import { moveItem } from '../../lib/sortable/sortable-list'
-import { toolLabel } from '../../lib/tools/tool-label'
 import { useDesktopStore } from '../../stores/desktop'
+import { useOperationsStore } from '../../stores/operations'
 import { useSecretsStore } from '../../stores/secrets'
 import { useSettingsSessionStore } from '../../stores/settings-session'
-import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
@@ -162,7 +162,7 @@ const { t } = useI18n()
 const { toastKey, toastError } = useToast()
 const desktopStore = useDesktopStore()
 const secretsStore = useSecretsStore()
-const toolsStore = useToolsStore()
+const operationsStore = useOperationsStore()
 
 const externalAccess = computed<ExternalAccess>(() => ({
   canAccessSelection:
@@ -179,7 +179,7 @@ const setCommands = (next: CommandConfig[]) => {
 const commands = computed(() => normalizeCommands(userConfig.value.commands))
 /** The other commands an external call by the name of each one could mean */
 const nameConflicts = computed(() =>
-  externalCommandNameConflicts(commands.value, toolsStore)
+  externalCommandNameConflicts(commands.value, operationsStore)
 )
 
 /** The first slot of the action menu that holds each command (page 0) */
@@ -250,18 +250,18 @@ async function reveal(id: string) {
 if (props.focusCommandId) void reveal(props.focusCommandId)
 
 const getUnavailableReasonKey = (command: CommandConfig) =>
-  commandUnavailableReason(command, toolsStore)
+  commandUnavailableReason(command, operationsStore)
 
 const isCreateModalOpen = ref(false)
 
 /** The tools a command can be created from */
 const availableTools = computed(() =>
-  toolsStore
+  operationsStore
     .list()
-    .filter((tool) => isCommandTool(tool))
+    .filter((tool) => isCommandOperation(tool))
     .map((tool) => ({
       id: tool.id,
-      name: toolLabel(tool, t),
+      name: operationLabel(tool, t),
       description: tool.descriptionKey
         ? t(tool.descriptionKey)
         : tool.description,
@@ -271,9 +271,9 @@ const availableTools = computed(() =>
 
 function handleCreateCommand(event: CreateCommandSubmitEvent) {
   isCreateModalOpen.value = false
-  const tool = toolsStore.get(event.toolId)
+  const tool = operationsStore.get(event.operationId)
   const command = createCommand(
-    event.toolId,
+    event.operationId,
     undefined,
     tool,
     desktopStore.userData?.platform

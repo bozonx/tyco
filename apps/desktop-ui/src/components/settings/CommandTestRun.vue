@@ -81,8 +81,8 @@ import {
 import { createScriptActionClient } from '../../lib/custom-actions/script-action-client'
 import { useDesktopStore } from '../../stores/desktop'
 import { useIpcStore } from '../../stores/ipc'
+import { useOperationsStore } from '../../stores/operations'
 import { useSettingsSessionStore } from '../../stores/settings-session'
-import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import type { CommandConfig } from '@tyco/shared'
@@ -94,7 +94,7 @@ const { t } = useI18n()
 const ipcStore = useIpcStore()
 const desktopStore = useDesktopStore()
 const settingsSession = useSettingsSessionStore()
-const toolsStore = useToolsStore()
+const operationsStore = useOperationsStore()
 
 const text = ref('')
 const result = ref<CommandTestResult | null>(null)
@@ -102,10 +102,12 @@ const isRunning = ref(false)
 let controller: AbortController | null = null
 let runCounter = 0
 
-const takesText = computed(() => commandTakesText(props.command, toolsStore))
+const takesText = computed(() =>
+  commandTakesText(props.command, operationsStore)
+)
 /** A name alone does not keep the command from running */
 const hasIssues = computed(() =>
-  validateCommand(props.command, toolsStore).some(
+  validateCommand(props.command, operationsStore).some(
     (issue) => issue.field !== 'name'
   )
 )
@@ -126,7 +128,7 @@ async function run() {
     result.value = await runCommandTest(
       props.command,
       text.value,
-      toolsStore,
+      operationsStore,
       {
         ...createScriptActionClient(ipcStore.call),
         newRunId: () => `command-test-${Date.now()}-${++runCounter}`,
@@ -154,7 +156,7 @@ function stop() {
 
 // a result of another configuration would mislead
 watch(
-  () => props.command.toolConfig,
+  () => props.command.operationConfig,
   () => {
     if (!isRunning.value) result.value = null
   }

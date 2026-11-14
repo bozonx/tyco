@@ -27,7 +27,7 @@
   "contentTemplate": "内容模板",
   "contentTemplateInfo": "支持日期令牌、{'{'}title{'}'} 和必需的 {'{'}content{'}'}。要输入花括号，请写 {'{'}{'{'} 或 {'}'}{'}'}。如果标题使用 {'{'}title{'}'}，第一行不会在其下方重复。追加模式会在文件不存在时创建文件。",
   "clearInputAfterSave": "保存后清空输入框",
-  "toolLabel": "写入笔记",
+  "operationLabel": "写入笔记",
   "toolDescription": "在笔记文件夹中将文本保存为新笔记或追加到现有笔记中",
   "noNotesPath": "快速笔记插件设置中未配置笔记文件夹",
   "noteSaved": "笔记已保存",

@@ -39,6 +39,7 @@ import type {
   InputRegion,
   InstalledPlugin,
   JobCompletion,
+  OperationCatalogEntry,
   PluginPackagePreview,
   ProfileMemoryChange,
   ProfileMemorySearchResult,
@@ -55,7 +56,6 @@ import type {
   StorageInfo,
   StorageKind,
   TextInsertionStatus,
-  ToolCatalogEntry,
   UserDataRelocationMode,
   UserDataTarget,
   VaultFolder,
@@ -417,6 +417,10 @@ export interface DesktopCommands {
     args: { id: string; result: string }
     result: void
   }
+  set_operation_catalog: {
+    args: { tools: Array<OperationCatalogEntry> }
+    result: void
+  }
   set_quick_input_region: {
     args: { region?: InputRegion | null; activationId: number }
     result: void
@@ -425,7 +429,6 @@ export interface DesktopCommands {
     args: { id: string; value: string; origins?: Array<string> | null }
     result: void
   }
-  set_tool_catalog: { args: { tools: Array<ToolCatalogEntry> }; result: void }
   set_tray_menu_labels: {
     args: { showLabel: string; quitLabel: string; tooltipLabel?: string | null }
     result: void

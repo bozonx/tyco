@@ -10,15 +10,18 @@ import {
   buildScriptRequest,
   cancelScriptRun,
 } from '../custom-actions/script-executor'
-import { outputRequest, toolCallCommand } from '../tools/tool-call'
-import type { ToolLookup } from '../tools/tool-types'
+import {
+  outputRequest,
+  operationCallCommand,
+} from '../operations/operation-call'
+import type { OperationLookup } from '../operations/operation-types'
 import {
   commandLabel,
   commandTakesText,
-  commandTool,
+  commandOperation,
   preTransformCommandText,
 } from './command-runtime'
-import { scriptToolConfig } from './command-config'
+import { scriptOperationConfig } from './command-config'
 
 export interface CommandTestDependencies {
   executeScriptAction: (
@@ -36,9 +39,9 @@ export interface CommandTestDependencies {
 
 /** Whether the saved script runs the same as the one in the editor */
 const isSameScript = (saved: CommandConfig, draft: CommandConfig): boolean => {
-  const [a, b] = [scriptToolConfig(saved), scriptToolConfig(draft)]
+  const [a, b] = [scriptOperationConfig(saved), scriptOperationConfig(draft)]
   return (
-    saved.toolId === 'script' &&
+    saved.operationId === 'script' &&
     a.command === b.command &&
     (a.workingDirectory ?? '') === (b.workingDirectory ?? '')
   )
@@ -56,7 +59,7 @@ export type CommandTestResult =
 
 /** The commands the editor can test: a script or a webhook */
 export const canTestCommand = (command: CommandConfig): boolean =>
-  command.toolId === 'script' || command.toolId === 'webhook'
+  command.operationId === 'script' || command.operationId === 'webhook'
 
 /**
  * Runs `command` on `text` as it is configured, but keeps the output: nothing
@@ -66,7 +69,7 @@ export const canTestCommand = (command: CommandConfig): boolean =>
 export async function runCommandTest(
   command: CommandConfig,
   text: string,
-  tools: ToolLookup,
+  tools: OperationLookup,
   deps: CommandTestDependencies & {
     transformTextWithLlm?: (
       prompt: string,
@@ -77,8 +80,8 @@ export async function runCommandTest(
   signal: AbortSignal
 ): Promise<CommandTestResult> {
   // a script is checked and saved before the LLM is asked to prepare its text
-  if (command.toolId === 'script') {
-    if (!scriptToolConfig(command).command.trim()) {
+  if (command.operationId === 'script') {
+    if (!scriptOperationConfig(command).command.trim()) {
       return { kind: 'error', messageKey: 'commands.errorNoCommand' }
     }
     let saved: CommandConfig | undefined
@@ -108,7 +111,7 @@ export async function runCommandTest(
   }
   const resolvedText = pre.text ?? text
   const input = commandTakesText(command, tools) ? resolvedText : null
-  if (command.toolId === 'script') {
+  if (command.operationId === 'script') {
     const runId = deps.newRunId()
     let over = false
     const cancel = () => {
@@ -136,15 +139,15 @@ export async function runCommandTest(
     }
   }
 
-  const tool = commandTool(command, tools)
-  if (!tool) return { kind: 'error', messageKey: 'commands.toolMissing' }
+  const tool = commandOperation(command, tools)
+  if (!tool) return { kind: 'error', messageKey: 'commands.typeMissing' }
   try {
     const result = await tool.run({
       input: input === null ? {} : { text: input },
-      config: command.toolConfig,
+      config: command.operationConfig,
       source: 'menu',
       signal,
-      command: toolCallCommand(command.id, commandLabel(command), false),
+      command: operationCallCommand(command.id, commandLabel(command), false),
       ...outputRequest(true),
     })
     if (signal.aborted || result.cancelled) return { kind: 'cancelled' }

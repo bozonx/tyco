@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createCommand } from '../commands/command-config'
-import { testTools, testTranslateTool } from '../tools/testing'
+import { testOperations, testTranslateOperation } from '../operations/testing'
 import {
   compileVoiceRoutes,
   findVoiceConflicts,
@@ -18,7 +18,7 @@ const script = (id: string, phrases: string[]) => ({
   ...createCommand('script', id),
   isVoiceEnabled: true,
   phrases,
-  toolConfig: { command: 'echo {{TEXT}}' },
+  operationConfig: { command: 'echo {{TEXT}}' },
 })
 
 describe('voice resolver', () => {
@@ -173,7 +173,7 @@ describe('voice resolver', () => {
     expect(resolveVoice(routes, 'Noise. Translate to').kind).toBe('incomplete')
   })
   it('compiles only opted-in available commands across the entire library', () => {
-    const tools = testTools()
+    const tools = testOperations()
     const enabled = script('a', ['save note'])
     expect(
       compileVoiceRoutes(
@@ -181,7 +181,7 @@ describe('voice resolver', () => {
           enabled,
           { ...enabled, id: 'b', isVoiceEnabled: false },
           { ...enabled, id: 'c', isEnabled: false },
-          { ...enabled, id: 'd', toolId: 'missing' },
+          { ...enabled, id: 'd', operationId: 'missing' },
         ],
         tools
       ).map((item) => item.commandId)
@@ -195,19 +195,19 @@ describe('voice resolver', () => {
     expect(voiceInputIssue(enabled, '', tools)).toBe('missing-text')
     expect(
       voiceInputIssue(
-        { ...enabled, toolConfig: { command: 'backup' } },
+        { ...enabled, operationConfig: { command: 'backup' } },
         'cancel that',
         tools
       )
     ).toBe('extra-text')
   })
   it('uses explicit phrases for saved translations without adding built-in routes', () => {
-    const tool = { ...testTools().get('script')!, id: 'core.translate' }
+    const tool = { ...testOperations().get('script')!, id: 'core.translate' }
     const tools = { get: () => tool }
     const first = {
       ...script('first', ['my translation']),
-      toolId: 'core.translate',
-      toolConfig: { language: 'en-US' },
+      operationId: 'core.translate',
+      operationConfig: { language: 'en-US' },
     }
     const second = { ...first, id: 'second' }
     const before = structuredClone(first)
@@ -261,13 +261,13 @@ it('offers explicit parameter recovery without guessing which unknown words to r
 })
 
 it('does not add hidden phrases to user commands', () => {
-  const tools = { get: () => testTools().get('script') }
+  const tools = { get: () => testOperations().get('script') }
   const commands = [
     'core.copy',
     'core.insert',
     'core.correct',
     'core.askInChat',
-  ].map((toolId) => ({ ...script(toolId, []), toolId }))
+  ].map((operationId) => ({ ...script(operationId, []), operationId }))
   const routes = compileVoiceRoutes(commands, tools)
   expect(new Set(routes.map((item) => item.commandId))).toEqual(new Set())
   commands[0]!.phrases = ['my clipboard']
@@ -382,12 +382,12 @@ describe('voice resolver CJK and SOV languages', () => {
   })
 
   it('validates selection context requirement for commands using {{SELECTION}}', () => {
-    const tools = testTools()
+    const tools = testOperations()
     const selectionScript = {
       ...createCommand('script', 'with-selection'),
       isVoiceEnabled: true,
       phrases: ['summarize'],
-      toolConfig: { command: 'echo {{SELECTION}} - {{TEXT}}' },
+      operationConfig: { command: 'echo {{SELECTION}} - {{TEXT}}' },
     }
     expect(voiceInputIssue(selectionScript, 'some text', tools)).toBe(
       'missing-selection'
@@ -406,7 +406,7 @@ describe('voice resolver CJK and SOV languages', () => {
 })
 
 describe('voice routes of a command parameter', () => {
-  const tools = testTools({}, [testTranslateTool()])
+  const tools = testOperations({}, [testTranslateOperation()])
   const translate = {
     ...createCommand('core.translate', 'translate'),
     isVoiceEnabled: true,
@@ -444,7 +444,7 @@ describe('voice routes of a command parameter', () => {
     const fixed = {
       ...translate,
       phrases: ['to german'],
-      toolConfig: { language: 'de-DE' },
+      operationConfig: { language: 'de-DE' },
     }
     expect(compileVoiceRoutes([fixed], tools)).toEqual([
       { commandId: 'translate', phrase: 'to german', parameters: [] },

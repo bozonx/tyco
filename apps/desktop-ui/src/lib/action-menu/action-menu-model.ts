@@ -11,7 +11,7 @@ import {
   type ChatPromptConfig,
   type CommandConfig,
   type CommandRunRecord,
-  type CoreToolId,
+  type CoreOperationId,
   type MainActionConfig,
   type ProfileActionKind,
   type ShortcutSlots,
@@ -115,7 +115,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
    */
   const createBuiltinActionItem = (
     item: Required<Pick<ActionItem, 'id' | 'labelKey' | 'icon'>>,
-    toolId: CoreToolId,
+    operationId: CoreOperationId,
     leavesApp: boolean,
     notifySuccess?: boolean
   ): ActionItem => ({
@@ -127,7 +127,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       }
       if (leavesApp) await deps.saveOutput(text)
       await invocationRunner.run(
-        { toolId, toolConfig: {}, label: translate(item.labelKey) },
+        { operationId, operationConfig: {}, label: translate(item.labelKey) },
         text,
         {
           source: 'menu',
@@ -549,8 +549,8 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           action: async (text: string) => {
             await invocationRunner.run(
               {
-                toolId: 'core.askInChat',
-                toolConfig: {},
+                operationId: 'core.askInChat',
+                operationConfig: {},
                 label: translate('action.askInChat'),
               },
               text,

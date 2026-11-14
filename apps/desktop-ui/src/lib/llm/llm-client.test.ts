@@ -637,7 +637,7 @@ function toolCallChunks(name: string) {
 }
 
 /** The default config with its local model able to call tools */
-function toolConfig() {
+function operationConfig() {
   const llm = structuredClone(DEFAULT_LLM_CONFIG)
   for (const model of llm.models) model.canUseTools = true
   return llm
@@ -683,7 +683,7 @@ describe('llm-client stream', () => {
       }
       return streamResponse(toolCallChunks('c0_clock'))
     })
-    const { client } = setup(fetch, toolConfig())
+    const { client } = setup(fetch, operationConfig())
     const execute = vi.fn(async () => ({ ok: true, content: '12:00' }))
     const run = createAiCommandRunner({
       stream: client.stream,
@@ -715,7 +715,7 @@ describe('llm-client stream', () => {
 
   it('runs the tool loop and reports every step', async () => {
     const fetch = toolServer()
-    const { client } = setup(fetch, toolConfig())
+    const { client } = setup(fetch, operationConfig())
 
     const events = await collect(
       client.stream('aiTask', prompt, { tools: clock(), maxSteps: 3 })
@@ -744,7 +744,7 @@ describe('llm-client stream', () => {
 
   it('stops at an approval request and continues after the decision', async () => {
     const fetch = toolServer()
-    const { client } = setup(fetch, toolConfig())
+    const { client } = setup(fetch, operationConfig())
     const options = {
       tools: clock(),
       maxSteps: 3,
@@ -785,7 +785,7 @@ describe('llm-client stream', () => {
     const fetch = vi.fn<FetchFunction>(async () =>
       streamResponse(toolCallChunks('now'))
     )
-    const { client } = setup(fetch, toolConfig())
+    const { client } = setup(fetch, operationConfig())
 
     await expect(
       collect(client.stream('aiTask', prompt, { tools: clock(), maxSteps: 1 }))
@@ -798,7 +798,7 @@ describe('llm-client stream', () => {
         error: { message: 'qwen2.5:7b does not support tools' },
       })
     )
-    const { client } = setup(fetch, toolConfig())
+    const { client } = setup(fetch, operationConfig())
 
     const error = await collect(
       client.stream('aiTask', prompt, { tools: clock(), maxSteps: 2 })

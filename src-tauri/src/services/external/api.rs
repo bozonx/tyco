@@ -155,7 +155,7 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
         // Each command carries its own grant, so the list holds the granted ones.
         Request::ListCommands => {
             let config = app.state::<AppState>().user_config();
-            let catalog = app.state::<command_library::ToolCatalogState>().get();
+            let catalog = app.state::<command_library::OperationCatalogState>().get();
             Response::json(&command_library::list(&config, catalog.as_ref()))
         }
         Request::DescribeCommand { target, by_name } => match describe(app, &target, by_name) {

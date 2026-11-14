@@ -27,7 +27,7 @@
   "contentTemplate": "Szablon zawartości",
   "contentTemplateInfo": "Obsługuje tokeny daty, {'{'}title{'}'} oraz wymagany {'{'}content{'}'}. Wpisz {'{'}{'{'} lub {'}'}{'}'}, aby uzyskać nawias klamrowy. Jeśli nagłówek używa {'{'}title{'}'}, pierwszy wiersz nie jest pod nim powtarzany. Tryb dopisywania tworzy plik, jeśli nie istnieje.",
   "clearInputAfterSave": "Wyczyść pole wprowadzania po zapisaniu",
-  "toolLabel": "Napisz notatkę",
+  "operationLabel": "Napisz notatkę",
   "toolDescription": "Zapisuje tekst jako nową notatkę lub dołącza go do istniejącej w folderze notatek",
   "noNotesPath": "Folder notatek nie został skonfigurowany w ustawieniach wtyczki Szybka notatka",
   "noteSaved": "Notatka zapisana",

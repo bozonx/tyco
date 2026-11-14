@@ -1,17 +1,20 @@
-import type { CoreToolId } from '@tyco/shared'
+import type { CoreOperationId } from '@tyco/shared'
 
-import type { ToolResult } from '../tools/tool-types'
+import type { OperationResult } from '../operations/operation-types'
 import type {
   Invocation,
   InvocationOptions,
   InvocationOutcome,
 } from './invocation-types'
-import { createToolInvoker, type ToolInvokerDependencies } from './invoke-tool'
+import {
+  createOperationInvoker,
+  type OperationInvokerDependencies,
+} from './invoke-operation'
 import { resolveSink } from './result-sinks'
 
 type ToastKind = 'info' | 'warn' | 'error' | 'success'
 
-export interface InvocationRunnerDependencies extends ToolInvokerDependencies {
+export interface InvocationRunnerDependencies extends OperationInvokerDependencies {
   showToast: (messageKey: string, type?: ToastKind) => void
   /** A toast with `messageKey` translated and `detail` after it */
   showError?: (messageKey: string, detail?: string) => void
@@ -38,7 +41,7 @@ export function reportResult(
     InvocationRunnerDependencies,
     'showToast' | 'showError' | 'showText'
   >,
-  result: Pick<ToolResult, 'ok' | 'level' | 'messageKey' | 'message'>
+  result: Pick<OperationResult, 'ok' | 'level' | 'messageKey' | 'message'>
 ): void {
   const level = result.level ?? (result.ok ? 'success' : 'error')
   if (result.messageKey) {
@@ -57,15 +60,15 @@ export function reportResult(
 
 /** The clipboard sink puts the output there with the tool the copy action runs */
 const copyInvocation: Invocation = {
-  toolId: 'core.copy' satisfies CoreToolId,
-  toolConfig: {},
+  operationId: 'core.copy' satisfies CoreOperationId,
+  operationConfig: {},
   label: 'core.copy',
 }
 
 /** The paste sink types the output with the tool the insert action runs */
 const insertInvocation: Invocation = {
-  toolId: 'core.insert' satisfies CoreToolId,
-  toolConfig: {},
+  operationId: 'core.insert' satisfies CoreOperationId,
+  operationConfig: {},
   label: 'core.insert',
 }
 
@@ -87,9 +90,9 @@ const cancelled: InvocationOutcome = {
  * of the invocation context
  */
 export function createInvocationRunner(deps: InvocationRunnerDependencies) {
-  const invoke = createToolInvoker(deps)
+  const invoke = createOperationInvoker(deps)
 
-  const report = (result: ToolResult) => reportResult(deps, result)
+  const report = (result: OperationResult) => reportResult(deps, result)
 
   /** The output without its trailing line breaks, or null when it is empty */
   const outputText = (output: string): string | null => {
@@ -156,7 +159,7 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
 
   /** Reports a run that ended without output to hand on */
   const finish = (
-    result: ToolResult,
+    result: OperationResult,
     options?: InvocationOptions
   ): InvocationOutcome => {
     if (options?.notifySuccess !== false || !result.ok) {
@@ -211,7 +214,7 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
     invocation: Invocation,
     text: string,
     options: InvocationOptions = {}
-  ): Promise<ToolResult> => {
+  ): Promise<OperationResult> => {
     const {
       failure: _failure,
       sourceText: _source,

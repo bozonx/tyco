@@ -35,8 +35,8 @@ def run_notification_checks(*, vm, driver, guest, check, selected, args):
                 "description": "Native notification fixture",
                 "phrases": [],
                 "isVoiceEnabled": False,
-                "toolId": "script",
-                "toolConfig": {
+                "operationId": "script",
+                "operationConfig": {
                     "command": "printf '%s' "
                     + shlex.quote(marker)
                     + " >&2; printf %s {{TEXT}} >/dev/null; exit 1"

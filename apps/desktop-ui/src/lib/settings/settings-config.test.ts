@@ -14,7 +14,7 @@ describe('settings config preparation', () => {
       ...structuredClone(DEFAULT_USER_CONFIG),
       editor: { ...DEFAULT_USER_CONFIG.editor, submitKey: 'invalid' },
       chatRoles: ['old'],
-      registrationState: { seededToolIds: ['core.correct'] },
+      registrationState: { seededOperationIds: ['core.correct'] },
       aiRules: { chat: 'old' },
     }
     const original = structuredClone(input)

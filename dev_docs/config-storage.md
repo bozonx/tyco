@@ -46,15 +46,15 @@ but saves nothing (`configIsNewer`).
 The backend rejects invalid IPC saves before storing credentials or writing the config:
 counts must be safe nonnegative integers, entity ids and translation languages
 must be unique, and command, task, provider, model and action slot references must
-exist. Opaque plugin settings and plugin tool config remain plugin-owned. A newer
+exist. Opaque plugin settings and plugin operation config remain plugin-owned. A newer
 schema version is rejected without modifying the file.
 
 The config holds settings only, no state: nothing records what the app added
-by itself, because it adds nothing. Tools (core and plugin) are registered at
+by itself, because it adds nothing. Operations (core and plugin) are registered at
 runtime and are not stored; `commands` holds only the commands the user made
 from them. A new config starts with one of them, `translate` (a `core.translate`
 command without a language); deleting it is final, and the user makes another
-one from the same tool.
+one from the same operation.
 
 ## Structure
 
@@ -74,7 +74,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `actionPages`       | pages of the action menu: each has `inputMode` (`selection` or `none`) and `slots` (a shortcut grid)                                                                                                                                                                                              |
 | `customActionSlots` | the five actions of the `customAction1`..`customAction5` hotkeys: `action` (a slot item or `null`), `takesSelection`                                                                                                                                                                              |
 | `favorites`         | `items`, the favorites list                                                                                                                                                                                                                                                                       |
-| `commands`          | the commands of the user: `toolId`, `toolConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, `platforms`, …                                                                                                                                                                                   |
+| `commands`          | the commands of the user: `operationId`, `operationConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, `platforms`, …                                                                                                                                                                         |
 | `variables`         | the variables commands refer to as `{{var:NAME}}`: `id`, `name`, `description`                                                                                                                                                                                                                    |
 | `variableValues`    | the value of each variable on this device, by variable id (device)                                                                                                                                                                                                                                |
 | `llm`               | `imageQuality`, `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below)                                                                                                                                                                                         |
@@ -144,9 +144,9 @@ the one model that answers the task, empty when none is picked; a call that
 fails is not retried on another model.
 
 The standard items of the action menu (`type: "standard"`) are not the core
-tools under another name: they are menu behaviors (the correction opens its
+operations under another name: they are menu behaviors (the correction opens its
 review, the insertion knows the target window, `transformationMenu`,
-`stylingMenu` and `translationMenu` open a submenu). The core tools (`core.*`) serve commands,
+`stylingMenu` and `translationMenu` open a submenu). The core operations (`core.*`) serve commands,
 which run headless.
 
 Conventions:
@@ -154,7 +154,7 @@ Conventions:
 - Key combinations are written as the hotkeys are: `Ctrl+Alt+V`, `Ctrl+Enter`,
   `Shift+Insert`. `Ctrl` is the Control key on every platform; `Super` is Cmd
   on macOS and the Windows key on Windows.
-- Text that is not set is an empty string (a hotkey, a tool
+- Text that is not set is an empty string (a hotkey, an operation
   path); a number that is not set is absent (model limits,
   `retentionDays`, which keeps everything without it). Zero is never a
   sentinel: a feature is turned off by its own field (`storage: "off"`).
@@ -170,13 +170,13 @@ Conventions:
   boundary.
 - An id is stable and independent of the display name.
 
-Script tools use `workingDirectory`; webhook tools use `isAuthEnabled` and
+Script operations use `workingDirectory`; webhook operations use `isAuthEnabled` and
 `authSecretId`; commands use `isLlmArgumentParsingEnabled`. The standard
 menu actions `transformationMenu`, `stylingMenu` and `translationMenu` open a
 menu to pick from; one transformation, style or language is an item of the
 `transformation`, `styling` or `translation` type.
 
-An AI command is a command of the `core.aiTask` tool. Its `toolConfig` holds
+An AI command is a command of the `core.aiTask` operation. Its `operationConfig` holds
 `prompt`, `allowedCommandIds` (the commands its agent may run; the command
 itself never runs) and `maxSteps` (1–50, 5 by default), see
 `dev_docs/design-ai-commands.md`.
@@ -239,11 +239,11 @@ unassigned by default. The voice catalog is independent of `actionPages` and
 `isAvailableExternally`; it lists only the commands of the library, there are
 no voice functions apart from them.
 
-A tool may leave a setting to the caller of its command (`commandParameters`
-of the tool definition): a command without a value for it, such as a
+An operation may leave a setting to the caller of its command (`commandParameters`
+of the operation definition): a command without a value for it, such as a
 `core.translate` command without `language`, gets it from the call. A voice
 phrase names it: `{language}` in a phrase marks where, otherwise it follows the
-phrase, and a command without phrases uses those of its tool
+phrase, and a command without phrases uses those of its operation
 (`voiceGrammar.translate` of every locale). An AI command, a chat and an
 external caller give it in the input, whose schema then requires it. The
 action menu does not offer such a command: the translation menu is that
@@ -604,7 +604,7 @@ folder screen; it never connects the folder in the running process.
 
 Later, if needed: showing the conflicting copies of sync tools and merging a
 copy of `config.json`; variables in transformation and styling prompts, LLM
-task rules and the DeepL endpoint; providers, commands, tools and plugins kept
+task rules and the DeepL endpoint; providers, commands, operations and plugins kept
 inside a vault.
 
 A native sync (TyCo Cloud) would keep a server journal of revisions per entity

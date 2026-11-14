@@ -27,7 +27,7 @@
   "contentTemplate": "Plantilla de contenido",
   "contentTemplateInfo": "Admite tokens de fecha, {'{'}title{'}'} y el obligatorio {'{'}content{'}'}. Escribe {'{'}{'{'} o {'}'}{'}'} para una llave literal. Si un encabezado usa {'{'}title{'}'}, la primera línea no se repite debajo. El modo de anexar crea el archivo si no existe.",
   "clearInputAfterSave": "Limpiar el campo de entrada después de guardar",
-  "toolLabel": "Escribir una nota",
+  "operationLabel": "Escribir una nota",
   "toolDescription": "Guarda el texto como una nota nueva o lo agrega a una, en tu carpeta de notas",
   "noNotesPath": "No hay carpeta de notas configurada en el plugin Nota rápida",
   "noteSaved": "Nota guardada",

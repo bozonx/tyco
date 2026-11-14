@@ -2,15 +2,15 @@ import { describe, expect, it } from 'vitest'
 
 import { createCommand } from '../commands/command-config'
 import {
-  aiCommandToolConfigOf,
+  aiCommandOperationConfigOf,
   callableCommands,
   maxStepsOf,
 } from './ai-command-config'
 
-describe('aiCommandToolConfigOf', () => {
+describe('aiCommandOperationConfigOf', () => {
   it('reads the settings, dropping what is not an id', () => {
     expect(
-      aiCommandToolConfigOf({
+      aiCommandOperationConfigOf({
         prompt: 'Do it',
         allowedCommandIds: ['a', 'a', ' ', 7, 'b'],
         maxSteps: 3,
@@ -25,7 +25,7 @@ describe('aiCommandToolConfigOf', () => {
   })
 
   it('falls back to the defaults', () => {
-    expect(aiCommandToolConfigOf({})).toEqual({
+    expect(aiCommandOperationConfigOf({})).toEqual({
       prompt: '',
       allowedCommandIds: [],
       maxSteps: 5,

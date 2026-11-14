@@ -24,7 +24,7 @@ const menuModalsStore = useMenuModalsStore()
 
 const kind: RuleLibraryMenuKind = {
   titleKey: 'menu.transformation',
-  toolId: 'core.transformation',
+  operationId: 'core.transformation',
   minTextLength: APP_CONFIG.minTransformationLength,
   pending: { transformation: true },
   getLibrary: (config) => config?.transformations,

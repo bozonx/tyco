@@ -8,18 +8,18 @@ import { normalizeCommands } from '../commands/command-config'
 import { commandRunRecord, logCommandRun } from '../commands/command-run-record'
 import type { createHistoryModel } from '../history/history-model'
 import { toolResultMessage } from '../invocation/invocation-result'
-import type { ToolResult } from '../tools/tool-types'
+import type { OperationResult } from '../operations/operation-types'
 
 export class SelectionActionAbortedError extends Error {}
 
 export interface SelectionActionDependencies {
   commands: () => unknown
-  correct: (text: string, signal: AbortSignal) => Promise<ToolResult>
+  correct: (text: string, signal: AbortSignal) => Promise<OperationResult>
   transform: (
     command: CommandConfig,
     text: string,
     signal: AbortSignal
-  ) => Promise<ToolResult>
+  ) => Promise<OperationResult>
   logRun: (record: CommandRunRecord) => Promise<void>
   history: Pick<
     ReturnType<typeof createHistoryModel>,
@@ -36,7 +36,7 @@ export function createSelectionAction(deps: SelectionActionDependencies) {
     text: string,
     signal: AbortSignal
   ): Promise<string> => {
-    let result: ToolResult
+    let result: OperationResult
     if (action.kind === 'correction') {
       result = await deps.correct(text, signal)
     } else {

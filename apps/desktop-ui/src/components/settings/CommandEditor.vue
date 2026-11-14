@@ -25,21 +25,21 @@
     <!-- focusout: a command left without a name takes one from what it runs -->
     <div class="command-tool-fields" @focusout="suggestName">
       <CustomActionFields
-        v-if="customActionTool"
+        v-if="customActionOperation"
         :key="command.id"
         :command="command"
-        @update="updateToolConfig"
+        @update="updateOperationConfig"
       />
-      <ToolConfigFields
+      <OperationConfigFields
         v-else-if="tool"
         :key="`${command.id}:tools`"
         :command="command"
         :tool="tool"
         :user-config="userConfig"
-        @update="updateToolConfig"
+        @update="updateOperationConfig"
       />
       <p v-else class="command-warning">
-        {{ t('commands.unknownTool', { tool: command.toolId }) }}
+        {{ t('commands.unknownType', { type: command.operationId }) }}
       </p>
     </div>
 
@@ -251,15 +251,15 @@ import {
 } from '../../lib/commands/command-external'
 import {
   commandLabel,
-  commandTool,
+  commandOperation,
   commandUnavailableReason,
   suggestCommandName,
   validateCommand,
 } from '../../lib/commands/command-runtime'
 import { canTestCommand } from '../../lib/commands/command-test-run'
-import { toolLabel } from '../../lib/tools/tool-label'
+import { operationLabel } from '../../lib/operations/operation-label'
 import { useIpcStore } from '../../stores/ipc'
-import { useToolsStore } from '../../stores/tools'
+import { useOperationsStore } from '../../stores/operations'
 import Button from '../common/Button.vue'
 import CopyButton from '../common/CopyButton.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
@@ -275,7 +275,7 @@ import InfoTooltip from '../common/InfoTooltip.vue'
 import CommandTestRun from './CommandTestRun.vue'
 import CommandVoiceFields from './CommandVoiceFields.vue'
 import CustomActionFields from './CustomActionFields.vue'
-import ToolConfigFields from './ToolConfigFields.vue'
+import OperationConfigFields from './OperationConfigFields.vue'
 import {
   COMMAND_PLATFORMS,
   type CommandConfig,
@@ -308,20 +308,26 @@ const { t } = useI18n()
 const { toastKey } = useToast()
 const ipcStore = useIpcStore()
 
-const toolsStore = useToolsStore()
-const tool = computed(() => commandTool(props.command, toolsStore))
+const operationsStore = useOperationsStore()
+const tool = computed(() => commandOperation(props.command, operationsStore))
 /** A script or a webhook: its settings have an editor of their own */
-const customActionTool = computed(
-  () => props.command.toolId === 'script' || props.command.toolId === 'webhook'
+const customActionOperation = computed(
+  () =>
+    props.command.operationId === 'script' ||
+    props.command.operationId === 'webhook'
 )
 const canTest = computed(() => canTestCommand(props.command))
 /** A translation needs no name: its tool names it, see `commandLabel` */
-const isNamedByTool = computed(() => props.command.toolId === 'core.translate')
+const isNamedByTool = computed(
+  () => props.command.operationId === 'core.translate'
+)
 /** Why the command cannot run, unless its tool is missing altogether */
 const unavailableReason = computed(() =>
-  tool.value ? commandUnavailableReason(props.command, toolsStore) : undefined
+  tool.value
+    ? commandUnavailableReason(props.command, operationsStore)
+    : undefined
 )
-const issues = computed(() => validateCommand(props.command, toolsStore))
+const issues = computed(() => validateCommand(props.command, operationsStore))
 const warningsFor = (field: string) =>
   issues.value
     .filter((issue) => issue.field === field)
@@ -331,7 +337,7 @@ const nameWarnings = computed(() => warningsFor('name'))
 const {
   update,
   updateDescription,
-  updateToolConfig,
+  updateOperationConfig,
   updateExternalTimeout,
   updateOutputAction,
 } = createCommandEditorModel({
@@ -358,13 +364,16 @@ const afterRunOptions = computed(() => [
  */
 const backgroundScript = computed(
   () =>
-    props.command.toolId === 'script' && props.command.outputAction === 'none'
+    props.command.operationId === 'script' &&
+    props.command.outputAction === 'none'
 )
 
 /** Which tool the command runs */
 const origin = computed(() =>
-  t('commands.toolInfo', {
-    tool: tool.value ? toolLabel(tool.value, t) : props.command.toolId,
+  t('commands.typeInfo', {
+    type: tool.value
+      ? operationLabel(tool.value, t)
+      : props.command.operationId,
   })
 )
 

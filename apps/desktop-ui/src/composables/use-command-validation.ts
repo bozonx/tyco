@@ -2,11 +2,11 @@ import { computed } from 'vue'
 import { ACTION_TEXT_PLACEHOLDER, type CommandConfig } from '@tyco/shared'
 
 import { validateCommand } from '../lib/commands/command-runtime'
-import { useToolsStore } from '../stores/tools'
+import { useOperationsStore } from '../stores/operations'
 import { useI18n } from './use-i18n'
 
 export function useCommandValidation(getCommand: () => CommandConfig) {
-  const tools = useToolsStore()
+  const tools = useOperationsStore()
   const { t } = useI18n()
   const issues = computed(() => validateCommand(getCommand(), tools))
   return (field: string) =>

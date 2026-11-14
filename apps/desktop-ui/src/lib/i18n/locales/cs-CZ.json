@@ -191,7 +191,7 @@
     },
     "commands": {
       "group": "Příkazy",
-      "groupHint": "Povolit modelu spouštět vybrané uživatelské příkazy a nástroje doplňků. „Zeptat se“ se zeptá před každým voláním.",
+      "groupHint": "Povolit modelu spouštět vybrané příkazy. Vybrat lze jen příkazy s popisem pro AI. „Zeptat se“ se zeptá před každým voláním.",
       "needsDescription": "Vyžaduje popis pro AI v nastavení příkazu",
       "noCommands": "Zatím nejsou nakonfigurovány žádné uživatelské příkazy.",
       "noCommandsHint": "Nejprve vytvořte příkazy v Nastavení → Příkazy.",
@@ -228,7 +228,7 @@
     "errorNoName": "Zadejte název.",
     "errorNoPrompt": "Napište instrukci pro LLM.",
     "errorNoUrl": "Zadejte URL.",
-    "errorUnknownTool": "Neznámý nástroj.",
+    "errorUnknownType": "Neznámý typ příkazu.",
     "external": "Dostupné zvenku",
     "externalDescription": "Co mohou místní aplikace vaší relace dělat přes tyco-ctl a D-Bus. Přístup ke každému příkazu se zapíná v jeho pokročilém nastavení.",
     "externalInfo": "Místní aplikace a skripty mohou spustit povolený příkaz pomocí tyco-ctl run <ID> nebo tyco-ctl run --name <název>. Výsledek se vrátí volajícímu. --interactive povoluje rozhraní pro zadání textu; --selection --replace výslovně žádá nahrazení výběru.",
@@ -238,8 +238,8 @@
     "fieldOff": "Ne",
     "fieldOn": "Ano",
     "fromPluginSettings": "Z nastavení pluginu: {value}",
-    "hint": "Příkazy jsou přizpůsobitelné akce založené na nástrojích: dotazy na LLM, shellové skripty, HTTP webhooky nebo překlad. Zpracovávají vybraný text nebo běží bez vstupu a výsledek mohou vložit do aktivního okna, zkopírovat do schránky nebo zobrazit. Spouštějí se z rychlých příkazů (spouštěče), nabídky hlavních akcí nebo přes tyco-ctl.",
-    "inputUnsupported": "Jeho nástroj potřebuje strukturovaný vstup, který nelze získat z textu",
+    "hint": "Příkazy jsou přizpůsobitelné akce různých typů: dotazy na LLM, shellové skripty, HTTP webhooky nebo překlad. Zpracovávají vybraný text nebo běží bez vstupu a výsledek mohou vložit do aktivního okna, zkopírovat do schránky nebo zobrazit. Spouštějí se z rychlých příkazů (spouštěče), nabídky hlavních akcí nebo přes tyco-ctl.",
+    "inputUnsupported": "Jeho typ potřebuje strukturovaný vstup, který nelze získat z textu",
     "languageLabel": "Překládat do",
     "languagePlaceholder": "Vyberte jazyk",
     "launcherResult": "Akce",
@@ -265,12 +265,12 @@
     "testRunning": "Spouští se…",
     "testStop": "Zastavit",
     "testTextPlaceholder": "Text k otestování",
-    "toolInfo": "Nástroj: {tool}",
-    "toolMissing": "Jeho nástroj není k dispozici: plugin je vypnutý nebo chybí",
+    "typeInfo": "Typ: {type}",
+    "typeMissing": "Jeho typ není k dispozici: plugin je vypnutý nebo chybí",
     "preTransformFailed": "Text pro příkaz se nepodařilo připravit",
     "unavailableInMenu": "{name} (v nabídce nedostupné)",
     "undo": "Zpět",
-    "unknownTool": "Nástroj „{tool}“ není v této verzi Tyco k dispozici.",
+    "unknownType": "Typ příkazu „{type}“ není v této verzi Tyco k dispozici.",
     "unnamed": "Příkaz bez názvu",
     "warningExternalNameTwins": "Jiné příkazy mají stejný název: {names}. Volání tímto názvem se odmítne jako nejednoznačné; použijte ID.",
     "llmPreTransform": "Předběžná transformace pomocí LLM",
@@ -302,7 +302,7 @@
     "aiToolsEnabledLabel": "Povolit nástroje",
     "aiToolsEnabledInfo": "Pokud je povoleno, AI může volat další povolené příkazy.",
     "createModalTitle": "Nový příkaz",
-    "toolTypeLabel": "Typ příkazu"
+    "typeLabel": "Typ příkazu"
   },
   "common": {
     "add": "Přidat",
@@ -1308,7 +1308,7 @@
     "commandDisabled": "Příkaz je vypnutý",
     "commandFailed": "Příkaz selhal",
     "commandInputInvalid": "Vstup příkazu je neplatný",
-    "commandInputUnsupported": "Tento příkaz nepřijímá text: jeho nástroj potřebuje strukturovaný vstup",
+    "commandInputUnsupported": "Tento příkaz nepřijímá text: jeho typ potřebuje strukturovaný vstup",
     "commandUnavailable": "Příkaz není dostupný",
     "desktopCommandFailed": "Akce selhala",
     "dictationClosed": "Služba rozpoznávání řeči ukončila relaci během nahrávání",
@@ -1356,7 +1356,7 @@
     "webhookKeyNotSet": "Klíč tohoto webhooku není na tomto zařízení nastaven; zadejte ho v nastavení příkazu",
     "webhookSuccess": "Webhook byl úspěšně odeslán"
   },
-  "tools": {
+  "operations": {
     "aiTask": "AI příkaz",
     "aiTaskDescription": "Zpracuje text podle vašeho pokynu v jednom kroku a může spouštět další příkazy",
     "askInChat": "Zeptat se v chatu",

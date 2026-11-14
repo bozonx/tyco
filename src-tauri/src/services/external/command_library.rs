@@ -18,8 +18,8 @@ use crate::services::custom_actions::{SELECTION_PLACEHOLDER, TEXT_PLACEHOLDER};
 /// How a command of a tool gets its input from a text.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(rename = "ToolCatalogInput")]
-pub enum ToolInputKind {
+#[ts(rename = "OperationCatalogInput")]
+pub enum OperationInputKind {
     None,
     Text,
     /// The tool parses the text itself.
@@ -34,19 +34,19 @@ pub enum ToolInputKind {
 #[serde(rename_all = "camelCase")]
 pub struct CommandInputDescription {
     #[ts(type = "Record<string, unknown>")]
-    pub tool_config: Value,
-    pub input: ToolInputKind,
+    pub operation_config: Value,
+    pub input: OperationInputKind,
     #[ts(type = "Record<string, unknown>")]
     pub input_schema: Value,
 }
 
-/// A tool as the webview registry describes it, see `set_tool_catalog`.
+/// A tool as the webview registry describes it, see `set_operation_catalog`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(optional_fields = nullable)]
-pub struct ToolCatalogEntry {
+pub struct OperationCatalogEntry {
     pub id: String,
-    pub input: ToolInputKind,
+    pub input: OperationInputKind,
     #[serde(rename = "available")]
     pub is_available: bool,
     /// Why it is not available, already translated.
@@ -62,23 +62,23 @@ pub struct ToolCatalogEntry {
 /// The tools of the webview registry by id. Plugin tools and whether a tool
 /// can run (it may need the LLM) are known to the webview only: the quick
 /// window sends the catalog whenever the plugins load.
-pub type ToolCatalog = HashMap<String, ToolCatalogEntry>;
+pub type OperationCatalog = HashMap<String, OperationCatalogEntry>;
 
 /// The tool catalog the quick window sent last; `None` until it does.
 #[derive(Default)]
-pub struct ToolCatalogState(std::sync::Mutex<Option<ToolCatalog>>);
+pub struct OperationCatalogState(std::sync::Mutex<Option<OperationCatalog>>);
 
-impl ToolCatalogState {
-    pub fn get(&self) -> Option<ToolCatalog> {
+impl OperationCatalogState {
+    pub fn get(&self) -> Option<OperationCatalog> {
         self.0.locked().clone()
     }
 
-    pub fn set(&self, catalog: ToolCatalog) {
+    pub fn set(&self, catalog: OperationCatalog) {
         *self.0.locked() = Some(catalog);
     }
 }
 
-pub fn catalog_from(entries: Vec<ToolCatalogEntry>) -> ToolCatalog {
+pub fn catalog_from(entries: Vec<OperationCatalogEntry>) -> OperationCatalog {
     entries
         .into_iter()
         .map(|entry| (entry.id.clone(), entry))
@@ -190,14 +190,14 @@ fn can_run_externally(command: &Value) -> bool {
 
 pub fn command_input<'a>(
     command: &Value,
-    tool: &'a ToolCatalogEntry,
+    tool: &'a OperationCatalogEntry,
 ) -> Result<Option<&'a CommandInputDescription>, CommandLookupError> {
     let Some(input) = tool.command_inputs.get(id_of(command)) else {
         return Ok(None);
     };
-    if input.tool_config
+    if input.operation_config
         != command
-            .get("toolConfig")
+            .get("operationConfig")
             .cloned()
             .unwrap_or_else(|| serde_json::json!({}))
     {
@@ -208,8 +208,8 @@ pub fn command_input<'a>(
 
 fn input_kind(
     command: &Value,
-    tool: &ToolCatalogEntry,
-) -> Result<ToolInputKind, CommandLookupError> {
+    tool: &OperationCatalogEntry,
+) -> Result<OperationInputKind, CommandLookupError> {
     Ok(command_input(command, tool)?.map_or(tool.input, |input| input.input))
 }
 
@@ -253,27 +253,27 @@ pub fn webhook_mentions_selection(config: &Value) -> bool {
 /// a text.
 fn resolve_text_input_support(
     command: &Value,
-    catalog: Option<&ToolCatalog>,
+    catalog: Option<&OperationCatalog>,
 ) -> Result<bool, CommandLookupError> {
     let id = id_of(command).to_owned();
-    let tool_id = str_field(command, "toolId").trim();
-    let config = command.get("toolConfig").unwrap_or(&Value::Null);
-    match tool_id {
+    let operation_id = str_field(command, "operationId").trim();
+    let config = command.get("operationConfig").unwrap_or(&Value::Null);
+    match operation_id {
         "script" => return Ok(script_can_take_text(config)),
         "webhook" => return Ok(webhook_can_take_text(config)),
         _ => {}
     }
     let catalog = catalog.ok_or_else(|| CommandLookupError::ToolsLoading(id.clone()))?;
     let tool = catalog
-        .get(tool_id)
+        .get(operation_id)
         .ok_or_else(|| CommandLookupError::Unavailable(id.clone(), None))?;
     if !tool.is_available {
         return Err(CommandLookupError::Unavailable(id, tool.reason.clone()));
     }
     match input_kind(command, tool)? {
-        ToolInputKind::None => Ok(false),
-        ToolInputKind::Text | ToolInputKind::Parsed => Ok(true),
-        ToolInputKind::Structured
+        OperationInputKind::None => Ok(false),
+        OperationInputKind::Text | OperationInputKind::Parsed => Ok(true),
+        OperationInputKind::Structured
             if command
                 .get("isLlmArgumentParsingEnabled")
                 .and_then(Value::as_bool)
@@ -281,14 +281,14 @@ fn resolve_text_input_support(
         {
             Ok(true)
         }
-        ToolInputKind::Structured => Ok(false),
+        OperationInputKind::Structured => Ok(false),
     }
 }
 
 /// The command as a call runs it, or why it cannot be called from outside.
 fn resolve_callable_command(
     command: &Value,
-    catalog: Option<&ToolCatalog>,
+    catalog: Option<&OperationCatalog>,
 ) -> Result<ExternalCommand, CommandLookupError> {
     let id = id_of(command).to_owned();
     if !is_enabled(command) {
@@ -312,10 +312,10 @@ fn resolve_callable_command(
         id,
         can_take_text,
         has_structured_input: catalog
-            .and_then(|catalog| catalog.get(str_field(command, "toolId").trim()))
+            .and_then(|catalog| catalog.get(str_field(command, "operationId").trim()))
             .map(|tool| input_kind(command, tool))
             .transpose()?
-            .is_some_and(|input| input == ToolInputKind::Structured),
+            .is_some_and(|input| input == OperationInputKind::Structured),
     })
 }
 
@@ -323,7 +323,7 @@ fn resolve_callable_command(
 /// name says so explicitly, see `find_by_name`.
 pub fn find_by_id(
     user_config: &Value,
-    catalog: Option<&ToolCatalog>,
+    catalog: Option<&OperationCatalog>,
     id: &str,
 ) -> Result<ExternalCommand, CommandLookupError> {
     let id = id.trim();
@@ -337,7 +337,7 @@ pub fn find_by_id(
 /// The only callable command with the name `name`, compared normalized.
 pub fn find_by_name(
     user_config: &Value,
-    catalog: Option<&ToolCatalog>,
+    catalog: Option<&OperationCatalog>,
     name: &str,
 ) -> Result<ExternalCommand, CommandLookupError> {
     let normalized = normalize_name(name);
@@ -405,7 +405,7 @@ fn display_name(command: &Value) -> &str {
     }
 }
 
-pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> Value {
+pub fn list(user_config: &Value, catalog: Option<&OperationCatalog>) -> Value {
     let listed: Vec<ListedCommand> = commands_of(user_config)
         .iter()
         .filter(|command| !id_of(command).is_empty())
@@ -430,7 +430,7 @@ pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> Value {
 /// Describe the same effective input used by the execution registry.
 pub fn describe(
     user_config: &Value,
-    catalog: Option<&ToolCatalog>,
+    catalog: Option<&OperationCatalog>,
     target: &str,
     by_name: bool,
 ) -> Result<Value, CommandLookupError> {
@@ -442,7 +442,7 @@ pub fn describe(
     let raw = commands_of(user_config)
         .iter()
         .find(|raw| id_of(raw) == command.id);
-    let tool = raw.and_then(|raw| catalog?.get(str_field(raw, "toolId").trim()));
+    let tool = raw.and_then(|raw| catalog?.get(str_field(raw, "operationId").trim()));
     let schema = match (raw, tool) {
         (Some(raw), Some(tool)) => command_input(raw, tool)?
             .map(|input| input.input_schema.clone())

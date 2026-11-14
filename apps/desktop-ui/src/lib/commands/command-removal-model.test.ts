@@ -11,7 +11,7 @@ describe('command removal model', () => {
   function fixture() {
     const command = {
       ...createCommand('webhook', 'test'),
-      toolConfig: {
+      operationConfig: {
         url: 'https://example.com',
         isAuthEnabled: true,
         authSecretId: 'webhook.auth.test',
@@ -95,7 +95,7 @@ describe('command removal model', () => {
     const f = fixture()
     const twin = {
       ...createCommand('webhook', 'twin'),
-      toolConfig: {
+      operationConfig: {
         url: 'https://example.com',
         headers: { authorization: secretRef('webhook.auth.test') },
       },
@@ -125,7 +125,7 @@ describe('command removal model', () => {
   it('finds the secrets of a webhook in its headers and its Authorization', () => {
     const command = {
       ...createCommand('webhook', 'hook'),
-      toolConfig: {
+      operationConfig: {
         url: 'https://example.com',
         authSecretId: 'webhook.auth.a',
         headers: { 'x-key': secretRef('webhook.header.b'), plain: 'value' },

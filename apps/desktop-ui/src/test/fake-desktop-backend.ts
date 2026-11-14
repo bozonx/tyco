@@ -336,7 +336,7 @@ export class FakeDesktopBackend {
     this.handle('submit_activation_metric_value', noop)
     this.handle('confirm_screenshot_crop', noop)
     this.handle('cancel_screenshot_crop', noop)
-    this.handle('set_tool_catalog', noop)
+    this.handle('set_operation_catalog', noop)
     this.handle('set_tray_menu_labels', noop)
     this.handle('list_input_devices', () => [])
   }

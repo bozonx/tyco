@@ -43,7 +43,7 @@ describe('SettingsCreateCommandModal.vue', () => {
   it('renders title, close button, and tool options', () => {
     const wrapper = mountModal()
     expect(wrapper.text()).toContain('commands.createModalTitle')
-    expect(wrapper.text()).toContain('commands.toolTypeLabel')
+    expect(wrapper.text()).toContain('commands.typeLabel')
 
     const closeBtn = wrapper.find('button[aria-label="common.cancel"]')
     expect(closeBtn.exists()).toBe(true)
@@ -58,7 +58,7 @@ describe('SettingsCreateCommandModal.vue', () => {
     const items = wrapper.findAll('.create-command-item')
     await items[0].trigger('click')
 
-    expect(wrapper.emitted('submit')?.[0]).toEqual([{ toolId: 'script' }])
+    expect(wrapper.emitted('submit')?.[0]).toEqual([{ operationId: 'script' }])
   })
 
   it('selects webhook tool on single click', async () => {
@@ -66,7 +66,7 @@ describe('SettingsCreateCommandModal.vue', () => {
     const items = wrapper.findAll('.create-command-item')
     await items[1].trigger('click')
 
-    expect(wrapper.emitted('submit')?.[0]).toEqual([{ toolId: 'webhook' }])
+    expect(wrapper.emitted('submit')?.[0]).toEqual([{ operationId: 'webhook' }])
   })
 
   it('selects AI tool on single click', async () => {
@@ -74,7 +74,9 @@ describe('SettingsCreateCommandModal.vue', () => {
     const items = wrapper.findAll('.create-command-item')
     await items[2].trigger('click')
 
-    expect(wrapper.emitted('submit')?.[0]).toEqual([{ toolId: 'core.aiTask' }])
+    expect(wrapper.emitted('submit')?.[0]).toEqual([
+      { operationId: 'core.aiTask' },
+    ])
   })
 
   it('emits close when header close button is clicked', async () => {

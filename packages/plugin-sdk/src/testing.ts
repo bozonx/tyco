@@ -1,5 +1,8 @@
 import { vi, type Mock } from 'vitest'
-import { runToolFromAction, runToolFromToolbar } from './toolbar-tool.js'
+import {
+  runOperationFromAction,
+  runOperationFromToolbar,
+} from './toolbar-operation.js'
 
 import type {
   ActionContribution,
@@ -8,7 +11,7 @@ import type {
   EditorInputSnapshot,
   PluginContext,
   ToolbarItem,
-  ToolDefinition,
+  OperationDefinition,
 } from './index.js'
 
 export interface PluginTestContextOptions {
@@ -34,11 +37,11 @@ export function createPluginTestContext(
   mocks: PluginTestMocks
   actionItems: ActionItem[]
   toolbarItems: ToolbarItem[]
-  tools: ToolDefinition[]
+  tools: OperationDefinition[]
 } {
   const actionItems: ActionItem[] = []
   const toolbarItems: ToolbarItem[] = []
-  const tools: ToolDefinition[] = []
+  const tools: OperationDefinition[] = []
   let value = options.value ?? options.selectedText ?? ''
   let selectedText = options.selectedText ?? ''
   let revision = 0
@@ -53,11 +56,11 @@ export function createPluginTestContext(
       const registered = items.map((item): ActionItem => ({
         ...item,
         action:
-          item.toolId !== undefined
+          item.operationId !== undefined
             ? async (text: string) => {
-                const tool = tools.find((tool) => tool.id === item.toolId)
+                const tool = tools.find((tool) => tool.id === item.operationId)
                 if (!tool) throw new Error('Unknown action tool')
-                await runToolFromAction(ctx, tool, text)
+                await runOperationFromAction(ctx, tool, text)
               }
             : item.action!,
       }))
@@ -82,11 +85,11 @@ export function createPluginTestContext(
       const registered = items.map((item): ToolbarItem => ({
         ...item,
         action:
-          item.toolId !== undefined
+          item.operationId !== undefined
             ? async () => {
-                const tool = tools.find((tool) => tool.id === item.toolId)
+                const tool = tools.find((tool) => tool.id === item.operationId)
                 if (!tool) throw new Error('Unknown toolbar tool')
-                await runToolFromToolbar(ctx, tool)
+                await runOperationFromToolbar(ctx, tool)
               }
             : item.action!,
       }))
@@ -98,7 +101,7 @@ export function createPluginTestContext(
         }
       }
     }),
-    registerTools: vi.fn((items: ToolDefinition[]) => {
+    registerOperations: vi.fn((items: OperationDefinition[]) => {
       tools.push(...items)
       return () => {
         for (const item of items) {

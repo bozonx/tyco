@@ -56,7 +56,7 @@ describe('plugin RPC', () => {
       type: 'host',
       id: 11,
       requestId: 2,
-      method: 'registerTools',
+      method: 'registerOperations',
       args: [[]],
     })
     await vi.waitFor(() =>

@@ -32,7 +32,7 @@ import { translationLanguageLabel } from '../lib/translation/translation-languag
 import { useActionMenuStore } from '../stores/action-menu'
 import { useAiProfilesStore } from '../stores/ai-profiles'
 import { usePluginRuntimeStore } from '../stores/plugin-runtime'
-import { useToolsStore } from '../stores/tools'
+import { useOperationsStore } from '../stores/operations'
 import { useI18n } from './use-i18n'
 import { useSettingsContext } from './use-settings-context'
 import { entityLabel } from '../lib/ai-profiles/vault-groups'
@@ -62,7 +62,7 @@ export function useMainActionChoices(
   const { pluginFactories } = usePluginRuntimeStore()
   const actionMenuStore = useActionMenuStore()
   const aiProfilesStore = useAiProfilesStore()
-  const toolsStore = useToolsStore()
+  const operationsStore = useOperationsStore()
 
   const commands = computed(() => normalizeCommands(userConfig.value.commands))
 
@@ -197,12 +197,13 @@ export function useMainActionChoices(
       ),
     ...commands.value
       .filter(
-        (command) => isMenuCommand(command, toolsStore) && isOffered(command)
+        (command) =>
+          isMenuCommand(command, operationsStore) && isOffered(command)
       )
       .map((command) => ({
         config: { type: 'command' as const, commandId: command.id },
         name: commandLabel(command),
-        group: commandGroup(command, toolsStore),
+        group: commandGroup(command, operationsStore),
       })),
   ])
 
@@ -312,7 +313,7 @@ export function useMainActionChoices(
     availableActions,
     actionOptions,
     commands,
-    toolsStore,
+    operationsStore,
     optionId,
     isVisible,
     groupLabel,

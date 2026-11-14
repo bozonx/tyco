@@ -21,7 +21,7 @@ import { normalizeLlmConfig } from '../llm/llm-config'
 import { describeError } from '../errors/describe-error'
 import { formatLlmError } from '../llm/llm-errors'
 import type { AppRoutePath } from '../navigation/routes'
-import type { ToolLookup } from '../tools/tool-types'
+import type { OperationLookup } from '../operations/operation-types'
 import type { CommandEnvironment } from '../variables/command-variables'
 import {
   createChatController,
@@ -87,7 +87,7 @@ export interface ChatStoreRuntimeDependencies {
   toastKey: (key: string, kind: 'error' | 'warn') => void
   warn: (message: string) => void
   /** Tool registry to look up tools for custom commands in chat */
-  tools?: ToolLookup
+  tools?: OperationLookup
   /** The platform and variable values of this device */
   environment?: () => CommandEnvironment
   /** Waits before each retry of a failed chat write */

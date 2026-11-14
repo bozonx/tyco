@@ -37,7 +37,7 @@ import { useQuickDismissStore } from '../stores/quick-dismiss'
 import { useSelectionReplaceStore } from '../stores/selection-replace'
 import { useSettingsSessionStore } from '../stores/settings-session'
 import { useThemeStore } from '../stores/theme'
-import { useToolCatalogStore } from '../stores/tool-catalog'
+import { useOperationCatalogStore } from '../stores/operation-catalog'
 import { DESKTOP_EVENTS, DESKTOP_WINDOW_LABELS } from '@tyco/shared'
 
 /** Wires application services to the lifetime of the root component. */
@@ -163,7 +163,7 @@ export function useAppRuntime() {
       await pluginRuntime.refreshInstalledPlugins()
       await pluginRuntime.reloadPlugins()
       // external calls find the commands of plugin tools by this catalog
-      if (isQuickWindow) useToolCatalogStore().start()
+      if (isQuickWindow) useOperationCatalogStore().start()
     },
   })
 

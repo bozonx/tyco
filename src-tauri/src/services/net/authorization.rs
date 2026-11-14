@@ -80,11 +80,14 @@ fn configured_base_urls(config: &serde_json::Value) -> impl Iterator<Item = &str
         .into_iter()
         .flatten()
         .filter(|command| {
-            command.get("toolId").and_then(serde_json::Value::as_str) == Some("webhook")
+            command
+                .get("operationId")
+                .and_then(serde_json::Value::as_str)
+                == Some("webhook")
         })
         .filter_map(|command| {
             command
-                .get("toolConfig")
+                .get("operationConfig")
                 .and_then(|config| config.get("url"))
         })
         .filter_map(serde_json::Value::as_str);
@@ -115,7 +118,7 @@ mod tests {
     fn endpoints_take_the_variables_of_this_device() {
         let config = serde_json::json!({
             "llm": {"providers": [{"type": "openaiCompatible", "baseUrl": "{{var:LOCAL_API}}/v1"}]},
-            "commands": [{"toolId": "webhook", "toolConfig": {"url": "{{var:HOOKS}}/run"}}]
+            "commands": [{"operationId": "webhook", "operationConfig": {"url": "{{var:HOOKS}}/run"}}]
         });
         let secrets = crate::services::secrets::Secrets::new();
         let values = VariableValues::from_pairs(&[("LOCAL_API", "http://localhost:11434")]);
@@ -132,7 +135,7 @@ mod tests {
 
     #[test]
     fn allows_configured_webhooks_without_a_secret() {
-        let config = serde_json::json!({"commands":[{"id":"hook", "toolId":"webhook", "toolConfig":{"url":"https://hooks.example/run?text={{TEXT}}"}}]});
+        let config = serde_json::json!({"commands":[{"id":"hook", "operationId":"webhook", "operationConfig":{"url":"https://hooks.example/run?text={{TEXT}}"}}]});
         let secrets = crate::services::secrets::Secrets::new();
         assert!(ensure_allowed_origin(
             Protocol::Http,

@@ -1,11 +1,11 @@
 <template>
   <ScriptActionFields
-    v-if="command.toolId === 'script'"
+    v-if="command.operationId === 'script'"
     :command="command"
     @update="(field, value) => emit('update', field, value)"
   />
   <WebhookActionFields
-    v-else-if="command.toolId === 'webhook'"
+    v-else-if="command.operationId === 'webhook'"
     :command="command"
     @update="(field, value) => emit('update', field, value)"
   />

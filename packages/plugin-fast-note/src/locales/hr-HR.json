@@ -27,7 +27,7 @@
   "contentTemplate": "Predložak sadržaja",
   "contentTemplateInfo": "Podržava tokene datuma, {'{'}title{'}'} i obavezni {'{'}content{'}'}. Za vitičastu zagradu napišite {'{'}{'{'} ili {'}'}{'}'}. Ako naslov koristi {'{'}title{'}'}, prvi redak se ne ponavlja ispod njega. Način dodavanja stvara datoteku ako ne postoji.",
   "clearInputAfterSave": "Očisti polje za unos nakon spremanja",
-  "toolLabel": "Napiši bilješku",
+  "operationLabel": "Napiši bilješku",
   "toolDescription": "Sprema tekst kao novu bilješku ili ga dodaje u postojeću, u vašoj mapi s bilješkama",
   "noNotesPath": "Mapa s bilješkama nije konfigurirana u postavkama dodatka Brza bilješka",
   "noteSaved": "Bilješka je spremljena",

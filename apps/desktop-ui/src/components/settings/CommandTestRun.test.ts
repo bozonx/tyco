@@ -32,16 +32,16 @@ const { session } = vi.hoisted(() => ({
 vi.mock('../../stores/settings-session', () => ({
   useSettingsSessionStore: () => session,
 }))
-vi.mock('../../stores/tools', async () => {
-  const { testTools } = await import('../../lib/tools/testing')
-  const tools = testTools()
-  return { useToolsStore: () => tools }
+vi.mock('../../stores/operations', async () => {
+  const { testOperations } = await import('../../lib/operations/testing')
+  const tools = testOperations()
+  return { useOperationsStore: () => tools }
 })
 
 const script = (command = 'echo hi'): CommandConfig => ({
   ...createCommand('script', 'sc1'),
   name: 'Echo',
-  toolConfig: { command, workingDirectory: '' },
+  operationConfig: { command, workingDirectory: '' },
 })
 
 const mountRun = (command = script()) =>
@@ -93,11 +93,11 @@ describe('CommandTestRun.vue', () => {
   it('joins the translated and raw parts of an error', async () => {
     const wrapper = await runWith({
       kind: 'error',
-      messageKey: 'commands.toolMissing',
+      messageKey: 'commands.typeMissing',
       message: 'details',
     })
     expect(wrapper.get('.is-error').text()).toBe(
-      'commands.toolMissing: details'
+      'commands.typeMissing: details'
     )
   })
 

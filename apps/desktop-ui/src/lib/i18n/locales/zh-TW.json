@@ -191,7 +191,7 @@
     },
     "commands": {
       "group": "命令",
-      "groupHint": "允許模型執行選定的自訂命令與外掛程式工具。「詢問」會在每次呼叫前確認。",
+      "groupHint": "允許模型執行選定的命令。只能選擇附有 AI 描述的命令。「詢問」會在每次呼叫前確認。",
       "needsDescription": "需要在命令設定中填寫 AI 說明",
       "noCommands": "尚未設定自訂命令。",
       "noCommandsHint": "請先在設定 → 命令中建立命令。",
@@ -228,7 +228,7 @@
     "errorNoName": "請輸入名稱。",
     "errorNoPrompt": "請編寫給 LLM 的指示。",
     "errorNoUrl": "請輸入 URL。",
-    "errorUnknownTool": "未知的工具。",
+    "errorUnknownType": "未知的命令類型。",
     "external": "允許外部存取",
     "externalDescription": "您工作階段中的本機應用程式可透過 tyco-ctl 與 D-Bus 執行的操作。每個命令的存取權限均在其進階設定中啟用。",
     "externalInfo": "本機應用程式與指令碼可使用 tyco-ctl run <ID> 或 tyco-ctl run --name <name> 執行獲允許的命令。結果將傳回給呼叫方。--interactive 允許文字輸入介面；--selection --replace 則明確請求取代選取內容。",
@@ -238,8 +238,8 @@
     "fieldOff": "否",
     "fieldOn": "是",
     "fromPluginSettings": "來自外掛程式設定：{value}",
-    "hint": "命令是基於工具的可自訂動作：LLM 提示詞、Shell 指令碼、HTTP Webhook 或翻譯。它們可以處理選取的文字或在無輸入下執行，結果可插入使用中的視窗、複製到剪貼簿或在畫面上顯示。可透過快速命令（啟動器）、主要動作功能表或 tyco-ctl 命令列執行。",
-    "inputUnsupported": "其工具需要無法從文字中取得的結構化輸入",
+    "hint": "命令是多種類型的可自訂動作：LLM 提示詞、Shell 指令碼、HTTP Webhook 或翻譯。它們可以處理選取的文字或在無輸入下執行，結果可插入使用中的視窗、複製到剪貼簿或在畫面上顯示。可透過快速命令（啟動器）、主要動作功能表或 tyco-ctl 命令列執行。",
+    "inputUnsupported": "其類型需要無法從文字中取得的結構化輸入",
     "languageLabel": "翻譯為",
     "languagePlaceholder": "選擇語言",
     "launcherResult": "動作",
@@ -265,12 +265,12 @@
     "testRunning": "正在執行…",
     "testStop": "停止",
     "testTextPlaceholder": "用於測試的文字",
-    "toolInfo": "工具：{tool}",
-    "toolMissing": "其工具無法使用：外掛程式已停用或遺失",
+    "typeInfo": "類型：{type}",
+    "typeMissing": "其類型無法使用：外掛程式已停用或遺失",
     "preTransformFailed": "無法為指令準備文字",
     "unavailableInMenu": "{name}（在選單中無法使用）",
     "undo": "復原",
-    "unknownTool": "此版本的 Tyco 無法使用「{tool}」工具。",
+    "unknownType": "此版本的 Tyco 無法使用「{type}」命令類型。",
     "unnamed": "未命名命令",
     "warningExternalNameTwins": "其他命令具有相同名稱：{names}。依此名稱呼叫會因不明確而遭拒；請改用 ID。",
     "llmPreTransform": "使用 LLM 進行文字預處理",
@@ -302,7 +302,7 @@
     "aiToolsEnabledLabel": "允許使用工具",
     "aiToolsEnabledInfo": "啟用後，AI 可以呼叫其他被允許的指令。",
     "createModalTitle": "新增指令",
-    "toolTypeLabel": "指令類型"
+    "typeLabel": "指令類型"
   },
   "common": {
     "add": "新增",
@@ -1308,7 +1308,7 @@
     "commandDisabled": "命令已停用",
     "commandFailed": "命令執行失敗",
     "commandInputInvalid": "命令的輸入無效",
-    "commandInputUnsupported": "此命令無法接收文字：其工具需要結構化輸入",
+    "commandInputUnsupported": "此命令無法接收文字：其類型需要結構化輸入",
     "commandUnavailable": "命令無法使用",
     "desktopCommandFailed": "動作失敗",
     "dictationClosed": "語音辨識服務在錄音時終止了工作階段",
@@ -1356,7 +1356,7 @@
     "webhookKeyNotSet": "此裝置上未設定此 Webhook 的金鑰；請在命令設定中輸入",
     "webhookSuccess": "Webhook 發送成功"
   },
-  "tools": {
+  "operations": {
     "aiTask": "AI 指令",
     "aiTaskDescription": "依你的指示一步處理文字，並可執行其他指令",
     "askInChat": "在聊天中提問",

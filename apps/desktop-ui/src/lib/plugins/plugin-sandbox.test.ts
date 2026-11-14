@@ -286,9 +286,11 @@ describe('plugin-sandbox', () => {
 
     it('exposes returned host functions as callbacks to the plugin', async () => {
       const disposer = vi.fn(() => 'removed')
-      const harness = createHarness({ registerTools: vi.fn(() => disposer) })
+      const harness = createHarness({
+        registerOperations: vi.fn(() => disposer),
+      })
       await harness.activate()
-      const registered = await harness.callHost('registerTools', [[]])
+      const registered = await harness.callHost('registerOperations', [[]])
       const callbackId = (registered.result as { $callback: number }).$callback
       expect(callbackId).toBeGreaterThan(0)
 
@@ -370,9 +372,11 @@ describe('plugin-sandbox', () => {
     })
 
     it('asks the worker to dispose and clears callbacks', async () => {
-      const harness = createHarness({ registerTools: vi.fn(() => () => {}) })
+      const harness = createHarness({
+        registerOperations: vi.fn(() => () => {}),
+      })
       await harness.activate()
-      await harness.callHost('registerTools', [[]])
+      await harness.callHost('registerOperations', [[]])
       await harness.dispose()
       expect(harness.sent.some((m) => m.method === 'dispose')).toBe(true)
       expect(harness.close).toHaveBeenCalledOnce()

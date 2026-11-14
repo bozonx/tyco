@@ -6,7 +6,7 @@ import {
   substituteVariables,
   type VariablePlace,
   type VariableValues,
-  type WebhookToolConfig,
+  type WebhookOperationConfig,
 } from '@tyco/shared'
 
 import { isSecretRef, secretRef } from '../net/secrets'
@@ -19,7 +19,7 @@ const MAX_ERROR_BODY_CHARS = 200
 export type WebhookCallLog = (name: string, details: string) => Promise<void>
 
 /** A webhook to call: the settings of the tool and who calls it */
-export interface WebhookTarget extends WebhookToolConfig {
+export interface WebhookTarget extends WebhookOperationConfig {
   /** The id of the command; the Authorization secret is kept under it */
   id: string
   name: string

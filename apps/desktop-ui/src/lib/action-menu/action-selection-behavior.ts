@@ -5,7 +5,7 @@ import {
 } from '@tyco/shared'
 
 import { commandTakesText } from '../commands/command-runtime'
-import type { ToolLookup } from '../tools/tool-types'
+import type { OperationLookup } from '../operations/operation-types'
 
 export interface ActionSelectionBehavior {
   /** Whether the user cannot toggle the switch in the settings */
@@ -40,7 +40,7 @@ const LOCKED_FALSE_STANDARD_ACTIONS = new Set([
 export function resolveActionSelectionBehavior(
   action: MainActionConfig | null | undefined,
   commands?: readonly CommandConfig[],
-  tools?: ToolLookup
+  tools?: OperationLookup
 ): ActionSelectionBehavior {
   if (!action) {
     return { disabled: true, forcedValue: true }

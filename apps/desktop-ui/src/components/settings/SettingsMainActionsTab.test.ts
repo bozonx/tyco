@@ -30,10 +30,10 @@ vi.mock('../../stores/ai-profiles', () => ({
       id === 'assistant' ? { id: 'assistant', name: 'Assistant' } : undefined,
   }),
 }))
-vi.mock('../../stores/tools', async () => {
-  const { testTools } = await import('../../lib/tools/testing')
-  const tools = testTools()
-  return { useToolsStore: () => tools }
+vi.mock('../../stores/operations', async () => {
+  const { testOperations } = await import('../../lib/operations/testing')
+  const tools = testOperations()
+  return { useOperationsStore: () => tools }
 })
 
 /** Renders each slot through the item template, with buttons for the grid */

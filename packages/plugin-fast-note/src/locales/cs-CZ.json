@@ -27,7 +27,7 @@
   "contentTemplate": "Šablona obsahu",
   "contentTemplateInfo": "Podporuje tokeny data, {'{'}title{'}'} a povinný {'{'}content{'}'}. Pro složenou závorku napište {'{'}{'{'} nebo {'}'}{'}'}. Pokud nadpis používá {'{'}title{'}'}, první řádek se pod ním neopakuje. Režim připojení vytvoří soubor, pokud chybí.",
   "clearInputAfterSave": "Po uložení vymazat vstupní pole",
-  "toolLabel": "Zapsat poznámku",
+  "operationLabel": "Zapsat poznámku",
   "toolDescription": "Uloží text jako novou poznámku nebo jej připojí ke stávající ve složce poznámek",
   "noNotesPath": "Složka poznámek není v nastavení doplňku Rychlá poznámka nakonfigurována",
   "noteSaved": "Poznámka uložena",

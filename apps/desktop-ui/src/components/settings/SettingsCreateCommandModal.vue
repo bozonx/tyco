@@ -20,9 +20,7 @@
       </div>
 
       <div class="create-command-section">
-        <span class="create-command-label">{{
-          t('commands.toolTypeLabel')
-        }}</span>
+        <span class="create-command-label">{{ t('commands.typeLabel') }}</span>
 
         <div class="create-command-list" role="list">
           <template v-for="item in commandItems" :key="item.key">
@@ -67,12 +65,12 @@ export interface CreateCommandToolOption {
 }
 
 export interface CreateCommandSubmitEvent {
-  toolId: string
+  operationId: string
 }
 
 interface CommandItemOption {
   key: string
-  toolId: string
+  operationId: string
   name: string
   description?: string
   icon: string
@@ -88,25 +86,25 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const titleId = useId()
 
-function defaultIconForTool(toolId: string): string {
-  if (toolId === 'script') return 'mdi:console'
-  if (toolId === 'webhook') return 'mdi:webhook'
-  if (toolId === 'core.aiTask') return 'mdi:robot-outline'
+function defaultIconForOperation(operationId: string): string {
+  if (operationId === 'script') return 'mdi:console'
+  if (operationId === 'webhook') return 'mdi:webhook'
+  if (operationId === 'core.aiTask') return 'mdi:robot-outline'
   return 'mdi:puzzle-outline'
 }
 
 const commandItems = computed<CommandItemOption[]>(() =>
   props.tools.map((tool) => ({
     key: tool.id,
-    toolId: tool.id,
+    operationId: tool.id,
     name: tool.name,
     description: tool.description,
-    icon: tool.icon ?? defaultIconForTool(tool.id),
+    icon: tool.icon ?? defaultIconForOperation(tool.id),
   }))
 )
 
 function handleSelect(item: CommandItemOption) {
-  emit('submit', { toolId: item.toolId })
+  emit('submit', { operationId: item.operationId })
 }
 
 function close() {

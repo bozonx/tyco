@@ -4,8 +4,8 @@ import type {
   StandardActionId,
 } from '@tyco/shared'
 
-import { commandTool } from '../commands/command-runtime'
-import type { ToolLookup } from '../tools/tool-types'
+import { commandOperation } from '../commands/command-runtime'
+import type { OperationLookup } from '../operations/operation-types'
 import { configProfileKey } from '../ai-profiles/profile-ref'
 
 /**
@@ -109,14 +109,14 @@ export function pluginActionGroup(
 
 export function commandGroup(
   command: CommandConfig,
-  tools: ToolLookup
+  tools: OperationLookup
 ): MainActionGroup {
-  if (command.toolId === 'core.translate') return { kind: 'translation' }
-  if (command.toolId === 'core.aiTask') return { kind: 'aiCommands' }
-  if (command.toolId === 'core.transformation')
+  if (command.operationId === 'core.translate') return { kind: 'translation' }
+  if (command.operationId === 'core.aiTask') return { kind: 'aiCommands' }
+  if (command.operationId === 'core.transformation')
     return { kind: 'transformation' }
-  if (command.toolId === 'core.styling') return { kind: 'styling' }
-  const owner = commandTool(command, tools)?.owner
+  if (command.operationId === 'core.styling') return { kind: 'styling' }
+  const owner = commandOperation(command, tools)?.owner
   if (owner?.kind === 'plugin')
     return { kind: 'plugin', plugin: owner.pluginId }
   return { kind: 'commands' }
@@ -136,19 +136,19 @@ export function duplicatesDirectChoice(
   }
 ): boolean {
   const value = (key: string) => {
-    const field = command.toolConfig[key]
+    const field = command.operationConfig[key]
     return typeof field === 'string' ? field.trim() : ''
   }
-  if (command.toolId === 'core.translate') {
+  if (command.operationId === 'core.translate') {
     // without a language of its own it is the translation menu itself
     return !value('language') || direct.languages.includes(value('language'))
   }
-  if (command.toolId === 'core.transformation') {
+  if (command.operationId === 'core.transformation') {
     return (direct.transformations ?? []).some(
       (rule) => rule.trim() === value('prompt')
     )
   }
-  if (command.toolId === 'core.styling') {
+  if (command.operationId === 'core.styling') {
     return (direct.styling ?? []).some(
       (rule) => rule.trim() === value('prompt')
     )

@@ -1,4 +1,4 @@
-import type { ToolResult } from '../tools/tool-types'
+import type { OperationResult } from '../operations/operation-types'
 import type { BufferedPendingAction } from './menu-modal-params'
 
 export interface BufferedIntentDependencies {
@@ -16,14 +16,14 @@ export interface BufferedIntentDependencies {
   canInsertIntoWindow: () => boolean
   closeAll: () => void
   saveOutput: (text: string) => Promise<unknown>
-  insert: (text: string) => Promise<ToolResult>
-  copy: (text: string) => Promise<ToolResult>
+  insert: (text: string) => Promise<OperationResult>
+  copy: (text: string) => Promise<OperationResult>
   isQuickWindow: () => boolean
   hideWindow: () => Promise<unknown>
   notifyNoTarget: () => void
   notifyCopied: () => void
   reportHistoryError: () => void
-  reportFailure: (result: ToolResult) => void
+  reportFailure: (result: OperationResult) => void
 }
 
 /**

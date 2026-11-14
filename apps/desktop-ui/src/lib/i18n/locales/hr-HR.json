@@ -191,7 +191,7 @@
     },
     "commands": {
       "group": "Naredbe",
-      "groupHint": "Dopustite modelu pokretanje odabranih prilagođenih naredbi i alata dodataka. „Pitaj” traži potvrdu prije svakog poziva.",
+      "groupHint": "Dopustite modelu pokretanje odabranih naredbi. Mogu se odabrati samo naredbe s opisom za AI. „Pitaj” traži potvrdu prije svakog poziva.",
       "needsDescription": "Potreban je opis za AI u postavkama naredbe",
       "noCommands": "Još nema konfiguriranih prilagođenih naredbi.",
       "noCommandsHint": "Prvo stvorite naredbe u Postavke → Naredbe.",
@@ -228,7 +228,7 @@
     "errorNoName": "Unesite naziv.",
     "errorNoPrompt": "Napišite uputu za LLM.",
     "errorNoUrl": "Unesite URL.",
-    "errorUnknownTool": "Nepoznat alat.",
+    "errorUnknownType": "Nepoznata vrsta naredbe.",
     "external": "Dostupno izvana",
     "externalDescription": "Što lokalne aplikacije vaše sesije mogu raditi putem tyco-ctl i D-Busa. Pristup svakoj naredbi uključuje se u njezinim naprednim postavkama.",
     "externalInfo": "Lokalne aplikacije i skripte mogu pokrenuti dopuštenu naredbu s tyco-ctl run <ID> ili tyco-ctl run --name <naziv>. Rezultat se vraća pozivatelju. --interactive dopušta sučelje za unos teksta; --selection --replace izričito traži zamjenu odabira.",
@@ -238,8 +238,8 @@
     "fieldOff": "Ne",
     "fieldOn": "Da",
     "fromPluginSettings": "Iz postavki dodatka: {value}",
-    "hint": "Naredbe su prilagodljive radnje temeljene na alatima: LLM upiti, skripte ljuske, HTTP webhookovi ili prijevod. Obrađuju označeni tekst ili se pokreću bez unosa, a rezultat mogu umetnuti u aktivni prozor, kopirati u međuspremnik ili prikazati. Pokreću se iz brzih naredbi (pokretača), izbornika glavnih radnji ili putem tyco-ctl-a.",
-    "inputUnsupported": "Njezin alat treba strukturirani unos koji se ne može dobiti iz teksta",
+    "hint": "Naredbe su prilagodljive radnje različitih vrsta: LLM upiti, skripte ljuske, HTTP webhookovi ili prijevod. Obrađuju označeni tekst ili se pokreću bez unosa, a rezultat mogu umetnuti u aktivni prozor, kopirati u međuspremnik ili prikazati. Pokreću se iz brzih naredbi (pokretača), izbornika glavnih radnji ili putem tyco-ctl-a.",
+    "inputUnsupported": "Njezina vrsta treba strukturirani unos koji se ne može dobiti iz teksta",
     "languageLabel": "Prevedi na",
     "languagePlaceholder": "Odaberite jezik",
     "launcherResult": "Radnja",
@@ -265,12 +265,12 @@
     "testRunning": "Pokreće se…",
     "testStop": "Zaustavi",
     "testTextPlaceholder": "Tekst za testiranje",
-    "toolInfo": "Alat: {tool}",
-    "toolMissing": "Njezin alat nije dostupan: dodatak je onemogućen ili nedostaje",
+    "typeInfo": "Vrsta: {type}",
+    "typeMissing": "Njezina vrsta nije dostupna: dodatak je onemogućen ili nedostaje",
     "preTransformFailed": "Tekst za naredbu nije moguće pripremiti",
     "unavailableInMenu": "{name} (nedostupno u izborniku)",
     "undo": "Poništi",
-    "unknownTool": "Alat „{tool}” nije dostupan u ovoj verziji Tyca.",
+    "unknownType": "Vrsta naredbe „{type}” nije dostupna u ovoj verziji Tyca.",
     "unnamed": "Naredba bez naziva",
     "warningExternalNameTwins": "Druge naredbe imaju isti naziv: {names}. Poziv tim nazivom odbija se kao dvosmislen; koristite ID.",
     "llmPreTransform": "Prethodna transformacija pomoću LLM-a",
@@ -302,7 +302,7 @@
     "aiToolsEnabledLabel": "Dopusti alate",
     "aiToolsEnabledInfo": "Kada je uključeno, AI može pozivati druge dopuštene naredbe.",
     "createModalTitle": "Nova naredba",
-    "toolTypeLabel": "Vrsta naredbe"
+    "typeLabel": "Vrsta naredbe"
   },
   "common": {
     "add": "Dodaj",
@@ -1314,7 +1314,7 @@
     "commandDisabled": "Naredba je onemogućena",
     "commandFailed": "Naredba nije uspjela",
     "commandInputInvalid": "Unos naredbe nije valjan",
-    "commandInputUnsupported": "Ova naredba ne prima tekst: njezin alat treba strukturirani unos",
+    "commandInputUnsupported": "Ova naredba ne prima tekst: njezina vrsta treba strukturirani unos",
     "commandUnavailable": "Naredba nije dostupna",
     "desktopCommandFailed": "Radnja nije uspjela",
     "dictationClosed": "Usluga prepoznavanja govora zatvorila je sesiju tijekom snimanja",
@@ -1362,7 +1362,7 @@
     "webhookKeyNotSet": "Ključ ovog webhooka nije postavljen na ovom uređaju; unesite ga u postavkama naredbe",
     "webhookSuccess": "Webhook je uspješno poslan"
   },
-  "tools": {
+  "operations": {
     "aiTask": "AI naredba",
     "aiTaskDescription": "Obrađuje tekst prema vašoj uputi u jednom koraku i može pokretati druge naredbe",
     "askInChat": "Pitaj u chatu",

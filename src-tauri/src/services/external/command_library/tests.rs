@@ -8,112 +8,112 @@ fn config() -> Value {
             {
                 "id": "backup",
                 "name": "Бэкап",
-                "toolId": "script",
-                "toolConfig": { "command": "backup.sh" },
+                "operationId": "script",
+                "operationConfig": { "command": "backup.sh" },
                 "isAvailableExternally": true
             },
             {
                 "id": "note",
                 "name": "Work  Note",
-                "toolId": "webhook",
-                "toolConfig": { "url": "https://example.com/?q={{TEXT}}" },
+                "operationId": "webhook",
+                "operationConfig": { "url": "https://example.com/?q={{TEXT}}" },
                 "afterRun": "showMenu",
                 "isAvailableExternally": true
             },
             {
                 "id": "hidden",
                 "name": "Hidden",
-                "toolId": "script",
-                "toolConfig": { "command": "x" },
+                "operationId": "script",
+                "operationConfig": { "command": "x" },
                 "isAvailableExternally": false
             },
             {
                 "id": "off",
                 "name": "Off",
-                "toolId": "script",
-                "toolConfig": { "command": "x" },
+                "operationId": "script",
+                "operationConfig": { "command": "x" },
                 "isEnabled": false,
                 "isAvailableExternally": true
             },
             {
                 "id": "plugin",
                 "name": "Plugin",
-                "toolId": "FastNote.write",
+                "operationId": "FastNote.write",
                 "isAvailableExternally": true
             },
             {
                 "id": "missing-tool",
                 "name": "Missing",
-                "toolId": "Gone.tool",
+                "operationId": "Gone.tool",
                 "isAvailableExternally": true
             },
             {
                 "id": "translate",
                 "name": "Translate",
-                "toolId": "core.translate",
+                "operationId": "core.translate",
                 "afterRun": "insertIntoWindow",
                 "isAvailableExternally": true
             },
             {
                 "id": "lights",
                 "name": "Lights",
-                "toolId": "Home.lights",
+                "operationId": "Home.lights",
                 "isAvailableExternally": true
             },
             {
                 "id": "remind",
                 "name": "Remind",
-                "toolId": "Home.remind",
+                "operationId": "Home.remind",
                 "isLlmArgumentParsingEnabled": true,
                 "isAvailableExternally": true
             },
             {
                 "id": "remind-raw",
                 "name": "Remind raw",
-                "toolId": "Home.remind",
+                "operationId": "Home.remind",
                 "isAvailableExternally": true
             },
             {
                 "id": "twin-a",
                 "name": "Twin",
-                "toolId": "script",
-                "toolConfig": { "command": "a" },
+                "operationId": "script",
+                "operationConfig": { "command": "a" },
                 "isAvailableExternally": true
             },
             {
                 "id": "twin-b",
                 "name": "twin",
-                "toolId": "script",
-                "toolConfig": { "command": "b" },
+                "operationId": "script",
+                "operationConfig": { "command": "b" },
                 "isAvailableExternally": true
             },
             {
                 "id": "twin-c",
                 "name": "Twin",
-                "toolId": "script",
-                "toolConfig": { "command": "c" },
+                "operationId": "script",
+                "operationConfig": { "command": "c" },
                 "isAvailableExternally": false
             },
             {
                 "id": "Lamp",
                 "name": "Свет",
-                "toolId": "webhook",
-                "toolConfig": { "url": "https://example.com" },
+                "operationId": "webhook",
+                "operationConfig": { "url": "https://example.com" },
                 "isAvailableExternally": true
             },
             {
                 "id": "lamp-2",
                 "name": "Lamp",
-                "toolId": "webhook",
-                "toolConfig": { "url": "https://example.com" },
+                "operationId": "webhook",
+                "operationConfig": { "url": "https://example.com" },
                 "isAvailableExternally": true
             }
         ]
     })
 }
 
-fn catalog() -> ToolCatalog {
-    let entry = |id: &str, input, available, reason: Option<&str>| ToolCatalogEntry {
+fn catalog() -> OperationCatalog {
+    let entry = |id: &str, input, available, reason: Option<&str>| OperationCatalogEntry {
         id: id.to_owned(),
         input,
         is_available: available,
@@ -122,16 +122,16 @@ fn catalog() -> ToolCatalog {
         command_inputs: HashMap::new(),
     };
     catalog_from(vec![
-        entry("script", ToolInputKind::Text, true, None),
-        entry("FastNote.write", ToolInputKind::Text, true, None),
+        entry("script", OperationInputKind::Text, true, None),
+        entry("FastNote.write", OperationInputKind::Text, true, None),
         entry(
             "core.translate",
-            ToolInputKind::Text,
+            OperationInputKind::Text,
             false,
             Some("No LLM is configured"),
         ),
-        entry("Home.lights", ToolInputKind::None, true, None),
-        entry("Home.remind", ToolInputKind::Structured, true, None),
+        entry("Home.lights", OperationInputKind::None, true, None),
+        entry("Home.remind", OperationInputKind::Structured, true, None),
     ])
 }
 
@@ -146,19 +146,19 @@ fn find_named(name: &str) -> Result<ExternalCommand, CommandLookupError> {
 #[test]
 fn configured_input_changes_schema_and_call_capabilities() {
     let command = json!({
-        "id": "configured", "toolId": "Plugin.dynamic",
-        "toolConfig": {"mode": "structured"}, "isAvailableExternally": true
+        "id": "configured", "operationId": "Plugin.dynamic",
+        "operationConfig": {"mode": "structured"}, "isAvailableExternally": true
     });
-    let mut tool = ToolCatalogEntry {
+    let mut tool = OperationCatalogEntry {
         id: "Plugin.dynamic".into(),
-        input: ToolInputKind::Text,
+        input: OperationInputKind::Text,
         is_available: true,
         reason: None,
         input_schema: None,
         command_inputs: HashMap::new(),
     };
     tool.command_inputs.insert("configured".into(), CommandInputDescription {
-        tool_config: command["toolConfig"].clone(), input: ToolInputKind::Structured,
+        operation_config: command["operationConfig"].clone(), input: OperationInputKind::Structured,
         input_schema: json!({"type":"object", "properties":{"at":{"type":"string"}}, "required":["at"]}),
     });
     assert_eq!(
@@ -180,7 +180,7 @@ fn configured_input_changes_schema_and_call_capabilities() {
     assert_eq!(listed[0]["input"], "structured");
     assert_eq!(listed[0]["canReplaceSelection"], false);
     let mut changed = config;
-    changed["commands"][0]["toolConfig"]["mode"] = json!("text");
+    changed["commands"][0]["operationConfig"]["mode"] = json!("text");
     assert_eq!(
         find_by_id(&changed, Some(&catalog), "configured"),
         Err(CommandLookupError::ToolsLoading("configured".into()))
@@ -371,9 +371,9 @@ fn names_normalize_as_the_webview_does() {
 #[test]
 fn a_name_waits_while_a_command_of_that_name_is_loading() {
     let config = json!({"commands": [
-        {"id": "a", "name": "Same", "toolId": "script",
-         "toolConfig": {"command": "x"}, "isAvailableExternally": true},
-        {"id": "b", "name": "Same", "toolId": "Plugin.late", "isAvailableExternally": true},
+        {"id": "a", "name": "Same", "operationId": "script",
+         "operationConfig": {"command": "x"}, "isAvailableExternally": true},
+        {"id": "b", "name": "Same", "operationId": "Plugin.late", "isAvailableExternally": true},
     ]});
     // the catalog has not come yet: `b` may be callable too
     assert_eq!(
@@ -385,10 +385,10 @@ fn a_name_waits_while_a_command_of_that_name_is_loading() {
 #[test]
 fn a_name_that_cannot_be_called_tells_the_most_telling_reason() {
     let config = json!({"commands": [
-        {"id": "off", "name": "Same", "toolId": "script",
-         "toolConfig": {"command": "x"}, "isEnabled": false, "isAvailableExternally": true},
-        {"id": "inside", "name": "Same", "toolId": "script",
-         "toolConfig": {"command": "x"}},
+        {"id": "off", "name": "Same", "operationId": "script",
+         "operationConfig": {"command": "x"}, "isEnabled": false, "isAvailableExternally": true},
+        {"id": "inside", "name": "Same", "operationId": "script",
+         "operationConfig": {"command": "x"}},
     ]});
     assert_eq!(
         find_by_name(&config, None, "same"),
@@ -399,8 +399,8 @@ fn a_name_that_cannot_be_called_tells_the_most_telling_reason() {
 #[test]
 fn describe_names_a_command_without_a_name_by_its_id() {
     let config = json!({"commands": [
-        {"id": "nameless", "name": "  ", "toolId": "script",
-         "toolConfig": {"command": "x"}, "isAvailableExternally": true},
+        {"id": "nameless", "name": "  ", "operationId": "script",
+         "operationConfig": {"command": "x"}, "isAvailableExternally": true},
     ]});
     let description = describe(&config, None, "nameless", false).unwrap();
     assert_eq!(description["name"], "nameless");
@@ -415,8 +415,8 @@ fn a_command_of_another_platform_is_not_called_and_stays_in_the_config() {
         "windows"
     };
     let config = json!({"commands": [{
-        "id": "elsewhere", "name": "Elsewhere", "toolId": "script",
-        "toolConfig": {"command": "x"}, "isAvailableExternally": true,
+        "id": "elsewhere", "name": "Elsewhere", "operationId": "script",
+        "operationConfig": {"command": "x"}, "isAvailableExternally": true,
         "platforms": [other]
     }]});
     assert!(matches!(

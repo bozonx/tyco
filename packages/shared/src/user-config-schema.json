@@ -669,8 +669,8 @@
             "items": { "type": "string", "default": "" },
             "default": []
           },
-          "toolId": { "type": "string", "default": "", "minLength": 1 },
-          "toolConfig": {
+          "operationId": { "type": "string", "default": "", "minLength": 1 },
+          "operationConfig": {
             "type": "object",
             "properties": {},
             "required": [],
@@ -708,8 +708,8 @@
           "name",
           "description",
           "phrases",
-          "toolId",
-          "toolConfig",
+          "operationId",
+          "operationConfig",
           "isLlmArgumentParsingEnabled",
           "isLlmPreTransformEnabled",
           "llmPreTransformPrompt",
@@ -1365,7 +1365,7 @@
     "aiProfiles"
   ],
   "$defs": {
-    "scriptToolConfig": {
+    "scriptOperationConfig": {
       "type": "object",
       "properties": {
         "command": { "type": "string", "default": "" },
@@ -1373,7 +1373,7 @@
       },
       "required": ["command"]
     },
-    "webhookToolConfig": {
+    "webhookOperationConfig": {
       "type": "object",
       "properties": {
         "url": { "type": "string", "default": "" },

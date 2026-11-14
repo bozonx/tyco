@@ -69,7 +69,7 @@ import {
   voiceCommandPhrases,
   voiceParameterLabels,
 } from '../../lib/voice-commands/voice-view-presenter'
-import { useToolsStore } from '../../stores/tools'
+import { useOperationsStore } from '../../stores/operations'
 import AppIcon from '../common/AppIcon.vue'
 import Badge from '../common/Badge.vue'
 import type { CommandConfig } from '@tyco/shared'
@@ -84,7 +84,7 @@ const props = defineProps<{
 const emit = defineEmits<{ pick: [command: CommandConfig] }>()
 
 const { t } = useI18n()
-const tools = useToolsStore()
+const tools = useOperationsStore()
 const catalogRef = ref<HTMLElement | null>(null)
 
 /** The values the recognizer heard for a marked command */

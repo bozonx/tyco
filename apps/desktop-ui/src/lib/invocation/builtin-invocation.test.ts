@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { createToolRegistry } from '../tools/tool-registry'
-import { TEXT_INPUT_SCHEMA } from '../tools/tool-types'
+import { createOperationRegistry } from '../operations/operation-registry'
+import { TEXT_INPUT_SCHEMA } from '../operations/operation-types'
 import { builtinInvocation } from './builtin-invocation'
 
-const tools = createToolRegistry([
+const tools = createOperationRegistry([
   {
     id: 'core.echo',
-    labelKey: 'tools.echo',
+    labelKey: 'operations.echo',
     description: 'Echoes the text',
     inputSchema: TEXT_INPUT_SCHEMA,
     run: vi.fn(),
@@ -20,9 +20,9 @@ describe('builtinInvocation', () => {
     expect(
       builtinInvocation('core.echo', tools, t, { language: 'de' })
     ).toEqual({
-      toolId: 'core.echo',
-      toolConfig: { language: 'de' },
-      label: '<tools.echo>',
+      operationId: 'core.echo',
+      operationConfig: { language: 'de' },
+      label: '<operations.echo>',
     })
   })
 

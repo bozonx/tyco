@@ -3,20 +3,20 @@ import { computed } from 'vue'
 import { DEFAULT_MAIN_ACTIONS } from '@tyco/shared'
 
 import { createCommand } from '../commands/command-config'
-import { createCoreTools } from '../tools/core-tools'
-import { testTools } from '../tools/testing'
+import { createCoreOperations } from '../operations/core-operations'
+import { testOperations } from '../operations/testing'
 import { createActionMenuModel } from './action-menu-model'
 
 /** The core tools the built-in actions run, over mocks of what the app does */
-function coreTools() {
+function coreOperations() {
   const services = {
     insertText: vi.fn(async (_text: string) => {}),
     copyText: vi.fn(async (_text: string) => {}),
     askInChat: vi.fn(async (_text: string) => {}),
   }
-  const tools = testTools(
+  const tools = testOperations(
     {},
-    createCoreTools({
+    createCoreOperations({
       ...services,
       correctText: vi.fn(),
       translateTo: vi.fn(),
@@ -32,7 +32,7 @@ function coreTools() {
 
 describe('createActionMenuModel', () => {
   const setup = () => {
-    const { services, tools } = coreTools()
+    const { services, tools } = coreOperations()
     const deps = {
       saveOutput: vi.fn().mockResolvedValue(undefined),
       openTranslateModal: vi.fn(),
@@ -446,7 +446,7 @@ describe('createActionMenuModel', () => {
       correctAndInsert: vi.fn().mockResolvedValue(undefined),
       showToast: vi.fn(),
       mainActions: () => mainActions,
-      tools: testTools(),
+      tools: testOperations(),
     }
     const store = createActionMenuModel(deps)
 
@@ -466,7 +466,7 @@ describe('createActionMenuModel', () => {
     const noText = {
       ...createCommand('script', 'sc1'),
       name: 'Backup',
-      toolConfig: { command: 'backup' },
+      operationConfig: { command: 'backup' },
     }
     const executeScriptAction = vi
       .fn()
@@ -479,7 +479,7 @@ describe('createActionMenuModel', () => {
       })
     const store = createActionMenuModel({
       ...deps,
-      tools: testTools({ executeScriptAction }),
+      tools: testOperations({ executeScriptAction }),
       mainActions: () => ({ q: { type: 'command', commandId: 'sc1' } }),
       commands: () => [noText],
     })
@@ -499,11 +499,11 @@ describe('createActionMenuModel', () => {
     const script = {
       ...createCommand('script', 'sc1'),
       name: 'Echo',
-      toolConfig: { command: 'echo {{TEXT}}' },
+      operationConfig: { command: 'echo {{TEXT}}' },
     }
     const noText = {
       ...createCommand('webhook', 'wh1'),
-      toolConfig: { url: 'https://x.test' },
+      operationConfig: { url: 'https://x.test' },
     }
     const disabled = { ...createCommand('script', 'sc2'), isEnabled: false }
     const executeScriptAction = vi
@@ -519,7 +519,7 @@ describe('createActionMenuModel', () => {
     const store = createActionMenuModel({
       ...deps,
       logRun,
-      tools: testTools({ executeScriptAction }),
+      tools: testOperations({ executeScriptAction }),
       mainActions: () => ({
         q: { type: 'command', commandId: 'sc1' },
         w: { type: 'command', commandId: 'wh1' },
@@ -560,7 +560,7 @@ describe('createActionMenuModel', () => {
     const script = {
       ...createCommand('script', 'sc1'),
       name: 'Echo',
-      toolConfig: { command: 'echo {{TEXT}}' },
+      operationConfig: { command: 'echo {{TEXT}}' },
     }
     const setPendingModal = vi.fn().mockReturnValue(7)
     const clearPendingModal = vi.fn()
@@ -582,7 +582,7 @@ describe('createActionMenuModel', () => {
       logRun,
       setPendingModal,
       clearPendingModal,
-      tools: testTools({ executeScriptAction, cancelScriptAction }),
+      tools: testOperations({ executeScriptAction, cancelScriptAction }),
       mainActions: () => ({ q: { type: 'command', commandId: 'sc1' } }),
       commands: () => [script],
     })

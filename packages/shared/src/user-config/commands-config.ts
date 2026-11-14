@@ -65,7 +65,10 @@ export type CommandOutputAction = (typeof COMMAND_OUTPUT_ACTIONS)[number]
 export const COMMAND_PLATFORMS = ['linux', 'windows'] as const
 export type CommandPlatform = (typeof COMMAND_PLATFORMS)[number]
 
-/** Tools over what the app already does, see `lib/tools/core-tools.ts` */
+/**
+ * Operations over what the app already does, see
+ * `lib/operations/core-operations.ts`
+ */
 export const CORE_TOOL_IDS = [
   'core.insert',
   'core.copy',
@@ -76,10 +79,10 @@ export const CORE_TOOL_IDS = [
   'core.styling',
   'core.askInChat',
 ] as const
-export type CoreToolId = (typeof CORE_TOOL_IDS)[number]
+export type CoreOperationId = (typeof CORE_TOOL_IDS)[number]
 
-/** `toolConfig` of a `script` command */
-export interface ScriptToolConfig {
+/** `operationConfig` of a `script` command */
+export interface ScriptOperationConfig {
   /**
    * A shell command; `{{TEXT}}` is replaced with the text, quoted. The command
    * takes the text only when it mentions `{{TEXT}}`, see `scriptTakesText`
@@ -103,10 +106,11 @@ export const AI_COMMAND_MAX_STEPS_DEFAULT = 5
 export const AI_COMMAND_MAX_STEPS_MAX = 50
 
 /**
- * `toolConfig` of an AI command, a command of the `core.aiTask` tool: an LLM
- * agent that follows `prompt` and may call the commands of `allowedCommandIds`
+ * `operationConfig` of an AI command, a command of the `core.aiTask` tool: an
+ * LLM agent that follows `prompt` and may call the commands of
+ * `allowedCommandIds`
  */
-export interface AiCommandToolConfig {
+export interface AiCommandOperationConfig {
   prompt: string
   /** The commands the agent may run; never the command itself */
   allowedCommandIds: string[]
@@ -119,8 +123,8 @@ export interface AiCommandToolConfig {
   isToolsEnabled?: boolean
 }
 
-/** `toolConfig` of a `webhook` command */
-export interface WebhookToolConfig {
+/** `operationConfig` of a `webhook` command */
+export interface WebhookOperationConfig {
   url: string
   method?: 'GET' | 'POST'
   headers?: Record<string, string>
@@ -139,8 +143,9 @@ export interface WebhookToolConfig {
  * sync with `script_takes_text` in
  * `src-tauri/src/services/external/command_library.rs`
  */
-export const scriptTakesText = (config: Pick<ScriptToolConfig, 'command'>) =>
-  config.command.includes(ACTION_TEXT_PLACEHOLDER)
+export const scriptTakesText = (
+  config: Pick<ScriptOperationConfig, 'command'>
+) => config.command.includes(ACTION_TEXT_PLACEHOLDER)
 
 /**
  * Whether a webhook takes the text: `{{TEXT}}` is in its URL or in the body of
@@ -148,7 +153,7 @@ export const scriptTakesText = (config: Pick<ScriptToolConfig, 'command'>) =>
  * `src-tauri/src/services/external/command_library.rs`
  */
 export const webhookTakesText = (
-  config: Pick<WebhookToolConfig, 'url' | 'method' | 'payloadTemplate'>
+  config: Pick<WebhookOperationConfig, 'url' | 'method' | 'payloadTemplate'>
 ) =>
   config.url.includes(ACTION_TEXT_PLACEHOLDER) ||
   (config.method !== 'GET' &&
@@ -160,7 +165,7 @@ export const webhookTakesText = (
  * `src-tauri/src/services/external/command_library.rs`
  */
 export const scriptTakesSelection = (
-  config: Pick<ScriptToolConfig, 'command'>
+  config: Pick<ScriptOperationConfig, 'command'>
 ) => config.command.includes(ACTION_SELECTION_PLACEHOLDER)
 
 /**
@@ -169,7 +174,7 @@ export const scriptTakesSelection = (
  * `src-tauri/src/services/external/command_library.rs`
  */
 export const webhookTakesSelection = (
-  config: Pick<WebhookToolConfig, 'url' | 'method' | 'payloadTemplate'>
+  config: Pick<WebhookOperationConfig, 'url' | 'method' | 'payloadTemplate'>
 ) =>
   config.url.includes(ACTION_SELECTION_PLACEHOLDER) ||
   (config.method !== 'GET' &&
@@ -177,22 +182,25 @@ export const webhookTakesSelection = (
 
 /** Whether a command uses `{{SELECTION}}` in its script or webhook settings */
 export const commandTakesSelection = (
-  command: Pick<CommandConfig, 'toolId' | 'toolConfig'>
+  command: Pick<CommandConfig, 'operationId' | 'operationConfig'>
 ): boolean => {
-  if (command.toolId === 'script') {
+  if (command.operationId === 'script') {
     return (
-      typeof command.toolConfig.command === 'string' &&
+      typeof command.operationConfig.command === 'string' &&
       scriptTakesSelection(
-        command.toolConfig as unknown as Pick<ScriptToolConfig, 'command'>
+        command.operationConfig as unknown as Pick<
+          ScriptOperationConfig,
+          'command'
+        >
       )
     )
   }
-  if (command.toolId === 'webhook') {
+  if (command.operationId === 'webhook') {
     return (
-      typeof command.toolConfig.url === 'string' &&
+      typeof command.operationConfig.url === 'string' &&
       webhookTakesSelection(
-        command.toolConfig as unknown as Pick<
-          WebhookToolConfig,
+        command.operationConfig as unknown as Pick<
+          WebhookOperationConfig,
           'url' | 'method' | 'payloadTemplate'
         >
       )
@@ -218,10 +226,10 @@ export interface CommandConfig {
   /** Explicit literal voice phrases; the display name is never matched. */
   phrases: string[]
   isVoiceEnabled: boolean
-  /** `script`, `webhook`, `core.<tool>` or `<pluginId>.<toolId>` */
-  toolId: string
+  /** `script`, `webhook`, `core.<tool>` or `<pluginId>.<operationId>` */
+  operationId: string
   /** Values for the tool's config fields */
-  toolConfig: Record<string, unknown>
+  operationConfig: Record<string, unknown>
   /**
    * Fill a structured input from text with the LLM; only for tools that take a
    * structured input and do not parse text themselves

@@ -65,7 +65,7 @@ import { computed, ref } from 'vue'
 
 import { useCommandValidation } from '../../composables/use-command-validation'
 import { useI18n } from '../../composables/use-i18n'
-import { scriptToolConfig } from '../../lib/commands/command-config'
+import { scriptOperationConfig } from '../../lib/commands/command-config'
 import { useIpcStore } from '../../stores/ipc'
 import FieldRow from '../common/FieldRow.vue'
 import IconButton from '../common/IconButton.vue'
@@ -83,7 +83,7 @@ function update(field: string, value: unknown) {
 }
 
 const ipcStore = useIpcStore()
-const script = computed(() => scriptToolConfig(props.command))
+const script = computed(() => scriptOperationConfig(props.command))
 const commandRef = ref<InstanceType<typeof ActionTemplateField> | null>(null)
 async function browseScript() {
   const res = await ipcStore.callOrNotify('pick_script_file')

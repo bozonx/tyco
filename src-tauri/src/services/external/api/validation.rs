@@ -25,7 +25,7 @@ pub(super) fn ensure_selection_access_allowed(config: &Value) -> ApiResult<()> {
 
 pub(super) fn lookup(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<ExternalCommand> {
     let config = app.state::<AppState>().user_config();
-    let catalog = app.state::<command_library::ToolCatalogState>().get();
+    let catalog = app.state::<command_library::OperationCatalogState>().get();
     if by_name {
         command_library::find_by_name(&config, catalog.as_ref(), target)
     } else {
@@ -51,7 +51,7 @@ pub(super) fn command_name(config: &Value, id: &str) -> String {
 
 pub(super) fn describe(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<Value> {
     let config = app.state::<AppState>().user_config();
-    let catalog = app.state::<command_library::ToolCatalogState>().get();
+    let catalog = app.state::<command_library::OperationCatalogState>().get();
     command_library::describe(&config, catalog.as_ref(), target, by_name)
         .map_err(|error| Box::new(lookup_error(error)))
 }

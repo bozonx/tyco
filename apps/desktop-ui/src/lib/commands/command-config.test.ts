@@ -8,7 +8,7 @@ import {
   type ShortcutSlots,
 } from '@tyco/shared'
 
-import { testTools } from '../tools/testing'
+import { testOperations } from '../operations/testing'
 
 import {
   commandAfterRun,
@@ -28,10 +28,10 @@ import {
 import {
   externalTimeoutOf,
   createCommand,
-  isCommandTool,
+  isCommandOperation,
   normalizeCommands,
-  scriptToolConfigOf,
-  toolConfigText,
+  scriptOperationConfigOf,
+  operationConfigText,
 } from './command-config'
 import {
   removeCommandReferences,
@@ -39,20 +39,20 @@ import {
   restoreCommandReferences,
 } from './command-removal-model'
 
-const tools = testTools()
+const tools = testOperations()
 
 /** A new command with a name, which a command must have */
-const namedCommand = (toolId: string, id: string): CommandConfig => ({
-  ...createCommand(toolId, id),
+const namedCommand = (operationId: string, id: string): CommandConfig => ({
+  ...createCommand(operationId, id),
   name: 'Command',
 })
 
 const withConfig = (
   command: CommandConfig,
-  toolConfig: Record<string, unknown>
+  operationConfig: Record<string, unknown>
 ): CommandConfig => ({
   ...command,
-  toolConfig: { ...command.toolConfig, ...toolConfig },
+  operationConfig: { ...command.operationConfig, ...operationConfig },
 })
 
 /** One command read by the shared normalizer, or undefined when it is dropped */
@@ -63,8 +63,8 @@ describe('normalizeCommands for one command', () => {
     expect(
       normalizeCommand({
         id: 'sc1',
-        toolId: 'script',
-        toolConfig: { command: 'echo' },
+        operationId: 'script',
+        operationConfig: { command: 'echo' },
         afterRun: 'bogus',
         confirm: 'never',
         availableIn: { launcher: true, external: 'yes' },
@@ -74,8 +74,8 @@ describe('normalizeCommands for one command', () => {
       name: '',
       description: '',
       phrases: [],
-      toolId: 'script',
-      toolConfig: { command: 'echo' },
+      operationId: 'script',
+      operationConfig: { command: 'echo' },
       isLlmArgumentParsingEnabled: false,
       isLlmPreTransformEnabled: false,
       llmPreTransformPrompt: '',
@@ -96,14 +96,14 @@ describe('normalizeCommands for one command', () => {
     expect(
       normalizeCommand({
         id: 'new',
-        toolId: 'script',
+        operationId: 'script',
         outputAction: 'insertIntoWindow',
       })?.outputAction
     ).toBe('insertIntoWindow')
     expect(
       normalizeCommand({
         id: 'partial',
-        toolId: 'script',
+        operationId: 'script',
         outputAction: 'copy',
       })?.outputAction
     ).toBe('none')
@@ -113,13 +113,13 @@ describe('normalizeCommands for one command', () => {
     expect(
       normalizeCommand({
         id: 'wh1',
-        toolId: 'webhook',
-        toolConfig: {
+        operationId: 'webhook',
+        operationConfig: {
           url: 'https://x.test',
           method: 'PUT',
           headers: { 'x-a': '1', 'x-b': 2 },
         },
-      })?.toolConfig
+      })?.operationConfig
     ).toEqual({
       url: 'https://x.test',
       method: 'POST',
@@ -128,28 +128,31 @@ describe('normalizeCommands for one command', () => {
   })
 
   it('keeps the settings of a tool it does not know', () => {
-    const toolConfig = { folder: '~/notes', mode: 1 }
+    const operationConfig = { folder: '~/notes', mode: 1 }
     expect(
-      normalizeCommand({ id: 'n1', toolId: 'notes.write', toolConfig })
-        ?.toolConfig
-    ).toEqual(toolConfig)
+      normalizeCommand({
+        id: 'n1',
+        operationId: 'notes.write',
+        operationConfig,
+      })?.operationConfig
+    ).toEqual(operationConfig)
   })
 
   it('drops a command without an id or a tool', () => {
-    expect(normalizeCommand({ id: ' ', toolId: 'script' })).toBeUndefined()
+    expect(normalizeCommand({ id: ' ', operationId: 'script' })).toBeUndefined()
     expect(normalizeCommand({ id: 'a' })).toBeUndefined()
     expect(normalizeCommand('script')).toBeUndefined()
   })
 
   it('repairs an id that breaks the schema instead of dropping the command', () => {
-    expect(normalizeCommand({ id: 'My Cmd!', toolId: 'script' })?.id).toBe(
+    expect(normalizeCommand({ id: 'My Cmd!', operationId: 'script' })?.id).toBe(
       'my-cmd'
     )
     expect(
       normalizeCommands([
-        { id: 'notes', toolId: 'script' },
-        { id: 'Notes', toolId: 'script' },
-        { id: 'Скрипт', toolId: 'script' },
+        { id: 'notes', operationId: 'script' },
+        { id: 'Notes', operationId: 'script' },
+        { id: 'Скрипт', operationId: 'script' },
       ]).map((command) => command.id)
     ).toEqual(['notes', 'notes-2', 'command'])
   })
@@ -165,10 +168,10 @@ describe('externalTimeoutOf', () => {
   })
 })
 
-describe('scriptToolConfigOf', () => {
+describe('scriptOperationConfigOf', () => {
   it('reads the command and the directory only', () => {
     expect(
-      scriptToolConfigOf({
+      scriptOperationConfigOf({
         command: 'ls',
         workingDirectory: '~',
         timeoutSec: 5,
@@ -180,8 +183,8 @@ describe('scriptToolConfigOf', () => {
 describe('normalizeCommands', () => {
   it('keeps the first of commands with the same id', () => {
     const commands = normalizeCommands([
-      { id: 'a', toolId: 'script', name: 'First' },
-      { id: 'a', toolId: 'script', name: 'Second' },
+      { id: 'a', operationId: 'script', name: 'First' },
+      { id: 'a', operationId: 'script', name: 'Second' },
       null,
     ])
     expect(commands.map((command) => command.name)).toEqual(['First'])
@@ -209,9 +212,9 @@ describe('menu commands', () => {
     expect(isMenuCommand({ ...script, isEnabled: false }, tools)).toBe(false)
     expect(commandTakesText(script, tools)).toBe(false)
     expect(isMenuCommand(script, tools)).toBe(true)
-    expect(commandTakesText({ ...script, toolId: 'notes.write' }, tools)).toBe(
-      false
-    )
+    expect(
+      commandTakesText({ ...script, operationId: 'notes.write' }, tools)
+    ).toBe(false)
   })
 
   it('takes the text a script mentions', () => {
@@ -225,10 +228,10 @@ describe('menu commands', () => {
   })
 
   it('takes the text where the placeholder of a webhook stands', () => {
-    const webhook = (toolConfig: Record<string, unknown>) =>
+    const webhook = (operationConfig: Record<string, unknown>) =>
       withConfig(createCommand('webhook', 'a'), {
         url: 'https://x.test',
-        ...toolConfig,
+        ...operationConfig,
       })
     expect(
       commandTakesText(webhook({ url: 'https://x.test/{{TEXT}}' }), tools)
@@ -377,7 +380,7 @@ describe('commands of the core tools', () => {
     const aiTask = createCommand('core.aiTask', 'a', {
       defaultOutputAction: 'insertIntoWindow',
     })
-    expect(aiTask.toolConfig).toEqual({
+    expect(aiTask.operationConfig).toEqual({
       prompt: '',
       allowedCommandIds: [],
       maxSteps: 5,
@@ -385,7 +388,7 @@ describe('commands of the core tools', () => {
     })
     expect(aiTask.outputAction).toBe('insertIntoWindow')
     expect(aiTask.platforms).toBeUndefined()
-    expect(createCommand('Notes.write', 'n').toolConfig).toEqual({})
+    expect(createCommand('Notes.write', 'n').operationConfig).toEqual({})
     expect(
       createCommand('script', 's', { canSelectPlatforms: true }, 'windows')
         .platforms
@@ -397,7 +400,7 @@ describe('commands of the core tools', () => {
   })
 
   it('need an instruction for AI command', () => {
-    const coreTools = testTools({}, [
+    const coreOperations = testOperations({}, [
       {
         id: 'core.aiTask',
         description: '',
@@ -406,49 +409,55 @@ describe('commands of the core tools', () => {
       },
     ])
     expect(
-      validateCommand(namedCommand('core.aiTask', 'a'), coreTools)
+      validateCommand(namedCommand('core.aiTask', 'a'), coreOperations)
     ).toEqual([{ field: 'prompt', messageKey: 'commands.errorNoPrompt' }])
     expect(
       validateCommand(
         withConfig(namedCommand('core.aiTask', 'a'), { prompt: 'Shorter' }),
-        coreTools
+        coreOperations
       )
     ).toEqual([])
-    expect(validateCommand(namedCommand('Gone.tool', 'g'), coreTools)).toEqual([
-      { field: 'toolId', messageKey: 'commands.errorUnknownTool' },
+    expect(
+      validateCommand(namedCommand('Gone.tool', 'g'), coreOperations)
+    ).toEqual([
+      { field: 'operationId', messageKey: 'commands.errorUnknownType' },
     ])
   })
 
   it('identifies selectable command tools', () => {
-    expect(isCommandTool({ id: 'script', owner: { kind: 'core' } })).toBe(true)
-    expect(isCommandTool({ id: 'webhook', owner: { kind: 'core' } })).toBe(true)
-    expect(isCommandTool({ id: 'core.aiTask', owner: { kind: 'core' } })).toBe(
+    expect(isCommandOperation({ id: 'script', owner: { kind: 'core' } })).toBe(
+      true
+    )
+    expect(isCommandOperation({ id: 'webhook', owner: { kind: 'core' } })).toBe(
       true
     )
     expect(
-      isCommandTool({ id: 'core.translate', owner: { kind: 'core' } })
+      isCommandOperation({ id: 'core.aiTask', owner: { kind: 'core' } })
     ).toBe(true)
-    expect(isCommandTool({ id: 'core.insert', owner: { kind: 'core' } })).toBe(
-      false
-    )
-    expect(isCommandTool({ id: 'core.copy', owner: { kind: 'core' } })).toBe(
-      false
-    )
-    expect(isCommandTool({ id: 'core.correct', owner: { kind: 'core' } })).toBe(
-      false
-    )
     expect(
-      isCommandTool({ id: 'core.askInChat', owner: { kind: 'core' } })
+      isCommandOperation({ id: 'core.translate', owner: { kind: 'core' } })
+    ).toBe(true)
+    expect(
+      isCommandOperation({ id: 'core.insert', owner: { kind: 'core' } })
     ).toBe(false)
     expect(
-      isCommandTool({
+      isCommandOperation({ id: 'core.copy', owner: { kind: 'core' } })
+    ).toBe(false)
+    expect(
+      isCommandOperation({ id: 'core.correct', owner: { kind: 'core' } })
+    ).toBe(false)
+    expect(
+      isCommandOperation({ id: 'core.askInChat', owner: { kind: 'core' } })
+    ).toBe(false)
+    expect(
+      isCommandOperation({
         id: 'Plugin.action',
         owner: { kind: 'plugin', pluginId: 'plugin' },
         configFields: [],
       })
     ).toBe(false)
     expect(
-      isCommandTool({
+      isCommandOperation({
         id: 'Plugin.action',
         owner: { kind: 'plugin', pluginId: 'plugin' },
         configFields: [{ name: 'folder', type: 'text' }],
@@ -528,14 +537,14 @@ describe('commandAfterRun', () => {
   })
 })
 
-describe('toolConfigText', () => {
+describe('operationConfigText', () => {
   it('reads a text setting and takes anything else as empty', () => {
     const command = {
       ...createCommand('core.translateTo', 'id1'),
-      toolConfig: { language: 'de-DE', count: 3 },
+      operationConfig: { language: 'de-DE', count: 3 },
     }
-    expect(toolConfigText(command, 'language')).toBe('de-DE')
-    expect(toolConfigText(command, 'count')).toBe('')
-    expect(toolConfigText(command, 'missing')).toBe('')
+    expect(operationConfigText(command, 'language')).toBe('de-DE')
+    expect(operationConfigText(command, 'count')).toBe('')
+    expect(operationConfigText(command, 'missing')).toBe('')
   })
 })

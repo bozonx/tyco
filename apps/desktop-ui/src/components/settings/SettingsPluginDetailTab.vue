@@ -31,7 +31,7 @@
         <p v-else class="plugin-detail-note">
           {{ t('settings.noPluginSettings') }}
         </p>
-        <ToolConfigPreview
+        <OperationConfigPreview
           v-for="tool in previewTools"
           :key="tool.id"
           :tool="tool"
@@ -51,18 +51,18 @@ import { computed } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import type { InstalledPluginItem } from '../../lib/plugins/plugin-settings'
-import { useToolsStore } from '../../stores/tools'
+import { useOperationsStore } from '../../stores/operations'
 import InlineNotice from '../common/InlineNotice.vue'
 import ConfigFields from './ConfigFields.vue'
+import OperationConfigPreview from './OperationConfigPreview.vue'
 import PluginCard from './PluginCard.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
-import ToolConfigPreview from './ToolConfigPreview.vue'
 
 const props = defineProps<{ plugin: InstalledPluginItem }>()
 
 const { t } = useI18n()
 const { operations, navigate } = useSettingsContext()
-const toolsStore = useToolsStore()
+const operationsStore = useOperationsStore()
 /** The settings being edited, as the plugin tools get them */
 const settings = computed(() =>
   Object.fromEntries(
@@ -74,7 +74,7 @@ const settings = computed(() =>
 )
 /** Tools of the plugin that preview their output for these settings */
 const previewTools = computed(() =>
-  toolsStore
+  operationsStore
     .list()
     .filter(
       (tool) =>

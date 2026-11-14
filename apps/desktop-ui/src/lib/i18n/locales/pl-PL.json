@@ -191,7 +191,7 @@
     },
     "commands": {
       "group": "Polecenia",
-      "groupHint": "Zezwól modelowi na uruchamianie wybranych poleceń użytkownika i narzędzi wtyczek. „Pytaj” wymaga potwierdzenia przed każdym wywołaniem.",
+      "groupHint": "Zezwól modelowi na uruchamianie wybranych poleceń. Wybrać można tylko polecenia z opisem dla AI. „Pytaj” wymaga potwierdzenia przed każdym wywołaniem.",
       "needsDescription": "Wymaga opisu dla AI w ustawieniach polecenia",
       "noCommands": "Nie skonfigurowano jeszcze poleceń użytkownika.",
       "noCommandsHint": "Najpierw utwórz polecenia w Ustawienia → Polecenia.",
@@ -228,7 +228,7 @@
     "errorNoName": "Wpisz nazwę.",
     "errorNoPrompt": "Napisz instrukcję dla LLM.",
     "errorNoUrl": "Wpisz adres URL.",
-    "errorUnknownTool": "Nieznane narzędzie.",
+    "errorUnknownType": "Nieznany typ polecenia.",
     "external": "Dostępne z zewnątrz",
     "externalDescription": "Co lokalne aplikacje Twojej sesji mogą robić przez tyco-ctl i D-Bus. Dostęp do każdego polecenia włącza się w jego ustawieniach zaawansowanych.",
     "externalInfo": "Lokalne aplikacje i skrypty mogą uruchomić dozwolone polecenie przez tyco-ctl run <ID> lub tyco-ctl run --name <nazwa>. Wynik wraca do wywołującego. --interactive pozwala na interfejs wprowadzania tekstu; --selection --replace jawnie żąda zastąpienia zaznaczenia.",
@@ -238,8 +238,8 @@
     "fieldOff": "Nie",
     "fieldOn": "Tak",
     "fromPluginSettings": "Z ustawień wtyczki: {value}",
-    "hint": "Polecenia to konfigurowalne akcje oparte na narzędziach: zapytania LLM, skrypty powłoki, webhooki HTTP lub tłumaczenie. Przetwarzają zaznaczony tekst lub działają bez danych wejściowych, a wynik mogą wstawić do aktywnego okna, skopiować do schowka lub wyświetlić. Uruchamia się je z szybkich poleceń (launchera), menu głównych akcji lub przez tyco-ctl.",
-    "inputUnsupported": "Jego narzędzie wymaga ustrukturyzowanych danych wejściowych, których nie da się uzyskać z tekstu",
+    "hint": "Polecenia to konfigurowalne akcje różnych typów: zapytania LLM, skrypty powłoki, webhooki HTTP lub tłumaczenie. Przetwarzają zaznaczony tekst lub działają bez danych wejściowych, a wynik mogą wstawić do aktywnego okna, skopiować do schowka lub wyświetlić. Uruchamia się je z szybkich poleceń (launchera), menu głównych akcji lub przez tyco-ctl.",
+    "inputUnsupported": "Jego typ wymaga ustrukturyzowanych danych wejściowych, których nie da się uzyskać z tekstu",
     "languageLabel": "Tłumacz na",
     "languagePlaceholder": "Wybierz język",
     "launcherResult": "Akcja",
@@ -265,12 +265,12 @@
     "testRunning": "Uruchamianie…",
     "testStop": "Zatrzymaj",
     "testTextPlaceholder": "Tekst do testu",
-    "toolInfo": "Narzędzie: {tool}",
-    "toolMissing": "Jego narzędzie jest niedostępne: wtyczka jest wyłączona lub jej brak",
+    "typeInfo": "Typ: {type}",
+    "typeMissing": "Jego typ jest niedostępny: wtyczka jest wyłączona lub jej brak",
     "preTransformFailed": "Nie udało się przygotować tekstu dla polecenia",
     "unavailableInMenu": "{name} (niedostępne w menu)",
     "undo": "Cofnij",
-    "unknownTool": "Narzędzie „{tool}” nie jest dostępne w tej wersji Tyco.",
+    "unknownType": "Typ polecenia „{type}” nie jest dostępny w tej wersji Tyco.",
     "unnamed": "Polecenie bez nazwy",
     "warningExternalNameTwins": "Inne polecenia mają tę samą nazwę: {names}. Wywołanie po tej nazwie jest odrzucane jako niejednoznaczne; użyj ID.",
     "llmPreTransform": "Wstępna transformacja za pomocą LLM",
@@ -302,7 +302,7 @@
     "aiToolsEnabledLabel": "Zezwalaj na narzędzia",
     "aiToolsEnabledInfo": "Gdy włączone, AI może wywoływać inne dozwolone polecenia.",
     "createModalTitle": "Nowe polecenie",
-    "toolTypeLabel": "Typ polecenia"
+    "typeLabel": "Typ polecenia"
   },
   "common": {
     "add": "Dodaj",
@@ -1314,7 +1314,7 @@
     "commandDisabled": "Polecenie jest wyłączone",
     "commandFailed": "Polecenie nie powiodło się",
     "commandInputInvalid": "Dane wejściowe polecenia są nieprawidłowe",
-    "commandInputUnsupported": "To polecenie nie przyjmuje tekstu: jego narzędzie wymaga ustrukturyzowanych danych",
+    "commandInputUnsupported": "To polecenie nie przyjmuje tekstu: jego typ wymaga ustrukturyzowanych danych",
     "commandUnavailable": "Polecenie jest niedostępne",
     "desktopCommandFailed": "Akcja nie powiodła się",
     "dictationClosed": "Usługa rozpoznawania mowy zakończyła sesję w trakcie nagrywania",
@@ -1362,7 +1362,7 @@
     "webhookKeyNotSet": "Klucz tego webhooka nie jest ustawiony na tym urządzeniu; wpisz go w ustawieniach polecenia",
     "webhookSuccess": "Webhook wysłany pomyślnie"
   },
-  "tools": {
+  "operations": {
     "aiTask": "Polecenie AI",
     "aiTaskDescription": "Przetwarza tekst według Twojej instrukcji w jednym kroku i może uruchamiać inne polecenia",
     "askInChat": "Zapytaj na czacie",

@@ -27,7 +27,7 @@
   "contentTemplate": "Modèle de contenu",
   "contentTemplateInfo": "Prend en charge les jetons de date, {'{'}title{'}'} et le jeton obligatoire {'{'}content{'}'}. Écrivez {'{'}{'{'} ou {'}'}{'}'} pour une accolade littérale. Si un titre utilise {'{'}title{'}'}, la première ligne n'est pas répétée en dessous. Le mode ajout crée le fichier s'il n'existe pas.",
   "clearInputAfterSave": "Effacer le champ de saisie après l'enregistrement",
-  "toolLabel": "Écrire une note",
+  "operationLabel": "Écrire une note",
   "toolDescription": "Enregistre le texte en tant que nouvelle note ou l'ajoute à une note existante, dans votre dossier de notes",
   "noNotesPath": "Le dossier de notes n'est pas configuré dans les paramètres du plugin Note rapide",
   "noteSaved": "Note enregistrée",

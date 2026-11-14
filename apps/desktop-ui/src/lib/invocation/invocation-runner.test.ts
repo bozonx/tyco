@@ -1,21 +1,21 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { testCopyTool } from '../tools/testing'
-import { createToolRegistry } from '../tools/tool-registry'
+import { testCopyOperation } from '../operations/testing'
+import { createOperationRegistry } from '../operations/operation-registry'
 import {
   TEXT_INPUT_SCHEMA,
-  type ToolDefinition,
-  type ToolResult,
-} from '../tools/tool-types'
+  type OperationDefinition,
+  type OperationResult,
+} from '../operations/operation-types'
 import { createInvocationRunner, reportResult } from './invocation-runner'
 import type { Invocation } from './invocation-types'
 
 const echoTool = (
-  extra: Partial<ToolDefinition> = {},
-  result: ToolResult = { ok: true, content: 'ECHO' }
-): ToolDefinition => ({
+  extra: Partial<OperationDefinition> = {},
+  result: OperationResult = { ok: true, content: 'ECHO' }
+): OperationDefinition => ({
   id: 'core.echo',
-  labelKey: 'tools.echo',
+  labelKey: 'operations.echo',
   description: 'Echoes the text',
   inputSchema: TEXT_INPUT_SCHEMA,
   run: vi.fn(async () => result),
@@ -24,15 +24,15 @@ const echoTool = (
 
 /** A built-in action: no command of the library stands behind it */
 const builtin: Invocation = {
-  toolId: 'core.echo',
-  toolConfig: {},
+  operationId: 'core.echo',
+  operationConfig: {},
   label: 'Echo',
 }
 
-function setup(tool: ToolDefinition = echoTool()) {
+function setup(tool: OperationDefinition = echoTool()) {
   const copyText = vi.fn(async (_text: string) => {})
   const deps = {
-    tools: createToolRegistry([tool, testCopyTool(copyText)]),
+    tools: createOperationRegistry([tool, testCopyOperation(copyText)]),
     showToast: vi.fn(),
     showError: vi.fn(),
     showText: vi.fn(),
@@ -78,8 +78,11 @@ describe('built-in invocations', () => {
 
   it('reports a tool that is not registered', async () => {
     const { runner } = setup()
-    const outcome = await runner.run({ ...builtin, toolId: 'core.gone' }, 'x')
-    expect(outcome).toEqual({ success: false, message: 'commands.toolMissing' })
+    const outcome = await runner.run(
+      { ...builtin, operationId: 'core.gone' },
+      'x'
+    )
+    expect(outcome).toEqual({ success: false, message: 'commands.typeMissing' })
   })
 
   it('hands the output to the caller of a transform', async () => {
@@ -92,11 +95,11 @@ describe('built-in invocations', () => {
 
   it('tells a transform why the tool cannot run', async () => {
     const { runner } = setup(
-      echoTool({ getUnavailableReasonKey: () => 'tools.noLlm' })
+      echoTool({ getUnavailableReasonKey: () => 'operations.noLlm' })
     )
     expect(await runner.transform(builtin, 'hello')).toEqual({
       ok: false,
-      messageKey: 'tools.noLlm',
+      messageKey: 'operations.noLlm',
     })
   })
 

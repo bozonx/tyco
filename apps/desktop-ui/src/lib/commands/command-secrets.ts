@@ -1,15 +1,15 @@
 import type { CommandConfig } from '@tyco/shared'
 
 import { secretIdFromRef } from '../net/secrets'
-import { webhookToolConfig } from './command-config'
+import { webhookOperationConfig } from './command-config'
 
 /**
  * The secrets a command refers to: the Authorization secret of a webhook and
  * the secret references among its headers
  */
 export function commandSecretIds(command: CommandConfig): string[] {
-  if (command.toolId !== 'webhook') return []
-  const tool = webhookToolConfig(command)
+  if (command.operationId !== 'webhook') return []
+  const tool = webhookOperationConfig(command)
   const ids = new Set(
     Object.values(tool.headers).flatMap((value) => {
       const id = secretIdFromRef(value)

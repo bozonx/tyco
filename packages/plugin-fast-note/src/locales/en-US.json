@@ -27,7 +27,7 @@
   "contentTemplate": "Content template",
   "contentTemplateInfo": "Supports date tokens, {'{'}title{'}'}, and required {'{'}content{'}'}. Write {'{'}{'{'} or {'}'}{'}'} for a literal brace. When a heading uses {'{'}title{'}'}, the first line is not repeated below it. Append mode creates the file if missing.",
   "clearInputAfterSave": "Clear input field after saving",
-  "toolLabel": "Write a note",
+  "operationLabel": "Write a note",
   "toolDescription": "Saves the text as a new note or appends it to one, in your notes folder",
   "noNotesPath": "Notes folder is not configured in the Quick note plugin settings",
   "noteSaved": "Note saved",

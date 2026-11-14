@@ -6,9 +6,9 @@ import type { CommandOutputAction, CommandRunSource } from '@tyco/shared'
  * that needs no saved command
  */
 export interface Invocation {
-  toolId: string
-  /** `toolConfig` of the command, or the settings of a built-in action */
-  toolConfig: Record<string, unknown>
+  operationId: string
+  /** `operationConfig` of the command, or the settings of a built-in action */
+  operationConfig: Record<string, unknown>
   /** The name shown in messages, never empty */
   label: string
   /** The command it comes from; a built-in action has none */
@@ -41,9 +41,9 @@ export interface InvocationOptions {
   source?: CommandRunSource
   /** Context captured at invocation time, such as selected text */
   context?: { selectionText: string }
-  /** The stages of a long run, see `ToolCall.onProgress` */
+  /** The stages of a long run, see `OperationCall.onProgress` */
   onProgress?: (stage: string) => void
-  /** The AI commands that led to this run, see `HostToolCall` */
+  /** The AI commands that led to this run, see `HostOperationCall` */
   callerCommandIds?: readonly string[]
   /** Whether to report successful execution to the user (e.g. via toast) */
   notifySuccess?: boolean

@@ -27,7 +27,7 @@
   "contentTemplate": "Tartalomsablon",
   "contentTemplateInfo": "Támogatja a dátumtokeneket, a {'{'}title{'}'} tokent és a kötelező {'{'}content{'}'} tokent. Kapcsos zárójelhez írja: {'{'}{'{'} vagy {'}'}{'}'}. Ha egy címsor a {'{'}title{'}'} tokent használja, az első sor nem ismétlődik alatta. A hozzáfűzés mód létrehozza a fájlt, ha hiányzik.",
   "clearInputAfterSave": "Bemeneti mező törlése mentés után",
-  "toolLabel": "Jegyzet írása",
+  "operationLabel": "Jegyzet írása",
   "toolDescription": "Menti a szöveget új jegyzetként, vagy meglévőhöz fűzi a jegyzetmappában",
   "noNotesPath": "A jegyzetek mappája nincs beállítva a Gyors jegyzet bővítmény beállításaiban",
   "noteSaved": "Jegyzet mentve",

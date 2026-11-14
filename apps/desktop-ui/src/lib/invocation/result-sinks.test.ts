@@ -41,7 +41,7 @@ describe('resolveSink', () => {
 it.each(['insertIntoWindow', 'copyToClipboard', 'none', 'showMenu'] as const)(
   'shows voice translations in the result menu instead of %s',
   (action) => {
-    const invocation = { toolId: 'core.translate', outputAction: action }
+    const invocation = { operationId: 'core.translate', outputAction: action }
     expect(resolveSink(invocation, { source: 'voice' })).toBe('showMenu')
     expect(resolveSink(invocation, { source: 'launcher' })).toBe(action)
     expect(resolveSink(invocation, { source: 'voice', output: 'return' })).toBe(

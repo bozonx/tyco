@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { createCommand } from '../lib/commands/command-config'
 import { useCommandValidation } from './use-command-validation'
 
-vi.mock('../stores/tools', () => ({
-  useToolsStore: () => ({ get: () => undefined }),
+vi.mock('../stores/operations', () => ({
+  useOperationsStore: () => ({ get: () => undefined }),
 }))
 vi.mock('./use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => `translated:${key}` }),
@@ -19,7 +19,7 @@ describe('command validation', () => {
       'translated:commands.errorNoCommand',
     ])
     expect(warningsOf('url')).toEqual([])
-    state.command.toolConfig.command = 'echo {text}'
+    state.command.operationConfig.command = 'echo {text}'
     expect(warningsOf('command')).toEqual([])
     state.command = createCommand('webhook', 'webhook')
     expect(warningsOf('url')).toEqual(['translated:commands.errorNoUrl'])

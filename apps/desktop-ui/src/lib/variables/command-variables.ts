@@ -30,9 +30,9 @@ const VARIABLE_FIELDS: Readonly<Record<string, readonly string[]>> = {
   'core.aiTask': ['prompt'],
 }
 
-/** The names of the fields of `toolId` that take variables */
-const variableFieldsOf = (toolId: string): readonly string[] =>
-  VARIABLE_FIELDS[toolId] ?? []
+/** The names of the fields of `operationId` that take variables */
+const variableFieldsOf = (operationId: string): readonly string[] =>
+  VARIABLE_FIELDS[operationId] ?? []
 
 /** Whether `value` of a webhook header is plain text, not a key reference */
 const isPlainHeader = (value: unknown): value is string =>
@@ -43,23 +43,23 @@ const isPlainHeader = (value: unknown): value is string =>
  * fills. A webhook's body counts only for a POST request
  */
 function commandVariableTemplates(
-  toolId: string,
-  toolConfig: Record<string, unknown>
+  operationId: string,
+  operationConfig: Record<string, unknown>
 ): string[] {
   const texts: string[] = []
-  for (const field of variableFieldsOf(toolId)) {
+  for (const field of variableFieldsOf(operationId)) {
     if (
-      toolId === 'webhook' &&
+      operationId === 'webhook' &&
       field === 'payloadTemplate' &&
-      toolConfig.method === 'GET'
+      operationConfig.method === 'GET'
     )
       continue
-    const value = toolConfig[field]
+    const value = operationConfig[field]
     if (typeof value === 'string') texts.push(value)
   }
-  if (toolId === 'webhook' && toolConfig.headers) {
+  if (operationId === 'webhook' && operationConfig.headers) {
     for (const value of Object.values(
-      toolConfig.headers as Record<string, unknown>
+      operationConfig.headers as Record<string, unknown>
     ))
       if (isPlainHeader(value)) texts.push(value)
   }
@@ -68,11 +68,11 @@ function commandVariableTemplates(
 
 /** The variables the command refers to that have no value on this device */
 export const commandMissingVariables = (
-  command: Pick<CommandConfig, 'toolId' | 'toolConfig'>,
+  command: Pick<CommandConfig, 'operationId' | 'operationConfig'>,
   variables: VariableValues
 ): string[] =>
   missingVariables(
-    commandVariableTemplates(command.toolId, command.toolConfig),
+    commandVariableTemplates(command.operationId, command.operationConfig),
     variables
   )
 
@@ -83,19 +83,19 @@ export const isOnPlatform = (
 ): boolean => !platforms?.length || platforms.includes(platform)
 
 /** The fields `{{var:from}}` is renamed in, see `renameVariable` */
-function renameInToolConfig(
-  toolId: string,
-  toolConfig: Record<string, unknown>,
+function renameInOperationConfig(
+  operationId: string,
+  operationConfig: Record<string, unknown>,
   from: string,
   to: string
 ): Record<string, unknown> {
-  const fields = variableFieldsOf(toolId)
-  if (!fields.length) return toolConfig
-  const next = { ...toolConfig }
+  const fields = variableFieldsOf(operationId)
+  if (!fields.length) return operationConfig
+  const next = { ...operationConfig }
   for (const field of fields)
     if (typeof next[field] === 'string')
       next[field] = renameVariableReferences(next[field], from, to)
-  if (toolId === 'webhook' && next.headers) {
+  if (operationId === 'webhook' && next.headers) {
     next.headers = Object.fromEntries(
       Object.entries(next.headers as Record<string, unknown>).map(
         ([name, value]) => [
@@ -129,15 +129,15 @@ export function renameVariable(
   return {
     variables,
     commands: config.commands.map((command) => {
-      const toolConfig = renameInToolConfig(
-        command.toolId,
-        command.toolConfig,
+      const operationConfig = renameInOperationConfig(
+        command.operationId,
+        command.operationConfig,
         from,
         to
       )
-      return toolConfig === command.toolConfig
+      return operationConfig === command.operationConfig
         ? command
-        : { ...command, toolConfig }
+        : { ...command, operationConfig }
     }),
     llm: {
       ...config.llm,
@@ -174,9 +174,10 @@ export function variableUsage(
       .map((variable) => variable.id),
     commandIds: config.commands
       .filter((command) =>
-        commandVariableTemplates(command.toolId, command.toolConfig).some(
-          refers
-        )
+        commandVariableTemplates(
+          command.operationId,
+          command.operationConfig
+        ).some(refers)
       )
       .map((command) => command.id),
     providerIds: config.llm.providers

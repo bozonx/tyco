@@ -421,16 +421,16 @@ export function normalizeCommands(value: unknown): UserConfig['commands'] {
     schemaAt('commands')
   ) as UserConfig['commands']
   for (const command of commands) {
-    command.toolId = command.toolId.trim()
+    command.operationId = command.operationId.trim()
     const toolSchema =
-      command.toolId === 'script'
-        ? schemaValue.$defs.scriptToolConfig
-        : command.toolId === 'webhook'
-          ? schemaValue.$defs.webhookToolConfig
+      command.operationId === 'script'
+        ? schemaValue.$defs.scriptOperationConfig
+        : command.operationId === 'webhook'
+          ? schemaValue.$defs.webhookOperationConfig
           : undefined
     if (toolSchema)
-      command.toolConfig = repair(
-        command.toolConfig,
+      command.operationConfig = repair(
+        command.operationConfig,
         toolSchema as Schema
       ) as Record<string, unknown>
   }

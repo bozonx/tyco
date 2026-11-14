@@ -265,10 +265,10 @@ pub fn attached_vaults(config: &Value) -> Vec<AttachedVault> {
         .collect()
 }
 
-/// `toolConfig` of a command of the `script` tool.
+/// `operationConfig` of a command of the `script` tool.
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-pub struct ScriptToolConfig {
+pub struct ScriptOperationConfig {
     #[serde(default)]
     pub command: String,
     /// Empty for the home directory.
@@ -282,14 +282,14 @@ pub struct ScriptCommand {
     /// The name the action log shows, never empty; see `commandLabel` in
     /// `lib/commands/command-runtime.ts`.
     pub label: String,
-    pub tool_config: ScriptToolConfig,
+    pub operation_config: ScriptOperationConfig,
     pub is_enabled: bool,
     /// Whether it runs on the platform of this build, see
     /// [`CommandConfig::platforms`].
     pub is_on_this_platform: bool,
 }
 
-/// A saved command, `commands[]`. Its `toolConfig` depends on the tool and
+/// A saved command, `commands[]`. Its `operationConfig` depends on the tool and
 /// stays a `Value`.
 #[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -299,11 +299,11 @@ pub struct CommandConfig {
     #[serde(default, deserialize_with = "lenient")]
     pub name: String,
     #[serde(default, deserialize_with = "lenient")]
-    pub tool_id: String,
+    pub operation_id: String,
     #[serde(default, deserialize_with = "lenient")]
     pub is_enabled: bool,
     #[serde(default)]
-    pub tool_config: Value,
+    pub operation_config: Value,
     /// The limit of a background external run, in seconds; see
     /// `EXTERNAL_TIMEOUT_DEFAULT_SEC` in `commands-config.ts`.
     #[serde(
@@ -376,19 +376,19 @@ pub fn command(config: &Value, id: &str) -> Option<CommandConfig> {
 /// to run instead of passing the shell command itself: a script in the
 /// webview must not be able to run a command the user never saved.
 pub fn script_command(config: &Value, id: &str) -> Option<ScriptCommand> {
-    let command = command(config, id).filter(|command| command.tool_id == "script")?;
-    let tool_config = ScriptToolConfig::deserialize(&command.tool_config).ok()?;
+    let command = command(config, id).filter(|command| command.operation_id == "script")?;
+    let operation_config = ScriptOperationConfig::deserialize(&command.operation_config).ok()?;
     let name = command.name.trim();
     let label = if !name.is_empty() {
         name.to_owned()
-    } else if !tool_config.command.trim().is_empty() {
-        tool_config.command.trim().to_owned()
+    } else if !operation_config.command.trim().is_empty() {
+        operation_config.command.trim().to_owned()
     } else {
         String::from("Command")
     };
     Some(ScriptCommand {
         label,
-        tool_config,
+        operation_config,
         is_enabled: command.is_enabled,
         is_on_this_platform: command.is_on_this_platform(),
     })
@@ -422,15 +422,15 @@ mod tests {
     #[test]
     fn script_commands_are_found_by_id_with_their_label() {
         let config = json!({"commands": [
-            {"id": "a", "name": " Notes ", "toolId": "script",
-             "toolConfig": {"command": "echo {{TEXT}}", "workingDirectory": "~/n"}},
-            {"id": "b", "name": "", "toolId": "script", "toolConfig": {"command": " ls "}},
-            {"id": "c", "name": "Hook", "toolId": "webhook", "toolConfig": {"url": "x"}},
+            {"id": "a", "name": " Notes ", "operationId": "script",
+             "operationConfig": {"command": "echo {{TEXT}}", "workingDirectory": "~/n"}},
+            {"id": "b", "name": "", "operationId": "script", "operationConfig": {"command": " ls "}},
+            {"id": "c", "name": "Hook", "operationId": "webhook", "operationConfig": {"url": "x"}},
         ]});
         let a = script_command(&config, "a").unwrap();
         assert_eq!(a.label, "Notes");
-        assert_eq!(a.tool_config.command, "echo {{TEXT}}");
-        assert_eq!(a.tool_config.working_directory, "~/n");
+        assert_eq!(a.operation_config.command, "echo {{TEXT}}");
+        assert_eq!(a.operation_config.working_directory, "~/n");
         assert_eq!(script_command(&config, "b").unwrap().label, "ls");
         assert!(script_command(&config, "c").is_none());
         assert!(script_command(&config, "missing").is_none());

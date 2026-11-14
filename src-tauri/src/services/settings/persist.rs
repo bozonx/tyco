@@ -726,8 +726,8 @@ fn normalized_user_part(
 }
 
 /// The plugin a command's tool belongs to: `<plugin id>.<tool>`.
-fn tool_plugin(tool_id: &str) -> Option<&str> {
-    tool_id.split_once('.').map(|(plugin, _)| plugin)
+fn operation_plugin(operation_id: &str) -> Option<&str> {
+    operation_id.split_once('.').map(|(plugin, _)| plugin)
 }
 
 /// The plugins whose settings hold a notes folder field, and the commands the
@@ -777,15 +777,15 @@ fn take_note_paths(config: &mut Value, notes: NotesFields) -> TakenNotePaths {
     }
     let mut command_paths = BTreeMap::new();
     for command in config["commands"].as_array_mut().into_iter().flatten() {
-        let Some(field) = command["toolId"]
+        let Some(field) = command["operationId"]
             .as_str()
-            .and_then(tool_plugin)
+            .and_then(operation_plugin)
             .and_then(notes)
         else {
             continue;
         };
         let id = command["id"].as_str().unwrap_or_default().to_owned();
-        if let Some(path) = command["toolConfig"].get_mut(&field) {
+        if let Some(path) = command["operationConfig"].get_mut(&field) {
             if let Some(text) = path.as_str().filter(|text| !text.trim().is_empty()) {
                 command_paths.insert(id, text.to_owned());
             }
@@ -823,17 +823,17 @@ fn put_note_paths(config: &mut Value, device: &DeviceFile, notes: NotesFields) {
         else {
             continue;
         };
-        let Some(field) = command["toolId"]
+        let Some(field) = command["operationId"]
             .as_str()
-            .and_then(tool_plugin)
+            .and_then(operation_plugin)
             .and_then(notes)
         else {
             continue;
         };
-        if !command["toolConfig"].is_object() {
-            command["toolConfig"] = json!({});
+        if !command["operationConfig"].is_object() {
+            command["operationConfig"] = json!({});
         }
-        command["toolConfig"][field] = json!(path);
+        command["operationConfig"][field] = json!(path);
     }
 }
 

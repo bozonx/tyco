@@ -1,6 +1,6 @@
 # Plugins
 
-Plugins add editor transforms, toolbar buttons, menu actions and tools that
+Plugins add editor transforms, toolbar buttons, menu actions and operations that
 commands can run. TyCo ships several plugins (TextCase, WebFormatter,
 Diacritics, FastNote, SearchInInternet); you can also install your own
 packages. Internals of the runtime and the package format are in
@@ -72,7 +72,7 @@ export default function plugin(): PluginDefinition {
 
 Rules to keep in mind:
 
-- **Ids are permanent.** The plugin id and the ids of its tools identify the
+- **Ids are permanent.** The plugin id and the ids of its operations identify the
   plugin and its saved settings; changing one makes a new plugin.
 - **Every locale is required.** Supply a dictionary for each locale of
   `packages/plugin-sdk/src/locales.json`, with the same keys and placeholders.
@@ -82,12 +82,12 @@ Rules to keep in mind:
 - **What you can register:** case, format and edit items (they get the
   selection, or the whole text when nothing is selected; mark an item
   `selectionOnly` when the whole text would be a surprise), toolbar buttons,
-  action-menu items and tools. A tool can be put on the toolbar by its id and
+  action-menu items and operations. An operation can be put on the toolbar by its id and
   used by the user's commands.
 - **Settings are declarative.** Describe fields in `defaultConfig`; TyCo draws
   the form, applies defaults and gives the plugin only its own validated
   settings. Fields can be shown conditionally (`visibleWhen`), filled by
-  presets, renamed between versions (`migrations`), and previewed by a tool's
+  presets, renamed between versions (`migrations`), and previewed by an operation's
   `previewConfig`.
 - **Delayed edits.** For work that finishes later, take
   `getEditorInputSnapshot()` and apply the result with `applyEditorInputEdit`;

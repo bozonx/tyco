@@ -27,7 +27,7 @@
   "contentTemplate": "내용 템플릿",
   "contentTemplateInfo": "날짜 토큰, {'{'}title{'}'} 및 필수 {'{'}content{'}'}를 지원합니다. 중괄호를 쓰려면 {'{'}{'{'} 또는 {'}'}{'}'}를 입력하세요. 제목에 {'{'}title{'}'}를 사용하면 첫 줄이 그 아래에 반복되지 않습니다. 추가 모드는 파일이 없으면 만듭니다.",
   "clearInputAfterSave": "저장 후 입력 필드 비우기",
-  "toolLabel": "메모 작성",
+  "operationLabel": "메모 작성",
   "toolDescription": "메모 폴더에서 텍스트를 새 메모로 저장하거나 기존 메모에 추가합니다",
   "noNotesPath": "빠른 메모 플러그인 설정에 메모 폴더가 설정되지 않았습니다",
   "noteSaved": "메모가 저장되었습니다",

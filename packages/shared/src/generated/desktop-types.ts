@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 0aed15df4a94f8427b0f4a752f983de97006d18bca852e053fb0e2ef189036ef
+// Source hash: cd6e7d23823f3a0339061795ba7ea894a92ad108a4390ffb34cff1b98cdaa92b
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -402,8 +402,8 @@ export type ClientLogLevel = 'error' | 'warn' | 'info' | 'debug'
 
 /** Effective input for one configured command, computed by its tool registry. */
 export type CommandInputDescription = {
-  toolConfig: Record<string, unknown>
-  input: ToolCatalogInput
+  operationConfig: Record<string, unknown>
+  input: OperationCatalogInput
   inputSchema: Record<string, unknown>
 }
 
@@ -703,6 +703,20 @@ export type OpenMainChatEvent = {
   chatId?: string
 }
 
+/** A tool as the webview registry describes it, see `set_operation_catalog`. */
+export type OperationCatalogEntry = {
+  id: string
+  input: OperationCatalogInput
+  available: boolean
+  /** Why it is not available, already translated. */
+  reason?: string | null
+  inputSchema?: Record<string, unknown>
+  commandInputs: { [key in string]: CommandInputDescription }
+}
+
+/** How a command of a tool gets its input from a text. */
+export type OperationCatalogInput = 'none' | 'text' | 'parsed' | 'structured'
+
 /** What a picked package would install, for the user to confirm. */
 export type PluginPackagePreview = {
   /** What `install_plugin_package` takes to install this package. */
@@ -940,20 +954,6 @@ export type TextInsertionStatus = {
    */
   missingClipboardTools: Array<string>
 }
-
-/** A tool as the webview registry describes it, see `set_tool_catalog`. */
-export type ToolCatalogEntry = {
-  id: string
-  input: ToolCatalogInput
-  available: boolean
-  /** Why it is not available, already translated. */
-  reason?: string | null
-  inputSchema?: Record<string, unknown>
-  commandInputs: { [key in string]: CommandInputDescription }
-}
-
-/** How a command of a tool gets its input from a text. */
-export type ToolCatalogInput = 'none' | 'text' | 'parsed' | 'structured'
 
 /** Whether a group of tools is offered to the model, and how freely. */
 export type ToolGroupSettings = {

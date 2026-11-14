@@ -35,11 +35,11 @@ fn protect_headers(
     };
     let mut changed = false;
     for command in commands {
-        if command["toolId"] != "webhook" {
+        if command["operationId"] != "webhook" {
             continue;
         }
         let command_id = command["id"].as_str().unwrap_or_default().to_owned();
-        let Some(tool) = command.get_mut("toolConfig") else {
+        let Some(tool) = command.get_mut("operationConfig") else {
             continue;
         };
         let url = tool["url"].as_str().unwrap_or_default().to_owned();
@@ -235,7 +235,7 @@ mod tests {
         .collect();
         std::fs::write(&path, serde_json::json!({ "secrets": secrets }).to_string()).unwrap();
         let store = SecretStore::load(path, None).unwrap();
-        let config = serde_json::json!({"commands":[{"toolConfig":{"headers":{"a":"tyco-secret:webhook.header.shared"}}}]});
+        let config = serde_json::json!({"commands":[{"operationConfig":{"headers":{"a":"tyco-secret:webhook.header.shared"}}}]});
         let candidates = HashSet::from([
             "webhook.header.shared".into(),
             "webhook.header.obsolete".into(),
@@ -255,7 +255,7 @@ mod tests {
 
     #[test]
     fn replaces_headers_with_origin_bound_references_of_their_own() {
-        let mut config = serde_json::json!({"commands":[{"id":"one", "toolId":"webhook", "toolConfig":{"url":"https://hooks.example/path", "headers":{"x-api-key":"private-key", "Authorization":"Bearer token"}}}]});
+        let mut config = serde_json::json!({"commands":[{"id":"one", "operationId":"webhook", "operationConfig":{"url":"https://hooks.example/path", "headers":{"x-api-key":"private-key", "Authorization":"Bearer token"}}}]});
         let mut stored = Vec::new();
         assert!(protect_headers(
             &mut config,
@@ -288,7 +288,7 @@ mod tests {
     fn the_id_of_a_header_does_not_hold_its_value() {
         // the shared config goes to a cloud: a digest of a weak value could
         // be guessed from it
-        let mut config = serde_json::json!({"commands":[{"id":"one", "toolId":"webhook", "toolConfig":{"url":"https://hooks.example", "headers":{"x-key":"1234"}}}]});
+        let mut config = serde_json::json!({"commands":[{"id":"one", "operationId":"webhook", "operationConfig":{"url":"https://hooks.example", "headers":{"x-key":"1234"}}}]});
         let mut ids = Vec::new();
         protect_headers(
             &mut config,
@@ -302,14 +302,14 @@ mod tests {
         .unwrap();
         assert_eq!(ids, ["webhook.header.fixed"]);
         assert_eq!(
-            config["commands"][0]["toolConfig"]["headers"]["x-key"],
+            config["commands"][0]["operationConfig"]["headers"]["x-key"],
             "tyco-secret:webhook.header.fixed"
         );
     }
     #[test]
     fn a_header_key_is_bound_to_the_url_of_this_device() {
-        let config = serde_json::json!({"commands":[{"id":"one", "toolId":"webhook",
-            "toolConfig":{"url":"{{var:HOOKS}}/run", "headers":{"x-key":"private"}}}]});
+        let config = serde_json::json!({"commands":[{"id":"one", "operationId":"webhook",
+            "operationConfig":{"url":"{{var:HOOKS}}/run", "headers":{"x-key":"private"}}}]});
         let values = VariableValues::from_pairs(&[("HOOKS", "https://hooks.example")]);
         let mut origins = Vec::new();
         protect_headers(
@@ -339,7 +339,7 @@ mod tests {
 
     #[test]
     fn refuses_to_drop_credentials_when_storage_fails() {
-        let mut config = serde_json::json!({"commands":[{"id":"one", "toolId":"webhook", "toolConfig":{"url":"https://hooks.example", "headers":{"x-key":"private"}}}]});
+        let mut config = serde_json::json!({"commands":[{"id":"one", "operationId":"webhook", "operationConfig":{"url":"https://hooks.example", "headers":{"x-key":"private"}}}]});
         let original = config.clone();
         assert!(protect_headers(
             &mut config,
@@ -355,7 +355,7 @@ mod tests {
     fn ensure_secret_not_referenced_rejects_used_keys_and_allows_free_keys() {
         let config = serde_json::json!({
             "commands": [{
-                "toolConfig": {
+                "operationConfig": {
                     "headers": {
                         "Authorization": "tyco-secret:active-secret"
                     }

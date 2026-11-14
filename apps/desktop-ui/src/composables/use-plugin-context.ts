@@ -1,5 +1,5 @@
 import { createInvocationRunner } from '../lib/invocation/invocation-runner'
-import { createToolInvoker } from '../lib/invocation/invoke-tool'
+import { createOperationInvoker } from '../lib/invocation/invoke-operation'
 import { translate } from '../lib/i18n/index'
 import { clientLogger } from '../lib/logger/index'
 import { createPluginContext } from '../lib/plugins/plugin-context'
@@ -12,15 +12,15 @@ import { useInvocationRunnerDependencies } from '../stores/invocations'
 import { useIpcStore } from '../stores/ipc'
 import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useToolbarStore } from '../stores/toolbar'
-import { useToolsStore } from '../stores/tools'
+import { useOperationsStore } from '../stores/operations'
 import useToast from './use-toast'
 
 export default function usePluginContext() {
   const actions = useActionMenuStore()
   const edits = useEditMenuStore()
   const toolbar = useToolbarStore()
-  const tools = useToolsStore()
-  const invokeTool = createToolInvoker({ tools })
+  const tools = useOperationsStore()
+  const invokeOperation = createOperationInvoker({ tools })
   const invocationRunner = createInvocationRunner(
     useInvocationRunnerDependencies()
   )
@@ -41,11 +41,16 @@ export default function usePluginContext() {
       registerCaseItems: (items) => edits.registerCaseItems(items),
       registerFormatItems: (items) => edits.registerFormatItems(items),
       registerToolbarItems: (items) => toolbar.registerToolbarItems(items),
-      registerTools: (items, baseConfig) =>
-        tools.registerPluginTools(id, items, baseConfig),
-      invokeTool: (toolId, snapshot, signal) =>
-        invokeTool(
-          { toolId, toolConfig: {}, label: toolId, outputAction: 'none' },
+      registerOperations: (items, baseConfig) =>
+        tools.registerPluginOperations(id, items, baseConfig),
+      invokeOperation: (operationId, snapshot, signal) =>
+        invokeOperation(
+          {
+            operationId,
+            operationConfig: {},
+            label: operationId,
+            outputAction: 'none',
+          },
           snapshot.selectedText.trim() ? snapshot.selectedText : snapshot.value,
           {
             source: 'toolbar',
@@ -54,10 +59,10 @@ export default function usePluginContext() {
             editorSnapshot: snapshot,
           }
         ),
-      invokeActionTool: async (toolId, text, signal) => {
+      invokeActionOperation: async (operationId, text, signal) => {
         if (text.trim()) await history.saveOutput(text)
         await invocationRunner.run(
-          { toolId, toolConfig: {}, label: toolId },
+          { operationId, operationConfig: {}, label: operationId },
           text,
           { source: 'menu', signal }
         )

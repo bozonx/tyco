@@ -191,7 +191,7 @@
     },
     "commands": {
       "group": "Commands",
-      "groupHint": "Allow the model to run selected custom commands and plugin tools. “Ask” asks before every call.",
+      "groupHint": "Allow the model to run the selected commands. Only commands with a description for the AI can be selected. “Ask” asks before every call.",
       "needsDescription": "Requires a description for AI in command settings",
       "noCommands": "No custom commands configured yet.",
       "noCommandsHint": "Create commands in Settings → Commands first.",
@@ -228,7 +228,7 @@
     "errorNoName": "Enter a name.",
     "errorNoPrompt": "Write the instruction for the LLM.",
     "errorNoUrl": "Enter the URL.",
-    "errorUnknownTool": "Unknown tool.",
+    "errorUnknownType": "Unknown command type.",
     "external": "Available from outside",
     "externalDescription": "What local applications of your session may do through tyco-ctl and D-Bus. Access to each command is enabled in its advanced settings.",
     "externalInfo": "Local applications and scripts can run an allowed command with tyco-ctl run <ID> or tyco-ctl run --name <name>. The result is returned to the caller. --interactive allows text input UI; --selection --replace explicitly requests selection replacement.",
@@ -238,8 +238,8 @@
     "fieldOff": "No",
     "fieldOn": "Yes",
     "fromPluginSettings": "From the plugin settings: {value}",
-    "hint": "Commands are customizable actions powered by tools: LLM prompts, shell scripts, HTTP webhooks, or translation. They process selected text or run without input, and their result can be inserted into the active window, copied to the clipboard, or displayed. Run commands from action pages or via tyco-ctl.",
-    "inputUnsupported": "Its tool needs a structured input that cannot be taken from a text",
+    "hint": "Commands are customizable actions of different types: LLM prompts, shell scripts, HTTP webhooks, or translation. They process selected text or run without input, and their result can be inserted into the active window, copied to the clipboard, or displayed. Run commands from action pages or via tyco-ctl.",
+    "inputUnsupported": "Its type needs a structured input that cannot be taken from a text",
     "languageLabel": "Translate into",
     "languagePlaceholder": "Choose a language",
     "launcherResult": "Action",
@@ -265,12 +265,12 @@
     "testRunning": "Running…",
     "testStop": "Stop",
     "testTextPlaceholder": "Text to test with",
-    "toolInfo": "Tool: {tool}",
-    "toolMissing": "Its tool is not available: the plugin is disabled or missing",
+    "typeInfo": "Type: {type}",
+    "typeMissing": "Its type is not available: the plugin is disabled or missing",
     "preTransformFailed": "Could not prepare the text for the command",
     "unavailableInMenu": "{name} (unavailable in the menu)",
     "undo": "Undo",
-    "unknownTool": "The tool “{tool}” is not available in this version of Tyco.",
+    "unknownType": "The command type “{type}” is not available in this version of Tyco.",
     "unnamed": "Untitled command",
     "warningExternalNameTwins": "Other commands have the same name: {names}. A call by this name is refused as ambiguous; use the ID.",
     "llmPreTransform": "Pre-transform text with LLM",
@@ -302,7 +302,7 @@
     "aiToolsEnabledLabel": "Allow tools",
     "aiToolsEnabledInfo": "When enabled, the AI can invoke other allowed commands.",
     "createModalTitle": "New command",
-    "toolTypeLabel": "Command type"
+    "typeLabel": "Command type"
   },
   "common": {
     "add": "Add",
@@ -1314,7 +1314,7 @@
     "commandDisabled": "The command is disabled",
     "commandFailed": "The command failed",
     "commandInputInvalid": "The input of the command is not valid",
-    "commandInputUnsupported": "This command cannot take a text: its tool needs a structured input",
+    "commandInputUnsupported": "This command cannot take a text: its type needs a structured input",
     "commandUnavailable": "The command is unavailable",
     "desktopCommandFailed": "Action failed",
     "dictationClosed": "The speech recognition service ended the session while recording",
@@ -1362,7 +1362,7 @@
     "webhookKeyNotSet": "The key of this webhook is not set on this device; enter it in the command settings",
     "webhookSuccess": "Webhook sent successfully"
   },
-  "tools": {
+  "operations": {
     "aiTask": "AI command",
     "aiTaskDescription": "Processes text by your instruction in one step and may run other commands",
     "askInChat": "Ask in chat",

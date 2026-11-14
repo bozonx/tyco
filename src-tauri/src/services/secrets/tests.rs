@@ -314,8 +314,8 @@ fn two_devices_keep_their_own_keys_under_one_shared_reference() {
     let desktop = in_memory();
     let mut config = serde_json::json!({"commands": [{
         "id": "hook",
-        "toolId": "webhook",
-        "toolConfig": {
+        "operationId": "webhook",
+        "operationConfig": {
             "url": "https://hooks.example/path",
             "headers": {"x-key": "laptop value"},
             "isAuthEnabled": true,
@@ -334,7 +334,7 @@ fn two_devices_keep_their_own_keys_under_one_shared_reference() {
             Some(vec!["https://hooks.example".into()]),
         )
         .unwrap();
-    let header_ref = config["commands"][0]["toolConfig"]["headers"]["x-key"].clone();
+    let header_ref = config["commands"][0]["operationConfig"]["headers"]["x-key"].clone();
     let header_id = header_ref
         .as_str()
         .and_then(|value| value.strip_prefix(SECRET_REF_PREFIX))
@@ -363,7 +363,7 @@ fn two_devices_keep_their_own_keys_under_one_shared_reference() {
     webhook::cleanup_after_startup(&desktop, &config);
 
     assert_eq!(
-        config["commands"][0]["toolConfig"]["headers"]["x-key"],
+        config["commands"][0]["operationConfig"]["headers"]["x-key"],
         header_ref
     );
     let value =

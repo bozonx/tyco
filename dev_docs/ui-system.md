@@ -215,11 +215,11 @@ presentation. Supply translated strings through `error` and `warning`; use the
 controls use `group` and each control supplies its own accessible name.
 
 `ConfigFieldControl` renders a normalized control description. `ConfigFields`
-adapts plugin settings. `PluginToolFields` adapts command overrides, preserving
+adapts plugin settings. `PluginOperationFields` adapts command overrides, preserving
 inheritance and explicit `false`. These value semantics must stay separate.
-`TranslationToolFields`, `AiCommandToolFields` (AI commands) and
-`PromptToolFields` (transformations and styles) own the built-in tool forms;
-`ToolConfigFields` selects the form.
+`TranslationToolFields`, `AiCommandOperationFields` (AI commands) and
+`PromptToolFields` (transformations and styles) own the built-in operation forms;
+`OperationConfigFields` selects the form.
 
 Keep parsing and asynchronous settings behavior in injected models under
 `src/lib/`, with focused unit tests. Views wire dependencies and translate

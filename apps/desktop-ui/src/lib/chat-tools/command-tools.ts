@@ -1,7 +1,7 @@
 import { COMMANDS_TOOL_GROUP_ID, type CommandConfig } from '@tyco/shared'
 
-import { invocationUnavailableReason } from '../invocation/invoke-tool'
-import type { ToolLookup } from '../tools/tool-types'
+import { invocationUnavailableReason } from '../invocation/invoke-operation'
+import type { OperationLookup } from '../operations/operation-types'
 import {
   isOnPlatform,
   type CommandEnvironment,
@@ -11,15 +11,15 @@ import type {
   ChatToolDefinition,
   ChatToolProvider,
 } from './chat-tool-registry'
-import { adaptCommand } from './registered-tool-adapter'
+import { adaptCommand } from './registered-operation-adapter'
 
 export { COMMANDS_TOOL_GROUP_ID }
 
 export interface CommandToolProviderDependencies {
   /** All user commands configured in the app */
   commands: () => readonly CommandConfig[]
-  /** Tool registry to look up tools by command.toolId */
-  tools: ToolLookup
+  /** Tool registry to look up tools by command.operationId */
+  tools: OperationLookup
   /** The platform and the variable values of this device */
   environment?: () => CommandEnvironment
   /** Optional logger for skipped or problematic tools */
@@ -57,10 +57,10 @@ export function createCommandToolProvider(
 
         if (env && !isOnPlatform(command.platforms, env.platform)) continue
 
-        const tool = deps.tools.get(command.toolId)
+        const tool = deps.tools.get(command.operationId)
         if (!tool) {
           deps.warn?.(
-            `Tool "${command.toolId}" for command "${command.name}" not found`
+            `Tool "${command.operationId}" for command "${command.name}" not found`
           )
           continue
         }

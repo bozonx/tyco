@@ -3,7 +3,7 @@
     class="command-panel"
     :expanded="expanded"
     density="compact"
-    :icon="commandIcon(command, toolsStore)"
+    :icon="commandIcon(command, operationsStore)"
     :icon-title="toolName"
     @toggle="emit('toggle')"
   >
@@ -20,7 +20,7 @@
       >
         {{ displayName || t('commands.unnamed') }}
       </span>
-      <Badge v-if="!commandTakesText(command, toolsStore)">
+      <Badge v-if="!commandTakesText(command, operationsStore)">
         {{ t('commands.badgeNoText') }}
       </Badge>
       <Badge
@@ -96,8 +96,8 @@ import {
   commandUnavailableReason,
   validateCommand,
 } from '../../lib/commands/command-runtime'
-import { toolLabel } from '../../lib/tools/tool-label'
-import { useToolsStore } from '../../stores/tools'
+import { operationLabel } from '../../lib/operations/operation-label'
+import { useOperationsStore } from '../../stores/operations'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
 import AppIcon from '../common/AppIcon.vue'
 import Badge from '../common/Badge.vue'
@@ -126,26 +126,26 @@ const emit = defineEmits<{
   (event: 'remove'): void
 }>()
 const { t } = useI18n()
-const toolsStore = useToolsStore()
+const operationsStore = useOperationsStore()
 const slotKey = (index: number) =>
   SHORTCUT_SLOT_KEYS[index]?.toUpperCase() ?? ''
 // a translation without a name of its own is named by its tool
 const displayName = computed(() =>
-  props.command.name.trim() || props.command.toolId !== 'core.translate'
+  props.command.name.trim() || props.command.operationId !== 'core.translate'
     ? props.command.name
     : commandLabel(props.command)
 )
 const unavailableReasonKey = computed(() =>
-  commandUnavailableReason(props.command, toolsStore)
+  commandUnavailableReason(props.command, operationsStore)
 )
 const hasIssues = computed(
   () =>
-    validateCommand(props.command, toolsStore).length > 0 ||
+    validateCommand(props.command, operationsStore).length > 0 ||
     props.nameConflicts.length > 0
 )
 const toolName = computed(() => {
-  const tool = toolsStore.get(props.command.toolId)
-  return tool ? toolLabel(tool, t) : props.command.toolId
+  const tool = operationsStore.get(props.command.operationId)
+  return tool ? operationLabel(tool, t) : props.command.operationId
 })
 const menuItems = computed<DropdownMenuItem[]>(() => [
   {

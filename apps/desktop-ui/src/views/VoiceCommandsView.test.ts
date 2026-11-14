@@ -2,7 +2,10 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 import { createCommand } from '../lib/commands/command-config'
-import { testTools, testTranslateTool } from '../lib/tools/testing'
+import {
+  testOperations,
+  testTranslateOperation,
+} from '../lib/operations/testing'
 import { translate } from '../lib/i18n'
 import { i18n } from '../lib/i18n'
 import { getLanguageLabelKey } from '../lib/locale/language'
@@ -72,8 +75,8 @@ vi.mock('../stores/quick-dismiss', () => ({
 vi.mock('../composables/use-overlay-nav', () => ({
   useOverlayNav: () => ({ handleEsc: mocks.hide }),
 }))
-vi.mock('../stores/tools', () => ({
-  useToolsStore: () => testTools({}, [testTranslateTool()]),
+vi.mock('../stores/operations', () => ({
+  useOperationsStore: () => testOperations({}, [testTranslateOperation()]),
 }))
 vi.mock('../components/overlay/ActionOverlayLayout.vue', () => ({
   default: {
@@ -129,7 +132,7 @@ describe('separate voice command overlay', () => {
     // the translation is one row whatever the language
     expect(wrapper.findAll('.voice-entry')).toHaveLength(41)
     expect(entry(wrapper, TRANSLATE_KEY).text()).toContain(
-      translate('tools.translate')
+      translate('operations.translate')
     )
     expect(wrapper.text()).toContain('save note 39')
     expect(entry(wrapper, 'command-39').attributes('title')).toBe(
@@ -341,13 +344,13 @@ describe('separate voice command overlay', () => {
     wrapper.unmount()
   })
   it('explains unavailable functions and does not let them be picked', async () => {
-    voice.unavailableReason.mockReturnValue('tools.noTranslator')
+    voice.unavailableReason.mockReturnValue('operations.noTranslator')
     voice.stage = 'review'
     const wrapper = mountView()
     const row = entry(wrapper, TRANSLATE_KEY)
     expect(row.attributes('aria-disabled')).toBe('true')
     expect(row.find('.voice-entry-warning').attributes('title')).toBe(
-      translate('tools.noTranslator')
+      translate('operations.noTranslator')
     )
     await row.trigger('click')
     expect(mocks.choose).not.toHaveBeenCalled()

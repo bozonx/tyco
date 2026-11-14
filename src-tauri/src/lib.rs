@@ -100,7 +100,7 @@ pub fn run() {
             .manage(services::custom_actions::ScriptRuns::default())
             .manage(services::ai_tools::web::WebRuns::default())
             .manage(services::external::jobs::ExternalJobs::default())
-            .manage(services::external::command_library::ToolCatalogState::default())
+            .manage(services::external::command_library::OperationCatalogState::default())
             .manage(services::chat_images::ChatImages::default())
             .manage(services::ai_vault::MemoryReadVersions::default())
             .manage(services::dropped_files::DroppedFiles::default())
@@ -287,7 +287,7 @@ pub fn run() {
             commands::external_jobs::answer_external_access,
             commands::external_jobs::claim_external_job,
             commands::external_jobs::finish_external_job,
-            commands::external_jobs::set_tool_catalog,
+            commands::external_jobs::set_operation_catalog,
             commands::hotkeys::apply_hotkey,
             commands::hotkeys::get_hotkey_provider_info,
             commands::hotkeys::open_system_hotkey_settings,

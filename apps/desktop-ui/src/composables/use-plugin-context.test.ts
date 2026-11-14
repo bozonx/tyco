@@ -1,4 +1,4 @@
-import { TEXT_INPUT_SCHEMA, type ToolDefinition } from '@tyco/plugin-sdk'
+import { TEXT_INPUT_SCHEMA, type OperationDefinition } from '@tyco/plugin-sdk'
 import { disposePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -56,8 +56,8 @@ describe('plugin context wiring', () => {
 
   it('runs toolbar buttons through the tool registry with the selection', async () => {
     const { context } = createContext()
-    const run = vi.fn<ToolDefinition['run']>(async () => ({ ok: true }))
-    context.registerTools([
+    const run = vi.fn<OperationDefinition['run']>(async () => ({ ok: true }))
+    context.registerOperations([
       {
         id: 'upper',
         description: 'upper',
@@ -65,7 +65,7 @@ describe('plugin context wiring', () => {
         run,
       },
     ])
-    context.registerToolbarItems([{ id: 'button', toolId: 'upper' }])
+    context.registerToolbarItems([{ id: 'button', operationId: 'upper' }])
     const editor = useEditorInputStore()
     editor.setValue('Hello world')
     editor.setSelection('world', 6, 11)
@@ -76,7 +76,7 @@ describe('plugin context wiring', () => {
     expect(run).toHaveBeenCalledWith(
       expect.objectContaining({ input: { text: 'world' } })
     )
-    context.registerActionsItems([{ id: 'act', toolId: 'upper' }])
+    context.registerActionsItems([{ id: 'act', operationId: 'upper' }])
     const action = useActionMenuStore()
       .getRegisteredActions()
       .find((item) => item.id === 'Example:act')!

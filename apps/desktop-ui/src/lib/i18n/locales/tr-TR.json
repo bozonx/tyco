@@ -191,7 +191,7 @@
     },
     "commands": {
       "group": "Komutlar",
-      "groupHint": "Modelin seçilen özel komutları ve eklenti araçlarını çalıştırmasına izin verin. \"Sor\", her çağrıdan önce onay ister.",
+      "groupHint": "Modelin seçilen komutları çalıştırmasına izin verin. Yalnızca yapay zekâ için açıklaması olan komutlar seçilebilir. \"Sor\", her çağrıdan önce onay ister.",
       "needsDescription": "Komut ayarlarında yapay zeka için bir açıklama gereklidir",
       "noCommands": "Henüz özel komut yapılandırılmadı.",
       "noCommandsHint": "Önce Ayarlar → Komutlar bölümünde komut oluşturun.",
@@ -228,7 +228,7 @@
     "errorNoName": "Bir ad girin.",
     "errorNoPrompt": "LLM için talimatı yazın.",
     "errorNoUrl": "URL'yi girin.",
-    "errorUnknownTool": "Bilinmeyen araç.",
+    "errorUnknownType": "Bilinmeyen komut türü.",
     "external": "Dışarıdan erişilebilir",
     "externalDescription": "Oturumunuzdaki yerel uygulamaların tyco-ctl ve D-Bus üzerinden neler yapabileceği. Her komuta erişim, komutun gelişmiş ayarlarında etkinleştirilir.",
     "externalInfo": "Yerel uygulamalar ve betikler izin verilen komutu tyco-ctl run <kimlik> veya tyco-ctl run --name <ad> ile çalıştırabilir. Sonuç çağırana döndürülür. --interactive metin girişi penceresine izin verir; --selection --replace seçimin değiştirilmesini açıkça ister.",
@@ -238,8 +238,8 @@
     "fieldOff": "Hayır",
     "fieldOn": "Evet",
     "fromPluginSettings": "Eklenti ayarlarından: {value}",
-    "hint": "Komutlar; LLM istemleri, kabuk komut dosyaları, HTTP web kancaları veya çeviri gibi araçlara dayalı özelleştirilebilir eylemlerdir. Seçili metni işleyebilir veya girdi olmadan çalışabilirler; sonuç etkin pencereye eklenebilir, panoya kopyalanabilir veya gösterilebilir. Hızlı komutlardan (başlatıcı), ana eylemler menüsünden veya tyco-ctl aracılığıyla çalıştırılırlar.",
-    "inputUnsupported": "Aracı, metinden alınamayan yapılandırılmış bir girdi bekliyor",
+    "hint": "Komutlar; LLM istemleri, kabuk komut dosyaları, HTTP web kancaları veya çeviri gibi farklı türlerde özelleştirilebilir eylemlerdir. Seçili metni işleyebilir veya girdi olmadan çalışabilirler; sonuç etkin pencereye eklenebilir, panoya kopyalanabilir veya gösterilebilir. Hızlı komutlardan (başlatıcı), ana eylemler menüsünden veya tyco-ctl aracılığıyla çalıştırılırlar.",
+    "inputUnsupported": "Türü, metinden alınamayan yapılandırılmış bir girdi bekliyor",
     "languageLabel": "Şu dile çevir",
     "languagePlaceholder": "Bir dil seçin",
     "launcherResult": "Eylem",
@@ -265,12 +265,12 @@
     "testRunning": "Çalışıyor…",
     "testStop": "Durdur",
     "testTextPlaceholder": "Deneme metni",
-    "toolInfo": "Araç: {tool}",
-    "toolMissing": "Aracı kullanılamıyor: eklenti kapalı veya yok",
+    "typeInfo": "Tür: {type}",
+    "typeMissing": "Türü kullanılamıyor: eklenti kapalı veya yok",
     "preTransformFailed": "Komut için metin hazırlanamadı",
     "unavailableInMenu": "{name} (menüde kullanılamaz)",
     "undo": "Geri al",
-    "unknownTool": "“{tool}” aracı Tyco'nun bu sürümünde kullanılamıyor.",
+    "unknownType": "“{type}” komut türü Tyco'nun bu sürümünde kullanılamıyor.",
     "unnamed": "Adsız komut",
     "warningExternalNameTwins": "Aynı ada sahip başka komutlar var: {names}. Bu adla yapılan çağrı belirsiz olduğu için reddedilir; kimliği kullanın.",
     "llmPreTransform": "LLM ile ön metin dönüştürme",
@@ -302,7 +302,7 @@
     "aiToolsEnabledLabel": "Araçlara izin ver",
     "aiToolsEnabledInfo": "Etkinleştirildiğinde, yapay zekâ izin verilen diğer komutları çağırabilir.",
     "createModalTitle": "Yeni komut",
-    "toolTypeLabel": "Komut türü"
+    "typeLabel": "Komut türü"
   },
   "common": {
     "add": "Ekle",
@@ -1311,7 +1311,7 @@
     "commandDisabled": "Komut devre dışı",
     "commandFailed": "Komut başarısız oldu",
     "commandInputInvalid": "Komutun girdisi geçersiz",
-    "commandInputUnsupported": "Bu komut metin alamaz: aracı yapılandırılmış bir girdi bekliyor",
+    "commandInputUnsupported": "Bu komut metin alamaz: türü yapılandırılmış bir girdi bekliyor",
     "commandUnavailable": "Komut kullanılamıyor",
     "desktopCommandFailed": "İşlem başarısız oldu",
     "dictationClosed": "Konuşma tanıma hizmeti kayıt sırasında oturumu sonlandırdı",
@@ -1359,7 +1359,7 @@
     "webhookKeyNotSet": "Bu webhook’un anahtarı bu cihazda ayarlanmadı; komut ayarlarından girin",
     "webhookSuccess": "Web kancası başarıyla gönderildi"
   },
-  "tools": {
+  "operations": {
     "aiTask": "Yapay zekâ komutu",
     "aiTaskDescription": "Metni talimatınıza göre tek adımda işler ve başka komutlar çalıştırabilir",
     "askInChat": "Sohbette sor",

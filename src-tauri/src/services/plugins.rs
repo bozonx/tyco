@@ -430,10 +430,10 @@ pub fn approved_note_roots(
     }
     let prefix = format!("{id}.");
     for command in crate::models::user_config::commands(config) {
-        if !command.is_enabled || !command.tool_id.starts_with(&prefix) {
+        if !command.is_enabled || !command.operation_id.starts_with(&prefix) {
             continue;
         }
-        if let Some(root) = command.tool_config[field]
+        if let Some(root) = command.operation_config[field]
             .as_str()
             .filter(|root| !root.trim().is_empty())
         {
@@ -523,9 +523,9 @@ mod tests {
     #[test]
     fn only_saved_enabled_plugin_and_command_settings_grant_note_roots() {
         let mut config = serde_json::json!({"plugins": {"Example": {"isEnabled": true, "settings": {"notesPath": "/notes"}}}, "commands": [
-            {"isEnabled": true, "toolId": "Example.write", "toolConfig": {"notesPath": "/command-notes"}},
-            {"isEnabled": false, "toolId": "Example.write", "toolConfig": {"notesPath": "/disabled"}},
-            {"isEnabled": true, "toolId": "Other.write", "toolConfig": {"notesPath": "/other"}}
+            {"isEnabled": true, "operationId": "Example.write", "operationConfig": {"notesPath": "/command-notes"}},
+            {"isEnabled": false, "operationId": "Example.write", "operationConfig": {"notesPath": "/disabled"}},
+            {"isEnabled": true, "operationId": "Other.write", "operationConfig": {"notesPath": "/other"}}
         ]});
         assert_eq!(
             approved_note_roots(&config, "Example", "notesPath").unwrap(),

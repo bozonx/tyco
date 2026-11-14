@@ -9,14 +9,14 @@ import {
   EXTERNAL_TIMEOUT_DEFAULT_SEC,
   EXTERNAL_TIMEOUT_MAX_SEC,
   normalizeCommands,
-  type ScriptToolConfig,
-  type WebhookToolConfig,
+  type ScriptOperationConfig,
+  type WebhookOperationConfig,
 } from '@tyco/shared'
-import type { RegisteredTool } from '../tools/tool-types'
+import type { RegisteredOperation } from '../operations/operation-types'
 
 /** Whether a tool can be chosen to create a command from in the commands library */
-export function isCommandTool(
-  tool: Pick<RegisteredTool, 'id' | 'owner' | 'configFields'>
+export function isCommandOperation(
+  tool: Pick<RegisteredOperation, 'id' | 'owner' | 'configFields'>
 ): boolean {
   if (
     tool.id === 'script' ||
@@ -64,9 +64,9 @@ export function externalTimeoutOf(value: unknown): number {
     : EXTERNAL_TIMEOUT_DEFAULT_SEC
 }
 
-export function scriptToolConfigOf(
+export function scriptOperationConfigOf(
   config: Record<string, unknown>
-): ScriptToolConfig {
+): ScriptOperationConfig {
   return {
     command: stringOr(config.command),
     workingDirectory: stringOr(config.workingDirectory),
@@ -74,12 +74,12 @@ export function scriptToolConfigOf(
 }
 
 /** A webhook config as read from a command: its method and headers are set */
-export type ResolvedWebhookToolConfig = WebhookToolConfig &
-  Required<Pick<WebhookToolConfig, 'method' | 'headers'>>
+export type ResolvedWebhookOperationConfig = WebhookOperationConfig &
+  Required<Pick<WebhookOperationConfig, 'method' | 'headers'>>
 
-export function webhookToolConfigOf(
+export function webhookOperationConfigOf(
   config: Record<string, unknown>
-): ResolvedWebhookToolConfig {
+): ResolvedWebhookOperationConfig {
   return {
     url: stringOr(config.url),
     method: config.method === 'GET' ? 'GET' : 'POST',
@@ -93,15 +93,19 @@ export function webhookToolConfigOf(
 }
 
 /** A text setting of the command's tool, or an empty string */
-export const toolConfigText = (command: CommandConfig, key: string): string =>
-  stringOr(command.toolConfig[key])
+export const operationConfigText = (
+  command: CommandConfig,
+  key: string
+): string => stringOr(command.operationConfig[key])
 
-export const scriptToolConfig = (command: CommandConfig): ScriptToolConfig =>
-  scriptToolConfigOf(command.toolConfig)
-
-export const webhookToolConfig = (
+export const scriptOperationConfig = (
   command: CommandConfig
-): ResolvedWebhookToolConfig => webhookToolConfigOf(command.toolConfig)
+): ScriptOperationConfig => scriptOperationConfigOf(command.operationConfig)
+
+export const webhookOperationConfig = (
+  command: CommandConfig
+): ResolvedWebhookOperationConfig =>
+  webhookOperationConfigOf(command.operationConfig)
 
 export { normalizeCommands }
 
@@ -113,8 +117,8 @@ function newCommandId(): string {
 }
 
 /** The settings a new command of the tool starts with */
-function defaultToolConfig(toolId: string): Record<string, unknown> {
-  switch (toolId) {
+function defaultOperationConfig(operationId: string): Record<string, unknown> {
+  switch (operationId) {
     case 'script':
       return { command: '', workingDirectory: '' }
     case 'webhook':
@@ -144,9 +148,12 @@ function defaultToolConfig(toolId: string): Record<string, unknown> {
  * `currentPlatform` initializes the platform filter when the tool uses one
  */
 export function createCommand(
-  toolId: string,
+  operationId: string,
   id: string = newCommandId(),
-  tool?: Pick<RegisteredTool, 'defaultOutputAction' | 'canSelectPlatforms'>,
+  tool?: Pick<
+    RegisteredOperation,
+    'defaultOutputAction' | 'canSelectPlatforms'
+  >,
   currentPlatform?: string
 ): CommandConfig {
   const defaultPlatforms =
@@ -160,8 +167,8 @@ export function createCommand(
     description: '',
     phrases: [],
     isVoiceEnabled: false,
-    toolId,
-    toolConfig: defaultToolConfig(toolId),
+    operationId,
+    operationConfig: defaultOperationConfig(operationId),
     isLlmArgumentParsingEnabled: false,
     isLlmPreTransformEnabled: false,
     llmPreTransformPrompt: '',

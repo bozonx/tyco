@@ -179,7 +179,7 @@ import { useCommandValidation } from '../../composables/use-command-validation'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsVariables } from '../../composables/use-settings-variables'
 import useToast from '../../composables/use-toast'
-import { webhookToolConfig } from '../../lib/commands/command-config'
+import { webhookOperationConfig } from '../../lib/commands/command-config'
 import { isSecretReferenced } from '../../lib/commands/command-secrets'
 import { createWebhookAuthModel } from '../../lib/commands/webhook-auth-model'
 import {
@@ -218,7 +218,7 @@ function update(field: string, value: unknown) {
   emit('update', field, value)
 }
 
-const webhook = computed(() => webhookToolConfig(props.command))
+const webhook = computed(() => webhookOperationConfig(props.command))
 const variables = useSettingsVariables()
 /** The URL as it is on this device; empty when a variable has no value here */
 const urlHere = computed(() => {
@@ -237,7 +237,7 @@ const { toastKey, toastError, toastText } = useToast()
 const headerRows = ref<WebhookHeaderRow[]>([])
 const secretDrafts = reactive<Record<number, string>>({})
 const configHeaders = computed(() =>
-  props.command.toolId === 'webhook' ? webhook.value.headers : {}
+  props.command.operationId === 'webhook' ? webhook.value.headers : {}
 )
 watch(
   [() => props.command.id, configHeaders],
@@ -295,7 +295,7 @@ const session = useSettingsSessionStore()
 const secretId = computed(() => webhook.value.authSecretId ?? '')
 const hasAuth = computed(
   () =>
-    props.command.toolId === 'webhook' &&
+    props.command.operationId === 'webhook' &&
     Boolean(webhook.value.isAuthEnabled) &&
     Boolean(secretId.value)
 )

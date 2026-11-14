@@ -35,16 +35,16 @@ vi.mock('../../stores/settings-session', () => ({
 vi.mock('../../stores/secrets', () => ({
   useSecretsStore: () => ({ removeSecret }),
 }))
-vi.mock('../../stores/tools', async () => {
-  const { testTools } = await import('../../lib/tools/testing')
-  const tools = testTools()
-  return { useToolsStore: () => tools }
+vi.mock('../../stores/operations', async () => {
+  const { testOperations } = await import('../../lib/operations/testing')
+  const tools = testOperations()
+  return { useOperationsStore: () => tools }
 })
 
 const webhook = {
   ...createCommand('webhook', 'wh1'),
   name: 'Hook',
-  toolConfig: {
+  operationConfig: {
     url: 'https://x.test',
     isAuthEnabled: true,
     authSecretId: 'webhook.auth.wh1',
@@ -234,11 +234,11 @@ describe('SettingsCommandsTab.vue', () => {
     }[]
     expect(availableTools.map((tool) => tool.id)).toEqual(['script', 'webhook'])
 
-    modal.vm.$emit('submit', { toolId: 'webhook' })
+    modal.vm.$emit('submit', { operationId: 'webhook' })
     await nextTick()
 
     expect(
-      context.draft.value.commands.map((command) => command.toolId)
+      context.draft.value.commands.map((command) => command.operationId)
     ).toEqual(['webhook', 'webhook', 'script'])
     expect(context.draft.value.commands[0].platforms).toBeUndefined()
     expect(modal.props('open')).toBe(false)
@@ -248,7 +248,7 @@ describe('SettingsCommandsTab.vue', () => {
     expect(firstCard.props('autofocusName')).toBe(true)
     expect(firstCard.props('expanded')).toBe(true)
 
-    modal.vm.$emit('submit', { toolId: 'script' })
+    modal.vm.$emit('submit', { operationId: 'script' })
     await nextTick()
     expect(context.draft.value.commands[0].platforms).toEqual(['linux'])
   })
@@ -257,7 +257,7 @@ describe('SettingsCommandsTab.vue', () => {
     const wrapper = mountTab(undefined, false)
     await wrapper.get('.add-btn').trigger('click')
     const modal = wrapper.findComponent({ name: 'SettingsCreateCommandModal' })
-    modal.vm.$emit('submit', { toolId: 'script' })
+    modal.vm.$emit('submit', { operationId: 'script' })
     await nextTick()
     const card = wrapper.findAllComponents({ name: 'CommandCard' })[0]
     await card

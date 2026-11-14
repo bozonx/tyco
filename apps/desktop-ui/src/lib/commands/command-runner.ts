@@ -9,14 +9,14 @@ import type {
   InvocationOptions,
   InvocationOutcome,
 } from '../invocation/invocation-types'
-import { createToolInvoker } from '../invocation/invoke-tool'
-import type { ToolResult } from '../tools/tool-types'
+import { createOperationInvoker } from '../invocation/invoke-operation'
+import type { OperationResult } from '../operations/operation-types'
 import { commandInvocation, preTransformCommandText } from './command-runtime'
 
 /** Shown when a pre-transformation fails without saying why */
 const FAILED_KEY = 'commands.preTransformFailed'
 
-const disabled: ToolResult = {
+const disabled: OperationResult = {
   ok: false,
   level: 'warn',
   messageKey: 'toast.commandDisabled',
@@ -52,7 +52,7 @@ function createInputPreparation(deps: CommandTransformDependencies) {
         cancelled: true,
         message: 'Cancelled',
       }
-      const result: ToolResult = { ok: false, cancelled: true }
+      const result: OperationResult = { ok: false, cancelled: true }
       return { ok: false as const, outcome, result }
     }
     if (!pre.ok) {
@@ -62,7 +62,11 @@ function createInputPreparation(deps: CommandTransformDependencies) {
         success: false,
         message: pre.message ?? messageKey,
       }
-      const result: ToolResult = { ok: false, messageKey, message: pre.message }
+      const result: OperationResult = {
+        ok: false,
+        messageKey,
+        message: pre.message,
+      }
       return { ok: false as const, outcome, result }
     }
     const nextText = pre.text ?? text
@@ -79,13 +83,13 @@ function createInputPreparation(deps: CommandTransformDependencies) {
  * preparation.
  */
 export function createCommandTransformer(deps: CommandTransformDependencies) {
-  const invoke = createToolInvoker(deps)
+  const invoke = createOperationInvoker(deps)
   const prepare = createInputPreparation(deps)
   return async (
     command: CommandConfig,
     text: string,
     options: InvocationOptions = {}
-  ): Promise<ToolResult> => {
+  ): Promise<OperationResult> => {
     if (!command.isEnabled) return disabled
     const pre = await prepare(command, text, options)
     if (!pre.ok) return pre.result

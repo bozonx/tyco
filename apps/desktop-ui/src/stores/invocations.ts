@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-import type { CoreToolId } from '@tyco/shared'
+import type { CoreOperationId } from '@tyco/shared'
 
 import { useToastStore } from './toast'
 import { translate } from '../lib/i18n'
@@ -13,7 +13,7 @@ import type { InvocationOptions } from '../lib/invocation/invocation-types'
 import { translationMetaOf } from '../lib/translation/translation-meta'
 import { useIpcStore } from './ipc'
 import { MenuModals, useMenuModalsStore } from './menu-modals'
-import { useToolsStore } from './tools'
+import { useOperationsStore } from './operations'
 
 /**
  * What invocations run with, wherever they come from: a command of the library
@@ -23,11 +23,11 @@ import { useToolsStore } from './tools'
 export function useInvocationRunnerDependencies(): InvocationRunnerDependencies {
   const ipcStore = useIpcStore()
   const menuModalsStore = useMenuModalsStore()
-  const toolsStore = useToolsStore()
+  const operationsStore = useOperationsStore()
   const { toastKey, toastText } = useToastStore()
 
   return {
-    tools: toolsStore,
+    tools: operationsStore,
     showToast: (message, type) => {
       toastKey(message, type)
     },
@@ -58,18 +58,25 @@ export function useInvocationRunnerDependencies(): InvocationRunnerDependencies 
  * translation into the picked language, an AI task, a correction, an insertion
  */
 export const useInvocationsStore = defineStore('invocations', () => {
-  const toolsStore = useToolsStore()
+  const operationsStore = useOperationsStore()
   const runner = createInvocationRunner(useInvocationRunnerDependencies())
 
   /** Runs the tool on `text` and hands back its result to show */
   const call = (
-    toolId: CoreToolId,
+    operationId: CoreOperationId,
     text: string,
-    options: InvocationOptions & { toolConfig?: Record<string, unknown> } = {}
+    options: InvocationOptions & {
+      operationConfig?: Record<string, unknown>
+    } = {}
   ) => {
-    const { toolConfig, ...rest } = options
+    const { operationConfig, ...rest } = options
     return runner.transform(
-      builtinInvocation(toolId, toolsStore, translate, toolConfig),
+      builtinInvocation(
+        operationId,
+        operationsStore,
+        translate,
+        operationConfig
+      ),
       text,
       rest
     )

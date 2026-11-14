@@ -1,5 +1,5 @@
 import type { InputConfigItem } from './config.js'
-import type { ToolDefinition } from './tools.js'
+import type { OperationDefinition } from './operations.js'
 
 export const PLUGIN_API_VERSION = 2
 export type PluginCapability = 'editor' | 'browser' | 'notes'
@@ -69,16 +69,16 @@ export interface ToolbarItem extends Contribution {
 }
 /** Public registrations require stable IDs; host-built menu items may omit them. */
 export type ActionContribution =
-  | (ActionItem & { id: string; toolId?: never })
+  | (ActionItem & { id: string; operationId?: never })
   | (Omit<ActionItem, 'action'> & {
       id: string
-      toolId: string
+      operationId: string
       action?: never
     })
 export type EditContribution = EditItem & { id: string }
 export type ToolbarContribution =
-  | (ToolbarItem & { toolId?: never })
-  | (Omit<ToolbarItem, 'action'> & { toolId: string; action?: never })
+  | (ToolbarItem & { operationId?: never })
+  | (Omit<ToolbarItem, 'action'> & { operationId: string; action?: never })
 
 export interface PluginConfig {
   /** Version of persisted plugin settings, independent of the package version. */
@@ -115,7 +115,7 @@ export interface PluginContext {
   registerCaseItems(items: EditContribution[]): PluginDisposer
   registerFormatItems(items: EditContribution[]): PluginDisposer
   registerToolbarItems(items: ToolbarContribution[]): PluginDisposer
-  registerTools(items: ToolDefinition[]): PluginDisposer
+  registerOperations(items: OperationDefinition[]): PluginDisposer
   getEditorInputValue(): Promise<string>
   getEditorInputSelectedText(): Promise<string>
   getEditorInputSnapshot(): Promise<EditorInputSnapshot>

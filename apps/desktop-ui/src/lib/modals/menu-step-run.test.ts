@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { ToolResult } from '../tools/tool-types'
+import type { OperationResult } from '../operations/operation-types'
 import { MenuModals, createMenuModalsModel } from './menu-modals-model'
 import { createMenuStepRun, type MenuStepRunRequest } from './menu-step-run'
 
@@ -23,7 +23,7 @@ function setup() {
     saveSourceResult: vi.fn().mockResolvedValue(undefined),
     saveSourceFailure: vi.fn().mockResolvedValue(undefined),
     reportHistoryError: vi.fn(),
-    describeResult: (result: ToolResult) => `failed: ${result.message}`,
+    describeResult: (result: OperationResult) => `failed: ${result.message}`,
     reportError: vi.fn(),
   }
   return { menu, deps, run: createMenuStepRun(deps) }
@@ -73,7 +73,7 @@ describe('menu step run', () => {
 
   it('shows the pending screen while the tool runs and updates it', async () => {
     const { run, menu } = setup()
-    const answer = deferred<ToolResult>()
+    const answer = deferred<OperationResult>()
     const running = run(
       request({
         invoke: (_signal, updatePending) => {
@@ -92,7 +92,7 @@ describe('menu step run', () => {
 
   it('stops quietly once the user cancels the pending screen', async () => {
     const { deps, run, menu } = setup()
-    const answer = deferred<ToolResult>()
+    const answer = deferred<OperationResult>()
     const show = vi.fn()
     let signal: AbortSignal | undefined
     const running = run(
@@ -154,7 +154,7 @@ describe('menu step run', () => {
   it('keeps the result in the history when the step closed meanwhile', async () => {
     const { deps, run, menu } = setup()
     menu.nextModal(MenuModals.TRANSLATE, { text: 'source' })
-    const answer = deferred<ToolResult>()
+    const answer = deferred<OperationResult>()
     const show = vi.fn()
     const running = run(request({ show, invoke: () => answer.promise }))
     await vi.waitFor(() => expect(deps.saveSource).toHaveBeenCalled())
@@ -184,7 +184,7 @@ describe('menu step run', () => {
       executeBufferedIntent,
     })
     const show = vi.fn()
-    const answer = deferred<ToolResult>()
+    const answer = deferred<OperationResult>()
     const running = runWithBuffered(
       request({
         show,
@@ -214,7 +214,7 @@ describe('menu step run', () => {
       executeBufferedIntent,
     })
     const show = vi.fn()
-    const answer = deferred<ToolResult>()
+    const answer = deferred<OperationResult>()
     const running = runWithBuffered(
       request({
         text: 'source',

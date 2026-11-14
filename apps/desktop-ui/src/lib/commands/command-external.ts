@@ -1,5 +1,5 @@
 import type { CommandConfig } from '@tyco/shared'
-import type { ToolLookup } from '../tools/tool-types'
+import type { OperationLookup } from '../operations/operation-types'
 import { isCommandAvailable } from './command-runtime'
 
 /**
@@ -18,7 +18,7 @@ export function normalizeCommandName(name: string): string {
 /** Whether an external call may run the command */
 function canRunCommandExternally(
   command: CommandConfig,
-  tools: ToolLookup
+  tools: OperationLookup
 ): boolean {
   return (
     command.isEnabled &&
@@ -33,7 +33,7 @@ function canRunCommandExternally(
  */
 export function externalCommandNameConflicts(
   commands: readonly CommandConfig[],
-  tools: ToolLookup
+  tools: OperationLookup
 ): Map<string, CommandConfig[]> {
   const byName = new Map<string, CommandConfig[]>()
   for (const command of commands) {

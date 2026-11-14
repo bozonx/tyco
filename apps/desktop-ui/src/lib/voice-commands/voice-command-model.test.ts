@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createCommand } from '../commands/command-config'
-import { testTools, testTranslateTool } from '../tools/testing'
+import { testOperations, testTranslateOperation } from '../operations/testing'
 import { DictationError } from '../stt/dictation-error'
 import {
   createVoiceCommandModel,
@@ -8,7 +8,7 @@ import {
 } from './voice-command-model'
 
 function setup(overrides: Partial<VoiceCommandDependencies> = {}) {
-  const baseTools = testTools({}, [testTranslateTool()])
+  const baseTools = testOperations({}, [testTranslateOperation()])
   const scriptTool = baseTools.get('script')!
   const tools = {
     get: (id: string) =>
@@ -28,7 +28,7 @@ function setup(overrides: Partial<VoiceCommandDependencies> = {}) {
       ...createCommand('script', 'note'),
       isVoiceEnabled: true,
       phrases: ['save note'],
-      toolConfig: { command: 'echo {{TEXT}}' },
+      operationConfig: { command: 'echo {{TEXT}}' },
     },
     { ...createCommand('core.translate', 'translate'), isVoiceEnabled: true },
   ]
@@ -239,7 +239,7 @@ describe('voice command session', () => {
       finishDictation: vi.fn(async () => 'turn off kitchen lights'),
     })
     commands[0]!.phrases = ['turn off kitchen lights']
-    commands[0]!.toolConfig = { command: 'home-control kitchen off' }
+    commands[0]!.operationConfig = { command: 'home-control kitchen off' }
     await model.start()
     await model.finish('review')
     expect(model.inputText.value).toBe('')
@@ -261,7 +261,7 @@ describe('voice command session', () => {
     await model.finish()
     expect(model.inputIssue.value).toBe('missing-text')
     expect(deps.run).not.toHaveBeenCalled()
-    commands[0]!.toolConfig = { command: 'backup' }
+    commands[0]!.operationConfig = { command: 'backup' }
     model.inputText.value = 'actually cancel'
     expect(model.inputIssue.value).toBe('extra-text')
     await model.run()
@@ -616,7 +616,7 @@ it('passes selection context to deps.run and blocks commands requiring selection
     ...createCommand('script', 'with-sel'),
     isVoiceEnabled: true,
     phrases: ['summarize'],
-    toolConfig: { command: 'echo {{SELECTION}} - {{TEXT}}' },
+    operationConfig: { command: 'echo {{SELECTION}} - {{TEXT}}' },
   }
   const { model, deps } = setup({
     commands: () => [selectionCommand],

@@ -4,14 +4,17 @@ use crate::{
     services::external::{
         access::AccessDecision,
         api::{self, JobCompletion},
-        command_library::{self, ToolCatalogEntry, ToolCatalogState},
+        command_library::{self, OperationCatalogEntry, OperationCatalogState},
     },
 };
 use tauri::{AppHandle, State};
 use tyco_activation_protocol::Job as ExternalJob;
 
 #[tauri::command]
-pub fn set_tool_catalog(state: State<'_, ToolCatalogState>, tools: Vec<ToolCatalogEntry>) {
+pub fn set_operation_catalog(
+    state: State<'_, OperationCatalogState>,
+    tools: Vec<OperationCatalogEntry>,
+) {
     state.set(command_library::catalog_from(tools));
 }
 

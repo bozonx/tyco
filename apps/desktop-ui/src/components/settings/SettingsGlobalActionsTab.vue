@@ -368,7 +368,7 @@ const {
   availableActions,
   optionId,
   commands,
-  toolsStore,
+  operationsStore,
 } = useMainActionChoices(customSlotsConfigs)
 
 const customActionOptions = computed(() => [
@@ -404,7 +404,7 @@ function slotBehavior(index: number) {
   return resolveActionSelectionBehavior(
     slot?.action,
     commands.value,
-    toolsStore
+    operationsStore
   )
 }
 
@@ -439,12 +439,12 @@ function updateCustomAction(
   const behavior = resolveActionSelectionBehavior(
     newAction,
     commands.value,
-    toolsStore
+    operationsStore
   )
   const previousBehavior = resolveActionSelectionBehavior(
     current.action,
     commands.value,
-    toolsStore
+    operationsStore
   )
   const takesSelection =
     behavior.forcedValue !== null

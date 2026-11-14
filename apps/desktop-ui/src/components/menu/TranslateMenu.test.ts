@@ -91,7 +91,7 @@ describe('TranslateMenu', () => {
       'core.translate',
       'Hello world',
       expect.objectContaining({
-        toolConfig: { language: 'de-DE', sourceLanguage: undefined },
+        operationConfig: { language: 'de-DE', sourceLanguage: undefined },
       })
     )
   })
@@ -110,7 +110,7 @@ describe('TranslateMenu', () => {
       'core.translate',
       'Hello world',
       expect.objectContaining({
-        toolConfig: expect.objectContaining({ language: 'de-DE' }),
+        operationConfig: expect.objectContaining({ language: 'de-DE' }),
       })
     )
     await vi.waitFor(() =>
@@ -152,7 +152,7 @@ describe('TranslateMenu', () => {
     await input.trigger('keydown', { key: 'Enter' })
 
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
-    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it')
+    expect(transform.mock.calls[0]![2].operationConfig.language).toBe('it')
     await vi.waitFor(() =>
       expect(desktop.backend.callsOf('patch_session_state')).toEqual([
         { patch: { recentTranslateLanguages: ['it'] } },
@@ -177,7 +177,7 @@ describe('TranslateMenu', () => {
       'core.translate',
       'Hello world',
       expect.objectContaining({
-        toolConfig: { language: 'it', sourceLanguage: 'pl' },
+        operationConfig: { language: 'it', sourceLanguage: 'pl' },
       })
     )
   })
@@ -195,7 +195,7 @@ describe('TranslateMenu', () => {
     await input.trigger('keydown', { key: 'ArrowDown' })
     await input.trigger('keydown', { key: 'Enter' })
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
-    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it-IT')
+    expect(transform.mock.calls[0]![2].operationConfig.language).toBe('it-IT')
   })
 
   it('finds a language by its English name', async () => {
@@ -208,7 +208,7 @@ describe('TranslateMenu', () => {
     await input.trigger('keydown', { key: 'Enter' })
 
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
-    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('de')
+    expect(transform.mock.calls[0]![2].operationConfig.language).toBe('de')
   })
 
   it('translates the highlighted language by clicking the Enter hint', async () => {
@@ -222,7 +222,7 @@ describe('TranslateMenu', () => {
     expect(button.attributes('disabled')).toBeUndefined()
     await button.trigger('click')
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
-    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it-IT')
+    expect(transform.mock.calls[0]![2].operationConfig.language).toBe('it-IT')
     wrapper.unmount()
   })
   it('drops late results and stages after cancellation without clearing a new operation', async () => {

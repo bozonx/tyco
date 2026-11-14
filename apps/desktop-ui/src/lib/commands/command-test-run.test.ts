@@ -2,18 +2,18 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { CommandConfig, ScriptExecutionResult } from '@tyco/shared'
 
-import { testTools } from '../tools/testing'
+import { testOperations } from '../operations/testing'
 import { createCommand } from './command-config'
 import { canTestCommand, runCommandTest } from './command-test-run'
 
 const script = (
-  toolConfig: Record<string, unknown>,
+  operationConfig: Record<string, unknown>,
   extra: Partial<CommandConfig> = {}
 ): CommandConfig => ({
   ...createCommand('script', 'sc1'),
   name: 'Echo',
   ...extra,
-  toolConfig: { command: 'echo {{TEXT}}', ...toolConfig },
+  operationConfig: { command: 'echo {{TEXT}}', ...operationConfig },
 })
 
 const finished: ScriptExecutionResult = {
@@ -43,7 +43,7 @@ const testScript = async (command: CommandConfig, d = deps(), text = 'hi') => {
   return runCommandTest(
     command,
     text,
-    testTools(),
+    testOperations(),
     d,
     new AbortController().signal
   )
@@ -88,7 +88,7 @@ describe('runCommandTest', () => {
       const result = await runCommandTest(
         script({}),
         'hi',
-        testTools(),
+        testOperations(),
         d,
         new AbortController().signal
       )
@@ -109,7 +109,7 @@ describe('runCommandTest', () => {
     const result = await runCommandTest(
       script({}),
       'hi',
-      testTools(),
+      testOperations(),
       d,
       new AbortController().signal
     )
@@ -130,7 +130,7 @@ describe('runCommandTest', () => {
     const result = await runCommandTest(
       command,
       'hi',
-      testTools(),
+      testOperations(),
       {
         ...deps(undefined, undefined, vi.fn().mockResolvedValue(undefined)),
         transformTextWithLlm,
@@ -146,7 +146,7 @@ describe('runCommandTest', () => {
     const result = await runCommandTest(
       script({ command: ' ' }),
       '',
-      testTools(),
+      testOperations(),
       d,
       new AbortController().signal
     )
@@ -169,7 +169,7 @@ describe('runCommandTest', () => {
     const result = await runCommandTest(
       script({}),
       '',
-      testTools(),
+      testOperations(),
       d,
       controller.signal
     )
@@ -190,12 +190,12 @@ describe('runCommandTest', () => {
     const webhook: CommandConfig = {
       ...createCommand('webhook', 'wh1'),
       name: 'Hook',
-      toolConfig: { url: 'https://x.test/?q={{TEXT}}' },
+      operationConfig: { url: 'https://x.test/?q={{TEXT}}' },
     }
     const result = await runCommandTest(
       webhook,
       'hi',
-      testTools({ executeWebhook }),
+      testOperations({ executeWebhook }),
       deps(),
       new AbortController().signal
     )
@@ -212,7 +212,7 @@ describe('runCommandTest', () => {
     const webhook: CommandConfig = {
       ...createCommand('webhook', 'wh1'),
       name: 'Hook',
-      toolConfig: { url: 'https://x.test/?q={{TEXT}}' },
+      operationConfig: { url: 'https://x.test/?q={{TEXT}}' },
       isLlmPreTransformEnabled: true,
       llmPreTransformPrompt: 'Uppercase',
     }
@@ -220,7 +220,7 @@ describe('runCommandTest', () => {
     const result = await runCommandTest(
       webhook,
       'hi',
-      testTools({ executeWebhook }),
+      testOperations({ executeWebhook }),
       { ...deps(), transformTextWithLlm },
       new AbortController().signal
     )
@@ -241,14 +241,14 @@ describe('runCommandTest', () => {
     const webhook: CommandConfig = {
       ...createCommand('webhook', 'wh1'),
       name: 'Hook',
-      toolConfig: { url: 'https://x.test/?q={{TEXT}}' },
+      operationConfig: { url: 'https://x.test/?q={{TEXT}}' },
       isLlmPreTransformEnabled: true,
       llmPreTransformPrompt: '   ',
     }
     const result = await runCommandTest(
       webhook,
       'hi',
-      testTools(),
+      testOperations(),
       deps(),
       new AbortController().signal
     )
@@ -262,13 +262,13 @@ describe('runCommandTest', () => {
     const executeWebhook = vi.fn().mockRejectedValue(new Error('HTTP 500'))
     const webhook: CommandConfig = {
       ...createCommand('webhook', 'wh1'),
-      toolConfig: { url: 'https://x.test' },
+      operationConfig: { url: 'https://x.test' },
     }
     expect(
       await runCommandTest(
         webhook,
         '',
-        testTools({ executeWebhook }),
+        testOperations({ executeWebhook }),
         deps(),
         new AbortController().signal
       )

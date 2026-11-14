@@ -13,10 +13,10 @@ export function createCommandEditorModel(deps: {
   function updateDescription(value: string) {
     update({ description: value.trim() ? value : '' })
   }
-  function updateToolConfig(field: string, value: unknown) {
-    const { [field]: _previous, ...rest } = deps.getCommand().toolConfig
+  function updateOperationConfig(field: string, value: unknown) {
+    const { [field]: _previous, ...rest } = deps.getCommand().operationConfig
     update({
-      toolConfig: value === undefined ? rest : { ...rest, [field]: value },
+      operationConfig: value === undefined ? rest : { ...rest, [field]: value },
     })
   }
   /** An empty or invalid text gives the default limit */
@@ -31,7 +31,7 @@ export function createCommandEditorModel(deps: {
   return {
     update,
     updateDescription,
-    updateToolConfig,
+    updateOperationConfig,
     updateExternalTimeout,
     updateOutputAction,
   }

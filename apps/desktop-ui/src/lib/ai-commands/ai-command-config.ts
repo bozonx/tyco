@@ -1,18 +1,18 @@
 import {
   AI_COMMAND_MAX_STEPS_DEFAULT,
   AI_COMMAND_MAX_STEPS_MAX,
-  type AiCommandToolConfig,
+  type AiCommandOperationConfig,
   type CommandConfig,
-  type CoreToolId,
+  type CoreOperationId,
 } from '@tyco/shared'
 
 import { stringOr } from '../commands/command-config'
 
 /** The tool of AI commands */
-export const AI_COMMAND_TOOL_ID = 'core.aiTask' satisfies CoreToolId
+export const AI_COMMAND_OPERATION_ID = 'core.aiTask' satisfies CoreOperationId
 
-export const isAiCommand = (command: Pick<CommandConfig, 'toolId'>) =>
-  command.toolId === AI_COMMAND_TOOL_ID
+export const isAiCommand = (command: Pick<CommandConfig, 'operationId'>) =>
+  command.operationId === AI_COMMAND_OPERATION_ID
 
 /** The step limit as a whole number within range, or the default */
 export function maxStepsOf(value: unknown): number {
@@ -24,10 +24,10 @@ export function maxStepsOf(value: unknown): number {
     : AI_COMMAND_MAX_STEPS_DEFAULT
 }
 
-/** The settings of an AI command as read from its `toolConfig` */
-export function aiCommandToolConfigOf(
+/** The settings of an AI command as read from its `operationConfig` */
+export function aiCommandOperationConfigOf(
   config: Record<string, unknown>
-): AiCommandToolConfig {
+): AiCommandOperationConfig {
   const ids = Array.isArray(config.allowedCommandIds)
     ? config.allowedCommandIds.filter(
         (id): id is string => typeof id === 'string' && id.trim() !== ''

@@ -54,13 +54,13 @@ pub fn execute_saved_script(
             run.command_id
         )));
     }
-    let tool_config = &command.tool_config;
+    let operation_config = &command.operation_config;
     execute_script(
         runs,
         &ScriptRequest {
             name: &command.label,
-            command: &tool_config.command,
-            working_dir: Some(tool_config.working_directory.as_str())
+            command: &operation_config.command,
+            working_dir: Some(operation_config.working_directory.as_str())
                 .filter(|dir| !dir.trim().is_empty()),
             text: run.text,
             selection_text: run.selection_text,
@@ -80,9 +80,9 @@ mod tests {
     #[test]
     fn an_unknown_disabled_or_non_script_command_is_refused_before_running() {
         let config = serde_json::json!({"commands": [
-            {"id": "hook", "name": "Hook", "toolId": "webhook", "toolConfig": {"url": "x"}, "isEnabled": true},
-            {"id": "off", "name": "Off", "toolId": "script", "toolConfig": {"command": "true"}, "isEnabled": false},
-            {"id": "elsewhere", "name": "Elsewhere", "toolId": "script", "toolConfig": {"command": "true"}, "isEnabled": true,
+            {"id": "hook", "name": "Hook", "operationId": "webhook", "operationConfig": {"url": "x"}, "isEnabled": true},
+            {"id": "off", "name": "Off", "operationId": "script", "operationConfig": {"command": "true"}, "isEnabled": false},
+            {"id": "elsewhere", "name": "Elsewhere", "operationId": "script", "operationConfig": {"command": "true"}, "isEnabled": true,
              "platforms": [if cfg!(target_os = "windows") { "linux" } else { "windows" }]},
         ]});
         for command_id in ["missing", "hook", "off", "elsewhere"] {

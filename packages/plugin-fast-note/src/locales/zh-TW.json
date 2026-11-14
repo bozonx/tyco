@@ -27,7 +27,7 @@
   "contentTemplate": "內容範本",
   "contentTemplateInfo": "支援日期權杖、{'{'}title{'}'} 以及必要的 {'{'}content{'}'}。若要輸入大括號，請寫 {'{'}{'{'} 或 {'}'}{'}'}。如果標題使用 {'{'}title{'}'}，第一行不會在其下方重複。附加模式會在檔案不存在時建立檔案。",
   "clearInputAfterSave": "儲存後清除輸入欄位",
-  "toolLabel": "撰寫筆記",
+  "operationLabel": "撰寫筆記",
   "toolDescription": "在筆記資料夾中將文字儲存為新筆記或附加到現有筆記中",
   "noNotesPath": "快速筆記外掛程式設定中未設定筆記資料夾",
   "noteSaved": "筆記已儲存",

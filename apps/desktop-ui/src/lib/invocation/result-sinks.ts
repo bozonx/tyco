@@ -12,13 +12,13 @@ import type {
  */
 export function resolveSink(
   invocation: Pick<Invocation, 'outputAction'> &
-    Partial<Pick<Invocation, 'toolId'>>,
+    Partial<Pick<Invocation, 'operationId'>>,
   options: Pick<InvocationOptions, 'output' | 'source'> = {}
 ): ResultSink {
   if (options.output) return options.output
   const source = options.source ?? 'menu'
   if (source === 'external') return 'return'
-  if (source === 'voice' && invocation.toolId === 'core.translate')
+  if (source === 'voice' && invocation.operationId === 'core.translate')
     return 'showMenu'
   if (source === 'toolbar' || !invocation.outputAction) return 'showMenu'
   return invocation.outputAction

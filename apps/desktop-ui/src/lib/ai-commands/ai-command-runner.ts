@@ -1,8 +1,8 @@
 import { dynamicTool, jsonSchema, type ToolSet } from '@bozonx/ai-kit'
 import { isRecord } from '@tyco/shared/value-guards'
-import type { AiCommandToolConfig } from '@tyco/shared'
+import type { AiCommandOperationConfig } from '@tyco/shared'
 
-import { toolResultForModel } from '../chat-tools/registered-tool-adapter'
+import { toolResultForModel } from '../chat-tools/registered-operation-adapter'
 import type {
   LlmRunName,
   LlmStreamEvent,
@@ -10,7 +10,7 @@ import type {
 } from '../llm/llm-client'
 import { cleanLlmOutput } from '../llm/llm-output'
 import type { LlmPrompt } from '../llm/llm-prompt'
-import type { JsonSchema, ToolResult } from '../tools/tool-types'
+import type { JsonSchema, OperationResult } from '../operations/operation-types'
 
 /** A command the agent may run, as a tool of the model */
 export interface AiCommandAgentTool {
@@ -23,7 +23,7 @@ export interface AiCommandAgentTool {
   execute: (
     input: Record<string, unknown>,
     signal: AbortSignal
-  ) => Promise<ToolResult>
+  ) => Promise<OperationResult>
 }
 
 export interface AiCommandRunnerDependencies {
@@ -72,7 +72,7 @@ const agentToolName = (index: number, commandId: string): string =>
  */
 export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
   return async (
-    config: AiCommandToolConfig,
+    config: AiCommandOperationConfig,
     text: string,
     tools: readonly AiCommandAgentTool[],
     options: AiCommandRunOptions

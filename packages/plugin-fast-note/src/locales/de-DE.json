@@ -27,7 +27,7 @@
   "contentTemplate": "Inhaltssvorlage",
   "contentTemplateInfo": "Unterstützt Datums-Token, {'{'}title{'}'} und das erforderliche {'{'}content{'}'}. Schreiben Sie {'{'}{'{'} oder {'}'}{'}'} für eine geschweifte Klammer. Verwendet eine Überschrift {'{'}title{'}'}, wird die erste Zeile darunter nicht wiederholt. Der Anhangmodus erstellt die Datei, falls nicht vorhanden.",
   "clearInputAfterSave": "Eingabefeld nach dem Speichern leeren",
-  "toolLabel": "Notiz schreiben",
+  "operationLabel": "Notiz schreiben",
   "toolDescription": "Speichert den Text als neue Notiz oder hängt ihn an eine vorhandene an, in Ihrem Notizordner",
   "noNotesPath": "Notizordner ist in den Einstellungen des Schnellnotiz-Plugins nicht konfiguriert",
   "noteSaved": "Notiz gespeichert",

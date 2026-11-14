@@ -229,8 +229,8 @@ import {
 import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
+import { useOperationsStore } from '../stores/operations'
 import { useQuickDismissStore } from '../stores/quick-dismiss'
-import { useToolsStore } from '../stores/tools'
 import { useVoiceCommandsStore } from '../stores/voice-commands'
 import type { CommandConfig } from '@tyco/shared'
 
@@ -250,7 +250,7 @@ const { toastKey } = useToast()
 const desktopStore = useDesktopStore()
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
-const tools = useToolsStore()
+const tools = useOperationsStore()
 const voice = useVoiceCommandsStore()
 const releaseHold = useQuickDismissStore().hold()
 const { handleEsc, handleCloseAll } = useOverlayNav(() => ({ escMode: 'auto' }))

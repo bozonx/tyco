@@ -191,7 +191,7 @@
     },
     "commands": {
       "group": "Comandos",
-      "groupHint": "Permitir que o modelo execute comandos personalizados e ferramentas de plug-in selecionados. \"Perguntar\" pede confirmação antes de cada chamada.",
+      "groupHint": "Permitir que o modelo execute os comandos selecionados. Só podem ser escolhidos comandos com uma descrição para a IA. \"Perguntar\" pede confirmação antes de cada chamada.",
       "needsDescription": "Requer uma descrição para a IA nas configurações do comando",
       "noCommands": "Nenhum comando personalizado configurado ainda.",
       "noCommandsHint": "Crie comandos primeiro em Configurações → Comandos.",
@@ -228,7 +228,7 @@
     "errorNoName": "Digite um nome.",
     "errorNoPrompt": "Escreva a instrução para o LLM.",
     "errorNoUrl": "Digite a URL.",
-    "errorUnknownTool": "Ferramenta desconhecida.",
+    "errorUnknownType": "Tipo de comando desconhecido.",
     "external": "Disponível de fora",
     "externalDescription": "O que os aplicativos locais da sua sessão podem fazer via tyco-ctl e D-Bus. O acesso a cada comando é ativado nas configurações avançadas dele.",
     "externalInfo": "Aplicativos e scripts locais podem executar um comando permitido com tyco-ctl run <ID> ou tyco-ctl run --name <nome>. O resultado é devolvido a quem chamou. --interactive permite a interface de entrada de texto; --selection --replace solicita explicitamente a substituição da seleção.",
@@ -238,8 +238,8 @@
     "fieldOff": "Não",
     "fieldOn": "Sim",
     "fromPluginSettings": "Das configurações do plugin: {value}",
-    "hint": "Comandos são ações personalizáveis baseadas em ferramentas: prompts de LLM, scripts de shell, webhooks HTTP ou tradução. Eles processam texto selecionado ou executam sem entrada, e seu resultado pode ser inserido na janela ativa, copiado para a área de transferência ou exibido. São executados a partir de comandos rápidos (inicializador), do menu de ações principais ou via tyco-ctl.",
-    "inputUnsupported": "A ferramenta dele precisa de uma entrada estruturada que não pode ser obtida de um texto",
+    "hint": "Comandos são ações personalizáveis de vários tipos: prompts de LLM, scripts de shell, webhooks HTTP ou tradução. Eles processam texto selecionado ou executam sem entrada, e seu resultado pode ser inserido na janela ativa, copiado para a área de transferência ou exibido. São executados a partir de comandos rápidos (inicializador), do menu de ações principais ou via tyco-ctl.",
+    "inputUnsupported": "O tipo dele precisa de uma entrada estruturada que não pode ser obtida de um texto",
     "languageLabel": "Traduzir para",
     "languagePlaceholder": "Escolha um idioma",
     "launcherResult": "Ação",
@@ -265,12 +265,12 @@
     "testRunning": "Executando…",
     "testStop": "Parar",
     "testTextPlaceholder": "Texto para testar",
-    "toolInfo": "Ferramenta: {tool}",
-    "toolMissing": "A ferramenta dele não está disponível: o plugin está desativado ou ausente",
+    "typeInfo": "Tipo: {type}",
+    "typeMissing": "O tipo dele não está disponível: o plugin está desativado ou ausente",
     "preTransformFailed": "Não foi possível preparar o texto para o comando",
     "unavailableInMenu": "{name} (indisponível no menu)",
     "undo": "Desfazer",
-    "unknownTool": "A ferramenta “{tool}” não está disponível nesta versão do Tyco.",
+    "unknownType": "O tipo de comando “{type}” não está disponível nesta versão do Tyco.",
     "unnamed": "Comando sem título",
     "warningExternalNameTwins": "Outros comandos têm o mesmo nome: {names}. Uma chamada por esse nome é recusada por ser ambígua; use o ID.",
     "llmPreTransform": "Pré-transformação com LLM",
@@ -302,7 +302,7 @@
     "aiToolsEnabledLabel": "Permitir ferramentas",
     "aiToolsEnabledInfo": "Quando ativado, a IA pode chamar outros comandos permitidos.",
     "createModalTitle": "Novo comando",
-    "toolTypeLabel": "Tipo de comando"
+    "typeLabel": "Tipo de comando"
   },
   "common": {
     "add": "Adicionar",
@@ -1314,7 +1314,7 @@
     "commandDisabled": "O comando está desativado",
     "commandFailed": "O comando falhou",
     "commandInputInvalid": "A entrada do comando não é válida",
-    "commandInputUnsupported": "Este comando não aceita texto: a ferramenta dele precisa de uma entrada estruturada",
+    "commandInputUnsupported": "Este comando não aceita texto: o tipo dele precisa de uma entrada estruturada",
     "commandUnavailable": "O comando está indisponível",
     "desktopCommandFailed": "A ação falhou",
     "dictationClosed": "O serviço de reconhecimento de voz encerrou a sessão durante a gravação",
@@ -1362,7 +1362,7 @@
     "webhookKeyNotSet": "A chave deste webhook não está definida neste dispositivo; digite-a nas configurações do comando",
     "webhookSuccess": "Webhook enviado com sucesso"
   },
-  "tools": {
+  "operations": {
     "aiTask": "Comando de IA",
     "aiTaskDescription": "Processa o texto conforme sua instrução em uma única etapa e pode executar outros comandos",
     "askInChat": "Perguntar no chat",

@@ -318,10 +318,10 @@ const ENTITY_COLLECTIONS: [&str; 8] = [
     "/llm/models",
 ];
 
-fn tool_config_schema(tool_id: &Value) -> Option<&'static Value> {
-    match tool_id.as_str() {
-        Some("script") => Some(&SCHEMA["$defs"]["scriptToolConfig"]),
-        Some("webhook") => Some(&SCHEMA["$defs"]["webhookToolConfig"]),
+fn operation_config_schema(operation_id: &Value) -> Option<&'static Value> {
+    match operation_id.as_str() {
+        Some("script") => Some(&SCHEMA["$defs"]["scriptOperationConfig"]),
+        Some("webhook") => Some(&SCHEMA["$defs"]["webhookOperationConfig"]),
         _ => None,
     }
 }
@@ -451,15 +451,21 @@ pub fn validate_user_config(config: &Value) -> Result<(), AppError> {
         return Err(invalid_field("configVersion"));
     }
     for command in config["commands"].as_array().into_iter().flatten() {
-        if let Some(schema) = tool_config_schema(&command["toolId"]) {
-            validate(&command["toolConfig"], schema, "commands.toolConfig")?;
+        if let Some(schema) = operation_config_schema(&command["operationId"]) {
+            validate(
+                &command["operationConfig"],
+                schema,
+                "commands.operationConfig",
+            )?;
         }
-        if command["toolId"] == "webhook" && command["toolConfig"]["isAuthEnabled"] == true {
-            let id = command["toolConfig"]["authSecretId"]
+        if command["operationId"] == "webhook"
+            && command["operationConfig"]["isAuthEnabled"] == true
+        {
+            let id = command["operationConfig"]["authSecretId"]
                 .as_str()
-                .ok_or_else(|| invalid_field("commands.toolConfig.authSecretId"))?;
+                .ok_or_else(|| invalid_field("commands.operationConfig.authSecretId"))?;
             if !crate::services::secrets::is_valid_id(id) {
-                return Err(invalid_field("commands.toolConfig.authSecretId"));
+                return Err(invalid_field("commands.operationConfig.authSecretId"));
             }
         }
     }
@@ -536,7 +542,7 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
     *config = repair(config, &SCHEMA, defaults);
     config["configVersion"] = json!(crate::services::settings::version::CONFIG_VERSION);
     for command in config["commands"].as_array_mut().into_iter().flatten() {
-        command["toolId"] = json!(command["toolId"].as_str().unwrap_or_default().trim());
+        command["operationId"] = json!(command["operationId"].as_str().unwrap_or_default().trim());
     }
     let builtin_ids = BUILTIN_LLM_PROVIDERS;
     let mut providers = config["llm"]["providers"]
@@ -620,8 +626,8 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
     }
     retain_user_variables(config);
     for command in config["commands"].as_array_mut().into_iter().flatten() {
-        if let Some(schema) = tool_config_schema(&command["toolId"]) {
-            command["toolConfig"] = repair(&command["toolConfig"], schema, defaults);
+        if let Some(schema) = operation_config_schema(&command["operationId"]) {
+            command["operationConfig"] = repair(&command["operationConfig"], schema, defaults);
         }
     }
     let transformation_ids: HashSet<String> = ids(config, "/transformations/items")
@@ -1146,7 +1152,7 @@ mod tests {
     #[test]
     fn voice_permissions_are_opt_in() {
         let mut config = serde_json::json!({
-            "commands": [{ "id": "note", "toolId": "script", "phrases": ["save note"] }]
+            "commands": [{ "id": "note", "operationId": "script", "phrases": ["save note"] }]
         });
         normalize_user_config(&mut config);
         assert_eq!(config["commands"][0]["isVoiceEnabled"], false);

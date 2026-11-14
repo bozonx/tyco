@@ -13,7 +13,7 @@ describe('command editor model', () => {
     let command = {
       ...createCommand('script', 'test'),
       description: 'Previous',
-      toolConfig: { command: 'echo test' },
+      operationConfig: { command: 'echo test' },
     }
     const model = createCommandEditorModel({
       getCommand: () => command,
@@ -31,7 +31,7 @@ describe('command editor model', () => {
     expect(command.externalTimeoutSec).toBe(EXTERNAL_TIMEOUT_DEFAULT_SEC)
     model.updateExternalTimeout('10abc')
     expect(command.externalTimeoutSec).toBe(EXTERNAL_TIMEOUT_DEFAULT_SEC)
-    expect(command.toolConfig.command).toBe('echo test')
+    expect(command.operationConfig.command).toBe('echo test')
   })
   it('sets the output action of quick commands', () => {
     let command = createCommand('script', 'test')

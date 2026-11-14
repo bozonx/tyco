@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { CommandConfig } from '@tyco/shared'
 
 import { createCommand } from '../commands/command-config'
-import { testTools } from '../tools/testing'
+import { testOperations } from '../operations/testing'
 import { resolveActionSelectionBehavior } from './action-selection-behavior'
 
 describe('resolveActionSelectionBehavior', () => {
@@ -120,21 +120,21 @@ describe('resolveActionSelectionBehavior', () => {
       {
         ...createCommand('script', 'cmd-selection'),
         name: 'Selection Cmd',
-        toolConfig: { command: 'echo {{SELECTION}}' },
+        operationConfig: { command: 'echo {{SELECTION}}' },
       },
       {
         ...createCommand('script', 'cmd-text'),
         name: 'Text Cmd',
-        toolConfig: { command: 'echo {{TEXT}}' },
+        operationConfig: { command: 'echo {{TEXT}}' },
       },
       {
         ...createCommand('script', 'cmd-none'),
         name: 'No Text Cmd',
-        toolConfig: { command: 'date' },
+        operationConfig: { command: 'date' },
       },
     ]
 
-    const tools = testTools()
+    const tools = testOperations()
 
     expect(
       resolveActionSelectionBehavior(

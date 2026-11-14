@@ -268,8 +268,8 @@ import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import { useOperationsStore } from '../../stores/operations'
 import { useSecretsStore } from '../../stores/secrets'
-import { useToolsStore } from '../../stores/tools'
 import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
@@ -302,7 +302,7 @@ const desktopStore = useDesktopStore()
 const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
 const llmStore = useLlmStore()
-const toolsStore = useToolsStore()
+const operationsStore = useOperationsStore()
 const aiProfilesStore = useAiProfilesStore()
 const secretsStore = useSecretsStore()
 const editorNavigation = useEditorNavigation()
@@ -367,8 +367,8 @@ const runtime = createQuickAiRequestRuntime({
   readSoul: (id) => aiProfilesStore.readSoul(id),
   readMemory: (id, file) => aiProfilesStore.readMemory(id, file),
   listMemoryTopics: (id) => aiProfilesStore.listMemoryTopics(id),
-  tools: toolsStore,
-  environment: toolsStore.environment,
+  tools: operationsStore,
+  environment: operationsStore.environment,
   saveOutput: (text) => void historyStore.saveOutput(text, 'quickAiRequest'),
   toEditor: (text, sourceText) => editorNavigation.toEditor(text, sourceText),
   closeOverlay: () => menuModalsStore.closeAll(),

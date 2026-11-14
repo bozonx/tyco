@@ -191,7 +191,7 @@
     },
     "commands": {
       "group": "Parancsok",
-      "groupHint": "A modell futtathatja a kiválasztott egyéni parancsokat és beépülő modulok eszközeit. A „Kérdezés” minden hívás előtt megerősítést kér.",
+      "groupHint": "A modell futtathatja a kiválasztott parancsokat. Csak MI-nek szóló leírással rendelkező parancsok választhatók. A „Kérdezés” minden hívás előtt megerősítést kér.",
       "needsDescription": "Leírás szükséges az AI számára a parancs beállításaiban",
       "noCommands": "Még nincsenek egyéni parancsok konfigurálva.",
       "noCommandsHint": "Először hozzon létre parancsokat a Beállítások → Parancsok menüben.",
@@ -228,7 +228,7 @@
     "errorNoName": "Adjon meg egy nevet.",
     "errorNoPrompt": "Írja meg az utasítást az LLM számára.",
     "errorNoUrl": "Adja meg az URL-t.",
-    "errorUnknownTool": "Ismeretlen eszköz.",
+    "errorUnknownType": "Ismeretlen parancstípus.",
     "external": "Kívülről elérhető",
     "externalDescription": "Mit tehetnek a munkamenet helyi alkalmazásai a tyco-ctl és a D-Bus segítségével. Az egyes parancsokhoz való hozzáférés a parancs speciális beállításaiban kapcsolható be.",
     "externalInfo": "A helyi alkalmazások és szkriptek a tyco-ctl run <ID> vagy a tyco-ctl run --name <név> paranccsal futtathatnak egy engedélyezett parancsot. Az eredmény a hívóhoz kerül vissza. A --interactive engedélyezi a szövegbeviteli felületet; a --selection --replace kifejezetten a kijelölés cseréjét kéri.",
@@ -238,8 +238,8 @@
     "fieldOff": "Nem",
     "fieldOn": "Igen",
     "fromPluginSettings": "A bővítmény beállításaiból: {value}",
-    "hint": "A parancsok eszközökön alapuló, testreszabható műveletek: LLM-promptok, shell parancsfájlok, HTTP webhookok vagy fordítás. Feldolgozzák a kijelölt szöveget vagy bemenet nélkül futnak, az eredmény pedig beilleszthető az aktív ablakba, a vágólapra másolható vagy megjeleníthető. Futtathatók a gyorsparancsokból (indítóból), a fő műveletek menüjéből vagy a tyco-ctl segítségével.",
-    "inputUnsupported": "Az eszköze strukturált bemenetet igényel, amely szövegből nem nyerhető ki",
+    "hint": "A parancsok különféle típusú, testreszabható műveletek: LLM-promptok, shell parancsfájlok, HTTP webhookok vagy fordítás. Feldolgozzák a kijelölt szöveget vagy bemenet nélkül futnak, az eredmény pedig beilleszthető az aktív ablakba, a vágólapra másolható vagy megjeleníthető. Futtathatók a gyorsparancsokból (indítóból), a fő műveletek menüjéből vagy a tyco-ctl segítségével.",
+    "inputUnsupported": "A típusa strukturált bemenetet igényel, amely szövegből nem nyerhető ki",
     "languageLabel": "Fordítás erre:",
     "languagePlaceholder": "Válasszon nyelvet",
     "launcherResult": "Művelet",
@@ -265,12 +265,12 @@
     "testRunning": "Fut…",
     "testStop": "Leállítás",
     "testTextPlaceholder": "Tesztszöveg",
-    "toolInfo": "Eszköz: {tool}",
-    "toolMissing": "Az eszköze nem érhető el: a bővítmény ki van kapcsolva vagy hiányzik",
+    "typeInfo": "Típus: {type}",
+    "typeMissing": "A típusa nem érhető el: a bővítmény ki van kapcsolva vagy hiányzik",
     "preTransformFailed": "Nem sikerült előkészíteni a szöveget a parancshoz",
     "unavailableInMenu": "{name} (a menüben nem érhető el)",
     "undo": "Visszavonás",
-    "unknownTool": "A(z) „{tool}” eszköz nem érhető el a Tyco ezen verziójában.",
+    "unknownType": "A(z) „{type}” parancstípus nem érhető el a Tyco ezen verziójában.",
     "unnamed": "Névtelen parancs",
     "warningExternalNameTwins": "Más parancsoknak is ez a neve: {names}. Az ezzel a névvel történő hívás kétértelműként elutasításra kerül; használja az azonosítót.",
     "llmPreTransform": "Előzetes átalakítás LLM-mel",
@@ -302,7 +302,7 @@
     "aiToolsEnabledLabel": "Eszközök engedélyezése",
     "aiToolsEnabledInfo": "Ha be van kapcsolva, az MI meghívhat más engedélyezett parancsokat.",
     "createModalTitle": "Új parancs",
-    "toolTypeLabel": "Parancstípus"
+    "typeLabel": "Parancstípus"
   },
   "common": {
     "add": "Hozzáadás",
@@ -1311,7 +1311,7 @@
     "commandDisabled": "A parancs ki van kapcsolva",
     "commandFailed": "A parancs sikertelen",
     "commandInputInvalid": "A parancs bemenete érvénytelen",
-    "commandInputUnsupported": "Ez a parancs nem fogad szöveget: az eszköze strukturált bemenetet igényel",
+    "commandInputUnsupported": "Ez a parancs nem fogad szöveget: a típusa strukturált bemenetet igényel",
     "commandUnavailable": "A parancs nem érhető el",
     "desktopCommandFailed": "A művelet sikertelen",
     "dictationClosed": "A beszédfelismerő szolgáltatás felvétel közben bezárta a munkamenetet",
@@ -1359,7 +1359,7 @@
     "webhookKeyNotSet": "Ennek a webhooknak a kulcsa nincs beállítva ezen az eszközön; adja meg a parancs beállításaiban",
     "webhookSuccess": "A webhook sikeresen elküldve"
   },
-  "tools": {
+  "operations": {
     "aiTask": "MI-parancs",
     "aiTaskDescription": "Egy lépésben feldolgozza a szöveget az utasítása szerint, és más parancsokat is futtathat",
     "askInChat": "Kérdezés a csevegésben",

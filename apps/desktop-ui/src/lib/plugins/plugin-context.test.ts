@@ -1,9 +1,9 @@
-import { createToolRegistry } from '../tools/tool-registry'
-import { createToolInvoker } from '../invocation/invoke-tool'
+import { createOperationRegistry } from '../operations/operation-registry'
+import { createOperationInvoker } from '../invocation/invoke-operation'
 import {
   PluginError,
   TEXT_INPUT_SCHEMA,
-  type ToolDefinition,
+  type OperationDefinition,
 } from '@tyco/plugin-sdk'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -23,7 +23,7 @@ function setup(
     registerCaseItems: vi.fn(),
     registerFormatItems: vi.fn(),
     registerToolbarItems: vi.fn(),
-    registerTools: vi.fn(),
+    registerOperations: vi.fn(),
     getEditorInputValue: vi.fn(() => 'text'),
     getEditorInputSelectedText: vi.fn(() => 'selection'),
     getEditorInputSnapshot: vi.fn(() => ({
@@ -57,7 +57,7 @@ function setup(
   )
   return { context, deps, controller }
 }
-const tool = (run: ToolDefinition['run']): ToolDefinition => ({
+const tool = (run: OperationDefinition['run']): OperationDefinition => ({
   id: 'test',
   description: 'test',
   inputSchema: TEXT_INPUT_SCHEMA,
@@ -103,7 +103,7 @@ describe('plugin context boundary', () => {
     controller.abort()
     expect(() => context.setEditorInputValue('changed')).toThrow('disposed')
     expect(() =>
-      context.registerTools([tool(async () => ({ ok: true }))])
+      context.registerOperations([tool(async () => ({ ok: true }))])
     ).toThrow('disposed')
     expect(deps.setEditorInputValue).not.toHaveBeenCalled()
   })
@@ -126,7 +126,7 @@ describe('plugin context boundary', () => {
     const { context, deps, controller } = setup()
     let complete!: () => void
     let received!: AbortSignal
-    context.registerTools([
+    context.registerOperations([
       tool(async ({ signal }) => {
         received = signal
         await new Promise<void>((resolve) => {
@@ -135,7 +135,7 @@ describe('plugin context boundary', () => {
         return { ok: true, content: 'late' }
       }),
     ])
-    const registered = vi.mocked(deps.registerTools).mock.calls[0][0][0]
+    const registered = vi.mocked(deps.registerOperations).mock.calls[0][0][0]
     const running = registered.run({
       input: { text: 'text' },
       config: {},
@@ -150,7 +150,7 @@ describe('plugin context boundary', () => {
   })
   it('reports a change a tool committed before its plugin was disabled, without output', async () => {
     const { context, deps, controller } = setup()
-    context.registerTools([
+    context.registerOperations([
       tool(async () => {
         controller.abort()
         return {
@@ -161,7 +161,7 @@ describe('plugin context boundary', () => {
         }
       }),
     ])
-    const registered = vi.mocked(deps.registerTools).mock.calls[0][0][0]
+    const registered = vi.mocked(deps.registerOperations).mock.calls[0][0][0]
     expect(
       await registered.run({
         input: { text: 'text' },
@@ -182,10 +182,10 @@ describe('plugin context boundary', () => {
       issues: [{ messageKey: 'local.bad', params: { token: 'x' } }],
       samples: ['sample'],
     }))
-    context.registerTools([
+    context.registerOperations([
       { ...tool(async () => ({ ok: true })), previewConfig },
     ])
-    const registered = vi.mocked(deps.registerTools).mock.calls[0][0][0]
+    const registered = vi.mocked(deps.registerOperations).mock.calls[0][0][0]
     const config = { pathToNotes: '/notes' }
     expect(await registered.previewConfig!(config)).toEqual({
       issues: [
@@ -204,9 +204,9 @@ describe('plugin context boundary', () => {
     await expect(registered.previewConfig!(config)).rejects.toThrow()
 
     const editorOnly = setup()
-    editorOnly.context.registerTools([tool(async () => ({ ok: true }))])
+    editorOnly.context.registerOperations([tool(async () => ({ ok: true }))])
     expect(
-      vi.mocked(editorOnly.deps.registerTools).mock.calls[0][0][0]
+      vi.mocked(editorOnly.deps.registerOperations).mock.calls[0][0][0]
         .directoryFieldName
     ).toBeUndefined()
   })
@@ -328,18 +328,18 @@ describe('conditional plugin editor boundary', () => {
 
 it('routes declarative toolbar buttons and action items through host invocation', async () => {
   const { context, deps, controller } = setup()
-  deps.invokeTool = vi.fn(async () => ({
+  deps.invokeOperation = vi.fn(async () => ({
     ok: true,
     messageKey: 'toast.commandFailed',
   }))
-  deps.invokeActionTool = vi.fn(async () => {})
-  context.registerToolbarItems([{ id: 'button', toolId: 'test' }])
+  deps.invokeActionOperation = vi.fn(async () => {})
+  context.registerToolbarItems([{ id: 'button', operationId: 'test' }])
   context.registerActionsItems([
-    { id: 'action', labelKey: 'local.label', toolId: 'test' },
+    { id: 'action', labelKey: 'local.label', operationId: 'test' },
   ])
   const item = vi.mocked(deps.registerToolbarItems).mock.calls[0][0][0]
   await item.action()
-  expect(deps.invokeTool).toHaveBeenCalledWith(
+  expect(deps.invokeOperation).toHaveBeenCalledWith(
     'Example.test',
     deps.getEditorInputSnapshot(),
     controller.signal
@@ -347,7 +347,7 @@ it('routes declarative toolbar buttons and action items through host invocation'
   expect(item.ownerPluginId).toBe('Example')
   const actionItem = vi.mocked(deps.registerActionsItems).mock.calls[0][0][0]
   await actionItem.action('selected text')
-  expect(deps.invokeActionTool).toHaveBeenCalledWith(
+  expect(deps.invokeActionOperation).toHaveBeenCalledWith(
     'Example.test',
     'selected text',
     controller.signal
@@ -394,10 +394,10 @@ it.each([
 
 it('rejects malformed callback results before they reach consumers', async () => {
   const { context, deps } = setup()
-  context.registerTools([
+  context.registerOperations([
     tool(async () => ({ ok: true, content: {} }) as never),
   ])
-  const registered = vi.mocked(deps.registerTools).mock.calls[0][0][0]
+  const registered = vi.mocked(deps.registerOperations).mock.calls[0][0][0]
   await expect(
     registered.run({
       input: {},
@@ -411,18 +411,23 @@ it('rejects malformed callback results before they reach consumers', async () =>
 
 it('shares structured input preparation between toolbar tools and commands', async () => {
   const { context, deps } = setup()
-  const registry = createToolRegistry()
-  deps.registerTools = (tools, config) =>
-    registry.registerPluginTools('Example', tools, config)
-  const invoke = createToolInvoker({ tools: registry })
-  deps.invokeTool = (toolId, snapshot, signal) =>
+  const registry = createOperationRegistry()
+  deps.registerOperations = (tools, config) =>
+    registry.registerPluginOperations('Example', tools, config)
+  const invoke = createOperationInvoker({ tools: registry })
+  deps.invokeOperation = (operationId, snapshot, signal) =>
     invoke(
-      { toolId, toolConfig: {}, label: toolId, outputAction: 'none' },
+      {
+        operationId,
+        operationConfig: {},
+        label: operationId,
+        outputAction: 'none',
+      },
       snapshot.value,
       { source: 'toolbar', output: 'none', editorSnapshot: snapshot, signal }
     )
-  const run = vi.fn<ToolDefinition['run']>(async () => ({ ok: true }))
-  context.registerTools([
+  const run = vi.fn<OperationDefinition['run']>(async () => ({ ok: true }))
+  context.registerOperations([
     {
       id: 'structured',
       description: 'structured',
@@ -435,7 +440,7 @@ it('shares structured input preparation between toolbar tools and commands', asy
       run,
     },
   ])
-  context.registerToolbarItems([{ id: 'button', toolId: 'structured' }])
+  context.registerToolbarItems([{ id: 'button', operationId: 'structured' }])
   const item = vi.mocked(deps.registerToolbarItems).mock.calls[0][0][0]
   const pending = item.action()
   expect(item.disabled).toBe(true)
@@ -450,7 +455,11 @@ it('shares structured input preparation between toolbar tools and commands', asy
     })
   )
   await invoke(
-    { toolId: 'Example.structured', toolConfig: {}, label: 'Command' },
+    {
+      operationId: 'Example.structured',
+      operationConfig: {},
+      label: 'Command',
+    },
     'text'
   )
   expect(run.mock.calls[0][0].input).toEqual(run.mock.calls[1][0].input)
@@ -477,7 +486,7 @@ describe('plugin context registrations', () => {
     expect(() => context.registerToolbarItems(many)).toThrow(
       'Too many plugin contributions'
     )
-    expect(() => context.registerTools(many as never)).toThrow(
+    expect(() => context.registerOperations(many as never)).toThrow(
       'Too many plugin contributions'
     )
   })
@@ -543,7 +552,7 @@ describe('plugin context registrations', () => {
 
   it('scopes tool metadata and reports unavailability after disposal', () => {
     const { context, deps, controller } = setup()
-    context.registerTools([
+    context.registerOperations([
       {
         ...tool(async () => ({ ok: true })),
         labelKey: 'local.label',
@@ -551,7 +560,7 @@ describe('plugin context registrations', () => {
         defaultPhrasesKey: 'local.phrases',
       },
     ])
-    const registered = vi.mocked(deps.registerTools).mock.calls[0]![0][0]!
+    const registered = vi.mocked(deps.registerOperations).mock.calls[0]![0][0]!
     expect(registered).toMatchObject({
       labelKey: pluginMessageKey('Example', 'local.label'),
       descriptionKey: pluginMessageKey('Example', 'local.description'),
@@ -567,8 +576,10 @@ describe('plugin context registrations', () => {
   it('validates and scopes parser results', async () => {
     const { context, deps } = setup()
     const parseText = vi.fn()
-    context.registerTools([{ ...tool(async () => ({ ok: true })), parseText }])
-    const registered = vi.mocked(deps.registerTools).mock.calls[0]![0][0]!
+    context.registerOperations([
+      { ...tool(async () => ({ ok: true })), parseText },
+    ])
+    const registered = vi.mocked(deps.registerOperations).mock.calls[0]![0][0]!
     const parseContext = { signal: new AbortController().signal } as never
 
     parseText.mockResolvedValueOnce({ ok: true, input: { text: 'a' } })
@@ -595,9 +606,9 @@ describe('plugin context registrations', () => {
 
   it('maps tool failures to results', async () => {
     const { context, deps } = setup()
-    const run = vi.fn<ToolDefinition['run']>()
-    context.registerTools([tool(run)])
-    const registered = vi.mocked(deps.registerTools).mock.calls[0]![0][0]!
+    const run = vi.fn<OperationDefinition['run']>()
+    context.registerOperations([tool(run)])
+    const registered = vi.mocked(deps.registerOperations).mock.calls[0]![0][0]!
 
     run.mockResolvedValueOnce({ ok: false, messageKey: 'local.denied' })
     await expect(registered.run(call())).resolves.toEqual({
@@ -630,17 +641,17 @@ describe('plugin context registrations', () => {
   ])('rejects malformed tool definitions: %j', (patch, message) => {
     const { context, deps } = setup()
     expect(() =>
-      context.registerTools([
+      context.registerOperations([
         { ...tool(async () => ({ ok: true })), ...patch } as never,
       ])
     ).toThrow(message)
-    expect(deps.registerTools).not.toHaveBeenCalled()
+    expect(deps.registerOperations).not.toHaveBeenCalled()
   })
 
   it('keeps tools from granting themselves notes access', () => {
     const { context } = setup(['notes'])
     const withField = (field: Record<string, unknown>) =>
-      context.registerTools([
+      context.registerOperations([
         {
           ...tool(async () => ({ ok: true })),
           id: `tool${Math.random().toString(36).slice(2)}`,
@@ -685,12 +696,12 @@ describe('plugin context registrations', () => {
 describe('plugin toolbar tools', () => {
   it('shows tool results as notifications', async () => {
     const { context, deps } = setup()
-    deps.invokeTool = vi.fn(async () => ({
+    deps.invokeOperation = vi.fn(async () => ({
       ok: false,
       messageKey: 'toast.commandFailed',
       message: 'Details',
     }))
-    context.registerToolbarItems([{ id: 'button', toolId: 'test' }])
+    context.registerToolbarItems([{ id: 'button', operationId: 'test' }])
     const item = vi.mocked(deps.registerToolbarItems).mock.calls[0]![0][0]!
     await item.action()
     expect(deps.toastKey).toHaveBeenCalledWith('toast.commandFailed', 'error')
@@ -699,8 +710,8 @@ describe('plugin toolbar tools', () => {
 
   it('stays silent for cancelled tools', async () => {
     const { context, deps } = setup()
-    deps.invokeTool = vi.fn(async () => ({ ok: false, cancelled: true }))
-    context.registerToolbarItems([{ id: 'button', toolId: 'test' }])
+    deps.invokeOperation = vi.fn(async () => ({ ok: false, cancelled: true }))
+    context.registerToolbarItems([{ id: 'button', operationId: 'test' }])
     const item = vi.mocked(deps.registerToolbarItems).mock.calls[0]![0][0]!
     await item.action()
     expect(deps.toastKey).not.toHaveBeenCalled()
@@ -708,7 +719,7 @@ describe('plugin toolbar tools', () => {
 
   it('reports a missing invoker without scoping host keys', async () => {
     const { context, deps } = setup()
-    context.registerToolbarItems([{ id: 'button', toolId: 'test' }])
+    context.registerToolbarItems([{ id: 'button', operationId: 'test' }])
     const item = vi.mocked(deps.registerToolbarItems).mock.calls[0]![0][0]!
     await item.action()
     expect(deps.toastKey).toHaveBeenCalledWith('toast.commandFailed', 'error')

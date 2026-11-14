@@ -39,7 +39,7 @@ import {
 } from '../../lib/voice-commands/voice-resolver'
 import { voiceParameters } from '../../lib/voice-commands/voice-view-presenter'
 import { useDesktopStore } from '../../stores/desktop'
-import { useToolsStore } from '../../stores/tools'
+import { useOperationsStore } from '../../stores/operations'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
@@ -50,7 +50,7 @@ const props = defineProps<{ command: CommandConfig; userConfig?: UserConfig }>()
 const emit = defineEmits<{ update: [patch: Partial<CommandConfig>] }>()
 const { t } = useI18n()
 const desktopStore = useDesktopStore()
-const toolsStore = useToolsStore()
+const operationsStore = useOperationsStore()
 const voiceRoutes = computed(() =>
   compileVoiceRoutes(
     [
@@ -61,7 +61,7 @@ const voiceRoutes = computed(() =>
       ).filter((item) => item.id !== props.command.id),
       props.command,
     ],
-    toolsStore
+    operationsStore
   )
 )
 /**
@@ -69,8 +69,8 @@ const voiceRoutes = computed(() =>
  * ones it is spoken with when it has none of its own
  */
 const phrasesPlaceholder = computed(() => {
-  const [parameter] = voiceParameters(props.command, toolsStore)
-  const key = toolsStore.get(props.command.toolId)?.voicePhrasesKey
+  const [parameter] = voiceParameters(props.command, operationsStore)
+  const key = operationsStore.get(props.command.operationId)?.voicePhrasesKey
   if (!parameter || !key) return t('voiceCommands.phrasesPlaceholder')
   return grammarVariants(
     t(key, { [parameter.name]: `{${parameter.name}}` })

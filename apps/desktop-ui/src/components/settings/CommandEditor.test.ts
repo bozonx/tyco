@@ -17,19 +17,19 @@ const { toastKey } = vi.hoisted(() => ({ toastKey: vi.fn() }))
 vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey }),
 }))
-vi.mock('../../stores/tools', async () => {
-  const { testTools } = await import('../../lib/tools/testing')
-  const tools = testTools()
-  return { useToolsStore: () => tools }
+vi.mock('../../stores/operations', async () => {
+  const { testOperations } = await import('../../lib/operations/testing')
+  const tools = testOperations()
+  return { useOperationsStore: () => tools }
 })
 
 const script = (
-  toolConfig: Record<string, unknown> = {},
+  operationConfig: Record<string, unknown> = {},
   extra: Partial<CommandConfig> = {}
 ): CommandConfig => ({
   ...createCommand('script', 'sc1'),
   ...extra,
-  toolConfig: { command: '', workingDirectory: '', ...toolConfig },
+  operationConfig: { command: '', workingDirectory: '', ...operationConfig },
 })
 
 const mountEditor = (
@@ -154,21 +154,25 @@ describe('CommandEditor.vue', () => {
     const webhookEditor = mountEditor({
       ...createCommand('webhook', 'wh1'),
       name: 'Hook',
-      toolConfig: { url: 'https://x.test' },
+      operationConfig: { url: 'https://x.test' },
     })
     expect(
       webhookEditor.find('[data-testid="command-platform-linux"]').exists()
     ).toBe(false)
     expect(webhookEditor.find('.command-open-log').exists()).toBe(true)
 
-    const unknownToolEditor = mountEditor({
+    const unknownOperationEditor = mountEditor({
       ...createCommand('other.plugin', 'p1'),
       name: 'Other',
     })
     expect(
-      unknownToolEditor.find('[data-testid="command-platform-linux"]').exists()
+      unknownOperationEditor
+        .find('[data-testid="command-platform-linux"]')
+        .exists()
     ).toBe(false)
-    expect(unknownToolEditor.find('.command-open-log').exists()).toBe(false)
+    expect(unknownOperationEditor.find('.command-open-log').exists()).toBe(
+      false
+    )
   })
 
   it('places description outside advanced and does not show inline prompt warning on enable', async () => {

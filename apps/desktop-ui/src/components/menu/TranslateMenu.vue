@@ -329,7 +329,7 @@ const translate = async (targetLanguage: string, source?: string) => {
               label: t(stageLabels[stage as keyof typeof stageLabels]),
             })
         },
-        toolConfig: { language: targetLanguage, sourceLanguage: source },
+        operationConfig: { language: targetLanguage, sourceLanguage: source },
       }),
     read: (result) => {
       if (result.content !== undefined) return result.content

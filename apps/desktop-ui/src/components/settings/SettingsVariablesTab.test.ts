@@ -176,8 +176,8 @@ describe('SettingsVariablesTab.vue', () => {
           {
             id: 'c1',
             name: 'Ask',
-            toolId: 'core.aiTask',
-            toolConfig: { prompt: '{{var:NOTES}}' },
+            operationId: 'core.aiTask',
+            operationConfig: { prompt: '{{var:NOTES}}' },
           },
         ],
       }).commands

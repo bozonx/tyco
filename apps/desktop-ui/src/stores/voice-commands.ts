@@ -13,14 +13,14 @@ import { commandRunRecord } from '../lib/commands/command-run-record'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
-import { useToolsStore } from './tools'
+import { useOperationsStore } from './operations'
 import { useHistoryStore } from './history'
 
 export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
   const ipc = useIpcStore()
   const desktop = useDesktopStore()
   const history = useHistoryStore()
-  const tools = useToolsStore()
+  const tools = useOperationsStore()
   const runner = createCommandRunner(useInvocationRunnerDependencies())
   const model = createVoiceCommandModel({
     commands: () => desktop.userConfig.commands,

@@ -3,7 +3,11 @@ import {
   hasContributionIdFormat,
 } from './package-format.js'
 import { isRecord } from './value-guards.js'
-import type { ToolResult, ParseResult, ToolConfigPreview } from './tools.js'
+import type {
+  OperationResult,
+  ParseResult,
+  OperationConfigPreview,
+} from './operations.js'
 
 /** Check untrusted registration data before it reaches a host registry. */
 export function validateContribution(
@@ -52,10 +56,13 @@ export function validateContribution(
     )
       throw new Error('Invalid toolbar position')
   }
-  if ((kind === 'toolbar' || kind === 'action') && value.toolId !== undefined) {
+  if (
+    (kind === 'toolbar' || kind === 'action') &&
+    value.operationId !== undefined
+  ) {
     if (
-      typeof value.toolId !== 'string' ||
-      !hasContributionIdFormat(value.toolId) ||
+      typeof value.operationId !== 'string' ||
+      !hasContributionIdFormat(value.operationId) ||
       value.action !== undefined
     )
       throw new Error(`Invalid ${kind} tool reference`)
@@ -65,9 +72,9 @@ export function validateContribution(
     throw new Error('Missing plugin callback')
 }
 
-export function validateToolResult(
+export function validateOperationResult(
   value: unknown
-): asserts value is ToolResult {
+): asserts value is OperationResult {
   if (!isRecord(value) || typeof value.ok !== 'boolean')
     throw new Error('Invalid plugin tool result')
   for (const field of ['messageKey', 'message', 'content'])
@@ -90,12 +97,12 @@ export function validateToolResult(
  * it already changed something outside the app (`isCommitted`). Its output is
  * dropped either way.
  */
-export function cancelledToolResult(result: unknown): ToolResult {
+export function cancelledOperationResult(result: unknown): OperationResult {
   if (isRecord(result) && result.ok === true && result.isCommitted === true) {
-    validateToolResult(result)
+    validateOperationResult(result)
     return Object.fromEntries(
       Object.entries(result).filter(([key]) => key !== 'content')
-    ) as unknown as ToolResult
+    ) as unknown as OperationResult
   }
   return { ok: false, cancelled: true }
 }
@@ -105,9 +112,9 @@ export const MAX_PREVIEW_ISSUES = 32
 export const MAX_PREVIEW_SAMPLES = 8
 export const MAX_PREVIEW_SAMPLE_LENGTH = 65_536
 
-export function validateToolConfigPreview(
+export function validateOperationConfigPreview(
   value: unknown
-): asserts value is ToolConfigPreview {
+): asserts value is OperationConfigPreview {
   if (!isRecord(value)) throw new Error('Invalid tool config preview')
   if (value.issues !== undefined) {
     if (
@@ -152,7 +159,7 @@ export function validateParseResult(
       throw new Error(`Invalid parse result ${field}`)
 }
 
-export function validateToolSchema(value: unknown, depth = 0): void {
+export function validateOperationSchema(value: unknown, depth = 0): void {
   if (!isRecord(value) || depth > 16)
     throw new Error('Invalid tool input schema')
   if (
@@ -169,7 +176,7 @@ export function validateToolSchema(value: unknown, depth = 0): void {
     )
       throw new Error('Invalid tool schema properties')
     for (const schema of Object.values(value.properties))
-      validateToolSchema(schema, depth + 1)
+      validateOperationSchema(schema, depth + 1)
   }
   if (
     value.required !== undefined &&
@@ -179,5 +186,5 @@ export function validateToolSchema(value: unknown, depth = 0): void {
     throw new Error('Invalid tool schema required fields')
   if (value.enum !== undefined && !Array.isArray(value.enum))
     throw new Error('Invalid tool schema enum')
-  if (value.items !== undefined) validateToolSchema(value.items, depth + 1)
+  if (value.items !== undefined) validateOperationSchema(value.items, depth + 1)
 }

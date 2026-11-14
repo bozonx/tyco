@@ -108,7 +108,7 @@ async function main() {
       const contribution =
         runtime.registrations.registerFormatItems?.[0] ??
         runtime.registrations.registerCaseItems?.[0] ??
-        runtime.registrations.registerTools?.[0] ??
+        runtime.registrations.registerOperations?.[0] ??
         runtime.registrations.registerToolbarItems?.[0]
       assert(contribution, `No contributions: ${manifest.id}`)
       const callback = (contribution.run ?? contribution.action).$callback

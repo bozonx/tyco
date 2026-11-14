@@ -191,7 +191,7 @@
     },
     "commands": {
       "group": "コマンド",
-      "groupHint": "選択したカスタムコマンドおよびプラグインツールの実行をモデルに許可します。「確認」は呼び出しごとに確認します。",
+      "groupHint": "選択したコマンドの実行をモデルに許可します。AI向けの説明があるコマンドのみ選択できます。「確認」は呼び出しごとに確認します。",
       "needsDescription": "コマンド設定で AI 用の説明が必要です",
       "noCommands": "カスタムコマンドはまだ設定されていません。",
       "noCommandsHint": "最初に「設定 → コマンド」でコマンドを作成してください。",
@@ -228,7 +228,7 @@
     "errorNoName": "名前を入力してください。",
     "errorNoPrompt": "LLMへの指示を入力してください。",
     "errorNoUrl": "URLを入力してください。",
-    "errorUnknownTool": "不明なツールです。",
+    "errorUnknownType": "不明なコマンドの種類です。",
     "external": "外部からの呼び出しを許可",
     "externalDescription": "現在のセッション内のローカルアプリケーションが、tyco-ctlおよびD-Busを介して実行できる操作。各コマンドへのアクセスは、高度な設定で有効にします。",
     "externalInfo": "ローカルアプリケーションやスクリプトは、tyco-ctl run <ID> または tyco-ctl run --name <name> を使用して許可されたコマンドを実行できます。結果は呼び出し元に返されます。--interactive はテキスト入力UIを許可し、--selection --replace は選択テキストの置換を明示的に要求します。",
@@ -238,8 +238,8 @@
     "fieldOff": "いいえ",
     "fieldOn": "はい",
     "fromPluginSettings": "プラグイン設定より: {value}",
-    "hint": "コマンドは各種ツール（LLMプロンプト、シェルスクリプト、HTTP Webhook、翻訳など）に基づくカスタマイズ可能なアクションです。選択テキストの処理や入力なしでの実行が可能で、結果をアクティブウィンドウへの挿入、クリップボードへのコピー、または画面表示できます。クイックコマンド（ランチャー）、メインアクションメニュー、またはtyco-ctlから実行できます。",
-    "inputUnsupported": "このツールには構造化された入力が必要であり、テキストから取得することはできません",
+    "hint": "コマンドはさまざまな種類（LLMプロンプト、シェルスクリプト、HTTP Webhook、翻訳など）に基づくカスタマイズ可能なアクションです。選択テキストの処理や入力なしでの実行が可能で、結果をアクティブウィンドウへの挿入、クリップボードへのコピー、または画面表示できます。クイックコマンド（ランチャー）、メインアクションメニュー、またはtyco-ctlから実行できます。",
+    "inputUnsupported": "この種類には構造化された入力が必要であり、テキストから取得することはできません",
     "languageLabel": "翻訳先言語",
     "languagePlaceholder": "言語を選択",
     "launcherResult": "アクション",
@@ -265,12 +265,12 @@
     "testRunning": "実行中…",
     "testStop": "停止",
     "testTextPlaceholder": "テスト用テキスト",
-    "toolInfo": "ツール: {tool}",
-    "toolMissing": "ツールが利用できません。プラグインが無効か見つかりません",
+    "typeInfo": "種類: {type}",
+    "typeMissing": "この種類は利用できません。プラグインが無効か見つかりません",
     "preTransformFailed": "コマンド用のテキストを準備できませんでした",
     "unavailableInMenu": "{name}（メニューでは利用不可）",
     "undo": "元に戻す",
-    "unknownTool": "ツール「{tool}」はこのバージョンのTycoでは利用できません。",
+    "unknownType": "コマンドの種類「{type}」はこのバージョンのTycoでは利用できません。",
     "unnamed": "無題のコマンド",
     "warningExternalNameTwins": "同じ名前のコマンドが他に存在します: {names}。この名前での呼び出しは曖昧なため拒否されます。IDを使用してください。",
     "llmPreTransform": "LLMによる事前テキスト変換",
@@ -302,7 +302,7 @@
     "aiToolsEnabledLabel": "ツールの使用を許可",
     "aiToolsEnabledInfo": "有効にすると、AIは許可された他のコマンドを呼び出すことができます。",
     "createModalTitle": "新規コマンド",
-    "toolTypeLabel": "コマンドの種類"
+    "typeLabel": "コマンドの種類"
   },
   "common": {
     "add": "追加",
@@ -1311,7 +1311,7 @@
     "commandDisabled": "コマンドは無効化されています",
     "commandFailed": "コマンドが失敗しました",
     "commandInputInvalid": "コマンドの入力が無効です",
-    "commandInputUnsupported": "このコマンドはテキストを受け取れません。ツールに構造化された入力が必要です",
+    "commandInputUnsupported": "このコマンドはテキストを受け取れません。この種類には構造化された入力が必要です",
     "commandUnavailable": "コマンドが利用できません",
     "desktopCommandFailed": "アクションが失敗しました",
     "dictationClosed": "音声認識サービスが録音中にセッションを終了しました",
@@ -1359,7 +1359,7 @@
     "webhookKeyNotSet": "この Webhook のキーはこのデバイスで設定されていません。コマンドの設定で入力してください",
     "webhookSuccess": "Webhookが正常に送信されました"
   },
-  "tools": {
+  "operations": {
     "aiTask": "AI コマンド",
     "aiTaskDescription": "指示に従ってテキストを 1 ステップで処理し、他のコマンドも実行できます",
     "askInChat": "チャットで質問",

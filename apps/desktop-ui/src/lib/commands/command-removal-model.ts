@@ -41,7 +41,7 @@ export function createCommandRemovalModel(deps: {
     removed.value = null
     if (!entry) return
     const { command } = entry
-    if (command.toolId === 'webhook') {
+    if (command.operationId === 'webhook') {
       void cleanup(command).catch(deps.notifyError)
     }
   }

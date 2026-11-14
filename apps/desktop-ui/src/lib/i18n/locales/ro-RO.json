@@ -191,7 +191,7 @@
     },
     "commands": {
       "group": "Comenzi",
-      "groupHint": "Permiteți modelului să execute comenzile personalizate și instrumentele de plugin selectate. „Întreabă” cere confirmare înainte de fiecare apel.",
+      "groupHint": "Permiteți modelului să execute comenzile selectate. Se pot alege doar comenzi cu o descriere pentru AI. „Întreabă” cere confirmare înainte de fiecare apel.",
       "needsDescription": "Necesită o descriere pentru AI în setările comenzii",
       "noCommands": "Nu există încă comenzi personalizate configurate.",
       "noCommandsHint": "Creați mai întâi comenzi în Setări → Comenzi.",
@@ -228,7 +228,7 @@
     "errorNoName": "Introduceți un nume.",
     "errorNoPrompt": "Scrieți instrucțiunea pentru LLM.",
     "errorNoUrl": "Introduceți URL-ul.",
-    "errorUnknownTool": "Instrument necunoscut.",
+    "errorUnknownType": "Tip de comandă necunoscut.",
     "external": "Disponibilă din exterior",
     "externalDescription": "Ce pot face aplicațiile locale din sesiunea dvs. prin tyco-ctl și D-Bus. Accesul la fiecare comandă se activează în setările ei avansate.",
     "externalInfo": "Aplicațiile și scripturile locale pot rula o comandă permisă cu tyco-ctl run <ID> sau tyco-ctl run --name <nume>. Rezultatul este returnat apelantului. --interactive permite interfața de introducere a textului; --selection --replace cere explicit înlocuirea selecției.",
@@ -238,8 +238,8 @@
     "fieldOff": "Nu",
     "fieldOn": "Da",
     "fromPluginSettings": "Din setările pluginului: {value}",
-    "hint": "Comenzile sunt acțiuni personalizabile bazate pe instrumente: prompturi LLM, scripturi shell, webhook-uri HTTP sau traducere. Procesează textul selectat sau rulează fără date de intrare, iar rezultatul poate fi inserat în fereastra activă, copiat în clipboard sau afișat. Se apelează din comenzi rapide (lansator), meniul acțiunilor principale sau prin tyco-ctl.",
-    "inputUnsupported": "Instrumentul său are nevoie de o intrare structurată, care nu poate fi obținută dintr-un text",
+    "hint": "Comenzile sunt acțiuni personalizabile de diferite tipuri: prompturi LLM, scripturi shell, webhook-uri HTTP sau traducere. Procesează textul selectat sau rulează fără date de intrare, iar rezultatul poate fi inserat în fereastra activă, copiat în clipboard sau afișat. Se apelează din comenzi rapide (lansator), meniul acțiunilor principale sau prin tyco-ctl.",
+    "inputUnsupported": "Tipul său are nevoie de o intrare structurată, care nu poate fi obținută dintr-un text",
     "languageLabel": "Tradu în",
     "languagePlaceholder": "Alegeți o limbă",
     "launcherResult": "Acțiune",
@@ -265,12 +265,12 @@
     "testRunning": "Se rulează…",
     "testStop": "Oprește",
     "testTextPlaceholder": "Text pentru test",
-    "toolInfo": "Instrument: {tool}",
-    "toolMissing": "Instrumentul său nu este disponibil: pluginul este dezactivat sau lipsește",
+    "typeInfo": "Tip: {type}",
+    "typeMissing": "Tipul său nu este disponibil: pluginul este dezactivat sau lipsește",
     "preTransformFailed": "Textul pentru comandă nu a putut fi pregătit",
     "unavailableInMenu": "{name} (indisponibilă în meniu)",
     "undo": "Anulează",
-    "unknownTool": "Instrumentul „{tool}” nu este disponibil în această versiune Tyco.",
+    "unknownType": "Tipul de comandă „{type}” nu este disponibil în această versiune Tyco.",
     "unnamed": "Comandă fără nume",
     "warningExternalNameTwins": "Alte comenzi au același nume: {names}. Un apel cu acest nume este refuzat ca ambiguu; folosiți ID-ul.",
     "llmPreTransform": "Pretransformare cu LLM",
@@ -302,7 +302,7 @@
     "aiToolsEnabledLabel": "Permite instrumente",
     "aiToolsEnabledInfo": "Când este activat, AI poate apela alte comenzi permise.",
     "createModalTitle": "Comandă nouă",
-    "toolTypeLabel": "Tipul comenzii"
+    "typeLabel": "Tipul comenzii"
   },
   "common": {
     "add": "Adaugă",
@@ -1314,7 +1314,7 @@
     "commandDisabled": "Comanda este dezactivată",
     "commandFailed": "Comanda a eșuat",
     "commandInputInvalid": "Intrarea comenzii nu este validă",
-    "commandInputUnsupported": "Această comandă nu poate primi text: instrumentul ei are nevoie de o intrare structurată",
+    "commandInputUnsupported": "Această comandă nu poate primi text: tipul ei are nevoie de o intrare structurată",
     "commandUnavailable": "Comanda nu este disponibilă",
     "desktopCommandFailed": "Acțiunea a eșuat",
     "dictationClosed": "Serviciul de recunoaștere vocală a închis sesiunea în timpul înregistrării",
@@ -1362,7 +1362,7 @@
     "webhookKeyNotSet": "Cheia acestui webhook nu este setată pe acest dispozitiv; introduceți-o în setările comenzii",
     "webhookSuccess": "Webhook trimis cu succes"
   },
-  "tools": {
+  "operations": {
     "aiTask": "Comandă AI",
     "aiTaskDescription": "Procesează textul după instrucțiunea ta într-un singur pas și poate rula alte comenzi",
     "askInChat": "Întreabă în chat",

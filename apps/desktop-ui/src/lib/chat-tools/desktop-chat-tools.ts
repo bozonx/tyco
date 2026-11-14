@@ -15,7 +15,7 @@ import {
 } from '@tyco/shared'
 
 import { createReplyBlocksToolProvider } from '../reply-blocks/reply-blocks-tool'
-import type { ToolLookup } from '../tools/tool-types'
+import type { OperationLookup } from '../operations/operation-types'
 import type { CommandEnvironment } from '../variables/command-variables'
 import { createChatToolsSession } from './chat-tools-session'
 import { createCommandToolProvider } from './command-tools'
@@ -118,7 +118,7 @@ export interface DesktopChatToolsDependencies {
   extractDocumentText?: typeof readDocumentText
   isDebugEnabled?: () => boolean
   commands?: () => readonly CommandConfig[]
-  tools?: ToolLookup
+  tools?: OperationLookup
   environment?: () => CommandEnvironment
 }
 

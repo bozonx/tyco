@@ -10,7 +10,7 @@ import {
   liveTranscriptText,
   type LiveTranscriptState,
 } from '../stt/live-transcript'
-import type { ToolLookup } from '../tools/tool-types'
+import type { OperationLookup } from '../operations/operation-types'
 import type { TimerDependencies } from '../timers/single-timer'
 import {
   AUTO_STOP_WARNING_MS,
@@ -34,7 +34,7 @@ export interface VoiceCommandContext {
 
 export interface VoiceCommandDependencies extends TimerDependencies {
   commands: () => readonly CommandConfig[]
-  tools: ToolLookup
+  tools: OperationLookup
   context?: VoiceCommandContext | (() => VoiceCommandContext | undefined)
   startDictation: (handlers: DictationHandlers) => Promise<void>
   finishDictation: () => Promise<string>

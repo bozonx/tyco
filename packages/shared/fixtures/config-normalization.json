@@ -3839,32 +3839,32 @@
         {
           "id": "notes",
           "name": "Notes",
-          "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "operationId": "script",
+          "operationConfig": { "command": "true" }
         },
         {
           "id": "MyCmd",
           "name": "Upper case",
-          "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "operationId": "script",
+          "operationConfig": { "command": "true" }
         },
         {
           "id": "Мой скрипт",
           "name": "Cyrillic only",
-          "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "operationId": "script",
+          "operationConfig": { "command": "true" }
         },
         {
           "id": " Notes ",
           "name": "Collides with notes",
-          "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "operationId": "script",
+          "operationConfig": { "command": "true" }
         },
         {
           "id": "MyCmd",
           "name": "Repeat of an invalid id",
-          "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "operationId": "script",
+          "operationConfig": { "command": "true" }
         }
       ],
       "llm": {
@@ -4063,8 +4063,8 @@
         {
           "id": "notes",
           "name": "Notes",
-          "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "operationId": "script",
+          "operationConfig": { "command": "true" },
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -4080,8 +4080,8 @@
         {
           "id": "mycmd",
           "name": "Upper case",
-          "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "operationId": "script",
+          "operationConfig": { "command": "true" },
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -4097,8 +4097,8 @@
         {
           "id": "command",
           "name": "Cyrillic only",
-          "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "operationId": "script",
+          "operationConfig": { "command": "true" },
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -4114,8 +4114,8 @@
         {
           "id": "notes-2",
           "name": "Collides with notes",
-          "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "operationId": "script",
+          "operationConfig": { "command": "true" },
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -4356,33 +4356,33 @@
         {
           "id": "notes",
           "name": "Notes",
-          "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "operationId": "script",
+          "operationConfig": { "command": "true" },
           "platforms": ["linux", "macos", "linux"]
         },
         {
           "id": "MyCmd",
           "name": "Upper case",
-          "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "operationId": "script",
+          "operationConfig": { "command": "true" }
         },
         {
           "id": "Мой скрипт",
           "name": "Cyrillic only",
-          "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "operationId": "script",
+          "operationConfig": { "command": "true" }
         },
         {
           "id": " Notes ",
           "name": "Collides with notes",
-          "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "operationId": "script",
+          "operationConfig": { "command": "true" }
         },
         {
           "id": "MyCmd",
           "name": "Repeat of an invalid id",
-          "toolId": "script",
-          "toolConfig": { "command": "true" }
+          "operationId": "script",
+          "operationConfig": { "command": "true" }
         }
       ],
       "variables": [
@@ -4596,8 +4596,8 @@
         {
           "id": "notes",
           "name": "Notes",
-          "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "operationId": "script",
+          "operationConfig": { "command": "true" },
           "platforms": ["linux"],
           "description": "",
           "phrases": [],
@@ -4614,8 +4614,8 @@
         {
           "id": "mycmd",
           "name": "Upper case",
-          "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "operationId": "script",
+          "operationConfig": { "command": "true" },
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -4631,8 +4631,8 @@
         {
           "id": "command",
           "name": "Cyrillic only",
-          "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "operationId": "script",
+          "operationConfig": { "command": "true" },
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -4648,8 +4648,8 @@
         {
           "id": "notes-2",
           "name": "Collides with notes",
-          "toolId": "script",
-          "toolConfig": { "command": "true" },
+          "operationId": "script",
+          "operationConfig": { "command": "true" },
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,

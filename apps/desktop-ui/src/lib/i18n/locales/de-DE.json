@@ -191,7 +191,7 @@
     },
     "commands": {
       "group": "Befehle",
-      "groupHint": "Dem Modell erlauben, ausgewählte benutzerdefinierte Befehle und Plugin-Tools auszuführen. „Fragen“ fragt vor jedem Aufruf nach.",
+      "groupHint": "Dem Modell erlauben, die ausgewählten Befehle auszuführen. Auswählbar sind nur Befehle mit einer Beschreibung für die KI. „Fragen“ fragt vor jedem Aufruf nach.",
       "needsDescription": "Erfordert eine Beschreibung für KI in den Befehlseinstellungen",
       "noCommands": "Noch keine benutzerdefinierten Befehle konfiguriert.",
       "noCommandsHint": "Erstellen Sie zuerst Befehle unter Einstellungen → Befehle.",
@@ -228,7 +228,7 @@
     "errorNoName": "Geben Sie einen Namen ein.",
     "errorNoPrompt": "Schreiben Sie die Anweisung für das LLM.",
     "errorNoUrl": "Geben Sie die URL ein.",
-    "errorUnknownTool": "Unbekanntes Werkzeug.",
+    "errorUnknownType": "Unbekannter Befehlstyp.",
     "external": "Von außen verfügbar",
     "externalDescription": "Was lokale Anwendungen Ihrer Sitzung über tyco-ctl und D-Bus tun dürfen. Der Zugriff auf jeden Befehl wird in seinen erweiterten Einstellungen aktiviert.",
     "externalInfo": "Lokale Anwendungen und Skripte können einen erlaubten Befehl mit tyco-ctl run <ID> oder tyco-ctl run --name <Name> ausführen. Das Ergebnis geht an den Aufrufer zurück. --interactive erlaubt eine Oberfläche zur Texteingabe; --selection --replace fordert ausdrücklich das Ersetzen der Auswahl an.",
@@ -238,8 +238,8 @@
     "fieldOff": "Nein",
     "fieldOn": "Ja",
     "fromPluginSettings": "Aus den Plugin-Einstellungen: {value}",
-    "hint": "Befehle sind anpassbare Aktionen auf Basis von Werkzeugen: LLM-Prompts, Shell-Skripte, HTTP-Webhooks oder Übersetzung. Sie verarbeiten markierten Text oder laufen ohne Eingabe; das Ergebnis kann in das aktive Fenster eingefügt, in die Zwischenablage kopiert oder angezeigt werden. Befehle werden über Schnellbefehle (Launcher), das Hauptaktionsmenü oder über tyco-ctl aufgerufen.",
-    "inputUnsupported": "Sein Werkzeug braucht eine strukturierte Eingabe, die sich nicht aus einem Text gewinnen lässt",
+    "hint": "Befehle sind anpassbare Aktionen verschiedener Typen: LLM-Prompts, Shell-Skripte, HTTP-Webhooks oder Übersetzung. Sie verarbeiten markierten Text oder laufen ohne Eingabe; das Ergebnis kann in das aktive Fenster eingefügt, in die Zwischenablage kopiert oder angezeigt werden. Befehle werden über Schnellbefehle (Launcher), das Hauptaktionsmenü oder über tyco-ctl aufgerufen.",
+    "inputUnsupported": "Sein Typ braucht eine strukturierte Eingabe, die sich nicht aus einem Text gewinnen lässt",
     "languageLabel": "Übersetzen in",
     "languagePlaceholder": "Sprache wählen",
     "launcherResult": "Aktion",
@@ -265,12 +265,12 @@
     "testRunning": "Wird ausgeführt…",
     "testStop": "Stoppen",
     "testTextPlaceholder": "Text zum Testen",
-    "toolInfo": "Werkzeug: {tool}",
-    "toolMissing": "Sein Werkzeug ist nicht verfügbar: Das Plugin ist deaktiviert oder fehlt",
+    "typeInfo": "Typ: {type}",
+    "typeMissing": "Sein Typ ist nicht verfügbar: Das Plugin ist deaktiviert oder fehlt",
     "preTransformFailed": "Der Text für den Befehl konnte nicht vorbereitet werden",
     "unavailableInMenu": "{name} (im Menü nicht verfügbar)",
     "undo": "Rückgängig",
-    "unknownTool": "Das Werkzeug „{tool}“ ist in dieser Version von Tyco nicht verfügbar.",
+    "unknownType": "Der Befehlstyp „{type}“ ist in dieser Version von Tyco nicht verfügbar.",
     "unnamed": "Unbenannter Befehl",
     "warningExternalNameTwins": "Andere Befehle haben denselben Namen: {names}. Ein Aufruf mit diesem Namen wird als mehrdeutig abgelehnt; verwenden Sie die ID.",
     "llmPreTransform": "Vorab-Transformation mit LLM",
@@ -302,7 +302,7 @@
     "aiToolsEnabledLabel": "Werkzeuge erlauben",
     "aiToolsEnabledInfo": "Wenn aktiviert, kann die KI andere erlaubte Befehle aufrufen.",
     "createModalTitle": "Neuer Befehl",
-    "toolTypeLabel": "Befehlstyp"
+    "typeLabel": "Befehlstyp"
   },
   "common": {
     "add": "Hinzufügen",
@@ -1314,7 +1314,7 @@
     "commandDisabled": "Der Befehl ist deaktiviert",
     "commandFailed": "Der Befehl ist fehlgeschlagen",
     "commandInputInvalid": "Die Eingabe des Befehls ist ungültig",
-    "commandInputUnsupported": "Dieser Befehl kann keinen Text annehmen: Sein Werkzeug braucht eine strukturierte Eingabe",
+    "commandInputUnsupported": "Dieser Befehl kann keinen Text annehmen: Sein Typ braucht eine strukturierte Eingabe",
     "commandUnavailable": "Der Befehl ist nicht verfügbar",
     "desktopCommandFailed": "Aktion fehlgeschlagen",
     "dictationClosed": "Der Spracherkennungsdienst hat die Sitzung während der Aufnahme beendet",
@@ -1362,7 +1362,7 @@
     "webhookKeyNotSet": "Der Schlüssel dieses Webhooks ist auf diesem Gerät nicht gesetzt; gib ihn in den Befehlseinstellungen ein",
     "webhookSuccess": "Webhook erfolgreich gesendet"
   },
-  "tools": {
+  "operations": {
     "aiTask": "KI-Befehl",
     "aiTaskDescription": "Verarbeitet Text nach Ihrer Anweisung in einem Schritt und kann andere Befehle ausführen",
     "askInChat": "Im Chat fragen",

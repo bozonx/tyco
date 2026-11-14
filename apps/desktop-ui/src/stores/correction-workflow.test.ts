@@ -78,11 +78,11 @@ describe('useCorrectionWorkflowStore', () => {
     const invocations = useInvocationsStore()
     const history = useHistoryStore()
 
-    vi.spyOn(invocations, 'call').mockImplementation(async (toolId) => {
-      if (toolId === 'core.correct') {
+    vi.spyOn(invocations, 'call').mockImplementation(async (operationId) => {
+      if (operationId === 'core.correct') {
         return { ok: true, content: 'quick corrected' }
       }
-      if (toolId === 'core.insert') {
+      if (operationId === 'core.insert') {
         return { ok: true }
       }
       return { ok: false }

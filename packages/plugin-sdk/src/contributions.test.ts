@@ -1,38 +1,41 @@
 import { describe, expect, it } from 'vitest'
 import {
-  cancelledToolResult,
+  cancelledOperationResult,
   validateContribution,
   validateParseResult,
-  validateToolConfigPreview,
-  validateToolResult,
-  validateToolSchema,
+  validateOperationConfigPreview,
+  validateOperationResult,
+  validateOperationSchema,
 } from './contributions.js'
 
 describe('plugin contribution validation', () => {
   it('requires an exclusive callback or local tool reference for toolbar and action items', () => {
     expect(() =>
-      validateContribution({ id: 'button', toolId: 'search' }, 'toolbar')
+      validateContribution({ id: 'button', operationId: 'search' }, 'toolbar')
     ).not.toThrow()
     expect(() =>
-      validateContribution({ id: 'action', toolId: 'search' }, 'action')
+      validateContribution({ id: 'action', operationId: 'search' }, 'action')
     ).not.toThrow()
     expect(() =>
       validateContribution(
-        { id: 'button', toolId: 'search', action: () => {} },
+        { id: 'button', operationId: 'search', action: () => {} },
         'toolbar'
       )
     ).toThrow()
     expect(() =>
       validateContribution(
-        { id: 'action', toolId: 'search', action: () => {} },
+        { id: 'action', operationId: 'search', action: () => {} },
         'action'
       )
     ).toThrow()
     expect(() =>
-      validateContribution({ id: 'button', toolId: 'Other.search' }, 'toolbar')
+      validateContribution(
+        { id: 'button', operationId: 'Other.search' },
+        'toolbar'
+      )
     ).toThrow()
     expect(() =>
-      validateContribution({ id: 'edit', toolId: 'search' }, 'edit')
+      validateContribution({ id: 'edit', operationId: 'search' }, 'edit')
     ).toThrow()
     expect(() => validateContribution({ id: 'button' }, 'toolbar')).toThrow()
     expect(() =>
@@ -56,44 +59,46 @@ describe('plugin contribution validation', () => {
     { ok: false, cancelled: 'yes' },
     { ok: true, level: 'invalid' },
   ])('rejects malformed tool results: %j', (value) => {
-    expect(() => validateToolResult(value)).toThrow()
+    expect(() => validateOperationResult(value)).toThrow()
   })
   it('validates parsed values and nested schemas', () => {
     expect(() => validateParseResult({ ok: true, input: [] })).toThrow()
     expect(() => validateParseResult({ ok: false, message: 3 })).toThrow()
     expect(() =>
-      validateToolSchema({
+      validateOperationSchema({
         type: 'object',
         properties: { entries: { type: 'array', items: { type: 'string' } } },
       })
     ).not.toThrow()
-    expect(() => validateToolSchema({ properties: { broken: null } })).toThrow()
-    expect(() => validateToolSchema({ required: 'text' })).toThrow()
+    expect(() =>
+      validateOperationSchema({ properties: { broken: null } })
+    ).toThrow()
+    expect(() => validateOperationSchema({ required: 'text' })).toThrow()
   })
   it('reports a cancelled run only when it already committed a change', () => {
-    expect(cancelledToolResult({ ok: true, content: 'text' })).toEqual({
+    expect(cancelledOperationResult({ ok: true, content: 'text' })).toEqual({
       ok: false,
       cancelled: true,
     })
     expect(
-      cancelledToolResult({
+      cancelledOperationResult({
         ok: true,
         isCommitted: true,
         content: 'text',
         messageKey: 'local.saved',
       })
     ).toEqual({ ok: true, isCommitted: true, messageKey: 'local.saved' })
-    expect(cancelledToolResult({ ok: false, isCommitted: true })).toEqual({
+    expect(cancelledOperationResult({ ok: false, isCommitted: true })).toEqual({
       ok: false,
       cancelled: true,
     })
     expect(() =>
-      cancelledToolResult({ ok: true, isCommitted: true, level: 'loud' })
+      cancelledOperationResult({ ok: true, isCommitted: true, level: 'loud' })
     ).toThrow()
   })
   it('bounds settings previews', () => {
     expect(() =>
-      validateToolConfigPreview({
+      validateOperationConfigPreview({
         issues: [{ messageKey: 'local.bad', params: { token: 'x', count: 1 } }],
         samples: ['a', 'b'],
       })
@@ -106,6 +111,6 @@ describe('plugin contribution validation', () => {
       { samples: Array(9).fill('') },
       { samples: ['x'.repeat(65_537)] },
     ])
-      expect(() => validateToolConfigPreview(value)).toThrow()
+      expect(() => validateOperationConfigPreview(value)).toThrow()
   })
 })

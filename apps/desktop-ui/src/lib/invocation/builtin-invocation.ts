@@ -1,5 +1,5 @@
-import { toolLabel } from '../tools/tool-label'
-import type { ToolLookup } from '../tools/tool-types'
+import { operationLabel } from '../operations/operation-label'
+import type { OperationLookup } from '../operations/operation-types'
 import type { Invocation } from './invocation-types'
 
 /**
@@ -7,11 +7,15 @@ import type { Invocation } from './invocation-types'
  * a built-in action, or a step that has gathered the settings itself
  */
 export function builtinInvocation(
-  toolId: string,
-  tools: ToolLookup,
+  operationId: string,
+  tools: OperationLookup,
   t: (key: string) => string,
-  toolConfig: Record<string, unknown> = {}
+  operationConfig: Record<string, unknown> = {}
 ): Invocation {
-  const tool = tools.get(toolId)
-  return { toolId, toolConfig, label: tool ? toolLabel(tool, t) : toolId }
+  const tool = tools.get(operationId)
+  return {
+    operationId,
+    operationConfig,
+    label: tool ? operationLabel(tool, t) : operationId,
+  }
 }

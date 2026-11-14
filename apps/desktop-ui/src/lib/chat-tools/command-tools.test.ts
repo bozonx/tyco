@@ -5,7 +5,10 @@ import {
   type ProfileToolSettings,
 } from '@tyco/shared'
 
-import type { RegisteredTool, ToolLookup } from '../tools/tool-types'
+import type {
+  RegisteredOperation,
+  OperationLookup,
+} from '../operations/operation-types'
 import { createCommandToolProvider } from './command-tools'
 import { chatToolName } from './tool-name'
 
@@ -17,8 +20,8 @@ const mockCommand = (patch: Partial<CommandConfig> = {}): CommandConfig => ({
   description: 'A helpful tool for the model',
   phrases: [],
   isVoiceEnabled: false,
-  toolId: 'script',
-  toolConfig: { command: 'echo hello' },
+  operationId: 'script',
+  operationConfig: { command: 'echo hello' },
   isLlmArgumentParsingEnabled: false,
   outputAction: 'none',
   isOutputLogged: false,
@@ -28,7 +31,9 @@ const mockCommand = (patch: Partial<CommandConfig> = {}): CommandConfig => ({
   ...patch,
 })
 
-const mockTool = (patch: Partial<RegisteredTool> = {}): RegisteredTool => ({
+const mockTool = (
+  patch: Partial<RegisteredOperation> = {}
+): RegisteredOperation => ({
   id: 'script',
   owner: { kind: 'core' },
   description: 'Script runner',
@@ -38,8 +43,8 @@ const mockTool = (patch: Partial<RegisteredTool> = {}): RegisteredTool => ({
 })
 
 const createLookup = (
-  tools: Record<string, RegisteredTool> = { script: mockTool() }
-): ToolLookup => ({ get: (id) => tools[id] })
+  tools: Record<string, RegisteredOperation> = { script: mockTool() }
+): OperationLookup => ({ get: (id) => tools[id] })
 
 const profileSettings = (
   patch: Partial<ProfileToolSettings['groups'][string]> = {}
@@ -164,7 +169,7 @@ describe('command-tools', () => {
   it('skips tools marked canRunFromChat: false', async () => {
     const restrictedTool = mockTool({ canRunFromChat: false })
     const provider = createCommandToolProvider({
-      commands: () => [mockCommand({ toolId: 'restricted' })],
+      commands: () => [mockCommand({ operationId: 'restricted' })],
       tools: createLookup({ restricted: restrictedTool }),
     })
 
@@ -196,13 +201,13 @@ describe('command-tools', () => {
 
   it('skips commands whose tool is missing or unavailable', async () => {
     const unavailableTool = mockTool({
-      getUnavailableReasonKey: () => 'tools.noApiKey',
+      getUnavailableReasonKey: () => 'operations.noApiKey',
     })
     const warn = vi.fn()
     const provider = createCommandToolProvider({
       commands: () => [
-        mockCommand({ id: 'cmd-1', toolId: 'missing' }),
-        mockCommand({ id: 'cmd-2', toolId: 'unavailable' }),
+        mockCommand({ id: 'cmd-1', operationId: 'missing' }),
+        mockCommand({ id: 'cmd-2', operationId: 'unavailable' }),
       ],
       tools: createLookup({ unavailable: unavailableTool }),
       warn,
@@ -229,7 +234,7 @@ describe('command-tools', () => {
       id: 'cmd-exec',
       name: 'Exec Command',
       description: 'Executes things',
-      toolConfig: { command: 'echo hi' },
+      operationConfig: { command: 'echo hi' },
     })
     const provider = createCommandToolProvider({
       commands: () => [command],

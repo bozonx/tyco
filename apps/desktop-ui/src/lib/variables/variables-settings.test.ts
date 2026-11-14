@@ -26,8 +26,8 @@ const config = () =>
       {
         id: 'save',
         name: 'Save',
-        toolId: 'script',
-        toolConfig: {
+        operationId: 'script',
+        operationConfig: {
           command: 'cp x {{var:NOTES_DIR}}',
           workingDirectory: '{{var:NOTES_DIR}}',
         },
@@ -35,8 +35,8 @@ const config = () =>
       {
         id: 'hook',
         name: 'Hook',
-        toolId: 'webhook',
-        toolConfig: {
+        operationId: 'webhook',
+        operationConfig: {
           url: 'https://x.test/{{var:NOTES_DIR}}',
           method: 'GET',
           payloadTemplate: '{{var:OTHER}}',
@@ -49,14 +49,14 @@ const config = () =>
       {
         id: 'ask',
         name: 'Ask',
-        toolId: 'core.aiTask',
-        toolConfig: { prompt: 'Look in {{var:NOTES_DIR}}' },
+        operationId: 'core.aiTask',
+        operationConfig: { prompt: 'Look in {{var:NOTES_DIR}}' },
       },
       {
         id: 'note',
         name: 'Note',
-        toolId: 'FastNote.addNote',
-        toolConfig: { title: '{{var:NOTES_DIR}}' },
+        operationId: 'FastNote.addNote',
+        operationConfig: { title: '{{var:NOTES_DIR}}' },
       },
     ],
     llm: {
@@ -129,18 +129,18 @@ describe('variables settings', () => {
     const draft = config()
     expect(renameVariableIn(draft, 'notes', 'NOTES')).toBeUndefined()
     const [save, hook, ask, note] = draft.commands
-    expect(save!.toolConfig).toEqual({
+    expect(save!.operationConfig).toEqual({
       command: 'cp x {{var:NOTES}}',
       workingDirectory: '{{var:NOTES}}',
     })
-    expect(hook!.toolConfig.url).toBe('https://x.test/{{var:NOTES}}')
-    expect(hook!.toolConfig.headers).toEqual({
+    expect(hook!.operationConfig.url).toBe('https://x.test/{{var:NOTES}}')
+    expect(hook!.operationConfig.headers).toEqual({
       'X-A': '{{var:NOTES}}',
       'X-B': 'tyco-secret:webhook.header.1',
     })
-    expect(ask!.toolConfig.prompt).toBe('Look in {{var:NOTES}}')
+    expect(ask!.operationConfig.prompt).toBe('Look in {{var:NOTES}}')
     // a plugin field has its own templates
-    expect(note!.toolConfig.title).toBe('{{var:NOTES_DIR}}')
+    expect(note!.operationConfig.title).toBe('{{var:NOTES_DIR}}')
     expect(draft.llm.providers.at(-1)!.baseUrl).toBe('{{var:NOTES}}/v1')
     expect(draft.variables[0]!.name).toBe('NOTES')
     expect(renameVariableIn(draft, 'notes', 'bad name')).toBe(
@@ -202,7 +202,10 @@ describe('variables settings', () => {
       commandMissingVariables(
         {
           ...draft.commands[1]!,
-          toolConfig: { ...draft.commands[1]!.toolConfig, method: 'POST' },
+          operationConfig: {
+            ...draft.commands[1]!.operationConfig,
+            method: 'POST',
+          },
         },
         { NOTES_DIR: '/n' }
       )

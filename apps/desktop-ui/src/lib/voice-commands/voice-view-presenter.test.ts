@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createCommand } from '../commands/command-config'
-import { testTools, testTranslateTool } from '../tools/testing'
+import { testOperations, testTranslateOperation } from '../operations/testing'
 import {
   pickVoiceCommand,
   resolveVoiceNotice,
@@ -17,7 +17,7 @@ const t = (key: string, params?: Record<string, string>) =>
     : params
       ? `${key}:${JSON.stringify(params)}`
       : key
-const tools = testTools({}, [testTranslateTool()])
+const tools = testOperations({}, [testTranslateOperation()])
 
 describe('voice-view-presenter', () => {
   it('shows the phrases of a command as they are', () => {
@@ -53,7 +53,7 @@ describe('voice-view-presenter', () => {
     expect(
       voiceParameterLabels(command, { language: 'de-DE' }, tools, t)
     ).toEqual(['language.de-DE'])
-    const fixed = { ...command, toolConfig: { language: 'de-DE' } }
+    const fixed = { ...command, operationConfig: { language: 'de-DE' } }
     expect(voiceParameters(fixed, tools)).toEqual([])
   })
 

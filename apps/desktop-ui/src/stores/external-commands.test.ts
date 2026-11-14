@@ -12,7 +12,7 @@ import {
   type TestDesktop,
 } from '../test/install-fake-desktop'
 import { useExternalCommandsStore } from './external-commands'
-import { useToolsStore } from './tools'
+import { useOperationsStore } from './operations'
 
 let desktop: TestDesktop
 
@@ -28,12 +28,12 @@ afterEach(() => {
 
 describe('external commands store wiring', () => {
   it('wires runner, overlay and IPC properly on successful handleRun', async () => {
-    const tools = useToolsStore()
+    const tools = useOperationsStore()
 
     const runMock = vi
       .fn()
       .mockResolvedValue({ ok: true, content: 'output text' })
-    tools.registerCoreTools([
+    tools.registerCoreOperations([
       {
         id: 'mock.tool',
         name: 'Mock Tool',
@@ -51,8 +51,8 @@ describe('external commands store wiring', () => {
       name: 'External Command',
       description: '',
       isEnabled: true,
-      toolId: 'mock.tool',
-      toolConfig: {},
+      operationId: 'mock.tool',
+      operationConfig: {},
       phrases: [],
       isLlmArgumentParsingEnabled: false,
       isVoiceEnabled: false,

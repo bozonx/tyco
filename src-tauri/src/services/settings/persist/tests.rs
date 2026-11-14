@@ -333,8 +333,8 @@ fn notes_folders_stay_on_the_device() {
     config["plugins"]["FastNote"] =
         json!({"isEnabled": true, "settings": {"pathToNotes": "/notes", "mode": "daily"}});
     config["commands"] = json!([
-        {"id": "inbox", "toolId": "FastNote.addNote", "toolConfig": {"pathToNotes": "/inbox"}},
-        {"id": "other", "toolId": "script", "toolConfig": {"pathToNotes": "/kept"}}
+        {"id": "inbox", "operationId": "FastNote.addNote", "operationConfig": {"pathToNotes": "/inbox"}},
+        {"id": "other", "operationId": "script", "operationConfig": {"pathToNotes": "/kept"}}
     ]);
     let config = {
         let mut repaired = config;
@@ -351,8 +351,11 @@ fn notes_folders_stay_on_the_device() {
     let user = setup.user_file();
     assert_eq!(user["plugins"]["FastNote"]["settings"]["pathToNotes"], "");
     assert_eq!(user["plugins"]["FastNote"]["settings"]["mode"], "daily");
-    assert_eq!(user["commands"][0]["toolConfig"]["pathToNotes"], "");
-    assert_eq!(user["commands"][1]["toolConfig"]["pathToNotes"], "/kept");
+    assert_eq!(user["commands"][0]["operationConfig"]["pathToNotes"], "");
+    assert_eq!(
+        user["commands"][1]["operationConfig"]["pathToNotes"],
+        "/kept"
+    );
     let device = setup.device.snapshot();
     assert_eq!(device.plugin_paths["FastNote"], "/notes");
     assert_eq!(device.plugin_command_paths["inbox"], "/inbox");
@@ -362,7 +365,10 @@ fn notes_folders_stay_on_the_device() {
         loaded["plugins"]["FastNote"]["settings"]["pathToNotes"],
         "/notes"
     );
-    assert_eq!(loaded["commands"][0]["toolConfig"]["pathToNotes"], "/inbox");
+    assert_eq!(
+        loaded["commands"][0]["operationConfig"]["pathToNotes"],
+        "/inbox"
+    );
     assert_eq!(
         crate::services::plugins::approved_note_roots(&loaded, "FastNote", "pathToNotes").unwrap(),
         ["/notes", "/inbox"]

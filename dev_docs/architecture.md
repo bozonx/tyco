@@ -33,6 +33,30 @@ onto its result. The session follows the stored config (`savedUserConfig`), not
 the config an external run brings. On exit the webview flushes the config and
 every draft registered with `registerDraft` (AI profiles and projects).
 
+## Operations, commands and tools
+
+Three terms that look alike name different layers; keep them apart in code,
+docs and UI:
+
+- An **operation** (`lib/operations/`, `OperationDefinition` in the SDK,
+  `core.*` or `<plugin>.<id>`) is what the app or a plugin can do. It has a
+  config schema and an input schema, and nothing runs it by itself. The UI calls
+  it the type of a command.
+- A **command** (`lib/commands/`, `CommandConfig`) is the user's configured
+  instance of an operation: `operationId` + `operationConfig`, name,
+  description, hotkey, voice phrases, platforms and output. A command is the
+  only way to reach an action outside the chat: hotkeys, toolbar, action menu,
+  voice, `tyco-ctl`/D-Bus and AI commands all run commands. A plugin toolbar
+  button may reference an operation directly.
+- A **tool** (`lib/chat-tools/`, `ChatToolDefinition`) is what an LLM sees and
+  calls in a tool loop. Tools come only from `ChatToolProvider`s: built-in ones
+  (files, web, memory, reply blocks), the `commands` provider (commands the
+  profile selected, each with a description for the AI) and MCP servers. An
+  operation never becomes a tool without a command.
+
+An AI command (`core.aiTask`) runs its own loop over commands
+(`ai-command-runner.ts`), not over chat tools.
+
 ## Backend and trust boundaries
 
 `commands/` adapts IPC to services and holds no workflow of its own.
@@ -50,7 +74,7 @@ facade.
 `AppState` holds the desktop snapshot, the settings lock, the history
 coordinator and the lifecycle phase (running, quitting, shutting down). Other
 domains manage their own state (`NetState`, `SecretStore`, `ChatImages`,
-`VoiceSessionState`, `ToolCatalogState`, ...): state that needs nothing is
+`VoiceSessionState`, `OperationCatalogState`, ...): state that needs nothing is
 managed on the builder, state built from the config or a window in `setup`,
 after the config is read and before the windows exist.
 

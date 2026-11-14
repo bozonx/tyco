@@ -26,20 +26,22 @@ vi.mock('../../stores/secrets', () => ({ useSecretsStore: () => secrets }))
 vi.mock('../../stores/settings-session', () => ({
   useSettingsSessionStore: () => session,
 }))
-vi.mock('../../stores/tools', async () => {
-  const { testTools } = await import('../../lib/tools/testing')
-  const tools = testTools()
-  return { useToolsStore: () => tools }
+vi.mock('../../stores/operations', async () => {
+  const { testOperations } = await import('../../lib/operations/testing')
+  const tools = testOperations()
+  return { useOperationsStore: () => tools }
 })
 
-const webhook = (toolConfig: Record<string, unknown> = {}): CommandConfig => ({
+const webhook = (
+  operationConfig: Record<string, unknown> = {}
+): CommandConfig => ({
   ...createCommand('webhook', 'wh1'),
   name: 'Hook',
-  toolConfig: {
+  operationConfig: {
     url: 'https://hooks.example.com/run',
     method: 'POST',
     payloadTemplate: '',
-    ...toolConfig,
+    ...operationConfig,
   },
 })
 
@@ -70,7 +72,7 @@ describe('WebhookActionFields.vue', () => {
         void wrapper.setProps({
           command: {
             ...command,
-            toolConfig: { ...command.toolConfig, [field]: value },
+            operationConfig: { ...command.operationConfig, [field]: value },
           },
         })
       },

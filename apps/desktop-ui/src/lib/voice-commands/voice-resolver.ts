@@ -4,12 +4,12 @@ import {
   commandTakesText,
   isCommandAvailable,
 } from '../commands/command-runtime'
-import type { ToolLookup } from '../tools/tool-types'
+import type { OperationLookup } from '../operations/operation-types'
 import {
   localeMessage,
   openCommandParameters,
   parameterVariants,
-} from '../tools/command-parameters'
+} from '../operations/command-parameters'
 
 export interface VoiceParameter {
   name: string
@@ -324,7 +324,7 @@ function resolveFrom(
 
 export function isVoiceCommand(
   command: CommandConfig,
-  tools: ToolLookup
+  tools: OperationLookup
 ): boolean {
   return (
     command.isEnabled &&
@@ -384,11 +384,11 @@ function parameterRoute(
  */
 function commandRoutes(
   command: CommandConfig,
-  tools: ToolLookup
+  tools: OperationLookup
 ): VoiceRoute[] {
   const own = command.phrases.filter((phrase) => words(phrase).length)
-  const tool = tools.get(command.toolId)
-  const [parameter] = openCommandParameters(tool, command.toolConfig)
+  const tool = tools.get(command.operationId)
+  const [parameter] = openCommandParameters(tool, command.operationConfig)
   if (!parameter)
     return own.map((phrase) => ({
       commandId: command.id,
@@ -419,7 +419,7 @@ function commandRoutes(
 
 export function compileVoiceRoutes(
   commands: readonly CommandConfig[],
-  tools: ToolLookup,
+  tools: OperationLookup,
   includeUnavailable = false
 ): VoiceRoute[] {
   return commands
@@ -478,7 +478,7 @@ export type VoiceInputIssue =
 export function voiceInputIssue(
   command: CommandConfig,
   text: string,
-  tools: ToolLookup,
+  tools: OperationLookup,
   context?: { selectionText: string },
   parameters: Readonly<Record<string, string>> = {}
 ): VoiceInputIssue | undefined {
@@ -486,9 +486,10 @@ export function voiceInputIssue(
     return 'missing-selection'
   }
   if (
-    openCommandParameters(tools.get(command.toolId), command.toolConfig).some(
-      (parameter) => !parameters[parameter.name]
-    )
+    openCommandParameters(
+      tools.get(command.operationId),
+      command.operationConfig
+    ).some((parameter) => !parameters[parameter.name])
   )
     return 'missing-parameter'
 

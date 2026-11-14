@@ -29,7 +29,7 @@ import { useIpcStore } from './ipc'
 import { useLlmStore } from './llm'
 import { useMenuModalsStore } from './menu-modals'
 import { useSecretsStore } from './secrets'
-import { useToolsStore } from './tools'
+import { useOperationsStore } from './operations'
 
 /**
  * One chat: "Ask AI" when `profileId` is null, a profile chat otherwise. Each
@@ -45,7 +45,7 @@ function createChatStoreSetup(profileId: string | null) {
     const llmStore = useLlmStore()
     const secretsStore = useSecretsStore()
     const aiProfilesStore = useAiProfilesStore()
-    const toolsStore = useToolsStore()
+    const operationsStore = useOperationsStore()
     if (profileId) {
       const pinia = getActivePinia()
       // Keep drafts and generation intact if removing the profile fails.
@@ -86,8 +86,8 @@ function createChatStoreSetup(profileId: string | null) {
       updateProfileModel: (id, modelId) =>
         aiProfilesStore.updateProfile(id, { modelId }),
       getUserConfig: () => desktopStore.userConfig,
-      tools: toolsStore,
-      environment: toolsStore.environment,
+      tools: operationsStore,
+      environment: operationsStore.environment,
       getSessionState: () => desktopStore.sessionState,
       saveSessionState: desktopStore.patchSessionState,
       saveChatModelId: async (modelId) => {
@@ -145,7 +145,9 @@ function createChatStoreSetup(profileId: string | null) {
     // "Ask AI" is the chat of `core.askInChat`
     if (!profileId)
       onScopeDispose(
-        useToolsStore().provideAskInChat((text) => runtime.attachToChat(text))
+        useOperationsStore().provideAskInChat((text) =>
+          runtime.attachToChat(text)
+        )
       )
 
     return runtime
