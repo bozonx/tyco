@@ -17,6 +17,8 @@ pub const DEFAULT_MEMORY_CORE: &str =
     "# Ядро памяти\n\n## О пользователе\n\n## Постоянные правила\n";
 
 pub const MAX_MEMORY_FACT_LEN: usize = 4_000;
+pub const MAX_MEMORY_HEADING_LEN: usize = 120;
+pub const MAX_MEMORY_DESCRIPTION_LEN: usize = 300;
 pub const MAX_MEMORY_FILE_BYTES: usize = 64 * 1024;
 pub const MAX_MEMORY_TOPIC_FILES: usize = 50;
 pub const MAX_MEMORY_SEARCH_RESULTS: usize = 100;
@@ -271,17 +273,18 @@ pub fn read_profile_memory(
 
 /// Appends a single fact/thesis to a memory file.
 /// If a topic file does not exist, it is created.
-pub fn add_profile_memory_fact(
+pub fn add_profile_memory_fact<'a>(
     vault_root: &Path,
     versions: &MemoryReadVersions,
     profile_id: &str,
     chat_id: Option<&str>,
     file: &str,
-    fact: &str,
+    entry: impl Into<MemoryEntry<'a>>,
 ) -> Result<ProfileMemoryChange, AppError> {
+    let entry = entry.into();
     validate_id(profile_id)?;
     let normalized = normalize_and_validate_memory_file(file)?;
-    let fact_trimmed = fact.trim();
+    let fact_trimmed = entry.fact.trim();
     if fact_trimmed.is_empty() {
         return Err(AppError::InvalidInput("Memory fact cannot be empty".into()));
     }
@@ -290,6 +293,18 @@ pub fn add_profile_memory_fact(
             "Memory fact exceeds maximum allowed length of {MAX_MEMORY_FACT_LEN} characters"
         )));
     }
+    let section = entry
+        .section
+        .map(|section| section.trim().trim_start_matches('#').trim())
+        .filter(|section| !section.is_empty());
+    if section
+        .is_some_and(|section| section.len() > MAX_MEMORY_HEADING_LEN || section.contains('\n'))
+    {
+        return Err(AppError::InvalidInput(format!(
+            "Memory section must be a single line of at most {MAX_MEMORY_HEADING_LEN} characters"
+        )));
+    }
+    let bullet = format_memory_bullet(fact_trimmed);
 
     let memory_dir = profile_memory_dir(vault_root, profile_id)?;
     let target_path = memory_file_path(&memory_dir, &normalized);
@@ -298,19 +313,7 @@ pub fn add_profile_memory_fact(
         let existing = fs::read_to_string(&target_path)?;
         versions.check(vault_root, profile_id, &normalized, &existing)?;
         save_snapshot_if_needed(&memory_dir, chat_id, &normalized, &target_path)?;
-
-        let mut next = existing.clone();
-        if !next.is_empty() && !next.ends_with('\n') {
-            next.push('\n');
-        }
-        if fact_trimmed.starts_with('-') || fact_trimmed.starts_with('*') {
-            next.push_str(fact_trimmed);
-        } else {
-            next.push_str("- ");
-            next.push_str(fact_trimmed);
-        }
-        next.push('\n');
-
+        let next = append_memory_bullet(&existing, &bullet, section);
         (Some(existing), next)
     } else {
         if normalized != MEMORY_CORE_FILE {
@@ -324,16 +327,23 @@ pub fn add_profile_memory_fact(
         save_snapshot_if_needed(&memory_dir, chat_id, &normalized, &target_path)?;
         let stem = &normalized[..normalized.len() - 3];
         let title = format_stem_to_title(stem);
-        let mut next = format!("# {title}\n\n");
-        if fact_trimmed.starts_with('-') || fact_trimmed.starts_with('*') {
-            next.push_str(fact_trimmed);
-        } else {
-            next.push_str("- ");
-            next.push_str(fact_trimmed);
+        let mut header = format!("# {title}\n\n");
+        let description = entry
+            .description
+            .map(|text| text.split_whitespace().collect::<Vec<_>>().join(" "))
+            .filter(|text| !text.is_empty());
+        if let Some(description) = description {
+            if description.len() > MAX_MEMORY_DESCRIPTION_LEN {
+                return Err(AppError::InvalidInput(format!(
+                    "Memory topic description exceeds {MAX_MEMORY_DESCRIPTION_LEN} characters"
+                )));
+            }
+            // Keep the description from being parsed as a list item or heading.
+            let description = description.trim_start_matches(['#', '-', '*', ' ']);
+            header.push_str(description);
+            header.push_str("\n\n");
         }
-        next.push('\n');
-
-        (None, next)
+        (None, append_memory_bullet(&header, &bullet, section))
     };
 
     if after.len() > MAX_MEMORY_FILE_BYTES {
@@ -350,6 +360,102 @@ pub fn add_profile_memory_fact(
         before,
         after,
     })
+}
+
+/// A fact appended by `add_profile_memory_fact`, with optional placement.
+#[derive(Debug, Default, Clone, Copy)]
+pub struct MemoryEntry<'a> {
+    pub fact: &'a str,
+    /// Heading to append under; created at the end of the file when missing.
+    pub section: Option<&'a str>,
+    /// One-line summary written under the title when a new topic is created.
+    pub description: Option<&'a str>,
+}
+
+impl<'a> From<&'a str> for MemoryEntry<'a> {
+    fn from(fact: &'a str) -> Self {
+        Self {
+            fact,
+            ..Self::default()
+        }
+    }
+}
+
+impl<'a> From<&'a String> for MemoryEntry<'a> {
+    fn from(fact: &'a String) -> Self {
+        fact.as_str().into()
+    }
+}
+
+fn format_memory_bullet(fact: &str) -> String {
+    if fact.starts_with('-') || fact.starts_with('*') {
+        fact.to_owned()
+    } else {
+        format!("- {fact}")
+    }
+}
+
+/// Returns the level and text of a Markdown ATX heading.
+fn markdown_heading(line: &str) -> Option<(usize, &str)> {
+    let trimmed = line.trim_start();
+    let level = trimmed.chars().take_while(|c| *c == '#').count();
+    if level == 0 || level > 6 {
+        return None;
+    }
+    let rest = &trimmed[level..];
+    if !rest.is_empty() && !rest.starts_with(' ') {
+        return None;
+    }
+    Some((level, rest.trim()))
+}
+
+/// Appends a bullet to the end of `section` (case-insensitive heading match),
+/// to a new `## section` at the end of the file, or to the end of the file.
+pub fn append_memory_bullet(text: &str, bullet: &str, section: Option<&str>) -> String {
+    let Some(section) = section else {
+        let mut next = text.to_owned();
+        if !next.is_empty() && !next.ends_with('\n') {
+            next.push('\n');
+        }
+        next.push_str(bullet);
+        next.push('\n');
+        return next;
+    };
+    let wanted = section.to_lowercase();
+    let lines: Vec<&str> = text.lines().collect();
+    let found = lines.iter().enumerate().find_map(|(index, line)| {
+        markdown_heading(line)
+            .filter(|(_, heading)| heading.to_lowercase() == wanted)
+            .map(|(level, _)| (index, level))
+    });
+    let Some((start, level)) = found else {
+        let mut next = text.trim_end().to_owned();
+        if !next.is_empty() {
+            next.push_str("\n\n");
+        }
+        next.push_str(&format!("## {section}\n\n{bullet}\n"));
+        return next;
+    };
+    let end = lines[start + 1..]
+        .iter()
+        .position(|line| markdown_heading(line).is_some_and(|(found, _)| found <= level))
+        .map_or(lines.len(), |offset| start + 1 + offset);
+    let mut insert_at = end;
+    while insert_at > start + 1 && lines[insert_at - 1].trim().is_empty() {
+        insert_at -= 1;
+    }
+    let mut out: Vec<&str> = lines[..insert_at].to_vec();
+    if insert_at == start + 1 {
+        out.push("");
+    }
+    out.push(bullet);
+    if end < lines.len() {
+        out.push("");
+        out.extend_from_slice(&lines[end..]);
+    }
+    let mut next = out.join("\n");
+    next.push('\n');
+    next
 }
 
 fn apply_memory_replace(text: &str, old_text: &str, new_text: &str) -> Result<String, AppError> {

@@ -1139,3 +1139,63 @@ fn memory_revision_checks_are_isolated_by_vault_even_for_equal_profile_ids() {
         "External"
     );
 }
+
+#[test]
+fn memory_bullet_goes_to_the_end_of_its_section() {
+    let text = "# Core\n\n## About the user\n\n- Lives in Kazan\n\n## Standing rules\n";
+    let next = append_memory_bullet(text, "- Has a dog", Some("about the USER"));
+    assert_eq!(
+        next,
+        "# Core\n\n## About the user\n\n- Lives in Kazan\n- Has a dog\n\n## Standing rules\n"
+    );
+    let rules = append_memory_bullet(&next, "- Answer briefly", Some("## Standing rules"));
+    assert!(rules.ends_with("## Standing rules\n\n- Answer briefly\n"));
+}
+
+#[test]
+fn memory_bullet_creates_a_missing_section_or_appends_without_one() {
+    assert_eq!(
+        append_memory_bullet("# Core\n\n- a\n", "- b", Some("Work")),
+        "# Core\n\n- a\n\n## Work\n\n- b\n"
+    );
+    assert_eq!(
+        append_memory_bullet("# Core\n- a", "- b", None),
+        "# Core\n- a\n- b\n"
+    );
+    // A deeper heading inside the section stays part of it.
+    assert_eq!(
+        append_memory_bullet("## A\n- a\n### A1\n- a1\n## B\n", "- x", Some("A")),
+        "## A\n- a\n### A1\n- a1\n- x\n\n## B\n"
+    );
+}
+
+#[test]
+fn new_memory_topic_keeps_its_description_for_the_outline() {
+    let versions = MemoryReadVersions::default();
+    let test_dir = TestDir::new("ai_vault_memory_description");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("desc", 1000), "").unwrap();
+
+    let change = add_profile_memory_fact(
+        &vault_root,
+        &versions,
+        "desc",
+        None,
+        "health.md",
+        MemoryEntry {
+            fact: "Lactose intolerance",
+            section: None,
+            description: Some("Diet,\n allergies and conditions"),
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        change.after,
+        "# Health\n\nDiet, allergies and conditions\n\n- Lactose intolerance\n"
+    );
+    let topics = list_profile_memory_topics(&vault_root, "desc").unwrap();
+    assert_eq!(
+        topics[1].description.as_deref(),
+        Some("Diet, allergies and conditions")
+    );
+}

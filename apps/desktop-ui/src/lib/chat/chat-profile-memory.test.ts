@@ -47,9 +47,9 @@ describe('chat-profile-memory', () => {
     ]
 
     expect(formatTopicsList(topics)).toBe(
-      `- health.md — История болезней и анализы (2.1 КБ)\n- preferences.md — Стиль ответов (0.4 КБ)\n- notes.md — Notes (1.0 КБ)`
+      `- health.md — История болезней и анализы (~717 tokens)\n- preferences.md — Стиль ответов (~137 tokens)\n- notes.md — Notes (~342 tokens)`
     )
-    expect(formatTopicsList([])).toBe('(нет тем)')
+    expect(formatTopicsList([])).toBe('(no topics yet)')
   })
 
   it('does not clip core.md within hard limit', () => {
@@ -83,8 +83,12 @@ describe('chat-profile-memory', () => {
     })
 
     expect(warnings.length).toBe(2)
-    expect(warnings[0]).toContain('core.md: 1 100 токенов, лимит 1 000')
-    expect(warnings[1]).toContain('health.md: 2 800 токенов, лимит 2 500')
+    expect(warnings[0]).toContain(
+      'core.md is 1100 tokens, over the 1000 token budget'
+    )
+    expect(warnings[1]).toContain(
+      'health.md is 2800 tokens, over the 2500 token budget'
+    )
   })
 
   it('builds full profile memory block according to spec', () => {
@@ -110,11 +114,11 @@ describe('chat-profile-memory', () => {
 
     expect(memoryContext.block).toContain('<profile_memory>')
     expect(memoryContext.block).toContain(
-      'Это заметки о пользователе, сохранённые в прошлых разговорах.'
+      'Notes about the user saved in earlier conversations.'
     )
     expect(memoryContext.block).toContain('<core>\n' + coreText + '\n</core>')
     expect(memoryContext.block).toContain(
-      '- health.md — История болезней и анализы (2.1 КБ)'
+      '- health.md — История болезней и анализы (~717 tokens)'
     )
     expect(memoryContext.block).toContain('</profile_memory>')
   })

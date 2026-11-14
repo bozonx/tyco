@@ -237,7 +237,8 @@ describe('memory-tools', () => {
         'prof-1',
         'health.md',
         'Lactose intolerance',
-        'chat-123'
+        'chat-123',
+        { section: undefined, description: undefined }
       )
       expect(result).toBe('Added fact to health.md')
     })
@@ -355,7 +356,22 @@ describe('memory-tools', () => {
         kind: 'file-change',
         path: 'memory/habits.md',
         before: null,
-        after: '# habits\n\n- Wakes up at 7am\n',
+        after: '# Habits\n\n- Wakes up at 7am\n',
+      })
+
+      vi.mocked(deps.readMemory).mockRejectedValueOnce(new Error('not found'))
+      const describedPreview = await addTool.preview!(
+        {
+          file: 'home-renovation.md',
+          fact: 'Kitchen is done',
+          description: 'Apartment renovation plans',
+          section: '## Progress',
+        },
+        new AbortController().signal
+      )
+      expect(describedPreview).toMatchObject({
+        after:
+          '# Home Renovation\n\nApartment renovation plans\n\n## Progress\n\n- Kitchen is done\n',
       })
     })
 

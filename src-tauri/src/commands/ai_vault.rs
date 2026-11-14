@@ -305,6 +305,8 @@ pub async fn add_ai_profile_memory_fact(
     chat_id: Option<String>,
     file: String,
     fact: String,
+    section: Option<String>,
+    description: Option<String>,
 ) -> Result<ProfileMemoryChange, AppError> {
     run_blocking(move || {
         let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
@@ -315,7 +317,11 @@ pub async fn add_ai_profile_memory_fact(
                 profile_id,
                 chat_id.as_deref(),
                 &file,
-                &fact,
+                ai_vault::MemoryEntry {
+                    fact: &fact,
+                    section: section.as_deref(),
+                    description: description.as_deref(),
+                },
             )
         })
     })

@@ -67,6 +67,8 @@ export interface DesktopChatToolsInvoke {
       chatId?: string | null
       file: string
       fact: string
+      section?: string | null
+      description?: string | null
     }
   ): Promise<ProfileMemoryChange>
   (
@@ -157,12 +159,14 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
       deps.invoke('read_ai_profile_memory', { profileId: id, file }),
     searchMemory: (id, query) =>
       deps.invoke('search_ai_profile_memory', { profileId: id, query }),
-    addFact: (id, file, fact, chatId) =>
+    addFact: (id, file, fact, chatId, placement) =>
       deps.invoke('add_ai_profile_memory_fact', {
         profileId: id,
         chatId,
         file,
         fact,
+        section: placement?.section ?? null,
+        description: placement?.description ?? null,
       }),
     replaceMemory: (id, file, oldText, newText, chatId) =>
       deps.invoke('replace_ai_profile_memory', {

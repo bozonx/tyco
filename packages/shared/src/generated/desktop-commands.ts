@@ -102,6 +102,8 @@ export interface DesktopCommands {
       chatId?: string | null
       file: string
       fact: string
+      section?: string | null
+      description?: string | null
     }
     result: ProfileMemoryChange
   }
