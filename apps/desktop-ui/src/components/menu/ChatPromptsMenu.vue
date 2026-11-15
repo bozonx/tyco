@@ -22,7 +22,7 @@
         "
         :shortcuts-disabled="props.shortcutsDisabled"
         @select="runPrompt($event.view)"
-        @escape="onEscape"
+        @escape="handleEsc"
       >
         <template #title="{ item }">
           <span class="chat-prompt-name">{{ item.view.label }}</span>
@@ -78,7 +78,7 @@ const query = ref('')
 const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
 const { t } = useI18n()
-const { handleEsc, handleCloseAll } = useOverlayNav()
+const { handleEsc } = useOverlayNav()
 const { views } = useChatPrompts()
 
 /** The grid keys its cells by id */
@@ -91,11 +91,6 @@ const filteredItems = computed(() =>
 
 function close() {
   handleEsc()
-}
-
-function onEscape(isShifted: boolean) {
-  if (isShifted) handleCloseAll()
-  else handleEsc()
 }
 
 function runPrompt(view: ChatPromptView) {

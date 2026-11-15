@@ -132,7 +132,7 @@ const props = defineProps<{ selection: ScreenshotAreaSelection }>()
 
 const emit = defineEmits<{
   confirm: [crop: CropRect]
-  cancel: [options?: { closeAll?: boolean }]
+  cancel: []
   /** The frozen image could not be read */
   failed: []
 }>()
@@ -233,15 +233,16 @@ function onConfirm() {
   if (crop) emit('confirm', crop)
 }
 
-function onCancel(closeAll = false) {
-  emit('cancel', { closeAll })
+// Shift+Esc never gets here: `QuickOverlay` intercepts the global close
+function onCancel() {
+  emit('cancel')
 }
 
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     e.preventDefault()
     e.stopImmediatePropagation()
-    onCancel(e.shiftKey)
+    onCancel()
   } else if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
     e.preventDefault()
     e.stopImmediatePropagation()

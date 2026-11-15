@@ -52,6 +52,7 @@ import { describeDictationError } from '../lib/stt/dictation-error'
 import { liveTranscriptText } from '../lib/stt/live-transcript'
 import { createKeyPressTracker } from '../lib/ui/key-press-tracker'
 import { isTextEntryTarget } from '../lib/ui/text-entry-target'
+import { useCloseWindowStore } from '../stores/close-window'
 import { useDesktopStore } from '../stores/desktop'
 import { useDictationHandoffStore } from '../stores/dictation-handoff'
 import { useHistoryStore } from '../stores/history'
@@ -59,7 +60,6 @@ import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useQuickDismissStore } from '../stores/quick-dismiss'
 import { useVoiceResultStore } from '../stores/voice-result'
-import { useWindowStore } from '../stores/window'
 
 const emit = defineEmits<{
   /** The recording is over and its outcome takes the whole window */
@@ -71,7 +71,7 @@ const desktopStore = useDesktopStore()
 const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
-const windowStore = useWindowStore()
+const closeWindowStore = useCloseWindowStore()
 const modeSwitch = useQuickModeSwitch()
 const { startDictation, finishDictation, cancelDictation, switchSource } =
   useDictationActions()
@@ -101,10 +101,7 @@ const model = createListenModel({
       'warn'
     ),
   describeError: (error) => describeDictationError(error, translate),
-  onClose: () => {
-    menuModalsStore.cancelAndCloseAll()
-    void windowStore.hide()
-  },
+  onClose: () => closeWindowStore.closeAll(),
 })
 
 const isChangingMode = ref(false)

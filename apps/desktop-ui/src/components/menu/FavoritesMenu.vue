@@ -13,7 +13,7 @@
         "
         :shortcuts-disabled="props.shortcutsDisabled"
         @select="selectFavorite"
-        @escape="onEscape"
+        @escape="handleEsc"
       >
         <template #title="{ item }">
           <span v-if="item.name" class="favorite-name">{{ item.name }}</span>
@@ -50,12 +50,7 @@ const menuModalsStore = useMenuModalsStore()
 
 const query = ref('')
 
-const { handleEsc, handleCloseAll } = useOverlayNav()
-
-function onEscape(isShifted: boolean) {
-  if (isShifted) handleCloseAll()
-  else handleEsc()
-}
+const { handleEsc } = useOverlayNav()
 
 const allFavorites = computed<FavoriteConfig[]>(
   () => desktopStore.userConfig.favorites?.items ?? []

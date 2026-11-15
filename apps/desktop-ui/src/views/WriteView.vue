@@ -101,6 +101,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import ShortcutButton from '../components/overlay/ShortcutButton.vue'
 import WriteLivePreview from '../components/quick/WriteLivePreview.vue'
 import WriteModeInput from '../components/quick/WriteModeInput.vue'
+import { useCloseWindowInterceptor } from '../composables/use-close-window-interceptor'
 import { useDismissibleLayer } from '../composables/use-dismissible-layer'
 import { useI18n } from '../composables/use-i18n'
 import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
@@ -111,6 +112,7 @@ import {
   submitShortcut,
 } from '../lib/input-keys/input-keys'
 import { maxInputHeight } from '../lib/quick-panel/input-height'
+import { useCloseWindowStore } from '../stores/close-window'
 import { useCorrectionWorkflowStore } from '../stores/correction-workflow'
 import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
@@ -118,14 +120,13 @@ import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
 import { useQuickInputStore } from '../stores/quick-input'
 import { useTextCorrectionStore } from '../stores/text-correction'
-import { useWindowStore } from '../stores/window'
 import type { QuickCorrectionMode } from '@tyco/shared'
 
 const navPanelStore = useNavPanelStore()
 const quickInputStore = useQuickInputStore()
-const windowStore = useWindowStore()
 const desktopStore = useDesktopStore()
 const menuModalsStore = useMenuModalsStore()
+const closeWindowStore = useCloseWindowStore()
 const correctionWorkflowStore = useCorrectionWorkflowStore()
 const textCorrectionStore = useTextCorrectionStore()
 const ipcStore = useIpcStore()
@@ -281,17 +282,20 @@ watch(
   }
 )
 
+// any close of the window, Shift+Esc too, stops what the input started; the
+// close itself drops the text, which stays only in the history
+useCloseWindowInterceptor(() => {
+  if (desktopStore.desktopState.mode === 'quickInput') {
+    correctionWorkflowStore.cancelInsert()
+    correctionWorkflowStore.cancelPrecorrection()
+    textCorrectionStore.resetLive()
+    resetNav()
+  }
+  return false
+})
+
 function cancelAndClose() {
-  correctionWorkflowStore.cancelInsert()
-  correctionWorkflowStore.cancelPrecorrection()
-  textCorrectionStore.resetLive()
-  // Escape and the cancel button drop the text on purpose; it stays only in
-  // the history, when the history is on
-  quickInputStore.discard()
-  menuModalsStore.cancelPending()
-  menuModalsStore.closeAll()
-  resetNav()
-  void windowStore.hide()
+  closeWindowStore.closeAll()
 }
 
 /** Whether the input takes commands: not while a modal is over it. */

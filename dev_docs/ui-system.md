@@ -356,12 +356,15 @@ correction responses are failures and must not replace the source text.
 Overlay headers separate Back (Esc) from the close cross (Shift+Esc). Escape
 returns one step and closes at the root. The cross closes the entire scenario. At the root, a single Close (Esc) button replaces both Back and the cross; Shift+Esc still closes. Header actions follow Other actions, Back, Close order.
 
-Shift+Esc is global: `useCloseWindowStore` handles it once per window, in the
-capture phase, before any surface. It cancels the running operation, clears the
-menus, drops the quick input or voice result and hides the window. Surfaces do
-not handle Shift+Esc themselves; one that must close in its own way, such as the
-screenshot area selector, registers `useCloseWindowInterceptor`. The close cross
-of quick window overlays goes the same way.
+Shift+Esc and its alias Ctrl+Q are global: `useCloseWindowStore` handles them
+once per window, in the capture phase, before any surface. Hints show Shift+Esc.
+The close cancels the running operation, clears the menus, drops the quick input
+or voice result and hides the window; the close cross of quick window overlays
+and Close at a special mode root go the same way. Surfaces do not handle these
+keys themselves. A surface that must clean up registers
+`useCloseWindowInterceptor` and returns false, as quick input does to stop its
+insertion and corrections; one that closes in its own way returns true, as the
+screenshot area selector does to cancel the capture.
 
 What counts as the root:
 

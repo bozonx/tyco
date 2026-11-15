@@ -134,7 +134,7 @@ describe('SearchShortcutGrid', () => {
     await wrapper
       .find('.search-grid-grid')
       .trigger('keydown', { key: 'Escape' })
-    expect(wrapper.emitted('escape')).toEqual([[false]])
+    expect(wrapper.emitted('escape')).toEqual([[]])
     wrapper.unmount()
   })
 })

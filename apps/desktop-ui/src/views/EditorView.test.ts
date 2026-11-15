@@ -1,16 +1,8 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  onTestFinished,
-  vi,
-} from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useEditorInputStore } from '../stores/editor-input'
-import { useCloseWindowStore } from '../stores/close-window'
+import { installCloseWindowKeys } from '../test/close-window-keys'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
 import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
@@ -108,13 +100,7 @@ describe('Editor actions shortcut', () => {
   })
 
   it('opens the action menu on Escape and hides on Shift+Escape, keeping unsaved text', async () => {
-    // the app runtime owns Shift+Esc for the whole window
-    const closeAllKey = (event: KeyboardEvent) =>
-      useCloseWindowStore().handleKeydown(event)
-    window.addEventListener('keydown', closeAllKey, true)
-    onTestFinished(() =>
-      window.removeEventListener('keydown', closeAllKey, true)
-    )
+    installCloseWindowKeys()
     const editor = useEditorInputStore()
     editor.setValue('Unsaved text', 'plain')
 
@@ -150,13 +136,7 @@ describe('Editor actions shortcut', () => {
   })
 
   it('closes editor window on Shift+Escape even when an action modal is open', async () => {
-    // the app runtime owns Shift+Esc for the whole window
-    const closeAllKey = (event: KeyboardEvent) =>
-      useCloseWindowStore().handleKeydown(event)
-    window.addEventListener('keydown', closeAllKey, true)
-    onTestFinished(() =>
-      window.removeEventListener('keydown', closeAllKey, true)
-    )
+    installCloseWindowKeys()
     const wrapper = mount(EditorView, { global: { stubs: { Editor: true } } })
     const modals = useMenuModalsStore()
     modals.nextModal(MenuModals.INSERT, { text: 'Some action text' })
@@ -177,6 +157,7 @@ describe('Editor actions shortcut', () => {
   })
 
   it('closes editor window on Ctrl+Q or Cmd+Q', async () => {
+    installCloseWindowKeys()
     const wrapper = mount(EditorView, { global: { stubs: { Editor: true } } })
 
     window.dispatchEvent(

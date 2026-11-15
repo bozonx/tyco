@@ -1,4 +1,5 @@
 import { flushPromises, mount } from '@vue/test-utils'
+import { installCloseWindowKeys } from '../test/close-window-keys'
 import { nextTick, reactive } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_USER_CONFIG } from '@tyco/shared'
@@ -176,6 +177,16 @@ describe('quick input screen', () => {
       text: 'Original text',
     })
     expect(mocks.correction.insert).not.toHaveBeenCalled()
+  })
+
+  it('stops what the input started on Shift+Escape too', async () => {
+    installCloseWindowKeys()
+    press('Escape', { shiftKey: true })
+    expect(mocks.writer.discard).toHaveBeenCalledOnce()
+    expect(mocks.correction.cancelInsert).toHaveBeenCalledOnce()
+    expect(mocks.correction.cancelPrecorrection).toHaveBeenCalledOnce()
+    await flushPromises()
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
   })
 
   it('keeps newline and cancel behavior', async () => {

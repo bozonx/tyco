@@ -13,7 +13,6 @@ import { createMainWindowReset } from '../lib/app/main-window-reset'
 import { desktopClient } from '../lib/desktop/client'
 import { isQuickWindow as isInQuickWindow } from '../lib/desktop/window'
 import { syncI18nLocale } from '../lib/i18n'
-import { isCloseWindowEvent } from '../lib/input-keys/input-keys'
 import { syncDocumentLanguageAttributes } from '../lib/locale/language'
 import { clientLogger } from '../lib/logger'
 import { appNavigation } from '../navigation'
@@ -51,7 +50,7 @@ export function useAppRuntime() {
   const { locale, t } = useI18n()
   const menuModalsStore = useMenuModalsStore()
   const navPanelStore = useNavPanelStore()
-  // Shift+Esc closes the window at any step. Registered before any layer, in
+  // Shift+Esc and Ctrl+Q close the window at any step. Registered before any layer, in
   // the capture phase, so no surface handles it on its own.
   const closeWindowStore = useCloseWindowStore()
   const onCloseAllKey = (event: KeyboardEvent) => {
@@ -68,13 +67,6 @@ export function useAppRuntime() {
     keyboardPhase: 'bubble',
     dismiss: () => {},
     keydown: (event) => {
-      if (isCloseWindowEvent(event)) {
-        event.preventDefault()
-        menuModalsStore.cancelPending()
-        menuModalsStore.closeAll()
-        void ipcStore.callOrNotify('hide_window')
-        return
-      }
       if (event.key === 'Escape') navPanelStore.handleKeyDown(event)
     },
   })

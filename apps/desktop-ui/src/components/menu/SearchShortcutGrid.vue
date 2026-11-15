@@ -117,7 +117,7 @@ const query = defineModel<string>('query', { default: '' })
 const emit = defineEmits<{
   (e: 'select', item: T): void
   /** Escape, with Shift held or not */
-  (e: 'escape', isShifted: boolean): void
+  (e: 'escape'): void
 }>()
 
 const { t } = useI18n()
@@ -217,7 +217,7 @@ function clearQuery() {
 function onEscape(event: KeyboardEvent) {
   event.preventDefault()
   event.stopPropagation()
-  emit('escape', event.shiftKey)
+  emit('escape')
 }
 
 function isPlainKey(event: KeyboardEvent): boolean {
@@ -257,15 +257,11 @@ function pickBySlot(event: KeyboardEvent): boolean {
 function onSearchKeyDown(event: KeyboardEvent) {
   if (event.isComposing) return
   if (event.key === 'Escape') {
-    if (event.shiftKey) {
-      onEscape(event)
-      return
-    }
     event.preventDefault()
     event.stopPropagation()
     if (query.value) query.value = ''
     else if (props.items.length > 0) focusGrid()
-    else emit('escape', false)
+    else emit('escape')
     return
   }
   if (isFindKey(event)) {

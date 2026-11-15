@@ -253,7 +253,7 @@ const menuModalsStore = useMenuModalsStore()
 const tools = useOperationsStore()
 const voice = useVoiceCommandsStore()
 const releaseHold = useQuickDismissStore().hold()
-const { handleEsc, handleCloseAll } = useOverlayNav(() => ({ escMode: 'auto' }))
+const { handleEsc } = useOverlayNav(() => ({ escMode: 'auto' }))
 
 const isContextDisabled = ref(false)
 
@@ -380,13 +380,9 @@ const pick = (command: CommandConfig) => {
   }
 }
 
-const close = (isShift: boolean | MouseEvent = false) => {
+const close = () => {
   void voice.cancel()
-  if (typeof isShift === 'boolean' && isShift) {
-    handleCloseAll()
-  } else {
-    handleEsc()
-  }
+  handleEsc()
 }
 
 let runningPendingOwner: number | undefined

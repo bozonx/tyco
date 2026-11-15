@@ -1,4 +1,7 @@
-import type { InputKeyEvent } from '../input-keys/input-keys'
+import {
+  isCloseWindowEvent,
+  type InputKeyEvent,
+} from '../input-keys/input-keys'
 
 /** Takes over closing the window; returns false to let the default run */
 export type CloseWindowInterceptor = () => boolean
@@ -21,9 +24,9 @@ export function isCloseAllEvent(event: InputKeyEvent): boolean {
 }
 
 /**
- * The single owner of Shift+Esc in a window. A surface that must close in its
- * own way, such as the screenshot area selector, intercepts it; the latest
- * interceptor goes first.
+ * The single owner of Shift+Esc and its alias Ctrl+Q in a window. A surface
+ * that must close in its own way, such as the screenshot area selector,
+ * intercepts it; the latest interceptor goes first.
  */
 export function createCloseWindowModel(deps: CloseWindowDependencies) {
   const interceptors: CloseWindowInterceptor[] = []
@@ -43,14 +46,14 @@ export function createCloseWindowModel(deps: CloseWindowDependencies) {
     deps.closeWindow()
   }
 
-  /** Handles Shift+Esc; true when the event was consumed */
+  /** Handles Shift+Esc and Ctrl+Q; true when the event was consumed */
   function handleKeydown(
     event: InputKeyEvent & {
       preventDefault: () => void
       stopImmediatePropagation: () => void
     }
   ): boolean {
-    if (!isCloseAllEvent(event)) return false
+    if (!isCloseAllEvent(event) && !isCloseWindowEvent(event)) return false
     event.preventDefault()
     event.stopImmediatePropagation()
     closeAll()
