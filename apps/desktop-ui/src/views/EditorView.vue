@@ -49,8 +49,12 @@ useDismissibleLayer({
   elements: () => [],
   canDismissOutside: false,
   keyboardPhase: 'bubble',
-  dismiss: () => {
-    void closeEditor()
+  dismiss: openInsertMenu,
+  // Esc in the editor opens its action menu; Shift+Esc hides the window
+  keydown: (event) => {
+    if (event.key !== 'Escape') return
+    if (event.shiftKey) void closeEditor()
+    else openInsertMenu()
   },
 })
 

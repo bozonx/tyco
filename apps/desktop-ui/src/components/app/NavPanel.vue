@@ -152,7 +152,8 @@ onMounted(() => {
 onBeforeUnmount(() => resizeObserver?.disconnect())
 
 const escapeButtonText = computed(() => {
-  return t(navPanelStore.navPanelState.escapeButtonLabelKey)
+  // the key opens it too, e.g. "Actions (Esc)" in the editor
+  return `${t(navPanelStore.navPanelState.escapeButtonLabelKey)} (Esc)`
 })
 
 const currentProfileId = computed(() => {

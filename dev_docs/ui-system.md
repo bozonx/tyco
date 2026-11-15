@@ -384,4 +384,4 @@ Close (Esc) at the right edge, matching voice input. Shift+Space finalizes recor
 and opens transcript actions; Enter/Space retain their completion behavior.
 Shift+Tab and Tab from interactive controls keep normal focus navigation.
 
-Overlays in the main editor always offer Back (Esc) and Close (Shift+Esc). At the root, Back dismisses the overlay and returns to the editor. Each navigation step owns its text draft; edits on a child step never replace its parent draft. Preview and diff drafts persist separately from their original result so Reset remains available.
+Esc in the editor opens the action menu, as do its Actions (Esc) button and Ctrl+Enter; Shift+Esc hides the window. Overlays in the main editor always offer Back (Esc) and Close (Shift+Esc). At the root, Back dismisses the overlay and returns to the editor. Each navigation step owns its text draft; edits on a child step never replace its parent draft. Preview and diff drafts persist separately from their original result so Reset remains available.

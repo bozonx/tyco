@@ -98,7 +98,7 @@ describe('Editor actions shortcut', () => {
     wrapper.unmount()
   })
 
-  it('closes editor on Escape while keeping unsaved text in memory', async () => {
+  it('opens the action menu on Escape and hides on Shift+Escape, keeping unsaved text', async () => {
     const editor = useEditorInputStore()
     editor.setValue('Unsaved text', 'plain')
 
@@ -108,6 +108,20 @@ describe('Editor actions shortcut', () => {
       new KeyboardEvent('keydown', {
         key: 'Escape',
         code: 'Escape',
+        cancelable: true,
+      })
+    )
+    await flushPromises()
+    expect(useMenuModalsStore().currentModal).toBe(MenuModals.INSERT)
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
+
+    useMenuModalsStore().closeAll()
+    await flushPromises()
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        code: 'Escape',
+        shiftKey: true,
         cancelable: true,
       })
     )

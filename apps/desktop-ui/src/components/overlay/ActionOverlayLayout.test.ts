@@ -173,3 +173,42 @@ describe('ActionOverlayLayout navigation', () => {
     expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
   })
 })
+
+describe('ActionOverlayLayout over the editor', () => {
+  let desktop: TestDesktop
+  beforeEach(async () => {
+    desktop = await loadFakeDesktop({ mode: 'editor' }, 'main')
+    desktop.backend.handle('hide_window', () => undefined)
+  })
+  afterEach(() => desktop.dispose())
+
+  it('returns to the editor from its action menu', async () => {
+    const menus = useMenuModalsStore()
+    menus.nextModal(MenuModals.INSERT, { text: 'Text' })
+    const wrapper = mount(ActionOverlayLayout, {
+      global: { plugins: [desktop.pinia] },
+    })
+    expect(wrapper.get('.action-overlay-esc').text()).toContain('common.back')
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await flushPromises()
+    expect(menus.currentModal).toBe(MenuModals.NONE)
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
+    wrapper.unmount()
+  })
+
+  it('goes back from a step of the action menu', async () => {
+    const menus = useMenuModalsStore()
+    menus.nextModal(MenuModals.INSERT, { text: 'Text' })
+    menus.nextModal(MenuModals.TRANSLATE, { text: 'Text' })
+    const wrapper = mount(ActionOverlayLayout, {
+      global: { plugins: [desktop.pinia] },
+    })
+    expect(wrapper.get('.action-overlay-esc').text()).toContain('common.back')
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await flushPromises()
+    expect(menus.menuBreadcrumbs).toEqual([MenuModals.INSERT])
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
+    wrapper.unmount()
+  })
+})
