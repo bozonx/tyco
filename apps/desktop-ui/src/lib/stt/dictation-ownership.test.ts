@@ -19,6 +19,7 @@ function setup() {
   const owners = createDictationOwnership(dictation)
   return {
     dictation,
+    cancelActive: owners.cancelActive,
     first: owners.createSession(),
     second: owners.createSession(),
   }
@@ -67,5 +68,13 @@ describe('dictation ownership', () => {
     await expect(first.start(request)).rejects.toThrow('Device unavailable')
     await second.start(request)
     expect(await second.finish()).toBe('New words')
+  })
+
+  it('cancels active capture across all sessions', async () => {
+    const { dictation, first, cancelActive } = setup()
+    await first.start(request)
+    await cancelActive()
+    expect(dictation.cancel).toHaveBeenCalledOnce()
+    expect(await first.finish()).toBe('')
   })
 })

@@ -1132,4 +1132,28 @@ describe('QuickAiRequestMenu', () => {
       await flushPromises()
     }
   })
+
+  it('stops generating when the window is hidden', async () => {
+    let abortCalled = false
+    vi.spyOn(useLlmStore().actions, 'sendChatMessage').mockImplementationOnce(
+      async (_message, _history, _instructions, options) => {
+        options.signal?.addEventListener('abort', () => {
+          abortCalled = true
+        })
+        return new Promise(() => undefined)
+      }
+    )
+    const wrapper = mountMenu()
+    await wrapper.find('.query-panel-input').setValue('Tell me a story')
+    await wrapper
+      .find('.query-panel-input')
+      .trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+
+    desktop.setState({ isWindowShown: false })
+    await flushPromises()
+
+    expect(abortCalled).toBe(true)
+    wrapper.unmount()
+  })
 })

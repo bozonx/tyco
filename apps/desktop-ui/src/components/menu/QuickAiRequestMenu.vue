@@ -622,6 +622,15 @@ watch(
   { immediate: true }
 )
 
+watch(
+  () => desktopStore.desktopState?.isWindowShown,
+  (isShown) => {
+    if (!isShown && model.isGenerating.value) {
+      model.stopGeneration()
+    }
+  }
+)
+
 /** Auto-suggested only before the first request, when the input is empty */
 const recentOptions = computed<QueryPanelOption[]>(() =>
   input.value.value || model.turns.value.length > 0 || isRecentMenuOpen.value

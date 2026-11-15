@@ -58,6 +58,7 @@ export interface ListenModelDependencies extends TimerDependencies {
   onAutoStop?: (reason: AutoStopReason) => void
   /** Tells the user what failed */
   describeError: (error: unknown) => string
+  logError?: (message: string, error: unknown) => void
   /** The overlay is to close: cancelled, or a result dismissed */
   onClose: () => void
 }
@@ -284,7 +285,9 @@ export function createListenModel(deps: ListenModelDependencies) {
     dispose: () => {
       generation += 1
       session.dispose()
-      void deps.cancelDictation().catch(() => undefined)
+      void deps.cancelDictation().catch((error: unknown) => {
+        deps.logError?.('Could not cancel listening capture on dispose', error)
+      })
     },
   }
 }

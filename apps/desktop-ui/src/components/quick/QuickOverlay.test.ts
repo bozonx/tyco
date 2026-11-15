@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
   menuMounts: 0,
   menuUnmounts: 0,
   cancelAndCloseAll: vi.fn(),
+  cancelPending: vi.fn(),
 }))
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -41,7 +42,7 @@ vi.mock('../../stores/menu-modals', () => ({
   MenuModals: { NONE: 'none' },
   useMenuModalsStore: () =>
     Object.assign(reactive(mocks.modals), {
-      cancelPending: vi.fn(),
+      cancelPending: mocks.cancelPending,
       cancelAndCloseAll: mocks.cancelAndCloseAll,
       closeAll: vi.fn(),
     }),
@@ -503,6 +504,32 @@ describe('quick overlay menus', () => {
       expect(mocks.menuUnmounts).toBe(2)
     } finally {
       wrapper.unmount()
+      desktop.setState({ mode: 'quickInput' })
+    }
+  })
+
+  it('cancels pending modal operations when overlay mode changes or window hides', async () => {
+    stubResizeObserver()
+    desktop.setState({ mode: 'translation', isWindowShown: true })
+    mocks.modals.pendingModal = 'translating'
+    mocks.cancelPending.mockClear()
+
+    const wrapper = mount(QuickOverlay, {
+      global: { plugins: [desktop.pinia] },
+    })
+    await flushPromises()
+    try {
+      desktop.setState({ mode: 'voice' })
+      await nextTick()
+      expect(mocks.cancelPending).toHaveBeenCalledOnce()
+
+      mocks.cancelPending.mockClear()
+      desktop.setState({ isWindowShown: false })
+      await nextTick()
+      expect(mocks.cancelPending).toHaveBeenCalledOnce()
+    } finally {
+      wrapper.unmount()
+      mocks.modals.pendingModal = null
       desktop.setState({ mode: 'quickInput' })
     }
   })

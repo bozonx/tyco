@@ -50,6 +50,7 @@ import {
   configuredListenSource,
   createListenModel,
 } from '../lib/listen/listen-model'
+import { clientLogger } from '../lib/logger'
 import { describeDictationError } from '../lib/stt/dictation-error'
 import { liveTranscriptText } from '../lib/stt/live-transcript'
 import { createKeyPressTracker } from '../lib/ui/key-press-tracker'
@@ -123,6 +124,8 @@ const model = createListenModel({
       'warn'
     ),
   describeError: (error) => describeDictationError(error, translate),
+  logError: (message, error) =>
+    clientLogger.warn(`${message}: ${String(error)}`, 'stt'),
   onClose: () => closeWindowStore.closeAll(),
 })
 

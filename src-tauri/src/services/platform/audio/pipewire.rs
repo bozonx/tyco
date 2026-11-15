@@ -274,7 +274,6 @@ fn stream_of_target(
     let mut props = properties! {
         *pw::keys::MEDIA_TYPE => "Audio",
         *pw::keys::MEDIA_CATEGORY => "Capture",
-        *pw::keys::MEDIA_ROLE => "Communication",
         "target.object" => target,
         *pw::keys::NODE_DONT_RECONNECT => "true",
         "node.dont-fallback" => "true",
@@ -383,7 +382,6 @@ fn capture_system_mix(
         properties! {
             *pw::keys::MEDIA_TYPE => "Audio",
             *pw::keys::MEDIA_CATEGORY => "Capture",
-            *pw::keys::MEDIA_ROLE => "Communication",
             *pw::keys::STREAM_CAPTURE_SINK => "true",
         },
     )

@@ -578,8 +578,23 @@ watch(
   () => desktopStore.desktopState.isWindowShown,
   (isShown) => {
     syncFocus()
-    if (isShown) void windowFocus.refresh()
-    else cancelPendingReveal()
+    if (isShown) {
+      void windowFocus.refresh()
+    } else {
+      cancelPendingReveal()
+      if (menuModalsStore.pendingModal) {
+        menuModalsStore.cancelPending()
+      }
+    }
+  }
+)
+
+watch(
+  () => desktopStore.desktopState.activationId,
+  () => {
+    if (menuModalsStore.hasOpenModal || menuModalsStore.pendingModal) {
+      menuModalsStore.cancelAndCloseAll()
+    }
   }
 )
 
@@ -599,6 +614,9 @@ watch(
   async (mode) => {
     if (mode !== 'voice') voiceResultShown.value = false
     if (mode !== 'listen') listenResultShown.value = false
+    if (menuModalsStore.pendingModal) {
+      menuModalsStore.cancelPending()
+    }
     await nextTick()
     syncFocus()
   }

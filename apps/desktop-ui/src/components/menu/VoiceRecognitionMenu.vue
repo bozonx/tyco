@@ -93,6 +93,7 @@ import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-me
 import { hasSeparateQuickWindow, isQuickWindow } from '../../lib/desktop/window'
 import { describeError } from '../../lib/errors/describe-error'
 import { isEditorHistoryOff } from '../../lib/history/editor-history-storage'
+import { clientLogger } from '../../lib/logger'
 import type { VoiceMenuParams } from '../../lib/modals/menu-modal-params'
 import { isModeOfWindow } from '../../lib/navigation/routes'
 import {
@@ -342,6 +343,8 @@ const model = createVoiceRecognition({
   saveSourceFailure: (id, failure) =>
     historyStore.saveSourceFailure(id, failure),
   describeError: (error) => describeError(error, t),
+  logError: (message, error) =>
+    clientLogger.warn(`${message}: ${String(error)}`, 'stt'),
   setPendingModal: (options) => menuModalsStore.setPendingModal(options),
   clearPendingModal: (owner) => menuModalsStore.clearPendingModal(owner),
   consumeBufferedIntent: () => menuModalsStore.consumeBufferedIntent(),

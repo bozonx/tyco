@@ -305,4 +305,15 @@ describe('TranslateMenu', () => {
       expect.anything()
     )
   })
+
+  it('cancels pending modal operations on unmount', async () => {
+    const menus = useMenuModalsStore()
+    menus.nextModal(MenuModals.TRANSLATE, { text: 'Source' })
+    const wrapper = mountMenu({ text: 'Source' })
+    menus.setPendingModal({ label: 'Translating' })
+    expect(menus.pendingModal).toEqual({ label: 'Translating' })
+
+    wrapper.unmount()
+    expect(menus.pendingModal).toBeNull()
+  })
 })

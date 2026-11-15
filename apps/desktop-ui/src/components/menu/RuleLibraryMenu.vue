@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useMenuStartup } from '../../composables/use-menu-startup'
@@ -79,6 +79,12 @@ watch(draftText, (text) => {
     ) {
       menuModalsStore.updateStep(id, currentModal, { text })
     }
+  }
+})
+
+onUnmounted(() => {
+  if (menuModalsStore.pendingModal) {
+    menuModalsStore.cancelPending()
   }
 })
 

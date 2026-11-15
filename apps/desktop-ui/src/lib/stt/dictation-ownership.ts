@@ -55,5 +55,15 @@ export function createDictationOwnership(dictation: LiveDictation) {
     }
   }
 
-  return { createSession }
+  function cancelActive(): Promise<void> {
+    desiredOwner = undefined
+    return enqueue(async () => {
+      if (captureOwner !== undefined) {
+        await dictation.cancel()
+        captureOwner = undefined
+      }
+    })
+  }
+
+  return { createSession, cancelActive }
 }

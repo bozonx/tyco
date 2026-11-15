@@ -73,4 +73,15 @@ describe('RuleLibraryMenu', () => {
     expect(shortcutListProps.text).toBe('Modified text')
     expect(menus.currentModalParams).toMatchObject({ text: 'Modified text' })
   })
+
+  it('cancels pending modal operations on unmount', async () => {
+    const menus = useMenuModalsStore()
+    menus.nextModal(MenuModals.TRANSFORMATION, { text: 'Initial text' })
+    const wrapper = mountMenu()
+    menus.setPendingModal({ transformation: true })
+    expect(menus.pendingModal).toEqual({ transformation: true })
+
+    wrapper.unmount()
+    expect(menus.pendingModal).toBeNull()
+  })
 })

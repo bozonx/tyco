@@ -80,6 +80,7 @@ export interface VoiceRecognitionDependencies extends TimerDependencies {
   ) => Promise<unknown>
   /** The error text the user is shown, kept with a failed transcript */
   describeError?: (error: unknown) => string
+  logError?: (message: string, error: unknown) => void
   setPendingModal: (options: {
     correction?: boolean
     styling?: boolean
@@ -660,7 +661,9 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       await stopping
       await starting
       await cancelDictation()
-    })().catch(() => undefined)
+    })().catch((error: unknown) => {
+      deps.logError?.('Could not cancel voice dictation on dispose', error)
+    })
   }
 
   async function restartSession() {

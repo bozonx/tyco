@@ -1,7 +1,9 @@
 import { defineStore } from 'pinia'
 
+import { clientLogger } from '../lib/logger'
 import { createCloseWindowModel } from '../lib/app/close-window'
 import { useDesktopStore } from './desktop'
+import { useDictationStore } from './dictation'
 import { useMenuModalsStore } from './menu-modals'
 import { useQuickInputStore } from './quick-input'
 import { useVoiceResultStore } from './voice-result'
@@ -14,11 +16,18 @@ export const useCloseWindowStore = defineStore('closeWindow', () => {
   const windowStore = useWindowStore()
   const quickInputStore = useQuickInputStore()
   const voiceResultStore = useVoiceResultStore()
+  const dictationStore = useDictationStore()
 
   return createCloseWindowModel({
     closeWindow: () => {
       menuModalsStore.cancelPending()
       menuModalsStore.closeAll()
+      void dictationStore.cancelActive().catch((error: unknown) => {
+        clientLogger.warn(
+          `Could not cancel dictation on window close: ${String(error)}`,
+          'stt'
+        )
+      })
       // closing drops the text on purpose; it stays only in the history
       const mode = desktopStore.desktopState?.mode
       if (mode === 'quickInput') quickInputStore.discard()

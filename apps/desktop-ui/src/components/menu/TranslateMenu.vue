@@ -262,7 +262,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useMenuStartup } from '../../composables/use-menu-startup'
@@ -323,6 +323,12 @@ watch(draftText, (text) => {
   const id = draftStepId
   if (id !== undefined)
     menuModalsStore.updateStep(id, MenuModals.TRANSLATE, { text })
+})
+
+onUnmounted(() => {
+  if (menuModalsStore.pendingModal) {
+    menuModalsStore.cancelPending()
+  }
 })
 const runStep = useMenuStepRun()
 const { toastKey, toastText } = useToast()
