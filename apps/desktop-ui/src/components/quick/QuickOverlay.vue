@@ -348,7 +348,13 @@ const clickableElements = (): Element[] => [
 
 const handleRootPointerDown = (event: PointerEvent) => {
   // a click around the input lands in this window; a menu takes them all
-  if (!cardRef.value || isSheet.value || keepsOnFocusLoss.value) return
+  if (
+    currentMode.value === 'quickInput' ||
+    !cardRef.value ||
+    isSheet.value ||
+    keepsOnFocusLoss.value
+  )
+    return
   const target = event.target as Node | null
   if (!cardRef.value.querySelector('.write-frame')) return
   const isInputPart = clickableElements().some(

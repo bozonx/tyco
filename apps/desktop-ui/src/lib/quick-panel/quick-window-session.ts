@@ -1,13 +1,9 @@
 /** Modes whose first step (the input, the action menu) has nothing to lose. */
-const DISMISSIBLE_MODES = new Set([
-  'selectionActions',
-  'translation',
-  'styling',
-  'transformation',
-])
+const DISMISSIBLE_MODES = new Set(['selectionActions'])
 
 export interface QuickWindowSessionDependencies {
   mode: () => string
+  hasInputText?: () => boolean
   isWindowShown: () => boolean
   hasModal: () => boolean
   hasPendingModal: () => boolean
@@ -32,7 +28,10 @@ export function createQuickWindowSession(deps: QuickWindowSessionDependencies) {
    * must not lose it
    */
   const keepsOnFocusLoss = (): boolean =>
-    !DISMISSIBLE_MODES.has(deps.mode()) ||
+    !(
+      DISMISSIBLE_MODES.has(deps.mode()) ||
+      (deps.mode() === 'quickInput' && deps.hasInputText?.() === false)
+    ) ||
     deps.hasModal() ||
     deps.hasPendingModal()
 

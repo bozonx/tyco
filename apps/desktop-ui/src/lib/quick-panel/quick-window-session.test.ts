@@ -27,6 +27,30 @@ function setup(state: Partial<Record<string, unknown>> = {}) {
 }
 
 describe('quick window session', () => {
+  it('dismisses empty input but preserves typed text and action steps', () => {
+    const { deps } = setup()
+    const session = createQuickWindowSession({
+      ...deps,
+      hasInputText: () => false,
+    })
+    expect(session.canDismissOnFocusLoss()).toBe(true)
+    expect(
+      createQuickWindowSession({
+        ...deps,
+        hasInputText: () => true,
+      }).canDismissOnFocusLoss()
+    ).toBe(false)
+    expect(
+      setup({ mode: 'selectionActions' }).session.canDismissOnFocusLoss()
+    ).toBe(true)
+    expect(
+      setup({
+        mode: 'selectionActions',
+        hasModal: true,
+      }).session.canDismissOnFocusLoss()
+    ).toBe(false)
+  })
+
   it('lets only the first step go on a focus loss', () => {
     expect(setup().session.canDismissOnFocusLoss()).toBe(false)
     expect(setup({ hasModal: true }).session.keepsOnFocusLoss()).toBe(true)
@@ -38,9 +62,9 @@ describe('quick window session', () => {
     expect(setup({ mode: 'listen' }).session.keepsOnFocusLoss()).toBe(true)
     // a correction on its way is past the first step
     expect(setup({ mode: 'correction' }).session.keepsOnFocusLoss()).toBe(true)
-    expect(setup({ mode: 'styling' }).session.keepsOnFocusLoss()).toBe(false)
+    expect(setup({ mode: 'styling' }).session.keepsOnFocusLoss()).toBe(true)
     expect(setup({ mode: 'transformation' }).session.keepsOnFocusLoss()).toBe(
-      false
+      true
     )
   })
 

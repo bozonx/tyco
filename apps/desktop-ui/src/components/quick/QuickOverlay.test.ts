@@ -407,12 +407,20 @@ describe('quick overlay menus', () => {
     }
   }
 
-  it.each(['selectionActions', 'translation', 'styling', 'transformation'])(
+  it.each(['selectionActions'])(
     'dismisses the %s menu when the focus goes elsewhere',
     async (mode) => {
       await loseFocus(mode)
       expect(await sent('hide_quick_window_on_blur')).not.toEqual([])
       expect(await sent('hide_window')).toEqual([])
+    }
+  )
+
+  it.each(['translation', 'styling', 'transformation'])(
+    'keeps the %s action on focus loss',
+    async (mode) => {
+      await loseFocus(mode)
+      expect(await sent('hide_quick_window_on_blur')).toEqual([])
     }
   )
 

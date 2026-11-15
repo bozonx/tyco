@@ -24,6 +24,7 @@ export function useQuickWindowSession(
 
   const session = createQuickWindowSession({
     mode: () => desktopStore.desktopState.mode || 'quickInput',
+    hasInputText: () => (quickInputStore.value ?? '').length > 0,
     isWindowShown: () => Boolean(desktopStore.desktopState.isWindowShown),
     hasModal: () => menuModalsStore.currentModal !== MenuModals.NONE,
     hasPendingModal: () => Boolean(menuModalsStore.pendingModal),
