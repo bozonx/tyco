@@ -8,6 +8,12 @@
           size="sm"
           tile
           :icon="slot.action.icon"
+          :content-key="
+            pageIndex === undefined
+              ? undefined
+              : `${slot.action.id}:${slot.label}:${slot.action.icon}`
+          "
+          :motion-direction="motionDirection"
           :keys="[slot.key.toUpperCase()]"
           :disabled="slot.action.disabled"
           :title="
@@ -55,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
@@ -73,6 +79,8 @@ interface ShortcutSlotItem {
 
 const props = withDefaults(
   defineProps<{
+    pageIndex?: number
+    motionDirection?: number
     text?: string
     /** What `text` was transformed from, see `routeParams.toEditor`. */
     sourceText?: string
@@ -87,6 +95,8 @@ const props = withDefaults(
     shortcutsDisabled?: boolean
   }>(),
   {
+    pageIndex: undefined,
+    motionDirection: 1,
     text: '',
     sourceText: '',
     spaceKey: undefined,
@@ -131,6 +141,12 @@ const slots = computed<ShortcutSlotItem[]>(() =>
  * on a text the user has not seen
  */
 const pressedKeys = new Map<string, string>()
+
+watch(
+  () => props.pageIndex,
+  () => pressedKeys.clear(),
+  { flush: 'sync' }
+)
 
 const handleWindowBlur = () => {
   pressedKeys.clear()

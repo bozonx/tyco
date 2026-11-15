@@ -11,9 +11,19 @@
     :disabled="disabled"
     @click="emit('click')"
   >
-    <AppIcon v-if="icon" :icon="icon" size="sm" class="shortcut-icon" />
-    <span class="shortcut-label">
-      <slot />
+    <span
+      class="shortcut-content"
+      :style="{ '--content-offset': `${motionDirection * 4}px` }"
+    >
+      <Transition
+        :name="contentKey === undefined ? '' : 'shortcut-content'"
+        @before-leave="hideLeavingContent"
+      >
+        <span :key="contentKey" class="shortcut-content-inner">
+          <AppIcon v-if="icon" :icon="icon" size="sm" class="shortcut-icon" />
+          <span class="shortcut-label"><slot /></span>
+        </span>
+      </Transition>
     </span>
     <ShortcutKeys :keys="keys" class="shortcut-keys" />
   </button>
@@ -27,6 +37,8 @@ import ShortcutKeys from './ShortcutKeys.vue'
 withDefaults(
   defineProps<{
     keys: string[]
+    contentKey?: string
+    motionDirection?: number
     disabled?: boolean
     variant?: 'primary' | 'ghost'
     size?: ControlSize
@@ -36,6 +48,8 @@ withDefaults(
     tile?: boolean
   }>(),
   {
+    contentKey: undefined,
+    motionDirection: 1,
     disabled: false,
     variant: 'ghost',
     size: 'md',
@@ -43,6 +57,10 @@ withDefaults(
     tile: false,
   }
 )
+
+function hideLeavingContent(element: Element) {
+  element.setAttribute('aria-hidden', 'true')
+}
 
 const emit = defineEmits<{ (e: 'click'): void }>()
 </script>
@@ -153,5 +171,46 @@ const emit = defineEmits<{ (e: 'click'): void }>()
 
 .shortcut.is-primary:disabled {
   color: var(--quick-primary-fg);
+}
+
+.shortcut-content {
+  display: grid;
+  flex: 1 1 0%;
+  min-width: 0;
+  overflow: hidden;
+}
+.shortcut-content-inner {
+  grid-area: 1 / 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+.shortcut-content-enter-active,
+.shortcut-content-leave-active {
+  transition:
+    opacity 130ms ease-out,
+    transform 130ms cubic-bezier(0.2, 0, 0, 1);
+}
+.shortcut-content-leave-active {
+  pointer-events: none;
+}
+.shortcut-content-enter-from {
+  opacity: 0;
+  transform: translateX(var(--content-offset));
+}
+.shortcut-content-leave-to {
+  opacity: 0;
+  transform: translateX(calc(-1 * var(--content-offset)));
+}
+@media (prefers-reduced-motion: reduce) {
+  .shortcut-content-enter-active,
+  .shortcut-content-leave-active {
+    transition: opacity 60ms ease-out;
+  }
+  .shortcut-content-enter-from,
+  .shortcut-content-leave-to {
+    transform: none;
+  }
 }
 </style>

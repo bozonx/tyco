@@ -6,10 +6,16 @@
     <template v-if="hasDiff || actionMenuStore.pageCount > 1" #header-extra>
       <div
         v-if="actionMenuStore.pageCount > 1"
+        ref="pagesBar"
         class="action-pages-bar"
         role="group"
         :aria-label="t('settings.mainActionGroups.actionPages')"
       >
+        <span
+          class="action-page-highlight"
+          :style="highlightStyle"
+          aria-hidden="true"
+        />
         <KeyboardKey class="action-pages-hint">Tab</KeyboardKey>
         <button
           v-for="index in actionMenuStore.pageCount"
@@ -45,7 +51,8 @@
     <template #actions>
       <ShortcutList
         editor-shortcut
-        :key="actionMenuStore.pageIndex"
+        :page-index="actionMenuStore.pageIndex"
+        :motion-direction="motionDirection"
         :text="activeActionText"
         :source-text="activeSourceText"
         :editor-button-label="t('shortcuts.insertIntoEditor')"
@@ -63,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
@@ -118,6 +125,35 @@ watch(draftText, (text) => {
 })
 const desktopStore = useDesktopStore()
 const actionMenuStore = useActionMenuStore()
+const pagesBar = ref<HTMLElement>()
+const highlightStyle = ref<Record<string, string>>({ opacity: '0' })
+const motionDirection = ref(1)
+function updateHighlight() {
+  const active = pagesBar.value?.querySelector<HTMLElement>('.is-active')
+  if (!active) return
+  highlightStyle.value = {
+    width: `${active.offsetWidth}px`,
+    height: `${active.offsetHeight}px`,
+    transform: `translate(${active.offsetLeft}px, ${active.offsetTop}px)`,
+  }
+}
+watch(
+  () => actionMenuStore.pageIndex,
+  (index, previous) => {
+    motionDirection.value = index > previous ? 1 : -1
+    void nextTick(updateHighlight)
+  },
+  { flush: 'sync' }
+)
+let pagesResizeObserver: ResizeObserver | undefined
+onMounted(() => {
+  updateHighlight()
+  if (typeof ResizeObserver === 'undefined') return
+  pagesResizeObserver = new ResizeObserver(updateHighlight)
+  if (pagesBar.value) pagesResizeObserver.observe(pagesBar.value)
+})
+onUnmounted(() => pagesResizeObserver?.disconnect())
+
 const menuModalsStore = useMenuModalsStore()
 const editorInputStore = useEditorInputStore()
 
@@ -189,9 +225,9 @@ useViewModeArrowKeys((step) => {
     stepMode(step)
   } else if (actionMenuStore.pageCount > 1) {
     if (step === 1) {
-      actionMenuStore.nextPage()
+      stepPage(1)
     } else if (step === -1) {
-      actionMenuStore.prevPage()
+      stepPage(-1)
     }
   }
 })
@@ -310,6 +346,12 @@ const primaryAction = computed<ActionItem | undefined>(() => {
   return { ...insertAction, disabled, hint }
 })
 
+function stepPage(direction: number) {
+  if (direction > 0) actionMenuStore.nextPage()
+  else actionMenuStore.prevPage()
+  motionDirection.value = direction
+}
+
 function onKeyDown(event: KeyboardEvent) {
   if (props.shortcutsDisabled || actionMenuStore.pageCount <= 1) return
   if (event.isComposing || isTextEntryTarget(event.target)) return
@@ -323,9 +365,9 @@ function onKeyDown(event: KeyboardEvent) {
   ) {
     event.preventDefault()
     if (event.shiftKey) {
-      actionMenuStore.prevPage()
+      stepPage(-1)
     } else {
-      actionMenuStore.nextPage()
+      stepPage(1)
     }
     return
   }
@@ -335,10 +377,10 @@ function onKeyDown(event: KeyboardEvent) {
   }
   if (event.key === 'PageDown') {
     event.preventDefault()
-    actionMenuStore.nextPage()
+    stepPage(1)
   } else if (event.key === 'PageUp') {
     event.preventDefault()
-    actionMenuStore.prevPage()
+    stepPage(-1)
   } else if (/^[1-9]$/.test(event.key) || event.key === '0') {
     const target = event.key === '0' ? 9 : Number(event.key) - 1
     if (target < actionMenuStore.pageCount) {
@@ -359,6 +401,7 @@ onUnmounted(() => {
 <style scoped>
 /* Page tabs: a segmented control with the page number keys */
 .action-pages-bar {
+  position: relative;
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
@@ -376,6 +419,7 @@ onUnmounted(() => {
 }
 
 .action-page-button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
@@ -397,8 +441,7 @@ onUnmounted(() => {
 
 .action-page-button.is-active {
   color: var(--color-base-content);
-  background-color: var(--app-surface-raised);
-  box-shadow: var(--app-shadow-segment);
+
   font-weight: 500;
 }
 
@@ -414,5 +457,24 @@ onUnmounted(() => {
   display: flex;
   flex: 1 1 0%;
   min-height: 0;
+}
+
+.action-page-highlight {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  border-radius: var(--radius-sm);
+  background: var(--app-surface-raised);
+  box-shadow: var(--app-shadow-segment);
+  transition:
+    transform 170ms cubic-bezier(0.2, 0, 0, 1),
+    width 170ms ease-out,
+    height 170ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .action-page-highlight {
+    transition: none;
+  }
 }
 </style>
