@@ -33,14 +33,13 @@
         :disabled="isFinishing"
         @change="emit('language-change')"
       />
-      <ShortcutButton
+      <OverlayEscButton
         class="listen-bar-close"
         :title="t('common.closeAllHint')"
         :disabled="isFinishing"
         @click="void model.close()"
-        :keys="['Esc']"
-        >{{ t('common.close') }}</ShortcutButton
-      >
+        @close-all="void model.close()"
+      />
     </div>
     <RecordingStoppedNotice
       v-if="isStopped"
@@ -135,6 +134,7 @@ import {
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
+import OverlayEscButton from '../overlay/OverlayEscButton.vue'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import AudioWaveform from '../voice/AudioWaveform.vue'

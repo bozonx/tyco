@@ -13,14 +13,11 @@
         :disabled="!desktopStore.desktopState.canListen"
         @switch="switchToListen"
       />
-      <ShortcutButton
+      <OverlayEscButton
         class="voice-stopped-close"
-        size="sm"
-        :keys="['Esc']"
         @click="dismissStartError"
-      >
-        {{ t('common.close') }}
-      </ShortcutButton>
+        @close-all="dismissStartError"
+      />
     </div>
     <RecordingStoppedNotice
       :kind="startError.isEmpty ? 'empty' : 'error'"
@@ -111,7 +108,7 @@ import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickDismissStore } from '../../stores/quick-dismiss'
-import ShortcutButton from '../overlay/ShortcutButton.vue'
+import OverlayEscButton from '../overlay/OverlayEscButton.vue'
 import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import QuickModeSwitch from '../voice/QuickModeSwitch.vue'
 import RecordingBarFrame from '../voice/RecordingBarFrame.vue'

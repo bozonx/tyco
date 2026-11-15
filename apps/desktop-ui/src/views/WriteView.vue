@@ -1,14 +1,12 @@
 <template>
   <div ref="containerRef" class="write-mode-container">
     <div class="write-header">
-      <ShortcutButton
+      <OverlayEscButton
         class="write-hint-action"
-        :title="t('common.closeAllHint')"
         @mousedown.prevent
         @click="cancelFromHint"
-        :keys="['Esc']"
-        >{{ t('common.close') }}</ShortcutButton
-      >
+        @close-all="cancelFromHint"
+      />
     </div>
     <WriteLivePreview
       v-if="
@@ -62,6 +60,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
+import OverlayEscButton from '../components/overlay/OverlayEscButton.vue'
 import ShortcutButton from '../components/overlay/ShortcutButton.vue'
 import WriteLivePreview from '../components/quick/WriteLivePreview.vue'
 import WriteModeInput from '../components/quick/WriteModeInput.vue'

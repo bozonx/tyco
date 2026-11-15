@@ -27,34 +27,20 @@
         >
           {{ t('menu.otherActions') }}
         </Button>
-        <button
+        <OverlayEscButton
           v-if="escVisible"
-          type="button"
-          class="action-overlay-esc"
+          :mode="resolvedEscMode"
+          :label="escLabel"
           :title="
             resolvedEscMode === 'back' || props.escLabel
               ? escLabel
               : t('common.close')
           "
           @click="onEscClick"
-        >
-          <AppIcon
-            v-if="resolvedEscMode === 'back'"
-            icon="mdi:arrow-left"
-            size="sm"
-          />
-          <KeyboardKey>Esc</KeyboardKey>
-          <span>{{
-            resolvedEscMode === 'back' || props.escLabel
-              ? escLabel
-              : t('common.close')
-          }}</span>
-        </button>
-        <IconButton
+          @close-all="handleCloseAll"
+        />
+        <OverlayCloseButton
           v-if="escVisible && resolvedEscMode === 'back' && inQuickWindow"
-          class="action-overlay-close"
-          icon="mdi:close"
-          :label="t('common.close')"
           :title="escTitle"
           @click="handleCloseAll"
         />
@@ -83,10 +69,9 @@ import { useOverlayNav } from '../../composables/use-overlay-nav'
 import { isQuickWindow } from '../../lib/desktop/window'
 import { previewAppearanceKey } from '../../lib/ui/preview-context'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
-import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
-import IconButton from '../common/IconButton.vue'
-import KeyboardKey from '../common/KeyboardKey.vue'
+import OverlayCloseButton from './OverlayCloseButton.vue'
+import OverlayEscButton from './OverlayEscButton.vue'
 
 provide(previewAppearanceKey, 'plain')
 
@@ -227,33 +212,6 @@ useDismissibleLayer({
   align-items: center;
   gap: var(--space-sm);
   font-size: var(--text-control);
-}
-
-.action-overlay-esc {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-md);
-  font-size: var(--text-control);
-  color: var(--app-text-muted);
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  flex-shrink: 0;
-  transition:
-    color var(--transition-fast),
-    background-color var(--transition-fast);
-}
-
-.action-overlay-esc:hover {
-  color: var(--color-base-content);
-  background-color: var(--app-hover);
-}
-
-.action-overlay-esc:focus-visible {
-  outline: var(--app-focus-outline-width) solid var(--color-primary);
-  outline-offset: 2px;
 }
 
 .action-overlay-preview-box {
