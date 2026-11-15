@@ -1,12 +1,13 @@
-//! The web search and fetch tools of profile chats.
+//! The web search and fetch tools of the chats.
 
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 
 use crate::{
     errors::AppError,
     services::ai_tools::web::{self, AiWebToolOutput, AiWebToolRequest, WebRuns},
     services::ai_vault,
     services::secrets::{with_store, SecretStore},
+    state::AppState,
 };
 
 #[tauri::command]
@@ -28,6 +29,8 @@ pub async fn run_ai_web_tool(
             let profile = ai_vault::get_profile(dir, profile_id)?;
             web::ensure_web_enabled(&profile)
         })?;
+    } else {
+        web::ensure_ask_ai_web_enabled(&app.state::<AppState>().user_config())?;
     }
 
     let secret = with_store(&app, |store: &SecretStore| {

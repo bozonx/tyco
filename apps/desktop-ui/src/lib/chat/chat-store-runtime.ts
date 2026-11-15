@@ -172,6 +172,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
       conversationAttachedFiles(
         model.messages.value.flatMap((message) => message.attachments || [])
       ),
+    getAskAiWebAccess: () => deps.getUserConfig()?.llm?.webSearch?.askAiAccess,
     getFetchMaxCharacters: () =>
       deps.getUserConfig()?.llm?.webSearch?.fetchMaxCharacters,
     warn,

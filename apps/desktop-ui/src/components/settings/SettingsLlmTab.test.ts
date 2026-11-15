@@ -381,6 +381,7 @@ describe('SettingsLlmTab.vue', () => {
       'settings.chatImageQuality',
       'settings.webJinaApiKey',
       'settings.webFetchMaxCharacters',
+      'settings.askAiWebAccess',
     ])
 
     const modeControl = wrapper.findComponent({ name: 'SegmentedControl' })
@@ -402,6 +403,7 @@ describe('SettingsLlmTab.vue', () => {
       'settings.chatImageQuality',
       'settings.webJinaApiKey',
       'settings.webFetchMaxCharacters',
+      'settings.askAiWebAccess',
     ])
   })
 })

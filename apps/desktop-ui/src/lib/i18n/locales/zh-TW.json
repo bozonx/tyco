@@ -640,6 +640,7 @@
   "settings": {
     "accessAllow": "允許",
     "accessAsk": "詢問",
+    "accessOff": "關閉",
     "accessLevel": "存取",
     "accessLevelAskAll": "讀寫時均詢問",
     "accessLevelFull": "完整存取",
@@ -1297,7 +1298,9 @@
     "webFetchMaxCharactersHint": "從單一網頁擷取的最大字元數（1,000 至 100,000）。有助於節省上下文視窗。",
     "webJinaApiKey": "Jina AI API 金鑰",
     "webJinaApiKeyHint": "選填。未配置金鑰時，請求將使用具有共用速率限制的免費層級。",
-    "webSearchSectionHint": "AI 模型與設定檔使用的網頁搜尋與頁面讀取工具設定。"
+    "webSearchSectionHint": "AI 模型與設定檔使用的網頁搜尋與頁面讀取工具設定。",
+    "askAiWebAccess": "「詢問 AI」中的網路",
+    "askAiWebAccessHint": "沒有設定檔的「詢問 AI」聊天能否搜尋網路及讀取網頁。「詢問」會在每次呼叫前等待你的核准。設定檔在各自的工具中設定。"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

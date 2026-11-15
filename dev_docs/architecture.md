@@ -54,8 +54,15 @@ docs and UI:
   profile selected, each with a description for the AI) and MCP servers. An
   operation never becomes a tool without a command.
 
-An AI command (`core.aiTask`) runs its own loop over commands
-(`ai-command-runner.ts`), not over chat tools.
+An AI command (`core.aiTask`) runs its agent through the same tool loop as the
+chat (`chat-tools/chat-tool-loop.ts`): `ai-command-runner.ts` only turns the
+commands the AI command allows into tools, all `allow`, since the user picked
+them and the command often runs with no window to ask in.
+
+The "Ask AI" chat has no profile and so no tool settings of its own besides
+`llm.webSearch.askAiAccess` (`ask` by default, `allow`, `off`): it always gets
+the reply blocks and its own attachments, and the web tools by that setting.
+`run_ai_web_tool` refuses a call without a profile when it is `off`.
 
 ## Backend and trust boundaries
 

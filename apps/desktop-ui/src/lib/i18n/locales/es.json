@@ -646,6 +646,7 @@
   "settings": {
     "accessAllow": "Permitir",
     "accessAsk": "Preguntar",
+    "accessOff": "Desactivado",
     "accessLevel": "Acceso",
     "accessLevelAskAll": "Preguntar para leer y escribir",
     "accessLevelFull": "Acceso completo",
@@ -1303,7 +1304,9 @@
     "webFetchMaxCharactersHint": "Número máximo de caracteres extraídos de una sola página web (1.000 a 100.000). Ahorra ventana de contexto.",
     "webJinaApiKey": "Clave de API de Jina AI",
     "webJinaApiKeyHint": "Opcional. Sin una clave, las solicitudes usan el nivel gratuito con límites compartidos.",
-    "webSearchSectionHint": "Configuración para la búsqueda web y lectura de páginas usadas por los modelos y perfiles de IA."
+    "webSearchSectionHint": "Configuración para la búsqueda web y lectura de páginas usadas por los modelos y perfiles de IA.",
+    "askAiWebAccess": "Web en «Preguntar a la IA»",
+    "askAiWebAccessHint": "Si el chat «Preguntar a la IA», que no tiene perfil, puede buscar en la web y leer páginas. «Preguntar» espera tu aprobación antes de cada llamada. Los perfiles lo configuran en sus propias herramientas."
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

@@ -643,6 +643,7 @@
   "settings": {
     "accessAllow": "İzin Ver",
     "accessAsk": "Sor",
+    "accessOff": "Kapalı",
     "accessLevel": "Erişim",
     "accessLevelAskAll": "Okuma ve yazma için sor",
     "accessLevelFull": "Tam erişim",
@@ -1300,7 +1301,9 @@
     "webFetchMaxCharactersHint": "Tek bir web sayfasından alınacak maksimum karakter sayısı (1.000 - 100.000). Bağlam penceresinden tasarruf sağlar.",
     "webJinaApiKey": "Jina AI API anahtarı",
     "webJinaApiKeyHint": "İsteğe bağlı. Anahtar olmadan istekler paylaşılan hız sınırlarına sahip ücretsiz katmanı kullanır.",
-    "webSearchSectionHint": "Yapay zeka modelleri ve profilleri tarafından kullanılan web araması ve sayfa okuma araçları için ayarlar."
+    "webSearchSectionHint": "Yapay zeka modelleri ve profilleri tarafından kullanılan web araması ve sayfa okuma araçları için ayarlar.",
+    "askAiWebAccess": "\"Yapay Zekâya Sor\" içinde web",
+    "askAiWebAccessHint": "Profili olmayan \"Yapay Zekâya Sor\" sohbetinin web’de arama yapıp sayfa okuyup okuyamayacağı. \"Sor\" her çağrıdan önce onayınızı bekler. Profiller bunu kendi araçlarında ayarlar."
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

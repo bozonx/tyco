@@ -646,6 +646,7 @@
   "settings": {
     "accessAllow": "Permite",
     "accessAsk": "Întreabă",
+    "accessOff": "Oprit",
     "accessLevel": "Acces",
     "accessLevelAskAll": "Întreabă pentru citire și scriere",
     "accessLevelFull": "Acces complet",
@@ -1303,7 +1304,9 @@
     "webFetchMaxCharactersHint": "Numărul maxim de caractere preluate de pe o singură pagină web (1.000 până la 100.000). Economisește fereastra de context.",
     "webJinaApiKey": "Cheie API Jina AI",
     "webJinaApiKeyHint": "Opțional. Fără cheie, cererile folosesc nivelul gratuit cu limite partajate.",
-    "webSearchSectionHint": "Setări pentru instrumentele de căutare web și citire a paginilor utilizate de modelele și profilurile AI."
+    "webSearchSectionHint": "Setări pentru instrumentele de căutare web și citire a paginilor utilizate de modelele și profilurile AI.",
+    "askAiWebAccess": "Web în „Întreabă AI”",
+    "askAiWebAccessHint": "Dacă chatul „Întreabă AI”, care nu are profil, poate căuta pe web și citi pagini. „Întreabă” așteaptă aprobarea ta înainte de fiecare apel. Profilurile setează acest lucru în propriile instrumente."
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

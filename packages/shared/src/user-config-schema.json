@@ -941,7 +941,8 @@
               "type": "integer",
               "minimum": 1000,
               "maximum": 100000
-            }
+            },
+            "askAiAccess": { "enum": ["ask", "allow", "off"], "default": "ask" }
           }
         }
       },

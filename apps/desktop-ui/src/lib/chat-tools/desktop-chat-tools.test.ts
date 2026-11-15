@@ -132,6 +132,36 @@ describe('desktop-chat-tools', () => {
     expect(disabledProfileToolNames).not.toContain('web_fetch')
   })
 
+  it('gives the "Ask AI" chat the web access of the config', async () => {
+    const invoke = vi.fn(async () => []) as unknown as DesktopChatToolsInvoke
+    let access: 'ask' | 'allow' | 'off' | undefined
+    const chatTools = createDesktopChatTools({
+      profileId: null,
+      invoke,
+      canUseTools: () => true,
+      getAskAiWebAccess: () => access,
+      warn: vi.fn(),
+      isDebugEnabled: () => false,
+    })
+    const approvalOf = (
+      result: Awaited<ReturnType<typeof chatTools.turnTools>>
+    ) =>
+      (result.tools!.tools!.toolApproval as (call: unknown) => unknown)({
+        toolCall: { toolName: 'web_search', input: { query: 'x' } },
+      })
+
+    const byDefault = await chatTools.turnTools('gpt-4', 5000)
+    expect(approvalOf(byDefault)).toBe('user-approval')
+
+    access = 'allow'
+    const allowed = await chatTools.turnTools('gpt-4', 5000)
+    expect(approvalOf(allowed)).toBe('approved')
+
+    access = 'off'
+    const off = await chatTools.turnTools('gpt-4', 5000)
+    expect(Object.keys(off.tools!.tools!.tools)).not.toContain('web_search')
+  })
+
   it('resolves user commands when commands group is enabled with selected command IDs', async () => {
     const invoke = vi.fn(async () => []) as unknown as DesktopChatToolsInvoke
 

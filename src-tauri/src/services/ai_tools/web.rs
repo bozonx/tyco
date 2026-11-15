@@ -172,6 +172,21 @@ struct PreparedFetch {
     locale: Option<HeaderValue>,
 }
 
+/// Checks that the "Ask AI" chat, which has no profile, may use the web tools:
+/// `llm.webSearch.askAiAccess` is not `off`. Absent or unknown, it is `ask`.
+pub fn ensure_ask_ai_web_enabled(user_config: &serde_json::Value) -> Result<(), AppError> {
+    let access = user_config
+        .pointer("/llm/webSearch/askAiAccess")
+        .and_then(serde_json::Value::as_str);
+    if access == Some("off") {
+        Err(AppError::InvalidInput(
+            "Web tools are turned off for the Ask AI chat".into(),
+        ))
+    } else {
+        Ok(())
+    }
+}
+
 /// Checks that the profile has the web tool group enabled and not set to `deny`.
 /// When the profile has no explicit `web` entry, defaults to enabled (matching the UI default).
 pub fn ensure_web_enabled(profile: &AiProfile) -> Result<(), AppError> {
@@ -660,6 +675,18 @@ mod tests {
             max_step_count: None,
         }));
         assert!(ensure_web_enabled(&profile).is_ok());
+    }
+
+    #[test]
+    fn test_ensure_ask_ai_web_enabled_follows_the_config() {
+        use serde_json::json;
+        assert!(ensure_ask_ai_web_enabled(&json!({})).is_ok());
+        for access in ["ask", "allow"] {
+            let config = json!({ "llm": { "webSearch": { "askAiAccess": access } } });
+            assert!(ensure_ask_ai_web_enabled(&config).is_ok());
+        }
+        let off = json!({ "llm": { "webSearch": { "askAiAccess": "off" } } });
+        assert!(ensure_ask_ai_web_enabled(&off).is_err());
     }
 
     #[test]

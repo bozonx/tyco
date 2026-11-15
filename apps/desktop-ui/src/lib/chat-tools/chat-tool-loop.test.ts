@@ -396,7 +396,7 @@ describe('chat-tool-loop', () => {
         stepNumber,
       })
     expect(step(0)).toBeUndefined()
-    expect(step(2)).toEqual({ activeTools: [] })
+    expect(step(2)).toEqual({ activeTools: [], toolChoice: 'none' })
   })
 
   it('fails as a step limit when an approval comes at the last step', async () => {

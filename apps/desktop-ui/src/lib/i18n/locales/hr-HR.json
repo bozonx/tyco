@@ -646,6 +646,7 @@
   "settings": {
     "accessAllow": "Dopusti",
     "accessAsk": "Pitaj",
+    "accessOff": "Isključeno",
     "accessLevel": "Pristup",
     "accessLevelAskAll": "Pitaj za čitanje i pisanje",
     "accessLevelFull": "Potpuni pristup",
@@ -1303,7 +1304,9 @@
     "webFetchMaxCharactersHint": "Maksimalni broj znakova dohvaćenih s jedne web stranice (1.000 do 100.000). Štedi kontekstualni prozor.",
     "webJinaApiKey": "Jina AI API ključ",
     "webJinaApiKeyHint": "Neobavezno. Bez ključa, zahtjevi koriste besplatnu razinu sa zajedničkim ograničenjima.",
-    "webSearchSectionHint": "Postavke za alate za pretraživanje weba i čitanje stranica koje koriste AI modeli i profili."
+    "webSearchSectionHint": "Postavke za alate za pretraživanje weba i čitanje stranica koje koriste AI modeli i profili.",
+    "askAiWebAccess": "Web u „Pitaj AI”",
+    "askAiWebAccessHint": "Smije li chat „Pitaj AI”, koji nema profil, pretraživati web i čitati stranice. „Pitaj” čeka vaše odobrenje prije svakog poziva. Profili to postavljaju u vlastitim alatima."
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

@@ -646,6 +646,7 @@
   "settings": {
     "accessAllow": "Zezwól",
     "accessAsk": "Pytaj",
+    "accessOff": "Wył.",
     "accessLevel": "Dostęp",
     "accessLevelAskAll": "Pytaj o odczyt i zapis",
     "accessLevelFull": "Pełny dostęp",
@@ -1303,7 +1304,9 @@
     "webFetchMaxCharactersHint": "Maksymalna liczba znaków pobierana z pojedynczej strony internetowej (od 1 000 do 100 000). Oszczędza okno kontekstu.",
     "webJinaApiKey": "Klucz API Jina AI",
     "webJinaApiKeyHint": "Opcjonalnie. Bez klucza żądania korzystają z bezpłatnego planu ze wspólnymi limitami.",
-    "webSearchSectionHint": "Ustawienia wyszukiwania w sieci i czytania stron używanych przez modele i profile AI."
+    "webSearchSectionHint": "Ustawienia wyszukiwania w sieci i czytania stron używanych przez modele i profile AI.",
+    "askAiWebAccess": "Sieć w „Zapytaj AI”",
+    "askAiWebAccessHint": "Czy czat „Zapytaj AI”, który nie ma profilu, może wyszukiwać w sieci i czytać strony. „Pytaj” czeka na Twoją zgodę przed każdym wywołaniem. Profile ustawiają to we własnych narzędziach."
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

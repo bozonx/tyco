@@ -643,6 +643,7 @@
   "settings": {
     "accessAllow": "Engedélyezés",
     "accessAsk": "Kérdés",
+    "accessOff": "Ki",
     "accessLevel": "Hozzáférés",
     "accessLevelAskAll": "Kérdezzen rá az olvasásra és az írásra",
     "accessLevelFull": "Teljes hozzáférés",
@@ -1300,7 +1301,9 @@
     "webFetchMaxCharactersHint": "Egyetlen weboldalról beolvasott karakterek maximális száma (1 000 és 100 000 között). Kíméli a kontextusablakot.",
     "webJinaApiKey": "Jina AI API-kulcs",
     "webJinaApiKeyHint": "Opcionális. Kulcs nélkül a kérések az ingyenes szintet használják megosztott korlátokkal.",
-    "webSearchSectionHint": "Az AI modellek és profilok által használt webes keresési és oldalolvasási eszközök beállításai."
+    "webSearchSectionHint": "Az AI modellek és profilok által használt webes keresési és oldalolvasási eszközök beállításai.",
+    "askAiWebAccess": "Web a „Kérdezze az MI-t” csevegésben",
+    "askAiWebAccessHint": "Kereshet-e a weben és olvashat-e oldalakat a profil nélküli „Kérdezze az MI-t” csevegés. A „Kérdez” minden hívás előtt megvárja a jóváhagyását. A profilok ezt a saját eszközeikben állítják be."
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

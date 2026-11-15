@@ -107,6 +107,8 @@ export function createQuickAiRequestRuntime(
         getMemoryMode: () => profile?.memoryMode,
         getChatId: () => chatId,
         getAttachedFiles: () => model.attachedFiles(),
+        getAskAiWebAccess: () =>
+          deps.getUserConfig()?.llm?.webSearch?.askAiAccess,
         getFetchMaxCharacters: () =>
           deps.getUserConfig()?.llm?.webSearch?.fetchMaxCharacters,
         warn: (message) => deps.warn(message, 'tools'),

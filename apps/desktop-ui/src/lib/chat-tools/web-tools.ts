@@ -1,8 +1,10 @@
-import type {
-  AiWebToolOutput,
-  AiWebToolRequest,
-  ProfileToolSettings,
-  WebSearchResultItem,
+import {
+  ASK_AI_WEB_ACCESS_DEFAULT,
+  type AskAiWebAccess,
+  type AiWebToolOutput,
+  type AiWebToolRequest,
+  type ProfileToolSettings,
+  type WebSearchResultItem,
 } from '@tyco/shared'
 import type { JsonSchema } from '@tyco/plugin-sdk'
 
@@ -63,6 +65,23 @@ export function withWebToolGroup(
     CHAT_TOOL_GROUPS.find((g) => g.id === WEB_TOOL_GROUP_ID) ??
     WEB_GROUP_FALLBACK
   return withToolGroup(settings, group, {})
+}
+
+/**
+ * The tool settings of the "Ask AI" chat, which has no profile: only its web
+ * access is the user's to set
+ */
+export function askAiToolSettings(
+  access: AskAiWebAccess = ASK_AI_WEB_ACCESS_DEFAULT
+): ProfileToolSettings {
+  return {
+    groups: {
+      [WEB_TOOL_GROUP_ID]:
+        access === 'off'
+          ? { isEnabled: false, access: 'deny' }
+          : { isEnabled: true, access },
+    },
+  }
 }
 
 /** Room left in the output for the page title, source and the note */

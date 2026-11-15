@@ -75,14 +75,17 @@ type ToolCallPart = Extract<ChatMessagePart, { type: 'tool-call' }>
  */
 function lastStepWithoutTools(stepCount: number): PrepareStep {
   return ({ stepNumber }) =>
-    stepNumber >= stepCount - 1 ? { activeTools: [] } : undefined
+    stepNumber >= stepCount - 1
+      ? { activeTools: [], toolChoice: 'none' }
+      : undefined
 }
 
 /**
  * One chat turn with tools: streams the answer, records each step as a part of
  * the message, stops for the user's approval and continues, and keeps the turn
- * within its steps. Plain code, so that the same loop serves the chat window
- * and a chat run through the external API
+ * within its steps. Plain code, so that the same loop serves the chat window, a
+ * chat run through the external API, the quick AI request and the agent of AI
+ * commands
  *
  * Resolves with the final state; aborted, it resolves with what came so far.
  *

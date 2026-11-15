@@ -1,7 +1,19 @@
-import { dynamicTool, jsonSchema, type ToolSet } from '@bozonx/ai-kit'
 import { isRecord } from '@tyco/shared/value-guards'
-import type { AiCommandOperationConfig } from '@tyco/shared'
+import {
+  COMMANDS_TOOL_GROUP_ID,
+  type AiCommandOperationConfig,
+  type ProfileToolSettings,
+} from '@tyco/shared'
 
+import {
+  runChatToolLoop,
+  type ChatToolLoopState,
+} from '../chat-tools/chat-tool-loop'
+import { createChatToolPolicy } from '../chat-tools/chat-tool-policy'
+import {
+  createChatToolRegistry,
+  type ChatToolDefinition,
+} from '../chat-tools/chat-tool-registry'
 import { toolResultForModel } from '../chat-tools/registered-operation-adapter'
 import type {
   LlmRunName,
@@ -63,10 +75,27 @@ const agentToolName = (index: number, commandId: string): string =>
   )
 
 /**
+ * The answer of a run: the text written after the last command call. What the
+ * model wrote before a call only leads up to it
+ */
+function answerText(state: ChatToolLoopState): string {
+  let lastCall = -1
+  state.parts.forEach((part, index) => {
+    if (part.type === 'tool-call' || part.type === 'tool-result')
+      lastCall = index
+  })
+  return state.parts
+    .slice(lastCall + 1)
+    .flatMap((part) => (part.type === 'text' ? [part.text] : []))
+    .join('')
+}
+
+/**
  * Runs the agent of an AI command on `text`: the model follows the prompt and
- * may run the given commands as its tools. Resolves with its final answer, the
- * text written after the last command it ran, or the output of that command
- * when the model wrote nothing after it
+ * may run the given commands as its tools, through the same loop and tool
+ * policy as the chat. Resolves with its final answer, the text written after
+ * the last command it ran, or the output of that command when the model wrote
+ * nothing after it
  *
  * @throws LlmError
  */
@@ -80,73 +109,84 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
     let callsUsed = 0
     /** What the last command that ran returned */
     let lastResult = ''
-    const byName = new Map<string, AiCommandAgentTool>()
-    const toolSet: ToolSet = {}
-    tools.forEach((tool, index) => {
+    const labels = new Map<string, string>()
+    const definitions: ChatToolDefinition[] = tools.map((tool, index) => {
       const name = agentToolName(index, tool.commandId)
-      byName.set(name, tool)
-      toolSet[name] = dynamicTool({
+      labels.set(name, tool.label)
+      return {
+        name,
+        groupId: COMMANDS_TOOL_GROUP_ID,
+        label: tool.label,
         description: tool.description,
-        inputSchema: jsonSchema(
-          tool.inputSchema as Parameters<typeof jsonSchema>[0]
-        ),
-        execute: async (input, { abortSignal }) => {
+        inputSchema: tool.inputSchema,
+        execute: async (input, { signal }) => {
           // Reserve before awaiting: parallel calls share the same budget.
           if (callsUsed >= config.maxSteps) return CALL_LIMIT_NOTICE
           callsUsed += 1
           const result = toolResultForModel(
-            await tool.execute(
-              isRecord(input) ? input : {},
-              abortSignal ?? options.signal
-            )
+            await tool.execute(isRecord(input) ? input : {}, signal)
           )
           lastResult = result
           return result
         },
-      })
+      }
     })
+
+    // The user picked the commands of the agent, and an AI command often runs
+    // with no window to ask in: they run without asking
+    const policy = createChatToolPolicy({ canAsk: false })
+    const settings: ProfileToolSettings = {
+      groups: {
+        [COMMANDS_TOOL_GROUP_ID]: { isEnabled: true, access: 'allow' },
+      },
+    }
+    const toolSet = definitions.length
+      ? await createChatToolRegistry({
+          providers: () => [{ id: 'aiCommand', tools: () => definitions }],
+          policy,
+        }).resolve({ profileId: null, modelId: '', settings })
+      : null
 
     const system = [
       deps.instructions().trim(),
       `Command instructions:\n\n${config.prompt.trim()}`,
     ].join('\n\n')
 
-    let answer = ''
-    for await (const event of deps.stream(
-      'aiTask',
+    let reportedCalls = 0
+    const state = await runChatToolLoop(
       {
-        system,
-        messages: [
-          {
-            role: 'user',
-            content: text.trim() ? text : 'Carry out the command instructions.',
-          },
-        ],
+        stream: (prompt, streamOptions) =>
+          deps.stream('aiTask', prompt, streamOptions),
+        requestApproval: () => Promise.resolve('deny'),
+        policy,
       },
       {
+        prompt: {
+          system,
+          messages: [
+            {
+              role: 'user',
+              content: text.trim()
+                ? text
+                : 'Carry out the command instructions.',
+            },
+          ],
+        },
+        tools: toolSet,
+        // the calls the command allows, then the answer
+        maxStepCount: config.maxSteps + 1,
         signal: options.signal,
-        ...(tools.length
-          ? {
-              tools: toolSet,
-              maxSteps: config.maxSteps + 1,
-              prepareStep: ({ stepNumber }) =>
-                callsUsed >= config.maxSteps || stepNumber >= config.maxSteps
-                  ? { activeTools: [], toolChoice: 'none' }
-                  : undefined,
-            }
-          : {}),
+        onUpdate: (update) => {
+          const calls = update.parts.filter((part) => part.type === 'tool-call')
+          for (const call of calls.slice(reportedCalls)) {
+            const label = labels.get(call.toolName)
+            if (label) options.onStep?.(label)
+          }
+          reportedCalls = calls.length
+        },
       }
-    )) {
-      if (event.type === 'text') {
-        answer += event.text
-      } else if (event.type === 'tool-call') {
-        // what the model wrote before a call leads up to it, not the answer
-        answer = ''
-        const tool = byName.get(event.toolName)
-        if (tool) options.onStep?.(tool.label)
-      }
-    }
-    const final = cleanLlmOutput(answer, text)
+    )
+    const final = cleanLlmOutput(answerText(state), text)
     // commands ran but the model said nothing after them: their output is the answer
     return final.trim() ? final : lastResult
   }

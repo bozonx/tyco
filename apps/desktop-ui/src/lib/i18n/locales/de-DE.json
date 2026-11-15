@@ -646,6 +646,7 @@
   "settings": {
     "accessAllow": "Zulassen",
     "accessAsk": "Fragen",
+    "accessOff": "Aus",
     "accessLevel": "Zugriff",
     "accessLevelAskAll": "Vor Lesen und Schreiben fragen",
     "accessLevelFull": "Vollzugriff",
@@ -1303,7 +1304,9 @@
     "webFetchMaxCharactersHint": "Maximale Zeichenanzahl, die von einer einzelnen Webseite abgerufen wird (1.000 bis 100.000). Schont das Kontextfenster.",
     "webJinaApiKey": "Jina AI-API-Schlüssel",
     "webJinaApiKeyHint": "Optional. Ohne Schlüssel nutzen Anfragen das kostenlose Kontingent mit geteilten Limits.",
-    "webSearchSectionHint": "Einstellungen für Websuche und das Abrufen von Webseiten durch KI-Modelle und Profile."
+    "webSearchSectionHint": "Einstellungen für Websuche und das Abrufen von Webseiten durch KI-Modelle und Profile.",
+    "askAiWebAccess": "Web in „KI fragen“",
+    "askAiWebAccessHint": "Ob der Chat „KI fragen“, der kein Profil hat, im Web suchen und Seiten lesen darf. „Fragen“ wartet vor jedem Aufruf auf Ihre Zustimmung. Profile legen das in ihren eigenen Werkzeugen fest."
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

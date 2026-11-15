@@ -102,12 +102,22 @@ export const DEFAULT_WEB_FETCH_MAX_CHARACTERS = 15_000
 export const MIN_WEB_FETCH_MAX_CHARACTERS = 1_000
 export const MAX_WEB_FETCH_MAX_CHARACTERS = 100_000
 
+/**
+ * How the "Ask AI" chat, which has no profile, may use the web tools: `ask`
+ * waits for the user before each call
+ */
+export type AskAiWebAccess = 'ask' | 'allow' | 'off'
+
+export const ASK_AI_WEB_ACCESS_DEFAULT: AskAiWebAccess = 'ask'
+
 export interface WebSearchConfig {
   /**
    * Maximum number of characters fetched from a single web page (1,000 to
    * 100,000)
    */
   fetchMaxCharacters?: number
+  /** The web tools of the "Ask AI" chat; profiles set their own */
+  askAiAccess?: AskAiWebAccess
 }
 
 export interface LlmConfig {

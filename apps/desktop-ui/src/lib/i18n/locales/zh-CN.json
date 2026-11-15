@@ -640,6 +640,7 @@
   "settings": {
     "accessAllow": "允许",
     "accessAsk": "每次询问",
+    "accessOff": "关闭",
     "accessLevel": "访问",
     "accessLevelAskAll": "读写时均询问",
     "accessLevelFull": "完全访问",
@@ -1297,7 +1298,9 @@
     "webFetchMaxCharactersHint": "从单个网页获取的最大字符数（1,000 到 100,000）。有助于节省上下文窗口。",
     "webJinaApiKey": "Jina AI API 密钥",
     "webJinaApiKeyHint": "可选。未配置密钥时，请求将使用具有共享速率限制的免费层级。",
-    "webSearchSectionHint": "AI 模型和配置文件使用的网页搜索与页面读取工具的设置。"
+    "webSearchSectionHint": "AI 模型和配置文件使用的网页搜索与页面读取工具的设置。",
+    "askAiWebAccess": "“询问 AI”中的网络",
+    "askAiWebAccessHint": "没有配置文件的“询问 AI”聊天能否搜索网络和读取网页。“询问”会在每次调用前等待你的批准。配置文件在各自的工具中设置。"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

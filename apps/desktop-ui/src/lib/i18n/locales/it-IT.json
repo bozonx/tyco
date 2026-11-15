@@ -646,6 +646,7 @@
   "settings": {
     "accessAllow": "Consenti",
     "accessAsk": "Chiedi",
+    "accessOff": "Disattivato",
     "accessLevel": "Accesso",
     "accessLevelAskAll": "Chiedi per lettura e scrittura",
     "accessLevelFull": "Accesso completo",
@@ -1303,7 +1304,9 @@
     "webFetchMaxCharactersHint": "Numero massimo di caratteri recuperati da una singola pagina web (da 1.000 a 100.000). Aiuta a risparmiare la finestra di contesto.",
     "webJinaApiKey": "Chiave API Jina AI",
     "webJinaApiKeyHint": "Facoltativo. Senza chiave, le richieste utilizzano il piano gratuito con limiti condivisi.",
-    "webSearchSectionHint": "Impostazioni per la ricerca sul web e la lettura delle pagine utilizzate dai modelli e profili IA."
+    "webSearchSectionHint": "Impostazioni per la ricerca sul web e la lettura delle pagine utilizzate dai modelli e profili IA.",
+    "askAiWebAccess": "Web in «Chiedi all’IA»",
+    "askAiWebAccessHint": "Se la chat «Chiedi all’IA», che non ha un profilo, può cercare sul web e leggere pagine. «Chiedi» attende la tua approvazione prima di ogni chiamata. I profili lo impostano nei propri strumenti."
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {

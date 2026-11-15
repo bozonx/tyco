@@ -640,6 +640,7 @@
   "settings": {
     "accessAllow": "Povolit",
     "accessAsk": "Ptát se",
+    "accessOff": "Vypnuto",
     "accessLevel": "Přístup",
     "accessLevelAskAll": "Ptát se na čtení a zápis",
     "accessLevelFull": "Plný přístup",
@@ -1297,7 +1298,9 @@
     "webFetchMaxCharactersHint": "Maximální počet znaků načtených z jedné webové stránky (1 000 až 100 000). Pomáhá šetřit kontextové okno.",
     "webJinaApiKey": "Klíč API Jina AI",
     "webJinaApiKeyHint": "Volitelné. Bez klíče požadavky využívají bezplatný tarif se sdílenými limity.",
-    "webSearchSectionHint": "Nastavení nástrojů pro vyhledávání na webu a čtení stránek používaných modely a profily AI."
+    "webSearchSectionHint": "Nastavení nástrojů pro vyhledávání na webu a čtení stránek používaných modely a profily AI.",
+    "askAiWebAccess": "Web v „Zeptat se AI“",
+    "askAiWebAccessHint": "Zda chat „Zeptat se AI“, který nemá profil, smí hledat na webu a číst stránky. „Ptát se“ čeká před každým voláním na vaše schválení. Profily to nastavují ve svých nástrojích."
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

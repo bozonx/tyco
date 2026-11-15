@@ -646,6 +646,7 @@
   "settings": {
     "accessAllow": "Autoriser",
     "accessAsk": "Demander",
+    "accessOff": "Désactivé",
     "accessLevel": "Accès",
     "accessLevelAskAll": "Demander pour lire et écrire",
     "accessLevelFull": "Accès complet",
@@ -1303,7 +1304,9 @@
     "webFetchMaxCharactersHint": "Nombre maximal de caractères récupérés d’une seule page Web (1 000 à 100 000). Économise la fenêtre de contexte.",
     "webJinaApiKey": "Clé API Jina AI",
     "webJinaApiKeyHint": "Facultatif. Sans clé, les requêtes utilisent le niveau gratuit avec des limites partagées.",
-    "webSearchSectionHint": "Paramètres de recherche Web et de lecture de pages utilisés par les modèles et profils d'IA."
+    "webSearchSectionHint": "Paramètres de recherche Web et de lecture de pages utilisés par les modèles et profils d'IA.",
+    "askAiWebAccess": "Web dans « Demander à l’IA »",
+    "askAiWebAccessHint": "Indique si le chat « Demander à l’IA », qui n’a pas de profil, peut chercher sur le web et lire des pages. « Demander » attend votre accord avant chaque appel. Les profils le règlent dans leurs propres outils."
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {

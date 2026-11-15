@@ -1,4 +1,5 @@
 import {
+  type AskAiWebAccess,
   type AiAttachedFile,
   type AiFileChangePreview,
   type AiFileRoot,
@@ -26,7 +27,7 @@ import {
 import { readDocumentText } from './file-document-text'
 import { createFileToolProvider, type FileToolScope } from './file-tools'
 import { createMemoryToolProvider } from './memory-tools'
-import { createWebToolProvider } from './web-tools'
+import { askAiToolSettings, createWebToolProvider } from './web-tools'
 
 interface FileToolArgs {
   profileId: string | null
@@ -114,6 +115,8 @@ export interface DesktopChatToolsDependencies {
   /** The originals attached to the conversation, for the file tools */
   getAttachedFiles?: () => readonly AiAttachedFile[]
   getFetchMaxCharacters?: () => number | undefined
+  /** The web access of the "Ask AI" chat, used when `profileId` is null */
+  getAskAiWebAccess?: () => AskAiWebAccess | undefined
   warn: (message: string) => void
   extractDocumentText?: typeof readDocumentText
   isDebugEnabled?: () => boolean
@@ -221,6 +224,12 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
     warn: deps.warn,
   })
 
+  /** A profile's own settings, or those of "Ask AI" for a chat without one */
+  const toolSettings = (profileTools: ProfileToolSettings | undefined) =>
+    deps.profileId === null
+      ? askAiToolSettings(deps.getAskAiWebAccess?.())
+      : profileTools
+
   /** The tools of a turn on the model picked in the chat */
   const turnTools = async (
     modelId: string,
@@ -236,7 +245,7 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
         profileId: deps.profileId,
         modelId,
         canUseTools,
-        settings: profileTools,
+        settings: toolSettings(profileTools),
         memoryMode: resolvedMode,
         outputBudgetCharacters,
         attachedFiles: deps.getAttachedFiles?.(),
@@ -251,7 +260,7 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
   }) =>
     session.mayOfferTools({
       canUseTools: request.canUseTools,
-      settings: request.settings,
+      settings: toolSettings(request.settings),
       memoryMode: request.memoryMode ?? deps.getMemoryMode?.(),
     })
 

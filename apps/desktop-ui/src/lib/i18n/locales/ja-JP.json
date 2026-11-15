@@ -643,6 +643,7 @@
   "settings": {
     "accessAllow": "許可",
     "accessAsk": "確認",
+    "accessOff": "オフ",
     "accessLevel": "アクセス",
     "accessLevelAskAll": "読み取りと書き込み時に確認",
     "accessLevelFull": "フルアクセス",
@@ -1300,7 +1301,9 @@
     "webFetchMaxCharactersHint": "1つのウェブページから取得する最大文字数（1,000〜100,000）。コンテキストウィンドウの節約に役立ちます。",
     "webJinaApiKey": "Jina AI API キー",
     "webJinaApiKeyHint": "省略可能。キーがない場合、リクエストは共有レート制限のある無料枠を使用します。",
-    "webSearchSectionHint": "AIモデルやプロファイルが使用するウェブ検索およびページ読み取りツールの設定。"
+    "webSearchSectionHint": "AIモデルやプロファイルが使用するウェブ検索およびページ読み取りツールの設定。",
+    "askAiWebAccess": "「AIに質問」でのウェブ",
+    "askAiWebAccessHint": "プロファイルのない「AIに質問」チャットがウェブ検索やページの読み取りを行えるかどうか。「確認」は呼び出しのたびに承認を待ちます。プロファイルは各自のツールで設定します。"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {
