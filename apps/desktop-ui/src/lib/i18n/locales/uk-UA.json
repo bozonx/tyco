@@ -611,7 +611,9 @@
     "contextRequired": "Потрібен контекст",
     "typeText": "Ввести текст",
     "toPrompt": "У поле запиту",
-    "editText": "Редагувати текст"
+    "editText": "Редагувати текст",
+    "translateGroupFrequent": "Часті",
+    "translateSwapLanguages": "Поміняти місцями"
   },
   "nav": {
     "aiChat": "Запитати ШІ",

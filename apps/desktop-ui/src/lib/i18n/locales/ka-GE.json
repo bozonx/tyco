@@ -611,7 +611,9 @@
     "contextRequired": "საჭიროა კონტექსტი",
     "typeText": "ტექსტის შეყვანა",
     "toPrompt": "მოთხოვნის ველში",
-    "editText": "ტექსტის რედაქტირება"
+    "editText": "ტექსტის რედაქტირება",
+    "translateGroupFrequent": "ხშირი",
+    "translateSwapLanguages": "ენების შეცვლა"
   },
   "nav": {
     "aiChat": "ჰკითხეთ AI-ს",

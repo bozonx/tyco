@@ -21,6 +21,20 @@ describe('groupLanguages', () => {
     ])
   })
 
+  it('includes frequent picks after recent picks without duplicates', () => {
+    expect(
+      groupLanguages(['pl-PL'], all, label, undefined, undefined, [
+        'de-DE',
+        'pl-PL',
+      ])
+    ).toEqual([
+      { id: 'pl-PL', group: 'recent' },
+      { id: 'de-DE', group: 'frequent' },
+      { id: 'en-US', group: 'all' },
+      { id: 'it-IT', group: 'all' },
+    ])
+  })
+
   it('leaves out the language of the other field and unknown recent ones', () => {
     expect(
       groupLanguages(['pl-PL', 'xx-XX'], all, label, 'pl-PL').map(

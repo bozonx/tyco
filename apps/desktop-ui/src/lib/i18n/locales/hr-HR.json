@@ -611,7 +611,9 @@
     "contextRequired": "Potreban kontekst",
     "typeText": "Upiši tekst",
     "toPrompt": "U polje upita",
-    "editText": "Uredi tekst"
+    "editText": "Uredi tekst",
+    "translateGroupFrequent": "Česti",
+    "translateSwapLanguages": "Zamijeni jezike"
   },
   "nav": {
     "aiChat": "Pitaj AI",

@@ -611,7 +611,9 @@
     "contextRequired": "Contesto richiesto",
     "typeText": "Scrivi testo",
     "toPrompt": "Al campo della richiesta",
-    "editText": "Modifica testo"
+    "editText": "Modifica testo",
+    "translateGroupFrequent": "Frequenti",
+    "translateSwapLanguages": "Inverti lingue"
   },
   "nav": {
     "aiChat": "Chiedi all’IA",

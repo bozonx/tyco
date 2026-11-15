@@ -611,7 +611,9 @@
     "contextRequired": "Context required",
     "typeText": "Type text",
     "toPrompt": "To prompt input",
-    "editText": "Edit text"
+    "editText": "Edit text",
+    "translateGroupFrequent": "Frequent",
+    "translateSwapLanguages": "Swap languages"
   },
   "nav": {
     "aiChat": "Ask AI",

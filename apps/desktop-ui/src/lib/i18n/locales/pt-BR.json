@@ -611,7 +611,9 @@
     "contextRequired": "Contexto necessário",
     "typeText": "Digitar texto",
     "toPrompt": "Para o campo da solicitação",
-    "editText": "Editar texto"
+    "editText": "Editar texto",
+    "translateGroupFrequent": "Frequentes",
+    "translateSwapLanguages": "Inverter idiomas"
   },
   "nav": {
     "aiChat": "Perguntar à IA",

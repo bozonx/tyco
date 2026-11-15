@@ -2,7 +2,7 @@
   <ActionOverlayLayout
     :other-actions-text="draftText"
     :title="t('menu.translate')"
-    :on-esc="isPickerMode ? closePicker : undefined"
+    :on-esc="isPickerMode ? handleOverlayEsc : undefined"
     :esc-mode="isPickerMode ? 'back' : 'auto'"
   >
     <template #preview>
@@ -21,41 +21,55 @@
             class="translate-column"
             :class="{ 'is-active': activeField === 'source' }"
             data-field="source"
+            @click="activateField('source')"
           >
             <div class="translate-column-header">
-              <span class="translate-column-label">{{
-                t('menu.translateSourceLanguage')
-              }}</span>
-              <span
-                v-if="sourceLanguage !== AUTO_LANGUAGE_VALUE"
-                class="translate-column-selected"
-              >
-                {{ sourceLabel }}
-              </span>
-            </div>
+              <div v-if="!sourceQuery" class="translate-column-title-row">
+                <span class="translate-column-label">{{
+                  t('menu.translateSourceLanguage')
+                }}</span>
+                <span
+                  v-if="sourceLanguage !== AUTO_LANGUAGE_VALUE"
+                  class="translate-column-selected"
+                >
+                  {{ sourceLabel }}
+                </span>
+              </div>
+              <div v-show="sourceQuery" class="translate-query-row">
+                <AppIcon
+                  icon="mdi:magnify"
+                  size="sm"
+                  class="translate-query-icon"
+                />
+              </div>
 
-            <input
-              ref="sourceInputRef"
-              v-model="sourceQuery"
-              type="text"
-              class="translate-column-input"
-              data-field="source"
-              :disabled="isInputDisabled"
-              :placeholder="t('menu.translateSourcePlaceholder')"
-              role="combobox"
-              aria-autocomplete="list"
-              :aria-expanded="sourceOptions.length > 0"
-              aria-controls="translate-source-list"
-              :aria-activedescendant="
-                highlightedSourceIndex >= 0
-                  ? `translate-source-option-${highlightedSourceIndex}`
-                  : undefined
-              "
-              spellcheck="false"
-              autocomplete="off"
-              @focus="activeField = 'source'"
-              @keydown="onKeyDown($event, 'source')"
-            />
+              <input
+                ref="sourceInputRef"
+                v-model="sourceQuery"
+                type="text"
+                class="translate-column-header-input"
+                :class="{
+                  'is-searching': Boolean(sourceQuery),
+                  'is-idle': !sourceQuery,
+                }"
+                data-field="source"
+                :disabled="isInputDisabled"
+                :aria-label="t('menu.translateSourcePlaceholder')"
+                role="combobox"
+                aria-autocomplete="list"
+                :aria-expanded="sourceOptions.length > 0"
+                aria-controls="translate-source-list"
+                :aria-activedescendant="
+                  highlightedSourceIndex >= 0
+                    ? `translate-source-option-${highlightedSourceIndex}`
+                    : undefined
+                "
+                spellcheck="false"
+                autocomplete="off"
+                @focus="activeField = 'source'"
+                @keydown="onKeyDown($event, 'source')"
+              />
+            </div>
 
             <ul
               v-if="sourceOptions.length > 0"
@@ -102,14 +116,17 @@
                       size="md"
                       class="translate-option-icon"
                     />
-                    <span class="translate-option-text">{{
-                      option.label
-                    }}</span>
+                    <span class="translate-option-text">
+                      {{ option.label
+                      }}<span
+                        v-if="option.hint"
+                        class="translate-option-native"
+                      >
+                        · {{ option.hint }}</span
+                      >
+                    </span>
                   </span>
                   <span class="translate-option-end">
-                    <span v-if="option.hint" class="translate-option-hint">{{
-                      option.hint
-                    }}</span>
                     <AppIcon
                       v-if="option.selected"
                       icon="mdi:check"
@@ -125,9 +142,18 @@
             </p>
           </div>
 
-          <!-- Divider with arrow -->
-          <div class="translate-divider" aria-hidden="true">
-            <AppIcon icon="mdi:arrow-right" size="lg" class="translate-arrow" />
+          <!-- Swap button between columns -->
+          <div class="translate-swap-container">
+            <button
+              type="button"
+              class="translate-swap-button"
+              :disabled="isAutoSource || isInputDisabled"
+              :title="`${t('menu.translateSwapLanguages')} (Ctrl+Shift+S)`"
+              :aria-label="t('menu.translateSwapLanguages')"
+              @click="swapLanguages"
+            >
+              <AppIcon icon="mdi:swap-horizontal" size="md" />
+            </button>
           </div>
 
           <!-- Target language column -->
@@ -135,35 +161,52 @@
             class="translate-column"
             :class="{ 'is-active': activeField === 'target' }"
             data-field="target"
+            @click="activateField('target')"
           >
             <div class="translate-column-header">
-              <span class="translate-column-label">{{
-                t('menu.translateTargetLanguage')
-              }}</span>
-            </div>
+              <div v-if="!targetQuery" class="translate-column-title-row">
+                <span class="translate-column-label">{{
+                  t('menu.translateTargetLanguage')
+                }}</span>
+                <span v-if="targetLanguage" class="translate-column-selected">
+                  {{ targetLabel }}
+                </span>
+              </div>
+              <div v-show="targetQuery" class="translate-query-row">
+                <AppIcon
+                  icon="mdi:magnify"
+                  size="sm"
+                  class="translate-query-icon"
+                />
+              </div>
 
-            <input
-              ref="targetInputRef"
-              v-model="targetQuery"
-              type="text"
-              class="translate-column-input"
-              data-field="target"
-              :disabled="isInputDisabled"
-              :placeholder="t('menu.translateTargetPlaceholder')"
-              role="combobox"
-              aria-autocomplete="list"
-              :aria-expanded="targetOptions.length > 0"
-              aria-controls="translate-target-list"
-              :aria-activedescendant="
-                highlightedTargetIndex >= 0
-                  ? `translate-target-option-${highlightedTargetIndex}`
-                  : undefined
-              "
-              spellcheck="false"
-              autocomplete="off"
-              @focus="activeField = 'target'"
-              @keydown="onKeyDown($event, 'target')"
-            />
+              <input
+                ref="targetInputRef"
+                v-model="targetQuery"
+                type="text"
+                class="translate-column-header-input"
+                :class="{
+                  'is-searching': Boolean(targetQuery),
+                  'is-idle': !targetQuery,
+                }"
+                data-field="target"
+                :disabled="isInputDisabled"
+                :aria-label="t('menu.translateTargetPlaceholder')"
+                role="combobox"
+                aria-autocomplete="list"
+                :aria-expanded="targetOptions.length > 0"
+                aria-controls="translate-target-list"
+                :aria-activedescendant="
+                  highlightedTargetIndex >= 0
+                    ? `translate-target-option-${highlightedTargetIndex}`
+                    : undefined
+                "
+                spellcheck="false"
+                autocomplete="off"
+                @focus="activeField = 'target'"
+                @keydown="onKeyDown($event, 'target')"
+              />
+            </div>
 
             <ul
               v-if="targetOptions.length > 0"
@@ -210,14 +253,17 @@
                       size="md"
                       class="translate-option-icon"
                     />
-                    <span class="translate-option-text">{{
-                      option.label
-                    }}</span>
+                    <span class="translate-option-text">
+                      {{ option.label
+                      }}<span
+                        v-if="option.hint"
+                        class="translate-option-native"
+                      >
+                        · {{ option.hint }}</span
+                      >
+                    </span>
                   </span>
                   <span class="translate-option-end">
-                    <span v-if="option.hint" class="translate-option-hint">{{
-                      option.hint
-                    }}</span>
                     <AppIcon
                       v-if="option.selected"
                       icon="mdi:check"
@@ -236,16 +282,45 @@
 
         <!-- Footer -->
         <div class="translate-footer">
-          <div class="translate-hints">
+          <div class="translate-hints-secondary">
             <ShortcutHint
-              v-for="hint in pickerHints"
-              :key="hint.label"
-              :keys="hint.keys"
+              :keys="['Tab']"
               interactive
-              :disabled="props.shortcutsDisabled || hint.disabled"
-              @click="hint.action?.()"
+              :disabled="props.shortcutsDisabled"
+              @click="switchField"
             >
-              {{ hint.label }}
+              {{ t('menu.translateSwitchField') }}
+            </ShortcutHint>
+          </div>
+          <div class="translate-hints-primary">
+            <ShortcutHint
+              v-if="activeField === 'source'"
+              :keys="['Ctrl', 'Enter']"
+              interactive
+              :disabled="props.shortcutsDisabled || isQuickTranslateDisabled"
+              @click="quickTranslate()"
+            >
+              {{ t('menu.translate') }}
+            </ShortcutHint>
+            <ShortcutHint
+              class="is-primary"
+              :keys="['Enter']"
+              interactive
+              :disabled="
+                props.shortcutsDisabled ||
+                (activeField === 'source'
+                  ? highlightedSourceIndex < 0
+                  : highlightedTargetIndex < 0)
+              "
+              @click="
+                activeField === 'source' ? submitSource() : submitTarget()
+              "
+            >
+              {{
+                activeField === 'source'
+                  ? t('menu.translatePickSource')
+                  : t('menu.translate')
+              }}
             </ShortcutHint>
           </div>
         </div>
@@ -342,6 +417,7 @@ const sourceQuery = ref('')
 const targetQuery = ref('')
 /** Picked anew each time the menu opens: an old pick is easily forgotten */
 const sourceLanguage = ref(AUTO_LANGUAGE_VALUE)
+const targetLanguage = ref<string | undefined>(undefined)
 
 const sourceInputRef = ref<HTMLInputElement | null>(null)
 const targetInputRef = ref<HTMLInputElement | null>(null)
@@ -364,9 +440,16 @@ const recentFor = (direction: 'source' | 'target') =>
   recentLanguages.value.flatMap(
     (id) => resolveTranslationLanguage(id, provider.value, direction) ?? []
   )
+const frequentFor = (direction: 'source' | 'target') =>
+  slotList(desktopStore.userConfig.translation.targetLanguages)
+    .filter((id): id is string => Boolean(id))
+    .flatMap(
+      (id) => resolveTranslationLanguage(id, provider.value, direction) ?? []
+    )
 
 watch(provider, () => {
   sourceLanguage.value = AUTO_LANGUAGE_VALUE
+  targetLanguage.value = undefined
 })
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
@@ -399,6 +482,16 @@ const closePicker = () => {
   isPickerMode.value = false
 }
 
+const handleOverlayEsc = () => {
+  const currentQuery =
+    activeField.value === 'source' ? sourceQuery : targetQuery
+  if (currentQuery.value) {
+    currentQuery.value = ''
+  } else {
+    closePicker()
+  }
+}
+
 const recentLanguages = computed(
   () => desktopStore.sessionState?.recentTranslateLanguages ?? []
 )
@@ -407,6 +500,7 @@ const AUTO_ICON = 'mdi:auto-mode'
 
 const GROUP_LABELS: Record<LanguageGroup, string> = {
   recent: 'menu.translateGroupRecent',
+  frequent: 'menu.translateGroupFrequent',
   all: 'menu.translateGroupAll',
 }
 
@@ -420,7 +514,10 @@ const toOption = (
   return {
     id,
     label,
-    hint: native && native !== label ? native : undefined,
+    hint:
+      native && native.toLowerCase() !== label.toLowerCase()
+        ? native
+        : undefined,
     keywords: languageSearchNames(id),
     group: t(GROUP_LABELS[group]),
     selected,
@@ -440,17 +537,23 @@ const rawSourceOptions = computed<QueryPanelOption[]>(() => [
     languageIds('source'),
     languageLabel,
     undefined,
-    locale.value
+    locale.value,
+    frequentFor('source')
   ).map(({ id, group }) => toOption(id, group, id === sourceLanguage.value)),
 ])
 
-const sourceOptions = computed<QueryPanelOption[]>(() =>
-  sourceQuery.value.trim()
-    ? filterOptions(rawSourceOptions.value, sourceQuery.value).map(
-        (option) => ({ ...option, group: undefined })
-      )
-    : rawSourceOptions.value
-)
+const sourceOptions = computed<QueryPanelOption[]>(() => {
+  const query = sourceQuery.value.trim()
+  if (!query) return rawSourceOptions.value
+
+  const autoOption = rawSourceOptions.value[0]!
+  const otherOptions = rawSourceOptions.value.slice(1)
+  const filtered = filterOptions(otherOptions, query).map((option) => ({
+    ...option,
+    group: undefined,
+  }))
+  return [autoOption, ...filtered]
+})
 
 const rawTargetOptions = computed<QueryPanelOption[]>(() =>
   groupLanguages(
@@ -460,17 +563,20 @@ const rawTargetOptions = computed<QueryPanelOption[]>(() =>
     sourceLanguage.value === AUTO_LANGUAGE_VALUE
       ? undefined
       : sourceLanguage.value,
-    locale.value
-  ).map(({ id, group }) => toOption(id, group))
+    locale.value,
+    frequentFor('target')
+  ).map(({ id, group }) => toOption(id, group, id === targetLanguage.value))
 )
 
-const targetOptions = computed<QueryPanelOption[]>(() =>
-  targetQuery.value.trim()
-    ? filterOptions(rawTargetOptions.value, targetQuery.value).map(
-        (option) => ({ ...option, group: undefined })
-      )
-    : rawTargetOptions.value
-)
+const targetOptions = computed<QueryPanelOption[]>(() => {
+  const query = targetQuery.value.trim()
+  if (!query) return rawTargetOptions.value
+
+  return filterOptions(rawTargetOptions.value, query).map((option) => ({
+    ...option,
+    group: undefined,
+  }))
+})
 
 const isAutoSource = computed(
   () => sourceLanguage.value === AUTO_LANGUAGE_VALUE
@@ -480,6 +586,10 @@ const sourceLabel = computed(() =>
   isAutoSource.value
     ? t('menu.translateAutoDetect')
     : languageLabel(sourceLanguage.value)
+)
+
+const targetLabel = computed(() =>
+  targetLanguage.value ? languageLabel(targetLanguage.value) : ''
 )
 
 function scrollToHighlighted(column: 'source' | 'target') {
@@ -500,7 +610,8 @@ watch(targetOptions, () => {
   if (targetQuery.value.trim() !== '' && targetOptions.value.length > 0) {
     highlightedTargetIndex.value = 0
   } else {
-    highlightedTargetIndex.value = -1
+    const selectedIndex = targetOptions.value.findIndex((o) => o.selected)
+    highlightedTargetIndex.value = selectedIndex
   }
   if (highlightedTargetIndex.value >= 0) {
     scrollToHighlighted('target')
@@ -510,11 +621,11 @@ watch(targetOptions, () => {
 watch(
   [sourceOptions, sourceLanguage],
   () => {
-    if (sourceQuery.value.trim() !== '' && sourceOptions.value.length > 0) {
-      highlightedSourceIndex.value = 0
+    if (sourceQuery.value.trim() !== '') {
+      highlightedSourceIndex.value = sourceOptions.value.length > 1 ? 1 : 0
     } else {
       const selectedIndex = sourceOptions.value.findIndex((o) => o.selected)
-      highlightedSourceIndex.value = selectedIndex >= 0 ? selectedIndex : -1
+      highlightedSourceIndex.value = selectedIndex >= 0 ? selectedIndex : 0
     }
     if (highlightedSourceIndex.value >= 0) {
       scrollToHighlighted('source')
@@ -523,41 +634,90 @@ watch(
   { immediate: true }
 )
 
-const pickerHints = computed(() => [
-  {
-    keys: ['Enter'],
-    label:
-      activeField.value === 'source'
-        ? t('menu.translatePickSource')
-        : t('menu.translate'),
-    disabled:
-      activeField.value === 'source'
-        ? highlightedSourceIndex.value < 0
-        : highlightedTargetIndex.value < 0,
-    action: () => {
-      if (activeField.value === 'source') {
-        submitSource()
-      } else {
-        void submitTarget()
-      }
-    },
-  },
-  {
-    keys: ['Tab'],
-    label: t('menu.translateSwitchField'),
-    disabled: false,
-    action: switchField,
-  },
-])
+function activateField(field: 'source' | 'target') {
+  activeField.value = field
+  void nextTick(() => {
+    if (field === 'source') {
+      sourceInputRef.value?.focus()
+    } else {
+      targetInputRef.value?.focus()
+    }
+  })
+}
 
 function switchField() {
   if (activeField.value === 'source') {
-    activeField.value = 'target'
-    void nextTick(() => targetInputRef.value?.focus())
+    activateField('target')
   } else {
-    activeField.value = 'source'
-    void nextTick(() => sourceInputRef.value?.focus())
+    activateField('source')
   }
+}
+
+function swapLanguages() {
+  if (isAutoSource.value || isInputDisabled.value) return
+
+  const currentSource = sourceLanguage.value
+  const currentTarget =
+    targetLanguage.value ??
+    targetOptions.value[highlightedTargetIndex.value]?.id ??
+    rawTargetOptions.value[0]?.id
+
+  if (!currentTarget) return
+
+  const newSource = resolveTranslationLanguage(
+    currentTarget,
+    provider.value,
+    'source'
+  )
+  const newTarget = resolveTranslationLanguage(
+    currentSource,
+    provider.value,
+    'target'
+  )
+
+  if (newSource && newTarget) {
+    sourceLanguage.value = newSource
+    targetLanguage.value = newTarget
+    sourceQuery.value = ''
+    targetQuery.value = ''
+  }
+}
+
+const isQuickTranslateDisabled = computed(() => {
+  const hasTarget = Boolean(
+    targetLanguage.value ||
+    highlightedTargetIndex.value >= 0 ||
+    targetOptions.value[0]?.id
+  )
+  return isInputDisabled.value || !hasTarget
+})
+
+function quickTranslate(fromColumn?: 'source' | 'target') {
+  if (isInputDisabled.value) return
+
+  const effectiveColumn = fromColumn ?? activeField.value
+  let targetId = targetLanguage.value
+  if (!targetId && highlightedTargetIndex.value >= 0) {
+    targetId = targetOptions.value[highlightedTargetIndex.value]?.id
+  }
+  if (!targetId) {
+    targetId = targetOptions.value[0]?.id
+  }
+  if (!targetId) return
+
+  let sourceId = pickedSourceLanguage()
+  if (effectiveColumn === 'source' && highlightedSourceIndex.value >= 0) {
+    const chosen = sourceOptions.value[highlightedSourceIndex.value]
+    if (chosen) {
+      sourceLanguage.value = chosen.id
+      sourceId = pickedSourceLanguage()
+    }
+  }
+
+  void desktopStore.patchSessionState({
+    recentTranslateLanguages: pushRecent(recentLanguages.value, targetId),
+  })
+  void translate(targetId, sourceId)
 }
 
 function submitSource(option?: QueryPanelOption) {
@@ -567,8 +727,7 @@ function submitSource(option?: QueryPanelOption) {
 
   sourceLanguage.value = chosen.id
   sourceQuery.value = ''
-  activeField.value = 'target'
-  void nextTick(() => targetInputRef.value?.focus())
+  activateField('target')
 }
 
 async function submitTarget(option?: QueryPanelOption) {
@@ -576,6 +735,8 @@ async function submitTarget(option?: QueryPanelOption) {
   const chosen = option ?? targetOptions.value[highlightedTargetIndex.value]
   if (!chosen) return
 
+  targetLanguage.value = chosen.id
+  targetQuery.value = ''
   void desktopStore.patchSessionState({
     recentTranslateLanguages: pushRecent(recentLanguages.value, chosen.id),
   })
@@ -584,6 +745,23 @@ async function submitTarget(option?: QueryPanelOption) {
 
 function onKeyDown(event: KeyboardEvent, column: 'source' | 'target') {
   if (isInputDisabled.value || event.isComposing) return
+
+  if (
+    (event.ctrlKey || event.metaKey) &&
+    event.shiftKey &&
+    (event.key === 'S' || event.key === 's')
+  ) {
+    event.preventDefault()
+    swapLanguages()
+    return
+  }
+
+  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+    event.preventDefault()
+    if (event.repeat) return
+    quickTranslate(column)
+    return
+  }
 
   switch (event.key) {
     case 'ArrowDown':
@@ -624,7 +802,12 @@ function onKeyDown(event: KeyboardEvent, column: 'source' | 'target') {
     }
     case 'Escape': {
       event.preventDefault()
-      closePicker()
+      const query = column === 'source' ? sourceQuery : targetQuery
+      if (query.value) {
+        query.value = ''
+      } else {
+        closePicker()
+      }
       return
     }
   }
@@ -637,7 +820,7 @@ function pickedSourceLanguage(): string | undefined {
     : sourceLanguage.value
 }
 
-const translate = async (targetLanguage: string, source?: string) => {
+const translate = async (targetLanguageCode: string, source?: string) => {
   const sourceText = draftText.value
 
   if (!sourceText.trim()) {
@@ -651,7 +834,7 @@ const translate = async (targetLanguage: string, source?: string) => {
     return
   }
 
-  if (source === targetLanguage) {
+  if (source === targetLanguageCode) {
     toastKey('toast.sameTranslationLanguage', 'warn')
     return
   }
@@ -674,7 +857,10 @@ const translate = async (targetLanguage: string, source?: string) => {
               label: t(stageLabels[stage as keyof typeof stageLabels]),
             })
         },
-        operationConfig: { language: targetLanguage, sourceLanguage: source },
+        operationConfig: {
+          language: targetLanguageCode,
+          sourceLanguage: source,
+        },
       }),
     read: (result) => {
       if (result.content !== undefined) return result.content
@@ -726,15 +912,25 @@ useMenuStartup({
   flex-direction: column;
   min-width: 0;
   gap: var(--space-2xs);
+  cursor: default;
 }
 
 .translate-column-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-height: 1.5rem;
+  padding: 0 var(--space-2xs);
+}
+
+.translate-column-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-xs);
-  min-height: 1.125rem;
-  padding: 0 var(--space-2xs);
+  width: 100%;
+  min-width: 0;
 }
 
 .translate-column-label {
@@ -758,46 +954,84 @@ useMenuStartup({
   text-overflow: ellipsis;
 }
 
-.translate-column-input {
-  width: 100%;
-  min-width: 0;
-  height: var(--control-size-md);
-  padding: 0 var(--space-md);
-  border: 1px solid var(--quick-field-border);
-  border-radius: var(--quick-tile-radius);
-  background-color: var(--quick-field-bg);
-  color: var(--color-base-content);
-  font-size: var(--text-title);
+.translate-query-row {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.translate-query-icon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.translate-column-header-input {
   outline: none;
-  transition:
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast);
 }
 
-.translate-column.is-active .translate-column-input:focus,
-.translate-column-input:focus {
-  border-color: var(--quick-field-border-focus);
-  box-shadow: var(--app-focus-ring);
+.translate-column-header-input.is-idle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: default;
+  pointer-events: none;
 }
 
-.translate-divider {
+.translate-column-header-input.is-searching {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 1.5rem;
+  border: none;
+  background: transparent;
+  padding: 0 0 0 var(--space-2xs);
+  font-size: var(--text-body);
+  font-weight: 500;
+  color: var(--color-base-content);
+}
+
+.translate-swap-container {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  padding-top: 1.25rem;
-  color: var(--app-text-faint);
+  padding-top: 1.5rem;
 }
 
-.translate-arrow {
-  flex-shrink: 0;
-  color: var(--app-text-faint);
+.translate-swap-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-size-sm);
+  height: var(--control-size-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--app-surface-raised);
+  color: var(--app-text-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.translate-swap-button:hover:not(:disabled) {
+  background-color: var(--app-hover);
+  border-color: var(--app-border-focus);
+  color: var(--color-primary);
+}
+
+.translate-swap-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .translate-column-options {
   display: flex;
   flex-direction: column;
-  height: 9.5rem;
+  height: 12.5rem;
   margin: 0;
   padding: var(--space-xs);
   overflow-y: auto;
@@ -806,11 +1040,14 @@ useMenuStartup({
   border: 1px solid var(--app-border-subtle);
   border-radius: var(--radius-md);
   background-color: var(--app-surface-raised);
-  transition: border-color var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .translate-column.is-active .translate-column-options {
-  border-color: var(--app-border);
+  border-color: var(--app-border-focus);
+  box-shadow: var(--app-focus-ring);
 }
 
 .translate-group {
@@ -865,6 +1102,19 @@ useMenuStartup({
   text-overflow: ellipsis;
 }
 
+.translate-option-native {
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
+  font-weight: normal;
+}
+
+.translate-column.is-active
+  .translate-option.is-highlighted
+  .translate-option-native {
+  color: var(--color-primary);
+  opacity: 0.8;
+}
+
 .translate-option-icon {
   flex-shrink: 0;
 }
@@ -880,17 +1130,11 @@ useMenuStartup({
   color: var(--color-primary);
 }
 
-.translate-option-hint {
-  flex-shrink: 0;
-  font-size: var(--text-caption);
-  color: var(--app-text-faint);
-}
-
 .translate-empty {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 9.5rem;
+  height: 12.5rem;
   margin: 0;
   padding: 0.5rem;
   border: 1px solid var(--app-border-subtle);
@@ -910,10 +1154,30 @@ useMenuStartup({
   border-top: 1px solid var(--app-border-subtle);
 }
 
-.translate-hints {
+.translate-hints-secondary {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-xs) var(--space-md);
+  gap: var(--space-xs);
+}
+
+.translate-hints-primary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.shortcut-hint.is-primary {
+  --key-background: rgba(255, 255, 255, 0.2);
+  --key-border-color: rgba(255, 255, 255, 0.4);
+  --key-color: var(--color-primary-content);
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+}
+
+.shortcut-hint.is-primary:hover:not(:disabled) {
+  opacity: 0.9;
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
 }
 </style>

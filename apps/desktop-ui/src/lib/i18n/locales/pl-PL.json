@@ -611,7 +611,9 @@
     "contextRequired": "Wymagany kontekst",
     "typeText": "Wpisz tekst",
     "toPrompt": "Do pola zapytania",
-    "editText": "Edytuj tekst"
+    "editText": "Edytuj tekst",
+    "translateGroupFrequent": "Częste",
+    "translateSwapLanguages": "Zamień języki"
   },
   "nav": {
     "aiChat": "Zapytaj AI",

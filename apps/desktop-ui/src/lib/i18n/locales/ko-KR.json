@@ -611,7 +611,9 @@
     "contextRequired": "컨텍스트 필요",
     "typeText": "텍스트 입력",
     "toPrompt": "요청 입력란으로",
-    "editText": "텍스트 편집"
+    "editText": "텍스트 편집",
+    "translateGroupFrequent": "자주 사용",
+    "translateSwapLanguages": "언어 바꾸기"
   },
   "nav": {
     "aiChat": "AI에게 질문",

@@ -611,7 +611,9 @@
     "contextRequired": "Kontext erforderlich",
     "typeText": "Text eingeben",
     "toPrompt": "Zum Eingabefeld",
-    "editText": "Text bearbeiten"
+    "editText": "Text bearbeiten",
+    "translateGroupFrequent": "Häufig verwendet",
+    "translateSwapLanguages": "Sprachen tauschen"
   },
   "nav": {
     "aiChat": "KI fragen",

@@ -611,7 +611,9 @@
     "contextRequired": "Мәтінмән қажет",
     "typeText": "Мәтін енгізу",
     "toPrompt": "Сұрау өрісіне",
-    "editText": "Мәтінді өңдеу"
+    "editText": "Мәтінді өңдеу",
+    "translateGroupFrequent": "Жиі қолданылатындар",
+    "translateSwapLanguages": "Тілдерді ауыстыру"
   },
   "nav": {
     "aiChat": "ЖИ-ден сұрау",

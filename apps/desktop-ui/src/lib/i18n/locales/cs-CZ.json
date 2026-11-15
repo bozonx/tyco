@@ -611,7 +611,9 @@
     "contextRequired": "Vyžadován kontext",
     "typeText": "Napsat text",
     "toPrompt": "Do pole dotazu",
-    "editText": "Upravit text"
+    "editText": "Upravit text",
+    "translateGroupFrequent": "Časté",
+    "translateSwapLanguages": "Prohodit jazyky"
   },
   "nav": {
     "aiChat": "Zeptat se AI",

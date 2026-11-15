@@ -223,7 +223,7 @@ describe('TranslateMenu', () => {
     const wrapper = mountMenu()
     await shortcutListProps.spaceKey.action()
     await nextTick()
-    const button = wrapper.find('button.shortcut-hint')
+    const button = wrapper.find('button.shortcut-hint.is-primary')
     expect(button.attributes('disabled')).toBeDefined()
     await wrapper
       .find<HTMLInputElement>('input[data-field="target"]')
@@ -315,5 +315,106 @@ describe('TranslateMenu', () => {
 
     wrapper.unmount()
     expect(menus.pendingModal).toBeNull()
+  })
+
+  it('pins auto-detect at index 0 even during search in source column', async () => {
+    const wrapper = mountMenu()
+    await shortcutListProps.spaceKey.action()
+    await nextTick()
+
+    const sourceInput = wrapper.find<HTMLInputElement>(
+      'input[data-field="source"]'
+    )
+    await sourceInput.trigger('focus')
+    await sourceInput.setValue('germ')
+    const sourceOptions = wrapper
+      .find('[data-field="source"]')
+      .findAll('.translate-option')
+    expect(sourceOptions[0].attributes('data-option-id')).toBe('auto')
+    expect(sourceOptions[1].attributes('data-option-id')).toBe('de')
+    expect(sourceOptions[1].classes()).toContain('is-highlighted')
+  })
+
+  it('swaps source and target languages on button click and via shortcut', async () => {
+    const wrapper = mountMenu()
+    await shortcutListProps.spaceKey.action()
+    await nextTick()
+
+    const swapBtn = wrapper.find('button.translate-swap-button')
+    // Disabled while source is auto
+    expect(swapBtn.attributes('disabled')).toBeDefined()
+
+    // Pick German as source
+    const sourceInput = wrapper.find<HTMLInputElement>(
+      'input[data-field="source"]'
+    )
+    await sourceInput.setValue('german')
+    await sourceInput.trigger('keydown', { key: 'Enter' })
+
+    // Pick Italian as target
+    const targetInput = wrapper.find<HTMLInputElement>(
+      'input[data-field="target"]'
+    )
+    await targetInput.setValue('ital')
+    // Highlight Italian without submitting
+    await nextTick()
+
+    expect(swapBtn.attributes('disabled')).toBeUndefined()
+    await swapBtn.trigger('click')
+
+    // Now source should be Italian and target should be German
+    // Let's verify by pressing Ctrl+Enter to translate
+    await targetInput.trigger('keydown', { key: 'Enter', ctrlKey: true })
+    await vi.waitFor(() => expect(transform).toHaveBeenCalled())
+    expect(transform).toHaveBeenCalledWith(
+      'core.translate',
+      'Hello world',
+      expect.objectContaining({
+        operationConfig: { language: 'de', sourceLanguage: 'it' },
+      })
+    )
+  })
+
+  it('clears search query on Escape first, then closes on second Escape', async () => {
+    const wrapper = mountMenu()
+    await shortcutListProps.spaceKey.action()
+    await nextTick()
+
+    const targetInput = wrapper.find<HTMLInputElement>(
+      'input[data-field="target"]'
+    )
+    await targetInput.setValue('germ')
+    expect(targetInput.element.value).toBe('germ')
+
+    // First Escape clears query
+    await targetInput.trigger('keydown', { key: 'Escape' })
+    expect(targetInput.element.value).toBe('')
+    expect(wrapper.find('.translate-picker').exists()).toBe(true)
+
+    // Second Escape closes picker
+    await targetInput.trigger('keydown', { key: 'Escape' })
+    expect(wrapper.find('.translate-picker').exists()).toBe(false)
+  })
+
+  it('translates immediately via Ctrl+Enter from source column', async () => {
+    setRecentLanguages(['de-DE'])
+    const wrapper = mountMenu()
+    await shortcutListProps.spaceKey.action()
+    await nextTick()
+
+    const sourceInput = wrapper.find<HTMLInputElement>(
+      'input[data-field="source"]'
+    )
+    await sourceInput.setValue('polish')
+    await sourceInput.trigger('keydown', { key: 'Enter', ctrlKey: true })
+
+    await vi.waitFor(() => expect(transform).toHaveBeenCalled())
+    expect(transform).toHaveBeenCalledWith(
+      'core.translate',
+      'Hello world',
+      expect.objectContaining({
+        operationConfig: { language: 'de-DE', sourceLanguage: 'pl' },
+      })
+    )
   })
 })

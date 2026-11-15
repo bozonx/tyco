@@ -611,7 +611,9 @@
     "contextRequired": "Требуется контекст",
     "typeText": "Ввести текст",
     "toPrompt": "В поле запроса",
-    "editText": "Редактировать текст"
+    "editText": "Редактировать текст",
+    "translateGroupFrequent": "Частые",
+    "translateSwapLanguages": "Поменять местами"
   },
   "nav": {
     "aiChat": "Спросить ИИ",

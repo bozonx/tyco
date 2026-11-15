@@ -611,7 +611,9 @@
     "contextRequired": "需要上下文",
     "typeText": "輸入文字",
     "toPrompt": "前往提問輸入框",
-    "editText": "編輯文字"
+    "editText": "編輯文字",
+    "translateGroupFrequent": "常用語言",
+    "translateSwapLanguages": "交換語言"
   },
   "nav": {
     "aiChat": "詢問 AI",

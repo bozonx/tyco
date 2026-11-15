@@ -611,7 +611,9 @@
     "contextRequired": "コンテキストが必要です",
     "typeText": "テキストを入力",
     "toPrompt": "質問入力欄へ",
-    "editText": "テキストを編集"
+    "editText": "テキストを編集",
+    "translateGroupFrequent": "よく使う言語",
+    "translateSwapLanguages": "言語を入れ替える"
   },
   "nav": {
     "aiChat": "AIに質問",

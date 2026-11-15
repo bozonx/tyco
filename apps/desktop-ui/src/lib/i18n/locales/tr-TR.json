@@ -611,7 +611,9 @@
     "contextRequired": "Bağlam gerekli",
     "typeText": "Metin yaz",
     "toPrompt": "İstek alanına",
-    "editText": "Metni düzenle"
+    "editText": "Metni düzenle",
+    "translateGroupFrequent": "Sık kullanılanlar",
+    "translateSwapLanguages": "Dilleri değiştir"
   },
   "nav": {
     "aiChat": "Yapay Zekâya Sor",

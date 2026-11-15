@@ -611,7 +611,9 @@
     "contextRequired": "Context necesar",
     "typeText": "Introdu text",
     "toPrompt": "În câmpul solicitării",
-    "editText": "Editează textul"
+    "editText": "Editează textul",
+    "translateGroupFrequent": "Frecvente",
+    "translateSwapLanguages": "Inversează limbile"
   },
   "nav": {
     "aiChat": "Întreabă AI",

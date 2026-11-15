@@ -611,7 +611,9 @@
     "contextRequired": "Contexte requis",
     "typeText": "Saisir du texte",
     "toPrompt": "Vers le champ de requête",
-    "editText": "Modifier le texte"
+    "editText": "Modifier le texte",
+    "translateGroupFrequent": "Fréquentes",
+    "translateSwapLanguages": "Inverser les langues"
   },
   "nav": {
     "aiChat": "Demander à l’IA",

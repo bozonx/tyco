@@ -611,7 +611,9 @@
     "contextRequired": "Kontextus szükséges",
     "typeText": "Szöveg beírása",
     "toPrompt": "A kérés mezőjébe",
-    "editText": "Szöveg szerkesztése"
+    "editText": "Szöveg szerkesztése",
+    "translateGroupFrequent": "Gyakoriak",
+    "translateSwapLanguages": "Nyelvek megcserélése"
   },
   "nav": {
     "aiChat": "Kérdezze az MI-t",

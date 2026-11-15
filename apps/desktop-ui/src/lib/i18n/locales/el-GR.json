@@ -611,7 +611,9 @@
     "contextRequired": "Απαιτείται περιβάλλον",
     "typeText": "Πληκτρολόγηση κειμένου",
     "toPrompt": "Στο πεδίο ερωτήματος",
-    "editText": "Επεξεργασία κειμένου"
+    "editText": "Επεξεργασία κειμένου",
+    "translateGroupFrequent": "Συχνές",
+    "translateSwapLanguages": "Εναλλαγή γλωσσών"
   },
   "nav": {
     "aiChat": "Ρωτήστε την ΤΝ",

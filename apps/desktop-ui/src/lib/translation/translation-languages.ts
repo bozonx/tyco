@@ -73,18 +73,42 @@ export function translationLanguageLabel(id: string, locale: string): string {
   return name
 }
 
+const nativeDisplayNames = new Map<string, Intl.DisplayNames>()
+
 export function translationLanguageNativeName(id: string): string | undefined {
-  return nativeNames.get(id)
+  const known = nativeNames.get(id)
+  if (known) return known
+  try {
+    const base = id.split('-')[0]
+    let formatter = nativeDisplayNames.get(id)
+    if (!formatter) {
+      formatter = new Intl.DisplayNames([id, base], {
+        type: 'language',
+        fallback: 'none',
+      })
+      nativeDisplayNames.set(id, formatter)
+    }
+    const name = formatter.of(id) ?? formatter.of(base)
+    if (name) {
+      return name.charAt(0).toUpperCase() + name.slice(1)
+    }
+  } catch {
+    /* Preserve published names for tags unknown to the runtime. */
+  }
+  return undefined
 }
 
 export function translationLanguageSearchNames(id: string): string[] {
+  const native = translationLanguageNativeName(id)
   return [
     ...new Set(
       [
+        native,
         nativeNames.get(id),
         messageNames[id],
         names[id],
         translationLanguageLabel(id, 'en'),
+        translationLanguageLabel(id, 'ru'),
       ].filter((name): name is string => Boolean(name))
     ),
   ]
