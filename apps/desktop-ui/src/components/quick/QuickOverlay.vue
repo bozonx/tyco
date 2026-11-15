@@ -136,6 +136,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useCloseWindowInterceptor } from '../../composables/use-close-window-interceptor'
+import { useFeedbackMotion } from '../../composables/use-feedback-motion'
 import { useI18n } from '../../composables/use-i18n'
 import { useQuickWindowSession } from '../../composables/use-quick-window-session'
 import { desktopClient } from '../../lib/desktop/client'
@@ -262,6 +263,23 @@ const onSelectorFailed = async () => {
     },
   })
 }
+
+useFeedbackMotion(
+  () =>
+    isSheet.value
+      ? cardRef.value?.querySelector<HTMLElement>(
+          '.quick-mode-layer:not([style*="display: none"])'
+        )
+      : null,
+  () =>
+    `${currentMode.value}:${voiceResultShown.value}:${listenResultShown.value}:${hasModal.value}`,
+  {
+    distancePx: 6,
+    durationMs: 160,
+    direction: (next, previous) =>
+      previous.endsWith(':true') && next.endsWith(':false') ? -1 : 1,
+  }
+)
 
 const isSheet = computed(() => {
   return (

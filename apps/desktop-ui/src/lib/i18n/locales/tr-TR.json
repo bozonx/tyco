@@ -726,6 +726,8 @@
     "askInProfileChat": "Sohbette sor: {profile}",
     "automationCategory": "Otomasyon",
     "autosaveFailed": "Kaydedilmedi",
+    "autosaveSaving": "Kaydediliyor…",
+    "autosaveSaved": "Kaydedildi",
     "backToPlugins": "Eklentilere dön",
     "baseUrl": "Temel URL",
     "browseFolder": "Klasör seç",

@@ -1,5 +1,8 @@
 <template>
-  <div class="image-attachment" :class="`is-${effectiveSize}`">
+  <div
+    class="image-attachment"
+    :class="[`is-${effectiveSize}`, { 'feedback-arrive': removable }]"
+  >
     <button
       type="button"
       class="image-preview-btn"

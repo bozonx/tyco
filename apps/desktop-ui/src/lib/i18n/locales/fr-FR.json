@@ -729,6 +729,8 @@
     "askInProfileChat": "Demander dans le chat : {profile}",
     "automationCategory": "Automatisation",
     "autosaveFailed": "Non enregistré",
+    "autosaveSaving": "Enregistrement…",
+    "autosaveSaved": "Enregistré",
     "backToPlugins": "Retour aux plugins",
     "baseUrl": "URL de base",
     "browseFolder": "Choisir un dossier",

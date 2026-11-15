@@ -226,17 +226,22 @@
         </template>
         <template #footer-end>
           <ShortcutButton
-            v-if="!model.isGenerating.value"
             variant="primary"
             size="sm"
             class="run-action-btn"
             :keys="[
               resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey),
             ]"
-            :disabled="!canSend"
+            :disabled="!canSend || model.isGenerating.value"
+            :aria-busy="model.isGenerating.value || undefined"
+            :loading="model.isGenerating.value"
             @click="handleQuerySubmit({ ctrl: false })"
           >
-            {{ t('menu.aiPromptRun') }}
+            {{
+              model.isGenerating.value
+                ? t('chat.generating')
+                : t('menu.aiPromptRun')
+            }}
           </ShortcutButton>
         </template>
       </QueryPanel>
@@ -248,6 +253,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
+import { useFeedbackMotion } from '../../composables/use-feedback-motion'
 import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
 import useToast from '../../composables/use-toast'
@@ -391,6 +397,18 @@ const isApplying = ref(false)
 const resultActionsRef = ref<HTMLElement>()
 const isResultVisible = computed(
   () => model.turns.value.at(-1)?.status === 'done' && !isFollowUpOpen.value
+)
+useFeedbackMotion(
+  () => resultActionsRef.value ?? queryPanelRef.value?.$el,
+  () =>
+    isListening.value
+      ? 'voice'
+      : isResultVisible.value
+        ? 'result'
+        : model.isGenerating.value
+          ? 'generating'
+          : 'input',
+  { distancePx: 0, durationMs: 140 }
 )
 watch(isResultVisible, (visible) => {
   if (visible) void nextTick(() => resultActionsRef.value?.focus())

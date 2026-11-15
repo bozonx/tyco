@@ -726,6 +726,8 @@
     "askInProfileChat": "Чатта сұрау: {profile}",
     "automationCategory": "Автоматтандыру",
     "autosaveFailed": "Сақталмады",
+    "autosaveSaving": "Сақталуда…",
+    "autosaveSaved": "Сақталды",
     "backToPlugins": "Плагиндерге оралу",
     "baseUrl": "Негізгі URL",
     "browseFolder": "Қалтаны таңдау",

@@ -726,6 +726,8 @@
     "askInProfileChat": "კითხვა ჩატში: {profile}",
     "automationCategory": "ავტომატიზაცია",
     "autosaveFailed": "არ შეინახა",
+    "autosaveSaving": "ინახება…",
+    "autosaveSaved": "შენახულია",
     "backToPlugins": "დანამატებზე დაბრუნება",
     "baseUrl": "საბაზო URL",
     "browseFolder": "საქაღალდის არჩევა",

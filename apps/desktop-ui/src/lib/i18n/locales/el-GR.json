@@ -726,6 +726,8 @@
     "askInProfileChat": "Ερώτηση στη συνομιλία: {profile}",
     "automationCategory": "Αυτοματισμός",
     "autosaveFailed": "Δεν αποθηκεύτηκε",
+    "autosaveSaving": "Αποθήκευση…",
+    "autosaveSaved": "Αποθηκεύτηκε",
     "backToPlugins": "Πίσω στις προσθήκες",
     "baseUrl": "Βασικό URL",
     "browseFolder": "Επιλογή φακέλου",

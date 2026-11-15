@@ -35,7 +35,7 @@
 
         <div
           v-if="chatStore.isGenerating && !streamHasContent"
-          class="typing-indicator"
+          class="typing-indicator feedback-arrive"
           role="status"
         >
           <span

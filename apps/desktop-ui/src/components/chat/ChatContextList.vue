@@ -1,9 +1,26 @@
 <template>
   <div v-if="visible" class="context-list">
-    <div v-if="attached.length || images.length" class="context-attached">
+    <TransitionGroup
+      v-if="attached.length || images.length"
+      name="feedback-list"
+      @before-enter="
+        (element) => {
+          element.removeAttribute('inert')
+          element.removeAttribute('aria-hidden')
+        }
+      "
+      @before-leave="
+        (element) => {
+          element.setAttribute('inert', '')
+          element.setAttribute('aria-hidden', 'true')
+        }
+      "
+      tag="div"
+      class="context-attached"
+    >
       <ChatImageAttachment
         v-for="image in images"
-        :key="image.id"
+        :key="`image-${image.id}`"
         :image="image"
         removable
         compact
@@ -11,7 +28,7 @@
       />
       <ChatAttachment
         v-for="(attachment, index) in attachments"
-        :key="`attachment-${index}`"
+        :key="attachmentKey(attachment)"
         :text="attachment.text"
         :source="attachment.source"
         :name="attachment.name"
@@ -20,7 +37,7 @@
         announce
         @remove="chatStore.removeAttachment(index)"
       />
-    </div>
+    </TransitionGroup>
 
     <div
       v-if="budgetWarning"
@@ -46,6 +63,17 @@ import ChatImageAttachment from './ChatImageAttachment.vue'
 /** What goes to the next chat message along with it: images and texts in one row */
 const { chat: chatStore } = useChatScope()
 const { t, locale } = useI18n()
+
+const attachmentKeys = new WeakMap<object, number>()
+let nextAttachmentKey = 0
+function attachmentKey(attachment: object) {
+  let key = attachmentKeys.get(attachment)
+  if (key === undefined) {
+    key = nextAttachmentKey++
+    attachmentKeys.set(attachment, key)
+  }
+  return `attachment-${key}`
+}
 
 const attachments = computed(
   () => chatStore.currentChatParams?.attachments || []
@@ -83,6 +111,7 @@ const visible = computed(
   gap: var(--space-xs);
 }
 .context-attached {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;

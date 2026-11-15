@@ -6,6 +6,7 @@ import { placeholder } from '@codemirror/view'
 import { fromStore, placeholderCompartment } from './create-editor-state'
 import type { EditSource } from './edit-source'
 import { EDIT_USER_EVENT, isolatedEditSources } from './edit-source'
+import { showChangeFeedback } from './change-feedback'
 
 export interface DocChange {
   from: number
@@ -103,6 +104,14 @@ export const applyStoreEdit = (view: EditorView, edit: StoreEdit): boolean => {
     ...(change ? { changes: change } : {}),
     ...(needSelection ? { selection: EditorSelection.single(from, to) } : {}),
     annotations,
+    ...(change && (source === 'ai' || source === 'voice')
+      ? {
+          effects: showChangeFeedback.of({
+            from: change.from,
+            to: change.from + change.insert.length,
+          }),
+        }
+      : {}),
     scrollIntoView: true,
   })
 

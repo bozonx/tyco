@@ -13,6 +13,7 @@
         :size="compact ? 'sm' : 'md'"
         :keys="primaryKeys"
         variant="primary"
+        :loading="isFinishing"
         :disabled="isFinishing"
         @click="() => finish('insert')"
         >{{
@@ -36,6 +37,7 @@
         :size="compact ? 'sm' : 'md'"
         :keys="primaryKeys"
         variant="primary"
+        :loading="isFinishing"
         :disabled="isFinishing"
         @click="() => finish('insert')"
       >
@@ -64,6 +66,7 @@
           :size="compact ? 'sm' : 'md'"
           :keys="primaryKeys"
           variant="primary"
+          :loading="isFinishing"
           :disabled="isFinishing"
           @click="() => finish('submit')"
         >
@@ -84,6 +87,7 @@
           :size="compact ? 'sm' : 'md'"
           :keys="primaryKeys"
           variant="primary"
+          :loading="isFinishing"
           :disabled="isFinishing"
           @click="() => finish('insert')"
         >

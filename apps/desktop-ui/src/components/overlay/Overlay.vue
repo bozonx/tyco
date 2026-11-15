@@ -7,7 +7,7 @@
     :data-theme="overlayTheme"
   >
     <div class="overlay-panel" :class="{ 'is-compact': !navBarVisible }">
-      <div class="overlay-body">
+      <div ref="bodyRef" class="overlay-body">
         <slot />
       </div>
     </div>
@@ -15,17 +15,35 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
+import { useFeedbackMotion } from '../../composables/use-feedback-motion'
 import { useThemeStore } from '../../stores/theme'
 
 const themeStore = useThemeStore()
 const overlayTheme = computed(() =>
   themeStore.resolved.theme === 'eInk' ? 'eInk' : 'dark'
 )
-withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
-  navBarVisible: true,
-})
+const props = withDefaults(
+  defineProps<{ navBarVisible?: boolean; motionKey?: number | string }>(),
+  { navBarVisible: true, motionKey: undefined }
+)
+const bodyRef = ref<HTMLElement | null>(null)
+useFeedbackMotion(
+  () => bodyRef.value,
+  () => props.motionKey,
+  {
+    direction: (next, previous) =>
+      typeof next === 'number' &&
+      typeof previous === 'number' &&
+      next < previous
+        ? -1
+        : 1,
+    distancePx: 6,
+    durationMs: 160,
+    appear: true,
+  }
+)
 </script>
 
 <style scoped>

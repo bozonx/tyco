@@ -101,3 +101,11 @@ Case and Format menus list core items first, then plugin items:
 
 An item marked `selectionOnly` is disabled in menus while nothing is selected.
 Toolbar buttons that open action menus find them by action ID, never by label.
+
+## Applied result feedback
+
+`change-feedback.ts` marks the minimal inserted/replaced range of store edits
+from AI or voice for 650 ms. The decoration and its expiration do not enter
+undo history or alter the selection. A new result restarts the deadline; typing
+clears obsolete feedback. Ordinary synchronization and unchanged results do not
+highlight. Reduced motion and e-ink keep the temporary mark static.

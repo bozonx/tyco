@@ -24,6 +24,7 @@
         <SettingsSaveStatus
           :config-is-newer="configIsNewer"
           :is-saving="isSaving"
+          :has-unsaved-changes="session.hasUnsavedChanges"
           :is-reloading="isReloading"
           :save-error="saveError"
           :conflicts="conflictTitles"

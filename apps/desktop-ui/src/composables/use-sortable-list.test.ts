@@ -80,6 +80,30 @@ function setup(mode: 'sort' | 'swap' = 'sort') {
 }
 
 describe('useSortableList', () => {
+  it('settles a swapped slot and cancels feedback when another drag begins', async () => {
+    const { handle, cards } = setup('swap')
+    const animations: { cancel: ReturnType<typeof vi.fn> }[] = []
+    const animate = vi.fn(() => {
+      const animation = { cancel: vi.fn() }
+      animations.push(animation)
+      return animation as unknown as Animation
+    })
+    cards.forEach(({ element }) =>
+      Object.defineProperty(element, 'animate', {
+        configurable: true,
+        value: animate,
+      })
+    )
+    pointer('pointerdown', 10, handle)
+    pointer('pointerup', 105)
+    await nextTick()
+    expect(animate).toHaveBeenCalledTimes(2)
+    pointer('pointerdown', 10, handle)
+    expect(
+      animations.every((animation) => animation.cancel.mock.calls.length === 1)
+    ).toBe(true)
+  })
+
   it('waits for a movement threshold and commits only the final pointer position', () => {
     const { handle, move, sortable } = setup()
     pointer('pointerdown', 10, handle)

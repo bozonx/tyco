@@ -114,7 +114,7 @@
           size="sm"
           :keys="stopKeys"
           variant="primary"
-          :disabled="isFinishing"
+          :loading="isFinishing"
           @click="void model.stop()"
         >
           {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}

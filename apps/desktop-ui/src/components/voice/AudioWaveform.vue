@@ -4,35 +4,37 @@
     :class="{ compact, 'is-inline': layout === 'inline' }"
     data-testid="audio-waveform"
   >
-    <!-- Transcribing / processing mode -->
-    <div v-if="isProcessing" class="transcribing-state">
-      <span class="loading loading-spinner loading-lg text-primary" />
-      <p class="transcribing-label">{{ processingLabel }}</p>
-    </div>
-
-    <!-- Active listening / recording mode -->
-    <div v-else class="listening-state">
-      <div class="waveform-visualizer" aria-hidden="true">
-        <div
-          v-for="(barHeight, index) in barHeights"
-          :key="index"
-          class="waveform-bar"
-          :style="{ height: `${barHeight}px`, opacity: barOpacities[index] }"
-        />
+    <Transition
+      name="feedback-state"
+      @before-enter="(element) => element.removeAttribute('aria-hidden')"
+      @before-leave="(element) => element.setAttribute('aria-hidden', 'true')"
+    >
+      <!-- Transcribing / processing mode -->
+      <div v-if="isProcessing" key="processing" class="transcribing-state">
+        <span class="loading loading-spinner loading-lg text-primary" />
+        <p class="transcribing-label">{{ processingLabel }}</p>
       </div>
 
-      <div class="waveform-meta">
-        <div class="waveform-status">
-          <AppIcon
-            :icon="props.icon"
-            class="mic-icon"
-            :class="{ 'animate-pulse': !isReducedMotion }"
+      <!-- Active listening / recording mode -->
+      <div v-else key="listening" class="listening-state">
+        <div class="waveform-visualizer" aria-hidden="true">
+          <div
+            v-for="(barHeight, index) in barHeights"
+            :key="index"
+            class="waveform-bar"
+            :style="{ height: `${barHeight}px`, opacity: barOpacities[index] }"
           />
-          <span>{{ props.statusLabel ?? t('menu.listening') }}</span>
         </div>
-        <div class="waveform-timer">{{ formattedDuration }}</div>
+
+        <div class="waveform-meta">
+          <div class="waveform-status">
+            <AppIcon :icon="props.icon" class="mic-icon" />
+            <span>{{ props.statusLabel ?? t('menu.listening') }}</span>
+          </div>
+          <div class="waveform-timer">{{ formattedDuration }}</div>
+        </div>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
@@ -193,6 +195,7 @@ onUnmounted(() => {
 
 <style scoped>
 .audio-waveform-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;

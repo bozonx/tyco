@@ -729,6 +729,8 @@
     "askInProfileChat": "Chiedi in chat: {profile}",
     "automationCategory": "Automazione",
     "autosaveFailed": "Non salvato",
+    "autosaveSaving": "Salvataggio…",
+    "autosaveSaved": "Salvato",
     "backToPlugins": "Torna ai plugin",
     "baseUrl": "URL di base",
     "browseFolder": "Scegli cartella",

@@ -62,9 +62,9 @@ export function createAudioWaveformModel() {
     const newOpacities: number[] = []
 
     for (let i = 0; i < BAR_COUNT; i++) {
-      // Ambient breathing wave when silent or low volume
+      // Visual modulation follows the signal; silence settles at the baseline.
       const ambient = Math.sin(phase + i * 0.35) * 0.5 + 0.5
-      const ambientHeight = MIN_BAR_HEIGHT_PX + ambient * 4
+      const ambientHeight = MIN_BAR_HEIGHT_PX + ambient * 4 * effectiveLevel
 
       // Dynamic voice response when audio is received
       const voiceModulation =
@@ -96,7 +96,7 @@ export function createAudioWaveformModel() {
       const opacity =
         effectiveLevel > 0.03
           ? 0.45 + (smoothedHeight / maxBarHeight) * 0.55
-          : 0.35 + ambient * 0.25
+          : 0.4
       newOpacities.push(Math.min(1, Math.max(0.2, opacity)))
     }
 

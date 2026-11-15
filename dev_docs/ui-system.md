@@ -405,3 +405,31 @@ not animate. Page changes clear pending key presses so releasing a key held
 on the previous page cannot invoke a newly assigned action. Transitions never
 block activation or queue page changes. Reduced motion removes translation
 and uses a 60 ms content fade.
+
+## Operation feedback
+
+State transitions use `useFeedbackMotion`: 120–160 ms fades with at most 6 px
+of translation. A newer state cancels the previous animation, disposal cancels
+its animation, and input is never delayed. Reduced motion uses a 60 ms fade;
+e-ink skips these animations. Quick mode changes animate only full sheets so
+transforms cannot move a panel outside its native click-through input region.
+Modal steps animate their content in the direction of their step IDs; returning
+to the underlying quick sheet moves backwards. Outgoing screens unmount
+immediately, retaining the existing cancellation and focus lifecycle.
+
+Recording waveforms follow the actual signal and settle at their baseline in
+silence. Recording-to-processing fades happen at the state boundary, without
+animating transcript tokens. Send/stop and copy/check icons change within the
+same button, preserving focus. Request completion briefly reveals chat actions;
+quick request results and follow-up composers fade at their state boundary.
+
+Autosave status reserves space for localized saving/saved labels. Detail pages
+use their existing autosave summary; the settings session also includes its
+pending changes and displays confirmed success for 1.5 seconds. Failures remain
+visible with the existing retry/conflict controls. Labels are translated in all
+core locales.
+
+Attachment groups use stable object/image keys and short layout transitions;
+leaving attachments become inert immediately. Sortable lists retain their drag
+preview and settle into committed positions over 160 ms, canceling that feedback
+on another drag or disposal.

@@ -67,3 +67,15 @@
     outline-offset: -2px;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .autosave-spinner,
+  .shortcut-icon.is-loading {
+    animation: none !important;
+  }
+}
+
+[data-motion='reduce'] .cm-change-feedback,
+[data-theme='eInk'] .cm-change-feedback {
+  animation: none !important;
+}

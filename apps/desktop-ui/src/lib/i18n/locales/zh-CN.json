@@ -723,6 +723,8 @@
     "askInProfileChat": "在聊天中询问：{profile}",
     "automationCategory": "自动化",
     "autosaveFailed": "未保存",
+    "autosaveSaving": "正在保存…",
+    "autosaveSaved": "已保存",
     "backToPlugins": "返回插件列表",
     "baseUrl": "基础 URL",
     "browseFolder": "选择文件夹",

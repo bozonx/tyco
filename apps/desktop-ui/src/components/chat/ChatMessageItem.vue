@@ -71,7 +71,12 @@
         {{ message.content }}
       </div>
 
-      <div v-if="hasMessageActions" class="message-actions">
+      <div
+        v-if="hasMessageActions"
+        ref="actionsRef"
+        class="message-actions"
+        :class="{ 'is-completed': justCompleted }"
+      >
         <span v-if="message.status === 'stopped'" class="message-status">
           {{ t('chat.stopped') }}
         </span>
@@ -107,9 +112,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import { useCopyValue } from '../../composables/use-copy-value'
+import { useFeedbackMotion } from '../../composables/use-feedback-motion'
 import { useI18n } from '../../composables/use-i18n'
 import { messageSteps } from '../../lib/chat-tools/chat-message-steps'
 import type { ChatToolApprovalRequest } from '../../lib/chat-tools/chat-tool-loop'
@@ -169,6 +175,27 @@ const isReplyBlocksOnly = computed(() => {
       replyBlocksOf(step.call.input).length > 0
   )
 })
+
+const actionsRef = ref<HTMLElement | null>(null)
+const justCompleted = ref(false)
+let completedTimer: ReturnType<typeof setTimeout> | undefined
+watch(
+  () => props.streaming,
+  (streaming, previous) => {
+    clearTimeout(completedTimer)
+    justCompleted.value = Boolean(previous && !streaming)
+    if (justCompleted.value)
+      completedTimer = setTimeout(() => {
+        justCompleted.value = false
+      }, 1400)
+  }
+)
+onBeforeUnmount(() => clearTimeout(completedTimer))
+useFeedbackMotion(
+  () => actionsRef.value,
+  () => props.streaming,
+  { distancePx: 0, durationMs: 140 }
+)
 
 const hasMessageActions = computed(() => {
   if (isReplyBlocksOnly.value) {
@@ -251,7 +278,8 @@ function copyMessage() {
   font-size: var(--text-caption);
 }
 .chat-item-content:hover .message-actions,
-.message-actions:focus-within {
+.message-actions:focus-within,
+.message-actions.is-completed {
   opacity: 1;
 }
 .message-action {

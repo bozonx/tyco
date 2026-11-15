@@ -8,7 +8,8 @@
       'is-xs': size === 'xs',
       'is-tile': tile,
     }"
-    :disabled="disabled"
+    :disabled="disabled || loading"
+    :aria-busy="loading || undefined"
     @click="emit('click')"
   >
     <span
@@ -17,10 +18,17 @@
     >
       <Transition
         :name="contentKey === undefined ? '' : 'shortcut-content'"
+        @before-enter="(element) => element.removeAttribute('aria-hidden')"
         @before-leave="hideLeavingContent"
       >
         <span :key="contentKey" class="shortcut-content-inner">
-          <AppIcon v-if="icon" :icon="icon" size="sm" class="shortcut-icon" />
+          <AppIcon
+            v-if="icon || loading"
+            :icon="loading ? 'mdi:loading' : icon!"
+            size="sm"
+            class="shortcut-icon"
+            :class="{ 'is-loading': loading }"
+          />
           <span class="shortcut-label"><slot /></span>
         </span>
       </Transition>
@@ -39,6 +47,7 @@ withDefaults(
     keys: string[]
     contentKey?: string
     motionDirection?: number
+    loading?: boolean
     disabled?: boolean
     variant?: 'primary' | 'ghost'
     size?: ControlSize
@@ -50,6 +59,7 @@ withDefaults(
   {
     contentKey: undefined,
     motionDirection: 1,
+    loading: false,
     disabled: false,
     variant: 'ghost',
     size: 'md',
@@ -109,13 +119,31 @@ const emit = defineEmits<{ (e: 'click'): void }>()
   opacity: 0.6;
 }
 
+.shortcut-icon.is-loading {
+  animation: shortcut-spin 900ms linear infinite;
+}
+@keyframes shortcut-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .shortcut-icon {
   flex-shrink: 0;
   color: var(--quick-tile-icon-color);
   transition: color var(--transition-fast);
 }
 
-.shortcut:hover:not(:disabled) .shortcut-icon {
+.shortcut:hover:not(:disabled) .shortcut-icon.is-loading {
+  animation: shortcut-spin 900ms linear infinite;
+}
+@keyframes shortcut-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.shortcut-icon {
   color: var(--color-primary);
 }
 

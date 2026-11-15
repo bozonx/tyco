@@ -23,6 +23,7 @@ import { DEFAULT_USER_CONFIG, type EditorShortcuts } from '@tyco/shared'
 import { markdownPreview } from './markdown-preview'
 import { pasteExtension } from './paste'
 import { editorHighlightStyle, editorTheme } from './theme'
+import { changeFeedback } from './change-feedback'
 
 /**
  * Marks transactions received by the editor from the store. The update listener
@@ -83,6 +84,7 @@ export const createEditorExtensions = (
   options: CreateEditorStateOptions = {}
 ): Extension[] => [
   history(),
+  changeFeedback,
   historyKeysExtension(),
   editorSearch(options.t ?? translate),
   ...(options.onOpenActions ? [actionsKeymap(options.onOpenActions)] : []),

@@ -726,6 +726,8 @@
     "askInProfileChat": "Спросить в чате: {profile}",
     "automationCategory": "Автоматизация",
     "autosaveFailed": "Не сохранено",
+    "autosaveSaving": "Сохраняется…",
+    "autosaveSaved": "Сохранено",
     "backToPlugins": "Назад к плагинам",
     "baseUrl": "Базовый URL",
     "browseFolder": "Выбрать папку",

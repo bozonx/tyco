@@ -726,6 +726,8 @@
     "askInProfileChat": "Kérdezés a csevegésben: {profile}",
     "automationCategory": "Automatizálás",
     "autosaveFailed": "Nincs mentve",
+    "autosaveSaving": "Mentés…",
+    "autosaveSaved": "Mentve",
     "backToPlugins": "Vissza a bővítményekhez",
     "baseUrl": "Alap-URL",
     "browseFolder": "Mappa kiválasztása",

@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, ref, watch, type Ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 
 import {
   resolveItemShift,
@@ -71,6 +71,13 @@ export function useSortableList(
   const targetIndex = ref<number | null>(null)
   const offsetY = ref(0)
   let session: DragSession | null = null
+  let disposed = false
+  const settleAnimations = new Set<Animation>()
+  const cancelSettle = () => {
+    settleAnimations.forEach((animation) => animation.cancel())
+    settleAnimations.clear()
+  }
+
   const isSorting = computed(() => draggedIndex.value !== null)
   const items = () =>
     Array.from(
@@ -212,11 +219,52 @@ export function useSortableList(
       current.handle.releasePointerCapture(current.pointerId)
     if (current.active) document.body.classList.remove('is-sorting')
     const to = targetIndex.value
+    const positions = new Map(
+      current.items.map((item) => [item, item.getBoundingClientRect()])
+    )
     draggedIndex.value = null
     targetIndex.value = null
     offsetY.value = 0
     if (commit && valid && current.active && to !== null && to !== current.from)
       onMove(current.from, to)
+    if (current.active && valid)
+      void nextTick(() => {
+        if (
+          disposed ||
+          session ||
+          document.documentElement.dataset.motion === 'reduce' ||
+          window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ||
+          container.value?.closest('[data-theme="eInk"]')
+        )
+          return
+        items().forEach((item, index) => {
+          const previousItem =
+            options.mode === 'swap' && commit && to !== null
+              ? current.items[
+                  index === current.from
+                    ? to
+                    : index === to
+                      ? current.from
+                      : index
+                ]
+              : item
+          const before = previousItem && positions.get(previousItem)
+          if (!before || !item.animate) return
+          const after = item.getBoundingClientRect()
+          const x = before.left - after.left
+          const y = before.top - after.top
+          if (Math.abs(x) < 1 && Math.abs(y) < 1) return
+          const animation = item.animate(
+            [
+              { transform: `translate(${x}px, ${y}px)` },
+              { transform: 'translate(0, 0)' },
+            ],
+            { duration: 160, easing: 'cubic-bezier(0.2, 0, 0, 1)' }
+          )
+          settleAnimations.add(animation)
+          animation.onfinish = () => settleAnimations.delete(animation)
+        })
+      })
   }
 
   const onPointerUp = (event: PointerEvent) => {
@@ -243,6 +291,7 @@ export function useSortableList(
       !container.value
     )
       return
+    cancelSettle()
     const currentItems = items()
     if (!currentItems[index]) return
     cancelActiveDrag?.()
@@ -308,7 +357,11 @@ export function useSortableList(
   }
   if (options.getItemKeys)
     watch(() => [...options.getItemKeys!()], onCancel, { flush: 'sync' })
-  onBeforeUnmount(onCancel)
+  onBeforeUnmount(() => {
+    disposed = true
+    onCancel()
+    cancelSettle()
+  })
   return {
     draggedIndex,
     targetIndex,

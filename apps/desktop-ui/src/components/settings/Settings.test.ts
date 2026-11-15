@@ -185,15 +185,19 @@ describe('Settings.vue', () => {
         },
       },
     })
-    // the live region is always there, and says nothing while saves succeed
-    expect(wrapper.get('[role="status"]').text()).toBe('')
+    // The region stays mounted and reports real saving and saved states.
+    expect(wrapper.get('.settings-autosave-content').text()).toBe('')
     const session = useSettingsSessionStore()
     session.isSaving = true
     await wrapper.vm.$nextTick()
-    expect(wrapper.get('[role="status"]').text()).toBe('')
+    expect(wrapper.get('.settings-autosave-content').text()).toBe(
+      'settings.autosaveSaving'
+    )
     session.isSaving = false
     await wrapper.vm.$nextTick()
-    expect(wrapper.get('[role="status"]').text()).toBe('')
+    expect(wrapper.get('.settings-autosave-content').text()).toBe(
+      'settings.autosaveSaved'
+    )
     session.saveError = 'Unavailable'
     await wrapper.vm.$nextTick()
     expect(wrapper.get('[role="status"]').text()).toContain('Unavailable')

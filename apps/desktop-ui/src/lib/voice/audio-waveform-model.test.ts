@@ -29,6 +29,16 @@ describe('audio waveform model', () => {
         .heights
     )
   })
+  it('settles at the baseline during silence instead of implying incoming sound', () => {
+    const model = createAudioWaveformModel()
+    for (let index = 0; index < 30; index++)
+      model.step({ level: 1, peak: 1, isCompact: true })
+    let frame = model.step({ level: 0, peak: 0, isCompact: true })
+    for (let index = 0; index < 90; index++)
+      frame = model.step({ level: 0, peak: 0, isCompact: true })
+    expect(frame.heights.every((height) => height <= 4.2)).toBe(true)
+    expect(frame.opacities.every((opacity) => opacity === 0.4)).toBe(true)
+  })
   it('computes static frame with uniform bar heights for reduced motion', () => {
     const model = createAudioWaveformModel()
     const frame = model.staticFrame({ level: 0.5, peak: 0.5, isCompact: true })

@@ -58,7 +58,7 @@
 
       <div
         v-if="turn.status === 'generating'"
-        class="turn-generating"
+        class="turn-generating feedback-arrive"
         role="status"
       >
         <span

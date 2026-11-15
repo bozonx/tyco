@@ -729,6 +729,8 @@
     "askInProfileChat": "Pitaj u chatu: {profile}",
     "automationCategory": "Automatizacija",
     "autosaveFailed": "Nije spremljeno",
+    "autosaveSaving": "Spremanje…",
+    "autosaveSaved": "Spremljeno",
     "backToPlugins": "Natrag na dodatke",
     "baseUrl": "Osnovni URL",
     "browseFolder": "Odaberi mapu",

@@ -115,20 +115,17 @@
           icon="mdi:microphone-outline"
         />
         <IconButton
-          v-if="!chatStore.isGenerating"
           size="sm"
-          variant="primary"
-          :disabled="!canSend"
-          @click="emit('send')"
-          :label="t('chat.sendMessage')"
-          icon="mdi:arrow-up"
-        />
-        <IconButton
-          v-else
-          size="sm"
-          @click="chatStore.stopGeneration()"
-          :label="t('chat.stop')"
-          icon="mdi:stop"
+          :variant="chatStore.isGenerating ? 'neutral' : 'primary'"
+          :disabled="!chatStore.isGenerating && !canSend"
+          :aria-busy="chatStore.isGenerating || undefined"
+          @click="
+            chatStore.isGenerating ? chatStore.stopGeneration() : emit('send')
+          "
+          :label="
+            chatStore.isGenerating ? t('chat.stop') : t('chat.sendMessage')
+          "
+          :icon="chatStore.isGenerating ? 'mdi:stop' : 'mdi:arrow-up'"
         />
       </div>
     </div>

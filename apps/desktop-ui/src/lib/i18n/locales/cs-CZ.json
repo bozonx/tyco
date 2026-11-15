@@ -723,6 +723,8 @@
     "askInProfileChat": "Zeptat se v chatu: {profile}",
     "automationCategory": "Automatizace",
     "autosaveFailed": "Neuloženo",
+    "autosaveSaving": "Ukládání…",
+    "autosaveSaved": "Uloženo",
     "backToPlugins": "Zpět na pluginy",
     "baseUrl": "Základní URL",
     "browseFolder": "Vybrat složku",

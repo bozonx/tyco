@@ -1,6 +1,9 @@
 <template>
   <!-- an inline voice input is drawn by the editor itself -->
-  <Overlay v-if="isVisible && menuModalsStore.currentStep && !isInlineVoice">
+  <Overlay
+    v-if="isVisible && menuModalsStore.currentStep && !isInlineVoice"
+    :motion-key="menuModalsStore.currentStepId"
+  >
     <!-- keyed by step: a correction step over an insert one is a new screen -->
     <InsertMenu
       v-if="menuModalsStore.currentStep?.modal === MenuModals.INSERT"

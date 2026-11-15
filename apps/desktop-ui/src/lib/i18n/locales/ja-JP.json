@@ -726,6 +726,8 @@
     "askInProfileChat": "チャットで質問: {profile}",
     "automationCategory": "自動化",
     "autosaveFailed": "保存されていません",
+    "autosaveSaving": "保存中…",
+    "autosaveSaved": "保存済み",
     "backToPlugins": "プラグイン一覧に戻る",
     "baseUrl": "ベースURL",
     "browseFolder": "フォルダーを選択",
