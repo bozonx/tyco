@@ -15,6 +15,7 @@ import { tauriNetIpc } from '../lib/net/tauri-net'
 import { createScriptAndWebhookOperations } from '../lib/operations/script-and-webhook-operations'
 import { createAiCommandOperation } from '../lib/ai-commands/ai-command-operation'
 import { createCommandTransformer } from '../lib/commands/command-runner'
+import { invocationUnavailableReason } from '../lib/invocation/invoke-operation'
 import { createCoreOperations } from '../lib/operations/core-operations'
 import { commandInputSchema } from '../lib/operations/command-parameters'
 import { createOperationRegistry } from '../lib/operations/operation-registry'
@@ -139,7 +140,11 @@ export const useOperationsStore = defineStore('tools', () => {
     commands: () => desktopStore.userConfig?.commands ?? [],
     commandInputSchema: (command) => {
       const tool = registry.get(command.operationId)
-      if (!tool || tool.getUnavailableReasonKey?.()) return undefined
+      if (
+        !tool ||
+        invocationUnavailableReason(command, { get: registry.get, environment })
+      )
+        return undefined
       return commandInputSchema(tool, command.operationConfig)
     },
     runCommand: (command, input, options) =>
