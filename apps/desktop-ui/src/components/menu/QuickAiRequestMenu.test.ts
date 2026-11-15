@@ -412,7 +412,7 @@ describe('QuickAiRequestMenu', () => {
     await input.trigger('keydown', { key: 'Enter' })
     await flushPromises()
 
-    expect(wrapper.find('.action-overlay-esc').text()).toContain('common.close')
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
     expect(wrapper.find('.turn-prompt-text').text()).toBe('First question')
     expect((input.element as HTMLInputElement).value).toBe('')
     wrapper.unmount()
@@ -600,7 +600,7 @@ describe('QuickAiRequestMenu', () => {
     await input.setValue('First question')
     await input.trigger('keydown', { key: 'Enter' })
     await flushPromises()
-    expect(wrapper.find('.action-overlay-esc').text()).toContain('common.close')
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
 
     window.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true })

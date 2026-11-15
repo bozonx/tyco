@@ -32,7 +32,8 @@ describe('ActionOverlayLayout navigation', () => {
       props: { otherActionsText: 'Source' },
       global: { plugins: [desktop.pinia] },
     })
-    expect(wrapper.find('.action-overlay-esc').exists()).toBe(true)
+    // at the root only the close cross remains; Escape also closes
+    expect(wrapper.find('.action-overlay-esc').exists()).toBe(false)
     expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
     const other = wrapper
       .findAll('button')
@@ -65,7 +66,7 @@ describe('ActionOverlayLayout navigation', () => {
       global: { plugins: [desktop.pinia] },
     })
     expect(wrapper.text()).not.toContain('menu.otherActions')
-    expect(wrapper.get('.action-overlay-esc').text()).toContain('common.close')
+    expect(wrapper.find('.action-overlay-esc').exists()).toBe(false)
     expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
     wrapper.unmount()
   })
@@ -94,7 +95,7 @@ describe('ActionOverlayLayout navigation', () => {
     const menus = useMenuModalsStore()
     menus.startScenario(MenuModals.INSERT, { text: 'Source' })
     const wrapper = mountLayout()
-    expect(wrapper.get('.action-overlay-esc').text()).toContain('common.close')
+    expect(wrapper.find('.action-overlay-esc').exists()).toBe(false)
     expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     await flushPromises()
@@ -104,9 +105,9 @@ describe('ActionOverlayLayout navigation', () => {
 
   it('closes at the root with one visible Escape action', async () => {
     const wrapper = mountLayout()
-    expect(wrapper.get('.action-overlay-esc').text()).toContain('common.close')
+    expect(wrapper.find('.action-overlay-esc').exists()).toBe(false)
     expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
-    await wrapper.get('.action-overlay-esc').trigger('click')
+    await wrapper.get('.action-overlay-close').trigger('click')
     await flushPromises()
     expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
   })

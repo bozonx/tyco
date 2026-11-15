@@ -28,7 +28,7 @@
           {{ t('menu.otherActions') }}
         </Button>
         <OverlayEscButton
-          v-if="escVisible"
+          v-if="escVisible && (resolvedEscMode === 'back' || props.escLabel)"
           :mode="resolvedEscMode"
           :label="escLabel"
           :title="
