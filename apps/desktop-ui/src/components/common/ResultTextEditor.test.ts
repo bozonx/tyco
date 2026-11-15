@@ -58,6 +58,27 @@ describe('ResultTextEditor', () => {
     expect(document.activeElement).toBe(textarea)
   })
 
+  it('lets Ctrl+Enter reach the overlay for submission', () => {
+    const onKeydown = vi.fn()
+    const wrapper = mount(ResultTextEditor, {
+      attachTo: document.body,
+      props: { modelValue: 'Result', label: 'Result' },
+      attrs: { onKeydown },
+    })
+    const textarea = wrapper.get('textarea').element
+    textarea.focus()
+    const ctrlEnter = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      code: 'Enter',
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+    textarea.dispatchEvent(ctrlEnter)
+    expect(onKeydown).toHaveBeenCalledOnce()
+    wrapper.unmount()
+  })
+
   it('renders optional highlights as text outside the editable control', () => {
     const wrapper = mount(ResultTextEditor, {
       props: {

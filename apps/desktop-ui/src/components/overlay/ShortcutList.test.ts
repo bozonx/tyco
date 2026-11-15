@@ -223,6 +223,72 @@ describe('ShortcutList', () => {
     wrapper.unmount()
   })
 
+  it('switches primary button to Ctrl+Enter, dims grid when text field is focused, and triggers on Ctrl+Enter', async () => {
+    const spaceAction = vi.fn()
+    const leftLetterKeys: any[] = new Array(15).fill(undefined)
+    leftLetterKeys[0] = { name: 'Action Q', action: vi.fn() }
+    const wrapper = mount(ShortcutList, {
+      attachTo: document.body,
+      props: {
+        text: 'edited content',
+        spaceKey: { name: 'Insert', action: spaceAction },
+        leftLetterKeys,
+      },
+    })
+
+    const primaryButton = wrapper.findAllComponents({
+      name: 'ShortcutButton',
+    })[1]!
+    expect(primaryButton.props('keys')).toEqual(['Space', 'Enter'])
+    expect(wrapper.find('.shortcuts-grid-5x3').classes()).not.toContain(
+      'is-dimmed'
+    )
+
+    const textarea = document.createElement('textarea')
+    document.body.append(textarea)
+
+    textarea.focus()
+    window.dispatchEvent(new FocusEvent('focusin'))
+    await wrapper.vm.$nextTick()
+
+    expect(primaryButton.props('keys')).toEqual(['Ctrl', 'Enter'])
+    expect(wrapper.find('.shortcuts-grid-5x3').classes()).toContain('is-dimmed')
+
+    // Normal Space inside textarea does not trigger primary action
+    textarea.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Space', bubbles: true })
+    )
+    textarea.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'Space', bubbles: true })
+    )
+    expect(spaceAction).not.toHaveBeenCalled()
+
+    // Ctrl+Enter triggers the primary action with current text
+    const ctrlEnter = new KeyboardEvent('keydown', {
+      code: 'Enter',
+      key: 'Enter',
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+    textarea.dispatchEvent(ctrlEnter)
+    expect(ctrlEnter.defaultPrevented).toBe(true)
+    expect(spaceAction).toHaveBeenCalledWith('edited content')
+
+    // Blurring textarea restores Space + Enter and un-dims grid
+    textarea.blur()
+    window.dispatchEvent(new FocusEvent('focusout'))
+    await wrapper.vm.$nextTick()
+
+    expect(primaryButton.props('keys')).toEqual(['Space', 'Enter'])
+    expect(wrapper.find('.shortcuts-grid-5x3').classes()).not.toContain(
+      'is-dimmed'
+    )
+
+    textarea.remove()
+    wrapper.unmount()
+  })
+
   it('allows Shift+Tab for reverse focus navigation without triggering editor navigation', () => {
     const wrapper = mount(ShortcutList, {
       props: {

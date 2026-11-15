@@ -32,7 +32,9 @@ export function newlineShortcut(): string {
 }
 
 const isEnter = (event: InputKeyEvent) =>
-  event.code === 'Enter' || event.code === 'NumpadEnter'
+  event.code === 'Enter' ||
+  event.code === 'NumpadEnter' ||
+  event.key === 'Enter'
 
 const onlyCtrl = (event: InputKeyEvent) =>
   Boolean(event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey

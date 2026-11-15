@@ -1,7 +1,11 @@
 <template>
-  <div class="shortcuts-list">
+  <div class="shortcuts-list" :class="{ 'is-typing': effectiveTextFocused }">
     <!-- 5 columns x 3 rows grid for physical keyboard layout: qwert / asdfg / zxcvb -->
-    <div v-if="hasPresetActions" class="shortcuts-grid-5x3">
+    <div
+      v-if="hasPresetActions"
+      class="shortcuts-grid-5x3"
+      :class="{ 'is-dimmed': effectiveTextFocused }"
+    >
       <template v-for="slot in slots" :key="slot.key">
         <ShortcutButton
           v-if="slot.action"
@@ -44,7 +48,7 @@
 
       <ShortcutButton
         v-if="props.spaceKey"
-        :keys="['Space', 'Enter']"
+        :keys="primaryKeys"
         :disabled="props.spaceKey.disabled"
         :title="
           props.spaceKey.hint
@@ -61,11 +65,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
+import { isCtrlEnter } from '../../lib/input-keys/input-keys'
 import { isTextEntryTarget } from '../../lib/ui/text-entry-target'
 import { type ActionItem } from '../../stores/action-menu'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
@@ -93,6 +98,7 @@ const props = withDefaults(
     escMode?: 'close' | 'back' | 'auto'
     leftLetterKeys?: (ActionItem | undefined)[]
     shortcutsDisabled?: boolean
+    textFocused?: boolean
   }>(),
   {
     pageIndex: undefined,
@@ -108,6 +114,7 @@ const props = withDefaults(
     escMode: 'auto',
     leftLetterKeys: () => [],
     shortcutsDisabled: false,
+    textFocused: undefined,
   }
 )
 
@@ -117,6 +124,23 @@ const { handleEsc } = useOverlayNav(() => ({
   escMode: props.escMode,
   onEsc: props.escAction,
 }))
+
+const isTextFocused = ref(false)
+
+function updateFocusState() {
+  isTextFocused.value = isTextEntryTarget(document.activeElement)
+}
+
+const effectiveTextFocused = computed(
+  () => props.textFocused ?? isTextFocused.value
+)
+
+const primaryKeys = computed(() => {
+  if (effectiveTextFocused.value) {
+    return ['Ctrl', 'Enter']
+  }
+  return ['Space', 'Enter']
+})
 
 /**
  * Exactly 15 slots mapping 1:1 to physical keys: Row 1 (0..4): Q W E R T Row 2
@@ -150,6 +174,7 @@ watch(
 
 const handleWindowBlur = () => {
   pressedKeys.clear()
+  isTextFocused.value = false
 }
 
 const hasPresetActions = computed(() =>
@@ -157,12 +182,17 @@ const hasPresetActions = computed(() =>
 )
 
 onMounted(() => {
+  updateFocusState()
+  window.addEventListener('focusin', updateFocusState)
+  window.addEventListener('focusout', updateFocusState)
   window.addEventListener('keydown', handleKeyDown)
   window.addEventListener('keyup', handleShortcutKeyUp)
   window.addEventListener('blur', handleWindowBlur)
 })
 
 onUnmounted(() => {
+  window.removeEventListener('focusin', updateFocusState)
+  window.removeEventListener('focusout', updateFocusState)
   window.removeEventListener('keydown', handleKeyDown)
   window.removeEventListener('keyup', handleShortcutKeyUp)
   window.removeEventListener('blur', handleWindowBlur)
@@ -184,6 +214,11 @@ function isClickableTarget(target: EventTarget | null) {
 function handleKeyDown(event: KeyboardEvent) {
   if (props.shortcutsDisabled || event.defaultPrevented || event.isComposing)
     return
+  if (isCtrlEnter(event) && props.spaceKey && !props.spaceKey.disabled) {
+    event.preventDefault()
+    void props.spaceKey.action(props.text || '')
+    return
+  }
   if (isTypingKey(event)) {
     pressedKeys.delete(event.code)
     return
@@ -289,6 +324,15 @@ function getActionLabel(item?: ActionItem) {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-auto-rows: var(--quick-tile-height);
   gap: var(--quick-tile-gap);
+}
+
+.shortcuts-grid-5x3.is-dimmed {
+  opacity: 0.5;
+  transition: opacity var(--transition-fast);
+}
+
+.shortcuts-grid-5x3.is-dimmed:hover {
+  opacity: 0.85;
 }
 
 .shortcut-empty-slot {

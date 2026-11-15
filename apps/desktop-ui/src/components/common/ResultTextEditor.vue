@@ -30,6 +30,7 @@
 import { ref } from 'vue'
 
 import type { DiffPart } from '../../lib/diff/diff-model'
+import { isCtrlEnter } from '../../lib/input-keys/input-keys'
 import FieldTextArea from './FieldTextArea.vue'
 
 defineProps<{ modelValue: string; label: string; parts?: DiffPart[] }>()
@@ -37,11 +38,16 @@ const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 const highlight = ref<HTMLElement | null>(null)
 function onKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape' && event.shiftKey) return
-  event.stopPropagation()
   if (event.key === 'Escape') {
     event.preventDefault()
     ;(event.target as HTMLElement).blur()
+    event.stopPropagation()
+    return
   }
+  if (isCtrlEnter(event)) {
+    return
+  }
+  event.stopPropagation()
 }
 function syncScroll(event: Event) {
   if (!highlight.value) return
