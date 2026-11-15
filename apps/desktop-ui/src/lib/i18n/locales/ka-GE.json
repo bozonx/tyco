@@ -311,7 +311,7 @@
     "change": "შეცვლა",
     "charsCount": "სიმბოლოები: {count}",
     "close": "დახურვა",
-    "closeAllHint": "Shift+Esc ყველაფერს დაუყოვნებლივ ხურავს",
+    "closeAllHint": "Ctrl+Q ყველაფერს დაუყოვნებლივ ხურავს",
     "confirm": "დადასტურება",
     "copied": "დაკოპირდა",
     "copy": "კოპირება",

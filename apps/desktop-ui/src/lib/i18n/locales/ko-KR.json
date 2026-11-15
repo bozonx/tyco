@@ -311,7 +311,7 @@
     "change": "변경",
     "charsCount": "글자 수: {count}",
     "close": "닫기",
-    "closeAllHint": "Shift+Esc는 즉시 모든 것을 닫습니다",
+    "closeAllHint": "Ctrl+Q는 즉시 모든 것을 닫습니다",
     "confirm": "확인",
     "copied": "복사됨",
     "copy": "복사",

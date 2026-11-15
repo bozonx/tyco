@@ -311,7 +311,7 @@
     "change": "Αλλαγή",
     "charsCount": "Χαρακτήρες: {count}",
     "close": "Κλείσιμο",
-    "closeAllHint": "Το Shift+Esc κλείνει τα πάντα αμέσως",
+    "closeAllHint": "Το Ctrl+Q κλείνει τα πάντα αμέσως",
     "confirm": "Επιβεβαίωση",
     "copied": "Αντιγράφηκε",
     "copy": "Αντιγραφή",

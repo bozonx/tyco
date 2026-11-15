@@ -311,7 +311,7 @@
     "change": "変更",
     "charsCount": "文字数: {count}",
     "close": "閉じる",
-    "closeAllHint": "Shift+Esc で直ちにすべてを閉じます",
+    "closeAllHint": "Ctrl+Q で直ちにすべてを閉じます",
     "confirm": "確認",
     "copied": "コピーしました",
     "copy": "コピー",

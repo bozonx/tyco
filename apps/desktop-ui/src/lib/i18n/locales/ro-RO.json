@@ -311,7 +311,7 @@
     "change": "Schimbă",
     "charsCount": "Caractere: {count}",
     "close": "Închide",
-    "closeAllHint": "Shift+Esc închide totul imediat",
+    "closeAllHint": "Ctrl+Q închide totul imediat",
     "confirm": "Confirmă",
     "copied": "Copiat",
     "copy": "Copiază",

@@ -311,7 +311,7 @@
     "change": "更改",
     "charsCount": "字符数: {count}",
     "close": "关闭",
-    "closeAllHint": "Shift+Esc 立即关闭所有内容",
+    "closeAllHint": "Ctrl+Q 立即关闭所有内容",
     "confirm": "确认",
     "copied": "已复制",
     "copy": "复制",

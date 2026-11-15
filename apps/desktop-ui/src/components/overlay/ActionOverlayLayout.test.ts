@@ -166,7 +166,7 @@ describe('ActionOverlayLayout navigation', () => {
     menus.nextModal(MenuModals.TRANSLATE, {})
     mountLayout()
     window.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Escape', shiftKey: true })
+      new KeyboardEvent('keydown', { key: 'q', code: 'KeyQ', ctrlKey: true })
     )
     await flushPromises()
     expect(menus.menuBreadcrumbs).toEqual([])

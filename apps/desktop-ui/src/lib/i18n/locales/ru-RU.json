@@ -311,7 +311,7 @@
     "change": "Изменить",
     "charsCount": "Символов: {count}",
     "close": "Закрыть",
-    "closeAllHint": "Shift+Esc закрывает всё сразу",
+    "closeAllHint": "Ctrl+Q закрывает всё сразу",
     "confirm": "Подтвердить",
     "copied": "Скопировано",
     "copy": "Скопировать",

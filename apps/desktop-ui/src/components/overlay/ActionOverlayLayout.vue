@@ -144,7 +144,7 @@ useDismissibleLayer({
   keyboardPhase: 'bubble',
   keydown: (event) => {
     if (event.key !== 'Escape') return
-    // Shift+Esc never gets here: `useCloseWindowStore` owns it
+    // Ctrl+Q never gets here: `useCloseWindowStore` owns it
     if (!props.escLabel && resolvedEscMode.value === 'close') handleCloseAll()
     else handleEsc()
   },

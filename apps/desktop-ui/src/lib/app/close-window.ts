@@ -11,22 +11,13 @@ export interface CloseWindowDependencies {
   closeWindow: () => void
 }
 
-/** Shift+Esc: closes the whole window at any step */
-export function isCloseAllEvent(event: InputKeyEvent): boolean {
-  return (
-    (event.key === 'Escape' || event.code === 'Escape') &&
-    Boolean(event.shiftKey) &&
-    !event.ctrlKey &&
-    !event.altKey &&
-    !event.metaKey &&
-    !event.isComposing
-  )
-}
+/** Ctrl+Q closes the whole window at any step. */
+export const isCloseAllEvent = isCloseWindowEvent
 
 /**
- * The single owner of Shift+Esc and its alias Ctrl+Q in a window. A surface
- * that must close in its own way, such as the screenshot area selector,
- * intercepts it; the latest interceptor goes first.
+ * The single owner of Ctrl+Q in a window. A surface that must close in its own
+ * way, such as the screenshot area selector, intercepts it; the latest
+ * interceptor goes first.
  */
 export function createCloseWindowModel(deps: CloseWindowDependencies) {
   const interceptors: CloseWindowInterceptor[] = []
@@ -46,7 +37,7 @@ export function createCloseWindowModel(deps: CloseWindowDependencies) {
     deps.closeWindow()
   }
 
-  /** Handles Shift+Esc and Ctrl+Q; true when the event was consumed */
+  /** Handles Ctrl+Q; true when the event was consumed */
   function handleKeydown(
     event: InputKeyEvent & {
       preventDefault: () => void

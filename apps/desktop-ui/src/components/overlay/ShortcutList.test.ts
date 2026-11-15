@@ -324,7 +324,7 @@ describe('ShortcutList', () => {
     })
 
     window.dispatchEvent(
-      new KeyboardEvent('keydown', { code: 'Escape', shiftKey: true })
+      new KeyboardEvent('keydown', { code: 'KeyQ', ctrlKey: true })
     )
     await flushPromises()
     expect(mocks.back).not.toHaveBeenCalled()

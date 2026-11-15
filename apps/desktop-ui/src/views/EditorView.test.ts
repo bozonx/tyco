@@ -121,9 +121,9 @@ describe('Editor actions shortcut', () => {
     await flushPromises()
     window.dispatchEvent(
       new KeyboardEvent('keydown', {
-        key: 'Escape',
-        code: 'Escape',
-        shiftKey: true,
+        key: 'q',
+        code: 'KeyQ',
+        ctrlKey: true,
         cancelable: true,
       })
     )
@@ -144,9 +144,9 @@ describe('Editor actions shortcut', () => {
 
     window.dispatchEvent(
       new KeyboardEvent('keydown', {
-        key: 'Escape',
-        code: 'Escape',
-        shiftKey: true,
+        key: 'q',
+        code: 'KeyQ',
+        ctrlKey: true,
         cancelable: true,
       })
     )

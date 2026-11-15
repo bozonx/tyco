@@ -311,7 +311,7 @@
     "change": "Змінити",
     "charsCount": "Символів: {count}",
     "close": "Закрити",
-    "closeAllHint": "Shift+Esc закриває все відразу",
+    "closeAllHint": "Ctrl+Q закриває все відразу",
     "confirm": "Підтвердити",
     "copied": "Скопійовано",
     "copy": "Копіювати",

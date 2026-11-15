@@ -311,7 +311,7 @@
     "change": "Změnit",
     "charsCount": "Znaky: {count}",
     "close": "Zavřít",
-    "closeAllHint": "Shift+Esc okamžitě zavře vše",
+    "closeAllHint": "Ctrl+Q okamžitě zavře vše",
     "confirm": "Potvrdit",
     "copied": "Zkopírováno",
     "copy": "Kopírovat",

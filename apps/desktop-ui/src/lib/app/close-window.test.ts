@@ -3,17 +3,17 @@ import { describe, expect, it, vi } from 'vitest'
 import { createCloseWindowModel, isCloseAllEvent } from './close-window'
 
 const keydown = (init: Partial<KeyboardEvent>) => ({
-  key: 'Escape',
-  code: 'Escape',
-  shiftKey: true,
+  key: 'q',
+  code: 'KeyQ',
+  ctrlKey: true,
   preventDefault: vi.fn(),
   stopImmediatePropagation: vi.fn(),
   ...init,
 })
 
 describe('close window', () => {
-  it('takes only a plain Shift+Esc', () => {
-    expect(isCloseAllEvent({ key: 'Escape', shiftKey: true })).toBe(true)
+  it('takes only a plain Ctrl+Q', () => {
+    expect(isCloseAllEvent({ key: 'q', ctrlKey: true })).toBe(true)
     expect(isCloseAllEvent({ key: 'Escape' })).toBe(false)
     expect(
       isCloseAllEvent({ key: 'Escape', shiftKey: true, ctrlKey: true })
@@ -23,7 +23,7 @@ describe('close window', () => {
     ).toBe(false)
   })
 
-  it('consumes Shift+Esc and closes the window', () => {
+  it('consumes Ctrl+Q and closes the window', () => {
     const closeWindow = vi.fn()
     const model = createCloseWindowModel({ closeWindow })
     const event = keydown({})
@@ -31,7 +31,7 @@ describe('close window', () => {
     expect(event.preventDefault).toHaveBeenCalled()
     expect(event.stopImmediatePropagation).toHaveBeenCalled()
     expect(closeWindow).toHaveBeenCalledOnce()
-    expect(model.handleKeydown(keydown({ shiftKey: false }))).toBe(false)
+    expect(model.handleKeydown(keydown({ ctrlKey: false }))).toBe(false)
     expect(closeWindow).toHaveBeenCalledOnce()
   })
 

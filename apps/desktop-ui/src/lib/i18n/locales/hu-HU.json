@@ -311,7 +311,7 @@
     "change": "Módosítás",
     "charsCount": "Karakterek: {count}",
     "close": "Bezárás",
-    "closeAllHint": "A Shift+Esc azonnal bezár mindent",
+    "closeAllHint": "A Ctrl+Q azonnal bezár mindent",
     "confirm": "Megerősítés",
     "copied": "Másolva",
     "copy": "Másolás",

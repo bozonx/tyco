@@ -311,7 +311,7 @@
     "change": "Değiştir",
     "charsCount": "Karakter: {count}",
     "close": "Kapat",
-    "closeAllHint": "Shift+Esc her şeyi hemen kapatır",
+    "closeAllHint": "Ctrl+Q her şeyi hemen kapatır",
     "confirm": "Onayla",
     "copied": "Kopyalandı",
     "copy": "Kopyala",

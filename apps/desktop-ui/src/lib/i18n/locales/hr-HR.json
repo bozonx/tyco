@@ -311,7 +311,7 @@
     "change": "Promijeni",
     "charsCount": "Znakova: {count}",
     "close": "Zatvori",
-    "closeAllHint": "Shift+Esc odmah zatvara sve",
+    "closeAllHint": "Ctrl+Q odmah zatvara sve",
     "confirm": "Potvrdi",
     "copied": "Kopirano",
     "copy": "Kopiraj",

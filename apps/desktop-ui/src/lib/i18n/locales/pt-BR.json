@@ -311,7 +311,7 @@
     "change": "Alterar",
     "charsCount": "Caracteres: {count}",
     "close": "Fechar",
-    "closeAllHint": "Shift+Esc fecha tudo imediatamente",
+    "closeAllHint": "Ctrl+Q fecha tudo imediatamente",
     "confirm": "Confirmar",
     "copied": "Copiado",
     "copy": "Copiar",

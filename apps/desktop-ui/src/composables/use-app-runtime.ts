@@ -50,7 +50,7 @@ export function useAppRuntime() {
   const { locale, t } = useI18n()
   const menuModalsStore = useMenuModalsStore()
   const navPanelStore = useNavPanelStore()
-  // Shift+Esc and Ctrl+Q close the window at any step. Registered before any layer, in
+  // Ctrl+Q close the window at any step. Registered before any layer, in
   // the capture phase, so no surface handles it on its own.
   const closeWindowStore = useCloseWindowStore()
   const onCloseAllKey = (event: KeyboardEvent) => {

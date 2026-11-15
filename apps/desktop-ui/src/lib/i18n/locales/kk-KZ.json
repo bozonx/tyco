@@ -311,7 +311,7 @@
     "change": "Өзгерту",
     "charsCount": "Таңбалар: {count}",
     "close": "Жабу",
-    "closeAllHint": "Shift+Esc бәрін бірден жабады",
+    "closeAllHint": "Ctrl+Q бәрін бірден жабады",
     "confirm": "Растау",
     "copied": "Көшірілді",
     "copy": "Көшіру",
