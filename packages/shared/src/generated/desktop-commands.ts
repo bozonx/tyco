@@ -346,6 +346,7 @@ export interface DesktopCommands {
     result: ProfileMemoryChange
   }
   replace_selection_with_command: { args: { commandId: string }; result: void }
+  reposition_quick_window: { args: { activationId: number }; result: void }
   request_text_insertion_permission: {
     args: undefined
     result: TextInsertionStatus
@@ -527,6 +528,7 @@ export const ACTIVATION_DESKTOP_COMMANDS = [
   'open_transferred_chat',
   'paste_into_target_and_hide',
   'remove_screenshot',
+  'reposition_quick_window',
   'reveal_quick_window',
   'set_quick_input_region',
   'switch_quick_mode',

@@ -90,8 +90,8 @@ describe('VoiceRecognitionMenu', () => {
     await flushPromises()
 
     const buttons = wrapper.findAll('button')
-    // ShortcutButton (Finish), Button (Cancel), Button (Send)
-    expect(buttons.length).toBe(3)
+    // Collapse, Finish, Cancel, and Send.
+    expect(buttons.length).toBe(4)
 
     const cancelBtn = wrapper.find('button[title="chat.voiceCancelHint"]')
     expect(cancelBtn.exists()).toBe(true)

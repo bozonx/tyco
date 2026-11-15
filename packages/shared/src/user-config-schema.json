@@ -140,13 +140,23 @@
           "type": "string",
           "enum": ["screen", "area"],
           "default": "area"
-        }
+        },
+        "actionMenuPosition": {
+          "type": "string",
+          "enum": ["center", "right", "bottomRight"],
+          "default": "center"
+        },
+        "isVoiceCollapsed": { "type": "boolean", "default": false },
+        "isListenCollapsed": { "type": "boolean", "default": false }
       },
       "required": [
         "isHiddenOnBlur",
         "isCorrectionPrefetchEnabled",
         "correctionMode",
-        "screenshotCaptureMode"
+        "screenshotCaptureMode",
+        "actionMenuPosition",
+        "isVoiceCollapsed",
+        "isListenCollapsed"
       ],
       "defaultPath": "quickWindow"
     },

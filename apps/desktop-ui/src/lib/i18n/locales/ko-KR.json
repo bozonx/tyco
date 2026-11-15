@@ -1470,7 +1470,15 @@
   },
   "window": {
     "clickToFocus": "계속하려면 클릭하세요",
-    "moveOverlay": "드래그하여 이동"
+    "moveOverlay": "드래그하여 이동",
+    "cyclePosition": "위치: {position} (Alt+P)",
+    "position": {
+      "center": "가운데",
+      "right": "오른쪽",
+      "bottomRight": "오른쪽 아래"
+    },
+    "collapseRecording": "녹음 막대 접기",
+    "expandRecording": "녹음 막대 펼치기"
   },
   "write": {
     "alreadyCorrected": "텍스트가 이미 교정되었습니다",

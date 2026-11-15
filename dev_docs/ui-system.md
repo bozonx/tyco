@@ -433,3 +433,22 @@ Attachment groups use stable object/image keys and short layout transitions;
 leaving attachments become inert immediately. Sortable lists retain their drag
 preview and settle into committed positions over 160 ms, canceling that feedback
 on another drag or disposal.
+
+## Quick overlay placement and recording bars
+
+The action menu cycles `quickWindow.actionMenuPosition` through `center`,
+`right`, and `bottomRight` with its position button or Alt+P. The backend applies
+that preference to quick sheets on activation and through the activation-scoped
+`reposition_quick_window` command. Layer-shell uses right/bottom anchors; regular
+windows use monitor coordinates and scaled margins. Panel placement stays at the
+bottom center. Monitor recovery preserves the selected sheet anchors.
+
+`RecordingBarFrame` persists `isVoiceCollapsed` and `isListenCollapsed` separately
+in `quickWindow`. Collapse changes presentation only: transcript and styling
+panels are hidden while the meter, finish action, and close control stay usable.
+Recording state and capture lifecycle remain owned by the views/models.
+
+Focus loss may dismiss the action-page selector (including subsequent pages) or
+an empty quick text input. Typed input, action steps, results, voice input, and
+system audio recording stay open. The existing hide-on-blur preference still
+controls automatic dismissal.

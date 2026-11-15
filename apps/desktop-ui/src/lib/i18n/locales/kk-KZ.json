@@ -1473,7 +1473,15 @@
   },
   "window": {
     "clickToFocus": "Жалғастыру үшін басыңыз",
-    "moveOverlay": "Жылжыту үшін сүйреңіз"
+    "moveOverlay": "Жылжыту үшін сүйреңіз",
+    "cyclePosition": "Орны: {position} (Alt+P)",
+    "position": {
+      "center": "Ортада",
+      "right": "Оң жақта",
+      "bottomRight": "Төменгі оң жақта"
+    },
+    "collapseRecording": "Жазу жолағын жию",
+    "expandRecording": "Жазу жолағын жаю"
   },
   "write": {
     "alreadyCorrected": "Мәтін бұрыннан түзетілген",

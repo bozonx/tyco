@@ -1473,7 +1473,15 @@
   },
   "window": {
     "clickToFocus": "Kattintson a folytatáshoz",
-    "moveOverlay": "Húzza az áthelyezéshez"
+    "moveOverlay": "Húzza az áthelyezéshez",
+    "cyclePosition": "Pozíció: {position} (Alt+P)",
+    "position": {
+      "center": "Középen",
+      "right": "Jobbra",
+      "bottomRight": "Jobbra lent"
+    },
+    "collapseRecording": "Felvételi sáv összecsukása",
+    "expandRecording": "Felvételi sáv kibontása"
   },
   "write": {
     "alreadyCorrected": "A szöveg már javítva van",

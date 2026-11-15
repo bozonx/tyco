@@ -1476,7 +1476,15 @@
   },
   "window": {
     "clickToFocus": "Faceți clic pentru a continua",
-    "moveOverlay": "Trageți pentru a muta"
+    "moveOverlay": "Trageți pentru a muta",
+    "cyclePosition": "Poziție: {position} (Alt+P)",
+    "position": {
+      "center": "Centru",
+      "right": "Dreapta",
+      "bottomRight": "Dreapta jos"
+    },
+    "collapseRecording": "Restrânge bara de înregistrare",
+    "expandRecording": "Extinde bara de înregistrare"
   },
   "write": {
     "alreadyCorrected": "Textul este deja corectat",

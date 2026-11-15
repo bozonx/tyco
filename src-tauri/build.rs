@@ -156,6 +156,7 @@ fn main() {
             "set_editor_history_item_result",
             "set_editor_history_item_failure",
             "reveal_quick_window",
+            "reposition_quick_window",
             "set_quick_input_region",
             "set_secret",
             "set_operation_catalog",

@@ -1476,7 +1476,15 @@
   },
   "window": {
     "clickToFocus": "Fai clic per continuare",
-    "moveOverlay": "Trascina per spostare"
+    "moveOverlay": "Trascina per spostare",
+    "cyclePosition": "Posizione: {position} (Alt+P)",
+    "position": {
+      "center": "Centro",
+      "right": "Destra",
+      "bottomRight": "In basso a destra"
+    },
+    "collapseRecording": "Comprimi barra di registrazione",
+    "expandRecording": "Espandi barra di registrazione"
   },
   "write": {
     "alreadyCorrected": "Il testo è già corretto",

@@ -1476,7 +1476,15 @@
   },
   "window": {
     "clickToFocus": "Zum Fortfahren klicken",
-    "moveOverlay": "Zum Verschieben ziehen"
+    "moveOverlay": "Zum Verschieben ziehen",
+    "cyclePosition": "Position: {position} (Alt+P)",
+    "position": {
+      "center": "Mitte",
+      "right": "Rechts",
+      "bottomRight": "Unten rechts"
+    },
+    "collapseRecording": "Aufnahmeleiste einklappen",
+    "expandRecording": "Aufnahmeleiste ausklappen"
   },
   "write": {
     "alreadyCorrected": "Der Text ist bereits korrigiert",

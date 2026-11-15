@@ -136,3 +136,9 @@ pub fn open_transferred_chat(
 ) -> Result<(), AppError> {
     runtime::screenshot::open_chat(&app, transfer, activation_id)
 }
+
+/// Applies the saved sheet placement to the current quick activation.
+#[tauri::command]
+pub fn reposition_quick_window(app: AppHandle, activation_id: u64) -> Result<(), AppError> {
+    runtime::reposition_quick_window(&app, activation_id)
+}

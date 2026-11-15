@@ -414,6 +414,20 @@ struct SttConfig {
     is_voice_commands_hold_enabled: bool,
 }
 
+/// Preferred placement of action sheets on the active output.
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum ActionMenuPosition {
+    #[default]
+    Center,
+    Right,
+    BottomRight,
+}
+
+pub fn action_menu_position(config: &Value) -> ActionMenuPosition {
+    section_at(config, "/quickWindow/actionMenuPosition")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

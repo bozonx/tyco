@@ -20,6 +20,7 @@
     "allow-finish-selection-run",
     "allow-mark-activation-metric",
     "allow-reveal-quick-window",
+    "allow-reposition-quick-window",
     "allow-set-quick-input-region",
     "allow-set-operation-catalog",
     "allow-submit-activation-metric-value"

@@ -1476,7 +1476,15 @@
   },
   "window": {
     "clickToFocus": "Click to continue",
-    "moveOverlay": "Drag to move"
+    "moveOverlay": "Drag to move",
+    "cyclePosition": "Position: {position} (Alt+P)",
+    "position": {
+      "center": "Center",
+      "right": "Right",
+      "bottomRight": "Bottom right"
+    },
+    "collapseRecording": "Collapse recording bar",
+    "expandRecording": "Expand recording bar"
   },
   "write": {
     "alreadyCorrected": "Text is already corrected",

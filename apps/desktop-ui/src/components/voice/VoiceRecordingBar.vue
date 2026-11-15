@@ -7,6 +7,7 @@
         canSwitchMode || Boolean(replyTo) || props.showCancelButton,
     }"
     :label="ariaLabel"
+    collapse-mode="voice"
   >
     <div class="voice-bar-header">
       <OverlayDragHandle />

@@ -1,5 +1,6 @@
+use crate::models::user_config::{self, ActionMenuPosition};
 use serde::Deserialize;
-use tauri::{PhysicalPosition, Position, WebviewWindow};
+use tauri::{Manager, PhysicalPosition, Position, WebviewWindow};
 
 #[cfg(target_os = "linux")]
 use gtk::prelude::*;
@@ -411,6 +412,7 @@ pub fn set_panel_input_region(
 thread_local! {
     /// Geometry last applied to the layer surface. GTK windows live on the main
     /// thread, and so does this value.
+    static APPLIED_POSITION: std::cell::Cell<ActionMenuPosition> = const { std::cell::Cell::new(ActionMenuPosition::Center) };
     static APPLIED_GEOMETRY: std::cell::Cell<Option<(WindowProfile, i32, i32, i32)>> =
         const { std::cell::Cell::new(None) };
 }
@@ -491,7 +493,9 @@ fn recover_removed_monitor(
     window.resize(width, height);
     match profile {
         WindowProfile::Panel => layer_shell::set_panel_profile(window, margin),
-        WindowProfile::Sheet => layer_shell::set_sheet_profile(window, margin),
+        WindowProfile::Sheet => {
+            layer_shell::set_positioned_sheet_profile(window, margin, APPLIED_POSITION.get())
+        }
     }
     APPLIED_GEOMETRY.set(Some((profile, margin, width, height)));
     // The old output's closed event is not a user dismissal. Reacquire the
@@ -577,7 +581,10 @@ pub fn apply_panel_surface(
     };
     // Anchors and size only change with the profile; reapplying them on every
     // show costs a relayout and a configure round trip before the first frame
-    if APPLIED_GEOMETRY.get() != Some((profile, margin, width, height)) {
+    let position = sheet_position(window, profile);
+    if APPLIED_POSITION.get() != position
+        || APPLIED_GEOMETRY.get() != Some((profile, margin, width, height))
+    {
         // Layer-shell remaps use the default size; resize alone can retain the
         // previous allocation while the surface is hidden.
         // Wry's GtkFixed child retains a minimum size from its previous bounds.
@@ -589,9 +596,12 @@ pub fn apply_panel_surface(
         gtk_window.resize(width, height);
         match profile {
             WindowProfile::Panel => layer_shell::set_panel_profile(&gtk_window, margin),
-            WindowProfile::Sheet => layer_shell::set_sheet_profile(&gtk_window, margin),
+            WindowProfile::Sheet => {
+                layer_shell::set_positioned_sheet_profile(&gtk_window, margin, position)
+            }
         }
         gtk_window.queue_resize();
+        APPLIED_POSITION.set(position);
         APPLIED_GEOMETRY.set(Some((profile, margin, width, height)));
     }
     layer_shell::set_keyboard(
@@ -670,22 +680,55 @@ fn position_regular_panel(window: &WebviewWindow, profile: WindowProfile) -> Res
     let monitor_position = monitor.position();
     let monitor_size = monitor.size();
     let window_size = window.outer_size()?;
-    let x =
-        monitor_position.x + ((monitor_size.width.saturating_sub(window_size.width)) / 2) as i32;
-    let y = match profile {
-        WindowProfile::Panel => {
-            let bottom_gap = (24.0 * monitor.scale_factor()).round() as i32;
-            monitor_position.y + monitor_size.height.saturating_sub(window_size.height) as i32
-                - bottom_gap
-        }
-        WindowProfile::Sheet => {
-            monitor_position.y
-                + ((monitor_size.height.saturating_sub(window_size.height)) / 2) as i32
-        }
-    };
+    let scale = monitor.scale_factor();
+    let (x, y) = panel_offsets(
+        monitor_size.width,
+        monitor_size.height,
+        window_size.width,
+        window_size.height,
+        (24.0 * scale).round() as i32,
+        profile,
+        sheet_position(window, profile),
+    );
+    let (x, y) = (monitor_position.x + x, monitor_position.y + y);
 
     window.set_position(Position::Physical(PhysicalPosition::new(x, y)))?;
     Ok(())
+}
+
+fn sheet_position(window: &WebviewWindow, profile: WindowProfile) -> ActionMenuPosition {
+    if profile != WindowProfile::Sheet {
+        return ActionMenuPosition::Center;
+    }
+    window
+        .app_handle()
+        .try_state::<crate::state::AppState>()
+        .map(|state| user_config::action_menu_position(&state.user_config()))
+        .unwrap_or_default()
+}
+
+fn panel_offsets(
+    screen_width: u32,
+    screen_height: u32,
+    width: u32,
+    height: u32,
+    gap: i32,
+    profile: WindowProfile,
+    position: ActionMenuPosition,
+) -> (i32, i32) {
+    let available_x = screen_width.saturating_sub(width) as i32;
+    let available_y = screen_height.saturating_sub(height) as i32;
+    let x = if profile == WindowProfile::Sheet && position != ActionMenuPosition::Center {
+        (available_x - gap).max(0)
+    } else {
+        available_x / 2
+    };
+    let y = if profile == WindowProfile::Panel || position == ActionMenuPosition::BottomRight {
+        (available_y - gap).max(0)
+    } else {
+        available_y / 2
+    };
+    (x, y)
 }
 
 #[cfg(test)]
@@ -762,5 +805,44 @@ mod tests {
         let value = serde_json::json!({ "x": 8, "y": 300.5, "width": 784, "height": 60 });
         let parsed: InputRegion = serde_json::from_value(value).unwrap();
         assert_eq!(parsed, region(8.0, 300.5, 784.0, 60.0));
+    }
+}
+
+#[cfg(test)]
+mod placement_tests {
+    use super::*;
+
+    #[test]
+    fn sheet_presets_and_panel_placement() {
+        let offset =
+            |profile, position| panel_offsets(1920, 1080, 1000, 600, 24, profile, position);
+        assert_eq!(
+            offset(WindowProfile::Sheet, ActionMenuPosition::Center),
+            (460, 240)
+        );
+        assert_eq!(
+            offset(WindowProfile::Sheet, ActionMenuPosition::Right),
+            (896, 240)
+        );
+        assert_eq!(
+            offset(WindowProfile::Sheet, ActionMenuPosition::BottomRight),
+            (896, 456)
+        );
+        assert_eq!(
+            offset(WindowProfile::Panel, ActionMenuPosition::Right),
+            (460, 456)
+        );
+        assert_eq!(
+            panel_offsets(
+                800,
+                500,
+                1000,
+                600,
+                48,
+                WindowProfile::Sheet,
+                ActionMenuPosition::BottomRight
+            ),
+            (0, 0)
+        );
     }
 }

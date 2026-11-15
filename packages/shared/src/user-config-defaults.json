@@ -41,7 +41,10 @@
     "isHiddenOnBlur": true,
     "isCorrectionPrefetchEnabled": false,
     "correctionMode": "onSubmit",
-    "screenshotCaptureMode": "area"
+    "screenshotCaptureMode": "area",
+    "actionMenuPosition": "center",
+    "isVoiceCollapsed": false,
+    "isListenCollapsed": false
   },
   "hotkeys": {
     "editor": "",

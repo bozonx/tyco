@@ -148,3 +148,27 @@ pub fn attach_status(window: &impl IsA<gtk::Window>, margin_bottom: i32) {
     }
     set_panel_profile(window, margin_bottom);
 }
+
+/// Positions a sheet using compositor anchors, including on KDE Wayland.
+pub fn set_positioned_sheet_profile(
+    window: &impl IsA<gtk::Window>,
+    margin_top: i32,
+    position: crate::models::user_config::ActionMenuPosition,
+) {
+    use crate::models::user_config::ActionMenuPosition;
+    set_sheet_profile(window, margin_top);
+    let pointer = raw(window);
+    // SAFETY: the surface is initialized and the window remains alive.
+    unsafe {
+        if position != ActionMenuPosition::Center {
+            gtk_layer_set_anchor(pointer, EDGE_RIGHT, 1);
+            gtk_layer_set_margin(pointer, EDGE_RIGHT, 24);
+        }
+        if position == ActionMenuPosition::BottomRight {
+            gtk_layer_set_anchor(pointer, EDGE_TOP, 0);
+            gtk_layer_set_margin(pointer, EDGE_TOP, 0);
+            gtk_layer_set_anchor(pointer, EDGE_BOTTOM, 1);
+            gtk_layer_set_margin(pointer, EDGE_BOTTOM, 24);
+        }
+    }
+}

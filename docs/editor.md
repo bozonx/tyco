@@ -125,3 +125,17 @@ select an application to record it independently of the default output.
 Linux requires PipeWire. Application capture on Windows requires process-loopback
 support, checked at runtime. Separate installations are separate application
 sources on Windows; helpers installed in another directory may appear separately.
+
+### Quick overlay controls
+
+In the action menu, use its position button or **Alt+P** to cycle between the
+center, right, and bottom-right of the screen. TyCo remembers the selection.
+
+Voice input and system audio recording have a collapse button. The compact bar
+keeps recording and provides the level indicator, finish action, and close
+button. Expand it to see the transcript and additional controls again. TyCo
+remembers the compact setting separately for the two recording modes.
+
+When hiding on focus loss is enabled, only an empty quick text input or the
+action-page selector closes when you switch to another app. An action's menu,
+its result, and recording bars stay open until you close them.

@@ -1473,7 +1473,15 @@
   },
   "window": {
     "clickToFocus": "Κάντε κλικ για να συνεχίσετε",
-    "moveOverlay": "Σύρετε για μετακίνηση"
+    "moveOverlay": "Σύρετε για μετακίνηση",
+    "cyclePosition": "Θέση: {position} (Alt+P)",
+    "position": {
+      "center": "Κέντρο",
+      "right": "Δεξιά",
+      "bottomRight": "Κάτω δεξιά"
+    },
+    "collapseRecording": "Σύμπτυξη γραμμής εγγραφής",
+    "expandRecording": "Ανάπτυξη γραμμής εγγραφής"
   },
   "write": {
     "alreadyCorrected": "Το κείμενο είναι ήδη διορθωμένο",

@@ -10,7 +10,7 @@ mod warmup;
 mod window_visibility;
 
 pub use lifecycle::{create_windows, manage_state, request_exit, request_restart, setup, shutdown};
-pub use panel_layer::{reveal_quick_window, set_quick_input_region};
+pub use panel_layer::{reposition_quick_window, reveal_quick_window, set_quick_input_region};
 pub use target_focus::{follow_target_window, forget_target_window, wait_until_unfocused};
 pub use target_paste::paste_into_target;
 pub use tray::set_tray_menu_labels;

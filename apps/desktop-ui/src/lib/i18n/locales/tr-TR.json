@@ -1473,7 +1473,11 @@
   },
   "window": {
     "clickToFocus": "Devam etmek için tıklayın",
-    "moveOverlay": "Taşımak için sürükleyin"
+    "moveOverlay": "Taşımak için sürükleyin",
+    "cyclePosition": "Konum: {position} (Alt+P)",
+    "position": { "center": "Orta", "right": "Sağ", "bottomRight": "Sağ alt" },
+    "collapseRecording": "Kayıt çubuğunu daralt",
+    "expandRecording": "Kayıt çubuğunu genişlet"
   },
   "write": {
     "alreadyCorrected": "Metin zaten düzeltildi",

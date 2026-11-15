@@ -3,6 +3,14 @@
     :title="props.correction ? t('menu.correction') : t('menu.actions')"
     :esc-mode="resolvedEscMode"
   >
+    <template
+      v-if="
+        inQuickWindow && desktopStore.desktopState.mode === 'selectionActions'
+      "
+      #header-actions
+    >
+      <ActionMenuPositionButton />
+    </template>
     <template v-if="hasDiff || actionMenuStore.pageCount > 1" #header-extra>
       <div
         v-if="actionMenuStore.pageCount > 1"
@@ -76,6 +84,7 @@ import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
 import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
+import { isQuickWindow } from '../../lib/desktop/window'
 import { voiceReplyActionParams } from '../../lib/listen/listen-reply-actions'
 import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
 import { isTextEntryTarget } from '../../lib/ui/text-entry-target'
@@ -88,6 +97,7 @@ import KeyboardKey from '../common/KeyboardKey.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ContextPreview from '../overlay/ContextPreview.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
+import ActionMenuPositionButton from '../quick/ActionMenuPositionButton.vue'
 import ResultViewModeToggle from './ResultViewModeToggle.vue'
 import { APP_CONFIG } from '@tyco/shared'
 
@@ -123,6 +133,7 @@ watch(draftText, (text) => {
   if (id !== undefined)
     menuModalsStore.updateStep(id, MenuModals.INSERT, { text })
 })
+const inQuickWindow = isQuickWindow()
 const desktopStore = useDesktopStore()
 const actionMenuStore = useActionMenuStore()
 const pagesBar = ref<HTMLElement>()

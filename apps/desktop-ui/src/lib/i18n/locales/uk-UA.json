@@ -1473,7 +1473,15 @@
   },
   "window": {
     "clickToFocus": "Клацніть, щоб продовжити",
-    "moveOverlay": "Перетягніть, щоб перемістити"
+    "moveOverlay": "Перетягніть, щоб перемістити",
+    "cyclePosition": "Положення: {position} (Alt+P)",
+    "position": {
+      "center": "По центру",
+      "right": "Праворуч",
+      "bottomRight": "Праворуч унизу"
+    },
+    "collapseRecording": "Згорнути панель запису",
+    "expandRecording": "Розгорнути панель запису"
   },
   "write": {
     "alreadyCorrected": "Текст уже виправлено",

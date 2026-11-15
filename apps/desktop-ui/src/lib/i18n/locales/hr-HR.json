@@ -1476,7 +1476,15 @@
   },
   "window": {
     "clickToFocus": "Kliknite za nastavak",
-    "moveOverlay": "Povucite za pomicanje"
+    "moveOverlay": "Povucite za pomicanje",
+    "cyclePosition": "Položaj: {position} (Alt+P)",
+    "position": {
+      "center": "Sredina",
+      "right": "Desno",
+      "bottomRight": "Dolje desno"
+    },
+    "collapseRecording": "Sažmi traku snimanja",
+    "expandRecording": "Proširi traku snimanja"
   },
   "write": {
     "alreadyCorrected": "Tekst je već ispravljen",

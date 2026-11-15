@@ -1473,7 +1473,15 @@
   },
   "window": {
     "clickToFocus": "დააწკაპუნეთ გასაგრძელებლად",
-    "moveOverlay": "გადაათრიეთ გადასაადგილებლად"
+    "moveOverlay": "გადაათრიეთ გადასაადგილებლად",
+    "cyclePosition": "მდებარეობა: {position} (Alt+P)",
+    "position": {
+      "center": "ცენტრში",
+      "right": "მარჯვნივ",
+      "bottomRight": "ქვემოთ მარჯვნივ"
+    },
+    "collapseRecording": "ჩაწერის ზოლის ჩაკეცვა",
+    "expandRecording": "ჩაწერის ზოლის გაშლა"
   },
   "write": {
     "alreadyCorrected": "ტექსტი უკვე შესწორებულია",

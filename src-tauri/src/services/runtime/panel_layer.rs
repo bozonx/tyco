@@ -92,6 +92,36 @@ pub(super) fn settle_quick_keyboard(app: &AppHandle) {
     }
 }
 
+/// Repositions only the visible sheet belonging to the requesting activation.
+pub fn reposition_quick_window(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
+    on_main_thread(app, move |app| {
+        if app
+            .state::<crate::services::activation::coordinator::ActivationCoordinator>()
+            .is_screenshot_pending()
+        {
+            return Ok(());
+        }
+        let snapshot = app.state::<AppState>().snapshot();
+        if !is_current_quick_activation(
+            app.state::<RuntimeWindows>().active_label(),
+            snapshot.window.is_window_shown,
+            snapshot.activation.activation_id,
+            activation_id,
+        ) || snapshot.window.window_profile != crate::models::WindowProfile::Sheet
+        {
+            return Ok(());
+        }
+        if let Some(window) = app.get_webview_window(QUICK_WINDOW_LABEL) {
+            crate::services::platform::apply_panel_surface(
+                &window,
+                snapshot.window.window_profile,
+                panel_layer(app),
+            )?;
+        }
+        Ok(())
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

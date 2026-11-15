@@ -1473,7 +1473,15 @@
   },
   "window": {
     "clickToFocus": "Нажмите, чтобы продолжить",
-    "moveOverlay": "Перетащите, чтобы переместить"
+    "moveOverlay": "Перетащите, чтобы переместить",
+    "cyclePosition": "Положение: {position} (Alt+P)",
+    "position": {
+      "center": "По центру",
+      "right": "Справа",
+      "bottomRight": "Справа снизу"
+    },
+    "collapseRecording": "Свернуть панель записи",
+    "expandRecording": "Развернуть панель записи"
   },
   "write": {
     "alreadyCorrected": "Текст уже корректирован",

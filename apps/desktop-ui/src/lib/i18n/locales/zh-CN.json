@@ -1468,7 +1468,14 @@
     },
     "translate": "翻译成;翻译为"
   },
-  "window": { "clickToFocus": "点击以继续", "moveOverlay": "拖动以移动" },
+  "window": {
+    "clickToFocus": "点击以继续",
+    "moveOverlay": "拖动以移动",
+    "cyclePosition": "位置：{position} (Alt+P)",
+    "position": { "center": "居中", "right": "右侧", "bottomRight": "右下角" },
+    "collapseRecording": "收起录音栏",
+    "expandRecording": "展开录音栏"
+  },
   "write": {
     "alreadyCorrected": "文本已完成纠错",
     "correct": "纠错",

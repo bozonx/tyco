@@ -242,7 +242,12 @@ export type QuickCorrectionMode = (typeof QUICK_CORRECTION_MODES)[number]
 export const SCREENSHOT_CAPTURE_MODES = ['screen', 'area'] as const
 export type ScreenshotCaptureMode = (typeof SCREENSHOT_CAPTURE_MODES)[number]
 
+export type ActionMenuPosition = 'center' | 'right' | 'bottomRight'
+
 export interface QuickWindowConfig {
+  actionMenuPosition: ActionMenuPosition
+  isVoiceCollapsed: boolean
+  isListenCollapsed: boolean
   isHiddenOnBlur: boolean
   isCorrectionPrefetchEnabled: boolean
   correctionMode: QuickCorrectionMode

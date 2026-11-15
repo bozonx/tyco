@@ -1473,7 +1473,11 @@
   },
   "window": {
     "clickToFocus": "クリックして続行",
-    "moveOverlay": "ドラッグして移動"
+    "moveOverlay": "ドラッグして移動",
+    "cyclePosition": "位置：{position} (Alt+P)",
+    "position": { "center": "中央", "right": "右", "bottomRight": "右下" },
+    "collapseRecording": "録音バーを折りたたむ",
+    "expandRecording": "録音バーを展開"
   },
   "write": {
     "alreadyCorrected": "テキストはすでに修正済みです",

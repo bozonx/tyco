@@ -1470,7 +1470,15 @@
   },
   "window": {
     "clickToFocus": "Klikněte pro pokračování",
-    "moveOverlay": "Přetažením přesunete"
+    "moveOverlay": "Přetažením přesunete",
+    "cyclePosition": "Poloha: {position} (Alt+P)",
+    "position": {
+      "center": "Uprostřed",
+      "right": "Vpravo",
+      "bottomRight": "Vpravo dole"
+    },
+    "collapseRecording": "Sbalit panel nahrávání",
+    "expandRecording": "Rozbalit panel nahrávání"
   },
   "write": {
     "alreadyCorrected": "Text je již opraven",

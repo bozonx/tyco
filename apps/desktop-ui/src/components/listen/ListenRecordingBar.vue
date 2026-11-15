@@ -3,6 +3,7 @@
   <RecordingBarFrame
     class="voice-bar listen-bar"
     :label="t('listen.title')"
+    collapse-mode="listen"
     :class="{ 'is-stopped': isStopped }"
   >
     <div class="listen-bar-header">
