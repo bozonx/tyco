@@ -12,6 +12,7 @@ import {
   loadFakeDesktop,
   type TestDesktop,
 } from '../../test/install-fake-desktop'
+import ContextPreview from '../overlay/ContextPreview.vue'
 import TranslateMenu from './TranslateMenu.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -34,7 +35,7 @@ describe('TranslateMenu', () => {
       props: { text: 'Hello world', ...props },
       global: {
         stubs: {
-          TextPreview: true,
+          ContextPreview: true,
           ActionOverlayLayout: {
             template: `<div><slot name="preview" /><slot name="actions" /></div>`,
           },
@@ -281,5 +282,27 @@ describe('TranslateMenu', () => {
     expect(menu.currentModal).toBe(MenuModals.TRANSLATE)
     expect(menu.pendingModal).toEqual({ label: 'New operation' })
     wrapper.unmount()
+  })
+
+  it('allows editing the text and uses edited text for translation', async () => {
+    const menus = useMenuModalsStore()
+    menus.nextModal(MenuModals.TRANSLATE, { text: 'Source text' })
+    setTargetLanguages({ q: 'de-DE' })
+    const wrapper = mountMenu({ text: 'Source text' })
+    const preview = wrapper.findComponent(ContextPreview)
+    expect(preview.exists()).toBe(true)
+    expect(preview.props('editable')).toBe(true)
+    preview.vm.$emit('update:text', 'Edited source text')
+    await nextTick()
+    expect(shortcutListProps.text).toBe('Edited source text')
+    expect(menus.currentModalParams).toMatchObject({
+      text: 'Edited source text',
+    })
+    await shortcutListProps.leftLetterKeys[0].action()
+    expect(transform).toHaveBeenCalledWith(
+      'core.translate',
+      'Edited source text',
+      expect.anything()
+    )
   })
 })

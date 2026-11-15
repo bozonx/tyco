@@ -165,11 +165,12 @@ export function createQuickAiRequestModel(
   deps: QuickAiRequestModelDependencies
 ) {
   const context = deps.context ?? { kind: 'selection' }
-  const originalSourceText =
+  const rawSourceText = ref(
     context.kind === 'selection' ? context.text : undefined
+  )
   const isSourceTextDisabled = ref(false)
   const sourceText = computed(() =>
-    isSourceTextDisabled.value ? undefined : originalSourceText
+    isSourceTextDisabled.value ? undefined : rawSourceText.value
   )
   const inputMode = ref<'text' | 'voice'>(deps.initialInputMode ?? 'text')
   const profileId = ref<string | null>(deps.initialProfileId ?? null)
@@ -389,6 +390,11 @@ export function createQuickAiRequestModel(
     isSourceTextDisabled.value = disabled
   }
 
+  const setSourceText = (text: string) => {
+    if (isSourceTextLocked.value) return
+    rawSourceText.value = text
+  }
+
   const setSourceImages = (images: ChatImage[]) => {
     if (isSourceImageLocked.value) return
     sourceImages.value = images
@@ -586,9 +592,11 @@ export function createQuickAiRequestModel(
     modelIssue,
     describeModelIssue,
     sourceText,
+    rawSourceText,
     isSourceTextDisabled,
     isSourceTextLocked,
     setSourceTextDisabled,
+    setSourceText,
     sourceImages,
     isSourceImageLocked,
     setSourceImages,

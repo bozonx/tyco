@@ -354,12 +354,16 @@ describe('QuickAiRequestMenu', () => {
 
   it('renders preview with source text', () => {
     const wrapper = mountMenu({ text: 'Hello text to transform' })
-    expect(wrapper.text()).toContain('Hello text to transform')
+    expect(wrapper.find('textarea').element.value).toBe(
+      'Hello text to transform'
+    )
   })
 
   it('disables and restores source text context preview', async () => {
     const wrapper = mountMenu({ text: 'Hello text to transform' })
-    expect(wrapper.text()).toContain('Hello text to transform')
+    expect(wrapper.find('textarea').element.value).toBe(
+      'Hello text to transform'
+    )
 
     const removeBtn = wrapper.find('button[aria-label="action.removeContext"]')
     expect(removeBtn.exists()).toBe(true)
@@ -374,7 +378,17 @@ describe('QuickAiRequestMenu', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.find('.context-disabled-banner').exists()).toBe(false)
-    expect(wrapper.text()).toContain('Hello text to transform')
+    expect(wrapper.find('textarea').element.value).toBe(
+      'Hello text to transform'
+    )
+  })
+
+  it('allows editing source text context preview and keeps updated text', async () => {
+    const wrapper = mountMenu({ text: 'Hello text to transform' })
+    const textarea = wrapper.find('textarea')
+    expect(textarea.element.value).toBe('Hello text to transform')
+    await textarea.setValue('Edited prompt context')
+    expect(textarea.element.value).toBe('Edited prompt context')
   })
 
   it('shows the profile, model, chat and editor buttons on the left and run button on the right', () => {

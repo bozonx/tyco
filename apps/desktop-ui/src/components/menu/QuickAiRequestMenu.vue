@@ -17,9 +17,11 @@
     <template #preview>
       <ContextPreview
         v-if="props.text"
-        :text="props.text"
+        :text="model.rawSourceText.value ?? props.text"
+        :editable="!model.isSourceTextLocked.value"
         :disabled="model.isSourceTextDisabled.value"
         :allow-disable="!model.isSourceTextLocked.value"
+        @update:text="(text) => model.setSourceText(text)"
         @update:disabled="(disabled) => model.setSourceTextDisabled(disabled)"
       />
       <div
@@ -465,7 +467,7 @@ const canReturnToPrevious = computed(() => !isAtRoot())
 const canOpenSelectionActions = computed(
   () =>
     !canReturnToPrevious.value &&
-    Boolean(props.text.trim()) &&
+    Boolean((model.rawSourceText.value ?? props.text).trim()) &&
     !isResultVisible.value
 )
 function openSelectionActions() {
@@ -476,9 +478,16 @@ function openSelectionActions() {
     isApplying.value
   )
     return
-  const text = props.text
+  const text = model.rawSourceText.value ?? props.text
   menuModalsStore.startScenario(MenuModals.INSERT, { text })
 }
+
+watch(model.rawSourceText, (text) => {
+  const stepId = menuModalsStore.currentStepId
+  if (stepId !== undefined && text !== undefined) {
+    menuModalsStore.updateStep(stepId, MenuModals.QUICK_AI_REQUEST, { text })
+  }
+})
 
 function openNextStep() {
   if (

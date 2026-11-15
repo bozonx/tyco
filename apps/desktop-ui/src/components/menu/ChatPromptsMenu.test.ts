@@ -69,7 +69,7 @@ describe('ChatPromptsMenu', () => {
   it('lists the prompts with a text and the context', async () => {
     const wrapper = mountMenu()
     await flushPromises()
-    expect(wrapper.find('.text-preview').text()).toBe('Some sample text')
+    expect(wrapper.find('textarea').element.value).toBe('Some sample text')
     expect(names(wrapper)).toEqual(['Summarize', 'Critique'])
     expect(wrapper.text()).toContain('chatPrompts.missingProfile')
     wrapper.unmount()
@@ -131,6 +131,30 @@ describe('ChatPromptsMenu', () => {
     await flushPromises()
     expect(wrapper.find('.search-grid-empty').text()).toBe('chatPrompts.empty')
     expect(wrapper.text()).toContain('chatPrompts.emptyHint')
+    wrapper.unmount()
+  })
+
+  it('allows editing the text and uses edited text for running a prompt', async () => {
+    const wrapper = mountMenu()
+    await flushPromises()
+    const menuModalsStore = useMenuModalsStore()
+
+    const textarea = wrapper.find('textarea')
+    await textarea.setValue('Edited context for prompt')
+
+    await wrapper.find('.search-grid-search-input').setValue('crit')
+    await wrapper
+      .find('.search-grid-search-input')
+      .trigger('keydown', { key: 'Enter' })
+
+    expect(menuModalsStore.currentStep?.modal).toBe(MenuModals.QUICK_AI_REQUEST)
+    expect(menuModalsStore.currentStep?.params).toEqual(
+      expect.objectContaining({
+        text: 'Edited context for prompt',
+        profileId: null,
+        prompt: 'Critique this code',
+      })
+    )
     wrapper.unmount()
   })
 })

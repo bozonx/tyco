@@ -1,6 +1,6 @@
 <template>
   <ActionOverlayLayout
-    :other-actions-text="props.text"
+    :other-actions-text="draftText"
     :title="t('menu.chatPrompts')"
     :on-esc="close"
   >
@@ -8,7 +8,8 @@
       <ContextPreview
         v-if="props.text"
         v-model:disabled="isContextDisabled"
-        :text="props.text"
+        v-model:text="draftText"
+        editable
       />
     </template>
 
@@ -47,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useChatPrompts } from '../../composables/use-chat-prompts'
 import { useI18n } from '../../composables/use-i18n'
@@ -71,11 +72,27 @@ const props = withDefaults(defineProps<ChatPromptsMenuParams>(), {
   shortcutsDisabled: false,
 })
 
+const menuModalsStore = useMenuModalsStore()
+const draftStepId = menuModalsStore.currentStepId
+const draftText = ref(props.text)
+watch(
+  () => props.text,
+  (text) => {
+    draftText.value = text
+  }
+)
+watch(draftText, (text) => {
+  const id = draftStepId
+  if (id !== undefined)
+    menuModalsStore.updateStep(id, MenuModals.CHAT_PROMPTS, { text })
+})
+
 const isContextDisabled = ref(false)
-const activeText = computed(() => (isContextDisabled.value ? '' : props.text))
+const activeText = computed(() =>
+  isContextDisabled.value ? '' : draftText.value
+)
 const query = ref('')
 
-const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
 const { t } = useI18n()
 const { handleEsc } = useOverlayNav()

@@ -1,15 +1,19 @@
 <template>
   <ActionOverlayLayout
-    :other-actions-text="props.text"
+    :other-actions-text="draftText"
     :title="t(props.kind.titleKey)"
   >
     <template #preview>
-      <TextPreview :text="props.text" />
+      <ContextPreview
+        v-model:text="draftText"
+        editable
+        :allow-disable="false"
+      />
     </template>
 
     <template #actions>
       <ShortcutList
-        :text="props.text"
+        :text="draftText"
         :left-letter-keys="leftLetterKeys"
         :shortcuts-disabled="props.shortcutsDisabled"
       />
@@ -18,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useMenuStartup } from '../../composables/use-menu-startup'
@@ -34,8 +38,8 @@ import type { ActionItem } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
 import { useInvocationsStore } from '../../stores/invocations'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
-import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
+import ContextPreview from '../overlay/ContextPreview.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
 
 /** A menu of the rules of a library: the styles or the transformations */
@@ -56,6 +60,27 @@ const invocations = useInvocationsStore()
 const { toastKey } = useToast()
 const runStep = useMenuStepRun()
 const { t } = useI18n()
+
+const draftStepId = menuModalsStore.currentStepId
+const draftText = ref(props.text)
+watch(
+  () => props.text,
+  (text) => {
+    draftText.value = text
+  }
+)
+watch(draftText, (text) => {
+  const id = draftStepId
+  if (id !== undefined) {
+    const currentModal = menuModalsStore.currentStep?.modal
+    if (
+      currentModal === MenuModals.TRANSFORMATION ||
+      currentModal === MenuModals.STYLING
+    ) {
+      menuModalsStore.updateStep(id, currentModal, { text })
+    }
+  }
+})
 
 const library = () => props.kind.getLibrary(desktopStore.userConfig)
 
@@ -87,7 +112,7 @@ useMenuStartup({
 })
 
 async function runRule(rule: string, itemLabel?: string) {
-  const trimmedText = props.text.trim()
+  const trimmedText = draftText.value.trim()
 
   if (!trimmedText) {
     toastKey('toast.noTextToProcess', 'warn')
@@ -101,7 +126,7 @@ async function runRule(rule: string, itemLabel?: string) {
 
   await runStep({
     text: trimmedText,
-    sourceText: props.text,
+    sourceText: draftText.value,
     operation: 'aiTask',
     pending: itemLabel
       ? { ...props.kind.pending, label: itemLabel }
@@ -115,7 +140,7 @@ async function runRule(rule: string, itemLabel?: string) {
     read: (result) => result.content ?? null,
     show: (newText) =>
       menuModalsStore.nextModal(MenuModals.DIFF, {
-        oldText: props.text,
+        oldText: draftText.value,
         newText,
       }),
   })

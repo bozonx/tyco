@@ -1,12 +1,16 @@
 <template>
   <ActionOverlayLayout
-    :other-actions-text="props.text"
+    :other-actions-text="draftText"
     :title="t('menu.translate')"
     :on-esc="isPickerMode ? closePicker : undefined"
     :esc-mode="isPickerMode ? 'back' : 'auto'"
   >
     <template #preview>
-      <TextPreview :text="props.text" />
+      <ContextPreview
+        v-model:text="draftText"
+        editable
+        :allow-disable="false"
+      />
     </template>
 
     <template #actions>
@@ -248,7 +252,7 @@
       </div>
       <ShortcutList
         v-else
-        :text="props.text"
+        :text="draftText"
         :space-key="otherLanguageAction"
         :left-letter-keys="leftLetterKeys"
         :shortcuts-disabled="props.shortcutsDisabled"
@@ -291,8 +295,8 @@ import { useDesktopStore } from '../../stores/desktop'
 import { useInvocationsStore } from '../../stores/invocations'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import AppIcon from '../common/AppIcon.vue'
-import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
+import ContextPreview from '../overlay/ContextPreview.vue'
 import ShortcutHint from '../overlay/ShortcutHint.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
 import type { QueryPanelOption } from './QueryPanel.vue'
@@ -307,6 +311,19 @@ const props = withDefaults(defineProps<TranslateMenuParams>(), {
 const desktopStore = useDesktopStore()
 const invocations = useInvocationsStore()
 const menuModalsStore = useMenuModalsStore()
+const draftStepId = menuModalsStore.currentStepId
+const draftText = ref(props.text)
+watch(
+  () => props.text,
+  (text) => {
+    draftText.value = text
+  }
+)
+watch(draftText, (text) => {
+  const id = draftStepId
+  if (id !== undefined)
+    menuModalsStore.updateStep(id, MenuModals.TRANSLATE, { text })
+})
 const runStep = useMenuStepRun()
 const { toastKey, toastText } = useToast()
 const { t, locale } = useI18n()
@@ -615,7 +632,7 @@ function pickedSourceLanguage(): string | undefined {
 }
 
 const translate = async (targetLanguage: string, source?: string) => {
-  const sourceText = props.text
+  const sourceText = draftText.value
 
   if (!sourceText.trim()) {
     toastKey('toast.noTextToTranslate', 'warn')
