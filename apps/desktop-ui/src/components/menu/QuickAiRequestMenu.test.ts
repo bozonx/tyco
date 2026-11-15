@@ -907,17 +907,33 @@ describe('QuickAiRequestMenu', () => {
       wrapper.unmount()
     })
 
-    it('closes the overlay when voice is cancelled after opening directly in voice mode', async () => {
+    it('returns to the text input when voice is cancelled after opening directly in voice mode', async () => {
       const wrapper = mountMenu({ inputMode: 'voice' })
       const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
       voiceMenu.vm.$emit('cancelled')
       await flushPromises()
 
-      expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
-      expect(wrapper.find('.query-panel-input').exists()).toBe(false)
+      expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
+      expect(wrapper.find('.query-panel-input').exists()).toBe(true)
     })
 
-    it('goes back in modal stack when voice is cancelled after opening in voice mode from action menu', async () => {
+    it('closes the overlay on a second ESC after cancelling voice in direct voice mode', async () => {
+      const wrapper = mountMenu({ inputMode: 'voice' })
+      const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+      voiceMenu.vm.$emit('cancelled')
+      await flushPromises()
+
+      expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
+      expect(wrapper.find('.query-panel-input').exists()).toBe(true)
+
+      const queryPanel = wrapper.findComponent({ name: 'QueryPanel' })
+      queryPanel.vm.$emit('back')
+      await flushPromises()
+
+      expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
+    })
+
+    it('returns to the text input when voice is cancelled after opening in voice mode from action menu', async () => {
       const menuModals = useMenuModalsStore()
       menuModals.nextModal(MenuModals.INSERT, { text: 'Source' })
       menuModals.nextModal(MenuModals.QUICK_AI_REQUEST, {
@@ -929,6 +945,32 @@ describe('QuickAiRequestMenu', () => {
       const wrapper = mountMenu({ inputMode: 'voice' })
       const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
       voiceMenu.vm.$emit('cancelled')
+      await flushPromises()
+
+      expect(backSpy).toHaveBeenCalledTimes(0)
+      expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
+      expect(wrapper.find('.query-panel-input').exists()).toBe(true)
+    })
+
+    it('goes back in modal stack on a second ESC after cancelling voice mode from action menu', async () => {
+      const menuModals = useMenuModalsStore()
+      menuModals.nextModal(MenuModals.INSERT, { text: 'Source' })
+      menuModals.nextModal(MenuModals.QUICK_AI_REQUEST, {
+        text: 'Source',
+        inputMode: 'voice',
+      })
+      const backSpy = vi.spyOn(menuModals, 'back')
+
+      const wrapper = mountMenu({ inputMode: 'voice' })
+      const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+      voiceMenu.vm.$emit('cancelled')
+      await flushPromises()
+
+      expect(backSpy).toHaveBeenCalledTimes(0)
+      expect(wrapper.find('.query-panel-input').exists()).toBe(true)
+
+      const queryPanel = wrapper.findComponent({ name: 'QueryPanel' })
+      queryPanel.vm.$emit('back')
       await flushPromises()
 
       expect(backSpy).toHaveBeenCalledTimes(1)
@@ -996,7 +1038,8 @@ describe('QuickAiRequestMenu', () => {
 
     it('shows Space, Enter on run button when input is blurred and Enter when focused', async () => {
       const wrapper = mountMenu({}, { attachTo: document.body })
-      const runBtn = wrapper.findComponent<typeof ShortcutButton>('.run-action-btn')
+      const runBtn =
+        wrapper.findComponent<typeof ShortcutButton>('.run-action-btn')
       expect(runBtn.props('keys')).toEqual(['Space', 'Enter'])
 
       const input = wrapper.find('.query-panel-input')
@@ -1020,7 +1063,8 @@ describe('QuickAiRequestMenu', () => {
         },
       })
       const wrapper = mountMenu({}, { attachTo: document.body })
-      const runBtn = wrapper.findComponent<typeof ShortcutButton>('.run-action-btn')
+      const runBtn =
+        wrapper.findComponent<typeof ShortcutButton>('.run-action-btn')
       expect(runBtn.props('keys')).toEqual(['Space', 'Enter'])
 
       const input = wrapper.find('.query-panel-input')

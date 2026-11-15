@@ -698,7 +698,6 @@ function startVoice() {
     prefix: range ? value.slice(0, range.start) : value,
     suffix: range ? value.slice(range.end) : '',
   }
-  voiceEntrySource.value = 'input'
   isListening.value = true
 }
 
@@ -713,10 +712,6 @@ function focusPrompt() {
 }
 
 function handleVoiceCancelled() {
-  if (voiceEntrySource.value === 'overlay') {
-    defaultHandleEsc()
-    return
-  }
   isListening.value = false
   focusPrompt()
 }
@@ -727,7 +722,6 @@ async function handleVoiceCorrected(
   _correctedText: string | undefined,
   intent: VoiceFinishIntent
 ) {
-  voiceEntrySource.value = 'input'
   isListening.value = false
   if (intent === 'copy') {
     void actionMenuStore.runDefaultAction('copyToClipboard', resultText)
@@ -786,10 +780,8 @@ function handleEsc() {
   }
   if (isListening.value) {
     isListening.value = false
-    if (voiceEntrySource.value === 'input') {
-      focusPrompt()
-      return
-    }
+    focusPrompt()
+    return
   }
   defaultHandleEsc()
 }
@@ -851,11 +843,7 @@ function handleWindowKeys(event: KeyboardEvent) {
     model.stopGeneration()
     return
   }
-  if (
-    isInputBlocked.value ||
-    model.isGenerating.value ||
-    isListening.value
-  )
+  if (isInputBlocked.value || model.isGenerating.value || isListening.value)
     return
 
   const target = event.target
