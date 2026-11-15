@@ -35,6 +35,7 @@ import {
 import { getLanguageLabelKey } from '../locale/language'
 import type { PendingModalParams } from '../modals/menu-modal-params'
 import { normalizeMainActions } from './main-actions'
+import { validateActionText } from './action-text-requirement'
 import { configProfileKey } from '../ai-profiles/profile-ref'
 
 export type { ActionItem } from '../../types/plugins'
@@ -167,12 +168,16 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     },
   })
 
-  /** Runs `action` on the text, unless there is none */
+  /** Runs `action` on the text, validating text requirements */
   const withText =
-    (action: (text: string) => void) =>
+    (actionId: string, action: (text: string) => void) =>
     async (text: string): Promise<void> => {
-      if (!text?.trim()) {
-        deps.showToast('toast.textNotSelected', 'error')
+      const check = validateActionText(actionId, text, {
+        minCorrectionLength:
+          deps.minCorrectionLength?.() ?? APP_CONFIG.minCorrectionLength,
+      })
+      if (!check.valid) {
+        deps.showToast(check.toastKey!, check.toastKind ?? 'warn')
         return
       }
       action(text)
@@ -189,7 +194,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       id: `transformation:${transformationId}`,
       name: item.name,
       icon: 'mdi:auto-fix',
-      action: withText((text) =>
+      action: withText(`transformation:${transformationId}`, (text) =>
         deps.openTransformationModal?.(text, transformationId)
       ),
     }
@@ -204,7 +209,9 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       id: `styling:${stylingId}`,
       name: item.name,
       icon: 'mdi:palette-outline',
-      action: withText((text) => deps.openStylingModal?.(text, stylingId)),
+      action: withText(`styling:${stylingId}`, (text) =>
+        deps.openStylingModal?.(text, stylingId)
+      ),
     }
   }
 
@@ -234,7 +241,9 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       ? { labelKey: getLanguageLabelKey(language) }
       : { name: translationLanguageLabel(language, i18n.global.locale.value) }),
     icon: 'mdi:translate',
-    action: withText((text) => deps.openTranslateModal(text, language)),
+    action: withText(`translation:${language}`, (text) =>
+      deps.openTranslateModal(text, language)
+    ),
   })
 
   const createProfileChatActionItem = (
@@ -340,14 +349,12 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     text: string,
     extra?: CorrectionStepExtra
   ): Promise<void> => {
-    if (!text?.trim()) {
-      deps.showToast('toast.textNotSelected', 'error')
-      return
-    }
-    const minLength =
-      deps.minCorrectionLength?.() ?? APP_CONFIG.minCorrectionLength
-    if (text.trim().length < minLength) {
-      deps.showToast('toast.textTooShortForCorrection', 'warn')
+    const check = validateActionText('correction', text, {
+      minCorrectionLength:
+        deps.minCorrectionLength?.() ?? APP_CONFIG.minCorrectionLength,
+    })
+    if (!check.valid) {
+      deps.showToast(check.toastKey!, check.toastKind ?? 'warn')
       return
     }
     await deps.startCorrection(text, extra)
@@ -381,8 +388,9 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           icon: 'mdi:auto-fix',
           trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
-            if (!text?.trim()) {
-              deps.showToast('toast.textNotSelected', 'error')
+            const check = validateActionText('transformationMenu', text)
+            if (!check.valid) {
+              deps.showToast(check.toastKey!, check.toastKind ?? 'warn')
               return
             }
             deps.openTransformationModal?.(text)
@@ -440,8 +448,9 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           icon: 'mdi:palette-outline',
           trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
-            if (!text?.trim()) {
-              deps.showToast('toast.textNotSelected', 'error')
+            const check = validateActionText('stylingMenu', text)
+            if (!check.valid) {
+              deps.showToast(check.toastKey!, check.toastKind ?? 'warn')
               return
             }
             deps.openStylingModal?.(text)
@@ -453,11 +462,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           icon: 'mdi:lightning-bolt-outline',
           trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
-            if (takesText.value && !text?.trim()) {
-              deps.showToast('toast.textNotSelected', 'error')
-              return
-            }
-            deps.openChatPromptsModal?.(text)
+            deps.openChatPromptsModal?.(text ?? '')
           },
         },
         {
@@ -509,15 +514,12 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           labelKey: 'settings.hotkeyActions.selectionCorrection',
           icon: 'mdi:spellcheck',
           action: async (text: string) => {
-            if (!text?.trim()) {
-              deps.showToast('toast.textNotSelected', 'error')
-              return
-            }
-            if (
-              text.trim().length <
-              (deps.minCorrectionLength?.() ?? APP_CONFIG.minCorrectionLength)
-            ) {
-              deps.showToast('toast.textTooShortForCorrection', 'warn')
+            const check = validateActionText('directCorrection', text, {
+              minCorrectionLength:
+                deps.minCorrectionLength?.() ?? APP_CONFIG.minCorrectionLength,
+            })
+            if (!check.valid) {
+              deps.showToast(check.toastKey!, check.toastKind ?? 'warn')
               return
             }
             await deps.correctAndInsert?.(text)
@@ -535,8 +537,9 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           icon: 'mdi:translate',
           trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
-            if (!text?.trim()) {
-              deps.showToast('toast.textNotSelected', 'error')
+            const check = validateActionText('translationMenu', text)
+            if (!check.valid) {
+              deps.showToast(check.toastKey!, check.toastKind ?? 'warn')
               return
             }
             deps.openTranslateModal(text)

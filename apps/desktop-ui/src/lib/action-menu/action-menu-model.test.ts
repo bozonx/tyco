@@ -340,6 +340,65 @@ describe('createActionMenuModel', () => {
     })
   })
 
+  it('validates text requirements for transformation, styling, and translation menus', async () => {
+    const { store, deps } = setup()
+    const actions = store.getDefaultActions()
+
+    const transformation = actions.find((a) => a.id === 'transformationMenu')
+    await transformation?.action('   ')
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.textNotSelected',
+      'error'
+    )
+    await transformation?.action('a')
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.textTooShortToProcess',
+      'warn'
+    )
+    expect(deps.openTransformationModal).not.toHaveBeenCalled()
+    await transformation?.action('ab')
+    expect(deps.openTransformationModal).toHaveBeenCalledWith('ab')
+
+    const styling = actions.find((a) => a.id === 'stylingMenu')
+    await styling?.action('   ')
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.textNotSelected',
+      'error'
+    )
+    await styling?.action('a')
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.textTooShortToProcess',
+      'warn'
+    )
+    expect(deps.openStylingModal).not.toHaveBeenCalled()
+    await styling?.action('ab')
+    expect(deps.openStylingModal).toHaveBeenCalledWith('ab')
+
+    const translation = actions.find((a) => a.id === 'translationMenu')
+    await translation?.action('   ')
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.textNotSelected',
+      'error'
+    )
+    await translation?.action('a')
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.textTooShortToTranslate',
+      'warn'
+    )
+    expect(deps.openTranslateModal).not.toHaveBeenCalled()
+    await translation?.action('ab')
+    expect(deps.openTranslateModal).toHaveBeenCalledWith('ab')
+  })
+
+  it('allows opening chatPromptsMenu with empty text', async () => {
+    const { store, deps } = setup()
+    const actions = store.getDefaultActions()
+    const chatPrompts = actions.find((a) => a.id === 'chatPromptsMenu')
+    await chatPrompts?.action('')
+    expect(deps.openChatPromptsModal).toHaveBeenCalledWith('')
+    expect(deps.showToast).not.toHaveBeenCalled()
+  })
+
   it('opens the editor without requiring or passing source text', async () => {
     const { deps } = setup()
     const activateMode = vi.fn()

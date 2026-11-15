@@ -264,6 +264,7 @@ import { useI18n } from '../../composables/use-i18n'
 import { useMenuStartup } from '../../composables/use-menu-startup'
 import { useMenuStepRun } from '../../composables/use-menu-step-run'
 import useToast from '../../composables/use-toast'
+import { isCjkText } from '../../lib/action-menu/action-text-requirement'
 import { toolResultMessage } from '../../lib/invocation/invocation-result'
 import { AUTO_LANGUAGE_VALUE } from '../../lib/locale/language'
 import {
@@ -622,11 +623,7 @@ const translate = async (targetLanguage: string, source?: string) => {
   }
 
   const trimmed = sourceText.trim()
-  const isCjk =
-    /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(
-      trimmed
-    )
-  if (!isCjk && trimmed.length < APP_CONFIG.minTranslationLength) {
+  if (!isCjkText(trimmed) && trimmed.length < APP_CONFIG.minTranslationLength) {
     toastKey('toast.textTooShortToTranslate', 'warn')
     return
   }

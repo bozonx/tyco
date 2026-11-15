@@ -86,6 +86,10 @@ import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
 import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
+import {
+  actionRequiresContext,
+  validateActionText,
+} from '../../lib/action-menu/action-text-requirement'
 import { isQuickWindow } from '../../lib/desktop/window'
 import { voiceReplyActionParams } from '../../lib/listen/listen-reply-actions'
 import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
@@ -258,36 +262,12 @@ const activeSourceText = computed(() => {
 
 const minCorrectionLength = APP_CONFIG.minCorrectionLength
 
-/** Why the correction action is off for this text, if it is. */
-const correctionBlocker = computed(() => {
-  if (props.correction) {
-    return t('write.alreadyCorrected')
-  }
-  if (activeActionText.value.trim().length < minCorrectionLength) {
-    return t('write.textTooShortForCorrection')
-  }
-  return undefined
-})
-
-const requiresContext = (actionId?: string) => {
-  if (!actionId) return false
-  return (
-    actionId === 'correction' ||
-    actionId === 'insertIntoWindow' ||
-    actionId === 'copyToClipboard' ||
-    actionId === 'transformationMenu' ||
-    actionId.startsWith('transformation:') ||
-    actionId === 'stylingMenu' ||
-    actionId.startsWith('styling:') ||
-    actionId === 'translateMenu' ||
-    actionId.startsWith('translate:') ||
-    actionId === 'applyToEditor'
-  )
-}
+const actionValidation = (actionId?: string) =>
+  validateActionText(actionId, activeActionText.value, { minCorrectionLength })
 
 function shouldDisableAction(item?: ActionItem) {
   if (!item) return false
-  if (isContextDisabled.value && requiresContext(item.id)) {
+  if (isContextDisabled.value && actionRequiresContext(item.id)) {
     return true
   }
   if (item.id === 'insertIntoWindow') {
@@ -304,14 +284,18 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
   (props.insertOnly || editorTarget.value ? [] : actionsMenu.value).map(
     (item: ActionItem | undefined) => {
       if (!item) return undefined
-      if (isContextDisabled.value && requiresContext(item.id)) {
+      if (isContextDisabled.value && actionRequiresContext(item.id)) {
         return { ...item, disabled: true, hint: t('menu.contextRequired') }
       }
-      if (item.id === 'correction' && correctionBlocker.value) {
-        return { ...item, disabled: true, hint: correctionBlocker.value }
+      if (item.id === 'correction' && props.correction) {
+        return { ...item, disabled: true, hint: t('write.alreadyCorrected') }
       }
       if (item.id === 'insertIntoWindow' && !desktopStore.canInsertIntoWindow) {
         return { ...item, disabled: true, hint: t('selection.noTarget') }
+      }
+      const validation = actionValidation(item.id)
+      if (!validation.valid && validation.hintKey) {
+        return { ...item, disabled: true, hint: t(validation.hintKey) }
       }
       return { ...item, disabled: item.disabled || shouldDisableAction(item) }
     }
@@ -320,7 +304,7 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
 
 const primaryAction = computed<ActionItem | undefined>(() => {
   if (editorTarget.value) {
-    if (isContextDisabled.value) {
+    if (isContextDisabled.value || !activeActionText.value) {
       return {
         ...applyToEditorAction,
         disabled: true,
@@ -331,10 +315,14 @@ const primaryAction = computed<ActionItem | undefined>(() => {
   }
   if (props.primaryAction) {
     const custom = props.primaryAction
-    const disabled = custom.disabled || shouldDisableAction(custom)
+    const validation = actionValidation(custom.id)
+    const disabled =
+      custom.disabled || shouldDisableAction(custom) || !validation.valid
     const hint = isContextDisabled.value
       ? t('menu.contextRequired')
-      : custom.hint
+      : !validation.valid && validation.hintKey
+        ? t(validation.hintKey)
+        : custom.hint
     return { ...custom, disabled, hint }
   }
   if (!props.allowInsertButton) return undefined
@@ -348,13 +336,19 @@ const primaryAction = computed<ActionItem | undefined>(() => {
     return undefined
   }
 
-  const disabled = insertAction.disabled || shouldDisableAction(insertAction)
+  const validation = actionValidation(insertAction.id)
+  const disabled =
+    insertAction.disabled ||
+    shouldDisableAction(insertAction) ||
+    !validation.valid
   const hint = isContextDisabled.value
     ? t('menu.contextRequired')
     : insertAction.id === 'insertIntoWindow' &&
         !desktopStore.canInsertIntoWindow
       ? t('selection.noTarget')
-      : insertAction.hint
+      : !validation.valid && validation.hintKey
+        ? t(validation.hintKey)
+        : insertAction.hint
 
   return { ...insertAction, disabled, hint }
 })

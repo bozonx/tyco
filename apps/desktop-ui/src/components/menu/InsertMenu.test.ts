@@ -338,6 +338,74 @@ describe('InsertMenu correction step', () => {
     const wrapper = mountMenu({ text: 'Result', escMode: 'back' })
     expect(wrapper.findComponent(ShortcutList).props('escMode')).toBe('back')
   })
+
+  it('disables text-dependent action buttons with hints when text is too short or empty', () => {
+    mocks.editorPage = false
+    desktop.setUserConfig({
+      actionPages: [
+        {
+          inputMode: 'selection',
+          slots: {
+            q: { type: 'standard', actionId: 'correction' },
+            w: { type: 'standard', actionId: 'transformationMenu' },
+            e: { type: 'standard', actionId: 'stylingMenu' },
+            r: { type: 'standard', actionId: 'translationMenu' },
+            t: { type: 'standard', actionId: 'chatPromptsMenu' },
+          },
+        },
+      ],
+    })
+    // 1-char text: too short for correction (needs 10), transformation (needs 2), styling (needs 2), translation (needs 2)
+    const wrapperShort = mountMenu({ text: 'x' })
+    const listShort = wrapperShort.findComponent(ShortcutList)
+    const keysShort = listShort.props('leftLetterKeys') as {
+      id?: string
+      disabled?: boolean
+      hint?: string
+    }[]
+
+    const correctionItem = keysShort.find((k) => k?.id === 'correction')
+    expect(correctionItem?.disabled).toBe(true)
+    expect(correctionItem?.hint).toBe('write.textTooShortForCorrection')
+
+    const transformItem = keysShort.find((k) => k?.id === 'transformationMenu')
+    expect(transformItem?.disabled).toBe(true)
+    expect(transformItem?.hint).toBe('toast.textTooShortToProcess')
+
+    const stylingItem = keysShort.find((k) => k?.id === 'stylingMenu')
+    expect(stylingItem?.disabled).toBe(true)
+    expect(stylingItem?.hint).toBe('toast.textTooShortToProcess')
+
+    const translateItem = keysShort.find((k) => k?.id === 'translationMenu')
+    expect(translateItem?.disabled).toBe(true)
+    expect(translateItem?.hint).toBe('toast.textTooShortToTranslate')
+
+    // chatPromptsMenu does not require text
+    const promptsItem = keysShort.find((k) => k?.id === 'chatPromptsMenu')
+    expect(promptsItem?.disabled).toBeFalsy()
+
+    wrapperShort.unmount()
+
+    // 2-char text: enough for transformation, styling, translation, but not correction (needs 10)
+    const wrapperTwo = mountMenu({ text: 'xy' })
+    const listTwo = wrapperTwo.findComponent(ShortcutList)
+    const keysTwo = listTwo.props('leftLetterKeys') as {
+      id?: string
+      disabled?: boolean
+      hint?: string
+    }[]
+
+    expect(keysTwo.find((k) => k?.id === 'correction')?.disabled).toBe(true)
+    expect(
+      keysTwo.find((k) => k?.id === 'transformationMenu')?.disabled
+    ).toBeFalsy()
+    expect(keysTwo.find((k) => k?.id === 'stylingMenu')?.disabled).toBeFalsy()
+    expect(
+      keysTwo.find((k) => k?.id === 'translationMenu')?.disabled
+    ).toBeFalsy()
+
+    wrapperTwo.unmount()
+  })
 })
 
 afterEach(() => {
