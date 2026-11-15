@@ -356,6 +356,13 @@ correction responses are failures and must not replace the source text.
 Overlay headers separate Back (Esc) from the close cross (Shift+Esc). Escape
 returns one step and closes at the root. The cross closes the entire scenario. At the root, a single Close (Esc) button replaces both Back and the cross; Shift+Esc still closes. Header actions follow Other actions, Back, Close order.
 
+Shift+Esc is global: `useCloseWindowStore` handles it once per window, in the
+capture phase, before any surface. It cancels the running operation, clears the
+menus, drops the quick input or voice result and hides the window. Surfaces do
+not handle Shift+Esc themselves; one that must close in its own way, such as the
+screenshot area selector, registers `useCloseWindowInterceptor`. The close cross
+of quick window overlays goes the same way.
+
 What counts as the root:
 
 - In the quick window the view of a menu mode (selection actions, translation,
@@ -384,4 +391,4 @@ Close (Esc) at the right edge, matching voice input. Shift+Space finalizes recor
 and opens transcript actions; Enter/Space retain their completion behavior.
 Shift+Tab and Tab from interactive controls keep normal focus navigation.
 
-Esc in the editor opens the action menu, as do its Actions (Esc) button and Ctrl+Enter; Shift+Esc hides the window. Overlays in the main editor always offer Back (Esc) and Close (Shift+Esc). At the root, Back dismisses the overlay and returns to the editor. Each navigation step owns its text draft; edits on a child step never replace its parent draft. Preview and diff drafts persist separately from their original result so Reset remains available.
+Esc in the editor opens the action menu, as do its Actions (Esc) button and Ctrl+Enter. Overlays in the main window offer Back (Esc) only: the window frame closes the window, so they draw no close cross. At the root, Back dismisses the overlay and returns to the editor. Each navigation step owns its text draft; edits on a child step never replace its parent draft. Preview and diff drafts persist separately from their original result so Reset remains available.

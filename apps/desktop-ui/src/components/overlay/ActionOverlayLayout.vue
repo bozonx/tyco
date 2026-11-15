@@ -51,7 +51,7 @@
           }}</span>
         </button>
         <IconButton
-          v-if="escVisible && resolvedEscMode === 'back'"
+          v-if="escVisible && resolvedEscMode === 'back' && inQuickWindow"
           class="action-overlay-close"
           icon="mdi:close"
           :label="t('common.close')"
@@ -80,6 +80,7 @@ import { computed, provide } from 'vue'
 import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
+import { isQuickWindow } from '../../lib/desktop/window'
 import { previewAppearanceKey } from '../../lib/ui/preview-context'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import AppIcon from '../common/AppIcon.vue'
@@ -88,6 +89,9 @@ import IconButton from '../common/IconButton.vue'
 import KeyboardKey from '../common/KeyboardKey.vue'
 
 provide(previewAppearanceKey, 'plain')
+
+// the main window closes by its own frame: no close cross there
+const inQuickWindow = isQuickWindow()
 
 const props = withDefaults(
   defineProps<{
@@ -155,11 +159,8 @@ useDismissibleLayer({
   keyboardPhase: 'bubble',
   keydown: (event) => {
     if (event.key !== 'Escape') return
-    if (
-      event.shiftKey ||
-      (!props.escLabel && resolvedEscMode.value === 'close')
-    )
-      handleCloseAll()
+    // Shift+Esc never gets here: `useCloseWindowStore` owns it
+    if (!props.escLabel && resolvedEscMode.value === 'close') handleCloseAll()
     else handleEsc()
   },
 })

@@ -111,14 +111,14 @@ describe('ActionOverlayLayout navigation', () => {
     expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
   })
 
-  it('keeps Back and Close at the editor root', async () => {
+  it('keeps only Back at the editor root: the window frame closes it', async () => {
     desktop.dispose()
     desktop = await loadFakeDesktop({ mode: 'editor' }, 'main')
     const menus = useMenuModalsStore()
     menus.nextModal(MenuModals.INSERT, { text: 'Editor draft' })
     const wrapper = mountLayout()
     expect(wrapper.get('.action-overlay-esc').text()).toContain('common.back')
-    expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(false)
     await wrapper.get('.action-overlay-esc').trigger('click')
     expect(menus.menuBreadcrumbs).toEqual([])
     expect(desktop.backend.callsOf('hide_window')).toHaveLength(0)
@@ -189,7 +189,7 @@ describe('ActionOverlayLayout over the editor', () => {
       global: { plugins: [desktop.pinia] },
     })
     expect(wrapper.get('.action-overlay-esc').text()).toContain('common.back')
-    expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(false)
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     await flushPromises()
     expect(menus.currentModal).toBe(MenuModals.NONE)

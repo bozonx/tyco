@@ -6,21 +6,17 @@ import {
 } from '../lib/modals/overlay-nav'
 import { isMenuRootMode } from '../lib/navigation/routes'
 import { appNavigation } from '../navigation'
+import { useCloseWindowStore } from '../stores/close-window'
 import { useDesktopStore } from '../stores/desktop'
 import { useEditorInputStore } from '../stores/editor-input'
-import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
-import { useQuickInputStore } from '../stores/quick-input'
-import { useVoiceResultStore } from '../stores/voice-result'
 import { useI18n } from './use-i18n'
 
 export function useOverlayNav(options?: () => OverlayNavOptions) {
   const menuModalsStore = useMenuModalsStore()
-  const ipcStore = useIpcStore()
   const desktopStore = useDesktopStore()
   const editorInputStore = useEditorInputStore()
-  const quickInputStore = useQuickInputStore()
-  const voiceResultStore = useVoiceResultStore()
+  const closeWindowStore = useCloseWindowStore()
   const { t } = useI18n()
 
   /** A single step over the menu view of its quick window mode */
@@ -47,40 +43,18 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
     }
   }
 
+  /** Esc at the root: the quick window closes, the main one shows the editor */
   const hideWindow = () => {
+    if (isQuickWindow()) {
+      closeWindowStore.closeAll()
+      return
+    }
     menuModalsStore.cancelPending()
     menuModalsStore.closeAll()
-    try {
-      if (isQuickWindow()) {
-        // Esc drops the text on purpose; it stays only in the history
-        const mode = desktopStore.desktopState?.mode
-        if (mode === 'quickInput') quickInputStore.discard()
-        if (mode === 'voice') voiceResultStore.step.resetResult()
-        void ipcStore.callOrNotify('hide_window')
-      } else {
-        void appNavigation.goToEditor()
-      }
-    } catch {
-      // Dev mode fallback
-    }
+    void appNavigation.goToEditor()
   }
 
-  const closeAll = () => {
-    menuModalsStore.cancelPending()
-    menuModalsStore.closeAll()
-    try {
-      if (isQuickWindow()) {
-        const mode = desktopStore.desktopState?.mode
-        if (mode === 'quickInput') quickInputStore.discard()
-        if (mode === 'voice') voiceResultStore.step.resetResult()
-        void ipcStore.callOrNotify('hide_window')
-      } else {
-        void ipcStore.callOrNotify('hide_window')
-      }
-    } catch {
-      // Dev mode fallback
-    }
-  }
+  const closeAll = () => closeWindowStore.closeAll()
 
   const nav = createOverlayNavModel(
     {

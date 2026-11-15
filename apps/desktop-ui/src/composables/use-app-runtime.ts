@@ -20,6 +20,7 @@ import { appNavigation } from '../navigation'
 import { APP_ROUTES, isQuickWindowMode } from '../lib/navigation/routes'
 import { createSettingsShutdown } from '../lib/settings/settings-shutdown'
 import { useChatStore, useProfileChatStore } from '../stores/chat'
+import { useCloseWindowStore } from '../stores/close-window'
 import {
   useChatInputStore,
   useProfileChatInputStore,
@@ -50,6 +51,16 @@ export function useAppRuntime() {
   const { locale, t } = useI18n()
   const menuModalsStore = useMenuModalsStore()
   const navPanelStore = useNavPanelStore()
+  // Shift+Esc closes the window at any step. Registered before any layer, in
+  // the capture phase, so no surface handles it on its own.
+  const closeWindowStore = useCloseWindowStore()
+  const onCloseAllKey = (event: KeyboardEvent) => {
+    closeWindowStore.handleKeydown(event)
+  }
+  window.addEventListener('keydown', onCloseAllKey, true)
+  onScopeDispose(() =>
+    window.removeEventListener('keydown', onCloseAllKey, true)
+  )
   useDismissibleLayer({
     isOpen: () => !isQuickWindow,
     elements: () => [],
@@ -64,16 +75,7 @@ export function useAppRuntime() {
         void ipcStore.callOrNotify('hide_window')
         return
       }
-      if (event.key === 'Escape') {
-        if (event.shiftKey) {
-          event.preventDefault()
-          menuModalsStore.cancelPending()
-          menuModalsStore.closeAll()
-          void ipcStore.callOrNotify('hide_window')
-          return
-        }
-        navPanelStore.handleKeyDown(event)
-      }
+      if (event.key === 'Escape') navPanelStore.handleKeyDown(event)
     },
   })
   const chatStore = useChatStore()

@@ -50,22 +50,12 @@ useDismissibleLayer({
   canDismissOutside: false,
   keyboardPhase: 'bubble',
   dismiss: openInsertMenu,
-  // Esc in the editor opens its action menu; Shift+Esc hides the window
-  keydown: (event) => {
-    if (event.key !== 'Escape') return
-    if (event.shiftKey) void closeEditor()
-    else openInsertMenu()
-  },
+  // Esc in the editor opens its action menu; Shift+Esc is global
 })
 
 function handleKeyDown(event: KeyboardEvent) {
   if (event.defaultPrevented) return
   if (isCloseWindowEvent(event)) {
-    event.preventDefault()
-    void closeEditor()
-    return
-  }
-  if (event.key === 'Escape' && event.shiftKey) {
     event.preventDefault()
     void closeEditor()
     return

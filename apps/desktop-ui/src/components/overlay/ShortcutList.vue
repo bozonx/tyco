@@ -199,13 +199,7 @@ function handleShortcutKeyUp(event: KeyboardEvent) {
   if (props.shortcutsDisabled || textAtKeyDown === undefined) return
   if (isTypingKey(event)) return
   if (textAtKeyDown !== props.text) return
-  if (
-    event.ctrlKey ||
-    event.altKey ||
-    event.metaKey ||
-    (event.shiftKey && event.code !== 'Escape')
-  )
-    return
+  if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return
 
   if (
     (event.code === 'Space' || event.code === 'Enter') &&
@@ -215,11 +209,7 @@ function handleShortcutKeyUp(event: KeyboardEvent) {
     void props.spaceKey.action(props.text || '')
   } else if (event.code === 'Escape' && props.escVisible) {
     event.preventDefault()
-    if (event.shiftKey) {
-      handleCloseAll()
-    } else {
-      handleEsc()
-    }
+    handleEsc()
   } else {
     let codeLetter: string | undefined
     if (event.code.length === 4 && event.code.startsWith('Key')) {

@@ -15,7 +15,6 @@ export const DEFAULT_NAV_PANEL_STATE: NavPanelState = {
 export interface NavPanelModelDependencies {
   hasOpenModal: () => boolean
   backModal: () => void
-  closeAll?: () => void
 }
 
 export function createNavPanelModel(deps: NavPanelModelDependencies) {
@@ -30,16 +29,9 @@ export function createNavPanelModel(deps: NavPanelModelDependencies) {
       shiftKey?: boolean
     }
   ) {
-    if (event.code !== 'Escape' || event.defaultPrevented) return
-
-    if (event.shiftKey) {
-      if (deps.closeAll) {
-        deps.closeAll()
-      } else {
-        deps.backModal()
-      }
+    // Shift+Esc is global, see `useCloseWindowStore`
+    if (event.code !== 'Escape' || event.shiftKey || event.defaultPrevented)
       return
-    }
 
     if (deps.hasOpenModal()) {
       deps.backModal()

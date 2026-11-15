@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
@@ -71,21 +71,6 @@ async function selectFavorite(favorite: FavoriteConfig) {
     text: favorite.text,
   })
 }
-
-function onGlobalKeyDown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && event.shiftKey) {
-    event.preventDefault()
-    handleCloseAll()
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', onGlobalKeyDown)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', onGlobalKeyDown)
-})
 </script>
 
 <style scoped>

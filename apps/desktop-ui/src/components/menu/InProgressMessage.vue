@@ -56,7 +56,6 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
-import { useOverlayNav } from '../../composables/use-overlay-nav'
 import useToast from '../../composables/use-toast'
 import type { PendingModalParams } from '../../lib/modals/menu-modal-params'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
@@ -77,7 +76,6 @@ const props = withDefaults(defineProps<PendingModalParams>(), {
   allowBufferedCopy: true,
 })
 
-const { handleCloseAll } = useOverlayNav()
 const menuModalsStore = useMenuModalsStore()
 const actionMenuStore = useActionMenuStore()
 const desktopStore = useDesktopStore()
@@ -168,12 +166,6 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 function handleBufferedKey(event: KeyboardEvent) {
-  if ((event.key === 'Escape' || event.code === 'Escape') && event.shiftKey) {
-    event.preventDefault()
-    event.stopImmediatePropagation()
-    handleCloseAll()
-    return
-  }
   if (!props.allowBufferedIntent || event.shiftKey) return
   if (event.ctrlKey || event.altKey || event.metaKey || event.isComposing)
     return
@@ -259,11 +251,6 @@ useDismissibleLayer({
   isOpen: () => true,
   elements: () => [],
   canDismissOutside: false,
-  keydown: (event) => {
-    if (event.key !== 'Escape') return
-    if (event.shiftKey) handleCloseAll()
-    else handleCancel()
-  },
 })
 </script>
 

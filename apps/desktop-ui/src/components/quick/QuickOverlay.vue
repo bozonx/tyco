@@ -135,6 +135,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
+import { useCloseWindowInterceptor } from '../../composables/use-close-window-interceptor'
 import { useI18n } from '../../composables/use-i18n'
 import { useQuickWindowSession } from '../../composables/use-quick-window-session'
 import { desktopClient } from '../../lib/desktop/client'
@@ -227,6 +228,13 @@ const onConfirmCrop = async (crop: CropRect) => {
     activeAreaSelection.value = selection
   }
 }
+
+// Shift+Esc over the area selector cancels the capture as a whole
+useCloseWindowInterceptor(() => {
+  if (!activeAreaSelection.value) return false
+  void onCancelCrop({ closeAll: true })
+  return true
+})
 
 const onCancelCrop = async (options?: { closeAll?: boolean }) => {
   const selection = activeAreaSelection.value
