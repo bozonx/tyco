@@ -13,19 +13,30 @@ afterEach(() =>
 )
 
 describe('ActionMenuPositionButton', () => {
-  it('cycles saved positions with the button and Alt+P', async () => {
+  it('selects saved positions from the dropdown and cycles with Alt+P', async () => {
     const desktop = await loadFakeDesktop({}, 'quick')
     cleanups.push(() => desktop.dispose())
     desktop.backend.handle('reposition_quick_window', () => undefined)
     const wrapper = mount(ActionMenuPositionButton, {
       global: { plugins: [desktop.pinia, i18n] },
+      attachTo: document.body,
     })
     cleanups.push(() => wrapper.unmount())
+
+    // Opens dropdown on button click
     await wrapper.get('button').trigger('click')
+    await flushPromises()
+
+    const itemButtons = document.body.querySelectorAll('.dropdown-panel button')
+    expect(itemButtons).toHaveLength(3)
+    // Select 'right' (2nd option)
+    ;(itemButtons[1] as HTMLButtonElement).click()
     await flushPromises()
     expect(desktop.backend.userConfig.quickWindow.actionMenuPosition).toBe(
       'right'
     )
+
+    // Alt+P shortcut cycles to bottomRight
     window.dispatchEvent(
       new KeyboardEvent('keydown', {
         code: 'KeyP',
@@ -37,7 +48,14 @@ describe('ActionMenuPositionButton', () => {
     expect(desktop.backend.userConfig.quickWindow.actionMenuPosition).toBe(
       'bottomRight'
     )
+
+    // Open dropdown again and select center (1st option)
     await wrapper.get('button').trigger('click')
+    await flushPromises()
+    const updatedButtons = document.body.querySelectorAll(
+      '.dropdown-panel button'
+    )
+    ;(updatedButtons[0] as HTMLButtonElement).click()
     await flushPromises()
     expect(desktop.backend.userConfig.quickWindow.actionMenuPosition).toBe(
       'center'

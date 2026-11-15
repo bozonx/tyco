@@ -436,9 +436,9 @@ on another drag or disposal.
 
 ## Quick overlay placement and recording bars
 
-The action menu cycles `quickWindow.actionMenuPosition` through `center`,
-`right`, and `bottomRight` with its position button or Alt+P. The backend applies
-that preference to quick sheets on activation and through the activation-scoped
+The action menu selects `quickWindow.actionMenuPosition` (`center`, `right`,
+or `bottomRight`) with its position dropdown menu or cycles it with Alt+P. The
+backend applies that preference to quick sheets on activation and through the activation-scoped
 `reposition_quick_window` command. Layer-shell uses right/bottom anchors; regular
 windows use monitor coordinates and scaled margins. Panel placement stays at the
 bottom center. Monitor recovery preserves the selected sheet anchors.

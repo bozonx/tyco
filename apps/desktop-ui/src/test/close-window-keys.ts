@@ -3,8 +3,8 @@ import { onTestFinished } from 'vitest'
 import { useCloseWindowStore } from '../stores/close-window'
 
 /**
- * Installs the window-wide Ctrl+Q the app runtime owns, for a
- * test that mounts a surface without the root component.
+ * Installs the window-wide Ctrl+Q the app runtime owns, for a test that mounts
+ * a surface without the root component.
  */
 export function installCloseWindowKeys() {
   const onKeydown = (event: KeyboardEvent) =>

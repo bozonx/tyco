@@ -128,8 +128,9 @@ sources on Windows; helpers installed in another directory may appear separately
 
 ### Quick overlay controls
 
-In the action menu, use its position button or **Alt+P** to cycle between the
-center, right, and bottom-right of the screen. TyCo remembers the selection.
+In the action menu, use its position dropdown menu or **Alt+P** to choose
+between the center, right, and bottom-right of the screen. TyCo remembers the
+selection.
 
 Voice input and system audio recording have a collapse button. The compact bar
 keeps recording and provides the level indicator, finish action, and close

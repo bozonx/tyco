@@ -1,10 +1,14 @@
 <template>
-  <IconButton
+  <DropdownMenu
     :label="t('window.cyclePosition', { position: positionLabel })"
     icon="mdi:dock-right"
     size="xs"
+    square
+    hide-chevron
+    placement="bottom"
+    align="right"
     :disabled="isSaving"
-    @click="cycle"
+    :items="items"
   />
 </template>
 
@@ -14,7 +18,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useDesktopStore } from '../../stores/desktop'
 import { useIpcStore } from '../../stores/ipc'
-import IconButton from '../common/IconButton.vue'
+import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import type { ActionMenuPosition } from '@tyco/shared'
 
 const { t } = useI18n()
@@ -35,12 +39,11 @@ const positionLabel = computed(() => {
       return t('window.position.center')
   }
 })
-async function cycle() {
-  if (isSaving.value) return
+
+async function setPosition(next: ActionMenuPosition) {
+  if (isSaving.value || position.value === next) return
   isSaving.value = true
   try {
-    const next =
-      positions[(positions.indexOf(position.value) + 1) % positions.length]!
     const result = await desktop.updateUserConfig({
       quickWindow: {
         ...desktop.savedUserConfig.quickWindow,
@@ -52,6 +55,26 @@ async function cycle() {
     isSaving.value = false
   }
 }
+
+async function cycle() {
+  const next =
+    positions[(positions.indexOf(position.value) + 1) % positions.length]!
+  await setPosition(next)
+}
+
+const items = computed<DropdownMenuItem[]>(() =>
+  positions.map((pos) => ({
+    label:
+      pos === 'right'
+        ? t('window.position.right')
+        : pos === 'bottomRight'
+          ? t('window.position.bottomRight')
+          : t('window.position.center'),
+    icon: position.value === pos ? 'mdi:check' : undefined,
+    action: () => setPosition(pos),
+  }))
+)
+
 function onKeydown(event: KeyboardEvent) {
   if (
     event.code !== 'KeyP' ||
