@@ -170,11 +170,14 @@ onUnmounted(() => {
 
 /** Keys typed into a field belong to its text; only Escape stays a shortcut */
 function isTypingKey(event: KeyboardEvent) {
+  return event.code !== 'Escape' && isTextEntryTarget(event.target)
+}
+
+/** Whether Space/Enter on this target activates a focused clickable element */
+function isClickableTarget(target: EventTarget | null) {
   return (
-    event.code !== 'Escape' &&
-    (isTextEntryTarget(event.target) ||
-      (event.target instanceof Element &&
-        Boolean(event.target.closest('button, a, [role=button]'))))
+    target instanceof Element &&
+    Boolean(target.closest('button, a, [role=button]'))
   )
 }
 
@@ -182,6 +185,13 @@ function handleKeyDown(event: KeyboardEvent) {
   if (props.shortcutsDisabled || event.defaultPrevented || event.isComposing)
     return
   if (isTypingKey(event)) {
+    pressedKeys.delete(event.code)
+    return
+  }
+  if (
+    (event.code === 'Space' || event.code === 'Enter') &&
+    isClickableTarget(event.target)
+  ) {
     pressedKeys.delete(event.code)
     return
   }
@@ -208,6 +218,11 @@ function handleShortcutKeyUp(event: KeyboardEvent) {
   pressedKeys.delete(event.code)
   if (props.shortcutsDisabled || textAtKeyDown === undefined) return
   if (isTypingKey(event)) return
+  if (
+    (event.code === 'Space' || event.code === 'Enter') &&
+    isClickableTarget(event.target)
+  )
+    return
   if (textAtKeyDown !== props.text) return
   if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return
 

@@ -29,10 +29,12 @@
           v-for="index in actionMenuStore.pageCount"
           :key="index"
           type="button"
+          tabindex="-1"
           class="action-page-button"
           :class="{ 'is-active': actionMenuStore.pageIndex === index - 1 }"
           :aria-pressed="actionMenuStore.pageIndex === index - 1"
-          @click="actionMenuStore.setPage(index - 1)"
+          @pointerdown="handlePagePointerDown"
+          @click="handlePageClick($event, index - 1)"
         >
           <KeyboardKey v-if="index <= 10">{{
             index === 10 ? 0 : index
@@ -361,6 +363,17 @@ function stepPage(direction: number) {
   if (direction > 0) actionMenuStore.nextPage()
   else actionMenuStore.prevPage()
   motionDirection.value = direction
+}
+
+function handlePagePointerDown(event: PointerEvent) {
+  if (event.pointerType === 'mouse') {
+    event.preventDefault()
+  }
+}
+
+function handlePageClick(event: MouseEvent, pageIndex: number) {
+  ;(event.currentTarget as HTMLElement | null)?.blur()
+  actionMenuStore.setPage(pageIndex)
 }
 
 function onKeyDown(event: KeyboardEvent) {

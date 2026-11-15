@@ -213,7 +213,16 @@ describe('InsertMenu correction step', () => {
     const pageButtons = wrapper.findAll('.action-page-button')
     expect(pageButtons).toHaveLength(2)
     expect(pageButtons[0].classes()).toContain('is-active')
+    expect(pageButtons[0].attributes('tabindex')).toBe('-1')
+    expect(pageButtons[1].attributes('tabindex')).toBe('-1')
     expect(wrapper.find('.preview-area').exists()).toBe(true)
+
+    const pointerDownEvent = new PointerEvent('pointerdown', {
+      pointerType: 'mouse',
+      cancelable: true,
+    })
+    pageButtons[1].element.dispatchEvent(pointerDownEvent)
+    expect(pointerDownEvent.defaultPrevented).toBe(true)
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: '2' }))
     await wrapper.vm.$nextTick()

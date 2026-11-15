@@ -401,4 +401,44 @@ describe('ShortcutList', () => {
     expect(spaceAction).toHaveBeenCalledWith('corrected')
     wrapper.unmount()
   })
+
+  it('triggers mapped letter key action even when focus is on a button', () => {
+    const qAction = vi.fn()
+    const leftLetterKeys: any[] = [{ name: 'Action Q', action: qAction }]
+
+    const wrapper = mount(ShortcutList, {
+      props: { text: 'text for q', leftLetterKeys },
+    })
+
+    const button = document.createElement('button')
+    document.body.append(button)
+    button.focus()
+
+    press('KeyQ', { bubbles: true }, button)
+    expect(qAction).toHaveBeenCalledWith('text for q')
+
+    button.remove()
+    wrapper.unmount()
+  })
+
+  it('leaves Space and Enter to a focused button instead of running spaceKey', () => {
+    const spaceAction = vi.fn()
+    const wrapper = mount(ShortcutList, {
+      props: {
+        text: 'text',
+        spaceKey: { name: 'Insert', action: spaceAction },
+      },
+    })
+
+    const button = document.createElement('button')
+    document.body.append(button)
+    button.focus()
+
+    press('Space', { bubbles: true }, button)
+    press('Enter', { bubbles: true }, button)
+    expect(spaceAction).not.toHaveBeenCalled()
+
+    button.remove()
+    wrapper.unmount()
+  })
 })

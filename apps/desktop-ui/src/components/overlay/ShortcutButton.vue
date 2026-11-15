@@ -1,6 +1,7 @@
 <template>
   <button
     type="button"
+    :tabindex="tile ? -1 : undefined"
     class="shortcut"
     :class="{
       'is-primary': variant === 'primary',
@@ -10,7 +11,8 @@
     }"
     :disabled="disabled || loading"
     :aria-busy="loading || undefined"
-    @click="emit('click')"
+    @pointerdown="handlePointerDown"
+    @click="handleClick"
   >
     <span
       class="shortcut-content"
@@ -70,6 +72,18 @@ withDefaults(
 
 function hideLeavingContent(element: Element) {
   element.setAttribute('aria-hidden', 'true')
+}
+
+function handlePointerDown(event: PointerEvent) {
+  // Prevent button from grabbing and retaining focus on mouse click
+  if (event.pointerType === 'mouse') {
+    event.preventDefault()
+  }
+}
+
+function handleClick(event: MouseEvent) {
+  ;(event.currentTarget as HTMLElement | null)?.blur()
+  emit('click')
 }
 
 const emit = defineEmits<{ (e: 'click'): void }>()

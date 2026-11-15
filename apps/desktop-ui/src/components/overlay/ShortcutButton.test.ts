@@ -42,4 +42,40 @@ describe('ShortcutButton', () => {
     await button.trigger('click')
     expect(wrapper.emitted('click')).toBeUndefined()
   })
+
+  it('sets tabindex to -1 for tile buttons to keep them out of Tab navigation', () => {
+    const tileWrapper = mount(ShortcutButton, {
+      props: { keys: ['Q'], tile: true },
+      slots: { default: 'Tile action' },
+    })
+    expect(tileWrapper.find('button').attributes('tabindex')).toBe('-1')
+
+    const regularWrapper = mount(ShortcutButton, {
+      props: { keys: ['Space'] },
+      slots: { default: 'Normal action' },
+    })
+    expect(regularWrapper.find('button').attributes('tabindex')).toBeUndefined()
+  })
+
+  it('prevents default on mouse pointerdown to avoid retaining focus', async () => {
+    const wrapper = mount(ShortcutButton, {
+      props: { keys: ['Q'] },
+      slots: { default: 'Mouse action' },
+    })
+
+    const button = wrapper.find('button')
+    const event = new PointerEvent('pointerdown', {
+      pointerType: 'mouse',
+      cancelable: true,
+    })
+    button.element.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(true)
+
+    const touchEvent = new PointerEvent('pointerdown', {
+      pointerType: 'touch',
+      cancelable: true,
+    })
+    button.element.dispatchEvent(touchEvent)
+    expect(touchEvent.defaultPrevented).toBe(false)
+  })
 })
