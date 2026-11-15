@@ -1475,7 +1475,6 @@
     "correct": "Opravit",
     "correctAndInsert": "Opravit a vložit",
     "correctionFailed": "Text se nepodařilo opravit",
-    "newLine": "Nový řádek",
     "nothingToCorrect": "Není co opravit",
     "textTooShortForCorrection": "Text je na opravu příliš krátký",
     "insert": "Vložit",
@@ -1483,8 +1482,7 @@
     "livePreview": "Živá oprava",
     "clickToApply": "Kliknutím použijete",
     "liveCorrectionFailed": "Živá oprava selhala",
-    "liveCorrectionFailedHint": "Model neodpověděl. Text bude vložen v původní podobě.",
-    "openHistory": "Historie rychlého zadávání"
+    "liveCorrectionFailedHint": "Model neodpověděl. Text bude vložen v původní podobě."
   },
   "variables": {
     "browse": "Procházet…",

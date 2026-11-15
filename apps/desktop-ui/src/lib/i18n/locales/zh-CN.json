@@ -1472,7 +1472,6 @@
     "correct": "纠错",
     "correctAndInsert": "纠错并插入",
     "correctionFailed": "无法纠错文本",
-    "newLine": "换行",
     "nothingToCorrect": "无需纠错",
     "textTooShortForCorrection": "文本过短，无法纠错",
     "insert": "插入",
@@ -1480,8 +1479,7 @@
     "livePreview": "实时修正",
     "clickToApply": "点击应用",
     "liveCorrectionFailed": "实时纠错失败",
-    "liveCorrectionFailedHint": "模型未响应。文本将按键入的内容插入。",
-    "openHistory": "快速输入历史"
+    "liveCorrectionFailedHint": "模型未响应。文本将按键入的内容插入。"
   },
   "variables": {
     "browse": "浏览…",

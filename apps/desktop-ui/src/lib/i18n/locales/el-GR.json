@@ -1478,7 +1478,6 @@
     "correct": "Διόρθωση",
     "correctAndInsert": "Διόρθωση και εισαγωγή",
     "correctionFailed": "Δεν ήταν δυνατή η διόρθωση του κειμένου",
-    "newLine": "Νέα γραμμή",
     "nothingToCorrect": "Δεν υπάρχει κάτι για διόρθωση",
     "textTooShortForCorrection": "Το κείμενο είναι πολύ σύντομο για διόρθωση",
     "insert": "Εισαγωγή",
@@ -1486,8 +1485,7 @@
     "livePreview": "Ζωντανή διόρθωση",
     "clickToApply": "Κάντε κλικ για εφαρμογή",
     "liveCorrectionFailed": "Η ζωντανή διόρθωση απέτυχε",
-    "liveCorrectionFailedHint": "Το μοντέλο δεν απάντησε. Το κείμενο θα εισαχθεί όπως πληκτρολογήθηκε.",
-    "openHistory": "Ιστορικό γρήγορης εισαγωγής"
+    "liveCorrectionFailedHint": "Το μοντέλο δεν απάντησε. Το κείμενο θα εισαχθεί όπως πληκτρολογήθηκε."
   },
   "variables": {
     "browse": "Αναζήτηση…",

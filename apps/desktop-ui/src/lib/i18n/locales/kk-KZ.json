@@ -1478,7 +1478,6 @@
     "correct": "Түзету",
     "correctAndInsert": "Түзетіп, кірістіру",
     "correctionFailed": "Мәтінді түзету мүмкін болмады",
-    "newLine": "Жаңа жол",
     "nothingToCorrect": "Түзететін ештеңе жоқ",
     "textTooShortForCorrection": "Мәтін түзету үшін тым қысқа",
     "insert": "Қою",
@@ -1486,8 +1485,7 @@
     "livePreview": "Тікелей түзету",
     "clickToApply": "Қолдану үшін басыңыз",
     "liveCorrectionFailed": "Тікелей түзету сәтсіз аяқталды",
-    "liveCorrectionFailedHint": "Модель жауап бермеді. Мәтін сол күйінде қойылады.",
-    "openHistory": "Жылдам енгізу тарихы"
+    "liveCorrectionFailedHint": "Модель жауап бермеді. Мәтін сол күйінде қойылады."
   },
   "variables": {
     "browse": "Шолу…",

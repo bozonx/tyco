@@ -1481,7 +1481,6 @@
     "correct": "Corriger",
     "correctAndInsert": "Corriger et insérer",
     "correctionFailed": "Impossible de corriger le texte",
-    "newLine": "Nouvelle ligne",
     "nothingToCorrect": "Rien à corriger",
     "textTooShortForCorrection": "Le texte est trop court pour être corrigé",
     "insert": "Insérer",
@@ -1489,8 +1488,7 @@
     "livePreview": "Correction en direct",
     "clickToApply": "Cliquer pour appliquer",
     "liveCorrectionFailed": "Échec de la correction en direct",
-    "liveCorrectionFailedHint": "Le modèle n'a pas répondu. Le texte sera inséré tel quel.",
-    "openHistory": "Historique de la saisie rapide"
+    "liveCorrectionFailedHint": "Le modèle n'a pas répondu. Le texte sera inséré tel quel."
   },
   "variables": {
     "browse": "Parcourir…",

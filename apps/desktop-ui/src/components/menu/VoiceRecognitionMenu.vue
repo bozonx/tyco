@@ -28,43 +28,15 @@
       :hint="startError.hint"
       source="microphone"
     />
-    <div class="voice-stopped-actions">
-      <ShortcutButton
-        v-if="
-          props.finishBehavior !== 'prompt' &&
-          liveTranscriptText(transcript).trim()
-        "
-        size="sm"
-        :keys="['Shift', 'Space']"
-        @click="preserveErrorDraft('next')"
-        >{{ t('menu.actions') }}</ShortcutButton
-      >
-      <Button
-        v-if="props.allowEmptyInput"
-        size="sm"
-        :variant="startError.canRetry ? 'ghost' : 'primary'"
-        @click="openEmptyInput"
-        >{{ t('menu.typeText') }}</Button
-      >
-      <Button
-        v-if="startError.canOpenSettings"
-        size="sm"
-        :variant="startError.canRetry ? 'ghost' : 'primary'"
-        icon="mdi:cog-outline"
-        @click="openSttSettings"
-      >
-        {{ t('common.openSettings') }}
-      </Button>
-      <ShortcutButton
-        v-if="startError.canRetry"
-        size="sm"
-        variant="primary"
-        :keys="['Space']"
-        @click="retryAfterError"
-      >
-        {{ t('listen.retry') }}
-      </ShortcutButton>
-    </div>
+    <StoppedRecordingActions
+      class="voice-stopped-actions"
+      :capabilities="stoppedCapabilities"
+      :has-next-actions="hasErrorDraftActions"
+      @retry="retryAfterError"
+      @type-text="preserveErrorDraft('insert')"
+      @open-settings="openSttSettings"
+      @next="preserveErrorDraft('next')"
+    />
   </RecordingBarFrame>
   <component
     v-else
@@ -128,6 +100,10 @@ import { createVoiceRecognition } from '../../lib/stt/voice-recognition'
 import { stylingSlotList } from '../../lib/styling/styling-library'
 import { createKeyPressTracker } from '../../lib/ui/key-press-tracker'
 import { isTextEntryTarget } from '../../lib/ui/text-entry-target'
+import {
+  type StoppedRecordingAction,
+  stoppedRecordingActions,
+} from '../../lib/voice/stopped-recording-actions'
 import { useDesktopStore } from '../../stores/desktop'
 import { useDictationHandoffStore } from '../../stores/dictation-handoff'
 import { useHistoryStore } from '../../stores/history'
@@ -135,12 +111,12 @@ import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickDismissStore } from '../../stores/quick-dismiss'
-import Button from '../common/Button.vue'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import QuickModeSwitch from '../voice/QuickModeSwitch.vue'
 import RecordingBarFrame from '../voice/RecordingBarFrame.vue'
 import RecordingStoppedNotice from '../voice/RecordingStoppedNotice.vue'
+import StoppedRecordingActions from '../voice/StoppedRecordingActions.vue'
 import VoiceRecordingBar from '../voice/VoiceRecordingBar.vue'
 import VoiceRecordingSheet from '../voice/VoiceRecordingSheet.vue'
 import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
@@ -213,10 +189,21 @@ async function preserveErrorDraft(intent: VoiceFinishIntent) {
   emit('corrected', text, text, undefined, intent)
 }
 
-async function openEmptyInput() {
-  await model.cancelWithoutClosing()
-  startError.value = null
-  emit('corrected', '', '', undefined, 'insert')
+const stoppedCapabilities = computed(() => ({
+  canRetry: startError.value?.canRetry === true,
+  canTypeText: props.allowEmptyInput,
+  canOpenSettings: startError.value?.canOpenSettings === true,
+}))
+const hasErrorDraftActions = computed(
+  () =>
+    props.finishBehavior !== 'prompt' &&
+    Boolean(liveTranscriptText(transcript.value).trim())
+)
+
+function runStoppedAction(action: StoppedRecordingAction | undefined) {
+  if (action === 'retry') retryAfterError()
+  else if (action === 'typeText') void preserveErrorDraft('insert')
+  else if (action === 'openSettings') openSttSettings()
 }
 
 function dismissStartError() {
@@ -525,21 +512,16 @@ function handleKeyUp(event: KeyboardEvent) {
   if (event.defaultPrevented) return
 
   if (startError.value) {
-    const hasDraft = Boolean(liveTranscriptText(transcript.value).trim())
-    if (
-      event.code === 'Space' &&
-      event.shiftKey &&
-      hasDraft &&
-      props.finishBehavior !== 'prompt'
-    )
-      void preserveErrorDraft('next')
-    else if (
+    if (event.code === 'Space' && event.shiftKey) {
+      if (hasErrorDraftActions.value) void preserveErrorDraft('next')
+    } else if (
       (event.code === 'Enter' || event.code === 'Space') &&
       !event.shiftKey
     ) {
-      // the key that started the recording records again
-      if (startError.value.canRetry) retryAfterError()
-      else if (props.allowEmptyInput) void preserveErrorDraft('insert')
+      // the key that started the recording runs the primary action
+      runStoppedAction(
+        stoppedRecordingActions(stoppedCapabilities.value).primary
+      )
     }
     return
   }

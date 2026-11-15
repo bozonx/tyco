@@ -1478,7 +1478,6 @@
     "correct": "校正",
     "correctAndInsert": "校正して挿入",
     "correctionFailed": "テキストを校正できませんでした",
-    "newLine": "改行",
     "nothingToCorrect": "修正箇所はありません",
     "textTooShortForCorrection": "テキストが短すぎるため校正できません",
     "insert": "挿入",
@@ -1486,8 +1485,7 @@
     "livePreview": "リアルタイム校正",
     "clickToApply": "クリックして適用",
     "liveCorrectionFailed": "リアルタイム校正に失敗しました",
-    "liveCorrectionFailedHint": "モデルが応答しませんでした。入力されたテキストがそのまま挿入されます。",
-    "openHistory": "クイック入力の履歴"
+    "liveCorrectionFailedHint": "モデルが応答しませんでした。入力されたテキストがそのまま挿入されます。"
   },
   "variables": {
     "browse": "参照…",

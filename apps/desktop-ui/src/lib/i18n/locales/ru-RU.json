@@ -1478,7 +1478,6 @@
     "correct": "Исправить",
     "correctAndInsert": "Исправить и вставить",
     "correctionFailed": "Не удалось исправить текст",
-    "newLine": "Новая строка",
     "nothingToCorrect": "Исправлять нечего",
     "textTooShortForCorrection": "Слишком короткий текст для коррекции",
     "insert": "Вставить",
@@ -1486,8 +1485,7 @@
     "livePreview": "Живая коррекция",
     "clickToApply": "Нажмите, чтобы применить",
     "liveCorrectionFailed": "Не удалось исправить",
-    "liveCorrectionFailedHint": "Модель не ответила. Текст будет вставлен без изменений.",
-    "openHistory": "История быстрого ввода"
+    "liveCorrectionFailedHint": "Модель не ответила. Текст будет вставлен без изменений."
   },
   "variables": {
     "browse": "Обзор…",

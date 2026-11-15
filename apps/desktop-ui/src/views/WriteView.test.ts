@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { installCloseWindowKeys } from '../test/close-window-keys'
 import { nextTick, reactive } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_USER_CONFIG } from '@tyco/shared'
+import { type DEFAULT_USER_CONFIG } from '@tyco/shared'
 import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import WriteView from './WriteView.vue'
 
@@ -137,30 +137,6 @@ describe('quick input screen', () => {
     expect(mocks.writer.setValue).toHaveBeenCalledWith('Transferred words')
   })
 
-  it('opens the quick input history with the typed text saved first', async () => {
-    desktop.backend.handle('activate_mode', () => undefined)
-    await wrapper.find('.write-history-action').trigger('click')
-    await flushPromises()
-    expect(mocks.writer.flushHistory).toHaveBeenCalledOnce()
-    expect(desktop.backend.callsOf('activate_mode')).toEqual([
-      { mode: 'history', historyOrigin: 'quickInput' },
-    ])
-  })
-
-  it('offers no history with the history turned off', async () => {
-    desktop.setUserConfig({
-      editor: {
-        ...desktop.backend.userConfig.editor,
-        history: {
-          ...desktop.backend.userConfig.editor.history,
-          storage: 'off',
-        },
-      },
-    })
-    await flushPromises()
-    expect(wrapper.find('.write-history-action').exists()).toBe(false)
-  })
-
   it('corrects and inserts on Enter without opening the next step', () => {
     press('Enter')
     expect(mocks.correction.insert).toHaveBeenCalledWith('Original text')
@@ -284,17 +260,5 @@ describe('quick input screen', () => {
 
     press('Enter')
     expect(mocks.correction.insertDirect).toHaveBeenCalledWith('Original text')
-  })
-
-  it('shows current correction mode in the hint bar and cycles it on click', async () => {
-    const modeSwitch = wrapper.get('.write-mode-switch')
-    expect(modeSwitch.text()).toContain('settings.quickCorrectionOnSubmit')
-
-    await modeSwitch.trigger('click')
-    await flushPromises()
-    expect(desktop.backend.userConfig.quickWindow).toEqual({
-      ...DEFAULT_USER_CONFIG.quickWindow,
-      correctionMode: 'off',
-    })
   })
 })

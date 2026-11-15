@@ -1478,7 +1478,6 @@
     "correct": "Düzelt",
     "correctAndInsert": "Düzelt ve ekle",
     "correctionFailed": "Metin düzeltilemedi",
-    "newLine": "Yeni satır",
     "nothingToCorrect": "Düzeltilecek bir şey yok",
     "textTooShortForCorrection": "Metin düzeltme için çok kısa",
     "insert": "Ekle",
@@ -1486,8 +1485,7 @@
     "livePreview": "Canlı düzeltme",
     "clickToApply": "Uygulamak için tıklayın",
     "liveCorrectionFailed": "Canlı düzeltme başarısız oldu",
-    "liveCorrectionFailedHint": "Model yanıt vermedi. Metin yazıldığı gibi eklenecektir.",
-    "openHistory": "Hızlı giriş geçmişi"
+    "liveCorrectionFailedHint": "Model yanıt vermedi. Metin yazıldığı gibi eklenecektir."
   },
   "variables": {
     "browse": "Gözat…",

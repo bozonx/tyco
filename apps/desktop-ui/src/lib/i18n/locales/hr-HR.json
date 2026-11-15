@@ -1481,7 +1481,6 @@
     "correct": "Ispravi",
     "correctAndInsert": "Ispravi i umetni",
     "correctionFailed": "Tekst se nije mogao ispraviti",
-    "newLine": "Novi redak",
     "nothingToCorrect": "Nema se što ispraviti",
     "textTooShortForCorrection": "Tekst je prekratak za ispravak",
     "insert": "Umetni",
@@ -1489,8 +1488,7 @@
     "livePreview": "Ispravak uživo",
     "clickToApply": "Kliknite za primjenu",
     "liveCorrectionFailed": "Ispravak uživo nije uspio",
-    "liveCorrectionFailedHint": "Model nije odgovorio. Tekst će biti umetnut kako je upisan.",
-    "openHistory": "Povijest brzog unosa"
+    "liveCorrectionFailedHint": "Model nije odgovorio. Tekst će biti umetnut kako je upisan."
   },
   "variables": {
     "browse": "Pregledaj…",

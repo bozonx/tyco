@@ -1481,7 +1481,6 @@
     "correct": "Correggi",
     "correctAndInsert": "Correggi e inserisci",
     "correctionFailed": "Impossibile correggere il testo",
-    "newLine": "A capo",
     "nothingToCorrect": "Niente da correggere",
     "textTooShortForCorrection": "Il testo è troppo corto per essere corretto",
     "insert": "Inserisci",
@@ -1489,8 +1488,7 @@
     "livePreview": "Correzione in tempo reale",
     "clickToApply": "Fai clic per applicare",
     "liveCorrectionFailed": "Correzione in tempo reale non riuscita",
-    "liveCorrectionFailedHint": "Il modello non ha risposto. Il testo verrà inserito così com'è stato digitato.",
-    "openHistory": "Cronologia dell’inserimento rapido"
+    "liveCorrectionFailedHint": "Il modello non ha risposto. Il testo verrà inserito così com'è stato digitato."
   },
   "variables": {
     "browse": "Sfoglia…",

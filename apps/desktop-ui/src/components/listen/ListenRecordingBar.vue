@@ -99,39 +99,35 @@
         "
       />
 
-      <div class="listen-bar-actions">
+      <StoppedRecordingActions
+        v-if="isStopped"
+        class="listen-bar-actions"
+        :capabilities="{
+          canRetry: model.canRetry.value,
+          canOpenSettings: model.canOpenSettings.value,
+        }"
+        @retry="void model.retry()"
+        @open-settings="emit('open-settings')"
+      />
+      <div v-else class="listen-bar-actions">
         <ShortcutButton
-          v-if="!isStopped"
           size="sm"
           :keys="['Shift', 'Space']"
-          :disabled="isFinishing || (isStopped && !model.canRetry.value)"
-          @click="isStopped ? void model.retry() : void model.stop()"
+          :disabled="isFinishing"
+          @click="void model.stop()"
         >
           {{ t('menu.actions') }}
         </ShortcutButton>
         <ShortcutButton
           size="sm"
-          :keys="isStopped ? ['Space'] : stopKeys"
+          :keys="stopKeys"
           variant="primary"
-          :disabled="isFinishing || (isStopped && !model.canRetry.value)"
-          @click="isStopped ? void model.retry() : void model.stop()"
+          :disabled="isFinishing"
+          @click="void model.stop()"
         >
-          {{
-            isStopped
-              ? t('listen.retry')
-              : isFinishing
-                ? t('common.inProgress')
-                : t('menu.finish')
-          }}
+          {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
         </ShortcutButton>
       </div>
-      <Button
-        v-if="isStopped && model.canOpenSettings.value"
-        size="sm"
-        variant="primary"
-        @click="emit('open-settings')"
-        >{{ t('common.openSettings') }}</Button
-      >
     </div>
   </RecordingBarFrame>
 </template>
@@ -153,6 +149,7 @@ import AudioWaveform from '../voice/AudioWaveform.vue'
 import LiveTranscript from '../voice/LiveTranscript.vue'
 import RecordingBarFrame from '../voice/RecordingBarFrame.vue'
 import RecordingStoppedNotice from '../voice/RecordingStoppedNotice.vue'
+import StoppedRecordingActions from '../voice/StoppedRecordingActions.vue'
 import SttLanguagePicker from '../voice/SttLanguagePicker.vue'
 import VoiceAutoStopNotice from '../voice/VoiceAutoStopNotice.vue'
 import ListenSourcePicker from './ListenSourcePicker.vue'

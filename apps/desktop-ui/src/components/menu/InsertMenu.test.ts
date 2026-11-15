@@ -233,21 +233,29 @@ describe('InsertMenu correction step', () => {
     await wrapper.vm.$nextTick()
     expect(actionMenuStore.pageIndex).toBe(0)
 
-    window.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Tab', ctrlKey: true })
-    )
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }))
     await wrapper.vm.$nextTick()
     expect(actionMenuStore.pageIndex).toBe(1)
 
     window.dispatchEvent(
-      new KeyboardEvent('keydown', {
-        key: 'Tab',
-        ctrlKey: true,
-        shiftKey: true,
-      })
+      new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true })
     )
     await wrapper.vm.$nextTick()
     expect(actionMenuStore.pageIndex).toBe(0)
+
+    // Shift+Tab wraps around to the last page
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true })
+    )
+    await wrapper.vm.$nextTick()
+    expect(actionMenuStore.pageIndex).toBe(actionMenuStore.pageCount - 1)
+
+    // Ctrl+Tab no longer switches pages
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Tab', ctrlKey: true })
+    )
+    await wrapper.vm.$nextTick()
+    expect(actionMenuStore.pageIndex).toBe(actionMenuStore.pageCount - 1)
   })
 
   it('saves text as a favorite when save button is clicked', async () => {

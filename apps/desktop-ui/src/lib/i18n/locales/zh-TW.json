@@ -1472,7 +1472,6 @@
     "correct": "校對",
     "correctAndInsert": "校對並插入",
     "correctionFailed": "無法校對文字",
-    "newLine": "換行",
     "nothingToCorrect": "沒有需要校對的內容",
     "textTooShortForCorrection": "文字過短，無法進行校對",
     "insert": "插入",
@@ -1480,8 +1479,7 @@
     "livePreview": "即時修正",
     "clickToApply": "點擊套用",
     "liveCorrectionFailed": "即時校正失敗",
-    "liveCorrectionFailedHint": "模型沒有回應。文字將按鍵入的內容插入。",
-    "openHistory": "快速輸入歷史"
+    "liveCorrectionFailedHint": "模型沒有回應。文字將按鍵入的內容插入。"
   },
   "variables": {
     "browse": "瀏覽…",

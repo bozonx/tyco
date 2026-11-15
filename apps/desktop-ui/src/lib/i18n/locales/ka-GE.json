@@ -1478,7 +1478,6 @@
     "correct": "შესწორება",
     "correctAndInsert": "შესწორება და ჩასმა",
     "correctionFailed": "ტექსტის შესწორება ვერ მოხერხდა",
-    "newLine": "ახალი ხაზი",
     "nothingToCorrect": "შესასწორებელი არაფერია",
     "textTooShortForCorrection": "ტექსტი შესასწორებლად ზედმეტად მოკლეა",
     "insert": "ჩასმა",
@@ -1486,8 +1485,7 @@
     "livePreview": "ცოცხალი შესწორება",
     "clickToApply": "დააწკაპუნეთ გამოსაყენებლად",
     "liveCorrectionFailed": "ცოცხალი შესწორება ვერ მოხერხდა",
-    "liveCorrectionFailedHint": "მოდელმა არ უპასუხა. ტექსტი ჩაისმება უცვლელად.",
-    "openHistory": "სწრაფი შეყვანის ისტორია"
+    "liveCorrectionFailedHint": "მოდელმა არ უპასუხა. ტექსტი ჩაისმება უცვლელად."
   },
   "variables": {
     "browse": "დათვალიერება…",

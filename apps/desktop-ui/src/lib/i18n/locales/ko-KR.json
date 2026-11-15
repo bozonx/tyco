@@ -1475,7 +1475,6 @@
     "correct": "교정",
     "correctAndInsert": "교정 후 삽입",
     "correctionFailed": "텍스트를 교정할 수 없습니다",
-    "newLine": "줄 바꿈",
     "nothingToCorrect": "교정할 내용이 없습니다",
     "textTooShortForCorrection": "교정하기에 텍스트가 너무 짧습니다",
     "insert": "삽입",
@@ -1483,8 +1482,7 @@
     "livePreview": "실시간 교정",
     "clickToApply": "클릭하여 적용",
     "liveCorrectionFailed": "실시간 교정 실패",
-    "liveCorrectionFailedHint": "모델이 응답하지 않았습니다. 입력한 텍스트 그대로 삽입됩니다.",
-    "openHistory": "빠른 입력 기록"
+    "liveCorrectionFailedHint": "모델이 응답하지 않았습니다. 입력한 텍스트 그대로 삽입됩니다."
   },
   "variables": {
     "browse": "찾아보기…",

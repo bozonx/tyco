@@ -1481,7 +1481,6 @@
     "correct": "Korrigieren",
     "correctAndInsert": "Korrigieren und einfügen",
     "correctionFailed": "Der Text konnte nicht korrigiert werden",
-    "newLine": "Neue Zeile",
     "nothingToCorrect": "Nichts zu korrigieren",
     "textTooShortForCorrection": "Der Text ist für eine Korrektur zu kurz",
     "insert": "Einfügen",
@@ -1489,8 +1488,7 @@
     "livePreview": "Live-Korrektur",
     "clickToApply": "Klicken zum Übernehmen",
     "liveCorrectionFailed": "Live-Korrektur fehlgeschlagen",
-    "liveCorrectionFailedHint": "Das Modell hat nicht geantwortet. Der Text wird wie eingegeben eingefügt.",
-    "openHistory": "Verlauf der Schnelleingabe"
+    "liveCorrectionFailedHint": "Das Modell hat nicht geantwortet. Der Text wird wie eingegeben eingefügt."
   },
   "variables": {
     "browse": "Durchsuchen…",

@@ -1481,7 +1481,6 @@
     "correct": "Correct",
     "correctAndInsert": "Correct and insert",
     "correctionFailed": "Could not correct the text",
-    "newLine": "New line",
     "nothingToCorrect": "Nothing to correct",
     "textTooShortForCorrection": "Text is too short for correction",
     "insert": "Insert",
@@ -1489,8 +1488,7 @@
     "livePreview": "Live correction",
     "clickToApply": "Click to apply",
     "liveCorrectionFailed": "Live correction failed",
-    "liveCorrectionFailedHint": "The model did not respond. The text will be inserted as typed.",
-    "openHistory": "Quick input history"
+    "liveCorrectionFailedHint": "The model did not respond. The text will be inserted as typed."
   },
   "variables": {
     "browse": "Browse…",

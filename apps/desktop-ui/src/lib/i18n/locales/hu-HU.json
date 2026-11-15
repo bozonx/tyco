@@ -1478,7 +1478,6 @@
     "correct": "Javítás",
     "correctAndInsert": "Javítás és beillesztés",
     "correctionFailed": "A szöveget nem sikerült kijavítani",
-    "newLine": "Új sor",
     "nothingToCorrect": "Nincs mit javítani",
     "textTooShortForCorrection": "A szöveg túl rövid a javításhoz",
     "insert": "Beillesztés",
@@ -1486,8 +1485,7 @@
     "livePreview": "Élő javítás",
     "clickToApply": "Kattintson az alkalmazáshoz",
     "liveCorrectionFailed": "Az élő javítás sikertelen",
-    "liveCorrectionFailedHint": "A modell nem válaszolt. A szöveg úgy lesz beillesztve, ahogy beírta.",
-    "openHistory": "Gyors bevitel előzményei"
+    "liveCorrectionFailedHint": "A modell nem válaszolt. A szöveg úgy lesz beillesztve, ahogy beírta."
   },
   "variables": {
     "browse": "Tallózás…",

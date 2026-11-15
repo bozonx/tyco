@@ -10,6 +10,7 @@
         role="group"
         :aria-label="t('settings.mainActionGroups.actionPages')"
       >
+        <KeyboardKey class="action-pages-hint">Tab</KeyboardKey>
         <button
           v-for="index in actionMenuStore.pageCount"
           :key="index"
@@ -313,7 +314,13 @@ function onKeyDown(event: KeyboardEvent) {
   if (props.shortcutsDisabled || actionMenuStore.pageCount <= 1) return
   if (event.isComposing || isTextEntryTarget(event.target)) return
 
-  if (event.ctrlKey && !event.altKey && !event.metaKey && event.key === 'Tab') {
+  // Tab cycles the pages: the menu is driven by letter keys, not by focus
+  if (
+    event.key === 'Tab' &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    !event.metaKey
+  ) {
     event.preventDefault()
     if (event.shiftKey) {
       actionMenuStore.prevPage()
@@ -362,6 +369,10 @@ onUnmounted(() => {
 
   --key-size: var(--quick-kbd-size);
   --key-font-size: var(--quick-kbd-font-size);
+}
+
+.action-pages-hint {
+  margin-inline: var(--space-xs);
 }
 
 .action-page-button {

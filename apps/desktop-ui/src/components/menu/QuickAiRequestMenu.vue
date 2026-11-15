@@ -151,7 +151,7 @@
           v-if="model.replyBlocks.value.length"
           class="quick-insert-action"
           variant="primary"
-          :keys="['Enter', 'Space']"
+          :keys="['Space', 'Enter']"
           :disabled="
             !model.selectedReplyBlock.value || isInputBlocked || isApplying
           "

@@ -1478,7 +1478,6 @@
     "correct": "Виправити",
     "correctAndInsert": "Виправити й вставити",
     "correctionFailed": "Не вдалося виправити текст",
-    "newLine": "Новий рядок",
     "nothingToCorrect": "Нема чого виправляти",
     "textTooShortForCorrection": "Текст закороткий для виправлення",
     "insert": "Вставити",
@@ -1486,8 +1485,7 @@
     "livePreview": "Жива корекція",
     "clickToApply": "Натисніть, щоб застосувати",
     "liveCorrectionFailed": "Помилка виправлення наживо",
-    "liveCorrectionFailedHint": "Модель не відповіла. Текст буде вставлено без змін.",
-    "openHistory": "Історія швидкого введення"
+    "liveCorrectionFailedHint": "Модель не відповіла. Текст буде вставлено без змін."
   },
   "variables": {
     "browse": "Огляд…",

@@ -34,42 +34,6 @@
     <p ref="hintRef" class="write-hint">
       <ShortcutButton
         size="sm"
-        :keys="[]"
-        type="button"
-        class="write-hint-action write-mode-switch"
-        :class="{ 'is-active': !isOffMode }"
-        :title="t('settings.quickCorrectionMode')"
-        :aria-label="`${t('settings.quickCorrectionMode')}: ${correctionModeLabel}`"
-        @mousedown.prevent
-        @click="cycleCorrectionMode"
-      >
-        <span>{{ correctionModeLabel }}</span>
-      </ShortcutButton>
-      <template v-if="isHistoryOn">
-        <ShortcutButton
-          size="sm"
-          :keys="[]"
-          type="button"
-          class="write-hint-action write-history-action"
-          :title="t('write.openHistory')"
-          :aria-label="t('write.openHistory')"
-          @mousedown.prevent
-          @click="openHistory"
-          >{{ t('write.openHistory') }}</ShortcutButton
-        >
-      </template>
-      <ShortcutButton
-        size="sm"
-        :keys="[newlineShortcutLabel]"
-        type="button"
-        class="write-hint-action"
-        @mousedown.prevent
-        @click="insertNewline"
-      >
-        <span>{{ t('write.newLine') }}</span>
-      </ShortcutButton>
-      <ShortcutButton
-        size="sm"
         :keys="['Shift', 'Space']"
         type="button"
         class="write-hint-action"
@@ -104,9 +68,7 @@ import WriteModeInput from '../components/quick/WriteModeInput.vue'
 import { useCloseWindowInterceptor } from '../composables/use-close-window-interceptor'
 import { useDismissibleLayer } from '../composables/use-dismissible-layer'
 import { useI18n } from '../composables/use-i18n'
-import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
 import {
-  newlineShortcut,
   resolveInputKeyAction,
   resolveSubmitKey,
   submitShortcut,
@@ -115,12 +77,10 @@ import { maxInputHeight } from '../lib/quick-panel/input-height'
 import { useCloseWindowStore } from '../stores/close-window'
 import { useCorrectionWorkflowStore } from '../stores/correction-workflow'
 import { useDesktopStore } from '../stores/desktop'
-import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
 import { useQuickInputStore } from '../stores/quick-input'
 import { useTextCorrectionStore } from '../stores/text-correction'
-import type { QuickCorrectionMode } from '@tyco/shared'
 
 const navPanelStore = useNavPanelStore()
 const quickInputStore = useQuickInputStore()
@@ -129,22 +89,7 @@ const menuModalsStore = useMenuModalsStore()
 const closeWindowStore = useCloseWindowStore()
 const correctionWorkflowStore = useCorrectionWorkflowStore()
 const textCorrectionStore = useTextCorrectionStore()
-const ipcStore = useIpcStore()
 
-// with the history off there is nothing to look back at: nothing typed is kept
-const isHistoryOn = computed(() => !isEditorHistoryOff(desktopStore.userConfig))
-
-/**
- * Opens the history of the quick input in the main window; the text being typed
- * is saved first so that it is in the list. It also stays in the input
- */
-async function openHistory() {
-  await quickInputStore.flushHistory().catch(() => {})
-  await ipcStore.callOrNotify('activate_mode', {
-    mode: 'history',
-    historyOrigin: 'quickInput',
-  })
-}
 const { t } = useI18n()
 const submitKey = computed(() =>
   resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey)
@@ -154,22 +99,11 @@ const correctionMode = computed(
 )
 const isLiveMode = computed(() => correctionMode.value === 'live')
 const isOffMode = computed(() => correctionMode.value === 'off')
-const correctionModeLabel = computed(() => {
-  if (correctionMode.value === 'live') return t('settings.quickCorrectionLive')
-  if (correctionMode.value === 'off') return t('settings.quickCorrectionOff')
-  return t('settings.quickCorrectionOnSubmit')
-})
-const NEXT_CORRECTION_MODE: Record<QuickCorrectionMode, QuickCorrectionMode> = {
-  live: 'onSubmit',
-  onSubmit: 'off',
-  off: 'live',
-}
 const prefetch = computed(
   () =>
     desktopStore.userConfig?.quickWindow?.isCorrectionPrefetchEnabled === true
 )
 const submitShortcutLabel = computed(() => submitShortcut(submitKey.value))
-const newlineShortcutLabel = computed(() => newlineShortcut())
 
 const containerRef = ref<HTMLElement | null>(null)
 const inputRef = ref<InstanceType<typeof WriteModeInput> | null>(null)
@@ -328,21 +262,8 @@ function cancelFromHint() {
   cancelAndClose()
 }
 
-function cycleCorrectionMode() {
-  if (!acceptsInput() || menuModalsStore.pendingModal) return
-  const next = NEXT_CORRECTION_MODE[correctionMode.value]
-  // the patch is shallow: keep the other quick window settings as they are
-  void desktopStore.updateUserConfig({
-    quickWindow: {
-      ...desktopStore.savedUserConfig.quickWindow,
-      correctionMode: next,
-    },
-  })
-}
-
-/** Inserts a line break at the caret, as the newline shortcut does. */
+/** Inserts a line break at the caret for the newline shortcut. */
 async function insertNewline() {
-  if (!acceptsInput() || menuModalsStore.pendingModal) return
   const input = inputRef.value
   const selection = input?.getSelection()
   const text = quickInputStore.value

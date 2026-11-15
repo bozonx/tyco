@@ -52,6 +52,7 @@ import { describeDictationError } from '../lib/stt/dictation-error'
 import { liveTranscriptText } from '../lib/stt/live-transcript'
 import { createKeyPressTracker } from '../lib/ui/key-press-tracker'
 import { isTextEntryTarget } from '../lib/ui/text-entry-target'
+import { stoppedRecordingActions } from '../lib/voice/stopped-recording-actions'
 import { useCloseWindowStore } from '../stores/close-window'
 import { useDesktopStore } from '../stores/desktop'
 import { useDictationHandoffStore } from '../stores/dictation-handoff'
@@ -183,7 +184,8 @@ function onKeyUp(event: KeyboardEvent) {
     void model.stop()
     return
   }
-  // the key that ended the recording records again after an empty one
+  // the key that ended the recording runs the primary action of the stop:
+  // records again, or opens the settings that a retry cannot fix
   if (
     isBar.value &&
     (event.code === 'Enter' || event.code === 'Space') &&
@@ -193,11 +195,16 @@ function onKeyUp(event: KeyboardEvent) {
     !event.altKey &&
     !event.metaKey &&
     !isInteractiveOrTypingTarget(event.target) &&
-    (model.phase.value === 'empty' ||
-      (model.phase.value === 'failed' && model.canRetry.value))
+    (model.phase.value === 'empty' || model.phase.value === 'failed')
   ) {
+    const { primary } = stoppedRecordingActions({
+      canRetry: model.canRetry.value,
+      canOpenSettings: model.canOpenSettings.value,
+    })
+    if (!primary) return
     event.preventDefault()
-    void model.retry()
+    if (primary === 'retry') void model.retry()
+    else openSttSettings()
   }
 }
 

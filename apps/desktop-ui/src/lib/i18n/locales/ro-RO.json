@@ -1481,7 +1481,6 @@
     "correct": "Corectează",
     "correctAndInsert": "Corectează și inserează",
     "correctionFailed": "Textul nu a putut fi corectat",
-    "newLine": "Rând nou",
     "nothingToCorrect": "Nimic de corectat",
     "textTooShortForCorrection": "Textul este prea scurt pentru corectare",
     "insert": "Inserează",
@@ -1489,8 +1488,7 @@
     "livePreview": "Corectare în direct",
     "clickToApply": "Faceți clic pentru a aplica",
     "liveCorrectionFailed": "Corectarea în timp real a eșuat",
-    "liveCorrectionFailedHint": "Modelul nu a răspuns. Textul va fi inserat așa cum a fost tastat.",
-    "openHistory": "Istoricul introducerii rapide"
+    "liveCorrectionFailedHint": "Modelul nu a răspuns. Textul va fi inserat așa cum a fost tastat."
   },
   "variables": {
     "browse": "Răsfoiește…",
