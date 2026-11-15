@@ -1612,6 +1612,7 @@
     "waitingPlaceholder": "Čekam zvuk…"
   },
   "stt": {
+    "cannotChangeLanguage": "Jezik se ne može promijeniti: prepoznavanje je već započelo",
     "languageSavedForNext": "Jezik spremljen za sljedeće snimanje",
     "openSettings": "Postavke transkripcije…"
   }

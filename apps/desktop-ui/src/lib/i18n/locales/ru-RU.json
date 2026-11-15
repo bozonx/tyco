@@ -1609,6 +1609,7 @@
     "waitingPlaceholder": "Жду звук…"
   },
   "stt": {
+    "cannotChangeLanguage": "Язык нельзя изменить: распознавание уже началось",
     "languageSavedForNext": "Язык сохранён для следующей записи",
     "openSettings": "Настройки транскрибации…"
   }

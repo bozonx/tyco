@@ -1612,6 +1612,7 @@
     "waitingPlaceholder": "En attente d’audio…"
   },
   "stt": {
+    "cannotChangeLanguage": "Impossible de changer de langue : la reconnaissance a déjà commencé",
     "languageSavedForNext": "Langue enregistrée pour le prochain enregistrement",
     "openSettings": "Paramètres de transcription…"
   }

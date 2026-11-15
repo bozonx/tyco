@@ -10,6 +10,7 @@
           placement="bottom"
           align="right"
           :disabled="voice.stage === 'finishing' || voice.stage === 'running'"
+          :has-text="hasText"
           @change="handleLanguageChange"
         />
         <InfoTooltip :text="t('voiceCommands.hint')" placement="bottom" />
@@ -320,6 +321,10 @@ const chosenParameters = computed(() =>
 )
 const target = computed(() =>
   voice.command ? commandTarget(voice.command).trim() : ''
+)
+
+const hasText = computed(() =>
+  Boolean(liveTranscriptText(voice.liveTranscript).trim())
 )
 
 const notice = computed(() =>

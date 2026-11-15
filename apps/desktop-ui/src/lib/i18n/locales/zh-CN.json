@@ -1602,6 +1602,7 @@
     "waitingPlaceholder": "等待音频…"
   },
   "stt": {
+    "cannotChangeLanguage": "无法更改语言：识别已开始",
     "languageSavedForNext": "已保存语言，将在下次录音时生效",
     "openSettings": "转录设置…"
   }

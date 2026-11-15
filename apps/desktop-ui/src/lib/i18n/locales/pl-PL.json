@@ -1612,6 +1612,7 @@
     "waitingPlaceholder": "Oczekiwanie na dźwięk…"
   },
   "stt": {
+    "cannotChangeLanguage": "Nie można zmienić języka: rozpoznawanie już się rozpoczęło",
     "languageSavedForNext": "Język zapisany dla następnego nagrania",
     "openSettings": "Ustawienia transkrypcji…"
   }

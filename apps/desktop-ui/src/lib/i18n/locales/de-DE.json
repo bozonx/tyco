@@ -1612,6 +1612,7 @@
     "waitingPlaceholder": "Warte auf Audio…"
   },
   "stt": {
+    "cannotChangeLanguage": "Sprache kann nicht geändert werden: Erkennung hat bereits begonnen",
     "languageSavedForNext": "Sprache für die nächste Aufnahme gespeichert",
     "openSettings": "Transkriptionseinstellungen…"
   }

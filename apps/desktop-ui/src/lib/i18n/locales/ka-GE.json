@@ -1609,6 +1609,7 @@
     "waitingPlaceholder": "ხმის მოლოდინში…"
   },
   "stt": {
+    "cannotChangeLanguage": "ენის შეცვლა შეუძლებელია: ამოცნობა უკვე დაიწყო",
     "languageSavedForNext": "ენა შენახულია შემდეგი ჩანაწერისთვის",
     "openSettings": "ტრანსკრიფციის პარამეტრები…"
   }

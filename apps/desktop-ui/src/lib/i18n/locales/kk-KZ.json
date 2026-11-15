@@ -1609,6 +1609,7 @@
     "waitingPlaceholder": "Дыбысты күту…"
   },
   "stt": {
+    "cannotChangeLanguage": "Тілді өзгерту мүмкін емес: тану басталып кетті",
     "languageSavedForNext": "Тіл келесі жазба үшін сақталды",
     "openSettings": "Транскрибация баптаулары…"
   }

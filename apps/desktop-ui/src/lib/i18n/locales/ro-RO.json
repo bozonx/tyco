@@ -1612,6 +1612,7 @@
     "waitingPlaceholder": "Aștept sunet…"
   },
   "stt": {
+    "cannotChangeLanguage": "Limba nu poate fi schimbată: recunoașterea a început deja",
     "languageSavedForNext": "Limbă salvată pentru următoarea înregistrare",
     "openSettings": "Setări de transcriere…"
   }

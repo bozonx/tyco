@@ -1609,6 +1609,7 @@
     "waitingPlaceholder": "Várakozás hangra…"
   },
   "stt": {
+    "cannotChangeLanguage": "A nyelv nem módosítható: a felismerés már elkezdődött",
     "languageSavedForNext": "A nyelv elmentve a következő felvételhez",
     "openSettings": "Átírási beállítások…"
   }

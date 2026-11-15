@@ -1606,6 +1606,7 @@
     "waitingPlaceholder": "Čekám na zvuk…"
   },
   "stt": {
+    "cannotChangeLanguage": "Jazyk nelze změnit: rozpoznávání již začalo",
     "languageSavedForNext": "Jazyk uložen pro příští nahrávání",
     "openSettings": "Nastavení přepisu…"
   }

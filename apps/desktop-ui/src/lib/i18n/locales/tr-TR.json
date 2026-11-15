@@ -1605,6 +1605,7 @@
     "waitingPlaceholder": "Ses bekleniyor…"
   },
   "stt": {
+    "cannotChangeLanguage": "Dil değiştirilemez: tanıma zaten başladı",
     "languageSavedForNext": "Dil bir sonraki kayıt için kaydedildi",
     "openSettings": "Deşifre ayarları…"
   }

@@ -85,6 +85,7 @@
         placement="top"
         align="right"
         :disabled="isFinishing"
+        :has-text="hasText"
         @change="emit('language-change')"
       />
       <VoiceRecordingActions
@@ -93,7 +94,7 @@
         :chat="chat"
         :cancel-shortcut="cancelShortcut"
         :finish-behavior="finishBehavior"
-        :has-text="Boolean(liveTranscriptText(transcript).trim())"
+        :has-text="hasText"
         :finish-hotkey="finishHotkey"
         :is-finishing="isFinishing"
         :finish="finish"
@@ -130,6 +131,10 @@ const emit = defineEmits<{
   (e: 'language-change'): void
 }>()
 const { t } = useI18n()
+
+const hasText = computed(() =>
+  Boolean(liveTranscriptText(props.transcript).trim())
+)
 
 const ariaLabel = computed(() => {
   if (props.isCorrecting) return t('menu.correction')

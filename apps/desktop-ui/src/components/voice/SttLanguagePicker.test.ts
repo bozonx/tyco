@@ -111,4 +111,28 @@ describe('SttLanguagePicker', () => {
     )
     wrapper.unmount()
   })
+
+  it('disables the picker and updates title when recognition has started', async () => {
+    desktop = await loadFakeDesktop({
+      userConfig: {
+        ...DEFAULT_USER_CONFIG,
+        stt: { ...DEFAULT_USER_CONFIG.stt, provider: 'deepgram' },
+      },
+    })
+    const wrapper = mount(SttLanguagePicker, {
+      props: { hasText: true },
+      global: { plugins: [i18n, desktop.pinia] },
+    })
+
+    const trigger = wrapper.get('button.dropdown-trigger')
+    expect(trigger.attributes('disabled')).toBeDefined()
+    expect(trigger.classes()).toContain('btn-disabled')
+    expect(trigger.attributes('title')).toBe(
+      i18n.global.t('stt.cannotChangeLanguage')
+    )
+    expect(wrapper.get('.stt-language-picker').attributes('title')).toBe(
+      i18n.global.t('stt.cannotChangeLanguage')
+    )
+    wrapper.unmount()
+  })
 })

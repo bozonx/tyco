@@ -32,6 +32,7 @@
         placement="top"
         align="right"
         :disabled="isFinishing"
+        :has-text="hasText"
         @change="emit('language-change')"
       />
       <OverlayEscButton
@@ -138,6 +139,7 @@ import {
   type ListenModel,
   SYSTEM_MIX_SOURCE,
 } from '../../lib/listen/listen-model'
+import { liveTranscriptText } from '../../lib/stt/live-transcript'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
@@ -172,6 +174,10 @@ const emit = defineEmits<{
   (e: 'back'): void
 }>()
 const { t } = useI18n()
+
+const hasText = computed(() =>
+  Boolean(liveTranscriptText(props.model.transcript.value).trim())
+)
 
 const pickedLabel = ref<{ appId: string; label: string }>()
 const activeAppLabel = computed(() => {

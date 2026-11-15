@@ -1605,6 +1605,7 @@
     "waitingPlaceholder": "音声を待機中…"
   },
   "stt": {
+    "cannotChangeLanguage": "言語を変更できません: 音声認識は既に開始されています",
     "languageSavedForNext": "次回の録音用に言語を保存しました",
     "openSettings": "文字起こし設定…"
   }

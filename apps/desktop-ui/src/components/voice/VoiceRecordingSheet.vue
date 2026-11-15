@@ -5,6 +5,7 @@
         placement="bottom"
         align="right"
         :disabled="isFinishing"
+        :has-text="hasText"
         @change="emit('language-change')"
       />
     </template>
@@ -47,7 +48,7 @@
       <VoiceRecordingActions
         class="voice-shortcuts"
         :finish-behavior="finishBehavior"
-        :has-text="Boolean(liveTranscriptText(transcript).trim())"
+        :has-text="hasText"
         :finish-hotkey="finishHotkey"
         :is-finishing="isFinishing"
         :finish="finish"
@@ -76,6 +77,10 @@ const emit = defineEmits<{
   (e: 'language-change'): void
 }>()
 const { t } = useI18n()
+
+const hasText = computed(() =>
+  Boolean(liveTranscriptText(props.transcript).trim())
+)
 
 const title = computed(() => {
   if (props.isCorrecting) return t('menu.correction')

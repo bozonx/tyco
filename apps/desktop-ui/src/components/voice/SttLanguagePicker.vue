@@ -8,7 +8,7 @@
     :align="align"
     :label="badgeLabel"
     :title="tooltipLabel"
-    :disabled="disabled || isSaving"
+    :disabled="isDisabled"
     :items="items"
   />
 </template>
@@ -32,13 +32,14 @@ import { useDesktopStore } from '../../stores/desktop'
 import { useIpcStore } from '../../stores/ipc'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     placement?: 'top' | 'bottom'
     align?: 'left' | 'right'
     disabled?: boolean
+    hasText?: boolean
   }>(),
-  { placement: 'top', align: 'left', disabled: false }
+  { placement: 'top', align: 'left', disabled: false, hasText: false }
 )
 
 const emit = defineEmits<{ (e: 'change', language: string): void }>()
@@ -62,7 +63,12 @@ const badgeLabel = computed(() =>
   deepgramLanguageBadge(currentLanguage.value, t('language.auto'))
 )
 
+const isDisabled = computed(
+  () => props.disabled || props.hasText || isSaving.value
+)
+
 const tooltipLabel = computed(() => {
+  if (props.hasText) return t('stt.cannotChangeLanguage')
   const name =
     currentLanguage.value === DICTATION_LANGUAGE_AUTO
       ? t('language.auto')

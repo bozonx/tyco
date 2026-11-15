@@ -2,6 +2,7 @@
   <div
     ref="containerRef"
     class="relative inline-block text-left"
+    :title="disabled ? (title ?? (square ? label : undefined)) : undefined"
     @focusout="onFocusout"
     @keydown.esc="onEscape"
   >
