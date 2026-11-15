@@ -231,9 +231,7 @@
             variant="primary"
             size="sm"
             class="run-action-btn"
-            :keys="[
-              resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey),
-            ]"
+            :keys="submitKeys"
             :disabled="!canSend || model.isGenerating.value"
             :aria-busy="model.isGenerating.value || undefined"
             :loading="model.isGenerating.value"
@@ -269,6 +267,7 @@ import { clientLogger } from '../../lib/logger'
 import type { QuickAiRequestMenuParams } from '../../lib/modals/menu-modal-params'
 import { createQuickAiRequestRuntime } from '../../lib/quick-ai-request/quick-ai-request-runtime'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
+import { isTextEntryTarget } from '../../lib/ui/text-entry-target'
 import { useActionMenuStore } from '../../stores/action-menu'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useDesktopStore } from '../../stores/desktop'
@@ -595,6 +594,20 @@ const canSend = computed(
     !model.isGenerating.value
 )
 
+const isTextFocused = ref(false)
+
+function updateFocusState() {
+  isTextFocused.value = isTextEntryTarget(document.activeElement)
+}
+
+const submitKeys = computed(() => {
+  if (isTextFocused.value) {
+    const key = resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey)
+    return key.includes('+') ? key.split('+') : [key]
+  }
+  return ['Space', 'Enter']
+})
+
 const RECENT_PROMPTS_INLINE_LIMIT = 5
 const RECENT_PROMPTS_MENU_LIMIT = 15
 
@@ -666,6 +679,7 @@ function handleInputBlur(event: FocusEvent) {
     start: element.selectionStart ?? length,
     end: element.selectionEnd ?? length,
   })
+  updateFocusState()
 }
 
 function startVoice() {
@@ -694,6 +708,7 @@ function focusPrompt() {
     queryPanelRef.value?.focus()
     const caret = input.takePendingCaret()
     if (caret !== null) queryPanelRef.value?.select(caret, caret)
+    updateFocusState()
   })
 }
 
@@ -779,6 +794,17 @@ function handleEsc() {
   defaultHandleEsc()
 }
 
+function isClickableTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    Boolean(
+      target.closest(
+        'button, a, [role="button"], [role="option"], [role="menuitem"], [role="tab"]'
+      )
+    )
+  )
+}
+
 /** The result surface owns insertion keys; the composer owns text input. */
 function handleWindowKeys(event: KeyboardEvent) {
   if (event.defaultPrevented || event.repeat || event.isComposing) return
@@ -796,13 +822,7 @@ function handleWindowKeys(event: KeyboardEvent) {
       return
     }
     const target = event.target
-    if (
-      target instanceof Element &&
-      target.closest(
-        'input, textarea, select, button, a, [contenteditable="true"], [role="button"]'
-      )
-    )
-      return
+    if (isTextEntryTarget(target) || isClickableTarget(target)) return
     if (window.getSelection()?.toString()) return
     if (
       event.code === 'Space' &&
@@ -825,10 +845,42 @@ function handleWindowKeys(event: KeyboardEvent) {
     }
     return
   }
-  if (event.key !== 'Escape') return
-  if (!model.isGenerating.value || menuModalsStore.pendingModal) return
-  event.preventDefault()
-  model.stopGeneration()
+  if (event.key === 'Escape') {
+    if (!model.isGenerating.value || menuModalsStore.pendingModal) return
+    event.preventDefault()
+    model.stopGeneration()
+    return
+  }
+  if (
+    isInputBlocked.value ||
+    model.isGenerating.value ||
+    isListening.value
+  )
+    return
+
+  const target = event.target
+  if (isTextEntryTarget(target) || isClickableTarget(target)) return
+  if (window.getSelection()?.toString()) return
+
+  const isEnter =
+    event.code === 'Enter' ||
+    event.code === 'NumpadEnter' ||
+    event.key === 'Enter'
+  const isSpace = event.code === 'Space' || event.key === ' '
+
+  if (
+    !event.shiftKey &&
+    !event.altKey &&
+    !event.metaKey &&
+    (!event.ctrlKey ? isEnter || isSpace : isEnter)
+  ) {
+    if (canSend.value) {
+      event.preventDefault()
+      void handleQuerySubmit({ ctrl: false })
+    } else if (isSpace) {
+      event.preventDefault()
+    }
+  }
 }
 
 function goToSettings() {
@@ -836,6 +888,9 @@ function goToSettings() {
 }
 
 onMounted(async () => {
+  updateFocusState()
+  window.addEventListener('focusin', updateFocusState)
+  window.addEventListener('focusout', updateFocusState)
   window.addEventListener('keydown', handleWindowKeys)
   // The models of a provider show up only when its key is known to be set;
   // the quick window has not read the keys yet, or they changed since then.
@@ -843,6 +898,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('focusin', updateFocusState)
+  window.removeEventListener('focusout', updateFocusState)
   window.removeEventListener('keydown', handleWindowKeys)
   disposed = true
   if (navigationStepId !== undefined) {

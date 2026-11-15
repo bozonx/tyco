@@ -7,6 +7,7 @@ import {
 import { useLlmStore } from '../../stores/llm'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useToastStore } from '../../stores/toast'
+import type ShortcutButton from '../overlay/ShortcutButton.vue'
 import QuickAiRequestMenu from './QuickAiRequestMenu.vue'
 
 vi.mock('../../composables/use-i18n', async () => {
@@ -55,9 +56,13 @@ describe('QuickAiRequestMenu', () => {
     desktop.dispose()
   })
 
-  const mountMenu = (props: Record<string, unknown> = {}) =>
+  const mountMenu = (
+    props: Record<string, unknown> = {},
+    options: Record<string, unknown> = {}
+  ) =>
     mount(QuickAiRequestMenu, {
       props: { text: 'Source text for AI', ...props },
+      ...options,
       global: {
         plugins: [desktop.pinia],
         stubs: {
@@ -987,6 +992,111 @@ describe('QuickAiRequestMenu', () => {
       expect((input.element as HTMLTextAreaElement).value).toBe(
         'Line 1\nLine 2'
       )
+    })
+
+    it('shows Space, Enter on run button when input is blurred and Enter when focused', async () => {
+      const wrapper = mountMenu({}, { attachTo: document.body })
+      const runBtn = wrapper.findComponent<typeof ShortcutButton>('.run-action-btn')
+      expect(runBtn.props('keys')).toEqual(['Space', 'Enter'])
+
+      const input = wrapper.find('.query-panel-input')
+      ;(input.element as HTMLElement).focus()
+      window.dispatchEvent(new FocusEvent('focusin'))
+      await wrapper.vm.$nextTick()
+      expect(runBtn.props('keys')).toEqual(['Enter'])
+
+      ;(input.element as HTMLElement).blur()
+      window.dispatchEvent(new FocusEvent('focusout'))
+      await wrapper.vm.$nextTick()
+      expect(runBtn.props('keys')).toEqual(['Space', 'Enter'])
+      wrapper.unmount()
+    })
+
+    it('shows Ctrl, Enter on run button when submitKey is configured to Ctrl+Enter and input is focused', async () => {
+      desktop.setUserConfig({
+        editor: {
+          ...desktop.backend.userConfig.editor,
+          submitKey: 'Ctrl+Enter',
+        },
+      })
+      const wrapper = mountMenu({}, { attachTo: document.body })
+      const runBtn = wrapper.findComponent<typeof ShortcutButton>('.run-action-btn')
+      expect(runBtn.props('keys')).toEqual(['Space', 'Enter'])
+
+      const input = wrapper.find('.query-panel-input')
+      ;(input.element as HTMLElement).focus()
+      window.dispatchEvent(new FocusEvent('focusin'))
+      await wrapper.vm.$nextTick()
+      expect(runBtn.props('keys')).toEqual(['Ctrl', 'Enter'])
+      wrapper.unmount()
+    })
+
+    it('submits with Enter when focus is outside the text input', async () => {
+      const wrapper = mountMenu()
+      await wrapper.find('.query-panel-input').setValue('Send this prompt')
+      await wrapper.find('.query-panel-input').trigger('blur')
+
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Enter',
+          code: 'Enter',
+          bubbles: true,
+        })
+      )
+      await flushPromises()
+
+      expect(wrapper.find('.turn-prompt-text').text()).toBe('Send this prompt')
+    })
+
+    it('submits with Space when focus is outside the text input', async () => {
+      const wrapper = mountMenu()
+      await wrapper.find('.query-panel-input').setValue('Send with space')
+      await wrapper.find('.query-panel-input').trigger('blur')
+
+      const spaceEvent = new KeyboardEvent('keydown', {
+        key: ' ',
+        code: 'Space',
+        bubbles: true,
+        cancelable: true,
+      })
+      window.dispatchEvent(spaceEvent)
+      await flushPromises()
+
+      expect(spaceEvent.defaultPrevented).toBe(true)
+      expect(wrapper.find('.turn-prompt-text').text()).toBe('Send with space')
+    })
+
+    it('prevents default on Space when focus is outside even if prompt is empty', async () => {
+      const wrapper = mountMenu()
+      const spaceEvent = new KeyboardEvent('keydown', {
+        key: ' ',
+        code: 'Space',
+        bubbles: true,
+        cancelable: true,
+      })
+      window.dispatchEvent(spaceEvent)
+      await flushPromises()
+
+      expect(spaceEvent.defaultPrevented).toBe(true)
+      expect(wrapper.find('.turn-prompt-text').exists()).toBe(false)
+    })
+
+    it('does not submit on Space or Enter when target is a button or clickable element', async () => {
+      const wrapper = mountMenu()
+      await wrapper.find('.query-panel-input').setValue('Prompt text')
+      const button = wrapper.find('.icon-btn')
+
+      button.element.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Enter',
+          code: 'Enter',
+          bubbles: true,
+          cancelable: true,
+        })
+      )
+      await flushPromises()
+
+      expect(wrapper.find('.turn-prompt-text').exists()).toBe(false)
     })
   })
 
