@@ -78,9 +78,9 @@
           :is-transcribing="isTranscribing"
           :is-correcting="isCorrecting"
           :is-styling="isStyling"
+          :auto-stop-deadline-ms="autoStopDeadlineMs"
         />
       </div>
-      <VoiceAutoStopNotice :deadline-ms="autoStopDeadlineMs" />
       <SttLanguagePicker
         placement="top"
         align="right"
@@ -117,7 +117,6 @@ import LiveTranscript from './LiveTranscript.vue'
 import MicrophoneSourcePicker from './MicrophoneSourcePicker.vue'
 import RecordingBarFrame from './RecordingBarFrame.vue'
 import SttLanguagePicker from './SttLanguagePicker.vue'
-import VoiceAutoStopNotice from './VoiceAutoStopNotice.vue'
 import VoiceRecordingActions from './VoiceRecordingActions.vue'
 import type { VoiceRecordingProps } from './voice-recording-props'
 import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'

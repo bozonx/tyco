@@ -572,7 +572,7 @@
     "dictationInterrupted": "Prepoznavanje je zaustavljeno. Pritisnite Enter da biste zadržali prepoznati tekst ili Esc da biste ga odbacili.",
     "finish": "Završi",
     "listening": "Slušam...",
-    "autoStopCountdown": "Snimanje će se automatski zaustaviti za {seconds} s",
+    "autoStopCountdown": "Zaustavljanje za {seconds} s",
     "replaceInEditor": "Zamijeni u uređivaču",
     "reviewResult": "Pregledaj rezultat",
     "speakNow": "Govorite u mikrofon...",

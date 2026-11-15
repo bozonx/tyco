@@ -572,7 +572,7 @@
     "dictationInterrupted": "인식이 중지되었습니다. 인식된 텍스트를 유지하려면 Enter 키를, 취소하려면 Esc 키를 누르세요.",
     "finish": "완료",
     "listening": "듣는 중...",
-    "autoStopCountdown": "{seconds}초 후 녹음이 자동으로 중지됩니다",
+    "autoStopCountdown": "{seconds}초 후 중지",
     "replaceInEditor": "편집기에서 바꾸기",
     "reviewResult": "결과 검토",
     "speakNow": "마이크에 대고 말씀하세요...",

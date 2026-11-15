@@ -572,7 +572,7 @@
     "dictationInterrupted": "Η αναγνώριση σταμάτησε. Πατήστε Enter για να κρατήσετε το κείμενο που αναγνωρίστηκε ή Esc για να το απορρίψετε.",
     "finish": "Τέλος",
     "listening": "Ακρόαση...",
-    "autoStopCountdown": "Η εγγραφή θα σταματήσει αυτόματα σε {seconds} δ",
+    "autoStopCountdown": "Διακοπή σε {seconds} δ",
     "replaceInEditor": "Αντικατάσταση στον επεξεργαστή",
     "reviewResult": "Έλεγχος αποτελέσματος",
     "speakNow": "Μιλήστε στο μικρόφωνο...",

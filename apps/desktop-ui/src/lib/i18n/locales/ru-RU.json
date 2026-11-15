@@ -572,7 +572,7 @@
     "dictationInterrupted": "Распознавание прервано. Enter — сохранить распознанный текст, Esc — отменить.",
     "finish": "Закончить",
     "listening": "Слушаю...",
-    "autoStopCountdown": "Запись остановится автоматически через {seconds} с",
+    "autoStopCountdown": "Остановка через {seconds} с",
     "replaceInEditor": "Заменить в редакторе",
     "reviewResult": "Проверьте результат",
     "speakNow": "Говорите в микрофон...",

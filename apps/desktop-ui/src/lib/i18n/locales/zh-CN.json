@@ -572,7 +572,7 @@
     "dictationInterrupted": "识别已停止。按 Enter 保留已识别的文本，按 Esc 放弃。",
     "finish": "完成",
     "listening": "正在聆听…",
-    "autoStopCountdown": "录音将在 {seconds} 秒后自动停止",
+    "autoStopCountdown": "{seconds} 秒后停止",
     "replaceInEditor": "替换到编辑器",
     "reviewResult": "查看结果",
     "speakNow": "请对着麦克风说话…",

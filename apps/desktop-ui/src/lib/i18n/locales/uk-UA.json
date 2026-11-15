@@ -572,7 +572,7 @@
     "dictationInterrupted": "Розпізнавання зупинилося. Натисніть Enter, щоб залишити розпізнаний текст, або Esc, щоб відкинути його.",
     "finish": "Завершити",
     "listening": "Слухаю...",
-    "autoStopCountdown": "Запис зупиниться автоматично через {seconds} с",
+    "autoStopCountdown": "Зупинка через {seconds} с",
     "replaceInEditor": "Замінити в редакторі",
     "reviewResult": "Переглянути результат",
     "speakNow": "Говоріть у мікрофон...",

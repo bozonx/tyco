@@ -572,7 +572,7 @@
     "dictationInterrupted": "Recunoașterea s-a oprit. Apăsați Enter pentru a păstra textul recunoscut sau Esc pentru a renunța la el.",
     "finish": "Termină",
     "listening": "Se ascultă...",
-    "autoStopCountdown": "Înregistrarea se oprește automat în {seconds} s",
+    "autoStopCountdown": "Oprire în {seconds} s",
     "replaceInEditor": "Înlocuiește în editor",
     "reviewResult": "Verifică rezultatul",
     "speakNow": "Vorbiți la microfon...",

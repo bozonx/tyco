@@ -98,13 +98,11 @@
           :peak="audioPeak"
           :duration-ms="recordingDurationMs"
           :is-transcribing="isFinishing"
+          :auto-stop-deadline-ms="
+            isStopped ? undefined : model.autoStopWarning.value?.deadlineMs
+          "
         />
       </div>
-      <VoiceAutoStopNotice
-        :deadline-ms="
-          isStopped ? undefined : model.autoStopWarning.value?.deadlineMs
-        "
-      />
 
       <StoppedRecordingActions
         v-if="isStopped"
@@ -153,7 +151,6 @@ import RecordingBarFrame from '../voice/RecordingBarFrame.vue'
 import RecordingStoppedNotice from '../voice/RecordingStoppedNotice.vue'
 import StoppedRecordingActions from '../voice/StoppedRecordingActions.vue'
 import SttLanguagePicker from '../voice/SttLanguagePicker.vue'
-import VoiceAutoStopNotice from '../voice/VoiceAutoStopNotice.vue'
 import ListenSourcePicker from './ListenSourcePicker.vue'
 import type { CaptureSource } from '@tyco/shared'
 

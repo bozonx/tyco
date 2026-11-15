@@ -572,7 +572,7 @@
     "dictationInterrupted": "Rozpoznawanie zostało przerwane. Naciśnij Enter, aby zachować rozpoznany tekst, lub Esc, aby go odrzucić.",
     "finish": "Zakończ",
     "listening": "Słucham...",
-    "autoStopCountdown": "Nagrywanie zatrzyma się automatycznie za {seconds} s",
+    "autoStopCountdown": "Zatrzymanie za {seconds} s",
     "replaceInEditor": "Zastąp w edytorze",
     "reviewResult": "Przejrzyj wynik",
     "speakNow": "Mów do mikrofonu...",

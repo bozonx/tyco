@@ -95,4 +95,23 @@ describe('reduced motion at mount', () => {
     expect(wrapper.find('.listening-state').exists()).toBe(false)
     wrapper.unmount()
   })
+
+  it('renders auto-stop countdown in status when autoStopDeadlineMs is set', async () => {
+    const deadlineMs = Date.now() + 14_000
+    const wrapper = mount(AudioWaveform, {
+      props: { autoStopDeadlineMs: deadlineMs },
+      global: { plugins: [i18n] },
+    })
+
+    const status = wrapper.find('.waveform-status')
+    expect(status.classes()).toContain('is-warning')
+    expect(status.text()).toBe(
+      i18n.global.t('menu.autoStopCountdown', { seconds: 14 })
+    )
+
+    await wrapper.setProps({ autoStopDeadlineMs: undefined })
+    expect(status.classes()).not.toContain('is-warning')
+    expect(status.text()).toBe(i18n.global.t('menu.listening'))
+    wrapper.unmount()
+  })
 })

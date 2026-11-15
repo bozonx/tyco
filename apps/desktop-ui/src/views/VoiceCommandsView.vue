@@ -45,14 +45,12 @@
                 <AppIcon icon="mdi:microphone" size="md" aria-hidden="true" />
                 <span>{{ t('voiceCommands.phaseAwaitingCommand') }}</span>
               </p>
-              <VoiceAutoStopNotice
-                :deadline-ms="voice.autoStopWarning?.deadlineMs"
-              />
               <AudioWaveform
                 :level="audioLevel"
                 :peak="audioPeak"
                 :duration-ms="recordingDurationMs"
                 :is-transcribing="voice.stage === 'finishing'"
+                :auto-stop-deadline-ms="voice.autoStopWarning?.deadlineMs"
               />
               <LiveTranscript
                 class="voice-live"
@@ -200,7 +198,6 @@ import ShortcutButton from '../components/overlay/ShortcutButton.vue'
 import AudioWaveform from '../components/voice/AudioWaveform.vue'
 import LiveTranscript from '../components/voice/LiveTranscript.vue'
 import SttLanguagePicker from '../components/voice/SttLanguagePicker.vue'
-import VoiceAutoStopNotice from '../components/voice/VoiceAutoStopNotice.vue'
 import VoiceCommandCatalog from '../components/voice/VoiceCommandCatalog.vue'
 import { useI18n } from '../composables/use-i18n'
 import { useOverlayNav } from '../composables/use-overlay-nav'

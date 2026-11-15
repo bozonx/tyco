@@ -572,7 +572,7 @@
     "dictationInterrupted": "Tanıma durdu. Tanınan metni tutmak için Enter'a, silmek için Esc'ye basın.",
     "finish": "Bitir",
     "listening": "Dinleniyor...",
-    "autoStopCountdown": "Kayıt {seconds} sn içinde otomatik olarak duracak",
+    "autoStopCountdown": "{seconds} sn içinde duracak",
     "replaceInEditor": "Düzenleyicide değiştir",
     "reviewResult": "Sonucu inceleyin",
     "speakNow": "Mikrofona konuşun...",

@@ -572,7 +572,7 @@
     "dictationInterrupted": "A felismerés leállt. Nyomja meg az Entert a felismert szöveg megtartásához, vagy az Esc billentyűt az elvetéséhez.",
     "finish": "Befejezés",
     "listening": "Figyelés...",
-    "autoStopCountdown": "A felvétel {seconds} mp múlva automatikusan leáll",
+    "autoStopCountdown": "Leállás {seconds} mp múlva",
     "replaceInEditor": "Csere a szerkesztőben",
     "reviewResult": "Eredmény áttekintése",
     "speakNow": "Beszéljen a mikrofonba...",

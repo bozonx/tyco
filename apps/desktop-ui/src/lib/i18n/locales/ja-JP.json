@@ -572,7 +572,7 @@
     "dictationInterrupted": "音声認識が中断されました。Enterキーを押して認識されたテキストを保持するか、Escキーで破棄してください。",
     "finish": "完了",
     "listening": "聞き取り中...",
-    "autoStopCountdown": "録音は {seconds} 秒後に自動的に停止します",
+    "autoStopCountdown": "{seconds} 秒後に停止",
     "replaceInEditor": "エディター内で置換",
     "reviewResult": "結果を確認",
     "speakNow": "マイクに向かって話してください...",

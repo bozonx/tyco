@@ -33,8 +33,8 @@
         :is-transcribing="isTranscribing"
         :is-correcting="isCorrecting"
         :is-styling="isStyling"
+        :auto-stop-deadline-ms="autoStopDeadlineMs"
       />
-      <VoiceAutoStopNotice :deadline-ms="autoStopDeadlineMs" />
       <LiveTranscript
         :committed="transcript.committed"
         :draft="transcript.draft"
@@ -67,7 +67,6 @@ import SelectionContextPreview from '../overlay/SelectionContextPreview.vue'
 import AudioWaveform from './AudioWaveform.vue'
 import LiveTranscript from './LiveTranscript.vue'
 import SttLanguagePicker from './SttLanguagePicker.vue'
-import VoiceAutoStopNotice from './VoiceAutoStopNotice.vue'
 import VoiceRecordingActions from './VoiceRecordingActions.vue'
 import type { VoiceRecordingProps } from './voice-recording-props'
 

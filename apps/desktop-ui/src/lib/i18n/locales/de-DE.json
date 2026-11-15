@@ -572,7 +572,7 @@
     "dictationInterrupted": "Die Erkennung wurde beendet. Drücken Sie Enter, um den erkannten Text zu behalten, oder Esc, um ihn zu verwerfen.",
     "finish": "Fertig",
     "listening": "Hört zu...",
-    "autoStopCountdown": "Aufnahme stoppt automatisch in {seconds} s",
+    "autoStopCountdown": "Stoppt in {seconds} s",
     "replaceInEditor": "Im Editor ersetzen",
     "reviewResult": "Ergebnis prüfen",
     "speakNow": "Sprechen Sie ins Mikrofon...",

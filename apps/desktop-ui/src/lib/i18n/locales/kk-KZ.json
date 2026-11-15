@@ -572,7 +572,7 @@
     "dictationInterrupted": "Тану тоқтады. Танылған мәтінді сақтау үшін Enter, оны жою үшін Esc пернесін басыңыз.",
     "finish": "Аяқтау",
     "listening": "Тыңдап тұрмын...",
-    "autoStopCountdown": "Жазу {seconds} с кейін автоматты түрде тоқтайды",
+    "autoStopCountdown": "{seconds} с ішінде тоқтайды",
     "replaceInEditor": "Редакторда ауыстыру",
     "reviewResult": "Нәтижені қарау",
     "speakNow": "Микрофонға сөйлеңіз...",

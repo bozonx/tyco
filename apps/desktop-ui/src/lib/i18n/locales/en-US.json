@@ -572,7 +572,7 @@
     "dictationInterrupted": "Recognition stopped. Press Enter to keep the recognized text or Esc to discard it.",
     "finish": "Finish",
     "listening": "Listening...",
-    "autoStopCountdown": "Recording stops automatically in {seconds} s",
+    "autoStopCountdown": "Stopping in {seconds}s",
     "replaceInEditor": "Replace in editor",
     "reviewResult": "Review the result",
     "speakNow": "Speak into the microphone...",

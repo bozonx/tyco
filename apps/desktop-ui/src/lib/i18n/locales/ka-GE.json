@@ -572,7 +572,7 @@
     "dictationInterrupted": "ამოცნობა შეჩერდა. დააჭირეთ Enter-ს ამოცნობილი ტექსტის შესანარჩუნებლად ან Esc-ს მის გასაუქმებლად.",
     "finish": "დასრულება",
     "listening": "ვუსმენ...",
-    "autoStopCountdown": "ჩაწერა ავტომატურად შეჩერდება {seconds} წამში",
+    "autoStopCountdown": "შეჩერება {seconds} წმ-ში",
     "replaceInEditor": "რედაქტორში ჩანაცვლება",
     "reviewResult": "შედეგის გადახედვა",
     "speakNow": "ისაუბრეთ მიკროფონში...",

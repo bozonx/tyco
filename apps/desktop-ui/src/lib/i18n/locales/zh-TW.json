@@ -572,7 +572,7 @@
     "dictationInterrupted": "辨識已停止。按 Enter 保留辨識的文字，或按 Esc 放棄。",
     "finish": "完成",
     "listening": "聆聽中...",
-    "autoStopCountdown": "錄音將在 {seconds} 秒後自動停止",
+    "autoStopCountdown": "{seconds} 秒後停止",
     "replaceInEditor": "在編輯器中取代",
     "reviewResult": "檢視結果",
     "speakNow": "請對著麥克風說話...",

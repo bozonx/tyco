@@ -572,7 +572,7 @@
     "dictationInterrupted": "Rozpoznávání se zastavilo. Stiskněte Enter pro ponechání rozpoznaného textu nebo Esc pro jeho zahození.",
     "finish": "Dokončit",
     "listening": "Poslouchám...",
-    "autoStopCountdown": "Nahrávání se automaticky zastaví za {seconds} s",
+    "autoStopCountdown": "Zastavení za {seconds} s",
     "replaceInEditor": "Nahradit v editoru",
     "reviewResult": "Zkontrolovat výsledek",
     "speakNow": "Mluvte do mikrofonu...",

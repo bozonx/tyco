@@ -572,7 +572,7 @@
     "dictationInterrupted": "La reconnaissance s’est arrêtée. Appuyez sur Entrée pour garder le texte reconnu ou sur Échap pour l’abandonner.",
     "finish": "Terminer",
     "listening": "Écoute...",
-    "autoStopCountdown": "L’enregistrement s’arrête automatiquement dans {seconds} s",
+    "autoStopCountdown": "Arrêt dans {seconds} s",
     "replaceInEditor": "Remplacer dans l’éditeur",
     "reviewResult": "Vérifier le résultat",
     "speakNow": "Parlez dans le micro...",

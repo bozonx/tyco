@@ -572,7 +572,7 @@
     "dictationInterrupted": "El reconocimiento se detuvo. Pulsa Enter para conservar el texto reconocido o Esc para descartarlo.",
     "finish": "Terminar",
     "listening": "Escuchando...",
-    "autoStopCountdown": "La grabación se detendrá automáticamente en {seconds} s",
+    "autoStopCountdown": "Parada en {seconds} s",
     "replaceInEditor": "Reemplazar en el editor",
     "reviewResult": "Revisar el resultado",
     "speakNow": "Habla al micrófono...",

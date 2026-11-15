@@ -27,9 +27,16 @@
         </div>
 
         <div class="waveform-meta">
-          <div class="waveform-status">
-            <AppIcon :icon="props.icon" class="mic-icon" />
-            <span>{{ props.statusLabel ?? t('menu.listening') }}</span>
+          <div
+            class="waveform-status"
+            :class="{ 'is-warning': isAutoStopWarning }"
+          >
+            <AppIcon
+              :icon="isAutoStopWarning ? 'mdi:timer-sand' : props.icon"
+              class="mic-icon"
+              :class="{ 'is-warning': isAutoStopWarning }"
+            />
+            <span>{{ currentStatusLabel }}</span>
           </div>
           <div class="waveform-timer">{{ formattedDuration }}</div>
         </div>
@@ -60,6 +67,7 @@ const props = withDefaults(
     compact?: boolean
     icon?: string
     statusLabel?: string
+    autoStopDeadlineMs?: number
   }>(),
   {
     level: 0,
@@ -71,10 +79,48 @@ const props = withDefaults(
     compact: true,
     icon: 'mdi:microphone',
     statusLabel: undefined,
+    autoStopDeadlineMs: undefined,
   }
 )
 
 const { t } = useI18n()
+
+/** How often the countdown is redrawn */
+const TICK_MS = 250
+
+const nowMs = ref(Date.now())
+let ticker: ReturnType<typeof setInterval> | undefined
+
+watch(
+  () => props.autoStopDeadlineMs,
+  (deadlineMs) => {
+    if (ticker) clearInterval(ticker)
+    ticker = undefined
+    nowMs.value = Date.now()
+    if (deadlineMs === undefined) return
+    ticker = setInterval(() => {
+      nowMs.value = Date.now()
+    }, TICK_MS)
+  },
+  { immediate: true }
+)
+
+const autoStopSecondsLeft = computed(() =>
+  props.autoStopDeadlineMs === undefined
+    ? undefined
+    : Math.max(0, Math.ceil((props.autoStopDeadlineMs - nowMs.value) / 1000))
+)
+
+const isAutoStopWarning = computed(
+  () => autoStopSecondsLeft.value !== undefined
+)
+
+const currentStatusLabel = computed(() => {
+  if (autoStopSecondsLeft.value !== undefined) {
+    return t('menu.autoStopCountdown', { seconds: autoStopSecondsLeft.value })
+  }
+  return props.statusLabel ?? t('menu.listening')
+})
 
 const isProcessing = computed(
   () => props.isTranscribing || props.isCorrecting || props.isStyling
@@ -187,6 +233,7 @@ onMounted(() => {
   syncMotionPreference()
 })
 onUnmounted(() => {
+  if (ticker) clearInterval(ticker)
   motionQuery?.removeEventListener?.('change', syncMotionPreference)
   mutationObserver?.disconnect()
   if (animationFrameId !== null) cancelAnimationFrame(animationFrameId)
@@ -253,6 +300,26 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-xs);
   font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.waveform-status.is-warning {
+  color: var(--color-warning);
+}
+
+.waveform-status.is-warning .mic-icon {
+  color: var(--color-warning);
+  animation: auto-stop-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes auto-stop-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
 }
 
 .mic-icon {
@@ -344,6 +411,9 @@ onUnmounted(() => {
   .mic-icon {
     animation: none;
   }
+  .waveform-status.is-warning .mic-icon {
+    animation: none;
+  }
 }
 
 :global([data-motion='reduce']) .waveform-bar {
@@ -351,6 +421,10 @@ onUnmounted(() => {
 }
 
 :global([data-motion='reduce']) .mic-icon {
+  animation: none !important;
+}
+
+:global([data-motion='reduce']) .waveform-status.is-warning .mic-icon {
   animation: none !important;
 }
 </style>
