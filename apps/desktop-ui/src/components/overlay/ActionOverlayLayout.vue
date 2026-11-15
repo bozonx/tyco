@@ -40,8 +40,8 @@
           @close-all="handleCloseAll"
         />
         <OverlayCloseButton
-          v-if="escVisible && resolvedEscMode === 'back' && inQuickWindow"
-          :title="escTitle"
+          v-if="escVisible && inQuickWindow"
+          :title="t('common.closeAllHint')"
           @click="handleCloseAll"
         />
       </div>
@@ -97,18 +97,12 @@ const props = withDefaults(
   }
 )
 
-const {
-  resolvedEscMode,
-  escLabel,
-  escTitle,
-  handleEsc,
-  handleCloseAll,
-  isAtRoot,
-} = useOverlayNav(() => ({
-  escMode: props.escMode,
-  escLabel: props.escLabel,
-  onEsc: props.onEsc,
-}))
+const { resolvedEscMode, escLabel, handleEsc, handleCloseAll, isAtRoot } =
+  useOverlayNav(() => ({
+    escMode: props.escMode,
+    escLabel: props.escLabel,
+    onEsc: props.onEsc,
+  }))
 
 const { t } = useI18n()
 const menuModalsStore = useMenuModalsStore()

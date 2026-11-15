@@ -33,7 +33,7 @@ describe('ActionOverlayLayout navigation', () => {
       global: { plugins: [desktop.pinia] },
     })
     expect(wrapper.find('.action-overlay-esc').exists()).toBe(true)
-    expect(wrapper.find('.action-overlay-close').exists()).toBe(false)
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
     const other = wrapper
       .findAll('button')
       .find((button) => button.text().includes('menu.otherActions'))!
@@ -66,7 +66,7 @@ describe('ActionOverlayLayout navigation', () => {
     })
     expect(wrapper.text()).not.toContain('menu.otherActions')
     expect(wrapper.get('.action-overlay-esc').text()).toContain('common.close')
-    expect(wrapper.find('.action-overlay-close').exists()).toBe(false)
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
     wrapper.unmount()
   })
 
@@ -95,7 +95,7 @@ describe('ActionOverlayLayout navigation', () => {
     menus.startScenario(MenuModals.INSERT, { text: 'Source' })
     const wrapper = mountLayout()
     expect(wrapper.get('.action-overlay-esc').text()).toContain('common.close')
-    expect(wrapper.find('.action-overlay-close').exists()).toBe(false)
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     await flushPromises()
     expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
@@ -105,7 +105,7 @@ describe('ActionOverlayLayout navigation', () => {
   it('closes at the root with one visible Escape action', async () => {
     const wrapper = mountLayout()
     expect(wrapper.get('.action-overlay-esc').text()).toContain('common.close')
-    expect(wrapper.find('.action-overlay-close').exists()).toBe(false)
+    expect(wrapper.find('.action-overlay-close').exists()).toBe(true)
     await wrapper.get('.action-overlay-esc').trigger('click')
     await flushPromises()
     expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
@@ -161,13 +161,14 @@ describe('ActionOverlayLayout navigation', () => {
     expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
   })
 
-  it('closes the complete scenario with Shift+Escape', async () => {
+  it('closes the complete scenario with the close cross', async () => {
     const menus = useMenuModalsStore()
     menus.nextModal(MenuModals.TRANSLATE, {})
-    mountLayout()
-    window.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'q', code: 'KeyQ', ctrlKey: true })
+    const wrapper = mountLayout()
+    expect(wrapper.get('.action-overlay-close').attributes('title')).toBe(
+      'common.closeAllHint'
     )
+    await wrapper.get('.action-overlay-close').trigger('click')
     await flushPromises()
     expect(menus.menuBreadcrumbs).toEqual([])
     expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
