@@ -329,7 +329,8 @@
     "openSettings": "Ayarları aç",
     "remove": "Kaldır",
     "retry": "Yeniden dene",
-    "save": "Kaydet"
+    "save": "Kaydet",
+    "closeOrEscapeHint": "Escape veya Ctrl+Q pencereyi kapatır"
   },
   "desktopErrors": {
     "busy": "Başka bir işlem sürüyor, daha sonra tekrar deneyin",

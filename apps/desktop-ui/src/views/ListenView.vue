@@ -7,6 +7,8 @@
       :recording-duration-ms="recordingDurationMs"
       :stop-hotkey="stopHotkey"
       :app-label="appLabel"
+      :has-back="hasBack"
+      @back="handleBack"
       @switch-mode="switchToVoice"
       @language-change="handleLanguageChange"
       @open-settings="openSttSettings"
@@ -60,6 +62,7 @@ import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useQuickDismissStore } from '../stores/quick-dismiss'
+import { useVoiceReferenceStore } from '../stores/voice-reference'
 import { useVoiceResultStore } from '../stores/voice-result'
 
 const emit = defineEmits<{
@@ -78,6 +81,24 @@ const { startDictation, finishDictation, cancelDictation, switchSource } =
   useDictationActions()
 // a click into the player must not end the listening, nor its result
 const releaseDismissHold = useQuickDismissStore().hold()
+const voiceReferenceStore = useVoiceReferenceStore()
+const origin = computed(() =>
+  voiceReferenceStore.originFor(desktopStore.desktopState.activationId)
+)
+const hasBack = computed(() => Boolean(origin.value))
+
+async function handleBack() {
+  const previous = origin.value
+  await model.cancel()
+  if (previous?.mode === 'selectionActions') {
+    await ipcStore.callOrNotify('activate_mode', {
+      mode: 'selectionActions',
+      text: previous.text ?? undefined,
+    })
+  } else {
+    closeWindowStore.closeAll()
+  }
+}
 
 const handoff = useDictationHandoffStore()
 const model = createListenModel({
@@ -147,7 +168,13 @@ useDismissibleLayer({
     !menuModalsStore.hasOpenModal,
   elements: () => [],
   canDismissOutside: false,
-  dismiss: () => void model.close(),
+  dismiss: () => {
+    if (hasBack.value) {
+      void handleBack()
+    } else {
+      void model.close()
+    }
+  },
 })
 
 const keyPresses = createKeyPressTracker()

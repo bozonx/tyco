@@ -329,7 +329,8 @@
     "openSettings": "Відкрити налаштування",
     "remove": "Прибрати",
     "retry": "Повторити",
-    "save": "Зберегти"
+    "save": "Зберегти",
+    "closeOrEscapeHint": "Escape або Ctrl+Q закриває вікно"
   },
   "desktopErrors": {
     "busy": "Виконується інша операція, спробуйте пізніше",

@@ -41,7 +41,7 @@
         />
         <OverlayCloseButton
           v-if="escVisible && inQuickWindow"
-          :title="t('common.closeAllHint')"
+          :has-back="resolvedEscMode === 'back' || Boolean(props.escLabel)"
           @click="handleCloseAll"
         />
       </div>

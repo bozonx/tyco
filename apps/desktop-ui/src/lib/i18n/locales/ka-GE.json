@@ -329,7 +329,8 @@
     "openSettings": "პარამეტრების გახსნა",
     "remove": "მოცილება",
     "retry": "ხელახლა ცდა",
-    "save": "შენახვა"
+    "save": "შენახვა",
+    "closeOrEscapeHint": "Escape ან Ctrl+Q ხურავს ფანჯარას"
   },
   "desktopErrors": {
     "busy": "მიმდინარეობს სხვა ოპერაცია, სცადეთ მოგვიანებით",

@@ -329,7 +329,8 @@
     "openSettings": "Otvori postavke",
     "remove": "Ukloni",
     "retry": "Pokušaj ponovno",
-    "save": "Spremi"
+    "save": "Spremi",
+    "closeOrEscapeHint": "Escape ili Ctrl+Q zatvara prozor"
   },
   "desktopErrors": {
     "busy": "U tijeku je druga operacija, pokušajte kasnije",

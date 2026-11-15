@@ -329,7 +329,8 @@
     "openSettings": "Баптауларды ашу",
     "remove": "Алып тастау",
     "retry": "Қайталау",
-    "save": "Сақтау"
+    "save": "Сақтау",
+    "closeOrEscapeHint": "Escape немесе Ctrl+Q терезені жабады"
   },
   "desktopErrors": {
     "busy": "Басқа операция орындалуда, кейінірек қайталаңыз",

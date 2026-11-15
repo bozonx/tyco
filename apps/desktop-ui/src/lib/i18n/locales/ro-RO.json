@@ -329,7 +329,8 @@
     "openSettings": "Deschide setările",
     "remove": "Elimină",
     "retry": "Reîncearcă",
-    "save": "Salvează"
+    "save": "Salvează",
+    "closeOrEscapeHint": "Escape sau Ctrl+Q închide fereastra"
   },
   "desktopErrors": {
     "busy": "Altă operație este în curs, încercați mai târziu",

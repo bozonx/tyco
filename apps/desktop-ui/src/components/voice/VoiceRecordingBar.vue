@@ -22,14 +22,19 @@
         {{ t('listen.replyingTo', { text: replyTo }) }}
       </span>
       <OverlayEscButton
+        v-if="props.hasBack"
+        mode="back"
+        class="voice-bar-back"
+        :disabled="isFinishing"
+        @click="props.onBack ? props.onBack() : cancel()"
+      />
+      <OverlayCloseButton
         v-if="props.showCancelButton !== false"
         class="voice-bar-close"
+        :has-back="props.hasBack"
+        :title="props.chat ? t('chat.voiceCancelHint') : undefined"
         :disabled="isFinishing"
-        :title="
-          t(cancelShortcut ? 'common.closeAllHint' : 'chat.voiceCancelHint')
-        "
-        @click="cancel"
-        @close-all="cancel"
+        @click="props.closeAll ? props.closeAll() : cancel()"
       />
     </div>
     <div v-if="referenceText" class="voice-reference-text">
@@ -102,6 +107,7 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { liveTranscriptText } from '../../lib/stt/live-transcript'
+import OverlayCloseButton from '../overlay/OverlayCloseButton.vue'
 import OverlayEscButton from '../overlay/OverlayEscButton.vue'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
@@ -152,9 +158,16 @@ const slots = computed(() => {
   height: 7.5rem;
 }
 
-.voice-bar-close {
+.voice-bar-back {
   margin-left: auto;
-  width: auto;
+}
+
+.voice-bar-close {
+  flex-shrink: 0;
+}
+
+.voice-bar-header:not(:has(.voice-bar-back)) .voice-bar-close {
+  margin-left: auto;
 }
 
 .voice-bar-header {

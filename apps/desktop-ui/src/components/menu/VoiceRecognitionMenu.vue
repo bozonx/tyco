@@ -14,9 +14,15 @@
         @switch="switchToListen"
       />
       <OverlayEscButton
+        v-if="hasBack"
+        mode="back"
+        class="voice-stopped-back"
+        @click="handleBack"
+      />
+      <OverlayCloseButton
         class="voice-stopped-close"
+        :has-back="hasBack"
         @click="dismissStartError"
-        @close-all="dismissStartError"
       />
     </div>
     <RecordingStoppedNotice
@@ -64,6 +70,9 @@
     :can-switch-mode="props.canSwitchMode"
     :microphone-id="sessionMicrophoneId"
     :select-microphone="selectMicrophone"
+    :has-back="hasBack"
+    :on-back="handleBack"
+    :close-all="cancel"
     @remove-context="emit('removeContext')"
     @switch-mode="switchToListen"
     @language-change="handleLanguageChange"
@@ -108,6 +117,8 @@ import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickDismissStore } from '../../stores/quick-dismiss'
+import { useVoiceReferenceStore } from '../../stores/voice-reference'
+import OverlayCloseButton from '../overlay/OverlayCloseButton.vue'
 import OverlayEscButton from '../overlay/OverlayEscButton.vue'
 import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
 import QuickModeSwitch from '../voice/QuickModeSwitch.vue'
@@ -226,6 +237,25 @@ const isOwnWindowShown = () =>
 const ownsActivation = () => isSameActivation() && isOwnWindowShown()
 const historyStore = useHistoryStore()
 const menuModalsStore = useMenuModalsStore()
+const voiceReferenceStore = useVoiceReferenceStore()
+const origin = computed(() =>
+  voiceReferenceStore.originFor(desktopStore.desktopState.activationId)
+)
+const hasBack = computed(() => Boolean(origin.value))
+
+async function handleBack() {
+  const previous = origin.value
+  await model.cancelWithoutClosing()
+  startError.value = null
+  if (previous?.mode === 'selectionActions') {
+    await useIpcStore().callOrNotify('activate_mode', {
+      mode: 'selectionActions',
+      text: previous.text ?? undefined,
+    })
+  } else {
+    emit('cancelled')
+  }
+}
 // a click elsewhere must not cut a dictation short
 const releaseDismissHold = useQuickDismissStore().hold()
 
@@ -464,6 +494,10 @@ useDismissibleLayer({
   elements: () => [],
   canDismissOutside: false,
   dismiss: () => {
+    if (hasBack.value) {
+      void handleBack()
+      return
+    }
     if (startError.value) {
       dismissStartError()
       return

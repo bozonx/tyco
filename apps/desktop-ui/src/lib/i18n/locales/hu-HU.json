@@ -329,7 +329,8 @@
     "openSettings": "Beállítások megnyitása",
     "remove": "Eltávolítás",
     "retry": "Újra",
-    "save": "Mentés"
+    "save": "Mentés",
+    "closeOrEscapeHint": "Az Escape vagy a Ctrl+Q bezárja az ablakot"
   },
   "desktopErrors": {
     "busy": "Egy másik művelet fut, próbálja később",

@@ -46,8 +46,10 @@ vi.mock('../../composables/use-toast', () => ({
 }))
 
 import { DictationError } from '../../lib/stt/dictation-error'
+import { useDesktopStore } from '../../stores/desktop'
 import { useHistoryStore } from '../../stores/history'
 import { useMenuModalsStore } from '../../stores/menu-modals'
+import { useVoiceReferenceStore } from '../../stores/voice-reference'
 
 describe('VoiceRecognitionMenu', () => {
   let desktop: TestDesktop
@@ -904,6 +906,45 @@ describe('VoiceRecognitionMenu', () => {
       expect.objectContaining({ mode: 'config', settingsTab: 'stt' })
     )
     expect(wrapper.emitted('cancelled')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('returns to action menu on back button click when origin is set', async () => {
+    const activateMode = vi.fn()
+    desktop.backend.handle('activate_mode', activateMode)
+    const voiceRef = useVoiceReferenceStore()
+    voiceRef.offerOrigin({
+      mode: 'selectionActions',
+      text: 'voice source text',
+      activationId: useDesktopStore().desktopState.activationId,
+    })
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar' },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+          AudioWaveform: true,
+          MicrophoneSourcePicker: true,
+          SttLanguagePicker: true,
+          VoiceRecordingActions: true,
+          RecordingBarFrame: { template: '<div><slot /></div>' },
+        },
+      },
+    })
+    await flushPromises()
+
+    const backBtn = wrapper.find('.voice-bar-back')
+    expect(backBtn.exists()).toBe(true)
+    await backBtn.trigger('click')
+    await flushPromises()
+
+    expect(activateMode).toHaveBeenCalledWith({
+      mode: 'selectionActions',
+      text: 'voice source text',
+    })
     wrapper.unmount()
   })
 })

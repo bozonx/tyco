@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import ListenRecordingBar from '../components/listen/ListenRecordingBar.vue'
 import { useDictationHandoffStore } from '../stores/dictation-handoff'
+import { useVoiceReferenceStore } from '../stores/voice-reference'
 import { useVoiceResultStore } from '../stores/voice-result'
 import { useDesktopStore } from '../stores/desktop'
 import { i18n } from '../lib/i18n'
@@ -260,6 +261,30 @@ describe('ListenView', () => {
     expect(activateMode).toHaveBeenCalledWith(
       expect.objectContaining({ mode: 'config', settingsTab: 'stt' })
     )
+    wrapper.unmount()
+  })
+
+  it('returns to action menu on back button click when origin is set', async () => {
+    const activateMode = vi.fn()
+    desktop.backend.handle('activate_mode', activateMode)
+    const voiceRef = useVoiceReferenceStore()
+    voiceRef.offerOrigin({
+      mode: 'selectionActions',
+      text: 'source text',
+      activationId: useDesktopStore().desktopState.activationId,
+    })
+    const wrapper = mountView()
+    await flushPromises()
+
+    const backBtn = wrapper.find('.listen-bar-back')
+    expect(backBtn.exists()).toBe(true)
+    await backBtn.trigger('click')
+    await flushPromises()
+
+    expect(activateMode).toHaveBeenCalledWith({
+      mode: 'selectionActions',
+      text: 'source text',
+    })
     wrapper.unmount()
   })
 })

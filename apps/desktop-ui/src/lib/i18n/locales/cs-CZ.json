@@ -329,7 +329,8 @@
     "openSettings": "Otevřít nastavení",
     "remove": "Odebrat",
     "retry": "Zkusit znovu",
-    "save": "Uložit"
+    "save": "Uložit",
+    "closeOrEscapeHint": "Escape nebo Ctrl+Q zavře okno"
   },
   "desktopErrors": {
     "busy": "Probíhá jiná operace, zkuste to později",

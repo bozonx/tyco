@@ -73,8 +73,9 @@ describe('ListenRecordingBar', () => {
         .get('.listen-bar-title')
         .element.nextElementSibling?.classList.contains('listen-bar-info')
     ).toBe(true)
-    expect(wrapper.get('.listen-bar-close .shortcut-label').text()).toBe(
-      i18n.global.t('common.close')
+    expect(wrapper.find('.listen-bar-close').exists()).toBe(true)
+    expect(wrapper.get('.listen-bar-close').attributes('title')).toBe(
+      i18n.global.t('common.closeOrEscapeHint')
     )
     expect(
       wrapper

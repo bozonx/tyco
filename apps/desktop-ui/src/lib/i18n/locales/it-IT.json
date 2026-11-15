@@ -329,7 +329,8 @@
     "openSettings": "Apri impostazioni",
     "remove": "Rimuovi",
     "retry": "Riprova",
-    "save": "Salva"
+    "save": "Salva",
+    "closeOrEscapeHint": "Escape o Ctrl+Q chiude la finestra"
   },
   "desktopErrors": {
     "busy": "È in corso un’altra operazione, riprova più tardi",

@@ -35,11 +35,17 @@
         @change="emit('language-change')"
       />
       <OverlayEscButton
+        v-if="hasBack"
+        mode="back"
+        class="listen-bar-back"
+        :disabled="isFinishing"
+        @click="emit('back')"
+      />
+      <OverlayCloseButton
         class="listen-bar-close"
-        :title="t('common.closeAllHint')"
+        :has-back="hasBack"
         :disabled="isFinishing"
         @click="void model.close()"
-        @close-all="void model.close()"
       />
     </div>
     <RecordingStoppedNotice
@@ -135,6 +141,7 @@ import {
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
+import OverlayCloseButton from '../overlay/OverlayCloseButton.vue'
 import OverlayEscButton from '../overlay/OverlayEscButton.vue'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 import OverlayDragHandle from '../quick/OverlayDragHandle.vue'
@@ -156,11 +163,13 @@ const props = defineProps<{
   /** The listening hotkey, which stops the recording too */
   stopHotkey?: string
   appLabel?: string
+  hasBack?: boolean
 }>()
 const emit = defineEmits<{
   (e: 'switch-mode'): void
   (e: 'language-change'): void
   (e: 'open-settings'): void
+  (e: 'back'): void
 }>()
 const { t } = useI18n()
 
@@ -229,9 +238,16 @@ const notice = computed(() => {
   min-height: 0;
 }
 
-.listen-bar-close {
+.listen-bar-back {
   margin-left: auto;
-  width: auto;
+}
+
+.listen-bar-close {
+  flex-shrink: 0;
+}
+
+.listen-bar-header:not(:has(.listen-bar-back)) .listen-bar-close {
+  margin-left: auto;
 }
 
 .listen-bar-header {

@@ -329,7 +329,8 @@
     "openSettings": "Otwórz ustawienia",
     "remove": "Usuń",
     "retry": "Ponów",
-    "save": "Zapisz"
+    "save": "Zapisz",
+    "closeOrEscapeHint": "Escape lub Ctrl+Q zamyka okno"
   },
   "desktopErrors": {
     "busy": "Trwa inna operacja, spróbuj później",

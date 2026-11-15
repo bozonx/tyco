@@ -40,4 +40,7 @@ export interface VoiceRecordingProps {
   finish: (intent?: VoiceFinishIntent) => Promise<void>
   finishWithStyle?: (rule: string) => Promise<void>
   cancel: () => Promise<void>
+  hasBack?: boolean
+  onBack?: () => void
+  closeAll?: () => void
 }

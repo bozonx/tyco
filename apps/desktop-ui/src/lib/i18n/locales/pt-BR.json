@@ -329,7 +329,8 @@
     "openSettings": "Abrir configurações",
     "remove": "Remover",
     "retry": "Tentar de novo",
-    "save": "Salvar"
+    "save": "Salvar",
+    "closeOrEscapeHint": "Escape ou Ctrl+Q fecha a janela"
   },
   "desktopErrors": {
     "busy": "Outra operação está em andamento, tente mais tarde",

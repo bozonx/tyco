@@ -329,7 +329,8 @@
     "openSettings": "設定を開く",
     "remove": "削除",
     "retry": "再試行",
-    "save": "保存"
+    "save": "保存",
+    "closeOrEscapeHint": "Escape または Ctrl+Q でウィンドウを閉じます"
   },
   "desktopErrors": {
     "busy": "別の操作を実行中です。後でもう一度お試しください",

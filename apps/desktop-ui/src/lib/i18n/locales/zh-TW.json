@@ -329,7 +329,8 @@
     "openSettings": "開啟設定",
     "remove": "移除",
     "retry": "重試",
-    "save": "儲存"
+    "save": "儲存",
+    "closeOrEscapeHint": "Escape 或 Ctrl+Q 關閉視窗"
   },
   "desktopErrors": {
     "busy": "另一項操作正在進行，請稍後重試",

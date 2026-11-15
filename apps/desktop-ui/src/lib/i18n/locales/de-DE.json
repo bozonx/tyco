@@ -329,7 +329,8 @@
     "openSettings": "Einstellungen öffnen",
     "remove": "Entfernen",
     "retry": "Erneut versuchen",
-    "save": "Speichern"
+    "save": "Speichern",
+    "closeOrEscapeHint": "Escape oder Ctrl+Q schließt das Fenster"
   },
   "desktopErrors": {
     "busy": "Ein anderer Vorgang läuft, bitte später erneut versuchen",

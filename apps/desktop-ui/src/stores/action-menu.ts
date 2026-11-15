@@ -39,6 +39,14 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
   const model = createActionMenuModel({
     activateMode: async (mode, profileId) => {
       pendingProfileId.value = profileId ?? null
+      if (mode === 'listen') {
+        const nextActivationId = desktopStore.desktopState.activationId + 1
+        useVoiceReferenceStore().offerOrigin({
+          mode: 'selectionActions',
+          text: desktopStore.desktopState.selectedText,
+          activationId: nextActivationId,
+        })
+      }
       await useIpcStore().callOrNotify('activate_mode', { mode })
     },
     openVoiceInput: async (text) => {

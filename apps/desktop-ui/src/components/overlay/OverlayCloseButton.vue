@@ -3,19 +3,28 @@
     class="overlay-close-button action-overlay-close"
     icon="mdi:close"
     :label="t('common.close')"
-    :title="title ?? t('common.closeAllHint')"
+    :title="resolvedTitle"
     @click="emit('click')"
   />
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { useI18n } from '../../composables/use-i18n'
 import IconButton from '../common/IconButton.vue'
 
-defineProps<{ title?: string }>()
+const props = defineProps<{ title?: string; hasBack?: boolean }>()
 
 const emit = defineEmits<{ (e: 'click'): void }>()
 const { t } = useI18n()
+
+const resolvedTitle = computed(() => {
+  if (props.title) return props.title
+  return props.hasBack
+    ? t('common.closeAllHint')
+    : t('common.closeOrEscapeHint')
+})
 </script>
 
 <style scoped>

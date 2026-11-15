@@ -1,13 +1,5 @@
 <template>
   <div ref="containerRef" class="write-mode-container">
-    <div class="write-header">
-      <OverlayEscButton
-        class="write-hint-action"
-        @mousedown.prevent
-        @click="cancelFromHint"
-        @close-all="cancelFromHint"
-      />
-    </div>
     <WriteLivePreview
       v-if="
         isLiveMode &&
@@ -29,38 +21,45 @@
       />
     </div>
     <!-- mousedown.prevent keeps the focus and the caret in the input -->
-    <p ref="hintRef" class="write-hint">
-      <ShortcutButton
-        size="sm"
-        :keys="['Shift', 'Space']"
-        type="button"
-        class="write-hint-action"
+    <div ref="hintRef" class="write-hint">
+      <OverlayCloseButton
+        class="write-close-action"
         @mousedown.prevent
-        @click="nextFromHint"
-      >
-        <span>{{ t('menu.actions') }}</span>
-      </ShortcutButton>
-      <ShortcutButton
-        size="sm"
-        :keys="[submitShortcutLabel]"
-        variant="primary"
-        type="button"
-        class="write-hint-action"
-        @mousedown.prevent
-        @click="submitFromHint"
-      >
-        <span>{{
-          isOffMode ? t('write.insert') : t('write.correctAndInsert')
-        }}</span>
-      </ShortcutButton>
-    </p>
+        @click="cancelFromHint"
+      />
+      <div class="write-hint-actions">
+        <ShortcutButton
+          size="sm"
+          :keys="['Shift', 'Space']"
+          type="button"
+          class="write-hint-action"
+          @mousedown.prevent
+          @click="nextFromHint"
+        >
+          <span>{{ t('menu.actions') }}</span>
+        </ShortcutButton>
+        <ShortcutButton
+          size="sm"
+          :keys="[submitShortcutLabel]"
+          variant="primary"
+          type="button"
+          class="write-hint-action"
+          @mousedown.prevent
+          @click="submitFromHint"
+        >
+          <span>{{
+            isOffMode ? t('write.insert') : t('write.correctAndInsert')
+          }}</span>
+        </ShortcutButton>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import OverlayEscButton from '../components/overlay/OverlayEscButton.vue'
+import OverlayCloseButton from '../components/overlay/OverlayCloseButton.vue'
 import ShortcutButton from '../components/overlay/ShortcutButton.vue'
 import WriteLivePreview from '../components/quick/WriteLivePreview.vue'
 import WriteModeInput from '../components/quick/WriteModeInput.vue'
@@ -337,10 +336,6 @@ function submit() {
 </script>
 
 <style scoped>
-.write-header {
-  display: flex;
-  justify-content: flex-end;
-}
 .write-mode-container {
   display: flex;
   flex-direction: column;
@@ -374,12 +369,11 @@ function submit() {
    lies below it */
 .write-hint {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  align-self: flex-end;
+  justify-content: space-between;
   gap: var(--space-sm);
   margin: 0;
-  padding: 0.25rem 0.625rem 0.25rem 0.25rem;
+  padding: 0.25rem 0.375rem 0.25rem 0.375rem;
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
   background-color: var(--app-quick-hint-surface);
@@ -387,6 +381,18 @@ function submit() {
   box-shadow: var(--app-shadow-sm);
   font-size: var(--text-caption);
   color: var(--app-text-muted);
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.write-hint-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.write-close-action {
   flex-shrink: 0;
 }
 

@@ -165,6 +165,15 @@ describe('quick input screen', () => {
     expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
   })
 
+  it('closes on close button click', async () => {
+    installCloseWindowKeys()
+    await wrapper.find('.action-overlay-close').trigger('click')
+    expect(mocks.writer.discard).toHaveBeenCalledOnce()
+    expect(mocks.correction.cancelInsert).toHaveBeenCalledOnce()
+    await flushPromises()
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
+  })
+
   it('keeps newline and cancel behavior', async () => {
     press('Enter', { shiftKey: true })
     expect(mocks.writer.setValue).toHaveBeenCalled()

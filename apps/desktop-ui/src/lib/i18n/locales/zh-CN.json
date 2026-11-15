@@ -329,7 +329,8 @@
     "openSettings": "打开设置",
     "remove": "移除",
     "retry": "重试",
-    "save": "保存"
+    "save": "保存",
+    "closeOrEscapeHint": "Escape 或 Ctrl+Q 关闭窗口"
   },
   "desktopErrors": {
     "busy": "另一项操作正在进行，请稍后重试",

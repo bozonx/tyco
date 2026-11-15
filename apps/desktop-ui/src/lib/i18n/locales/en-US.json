@@ -329,7 +329,8 @@
     "openSettings": "Open settings",
     "remove": "Remove",
     "retry": "Retry",
-    "save": "Save"
+    "save": "Save",
+    "closeOrEscapeHint": "Escape or Ctrl+Q closes the window"
   },
   "desktopErrors": {
     "busy": "Busy with another operation, try again later",

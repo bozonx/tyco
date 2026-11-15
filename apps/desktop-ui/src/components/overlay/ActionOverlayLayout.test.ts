@@ -156,6 +156,9 @@ describe('ActionOverlayLayout navigation', () => {
     menus.nextModal(MenuModals.INSERT, {})
     menus.nextModal(MenuModals.TRANSLATE, {})
     const wrapper = mountLayout()
+    expect(wrapper.get('.action-overlay-close').attributes('title')).toBe(
+      'common.closeAllHint'
+    )
     await wrapper.get('.action-overlay-close').trigger('click')
     await flushPromises()
     expect(menus.menuBreadcrumbs).toEqual([])
@@ -167,7 +170,7 @@ describe('ActionOverlayLayout navigation', () => {
     menus.nextModal(MenuModals.TRANSLATE, {})
     const wrapper = mountLayout()
     expect(wrapper.get('.action-overlay-close').attributes('title')).toBe(
-      'common.closeAllHint'
+      'common.closeOrEscapeHint'
     )
     await wrapper.get('.action-overlay-close').trigger('click')
     await flushPromises()
