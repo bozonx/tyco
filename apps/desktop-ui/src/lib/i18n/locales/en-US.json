@@ -1166,6 +1166,7 @@
     "storageLocationsInfo": "These service files stay on this device only and are not synchronized: local configuration, keys, recovery copies, cache, and logs. In normal use they do not need to be changed.",
     "storageLocationsUnavailable": "Filesystem storage information is available only in desktop mode.",
     "storageLogs": "Logs",
+    "storageOpenFolder": "Open folder",
     "storagePathCopied": "Path copied",
     "storageState": "State",
     "sttDictationSection": "Voice input",

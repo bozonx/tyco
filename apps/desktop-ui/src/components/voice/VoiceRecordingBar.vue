@@ -7,7 +7,7 @@
         canSwitchMode || Boolean(replyTo) || props.showCancelButton,
     }"
     :label="ariaLabel"
-    collapse-mode="voice"
+    :collapse-mode="props.canCollapse ? 'voice' : undefined"
   >
     <div class="voice-bar-header">
       <OverlayDragHandle />
@@ -123,6 +123,7 @@ import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 
 const props = withDefaults(defineProps<VoiceRecordingProps>(), {
   showCancelButton: true,
+  canCollapse: false,
 })
 const emit = defineEmits<{
   (e: 'switch-mode'): void

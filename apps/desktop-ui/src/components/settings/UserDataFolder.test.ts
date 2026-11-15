@@ -67,7 +67,12 @@ describe('UserDataFolder.vue', () => {
     expect(actionButtons[0].attributes('aria-label')).toBe(
       'settings.storageCopyPath'
     )
-    expect(actionButtons[1].text()).toContain('common.open')
+    expect(actionButtons[1].attributes('aria-label')).toBe(
+      'settings.storageOpenFolder'
+    )
+    expect(actionButtons[1].attributes('title')).toBe(
+      'settings.storageOpenFolder'
+    )
     expect(actionButtons[2].text()).toContain('common.change')
     expect(wrapper.find('input[type="checkbox"]').exists()).toBe(false)
   })

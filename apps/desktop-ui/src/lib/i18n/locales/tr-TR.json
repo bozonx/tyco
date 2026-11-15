@@ -1163,6 +1163,7 @@
     "storageLocationsInfo": "Bu hizmet dosyaları yalnızca bu cihazda kalır ve eşzamanlanmaz: yerel yapılandırma, anahtarlar, kurtarma kopyaları, önbellek ve günlükler. Normal kullanımda değiştirilmeleri gerekmez.",
     "storageLocationsUnavailable": "Dosya sistemi depolama bilgisi sadece desktop modunda kullanılabilir.",
     "storageLogs": "Günlükler",
+    "storageOpenFolder": "Klasörü aç",
     "storagePathCopied": "Yol kopyalandı",
     "storageState": "Durum",
     "sttDictationSection": "Sesli giriş",

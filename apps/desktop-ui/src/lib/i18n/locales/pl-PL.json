@@ -1166,6 +1166,7 @@
     "storageLocationsInfo": "Te pliki usługowe pozostają wyłącznie na tym urządzeniu i nie są synchronizowane: lokalna konfiguracja, klucze, kopie odzyskiwania, pamięć podręczna i logi. W codziennym użyciu nie trzeba ich zmieniać.",
     "storageLocationsUnavailable": "Informacje o przechowywaniu w systemie plików są dostępne tylko w trybie desktopowym.",
     "storageLogs": "Dzienniki",
+    "storageOpenFolder": "Otwórz folder",
     "storagePathCopied": "Skopiowano ścieżkę",
     "storageState": "Stan",
     "sttDictationSection": "Wprowadzanie głosowe",

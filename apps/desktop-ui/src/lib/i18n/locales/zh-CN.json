@@ -1160,6 +1160,7 @@
     "storageLocationsInfo": "这些服务文件仅保留在此设备上，不会同步：本地配置、密钥、恢复副本、缓存和日志。正常使用时无需更改。",
     "storageLocationsUnavailable": "文件系统存储信息仅在桌面模式下可用。",
     "storageLogs": "日志",
+    "storageOpenFolder": "打开文件夹",
     "storagePathCopied": "路径已复制",
     "storageState": "状态",
     "sttDictationSection": "语音输入",

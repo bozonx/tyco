@@ -518,7 +518,8 @@ describe('Settings.vue', () => {
     const openBtn = storageItems[0].get(
       '.storage-path-actions .storage-open-btn'
     )
-    expect(openBtn.text()).toContain('common.open')
+    expect(openBtn.attributes('aria-label')).toBe('settings.storageOpenFolder')
+    expect(openBtn.attributes('title')).toBe('settings.storageOpenFolder')
   })
 
   it('renders stt provider and llm formatting sections in stt tab', async () => {

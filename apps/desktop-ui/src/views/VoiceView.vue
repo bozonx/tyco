@@ -9,6 +9,7 @@
       :reference-text="referenceText"
       :can-switch-mode="isQuickWindow()"
       :keep-error-visible="isQuickWindow()"
+      :can-collapse="props.bar"
       @corrected="handleCorrected"
       @cancelled="handleCancelled"
     />

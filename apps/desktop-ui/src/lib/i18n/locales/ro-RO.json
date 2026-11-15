@@ -1166,6 +1166,7 @@
     "storageLocationsInfo": "Aceste fișiere de serviciu rămân doar pe acest dispozitiv și nu sunt sincronizate: configurația locală, cheile, copiile de recuperare, cache-ul și jurnalele. În utilizarea obișnuită nu este nevoie să le schimbați.",
     "storageLocationsUnavailable": "Informațiile despre stocarea în sistemul de fișiere sunt disponibile doar în modul desktop.",
     "storageLogs": "Jurnale",
+    "storageOpenFolder": "Deschide dosarul",
     "storagePathCopied": "Cale copiată",
     "storageState": "Stare",
     "sttDictationSection": "Intrare vocală",

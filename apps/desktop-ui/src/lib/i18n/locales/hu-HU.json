@@ -1163,6 +1163,7 @@
     "storageLocationsInfo": "Ezek a szolgáltatási fájlok csak ezen az eszközön maradnak, és nem szinkronizálódnak: helyi konfiguráció, kulcsok, helyreállítási másolatok, gyorsítótár és naplók. Normál használat mellett nem szükséges módosítani őket.",
     "storageLocationsUnavailable": "A fájlrendszerbeli tárolás adatai csak asztali módban érhetők el.",
     "storageLogs": "Naplók",
+    "storageOpenFolder": "Mappa megnyitása",
     "storagePathCopied": "Útvonal kimásolva",
     "storageState": "Állapot",
     "sttDictationSection": "Hangbevitel",

@@ -37,16 +37,15 @@
               :label="t('settings.storageCopyPath')"
               :copied-label="t('settings.storagePathCopied')"
             />
-            <Button
+            <IconButton
               class="storage-open-btn"
               size="xs"
               variant="ghost"
               tone="muted"
               icon="mdi:folder-open-outline"
+              :label="t('settings.storageOpenFolder')"
               @click="openStorageLocation(item.kind)"
-            >
-              {{ t('common.open') }}
-            </Button>
+            />
           </div>
         </div>
       </div>
@@ -58,9 +57,9 @@ import { computed, onMounted, ref, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useIpcStore } from '../../stores/ipc'
-import Button from '../common/Button.vue'
 import CopyButton from '../common/CopyButton.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
+import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import StateMessage from '../common/StateMessage.vue'
 import type { StorageInfo, StorageKind } from '@tyco/shared'
@@ -185,7 +184,8 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.storage-copy-btn {
+.storage-copy-btn,
+.storage-open-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -208,13 +208,16 @@ onMounted(() => {
 }
 
 .storage-copy-btn:hover,
-.storage-copy-btn:focus-visible {
+.storage-copy-btn:focus-visible,
+.storage-open-btn:hover,
+.storage-open-btn:focus-visible {
   opacity: 1;
   background-color: var(--app-hover);
   color: var(--color-base-content);
 }
 
-.storage-copy-btn:focus-visible {
+.storage-copy-btn:focus-visible,
+.storage-open-btn:focus-visible {
   box-shadow: var(--app-focus-ring);
 }
 </style>

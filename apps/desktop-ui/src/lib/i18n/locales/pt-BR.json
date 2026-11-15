@@ -1166,6 +1166,7 @@
     "storageLocationsInfo": "Estes arquivos de serviço ficam apenas neste dispositivo e não são sincronizados: configuração local, chaves, cópias de recuperação, cache e registros. No uso normal, não precisam ser alterados.",
     "storageLocationsUnavailable": "As informações sobre o armazenamento no sistema de arquivos só estão disponíveis no modo desktop.",
     "storageLogs": "Logs",
+    "storageOpenFolder": "Abrir pasta",
     "storagePathCopied": "Caminho copiado",
     "storageState": "Estado",
     "sttDictationSection": "Entrada de voz",

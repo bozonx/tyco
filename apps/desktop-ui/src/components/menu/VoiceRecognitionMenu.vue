@@ -68,6 +68,7 @@
     :reply-to="props.replyTo"
     :reference-text="props.referenceText"
     :can-switch-mode="props.canSwitchMode"
+    :can-collapse="props.canCollapse"
     :microphone-id="sessionMicrophoneId"
     :select-microphone="selectMicrophone"
     :has-back="hasBack"

@@ -1160,6 +1160,7 @@
     "storageLocationsInfo": "Tyto servisní soubory zůstávají pouze na tomto zařízení a nesynchronizují se: místní konfigurace, klíče, kopie pro obnovení, mezipaměť a protokoly. Při běžném používání je není třeba měnit.",
     "storageLocationsUnavailable": "Informace o úložišti v souborovém systému jsou dostupné jen v desktopovém režimu.",
     "storageLogs": "Protokoly",
+    "storageOpenFolder": "Otevřít složku",
     "storagePathCopied": "Cesta zkopírována",
     "storageState": "Stav",
     "sttDictationSection": "Hlasový vstup",

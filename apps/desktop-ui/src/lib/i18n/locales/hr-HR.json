@@ -1166,6 +1166,7 @@
     "storageLocationsInfo": "Ove servisne datoteke ostaju samo na ovom uređaju i ne sinkroniziraju se: lokalna konfiguracija, ključevi, kopije za oporavak, predmemorija i zapisnici. Pri uobičajenoj upotrebi nije ih potrebno mijenjati.",
     "storageLocationsUnavailable": "Podaci o pohrani u datotečnom sustavu dostupni su samo u desktop načinu.",
     "storageLogs": "Zapisnici",
+    "storageOpenFolder": "Otvori mapu",
     "storagePathCopied": "Putanja je kopirana",
     "storageState": "Stanje",
     "sttDictationSection": "Glasovni unos",

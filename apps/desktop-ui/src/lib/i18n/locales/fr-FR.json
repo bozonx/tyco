@@ -1166,6 +1166,7 @@
     "storageLocationsInfo": "Ces fichiers de service restent uniquement sur cet appareil et ne sont pas synchronisés : configuration locale, clés, copies de récupération, cache et journaux. En usage normal, ils n’ont pas besoin d’être modifiés.",
     "storageLocationsUnavailable": "Les informations sur le stockage dans le système de fichiers ne sont disponibles qu’en mode bureau.",
     "storageLogs": "Journaux",
+    "storageOpenFolder": "Ouvrir le dossier",
     "storagePathCopied": "Chemin copié",
     "storageState": "État",
     "sttDictationSection": "Saisie vocale",

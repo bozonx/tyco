@@ -1163,6 +1163,7 @@
     "storageLocationsInfo": "これらのサービス用ファイルはこのデバイスにのみ保存され、同期されません（ローカル設定、キー、復旧用コピー、キャッシュ、ログ）。通常利用で変更する必要はありません。",
     "storageLocationsUnavailable": "ファイルシステムの保存場所情報はデスクトップアプリでのみ利用可能です。",
     "storageLogs": "ログ",
+    "storageOpenFolder": "フォルダーを開く",
     "storagePathCopied": "パスをコピーしました",
     "storageState": "状態",
     "sttDictationSection": "音声入力",

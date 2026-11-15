@@ -15,14 +15,13 @@
             :label="t('settings.storageCopyPath')"
             :copied-label="t('settings.storagePathCopied')"
           />
-          <Button
+          <IconButton
             size="sm"
             variant="ghost"
             icon="mdi:folder-open-outline"
+            :label="t('settings.storageOpenFolder')"
             @click="open"
-          >
-            {{ t('common.open') }}
-          </Button>
+          />
           <Button
             size="sm"
             icon="mdi:folder-search-outline"
@@ -61,6 +60,7 @@ import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useUserDataStore } from '../../stores/user-data'
 import Button from '../common/Button.vue'
 import CopyButton from '../common/CopyButton.vue'
+import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import SettingsSection from './SettingsSection.vue'

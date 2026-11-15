@@ -1160,6 +1160,7 @@
     "storageLocationsInfo": "이 서비스 파일은 이 기기에만 저장되며 동기화되지 않습니다(로컬 구성, 키, 복구 사본, 캐시, 로그). 일반적인 사용에서는 변경할 필요가 없습니다.",
     "storageLocationsUnavailable": "파일 시스템 저장소 정보는 데스크톱 모드에서만 사용할 수 있습니다.",
     "storageLogs": "로그",
+    "storageOpenFolder": "폴더 열기",
     "storagePathCopied": "경로가 복사되었습니다",
     "storageState": "상태",
     "sttDictationSection": "음성 입력",

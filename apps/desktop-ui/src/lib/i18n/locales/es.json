@@ -1166,6 +1166,7 @@
     "storageLocationsInfo": "Estos archivos de servicio permanecen solo en este dispositivo y no se sincronizan: configuración local, claves, copias de recuperación, caché y registros. En el uso normal no es necesario cambiarlos.",
     "storageLocationsUnavailable": "La información sobre el almacenamiento en el sistema de archivos solo está disponible en el modo de escritorio.",
     "storageLogs": "Registros",
+    "storageOpenFolder": "Abrir la carpeta",
     "storagePathCopied": "Ruta copiada",
     "storageState": "Estado",
     "sttDictationSection": "Entrada de voz",

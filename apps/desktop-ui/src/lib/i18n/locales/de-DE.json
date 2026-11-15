@@ -1166,6 +1166,7 @@
     "storageLocationsInfo": "Diese Dienstdateien verbleiben nur auf diesem Gerät und werden nicht synchronisiert: lokale Konfiguration, Schlüssel, Wiederherstellungskopien, Cache und Protokolle. Im normalen Betrieb müssen sie nicht geändert werden.",
     "storageLocationsUnavailable": "Informationen zum Speicher im Dateisystem sind nur im Desktop-Modus verfügbar.",
     "storageLogs": "Protokolle",
+    "storageOpenFolder": "Ordner öffnen",
     "storagePathCopied": "Pfad kopiert",
     "storageState": "Zustand",
     "sttDictationSection": "Spracheingabe",

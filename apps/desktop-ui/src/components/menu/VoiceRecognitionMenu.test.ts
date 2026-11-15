@@ -92,14 +92,36 @@ describe('VoiceRecognitionMenu', () => {
     await flushPromises()
 
     const buttons = wrapper.findAll('button')
-    // Collapse, Finish, Cancel, and Send.
-    expect(buttons.length).toBe(4)
+    // Finish, Cancel, and Send. Collapse button is not rendered without canCollapse.
+    expect(buttons.length).toBe(3)
+    expect(wrapper.find('.recording-collapse-button').exists()).toBe(false)
 
     const cancelBtn = wrapper.find('button[title="chat.voiceCancelHint"]')
     expect(cancelBtn.exists()).toBe(true)
 
     const sendBtn = wrapper.find('button[title="chat.voiceSendNow"]')
     expect(sendBtn.exists()).toBe(true)
+  })
+
+  it('renders collapse button when canCollapse is true', async () => {
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar', chat: true, canCollapse: true },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+          AudioWaveform: true,
+          SttLanguagePicker: true,
+          ShortcutButton: true,
+          Button: true,
+          Icon: true,
+        },
+      },
+    })
+    await flushPromises()
+    expect(wrapper.find('.recording-collapse-button').exists()).toBe(true)
   })
 
   it('triggers finish with submit on send button click', async () => {
