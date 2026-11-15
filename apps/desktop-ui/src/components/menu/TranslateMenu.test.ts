@@ -1,4 +1,3 @@
-import QueryPanel from './QueryPanel.vue'
 import { translationLanguageIds } from '../../lib/translation/translation-languages'
 
 import { DEFAULT_SESSION_STATE } from '@tyco/shared'
@@ -135,11 +134,14 @@ describe('TranslateMenu', () => {
     const wrapper = mountMenu()
     await shortcutListProps.spaceKey.action()
     await nextTick()
-    const options = wrapper.findComponent(QueryPanel).props('options')!
-    expect(options.map((option) => option.id).sort()).toEqual(
+    const targetColumn = wrapper.find('[data-field="target"]')
+    const optionIds = targetColumn
+      .findAll('.translate-option')
+      .map((el) => el.attributes('data-option-id'))
+    expect(optionIds.sort()).toEqual(
       translationLanguageIds('google', 'target').sort()
     )
-    expect(options.length).toBeGreaterThan(100)
+    expect(optionIds.length).toBeGreaterThan(100)
   })
 
   it('translates into any language picked from the full list', async () => {
@@ -147,7 +149,7 @@ describe('TranslateMenu', () => {
 
     await shortcutListProps.spaceKey.action()
     await nextTick()
-    const input = wrapper.find('input')
+    const input = wrapper.find<HTMLInputElement>('input[data-field="target"]')
     await input.setValue('ital')
     await input.trigger('keydown', { key: 'Enter' })
 
@@ -165,12 +167,16 @@ describe('TranslateMenu', () => {
 
     await shortcutListProps.spaceKey.action()
     await nextTick()
-    const input = wrapper.find('input')
-    await wrapper.find('.language-field').trigger('click')
-    await input.setValue('polish')
-    await input.trigger('keydown', { key: 'Enter' })
-    await input.setValue('ital')
-    await input.trigger('keydown', { key: 'Enter' })
+    const sourceInput = wrapper.find<HTMLInputElement>(
+      'input[data-field="source"]'
+    )
+    const targetInput = wrapper.find<HTMLInputElement>(
+      'input[data-field="target"]'
+    )
+    await sourceInput.setValue('polish')
+    await sourceInput.trigger('keydown', { key: 'Enter' })
+    await targetInput.setValue('ital')
+    await targetInput.trigger('keydown', { key: 'Enter' })
 
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
     expect(transform).toHaveBeenCalledWith(
@@ -188,7 +194,7 @@ describe('TranslateMenu', () => {
 
     await shortcutListProps.spaceKey.action()
     await nextTick()
-    const input = wrapper.find('input')
+    const input = wrapper.find<HTMLInputElement>('input[data-field="target"]')
     await input.trigger('keydown', { key: 'Enter' })
     expect(transform).not.toHaveBeenCalled()
 
@@ -203,7 +209,7 @@ describe('TranslateMenu', () => {
 
     await shortcutListProps.spaceKey.action()
     await nextTick()
-    const input = wrapper.find('input')
+    const input = wrapper.find<HTMLInputElement>('input[data-field="target"]')
     await input.setValue('german')
     await input.trigger('keydown', { key: 'Enter' })
 
@@ -218,13 +224,40 @@ describe('TranslateMenu', () => {
     await nextTick()
     const button = wrapper.find('button.shortcut-hint')
     expect(button.attributes('disabled')).toBeDefined()
-    await wrapper.find('input').trigger('keydown', { key: 'ArrowDown' })
+    await wrapper
+      .find<HTMLInputElement>('input[data-field="target"]')
+      .trigger('keydown', { key: 'ArrowDown' })
     expect(button.attributes('disabled')).toBeUndefined()
     await button.trigger('click')
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
     expect(transform.mock.calls[0]![2].operationConfig.language).toBe('it-IT')
     wrapper.unmount()
   })
+
+  it('switches active field with Tab key', async () => {
+    const wrapper = mountMenu()
+    await shortcutListProps.spaceKey.action()
+    await nextTick()
+    const targetInput = wrapper.find<HTMLInputElement>(
+      'input[data-field="target"]'
+    )
+    await targetInput.trigger('keydown', { key: 'Tab' })
+    expect(wrapper.find('[data-field="source"]').classes()).toContain(
+      'is-active'
+    )
+  })
+
+  it('translates immediately when clicking a target language option', async () => {
+    const wrapper = mountMenu()
+    await shortcutListProps.spaceKey.action()
+    await nextTick()
+    const targetOptions = wrapper
+      .find('[data-field="target"]')
+      .findAll('.translate-option')
+    await targetOptions[0].trigger('click')
+    await vi.waitFor(() => expect(transform).toHaveBeenCalled())
+  })
+
   it('drops late results and stages after cancellation without clearing a new operation', async () => {
     let resolve!: (value: typeof result) => void
     transform.mockReturnValue(
