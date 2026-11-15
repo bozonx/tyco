@@ -81,8 +81,8 @@ describe('ListenRecordingBar', () => {
         .get('.listen-bar-actions')
         .findAll('kbd')
         .map((key) => key.text())
-    ).toEqual(['Shift', 'Space', 'Space', 'Enter'])
-    expect(wrapper.get('.listen-bar-actions').text()).toContain(
+    ).toEqual(['Space', 'Enter'])
+    expect(wrapper.get('.listen-bar-actions').text()).not.toContain(
       i18n.global.t('menu.actions')
     )
 

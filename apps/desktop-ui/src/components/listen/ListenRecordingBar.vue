@@ -112,14 +112,6 @@
       <div v-else class="listen-bar-actions">
         <ShortcutButton
           size="sm"
-          :keys="['Shift', 'Space']"
-          :disabled="isFinishing"
-          @click="void model.stop()"
-        >
-          {{ t('menu.actions') }}
-        </ShortcutButton>
-        <ShortcutButton
-          size="sm"
           :keys="stopKeys"
           variant="primary"
           :disabled="isFinishing"

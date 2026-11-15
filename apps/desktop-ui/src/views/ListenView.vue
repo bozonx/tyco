@@ -177,6 +177,7 @@ function onKeyUp(event: KeyboardEvent) {
     !event.ctrlKey &&
     !event.altKey &&
     !event.metaKey &&
+    // Shift+Space too: the result of a listening is its actions menu
     (!event.shiftKey || event.code === 'Space') &&
     !isInteractiveOrTypingTarget(event.target)
   ) {
