@@ -969,4 +969,67 @@ describe('VoiceRecognitionMenu', () => {
     })
     wrapper.unmount()
   })
+
+  it('returns to action menu on Escape key when origin is set', async () => {
+    const activateMode = vi.fn()
+    desktop.backend.handle('activate_mode', activateMode)
+    const voiceRef = useVoiceReferenceStore()
+    voiceRef.offerOrigin({
+      mode: 'selectionActions',
+      text: 'voice source text',
+      activationId: useDesktopStore().desktopState.activationId,
+    })
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar' },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+          AudioWaveform: true,
+          MicrophoneSourcePicker: true,
+          SttLanguagePicker: true,
+          VoiceRecordingActions: true,
+          RecordingBarFrame: { template: '<div><slot /></div>' },
+        },
+      },
+    })
+    await flushPromises()
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await flushPromises()
+
+    expect(activateMode).toHaveBeenCalledWith({
+      mode: 'selectionActions',
+      text: 'voice source text',
+    })
+    wrapper.unmount()
+  })
+
+  it('cancels and emits cancelled on Escape key when origin is not set', async () => {
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar' },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+          AudioWaveform: true,
+          MicrophoneSourcePicker: true,
+          SttLanguagePicker: true,
+          VoiceRecordingActions: true,
+          RecordingBarFrame: { template: '<div><slot /></div>' },
+        },
+      },
+    })
+    await flushPromises()
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await flushPromises()
+
+    expect(wrapper.emitted('cancelled')).toHaveLength(1)
+    wrapper.unmount()
+  })
 })

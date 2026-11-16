@@ -599,6 +599,22 @@ function handleKeyUp(event: KeyboardEvent) {
 }
 
 function handleKeyDown(event: KeyboardEvent) {
+  if (event.key === 'Escape' || event.code === 'Escape') {
+    event.preventDefault()
+    if (event.shiftKey) {
+      void cancel()
+      return
+    }
+    if (hasBack.value) {
+      void handleBack()
+    } else if (startError.value) {
+      dismissStartError()
+    } else {
+      void cancel()
+    }
+    return
+  }
+
   if (isTypingKey(event)) return
   const matchingStyle = findMatchingStyle(event)
   if (matchingStyle) {

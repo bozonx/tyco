@@ -36,7 +36,18 @@
               class="mic-icon"
               :class="{ 'is-warning': isAutoStopWarning }"
             />
-            <span>{{ currentStatusLabel }}</span>
+            <span
+              v-if="isAutoStopWarning && autoStopParts"
+              class="waveform-status-label"
+              >{{ autoStopParts.prefix
+              }}<span class="auto-stop-seconds">{{
+                autoStopParts.seconds
+              }}</span
+              >{{ autoStopParts.suffix }}</span
+            >
+            <span v-else class="waveform-status-label">{{
+              currentStatusLabel
+            }}</span>
           </div>
           <div class="waveform-timer">{{ formattedDuration }}</div>
         </div>
@@ -120,6 +131,13 @@ const currentStatusLabel = computed(() => {
     return t('menu.autoStopCountdown', { seconds: autoStopSecondsLeft.value })
   }
   return props.statusLabel ?? t('menu.listening')
+})
+
+const autoStopParts = computed(() => {
+  if (autoStopSecondsLeft.value === undefined) return null
+  const template = t('menu.autoStopCountdown', { seconds: '__SEC__' })
+  const [prefix = '', suffix = ''] = template.split('__SEC__')
+  return { prefix, seconds: autoStopSecondsLeft.value, suffix }
 })
 
 const isProcessing = computed(
@@ -301,6 +319,21 @@ onUnmounted(() => {
   gap: var(--space-xs);
   font-weight: 500;
   transition: color 0.15s ease;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.waveform-status-label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.auto-stop-seconds {
+  display: inline-block;
+  min-width: 2ch;
+  text-align: center;
+  font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
 }
 
 .waveform-status.is-warning {

@@ -10,7 +10,7 @@ export const MAX_RECORDING_MS = 3_600_000
  * A recording with no recognized speech for this long was left running. Every
  * kind of voice input stops after it: dictation and voice commands alike.
  */
-export const SILENCE_TIMEOUT_MS = 180_000
+export const SILENCE_TIMEOUT_MS = 30_000
 /** How long the countdown before an automatic stop is shown */
 export const AUTO_STOP_WARNING_MS = 20_000
 
