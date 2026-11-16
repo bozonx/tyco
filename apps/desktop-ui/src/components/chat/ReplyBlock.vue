@@ -14,6 +14,7 @@
         v-if="isDiffOpen && originalText"
         :old-text="originalText"
         :new-text="block.text"
+        appearance="plain"
         mode="unified"
       />
       <div v-else class="reply-block-text selectable">
@@ -142,6 +143,24 @@ const hasDiffOption = computed(
 .reply-block-content {
   font-size: var(--text-body);
   line-height: 1.55;
+}
+
+.reply-block-content :deep(.diff-container) {
+  height: auto;
+  flex: none;
+  border: none;
+  background: transparent;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.reply-block-content :deep(.diff-unified-view) {
+  padding: 0;
+  overflow: visible;
+  overscroll-behavior: auto;
+  flex: none;
+  min-height: auto;
+  height: auto;
 }
 
 .reply-block-text {

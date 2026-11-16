@@ -937,6 +937,7 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-sm);
   --shortcut-width: auto;
+  outline: none;
 }
 
 .quick-result-actions .select {
