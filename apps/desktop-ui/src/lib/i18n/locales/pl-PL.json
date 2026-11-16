@@ -1550,6 +1550,7 @@
     "hideDiff": "Ukryj zmiany"
   },
   "quickAiRequest": {
+    "sourceContext": "Zaznaczony tekst",
     "goToChat": "Przejdź do czatu",
     "followUp": "Kolejne zapytanie",
     "chooseVariant": "Wybierz wariant",

@@ -1550,6 +1550,7 @@
     "hideDiff": "Sakrij promjene"
   },
   "quickAiRequest": {
+    "sourceContext": "Odabrani tekst",
     "goToChat": "Idi na chat",
     "followUp": "Još jedan upit",
     "chooseVariant": "Odaberite varijantu",

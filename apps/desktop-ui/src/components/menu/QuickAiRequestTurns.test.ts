@@ -113,3 +113,29 @@ it('applies a reply block to the window or the editor with the selection to comp
     [applied, 'editor'],
   ])
 })
+
+it('passes canInsertIntoEditor prop to reply blocks', () => {
+  const wrapper = shallowMount(QuickAiRequestTurns, {
+    props: {
+      canInsertIntoEditor: false,
+      turns: [
+        turnWith({
+          role: 'assistant',
+          content: '',
+          parts: [
+            {
+              type: 'tool-call',
+              toolCallId: 'pr1',
+              toolName: 'propose_replies',
+              input: { blocks: [{ title: 'Option', text: 'Better' }] },
+              state: 'done',
+            },
+          ],
+        }),
+      ],
+    },
+  })
+
+  const block = wrapper.findComponent({ name: 'ReplyBlock' })
+  expect(block.props('canInsertIntoEditor')).toBe(false)
+})

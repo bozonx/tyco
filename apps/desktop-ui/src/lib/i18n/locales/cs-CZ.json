@@ -1544,6 +1544,7 @@
     "hideDiff": "Skrýt změny"
   },
   "quickAiRequest": {
+    "sourceContext": "Vybraný text",
     "goToChat": "Přejít do chatu",
     "followUp": "Další dotaz",
     "chooseVariant": "Vyberte variantu",

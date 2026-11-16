@@ -1547,6 +1547,7 @@
     "hideDiff": "Өзгерістерді жасыру"
   },
   "quickAiRequest": {
+    "sourceContext": "Таңдалған мәтін",
     "goToChat": "Чатқа өту",
     "followUp": "Тағы бір сұрау",
     "chooseVariant": "Нұсқаны таңдаңыз",

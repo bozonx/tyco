@@ -1550,6 +1550,7 @@
     "hideDiff": "Änderungen ausblenden"
   },
   "quickAiRequest": {
+    "sourceContext": "Ausgewählter Text",
     "goToChat": "Zum Chat wechseln",
     "followUp": "Weitere Anfrage",
     "chooseVariant": "Variante auswählen",

@@ -1547,6 +1547,7 @@
     "hideDiff": "ცვლილებების დამალვა"
   },
   "quickAiRequest": {
+    "sourceContext": "არჩეული ტექსტი",
     "goToChat": "ჩატში გადასვლა",
     "followUp": "კიდევ ერთი მოთხოვნა",
     "chooseVariant": "აირჩიეთ ვარიანტი",

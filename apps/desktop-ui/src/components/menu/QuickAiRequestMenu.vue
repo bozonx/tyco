@@ -15,15 +15,46 @@
       >
     </template>
     <template #preview>
-      <ContextPreview
-        v-if="props.text"
-        :text="model.rawSourceText.value ?? props.text"
-        :editable="!model.isSourceTextLocked.value"
-        :disabled="model.isSourceTextDisabled.value"
-        :allow-disable="!model.isSourceTextLocked.value"
-        @update:text="(text) => model.setSourceText(text)"
-        @update:disabled="(disabled) => model.setSourceTextDisabled(disabled)"
-      />
+      <div
+        v-if="
+          props.text &&
+          (model.turns.value.length === 0 || !model.isSourceTextDisabled.value)
+        "
+        class="quick-context-preview"
+        :class="{ 'is-with-turns': model.turns.value.length > 0 }"
+      >
+        <div v-if="model.turns.value.length > 0" class="quick-context-header">
+          <div class="quick-context-title">
+            <AppIcon
+              icon="mdi:selection-drag"
+              size="xs"
+              class="quick-context-icon"
+            />
+            <span>{{ t('quickAiRequest.sourceContext') }}</span>
+          </div>
+          <div class="quick-context-actions">
+            <CopyButton
+              class="quick-context-action-btn"
+              :value="model.rawSourceText.value ?? props.text"
+              :label="t('action.copy')"
+              size="xs"
+            />
+          </div>
+        </div>
+
+        <ContextPreview
+          v-if="model.turns.value.length === 0"
+          :text="model.rawSourceText.value ?? props.text"
+          :editable="!model.isSourceTextLocked.value"
+          :disabled="model.isSourceTextDisabled.value"
+          :allow-disable="!model.isSourceTextLocked.value"
+          @update:text="(text) => model.setSourceText(text)"
+          @update:disabled="(disabled) => model.setSourceTextDisabled(disabled)"
+        />
+        <div v-else class="quick-context-body selectable">
+          {{ model.rawSourceText.value ?? props.text }}
+        </div>
+      </div>
       <div
         v-if="props.screenshotMode"
         class="screenshot-preview"
@@ -66,6 +97,7 @@
         :turns="model.turns.value"
         :source-text="model.sourceText.value"
         :pending-approvals="runtime.pendingApprovals.value"
+        :can-insert-into-editor="!editorNavigation.isEditorPage()"
         @apply-reply-block="(block, target) => applyReply(block, target)"
         @answer-tool-approval="
           (approvalId, decision) =>
@@ -114,15 +146,6 @@
           :disabled="isInputBlocked || isApplying"
           @update:model-value="(index) => model.selectReplyBlock(Number(index))"
         />
-        <ShortcutButton
-          v-if="
-            model.selectedReplyBlock.value && !editorNavigation.isEditorPage()
-          "
-          :keys="[]"
-          :disabled="isInputBlocked || isApplying"
-          @click="applyReply(model.selectedReplyBlock.value!, 'editor')"
-          >{{ t('shortcuts.insertIntoEditor') }}</ShortcutButton
-        >
         <ShortcutButton
           :keys="[]"
           variant="ghost"
@@ -281,6 +304,7 @@ import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
+import CopyButton from '../common/CopyButton.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
@@ -918,6 +942,62 @@ onUnmounted(() => {
 .quick-result-actions .select {
   width: 100%;
   min-width: 0;
+}
+
+.quick-context-preview:not(.is-with-turns) {
+  display: flex;
+  flex: 1 1 0%;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.quick-context-preview.is-with-turns {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--app-border-subtle);
+  background-color: var(--app-surface-raised);
+  padding: var(--space-xs) var(--space-md) var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs, 0.25rem);
+}
+
+.quick-context-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
+.quick-context-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--app-text-muted);
+}
+
+.quick-context-icon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.quick-context-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.quick-context-body {
+  font-size: var(--text-caption);
+  line-height: 1.45;
+  color: var(--color-base-content);
+  max-height: 5.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .screenshot-preview {

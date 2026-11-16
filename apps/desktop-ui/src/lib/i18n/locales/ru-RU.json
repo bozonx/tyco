@@ -1547,6 +1547,7 @@
     "hideDiff": "Скрыть изменения"
   },
   "quickAiRequest": {
+    "sourceContext": "Выделенный текст",
     "goToChat": "Перейти в чат",
     "followUp": "Ещё запрос",
     "chooseVariant": "Выберите вариант",

@@ -1547,6 +1547,7 @@
     "hideDiff": "Módosítások elrejtése"
   },
   "quickAiRequest": {
+    "sourceContext": "Kijelölt szöveg",
     "goToChat": "Ugrás a csevegéshez",
     "followUp": "Újabb kérés",
     "chooseVariant": "Válasszon egy változatot",

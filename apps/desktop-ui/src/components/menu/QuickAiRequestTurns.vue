@@ -41,6 +41,7 @@
               :block="block"
               :index="bIndex"
               :original-text="props.sourceText"
+              :can-insert-into-editor="props.canInsertIntoEditor"
               @insert="emit('applyReplyBlock', block, 'window')"
               @insert-editor="emit('applyReplyBlock', block, 'editor')"
             />
@@ -108,8 +109,9 @@ const props = withDefaults(
     sourceText?: string
     /** The tool calls that wait for the user's answer now, by approval */
     pendingApprovals?: ReadonlyMap<string, ChatToolApprovalRequest>
+    canInsertIntoEditor?: boolean
   }>(),
-  { sourceText: '', pendingApprovals: undefined }
+  { sourceText: '', pendingApprovals: undefined, canInsertIntoEditor: true }
 )
 
 const emit = defineEmits<{
@@ -148,11 +150,11 @@ const { scroller, handleScroll, handleContentResized } = useChatScroll({
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  margin-top: var(--space-sm);
   overflow-y: auto;
   overscroll-behavior: contain;
-  max-height: 380px;
-  padding-right: var(--space-xs);
+  flex: 1 1 0%;
+  min-height: 0;
+  padding: var(--space-md);
 }
 
 .turn-item {
@@ -166,8 +168,9 @@ const { scroller, handleScroll, handleContentResized } = useChatScroll({
   align-items: flex-start;
   gap: var(--space-xs);
   font-weight: 500;
-  color: var(--color-text);
-  background: var(--color-bg-subtle);
+  color: var(--color-base-content);
+  background: var(--app-surface-raised);
+  border: 1px solid var(--app-border-subtle);
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-md);
   align-self: flex-start;

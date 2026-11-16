@@ -1547,6 +1547,7 @@
     "hideDiff": "Απόκρυψη αλλαγών"
   },
   "quickAiRequest": {
+    "sourceContext": "Επιλεγμένο κείμενο",
     "goToChat": "Μετάβαση στη συνομιλία",
     "followUp": "Νέο αίτημα",
     "chooseVariant": "Επιλέξτε παραλλαγή",

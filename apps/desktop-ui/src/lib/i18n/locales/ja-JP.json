@@ -1543,6 +1543,7 @@
     "hideDiff": "変更を非表示"
   },
   "quickAiRequest": {
+    "sourceContext": "選択したテキスト",
     "goToChat": "チャットへ移動",
     "followUp": "追加のリクエスト",
     "chooseVariant": "候補を選択",

@@ -275,6 +275,22 @@ describe('QuickAiRequestMenu', () => {
     })
   })
 
+  it('displays pinned source context with header and does not duplicate editor button in result actions', async () => {
+    const wrapper = await answerRequest([{ text: 'Improved text' }])
+    const contextPreview = wrapper.find('.quick-context-preview.is-with-turns')
+    expect(contextPreview.exists()).toBe(true)
+    expect(contextPreview.find('.quick-context-title').text()).toContain(
+      'quickAiRequest.sourceContext'
+    )
+    expect(contextPreview.find('.quick-context-body').text()).toContain(
+      'Source text for AI'
+    )
+
+    const actions = wrapper.find('.quick-result-actions')
+    expect(actions.exists()).toBe(true)
+    expect(actions.text()).not.toContain('shortcuts.insertIntoEditor')
+  })
+
   it('opens InsertMenu without oldText when source context was disabled', async () => {
     vi.spyOn(useLlmStore().actions, 'sendChatMessage').mockImplementationOnce(
       async (_message, _history, _instructions, options) => {

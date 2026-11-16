@@ -1543,6 +1543,7 @@
     "hideDiff": "Değişiklikleri gizle"
   },
   "quickAiRequest": {
+    "sourceContext": "Seçili metin",
     "goToChat": "Sohbete git",
     "followUp": "Yeni istek",
     "chooseVariant": "Bir seçenek belirleyin",

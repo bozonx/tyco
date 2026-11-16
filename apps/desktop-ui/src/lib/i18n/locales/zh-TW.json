@@ -1540,6 +1540,7 @@
     "hideDiff": "隱藏變更"
   },
   "quickAiRequest": {
+    "sourceContext": "選取文字",
     "goToChat": "前往聊天",
     "followUp": "繼續提問",
     "chooseVariant": "選擇一個版本",
