@@ -324,12 +324,12 @@ onUnmounted(() => {
 }
 
 .waveform-status-label {
-  display: inline-flex;
-  align-items: center;
+  white-space: pre;
 }
 
 .auto-stop-seconds {
   display: inline-block;
+  vertical-align: baseline;
   min-width: 2ch;
   text-align: center;
   font-family: var(--font-mono, monospace);

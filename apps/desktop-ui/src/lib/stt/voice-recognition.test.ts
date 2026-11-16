@@ -5,6 +5,7 @@ import {
   createVoiceRecognition,
   type VoiceRecognitionDependencies,
 } from './voice-recognition'
+import { SILENCE_TIMEOUT_MS } from './voice-session'
 
 function setup(overrides: Partial<VoiceRecognitionDependencies> = {}) {
   const deps: VoiceRecognitionDependencies = {
@@ -706,6 +707,16 @@ describe('voice recognition failures', () => {
 
     await model.finish()
     expect(model.autoStopWarning.value).toBeUndefined()
+  })
+
+  it('calls onAutoStop and skips default finish when handled', async () => {
+    vi.useFakeTimers()
+    const onAutoStop = vi.fn().mockReturnValue('handled')
+    const { deps, model } = setup({ onAutoStop })
+    await model.startSession()
+    await vi.advanceTimersByTimeAsync(SILENCE_TIMEOUT_MS)
+    expect(onAutoStop).toHaveBeenCalledWith('silence')
+    expect(deps.finishDictation).not.toHaveBeenCalled()
   })
 
   it('ignores a second start while one is running', async () => {

@@ -20,6 +20,7 @@ import {
 import type { VoiceFinishIntent } from './voice-finish-intent'
 import {
   AUTO_STOP_WARNING_MS,
+  type AutoStopReason,
   type AutoStopWarning,
   createVoiceSession,
   MAX_RECORDING_MS,
@@ -117,6 +118,11 @@ export interface VoiceRecognitionDependencies extends TimerDependencies {
    */
   onAbandoned?: (text: string) => void
   /**
+   * Handles automatic recording stop (e.g. silence timeout). Returning
+   * `'handled'` prevents the default finish.
+   */
+  onAutoStop?: (reason: AutoStopReason) => 'handled' | void
+  /**
    * Called when starting or recording fails with no text.
    *
    * - `'keep'`: caller renders the error inline (skips toast and `onCancelled`).
@@ -201,6 +207,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       autoStopWarning.value = warning
     },
     onAutoStop: (reason) => {
+      if (deps.onAutoStop?.(reason) === 'handled') return
       toastKey(
         reason === 'silence'
           ? 'toast.recordingSilenceStop'

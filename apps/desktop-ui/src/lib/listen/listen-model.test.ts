@@ -221,6 +221,16 @@ describe('listen model', () => {
     expect(deps.finishDictation).toHaveBeenCalled()
   })
 
+  it('skips default stop when onAutoStop returns handled', async () => {
+    const onAutoStop = vi.fn().mockReturnValue('handled')
+    const { model, deps, advance } = setup({ onAutoStop })
+    await model.start()
+    advance(SILENCE_TIMEOUT_MS)
+    await Promise.resolve()
+    expect(onAutoStop).toHaveBeenCalledWith('silence')
+    expect(deps.finishDictation).not.toHaveBeenCalled()
+  })
+
   it('stops on the repeated hotkey, then closes on the next one', async () => {
     const { model, deps } = setup()
     await model.start()

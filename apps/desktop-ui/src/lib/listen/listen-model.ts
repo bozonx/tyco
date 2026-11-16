@@ -54,8 +54,11 @@ export interface ListenModelDependencies extends TimerDependencies {
   switchSource: (source: CaptureSource) => Promise<void>
   /** Keeps a transcript in the history as a listening */
   saveTranscript: (text: string) => Promise<unknown>
-  /** Tells why a recording stopped by itself */
-  onAutoStop?: (reason: AutoStopReason) => void
+  /**
+   * Tells why a recording stopped by itself. Returning `'handled'` prevents the
+   * default stop.
+   */
+  onAutoStop?: (reason: AutoStopReason) => 'handled' | void
   /** Tells the user what failed */
   describeError: (error: unknown) => string
   logError?: (message: string, error: unknown) => void
@@ -104,7 +107,7 @@ export function createListenModel(deps: ListenModelDependencies) {
       autoStopWarning.value = warning
     },
     onAutoStop: (reason) => {
-      deps.onAutoStop?.(reason)
+      if (deps.onAutoStop?.(reason) === 'handled') return
       void stop()
     },
   })

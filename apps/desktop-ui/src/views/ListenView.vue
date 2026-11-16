@@ -116,13 +116,20 @@ const model = createListenModel({
     session.update(text)
     await session.flush()
   },
-  onAutoStop: (reason) =>
+  onAutoStop: (reason) => {
     toastKey(
       reason === 'silence'
         ? 'toast.recordingSilenceStop'
         : 'toast.recordingLimitReached',
       'warn'
-    ),
+    )
+    if (hasBack.value) {
+      void handleBack()
+    } else {
+      void model.close()
+    }
+    return 'handled'
+  },
   describeError: (error) => describeDictationError(error, translate),
   logError: (message, error) =>
     clientLogger.warn(`${message}: ${String(error)}`, 'stt'),

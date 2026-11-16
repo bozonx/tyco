@@ -46,6 +46,7 @@ vi.mock('../../composables/use-toast', () => ({
 }))
 
 import { DictationError } from '../../lib/stt/dictation-error'
+import { SILENCE_TIMEOUT_MS } from '../../lib/stt/voice-session'
 import { useDesktopStore } from '../../stores/desktop'
 import { useHistoryStore } from '../../stores/history'
 import { useMenuModalsStore } from '../../stores/menu-modals'
@@ -54,7 +55,10 @@ import { useVoiceReferenceStore } from '../../stores/voice-reference'
 describe('VoiceRecognitionMenu', () => {
   let desktop: TestDesktop
 
-  afterEach(() => desktop.dispose())
+  afterEach(() => {
+    vi.useRealTimers()
+    desktop.dispose()
+  })
 
   beforeEach(async () => {
     desktop = await loadFakeDesktop({ window: { isWindowShown: true } })
@@ -1027,6 +1031,71 @@ describe('VoiceRecognitionMenu', () => {
     await flushPromises()
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await flushPromises()
+
+    expect(wrapper.emitted('cancelled')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('returns to action menu on auto-stop silence timeout when origin is set', async () => {
+    vi.useFakeTimers()
+    const activateMode = vi.fn()
+    desktop.backend.handle('activate_mode', activateMode)
+    const voiceRef = useVoiceReferenceStore()
+    voiceRef.offerOrigin({
+      mode: 'selectionActions',
+      text: 'source text',
+      activationId: useDesktopStore().desktopState.activationId,
+    })
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar' },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+          AudioWaveform: true,
+          MicrophoneSourcePicker: true,
+          SttLanguagePicker: true,
+          VoiceRecordingActions: true,
+          RecordingBarFrame: { template: '<div><slot /></div>' },
+        },
+      },
+    })
+    await flushPromises()
+
+    await vi.advanceTimersByTimeAsync(SILENCE_TIMEOUT_MS)
+    await flushPromises()
+
+    expect(activateMode).toHaveBeenCalledWith({
+      mode: 'selectionActions',
+      text: 'source text',
+    })
+    wrapper.unmount()
+  })
+
+  it('cancels and emits cancelled on auto-stop silence timeout when origin is not set', async () => {
+    vi.useFakeTimers()
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar' },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+          AudioWaveform: true,
+          MicrophoneSourcePicker: true,
+          SttLanguagePicker: true,
+          VoiceRecordingActions: true,
+          RecordingBarFrame: { template: '<div><slot /></div>' },
+        },
+      },
+    })
+    await flushPromises()
+
+    await vi.advanceTimersByTimeAsync(SILENCE_TIMEOUT_MS)
     await flushPromises()
 
     expect(wrapper.emitted('cancelled')).toHaveLength(1)

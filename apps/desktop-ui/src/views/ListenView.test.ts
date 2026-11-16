@@ -1,5 +1,5 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import ListenRecordingBar from '../components/listen/ListenRecordingBar.vue'
 import { useDictationHandoffStore } from '../stores/dictation-handoff'
@@ -8,6 +8,7 @@ import { useVoiceResultStore } from '../stores/voice-result'
 import { useDesktopStore } from '../stores/desktop'
 import { i18n } from '../lib/i18n'
 import { DictationError } from '../lib/stt/dictation-error'
+import { SILENCE_TIMEOUT_MS } from '../lib/stt/voice-session'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import ListenView from './ListenView.vue'
@@ -67,6 +68,10 @@ const pressEnter = async (target: EventTarget = document) => {
 }
 
 describe('ListenView', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   beforeEach(async () => {
     vi.clearAllMocks()
     dictation.startDictation.mockResolvedValue(undefined)
@@ -285,6 +290,42 @@ describe('ListenView', () => {
       mode: 'selectionActions',
       text: 'source text',
     })
+    wrapper.unmount()
+  })
+
+  it('returns to action menu on auto-stop silence timeout when origin is set', async () => {
+    vi.useFakeTimers()
+    const activateMode = vi.fn()
+    desktop.backend.handle('activate_mode', activateMode)
+    const voiceRef = useVoiceReferenceStore()
+    voiceRef.offerOrigin({
+      mode: 'selectionActions',
+      text: 'source text',
+      activationId: useDesktopStore().desktopState.activationId,
+    })
+    const wrapper = mountView()
+    await flushPromises()
+
+    await vi.advanceTimersByTimeAsync(SILENCE_TIMEOUT_MS)
+    await flushPromises()
+
+    expect(activateMode).toHaveBeenCalledWith({
+      mode: 'selectionActions',
+      text: 'source text',
+    })
+    wrapper.unmount()
+  })
+
+  it('closes window on auto-stop silence timeout when origin is not set', async () => {
+    vi.useFakeTimers()
+    desktop.backend.handle('hide_window', () => undefined)
+    const wrapper = mountView()
+    await flushPromises()
+
+    await vi.advanceTimersByTimeAsync(SILENCE_TIMEOUT_MS)
+    await flushPromises()
+
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
     wrapper.unmount()
   })
 })

@@ -363,6 +363,20 @@ const model = createVoiceRecognition({
       canRetry: true,
     }
   },
+  onAutoStop: (reason) => {
+    toastKey(
+      reason === 'silence'
+        ? 'toast.recordingSilenceStop'
+        : 'toast.recordingLimitReached',
+      'warn'
+    )
+    if (hasBack.value) {
+      void handleBack()
+    } else {
+      void cancel()
+    }
+    return 'handled'
+  },
   onCancelled: () => {
     if (isSwitchingSource) return
     startError.value = null
