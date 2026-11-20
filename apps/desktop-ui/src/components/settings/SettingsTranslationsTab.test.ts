@@ -416,4 +416,25 @@ describe('SettingsTranslationsTab.vue', () => {
     await nextTick()
     expect(wrapper.find('.task-model-stub').exists()).toBe(true)
   })
+
+  it('toggles whether voice command is enabled for translation', async () => {
+    const context = createTestSettingsContext(createConfig())
+    const wrapper = mount(SettingsTranslationsTab, {
+      global: {
+        provide: context.provide,
+        stubs: { SecretKeyField: true, SecretStorageNotice: true },
+      },
+    })
+    const voiceRow = wrapper
+      .findAllComponents({ name: 'FieldRow' })
+      .find((r) => r.props('label') === 'settings.translationVoiceCommand')
+    expect(voiceRow).toBeDefined()
+
+    const switchComponent = voiceRow!.findComponent({ name: 'FieldSwitch' })
+    expect(switchComponent.exists()).toBe(true)
+    expect(switchComponent.props('modelValue')).toBe(true)
+
+    await switchComponent.vm.$emit('update:modelValue', false)
+    expect(context.draft.value.translation.isVoiceCommandEnabled).toBe(false)
+  })
 })

@@ -317,9 +317,11 @@ const customActionOperation = computed(
     props.command.operationId === 'webhook'
 )
 const canTest = computed(() => canTestCommand(props.command))
-/** AI commands already run through the LLM, so pre-transformation is redundant */
+/** AI commands and translation do not use pre-transformation */
 const canPreTransform = computed(
-  () => props.command.operationId !== 'core.aiTask'
+  () =>
+    props.command.operationId !== 'core.aiTask' &&
+    props.command.operationId !== 'core.translate'
 )
 /** A translation needs no name: its tool names it, see `commandLabel` */
 const isNamedByTool = computed(

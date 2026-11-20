@@ -107,4 +107,33 @@ describe('useVoiceCommandsStore', () => {
     expect(store.stage).toBe('idle')
     expect(mocks.runCommand).not.toHaveBeenCalled()
   })
+
+  it('includes builtin translation command in catalog when isVoiceCommandEnabled is true and excludes when false', async () => {
+    const desktop = useDesktopStore()
+    desktop.applyViewState({
+      ...desktop.desktopState,
+      userConfig: {
+        ...desktop.desktopState.userConfig,
+        translation: {
+          ...desktop.desktopState.userConfig.translation,
+          isVoiceCommandEnabled: true,
+        },
+      },
+    })
+    let store = useVoiceCommandsStore()
+    expect(store.catalog.some((c) => c.id === 'translate')).toBe(true)
+
+    desktop.applyViewState({
+      ...desktop.desktopState,
+      userConfig: {
+        ...desktop.desktopState.userConfig,
+        translation: {
+          ...desktop.desktopState.userConfig.translation,
+          isVoiceCommandEnabled: false,
+        },
+      },
+    })
+    store = useVoiceCommandsStore()
+    expect(store.catalog.some((c) => c.id === 'translate')).toBe(false)
+  })
 })

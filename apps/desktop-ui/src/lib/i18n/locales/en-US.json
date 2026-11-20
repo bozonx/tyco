@@ -1310,7 +1310,9 @@
     "webJinaApiKeyHint": "Optional. Without a key, requests use the free tier with shared rate limits.",
     "webSearchSectionHint": "Settings for web search and page reading tools used by AI models and profiles.",
     "askAiWebAccess": "Web in \"Ask AI\"",
-    "askAiWebAccessHint": "Whether the \"Ask AI\" chat, which has no profile, may search the web and read pages. \"Ask\" waits for your approval before each call. Profiles set this in their own tools."
+    "askAiWebAccessHint": "Whether the \"Ask AI\" chat, which has no profile, may search the web and read pages. \"Ask\" waits for your approval before each call. Profiles set this in their own tools.",
+    "translationVoiceCommand": "Voice command",
+    "translationVoiceCommandInfo": "Includes the translation command in voice commands (\"translate to [language]\")."
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

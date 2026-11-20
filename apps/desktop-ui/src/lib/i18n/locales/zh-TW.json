@@ -1304,7 +1304,9 @@
     "webJinaApiKeyHint": "選填。未配置金鑰時，請求將使用具有共用速率限制的免費層級。",
     "webSearchSectionHint": "AI 模型與設定檔使用的網頁搜尋與頁面讀取工具設定。",
     "askAiWebAccess": "「詢問 AI」中的網路",
-    "askAiWebAccessHint": "沒有設定檔的「詢問 AI」聊天能否搜尋網路及讀取網頁。「詢問」會在每次呼叫前等待你的核准。設定檔在各自的工具中設定。"
+    "askAiWebAccessHint": "沒有設定檔的「詢問 AI」聊天能否搜尋網路及讀取網頁。「詢問」會在每次呼叫前等待你的核准。設定檔在各自的工具中設定。",
+    "translationVoiceCommand": "語音指令",
+    "translationVoiceCommandInfo": "在語音指令中包含翻譯指令（「翻譯成[語言]」）。"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

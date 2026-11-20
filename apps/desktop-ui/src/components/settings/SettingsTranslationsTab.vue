@@ -90,6 +90,16 @@
           :modal-title="t('settings.translationCorrectionPrompt')"
         />
       </FieldRow>
+
+      <FieldRow
+        :label="t('settings.translationVoiceCommand')"
+        :info="t('settings.translationVoiceCommandInfo')"
+      >
+        <FieldSwitch
+          :model-value="translation.isVoiceCommandEnabled ?? true"
+          @update:model-value="updateVoiceCommand"
+        />
+      </FieldRow>
     </SettingsSection>
 
     <SettingsSection
@@ -119,6 +129,7 @@ import Button from '../common/Button.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import I18nText from '../common/I18nText.vue'
 import InlineAction from '../common/InlineAction.vue'
@@ -142,6 +153,7 @@ const {
   updateQualityGate,
   updateGlossary,
   commitGlossary,
+  updateVoiceCommand,
   saveProviderKey,
   removeProviderKey,
 } = createTranslationSettingsModel({

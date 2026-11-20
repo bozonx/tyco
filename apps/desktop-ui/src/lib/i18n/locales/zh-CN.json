@@ -1304,7 +1304,9 @@
     "webJinaApiKeyHint": "可选。未配置密钥时，请求将使用具有共享速率限制的免费层级。",
     "webSearchSectionHint": "AI 模型和配置文件使用的网页搜索与页面读取工具的设置。",
     "askAiWebAccess": "“询问 AI”中的网络",
-    "askAiWebAccessHint": "没有配置文件的“询问 AI”聊天能否搜索网络和读取网页。“询问”会在每次调用前等待你的批准。配置文件在各自的工具中设置。"
+    "askAiWebAccessHint": "没有配置文件的“询问 AI”聊天能否搜索网络和读取网页。“询问”会在每次调用前等待你的批准。配置文件在各自的工具中设置。",
+    "translationVoiceCommand": "语音命令",
+    "translationVoiceCommandInfo": "在语音命令中包含翻译命令（“翻译成[语言]”）。"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

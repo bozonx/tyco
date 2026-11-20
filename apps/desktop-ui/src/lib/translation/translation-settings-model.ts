@@ -165,6 +165,14 @@ export function createTranslationSettingsModel(deps: {
         )
     },
   })
+  const updateVoiceCommand = (isVoiceCommandEnabled: boolean) => {
+    deps.setConfig(
+      normalizeTranslationConfig({
+        ...translation.value,
+        isVoiceCommandEnabled,
+      })
+    )
+  }
   const saveProviderKey = () => keyEditor.save()
   const removeProviderKey = keyEditor.remove
 
@@ -179,6 +187,7 @@ export function createTranslationSettingsModel(deps: {
     updateQualityGate,
     updateGlossary,
     commitGlossary,
+    updateVoiceCommand,
     saveProviderKey,
     removeProviderKey,
   }

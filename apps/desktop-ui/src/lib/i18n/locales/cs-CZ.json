@@ -1304,7 +1304,9 @@
     "webJinaApiKeyHint": "Volitelné. Bez klíče požadavky využívají bezplatný tarif se sdílenými limity.",
     "webSearchSectionHint": "Nastavení nástrojů pro vyhledávání na webu a čtení stránek používaných modely a profily AI.",
     "askAiWebAccess": "Web v „Zeptat se AI“",
-    "askAiWebAccessHint": "Zda chat „Zeptat se AI“, který nemá profil, smí hledat na webu a číst stránky. „Ptát se“ čeká před každým voláním na vaše schválení. Profily to nastavují ve svých nástrojích."
+    "askAiWebAccessHint": "Zda chat „Zeptat se AI“, který nemá profil, smí hledat na webu a číst stránky. „Ptát se“ čeká před každým voláním na vaše schválení. Profily to nastavují ve svých nástrojích.",
+    "translationVoiceCommand": "Hlasový příkaz",
+    "translationVoiceCommandInfo": "Zahrne příkaz překladu do hlasových příkazů („přelož do [jazyk]“)."
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

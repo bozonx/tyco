@@ -90,7 +90,8 @@
     "qualityGate": "off",
     "glossary": [],
     "targetLanguages": { "q": "en-US" },
-    "viewMode": "split"
+    "viewMode": "split",
+    "isVoiceCommandEnabled": true
   },
   "actionPages": [
     {
@@ -136,25 +137,7 @@
     { "action": null, "takesSelection": true },
     { "action": null, "takesSelection": true }
   ],
-  "commands": [
-    {
-      "id": "translate",
-      "name": "",
-      "description": "",
-      "phrases": [],
-      "isVoiceEnabled": true,
-      "operationId": "core.translate",
-      "operationConfig": {},
-      "isLlmArgumentParsingEnabled": false,
-      "isLlmPreTransformEnabled": false,
-      "llmPreTransformPrompt": "",
-      "outputAction": "insertIntoWindow",
-      "isOutputLogged": false,
-      "isAvailableExternally": false,
-      "externalTimeoutSec": 120,
-      "isEnabled": true
-    }
-  ],
+  "commands": [],
   "variables": [],
   "variableValues": {},
   "llm": {

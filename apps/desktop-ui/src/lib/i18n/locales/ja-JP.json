@@ -1307,7 +1307,9 @@
     "webJinaApiKeyHint": "省略可能。キーがない場合、リクエストは共有レート制限のある無料枠を使用します。",
     "webSearchSectionHint": "AIモデルやプロファイルが使用するウェブ検索およびページ読み取りツールの設定。",
     "askAiWebAccess": "「AIに質問」でのウェブ",
-    "askAiWebAccessHint": "プロファイルのない「AIに質問」チャットがウェブ検索やページの読み取りを行えるかどうか。「確認」は呼び出しのたびに承認を待ちます。プロファイルは各自のツールで設定します。"
+    "askAiWebAccessHint": "プロファイルのない「AIに質問」チャットがウェブ検索やページの読み取りを行えるかどうか。「確認」は呼び出しのたびに承認を待ちます。プロファイルは各自のツールで設定します。",
+    "translationVoiceCommand": "音声コマンド",
+    "translationVoiceCommandInfo": "音声コマンドに翻訳コマンドを含めます（「[言語]に翻訳」）。"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

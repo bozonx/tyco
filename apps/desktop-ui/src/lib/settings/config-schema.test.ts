@@ -102,3 +102,19 @@ it('drops the removed main-vault location and canonicalizes repaired config refe
   expect(config).not.toHaveProperty('aiVault')
   expect(config.actionPages[0]!.slots.q).not.toHaveProperty('vaultId')
 })
+
+it('strips legacy default translate command from commands', () => {
+  const config = normalizeUserConfig({
+    commands: [
+      { id: 'translate', name: '', operationId: 'core.translate', phrases: [] },
+      {
+        id: 'my-script',
+        name: 'My Script',
+        operationId: 'script',
+        operationConfig: { command: 'echo 1' },
+      },
+    ],
+  })
+  expect(config.commands.some((c) => c.id === 'translate')).toBe(false)
+  expect(config.commands.some((c) => c.id === 'my-script')).toBe(true)
+})

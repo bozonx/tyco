@@ -350,3 +350,29 @@ export interface CustomActionSlotConfig {
 
 export const DEFAULT_CUSTOM_ACTION_SLOTS =
   configDefaults.customActionSlots as CustomActionSlotConfig[]
+
+export const BUILTIN_TRANSLATE_COMMAND_ID = 'translate'
+
+/**
+ * The synthetic command representing the built-in translation tool in voice
+ * commands
+ */
+export function builtinTranslateCommand(): CommandConfig {
+  return {
+    id: BUILTIN_TRANSLATE_COMMAND_ID,
+    name: '',
+    description: '',
+    phrases: [],
+    isVoiceEnabled: true,
+    operationId: 'core.translate',
+    operationConfig: {},
+    isLlmArgumentParsingEnabled: false,
+    isLlmPreTransformEnabled: false,
+    llmPreTransformPrompt: '',
+    outputAction: 'insertIntoWindow',
+    isOutputLogged: false,
+    isAvailableExternally: false,
+    externalTimeoutSec: 120,
+    isEnabled: true,
+  }
+}

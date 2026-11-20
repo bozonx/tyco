@@ -1310,7 +1310,9 @@
     "webJinaApiKeyHint": "Optional. Ohne Schlüssel nutzen Anfragen das kostenlose Kontingent mit geteilten Limits.",
     "webSearchSectionHint": "Einstellungen für Websuche und das Abrufen von Webseiten durch KI-Modelle und Profile.",
     "askAiWebAccess": "Web in „KI fragen“",
-    "askAiWebAccessHint": "Ob der Chat „KI fragen“, der kein Profil hat, im Web suchen und Seiten lesen darf. „Fragen“ wartet vor jedem Aufruf auf Ihre Zustimmung. Profile legen das in ihren eigenen Werkzeugen fest."
+    "askAiWebAccessHint": "Ob der Chat „KI fragen“, der kein Profil hat, im Web suchen und Seiten lesen darf. „Fragen“ wartet vor jedem Aufruf auf Ihre Zustimmung. Profile legen das in ihren eigenen Werkzeugen fest.",
+    "translationVoiceCommand": "Sprachbefehl",
+    "translationVoiceCommandInfo": "Fügt den Übersetzungsbefehl zu den Sprachbefehlen hinzu („übersetze auf [Sprache]“)."
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

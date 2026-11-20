@@ -1304,7 +1304,9 @@
     "webJinaApiKeyHint": "선택 사항입니다. 키가 없으면 공유 속도 제한이 있는 무료 요금제가 사용됩니다.",
     "webSearchSectionHint": "AI 모델 및 프로필에서 사용하는 웹 검색 및 페이지 읽기 도구 설정입니다.",
     "askAiWebAccess": "\"AI에게 질문\"의 웹",
-    "askAiWebAccessHint": "프로필이 없는 \"AI에게 질문\" 채팅이 웹을 검색하고 페이지를 읽을 수 있는지 여부입니다. \"묻기\"는 호출할 때마다 승인을 기다립니다. 프로필은 자체 도구에서 설정합니다."
+    "askAiWebAccessHint": "프로필이 없는 \"AI에게 질문\" 채팅이 웹을 검색하고 페이지를 읽을 수 있는지 여부입니다. \"묻기\"는 호출할 때마다 승인을 기다립니다. 프로필은 자체 도구에서 설정합니다.",
+    "translationVoiceCommand": "음성 명령",
+    "translationVoiceCommandInfo": "음성 명령에 번역 명령을 포함합니다(“[언어]로 번역”)."
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {

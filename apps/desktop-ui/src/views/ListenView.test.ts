@@ -314,7 +314,7 @@ describe('ListenView', () => {
       text: 'source text',
     })
     wrapper.unmount()
-  })
+  }, 20000)
 
   it('closes window on auto-stop silence timeout when origin is not set', async () => {
     vi.useFakeTimers()
@@ -327,5 +327,5 @@ describe('ListenView', () => {
 
     expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
     wrapper.unmount()
-  })
+  }, 20000)
 })

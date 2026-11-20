@@ -52,9 +52,9 @@ schema version is rejected without modifying the file.
 The config holds settings only, no state: nothing records what the app added
 by itself, because it adds nothing. Operations (core and plugin) are registered at
 runtime and are not stored; `commands` holds only the commands the user made
-from them. A new config starts with one of them, `translate` (a `core.translate`
-command without a language); deleting it is final, and the user makes another
-one from the same operation.
+from them. The built-in translation voice command is managed via
+`translation.isVoiceCommandEnabled` and synthesized for voice commands when enabled,
+leaving `commands` purely user-defined.
 
 ## Structure
 
@@ -70,7 +70,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `hotkeys`           | one shortcut per activation mode a hotkey opens, named as the mode, `selectionCorrection`                                                                                                                                                                                                         |
 | `externalAccess`    | `canAccessSelection`; each command allows external calls with `isAvailableExternally`                                                                                                                                                                                                             |
 | `windowInsertion`   | `linux`: `pasteShortcut`, `terminalPasteShortcut`; `terminalApps`: extra window classes treated as terminals                                                                                                                                                                                      |
-| `translation`       | `provider`, `providers.deepl.endpoint`, `qualityGate`, `glossary`, `targetLanguages` (a shortcut grid), `viewMode`                                                                                                                                                                                |
+| `translation`       | `provider`, `providers.deepl.endpoint`, `qualityGate`, `glossary`, `targetLanguages` (a shortcut grid), `viewMode`, `isVoiceCommandEnabled`                                                                                                                                                       |
 | `actionPages`       | pages of the action menu: each has `inputMode` (`selection` or `none`) and `slots` (a shortcut grid)                                                                                                                                                                                              |
 | `customActionSlots` | the five actions of the `customAction1`..`customAction5` hotkeys: `action` (a slot item or `null`), `takesSelection`                                                                                                                                                                              |
 | `favorites`         | `items`, the favorites list                                                                                                                                                                                                                                                                       |

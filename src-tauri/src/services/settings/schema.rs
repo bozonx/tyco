@@ -544,6 +544,18 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
     for command in config["commands"].as_array_mut().into_iter().flatten() {
         command["operationId"] = json!(command["operationId"].as_str().unwrap_or_default().trim());
     }
+    if let Some(commands) = config["commands"].as_array_mut() {
+        commands.retain(|command| {
+            !(command["id"] == "translate"
+                && command["operationId"] == "core.translate"
+                && command["name"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .trim()
+                    .is_empty()
+                && command["phrases"].as_array().is_none_or(|p| p.is_empty()))
+        });
+    }
     let builtin_ids = BUILTIN_LLM_PROVIDERS;
     let mut providers = config["llm"]["providers"]
         .as_array()
@@ -1158,6 +1170,24 @@ mod tests {
         assert_eq!(config["commands"][0]["isVoiceEnabled"], false);
         assert_eq!(config["commands"][0]["isAvailableExternally"], false);
         assert_eq!(config["commands"][0]["outputAction"], "none");
+    }
+
+    #[test]
+    fn strips_legacy_default_translate_command() {
+        let mut config = serde_json::json!({
+            "commands": [
+                { "id": "translate", "operationId": "core.translate", "name": "", "phrases": [] },
+                { "id": "note", "operationId": "script", "name": "Note", "phrases": ["save note"] }
+            ]
+        });
+        normalize_user_config(&mut config);
+        let ids: Vec<&str> = config["commands"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|c| c["id"].as_str())
+            .collect();
+        assert_eq!(ids, vec!["note"]);
     }
 
     #[test]

@@ -191,9 +191,7 @@ describe('normalizeCommands', () => {
   })
 
   it('reads a missing library as the default one, an empty one as it is', () => {
-    expect(normalizeCommands(undefined).map((command) => command.id)).toEqual([
-      'translate',
-    ])
+    expect(normalizeCommands(undefined)).toEqual([])
     expect(normalizeCommands([])).toEqual([])
   })
 })

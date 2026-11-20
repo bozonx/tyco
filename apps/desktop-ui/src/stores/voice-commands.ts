@@ -1,3 +1,8 @@
+import {
+  BUILTIN_TRANSLATE_COMMAND_ID,
+  builtinTranslateCommand,
+  type CommandConfig,
+} from '@tyco/shared'
 import { defineStore } from 'pinia'
 import { onScopeDispose } from 'vue'
 import { translate } from '../lib/i18n'
@@ -22,8 +27,21 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
   const history = useHistoryStore()
   const tools = useOperationsStore()
   const runner = createCommandRunner(useInvocationRunnerDependencies())
+
+  const effectiveCommands = (): readonly CommandConfig[] => {
+    const userCommands = desktop.userConfig?.commands ?? []
+    if (desktop.userConfig?.translation?.isVoiceCommandEnabled !== false) {
+      if (
+        !userCommands.some((item) => item.id === BUILTIN_TRANSLATE_COMMAND_ID)
+      ) {
+        return [...userCommands, builtinTranslateCommand()]
+      }
+    }
+    return userCommands
+  }
+
   const model = createVoiceCommandModel({
-    commands: () => desktop.userConfig.commands,
+    commands: effectiveCommands,
     operations: tools,
     ...useDictationActions(),
     describeError: (cause) => describeDictationError(cause, translate),
@@ -31,9 +49,7 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
       history.saveSource(text, 'voiceCorrection', 'voice'),
     run: async (command, text, signal, context, parameters) => {
       if (signal.aborted) return { success: false, cancelled: true }
-      const current = desktop.userConfig.commands.find(
-        (item) => item.id === command.id
-      )
+      const current = effectiveCommands().find((item) => item.id === command.id)
       if (
         !current ||
         !isVoiceCommand(current, tools) ||

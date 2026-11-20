@@ -1310,7 +1310,9 @@
     "webJinaApiKeyHint": "Opcjonalnie. Bez klucza żądania korzystają z bezpłatnego planu ze wspólnymi limitami.",
     "webSearchSectionHint": "Ustawienia wyszukiwania w sieci i czytania stron używanych przez modele i profile AI.",
     "askAiWebAccess": "Sieć w „Zapytaj AI”",
-    "askAiWebAccessHint": "Czy czat „Zapytaj AI”, który nie ma profilu, może wyszukiwać w sieci i czytać strony. „Pytaj” czeka na Twoją zgodę przed każdym wywołaniem. Profile ustawiają to we własnych narzędziach."
+    "askAiWebAccessHint": "Czy czat „Zapytaj AI”, który nie ma profilu, może wyszukiwać w sieci i czytać strony. „Pytaj” czeka na Twoją zgodę przed każdym wywołaniem. Profile ustawiają to we własnych narzędziach.",
+    "translationVoiceCommand": "Polecenie głosowe",
+    "translationVoiceCommandInfo": "Dołącza polecenie tłumaczenia do poleceń głosowych („przetłumacz na [język]”)."
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

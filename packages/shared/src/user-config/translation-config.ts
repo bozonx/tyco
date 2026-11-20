@@ -167,4 +167,6 @@ export interface TranslationConfig {
   /** The translation menu: distinct locales such as `en-US` by shortcut key */
   targetLanguages: ShortcutSlots<string>
   viewMode: 'split' | 'result'
+  /** Whether the built-in translation command is available in voice commands */
+  isVoiceCommandEnabled?: boolean
 }

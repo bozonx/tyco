@@ -339,7 +339,8 @@
           "additionalProperties": { "type": "string", "minLength": 1 },
           "default": { "q": "en-US" }
         },
-        "viewMode": { "enum": ["split", "result"], "default": "split" }
+        "viewMode": { "enum": ["split", "result"], "default": "split" },
+        "isVoiceCommandEnabled": { "type": "boolean", "default": true }
       },
       "required": [
         "provider",
@@ -347,7 +348,8 @@
         "qualityGate",
         "glossary",
         "targetLanguages",
-        "viewMode"
+        "viewMode",
+        "isVoiceCommandEnabled"
       ],
       "defaultPath": "translation"
     },

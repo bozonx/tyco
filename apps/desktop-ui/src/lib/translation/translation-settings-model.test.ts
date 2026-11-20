@@ -198,4 +198,15 @@ describe('translation settings model', () => {
     await another
     expect(model.keyDraft.value).toBe('new-deepl-key')
   })
+
+  it('updates whether the voice command is enabled', () => {
+    const { model, state } = setup()
+    expect(state.config.isVoiceCommandEnabled).toBe(true)
+
+    model.updateVoiceCommand(false)
+    expect(state.config.isVoiceCommandEnabled).toBe(false)
+
+    model.updateVoiceCommand(true)
+    expect(state.config.isVoiceCommandEnabled).toBe(true)
+  })
 })

@@ -1310,7 +1310,9 @@
     "webJinaApiKeyHint": "Opcional. Sin una clave, las solicitudes usan el nivel gratuito con límites compartidos.",
     "webSearchSectionHint": "Configuración para la búsqueda web y lectura de páginas usadas por los modelos y perfiles de IA.",
     "askAiWebAccess": "Web en «Preguntar a la IA»",
-    "askAiWebAccessHint": "Si el chat «Preguntar a la IA», que no tiene perfil, puede buscar en la web y leer páginas. «Preguntar» espera tu aprobación antes de cada llamada. Los perfiles lo configuran en sus propias herramientas."
+    "askAiWebAccessHint": "Si el chat «Preguntar a la IA», que no tiene perfil, puede buscar en la web y leer páginas. «Preguntar» espera tu aprobación antes de cada llamada. Los perfiles lo configuran en sus propias herramientas.",
+    "translationVoiceCommand": "Comando de voz",
+    "translationVoiceCommandInfo": "Incluye el comando de traducción en los comandos de voz («traduce al [idioma]»)."
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

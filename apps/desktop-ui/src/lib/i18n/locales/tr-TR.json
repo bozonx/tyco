@@ -1307,7 +1307,9 @@
     "webJinaApiKeyHint": "İsteğe bağlı. Anahtar olmadan istekler paylaşılan hız sınırlarına sahip ücretsiz katmanı kullanır.",
     "webSearchSectionHint": "Yapay zeka modelleri ve profilleri tarafından kullanılan web araması ve sayfa okuma araçları için ayarlar.",
     "askAiWebAccess": "\"Yapay Zekâya Sor\" içinde web",
-    "askAiWebAccessHint": "Profili olmayan \"Yapay Zekâya Sor\" sohbetinin web’de arama yapıp sayfa okuyup okuyamayacağı. \"Sor\" her çağrıdan önce onayınızı bekler. Profiller bunu kendi araçlarında ayarlar."
+    "askAiWebAccessHint": "Profili olmayan \"Yapay Zekâya Sor\" sohbetinin web’de arama yapıp sayfa okuyup okuyamayacağı. \"Sor\" her çağrıdan önce onayınızı bekler. Profiller bunu kendi araçlarında ayarlar.",
+    "translationVoiceCommand": "Sesli komut",
+    "translationVoiceCommandInfo": "Çeviri komutunu sesli komutlara dahil eder („[dil] çevir”)."
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

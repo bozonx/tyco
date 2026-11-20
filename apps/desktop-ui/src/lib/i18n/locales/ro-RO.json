@@ -1310,7 +1310,9 @@
     "webJinaApiKeyHint": "Opțional. Fără cheie, cererile folosesc nivelul gratuit cu limite partajate.",
     "webSearchSectionHint": "Setări pentru instrumentele de căutare web și citire a paginilor utilizate de modelele și profilurile AI.",
     "askAiWebAccess": "Web în „Întreabă AI”",
-    "askAiWebAccessHint": "Dacă chatul „Întreabă AI”, care nu are profil, poate căuta pe web și citi pagini. „Întreabă” așteaptă aprobarea ta înainte de fiecare apel. Profilurile setează acest lucru în propriile instrumente."
+    "askAiWebAccessHint": "Dacă chatul „Întreabă AI”, care nu are profil, poate căuta pe web și citi pagini. „Întreabă” așteaptă aprobarea ta înainte de fiecare apel. Profilurile setează acest lucru în propriile instrumente.",
+    "translationVoiceCommand": "Comandă vocală",
+    "translationVoiceCommandInfo": "Include comanda de traducere în comenzile vocale („tradu în [limbă]”)."
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
