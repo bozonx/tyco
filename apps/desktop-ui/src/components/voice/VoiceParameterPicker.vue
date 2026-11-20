@@ -46,7 +46,6 @@ const { t } = useI18n()
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: var(--space-xs);
-  border-left: 1px solid var(--app-border-subtle);
 }
 
 .voice-param-header {
@@ -83,8 +82,8 @@ const { t } = useI18n()
 
 .voice-param-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.375rem;
 }
 
 .voice-param-option {

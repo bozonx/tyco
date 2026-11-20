@@ -17,56 +17,112 @@
       </template>
 
       <template #preview>
-        <div class="voice-commands">
-          <section class="voice-main">
+        <div class="voice-commands" :class="{ 'is-listening': isListening }">
+          <template v-if="isListening">
             <ContextPreview
               v-if="contextText"
               v-model:disabled="isContextDisabled"
               :text="contextText"
             />
-            <template v-if="isListening">
-              <div v-if="voice.activeCommand" class="voice-chosen">
-                <AppIcon
-                  :icon="commandIcon(voice.activeCommand, tools)"
-                  size="xl"
-                  aria-hidden="true"
+            <section class="voice-listening-header">
+              <div class="voice-listening-status">
+                <div v-if="voice.activeCommand" class="voice-chosen">
+                  <button
+                    type="button"
+                    class="voice-breadcrumb-cmd"
+                    @click="voice.pinCommand(undefined)"
+                  >
+                    <AppIcon
+                      :icon="commandIcon(voice.activeCommand, tools)"
+                      size="lg"
+                      aria-hidden="true"
+                    />
+                    <span class="voice-chosen-name">{{
+                      commandLabel(voice.activeCommand)
+                    }}</span>
+                  </button>
+                  <template v-for="item in liveParameterItems" :key="item.name">
+                    <span class="voice-breadcrumb-sep" aria-hidden="true">›</span>
+                    <Badge
+                      tone="accent"
+                      class="voice-param-chip"
+                      @click="voice.clearParameter(item.name)"
+                      >{{ item.label }}</Badge
+                    >
+                  </template>
+                  <template v-if="voice.activeParameter">
+                    <span class="voice-breadcrumb-sep" aria-hidden="true">›</span>
+                    <Badge tone="neutral">{{
+                      t('voiceCommands.phaseAwaitingParameter', {
+                        parameter: parameterDisplayLabel(
+                          voice.activeParameter,
+                          t
+                        ),
+                      })
+                    }}</Badge>
+                  </template>
+                </div>
+                <p v-else class="voice-phase-hint">
+                  <AppIcon icon="mdi:microphone" size="md" aria-hidden="true" />
+                  <span>{{ t('voiceCommands.phaseAwaitingCommand') }}</span>
+                </p>
+                <AudioWaveform
+                  :level="audioLevel"
+                  :peak="audioPeak"
+                  :duration-ms="recordingDurationMs"
+                  :is-transcribing="voice.stage === 'finishing'"
+                  :auto-stop-deadline-ms="voice.autoStopWarning?.deadlineMs"
                 />
-                <span class="voice-chosen-name">{{
-                  commandLabel(voice.activeCommand)
-                }}</span>
-                <Badge
-                  v-for="item in liveParameterItems"
-                  :key="item.name"
-                  tone="accent"
-                  class="voice-param-chip"
-                  @click="voice.clearParameter(item.name)"
-                  >{{ item.label }}</Badge
-                >
-                <Badge v-if="voice.activeParameter" tone="neutral">{{
-                  t('voiceCommands.phaseAwaitingParameter', {
-                    parameter: parameterDisplayLabel(voice.activeParameter, t),
-                  })
-                }}</Badge>
               </div>
-              <p v-else class="voice-phase-hint">
-                <AppIcon icon="mdi:microphone" size="md" aria-hidden="true" />
-                <span>{{ t('voiceCommands.phaseAwaitingCommand') }}</span>
-              </p>
-              <AudioWaveform
-                :level="audioLevel"
-                :peak="audioPeak"
-                :duration-ms="recordingDurationMs"
-                :is-transcribing="voice.stage === 'finishing'"
-                :auto-stop-deadline-ms="voice.autoStopWarning?.deadlineMs"
+              <LiveTranscript
+                v-if="!isCapturingTextPhase"
+                class="voice-live-compact"
+                :committed="voice.liveTranscript.committed"
+                :draft="voice.liveTranscript.draft"
+              />
+            </section>
+
+            <section class="voice-listening-body">
+              <VoiceParameterPicker
+                v-if="voice.activeParameter && activeParameterOptions.length"
+                :parameter-label="
+                  parameterDisplayLabel(voice.activeParameter, t)
+                "
+                :options="activeParameterOptions"
+                :selected-value="
+                  voice.activeParameters[voice.activeParameter.name]
+                "
+                @pick="
+                  (val) =>
+                    voice.activeParameter &&
+                    voice.pinParameter(voice.activeParameter.name, val)
+                "
+                @back="voice.pinCommand(undefined)"
               />
               <LiveTranscript
+                v-else-if="isCapturingTextPhase"
                 class="voice-live"
                 :committed="voice.liveTranscript.committed"
                 :draft="voice.liveTranscript.draft"
               />
-            </template>
+              <VoiceCommandCatalog
+                v-else
+                :commands="voice.catalog"
+                :marks="marks"
+                :stage="voice.stage"
+                :unavailable-reason="voice.unavailableReason"
+                @pick="pick"
+              />
+            </section>
+          </template>
 
-            <template v-else-if="voice.stage !== 'running'">
+          <template v-else-if="voice.stage !== 'running'">
+            <section class="voice-main">
+              <ContextPreview
+                v-if="contextText"
+                v-model:disabled="isContextDisabled"
+                :text="contextText"
+              />
               <div v-if="voice.command" class="voice-chosen">
                 <AppIcon
                   :icon="commandIcon(voice.command, tools)"
@@ -117,33 +173,16 @@
                 :aria-label="t('voiceCommands.textPlaceholder')"
                 @update:model-value="(value) => (voice.inputText = value)"
               />
-            </template>
-          </section>
+            </section>
 
-          <VoiceParameterPicker
-            v-if="
-              isListening &&
-              voice.activeParameter &&
-              activeParameterOptions.length
-            "
-            :parameter-label="parameterDisplayLabel(voice.activeParameter, t)"
-            :options="activeParameterOptions"
-            :selected-value="voice.activeParameters[voice.activeParameter.name]"
-            @pick="
-              (val) =>
-                voice.activeParameter &&
-                voice.pinParameter(voice.activeParameter.name, val)
-            "
-            @back="voice.pinCommand(undefined)"
-          />
-          <VoiceCommandCatalog
-            v-else
-            :commands="voice.catalog"
-            :marks="marks"
-            :stage="voice.stage"
-            :unavailable-reason="voice.unavailableReason"
-            @pick="pick"
-          />
+            <VoiceCommandCatalog
+              :commands="voice.catalog"
+              :marks="marks"
+              :stage="voice.stage"
+              :unavailable-reason="voice.unavailableReason"
+              @pick="pick"
+            />
+          </template>
         </div>
       </template>
 
@@ -232,6 +271,7 @@ import { useVoiceRecordingMeter } from '../composables/use-voice-recording-meter
 import {
   commandIcon,
   commandLabel,
+  commandTakesText,
   commandTarget,
 } from '../lib/commands/command-runtime'
 import {
@@ -339,6 +379,34 @@ const liveParameterItems = computed(() => {
 
 const activeParameterOptions = computed(() =>
   voice.activeParameter ? voiceParameterOptions(voice.activeParameter, t) : []
+)
+
+const isCapturingTextPhase = computed(
+  () =>
+    isListening.value &&
+    Boolean(voice.activeCommand) &&
+    !voice.activeParameter
+)
+
+watch(
+  () =>
+    [
+      voice.stage,
+      voice.activeCommand,
+      voice.activeParameter,
+      voice.canRunLive,
+    ] as const,
+  ([stage, activeCmd, activeParam, canRun]) => {
+    if (
+      stage === 'recording' &&
+      activeCmd &&
+      !activeParam &&
+      canRun &&
+      !commandTakesText(activeCmd, tools)
+    ) {
+      void voice.finish('run')
+    }
+  }
 )
 
 /** The parameters of the chosen command the user can set by hand */
@@ -572,6 +640,68 @@ onUnmounted(() => {
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   height: 100%;
   min-height: 0;
+}
+
+.voice-commands.is-listening {
+  display: flex;
+  flex-direction: column;
+}
+
+.voice-listening-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--app-border-subtle);
+}
+
+.voice-listening-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.voice-live-compact {
+  min-height: 2.5rem;
+  max-height: 4.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.voice-listening-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+}
+
+.voice-breadcrumb-cmd {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.125rem 0.375rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.voice-breadcrumb-cmd:hover {
+  background: var(--app-hover);
+}
+
+.voice-breadcrumb-sep {
+  color: var(--app-text-muted);
+  font-weight: 400;
+}
+
+.voice-param-chip {
+  cursor: pointer;
 }
 
 .voice-main {

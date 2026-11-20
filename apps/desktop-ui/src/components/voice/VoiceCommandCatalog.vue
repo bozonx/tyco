@@ -18,7 +18,7 @@
       :data-key="command.id"
       :aria-current="marks.has(command.id) || undefined"
       :aria-disabled="!canPick(command) || undefined"
-      :title="command.description || undefined"
+      :title="entryTooltip(command)"
       @click="emit('pick', command)"
     >
       <AppIcon
@@ -29,7 +29,7 @@
       />
       <span class="voice-entry-body">
         <span class="voice-entry-name">
-          {{ commandLabel(command) }}
+          {{ primaryPhrase(command) || commandLabel(command) }}
           <Badge
             v-for="label in parameterLabels(command)"
             :key="label"
@@ -38,10 +38,9 @@
           >
         </span>
         <span
-          v-if="voiceCommandPhrases(command, tools, t).length"
+          v-if="showSecondaryName(command)"
           class="voice-entry-phrase"
-          :title="voiceCommandPhrases(command, tools, t).join('\n')"
-          >{{ voiceCommandPhrases(command, tools, t).join(' · ') }}</span
+          >{{ commandLabel(command) }}</span
         >
       </span>
       <AppIcon
@@ -87,6 +86,22 @@ const { t } = useI18n()
 const tools = useOperationsStore()
 const catalogRef = ref<HTMLElement | null>(null)
 
+const primaryPhrase = (command: CommandConfig) =>
+  voiceCommandPhrases(command, tools, t).slice(0, 2).join(' · ')
+
+const showSecondaryName = (command: CommandConfig) => {
+  const phrase = primaryPhrase(command)
+  return Boolean(phrase && phrase !== commandLabel(command))
+}
+
+const entryTooltip = (command: CommandConfig) => {
+  const phrases = voiceCommandPhrases(command, tools, t)
+  const parts = [commandLabel(command)]
+  if (phrases.length) parts.push(phrases.join(', '))
+  if (command.description) parts.push(command.description)
+  return parts.join('\n')
+}
+
 /** The values the recognizer heard for a marked command */
 const parameterLabels = (command: CommandConfig) => {
   const candidate = props.marks.get(command.id)
@@ -128,15 +143,13 @@ const onCatalogKeyDown = (event: KeyboardEvent) => {
 <style scoped>
 .voice-catalog {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
   align-content: start;
-  gap: 0.25rem;
+  gap: 0.375rem;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: var(--space-xs);
-  border-left: 1px solid var(--app-border-subtle);
-  container-type: inline-size;
 }
 
 .voice-entry {
@@ -226,16 +239,5 @@ const onCatalogKeyDown = (event: KeyboardEvent) => {
   color: var(--app-text-muted);
 }
 
-@container (max-width: 420px) {
-  .voice-catalog {
-    grid-template-columns: 1fr;
-  }
-}
 
-@container (max-width: 600px) {
-  .voice-catalog {
-    border-left: none;
-    border-top: 1px solid var(--app-border-subtle);
-  }
-}
 </style>

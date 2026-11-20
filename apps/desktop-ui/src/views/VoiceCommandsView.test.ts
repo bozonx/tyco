@@ -139,7 +139,7 @@ describe('separate voice command overlay', () => {
       translate('operations.translate')
     )
     expect(wrapper.text()).toContain('save note 39')
-    expect(entry(wrapper, 'command-39').attributes('title')).toBe(
+    expect(entry(wrapper, 'command-39').attributes('title')).toContain(
       'Description 39'
     )
     expect(wrapper.find('input[type="checkbox"]').exists()).toBe(false)
