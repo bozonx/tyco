@@ -1,109 +1,126 @@
 <template>
   <div class="dialog-toolbar">
-    <div class="dialog-toolbar-group">
-      <Button
-        v-if="!dialog.isActive"
-        variant="primary"
-        size="sm"
-        icon="mdi:record-circle-outline"
-        @click="dialog.start()"
-        >{{ t('dialog.start') }}</Button
-      >
-      <Button
-        v-else
-        size="sm"
-        icon="mdi:stop"
-        :loading="dialog.status === 'starting'"
-        @click="dialog.stop()"
-        >{{ t('dialog.stop') }}</Button
-      >
-      <SegmentedControl
-        :model-value="dialog.config.source"
-        size="sm"
-        :label="t('dialog.source')"
-        :options="sourceOptions"
-        :disabled="dialog.isActive"
-        @update:model-value="(source) => dialog.updateConfig({ source })"
-      />
+    <Button
+      v-if="isIdle"
+      class="dialog-toolbar-run"
+      variant="primary"
+      size="sm"
+      icon="mdi:record-circle-outline"
+      @click="dialog.start()"
+      >{{ t('dialog.start') }}</Button
+    >
+    <Button
+      v-else
+      class="dialog-toolbar-run"
+      size="sm"
+      icon="mdi:stop"
+      :loading="isStopping"
+      :disabled="isStopping"
+      @click="dialog.stop()"
+      >{{ isStopping ? t('dialog.stopping') : t('dialog.stop') }}</Button
+    >
+    <!-- the source is chosen before the dialog; while it runs, its sound -->
+    <SegmentedControl
+      v-if="isIdle"
+      class="dialog-toolbar-source"
+      :model-value="dialog.config.source"
+      size="sm"
+      :label="t('dialog.source')"
+      :options="sourceOptions"
+      @update:model-value="(source) => dialog.updateConfig({ source })"
+    />
+    <div v-else class="dialog-toolbar-levels">
       <DialogLevel
-        v-if="dialog.isActive && dialog.hasMicrophone"
+        v-if="dialog.hasMicrophone"
         icon="mdi:microphone"
-        :label="t('dialog.levelMe')"
+        :label="levelLabel('me')"
         :level="dialog.levels.me"
         :is-off="dialog.channelStatus.me === 'failed'"
       />
       <DialogLevel
-        v-if="dialog.isActive"
         icon="mdi:volume-high"
-        :label="t('dialog.levelRemote')"
+        :label="levelLabel('remote')"
         :level="dialog.levels.remote"
         :is-off="dialog.channelStatus.remote === 'failed'"
       />
-      <span v-if="channelNotice" class="dialog-toolbar-status" role="status">
-        {{ channelNotice }}
-      </span>
-    </div>
-    <div class="dialog-toolbar-group">
-      <FieldSelect
-        :model-value="dialog.config.translationTargetLanguage"
+      <AppIcon
+        v-if="channelNotice"
+        class="dialog-toolbar-connecting"
+        icon="mdi:loading"
         size="sm"
-        :title="t('dialog.translationLanguage')"
-        :aria-label="t('dialog.translationLanguage')"
-        :options="languageOptions"
-        @update:model-value="
-          (language) =>
-            dialog.updateConfig({
-              translationTargetLanguage: String(language ?? ''),
-            })
-        "
-      />
-      <SegmentedControl
-        v-if="dialog.config.translationTargetLanguage"
-        :model-value="dialog.config.textDisplay"
-        size="sm"
-        :label="t('dialog.textDisplay')"
-        :options="displayOptions"
-        @update:model-value="
-          (textDisplay) => dialog.updateConfig({ textDisplay })
-        "
-      />
-      <IconButton
-        icon="mdi:content-copy"
-        :label="t('dialog.copy')"
-        :disabled="isEmpty"
-        @click="dialog.copyTranscript()"
-      />
-      <IconButton
-        icon="mdi:lightning-bolt-outline"
-        :label="t('dialog.toActionMenu')"
-        :disabled="isEmpty"
-        @click="dialog.sendToActionMenu()"
-      />
-      <IconButton
-        icon="mdi:delete-sweep-outline"
-        :label="t('dialog.clear')"
-        :disabled="isEmpty"
-        @click="dialog.clear()"
-      />
-      <IconButton
-        icon="mdi:subtitles-outline"
-        :label="t('dialog.collapse')"
-        @click="dialog.enterCompact()"
+        role="status"
+        :title="channelNotice"
+        :aria-label="channelNotice"
       />
     </div>
+
+    <div class="dialog-toolbar-spacer" />
+
+    <FieldSelect
+      class="dialog-toolbar-language"
+      :model-value="dialog.config.translationTargetLanguage"
+      size="sm"
+      :title="t('dialog.translationLanguage')"
+      :aria-label="t('dialog.translationLanguage')"
+      :options="languageOptions"
+      @update:model-value="
+        (language) =>
+          dialog.updateConfig({
+            translationTargetLanguage: String(language ?? ''),
+          })
+      "
+    />
+    <SegmentedControl
+      class="dialog-toolbar-display"
+      :model-value="dialog.config.textDisplay"
+      size="sm"
+      :label="t('dialog.textDisplay')"
+      :options="displayOptions"
+      :disabled="!dialog.config.translationTargetLanguage"
+      @update:model-value="
+        (textDisplay) => dialog.updateConfig({ textDisplay })
+      "
+    />
+    <IconButton
+      icon="mdi:subtitles-outline"
+      :label="t('dialog.collapse')"
+      @click="dialog.enterCompact()"
+    />
+    <DropdownMenu
+      square
+      hide-chevron
+      align="right"
+      icon="mdi:dots-vertical"
+      :title="t('common.more')"
+      :disabled="isEmpty"
+      :items="moreItems"
+    />
+    <ConfirmModal
+      :open="isClearConfirmOpen"
+      :title="t('dialog.clearConfirmTitle')"
+      :message="t('dialog.clearConfirmMessage')"
+      :confirm-text="t('dialog.clear')"
+      danger
+      @confirm="confirmClear"
+      @cancel="isClearConfirmOpen = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { dialogLanguageOptions } from '../../lib/dialog/dialog-languages'
+import type { DialogSide } from '../../lib/dialog/dialog-transcript'
 import { translationLanguageLabel } from '../../lib/translation/translation-languages'
 import type { ControlOption } from '../../lib/ui/control-option'
 import { useDesktopStore } from '../../stores/desktop'
 import { useDialogStore } from '../../stores/dialog'
+import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
+import ConfirmModal from '../common/ConfirmModal.vue'
+import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
@@ -114,7 +131,12 @@ const dialog = useDialogStore()
 const desktopStore = useDesktopStore()
 const { t, locale } = useI18n()
 
+const isIdle = computed(
+  () => dialog.status === 'idle' || dialog.status === 'failed'
+)
+const isStopping = computed(() => dialog.status === 'stopping')
 const isEmpty = computed(() => dialog.segments.length === 0)
+const isClearConfirmOpen = ref(false)
 
 const sourceOptions = computed<ControlOption<DialogSource>[]>(() => [
   {
@@ -140,34 +162,111 @@ const languageOptions = computed(() =>
   })
 )
 
+const moreItems = computed<DropdownMenuItem[]>(() => [
+  {
+    label: t('dialog.copy'),
+    icon: 'mdi:content-copy',
+    action: () => void dialog.copyTranscript(),
+  },
+  {
+    label: t('dialog.toActionMenu'),
+    icon: 'mdi:lightning-bolt-outline',
+    action: () => void dialog.sendToActionMenu(),
+  },
+  {
+    label: t('dialog.clear'),
+    icon: 'mdi:delete-sweep-outline',
+    danger: true,
+    action: () => {
+      isClearConfirmOpen.value = true
+    },
+  },
+])
+
+function confirmClear() {
+  isClearConfirmOpen.value = false
+  dialog.clear()
+}
+
 const channelNotice = computed(() => {
   const statuses = Object.values(dialog.channelStatus)
   if (statuses.includes('reconnecting')) return t('dialog.reconnecting')
   if (statuses.includes('connecting')) return t('dialog.connecting')
   return ''
 })
+
+function levelLabel(side: DialogSide) {
+  const label = t(side === 'me' ? 'dialog.levelMe' : 'dialog.levelRemote')
+  return dialog.channelStatus[side] === 'failed'
+    ? `${label} · ${t('dialog.channelFailed')}`
+    : label
+}
 </script>
 
 <style scoped>
 .dialog-toolbar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-sm);
+  min-width: 0;
   padding: var(--space-sm) var(--space-md);
   border-bottom: 1px solid var(--app-border-subtle);
+  overflow: hidden;
 }
 
-.dialog-toolbar-group {
+.dialog-toolbar > * {
+  flex-shrink: 0;
+}
+
+/* the same width while it reads Start, Stop or Stopping */
+.dialog-toolbar-run {
+  min-width: 7.5rem;
+  justify-content: center;
+}
+
+/* the icons say it, the tooltips name it */
+.dialog-toolbar-source :deep(.option-label) {
+  display: none;
+}
+
+.dialog-toolbar-levels {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-sm);
 }
 
-.dialog-toolbar-status {
-  font-size: var(--text-small, 0.8125rem);
+.dialog-toolbar-connecting {
   color: var(--app-text-muted);
+  animation: dialog-toolbar-spin 1s linear infinite;
+}
+
+@keyframes dialog-toolbar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-toolbar-connecting {
+    animation: none;
+  }
+}
+
+.dialog-toolbar-spacer {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.dialog-toolbar-language {
+  flex-shrink: 1;
+  min-width: 7rem;
+  max-width: 12rem;
+}
+
+@media (max-width: 40rem) {
+  .dialog-toolbar-display {
+    display: none;
+  }
 }
 </style>

@@ -1318,9 +1318,8 @@
     "translationVoiceCommand": "Hangparancs",
     "translationVoiceCommandInfo": "Bekapcsolja a fordítási parancsot a hangparancsok közé („fordítsd le [nyelv] nyelvre”).",
     "dialogTab": "Párbeszéd",
-    "dialogSourceHint": "Mikrofonnal az Ön beszéde és a másik fél beszéde külön jelenik meg; csak a számítógép esetén csak a másik fél.",
-    "dialogTranslationHint": "A másik fél szavait erre a nyelvre fordítjuk. Az Ön beszédét nem fordítjuk.",
     "dialogTranslationProvider": "Fordítási szolgáltatás",
+    "dialogTranslationProviderHint": "A szolgáltatás, amely a másik felet fordítja. A fordítás beszélgetés közben zajlik, így egy gyors szolgáltatás kevésbé marad le.",
     "dialogProviderDefault": "Mint a fordítási beállításokban",
     "dialogProviderLlm": "MI-modell"
   },
@@ -1645,7 +1644,6 @@
     "sideMe": "Én",
     "sideRemote": "Másik fél",
     "translationLabel": "Fordítás",
-    "translating": "Fordítás…",
     "translationFailed": "Nem sikerült lefordítani",
     "feedLabel": "A párbeszéd átirata",
     "toLatest": "A legújabbhoz",
@@ -1672,6 +1670,12 @@
     "waitingForSpeech": "Figyelek…",
     "notRunning": "A párbeszéd leállt",
     "emptyTitle": "Hívás átírása",
-    "emptyHint": "Indítsa el a párbeszédet egy hívás közben bármely alkalmazásban: a másik fél szavai itt jelennek meg fordítással, és a felvétel más lapokon is folytatódik, amíg le nem állítja."
+    "emptyHint": "Indítsa el a párbeszédet egy hívás közben bármely alkalmazásban: a másik fél szavai itt jelennek meg fordítással, és a felvétel más lapokon is folytatódik, amíg le nem állítja.",
+    "stopping": "Leállítás…",
+    "stopAndExpand": "Leállítás és kibontás",
+    "retryTranslation": "Újra",
+    "clearConfirmTitle": "Törli az átiratot?",
+    "clearConfirmMessage": "A hívás teljes átirata törlődik. Sehol nincs elmentve, így nem állítható vissza.",
+    "channelFailed": "leállt"
   }
 }

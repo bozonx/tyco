@@ -1321,9 +1321,8 @@
     "translationVoiceCommand": "Comando de voz",
     "translationVoiceCommandInfo": "Incluye el comando de traducción en los comandos de voz («traduce al [idioma]»).",
     "dialogTab": "Diálogo",
-    "dialogSourceHint": "Con el micrófono, su voz y la del interlocutor se muestran por separado; solo el ordenador muestra solo al interlocutor.",
-    "dialogTranslationHint": "Lo que dice el interlocutor se traduce a este idioma. Su propia voz no se traduce.",
     "dialogTranslationProvider": "Servicio de traducción",
+    "dialogTranslationProviderHint": "El servicio que traduce a la otra parte. La traducción se hace durante la conversación, así que uno rápido se retrasa menos.",
     "dialogProviderDefault": "Como en los ajustes de traducción",
     "dialogProviderLlm": "Modelo de IA"
   },
@@ -1648,7 +1647,6 @@
     "sideMe": "Yo",
     "sideRemote": "Interlocutor",
     "translationLabel": "Traducción",
-    "translating": "Traduciendo…",
     "translationFailed": "No se pudo traducir",
     "feedLabel": "Transcripción del diálogo",
     "toLatest": "Al más reciente",
@@ -1675,6 +1673,12 @@
     "waitingForSpeech": "Escuchando…",
     "notRunning": "El diálogo está detenido",
     "emptyTitle": "Transcribir una llamada",
-    "emptyHint": "Inicie el diálogo durante una llamada en cualquier aplicación: lo que dice el interlocutor aparece aquí traducido y sigue grabándose en otras pestañas hasta que lo detenga."
+    "emptyHint": "Inicie el diálogo durante una llamada en cualquier aplicación: lo que dice el interlocutor aparece aquí traducido y sigue grabándose en otras pestañas hasta que lo detenga.",
+    "stopping": "Deteniendo…",
+    "stopAndExpand": "Detener y expandir",
+    "retryTranslation": "Reintentar",
+    "clearConfirmTitle": "¿Borrar la transcripción?",
+    "clearConfirmMessage": "Se eliminará toda la transcripción de la llamada. No se guarda en ningún sitio, así que no se podrá recuperar.",
+    "channelFailed": "detenido"
   }
 }

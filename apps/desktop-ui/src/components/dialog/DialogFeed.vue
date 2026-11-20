@@ -15,6 +15,7 @@
       :is-bubble="isBubble"
       :text-display="textDisplay"
       :translation-lang="translationLang"
+      @retry="(ids) => emit('retry', ids)"
     />
     <slot v-if="turns.length === 0" name="empty" />
   </div>
@@ -45,6 +46,11 @@ const props = defineProps<{
   isBubble: boolean
   textDisplay: DialogTextDisplay
   translationLang?: string
+}>()
+
+const emit = defineEmits<{
+  /** Translate these segments again */
+  (e: 'retry', ids: string[]): void
 }>()
 
 const { t } = useI18n()

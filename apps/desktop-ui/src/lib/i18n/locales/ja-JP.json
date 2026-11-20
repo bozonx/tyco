@@ -1318,9 +1318,8 @@
     "translationVoiceCommand": "音声コマンド",
     "translationVoiceCommandInfo": "音声コマンドに翻訳コマンドを含めます（「[言語]に翻訳」）。",
     "dialogTab": "会話",
-    "dialogSourceHint": "マイクありでは自分と相手の発言を分けて表示し、コンピューターのみでは相手だけを表示します。",
-    "dialogTranslationHint": "相手の発言をこの言語に翻訳します。自分の発言は翻訳しません。",
     "dialogTranslationProvider": "翻訳サービス",
+    "dialogTranslationProviderHint": "相手の発言を翻訳するサービスです。会話中に翻訳するため、速いサービスほど遅れが少なくなります。",
     "dialogProviderDefault": "翻訳設定と同じ",
     "dialogProviderLlm": "AI モデル"
   },
@@ -1641,7 +1640,6 @@
     "sideMe": "自分",
     "sideRemote": "相手",
     "translationLabel": "翻訳",
-    "translating": "翻訳中…",
     "translationFailed": "翻訳できませんでした",
     "feedLabel": "会話の文字起こし",
     "toLatest": "最新へ",
@@ -1668,6 +1666,12 @@
     "waitingForSpeech": "聞き取り中…",
     "notRunning": "会話は停止しています",
     "emptyTitle": "通話を文字起こし",
-    "emptyHint": "任意のアプリでの通話中に会話を開始すると、相手の発言が翻訳付きでここに表示され、停止するまで他のタブでも記録が続きます。"
+    "emptyHint": "任意のアプリでの通話中に会話を開始すると、相手の発言が翻訳付きでここに表示され、停止するまで他のタブでも記録が続きます。",
+    "stopping": "停止しています…",
+    "stopAndExpand": "停止して元に戻す",
+    "retryTranslation": "再試行",
+    "clearConfirmTitle": "文字起こしを消去しますか？",
+    "clearConfirmMessage": "通話の文字起こしがすべて削除されます。どこにも保存されないため、元に戻せません。",
+    "channelFailed": "停止"
   }
 }

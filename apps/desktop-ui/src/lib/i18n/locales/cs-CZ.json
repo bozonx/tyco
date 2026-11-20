@@ -1315,9 +1315,8 @@
     "translationVoiceCommand": "Hlasový příkaz",
     "translationVoiceCommandInfo": "Zahrne příkaz překladu do hlasových příkazů („přelož do [jazyk]“).",
     "dialogTab": "Dialog",
-    "dialogSourceHint": "S mikrofonem se vaše řeč a řeč protistrany zobrazují odděleně; jen počítač zobrazuje pouze protistranu.",
-    "dialogTranslationHint": "Co říká protistrana, se překládá do tohoto jazyka. Vaše vlastní řeč se nepřekládá.",
     "dialogTranslationProvider": "Překladová služba",
+    "dialogTranslationProviderHint": "Služba, která překládá druhou stranu. Překládá se během hovoru, takže rychlá služba méně zaostává.",
     "dialogProviderDefault": "Jako v nastavení překladu",
     "dialogProviderLlm": "Model AI"
   },
@@ -1642,7 +1641,6 @@
     "sideMe": "Já",
     "sideRemote": "Protistrana",
     "translationLabel": "Překlad",
-    "translating": "Překládám…",
     "translationFailed": "Nepodařilo se přeložit",
     "feedLabel": "Přepis dialogu",
     "toLatest": "K nejnovějšímu",
@@ -1669,6 +1667,12 @@
     "waitingForSpeech": "Poslouchám…",
     "notRunning": "Dialog je zastaven",
     "emptyTitle": "Přepsat hovor",
-    "emptyHint": "Spusťte dialog během hovoru v libovolné aplikaci: řeč protistrany se zde objeví s překladem a nahrávání pokračuje i na jiných kartách, dokud ho nezastavíte."
+    "emptyHint": "Spusťte dialog během hovoru v libovolné aplikaci: řeč protistrany se zde objeví s překladem a nahrávání pokračuje i na jiných kartách, dokud ho nezastavíte.",
+    "stopping": "Zastavuji…",
+    "stopAndExpand": "Zastavit a rozbalit",
+    "retryTranslation": "Zkusit znovu",
+    "clearConfirmTitle": "Vymazat přepis?",
+    "clearConfirmMessage": "Celý přepis hovoru bude smazán. Nikde se neukládá, takže ho nelze obnovit.",
+    "channelFailed": "zastaveno"
   }
 }

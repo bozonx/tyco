@@ -6,35 +6,41 @@
       isBubble ? 'is-bubble' : 'is-paragraph',
       { 'is-draft': isDraft },
     ]"
+    :title="hoverText"
+    :aria-label="isBubble ? sideLabel : undefined"
   >
-    <header class="dialog-turn-meta">
-      <span v-if="isBubble" class="dialog-turn-side">{{ sideLabel }}</span>
-      <time class="dialog-turn-time">{{ formatDialogTime(turn.startMs) }}</time>
-    </header>
     <p
-      v-if="showsTranslation && translation"
+      v-if="showsTranslation && hasTranslation"
       class="dialog-turn-main"
       :lang="translationLang"
     >
-      {{ translation }}
-    </p>
-    <p
-      v-if="showsOriginal || !translation"
-      class="dialog-turn-text"
-      :class="{ 'is-secondary': showsTranslation && translation }"
-    >
-      <template v-for="segment in turn.segments" :key="segment.id">
-        <span :class="{ 'is-interim': !segment.isFinal }">{{
-          segment.text
-        }}</span>
-        {{ ' ' }}
+      <template v-for="part in translatedParts" :key="part.id">
+        <span
+          :class="{ 'is-untranslated': part.isOriginal }"
+          :lang="part.isOriginal ? undefined : translationLang"
+          :aria-hidden="part.isOriginal ? 'true' : undefined"
+          >{{ part.text }}</span
+        >{{ ' ' }}
       </template>
     </p>
-    <p v-if="isTranslating" class="dialog-turn-status" role="status">
-      {{ t('dialog.translating') }}
+    <p
+      v-if="showsOriginal"
+      class="dialog-turn-text"
+      :class="{ 'is-secondary': showsTranslation && hasTranslation }"
+    >
+      <template v-for="segment in turn.segments" :key="segment.id">
+        <span
+          :class="{ 'is-interim': !segment.isFinal }"
+          :aria-hidden="segment.isFinal ? undefined : 'true'"
+          >{{ segment.text }}</span
+        >{{ ' ' }}
+      </template>
     </p>
-    <p v-else-if="hasFailedTranslation" class="dialog-turn-status is-error">
+    <p v-if="hasFailedTranslation" class="dialog-turn-status is-error">
       {{ t('dialog.translationFailed') }}
+      <InlineAction @click="emit('retry', failedIds)">{{
+        t('dialog.retryTranslation')
+      }}</InlineAction>
     </p>
   </article>
 </template>
@@ -43,12 +49,9 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { formatDialogTime } from '../../lib/dialog/dialog-export'
-import {
-  type DialogTurn,
-  isTurnTranslating,
-  turnTranslation,
-} from '../../lib/dialog/dialog-transcript'
+import { formatDialogClock } from '../../lib/dialog/dialog-export'
+import type { DialogTurn } from '../../lib/dialog/dialog-transcript'
+import InlineAction from '../common/InlineAction.vue'
 import type { DialogTextDisplay } from '@tyco/shared'
 
 const props = defineProps<{
@@ -59,12 +62,22 @@ const props = defineProps<{
   translationLang?: string
 }>()
 
+const emit = defineEmits<{
+  /** Translate these segments again */
+  (e: 'retry', ids: string[]): void
+}>()
+
 const { t } = useI18n()
 
 const sideLabel = computed(() =>
   t(props.turn.side === 'me' ? 'dialog.sideMe' : 'dialog.sideRemote')
 )
-const translation = computed(() => turnTranslation(props.turn))
+// the feed shows who spoke by the side; the hover adds when
+const hoverText = computed(() =>
+  props.isBubble
+    ? `${sideLabel.value} · ${formatDialogClock(props.turn.startMs)}`
+    : formatDialogClock(props.turn.startMs)
+)
 const isDraft = computed(() =>
   props.turn.segments.every((segment) => !segment.isFinal)
 )
@@ -72,19 +85,36 @@ const isDraft = computed(() =>
 const showsTranslation = computed(
   () => props.turn.side === 'remote' && props.textDisplay !== 'original'
 )
+const hasTranslation = computed(() =>
+  props.turn.segments.some((segment) => segment.translationState === 'complete')
+)
+/**
+ * The translation so far. With the translation alone, what is not translated
+ * yet follows it dimmed, so the latest words are not hidden while they wait.
+ */
+const translatedParts = computed(() =>
+  props.turn.segments.flatMap((segment) => {
+    if (segment.translationState === 'complete')
+      return segment.translation
+        ? [{ id: segment.id, text: segment.translation, isOriginal: false }]
+        : []
+    if (props.textDisplay !== 'translation') return []
+    return [{ id: segment.id, text: segment.text, isOriginal: true }]
+  })
+)
 const showsOriginal = computed(
   () =>
     props.turn.side === 'me' ||
     props.textDisplay !== 'translation' ||
-    !translation.value
+    !hasTranslation.value
 )
-const isTranslating = computed(
-  () => showsTranslation.value && isTurnTranslating(props.turn)
+const failedIds = computed(() =>
+  props.turn.segments
+    .filter((segment) => segment.translationState === 'failed')
+    .map((segment) => segment.id)
 )
 const hasFailedTranslation = computed(
-  () =>
-    showsTranslation.value &&
-    props.turn.segments.some((segment) => segment.translationState === 'failed')
+  () => showsTranslation.value && failedIds.value.length > 0
 )
 </script>
 
@@ -123,18 +153,6 @@ const hasFailedTranslation = computed(
   opacity: 0.75;
 }
 
-.dialog-turn-meta {
-  display: flex;
-  gap: 0.5rem;
-  font-size: var(--text-caption, 0.75rem);
-  color: var(--app-text-faint);
-}
-
-.dialog-turn-side {
-  font-weight: 600;
-  color: var(--app-text-muted);
-}
-
 .dialog-turn-main {
   font-size: 1.0625rem;
   line-height: 1.45;
@@ -151,12 +169,19 @@ const hasFailedTranslation = computed(
   color: var(--app-text-muted);
 }
 
-.is-interim {
+.is-interim,
+.is-untranslated {
   color: var(--app-text-faint);
+}
+
+.is-interim {
   font-style: italic;
 }
 
 .dialog-turn-status {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
   font-size: var(--text-caption, 0.75rem);
   color: var(--app-text-faint);
 }

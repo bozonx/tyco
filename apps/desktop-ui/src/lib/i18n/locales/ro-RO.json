@@ -1321,9 +1321,8 @@
     "translationVoiceCommand": "Comandă vocală",
     "translationVoiceCommandInfo": "Include comanda de traducere în comenzile vocale („tradu în [limbă]”).",
     "dialogTab": "Dialog",
-    "dialogSourceHint": "Cu microfonul, vorbirea dvs. și a interlocutorului apar separat; doar computerul arată numai interlocutorul.",
-    "dialogTranslationHint": "Ce spune interlocutorul este tradus în această limbă. Vorbirea dvs. nu este tradusă.",
     "dialogTranslationProvider": "Serviciu de traducere",
+    "dialogTranslationProviderHint": "Serviciul care traduce interlocutorul. Traducerea se face în timpul conversației, așa că unul rapid rămâne mai puțin în urmă.",
     "dialogProviderDefault": "Ca în setările de traducere",
     "dialogProviderLlm": "Model AI"
   },
@@ -1648,7 +1647,6 @@
     "sideMe": "Eu",
     "sideRemote": "Interlocutor",
     "translationLabel": "Traducere",
-    "translating": "Se traduce…",
     "translationFailed": "Traducerea a eșuat",
     "feedLabel": "Transcrierea dialogului",
     "toLatest": "La cel mai recent",
@@ -1675,6 +1673,12 @@
     "waitingForSpeech": "Ascult…",
     "notRunning": "Dialogul este oprit",
     "emptyTitle": "Transcrie un apel",
-    "emptyHint": "Porniți dialogul în timpul unui apel în orice aplicație: ce spune interlocutorul apare aici tradus, iar înregistrarea continuă pe alte file până îl opriți."
+    "emptyHint": "Porniți dialogul în timpul unui apel în orice aplicație: ce spune interlocutorul apare aici tradus, iar înregistrarea continuă pe alte file până îl opriți.",
+    "stopping": "Se oprește…",
+    "stopAndExpand": "Oprește și extinde",
+    "retryTranslation": "Reîncearcă",
+    "clearConfirmTitle": "Ștergeți transcrierea?",
+    "clearConfirmMessage": "Întreaga transcriere a apelului va fi ștearsă. Nu este salvată nicăieri, deci nu poate fi recuperată.",
+    "channelFailed": "oprit"
   }
 }

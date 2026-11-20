@@ -1321,9 +1321,8 @@
     "translationVoiceCommand": "Comando vocale",
     "translationVoiceCommandInfo": "Include il comando di traduzione nei comandi vocali («traduci in [lingua]»). ",
     "dialogTab": "Dialogo",
-    "dialogSourceHint": "Con il microfono, la tua voce e quella dell'interlocutore sono mostrate separatamente; solo il computer mostra solo l'interlocutore.",
-    "dialogTranslationHint": "Ciò che dice l'interlocutore viene tradotto in questa lingua. La tua voce non viene tradotta.",
     "dialogTranslationProvider": "Servizio di traduzione",
+    "dialogTranslationProviderHint": "Il servizio che traduce l’interlocutore. La traduzione avviene durante la conversazione, quindi uno veloce resta meno indietro.",
     "dialogProviderDefault": "Come nelle impostazioni di traduzione",
     "dialogProviderLlm": "Modello di IA"
   },
@@ -1648,7 +1647,6 @@
     "sideMe": "Io",
     "sideRemote": "Interlocutore",
     "translationLabel": "Traduzione",
-    "translating": "Traduzione in corso…",
     "translationFailed": "Impossibile tradurre",
     "feedLabel": "Trascrizione del dialogo",
     "toLatest": "Al più recente",
@@ -1675,6 +1673,12 @@
     "waitingForSpeech": "In ascolto…",
     "notRunning": "Il dialogo è fermo",
     "emptyTitle": "Trascrivi una chiamata",
-    "emptyHint": "Avvia il dialogo durante una chiamata in qualsiasi app: ciò che dice l'interlocutore appare qui tradotto e la registrazione continua nelle altre schede finché non la fermi."
+    "emptyHint": "Avvia il dialogo durante una chiamata in qualsiasi app: ciò che dice l'interlocutore appare qui tradotto e la registrazione continua nelle altre schede finché non la fermi.",
+    "stopping": "Arresto…",
+    "stopAndExpand": "Ferma ed espandi",
+    "retryTranslation": "Riprova",
+    "clearConfirmTitle": "Cancellare la trascrizione?",
+    "clearConfirmMessage": "L’intera trascrizione della chiamata verrà eliminata. Non viene salvata da nessuna parte e non potrà essere recuperata.",
+    "channelFailed": "fermato"
   }
 }

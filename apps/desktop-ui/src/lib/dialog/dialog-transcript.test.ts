@@ -6,6 +6,7 @@ import {
   lastRemoteTurn,
   turnText,
   turnTranslation,
+  turnUntranslatedText,
   type DialogSegment,
   type DialogSide,
 } from './dialog-transcript'
@@ -64,6 +65,18 @@ describe('buildDialogTurns', () => {
     expect(turn.id).toBe('a')
     expect(turnText(turn)).toBe('a b')
     expect(turnTranslation(turn)).toBe('A B')
+  })
+
+  it('tells what of a turn waits for its translation', () => {
+    const [turn] = buildDialogTurns([
+      {
+        ...segment('a', 'remote', 0, 100),
+        translation: 'A',
+        translationState: 'complete',
+      },
+      { ...segment('b', 'remote', 200, 300), translationState: 'pending' },
+    ])
+    expect(turnUntranslatedText(turn)).toBe('b')
   })
 
   it('finds the latest turn of the other side', () => {

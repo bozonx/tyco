@@ -1321,9 +1321,8 @@
     "translationVoiceCommand": "Glasovna naredba",
     "translationVoiceCommandInfo": "Uključuje naredbu prijevoda u glasovne naredbe („prevedi na [jezik]“).",
     "dialogTab": "Dijalog",
-    "dialogSourceHint": "S mikrofonom se vaš govor i govor sugovornika prikazuju odvojeno; samo računalo prikazuje samo sugovornika.",
-    "dialogTranslationHint": "Ono što sugovornik kaže prevodi se na ovaj jezik. Vaš govor se ne prevodi.",
     "dialogTranslationProvider": "Usluga prijevoda",
+    "dialogTranslationProviderHint": "Usluga koja prevodi sugovornika. Prijevod teče tijekom razgovora, pa brza usluga manje kasni.",
     "dialogProviderDefault": "Kao u postavkama prijevoda",
     "dialogProviderLlm": "AI model"
   },
@@ -1648,7 +1647,6 @@
     "sideMe": "Ja",
     "sideRemote": "Sugovornik",
     "translationLabel": "Prijevod",
-    "translating": "Prevodim…",
     "translationFailed": "Prijevod nije uspio",
     "feedLabel": "Transkript dijaloga",
     "toLatest": "Na najnovije",
@@ -1675,6 +1673,12 @@
     "waitingForSpeech": "Slušam…",
     "notRunning": "Dijalog je zaustavljen",
     "emptyTitle": "Transkribiraj poziv",
-    "emptyHint": "Pokrenite dijalog tijekom poziva u bilo kojoj aplikaciji: ono što sugovornik kaže pojavljuje se ovdje prevedeno, a snimanje se nastavlja na drugim karticama dok ga ne zaustavite."
+    "emptyHint": "Pokrenite dijalog tijekom poziva u bilo kojoj aplikaciji: ono što sugovornik kaže pojavljuje se ovdje prevedeno, a snimanje se nastavlja na drugim karticama dok ga ne zaustavite.",
+    "stopping": "Zaustavljanje…",
+    "stopAndExpand": "Zaustavi i proširi",
+    "retryTranslation": "Pokušaj ponovno",
+    "clearConfirmTitle": "Očistiti transkript?",
+    "clearConfirmMessage": "Cijeli transkript poziva bit će izbrisan. Nigdje se ne sprema pa ga nije moguće vratiti.",
+    "channelFailed": "zaustavljeno"
   }
 }

@@ -1321,9 +1321,8 @@
     "translationVoiceCommand": "Sprachbefehl",
     "translationVoiceCommandInfo": "Fügt den Übersetzungsbefehl zu den Sprachbefehlen hinzu („übersetze auf [Sprache]“).",
     "dialogTab": "Dialog",
-    "dialogSourceHint": "Mit Mikrofon werden Ihre Sprache und die Gegenseite getrennt angezeigt; nur Computer zeigt nur die Gegenseite.",
-    "dialogTranslationHint": "Was die Gegenseite sagt, wird in diese Sprache übersetzt. Ihre eigene Sprache wird nicht übersetzt.",
     "dialogTranslationProvider": "Übersetzungsdienst",
+    "dialogTranslationProviderHint": "Der Dienst, der die Gegenseite übersetzt. Übersetzt wird während des Gesprächs, ein schneller Dienst hält daher besser mit.",
     "dialogProviderDefault": "Wie in den Übersetzungseinstellungen",
     "dialogProviderLlm": "KI-Modell"
   },
@@ -1648,7 +1647,6 @@
     "sideMe": "Ich",
     "sideRemote": "Gegenseite",
     "translationLabel": "Übersetzung",
-    "translating": "Wird übersetzt…",
     "translationFailed": "Übersetzung fehlgeschlagen",
     "feedLabel": "Dialogtranskript",
     "toLatest": "Zum Neuesten",
@@ -1675,6 +1673,12 @@
     "waitingForSpeech": "Höre zu…",
     "notRunning": "Der Dialog ist beendet",
     "emptyTitle": "Ein Gespräch transkribieren",
-    "emptyHint": "Starten Sie den Dialog während eines Gesprächs in einer beliebigen App: Was die Gegenseite sagt, erscheint hier übersetzt und läuft auf anderen Tabs weiter, bis Sie ihn beenden."
+    "emptyHint": "Starten Sie den Dialog während eines Gesprächs in einer beliebigen App: Was die Gegenseite sagt, erscheint hier übersetzt und läuft auf anderen Tabs weiter, bis Sie ihn beenden.",
+    "stopping": "Wird beendet…",
+    "stopAndExpand": "Beenden und erweitern",
+    "retryTranslation": "Erneut versuchen",
+    "clearConfirmTitle": "Transkript löschen?",
+    "clearConfirmMessage": "Das gesamte Transkript des Anrufs wird gelöscht. Es wird nirgends gespeichert und lässt sich nicht wiederherstellen.",
+    "channelFailed": "gestoppt"
   }
 }

@@ -84,13 +84,18 @@ export const useDialogStore = defineStore('dialog', () => {
   const translationQueue = createDialogTranslationQueue({
     targetLanguage: () => config.value.translationTargetLanguage,
     translate: async ({ text, targetLanguage, context, signal }) => {
-      const rules = context.length
-        ? [
-            'The text is a line of a live conversation, recognized from speech.',
-            'The lines said before it, for context only; do not translate them:',
-            ...context.map((line) => `- ${line}`),
-          ].join('\n')
-        : 'The text is a line of a live conversation, recognized from speech.'
+      const rules = [
+        'The text is what the other side of a live call said, recognized from speech.',
+        ...(context.length
+          ? [
+              'The lines said before it, for context only; do not translate them:',
+              ...context.map(
+                (line) =>
+                  `- ${line.side === 'me' ? 'Me' : 'Other side'}: ${line.text}`
+              ),
+            ]
+          : []),
+      ].join('\n')
       const result = await translationClient.translate(text, {
         targetLanguage,
         signal,
@@ -106,6 +111,11 @@ export const useDialogStore = defineStore('dialog', () => {
   const capture = createVoiceCaptureControl(tauriNetIpc)
   const stt = createSttClient({ transport: createTauriTransport(tauriNetIpc) })
   let activeStt: DialogStt | undefined
+  /**
+   * When the running session began recording: the segments are on the clock, so
+   * the turns of several sessions without a clear stay in order
+   */
+  let sessionStartedAtMs = 0
 
   const showError = (error: unknown) => {
     errorText.value = describeDictationError(error, translate)
@@ -131,6 +141,7 @@ export const useDialogStore = defineStore('dialog', () => {
       })
     },
     onStatus: (next) => {
+      if (next === 'running') sessionStartedAtMs = Date.now()
       status.value = next
       if (next !== 'running') {
         levels.me = 0
@@ -141,7 +152,11 @@ export const useDialogStore = defineStore('dialog', () => {
       channelStatus[side] = next
     },
     onPart: (side, part, offsetMs) => {
-      const settled = transcript.apply(side, part, offsetMs)
+      const settled = transcript.apply(
+        side,
+        part,
+        sessionStartedAtMs + offsetMs
+      )
       if (settled) translationQueue.enqueue(settled)
     },
     onDraftLost: (side) => transcript.dropDraft(side),
@@ -200,6 +215,16 @@ export const useDialogStore = defineStore('dialog', () => {
 
   async function stop() {
     await session.stop()
+  }
+
+  /** The subtitles have nothing to show once stopped: the window comes back */
+  async function stopAndExpand() {
+    await Promise.all([session.stop(), leaveCompact()])
+  }
+
+  function retryTranslation(id: string) {
+    const segment = segments.value.find((item) => item.id === id)
+    if (segment?.translationState === 'failed') translationQueue.retry(segment)
   }
 
   function clear() {
@@ -268,6 +293,8 @@ export const useDialogStore = defineStore('dialog', () => {
     hasMicrophone,
     start,
     stop,
+    stopAndExpand,
+    retryTranslation,
     clear,
     exportText,
     updateConfig,

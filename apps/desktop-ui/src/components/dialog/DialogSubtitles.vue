@@ -1,22 +1,35 @@
 <template>
   <div class="dialog-subtitles" @mousedown.left="startDragging">
     <div class="dialog-subtitles-text" aria-live="polite">
+      <p
+        v-if="dialog.errorText"
+        class="dialog-subtitles-error"
+        role="alert"
+        :title="dialog.errorText"
+      >
+        {{ dialog.errorText }}
+      </p>
       <template v-if="turn">
-        <p v-if="mainText" class="dialog-subtitles-main" :lang="mainLang">
-          {{ mainText }}
+        <p v-if="mainText" class="dialog-subtitles-main">
+          <span :lang="mainLang">{{ mainText }}</span>
+          <span v-if="pendingText" class="dialog-subtitles-pending">
+            {{ pendingText }}</span
+          >
         </p>
         <p v-if="secondaryText" class="dialog-subtitles-secondary">
           {{ secondaryText }}
         </p>
       </template>
-      <p v-else class="dialog-subtitles-secondary">{{ placeholder }}</p>
+      <p v-else-if="!dialog.errorText" class="dialog-subtitles-secondary">
+        {{ placeholder }}
+      </p>
     </div>
     <div class="dialog-subtitles-actions" @mousedown.stop>
       <IconButton
         v-if="dialog.isActive"
         icon="mdi:stop"
-        :label="t('dialog.stop')"
-        @click="dialog.stop()"
+        :label="t('dialog.stopAndExpand')"
+        @click="dialog.stopAndExpand()"
       />
       <IconButton
         icon="mdi:arrow-expand"
@@ -41,6 +54,7 @@ import {
   lastRemoteTurn,
   turnText,
   turnTranslation,
+  turnUntranslatedText,
 } from '../../lib/dialog/dialog-transcript'
 import { clientLogger } from '../../lib/logger'
 import { useDialogStore } from '../../stores/dialog'
@@ -62,6 +76,12 @@ const mainText = computed(() =>
   display.value === 'original' || !translation.value
     ? original.value
     : translation.value
+)
+/** With the translation alone, the words still waiting for it follow dimmed */
+const pendingText = computed(() =>
+  turn.value && translation.value && display.value === 'translation'
+    ? turnUntranslatedText(turn.value)
+    : ''
 )
 const mainLang = computed(() =>
   mainText.value === translation.value
@@ -127,6 +147,18 @@ function startResizing() {
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.dialog-subtitles-pending {
+  color: var(--app-text-faint);
+}
+
+.dialog-subtitles-error {
+  font-size: var(--text-small, 0.8125rem);
+  color: var(--color-error);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dialog-subtitles-secondary {

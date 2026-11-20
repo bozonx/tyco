@@ -8,13 +8,14 @@ import {
 
 function segment(
   id: string,
-  side: DialogSegment['side'] = 'remote'
+  side: DialogSegment['side'] = 'remote',
+  startMs = 0
 ): DialogSegment {
   return {
     id,
     side,
-    startMs: 0,
-    endMs: 0,
+    startMs,
+    endMs: startMs,
     text: `text ${id}`,
     isFinal: true,
     translationState: 'idle',
@@ -46,13 +47,13 @@ describe('createDialogTranslationQueue', () => {
     })
     queue.enqueue(segment('a'))
     queue.enqueue(segment('me', 'me'))
-    queue.enqueue(segment('b'))
-    queue.enqueue(segment('c'))
+    queue.enqueue(segment('b', 'remote', 10_000))
+    queue.enqueue(segment('c', 'remote', 20_000))
     await queue.idle()
     expect(requests.map((request) => [request.text, request.context])).toEqual([
       ['text a', []],
-      ['text b', ['text a']],
-      ['text c', ['text b']],
+      ['text b', [{ side: 'me', text: 'text me' }]],
+      ['text c', [{ side: 'remote', text: 'text b' }]],
     ])
     expect(requests[0].targetLanguage).toBe('ru-RU')
     expect(updates.filter(([id]) => id === 'b')).toEqual([
@@ -60,6 +61,59 @@ describe('createDialogTranslationQueue', () => {
       ['b', { translationState: 'complete', translation: 'TEXT B' }],
     ])
     expect(updates.some(([id]) => id === 'me')).toBe(false)
+  })
+
+  it('takes what waited meanwhile in one request', async () => {
+    const first = deferred<string>()
+    const requests: string[] = []
+    const updates: [string, unknown][] = []
+    const queue = createDialogTranslationQueue({
+      translate: ({ text }) => {
+        requests.push(text)
+        return requests.length === 1 ? first.promise : Promise.resolve('BC')
+      },
+      targetLanguage: () => 'ru-RU',
+      onUpdate: (id, patch) => updates.push([id, patch]),
+    })
+    queue.enqueue(segment('a'))
+    queue.enqueue(segment('b', 'remote', 500))
+    queue.enqueue(segment('c', 'remote', 1000))
+    queue.enqueue(segment('reply', 'me', 1200))
+    queue.enqueue(segment('d', 'remote', 1500))
+    first.resolve('A')
+    await queue.idle()
+    expect(requests).toEqual(['text a', 'text b text c', 'text d'])
+    expect(updates).toContainEqual([
+      'b',
+      { translationState: 'complete', translation: 'BC' },
+    ])
+    expect(updates).toContainEqual([
+      'c',
+      { translationState: 'complete', translation: '' },
+    ])
+  })
+
+  it('translates a failed segment again', async () => {
+    let attempt = 0
+    const updates: [string, unknown][] = []
+    const queue = createDialogTranslationQueue({
+      translate: async () => {
+        attempt += 1
+        if (attempt === 1) throw new Error('offline')
+        return 'ok'
+      },
+      targetLanguage: () => 'ru-RU',
+      onUpdate: (id, patch) => updates.push([id, patch]),
+    })
+    const failed = segment('a')
+    queue.enqueue(failed)
+    await queue.idle()
+    queue.retry(failed)
+    await queue.idle()
+    expect(updates.at(-1)).toEqual([
+      'a',
+      { translationState: 'complete', translation: 'ok' },
+    ])
   })
 
   it('marks a failed segment and goes on with the next', async () => {
@@ -75,7 +129,7 @@ describe('createDialogTranslationQueue', () => {
       logError,
     })
     queue.enqueue(segment('a'))
-    queue.enqueue(segment('b'))
+    queue.enqueue(segment('b', 'remote', 10_000))
     await queue.idle()
     expect(updates).toContainEqual(['a', { translationState: 'failed' }])
     expect(updates).toContainEqual([

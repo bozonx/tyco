@@ -1315,9 +1315,8 @@
     "translationVoiceCommand": "語音指令",
     "translationVoiceCommandInfo": "在語音指令中包含翻譯指令（「翻譯成[語言]」）。",
     "dialogTab": "對話",
-    "dialogSourceHint": "使用麥克風時，您和對方的發言分開顯示；僅電腦時只顯示對方。",
-    "dialogTranslationHint": "對方的發言會翻譯成此語言。您自己的發言不翻譯。",
     "dialogTranslationProvider": "翻譯服務",
+    "dialogTranslationProviderHint": "翻譯對方發言的服務。翻譯在對話進行時完成，因此較快的服務延遲較小。",
     "dialogProviderDefault": "與翻譯設定相同",
     "dialogProviderLlm": "AI 模型"
   },
@@ -1638,7 +1637,6 @@
     "sideMe": "我",
     "sideRemote": "對方",
     "translationLabel": "翻譯",
-    "translating": "正在翻譯…",
     "translationFailed": "翻譯失敗",
     "feedLabel": "對話紀錄",
     "toLatest": "跳到最新",
@@ -1665,6 +1663,12 @@
     "waitingForSpeech": "正在聆聽…",
     "notRunning": "對話已停止",
     "emptyTitle": "轉寫通話",
-    "emptyHint": "在任何應用程式中通話時開始對話：對方的發言會連同譯文顯示在這裡，並在其他分頁中持續記錄，直到您停止。"
+    "emptyHint": "在任何應用程式中通話時開始對話：對方的發言會連同譯文顯示在這裡，並在其他分頁中持續記錄，直到您停止。",
+    "stopping": "正在停止…",
+    "stopAndExpand": "停止並展開",
+    "retryTranslation": "重試",
+    "clearConfirmTitle": "清除逐字稿？",
+    "clearConfirmMessage": "通話的完整逐字稿將被刪除。它不會儲存在任何地方，因此無法復原。",
+    "channelFailed": "已停止"
   }
 }

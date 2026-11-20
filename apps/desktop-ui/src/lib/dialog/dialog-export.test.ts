@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { exportDialogTranscript, formatDialogTime } from './dialog-export'
+import { exportDialogTranscript, formatDialogClock } from './dialog-export'
 import type { DialogSegment } from './dialog-transcript'
 
 const labels = { me: 'Me', remote: 'Remote', translation: 'Translation' }
+const formatTime = (ms: number) => `00:${String(ms / 1000).padStart(2, '0')}`
 
 function segment(
   patch: Partial<DialogSegment> & Pick<DialogSegment, 'id' | 'side'>
@@ -30,7 +31,11 @@ describe('exportDialogTranscript', () => {
       segment({ id: 'Yes', side: 'me', startMs: 9000 }),
     ]
     expect(
-      exportDialogTranscript(segments, { labels, includeTranslation: true })
+      exportDialogTranscript(segments, {
+        labels,
+        formatTime,
+        includeTranslation: true,
+      })
     ).toBe(
       [
         '[00:03] Remote: Can we move the release?',
@@ -39,7 +44,11 @@ describe('exportDialogTranscript', () => {
       ].join('\n')
     )
     expect(
-      exportDialogTranscript(segments, { labels, includeTranslation: false })
+      exportDialogTranscript(segments, {
+        labels,
+        formatTime,
+        includeTranslation: false,
+      })
     ).toBe('[00:03] Remote: Can we move the release?\n[00:09] Me: Yes')
   })
 
@@ -52,9 +61,25 @@ describe('exportDialogTranscript', () => {
     ).toBe('')
   })
 
-  it('formats times past an hour', () => {
-    expect(formatDialogTime(65_000)).toBe('01:05')
-    expect(formatDialogTime(3_725_000)).toBe('1:02:05')
-    expect(formatDialogTime(-5)).toBe('00:00')
+  it('leaves out the guesses that are not settled', () => {
+    expect(
+      exportDialogTranscript(
+        [
+          segment({ id: 'Settled', side: 'remote' }),
+          segment({
+            id: 'guess',
+            side: 'remote',
+            startMs: 1000,
+            isFinal: false,
+          }),
+        ],
+        { labels, formatTime, includeTranslation: true }
+      )
+    ).toBe('[00:00] Remote: Settled')
+  })
+
+  it('writes the clock time of a turn', () => {
+    const epochMs = new Date(2026, 10, 20, 9, 5, 7).getTime()
+    expect(formatDialogClock(epochMs)).toBe('09:05:07')
   })
 })

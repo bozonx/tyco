@@ -77,10 +77,12 @@ export function turnTranslation(turn: DialogTurn): string {
   return joinTexts(turn.segments.map((segment) => segment.translation ?? ''))
 }
 
-/** Whether some segment of the turn is being translated */
-export function isTurnTranslating(turn: DialogTurn): boolean {
-  return turn.segments.some(
-    (segment) => segment.isFinal && segment.translationState === 'pending'
+/** What of a turn waits for its translation: the latest words, as said */
+export function turnUntranslatedText(turn: DialogTurn): string {
+  return joinTexts(
+    turn.segments
+      .filter((segment) => segment.translationState !== 'complete')
+      .map((segment) => segment.text)
   )
 }
 

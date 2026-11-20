@@ -1318,9 +1318,8 @@
     "translationVoiceCommand": "Sesli komut",
     "translationVoiceCommandInfo": "Çeviri komutunu sesli komutlara dahil eder („[dil] çevir”).",
     "dialogTab": "Diyalog",
-    "dialogSourceHint": "Mikrofonla sizin ve karşı tarafın konuşması ayrı gösterilir; yalnızca bilgisayar seçeneği yalnızca karşı tarafı gösterir.",
-    "dialogTranslationHint": "Karşı tarafın söyledikleri bu dile çevrilir. Kendi konuşmanız çevrilmez.",
     "dialogTranslationProvider": "Çeviri hizmeti",
+    "dialogTranslationProviderHint": "Karşı tarafı çeviren hizmet. Çeviri konuşma sırasında yapılır; hızlı bir hizmet daha az geride kalır.",
     "dialogProviderDefault": "Çeviri ayarlarındaki gibi",
     "dialogProviderLlm": "Yapay zekâ modeli"
   },
@@ -1641,7 +1640,6 @@
     "sideMe": "Ben",
     "sideRemote": "Karşı taraf",
     "translationLabel": "Çeviri",
-    "translating": "Çevriliyor…",
     "translationFailed": "Çevrilemedi",
     "feedLabel": "Diyalog dökümü",
     "toLatest": "En yeniye",
@@ -1668,6 +1666,12 @@
     "waitingForSpeech": "Dinleniyor…",
     "notRunning": "Diyalog durduruldu",
     "emptyTitle": "Bir görüşmeyi yazıya dök",
-    "emptyHint": "Herhangi bir uygulamadaki görüşme sırasında diyaloğu başlatın: karşı tarafın söyledikleri burada çevrilmiş olarak görünür ve siz durdurana kadar diğer sekmelerde de kayıt devam eder."
+    "emptyHint": "Herhangi bir uygulamadaki görüşme sırasında diyaloğu başlatın: karşı tarafın söyledikleri burada çevrilmiş olarak görünür ve siz durdurana kadar diğer sekmelerde de kayıt devam eder.",
+    "stopping": "Durduruluyor…",
+    "stopAndExpand": "Durdur ve genişlet",
+    "retryTranslation": "Tekrar dene",
+    "clearConfirmTitle": "Transkript temizlensin mi?",
+    "clearConfirmMessage": "Görüşmenin tüm transkripti silinecek. Hiçbir yere kaydedilmediği için geri getirilemez.",
+    "channelFailed": "durduruldu"
   }
 }

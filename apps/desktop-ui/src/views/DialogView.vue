@@ -22,6 +22,7 @@
         :is-bubble="isBubble"
         :text-display="textDisplay"
         :translation-lang="dialog.config.translationTargetLanguage || undefined"
+        @retry="retryTranslation"
       >
         <template #empty>
           <StateMessage
@@ -65,6 +66,10 @@ const textDisplay = computed(() =>
 const emptyTitle = computed(() =>
   dialog.isActive ? t('dialog.waitingForSpeech') : t('dialog.emptyTitle')
 )
+
+function retryTranslation(ids: string[]) {
+  for (const id of ids) dialog.retryTranslation(id)
+}
 
 function openSttSettings() {
   void appNavigation.goToConfig('stt')

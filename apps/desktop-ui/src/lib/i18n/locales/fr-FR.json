@@ -1321,9 +1321,8 @@
     "translationVoiceCommand": "Commande vocale",
     "translationVoiceCommandInfo": "Inclut la commande de traduction dans les commandes vocales (« traduis en [langue] »).",
     "dialogTab": "Dialogue",
-    "dialogSourceHint": "Avec le micro, votre voix et celle de l'interlocuteur s'affichent séparément ; l'ordinateur seul n'affiche que l'interlocuteur.",
-    "dialogTranslationHint": "Les propos de l'interlocuteur sont traduits dans cette langue. Votre propre voix n'est pas traduite.",
     "dialogTranslationProvider": "Service de traduction",
+    "dialogTranslationProviderHint": "Le service qui traduit votre interlocuteur. La traduction se fait pendant la conversation : un service rapide suit mieux.",
     "dialogProviderDefault": "Comme dans les paramètres de traduction",
     "dialogProviderLlm": "Modèle d'IA"
   },
@@ -1648,7 +1647,6 @@
     "sideMe": "Moi",
     "sideRemote": "Interlocuteur",
     "translationLabel": "Traduction",
-    "translating": "Traduction…",
     "translationFailed": "Échec de la traduction",
     "feedLabel": "Transcription du dialogue",
     "toLatest": "Vers le plus récent",
@@ -1675,6 +1673,12 @@
     "waitingForSpeech": "À l'écoute…",
     "notRunning": "Le dialogue est arrêté",
     "emptyTitle": "Transcrire un appel",
-    "emptyHint": "Démarrez le dialogue pendant un appel dans n'importe quelle application : les propos de l'interlocuteur s'affichent ici, traduits, et l'enregistrement continue sur les autres onglets jusqu'à l'arrêt."
+    "emptyHint": "Démarrez le dialogue pendant un appel dans n'importe quelle application : les propos de l'interlocuteur s'affichent ici, traduits, et l'enregistrement continue sur les autres onglets jusqu'à l'arrêt.",
+    "stopping": "Arrêt…",
+    "stopAndExpand": "Arrêter et agrandir",
+    "retryTranslation": "Réessayer",
+    "clearConfirmTitle": "Effacer la transcription ?",
+    "clearConfirmMessage": "Toute la transcription de l’appel sera supprimée. Elle n’est enregistrée nulle part et ne pourra pas être restaurée.",
+    "channelFailed": "arrêté"
   }
 }

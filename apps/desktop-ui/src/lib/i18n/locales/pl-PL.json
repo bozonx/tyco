@@ -1321,9 +1321,8 @@
     "translationVoiceCommand": "Polecenie głosowe",
     "translationVoiceCommandInfo": "Dołącza polecenie tłumaczenia do poleceń głosowych („przetłumacz na [język]”).",
     "dialogTab": "Dialog",
-    "dialogSourceHint": "Z mikrofonem Twoja mowa i mowa rozmówcy są pokazywane osobno; sam komputer pokazuje tylko rozmówcę.",
-    "dialogTranslationHint": "Wypowiedzi rozmówcy są tłumaczone na ten język. Twoja mowa nie jest tłumaczona.",
     "dialogTranslationProvider": "Usługa tłumaczenia",
+    "dialogTranslationProviderHint": "Usługa, która tłumaczy rozmówcę. Tłumaczenie odbywa się w trakcie rozmowy, więc szybka usługa mniej się opóźnia.",
     "dialogProviderDefault": "Jak w ustawieniach tłumaczenia",
     "dialogProviderLlm": "Model AI"
   },
@@ -1648,7 +1647,6 @@
     "sideMe": "Ja",
     "sideRemote": "Rozmówca",
     "translationLabel": "Tłumaczenie",
-    "translating": "Tłumaczenie…",
     "translationFailed": "Nie udało się przetłumaczyć",
     "feedLabel": "Transkrypcja dialogu",
     "toLatest": "Do najnowszego",
@@ -1675,6 +1673,12 @@
     "waitingForSpeech": "Słucham…",
     "notRunning": "Dialog jest zatrzymany",
     "emptyTitle": "Transkrypcja rozmowy",
-    "emptyHint": "Uruchom dialog podczas rozmowy w dowolnej aplikacji: wypowiedzi rozmówcy pojawią się tutaj z tłumaczeniem, a nagrywanie trwa na innych kartach, dopóki go nie zatrzymasz."
+    "emptyHint": "Uruchom dialog podczas rozmowy w dowolnej aplikacji: wypowiedzi rozmówcy pojawią się tutaj z tłumaczeniem, a nagrywanie trwa na innych kartach, dopóki go nie zatrzymasz.",
+    "stopping": "Zatrzymywanie…",
+    "stopAndExpand": "Zatrzymaj i rozwiń",
+    "retryTranslation": "Spróbuj ponownie",
+    "clearConfirmTitle": "Wyczyścić transkrypcję?",
+    "clearConfirmMessage": "Cała transkrypcja rozmowy zostanie usunięta. Nie jest nigdzie zapisywana, więc nie da się jej przywrócić.",
+    "channelFailed": "zatrzymano"
   }
 }

@@ -1321,9 +1321,8 @@
     "translationVoiceCommand": "Voice command",
     "translationVoiceCommandInfo": "Includes the translation command in voice commands (\"translate to [language]\").",
     "dialogTab": "Dialog",
-    "dialogSourceHint": "With the microphone, your speech and the other side are shown apart; the computer alone shows only the other side.",
-    "dialogTranslationHint": "What the other side says is translated into this language. Your own speech is not translated.",
     "dialogTranslationProvider": "Translation service",
+    "dialogTranslationProviderHint": "The service that translates the other side. Translation runs as they speak, so a fast one keeps up better.",
     "dialogProviderDefault": "As in the translation settings",
     "dialogProviderLlm": "AI model"
   },
@@ -1648,7 +1647,6 @@
     "sideMe": "Me",
     "sideRemote": "Other side",
     "translationLabel": "Translation",
-    "translating": "Translating…",
     "translationFailed": "Could not translate",
     "feedLabel": "Dialog transcript",
     "toLatest": "To the latest",
@@ -1675,6 +1673,12 @@
     "waitingForSpeech": "Listening…",
     "notRunning": "The dialog is stopped",
     "emptyTitle": "Transcribe a call",
-    "emptyHint": "Start the dialog during a call in any app: what the other side says appears here, translated, and keeps going on other tabs until you stop it."
+    "emptyHint": "Start the dialog during a call in any app: what the other side says appears here, translated, and keeps going on other tabs until you stop it.",
+    "stopping": "Stopping…",
+    "stopAndExpand": "Stop and expand",
+    "retryTranslation": "Try again",
+    "clearConfirmTitle": "Clear the transcript?",
+    "clearConfirmMessage": "The whole transcript of the call is deleted. Nothing of it is saved, so it cannot be restored.",
+    "channelFailed": "stopped"
   }
 }
