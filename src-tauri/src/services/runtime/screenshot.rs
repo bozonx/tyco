@@ -372,6 +372,67 @@ pub fn add(app: &AppHandle, activation_id: u64) -> Result<Option<ChatImage>, App
         .map_err(|e| AppError::Failed(e.to_string()))?
 }
 
+/// Takes a screenshot for the chat window and holds it under `import_id`.
+pub fn capture_for_chat(
+    app: &AppHandle,
+    window_label: &str,
+    import_id: &str,
+) -> Result<Option<ChatImage>, AppError> {
+    let mode = ScreenshotCaptureMode::Area;
+    let screen = platform::screenshot::screen()?;
+    let owner = crate::services::chat_images::import_owner(window_label, import_id)?;
+    let (sender, receiver) = std::sync::mpsc::sync_channel(1);
+    on_main_thread(app, move |app| {
+        if app.state::<AppState>().is_quitting() {
+            return Err(AppError::ServiceUnavailable(
+                "Application is stopping".into(),
+            ));
+        }
+        let request = orchestration::begin(&app.state::<ActivationCoordinator>(), &Windows(app))?;
+        sender
+            .send(request)
+            .map_err(|e| AppError::Failed(e.to_string()))
+    })?;
+    let request = receiver
+        .recv()
+        .map_err(|e| AppError::Failed(e.to_string()))?;
+    let capture = orchestration::capture(
+        &app.state::<ActivationCoordinator>(),
+        &request,
+        &Source(app),
+        &Windows(app),
+        screen,
+        mode,
+    );
+    let (sender, receiver) = std::sync::mpsc::sync_channel(1);
+    on_main_thread(app, move |app| {
+        let outcome = orchestration::finish(
+            &app.state::<ActivationCoordinator>(),
+            &request,
+            capture,
+            &Windows(app),
+            &app.state::<ChatImages>(),
+            |image| {
+                let images = app.state::<ChatImages>();
+                images.lock().hold(&owner, &image.id);
+                Windows(app).restore()
+            },
+        )?;
+        let output = match outcome {
+            Some(Outcome::Captured(image)) => Ok(Some(image)),
+            Some(Outcome::Cancelled) => Ok(None),
+            Some(Outcome::Failed(error)) => Err(error),
+            None => Err(stale()),
+        };
+        sender
+            .send(output)
+            .map_err(|e| AppError::Failed(e.to_string()))
+    })?;
+    receiver
+        .recv()
+        .map_err(|e| AppError::Failed(e.to_string()))?
+}
+
 pub fn confirm_crop(app: &AppHandle, selection_id: u64, crop: CropRect) -> Result<(), AppError> {
     if crop.width == 0 || crop.height == 0 {
         return Err(AppError::invalid_input("Empty screenshot selection"));

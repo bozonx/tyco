@@ -153,7 +153,8 @@
       "projectHint": "项目“{name}”：你自己的文件",
       "workspace": "工作区",
       "workspaceHint": "配置文件的工作区：保存在聊天记录之外、可在该配置文件的所有聊天中使用的文件"
-    }
+    },
+    "takeScreenshot": "截取屏幕"
   },
   "chatTools": {
     "files": {

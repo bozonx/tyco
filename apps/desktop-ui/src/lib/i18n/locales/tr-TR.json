@@ -153,7 +153,8 @@
       "projectHint": "“{name}” projesi: kendi dosyalarınız",
       "workspace": "Çalışma klasörü",
       "workspaceHint": "Profilin çalışma klasörü: sohbet geçmişi dışında tutulan ve profilin tüm sohbetlerinde kullanılabilen dosyalar"
-    }
+    },
+    "takeScreenshot": "Ekran görüntüsü al"
   },
   "chatTools": {
     "files": {

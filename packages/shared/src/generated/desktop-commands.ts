@@ -128,6 +128,10 @@ export interface DesktopCommands {
     result: void
   }
   cancel_script_action: { args: { runId: string }; result: boolean }
+  capture_chat_screenshot: {
+    args: { importId: string }
+    result: ChatImage | null
+  }
   claim_external_job: { args: { id: string }; result: boolean }
   clear_ai_profile_memory: { args: { profileId: string }; result: void }
   clear_chats: { args: { profileId?: string | null }; result: void }

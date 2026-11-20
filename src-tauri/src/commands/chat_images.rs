@@ -27,8 +27,6 @@ use crate::{
 };
 
 const MAX_DROPPED_FILE_BYTES: u64 = 10 * 1024 * 1024;
-const MAX_IMPORT_ID_LENGTH: usize = 64;
-
 #[derive(Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(optional_fields = nullable)]
@@ -40,15 +38,7 @@ pub struct ChatImageMeta {
 
 /// The holder of the images a window imported under `import_id`.
 pub fn import_owner(window: &WebviewWindow, import_id: &str) -> Result<String, AppError> {
-    if import_id.is_empty()
-        || import_id.len() > MAX_IMPORT_ID_LENGTH
-        || !import_id
-            .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
-    {
-        return Err(AppError::InvalidInput("Invalid image import id".into()));
-    }
-    Ok(format!("{}/import/{import_id}", window.label()))
+    crate::services::chat_images::import_owner(window.label(), import_id)
 }
 
 /// The holder of the images of a chat deleted in a window, for its undo.

@@ -153,7 +153,8 @@
       "projectHint": "Projekt „{name}“: vaše vlastní soubory",
       "workspace": "Pracovní složka",
       "workspaceHint": "Pracovní složka profilu: soubory uložené mimo historii chatů, dostupné ve všech chatech profilu"
-    }
+    },
+    "takeScreenshot": "Pořídit snímek obrazovky"
   },
   "chatTools": {
     "files": {

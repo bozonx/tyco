@@ -153,7 +153,8 @@
       "projectHint": "Progetto «{name}»: i tuoi file",
       "workspace": "Area di lavoro",
       "workspaceHint": "L’area di lavoro del profilo: file conservati fuori dalla cronologia delle chat, disponibili in ogni chat del profilo"
-    }
+    },
+    "takeScreenshot": "Acquisisci screenshot"
   },
   "chatTools": {
     "files": {

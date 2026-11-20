@@ -1,9 +1,10 @@
 import { computed, ref, watch } from 'vue'
-import type {
-  ChatImage,
-  ChatMessage,
-  ChatParams,
-  ChatAttachment,
+import {
+  MAX_CHAT_IMAGES_COUNT,
+  type ChatImage,
+  type ChatMessage,
+  type ChatParams,
+  type ChatAttachment,
 } from '@tyco/shared'
 
 import { attachmentFileIds, messageFileIds } from './chat-attached-files'
@@ -140,6 +141,20 @@ export function createChatFileController(deps: ChatFileControllerDependencies) {
     pendingImages,
     addFiles,
     addDroppedFiles,
+    addImage: (image: ChatImage) => {
+      if (disposed) return
+      if (deps.isGenerating()) return deps.reportBusy()
+      const draft = deps.getDraft()
+      const images = [...(draft.images || [])]
+      if (images.length >= MAX_CHAT_IMAGES_COUNT) {
+        deps.report('screenshot', 'imageLimit')
+        return
+      }
+      if (!images.some((item) => item.id === image.id)) {
+        images.push(image)
+        draft.images = images
+      }
+    },
     whileOpening,
     removeImage: (id: string) => {
       deps.getDraft().images = pendingImages.value.filter(

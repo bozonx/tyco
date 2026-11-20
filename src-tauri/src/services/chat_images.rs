@@ -46,6 +46,21 @@ pub fn validate_id(id: &str) -> Result<(), AppError> {
     Ok(())
 }
 
+pub const MAX_IMPORT_ID_LENGTH: usize = 64;
+
+/// The holder of the images a window imported under `import_id`.
+pub fn import_owner(window_label: &str, import_id: &str) -> Result<String, AppError> {
+    if import_id.is_empty()
+        || import_id.len() > MAX_IMPORT_ID_LENGTH
+        || !import_id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
+    {
+        return Err(AppError::InvalidInput("Invalid image import id".into()));
+    }
+    Ok(format!("{window_label}/import/{import_id}"))
+}
+
 fn extension(media_type: &str) -> Option<&'static str> {
     FORMATS
         .iter()
@@ -1072,5 +1087,16 @@ mod tests {
             let _ = encoder.write_header().unwrap();
         }
         assert!(normalize(&oversized, None).is_err());
+    }
+
+    #[test]
+    fn import_owner_formats_and_validates_ids() {
+        assert_eq!(
+            import_owner("main", "import-123").unwrap(),
+            "main/import/import-123"
+        );
+        assert!(import_owner("main", "").is_err());
+        assert!(import_owner("main", "invalid/slash").is_err());
+        assert!(import_owner("main", &"a".repeat(MAX_IMPORT_ID_LENGTH + 1)).is_err());
     }
 }

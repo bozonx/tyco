@@ -101,6 +101,23 @@ pub async fn add_screenshot(
         .await?
 }
 
+/// Takes a screenshot for the chat window, holding it until synced under `import_id`.
+#[tauri::command]
+pub async fn capture_chat_screenshot(
+    window: WebviewWindow,
+    app: AppHandle,
+    import_id: String,
+) -> Result<Option<crate::models::ChatImage>, AppError> {
+    let services = app.state::<crate::services::background::BackgroundServices>();
+    let handle = app.clone();
+    let window_label = window.label().to_string();
+    services
+        .run_blocking(move || {
+            runtime::screenshot::capture_for_chat(&handle, &window_label, &import_id)
+        })
+        .await?
+}
+
 #[tauri::command]
 pub fn confirm_screenshot_crop(
     app: AppHandle,

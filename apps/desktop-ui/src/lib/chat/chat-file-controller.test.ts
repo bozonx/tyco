@@ -131,8 +131,31 @@ describe('chat file controller ownership', () => {
     const { controller, prepare, reportBusy } = setup(true)
     await controller.addFiles([new File(['file'], 'a.png')])
     await controller.addDroppedFiles(['/tmp/a.png'])
-    expect(reportBusy).toHaveBeenCalledTimes(2)
+    controller.addImage(image)
+    expect(reportBusy).toHaveBeenCalledTimes(3)
     expect(prepare).not.toHaveBeenCalled()
+    controller.dispose()
+  })
+  it('adds an image directly and bounds the count by the limit', async () => {
+    const { controller, draft, report } = setup()
+    const img1 = { ...image, id: 'img-1' }
+    const img2 = { ...image, id: 'img-2' }
+    const img3 = { ...image, id: 'img-3' }
+    const img4 = { ...image, id: 'img-4' }
+    const img5 = { ...image, id: 'img-5' }
+
+    controller.addImage(img1)
+    controller.addImage(img2)
+    controller.addImage(img2) // duplicate
+    expect(draft.value.images).toEqual([img1, img2])
+
+    controller.addImage(img3)
+    controller.addImage(img4)
+    expect(draft.value.images).toHaveLength(4)
+
+    controller.addImage(img5)
+    expect(draft.value.images).toHaveLength(4)
+    expect(report).toHaveBeenCalledWith('screenshot', 'imageLimit')
     controller.dispose()
   })
 })

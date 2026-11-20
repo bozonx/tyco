@@ -153,7 +153,8 @@
       "projectHint": "Proiectul „{name}”: fișierele tale",
       "workspace": "Spațiu de lucru",
       "workspaceHint": "Spațiul de lucru al profilului: fișiere păstrate în afara istoricului de chat, disponibile în toate chaturile profilului"
-    }
+    },
+    "takeScreenshot": "Fă o captură de ecran"
   },
   "chatTools": {
     "files": {

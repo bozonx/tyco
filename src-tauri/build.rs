@@ -49,6 +49,7 @@ fn main() {
             "acknowledge_settings_shutdown",
             "open_transferred_chat",
             "add_screenshot",
+            "capture_chat_screenshot",
             "remove_screenshot",
             "confirm_screenshot_crop",
             "cancel_screenshot_crop",

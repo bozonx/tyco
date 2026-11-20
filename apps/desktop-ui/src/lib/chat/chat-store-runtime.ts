@@ -516,6 +516,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     },
     addFiles: files.addFiles,
     addDroppedFiles: files.addDroppedFiles,
+    addImage: files.addImage,
     importingImages: files.importing,
     pendingImages: files.pendingImages,
     removeImage: files.removeImage,

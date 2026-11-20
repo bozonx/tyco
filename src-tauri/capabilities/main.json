@@ -34,6 +34,7 @@
     "allow-run-ai-file-tool",
     "allow-run-ai-web-tool",
     "allow-cancel-ai-web-tool",
+    "allow-capture-chat-screenshot",
     "allow-preview-ai-file-change",
     "allow-read-ai-file-bytes",
     "allow-read-ai-profile-memory",

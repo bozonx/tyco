@@ -153,7 +153,8 @@
       "projectHint": "프로젝트 “{name}”: 사용자의 파일",
       "workspace": "작업 공간",
       "workspaceHint": "프로필 작업 공간: 채팅 기록과 별도로 보관되며 프로필의 모든 채팅에서 사용할 수 있는 파일"
-    }
+    },
+    "takeScreenshot": "스크린샷 찍기"
   },
   "chatTools": {
     "files": {

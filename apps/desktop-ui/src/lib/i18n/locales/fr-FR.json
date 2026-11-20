@@ -153,7 +153,8 @@
       "projectHint": "Projet « {name} » : vos propres fichiers",
       "workspace": "Espace de travail",
       "workspaceHint": "L’espace de travail du profil : des fichiers conservés hors de l’historique des chats, disponibles dans tous les chats du profil"
-    }
+    },
+    "takeScreenshot": "Prendre une capture d’écran"
   },
   "chatTools": {
     "files": {

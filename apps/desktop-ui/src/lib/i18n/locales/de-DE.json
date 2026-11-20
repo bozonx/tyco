@@ -153,7 +153,8 @@
       "projectHint": "Projekt „{name}“: deine eigenen Dateien",
       "workspace": "Arbeitsordner",
       "workspaceHint": "Der Arbeitsordner des Profils: Dateien außerhalb des Chatverlaufs, in jedem Chat des Profils verfügbar"
-    }
+    },
+    "takeScreenshot": "Screenshot aufnehmen"
   },
   "chatTools": {
     "files": {

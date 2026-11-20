@@ -153,7 +153,8 @@
       "projectHint": "„{name}” projekt: a saját fájljai",
       "workspace": "Munkamappa",
       "workspaceHint": "A profil munkamappája: a csevegési előzményeken kívül tárolt fájlok, a profil minden csevegésében elérhetők"
-    }
+    },
+    "takeScreenshot": "Képernyőkép készítése"
   },
   "chatTools": {
     "files": {

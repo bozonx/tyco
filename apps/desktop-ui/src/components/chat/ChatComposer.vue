@@ -65,10 +65,27 @@
       <IconButton
         size="sm"
         variant="ghost"
-        :disabled="chatStore.isGenerating || Boolean(chatStore.importingImages)"
+        :disabled="
+          chatStore.isGenerating ||
+          Boolean(chatStore.importingImages) ||
+          hasReachedImageLimit
+        "
         @click="filePicker?.click()"
         :label="t('chat.addFile')"
         icon="mdi:paperclip"
+      />
+      <IconButton
+        size="sm"
+        variant="ghost"
+        :disabled="
+          chatStore.isGenerating ||
+          Boolean(chatStore.importingImages) ||
+          isCapturingScreenshot ||
+          hasReachedImageLimit
+        "
+        @click="takeScreenshot"
+        :label="t('chat.takeScreenshot')"
+        icon="mdi:camera-outline"
       />
       <div ref="promptButtonAnchorRef" class="relative inline-block">
         <IconButton
@@ -144,6 +161,8 @@ import {
 } from '../../lib/input-keys/input-keys'
 import { appNavigation } from '../../navigation'
 import { useDesktopStore } from '../../stores/desktop'
+import { useIpcStore } from '../../stores/ipc'
+import { useToastStore } from '../../stores/toast'
 import Button from '../common/Button.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
@@ -151,6 +170,7 @@ import InlineNotice from '../common/InlineNotice.vue'
 import ChatContextList from './ChatContextList.vue'
 import ChatInput from './ChatInput.vue'
 import ChatPromptsKeypad from './ChatPromptsKeypad.vue'
+import { MAX_CHAT_IMAGES_COUNT } from '@tyco/shared'
 
 defineProps<{ canSend: boolean; draggingFiles: boolean }>()
 const emit = defineEmits<{ send: [] }>()
@@ -206,6 +226,38 @@ const modelMenuItems = computed<DropdownMenuItem[]>(() => [
     action: openModelSettings,
   },
 ])
+
+const { toastKey } = useToastStore()
+const ipcStore = useIpcStore()
+const isCapturingScreenshot = ref(false)
+const hasReachedImageLimit = computed(
+  () => (chatStore.pendingImages?.length ?? 0) >= MAX_CHAT_IMAGES_COUNT
+)
+
+async function takeScreenshot() {
+  if (
+    isCapturingScreenshot.value ||
+    chatStore.isGenerating ||
+    Boolean(chatStore.importingImages) ||
+    hasReachedImageLimit.value
+  )
+    return
+  isCapturingScreenshot.value = true
+  try {
+    const importId = crypto.randomUUID()
+    const result = await ipcStore.call('capture_chat_screenshot', { importId })
+    if (result.success) {
+      if (result.result) {
+        chatStore.addImage(result.result)
+        chatInputStore.requestFocus()
+      }
+    } else {
+      toastKey('screenshot.failed', 'error')
+    }
+  } finally {
+    isCapturingScreenshot.value = false
+  }
+}
 
 function voiceInput() {
   openChatVoiceInput({ finishBehavior: 'confirm' })
