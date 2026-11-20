@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { type ActionPageConfig, type MainActionConfig } from '@tyco/shared'
+import { type ActionPageConfig } from '@tyco/shared'
 
 import { secretRef } from '../net/secrets'
 import { createCommand } from './command-config'
@@ -51,44 +51,21 @@ describe('command removal model', () => {
     }
   }
 
-  it('undo restores the command and references without deleting its secret', () => {
+  it('removes the command and references in action pages', () => {
     const f = fixture()
     f.model.removeCommand(f.command)
     expect(f.getCommands()).toEqual([])
     expect(f.getPages()[0]?.slots).toEqual({})
-    f.model.undoRemove()
-    expect(f.getCommands()).toEqual([f.command])
-    expect(f.getPages()[0]?.slots).toEqual({
-      q: { type: 'command', commandId: f.command.id },
-    })
-    f.model.finishRemoval()
-    expect(f.removeSecret).not.toHaveBeenCalled()
   })
 
-  it('finalizes secret deletion only once after undo is no longer offered', async () => {
+  it('cleans up webhook secrets after removal', async () => {
     const f = fixture()
     f.model.removeCommand(f.command)
-    f.model.finishRemoval()
-    f.model.finishRemoval()
     await vi.waitFor(() =>
       expect(f.removeSecret).toHaveBeenCalledExactlyOnceWith(
         'webhook.auth.test'
       )
     )
-  })
-
-  it('finalizes the previous deletion when another command is removed', async () => {
-    const f = fixture()
-    f.model.removeCommand(f.command)
-    f.model.removeCommand(createCommand('script', 'second'))
-    await vi.waitFor(() =>
-      expect(f.removeSecret).toHaveBeenCalledExactlyOnceWith(
-        'webhook.auth.test'
-      )
-    )
-    f.model.undoRemove()
-    f.model.finishRemoval()
-    expect(f.removeSecret).toHaveBeenCalledTimes(1)
   })
 
   it('keeps a secret another command still refers to', async () => {
@@ -116,7 +93,6 @@ describe('command removal model', () => {
       notifyError: vi.fn(),
     })
     model.removeCommand(f.command)
-    model.finishRemoval()
     await vi.waitFor(() => expect(persist).toHaveBeenCalled())
     await Promise.resolve()
     expect(removeSecret).not.toHaveBeenCalled()
@@ -141,48 +117,26 @@ describe('command removal model', () => {
     expect(isSecretReferenced([command], 'webhook.auth')).toBe(false)
   })
 
-  it('undo of the next deletion does not restore a finalized command', () => {
+  it('handles secret cleanup failure without breaking command deletion', async () => {
     const f = fixture()
-    f.model.removeCommand(f.command)
-    const second = createCommand('script', 'second')
-    f.model.removeCommand(second)
-    f.model.undoRemove()
-    expect(f.getCommands()).toEqual([second])
-    expect(f.getPages()[0]?.slots).toEqual({})
-  })
-
-  it('handles secret cleanup failure without retaining the pending deletion', async () => {
-    const f = fixture()
-    f.removeSecret.mockRejectedValue(new Error('Secret removal failed'))
-    f.model.removeCommand(f.command)
-    f.model.finishRemoval()
-    await Promise.resolve()
-    expect(f.model.removed.value).toBeNull()
-    f.model.undoRemove()
-    expect(f.getCommands()).toEqual([])
-  })
-
-  it('undo preserves references assigned while deletion is pending', () => {
-    const f = fixture()
-    f.model.removeCommand(f.command)
-    const replacement: MainActionConfig = {
-      type: 'command',
-      commandId: 'replacement',
-    }
-    f.setPages([{ inputMode: 'selection', slots: { q: replacement } }])
-    f.model.undoRemove()
-    expect(f.getCommands()).toEqual([f.command])
-    expect(f.getPages()[0]?.slots).toEqual({ q: replacement })
-    expect(f.removeSecret).not.toHaveBeenCalled()
-  })
-
-  it('removes and restores command references in action pages', () => {
-    const f = fixture()
-    f.model.removeCommand(f.command)
-    expect(f.getPages()[0]?.slots).toEqual({})
-    f.model.undoRemove()
-    expect(f.getPages()[0]?.slots).toEqual({
-      q: { type: 'command', commandId: f.command.id },
+    const notifyError = vi.fn()
+    const error = new Error('Secret removal failed')
+    f.removeSecret.mockRejectedValue(error)
+    let commands = [f.command]
+    const model = createCommandRemovalModel({
+      getCommands: () => commands,
+      getActionPages: () => [],
+      updateCommands: (value) => {
+        commands = value as typeof commands
+      },
+      updateActionPages: vi.fn(),
+      removeSecret: f.removeSecret,
+      persist: vi.fn().mockResolvedValue(undefined),
+      isSaved: () => true,
+      notifyError,
     })
+    model.removeCommand(f.command)
+    await vi.waitFor(() => expect(notifyError).toHaveBeenCalledWith(error))
+    expect(commands).toEqual([])
   })
 })

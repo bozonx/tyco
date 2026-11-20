@@ -24,20 +24,17 @@
           @close="isCreateModalOpen = false"
           @submit="handleCreateCommand"
         />
-        <InlineNotice
-          v-if="removed"
-          class="commands-notice"
-          kind="info"
-          announcement="polite"
-          icon="mdi:trash-can-outline"
-          :message="t('commands.removed', { name: removedName })"
-          appearance="surface"
-          density="compact"
-        >
-          <Button size="xs" variant="ghost" icon="mdi:undo" @click="undoRemove">
-            {{ t('commands.undo') }}
-          </Button>
-        </InlineNotice>
+        <ConfirmModal
+          :open="Boolean(commandToDelete)"
+          :title="t('commands.deleteConfirmTitle')"
+          :message="
+            t('commands.deleteConfirmMessage', { name: commandToDeleteName })
+          "
+          :confirm-text="t('common.delete')"
+          danger
+          @confirm="confirmDeleteCommand"
+          @cancel="commandToDelete = null"
+        />
         <StateMessage
           v-if="!commands.length"
           class="commands-empty"
@@ -72,7 +69,7 @@
               @update="updateCommand(index, $event)"
               @navigate="navigate"
               @copy-id="copyId(command)"
-              @remove="removeCommand(command)"
+              @remove="requestDeleteCommand(command)"
             />
           </div>
         </div>
@@ -106,13 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  type ComponentPublicInstance,
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  ref,
-} from 'vue'
+import { type ComponentPublicInstance, computed, nextTick, ref } from 'vue'
 
 import { useCopyValue } from '../../composables/use-copy-value'
 import { useI18n } from '../../composables/use-i18n'
@@ -136,9 +127,9 @@ import { useOperationsStore } from '../../stores/operations'
 import { useSecretsStore } from '../../stores/secrets'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import Button from '../common/Button.vue'
+import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
-import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
 import CommandCard from './CommandCard.vue'
 import SettingsCreateCommandModal, {
@@ -308,29 +299,42 @@ function updateCommand(index: number, command: CommandConfig) {
 }
 
 const settingsSession = useSettingsSessionStore()
-const { removed, removeCommand, undoRemove, finishRemoval } =
-  createCommandRemovalModel({
-    getCommands: () => commands.value,
-    getActionPages: () => userConfig.value.actionPages ?? [],
-    updateCommands: setCommands,
-    updateActionPages: (pages) => {
-      userConfig.value.actionPages = pages
-    },
-    removeSecret: (id) => secretsStore.removeSecret(id),
-    persist: settingsSession.persist,
-    isSaved: settingsSession.isSaved,
-    notifyError: (error) => {
-      clientLogger.error('Could not remove command secrets', {
-        error: String(error),
-      })
-      toastError(error, 'settings.keyRemoveFailed')
-    },
-  })
-const removedName = computed(
-  () => removed.value?.command.name.trim() || t('commands.unnamed')
+const { removeCommand } = createCommandRemovalModel({
+  getCommands: () => commands.value,
+  getActionPages: () => userConfig.value.actionPages ?? [],
+  updateCommands: setCommands,
+  updateActionPages: (pages) => {
+    userConfig.value.actionPages = pages
+  },
+  removeSecret: (id) => secretsStore.removeSecret(id),
+  persist: settingsSession.persist,
+  isSaved: settingsSession.isSaved,
+  notifyError: (error) => {
+    clientLogger.error('Could not remove command secrets', {
+      error: String(error),
+    })
+    toastError(error, 'settings.keyRemoveFailed')
+  },
+})
+
+const commandToDelete = ref<CommandConfig | null>(null)
+const commandToDeleteName = computed(
+  () => commandToDelete.value?.name.trim() || t('commands.unnamed')
 )
 
-onBeforeUnmount(finishRemoval)
+function requestDeleteCommand(command: CommandConfig) {
+  commandToDelete.value = command
+}
+
+function confirmDeleteCommand() {
+  const command = commandToDelete.value
+  commandToDelete.value = null
+  if (!command) return
+  if (focusedCommandId.value === command.id) {
+    focusedCommandId.value = null
+  }
+  removeCommand(command)
+}
 </script>
 
 <style scoped>
@@ -338,10 +342,6 @@ onBeforeUnmount(finishRemoval)
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-}
-
-.commands-notice {
-  margin-bottom: var(--space-sm);
 }
 
 .commands-list {

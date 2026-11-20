@@ -73,6 +73,7 @@ const mountTab = (focusCommandId?: string, stubEditor = true) => {
       provide: context.provide,
       stubs: {
         Teleport: true,
+        ConfirmModal: true,
         CommandEditor: stubEditor,
         CustomActionFields: true,
         CommandTestRun: true,
@@ -273,43 +274,50 @@ describe('SettingsCommandsTab.vue', () => {
     ).toBe(true)
   })
 
-  it('removes a command with its menu items and offers to undo it', async () => {
+  it('opens confirmation dialog on delete and cancels without deleting', async () => {
     removeSecret.mockClear()
     const wrapper = mountTab()
     await pickMenuItem(wrapper, 0, 1)
+
+    const modal = wrapper.findComponent({ name: 'ConfirmModal' })
+    expect(modal.props('open')).toBe(true)
+    expect(modal.props('title')).toBe('commands.deleteConfirmTitle')
+    expect(modal.props('message')).toContain('Hook')
+    expect(commandIds()).toEqual(['wh1', 'sc1'])
+
+    await modal.vm.$emit('cancel')
+    await nextTick()
+    expect(modal.props('open')).toBe(false)
+    expect(commandIds()).toEqual(['wh1', 'sc1'])
+    expect(removeSecret).not.toHaveBeenCalled()
+  })
+
+  it('deletes command and its action page slots upon confirmation', async () => {
+    removeSecret.mockClear()
+    const wrapper = mountTab()
+    await pickMenuItem(wrapper, 0, 1)
+
+    const modal = wrapper.findComponent({ name: 'ConfirmModal' })
+    expect(modal.props('open')).toBe(true)
+    await modal.vm.$emit('confirm')
+    await nextTick()
 
     expect(commandIds()).toEqual(['sc1'])
     expect(context.draft.value.actionPages[0].slots).toEqual({
       w: { type: 'standard', actionId: 'translationMenu' },
     })
-    expect(wrapper.find('.commands-notice').text()).toContain(
-      'commands.removed'
-    )
-    // the token stays while the removal can be undone
-    expect(removeSecret).not.toHaveBeenCalled()
-  })
-
-  it('puts a removed command back where it was', async () => {
-    removeSecret.mockClear()
-    const wrapper = mountTab()
-    await pickMenuItem(wrapper, 0, 1)
-    await wrapper.find('.commands-notice button').trigger('click')
-
-    expect(commandIds()).toEqual(['wh1', 'sc1'])
-    expect(context.draft.value.actionPages[0].slots).toEqual({
-      q: { type: 'command', commandId: 'wh1' },
-      w: { type: 'standard', actionId: 'translationMenu' },
-    })
     expect(wrapper.find('.commands-notice').exists()).toBe(false)
-    wrapper.unmount()
-    expect(removeSecret).not.toHaveBeenCalled()
   })
 
-  it('removes the webhook token once undo is no longer offered', async () => {
+  it('removes webhook secrets upon confirmed deletion', async () => {
     removeSecret.mockClear()
     const wrapper = mountTab()
     await pickMenuItem(wrapper, 0, 1)
-    wrapper.unmount()
+
+    const modal = wrapper.findComponent({ name: 'ConfirmModal' })
+    await modal.vm.$emit('confirm')
+    await nextTick()
+
     await vi.waitFor(() =>
       expect(removeSecret).toHaveBeenCalledWith('webhook.auth.wh1')
     )

@@ -1,5 +1,3 @@
-import { ref } from 'vue'
-
 import {
   SHORTCUT_SLOT_KEYS,
   type ActionPageConfig,
@@ -10,12 +8,6 @@ import {
 
 import { commandSecretIds, isSecretReferenced } from './command-secrets'
 
-interface RemovedCommand {
-  command: CommandConfig
-  index: number
-  actionPages?: ActionPageConfig[]
-}
-
 type MenuSlots = ShortcutSlots<MainActionConfig>
 
 const isCommandItem = (
@@ -23,7 +15,6 @@ const isCommandItem = (
   commandId: string
 ): boolean => slot?.type === 'command' && slot.commandId === commandId
 
-/** Undo restores references without overwriting edits made after removal. */
 export function createCommandRemovalModel(deps: {
   getCommands: () => CommandConfig[]
   getActionPages: () => ActionPageConfig[]
@@ -34,18 +25,6 @@ export function createCommandRemovalModel(deps: {
   isSaved: () => boolean
   notifyError: (error: unknown) => void
 }) {
-  const removed = ref<RemovedCommand | null>(null)
-
-  function finishRemoval() {
-    const entry = removed.value
-    removed.value = null
-    if (!entry) return
-    const { command } = entry
-    if (command.operationId === 'webhook') {
-      void cleanup(command).catch(deps.notifyError)
-    }
-  }
-
   /** Removes the secrets of a removed command that nothing else refers to */
   async function cleanup(command: CommandConfig) {
     await deps.persist()
@@ -59,44 +38,23 @@ export function createCommandRemovalModel(deps: {
   }
 
   function removeCommand(command: CommandConfig) {
-    finishRemoval()
     const commands = deps.getCommands()
     const actionPages = deps.getActionPages()
     const referencedInPages = actionPages.some((page) =>
       Object.values(page.slots).some((slot) => isCommandItem(slot, command.id))
     )
-    removed.value = {
-      command,
-      index: commands.findIndex((item) => item.id === command.id),
-      actionPages: referencedInPages ? [...actionPages] : undefined,
-    }
     deps.updateCommands(commands.filter((item) => item.id !== command.id))
     if (referencedInPages) {
       deps.updateActionPages(
         removeCommandFromActionPages(actionPages, command.id)
       )
     }
-  }
-
-  function undoRemove() {
-    const entry = removed.value
-    if (!entry) return
-    removed.value = null
-    deps.updateCommands(
-      restoreCommand(deps.getCommands(), entry.command, entry.index)
-    )
-    if (entry.actionPages) {
-      deps.updateActionPages(
-        restoreCommandInActionPages(
-          deps.getActionPages(),
-          entry.actionPages,
-          entry.command.id
-        )
-      )
+    if (command.operationId === 'webhook') {
+      void cleanup(command).catch(deps.notifyError)
     }
   }
 
-  return { removed, removeCommand, undoRemove, finishRemoval }
+  return { removeCommand }
 }
 
 /** The library with a removed command put back where it was */
