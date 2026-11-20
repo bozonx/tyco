@@ -22,9 +22,7 @@
     "removeContext": "Kontextus eltávolítása",
     "restoreContext": "Kontextus visszaállítása"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Fájl csatolása",
     "alertCaution": "Vigyázat",
@@ -201,9 +199,7 @@
       "deselectAll": "Kijelölés törlése",
       "unsupportedCommands": "Nem támogatott parancsok"
     },
-    "replyBlocks": {
-      "toolLabel": "Válaszblokkok"
-    }
+    "replyBlocks": { "toolLabel": "Válaszblokkok" }
   },
   "commands": {
     "advanced": "Speciális",
@@ -270,6 +266,8 @@
     "launcherResult": "Művelet",
     "launcherResultGroup": "A parancs eredménye",
     "launcherSelectionHint": "A „Beillesztés az ablakba” az aktív ablakban a kurzor helyére illeszti az eredményt. Ha ott szöveg van kijelölve, az eredmény lecseréli.",
+    "llmArgumentParsing": "A bemenet kitöltése a szövegből LLM-mel",
+    "llmArgumentParsingInfo": "Az eszköz külön mezőket vár, nem szöveget. Bekapcsolva az LLM kitölti őket abból a szövegből, amelyen a parancs fut, így gyorsbillentyűvel, menüből, hanggal vagy kívülről is indítható.",
     "llmPreTransform": "Előzetes átalakítás LLM-mel",
     "llmPreTransformInfo": "Átalakítja a szöveget az LLM-utasítással, mielőtt átadná a parancsnak.",
     "llmPreTransformPromptInfo": "Utasítás az LLM számára a bemeneti szöveg átalakításához, mielőtt a parancsnak elküldené.",
@@ -646,10 +644,7 @@
       "command": "A parancs változatlanul hagyta a szöveget",
       "correction": "Nem található hiba"
     },
-    "working": {
-      "command": "A parancs fut…",
-      "correction": "Javítás…"
-    }
+    "working": { "command": "A parancs fut…", "correction": "Javítás…" }
   },
   "settings": {
     "accessAllow": "Engedélyezés",
@@ -1318,9 +1313,7 @@
     "translationVoiceCommand": "Hangparancs",
     "translationVoiceCommandInfo": "Bekapcsolja a fordítási parancsot a hangparancsok közé („fordítsd le [nyelv] nyelvre”)."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Beillesztés a szerkesztőbe"
-  },
+  "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
     "auto": "Rendszer szerint",
     "dark": "Sötét",
@@ -1554,9 +1547,7 @@
     "valueNotSet": "Nincs érték ezen az eszközön: az ezt használó parancsok nem futnak",
     "valuePlaceholder": "Útvonal, cím vagy más szöveg"
   },
-  "favorites": {
-    "noMatches": "Nincsenek egyező kedvencek"
-  },
+  "favorites": { "noMatches": "Nincsenek egyező kedvencek" },
   "replyBlocks": {
     "insertIntoWindow": "Beszúrás az ablakba",
     "insertIntoEditor": "A szerkesztőbe",

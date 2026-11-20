@@ -10,12 +10,20 @@ use crate::{
 use tauri::{AppHandle, State};
 use tyco_activation_protocol::Job as ExternalJob;
 
+/// Only the quick window, which runs external jobs, describes their tools.
 #[tauri::command]
 pub fn set_operation_catalog(
     state: State<'_, OperationCatalogState>,
+    window: tauri::WebviewWindow,
     tools: Vec<OperationCatalogEntry>,
-) {
+) -> Result<(), AppError> {
+    if !api::is_job_window(window.label()) {
+        return Err(AppError::InvalidInput(
+            "Only the quick window sets the operation catalog".into(),
+        ));
+    }
     state.set(command_library::catalog_from(tools));
+    Ok(())
 }
 
 #[tauri::command]

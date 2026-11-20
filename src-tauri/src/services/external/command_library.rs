@@ -1,10 +1,9 @@
 //! Commands of the library run from outside the app through `tyco-ctl run`
-//! and interactive selection actions. The command is found here, from the config the backend
-//! holds, so a wrong id or name is an error of the call itself. The run is
-//! handed to the webview of the quick window: in the background when nothing
-//! has to be asked or shown, otherwise in the command overlay. Plugin tools
-//! are known from the tool catalog the quick window sends.
-//! See `dev_docs/design-voice-commands.md`, §3.4.
+//! and D-Bus. The command is found here, from the config the backend holds,
+//! so a wrong id or name is an error of the call itself. The run is handed to
+//! the webview of the quick window, which runs it in the background: a call
+//! must bring its input, no window asks for it. Plugin tools are known from
+//! the tool catalog the quick window sends.
 
 use crate::locks::MutexExt;
 use std::collections::HashMap;
@@ -13,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::errors::AppError;
-use crate::services::custom_actions::{SELECTION_PLACEHOLDER, TEXT_PLACEHOLDER};
+use crate::services::custom_actions::TEXT_PLACEHOLDER;
 
 /// How a command of a tool gets its input from a text.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, ts_rs::TS)]
@@ -184,6 +183,8 @@ fn id_of(command: &Value) -> &str {
     str_field(command, "id").trim()
 }
 
+/// Missing counts as enabled, as the schema default; keep in sync with
+/// `CommandConfig::is_enabled` in `models/user_config.rs`.
 fn is_enabled(command: &Value) -> bool {
     command.get("isEnabled").and_then(Value::as_bool) != Some(false)
 }
@@ -235,25 +236,6 @@ fn webhook_can_take_text(config: &Value) -> bool {
     str_field(config, "url").contains(TEXT_PLACEHOLDER)
         || (str_field(config, "method") != "GET"
             && str_field(config, "payloadTemplate").contains(TEXT_PLACEHOLDER))
-}
-
-/// Whether a script mentions `{{SELECTION}}`.
-/// Keep in sync with `scriptTakesSelection` in
-/// `packages/shared/src/user-config/commands-config.ts`.
-#[allow(dead_code)]
-pub fn script_mentions_selection(config: &Value) -> bool {
-    let command = str_field(config, "command");
-    command.contains(SELECTION_PLACEHOLDER)
-}
-
-/// Whether a webhook mentions `{{SELECTION}}`.
-/// Keep in sync with `webhookTakesSelection` in
-/// `packages/shared/src/user-config/commands-config.ts`.
-#[allow(dead_code)]
-pub fn webhook_mentions_selection(config: &Value) -> bool {
-    str_field(config, "url").contains(SELECTION_PLACEHOLDER)
-        || (str_field(config, "method") != "GET"
-            && str_field(config, "payloadTemplate").contains(SELECTION_PLACEHOLDER))
 }
 
 /// Whether the tool of the command can run it, and if so whether it takes
@@ -402,8 +384,6 @@ struct ListedCommand {
     output: &'static str,
 }
 
-/// The commands that may be called from outside, as a JSON array of
-/// `{ id, name, input, ... }`, in the order of the library.
 /// The name a call shows for the command: its id when it has none.
 fn display_name(command: &Value) -> &str {
     let name = str_field(command, "name").trim();
@@ -414,6 +394,8 @@ fn display_name(command: &Value) -> &str {
     }
 }
 
+/// The commands that may be called from outside, as a JSON array of
+/// `{ id, name, input, ... }`, in the order of the library.
 pub fn list(user_config: &Value, catalog: Option<&OperationCatalog>) -> Value {
     let listed: Vec<ListedCommand> = commands_of(user_config)
         .iter()

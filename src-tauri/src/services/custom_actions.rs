@@ -5,8 +5,7 @@ mod process_runner;
 pub use command_logging::{action_log_path, log_command_run, log_custom_action, CommandRunRecord};
 pub use file_dialogs::{pick_directory, pick_file, pick_script_file};
 pub use process_runner::{
-    execute_script, ScriptExecutionResult, ScriptRequest, ScriptRuns, SELECTION_PLACEHOLDER,
-    TEXT_PLACEHOLDER,
+    execute_script, ScriptExecutionResult, ScriptRequest, ScriptRuns, TEXT_PLACEHOLDER,
 };
 
 use std::path::Path;

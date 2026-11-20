@@ -991,8 +991,9 @@ fn command_id_repairs(commands: &Value) -> HashMap<String, String> {
     repairs
 }
 
-/// Gives the commands valid ids, the menu items and launcher keys of those
-/// commands following them; see `repairCommandIds` in `@tyco/shared`.
+/// Gives the commands valid ids, the menu items, custom hotkeys and AI
+/// commands that refer to them following them; see `repairCommandIds` in
+/// `@tyco/shared`.
 fn repair_command_ids(config: &mut Value) {
     let repairs = command_id_repairs(&config["commands"]);
     if repairs.is_empty() {
@@ -1006,6 +1007,29 @@ fn repair_command_ids(config: &mut Value) {
     for command in config["commands"].as_array_mut().into_iter().flatten() {
         if let Some(id) = command.get_mut("id") {
             renamed(id);
+        }
+        // the commands an AI command may run follow them too
+        if let Some(allowed) = command
+            .get_mut("operationConfig")
+            .and_then(|config| config.get_mut("allowedCommandIds"))
+            .and_then(Value::as_array_mut)
+        {
+            allowed.iter_mut().for_each(&renamed);
+        }
+    }
+    if let Some(slots) = config
+        .get_mut("customActionSlots")
+        .and_then(Value::as_array_mut)
+    {
+        for slot in slots {
+            if let Some(action) = slot
+                .get_mut("action")
+                .filter(|action| action["type"] == "command")
+            {
+                if let Some(id) = action.get_mut("commandId") {
+                    renamed(id);
+                }
+            }
         }
     }
     if let Some(pages) = config.get_mut("actionPages").and_then(Value::as_array_mut) {

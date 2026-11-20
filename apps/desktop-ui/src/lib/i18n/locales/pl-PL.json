@@ -22,9 +22,7 @@
     "removeContext": "Usuń kontekst",
     "restoreContext": "Przywróć kontekst"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Dołącz plik",
     "alertCaution": "Ostrożnie",
@@ -201,9 +199,7 @@
       "deselectAll": "Odznacz wszystko",
       "unsupportedCommands": "Nieobsługiwane polecenia"
     },
-    "replyBlocks": {
-      "toolLabel": "Warianty odpowiedzi"
-    }
+    "replyBlocks": { "toolLabel": "Warianty odpowiedzi" }
   },
   "commands": {
     "advanced": "Zaawansowane",
@@ -270,6 +266,8 @@
     "launcherResult": "Akcja",
     "launcherResultGroup": "Wynik polecenia",
     "launcherSelectionHint": "„Wstaw do okna” wkleja wynik w miejscu kursora w aktywnym oknie. Jeśli jest tam zaznaczony tekst, wynik go zastępuje.",
+    "llmArgumentParsing": "Wypełniaj dane wejściowe z tekstu za pomocą LLM",
+    "llmArgumentParsingInfo": "Narzędzie przyjmuje osobne pola, a nie tekst. Po włączeniu LLM wypełnia je z tekstu, na którym działa polecenie, dzięki czemu można je uruchomić skrótem, z menu, głosem lub z zewnątrz.",
     "llmPreTransform": "Wstępna transformacja za pomocą LLM",
     "llmPreTransformInfo": "Przekształca tekst za pomocą promptu LLM przed przekazaniem go do polecenia.",
     "llmPreTransformPromptInfo": "Instrukcja dla LLM służąca do przekształcenia tekstu wejściowego przed wysłaniem do polecenia.",
@@ -1318,9 +1316,7 @@
     "translationVoiceCommand": "Polecenie głosowe",
     "translationVoiceCommandInfo": "Dołącza polecenie tłumaczenia do poleceń głosowych („przetłumacz na [język]”)."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Wstaw do edytora"
-  },
+  "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
     "auto": "Jak w systemie",
     "dark": "Ciemny",
@@ -1554,9 +1550,7 @@
     "valueNotSet": "Brak wartości na tym urządzeniu: polecenia, które jej używają, nie są wykonywane",
     "valuePlaceholder": "Ścieżka, adres lub inny tekst"
   },
-  "favorites": {
-    "noMatches": "Brak pasujących ulubionych"
-  },
+  "favorites": { "noMatches": "Brak pasujących ulubionych" },
   "replyBlocks": {
     "insertIntoWindow": "Wstaw do okna",
     "insertIntoEditor": "Do edytora",

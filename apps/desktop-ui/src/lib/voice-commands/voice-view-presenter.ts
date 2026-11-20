@@ -36,7 +36,9 @@ export const parameterDisplayLabel = (
   parameter: OperationCommandParameter,
   t: Translate
 ): string =>
-  parameter.labelKey ? t(parameter.labelKey) : (parameter.label ?? parameter.name)
+  parameter.labelKey
+    ? t(parameter.labelKey)
+    : (parameter.label ?? parameter.name)
 
 export const parameterValueDisplayLabel = (
   parameter: OperationCommandParameter,

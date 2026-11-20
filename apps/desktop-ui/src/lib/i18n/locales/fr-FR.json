@@ -22,9 +22,7 @@
     "removeContext": "Supprimer le contexte",
     "restoreContext": "Restaurer le contexte"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Joindre un fichier",
     "alertCaution": "Attention",
@@ -201,9 +199,7 @@
       "deselectAll": "Tout désélectionner",
       "unsupportedCommands": "Commandes non prises en charge"
     },
-    "replyBlocks": {
-      "toolLabel": "Blocs de réponse"
-    }
+    "replyBlocks": { "toolLabel": "Blocs de réponse" }
   },
   "commands": {
     "advanced": "Avancé",
@@ -270,6 +266,8 @@
     "launcherResult": "Action",
     "launcherResultGroup": "Résultat de la commande",
     "launcherSelectionHint": "« Insérer dans la fenêtre » colle le résultat à l’emplacement du curseur dans la fenêtre active. Si du texte y est sélectionné, le résultat le remplace.",
+    "llmArgumentParsing": "Remplir l’entrée à partir du texte avec le LLM",
+    "llmArgumentParsingInfo": "L’outil prend des champs distincts, pas un texte. Si activé, le LLM les remplit à partir du texte sur lequel la commande s’exécute, pour la lancer par raccourci, menu, voix ou appel externe.",
     "llmPreTransform": "Pré-transformation avec LLM",
     "llmPreTransformInfo": "Transforme le texte avec une instruction LLM avant de le transmettre à la commande.",
     "llmPreTransformPromptInfo": "Instruction pour le LLM afin de transformer le texte d’entrée avant de l’envoyer à la commande.",
@@ -1318,9 +1316,7 @@
     "translationVoiceCommand": "Commande vocale",
     "translationVoiceCommandInfo": "Inclut la commande de traduction dans les commandes vocales (« traduis en [langue] »)."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Insérer dans l’éditeur"
-  },
+  "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {
     "auto": "Comme le système",
     "dark": "Sombre",
@@ -1554,9 +1550,7 @@
     "valueNotSet": "Aucune valeur sur cet appareil : les commandes qui l’utilisent ne s’exécutent pas",
     "valuePlaceholder": "Un chemin, une adresse ou un autre texte"
   },
-  "favorites": {
-    "noMatches": "Aucun favori correspondant"
-  },
+  "favorites": { "noMatches": "Aucun favori correspondant" },
   "replyBlocks": {
     "insertIntoWindow": "Insérer dans la fenêtre",
     "insertIntoEditor": "Vers l'éditeur",

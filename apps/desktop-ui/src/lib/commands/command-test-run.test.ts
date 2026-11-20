@@ -215,7 +215,8 @@ describe('runCommandTest', () => {
     expect(executeWebhook).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'Hook', isOutputLogged: false }),
       'hi',
-      expect.anything()
+      expect.anything(),
+      null
     )
   })
 
@@ -245,7 +246,8 @@ describe('runCommandTest', () => {
     expect(executeWebhook).toHaveBeenCalledWith(
       expect.anything(),
       'HI',
-      expect.anything()
+      expect.anything(),
+      null
     )
   })
 

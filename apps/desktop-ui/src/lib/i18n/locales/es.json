@@ -22,9 +22,7 @@
     "removeContext": "Quitar contexto",
     "restoreContext": "Restaurar contexto"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Adjuntar archivo",
     "alertCaution": "Precaución",
@@ -201,9 +199,7 @@
       "deselectAll": "Deseleccionar todo",
       "unsupportedCommands": "Comandos no compatibles"
     },
-    "replyBlocks": {
-      "toolLabel": "Bloques de respuesta"
-    }
+    "replyBlocks": { "toolLabel": "Bloques de respuesta" }
   },
   "commands": {
     "advanced": "Avanzado",
@@ -270,6 +266,8 @@
     "launcherResult": "Acción",
     "launcherResultGroup": "Resultado del comando",
     "launcherSelectionHint": "«Insertar en la ventana» pega el resultado donde está el cursor en la ventana activa. Si allí hay texto seleccionado, el resultado lo reemplaza.",
+    "llmArgumentParsing": "Rellenar la entrada a partir del texto con el LLM",
+    "llmArgumentParsingInfo": "La herramienta recibe campos separados, no un texto. Si se activa, el LLM los rellena a partir del texto sobre el que se ejecuta el comando, para poder lanzarlo con un atajo, el menú, la voz o una llamada externa.",
     "llmPreTransform": "Pretransformación con LLM",
     "llmPreTransformInfo": "Transforma el texto con una instrucción de LLM antes de pasarlo al comando.",
     "llmPreTransformPromptInfo": "Instrucción para el LLM con la que transformar el texto de entrada antes de enviarlo al comando.",
@@ -1318,9 +1316,7 @@
     "translationVoiceCommand": "Comando de voz",
     "translationVoiceCommandInfo": "Incluye el comando de traducción en los comandos de voz («traduce al [idioma]»)."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Insertar en el editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {
     "auto": "Como en el sistema",
     "dark": "Oscuro",
@@ -1554,9 +1550,7 @@
     "valueNotSet": "Sin valor en este dispositivo: los comandos que la usan no se ejecutan",
     "valuePlaceholder": "Una ruta, una dirección u otro texto"
   },
-  "favorites": {
-    "noMatches": "No hay favoritos que coincidan"
-  },
+  "favorites": { "noMatches": "No hay favoritos que coincidan" },
   "replyBlocks": {
     "insertIntoWindow": "Insertar en la ventana",
     "insertIntoEditor": "Al editor",

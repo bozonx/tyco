@@ -1,6 +1,16 @@
 import type { CommandConfig } from '@tyco/shared'
 import type { OperationLookup } from '../operations/operation-types'
-import { isCommandAvailable } from './command-runtime'
+import { commandUnavailableReason } from './command-runtime'
+
+/**
+ * Reasons that do not keep the backend from resolving a name: it checks the
+ * platform and the tool, not the values of this device or the text input
+ */
+const CALLABLE_REASONS = new Set([
+  'commands.variablesNotSet',
+  'commands.notesFolderMissing',
+  'commands.inputUnsupported',
+])
 
 /**
  * A name as external calls compare it: case, `ё` and spaces do not matter. Keep
@@ -15,16 +25,17 @@ export function normalizeCommandName(name: string): string {
     .join(' ')
 }
 
-/** Whether an external call may run the command */
+/**
+ * Whether an external call by name counts the command, as `find_by_name` in
+ * `services/external/command_library.rs` does
+ */
 function canRunCommandExternally(
   command: CommandConfig,
   operations: OperationLookup
 ): boolean {
-  return (
-    command.isEnabled &&
-    command.isAvailableExternally &&
-    isCommandAvailable(command, operations)
-  )
+  if (!command.isEnabled || !command.isAvailableExternally) return false
+  const reason = commandUnavailableReason(command, operations)
+  return !reason || CALLABLE_REASONS.has(reason)
 }
 
 /**

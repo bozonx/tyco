@@ -345,17 +345,42 @@ function commandIdRepairs(commands: unknown): Map<string, string> {
   return repairs
 }
 
-const withRepairedId = (
+/**
+ * The command with its repaired id, and the commands it may run as an AI
+ * command following theirs
+ */
+function withRepairedId(
   command: unknown,
   repairs: Map<string, string>
-): unknown =>
-  isRecord(command) && typeof command.id === 'string' && repairs.has(command.id)
-    ? { ...command, id: repairs.get(command.id) }
-    : command
+): unknown {
+  if (!isRecord(command)) return command
+  let result = command
+  if (typeof command.id === 'string' && repairs.has(command.id))
+    result = { ...result, id: repairs.get(command.id) }
+  const config = command.operationConfig
+  if (
+    isRecord(config) &&
+    Array.isArray(config.allowedCommandIds) &&
+    config.allowedCommandIds.some(
+      (id) => typeof id === 'string' && repairs.has(id)
+    )
+  )
+    result = {
+      ...result,
+      operationConfig: {
+        ...config,
+        allowedCommandIds: config.allowedCommandIds.map((id: unknown) =>
+          typeof id === 'string' ? (repairs.get(id) ?? id) : id
+        ),
+      },
+    }
+  return result
+}
 
 /**
- * The raw config with valid ids for its commands, the menu items and launcher
- * keys of those commands following them
+ * The raw config with valid ids for its commands, the menu items, custom
+ * hotkeys and AI commands that refer to them following them. Keep in sync with
+ * `repair_command_ids` in `services/settings/schema.rs`
  */
 function repairCommandIds(value: unknown): unknown {
   if (!isRecord(value)) return value

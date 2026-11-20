@@ -22,9 +22,7 @@
     "removeContext": "Мәтінмәнді алып тастау",
     "restoreContext": "Мәтінмәнді қалпына келтіру"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Файл тіркеу",
     "alertCaution": "Абайлаңыз",
@@ -201,9 +199,7 @@
       "deselectAll": "Барлығын алып тастау",
       "unsupportedCommands": "Қолдау көрсетілмейтін командалар"
     },
-    "replyBlocks": {
-      "toolLabel": "Жауап нұсқалары"
-    }
+    "replyBlocks": { "toolLabel": "Жауап нұсқалары" }
   },
   "commands": {
     "advanced": "Қосымша",
@@ -270,6 +266,8 @@
     "launcherResult": "Әрекет",
     "launcherResultGroup": "Команда нәтижесі",
     "launcherSelectionHint": "«Терезеге кірістіру» нәтижені белсенді терезедегі курсор тұрған жерге қояды. Ол жерде мәтін белгіленген болса, нәтиже оны ауыстырады.",
+    "llmArgumentParsing": "Енгізуді мәтіннен LLM арқылы толтыру",
+    "llmArgumentParsingInfo": "Құрал мәтінді емес, жеке өрістерді қабылдайды. Қосулы болса, LLM оларды команда орындалатын мәтіннен толтырады, сондықтан оны жылдам пернемен, мәзірден, дауыспен немесе сырттан іске қосуға болады.",
     "llmPreTransform": "LLM көмегімен мәтінді алдын ала түрлендіру",
     "llmPreTransformInfo": "Мәтінді пәрменге жібермес бұрын LLM сұрауымен түрлендіреді.",
     "llmPreTransformPromptInfo": "Мәтінді пәрменге жіберу алдында бастапқы мәтінді түрлендіруге арналған LLM нұсқаулығы.",
@@ -646,10 +644,7 @@
       "command": "Команда мәтінді өзгертпей қалдырды",
       "correction": "Қате табылмады"
     },
-    "working": {
-      "command": "Команда орындалуда…",
-      "correction": "Түзетілуде…"
-    }
+    "working": { "command": "Команда орындалуда…", "correction": "Түзетілуде…" }
   },
   "settings": {
     "accessAllow": "Рұқсат ету",
@@ -1318,9 +1313,7 @@
     "translationVoiceCommand": "Дауыстық пәрмен",
     "translationVoiceCommandInfo": "Аудару пәрменін дауыстық пәрмендерге қосады («[тіл] аудар»)."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Редакторға кірістіру"
-  },
+  "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {
     "auto": "Жүйедегідей",
     "dark": "Қараңғы",
@@ -1554,9 +1547,7 @@
     "valueNotSet": "Бұл құрылғыда мән жоқ: оны қолданатын командалар орындалмайды",
     "valuePlaceholder": "Жол, мекенжай немесе басқа мәтін"
   },
-  "favorites": {
-    "noMatches": "Сәйкес келетін фавориттер жоқ"
-  },
+  "favorites": { "noMatches": "Сәйкес келетін фавориттер жоқ" },
   "replyBlocks": {
     "insertIntoWindow": "Терезеге кірістіру",
     "insertIntoEditor": "Редакторға",

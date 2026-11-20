@@ -1,5 +1,6 @@
 import { COMMANDS_TOOL_GROUP_ID, type CommandConfig } from '@tyco/shared'
 
+import { createCommandTransformer } from '../commands/command-runner'
 import { invocationUnavailableReason } from '../invocation/invoke-operation'
 import type { OperationLookup } from '../operations/operation-types'
 import {
@@ -37,6 +38,11 @@ export function createCommandToolProvider(
   return {
     id: 'commands',
     async tools(context: ChatToolContext): Promise<ChatToolDefinition[]> {
+      // the chat runs a command as an AI command does: the input is checked
+      // and the command's pre-transformation applies
+      const transform = createCommandTransformer({
+        operations: deps.operations,
+      })
       const group = context.settings?.groups[COMMANDS_TOOL_GROUP_ID]
       if (!group?.isEnabled || group.access === 'deny') return []
 
@@ -68,11 +74,23 @@ export function createCommandToolProvider(
         // Tools that cannot run from chat (e.g. editor paste/copy) are omitted.
         if (tool.canRunFromChat === false) continue
         if (tool.getUnavailableReasonKey?.()) continue
-        if (env && invocationUnavailableReason(command, deps.operations))
+        // the model gives the input whole, so a structured one needs no parser
+        if (
+          env &&
+          invocationUnavailableReason(command, deps.operations, {
+            hasExplicitInput: true,
+          })
+        )
           continue
 
         const chatTool = await adaptCommand(command, tool, {
           groupId: COMMANDS_TOOL_GROUP_ID,
+          run: (input, signal) =>
+            transform(
+              command,
+              typeof input.text === 'string' ? input.text : '',
+              { input, signal, source: 'chat', output: 'return' }
+            ),
         })
         definitions.push(chatTool)
       }

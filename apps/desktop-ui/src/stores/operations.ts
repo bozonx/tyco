@@ -142,7 +142,12 @@ export const useOperationsStore = defineStore('tools', () => {
       const tool = registry.get(command.operationId)
       if (
         !tool ||
-        invocationUnavailableReason(command, { get: registry.get, environment })
+        invocationUnavailableReason(
+          command,
+          { get: registry.get, environment },
+          // the agent gives the input whole, a structured one too
+          { hasExplicitInput: true }
+        )
       )
         return undefined
       return commandInputSchema(tool, command.operationConfig)

@@ -22,9 +22,7 @@
     "removeContext": "Odebrat kontext",
     "restoreContext": "Obnovit kontext"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Přiložit soubor",
     "alertCaution": "Pozor",
@@ -201,9 +199,7 @@
       "deselectAll": "Zrušit výběr",
       "unsupportedCommands": "Nepodporované příkazy"
     },
-    "replyBlocks": {
-      "toolLabel": "Varianty odpovědí"
-    }
+    "replyBlocks": { "toolLabel": "Varianty odpovědí" }
   },
   "commands": {
     "advanced": "Pokročilé",
@@ -270,6 +266,8 @@
     "launcherResult": "Akce",
     "launcherResultGroup": "Výsledek příkazu",
     "launcherSelectionHint": "„Vložit do okna“ vloží výsledek na místo kurzoru v aktivním okně. Pokud je tam vybraný text, výsledek ho nahradí.",
+    "llmArgumentParsing": "Vyplnit vstup z textu pomocí LLM",
+    "llmArgumentParsingInfo": "Nástroj přijímá samostatná pole, ne text. Když je zapnuto, LLM je vyplní z textu, na kterém příkaz běží, takže jej lze spustit zkratkou, z nabídky, hlasem nebo zvenčí.",
     "llmPreTransform": "Předběžná transformace pomocí LLM",
     "llmPreTransformInfo": "Před předáním do příkazu transformuje text pomocí dotazu pro LLM.",
     "llmPreTransformPromptInfo": "Instrukce pro LLM k transformaci vstupního textu před odesláním do příkazu.",
@@ -632,10 +630,7 @@
     "cancelled": "Zrušeno",
     "done": "Hotovo",
     "emptyResult": "Model vrátil prázdný výsledek",
-    "failed": {
-      "command": "Příkaz selhal",
-      "correction": "Oprava selhala"
-    },
+    "failed": { "command": "Příkaz selhal", "correction": "Oprava selhala" },
     "focusChanged": "Mezitím se změnilo okno, proto byl výsledek zkopírován do schránky",
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
@@ -646,10 +641,7 @@
       "command": "Příkaz ponechal text beze změny",
       "correction": "Nenalezeny žádné chyby"
     },
-    "working": {
-      "command": "Spouští se příkaz…",
-      "correction": "Opravuje se…"
-    }
+    "working": { "command": "Spouští se příkaz…", "correction": "Opravuje se…" }
   },
   "settings": {
     "accessAllow": "Povolit",
@@ -1318,9 +1310,7 @@
     "translationVoiceCommand": "Hlasový příkaz",
     "translationVoiceCommandInfo": "Zahrne příkaz překladu do hlasových příkazů („přelož do [jazyk]“)."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Vložit do editoru"
-  },
+  "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
     "auto": "Podle systému",
     "dark": "Tmavý",
@@ -1554,9 +1544,7 @@
     "valueNotSet": "Žádná hodnota na tomto zařízení: příkazy, které ji používají, se nespustí",
     "valuePlaceholder": "Cesta, adresa nebo jiný text"
   },
-  "favorites": {
-    "noMatches": "Žádné odpovídající oblíbené"
-  },
+  "favorites": { "noMatches": "Žádné odpovídající oblíbené" },
   "replyBlocks": {
     "insertIntoWindow": "Vložit do okna",
     "insertIntoEditor": "Do editoru",

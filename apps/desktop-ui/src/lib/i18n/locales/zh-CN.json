@@ -22,9 +22,7 @@
     "removeContext": "移除上下文",
     "restoreContext": "恢复上下文"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "添加附件",
     "alertCaution": "小心",
@@ -201,9 +199,7 @@
       "deselectAll": "取消全选",
       "unsupportedCommands": "不支持的命令"
     },
-    "replyBlocks": {
-      "toolLabel": "回复块"
-    }
+    "replyBlocks": { "toolLabel": "回复块" }
   },
   "commands": {
     "advanced": "高级",
@@ -270,6 +266,8 @@
     "launcherResult": "操作",
     "launcherResultGroup": "命令结果",
     "launcherSelectionHint": "“插入到窗口”会将结果粘贴到活动窗口的光标位置。如果光标处选有文本，结果将替换该选中文本。",
+    "llmArgumentParsing": "用 LLM 从文本填写输入",
+    "llmArgumentParsingInfo": "该工具接收的是独立字段而不是文本。开启后，LLM 会根据命令所处理的文本填写这些字段，因此可以通过快捷键、菜单、语音或外部调用运行该命令。",
     "llmPreTransform": "使用 LLM 进行文本预处理",
     "llmPreTransformInfo": "在传递给命令之前，使用 LLM 提示词对文本进行转换。",
     "llmPreTransformPromptInfo": "用于在将输入文本发送到命令之前由 LLM 进行转换的指令。",
@@ -632,10 +630,7 @@
     "cancelled": "已取消",
     "done": "已完成",
     "emptyResult": "模型返回了空结果",
-    "failed": {
-      "command": "命令执行失败",
-      "correction": "纠错失败"
-    },
+    "failed": { "command": "命令执行失败", "correction": "纠错失败" },
     "focusChanged": "在此期间活动窗口已更改，结果已复制到剪贴板",
     "noSelection": "未选中任何内容",
     "noTarget": "没有具有焦点的应用程序窗口",
@@ -646,10 +641,7 @@
       "command": "命令未对文本做任何更改",
       "correction": "未发现错误"
     },
-    "working": {
-      "command": "正在运行命令…",
-      "correction": "正在纠错…"
-    }
+    "working": { "command": "正在运行命令…", "correction": "正在纠错…" }
   },
   "settings": {
     "accessAllow": "允许",
@@ -1318,9 +1310,7 @@
     "translationVoiceCommand": "语音命令",
     "translationVoiceCommandInfo": "在语音命令中包含翻译命令（“翻译成[语言]”）。"
   },
-  "shortcuts": {
-    "insertIntoEditor": "插入到编辑器"
-  },
+  "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
     "auto": "跟随系统",
     "dark": "深色",
@@ -1496,11 +1486,7 @@
     "clickToFocus": "点击以继续",
     "moveOverlay": "拖动以移动",
     "cyclePosition": "位置：{position} (Alt+P)",
-    "position": {
-      "center": "居中",
-      "right": "右侧",
-      "bottomRight": "右下角"
-    },
+    "position": { "center": "居中", "right": "右侧", "bottomRight": "右下角" },
     "collapseRecording": "收起录音栏",
     "expandRecording": "展开录音栏"
   },
@@ -1554,9 +1540,7 @@
     "valueNotSet": "此设备上没有值：使用它的命令不会运行",
     "valuePlaceholder": "路径、地址或其他文本"
   },
-  "favorites": {
-    "noMatches": "没有匹配的收藏夹"
-  },
+  "favorites": { "noMatches": "没有匹配的收藏夹" },
   "replyBlocks": {
     "insertIntoWindow": "插入到窗口",
     "insertIntoEditor": "到编辑器",

@@ -11,6 +11,7 @@ import type {
 } from '../invocation/invocation-types'
 import { createOperationInvoker } from '../invocation/invoke-operation'
 import type { OperationResult } from '../operations/operation-types'
+import { invocationUnavailableReason } from '../invocation/invoke-operation'
 import { commandInvocation, preTransformCommandText } from './command-runtime'
 
 /** Shown when a pre-transformation fails without saying why */
@@ -41,6 +42,14 @@ function createInputPreparation(deps: CommandTransformDependencies) {
     text: string,
     options: InvocationOptions
   ) => {
+    // a command that cannot run here is not prepared by the LLM for nothing:
+    // the run that follows tells why it does not run
+    if (
+      invocationUnavailableReason(commandInvocation(command), deps.operations, {
+        hasExplicitInput: options.input !== undefined,
+      })
+    )
+      return { ok: true as const, text, options }
     const pre = await preTransformCommandText(command, text, deps.operations, {
       signal: options.signal,
       source: options.source,

@@ -151,6 +151,11 @@ pub struct CommandRunEvent {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional, type = "Record<string, unknown>")]
     pub input: Option<Map<String, Value>>,
+    /// The selection the call captured, for `{{SELECTION}}`; it is the text
+    /// too, see `RunRequest::selection`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub selection_text: Option<String>,
     /// The quick window does not receive config changes made elsewhere.
     #[ts(type = "UserConfig")]
     pub user_config: std::sync::Arc<Value>,

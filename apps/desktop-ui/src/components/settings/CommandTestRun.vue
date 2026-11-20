@@ -103,7 +103,6 @@ const text = ref('')
 const result = ref<CommandTestResult | null>(null)
 const isRunning = ref(false)
 let controller: AbortController | null = null
-let runCounter = 0
 
 const takesText = computed(() =>
   commandTakesText(props.command, operationsStore)
@@ -134,7 +133,7 @@ async function run() {
       operationsStore,
       {
         ...createScriptActionClient(ipcStore.call),
-        newRunId: () => `command-test-${Date.now()}-${++runCounter}`,
+        newRunId: () => `command-test-${crypto.randomUUID()}`,
         saveCommand: async (commandId) => {
           await settingsSession.persist()
           if (!settingsSession.isSaved()) return undefined

@@ -22,9 +22,7 @@
     "removeContext": "Remove context",
     "restoreContext": "Restore context"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Attach file",
     "alertCaution": "Caution",
@@ -201,9 +199,7 @@
       "deselectAll": "Deselect all",
       "unsupportedCommands": "Unsupported commands"
     },
-    "replyBlocks": {
-      "toolLabel": "Reply Blocks"
-    }
+    "replyBlocks": { "toolLabel": "Reply Blocks" }
   },
   "commands": {
     "advanced": "Advanced",
@@ -270,6 +266,8 @@
     "launcherResult": "Action",
     "launcherResultGroup": "Command result",
     "launcherSelectionHint": "“Insert into window” pastes the result where the cursor is in the active window. If text is selected there, the result replaces it.",
+    "llmArgumentParsing": "Fill the input from the text with the LLM",
+    "llmArgumentParsingInfo": "The tool takes separate fields, not a text. When on, the LLM fills them from the text the command runs on, so the command can run from a hotkey, the menu, voice or an external call.",
     "llmPreTransform": "Pre-transform text with LLM",
     "llmPreTransformInfo": "Transforms the text with an LLM prompt before passing it to the command.",
     "llmPreTransformPromptInfo": "Instruction for the LLM to transform the input text before sending it to the command.",
@@ -1318,9 +1316,7 @@
     "translationVoiceCommand": "Voice command",
     "translationVoiceCommandInfo": "Includes the translation command in voice commands (\"translate to [language]\")."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Insert into editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
     "auto": "System default",
     "dark": "Dark",
@@ -1554,9 +1550,7 @@
     "valueNotSet": "No value on this device: commands that use it do not run",
     "valuePlaceholder": "A path, an address or other text"
   },
-  "favorites": {
-    "noMatches": "No matching favorites"
-  },
+  "favorites": { "noMatches": "No matching favorites" },
   "replyBlocks": {
     "insertIntoWindow": "Insert into window",
     "insertIntoEditor": "To editor",

@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 9c6b7495a12d47e6c92ce7a105ece4ca512d92fd793f001504d11220c3eca373
+// Source hash: 67de4b18fb14a7c60dc5dbe62fc2009aec7432bfc380228c99de6682d1cd9b9c
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -412,6 +412,11 @@ export type CommandRunEvent = {
   jobId: string
   text?: string
   input?: Record<string, unknown>
+  /**
+   * The selection the call captured, for `{{SELECTION}}`; it is the text too,
+   * see `RunRequest::selection`.
+   */
+  selectionText?: string
   /** The quick window does not receive config changes made elsewhere. */
   userConfig: UserConfig
 }

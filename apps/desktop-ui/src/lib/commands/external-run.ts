@@ -198,10 +198,15 @@ export function createExternalRun(deps: ExternalRunDependencies) {
       outcome = await deps.run(command, input ?? '', report, {
         signal: controller.signal,
         input: event.input,
+        // a call with `--selection` fills `{{SELECTION}}` as well
+        ...(event.selectionText != null
+          ? { context: { selectionText: event.selectionText } }
+          : {}),
       })
     } catch (error) {
       outcome = { success: false, message: errorMessage(error) }
     }
+    // a cancelled job never publishes a late result
     if (controller.signal.aborted)
       outcome = { success: false, cancelled: true, message: 'Cancelled' }
     if (event.jobId) {

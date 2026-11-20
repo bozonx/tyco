@@ -61,7 +61,9 @@ export function parameterVariants(
 }
 
 /** The values the parameter can take */
-export const parameterValues = (parameter: OperationCommandParameter): string[] =>
+export const parameterValues = (
+  parameter: OperationCommandParameter
+): string[] =>
   parameter.options?.length
     ? parameter.options.map((opt) => opt.value)
     : Object.keys(parameterVariants(messages['en-US'], parameter))
@@ -92,14 +94,19 @@ export function withOpenParameters(
     properties: {
       ...schema.properties,
       ...Object.fromEntries(
-        open.map((parameter) => [
-          parameter.name,
-          {
-            type: 'string',
-            description: parameter.description,
-            enum: parameterValues(parameter),
-          },
-        ])
+        open.map((parameter) => {
+          // a parameter with dynamic options or a free value has no list:
+          // an empty `enum` would refuse every value
+          const values = parameterValues(parameter)
+          return [
+            parameter.name,
+            {
+              type: 'string',
+              description: parameter.description,
+              ...(values.length ? { enum: values } : {}),
+            },
+          ]
+        })
       ),
     },
     required: [

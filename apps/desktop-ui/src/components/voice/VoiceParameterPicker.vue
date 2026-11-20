@@ -1,14 +1,7 @@
 <template>
-  <section
-    class="voice-param-picker"
-    :aria-label="parameterLabel"
-  >
+  <section class="voice-param-picker" :aria-label="parameterLabel">
     <div class="voice-param-header">
-      <button
-        type="button"
-        class="voice-param-back"
-        @click="emit('back')"
-      >
+      <button type="button" class="voice-param-back" @click="emit('back')">
         <AppIcon icon="mdi:arrow-left" size="sm" aria-hidden="true" />
         <span>{{ t('voiceCommands.backToCommands') }}</span>
       </button>
@@ -39,10 +32,7 @@ defineProps<{
   selectedValue?: string
 }>()
 
-const emit = defineEmits<{
-  pick: [value: string]
-  back: []
-}>()
+const emit = defineEmits<{ pick: [value: string]; back: [] }>()
 
 const { t } = useI18n()
 </script>

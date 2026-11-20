@@ -22,9 +22,7 @@
     "removeContext": "移除上下文",
     "restoreContext": "還原上下文"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "附加檔案",
     "alertCaution": "注意",
@@ -201,9 +199,7 @@
       "deselectAll": "取消全選",
       "unsupportedCommands": "不支援的指令"
     },
-    "replyBlocks": {
-      "toolLabel": "回覆區塊"
-    }
+    "replyBlocks": { "toolLabel": "回覆區塊" }
   },
   "commands": {
     "advanced": "進階",
@@ -270,6 +266,8 @@
     "launcherResult": "動作",
     "launcherResultGroup": "命令結果",
     "launcherSelectionHint": "「插入至視窗」會將結果貼在現用視窗的游標所在位置。若該處已選取文字，結果將取代該文字。",
+    "llmArgumentParsing": "用 LLM 從文字填寫輸入",
+    "llmArgumentParsingInfo": "此工具接收的是獨立欄位而不是文字。開啟後，LLM 會根據命令所處理的文字填寫這些欄位，因此可以透過快捷鍵、選單、語音或外部呼叫執行該命令。",
     "llmPreTransform": "使用 LLM 進行文字預處理",
     "llmPreTransformInfo": "在傳遞給命令之前，使用 LLM 提示詞對文字進行轉換。",
     "llmPreTransformPromptInfo": "用於在將輸入文字發送到命令之前由 LLM 進行轉換的指示。",
@@ -632,10 +630,7 @@
     "cancelled": "已取消",
     "done": "完成",
     "emptyResult": "模型傳回了空白結果",
-    "failed": {
-      "command": "命令執行失敗",
-      "correction": "校對失敗"
-    },
+    "failed": { "command": "命令執行失敗", "correction": "校對失敗" },
     "focusChanged": "視窗在此期間已切換，因此結果已複製到剪貼簿",
     "noSelection": "未選取任何內容",
     "noTarget": "沒有任何應用程式視窗取得焦點",
@@ -646,10 +641,7 @@
       "command": "命令未對文字進行任何變更",
       "correction": "未發現任何錯誤"
     },
-    "working": {
-      "command": "正在執行命令…",
-      "correction": "正在校對…"
-    }
+    "working": { "command": "正在執行命令…", "correction": "正在校對…" }
   },
   "settings": {
     "accessAllow": "允許",
@@ -1318,9 +1310,7 @@
     "translationVoiceCommand": "語音指令",
     "translationVoiceCommandInfo": "在語音指令中包含翻譯指令（「翻譯成[語言]」）。"
   },
-  "shortcuts": {
-    "insertIntoEditor": "插入至編輯器"
-  },
+  "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
     "auto": "跟隨系統",
     "dark": "深色",
@@ -1496,11 +1486,7 @@
     "clickToFocus": "按一下以繼續",
     "moveOverlay": "拖曳以移動",
     "cyclePosition": "位置：{position} (Alt+P)",
-    "position": {
-      "center": "置中",
-      "right": "右側",
-      "bottomRight": "右下角"
-    },
+    "position": { "center": "置中", "right": "右側", "bottomRight": "右下角" },
     "collapseRecording": "收合錄音列",
     "expandRecording": "展開錄音列"
   },
@@ -1554,9 +1540,7 @@
     "valueNotSet": "此裝置上沒有值：使用它的命令不會執行",
     "valuePlaceholder": "路徑、位址或其他文字"
   },
-  "favorites": {
-    "noMatches": "沒有相符的收藏"
-  },
+  "favorites": { "noMatches": "沒有相符的收藏" },
   "replyBlocks": {
     "insertIntoWindow": "插入至視窗",
     "insertIntoEditor": "至編輯器",

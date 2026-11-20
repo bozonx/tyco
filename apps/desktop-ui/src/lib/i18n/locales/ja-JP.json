@@ -22,9 +22,7 @@
     "removeContext": "コンテキストを削除",
     "restoreContext": "コンテキストを復元"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "ファイルを添付",
     "alertCaution": "注意",
@@ -201,9 +199,7 @@
       "deselectAll": "すべて選択解除",
       "unsupportedCommands": "サポートされていないコマンド"
     },
-    "replyBlocks": {
-      "toolLabel": "返答ブロック"
-    }
+    "replyBlocks": { "toolLabel": "返答ブロック" }
   },
   "commands": {
     "advanced": "高度な設定",
@@ -270,6 +266,8 @@
     "launcherResult": "アクション",
     "launcherResultGroup": "コマンドの結果",
     "launcherSelectionHint": "「ウィンドウに挿入」は、アクティブウィンドウのカーソル位置に結果を貼り付けます。テキストが選択されている場合は、結果で置き換えます。",
+    "llmArgumentParsing": "LLM でテキストから入力を埋める",
+    "llmArgumentParsingInfo": "このツールはテキストではなく個別のフィールドを受け取ります。オンにすると、コマンドを実行するテキストから LLM がフィールドを埋めるため、ホットキー、メニュー、音声、外部呼び出しから実行できます。",
     "llmPreTransform": "LLMによる事前テキスト変換",
     "llmPreTransformInfo": "コマンドに渡す前にLLMプロンプトでテキストを変換します。",
     "llmPreTransformPromptInfo": "コマンドに送信する前に入力テキストを変換するためのLLM指示。",
@@ -646,10 +644,7 @@
       "command": "コマンドによるテキストの変更はありませんでした",
       "correction": "修正箇所は見つかりませんでした"
     },
-    "working": {
-      "command": "コマンドを実行中…",
-      "correction": "校正中…"
-    }
+    "working": { "command": "コマンドを実行中…", "correction": "校正中…" }
   },
   "settings": {
     "accessAllow": "許可",
@@ -1318,9 +1313,7 @@
     "translationVoiceCommand": "音声コマンド",
     "translationVoiceCommandInfo": "音声コマンドに翻訳コマンドを含めます（「[言語]に翻訳」）。"
   },
-  "shortcuts": {
-    "insertIntoEditor": "エディターに挿入"
-  },
+  "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {
     "auto": "システム設定に従う",
     "dark": "ダーク",
@@ -1496,11 +1489,7 @@
     "clickToFocus": "クリックして続行",
     "moveOverlay": "ドラッグして移動",
     "cyclePosition": "位置：{position} (Alt+P)",
-    "position": {
-      "center": "中央",
-      "right": "右",
-      "bottomRight": "右下"
-    },
+    "position": { "center": "中央", "right": "右", "bottomRight": "右下" },
     "collapseRecording": "録音バーを折りたたむ",
     "expandRecording": "録音バーを展開"
   },
@@ -1554,9 +1543,7 @@
     "valueNotSet": "このデバイスに値がありません: この変数を使うコマンドは実行されません",
     "valuePlaceholder": "パス、アドレス、その他のテキスト"
   },
-  "favorites": {
-    "noMatches": "一致するお気に入りがありません"
-  },
+  "favorites": { "noMatches": "一致するお気に入りがありません" },
   "replyBlocks": {
     "insertIntoWindow": "ウィンドウに挿入",
     "insertIntoEditor": "エディタへ",

@@ -266,6 +266,23 @@ describe('reports during a run', () => {
     expect(deps.run).not.toHaveBeenCalled()
   })
 
+  it('hands a captured selection to the command for `{{SELECTION}}`', async () => {
+    const { deps, external } = setup(async () => ({ success: true }))
+    await external.handleRun(
+      event({ jobId: undefined, text: 'picked', selectionText: 'picked' })
+    )
+    expect(deps.run).toHaveBeenCalledWith(
+      expect.anything(),
+      'picked',
+      expect.any(Function),
+      expect.objectContaining({ context: { selectionText: 'picked' } })
+    )
+    vi.mocked(deps.run).mockClear()
+    await external.handleRun(event({ jobId: undefined, text: 'typed' }))
+    const options = (vi.mocked(deps.run).mock.calls[0] as unknown[])[3]
+    expect(options).not.toHaveProperty('context')
+  })
+
   it('logs a call for a command gone from the library', async () => {
     const { deps, external } = setup(async () => ({ success: true }))
     await external.handleRun(event({ commandId: 'gone', jobId: undefined }))

@@ -77,6 +77,15 @@ describe('createOperationInvoker', () => {
     expect(
       await invoke({ ...webhook, platforms: ['windows'] }, 'x')
     ).toMatchObject({ unavailable: 'commands.otherPlatform' })
+    // an explicit input, e.g. of an agent or `--input-json`, is no way round
+    expect(
+      await invoke({ ...webhook, platforms: ['windows'] }, '', {
+        input: { text: 'x' },
+      })
+    ).toMatchObject({ unavailable: 'commands.otherPlatform' })
+    expect(await invoke(webhook, '', { input: { text: 'x' } })).toMatchObject({
+      unavailable: 'commands.variablesNotSet',
+    })
     expect(await invoke(webhook, 'x')).toMatchObject({
       ok: false,
       messageKey: 'toast.variablesNotSet',
@@ -131,6 +140,27 @@ describe('createOperationInvoker', () => {
     )
 
     run.mockClear()
+    // a structured input needs no parser when it is given whole
+    const structured = vi.fn(async (): Promise<OperationResult> => ({
+      ok: true,
+    }))
+    const structuredInvoke = invokerOf(
+      tool(structured, {
+        inputSchema: {
+          type: 'object',
+          properties: { at: { type: 'string' }, message: { type: 'string' } },
+          required: ['at'],
+        },
+      })
+    )
+    expect(await structuredInvoke(invocation, 'x')).toMatchObject({
+      unavailable: 'commands.inputUnsupported',
+    })
+    expect(
+      await structuredInvoke(invocation, '', { input: { at: '18:00' } })
+    ).toMatchObject({ ok: true })
+    expect(structured).toHaveBeenCalled()
+
     const result = await invoke(invocation, '', { input: { other: 1 } })
     expect(result).toMatchObject({ ok: false, code: 'InvalidInput' })
     expect(result.failure).toBeTruthy()

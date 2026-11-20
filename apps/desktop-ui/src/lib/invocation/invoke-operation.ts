@@ -8,9 +8,9 @@ import {
   resolveOperationInput,
   operationCallConfig,
   operationInputKind,
-  operationInputSchema,
   validateOperationInput,
 } from '../operations/operation-input'
+import { commandInputSchema } from '../operations/command-parameters'
 import type {
   OperationLookup,
   OperationResult,
@@ -47,7 +47,9 @@ export type InvokeResult = OperationResult & {
 
 /**
  * Why the invocation cannot run now, as an i18n key: no such tool, the tool is
- * not available, or it cannot get its input from a text
+ * not available, or it cannot get its input from a text. A caller that gives
+ * the input whole (`hasExplicitInput`: an agent, a chat, an external call)
+ * needs no text, so only the last check is skipped for it
  */
 export function invocationUnavailableReason(
   invocation: Pick<
@@ -57,7 +59,8 @@ export function invocationUnavailableReason(
     | 'isLlmArgumentParsingEnabled'
     | 'platforms'
   >,
-  operations: OperationLookup
+  operations: OperationLookup,
+  options: { hasExplicitInput?: boolean } = {}
 ): string | undefined {
   const tool = operations.get(invocation.operationId)
   if (!tool) return 'commands.typeMissing'
@@ -83,6 +86,7 @@ export function invocationUnavailableReason(
     ).trim()
   )
     return 'commands.notesFolderMissing'
+  if (options.hasExplicitInput) return undefined
   const kind = operationInputKind(
     tool,
     invocation.operationConfig,
@@ -109,13 +113,11 @@ export function createOperationInvoker(deps: OperationInvokerDependencies) {
     options: InvocationOptions = {}
   ): Promise<InvokeResult> => {
     const tool = deps.operations.get(invocation.operationId)
-    // an explicit input needs no text, so only the tool itself can be missing
-    const reason =
-      options.input !== undefined
-        ? tool
-          ? tool.getUnavailableReasonKey?.()
-          : 'commands.typeMissing'
-        : invocationUnavailableReason(invocation, deps.operations)
+    // an explicit input needs no text, but the platform, the variables and
+    // the folder of the tool are checked all the same
+    const reason = invocationUnavailableReason(invocation, deps.operations, {
+      hasExplicitInput: options.input !== undefined,
+    })
     if (reason === 'commands.variablesNotSet') {
       // the user is told which values to set here
       const names = invocationMissingVariables(
@@ -148,8 +150,9 @@ export function createOperationInvoker(deps: OperationInvokerDependencies) {
       const inputErrors =
         options.input === undefined
           ? []
-          : validateOperationInput(
-              operationInputSchema(tool, config),
+          : // the open parameters of the command are part of its input
+            validateOperationInput(
+              commandInputSchema(tool, invocation.operationConfig),
               options.input
             )
       if (inputErrors.length)

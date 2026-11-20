@@ -238,7 +238,9 @@ describe('webhook commands', () => {
         isOutputLogged: true,
       }),
       'x',
-      expect.any(AbortSignal)
+      expect.any(AbortSignal),
+      // no selection: `{{SELECTION}}` is empty
+      null
     )
     expect(deps.showToast).toHaveBeenCalledWith(
       'toast.webhookSuccess',

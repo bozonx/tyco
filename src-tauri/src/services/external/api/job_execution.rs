@@ -92,7 +92,7 @@ pub(super) fn start(
         fail(app, &job.id, message.clone(), code);
         return Err(Box::new(Response::coded_error(code, message)));
     }
-    hand_off(app, &job.id, &command, &request, source)?;
+    hand_off(app, &job.id, &command, &request)?;
     Ok(job)
 }
 
@@ -110,14 +110,13 @@ fn fail(app: &AppHandle, id: &str, message: String, code: ErrorCode) {
     );
 }
 
-/// Gives an accepted job to the quick window: to the command overlay when it
-/// still needs input, to the background runner otherwise.
+/// Gives an accepted job to the background runner of the quick window. No
+/// window asks for missing input, `--interactive` included: such a job fails.
 fn hand_off(
     app: &AppHandle,
     job_id: &str,
     command: &ExternalCommand,
     request: &RunRequest,
-    _source: ActivationSource,
 ) -> ApiResult<()> {
     let config = app.state::<AppState>().user_config();
     let needs_ui = command.can_take_text && request.text.is_none() && request.input.is_none();
@@ -148,6 +147,7 @@ fn hand_off(
                     job_id: job_id.to_owned(),
                     text: request.text.clone(),
                     input: request.input.clone(),
+                    selection_text: request.selection.then(|| request.text.clone()).flatten(),
                     user_config: config,
                 },
             )
@@ -161,7 +161,7 @@ fn hand_off(
 
 /// Runs a job the user allowed to use the selection, unless it ended or its
 /// command went away while the prompt was shown.
-pub fn resume(app: &AppHandle, job_id: &str, source: ActivationSource) {
+pub fn resume(app: &AppHandle, job_id: &str) {
     let Some(request) = app.state::<ExternalJobs>().accepted_request(job_id) else {
         return;
     };
@@ -183,7 +183,7 @@ pub fn resume(app: &AppHandle, job_id: &str, source: ActivationSource) {
         }
     };
     // a failed handoff has completed the job with its error already
-    let _ = hand_off(app, job_id, &command, &request, source);
+    let _ = hand_off(app, job_id, &command, &request);
 }
 
 /// The user did not allow the job to use the selection.

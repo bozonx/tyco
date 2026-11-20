@@ -22,9 +22,7 @@
     "removeContext": "Rimuovi contesto",
     "restoreContext": "Ripristina contesto"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Allega file",
     "alertCaution": "Attenzione",
@@ -201,9 +199,7 @@
       "deselectAll": "Deseleziona tutto",
       "unsupportedCommands": "Comandi non supportati"
     },
-    "replyBlocks": {
-      "toolLabel": "Blocchi di risposta"
-    }
+    "replyBlocks": { "toolLabel": "Blocchi di risposta" }
   },
   "commands": {
     "advanced": "Avanzate",
@@ -270,6 +266,8 @@
     "launcherResult": "Azione",
     "launcherResultGroup": "Risultato del comando",
     "launcherSelectionHint": "«Inserisci nella finestra» incolla il risultato nel punto del cursore nella finestra attiva. Se lì c’è del testo selezionato, il risultato lo sostituisce.",
+    "llmArgumentParsing": "Compila l’input dal testo con l’LLM",
+    "llmArgumentParsingInfo": "Lo strumento accetta campi separati, non un testo. Se attivo, l’LLM li compila dal testo su cui viene eseguito il comando, così può essere avviato da scorciatoia, menu, voce o chiamata esterna.",
     "llmPreTransform": "Pre-trasformazione con LLM",
     "llmPreTransformInfo": "Trasforma il testo con un prompt LLM prima di passarlo al comando.",
     "llmPreTransformPromptInfo": "Istruzione per l’LLM con cui trasformare il testo di input prima di inviarlo al comando.",
@@ -1318,9 +1316,7 @@
     "translationVoiceCommand": "Comando vocale",
     "translationVoiceCommandInfo": "Include il comando di traduzione nei comandi vocali («traduci in [lingua]»). "
   },
-  "shortcuts": {
-    "insertIntoEditor": "Inserisci nell’editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {
     "auto": "Come nel sistema",
     "dark": "Scuro",
@@ -1554,9 +1550,7 @@
     "valueNotSet": "Nessun valore su questo dispositivo: i comandi che la usano non vengono eseguiti",
     "valuePlaceholder": "Un percorso, un indirizzo o altro testo"
   },
-  "favorites": {
-    "noMatches": "Nessun preferito corrispondente"
-  },
+  "favorites": { "noMatches": "Nessun preferito corrispondente" },
   "replyBlocks": {
     "insertIntoWindow": "Inserisci nella finestra",
     "insertIntoEditor": "Nell'editor",

@@ -25,8 +25,8 @@ struct ExternalJobEntry {
     pending_completion: Option<Job>,
     /// The user allowed this call to use the selection, see `services::external::access`.
     is_selection_approved: bool,
-    /// How long the run may take once started: set for a run in the
-    /// background, `None` for one in a window, which the user can cancel.
+    /// How long the run may take once started, the limit of its command;
+    /// `None` until the job is handed off.
     run_limit: Option<Duration>,
     claimed_at: Option<Instant>,
     /// When the job finished and began to wait for its selection replacement

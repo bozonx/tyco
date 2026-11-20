@@ -6,7 +6,9 @@ import {
   commandInputSchema,
   openCommandParameters,
   parameterValue,
+  withOpenParameters,
 } from './command-parameters'
+import { TEXT_INPUT_SCHEMA } from './operation-types'
 import { testOperations, testTranslateOperation } from './testing'
 import { outputRequest } from './operation-call'
 
@@ -71,10 +73,35 @@ describe('command parameters', () => {
     })
   })
 
-  it('names a translation by its tool and needs no name for it', () => {
+  it('names a command without a name by its core tool, but asks for one', () => {
     const command = createCommand('core.translate', 'translate')
     expect(commandLabel(command)).toBeTruthy()
     expect(commandLabel(command)).not.toBe('core.translate')
-    expect(validateCommand(command, tools)).toEqual([])
+    expect(validateCommand(command, tools)).toEqual([
+      { field: 'name', messageKey: 'commands.errorNoName' },
+    ])
+  })
+
+  it('leaves a parameter without a list of values open to any value', () => {
+    const schema = withOpenParameters(
+      TEXT_INPUT_SCHEMA,
+      {
+        commandParameters: [
+          {
+            name: 'folder',
+            description: 'A folder',
+            getOptions: () => [{ value: 'a' }],
+          },
+          {
+            name: 'mode',
+            description: 'A mode',
+            options: [{ value: 'fast' }, { value: 'slow' }],
+          },
+        ],
+      },
+      {}
+    )
+    expect(schema.properties?.folder).not.toHaveProperty('enum')
+    expect(schema.properties?.mode?.enum).toEqual(['fast', 'slow'])
   })
 })

@@ -300,8 +300,8 @@ prints the complete final job object. An operation can have its own intrinsic si
 effects (for example a webhook, script, `core.copy`, or `core.insert`); choosing
 returned output does not undo or disable those effects. For custom scripts and
 webhooks, Tyco substitutes `{{TEXT}}` with the provided input text (`TYCO_TEXT`
-environment variable in scripts) and `{{SELECTION}}` with any captured selection
-context (`TYCO_SELECTION` in scripts).
+environment variable in scripts) and `{{SELECTION}}` with the selection captured
+by `--selection` (`TYCO_SELECTION` in scripts); without one it is empty.
 
 ### Interactive execution and selection
 
@@ -320,9 +320,12 @@ result back into the original target. Empty replacement output is a failure.
 
 A changed foreground window prevents insertion: the result remains in the
 clipboard, the job fails with `SelectionFailed`, and its output remains
-available for recovery. An interactive command launcher is hidden before
-replacement so focus can return to the target. No window is forcibly focused
-when an unrelated application has taken focus.
+available for recovery. No window is forcibly focused when an unrelated
+application has taken focus.
+
+Without the global selection permission, the call asks the user first. The
+selection is captured before that prompt opens, since the prompt takes the
+focus away from it; it stays in memory only and is dropped if the user refuses.
 
 `tyco-ctl replace correction` corrects the selection in place, as the inline
 correction hotkey does, without a command of the library. It is meant for a
@@ -415,19 +418,17 @@ cannot overwrite cancellation. Cancel is idempotent for a retained terminal job.
 
 Cancellation aborts the operation signal and restores an outstanding selection
 snapshot. An operation may already have performed irreversible side effects; cancel
-is not rollback. Leaving a prepared interactive request cancels it.
+is not rollback.
 
 Jobs are in-memory and disappear when Tyco exits. At most 32 jobs may be active;
 at most 128 are retained, evicting the oldest terminal jobs first. Two limits end
 a job with `TimedOut`:
 
 - **Start**: a job must start within 300 seconds of the call. This covers the
-  access prompt and the text the user types in the command overlay.
-- **Run**: a command that runs in the background, without a window, is
-  stopped once it runs longer than its own limit, counted from its start. The
-  limit is set per command in the settings ("Background run limit"), 120
-  seconds by default, 1–3600. A command that runs in the command overlay has
-  no run limit: the user sees it and can cancel it.
+  access prompt for the selection.
+- **Run**: a command is stopped once it runs longer than its own limit,
+  counted from its start. The limit is set per command in the settings
+  ("Background run limit"), 120 seconds by default, 1–3600.
 
 A script is killed with its whole process tree when its job is cancelled or
 times out. Returned output
@@ -445,7 +446,7 @@ do not block the listener; connections are bounded.
 | ---- | ------------------------------------------------------- |
 | 0    | Request accepted, or successful completion when waiting |
 | 2    | Invalid arguments/input, missing input, ambiguous name  |
-| 3    | Permission denied or interactive UI required            |
+| 3    | Permission denied                                       |
 | 4    | Service/command unavailable, disabled, busy, not found  |
 | 5    | Execution or other API failure                          |
 | 6    | Timeout                                                 |
@@ -472,8 +473,8 @@ authorization dispatcher, so the same grants and capabilities apply.
 | `CorrectSelection`        |                     | Corrects the selection in place                                  |
 
 Modes are those of `tyco-ctl open`. `RunCommand` behaves like
-`tyco-ctl run <id> --interactive`: it asks for missing input in the command
-launcher. `ReplaceSelection` behaves like
+`tyco-ctl run <id> --interactive`: no window asks for input, so a command
+that takes text fails with `InputRequired`. `ReplaceSelection` behaves like
 `tyco-ctl run <id> --selection --replace --interactive`, and
 `CorrectSelection` like `tyco-ctl replace correction`. Command IDs are
 stable library IDs; display names are not accepted.

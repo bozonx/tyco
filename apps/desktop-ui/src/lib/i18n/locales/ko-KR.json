@@ -22,9 +22,7 @@
     "removeContext": "컨텍스트 제거",
     "restoreContext": "컨텍스트 복원"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "파일 첨부",
     "alertCaution": "주의",
@@ -201,9 +199,7 @@
       "deselectAll": "모두 선택 해제",
       "unsupportedCommands": "지원되지 않는 명령어"
     },
-    "replyBlocks": {
-      "toolLabel": "답변 블록"
-    }
+    "replyBlocks": { "toolLabel": "답변 블록" }
   },
   "commands": {
     "advanced": "고급",
@@ -270,6 +266,8 @@
     "launcherResult": "작업",
     "launcherResultGroup": "명령 결과",
     "launcherSelectionHint": "“창에 삽입”은 활성 창의 커서 위치에 결과를 붙여넣습니다. 텍스트가 선택되어 있으면 결과로 대체됩니다.",
+    "llmArgumentParsing": "LLM으로 텍스트에서 입력 채우기",
+    "llmArgumentParsingInfo": "이 도구는 텍스트가 아닌 개별 필드를 받습니다. 켜면 LLM이 명령이 실행되는 텍스트에서 필드를 채우므로 단축키, 메뉴, 음성 또는 외부 호출로 실행할 수 있습니다.",
     "llmPreTransform": "LLM으로 사전 텍스트 변환",
     "llmPreTransformInfo": "명령에 전달하기 전에 LLM 프롬프트로 텍스트를 변환합니다.",
     "llmPreTransformPromptInfo": "명령으로 보내기 전에 입력 텍스트를 변환하기 위한 LLM 지침입니다.",
@@ -632,10 +630,7 @@
     "cancelled": "취소됨",
     "done": "완료",
     "emptyResult": "모델이 빈 결과를 반환했습니다",
-    "failed": {
-      "command": "명령 실패",
-      "correction": "교정 실패"
-    },
+    "failed": { "command": "명령 실패", "correction": "교정 실패" },
     "focusChanged": "그 사이에 활성 창이 변경되어 결과가 클립보드에 복사되었습니다",
     "noSelection": "선택된 내용이 없습니다",
     "noTarget": "포커스가 있는 애플리케이션 창이 없습니다",
@@ -646,10 +641,7 @@
       "command": "명령 실행 후에도 텍스트가 변경되지 않았습니다",
       "correction": "오류를 찾지 못했습니다"
     },
-    "working": {
-      "command": "명령 실행 중…",
-      "correction": "교정 중…"
-    }
+    "working": { "command": "명령 실행 중…", "correction": "교정 중…" }
   },
   "settings": {
     "accessAllow": "허용",
@@ -1318,9 +1310,7 @@
     "translationVoiceCommand": "음성 명령",
     "translationVoiceCommandInfo": "음성 명령에 번역 명령을 포함합니다(“[언어]로 번역”)."
   },
-  "shortcuts": {
-    "insertIntoEditor": "편집기에 삽입"
-  },
+  "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {
     "auto": "시스템 설정 따르기",
     "dark": "다크",
@@ -1554,9 +1544,7 @@
     "valueNotSet": "이 기기에 값이 없음: 이 변수를 쓰는 명령은 실행되지 않습니다",
     "valuePlaceholder": "경로, 주소 또는 다른 텍스트"
   },
-  "favorites": {
-    "noMatches": "일치하는 즐겨찾기 없음"
-  },
+  "favorites": { "noMatches": "일치하는 즐겨찾기 없음" },
   "replyBlocks": {
     "insertIntoWindow": "창에 삽입",
     "insertIntoEditor": "편집기로",

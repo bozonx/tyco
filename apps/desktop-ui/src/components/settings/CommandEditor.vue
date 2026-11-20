@@ -203,6 +203,16 @@
             })
           }}
         </p>
+        <div v-if="canParseArguments" class="command-field-row">
+          <FieldSwitch
+            :model-value="command.isLlmArgumentParsingEnabled"
+            :label="t('commands.llmArgumentParsing')"
+            @update:model-value="
+              update({ isLlmArgumentParsingEnabled: $event })
+            "
+          />
+          <InfoTooltip :text="t('commands.llmArgumentParsingInfo')" />
+        </div>
         <div v-if="canPreTransform" class="command-field-row">
           <FieldSwitch
             :model-value="command.isLlmPreTransformEnabled ?? false"
@@ -255,6 +265,10 @@ import {
   validateCommand,
 } from '../../lib/commands/command-runtime'
 import { canTestCommand } from '../../lib/commands/command-test-run'
+import {
+  operationInputSchema,
+  schemaShape,
+} from '../../lib/operations/operation-input'
 import { operationLabel } from '../../lib/operations/operation-label'
 import { useIpcStore } from '../../stores/ipc'
 import { useOperationsStore } from '../../stores/operations'
@@ -319,6 +333,18 @@ const canTest = computed(() => canTestCommand(props.command))
 const canPreTransform = computed(
   () => props.command.operationId !== 'core.aiTask'
 )
+/**
+ * A tool with a structured input and no parser of its own takes a text only
+ * when the LLM fills its input from it
+ */
+const canParseArguments = computed(
+  () =>
+    Boolean(tool.value) &&
+    !tool.value!.parseText &&
+    schemaShape(
+      operationInputSchema(tool.value!, props.command.operationConfig)
+    ) === 'structured'
+)
 /** Why the command cannot run, unless its tool is missing altogether */
 const unavailableReason = computed(() =>
   tool.value
@@ -382,7 +408,9 @@ const advancedBodyId = useId()
 const isAdvancedOpen = ref<boolean>(
   Boolean(props.command.isOutputLogged) ||
     Boolean(props.command.isAvailableExternally) ||
-    (canPreTransform.value && Boolean(props.command.isLlmPreTransformEnabled))
+    (canPreTransform.value &&
+      Boolean(props.command.isLlmPreTransformEnabled)) ||
+    (canParseArguments.value && props.command.isLlmArgumentParsingEnabled)
 )
 
 const platformLabels = computed<Record<CommandPlatform, string>>(() => ({

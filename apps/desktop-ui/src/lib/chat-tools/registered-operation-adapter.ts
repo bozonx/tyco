@@ -133,27 +133,46 @@ export async function adaptRegisteredOperation(
 
 /**
  * Adapts a user command to a chat tool definition, resolving its config,
- * schema, label, timeout and command metadata.
+ * schema, label and command metadata. `run` executes the command the way the
+ * other callers do (input checks, pre-transformation); without it the tool is
+ * called directly. There is no time limit of its own: the user sees the chat
+ * and stops it, and `externalTimeoutSec` bounds background runs only
  */
 export async function adaptCommand(
   command: CommandConfig,
   tool: RegisteredOperation,
-  options: { groupId: string }
+  options: {
+    groupId: string
+    run?: (
+      input: Record<string, unknown>,
+      signal: AbortSignal
+    ) => Promise<OperationResult>
+  }
 ): Promise<ChatToolDefinition> {
   const config = operationCallConfig(tool, command.operationConfig)
   const inputSchema = commandInputSchema(tool, command.operationConfig)
-  return adaptRegisteredOperation(tool, {
+  const label = commandLabel(command)
+  const definition = await adaptRegisteredOperation(tool, {
     groupId: options.groupId,
     name: await chatToolName(command.id),
-    label: commandLabel(command),
+    label,
     description: command.description.trim(),
     inputSchema,
     config,
-    command: operationCallCommand(
-      command.id,
-      command.name,
-      command.isOutputLogged
-    ),
-    timeoutSec: command.externalTimeoutSec,
+    command: operationCallCommand(command.id, label, command.isOutputLogged),
   })
+  const run = options.run
+  if (!run) return definition
+  return {
+    ...definition,
+    execute: async (input, { signal }) =>
+      toolResultForModel(
+        await run(
+          input && typeof input === 'object' && !Array.isArray(input)
+            ? (input as Record<string, unknown>)
+            : {},
+          signal
+        )
+      ),
+  }
 }

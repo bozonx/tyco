@@ -128,9 +128,7 @@
             "
             :parameter-label="parameterDisplayLabel(voice.activeParameter, t)"
             :options="activeParameterOptions"
-            :selected-value="
-              voice.activeParameters[voice.activeParameter.name]
-            "
+            :selected-value="voice.activeParameters[voice.activeParameter.name]"
             @pick="
               (val) =>
                 voice.activeParameter &&

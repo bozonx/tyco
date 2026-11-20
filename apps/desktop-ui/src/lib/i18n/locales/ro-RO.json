@@ -22,9 +22,7 @@
     "removeContext": "Elimină contextul",
     "restoreContext": "Restaurează contextul"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Atașează un fișier",
     "alertCaution": "Atenție",
@@ -201,9 +199,7 @@
       "deselectAll": "Deselectează tot",
       "unsupportedCommands": "Comenzi neacceptate"
     },
-    "replyBlocks": {
-      "toolLabel": "Blocuri de răspuns"
-    }
+    "replyBlocks": { "toolLabel": "Blocuri de răspuns" }
   },
   "commands": {
     "advanced": "Avansat",
@@ -270,6 +266,8 @@
     "launcherResult": "Acțiune",
     "launcherResultGroup": "Rezultatul comenzii",
     "launcherSelectionHint": "„Inserează în fereastră” lipește rezultatul la poziția cursorului din fereastra activă. Dacă acolo este selectat text, rezultatul îl înlocuiește.",
+    "llmArgumentParsing": "Completează intrarea din text cu LLM",
+    "llmArgumentParsingInfo": "Instrumentul primește câmpuri separate, nu un text. Când este activat, LLM le completează din textul pe care rulează comanda, astfel încât poate fi rulată cu o scurtătură, din meniu, prin voce sau din exterior.",
     "llmPreTransform": "Pretransformare cu LLM",
     "llmPreTransformInfo": "Transformă textul cu o instrucțiune LLM înainte de a-l trimite la comandă.",
     "llmPreTransformPromptInfo": "Instrucțiune pentru LLM de transformare a textului de intrare înainte de a fi trimis comenzii.",
@@ -1318,9 +1316,7 @@
     "translationVoiceCommand": "Comandă vocală",
     "translationVoiceCommandInfo": "Include comanda de traducere în comenzile vocale („tradu în [limbă]”)."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Inserează în editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
     "auto": "Ca în sistem",
     "dark": "Întunecată",
@@ -1554,9 +1550,7 @@
     "valueNotSet": "Nicio valoare pe acest dispozitiv: comenzile care o folosesc nu rulează",
     "valuePlaceholder": "O cale, o adresă sau alt text"
   },
-  "favorites": {
-    "noMatches": "Nu există favorite care să se potrivească"
-  },
+  "favorites": { "noMatches": "Nu există favorite care să se potrivească" },
   "replyBlocks": {
     "insertIntoWindow": "Inserează în fereastră",
     "insertIntoEditor": "În editor",

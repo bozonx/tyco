@@ -22,9 +22,7 @@
     "removeContext": "კონტექსტის ამოშლა",
     "restoreContext": "კონტექსტის აღდგენა"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "ფაილის მიმაგრება",
     "alertCaution": "ყურადღება",
@@ -201,9 +199,7 @@
       "deselectAll": "არჩევის გაუქმება",
       "unsupportedCommands": "მხარდაუჭერელი ბრძანებები"
     },
-    "replyBlocks": {
-      "toolLabel": "პასუხის ბლოკები"
-    }
+    "replyBlocks": { "toolLabel": "პასუხის ბლოკები" }
   },
   "commands": {
     "advanced": "დამატებითი",
@@ -270,6 +266,8 @@
     "launcherResult": "მოქმედება",
     "launcherResultGroup": "ბრძანების შედეგი",
     "launcherSelectionHint": "„ფანჯარაში ჩასმა“ შედეგს აქტიურ ფანჯარაში კურსორის ადგილას სვამს. თუ იქ ტექსტი მონიშნულია, შედეგი მას ჩაანაცვლებს.",
+    "llmArgumentParsing": "შეყვანის შევსება ტექსტიდან LLM-ით",
+    "llmArgumentParsingInfo": "ხელსაწყო იღებს ცალკეულ ველებს და არა ტექსტს. ჩართვისას LLM ავსებს მათ იმ ტექსტიდან, რომელზეც ბრძანება სრულდება, ასე რომ მისი გაშვება შესაძლებელია მალსახმობით, მენიუდან, ხმით ან გარედან.",
     "llmPreTransform": "ტექსტის წინასწარი გარდაქმნა LLM-ით",
     "llmPreTransformInfo": "გარდაქმნის ტექსტს LLM მოთხოვნით ბრძანებისთვის გადაცემამდე.",
     "llmPreTransformPromptInfo": "ინსტრუქცია LLM-ისთვის შემავალი ტექსტის გარდასაქმნელად ბრძანებისთვის გაგზავნამდე.",
@@ -646,10 +644,7 @@
       "command": "ბრძანებამ ტექსტი უცვლელად დატოვა",
       "correction": "შეცდომები ვერ მოიძებნა"
     },
-    "working": {
-      "command": "ბრძანება სრულდება…",
-      "correction": "სწორდება…"
-    }
+    "working": { "command": "ბრძანება სრულდება…", "correction": "სწორდება…" }
   },
   "settings": {
     "accessAllow": "დაშვება",
@@ -1318,9 +1313,7 @@
     "translationVoiceCommand": "ხმოვანი ბრძანება",
     "translationVoiceCommandInfo": "თარგმნის ბრძანების ჩართვა ხმოვან ბრძანებებში („თარგმნე [ენა]“)."
   },
-  "shortcuts": {
-    "insertIntoEditor": "რედაქტორში ჩასმა"
-  },
+  "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {
     "auto": "სისტემის მიხედვით",
     "dark": "მუქი",
@@ -1554,9 +1547,7 @@
     "valueNotSet": "ამ მოწყობილობაზე მნიშვნელობა არ არის: მისი გამომყენებელი ბრძანებები არ სრულდება",
     "valuePlaceholder": "გზა, მისამართი ან სხვა ტექსტი"
   },
-  "favorites": {
-    "noMatches": "Შესატყვისი რჩეულები არ არის"
-  },
+  "favorites": { "noMatches": "Შესატყვისი რჩეულები არ არის" },
   "replyBlocks": {
     "insertIntoWindow": "ფანჯარაში ჩასმა",
     "insertIntoEditor": "რედაქტორში",

@@ -22,9 +22,7 @@
     "removeContext": "Kontext entfernen",
     "restoreContext": "Kontext wiederherstellen"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Datei anhängen",
     "alertCaution": "Vorsicht",
@@ -201,9 +199,7 @@
       "deselectAll": "Auswahl aufheben",
       "unsupportedCommands": "Nicht unterstützte Befehle"
     },
-    "replyBlocks": {
-      "toolLabel": "Antwortblöcke"
-    }
+    "replyBlocks": { "toolLabel": "Antwortblöcke" }
   },
   "commands": {
     "advanced": "Erweitert",
@@ -270,6 +266,8 @@
     "launcherResult": "Aktion",
     "launcherResultGroup": "Befehlsergebnis",
     "launcherSelectionHint": "„In Fenster einfügen“ fügt das Ergebnis an der Cursorposition im aktiven Fenster ein. Ist dort Text ausgewählt, wird er durch das Ergebnis ersetzt.",
+    "llmArgumentParsing": "Eingabe mit dem LLM aus dem Text füllen",
+    "llmArgumentParsingInfo": "Das Werkzeug nimmt einzelne Felder statt eines Textes. Wenn aktiviert, füllt das LLM sie aus dem Text, auf dem der Befehl läuft, sodass er per Tastenkürzel, Menü, Sprache oder extern laufen kann.",
     "llmPreTransform": "Vorab-Transformation mit LLM",
     "llmPreTransformInfo": "Transformiert den Text mit einem LLM-Prompt, bevor er an den Befehl übergeben wird.",
     "llmPreTransformPromptInfo": "Anweisung an das LLM, um den Eingabetext vor dem Senden an den Befehl zu transformieren.",
@@ -1318,9 +1316,7 @@
     "translationVoiceCommand": "Sprachbefehl",
     "translationVoiceCommandInfo": "Fügt den Übersetzungsbefehl zu den Sprachbefehlen hinzu („übersetze auf [Sprache]“)."
   },
-  "shortcuts": {
-    "insertIntoEditor": "In den Editor einfügen"
-  },
+  "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {
     "auto": "Wie im System",
     "dark": "Dunkel",
@@ -1554,9 +1550,7 @@
     "valueNotSet": "Kein Wert auf diesem Gerät: Befehle, die sie nutzen, werden nicht ausgeführt",
     "valuePlaceholder": "Ein Pfad, eine Adresse oder anderer Text"
   },
-  "favorites": {
-    "noMatches": "Keine passenden Favoriten"
-  },
+  "favorites": { "noMatches": "Keine passenden Favoriten" },
   "replyBlocks": {
     "insertIntoWindow": "In Fenster einfügen",
     "insertIntoEditor": "In Editor",

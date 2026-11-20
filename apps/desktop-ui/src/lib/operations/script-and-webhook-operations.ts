@@ -55,7 +55,11 @@ export interface ScriptAndWebhookOperationDependencies {
 }
 
 let runCounter = 0
-const defaultRunId = () => `command-run-${Date.now()}-${++runCounter}`
+/** Unique across windows: each has a counter of its own */
+const defaultRunId = () =>
+  typeof crypto !== 'undefined' && crypto.randomUUID
+    ? `command-run-${crypto.randomUUID()}`
+    : `command-run-${Date.now()}-${++runCounter}-${Math.random().toString(36).slice(2)}`
 
 const cancelled: OperationResult = { ok: false, cancelled: true }
 
@@ -203,14 +207,14 @@ function createWebhookOperation(
           isOutputLogged: call.command?.isOutputLogged ?? false,
         }
         const text = webhookTakesText(config) ? textOf(call.input) : null
-        response = await (call.context?.selectionText !== undefined
-          ? deps.executeWebhook(
-              target,
-              text,
-              call.signal,
-              call.context.selectionText
-            )
-          : deps.executeWebhook(target, text, call.signal))
+        // without a selection `{{SELECTION}}` is empty, as in a script,
+        // never sent as it is written
+        response = await deps.executeWebhook(
+          target,
+          text,
+          call.signal,
+          call.context?.selectionText ?? null
+        )
       } catch (error) {
         if (call.signal.aborted) return cancelled
         return {

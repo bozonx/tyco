@@ -48,13 +48,15 @@ export function createSelectionAction(deps: SelectionActionDependencies) {
           deps.t('commands.commandMissing', { id: action.commandId })
         )
       result = await deps.transform(command, text, signal)
-      logCommandRun(
-        deps,
-        commandRunRecord(command, 'selection', text, {
-          success: result.ok,
-          message: toolResultMessage(result, deps.t),
-        })
-      )
+      // a cancelled run did not fail
+      if (!result.cancelled)
+        logCommandRun(
+          deps,
+          commandRunRecord(command, 'selection', text, {
+            success: result.ok,
+            message: toolResultMessage(result, deps.t),
+          })
+        )
     }
     if (result.cancelled) throw new SelectionActionAbortedError()
     if (!result.ok)

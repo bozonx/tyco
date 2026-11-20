@@ -14,6 +14,7 @@ import {
   outputRequest,
   operationCallCommand,
 } from '../operations/operation-call'
+import { operationCallConfig } from '../operations/operation-input'
 import type { OperationLookup } from '../operations/operation-types'
 import {
   commandLabel,
@@ -153,7 +154,8 @@ export async function runCommandTest(
   try {
     const result = await tool.run({
       input: input === null ? {} : { text: input },
-      config: command.operationConfig,
+      // as a real run: the plugin settings fill what the command leaves empty
+      config: operationCallConfig(tool, command.operationConfig),
       source: 'menu',
       signal,
       command: operationCallCommand(command.id, commandLabel(command), false),

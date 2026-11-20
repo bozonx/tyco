@@ -252,8 +252,11 @@ function toggleProfileCommand(
   commandId: string,
   enabled: boolean
 ) {
-  const current =
+  // the ids of removed commands go with any change of the list
+  const known = new Set(commands.value.map((command) => command.id))
+  const current = (
     toolGroupSettings(profile.value?.tools, group).commandIds ?? []
+  ).filter((id) => known.has(id))
   const next = enabled
     ? [...new Set([...current, commandId])]
     : current.filter((id) => id !== commandId)

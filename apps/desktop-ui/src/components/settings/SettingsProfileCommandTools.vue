@@ -179,16 +179,30 @@ const noneSelected = computed(
     !supportedCommands.value.some((cmd) => props.selectedIds.includes(cmd.id))
 )
 
+/**
+ * The selected ids of commands that still exist: a removed command leaves its
+ * id in the profile, which is a file of its own, until the list is changed
+ */
+const existingSelectedIds = () => {
+  const ids = new Set(props.commands.map((command) => command.id))
+  return props.selectedIds.filter((id) => ids.has(id))
+}
+
 function selectAll() {
   const newSelected = Array.from(
-    new Set([...props.selectedIds, ...supportedCommands.value.map((c) => c.id)])
+    new Set([
+      ...existingSelectedIds(),
+      ...supportedCommands.value.map((c) => c.id),
+    ])
   )
   emit('updateSelected', newSelected)
 }
 
 function deselectAll() {
   const commandIdSet = new Set(supportedCommands.value.map((c) => c.id))
-  const newSelected = props.selectedIds.filter((id) => !commandIdSet.has(id))
+  const newSelected = existingSelectedIds().filter(
+    (id) => !commandIdSet.has(id)
+  )
   emit('updateSelected', newSelected)
 }
 </script>

@@ -27,7 +27,6 @@ pub enum AccessDecision {
 
 struct PendingAccessRequest {
     job_id: String,
-    source: ActivationSource,
 }
 
 /// The one request waiting for an answer: a second one is refused rather
@@ -77,7 +76,6 @@ pub fn ask(
 ) -> Result<(), AccessPromptError> {
     let claimed = app.state::<AccessPrompt>().try_claim(PendingAccessRequest {
         job_id: request.job_id.clone(),
-        source,
     });
     if !claimed {
         return Err(AccessPromptError::Busy);
@@ -96,9 +94,9 @@ pub fn ask(
 /// Applies the answer of the prompt; a job answered, cancelled or timed out
 /// before is left alone.
 pub fn answer(app: &AppHandle, job_id: &str, decision: AccessDecision) -> Result<(), AppError> {
-    let Some(pending) = app.state::<AccessPrompt>().take(job_id) else {
+    if app.state::<AccessPrompt>().take(job_id).is_none() {
         return Ok(());
-    };
+    }
     hide_prompt(app);
     // the command and the replacement need the window of the selection back
     runtime::wait_until_unfocused(app, FOCUS_RELEASE_TIMEOUT);
@@ -116,7 +114,7 @@ pub fn answer(app: &AppHandle, job_id: &str, decision: AccessDecision) -> Result
         AccessDecision::Once => {}
     }
     app.state::<ExternalJobs>().approve_selection(job_id);
-    api::resume(app, job_id, pending.source);
+    api::resume(app, job_id);
     Ok(())
 }
 
@@ -191,13 +189,11 @@ mod tests {
         assert!(!prompt.is_pending());
         assert!(prompt.try_claim(PendingAccessRequest {
             job_id: "job-1".into(),
-            source: ActivationSource::Cli,
         }));
         assert!(prompt.is_pending());
         // a second request does not take the prompt of the first
         assert!(!prompt.try_claim(PendingAccessRequest {
             job_id: "job-2".into(),
-            source: ActivationSource::Cli,
         }));
         assert!(prompt.take("job-2").is_none());
         assert!(prompt.take("job-1").is_some());

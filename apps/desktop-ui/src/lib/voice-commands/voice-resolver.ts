@@ -210,7 +210,11 @@ function resolveFrom(
             next.push(offset + valueWords.length)
           } else if (tail.length > valueWords.length) {
             // Skip filler/hesitation words before the spoken parameter value
-            for (let skip = 1; skip <= tail.length - valueWords.length; skip++) {
+            for (
+              let skip = 1;
+              skip <= tail.length - valueWords.length;
+              skip++
+            ) {
               if (startsWith(tail.slice(skip), valueWords)) {
                 next.push(offset + skip + valueWords.length)
                 break

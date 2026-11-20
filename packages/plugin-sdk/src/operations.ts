@@ -168,7 +168,9 @@ export interface OperationCommandParameter {
   /** Optional dynamic options provider */
   getOptions?(
     context: CommandParameterContext
-  ): readonly CommandParameterOption[] | Promise<readonly CommandParameterOption[]>
+  ):
+    | readonly CommandParameterOption[]
+    | Promise<readonly CommandParameterOption[]>
   /** Optional custom voice parser for free-form parameter values */
   resolveValue?(
     tailText: string,
@@ -221,7 +223,8 @@ export interface OperationDefinition {
   defaultPhrasesKey?: string
   /**
    * Parameters that a command may leave to its caller (voice, chat, external).
-   * Core handles step-by-step voice matching, tail discarding, and UI selection.
+   * Core handles step-by-step voice matching, tail discarding, and UI
+   * selection.
    */
   commandParameters?: readonly OperationCommandParameter[]
   /**

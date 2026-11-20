@@ -208,8 +208,7 @@ export function validateCommand(
   operations: OperationLookup
 ): CommandIssue[] {
   const issues: CommandIssue[] = []
-  // a translation is named well enough by its tool
-  if (!command.name.trim() && command.operationId !== 'core.translate') {
+  if (!command.name.trim()) {
     issues.push({ field: 'name', messageKey: 'commands.errorNoName' })
   }
   if (
@@ -247,8 +246,6 @@ export function validateCommand(
         isWarning: true,
       })
     }
-  } else if (command.operationId === 'core.translate') {
-    // without a language of its own, the caller names it
   } else if (
     command.operationId === 'core.aiTask' ||
     command.operationId === 'core.transformation' ||

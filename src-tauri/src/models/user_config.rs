@@ -300,7 +300,9 @@ pub struct CommandConfig {
     pub name: String,
     #[serde(default, deserialize_with = "lenient")]
     pub operation_id: String,
-    #[serde(default, deserialize_with = "lenient")]
+    /// Missing counts as enabled, as the schema default does; see
+    /// `is_enabled` in `services/external/command_library.rs`.
+    #[serde(default = "default_true", deserialize_with = "lenient_enabled")]
     pub is_enabled: bool,
     #[serde(default)]
     pub operation_config: Value,
@@ -337,6 +339,32 @@ pub fn is_on_this_platform(platforms: &[String]) -> bool {
 pub const EXTERNAL_TIMEOUT_DEFAULT_SEC: u64 = 120;
 /// See `EXTERNAL_TIMEOUT_MAX_SEC` in `commands-config.ts`.
 pub const EXTERNAL_TIMEOUT_MAX_SEC: u64 = 3600;
+
+/// Only an explicit `false` disables a command, see `CommandConfig::is_enabled`.
+fn lenient_enabled<'de, D>(deserializer: D) -> Result<bool, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Ok(Value::deserialize(deserializer)?.as_bool() != Some(false))
+}
+
+/// The longest shell command shown in place of a name, see
+/// `SCRIPT_LABEL_MAX_CHARS` in `lib/commands/command-runtime.ts`.
+const SCRIPT_LABEL_MAX_CHARS: usize = 60;
+
+/// The first line of a shell command, cut short, as `shortScriptLabel` in
+/// `lib/commands/command-runtime.ts` makes it.
+fn short_script_label(script: &str) -> String {
+    let script = script.trim();
+    let line = script.lines().next().unwrap_or_default().trim();
+    let is_cut = line.chars().count() > SCRIPT_LABEL_MAX_CHARS || line != script;
+    if is_cut {
+        let cut: String = line.chars().take(SCRIPT_LABEL_MAX_CHARS).collect();
+        format!("{}…", cut.trim_end())
+    } else {
+        line.to_owned()
+    }
+}
 
 fn default_external_timeout_sec() -> u64 {
     EXTERNAL_TIMEOUT_DEFAULT_SEC
@@ -382,7 +410,7 @@ pub fn script_command(config: &Value, id: &str) -> Option<ScriptCommand> {
     let label = if !name.is_empty() {
         name.to_owned()
     } else if !operation_config.command.trim().is_empty() {
-        operation_config.command.trim().to_owned()
+        short_script_label(&operation_config.command)
     } else {
         String::from("Command")
     };
@@ -392,6 +420,31 @@ pub fn script_command(config: &Value, id: &str) -> Option<ScriptCommand> {
         is_enabled: command.is_enabled,
         is_on_this_platform: command.is_on_this_platform(),
     })
+}
+
+#[cfg(test)]
+mod command_tests {
+    use super::*;
+
+    #[test]
+    fn a_command_without_is_enabled_is_enabled() {
+        let config = serde_json::json!({"commands": [
+            {"id": "a", "operationId": "script"},
+            {"id": "b", "operationId": "script", "isEnabled": false},
+            {"id": "c", "operationId": "script", "isEnabled": "no"},
+        ]});
+        assert!(command(&config, "a").unwrap().is_enabled);
+        assert!(!command(&config, "b").unwrap().is_enabled);
+        assert!(command(&config, "c").unwrap().is_enabled);
+    }
+
+    #[test]
+    fn a_script_label_is_its_first_line_cut_short() {
+        assert_eq!(short_script_label("  echo hi  "), "echo hi");
+        assert_eq!(short_script_label("echo a\necho b"), "echo a…");
+        let long = "x".repeat(70);
+        assert_eq!(short_script_label(&long), format!("{}…", "x".repeat(60)));
+    }
 }
 
 /// Whether holding the voice input hotkey records until released (Push-to-Talk).

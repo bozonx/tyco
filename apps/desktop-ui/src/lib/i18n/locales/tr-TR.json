@@ -22,9 +22,7 @@
     "removeContext": "Bağlamı kaldır",
     "restoreContext": "Bağlamı geri yükle"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Dosya ekle",
     "alertCaution": "Dikkat",
@@ -201,9 +199,7 @@
       "deselectAll": "Tüm seçimi kaldır",
       "unsupportedCommands": "Desteklenmeyen komutlar"
     },
-    "replyBlocks": {
-      "toolLabel": "Yanıt blokları"
-    }
+    "replyBlocks": { "toolLabel": "Yanıt blokları" }
   },
   "commands": {
     "advanced": "Gelişmiş",
@@ -270,6 +266,8 @@
     "launcherResult": "Eylem",
     "launcherResultGroup": "Komut sonucu",
     "launcherSelectionHint": "“Pencereye ekle”, sonucu etkin pencerede imlecin bulunduğu yere yapıştırır. Orada seçili metin varsa sonuç onun yerini alır.",
+    "llmArgumentParsing": "Girdiyi LLM ile metinden doldur",
+    "llmArgumentParsingInfo": "Araç metin değil, ayrı alanlar alır. Açıkken LLM bu alanları komutun çalıştığı metinden doldurur; böylece komut kısayol, menü, ses veya dış çağrıyla çalışabilir.",
     "llmPreTransform": "LLM ile ön metin dönüştürme",
     "llmPreTransformInfo": "Metni komuta iletmeden önce bir LLM istemiyle dönüştürür.",
     "llmPreTransformPromptInfo": "Girdi metnini komuta göndermeden önce dönüştürmek için LLM talimatı.",
@@ -646,10 +644,7 @@
       "command": "Komut metni olduğu gibi bıraktı",
       "correction": "Hata bulunamadı"
     },
-    "working": {
-      "command": "Komut çalışıyor…",
-      "correction": "Düzeltiliyor…"
-    }
+    "working": { "command": "Komut çalışıyor…", "correction": "Düzeltiliyor…" }
   },
   "settings": {
     "accessAllow": "İzin Ver",
@@ -1318,9 +1313,7 @@
     "translationVoiceCommand": "Sesli komut",
     "translationVoiceCommandInfo": "Çeviri komutunu sesli komutlara dahil eder („[dil] çevir”)."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Editöre ekle"
-  },
+  "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
     "auto": "Sistem dili",
     "dark": "Koyu",
@@ -1496,11 +1489,7 @@
     "clickToFocus": "Devam etmek için tıklayın",
     "moveOverlay": "Taşımak için sürükleyin",
     "cyclePosition": "Konum: {position} (Alt+P)",
-    "position": {
-      "center": "Orta",
-      "right": "Sağ",
-      "bottomRight": "Sağ alt"
-    },
+    "position": { "center": "Orta", "right": "Sağ", "bottomRight": "Sağ alt" },
     "collapseRecording": "Kayıt çubuğunu daralt",
     "expandRecording": "Kayıt çubuğunu genişlet"
   },
@@ -1554,9 +1543,7 @@
     "valueNotSet": "Bu cihazda değer yok: onu kullanan komutlar çalışmaz",
     "valuePlaceholder": "Bir yol, adres veya başka bir metin"
   },
-  "favorites": {
-    "noMatches": "Eşleşen favori yok"
-  },
+  "favorites": { "noMatches": "Eşleşen favori yok" },
   "replyBlocks": {
     "insertIntoWindow": "Pencereye ekle",
     "insertIntoEditor": "Düzenleyiciye",
