@@ -242,7 +242,9 @@ function translationSystem(
   glossary: GlossaryEntry[]
 ): string {
   return [
-    'Translate faithfully while preserving meaning, tone, structure and formatting.',
+    'Translate faithfully while preserving meaning and tone. Translate only natural-language text; preserve all source formatting and document structure.',
+    'Preserve Markdown syntax exactly: heading levels, emphasis markers, strikethrough, blockquotes, list markers and numbering, task checkboxes, tables and separators, links, images, and code fences with their language tags. Keep line breaks, blank lines, indentation and whitespace used for formatting. Do not remove, normalize or render markup, and do not add formatting or wrap the translation in a new code fence.',
+    'Keep code blocks, inline code, URLs, link destinations, placeholders, HTML tags and attributes unchanged. Translate human-readable link labels and image descriptions while preserving their surrounding syntax. During correction, restore any source formatting missing from the translation.',
     options.sourceLanguage && options.sourceLanguage !== 'auto'
       ? `Source language: ${translationLanguageLabel(options.sourceLanguage, 'en')} (${options.sourceLanguage}).`
       : '',
