@@ -77,8 +77,8 @@
               <LiveTranscript
                 v-if="!isCapturingTextPhase"
                 class="voice-live-compact"
-                :committed="voice.liveTranscript.committed"
-                :draft="voice.liveTranscript.draft"
+                :committed="displayTranscript.committed"
+                :draft="displayTranscript.draft"
               />
             </section>
 
@@ -102,8 +102,8 @@
               <LiveTranscript
                 v-else-if="isCapturingTextPhase"
                 class="voice-live"
-                :committed="voice.liveTranscript.committed"
-                :draft="voice.liveTranscript.draft"
+                :committed="displayTranscript.committed"
+                :draft="displayTranscript.draft"
               />
               <VoiceCommandCatalog
                 v-else
@@ -388,6 +388,26 @@ const isCapturingTextPhase = computed(
     !voice.activeParameter
 )
 
+const displayTranscript = computed(() => {
+  const { committed, draft } = voice.liveTranscript
+  const offset =
+    voice.activeCandidate?.textOffset ??
+    voice.resolution.parameterChoices?.[0]?.textOffset ??
+    0
+  if (!offset) return { committed, draft }
+  if (committed.length >= offset) {
+    return {
+      committed: committed.slice(offset).trimStart(),
+      draft,
+    }
+  }
+  const rest = offset - committed.length
+  return {
+    committed: '',
+    draft: draft.slice(rest).trimStart(),
+  }
+})
+
 watch(
   () =>
     [
@@ -648,26 +668,46 @@ onUnmounted(() => {
 }
 
 .voice-listening-header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  display: flex;
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-xs) var(--space-sm);
   border-bottom: 1px solid var(--app-border-subtle);
+  min-width: 0;
 }
 
 .voice-listening-status {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
+  align-items: center;
+  gap: var(--space-sm);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.voice-listening-status .voice-chosen {
+  flex: 0 1 auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  justify-content: flex-end;
+}
+
+.voice-listening-status .voice-chosen > * {
+  flex-shrink: 0;
+}
+
+.voice-listening-status .voice-breadcrumb-cmd {
+  flex-shrink: 1;
   min-width: 0;
 }
 
 .voice-live-compact {
-  min-height: 2.5rem;
-  max-height: 4.5rem;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  flex: 0 1 40%;
+  min-width: 0;
+  max-height: 2.25rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .voice-listening-body {
