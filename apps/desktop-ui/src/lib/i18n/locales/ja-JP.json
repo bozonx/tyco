@@ -22,7 +22,9 @@
     "removeContext": "コンテキストを削除",
     "restoreContext": "コンテキストを復元"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "ファイルを添付",
     "alertCaution": "注意",
@@ -199,7 +201,9 @@
       "deselectAll": "すべて選択解除",
       "unsupportedCommands": "サポートされていないコマンド"
     },
-    "replyBlocks": { "toolLabel": "返答ブロック" }
+    "replyBlocks": {
+      "toolLabel": "返答ブロック"
+    }
   },
   "commands": {
     "advanced": "高度な設定",
@@ -642,7 +646,10 @@
       "command": "コマンドによるテキストの変更はありませんでした",
       "correction": "修正箇所は見つかりませんでした"
     },
-    "working": { "command": "コマンドを実行中…", "correction": "校正中…" }
+    "working": {
+      "command": "コマンドを実行中…",
+      "correction": "校正中…"
+    }
   },
   "settings": {
     "accessAllow": "許可",
@@ -1311,7 +1318,9 @@
     "translationVoiceCommand": "音声コマンド",
     "translationVoiceCommandInfo": "音声コマンドに翻訳コマンドを含めます（「[言語]に翻訳」）。"
   },
-  "shortcuts": { "insertIntoEditor": "エディターに挿入" },
+  "shortcuts": {
+    "insertIntoEditor": "エディターに挿入"
+  },
   "theme": {
     "auto": "システム設定に従う",
     "dark": "ダーク",
@@ -1449,7 +1458,9 @@
     "title": "音声コマンド",
     "missingSelection": "選択されたテキストが必要です。",
     "phrasesPlaceholder": "フレーズの例（1行に1つ）",
-    "parameterMissing": "コマンド名の横でパラメーターの値を選択してください。"
+    "parameterMissing": "コマンド名の横でパラメーターの値を選択してください。",
+    "phaseAwaitingParameter": "{parameter} を話してください...",
+    "backToCommands": "すべてのコマンド"
   },
   "voiceGrammar": {
     "languages": {
@@ -1485,7 +1496,11 @@
     "clickToFocus": "クリックして続行",
     "moveOverlay": "ドラッグして移動",
     "cyclePosition": "位置：{position} (Alt+P)",
-    "position": { "center": "中央", "right": "右", "bottomRight": "右下" },
+    "position": {
+      "center": "中央",
+      "right": "右",
+      "bottomRight": "右下"
+    },
     "collapseRecording": "録音バーを折りたたむ",
     "expandRecording": "録音バーを展開"
   },
@@ -1539,7 +1554,9 @@
     "valueNotSet": "このデバイスに値がありません: この変数を使うコマンドは実行されません",
     "valuePlaceholder": "パス、アドレス、その他のテキスト"
   },
-  "favorites": { "noMatches": "一致するお気に入りがありません" },
+  "favorites": {
+    "noMatches": "一致するお気に入りがありません"
+  },
   "replyBlocks": {
     "insertIntoWindow": "ウィンドウに挿入",
     "insertIntoEditor": "エディタへ",

@@ -22,7 +22,9 @@
     "removeContext": "Мәтінмәнді алып тастау",
     "restoreContext": "Мәтінмәнді қалпына келтіру"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Файл тіркеу",
     "alertCaution": "Абайлаңыз",
@@ -199,7 +201,9 @@
       "deselectAll": "Барлығын алып тастау",
       "unsupportedCommands": "Қолдау көрсетілмейтін командалар"
     },
-    "replyBlocks": { "toolLabel": "Жауап нұсқалары" }
+    "replyBlocks": {
+      "toolLabel": "Жауап нұсқалары"
+    }
   },
   "commands": {
     "advanced": "Қосымша",
@@ -642,7 +646,10 @@
       "command": "Команда мәтінді өзгертпей қалдырды",
       "correction": "Қате табылмады"
     },
-    "working": { "command": "Команда орындалуда…", "correction": "Түзетілуде…" }
+    "working": {
+      "command": "Команда орындалуда…",
+      "correction": "Түзетілуде…"
+    }
   },
   "settings": {
     "accessAllow": "Рұқсат ету",
@@ -1311,7 +1318,9 @@
     "translationVoiceCommand": "Дауыстық пәрмен",
     "translationVoiceCommandInfo": "Аудару пәрменін дауыстық пәрмендерге қосады («[тіл] аудар»)."
   },
-  "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
+  "shortcuts": {
+    "insertIntoEditor": "Редакторға кірістіру"
+  },
   "theme": {
     "auto": "Жүйедегідей",
     "dark": "Қараңғы",
@@ -1449,7 +1458,9 @@
     "title": "Дауыстық командалар",
     "missingSelection": "Бөліп көрсетілген мәтін қажет.",
     "phrasesPlaceholder": "Үлгі фразалар, әр жолға біреуден",
-    "parameterMissing": "Команда атауының жанынан параметр мәнін таңдаңыз."
+    "parameterMissing": "Команда атауының жанынан параметр мәнін таңдаңыз.",
+    "phaseAwaitingParameter": "Say {parameter}...",
+    "backToCommands": "All commands"
   },
   "voiceGrammar": {
     "languages": {
@@ -1543,7 +1554,9 @@
     "valueNotSet": "Бұл құрылғыда мән жоқ: оны қолданатын командалар орындалмайды",
     "valuePlaceholder": "Жол, мекенжай немесе басқа мәтін"
   },
-  "favorites": { "noMatches": "Сәйкес келетін фавориттер жоқ" },
+  "favorites": {
+    "noMatches": "Сәйкес келетін фавориттер жоқ"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Терезеге кірістіру",
     "insertIntoEditor": "Редакторға",

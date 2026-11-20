@@ -22,7 +22,9 @@
     "removeContext": "Kontextus eltávolítása",
     "restoreContext": "Kontextus visszaállítása"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Fájl csatolása",
     "alertCaution": "Vigyázat",
@@ -199,7 +201,9 @@
       "deselectAll": "Kijelölés törlése",
       "unsupportedCommands": "Nem támogatott parancsok"
     },
-    "replyBlocks": { "toolLabel": "Válaszblokkok" }
+    "replyBlocks": {
+      "toolLabel": "Válaszblokkok"
+    }
   },
   "commands": {
     "advanced": "Speciális",
@@ -642,7 +646,10 @@
       "command": "A parancs változatlanul hagyta a szöveget",
       "correction": "Nem található hiba"
     },
-    "working": { "command": "A parancs fut…", "correction": "Javítás…" }
+    "working": {
+      "command": "A parancs fut…",
+      "correction": "Javítás…"
+    }
   },
   "settings": {
     "accessAllow": "Engedélyezés",
@@ -1311,7 +1318,9 @@
     "translationVoiceCommand": "Hangparancs",
     "translationVoiceCommandInfo": "Bekapcsolja a fordítási parancsot a hangparancsok közé („fordítsd le [nyelv] nyelvre”)."
   },
-  "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
+  "shortcuts": {
+    "insertIntoEditor": "Beillesztés a szerkesztőbe"
+  },
   "theme": {
     "auto": "Rendszer szerint",
     "dark": "Sötét",
@@ -1449,7 +1458,9 @@
     "title": "Hangparancsok",
     "missingSelection": "Kijelölt szöveg szükséges.",
     "phrasesPlaceholder": "Példamondatok, soronként egy",
-    "parameterMissing": "Válassza ki a paraméter értékét a parancs neve mellett."
+    "parameterMissing": "Válassza ki a paraméter értékét a parancs neve mellett.",
+    "phaseAwaitingParameter": "Mondja: {parameter}...",
+    "backToCommands": "Összes parancs"
   },
   "voiceGrammar": {
     "languages": {
@@ -1543,7 +1554,9 @@
     "valueNotSet": "Nincs érték ezen az eszközön: az ezt használó parancsok nem futnak",
     "valuePlaceholder": "Útvonal, cím vagy más szöveg"
   },
-  "favorites": { "noMatches": "Nincsenek egyező kedvencek" },
+  "favorites": {
+    "noMatches": "Nincsenek egyező kedvencek"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Beszúrás az ablakba",
     "insertIntoEditor": "A szerkesztőbe",

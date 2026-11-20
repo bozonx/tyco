@@ -32,6 +32,24 @@ export const voiceParameters = (
     command.operationConfig
   )
 
+export const parameterDisplayLabel = (
+  parameter: OperationCommandParameter,
+  t: Translate
+): string =>
+  parameter.labelKey ? t(parameter.labelKey) : (parameter.label ?? parameter.name)
+
+export const parameterValueDisplayLabel = (
+  parameter: OperationCommandParameter,
+  value: string,
+  t: Translate
+): string => {
+  if (parameter.valueLabelKey) return t(parameter.valueLabelKey(value))
+  const opt = parameter.options?.find((item) => item.value === value)
+  if (opt?.labelKey) return t(opt.labelKey)
+  if (opt?.label) return opt.label
+  return value
+}
+
 /** The values a parameter can take, to pick one by hand */
 export const voiceParameterOptions = (
   parameter: OperationCommandParameter,
@@ -39,7 +57,7 @@ export const voiceParameterOptions = (
 ): { id: string; name: string }[] =>
   parameterValues(parameter).map((value) => ({
     id: value,
-    name: t(parameter.valueLabelKey(value)),
+    name: parameterValueDisplayLabel(parameter, value, t),
   }))
 
 /** The named values of the parameters of the command, as they are shown */
@@ -51,7 +69,7 @@ export const voiceParameterLabels = (
 ): string[] =>
   voiceParameters(command, operations).flatMap((parameter) => {
     const value = parameters[parameter.name]
-    return value ? [t(parameter.valueLabelKey(value))] : []
+    return value ? [parameterValueDisplayLabel(parameter, value, t)] : []
   })
 
 /**
@@ -81,7 +99,9 @@ export const voiceCommandPhrases = (
     : key
       ? grammarVariants(rawMessage(t, key, parameter.name)).slice(0, 1)
       : []
-  const placeholder = t(parameter.placeholderKey)
+  const placeholder = parameter.placeholderKey
+    ? t(parameter.placeholderKey)
+    : (parameter.placeholder ?? parameter.name)
   const text = t('voiceCommands.textPlaceholder')
   return [
     ...new Set(

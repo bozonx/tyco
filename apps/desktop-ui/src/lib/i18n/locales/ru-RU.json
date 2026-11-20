@@ -22,7 +22,9 @@
     "removeContext": "Убрать контекст",
     "restoreContext": "Восстановить контекст"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Прикрепить файл",
     "alertCaution": "Осторожно",
@@ -199,7 +201,9 @@
       "deselectAll": "Снять все",
       "unsupportedCommands": "Неподдерживаемые команды"
     },
-    "replyBlocks": { "toolLabel": "Варианты ответа" }
+    "replyBlocks": {
+      "toolLabel": "Варианты ответа"
+    }
   },
   "commands": {
     "advanced": "Дополнительно",
@@ -642,7 +646,10 @@
       "command": "Команда оставила текст без изменений",
       "correction": "Ошибок не найдено"
     },
-    "working": { "command": "Выполняю команду…", "correction": "Исправляю…" }
+    "working": {
+      "command": "Выполняю команду…",
+      "correction": "Исправляю…"
+    }
   },
   "settings": {
     "accessAllow": "Разрешено",
@@ -1311,7 +1318,9 @@
     "translationVoiceCommand": "Голосовая команда",
     "translationVoiceCommandInfo": "Включает команду перевода в голосовые команды («переведи на [язык]»)."
   },
-  "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
+  "shortcuts": {
+    "insertIntoEditor": "Вставить в редактор"
+  },
   "theme": {
     "auto": "Как в системе",
     "dark": "Темная",
@@ -1449,7 +1458,9 @@
     "title": "Голосовые команды",
     "missingSelection": "Нужен выделенный текст.",
     "phrasesPlaceholder": "Примеры фраз построчно",
-    "parameterMissing": "Выберите значение параметра рядом с названием команды."
+    "parameterMissing": "Выберите значение параметра рядом с названием команды.",
+    "phaseAwaitingParameter": "Назовите: {parameter}...",
+    "backToCommands": "Все команды"
   },
   "voiceGrammar": {
     "languages": {
@@ -1543,7 +1554,9 @@
     "valueNotSet": "Нет значения на этом устройстве: команды с этой переменной не выполняются",
     "valuePlaceholder": "Путь, адрес или другой текст"
   },
-  "favorites": { "noMatches": "Ничего не найдено" },
+  "favorites": {
+    "noMatches": "Ничего не найдено"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Вставить в окно",
     "insertIntoEditor": "В редактор",

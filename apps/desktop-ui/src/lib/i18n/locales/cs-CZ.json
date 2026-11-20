@@ -22,7 +22,9 @@
     "removeContext": "Odebrat kontext",
     "restoreContext": "Obnovit kontext"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Přiložit soubor",
     "alertCaution": "Pozor",
@@ -199,7 +201,9 @@
       "deselectAll": "Zrušit výběr",
       "unsupportedCommands": "Nepodporované příkazy"
     },
-    "replyBlocks": { "toolLabel": "Varianty odpovědí" }
+    "replyBlocks": {
+      "toolLabel": "Varianty odpovědí"
+    }
   },
   "commands": {
     "advanced": "Pokročilé",
@@ -628,7 +632,10 @@
     "cancelled": "Zrušeno",
     "done": "Hotovo",
     "emptyResult": "Model vrátil prázdný výsledek",
-    "failed": { "command": "Příkaz selhal", "correction": "Oprava selhala" },
+    "failed": {
+      "command": "Příkaz selhal",
+      "correction": "Oprava selhala"
+    },
     "focusChanged": "Mezitím se změnilo okno, proto byl výsledek zkopírován do schránky",
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
@@ -639,7 +646,10 @@
       "command": "Příkaz ponechal text beze změny",
       "correction": "Nenalezeny žádné chyby"
     },
-    "working": { "command": "Spouští se příkaz…", "correction": "Opravuje se…" }
+    "working": {
+      "command": "Spouští se příkaz…",
+      "correction": "Opravuje se…"
+    }
   },
   "settings": {
     "accessAllow": "Povolit",
@@ -1308,7 +1318,9 @@
     "translationVoiceCommand": "Hlasový příkaz",
     "translationVoiceCommandInfo": "Zahrne příkaz překladu do hlasových příkazů („přelož do [jazyk]“)."
   },
-  "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
+  "shortcuts": {
+    "insertIntoEditor": "Vložit do editoru"
+  },
   "theme": {
     "auto": "Podle systému",
     "dark": "Tmavý",
@@ -1446,7 +1458,9 @@
     "title": "Hlasové příkazy",
     "missingSelection": "Je vyžadován výběr textu.",
     "phrasesPlaceholder": "Příklady frází, jedna na řádek",
-    "parameterMissing": "Vyberte hodnotu parametru vedle názvu příkazu."
+    "parameterMissing": "Vyberte hodnotu parametru vedle názvu příkazu.",
+    "phaseAwaitingParameter": "Řekněte {parameter}...",
+    "backToCommands": "Všechny příkazy"
   },
   "voiceGrammar": {
     "languages": {
@@ -1540,7 +1554,9 @@
     "valueNotSet": "Žádná hodnota na tomto zařízení: příkazy, které ji používají, se nespustí",
     "valuePlaceholder": "Cesta, adresa nebo jiný text"
   },
-  "favorites": { "noMatches": "Žádné odpovídající oblíbené" },
+  "favorites": {
+    "noMatches": "Žádné odpovídající oblíbené"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Vložit do okna",
     "insertIntoEditor": "Do editoru",

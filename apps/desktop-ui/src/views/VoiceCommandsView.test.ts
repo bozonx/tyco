@@ -26,6 +26,9 @@ const mocks = vi.hoisted(() => ({
   cancelRun: vi.fn(),
   run: vi.fn(),
   chooseCommand: vi.fn(),
+  pinCommand: vi.fn(),
+  pinParameter: vi.fn(),
+  clearParameter: vi.fn(),
   choose: vi.fn(),
   setParameter: vi.fn(),
   setContext: vi.fn(),
@@ -230,9 +233,10 @@ describe('separate voice command overlay', () => {
     expect(wrapper.findAll('.voice-entry.is-marked')).toHaveLength(1)
     wrapper.unmount()
   })
-  it('lets the user pick a command only after recording is finished', async () => {
+  it('lets the user pin a command during recording and pick after recording is finished', async () => {
     const wrapper = mountView()
     await entry(wrapper, 'command-0').trigger('click')
+    expect(mocks.pinCommand).toHaveBeenCalledWith('command-0')
     expect(mocks.chooseCommand).not.toHaveBeenCalled()
     voice.stage = 'review'
     await flushPromises()

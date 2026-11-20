@@ -22,7 +22,9 @@
     "removeContext": "Kontext entfernen",
     "restoreContext": "Kontext wiederherstellen"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Datei anhängen",
     "alertCaution": "Vorsicht",
@@ -199,7 +201,9 @@
       "deselectAll": "Auswahl aufheben",
       "unsupportedCommands": "Nicht unterstützte Befehle"
     },
-    "replyBlocks": { "toolLabel": "Antwortblöcke" }
+    "replyBlocks": {
+      "toolLabel": "Antwortblöcke"
+    }
   },
   "commands": {
     "advanced": "Erweitert",
@@ -1314,7 +1318,9 @@
     "translationVoiceCommand": "Sprachbefehl",
     "translationVoiceCommandInfo": "Fügt den Übersetzungsbefehl zu den Sprachbefehlen hinzu („übersetze auf [Sprache]“)."
   },
-  "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
+  "shortcuts": {
+    "insertIntoEditor": "In den Editor einfügen"
+  },
   "theme": {
     "auto": "Wie im System",
     "dark": "Dunkel",
@@ -1452,7 +1458,9 @@
     "title": "Sprachbefehle",
     "missingSelection": "Ausgewählter Text erforderlich.",
     "phrasesPlaceholder": "Beispielphrasen, eine pro Zeile",
-    "parameterMissing": "Wählen Sie den Parameterwert neben dem Befehlsnamen."
+    "parameterMissing": "Wählen Sie den Parameterwert neben dem Befehlsnamen.",
+    "phaseAwaitingParameter": "Nennen Sie {parameter}...",
+    "backToCommands": "Alle Befehle"
   },
   "voiceGrammar": {
     "languages": {
@@ -1546,7 +1554,9 @@
     "valueNotSet": "Kein Wert auf diesem Gerät: Befehle, die sie nutzen, werden nicht ausgeführt",
     "valuePlaceholder": "Ein Pfad, eine Adresse oder anderer Text"
   },
-  "favorites": { "noMatches": "Keine passenden Favoriten" },
+  "favorites": {
+    "noMatches": "Keine passenden Favoriten"
+  },
   "replyBlocks": {
     "insertIntoWindow": "In Fenster einfügen",
     "insertIntoEditor": "In Editor",

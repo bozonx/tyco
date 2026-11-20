@@ -22,7 +22,9 @@
     "removeContext": "Remove context",
     "restoreContext": "Restore context"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Attach file",
     "alertCaution": "Caution",
@@ -199,7 +201,9 @@
       "deselectAll": "Deselect all",
       "unsupportedCommands": "Unsupported commands"
     },
-    "replyBlocks": { "toolLabel": "Reply Blocks" }
+    "replyBlocks": {
+      "toolLabel": "Reply Blocks"
+    }
   },
   "commands": {
     "advanced": "Advanced",
@@ -1314,7 +1318,9 @@
     "translationVoiceCommand": "Voice command",
     "translationVoiceCommandInfo": "Includes the translation command in voice commands (\"translate to [language]\")."
   },
-  "shortcuts": { "insertIntoEditor": "Insert into editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Insert into editor"
+  },
   "theme": {
     "auto": "System default",
     "dark": "Dark",
@@ -1452,7 +1458,9 @@
     "title": "Voice commands",
     "missingSelection": "Selection is required.",
     "phrasesPlaceholder": "Sample phrases, one per line",
-    "parameterMissing": "Choose the parameter value next to the command name."
+    "parameterMissing": "Choose the parameter value next to the command name.",
+    "phaseAwaitingParameter": "Say {parameter}...",
+    "backToCommands": "All commands"
   },
   "voiceGrammar": {
     "languages": {
@@ -1546,7 +1554,9 @@
     "valueNotSet": "No value on this device: commands that use it do not run",
     "valuePlaceholder": "A path, an address or other text"
   },
-  "favorites": { "noMatches": "No matching favorites" },
+  "favorites": {
+    "noMatches": "No matching favorites"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Insert into window",
     "insertIntoEditor": "To editor",

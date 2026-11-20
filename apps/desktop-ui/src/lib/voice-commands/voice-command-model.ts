@@ -11,6 +11,7 @@ import {
   type LiveTranscriptState,
 } from '../stt/live-transcript'
 import type { OperationLookup } from '../operations/operation-types'
+import { openCommandParameters } from '../operations/command-parameters'
 import type { TimerDependencies } from '../timers/single-timer'
 import {
   AUTO_STOP_WARNING_MS,
@@ -102,6 +103,8 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   )
   const inputText = ref('')
   const selected = shallowRef<VoiceCandidate>()
+  const pinnedCommandId = ref<string | undefined>(undefined)
+  const pinnedParameters = ref<Record<string, string>>({})
   /** A message key (`voiceCommands.*`, `toast.*`) or a message as it came */
   const error = ref('')
   const errorCause = shallowRef<unknown>(undefined)
@@ -155,16 +158,82 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     if (stage.value === 'review' || stage.value === 'running') {
       return selected.value
     }
-    return (
-      resolution.value.candidates[0] ?? resolution.value.parameterChoices?.[0]
-    )
+    const candidate = resolution.value.candidates[0]
+    if (candidate) {
+      if (
+        pinnedCommandId.value &&
+        pinnedCommandId.value !== candidate.commandId
+      ) {
+        return {
+          commandId: pinnedCommandId.value,
+          text: activeTranscriptText.value,
+          parameters: { ...pinnedParameters.value },
+          consumedWordCount: 0,
+          textOffset: 0,
+          commandOffset: 0,
+        }
+      }
+      return {
+        ...candidate,
+        parameters: { ...candidate.parameters, ...pinnedParameters.value },
+      }
+    }
+    if (pinnedCommandId.value) {
+      return {
+        commandId: pinnedCommandId.value,
+        text: activeTranscriptText.value,
+        parameters: { ...pinnedParameters.value },
+        consumedWordCount: 0,
+        textOffset: 0,
+        commandOffset: 0,
+      }
+    }
+    return undefined
   })
-  const hasMatchedCommand = computed(() => Boolean(activeCandidate.value))
-  const recordingPhase = computed<'awaiting-command' | 'capturing-args'>(() => {
+  const resolvedCommandId = computed(
+    () =>
+      pinnedCommandId.value ??
+      resolution.value.candidates[0]?.commandId ??
+      resolution.value.parameterChoices?.[0]?.commandId
+  )
+  const activeCommand = computed(() => {
+    if (stage.value === 'review' || stage.value === 'running') {
+      return command.value
+    }
+    return findCommand(resolvedCommandId.value) ?? command.value
+  })
+  const activeParameters = computed<Record<string, string>>(() => {
+    if (stage.value === 'review' || stage.value === 'running') {
+      return selected.value?.parameters ?? {}
+    }
+    return {
+      ...(resolution.value.candidates[0]?.parameters ?? {}),
+      ...pinnedParameters.value,
+    }
+  })
+  const activeOpenParameters = computed(() =>
+    activeCommand.value
+      ? openCommandParameters(
+          deps.operations.get(activeCommand.value.operationId),
+          activeCommand.value.operationConfig
+        )
+      : []
+  )
+  const activeParameter = computed(() =>
+    activeOpenParameters.value.find(
+      (param) => !activeParameters.value[param.name]
+    )
+  )
+  const hasMatchedCommand = computed(() => Boolean(activeCommand.value))
+  const recordingPhase = computed<
+    'awaiting-command' | 'awaiting-parameter' | 'capturing-args'
+  >(() => {
     if (stage.value !== 'recording' && stage.value !== 'finishing') {
       return 'awaiting-command'
     }
-    return hasMatchedCommand.value ? 'capturing-args' : 'awaiting-command'
+    if (!activeCommand.value) return 'awaiting-command'
+    if (activeParameter.value) return 'awaiting-parameter'
+    return 'capturing-args'
   })
   const catalogRoutes = computed(() =>
     compileVoiceRoutes(commands.value, deps.operations, true)
@@ -175,9 +244,6 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     )
   )
   const command = computed(() => findCommand(selected.value?.commandId))
-  const activeCommand = computed(
-    () => findCommand(activeCandidate.value?.commandId) ?? command.value
-  )
   const inputIssue = computed(() =>
     command.value
       ? voiceInputIssue(
@@ -300,6 +366,42 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     error.value = ''
   }
 
+  /** Pins a command during live recording (or clears it when undefined) */
+  const pinCommand = (commandId: string | undefined) => {
+    if (stage.value !== 'recording' && stage.value !== 'finishing') return
+    pinnedCommandId.value = commandId
+    pinnedParameters.value = {}
+  }
+
+  /** Pins a parameter value during live recording */
+  const pinParameter = (name: string, value: string) => {
+    if (stage.value === 'review') {
+      setParameter(name, value)
+      return
+    }
+    if (stage.value !== 'recording' && stage.value !== 'finishing') return
+    if (!pinnedCommandId.value && activeCommand.value) {
+      pinnedCommandId.value = activeCommand.value.id
+    }
+    pinnedParameters.value = { ...pinnedParameters.value, [name]: value }
+  }
+
+  /** Clears a parameter value so it can be re-selected */
+  const clearParameter = (name: string) => {
+    if (stage.value === 'review' && selected.value) {
+      const next = { ...selected.value.parameters }
+      delete next[name]
+      selected.value = { ...selected.value, parameters: next }
+      error.value = ''
+      return
+    }
+    if (stage.value === 'recording' || stage.value === 'finishing') {
+      const next = { ...pinnedParameters.value }
+      delete next[name]
+      pinnedParameters.value = next
+    }
+  }
+
   /** The same command with the same parameters */
   const isSameCall = (a: VoiceCandidate, b: VoiceCandidate | undefined) =>
     Boolean(b) &&
@@ -386,6 +488,8 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     interruption = undefined
     // Preserve the previous text until new recognition explicitly replaces it.
     selected.value = undefined
+    pinnedCommandId.value = undefined
+    pinnedParameters.value = {}
     liveTranscript.value = createLiveTranscriptState()
     const pending = (async () => {
       await stopping
@@ -461,6 +565,8 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     transcript.value = ''
     inputText.value = ''
     selected.value = undefined
+    pinnedCommandId.value = undefined
+    pinnedParameters.value = {}
     liveTranscript.value = createLiveTranscriptState()
     const pending = starting
     stopping = stopping
@@ -479,6 +585,10 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     hasMatchedCommand,
     activeCandidate,
     activeCommand,
+    activeParameters,
+    activeParameter,
+    pinnedCommandId,
+    pinnedParameters,
     transcript,
     liveTranscript,
     inputText,
@@ -499,6 +609,9 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     choose,
     chooseCommand,
     setParameter,
+    pinCommand,
+    pinParameter,
+    clearParameter,
     context,
     setContext: (ctx?: VoiceCommandContext) => {
       explicitContext.value = ctx

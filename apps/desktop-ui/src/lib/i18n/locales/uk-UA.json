@@ -22,7 +22,9 @@
     "removeContext": "Прибрати контекст",
     "restoreContext": "Відновити контекст"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Прикріпити файл",
     "alertCaution": "Обережно",
@@ -199,7 +201,9 @@
       "deselectAll": "Зняти все",
       "unsupportedCommands": "Непідтримувані команди"
     },
-    "replyBlocks": { "toolLabel": "Варіанти відповіді" }
+    "replyBlocks": {
+      "toolLabel": "Варіанти відповіді"
+    }
   },
   "commands": {
     "advanced": "Додатково",
@@ -642,7 +646,10 @@
       "command": "Команда залишила текст без змін",
       "correction": "Помилок не знайдено"
     },
-    "working": { "command": "Виконання команди…", "correction": "Виправлення…" }
+    "working": {
+      "command": "Виконання команди…",
+      "correction": "Виправлення…"
+    }
   },
   "settings": {
     "accessAllow": "Дозволити",
@@ -1311,7 +1318,9 @@
     "translationVoiceCommand": "Голосова команда",
     "translationVoiceCommandInfo": "Включає команду перекладу в голосові команди («переклади на [мову]»)."
   },
-  "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
+  "shortcuts": {
+    "insertIntoEditor": "Вставити в редактор"
+  },
   "theme": {
     "auto": "Як у системі",
     "dark": "Темна",
@@ -1449,7 +1458,9 @@
     "title": "Голосові команди",
     "missingSelection": "Потрібен виділений текст.",
     "phrasesPlaceholder": "Приклади фраз построково",
-    "parameterMissing": "Виберіть значення параметра поруч із назвою команди."
+    "parameterMissing": "Виберіть значення параметра поруч із назвою команди.",
+    "phaseAwaitingParameter": "Назвіть: {parameter}...",
+    "backToCommands": "Усі команди"
   },
   "voiceGrammar": {
     "languages": {
@@ -1543,7 +1554,9 @@
     "valueNotSet": "Немає значення на цьому пристрої: команди з цією змінною не виконуються",
     "valuePlaceholder": "Шлях, адреса або інший текст"
   },
-  "favorites": { "noMatches": "Немає відповідних елементів вибраного" },
+  "favorites": {
+    "noMatches": "Немає відповідних елементів вибраного"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Вставити у вікно",
     "insertIntoEditor": "В редактор",

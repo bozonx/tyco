@@ -22,7 +22,9 @@
     "removeContext": "移除上下文",
     "restoreContext": "恢复上下文"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "添加附件",
     "alertCaution": "小心",
@@ -199,7 +201,9 @@
       "deselectAll": "取消全选",
       "unsupportedCommands": "不支持的命令"
     },
-    "replyBlocks": { "toolLabel": "回复块" }
+    "replyBlocks": {
+      "toolLabel": "回复块"
+    }
   },
   "commands": {
     "advanced": "高级",
@@ -628,7 +632,10 @@
     "cancelled": "已取消",
     "done": "已完成",
     "emptyResult": "模型返回了空结果",
-    "failed": { "command": "命令执行失败", "correction": "纠错失败" },
+    "failed": {
+      "command": "命令执行失败",
+      "correction": "纠错失败"
+    },
     "focusChanged": "在此期间活动窗口已更改，结果已复制到剪贴板",
     "noSelection": "未选中任何内容",
     "noTarget": "没有具有焦点的应用程序窗口",
@@ -639,7 +646,10 @@
       "command": "命令未对文本做任何更改",
       "correction": "未发现错误"
     },
-    "working": { "command": "正在运行命令…", "correction": "正在纠错…" }
+    "working": {
+      "command": "正在运行命令…",
+      "correction": "正在纠错…"
+    }
   },
   "settings": {
     "accessAllow": "允许",
@@ -1308,7 +1318,9 @@
     "translationVoiceCommand": "语音命令",
     "translationVoiceCommandInfo": "在语音命令中包含翻译命令（“翻译成[语言]”）。"
   },
-  "shortcuts": { "insertIntoEditor": "插入到编辑器" },
+  "shortcuts": {
+    "insertIntoEditor": "插入到编辑器"
+  },
   "theme": {
     "auto": "跟随系统",
     "dark": "深色",
@@ -1446,7 +1458,9 @@
     "title": "语音命令",
     "missingSelection": "需要提供选中的文本。",
     "phrasesPlaceholder": "示例短语，每行一条",
-    "parameterMissing": "请在命令名称旁选择参数值。"
+    "parameterMissing": "请在命令名称旁选择参数值。",
+    "phaseAwaitingParameter": "Say {parameter}...",
+    "backToCommands": "All commands"
   },
   "voiceGrammar": {
     "languages": {
@@ -1482,7 +1496,11 @@
     "clickToFocus": "点击以继续",
     "moveOverlay": "拖动以移动",
     "cyclePosition": "位置：{position} (Alt+P)",
-    "position": { "center": "居中", "right": "右侧", "bottomRight": "右下角" },
+    "position": {
+      "center": "居中",
+      "right": "右侧",
+      "bottomRight": "右下角"
+    },
     "collapseRecording": "收起录音栏",
     "expandRecording": "展开录音栏"
   },
@@ -1536,7 +1554,9 @@
     "valueNotSet": "此设备上没有值：使用它的命令不会运行",
     "valuePlaceholder": "路径、地址或其他文本"
   },
-  "favorites": { "noMatches": "没有匹配的收藏夹" },
+  "favorites": {
+    "noMatches": "没有匹配的收藏夹"
+  },
   "replyBlocks": {
     "insertIntoWindow": "插入到窗口",
     "insertIntoEditor": "到编辑器",

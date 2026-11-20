@@ -27,19 +27,44 @@ export function parameterVariants(
   locale: Locale,
   parameter: OperationCommandParameter
 ): Record<string, string> {
-  const value = localeMessage(locale, parameter.voiceValuesKey)
-  if (!isRecord(value)) return {}
-  return Object.fromEntries(
-    Object.entries(value).filter(
-      (entry): entry is [string, string] => typeof entry[1] === 'string'
+  if (parameter.voiceValuesKey) {
+    const value = localeMessage(locale, parameter.voiceValuesKey)
+    if (!isRecord(value)) return {}
+    return Object.fromEntries(
+      Object.entries(value).filter(
+        (entry): entry is [string, string] => typeof entry[1] === 'string'
+      )
     )
-  )
+  }
+  if (!parameter.options?.length) return {}
+  const result: Record<string, string> = {}
+  for (const opt of parameter.options) {
+    const parts: string[] = []
+    if (opt.voiceAliases?.length) parts.push(...opt.voiceAliases)
+    if (opt.voiceAliasesKey) {
+      const msg = localeMessage(locale, opt.voiceAliasesKey)
+      if (typeof msg === 'string' && msg.trim()) parts.push(msg)
+    }
+    if (!parts.length) {
+      if (opt.labelKey) {
+        const msg = localeMessage(locale, opt.labelKey)
+        if (typeof msg === 'string' && msg.trim()) parts.push(msg)
+      } else if (opt.label?.trim()) {
+        parts.push(opt.label.trim())
+      } else {
+        parts.push(opt.value)
+      }
+    }
+    result[opt.value] = parts.join(';')
+  }
+  return result
 }
 
 /** The values the parameter can take */
-export const parameterValues = (
-  parameter: OperationCommandParameter
-): string[] => Object.keys(parameterVariants(messages['en-US'], parameter))
+export const parameterValues = (parameter: OperationCommandParameter): string[] =>
+  parameter.options?.length
+    ? parameter.options.map((opt) => opt.value)
+    : Object.keys(parameterVariants(messages['en-US'], parameter))
 
 const isSet = (value: unknown) =>
   typeof value === 'string' ? Boolean(value.trim()) : value !== undefined

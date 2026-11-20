@@ -130,6 +130,52 @@ export interface OperationConfigPreview {
   samples?: string[]
 }
 
+export interface CommandParameterOption {
+  value: string
+  label?: string
+  labelKey?: string
+  voiceAliases?: readonly string[]
+  voiceAliasesKey?: string
+}
+
+export interface CommandParameterContext {
+  config: Record<string, unknown>
+  selectedParameters: Readonly<Record<string, string>>
+  signal?: AbortSignal
+}
+
+export type ParameterResolveResult =
+  | {
+      matched: true
+      value: string
+      displayLabel?: string
+      consumedText: string
+    }
+  | { matched: false }
+
+export interface OperationCommandParameter {
+  /** Key in command config and in `call.input` */
+  name: string
+  /** Description for LLM / external callers */
+  description: string
+  label?: string
+  labelKey?: string
+  placeholder?: string
+  placeholderKey?: string
+  required?: boolean
+  /** Static list of selectable options with optional voice aliases */
+  options?: readonly CommandParameterOption[]
+  /** Optional dynamic options provider */
+  getOptions?(
+    context: CommandParameterContext
+  ): readonly CommandParameterOption[] | Promise<readonly CommandParameterOption[]>
+  /** Optional custom voice parser for free-form parameter values */
+  resolveValue?(
+    tailText: string,
+    context: CommandParameterContext
+  ): ParameterResolveResult | Promise<ParameterResolveResult>
+}
+
 export interface OperationDefinition {
   /** Local to the plugin; the full id becomes `<pluginName>.<id>` */
   id: string
@@ -173,6 +219,11 @@ export interface OperationDefinition {
   defaultOutputAction?: CommandOutputAction
   /** Phrases suggested when the user creates a command for this tool */
   defaultPhrasesKey?: string
+  /**
+   * Parameters that a command may leave to its caller (voice, chat, external).
+   * Core handles step-by-step voice matching, tail discarding, and UI selection.
+   */
+  commandParameters?: readonly OperationCommandParameter[]
   /**
    * Checks settings and shows sample output in plugin settings and the command
    * editor; it must not have side effects.

@@ -35,11 +35,18 @@
                   commandLabel(voice.activeCommand)
                 }}</span>
                 <Badge
-                  v-for="label in liveParameterLabels"
-                  :key="label"
+                  v-for="item in liveParameterItems"
+                  :key="item.name"
                   tone="accent"
-                  >{{ label }}</Badge
+                  class="voice-param-chip"
+                  @click="voice.clearParameter(item.name)"
+                  >{{ item.label }}</Badge
                 >
+                <Badge v-if="voice.activeParameter" tone="neutral">{{
+                  t('voiceCommands.phaseAwaitingParameter', {
+                    parameter: parameterDisplayLabel(voice.activeParameter, t),
+                  })
+                }}</Badge>
               </div>
               <p v-else class="voice-phase-hint">
                 <AppIcon icon="mdi:microphone" size="md" aria-hidden="true" />
@@ -74,8 +81,8 @@
                   :key="parameter.name"
                   size="sm"
                   class="voice-language"
-                  :title="t(parameter.labelKey)"
-                  :aria-label="t(parameter.labelKey)"
+                  :title="parameterDisplayLabel(parameter, t)"
+                  :aria-label="parameterDisplayLabel(parameter, t)"
                   :model-value="voice.selected?.parameters[parameter.name]"
                   :options="voiceParameterOptions(parameter, t)"
                   @update:model-value="
@@ -113,7 +120,26 @@
             </template>
           </section>
 
+          <VoiceParameterPicker
+            v-if="
+              isListening &&
+              voice.activeParameter &&
+              activeParameterOptions.length
+            "
+            :parameter-label="parameterDisplayLabel(voice.activeParameter, t)"
+            :options="activeParameterOptions"
+            :selected-value="
+              voice.activeParameters[voice.activeParameter.name]
+            "
+            @pick="
+              (val) =>
+                voice.activeParameter &&
+                voice.pinParameter(voice.activeParameter.name, val)
+            "
+            @back="voice.pinCommand(undefined)"
+          />
           <VoiceCommandCatalog
+            v-else
             :commands="voice.catalog"
             :marks="marks"
             :stage="voice.stage"
@@ -199,6 +225,7 @@ import AudioWaveform from '../components/voice/AudioWaveform.vue'
 import LiveTranscript from '../components/voice/LiveTranscript.vue'
 import SttLanguagePicker from '../components/voice/SttLanguagePicker.vue'
 import VoiceCommandCatalog from '../components/voice/VoiceCommandCatalog.vue'
+import VoiceParameterPicker from '../components/voice/VoiceParameterPicker.vue'
 import { useI18n } from '../composables/use-i18n'
 import { useOverlayNav } from '../composables/use-overlay-nav'
 import useToast from '../composables/use-toast'
@@ -218,9 +245,10 @@ import { liveTranscriptText } from '../lib/stt/live-transcript'
 import type { TextControl } from '../lib/ui/text-control'
 import { matchVoiceCatalog } from '../lib/voice-commands/voice-catalog'
 import {
+  parameterDisplayLabel,
+  parameterValueDisplayLabel,
   pickVoiceCommand,
   resolveVoiceNotice,
-  voiceParameterLabels,
   voiceParameterOptions,
   voiceParameters,
 } from '../lib/voice-commands/voice-view-presenter'
@@ -301,15 +329,18 @@ const marks = computed(() =>
 
 const canRunLive = computed(() => Boolean(voice.canRunLive))
 
-const liveParameterLabels = computed(() =>
-  voice.activeCommand && voice.activeCandidate
-    ? voiceParameterLabels(
-        voice.activeCommand,
-        voice.activeCandidate.parameters,
-        tools,
-        t
-      )
-    : []
+const liveParameterItems = computed(() => {
+  if (!voice.activeCommand) return []
+  return voiceParameters(voice.activeCommand, tools).flatMap((param) => {
+    const val = voice.activeParameters[param.name]
+    return val
+      ? [{ name: param.name, label: parameterValueDisplayLabel(param, val, t) }]
+      : []
+  })
+})
+
+const activeParameterOptions = computed(() =>
+  voice.activeParameter ? voiceParameterOptions(voice.activeParameter, t) : []
 )
 
 /** The parameters of the chosen command the user can set by hand */
@@ -369,6 +400,10 @@ const canPick = (command: CommandConfig) =>
 
 /** A row picked by hand takes the recognized parameters when it has them */
 const pick = (command: CommandConfig) => {
+  if (voice.stage === 'recording' && !voice.unavailableReason(command)) {
+    voice.pinCommand(command.id)
+    return
+  }
   if (
     pickVoiceCommand(command, {
       canPick,

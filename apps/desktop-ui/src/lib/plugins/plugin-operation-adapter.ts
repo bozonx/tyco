@@ -40,6 +40,51 @@ export function createPluginOperationAdapter(
       defaultPhrasesKey: definition.defaultPhrasesKey
         ? key(definition.defaultPhrasesKey)
         : undefined,
+      commandParameters: definition.commandParameters?.map((param) => ({
+        ...param,
+        labelKey: param.labelKey ? key(param.labelKey) : undefined,
+        placeholderKey: param.placeholderKey
+          ? key(param.placeholderKey)
+          : undefined,
+        options: param.options?.map((opt) => ({
+          ...opt,
+          labelKey: opt.labelKey ? key(opt.labelKey) : undefined,
+          voiceAliasesKey: opt.voiceAliasesKey
+            ? key(opt.voiceAliasesKey)
+            : undefined,
+        })),
+        getOptions: param.getOptions
+          ? async (ctx) => {
+              check()
+              const signal = ctx.signal
+                ? AbortSignal.any([ctx.signal, lifecycle.signal])
+                : lifecycle.signal
+              const options = await param.getOptions!({ ...ctx, signal })
+              check()
+              return options.map((opt) => ({
+                ...opt,
+                labelKey: opt.labelKey ? key(opt.labelKey) : undefined,
+                voiceAliasesKey: opt.voiceAliasesKey
+                  ? key(opt.voiceAliasesKey)
+                  : undefined,
+              }))
+            }
+          : undefined,
+        resolveValue: param.resolveValue
+          ? async (tailText, ctx) => {
+              check()
+              const signal = ctx.signal
+                ? AbortSignal.any([ctx.signal, lifecycle.signal])
+                : lifecycle.signal
+              const res = await param.resolveValue!(tailText, {
+                ...ctx,
+                signal,
+              })
+              check()
+              return res
+            }
+          : undefined,
+      })),
       configFields: scopeConfigFields(id, definition.configFields),
       configPresets: lifecycle.configPresets,
       directoryFieldName: lifecycle.capabilities.includes('notes')

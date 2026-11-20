@@ -1,6 +1,7 @@
 import type { CommandEnvironment } from '../variables/command-variables'
 import type {
   OperationDefinition as SdkOperationDefinition,
+  OperationCommandParameter as SdkOperationCommandParameter,
   JsonSchema,
   OperationCall,
   OperationResult,
@@ -42,20 +43,13 @@ export interface OperationDefinition extends SdkOperationDefinition {
 }
 
 /** A setting of a command its caller gives, see `commandParameters` */
-export interface OperationCommandParameter {
-  /** The key in the config of the command and in the input of a call */
-  name: string
-  /** What the value is, for an agent and an external caller */
-  description: string
-  labelKey: string
-  /** How the parameter is shown in a sample phrase */
-  placeholderKey: string
+export interface OperationCommandParameter extends SdkOperationCommandParameter {
   /**
    * The i18n key of an object of the values, each with its spoken variants
    * separated by `;`; the keys of `en-US` are the values
    */
-  voiceValuesKey: string
-  valueLabelKey: (value: string) => string
+  voiceValuesKey?: string
+  valueLabelKey?: (value: string) => string
 }
 
 /** Who provides a tool of the registry */

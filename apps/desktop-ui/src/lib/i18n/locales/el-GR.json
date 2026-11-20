@@ -22,7 +22,9 @@
     "removeContext": "Αφαίρεση περιβάλλοντος",
     "restoreContext": "Επαναφορά περιβάλλοντος"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Επισύναψη αρχείου",
     "alertCaution": "Προσοχή",
@@ -199,7 +201,9 @@
       "deselectAll": "Αποεπιλογή όλων",
       "unsupportedCommands": "Μη υποστηριζόμενες εντολές"
     },
-    "replyBlocks": { "toolLabel": "Μπλοκ απαντήσεων" }
+    "replyBlocks": {
+      "toolLabel": "Μπλοκ απαντήσεων"
+    }
   },
   "commands": {
     "advanced": "Για προχωρημένους",
@@ -642,7 +646,10 @@
       "command": "Η εντολή άφησε το κείμενο αμετάβλητο",
       "correction": "Δεν βρέθηκαν λάθη"
     },
-    "working": { "command": "Εκτέλεση εντολής…", "correction": "Διόρθωση…" }
+    "working": {
+      "command": "Εκτέλεση εντολής…",
+      "correction": "Διόρθωση…"
+    }
   },
   "settings": {
     "accessAllow": "Να επιτρέπεται",
@@ -1311,7 +1318,9 @@
     "translationVoiceCommand": "Φωνητική εντολή",
     "translationVoiceCommandInfo": "Περιλαμβάνει την εντολή μετάφρασης στις φωνητικές εντολές («μετάφρασε στα [γλώσσα]»)."
   },
-  "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
+  "shortcuts": {
+    "insertIntoEditor": "Εισαγωγή στον επεξεργαστή"
+  },
   "theme": {
     "auto": "Όπως στο σύστημα",
     "dark": "Σκούρο",
@@ -1449,7 +1458,9 @@
     "title": "Φωνητικές εντολές",
     "missingSelection": "Απαιτείται επιλεγμένο κείμενο.",
     "phrasesPlaceholder": "Παραδείγματα φράσεων, μία ανά γραμμή",
-    "parameterMissing": "Επιλέξτε την τιμή της παραμέτρου δίπλα στο όνομα της εντολής."
+    "parameterMissing": "Επιλέξτε την τιμή της παραμέτρου δίπλα στο όνομα της εντολής.",
+    "phaseAwaitingParameter": "Πείτε {parameter}...",
+    "backToCommands": "Όλες οι εντολές"
   },
   "voiceGrammar": {
     "languages": {
@@ -1543,7 +1554,9 @@
     "valueNotSet": "Χωρίς τιμή σε αυτή τη συσκευή: οι εντολές που τη χρησιμοποιούν δεν εκτελούνται",
     "valuePlaceholder": "Μια διαδρομή, μια διεύθυνση ή άλλο κείμενο"
   },
-  "favorites": { "noMatches": "Δεν υπάρχουν αγαπημένα που να ταιριάζουν" },
+  "favorites": {
+    "noMatches": "Δεν υπάρχουν αγαπημένα που να ταιριάζουν"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Εισαγωγή στο παράθυρο",
     "insertIntoEditor": "Στον επεξεργαστή",

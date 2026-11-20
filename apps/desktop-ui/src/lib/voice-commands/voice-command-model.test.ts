@@ -542,9 +542,10 @@ it('considers command recognized during recording even when a parameter has an e
   partial('translate to Klingon Hello!')
   expect(model.resolution.value.kind).toBe('parameter-error')
   expect(model.hasMatchedCommand.value).toBe(true)
-  expect(model.recordingPhase.value).toBe('capturing-args')
+  expect(model.recordingPhase.value).toBe('awaiting-parameter')
   expect(model.activeCommand.value).toBeDefined()
-  expect(model.canRunLive.value).toBe(true)
+  expect(model.activeParameter.value?.name).toBe('language')
+  expect(model.canRunLive.value).toBe(false)
 })
 
 it('clears previous session transcript on cancel so reopening starts without active command', async () => {

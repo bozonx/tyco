@@ -22,7 +22,9 @@
     "removeContext": "Ukloni kontekst",
     "restoreContext": "Vrati kontekst"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Priloži datoteku",
     "alertCaution": "Oprez",
@@ -199,7 +201,9 @@
       "deselectAll": "Poništi odabir",
       "unsupportedCommands": "Nepodržane naredbe"
     },
-    "replyBlocks": { "toolLabel": "Blokovi odgovora" }
+    "replyBlocks": {
+      "toolLabel": "Blokovi odgovora"
+    }
   },
   "commands": {
     "advanced": "Napredno",
@@ -1314,7 +1318,9 @@
     "translationVoiceCommand": "Glasovna naredba",
     "translationVoiceCommandInfo": "Uključuje naredbu prijevoda u glasovne naredbe („prevedi na [jezik]“)."
   },
-  "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
+  "shortcuts": {
+    "insertIntoEditor": "Umetni u uređivač"
+  },
   "theme": {
     "auto": "Kao u sustavu",
     "dark": "Tamna",
@@ -1452,7 +1458,9 @@
     "title": "Glasovne naredbe",
     "missingSelection": "Potreban je odabrani tekst.",
     "phrasesPlaceholder": "Primjeri fraza, jedna po retku",
-    "parameterMissing": "Odaberite vrijednost parametra pokraj naziva naredbe."
+    "parameterMissing": "Odaberite vrijednost parametra pokraj naziva naredbe.",
+    "phaseAwaitingParameter": "Recite {parameter}...",
+    "backToCommands": "Sve naredbe"
   },
   "voiceGrammar": {
     "languages": {
@@ -1546,7 +1554,9 @@
     "valueNotSet": "Nema vrijednosti na ovom uređaju: naredbe koje je koriste ne izvršavaju se",
     "valuePlaceholder": "Putanja, adresa ili drugi tekst"
   },
-  "favorites": { "noMatches": "Nema podudarnih favorita" },
+  "favorites": {
+    "noMatches": "Nema podudarnih favorita"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Umetni u prozor",
     "insertIntoEditor": "U uređivač",

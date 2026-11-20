@@ -38,10 +38,10 @@
           >
         </span>
         <span
-          v-for="phrase in voiceCommandPhrases(command, tools, t)"
-          :key="phrase"
+          v-if="voiceCommandPhrases(command, tools, t).length"
           class="voice-entry-phrase"
-          >{{ phrase }}</span
+          :title="voiceCommandPhrases(command, tools, t).join('\n')"
+          >{{ voiceCommandPhrases(command, tools, t).join(' · ') }}</span
         >
       </span>
       <AppIcon
@@ -96,7 +96,8 @@ const parameterLabels = (command: CommandConfig) => {
 }
 // rows stay focusable and keep their hints while they cannot be picked
 const canPick = (command: CommandConfig) =>
-  props.stage === 'review' && !props.unavailableReason(command)
+  (props.stage === 'review' || props.stage === 'recording') &&
+  !props.unavailableReason(command)
 
 // the marked row may sit below the fold of a long list
 watch(
@@ -126,11 +127,16 @@ const onCatalogKeyDown = (event: KeyboardEvent) => {
 
 <style scoped>
 .voice-catalog {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 0.25rem;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: var(--space-xs);
   border-left: 1px solid var(--app-border-subtle);
+  container-type: inline-size;
 }
 
 .voice-entry {
@@ -202,7 +208,9 @@ const onCatalogKeyDown = (event: KeyboardEvent) => {
   font-family: var(--font-mono);
   font-size: var(--text-caption);
   color: var(--app-text-muted);
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .voice-entry-warning {
@@ -216,6 +224,12 @@ const onCatalogKeyDown = (event: KeyboardEvent) => {
   padding: var(--space-xs) var(--space-sm);
   font-size: var(--text-caption);
   color: var(--app-text-muted);
+}
+
+@container (max-width: 420px) {
+  .voice-catalog {
+    grid-template-columns: 1fr;
+  }
 }
 
 @container (max-width: 600px) {

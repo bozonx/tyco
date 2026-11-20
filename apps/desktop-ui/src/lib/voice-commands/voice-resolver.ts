@@ -206,8 +206,17 @@ function resolveFrom(
             incomplete = true
             incompleteDepth = Math.max(incompleteDepth, offset + tail.length)
           }
-          if (startsWith(tail, valueWords))
+          if (startsWith(tail, valueWords)) {
             next.push(offset + valueWords.length)
+          } else if (tail.length > valueWords.length) {
+            // Skip filler/hesitation words before the spoken parameter value
+            for (let skip = 1; skip <= tail.length - valueWords.length; skip++) {
+              if (startsWith(tail.slice(skip), valueWords)) {
+                next.push(offset + skip + valueWords.length)
+                break
+              }
+            }
+          }
         }
       }
       if (!next.length) {

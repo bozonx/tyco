@@ -22,7 +22,9 @@
     "removeContext": "Elimină contextul",
     "restoreContext": "Restaurează contextul"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Atașează un fișier",
     "alertCaution": "Atenție",
@@ -199,7 +201,9 @@
       "deselectAll": "Deselectează tot",
       "unsupportedCommands": "Comenzi neacceptate"
     },
-    "replyBlocks": { "toolLabel": "Blocuri de răspuns" }
+    "replyBlocks": {
+      "toolLabel": "Blocuri de răspuns"
+    }
   },
   "commands": {
     "advanced": "Avansat",
@@ -1314,7 +1318,9 @@
     "translationVoiceCommand": "Comandă vocală",
     "translationVoiceCommandInfo": "Include comanda de traducere în comenzile vocale („tradu în [limbă]”)."
   },
-  "shortcuts": { "insertIntoEditor": "Inserează în editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserează în editor"
+  },
   "theme": {
     "auto": "Ca în sistem",
     "dark": "Întunecată",
@@ -1452,7 +1458,9 @@
     "title": "Comenzi vocale",
     "missingSelection": "Este necesar textul selectat.",
     "phrasesPlaceholder": "Fraze demonstrative, câte una pe rând",
-    "parameterMissing": "Alegeți valoarea parametrului lângă numele comenzii."
+    "parameterMissing": "Alegeți valoarea parametrului lângă numele comenzii.",
+    "phaseAwaitingParameter": "Spuneți {parameter}...",
+    "backToCommands": "Toate comenzile"
   },
   "voiceGrammar": {
     "languages": {
@@ -1546,7 +1554,9 @@
     "valueNotSet": "Nicio valoare pe acest dispozitiv: comenzile care o folosesc nu rulează",
     "valuePlaceholder": "O cale, o adresă sau alt text"
   },
-  "favorites": { "noMatches": "Nu există favorite care să se potrivească" },
+  "favorites": {
+    "noMatches": "Nu există favorite care să se potrivească"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Inserează în fereastră",
     "insertIntoEditor": "În editor",
