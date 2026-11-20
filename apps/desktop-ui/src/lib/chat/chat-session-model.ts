@@ -210,6 +210,11 @@ export function createChatSessionModel(
 
   const openCurrentChat = async (attachment?: ChatAttachment) => {
     if (disposed) return
+    if (currentChatParams.value.id) {
+      if (attachment) addAttachment(attachment)
+      await deps.navigateTo(APP_ROUTES.CHAT.path)
+      return
+    }
     const currentId = (await deps.getCurrentChatId?.()) ?? deps.getLastChatId()
     if (currentId) {
       const request = openRequest + 1

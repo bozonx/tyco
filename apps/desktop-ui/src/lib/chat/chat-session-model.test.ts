@@ -241,6 +241,18 @@ describe('createChatSessionModel', () => {
       expect(deps.loadChat).not.toHaveBeenCalledTimes(2)
     })
 
+    it('preserves the open draft when attaching context', async () => {
+      const { model, deps, state } = setup()
+      await model.startChat({ attachments: [{ text: 'existing' }] })
+      await model.openCurrentChat({ text: 'attached' })
+      expect(state.currentChatParams.value.attachments).toEqual([
+        { text: 'existing' },
+        { text: 'attached' },
+      ])
+      expect(deps.loadChat).not.toHaveBeenCalled()
+      expect(state.currentChatParams.value.id).toBe('chat-1')
+    })
+
     it('opens current chat by updated time and adds attachment', async () => {
       const { model, deps, state } = setup()
       deps.getCurrentChatId = vi.fn().mockResolvedValue('chat-current')
