@@ -35,7 +35,15 @@ pub fn reveal_quick_window(app: &AppHandle, activation_id: u64) -> Result<(), Ap
         let Some(window) = app.get_webview_window(QUICK_WINDOW_LABEL) else {
             return Ok(());
         };
-        crate::services::platform::set_window_opacity(&window, 1.0)
+        crate::services::platform::set_window_opacity(&window, 1.0)?;
+        #[cfg(not(target_os = "linux"))]
+        {
+            if let Err(error) = window.unminimize() {
+                log::warn!("Could not unminimize window: {error}");
+            }
+            crate::services::activation::metrics::mark_show(app);
+        }
+        super::window_visibility::hide_inactive_window(app, QUICK_WINDOW_LABEL)
     })
 }
 

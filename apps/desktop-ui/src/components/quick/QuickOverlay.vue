@@ -324,15 +324,20 @@ const cancelPendingReveal = () => {
 const scheduleQuickWindowReveal = () => {
   cancelPendingReveal()
   if (!desktopStore.desktopState.isWindowShown) return
+  const activationId = desktopStore.desktopState.activationId
   void nextTick(() => {
     if (unmounted || !desktopStore.desktopState.isWindowShown) return
     const reveal = () => {
       pendingRevealFrame = undefined
       if (unmounted || !desktopStore.desktopState.isWindowShown) return
+      if (desktopStore.desktopState.activationId !== activationId) return
       void ipcStore.call('reveal_quick_window')
     }
     if (typeof requestAnimationFrame === 'function') {
-      pendingRevealFrame = requestAnimationFrame(reveal)
+      // The first callback runs before paint; allow that frame to render.
+      pendingRevealFrame = requestAnimationFrame(() => {
+        pendingRevealFrame = requestAnimationFrame(reveal)
+      })
     } else {
       reveal()
     }

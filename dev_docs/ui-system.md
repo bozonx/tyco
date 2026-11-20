@@ -434,6 +434,15 @@ leaving attachments become inert immediately. Sortable lists retain their drag
 preview and settle into committed positions over 160 ms, canceling that feedback
 on another drag or disposal.
 
+## Quick window reveal
+
+A new quick activation keeps the main window visible until the quick frontend
+acknowledges its rendered frame. The frontend waits for two animation frames
+and discards callbacks from superseded activations. GTK maps the quick window
+with zero opacity; other platforms keep it hidden until the acknowledgement.
+Only then is the main window hidden. Never reveal on a timeout: a slow renderer
+could still contain the previous activation's buffer.
+
 ## Quick overlay placement and recording bars
 
 The action menu selects `quickWindow.actionMenuPosition` (`center`, `right`,

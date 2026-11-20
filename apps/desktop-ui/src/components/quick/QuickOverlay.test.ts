@@ -463,6 +463,36 @@ describe('quick overlay menus', () => {
     }
   })
 
+  it('waits for a painted frame before revealing a new activation', async () => {
+    stubResizeObserver()
+    const frames: FrameRequestCallback[] = []
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      frames.push(callback)
+      return frames.length
+    })
+    vi.stubGlobal('cancelAnimationFrame', () => undefined)
+    desktop.setState({ mode: 'voice', isWindowShown: true })
+    const wrapper = mount(QuickOverlay, {
+      global: { plugins: [desktop.pinia] },
+    })
+    try {
+      await nextTick()
+      desktop.backend.calls.length = 0
+      expect(frames.length).toBeGreaterThan(0)
+      const beforePaint = frames.splice(0)
+      beforePaint.forEach((callback) => callback(0))
+      expect(desktop.backend.callsOf('reveal_quick_window')).toHaveLength(0)
+      frames.splice(0).forEach((callback) => callback(16))
+      await flushPromises()
+      expect(desktop.backend.callsOf('reveal_quick_window')).toContainEqual({
+        activationId: desktop.backend.activation.activationId,
+      })
+    } finally {
+      wrapper.unmount()
+      desktop.setState({ mode: 'quickInput' })
+    }
+  })
+
   it('keeps a hidden menu but resets it for the next activation', async () => {
     stubResizeObserver()
     desktop.setState({ mode: 'translation' })

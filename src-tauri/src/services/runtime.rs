@@ -251,7 +251,9 @@ fn activate_on_main_thread(
     let window_label = window_label_for_mode(activation.mode);
     let is_quick_window = window_label == QUICK_WINDOW_LABEL;
     app.state::<RuntimeWindows>().set_active_label(window_label);
-    hide_inactive_window(app, window_label)?;
+    if !is_quick_window {
+        hide_inactive_window(app, window_label)?;
+    }
     let window = app
         .get_webview_window(window_label)
         .ok_or_else(|| AppError::ServiceUnavailable(format!("Window {window_label} not found")))?;
@@ -308,6 +310,10 @@ fn activate_on_main_thread(
     let emitted = emit_state(app, &state);
 
     window.set_focusable(true)?;
+    // Non-GTK windows are shown only after the frontend renders the activation.
+    if is_quick_window && !cfg!(target_os = "linux") {
+        return emitted;
+    }
     window.show()?;
     super::activation::metrics::mark_show(app);
     if let Err(error) = window.unminimize() {

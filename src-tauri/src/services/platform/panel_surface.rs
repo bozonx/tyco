@@ -276,45 +276,28 @@ pub fn focus_window(window: &WebviewWindow) -> Result<(), AppError> {
     }
 }
 
-const QUICK_REVEAL_FALLBACK: std::time::Duration = std::time::Duration::from_millis(120);
-
-/// Fades the window in or out without unmapping it; only GTK can.
+/// Keeps stale quick-window content out of view until the frontend acknowledges
+/// a rendered activation. GTK can keep a transparent surface mapped; other
+/// platforms keep the window hidden until it is ready.
 pub fn set_window_opacity(window: &WebviewWindow, opacity: f64) -> Result<(), AppError> {
     #[cfg(target_os = "linux")]
-    {
-        use gtk::prelude::WidgetExt;
-        clear_reveal_timer();
-        window.gtk_window()?.set_opacity(opacity);
-    }
+    window.gtk_window()?.set_opacity(opacity);
     #[cfg(not(target_os = "linux"))]
-    let _ = (window, opacity);
+    if window.label() == "quick" {
+        if opacity == 0.0 {
+            window.hide()?;
+        } else {
+            window.show()?;
+            focus_window(window)?;
+        }
+    }
     Ok(())
 }
 
-/// Keeps the quick window transparent while the webview draws the new
-/// activation, with a fallback timer so a stalled frame never leaves the
-/// window invisible.
+/// Never reveal an old buffer on a timer: a slow renderer must acknowledge
+/// the new activation before it becomes visible.
 pub fn defer_quick_reveal(window: &WebviewWindow) -> Result<(), AppError> {
-    #[cfg(target_os = "linux")]
-    {
-        use gtk::prelude::{ObjectExt, WidgetExt};
-        clear_reveal_timer();
-        let gtk_window = window.gtk_window()?;
-        gtk_window.set_opacity(0.0);
-        let weak_window = gtk_window.downgrade();
-        let timer = gtk::glib::timeout_add_local_once(QUICK_REVEAL_FALLBACK, move || {
-            REVEAL_TIMER.with_borrow_mut(|slot| {
-                slot.take();
-            });
-            if let Some(window) = weak_window.upgrade() {
-                window.set_opacity(1.0);
-            }
-        });
-        REVEAL_TIMER.with_borrow_mut(|slot| *slot = Some(timer));
-    }
-    #[cfg(not(target_os = "linux"))]
-    let _ = window;
-    Ok(())
+    set_window_opacity(window, 0.0)
 }
 
 /// The shown panel got the focus: an exclusive grab is not needed any more.
@@ -425,16 +408,6 @@ thread_local! {
     static SELECTED_PANEL_MONITOR: std::cell::RefCell<Option<gtk::gdk::Monitor>> = const { std::cell::RefCell::new(None) };
     static PANEL_RELOCATING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
     static RELOCATION_TIMER: std::cell::RefCell<Option<gtk::glib::SourceId>> = const { std::cell::RefCell::new(None) };
-    static REVEAL_TIMER: std::cell::RefCell<Option<gtk::glib::SourceId>> = const { std::cell::RefCell::new(None) };
-}
-
-#[cfg(target_os = "linux")]
-fn clear_reveal_timer() {
-    REVEAL_TIMER.with_borrow_mut(|timer| {
-        if let Some(timer) = timer.take() {
-            timer.remove();
-        }
-    });
 }
 
 pub fn is_panel_relocating() -> bool {
