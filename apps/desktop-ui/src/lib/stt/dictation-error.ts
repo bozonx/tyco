@@ -15,7 +15,8 @@ import { errorMessage } from '@tyco/shared/value-guards'
  * - `incompleteConfig`: the provider model or server address is invalid;
  * - `closed`: the service ended the session while recording;
  * - `timeout`: the service did not send its last words in time;
- * - `superseded`: another voice input took the microphone over.
+ * - `superseded`: another voice input took the microphone over;
+ * - `captureBusy`: the dialog holds the sound, nothing else may record.
  */
 export type DictationErrorKind =
   | 'microphone'
@@ -31,6 +32,7 @@ export type DictationErrorKind =
   | 'closed'
   | 'timeout'
   | 'superseded'
+  | 'captureBusy'
 
 /**
  * A failure of the dictation itself. `details` is what the system or the
@@ -61,6 +63,7 @@ const DICTATION_ERROR_KEYS: Record<DictationErrorKind, string> = {
   closed: 'toast.dictationClosed',
   timeout: 'toast.dictationTimeout',
   superseded: 'toast.dictationSuperseded',
+  captureBusy: 'toast.soundBusyWithDialog',
 }
 
 /**
@@ -108,6 +111,26 @@ export function dictationErrorKey(error: unknown): string | undefined {
     : undefined
 }
 
+/**
+ * Whether a capture was refused because the dialog holds the sound: the desktop
+ * error, or an error caused by it
+ */
+export function isCaptureBusyError(error: unknown): boolean {
+  for (let current = error, depth = 0; current && depth < 4; depth += 1) {
+    if (
+      typeof current === 'object' &&
+      'code' in current &&
+      current.code === 'captureBusy'
+    )
+      return true
+    current =
+      current instanceof Error || (typeof current === 'object' && current)
+        ? (current as { cause?: unknown }).cause
+        : undefined
+  }
+  return false
+}
+
 /** `error` as `kind`, keeping what it said as the details */
 export function asDictationError(
   kind: DictationErrorKind,
@@ -115,12 +138,15 @@ export function asDictationError(
 ): DictationError {
   if (error instanceof DictationError) return error
   const details = errorMessage(error)
+  if (kind === 'microphone' && isCaptureBusyError(error))
+    return new DictationError('captureBusy', details, details)
   const resolvedKind =
     kind === 'provider' ? classifyProviderError(details) : kind
   return new DictationError(resolvedKind, details, details)
 }
 
 const SELF_CONTAINED_KINDS: ReadonlySet<DictationErrorKind> = new Set([
+  'captureBusy',
   'connection',
   'localServerUnavailable',
   'auth',

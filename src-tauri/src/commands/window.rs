@@ -159,3 +159,32 @@ pub fn open_transferred_chat(
 pub fn reposition_quick_window(app: AppHandle, activation_id: u64) -> Result<(), AppError> {
     runtime::reposition_quick_window(&app, activation_id)
 }
+
+/// Turns the main window into the always-on-top strip of the dialog's
+/// subtitles, at `geometry` when it was remembered; returns where it went.
+#[tauri::command]
+pub async fn enter_compact_window(
+    app: AppHandle,
+    geometry: Option<runtime::compact_window::WindowGeometry>,
+) -> Result<runtime::compact_window::WindowGeometry, AppError> {
+    run_blocking(move || {
+        let state = app.state::<runtime::compact_window::CompactWindowState>();
+        let host = runtime::compact_window::MainWindowHost { app: &app };
+        runtime::compact_window::enter(&host, &state, geometry)
+    })
+    .await?
+}
+
+/// Gives the main window its size, position and mode back; returns where
+/// the strip was, to be remembered.
+#[tauri::command]
+pub async fn leave_compact_window(
+    app: AppHandle,
+) -> Result<Option<runtime::compact_window::WindowGeometry>, AppError> {
+    run_blocking(move || {
+        let state = app.state::<runtime::compact_window::CompactWindowState>();
+        let host = runtime::compact_window::MainWindowHost { app: &app };
+        runtime::compact_window::leave(&host, &state)
+    })
+    .await?
+}

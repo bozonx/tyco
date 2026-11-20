@@ -87,6 +87,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `plugins`           | per plugin id: `isEnabled` and the plugin-owned `settings`                                                                                                                                                                                                                                        |
 | `chat`              | `history` (`storage`: `off` or `disk`, `retentionDays`)                                                                                                                                                                                                                                           |
 | `stt`               | `provider`, `correctionMode`, `isVoiceInputHoldEnabled`, `isVoiceCommandsHoldEnabled`, `microphoneId` (device), `listenAppId` (device), `listenAppLabel` (device), `isStylingBarEnabled`, `isStylingBarDirectInsertEnabled`, `providers.deepgram`, `providers.sherpaOnnx`, `providers.geminiLive` |
+| `dialog`            | `source` (`microphoneAndSystem`, `system`), `translationTargetLanguage` (empty: no translation), `textDisplay` (`translation`, `original`, `both`), `translationProvider` (`default` or a translation provider), `compactGeometry` (device)                                                       |
 
 The hotkeys of `hotkeys` are named as the activation modes they open
 (`quickInput`, `selectionActions`, `selectionActionsPage2`..`selectionActionsPage5`,

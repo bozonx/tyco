@@ -360,7 +360,8 @@
     "vaultUnavailable": "Yapay zekâ profilleri klasörü bu cihazda bağlı değil",
     "projectUnavailable": "Proje klasörü bu cihazda ayarlanmamış",
     "alreadyExists": "Zaten var",
-    "staleRevision": "Dosya başka bir cihazda veya TyCo dışında değiştirildi"
+    "staleRevision": "Dosya başka bir cihazda veya TyCo dışında değiştirildi",
+    "captureBusy": "Ses diyalog tarafından kullanılıyor"
   },
   "diff": {
     "resetResult": "Sonucu sıfırla",
@@ -627,7 +628,8 @@
     "editor": "Editör",
     "history": "Geçmiş",
     "menu": "Menü",
-    "settings": "Ayarlar"
+    "settings": "Ayarlar",
+    "dialog": "Diyalog"
   },
   "selection": {
     "cancelled": "İptal edildi",
@@ -1314,7 +1316,13 @@
     "askAiWebAccess": "\"Yapay Zekâya Sor\" içinde web",
     "askAiWebAccessHint": "Profili olmayan \"Yapay Zekâya Sor\" sohbetinin web’de arama yapıp sayfa okuyup okuyamayacağı. \"Sor\" her çağrıdan önce onayınızı bekler. Profiller bunu kendi araçlarında ayarlar.",
     "translationVoiceCommand": "Sesli komut",
-    "translationVoiceCommandInfo": "Çeviri komutunu sesli komutlara dahil eder („[dil] çevir”)."
+    "translationVoiceCommandInfo": "Çeviri komutunu sesli komutlara dahil eder („[dil] çevir”).",
+    "dialogTab": "Diyalog",
+    "dialogSourceHint": "Mikrofonla sizin ve karşı tarafın konuşması ayrı gösterilir; yalnızca bilgisayar seçeneği yalnızca karşı tarafı gösterir.",
+    "dialogTranslationHint": "Karşı tarafın söyledikleri bu dile çevrilir. Kendi konuşmanız çevrilmez.",
+    "dialogTranslationProvider": "Çeviri hizmeti",
+    "dialogProviderDefault": "Çeviri ayarlarındaki gibi",
+    "dialogProviderLlm": "Yapay zekâ modeli"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
@@ -1374,7 +1382,8 @@
     "webhookEmptyUrl": "Web kancası URL'si boş",
     "webhookFailed": "Web kancası isteği başarısız oldu",
     "webhookKeyNotSet": "Bu webhook’un anahtarı bu cihazda ayarlanmadı; komut ayarlarından girin",
-    "webhookSuccess": "Web kancası başarıyla gönderildi"
+    "webhookSuccess": "Web kancası başarıyla gönderildi",
+    "soundBusyWithDialog": "Ses diyalog tarafından kullanılıyor: kaydetmek için onu durdurun"
   },
   "operations": {
     "aiTask": "Yapay zekâ komutu",
@@ -1627,5 +1636,38 @@
     "cannotChangeLanguage": "Dil değiştirilemez: tanıma zaten başladı",
     "languageSavedForNext": "Dil bir sonraki kayıt için kaydedildi",
     "openSettings": "Deşifre ayarları…"
+  },
+  "dialog": {
+    "sideMe": "Ben",
+    "sideRemote": "Karşı taraf",
+    "translationLabel": "Çeviri",
+    "translating": "Çevriliyor…",
+    "translationFailed": "Çevrilemedi",
+    "feedLabel": "Diyalog dökümü",
+    "toLatest": "En yeniye",
+    "start": "Başlat",
+    "stop": "Durdur",
+    "source": "Kaynak",
+    "sourceMicrophoneAndSystem": "Mikrofon ve bilgisayar",
+    "sourceSystem": "Yalnızca bilgisayar",
+    "levelMe": "Mikrofon seviyesi",
+    "levelRemote": "Bilgisayar sesi seviyesi",
+    "translationLanguage": "Şu dile çevir",
+    "textDisplay": "Göster",
+    "displayTranslation": "Çeviri",
+    "displayOriginal": "Orijinal",
+    "displayBoth": "İkisi de",
+    "copy": "Dökümü kopyala",
+    "toActionMenu": "Eylem menüsüne gönder",
+    "clear": "Dökümü temizle",
+    "collapse": "Altyazıya daralt",
+    "expand": "Genişlet",
+    "noTranslation": "Çeviri yok",
+    "reconnecting": "Konuşma tanımaya yeniden bağlanılıyor…",
+    "connecting": "Konuşma tanımaya bağlanılıyor…",
+    "waitingForSpeech": "Dinleniyor…",
+    "notRunning": "Diyalog durduruldu",
+    "emptyTitle": "Bir görüşmeyi yazıya dök",
+    "emptyHint": "Herhangi bir uygulamadaki görüşme sırasında diyaloğu başlatın: karşı tarafın söyledikleri burada çevrilmiş olarak görünür ve siz durdurana kadar diğer sekmelerde de kayıt devam eder."
   }
 }

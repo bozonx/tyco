@@ -120,9 +120,9 @@ describe('NavPanel.vue', () => {
     const wrapper = shallowMount(NavPanel)
 
     const buttons = wrapper.findAll('.topbar-tab')
-    // buttons[0] is Editor, buttons[1] is Ask AI, buttons[2] is Writer
-    expect(buttons[1].classes()).toContain('is-active')
-    expect(buttons[2].classes()).not.toContain('is-active')
+    // Editor, Dialog, Ask AI, then Writer
+    expect(buttons[2].classes()).toContain('is-active')
+    expect(buttons[3].classes()).not.toContain('is-active')
   })
 
   it('marks profile tab as active when query profile matches', () => {
@@ -131,8 +131,8 @@ describe('NavPanel.vue', () => {
     const wrapper = shallowMount(NavPanel)
 
     const buttons = wrapper.findAll('.topbar-tab')
-    expect(buttons[1].classes()).not.toContain('is-active')
-    expect(buttons[2].classes()).toContain('is-active')
+    expect(buttons[2].classes()).not.toContain('is-active')
+    expect(buttons[3].classes()).toContain('is-active')
   })
 
   it('navigates to profile chat when profile tab is clicked', async () => {
@@ -153,7 +153,7 @@ describe('NavPanel.vue', () => {
     mocks.aiProfilesStore.profiles = [{ id: 'writer', name: 'Writer' }]
     const wrapper = shallowMount(NavPanel)
 
-    await wrapper.findAll('.topbar-tab')[1].trigger('click')
+    await wrapper.findAll('.topbar-tab')[2].trigger('click')
 
     expect(mocks.chatStore.openLastOrNewChat).toHaveBeenCalled()
     expect(mocks.profileChatStore.openLastOrNewChat).not.toHaveBeenCalled()

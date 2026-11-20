@@ -133,6 +133,21 @@ sink's monitor, or every output stream of one application, mixed by
 and sums them through the same mixer. The microphone keeps time and owns
 the callback watchdog, so the mixed stream fills no gaps; a playback error
 ends it like a microphone error.
+The dialog (`CaptureSource::Dialog`) records the same two sources but keeps
+them apart: `MixLayout::Separate` aligns them in two lanes of the mixer and
+sends stereo PCM16, the microphone in the first channel; `VoiceCaptureInfo`
+names the channel count and level events carry a level per channel. Before
+normalization `voice/echo_gate.rs` mutes microphone blocks that are clearly
+quieter than playback and follow its envelope: the speakers' echo without
+headphones (real AEC is a later step). Without the microphone the dialog is
+the system sound in one channel. A dialog capture is never superseded:
+another capture fails with `AppError::CaptureBusy` (`captureBusy`), which
+voice input, voice commands and listening show as "the sound is busy with the
+dialog"; a dialog itself supersedes dictation. It has no duration limit.
+`runtime/compact_window.rs` turns the main window into the always-on-top
+strip of the dialog's subtitles behind a `CompactWindowHost`, and gives the
+window its geometry, maximized state and decorations back; the strip's own
+geometry is kept in `dialog.compactGeometry` (device).
 A playback source delivers nothing while nothing plays, so the capture loop
 fills the gap with silence (`voice/source.rs`), switches the source in place
 (`switch_capture_source`) and waits for the same application when it quits.

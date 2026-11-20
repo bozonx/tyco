@@ -107,6 +107,7 @@ pub fn run() {
             .manage(services::plugins::PluginInspection::default())
             .manage(services::voice::session::VoiceSessionState::default())
             .manage(services::voice::apps::AudioAppsWatches::default())
+            .manage(services::runtime::compact_window::CompactWindowState::default())
             .manage(services::external::access::AccessPrompt::default()),
     ));
     let app = builder
@@ -335,6 +336,8 @@ pub fn run() {
             commands::voice::start_voice_capture,
             commands::voice::stop_voice_capture,
             commands::voice::switch_capture_source,
+            commands::window::enter_compact_window,
+            commands::window::leave_compact_window,
             commands::voice::watch_audio_apps,
             commands::voice::unwatch_audio_apps,
             commands::window::open_transferred_chat,

@@ -40,7 +40,11 @@ describe('input-devices', () => {
 
   it('starts and stops microphone test capture and reacts to supersede/error', async () => {
     const fake = createFakeNetIpc({
-      start_voice_capture: () => ({ sampleRate: 16_000, sessionId: 42 }),
+      start_voice_capture: () => ({
+        sampleRate: 16_000,
+        channels: 1,
+        sessionId: 42,
+      }),
     })
     const onStopped = vi.fn()
     const onError = vi.fn()

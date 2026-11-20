@@ -19,6 +19,8 @@ const DEVICE_FIELD_NOTES: Record<
   [file: string, marker: string] | null
 > = {
   isInDevelopment: null,
+  // where the subtitles strip was last; no setting of its own
+  'dialog.compactGeometry': null,
   'appearance.uiScalePercent': [
     'SettingsAccessibilityTab.vue',
     `:label="t('settings.uiScale')" device-scoped`,

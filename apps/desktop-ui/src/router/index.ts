@@ -4,6 +4,7 @@ import { clientLogger } from '../lib/logger'
 import { APP_ROUTES } from '../lib/navigation/routes'
 import ChatView from '../views/ChatView.vue'
 import CorrectionView from '../views/CorrectionView.vue'
+import DialogView from '../views/DialogView.vue'
 import EditorView from '../views/EditorView.vue'
 import HistoryView from '../views/HistoryView.vue'
 import HomeView from '../views/HomeView.vue'
@@ -52,6 +53,11 @@ const router = createRouter({
       name: APP_ROUTES.CHAT.name,
       component: ChatView,
       props: true,
+    },
+    {
+      path: APP_ROUTES.DIALOG.path,
+      name: APP_ROUTES.DIALOG.name,
+      component: DialogView,
     },
     {
       path: APP_ROUTES.WRITE.path,

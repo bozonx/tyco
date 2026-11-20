@@ -360,7 +360,8 @@
     "vaultUnavailable": "AI 設定檔資料夾未在此裝置上連接",
     "projectUnavailable": "專案資料夾未在此裝置上設定",
     "alreadyExists": "已存在",
-    "staleRevision": "檔案已在其他裝置上或 TyCo 之外被變更"
+    "staleRevision": "檔案已在其他裝置上或 TyCo 之外被變更",
+    "captureBusy": "聲音正被對話佔用"
   },
   "diff": {
     "resetResult": "重設結果",
@@ -627,7 +628,8 @@
     "editor": "編輯器",
     "history": "歷史記錄",
     "menu": "選單",
-    "settings": "設定"
+    "settings": "設定",
+    "dialog": "對話"
   },
   "selection": {
     "cancelled": "已取消",
@@ -1311,7 +1313,13 @@
     "askAiWebAccess": "「詢問 AI」中的網路",
     "askAiWebAccessHint": "沒有設定檔的「詢問 AI」聊天能否搜尋網路及讀取網頁。「詢問」會在每次呼叫前等待你的核准。設定檔在各自的工具中設定。",
     "translationVoiceCommand": "語音指令",
-    "translationVoiceCommandInfo": "在語音指令中包含翻譯指令（「翻譯成[語言]」）。"
+    "translationVoiceCommandInfo": "在語音指令中包含翻譯指令（「翻譯成[語言]」）。",
+    "dialogTab": "對話",
+    "dialogSourceHint": "使用麥克風時，您和對方的發言分開顯示；僅電腦時只顯示對方。",
+    "dialogTranslationHint": "對方的發言會翻譯成此語言。您自己的發言不翻譯。",
+    "dialogTranslationProvider": "翻譯服務",
+    "dialogProviderDefault": "與翻譯設定相同",
+    "dialogProviderLlm": "AI 模型"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
@@ -1371,7 +1379,8 @@
     "webhookEmptyUrl": "Webhook URL 為空",
     "webhookFailed": "Webhook 請求失敗",
     "webhookKeyNotSet": "此裝置上未設定此 Webhook 的金鑰；請在命令設定中輸入",
-    "webhookSuccess": "Webhook 發送成功"
+    "webhookSuccess": "Webhook 發送成功",
+    "soundBusyWithDialog": "聲音正被對話佔用：請先停止對話再錄音"
   },
   "operations": {
     "aiTask": "AI 指令",
@@ -1624,5 +1633,38 @@
     "cannotChangeLanguage": "無法變更語言：辨識已開始",
     "languageSavedForNext": "已儲存語言，將於下次錄音時套用",
     "openSettings": "轉錄設定…"
+  },
+  "dialog": {
+    "sideMe": "我",
+    "sideRemote": "對方",
+    "translationLabel": "翻譯",
+    "translating": "正在翻譯…",
+    "translationFailed": "翻譯失敗",
+    "feedLabel": "對話紀錄",
+    "toLatest": "跳到最新",
+    "start": "開始",
+    "stop": "停止",
+    "source": "來源",
+    "sourceMicrophoneAndSystem": "麥克風和電腦",
+    "sourceSystem": "僅電腦",
+    "levelMe": "麥克風音量",
+    "levelRemote": "電腦聲音音量",
+    "translationLanguage": "翻譯為",
+    "textDisplay": "顯示",
+    "displayTranslation": "譯文",
+    "displayOriginal": "原文",
+    "displayBoth": "兩者",
+    "copy": "複製紀錄",
+    "toActionMenu": "傳送到操作選單",
+    "clear": "清除紀錄",
+    "collapse": "收合為字幕",
+    "expand": "展開",
+    "noTranslation": "不翻譯",
+    "reconnecting": "正在重新連線語音辨識…",
+    "connecting": "正在連線語音辨識…",
+    "waitingForSpeech": "正在聆聽…",
+    "notRunning": "對話已停止",
+    "emptyTitle": "轉寫通話",
+    "emptyHint": "在任何應用程式中通話時開始對話：對方的發言會連同譯文顯示在這裡，並在其他分頁中持續記錄，直到您停止。"
   }
 }

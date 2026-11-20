@@ -902,6 +902,7 @@ describe('QuickAiRequestMenu', () => {
       desktop.backend.handle('start_voice_capture', () => ({
         sessionId: 1,
         sampleRate: 16000,
+        channels: 1,
       }))
       desktop.backend.handle('stop_voice_capture', () => undefined)
       desktop.backend.handle('open_socket', () => new Promise(() => undefined))

@@ -508,6 +508,7 @@ impl SharedContext {
                 device_sample_rate_hz: context.device_sample_rate_hz,
                 output_sample_rate_hz: context.output_sample_rate_hz,
                 fills_gaps: context.fills_gaps,
+                channel_count: context.channel_count,
                 status: Arc::clone(&context.status),
             },
         }

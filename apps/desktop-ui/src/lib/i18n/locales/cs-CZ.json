@@ -360,7 +360,8 @@
     "vaultUnavailable": "Složka profilů AI není na tomto zařízení připojena",
     "projectUnavailable": "Složka projektu není na tomto zařízení nastavena",
     "alreadyExists": "Již existuje",
-    "staleRevision": "Soubor byl změněn na jiném zařízení nebo mimo TyCo"
+    "staleRevision": "Soubor byl změněn na jiném zařízení nebo mimo TyCo",
+    "captureBusy": "Zvuk je obsazen dialogem"
   },
   "diff": {
     "resetResult": "Obnovit výsledek",
@@ -627,7 +628,8 @@
     "editor": "Editor",
     "history": "Historie",
     "menu": "Nabídka",
-    "settings": "Nastavení"
+    "settings": "Nastavení",
+    "dialog": "Dialog"
   },
   "selection": {
     "cancelled": "Zrušeno",
@@ -1311,7 +1313,13 @@
     "askAiWebAccess": "Web v „Zeptat se AI“",
     "askAiWebAccessHint": "Zda chat „Zeptat se AI“, který nemá profil, smí hledat na webu a číst stránky. „Ptát se“ čeká před každým voláním na vaše schválení. Profily to nastavují ve svých nástrojích.",
     "translationVoiceCommand": "Hlasový příkaz",
-    "translationVoiceCommandInfo": "Zahrne příkaz překladu do hlasových příkazů („přelož do [jazyk]“)."
+    "translationVoiceCommandInfo": "Zahrne příkaz překladu do hlasových příkazů („přelož do [jazyk]“).",
+    "dialogTab": "Dialog",
+    "dialogSourceHint": "S mikrofonem se vaše řeč a řeč protistrany zobrazují odděleně; jen počítač zobrazuje pouze protistranu.",
+    "dialogTranslationHint": "Co říká protistrana, se překládá do tohoto jazyka. Vaše vlastní řeč se nepřekládá.",
+    "dialogTranslationProvider": "Překladová služba",
+    "dialogProviderDefault": "Jako v nastavení překladu",
+    "dialogProviderLlm": "Model AI"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
@@ -1371,7 +1379,8 @@
     "webhookEmptyUrl": "URL webhooku je prázdná",
     "webhookFailed": "Požadavek na webhook selhal",
     "webhookKeyNotSet": "Klíč tohoto webhooku není na tomto zařízení nastaven; zadejte ho v nastavení příkazu",
-    "webhookSuccess": "Webhook byl úspěšně odeslán"
+    "webhookSuccess": "Webhook byl úspěšně odeslán",
+    "soundBusyWithDialog": "Zvuk je obsazen dialogem: zastavte ho, abyste mohli nahrávat"
   },
   "operations": {
     "aiTask": "AI příkaz",
@@ -1628,5 +1637,38 @@
     "cannotChangeLanguage": "Jazyk nelze změnit: rozpoznávání již začalo",
     "languageSavedForNext": "Jazyk uložen pro příští nahrávání",
     "openSettings": "Nastavení přepisu…"
+  },
+  "dialog": {
+    "sideMe": "Já",
+    "sideRemote": "Protistrana",
+    "translationLabel": "Překlad",
+    "translating": "Překládám…",
+    "translationFailed": "Nepodařilo se přeložit",
+    "feedLabel": "Přepis dialogu",
+    "toLatest": "K nejnovějšímu",
+    "start": "Spustit",
+    "stop": "Zastavit",
+    "source": "Zdroj",
+    "sourceMicrophoneAndSystem": "Mikrofon a počítač",
+    "sourceSystem": "Jen počítač",
+    "levelMe": "Úroveň mikrofonu",
+    "levelRemote": "Úroveň zvuku počítače",
+    "translationLanguage": "Překládat do",
+    "textDisplay": "Zobrazit",
+    "displayTranslation": "Překlad",
+    "displayOriginal": "Originál",
+    "displayBoth": "Obojí",
+    "copy": "Kopírovat přepis",
+    "toActionMenu": "Odeslat do nabídky akcí",
+    "clear": "Vymazat přepis",
+    "collapse": "Sbalit do titulků",
+    "expand": "Rozbalit",
+    "noTranslation": "Bez překladu",
+    "reconnecting": "Znovu se připojuji k rozpoznávání řeči…",
+    "connecting": "Připojuji se k rozpoznávání řeči…",
+    "waitingForSpeech": "Poslouchám…",
+    "notRunning": "Dialog je zastaven",
+    "emptyTitle": "Přepsat hovor",
+    "emptyHint": "Spusťte dialog během hovoru v libovolné aplikaci: řeč protistrany se zde objeví s překladem a nahrávání pokračuje i na jiných kartách, dokud ho nezastavíte."
   }
 }

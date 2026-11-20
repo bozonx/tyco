@@ -360,7 +360,8 @@
     "vaultUnavailable": "AI プロファイルのフォルダーがこのデバイスで接続されていません",
     "projectUnavailable": "プロジェクトのフォルダーがこのデバイスで設定されていません",
     "alreadyExists": "すでに存在します",
-    "staleRevision": "ファイルが別のデバイスまたは TyCo の外で変更されました"
+    "staleRevision": "ファイルが別のデバイスまたは TyCo の外で変更されました",
+    "captureBusy": "音声は会話で使用中です"
   },
   "diff": {
     "resetResult": "結果をリセット",
@@ -627,7 +628,8 @@
     "editor": "エディター",
     "history": "履歴",
     "menu": "メニュー",
-    "settings": "設定"
+    "settings": "設定",
+    "dialog": "会話"
   },
   "selection": {
     "cancelled": "キャンセルされました",
@@ -1314,7 +1316,13 @@
     "askAiWebAccess": "「AIに質問」でのウェブ",
     "askAiWebAccessHint": "プロファイルのない「AIに質問」チャットがウェブ検索やページの読み取りを行えるかどうか。「確認」は呼び出しのたびに承認を待ちます。プロファイルは各自のツールで設定します。",
     "translationVoiceCommand": "音声コマンド",
-    "translationVoiceCommandInfo": "音声コマンドに翻訳コマンドを含めます（「[言語]に翻訳」）。"
+    "translationVoiceCommandInfo": "音声コマンドに翻訳コマンドを含めます（「[言語]に翻訳」）。",
+    "dialogTab": "会話",
+    "dialogSourceHint": "マイクありでは自分と相手の発言を分けて表示し、コンピューターのみでは相手だけを表示します。",
+    "dialogTranslationHint": "相手の発言をこの言語に翻訳します。自分の発言は翻訳しません。",
+    "dialogTranslationProvider": "翻訳サービス",
+    "dialogProviderDefault": "翻訳設定と同じ",
+    "dialogProviderLlm": "AI モデル"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {
@@ -1374,7 +1382,8 @@
     "webhookEmptyUrl": "Webhook URLが空です",
     "webhookFailed": "Webhookリクエストが失敗しました",
     "webhookKeyNotSet": "この Webhook のキーはこのデバイスで設定されていません。コマンドの設定で入力してください",
-    "webhookSuccess": "Webhookが正常に送信されました"
+    "webhookSuccess": "Webhookが正常に送信されました",
+    "soundBusyWithDialog": "音声は会話で使用中です。録音するには会話を停止してください"
   },
   "operations": {
     "aiTask": "AI コマンド",
@@ -1627,5 +1636,38 @@
     "cannotChangeLanguage": "言語を変更できません: 音声認識は既に開始されています",
     "languageSavedForNext": "次回の録音用に言語を保存しました",
     "openSettings": "文字起こし設定…"
+  },
+  "dialog": {
+    "sideMe": "自分",
+    "sideRemote": "相手",
+    "translationLabel": "翻訳",
+    "translating": "翻訳中…",
+    "translationFailed": "翻訳できませんでした",
+    "feedLabel": "会話の文字起こし",
+    "toLatest": "最新へ",
+    "start": "開始",
+    "stop": "停止",
+    "source": "ソース",
+    "sourceMicrophoneAndSystem": "マイクとコンピューター",
+    "sourceSystem": "コンピューターのみ",
+    "levelMe": "マイクのレベル",
+    "levelRemote": "コンピューターの音声レベル",
+    "translationLanguage": "翻訳先",
+    "textDisplay": "表示",
+    "displayTranslation": "翻訳",
+    "displayOriginal": "原文",
+    "displayBoth": "両方",
+    "copy": "文字起こしをコピー",
+    "toActionMenu": "アクションメニューに送る",
+    "clear": "文字起こしを消去",
+    "collapse": "字幕に折りたたむ",
+    "expand": "展開",
+    "noTranslation": "翻訳なし",
+    "reconnecting": "音声認識に再接続しています…",
+    "connecting": "音声認識に接続しています…",
+    "waitingForSpeech": "聞き取り中…",
+    "notRunning": "会話は停止しています",
+    "emptyTitle": "通話を文字起こし",
+    "emptyHint": "任意のアプリでの通話中に会話を開始すると、相手の発言が翻訳付きでここに表示され、停止するまで他のタブでも記録が続きます。"
   }
 }

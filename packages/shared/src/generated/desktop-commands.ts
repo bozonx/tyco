@@ -62,6 +62,7 @@ import type {
   VaultInfo,
   VaultState,
   VoiceCaptureInfo,
+  WindowGeometry,
 } from './desktop-types'
 import type { UserConfig } from '../user-config'
 
@@ -168,6 +169,10 @@ export interface DesktopCommands {
   delete_editor_history_item: { args: { id: string }; result: void }
   delete_secret: { args: { id: string }; result: void }
   detach_ai_vault: { args: { vaultId: string }; result: void }
+  enter_compact_window: {
+    args: { geometry?: WindowGeometry | null }
+    result: WindowGeometry
+  }
   execute_script_action: {
     args: { request: ScriptActionRequest }
     result: ScriptExecutionResult
@@ -208,6 +213,7 @@ export interface DesktopCommands {
     args: { inspectionId: string }
     result: InstalledPlugin
   }
+  leave_compact_window: { args: undefined; result: WindowGeometry | null }
   list_ai_file_roots: {
     args: { profileId?: string | null; attachments: Array<AiAttachedFile> }
     result: Array<AiFileRoot>

@@ -22,6 +22,8 @@ pub struct VoiceCaptureSession {
     pub stop_flag: Arc<AtomicBool>,
     /// Set before a stop when a newer capture takes the microphone over.
     pub superseded: Arc<AtomicBool>,
+    /// A dialog: other captures do not take the sound over from it.
+    pub is_dialog: bool,
     pub switch: SourceSwitchSlot,
     pub thread: std::thread::JoinHandle<()>,
 }
@@ -95,6 +97,16 @@ impl VoiceSessionState {
         }
     }
 
+    /// Whether the running capture is a dialog, which no other capture
+    /// takes the sound over from.
+    pub fn is_dialog_running(&self) -> bool {
+        self.session
+            .locked()
+            .session
+            .as_ref()
+            .is_some_and(|session| session.is_dialog)
+    }
+
     /// Where a switch of the source reaches the running capture `id`.
     pub fn switch_slot(&self, id: u64) -> Option<SourceSwitchSlot> {
         let guard = self.session.locked();
@@ -123,6 +135,7 @@ mod tests {
             id,
             stop_flag: Arc::new(AtomicBool::new(false)),
             superseded: Arc::new(AtomicBool::new(false)),
+            is_dialog: false,
             switch: Arc::default(),
             thread: std::thread::spawn(|| {}),
         }
@@ -152,6 +165,7 @@ mod tests {
             id: 1,
             stop_flag: stop_flag.clone(),
             superseded: Arc::new(AtomicBool::new(false)),
+            is_dialog: false,
             switch: Arc::default(),
             thread: std::thread::spawn(move || {
                 let _ = waiting.recv();
@@ -179,6 +193,18 @@ mod tests {
         assert!(state.install(session(5)).is_ok());
 
         assert_eq!(state.take(None).unwrap().id, 5);
+    }
+
+    #[test]
+    fn a_running_dialog_is_reported() {
+        let state = VoiceSessionState::default();
+        assert!(!state.is_dialog_running());
+        let mut dialog = session(3);
+        dialog.is_dialog = true;
+        assert!(state.install(dialog).is_ok());
+        assert!(state.is_dialog_running());
+        state.take(None);
+        assert!(!state.is_dialog_running());
     }
 
     #[test]

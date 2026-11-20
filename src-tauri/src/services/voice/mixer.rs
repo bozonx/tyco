@@ -1,42 +1,67 @@
 //! Mixes the streams of one application into one: a browser plays a stream
-//! per tab, a messenger one per voice message.
+//! per tab, a messenger one per voice message. With several lanes it keeps
+//! sources apart instead, in step: the channels of a dialog.
 use std::collections::{HashMap, VecDeque};
 
-/// Mono samples of several streams summed in step. Each stream writes from
-/// where it joined; what every stream has written goes out, and a stream
-/// that falls too far behind is not waited for.
+/// Where a stream writes next, and to which lane.
+#[derive(Clone, Copy)]
+struct Cursor {
+    /// An absolute frame position.
+    position: u64,
+    lane: usize,
+}
+
+/// Samples of several streams in step. Each stream writes from where it
+/// joined into its lane, summed with the other streams of that lane; what
+/// every stream has written goes out, and a stream that falls too far behind
+/// is not waited for. Frames of several lanes come out interleaved.
 pub struct StreamMixer {
+    /// Interleaved frames of `lanes` samples.
     buffer: VecDeque<f32>,
-    /// The absolute position of `buffer[0]`.
+    /// The absolute frame position of the first frame of `buffer`.
     base: u64,
-    /// Where each stream writes next, as an absolute position.
-    cursors: HashMap<u32, u64>,
+    cursors: HashMap<u32, Cursor>,
+    lanes: usize,
     max_lag_samples: u64,
 }
 
 impl StreamMixer {
+    /// One lane: every stream is summed into it.
     pub fn new(max_lag_samples: u64) -> Self {
+        Self::with_lanes(max_lag_samples, 1)
+    }
+
+    /// `lanes` channels kept apart; `max_lag_samples` counts frames.
+    pub fn with_lanes(max_lag_samples: u64, lanes: usize) -> Self {
         Self {
             buffer: VecDeque::new(),
             base: 0,
             cursors: HashMap::new(),
+            lanes: lanes.max(1),
             max_lag_samples,
         }
     }
 
     fn head(&self) -> u64 {
-        self.base + self.buffer.len() as u64
+        self.base + (self.buffer.len() / self.lanes) as u64
     }
 
     /// A stream joins at the present: the newest sample written so far.
     pub fn add_stream(&mut self, id: u32) {
+        self.add_stream_to_lane(id, 0);
+    }
+
+    pub fn add_stream_to_lane(&mut self, id: u32, lane: usize) {
         let head = self
             .cursors
             .values()
-            .copied()
+            .map(|cursor| cursor.position)
             .max()
             .unwrap_or_else(|| self.head());
-        self.cursors.entry(id).or_insert(head);
+        self.cursors.entry(id).or_insert(Cursor {
+            position: head,
+            lane: lane.min(self.lanes - 1),
+        });
     }
 
     pub fn remove_stream(&mut self, id: u32) {
@@ -49,30 +74,32 @@ impl StreamMixer {
     }
 
     pub fn push(&mut self, id: u32, samples: &[f32]) {
+        let head = self.head();
+        let base = self.base;
         let Some(cursor) = self.cursors.get_mut(&id) else {
             return;
         };
         // a stream that lagged past what went out was silent, not late: it
         // resumes at the present, in step with the streams that kept time
-        let start = if *cursor < self.base {
-            self.base + self.buffer.len() as u64
+        let start = if cursor.position < base {
+            head
         } else {
-            *cursor
+            cursor.position
         };
         let end = start + samples.len() as u64;
-        *cursor = end;
-        let head = self.head();
+        cursor.position = end;
+        let lane = cursor.lane;
         if end > head {
             self.buffer
-                .extend(std::iter::repeat_n(0.0, (end - head) as usize));
+                .extend(std::iter::repeat_n(0.0, (end - head) as usize * self.lanes));
         }
         for (offset, sample) in samples.iter().enumerate() {
-            let index = (start - self.base) as usize + offset;
-            self.buffer[index] += sample;
+            let frame = (start - base) as usize + offset;
+            self.buffer[frame * self.lanes + lane] += sample;
         }
     }
 
-    /// The samples every stream has written, or that one stream got ahead
+    /// The frames every stream has written, or that one stream got ahead
     /// of the others by more than the lag allows.
     pub fn finish(&mut self) -> Vec<f32> {
         self.cursors.clear();
@@ -81,12 +108,17 @@ impl StreamMixer {
 
     pub fn drain(&mut self) -> Vec<f32> {
         let head = self.head();
-        let slowest = self.cursors.values().copied().min().unwrap_or(head);
+        let slowest = self
+            .cursors
+            .values()
+            .map(|cursor| cursor.position)
+            .min()
+            .unwrap_or(head);
         let ready_until = slowest.max(head.saturating_sub(self.max_lag_samples));
         let count = ready_until.saturating_sub(self.base) as usize;
         self.base += count as u64;
         self.buffer
-            .drain(..count)
+            .drain(..count * self.lanes)
             .map(|sample| sample.clamp(-1.0, 1.0))
             .collect()
     }
@@ -164,6 +196,31 @@ mod tests {
         mixer.push(1, &[0.8]);
         mixer.push(2, &[0.8]);
         assert_eq!(mixer.drain(), vec![1.0]);
+    }
+
+    #[test]
+    fn lanes_stay_apart_and_in_step() {
+        let mut mixer = StreamMixer::with_lanes(1_000, 2);
+        mixer.add_stream_to_lane(1, 0);
+        mixer.add_stream_to_lane(2, 1);
+        mixer.push(1, &[0.1, 0.2, 0.3]);
+        mixer.push(2, &[0.5, 0.6]);
+        assert_eq!(mixer.drain(), vec![0.1, 0.5, 0.2, 0.6]);
+        mixer.push(2, &[0.7]);
+        assert_eq!(mixer.drain(), vec![0.3, 0.7]);
+    }
+
+    #[test]
+    fn a_silent_lane_is_filled_with_silence_past_the_lag() {
+        let mut mixer = StreamMixer::with_lanes(2, 2);
+        mixer.add_stream_to_lane(1, 0);
+        mixer.add_stream_to_lane(2, 1);
+        mixer.push(1, &[0.1, 0.1, 0.1, 0.1]);
+        assert_eq!(mixer.drain(), vec![0.1, 0.0, 0.1, 0.0]);
+        // the silent lane resumes at the present, after what went out
+        mixer.push(2, &[0.5]);
+        mixer.push(1, &[0.2]);
+        assert_eq!(mixer.finish(), vec![0.1, 0.0, 0.1, 0.0, 0.2, 0.5]);
     }
 
     #[test]

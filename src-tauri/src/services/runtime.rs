@@ -1,4 +1,5 @@
 use crate::locks::MutexExt;
+pub mod compact_window;
 mod lifecycle;
 mod panel_layer;
 pub mod screenshot;

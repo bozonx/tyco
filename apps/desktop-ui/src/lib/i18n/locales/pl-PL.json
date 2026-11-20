@@ -360,7 +360,8 @@
     "vaultUnavailable": "Folder profili AI nie jest podłączony na tym urządzeniu",
     "projectUnavailable": "Folder projektu nie jest ustawiony na tym urządzeniu",
     "alreadyExists": "Już istnieje",
-    "staleRevision": "Plik zmieniono na innym urządzeniu lub poza TyCo"
+    "staleRevision": "Plik zmieniono na innym urządzeniu lub poza TyCo",
+    "captureBusy": "Dźwięk jest zajęty przez dialog"
   },
   "diff": {
     "resetResult": "Przywróć wynik",
@@ -627,7 +628,8 @@
     "editor": "Edytor",
     "history": "Historia",
     "menu": "Menu",
-    "settings": "Ustawienia"
+    "settings": "Ustawienia",
+    "dialog": "Dialog"
   },
   "selection": {
     "cancelled": "Anulowano",
@@ -1317,7 +1319,13 @@
     "askAiWebAccess": "Sieć w „Zapytaj AI”",
     "askAiWebAccessHint": "Czy czat „Zapytaj AI”, który nie ma profilu, może wyszukiwać w sieci i czytać strony. „Pytaj” czeka na Twoją zgodę przed każdym wywołaniem. Profile ustawiają to we własnych narzędziach.",
     "translationVoiceCommand": "Polecenie głosowe",
-    "translationVoiceCommandInfo": "Dołącza polecenie tłumaczenia do poleceń głosowych („przetłumacz na [język]”)."
+    "translationVoiceCommandInfo": "Dołącza polecenie tłumaczenia do poleceń głosowych („przetłumacz na [język]”).",
+    "dialogTab": "Dialog",
+    "dialogSourceHint": "Z mikrofonem Twoja mowa i mowa rozmówcy są pokazywane osobno; sam komputer pokazuje tylko rozmówcę.",
+    "dialogTranslationHint": "Wypowiedzi rozmówcy są tłumaczone na ten język. Twoja mowa nie jest tłumaczona.",
+    "dialogTranslationProvider": "Usługa tłumaczenia",
+    "dialogProviderDefault": "Jak w ustawieniach tłumaczenia",
+    "dialogProviderLlm": "Model AI"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
@@ -1377,7 +1385,8 @@
     "webhookEmptyUrl": "Adres URL webhooka jest pusty",
     "webhookFailed": "Zapytanie do webhooka nie powiodło się",
     "webhookKeyNotSet": "Klucz tego webhooka nie jest ustawiony na tym urządzeniu; wpisz go w ustawieniach polecenia",
-    "webhookSuccess": "Webhook wysłany pomyślnie"
+    "webhookSuccess": "Webhook wysłany pomyślnie",
+    "soundBusyWithDialog": "Dźwięk jest zajęty przez dialog: zatrzymaj go, aby nagrywać"
   },
   "operations": {
     "aiTask": "Polecenie AI",
@@ -1634,5 +1643,38 @@
     "cannotChangeLanguage": "Nie można zmienić języka: rozpoznawanie już się rozpoczęło",
     "languageSavedForNext": "Język zapisany dla następnego nagrania",
     "openSettings": "Ustawienia transkrypcji…"
+  },
+  "dialog": {
+    "sideMe": "Ja",
+    "sideRemote": "Rozmówca",
+    "translationLabel": "Tłumaczenie",
+    "translating": "Tłumaczenie…",
+    "translationFailed": "Nie udało się przetłumaczyć",
+    "feedLabel": "Transkrypcja dialogu",
+    "toLatest": "Do najnowszego",
+    "start": "Rozpocznij",
+    "stop": "Zatrzymaj",
+    "source": "Źródło",
+    "sourceMicrophoneAndSystem": "Mikrofon i komputer",
+    "sourceSystem": "Tylko komputer",
+    "levelMe": "Poziom mikrofonu",
+    "levelRemote": "Poziom dźwięku komputera",
+    "translationLanguage": "Tłumacz na",
+    "textDisplay": "Pokazuj",
+    "displayTranslation": "Tłumaczenie",
+    "displayOriginal": "Oryginał",
+    "displayBoth": "Oba",
+    "copy": "Kopiuj transkrypcję",
+    "toActionMenu": "Wyślij do menu akcji",
+    "clear": "Wyczyść transkrypcję",
+    "collapse": "Zwiń do napisów",
+    "expand": "Rozwiń",
+    "noTranslation": "Bez tłumaczenia",
+    "reconnecting": "Ponowne łączenie z rozpoznawaniem mowy…",
+    "connecting": "Łączenie z rozpoznawaniem mowy…",
+    "waitingForSpeech": "Słucham…",
+    "notRunning": "Dialog jest zatrzymany",
+    "emptyTitle": "Transkrypcja rozmowy",
+    "emptyHint": "Uruchom dialog podczas rozmowy w dowolnej aplikacji: wypowiedzi rozmówcy pojawią się tutaj z tłumaczeniem, a nagrywanie trwa na innych kartach, dopóki go nie zatrzymasz."
   }
 }

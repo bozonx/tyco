@@ -261,5 +261,11 @@
       "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
       "geminiLive": { "modelId": "gemini-3.5-transcribe-live" }
     }
+  },
+  "dialog": {
+    "source": "microphoneAndSystem",
+    "translationTargetLanguage": "",
+    "textDisplay": "both",
+    "translationProvider": "default"
   }
 }

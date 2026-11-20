@@ -14,6 +14,7 @@ export interface NavigationApi {
   rememberConfigTab: (tab: string) => Promise<void>
   goToChat: () => Promise<void>
   goToProfileChat: (profileId: string) => Promise<void>
+  goToDialog: () => Promise<void>
 }
 
 export function createAppNavigation(router: {
@@ -57,6 +58,9 @@ export function createAppNavigation(router: {
     },
     async goToChat() {
       await router.push(APP_ROUTES.CHAT.path)
+    },
+    async goToDialog() {
+      await router.push(APP_ROUTES.DIALOG.path)
     },
     async goToProfileChat(profileId: string) {
       await router.push({

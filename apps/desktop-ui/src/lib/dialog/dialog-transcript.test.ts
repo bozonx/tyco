@@ -1,0 +1,144 @@
+import { describe, expect, it } from 'vitest'
+
+import {
+  buildDialogTurns,
+  createDialogTranscript,
+  lastRemoteTurn,
+  turnText,
+  turnTranslation,
+  type DialogSegment,
+  type DialogSide,
+} from './dialog-transcript'
+
+function segment(
+  id: string,
+  side: DialogSide,
+  startMs: number,
+  endMs: number
+): DialogSegment {
+  return {
+    id,
+    side,
+    startMs,
+    endMs,
+    text: id,
+    isFinal: true,
+    translationState: 'idle',
+  }
+}
+
+function ids(segments: DialogSegment[]) {
+  return buildDialogTurns(segments).map((turn) =>
+    turn.segments.map((item) => item.id)
+  )
+}
+
+describe('buildDialogTurns', () => {
+  it('groups nearby speech and separates pauses and speaker changes', () => {
+    expect(
+      ids([
+        segment('a', 'remote', 0, 100),
+        segment('b', 'remote', 200, 300),
+        segment('c', 'me', 400, 500),
+        segment('d', 'remote', 600, 700),
+        segment('e', 'remote', 3000, 4000),
+      ])
+    ).toEqual([['a', 'b'], ['c'], ['d'], ['e']])
+  })
+
+  it('keeps overlapping turns open and sorts by start time', () => {
+    expect(
+      ids([
+        segment('c', 'remote', 600, 900),
+        segment('b', 'me', 300, 700),
+        segment('a', 'remote', 0, 800),
+      ])
+    ).toEqual([['a', 'c'], ['b']])
+  })
+
+  it('names a turn by its first segment and joins its texts', () => {
+    const [turn] = buildDialogTurns([
+      { ...segment('a', 'remote', 0, 100), translation: 'A' },
+      { ...segment('b', 'remote', 200, 300), translation: 'B' },
+    ])
+    expect(turn.id).toBe('a')
+    expect(turnText(turn)).toBe('a b')
+    expect(turnTranslation(turn)).toBe('A B')
+  })
+
+  it('finds the latest turn of the other side', () => {
+    const turns = buildDialogTurns([
+      segment('a', 'remote', 0, 100),
+      segment('b', 'me', 200, 300),
+    ])
+    expect(lastRemoteTurn(turns)?.id).toBe('a')
+    expect(lastRemoteTurn([])).toBeUndefined()
+  })
+})
+
+describe('createDialogTranscript', () => {
+  function transcript() {
+    let next = 0
+    const changes: (readonly DialogSegment[])[] = []
+    const model = createDialogTranscript({
+      createId: () => `s${(next += 1)}`,
+      onChange: (segments) => changes.push(segments),
+    })
+    return { model, changes }
+  }
+
+  it('replaces the guess of a side and settles it with a final part', () => {
+    const { model } = transcript()
+    model.apply('remote', { type: 'partial', text: 'hel', startMs: 0 }, 1000)
+    model.apply('remote', { type: 'partial', text: 'hello', startMs: 0 }, 1000)
+    model.apply('me', { type: 'partial', text: 'yes', startMs: 50 }, 0)
+    expect(model.segments.map((item) => [item.text, item.isFinal])).toEqual([
+      ['hello', false],
+      ['yes', false],
+    ])
+    const settled = model.apply(
+      'remote',
+      { type: 'final', segment: { text: ' hello ', startMs: 0, endMs: 400 } },
+      1000
+    )
+    expect(settled).toMatchObject({
+      side: 'remote',
+      text: 'hello',
+      isFinal: true,
+      startMs: 1000,
+      endMs: 1400,
+    })
+    expect(model.segments.map((item) => item.text)).toEqual(['yes', 'hello'])
+  })
+
+  it('drops an empty guess and a lost one', () => {
+    const { model } = transcript()
+    model.apply('me', { type: 'partial', text: 'um', startMs: 0 }, 0)
+    model.apply('me', { type: 'partial', text: ' ', startMs: 0 }, 0)
+    expect(model.segments).toEqual([])
+    model.apply('me', { type: 'partial', text: 'so', startMs: 0 }, 0)
+    model.dropDraft('me')
+    expect(model.segments).toEqual([])
+  })
+
+  it('updates the translation of a segment and clears everything', () => {
+    const { model, changes } = transcript()
+    const settled = model.apply(
+      'remote',
+      { type: 'final', segment: { text: 'hi', startMs: 0, endMs: 10 } },
+      0
+    )!
+    model.update(settled.id, {
+      translation: 'привет',
+      translationState: 'complete',
+    })
+    expect(model.segments[0]).toMatchObject({
+      translation: 'привет',
+      translationState: 'complete',
+    })
+    model.update('missing', { translationState: 'failed' })
+    model.clear()
+    expect(model.segments).toEqual([])
+    expect(changes).toHaveLength(3)
+  })
+})

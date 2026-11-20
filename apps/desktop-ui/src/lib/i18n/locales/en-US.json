@@ -360,7 +360,8 @@
     "vaultUnavailable": "The folder of AI profiles is not connected on this device",
     "projectUnavailable": "The project folder is not set on this device",
     "alreadyExists": "It exists already",
-    "staleRevision": "The file was changed on another device or outside TyCo"
+    "staleRevision": "The file was changed on another device or outside TyCo",
+    "captureBusy": "The sound is busy with the dialog"
   },
   "diff": {
     "resetResult": "Reset result",
@@ -627,7 +628,8 @@
     "editor": "Editor",
     "history": "History",
     "menu": "Menu",
-    "settings": "Settings"
+    "settings": "Settings",
+    "dialog": "Dialog"
   },
   "selection": {
     "cancelled": "Cancelled",
@@ -1317,7 +1319,13 @@
     "askAiWebAccess": "Web in \"Ask AI\"",
     "askAiWebAccessHint": "Whether the \"Ask AI\" chat, which has no profile, may search the web and read pages. \"Ask\" waits for your approval before each call. Profiles set this in their own tools.",
     "translationVoiceCommand": "Voice command",
-    "translationVoiceCommandInfo": "Includes the translation command in voice commands (\"translate to [language]\")."
+    "translationVoiceCommandInfo": "Includes the translation command in voice commands (\"translate to [language]\").",
+    "dialogTab": "Dialog",
+    "dialogSourceHint": "With the microphone, your speech and the other side are shown apart; the computer alone shows only the other side.",
+    "dialogTranslationHint": "What the other side says is translated into this language. Your own speech is not translated.",
+    "dialogTranslationProvider": "Translation service",
+    "dialogProviderDefault": "As in the translation settings",
+    "dialogProviderLlm": "AI model"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
@@ -1377,7 +1385,8 @@
     "webhookEmptyUrl": "Webhook URL is empty",
     "webhookFailed": "Webhook request failed",
     "webhookKeyNotSet": "The key of this webhook is not set on this device; enter it in the command settings",
-    "webhookSuccess": "Webhook sent successfully"
+    "webhookSuccess": "Webhook sent successfully",
+    "soundBusyWithDialog": "The sound is busy with the dialog: stop it to record"
   },
   "operations": {
     "aiTask": "AI command",
@@ -1634,5 +1643,38 @@
     "cannotChangeLanguage": "Language cannot be changed: recognition has already started",
     "languageSavedForNext": "Language saved for the next recording",
     "openSettings": "Transcription settings…"
+  },
+  "dialog": {
+    "sideMe": "Me",
+    "sideRemote": "Other side",
+    "translationLabel": "Translation",
+    "translating": "Translating…",
+    "translationFailed": "Could not translate",
+    "feedLabel": "Dialog transcript",
+    "toLatest": "To the latest",
+    "start": "Start",
+    "stop": "Stop",
+    "source": "Source",
+    "sourceMicrophoneAndSystem": "Microphone and computer",
+    "sourceSystem": "Computer only",
+    "levelMe": "Microphone level",
+    "levelRemote": "Computer sound level",
+    "translationLanguage": "Translate into",
+    "textDisplay": "Show",
+    "displayTranslation": "Translation",
+    "displayOriginal": "Original",
+    "displayBoth": "Both",
+    "copy": "Copy the transcript",
+    "toActionMenu": "Send to the action menu",
+    "clear": "Clear the transcript",
+    "collapse": "Collapse to subtitles",
+    "expand": "Expand",
+    "noTranslation": "No translation",
+    "reconnecting": "Reconnecting to speech recognition…",
+    "connecting": "Connecting to speech recognition…",
+    "waitingForSpeech": "Listening…",
+    "notRunning": "The dialog is stopped",
+    "emptyTitle": "Transcribe a call",
+    "emptyHint": "Start the dialog during a call in any app: what the other side says appears here, translated, and keeps going on other tabs until you stop it."
   }
 }

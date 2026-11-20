@@ -20,6 +20,9 @@ pub enum AppError {
     /// Another operation holds what this one needs; it may succeed later.
     #[error("{0}")]
     Busy(String),
+    /// The sound is taken by the dialog, which no other capture takes over.
+    #[error("{0}")]
+    CaptureBusy(String),
     /// The user or the system did not allow the operation.
     #[error("{0}")]
     PermissionDenied(String),
@@ -111,6 +114,8 @@ error_codes! {
     ServiceUnavailable,
     /// Another operation holds what this one needs; it may succeed later.
     Busy,
+    /// The sound is taken by the dialog: voice input waits until it stops.
+    CaptureBusy,
     /// The user or the system did not allow the operation.
     PermissionDenied,
     /// A bound is reached.
@@ -152,6 +157,7 @@ impl AppError {
             Self::ConfigConflict(_) => ErrorCode::ConfigConflict,
             Self::ServiceUnavailable(_) => ErrorCode::ServiceUnavailable,
             Self::Busy(_) => ErrorCode::Busy,
+            Self::CaptureBusy(_) => ErrorCode::CaptureBusy,
             Self::PermissionDenied(_) => ErrorCode::PermissionDenied,
             Self::ResourceLimit(_) => ErrorCode::ResourceLimit,
             Self::InvalidInput(_) => ErrorCode::InvalidInput,
@@ -207,6 +213,7 @@ mod tests {
                 "operationFailed",
             ),
             (AppError::Busy("Clipboard is busy".into()), "busy"),
+            (AppError::CaptureBusy("Dialog".into()), "captureBusy"),
             (
                 AppError::PermissionDenied("Accessibility is off".into()),
                 "permissionDenied",

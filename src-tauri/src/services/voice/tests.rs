@@ -2,11 +2,12 @@
 fn capture_info_preserves_the_frontend_wire_names() {
     let info = super::VoiceCaptureInfo {
         sample_rate_hz: 16_000,
+        channels: 2,
         session_id: 7,
     };
     assert_eq!(
         serde_json::to_value(info).unwrap(),
-        serde_json::json!({"sampleRate": 16_000, "sessionId": 7})
+        serde_json::json!({"sampleRate": 16_000, "channels": 2, "sessionId": 7})
     );
 }
 
@@ -20,7 +21,7 @@ fn run_capture<A: AudioSource, L: AudioLevelSink, S: EventSink>(
     sink: &S,
     stop_flag: &Arc<AtomicBool>,
     superseded: &AtomicBool,
-    setup_tx: &std_mpsc::SyncSender<Result<u32, AppError>>,
+    setup_tx: &std_mpsc::SyncSender<Result<CaptureFormat, AppError>>,
 ) -> Result<(), AppError> {
     let switch = SourceSwitchSlot::default();
     let control = CaptureControl {
@@ -140,6 +141,7 @@ impl AudioSource for TestSource {
                 device_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
                 output_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
                 fills_gaps: false,
+                channel_count: 1,
                 status: Arc::default(),
             },
         })
@@ -184,7 +186,13 @@ fn stream_stops_before_final_samples_and_end_and_resets_the_audio_level() {
         &tx,
     )
     .unwrap();
-    assert_eq!(rx.try_recv().unwrap().unwrap(), TARGET_SAMPLE_RATE_HZ);
+    assert_eq!(
+        rx.try_recv().unwrap().unwrap(),
+        CaptureFormat {
+            sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
+            channels: 1
+        }
+    );
     assert_eq!(
         trace.values(),
         [
@@ -984,4 +992,152 @@ fn a_source_switch_discards_audio_recorded_twice_during_setup() {
         })
         .collect();
     assert_eq!(samples, vec![1; 100]);
+}
+
+#[tokio::test]
+async fn a_running_dialog_is_not_taken_over_by_dictation() {
+    let state = VoiceSessionState::default();
+    let trace = Trace::default();
+    let dialog = start_capture_with(
+        TestSource {
+            trace: trace.clone(),
+            ..TestSource::default()
+        },
+        CaptureSource::Dialog {
+            is_microphone_enabled: true,
+        },
+        trace.clone(),
+        &state,
+        trace.clone(),
+    )
+    .await
+    .unwrap();
+    let error = start_capture_with(
+        TestSource::default(),
+        CaptureSource::Microphone,
+        Trace::default(),
+        &state,
+        Trace::default(),
+    )
+    .await
+    .err()
+    .unwrap();
+    assert!(matches!(error, AppError::CaptureBusy(_)), "{error}");
+    assert!(state.is_dialog_running());
+    // the refused start opened nothing and ended nothing
+    assert_eq!(
+        trace
+            .values()
+            .iter()
+            .filter(|value| *value == "open")
+            .count(),
+        1
+    );
+    stop_capture(&state, Some(dialog.session_id)).await.unwrap();
+    assert!(!state.is_dialog_running());
+}
+
+#[tokio::test]
+async fn a_dialog_takes_the_sound_over_from_dictation() {
+    let state = VoiceSessionState::default();
+    let trace = Trace::default();
+    start_capture_with(
+        TestSource {
+            trace: trace.clone(),
+            ..TestSource::default()
+        },
+        CaptureSource::Microphone,
+        trace.clone(),
+        &state,
+        trace.clone(),
+    )
+    .await
+    .unwrap();
+    let dialog = start_capture_with(
+        TestSource {
+            trace: trace.clone(),
+            ..TestSource::default()
+        },
+        CaptureSource::Dialog {
+            is_microphone_enabled: false,
+        },
+        trace.clone(),
+        &state,
+        trace.clone(),
+    )
+    .await
+    .unwrap();
+    assert!(state.is_dialog_running());
+    assert!(trace
+        .values()
+        .iter()
+        .any(|value| value.contains("superseded")));
+    stop_capture(&state, Some(dialog.session_id)).await.unwrap();
+}
+
+#[test]
+fn a_stereo_capture_reports_its_channels_and_their_levels() {
+    struct StereoSource;
+    impl AudioSource for StereoSource {
+        type Stream = ();
+        fn open(
+            &self,
+            _source: &CaptureSource,
+            stop_flag: &Arc<AtomicBool>,
+        ) -> Result<OpenedCapture<()>, AppError> {
+            let mut context =
+                StreamContext::new(stop_flag, TARGET_SAMPLE_RATE_HZ, TARGET_SAMPLE_RATE_HZ);
+            context.channel_count = 2;
+            // the microphone loud, the computer silent
+            context
+                .pending_pcm_samples
+                .locked()
+                .extend([16_000, 0].repeat(1_600));
+            Ok(OpenedCapture {
+                stream: (),
+                context,
+                output_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
+            })
+        }
+    }
+    #[derive(Default)]
+    struct Levels(Mutex<Vec<VoiceAudioLevelPayload>>);
+    impl AudioLevelSink for Levels {
+        fn publish(&self, payload: VoiceAudioLevelPayload) {
+            self.0.lock().unwrap().push(payload);
+        }
+    }
+    let stop = Arc::new(AtomicBool::new(false));
+    let clock = TestRuntime {
+        now: std::cell::Cell::new(Instant::now()),
+        stop: Arc::clone(&stop),
+    };
+    let sink = RecordingSink::default();
+    let levels = Levels::default();
+    let (tx, rx) = std_mpsc::sync_channel(1);
+    let switch = SourceSwitchSlot::default();
+    let control = CaptureControl {
+        stop_flag: &stop,
+        superseded: &AtomicBool::new(false),
+        switch: &switch,
+    };
+    run_capture_thread(
+        &StereoSource,
+        CaptureSource::Dialog {
+            is_microphone_enabled: true,
+        },
+        &levels,
+        &clock,
+        &sink,
+        &control,
+        &tx,
+    )
+    .unwrap();
+    assert_eq!(rx.try_recv().unwrap().unwrap().channels, 2);
+    let published = levels.0.lock().unwrap();
+    let channels = published[0].channels.clone().unwrap();
+    assert!(channels[0] > 0.3 && channels[1] == 0.0, "{channels:?}");
+    // whole frames only
+    let bytes: usize = sink.chunks.lock().unwrap().iter().map(Vec::len).sum();
+    assert_eq!(bytes, 2 * 2 * 1_600);
 }

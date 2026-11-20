@@ -19,6 +19,7 @@ const APP_ROUTE_NAMES = {
   VOICE_QUICK_AI_REQUEST: 'voiceQuickAiRequest',
   CHAT_PROMPTS: 'chatPrompts',
   FAVORITES: 'favorites',
+  DIALOG: 'dialog',
 } as const
 
 export const APP_ROUTES = {
@@ -52,6 +53,7 @@ export const APP_ROUTES = {
   },
   CHAT_PROMPTS: { name: APP_ROUTE_NAMES.CHAT_PROMPTS, path: '/chatPrompts' },
   FAVORITES: { name: APP_ROUTE_NAMES.FAVORITES, path: '/favorites' },
+  DIALOG: { name: APP_ROUTE_NAMES.DIALOG, path: '/dialog' },
 } as const
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]['path']

@@ -360,7 +360,8 @@
     "vaultUnavailable": "La cartella dei profili IA non è collegata su questo dispositivo",
     "projectUnavailable": "La cartella del progetto non è impostata su questo dispositivo",
     "alreadyExists": "Esiste già",
-    "staleRevision": "Il file è stato modificato su un altro dispositivo o fuori da TyCo"
+    "staleRevision": "Il file è stato modificato su un altro dispositivo o fuori da TyCo",
+    "captureBusy": "L'audio è occupato dal dialogo"
   },
   "diff": {
     "resetResult": "Ripristina risultato",
@@ -627,7 +628,8 @@
     "editor": "Editor",
     "history": "Cronologia",
     "menu": "Menu",
-    "settings": "Impostazioni"
+    "settings": "Impostazioni",
+    "dialog": "Dialogo"
   },
   "selection": {
     "cancelled": "Annullato",
@@ -1317,7 +1319,13 @@
     "askAiWebAccess": "Web in «Chiedi all’IA»",
     "askAiWebAccessHint": "Se la chat «Chiedi all’IA», che non ha un profilo, può cercare sul web e leggere pagine. «Chiedi» attende la tua approvazione prima di ogni chiamata. I profili lo impostano nei propri strumenti.",
     "translationVoiceCommand": "Comando vocale",
-    "translationVoiceCommandInfo": "Include il comando di traduzione nei comandi vocali («traduci in [lingua]»). "
+    "translationVoiceCommandInfo": "Include il comando di traduzione nei comandi vocali («traduci in [lingua]»). ",
+    "dialogTab": "Dialogo",
+    "dialogSourceHint": "Con il microfono, la tua voce e quella dell'interlocutore sono mostrate separatamente; solo il computer mostra solo l'interlocutore.",
+    "dialogTranslationHint": "Ciò che dice l'interlocutore viene tradotto in questa lingua. La tua voce non viene tradotta.",
+    "dialogTranslationProvider": "Servizio di traduzione",
+    "dialogProviderDefault": "Come nelle impostazioni di traduzione",
+    "dialogProviderLlm": "Modello di IA"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {
@@ -1377,7 +1385,8 @@
     "webhookEmptyUrl": "L’URL del webhook è vuoto",
     "webhookFailed": "Richiesta al webhook non riuscita",
     "webhookKeyNotSet": "La chiave di questo webhook non è impostata su questo dispositivo; inseriscila nelle impostazioni del comando",
-    "webhookSuccess": "Webhook inviato correttamente"
+    "webhookSuccess": "Webhook inviato correttamente",
+    "soundBusyWithDialog": "L'audio è occupato dal dialogo: interrompilo per registrare"
   },
   "operations": {
     "aiTask": "Comando IA",
@@ -1634,5 +1643,38 @@
     "cannotChangeLanguage": "Impossibile cambiare lingua: il riconoscimento è già iniziato",
     "languageSavedForNext": "Lingua salvata per la prossima registrazione",
     "openSettings": "Impostazioni di trascrizione…"
+  },
+  "dialog": {
+    "sideMe": "Io",
+    "sideRemote": "Interlocutore",
+    "translationLabel": "Traduzione",
+    "translating": "Traduzione in corso…",
+    "translationFailed": "Impossibile tradurre",
+    "feedLabel": "Trascrizione del dialogo",
+    "toLatest": "Al più recente",
+    "start": "Avvia",
+    "stop": "Ferma",
+    "source": "Sorgente",
+    "sourceMicrophoneAndSystem": "Microfono e computer",
+    "sourceSystem": "Solo computer",
+    "levelMe": "Livello del microfono",
+    "levelRemote": "Livello dell'audio del computer",
+    "translationLanguage": "Traduci in",
+    "textDisplay": "Mostra",
+    "displayTranslation": "Traduzione",
+    "displayOriginal": "Originale",
+    "displayBoth": "Entrambi",
+    "copy": "Copia la trascrizione",
+    "toActionMenu": "Invia al menu delle azioni",
+    "clear": "Cancella la trascrizione",
+    "collapse": "Riduci a sottotitoli",
+    "expand": "Espandi",
+    "noTranslation": "Nessuna traduzione",
+    "reconnecting": "Riconnessione al riconoscimento vocale…",
+    "connecting": "Connessione al riconoscimento vocale…",
+    "waitingForSpeech": "In ascolto…",
+    "notRunning": "Il dialogo è fermo",
+    "emptyTitle": "Trascrivi una chiamata",
+    "emptyHint": "Avvia il dialogo durante una chiamata in qualsiasi app: ciò che dice l'interlocutore appare qui tradotto e la registrazione continua nelle altre schede finché non la fermi."
   }
 }

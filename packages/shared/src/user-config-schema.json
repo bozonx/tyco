@@ -1351,6 +1351,46 @@
         "providers"
       ],
       "defaultPath": "stt"
+    },
+    "dialog": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "enum": ["microphoneAndSystem", "system"],
+          "default": "microphoneAndSystem"
+        },
+        "translationTargetLanguage": {
+          "type": "string",
+          "maxLength": 35,
+          "default": ""
+        },
+        "textDisplay": {
+          "enum": ["translation", "original", "both"],
+          "default": "both"
+        },
+        "translationProvider": {
+          "enum": ["default", "deepl", "google", "llm"],
+          "default": "default"
+        },
+        "compactGeometry": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "integer" },
+            "y": { "type": "integer" },
+            "width": { "type": "integer", "minimum": 1 },
+            "height": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["x", "y", "width", "height"],
+          "x-scope": "device"
+        }
+      },
+      "required": [
+        "source",
+        "translationTargetLanguage",
+        "textDisplay",
+        "translationProvider"
+      ],
+      "defaultPath": "dialog"
     }
   },
   "required": [
@@ -1378,7 +1418,8 @@
     "chat",
     "stt",
     "aiVaults",
-    "aiProfiles"
+    "aiProfiles",
+    "dialog"
   ],
   "$defs": {
     "scriptOperationConfig": {

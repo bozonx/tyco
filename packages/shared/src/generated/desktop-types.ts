@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: a3ce8ab8685366b3920e25e8ed7a48a1d9cdbad57d1e1533cd0c19530e7e4b73
+// Source hash: be2d0f94cae5e5b9ac51b32ac5c3da494965f223d870b94a9b5ff4b2259026d5
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -289,6 +289,7 @@ export type CaptureSource =
   | { kind: 'systemMix' }
   | { kind: 'microphoneAndSystemMix' }
   | { kind: 'application'; appId: string }
+  | { kind: 'dialog'; isMicrophoneEnabled: boolean }
 
 export type Chat = {
   id: string
@@ -472,6 +473,7 @@ export type DesktopErrorCode =
   | 'configConflict'
   | 'serviceUnavailable'
   | 'busy'
+  | 'captureBusy'
   | 'permissionDenied'
   | 'resourceLimit'
   | 'invalidInput'
@@ -1070,7 +1072,12 @@ export type VaultState = 'available' | 'unavailable'
 /** Where an attached vault stands on this device. */
 export type VaultStatus = 'connected' | 'notConnected' | 'newer'
 
-export type VoiceAudioLevelPayload = { level: number; peak: number }
+export type VoiceAudioLevelPayload = {
+  level: number
+  peak: number
+  /** The level of each channel of a capture of several, in their order. */
+  channels?: Array<number>
+}
 
 /** Control messages on the audio channel; the audio itself goes as raw bytes. */
 export type VoiceCaptureEvent =
@@ -1081,8 +1088,13 @@ export type VoiceCaptureEvent =
   | { type: 'sourceLost'; source: CaptureSource }
 
 export type VoiceCaptureInfo = {
-  /** Rate of the PCM16 mono chunks that follow. */
+  /** Rate of the PCM16 chunks that follow. */
   sampleRate: number
+  /**
+   * How many interleaved channels the chunks hold: 2 for a dialog with the
+   * microphone (the microphone, then the computer sound), else 1.
+   */
+  channels: number
   /** What `stop_capture` takes to stop this capture and no other. */
   sessionId: number
 }
@@ -1092,6 +1104,14 @@ export type WebSearchResultItem = {
   url: string
   description: string
   content?: string
+}
+
+/** Where a window is and how large, in physical pixels of the desktop. */
+export type WindowGeometry = {
+  x: number
+  y: number
+  width: number
+  height: number
 }
 
 /**
@@ -1106,6 +1126,7 @@ export const DESKTOP_ERROR_CODES = [
   'configConflict',
   'serviceUnavailable',
   'busy',
+  'captureBusy',
   'permissionDenied',
   'resourceLimit',
   'invalidInput',

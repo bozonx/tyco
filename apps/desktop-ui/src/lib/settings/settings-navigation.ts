@@ -49,6 +49,11 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         icon: 'mdi:translate',
       },
       {
+        id: 'dialog',
+        labelKey: 'settings.dialogTab',
+        icon: 'mdi:account-voice',
+      },
+      {
         id: 'correction',
         labelKey: 'settings.correctionTab',
         icon: 'mdi:spellcheck',
@@ -402,6 +407,7 @@ const CONFIG_SECTION_TABS: Record<string, SettingsSectionId> = {
   plugins: 'plugins',
   chat: 'chat',
   stt: 'stt',
+  dialog: 'dialog',
 }
 
 /** Fields of a section edited on another tab than the rest of it */

@@ -169,6 +169,8 @@ fn main() {
             "start_voice_capture",
             "stop_voice_capture",
             "switch_capture_source",
+            "enter_compact_window",
+            "leave_compact_window",
             "switch_quick_mode",
             "watch_audio_apps",
             "unwatch_audio_apps",

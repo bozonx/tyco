@@ -16,6 +16,22 @@
         {{ t('nav.editor') }}
       </button>
       <button
+        type="button"
+        class="topbar-tab"
+        :aria-current="isDialogActive ? 'page' : undefined"
+        :class="{ 'is-active': isDialogActive }"
+        @click="openDialog"
+      >
+        <AppIcon
+          :icon="
+            dialogStore.isActive ? 'mdi:record-circle' : 'mdi:account-voice'
+          "
+          size="md"
+          :class="{ 'dialog-recording': dialogStore.isActive }"
+        />
+        {{ t('nav.dialog') }}
+      </button>
+      <button
         v-if="isInDevelopment"
         type="button"
         class="topbar-tab"
@@ -102,6 +118,7 @@ import { appNavigation } from '../../navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useChatStore, useProfileChatStore } from '../../stores/chat'
 import { useDesktopStore } from '../../stores/desktop'
+import { useDialogStore } from '../../stores/dialog'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useNavPanelStore } from '../../stores/nav-panel'
 import AppIcon from '../common/AppIcon.vue'
@@ -116,6 +133,10 @@ const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
 
 const desktopStore = useDesktopStore()
+const dialogStore = useDialogStore()
+const isDialogActive = computed(() =>
+  appNavigation.isCurrent(APP_ROUTES.DIALOG.path)
+)
 const isInDevelopment = computed(() => desktopStore.userConfig.isInDevelopment)
 const profiles = computed(() =>
   isInDevelopment.value ? aiProfilesStore.profiles : []
@@ -199,6 +220,11 @@ function openProfileChat(profileId: string) {
   void useProfileChatStore(profileId).openLastOrNewChat()
 }
 
+function openDialog() {
+  menuModalsStore.closeAll()
+  void appNavigation.goToDialog()
+}
+
 function openHistory() {
   menuModalsStore.closeAll()
   void appNavigation.goToHistory()
@@ -206,6 +232,10 @@ function openHistory() {
 </script>
 
 <style scoped>
+.dialog-recording {
+  color: var(--color-error);
+}
+
 .topbar-divider {
   width: 1px;
   height: 1rem;

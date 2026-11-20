@@ -270,7 +270,15 @@ describe('Settings.vue', () => {
         )
     ).toEqual([
       ['general', 'global-actions', 'editor', 'history', 'accessibility'],
-      ['llm', 'stt', 'chat', 'translations', 'correction', 'ai-profiles'],
+      [
+        'llm',
+        'stt',
+        'chat',
+        'translations',
+        'dialog',
+        'correction',
+        'ai-profiles',
+      ],
       [
         'main-actions',
         'transformations',

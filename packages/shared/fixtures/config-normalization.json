@@ -408,7 +408,13 @@
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true }
-      ]
+      ],
+      "dialog": {
+        "source": "microphoneAndSystem",
+        "translationTargetLanguage": "",
+        "textDisplay": "both",
+        "translationProvider": "default"
+      }
     }
   },
   {
@@ -836,7 +842,13 @@
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true }
-      ]
+      ],
+      "dialog": {
+        "source": "microphoneAndSystem",
+        "translationTargetLanguage": "",
+        "textDisplay": "both",
+        "translationProvider": "default"
+      }
     }
   },
   {
@@ -1257,7 +1269,13 @@
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true }
-      ]
+      ],
+      "dialog": {
+        "source": "microphoneAndSystem",
+        "translationTargetLanguage": "",
+        "textDisplay": "both",
+        "translationProvider": "default"
+      }
     }
   },
   {
@@ -1688,7 +1706,13 @@
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true }
-      ]
+      ],
+      "dialog": {
+        "source": "microphoneAndSystem",
+        "translationTargetLanguage": "",
+        "textDisplay": "both",
+        "translationProvider": "default"
+      }
     }
   },
   {
@@ -2097,7 +2121,13 @@
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true }
-      ]
+      ],
+      "dialog": {
+        "source": "microphoneAndSystem",
+        "translationTargetLanguage": "",
+        "textDisplay": "both",
+        "translationProvider": "default"
+      }
     }
   },
   {
@@ -2518,7 +2548,13 @@
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true }
-      ]
+      ],
+      "dialog": {
+        "source": "microphoneAndSystem",
+        "translationTargetLanguage": "",
+        "textDisplay": "both",
+        "translationProvider": "default"
+      }
     }
   },
   {
@@ -2941,7 +2977,13 @@
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true }
-      ]
+      ],
+      "dialog": {
+        "source": "microphoneAndSystem",
+        "translationTargetLanguage": "",
+        "textDisplay": "both",
+        "translationProvider": "default"
+      }
     }
   },
   {
@@ -3371,7 +3413,13 @@
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true }
-      ]
+      ],
+      "dialog": {
+        "source": "microphoneAndSystem",
+        "translationTargetLanguage": "",
+        "textDisplay": "both",
+        "translationProvider": "default"
+      }
     }
   },
   {
@@ -3813,7 +3861,13 @@
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true }
-      ]
+      ],
+      "dialog": {
+        "source": "microphoneAndSystem",
+        "translationTargetLanguage": "",
+        "textDisplay": "both",
+        "translationProvider": "default"
+      }
     }
   },
   {
@@ -4334,7 +4388,13 @@
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true }
-      ]
+      ],
+      "dialog": {
+        "source": "microphoneAndSystem",
+        "translationTargetLanguage": "",
+        "textDisplay": "both",
+        "translationProvider": "default"
+      }
     }
   },
   {
@@ -4875,7 +4935,13 @@
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true }
-      ]
+      ],
+      "dialog": {
+        "source": "microphoneAndSystem",
+        "translationTargetLanguage": "",
+        "textDisplay": "both",
+        "translationProvider": "default"
+      }
     }
   }
 ]

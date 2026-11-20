@@ -71,4 +71,21 @@ describe('dictation-error', () => {
     expect(describeDictationError(locked, translate)).toBe('Keychain locked')
     expect(isSettingsFixableDictationError(locked)).toBe(false)
   })
+
+  it('tells a voice input that the dialog holds the sound', () => {
+    const refusal = new Error('The sound is taken by the dialog', {
+      cause: {
+        code: 'captureBusy',
+        message: 'The sound is taken by the dialog',
+      },
+    })
+    const error = asDictationError('microphone', refusal)
+    expect(error.kind).toBe('captureBusy')
+    expect(describeDictationError(error, translate)).toBe(
+      'toast.soundBusyWithDialog'
+    )
+    expect(asDictationError('microphone', new Error('no device')).kind).toBe(
+      'microphone'
+    )
+  })
 })

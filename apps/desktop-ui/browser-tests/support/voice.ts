@@ -22,7 +22,7 @@ export function installVoice(desktop: FakeDesktop) {
   let socket: DesktopChannel | undefined
   desktop.handle('start_voice_capture', ({ onAudio }) => {
     audio = onAudio
-    return { sampleRate: 16000, sessionId: 7 }
+    return { sampleRate: 16000, channels: 1, sessionId: 7 }
   })
   desktop.handle('stop_voice_capture', async () => {
     if (audio) await desktop.sendChannel(audio, { type: 'end' })

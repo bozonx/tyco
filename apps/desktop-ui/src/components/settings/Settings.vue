@@ -128,6 +128,7 @@ import SettingsChatPromptsTab from './SettingsChatPromptsTab.vue'
 import SettingsChatTab from './SettingsChatTab.vue'
 import SettingsCommandsTab from './SettingsCommandsTab.vue'
 import SettingsCorrectionTab from './SettingsCorrectionTab.vue'
+import SettingsDialogTab from './SettingsDialogTab.vue'
 import SettingsEditorTab from './SettingsEditorTab.vue'
 import SettingsFavoritesTab from './SettingsFavoritesTab.vue'
 import SettingsGeneralTab from './SettingsGeneralTab.vue'
@@ -162,6 +163,7 @@ const SECTION_TABS: Record<
   llm: SettingsLlmTab,
   translations: SettingsTranslationsTab,
   accessibility: SettingsAccessibilityTab,
+  dialog: SettingsDialogTab,
   variables: SettingsVariablesTab,
   plugins: SettingsPluginsTab,
   'main-actions': SettingsMainActionsTab,

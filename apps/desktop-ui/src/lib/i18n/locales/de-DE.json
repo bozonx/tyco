@@ -360,7 +360,8 @@
     "vaultUnavailable": "Der Ordner der KI-Profile ist auf diesem Gerät nicht verbunden",
     "projectUnavailable": "Der Projektordner ist auf diesem Gerät nicht festgelegt",
     "alreadyExists": "Ist bereits vorhanden",
-    "staleRevision": "Die Datei wurde auf einem anderen Gerät oder außerhalb von TyCo geändert"
+    "staleRevision": "Die Datei wurde auf einem anderen Gerät oder außerhalb von TyCo geändert",
+    "captureBusy": "Der Ton wird vom Dialog belegt"
   },
   "diff": {
     "resetResult": "Ergebnis zurücksetzen",
@@ -627,7 +628,8 @@
     "editor": "Editor",
     "history": "Verlauf",
     "menu": "Menü",
-    "settings": "Einstellungen"
+    "settings": "Einstellungen",
+    "dialog": "Dialog"
   },
   "selection": {
     "cancelled": "Abgebrochen",
@@ -1317,7 +1319,13 @@
     "askAiWebAccess": "Web in „KI fragen“",
     "askAiWebAccessHint": "Ob der Chat „KI fragen“, der kein Profil hat, im Web suchen und Seiten lesen darf. „Fragen“ wartet vor jedem Aufruf auf Ihre Zustimmung. Profile legen das in ihren eigenen Werkzeugen fest.",
     "translationVoiceCommand": "Sprachbefehl",
-    "translationVoiceCommandInfo": "Fügt den Übersetzungsbefehl zu den Sprachbefehlen hinzu („übersetze auf [Sprache]“)."
+    "translationVoiceCommandInfo": "Fügt den Übersetzungsbefehl zu den Sprachbefehlen hinzu („übersetze auf [Sprache]“).",
+    "dialogTab": "Dialog",
+    "dialogSourceHint": "Mit Mikrofon werden Ihre Sprache und die Gegenseite getrennt angezeigt; nur Computer zeigt nur die Gegenseite.",
+    "dialogTranslationHint": "Was die Gegenseite sagt, wird in diese Sprache übersetzt. Ihre eigene Sprache wird nicht übersetzt.",
+    "dialogTranslationProvider": "Übersetzungsdienst",
+    "dialogProviderDefault": "Wie in den Übersetzungseinstellungen",
+    "dialogProviderLlm": "KI-Modell"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {
@@ -1377,7 +1385,8 @@
     "webhookEmptyUrl": "Die Webhook-URL ist leer",
     "webhookFailed": "Webhook-Anfrage fehlgeschlagen",
     "webhookKeyNotSet": "Der Schlüssel dieses Webhooks ist auf diesem Gerät nicht gesetzt; gib ihn in den Befehlseinstellungen ein",
-    "webhookSuccess": "Webhook erfolgreich gesendet"
+    "webhookSuccess": "Webhook erfolgreich gesendet",
+    "soundBusyWithDialog": "Der Ton wird vom Dialog belegt: Beenden Sie ihn, um aufzunehmen"
   },
   "operations": {
     "aiTask": "KI-Befehl",
@@ -1634,5 +1643,38 @@
     "cannotChangeLanguage": "Sprache kann nicht geändert werden: Erkennung hat bereits begonnen",
     "languageSavedForNext": "Sprache für die nächste Aufnahme gespeichert",
     "openSettings": "Transkriptionseinstellungen…"
+  },
+  "dialog": {
+    "sideMe": "Ich",
+    "sideRemote": "Gegenseite",
+    "translationLabel": "Übersetzung",
+    "translating": "Wird übersetzt…",
+    "translationFailed": "Übersetzung fehlgeschlagen",
+    "feedLabel": "Dialogtranskript",
+    "toLatest": "Zum Neuesten",
+    "start": "Starten",
+    "stop": "Stopp",
+    "source": "Quelle",
+    "sourceMicrophoneAndSystem": "Mikrofon und Computer",
+    "sourceSystem": "Nur Computer",
+    "levelMe": "Mikrofonpegel",
+    "levelRemote": "Pegel des Computertons",
+    "translationLanguage": "Übersetzen in",
+    "textDisplay": "Anzeigen",
+    "displayTranslation": "Übersetzung",
+    "displayOriginal": "Original",
+    "displayBoth": "Beides",
+    "copy": "Transkript kopieren",
+    "toActionMenu": "An das Aktionsmenü senden",
+    "clear": "Transkript leeren",
+    "collapse": "Zu Untertiteln einklappen",
+    "expand": "Ausklappen",
+    "noTranslation": "Keine Übersetzung",
+    "reconnecting": "Spracherkennung wird neu verbunden…",
+    "connecting": "Spracherkennung wird verbunden…",
+    "waitingForSpeech": "Höre zu…",
+    "notRunning": "Der Dialog ist beendet",
+    "emptyTitle": "Ein Gespräch transkribieren",
+    "emptyHint": "Starten Sie den Dialog während eines Gesprächs in einer beliebigen App: Was die Gegenseite sagt, erscheint hier übersetzt und läuft auf anderen Tabs weiter, bis Sie ihn beenden."
   }
 }

@@ -1,12 +1,15 @@
 //! Audio capture for live transcription: the microphone for dictation, the
 //! sound the computer plays for listening.
 //!
-//! Nothing is kept: the audio leaves as PCM16 mono chunks through the channel
-//! the webview passed in, which hands it on to the speech provider's socket.
-//! A dictation can therefore last as long as the user keeps talking.
+//! Nothing is kept: the audio leaves as PCM16 chunks through the channel the
+//! webview passed in, which hands it on to the speech provider's socket.
+//! A dictation can therefore last as long as the user keeps talking. The
+//! chunks are mono, but for a dialog with the microphone: two interleaved
+//! channels, the microphone and the computer sound.
 
 pub mod apps;
 mod audio_processing;
+mod echo_gate;
 pub(crate) mod microphone_mix;
 pub mod mixer;
 pub mod session;
@@ -56,14 +59,21 @@ const SWITCH_TIMEOUT: Duration = Duration::from_secs(10);
 pub struct VoiceAudioLevelPayload {
     pub level: f32,
     pub peak: f32,
+    /// The level of each channel of a capture of several, in their order.
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub channels: Option<Vec<f32>>,
 }
 
 #[derive(Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct VoiceCaptureInfo {
-    /// Rate of the PCM16 mono chunks that follow.
+    /// Rate of the PCM16 chunks that follow.
     #[serde(rename = "sampleRate")]
     pub sample_rate_hz: u32,
+    /// How many interleaved channels the chunks hold: 2 for a dialog with
+    /// the microphone (the microphone, then the computer sound), else 1.
+    pub channels: u16,
     /// What `stop_capture` takes to stop this capture and no other.
     pub session_id: u64,
 }
@@ -153,7 +163,7 @@ pub async fn switch_capture_source(
     session_id: u64,
     capture_source: CaptureSource,
 ) -> Result<(), AppError> {
-    if !capture_source.is_playback() {
+    if !capture_source.is_playback() || capture_source.is_dialog() {
         return Err(AppError::InvalidInput(
             "A capture switches only between playback sources".into(),
         ));
@@ -198,10 +208,18 @@ where
             "Voice service is stopping".into(),
         ));
     }
+    // The dialog keeps the sound until it is stopped: nothing takes it over
+    // but another dialog.
+    let is_dialog = capture_source.is_dialog();
+    if !is_dialog && state.is_dialog_running() {
+        return Err(AppError::CaptureBusy(
+            "The sound is taken by the dialog".into(),
+        ));
+    }
     // One microphone: a new dictation ends the previous one.
     supersede_capture_unlocked(state).await?;
     let session_id = state.allocate_session_id();
-    let (session, sample_rate_hz) = tokio::task::spawn_blocking(move || {
+    let (session, format) = tokio::task::spawn_blocking(move || {
         create_capture_session(
             source,
             capture_source,
@@ -222,7 +240,8 @@ where
         ));
     }
     Ok(VoiceCaptureInfo {
-        sample_rate_hz,
+        sample_rate_hz: format.sample_rate_hz,
+        channels: format.channels,
         session_id,
     })
 }
@@ -277,6 +296,13 @@ pub fn stop_capture_on_shutdown(state: &VoiceSessionState, deadline: Instant) {
     }
 }
 
+/// What a capture delivers, known once it records.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct CaptureFormat {
+    sample_rate_hz: u32,
+    channels: u16,
+}
+
 fn create_capture_session<A, L, S>(
     source: A,
     capture_source: CaptureSource,
@@ -284,7 +310,7 @@ fn create_capture_session<A, L, S>(
     sink: S,
     id: u64,
     setup_timeout: Duration,
-) -> Result<(VoiceCaptureSession, u32), AppError>
+) -> Result<(VoiceCaptureSession, CaptureFormat), AppError>
 where
     A: AudioSource + Send + 'static,
     L: AudioLevelSink + Send + 'static,
@@ -296,7 +322,8 @@ where
     let thread_superseded = Arc::clone(&superseded);
     let switch: SourceSwitchSlot = Arc::default();
     let thread_switch = Arc::clone(&switch);
-    let (setup_tx, setup_rx) = std_mpsc::sync_channel::<Result<u32, AppError>>(1);
+    let is_dialog = capture_source.is_dialog();
+    let (setup_tx, setup_rx) = std_mpsc::sync_channel::<Result<CaptureFormat, AppError>>(1);
     let thread = thread::spawn(move || {
         // only setup can fail; later failures go through the channel
         let control = CaptureControl {
@@ -319,15 +346,16 @@ where
     });
 
     match setup_rx.recv_timeout(setup_timeout) {
-        Ok(Ok(sample_rate_hz)) => Ok((
+        Ok(Ok(format)) => Ok((
             VoiceCaptureSession {
                 id,
                 stop_flag,
                 superseded,
+                is_dialog,
                 switch,
                 thread,
             },
-            sample_rate_hz,
+            format,
         )),
         Ok(Err(error)) => {
             let _ = thread.join();
@@ -360,7 +388,7 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
     clock: &impl MonotonicClock,
     sink: &S,
     control: &CaptureControl<'_>,
-    setup_tx: &std_mpsc::SyncSender<Result<u32, AppError>>,
+    setup_tx: &std_mpsc::SyncSender<Result<CaptureFormat, AppError>>,
 ) -> Result<(), AppError> {
     let stop_flag = control.stop_flag;
     let OpenedCapture {
@@ -368,13 +396,19 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
         mut context,
         output_sample_rate_hz,
     } = source.open(&capture_source, stop_flag)?;
+    let channel_count = context.channel_count.max(1);
 
     setup_tx
-        .send(Ok(output_sample_rate_hz))
+        .send(Ok(CaptureFormat {
+            sample_rate_hz: output_sample_rate_hz,
+            channels: channel_count,
+        }))
         .map_err(|error| AppError::Failed(error.to_string()))?;
 
     let mut active_source = capture_source;
-    let chunk_samples = output_sample_rate_hz as usize * CHUNK_MS / 1_000;
+    let channels = usize::from(channel_count);
+    let chunk_samples = output_sample_rate_hz as usize * CHUNK_MS / 1_000 * channels;
+    let mut channel_levels = ChannelLevels::new(channels);
     let started = clock.now();
     let mut delivered_samples: u64 = 0;
     let mut last_level = started;
@@ -405,7 +439,10 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
                     drop(opened);
                     let _ = reply.send(Err(AppError::Stale("Source switch expired".into())));
                 }
-                Ok(opened) if opened.output_sample_rate_hz == output_sample_rate_hz => {
+                Ok(opened)
+                    if opened.output_sample_rate_hz == output_sample_rate_hz
+                        && opened.context.channel_count.max(1) == channel_count =>
+                {
                     // the old stream's last samples go out before the new ones
                     drop(std::mem::replace(&mut stream, opened.stream));
                     // The new stream ran during setup while the old stream still
@@ -476,14 +513,14 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
             let elapsed = clock.now().saturating_duration_since(started);
             let expected = elapsed.as_millis() as u64 * u64::from(output_sample_rate_hz) / 1_000;
             let mut pending = context.pending_pcm_samples.locked();
-            let gap = silence_gap(
-                expected,
-                delivered_samples + pending.len() as u64,
-                output_sample_rate_hz,
-            );
-            pending.extend(std::iter::repeat_n(0, gap));
+            let frames = (delivered_samples + pending.len() as u64) / channels as u64;
+            let gap = silence_gap(expected, frames, output_sample_rate_hz);
+            pending.extend(std::iter::repeat_n(0, gap * channels));
         }
 
+        if channels > 1 {
+            channel_levels.measure(&context.pending_pcm_samples.locked());
+        }
         match flush_pending(&context.pending_pcm_samples, sink, chunk_samples) {
             Some(sent) => delivered_samples += sent as u64,
             None => {
@@ -497,7 +534,11 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
             last_level = clock.now();
             // the loudest moment since the last publish, not just the latest
             let (level, peak) = std::mem::take(&mut *context.current_level.locked());
-            levels.publish(VoiceAudioLevelPayload { level, peak });
+            levels.publish(VoiceAudioLevelPayload {
+                level,
+                peak,
+                channels: channel_levels.take(),
+            });
         }
     }
     // a switch that came too late is answered: the capture is over
@@ -512,6 +553,7 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
     levels.publish(VoiceAudioLevelPayload {
         level: 0.0,
         peak: 0.0,
+        channels: (channels > 1).then(|| vec![0.0; channels]),
     });
 
     // what was captured goes out first, whatever ended the capture: the
@@ -527,6 +569,45 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
     };
     sink.send_event(&event);
     Ok(())
+}
+
+/// The loudest level of each channel of interleaved samples since it was
+/// last taken. Samples still pending are measured again on the next poll,
+/// which leaves a maximum as it is.
+struct ChannelLevels {
+    levels: Vec<f32>,
+}
+
+impl ChannelLevels {
+    fn new(channels: usize) -> Self {
+        Self {
+            levels: vec![0.0; channels],
+        }
+    }
+
+    fn measure(&mut self, interleaved: &[i16]) {
+        let channels = self.levels.len();
+        for (channel, level) in self.levels.iter_mut().enumerate() {
+            let samples: Vec<i16> = interleaved
+                .iter()
+                .skip(channel)
+                .step_by(channels)
+                .copied()
+                .collect();
+            if !samples.is_empty() {
+                *level = level.max(compute_audio_level(&samples).0);
+            }
+        }
+    }
+
+    /// `None` for mono: its level is the capture's.
+    fn take(&mut self) -> Option<Vec<f32>> {
+        if self.levels.len() < 2 {
+            return None;
+        }
+        let channels = self.levels.len();
+        Some(std::mem::replace(&mut self.levels, vec![0.0; channels]))
+    }
 }
 
 /// Sends what has accumulated once it reaches `min_samples`: the number of
@@ -562,6 +643,8 @@ pub(crate) struct StreamContext {
     /// A playback source: silence stands in for the samples it does not
     /// deliver while nothing plays, see `silence_gap`
     pub fills_gaps: bool,
+    /// Interleaved channels of `pending_pcm_samples`, 1 for mono
+    pub channel_count: u16,
     pub status: Arc<Mutex<SourceStatus>>,
 }
 
@@ -623,6 +706,7 @@ impl StreamContext {
             device_sample_rate_hz,
             output_sample_rate_hz,
             fills_gaps: false,
+            channel_count: 1,
             status: Arc::default(),
         }
     }

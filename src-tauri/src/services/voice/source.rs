@@ -17,6 +17,12 @@ pub enum CaptureSource {
     /// Every stream one application plays.
     #[serde(rename_all = "camelCase")]
     Application { app_id: AudioAppId },
+    /// Both sides of a call for the dialog: with the microphone, a stereo
+    /// stream of the microphone and of everything the computer plays, kept
+    /// apart; without it, the computer sound alone. A dialog capture is not
+    /// taken over by another capture, see `voice::start_capture`.
+    #[serde(rename_all = "camelCase")]
+    Dialog { is_microphone_enabled: bool },
 }
 
 impl CaptureSource {
@@ -25,6 +31,10 @@ impl CaptureSource {
     /// `silence_gap`; with the microphone, the microphone keeps time.
     pub fn is_playback(&self) -> bool {
         !matches!(self, Self::Microphone)
+    }
+
+    pub fn is_dialog(&self) -> bool {
+        matches!(self, Self::Dialog { .. })
     }
 }
 
@@ -107,6 +117,13 @@ mod tests {
             })
             .unwrap(),
             serde_json::json!({"kind": "application", "appId": "telegram-desktop"})
+        );
+        assert_eq!(
+            serde_json::to_value(CaptureSource::Dialog {
+                is_microphone_enabled: true
+            })
+            .unwrap(),
+            serde_json::json!({"kind": "dialog", "isMicrophoneEnabled": true})
         );
         let parsed: CaptureSource = serde_json::from_value(serde_json::json!({
             "kind": "microphone"

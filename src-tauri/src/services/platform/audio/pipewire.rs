@@ -339,6 +339,7 @@ impl Output {
             device_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
             output_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
             fills_gaps: true,
+            channel_count: 1,
             status: Arc::clone(&self.status),
         };
         context.deliver(samples);

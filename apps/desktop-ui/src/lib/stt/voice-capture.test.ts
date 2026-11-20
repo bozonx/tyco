@@ -15,7 +15,11 @@ const pcm = (...values: number[]) => new Uint8Array(values).buffer
 describe('createVoiceCaptureControl', () => {
   it('delivers raw chunks in order and ends with the capture', async () => {
     const fake = createFakeNetIpc({
-      ['start_voice_capture']: () => ({ sampleRate: 16_000, sessionId: 7 }),
+      ['start_voice_capture']: () => ({
+        sampleRate: 16_000,
+        channels: 1,
+        sessionId: 7,
+      }),
     })
     const control = createVoiceCaptureControl(fake.ipc)
 
@@ -40,6 +44,7 @@ describe('createVoiceCaptureControl', () => {
     const fake = createFakeNetIpc({
       ['start_voice_capture']: () => ({
         sampleRate: 16_000,
+        channels: 1,
         sessionId: nextId++,
       }),
     })
@@ -56,7 +61,11 @@ describe('createVoiceCaptureControl', () => {
 
   it('ends the audio as usual when a newer capture takes the microphone', async () => {
     const fake = createFakeNetIpc({
-      ['start_voice_capture']: () => ({ sampleRate: 16_000, sessionId: 7 }),
+      ['start_voice_capture']: () => ({
+        sampleRate: 16_000,
+        channels: 1,
+        sessionId: 7,
+      }),
     })
     const capture = await createVoiceCaptureControl(fake.ipc).start()
     fake.emit(pcm(1, 2))
@@ -76,7 +85,11 @@ describe('createVoiceCaptureControl', () => {
 
   it('fails the audio when the microphone fails', async () => {
     const fake = createFakeNetIpc({
-      ['start_voice_capture']: () => ({ sampleRate: 16_000, sessionId: 7 }),
+      ['start_voice_capture']: () => ({
+        sampleRate: 16_000,
+        channels: 1,
+        sessionId: 7,
+      }),
     })
 
     const capture = await createVoiceCaptureControl(fake.ipc).start()

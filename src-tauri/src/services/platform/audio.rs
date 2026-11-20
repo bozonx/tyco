@@ -6,7 +6,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use crate::errors::AppError;
-use crate::services::voice::microphone_mix;
+use crate::services::voice::microphone_mix::{self, MixLayout};
 use crate::services::voice::{
     AudioApp, AudioInputDevice, AudioSource, CaptureSource, OpenedCapture,
 };
@@ -41,7 +41,30 @@ impl AudioSource for SystemAudioSource {
                 let microphone =
                     microphone::open_microphone(self.microphone_id.as_deref(), stop_flag)?;
                 let playback = open_playback(&CaptureSource::SystemMix, stop_flag)?;
-                microphone_mix::mix_captures(boxed(microphone), playback, stop_flag).map(boxed)
+                microphone_mix::mix_captures(
+                    boxed(microphone),
+                    playback,
+                    stop_flag,
+                    MixLayout::Summed,
+                )
+                .map(boxed)
+            }
+            CaptureSource::Dialog {
+                is_microphone_enabled: false,
+            } => open_playback(&CaptureSource::SystemMix, stop_flag),
+            CaptureSource::Dialog {
+                is_microphone_enabled: true,
+            } => {
+                let microphone =
+                    microphone::open_microphone(self.microphone_id.as_deref(), stop_flag)?;
+                let playback = open_playback(&CaptureSource::SystemMix, stop_flag)?;
+                microphone_mix::mix_captures(
+                    boxed(microphone),
+                    playback,
+                    stop_flag,
+                    MixLayout::Separate,
+                )
+                .map(boxed)
             }
             playback => open_playback(playback, stop_flag),
         }

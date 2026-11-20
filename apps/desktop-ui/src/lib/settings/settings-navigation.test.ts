@@ -95,7 +95,15 @@ describe('settings navigation', () => {
       ],
       [
         'settings.aiCategory',
-        ['llm', 'stt', 'chat', 'translations', 'correction', 'ai-profiles'],
+        [
+          'llm',
+          'stt',
+          'chat',
+          'translations',
+          'dialog',
+          'correction',
+          'ai-profiles',
+        ],
       ],
       [
         'settings.actionsCategory',

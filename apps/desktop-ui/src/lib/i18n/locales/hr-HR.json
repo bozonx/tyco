@@ -360,7 +360,8 @@
     "vaultUnavailable": "Mapa AI profila nije povezana na ovom uređaju",
     "projectUnavailable": "Mapa projekta nije postavljena na ovom uređaju",
     "alreadyExists": "Već postoji",
-    "staleRevision": "Datoteka je promijenjena na drugom uređaju ili izvan TyCo-a"
+    "staleRevision": "Datoteka je promijenjena na drugom uređaju ili izvan TyCo-a",
+    "captureBusy": "Zvuk zauzima dijalog"
   },
   "diff": {
     "resetResult": "Vrati rezultat",
@@ -627,7 +628,8 @@
     "editor": "Uređivač",
     "history": "Povijest",
     "menu": "Izbornik",
-    "settings": "Postavke"
+    "settings": "Postavke",
+    "dialog": "Dijalog"
   },
   "selection": {
     "cancelled": "Otkazano",
@@ -1317,7 +1319,13 @@
     "askAiWebAccess": "Web u „Pitaj AI”",
     "askAiWebAccessHint": "Smije li chat „Pitaj AI”, koji nema profil, pretraživati web i čitati stranice. „Pitaj” čeka vaše odobrenje prije svakog poziva. Profili to postavljaju u vlastitim alatima.",
     "translationVoiceCommand": "Glasovna naredba",
-    "translationVoiceCommandInfo": "Uključuje naredbu prijevoda u glasovne naredbe („prevedi na [jezik]“)."
+    "translationVoiceCommandInfo": "Uključuje naredbu prijevoda u glasovne naredbe („prevedi na [jezik]“).",
+    "dialogTab": "Dijalog",
+    "dialogSourceHint": "S mikrofonom se vaš govor i govor sugovornika prikazuju odvojeno; samo računalo prikazuje samo sugovornika.",
+    "dialogTranslationHint": "Ono što sugovornik kaže prevodi se na ovaj jezik. Vaš govor se ne prevodi.",
+    "dialogTranslationProvider": "Usluga prijevoda",
+    "dialogProviderDefault": "Kao u postavkama prijevoda",
+    "dialogProviderLlm": "AI model"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
@@ -1377,7 +1385,8 @@
     "webhookEmptyUrl": "URL webhooka je prazan",
     "webhookFailed": "Zahtjev prema webhooku nije uspio",
     "webhookKeyNotSet": "Ključ ovog webhooka nije postavljen na ovom uređaju; unesite ga u postavkama naredbe",
-    "webhookSuccess": "Webhook je uspješno poslan"
+    "webhookSuccess": "Webhook je uspješno poslan",
+    "soundBusyWithDialog": "Zvuk zauzima dijalog: zaustavite ga da biste snimali"
   },
   "operations": {
     "aiTask": "AI naredba",
@@ -1634,5 +1643,38 @@
     "cannotChangeLanguage": "Jezik se ne može promijeniti: prepoznavanje je već započelo",
     "languageSavedForNext": "Jezik spremljen za sljedeće snimanje",
     "openSettings": "Postavke transkripcije…"
+  },
+  "dialog": {
+    "sideMe": "Ja",
+    "sideRemote": "Sugovornik",
+    "translationLabel": "Prijevod",
+    "translating": "Prevodim…",
+    "translationFailed": "Prijevod nije uspio",
+    "feedLabel": "Transkript dijaloga",
+    "toLatest": "Na najnovije",
+    "start": "Pokreni",
+    "stop": "Zaustavi",
+    "source": "Izvor",
+    "sourceMicrophoneAndSystem": "Mikrofon i računalo",
+    "sourceSystem": "Samo računalo",
+    "levelMe": "Razina mikrofona",
+    "levelRemote": "Razina zvuka računala",
+    "translationLanguage": "Prevodi na",
+    "textDisplay": "Prikaži",
+    "displayTranslation": "Prijevod",
+    "displayOriginal": "Izvornik",
+    "displayBoth": "Oboje",
+    "copy": "Kopiraj transkript",
+    "toActionMenu": "Pošalji u izbornik radnji",
+    "clear": "Očisti transkript",
+    "collapse": "Sažmi u titlove",
+    "expand": "Proširi",
+    "noTranslation": "Bez prijevoda",
+    "reconnecting": "Ponovno povezivanje s prepoznavanjem govora…",
+    "connecting": "Povezivanje s prepoznavanjem govora…",
+    "waitingForSpeech": "Slušam…",
+    "notRunning": "Dijalog je zaustavljen",
+    "emptyTitle": "Transkribiraj poziv",
+    "emptyHint": "Pokrenite dijalog tijekom poziva u bilo kojoj aplikaciji: ono što sugovornik kaže pojavljuje se ovdje prevedeno, a snimanje se nastavlja na drugim karticama dok ga ne zaustavite."
   }
 }

@@ -18,6 +18,7 @@ function setup(finishTimeoutMs?: number) {
   const capture: VoiceCaptureControl = {
     start: vi.fn(async () => ({
       sampleRate: 16_000,
+      channels: 1,
       audio: audio.values,
       isSuperseded: () => superseded,
     })),
@@ -299,6 +300,7 @@ describe('createLiveDictation', () => {
           started = () =>
             resolve({
               sampleRate: 16_000,
+              channels: 1,
               audio: t.audio.values,
               isSuperseded: () => false,
             })

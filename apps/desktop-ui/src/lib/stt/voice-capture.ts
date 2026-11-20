@@ -13,9 +13,14 @@ export interface CaptureSourceHandlers {
   onSourceLost?: (source: CaptureSource) => void
 }
 
-interface VoiceCapture {
-  /** Rate of the PCM16 mono audio, in hertz */
+export interface VoiceCapture {
+  /** Rate of the PCM16 audio, in hertz */
   sampleRate: number
+  /**
+   * Interleaved channels of `audio`: 2 for a dialog with the microphone (the
+   * microphone, then the computer sound), else 1
+   */
+  channels: number
   /** Ends once the microphone is stopped and its last chunk delivered */
   audio: AsyncIterable<AudioChunk>
   /** Whether `audio` ended because a newer capture took the microphone */
@@ -90,6 +95,7 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
         const { sampleRate } = started
         return {
           sampleRate,
+          channels: started.channels,
           audio: (async function* () {
             try {
               yield* queue.values

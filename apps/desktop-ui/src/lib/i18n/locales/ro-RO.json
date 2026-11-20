@@ -360,7 +360,8 @@
     "vaultUnavailable": "Dosarul profilurilor AI nu este conectat pe acest dispozitiv",
     "projectUnavailable": "Dosarul proiectului nu este setat pe acest dispozitiv",
     "alreadyExists": "Există deja",
-    "staleRevision": "Fișierul a fost modificat pe alt dispozitiv sau în afara TyCo"
+    "staleRevision": "Fișierul a fost modificat pe alt dispozitiv sau în afara TyCo",
+    "captureBusy": "Sunetul este ocupat de dialog"
   },
   "diff": {
     "resetResult": "Resetează rezultatul",
@@ -627,7 +628,8 @@
     "editor": "Editor",
     "history": "Istoric",
     "menu": "Meniu",
-    "settings": "Setări"
+    "settings": "Setări",
+    "dialog": "Dialog"
   },
   "selection": {
     "cancelled": "Anulat",
@@ -1317,7 +1319,13 @@
     "askAiWebAccess": "Web în „Întreabă AI”",
     "askAiWebAccessHint": "Dacă chatul „Întreabă AI”, care nu are profil, poate căuta pe web și citi pagini. „Întreabă” așteaptă aprobarea ta înainte de fiecare apel. Profilurile setează acest lucru în propriile instrumente.",
     "translationVoiceCommand": "Comandă vocală",
-    "translationVoiceCommandInfo": "Include comanda de traducere în comenzile vocale („tradu în [limbă]”)."
+    "translationVoiceCommandInfo": "Include comanda de traducere în comenzile vocale („tradu în [limbă]”).",
+    "dialogTab": "Dialog",
+    "dialogSourceHint": "Cu microfonul, vorbirea dvs. și a interlocutorului apar separat; doar computerul arată numai interlocutorul.",
+    "dialogTranslationHint": "Ce spune interlocutorul este tradus în această limbă. Vorbirea dvs. nu este tradusă.",
+    "dialogTranslationProvider": "Serviciu de traducere",
+    "dialogProviderDefault": "Ca în setările de traducere",
+    "dialogProviderLlm": "Model AI"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
@@ -1377,7 +1385,8 @@
     "webhookEmptyUrl": "URL-ul webhookului este gol",
     "webhookFailed": "Cererea către webhook a eșuat",
     "webhookKeyNotSet": "Cheia acestui webhook nu este setată pe acest dispozitiv; introduceți-o în setările comenzii",
-    "webhookSuccess": "Webhook trimis cu succes"
+    "webhookSuccess": "Webhook trimis cu succes",
+    "soundBusyWithDialog": "Sunetul este ocupat de dialog: opriți-l pentru a înregistra"
   },
   "operations": {
     "aiTask": "Comandă AI",
@@ -1634,5 +1643,38 @@
     "cannotChangeLanguage": "Limba nu poate fi schimbată: recunoașterea a început deja",
     "languageSavedForNext": "Limbă salvată pentru următoarea înregistrare",
     "openSettings": "Setări de transcriere…"
+  },
+  "dialog": {
+    "sideMe": "Eu",
+    "sideRemote": "Interlocutor",
+    "translationLabel": "Traducere",
+    "translating": "Se traduce…",
+    "translationFailed": "Traducerea a eșuat",
+    "feedLabel": "Transcrierea dialogului",
+    "toLatest": "La cel mai recent",
+    "start": "Pornește",
+    "stop": "Oprește",
+    "source": "Sursă",
+    "sourceMicrophoneAndSystem": "Microfon și computer",
+    "sourceSystem": "Doar computerul",
+    "levelMe": "Nivelul microfonului",
+    "levelRemote": "Nivelul sunetului computerului",
+    "translationLanguage": "Tradu în",
+    "textDisplay": "Afișează",
+    "displayTranslation": "Traducere",
+    "displayOriginal": "Original",
+    "displayBoth": "Ambele",
+    "copy": "Copiază transcrierea",
+    "toActionMenu": "Trimite în meniul de acțiuni",
+    "clear": "Golește transcrierea",
+    "collapse": "Restrânge la subtitrări",
+    "expand": "Extinde",
+    "noTranslation": "Fără traducere",
+    "reconnecting": "Reconectare la recunoașterea vorbirii…",
+    "connecting": "Conectare la recunoașterea vorbirii…",
+    "waitingForSpeech": "Ascult…",
+    "notRunning": "Dialogul este oprit",
+    "emptyTitle": "Transcrie un apel",
+    "emptyHint": "Porniți dialogul în timpul unui apel în orice aplicație: ce spune interlocutorul apare aici tradus, iar înregistrarea continuă pe alte file până îl opriți."
   }
 }

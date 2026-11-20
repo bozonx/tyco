@@ -7,6 +7,7 @@ import type {
   ShortcutSlots,
   TranslationConfig,
 } from './user-config/translation-config'
+import type { DialogConfig } from './user-config/dialog-config'
 import type { SttConfig } from './user-config/stt-config'
 import type {
   ActionPageConfig,
@@ -17,6 +18,7 @@ import type { VariableConfig } from './variables'
 
 export * from './user-config/llm-config'
 export * from './user-config/translation-config'
+export * from './user-config/dialog-config'
 export * from './user-config/stt-config'
 export * from './user-config/commands-config'
 
@@ -298,6 +300,7 @@ export interface UserConfig {
   plugins: Record<string, PluginEntryConfig>
   chat: ChatConfig
   stt: SttConfig
+  dialog: DialogConfig
 }
 
 /** The vaults this device has attached besides the main one */

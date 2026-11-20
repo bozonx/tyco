@@ -360,7 +360,8 @@
     "vaultUnavailable": "La carpeta de perfiles de IA no está conectada en este dispositivo",
     "projectUnavailable": "La carpeta del proyecto no está definida en este dispositivo",
     "alreadyExists": "Ya existe",
-    "staleRevision": "El archivo se cambió en otro dispositivo o fuera de TyCo"
+    "staleRevision": "El archivo se cambió en otro dispositivo o fuera de TyCo",
+    "captureBusy": "El sonido está ocupado por el diálogo"
   },
   "diff": {
     "resetResult": "Restablecer resultado",
@@ -627,7 +628,8 @@
     "editor": "Editor",
     "history": "Historial",
     "menu": "Menú",
-    "settings": "Configuración"
+    "settings": "Configuración",
+    "dialog": "Diálogo"
   },
   "selection": {
     "cancelled": "Cancelado",
@@ -1317,7 +1319,13 @@
     "askAiWebAccess": "Web en «Preguntar a la IA»",
     "askAiWebAccessHint": "Si el chat «Preguntar a la IA», que no tiene perfil, puede buscar en la web y leer páginas. «Preguntar» espera tu aprobación antes de cada llamada. Los perfiles lo configuran en sus propias herramientas.",
     "translationVoiceCommand": "Comando de voz",
-    "translationVoiceCommandInfo": "Incluye el comando de traducción en los comandos de voz («traduce al [idioma]»)."
+    "translationVoiceCommandInfo": "Incluye el comando de traducción en los comandos de voz («traduce al [idioma]»).",
+    "dialogTab": "Diálogo",
+    "dialogSourceHint": "Con el micrófono, su voz y la del interlocutor se muestran por separado; solo el ordenador muestra solo al interlocutor.",
+    "dialogTranslationHint": "Lo que dice el interlocutor se traduce a este idioma. Su propia voz no se traduce.",
+    "dialogTranslationProvider": "Servicio de traducción",
+    "dialogProviderDefault": "Como en los ajustes de traducción",
+    "dialogProviderLlm": "Modelo de IA"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {
@@ -1377,7 +1385,8 @@
     "webhookEmptyUrl": "La URL del webhook está vacía",
     "webhookFailed": "La solicitud al webhook falló",
     "webhookKeyNotSet": "La clave de este webhook no está definida en este dispositivo; introdúcela en los ajustes del comando",
-    "webhookSuccess": "Webhook enviado correctamente"
+    "webhookSuccess": "Webhook enviado correctamente",
+    "soundBusyWithDialog": "El sonido está ocupado por el diálogo: deténgalo para grabar"
   },
   "operations": {
     "aiTask": "Comando de IA",
@@ -1634,5 +1643,38 @@
     "cannotChangeLanguage": "No se puede cambiar el idioma: el reconocimiento ya ha comenzado",
     "languageSavedForNext": "Idioma guardado para la próxima grabación",
     "openSettings": "Ajustes de transcripción…"
+  },
+  "dialog": {
+    "sideMe": "Yo",
+    "sideRemote": "Interlocutor",
+    "translationLabel": "Traducción",
+    "translating": "Traduciendo…",
+    "translationFailed": "No se pudo traducir",
+    "feedLabel": "Transcripción del diálogo",
+    "toLatest": "Al más reciente",
+    "start": "Iniciar",
+    "stop": "Detener",
+    "source": "Fuente",
+    "sourceMicrophoneAndSystem": "Micrófono y ordenador",
+    "sourceSystem": "Solo el ordenador",
+    "levelMe": "Nivel del micrófono",
+    "levelRemote": "Nivel del sonido del ordenador",
+    "translationLanguage": "Traducir a",
+    "textDisplay": "Mostrar",
+    "displayTranslation": "Traducción",
+    "displayOriginal": "Original",
+    "displayBoth": "Ambos",
+    "copy": "Copiar la transcripción",
+    "toActionMenu": "Enviar al menú de acciones",
+    "clear": "Borrar la transcripción",
+    "collapse": "Contraer a subtítulos",
+    "expand": "Expandir",
+    "noTranslation": "Sin traducción",
+    "reconnecting": "Reconectando con el reconocimiento de voz…",
+    "connecting": "Conectando con el reconocimiento de voz…",
+    "waitingForSpeech": "Escuchando…",
+    "notRunning": "El diálogo está detenido",
+    "emptyTitle": "Transcribir una llamada",
+    "emptyHint": "Inicie el diálogo durante una llamada en cualquier aplicación: lo que dice el interlocutor aparece aquí traducido y sigue grabándose en otras pestañas hasta que lo detenga."
   }
 }

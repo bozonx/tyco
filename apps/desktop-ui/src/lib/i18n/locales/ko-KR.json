@@ -360,7 +360,8 @@
     "vaultUnavailable": "AI 프로필 폴더가 이 기기에 연결되어 있지 않습니다",
     "projectUnavailable": "프로젝트 폴더가 이 기기에 설정되어 있지 않습니다",
     "alreadyExists": "이미 있습니다",
-    "staleRevision": "다른 기기나 TyCo 밖에서 파일이 변경되었습니다"
+    "staleRevision": "다른 기기나 TyCo 밖에서 파일이 변경되었습니다",
+    "captureBusy": "소리가 대화에서 사용 중입니다"
   },
   "diff": {
     "resetResult": "결과 초기화",
@@ -627,7 +628,8 @@
     "editor": "편집기",
     "history": "기록",
     "menu": "메뉴",
-    "settings": "설정"
+    "settings": "설정",
+    "dialog": "대화"
   },
   "selection": {
     "cancelled": "취소됨",
@@ -1311,7 +1313,13 @@
     "askAiWebAccess": "\"AI에게 질문\"의 웹",
     "askAiWebAccessHint": "프로필이 없는 \"AI에게 질문\" 채팅이 웹을 검색하고 페이지를 읽을 수 있는지 여부입니다. \"묻기\"는 호출할 때마다 승인을 기다립니다. 프로필은 자체 도구에서 설정합니다.",
     "translationVoiceCommand": "음성 명령",
-    "translationVoiceCommandInfo": "음성 명령에 번역 명령을 포함합니다(“[언어]로 번역”)."
+    "translationVoiceCommandInfo": "음성 명령에 번역 명령을 포함합니다(“[언어]로 번역”).",
+    "dialogTab": "대화",
+    "dialogSourceHint": "마이크를 사용하면 내 말과 상대방의 말이 따로 표시되고, 컴퓨터만 사용하면 상대방만 표시됩니다.",
+    "dialogTranslationHint": "상대방의 말을 이 언어로 번역합니다. 내 말은 번역하지 않습니다.",
+    "dialogTranslationProvider": "번역 서비스",
+    "dialogProviderDefault": "번역 설정과 동일",
+    "dialogProviderLlm": "AI 모델"
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {
@@ -1371,7 +1379,8 @@
     "webhookEmptyUrl": "웹후크 URL이 비어 있습니다",
     "webhookFailed": "웹후크 요청 실패",
     "webhookKeyNotSet": "이 웹훅의 키가 이 기기에 설정되지 않았습니다. 명령 설정에서 입력하세요",
-    "webhookSuccess": "웹후크가 성공적으로 전송되었습니다"
+    "webhookSuccess": "웹후크가 성공적으로 전송되었습니다",
+    "soundBusyWithDialog": "소리가 대화에서 사용 중입니다. 녹음하려면 대화를 중지하세요"
   },
   "operations": {
     "aiTask": "AI 명령",
@@ -1628,5 +1637,38 @@
     "cannotChangeLanguage": "언어를 변경할 수 없습니다: 음성 인식이 이미 시작되었습니다",
     "languageSavedForNext": "다음 녹음을 위해 언어가 저장되었습니다",
     "openSettings": "받아쓰기 설정…"
+  },
+  "dialog": {
+    "sideMe": "나",
+    "sideRemote": "상대방",
+    "translationLabel": "번역",
+    "translating": "번역 중…",
+    "translationFailed": "번역하지 못했습니다",
+    "feedLabel": "대화 기록",
+    "toLatest": "최신으로",
+    "start": "시작",
+    "stop": "중지",
+    "source": "소스",
+    "sourceMicrophoneAndSystem": "마이크와 컴퓨터",
+    "sourceSystem": "컴퓨터만",
+    "levelMe": "마이크 레벨",
+    "levelRemote": "컴퓨터 소리 레벨",
+    "translationLanguage": "번역할 언어",
+    "textDisplay": "표시",
+    "displayTranslation": "번역",
+    "displayOriginal": "원문",
+    "displayBoth": "둘 다",
+    "copy": "기록 복사",
+    "toActionMenu": "작업 메뉴로 보내기",
+    "clear": "기록 지우기",
+    "collapse": "자막으로 접기",
+    "expand": "펼치기",
+    "noTranslation": "번역 안 함",
+    "reconnecting": "음성 인식에 다시 연결하는 중…",
+    "connecting": "음성 인식에 연결하는 중…",
+    "waitingForSpeech": "듣는 중…",
+    "notRunning": "대화가 중지되었습니다",
+    "emptyTitle": "통화 받아쓰기",
+    "emptyHint": "아무 앱에서나 통화 중에 대화를 시작하세요. 상대방의 말이 번역과 함께 여기에 표시되고, 중지할 때까지 다른 탭에서도 계속 기록됩니다."
   }
 }

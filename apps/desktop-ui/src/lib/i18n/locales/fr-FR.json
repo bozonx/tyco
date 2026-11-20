@@ -360,7 +360,8 @@
     "vaultUnavailable": "Le dossier des profils IA n’est pas connecté sur cet appareil",
     "projectUnavailable": "Le dossier du projet n’est pas défini sur cet appareil",
     "alreadyExists": "Existe déjà",
-    "staleRevision": "Le fichier a été modifié sur un autre appareil ou hors de TyCo"
+    "staleRevision": "Le fichier a été modifié sur un autre appareil ou hors de TyCo",
+    "captureBusy": "Le son est occupé par le dialogue"
   },
   "diff": {
     "resetResult": "Réinitialiser le résultat",
@@ -627,7 +628,8 @@
     "editor": "Éditeur",
     "history": "Historique",
     "menu": "Menu",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "dialog": "Dialogue"
   },
   "selection": {
     "cancelled": "Annulé",
@@ -1317,7 +1319,13 @@
     "askAiWebAccess": "Web dans « Demander à l’IA »",
     "askAiWebAccessHint": "Indique si le chat « Demander à l’IA », qui n’a pas de profil, peut chercher sur le web et lire des pages. « Demander » attend votre accord avant chaque appel. Les profils le règlent dans leurs propres outils.",
     "translationVoiceCommand": "Commande vocale",
-    "translationVoiceCommandInfo": "Inclut la commande de traduction dans les commandes vocales (« traduis en [langue] »)."
+    "translationVoiceCommandInfo": "Inclut la commande de traduction dans les commandes vocales (« traduis en [langue] »).",
+    "dialogTab": "Dialogue",
+    "dialogSourceHint": "Avec le micro, votre voix et celle de l'interlocuteur s'affichent séparément ; l'ordinateur seul n'affiche que l'interlocuteur.",
+    "dialogTranslationHint": "Les propos de l'interlocuteur sont traduits dans cette langue. Votre propre voix n'est pas traduite.",
+    "dialogTranslationProvider": "Service de traduction",
+    "dialogProviderDefault": "Comme dans les paramètres de traduction",
+    "dialogProviderLlm": "Modèle d'IA"
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {
@@ -1377,7 +1385,8 @@
     "webhookEmptyUrl": "L’URL du webhook est vide",
     "webhookFailed": "La requête au webhook a échoué",
     "webhookKeyNotSet": "La clé de ce webhook n’est pas définie sur cet appareil ; saisissez-la dans les paramètres de la commande",
-    "webhookSuccess": "Webhook envoyé avec succès"
+    "webhookSuccess": "Webhook envoyé avec succès",
+    "soundBusyWithDialog": "Le son est occupé par le dialogue : arrêtez-le pour enregistrer"
   },
   "operations": {
     "aiTask": "Commande IA",
@@ -1634,5 +1643,38 @@
     "cannotChangeLanguage": "Impossible de changer de langue : la reconnaissance a déjà commencé",
     "languageSavedForNext": "Langue enregistrée pour le prochain enregistrement",
     "openSettings": "Paramètres de transcription…"
+  },
+  "dialog": {
+    "sideMe": "Moi",
+    "sideRemote": "Interlocuteur",
+    "translationLabel": "Traduction",
+    "translating": "Traduction…",
+    "translationFailed": "Échec de la traduction",
+    "feedLabel": "Transcription du dialogue",
+    "toLatest": "Vers le plus récent",
+    "start": "Démarrer",
+    "stop": "Arrêter",
+    "source": "Source",
+    "sourceMicrophoneAndSystem": "Micro et ordinateur",
+    "sourceSystem": "Ordinateur seul",
+    "levelMe": "Niveau du micro",
+    "levelRemote": "Niveau du son de l'ordinateur",
+    "translationLanguage": "Traduire en",
+    "textDisplay": "Afficher",
+    "displayTranslation": "Traduction",
+    "displayOriginal": "Original",
+    "displayBoth": "Les deux",
+    "copy": "Copier la transcription",
+    "toActionMenu": "Envoyer au menu des actions",
+    "clear": "Effacer la transcription",
+    "collapse": "Réduire en sous-titres",
+    "expand": "Agrandir",
+    "noTranslation": "Sans traduction",
+    "reconnecting": "Reconnexion à la reconnaissance vocale…",
+    "connecting": "Connexion à la reconnaissance vocale…",
+    "waitingForSpeech": "À l'écoute…",
+    "notRunning": "Le dialogue est arrêté",
+    "emptyTitle": "Transcrire un appel",
+    "emptyHint": "Démarrez le dialogue pendant un appel dans n'importe quelle application : les propos de l'interlocuteur s'affichent ici, traduits, et l'enregistrement continue sur les autres onglets jusqu'à l'arrêt."
   }
 }

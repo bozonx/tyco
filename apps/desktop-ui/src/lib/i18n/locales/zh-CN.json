@@ -360,7 +360,8 @@
     "vaultUnavailable": "AI 配置文件夹未在此设备上连接",
     "projectUnavailable": "项目文件夹未在此设备上设置",
     "alreadyExists": "已存在",
-    "staleRevision": "文件已在其他设备上或 TyCo 之外被更改"
+    "staleRevision": "文件已在其他设备上或 TyCo 之外被更改",
+    "captureBusy": "声音正被对话占用"
   },
   "diff": {
     "resetResult": "重置结果",
@@ -627,7 +628,8 @@
     "editor": "编辑器",
     "history": "历史记录",
     "menu": "菜单",
-    "settings": "设置"
+    "settings": "设置",
+    "dialog": "对话"
   },
   "selection": {
     "cancelled": "已取消",
@@ -1311,7 +1313,13 @@
     "askAiWebAccess": "“询问 AI”中的网络",
     "askAiWebAccessHint": "没有配置文件的“询问 AI”聊天能否搜索网络和读取网页。“询问”会在每次调用前等待你的批准。配置文件在各自的工具中设置。",
     "translationVoiceCommand": "语音命令",
-    "translationVoiceCommandInfo": "在语音命令中包含翻译命令（“翻译成[语言]”）。"
+    "translationVoiceCommandInfo": "在语音命令中包含翻译命令（“翻译成[语言]”）。",
+    "dialogTab": "对话",
+    "dialogSourceHint": "使用麦克风时，您和对方的发言分开显示；仅电脑时只显示对方。",
+    "dialogTranslationHint": "对方的发言会翻译成此语言。您自己的发言不翻译。",
+    "dialogTranslationProvider": "翻译服务",
+    "dialogProviderDefault": "与翻译设置相同",
+    "dialogProviderLlm": "AI 模型"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
@@ -1371,7 +1379,8 @@
     "webhookEmptyUrl": "Webhook URL 为空",
     "webhookFailed": "Webhook 请求失败",
     "webhookKeyNotSet": "此设备上未设置该 Webhook 的密钥；请在命令设置中输入",
-    "webhookSuccess": "Webhook 发送成功"
+    "webhookSuccess": "Webhook 发送成功",
+    "soundBusyWithDialog": "声音正被对话占用：请先停止对话再录音"
   },
   "operations": {
     "aiTask": "AI 命令",
@@ -1624,5 +1633,38 @@
     "cannotChangeLanguage": "无法更改语言：识别已开始",
     "languageSavedForNext": "已保存语言，将在下次录音时生效",
     "openSettings": "转录设置…"
+  },
+  "dialog": {
+    "sideMe": "我",
+    "sideRemote": "对方",
+    "translationLabel": "翻译",
+    "translating": "正在翻译…",
+    "translationFailed": "翻译失败",
+    "feedLabel": "对话记录",
+    "toLatest": "跳到最新",
+    "start": "开始",
+    "stop": "停止",
+    "source": "来源",
+    "sourceMicrophoneAndSystem": "麦克风和电脑",
+    "sourceSystem": "仅电脑",
+    "levelMe": "麦克风音量",
+    "levelRemote": "电脑声音音量",
+    "translationLanguage": "翻译为",
+    "textDisplay": "显示",
+    "displayTranslation": "译文",
+    "displayOriginal": "原文",
+    "displayBoth": "两者",
+    "copy": "复制记录",
+    "toActionMenu": "发送到操作菜单",
+    "clear": "清空记录",
+    "collapse": "收起为字幕",
+    "expand": "展开",
+    "noTranslation": "不翻译",
+    "reconnecting": "正在重新连接语音识别…",
+    "connecting": "正在连接语音识别…",
+    "waitingForSpeech": "正在聆听…",
+    "notRunning": "对话已停止",
+    "emptyTitle": "转写通话",
+    "emptyHint": "在任意应用中通话时开始对话：对方的发言会带着译文显示在这里，并在其他标签页中继续记录，直到您停止。"
   }
 }

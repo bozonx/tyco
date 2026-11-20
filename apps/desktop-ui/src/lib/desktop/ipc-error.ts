@@ -12,6 +12,7 @@ export const DESKTOP_ERROR_KEYS: Readonly<Record<DesktopErrorCode, string>> = {
   configConflict: 'desktopErrors.configConflict',
   serviceUnavailable: 'desktopErrors.serviceUnavailable',
   busy: 'desktopErrors.busy',
+  captureBusy: 'desktopErrors.captureBusy',
   permissionDenied: 'desktopErrors.permissionDenied',
   resourceLimit: 'desktopErrors.resourceLimit',
   invalidInput: 'desktopErrors.invalidInput',

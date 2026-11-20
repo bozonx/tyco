@@ -29,7 +29,8 @@ Rust backend and a Vue 3 frontend, organized as a pnpm + Turborepo monorepo.
   when one is done, move its outcome into the matching note and delete it.
 - `docs/` — guides for users and integrators: `data-folder.md` (data folder
   and sync), `external-control.md` (CLI/D-Bus API), `editor.md` (editor keys
-  and formatting), `plugins.md` (writing and installing plugins). Keep them
+  and formatting), `plugins.md` (writing and installing plugins), `dialog.md`
+  (the call transcript with live translation). Keep them
   free of implementation details and link to `dev_docs/` for those.
 
 Toolchain: Node.js 24 (`.node-version`), pnpm 11, Rust pinned by

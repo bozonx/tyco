@@ -360,7 +360,8 @@
     "vaultUnavailable": "A pasta de perfis de IA não está conectada neste dispositivo",
     "projectUnavailable": "A pasta do projeto não está definida neste dispositivo",
     "alreadyExists": "Já existe",
-    "staleRevision": "O arquivo foi alterado em outro dispositivo ou fora do TyCo"
+    "staleRevision": "O arquivo foi alterado em outro dispositivo ou fora do TyCo",
+    "captureBusy": "O som está ocupado pelo diálogo"
   },
   "diff": {
     "resetResult": "Restaurar resultado",
@@ -627,7 +628,8 @@
     "editor": "Editor",
     "history": "Histórico",
     "menu": "Menu",
-    "settings": "Configurações"
+    "settings": "Configurações",
+    "dialog": "Diálogo"
   },
   "selection": {
     "cancelled": "Cancelado",
@@ -1317,7 +1319,13 @@
     "askAiWebAccess": "Web em \"Perguntar à IA\"",
     "askAiWebAccessHint": "Se o chat \"Perguntar à IA\", que não tem perfil, pode pesquisar na web e ler páginas. \"Perguntar\" espera sua aprovação antes de cada chamada. Os perfis definem isso nas próprias ferramentas.",
     "translationVoiceCommand": "Comando de voz",
-    "translationVoiceCommandInfo": "Inclui o comando de tradução nos comandos de voz («traduza para [idioma]»)."
+    "translationVoiceCommandInfo": "Inclui o comando de tradução nos comandos de voz («traduza para [idioma]»).",
+    "dialogTab": "Diálogo",
+    "dialogSourceHint": "Com o microfone, sua fala e a do interlocutor aparecem separadas; só o computador mostra apenas o interlocutor.",
+    "dialogTranslationHint": "O que o interlocutor diz é traduzido para este idioma. Sua própria fala não é traduzida.",
+    "dialogTranslationProvider": "Serviço de tradução",
+    "dialogProviderDefault": "Como nas configurações de tradução",
+    "dialogProviderLlm": "Modelo de IA"
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {
@@ -1377,7 +1385,8 @@
     "webhookEmptyUrl": "A URL do webhook está vazia",
     "webhookFailed": "A solicitação ao webhook falhou",
     "webhookKeyNotSet": "A chave deste webhook não está definida neste dispositivo; digite-a nas configurações do comando",
-    "webhookSuccess": "Webhook enviado com sucesso"
+    "webhookSuccess": "Webhook enviado com sucesso",
+    "soundBusyWithDialog": "O som está ocupado pelo diálogo: pare-o para gravar"
   },
   "operations": {
     "aiTask": "Comando de IA",
@@ -1634,5 +1643,38 @@
     "cannotChangeLanguage": "Não é possível alterar o idioma: o reconhecimento já começou",
     "languageSavedForNext": "Idioma salvo para a próxima gravação",
     "openSettings": "Configurações de transcrição…"
+  },
+  "dialog": {
+    "sideMe": "Eu",
+    "sideRemote": "Interlocutor",
+    "translationLabel": "Tradução",
+    "translating": "Traduzindo…",
+    "translationFailed": "Não foi possível traduzir",
+    "feedLabel": "Transcrição do diálogo",
+    "toLatest": "Para o mais recente",
+    "start": "Iniciar",
+    "stop": "Parar",
+    "source": "Fonte",
+    "sourceMicrophoneAndSystem": "Microfone e computador",
+    "sourceSystem": "Só o computador",
+    "levelMe": "Nível do microfone",
+    "levelRemote": "Nível do som do computador",
+    "translationLanguage": "Traduzir para",
+    "textDisplay": "Mostrar",
+    "displayTranslation": "Tradução",
+    "displayOriginal": "Original",
+    "displayBoth": "Ambos",
+    "copy": "Copiar a transcrição",
+    "toActionMenu": "Enviar ao menu de ações",
+    "clear": "Limpar a transcrição",
+    "collapse": "Recolher em legendas",
+    "expand": "Expandir",
+    "noTranslation": "Sem tradução",
+    "reconnecting": "Reconectando ao reconhecimento de fala…",
+    "connecting": "Conectando ao reconhecimento de fala…",
+    "waitingForSpeech": "Ouvindo…",
+    "notRunning": "O diálogo está parado",
+    "emptyTitle": "Transcrever uma chamada",
+    "emptyHint": "Inicie o diálogo durante uma chamada em qualquer app: o que o interlocutor diz aparece aqui traduzido e continua sendo gravado em outras abas até você parar."
   }
 }

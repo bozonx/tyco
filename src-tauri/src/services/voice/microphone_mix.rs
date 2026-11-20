@@ -1,16 +1,20 @@
-//! The microphone and the sound the computer plays as one stream, so that a
-//! single transcription hears both sides of a call.
+//! The microphone and the sound the computer plays together, so that a
+//! transcription hears both sides of a call.
 //!
 //! Each source is brought to a common loudness first: a quiet microphone
 //! next to a loud call, or the other way round, would otherwise leave one
-//! side to the speech model as a murmur. The two are then summed in step by
-//! `StreamMixer`, which does not wait for playback while nothing plays.
+//! side to the speech model as a murmur. `StreamMixer` keeps the two in
+//! step and does not wait for playback while nothing plays. They are then
+//! summed into one stream (`MixLayout::Summed`), or kept apart as the two
+//! channels of a stereo stream (`MixLayout::Separate`), the microphone first,
+//! with the echo of the speakers muted in the microphone, see `EchoGate`.
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
 use super::audio_processing::{compute_audio_level, float_to_pcm16};
+use super::echo_gate::EchoGate;
 use super::mixer::StreamMixer;
 use super::{OpenedCapture, StreamContext};
 use crate::errors::AppError;
@@ -43,6 +47,24 @@ const PUMP_INTERVAL: Duration = Duration::from_millis(20);
 
 const MICROPHONE: u32 = 0;
 const PLAYBACK: u32 = 1;
+
+/// How a mix hands the two sources on.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum MixLayout {
+    /// Summed into one mono stream.
+    Summed,
+    /// Two interleaved channels: the microphone, then playback.
+    Separate,
+}
+
+impl MixLayout {
+    fn channel_count(self) -> u16 {
+        match self {
+            Self::Summed => 1,
+            Self::Separate => 2,
+        }
+    }
+}
 
 /// A one-pole smoothing coefficient for a time constant at a sample rate.
 fn coefficient(time_s: f32, sample_rate_hz: u32) -> f32 {
@@ -152,14 +174,30 @@ struct Mix {
     upsampler: Upsampler,
     microphone_loudness: LoudnessNormalizer,
     playback_loudness: LoudnessNormalizer,
+    /// Only for `MixLayout::Separate`.
+    echo_gate: Option<EchoGate>,
 }
 
 impl Mix {
-    fn new(microphone: StreamContext, playback: StreamContext, output: MixOutput) -> Self {
+    fn new(
+        microphone: StreamContext,
+        playback: StreamContext,
+        output: MixOutput,
+        layout: MixLayout,
+    ) -> Self {
         let rate = playback.output_sample_rate_hz;
-        let mut mixer = StreamMixer::new(u64::from(rate) * MAX_LAG_MS / 1_000);
-        mixer.add_stream(MICROPHONE);
-        mixer.add_stream(PLAYBACK);
+        let max_lag = u64::from(rate) * MAX_LAG_MS / 1_000;
+        let mut mixer = StreamMixer::with_lanes(max_lag, usize::from(layout.channel_count()));
+        match layout {
+            MixLayout::Summed => {
+                mixer.add_stream(MICROPHONE);
+                mixer.add_stream(PLAYBACK);
+            }
+            MixLayout::Separate => {
+                mixer.add_stream_to_lane(MICROPHONE, 0);
+                mixer.add_stream_to_lane(PLAYBACK, 1);
+            }
+        }
         Self {
             upsampler: Upsampler::new(microphone.output_sample_rate_hz, rate),
             microphone,
@@ -168,23 +206,31 @@ impl Mix {
             mixer,
             microphone_loudness: LoudnessNormalizer::new(rate),
             playback_loudness: LoudnessNormalizer::new(rate),
+            echo_gate: (layout == MixLayout::Separate).then(|| EchoGate::new(rate)),
         }
     }
 
     /// Mixes what is ready; `is_final` also lets out what waits for the
     /// other source.
     fn step(&mut self, is_final: bool) {
+        // the echo gate compares the sources as recorded: they are brought
+        // to a common loudness after it
+        let is_separate = self.echo_gate.is_some();
         // playback first: when it resumes after silence it joins at the
         // present, which is where the microphone's batch of the same
         // moment begins
         let mut playback = take_samples(&self.playback.pending_pcm_samples);
-        self.playback_loudness.process(&mut playback);
+        if !is_separate {
+            self.playback_loudness.process(&mut playback);
+        }
         self.mixer.push(PLAYBACK, &playback);
 
         let recorded = take_samples(&self.microphone.pending_pcm_samples);
         let mut microphone = Vec::with_capacity(recorded.len() * 2);
         self.upsampler.push(&recorded, &mut microphone);
-        self.microphone_loudness.process(&mut microphone);
+        if !is_separate {
+            self.microphone_loudness.process(&mut microphone);
+        }
         self.mixer.push(MICROPHONE, &microphone);
 
         // the microphone's errors are the mixed stream's own; playback's
@@ -197,6 +243,30 @@ impl Mix {
             self.mixer.finish()
         } else {
             self.mixer.drain()
+        };
+        let mixed = match self.echo_gate.as_mut() {
+            None => mixed,
+            Some(gate) => {
+                let (microphone, playback): (Vec<f32>, Vec<f32>) = mixed
+                    .as_chunks::<2>()
+                    .0
+                    .iter()
+                    .map(|&[microphone, playback]| (microphone, playback))
+                    .unzip();
+                let (mut microphone, mut playback) = gate.process(&microphone, &playback);
+                if is_final {
+                    let (microphone_tail, playback_tail) = gate.finish();
+                    microphone.extend(microphone_tail);
+                    playback.extend(playback_tail);
+                }
+                self.microphone_loudness.process(&mut microphone);
+                self.playback_loudness.process(&mut playback);
+                microphone
+                    .into_iter()
+                    .zip(playback)
+                    .flat_map(|(microphone, playback)| [microphone, playback])
+                    .collect()
+            }
         };
         if mixed.is_empty() {
             return;
@@ -237,6 +307,7 @@ pub(crate) fn mix_captures<M, P>(
     microphone: OpenedCapture<M>,
     playback: OpenedCapture<P>,
     stop_flag: &Arc<AtomicBool>,
+    layout: MixLayout,
 ) -> Result<OpenedCapture<MixedStream<M, P>>, AppError> {
     let rate = playback.output_sample_rate_hz;
     if microphone.output_sample_rate_hz > rate {
@@ -254,6 +325,7 @@ pub(crate) fn mix_captures<M, P>(
         device_sample_rate_hz: rate,
         output_sample_rate_hz: rate,
         fills_gaps: false,
+        channel_count: layout.channel_count(),
         status: Arc::clone(&playback.context.status),
     };
     let output = MixOutput {
@@ -261,7 +333,7 @@ pub(crate) fn mix_captures<M, P>(
         level: Arc::clone(&context.current_level),
         stream_error: Arc::clone(&context.stream_error),
     };
-    let mut mix = Mix::new(microphone.context, playback.context, output);
+    let mut mix = Mix::new(microphone.context, playback.context, output, layout);
     let quit = Arc::new(AtomicBool::new(false));
     let thread_quit = Arc::clone(&quit);
     let pump = thread::Builder::new()
@@ -397,6 +469,10 @@ mod tests {
     type Error = Arc<Mutex<Option<String>>>;
 
     fn mix() -> (Mix, Samples, Error) {
+        mix_as(MixLayout::Summed)
+    }
+
+    fn mix_as(layout: MixLayout) -> (Mix, Samples, Error) {
         let pending: Arc<Mutex<Vec<i16>>> = Arc::default();
         let stream_error: Arc<Mutex<Option<String>>> = Arc::default();
         let output = MixOutput {
@@ -405,7 +481,7 @@ mod tests {
             stream_error: Arc::clone(&stream_error),
         };
         (
-            Mix::new(context(RATE), context(RATE), output),
+            Mix::new(context(RATE), context(RATE), output, layout),
             pending,
             stream_error,
         )
@@ -467,7 +543,7 @@ mod tests {
             output_sample_rate_hz: RATE,
         };
         let microphone_pending = Arc::clone(&microphone.context.pending_pcm_samples);
-        let opened = mix_captures(microphone, playback, &stop).unwrap();
+        let opened = mix_captures(microphone, playback, &stop, MixLayout::Summed).unwrap();
         microphone_pending.locked().extend_from_slice(&[500; 100]);
         let output = Arc::clone(&opened.context.pending_pcm_samples);
         drop(opened.stream);
@@ -486,6 +562,59 @@ mod tests {
             context: context(RATE),
             output_sample_rate_hz: RATE,
         };
-        assert!(mix_captures(microphone, playback, &Arc::default()).is_err());
+        assert!(mix_captures(microphone, playback, &Arc::default(), MixLayout::Summed).is_err());
+    }
+
+    #[test]
+    fn separate_channels_are_interleaved_microphone_first() {
+        let (mut mix, pending, _) = mix_as(MixLayout::Separate);
+        record(&mix.microphone, &[8_000; 1_600]);
+        record(&mix.playback, &[-4_000; 1_600]);
+        mix.step(true);
+        let frames = std::mem::take(&mut *pending.locked());
+        assert_eq!(frames.len(), 3_200);
+        // not summed: each channel keeps its own sign
+        assert!(frames
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .all(|frame| frame[0] > 0 && frame[1] < 0));
+    }
+
+    #[test]
+    fn separate_channels_stay_aligned_when_playback_resumes() {
+        let (mut mix, pending, _) = mix_as(MixLayout::Separate);
+        record(&mix.microphone, &[1_000; 8_000]);
+        mix.step(false);
+        record(&mix.playback, &[2_000; 1_600]);
+        record(&mix.microphone, &[0; 1_600]);
+        mix.step(true);
+        let frames = std::mem::take(&mut *pending.locked());
+        assert_eq!(frames.len(), 2 * 9_600);
+        let playback: Vec<i16> = frames
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|frame| frame[1])
+            .collect();
+        assert!(playback[..8_000].iter().all(|&sample| sample == 0));
+        assert!(playback[8_000..].iter().all(|&sample| sample > 1_500));
+    }
+
+    #[test]
+    fn a_separate_capture_reports_two_channels() {
+        let microphone = OpenedCapture {
+            stream: (),
+            context: context(RATE),
+            output_sample_rate_hz: RATE,
+        };
+        let playback = OpenedCapture {
+            stream: (),
+            context: context(RATE),
+            output_sample_rate_hz: RATE,
+        };
+        let opened =
+            mix_captures(microphone, playback, &Arc::default(), MixLayout::Separate).unwrap();
+        assert_eq!(opened.context.channel_count, 2);
     }
 }
