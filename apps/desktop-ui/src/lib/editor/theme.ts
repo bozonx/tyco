@@ -5,10 +5,7 @@ import { tags } from '@lezer/highlight'
 
 interface InternalEditorView {
   observer?: { ignore: (fn: () => void) => void }
-  docView?: {
-    forceSelection: boolean
-    updateSelection: () => void
-  }
+  docView?: { forceSelection: boolean; updateSelection: () => void }
 }
 
 /**
@@ -108,7 +105,9 @@ export const editorTheme: Extension = [
     // better served by the native caret and selection, which behave correctly
     // with IME. Hence the caret is styled through `caretColor` above and
     // `.cm-cursor` / `.cm-selectionBackground` are never rendered at all
-    '.cm-content ::selection': { backgroundColor: 'var(--editor-selection-bg)' },
+    '.cm-content ::selection': {
+      backgroundColor: 'var(--editor-selection-bg)',
+    },
     '.cm-specialChar': { color: 'var(--color-error)' },
     '.cm-activeLine': { backgroundColor: 'transparent' },
   }),
