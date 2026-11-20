@@ -128,6 +128,11 @@ Voice capture accepts an audio source, level output and polling runtime;
 computer plays natively: PipeWire on Linux (`audio/pipewire.rs`: the default
 sink's monitor, or every output stream of one application, mixed by
 `voice/mixer.rs`) and WASAPI loopback on Windows (`audio/wasapi.rs`).
+`microphoneAndSystemMix` opens the microphone and the system sound together;
+`voice/microphone_mix.rs` brings each to a common loudness (a slow gated gain)
+and sums them through the same mixer. The microphone keeps time and owns
+the callback watchdog, so the mixed stream fills no gaps; a playback error
+ends it like a microphone error.
 A playback source delivers nothing while nothing plays, so the capture loop
 fills the gap with silence (`voice/source.rs`), switches the source in place
 (`switch_capture_source`) and waits for the same application when it quits.

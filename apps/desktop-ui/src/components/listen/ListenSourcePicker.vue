@@ -4,11 +4,7 @@
     size="sm"
     placement="top"
     max-trigger-width="12rem"
-    :icon="
-      source.kind === 'application'
-        ? 'mdi:application-outline'
-        : 'mdi:volume-high'
-    "
+    :icon="sourceIcon"
     :label="sourceLabel"
     :title="t('listen.sourceLabel')"
     :disabled="disabled"
@@ -26,7 +22,10 @@ import {
   levelBars,
   watchAudioApps,
 } from '../../lib/listen/audio-apps'
-import { SYSTEM_MIX_SOURCE } from '../../lib/listen/listen-model'
+import {
+  MICROPHONE_AND_SYSTEM_MIX_SOURCE,
+  SYSTEM_MIX_SOURCE,
+} from '../../lib/listen/listen-model'
 import { isModeSwitchKey } from '../../lib/listen/quick-mode-switch'
 import { clientLogger } from '../../lib/logger'
 import { tauriNetIpc } from '../../lib/net/tauri-net'
@@ -53,7 +52,15 @@ let watch: AudioAppsWatch | undefined
 let isOpen = false
 let generation = 0
 
+const sourceIcon = computed(() => {
+  if (props.source.kind === 'application') return 'mdi:application-outline'
+  if (props.source.kind === 'microphoneAndSystemMix') return 'mdi:account-voice'
+  return 'mdi:volume-high'
+})
+
 const sourceLabel = computed(() => {
+  if (props.source.kind === 'microphoneAndSystemMix')
+    return t('listen.microphoneAndSystemMix')
   if (props.source.kind !== 'application') return t('listen.systemMix')
   const appId = props.source.appId
   return (
@@ -72,6 +79,11 @@ const items = computed<DropdownMenuItem[]>(() => {
       label: t('listen.systemMix'),
       icon: 'mdi:volume-high',
       action: () => emit('select', SYSTEM_MIX_SOURCE),
+    },
+    {
+      label: t('listen.microphoneAndSystemMix'),
+      icon: 'mdi:account-voice',
+      action: () => emit('select', MICROPHONE_AND_SYSTEM_MIX_SOURCE),
     },
   ]
   if (!desktopStore.desktopState.canListenToApps) return list

@@ -171,7 +171,7 @@ const appLabel = computed(() =>
     : undefined
 )
 const configuredSource = () =>
-  configuredListenSource(desktopStore.userConfig.stt?.listenAppId)
+  configuredListenSource(desktopStore.userConfig.stt)
 
 const stopHotkey = useVoiceFinishSignal(
   () => 'listen',

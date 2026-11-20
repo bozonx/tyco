@@ -7,6 +7,7 @@
 
 pub mod apps;
 mod audio_processing;
+pub(crate) mod microphone_mix;
 pub mod mixer;
 pub mod session;
 pub mod source;

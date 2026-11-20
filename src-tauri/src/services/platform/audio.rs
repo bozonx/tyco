@@ -6,6 +6,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use crate::errors::AppError;
+use crate::services::voice::microphone_mix;
 use crate::services::voice::{
     AudioApp, AudioInputDevice, AudioSource, CaptureSource, OpenedCapture,
 };
@@ -35,6 +36,12 @@ impl AudioSource for SystemAudioSource {
         match source {
             CaptureSource::Microphone => {
                 microphone::open_microphone(self.microphone_id.as_deref(), stop_flag).map(boxed)
+            }
+            CaptureSource::MicrophoneAndSystemMix => {
+                let microphone =
+                    microphone::open_microphone(self.microphone_id.as_deref(), stop_flag)?;
+                let playback = open_playback(&CaptureSource::SystemMix, stop_flag)?;
+                microphone_mix::mix_captures(boxed(microphone), playback, stop_flag).map(boxed)
             }
             playback => open_playback(playback, stop_flag),
         }

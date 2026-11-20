@@ -60,6 +60,11 @@ export interface SttConfig {
   listenAppId?: string
   /** What the user saw for `listenAppId` when choosing it */
   listenAppLabel?: string
+  /**
+   * Whether the listening hotkey mixes the microphone into all the computer
+   * sound, to transcribe both sides of a call; ignored with `listenAppId`
+   */
+  isListenMicrophoneMixed?: boolean
   /** Whether to show the 15-key styling keyboard during hotkey voice input */
   isStylingBarEnabled: boolean
   /** Whether pressing a style key inserts the result directly without preview */

@@ -31,13 +31,29 @@ export type ListenPhase =
   'idle' | 'recording' | 'finishing' | 'result' | 'empty' | 'failed'
 
 export const SYSTEM_MIX_SOURCE: CaptureSource = { kind: 'systemMix' }
+/** Both sides of a call: the microphone mixed with all the computer sound */
+export const MICROPHONE_AND_SYSTEM_MIX_SOURCE: CaptureSource = {
+  kind: 'microphoneAndSystemMix',
+}
 
-/** The source the listening hotkey starts with, see `stt.listenAppId` */
+/** The settings that choose the source of a listening */
+export interface ListenSourceSettings {
+  listenAppId?: string
+  isListenMicrophoneMixed?: boolean
+}
+
+/**
+ * The source the listening hotkey starts with, see `stt.listenAppId` and
+ * `stt.isListenMicrophoneMixed`
+ */
 export function configuredListenSource(
-  appId: string | undefined
+  settings: ListenSourceSettings | undefined
 ): CaptureSource {
-  const id = appId?.trim()
-  return id ? { kind: 'application', appId: id } : SYSTEM_MIX_SOURCE
+  const id = settings?.listenAppId?.trim()
+  if (id) return { kind: 'application', appId: id }
+  return settings?.isListenMicrophoneMixed
+    ? MICROPHONE_AND_SYSTEM_MIX_SOURCE
+    : SYSTEM_MIX_SOURCE
 }
 
 export function isSameSource(a: CaptureSource, b: CaptureSource): boolean {

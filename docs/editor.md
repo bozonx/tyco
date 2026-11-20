@@ -88,8 +88,8 @@ remain available until you clear them.
 
 Choose **Listen to computer audio** for one of the five custom slots in
 **Settings → Hotkeys** and assign a shortcut, or switch from
-the voice-input overlay with **Alt+L**. Choose all computer sound or a playing
-application. A source chosen in the overlay lasts for that listening session;
+the voice-input overlay with **Alt+L**. Choose all computer sound, all sound
+together with your microphone, or a playing application. A source chosen in the overlay lasts for that listening session;
 the next hotkey activation uses the source saved in settings.
 
 The overlay remains visible when you click into a player. Press the listening
@@ -125,6 +125,17 @@ select an application to record it independently of the default output.
 Linux requires PipeWire. Application capture on Windows requires process-loopback
 support, checked at runtime. Separate installations are separate application
 sources on Windows; helpers installed in another directory may appear separately.
+
+### Transcribing a call
+
+Choose **Microphone + all sound** to transcribe both sides of a call in Google
+Meet, Zoom or any other app: your microphone and everything the computer plays
+are mixed into one transcript. Each is brought to a similar loudness first, so
+a quiet microphone is not lost next to a loud call. The transcript does not tell
+who said what, and words spoken over each other may be recognized less well.
+Use headphones: with speakers, the microphone also hears the other side and
+their words may come out twice. The microphone is the one chosen in the voice
+settings.
 
 ### Quick overlay controls
 

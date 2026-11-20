@@ -1291,6 +1291,7 @@
         "microphoneId": { "type": "string", "x-scope": "device" },
         "listenAppId": { "type": "string", "x-scope": "device" },
         "listenAppLabel": { "type": "string", "x-scope": "device" },
+        "isListenMicrophoneMixed": { "type": "boolean", "x-scope": "device" },
         "isStylingBarEnabled": { "type": "boolean", "default": false },
         "isStylingBarDirectInsertEnabled": {
           "type": "boolean",

@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 3b52ef08081fe77502e05399cc2698d92473bc8f251fb67fc154a8fed581a854
+// Source hash: a3ce8ab8685366b3920e25e8ed7a48a1d9cdbad57d1e1533cd0c19530e7e4b73
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -287,6 +287,7 @@ export type AudioInputDevice = { id: string; label: string; isDefault: boolean }
 export type CaptureSource =
   | { kind: 'microphone' }
   | { kind: 'systemMix' }
+  | { kind: 'microphoneAndSystemMix' }
   | { kind: 'application'; appId: string }
 
 export type Chat = {

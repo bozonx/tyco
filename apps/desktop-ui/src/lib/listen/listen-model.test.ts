@@ -99,11 +99,23 @@ describe('listen model', () => {
 
   it('starts with the configured source', () => {
     expect(configuredListenSource(undefined)).toEqual({ kind: 'systemMix' })
-    expect(configuredListenSource(' ')).toEqual({ kind: 'systemMix' })
-    expect(configuredListenSource('Telegram.exe')).toEqual({
+    expect(configuredListenSource({ listenAppId: ' ' })).toEqual({
+      kind: 'systemMix',
+    })
+    expect(configuredListenSource({ listenAppId: 'Telegram.exe' })).toEqual({
       kind: 'application',
       appId: 'Telegram.exe',
     })
+    expect(configuredListenSource({ isListenMicrophoneMixed: true })).toEqual({
+      kind: 'microphoneAndSystemMix',
+    })
+    // an application is one source: the microphone is not mixed into it
+    expect(
+      configuredListenSource({
+        listenAppId: 'Telegram.exe',
+        isListenMicrophoneMixed: true,
+      })
+    ).toEqual({ kind: 'application', appId: 'Telegram.exe' })
     expect(
       isSameSource(
         { kind: 'application', appId: 'a' },

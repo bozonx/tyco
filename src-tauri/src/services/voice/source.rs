@@ -11,14 +11,18 @@ pub enum CaptureSource {
     /// Everything the computer plays, without Tyco's own sounds where the
     /// platform can leave them out.
     SystemMix,
+    /// The microphone and everything the computer plays, each brought to a
+    /// common loudness and summed into one stream: both sides of a call.
+    MicrophoneAndSystemMix,
     /// Every stream one application plays.
     #[serde(rename_all = "camelCase")]
     Application { app_id: AudioAppId },
 }
 
 impl CaptureSource {
-    /// Whether the source records what the computer plays: such a source is
-    /// silent, without callbacks, while nothing plays, see `silence_gap`.
+    /// Whether the source records what the computer plays. A source of
+    /// playback alone is silent, without callbacks, while nothing plays, see
+    /// `silence_gap`; with the microphone, the microphone keeps time.
     pub fn is_playback(&self) -> bool {
         !matches!(self, Self::Microphone)
     }
@@ -94,6 +98,10 @@ mod tests {
             serde_json::json!({"kind": "systemMix"})
         );
         assert_eq!(
+            serde_json::to_value(CaptureSource::MicrophoneAndSystemMix).unwrap(),
+            serde_json::json!({"kind": "microphoneAndSystemMix"})
+        );
+        assert_eq!(
             serde_json::to_value(CaptureSource::Application {
                 app_id: "telegram-desktop".into()
             })
@@ -111,6 +119,7 @@ mod tests {
     fn only_the_microphone_delivers_callbacks_in_silence() {
         assert!(!CaptureSource::Microphone.is_playback());
         assert!(CaptureSource::SystemMix.is_playback());
+        assert!(CaptureSource::MicrophoneAndSystemMix.is_playback());
     }
 
     #[test]

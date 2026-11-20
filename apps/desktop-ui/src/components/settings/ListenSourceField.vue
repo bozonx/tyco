@@ -53,17 +53,21 @@ const { draft: userConfig } = useSettingsContext()
 
 const stt = computed(() => userConfig.value.stt)
 const canListen = computed(() => desktopStore.desktopState.canListen)
-const source = computed(() => configuredListenSource(stt.value.listenAppId))
+const source = computed(() => configuredListenSource(stt.value))
 
 /** An application is kept by its id, never by a process id */
 function select(next: CaptureSource, label?: string) {
+  const settings = userConfig.value.stt
+  if (next.kind === 'microphoneAndSystemMix')
+    settings.isListenMicrophoneMixed = true
+  else delete settings.isListenMicrophoneMixed
   if (next.kind === 'application') {
-    userConfig.value.stt.listenAppId = next.appId
-    userConfig.value.stt.listenAppLabel = label ?? next.appId
+    settings.listenAppId = next.appId
+    settings.listenAppLabel = label ?? next.appId
     return
   }
-  delete userConfig.value.stt.listenAppId
-  delete userConfig.value.stt.listenAppLabel
+  delete settings.listenAppId
+  delete settings.listenAppLabel
 }
 
 function setAppId(value: string) {
@@ -72,6 +76,7 @@ function setAppId(value: string) {
     select({ kind: 'systemMix' })
     return
   }
+  delete userConfig.value.stt.isListenMicrophoneMixed
   userConfig.value.stt.listenAppId = appId
   userConfig.value.stt.listenAppLabel = appId
 }

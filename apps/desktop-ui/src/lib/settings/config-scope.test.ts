@@ -37,6 +37,7 @@ const DEVICE_FIELD_NOTES: Record<
   ],
   'stt.listenAppId': ['SettingsVoiceTab.vue', '<ListenSourceField'],
   'stt.listenAppLabel': ['SettingsVoiceTab.vue', '<ListenSourceField'],
+  'stt.isListenMicrophoneMixed': ['SettingsVoiceTab.vue', '<ListenSourceField'],
   'stt.providers.sherpaOnnx': [
     'SettingsVoiceTab.vue',
     ':error="sttServerUrlError"\n        device-scoped',
