@@ -79,6 +79,7 @@ function fixture(overrides: Partial<AppWindowControllerDependencies> = {}) {
     goToChat: vi.fn(async () => {}),
     startChat: vi.fn(async () => {}),
     openLastChat: vi.fn(async () => {}),
+    openCurrentChat: vi.fn(async () => {}),
     openChat: vi.fn(async () => {}),
     afterRender: vi.fn(async () => {}),
     setChatInput: vi.fn(),
@@ -232,6 +233,24 @@ describe('application window events', () => {
     expect(f.deps.startChat).toHaveBeenCalledWith({})
     expect(f.deps.focusChatInput).toHaveBeenCalledOnce()
     expect(f.deps.sendChatInput).not.toHaveBeenCalled()
+
+    await f.deliver(DESKTOP_EVENTS.OPEN_MAIN_CHAT, {
+      attachment: { text: 'Snippet' },
+      newChat: true,
+      autoSend: false,
+    })
+    expect(f.deps.startChat).toHaveBeenCalledWith({
+      attachments: [{ text: 'Snippet' }],
+    })
+
+    await f.deliver(DESKTOP_EVENTS.OPEN_MAIN_CHAT, {
+      attachment: { text: 'Current snippet' },
+      newChat: false,
+      autoSend: false,
+    })
+    expect(f.deps.openCurrentChat).toHaveBeenCalledWith({
+      text: 'Current snippet',
+    })
     f.controller.stop()
   })
 

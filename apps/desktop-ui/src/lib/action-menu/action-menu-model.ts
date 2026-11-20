@@ -546,15 +546,31 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           },
         },
         {
-          id: 'askInChat',
-          labelKey: 'action.askInChat',
-          icon: 'mdi:chat-question-outline',
+          id: 'askInCurrentChat',
+          labelKey: 'action.askInCurrentChat',
+          icon: 'mdi:chat-outline',
           action: async (text: string) => {
             await invocationRunner.run(
               {
-                operationId: 'core.askInChat',
+                operationId: 'core.askInCurrentChat',
                 operationConfig: {},
-                label: translate('action.askInChat'),
+                label: translate('action.askInCurrentChat'),
+              },
+              text,
+              { source: 'menu' }
+            )
+          },
+        },
+        {
+          id: 'askInNewChat',
+          labelKey: 'action.askInNewChat',
+          icon: 'mdi:chat-plus-outline',
+          action: async (text: string) => {
+            await invocationRunner.run(
+              {
+                operationId: 'core.askInNewChat',
+                operationConfig: {},
+                label: translate('action.askInNewChat'),
               },
               text,
               { source: 'menu' }

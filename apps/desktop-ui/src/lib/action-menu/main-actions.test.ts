@@ -17,7 +17,7 @@ describe('normalizeMainActions', () => {
         w: { type: 'standard', actionId: 'translationMenu' },
         e: { type: 'custom', command: 'echo nope' },
         r: { type: 'standard', actionId: 'unknown' },
-        y: { type: 'standard', actionId: 'askInChat' },
+        y: { type: 'standard', actionId: 'askInCurrentChat' },
       }).slice(0, 4)
     ).toEqual([
       null,
@@ -25,6 +25,14 @@ describe('normalizeMainActions', () => {
       null,
       null,
     ])
+  })
+
+  it('normalizes legacy askInChat action to askInCurrentChat', () => {
+    expect(
+      normalizeMainActions({
+        q: { type: 'standard', actionId: 'askInChat' },
+      })[0]
+    ).toEqual({ type: 'standard', actionId: 'askInCurrentChat' })
   })
 
   it('keeps references to commands, transformations and translation languages', () => {
@@ -54,7 +62,8 @@ describe('normalizeMainActions', () => {
 describe('isMainActionVisible', () => {
   it.each<MainActionConfig>([
     { type: 'command', commandId: 'script' },
-    { type: 'standard', actionId: 'askInChat' },
+    { type: 'standard', actionId: 'askInCurrentChat' },
+    { type: 'standard', actionId: 'askInNewChat' },
     { type: 'standard', actionId: 'correction' },
     { type: 'profileChat', profileId: 'assistant' },
     { type: 'standard', actionId: 'copyToClipboard' },

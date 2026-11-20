@@ -54,6 +54,8 @@ const ACTION_ICONS: Record<string, string> = {
   aiTask: 'mdi:robot-outline',
   correction: 'mdi:spellcheck',
   translation: 'mdi:translate',
+  askInCurrentChat: 'mdi:chat-outline',
+  askInNewChat: 'mdi:chat-plus-outline',
   askInChat: 'mdi:chat-question-outline',
 }
 

@@ -14,6 +14,9 @@ pub struct OpenMainChatEvent {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub chat_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub new_chat: Option<bool>,
 }
 
 /// A chat history changed: every window reloads its list, and a window
@@ -133,7 +136,7 @@ pub struct Chat {
     pub id: String,
     pub title: String,
     /// Unix time in milliseconds.
-    #[serde(rename = "lastMessageAt")]
+    #[serde(rename = "lastMessageAt", alias = "updatedAt")]
     pub last_message_at_ms: u64,
     pub messages: Vec<ChatMessage>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -147,7 +150,7 @@ pub struct ChatSummary {
     pub id: String,
     pub title: String,
     /// Unix time in milliseconds.
-    #[serde(rename = "lastMessageAt")]
+    #[serde(rename = "lastMessageAt", alias = "updatedAt")]
     pub last_message_at_ms: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

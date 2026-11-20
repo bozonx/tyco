@@ -169,6 +169,8 @@ describe('actionIcon', () => {
   it('prefers the own icon, then the standard one, then the fallback', () => {
     expect(actionIcon('translation', 'mdi:star')).toBe('mdi:star')
     expect(actionIcon('translation')).toBe('mdi:translate')
+    expect(actionIcon('askInCurrentChat')).toBe('mdi:chat-outline')
+    expect(actionIcon('askInNewChat')).toBe('mdi:chat-plus-outline')
     expect(actionIcon('plugin-x')).toBe(ACTIONS_ICON)
     expect(actionIcon()).toBe(ACTIONS_ICON)
   })

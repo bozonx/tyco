@@ -29,6 +29,10 @@ export interface CoreOperationDependencies {
   copyText: (text: string) => Promise<void>
   /** Opens the chat with the text attached */
   askInChat: (text: string) => Promise<void>
+  /** Opens the current chat with the text attached */
+  askInCurrentChat?: (text: string) => Promise<void>
+  /** Opens a new chat with the text attached */
+  askInNewChat?: (text: string) => Promise<void>
   correctText: (text: string, signal: AbortSignal) => Promise<string>
   translateTo: (
     language: string,
@@ -151,16 +155,46 @@ export function createCoreOperations(
 
   const askInChat: OperationDefinition = {
     id: 'core.askInChat' satisfies CoreOperationId,
-    labelKey: 'operations.askInChat',
-    descriptionKey: 'operations.askInChatDescription',
+    labelKey: 'operations.askInCurrentChat',
+    descriptionKey: 'operations.askInCurrentChatDescription',
     icon: 'mdi:chat-question-outline',
     description: 'Opens the chat of the app with the text attached',
     inputSchema: TEXT_INPUT_SCHEMA,
     canRunFromChat: false,
     run: async (call) => {
       const text = textOf(call)
-      await deps.askInChat(text)
+      await (deps.askInCurrentChat ?? deps.askInChat)(text)
       // the chat opens in the main window, which the quick one hands over to
+      return { ok: true, keepWindow: true }
+    },
+  }
+
+  const askInCurrentChat: OperationDefinition = {
+    id: 'core.askInCurrentChat' satisfies CoreOperationId,
+    labelKey: 'operations.askInCurrentChat',
+    descriptionKey: 'operations.askInCurrentChatDescription',
+    icon: 'mdi:chat-outline',
+    description: 'Opens current chat with the text attached',
+    inputSchema: TEXT_INPUT_SCHEMA,
+    canRunFromChat: false,
+    run: async (call) => {
+      const text = textOf(call)
+      await (deps.askInCurrentChat ?? deps.askInChat)(text)
+      return { ok: true, keepWindow: true }
+    },
+  }
+
+  const askInNewChat: OperationDefinition = {
+    id: 'core.askInNewChat' satisfies CoreOperationId,
+    labelKey: 'operations.askInNewChat',
+    descriptionKey: 'operations.askInNewChatDescription',
+    icon: 'mdi:chat-plus-outline',
+    description: 'Opens a new chat with the text attached',
+    inputSchema: TEXT_INPUT_SCHEMA,
+    canRunFromChat: false,
+    run: async (call) => {
+      const text = textOf(call)
+      await (deps.askInNewChat ?? deps.askInChat)(text)
       return { ok: true, keepWindow: true }
     },
   }
@@ -252,5 +286,15 @@ export function createCoreOperations(
     }
   )
 
-  return [insert, copy, correct, translate, transformation, styling, askInChat]
+  return [
+    insert,
+    copy,
+    correct,
+    translate,
+    transformation,
+    styling,
+    askInChat,
+    askInCurrentChat,
+    askInNewChat,
+  ]
 }

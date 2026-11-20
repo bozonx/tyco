@@ -424,7 +424,9 @@ describe('QuickAiRequestMenu', () => {
       'quickAiRequest.goToChat',
     ])
     expect(footerEnd.find('.run-action-btn').exists()).toBe(true)
-    expect(wrapper.find('[aria-label="action.askInChat"]').exists()).toBe(false)
+    expect(
+      wrapper.find('[aria-label="action.askInCurrentChat"]').exists()
+    ).toBe(false)
   })
 
   it('tells by the placeholder what the request is about', () => {

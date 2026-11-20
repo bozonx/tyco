@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 67de4b18fb14a7c60dc5dbe62fc2009aec7432bfc380228c99de6682d1cd9b9c
+// Source hash: 3b52ef08081fe77502e05399cc2698d92473bc8f251fb67fc154a8fed581a854
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -706,6 +706,7 @@ export type OpenMainChatEvent = {
   autoSend: boolean
   profileId?: string
   chatId?: string
+  newChat?: boolean
 }
 
 /** A tool as the webview registry describes it, see `set_operation_catalog`. */

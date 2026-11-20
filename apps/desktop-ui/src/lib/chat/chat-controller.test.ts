@@ -16,7 +16,10 @@ function setup() {
     canUseTools: false,
     contextWindowTokens: 100_000,
   })
-  const state = reactive({ label: 'main', externalSelection: '' })
+  const state = reactive<{ label: string; externalSelection: string | null }>({
+    label: 'main',
+    externalSelection: '',
+  })
   const editor = reactive({ value: '', selectedText: '' })
   const input = reactive({
     value: '',
@@ -113,7 +116,10 @@ describe('chat controller', () => {
     const { controller, deps, model, state } = setup()
     state.label = 'quick'
     await controller.startChat({ attachments: [{ text: 'context' }] })
-    expect(deps.openMainChat).toHaveBeenCalledWith({ text: 'context' })
+    expect(deps.openMainChat).toHaveBeenCalledWith(
+      { text: 'context' },
+      { newChat: true }
+    )
     expect(model.currentChatParams.value.id).toBeUndefined()
     expect(deps.input.requestFocus).not.toHaveBeenCalled()
     expect(deps.closeModals).toHaveBeenCalledOnce()
@@ -124,23 +130,26 @@ describe('chat controller', () => {
     state.label = 'quick'
     state.externalSelection = 'selection'
     await controller.attachToChat('selection')
-    expect(deps.openMainChat).toHaveBeenCalledWith({
-      text: 'selection',
-      source: 'selection',
-    })
+    expect(deps.openMainChat).toHaveBeenCalledWith(
+      { text: 'selection', source: 'selection' },
+      { newChat: false }
+    )
     expect(deps.input.requestFocus).not.toHaveBeenCalled()
   })
 
   it('opens main chat without attachment when text is empty in quick window', async () => {
     const { controller, deps, state } = setup()
     state.label = 'quick'
+    state.externalSelection = null
     await controller.attachToChat('')
-    expect(deps.openMainChat).toHaveBeenCalledWith(undefined)
+    expect(deps.openMainChat).toHaveBeenCalledWith(undefined, {
+      newChat: false,
+    })
   })
 
-  it('opens last or new chat when text is empty in main window', async () => {
+  it('opens current chat when text is empty in main window', async () => {
     const { controller, model } = setup()
-    const openSpy = vi.spyOn(model, 'openLastOrNewChat')
+    const openSpy = vi.spyOn(model, 'openCurrentChat')
     await controller.attachToChat('')
     expect(openSpy).toHaveBeenCalled()
   })

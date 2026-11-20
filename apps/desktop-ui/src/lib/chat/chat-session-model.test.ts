@@ -28,6 +28,7 @@ describe('createChatSessionModel', () => {
       chatLoadError: vi.fn(() => 'Load error'),
       chatNotFoundError: vi.fn(() => 'Not found'),
       getLastChatId: vi.fn(() => null as string | null),
+      getCurrentChatId: vi.fn(() => null as string | null),
       branchTitle: vi.fn((title: string) => `Branch of ${title}`),
     }
     const halt = vi.fn()
@@ -238,6 +239,23 @@ describe('createChatSessionModel', () => {
       await model.openLastOrNewChat()
       expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.CHAT.path)
       expect(deps.loadChat).not.toHaveBeenCalledTimes(2)
+    })
+
+    it('opens current chat by updated time and adds attachment', async () => {
+      const { model, deps, state } = setup()
+      deps.getCurrentChatId = vi.fn().mockResolvedValue('chat-current')
+      deps.loadChat.mockResolvedValueOnce({
+        id: 'chat-current',
+        title: 'Current',
+        lastMessageAt: 1_767_225_600_000,
+        messages: [],
+      })
+
+      await model.openCurrentChat({ text: 'attached' })
+      expect(state.currentChatParams.value.id).toBe('chat-current')
+      expect(state.currentChatParams.value.attachments).toEqual([
+        { text: 'attached' },
+      ])
     })
   })
 

@@ -68,11 +68,44 @@ export const useOperationsStore = defineStore('tools', () => {
 
   // the chat hands itself in: the registry does not depend on it
   let askInChatHandler: ((text: string) => Promise<void>) | null = null
-  /** Lets `core.askInChat` reach the chat; returns the release function */
-  const provideAskInChat = (handler: (text: string) => Promise<void>) => {
-    askInChatHandler = handler
+  let askInCurrentChatHandler: ((text: string) => Promise<void>) | null = null
+  let askInNewChatHandler: ((text: string) => Promise<void>) | null = null
+
+  /**
+   * Lets `core.askInChat` and related tools reach the chat; returns the release
+   * function
+   */
+  const provideAskInChat = (
+    handlers:
+      | ((text: string) => Promise<void>)
+      | {
+          askInCurrentChat?: (text: string) => Promise<void>
+          askInNewChat?: (text: string) => Promise<void>
+          askInChat?: (text: string) => Promise<void>
+        }
+  ) => {
+    if (typeof handlers === 'function') {
+      askInChatHandler = handlers
+      askInCurrentChatHandler = handlers
+      askInNewChatHandler = handlers
+      return () => {
+        if (askInChatHandler === handlers) {
+          askInChatHandler = null
+          askInCurrentChatHandler = null
+          askInNewChatHandler = null
+        }
+      }
+    }
+    const current = handlers.askInCurrentChat ?? handlers.askInChat ?? null
+    const newChat = handlers.askInNewChat ?? handlers.askInChat ?? null
+    const legacy = handlers.askInChat ?? handlers.askInCurrentChat ?? null
+    askInCurrentChatHandler = current
+    askInNewChatHandler = newChat
+    askInChatHandler = legacy
     return () => {
-      if (askInChatHandler === handler) askInChatHandler = null
+      askInCurrentChatHandler = null
+      askInNewChatHandler = null
+      askInChatHandler = null
     }
   }
 
@@ -82,8 +115,19 @@ export const useOperationsStore = defineStore('tools', () => {
       resultOrThrow(await ipcStore.call('copy_text', { text }), 'copy_text')
     },
     askInChat: async (text) => {
-      if (!askInChatHandler) throw new Error('The chat is not available')
-      await askInChatHandler(text)
+      const handler = askInChatHandler ?? askInCurrentChatHandler
+      if (!handler) throw new Error('The chat is not available')
+      await handler(text)
+    },
+    askInCurrentChat: async (text) => {
+      const handler = askInCurrentChatHandler ?? askInChatHandler
+      if (!handler) throw new Error('The chat is not available')
+      await handler(text)
+    },
+    askInNewChat: async (text) => {
+      const handler = askInNewChatHandler ?? askInChatHandler
+      if (!handler) throw new Error('The chat is not available')
+      await handler(text)
     },
     correctText: textCorrectionStore.correct,
     translateTo: async (language, text, options) => {

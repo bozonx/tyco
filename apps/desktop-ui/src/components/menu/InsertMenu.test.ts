@@ -205,7 +205,7 @@ describe('InsertMenu correction step', () => {
         },
         {
           inputMode: 'none',
-          slots: { q: { type: 'standard', actionId: 'askInChat' } },
+          slots: { q: { type: 'standard', actionId: 'askInCurrentChat' } },
         },
       ],
     })

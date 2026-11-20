@@ -256,6 +256,7 @@ export interface DesktopCommands {
       autoSend?: boolean | null
       profileId?: string | null
       chatId?: string | null
+      newChat?: boolean | null
       activationId: number
     }
     result: void

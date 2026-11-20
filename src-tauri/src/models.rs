@@ -80,6 +80,7 @@ mod desktop_contract_tests {
             auto_send: true,
             profile_id: None,
             chat_id: None,
+            new_chat: None,
         };
         assert_eq!(
             serde_json::to_value(payload).unwrap(),

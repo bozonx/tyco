@@ -72,7 +72,8 @@ describe('resolveActionSelectionBehavior', () => {
       'voiceInput',
       'quickAiRequest',
       'voiceQuickAiRequest',
-      'askInChat',
+      'askInCurrentChat',
+      'askInNewChat',
       'chatPromptsMenu',
     ] as const) {
       expect(

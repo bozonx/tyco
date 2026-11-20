@@ -55,3 +55,31 @@ export function groupChatHistory(
     .filter((key) => groups.has(key))
     .map((key) => ({ key, items: groups.get(key) || [] }))
 }
+
+/**
+ * Resolves the update timestamp of a chat: `updatedAt` if present, otherwise
+ * `lastMessageAt`.
+ */
+export function chatUpdatedAt(item: {
+  updatedAt?: number
+  lastMessageAt?: number
+}): number {
+  return item.updatedAt ?? item.lastMessageAt ?? 0
+}
+
+/** Finds the chat with the most recent `updatedAt` (or `lastMessageAt`). */
+export function findCurrentChat<
+  T extends { id: string; updatedAt?: number; lastMessageAt?: number },
+>(items: readonly T[]): T | null {
+  if (!items || items.length === 0) return null
+  let latest = items[0]
+  let latestTime = chatUpdatedAt(latest)
+  for (let i = 1; i < items.length; i++) {
+    const time = chatUpdatedAt(items[i])
+    if (time > latestTime) {
+      latestTime = time
+      latest = items[i]
+    }
+  }
+  return latest
+}

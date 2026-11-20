@@ -34,7 +34,10 @@ export interface ChatControllerDependencies {
   requestBudgetCharacters?: () => number
   externalSelection: () => string | null | undefined
   windowLabel: () => string
-  openMainChat: (attachment: ChatAttachment | undefined) => Promise<unknown>
+  openMainChat: (
+    attachment: ChatAttachment | undefined,
+    options?: { newChat?: boolean; chatId?: string }
+  ) => Promise<unknown>
   closeModals: () => void
   afterRender: () => Promise<unknown>
   selectModel: (id: string) => Promise<unknown>
@@ -112,9 +115,12 @@ export function createChatController(deps: ChatControllerDependencies) {
       (pendingImages.value.length > 0 || historyImagesRequired.value)
   )
   /** Runs in the main window; the quick window hands the text over to it */
-  const inMainWindow = async (attachment: ChatAttachment | undefined) => {
+  const inMainWindow = async (
+    attachment: ChatAttachment | undefined,
+    options?: { newChat?: boolean; chatId?: string }
+  ) => {
     if (deps.windowLabel() !== DESKTOP_WINDOW_LABELS.QUICK) return true
-    await deps.openMainChat(attachment)
+    await deps.openMainChat(attachment, options)
     return false
   }
 
@@ -127,7 +133,8 @@ export function createChatController(deps: ChatControllerDependencies) {
   const startChat = async (params: Parameters<typeof model.startChat>[0]) => {
     if (disposed) return
     deps.closeModals()
-    if (!(await inMainWindow(params.attachments?.[0]))) return
+    if (!(await inMainWindow(params.attachments?.[0], { newChat: true })))
+      return
     await model.startChat(params)
     await focusAfterRender()
   }
@@ -154,6 +161,9 @@ export function createChatController(deps: ChatControllerDependencies) {
      * `inferAttachmentSource`
      */
     async attachToChat(text: string, source?: ChatAttachmentSource) {
+      await this.attachToCurrentChat(text, source)
+    },
+    async attachToCurrentChat(text: string, source?: ChatAttachmentSource) {
       if (disposed) return
       const trimmed = text?.trim()
       const attachment: ChatAttachment | undefined = trimmed
@@ -169,12 +179,32 @@ export function createChatController(deps: ChatControllerDependencies) {
           }
         : undefined
       deps.closeModals()
-      if (!(await inMainWindow(attachment))) return
+      if (!(await inMainWindow(attachment, { newChat: false }))) return
       if (attachment) {
-        await model.attachToChat(attachment)
+        await files.whileOpening(() => model.openCurrentChat(attachment))
       } else {
-        await files.whileOpening(() => model.openLastOrNewChat())
+        await files.whileOpening(() => model.openCurrentChat())
       }
+      await focusAfterRender()
+    },
+    async attachToNewChat(text: string, source?: ChatAttachmentSource) {
+      if (disposed) return
+      const trimmed = text?.trim()
+      const attachment: ChatAttachment | undefined = trimmed
+        ? {
+            text: trimmed,
+            source:
+              source ??
+              inferAttachmentSource(trimmed, {
+                externalSelection: deps.externalSelection(),
+                editorSelection: editorInputStore.selectedText,
+                editorText: editorInputStore.value,
+              }),
+          }
+        : undefined
+      deps.closeModals()
+      if (!(await inMainWindow(attachment, { newChat: true }))) return
+      await startChat(attachment ? { attachments: [attachment] } : {})
       await focusAfterRender()
     },
     async openLastOrNewChat() {

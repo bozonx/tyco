@@ -13,6 +13,8 @@ function coreOperations() {
     insertText: vi.fn(async (_text: string) => {}),
     copyText: vi.fn(async (_text: string) => {}),
     askInChat: vi.fn(async (_text: string) => {}),
+    askInCurrentChat: vi.fn(async (_text: string) => {}),
+    askInNewChat: vi.fn(async (_text: string) => {}),
   }
   const operations = testOperations(
     {},
@@ -70,25 +72,27 @@ describe('createActionMenuModel', () => {
   it('hides development actions without moving other shortcuts or changing saved slots', () => {
     const { deps } = setup()
     const mainActions = {
-      q: { type: 'standard' as const, actionId: 'askInChat' as const },
+      q: { type: 'standard' as const, actionId: 'askInCurrentChat' as const },
       w: { type: 'standard' as const, actionId: 'correction' as const },
     }
     const store = createActionMenuModel({
       ...deps,
       mainActions: () => mainActions,
       isMainActionVisible: (action) =>
-        !(action.type === 'standard' && action.actionId === 'askInChat'),
+        !(action.type === 'standard' && action.actionId === 'askInCurrentChat'),
     })
     expect(store.resolveMainActions().slice(0, 2)).toEqual([
       null,
       mainActions.w,
     ])
     expect(
-      store.getDefaultActions().some((action) => action.id === 'askInChat')
+      store
+        .getDefaultActions()
+        .some((action) => action.id === 'askInCurrentChat')
     ).toBe(false)
     expect(store.getShortcutActions()[0]).toBeUndefined()
     expect(store.getShortcutActions()[1]?.id).toBe('correction')
-    expect(mainActions.q.actionId).toBe('askInChat')
+    expect(mainActions.q.actionId).toBe('askInCurrentChat')
   })
 
   it('hides the slot of a profile of a vault away without its place', () => {
@@ -122,7 +126,7 @@ describe('createActionMenuModel', () => {
         },
         {
           inputMode: 'none',
-          slots: { q: { type: 'standard', actionId: 'askInChat' } },
+          slots: { q: { type: 'standard', actionId: 'askInCurrentChat' } },
         },
       ],
     })
@@ -134,7 +138,7 @@ describe('createActionMenuModel', () => {
     store.nextPage()
     expect(store.pageIndex.value).toBe(1)
     expect(store.takesText.value).toBe(false)
-    expect(store.getShortcutActions()[0]?.id).toBe('askInChat')
+    expect(store.getShortcutActions()[0]?.id).toBe('askInCurrentChat')
 
     store.setPage(0)
     expect(store.pageIndex.value).toBe(0)
@@ -409,19 +413,31 @@ describe('createActionMenuModel', () => {
     expect(activateMode).toHaveBeenCalledWith('editor')
   })
 
-  it('opens the chat with or without text for askInChat action', async () => {
+  it('opens current chat with or without text for askInCurrentChat action', async () => {
     const { store, deps, services } = setup()
     const actions = store.getDefaultActions()
 
-    const askInChatAction = actions.find(
-      (a) => a.labelKey === 'action.askInChat'
-    )
-    await askInChatAction?.action('   ')
-    expect(services.askInChat).toHaveBeenCalledWith('   ')
+    const action = actions.find((a) => a.labelKey === 'action.askInCurrentChat')
+    await action?.action('   ')
+    expect(services.askInCurrentChat).toHaveBeenCalledWith('   ')
     expect(deps.showToast).not.toHaveBeenCalled()
 
-    await askInChatAction?.action('some context text')
-    expect(services.askInChat).toHaveBeenCalledWith('some context text')
+    await action?.action('some context text')
+    expect(services.askInCurrentChat).toHaveBeenCalledWith('some context text')
+    expect(deps.saveOutput).not.toHaveBeenCalled()
+  })
+
+  it('opens new chat with or without text for askInNewChat action', async () => {
+    const { store, deps, services } = setup()
+    const actions = store.getDefaultActions()
+
+    const action = actions.find((a) => a.labelKey === 'action.askInNewChat')
+    await action?.action('   ')
+    expect(services.askInNewChat).toHaveBeenCalledWith('   ')
+    expect(deps.showToast).not.toHaveBeenCalled()
+
+    await action?.action('some context text')
+    expect(services.askInNewChat).toHaveBeenCalledWith('some context text')
     expect(deps.saveOutput).not.toHaveBeenCalled()
   })
 

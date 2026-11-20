@@ -5,6 +5,7 @@ use crate::{
 };
 use tauri::AppHandle;
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub fn open_main_chat(
     app: AppHandle,
     attachment: Option<crate::models::ChatAttachment>,
@@ -12,6 +13,7 @@ pub fn open_main_chat(
     auto_send: Option<bool>,
     profile_id: Option<String>,
     chat_id: Option<String>,
+    new_chat: Option<bool>,
     activation_id: u64,
 ) -> Result<(), AppError> {
     runtime::open_main_chat(
@@ -21,6 +23,7 @@ pub fn open_main_chat(
         auto_send,
         profile_id,
         chat_id,
+        new_chat,
         activation_id,
     )
 }

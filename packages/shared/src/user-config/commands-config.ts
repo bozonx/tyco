@@ -24,7 +24,8 @@ export const STANDARD_ACTION_IDS = [
   'voiceQuickAiRequest',
   'screenshotQuickAiRequest',
   'voiceScreenshotQuickAiRequest',
-  'askInChat',
+  'askInCurrentChat',
+  'askInNewChat',
 ] as const
 
 export type StandardActionId = (typeof STANDARD_ACTION_IDS)[number]
@@ -78,6 +79,8 @@ export const CORE_TOOL_IDS = [
   'core.transformation',
   'core.styling',
   'core.askInChat',
+  'core.askInCurrentChat',
+  'core.askInNewChat',
 ] as const
 export type CoreOperationId = (typeof CORE_TOOL_IDS)[number]
 

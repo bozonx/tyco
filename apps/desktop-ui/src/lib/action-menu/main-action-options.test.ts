@@ -26,7 +26,8 @@ describe('main action groups', () => {
     expect(standardActionGroup('stylingMenu')).toEqual({ kind: 'basic' })
     expect(standardActionGroup('insertIntoWindow')).toEqual({ kind: 'basic' })
     expect(standardActionGroup('voiceCommands')).toEqual({ kind: 'basic' })
-    expect(standardActionGroup('askInChat')).toEqual({ kind: 'askAi' })
+    expect(standardActionGroup('askInCurrentChat')).toEqual({ kind: 'askAi' })
+    expect(standardActionGroup('askInNewChat')).toEqual({ kind: 'askAi' })
     expect(standardActionGroup('quickAiRequest')).toEqual({ kind: 'askAi' })
   })
 

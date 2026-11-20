@@ -19,7 +19,7 @@ export function createChatSessionModel(
     | 'chatNotFoundError'
     | 'getLastChatId'
     | 'branchTitle'
-  >,
+  > & { getCurrentChatId?: () => Promise<string | null> | string | null },
   state: ChatState,
   halt: (save: boolean) => void,
   persist: (messages: ChatMessage[], params?: ChatParams) => Promise<boolean>
@@ -208,6 +208,20 @@ export function createChatSessionModel(
     await startChat({})
   }
 
+  const openCurrentChat = async (attachment?: ChatAttachment) => {
+    if (disposed) return
+    const currentId = (await deps.getCurrentChatId?.()) ?? deps.getLastChatId()
+    if (currentId) {
+      const request = openRequest + 1
+      if (await openChat(currentId, { silent: true })) {
+        if (attachment) addAttachment(attachment)
+        return
+      }
+      if (!isCurrent(request)) return
+    }
+    await startChat(attachment ? { attachments: [attachment] } : {})
+  }
+
   const createChatFromMessages = async (
     initialMessages: ChatMessage[],
     chatParams: ChatParams = {}
@@ -244,5 +258,6 @@ export function createChatSessionModel(
     attachToChat,
     addAttachment,
     openLastOrNewChat,
+    openCurrentChat,
   }
 }

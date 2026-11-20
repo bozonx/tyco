@@ -406,7 +406,8 @@
                         "correction",
                         "directCorrection",
                         "translationMenu",
-                        "askInChat",
+                        "askInCurrentChat",
+                        "askInNewChat",
                         "quickAiRequest",
                         "voiceQuickAiRequest",
                         "screenshotQuickAiRequest",
@@ -562,7 +563,8 @@
                       "voiceQuickAiRequest",
                       "screenshotQuickAiRequest",
                       "voiceScreenshotQuickAiRequest",
-                      "askInChat",
+                      "askInCurrentChat",
+                      "askInNewChat",
                       "correction",
                       "directCorrection"
                     ]

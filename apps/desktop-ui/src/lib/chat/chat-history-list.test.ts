@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import type { Chat } from '@tyco/shared'
-import { filterChatHistory, groupChatHistory } from './chat-history-list'
+import {
+  chatUpdatedAt,
+  filterChatHistory,
+  findCurrentChat,
+  groupChatHistory,
+} from './chat-history-list'
 
 const item = (id: string, date: string, title = id): Chat => ({
   id,
@@ -53,5 +58,21 @@ describe('chat-history-list', () => {
       now
     )
     expect(today.items.map((chat) => chat.id)).toEqual(['noon', 'morning'])
+  })
+
+  it('determines updated time preferring updatedAt over lastMessageAt', () => {
+    expect(chatUpdatedAt({ lastMessageAt: 100 })).toBe(100)
+    expect(chatUpdatedAt({ updatedAt: 200, lastMessageAt: 100 })).toBe(200)
+    expect(chatUpdatedAt({})).toBe(0)
+  })
+
+  it('finds the current chat with the greatest updated time', () => {
+    expect(findCurrentChat([])).toBeNull()
+    const chats = [
+      { id: 'c1', lastMessageAt: 1000 },
+      { id: 'c2', updatedAt: 3000, lastMessageAt: 500 },
+      { id: 'c3', lastMessageAt: 2000 },
+    ]
+    expect(findCurrentChat(chats)?.id).toBe('c2')
   })
 })

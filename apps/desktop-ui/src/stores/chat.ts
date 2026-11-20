@@ -1,4 +1,4 @@
-import { DESKTOP_EVENTS, llmSecretId } from '@tyco/shared'
+import { DESKTOP_EVENTS, llmSecretId, type ChatAttachment } from '@tyco/shared'
 import { defineStore, getActivePinia, type Pinia } from 'pinia'
 import { nextTick, onScopeDispose, watch } from 'vue'
 
@@ -106,10 +106,15 @@ function createChatStoreSetup(profileId: string | null) {
         isSecretUsable(secretsStore.secrets, llmSecretId(providerId)),
       externalSelection: () => desktopStore.desktopState.selectedText,
       windowLabel: getDesktopWindowLabel,
-      openMainChat: (attachment) =>
+      openMainChat: (
+        attachment?: ChatAttachment,
+        options?: { newChat?: boolean; chatId?: string }
+      ) =>
         ipcStore.callOrNotify('open_main_chat', {
           attachment,
           profileId: profileId ?? undefined,
+          newChat: options?.newChat,
+          chatId: options?.chatId,
         }),
       closeModals: menuModalsStore.closeAll,
       afterRender: nextTick,
@@ -142,12 +147,14 @@ function createChatStoreSetup(profileId: string | null) {
       }
     )
 
-    // "Ask AI" is the chat of `core.askInChat`
+    // "Ask AI" is the chat of `core.askInChat`, `core.askInCurrentChat`, `core.askInNewChat`
     if (!profileId)
       onScopeDispose(
-        useOperationsStore().provideAskInChat((text) =>
-          runtime.attachToChat(text)
-        )
+        useOperationsStore().provideAskInChat({
+          askInCurrentChat: (text) => runtime.attachToCurrentChat(text),
+          askInNewChat: (text) => runtime.attachToNewChat(text),
+          askInChat: (text) => runtime.attachToCurrentChat(text),
+        })
       )
 
     return runtime

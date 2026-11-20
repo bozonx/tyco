@@ -1,6 +1,7 @@
 import {
   DESKTOP_EVENTS,
   type DesktopEventPayloads,
+  type ChatAttachment,
   type ChatParams,
   type DesktopListen,
 } from '@tyco/shared'
@@ -42,18 +43,22 @@ export interface AppWindowControllerDependencies {
   profileChat?: (profileId: string) => {
     startChat: (params: ChatParams) => Promise<void>
     openLastChat: () => Promise<void>
+    openCurrentChat?: (attachment?: ChatAttachment) => Promise<void>
     openChat: (id: string) => Promise<boolean | void>
     setChatInput: (text: string) => void
     sendChatInput: () => Promise<unknown>
     focusChatInput: () => void
+    addAttachment?: (attachment: ChatAttachment) => void
   }
   startChat: (params: ChatParams) => Promise<void>
   openLastChat: () => Promise<void>
+  openCurrentChat?: (attachment?: ChatAttachment) => Promise<void>
   openChat: (id: string) => Promise<boolean | void>
   afterRender: () => Promise<void>
   setChatInput: (text: string) => void
   sendChatInput: () => Promise<unknown>
   focusChatInput: () => void
+  addAttachment?: (attachment: ChatAttachment) => void
   applyEditorTransfer: (text?: string, sourceText?: string) => unknown
   goToEditor: () => Promise<void>
   resetMainWindow: () => Promise<void>
@@ -77,10 +82,12 @@ export function createAppWindowController(
       profile ?? {
         startChat: deps.startChat,
         openLastChat: deps.openLastChat,
+        openCurrentChat: deps.openCurrentChat,
         openChat: deps.openChat,
         setChatInput: deps.setChatInput,
         sendChatInput: deps.sendChatInput,
         focusChatInput: deps.focusChatInput,
+        addAttachment: deps.addAttachment,
       }
     )
   }
@@ -98,14 +105,36 @@ export function createAppWindowController(
     const isCurrent = beginChatRequest()
     const chat = await goToChatOf(payload.profileId)
     if (!isCurrent()) return
-    const { attachment, question, autoSend } = payload
+    const { attachment, question, autoSend, newChat, chatId } = payload
     const trimmedText = attachment?.text?.trim()
     const trimmedQuestion = question?.trim()
-    if (payload.chatId) {
-      await chat.openChat(payload.chatId)
-    } else if (attachment && trimmedText) {
+    const targetAttachment =
+      attachment && trimmedText
+        ? { ...attachment, text: trimmedText }
+        : undefined
+
+    if (chatId) {
+      await chat.openChat(chatId)
+      if (targetAttachment && chat.addAttachment) {
+        chat.addAttachment(targetAttachment)
+      }
+    } else if (newChat === true) {
+      if (targetAttachment) {
+        await chat.startChat({ attachments: [targetAttachment] })
+      } else {
+        await chat.startChat({})
+      }
+    } else if (newChat === false) {
+      if (chat.openCurrentChat) {
+        await chat.openCurrentChat(targetAttachment)
+      } else if (targetAttachment) {
+        await chat.startChat({ attachments: [targetAttachment] })
+      } else {
+        await chat.openLastChat()
+      }
+    } else if (targetAttachment) {
       await chat.startChat({
-        attachments: [{ ...attachment, text: trimmedText }],
+        attachments: [targetAttachment],
       })
     } else if (trimmedQuestion) {
       await chat.startChat({})

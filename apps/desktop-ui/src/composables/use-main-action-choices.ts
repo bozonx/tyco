@@ -267,7 +267,7 @@ export function useMainActionChoices(
       const profile = aiProfilesStore.getProfile(configProfileKey(slot))
       const actionName =
         slot.action === 'chat'
-          ? t('action.askInChat')
+          ? t('action.askInCurrentChat')
           : t(`action.${slot.action}`)
       return profile
         ? `${profile.name} — ${actionName}`

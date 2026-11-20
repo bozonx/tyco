@@ -65,6 +65,8 @@ describe('createCoreOperations', () => {
       'core.transformation',
       'core.styling',
       'core.askInChat',
+      'core.askInCurrentChat',
+      'core.askInNewChat',
     ])
     expect(tools.get('core.correct')?.defaultOutputAction).toBe(
       'insertIntoWindow'
@@ -86,6 +88,10 @@ describe('createCoreOperations', () => {
     expect(deps.copyText).toHaveBeenCalledWith('hi')
     await run('core.askInChat', 'why?')
     expect(deps.askInChat).toHaveBeenCalledWith('why?')
+    await run('core.askInCurrentChat', 'current?')
+    expect(deps.askInChat).toHaveBeenCalledWith('current?')
+    await run('core.askInNewChat', 'new?')
+    expect(deps.askInChat).toHaveBeenCalledWith('new?')
   })
 
   it('refuses an empty text', async () => {

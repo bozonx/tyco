@@ -32,6 +32,8 @@ function testCoreOperation(
     insertText: deps.insertText ?? unused,
     copyText: deps.copyText ?? unused,
     askInChat: unused,
+    askInCurrentChat: unused,
+    askInNewChat: unused,
     correctText: unused,
     translateTo: async (language, text) =>
       deps.translateTo

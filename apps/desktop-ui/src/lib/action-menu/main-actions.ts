@@ -81,6 +81,9 @@ function normalizeSlot(slot: unknown): MainActionConfig | null {
   ) {
     return { type: 'standard', actionId: 'voiceCommands' }
   }
+  if (item.type === 'standard' && item.actionId === 'askInChat') {
+    return { type: 'standard', actionId: 'askInCurrentChat' }
+  }
   if (!isValidActionSlot(slot)) return null
   return slot
 }

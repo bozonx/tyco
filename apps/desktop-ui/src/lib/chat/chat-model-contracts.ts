@@ -70,6 +70,11 @@ export interface ChatModelDependencies {
   nowMs: () => number
   saveSessionState: (state: Partial<SessionState>) => void | Promise<void>
   getLastChatId: () => string | null | undefined
+  /**
+   * Resolves the current chat id by most recent update time (updatedAt /
+   * lastMessageAt)
+   */
+  getCurrentChatId?: () => Promise<string | null> | string | null
   /** The model picked in the chat; null when none is available */
   getChatModel: () => ChatRequestModel | null
   /**

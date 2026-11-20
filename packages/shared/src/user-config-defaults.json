@@ -107,7 +107,7 @@
         "d": { "type": "standard", "actionId": "correction" },
         "f": { "type": "standard", "actionId": "transformationMenu" },
         "g": { "type": "standard", "actionId": "chatPromptsMenu" },
-        "z": { "type": "standard", "actionId": "askInChat" },
+        "z": { "type": "standard", "actionId": "askInCurrentChat" },
         "v": { "type": "standard", "actionId": "voiceQuickAiRequest" },
         "b": { "type": "standard", "actionId": "voiceInput" }
       }
@@ -125,7 +125,7 @@
         "s": { "type": "standard", "actionId": "openHistory" },
         "f": { "type": "standard", "actionId": "favoritesMenu" },
         "g": { "type": "standard", "actionId": "listen" },
-        "z": { "type": "standard", "actionId": "askInChat" },
+        "z": { "type": "standard", "actionId": "askInCurrentChat" },
         "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
       }
     }

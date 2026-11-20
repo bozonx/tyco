@@ -57,6 +57,7 @@ pub fn open_main_editor(
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn open_main_chat(
     app: &AppHandle,
     attachment: Option<crate::models::ChatAttachment>,
@@ -64,6 +65,7 @@ pub fn open_main_chat(
     auto_send: Option<bool>,
     profile_id: Option<String>,
     chat_id: Option<String>,
+    new_chat: Option<bool>,
     activation_id: u64,
 ) -> Result<(), AppError> {
     show_main_with::<events::OpenMainChat>(
@@ -75,6 +77,7 @@ pub fn open_main_chat(
             auto_send: auto_send.unwrap_or(false),
             profile_id,
             chat_id,
+            new_chat,
         },
         activation_id,
     )

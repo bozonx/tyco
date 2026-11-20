@@ -84,7 +84,9 @@ export function standardActionGroup(id: StandardActionId): MainActionGroup {
     id === 'voiceQuickAiRequest' ||
     id === 'screenshotQuickAiRequest' ||
     id === 'voiceScreenshotQuickAiRequest' ||
-    id === 'askInChat'
+    id === 'askInCurrentChat' ||
+    id === 'askInNewChat' ||
+    (id as string) === 'askInChat'
   ) {
     return { kind: 'askAi' }
   }

@@ -1239,7 +1239,7 @@ mod tests {
             ),
             (
                 "/actionPages/0/slots",
-                json!({"y": {"type":"standard","actionId":"askInChat"}}),
+                json!({"y": {"type":"standard","actionId":"askInCurrentChat"}}),
             ),
             ("/actionPages", json!([])),
             (
@@ -1302,8 +1302,8 @@ mod tests {
             "inputMode": "selection",
             "slots": {
                 "q": {"type":"command","commandId":"missing"},
-                "w": {"type":"standard","actionId":"askInChat"},
-                "y": {"type":"standard","actionId":"askInChat"},
+                "w": {"type":"standard","actionId":"askInCurrentChat"},
+                "y": {"type":"standard","actionId":"askInCurrentChat"},
             }
         }]);
         config["translation"]["targetLanguages"] = json!({"q": "en-US", "w": "en-US", "e": 1});
@@ -1314,7 +1314,7 @@ mod tests {
         assert!(!normalize_user_config(&mut config));
         assert_eq!(
             config["actionPages"][0]["slots"],
-            json!({"w": {"type":"standard","actionId":"askInChat"}})
+            json!({"w": {"type":"standard","actionId":"askInCurrentChat"}})
         );
         assert_eq!(
             config["translation"]["targetLanguages"],

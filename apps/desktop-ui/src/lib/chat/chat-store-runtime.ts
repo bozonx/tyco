@@ -8,7 +8,7 @@ import {
   type StorageChangedEvent,
   type UserConfig,
 } from '@tyco/shared'
-import { computed, watch, type Ref } from 'vue'
+import { computed, unref, watch, type Ref } from 'vue'
 
 import { LlmInstructionKind } from '../../types'
 import { changedChatFiles } from './chat-storage-changes'
@@ -37,6 +37,7 @@ import {
   pickScopedChatModel,
   type ChatLlmOption,
 } from './chat-llm-selection'
+import { findCurrentChat } from './chat-history-list'
 import { createChatModel } from './chat-model'
 import { createChatProfileRuntime } from './chat-profile-runtime'
 import { profileTurnOptions } from './chat-profile-turn'
@@ -78,7 +79,10 @@ export interface ChatStoreRuntimeDependencies {
   hasSecret: (providerId: string) => boolean
   externalSelection: () => string | null | undefined
   windowLabel: () => string
-  openMainChat: (attachment: ChatAttachment | undefined) => Promise<unknown>
+  openMainChat: (
+    attachment: ChatAttachment | undefined,
+    options?: { newChat?: boolean; chatId?: string }
+  ) => Promise<unknown>
   closeModals: () => void
   afterRender: () => Promise<unknown>
   navigateTo: (path: AppRoutePath) => Promise<void>
@@ -367,6 +371,19 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
       await scope.saveLastChatId(patch.lastChatId)
     },
     getLastChatId: scope.getLastChatId,
+    getCurrentChatId: async () => {
+      let items = unref(history.chatHistory)
+      if (items.length === 0) {
+        try {
+          await history.loadChatHistory()
+        } catch {
+          // ignore
+        }
+        items = unref(history.chatHistory)
+      }
+      const current = findCurrentChat(items)
+      return current?.id ?? null
+    },
     isHistoryEnabled,
     getChatModel: () => {
       const picked = selectedModel.value
@@ -513,6 +530,12 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
       if (profileId) await prepareProfile()
       if (disposed) return
       await controller.openLastOrNewChat()
+    },
+    async openCurrentChat(attachment?: ChatAttachment) {
+      if (disposed) return
+      if (profileId) await prepareProfile()
+      if (disposed) return
+      await model.openCurrentChat(attachment)
     },
     addFiles: files.addFiles,
     addDroppedFiles: files.addDroppedFiles,
