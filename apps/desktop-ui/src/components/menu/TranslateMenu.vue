@@ -14,13 +14,19 @@
     </template>
 
     <template #actions>
-      <div v-if="isPickerMode" class="translate-picker">
+      <div
+        v-if="isPickerMode"
+        class="translate-picker"
+        tabindex="-1"
+        @keydown="onPickerKeyDown"
+      >
         <div class="translate-columns">
           <!-- Source language column -->
           <div
             class="translate-column"
             :class="{ 'is-active': activeField === 'source' }"
             data-field="source"
+            @mousedown="activateField('source')"
             @click="activateField('source')"
           >
             <div class="translate-column-header">
@@ -67,8 +73,18 @@
                 spellcheck="false"
                 autocomplete="off"
                 @focus="activeField = 'source'"
-                @keydown="onKeyDown($event, 'source')"
+                @keydown="onInputKeyDown($event, 'source')"
               />
+
+              <button
+                v-if="sourceQuery"
+                type="button"
+                class="translate-query-clear-btn"
+                :title="t('editor.clear')"
+                @click.stop="clearQuery('source')"
+              >
+                <AppIcon icon="mdi:close" size="xs" />
+              </button>
             </div>
 
             <ul
@@ -77,6 +93,7 @@
               ref="sourceListRef"
               class="translate-column-options"
               role="listbox"
+              @mousedown="activateField('source')"
             >
               <template
                 v-for="(option, index) in sourceOptions"
@@ -161,6 +178,7 @@
             class="translate-column"
             :class="{ 'is-active': activeField === 'target' }"
             data-field="target"
+            @mousedown="activateField('target')"
             @click="activateField('target')"
           >
             <div class="translate-column-header">
@@ -204,8 +222,18 @@
                 spellcheck="false"
                 autocomplete="off"
                 @focus="activeField = 'target'"
-                @keydown="onKeyDown($event, 'target')"
+                @keydown="onInputKeyDown($event, 'target')"
               />
+
+              <button
+                v-if="targetQuery"
+                type="button"
+                class="translate-query-clear-btn"
+                :title="t('editor.clear')"
+                @click.stop="clearQuery('target')"
+              >
+                <AppIcon icon="mdi:close" size="xs" />
+              </button>
             </div>
 
             <ul
@@ -214,6 +242,7 @@
               ref="targetListRef"
               class="translate-column-options"
               role="listbox"
+              @mousedown="activateField('target')"
             >
               <template
                 v-for="(option, index) in targetOptions"
@@ -298,7 +327,7 @@
               :keys="['Ctrl', 'Enter']"
               interactive
               :disabled="props.shortcutsDisabled || isQuickTranslateDisabled"
-              @click="quickTranslate()"
+              @click="quickTranslate('source')"
             >
               {{ t('menu.translate') }}
             </ShortcutHint>
@@ -436,16 +465,23 @@ const languageLabel = (id: string): string =>
 const provider = computed(() => desktopStore.userConfig.translation.provider)
 const languageIds = (direction: 'source' | 'target') =>
   translationLanguageIds(provider.value, direction)
-const recentFor = (direction: 'source' | 'target') =>
-  recentLanguages.value.flatMap(
+
+const recentTargetLanguages = computed(
+  () => desktopStore.sessionState?.recentTranslateLanguages ?? []
+)
+const recentSourceLanguages = computed(
+  () => desktopStore.sessionState?.recentTranslateSourceLanguages ?? []
+)
+
+const recentFor = (direction: 'source' | 'target') => {
+  const list =
+    direction === 'source'
+      ? recentSourceLanguages.value
+      : recentTargetLanguages.value
+  return list.flatMap(
     (id) => resolveTranslationLanguage(id, provider.value, direction) ?? []
   )
-const frequentFor = (direction: 'source' | 'target') =>
-  slotList(desktopStore.userConfig.translation.targetLanguages)
-    .filter((id): id is string => Boolean(id))
-    .flatMap(
-      (id) => resolveTranslationLanguage(id, provider.value, direction) ?? []
-    )
+}
 
 watch(provider, () => {
   sourceLanguage.value = AUTO_LANGUAGE_VALUE
@@ -472,6 +508,7 @@ const otherLanguageAction: ActionItem = {
     activeField.value = 'target'
     sourceQuery.value = ''
     targetQuery.value = ''
+    sourceLanguage.value = AUTO_LANGUAGE_VALUE
     isPickerMode.value = true
     await nextTick()
     targetInputRef.value?.focus()
@@ -492,15 +529,20 @@ const handleOverlayEsc = () => {
   }
 }
 
-const recentLanguages = computed(
-  () => desktopStore.sessionState?.recentTranslateLanguages ?? []
-)
+const clearQuery = (column: 'source' | 'target') => {
+  if (column === 'source') {
+    sourceQuery.value = ''
+    activateField('source')
+  } else {
+    targetQuery.value = ''
+    activateField('target')
+  }
+}
 
 const AUTO_ICON = 'mdi:auto-mode'
 
 const GROUP_LABELS: Record<LanguageGroup, string> = {
   recent: 'menu.translateGroupRecent',
-  frequent: 'menu.translateGroupFrequent',
   all: 'menu.translateGroupAll',
 }
 
@@ -537,8 +579,7 @@ const rawSourceOptions = computed<QueryPanelOption[]>(() => [
     languageIds('source'),
     languageLabel,
     undefined,
-    locale.value,
-    frequentFor('source')
+    locale.value
   ).map(({ id, group }) => toOption(id, group, id === sourceLanguage.value)),
 ])
 
@@ -563,8 +604,7 @@ const rawTargetOptions = computed<QueryPanelOption[]>(() =>
     sourceLanguage.value === AUTO_LANGUAGE_VALUE
       ? undefined
       : sourceLanguage.value,
-    locale.value,
-    frequentFor('target')
+    locale.value
   ).map(({ id, group }) => toOption(id, group, id === targetLanguage.value))
 )
 
@@ -680,6 +720,16 @@ function swapLanguages() {
     targetLanguage.value = newTarget
     sourceQuery.value = ''
     targetQuery.value = ''
+    void desktopStore.patchSessionState({
+      recentTranslateLanguages: pushRecent(
+        recentTargetLanguages.value,
+        newTarget
+      ),
+      recentTranslateSourceLanguages: pushRecent(
+        recentSourceLanguages.value,
+        newSource
+      ),
+    })
   }
 }
 
@@ -711,11 +761,19 @@ function quickTranslate(fromColumn?: 'source' | 'target') {
     if (chosen) {
       sourceLanguage.value = chosen.id
       sourceId = pickedSourceLanguage()
+      if (chosen.id !== AUTO_LANGUAGE_VALUE) {
+        void desktopStore.patchSessionState({
+          recentTranslateSourceLanguages: pushRecent(
+            recentSourceLanguages.value,
+            chosen.id
+          ),
+        })
+      }
     }
   }
 
   void desktopStore.patchSessionState({
-    recentTranslateLanguages: pushRecent(recentLanguages.value, targetId),
+    recentTranslateLanguages: pushRecent(recentTargetLanguages.value, targetId),
   })
   void translate(targetId, sourceId)
 }
@@ -727,6 +785,14 @@ function submitSource(option?: QueryPanelOption) {
 
   sourceLanguage.value = chosen.id
   sourceQuery.value = ''
+  if (chosen.id !== AUTO_LANGUAGE_VALUE) {
+    void desktopStore.patchSessionState({
+      recentTranslateSourceLanguages: pushRecent(
+        recentSourceLanguages.value,
+        chosen.id
+      ),
+    })
+  }
   activateField('target')
 }
 
@@ -738,14 +804,18 @@ async function submitTarget(option?: QueryPanelOption) {
   targetLanguage.value = chosen.id
   targetQuery.value = ''
   void desktopStore.patchSessionState({
-    recentTranslateLanguages: pushRecent(recentLanguages.value, chosen.id),
+    recentTranslateLanguages: pushRecent(
+      recentTargetLanguages.value,
+      chosen.id
+    ),
   })
   await translate(chosen.id, pickedSourceLanguage())
 }
 
-function onKeyDown(event: KeyboardEvent, column: 'source' | 'target') {
-  if (isInputDisabled.value || event.isComposing) return
-
+function handleNavigationKey(
+  event: KeyboardEvent,
+  column: 'source' | 'target'
+) {
   if (
     (event.ctrlKey || event.metaKey) &&
     event.shiftKey &&
@@ -811,6 +881,27 @@ function onKeyDown(event: KeyboardEvent, column: 'source' | 'target') {
       return
     }
   }
+}
+
+function onInputKeyDown(event: KeyboardEvent, column: 'source' | 'target') {
+  if (isInputDisabled.value || event.isComposing) return
+
+  // Prevent leading space
+  const query = column === 'source' ? sourceQuery.value : targetQuery.value
+  if (event.key === ' ' && !query.trim()) {
+    event.preventDefault()
+    return
+  }
+
+  handleNavigationKey(event, column)
+}
+
+function onPickerKeyDown(event: KeyboardEvent) {
+  if (isInputDisabled.value || event.isComposing) return
+  // If event originated from an input, onInputKeyDown already handled it
+  if (event.target instanceof HTMLInputElement) return
+
+  handleNavigationKey(event, activeField.value)
 }
 
 /** The source language the user picked; undefined lets the translator detect it */
@@ -896,6 +987,7 @@ useMenuStartup({
   flex-direction: column;
   gap: var(--space-sm);
   width: 100%;
+  outline: none;
 }
 
 .translate-columns {
@@ -965,6 +1057,29 @@ useMenuStartup({
   flex-shrink: 0;
 }
 
+.translate-query-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full, 9999px);
+  background: transparent;
+  color: var(--app-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.translate-query-clear-btn:hover {
+  color: var(--color-base-content);
+  background-color: var(--app-hover);
+}
+
 .translate-column-header-input {
   outline: none;
 }
@@ -977,7 +1092,6 @@ useMenuStartup({
   height: 100%;
   opacity: 0;
   cursor: default;
-  pointer-events: none;
 }
 
 .translate-column-header-input.is-searching {
@@ -1164,20 +1278,5 @@ useMenuStartup({
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-}
-
-.shortcut-hint.is-primary {
-  --key-background: rgba(255, 255, 255, 0.2);
-  --key-border-color: rgba(255, 255, 255, 0.4);
-  --key-color: var(--color-primary-content);
-  border-color: var(--color-primary);
-  background-color: var(--color-primary);
-  color: var(--color-primary-content);
-}
-
-.shortcut-hint.is-primary:hover:not(:disabled) {
-  opacity: 0.9;
-  background-color: var(--color-primary);
-  color: var(--color-primary-content);
 }
 </style>

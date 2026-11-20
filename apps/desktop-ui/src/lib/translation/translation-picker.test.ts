@@ -21,17 +21,13 @@ describe('groupLanguages', () => {
     ])
   })
 
-  it('includes frequent picks after recent picks without duplicates', () => {
-    expect(
-      groupLanguages(['pl-PL'], all, label, undefined, undefined, [
-        'de-DE',
-        'pl-PL',
-      ])
-    ).toEqual([
+  it('limits recent picks to 5 without duplicates', () => {
+    const list = ['pl-PL', 'de-DE', 'it-IT', 'en-US', 'pl-PL']
+    expect(groupLanguages(list, all, label)).toEqual([
       { id: 'pl-PL', group: 'recent' },
-      { id: 'de-DE', group: 'frequent' },
-      { id: 'en-US', group: 'all' },
-      { id: 'it-IT', group: 'all' },
+      { id: 'de-DE', group: 'recent' },
+      { id: 'it-IT', group: 'recent' },
+      { id: 'en-US', group: 'recent' },
     ])
   })
 

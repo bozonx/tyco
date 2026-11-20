@@ -97,6 +97,10 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
     const queuedPatch = { ...patch }
     if (patch.recentTranslateLanguages)
       queuedPatch.recentTranslateLanguages = [...patch.recentTranslateLanguages]
+    if (patch.recentTranslateSourceLanguages)
+      queuedPatch.recentTranslateSourceLanguages = [
+        ...patch.recentTranslateSourceLanguages,
+      ]
     const write = sessionStateWrites.then(async () => {
       const response = await deps.call('patch_session_state', {
         patch: queuedPatch,

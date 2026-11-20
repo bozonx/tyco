@@ -53,6 +53,7 @@ export const DEFAULT_SESSION_STATE: SessionState = {
   lastMode: null,
   lastProfileChatIds: {},
   recentTranslateLanguages: [],
+  recentTranslateSourceLanguages: [],
 }
 
 /** UI projection of the domain snapshot, never serialized as an IPC payload. */

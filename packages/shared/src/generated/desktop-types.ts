@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: cd6e7d23823f3a0339061795ba7ea894a92ad108a4390ffb34cff1b98cdaa92b
+// Source hash: 9c6b7495a12d47e6c92ce7a105ece4ca512d92fd793f001504d11220c3eca373
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -855,6 +855,11 @@ export type SessionState = {
   lastProfileChatIds: { [key in string]: string }
   /** Languages picked from the full list in the translate menu, newest first. */
   recentTranslateLanguages: Array<string>
+  /**
+   * Source languages picked from the full list in the translate menu, newest
+   * first.
+   */
+  recentTranslateSourceLanguages: Array<string>
 }
 
 export type SessionStatePatch = Partial<SessionState>

@@ -13,4 +13,7 @@ pub struct SessionState {
     /// Languages picked from the full list in the translate menu, newest first.
     #[serde(default)]
     pub recent_translate_languages: Vec<String>,
+    /// Source languages picked from the full list in the translate menu, newest first.
+    #[serde(default)]
+    pub recent_translate_source_languages: Vec<String>,
 }

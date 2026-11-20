@@ -6,6 +6,7 @@ pub const VALID_SESSION_STATE_KEYS: &[&str] = &[
     "lastMode",
     "lastProfileChatIds",
     "recentTranslateLanguages",
+    "recentTranslateSourceLanguages",
 ];
 
 /// Replaces patched fields, except profile chat ids which merge by profile.

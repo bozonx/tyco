@@ -36,7 +36,8 @@
         "lastChatId": null,
         "lastMode": null,
         "lastProfileChatIds": {},
-        "recentTranslateLanguages": []
+        "recentTranslateLanguages": [],
+        "recentTranslateSourceLanguages": []
       },
       "userData": {
         "path": "",

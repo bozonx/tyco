@@ -417,4 +417,39 @@ describe('TranslateMenu', () => {
       })
     )
   })
+
+  it('saves chosen source language to recentTranslateSourceLanguages in session state', async () => {
+    const wrapper = mountMenu()
+    await shortcutListProps.spaceKey.action()
+    await nextTick()
+
+    const sourceInput = wrapper.find<HTMLInputElement>(
+      'input[data-field="source"]'
+    )
+    await sourceInput.setValue('german')
+    await sourceInput.trigger('keydown', { key: 'Enter' })
+
+    await vi.waitFor(() =>
+      expect(desktop.backend.callsOf('patch_session_state')).toEqual([
+        { patch: { recentTranslateSourceLanguages: ['de'] } },
+      ])
+    )
+  })
+
+  it('ignores leading space keydown when search query is empty', async () => {
+    const wrapper = mountMenu()
+    await shortcutListProps.spaceKey.action()
+    await nextTick()
+
+    const targetInput = wrapper.find<HTMLInputElement>(
+      'input[data-field="target"]'
+    )
+    const event = new KeyboardEvent('keydown', {
+      key: ' ',
+      cancelable: true,
+      bubbles: true,
+    })
+    targetInput.element.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(true)
+  })
 })
