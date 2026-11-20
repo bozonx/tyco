@@ -8,15 +8,13 @@
       class="command-field"
       vertical
       density="compact"
-      :required="!isNamedByTool"
+      required
       :label="t('commands.nameLabel')"
       :warning="nameWarnings"
     >
       <FieldInput
         :model-value="command.name"
-        :placeholder="
-          isNamedByTool ? commandLabel(command) : t('commands.namePlaceholder')
-        "
+        :placeholder="t('commands.namePlaceholder')"
         :autofocus="autofocusName"
         @update:model-value="update({ name: $event })"
       />
@@ -317,15 +315,9 @@ const customActionOperation = computed(
     props.command.operationId === 'webhook'
 )
 const canTest = computed(() => canTestCommand(props.command))
-/** AI commands and translation do not use pre-transformation */
+/** AI commands do not use pre-transformation */
 const canPreTransform = computed(
-  () =>
-    props.command.operationId !== 'core.aiTask' &&
-    props.command.operationId !== 'core.translate'
-)
-/** A translation needs no name: its tool names it, see `commandLabel` */
-const isNamedByTool = computed(
-  () => props.command.operationId === 'core.translate'
+  () => props.command.operationId !== 'core.aiTask'
 )
 /** Why the command cannot run, unless its tool is missing altogether */
 const unavailableReason = computed(() =>

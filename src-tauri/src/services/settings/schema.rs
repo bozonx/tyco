@@ -545,16 +545,7 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
         command["operationId"] = json!(command["operationId"].as_str().unwrap_or_default().trim());
     }
     if let Some(commands) = config["commands"].as_array_mut() {
-        commands.retain(|command| {
-            !(command["id"] == "translate"
-                && command["operationId"] == "core.translate"
-                && command["name"]
-                    .as_str()
-                    .unwrap_or_default()
-                    .trim()
-                    .is_empty()
-                && command["phrases"].as_array().is_none_or(|p| p.is_empty()))
-        });
+        commands.retain(|command| command["operationId"] != "core.translate");
     }
     let builtin_ids = BUILTIN_LLM_PROVIDERS;
     let mut providers = config["llm"]["providers"]

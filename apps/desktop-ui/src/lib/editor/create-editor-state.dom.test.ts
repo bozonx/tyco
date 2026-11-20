@@ -2,6 +2,7 @@ import { EditorView } from '@codemirror/view'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createEditorState } from './create-editor-state'
+import { setMarkdownPreview } from './markdown-preview'
 
 const press = (
   view: EditorView,
@@ -95,6 +96,29 @@ describe('select all shortcut', () => {
     })
 
     press(view, { key: 'ф', code: 'KeyA', ctrlKey: true, keyCode: 0 })
+    expect(view.state.selection.main.from).toBe(0)
+    expect(view.state.selection.main.to).toBe(doc.length)
+    view.destroy()
+  })
+
+  it('refreshes native DOM selection endpoints when docView redraws with a non-empty selection', () => {
+    const doc = 'First line\nSecond line `code`\nThird line'
+    const view = new EditorView({
+      parent: document.body,
+      state: createEditorState({ doc, markdownPreview: false }),
+    })
+    view.focus()
+
+    press(view, { key: 'a', code: 'KeyA', ctrlKey: true, keyCode: 65 })
+    const sel = window.getSelection()
+    expect(sel?.anchorNode).not.toBeNull()
+    const anchorParent = sel!.anchorNode!.parentNode!
+    const insertBeforeSpy = vi.spyOn(anchorParent, 'insertBefore')
+
+    // Trigger a docView redraw while the whole document remains selected
+    setMarkdownPreview(view, true)
+
+    expect(insertBeforeSpy).toHaveBeenCalled()
     expect(view.state.selection.main.from).toBe(0)
     expect(view.state.selection.main.to).toBe(doc.length)
     view.destroy()

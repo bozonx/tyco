@@ -111,7 +111,6 @@ import { computed } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import {
   commandIcon,
-  commandLabel,
   commandUnavailableReason,
   validateCommand,
 } from '../../lib/commands/command-runtime'
@@ -148,12 +147,7 @@ const { t } = useI18n()
 const operationsStore = useOperationsStore()
 const slotKey = (index: number) =>
   SHORTCUT_SLOT_KEYS[index]?.toUpperCase() ?? ''
-// a translation without a name of its own is named by its tool
-const displayName = computed(() =>
-  props.command.name.trim() || props.command.operationId !== 'core.translate'
-    ? props.command.name
-    : commandLabel(props.command)
-)
+const displayName = computed(() => props.command.name)
 const unavailableReasonKey = computed(() =>
   commandUnavailableReason(props.command, operationsStore)
 )

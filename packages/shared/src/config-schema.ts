@@ -435,15 +435,7 @@ export function normalizeCommands(value: unknown): UserConfig['commands'] {
       ) as Record<string, unknown>
   }
   return deduplicate(
-    commands.filter(
-      (command) =>
-        !(
-          command.id === 'translate' &&
-          command.operationId === 'core.translate' &&
-          !command.name.trim() &&
-          (!command.phrases || command.phrases.length === 0)
-        )
-    )
+    commands.filter((command) => command.operationId !== 'core.translate')
   )
 }
 
