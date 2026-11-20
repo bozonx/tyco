@@ -4,8 +4,8 @@ use crate::{
     services::runtime,
 };
 use tauri::AppHandle;
-#[tauri::command]
 #[allow(clippy::too_many_arguments)]
+#[tauri::command]
 pub fn open_main_chat(
     app: AppHandle,
     attachment: Option<crate::models::ChatAttachment>,

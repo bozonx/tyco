@@ -133,9 +133,7 @@ export function createAppWindowController(
         await chat.openLastChat()
       }
     } else if (targetAttachment) {
-      await chat.startChat({
-        attachments: [targetAttachment],
-      })
+      await chat.startChat({ attachments: [targetAttachment] })
     } else if (trimmedQuestion) {
       await chat.startChat({})
     } else {
