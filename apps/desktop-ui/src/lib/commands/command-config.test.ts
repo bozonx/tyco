@@ -448,7 +448,7 @@ describe('commands of the core tools', () => {
     ).toBe(true)
     expect(
       isCommandOperation({ id: 'core.translate', owner: { kind: 'core' } })
-    ).toBe(true)
+    ).toBe(false)
     expect(
       isCommandOperation({ id: 'core.insert', owner: { kind: 'core' } })
     ).toBe(false)

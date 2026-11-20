@@ -323,15 +323,6 @@
           </div>
           <div class="translate-hints-primary">
             <ShortcutHint
-              v-if="activeField === 'source'"
-              :keys="['Ctrl', 'Enter']"
-              interactive
-              :disabled="props.shortcutsDisabled || isQuickTranslateDisabled"
-              @click="quickTranslate('source')"
-            >
-              {{ t('menu.translate') }}
-            </ShortcutHint>
-            <ShortcutHint
               class="is-primary"
               :keys="['Enter']"
               interactive
@@ -516,6 +507,7 @@ const otherLanguageAction: ActionItem = {
 }
 
 const closePicker = () => {
+  targetLanguage.value = undefined
   isPickerMode.value = false
 }
 
@@ -733,51 +725,6 @@ function swapLanguages() {
   }
 }
 
-const isQuickTranslateDisabled = computed(() => {
-  const hasTarget = Boolean(
-    targetLanguage.value ||
-    highlightedTargetIndex.value >= 0 ||
-    targetOptions.value[0]?.id
-  )
-  return isInputDisabled.value || !hasTarget
-})
-
-function quickTranslate(fromColumn?: 'source' | 'target') {
-  if (isInputDisabled.value) return
-
-  const effectiveColumn = fromColumn ?? activeField.value
-  let targetId = targetLanguage.value
-  if (!targetId && highlightedTargetIndex.value >= 0) {
-    targetId = targetOptions.value[highlightedTargetIndex.value]?.id
-  }
-  if (!targetId) {
-    targetId = targetOptions.value[0]?.id
-  }
-  if (!targetId) return
-
-  let sourceId = pickedSourceLanguage()
-  if (effectiveColumn === 'source' && highlightedSourceIndex.value >= 0) {
-    const chosen = sourceOptions.value[highlightedSourceIndex.value]
-    if (chosen) {
-      sourceLanguage.value = chosen.id
-      sourceId = pickedSourceLanguage()
-      if (chosen.id !== AUTO_LANGUAGE_VALUE) {
-        void desktopStore.patchSessionState({
-          recentTranslateSourceLanguages: pushRecent(
-            recentSourceLanguages.value,
-            chosen.id
-          ),
-        })
-      }
-    }
-  }
-
-  void desktopStore.patchSessionState({
-    recentTranslateLanguages: pushRecent(recentTargetLanguages.value, targetId),
-  })
-  void translate(targetId, sourceId)
-}
-
 function submitSource(option?: QueryPanelOption) {
   if (isInputDisabled.value) return
   const chosen = option ?? sourceOptions.value[highlightedSourceIndex.value]
@@ -801,7 +748,6 @@ async function submitTarget(option?: QueryPanelOption) {
   const chosen = option ?? targetOptions.value[highlightedTargetIndex.value]
   if (!chosen) return
 
-  targetLanguage.value = chosen.id
   targetQuery.value = ''
   void desktopStore.patchSessionState({
     recentTranslateLanguages: pushRecent(
@@ -809,7 +755,12 @@ async function submitTarget(option?: QueryPanelOption) {
       chosen.id
     ),
   })
-  await translate(chosen.id, pickedSourceLanguage())
+  try {
+    targetLanguage.value = chosen.id
+    await translate(chosen.id, pickedSourceLanguage())
+  } finally {
+    targetLanguage.value = undefined
+  }
 }
 
 function handleNavigationKey(
@@ -823,13 +774,6 @@ function handleNavigationKey(
   ) {
     event.preventDefault()
     swapLanguages()
-    return
-  }
-
-  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-    event.preventDefault()
-    if (event.repeat) return
-    quickTranslate(column)
     return
   }
 

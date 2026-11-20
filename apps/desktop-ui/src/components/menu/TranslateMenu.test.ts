@@ -363,8 +363,8 @@ describe('TranslateMenu', () => {
     await swapBtn.trigger('click')
 
     // Now source should be Italian and target should be German
-    // Let's verify by pressing Ctrl+Enter to translate
-    await targetInput.trigger('keydown', { key: 'Enter', ctrlKey: true })
+    // Let's verify by pressing Enter to translate
+    await targetInput.trigger('keydown', { key: 'Enter' })
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
     expect(transform).toHaveBeenCalledWith(
       'core.translate',
@@ -396,26 +396,39 @@ describe('TranslateMenu', () => {
     expect(wrapper.find('.translate-picker').exists()).toBe(false)
   })
 
-  it('translates immediately via Ctrl+Enter from source column', async () => {
-    setRecentLanguages(['de-DE'])
+  it('clears targetLanguage selection after translation cancellation', async () => {
+    let reject!: (error: unknown) => void
+    transform.mockReturnValue(
+      new Promise((_, fail) => {
+        reject = fail
+      })
+    )
     const wrapper = mountMenu()
     await shortcutListProps.spaceKey.action()
     await nextTick()
 
-    const sourceInput = wrapper.find<HTMLInputElement>(
-      'input[data-field="source"]'
+    const targetInput = wrapper.find<HTMLInputElement>(
+      'input[data-field="target"]'
     )
-    await sourceInput.setValue('polish')
-    await sourceInput.trigger('keydown', { key: 'Enter', ctrlKey: true })
-
+    await targetInput.setValue('german')
+    void targetInput.trigger('keydown', { key: 'Enter' })
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
-    expect(transform).toHaveBeenCalledWith(
-      'core.translate',
-      'Hello world',
-      expect.objectContaining({
-        operationConfig: { language: 'de-DE', sourceLanguage: 'pl' },
-      })
-    )
+
+    useMenuModalsStore().cancelPending()
+    reject({ cancelled: true })
+
+    await vi.waitFor(() => {
+      expect(
+        wrapper
+          .find('[data-field="target"] .translate-column-selected')
+          .exists()
+      ).toBe(false)
+      expect(
+        wrapper
+          .find('[data-field="target"]')
+          .findAll('.translate-option.is-selected')
+      ).toHaveLength(0)
+    })
   })
 
   it('saves chosen source language to recentTranslateSourceLanguages in session state', async () => {
