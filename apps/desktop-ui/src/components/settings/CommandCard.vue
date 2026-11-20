@@ -20,9 +20,29 @@
       >
         {{ displayName || t('commands.unnamed') }}
       </span>
-      <Badge v-if="!commandTakesText(command, operationsStore)">
-        {{ t('commands.badgeNoText') }}
-      </Badge>
+      <div v-if="hasTriggers" class="command-triggers">
+        <Badge
+          v-if="command.isVoiceEnabled"
+          tone="muted"
+          :title="t('commands.badgeVoice')"
+        >
+          <AppIcon icon="mdi:microphone-outline" size="sm" />
+        </Badge>
+        <Badge
+          v-if="command.isAvailableExternally"
+          tone="muted"
+          :title="t('commands.badgeExternal')"
+        >
+          <AppIcon icon="mdi:console-line" size="sm" />
+        </Badge>
+        <Badge
+          v-if="command.description?.trim()"
+          tone="muted"
+          :title="t('commands.badgeAi')"
+        >
+          <AppIcon icon="mdi:robot-outline" size="sm" />
+        </Badge>
+      </div>
       <Badge
         v-if="command.isEnabled && unavailableReasonKey"
         tone="muted"
@@ -92,7 +112,6 @@ import { useI18n } from '../../composables/use-i18n'
 import {
   commandIcon,
   commandLabel,
-  commandTakesText,
   commandUnavailableReason,
   validateCommand,
 } from '../../lib/commands/command-runtime'
@@ -138,6 +157,13 @@ const displayName = computed(() =>
 const unavailableReasonKey = computed(() =>
   commandUnavailableReason(props.command, operationsStore)
 )
+const hasTriggers = computed(() =>
+  Boolean(
+    props.command.isVoiceEnabled ||
+    props.command.isAvailableExternally ||
+    props.command.description?.trim()
+  )
+)
 const hasIssues = computed(
   () =>
     validateCommand(props.command, operationsStore).length > 0 ||
@@ -177,6 +203,13 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
 
 .command-name.is-empty {
   color: var(--app-text-muted);
+}
+
+.command-triggers {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
 }
 
 .command-placements {
