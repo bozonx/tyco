@@ -73,7 +73,11 @@ export class PreviewWidget extends WidgetType {
     return dom
   }
 
-  override ignoreEvent(): boolean {
+  override ignoreEvent(event: Event): boolean {
+    if (event.type === 'keydown') {
+      const e = event as KeyboardEvent
+      if (e.ctrlKey || e.metaKey) return false
+    }
     return true
   }
 }
@@ -169,7 +173,11 @@ export class CodeBlockHeaderWidget extends WidgetType {
     return dom
   }
 
-  override ignoreEvent(): boolean {
+  override ignoreEvent(event: Event): boolean {
+    if (event.type === 'keydown') {
+      const e = event as KeyboardEvent
+      if (e.ctrlKey || e.metaKey) return false
+    }
     return true
   }
 }
@@ -217,7 +225,11 @@ export class MarkerWidget extends WidgetType {
     return checkbox
   }
 
-  override ignoreEvent(): boolean {
+  override ignoreEvent(event: Event): boolean {
+    if (event.type === 'keydown') {
+      const e = event as KeyboardEvent
+      if (e.ctrlKey || e.metaKey) return false
+    }
     return true
   }
 }

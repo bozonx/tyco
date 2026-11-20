@@ -4,6 +4,13 @@ import { EditorView, keymap } from '@codemirror/view'
 
 import { EDIT_USER_EVENT } from './edit-source'
 import { htmlToMarkdown, isCodeEditorHtml } from './html-to-markdown'
+import { shortcutLetter } from './history-keys'
+
+export const isPastePlainEvent = (event: KeyboardEvent): boolean => {
+  const isMod = event.ctrlKey || event.metaKey
+  if (!isMod || event.altKey || !event.shiftKey) return false
+  return shortcutLetter(event) === 'v'
+}
 
 /** Insert text into current selection as a regular paste */
 export const insertPastedText = (view: EditorView, text: string): void => {
@@ -60,6 +67,15 @@ export const pasteExtension = (
 ): Extension => [
   ...(onPastePlain
     ? [
+        EditorView.domEventHandlers({
+          keydown: (event) => {
+            if (isPastePlainEvent(event)) {
+              onPastePlain()
+              return true
+            }
+            return false
+          },
+        }),
         keymap.of([
           {
             key: 'Mod-Shift-v',

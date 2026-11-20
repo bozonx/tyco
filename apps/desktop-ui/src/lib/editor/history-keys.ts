@@ -1,4 +1,4 @@
-import { redo, undo } from '@codemirror/commands'
+import { redo, selectAll, undo } from '@codemirror/commands'
 import type { Extension } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 
@@ -7,10 +7,17 @@ import { EditorView } from '@codemirror/view'
  * that Ctrl+Y of a QWERTZ keyboard is not taken for Ctrl+Z; the QWERTY letter
  * at the same position otherwise, e.g. under a Cyrillic layout.
  */
-const shortcutLetter = (event: KeyboardEvent): string | null => {
+export const shortcutLetter = (event: KeyboardEvent): string | null => {
   if (/^[a-z]$/i.test(event.key)) return event.key.toLowerCase()
   const physical = /^Key([A-Z])$/.exec(event.code)
   return physical ? physical[1].toLowerCase() : null
+}
+
+/** Mod+A on any layout */
+export const isSelectAllEvent = (event: KeyboardEvent): boolean => {
+  const isMod = event.ctrlKey || event.metaKey
+  if (!isMod || event.altKey || event.shiftKey) return false
+  return shortcutLetter(event) === 'a'
 }
 
 /** Mod+Z on any layout */
@@ -29,9 +36,9 @@ export const isRedoEvent = (event: KeyboardEvent): boolean => {
 }
 
 /**
- * CodeMirror extension ensuring undo and redo shortcuts work regardless of
- * active keyboard layout (e.g. Russian JCUKEN where physical KeyZ produces 'я'
- * instead of 'z').
+ * CodeMirror extension ensuring core editing shortcuts (undo, redo, select all)
+ * work regardless of active keyboard layout (e.g. Russian JCUKEN where physical
+ * KeyZ produces 'я' instead of 'z' or KeyA produces 'ф' instead of 'a').
  */
 export const historyKeysExtension = (): Extension =>
   EditorView.domEventHandlers({
@@ -43,6 +50,11 @@ export const historyKeysExtension = (): Extension =>
 
       if (isRedoEvent(event)) {
         redo(view)
+        return true
+      }
+
+      if (isSelectAllEvent(event)) {
+        selectAll(view)
         return true
       }
 

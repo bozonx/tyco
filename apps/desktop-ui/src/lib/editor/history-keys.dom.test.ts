@@ -4,7 +4,7 @@ import { EditorView } from '@codemirror/view'
 import { describe, expect, it } from 'vitest'
 
 import { createEditorExtensions } from './create-editor-state'
-import { isRedoEvent, isUndoEvent } from './history-keys'
+import { isRedoEvent, isSelectAllEvent, isUndoEvent } from './history-keys'
 
 if (!Range.prototype.getClientRects) {
   Range.prototype.getClientRects = () => [] as unknown as DOMRectList
@@ -60,6 +60,41 @@ describe('layouts with other Latin letters', () => {
     // AZERTY: W sits where QWERTY has Z
     expect(
       isUndoEvent(keyEvent({ key: 'w', code: 'KeyZ', ctrlKey: true }))
+    ).toBe(false)
+  })
+})
+
+describe('isSelectAllEvent', () => {
+  it('recognizes Ctrl+A and Cmd+A on English layout', () => {
+    expect(isSelectAllEvent(keyEvent({ key: 'a', ctrlKey: true }))).toBe(true)
+    expect(isSelectAllEvent(keyEvent({ key: 'a', metaKey: true }))).toBe(true)
+    expect(isSelectAllEvent(keyEvent({ key: 'A', ctrlKey: true }))).toBe(true)
+  })
+
+  it('recognizes Ctrl+A on Russian layout', () => {
+    expect(
+      isSelectAllEvent(keyEvent({ key: 'ф', code: 'KeyA', ctrlKey: true }))
+    ).toBe(true)
+    expect(
+      isSelectAllEvent(keyEvent({ key: 'Ф', code: 'KeyA', ctrlKey: true }))
+    ).toBe(true)
+    expect(isSelectAllEvent(keyEvent({ code: 'KeyA', ctrlKey: true }))).toBe(
+      true
+    )
+  })
+
+  it('rejects events without Mod or with Shift/Alt', () => {
+    expect(isSelectAllEvent(keyEvent({ key: 'a' }))).toBe(false)
+    expect(
+      isSelectAllEvent(keyEvent({ key: 'a', ctrlKey: true, shiftKey: true }))
+    ).toBe(false)
+    expect(
+      isSelectAllEvent(keyEvent({ key: 'a', ctrlKey: true, altKey: true }))
+    ).toBe(false)
+    expect(
+      isSelectAllEvent(
+        keyEvent({ key: 'ф', code: 'KeyA', ctrlKey: true, shiftKey: true })
+      )
     ).toBe(false)
   })
 })
@@ -171,6 +206,13 @@ describe('historyKeysExtension integration', () => {
     view.contentDOM.dispatchEvent(redoShiftZEvent)
     expect(view.state.doc.toString()).toBe('first second')
     expect(redoShiftZEvent.defaultPrevented).toBe(true)
+
+    // select all via Russian Ctrl+ф
+    const selectAllEvent = keyEvent({ key: 'ф', code: 'KeyA', ctrlKey: true })
+    view.contentDOM.dispatchEvent(selectAllEvent)
+    expect(view.state.selection.main.from).toBe(0)
+    expect(view.state.selection.main.to).toBe(view.state.doc.length)
+    expect(selectAllEvent.defaultPrevented).toBe(true)
 
     view.destroy()
   })

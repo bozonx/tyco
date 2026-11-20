@@ -67,6 +67,40 @@ describe('toggle markup shortcut', () => {
   })
 })
 
+describe('select all shortcut', () => {
+  it('selects all on English Ctrl+A', () => {
+    const doc = Array.from(
+      { length: 500 },
+      (_, i) => `Line ${i}: formatted **bold** text`
+    ).join('\n')
+    const view = new EditorView({
+      parent: document.body,
+      state: createEditorState({ doc, markdownPreview: true }),
+    })
+
+    press(view, { key: 'a', code: 'KeyA', ctrlKey: true, keyCode: 65 })
+    expect(view.state.selection.main.from).toBe(0)
+    expect(view.state.selection.main.to).toBe(doc.length)
+    view.destroy()
+  })
+
+  it('selects all on Russian Ctrl+A (KeyA with Cyrillic ф)', () => {
+    const doc = Array.from(
+      { length: 500 },
+      (_, i) => `Line ${i}: formatted **bold** text`
+    ).join('\n')
+    const view = new EditorView({
+      parent: document.body,
+      state: createEditorState({ doc, markdownPreview: true }),
+    })
+
+    press(view, { key: 'ф', code: 'KeyA', ctrlKey: true, keyCode: 0 })
+    expect(view.state.selection.main.from).toBe(0)
+    expect(view.state.selection.main.to).toBe(doc.length)
+    view.destroy()
+  })
+})
+
 describe('open actions shortcut', () => {
   it('calls onOpenActions on Ctrl+Enter', () => {
     const onOpenActions = vi.fn()
