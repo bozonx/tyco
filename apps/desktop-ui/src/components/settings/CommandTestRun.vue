@@ -87,7 +87,10 @@ import Button from '../common/Button.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import type { CommandConfig } from '@tyco/shared'
 
-/** Runs a script or a webhook from its editor and shows what came out */
+/**
+ * Runs a script, a webhook or an AI command from its editor and shows what came
+ * out
+ */
 const props = defineProps<{ command: CommandConfig }>()
 
 const { t } = useI18n()
@@ -105,10 +108,10 @@ let runCounter = 0
 const takesText = computed(() =>
   commandTakesText(props.command, operationsStore)
 )
-/** A name alone does not keep the command from running */
+/** A name or a warning alone does not keep the command from running */
 const hasIssues = computed(() =>
   validateCommand(props.command, operationsStore).some(
-    (issue) => issue.field !== 'name'
+    (issue) => issue.field !== 'name' && !issue.isWarning
   )
 )
 
@@ -154,12 +157,14 @@ function stop() {
   controller?.abort()
 }
 
-// a result of another configuration would mislead
+// a result of another configuration would mislead: any setting of the
+// command, e.g. its pre-transformation or platforms, may change it
 watch(
-  () => props.command.operationConfig,
+  () => props.command,
   () => {
     if (!isRunning.value) result.value = null
-  }
+  },
+  { deep: true }
 )
 
 onUnmounted(stop)

@@ -1,12 +1,7 @@
 import commandNames from '../../../../../packages/shared/fixtures/command-names.json'
 import { describe, expect, it } from 'vitest'
 
-import {
-  type CommandConfig,
-  EXTERNAL_TIMEOUT_DEFAULT_SEC,
-  type MainActionConfig,
-  type ShortcutSlots,
-} from '@tyco/shared'
+import { type CommandConfig, EXTERNAL_TIMEOUT_DEFAULT_SEC } from '@tyco/shared'
 
 import { testOperations } from '../operations/testing'
 
@@ -33,11 +28,7 @@ import {
   scriptOperationConfigOf,
   operationConfigText,
 } from './command-config'
-import {
-  removeCommandReferences,
-  restoreCommand,
-  restoreCommandReferences,
-} from './command-removal-model'
+import { removeCommandReferences } from './command-removal-model'
 
 const tools = testOperations()
 
@@ -267,6 +258,11 @@ describe('menu commands', () => {
     })
     expect(commandLabel(script)).toBe('backup.sh')
     expect(commandLabel({ ...script, name: 'Backup' })).toBe('Backup')
+    const long = withConfig(createCommand('script', 'b'), {
+      command: `curl -H 'Authorization: token' ${'x'.repeat(80)}\necho done`,
+    })
+    expect(commandLabel(long)).toHaveLength(61)
+    expect(commandLabel(long)).not.toContain('echo done')
   })
 
   it('removes every reference to a command from the menu', () => {
@@ -288,6 +284,24 @@ describe('menu commands', () => {
 })
 
 describe('validateCommand', () => {
+  it('warns that the stored key replaces an Authorization header', () => {
+    const hook = withConfig(namedCommand('webhook', 'h'), {
+      url: 'https://x.test',
+      headers: { authorization: 'Bearer x' },
+      isAuthEnabled: true,
+    })
+    expect(validateCommand(hook, tools)).toEqual([
+      {
+        field: 'headers',
+        messageKey: 'commands.errorAuthHeaderOverridden',
+        isWarning: true,
+      },
+    ])
+    expect(
+      validateCommand(withConfig(hook, { isAuthEnabled: false }), tools)
+    ).toEqual([])
+  })
+
   it('requires a name', () => {
     const script = withConfig(createCommand('script', 'a'), { command: 'ls' })
     expect(validateCommand(script, tools)).toEqual([
@@ -461,42 +475,6 @@ describe('commands of the core tools', () => {
         configFields: [{ name: 'folder', type: 'text' }],
       })
     ).toBe(true)
-  })
-})
-
-describe('command removal', () => {
-  const a = createCommand('script', 'a')
-  const b = createCommand('script', 'b')
-  const c = createCommand('script', 'c')
-
-  it('puts a command back at its index', () => {
-    expect(restoreCommand([a, c], b, 1).map((item) => item.id)).toEqual([
-      'a',
-      'b',
-      'c',
-    ])
-    expect(restoreCommand([a], c, 5).map((item) => item.id)).toEqual(['a', 'c'])
-    expect(restoreCommand([a, b], b, 0).map((item) => item.id)).toEqual([
-      'a',
-      'b',
-    ])
-  })
-
-  it('refills only the menu slots that held the command and are empty', () => {
-    const previous: ShortcutSlots<MainActionConfig> = {
-      q: { type: 'command', commandId: 'b' },
-      w: { type: 'command', commandId: 'b' },
-      e: { type: 'standard', actionId: 'translationMenu' },
-    }
-    const current: ShortcutSlots<MainActionConfig> = {
-      w: { type: 'command', commandId: 'a' },
-      e: { type: 'standard', actionId: 'translationMenu' },
-    }
-    expect(restoreCommandReferences(current, previous, 'b')).toEqual({
-      q: { type: 'command', commandId: 'b' },
-      w: { type: 'command', commandId: 'a' },
-      e: { type: 'standard', actionId: 'translationMenu' },
-    })
   })
 })
 

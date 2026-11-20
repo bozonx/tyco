@@ -1,25 +1,29 @@
-import {
-  SHORTCUT_SLOT_KEYS,
-  type ActionPageConfig,
-  type CommandConfig,
-  type MainActionConfig,
-  type ShortcutSlots,
+import type {
+  ActionPageConfig,
+  CommandConfig,
+  CustomActionSlotConfig,
+  MainActionConfig,
+  ShortcutSlots,
 } from '@tyco/shared'
 
+import { AI_COMMAND_OPERATION_ID } from '../ai-commands/ai-command-config'
 import { commandSecretIds, isSecretReferenced } from './command-secrets'
 
 type MenuSlots = ShortcutSlots<MainActionConfig>
 
 const isCommandItem = (
-  slot: MainActionConfig | undefined,
+  slot: MainActionConfig | null | undefined,
   commandId: string
 ): boolean => slot?.type === 'command' && slot.commandId === commandId
 
 export function createCommandRemovalModel(deps: {
   getCommands: () => CommandConfig[]
   getActionPages: () => ActionPageConfig[]
+  /** The custom hotkeys; absent when the config has none */
+  getCustomActionSlots?: () => CustomActionSlotConfig[] | undefined
   updateCommands: (commands: CommandConfig[]) => void
   updateActionPages: (pages: ActionPageConfig[]) => void
+  updateCustomActionSlots?: (slots: CustomActionSlotConfig[]) => void
   removeSecret: (id: string) => Promise<void>
   persist: () => Promise<unknown>
   isSaved: () => boolean
@@ -37,16 +41,31 @@ export function createCommandRemovalModel(deps: {
     }
   }
 
+  /**
+   * Removes the command and every reference to it in the config: the action
+   * pages, the custom hotkeys and the commands AI commands may run
+   */
   function removeCommand(command: CommandConfig) {
     const commands = deps.getCommands()
     const actionPages = deps.getActionPages()
     const referencedInPages = actionPages.some((page) =>
       Object.values(page.slots).some((slot) => isCommandItem(slot, command.id))
     )
-    deps.updateCommands(commands.filter((item) => item.id !== command.id))
+    deps.updateCommands(
+      removeCommandFromAiCommands(
+        commands.filter((item) => item.id !== command.id),
+        command.id
+      )
+    )
     if (referencedInPages) {
       deps.updateActionPages(
         removeCommandFromActionPages(actionPages, command.id)
+      )
+    }
+    const slots = deps.getCustomActionSlots?.()
+    if (slots?.some((slot) => isCommandItem(slot.action, command.id))) {
+      deps.updateCustomActionSlots?.(
+        removeCommandFromCustomActionSlots(slots, command.id)
       )
     }
     if (command.operationId === 'webhook') {
@@ -55,36 +74,6 @@ export function createCommandRemovalModel(deps: {
   }
 
   return { removeCommand }
-}
-
-/** The library with a removed command put back where it was */
-export function restoreCommand(
-  commands: readonly CommandConfig[],
-  command: CommandConfig,
-  index: number
-): CommandConfig[] {
-  if (commands.some((item) => item.id === command.id)) return [...commands]
-  const next = [...commands]
-  next.splice(Math.min(Math.max(index, 0), next.length), 0, command)
-  return next
-}
-
-/**
- * The menu with the items of a removed command put back: the slots that held it
- * before and are still empty
- */
-export function restoreCommandReferences(
-  slots: MenuSlots,
-  previous: MenuSlots,
-  commandId: string
-): MenuSlots {
-  const next = { ...slots }
-  for (const key of SHORTCUT_SLOT_KEYS) {
-    const before = previous[key]
-    if (!next[key] && before && isCommandItem(before, commandId))
-      next[key] = before
-  }
-  return next
 }
 
 /** The menu without the items that refer to the command */
@@ -108,18 +97,35 @@ export function removeCommandFromActionPages(
   }))
 }
 
-/** The action pages with restored command slots where still unassigned */
-export function restoreCommandInActionPages(
-  currentPages: readonly ActionPageConfig[],
-  previousPages: readonly ActionPageConfig[],
+/** The custom hotkeys with the ones that ran the command left without action */
+export function removeCommandFromCustomActionSlots(
+  slots: readonly CustomActionSlotConfig[],
   commandId: string
-): ActionPageConfig[] {
-  return currentPages.map((page, index) => {
-    const before = previousPages[index]
-    if (!before) return page
+): CustomActionSlotConfig[] {
+  return slots.map((slot) =>
+    isCommandItem(slot.action, commandId) ? { ...slot, action: null } : slot
+  )
+}
+
+/** The commands with AI commands no longer allowed to run the command */
+export function removeCommandFromAiCommands(
+  commands: readonly CommandConfig[],
+  commandId: string
+): CommandConfig[] {
+  return commands.map((command) => {
+    const allowed = command.operationConfig.allowedCommandIds
+    if (
+      command.operationId !== AI_COMMAND_OPERATION_ID ||
+      !Array.isArray(allowed) ||
+      !allowed.includes(commandId)
+    )
+      return command
     return {
-      ...page,
-      slots: restoreCommandReferences(page.slots, before.slots, commandId),
+      ...command,
+      operationConfig: {
+        ...command.operationConfig,
+        allowedCommandIds: allowed.filter((id) => id !== commandId),
+      },
     }
   })
 }

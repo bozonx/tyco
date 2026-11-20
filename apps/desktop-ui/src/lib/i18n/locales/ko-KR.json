@@ -240,6 +240,7 @@
     "editCommand": "명령 편집",
     "empty": "아직 명령이 없습니다.",
     "enable": "명령 활성화",
+    "errorAuthHeaderOverridden": "인증이 켜져 있는 동안 Authorization 헤더는 저장된 키로 대체됩니다.",
     "errorInvalidUrl": "올바른 http(s) URL을 입력하세요.",
     "errorNoCommand": "실행할 명령을 입력하세요.",
     "errorNoLanguage": "번역할 대상 언어를 선택하세요.",

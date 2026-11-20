@@ -240,6 +240,7 @@
     "editCommand": "Uredi naredbu",
     "empty": "Još nema naredbi.",
     "enable": "Omogući naredbu",
+    "errorAuthHeaderOverridden": "Dok je autorizacija uključena, zaglavlje Authorization zamjenjuje se spremljenim ključem.",
     "errorInvalidUrl": "Unesite valjani http(s) URL.",
     "errorNoCommand": "Unesite naredbu za pokretanje.",
     "errorNoLanguage": "Odaberite ciljni jezik prijevoda.",

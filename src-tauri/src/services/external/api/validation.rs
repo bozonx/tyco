@@ -63,7 +63,9 @@ fn lookup_error(error: CommandLookupError) -> Response {
         CommandLookupError::Disabled(_) => ErrorCode::Disabled,
         CommandLookupError::NotExternal(_) => ErrorCode::AccessDenied,
         CommandLookupError::Unavailable(_, _) => ErrorCode::Unavailable,
-        CommandLookupError::ToolsLoading(_) => ErrorCode::NotReady,
+        CommandLookupError::ToolsLoading(_) | CommandLookupError::CatalogStale(_) => {
+            ErrorCode::NotReady
+        }
     };
     Response::coded_error(code, error.to_string())
 }

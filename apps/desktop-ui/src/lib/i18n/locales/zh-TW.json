@@ -240,6 +240,7 @@
     "editCommand": "編輯命令",
     "empty": "尚無命令。",
     "enable": "啟用命令",
+    "errorAuthHeaderOverridden": "啟用授權時，Authorization 標頭會被已儲存的金鑰取代。",
     "errorInvalidUrl": "請輸入有效的 http(s) URL。",
     "errorNoCommand": "請輸入要執行的命令。",
     "errorNoLanguage": "請選擇要翻譯成的語言。",

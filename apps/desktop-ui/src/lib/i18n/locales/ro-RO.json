@@ -240,6 +240,7 @@
     "editCommand": "Editează comanda",
     "empty": "Încă nu există comenzi.",
     "enable": "Activează comanda",
+    "errorAuthHeaderOverridden": "Cât timp autorizarea este activată, antetul Authorization este înlocuit cu cheia salvată.",
     "errorInvalidUrl": "Introdu un URL http(s) valid.",
     "errorNoCommand": "Introduceți comanda de rulat.",
     "errorNoLanguage": "Alegeți limba în care să se traducă.",

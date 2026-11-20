@@ -132,6 +132,20 @@ describe('createExternalRun', () => {
     })
   })
 
+  it('keeps no history of the text of a disabled command', async () => {
+    const { deps, external } = setup(async () => ({ success: false }))
+    await external.handleRun(
+      event({
+        text: 'secret',
+        userConfig: {
+          ...DEFAULT_USER_CONFIG,
+          commands: [{ ...lamp, isEnabled: false }],
+        },
+      })
+    )
+    expect(deps.saveOutput).not.toHaveBeenCalled()
+  })
+
   it('passes the text on and keeps it in the history', async () => {
     const { deps, external } = setup(async () => ({
       success: true,

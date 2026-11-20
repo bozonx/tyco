@@ -13,6 +13,8 @@ const MAX_ACTIVE_JOBS: usize = 32;
 /// access prompt or to type the text in the command overlay.
 const START_TIMEOUT: Duration = Duration::from_secs(300);
 const MAX_OUTPUT_BYTES: usize = 512 * 1024;
+/// How long a finished job may wait for its selection to be replaced
+const REPLACEMENT_TIMEOUT: Duration = Duration::from_secs(60);
 
 struct ExternalJobEntry {
     job: Job,
@@ -27,6 +29,8 @@ struct ExternalJobEntry {
     /// background, `None` for one in a window, which the user can cancel.
     run_limit: Option<Duration>,
     claimed_at: Option<Instant>,
+    /// When the job finished and began to wait for its selection replacement
+    pending_since: Option<Instant>,
 }
 
 #[derive(Default)]
@@ -77,10 +81,12 @@ impl ExternalJobs {
                 return Err("Too many jobs");
             }
         }
+        // not guessable: another local client must not read or cancel the job
+        // of a caller by counting
         let id = format!(
             "job-{}-{}",
-            std::process::id(),
-            self.next_job_sequence.fetch_add(1, Ordering::Relaxed) + 1
+            self.next_job_sequence.fetch_add(1, Ordering::Relaxed) + 1,
+            crate::services::random_id::new_uuid()
         );
         let job = Job {
             id: id.clone(),
@@ -102,6 +108,7 @@ impl ExternalJobs {
                 is_selection_approved: false,
                 run_limit: None,
                 claimed_at: None,
+                pending_since: None,
             },
         );
         Ok(job)
@@ -191,6 +198,18 @@ impl ExternalJobs {
         error: Option<String>,
         code: Option<String>,
     ) -> Option<(Job, Option<u64>)> {
+        self.finish_at(id, state, output, error, code, Instant::now())
+    }
+
+    fn finish_at(
+        &self,
+        id: &str,
+        state: JobState,
+        output: Option<String>,
+        error: Option<String>,
+        code: Option<String>,
+        now: Instant,
+    ) -> Option<(Job, Option<u64>)> {
         let mut entries = self.lock_entries();
         let entry = entries.get_mut(id)?;
         if entry.job.state.is_terminal() || entry.pending_completion.is_some() {
@@ -202,7 +221,11 @@ impl ExternalJobs {
             .is_some_and(|output| output.len() > MAX_OUTPUT_BYTES)
         {
             entry.job.state = JobState::Failed;
-            entry.job.error = Some("Command output is too large".into());
+            // the error of the run, if any, is not lost behind the size
+            entry.job.error = Some(match error {
+                Some(error) => format!("Command output is too large; {error}"),
+                None => "Command output is too large".into(),
+            });
             entry.job.code = Some(ErrorCode::OutputTooLarge.into());
         } else {
             entry.job.output = output;
@@ -223,6 +246,7 @@ impl ExternalJobs {
         let selection_run_id = entry.selection_run_id.take();
         if selection_run_id.is_some() {
             entry.pending_completion = Some(job.clone());
+            entry.pending_since = Some(now);
             entry.job.state = JobState::Running;
         }
         entry.request.text = None;
@@ -234,6 +258,7 @@ impl ExternalJobs {
     pub fn complete_selection_replacement(&self, id: &str, error: Option<String>) {
         let mut entries = self.lock_entries();
         if let Some(entry) = entries.get_mut(id) {
+            entry.pending_since = None;
             if let Some(mut job) = entry.pending_completion.take() {
                 if let Some(error) = error {
                     job.state = JobState::Failed;
@@ -256,6 +281,25 @@ impl ExternalJobs {
         self.lock_entries()
             .get(id)
             .is_some_and(|entry| entry.request.replace)
+    }
+
+    /// Jobs whose selection replacement has not finished in time: something
+    /// failed on the way, and they must not stay running for good
+    pub fn stale_replacement_ids(&self) -> Vec<String> {
+        self.stale_replacement_ids_at(Instant::now())
+    }
+
+    fn stale_replacement_ids_at(&self, now: Instant) -> Vec<String> {
+        self.lock_entries()
+            .iter()
+            .filter(|(_, entry)| {
+                entry.pending_completion.is_some()
+                    && entry.pending_since.is_some_and(|since| {
+                        now.saturating_duration_since(since) >= REPLACEMENT_TIMEOUT
+                    })
+            })
+            .map(|(id, _)| id.clone())
+            .collect()
     }
 
     pub fn expired_job_ids(&self) -> Vec<String> {
@@ -490,6 +534,49 @@ mod tests {
         assert_eq!(
             jobs.get(&job.id).unwrap().code.as_deref(),
             Some("OutputTooLarge")
+        );
+    }
+
+    #[test]
+    fn a_replacement_that_never_finishes_fails_the_job_in_time() {
+        let jobs = ExternalJobs::default();
+        let now = Instant::now();
+        let job = jobs
+            .create_at("cmd".into(), RunRequest::default(), Some(7), now)
+            .unwrap();
+        jobs.claim_at(&job.id, now);
+        jobs.finish_at(
+            &job.id,
+            JobState::Succeeded,
+            Some("x".into()),
+            None,
+            None,
+            now,
+        )
+        .unwrap();
+        assert!(jobs.stale_replacement_ids_at(now).is_empty());
+        let stale = jobs.stale_replacement_ids_at(now + REPLACEMENT_TIMEOUT);
+        assert_eq!(stale, vec![job.id.clone()]);
+        jobs.complete_selection_replacement(&job.id, Some("timed out".into()));
+        assert_eq!(jobs.get(&job.id).unwrap().state, JobState::Failed);
+        assert!(jobs
+            .stale_replacement_ids_at(now + REPLACEMENT_TIMEOUT)
+            .is_empty());
+    }
+
+    #[test]
+    fn job_ids_cannot_be_guessed_from_one_another() {
+        let jobs = ExternalJobs::default();
+        let first = jobs
+            .create("a".into(), RunRequest::default(), None)
+            .unwrap();
+        let second = jobs
+            .create("b".into(), RunRequest::default(), None)
+            .unwrap();
+        assert!(first.id.len() > 30);
+        assert_ne!(
+            first.id[first.id.len() - 12..],
+            second.id[second.id.len() - 12..]
         );
     }
 }

@@ -240,6 +240,7 @@
     "editCommand": "Edytuj polecenie",
     "empty": "Brak poleceń.",
     "enable": "Włącz polecenie",
+    "errorAuthHeaderOverridden": "Gdy autoryzacja jest włączona, nagłówek Authorization jest zastępowany zapisanym kluczem.",
     "errorInvalidUrl": "Wpisz prawidłowy adres URL http(s).",
     "errorNoCommand": "Wpisz polecenie do uruchomienia.",
     "errorNoLanguage": "Wybierz język docelowy tłumaczenia.",

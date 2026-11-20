@@ -151,6 +151,15 @@ fn is_powershell_double_quote(c: char) -> bool {
     matches!(c, '"' | '\u{201C}' | '\u{201D}' | '\u{201E}')
 }
 
+/// A command substitution the scan is inside of.
+struct SubstitutionLevel {
+    /// The quoting it started in, back in force once it closes
+    outer: QuoteContext,
+    /// Parentheses opened inside it and not closed yet
+    depth: usize,
+    is_backtick: bool,
+}
+
 fn substitute_for(script: &str, placeholders: &[Placeholder], windows: bool) -> String {
     let is_single = |c: char| {
         if windows {
@@ -169,6 +178,9 @@ fn substitute_for(script: &str, placeholders: &[Placeholder], windows: bool) -> 
     let escape = if windows { '`' } else { '\\' };
     let mut result = String::with_capacity(script.len() + 16);
     let mut context = QuoteContext::Bare;
+    // the command substitutions `$(...)` and `` `...` `` open, each with its
+    // own quoting, inside the context they started in
+    let mut levels: Vec<SubstitutionLevel> = Vec::new();
     let mut rest = script;
 
     while !rest.is_empty() {
@@ -190,6 +202,51 @@ fn substitute_for(script: &str, placeholders: &[Placeholder], windows: bool) -> 
         result.push(c);
         rest = chars.as_str();
         let next = rest.chars().next();
+
+        if matches!(context, QuoteContext::Bare | QuoteContext::DoubleQuoted) {
+            if c == '$' && next == Some('(') {
+                result.push('(');
+                rest = &rest[1..];
+                levels.push(SubstitutionLevel {
+                    outer: context,
+                    depth: 0,
+                    is_backtick: false,
+                });
+                context = QuoteContext::Bare;
+                continue;
+            }
+            if !windows && c == '`' {
+                if context == QuoteContext::Bare
+                    && levels.last().is_some_and(|level| level.is_backtick)
+                {
+                    context = levels.pop().map_or(QuoteContext::Bare, |level| level.outer);
+                } else {
+                    levels.push(SubstitutionLevel {
+                        outer: context,
+                        depth: 0,
+                        is_backtick: true,
+                    });
+                    context = QuoteContext::Bare;
+                }
+                continue;
+            }
+            if context == QuoteContext::Bare {
+                if let Some(level) = levels.last_mut().filter(|level| !level.is_backtick) {
+                    if c == '(' {
+                        level.depth += 1;
+                        continue;
+                    }
+                    if c == ')' {
+                        if level.depth > 0 {
+                            level.depth -= 1;
+                        } else {
+                            context = levels.pop().map_or(QuoteContext::Bare, |level| level.outer);
+                        }
+                        continue;
+                    }
+                }
+            }
+        }
 
         match context {
             QuoteContext::Bare | QuoteContext::DoubleQuoted if c == escape => {
@@ -287,6 +344,27 @@ mod tests {
             windows,
         )
     }
+    #[test]
+    fn a_command_substitution_has_quoting_of_its_own() {
+        assert_eq!(
+            substitute_text("echo \"$(echo '{{TEXT}}')\"", PLACEHOLDER, "x", false),
+            "echo \"$(echo ''\"${TYCO_TEXT}\"'')\""
+        );
+        assert_eq!(
+            substitute_text(
+                "echo \"`echo '{{TEXT}}'`\" {{TEXT}}",
+                PLACEHOLDER,
+                "x",
+                false
+            ),
+            "echo \"`echo ''\"${TYCO_TEXT}\"''`\" \"${TYCO_TEXT}\""
+        );
+        assert_eq!(
+            substitute_text("echo $((1 + (2))) '{{TEXT}}'", PLACEHOLDER, "x", false),
+            "echo $((1 + (2))) ''\"${TYCO_TEXT}\"''"
+        );
+    }
+
     const NASTY: &str = "it's \"quoted\" $HOME `id` \\ ; exit 3 ‘’“”";
 
     /// Runs `template` with `text` in place of the placeholders.

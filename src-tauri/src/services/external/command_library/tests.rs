@@ -183,7 +183,7 @@ fn configured_input_changes_schema_and_call_capabilities() {
     changed["commands"][0]["operationConfig"]["mode"] = json!("text");
     assert_eq!(
         find_by_id(&changed, Some(&catalog), "configured"),
-        Err(CommandLookupError::ToolsLoading("configured".into()))
+        Err(CommandLookupError::CatalogStale("configured".into()))
     );
 }
 

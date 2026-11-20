@@ -240,6 +240,7 @@
     "editCommand": "Upravit příkaz",
     "empty": "Zatím žádné příkazy.",
     "enable": "Zapnout příkaz",
+    "errorAuthHeaderOverridden": "Dokud je autorizace zapnutá, hlavička Authorization se nahrazuje uloženým klíčem.",
     "errorInvalidUrl": "Zadejte platnou adresu URL http(s).",
     "errorNoCommand": "Zadejte příkaz ke spuštění.",
     "errorNoLanguage": "Vyberte cílový jazyk překladu.",

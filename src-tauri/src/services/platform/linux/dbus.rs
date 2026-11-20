@@ -105,8 +105,8 @@ impl TycoDbus {
         .await
     }
 
-    /// Runs the library command `id` interactively: it asks
-    /// for input or confirmation when needed and returns the result to the caller.
+    /// Runs the library command `id` and returns the result to the caller. A
+    /// command that takes text fails with `InputRequired`: this call has none.
     async fn run_command(&self, id: String) -> Result<(), ApiError> {
         self.run(RunRequest {
             target: id,

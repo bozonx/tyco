@@ -183,7 +183,8 @@ export function createExternalRun(deps: ExternalRunDependencies) {
       delayMs: PENDING_OVERLAY_DELAY_MS,
     })
     const input = event.text ?? null
-    if (input !== null)
+    // the text leaves the app only with a command that runs
+    if (input !== null && command.isEnabled)
       await Promise.resolve()
         .then(() => deps.saveOutput?.(input))
         .catch((error: unknown) => deps.reportError?.(error))

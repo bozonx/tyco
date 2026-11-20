@@ -311,8 +311,9 @@ tyco-ctl run my-fix --selection --replace --interactive --wait
 tyco-ctl run my-transform --selection --wait
 ```
 
-Interactive execution may ask for input. It never implicitly
-uses a selection. `--selection` captures the focused application's selected
+Interactive execution does not open a window to ask for text: a command that
+takes text still needs `--text`, `--stdin` or `--selection`, and fails with
+`InputRequired` without one. It never implicitly uses a selection. `--selection` captures the focused application's selected
 text; without `--replace`, the output is returned and the clipboard is left as
 the user had it. `--replace` requires `--selection`, overrides configured after-run output handling, and inserts the
 result back into the original target. Empty replacement output is a failure.
@@ -365,7 +366,7 @@ error; ordinary command execution still uses the Unix transport.
 Without `--wait`, `run` returns a JSON job object immediately:
 
 ```json
-{ "id": "job-1234-1", "commandId": "my-backup", "state": "accepted" }
+{ "id": "job-1-5f0c…", "commandId": "my-backup", "state": "accepted" }
 ```
 
 ```sh

@@ -240,6 +240,7 @@
     "editCommand": "Befehl bearbeiten",
     "empty": "Noch keine Befehle.",
     "enable": "Befehl aktivieren",
+    "errorAuthHeaderOverridden": "Solange die Autorisierung aktiv ist, wird der Header Authorization durch den gespeicherten Schlüssel ersetzt.",
     "errorInvalidUrl": "Gib eine gültige http(s)-URL ein.",
     "errorNoCommand": "Geben Sie den auszuführenden Befehl ein.",
     "errorNoLanguage": "Wählen Sie die Zielsprache der Übersetzung.",

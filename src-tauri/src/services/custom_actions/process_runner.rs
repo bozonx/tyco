@@ -68,11 +68,16 @@ pub struct ScriptRequest<'a> {
 
 type CancelFlag = Arc<AtomicBool>;
 
+/// How many cancellations of runs not started yet are kept
+const MAX_EARLY_CANCELS: usize = 64;
+
 #[derive(Default)]
 struct RunRegistry {
     is_stopping: bool,
     next_id: u64,
     runs: HashMap<u64, (Option<String>, CancelFlag)>,
+    /// Runs cancelled before they registered: a cancel may overtake the start
+    early_cancels: std::collections::VecDeque<String>,
 }
 #[derive(Default)]
 struct SharedRuns {
@@ -107,6 +112,12 @@ impl ScriptRuns {
         registry.next_id += 1;
         let id = registry.next_id;
         let flag = CancelFlag::default();
+        if let Some(run_id) = run_id {
+            if let Some(index) = registry.early_cancels.iter().position(|id| id == run_id) {
+                registry.early_cancels.remove(index);
+                flag.store(true, Ordering::SeqCst);
+            }
+        }
         registry
             .runs
             .insert(id, (run_id.map(str::to_owned), flag.clone()));
@@ -116,13 +127,21 @@ impl ScriptRuns {
             shared: self.shared.clone(),
         })
     }
+    /// Stops the run `run_id`; false when it is not going, and then a run that
+    /// starts with this id later is cancelled at once
     pub fn cancel(&self, run_id: &str) -> bool {
-        let registry = self.shared.registry.locked();
+        let mut registry = self.shared.registry.locked();
         for (name, flag) in registry.runs.values() {
             if name.as_deref() == Some(run_id) {
                 flag.store(true, Ordering::SeqCst);
                 return true;
             }
+        }
+        if !registry.early_cancels.iter().any(|id| id == run_id) {
+            if registry.early_cancels.len() >= MAX_EARLY_CANCELS {
+                registry.early_cancels.pop_front();
+            }
+            registry.early_cancels.push_back(run_id.to_owned());
         }
         false
     }
@@ -340,9 +359,16 @@ pub fn execute_script(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
 
+    check_env_sizes(request).map_err(|message| {
+        log.write(&empty_result(), Some(&message));
+        AppError::InvalidInput(message)
+    })?;
     let registration = runs.register(request.run_id).inspect_err(|error| {
         log.write(&empty_result(), Some(&error.to_string()));
     })?;
+    if registration.flag.load(Ordering::SeqCst) {
+        return Err(fail(&log, String::from(SCRIPT_CANCELLED)));
+    }
     let mut child = command
         .spawn()
         .map_err(|error| fail(&log, format!("Failed to start the command: {error}")))?;
@@ -374,11 +400,20 @@ pub fn execute_script(
     }
 
     // left running, e.g. a GUI app; the outcome only goes to the log
+    // the run stays registered: it can still be cancelled, and the app stops
+    // it on exit rather than leaving it behind
     thread::spawn(move || {
-        let status = running.child.wait();
-        match status {
-            Ok(status) => log.write(&running.finish(status).0, None),
-            Err(error) => log.write(&empty_result(), Some(&error.to_string())),
+        let registration = registration;
+        match running.wait_until(None, &registration.flag) {
+            Ok(ProcessWaitOutcome::Exited(status)) => log.write(&running.finish(status).0, None),
+            Ok(_) => {
+                drop(running);
+                log.write(&empty_result(), Some(SCRIPT_CANCELLED));
+            }
+            Err(error) => {
+                drop(running);
+                log.write(&empty_result(), Some(&error.to_string()));
+            }
         }
     });
     Ok(ScriptExecutionResult {
@@ -395,12 +430,13 @@ fn script_command(request: &ScriptRequest) -> std::process::Command {
         .iter()
         .map(|name| (variables::placeholder(name), VariableValues::env_name(name)))
         .collect();
-    let selection = request.selection_text.unwrap_or_default();
+    let text = passed_text(request);
+    let selection = passed_selection(request);
     let mut placeholders = vec![
         shell::Placeholder {
             token: TEXT_PLACEHOLDER,
             env: shell::TEXT_ENV,
-            value: request.text,
+            value: text,
         },
         shell::Placeholder {
             token: SELECTION_PLACEHOLDER,
@@ -416,10 +452,57 @@ fn script_command(request: &ScriptRequest) -> std::process::Command {
         placeholders.push(shell::Placeholder { token, env, value });
     }
     let mut command = shell::command(&shell::substitute_all(request.command, &placeholders));
-    command.env(shell::TEXT_ENV, request.text);
+    command.env(shell::TEXT_ENV, text);
     command.env(shell::SELECTION_ENV, selection);
     command.envs(request.variables.env());
     command
+}
+
+/// The text a script gets: none unless it mentions `{{TEXT}}`
+fn passed_text<'a>(request: &ScriptRequest<'a>) -> &'a str {
+    if request.command.contains(TEXT_PLACEHOLDER) {
+        request.text
+    } else {
+        ""
+    }
+}
+
+/// The selection a script gets: none unless it mentions `{{SELECTION}}`, so
+/// it does not reach scripts and their children that never asked for it
+fn passed_selection<'a>(request: &ScriptRequest<'a>) -> &'a str {
+    if request.command.contains(SELECTION_PLACEHOLDER) {
+        request.selection_text.unwrap_or_default()
+    } else {
+        ""
+    }
+}
+
+/// The largest value of one environment variable the OS takes: Linux limits a
+/// single string to 128 KiB, Windows the whole block to 32767 characters
+#[cfg(target_os = "windows")]
+const MAX_ENV_VALUE: usize = 24 * 1024;
+#[cfg(not(target_os = "windows"))]
+const MAX_ENV_VALUE: usize = 120 * 1024;
+
+/// The size of a value as the OS counts it
+fn env_size(value: &str) -> usize {
+    if cfg!(target_os = "windows") {
+        value.encode_utf16().count()
+    } else {
+        value.len()
+    }
+}
+
+/// Refuses a text the OS would not start the script with, saying why
+fn check_env_sizes(request: &ScriptRequest) -> Result<(), String> {
+    let text = env_size(passed_text(request));
+    let selection = env_size(passed_selection(request));
+    if text.max(selection) > MAX_ENV_VALUE || text + selection > MAX_ENV_VALUE * 2 {
+        return Err(format!(
+            "The text is too large to pass to a script (limit {MAX_ENV_VALUE} characters)"
+        ));
+    }
+    Ok(())
 }
 
 fn empty_result() -> ScriptExecutionResult {
@@ -829,5 +912,89 @@ mod tests {
 
         assert!(reg1.flag.load(Ordering::SeqCst));
         assert!(reg2.flag.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn a_cancel_that_overtakes_the_start_cancels_the_run() {
+        let runs = ScriptRuns::default();
+        assert!(!runs.cancel("early"));
+        let registration = runs.register(Some("early")).unwrap();
+        assert!(registration.flag.load(Ordering::SeqCst));
+        drop(registration);
+        let later = runs.register(Some("early")).unwrap();
+        assert!(!later.flag.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn integration_a_run_cancelled_before_it_started_does_not_start() {
+        let runs = ScriptRuns::default();
+        runs.cancel("never");
+        let error = execute_script(
+            &runs,
+            &ScriptRequest {
+                run_id: Some("never"),
+                ..request(commands::SLEEP, "")
+            },
+            None,
+        )
+        .unwrap_err();
+        assert_eq!(error.to_string(), SCRIPT_CANCELLED);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn integration_a_script_without_the_placeholders_gets_no_text_or_selection() {
+        let result = execute_script(
+            &ScriptRuns::default(),
+            &ScriptRequest {
+                selection_text: Some("secret"),
+                ..request("printf '%s|%s' \"$TYCO_TEXT\" \"$TYCO_SELECTION\"", "text")
+            },
+            None,
+        )
+        .unwrap();
+        assert_eq!(result.stdout, "|");
+    }
+
+    #[test]
+    fn integration_a_text_too_large_for_the_environment_is_refused_before_starting() {
+        let text = "x".repeat(MAX_ENV_VALUE + 1);
+        let error = execute_script(
+            &ScriptRuns::default(),
+            &request(commands::ECHO_PLACEHOLDER, &text),
+            None,
+        )
+        .unwrap_err();
+        assert!(matches!(error, AppError::InvalidInput(_)));
+        // a script that does not take the text runs whatever its size
+        let selection = "x".repeat(MAX_ENV_VALUE + 1);
+        assert!(execute_script(
+            &ScriptRuns::default(),
+            &ScriptRequest {
+                selection_text: Some(&selection),
+                ..request(commands::PWD, "")
+            },
+            None,
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn integration_a_script_left_running_stays_cancellable_and_is_stopped_on_exit() {
+        let runs = ScriptRuns::default();
+        let result = execute_script(
+            &runs,
+            &ScriptRequest {
+                should_capture_output: false,
+                run_id: Some("background"),
+                ..request(commands::SLEEP, "")
+            },
+            None,
+        )
+        .unwrap();
+        assert!(result.is_running);
+        assert!(!runs.wait_until(Instant::now()));
+        runs.stop();
+        assert!(runs.wait_until(Instant::now() + Duration::from_secs(10)));
     }
 }

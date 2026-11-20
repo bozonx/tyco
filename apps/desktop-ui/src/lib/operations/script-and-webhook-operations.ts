@@ -93,6 +93,8 @@ function createScriptOperation(
       if (!call.command) {
         return { ok: false, messageKey: 'toast.scriptNotSaved' }
       }
+      if (!deps.executeScriptAction)
+        return { ok: false, messageKey: 'toast.scriptFailed' }
       const runId = (deps.newRunId ?? defaultRunId)()
       let isExecutionFinished = false
       const cancel = () => {
@@ -103,14 +105,15 @@ function createScriptOperation(
         )
       }
       call.signal.addEventListener('abort', cancel, { once: true })
-      if (!deps.executeScriptAction)
-        return { ok: false, messageKey: 'toast.scriptFailed' }
       let result: ScriptExecutionResult
       try {
         result = await deps.executeScriptAction({
           ...buildScriptRequest(
             call.command.id,
-            scriptTakesText(config) ? textOf(call.input) : null,
+            // the backend runs the saved command and hands it the text and
+            // the selection only when that one mentions `{{TEXT}}` and
+            // `{{SELECTION}}`: an unsaved edit here must not decide it
+            textOf(call.input),
             {
               captureOutput: call.isOutputRequested,
               isOutputLogged: call.command.isOutputLogged,

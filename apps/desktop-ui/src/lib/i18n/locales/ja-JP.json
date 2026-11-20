@@ -240,6 +240,7 @@
     "editCommand": "コマンドを編集",
     "empty": "コマンドはまだありません。",
     "enable": "コマンドを有効化",
+    "errorAuthHeaderOverridden": "認証が有効な間、Authorization ヘッダーは保存されたキーに置き換えられます。",
     "errorInvalidUrl": "有効な http(s) URL を入力してください。",
     "errorNoCommand": "実行するコマンドを入力してください。",
     "errorNoLanguage": "翻訳先の言語を選択してください。",

@@ -306,6 +306,10 @@ const { removeCommand } = createCommandRemovalModel({
   updateActionPages: (pages) => {
     userConfig.value.actionPages = pages
   },
+  getCustomActionSlots: () => userConfig.value.customActionSlots,
+  updateCustomActionSlots: (slots) => {
+    userConfig.value.customActionSlots = slots
+  },
   removeSecret: (id) => secretsStore.removeSecret(id),
   persist: settingsSession.persist,
   isSaved: settingsSession.isSaved,

@@ -129,6 +129,19 @@ export function suggestCommandName(command: CommandConfig): string {
   return ''
 }
 
+/** The longest shell command shown in place of a name */
+const SCRIPT_LABEL_MAX_CHARS = 60
+
+/**
+ * The first line of a shell command, cut short: a label goes to overlays,
+ * notifications and the log, and a long script may hold more than its name
+ */
+function shortScriptLabel(script: string): string {
+  const line = script.trim().split(/\r?\n/, 1)[0]?.trim() ?? ''
+  const isCut = line.length > SCRIPT_LABEL_MAX_CHARS || line !== script.trim()
+  return isCut ? `${line.slice(0, SCRIPT_LABEL_MAX_CHARS).trimEnd()}…` : line
+}
+
 /**
  * The name shown for the command, never empty. Without a name of its own it is
  * named by what it runs: a command of a core tool by the name of the tool
@@ -138,7 +151,9 @@ export function commandLabel(command: CommandConfig): string {
   if (isCoreOperationId(command.operationId))
     return translate(`operations.${command.operationId.slice('core.'.length)}`)
   if (command.operationId === 'script') {
-    return scriptOperationConfig(command).command.trim() || command.id
+    return (
+      shortScriptLabel(scriptOperationConfig(command).command) || command.id
+    )
   }
   if (command.operationId === 'webhook') {
     return (
@@ -183,6 +198,8 @@ export interface CommandIssue {
   /** The tool config field the issue is about */
   field: string
   messageKey: string
+  /** The command runs anyway, though maybe not as the user expects */
+  isWarning?: boolean
 }
 
 /** What keeps the command from running as the user expects */
@@ -216,6 +233,19 @@ export function validateCommand(
       issues.push({ field: 'url', messageKey: 'commands.errorNoUrl' })
     } else if (!httpOrigin(sampleUrlTemplate(config.url))) {
       issues.push({ field: 'url', messageKey: 'commands.errorInvalidUrl' })
+    }
+    // the stored key takes the place of a header of the same name
+    if (
+      config.isAuthEnabled &&
+      Object.keys(config.headers).some(
+        (name) => name.trim().toLowerCase() === 'authorization'
+      )
+    ) {
+      issues.push({
+        field: 'headers',
+        messageKey: 'commands.errorAuthHeaderOverridden',
+        isWarning: true,
+      })
     }
   } else if (command.operationId === 'core.translate') {
     // without a language of its own, the caller names it

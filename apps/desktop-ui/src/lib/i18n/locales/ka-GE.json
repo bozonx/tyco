@@ -240,6 +240,7 @@
     "editCommand": "ბრძანების რედაქტირება",
     "empty": "ბრძანებები ჯერ არ არის.",
     "enable": "ბრძანების ჩართვა",
+    "errorAuthHeaderOverridden": "სანამ ავტორიზაცია ჩართულია, Authorization სათაური შენახული გასაღებით იცვლება.",
     "errorInvalidUrl": "შეიყვანეთ სწორი http(s) URL.",
     "errorNoCommand": "შეიყვანეთ შესასრულებელი ბრძანება.",
     "errorNoLanguage": "აირჩიეთ თარგმანის ენა.",

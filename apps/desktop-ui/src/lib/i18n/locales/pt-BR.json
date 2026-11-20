@@ -240,6 +240,7 @@
     "editCommand": "Editar o comando",
     "empty": "Ainda não há comandos.",
     "enable": "Ativar o comando",
+    "errorAuthHeaderOverridden": "Enquanto a autorização estiver ativada, o cabeçalho Authorization é substituído pela chave salva.",
     "errorInvalidUrl": "Insira uma URL http(s) válida.",
     "errorNoCommand": "Digite o comando a executar.",
     "errorNoLanguage": "Escolha o idioma para o qual traduzir.",

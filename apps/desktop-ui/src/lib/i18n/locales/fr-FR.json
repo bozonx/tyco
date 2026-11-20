@@ -240,6 +240,7 @@
     "editCommand": "Modifier la commande",
     "empty": "Aucune commande pour l’instant.",
     "enable": "Activer la commande",
+    "errorAuthHeaderOverridden": "Tant que l’autorisation est activée, l’en-tête Authorization est remplacé par la clé enregistrée.",
     "errorInvalidUrl": "Saisissez une URL http(s) valide.",
     "errorNoCommand": "Saisissez la commande à exécuter.",
     "errorNoLanguage": "Choisissez la langue cible.",

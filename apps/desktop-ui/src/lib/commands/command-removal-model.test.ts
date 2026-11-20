@@ -5,7 +5,11 @@ import { type ActionPageConfig } from '@tyco/shared'
 import { secretRef } from '../net/secrets'
 import { createCommand } from './command-config'
 import { commandSecretIds, isSecretReferenced } from './command-secrets'
-import { createCommandRemovalModel } from './command-removal-model'
+import {
+  createCommandRemovalModel,
+  removeCommandFromAiCommands,
+  removeCommandFromCustomActionSlots,
+} from './command-removal-model'
 
 describe('command removal model', () => {
   function fixture() {
@@ -138,5 +142,46 @@ describe('command removal model', () => {
     model.removeCommand(f.command)
     await vi.waitFor(() => expect(notifyError).toHaveBeenCalledWith(error))
     expect(commands).toEqual([])
+  })
+
+  it('leaves the custom hotkeys of the command without action', () => {
+    const f = fixture()
+    expect(
+      removeCommandFromCustomActionSlots(
+        [
+          {
+            action: { type: 'command', commandId: f.command.id },
+            takesSelection: true,
+          },
+          {
+            action: { type: 'command', commandId: 'other' },
+            takesSelection: false,
+          },
+          { action: null, takesSelection: false },
+        ],
+        f.command.id
+      )
+    ).toEqual([
+      { action: null, takesSelection: true },
+      {
+        action: { type: 'command', commandId: 'other' },
+        takesSelection: false,
+      },
+      { action: null, takesSelection: false },
+    ])
+  })
+
+  it('takes the command away from the AI commands allowed to run it', () => {
+    const ai = {
+      ...createCommand('core.aiTask', 'ai'),
+      operationConfig: { prompt: 'p', allowedCommandIds: ['gone', 'kept'] },
+    }
+    const script = createCommand('script', 'gone')
+    const [nextAi, nextScript] = removeCommandFromAiCommands(
+      [ai, script],
+      'gone'
+    )
+    expect(nextAi.operationConfig.allowedCommandIds).toEqual(['kept'])
+    expect(nextScript).toBe(script)
   })
 })

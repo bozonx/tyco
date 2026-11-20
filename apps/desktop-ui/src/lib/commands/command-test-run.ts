@@ -19,6 +19,7 @@ import {
   commandLabel,
   commandTakesText,
   commandOperation,
+  commandUnavailableReason,
   preTransformCommandText,
 } from './command-runtime'
 import { scriptOperationConfig } from './command-config'
@@ -81,6 +82,12 @@ export async function runCommandTest(
   },
   signal: AbortSignal
 ): Promise<CommandTestResult> {
+  // a test runs what a real run would: a disabled command, one of another
+  // platform or one that cannot run here is refused alike for every tool
+  if (!command.isEnabled)
+    return { kind: 'error', messageKey: 'toast.commandDisabled' }
+  const unavailable = commandUnavailableReason(command, operations)
+  if (unavailable) return { kind: 'error', messageKey: unavailable }
   // a script is checked and saved before the LLM is asked to prepare its text
   if (command.operationId === 'script') {
     if (!scriptOperationConfig(command).command.trim()) {

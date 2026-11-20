@@ -240,6 +240,7 @@
     "editCommand": "Редагувати команду",
     "empty": "Команд поки немає.",
     "enable": "Увімкнути команду",
+    "errorAuthHeaderOverridden": "Поки ввімкнено авторизацію, заголовок Authorization замінюється збереженим ключем.",
     "errorInvalidUrl": "Введіть коректну адресу http(s).",
     "errorNoCommand": "Введіть команду для виконання.",
     "errorNoLanguage": "Виберіть мову перекладу.",

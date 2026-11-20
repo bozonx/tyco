@@ -240,6 +240,7 @@
     "editCommand": "Команданы өңдеу",
     "empty": "Әзірге командалар жоқ.",
     "enable": "Команданы қосу",
+    "errorAuthHeaderOverridden": "Авторизация қосулы тұрғанда Authorization тақырыбы сақталған кілтпен ауыстырылады.",
     "errorInvalidUrl": "Жарамды http(s) URL мекенжайын енгізіңіз.",
     "errorNoCommand": "Орындалатын команданы енгізіңіз.",
     "errorNoLanguage": "Аударма тілін таңдаңыз.",

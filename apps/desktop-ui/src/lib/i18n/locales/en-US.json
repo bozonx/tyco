@@ -240,6 +240,7 @@
     "editCommand": "Edit the command",
     "empty": "No commands yet.",
     "enable": "Enable command",
+    "errorAuthHeaderOverridden": "The Authorization header is replaced by the stored key while authorization is on.",
     "errorInvalidUrl": "Enter a valid http(s) URL.",
     "errorNoCommand": "Enter the command to run.",
     "errorNoLanguage": "Choose the language to translate into.",

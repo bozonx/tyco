@@ -240,6 +240,7 @@
     "editCommand": "Parancs szerkesztése",
     "empty": "Még nincsenek parancsok.",
     "enable": "Parancs bekapcsolása",
+    "errorAuthHeaderOverridden": "Amíg az engedélyezés be van kapcsolva, az Authorization fejlécet a mentett kulcs váltja fel.",
     "errorInvalidUrl": "Adj meg egy érvényes http(s) URL-t.",
     "errorNoCommand": "Adja meg a futtatandó parancsot.",
     "errorNoLanguage": "Válassza ki a célnyelvet.",

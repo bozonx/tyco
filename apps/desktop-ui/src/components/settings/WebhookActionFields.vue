@@ -51,6 +51,7 @@
       vertical
       density="compact"
       :label="t('settings.actionWebhookHeadersLabel')"
+      :warning="warningsOf('headers')"
     >
       <div
         v-for="(header, headerIndex) in headerRows"

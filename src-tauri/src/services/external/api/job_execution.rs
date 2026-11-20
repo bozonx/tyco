@@ -122,9 +122,12 @@ fn hand_off(
     let config = app.state::<AppState>().user_config();
     let needs_ui = command.can_take_text && request.text.is_none() && request.input.is_none();
     if needs_ui {
+        // no window asks for the text: the job fails rather than waits
+        const MESSAGE: &str = "Command requires text input: pass --text, --stdin or --selection";
+        fail(app, job_id, MESSAGE.into(), ErrorCode::InputRequired);
         return Err(Box::new(Response::coded_error(
-            ErrorCode::InvalidInput,
-            "Command requires text input",
+            ErrorCode::InputRequired,
+            MESSAGE,
         )));
     }
     let run_limit = Some(Duration::from_secs(
@@ -359,6 +362,14 @@ pub fn claim(app: &AppHandle, id: &str) -> bool {
 
 /// Cancels jobs that waited too long to start and background runs over their
 /// limit, even when no external client polls them.
+/// Ends a job whose selection replacement never reported back
+fn selection_replace_timed_out(app: &AppHandle, id: &str) {
+    app.state::<ExternalJobs>().complete_selection_replacement(
+        id,
+        Some("The selection replacement did not finish in time".into()),
+    );
+}
+
 pub fn spawn_reaper(app: AppHandle) -> Result<(), AppError> {
     let services = app.state::<crate::services::background::BackgroundServices>();
     let handle = app.clone();
@@ -366,6 +377,9 @@ pub fn spawn_reaper(app: AppHandle) -> Result<(), AppError> {
         let app = handle;
         loop {
             tokio::time::sleep(Duration::from_secs(1)).await;
+            for id in app.state::<ExternalJobs>().stale_replacement_ids() {
+                selection_replace_timed_out(&app, &id);
+            }
             let ids = app.state::<ExternalJobs>().expired_job_ids();
             for id in ids {
                 let handle = app.clone();

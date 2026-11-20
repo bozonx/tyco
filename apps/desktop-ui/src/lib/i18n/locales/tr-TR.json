@@ -240,6 +240,7 @@
     "editCommand": "Komutu düzenle",
     "empty": "Henüz komut yok.",
     "enable": "Komutu etkinleştir",
+    "errorAuthHeaderOverridden": "Yetkilendirme açıkken Authorization başlığı kayıtlı anahtarla değiştirilir.",
     "errorInvalidUrl": "Geçerli bir http(s) URL'si girin.",
     "errorNoCommand": "Çalıştırılacak komutu girin.",
     "errorNoLanguage": "Çevrilecek dili seçin.",

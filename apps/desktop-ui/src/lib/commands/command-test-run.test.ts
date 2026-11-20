@@ -51,6 +51,17 @@ const testScript = async (command: CommandConfig, d = deps(), text = 'hi') => {
 }
 
 describe('runCommandTest', () => {
+  it('refuses a disabled command before running anything', async () => {
+    const d = deps()
+    const result = await testScript(script({}, { isEnabled: false }), d)
+    expect(result).toEqual({
+      kind: 'error',
+      messageKey: 'toast.commandDisabled',
+    })
+    expect(d.saveCommand).not.toHaveBeenCalled()
+    expect(d.executeScriptAction).not.toHaveBeenCalled()
+  })
+
   it('waits for a script and keeps its exit code and stderr', async () => {
     const d = deps()
     const command = script({ timeoutSec: 5 }, { isOutputLogged: true })

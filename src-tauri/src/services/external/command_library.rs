@@ -104,6 +104,9 @@ pub enum CommandLookupError {
     Unavailable(String, Option<String>),
     /// The webview has not sent the tool catalog yet.
     ToolsLoading(String),
+    /// The catalog describes another config of the command: the quick window
+    /// has not sent the catalog of the current config yet
+    CatalogStale(String),
 }
 
 impl std::fmt::Display for CommandLookupError {
@@ -129,6 +132,10 @@ impl std::fmt::Display for CommandLookupError {
                     "The tool of the command `{id}` is not available: {reason}"
                 )
             }
+            Self::CatalogStale(id) => write!(
+                f,
+                "The tools have not caught up with a change of the command `{id}`; try again in a moment"
+            ),
             Self::ToolsLoading(id) => write!(
                 f,
                 "The tools are still loading; try the command `{id}` again in a moment"
@@ -141,9 +148,9 @@ impl From<CommandLookupError> for AppError {
     fn from(error: CommandLookupError) -> Self {
         let message = error.to_string();
         match error {
-            CommandLookupError::Unavailable(..) | CommandLookupError::ToolsLoading(_) => {
-                AppError::ServiceUnavailable(message)
-            }
+            CommandLookupError::Unavailable(..)
+            | CommandLookupError::ToolsLoading(_)
+            | CommandLookupError::CatalogStale(_) => AppError::ServiceUnavailable(message),
             CommandLookupError::NotFound(_)
             | CommandLookupError::Ambiguous(..)
             | CommandLookupError::Disabled(_)
@@ -201,7 +208,7 @@ pub fn command_input<'a>(
             .cloned()
             .unwrap_or_else(|| serde_json::json!({}))
     {
-        return Err(CommandLookupError::ToolsLoading(id_of(command).into()));
+        return Err(CommandLookupError::CatalogStale(id_of(command).into()));
     }
     Ok(Some(input))
 }
@@ -358,7 +365,9 @@ pub fn find_by_name(
     // a command whose tools are still loading may turn out callable as well:
     // running another one of the same name now could run the wrong one
     let loading = resolved.iter().find_map(|found| match found {
-        Err(error @ CommandLookupError::ToolsLoading(_)) => Some(error.clone()),
+        Err(
+            error @ (CommandLookupError::ToolsLoading(_) | CommandLookupError::CatalogStale(_)),
+        ) => Some(error.clone()),
         _ => None,
     });
     match (callable_matches.as_slice(), loading) {
