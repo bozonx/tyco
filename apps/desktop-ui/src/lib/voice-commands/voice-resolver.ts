@@ -1,10 +1,14 @@
 import { type CommandConfig, commandTakesSelection } from '@tyco/shared'
+import { COMMON_LANGUAGE_OPTIONS } from '../locale/language'
 import { messages } from '../i18n/messages'
 import {
   commandTakesText,
   isCommandAvailable,
 } from '../commands/command-runtime'
-import type { OperationLookup } from '../operations/operation-types'
+import type {
+  OperationCommandParameter,
+  OperationLookup,
+} from '../operations/operation-types'
 import {
   localeMessage,
   openCommandParameters,
@@ -36,6 +40,7 @@ export interface VoiceCandidate {
    * user spoke over by starting a new sentence; 0 means nothing was dropped.
    */
   commandOffset: number
+  skippedWordCount?: number
 }
 
 export interface VoiceResolution {
@@ -188,13 +193,17 @@ function resolveFrom(
       }
       if (!startsWith(input, phrase)) continue
     }
-    let offsets = [phrase.length]
+    interface OffsetMatch {
+      offset: number
+      skipped: number
+    }
+    let offsets: OffsetMatch[] = [{ offset: phrase.length, skipped: 0 }]
     let failedToMatchLeadingParameter = false
     const parameters: Record<string, string> = {}
     for (const parameter of route.parameters) {
-      const next: number[] = []
-      for (const offset of offsets) {
-        const tail = input.slice(offset)
+      const next: OffsetMatch[] = []
+      for (const m of offsets) {
+        const tail = input.slice(m.offset)
         for (const variant of parameter.variants) {
           const valueWords = words(variant)
           if (!valueWords.length) continue
@@ -204,11 +213,14 @@ function resolveFrom(
             startsWith(valueWords, tail)
           ) {
             incomplete = true
-            incompleteDepth = Math.max(incompleteDepth, offset + tail.length)
+            incompleteDepth = Math.max(incompleteDepth, m.offset + tail.length)
           }
           if (startsWith(tail, valueWords)) {
-            next.push(offset + valueWords.length)
-          } else if (tail.length > valueWords.length) {
+            next.push({
+              offset: m.offset + valueWords.length,
+              skipped: m.skipped,
+            })
+          } else if (phrase.length > 0 && tail.length > valueWords.length) {
             // Skip filler/hesitation words before the spoken parameter value
             for (
               let skip = 1;
@@ -216,7 +228,10 @@ function resolveFrom(
               skip++
             ) {
               if (startsWith(tail.slice(skip), valueWords)) {
-                next.push(offset + skip + valueWords.length)
+                next.push({
+                  offset: m.offset + skip + valueWords.length,
+                  skipped: m.skipped + skip,
+                })
                 break
               }
             }
@@ -228,65 +243,91 @@ function resolveFrom(
           failedToMatchLeadingParameter = true
           break
         }
-        for (const offset of offsets) {
+        for (const m of offsets) {
           const textOffset = argumentOffset(
             transcript,
-            tokens[offset - 1]?.end ?? commandOffset
+            tokens[m.offset - 1]?.end ?? commandOffset
           )
           parameterChoices.push({
             commandId: route.commandId,
             parameters: { ...parameters, [parameter.name]: parameter.value },
-            consumedWordCount: offset,
+            consumedWordCount: m.offset,
             textOffset,
             commandOffset,
             text: transcript.slice(textOffset).trimEnd(),
           })
         }
-        if (offsets.some((offset) => input.length > offset)) {
+        if (offsets.some((m) => input.length > m.offset)) {
           parameterError = true
-          parameterErrorDepth = Math.max(parameterErrorDepth, ...offsets)
+          parameterErrorDepth = Math.max(
+            parameterErrorDepth,
+            ...offsets.map((m) => m.offset)
+          )
         } else {
           incomplete = true
-          incompleteDepth = Math.max(incompleteDepth, ...offsets)
+          incompleteDepth = Math.max(
+            incompleteDepth,
+            ...offsets.map((m) => m.offset)
+          )
         }
       }
-      offsets = [...new Set(next)]
+      offsets = next.filter(
+        (m, i, arr) =>
+          arr.findIndex(
+            (o) => o.offset === m.offset && o.skipped === m.skipped
+          ) === i
+      )
       parameters[parameter.name] = parameter.value
     }
     if (failedToMatchLeadingParameter) continue
     if (suffixWords.length) {
-      const next: number[] = []
-      for (const offset of offsets) {
-        const tail = input.slice(offset)
+      const next: OffsetMatch[] = []
+      for (const m of offsets) {
+        const tail = input.slice(m.offset)
         if (
           tail.length > 0 &&
           tail.length < suffixWords.length &&
           startsWith(suffixWords, tail)
         ) {
           incomplete = true
-          incompleteDepth = Math.max(incompleteDepth, offset + tail.length)
+          incompleteDepth = Math.max(incompleteDepth, m.offset + tail.length)
         }
         if (startsWith(tail, suffixWords))
-          next.push(offset + suffixWords.length)
+          next.push({
+            offset: m.offset + suffixWords.length,
+            skipped: m.skipped,
+          })
       }
       if (!next.length && offsets.length) {
-        if (offsets.some((offset) => input.length > offset)) {
+        if (offsets.some((m) => input.length > m.offset)) {
           parameterError = true
-          parameterErrorDepth = Math.max(parameterErrorDepth, ...offsets)
+          parameterErrorDepth = Math.max(
+            parameterErrorDepth,
+            ...offsets.map((m) => m.offset)
+          )
         } else {
           incomplete = true
-          incompleteDepth = Math.max(incompleteDepth, ...offsets)
+          incompleteDepth = Math.max(
+            incompleteDepth,
+            ...offsets.map((m) => m.offset)
+          )
         }
       }
-      offsets = [...new Set(next)]
+      offsets = next.filter(
+        (m, i, arr) =>
+          arr.findIndex(
+            (o) => o.offset === m.offset && o.skipped === m.skipped
+          ) === i
+      )
     }
-    for (const offset of offsets) {
-      const end = tokens[offset - 1]?.end ?? commandOffset
+    for (const m of offsets) {
+      const end = tokens[m.offset - 1]?.end ?? commandOffset
       const textOffset = argumentOffset(transcript, end)
       candidates.push({
         commandId: route.commandId,
         parameters,
-        consumedWordCount: offset,
+        consumedWordCount: m.offset,
+        skippedWordCount: m.skipped,
         textOffset,
         commandOffset,
         text: transcript.slice(textOffset).trimEnd(),
@@ -306,9 +347,15 @@ function resolveFrom(
   }
   if (incompleteDepth > longest)
     return { kind: 'incomplete', candidates: [], parameterChoices }
+  const longestCandidates = candidates.filter(
+    (item) => item.consumedWordCount === longest
+  )
+  const minSkipped = Math.min(
+    ...longestCandidates.map((item) => item.skippedWordCount ?? 0)
+  )
   const unique = new Map<string, VoiceCandidate>()
-  for (const candidate of candidates) {
-    if (candidate.consumedWordCount !== longest) continue
+  for (const candidate of longestCandidates) {
+    if ((candidate.skippedWordCount ?? 0) !== minSkipped) continue
     unique.set(
       JSON.stringify([
         candidate.commandId,
@@ -319,6 +366,26 @@ function resolveFrom(
     )
   }
   const result = [...unique.values()]
+  if (result.length > 1) {
+    const firstCommandId = result[0]!.commandId
+    if (result.every((c) => c.commandId === firstCommandId)) {
+      const baseCandidate = result.find((c) => {
+        const lang = c.parameters.language
+        return lang && !lang.includes('-')
+      })
+      if (
+        baseCandidate &&
+        result.every(
+          (c) =>
+            !c.parameters.language ||
+            c.parameters.language.split('-')[0] ===
+              baseCandidate.parameters.language
+        )
+      ) {
+        return { kind: 'match', candidates: [baseCandidate] }
+      }
+    }
+  }
   return {
     kind:
       result.length > 1
@@ -390,6 +457,35 @@ function parameterRoute(
   }
 }
 
+function parameterExpandedVariants(
+  locale: (typeof messages)[keyof typeof messages],
+  parameter: OperationCommandParameter,
+  value: string,
+  localSpoken: string
+): string[] {
+  const variants = grammarVariants(localSpoken)
+  if (parameter.voiceValuesKey === 'voiceGrammar.languages') {
+    const enLocale = messages['en-US']
+    if (enLocale && enLocale !== locale) {
+      const enSpoken = parameterVariants(enLocale, parameter)[value]
+      if (enSpoken) variants.push(...grammarVariants(enSpoken))
+    }
+    const targetLocale = messages[value as keyof typeof messages]
+    if (targetLocale && targetLocale !== locale && targetLocale !== enLocale) {
+      const nativeSpoken = parameterVariants(targetLocale, parameter)[value]
+      if (nativeSpoken) variants.push(...grammarVariants(nativeSpoken))
+    }
+    const common = COMMON_LANGUAGE_OPTIONS.find((opt) => opt.id === value)
+    if (
+      common?.name &&
+      !['es-AR', 'es-ES', 'pt-PT', 'en-GB', 'zh-TW'].includes(value)
+    ) {
+      variants.push(common.name)
+    }
+  }
+  return [...new Set(variants)]
+}
+
 /**
  * The routes of a command: its phrases, or the phrases of its tool when it has
  * none and leaves a parameter to the caller. The first parameter it leaves is
@@ -423,7 +519,12 @@ function commandRoutes(
           parameterRoute(command.id, template, {
             name: parameter.name,
             value,
-            variants: grammarVariants(spoken),
+            variants: parameterExpandedVariants(
+              locale,
+              parameter,
+              value,
+              spoken
+            ),
           })
         )
   }

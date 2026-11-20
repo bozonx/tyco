@@ -1465,9 +1465,9 @@
       "el-GR": "Griego",
       "en-GB": "inglés británico",
       "en-US": "inglés;inglés americano",
-      "es": "Español",
-      "es-AR": "español;español argentino",
-      "es-ES": "español;español europeo",
+      "es": "español;castellano",
+      "es-AR": "español argentino;español rioplatense",
+      "es-ES": "español europeo;español de España;español peninsular",
       "fr-FR": "francés",
       "hr-HR": "Croata",
       "hu-HU": "Húngaro",
@@ -1478,7 +1478,7 @@
       "ko-KR": "Coreano",
       "pl-PL": "Polaco",
       "pt-BR": "portugués;portugués brasileño",
-      "pt-PT": "portugués;portugués europeo",
+      "pt-PT": "portugués europeo;portugués de Portugal",
       "ro-RO": "Rumano",
       "ru-RU": "ruso",
       "tr-TR": "turco",
@@ -1486,7 +1486,7 @@
       "zh-CN": "chino",
       "zh-TW": "Chino tradicional"
     },
-    "translate": "traduce al"
+    "translate": "traduce al;traduce a;traduce en;traducir al;traducir a;traduce"
   },
   "window": {
     "clickToFocus": "Haz clic para continuar",

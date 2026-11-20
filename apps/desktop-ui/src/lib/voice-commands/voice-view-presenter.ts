@@ -127,6 +127,7 @@ export function resolveVoiceNotice(
     inputIssue: VoiceInputIssue | undefined
     stage: string
     resolutionKind: VoiceResolution['kind']
+    candidates?: readonly VoiceCandidate[]
   },
   t: (key: string) => string
 ): VoiceNotice | undefined {
@@ -152,8 +153,19 @@ export function resolveVoiceNotice(
     return undefined
   }
   if (state.stage !== 'review') return undefined
-  if (state.resolutionKind === 'ambiguous')
-    return { kind: 'info', message: t('voiceCommands.ambiguous') }
+  if (state.resolutionKind === 'ambiguous') {
+    const sameCommand =
+      Boolean(state.candidates?.length) &&
+      state.candidates!.every(
+        (c) => c.commandId === state.candidates![0]!.commandId
+      )
+    return {
+      kind: 'info',
+      message: sameCommand
+        ? t('voiceCommands.parameterMissing')
+        : t('voiceCommands.ambiguous'),
+    }
+  }
   if (state.resolutionKind === 'parameter-error')
     return { kind: 'info', message: t('voiceCommands.languageMissing') }
   return { kind: 'info', message: t('voiceCommands.noMatch') }

@@ -1465,9 +1465,9 @@
       "el-GR": "Grčki",
       "en-GB": "britanski engleski",
       "en-US": "engleski;američki engleski",
-      "es": "Španjolski",
-      "es-AR": "španjolski;argentinski španjolski",
-      "es-ES": "španjolski;europski španjolski",
+      "es": "španjolski",
+      "es-AR": "argentinski španjolski",
+      "es-ES": "europski španjolski",
       "fr-FR": "francuski",
       "hr-HR": "Hrvatski",
       "hu-HU": "Mađarski",
@@ -1478,7 +1478,7 @@
       "ko-KR": "Korejski",
       "pl-PL": "Poljski",
       "pt-BR": "portugalski;brazilski portugalski",
-      "pt-PT": "portugalski;europski portugalski",
+      "pt-PT": "europski portugalski",
       "ro-RO": "Rumunjski",
       "ru-RU": "ruski",
       "tr-TR": "turski",
@@ -1486,7 +1486,7 @@
       "zh-CN": "kineski",
       "zh-TW": "Tradicionalni kineski"
     },
-    "translate": "prevedi na"
+    "translate": "prevedi na;prevedi u;prevedi"
   },
   "window": {
     "clickToFocus": "Kliknite za nastavak",

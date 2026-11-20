@@ -414,16 +414,29 @@ describe('voice routes of a command parameter', () => {
 
   it('speaks the language in the phrases of every locale', () => {
     const routes = compileVoiceRoutes([translate], tools)
-    for (const [text, language] of [
-      ['переведи на немецкий Привет', 'de-DE'],
-      ['translate to French Hello', 'fr-FR'],
-      ['英語に翻訳してこんにちは', 'en-US'],
+    for (const [text, language, expectedText] of [
+      ['переведи на немецкий Привет', 'de-DE', 'Привет'],
+      ['translate to French Hello', 'fr-FR', 'Hello'],
+      ['英語に翻訳してこんにちは', 'en-US', 'こんにちは'],
+      ['Переведи на Испанский. Привет, как дела?', 'es', 'Привет, как дела?'],
+      ['Переведи на аргентинский испанский Текст', 'es-AR', 'Текст'],
+      ['Переведи на европейский испанский Текст', 'es-ES', 'Текст'],
+      ['Переведи на German Привет', 'de-DE', 'Привет'],
+      ['Переведи на Deutsch Привет', 'de-DE', 'Привет'],
+      ['Переведи на Spanish Привет', 'es', 'Привет'],
+      ['Переведи на Español Привет', 'es', 'Привет'],
+      ['translate to Deutsch Hello', 'de-DE', 'Hello'],
+      ['translate into Spanish Hello', 'es', 'Hello'],
+      ['перевести на испанский Привет', 'es', 'Привет'],
+      ['перевод на испанский Привет', 'es', 'Привет'],
+      ['переведи в испанский Привет', 'es', 'Привет'],
     ] as const) {
       const result = resolveVoice(routes, text)
       expect(result.kind).toBe('match')
       expect(result.candidates[0]).toMatchObject({
         commandId: 'translate',
         parameters: { language },
+        text: expectedText,
       })
     }
   })

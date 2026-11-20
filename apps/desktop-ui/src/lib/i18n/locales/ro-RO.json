@@ -1465,9 +1465,9 @@
       "el-GR": "Greacă",
       "en-GB": "engleză britanică",
       "en-US": "engleză;engleză americană",
-      "es": "Spaniolă",
-      "es-AR": "spaniolă;spaniolă argentiniană",
-      "es-ES": "spaniolă;spaniolă europeană",
+      "es": "spaniolă",
+      "es-AR": "spaniolă argentiniană",
+      "es-ES": "spaniolă europeană;spaniolă din Spania",
       "fr-FR": "franceză",
       "hr-HR": "Croată",
       "hu-HU": "Maghiară",
@@ -1478,7 +1478,7 @@
       "ko-KR": "Coreeană",
       "pl-PL": "Poloneză",
       "pt-BR": "portugheză;portugheză braziliană",
-      "pt-PT": "portugheză;portugheză europeană",
+      "pt-PT": "portugheză europeană;portugheză din Portugalia",
       "ro-RO": "Română",
       "ru-RU": "rusă",
       "tr-TR": "turcă",
@@ -1486,7 +1486,7 @@
       "zh-CN": "chineză",
       "zh-TW": "Chineză tradițională"
     },
-    "translate": "tradu în"
+    "translate": "tradu în;traduce în;tradu"
   },
   "window": {
     "clickToFocus": "Faceți clic pentru a continua",

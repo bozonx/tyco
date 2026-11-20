@@ -1454,14 +1454,14 @@
   },
   "voiceGrammar": {
     "languages": {
-      "cs-CZ": "Czech",
+      "cs-CZ": "čeština;česky;český",
       "de-DE": "němčiny",
       "el-GR": "Řečtina",
       "en-GB": "britské angličtiny",
       "en-US": "angličtiny;americké angličtiny",
-      "es": "Španělština",
-      "es-AR": "španělštiny;argentinské španělštiny",
-      "es-ES": "španělštiny;evropské španělštiny",
+      "es": "španělštiny;španělština",
+      "es-AR": "argentinské španělštiny;argentinská španělština",
+      "es-ES": "evropské španělštiny;evropská španělština",
       "fr-FR": "francouzštiny",
       "hr-HR": "Chorvatština",
       "hu-HU": "Maďarština",
@@ -1471,8 +1471,8 @@
       "kk-KZ": "Kazaština",
       "ko-KR": "Korejština",
       "pl-PL": "Polština",
-      "pt-BR": "portugalštiny;brazilské portugalštiny",
-      "pt-PT": "portugalštiny;evropské portugalštiny",
+      "pt-BR": "portugalštiny;portugalština;brazilské portugalštiny",
+      "pt-PT": "evropské portugalštiny;evropská portugalština",
       "ro-RO": "Rumunština",
       "ru-RU": "ruštiny",
       "tr-TR": "turečtiny",
@@ -1480,7 +1480,7 @@
       "zh-CN": "čínštiny",
       "zh-TW": "Tradiční čínština"
     },
-    "translate": "přelož do"
+    "translate": "přelož do;přelož;přeložit do;přeložit"
   },
   "window": {
     "clickToFocus": "Klikněte pro pokračování",

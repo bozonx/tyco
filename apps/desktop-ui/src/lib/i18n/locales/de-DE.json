@@ -1466,8 +1466,8 @@
       "en-GB": "britisches Englisch",
       "en-US": "Englisch;amerikanisches Englisch",
       "es": "Spanisch",
-      "es-AR": "Spanisch;argentinisches Spanisch",
-      "es-ES": "Spanisch;europäisches Spanisch",
+      "es-AR": "argentinisches Spanisch",
+      "es-ES": "europäisches Spanisch;Spanisch (Spanien)",
       "fr-FR": "Französisch",
       "hr-HR": "Kroatisch",
       "hu-HU": "Ungarisch",
@@ -1478,7 +1478,7 @@
       "ko-KR": "Koreanisch",
       "pl-PL": "Polnisch",
       "pt-BR": "Portugiesisch;brasilianisches Portugiesisch",
-      "pt-PT": "Portugiesisch;europäisches Portugiesisch",
+      "pt-PT": "europäisches Portugiesisch;Portugiesisch (Portugal)",
       "ro-RO": "Rumänisch",
       "ru-RU": "Russisch",
       "tr-TR": "Türkisch",
@@ -1486,7 +1486,7 @@
       "zh-CN": "Chinesisch",
       "zh-TW": "Traditionelles Chinesisch"
     },
-    "translate": "übersetze auf"
+    "translate": "übersetze auf;übersetze in;übersetze nach;übersetzen auf;übersetzen in;übersetze"
   },
   "window": {
     "clickToFocus": "Zum Fortfahren klicken",

@@ -1462,9 +1462,9 @@
       "el-GR": "Görög",
       "en-GB": "brit angolra",
       "en-US": "angolra;amerikai angolra",
-      "es": "Spanyol",
-      "es-AR": "spanyolra;argentin spanyolra",
-      "es-ES": "spanyolra;európai spanyolra",
+      "es": "spanyolra;spanyol",
+      "es-AR": "argentin spanyolra;argentin spanyol",
+      "es-ES": "európai spanyolra;európai spanyol",
       "fr-FR": "franciára",
       "hr-HR": "Horvát",
       "hu-HU": "Magyar",
@@ -1474,8 +1474,8 @@
       "kk-KZ": "Kazah",
       "ko-KR": "Koreai",
       "pl-PL": "Lengyel",
-      "pt-BR": "portugálra;brazil portugálra",
-      "pt-PT": "portugálra;európai portugálra",
+      "pt-BR": "portugálra;portugál;brazil portugálra",
+      "pt-PT": "európai portugálra;európai portugál",
       "ro-RO": "Román",
       "ru-RU": "oroszra",
       "tr-TR": "törökre",
@@ -1483,7 +1483,7 @@
       "zh-CN": "kínaira",
       "zh-TW": "Hagyományos kínai"
     },
-    "translate": "fordítsd le"
+    "translate": "fordítsd le;fordítsd;fordítás"
   },
   "window": {
     "clickToFocus": "Kattintson a folytatáshoz",
