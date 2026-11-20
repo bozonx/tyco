@@ -110,14 +110,11 @@ const model = createListenModel({
   finishDictation,
   cancelDictation,
   switchSource,
-  saveTranscript: async (text) => {
-    const session = historyStore.createInputSession(
+  createHistorySession: () =>
+    historyStore.createInputSession(
       () => toastKey('history.operationFailed', 'error'),
       'listen'
-    )
-    session.update(text)
-    await session.flush()
-  },
+    ),
   onAutoStop: (reason) => {
     toastKey(
       reason === 'silence'

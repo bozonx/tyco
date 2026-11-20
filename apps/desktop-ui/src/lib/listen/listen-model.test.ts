@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import type { EditorHistoryEntry } from '@tyco/shared'
+
+import {
+  createInputHistorySession,
+  INPUT_HISTORY_INTERVAL_MS,
+} from '../history/input-history-session'
 import type { DictationHandlers } from '../stt/dictation-controller'
 import { SILENCE_TIMEOUT_MS } from '../stt/voice-session'
 import {
@@ -13,6 +19,14 @@ function setup(overrides: Partial<ListenModelDependencies> = {}) {
   let handlers: DictationHandlers | undefined
   const timers: { run: () => void; at: number }[] = []
   let now = 0
+  /** The history as `save` left it, by record id */
+  const history = new Map<string, string>()
+  let nextId = 0
+  const save = vi.fn(async (entry: EditorHistoryEntry) => {
+    const id = entry.id ?? `record-${++nextId}`
+    history.set(id, entry.text)
+    return id
+  })
   const deps = {
     now: () => now,
     setTimer: (run: () => void, delayMs: number) => {
@@ -30,7 +44,12 @@ function setup(overrides: Partial<ListenModelDependencies> = {}) {
     finishDictation: vi.fn(async () => 'Hello there'),
     cancelDictation: vi.fn(async () => undefined),
     switchSource: vi.fn(async () => undefined),
-    saveTranscript: vi.fn(async () => undefined),
+    createHistorySession: () =>
+      createInputHistorySession({
+        save,
+        origin: 'listen',
+        reportError: () => undefined,
+      }),
     onAutoStop: vi.fn(),
     describeError: (error: unknown) => String(error),
     onClose: vi.fn(),
@@ -46,10 +65,63 @@ function setup(overrides: Partial<ListenModelDependencies> = {}) {
       }
     }
   }
-  return { model, deps, handlers: () => handlers!, advance }
+  /** The texts in the history once pending saves are done */
+  const saved = async () => {
+    for (let index = 0; index < 10; index++) await Promise.resolve()
+    return [...history.values()]
+  }
+  return { model, deps, handlers: () => handlers!, advance, save, saved }
 }
 
 describe('listen model', () => {
+  it('checkpoints the transcript in one record while it records', async () => {
+    vi.useFakeTimers()
+    try {
+      const { model, handlers, save, saved } = setup()
+      await model.start()
+      handlers().onText({ committed: 'First words', draft: 'and' })
+      expect(save).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(INPUT_HISTORY_INTERVAL_MS)
+      expect(await saved()).toEqual(['First words and'])
+      // speech that goes on is checkpointed again, into the same record
+      handlers().onText({ committed: 'First words and more', draft: '' })
+      await vi.advanceTimersByTimeAsync(INPUT_HISTORY_INTERVAL_MS)
+      expect(await saved()).toEqual(['First words and more'])
+      await model.stop()
+      expect(await saved()).toEqual(['Hello there'])
+      model.dispose()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('keeps what was heard when the window closes mid-recording', async () => {
+    const { model, handlers, saved } = setup()
+    await model.start()
+    handlers().onText({ committed: 'Said just now', draft: 'and this' })
+    await model.close()
+    expect(await saved()).toEqual(['Said just now and this'])
+  })
+
+  it('keeps what was heard when the view goes away', async () => {
+    const { model, handlers, saved } = setup()
+    await model.start()
+    handlers().onText({ committed: 'Unsaved words', draft: '' })
+    model.dispose()
+    expect(await saved()).toEqual(['Unsaved words'])
+  })
+
+  it('keeps each listening in a record of its own', async () => {
+    const { model, handlers, saved } = setup()
+    await model.start()
+    handlers().onText({ committed: 'First', draft: '' })
+    await model.cancel()
+    await model.start()
+    handlers().onText({ committed: 'Second', draft: '' })
+    await model.stop()
+    expect(await saved()).toEqual(['First', 'Hello there'])
+  })
+
   it('keeps transferred words actionable when the new source fails to start', async () => {
     const { model } = setup({
       initialText: 'Keep these words',
@@ -62,7 +134,9 @@ describe('listen model', () => {
   })
 
   it('keeps a draft from the previous source in live display and final text', async () => {
-    const { model, handlers, deps } = setup({ initialText: 'From microphone.' })
+    const { model, handlers, saved } = setup({
+      initialText: 'From microphone.',
+    })
     await model.start()
     expect(model.transcript.value.committed).toBe('From microphone.')
     handlers().onText({ committed: 'From audio', draft: 'now' })
@@ -72,21 +146,20 @@ describe('listen model', () => {
     })
     await model.stop()
     expect(model.resultText.value).toBe('From microphone. Hello there')
-    expect(deps.saveTranscript).toHaveBeenCalledWith(
-      'From microphone. Hello there'
-    )
+    expect(await saved()).toEqual(['From microphone. Hello there'])
     model.dispose()
   })
 
   it('ignores recognition completed after closing the recording', async () => {
     let resolveFinish!: (text: string) => void
-    const { model, deps } = setup({
+    const { model, deps, saved, handlers } = setup({
       finishDictation: () =>
         new Promise<string>((resolve) => {
           resolveFinish = resolve
         }),
     })
     await model.start()
+    handlers().onText({ committed: 'Heard live', draft: '' })
     const finishing = model.stop()
     await model.close()
     resolveFinish('Late transcript')
@@ -94,7 +167,8 @@ describe('listen model', () => {
     expect(model.phase.value).toBe('idle')
     expect(model.resultText.value).toBe('')
     expect(deps.cancelDictation).toHaveBeenCalled()
-    expect(deps.saveTranscript).not.toHaveBeenCalled()
+    // the history keeps what was heard before closing, not the late text
+    expect(await saved()).toEqual(['Heard live'])
   })
 
   it('starts with the configured source', () => {
@@ -125,7 +199,7 @@ describe('listen model', () => {
   })
 
   it('records the source and turns the transcript into a result', async () => {
-    const { model, deps } = setup()
+    const { model, deps, saved } = setup()
     await model.start({ kind: 'systemMix' })
     expect(deps.startDictation).toHaveBeenCalledWith(
       expect.objectContaining({ source: { kind: 'systemMix' } })
@@ -136,15 +210,17 @@ describe('listen model', () => {
 
     expect(model.phase.value).toBe('result')
     expect(model.resultText.value).toBe('Hello there')
-    expect(deps.saveTranscript).toHaveBeenCalledWith('Hello there')
+    expect(await saved()).toEqual(['Hello there'])
   })
 
   it('shows that nothing was heard instead of an empty result', async () => {
-    const { model, deps } = setup({ finishDictation: vi.fn(async () => ' ') })
+    const { model, deps, save } = setup({
+      finishDictation: vi.fn(async () => ' '),
+    })
     await model.start()
     await model.stop()
     expect(model.phase.value).toBe('empty')
-    expect(deps.saveTranscript).not.toHaveBeenCalled()
+    expect(save).not.toHaveBeenCalled()
 
     await model.retry()
     expect(model.phase.value).toBe('recording')

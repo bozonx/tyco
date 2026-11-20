@@ -49,7 +49,6 @@ describe('ListenRecordingBar', () => {
       finishDictation: vi.fn(async () => ''),
       cancelDictation: vi.fn(async () => undefined),
       switchSource: vi.fn(async () => undefined),
-      saveTranscript: vi.fn(async () => undefined),
       describeError: (error) => String(error),
       onClose: vi.fn(),
     })

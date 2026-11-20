@@ -68,8 +68,11 @@ export interface ListenModelDependencies extends TimerDependencies {
   finishDictation: () => Promise<string>
   cancelDictation: () => Promise<void>
   switchSource: (source: CaptureSource) => Promise<void>
-  /** Keeps a transcript in the history as a listening */
-  saveTranscript: (text: string) => Promise<unknown>
+  /**
+   * The history record of the listening: checkpointed while it records, so that
+   * a crash or a closed window loses at most a few seconds of it
+   */
+  createHistorySession?: () => ListenHistorySession
   /**
    * Tells why a recording stopped by itself. Returning `'handled'` prevents the
    * default stop.
@@ -80,6 +83,13 @@ export interface ListenModelDependencies extends TimerDependencies {
   logError?: (message: string, error: unknown) => void
   /** The overlay is to close: cancelled, or a result dismissed */
   onClose: () => void
+}
+
+/** The part of `createInputHistorySession` a listening uses */
+export interface ListenHistorySession {
+  update: (text: string) => void
+  end: () => void
+  dispose: () => void
 }
 
 /** One listening of the computer sound: no commands, no correction. */
@@ -104,6 +114,12 @@ export function createListenModel(deps: ListenModelDependencies) {
   let generation = 0
   let lastState = createLiveTranscriptState()
   let lastStartSource: CaptureSource = SYSTEM_MIX_SOURCE
+  const history = deps.createHistorySession?.()
+  /** Saves the record as it stands and starts a new one on the next text */
+  const keepInHistory = (text?: string) => {
+    if (text !== undefined) history?.update(text)
+    history?.end()
+  }
 
   const canOpenSettings = computed(() =>
     isSettingsFixableDictationError(errorCause.value)
@@ -138,8 +154,11 @@ export function createListenModel(deps: ListenModelDependencies) {
     if (text) {
       resultText.value = text
       phase.value = 'result'
-      void deps.saveTranscript(text).catch(() => undefined)
-    } else phase.value = 'failed'
+      keepInHistory(text)
+    } else {
+      keepInHistory()
+      phase.value = 'failed'
+    }
   }
 
   async function start(startSource: CaptureSource = lastStartSource) {
@@ -148,6 +167,8 @@ export function createListenModel(deps: ListenModelDependencies) {
     isSwitching.value = false
     lastStartSource = startSource
     source.value = startSource
+    // whatever an earlier run left unsaved goes in before the new record
+    keepInHistory()
     transcript.value = { committed: carriedText, draft: '' }
     lastState = transcript.value
     isWaiting.value = startSource.kind === 'application'
@@ -170,6 +191,7 @@ export function createListenModel(deps: ListenModelDependencies) {
             ...state,
             committed: joinWords(carriedText, state.committed),
           }
+          history?.update(liveTranscriptText(transcript.value))
         },
         onError: (error) => {
           if (run !== generation || phase.value !== 'recording') return
@@ -214,20 +236,24 @@ export function createListenModel(deps: ListenModelDependencies) {
         return
       }
     }
+    // closed while finishing: the record keeps what was heard live
     if (run !== generation) return
     if (!text) {
+      keepInHistory()
       phase.value = 'empty'
       return
     }
     carriedText = ''
     resultText.value = text
     phase.value = 'result'
-    void deps.saveTranscript(text).catch(() => undefined)
+    keepInHistory(text)
   }
 
   async function cancel() {
     generation += 1
     session.stopTimer()
+    // a closed window, Back or a switch to voice must not drop what was heard
+    keepInHistory()
     phase.value = 'idle'
     await deps.cancelDictation().catch(() => undefined)
   }
@@ -304,6 +330,7 @@ export function createListenModel(deps: ListenModelDependencies) {
     dispose: () => {
       generation += 1
       session.dispose()
+      history?.dispose()
       void deps.cancelDictation().catch((error: unknown) => {
         deps.logError?.('Could not cancel listening capture on dispose', error)
       })
