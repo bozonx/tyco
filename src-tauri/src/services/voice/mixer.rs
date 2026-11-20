@@ -52,8 +52,13 @@ impl StreamMixer {
         let Some(cursor) = self.cursors.get_mut(&id) else {
             return;
         };
-        // a stream that lagged past what went out writes from the present
-        let start = (*cursor).max(self.base);
+        // a stream that lagged past what went out was silent, not late: it
+        // resumes at the present, in step with the streams that kept time
+        let start = if *cursor < self.base {
+            self.base + self.buffer.len() as u64
+        } else {
+            *cursor
+        };
         let end = start + samples.len() as u64;
         *cursor = end;
         let head = self.head();
@@ -133,10 +138,11 @@ mod tests {
         mixer.add_stream(2);
         mixer.push(1, &[0.1, 0.1, 0.1, 0.1]);
         assert_eq!(mixer.drain(), vec![0.1, 0.1]);
-        // the stalled stream resumes in the present, not over what went out
+        // the stalled stream resumes at the present, after what the other
+        // stream wrote, not over the samples still held for it
         mixer.push(2, &[0.5, 0.5, 0.5]);
         mixer.remove_stream(1);
-        assert_eq!(mixer.drain(), vec![0.6, 0.6, 0.5]);
+        assert_eq!(mixer.drain(), vec![0.1, 0.1, 0.5, 0.5, 0.5]);
     }
 
     #[test]

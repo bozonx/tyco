@@ -116,7 +116,7 @@ where
         / frame.len() as f32
 }
 
-fn float_to_pcm16(sample: f32) -> i16 {
+pub(super) fn float_to_pcm16(sample: f32) -> i16 {
     let clamped = sample.clamp(-1.0, 1.0);
     let value = if clamped < 0.0 {
         clamped * 32768.0

@@ -10,7 +10,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use super::audio_processing::compute_audio_level;
+use super::audio_processing::{compute_audio_level, float_to_pcm16};
 use super::mixer::StreamMixer;
 use super::{OpenedCapture, StreamContext};
 use crate::errors::AppError;
@@ -19,9 +19,9 @@ use crate::locks::MutexExt;
 /// The loudness speech is brought to: about -22 dBFS, leaving headroom for
 /// both sources speaking at once.
 const TARGET_RMS: f32 = 0.08;
-/// Below about -46 dBFS there is silence or room noise: the gain holds, so
-/// that noise is not raised to the loudness of speech.
-const GATE_RMS: f32 = 0.005;
+/// Below about -40 dBFS there is silence or room noise (a fan, keys): the
+/// gain holds, so that noise is not raised to the loudness of speech.
+const GATE_RMS: f32 = 0.01;
 /// A loud source is lowered at most this much...
 const MIN_GAIN: f32 = 0.1;
 /// ...and a quiet one raised at most this much, about +18 dB.
@@ -174,15 +174,18 @@ impl Mix {
     /// Mixes what is ready; `is_final` also lets out what waits for the
     /// other source.
     fn step(&mut self, is_final: bool) {
+        // playback first: when it resumes after silence it joins at the
+        // present, which is where the microphone's batch of the same
+        // moment begins
+        let mut playback = take_samples(&self.playback.pending_pcm_samples);
+        self.playback_loudness.process(&mut playback);
+        self.mixer.push(PLAYBACK, &playback);
+
         let recorded = take_samples(&self.microphone.pending_pcm_samples);
         let mut microphone = Vec::with_capacity(recorded.len() * 2);
         self.upsampler.push(&recorded, &mut microphone);
         self.microphone_loudness.process(&mut microphone);
         self.mixer.push(MICROPHONE, &microphone);
-
-        let mut playback = take_samples(&self.playback.pending_pcm_samples);
-        self.playback_loudness.process(&mut playback);
-        self.mixer.push(PLAYBACK, &playback);
 
         // the microphone's errors are the mixed stream's own; playback's
         // are handed over
@@ -198,10 +201,7 @@ impl Mix {
         if mixed.is_empty() {
             return;
         }
-        let samples: Vec<i16> = mixed
-            .iter()
-            .map(|sample| (sample * f32::from(i16::MAX)) as i16)
-            .collect();
+        let samples: Vec<i16> = mixed.iter().copied().map(float_to_pcm16).collect();
         {
             let (rms, peak) = compute_audio_level(&samples);
             let mut level = self.output.level.locked();
@@ -326,6 +326,37 @@ mod tests {
         let mut noise = tone(0.001, 4.0);
         normalizer.process(&mut noise);
         assert!(rms(&noise) <= 0.001, "{}", rms(&noise));
+    }
+
+    #[test]
+    fn room_noise_after_speech_is_not_raised() {
+        let mut normalizer = LoudnessNormalizer::new(RATE);
+        let mut speech = tone(0.1, 4.0);
+        normalizer.process(&mut speech);
+        // a fan at about -43 dBFS for long pauses
+        let mut noise = tone(0.01, 6.0);
+        let before = rms(&noise);
+        normalizer.process(&mut noise);
+        let after = rms(&noise[noise.len() - RATE as usize..]);
+        // speech near the target keeps the gain near unity: the noise stays
+        // far below speech instead of being raised towards it
+        assert!(after < before * 1.3, "{after}");
+    }
+
+    #[test]
+    fn playback_that_resumes_after_silence_stays_in_step_with_the_microphone() {
+        let (mut mix, pending, _) = mix();
+        // half a second of speech while nothing plays
+        record(&mix.microphone, &[1_000; 8_000]);
+        mix.step(false);
+        // playback starts now: it belongs after the speech, not 300 ms into it
+        record(&mix.playback, &[2_000; 1_600]);
+        record(&mix.microphone, &[0; 1_600]);
+        mix.step(true);
+        let mixed = std::mem::take(&mut *pending.locked());
+        assert_eq!(mixed.len(), 9_600);
+        assert!(mixed[..8_000].iter().all(|&sample| sample < 1_500));
+        assert!(mixed[8_000..].iter().all(|&sample| sample > 1_500));
     }
 
     #[test]

@@ -17,7 +17,7 @@ pub use source::{
 };
 
 pub use audio_processing::compute_audio_level;
-use audio_processing::{mix_frame, pcm16_to_le_bytes, Downsampler};
+use audio_processing::{float_to_pcm16, mix_frame, pcm16_to_le_bytes, Downsampler};
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{mpsc as std_mpsc, Arc, Mutex};
@@ -633,10 +633,7 @@ impl StreamContext {
         if samples.is_empty() {
             return;
         }
-        let converted: Vec<i16> = samples
-            .iter()
-            .map(|sample| (sample.clamp(-1.0, 1.0) * f32::from(i16::MAX)) as i16)
-            .collect();
+        let converted: Vec<i16> = samples.iter().copied().map(float_to_pcm16).collect();
         if let Ok(mut level) = self.current_level.lock() {
             let (rms, peak) = compute_audio_level(&converted);
             *level = (level.0.max(rms), level.1.max(peak));
