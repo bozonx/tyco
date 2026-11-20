@@ -196,6 +196,7 @@ export function validateCommand(
     issues.push({ field: 'name', messageKey: 'commands.errorNoName' })
   }
   if (
+    command.operationId !== 'core.aiTask' &&
     command.isLlmPreTransformEnabled &&
     !stringOr(command.llmPreTransformPrompt).trim()
   ) {
@@ -267,6 +268,7 @@ export async function preTransformCommandText(
 ): Promise<PreTransformResult> {
   if (
     !command.isLlmPreTransformEnabled ||
+    command.operationId === 'core.aiTask' ||
     !commandTakesText(command, operations)
   ) {
     return { ok: true, text }

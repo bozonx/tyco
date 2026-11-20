@@ -287,4 +287,23 @@ describe('CommandEditor.vue', () => {
         .findAll('.command-hint')
     ).toHaveLength(0)
   })
+
+  it('shows test section for AI commands and hides pre-transformation', () => {
+    const aiCommand: CommandConfig = {
+      ...createCommand('core.aiTask', 'ai1'),
+      name: 'AI Task',
+      operationConfig: { prompt: 'Do something' },
+    }
+    const wrapper = mountEditor(aiCommand)
+    expect(wrapper.findComponent({ name: 'CommandTestRun' }).exists()).toBe(
+      true
+    )
+
+    const advanced = wrapper.get('.command-group-advanced')
+    expect(
+      advanced
+        .find('input[type="checkbox"][aria-label="commands.llmPreTransform"]')
+        .exists()
+    ).toBe(false)
+  })
 })

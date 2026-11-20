@@ -205,7 +205,7 @@
             })
           }}
         </p>
-        <div class="command-field-row">
+        <div v-if="canPreTransform" class="command-field-row">
           <FieldSwitch
             :model-value="command.isLlmPreTransformEnabled ?? false"
             :label="t('commands.llmPreTransform')"
@@ -214,7 +214,7 @@
           <InfoTooltip :text="t('commands.llmPreTransformInfo')" />
         </div>
         <FieldRow
-          v-if="command.isLlmPreTransformEnabled"
+          v-if="canPreTransform && command.isLlmPreTransformEnabled"
           class="command-field"
           vertical
           density="compact"
@@ -317,6 +317,10 @@ const customActionOperation = computed(
     props.command.operationId === 'webhook'
 )
 const canTest = computed(() => canTestCommand(props.command))
+/** AI commands already run through the LLM, so pre-transformation is redundant */
+const canPreTransform = computed(
+  () => props.command.operationId !== 'core.aiTask'
+)
 /** A translation needs no name: its tool names it, see `commandLabel` */
 const isNamedByTool = computed(
   () => props.command.operationId === 'core.translate'
@@ -384,7 +388,7 @@ const advancedBodyId = useId()
 const isAdvancedOpen = ref<boolean>(
   Boolean(props.command.isOutputLogged) ||
     Boolean(props.command.isAvailableExternally) ||
-    Boolean(props.command.isLlmPreTransformEnabled)
+    (canPreTransform.value && Boolean(props.command.isLlmPreTransformEnabled))
 )
 
 const platformLabels = computed<Record<CommandPlatform, string>>(() => ({

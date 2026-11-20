@@ -57,9 +57,11 @@ export type CommandTestResult =
   | { kind: 'error'; messageKey?: string; message?: string }
   | { kind: 'cancelled' }
 
-/** The commands the editor can test: a script or a webhook */
+/** The commands the editor can test: a script, a webhook or an AI command */
 export const canTestCommand = (command: CommandConfig): boolean =>
-  command.operationId === 'script' || command.operationId === 'webhook'
+  command.operationId === 'script' ||
+  command.operationId === 'webhook' ||
+  command.operationId === 'core.aiTask'
 
 /**
  * Runs `command` on `text` as it is configured, but keeps the output: nothing

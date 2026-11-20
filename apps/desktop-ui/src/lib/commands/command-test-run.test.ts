@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { CommandConfig, ScriptExecutionResult } from '@tyco/shared'
 
+import type { OperationDefinition } from '../operations/operation-types'
 import { testOperations } from '../operations/testing'
 import { createCommand } from './command-config'
 import { canTestCommand, runCommandTest } from './command-test-run'
@@ -278,12 +279,42 @@ describe('runCommandTest', () => {
       message: 'HTTP 500',
     })
   })
+
+  it('runs an AI command and returns its output', async () => {
+    const aiTaskTool: OperationDefinition = {
+      id: 'core.aiTask',
+      labelKey: 'operations.aiTask',
+      description: 'AI Task',
+      inputSchema: { type: 'object', properties: { text: { type: 'string' } } },
+      run: vi.fn().mockResolvedValue({ ok: true, content: 'AI summary' }),
+    }
+    const aiCommand: CommandConfig = {
+      ...createCommand('core.aiTask', 'ai1'),
+      name: 'Summarize',
+      operationConfig: { prompt: 'Summarize this', maxSteps: 3 },
+    }
+    const result = await runCommandTest(
+      aiCommand,
+      'Input text',
+      testOperations({}, [aiTaskTool]),
+      deps(),
+      new AbortController().signal
+    )
+    expect(result).toEqual({ kind: 'output', output: 'AI summary' })
+    expect(aiTaskTool.run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: { text: 'Input text' },
+        config: { prompt: 'Summarize this', maxSteps: 3 },
+      })
+    )
+  })
 })
 
 describe('canTestCommand', () => {
-  it('tests scripts and webhooks only', () => {
+  it('tests scripts, webhooks and AI commands', () => {
     expect(canTestCommand(createCommand('script', 's'))).toBe(true)
     expect(canTestCommand(createCommand('webhook', 'w'))).toBe(true)
+    expect(canTestCommand(createCommand('core.aiTask', 'ai'))).toBe(true)
     expect(canTestCommand(createCommand('core.translate', 't'))).toBe(false)
   })
 })
