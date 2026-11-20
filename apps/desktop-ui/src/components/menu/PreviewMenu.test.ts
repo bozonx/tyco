@@ -6,6 +6,7 @@ import {
   type TestDesktop,
 } from '../../test/install-fake-desktop'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import { useActionMenuStore } from '../../stores/action-menu'
 import PreviewMenu from './PreviewMenu.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -48,6 +49,31 @@ describe('PreviewMenu', () => {
       wrapper.findComponent({ name: 'ResultTextEditor' }).props('modelValue')
     ).not.toBe('Edited child')
     expect(menus.currentModalParams).toMatchObject({ text: 'Original result' })
+    wrapper.unmount()
+  })
+
+  it('always resets action menu page and uses first page shortcuts when reviewing results', async () => {
+    desktop.setUserConfig({
+      actionPages: [
+        {
+          inputMode: 'selection',
+          slots: { q: { type: 'standard', actionId: 'copyToClipboard' } },
+        },
+        {
+          inputMode: 'none',
+          slots: { q: { type: 'standard', actionId: 'openHistory' } },
+        },
+      ],
+    })
+    const actionMenu = useActionMenuStore()
+    actionMenu.setPage(1)
+    expect(actionMenu.pageIndex).toBe(1)
+
+    const wrapper = mount(PreviewMenu, {
+      props: { text: 'Some command result' },
+      global: { stubs: { ShortcutList: true } },
+    })
+    expect(actionMenu.pageIndex).toBe(0)
     wrapper.unmount()
   })
 

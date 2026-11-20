@@ -145,4 +145,24 @@ describe('window actions', () => {
     expect(actions.pageIndex).toBe(0)
     expect(actions.takesText).toBe(true)
   })
+
+  it('resets to the first page when the window is hidden', async () => {
+    desktop = await loadFakeDesktop({
+      mode: 'selectionActions',
+      window: { isWindowShown: true },
+    })
+    desktop.setUserConfig({
+      actionPages: [
+        { inputMode: 'selection', slots: {} },
+        { inputMode: 'none', slots: {} },
+      ],
+    })
+    const actions = useActionMenuStore()
+    actions.setPage(1)
+    expect(actions.pageIndex).toBe(1)
+
+    desktop.setState({ isWindowShown: false })
+    await Promise.resolve()
+    expect(actions.pageIndex).toBe(0)
+  })
 })

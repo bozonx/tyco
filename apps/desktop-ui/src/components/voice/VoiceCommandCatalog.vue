@@ -37,11 +37,9 @@
             >{{ label }}</Badge
           >
         </span>
-        <span
-          v-if="showSecondaryName(command)"
-          class="voice-entry-phrase"
-          >{{ commandLabel(command) }}</span
-        >
+        <span v-if="showSecondaryName(command)" class="voice-entry-phrase">{{
+          commandLabel(command)
+        }}</span>
       </span>
       <AppIcon
         v-if="unavailableReason(command)"
@@ -238,6 +236,4 @@ const onCatalogKeyDown = (event: KeyboardEvent) => {
   font-size: var(--text-caption);
   color: var(--app-text-muted);
 }
-
-
 </style>

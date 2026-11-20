@@ -146,6 +146,7 @@ async function handleCorrected(
     return
   }
   if (typeof intent === 'object' && intent !== null) {
+    actionMenuStore.openPage(0)
     showResult(resultText, recognizedText !== resultText ? recognizedText : '')
     const slotAction = actionMenuStore.getShortcutActions()[intent.slotIndex]
     if (slotAction && !slotAction.disabled) {
@@ -161,6 +162,7 @@ async function handleCorrected(
     void insertAction.action(resultText)
     return
   }
+  actionMenuStore.openPage(0)
   showResult(resultText, recognizedText !== resultText ? recognizedText : '')
 }
 

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 
 import { clientLogger } from '../lib/logger'
 import { createCloseWindowModel } from '../lib/app/close-window'
+import { useActionMenuStore } from './action-menu'
 import { useDesktopStore } from './desktop'
 import { useDictationStore } from './dictation'
 import { useMenuModalsStore } from './menu-modals'
@@ -17,11 +18,13 @@ export const useCloseWindowStore = defineStore('closeWindow', () => {
   const quickInputStore = useQuickInputStore()
   const voiceResultStore = useVoiceResultStore()
   const dictationStore = useDictationStore()
+  const actionMenuStore = useActionMenuStore()
 
   return createCloseWindowModel({
     closeWindow: () => {
       menuModalsStore.cancelPending()
       menuModalsStore.closeAll()
+      actionMenuStore.openPage(0)
       void dictationStore.cancelActive().catch((error: unknown) => {
         clientLogger.warn(
           `Could not cancel dictation on window close: ${String(error)}`,

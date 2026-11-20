@@ -162,9 +162,20 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       [
         desktopStore.desktopState.activationId,
         desktopStore.desktopState.actionPageIndex,
+        desktopStore.desktopState.isWindowShown,
       ] as const,
-    ([id, index], previous) => {
-      if (previous && id === previous[0] && index === previous[1]) return
+    ([id, index, isShown], previous) => {
+      if (!isShown) {
+        model.openPage(0)
+        return
+      }
+      if (
+        previous &&
+        id === previous[0] &&
+        index === previous[1] &&
+        isShown === previous[2]
+      )
+        return
       model.openPage(typeof index === 'number' ? index : 0)
     },
     { immediate: true }

@@ -56,6 +56,7 @@ import { liveTranscriptText } from '../lib/stt/live-transcript'
 import { createKeyPressTracker } from '../lib/ui/key-press-tracker'
 import { isTextEntryTarget } from '../lib/ui/text-entry-target'
 import { stoppedRecordingActions } from '../lib/voice/stopped-recording-actions'
+import { useActionMenuStore } from '../stores/action-menu'
 import { useCloseWindowStore } from '../stores/close-window'
 import { useDesktopStore } from '../stores/desktop'
 import { useDictationHandoffStore } from '../stores/dictation-handoff'
@@ -72,6 +73,7 @@ const emit = defineEmits<{
 }>()
 
 const { toastKey } = useToast()
+const actionMenuStore = useActionMenuStore()
 const desktopStore = useDesktopStore()
 const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
@@ -153,6 +155,14 @@ watch(
   { flush: 'sync' }
 )
 watch(isBar, (bar) => emit('result-shown', !bar), { immediate: true })
+watch(
+  () => model.phase.value,
+  (phase) => {
+    if (phase === 'result') {
+      actionMenuStore.openPage(0)
+    }
+  }
+)
 
 const appLabel = computed(() =>
   model.source.value.kind === 'application' &&

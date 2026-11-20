@@ -78,6 +78,7 @@ vi.mock('../stores/action-menu', () => ({
       { id: 'copyToClipboard', action: mocks.copyAction },
     ]
     return {
+      openPage: vi.fn(),
       getDefaultActions: actions,
       getShortcutActions: () => [
         { id: 'copyToClipboard', action: mocks.copyAction },

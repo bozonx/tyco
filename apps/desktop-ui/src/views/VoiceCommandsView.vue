@@ -42,7 +42,9 @@
                     }}</span>
                   </button>
                   <template v-for="item in liveParameterItems" :key="item.name">
-                    <span class="voice-breadcrumb-sep" aria-hidden="true">›</span>
+                    <span class="voice-breadcrumb-sep" aria-hidden="true"
+                      >›</span
+                    >
                     <Badge
                       tone="accent"
                       class="voice-param-chip"
@@ -51,7 +53,9 @@
                     >
                   </template>
                   <template v-if="voice.activeParameter">
-                    <span class="voice-breadcrumb-sep" aria-hidden="true">›</span>
+                    <span class="voice-breadcrumb-sep" aria-hidden="true"
+                      >›</span
+                    >
                     <Badge tone="neutral">{{
                       t('voiceCommands.phaseAwaitingParameter', {
                         parameter: parameterDisplayLabel(
@@ -290,6 +294,7 @@ import {
   voiceParameterOptions,
   voiceParameters,
 } from '../lib/voice-commands/voice-view-presenter'
+import { useActionMenuStore } from '../stores/action-menu'
 import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
@@ -311,6 +316,7 @@ const props = withDefaults(
 
 const { t } = useI18n()
 const { toastKey } = useToast()
+const actionMenuStore = useActionMenuStore()
 const desktopStore = useDesktopStore()
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
@@ -383,9 +389,7 @@ const activeParameterOptions = computed(() =>
 
 const isCapturingTextPhase = computed(
   () =>
-    isListening.value &&
-    Boolean(voice.activeCommand) &&
-    !voice.activeParameter
+    isListening.value && Boolean(voice.activeCommand) && !voice.activeParameter
 )
 
 const displayTranscript = computed(() => {
@@ -396,16 +400,10 @@ const displayTranscript = computed(() => {
     0
   if (!offset) return { committed, draft }
   if (committed.length >= offset) {
-    return {
-      committed: committed.slice(offset).trimStart(),
-      draft,
-    }
+    return { committed: committed.slice(offset).trimStart(), draft }
   }
   const rest = offset - committed.length
-  return {
-    committed: '',
-    draft: draft.slice(rest).trimStart(),
-  }
+  return { committed: '', draft: draft.slice(rest).trimStart() }
 })
 
 watch(
@@ -578,6 +576,7 @@ function openTextActions() {
     )
   // opened by its hotkey, the text actions start the scenario anew; opened
   // from the action menu, Esc returns to this review
+  actionMenuStore.openPage(0)
   menuModalsStore.nextModal(MenuModals.INSERT, { text: voice.inputText })
 }
 

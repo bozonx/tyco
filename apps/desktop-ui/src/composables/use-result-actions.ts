@@ -9,13 +9,14 @@ import { useI18n } from './use-i18n'
 
 export function useResultActions(sourceText?: () => string | undefined) {
   const actionMenuStore = useActionMenuStore()
+  actionMenuStore.openPage(0)
   const desktopStore = useDesktopStore()
   const editorNavigation = useEditorNavigation()
   const editorInputStore = useEditorInputStore()
   const menuModalsStore = useMenuModalsStore()
   const { t } = useI18n()
   const model = createResultActions({
-    getShortcutActions: () => actionMenuStore.getShortcutActions(),
+    getShortcutActions: () => actionMenuStore.getShortcutActions(0),
     getDefaultActions: () => actionMenuStore.getDefaultActions(),
     hasTargetWindow: () => desktopStore.canInsertIntoWindow,
     noTargetHint: () => t('selection.noTarget'),

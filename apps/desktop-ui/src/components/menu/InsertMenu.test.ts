@@ -2,6 +2,7 @@ import { config, flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
+import { useActionMenuStore } from '../../stores/action-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import CopyButton from '../common/CopyButton.vue'
@@ -405,6 +406,22 @@ describe('InsertMenu correction step', () => {
     ).toBeFalsy()
 
     wrapperTwo.unmount()
+  })
+
+  it('resets action menu page to the first page when mounted with diff or correction result', async () => {
+    desktop.setUserConfig({
+      actionPages: [
+        { inputMode: 'selection', slots: {} },
+        { inputMode: 'none', slots: {} },
+      ],
+    })
+    const actionMenu = useActionMenuStore()
+    actionMenu.setPage(1)
+    expect(actionMenu.pageIndex).toBe(1)
+
+    const wrapper = mountMenu({ text: 'New text', oldText: 'Old text' })
+    expect(actionMenu.pageIndex).toBe(0)
+    wrapper.unmount()
   })
 })
 

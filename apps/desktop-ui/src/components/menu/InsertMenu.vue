@@ -164,6 +164,13 @@ watch(
 )
 let pagesResizeObserver: ResizeObserver | undefined
 onMounted(() => {
+  if (
+    menuModalsStore.currentModal === MenuModals.INSERT ||
+    props.correction ||
+    Boolean(props.oldText)
+  ) {
+    actionMenuStore.openPage(0)
+  }
   updateHighlight()
   if (typeof ResizeObserver === 'undefined') return
   pagesResizeObserver = new ResizeObserver(updateHighlight)
