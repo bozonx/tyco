@@ -1,5 +1,4 @@
 import { type CommandConfig, commandTakesSelection } from '@tyco/shared'
-import { COMMON_LANGUAGE_OPTIONS } from '../locale/language'
 import { messages } from '../i18n/messages'
 import {
   commandTakesText,
@@ -19,6 +18,8 @@ export interface VoiceParameter {
   name: string
   value: string
   variants: readonly string[]
+  /** See `OperationCommandParameter.preferVoiceValue` */
+  preferValue?: (values: readonly string[]) => string | undefined
 }
 
 export interface VoiceRoute {
@@ -47,6 +48,8 @@ export interface VoiceResolution {
   kind: 'none' | 'incomplete' | 'parameter-error' | 'match' | 'ambiguous'
   candidates: VoiceCandidate[]
   parameterChoices?: VoiceCandidate[]
+  /** The parameter whose spoken value is not recognized, on `parameter-error` */
+  failedParameter?: { commandId: string; name: string }
 }
 
 interface Token {
@@ -60,6 +63,13 @@ const segmenter =
     ? new Intl.Segmenter(undefined, { granularity: 'word' })
     : undefined
 
+/** Case, the Turkish dotted `İ` and `ё` do not tell words apart */
+const normalizeWord = (word: string) =>
+  word
+    .toLowerCase()
+    .replace(/\u0307/g, '')
+    .replace(/\u0451/g, '\u0435')
+
 /** Comparison never changes the original text or its UTF-16 offsets. */
 function tokenize(text: string): Token[] {
   if (segmenter) {
@@ -67,10 +77,7 @@ function tokenize(text: string): Token[] {
     for (const seg of segmenter.segment(text)) {
       if (seg.isWordLike && /[\p{L}\p{M}\p{N}]/u.test(seg.segment)) {
         tokens.push({
-          word: seg.segment
-            .toLowerCase()
-            .replace(/\u0307/g, '')
-            .replace(/\u0451/g, '\u0435'),
+          word: normalizeWord(seg.segment),
           start: seg.index,
           end: seg.index + seg.segment.length,
         })
@@ -79,29 +86,41 @@ function tokenize(text: string): Token[] {
     return tokens
   }
   return [...text.matchAll(/[\p{L}\p{M}\p{N}]+/gu)].map((match) => ({
-    word: match[0]
-      .toLowerCase()
-      .replace(/\u0307/g, '')
-      .replace(/\u0451/g, '\u0435'),
+    word: normalizeWord(match[0]),
     start: match.index,
     end: match.index + match[0].length,
   }))
 }
 
+const words = (text: string): readonly string[] =>
+  tokenize(text).map((token) => token.word)
+
+interface RouteWords {
+  phrase: readonly string[]
+  suffix: readonly string[]
+  /** The words of each variant of each parameter, in their order */
+  parameters: readonly (readonly (readonly string[])[])[]
+}
+
 /**
- * Route phrases and parameter variants are a small fixed set, while the live
- * transcript is resolved again on every partial result: their words are
- * tokenized once.
+ * The routes are compiled once, while the live transcript is resolved again on
+ * every partial result: the words of a route are tokenized once and live as
+ * long as the route does.
  */
-const wordCache = new Map<string, readonly string[]>()
-const WORD_CACHE_LIMIT = 10_000
-function words(text: string): readonly string[] {
-  const cached = wordCache.get(text)
-  if (cached) return cached
-  const result = tokenize(text).map((token) => token.word)
-  if (wordCache.size >= WORD_CACHE_LIMIT) wordCache.clear()
-  wordCache.set(text, result)
-  return result
+const routeWordCache = new WeakMap<VoiceRoute, RouteWords>()
+function routeWords(route: VoiceRoute): RouteWords {
+  let cached = routeWordCache.get(route)
+  if (!cached) {
+    cached = {
+      phrase: words(route.phrase),
+      suffix: route.suffix ? words(route.suffix) : [],
+      parameters: route.parameters.map((parameter) =>
+        parameter.variants.map(words)
+      ),
+    }
+    routeWordCache.set(route, cached)
+  }
+  return cached
 }
 const startsWith = (input: readonly string[], prefix: readonly string[]) =>
   prefix.every((word, index) => input[index] === word)
@@ -176,9 +195,15 @@ function resolveFrom(
   let incompleteDepth = 0
   let parameterError = false
   let parameterErrorDepth = 0
+  let failedParameter: VoiceResolution['failedParameter']
+  const preferences = new Map<
+    string,
+    (values: readonly string[]) => string | undefined
+  >()
   for (const route of routes) {
-    const phrase = words(route.phrase)
-    const suffixWords = route.suffix ? words(route.suffix) : []
+    const routeWordList = routeWords(route)
+    const phrase = routeWordList.phrase
+    const suffixWords = routeWordList.suffix
     if (!phrase.length && !route.parameters.length) continue
     if (!phrase.length && !input.length) continue
     if (phrase.length) {
@@ -200,12 +225,16 @@ function resolveFrom(
     let offsets: OffsetMatch[] = [{ offset: phrase.length, skipped: 0 }]
     let failedToMatchLeadingParameter = false
     const parameters: Record<string, string> = {}
-    for (const parameter of route.parameters) {
+    for (const [parameterIndex, parameter] of route.parameters.entries()) {
+      if (parameter.preferValue)
+        preferences.set(
+          `${route.commandId}\u0000${parameter.name}`,
+          parameter.preferValue
+        )
       const next: OffsetMatch[] = []
       for (const m of offsets) {
         const tail = input.slice(m.offset)
-        for (const variant of parameter.variants) {
-          const valueWords = words(variant)
+        for (const valueWords of routeWordList.parameters[parameterIndex]!) {
           if (!valueWords.length) continue
           if (
             tail.length > 0 &&
@@ -259,10 +288,13 @@ function resolveFrom(
         }
         if (offsets.some((m) => input.length > m.offset)) {
           parameterError = true
-          parameterErrorDepth = Math.max(
-            parameterErrorDepth,
-            ...offsets.map((m) => m.offset)
-          )
+          const depth = Math.max(...offsets.map((m) => m.offset))
+          if (depth > parameterErrorDepth || !failedParameter)
+            failedParameter = {
+              commandId: route.commandId,
+              name: parameter.name,
+            }
+          parameterErrorDepth = Math.max(parameterErrorDepth, depth)
         } else {
           incomplete = true
           incompleteDepth = Math.max(
@@ -343,7 +375,12 @@ function resolveFrom(
     parameterErrorDepth >= longest &&
     parameterErrorDepth > incompleteDepth
   ) {
-    return { kind: 'parameter-error', candidates: [], parameterChoices }
+    return {
+      kind: 'parameter-error',
+      candidates: [],
+      parameterChoices,
+      ...(failedParameter ? { failedParameter } : {}),
+    }
   }
   if (incompleteDepth > longest)
     return { kind: 'incomplete', candidates: [], parameterChoices }
@@ -366,26 +403,8 @@ function resolveFrom(
     )
   }
   const result = [...unique.values()]
-  if (result.length > 1) {
-    const firstCommandId = result[0]!.commandId
-    if (result.every((c) => c.commandId === firstCommandId)) {
-      const baseCandidate = result.find((c) => {
-        const lang = c.parameters.language
-        return lang && !lang.includes('-')
-      })
-      if (
-        baseCandidate &&
-        result.every(
-          (c) =>
-            !c.parameters.language ||
-            c.parameters.language.split('-')[0] ===
-              baseCandidate.parameters.language
-        )
-      ) {
-        return { kind: 'match', candidates: [baseCandidate] }
-      }
-    }
-  }
+  const preferred = preferredCandidate(result, preferences)
+  if (preferred) return { kind: 'match', candidates: [preferred] }
   return {
     kind:
       result.length > 1
@@ -399,7 +418,43 @@ function resolveFrom(
               : 'none',
     candidates: result,
     parameterChoices: result.length ? undefined : parameterChoices,
+    ...(!result.length && !incomplete && parameterError && failedParameter
+      ? { failedParameter }
+      : {}),
   }
+}
+
+/**
+ * Candidates of one command that differ only in the value of one parameter,
+ * which the parameter settles: `es` over `es-ES` and `es-AR`
+ */
+function preferredCandidate(
+  candidates: readonly VoiceCandidate[],
+  preferences: ReadonlyMap<
+    string,
+    (values: readonly string[]) => string | undefined
+  >
+): VoiceCandidate | undefined {
+  if (candidates.length < 2) return undefined
+  const [first] = candidates as [VoiceCandidate, ...VoiceCandidate[]]
+  if (
+    candidates.some(
+      (c) =>
+        c.commandId !== first.commandId || c.textOffset !== first.textOffset
+    )
+  )
+    return undefined
+  const names = new Set(candidates.flatMap((c) => Object.keys(c.parameters)))
+  const differing = [...names].filter((name) =>
+    candidates.some((c) => c.parameters[name] !== first.parameters[name])
+  )
+  if (differing.length !== 1) return undefined
+  const [name] = differing as [string]
+  const prefer = preferences.get(`${first.commandId}\u0000${name}`)
+  const value = prefer?.(candidates.map((c) => c.parameters[name] ?? ''))
+  return value === undefined
+    ? undefined
+    : candidates.find((c) => c.parameters[name] === value)
 }
 
 export function isVoiceCommand(
@@ -457,33 +512,19 @@ function parameterRoute(
   }
 }
 
-function parameterExpandedVariants(
-  locale: (typeof messages)[keyof typeof messages],
+/** The spoken variants of a value in the locale and those the parameter adds */
+function parameterSpokenVariants(
+  localeId: string,
   parameter: OperationCommandParameter,
   value: string,
   localSpoken: string
 ): string[] {
-  const variants = grammarVariants(localSpoken)
-  if (parameter.voiceValuesKey === 'voiceGrammar.languages') {
-    const enLocale = messages['en-US']
-    if (enLocale && enLocale !== locale) {
-      const enSpoken = parameterVariants(enLocale, parameter)[value]
-      if (enSpoken) variants.push(...grammarVariants(enSpoken))
-    }
-    const targetLocale = messages[value as keyof typeof messages]
-    if (targetLocale && targetLocale !== locale && targetLocale !== enLocale) {
-      const nativeSpoken = parameterVariants(targetLocale, parameter)[value]
-      if (nativeSpoken) variants.push(...grammarVariants(nativeSpoken))
-    }
-    const common = COMMON_LANGUAGE_OPTIONS.find((opt) => opt.id === value)
-    if (
-      common?.name &&
-      !['es-AR', 'es-ES', 'pt-PT', 'en-GB', 'zh-TW'].includes(value)
-    ) {
-      variants.push(common.name)
-    }
-  }
-  return [...new Set(variants)]
+  return [
+    ...new Set([
+      ...grammarVariants(localSpoken),
+      ...(parameter.voiceVariants?.(localeId, value) ?? []),
+    ]),
+  ]
 }
 
 /**
@@ -505,7 +546,7 @@ function commandRoutes(
       parameters: [],
     }))
   const routes: VoiceRoute[] = []
-  for (const locale of Object.values(messages)) {
+  for (const [localeId, locale] of Object.entries(messages)) {
     const defaults = tool?.voicePhrasesKey
       ? localeMessage(locale, tool.voicePhrasesKey)
       : undefined
@@ -519,12 +560,15 @@ function commandRoutes(
           parameterRoute(command.id, template, {
             name: parameter.name,
             value,
-            variants: parameterExpandedVariants(
-              locale,
+            variants: parameterSpokenVariants(
+              localeId,
               parameter,
               value,
               spoken
             ),
+            ...(parameter.preferVoiceValue
+              ? { preferValue: parameter.preferVoiceValue }
+              : {}),
           })
         )
   }
@@ -552,37 +596,61 @@ export function findVoiceConflicts(
   commandId: string
 ): string[] {
   const expand = (route: VoiceRoute): (readonly string[])[] => {
-    let prefixes: (readonly string[])[] = [words(route.phrase)]
-    for (const parameter of route.parameters) {
+    const routeWordList = routeWords(route)
+    let prefixes: (readonly string[])[] = [routeWordList.phrase]
+    for (const variants of routeWordList.parameters) {
       prefixes = prefixes.flatMap((prefix) =>
-        parameter.variants.map((variant) => [...prefix, ...words(variant)])
+        variants.map((valueWords) => [...prefix, ...valueWords])
       )
     }
-    const suffixWords = route.suffix ? words(route.suffix) : []
+    const suffixWords = routeWordList.suffix
     if (suffixWords.length) {
       prefixes = prefixes.map((prefix) => [...prefix, ...suffixWords])
     }
     return prefixes
   }
-  const own = routes
+  // nested sequences share their first word: only those are compared
+  const own = new Map<string, (readonly string[])[]>()
+  for (const prefix of routes
     .filter((route) => route.commandId === commandId)
-    .flatMap(expand)
-  return [
-    ...new Set(
-      routes
-        .filter(
-          (route) =>
-            route.commandId !== commandId &&
-            expand(route).some((other) =>
-              own.some(
-                (prefix) =>
-                  startsWith(prefix, other) || startsWith(other, prefix)
-              )
-            )
-        )
-        .map((route) => route.commandId)
-    ),
-  ]
+    .flatMap(expand)) {
+    const key = prefix[0] ?? ''
+    own.set(key, [...(own.get(key) ?? []), prefix])
+  }
+  const nests = (other: readonly string[]) =>
+    [...(own.get(other[0] ?? '') ?? []), ...(own.get('') ?? [])].some(
+      (prefix) => startsWith(prefix, other) || startsWith(other, prefix)
+    ) ||
+    (!other.length && own.size > 0)
+  const conflicts = new Set<string>()
+  for (const route of routes) {
+    if (route.commandId === commandId || conflicts.has(route.commandId))
+      continue
+    if (expand(route).some(nests)) conflicts.add(route.commandId)
+  }
+  return [...conflicts]
+}
+
+export type VoiceParameterIssue =
+  'unspeakable-parameter' | 'unspoken-parameters'
+
+/**
+ * What keeps the parameters of the command from being spoken: a phrase names
+ * only the first parameter the command leaves open, and only one with values
+ * known in advance; a value that comes from the plugin at run time is not
+ * spoken
+ */
+export function voiceParameterIssue(
+  command: CommandConfig,
+  operations: OperationLookup
+): VoiceParameterIssue | undefined {
+  const open = openCommandParameters(
+    operations.get(command.operationId),
+    command.operationConfig
+  )
+  if (!open.length) return undefined
+  if (!commandRoutes(command, operations).length) return 'unspeakable-parameter'
+  return open.length > 1 ? 'unspoken-parameters' : undefined
 }
 
 export type VoiceInputIssue =

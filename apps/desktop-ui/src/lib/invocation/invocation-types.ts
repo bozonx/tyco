@@ -31,10 +31,11 @@ export interface InvocationOptions {
   /** The input as it is, in place of the one parsed from the text */
   input?: Record<string, unknown>
   /**
-   * Explicit output handling for callers that return or consume results
-   * themselves.
+   * Explicit output handling in place of the output action of the command:
+   * callers that return or consume results themselves, or a context that has a
+   * rule of its own, such as a voice translation
    */
-  output?: 'return' | 'none'
+  output?: ResultSink
   /** Cancels the run: the script is killed, the request is aborted */
   signal?: AbortSignal
   /** Where the run is invoked from; the action menu by default */

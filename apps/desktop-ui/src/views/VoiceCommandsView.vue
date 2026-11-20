@@ -449,6 +449,7 @@ const notice = computed(() =>
       stage: voice.stage,
       resolutionKind: voice.resolution.kind,
       candidates: voice.resolution.candidates,
+      failedParameter: voice.failedParameter,
     },
     t
   )

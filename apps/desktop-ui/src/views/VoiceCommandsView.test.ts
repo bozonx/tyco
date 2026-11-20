@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 import { createCommand } from '../lib/commands/command-config'
+import type { OperationCommandParameter } from '../lib/operations/operation-types'
 import {
   testOperations,
   testTranslateOperation,
@@ -54,6 +55,7 @@ const voice = reactive({
   selected: undefined as VoiceCandidate | undefined,
   error: '',
   resolution: { kind: 'none', candidates: [] } as VoiceResolution,
+  failedParameter: undefined as OperationCommandParameter | undefined,
   hasMatchedCommand: false,
   canRunLive: false,
   activeCommand: undefined as CommandConfig | undefined,
@@ -269,9 +271,16 @@ describe('separate voice command overlay', () => {
       kind: 'parameter-error',
       candidates: [],
       parameterChoices: [choice],
+      failedParameter: { commandId: 'translate', name: 'language' },
+    }
+    voice.failedParameter = {
+      name: 'language',
+      description: '',
+      voiceErrorKey: 'voiceCommands.languageMissing',
     }
     const wrapper = mountView()
     expect(wrapper.text()).toContain(translate('voiceCommands.languageMissing'))
+    voice.failedParameter = undefined
     await entry(wrapper, TRANSLATE_KEY).trigger('click')
     expect(mocks.choose).toHaveBeenCalledWith(choice)
     expect(mocks.run).not.toHaveBeenCalled()

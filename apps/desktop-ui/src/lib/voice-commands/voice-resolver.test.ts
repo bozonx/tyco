@@ -6,6 +6,7 @@ import {
   findVoiceConflicts,
   resolveVoice,
   voiceInputIssue,
+  voiceParameterIssue,
   type VoiceRoute,
 } from './voice-resolver'
 
@@ -471,5 +472,86 @@ describe('voice routes of a command parameter', () => {
         language: 'de-DE',
       })
     ).toBeUndefined()
+  })
+
+  it('names the parameter whose spoken value is not recognized', () => {
+    const result = resolveVoice(
+      compileVoiceRoutes([translate], tools),
+      'translate to Klingon Hello'
+    )
+    expect(result).toMatchObject({
+      kind: 'parameter-error',
+      failedParameter: { commandId: 'translate', name: 'language' },
+    })
+  })
+
+  it('never takes a regional language for another one', () => {
+    const routes = compileVoiceRoutes([translate], tools)
+    // `es` is preferred over its regions, see `preferBaseLanguage`
+    const regional = ['pt-BR', 'pt-PT', 'en-US', 'en-GB', 'zh-CN', 'zh-TW']
+    for (const item of routes) {
+      const [parameter] = item.parameters
+      if (!parameter || !regional.includes(parameter.value)) continue
+      for (const variant of parameter.variants) {
+        const spoken = [item.phrase, variant, item.suffix ?? '', 'Hi']
+        const result = resolveVoice(routes, spoken.join(' '))
+        expect(result.kind, spoken.join(' ')).toBe('match')
+        expect(result.candidates[0]!.parameters.language).toBe(parameter.value)
+      }
+    }
+  })
+})
+
+describe('generic voice parameters', () => {
+  const choice = (value: string, variant: string): VoiceRoute => ({
+    commandId: 'pick',
+    phrase: 'pick',
+    parameters: [
+      {
+        name: 'size',
+        value,
+        variants: [variant],
+        preferValue: (values) =>
+          values.includes('large') ? 'large' : undefined,
+      },
+    ],
+  })
+
+  it('lets the parameter settle a phrase that names several values', () => {
+    const routes = [choice('large', 'big'), choice('huge', 'big')]
+    expect(resolveVoice(routes, 'pick big now')).toMatchObject({
+      kind: 'match',
+      candidates: [{ parameters: { size: 'large' }, text: 'now' }],
+    })
+    const undecided = [choice('small', 'tiny'), choice('mini', 'tiny')]
+    expect(resolveVoice(undecided, 'pick tiny now').kind).toBe('ambiguous')
+  })
+
+  it('warns about parameters a phrase cannot name', () => {
+    const tool = {
+      ...testTranslateOperation(),
+      id: 'test.dynamic',
+      commandParameters: [
+        { name: 'board', description: 'Board', getOptions: () => [] },
+        { name: 'list', description: 'List', options: [{ value: 'a' }] },
+      ],
+    }
+    const several = testOperations({}, [
+      { ...tool, commandParameters: [...tool.commandParameters].reverse() },
+    ])
+    const command = {
+      ...createCommand('test.dynamic', 'dynamic'),
+      isVoiceEnabled: true,
+    }
+    expect(voiceParameterIssue(command, testOperations({}, [tool]))).toBe(
+      'unspeakable-parameter'
+    )
+    expect(voiceParameterIssue(command, several)).toBe('unspoken-parameters')
+    expect(
+      voiceParameterIssue(
+        { ...command, operationConfig: { list: 'a' } },
+        several
+      )
+    ).toBe('unspeakable-parameter')
   })
 })

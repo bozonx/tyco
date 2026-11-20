@@ -249,6 +249,17 @@ external caller give it in the input, whose schema then requires it. The
 action menu does not offer such a command: the translation menu is that
 choice already.
 
+The voice resolver knows nothing of languages: the parameter describes itself.
+`voiceVariants` adds spoken variants beyond those of the locale (a language is
+also named in English and in itself, see `lib/translation/voice-languages.ts`),
+`preferVoiceValue` settles a phrase that names several values at once (`es`
+over `es-ES` and `es-AR`), and `voiceErrorKey` is the message when the value is
+not recognized. A phrase names only the first open parameter, and only one
+whose values are known in advance: a plugin parameter with `getOptions` or
+`resolveValue` is not spoken, and the command settings warn about it. An
+operation may also send voice runs elsewhere than the output action of the
+command (`voiceOutputAction`): a voice translation opens the result menu.
+
 Every save writes the whole config atomically. Concurrent window edits use a
 three-way merge: objects merge field by field, entity lists (items with an
 `id`) merge item by item and keep the order one side changed; editing the same

@@ -128,8 +128,10 @@ export function resolveVoiceNotice(
     stage: string
     resolutionKind: VoiceResolution['kind']
     candidates?: readonly VoiceCandidate[]
+    /** The parameter whose spoken value is not recognized */
+    failedParameter?: OperationCommandParameter
   },
-  t: (key: string) => string
+  t: Translate
 ): VoiceNotice | undefined {
   if (state.error) {
     const key = state.error
@@ -167,8 +169,21 @@ export function resolveVoiceNotice(
     }
   }
   if (state.resolutionKind === 'parameter-error')
-    return { kind: 'info', message: t('voiceCommands.languageMissing') }
+    return { kind: 'info', message: parameterErrorMessage(state, t) }
   return { kind: 'info', message: t('voiceCommands.noMatch') }
+}
+
+function parameterErrorMessage(
+  state: { failedParameter?: OperationCommandParameter },
+  t: Translate
+): string {
+  const parameter = state.failedParameter
+  if (parameter?.voiceErrorKey) return t(parameter.voiceErrorKey)
+  return t('voiceCommands.parameterUnrecognized', {
+    parameter: parameter
+      ? parameterDisplayLabel(parameter, t)
+      : t('voiceCommands.parameterFallbackLabel'),
+  })
 }
 
 /** A command picked by hand takes the recognized parameters when it has them */

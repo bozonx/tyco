@@ -703,6 +703,7 @@ it('opens a result menu for a voice translation without inserting or copying the
       description: 'Translates input text',
       inputSchema: TEXT_INPUT_SCHEMA,
       defaultOutputAction: 'insertIntoWindow',
+      voiceOutputAction: 'showMenu',
       run: async () => ({ ok: true, content: 'Hello, how are you?' }),
     },
   ])

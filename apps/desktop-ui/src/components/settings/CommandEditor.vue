@@ -116,6 +116,12 @@
           <p v-if="backgroundScript" class="command-place-detail command-hint">
             {{ t('commands.afterRunNoneScriptHint') }}
           </p>
+          <p
+            v-if="command.isVoiceEnabled && tool?.voiceOutputAction"
+            class="command-place-detail command-hint"
+          >
+            {{ t('commands.voiceOutputActionHint') }}
+          </p>
         </section>
         <FieldRow
           v-if="tool?.canSelectPlatforms"

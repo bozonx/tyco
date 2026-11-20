@@ -1,6 +1,11 @@
 import type { CoreOperationId, LlmTask } from '@tyco/shared'
 
 import { getLanguageLabelKey } from '../locale/language'
+import {
+  languageVoiceVariants,
+  preferBaseLanguage,
+  VOICE_LANGUAGES_KEY,
+} from '../translation/voice-languages'
 import { parameterValue } from './command-parameters'
 import {
   TEXT_INPUT_SCHEMA,
@@ -230,11 +235,15 @@ export function createCoreOperations(
           description: 'The language to translate into, as a BCP 47 tag',
           labelKey: 'commands.languageLabel',
           placeholderKey: 'voiceCommands.languagePlaceholder',
-          voiceValuesKey: 'voiceGrammar.languages',
+          voiceValuesKey: VOICE_LANGUAGES_KEY,
           valueLabelKey: getLanguageLabelKey,
+          voiceVariants: languageVoiceVariants,
+          preferVoiceValue: preferBaseLanguage,
+          voiceErrorKey: 'voiceCommands.languageMissing',
         },
       ],
       voicePhrasesKey: 'voiceGrammar.translate',
+      voiceOutputAction: 'showMenu',
     },
     (call, text) => {
       const language = parameterValue(call, 'language')

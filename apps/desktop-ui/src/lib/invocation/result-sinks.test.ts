@@ -38,17 +38,13 @@ describe('resolveSink', () => {
   })
 })
 
-it.each(['insertIntoWindow', 'copyToClipboard', 'none', 'showMenu'] as const)(
-  'shows voice translations in the result menu instead of %s',
-  (action) => {
-    const invocation = { operationId: 'core.translate', outputAction: action }
-    expect(resolveSink(invocation, { source: 'voice' })).toBe('showMenu')
-    expect(resolveSink(invocation, { source: 'launcher' })).toBe(action)
-    expect(resolveSink(invocation, { source: 'voice', output: 'return' })).toBe(
-      'return'
-    )
-  }
-)
+it('takes the output the caller asks for over the action of the command', () => {
+  const invocation = { outputAction: 'insertIntoWindow' as const }
+  expect(resolveSink(invocation, { source: 'voice', output: 'showMenu' })).toBe(
+    'showMenu'
+  )
+  expect(resolveSink(invocation, { source: 'voice' })).toBe('insertIntoWindow')
+})
 
 it('allows notification-only toolbar invocations without requesting output', () => {
   expect(

@@ -120,11 +120,22 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
   const runner = createInvocationRunner(deps)
   const preTransform = createInputPreparation(deps)
 
+  /** A voice run goes where its operation asks, see `voiceOutputAction` */
+  const voiceOptions = (
+    command: CommandConfig,
+    options: InvocationOptions
+  ): InvocationOptions => {
+    if (options.source !== 'voice' || options.output) return options
+    const output = deps.operations.get(command.operationId)?.voiceOutputAction
+    return output ? { ...options, output } : options
+  }
+
   const run = async (
     command: CommandConfig,
     text: string,
-    options: InvocationOptions = {}
+    runOptions: InvocationOptions = {}
   ): Promise<InvocationOutcome> => {
+    const options = voiceOptions(command, runOptions)
     if (!command.isEnabled) {
       deps.showToast('toast.commandDisabled', 'warn')
       return { success: false, message: 'Disabled' }

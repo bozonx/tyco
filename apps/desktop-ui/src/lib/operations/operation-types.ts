@@ -1,3 +1,4 @@
+import type { CommandOutputAction } from '@tyco/shared'
 import type { CommandEnvironment } from '../variables/command-variables'
 import type {
   OperationDefinition as SdkOperationDefinition,
@@ -40,6 +41,11 @@ export interface OperationDefinition extends SdkOperationDefinition {
    * follows the phrase
    */
   voicePhrasesKey?: string
+  /**
+   * Where a voice run sends the output in place of the output action of the
+   * command: a translation opens the result menu to choose what to do with it
+   */
+  voiceOutputAction?: CommandOutputAction
 }
 
 /** A setting of a command its caller gives, see `commandParameters` */
@@ -50,6 +56,19 @@ export interface OperationCommandParameter extends SdkOperationCommandParameter 
    */
   voiceValuesKey?: string
   valueLabelKey?: (value: string) => string
+  /**
+   * More spoken variants of a value beyond those of the locale, such as the
+   * name of a language in English and in itself
+   */
+  voiceVariants?: (localeId: string, value: string) => readonly string[]
+  /**
+   * The value to take when a phrase names several values of the parameter at
+   * once, such as `es` for `es`, `es-ES` and `es-AR`; none leaves the choice to
+   * the user
+   */
+  preferVoiceValue?: (values: readonly string[]) => string | undefined
+  /** The i18n key of the message when the spoken value is not recognized */
+  voiceErrorKey?: string
 }
 
 /** Who provides a tool of the registry */

@@ -21,6 +21,17 @@
         />
       </FieldRow>
       <InlineNotice
+        v-if="parameterIssue"
+        kind="warning"
+        :message="
+          t(
+            parameterIssue === 'unspeakable-parameter'
+              ? 'voiceCommands.parameterUnspeakable'
+              : 'voiceCommands.parameterUnspoken'
+          )
+        "
+      />
+      <InlineNotice
         v-if="voiceConflicts.length"
         kind="warning"
         :message="`${t('voiceCommands.conflicts')}: ${voiceConflicts.join(', ')}`"
@@ -36,6 +47,7 @@ import {
   compileVoiceRoutes,
   findVoiceConflicts,
   grammarVariants,
+  voiceParameterIssue,
 } from '../../lib/voice-commands/voice-resolver'
 import { voiceParameters } from '../../lib/voice-commands/voice-view-presenter'
 import { useDesktopStore } from '../../stores/desktop'
@@ -76,6 +88,9 @@ const phrasesPlaceholder = computed(() => {
     t(key, { [parameter.name]: `{${parameter.name}}` })
   ).join('\n')
 })
+const parameterIssue = computed(() =>
+  voiceParameterIssue(props.command, operationsStore)
+)
 const voiceConflicts = computed(() =>
   findVoiceConflicts(voiceRoutes.value, props.command.id)
 )

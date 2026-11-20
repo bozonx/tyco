@@ -154,6 +154,17 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   const resolution = computed(() =>
     resolveVoice(routes.value, activeTranscriptText.value)
   )
+  /** The parameter whose spoken value is not recognized, for the message */
+  const failedParameter = computed(() => {
+    const failed = resolution.value.failedParameter
+    const command = failed && findCommand(failed.commandId)
+    return command
+      ? openCommandParameters(
+          deps.operations.get(command.operationId),
+          command.operationConfig
+        ).find((parameter) => parameter.name === failed.name)
+      : undefined
+  })
   const activeCandidate = computed<VoiceCandidate | undefined>(() => {
     if (stage.value === 'review' || stage.value === 'running') {
       return selected.value
@@ -600,6 +611,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     unavailableReason: (command: CommandConfig) =>
       commandUnavailableReason(command, deps.operations),
     resolution,
+    failedParameter,
     catalog,
     command,
     inputIssue,
