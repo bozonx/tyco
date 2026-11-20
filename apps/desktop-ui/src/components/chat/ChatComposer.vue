@@ -1,5 +1,9 @@
 <template>
-  <div class="chat-composer" :class="{ 'is-dragging': draggingFiles }">
+  <div
+    class="chat-composer"
+    :class="{ 'is-dragging': draggingFiles }"
+    @keydown="handleKeydown"
+  >
     <ChatContextList />
 
     <InlineNotice
@@ -71,7 +75,7 @@
           hasReachedImageLimit
         "
         @click="filePicker?.click()"
-        :label="t('chat.addFile')"
+        :label="hasReachedImageLimit ? t('chat.imageLimit') : t('chat.addFile')"
         icon="mdi:paperclip"
       />
       <IconButton
@@ -84,7 +88,11 @@
           hasReachedImageLimit
         "
         @click="takeScreenshot"
-        :label="t('chat.takeScreenshot')"
+        :label="
+          hasReachedImageLimit
+            ? t('chat.imageLimit')
+            : `${t('chat.takeScreenshot')} (${screenshotShortcut})`
+        "
         icon="mdi:camera-outline"
       />
       <div ref="promptButtonAnchorRef" class="relative inline-block">
@@ -155,6 +163,7 @@ import { useChatScope } from '../../composables/use-chat-scope'
 import { useChatVoiceInput } from '../../composables/use-chat-voice-input'
 import { useI18n } from '../../composables/use-i18n'
 import {
+  isScreenshotShortcut,
   newlineShortcut,
   resolveSubmitKey,
   submitShortcut,
@@ -234,14 +243,29 @@ const hasReachedImageLimit = computed(
   () => (chatStore.pendingImages?.length ?? 0) >= MAX_CHAT_IMAGES_COUNT
 )
 
+const isMac =
+  typeof navigator !== 'undefined' &&
+  /Mac|iPod|iPhone|iPad/.test(navigator.platform)
+const screenshotShortcut = isMac ? '⌘⇧S' : 'Ctrl+Shift+S'
+
+function handleKeydown(event: KeyboardEvent) {
+  if (isScreenshotShortcut(event)) {
+    event.preventDefault()
+    void takeScreenshot()
+  }
+}
+
 async function takeScreenshot() {
   if (
     isCapturingScreenshot.value ||
     chatStore.isGenerating ||
-    Boolean(chatStore.importingImages) ||
-    hasReachedImageLimit.value
+    Boolean(chatStore.importingImages)
   )
     return
+  if (hasReachedImageLimit.value) {
+    toastKey('chat.imageLimit', 'warn')
+    return
+  }
   isCapturingScreenshot.value = true
   try {
     const importId = crypto.randomUUID()
@@ -249,13 +273,13 @@ async function takeScreenshot() {
     if (result.success) {
       if (result.result) {
         chatStore.addImage(result.result)
-        chatInputStore.requestFocus()
       }
     } else {
       toastKey('screenshot.failed', 'error')
     }
   } finally {
     isCapturingScreenshot.value = false
+    chatInputStore.requestFocus()
   }
 }
 

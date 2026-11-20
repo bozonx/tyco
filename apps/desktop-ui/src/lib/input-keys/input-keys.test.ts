@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   isCloseWindowEvent,
   isCtrlEnter,
+  isScreenshotShortcut,
   newlineShortcut,
   resolveInputKeyAction,
   resolveSubmitKey,
@@ -102,5 +103,57 @@ describe('input keys', () => {
       isCloseWindowEvent({ code: 'KeyQ', ctrlKey: true, isComposing: true })
     ).toBe(false)
     expect(isCloseWindowEvent({ code: 'KeyQ' })).toBe(false)
+  })
+
+  it('recognizes screenshot shortcuts (Ctrl+Shift+S or Cmd+Shift+S) on any layout', () => {
+    expect(
+      isScreenshotShortcut({ code: 'KeyS', ctrlKey: true, shiftKey: true })
+    ).toBe(true)
+    expect(
+      isScreenshotShortcut({ code: 'KeyS', metaKey: true, shiftKey: true })
+    ).toBe(true)
+    expect(
+      isScreenshotShortcut({
+        key: 's',
+        code: 'KeyS',
+        ctrlKey: true,
+        shiftKey: true,
+      })
+    ).toBe(true)
+    expect(
+      isScreenshotShortcut({
+        key: 'ы',
+        code: 'KeyS',
+        ctrlKey: true,
+        shiftKey: true,
+      })
+    ).toBe(true)
+    expect(
+      isScreenshotShortcut({
+        key: 's',
+        code: 'KeyA',
+        ctrlKey: true,
+        shiftKey: true,
+      })
+    ).toBe(true)
+    expect(
+      isScreenshotShortcut({ code: 'KeyS', ctrlKey: true, shiftKey: false })
+    ).toBe(false)
+    expect(
+      isScreenshotShortcut({
+        code: 'KeyS',
+        ctrlKey: true,
+        shiftKey: true,
+        altKey: true,
+      })
+    ).toBe(false)
+    expect(
+      isScreenshotShortcut({
+        code: 'KeyS',
+        ctrlKey: true,
+        shiftKey: true,
+        isComposing: true,
+      })
+    ).toBe(false)
   })
 })

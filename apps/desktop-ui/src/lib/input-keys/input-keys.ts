@@ -59,6 +59,21 @@ export function isCloseWindowEvent(event: InputKeyEvent): boolean {
   return event.code === 'KeyQ'
 }
 
+/**
+ * Checks whether an event represents a shortcut to capture a screenshot
+ * (Ctrl+Shift+S or Cmd+Shift+S on macOS), regardless of active keyboard
+ * layout.
+ */
+export function isScreenshotShortcut(event: InputKeyEvent): boolean {
+  if (event.isComposing) return false
+  const isMod = Boolean(event.ctrlKey || event.metaKey)
+  if (!isMod || !event.shiftKey || event.altKey) return false
+  if (event.key && /^[a-z]$/i.test(event.key)) {
+    return event.key.toLowerCase() === 's'
+  }
+  return event.code === 'KeyS'
+}
+
 export function resolveInputKeyAction(
   event: InputKeyEvent,
   submitKey: SubmitKey = DEFAULT_SUBMIT_KEY

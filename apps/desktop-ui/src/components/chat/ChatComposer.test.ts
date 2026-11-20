@@ -133,7 +133,7 @@ describe('ChatComposer.vue', () => {
       (btn) => btn.props('icon') === 'mdi:camera-outline'
     )
     expect(screenshotButton).toBeDefined()
-    expect(screenshotButton!.props('label')).toBe('chat.takeScreenshot')
+    expect(screenshotButton!.props('label')).toContain('chat.takeScreenshot')
     expect(screenshotButton!.props('disabled')).toBe(false)
 
     await screenshotButton!.trigger('click')
@@ -144,7 +144,70 @@ describe('ChatComposer.vue', () => {
     expect(mocks.requestFocus).toHaveBeenCalled()
   })
 
-  it('disables screenshot button when image limit is reached', async () => {
+  it('requests focus even when screenshot capture is cancelled', async () => {
+    desktop.backend.handle('capture_chat_screenshot', () => null)
+
+    const wrapper = mount(ChatComposer, {
+      props: { canSend: true, draggingFiles: false },
+      global: {
+        plugins: [desktop.pinia],
+        stubs: {
+          ChatContextList: true,
+          ChatInput: true,
+          DropdownMenu: true,
+          ChatPromptsKeypad: true,
+        },
+      },
+    })
+
+    const buttons = wrapper.findAllComponents({ name: 'IconButton' })
+    const screenshotButton = buttons.find(
+      (btn) => btn.props('icon') === 'mdi:camera-outline'
+    )
+    await screenshotButton!.trigger('click')
+    await flushPromises()
+
+    expect(desktop.backend.callsOf('capture_chat_screenshot')).toHaveLength(1)
+    expect(mocks.addImage).not.toHaveBeenCalled()
+    expect(mocks.requestFocus).toHaveBeenCalled()
+  })
+
+  it('triggers screenshot capture on Ctrl+Shift+S keydown', async () => {
+    const fakeImage = {
+      id: 'screenshot-key',
+      mediaType: 'image/webp' as const,
+      width: 100,
+      height: 100,
+      size: 500,
+    }
+    desktop.backend.handle('capture_chat_screenshot', () => fakeImage)
+
+    const wrapper = mount(ChatComposer, {
+      props: { canSend: true, draggingFiles: false },
+      global: {
+        plugins: [desktop.pinia],
+        stubs: {
+          ChatContextList: true,
+          ChatInput: true,
+          DropdownMenu: true,
+          ChatPromptsKeypad: true,
+        },
+      },
+    })
+
+    await wrapper.trigger('keydown', {
+      code: 'KeyS',
+      ctrlKey: true,
+      shiftKey: true,
+    })
+    await flushPromises()
+
+    expect(desktop.backend.callsOf('capture_chat_screenshot')).toHaveLength(1)
+    expect(mocks.addImage).toHaveBeenCalledWith(fakeImage)
+    expect(mocks.requestFocus).toHaveBeenCalled()
+  })
+
+  it('disables screenshot button and updates label when image limit is reached', async () => {
     mocks.chatState.pendingImages = [
       { id: '1' },
       { id: '2' },
@@ -170,5 +233,15 @@ describe('ChatComposer.vue', () => {
       (btn) => btn.props('icon') === 'mdi:camera-outline'
     )
     expect(screenshotButton!.props('disabled')).toBe(true)
+    expect(screenshotButton!.props('label')).toBe('chat.imageLimit')
+
+    await wrapper.trigger('keydown', {
+      code: 'KeyS',
+      ctrlKey: true,
+      shiftKey: true,
+    })
+    await flushPromises()
+
+    expect(desktop.backend.callsOf('capture_chat_screenshot')).toHaveLength(0)
   })
 })
