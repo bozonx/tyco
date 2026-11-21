@@ -40,7 +40,6 @@ function createStore() {
   return reactive({
     profiles: [] as AiProfile[],
     projects: [] as Array<Record<string, unknown>>,
-    vaultPath: '/vault',
     vaultError: '',
     vaults: [
       {

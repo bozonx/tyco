@@ -371,7 +371,7 @@
     "unsupportedConfig": "設定是由較新版本的應用程式儲存",
     "userDataUnavailable": "資料夾無法使用",
     "variableNotSet": "變數在此裝置上沒有值",
-    "vaultUnavailable": "AI 設定檔資料夾未在此裝置上連接",
+    "vaultUnavailable": "工作區未在此裝置上連接",
     "projectUnavailable": "專案資料夾未在此裝置上設定",
     "alreadyExists": "已存在",
     "staleRevision": "檔案已在其他裝置上或 TyCo 之外被變更",

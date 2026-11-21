@@ -371,7 +371,7 @@
     "unsupportedConfig": "Nastavení uložila novější verze aplikace",
     "userDataUnavailable": "Složka dat není dostupná",
     "variableNotSet": "Proměnná nemá na tomto zařízení hodnotu",
-    "vaultUnavailable": "Složka profilů AI není na tomto zařízení připojena",
+    "vaultUnavailable": "Prostor není na tomto zařízení připojen",
     "projectUnavailable": "Složka projektu není na tomto zařízení nastavena",
     "alreadyExists": "Již existuje",
     "staleRevision": "Soubor byl změněn na jiném zařízení nebo mimo TyCo",

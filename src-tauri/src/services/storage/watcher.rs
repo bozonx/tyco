@@ -132,9 +132,14 @@ fn is_storage_entry(relative: &Path) -> bool {
         return false;
     };
     match first {
-        "config.json" | "tyco-user.json" | "tyco-vault.json" => parts.next().is_none(),
+        "config.json" | "tyco-user.json" | VAULT_MARKER | VAULT_SETTINGS => parts.next().is_none(),
         "history" => parts.next().is_none_or(|name| name == "editor"),
-        "chats" | "plugins" | "profiles" => true,
+        "chats" | "plugins" => true,
+        // The Files of a profile are the user's, read on demand.
+        "profiles" => !matches!(
+            (parts.next(), parts.next()),
+            (Some(_), Some(folder)) if folder == PROFILE_FILES_DIR
+        ),
         // The files of an internal project are the user's, read on demand:
         // only its description is data of the app.
         "projects" => match (parts.next(), parts.next(), parts.next()) {
@@ -210,7 +215,8 @@ fn scan_tree(
         let name = entry.file_name().to_string_lossy().into_owned();
         if is_temporary_name(&name)
             || conflict_original(&name, &names).is_some()
-            || matches!(name.as_str(), "workspace" | ".git")
+            || name == ".git"
+            || is_profile_files_dir(&path)
             || (scoped && !is_storage_entry(path.strip_prefix(root).unwrap_or(&path)))
         {
             continue;
@@ -482,7 +488,27 @@ pub fn setup(app: &AppHandle) -> Result<(), AppError> {
         })
 }
 
-const VAULT_MARKER: &str = "tyco-vault.json";
+const VAULT_MARKER: &str = crate::services::ai_vault::marker::VAULT_MARKER_FILE;
+const VAULT_SETTINGS: &str = crate::services::ai_vault::settings::VAULT_SETTINGS_FILE;
+const PROFILE_FILES_DIR: &str = "workspace";
+
+/// `profiles/<id>/workspace`: the Files of a profile, never data of the app.
+fn is_profile_files_dir(path: &Path) -> bool {
+    path.file_name()
+        .is_some_and(|name| name == PROFILE_FILES_DIR)
+        && path
+            .parent()
+            .and_then(Path::parent)
+            .and_then(Path::file_name)
+            .is_some_and(|name| name == "profiles")
+}
+
+/// The settings of a vault changed: its chats follow them from now on.
+fn is_vault_settings(vaults: &[WatchedVault], path: &Path) -> bool {
+    vaults
+        .iter()
+        .any(|vault| path == vault.root.join(VAULT_SETTINGS))
+}
 
 /// The vault `path` belongs to, the innermost one.
 fn vault_of<'a>(vaults: &'a [WatchedVault], path: &Path) -> Option<&'a WatchedVault> {
@@ -536,6 +562,9 @@ fn announce(app: &AppHandle, user: &UserData, vaults: &[WatchedVault], paths: &[
         .cloned()
         .collect();
     let event = describe_changes(&user.dir, vaults, &shown);
+    if paths.iter().any(|path| is_vault_settings(vaults, path)) {
+        app.state::<AppState>().history.mark_chat_cleanup_pending();
+    }
     // Derived indexes and search text must ignore preserved timestamps.
     for path in paths {
         app.state::<AppState>().history.invalidate_chat_search(path);
@@ -585,6 +614,29 @@ fn announce(app: &AppHandle, user: &UserData, vaults: &[WatchedVault], paths: &[
 mod tests {
     use super::*;
     use crate::services::test_support::TestDir;
+
+    #[test]
+    fn vault_settings_are_watched_and_profile_files_are_not() {
+        for path in [
+            "tyco-vault-settings.json",
+            "tyco-vault.json",
+            "ai-vault/tyco-vault-settings.json",
+            "profiles/p1/profile.json",
+            "profiles/p1/chats/c.json",
+        ] {
+            assert!(is_storage_entry(Path::new(path)), "{path}");
+        }
+        for path in [
+            "profiles/p1/workspace",
+            "profiles/p1/workspace/notes.md",
+            "ai-vault/profiles/p1/workspace/notes.md",
+            "tyco-vault-settings.json/x",
+        ] {
+            assert!(!is_storage_entry(Path::new(path)), "{path}");
+        }
+        assert!(is_profile_files_dir(Path::new("/v/profiles/p1/workspace")));
+        assert!(!is_profile_files_dir(Path::new("/v/projects/x/workspace")));
+    }
 
     #[test]
     fn vault_changes_carry_their_vault_and_a_path_inside_it() {

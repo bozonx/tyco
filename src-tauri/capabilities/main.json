@@ -13,7 +13,6 @@
     "allow-delete-ai-profile",
     "allow-delete-ai-project",
     "allow-get-ai-profile",
-    "allow-get-ai-vault-path",
     "allow-list-input-devices",
     "allow-list-ai-vaults",
     "allow-inspect-ai-vault-folder",

@@ -71,20 +71,69 @@ pub const VAULT_SUBFOLDER: &str = "TyCo Workspace";
 pub fn list_vaults(app: &AppHandle) -> Result<Vec<VaultInfo>, AppError> {
     let state = app.state::<AppState>();
     let _access = state.read_vault();
-    let main = super::main_vault(app)?;
-    let mut vaults = vec![VaultInfo {
-        vault_id: String::new(),
-        name: String::new(),
-        path: main.root.to_string_lossy().into_owned(),
-        is_main: true,
-        status: VaultStatus::Connected,
-        is_writable_by_others: false,
-        chat_history: super::settings::read_chat_history(&main.root),
-    }];
-    for attached in attached_vaults(&state.user_config()) {
-        vaults.push(attached_info(&attached));
+    Ok(list_vaults_in(
+        super::main_vault(app),
+        &attached_vaults(&state.user_config()),
+    ))
+}
+
+/// [`list_vaults`] over the main vault as it opened and the attached ones.
+/// The main vault away with the data folder is listed as not connected; the
+/// attached ones are still listed and used.
+pub fn list_vaults_in(main: Result<Vault, AppError>, attached: &[AttachedVault]) -> Vec<VaultInfo> {
+    let main = match main {
+        Ok(main) => VaultInfo {
+            vault_id: String::new(),
+            name: String::new(),
+            path: main.root.to_string_lossy().into_owned(),
+            is_main: true,
+            status: VaultStatus::Connected,
+            is_writable_by_others: false,
+            chat_history: super::settings::read_chat_history(&main.root),
+        },
+        Err(error) => {
+            log::warn!("The main workspace is unavailable: {error}");
+            VaultInfo {
+                vault_id: String::new(),
+                name: String::new(),
+                path: String::new(),
+                is_main: true,
+                status: VaultStatus::NotConnected,
+                is_writable_by_others: false,
+                chat_history: super::VaultChatHistory::default(),
+            }
+        }
+    };
+    std::iter::once(main)
+        .chain(attached.iter().map(attached_info))
+        .collect()
+}
+
+/// The vaults that can be used now, each with the vault part of its
+/// references: the main one (empty) and every attached one that is there.
+pub fn connected_vaults(app: &AppHandle) -> Vec<(String, Vault)> {
+    let config = app.state::<AppState>().user_config();
+    connected_vaults_in(super::main_vault(app), &attached_vaults(&config))
+}
+
+/// [`connected_vaults`] over the main vault as it opened and the attached ones.
+pub fn connected_vaults_in(
+    main: Result<Vault, AppError>,
+    attached: &[AttachedVault],
+) -> Vec<(String, Vault)> {
+    let mut vaults = Vec::new();
+    match main {
+        Ok(vault) => vaults.push((String::new(), vault)),
+        Err(error) => log::warn!("The main workspace is unavailable: {error}"),
     }
-    Ok(vaults)
+    for attached in attached {
+        if let Ok(vault) = marker::open_attached(Path::new(&attached.path)) {
+            if vault.id == attached.vault_id {
+                vaults.push((attached.vault_id.clone(), vault));
+            }
+        }
+    }
+    vaults
 }
 
 fn attached_info(attached: &AttachedVault) -> VaultInfo {
@@ -111,26 +160,6 @@ fn attached_info(attached: &AttachedVault) -> VaultInfo {
             super::VaultChatHistory::default()
         },
     }
-}
-
-/// The vaults that can be used now, each with the vault part of its
-/// references: the main one (empty) and every attached one that is there.
-pub fn connected_vaults(app: &AppHandle) -> Vec<(String, Vault)> {
-    let mut vaults = Vec::new();
-    match super::main_vault(app) {
-        Ok(vault) => vaults.push((String::new(), vault)),
-        Err(error) => log::warn!("The main AI vault is unavailable: {error}"),
-    }
-    let config = app.state::<AppState>().user_config();
-    for attached in attached_vaults(&config) {
-        match marker::open_attached(Path::new(&attached.path)) {
-            Ok(vault) if vault.id == attached.vault_id => {
-                vaults.push((attached.vault_id.clone(), vault));
-            }
-            Ok(_) | Err(_) => {}
-        }
-    }
-    vaults
 }
 
 /// The folders the external projects of every vault must stay out of: the
@@ -454,8 +483,7 @@ pub fn list_all_profiles(app: &AppHandle) -> Result<Vec<super::AiProfile>, AppEr
                     .into_iter()
                     .map(|profile| profile_to_ref(&vault_id, profile)),
             ),
-            // the main vault must be readable; an attached one may be away
-            Err(error) if vault_id.is_empty() => return Err(error),
+            // one vault that cannot be read hides no other
             Err(error) => log::warn!("Could not read the AI vault {vault_id}: {error}"),
         }
     }
@@ -493,7 +521,6 @@ pub fn list_all_projects(app: &AppHandle) -> Result<Vec<super::AiProject>, AppEr
                     .map(|project| mark_synced(project, &synced_roots))
                     .map(|project| project_to_ref(&vault_id, project)),
             ),
-            Err(error) if vault_id.is_empty() => return Err(error),
             Err(error) => log::warn!("Could not read the AI vault {vault_id}: {error}"),
         }
     }

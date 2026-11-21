@@ -250,7 +250,6 @@ pub fn run() {
             commands::ai_vault::delete_ai_profile,
             commands::ai_vault::delete_ai_project,
             commands::ai_vault::get_ai_profile,
-            commands::ai_vault::get_ai_vault_path,
             commands::ai_vault::list_ai_vaults,
             commands::ai_vault::inspect_ai_vault_folder,
             commands::ai_vault::attach_ai_vault,

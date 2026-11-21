@@ -23,7 +23,6 @@ let desktop: TestDesktop
 
 beforeEach(async () => {
   desktop = await loadFakeDesktop()
-  desktop.backend.handle('get_ai_vault_path', () => '/vault')
 })
 
 afterEach(() => {
@@ -63,22 +62,6 @@ it('does not repopulate a failed vault load from a late sibling response', async
   await vi.waitFor(() => expect(store.isLoaded).toBe(true))
   expect(store.profiles).toEqual([])
   expect(store.vaultError).toBe('unavailable')
-})
-
-it('does not start obsolete list requests after a delayed vault path read', async () => {
-  const oldPath = deferred<string>()
-  let pathCalls = 0
-  desktop.backend.handle('get_ai_vault_path', () => {
-    pathCalls++
-    return pathCalls === 1 ? oldPath.promise : '/new-vault'
-  })
-  const store = useAiProfilesStore()
-  const oldLoad = store.loadAll()
-  await store.loadAll()
-  oldPath.resolve('/old-vault')
-  await oldLoad
-  expect(desktop.backend.callsOf('list_ai_profiles')).toHaveLength(1)
-  expect(store.vaultPath).toBe('/new-vault')
 })
 
 it('announces SOUL changes separately from the profile JSON revision and isolates vaults', async () => {

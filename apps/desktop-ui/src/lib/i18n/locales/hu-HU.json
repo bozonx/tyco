@@ -371,7 +371,7 @@
     "unsupportedConfig": "A beállításokat az alkalmazás egy újabb verziója mentette",
     "userDataUnavailable": "Az adatmappa nem érhető el",
     "variableNotSet": "Egy változónak nincs értéke ezen az eszközön",
-    "vaultUnavailable": "Az MI-profilok mappája nincs csatlakoztatva ezen az eszközön",
+    "vaultUnavailable": "A munkaterület nincs csatlakoztatva ezen az eszközön",
     "projectUnavailable": "A projekt mappája nincs beállítva ezen az eszközön",
     "alreadyExists": "Már létezik",
     "staleRevision": "A fájl egy másik eszközön vagy a TyCo-n kívül módosult",

@@ -371,7 +371,7 @@
     "unsupportedConfig": "Ayarlar uygulamanın daha yeni bir sürümüyle kaydedilmiş",
     "userDataUnavailable": "Veri klasörü kullanılamıyor",
     "variableNotSet": "Bir değişkenin bu cihazda değeri yok",
-    "vaultUnavailable": "Yapay zekâ profilleri klasörü bu cihazda bağlı değil",
+    "vaultUnavailable": "Çalışma alanı bu cihazda bağlı değil",
     "projectUnavailable": "Proje klasörü bu cihazda ayarlanmamış",
     "alreadyExists": "Zaten var",
     "staleRevision": "Dosya başka bir cihazda veya TyCo dışında değiştirildi",

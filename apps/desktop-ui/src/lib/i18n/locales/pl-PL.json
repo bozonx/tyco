@@ -371,7 +371,7 @@
     "unsupportedConfig": "Ustawienia zapisała nowsza wersja aplikacji",
     "userDataUnavailable": "Folder danych jest niedostępny",
     "variableNotSet": "Zmienna nie ma wartości na tym urządzeniu",
-    "vaultUnavailable": "Folder profili AI nie jest podłączony na tym urządzeniu",
+    "vaultUnavailable": "Przestrzeń robocza nie jest podłączona na tym urządzeniu",
     "projectUnavailable": "Folder projektu nie jest ustawiony na tym urządzeniu",
     "alreadyExists": "Już istnieje",
     "staleRevision": "Plik zmieniono na innym urządzeniu lub poza TyCo",

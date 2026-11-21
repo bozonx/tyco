@@ -71,10 +71,14 @@ import {
   withSaving,
   workspaceRetentionDays,
 } from '../../lib/ai-profiles/workspace-history'
-import { chatHistoryRetentionChoices } from '../../lib/chat/chat-history-settings'
+import {
+  chatHistoryConfig,
+  chatHistoryRetentionChoices,
+} from '../../lib/chat/chat-history-settings'
 import { historyRetentionOptions } from '../../lib/history/history-retention'
 import { toHtmlLang } from '../../lib/locale/language'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
+import { useDesktopStore } from '../../stores/desktop'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
@@ -87,10 +91,15 @@ const props = defineProps<{ vault: VaultInfo }>()
 
 const { t } = useI18n()
 const { toastError } = useToast()
-const { draft, effectiveAppLanguage } = useSettingsContext()
+const { effectiveAppLanguage } = useSettingsContext()
+const desktopStore = useDesktopStore()
 const store = useAiProfilesStore()
 
-const defaults = computed(() => draft.value.aiProfiles.chatHistory)
+// the settings of a workspace apply at once, so they follow the saved
+// default, not an unsaved draft of it
+const defaults = computed(() =>
+  chatHistoryConfig(desktopStore.userConfig, 'profiles')
+)
 const isSaving = computed(() =>
   isWorkspaceSaving(props.vault.chatHistory, defaults.value)
 )

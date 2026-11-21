@@ -371,7 +371,7 @@
     "unsupportedConfig": "Les paramètres ont été enregistrés par une version plus récente de l’application",
     "userDataUnavailable": "Le dossier de données est indisponible",
     "variableNotSet": "Une variable n’a pas de valeur sur cet appareil",
-    "vaultUnavailable": "Le dossier des profils IA n’est pas connecté sur cet appareil",
+    "vaultUnavailable": "L’espace de travail n’est pas connecté sur cet appareil",
     "projectUnavailable": "Le dossier du projet n’est pas défini sur cet appareil",
     "alreadyExists": "Existe déjà",
     "staleRevision": "Le fichier a été modifié sur un autre appareil ou hors de TyCo",

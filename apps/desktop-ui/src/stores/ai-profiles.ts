@@ -7,7 +7,6 @@ import {
 
 import { clientLogger } from '../lib/logger'
 import { joinRef, vaultOfRef } from '../lib/ai-profiles/profile-ref'
-import { rewriteProfileRefs } from '../lib/ai-profiles/profile-ref-rewrite'
 import { defineStore } from 'pinia'
 import { computed, onScopeDispose, readonly, ref, watch } from 'vue'
 import { desktopClient } from '../lib/desktop/client'
@@ -95,7 +94,6 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     vaults.value = resultOrThrow(await call('list_ai_vaults'))
   }
 
-  const vaultPath = ref('')
   /** Why the vault cannot be read, e.g. its configured folder is unavailable */
   const vaultError = ref('')
   const isLoaded = ref(false)
@@ -107,8 +105,6 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     let active = true
     const isCurrent = () => active && request === loadRequest
     try {
-      const path = resultOrThrow(await call('get_ai_vault_path'))
-      if (!isCurrent()) return
       await Promise.all([
         profilesModel.loadProfiles(isCurrent),
         projectsModel.loadProjects(isCurrent),
@@ -117,7 +113,6 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
         ),
       ])
       if (request !== loadRequest) return
-      vaultPath.value = path
       vaultError.value = ''
     } catch (error) {
       if (request !== loadRequest) return
@@ -227,24 +222,11 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
   }
 
   /**
-   * Moves a profile to another vault and points the settings that name it to
-   * where it landed. Returns its new reference
+   * Moves a profile to another vault; the backend points the settings that name
+   * it to where it landed. Returns its new reference
    */
   const moveProfile = async (id: string, vaultId: string): Promise<string> => {
     const moved = resultOrThrow(await call('move_ai_profile', { id, vaultId }))
-    const config = desktopStore.userConfig
-    if (config) {
-      const patch = rewriteProfileRefs(config, id, moved.id)
-      if (Object.keys(patch).length > 0) {
-        const response = await desktopStore.updateUserConfig(patch)
-        if (!response.success)
-          clientLogger.error(
-            'Could not point the settings to the moved profile',
-            response.error,
-            'ai-profiles'
-          )
-      }
-    }
     await loadAll()
     return moved.id
   }
@@ -320,7 +302,6 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
   return {
     profiles: readonly(profilesModel.profiles),
     projects: readonly(projectsModel.projects),
-    vaultPath: readonly(vaultPath),
     vaultError: readonly(vaultError),
     /** Gives an external project its folder on this device */
     setProjectFolder: async (id: string): Promise<boolean> => {

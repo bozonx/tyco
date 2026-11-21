@@ -371,7 +371,7 @@
     "unsupportedConfig": "설정이 더 새로운 버전의 앱으로 저장되었습니다",
     "userDataUnavailable": "데이터 폴더를 사용할 수 없습니다",
     "variableNotSet": "변수에 이 기기의 값이 없습니다",
-    "vaultUnavailable": "AI 프로필 폴더가 이 기기에 연결되어 있지 않습니다",
+    "vaultUnavailable": "작업 공간이 이 기기에 연결되어 있지 않습니다",
     "projectUnavailable": "프로젝트 폴더가 이 기기에 설정되어 있지 않습니다",
     "alreadyExists": "이미 있습니다",
     "staleRevision": "다른 기기나 TyCo 밖에서 파일이 변경되었습니다",

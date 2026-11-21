@@ -371,7 +371,7 @@
     "unsupportedConfig": "La configuración fue guardada por una versión más nueva de la app",
     "userDataUnavailable": "La carpeta de datos no está disponible",
     "variableNotSet": "Una variable no tiene valor en este dispositivo",
-    "vaultUnavailable": "La carpeta de perfiles de IA no está conectada en este dispositivo",
+    "vaultUnavailable": "El espacio de trabajo no está conectado en este dispositivo",
     "projectUnavailable": "La carpeta del proyecto no está definida en este dispositivo",
     "alreadyExists": "Ya existe",
     "staleRevision": "El archivo se cambió en otro dispositivo o fuera de TyCo",

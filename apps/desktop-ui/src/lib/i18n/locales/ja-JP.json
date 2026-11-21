@@ -371,7 +371,7 @@
     "unsupportedConfig": "設定は新しいバージョンのアプリで保存されています",
     "userDataUnavailable": "データフォルダーを利用できません",
     "variableNotSet": "変数にこのデバイスの値がありません",
-    "vaultUnavailable": "AI プロファイルのフォルダーがこのデバイスで接続されていません",
+    "vaultUnavailable": "ワークスペースがこのデバイスで接続されていません",
     "projectUnavailable": "プロジェクトのフォルダーがこのデバイスで設定されていません",
     "alreadyExists": "すでに存在します",
     "staleRevision": "ファイルが別のデバイスまたは TyCo の外で変更されました",

@@ -371,7 +371,7 @@
     "unsupportedConfig": "Die Einstellungen stammen von einer neueren App-Version",
     "userDataUnavailable": "Der Datenordner ist nicht verfügbar",
     "variableNotSet": "Eine Variable hat auf diesem Gerät keinen Wert",
-    "vaultUnavailable": "Der Ordner der KI-Profile ist auf diesem Gerät nicht verbunden",
+    "vaultUnavailable": "Der Arbeitsbereich ist auf diesem Gerät nicht verbunden",
     "projectUnavailable": "Der Projektordner ist auf diesem Gerät nicht festgelegt",
     "alreadyExists": "Ist bereits vorhanden",
     "staleRevision": "Die Datei wurde auf einem anderen Gerät oder außerhalb von TyCo geändert",

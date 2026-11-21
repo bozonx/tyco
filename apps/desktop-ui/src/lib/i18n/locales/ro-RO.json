@@ -371,7 +371,7 @@
     "unsupportedConfig": "Setările au fost salvate de o versiune mai nouă a aplicației",
     "userDataUnavailable": "Folderul de date nu este disponibil",
     "variableNotSet": "O variabilă nu are valoare pe acest dispozitiv",
-    "vaultUnavailable": "Dosarul profilurilor AI nu este conectat pe acest dispozitiv",
+    "vaultUnavailable": "Spațiul de lucru nu este conectat pe acest dispozitiv",
     "projectUnavailable": "Dosarul proiectului nu este setat pe acest dispozitiv",
     "alreadyExists": "Există deja",
     "staleRevision": "Fișierul a fost modificat pe alt dispozitiv sau în afara TyCo",

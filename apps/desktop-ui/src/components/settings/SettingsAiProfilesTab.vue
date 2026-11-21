@@ -273,7 +273,7 @@ const activeVault = computed<VaultInfo>(
     aiProfilesStore.vaults.find((vault) => vault.isMain) ?? {
       vaultId: '',
       name: '',
-      path: aiProfilesStore.vaultPath,
+      path: '',
       isMain: true,
       status: 'connected',
       isWritableByOthers: false,
@@ -281,16 +281,13 @@ const activeVault = computed<VaultInfo>(
     }
 )
 const isActiveConnected = computed(
-  () => activeVault.value.isMain || activeVault.value.status === 'connected'
+  () => activeVault.value.status === 'connected'
 )
 const workspaceOptions = computed(() =>
   aiProfilesStore.vaults.map((vault) => ({
     id: vault.vaultId,
     name: vaultLabel(vault, t('settings.aiVaults.main')),
-    icon:
-      vault.isMain || vault.status === 'connected'
-        ? undefined
-        : 'mdi:alert-outline',
+    icon: vault.status === 'connected' ? undefined : 'mdi:alert-outline',
   }))
 )
 function selectWorkspace(vaultId: string) {

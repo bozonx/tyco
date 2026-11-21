@@ -14,15 +14,6 @@ use crate::{
 // Profiles and projects are named by references `[vaultId:]id`: the vault
 // part is empty for the main vault, see `ai_vault::split_ref`.
 
-/// The folder of the main vault.
-#[tauri::command]
-pub async fn get_ai_vault_path(app: AppHandle) -> Result<String, AppError> {
-    run_blocking(move || {
-        ai_vault::with_vault(&app, "", |dir| Ok(dir.to_string_lossy().into_owned()))
-    })
-    .await?
-}
-
 /// Shows a vault, or one profile folder in it, in the file manager. The path
 /// is built here: the webview never names a folder to open.
 #[tauri::command]

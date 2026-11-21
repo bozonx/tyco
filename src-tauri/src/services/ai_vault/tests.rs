@@ -1496,3 +1496,82 @@ fn a_new_profile_leaves_no_hidden_folder() {
         .collect();
     assert_eq!(names, ["writer"]);
 }
+
+fn attached_entry(vault: &Vault) -> crate::models::user_config::AttachedVault {
+    crate::models::user_config::AttachedVault {
+        path: vault.root.to_string_lossy().into_owned(),
+        vault_id: vault.id.clone(),
+    }
+}
+
+#[test]
+fn a_reference_resolves_to_its_attached_vault_or_the_main_one() {
+    let dir = TestDir::new("vault-resolve");
+    let main = marker::open_default(&dir.join("data/ai-vault")).unwrap();
+    let work = marker::create_attached(&dir.join("work"), "Work").unwrap();
+    let attached = [attached_entry(&work)];
+    assert_eq!(
+        resolve_vault_in(Ok(main.clone()), &attached, "").unwrap(),
+        main
+    );
+    // the main vault named by its own id
+    assert_eq!(
+        resolve_vault_in(Ok(main.clone()), &attached, &main.id).unwrap(),
+        main
+    );
+    assert_eq!(
+        resolve_vault_in(Ok(main.clone()), &attached, &work.id)
+            .unwrap()
+            .root,
+        work.root
+    );
+    assert!(matches!(
+        resolve_vault_in(Ok(main), &attached, "unknown"),
+        Err(AppError::VaultUnavailable(_))
+    ));
+}
+
+#[test]
+fn an_attached_vault_stays_usable_while_the_main_one_is_away() {
+    let dir = TestDir::new("vault-main-away");
+    let work = marker::create_attached(&dir.join("work"), "Work").unwrap();
+    let attached = [attached_entry(&work)];
+    let away = || Err(AppError::UserDataUnavailable("away".into()));
+    assert!(resolve_vault_in(away(), &attached, &work.id).is_ok());
+    assert!(resolve_vault_in(away(), &attached, "").is_err());
+
+    let listed = list_vaults_in(away(), &attached);
+    assert_eq!(listed.len(), 2);
+    assert!(listed[0].is_main);
+    assert_eq!(listed[0].status, VaultStatus::NotConnected);
+    assert_eq!(listed[1].status, VaultStatus::Connected);
+    assert_eq!(listed[1].name, "Work");
+
+    let connected = connected_vaults_in(away(), &attached);
+    assert_eq!(connected.len(), 1);
+    assert_eq!(connected[0].0, work.id);
+}
+
+#[test]
+fn a_folder_that_holds_another_vault_now_is_not_connected() {
+    let dir = TestDir::new("vault-swapped");
+    let work = marker::create_attached(&dir.join("work"), "Work").unwrap();
+    let mut entry = attached_entry(&work);
+    entry.vault_id = "other".into();
+    let attached = [entry];
+    assert!(matches!(
+        resolve_vault_in(
+            Err(AppError::UserDataUnavailable("away".into())),
+            &attached,
+            "other"
+        ),
+        Err(AppError::VaultUnavailable(_))
+    ));
+    assert_eq!(
+        list_vaults_in(Err(AppError::UserDataUnavailable("away".into())), &attached)[1].status,
+        VaultStatus::NotConnected
+    );
+    assert!(
+        connected_vaults_in(Err(AppError::UserDataUnavailable("x".into())), &attached).is_empty()
+    );
+}

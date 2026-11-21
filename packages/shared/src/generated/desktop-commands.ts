@@ -198,7 +198,6 @@ export interface DesktopCommands {
     result: SelectionFinishStatus
   }
   get_ai_profile: { args: { id: string }; result: AiProfile }
-  get_ai_vault_path: { args: undefined; result: string }
   get_chat: {
     args: { id: string; importId?: string | null; profileId?: string | null }
     result: Chat | null

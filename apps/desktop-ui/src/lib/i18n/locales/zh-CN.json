@@ -371,7 +371,7 @@
     "unsupportedConfig": "设置由更新版本的应用保存",
     "userDataUnavailable": "数据文件夹不可用",
     "variableNotSet": "变量在此设备上没有值",
-    "vaultUnavailable": "AI 配置文件夹未在此设备上连接",
+    "vaultUnavailable": "工作区未在此设备上连接",
     "projectUnavailable": "项目文件夹未在此设备上设置",
     "alreadyExists": "已存在",
     "staleRevision": "文件已在其他设备上或 TyCo 之外被更改",

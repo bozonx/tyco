@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests;
 
+pub mod config_refs;
 pub mod marker;
 pub mod memory;
 pub mod operations;
@@ -15,6 +16,7 @@ pub use settings::{VaultChatHistory, VaultHistoryStorage};
 pub use transfer::MovedEntity;
 pub use types::*;
 
+use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
@@ -59,28 +61,42 @@ pub fn main_vault(app: &AppHandle) -> Result<Vault, AppError> {
 /// device attached. A vault not attached, or not there now, is an error;
 /// nothing is made in its place.
 pub fn resolve_vault(app: &AppHandle, vault_id: &str) -> Result<Vault, AppError> {
+    let config = app.state::<crate::state::AppState>().user_config();
+    resolve_vault_in(
+        main_vault(app),
+        &crate::models::user_config::attached_vaults(&config),
+        vault_id,
+    )
+}
+
+/// [`resolve_vault`] over the main vault as it opened and the vaults this
+/// device attached.
+pub fn resolve_vault_in(
+    main: Result<Vault, AppError>,
+    attached: &[crate::models::user_config::AttachedVault],
+    vault_id: &str,
+) -> Result<Vault, AppError> {
     if vault_id.is_empty() {
-        return main_vault(app);
+        return main;
     }
     // the main vault named by its own id, e.g. in a reference written by hand
-    if let Ok(main) = main_vault(app) {
+    if let Ok(main) = main {
         if main.id == vault_id {
             return Ok(main);
         }
     }
-    let config = app.state::<crate::state::AppState>().user_config();
-    let attached = crate::models::user_config::attached_vaults(&config)
-        .into_iter()
+    let attached = attached
+        .iter()
         .find(|vault| vault.vault_id == vault_id)
         .ok_or_else(|| {
             AppError::VaultUnavailable(format!(
-                "The AI vault {vault_id} is not attached on this device"
+                "The workspace {vault_id} is not attached on this device"
             ))
         })?;
     let vault = marker::open_attached(std::path::Path::new(&attached.path))?;
     if vault.id != vault_id {
         return Err(AppError::VaultUnavailable(format!(
-            "The folder {} holds another AI vault now",
+            "The folder {} holds another workspace now",
             attached.path
         )));
     }
@@ -212,7 +228,7 @@ pub fn move_profile_to_vault(
     to_id: &str,
 ) -> Result<MovedEntity, AppError> {
     let (from_id, id) = split_ref(profile_ref);
-    with_two_vaults(app, from_id, to_id, |from, to| {
+    let (from_ref, moved) = with_two_vaults(app, from_id, to_id, |from, to| {
         let moved = crate::services::storage::while_chats_locked_in_vault(app, || {
             transfer::move_profile(&from.root, &to.root, id)
         })?;
@@ -221,10 +237,26 @@ pub fn move_profile_to_vault(
         if let Err(error) = crate::services::storage::remove_profile_index(app, &from.id, id) {
             log::warn!("Could not remove the chat index of the profile {id}: {error}");
         }
-        Ok(MovedEntity {
-            id: join_ref(&canonical_vault_ref(app, to_id, to), &moved.id),
-        })
-    })
+        Ok((
+            join_ref(&canonical_vault_ref(app, from_id, from), id),
+            MovedEntity {
+                id: join_ref(&canonical_vault_ref(app, to_id, to), &moved.id),
+            },
+        ))
+    })?;
+    // after the vault locks are released: a settings save takes vault access
+    // itself. The profile is moved already, so a failure here is only logged
+    // and leaves the settings naming a profile that is gone.
+    let mut probe = Value::clone(&app.state::<crate::state::AppState>().user_config());
+    if !config_refs::rewrite_profile_refs(&mut probe, &from_ref, &moved.id) {
+        return Ok(moved);
+    }
+    if let Err(error) = crate::services::settings::update_user_config(app, |config| {
+        config_refs::rewrite_profile_refs(config, &from_ref, &moved.id);
+    }) {
+        log::error!("Could not point the settings to the moved profile {id}: {error}");
+    }
+    Ok(moved)
 }
 
 /// Moves a project, named by its reference, to the vault `to_id` (empty: the

@@ -80,7 +80,6 @@ fn main() {
             "finish_external_job",
             "finish_selection_run",
             "get_ai_profile",
-            "get_ai_vault_path",
             "list_ai_vaults",
             "inspect_ai_vault_folder",
             "attach_ai_vault",

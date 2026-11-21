@@ -516,6 +516,13 @@ update TyCo before opening it. This is deliberately stricter than the data
 folder's read-only compatibility path; an unknown vault layout is not interpreted.
 There is no separate read-only vault mode.
 
+The main vault is away while the data folder is: `list_ai_vaults` lists it as
+`notConnected` with an empty path, and the attached vaults stay listed and
+used. One vault that cannot be read hides the profiles and projects of no
+other. Resolving and listing are pure over the main vault as it opened and
+the attached list (`resolve_vault_in`, `list_vaults_in`,
+`connected_vaults_in`); the `AppHandle` functions only gather those.
+
 The webview names a profile or a project by a reference `[vaultId:]id`
 (`ai_vault::split_ref`): the vault part is left out for the main vault.
 Commands take references; listing returns the entities of every vault that is
@@ -571,7 +578,13 @@ missing one follows `aiProfiles.chatHistory`, the default for every vault
 chats are saved). Unknown fields are kept on write; a newer `formatVersion` or
 an unreadable file is refused on write and read as no settings, so a broken
 file never stops the chats. `set_ai_vault_chat_history` writes it and marks the
-chat cleanup pending; `list_ai_vaults` returns it as `chatHistory`.
+chat cleanup pending; `list_ai_vaults` returns it as `chatHistory`. The watcher
+follows the file too: a change a sync brings refreshes the settings and marks
+the cleanup pending as well. The settings page applies these values at once,
+so its "by default" choice shows the saved default, not an unsaved draft.
+Whether quick requests are saved stays an app-wide choice
+(`aiProfiles.chatHistory.isQuickRequestSavingEnabled`), applied within the
+vault's own saving choice.
 
 `move_ai_profile` and `move_ai_project` (`ai_vault::transfer`) move an entity
 to another connected vault, locking both vaults in the order of their roots.
@@ -579,8 +592,10 @@ The entity is copied into a hidden folder of the destination, its description
 rewritten (unknown fields kept), moved into place whole, and only then is the
 source removed; a failure removes the partial copy. The id is kept unless it
 is taken there, then a fresh one is made. A profile drops all its project
-permissions, its memory read versions and its chat index; the webview rewrites
-the references in `config.json` to the returned one (`rewriteProfileRefs`). A
+permissions, its memory read versions and its chat index; once the vault locks
+are released, the backend rewrites the references in `config.json` to the
+returned one (`ai_vault::config_refs`, plugin sections kept) as a regular
+settings save. A
 project is removed from the source as `delete_project` does, so profiles left
 behind drop their permissions; an external project's folder on this device
 moves to the destination key of `aiProjectPaths`, other devices set it again.

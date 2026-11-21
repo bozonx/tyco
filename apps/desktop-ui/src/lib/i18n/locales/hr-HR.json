@@ -371,7 +371,7 @@
     "unsupportedConfig": "Postavke je spremila novija verzija aplikacije",
     "userDataUnavailable": "Mapa podataka nije dostupna",
     "variableNotSet": "Varijabla nema vrijednost na ovom uređaju",
-    "vaultUnavailable": "Mapa AI profila nije povezana na ovom uređaju",
+    "vaultUnavailable": "Radni prostor nije povezan na ovom uređaju",
     "projectUnavailable": "Mapa projekta nije postavljena na ovom uređaju",
     "alreadyExists": "Već postoji",
     "staleRevision": "Datoteka je promijenjena na drugom uređaju ili izvan TyCo-a",

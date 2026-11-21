@@ -142,8 +142,6 @@ describe('profile chats', () => {
     const ipc = useIpcStore()
     return vi.spyOn(ipc, 'call').mockImplementation((async (name: string) => {
       switch (name) {
-        case 'get_ai_vault_path':
-          return { success: true, result: '/vault' }
         case 'list_ai_profiles':
           return { success: true, result: [files.profile] }
         case 'list_ai_projects':

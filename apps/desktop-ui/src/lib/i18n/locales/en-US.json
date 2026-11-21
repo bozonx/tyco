@@ -371,7 +371,7 @@
     "unsupportedConfig": "The settings were saved by a newer version of the app",
     "userDataUnavailable": "The data folder is unavailable",
     "variableNotSet": "A variable has no value on this device",
-    "vaultUnavailable": "The folder of AI profiles is not connected on this device",
+    "vaultUnavailable": "The workspace is not connected on this device",
     "projectUnavailable": "The project folder is not set on this device",
     "alreadyExists": "It exists already",
     "staleRevision": "The file was changed on another device or outside TyCo",
