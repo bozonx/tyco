@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::errors::AppError;
-use crate::services::custom_actions::TEXT_PLACEHOLDER;
+use crate::services::custom_actions::{SELECTION_PLACEHOLDER, TEXT_PLACEHOLDER};
 
 /// How a command of a tool gets its input from a text.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, ts_rs::TS)]
@@ -90,6 +90,16 @@ pub struct ExternalCommand {
     pub id: String,
     pub can_take_text: bool,
     pub has_structured_input: bool,
+    /// A script or a webhook that mentions `{{SELECTION}}`: a call with
+    /// `--selection` fills it even when the command takes no text.
+    pub can_take_selection: bool,
+}
+
+impl ExternalCommand {
+    /// Whether a call may pass `--selection` and replace it with the output.
+    pub fn accepts_selection(&self) -> bool {
+        (self.can_take_text && !self.has_structured_input) || self.can_take_selection
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -168,11 +178,16 @@ pub fn normalize_name(name: &str) -> String {
         .join(" ")
 }
 
-fn commands_of(user_config: &Value) -> &[Value] {
+/// The commands of the library. The legacy `core.translate` entries are left
+/// out, as `normalizeCommands` in `config-schema.ts` drops them: the overlay
+/// would not find such a command.
+fn commands_of(user_config: &Value) -> impl Iterator<Item = &Value> {
     user_config
         .get("commands")
         .and_then(Value::as_array)
-        .map_or(&[], Vec::as_slice)
+        .map_or(&[][..], Vec::as_slice)
+        .iter()
+        .filter(|command| str_field(command, "operationId").trim() != "core.translate")
 }
 
 fn str_field<'a>(value: &'a Value, key: &str) -> &'a str {
@@ -234,8 +249,29 @@ fn script_can_take_text(config: &Value) -> bool {
 /// `packages/shared/src/user-config/commands-config.ts`.
 fn webhook_can_take_text(config: &Value) -> bool {
     str_field(config, "url").contains(TEXT_PLACEHOLDER)
-        || (str_field(config, "method") != "GET"
-            && str_field(config, "payloadTemplate").contains(TEXT_PLACEHOLDER))
+        || (!is_get(config) && str_field(config, "payloadTemplate").contains(TEXT_PLACEHOLDER))
+}
+
+/// Whether a script or a webhook mentions `{{SELECTION}}`. Keep in sync with
+/// `scriptTakesSelection` and `webhookTakesSelection` in
+/// `packages/shared/src/user-config/commands-config.ts`.
+fn can_take_selection(command: &Value) -> bool {
+    let config = command.get("operationConfig").unwrap_or(&Value::Null);
+    match str_field(command, "operationId").trim() {
+        "script" => str_field(config, "command").contains(SELECTION_PLACEHOLDER),
+        "webhook" => {
+            str_field(config, "url").contains(SELECTION_PLACEHOLDER)
+                || (!is_get(config)
+                    && str_field(config, "payloadTemplate").contains(SELECTION_PLACEHOLDER))
+        }
+        _ => false,
+    }
+}
+
+/// A webhook sends GET only when it says so exactly, as the schema spells it;
+/// anything else is POST, see `webhookOperationConfigOf`.
+fn is_get(config: &Value) -> bool {
+    str_field(config, "method") == "GET"
 }
 
 /// Whether the tool of the command can run it, and if so whether it takes
@@ -286,10 +322,9 @@ fn resolve_callable_command(
     if !can_run_externally(command) {
         return Err(CommandLookupError::NotExternal(id));
     }
-    let platforms: Vec<String> = command
-        .get("platforms")
-        .and_then(|platforms| serde_json::from_value(platforms.clone()).ok())
-        .unwrap_or_default();
+    let platforms = crate::models::user_config::platforms_from(
+        command.get("platforms").unwrap_or(&Value::Null),
+    );
     if !crate::models::user_config::is_on_this_platform(&platforms) {
         return Err(CommandLookupError::Unavailable(
             id,
@@ -305,6 +340,7 @@ fn resolve_callable_command(
             .map(|tool| input_kind(command, tool))
             .transpose()?
             .is_some_and(|input| input == OperationInputKind::Structured),
+        can_take_selection: can_take_selection(command),
     })
 }
 
@@ -317,7 +353,6 @@ pub fn find_by_id(
 ) -> Result<ExternalCommand, CommandLookupError> {
     let id = id.trim();
     commands_of(user_config)
-        .iter()
         .find(|command| !id.is_empty() && id_of(command) == id)
         .ok_or_else(|| CommandLookupError::NotFound(id.to_owned()))
         .and_then(|command| resolve_callable_command(command, catalog))
@@ -331,7 +366,6 @@ pub fn find_by_name(
 ) -> Result<ExternalCommand, CommandLookupError> {
     let normalized = normalize_name(name);
     let matches: Vec<&Value> = commands_of(user_config)
-        .iter()
         .filter(|command| {
             !normalized.is_empty() && normalize_name(str_field(command, "name")) == normalized
         })
@@ -377,7 +411,7 @@ pub fn find_by_name(
 struct ListedCommand {
     id: String,
     name: String,
-    /// `text` or `none`
+    /// `structured`, `text` or `none`
     input: &'static str,
     can_replace_selection: bool,
     /// External callers always receive the output.
@@ -398,7 +432,6 @@ fn display_name(command: &Value) -> &str {
 /// `{ id, name, input, ... }`, in the order of the library.
 pub fn list(user_config: &Value, catalog: Option<&OperationCatalog>) -> Value {
     let listed: Vec<ListedCommand> = commands_of(user_config)
-        .iter()
         .filter(|command| !id_of(command).is_empty())
         .filter_map(|command| Some((command, resolve_callable_command(command, catalog).ok()?)))
         .map(|(command, found)| ListedCommand {
@@ -411,7 +444,7 @@ pub fn list(user_config: &Value, catalog: Option<&OperationCatalog>) -> Value {
             } else {
                 "none"
             },
-            can_replace_selection: found.can_take_text && !found.has_structured_input,
+            can_replace_selection: found.accepts_selection(),
             output: "return",
         })
         .collect();
@@ -430,9 +463,7 @@ pub fn describe(
     } else {
         find_by_id(user_config, catalog, target)?
     };
-    let raw = commands_of(user_config)
-        .iter()
-        .find(|raw| id_of(raw) == command.id);
+    let raw = commands_of(user_config).find(|raw| id_of(raw) == command.id);
     let tool = raw.and_then(|raw| catalog?.get(str_field(raw, "operationId").trim()));
     let schema = match (raw, tool) {
         (Some(raw), Some(tool)) => command_input(raw, tool)?
@@ -445,7 +476,7 @@ pub fn describe(
         "name": raw.map_or(command.id.as_str(), display_name),
         "input": if command.has_structured_input { "structured" } else if command.can_take_text { "text" } else { "none" },
         "textAccepted": command.can_take_text,
-        "canReplaceSelection": command.can_take_text && !command.has_structured_input,
+        "canReplaceSelection": command.accepts_selection(),
         "output": "return",
         "inputSchema": schema,
     }))

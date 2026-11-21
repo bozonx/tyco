@@ -166,12 +166,6 @@ export function createCommandRunSession(deps: CommandRunSessionDependencies) {
         shownResult = { text: output, sourceText }
       },
     }
-    // the text leaves the app only with a command that runs
-    if (text !== null && command.isEnabled)
-      await Promise.resolve()
-        .then(() => deps.saveOutput?.(text))
-        .catch(reportError)
-
     let outcome: InvocationOutcome
     if (run.controller.signal.aborted) {
       outcome = { success: false, cancelled: true, message: 'Cancelled' }
@@ -196,6 +190,12 @@ export function createCommandRunSession(deps: CommandRunSessionDependencies) {
     if (shownResult && outcome.success && outcome.output === undefined)
       outcome = { ...outcome, output: shownResult.text }
     const final = await finishJob(run, outcome)
+    // the text left the app only if the command ran: a refused, failed or
+    // cancelled run does not put it into the history
+    if (text !== null && final.success)
+      void Promise.resolve()
+        .then(() => deps.saveOutput?.(text))
+        .catch(reportError)
     if (!final.cancelled || final.code === TIMED_OUT_CODE)
       logCommandRun(
         deps,

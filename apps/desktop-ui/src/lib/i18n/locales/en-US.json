@@ -326,7 +326,8 @@
     "unknownType": "The command type “{type}” is not available in this version of Tyco.",
     "unnamed": "Untitled command",
     "variablesNotSet": "A variable it uses has no value on this device",
-    "warningExternalNameTwins": "Other commands have the same name: {names}. A call by this name is refused as ambiguous; use the ID."
+    "warningExternalNameTwins": "Other commands have the same name: {names}. A call by this name is refused as ambiguous; use the ID.",
+    "testRunsAllowedCommands": "The test really runs the commands this AI command may call: scripts run and webhooks are sent."
   },
   "common": {
     "add": "Add",

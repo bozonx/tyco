@@ -326,7 +326,8 @@
     "unknownType": "Typ příkazu „{type}“ není v této verzi Tyco k dispozici.",
     "unnamed": "Příkaz bez názvu",
     "variablesNotSet": "Proměnná, kterou používá, nemá na tomto zařízení hodnotu",
-    "warningExternalNameTwins": "Jiné příkazy mají stejný název: {names}. Volání tímto názvem se odmítne jako nejednoznačné; použijte ID."
+    "warningExternalNameTwins": "Jiné příkazy mají stejný název: {names}. Volání tímto názvem se odmítne jako nejednoznačné; použijte ID.",
+    "testRunsAllowedCommands": "Test skutečně spustí příkazy, které tento AI příkaz smí volat: skripty se provedou a webhooky odešlou."
   },
   "common": {
     "add": "Přidat",

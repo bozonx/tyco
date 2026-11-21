@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod transport;
 
-pub const API_VERSION: u32 = 3;
+pub const API_VERSION: u32 = 4;
 /// Room for the text of a command and the list of commands.
 pub const MAX_MESSAGE_BYTES: usize = 1024 * 1024;
 pub const START_MODES: &[&str] = &[
@@ -110,7 +110,8 @@ pub enum Request {
     ReplaceSelection {
         action: String,
     },
-    ListJobs,
+    // there is no request listing jobs: a job has no owner, so its id is
+    // what keeps another local client from reading or cancelling it
     JobStatus {
         id: String,
     },
@@ -400,7 +401,6 @@ mod tests {
             Request::ReplaceSelection {
                 action: "correction".into(),
             },
-            Request::ListJobs,
         ] {
             let encoded = serde_json::to_string(&request).unwrap();
             let decoded: Request = serde_json::from_str(&encoded).unwrap();

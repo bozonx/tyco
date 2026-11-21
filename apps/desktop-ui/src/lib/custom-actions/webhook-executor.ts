@@ -27,6 +27,20 @@ export interface WebhookTarget extends WebhookOperationConfig {
 }
 
 /**
+ * A webhook that cannot be sent as configured on this device; `messageKey`
+ * tells the user why, `message` adds the details (e.g. variable names)
+ */
+export class WebhookConfigError extends Error {
+  constructor(
+    readonly messageKey: string,
+    message: string
+  ) {
+    super(message)
+    this.name = 'WebhookConfigError'
+  }
+}
+
+/**
  * `template` filled for `place`; a variable without a value here stops the
  * request, see `substituteVariables`
  */
@@ -47,10 +61,13 @@ function filled(
   if (result.ok) return result.value
   if ('cycles' in result)
     throw new Error(`Cyclic variable references: ${result.cycles.join(', ')}`)
+  if (result.missing.length)
+    throw new WebhookConfigError(
+      'toast.variablesNotSet',
+      result.missing.join(', ')
+    )
   throw new Error(
-    result.missing.length
-      ? `Variables not set on this device: ${result.missing.join(', ')}`
-      : `The value of the variable ${(result as { invalidName: string }).invalidName} cannot go into a header`
+    `The value of the variable ${(result as { invalidName: string }).invalidName} cannot go into a header`
   )
 }
 
@@ -105,7 +122,10 @@ export function buildWebhookRequest(
   }
   if (target.isAuthEnabled) {
     if (!target.authSecretId)
-      throw new Error('Missing webhook authorization secret id')
+      throw new WebhookConfigError(
+        'toast.webhookKeyNotSet',
+        target.name || 'Webhook'
+      )
     headers.authorization = secretRef(target.authSecretId)
   }
 

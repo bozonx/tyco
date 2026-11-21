@@ -50,7 +50,7 @@ fn config() -> Value {
             {
                 "id": "translate",
                 "name": "Translate",
-                "operationId": "core.translate",
+                "operationId": "core.correct",
                 "afterRun": "insertIntoWindow",
                 "isAvailableExternally": true
             },
@@ -125,7 +125,7 @@ fn catalog() -> OperationCatalog {
         entry("script", OperationInputKind::Text, true, None),
         entry("FastNote.write", OperationInputKind::Text, true, None),
         entry(
-            "core.translate",
+            "core.correct",
             OperationInputKind::Text,
             false,
             Some("No LLM is configured"),
@@ -212,6 +212,7 @@ fn finds_a_command_by_its_trimmed_id() {
             id: String::from("backup"),
             can_take_text: false,
             has_structured_input: false,
+            can_take_selection: false,
         }
     );
 }
@@ -305,7 +306,7 @@ fn a_webhook_takes_the_text_where_its_placeholder_stands() {
 #[test]
 fn accepts_commands_independently_of_launcher_output_settings() {
     let mut catalog = catalog();
-    catalog.get_mut("core.translate").unwrap().is_available = true;
+    catalog.get_mut("core.correct").unwrap().is_available = true;
     let found = find_by_id(&config(), Some(&catalog), "translate").unwrap();
     assert!(found.can_take_text);
 }
@@ -434,4 +435,51 @@ fn a_command_of_another_platform_is_not_called_and_stays_in_the_config() {
         normalized["actionPages"][0]["slots"]["q"]["commandId"],
         "elsewhere"
     );
+}
+
+#[test]
+fn a_script_of_the_selection_alone_accepts_selection() {
+    let config = serde_json::json!({"commands": [
+        {"id": "sel", "name": "Sel", "operationId": "script", "isAvailableExternally": true,
+         "operationConfig": {"command": "echo {{SELECTION}}"}},
+        {"id": "hook", "name": "Hook", "operationId": "webhook", "isAvailableExternally": true,
+         "operationConfig": {"url": "https://x.test", "method": "GET", "payloadTemplate": "{{SELECTION}}"}},
+    ]});
+    let sel = find_by_id(&config, None, "sel").unwrap();
+    assert!(!sel.can_take_text);
+    assert!(sel.accepts_selection());
+    // a GET request sends no body, so its template does not count
+    assert!(!find_by_id(&config, None, "hook")
+        .unwrap()
+        .accepts_selection());
+    let listed = list(&config, None);
+    assert_eq!(listed[0]["canReplaceSelection"], true);
+}
+
+#[test]
+fn a_bad_platform_entry_does_not_widen_the_command() {
+    let other = if cfg!(target_os = "windows") {
+        "linux"
+    } else {
+        "windows"
+    };
+    let config = serde_json::json!({"commands": [
+        {"id": "a", "name": "A", "operationId": "script", "isAvailableExternally": true,
+         "operationConfig": {"command": "true"}, "platforms": [other, 5]},
+    ]});
+    assert!(matches!(
+        find_by_id(&config, None, "a"),
+        Err(CommandLookupError::Unavailable(..))
+    ));
+}
+
+#[test]
+fn legacy_translate_commands_are_not_callable() {
+    let config = serde_json::json!({"commands": [
+        {"id": "translate", "name": "T", "operationId": "core.translate", "isAvailableExternally": true},
+    ]});
+    assert!(matches!(
+        find_by_id(&config, None, "translate"),
+        Err(CommandLookupError::NotFound(_))
+    ));
 }

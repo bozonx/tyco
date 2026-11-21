@@ -194,7 +194,6 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
             Ok(()) => Response::success(),
             Err(error) => *error,
         },
-        Request::ListJobs => Response::json(&app.state::<ExternalJobs>().list()),
         Request::JobStatus { id } => app
             .state::<ExternalJobs>()
             .get(&id)

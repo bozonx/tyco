@@ -326,7 +326,8 @@
     "unknownType": "A(z) „{type}” parancstípus nem érhető el a Tyco ezen verziójában.",
     "unnamed": "Névtelen parancs",
     "variablesNotSet": "Egy általa használt változónak nincs értéke ezen az eszközön",
-    "warningExternalNameTwins": "Más parancsoknak is ez a neve: {names}. Az ezzel a névvel történő hívás kétértelműként elutasításra kerül; használja az azonosítót."
+    "warningExternalNameTwins": "Más parancsoknak is ez a neve: {names}. Az ezzel a névvel történő hívás kétértelműként elutasításra kerül; használja az azonosítót.",
+    "testRunsAllowedCommands": "A teszt ténylegesen futtatja azokat a parancsokat, amelyeket ez az AI-parancs meghívhat: a szkriptek lefutnak, a webhookok elküldésre kerülnek."
   },
   "common": {
     "add": "Hozzáadás",

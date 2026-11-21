@@ -14,6 +14,7 @@ import {
   scriptFailureDetail,
 } from '../custom-actions/script-executor'
 import {
+  WebhookConfigError,
   type WebhookTarget,
   webhookResultText,
 } from '../custom-actions/webhook-executor'
@@ -155,13 +156,16 @@ function createScriptOperation(
   }
 }
 
-/** The keys a webhook refers to: its authorization and its secret headers */
+/**
+ * The keys a webhook refers to: its authorization and its secret headers. An
+ * authorization without a key id refers to a key that cannot exist: `''`
+ */
 function webhookSecretIds(config: WebhookOperationConfig): string[] {
   const ids = Object.values(config.headers ?? {}).flatMap((value) => {
     const id = secretIdFromRef(value)
     return id ? [id] : []
   })
-  if (config.isAuthEnabled && config.authSecretId) ids.push(config.authSecretId)
+  if (config.isAuthEnabled) ids.push(config.authSecretId ?? '')
   return ids
 }
 
@@ -217,6 +221,13 @@ function createWebhookOperation(
         )
       } catch (error) {
         if (call.signal.aborted) return cancelled
+        if (error instanceof WebhookConfigError)
+          return {
+            ok: false,
+            level: 'warn',
+            messageKey: error.messageKey,
+            message: error.message,
+          }
         return {
           ok: false,
           messageKey: 'toast.webhookFailed',

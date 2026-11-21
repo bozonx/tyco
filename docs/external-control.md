@@ -3,9 +3,9 @@
 Tyco exposes a deliberately limited API for local desktop integration. It does
 not expose arbitrary Tauri functions, secret management, plugin installation,
 or configuration writes. The CLI and D-Bus share one Rust authorization and
-execution dispatcher. The current external API version is 3; version 3 shows
+execution dispatcher. The current external API version is 4; version 3 shows
 every command run in the Tyco overlay, one at a time, and removes
-`--interactive`.
+`--interactive`; version 4 removes `jobs list`.
 
 ## Prerequisites and transports
 
@@ -150,7 +150,6 @@ with `ConfigurationChanged` instead of executing a stale configuration.
  tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]
               [--replace] [--wait] [--json] [--timeout SECONDS]
  tyco-ctl replace correction
- tyco-ctl jobs list [--json]
  tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
 ```
 
@@ -169,7 +168,6 @@ Choose the command by the result you need:
 | Inspect a command's accepted input                    | `commands describe`          |
 | Execute a library command and obtain its output       | `run ... --wait`             |
 | Submit work and collect the result later              | `run`, then `jobs wait`      |
-| Find retained invocations                             | `jobs list`                  |
 | Inspect or cancel a submitted invocation              | `jobs status`, `jobs cancel` |
 | Correct the current selection from a desktop shortcut | `replace correction`         |
 
@@ -249,8 +247,10 @@ For example, a text command description can look like:
 - `input: "structured"`: use `--input-json` with an object matching the operation's
   schema. Text is also accepted when `textAccepted` is true (LLM argument
   parsing is enabled). Selection input is not supported for structured commands.
-- `canReplaceSelection` describes command compatibility, not the current
-  selection permission or platform support.
+- `canReplaceSelection` tells whether `--selection` (and `--replace`) may be
+  used. It is true for a text command and also for a script or webhook that
+  takes no text but uses `{{SELECTION}}`. It describes command compatibility,
+  not the current selection permission or platform support.
 - `output: "return"` means external runs return tool output instead of applying
   the library command's configured `afterRun` action.
 - `inputSchema` is the effective schema after command-specific overrides,
@@ -281,7 +281,7 @@ These commands require individual external grants. Every run is shown in the
 Tyco command overlay: it shows the run, its result or its error, and Esc
 cancels it. A command that takes text and gets none asks for the text in the
 overlay; a command that takes only structured input fails with
-`InputRequired` without `--input-json`. A run never captures a selection
+`InputRequired` without `--input-json` and with `InvalidInput` when given text. A run never captures a selection
 implicitly, and it does not perform the command's configured after-run action:
 the output goes back to the caller.
 
@@ -386,7 +386,6 @@ Without `--wait`, `run` returns a JSON job object immediately:
 ```
 
 ```sh
-tyco-ctl jobs list
 tyco-ctl jobs status job-1234-1
 tyco-ctl jobs wait job-1234-1 --timeout 60 --json
 tyco-ctl jobs cancel job-1234-1
@@ -407,11 +406,9 @@ calls), not by `open` or `replace correction`.
 `jobs status` and `jobs cancel` always return JSON on stdout; `--json` also
 selects JSON errors on stderr. `--timeout` is only valid for `jobs wait`.
 `jobs wait` polls the server; it neither reruns nor claims the command.
-`jobs list` returns a JSON array of all retained jobs, newest submissions first.
-Each entry contains `id`, `commandId`, and `state`; output and error details
-are omitted to keep the response small. Use `jobs status ID` for the full job.
-An empty array means no jobs are retained. This includes calls from other local
-clients within the same session; there is no per-client ownership.
+Jobs are not listed. A job has no per-client owner, so its ID, returned only
+to the caller of `run`, is what keeps other local clients from reading its
+output or cancelling it: keep the ID if you need the job later.
 
 Keep the ID returned by submission when a script needs its own result. For
 example, with the optional external `jq` utility:

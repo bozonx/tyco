@@ -123,10 +123,14 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
           // Reserve before awaiting: parallel calls share the same budget.
           if (callsUsed >= config.maxSteps) return CALL_LIMIT_NOTICE
           callsUsed += 1
-          const result = toolResultForModel(
-            await tool.execute(isRecord(input) ? input : {}, signal)
+          const outcome = await tool.execute(
+            isRecord(input) ? input : {},
+            signal
           )
-          lastResult = result
+          const result = toolResultForModel(outcome)
+          // only a text the command returned may stand for the answer, never
+          // a status such as `Done` or an i18n key
+          if (outcome.content?.trim()) lastResult = outcome.content
           return result
         },
       }

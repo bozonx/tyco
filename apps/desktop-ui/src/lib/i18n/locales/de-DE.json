@@ -326,7 +326,8 @@
     "unknownType": "Der Befehlstyp „{type}“ ist in dieser Version von Tyco nicht verfügbar.",
     "unnamed": "Unbenannter Befehl",
     "variablesNotSet": "Eine verwendete Variable hat auf diesem Gerät keinen Wert",
-    "warningExternalNameTwins": "Andere Befehle haben denselben Namen: {names}. Ein Aufruf mit diesem Namen wird als mehrdeutig abgelehnt; verwenden Sie die ID."
+    "warningExternalNameTwins": "Andere Befehle haben denselben Namen: {names}. Ein Aufruf mit diesem Namen wird als mehrdeutig abgelehnt; verwenden Sie die ID.",
+    "testRunsAllowedCommands": "Der Test führt die Befehle, die dieser KI-Befehl aufrufen darf, wirklich aus: Skripte laufen, Webhooks werden gesendet."
   },
   "common": {
     "add": "Hinzufügen",

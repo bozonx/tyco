@@ -94,3 +94,43 @@ it('answers with the output of the last command when the model says nothing afte
     )
   ).toBe('Output of one')
 })
+
+it('does not answer with the status of a command that returned no text', async () => {
+  async function* stream(
+    _task: string,
+    _prompt: LlmPrompt,
+    options: LlmStreamOptions = {}
+  ): AsyncGenerator<LlmStreamEvent> {
+    const tool = Object.values(options.tools as ToolSet)[0]!
+    yield { type: 'tool-call', toolCallId: '1', toolName: 'c0_one', input: {} }
+    await tool.execute!(
+      {},
+      {
+        toolCallId: '1',
+        messages: [],
+        context: undefined,
+        abortSignal: options.signal,
+      }
+    )
+  }
+  const run = createAiCommandRunner({ stream, instructions: () => '' })
+  expect(
+    await run(
+      { prompt: 'Do it', allowedCommandIds: ['one'], maxSteps: 1 },
+      '',
+      [
+        {
+          commandId: 'one',
+          label: 'One',
+          description: 'Does it',
+          inputSchema: { type: 'object', properties: {} },
+          execute: async () => ({
+            ok: true,
+            messageKey: 'toast.scriptSuccess',
+          }),
+        },
+      ],
+      { signal: new AbortController().signal }
+    )
+  ).toBe('')
+})

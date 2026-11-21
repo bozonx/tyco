@@ -156,6 +156,14 @@ impl ExternalJobs {
             .map(|(id, _)| id.clone())
     }
 
+    /// The run is over and its output is replacing the selection: it can no
+    /// longer be cancelled.
+    pub fn is_replacing_selection(&self, id: &str) -> bool {
+        self.lock_entries()
+            .get(id)
+            .is_some_and(|entry| entry.pending_completion.is_some())
+    }
+
     pub fn is_internal(&self, id: &str) -> bool {
         self.lock_entries()
             .get(id)
@@ -201,24 +209,6 @@ impl ExternalJobs {
             .get(id)
             .filter(|entry| entry.job.state == JobState::Accepted)
             .map(|entry| entry.request.clone())
-    }
-
-    /// Newest submissions first; omit output so the list stays bounded on the wire.
-    pub fn list(&self) -> Vec<Job> {
-        let entries = self.lock_entries();
-        let mut ordered = entries.values().collect::<Vec<_>>();
-        ordered.sort_by_key(|entry| std::cmp::Reverse(entry.created_at));
-        ordered
-            .into_iter()
-            .map(|entry| Job {
-                output: None,
-                error: None,
-                code: None,
-                id: entry.job.id.clone(),
-                command_id: entry.job.command_id.clone(),
-                state: entry.job.state.clone(),
-            })
-            .collect()
     }
 
     pub fn get(&self, id: &str) -> Option<Job> {
@@ -405,30 +395,17 @@ mod tests {
     }
 
     #[test]
-    fn lists_retained_jobs_newest_first_without_results() {
+    fn a_finished_job_keeps_its_output() {
         let jobs = ExternalJobs::default();
-        let now = Instant::now();
-        let first = jobs.create_at(new_job("first"), now).unwrap();
+        let job = jobs.create(new_job("first")).unwrap();
         jobs.finish(
-            &first.id,
+            &job.id,
             JobState::Succeeded,
             Some("result".into()),
             None,
             None,
         );
-        let second = jobs
-            .create_at(new_job("second"), now + Duration::from_secs(1))
-            .unwrap();
-        let listed = jobs.list();
-        assert_eq!(
-            listed.iter().map(|job| job.id.as_str()).collect::<Vec<_>>(),
-            vec![second.id.as_str(), first.id.as_str()]
-        );
-        assert!(listed.iter().all(|job| job.output.is_none()));
-        assert_eq!(
-            jobs.get(&first.id).unwrap().output.as_deref(),
-            Some("result")
-        );
+        assert_eq!(jobs.get(&job.id).unwrap().output.as_deref(), Some("result"));
     }
 
     #[test]

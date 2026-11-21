@@ -101,6 +101,17 @@ describe('createCommandRunSession', () => {
     expect(session.isActive()).toBe(false)
   })
 
+  it('does not put the text of a failed run into the history', async () => {
+    const { deps, session } = setup(async () => ({
+      success: false,
+      message: 'boom',
+    }))
+    await session.open(request())
+    await flush()
+    expect(deps.saveOutput).not.toHaveBeenCalled()
+    expect(session.state.value.phase).toBe('failed')
+  })
+
   it('asks for the text a command takes when the run brought none', async () => {
     const { runMock, session } = setup(undefined, {
       claim: vi.fn(async () => payload({ text: undefined })),

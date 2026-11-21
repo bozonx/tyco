@@ -343,6 +343,26 @@ describe('SettingsCommandsTab.vue', () => {
     expect(commands()[1].isEnabled).toBe(true)
   })
 
+  it('keeps the entries the library does not show when a command changes', async () => {
+    const wrapper = mountTab()
+    const legacy = {
+      ...createCommand('core.translate', 'translate'),
+      name: 'Legacy',
+    }
+    context.draft.value.commands = [webhook, legacy, script]
+    await nextTick()
+    // the legacy entry is not listed: the second card is the script
+    const card = wrapper.findAll('.command-card')[1]
+    await card.find('.enabled-switch input').setValue(false)
+    const commands = context.draft.value.commands as CommandConfig[]
+    expect(commands.map((command) => command.id)).toEqual([
+      'wh1',
+      'translate',
+      'sc1',
+    ])
+    expect(commands[2].isEnabled).toBe(false)
+  })
+
   it('grants selection capture without touching the commands', async () => {
     const wrapper = mountTab()
     const commands = context.draft.value.commands

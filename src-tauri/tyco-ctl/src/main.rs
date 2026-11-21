@@ -14,7 +14,6 @@ const USAGE: &str = "Usage: tyco-ctl status
        tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]
                     [--replace] [--wait] [--json] [--timeout SECONDS]
        tyco-ctl replace correction
-       tyco-ctl jobs list [--json]
        tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
 
 Modes: editor, quick-input, chat, voice-commands, voice, selection-actions,
@@ -195,12 +194,6 @@ fn parse_cli_invocation(args: &[String]) -> Result<CliInvocation, String> {
             }
             command.request = Request::Run { request };
         }
-        "jobs" if args.get(1).is_some_and(|arg| arg == "list") => {
-            if args.len() != 2 {
-                return Err(USAGE.into());
-            }
-            command.request = Request::ListJobs;
-        }
         "jobs" => {
             let action = value(1)?;
             let id = value(2)?;
@@ -326,8 +319,7 @@ fn help(args: &[String]) -> Option<&'static str> {
         ["commands", "describe"] => "Usage: tyco-ctl commands describe <id | --name NAME>\nPrint the command's effective input schema and capabilities as JSON.",
         ["run"] => "Usage: tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]\n       [--replace] [--wait] [--json] [--timeout SECONDS]\nRun a library command in the Tyco overlay; a run while another runs fails with Busy. Without --wait, returns a job. With --wait, returns output.\n--json formats results and stderr errors as JSON. --timeout only bounds waiting.\nInput sources are exclusive; --replace requires --selection. Use --stdin for private text.",
         ["replace"] | ["replace", "correction"] => "Usage: tyco-ctl replace correction\nRequest correction of the current selection without waiting; requires selection permission.",
-        ["jobs"] => "Usage: tyco-ctl jobs list [--json]\n       tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]\nInspect retained invocations, cancel work, or collect results. Only wait accepts --timeout.",
-        ["jobs", "list"] => "Usage: tyco-ctl jobs list [--json]\nPrint retained jobs as JSON, newest first, without output or error details. Use status for details.",
+        ["jobs"] => "Usage: tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]\nInspect retained invocations, cancel work, or collect results. Only wait accepts --timeout.",
         ["jobs", "status"] => "Usage: tyco-ctl jobs status <job-id> [--json]\nPrint job details as JSON. Exit 0 means the job was found, even if it failed.",
         ["jobs", "cancel"] => "Usage: tyco-ctl jobs cancel <job-id> [--json]\nRequest cancellation and print job JSON. Does not roll back side effects.",
         ["jobs", "wait"] => "Usage: tyco-ctl jobs wait <job-id> [--json] [--timeout SECONDS]\nWait for completion; return output or full terminal job JSON. Exit with the job's result.\nTimeout defaults to 300 seconds (1-3600); a client timeout does not cancel the job.",
@@ -459,12 +451,8 @@ mod tests {
                 .unwrap()
                 .json
         );
-        assert_eq!(
-            command(&["jobs", "list"]).unwrap().request,
-            Request::ListJobs
-        );
-        assert!(command(&["jobs", "list", "job-1"]).is_err());
-        assert!(command(&["jobs", "list", "--timeout", "1"]).is_err());
+        // jobs are not listed: an id is known to the caller that ran it only
+        assert!(command(&["jobs", "list"]).is_err());
         for args in [
             vec!["run", "--help"],
             vec!["jobs", "wait", "-h"],

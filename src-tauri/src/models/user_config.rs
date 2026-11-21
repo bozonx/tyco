@@ -315,7 +315,7 @@ pub struct CommandConfig {
     pub run_timeout_sec: u64,
     /// The platforms the command runs on, empty for every one. On another
     /// one it stays in the config and in the grids, but does not run.
-    #[serde(default, deserialize_with = "lenient")]
+    #[serde(default, deserialize_with = "lenient_platforms")]
     pub platforms: Vec<String>,
 }
 
@@ -333,6 +333,33 @@ pub fn is_on_this_platform(platforms: &[String]) -> bool {
         || platforms
             .iter()
             .any(|platform| platform == crate::services::platform::hotkeys::platform_name())
+}
+
+/// The platforms of a command as the schema repair keeps them: the known
+/// names only, so one bad entry does not widen the command to every platform.
+pub fn platforms_from(value: &Value) -> Vec<String> {
+    let mut platforms: Vec<String> = Vec::new();
+    for platform in value.as_array().into_iter().flatten() {
+        if let Some(name) = platform
+            .as_str()
+            .filter(|name| KNOWN_PLATFORMS.contains(name))
+        {
+            if !platforms.iter().any(|known| known == name) {
+                platforms.push(name.to_owned());
+            }
+        }
+    }
+    platforms
+}
+
+/// See `COMMAND_PLATFORMS` in `commands-config.ts`.
+const KNOWN_PLATFORMS: [&str; 2] = ["linux", "windows"];
+
+fn lenient_platforms<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Ok(platforms_from(&Value::deserialize(deserializer)?))
 }
 
 /// See `RUN_TIMEOUT_DEFAULT_SEC` in `commands-config.ts`.

@@ -326,7 +326,8 @@
     "unknownType": "Typ polecenia „{type}” nie jest dostępny w tej wersji Tyco.",
     "unnamed": "Polecenie bez nazwy",
     "variablesNotSet": "Używana zmienna nie ma wartości na tym urządzeniu",
-    "warningExternalNameTwins": "Inne polecenia mają tę samą nazwę: {names}. Wywołanie po tej nazwie jest odrzucane jako niejednoznaczne; użyj ID."
+    "warningExternalNameTwins": "Inne polecenia mają tę samą nazwę: {names}. Wywołanie po tej nazwie jest odrzucane jako niejednoznaczne; użyj ID.",
+    "testRunsAllowedCommands": "Test naprawdę uruchamia polecenia, które to polecenie AI może wywołać: skrypty są wykonywane, a webhooki wysyłane."
   },
   "common": {
     "add": "Dodaj",

@@ -1,6 +1,7 @@
 import { errorMessage } from '@tyco/shared/value-guards'
 import {
   type CommandConfig,
+  commandTakesSelection,
   SCRIPT_CANCELLED_ERROR,
   type ScriptActionRequest,
   type ScriptExecutionResult,
@@ -121,6 +122,9 @@ export async function runCommandTest(
   }
   const resolvedText = pre.text ?? text
   const input = commandTakesText(command, operations) ? resolvedText : null
+  // the editor has one text field: a command of `{{SELECTION}}` gets it as
+  // the selection too, as the LLM never prepares the selection
+  const selectionText = commandTakesSelection(command) ? text : undefined
   if (command.operationId === 'script') {
     const runId = deps.newRunId()
     let over = false
@@ -133,6 +137,7 @@ export async function runCommandTest(
         ...buildScriptRequest(command.id, input, {
           captureOutput: true,
           isOutputLogged: false,
+          ...(selectionText !== undefined ? { selectionText } : {}),
         }),
         runId,
       })
@@ -160,6 +165,7 @@ export async function runCommandTest(
       signal,
       command: operationCallCommand(command.id, commandLabel(command), false),
       ...outputRequest(true),
+      ...(selectionText !== undefined ? { context: { selectionText } } : {}),
     })
     if (signal.aborted || result.cancelled) return { kind: 'cancelled' }
     if (!result.ok) {

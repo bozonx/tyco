@@ -326,7 +326,8 @@
     "unknownType": "Vrsta naredbe „{type}” nije dostupna u ovoj verziji Tyca.",
     "unnamed": "Naredba bez naziva",
     "variablesNotSet": "Varijabla koju koristi nema vrijednost na ovom uređaju",
-    "warningExternalNameTwins": "Druge naredbe imaju isti naziv: {names}. Poziv tim nazivom odbija se kao dvosmislen; koristite ID."
+    "warningExternalNameTwins": "Druge naredbe imaju isti naziv: {names}. Poziv tim nazivom odbija se kao dvosmislen; koristite ID.",
+    "testRunsAllowedCommands": "Test stvarno pokreće naredbe koje ova AI naredba smije pozivati: skripte se izvršavaju, a webhookovi šalju."
   },
   "common": {
     "add": "Dodaj",

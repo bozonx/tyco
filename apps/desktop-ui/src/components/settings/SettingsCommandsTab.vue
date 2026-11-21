@@ -117,7 +117,10 @@ import {
 import { isCommandOperation } from '../../lib/commands/command-config'
 import { externalCommandNameConflicts } from '../../lib/commands/command-external'
 import { createCommandRemovalModel } from '../../lib/commands/command-removal-model'
-import { commandUnavailableReason } from '../../lib/commands/command-runtime'
+import {
+  commandLabel,
+  commandUnavailableReason,
+} from '../../lib/commands/command-runtime'
 import { clientLogger } from '../../lib/logger'
 import { operationLabel } from '../../lib/operations/operation-label'
 import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
@@ -167,6 +170,13 @@ const setExternalAccess = (key: keyof ExternalAccess, value: boolean) => {
 const setCommands = (next: CommandConfig[]) => {
   userConfig.value.commands = next
 }
+/**
+ * The commands as the draft holds them. Edits go here by id, never as the
+ * normalized list: it leaves out entries (legacy ones, repeated ids) that one
+ * edit of another command must not delete
+ */
+const rawCommands = (): CommandConfig[] => userConfig.value.commands ?? []
+/** The commands as the library shows them */
 const commands = computed(() => normalizeCommands(userConfig.value.commands))
 /** The other commands an external call by the name of each one could mean */
 const nameConflicts = computed(() =>
@@ -271,7 +281,7 @@ function handleCreateCommand(event: CreateCommandSubmitEvent) {
   )
 
   focusedCommandId.value = command.id
-  setCommands([command, ...commands.value])
+  setCommands([command, ...rawCommands()])
   expanded.value = new Set([command.id, ...expanded.value])
   void reveal(command.id)
 }
@@ -283,8 +293,18 @@ const { draggedIndex, isSorting, startDrag, itemOffset } = useSortableList(
   { getItemKeys: () => commands.value.map((command) => command.id) }
 )
 
+/** Reorders the shown commands; entries the library does not show stay last */
 function moveCommand(from: number, to: number) {
-  setCommands(moveItem(commands.value, from, to))
+  const order = moveItem(commands.value, from, to).map((item) => item.id)
+  const raw = rawCommands()
+  const placed = new Set<CommandConfig>()
+  const moved = order.flatMap((id) => {
+    const item = raw.find((candidate) => candidate.id === id)
+    if (!item) return []
+    placed.add(item)
+    return [item]
+  })
+  setCommands([...moved, ...raw.filter((item) => !placed.has(item))])
 }
 
 const itemStyle = (index: number) => {
@@ -293,14 +313,21 @@ const itemStyle = (index: number) => {
 }
 
 function updateCommand(index: number, command: CommandConfig) {
-  const next = [...commands.value]
-  next[index] = command
-  setCommands(next)
+  const id = commands.value[index]?.id
+  if (id === undefined) return
+  let isReplaced = false
+  setCommands(
+    rawCommands().map((item) => {
+      if (isReplaced || item.id !== id) return item
+      isReplaced = true
+      return command
+    })
+  )
 }
 
 const settingsSession = useSettingsSessionStore()
 const { removeCommand } = createCommandRemovalModel({
-  getCommands: () => commands.value,
+  getCommands: rawCommands,
   getActionPages: () => userConfig.value.actionPages ?? [],
   updateCommands: setCommands,
   updateActionPages: (pages) => {
@@ -322,8 +349,8 @@ const { removeCommand } = createCommandRemovalModel({
 })
 
 const commandToDelete = ref<CommandConfig | null>(null)
-const commandToDeleteName = computed(
-  () => commandToDelete.value?.name.trim() || t('commands.unnamed')
+const commandToDeleteName = computed(() =>
+  commandToDelete.value ? commandLabel(commandToDelete.value) : ''
 )
 
 function requestDeleteCommand(command: CommandConfig) {

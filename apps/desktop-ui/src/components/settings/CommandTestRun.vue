@@ -1,5 +1,8 @@
 <template>
   <div class="test-run">
+    <p v-if="runsOtherCommands" class="test-run-status is-warning">
+      {{ t('commands.testRunsAllowedCommands') }}
+    </p>
     <FieldTextArea
       v-if="takesText"
       class="test-run-text"
@@ -71,6 +74,10 @@ import { computed, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import {
+  AI_COMMAND_OPERATION_ID,
+  aiCommandOperationConfigOf,
+} from '../../lib/ai-commands/ai-command-config'
+import {
   commandTakesText,
   validateCommand,
 } from '../../lib/commands/command-runtime'
@@ -85,7 +92,7 @@ import { useOperationsStore } from '../../stores/operations'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import Button from '../common/Button.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
-import type { CommandConfig } from '@tyco/shared'
+import { type CommandConfig, commandTakesSelection } from '@tyco/shared'
 
 /**
  * Runs a script, a webhook or an AI command from its editor and shows what came
@@ -104,9 +111,21 @@ const result = ref<CommandTestResult | null>(null)
 const isRunning = ref(false)
 let controller: AbortController | null = null
 
-const takesText = computed(() =>
-  commandTakesText(props.command, operationsStore)
+/** The test text goes to `{{TEXT}}`, and to `{{SELECTION}}` as well */
+const takesText = computed(
+  () =>
+    commandTakesText(props.command, operationsStore) ||
+    commandTakesSelection(props.command)
 )
+/**
+ * An AI command runs the commands it may call for real in a test too: a script
+ * runs, a webhook is sent
+ */
+const runsOtherCommands = computed(() => {
+  if (props.command.operationId !== AI_COMMAND_OPERATION_ID) return false
+  const config = aiCommandOperationConfigOf(props.command.operationConfig)
+  return config.isToolsEnabled !== false && config.allowedCommandIds.length > 0
+})
 /** A name or a warning alone does not keep the command from running */
 const hasIssues = computed(() =>
   validateCommand(props.command, operationsStore).some(
@@ -196,6 +215,10 @@ onUnmounted(stop)
 
 .test-run-status.is-success {
   color: var(--color-success);
+}
+
+.test-run-status.is-warning {
+  color: var(--color-warning);
 }
 
 .test-run-status.is-error {

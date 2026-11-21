@@ -326,7 +326,8 @@
     "unknownType": "此版本的 Tyco 無法使用「{type}」命令類型。",
     "unnamed": "未命名命令",
     "variablesNotSet": "其使用的變數在此裝置上沒有值",
-    "warningExternalNameTwins": "其他命令具有相同名稱：{names}。依此名稱呼叫會因不明確而遭拒；請改用 ID。"
+    "warningExternalNameTwins": "其他命令具有相同名稱：{names}。依此名稱呼叫會因不明確而遭拒；請改用 ID。",
+    "testRunsAllowedCommands": "測試會真正執行此 AI 命令可呼叫的命令：腳本會執行，Webhook 會傳送。"
   },
   "common": {
     "add": "新增",

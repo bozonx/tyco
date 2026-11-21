@@ -326,7 +326,8 @@
     "unknownType": "“{type}” komut türü Tyco'nun bu sürümünde kullanılamıyor.",
     "unnamed": "Adsız komut",
     "variablesNotSet": "Kullandığı bir değişkenin bu cihazda değeri yok",
-    "warningExternalNameTwins": "Aynı ada sahip başka komutlar var: {names}. Bu adla yapılan çağrı belirsiz olduğu için reddedilir; kimliği kullanın."
+    "warningExternalNameTwins": "Aynı ada sahip başka komutlar var: {names}. Bu adla yapılan çağrı belirsiz olduğu için reddedilir; kimliği kullanın.",
+    "testRunsAllowedCommands": "Test, bu yapay zekâ komutunun çağırabileceği komutları gerçekten çalıştırır: betikler çalışır ve webhook’lar gönderilir."
   },
   "common": {
     "add": "Ekle",

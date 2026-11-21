@@ -360,7 +360,7 @@ pub(super) fn cancel(app: &AppHandle, id: &str, code: ErrorCode) -> Response {
     let Some(job) = jobs.get(id) else {
         return Response::coded_error(ErrorCode::NotFound, "No such job");
     };
-    if !job.state.is_terminal() {
+    if !job.state.is_terminal() && !jobs.is_replacing_selection(id) {
         access::withdraw(app, id);
         let message = match code {
             ErrorCode::TimedOut if job.state == JobState::Accepted => {

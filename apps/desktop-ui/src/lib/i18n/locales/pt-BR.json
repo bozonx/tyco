@@ -326,7 +326,8 @@
     "unknownType": "O tipo de comando “{type}” não está disponível nesta versão do Tyco.",
     "unnamed": "Comando sem título",
     "variablesNotSet": "Uma variável que ele usa não tem valor neste dispositivo",
-    "warningExternalNameTwins": "Outros comandos têm o mesmo nome: {names}. Uma chamada por esse nome é recusada por ser ambígua; use o ID."
+    "warningExternalNameTwins": "Outros comandos têm o mesmo nome: {names}. Uma chamada por esse nome é recusada por ser ambígua; use o ID.",
+    "testRunsAllowedCommands": "O teste executa de verdade os comandos que este comando de IA pode chamar: scripts são executados e webhooks são enviados."
   },
   "common": {
     "add": "Adicionar",

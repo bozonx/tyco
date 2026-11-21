@@ -61,26 +61,26 @@ describe('scriptFailureDetail', () => {
 })
 
 describe('cancelScriptRun', () => {
-  it('asks again while the run is not registered yet, and stops once it is over', async () => {
-    vi.useFakeTimers()
-    try {
-      const cancel = vi
-        .fn<(runId: string) => Promise<boolean>>()
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(true)
-      cancelScriptRun(cancel, 'run-1', () => false)
-      await vi.advanceTimersByTimeAsync(500)
-      expect(cancel).toHaveBeenCalledTimes(2)
+  it('asks once, as the backend keeps a cancel that overtakes the start', async () => {
+    const cancel = vi.fn(async () => false)
+    cancelScriptRun(cancel, 'run-1', () => false)
+    await Promise.resolve()
+    expect(cancel).toHaveBeenCalledTimes(1)
+    expect(cancel).toHaveBeenCalledWith('run-1')
+  })
 
-      const late = vi.fn(async () => false)
-      let over = false
-      cancelScriptRun(late, 'run-2', () => over)
-      await vi.advanceTimersByTimeAsync(0)
-      over = true
-      await vi.advanceTimersByTimeAsync(1000)
-      expect(late).toHaveBeenCalledTimes(1)
-    } finally {
-      vi.useRealTimers()
-    }
+  it('does not ask for a run that is over', () => {
+    const cancel = vi.fn(async () => true)
+    cancelScriptRun(cancel, 'run-2', () => true)
+    expect(cancel).not.toHaveBeenCalled()
+  })
+
+  it('swallows a failed request', async () => {
+    const cancel = vi.fn(async () => {
+      throw new Error('gone')
+    })
+    cancelScriptRun(cancel, 'run-3', () => false)
+    await Promise.resolve()
+    expect(cancel).toHaveBeenCalledTimes(1)
   })
 })

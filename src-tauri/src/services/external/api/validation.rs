@@ -36,9 +36,12 @@ pub(super) fn lookup(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<
 
 /// The command `id` as the user config holds it.
 pub(super) fn raw_command<'a>(config: &'a Value, id: &str) -> Option<&'a Value> {
-    config["commands"]
-        .as_array()
-        .and_then(|commands| commands.iter().find(|item| item["id"] == id))
+    config["commands"].as_array().and_then(|commands| {
+        // ids compare trimmed, as the lookup in `command_library` does
+        commands
+            .iter()
+            .find(|item| item["id"].as_str().map(str::trim) == Some(id.trim()))
+    })
 }
 
 /// The name the user gave the command, for the access prompt.
@@ -81,7 +84,7 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
             "Choose one input source; replacement requires selection",
         )));
     }
-    if request.selection && (!command.can_take_text || command.has_structured_input) {
+    if request.selection && !command.accepts_selection() {
         return Err(Box::new(Response::coded_error(
             ErrorCode::InvalidInput,
             "This command does not accept selection text",
@@ -94,6 +97,12 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
         return Err(Box::new(Response::coded_error(
             ErrorCode::InvalidInput,
             "This command does not accept input",
+        )));
+    }
+    if command.has_structured_input && !command.can_take_text && request.text.is_some() {
+        return Err(Box::new(Response::coded_error(
+            ErrorCode::InvalidInput,
+            "This command takes structured input, not text: pass --input",
         )));
     }
     if command.has_structured_input && !command.can_take_text && request.input.is_none() {
@@ -116,6 +125,7 @@ mod tests {
             id: "test".into(),
             can_take_text: true,
             has_structured_input: false,
+            can_take_selection: false,
         }
     }
 
@@ -132,6 +142,52 @@ mod tests {
         assert!(validate_run(&command, &request).is_ok());
         request.selection = true;
         assert!(validate_run(&command, &request).is_err());
+    }
+
+    #[test]
+    fn a_command_of_the_selection_alone_takes_selection_but_no_text() {
+        let command = ExternalCommand {
+            can_take_text: false,
+            can_take_selection: true,
+            ..command()
+        };
+        let mut request = RunRequest {
+            target: "test".into(),
+            selection: true,
+            replace: true,
+            ..Default::default()
+        };
+        assert!(validate_run(&command, &request).is_ok());
+        request.selection = false;
+        request.replace = false;
+        request.text = Some("text".into());
+        assert!(validate_run(&command, &request).is_err());
+    }
+
+    #[test]
+    fn a_structured_command_refuses_text_and_requires_input() {
+        let command = ExternalCommand {
+            can_take_text: false,
+            has_structured_input: true,
+            ..command()
+        };
+        let mut request = RunRequest {
+            target: "test".into(),
+            text: Some("text".into()),
+            ..Default::default()
+        };
+        let error = validate_run(&command, &request).unwrap_err();
+        assert_eq!(error.code.as_deref(), Some("InvalidInput"));
+        request.text = None;
+        let error = validate_run(&command, &request).unwrap_err();
+        assert_eq!(error.code.as_deref(), Some("InputRequired"));
+    }
+
+    #[test]
+    fn raw_commands_are_found_by_their_trimmed_id() {
+        let config = json!({"commands": [{"id": " backup "}]});
+        assert!(raw_command(&config, "backup").is_some());
+        assert!(raw_command(&config, "other").is_none());
     }
 
     #[test]

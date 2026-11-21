@@ -326,7 +326,8 @@
     "unknownType": "“{type}” 명령 유형은 이 버전의 Tyco에서 사용할 수 없습니다.",
     "unnamed": "제목 없는 명령",
     "variablesNotSet": "사용하는 변수에 이 기기의 값이 없습니다",
-    "warningExternalNameTwins": "동일한 이름을 가진 다른 명령이 있습니다: {names}. 이름으로 호출하면 모호하여 거부되므로 ID를 사용하세요."
+    "warningExternalNameTwins": "동일한 이름을 가진 다른 명령이 있습니다: {names}. 이름으로 호출하면 모호하여 거부되므로 ID를 사용하세요.",
+    "testRunsAllowedCommands": "테스트는 이 AI 명령이 호출할 수 있는 명령을 실제로 실행합니다. 스크립트가 실행되고 웹훅이 전송됩니다."
   },
   "common": {
     "add": "추가",

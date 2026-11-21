@@ -326,7 +326,8 @@
     "unknownType": "Tipul de comandă „{type}” nu este disponibil în această versiune Tyco.",
     "unnamed": "Comandă fără nume",
     "variablesNotSet": "O variabilă pe care o folosește nu are valoare pe acest dispozitiv",
-    "warningExternalNameTwins": "Alte comenzi au același nume: {names}. Un apel cu acest nume este refuzat ca ambiguu; folosiți ID-ul."
+    "warningExternalNameTwins": "Alte comenzi au același nume: {names}. Un apel cu acest nume este refuzat ca ambiguu; folosiți ID-ul.",
+    "testRunsAllowedCommands": "Testul rulează cu adevărat comenzile pe care această comandă AI le poate apela: scripturile rulează, iar webhook-urile sunt trimise."
   },
   "common": {
     "add": "Adaugă",

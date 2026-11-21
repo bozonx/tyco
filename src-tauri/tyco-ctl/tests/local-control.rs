@@ -11,7 +11,6 @@ fn server_fixture() {
     }
     tyco_activation_protocol::transport::serve(|request| match request {
         Request::Status => Response::json(&serde_json::json!({"apiVersion":API_VERSION})),
-        Request::ListJobs => Response::json(&serde_json::json!([{ "id": "test-job", "commandId": "test", "state": "failed" }])),
         Request::Run { request } => Response::json(&serde_json::json!({"id":"test-job","commandId":request.target,"state":"succeeded","output":request.text})),
         Request::JobStatus { .. } => Response::json(&serde_json::json!({"id":"test-job","commandId":"test","state":"failed","error":"Test failure","code":"ExecutionFailed"})),
         _ => Response::coded_error(ErrorCode::AccessDenied, "Test denial"),
@@ -134,10 +133,6 @@ fn cli_round_trip_and_failures() {
             .code(),
         Some(5)
     );
-    let list = client().args(["jobs", "list"]).output().unwrap();
-    assert!(list.status.success());
-    let jobs: serde_json::Value = serde_json::from_slice(&list.stdout).unwrap();
-    assert_eq!(jobs[0]["id"], "test-job");
     let failure = client()
         .args(["jobs", "wait", "test-job", "--json"])
         .output()
@@ -187,7 +182,7 @@ fn cli_round_trip_and_failures() {
     let error: serde_json::Value = serde_json::from_slice(&unavailable.stderr).unwrap();
     assert_eq!(error["code"], "Unavailable");
     assert!(client()
-        .args(["jobs", "list", "--help"])
+        .args(["jobs", "--help"])
         .output()
         .unwrap()
         .status

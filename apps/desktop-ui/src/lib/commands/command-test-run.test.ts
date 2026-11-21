@@ -86,6 +86,14 @@ describe('runCommandTest', () => {
     expect(d.executeScriptAction.mock.calls[0][0].text).toBe('')
   })
 
+  it('passes the test text as the selection to a script of `{{SELECTION}}`', async () => {
+    const d = deps()
+    await testScript(script({ command: 'echo {{SELECTION}}' }), d, 'picked')
+    expect(d.executeScriptAction).toHaveBeenCalledWith(
+      expect.objectContaining({ text: '', selectionText: 'picked' })
+    )
+  })
+
   it('runs only the script as it is saved', async () => {
     for (const savedCommand of [
       undefined,

@@ -326,7 +326,8 @@
     "unknownType": "コマンドの種類「{type}」はこのバージョンのTycoでは利用できません。",
     "unnamed": "無題のコマンド",
     "variablesNotSet": "使用している変数にこのデバイスの値がありません",
-    "warningExternalNameTwins": "同じ名前のコマンドが他に存在します: {names}。この名前での呼び出しは曖昧なため拒否されます。IDを使用してください。"
+    "warningExternalNameTwins": "同じ名前のコマンドが他に存在します: {names}。この名前での呼び出しは曖昧なため拒否されます。IDを使用してください。",
+    "testRunsAllowedCommands": "テストでは、この AI コマンドが呼び出せるコマンドが実際に実行されます。スクリプトが実行され、Webhook が送信されます。"
   },
   "common": {
     "add": "追加",
