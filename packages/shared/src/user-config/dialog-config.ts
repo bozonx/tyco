@@ -14,6 +14,8 @@ export interface DialogWindowGeometry {
 }
 
 export interface DialogConfig {
+  /** Whether the dialog mode is offered: its tab, its view and its settings */
+  isEnabled: boolean
   source: DialogSource
   /** The language the other side is translated into; empty: no translation */
   translationTargetLanguage: string

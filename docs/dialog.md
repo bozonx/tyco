@@ -5,6 +5,10 @@ The **Dialog** tab of the main window listens to a call in any application
 turns: the other side on the left, you on the right. What the other side says
 is translated as it comes.
 
+If you only use TyCo for typing, turn **Dialog mode** off in
+**Settings → Dialog**: the tab goes away, and a running dialog stops with its
+transcript saved.
+
 ## Starting and stopping
 
 Press **Start** during the call. The dialog keeps going when you switch tabs,

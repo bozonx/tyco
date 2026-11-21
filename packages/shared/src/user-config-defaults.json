@@ -263,6 +263,7 @@
     }
   },
   "dialog": {
+    "isEnabled": true,
     "source": "microphoneAndSystem",
     "translationTargetLanguage": "",
     "textDisplay": "both",

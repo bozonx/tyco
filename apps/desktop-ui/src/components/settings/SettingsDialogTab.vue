@@ -1,6 +1,17 @@
 <template>
   <SettingsSection>
     <FieldRow
+      :label="t('settings.dialogEnabled')"
+      :hint="t('settings.dialogEnabledHint')"
+    >
+      <FieldSwitch
+        :model-value="dialog.isEnabled"
+        @update:model-value="setDialog({ isEnabled: $event })"
+      />
+    </FieldRow>
+  </SettingsSection>
+  <SettingsSection v-if="dialog.isEnabled">
+    <FieldRow
       :label="t('settings.dialogTranslationProvider')"
       :hint="t('settings.dialogTranslationProviderHint')"
     >
@@ -59,6 +70,7 @@ import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import DirectoryPickerButton from './DirectoryPickerButton.vue'
 import SettingsSection from './SettingsSection.vue'
 import { DEFAULT_USER_CONFIG, type DialogConfig } from '@tyco/shared'

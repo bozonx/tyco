@@ -1336,6 +1336,8 @@
     "translationVoiceCommand": "Sprachbefehl",
     "translationVoiceCommandInfo": "Fügt den Übersetzungsbefehl zu den Sprachbefehlen hinzu („übersetze auf [Sprache]“).",
     "dialogTab": "Dialog",
+    "dialogEnabled": "Dialogmodus",
+    "dialogEnabledHint": "Zeigt den Tab „Dialog“: ein Live-Transkript eines Anrufs mit Übersetzung der Gegenseite. Schalten Sie ihn aus, wenn Sie nur Text eingeben.",
     "dialogTranslationProvider": "Übersetzungsdienst",
     "dialogTranslationProviderHint": "Der Dienst, der die Gegenseite übersetzt. Übersetzt wird während des Gesprächs, ein schneller Dienst hält daher besser mit.",
     "dialogProviderDefault": "Wie in den Übersetzungseinstellungen",

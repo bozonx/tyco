@@ -1330,6 +1330,8 @@
     "translationVoiceCommand": "语音命令",
     "translationVoiceCommandInfo": "在语音命令中包含翻译命令（“翻译成[语言]”）。",
     "dialogTab": "对话",
+    "dialogEnabled": "对话模式",
+    "dialogEnabledHint": "显示“对话”标签页：实时转写通话并翻译对方的发言。如果只需要输入文字，可将其关闭。",
     "dialogTranslationProvider": "翻译服务",
     "dialogTranslationProviderHint": "翻译对方发言的服务。翻译在对话进行时完成，因此更快的服务延迟更小。",
     "dialogProviderDefault": "与翻译设置相同",

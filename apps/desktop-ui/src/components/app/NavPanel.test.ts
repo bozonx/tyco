@@ -1,4 +1,6 @@
 import { shallowMount } from '@vue/test-utils'
+import { DEFAULT_USER_CONFIG } from '@tyco/shared'
+import { nextTick } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
@@ -95,6 +97,17 @@ describe('NavPanel.vue', () => {
     const wrapper = shallowMount(NavPanel)
     expect(wrapper.text()).toContain('nav.editor')
     expect(wrapper.text()).toContain('nav.aiChat')
+  })
+
+  it('hides the dialog tab while the dialog mode is off', async () => {
+    const wrapper = shallowMount(NavPanel)
+    expect(wrapper.text()).toContain('nav.dialog')
+
+    desktop.setUserConfig({
+      dialog: { ...DEFAULT_USER_CONFIG.dialog, isEnabled: false },
+    })
+    await nextTick()
+    expect(wrapper.text()).not.toContain('nav.dialog')
   })
 
   it('renders divider and profile tabs when profiles are provided', async () => {

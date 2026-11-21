@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 
 import Button from '../components/common/Button.vue'
 import InlineNotice from '../components/common/InlineNotice.vue'
@@ -51,6 +51,14 @@ import { useDialogStore } from '../stores/dialog'
 
 const dialog = useDialogStore()
 const { t } = useI18n()
+
+// the mode turned off in the settings takes its view away
+watch(
+  () => dialog.isEnabled,
+  (isEnabled) => {
+    if (!isEnabled) void appNavigation.goToEditor()
+  }
+)
 
 /** Bubbles on both sides when the user is heard too, else paragraphs */
 const isBubble = computed(() =>

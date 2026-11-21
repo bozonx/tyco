@@ -1330,6 +1330,8 @@
     "translationVoiceCommand": "語音指令",
     "translationVoiceCommandInfo": "在語音指令中包含翻譯指令（「翻譯成[語言]」）。",
     "dialogTab": "對話",
+    "dialogEnabled": "對話模式",
+    "dialogEnabledHint": "顯示「對話」分頁：即時轉寫通話並翻譯對方的發言。如果只需要輸入文字，可將其關閉。",
     "dialogTranslationProvider": "翻譯服務",
     "dialogTranslationProviderHint": "翻譯對方發言的服務。翻譯在對話進行時完成，因此較快的服務延遲較小。",
     "dialogProviderDefault": "與翻譯設定相同",

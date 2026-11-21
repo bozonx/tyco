@@ -1336,6 +1336,8 @@
     "translationVoiceCommand": "Comandă vocală",
     "translationVoiceCommandInfo": "Include comanda de traducere în comenzile vocale („tradu în [limbă]”).",
     "dialogTab": "Dialog",
+    "dialogEnabled": "Mod dialog",
+    "dialogEnabledHint": "Afișează fila Dialog: transcrierea în timp real a unui apel, cu traducerea interlocutorului. Dezactivați-l dacă doar introduceți text.",
     "dialogTranslationProvider": "Serviciu de traducere",
     "dialogTranslationProviderHint": "Serviciul care traduce interlocutorul. Traducerea se face în timpul conversației, așa că unul rapid rămâne mai puțin în urmă.",
     "dialogProviderDefault": "Ca în setările de traducere",

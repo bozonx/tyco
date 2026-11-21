@@ -2,9 +2,9 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 
 import { clientLogger } from '../lib/logger'
 import { APP_ROUTES } from '../lib/navigation/routes'
+import { useDesktopStore } from '../stores/desktop'
 import ChatView from '../views/ChatView.vue'
 import CorrectionView from '../views/CorrectionView.vue'
-import DialogView from '../views/DialogView.vue'
 import EditorView from '../views/EditorView.vue'
 import HistoryView from '../views/HistoryView.vue'
 import HomeView from '../views/HomeView.vue'
@@ -57,7 +57,12 @@ const router = createRouter({
     {
       path: APP_ROUTES.DIALOG.path,
       name: APP_ROUTES.DIALOG.name,
-      component: DialogView,
+      // an optional mode: its view loads only when opened
+      component: () => import('../views/DialogView.vue'),
+      beforeEnter: () =>
+        useDesktopStore().userConfig?.dialog?.isEnabled === false
+          ? APP_ROUTES.HOME.path
+          : true,
     },
     {
       path: APP_ROUTES.WRITE.path,

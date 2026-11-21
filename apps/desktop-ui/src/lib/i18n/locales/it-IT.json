@@ -1336,6 +1336,8 @@
     "translationVoiceCommand": "Comando vocale",
     "translationVoiceCommandInfo": "Include il comando di traduzione nei comandi vocali («traduci in [lingua]»). ",
     "dialogTab": "Dialogo",
+    "dialogEnabled": "Modalità dialogo",
+    "dialogEnabledHint": "Mostra la scheda Dialogo: la trascrizione in tempo reale di una chiamata con la traduzione dell’interlocutore. Disattivala se scrivi soltanto testo.",
     "dialogTranslationProvider": "Servizio di traduzione",
     "dialogTranslationProviderHint": "Il servizio che traduce l’interlocutore. La traduzione avviene durante la conversazione, quindi uno veloce resta meno indietro.",
     "dialogProviderDefault": "Come nelle impostazioni di traduzione",

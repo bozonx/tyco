@@ -1336,6 +1336,8 @@
     "translationVoiceCommand": "Voice command",
     "translationVoiceCommandInfo": "Includes the translation command in voice commands (\"translate to [language]\").",
     "dialogTab": "Dialog",
+    "dialogEnabled": "Dialog mode",
+    "dialogEnabledHint": "Shows the Dialog tab: a live transcript of a call with translation of the other side. Turn it off if you only type.",
     "dialogTranslationProvider": "Translation service",
     "dialogTranslationProviderHint": "The service that translates the other side. Translation runs as they speak, so a fast one keeps up better.",
     "dialogProviderDefault": "As in the translation settings",

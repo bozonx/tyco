@@ -1330,6 +1330,8 @@
     "translationVoiceCommand": "Hlasový příkaz",
     "translationVoiceCommandInfo": "Zahrne příkaz překladu do hlasových příkazů („přelož do [jazyk]“).",
     "dialogTab": "Dialog",
+    "dialogEnabled": "Režim dialogu",
+    "dialogEnabledHint": "Zobrazí kartu Dialog: živý přepis hovoru s překladem protistrany. Vypněte, pokud jen píšete text.",
     "dialogTranslationProvider": "Překladová služba",
     "dialogTranslationProviderHint": "Služba, která překládá druhou stranu. Překládá se během hovoru, takže rychlá služba méně zaostává.",
     "dialogProviderDefault": "Jako v nastavení překladu",

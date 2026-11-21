@@ -1333,6 +1333,8 @@
     "translationVoiceCommand": "Sesli komut",
     "translationVoiceCommandInfo": "Çeviri komutunu sesli komutlara dahil eder („[dil] çevir”).",
     "dialogTab": "Diyalog",
+    "dialogEnabled": "Diyalog modu",
+    "dialogEnabledHint": "Diyalog sekmesini gösterir: karşı tarafın çevirisiyle bir aramanın canlı dökümü. Yalnızca metin yazıyorsanız kapatın.",
     "dialogTranslationProvider": "Çeviri hizmeti",
     "dialogTranslationProviderHint": "Karşı tarafı çeviren hizmet. Çeviri konuşma sırasında yapılır; hızlı bir hizmet daha az geride kalır.",
     "dialogProviderDefault": "Çeviri ayarlarındaki gibi",

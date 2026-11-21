@@ -1336,6 +1336,8 @@
     "translationVoiceCommand": "Polecenie głosowe",
     "translationVoiceCommandInfo": "Dołącza polecenie tłumaczenia do poleceń głosowych („przetłumacz na [język]”).",
     "dialogTab": "Dialog",
+    "dialogEnabled": "Tryb dialogu",
+    "dialogEnabledHint": "Pokazuje kartę Dialog: transkrypcję rozmowy na żywo z tłumaczeniem rozmówcy. Wyłącz, jeśli tylko wpisujesz tekst.",
     "dialogTranslationProvider": "Usługa tłumaczenia",
     "dialogTranslationProviderHint": "Usługa, która tłumaczy rozmówcę. Tłumaczenie odbywa się w trakcie rozmowy, więc szybka usługa mniej się opóźnia.",
     "dialogProviderDefault": "Jak w ustawieniach tłumaczenia",

@@ -41,6 +41,7 @@ import { useSecretsStore } from './secrets'
 import { useTranslationStore } from './translation'
 
 const DEFAULT_DIALOG_CONFIG: DialogConfig = {
+  isEnabled: true,
   source: 'microphoneAndSystem',
   translationTargetLanguage: '',
   textDisplay: 'both',
@@ -69,6 +70,7 @@ export const useDialogStore = defineStore('dialog', () => {
     ...DEFAULT_DIALOG_CONFIG,
     ...desktopStore.userConfig?.dialog,
   }))
+  const isEnabled = computed(() => config.value.isEnabled)
   const status = ref<DialogSessionStatus>('idle')
   const channelStatus = reactive<
     Partial<Record<DialogSide, DialogChannelStatus>>
@@ -363,6 +365,11 @@ export const useDialogStore = defineStore('dialog', () => {
   )
   // an external request stops a running dialog; the transcript is saved first
   const unregisterVisibleWork = useVisibleWorkStore().register(stopAndSave)
+  // turning the mode off ends a running dialog with its transcript saved
+  watch(isEnabled, (isOn) => {
+    if (isOn) return
+    void Promise.all([stopAndSave(), hideSubtitles()])
+  })
   onScopeDispose(() => {
     unregisterFlush()
     unregisterVisibleWork()
@@ -426,6 +433,7 @@ export const useDialogStore = defineStore('dialog', () => {
     .catch(() => undefined)
 
   return {
+    isEnabled,
     config,
     status,
     channelStatus,

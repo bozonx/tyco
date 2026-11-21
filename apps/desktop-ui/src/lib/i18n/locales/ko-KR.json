@@ -1330,6 +1330,8 @@
     "translationVoiceCommand": "음성 명령",
     "translationVoiceCommandInfo": "음성 명령에 번역 명령을 포함합니다(“[언어]로 번역”).",
     "dialogTab": "대화",
+    "dialogEnabled": "대화 모드",
+    "dialogEnabledHint": "대화 탭을 표시합니다. 통화를 실시간으로 받아쓰고 상대방의 말을 번역합니다. 텍스트 입력만 사용한다면 끄세요.",
     "dialogTranslationProvider": "번역 서비스",
     "dialogTranslationProviderHint": "상대방의 말을 번역하는 서비스입니다. 대화 중에 번역하므로 빠른 서비스일수록 덜 뒤처집니다.",
     "dialogProviderDefault": "번역 설정과 동일",

@@ -1333,6 +1333,8 @@
     "translationVoiceCommand": "Hangparancs",
     "translationVoiceCommandInfo": "Bekapcsolja a fordítási parancsot a hangparancsok közé („fordítsd le [nyelv] nyelvre”).",
     "dialogTab": "Párbeszéd",
+    "dialogEnabled": "Párbeszéd mód",
+    "dialogEnabledHint": "Megjeleníti a Párbeszéd lapot: egy hívás élő átiratát a másik fél fordításával. Kapcsolja ki, ha csak szöveget gépel.",
     "dialogTranslationProvider": "Fordítási szolgáltatás",
     "dialogTranslationProviderHint": "A szolgáltatás, amely a másik felet fordítja. A fordítás beszélgetés közben zajlik, így egy gyors szolgáltatás kevésbé marad le.",
     "dialogProviderDefault": "Mint a fordítási beállításokban",

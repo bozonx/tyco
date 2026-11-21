@@ -1333,6 +1333,8 @@
     "translationVoiceCommand": "音声コマンド",
     "translationVoiceCommandInfo": "音声コマンドに翻訳コマンドを含めます（「[言語]に翻訳」）。",
     "dialogTab": "会話",
+    "dialogEnabled": "ダイアログモード",
+    "dialogEnabledHint": "「ダイアログ」タブを表示します。通話をリアルタイムで文字起こしし、相手の発言を翻訳します。テキスト入力だけを使う場合はオフにしてください。",
     "dialogTranslationProvider": "翻訳サービス",
     "dialogTranslationProviderHint": "相手の発言を翻訳するサービスです。会話中に翻訳するため、速いサービスほど遅れが少なくなります。",
     "dialogProviderDefault": "翻訳設定と同じ",

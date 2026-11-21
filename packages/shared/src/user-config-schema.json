@@ -1355,6 +1355,7 @@
     "dialog": {
       "type": "object",
       "properties": {
+        "isEnabled": { "type": "boolean", "default": true },
         "source": {
           "enum": ["microphoneAndSystem", "system"],
           "default": "microphoneAndSystem"
@@ -1391,6 +1392,7 @@
         "isRecordingNoticeAcknowledged": { "type": "boolean" }
       },
       "required": [
+        "isEnabled",
         "source",
         "translationTargetLanguage",
         "textDisplay",

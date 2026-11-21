@@ -410,6 +410,7 @@
         { "action": null, "takesSelection": true }
       ],
       "dialog": {
+        "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "textDisplay": "both",
@@ -844,6 +845,7 @@
         { "action": null, "takesSelection": true }
       ],
       "dialog": {
+        "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "textDisplay": "both",
@@ -1271,6 +1273,7 @@
         { "action": null, "takesSelection": true }
       ],
       "dialog": {
+        "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "textDisplay": "both",
@@ -1708,6 +1711,7 @@
         { "action": null, "takesSelection": true }
       ],
       "dialog": {
+        "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "textDisplay": "both",
@@ -2123,6 +2127,7 @@
         { "action": null, "takesSelection": true }
       ],
       "dialog": {
+        "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "textDisplay": "both",
@@ -2550,6 +2555,7 @@
         { "action": null, "takesSelection": true }
       ],
       "dialog": {
+        "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "textDisplay": "both",
@@ -2979,6 +2985,7 @@
         { "action": null, "takesSelection": true }
       ],
       "dialog": {
+        "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "textDisplay": "both",
@@ -3415,6 +3422,7 @@
         { "action": null, "takesSelection": true }
       ],
       "dialog": {
+        "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "textDisplay": "both",
@@ -3863,6 +3871,7 @@
         { "action": null, "takesSelection": true }
       ],
       "dialog": {
+        "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "textDisplay": "both",
@@ -4390,6 +4399,7 @@
         { "action": null, "takesSelection": true }
       ],
       "dialog": {
+        "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "textDisplay": "both",
@@ -4937,6 +4947,7 @@
         { "action": null, "takesSelection": true }
       ],
       "dialog": {
+        "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "textDisplay": "both",

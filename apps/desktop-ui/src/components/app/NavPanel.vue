@@ -16,6 +16,7 @@
         {{ t('nav.editor') }}
       </button>
       <button
+        v-if="dialogStore.isEnabled"
         type="button"
         class="topbar-tab"
         :aria-current="isDialogActive ? 'page' : undefined"
