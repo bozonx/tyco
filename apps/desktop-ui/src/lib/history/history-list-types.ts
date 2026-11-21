@@ -23,6 +23,8 @@ export interface HistoryListItem {
     /** Gone from where the entry points: no action is offered */
     isMissing: boolean
     missingLabel: string
+    /** Said of a file that is there, e.g. that it holds only a part */
+    note?: string
     action: HistoryListAction
   }
 }

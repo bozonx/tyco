@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 3518eb77c85a1ed6faf22fcbf43b04751e2501b942d926691d098fb0af8e058e
+// Source hash: 1e31e4e75c1b21cbab92d97c1225c8be89eaea3dee29eeccef2d9f25f53cdeb2
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -539,6 +539,11 @@ export type EditorHistoryDialog = {
    * file may have been moved or deleted since.
    */
   recordingPath?: string
+  /**
+   * The recording stopped before the session did, e.g. the disk filled up: the
+   * file holds only the beginning.
+   */
+  isRecordingIncomplete?: boolean
 }
 
 /** What the dialog listened to. */

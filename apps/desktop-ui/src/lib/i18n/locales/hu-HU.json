@@ -512,6 +512,7 @@
     "filterListen": "Rendszerhang",
     "kindDialog": "Párbeszéd",
     "recordingNotFound": "a fájl nem található",
+    "recordingIncomplete": "a felvétel hiányos",
     "showInFolder": "Megjelenítés a mappában"
   },
   "input": {

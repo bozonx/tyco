@@ -176,4 +176,43 @@ describe('createDialogTranslationQueue', () => {
       )
     ).toEqual([])
   })
+
+  it('runs one request at a time after a clear during a request', async () => {
+    const calls: ReturnType<typeof deferred<string>>[] = []
+    let inFlight = 0
+    let maxInFlight = 0
+    const queue = createDialogTranslationQueue({
+      translate: async () => {
+        inFlight += 1
+        maxInFlight = Math.max(maxInFlight, inFlight)
+        const call = deferred<string>()
+        calls.push(call)
+        try {
+          return await call.promise
+        } finally {
+          inFlight -= 1
+        }
+      },
+      targetLanguage: () => 'ru-RU',
+      onUpdate: () => undefined,
+    })
+    queue.enqueue(segment('old'))
+    await Promise.resolve()
+    queue.clear()
+    queue.enqueue(segment('new'))
+    await Promise.resolve()
+    // the request of the cleared dialog ends while the new one runs
+    calls[0].resolve('old')
+    await new Promise((resolve) => setTimeout(resolve))
+    queue.enqueue(segment('next', 'remote', 60_000))
+    await new Promise((resolve) => setTimeout(resolve))
+    expect(maxInFlight).toBe(2)
+    expect(inFlight).toBe(1)
+    calls[1].resolve('new')
+    await new Promise((resolve) => setTimeout(resolve))
+    calls[2]?.resolve('next')
+    await queue.idle()
+    expect(calls).toHaveLength(3)
+    expect(maxInFlight).toBe(2)
+  })
 })

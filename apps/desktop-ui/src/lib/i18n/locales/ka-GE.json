@@ -512,6 +512,7 @@
     "filterListen": "სისტემის ხმა",
     "kindDialog": "დიალოგი",
     "recordingNotFound": "ფაილი ვერ მოიძებნა",
+    "recordingIncomplete": "ჩანაწერი არასრულია",
     "showInFolder": "საქაღალდეში ჩვენება"
   },
   "input": {

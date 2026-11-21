@@ -512,6 +512,7 @@
     "filterListen": "Zvuk sustava",
     "kindDialog": "Dijalog",
     "recordingNotFound": "datoteka nije pronađena",
+    "recordingIncomplete": "snimka je nepotpuna",
     "showInFolder": "Prikaži u mapi"
   },
   "input": {

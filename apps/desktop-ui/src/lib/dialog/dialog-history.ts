@@ -21,6 +21,8 @@ export interface DialogHistory {
   checkpoint: () => Promise<void>
   /** A last checkpoint; the session stays closed until `begin` */
   end: () => Promise<void>
+  /** The recording of the session stopped early: the entry tells so */
+  markRecordingIncomplete: () => Promise<void>
   dispose: () => void
 }
 
@@ -28,7 +30,8 @@ interface Session {
   meta: EditorHistoryDialog
   /** The entry's id once it was stored */
   id?: string
-  savedText: string
+  /** The text last written; none: the entry was never written */
+  savedText?: string
   /** The user deleted the entry: the session is not written again */
   isDropped: boolean
 }
@@ -36,7 +39,8 @@ interface Session {
 /**
  * The history entry of a dialog session: one per Start, created with the first
  * finished turn and rewritten under its id as more follow. A session that
- * recognized nothing leaves no entry.
+ * recognized nothing leaves no entry unless it was recorded: the entry is the
+ * way back to the file.
  */
 export function createDialogHistory(
   deps: DialogHistoryDependencies
@@ -63,7 +67,8 @@ export function createDialogHistory(
     pending = pending.then(async () => {
       if (target.isDropped) return
       const text = deps.getText()
-      if (!text.trim() || text === target.savedText) return
+      if (!text.trim() && !target.meta.recordingPath) return
+      if (text === target.savedText) return
       try {
         const id = await deps.save({
           ...(target.id && { id: target.id }),
@@ -82,26 +87,37 @@ export function createDialogHistory(
     return pending
   }
 
+  // closed at once, written after: a `begin` meanwhile keeps its own session
   const end = async () => {
     stopTimer()
     const ending = session
+    session = undefined
     if (!ending) return pending
     await write(ending)
-    // a session begun meanwhile stays open
-    if (session === ending) session = undefined
   }
 
   return {
     async begin(meta) {
-      await end()
-      session = { meta, savedText: '', isDropped: false }
-      const current = session
+      const ending = end()
+      const current: Session = { meta, isDropped: false }
+      session = current
       timer = startInterval(() => {
         void write(current)
       }, deps.intervalMs ?? DIALOG_HISTORY_INTERVAL_MS)
+      await ending
+      // the first write of a recorded session links its file at once
+      await write(current)
     },
     checkpoint: () => (session ? write(session) : pending),
     end,
+    markRecordingIncomplete() {
+      const current = session
+      if (!current?.meta.recordingPath) return pending
+      current.meta = { ...current.meta, isRecordingIncomplete: true }
+      // rewritten even if the text is the same
+      current.savedText = undefined
+      return write(current)
+    },
     dispose() {
       stopTimer()
       session = undefined

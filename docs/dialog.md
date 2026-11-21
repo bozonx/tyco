@@ -77,7 +77,8 @@ With the history turned on (**Settings → History**), each conversation from
 above. It is saved every few seconds while the conversation goes on, and when
 you stop, hide the window or quit TyCo, so a crash loses little. Words still
 being recognized are not saved. A conversation in which nothing was
-recognized leaves no entry. The entry is kept as long as other history
+recognized leaves no entry, unless it was recorded: then the entry is there
+from the start, so the recording can always be found. The entry is kept as long as other history
 entries and is deleted the same way.
 
 ## Recording the call
@@ -101,8 +102,12 @@ does not move the recordings made before. A file is named by the time it
 started, e.g. `TyCo dialog 2026-11-20 14-03-05.opus`. The history entry of a
 recorded conversation shows the file name and **Show in folder**, or "file
 not found" once the file was moved or deleted. Deleting the history entry
-leaves the file where it is. If the file cannot be written (the disk is
-full, the folder is gone), the recording stops and the transcript goes on.
+leaves the file where it is. If the disk falls behind for a moment, the
+missed sound is replaced by silence of the same length, so the file keeps
+the time of the call. If the file cannot be written at all (the disk is
+full, the folder is gone), the recording stops, the transcript goes on, and
+the history entry marks the recording as incomplete. A conversation stopped
+before any sound was captured leaves no file.
 
 Recordings are not part of the TyCo data folder and are not synchronized with
 it. Calls started from the command line or D-Bus are never recorded.

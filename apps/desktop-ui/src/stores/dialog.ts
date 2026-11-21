@@ -158,6 +158,7 @@ export const useDialogStore = defineStore('dialog', () => {
               recording.value = undefined
               errorText.value = translate('dialog.recordingFailed')
               canFixInSettings.value = false
+              void dialogHistory.markRecordingIncomplete()
             },
           },
           desktopStore.userConfig.stt.microphoneId,
@@ -391,12 +392,20 @@ export const useDialogStore = defineStore('dialog', () => {
     if (result.success) isSubtitlesShown.value = true
   }
 
+  let isHidingSubtitles = false
+
   async function hideSubtitles() {
-    if (!isSubtitlesShown.value) return
-    isSubtitlesShown.value = false
-    const result = await useIpcStore().callOrNotify('hide_subtitles')
-    if (result.success && result.result)
-      await updateConfig({ compactGeometry: result.result })
+    if (!isSubtitlesShown.value || isHidingSubtitles) return
+    isHidingSubtitles = true
+    try {
+      const result = await useIpcStore().callOrNotify('hide_subtitles')
+      // a window that did not hide is still shown and still updated
+      if (!result.success) return
+      isSubtitlesShown.value = false
+      if (result.result) await updateConfig({ compactGeometry: result.result })
+    } finally {
+      isHidingSubtitles = false
+    }
   }
 
   void desktopClient

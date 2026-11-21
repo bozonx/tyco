@@ -4,6 +4,10 @@
 //! often, and Ogg pages stand on their own, so a crash leaves a file that
 //! plays up to its last page. There is no finalization to miss.
 //!
+//! A disk that falls behind costs no audio up to a minute: what could not be
+//! queued becomes silence of the same length once the queue frees, so the
+//! file keeps the call's timeline.
+//!
 //! Granule positions follow RFC 7845: always counted at 48 kHz, whatever the
 //! input rate, starting with the encoder's pre-skip.
 use std::fs::File;
@@ -30,6 +34,8 @@ const STEREO_BITRATE_BPS: i32 = 32_000;
 const MONO_BITRATE_BPS: i32 = 24_000;
 /// How many chunks of about 100 ms may wait for the disk.
 const QUEUE_CHUNKS: usize = 100;
+/// The longest gap of a stalled disk that is filled with silence.
+const MAX_GAP_SECONDS: usize = 60;
 const VENDOR: &str = "TyCo";
 
 fn encoding_error(error: opus::Error) -> io::Error {
@@ -57,10 +63,13 @@ pub struct OggOpusWriter<W: Write> {
 }
 
 impl OggOpusWriter<BufWriter<File>> {
-    /// Creates the file, refusing to overwrite one.
+    /// Creates the file, refusing to overwrite one; a file whose headers
+    /// could not be written is removed.
     pub fn create(path: &Path, sample_rate_hz: u32, channels: u16) -> io::Result<Self> {
         let file = File::options().write(true).create_new(true).open(path)?;
-        Self::new(BufWriter::new(file), sample_rate_hz, channels)
+        Self::new(BufWriter::new(file), sample_rate_hz, channels).inspect_err(|_| {
+            let _ = std::fs::remove_file(path);
+        })
     }
 }
 
@@ -197,7 +206,12 @@ impl<W: Write> OggOpusWriter<W> {
 /// encoder runs on a thread of its own. A failed write ends the recording
 /// only; the capture goes on.
 pub struct RecordingSink {
+    path: PathBuf,
     sender: Option<SyncSender<Vec<i16>>>,
+    /// Interleaved samples that did not fit the queue, owed as silence.
+    owed_samples: usize,
+    max_owed_samples: usize,
+    has_audio: bool,
     thread: Option<thread::JoinHandle<()>>,
     failure: Arc<Mutex<Option<String>>>,
     is_failed: Arc<AtomicBool>,
@@ -211,6 +225,7 @@ impl RecordingSink {
                 AppError::Failed(format!("Cannot create the recordings folder: {error}"))
             })?;
         }
+        let file_path = path.clone();
         let mut writer = OggOpusWriter::create(&path, sample_rate_hz, channels)
             .map_err(|error| AppError::Failed(format!("Cannot create the recording: {error}")))?;
         let (sender, receiver) = mpsc::sync_channel::<Vec<i16>>(QUEUE_CHUNKS);
@@ -238,7 +253,11 @@ impl RecordingSink {
             .map_err(|error| AppError::Failed(format!("Cannot start the recording: {error}")))?;
         log::info!("Recording the dialog to {}", path.display());
         Ok(Self {
+            path: file_path,
             sender: Some(sender),
+            owed_samples: 0,
+            max_owed_samples: sample_rate_hz as usize * usize::from(channels) * MAX_GAP_SECONDS,
+            has_audio: false,
             thread: Some(thread),
             failure,
             is_failed,
@@ -251,17 +270,43 @@ impl RecordingSink {
         if samples.is_empty() || self.is_failed.load(Ordering::SeqCst) {
             return;
         }
-        let Some(sender) = &self.sender else { return };
-        match sender.try_send(samples.to_vec()) {
-            Ok(()) => {}
-            Err(TrySendError::Full(_)) => {
-                *self.failure.locked() =
-                    Some("The disk does not keep up with the recording".into());
-                self.is_failed.store(true, Ordering::SeqCst);
-                self.sender = None;
+        if self.owed_samples > 0 {
+            if !self.send(vec![0; self.owed_samples]) {
+                self.owe(samples.len());
+                return;
             }
-            Err(TrySendError::Disconnected(_)) => self.sender = None,
+            log::info!("The call recording caught up with the disk");
+            self.owed_samples = 0;
         }
+        if !self.send(samples.to_vec()) {
+            if self.owed_samples == 0 {
+                log::warn!("The disk does not keep up with the call recording");
+            }
+            self.owe(samples.len());
+        }
+    }
+
+    /// Whether the samples were queued; a full queue keeps them owed.
+    fn send(&mut self, samples: Vec<i16>) -> bool {
+        let Some(sender) = &self.sender else {
+            return true;
+        };
+        match sender.try_send(samples) {
+            Ok(()) => {
+                self.has_audio = true;
+                true
+            }
+            Err(TrySendError::Full(_)) => false,
+            Err(TrySendError::Disconnected(_)) => {
+                self.sender = None;
+                true
+            }
+        }
+    }
+
+    /// Beyond the longest gap the stall shortens the file instead.
+    fn owe(&mut self, samples: usize) {
+        self.owed_samples = (self.owed_samples + samples).min(self.max_owed_samples);
     }
 
     /// Why the recording stopped, once: the capture tells the webview.
@@ -283,10 +328,15 @@ impl RecordingSink {
         self.close();
     }
 
+    /// A recording that got no audio, e.g. a dialog stopped while starting,
+    /// leaves no file.
     fn close(&mut self) {
         self.sender = None;
         if let Some(thread) = self.thread.take() {
             let _ = thread.join();
+            if !self.has_audio && self.owed_samples == 0 {
+                let _ = std::fs::remove_file(&self.path);
+            }
         }
     }
 }
@@ -422,6 +472,50 @@ mod tests {
         let bytes = std::fs::read(&path).unwrap();
         assert!(pages(&bytes).len() >= 3);
         assert!(RecordingSink::start(path, 16_000, 1).is_err());
+        let _ = std::fs::remove_dir_all(folder);
+    }
+
+    fn temp_folder(name: &str) -> PathBuf {
+        std::env::temp_dir().join(format!(
+            "tyco-recording-{name}-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ))
+    }
+
+    #[test]
+    fn a_recording_without_audio_leaves_no_file() {
+        let folder = temp_folder("empty");
+        let path = folder.join("call.opus");
+        let sink = RecordingSink::start(path.clone(), 16_000, 1).unwrap();
+        assert!(path.exists());
+        sink.finish();
+        assert!(!path.exists());
+        let _ = std::fs::remove_dir_all(folder);
+    }
+
+    #[test]
+    fn a_stalled_queue_owes_silence_instead_of_failing() {
+        let folder = temp_folder("stall");
+        let mut sink = RecordingSink::start(folder.join("call.opus"), 16_000, 1).unwrap();
+        // the encoder is never this slow; a sender with no room stands for it
+        let (sender, receiver) = mpsc::sync_channel::<Vec<i16>>(1);
+        let real = sink.sender.replace(sender);
+        sink.push(&[1; 100]);
+        sink.push(&[2; 50]);
+        sink.push(&[3; 30]);
+        assert_eq!(sink.owed_samples, 80);
+        assert!(sink.take_failure().is_none());
+        assert_eq!(receiver.recv().unwrap(), vec![1; 100]);
+        // the silence goes first, the queue fills again behind it
+        sink.push(&[4; 10]);
+        assert_eq!(receiver.recv().unwrap(), vec![0; 80]);
+        assert_eq!(sink.owed_samples, 10);
+        sink.sender = real;
+        sink.finish();
         let _ = std::fs::remove_dir_all(folder);
     }
 }

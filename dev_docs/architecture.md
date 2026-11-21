@@ -160,10 +160,14 @@ there is no finalization. The microphone is recorded as heard: `Mix` keeps
 the stereo frames before the echo gate and the loudness normalization in
 `StreamContext::unprocessed_pcm_samples`, which the capture loop drains into
 the recording; a mono capture records the chunks it sends. The encoder runs
-on a thread of its own behind a bounded queue (`RecordingSink`); a failed
-write or a queue that overflows stops the recording only and sends
-`recordingFailed` on the audio channel. The capture's end, a stop or quit
-closes the file. The webview's history links a recording by absolute path;
+on a thread of its own behind a bounded queue (`RecordingSink`). Chunks that
+do not fit a full queue are owed and sent as silence once it frees (up to a
+minute), so the file keeps the call's timeline; a failed write stops the
+recording only and sends `recordingFailed` on the audio channel, and the
+webview marks the history entry `isRecordingIncomplete`. A file whose
+headers fail, or that received no audio, is removed. The capture's end, a stop or quit
+closes the file. The webview's history links a recording by absolute path (a `Dialog` entry with
+a `recordingPath` is stored even without text, so the file stays reachable);
 `check_dialog_recordings` and `show_dialog_recording` accept only absolute
 `.opus` paths.
 The dialog's subtitles are a window of their own, `subtitles`

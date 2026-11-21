@@ -512,6 +512,7 @@
     "filterListen": "Audio del sistema",
     "kindDialog": "Diálogo",
     "recordingNotFound": "archivo no encontrado",
+    "recordingIncomplete": "grabación incompleta",
     "showInFolder": "Mostrar en la carpeta"
   },
   "input": {

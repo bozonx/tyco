@@ -74,6 +74,9 @@
         <span v-if="item.file.isMissing" class="history-file-missing">{{
           item.file.missingLabel
         }}</span>
+        <span v-else-if="item.file.note" class="history-file-note">{{
+          item.file.note
+        }}</span>
         <Button
           v-else
           size="xs"
@@ -229,6 +232,11 @@ const isLong = computed(
 .history-file-missing {
   flex-shrink: 0;
   color: var(--color-error);
+}
+
+.history-file-note {
+  flex-shrink: 0;
+  color: var(--color-warning);
 }
 
 .history-meta-badge {

@@ -64,16 +64,10 @@ describe('dialog history', () => {
 
   it('writes the last turns on end and stops the interval', async () => {
     const { history, saved, setText } = setup()
-    await history.begin({ ...meta, recordingPath: '/music/call.opus' })
+    await history.begin(meta)
     setText('Me: bye')
     await history.end()
-    expect(saved).toEqual([
-      {
-        text: 'Me: bye',
-        kind: 'dialog',
-        dialog: { ...meta, recordingPath: '/music/call.opus' },
-      },
-    ])
+    expect(saved).toEqual([{ text: 'Me: bye', kind: 'dialog', dialog: meta }])
     expect(vi.getTimerCount()).toBe(0)
     setText('Me: bye again')
     await history.checkpoint()
@@ -123,5 +117,42 @@ describe('dialog history', () => {
     expect(reportError).toHaveBeenCalledOnce()
     await history.checkpoint()
     expect(save).toHaveBeenCalledTimes(2)
+  })
+
+  it('links a recording at once, even before any turn', async () => {
+    const recorded = { ...meta, recordingPath: '/music/call.opus' }
+    const { history, saved, setText } = setup()
+    await history.begin(recorded)
+    expect(saved).toEqual([{ text: '', kind: 'dialog', dialog: recorded }])
+    await history.end()
+    expect(saved).toHaveLength(1)
+    setText('')
+    await history.begin(recorded)
+    setText('Me: hi')
+    await history.end()
+    expect(saved.at(-1)).toMatchObject({ id: 'entry-2', text: 'Me: hi' })
+  })
+
+  it('marks an entry whose recording stopped early', async () => {
+    const recorded = { ...meta, recordingPath: '/music/call.opus' }
+    const { history, saved, setText } = setup()
+    await history.begin(recorded)
+    setText('Me: hi')
+    await history.checkpoint()
+    await history.markRecordingIncomplete()
+    expect(saved.at(-1)).toEqual({
+      id: 'entry-1',
+      text: 'Me: hi',
+      kind: 'dialog',
+      dialog: { ...recorded, isRecordingIncomplete: true },
+    })
+  })
+
+  it('leaves no interval behind when a session ends while it begins', async () => {
+    const { history } = setup()
+    const beginning = history.begin(meta)
+    const ending = history.end()
+    await Promise.all([beginning, ending])
+    expect(vi.getTimerCount()).toBe(0)
   })
 })

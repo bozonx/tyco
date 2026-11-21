@@ -44,6 +44,11 @@ pub struct EditorHistoryDialog {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub recording_path: Option<String>,
+    /// The recording stopped before the session did, e.g. the disk filled up:
+    /// the file holds only the beginning.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[ts(as = "Option<bool>", optional)]
+    pub is_recording_incomplete: bool,
 }
 
 /// The AI transformation a `Source` entry was taken before.

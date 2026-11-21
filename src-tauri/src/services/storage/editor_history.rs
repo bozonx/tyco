@@ -303,7 +303,17 @@ fn save_editor_history_entry(
     // Intentional: with the history turned off the user chose not to keep
     // their input, so nothing is stored here or anywhere else. The history is
     // the only store of user input; there is no fallback draft storage.
-    if !policy.is_recording || entry.text.trim().is_empty() || policy.max_entries == 0 {
+    // a recorded dialog is kept even when nothing was recognized: the entry
+    // is the only way back to its recording
+    let has_recording = entry.kind == EditorHistoryKind::Dialog
+        && entry
+            .dialog
+            .as_ref()
+            .is_some_and(|dialog| dialog.recording_path.is_some());
+    if !policy.is_recording
+        || (entry.text.trim().is_empty() && !has_recording)
+        || policy.max_entries == 0
+    {
         return Ok(None);
     }
     let is_checkpoint = entry.kind.is_checkpointed();

@@ -609,3 +609,40 @@ fn a_dialog_is_checkpointed_under_its_id_and_keeps_its_session() {
     let bare = serde_json::from_value(json!({"text": "x", "kind": "dialog"})).unwrap();
     assert!(save_editor_history_entry(&mut history, bare).is_err());
 }
+
+#[test]
+fn a_recorded_dialog_is_kept_without_any_text() {
+    let mut memory = Vec::new();
+    let mut history = EditorHistorySession {
+        store: EditorHistoryTarget::Memory(&mut memory),
+        policy: memory_only(),
+    };
+    let dialog = |session: serde_json::Value| {
+        serde_json::from_value::<EditorHistoryEntry>(
+            json!({"text": "", "kind": "dialog", "dialog": session}),
+        )
+        .unwrap()
+    };
+    let unrecorded = dialog(json!({"startedAt": 1, "source": "system"}));
+    assert_eq!(
+        save_editor_history_entry(&mut history, unrecorded).unwrap(),
+        None
+    );
+    let recorded = dialog(json!({
+        "startedAt": 1, "source": "system", "recordingPath": "/music/call.opus"
+    }));
+    assert!(save_editor_history_entry(&mut history, recorded)
+        .unwrap()
+        .is_some());
+    // a draft without text is still dropped, whatever it claims
+    let draft = serde_json::from_value(json!({
+        "text": " ", "kind": "draft",
+        "dialog": {"startedAt": 1, "source": "system", "recordingPath": "/a.opus"}
+    }))
+    .unwrap();
+    assert_eq!(
+        save_editor_history_entry(&mut history, draft).unwrap(),
+        None
+    );
+    assert_eq!(history.load().unwrap().len(), 1);
+}

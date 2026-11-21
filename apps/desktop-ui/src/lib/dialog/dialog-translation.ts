@@ -132,10 +132,13 @@ export function createDialogTranslationQueue(
   const ensureRunning = () => {
     if (running) return
     const signal = controller.signal
-    running = run(signal).finally(() => {
+    const current: Promise<void> = run(signal).finally(() => {
+      // a cleared queue may run again already: that run is not this one
+      if (running !== current) return
       running = undefined
       if (pending.length > 0 && !signal.aborted) ensureRunning()
     })
+    running = current
   }
 
   const queue = (segment: DialogSegment) => {

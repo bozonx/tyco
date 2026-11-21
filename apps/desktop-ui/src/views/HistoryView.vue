@@ -208,7 +208,10 @@ const editorItems = computed<HistoryListItem[]>(() =>
       searchText: label,
       time: item.createdAt,
       ...(item.dialog?.recordingPath && {
-        file: recordingFile(item.dialog.recordingPath),
+        file: recordingFile(
+          item.dialog.recordingPath,
+          item.dialog.isRecordingIncomplete ?? false
+        ),
       }),
     }
   })
@@ -222,7 +225,7 @@ const recordingPaths = computed(() =>
   )
 )
 const checkRecordings = async () => {
-  const paths = recordingPaths.value
+  const paths = [...new Set(recordingPaths.value)]
   if (!paths.length) return
   const result = await ipcStore.call('check_dialog_recordings', { paths })
   if (!result.success || !result.result) return
@@ -231,13 +234,29 @@ const checkRecordings = async () => {
     paths.map((path, index) => [path, exists[index] ?? false])
   )
 }
-watch(recordingPaths, () => void checkRecordings(), { immediate: true })
+// a running dialog rewrites its entry often: only other paths are checked again
+watch(
+  () => [...new Set(recordingPaths.value)].sort().join('\n'),
+  () => void checkRecordings(),
+  { immediate: true }
+)
+// a file may have been moved or deleted while the window was hidden
+watch(
+  () => desktopStore.desktopState.isWindowShown,
+  (isShown) => {
+    if (isShown) void checkRecordings()
+  }
+)
 
-const recordingFile = (path: string): HistoryListItem['file'] => ({
+const recordingFile = (
+  path: string,
+  isIncomplete: boolean
+): HistoryListItem['file'] => ({
   name: recordingFileName(path),
   // unknown until checked: the action is offered
   isMissing: recordingExists.value[path] === false,
   missingLabel: t('history.recordingNotFound'),
+  ...(isIncomplete && { note: t('history.recordingIncomplete') }),
   action: {
     id: 'showRecording',
     icon: 'mdi:folder-open-outline',
