@@ -380,4 +380,16 @@ describe('SettingsCommandsTab.vue', () => {
     })
     expect(context.draft.value.commands).toBe(commands)
   })
+
+  it('updates the command run timeout setting including 0 for unbounded', async () => {
+    const wrapper = mountTab()
+    const numberInput = wrapper.find(
+      '.commands-settings-section input[type="number"]'
+    )
+    expect(numberInput.exists()).toBe(true)
+    await numberInput.setValue('60')
+    expect(context.draft.value.commandRunTimeoutSec).toBe(60)
+    await numberInput.setValue('0')
+    expect(context.draft.value.commandRunTimeoutSec).toBe(0)
+  })
 })

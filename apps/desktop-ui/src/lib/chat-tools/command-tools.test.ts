@@ -26,7 +26,6 @@ const mockCommand = (patch: Partial<CommandConfig> = {}): CommandConfig => ({
   outputAction: 'none',
   isOutputLogged: false,
   isAvailableExternally: false,
-  runTimeoutSec: 120,
   isEnabled: true,
   ...patch,
 })

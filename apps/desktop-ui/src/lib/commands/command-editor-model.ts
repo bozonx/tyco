@@ -1,7 +1,5 @@
 import type { CommandConfig, CommandOutputAction } from '@tyco/shared'
 
-import { runTimeoutOf } from './command-config'
-
 export function createCommandEditorModel(deps: {
   getCommand: () => CommandConfig
   update: (command: CommandConfig) => void
@@ -19,12 +17,6 @@ export function createCommandEditorModel(deps: {
       operationConfig: value === undefined ? rest : { ...rest, [field]: value },
     })
   }
-  /** An empty or invalid text gives the default limit */
-  function updateRunTimeout(value: string) {
-    // the text must be a number as a whole: `10abc` is no limit
-    const seconds = /^\s*\d+(\.\d+)?\s*$/.test(value) ? Number(value) : NaN
-    update({ runTimeoutSec: runTimeoutOf(seconds) })
-  }
   function updateOutputAction(outputAction: CommandOutputAction) {
     update({ outputAction })
   }
@@ -32,7 +24,6 @@ export function createCommandEditorModel(deps: {
     update,
     updateDescription,
     updateOperationConfig,
-    updateRunTimeout,
     updateOutputAction,
   }
 }

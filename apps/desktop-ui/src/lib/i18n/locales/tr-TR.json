@@ -302,7 +302,7 @@
     "pluginFieldsHint": "Boş alanlar değerini eklenti ayarlarından alır.",
     "preTransformEmpty": "LLM komut için metin döndürmedi",
     "preTransformFailed": "Komut için metin hazırlanamadı",
-    "runTimeoutInfo": "Komutun bir çalışmasının başlangıçtan itibaren ne kadar sürebileceği; sonrasında durdurulur ve zaman aşımı olarak bildirilir. Varsayılan {seconds}, en fazla {max}. Her çalışma komut katmanında gösterilir; orada daha önce iptal edebilirsiniz.",
+    "runTimeoutInfo": "Komutun bir çalışmasının başlangıçtan itibaren ne kadar sürebileceği; sonrasında durdurulur ve zaman aşımı olarak bildirilir. 0 sınırsız anlamına gelir. Varsayılan {seconds}, en fazla {max}.",
     "runTimeoutLabel": "Çalışma süresi sınırı, saniye",
     "running": "«{name}» çalıştırılıyor…",
     "settingsTitle": "Komut ayarları",

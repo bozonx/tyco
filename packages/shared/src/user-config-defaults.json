@@ -138,6 +138,7 @@
     { "action": null, "takesSelection": true }
   ],
   "commands": [],
+  "commandRunTimeoutSec": 300,
   "variables": [],
   "variableValues": {},
   "llm": {

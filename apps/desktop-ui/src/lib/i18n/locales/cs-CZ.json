@@ -302,7 +302,7 @@
     "pluginFieldsHint": "Prázdná pole přebírají hodnotu z nastavení pluginu.",
     "preTransformEmpty": "LLM nevrátil pro příkaz žádný text",
     "preTransformFailed": "Text pro příkaz se nepodařilo připravit",
-    "runTimeoutInfo": "Jak dlouho smí běh příkazu trvat od jeho spuštění; poté je zastaven a nahlášen jako vypršelý. Výchozí {seconds}, nejvýše {max}. Každý běh se zobrazuje v překryvu příkazu, kde jej můžete zrušit dříve.",
+    "runTimeoutInfo": "Jak dlouho smí běh příkazu trvat od jeho spuštění; poté je zastaven a nahlášen jako vypršelý. 0 znamená bez omezení. Výchozí {seconds}, nejvýše {max}.",
     "runTimeoutLabel": "Časový limit běhu, sekundy",
     "running": "Spouští se „{name}“…",
     "settingsTitle": "Nastavení příkazů",

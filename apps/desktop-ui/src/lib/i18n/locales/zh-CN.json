@@ -302,7 +302,7 @@
     "pluginFieldsHint": "留空字段将从插件设置中获取其值。",
     "preTransformEmpty": "LLM 未为该命令返回文本",
     "preTransformFailed": "无法为命令准备文本",
-    "runTimeoutInfo": "命令一次运行从开始起可持续的时间；超时后将被停止并报告为超时。默认 {seconds}，最多 {max}。每次运行都会显示在命令浮层中，你可以在那里提前取消。",
+    "runTimeoutInfo": "命令运行从开始起可持续的时间；超时后将被停止并报告为超时。0 表示无限制。默认 {seconds}，最多 {max}。",
     "runTimeoutLabel": "运行时限（秒）",
     "running": "正在运行“{name}”…",
     "settingsTitle": "命令设置",

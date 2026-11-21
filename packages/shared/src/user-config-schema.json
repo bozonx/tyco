@@ -701,12 +701,6 @@
             "default": "none"
           },
           "isAvailableExternally": { "type": "boolean", "default": false },
-          "runTimeoutSec": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 3600,
-            "default": 120
-          },
           "isVoiceEnabled": { "type": "boolean", "default": false },
           "isOutputLogged": { "type": "boolean", "default": false },
           "isEnabled": { "type": "boolean", "default": true },
@@ -730,12 +724,17 @@
           "outputAction",
           "isOutputLogged",
           "isAvailableExternally",
-          "runTimeoutSec",
           "isEnabled",
           "isVoiceEnabled"
         ]
       },
       "defaultPath": "commands"
+    },
+    "commandRunTimeoutSec": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3600,
+      "default": 300
     },
     "variables": {
       "type": "array",
@@ -1414,6 +1413,7 @@
     "actionPages",
     "customActionSlots",
     "commands",
+    "commandRunTimeoutSec",
     "variables",
     "variableValues",
     "llm",

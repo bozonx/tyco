@@ -282,6 +282,11 @@ export interface UserConfig {
   actionPages: ActionPageConfig[]
   customActionSlots: CustomActionSlotConfig[]
   commands: CommandConfig[]
+  /**
+   * How long a command run may take, in seconds; 0 disables the limit
+   * (unbounded). Defaults to 300 (5 minutes).
+   */
+  commandRunTimeoutSec: number
   /** The variables commands refer to as `{{var:NAME}}`, see `variables.ts` */
   variables: VariableConfig[]
   /**

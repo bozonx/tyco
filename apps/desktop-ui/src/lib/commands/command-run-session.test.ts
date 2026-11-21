@@ -19,7 +19,6 @@ const lamp: CommandConfig = {
   ...createCommand('webhook', 'lamp'),
   name: 'Lamp',
   operationConfig: { url: 'https://x.test' },
-  runTimeoutSec: 45,
 }
 
 const request = (
@@ -39,7 +38,11 @@ const payload = (
 ): CommandRunPayload => ({
   commandId: 'lamp',
   text: 'source',
-  userConfig: { ...DEFAULT_USER_CONFIG, commands: [lamp] },
+  userConfig: {
+    ...DEFAULT_USER_CONFIG,
+    commands: [lamp],
+    commandRunTimeoutSec: 45,
+  },
   ...extra,
 })
 

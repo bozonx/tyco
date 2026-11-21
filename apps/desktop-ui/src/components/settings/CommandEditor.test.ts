@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createCommand } from '../../lib/commands/command-config'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import CommandEditor from './CommandEditor.vue'
-import { type CommandConfig, RUN_TIMEOUT_DEFAULT_SEC } from '@tyco/shared'
+import type { CommandConfig } from '@tyco/shared'
 import {
   installFakeDesktop,
   type TestDesktop,
@@ -223,21 +223,6 @@ describe('CommandEditor.vue', () => {
     const section = wrapper.get('.command-group-advanced').find('section')
     const tooltip = section.findComponent(InfoTooltip)
     expect(tooltip.props('text')).toBe('commands.launcherSelectionHint')
-  })
-
-  it('limits only external background runs, falling back to the default', async () => {
-    const local = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
-    // a run in a window has no limit, so the field is for external calls only
-    expect(local.find('input[type="number"]').exists()).toBe(false)
-
-    const wrapper = mountEditor(
-      script({ command: 'ls' }, { name: 'ls', isAvailableExternally: true })
-    )
-    const input = wrapper.find('input[type="number"]')
-    await input.setValue('90')
-    expect(lastUpdate(wrapper).runTimeoutSec).toBe(90)
-    await input.setValue('')
-    expect(lastUpdate(wrapper).runTimeoutSec).toBe(RUN_TIMEOUT_DEFAULT_SEC)
   })
 
   it('opens the log and tells when there is none yet', async () => {

@@ -1,7 +1,10 @@
 import commandNames from '../../../../../packages/shared/fixtures/command-names.json'
 import { describe, expect, it } from 'vitest'
 
-import { type CommandConfig, RUN_TIMEOUT_DEFAULT_SEC } from '@tyco/shared'
+import {
+  type CommandConfig,
+  COMMAND_RUN_TIMEOUT_DEFAULT_SEC,
+} from '@tyco/shared'
 
 import { testOperations } from '../operations/testing'
 
@@ -74,7 +77,6 @@ describe('normalizeCommands for one command', () => {
       outputAction: 'none',
       isOutputLogged: false,
       isAvailableExternally: false,
-      runTimeoutSec: RUN_TIMEOUT_DEFAULT_SEC,
       isEnabled: true,
       // fields it does not know stay for the build that wrote them
       afterRun: 'bogus',
@@ -150,12 +152,13 @@ describe('normalizeCommands for one command', () => {
 })
 
 describe('runTimeoutOf', () => {
-  it('keeps a whole positive limit up to an hour, the default otherwise', () => {
+  it('keeps a whole positive limit up to an hour, 0 for unbounded, the default otherwise', () => {
     expect(runTimeoutOf(90.4)).toBe(90)
     expect(runTimeoutOf(99999)).toBe(3600)
-    expect(runTimeoutOf(0)).toBe(RUN_TIMEOUT_DEFAULT_SEC)
-    expect(runTimeoutOf('30')).toBe(RUN_TIMEOUT_DEFAULT_SEC)
-    expect(runTimeoutOf(Number.NaN)).toBe(RUN_TIMEOUT_DEFAULT_SEC)
+    expect(runTimeoutOf(0)).toBe(0)
+    expect(runTimeoutOf(-10)).toBe(0)
+    expect(runTimeoutOf('30')).toBe(COMMAND_RUN_TIMEOUT_DEFAULT_SEC)
+    expect(runTimeoutOf(Number.NaN)).toBe(COMMAND_RUN_TIMEOUT_DEFAULT_SEC)
   })
 })
 

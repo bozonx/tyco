@@ -173,32 +173,6 @@
             <CopyButton :value="cliCommand" :label="t('commands.copyCli')" />
           </span>
         </div>
-        <FieldRow
-          v-if="command.isAvailableExternally"
-          class="command-field command-place-detail"
-          vertical
-          density="compact"
-          :label="t('commands.runTimeoutLabel')"
-        >
-          <FieldNumber
-            :min="1"
-            :max="RUN_TIMEOUT_MAX_SEC"
-            :step="1"
-            :model-value="command.runTimeoutSec"
-            :placeholder="String(RUN_TIMEOUT_DEFAULT_SEC)"
-            @update:model-value="updateRunTimeout"
-          />
-
-          <template #info
-            ><InfoTooltip
-              :text="
-                t('commands.runTimeoutInfo', {
-                  seconds: RUN_TIMEOUT_DEFAULT_SEC,
-                  max: RUN_TIMEOUT_MAX_SEC,
-                })
-              "
-          /></template>
-        </FieldRow>
         <p
           v-if="command.isAvailableExternally && nameConflicts.length"
           class="command-warning"
@@ -283,7 +257,6 @@ import CopyButton from '../common/CopyButton.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
-import FieldNumber from '../common/FieldNumber.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
@@ -299,8 +272,6 @@ import {
   type CommandConfig,
   type CommandOutputAction,
   type CommandPlatform,
-  RUN_TIMEOUT_DEFAULT_SEC,
-  RUN_TIMEOUT_MAX_SEC,
   type UserConfig,
 } from '@tyco/shared'
 
@@ -364,16 +335,11 @@ const warningsFor = (field: string) =>
     .map((issue) => t(issue.messageKey))
 const nameWarnings = computed(() => warningsFor('name'))
 
-const {
-  update,
-  updateDescription,
-  updateOperationConfig,
-  updateRunTimeout,
-  updateOutputAction,
-} = createCommandEditorModel({
-  getCommand: () => props.command,
-  update: (command) => emit('update', command),
-})
+const { update, updateDescription, updateOperationConfig, updateOutputAction } =
+  createCommandEditorModel({
+    getCommand: () => props.command,
+    update: (command) => emit('update', command),
+  })
 
 function suggestName() {
   if (props.command.name.trim()) return

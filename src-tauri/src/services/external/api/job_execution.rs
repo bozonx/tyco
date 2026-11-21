@@ -392,14 +392,8 @@ pub(super) fn cancel(app: &AppHandle, id: &str, code: ErrorCode) -> Response {
 pub fn claim(app: &AppHandle, id: &str) -> Option<CommandRunPayload> {
     let jobs = app.state::<ExternalJobs>();
     let config = app.state::<AppState>().user_config();
-    let command_id = jobs.get(id)?.command_id;
-    let run_limit = Duration::from_secs(
-        crate::models::user_config::command(&config, &command_id).map_or(
-            crate::models::user_config::RUN_TIMEOUT_DEFAULT_SEC,
-            |command| command.run_timeout_sec,
-        ),
-    );
-    let (command_id, request) = jobs.claim(id, Some(run_limit))?;
+    let run_limit = crate::models::user_config::command_run_limit(&config);
+    let (command_id, request) = jobs.claim(id, run_limit)?;
     if !jobs.is_internal(id) {
         if let Err(error) = lookup(app, &command_id, false) {
             fail_with(app, id, *error);

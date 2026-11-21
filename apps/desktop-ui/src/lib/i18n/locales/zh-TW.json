@@ -302,7 +302,7 @@
     "pluginFieldsHint": "留空的欄位將自外掛程式設定取得其值。",
     "preTransformEmpty": "LLM 未為此指令傳回文字",
     "preTransformFailed": "無法為指令準備文字",
-    "runTimeoutInfo": "命令一次執行從開始起可持續的時間；逾時後將被停止並回報為逾時。預設 {seconds}，最多 {max}。每次執行都會顯示在命令浮層中，你可以在那裡提前取消。",
+    "runTimeoutInfo": "命令執行從開始起可持續的時間；逾時後將被停止並回報為逾時。0 表示無限制。預設 {seconds}，最多 {max}。",
     "runTimeoutLabel": "執行時限（秒）",
     "running": "正在執行「{name}」…",
     "settingsTitle": "命令設定",

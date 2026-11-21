@@ -302,7 +302,7 @@
     "pluginFieldsHint": "Az üres mezők a bővítmény beállításaiból veszik az értéküket.",
     "preTransformEmpty": "Az LLM nem adott vissza szöveget a parancshoz",
     "preTransformFailed": "Nem sikerült előkészíteni a szöveget a parancshoz",
-    "runTimeoutInfo": "Mennyi ideig tarthat a parancs egy futása az indulástól számítva; utána leáll, és időtúllépésként jelenik meg. Alapértelmezés {seconds}, legfeljebb {max}. Minden futás látható a parancs-átfedésben, ahol korábban megszakíthatod.",
+    "runTimeoutInfo": "Mennyi ideig tarthat a parancs egy futása az indulástól számítva; utána leáll, és időtúllépésként jelenik meg. A 0 korlátlant jelent. Alapértelmezés {seconds}, legfeljebb {max}.",
     "runTimeoutLabel": "Futási időkorlát, másodperc",
     "running": "„{name}” futtatása…",
     "settingsTitle": "Parancsbeállítások",

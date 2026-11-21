@@ -438,9 +438,10 @@ the overlay fails the active job with `Unavailable`. Two limits end a job with
 
 - **Start**: a job must start within 300 seconds of the call. This covers the
   access prompt for the selection and typing the text in the overlay.
-- **Run**: a command is stopped once it runs longer than its own limit,
-  counted from its start. The limit is set per command in the settings
-  ("Run time limit", `runTimeoutSec`), 120 seconds by default, 1–3600.
+- **Run**: a command is stopped once it runs longer than its limit,
+  counted from its start. The limit is configured globally in the command
+  settings ("Run time limit", `commandRunTimeoutSec`), 300 seconds (5 minutes)
+  by default, 0 for unbounded, up to 3600.
 
 A script is killed with its whole process tree when its job is cancelled or
 times out. Returned output

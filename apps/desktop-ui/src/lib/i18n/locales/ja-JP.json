@@ -302,7 +302,7 @@
     "pluginFieldsHint": "空のフィールドにはプラグイン設定の値が使用されます。",
     "preTransformEmpty": "LLM がコマンド用のテキストを返しませんでした",
     "preTransformFailed": "コマンド用のテキストを準備できませんでした",
-    "runTimeoutInfo": "コマンドの1回の実行が開始から続けられる時間です。超えると停止され、タイムアウトとして報告されます。既定は {seconds}、最大 {max}。各実行はコマンドオーバーレイに表示され、そこで早めにキャンセルできます。",
+    "runTimeoutInfo": "コマンドの実行が開始から続けられる時間です。超えると停止され、タイムアウトとして報告されます。0は無制限を意味します。既定は {seconds}、最大 {max}。",
     "runTimeoutLabel": "実行時間の上限（秒）",
     "running": "「{name}」を実行中…",
     "settingsTitle": "コマンド設定",

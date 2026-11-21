@@ -302,7 +302,7 @@
     "pluginFieldsHint": "Campos vazios usam o valor das configurações do plugin.",
     "preTransformEmpty": "O LLM não retornou texto para o comando",
     "preTransformFailed": "Não foi possível preparar o texto para o comando",
-    "runTimeoutInfo": "Quanto tempo uma execução do comando pode durar, contado do início; depois ela é interrompida e informada como expirada. {seconds} por padrão, no máximo {max}. Cada execução aparece na sobreposição do comando, onde você pode cancelá-la antes.",
+    "runTimeoutInfo": "Quanto tempo uma execução do comando pode durar, contado do início; depois ela é interrompida e informada como expirada. 0 significa ilimitado. {seconds} por padrão, no máximo {max}.",
     "runTimeoutLabel": "Limite de execução, segundos",
     "running": "Executando “{name}”…",
     "settingsTitle": "Configurações de comandos",

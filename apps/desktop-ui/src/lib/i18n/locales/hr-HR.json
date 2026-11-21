@@ -302,7 +302,7 @@
     "pluginFieldsHint": "Prazna polja preuzimaju vrijednost iz postavki dodatka.",
     "preTransformEmpty": "LLM nije vratio tekst za naredbu",
     "preTransformFailed": "Tekst za naredbu nije moguće pripremiti",
-    "runTimeoutInfo": "Koliko smije trajati izvođenje naredbe od njezina pokretanja; nakon toga se zaustavlja i prijavljuje kao isteklo. Zadano {seconds}, najviše {max}. Svako izvođenje prikazuje se u preklopu naredbe, gdje ga možete ranije otkazati.",
+    "runTimeoutInfo": "Koliko smije trajati izvođenje naredbe od njezina pokretanja; nakon toga se zaustavlja i prijavljuje kao isteklo. 0 znači neograničeno. Zadano {seconds}, najviše {max}.",
     "runTimeoutLabel": "Ograničenje izvođenja, sekunde",
     "running": "Pokreće se „{name}”…",
     "settingsTitle": "Postavke naredbi",

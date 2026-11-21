@@ -98,6 +98,24 @@
           @update:model-value="setExternalAccess('canAccessSelection', $event)"
         />
       </FieldRow>
+      <FieldRow
+        :label="t('commands.runTimeoutLabel')"
+        :info="
+          t('commands.runTimeoutInfo', {
+            seconds: String(COMMAND_RUN_TIMEOUT_DEFAULT_SEC),
+            max: String(COMMAND_RUN_TIMEOUT_MAX_SEC),
+          })
+        "
+      >
+        <FieldNumber
+          :min="0"
+          :max="COMMAND_RUN_TIMEOUT_MAX_SEC"
+          :step="1"
+          :model-value="commandRunTimeoutSec"
+          :placeholder="String(COMMAND_RUN_TIMEOUT_DEFAULT_SEC)"
+          @update:model-value="setCommandRunTimeoutSec"
+        />
+      </FieldRow>
     </SettingsSection>
   </div>
 </template>
@@ -131,6 +149,7 @@ import { useSecretsStore } from '../../stores/secrets'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
+import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import StateMessage from '../common/StateMessage.vue'
@@ -141,6 +160,8 @@ import SettingsCreateCommandModal, {
 import SettingsSection from './SettingsSection.vue'
 import SettingsTaskModel from './SettingsTaskModel.vue'
 import {
+  COMMAND_RUN_TIMEOUT_DEFAULT_SEC,
+  COMMAND_RUN_TIMEOUT_MAX_SEC,
   type CommandConfig,
   DEFAULT_EXTERNAL_ACCESS,
   type ExternalAccess,
@@ -165,6 +186,20 @@ const externalAccess = computed<ExternalAccess>(() => ({
 }))
 const setExternalAccess = (key: keyof ExternalAccess, value: boolean) => {
   userConfig.value.externalAccess = { ...externalAccess.value, [key]: value }
+}
+
+const commandRunTimeoutSec = computed<number>(
+  () => userConfig.value.commandRunTimeoutSec ?? COMMAND_RUN_TIMEOUT_DEFAULT_SEC
+)
+const setCommandRunTimeoutSec = (value: number | string) => {
+  const numeric = typeof value === 'number' ? value : Number(value)
+  const seconds = Number.isFinite(numeric)
+    ? Math.round(numeric)
+    : COMMAND_RUN_TIMEOUT_DEFAULT_SEC
+  userConfig.value.commandRunTimeoutSec = Math.max(
+    0,
+    Math.min(seconds, COMMAND_RUN_TIMEOUT_MAX_SEC)
+  )
 }
 
 const setCommands = (next: CommandConfig[]) => {

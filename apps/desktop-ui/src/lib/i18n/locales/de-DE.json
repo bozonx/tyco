@@ -302,7 +302,7 @@
     "pluginFieldsHint": "Leere Felder übernehmen ihren Wert aus den Plugin-Einstellungen.",
     "preTransformEmpty": "Das LLM hat keinen Text für den Befehl zurückgegeben",
     "preTransformFailed": "Der Text für den Befehl konnte nicht vorbereitet werden",
-    "runTimeoutInfo": "Wie lange ein Lauf des Befehls ab seinem Start dauern darf; danach wird er gestoppt und als Zeitüberschreitung gemeldet. Standardmäßig {seconds}, höchstens {max}. Jeder Lauf wird im Befehls-Overlay angezeigt, wo Sie ihn früher abbrechen können.",
+    "runTimeoutInfo": "Wie lange ein Lauf des Befehls ab seinem Start dauern darf; danach wird er gestoppt und als Zeitüberschreitung gemeldet. 0 bedeutet unbegrenzt. Standardmäßig {seconds}, höchstens {max}.",
     "runTimeoutLabel": "Laufzeitlimit, Sekunden",
     "running": "„{name}“ wird ausgeführt…",
     "settingsTitle": "Befehlseinstellungen",

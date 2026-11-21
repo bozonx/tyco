@@ -302,7 +302,7 @@
     "pluginFieldsHint": "Puste pola przyjmują wartość z ustawień wtyczki.",
     "preTransformEmpty": "LLM nie zwrócił tekstu dla polecenia",
     "preTransformFailed": "Nie udało się przygotować tekstu dla polecenia",
-    "runTimeoutInfo": "Jak długo może trwać uruchomienie polecenia, licząc od startu; potem zostaje zatrzymane i zgłoszone jako przekroczenie czasu. Domyślnie {seconds}, najwyżej {max}. Każde uruchomienie widać w nakładce polecenia, gdzie można je wcześniej anulować.",
+    "runTimeoutInfo": "Jak długo może trwać uruchomienie polecenia, licząc od startu; potem zostaje zatrzymane i zgłoszone jako przekroczenie czasu. 0 oznacza brak limitu. Domyślnie {seconds}, najwyżej {max}.",
     "runTimeoutLabel": "Limit czasu działania, sekundy",
     "running": "Uruchamianie „{name}”…",
     "settingsTitle": "Ustawienia poleceń",

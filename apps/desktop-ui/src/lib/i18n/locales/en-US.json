@@ -302,7 +302,7 @@
     "pluginFieldsHint": "Empty fields take their value from the plugin settings.",
     "preTransformEmpty": "The LLM returned no text for the command",
     "preTransformFailed": "Could not prepare the text for the command",
-    "runTimeoutInfo": "How long a run of the command may take, counted from its start; after that it is stopped and reported as timed out. {seconds} by default, at most {max}. Every run is shown in the command overlay, where you can cancel it earlier.",
+    "runTimeoutInfo": "How long a run of the command may take, counted from its start; after that it is stopped and reported as timed out. 0 means unlimited. {seconds} by default, at most {max}.",
     "runTimeoutLabel": "Run time limit, seconds",
     "running": "Running “{name}”…",
     "settingsTitle": "Command settings",

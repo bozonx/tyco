@@ -302,7 +302,7 @@
     "pluginFieldsHint": "Les champs vides prennent leur valeur dans les paramètres du plugin.",
     "preTransformEmpty": "Le LLM n’a renvoyé aucun texte pour la commande",
     "preTransformFailed": "Impossible de préparer le texte pour la commande",
-    "runTimeoutInfo": "Durée maximale d’une exécution de la commande, comptée depuis son démarrage ; ensuite elle est arrêtée et signalée comme expirée. {seconds} par défaut, au plus {max}. Chaque exécution est affichée dans la superposition de commande, où vous pouvez l’annuler plus tôt.",
+    "runTimeoutInfo": "Durée maximale d’une exécution de la commande, comptée depuis son démarrage ; ensuite elle est arrêtée et signalée comme expirée. 0 signifie illimité. {seconds} par défaut, au plus {max}.",
     "runTimeoutLabel": "Durée maximale d’exécution, secondes",
     "running": "Exécution de « {name} »…",
     "settingsTitle": "Paramètres des commandes",

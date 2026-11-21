@@ -96,12 +96,15 @@ export interface ScriptOperationConfig {
 }
 
 /**
- * How long a run of a command may take by default, in seconds, counted from its
- * start; the overlay shows the run and can cancel it earlier
+ * How long a run of a command may take by default, in seconds (5 minutes); 0
+ * disables the limit (unbounded).
  */
-export const RUN_TIMEOUT_DEFAULT_SEC = 120
-/** The longest run limit of a command, in seconds */
-export const RUN_TIMEOUT_MAX_SEC = 3600
+export const COMMAND_RUN_TIMEOUT_DEFAULT_SEC = 300
+/** The longest finite run limit of a command, in seconds */
+export const COMMAND_RUN_TIMEOUT_MAX_SEC = 3600
+
+export const RUN_TIMEOUT_DEFAULT_SEC = COMMAND_RUN_TIMEOUT_DEFAULT_SEC
+export const RUN_TIMEOUT_MAX_SEC = COMMAND_RUN_TIMEOUT_MAX_SEC
 
 /** How many model steps an AI command takes by default; each tool call is one */
 export const AI_COMMAND_MAX_STEPS_DEFAULT = 5
@@ -250,8 +253,6 @@ export interface CommandConfig {
   isOutputLogged: boolean
   /** Local applications may run it through tyco-ctl and D-Bus */
   isAvailableExternally: boolean
-  /** How long a run may take, in seconds, counted from its start */
-  runTimeoutSec: number
   isEnabled: boolean
   /** The platforms it runs on; absent or empty for every one */
   platforms?: CommandPlatform[]
@@ -372,7 +373,6 @@ export function builtinTranslateCommand(): CommandConfig {
     outputAction: 'insertIntoWindow',
     isOutputLogged: false,
     isAvailableExternally: false,
-    runTimeoutSec: 120,
     isEnabled: true,
   }
 }

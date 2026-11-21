@@ -302,7 +302,7 @@
     "pluginFieldsHint": "Câmpurile goale preiau valoarea din setările pluginului.",
     "preTransformEmpty": "LLM nu a returnat niciun text pentru comandă",
     "preTransformFailed": "Textul pentru comandă nu a putut fi pregătit",
-    "runTimeoutInfo": "Cât poate dura o rulare a comenzii de la pornire; apoi este oprită și raportată ca expirată. {seconds} implicit, cel mult {max}. Fiecare rulare apare în suprapunerea comenzii, unde o puteți anula mai devreme.",
+    "runTimeoutInfo": "Cât poate dura o rulare a comenzii de la pornire; apoi este oprită și raportată ca expirată. 0 înseamnă nelimitat. {seconds} implicit, cel mult {max}.",
     "runTimeoutLabel": "Limită de rulare, secunde",
     "running": "Se rulează „{name}”…",
     "settingsTitle": "Setări comenzi",

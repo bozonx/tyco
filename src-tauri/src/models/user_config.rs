@@ -306,13 +306,6 @@ pub struct CommandConfig {
     pub is_enabled: bool,
     #[serde(default)]
     pub operation_config: Value,
-    /// How long a run of the command may take, in seconds; see
-    /// `RUN_TIMEOUT_DEFAULT_SEC` in `commands-config.ts`.
-    #[serde(
-        default = "default_run_timeout_sec",
-        deserialize_with = "lenient_run_timeout"
-    )]
-    pub run_timeout_sec: u64,
     /// The platforms the command runs on, empty for every one. On another
     /// one it stays in the config and in the grids, but does not run.
     #[serde(default, deserialize_with = "lenient_platforms")]
@@ -362,10 +355,26 @@ where
     Ok(platforms_from(&Value::deserialize(deserializer)?))
 }
 
-/// See `RUN_TIMEOUT_DEFAULT_SEC` in `commands-config.ts`.
-pub const RUN_TIMEOUT_DEFAULT_SEC: u64 = 120;
-/// See `RUN_TIMEOUT_MAX_SEC` in `commands-config.ts`.
-pub const RUN_TIMEOUT_MAX_SEC: u64 = 3600;
+/// See `COMMAND_RUN_TIMEOUT_DEFAULT_SEC` in `commands-config.ts`.
+pub const DEFAULT_COMMAND_RUN_TIMEOUT_SEC: u64 = 300;
+/// See `COMMAND_RUN_TIMEOUT_MAX_SEC` in `commands-config.ts`.
+pub const MAX_COMMAND_RUN_TIMEOUT_SEC: u64 = 3600;
+
+/// The run limit of commands from `commandRunTimeoutSec`: `None` if 0 (unbounded),
+/// or `Some(Duration)` bounded by `MAX_COMMAND_RUN_TIMEOUT_SEC`.
+pub fn command_run_limit(config: &Value) -> Option<std::time::Duration> {
+    let seconds = config
+        .get("commandRunTimeoutSec")
+        .and_then(Value::as_u64)
+        .unwrap_or(DEFAULT_COMMAND_RUN_TIMEOUT_SEC);
+    if seconds == 0 {
+        None
+    } else {
+        Some(std::time::Duration::from_secs(
+            seconds.min(MAX_COMMAND_RUN_TIMEOUT_SEC),
+        ))
+    }
+}
 
 /// Only an explicit `false` disables a command, see `CommandConfig::is_enabled`.
 fn lenient_enabled<'de, D>(deserializer: D) -> Result<bool, D::Error>
@@ -391,22 +400,6 @@ fn short_script_label(script: &str) -> String {
     } else {
         line.to_owned()
     }
-}
-
-fn default_run_timeout_sec() -> u64 {
-    RUN_TIMEOUT_DEFAULT_SEC
-}
-
-/// A limit out of range falls back to the default, as the schema repair does.
-fn lenient_run_timeout<'de, D>(deserializer: D) -> Result<u64, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let value = Value::deserialize(deserializer)?;
-    Ok(value
-        .as_u64()
-        .filter(|seconds| (1..=RUN_TIMEOUT_MAX_SEC).contains(seconds))
-        .unwrap_or(RUN_TIMEOUT_DEFAULT_SEC))
 }
 
 /// The saved commands in their order; one that is not an object is left out.
@@ -531,19 +524,21 @@ mod tests {
     }
 
     #[test]
-    fn run_timeouts_out_of_range_fall_back_to_the_default() {
-        let config = json!({"commands": [
-            {"id": "a", "runTimeoutSec": 30},
-            {"id": "b"},
-            {"id": "c", "runTimeoutSec": 0},
-            {"id": "d", "runTimeoutSec": 99999},
-            {"id": "e", "runTimeoutSec": "60"},
-        ]});
-        let seconds = |id| command(&config, id).unwrap().run_timeout_sec;
-        assert_eq!(seconds("a"), 30);
-        for id in ["b", "c", "d", "e"] {
-            assert_eq!(seconds(id), RUN_TIMEOUT_DEFAULT_SEC);
-        }
+    fn command_run_limit_reads_timeout_or_defaults_or_disables() {
+        use std::time::Duration;
+        assert_eq!(
+            command_run_limit(&json!({"commandRunTimeoutSec": 30})),
+            Some(Duration::from_secs(30))
+        );
+        assert_eq!(command_run_limit(&json!({"commandRunTimeoutSec": 0})), None);
+        assert_eq!(
+            command_run_limit(&json!({})),
+            Some(Duration::from_secs(DEFAULT_COMMAND_RUN_TIMEOUT_SEC))
+        );
+        assert_eq!(
+            command_run_limit(&json!({"commandRunTimeoutSec": 99999})),
+            Some(Duration::from_secs(MAX_COMMAND_RUN_TIMEOUT_SEC))
+        );
     }
 
     #[test]

@@ -126,7 +126,7 @@ hotkey slot or the action menu) take the same slot and open
 `ActivationMode::CommandRun`, an internal mode outside `PUBLIC_MODES`, with a
 `CommandRunRequest` in the snapshot. The overlay claims the job
 (`claim_external_job` returns what it runs and starts the run limit,
-`runTimeoutSec` of the command), asks for access or text when needed and
+`commandRunTimeoutSec` of the config), asks for access or text when needed and
 finishes it; Esc cancels it through `cancel_external_job`. Before replacing a
 selection the backend hides the overlay and waits for the focus to leave it. A
 reload of the quick webview (`on_page_load`) fails the active job. The status

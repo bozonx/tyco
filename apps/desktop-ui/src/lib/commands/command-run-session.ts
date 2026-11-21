@@ -1,13 +1,14 @@
 import { shallowRef } from 'vue'
 
 import { errorMessage } from '@tyco/shared/value-guards'
-import type {
-  AccessDecision,
-  CommandConfig,
-  CommandRunPayload,
-  CommandRunRecord,
-  CommandRunRequest,
-  UserConfig,
+import {
+  type AccessDecision,
+  COMMAND_RUN_TIMEOUT_DEFAULT_SEC,
+  type CommandConfig,
+  type CommandRunPayload,
+  type CommandRunRecord,
+  type CommandRunRequest,
+  type UserConfig,
 } from '@tyco/shared'
 
 import type {
@@ -214,7 +215,10 @@ export function createCommandRunSession(deps: CommandRunSessionDependencies) {
       end(run, {
         phase: 'failed',
         message: deps.t('commandRun.timedOut', {
-          seconds: String(command.runTimeoutSec),
+          seconds: String(
+            payload.userConfig.commandRunTimeoutSec ??
+              COMMAND_RUN_TIMEOUT_DEFAULT_SEC
+          ),
         }),
       })
     } else if (final.cancelled) {

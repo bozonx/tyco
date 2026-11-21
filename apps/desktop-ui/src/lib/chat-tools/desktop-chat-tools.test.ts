@@ -184,7 +184,6 @@ describe('desktop-chat-tools', () => {
           outputAction: 'none',
           isOutputLogged: false,
           isAvailableExternally: false,
-          runTimeoutSec: 60,
           isEnabled: true,
         },
       ],

@@ -172,6 +172,18 @@
       }
     },
     "expected": {
+      "actionPages": [
+        { "inputMode": "selection", "slots": {} },
+        {
+          "inputMode": "none",
+          "slots": {
+            "a": { "type": "standard", "actionId": "directCorrection" },
+            "d": { "type": "standard", "actionId": "openHistory" },
+            "f": { "type": "standard", "actionId": "voiceInput" },
+            "g": { "type": "standard", "actionId": "voiceCommands" }
+          }
+        }
+      ],
       "configVersion": 1,
       "appearance": {
         "theme": "auto",
@@ -236,14 +248,14 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "chatPrompts": "",
-        "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": "",
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": "",
+        "chatPrompts": "",
+        "favorites": "",
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
@@ -373,18 +385,14 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
-      "actionPages": [
-        { "inputMode": "selection", "slots": {} },
-        {
-          "inputMode": "none",
-          "slots": {
-            "d": { "type": "standard", "actionId": "openHistory" },
-            "f": { "type": "standard", "actionId": "voiceInput" },
-            "g": { "type": "standard", "actionId": "voiceCommands" },
-            "a": { "type": "standard", "actionId": "directCorrection" }
-          }
-        }
+      "customActionSlots": [
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true }
       ],
+      "commandRunTimeoutSec": 300,
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -399,16 +407,9 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "items": [] },
+      "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] },
-      "customActionSlots": [
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true }
-      ],
       "dialog": {
         "isEnabled": true,
         "source": "microphoneAndSystem",
@@ -650,14 +651,14 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "chatPrompts": "",
-        "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": "",
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": "",
+        "chatPrompts": "",
+        "favorites": "",
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
@@ -820,6 +821,14 @@
           }
         }
       ],
+      "customActionSlots": [
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true }
+      ],
+      "commandRunTimeoutSec": 300,
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -834,16 +843,9 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "items": [] },
+      "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] },
-      "customActionSlots": [
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true }
-      ],
       "dialog": {
         "isEnabled": true,
         "source": "microphoneAndSystem",
@@ -1074,14 +1076,14 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "chatPrompts": "",
-        "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": "",
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": "",
+        "chatPrompts": "",
+        "favorites": "",
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
@@ -1248,6 +1250,14 @@
           }
         }
       ],
+      "customActionSlots": [
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true }
+      ],
+      "commandRunTimeoutSec": 300,
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -1262,16 +1272,9 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "items": [] },
+      "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] },
-      "customActionSlots": [
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true }
-      ],
       "dialog": {
         "isEnabled": true,
         "source": "microphoneAndSystem",
@@ -1507,14 +1510,14 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "chatPrompts": "",
-        "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": "",
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": "",
+        "chatPrompts": "",
+        "favorites": "",
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
@@ -1686,6 +1689,14 @@
           }
         }
       ],
+      "customActionSlots": [
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true }
+      ],
+      "commandRunTimeoutSec": 300,
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -1700,16 +1711,9 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "items": [] },
+      "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] },
-      "customActionSlots": [
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true }
-      ],
       "dialog": {
         "isEnabled": true,
         "source": "microphoneAndSystem",
@@ -1935,14 +1939,14 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "chatPrompts": "",
-        "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": "",
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": "",
+        "chatPrompts": "",
+        "favorites": "",
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
@@ -2102,6 +2106,14 @@
           }
         }
       ],
+      "customActionSlots": [
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true }
+      ],
+      "commandRunTimeoutSec": 300,
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -2116,16 +2128,9 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "items": [] },
+      "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] },
-      "customActionSlots": [
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true }
-      ],
       "dialog": {
         "isEnabled": true,
         "source": "microphoneAndSystem",
@@ -2356,14 +2361,14 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "chatPrompts": "",
-        "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": "",
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": "",
+        "chatPrompts": "",
+        "favorites": "",
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
@@ -2530,6 +2535,14 @@
           }
         }
       ],
+      "customActionSlots": [
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true }
+      ],
+      "commandRunTimeoutSec": 300,
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -2544,16 +2557,9 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "items": [] },
+      "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] },
-      "customActionSlots": [
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true }
-      ],
       "dialog": {
         "isEnabled": true,
         "source": "microphoneAndSystem",
@@ -2786,14 +2792,14 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "chatPrompts": "",
-        "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": "",
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": "",
+        "chatPrompts": "",
+        "favorites": "",
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
@@ -2960,6 +2966,14 @@
           }
         }
       ],
+      "customActionSlots": [
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true }
+      ],
+      "commandRunTimeoutSec": 300,
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -2974,16 +2988,9 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "items": [] },
+      "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] },
-      "customActionSlots": [
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true }
-      ],
       "dialog": {
         "isEnabled": true,
         "source": "microphoneAndSystem",
@@ -3230,13 +3237,13 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "chatPrompts": "",
-        "history": "",
-        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": "",
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": "",
+        "chatPrompts": "",
+        "favorites": "",
+        "history": "",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
@@ -3408,12 +3415,6 @@
           }
         }
       ],
-      "variables": [],
-      "variableValues": {},
-      "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [] },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] },
       "customActionSlots": [
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true },
@@ -3421,6 +3422,13 @@
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true }
       ],
+      "commandRunTimeoutSec": 300,
+      "variables": [],
+      "variableValues": {},
+      "styling": { "items": [], "slots": {} },
+      "chatPrompts": { "items": [] },
+      "favorites": { "items": [] },
+      "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
         "isEnabled": true,
         "source": "microphoneAndSystem",
@@ -3672,13 +3680,13 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "chatPrompts": "",
-        "history": "",
-        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": "",
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": "",
+        "chatPrompts": "",
+        "favorites": "",
+        "history": "",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
@@ -3857,12 +3865,6 @@
           }
         }
       ],
-      "variables": [],
-      "variableValues": {},
-      "styling": { "items": [], "slots": {} },
-      "chatPrompts": { "items": [] },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] },
       "customActionSlots": [
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true },
@@ -3870,6 +3872,13 @@
         { "action": null, "takesSelection": true },
         { "action": null, "takesSelection": true }
       ],
+      "commandRunTimeoutSec": 300,
+      "variables": [],
+      "variableValues": {},
+      "styling": { "items": [], "slots": {} },
+      "chatPrompts": { "items": [] },
+      "favorites": { "items": [] },
+      "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
         "isEnabled": true,
         "source": "microphoneAndSystem",
@@ -4131,14 +4140,14 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "chatPrompts": "",
-        "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": "",
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": "",
+        "chatPrompts": "",
+        "favorites": "",
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
@@ -4176,7 +4185,6 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         },
@@ -4193,7 +4201,6 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         },
@@ -4210,7 +4217,6 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         },
@@ -4227,7 +4233,6 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         }
@@ -4374,6 +4379,14 @@
           }
         }
       ],
+      "customActionSlots": [
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true }
+      ],
+      "commandRunTimeoutSec": 300,
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -4388,16 +4401,9 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "items": [] },
+      "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] },
-      "customActionSlots": [
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true }
-      ],
       "dialog": {
         "isEnabled": true,
         "source": "microphoneAndSystem",
@@ -4675,14 +4681,14 @@
         "selectionActionsPage3": "",
         "selectionActionsPage4": "",
         "selectionActionsPage5": "",
-        "chatPrompts": "",
-        "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "favorites": "",
         "quickAiRequest": "",
         "voiceQuickAiRequest": "",
         "screenshotQuickAiRequest": "",
         "voiceScreenshotQuickAiRequest": "",
+        "chatPrompts": "",
+        "favorites": "",
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
@@ -4721,7 +4727,6 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         },
@@ -4738,7 +4743,6 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         },
@@ -4755,7 +4759,6 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         },
@@ -4772,7 +4775,6 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         }
@@ -4924,6 +4926,14 @@
           }
         }
       ],
+      "customActionSlots": [
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true },
+        { "action": null, "takesSelection": true }
+      ],
+      "commandRunTimeoutSec": 300,
       "transformations": {
         "items": [
           {
@@ -4936,16 +4946,9 @@
       },
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "items": [] },
+      "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
-      "favorites": { "items": [] },
-      "customActionSlots": [
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true },
-        { "action": null, "takesSelection": true }
-      ],
       "dialog": {
         "isEnabled": true,
         "source": "microphoneAndSystem",

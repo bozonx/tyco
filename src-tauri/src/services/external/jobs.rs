@@ -233,9 +233,7 @@ impl ExternalJobs {
         }
         entry.job.state = JobState::Running;
         entry.claimed_at = Some(now);
-        if run_limit.is_some() {
-            entry.run_limit = run_limit;
-        }
+        entry.run_limit = run_limit;
         Some((entry.job.command_id.clone(), entry.request.clone()))
     }
 
