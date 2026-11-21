@@ -55,6 +55,9 @@ import type {
   StatusOverlayRequest,
   StorageInfo,
   StorageKind,
+  SubtitlesAction,
+  SubtitlesSnapshot,
+  SubtitlesView,
   TextInsertionStatus,
   UserDataRelocationMode,
   UserDataTarget,
@@ -169,10 +172,6 @@ export interface DesktopCommands {
   delete_editor_history_item: { args: { id: string }; result: void }
   delete_secret: { args: { id: string }; result: void }
   detach_ai_vault: { args: { vaultId: string }; result: void }
-  enter_compact_window: {
-    args: { geometry?: WindowGeometry | null }
-    result: WindowGeometry
-  }
   execute_script_action: {
     args: { request: ScriptActionRequest }
     result: ScriptExecutionResult
@@ -201,8 +200,10 @@ export interface DesktopCommands {
   get_secret_statuses: { args: undefined; result: Record<string, SecretStatus> }
   get_secret_vault_state: { args: undefined; result: VaultState }
   get_storage_info: { args: undefined; result: StorageInfo }
+  get_subtitles: { args: undefined; result: SubtitlesSnapshot }
   get_text_insertion_status: { args: undefined; result: TextInsertionStatus }
   hide_quick_window_on_blur: { args: { activationId: number }; result: void }
+  hide_subtitles: { args: undefined; result: WindowGeometry | null }
   hide_window: { args: { activationId: number }; result: void }
   inspect_ai_vault_folder: { args: { path: string }; result: VaultFolder }
   inspect_user_data_target: {
@@ -213,7 +214,6 @@ export interface DesktopCommands {
     args: { inspectionId: string }
     result: InstalledPlugin
   }
-  leave_compact_window: { args: undefined; result: WindowGeometry | null }
   list_ai_file_roots: {
     args: { profileId?: string | null; attachments: Array<AiAttachedFile> }
     result: Array<AiFileRoot>
@@ -305,6 +305,7 @@ export interface DesktopCommands {
     }
     result: AiFileChangePreview
   }
+  publish_subtitles: { args: { view: SubtitlesView }; result: void }
   read_ai_file_bytes: {
     args: {
       profileId?: string | null
@@ -358,6 +359,7 @@ export interface DesktopCommands {
   }
   replace_selection_with_command: { args: { commandId: string }; result: void }
   reposition_quick_window: { args: { activationId: number }; result: void }
+  request_subtitles_action: { args: { action: SubtitlesAction }; result: void }
   request_text_insertion_permission: {
     args: undefined
     result: TextInsertionStatus
@@ -441,6 +443,10 @@ export interface DesktopCommands {
     args: { id: string; value: string; origins?: Array<string> | null }
     result: void
   }
+  set_subtitles_input_region: {
+    args: { region?: InputRegion | null }
+    result: void
+  }
   set_tray_menu_labels: {
     args: { showLabel: string; quitLabel: string; tooltipLabel?: string | null }
     result: void
@@ -453,6 +459,7 @@ export interface DesktopCommands {
     args: { request?: StatusOverlayRequest | null }
     result: void
   }
+  show_subtitles: { args: { geometry?: WindowGeometry | null }; result: void }
   start_fetch: {
     args: { request: FetchRequest; onEvent: DesktopChannel }
     result: number

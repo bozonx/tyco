@@ -1,4 +1,4 @@
-use tauri::{AppHandle, Manager, WebviewWindow};
+use tauri::{AppHandle, Manager, State, WebviewWindow};
 
 use super::run_blocking;
 use crate::errors::AppError;
@@ -160,31 +160,67 @@ pub fn reposition_quick_window(app: AppHandle, activation_id: u64) -> Result<(),
     runtime::reposition_quick_window(&app, activation_id)
 }
 
-/// Turns the main window into the always-on-top strip of the dialog's
-/// subtitles, at `geometry` when it was remembered; returns where it went.
+/// Shows the subtitles of the dialog over every window, at `geometry` when
+/// it was remembered, and minimizes the main window.
 #[tauri::command]
-pub async fn enter_compact_window(
+pub async fn show_subtitles(
     app: AppHandle,
-    geometry: Option<runtime::compact_window::WindowGeometry>,
-) -> Result<runtime::compact_window::WindowGeometry, AppError> {
+    geometry: Option<runtime::subtitles_window::WindowGeometry>,
+) -> Result<(), AppError> {
     run_blocking(move || {
-        let state = app.state::<runtime::compact_window::CompactWindowState>();
-        let host = runtime::compact_window::MainWindowHost { app: &app };
-        runtime::compact_window::enter(&host, &state, geometry)
+        let state = app.state::<runtime::subtitles_window::SubtitlesState>();
+        let host = runtime::subtitles_window::TauriSubtitlesHost { app: &app };
+        runtime::subtitles_window::show(&host, &state, geometry)
     })
     .await?
 }
 
-/// Gives the main window its size, position and mode back; returns where
-/// the strip was, to be remembered.
+/// Hides the subtitles and gives the main window back; returns where the
+/// strip was, to be remembered.
 #[tauri::command]
-pub async fn leave_compact_window(
+pub async fn hide_subtitles(
     app: AppHandle,
-) -> Result<Option<runtime::compact_window::WindowGeometry>, AppError> {
+) -> Result<Option<runtime::subtitles_window::WindowGeometry>, AppError> {
     run_blocking(move || {
-        let state = app.state::<runtime::compact_window::CompactWindowState>();
-        let host = runtime::compact_window::MainWindowHost { app: &app };
-        runtime::compact_window::leave(&host, &state)
+        let state = app.state::<runtime::subtitles_window::SubtitlesState>();
+        let host = runtime::subtitles_window::TauriSubtitlesHost { app: &app };
+        runtime::subtitles_window::hide(&host, &state)
     })
     .await?
+}
+
+/// What the subtitles show from now on.
+#[tauri::command]
+pub fn publish_subtitles(
+    app: AppHandle,
+    view: runtime::subtitles_window::SubtitlesView,
+) -> Result<(), AppError> {
+    runtime::subtitles_window::publish(&app, view)
+}
+
+/// What the subtitles window shows when it loads.
+#[tauri::command]
+pub fn get_subtitles(
+    state: State<'_, runtime::subtitles_window::SubtitlesState>,
+) -> runtime::subtitles_window::SubtitlesSnapshot {
+    state.snapshot()
+}
+
+/// A button of the subtitles, for the main window to do.
+#[tauri::command]
+pub fn request_subtitles_action(
+    app: AppHandle,
+    action: runtime::subtitles_window::SubtitlesAction,
+) -> Result<(), AppError> {
+    runtime::subtitles_window::request_action(&app, action)
+}
+
+/// The part of the anchored subtitles that takes the pointer, in logical
+/// pixels; `None`: all of it. Clicks elsewhere reach the windows below.
+#[tauri::command]
+pub fn set_subtitles_input_region(
+    window: WebviewWindow,
+    region: Option<InputRegion>,
+) -> Result<(), AppError> {
+    crate::services::platform::set_panel_input_region(&window, region)
 }

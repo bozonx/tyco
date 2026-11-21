@@ -7,4 +7,6 @@ export const DESKTOP_WINDOW_LABELS = {
   MAIN: 'main',
   /** Renders the overlays opened by global hotkeys */
   QUICK: 'quick',
+  /** The subtitles of the dialog, over every window */
+  SUBTITLES: 'subtitles',
 } as const

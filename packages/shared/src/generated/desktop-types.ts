@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: be2d0f94cae5e5b9ac51b32ac5c3da494965f223d870b94a9b5ff4b2259026d5
+// Source hash: 79da4554925509cef0b8099b985ed27f26a92b86e2979e420a89ba347efee5b8
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -942,6 +942,37 @@ export type StorageKind = 'user' | 'device' | 'state' | 'cache' | 'logs'
  */
 export type StorageLocation = { kinds: Array<StorageKind>; path: string }
 
+/** A button of the strip, done by the main window. */
+export type SubtitlesAction = 'stop' | 'expand'
+
+/** What the strip knows when it loads. */
+export type SubtitlesSnapshot = {
+  view?: SubtitlesView | null
+  /**
+   * The compositor holds the strip at the bottom of the screen: it cannot be
+   * moved, and only its buttons take the pointer.
+   */
+  isAnchored: boolean
+}
+
+/** What the strip shows, put into words by the main window. */
+export type SubtitlesView = {
+  /** The latest words large: the translation, or the original without one. */
+  mainText: string
+  /** The language of `main_text` when it is the translation. */
+  mainLang?: string | null
+  /** Words that still wait for their translation, dimmed after it. */
+  pendingText: string
+  /** The original small under the translation. */
+  secondaryText: string
+  /** Shown while nothing was said yet. */
+  placeholder: string
+  errorText: string
+  isActive: boolean
+  stopLabel: string
+  expandLabel: string
+}
+
 /** How Tyco finds the window to insert into. */
 export type TargetTracking = 'tracked' | 'focusReturn'
 
@@ -1173,4 +1204,6 @@ export interface DesktopEventPayloads {
   'app://selection-cancel': SelectionCancelEvent
   'app://command-run': CommandRunEvent
   'app://external-job-cancel': string
+  'app://subtitles-changed': SubtitlesView
+  'app://subtitles-action-requested': SubtitlesAction
 }

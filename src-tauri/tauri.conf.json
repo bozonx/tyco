@@ -39,6 +39,23 @@
         "transparent": true,
         "decorations": false,
         "skipTaskbar": true
+      },
+      {
+        "label": "subtitles",
+        "create": false,
+        "url": "subtitles.html",
+        "title": "TyCo - subtitles",
+        "width": 760,
+        "height": 140,
+        "minWidth": 240,
+        "minHeight": 64,
+        "resizable": true,
+        "visible": false,
+        "transparent": true,
+        "decorations": false,
+        "skipTaskbar": true,
+        "alwaysOnTop": true,
+        "focus": false
       }
     ],
     "security": {

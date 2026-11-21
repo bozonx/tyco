@@ -12,18 +12,30 @@ use tauri::{App, AppHandle, Manager};
 
 /// Creates the windows of `tauri.conf.json`, which does not create them
 /// itself: it cannot know where the webviews keep their storage, and would
-/// put a development build's into the user's data directory.
+/// put a development build's into the user's data directory. The subtitles
+/// window waits until it is first shown.
 pub fn create_windows(app: &App) -> Result<(), AppError> {
-    let paths = crate::services::storage::app_paths::AppPaths::resolve(app.handle())?;
     for config in &app.config().app.windows {
-        let mut builder = tauri::WebviewWindowBuilder::from_config(app, config)?;
-        if let Some(dir) = paths.webview_dir() {
-            builder = builder.data_directory(dir);
+        if config.label == super::subtitles_window::SUBTITLES_WINDOW_LABEL {
+            continue;
         }
-        let window = builder.build()?;
+        let window = window_builder(app.handle(), config)?.build()?;
         crate::services::platform::allow_clipboard_read(&window)?;
     }
     Ok(())
+}
+
+/// A window of `tauri.conf.json` with the storage of the app's webviews.
+pub(super) fn window_builder<'a>(
+    app: &'a AppHandle,
+    config: &tauri::utils::config::WindowConfig,
+) -> Result<tauri::WebviewWindowBuilder<'a, tauri::Wry, AppHandle>, AppError> {
+    let paths = crate::services::storage::app_paths::AppPaths::resolve(app)?;
+    let mut builder = tauri::WebviewWindowBuilder::from_config(app, config)?;
+    if let Some(dir) = paths.webview_dir() {
+        builder = builder.data_directory(dir);
+    }
+    Ok(builder)
 }
 
 /// The runtime state, which needs neither the config nor a window.

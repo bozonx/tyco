@@ -1,6 +1,6 @@
 import { DESKTOP_EVENTS, type DialogConfig } from '@tyco/shared'
 import { defineStore } from 'pinia'
-import { computed, reactive, ref, shallowRef } from 'vue'
+import { computed, reactive, ref, shallowRef, watch } from 'vue'
 
 import { exportDialogTranscript } from '../lib/dialog/dialog-export'
 import {
@@ -15,6 +15,7 @@ import {
   type DialogSegment,
   type DialogSide,
 } from '../lib/dialog/dialog-transcript'
+import { buildSubtitlesView } from '../lib/dialog/dialog-subtitles'
 import { createDialogTranslationQueue } from '../lib/dialog/dialog-translation'
 import { desktopClient } from '../lib/desktop/client'
 import { translate } from '../lib/i18n'
@@ -60,7 +61,8 @@ export const useDialogStore = defineStore('dialog', () => {
   const segments = shallowRef<readonly DialogSegment[]>([])
   const errorText = ref('')
   const canFixInSettings = ref(false)
-  const isCompact = ref(false)
+  /** Whether the subtitles window is shown, with the main window minimized */
+  const isSubtitlesShown = ref(false)
   /** Whether the running dialog records the microphone too */
   const hasMicrophone = ref(config.value.source === 'microphoneAndSystem')
 
@@ -219,7 +221,7 @@ export const useDialogStore = defineStore('dialog', () => {
 
   /** The subtitles have nothing to show once stopped: the window comes back */
   async function stopAndExpand() {
-    await Promise.all([session.stop(), leaveCompact()])
+    await Promise.all([session.stop(), hideSubtitles()])
   }
 
   function retryTranslation(id: string) {
@@ -265,19 +267,51 @@ export const useDialogStore = defineStore('dialog', () => {
     })
   }
 
-  async function enterCompact() {
-    const result = await useIpcStore().callOrNotify('enter_compact_window', {
+  const subtitlesView = computed(() =>
+    buildSubtitlesView({
+      turns: turns.value,
+      translationLanguage: config.value.translationTargetLanguage,
+      textDisplay: config.value.textDisplay,
+      isActive: isActive.value,
+      errorText: errorText.value,
+      labels: {
+        waitingForSpeech: translate('dialog.waitingForSpeech'),
+        notRunning: translate('dialog.notRunning'),
+        stop: translate('dialog.stopAndExpand'),
+        expand: translate('dialog.expand'),
+      },
+    })
+  )
+
+  const publishSubtitles = () =>
+    useIpcStore().call('publish_subtitles', { view: subtitlesView.value })
+
+  // the subtitles window renders what the dialog publishes while it is shown
+  watch(subtitlesView, () => {
+    if (isSubtitlesShown.value) void publishSubtitles()
+  })
+
+  async function showSubtitles() {
+    await publishSubtitles()
+    const result = await useIpcStore().callOrNotify('show_subtitles', {
       geometry: config.value.compactGeometry ?? null,
     })
-    if (result.success) isCompact.value = true
+    if (result.success) isSubtitlesShown.value = true
   }
 
-  async function leaveCompact() {
-    const result = await useIpcStore().callOrNotify('leave_compact_window')
-    isCompact.value = false
+  async function hideSubtitles() {
+    if (!isSubtitlesShown.value) return
+    isSubtitlesShown.value = false
+    const result = await useIpcStore().callOrNotify('hide_subtitles')
     if (result.success && result.result)
       await updateConfig({ compactGeometry: result.result })
   }
+
+  void desktopClient
+    .listen(DESKTOP_EVENTS.SUBTITLES_ACTION_REQUESTED, (action) =>
+      action === 'stop' ? stopAndExpand() : hideSubtitles()
+    )
+    .catch(() => undefined)
 
   return {
     config,
@@ -289,7 +323,7 @@ export const useDialogStore = defineStore('dialog', () => {
     errorText,
     canFixInSettings,
     isActive,
-    isCompact,
+    isSubtitlesShown,
     hasMicrophone,
     start,
     stop,
@@ -300,7 +334,7 @@ export const useDialogStore = defineStore('dialog', () => {
     updateConfig,
     copyTranscript,
     sendToActionMenu,
-    enterCompact,
-    leaveCompact,
+    showSubtitles,
+    hideSubtitles,
   }
 })

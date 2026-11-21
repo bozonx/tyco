@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "subtitles-capability",
+  "description": "The subtitles of the dialog: renders what the main window publishes",
+  "windows": ["subtitles"],
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "core:window:allow-start-dragging",
+    "core:window:allow-start-resize-dragging",
+    "allow-get-subtitles",
+    "allow-request-subtitles-action",
+    "allow-set-subtitles-input-region",
+    "allow-log-client-message"
+  ]
+}

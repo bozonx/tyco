@@ -131,7 +131,10 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<services::voice::apps::AudioAppsEvent>();
     visitor.visit::<services::voice::AudioApp>();
     visitor.visit::<services::voice::AudioInputDevice>();
-    visitor.visit::<services::runtime::compact_window::WindowGeometry>();
+    visitor.visit::<services::runtime::subtitles_window::WindowGeometry>();
+    visitor.visit::<services::runtime::subtitles_window::SubtitlesView>();
+    visitor.visit::<services::runtime::subtitles_window::SubtitlesSnapshot>();
+    visitor.visit::<services::runtime::subtitles_window::SubtitlesAction>();
     visitor.visit::<services::voice::VoiceCaptureInfo>();
     visitor.visit::<tyco_activation_protocol::Job>();
 }

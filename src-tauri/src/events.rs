@@ -106,6 +106,12 @@ desktop_events! {
     CommandRun = "app://command-run" => CommandRunEvent;
     /// Carries the id of the external job to stop.
     ExternalJobCancel = "app://external-job-cancel" => String;
+    /// What the subtitles of the dialog show; to the subtitles window.
+    SubtitlesChanged = "app://subtitles-changed" =>
+        crate::services::runtime::subtitles_window::SubtitlesView;
+    /// A button of the subtitles; to the main window, where the dialog runs.
+    SubtitlesActionRequested = "app://subtitles-action-requested" =>
+        crate::services::runtime::subtitles_window::SubtitlesAction;
 }
 
 /// A text handed over to the editor of the main window.

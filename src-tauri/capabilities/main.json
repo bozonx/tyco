@@ -4,8 +4,6 @@
   "description": "Configuration, plugin installation and secret management",
   "windows": ["main"],
   "permissions": [
-    "core:window:allow-start-dragging",
-    "core:window:allow-start-resize-dragging",
     "allow-apply-hotkey",
     "allow-open-system-hotkey-settings",
     "allow-add-ai-profile-memory-fact",
@@ -64,7 +62,8 @@
     "allow-set-tray-menu-labels",
     "allow-suspend-hotkeys",
     "allow-write-ai-profile-soul",
-    "allow-enter-compact-window",
-    "allow-leave-compact-window"
+    "allow-show-subtitles",
+    "allow-hide-subtitles",
+    "allow-publish-subtitles"
   ]
 }

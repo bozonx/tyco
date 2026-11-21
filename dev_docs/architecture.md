@@ -144,10 +144,16 @@ the system sound in one channel. A dialog capture is never superseded:
 another capture fails with `AppError::CaptureBusy` (`captureBusy`), which
 voice input, voice commands and listening show as "the sound is busy with the
 dialog"; a dialog itself supersedes dictation. It has no duration limit.
-`runtime/compact_window.rs` turns the main window into the always-on-top
-strip of the dialog's subtitles behind a `CompactWindowHost`, and gives the
-window its geometry, maximized state and decorations back; the strip's own
-geometry is kept in `dialog.compactGeometry` (device).
+The dialog's subtitles are a window of their own, `subtitles`
+(`runtime/subtitles_window.rs`, behind a `SubtitlesHost`), created the first
+time they are shown; the main window is minimized meanwhile. With
+layer-shell it is a bottom-anchored overlay that never takes the keyboard and
+lets clicks through but on its buttons (`set_subtitles_input_region`); else
+a regular always-on-top window whose geometry is kept in
+`dialog.compactGeometry` (device). The dialog runs in the main window, which
+publishes a ready-to-render `SubtitlesView` (`publish_subtitles`,
+`app://subtitles-changed`); the strip loads only `subtitles.html` without the
+stores and hands its buttons back (`app://subtitles-action-requested`).
 A playback source delivers nothing while nothing plays, so the capture loop
 fills the gap with silence (`voice/source.rs`), switches the source in place
 (`switch_capture_source`) and waits for the same application when it quits.

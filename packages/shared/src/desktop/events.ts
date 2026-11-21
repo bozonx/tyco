@@ -40,6 +40,10 @@ export const DESKTOP_EVENTS = {
   /** An external call runs a command in the background */
   COMMAND_RUN: 'app://command-run',
   EXTERNAL_JOB_CANCEL: 'app://external-job-cancel',
+  /** What the subtitles of the dialog show; to the subtitles window */
+  SUBTITLES_CHANGED: 'app://subtitles-changed',
+  /** A button of the subtitles; to the main window, where the dialog runs */
+  SUBTITLES_ACTION_REQUESTED: 'app://subtitles-action-requested',
 } as const satisfies Record<string, DesktopEventName>
 
 export type DesktopEventName = keyof DesktopEventPayloads

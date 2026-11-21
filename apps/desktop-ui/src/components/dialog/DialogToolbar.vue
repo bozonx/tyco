@@ -84,7 +84,7 @@
     <IconButton
       icon="mdi:subtitles-outline"
       :label="t('dialog.collapse')"
-      @click="dialog.enterCompact()"
+      @click="dialog.showSubtitles()"
     />
     <DropdownMenu
       square

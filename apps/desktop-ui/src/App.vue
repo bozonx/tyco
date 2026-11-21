@@ -11,7 +11,6 @@
     <QuickOverlay />
   </template>
   <UserDataMissingScreen v-else-if="isUserDataMissing" />
-  <DialogSubtitles v-else-if="dialogStore?.isCompact" />
   <template v-else>
     <div class="layout" :inert="settingsShutdown.isClosing.value">
       <NavPanel v-if="navPanelStore.navPanelState.panelVisible" />
@@ -37,19 +36,15 @@ import NavPanel from './components/app/NavPanel.vue'
 import UserDataMissingScreen from './components/app/UserDataMissingScreen.vue'
 import ImageViewerDialog from './components/common/ImageViewerDialog.vue'
 import ToastContainer from './components/common/ToastContainer.vue'
-import DialogSubtitles from './components/dialog/DialogSubtitles.vue'
 import MenuModals from './components/menu/MenuModals.vue'
 import QuickOverlay from './components/quick/QuickOverlay.vue'
 import { useAppRuntime } from './composables/use-app-runtime'
 import { useDesktopStore } from './stores/desktop'
-import { useDialogStore } from './stores/dialog'
 import { useImageViewerStore } from './stores/image-viewer'
 
 const { settingsShutdown, t, isQuickWindow, navPanelStore } = useAppRuntime()
 const desktop = useDesktopStore()
 const imageViewer = useImageViewerStore()
-// the dialog runs in the main window only
-const dialogStore = isQuickWindow ? undefined : useDialogStore()
 /** The chosen data folder is not there: nothing else can work */
 const isUserDataMissing = computed(
   () => desktop.userData.status === 'notConnected'

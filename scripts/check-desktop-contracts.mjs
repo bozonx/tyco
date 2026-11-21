@@ -50,7 +50,7 @@ for (const file of await readdir(resolve(root, 'src-tauri/capabilities'))) {
   )
   assert.ok(
     capability.windows.every((/** @type {string} */ window) =>
-      ['main', 'quick'].includes(window)
+      ['main', 'quick', 'subtitles'].includes(window)
     ),
     'No wildcard window capabilities'
   )

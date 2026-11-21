@@ -1,9 +1,9 @@
 use crate::locks::MutexExt;
-pub mod compact_window;
 mod lifecycle;
 mod panel_layer;
 pub mod screenshot;
 pub mod settings_shutdown;
+pub mod subtitles_window;
 mod target_focus;
 mod target_paste;
 mod tray;

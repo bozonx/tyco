@@ -819,3 +819,37 @@ mod placement_tests {
         );
     }
 }
+
+/// Makes the subtitles window a strip over every window at the bottom of the
+/// screen that never takes the keyboard, where the compositor offers that
+/// (layer-shell); returns whether it does. Without it the window stays a
+/// regular one, placed and kept on top by the caller. Runs on the main
+/// thread, before the window is first shown.
+#[cfg(target_os = "linux")]
+pub fn attach_subtitles_surface(
+    window: &WebviewWindow,
+    size: (u32, u32),
+    margin_bottom: i32,
+) -> Result<bool, AppError> {
+    use super::linux::layer_shell;
+    if !layer_shell::is_supported() {
+        return Ok(false);
+    }
+    let gtk_window = window.gtk_window()?;
+    layer_shell::attach_bottom_overlay(&gtk_window, "tyco-subtitles", margin_bottom);
+    let (width, height) = (size.0 as i32, size.1 as i32);
+    window.with_webview(move |webview| {
+        webview.inner().set_size_request(width, height);
+    })?;
+    gtk_window.set_default_size(width, height);
+    Ok(true)
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn attach_subtitles_surface(
+    _window: &WebviewWindow,
+    _size: (u32, u32),
+    _margin_bottom: i32,
+) -> Result<bool, AppError> {
+    Ok(false)
+}

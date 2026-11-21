@@ -30,6 +30,7 @@ export default defineConfig(({ command, mode }) => {
       rolldownOptions: {
         input: {
           main: resolve(rootDir, 'index.html'),
+          subtitles: resolve(rootDir, 'subtitles.html'),
           ...(mode === 'browser-test'
             ? { catalog: resolve(rootDir, 'ui-catalog.html') }
             : {}),

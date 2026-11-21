@@ -135,8 +135,14 @@ pub fn set_keyboard(window: &impl IsA<gtk::Window>, keyboard: KeyboardMode) {
 /// A floating status bubble: on the overlay layer, anchored to the bottom
 /// edge, and never taking the keyboard from the focused window.
 pub fn attach_status(window: &impl IsA<gtk::Window>, margin_bottom: i32) {
+    attach_bottom_overlay(window, "tyco-status", margin_bottom);
+}
+
+/// A strip over every window, anchored to the bottom edge, that never takes
+/// the keyboard: the status bubble, the subtitles of the dialog.
+pub fn attach_bottom_overlay(window: &impl IsA<gtk::Window>, namespace: &str, margin_bottom: i32) {
     let pointer = raw(window);
-    let name_space = CString::new("tyco-status").expect("namespace has no NUL bytes");
+    let name_space = CString::new(namespace).expect("namespace has no NUL bytes");
     // SAFETY: `pointer` belongs to a live GTK window that has not been mapped
     // yet, and `name_space` outlives the call, which copies it.
     unsafe {

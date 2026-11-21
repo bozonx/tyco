@@ -44,11 +44,14 @@ alone.
 
 ## Subtitles
 
-**Collapse to subtitles** turns the window into a narrow strip over all
-windows with the latest words of the other side. Drag it to move it, drag its
-lower right corner to resize it; TyCo remembers where it was. **Expand** gives
-the window its size and place back; **Stop** ends the dialog and expands the
-window too.
+**Subtitles** shows the latest words of the other side in a narrow strip over
+all windows and minimizes the main window. **Expand** closes the strip and
+brings the main window back; **Stop** ends the dialog and brings it back too.
+
+On Linux desktops that support it (KDE Plasma, Sway, Hyprland and others on
+Wayland), the strip stays at the bottom of the screen and clicks pass through
+it to the call, except on its buttons. Elsewhere, drag it to move it and drag
+its lower right corner to resize it; TyCo remembers where it was.
 
 ## Exporting the transcript
 
