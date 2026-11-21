@@ -151,7 +151,7 @@ test.describe('action menu', () => {
     desktop.handle('log_command_run', () => undefined)
     desktop.handle('execute_script_action', () => ({
       success: true,
-      running: false,
+      detached: false,
       exitCode: 0,
       stdout: 'Browser command result',
       stderr: '',
@@ -178,7 +178,7 @@ test.describe('command configuration', () => {
     desktop.handle('log_command_run', () => undefined)
     desktop.handle('execute_script_action', () => ({
       success: true,
-      running: false,
+      detached: false,
       exitCode: 0,
       stdout: 'Configured command result',
       stderr: '',
@@ -232,7 +232,7 @@ test.describe('command configuration', () => {
     launcherDesktop.handle('log_command_run', () => undefined)
     launcherDesktop.handle('execute_script_action', () => ({
       success: true,
-      running: false,
+      detached: false,
       exitCode: 0,
       stdout: 'Configured command result',
       stderr: '',

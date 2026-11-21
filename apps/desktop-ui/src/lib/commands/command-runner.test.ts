@@ -51,7 +51,7 @@ const result = (
   exitCode: 0,
   stdout: '',
   stderr: '',
-  running: false,
+  detached: false,
   ...extra,
 })
 
@@ -150,16 +150,21 @@ describe('script commands', () => {
     expect(executeScriptAction.mock.calls[0][0].text).toBe('')
   })
 
-  it('reports a command left running in the background', async () => {
+  it('reports a detached command as started and hands no output on', async () => {
     const executeScriptAction = vi
       .fn()
-      .mockResolvedValue(result({ success: false, running: true }))
+      .mockResolvedValue(result({ success: true, detached: true }))
     const { deps, runner } = setup({ executeScriptAction })
-    await runner.run(script(), 'input')
+    const outcome = await runner.run(
+      script({ isDetached: true }, { outputAction: 'showMenu' }),
+      'input'
+    )
+    expect(outcome).toEqual({ success: true })
     expect(deps.showToast).toHaveBeenCalledWith(
-      'toast.scriptRunning',
+      'toast.scriptStarted',
       'success'
     )
+    expect(deps.showResultMenu).not.toHaveBeenCalled()
     expect(deps.hideWindow).toHaveBeenCalled()
   })
 
@@ -948,7 +953,7 @@ describe('LLM pre-transformation', () => {
       exitCode: 0,
       stdout: 'done',
       stderr: '',
-      running: false,
+      detached: false,
     }))
     const transformTextWithLlm = vi.fn(async () => 'prepared')
     const { runner } = setup({ executeScriptAction, transformTextWithLlm })

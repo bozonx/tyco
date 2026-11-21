@@ -65,6 +65,7 @@ pub fn execute_saved_script(
             text: run.text,
             selection_text: run.selection_text,
             should_capture_output: run.should_capture_output,
+            is_detached: operation_config.is_detached,
             should_log_output: run.should_log_output,
             run_id: run.run_id,
             variables,

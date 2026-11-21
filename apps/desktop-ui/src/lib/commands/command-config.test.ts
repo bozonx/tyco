@@ -163,14 +163,21 @@ describe('runTimeoutOf', () => {
 })
 
 describe('scriptOperationConfigOf', () => {
-  it('reads the command and the directory only', () => {
+  it('reads the command, the directory and the detached flag only', () => {
     expect(
       scriptOperationConfigOf({
         command: 'ls',
         workingDirectory: '~',
         timeoutSec: 5,
       })
-    ).toEqual({ command: 'ls', workingDirectory: '~' })
+    ).toEqual({ command: 'ls', workingDirectory: '~', isDetached: false })
+    expect(
+      scriptOperationConfigOf({ command: 'firefox', isDetached: true })
+    ).toMatchObject({ isDetached: true })
+    // only an explicit `true` detaches a command
+    expect(
+      scriptOperationConfigOf({ command: 'firefox', isDetached: 'yes' })
+    ).toMatchObject({ isDetached: false })
   })
 })
 

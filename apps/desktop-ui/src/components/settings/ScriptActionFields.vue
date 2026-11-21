@@ -58,6 +58,16 @@
         ><InfoTooltip :text="t('settings.actionWorkingDirInfo')"
       /></template>
     </FieldRow>
+
+    <div class="action-field script-detached">
+      <FieldSwitch
+        :model-value="script.isDetached ?? false"
+        :label="t('settings.actionDetachedLabel')"
+        data-testid="script-detached"
+        @update:model-value="update('isDetached', $event)"
+      />
+      <InfoTooltip :text="t('settings.actionDetachedInfo')" />
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -68,6 +78,7 @@ import { useI18n } from '../../composables/use-i18n'
 import { scriptOperationConfig } from '../../lib/commands/command-config'
 import { useIpcStore } from '../../stores/ipc'
 import FieldRow from '../common/FieldRow.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import ActionTemplateField from './ActionTemplateField.vue'
@@ -95,3 +106,11 @@ async function browseWorkingDir() {
   if (typeof res.result === 'string') update('workingDirectory', res.result)
 }
 </script>
+
+<style scoped>
+.script-detached {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+</style>

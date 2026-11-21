@@ -223,7 +223,6 @@
     "advanced": "Avancé",
     "afterRunCopy": "Dans le presse-papiers",
     "afterRunInsert": "Insérer dans la fenêtre",
-    "afterRunNoneScriptHint": "Les commandes rapides réglées sur « Rien » n’ont pas besoin de la sortie du script : le script n’est attendu que 3 s, puis peut continuer en arrière-plan. Le menu d’actions principal et les appels externes attendent toujours la sortie.",
     "afterRunShowResult": "Afficher le résultat",
     "aiAllowedCommands": "Commandes qu’elle peut exécuter",
     "aiAllowedCommandsInfo": "L’IA exécute ces commandes sans demander dès que le prompt en a besoin. Une commande ne s’exécute jamais elle-même ni une commande IA qui l’a appelée.",
@@ -1333,7 +1332,9 @@
     "dialogProviderLlm": "Modèle d'IA",
     "dialogRecordingsFolder": "Dossier des enregistrements",
     "dialogRecordingsFolderHint": "Où sont enregistrés les appels. Le changer ne déplace pas les enregistrements précédents.",
-    "dialogRecordingsFolderReset": "Rétablir la valeur par défaut"
+    "dialogRecordingsFolderReset": "Rétablir la valeur par défaut",
+    "actionDetachedLabel": "Lancer sans attendre",
+    "actionDetachedInfo": "Pour les lanceurs, p. ex. d'une application à fenêtre : la commande démarre seule et l'exécution se termine aussitôt. Tyco ne l'attend pas et ne l'arrête pas, même en quittant, et n'en reçoit ni sortie ni code de retour."
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {
@@ -1369,7 +1370,6 @@
     "scriptEmptyCommand": "La commande du script est vide",
     "scriptFailed": "L’exécution du script a échoué",
     "scriptNotSaved": "Enregistrez la commande avant de l’exécuter",
-    "scriptRunning": "La commande continue de s’exécuter en arrière-plan",
     "scriptSuccess": "Script exécuté avec succès",
     "settingsSaveFailed": "Impossible d’enregistrer les paramètres",
     "sttAuthFailed": "La clé API de transcription a été refusée. Vérifiez votre clé dans les paramètres de transcription.",
@@ -1394,7 +1394,8 @@
     "webhookFailed": "La requête au webhook a échoué",
     "webhookKeyNotSet": "La clé de ce webhook n’est pas définie sur cet appareil ; saisissez-la dans les paramètres de la commande",
     "webhookSuccess": "Webhook envoyé avec succès",
-    "soundBusyWithDialog": "Le son est occupé par le dialogue : arrêtez-le pour enregistrer"
+    "soundBusyWithDialog": "Le son est occupé par le dialogue : arrêtez-le pour enregistrer",
+    "scriptStarted": "La commande a été lancée"
   },
   "operations": {
     "aiTask": "Commande IA",

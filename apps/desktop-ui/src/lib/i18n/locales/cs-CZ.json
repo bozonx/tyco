@@ -223,7 +223,6 @@
     "advanced": "Pokročilé",
     "afterRunCopy": "Do schránky",
     "afterRunInsert": "Vložit do okna",
-    "afterRunNoneScriptHint": "Rychlé příkazy nastavené na „Nic“ nepotřebují výstup skriptu: na skript se čeká jen 3 s a pak může běžet dál na pozadí. Hlavní nabídka akcí a externí volání na výstup čekají vždy.",
     "afterRunShowResult": "Zobrazit výsledek",
     "aiAllowedCommands": "Příkazy, které smí spouštět",
     "aiAllowedCommandsInfo": "AI spouští tyto příkazy bez ptaní, kdykoli je prompt potřebuje. Příkaz nikdy nespustí sám sebe ani AI příkaz, který ho zavolal.",
@@ -1333,7 +1332,9 @@
     "dialogProviderLlm": "Model AI",
     "dialogRecordingsFolder": "Složka nahrávek",
     "dialogRecordingsFolderHint": "Kam se ukládají nahrávky hovorů. Změna nepřesune dřívější nahrávky.",
-    "dialogRecordingsFolderReset": "Obnovit výchozí"
+    "dialogRecordingsFolderReset": "Obnovit výchozí",
+    "actionDetachedLabel": "Spustit a nečekat",
+    "actionDetachedInfo": "Pro spouštění programů, např. s oknem: příkaz se spustí samostatně a běh hned skončí. Tyco na něj nečeká ani ho nezastaví, ani při ukončení, a nedostane od něj výstup ani návratový kód."
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
@@ -1369,7 +1370,6 @@
     "scriptEmptyCommand": "Příkaz skriptu je prázdný",
     "scriptFailed": "Spuštění skriptu selhalo",
     "scriptNotSaved": "Před spuštěním příkaz uložte",
-    "scriptRunning": "Příkaz dál běží na pozadí",
     "scriptSuccess": "Skript byl úspěšně spuštěn",
     "settingsSaveFailed": "Nastavení se nepodařilo uložit",
     "sttAuthFailed": "Klíč API pro přepis byl odmítnut. Zkontrolujte klíč v nastavení přepisu řeči.",
@@ -1394,7 +1394,8 @@
     "webhookFailed": "Požadavek na webhook selhal",
     "webhookKeyNotSet": "Klíč tohoto webhooku není na tomto zařízení nastaven; zadejte ho v nastavení příkazu",
     "webhookSuccess": "Webhook byl úspěšně odeslán",
-    "soundBusyWithDialog": "Zvuk je obsazen dialogem: zastavte ho, abyste mohli nahrávat"
+    "soundBusyWithDialog": "Zvuk je obsazen dialogem: zastavte ho, abyste mohli nahrávat",
+    "scriptStarted": "Příkaz byl spuštěn"
   },
   "operations": {
     "aiTask": "AI příkaz",

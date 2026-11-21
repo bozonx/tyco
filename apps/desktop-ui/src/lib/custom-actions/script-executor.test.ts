@@ -15,7 +15,7 @@ const result = (
   exitCode: 0,
   stdout: '',
   stderr: '',
-  running: false,
+  detached: false,
   ...extra,
 })
 

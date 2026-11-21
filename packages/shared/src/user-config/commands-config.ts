@@ -93,6 +93,11 @@ export interface ScriptOperationConfig {
   command: string
   /** Empty for the home directory */
   workingDirectory?: string
+  /**
+   * Started on its own and not waited for, e.g. a launcher of a GUI app: Tyco
+   * neither cancels nor stops it, nor reads its output or exit code
+   */
+  isDetached?: boolean
 }
 
 /**

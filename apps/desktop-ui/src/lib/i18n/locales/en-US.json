@@ -223,7 +223,6 @@
     "advanced": "Advanced",
     "afterRunCopy": "To clipboard",
     "afterRunInsert": "Insert into window",
-    "afterRunNoneScriptHint": "Quick-command runs set to “Nothing” do not need script output: the script is waited for only 3 s and may then continue in the background. The main action menu and external calls always wait for output.",
     "afterRunShowResult": "Show result",
     "aiAllowedCommands": "Commands it may run",
     "aiAllowedCommandsInfo": "The AI runs these commands without asking whenever the prompt needs them. A command never runs itself or an AI command that called it.",
@@ -1333,7 +1332,9 @@
     "dialogProviderLlm": "AI model",
     "dialogRecordingsFolder": "Recordings folder",
     "dialogRecordingsFolderHint": "Where call recordings are saved. Changing it does not move recordings made before.",
-    "dialogRecordingsFolderReset": "Reset to default"
+    "dialogRecordingsFolderReset": "Reset to default",
+    "actionDetachedLabel": "Start and don't wait",
+    "actionDetachedInfo": "For launchers, e.g. of a GUI app: the command is started on its own and the run ends at once. Tyco neither waits for it nor stops it, also when Tyco exits, and gets no output or exit code from it."
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
@@ -1369,7 +1370,6 @@
     "scriptEmptyCommand": "Script command is empty",
     "scriptFailed": "Script execution failed",
     "scriptNotSaved": "Save the command before running it",
-    "scriptRunning": "The command keeps running in the background",
     "scriptSuccess": "Script executed successfully",
     "settingsSaveFailed": "Failed to save settings",
     "sttAuthFailed": "The speech recognition API key was rejected. Check your key in Transcription settings.",
@@ -1394,7 +1394,8 @@
     "webhookFailed": "Webhook request failed",
     "webhookKeyNotSet": "The key of this webhook is not set on this device; enter it in the command settings",
     "webhookSuccess": "Webhook sent successfully",
-    "soundBusyWithDialog": "The sound is busy with the dialog: stop it to record"
+    "soundBusyWithDialog": "The sound is busy with the dialog: stop it to record",
+    "scriptStarted": "The command was started"
   },
   "operations": {
     "aiTask": "AI command",

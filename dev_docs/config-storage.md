@@ -171,7 +171,7 @@ Conventions:
   boundary.
 - An id is stable and independent of the display name.
 
-Script operations use `workingDirectory`; webhook operations use `isAuthEnabled` and
+Script operations use `workingDirectory` and `isDetached`; webhook operations use `isAuthEnabled` and
 `authSecretId`; commands use `isLlmArgumentParsingEnabled`. The standard
 menu actions `transformationMenu`, `stylingMenu` and `translationMenu` open a
 menu to pick from; one transformation, style or language is an item of the

@@ -223,7 +223,6 @@
     "advanced": "Speciális",
     "afterRunCopy": "A vágólapra",
     "afterRunInsert": "Beillesztés az ablakba",
-    "afterRunNoneScriptHint": "A „Semmi” beállítású gyorsparancs-futtatásoknak nincs szükségük a szkript kimenetére: a szkriptre csak 3 mp-ig vár a program, utána a háttérben futhat tovább. A fő műveletmenü és a külső hívások mindig megvárják a kimenetet.",
     "afterRunShowResult": "Eredmény megjelenítése",
     "aiAllowedCommands": "Futtatható parancsok",
     "aiAllowedCommandsInfo": "Az MI kérdés nélkül futtatja ezeket a parancsokat, amikor a promptnak szüksége van rájuk. Egy parancs soha nem futtatja önmagát, sem azt az MI-parancsot, amely meghívta.",
@@ -1333,7 +1332,9 @@
     "dialogProviderLlm": "MI-modell",
     "dialogRecordingsFolder": "Felvételek mappája",
     "dialogRecordingsFolderHint": "Ahová a hívásfelvételek kerülnek. A módosítás nem helyezi át a korábbi felvételeket.",
-    "dialogRecordingsFolderReset": "Alapértelmezett visszaállítása"
+    "dialogRecordingsFolderReset": "Alapértelmezett visszaállítása",
+    "actionDetachedLabel": "Indítás várakozás nélkül",
+    "actionDetachedInfo": "Indítókhoz, pl. ablakos programokhoz: a parancs önállóan indul, és a futás azonnal véget ér. A Tyco nem vár rá és nem állítja le, kilépéskor sem, és nem kapja meg a kimenetét vagy a kilépési kódját."
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
@@ -1369,7 +1370,6 @@
     "scriptEmptyCommand": "A szkript parancsa üres",
     "scriptFailed": "A szkript futtatása sikertelen",
     "scriptNotSaved": "Futtatás előtt mentse a parancsot",
-    "scriptRunning": "A parancs a háttérben tovább fut",
     "scriptSuccess": "A szkript sikeresen lefutott",
     "settingsSaveFailed": "A beállításokat nem sikerült menteni",
     "sttAuthFailed": "Az átírási API-kulcs elutasítva. Ellenőrizze a kulcsot az Átírás beállításaiban.",
@@ -1394,7 +1394,8 @@
     "webhookFailed": "A webhook-kérés sikertelen",
     "webhookKeyNotSet": "Ennek a webhooknak a kulcsa nincs beállítva ezen az eszközön; adja meg a parancs beállításaiban",
     "webhookSuccess": "A webhook sikeresen elküldve",
-    "soundBusyWithDialog": "A hangot a párbeszéd foglalja: állítsa le a felvételhez"
+    "soundBusyWithDialog": "A hangot a párbeszéd foglalja: állítsa le a felvételhez",
+    "scriptStarted": "A parancs elindult"
   },
   "operations": {
     "aiTask": "MI-parancs",

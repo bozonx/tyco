@@ -223,7 +223,6 @@
     "advanced": "Avansat",
     "afterRunCopy": "În clipboard",
     "afterRunInsert": "Inserează în fereastră",
-    "afterRunNoneScriptHint": "Rulările de comenzi rapide setate pe „Nimic” nu au nevoie de ieșirea scriptului: scriptul este așteptat doar 3 s, apoi poate continua în fundal. Meniul principal de acțiuni și apelurile externe așteaptă întotdeauna ieșirea.",
     "afterRunShowResult": "Afișează rezultatul",
     "aiAllowedCommands": "Comenzi pe care le poate rula",
     "aiAllowedCommandsInfo": "AI-ul rulează aceste comenzi fără să întrebe ori de câte ori promptul are nevoie de ele. O comandă nu se rulează niciodată pe sine și nici comanda AI care a apelat-o.",
@@ -1333,7 +1332,9 @@
     "dialogProviderLlm": "Model AI",
     "dialogRecordingsFolder": "Dosarul înregistrărilor",
     "dialogRecordingsFolderHint": "Unde se salvează înregistrările apelurilor. Schimbarea nu mută înregistrările anterioare.",
-    "dialogRecordingsFolderReset": "Revino la implicit"
+    "dialogRecordingsFolderReset": "Revino la implicit",
+    "actionDetachedLabel": "Pornește fără a aștepta",
+    "actionDetachedInfo": "Pentru lansatoare, de ex. ale unei aplicații cu fereastră: comanda pornește separat, iar rularea se încheie imediat. Tyco nu o așteaptă și nu o oprește, nici la ieșire, și nu primește ieșirea sau codul ei de ieșire."
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
@@ -1369,7 +1370,6 @@
     "scriptEmptyCommand": "Comanda scriptului este goală",
     "scriptFailed": "Rularea scriptului a eșuat",
     "scriptNotSaved": "Salvați comanda înainte de a o rula",
-    "scriptRunning": "Comanda continuă să ruleze în fundal",
     "scriptSuccess": "Scriptul a rulat cu succes",
     "settingsSaveFailed": "Setările nu au putut fi salvate",
     "sttAuthFailed": "Cheia API pentru transcriere a fost respinsă. Verificați cheia în setările de transcriere.",
@@ -1394,7 +1394,8 @@
     "webhookFailed": "Cererea către webhook a eșuat",
     "webhookKeyNotSet": "Cheia acestui webhook nu este setată pe acest dispozitiv; introduceți-o în setările comenzii",
     "webhookSuccess": "Webhook trimis cu succes",
-    "soundBusyWithDialog": "Sunetul este ocupat de dialog: opriți-l pentru a înregistra"
+    "soundBusyWithDialog": "Sunetul este ocupat de dialog: opriți-l pentru a înregistra",
+    "scriptStarted": "Comanda a fost pornită"
   },
   "operations": {
     "aiTask": "Comandă AI",

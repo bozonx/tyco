@@ -223,7 +223,6 @@
     "advanced": "Gelişmiş",
     "afterRunCopy": "Panoya",
     "afterRunInsert": "Pencereye ekle",
-    "afterRunNoneScriptHint": "“Hiçbir şey” seçilen hızlı komut çalıştırmalarında betik çıktısı gerekmez: betik yalnızca 3 sn beklenir ve sonra arka planda devam edebilir. Ana eylem menüsü ve dış çağrılar çıktıyı her zaman bekler.",
     "afterRunShowResult": "Sonucu göster",
     "aiAllowedCommands": "Çalıştırabileceği komutlar",
     "aiAllowedCommandsInfo": "Yapay zekâ, istem gerektirdiğinde bu komutları sormadan çalıştırır. Bir komut asla kendini veya onu çağıran yapay zekâ komutunu çalıştırmaz.",
@@ -1333,7 +1332,9 @@
     "dialogProviderLlm": "Yapay zekâ modeli",
     "dialogRecordingsFolder": "Kayıt klasörü",
     "dialogRecordingsFolderHint": "Arama kayıtlarının kaydedildiği yer. Değiştirmek önceki kayıtları taşımaz.",
-    "dialogRecordingsFolderReset": "Varsayılana sıfırla"
+    "dialogRecordingsFolderReset": "Varsayılana sıfırla",
+    "actionDetachedLabel": "Başlat ve bekleme",
+    "actionDetachedInfo": "Başlatıcılar için, örn. pencereli bir uygulama: komut kendi başına başlar ve çalıştırma hemen biter. Tyco onu beklemez, durdurmaz (çıkışta da), çıktısını veya çıkış kodunu almaz."
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
@@ -1369,7 +1370,6 @@
     "scriptEmptyCommand": "Betik komutu boş",
     "scriptFailed": "Betik çalıştırma başarısız oldu",
     "scriptNotSaved": "Komutu çalıştırmadan önce kaydedin",
-    "scriptRunning": "Komut arka planda çalışmaya devam ediyor",
     "scriptSuccess": "Betik başarıyla çalıştırıldı",
     "settingsSaveFailed": "Ayarlar kaydedilemedi",
     "sttAuthFailed": "Deşifre API anahtarı reddedildi. Anahtarınızı Deşifre ayarlarından kontrol edin.",
@@ -1394,7 +1394,8 @@
     "webhookFailed": "Web kancası isteği başarısız oldu",
     "webhookKeyNotSet": "Bu webhook’un anahtarı bu cihazda ayarlanmadı; komut ayarlarından girin",
     "webhookSuccess": "Web kancası başarıyla gönderildi",
-    "soundBusyWithDialog": "Ses diyalog tarafından kullanılıyor: kaydetmek için onu durdurun"
+    "soundBusyWithDialog": "Ses diyalog tarafından kullanılıyor: kaydetmek için onu durdurun",
+    "scriptStarted": "Komut başlatıldı"
   },
   "operations": {
     "aiTask": "Yapay zekâ komutu",

@@ -21,9 +21,6 @@ pub const TEXT_PLACEHOLDER: &str = "{{TEXT}}";
 /// Stands in for the selection in a command.
 pub const SELECTION_PLACEHOLDER: &str = "{{SELECTION}}";
 
-/// How long a command whose output is not needed is waited for. One still
-/// running by then, e.g. a GUI app it started, is left in the background.
-const STATUS_WAIT: Duration = Duration::from_secs(3);
 /// How long the output is read after the command exits. A process it started
 /// in the background may hold the pipes open for good.
 const PIPE_GRACE: Duration = Duration::from_millis(500);
@@ -43,9 +40,10 @@ pub struct ScriptExecutionResult {
     pub exit_code: Option<i32>,
     pub stdout: String,
     pub stderr: String,
-    /// The command did not finish while waited for and keeps running.
-    #[serde(rename = "running")]
-    pub is_running: bool,
+    /// The command was started detached and is not waited for, see
+    /// `ScriptRequest::is_detached`.
+    #[serde(rename = "detached")]
+    pub is_detached: bool,
 }
 
 pub struct ScriptRequest<'a> {
@@ -54,10 +52,15 @@ pub struct ScriptRequest<'a> {
     pub working_dir: Option<&'a str>,
     pub text: &'a str,
     pub selection_text: Option<&'a str>,
-    /// The caller uses the output: the command is waited for until it exits
-    /// or the run is cancelled. The caller shows the run and can cancel it, so
-    /// there is no time limit; a background caller cancels on its own limit.
+    /// The caller uses the output: one cut at `MAX_OUTPUT_BYTES` fails the run
+    /// instead of passing for the whole output. The command is waited for
+    /// until it exits or the run is cancelled either way; the caller shows the
+    /// run, cancels it and bounds it with the command run limit.
     pub should_capture_output: bool,
+    /// Starts the command on its own, e.g. a GUI app, and does not wait for
+    /// it: Tyco neither cancels nor stops it, nor reads its output or exit
+    /// code. The run is over once the command has started.
+    pub is_detached: bool,
     pub should_log_output: bool,
     /// Lets `cancel_script` stop the command while it is waited for.
     pub run_id: Option<&'a str>,
@@ -267,22 +270,14 @@ impl RunningScript {
         Ok(running)
     }
 
-    /// Waits until the command exits, the deadline (if any) passes or the run
-    /// is cancelled.
-    fn wait_until(
-        &mut self,
-        deadline: Option<Instant>,
-        cancelled: &AtomicBool,
-    ) -> std::io::Result<ProcessWaitOutcome> {
+    /// Waits until the command exits or the run is cancelled.
+    fn wait(&mut self, cancelled: &AtomicBool) -> std::io::Result<ProcessWaitOutcome> {
         loop {
             if let Some(status) = self.child.try_wait()? {
                 return Ok(ProcessWaitOutcome::Exited(status));
             }
             if cancelled.load(Ordering::SeqCst) {
                 return Ok(ProcessWaitOutcome::Cancelled);
-            }
-            if deadline.is_some_and(|deadline| Instant::now() >= deadline) {
-                return Ok(ProcessWaitOutcome::TimedOut);
             }
             thread::sleep(POLL_INTERVAL);
         }
@@ -301,7 +296,7 @@ impl RunningScript {
             exit_code: status.code(),
             stdout: read_buffer(&self.stdout),
             stderr: read_buffer(&self.stderr),
-            is_running: false,
+            is_detached: false,
         };
         (result, is_overflowed(&self.stdout))
     }
@@ -318,7 +313,6 @@ impl Drop for RunningScript {
 
 enum ProcessWaitOutcome {
     Exited(std::process::ExitStatus),
-    TimedOut,
     Cancelled,
 }
 
@@ -354,6 +348,9 @@ pub fn execute_script(
         command.current_dir(cwd);
         log.cwd = cwd.to_string_lossy().into_owned();
     }
+    if request.is_detached {
+        return start_detached(command, request, &log);
+    }
     command
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
@@ -377,9 +374,8 @@ pub fn execute_script(
     let mut running = RunningScript::start(child, stdout, stderr)
         .map_err(|error| fail(&log, format!("Failed to read the command output: {error}")))?;
 
-    let deadline = (!request.should_capture_output).then(|| Instant::now() + STATUS_WAIT);
     let status = running
-        .wait_until(deadline, &registration.flag)
+        .wait(&registration.flag)
         .map_err(|error| fail(&log, format!("Failed to wait for the command: {error}")))?;
 
     match status {
@@ -391,35 +387,46 @@ pub fn execute_script(
                 return Err(AppError::Failed(SCRIPT_OUTPUT_TOO_LARGE.into()));
             }
             log.write(&result, None);
-            return Ok(result);
+            Ok(result)
         }
-        ProcessWaitOutcome::Cancelled => {
-            return Err(fail(&log, String::from(SCRIPT_CANCELLED)));
-        }
-        ProcessWaitOutcome::TimedOut => {}
+        ProcessWaitOutcome::Cancelled => Err(fail(&log, String::from(SCRIPT_CANCELLED))),
     }
+}
 
-    // left running, e.g. a GUI app; the outcome only goes to the log
-    // the run stays registered: it can still be cancelled, and the app stops
-    // it on exit rather than leaving it behind
+/// Starts `command` detached, see `ScriptRequest::is_detached`: the start
+/// goes to the log, the rest of the command's life is its own.
+fn start_detached(
+    mut command: std::process::Command,
+    request: &ScriptRequest,
+    log: &LogContext,
+) -> Result<ScriptExecutionResult, AppError> {
+    let fail = |message: String| {
+        log.write(&empty_result(), Some(&message));
+        AppError::Failed(message)
+    };
+    check_env_sizes(request).map_err(|message| {
+        log.write(&empty_result(), Some(&message));
+        AppError::InvalidInput(message)
+    })?;
+    command
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    shell::detach(&mut command);
+    let mut child = command
+        .spawn()
+        .map_err(|error| fail(format!("Failed to start the command: {error}")))?;
+    // reaps the process once it exits, so that it leaves no zombie behind
     thread::spawn(move || {
-        let registration = registration;
-        match running.wait_until(None, &registration.flag) {
-            Ok(ProcessWaitOutcome::Exited(status)) => log.write(&running.finish(status).0, None),
-            Ok(_) => {
-                drop(running);
-                log.write(&empty_result(), Some(SCRIPT_CANCELLED));
-            }
-            Err(error) => {
-                drop(running);
-                log.write(&empty_result(), Some(&error.to_string()));
-            }
-        }
+        let _ = child.wait();
     });
-    Ok(ScriptExecutionResult {
-        is_running: true,
+    let result = ScriptExecutionResult {
+        is_success: true,
+        is_detached: true,
         ..empty_result()
-    })
+    };
+    log.write(&result, None);
+    Ok(result)
 }
 
 /// The shell command of `request`: the text and each variable it refers to
@@ -511,7 +518,7 @@ fn empty_result() -> ScriptExecutionResult {
         exit_code: None,
         stdout: String::new(),
         stderr: String::new(),
-        is_running: false,
+        is_detached: false,
     }
 }
 
@@ -530,6 +537,7 @@ mod tests {
             text,
             selection_text: None,
             should_capture_output: true,
+            is_detached: false,
             should_log_output: false,
             run_id: None,
             variables: &NO_VARIABLES,
@@ -796,19 +804,38 @@ mod tests {
     }
 
     #[test]
-    fn integration_leaves_a_long_command_running_when_its_output_is_not_needed() {
+    fn integration_a_detached_command_is_started_and_left_alone() {
+        let runs = ScriptRuns::default();
         let started = Instant::now();
         let result = execute_script(
-            &ScriptRuns::default(),
+            &runs,
             &ScriptRequest {
+                is_detached: true,
                 should_capture_output: false,
                 ..request(commands::SLEEP, "")
             },
             None,
         )
         .unwrap();
-        assert!(result.is_running);
-        assert!(started.elapsed() < Duration::from_secs(10));
+        assert!(result.is_success && result.is_detached);
+        assert!(started.elapsed() < Duration::from_secs(5));
+        // Tyco keeps no hold on it: nothing to cancel, nothing to stop on exit
+        assert!(runs.wait_until(Instant::now()));
+    }
+
+    #[test]
+    fn integration_a_command_whose_output_is_not_used_is_waited_for() {
+        let result = execute_script(
+            &ScriptRuns::default(),
+            &ScriptRequest {
+                should_capture_output: false,
+                ..request(commands::ECHO_PLACEHOLDER, "done")
+            },
+            None,
+        )
+        .unwrap();
+        assert!(result.is_success && !result.is_detached);
+        assert!(result.stdout.contains("done"));
     }
 
     #[cfg(unix)]
@@ -977,24 +1004,5 @@ mod tests {
             None,
         )
         .is_ok());
-    }
-
-    #[test]
-    fn integration_a_script_left_running_stays_cancellable_and_is_stopped_on_exit() {
-        let runs = ScriptRuns::default();
-        let result = execute_script(
-            &runs,
-            &ScriptRequest {
-                should_capture_output: false,
-                run_id: Some("background"),
-                ..request(commands::SLEEP, "")
-            },
-            None,
-        )
-        .unwrap();
-        assert!(result.is_running);
-        assert!(!runs.wait_until(Instant::now()));
-        runs.stop();
-        assert!(runs.wait_until(Instant::now() + Duration::from_secs(10)));
     }
 }

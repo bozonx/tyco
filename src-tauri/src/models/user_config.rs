@@ -274,6 +274,9 @@ pub struct ScriptOperationConfig {
     /// Empty for the home directory.
     #[serde(default)]
     pub working_directory: String,
+    /// Started on its own and not waited for, see `ScriptRequest::is_detached`.
+    #[serde(default)]
+    pub is_detached: bool,
 }
 
 /// A saved command of the `script` tool, as a run takes it.

@@ -223,7 +223,6 @@
     "advanced": "Napredno",
     "afterRunCopy": "U međuspremnik",
     "afterRunInsert": "Umetni u prozor",
-    "afterRunNoneScriptHint": "Brze naredbe postavljene na „Ništa” ne trebaju izlaz skripte: na skriptu se čeka samo 3 s, a zatim može nastaviti u pozadini. Glavni izbornik radnji i vanjski pozivi uvijek čekaju izlaz.",
     "afterRunShowResult": "Prikaži rezultat",
     "aiAllowedCommands": "Naredbe koje smije pokretati",
     "aiAllowedCommandsInfo": "AI pokreće ove naredbe bez pitanja kad god ih prompt treba. Naredba nikad ne pokreće samu sebe ni AI naredbu koja ju je pozvala.",
@@ -1333,7 +1332,9 @@
     "dialogProviderLlm": "AI model",
     "dialogRecordingsFolder": "Mapa snimki",
     "dialogRecordingsFolderHint": "Gdje se spremaju snimke poziva. Promjena ne premješta ranije snimke.",
-    "dialogRecordingsFolderReset": "Vrati zadano"
+    "dialogRecordingsFolderReset": "Vrati zadano",
+    "actionDetachedLabel": "Pokreni i ne čekaj",
+    "actionDetachedInfo": "Za pokretanje programa, npr. s prozorom: naredba se pokreće zasebno i izvršavanje odmah završava. Tyco je ne čeka niti zaustavlja, ni pri izlasku, i ne dobiva njezin izlaz ni izlazni kod."
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
@@ -1369,7 +1370,6 @@
     "scriptEmptyCommand": "Naredba skripte je prazna",
     "scriptFailed": "Izvođenje skripte nije uspjelo",
     "scriptNotSaved": "Spremite naredbu prije pokretanja",
-    "scriptRunning": "Naredba se nastavlja izvoditi u pozadini",
     "scriptSuccess": "Skripta je uspješno izvedena",
     "settingsSaveFailed": "Postavke se nisu mogle spremiti",
     "sttAuthFailed": "API ključ za transkripciju je odbijen. Provjerite ključ u postavkama transkripcije.",
@@ -1394,7 +1394,8 @@
     "webhookFailed": "Zahtjev prema webhooku nije uspio",
     "webhookKeyNotSet": "Ključ ovog webhooka nije postavljen na ovom uređaju; unesite ga u postavkama naredbe",
     "webhookSuccess": "Webhook je uspješno poslan",
-    "soundBusyWithDialog": "Zvuk zauzima dijalog: zaustavite ga da biste snimali"
+    "soundBusyWithDialog": "Zvuk zauzima dijalog: zaustavite ga da biste snimali",
+    "scriptStarted": "Naredba je pokrenuta"
   },
   "operations": {
     "aiTask": "AI naredba",

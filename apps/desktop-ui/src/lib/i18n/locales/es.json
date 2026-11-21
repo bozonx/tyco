@@ -223,7 +223,6 @@
     "advanced": "Avanzado",
     "afterRunCopy": "Al portapapeles",
     "afterRunInsert": "Insertar en la ventana",
-    "afterRunNoneScriptHint": "Las ejecuciones de comandos rápidos configuradas como «Nada» no necesitan la salida del script: se espera al script solo 3 s y después puede seguir en segundo plano. El menú principal de acciones y las llamadas externas siempre esperan la salida.",
     "afterRunShowResult": "Mostrar el resultado",
     "aiAllowedCommands": "Comandos que puede ejecutar",
     "aiAllowedCommandsInfo": "La IA ejecuta estos comandos sin preguntar cuando el prompt los necesita. Un comando nunca se ejecuta a sí mismo ni a un comando de IA que lo llamó.",
@@ -1333,7 +1332,9 @@
     "dialogProviderLlm": "Modelo de IA",
     "dialogRecordingsFolder": "Carpeta de grabaciones",
     "dialogRecordingsFolderHint": "Dónde se guardan las grabaciones de llamadas. Cambiarla no mueve las grabaciones anteriores.",
-    "dialogRecordingsFolderReset": "Restablecer valor predeterminado"
+    "dialogRecordingsFolderReset": "Restablecer valor predeterminado",
+    "actionDetachedLabel": "Iniciar sin esperar",
+    "actionDetachedInfo": "Para lanzadores, p. ej. de un programa con ventana: el comando se inicia por su cuenta y la ejecución termina al instante. Tyco no lo espera ni lo detiene, tampoco al salir, y no recibe su salida ni su código de salida."
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {
@@ -1369,7 +1370,6 @@
     "scriptEmptyCommand": "El comando del script está vacío",
     "scriptFailed": "La ejecución del script falló",
     "scriptNotSaved": "Guarda el comando antes de ejecutarlo",
-    "scriptRunning": "El comando sigue ejecutándose en segundo plano",
     "scriptSuccess": "El script se ejecutó correctamente",
     "settingsSaveFailed": "No se pudo guardar la configuración",
     "sttAuthFailed": "Se rechazó la clave API de transcripción. Revise la clave en los ajustes de transcripción.",
@@ -1394,7 +1394,8 @@
     "webhookFailed": "La solicitud al webhook falló",
     "webhookKeyNotSet": "La clave de este webhook no está definida en este dispositivo; introdúcela en los ajustes del comando",
     "webhookSuccess": "Webhook enviado correctamente",
-    "soundBusyWithDialog": "El sonido está ocupado por el diálogo: deténgalo para grabar"
+    "soundBusyWithDialog": "El sonido está ocupado por el diálogo: deténgalo para grabar",
+    "scriptStarted": "Se inició el comando"
   },
   "operations": {
     "aiTask": "Comando de IA",

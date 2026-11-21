@@ -94,9 +94,6 @@
               "
             />
           </label>
-          <p v-if="backgroundScript" class="command-place-detail command-hint">
-            {{ t('commands.afterRunNoneScriptHint') }}
-          </p>
           <p
             v-if="command.isVoiceEnabled && tool?.voiceOutputAction"
             class="command-place-detail command-hint"
@@ -361,16 +358,6 @@ const afterRunOptions = computed(() => [
   { id: 'copyToClipboard', name: t('commands.afterRunCopy') },
   { id: 'none', name: t('settings.actionAfterRunNone') },
 ])
-
-/**
- * Only command launcher runs configured to ignore output may stay in the
- * background.
- */
-const backgroundScript = computed(
-  () =>
-    props.command.operationId === 'script' &&
-    props.command.outputAction === 'none'
-)
 
 /** Which tool the command runs */
 const origin = computed(() =>

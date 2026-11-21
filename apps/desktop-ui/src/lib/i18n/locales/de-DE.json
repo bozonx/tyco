@@ -223,7 +223,6 @@
     "advanced": "Erweitert",
     "afterRunCopy": "In die Zwischenablage",
     "afterRunInsert": "In Fenster einfügen",
-    "afterRunNoneScriptHint": "Schnellbefehle mit der Einstellung „Nichts“ brauchen keine Skriptausgabe: Auf das Skript wird nur 3 s gewartet, danach kann es im Hintergrund weiterlaufen. Das Hauptaktionsmenü und externe Aufrufe warten immer auf die Ausgabe.",
     "afterRunShowResult": "Ergebnis anzeigen",
     "aiAllowedCommands": "Befehle, die er ausführen darf",
     "aiAllowedCommandsInfo": "Die KI führt diese Befehle ohne Rückfrage aus, wenn der Prompt sie braucht. Ein Befehl führt nie sich selbst aus und auch keinen KI-Befehl, der ihn aufgerufen hat.",
@@ -1333,7 +1332,9 @@
     "dialogProviderLlm": "KI-Modell",
     "dialogRecordingsFolder": "Ordner für Aufnahmen",
     "dialogRecordingsFolderHint": "Wo Gesprächsaufnahmen gespeichert werden. Bei einer Änderung werden frühere Aufnahmen nicht verschoben.",
-    "dialogRecordingsFolderReset": "Auf Standard zurücksetzen"
+    "dialogRecordingsFolderReset": "Auf Standard zurücksetzen",
+    "actionDetachedLabel": "Starten und nicht warten",
+    "actionDetachedInfo": "Für Starter, z. B. von Programmen mit Fenster: Der Befehl wird eigenständig gestartet und der Lauf endet sofort. Tyco wartet nicht auf ihn, beendet ihn nicht, auch nicht beim Beenden von Tyco, und erhält weder Ausgabe noch Exit-Code."
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {
@@ -1369,7 +1370,6 @@
     "scriptEmptyCommand": "Der Skriptbefehl ist leer",
     "scriptFailed": "Ausführung des Skripts fehlgeschlagen",
     "scriptNotSaved": "Speichern Sie den Befehl, bevor Sie ihn ausführen",
-    "scriptRunning": "Der Befehl läuft im Hintergrund weiter",
     "scriptSuccess": "Skript erfolgreich ausgeführt",
     "settingsSaveFailed": "Die Einstellungen konnten nicht gespeichert werden",
     "sttAuthFailed": "Der API-Schlüssel für die Transkription wurde abgelehnt. Prüfen Sie den Schlüssel in den Transkriptionseinstellungen.",
@@ -1394,7 +1394,8 @@
     "webhookFailed": "Webhook-Anfrage fehlgeschlagen",
     "webhookKeyNotSet": "Der Schlüssel dieses Webhooks ist auf diesem Gerät nicht gesetzt; gib ihn in den Befehlseinstellungen ein",
     "webhookSuccess": "Webhook erfolgreich gesendet",
-    "soundBusyWithDialog": "Der Ton wird vom Dialog belegt: Beenden Sie ihn, um aufzunehmen"
+    "soundBusyWithDialog": "Der Ton wird vom Dialog belegt: Beenden Sie ihn, um aufzunehmen",
+    "scriptStarted": "Der Befehl wurde gestartet"
   },
   "operations": {
     "aiTask": "KI-Befehl",

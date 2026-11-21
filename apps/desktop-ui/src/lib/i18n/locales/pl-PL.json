@@ -223,7 +223,6 @@
     "advanced": "Zaawansowane",
     "afterRunCopy": "Do schowka",
     "afterRunInsert": "Wstaw do okna",
-    "afterRunNoneScriptHint": "Szybkie polecenia ustawione na „Nic” nie potrzebują wyniku skryptu: na skrypt czeka się tylko 3 s, a potem może on działać dalej w tle. Główne menu akcji i wywołania zewnętrzne zawsze czekają na wynik.",
     "afterRunShowResult": "Pokaż wynik",
     "aiAllowedCommands": "Polecenia, które może uruchamiać",
     "aiAllowedCommandsInfo": "AI uruchamia te polecenia bez pytania, gdy prompt tego wymaga. Polecenie nigdy nie uruchamia samego siebie ani polecenia AI, które je wywołało.",
@@ -1333,7 +1332,9 @@
     "dialogProviderLlm": "Model AI",
     "dialogRecordingsFolder": "Folder nagrań",
     "dialogRecordingsFolderHint": "Gdzie zapisywane są nagrania rozmów. Zmiana nie przenosi wcześniejszych nagrań.",
-    "dialogRecordingsFolderReset": "Przywróć domyślny"
+    "dialogRecordingsFolderReset": "Przywróć domyślny",
+    "actionDetachedLabel": "Uruchom i nie czekaj",
+    "actionDetachedInfo": "Do uruchamiania programów, np. z oknem: polecenie startuje samodzielnie, a wykonanie od razu się kończy. Tyco nie czeka na nie ani go nie zatrzymuje, także przy wyjściu, i nie dostaje jego wyjścia ani kodu wyjścia."
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
@@ -1369,7 +1370,6 @@
     "scriptEmptyCommand": "Polecenie skryptu jest puste",
     "scriptFailed": "Wykonanie skryptu nie powiodło się",
     "scriptNotSaved": "Zapisz polecenie przed uruchomieniem",
-    "scriptRunning": "Polecenie nadal działa w tle",
     "scriptSuccess": "Skrypt wykonany pomyślnie",
     "settingsSaveFailed": "Nie udało się zapisać ustawień",
     "sttAuthFailed": "Klucz API transkrypcji został odrzucony. Sprawdź klucz w ustawieniach transkrypcji.",
@@ -1394,7 +1394,8 @@
     "webhookFailed": "Zapytanie do webhooka nie powiodło się",
     "webhookKeyNotSet": "Klucz tego webhooka nie jest ustawiony na tym urządzeniu; wpisz go w ustawieniach polecenia",
     "webhookSuccess": "Webhook wysłany pomyślnie",
-    "soundBusyWithDialog": "Dźwięk jest zajęty przez dialog: zatrzymaj go, aby nagrywać"
+    "soundBusyWithDialog": "Dźwięk jest zajęty przez dialog: zatrzymaj go, aby nagrywać",
+    "scriptStarted": "Polecenie zostało uruchomione"
   },
   "operations": {
     "aiTask": "Polecenie AI",

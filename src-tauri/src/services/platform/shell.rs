@@ -40,6 +40,24 @@ pub fn command(script: &str) -> Command {
     }
 }
 
+/// Lets a [`command`] outlive Tyco and be no part of it, e.g. a GUI app a
+/// launcher starts. On Unix its own process group, which [`command`] gives it
+/// already, keeps it out of Tyco's signals; on Windows it also gets a process
+/// group of its own, so that console control events of Tyco do not reach it.
+pub fn detach(command: &mut Command) {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        const CREATE_NEW_PROCESS_GROUP: u32 = 0x0000_0200;
+        command.creation_flags(CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP);
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = command;
+    }
+}
+
 /// A command that runs `script` with every `placeholder` standing for `text`,
 /// see [`substitute`].
 #[cfg(test)]

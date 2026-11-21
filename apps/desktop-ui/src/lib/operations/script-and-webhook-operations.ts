@@ -138,7 +138,7 @@ function createScriptOperation(
       }
       // finished before the cancellation reached it
       if (call.signal.aborted) return cancelled
-      if (!result.success && !result.running) {
+      if (!result.success) {
         return {
           ok: false,
           messageKey: 'toast.scriptFailed',
@@ -147,10 +147,11 @@ function createScriptOperation(
       }
       return {
         ok: true,
-        messageKey: result.running
-          ? 'toast.scriptRunning'
+        messageKey: result.detached
+          ? 'toast.scriptStarted'
           : 'toast.scriptSuccess',
-        content: result.stdout,
+        // a detached command gives no output: its run hands nothing on
+        ...(result.detached ? {} : { content: result.stdout }),
       }
     },
   }

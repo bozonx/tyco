@@ -223,7 +223,6 @@
     "advanced": "高度な設定",
     "afterRunCopy": "クリップボードへ",
     "afterRunInsert": "ウィンドウに挿入",
-    "afterRunNoneScriptHint": "「何もしない」に設定されたクイックコマンドの実行では、スクリプトの出力を待つ必要がありません。スクリプトは3秒間のみ待機され、その後バックグラウンドで実行を継続できます。メインのアクションメニューや外部呼び出しでは、常に出力を待機します。",
     "afterRunShowResult": "結果を表示",
     "aiAllowedCommands": "実行できるコマンド",
     "aiAllowedCommandsInfo": "プロンプトが必要とするとき、AI はこれらのコマンドを確認なしで実行します。コマンドが自分自身や自分を呼び出した AI コマンドを実行することはありません。",
@@ -1333,7 +1332,9 @@
     "dialogProviderLlm": "AI モデル",
     "dialogRecordingsFolder": "録音フォルダー",
     "dialogRecordingsFolderHint": "通話の録音の保存先です。変更しても以前の録音は移動されません。",
-    "dialogRecordingsFolderReset": "既定に戻す"
+    "dialogRecordingsFolderReset": "既定に戻す",
+    "actionDetachedLabel": "起動して待たない",
+    "actionDetachedInfo": "ウィンドウのあるアプリなどの起動用です。コマンドは単独で起動し、実行はすぐに終了します。Tyco は待機も停止もせず（終了時も同様）、出力や終了コードも受け取りません。"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {
@@ -1369,7 +1370,6 @@
     "scriptEmptyCommand": "スクリプトコマンドが空です",
     "scriptFailed": "スクリプトの実行に失敗しました",
     "scriptNotSaved": "実行する前にコマンドを保存してください",
-    "scriptRunning": "コマンドはバックグラウンドで引き続き実行されています",
     "scriptSuccess": "スクリプトが正常に実行されました",
     "settingsSaveFailed": "設定の保存に失敗しました",
     "sttAuthFailed": "文字起こし用のAPIキーが拒否されました。文字起こし設定でキーを確認してください。",
@@ -1394,7 +1394,8 @@
     "webhookFailed": "Webhookリクエストが失敗しました",
     "webhookKeyNotSet": "この Webhook のキーはこのデバイスで設定されていません。コマンドの設定で入力してください",
     "webhookSuccess": "Webhookが正常に送信されました",
-    "soundBusyWithDialog": "音声は会話で使用中です。録音するには会話を停止してください"
+    "soundBusyWithDialog": "音声は会話で使用中です。録音するには会話を停止してください",
+    "scriptStarted": "コマンドを起動しました"
   },
   "operations": {
     "aiTask": "AI コマンド",

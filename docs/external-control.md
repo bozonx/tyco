@@ -444,7 +444,9 @@ the overlay fails the active job with `Unavailable`. Two limits end a job with
   by default, 0 for unbounded, up to 3600.
 
 A script is killed with its whole process tree when its job is cancelled or
-times out. Returned output
+times out. A script command set to **Start and don't wait** is the exception:
+it is started on its own, the job succeeds at once without output, and Tyco
+does not stop what it started. Returned output
 is capped at 512 KiB and must also fit the escaped 1 MiB protocol envelope. Oversized output fails with `OutputTooLarge`.
 
 Client `--timeout` bounds waiting (1–3600 seconds); it is accepted only

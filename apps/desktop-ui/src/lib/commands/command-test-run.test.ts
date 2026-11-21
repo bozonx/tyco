@@ -22,7 +22,7 @@ const finished: ScriptExecutionResult = {
   exitCode: 2,
   stdout: 'out',
   stderr: 'oops',
-  running: false,
+  detached: false,
 }
 
 const deps = (

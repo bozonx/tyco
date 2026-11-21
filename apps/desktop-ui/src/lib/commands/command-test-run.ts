@@ -46,7 +46,8 @@ const isSameScript = (saved: CommandConfig, draft: CommandConfig): boolean => {
   return (
     saved.operationId === 'script' &&
     a.command === b.command &&
-    (a.workingDirectory ?? '') === (b.workingDirectory ?? '')
+    (a.workingDirectory ?? '') === (b.workingDirectory ?? '') &&
+    a.isDetached === b.isDetached
   )
 }
 

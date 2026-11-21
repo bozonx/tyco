@@ -1434,7 +1434,8 @@
       "type": "object",
       "properties": {
         "command": { "type": "string", "default": "" },
-        "workingDirectory": { "type": "string", "default": "" }
+        "workingDirectory": { "type": "string", "default": "" },
+        "isDetached": { "type": "boolean", "default": false }
       },
       "required": ["command"]
     },

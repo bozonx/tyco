@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 2845f3d0b8fa7dacea695e3f772c457b02b28e74cc167ecac6503a463a9614eb
+// Source hash: 0a07c0eb55ab03d6243d91a18dd2eb02a6b3b80aae347d24477df19af2134c02
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -870,8 +870,11 @@ export type ScriptExecutionResult = {
   exitCode: number | null
   stdout: string
   stderr: string
-  /** The command did not finish while waited for and keeps running. */
-  running: boolean
+  /**
+   * The command was started detached and is not waited for, see
+   * `ScriptRequest::is_detached`.
+   */
+  detached: boolean
 }
 
 /**

@@ -68,6 +68,7 @@ export function scriptOperationConfigOf(
   return {
     command: stringOr(config.command),
     workingDirectory: stringOr(config.workingDirectory),
+    isDetached: config.isDetached === true,
   }
 }
 
@@ -118,7 +119,7 @@ function newCommandId(): string {
 function defaultOperationConfig(operationId: string): Record<string, unknown> {
   switch (operationId) {
     case 'script':
-      return { command: '', workingDirectory: '' }
+      return { command: '', workingDirectory: '', isDetached: false }
     case 'webhook':
       return {
         url: '',

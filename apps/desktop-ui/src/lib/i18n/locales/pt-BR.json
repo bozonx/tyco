@@ -223,7 +223,6 @@
     "advanced": "Avançado",
     "afterRunCopy": "Para a área de transferência",
     "afterRunInsert": "Inserir na janela",
-    "afterRunNoneScriptHint": "Execuções de comandos rápidos definidas como “Nada” não precisam da saída do script: o script é aguardado apenas 3 s e depois pode continuar em segundo plano. O menu principal de ações e as chamadas externas sempre aguardam a saída.",
     "afterRunShowResult": "Mostrar o resultado",
     "aiAllowedCommands": "Comandos que ele pode executar",
     "aiAllowedCommandsInfo": "A IA executa esses comandos sem perguntar quando o prompt precisa deles. Um comando nunca executa a si mesmo nem um comando de IA que o chamou.",
@@ -1333,7 +1332,9 @@
     "dialogProviderLlm": "Modelo de IA",
     "dialogRecordingsFolder": "Pasta de gravações",
     "dialogRecordingsFolderHint": "Onde as gravações de chamadas são salvas. Alterá-la não move as gravações anteriores.",
-    "dialogRecordingsFolderReset": "Restaurar padrão"
+    "dialogRecordingsFolderReset": "Restaurar padrão",
+    "actionDetachedLabel": "Iniciar sem esperar",
+    "actionDetachedInfo": "Para lançadores, p. ex. de um app com janela: o comando é iniciado por conta própria e a execução termina na hora. O Tyco não o espera nem o interrompe, nem ao sair, e não recebe sua saída nem seu código de saída."
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {
@@ -1369,7 +1370,6 @@
     "scriptEmptyCommand": "O comando do script está vazio",
     "scriptFailed": "A execução do script falhou",
     "scriptNotSaved": "Salve o comando antes de executá-lo",
-    "scriptRunning": "O comando continua em execução em segundo plano",
     "scriptSuccess": "Script executado com sucesso",
     "settingsSaveFailed": "Não foi possível salvar as configurações",
     "sttAuthFailed": "A chave de API de transcrição foi recusada. Verifique a chave nas configurações de transcrição.",
@@ -1394,7 +1394,8 @@
     "webhookFailed": "A solicitação ao webhook falhou",
     "webhookKeyNotSet": "A chave deste webhook não está definida neste dispositivo; digite-a nas configurações do comando",
     "webhookSuccess": "Webhook enviado com sucesso",
-    "soundBusyWithDialog": "O som está ocupado pelo diálogo: pare-o para gravar"
+    "soundBusyWithDialog": "O som está ocupado pelo diálogo: pare-o para gravar",
+    "scriptStarted": "O comando foi iniciado"
   },
   "operations": {
     "aiTask": "Comando de IA",

@@ -223,7 +223,6 @@
     "advanced": "高级",
     "afterRunCopy": "复制到剪贴板",
     "afterRunInsert": "插入到窗口",
-    "afterRunNoneScriptHint": "设置为“无”的快捷命令运行不需要脚本输出：仅等待脚本 3 秒，之后可在后台继续运行。主操作菜单和外部调用始终会等待输出。",
     "afterRunShowResult": "显示结果",
     "aiAllowedCommands": "可运行的命令",
     "aiAllowedCommandsInfo": "当提示词需要时，AI 会直接运行这些命令而不询问。命令永远不会运行自身，也不会运行调用它的 AI 命令。",
@@ -1333,7 +1332,9 @@
     "dialogProviderLlm": "AI 模型",
     "dialogRecordingsFolder": "录音文件夹",
     "dialogRecordingsFolderHint": "通话录音的保存位置。更改后，之前的录音不会被移动。",
-    "dialogRecordingsFolderReset": "恢复默认"
+    "dialogRecordingsFolderReset": "恢复默认",
+    "actionDetachedLabel": "启动后不等待",
+    "actionDetachedInfo": "用于启动程序，例如带窗口的应用：命令单独启动，运行立即结束。Tyco 不会等待或停止它（退出时也不会），也不获取其输出和退出代码。"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
@@ -1369,7 +1370,6 @@
     "scriptEmptyCommand": "脚本命令为空",
     "scriptFailed": "脚本执行失败",
     "scriptNotSaved": "运行前请先保存命令",
-    "scriptRunning": "命令在后台继续运行",
     "scriptSuccess": "脚本执行成功",
     "settingsSaveFailed": "保存设置失败",
     "sttAuthFailed": "转录 API 密钥被拒绝。请在“转录”设置中检查您的密钥。",
@@ -1394,7 +1394,8 @@
     "webhookFailed": "Webhook 请求失败",
     "webhookKeyNotSet": "此设备上未设置该 Webhook 的密钥；请在命令设置中输入",
     "webhookSuccess": "Webhook 发送成功",
-    "soundBusyWithDialog": "声音正被对话占用：请先停止对话再录音"
+    "soundBusyWithDialog": "声音正被对话占用：请先停止对话再录音",
+    "scriptStarted": "命令已启动"
   },
   "operations": {
     "aiTask": "AI 命令",

@@ -104,7 +104,10 @@ takes the id of a saved `script` command: the shell command and its working
 directory are read from the saved config, and a disabled command is refused.
 A run has no time limit of its own: the caller shows it and cancels it with
 `cancel_script_action`; a library command run in the overlay is cancelled at
-`commandRunTimeoutSec`, the limit shared by all command runs. The command editor saves
+`commandRunTimeoutSec`, the limit shared by all command runs. A script is
+always waited for until it exits, unless its command is `isDetached`: then it
+starts on its own, without pipes, outside `ScriptRuns`, and the run ends at
+once; Tyco neither cancels nor stops it on exit. The command editor saves
 the draft before a test run and runs only what was saved. Notes are written
 only by `write_plugin_note`, under a root the user approved for that plugin.
 `read_dropped_file` reads only the paths of the last drop onto the window.
