@@ -1,5 +1,9 @@
 <template>
-  <div :class="$attrs.class" :style="$attrs.style" class="template-field">
+  <div
+    :class="[{ 'is-multiline': multiline }, $attrs.class]"
+    :style="$attrs.style"
+    class="template-field"
+  >
     <FieldPromptTextArea
       v-bind="fieldAttrs()"
       v-if="multiline"
@@ -39,12 +43,6 @@
       />
       <slot />
     </div>
-    <InfoTooltip
-      v-if="info"
-      class="template-field-info"
-      :text="info"
-      align="end"
-    />
   </div>
   <VariableReferenceHints
     v-if="canUseVariables"
@@ -60,7 +58,6 @@ import type { TextControl } from '../../lib/ui/text-control'
 import FieldInput from '../common/FieldInput.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import IconButton from '../common/IconButton.vue'
-import InfoTooltip from '../common/InfoTooltip.vue'
 import VariableInsertMenu from './VariableInsertMenu.vue'
 import VariableReferenceHints from './VariableReferenceHints.vue'
 import { ACTION_TEXT_PLACEHOLDER as TEXT } from '@tyco/shared'
@@ -74,7 +71,6 @@ const fieldAttrs = () =>
 const props = defineProps<{
   modelValue?: string
   placeholder?: string
-  info?: string
   multiline?: boolean
   /** The field takes `{{var:NAME}}`: it offers the variables to insert */
   canUseVariables?: boolean
@@ -108,13 +104,15 @@ defineExpose({ insert })
 <style scoped>
 .template-field {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-xs, 0.25rem);
+  flex: 1;
+  min-width: 0;
   width: 100%;
 }
 
-.template-field-info {
-  align-self: center;
+.template-field.is-multiline {
+  align-items: flex-start;
 }
 
 .template-field-actions {

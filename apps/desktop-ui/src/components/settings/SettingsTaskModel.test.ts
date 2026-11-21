@@ -47,4 +47,19 @@ describe('SettingsTaskModel.vue', () => {
     const { wrapper } = setup(() => '')
     expect(wrapper.findComponent(FieldRow).props('flow')).toBe(true)
   })
+
+  it('supports custom label and info overrides', () => {
+    const { context } = setup(() => '')
+    const wrapper = mount(SettingsTaskModel, {
+      props: {
+        task: 'correction',
+        label: 'Custom Model Label',
+        info: 'Custom Model Info',
+      },
+      global: { provide: context.provide },
+    })
+    const row = wrapper.findComponent(FieldRow)
+    expect(row.props('label')).toBe('Custom Model Label')
+    expect(row.props('info')).toBe('Custom Model Info')
+  })
 })

@@ -76,17 +76,17 @@
       </div>
     </SettingsSection>
 
-    <SettingsSection
-      :title="t('commands.aiTitle')"
-      :info="t('commands.aiDescription')"
-    >
-      <SettingsTaskModel task="aiTask" />
-    </SettingsSection>
+    <div class="commands-divider" role="separator" />
 
     <SettingsSection
-      :title="t('commands.externalTitle')"
-      :info="t('commands.externalDescription')"
+      class="commands-settings-section"
+      :title="t('commands.settingsTitle')"
     >
+      <SettingsTaskModel
+        task="aiTask"
+        :label="t('commands.aiTaskModel')"
+        :info="t('commands.aiDescription')"
+      />
       <FieldRow
         :label="t('commands.externalSelection')"
         :info="t('commands.externalSelectionInfo')"
@@ -406,5 +406,15 @@ function confirmDeleteCommand() {
 }
 .command-card.is-dragged {
   --disclosure-panel-border-color: var(--color-primary);
+}
+
+.commands-divider {
+  height: 1px;
+  background: var(--app-border-subtle);
+  margin: var(--space-xl) 0 var(--space-xs);
+}
+
+.commands-settings-section {
+  margin-top: var(--space-lg);
 }
 </style>

@@ -1,8 +1,8 @@
 <template>
   <FieldRow
     flow
-    :label="t('settings.taskModel')"
-    :info="t('settings.taskModelInfo')"
+    :label="label ?? t('settings.taskModel')"
+    :info="info ?? t('settings.taskModelInfo')"
   >
     <div class="task-model">
       <span :class="{ 'text-muted': !model }">
@@ -25,7 +25,7 @@ import FieldRow from '../common/FieldRow.vue'
 import InlineAction from '../common/InlineAction.vue'
 import type { LlmTask } from '@tyco/shared'
 
-const props = defineProps<{ task: LlmTask }>()
+const props = defineProps<{ task: LlmTask; label?: string; info?: string }>()
 
 const { t } = useI18n()
 const { draft: userConfig, navigate } = useSettingsContext()

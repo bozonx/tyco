@@ -157,6 +157,17 @@ describe('WebhookActionFields.vue', () => {
     expect(secrets.setSecret).not.toHaveBeenCalled()
   })
 
+  it('provides info tooltips on field rows rather than input controls', () => {
+    const wrapper = mount(WebhookActionFields, {
+      props: { command: webhook() },
+      global: { stubs: { ActionTemplateField: true } },
+    })
+    const fieldRows = wrapper.findAllComponents({ name: 'FieldRow' })
+    expect(fieldRows[0].props('info')).toBe('settings.actionWebhookUrlInfo')
+    expect(fieldRows[1].props('info')).toBe('settings.actionWebhookBodyInfo')
+    expect(fieldRows[3].props('info')).toBe('settings.actionWebhookAuthInfo')
+  })
+
   it('warns about a credential bound to another origin and removes it', async () => {
     secrets.secrets = { 'webhook-1': { origins: ['https://old.example.com'] } }
     const wrapper = mountFields(

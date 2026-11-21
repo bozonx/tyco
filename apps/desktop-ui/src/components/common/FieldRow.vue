@@ -27,6 +27,7 @@
       </div>
       <div v-if="hint" :id="hintId" class="field-row-hint">{{ hint }}</div>
       <FieldMessages
+        v-if="!vertical"
         :errors="errors"
         :warnings="warnings"
         :error-id="errorId"
@@ -38,6 +39,15 @@
     <div class="field-row-control">
       <slot />
     </div>
+    <FieldMessages
+      v-if="vertical"
+      :errors="errors"
+      :warnings="warnings"
+      :error-id="errorId"
+      :warning-id="warningId"
+      ><template v-if="$slots.messages" #default
+        ><slot name="messages" /></template
+    ></FieldMessages>
   </component>
 </template>
 

@@ -122,6 +122,14 @@ describe('SettingsCommandsTab.vue', () => {
     expect(section.props('info')).toBe('commands.hint')
   })
 
+  it('renders command settings section with divider and unified fields', () => {
+    const wrapper = mountTab()
+    expect(wrapper.find('.commands-divider').exists()).toBe(true)
+    const sections = wrapper.findAllComponents({ name: 'SettingsSection' })
+    expect(sections).toHaveLength(2)
+    expect(sections[1].props('title')).toBe('commands.settingsTitle')
+  })
+
   it('reorders commands by dragging the shared handle', async () => {
     context = createTestSettingsContext({
       actionPages: [{ inputMode: 'selection', slots: {} }],

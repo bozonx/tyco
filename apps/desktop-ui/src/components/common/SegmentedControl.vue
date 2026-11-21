@@ -74,7 +74,9 @@ const name = useId()
 <style scoped>
 .segmented-control {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  flex-shrink: 0;
   gap: var(--segment-gap);
   padding: var(--segment-padding);
   border-radius: var(--radius-md);
@@ -97,6 +99,7 @@ const name = useId()
   font-weight: 500;
   line-height: 1.25;
   cursor: pointer;
+  white-space: nowrap;
   transition:
     color var(--transition-fast),
     background-color var(--transition-fast),

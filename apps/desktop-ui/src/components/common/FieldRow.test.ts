@@ -96,6 +96,14 @@ describe('FieldRow', () => {
     expect(messages.text()).toContain('Domain warning')
     expect(messages.findAll('p')).toHaveLength(3)
     expect(input.attributes('aria-invalid')).toBeUndefined()
+    // When vertical is true, messages are placed below the control
+    const controlEl = wrapper.get('.field-row-control').element
+    expect(
+      Boolean(
+        controlEl.compareDocumentPosition(messages.element) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+      )
+    ).toBe(true)
     await wrapper.setProps({ error: ['Missing value', 'Duplicate value'] })
     expect(input.attributes('aria-invalid')).toBe('true')
     expect(wrapper.get('[role="alert"]').findAll('p')).toHaveLength(2)

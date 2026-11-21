@@ -6,10 +6,12 @@
       vertical
       density="compact"
       :label="t('settings.actionWebhookUrlLabel')"
+      :info="t('settings.actionWebhookUrlInfo', { placeholder: TEXT })"
       :warning="warningsOf('url')"
     >
       <div class="action-field-row">
         <SegmentedControl
+          class="shrink-0"
           :model-value="webhook.method || 'POST'"
           :label="t('settings.actionWebhookMethod')"
           :options="[
@@ -22,7 +24,6 @@
           can-use-variables
           :model-value="webhook.url"
           placeholder="https://"
-          :info="t('settings.actionWebhookUrlInfo', { placeholder: TEXT })"
           @update:model-value="update('url', $event)"
         />
       </div>
@@ -34,6 +35,7 @@
       vertical
       density="compact"
       :label="t('settings.actionWebhookBodyLabel')"
+      :info="t('settings.actionWebhookBodyInfo', { placeholder: TEXT })"
       :warning="warningsOf('payloadTemplate')"
     >
       <ActionTemplateField
@@ -41,7 +43,6 @@
         can-use-variables
         :model-value="webhook.payloadTemplate"
         :placeholder="t('settings.actionWebhookPayloadPlaceholder')"
-        :info="t('settings.actionWebhookBodyInfo', { placeholder: TEXT })"
         @update:model-value="update('payloadTemplate', $event)"
       />
     </FieldRow>
@@ -135,6 +136,7 @@
       vertical
       density="compact"
       :label="t('settings.actionWebhookAuthLabel')"
+      :info="t('settings.actionWebhookAuthInfo')"
     >
       <div class="action-field-row">
         <FieldInput
@@ -166,10 +168,6 @@
       <p v-if="authBoundElsewhere" class="action-field-warning">
         {{ t('settings.apiKeyBoundTo', { origin: authOrigins.join(', ') }) }}
       </p>
-
-      <template #info
-        ><InfoTooltip :text="t('settings.actionWebhookAuthInfo')"
-      /></template>
     </FieldRow>
   </div>
 </template>
@@ -201,7 +199,6 @@ import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import IconButton from '../common/IconButton.vue'
-import InfoTooltip from '../common/InfoTooltip.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import ActionTemplateField from './ActionTemplateField.vue'
 import VariableReferenceHints from './VariableReferenceHints.vue'
