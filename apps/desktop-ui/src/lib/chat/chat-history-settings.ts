@@ -1,4 +1,8 @@
-import type { ChatHistoryConfig, UserConfig } from '@tyco/shared'
+import type {
+  ChatHistoryConfig,
+  UserConfig,
+  VaultChatHistory,
+} from '@tyco/shared'
 import { historyRetentionChoices } from '../history/history-retention'
 
 /**
@@ -24,12 +28,15 @@ export function chatHistoryConfig(
 
 /**
  * Chats are saved unless the settings turn it off. A profile chat follows the
- * settings shared by all profiles, "Ask AI" its own
+ * settings of its workspace, `vaultHistory`, over the default of all profiles;
+ * "Ask AI" its own
  */
 export function isChatHistoryEnabled(
   config: ChatHistorySettingsSource,
-  profileId?: string | null
+  profileId?: string | null,
+  vaultHistory?: VaultChatHistory
 ): boolean {
+  if (profileId && vaultHistory?.storage) return vaultHistory.storage !== 'off'
   const scope: ChatHistoryScope = profileId ? 'profiles' : 'askAi'
   const history = chatHistoryConfig(config, scope)
   return history.storage !== 'off' && history.isChatSavingEnabled !== false
@@ -47,9 +54,10 @@ export function chatHistoryRetentionChoices(saved: unknown): number[] {
  */
 export function isQuickRequestSavingEnabled(
   config: ChatHistorySettingsSource,
-  profileId?: string | null
+  profileId?: string | null,
+  vaultHistory?: VaultChatHistory
 ): boolean {
-  if (!isChatHistoryEnabled(config, profileId)) {
+  if (!isChatHistoryEnabled(config, profileId, vaultHistory)) {
     return false
   }
   const scope: ChatHistoryScope = profileId ? 'profiles' : 'askAi'

@@ -485,6 +485,12 @@ a concurrently arriving folder returns `alreadyExists`.
 
 ### Vaults
 
+The UI calls a vault a **workspace** and the profile's `workspace/` folder its
+**Files**. On-disk, config and code names keep the old terms (`ai-vault/`,
+`tyco-vault.json`, `aiVaults`, `vaultId`, `ai_vault`, `profiles/<id>/workspace/`,
+the `workspace/` root of the file tools): older builds on other synced devices
+read them, and chats keep tool calls with these paths.
+
 A vault is known by its marker `tyco-vault.json` (`formatVersion`, a
 `vaultId` made once, and the `name` of an attached vault, the same on every
 device). The main vault is always `ai-vault/` of the user data folder and moves
@@ -497,7 +503,7 @@ Other vaults are attached per device (`aiVaults.attached: [{ path, vaultId }]`,
 `x-scope: device`; the `vaultId` is kept to name a vault that is away).
 `attach_ai_vault` uses a folder with a marker as it is, makes a new vault with
 a random id in a missing or empty one, and refuses a folder of other files (the
-settings offer its `TyCo Vault` subfolder), a vault whose id is attached
+settings offer its `TyCo Workspace` subfolder), a vault whose id is attached
 already or is that of the main vault (a copy), and a folder nested with the
 data folder or another vault (`check_sync_roots`). An attached vault is used
 only when it is there with its marker of that id; otherwise it is "not
@@ -555,6 +561,29 @@ anything is copied, and a failed copy removes what it copied. Without
 next sync: an internal project turned external is not connected there until
 its folder is set. Changing the folder of an external project only relinks
 it: its files are not moved.
+
+The settings of a vault live in `tyco-vault-settings.json` next to its marker
+(`ai_vault::settings`), synced with it and kept apart from the marker so that
+editing them never conflicts with it. Today it holds `chatHistory`
+(`storage`: `off` or `disk`, `retentionDays`); each field is optional and a
+missing one follows `aiProfiles.chatHistory`, the default for every vault
+(`ChatHistoryPolicy::for_vault`; a vault's `storage` alone decides whether its
+chats are saved). Unknown fields are kept on write; a newer `formatVersion` or
+an unreadable file is refused on write and read as no settings, so a broken
+file never stops the chats. `set_ai_vault_chat_history` writes it and marks the
+chat cleanup pending; `list_ai_vaults` returns it as `chatHistory`.
+
+`move_ai_profile` and `move_ai_project` (`ai_vault::transfer`) move an entity
+to another connected vault, locking both vaults in the order of their roots.
+The entity is copied into a hidden folder of the destination, its description
+rewritten (unknown fields kept), moved into place whole, and only then is the
+source removed; a failure removes the partial copy. The id is kept unless it
+is taken there, then a fresh one is made. A profile drops all its project
+permissions, its memory read versions and its chat index; the webview rewrites
+the references in `config.json` to the returned one (`rewriteProfileRefs`). A
+project is removed from the source as `delete_project` does, so profiles left
+behind drop their permissions; an external project's folder on this device
+moves to the destination key of `aiProjectPaths`, other devices set it again.
 
 Vault operations acquire the shared relocation gate before resolving a vault,
 then hold a mutex for that vault's canonical root for the complete operation,

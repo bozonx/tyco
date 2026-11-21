@@ -86,6 +86,7 @@ function createChatStoreSetup(profileId: string | null) {
       updateProfileModel: (id, modelId) =>
         aiProfilesStore.updateProfile(id, { modelId }),
       getUserConfig: () => desktopStore.userConfig,
+      getVaultChatHistory: aiProfilesStore.vaultChatHistoryOf,
       operations: operationsStore,
       environment: operationsStore.environment,
       getSessionState: () => desktopStore.sessionState,

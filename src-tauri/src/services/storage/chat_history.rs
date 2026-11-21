@@ -23,6 +23,7 @@ use super::DAY_MS;
 use crate::errors::AppError;
 use crate::models::user_config::{self, ChatHistoryConfig, HistoryStorage};
 use crate::models::{Chat, ChatSummary};
+use crate::services::ai_vault::{VaultChatHistory, VaultHistoryStorage};
 use crate::services::clock::now_ms;
 
 use crate::services::chat_images::ChatImageStore;
@@ -737,9 +738,27 @@ impl ChatHistoryPolicy {
         user_config::chat_history(user_config).into()
     }
 
-    /// The policy every profile chat follows.
+    /// The default policy of profile chats, for a vault that sets nothing.
     pub fn for_profiles(user_config: &Value) -> Self {
         user_config::profile_chat_history(user_config).into()
+    }
+
+    /// The policy of the profile chats of a vault: its own settings over the
+    /// default of the app.
+    pub fn for_vault(user_config: &Value, vault: &VaultChatHistory) -> Self {
+        let mut config = user_config::profile_chat_history(user_config);
+        if let Some(storage) = vault.storage {
+            // the vault decides alone whether its chats are saved
+            config.is_chat_saving_enabled = None;
+            config.storage = match storage {
+                VaultHistoryStorage::Off => HistoryStorage::Off,
+                VaultHistoryStorage::Disk => HistoryStorage::Disk,
+            };
+        }
+        if let Some(days) = vault.retention_days {
+            config.retention_days = days;
+        }
+        config.into()
     }
 
     /// The chat is to be stored: regular chats follow `saves_chats`, and

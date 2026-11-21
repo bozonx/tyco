@@ -95,7 +95,9 @@ describe('SettingsAiProfilesTab.vue', () => {
       global: {
         provide: context.provide,
         stubs: {
-          SettingsAiVaultsSection: true,
+          SettingsWorkspaceSection: true,
+          SettingsWorkspaceHistorySection: true,
+          SettingsWorkspaceAttach: true,
           SettingsCreateEntityModal: {
             name: 'SettingsCreateEntityModal',
             props: [

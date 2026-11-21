@@ -15,27 +15,6 @@ export function vaultLabel(
   )
 }
 
-export interface VaultGroup<T> {
-  vault: VaultInfo
-  items: T[]
-}
-
-/**
- * The entities of each vault that is there, the main one first; a vault without
- * any is listed too, so that something can be made in it
- */
-export function groupByVault<T extends { id: string }>(
-  items: readonly T[],
-  vaults: readonly VaultInfo[]
-): VaultGroup<T>[] {
-  return vaults
-    .filter((vault) => vault.isMain || vault.status === 'connected')
-    .map((vault) => ({
-      vault,
-      items: items.filter((item) => vaultOfRef(item.id) === vault.vaultId),
-    }))
-}
-
 /**
  * The name of a profile with its vault when another profile has that name too,
  * so that the two can be told apart

@@ -31,7 +31,7 @@ const DEVICE_FIELD_NOTES: Record<
   windowInsertion: ['SettingsGeneralTab.vue', 'device-scoped'],
   variableValues: ['SettingsVariablesTab.vue', `t('variables.hint'`],
   'aiVaults.attached': [
-    'SettingsAiVaultsSection.vue',
+    'SettingsWorkspaceSection.vue',
     'attachedDeviceScopedHint',
   ],
   'stt.microphoneId': [

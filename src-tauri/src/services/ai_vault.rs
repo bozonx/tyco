@@ -4,11 +4,15 @@ mod tests;
 pub mod marker;
 pub mod memory;
 pub mod operations;
+pub mod settings;
+pub mod transfer;
 pub mod types;
 
 pub use marker::Vault;
 pub use memory::*;
 pub use operations::*;
+pub use settings::{VaultChatHistory, VaultHistoryStorage};
+pub use transfer::MovedEntity;
 pub use types::*;
 
 use tauri::{AppHandle, Manager};
@@ -166,4 +170,86 @@ pub fn with_projects_then<L, T>(
         )?
     };
     then(loaded)
+}
+
+/// Runs `operation` on two different vaults, each locked as by
+/// [`with_vault_of`]; the locks are taken in the order of their folders, so
+/// two moves in opposite directions cannot wait on each other.
+fn with_two_vaults<T>(
+    app: &AppHandle,
+    from_id: &str,
+    to_id: &str,
+    operation: impl FnOnce(&Vault, &Vault) -> Result<T, AppError>,
+) -> Result<T, AppError> {
+    use crate::locks::MutexExt;
+    let state = app.state::<crate::state::AppState>();
+    let _access = state.read_vault();
+    let from = resolve_vault(app, from_id)?;
+    let to = resolve_vault(app, to_id)?;
+    if from.id == to.id {
+        return Err(AppError::InvalidInput(
+            "The destination is the workspace the item is in already".into(),
+        ));
+    }
+    let (first, second) = if from.root <= to.root {
+        (&from, &to)
+    } else {
+        (&to, &from)
+    };
+    let first_lock = locking::vault_lock(&first.root);
+    let second_lock = locking::vault_lock(&second.root);
+    let _first = first_lock.locked();
+    let _second = second_lock.locked();
+    operation(&from, &to)
+}
+
+/// Moves a profile, named by its reference, to the vault `to_id` (empty: the
+/// main one). Returns its reference there; the webview rewrites the
+/// references in the settings.
+pub fn move_profile_to_vault(
+    app: &AppHandle,
+    profile_ref: &str,
+    to_id: &str,
+) -> Result<MovedEntity, AppError> {
+    let (from_id, id) = split_ref(profile_ref);
+    with_two_vaults(app, from_id, to_id, |from, to| {
+        let moved = crate::services::storage::while_chats_locked_in_vault(app, || {
+            transfer::move_profile(&from.root, &to.root, id)
+        })?;
+        app.state::<MemoryReadVersions>()
+            .clear_profile(&from.root, id);
+        if let Err(error) = crate::services::storage::remove_profile_index(app, &from.id, id) {
+            log::warn!("Could not remove the chat index of the profile {id}: {error}");
+        }
+        Ok(MovedEntity {
+            id: join_ref(&canonical_vault_ref(app, to_id, to), &moved.id),
+        })
+    })
+}
+
+/// Moves a project, named by its reference, to the vault `to_id` (empty: the
+/// main one). Returns its reference there.
+pub fn move_project_to_vault(
+    app: &AppHandle,
+    project_ref: &str,
+    to_id: &str,
+) -> Result<MovedEntity, AppError> {
+    let (from_id, id) = split_ref(project_ref);
+    with_two_vaults(app, from_id, to_id, |from, to| {
+        let device = app.state::<crate::services::storage::device::DeviceStore>();
+        let from_paths = ProjectPaths {
+            device: &device,
+            vault_id: &from.id,
+            protected_roots: protected_roots(app),
+        };
+        let to_paths = ProjectPaths {
+            device: &device,
+            vault_id: &to.id,
+            protected_roots: protected_roots(app),
+        };
+        let moved = transfer::move_project(&from.root, &from_paths, &to.root, &to_paths, id)?;
+        Ok(MovedEntity {
+            id: join_ref(&canonical_vault_ref(app, to_id, to), &moved.id),
+        })
+    })
 }

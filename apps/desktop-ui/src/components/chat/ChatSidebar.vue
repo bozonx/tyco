@@ -249,6 +249,7 @@ import {
 } from '../../lib/chat/chat-history-list'
 import { isChatHistoryEnabled } from '../../lib/chat/chat-history-settings'
 import { clientLogger } from '../../lib/logger'
+import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useDesktopStore } from '../../stores/desktop'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
@@ -272,6 +273,7 @@ const { chat: chatStore } = useChatScope()
 /** The chats of the shown chat only: "Ask AI" or one profile */
 const history = chatStore.history
 const desktopStore = useDesktopStore()
+const aiProfilesStore = useAiProfilesStore()
 
 void history.loadChatHistory().catch((error) => {
   clientLogger.warn(`Could not load the chats: ${String(error)}`, 'chat')
@@ -305,7 +307,12 @@ const removedChat = computed(() => chatStore.removedChat)
 const undoRemoveChat = () => chatStore.undoRemoveChat()
 
 const chatHistoryDisabled = computed(
-  () => !isChatHistoryEnabled(desktopStore.userConfig, chatStore.profileId)
+  () =>
+    !isChatHistoryEnabled(
+      desktopStore.userConfig,
+      chatStore.profileId,
+      aiProfilesStore.vaultChatHistoryOf(chatStore.profileId)
+    )
 )
 
 /** Chats whose messages match the query, found in storage */

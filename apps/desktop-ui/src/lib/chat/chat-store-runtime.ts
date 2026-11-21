@@ -7,6 +7,7 @@ import {
   type SessionState,
   type StorageChangedEvent,
   type UserConfig,
+  type VaultChatHistory,
 } from '@tyco/shared'
 import { computed, unref, watch, type Ref } from 'vue'
 
@@ -68,6 +69,8 @@ export interface ChatStoreRuntimeDependencies {
   readSoul: (id: string) => Promise<string>
   updateProfileModel: (id: string, modelId: string) => Promise<unknown>
   getUserConfig: () => UserConfig | undefined
+  /** The chat history settings of the workspace of a profile */
+  getVaultChatHistory?: (profileId: string) => VaultChatHistory | undefined
   getSessionState: () => SessionState | undefined
   saveSessionState: (
     patch: Partial<SessionState>
@@ -281,7 +284,13 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
   let saveFailed = false
   const isHistoryEnabled = () => {
     const config = deps.getUserConfig()
-    return config ? isChatHistoryEnabled(config, profileId) : false
+    return config
+      ? isChatHistoryEnabled(
+          config,
+          profileId,
+          profileId ? deps.getVaultChatHistory?.(profileId) : undefined
+        )
+      : false
   }
   const model = createChatModel({
     // a profile reads its SOUL.md, memory and settings before the request is

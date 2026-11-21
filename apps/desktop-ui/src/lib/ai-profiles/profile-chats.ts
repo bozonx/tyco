@@ -12,10 +12,12 @@ export interface ProfileChatsDependencies {
 export function createProfileChatsModel(deps: ProfileChatsDependencies) {
   /**
    * How many chats the profiles keep altogether; a profile whose chats cannot
-   * be read counts none, the rest still count. Fails only when none is read
+   * be read counts none, the rest still count. Fails only when none is read.
+   * `ids` narrows it to some profiles, e.g. those of one workspace
    */
-  const countAll = async (): Promise<number> => {
-    const ids = deps.listProfileIds()
+  const countAll = async (
+    ids: readonly string[] = deps.listProfileIds()
+  ): Promise<number> => {
     const results = await Promise.allSettled(
       ids.map(async (id) => (await deps.storageFor(id).listChats()).length)
     )
@@ -32,11 +34,14 @@ export function createProfileChatsModel(deps: ProfileChatsDependencies) {
 
   /**
    * Removes the chats of every profile. All profiles are tried; the first
-   * failure is reported once the rest are done
+   * failure is reported once the rest are done. `ids` narrows it to some
+   * profiles
    */
-  const clearAll = async (): Promise<void> => {
+  const clearAll = async (
+    ids: readonly string[] = deps.listProfileIds()
+  ): Promise<void> => {
     const results = await Promise.allSettled(
-      deps.listProfileIds().map((id) => deps.storageFor(id).clearChats())
+      ids.map((id) => deps.storageFor(id).clearChats())
     )
     const failure = results.find(
       (result): result is PromiseRejectedResult => result.status === 'rejected'

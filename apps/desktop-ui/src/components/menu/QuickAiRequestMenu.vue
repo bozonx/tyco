@@ -390,6 +390,7 @@ const runtime = createQuickAiRequestRuntime({
   llmActions: llmStore.actions,
   loadImage: (id) => getChatImage(id),
   getUserConfig: () => desktopStore.userConfig,
+  getVaultChatHistory: aiProfilesStore.vaultChatHistoryOf,
   updateUserConfig: (patch) => desktopStore.updateUserConfig(patch),
   getSecrets: () => secretsStore.secrets,
   getProfile: (id) => aiProfilesStore.getProfile(id),

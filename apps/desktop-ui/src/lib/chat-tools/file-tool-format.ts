@@ -160,7 +160,7 @@ export function formatFileRoots(roots: readonly AiFileRoot[]): string {
       ? [
           'Where things go:',
           '- Your answer in the chat is text, not a file: show code, notes or a draft in the answer unless a file is asked for.',
-          '- When the user asks to save, keep, download or create a file without naming a place, it goes to workspace/. Any text format works: Markdown, code, JSON, CSV and so on. Also keep there what you will need in later chats.',
+          '- When the user asks to save, keep, download or create a file without naming a place, it goes to workspace/. Any text format works: Markdown, code, JSON, CSV and so on. Also keep there what you will need in later chats. The user sees workspace/ as the Files of the profile: call it that when you talk about it.',
           "- A project holds only the user's own work: change it only for a task about that project, never put notes or scratch files there.",
           '- Name the path of every file you create or change in your answer.',
         ]

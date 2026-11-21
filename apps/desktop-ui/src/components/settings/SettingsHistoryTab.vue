@@ -2,6 +2,7 @@
   <div class="settings-stack">
     <SettingsEditorHistorySection />
     <SettingsChatHistorySection scope="askAi" />
+    <SettingsChatHistorySection scope="profiles" />
 
     <SettingsSection bare>
       <template #description>

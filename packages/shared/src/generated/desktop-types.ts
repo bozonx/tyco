@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 0a07c0eb55ab03d6243d91a18dd2eb02a6b3b80aae347d24477df19af2134c02
+// Source hash: f5d0f77959bfdfdd7d53b3b3c57fee925bb3d084ffea01d9caf78a434130e1c1
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -751,6 +751,12 @@ export type KeySender = 'ydotool' | 'portal' | 'system'
 
 export type KeysState = 'ready' | 'needsPermission' | 'unavailable'
 
+/**
+ * Where a moved entity landed: its id in the destination vault, which is the
+ * old one unless that was taken there.
+ */
+export type MovedEntity = { id: string }
+
 /** What the main window opens its chat with. */
 export type OpenMainChatEvent = {
   attachment?: ChatAttachment | null
@@ -1133,6 +1139,16 @@ export type VaultChange = {
   path: string
 }
 
+/**
+ * The chat history of a vault's profiles; a missing field follows the app-wide
+ * default.
+ */
+export type VaultChatHistory = {
+  storage?: VaultHistoryStorage
+  /** 0 keeps the chats forever. */
+  retentionDays?: number
+}
+
 export type VaultFolder = { path: string; kind: VaultFolderKind }
 
 /** What a folder offered for a vault holds. */
@@ -1142,6 +1158,9 @@ export type VaultFolderKind =
   | { kind: 'occupied'; subfolder: string }
   | { kind: 'duplicate' }
   | { kind: 'nested'; message: string }
+
+/** Whether the chats of a vault's profiles are saved. */
+export type VaultHistoryStorage = 'off' | 'disk'
 
 /** A vault as the settings show it. */
 export type VaultInfo = {
@@ -1156,6 +1175,8 @@ export type VaultInfo = {
   status: VaultStatus
   /** Others may write to it: its profiles run the commands of this device. */
   isWritableByOthers: boolean
+  /** The chat history settings of its profiles; empty when not connected. */
+  chatHistory: VaultChatHistory
 }
 
 /** Whether the system credential store can be reached. */

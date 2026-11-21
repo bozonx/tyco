@@ -1,7 +1,13 @@
-import { DESKTOP_EVENTS, type VaultFolder, type VaultInfo } from '@tyco/shared'
+import {
+  DESKTOP_EVENTS,
+  type VaultChatHistory,
+  type VaultFolder,
+  type VaultInfo,
+} from '@tyco/shared'
 
 import { clientLogger } from '../lib/logger'
-import { joinRef } from '../lib/ai-profiles/profile-ref'
+import { joinRef, vaultOfRef } from '../lib/ai-profiles/profile-ref'
+import { rewriteProfileRefs } from '../lib/ai-profiles/profile-ref-rewrite'
 import { defineStore } from 'pinia'
 import { computed, onScopeDispose, readonly, ref, watch } from 'vue'
 import { desktopClient } from '../lib/desktop/client'
@@ -200,15 +206,70 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
       resultOrThrow(await call('rename_ai_vault', { vaultId, name }))
     )
 
+  /** The chat history settings of the vault of a profile reference */
+  const vaultChatHistoryOf = (
+    profileId: string | null | undefined
+  ): VaultChatHistory | undefined =>
+    profileId
+      ? vaults.value.find((vault) => vault.vaultId === vaultOfRef(profileId))
+          ?.chatHistory
+      : undefined
+
+  /** Stores how the chats of a vault's profiles are kept, on every device */
+  const setVaultChatHistory = async (
+    vaultId: string,
+    chatHistory: VaultChatHistory
+  ) => {
+    resultOrThrow(
+      await call('set_ai_vault_chat_history', { vaultId, chatHistory })
+    )
+    await loadVaults()
+  }
+
+  /**
+   * Moves a profile to another vault and points the settings that name it to
+   * where it landed. Returns its new reference
+   */
+  const moveProfile = async (id: string, vaultId: string): Promise<string> => {
+    const moved = resultOrThrow(await call('move_ai_profile', { id, vaultId }))
+    const config = desktopStore.userConfig
+    if (config) {
+      const patch = rewriteProfileRefs(config, id, moved.id)
+      if (Object.keys(patch).length > 0) {
+        const response = await desktopStore.updateUserConfig(patch)
+        if (!response.success)
+          clientLogger.error(
+            'Could not point the settings to the moved profile',
+            response.error,
+            'ai-profiles'
+          )
+      }
+    }
+    await loadAll()
+    return moved.id
+  }
+
+  /** Moves a project to another vault. Returns its new reference */
+  const moveProject = async (id: string, vaultId: string): Promise<string> => {
+    const moved = resultOrThrow(await call('move_ai_project', { id, vaultId }))
+    await loadAll()
+    return moved.id
+  }
+
   /** How many chats removing the profile `id` removes with it */
   const countChats = async (id: string): Promise<number> =>
     (await createIpcChatSessionStorageDriver(ipcStore, id).listChats()).length
 
-  /** The chats of all profiles, which share one history setting */
+  /** The chats of the profiles of all workspaces, or of one */
   const profileChats = createProfileChatsModel({
     listProfileIds: () => profilesModel.profiles.value.map(({ id }) => id),
     storageFor: (id) => createIpcChatSessionStorageDriver(ipcStore, id),
   })
+
+  const profileIdsOf = (vaultId: string) =>
+    profilesModel.profiles.value
+      .map(({ id }) => id)
+      .filter((id) => vaultOfRef(id) === vaultId)
 
   /** Removing a project removes the profiles' permissions for it as well */
   const deleteProject = async (id: string): Promise<void> => {
@@ -279,6 +340,10 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     relinkVault,
     detachVault,
     renameVault,
+    setVaultChatHistory,
+    vaultChatHistoryOf,
+    moveProfile,
+    moveProject,
     pickFolder: projectsModel.pickExternalFolder,
     // Profiles
     getProfile: profilesModel.getProfile,
@@ -288,8 +353,12 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     duplicateProfile: profilesModel.duplicateProfile,
     deleteProfile: profilesModel.deleteProfile,
     countChats,
-    countAllProfileChats: profileChats.countAll,
-    clearAllProfileChats: profileChats.clearAll,
+    countAllProfileChats: () => profileChats.countAll(),
+    clearAllProfileChats: () => profileChats.clearAll(),
+    countVaultChats: (vaultId: string) =>
+      profileChats.countAll(profileIdsOf(vaultId)),
+    clearVaultChats: (vaultId: string) =>
+      profileChats.clearAll(profileIdsOf(vaultId)),
     setProjectAccess: profilesModel.setProjectAccess,
     readSoul: profilesModel.readSoul,
     readSoulWithRevision,

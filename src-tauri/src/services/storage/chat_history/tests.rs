@@ -1077,3 +1077,41 @@ fn the_list_carries_no_recent_prompts_while_the_index_keeps_them() {
         ["Question"]
     );
 }
+
+#[test]
+fn a_vault_overrides_the_default_profile_policy() {
+    use crate::services::ai_vault::{VaultChatHistory, VaultHistoryStorage};
+    let config = json!({"aiProfiles": {"chatHistory": {"storage": "disk", "retentionDays": 7}}});
+    assert_eq!(
+        ChatHistoryPolicy::for_vault(&config, &VaultChatHistory::default()),
+        ChatHistoryPolicy::for_profiles(&config)
+    );
+    let kept = ChatHistoryPolicy::for_vault(
+        &config,
+        &VaultChatHistory {
+            storage: None,
+            retention_days: Some(0),
+        },
+    );
+    assert!(kept.is_enabled);
+    assert_eq!(kept.retention_days, 0);
+    let off = ChatHistoryPolicy::for_vault(
+        &config,
+        &VaultChatHistory {
+            storage: Some(VaultHistoryStorage::Off),
+            retention_days: None,
+        },
+    );
+    assert!(!off.is_enabled && !off.saves_chats);
+    assert_eq!(off.retention_days, 7);
+    let default_off =
+        json!({"aiProfiles": {"chatHistory": {"storage": "off", "isChatSavingEnabled": false}}});
+    let on = ChatHistoryPolicy::for_vault(
+        &default_off,
+        &VaultChatHistory {
+            storage: Some(VaultHistoryStorage::Disk),
+            retention_days: None,
+        },
+    );
+    assert!(on.is_enabled && on.saves_chats);
+}

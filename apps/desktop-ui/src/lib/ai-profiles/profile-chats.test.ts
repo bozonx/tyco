@@ -28,6 +28,13 @@ describe('createProfileChatsModel', () => {
     await expect(model.countAll()).resolves.toBe(5)
   })
 
+  it('counts and clears only the profiles asked for', async () => {
+    const { model, clearChats } = setup({ writer: 2, coder: 3 })
+    await expect(model.countAll(['coder'])).resolves.toBe(3)
+    await model.clearAll(['coder'])
+    expect(clearChats.mock.calls).toEqual([['coder']])
+  })
+
   it('counts the profiles that can be read when one cannot', async () => {
     const model = createProfileChatsModel({
       listProfileIds: () => ['writer', 'broken'],

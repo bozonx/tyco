@@ -98,7 +98,8 @@ impl HistoryStorageCoordinator {
         let chat_settings_changed =
             before.chat != after.chat || before.profile_chat != after.profile_chat;
         if chat_settings_changed || self.chat_cleanup_pending.load(Ordering::SeqCst) {
-            let chat_cleanup = enforce_chat_history_policies(app, &after);
+            let config = app.state::<AppState>().user_config();
+            let chat_cleanup = enforce_chat_history_policies(app, &after, &config);
             self.chat_cleanup_pending
                 .store(chat_cleanup.is_err(), Ordering::SeqCst);
             if let Err(error) = chat_cleanup {
@@ -143,7 +144,8 @@ impl HistoryStorageCoordinator {
         let _settings = state.lock_settings_update();
         let _editor = self.lock_editor_history();
         let _chats = self.lock_chat_history();
-        let policy = HistorySettings::from_config(&state.user_config());
+        let config = state.user_config();
+        let policy = HistorySettings::from_config(&config);
         let mut result = Ok(());
         if self.editor_cleanup_pending.load(Ordering::SeqCst) {
             match editor::enforce_editor_history_policy(app, &policy.editor) {
@@ -158,7 +160,7 @@ impl HistoryStorageCoordinator {
             }
         }
         if self.chat_cleanup_pending.load(Ordering::SeqCst) {
-            match enforce_chat_history_policies(app, &policy) {
+            match enforce_chat_history_policies(app, &policy, &config) {
                 Ok(()) => self.chat_cleanup_pending.store(false, Ordering::SeqCst),
                 Err(error) => {
                     log::warn!("Chat history cleanup failed; it will be retried: {error}");
@@ -229,6 +231,7 @@ pub fn apply_editor_history_settings_on_startup(
 fn enforce_chat_history_policies(
     app: &AppHandle,
     settings: &HistorySettings,
+    config: &serde_json::Value,
 ) -> Result<(), AppError> {
     super::user_data::user_dir(app)?;
     let ask_ai = chats::app_chat_dirs(app)
@@ -238,17 +241,18 @@ fn enforce_chat_history_policies(
     // a profile chat is saved there again
     let mut profiles = Ok(());
     for (vault_ref, vault) in crate::services::ai_vault::connected_vaults(app) {
+        let policy = chats::ChatHistoryPolicy::for_vault(
+            config,
+            &crate::services::ai_vault::settings::read_chat_history(&vault.root),
+        );
         profiles = profiles.and(enforce_profile_chat_history_policy(
-            app,
-            &vault_ref,
-            &vault,
-            settings.profile_chat,
+            app, &vault_ref, &vault, policy,
         ));
     }
     ask_ai.and(profiles)
 }
 
-/// Applies the policy all profiles share to the chats of each of them.
+/// Applies the policy of a vault to the chats of each of its profiles.
 fn enforce_profile_chat_history_policy(
     app: &AppHandle,
     vault_ref: &str,
@@ -384,6 +388,26 @@ fn scope_chat_dirs(
     }
 }
 
+/// The policy the chats of `scope` follow: a profile's chats follow the
+/// settings of its vault over the default of the app.
+fn scope_policy(
+    app: &AppHandle,
+    scope: &ChatScope,
+    config: &serde_json::Value,
+) -> Result<chats::ChatHistoryPolicy, AppError> {
+    match scope {
+        ChatScope::AskAi => Ok(chats::ChatHistoryPolicy::from_config(config)),
+        ChatScope::Profile(key) => {
+            let (vault_ref, _) = crate::services::ai_vault::split_ref(key);
+            let vault = crate::services::ai_vault::resolve_vault(app, vault_ref)?;
+            Ok(chats::ChatHistoryPolicy::for_vault(
+                config,
+                &crate::services::ai_vault::settings::read_chat_history(&vault.root),
+            ))
+        }
+    }
+}
+
 /// Every chat history shares one lock: chat images are shared by them all.
 fn with_chats<T>(
     app: &AppHandle,
@@ -491,10 +515,7 @@ pub fn list_recent_quick_request_prompts(
 ) -> Result<Vec<String>, AppError> {
     with_chats(app, scope, ChatAccess::Read, |state, dirs| {
         let config = state.user_config();
-        let policy = match scope {
-            ChatScope::AskAi => chats::ChatHistoryPolicy::from_config(&config),
-            ChatScope::Profile(_) => chats::ChatHistoryPolicy::for_profiles(&config),
-        };
+        let policy = scope_policy(app, scope, &config)?;
         chats::list_recent_quick_request_prompts(dirs, policy, limit)
     })
 }
@@ -525,10 +546,7 @@ pub fn read_chat(
 pub fn save_chat(app: &AppHandle, scope: &ChatScope, item: Chat) -> Result<(), AppError> {
     let removed = with_chats(app, scope, ChatAccess::Write, |state, dirs| {
         let config = state.user_config();
-        let policy = match scope {
-            ChatScope::AskAi => chats::ChatHistoryPolicy::from_config(&config),
-            ChatScope::Profile(_) => chats::ChatHistoryPolicy::for_profiles(&config),
-        };
+        let policy = scope_policy(app, scope, &config)?;
         if !policy.is_enabled {
             return Ok(None);
         }

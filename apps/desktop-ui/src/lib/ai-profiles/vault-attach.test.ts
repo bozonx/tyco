@@ -31,11 +31,11 @@ describe('attachPickedVault', () => {
 
   it('offers a subfolder in a folder of other files', async () => {
     const deps = setup({
-      '/picked': { kind: 'occupied', subfolder: '/picked/TyCo Vault' },
-      '/picked/TyCo Vault': { kind: 'empty' },
+      '/picked': { kind: 'occupied', subfolder: '/picked/TyCo Workspace' },
+      '/picked/TyCo Workspace': { kind: 'empty' },
     })
     expect(await attachPickedVault(deps)).toBe(true)
-    expect(deps.attach).toHaveBeenCalledWith('/picked/TyCo Vault', 'Work')
+    expect(deps.attach).toHaveBeenCalledWith('/picked/TyCo Workspace', 'Work')
 
     deps.confirmSubfolder.mockResolvedValueOnce(false)
     deps.attach.mockClear()

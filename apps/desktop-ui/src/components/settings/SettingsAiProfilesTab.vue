@@ -1,132 +1,139 @@
 <template>
   <div class="settings-stack">
-    <SettingsSection
-      :title="t('settings.aiProfilesTab')"
-      :info="t('settings.aiProfilesHint')"
-    >
-      <template #actions>
-        <Button
-          size="sm"
-          variant="primary"
-          icon="mdi:plus"
-          @click="showCreateProfileModal = true"
-        >
-          {{ t('settings.newProfile') }}
-        </Button>
-      </template>
+    <div class="workspace-bar">
+      <SegmentedControl
+        v-if="workspaceOptions.length > 1"
+        size="sm"
+        :label="t('settings.aiVaults.vault')"
+        :model-value="activeVault.vaultId"
+        :options="workspaceOptions"
+        data-testid="workspace-switcher"
+        @update:model-value="selectWorkspace"
+      />
+      <SettingsWorkspaceAttach @attached="selectWorkspace" />
+    </div>
 
-      <div class="settings-section-content">
-        <StateMessage
-          v-if="profiles.length === 0"
-          density="compact"
-          :message="t('settings.noProfilesYet')"
-        />
-        <template v-else>
-          <div
-            v-for="group in profileGroups"
-            :key="group.vault.vaultId"
-            class="vault-group"
+    <template v-if="!isActiveConnected">
+      <StateMessage
+        :message="t('settings.workspaceNotConnected')"
+        data-testid="workspace-not-connected"
+      />
+      <SettingsWorkspaceSection :vault="activeVault" />
+    </template>
+    <template v-else>
+      <SettingsSection
+        :title="t('settings.aiProfilesTab')"
+        :info="t('settings.aiProfilesHint')"
+      >
+        <template #actions>
+          <Button
+            size="sm"
+            variant="primary"
+            icon="mdi:plus"
+            @click="showCreateProfileModal = true"
           >
-            <h4 v-if="profileGroups.length > 1" class="vault-group-title">
-              {{ vaultLabel(group.vault, t('settings.aiVaults.main')) }}
-            </h4>
-            <div class="settings-entity-list">
-              <SettingsEntityItem
-                v-for="profile in group.items"
-                :key="profile.id"
-                :title="profile.name"
-                :description="describeProfile(profile)"
-                openable
-                @open="navigate(profileTab(profile.id))"
-              >
-                <template #actions>
-                  <DropdownMenu
-                    size="xs"
-                    square
-                    hide-chevron
-                    align="right"
-                    icon="mdi:dots-vertical"
-                    :title="t('commands.moreActions')"
-                    :items="profileMenuItems(profile)"
-                  />
-                </template>
-              </SettingsEntityItem>
-            </div>
-          </div>
+            {{ t('settings.newProfile') }}
+          </Button>
         </template>
-      </div>
-    </SettingsSection>
 
-    <SettingsSection
-      :title="t('settings.projectsTitle')"
-      :info="t('settings.projectsHint')"
-    >
-      <template #actions>
-        <Button
-          size="sm"
-          variant="primary"
-          icon="mdi:plus"
-          @click="showCreateProjectModal = true"
-        >
-          {{ t('settings.newProject') }}
-        </Button>
-      </template>
+        <div class="settings-section-content">
+          <StateMessage
+            v-if="activeProfiles.length === 0"
+            density="compact"
+            :message="t('settings.noProfilesYet')"
+          />
+          <template v-else>
+            <div>
+              <div class="settings-entity-list">
+                <SettingsEntityItem
+                  v-for="profile in activeProfiles"
+                  :key="profile.id"
+                  :title="profile.name"
+                  :description="describeProfile(profile)"
+                  openable
+                  @open="navigate(profileTab(profile.id))"
+                >
+                  <template #actions>
+                    <DropdownMenu
+                      size="xs"
+                      square
+                      hide-chevron
+                      align="right"
+                      icon="mdi:dots-vertical"
+                      :title="t('commands.moreActions')"
+                      :items="profileMenuItems(profile)"
+                    />
+                  </template>
+                </SettingsEntityItem>
+              </div>
+            </div>
+          </template>
+        </div>
+      </SettingsSection>
 
-      <div class="settings-section-content">
-        <InlineNotice
-          v-if="projectsWithoutFolder.length > 1"
-          density="compact"
-          kind="warning"
-          :message="
-            t('settings.projectsWithoutFolder', {
-              count: projectsWithoutFolder.length,
-            })
-          "
-        />
-        <StateMessage
-          v-if="projects.length === 0"
-          density="compact"
-          :message="t('settings.noProjectsYet')"
-        />
-        <template v-else>
-          <div
-            v-for="group in projectGroups"
-            :key="group.vault.vaultId"
-            class="vault-group"
+      <SettingsSection
+        :title="t('settings.projectsTitle')"
+        :info="t('settings.projectsHint')"
+      >
+        <template #actions>
+          <Button
+            size="sm"
+            variant="primary"
+            icon="mdi:plus"
+            @click="showCreateProjectModal = true"
           >
-            <h4 v-if="projectGroups.length > 1" class="vault-group-title">
-              {{ vaultLabel(group.vault, t('settings.aiVaults.main')) }}
-            </h4>
-            <div class="settings-entity-list">
-              <SettingsEntityItem
-                v-for="project in group.items"
-                :key="project.id"
-                :title="project.name"
-                :description="describeProject(project)"
-                openable
-                @open="navigate(projectTab(project.id))"
-              >
-                <template #actions>
-                  <DropdownMenu
-                    size="xs"
-                    square
-                    hide-chevron
-                    align="right"
-                    icon="mdi:dots-vertical"
-                    :title="t('commands.moreActions')"
-                    :items="projectMenuItems(project)"
-                  />
-                </template>
-              </SettingsEntityItem>
-            </div>
-          </div>
+            {{ t('settings.newProject') }}
+          </Button>
         </template>
-      </div>
-    </SettingsSection>
 
-    <SettingsAiVaultsSection />
+        <div class="settings-section-content">
+          <InlineNotice
+            v-if="projectsWithoutFolder.length > 1"
+            density="compact"
+            kind="warning"
+            :message="
+              t('settings.projectsWithoutFolder', {
+                count: projectsWithoutFolder.length,
+              })
+            "
+          />
+          <StateMessage
+            v-if="activeProjects.length === 0"
+            density="compact"
+            :message="t('settings.noProjectsYet')"
+          />
+          <template v-else>
+            <div>
+              <div class="settings-entity-list">
+                <SettingsEntityItem
+                  v-for="project in activeProjects"
+                  :key="project.id"
+                  :title="project.name"
+                  :description="describeProject(project)"
+                  openable
+                  @open="navigate(projectTab(project.id))"
+                >
+                  <template #actions>
+                    <DropdownMenu
+                      size="xs"
+                      square
+                      hide-chevron
+                      align="right"
+                      icon="mdi:dots-vertical"
+                      :title="t('commands.moreActions')"
+                      :items="projectMenuItems(project)"
+                    />
+                  </template>
+                </SettingsEntityItem>
+              </div>
+            </div>
+          </template>
+        </div>
+      </SettingsSection>
 
-    <SettingsChatHistorySection scope="profiles" />
+      <SettingsWorkspaceHistorySection :vault="activeVault" />
+      <SettingsWorkspaceSection :vault="activeVault" />
+    </template>
 
     <SettingsCreateEntityModal
       :open="showCreateProfileModal"
@@ -136,16 +143,7 @@
       :is-submitting="isCreatingProfile"
       @submit="handleCreateProfile"
       @close="showCreateProfileModal = false"
-    >
-      <FieldRow
-        v-if="vaultOptions.length > 1"
-        vertical
-        :separator="false"
-        :label="t('settings.aiVaults.vault')"
-      >
-        <FieldSelect v-model="targetVaultId" :options="vaultOptions" />
-      </FieldRow>
-    </SettingsCreateEntityModal>
+    />
 
     <SettingsCreateEntityModal
       :open="showCreateProjectModal"
@@ -177,15 +175,15 @@
         :disabled="isCreatingProject"
         @pick="pickNewProjectFolder"
       />
-      <FieldRow
-        v-if="vaultOptions.length > 1"
-        vertical
-        :separator="false"
-        :label="t('settings.aiVaults.vault')"
-      >
-        <FieldSelect v-model="targetVaultId" :options="vaultOptions" />
-      </FieldRow>
     </SettingsCreateEntityModal>
+
+    <SettingsMoveToWorkspaceModal
+      :kind="entityToMove?.kind ?? 'profile'"
+      :entity="entityToMove"
+      :is-submitting="isMoving"
+      @confirm="handleMove"
+      @close="entityToMove = null"
+    />
 
     <ConfirmModal
       :open="showDuplicateProfileConfirm"
@@ -222,6 +220,13 @@
   </div>
 </template>
 
+<script lang="ts">
+import { ref as moduleRef } from 'vue'
+
+/** The workspace last shown, kept while the app runs */
+const lastWorkspaceId = moduleRef('')
+</script>
+
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 
@@ -229,25 +234,27 @@ import { useBusyAction } from '../../composables/use-busy-action'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
-import { splitRef } from '../../lib/ai-profiles/profile-ref'
-import { groupByVault, vaultLabel } from '../../lib/ai-profiles/vault-groups'
+import { moveTargets } from '../../lib/ai-profiles/entity-move'
+import { splitRef, vaultOfRef } from '../../lib/ai-profiles/profile-ref'
+import { vaultLabel } from '../../lib/ai-profiles/vault-groups'
 import { profileTab, projectTab } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldRow from '../common/FieldRow.vue'
-import FieldSelect from '../common/FieldSelect.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import StateMessage from '../common/StateMessage.vue'
-import SettingsAiVaultsSection from './SettingsAiVaultsSection.vue'
-import SettingsChatHistorySection from './SettingsChatHistorySection.vue'
 import SettingsCreateEntityModal from './SettingsCreateEntityModal.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
+import SettingsMoveToWorkspaceModal from './SettingsMoveToWorkspaceModal.vue'
 import SettingsProjectFolderField from './SettingsProjectFolderField.vue'
 import SettingsSection from './SettingsSection.vue'
-import type { AiProject } from '@tyco/shared'
+import SettingsWorkspaceAttach from './SettingsWorkspaceAttach.vue'
+import SettingsWorkspaceHistorySection from './SettingsWorkspaceHistorySection.vue'
+import SettingsWorkspaceSection from './SettingsWorkspaceSection.vue'
+import type { AiProject, VaultInfo } from '@tyco/shared'
 
 const { t } = useI18n()
 const { navigate } = useSettingsContext()
@@ -256,27 +263,51 @@ const aiProfilesStore = useAiProfilesStore()
 
 const profiles = computed(() => aiProfilesStore.profiles)
 const projects = computed(() => aiProfilesStore.projects)
-const profileGroups = computed(() =>
-  groupByVault(profiles.value, aiProfilesStore.vaults)
+
+/** The workspace shown; the main one when the chosen one is gone */
+const activeVault = computed<VaultInfo>(
+  () =>
+    aiProfilesStore.vaults.find(
+      (vault) => vault.vaultId === lastWorkspaceId.value
+    ) ??
+    aiProfilesStore.vaults.find((vault) => vault.isMain) ?? {
+      vaultId: '',
+      name: '',
+      path: aiProfilesStore.vaultPath,
+      isMain: true,
+      status: 'connected',
+      isWritableByOthers: false,
+      chatHistory: {},
+    }
 )
-const projectGroups = computed(() =>
-  groupByVault(projects.value, aiProfilesStore.vaults)
+const isActiveConnected = computed(
+  () => activeVault.value.isMain || activeVault.value.status === 'connected'
 )
-/** The vaults something can be made in now */
-const vaultOptions = computed(() =>
-  profileGroups.value.map(({ vault }) => ({
+const workspaceOptions = computed(() =>
+  aiProfilesStore.vaults.map((vault) => ({
     id: vault.vaultId,
     name: vaultLabel(vault, t('settings.aiVaults.main')),
+    icon:
+      vault.isMain || vault.status === 'connected'
+        ? undefined
+        : 'mdi:alert-outline',
   }))
 )
+function selectWorkspace(vaultId: string) {
+  lastWorkspaceId.value = vaultId
+}
+const inActiveVault = (item: { id: string }) =>
+  vaultOfRef(item.id) === activeVault.value.vaultId
+const activeProfiles = computed(() => profiles.value.filter(inActiveVault))
+const activeProjects = computed(() => projects.value.filter(inActiveVault))
 /** The vault a new profile or project goes to */
-const targetVaultId = ref('')
+const targetVaultId = computed(() => activeVault.value.vaultId)
 
 /** An external project with no folder on this device */
 const isWithoutFolder = (project: AiProject) =>
   project.isExternal && !project.targetPath?.trim()
 const projectsWithoutFolder = computed(() =>
-  projects.value.filter(isWithoutFolder)
+  activeProjects.value.filter(isWithoutFolder)
 )
 
 async function setProjectFolder(project: AiProject) {
@@ -287,22 +318,10 @@ async function setProjectFolder(project: AiProject) {
   }
 }
 
-/**
- * The folder of a profile when it is outside the main vault or has a custom
- * folder
- */
+/** The folder of a profile when it has a custom one */
 function describeProfile(profile: { id: string }): string {
-  const { vaultId, id } = splitRef(profile.id)
-  if (vaultId) {
-    const vault = aiProfilesStore.vaults.find((v) => v.vaultId === vaultId)
-    if (vault && !vault.isMain) {
-      return vaultLabel(vault, '')
-    }
-  }
-  if (!id.startsWith('profile-')) {
-    return id
-  }
-  return ''
+  const { id } = splitRef(profile.id)
+  return id.startsWith('profile-') ? '' : id
 }
 
 /** The description of a project or folder setup notices */
@@ -331,6 +350,7 @@ function profileMenuItems(profile: {
       icon: 'mdi:content-copy',
       action: () => askDuplicateProfile(profile),
     },
+    ...moveItem('profile', profile),
     {
       label: t('common.delete'),
       icon: 'mdi:trash-can-outline',
@@ -413,6 +433,7 @@ function projectMenuItems(project: AiProject): DropdownMenuItem[] {
           },
         ]
       : []),
+    ...moveItem('project', project),
     {
       label: t('common.delete'),
       icon: 'mdi:trash-can-outline',
@@ -439,6 +460,49 @@ async function handleDeleteProject() {
     showDeleteProjectConfirm.value = false
     projectToDelete.value = null
   }
+}
+
+// ---------------------------------------------------------------------------
+// Move to another workspace
+// ---------------------------------------------------------------------------
+
+const entityToMove = ref<{
+  kind: 'profile' | 'project'
+  id: string
+  name: string
+} | null>(null)
+const { isBusy: isMoving, run: runMoving } = useBusyAction()
+
+function moveItem(
+  kind: 'profile' | 'project',
+  entity: { readonly id: string; readonly name: string }
+): DropdownMenuItem[] {
+  if (moveTargets(entity.id, aiProfilesStore.vaults).length === 0) return []
+  return [
+    {
+      label: t('settings.moveToWorkspace.action'),
+      icon: 'mdi:folder-move-outline',
+      action: () => {
+        entityToMove.value = { kind, id: entity.id, name: entity.name }
+      },
+    },
+  ]
+}
+
+async function handleMove(vaultId: string) {
+  const entity = entityToMove.value
+  if (!entity) return
+  await runMoving(async () => {
+    try {
+      if (entity.kind === 'profile')
+        await aiProfilesStore.moveProfile(entity.id, vaultId)
+      else await aiProfilesStore.moveProject(entity.id, vaultId)
+      entityToMove.value = null
+      selectWorkspace(vaultId)
+    } catch (error) {
+      toastError(error)
+    }
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -500,13 +564,14 @@ async function handleCreateProject(name: string) {
 </script>
 
 <style scoped>
-.vault-group + .vault-group {
-  margin-top: var(--space-md);
+.workspace-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
-.vault-group-title {
-  margin: 0 0 var(--space-xs);
-  font-size: var(--text-caption);
-  color: var(--app-text-faint);
+.workspace-bar > :last-child {
+  margin-left: auto;
 }
 </style>

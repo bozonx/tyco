@@ -296,6 +296,7 @@ export class FakeDesktopBackend {
         isMain: true,
         status: 'connected',
         isWritableByOthers: false,
+        chatHistory: {},
       },
     ])
     this.handle('list_ai_projects', () => [])

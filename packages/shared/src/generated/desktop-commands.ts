@@ -41,6 +41,7 @@ import type {
   InputRegion,
   InstalledPlugin,
   JobCompletion,
+  MovedEntity,
   OperationCatalogEntry,
   PluginPackagePreview,
   ProfileMemoryChange,
@@ -63,6 +64,7 @@ import type {
   TextInsertionStatus,
   UserDataRelocationMode,
   UserDataTarget,
+  VaultChatHistory,
   VaultFolder,
   VaultInfo,
   VaultState,
@@ -252,6 +254,14 @@ export interface DesktopCommands {
   mark_activation_metric: {
     args: { id: number; mark: ActivationMetricMark }
     result: void
+  }
+  move_ai_profile: {
+    args: { id: string; vaultId: string }
+    result: MovedEntity
+  }
+  move_ai_project: {
+    args: { id: string; vaultId: string }
+    result: MovedEntity
   }
   open_action_log: { args: undefined; result: boolean }
   open_ai_vault_location: {
@@ -444,6 +454,10 @@ export interface DesktopCommands {
   }
   send_socket_binary: { args: BinaryArgs<SocketFrameMeta>; result: void }
   send_socket_text: { args: { id: number; text: string }; result: void }
+  set_ai_vault_chat_history: {
+    args: { vaultId: string; chatHistory: VaultChatHistory }
+    result: void
+  }
   set_editor_history_item_failure: {
     args: { id: string; failure: EditorHistoryFailure }
     result: void

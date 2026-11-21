@@ -147,6 +147,7 @@ describe('profile chats', () => {
         case 'list_ai_profiles':
           return { success: true, result: [files.profile] }
         case 'list_ai_projects':
+        case 'list_ai_vaults':
           return { success: true, result: [] }
         case 'get_ai_profile':
           return { success: true, result: files.profile }

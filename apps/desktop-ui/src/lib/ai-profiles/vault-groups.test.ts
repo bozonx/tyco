@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { VaultInfo } from '@tyco/shared'
 
-import { entityLabel, groupByVault, vaultLabel } from './vault-groups'
+import { entityLabel, vaultLabel } from './vault-groups'
 
 const vault = (patch: Partial<VaultInfo>): VaultInfo => ({
   vaultId: '',
@@ -10,6 +10,7 @@ const vault = (patch: Partial<VaultInfo>): VaultInfo => ({
   isMain: true,
   status: 'connected',
   isWritableByOthers: false,
+  chatHistory: {},
   ...patch,
 })
 
@@ -23,20 +24,6 @@ const away = vault({
 })
 
 describe('vault groups', () => {
-  it('group entities by the vault of their reference', () => {
-    const groups = groupByVault(
-      [
-        { id: 'a', name: 'A' },
-        { id: 'w1:b', name: 'B' },
-      ],
-      [main, work, away]
-    )
-    expect(groups.map(({ vault, items }) => [vault.vaultId, items])).toEqual([
-      ['', [{ id: 'a', name: 'A' }]],
-      ['w1', [{ id: 'w1:b', name: 'B' }]],
-    ])
-  })
-
   it('name the vault only when profile names clash', () => {
     const profiles = [
       { id: 'a', name: 'Assistant' },

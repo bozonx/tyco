@@ -96,6 +96,37 @@ pub async fn rename_ai_vault(
     run_blocking(move || ai_vault::rename_vault(&app, &vault_id, &name)).await?
 }
 
+/// Stores the chat history settings of a vault and brings its chats in line
+/// with them in the background.
+#[tauri::command]
+pub async fn set_ai_vault_chat_history(
+    app: AppHandle,
+    vault_id: String,
+    chat_history: ai_vault::VaultChatHistory,
+) -> Result<(), AppError> {
+    run_blocking(move || ai_vault::set_vault_chat_history(&app, &vault_id, chat_history)).await?
+}
+
+/// Moves a profile with its chats, memory and files to another vault.
+#[tauri::command]
+pub async fn move_ai_profile(
+    app: AppHandle,
+    id: String,
+    vault_id: String,
+) -> Result<ai_vault::MovedEntity, AppError> {
+    run_blocking(move || ai_vault::move_profile_to_vault(&app, &id, &vault_id)).await?
+}
+
+/// Moves a project to another vault.
+#[tauri::command]
+pub async fn move_ai_project(
+    app: AppHandle,
+    id: String,
+    vault_id: String,
+) -> Result<ai_vault::MovedEntity, AppError> {
+    run_blocking(move || ai_vault::move_project_to_vault(&app, &id, &vault_id)).await?
+}
+
 /// The profiles of every vault that is there.
 #[tauri::command]
 pub async fn list_ai_profiles(app: AppHandle) -> Result<Vec<AiProfile>, AppError> {

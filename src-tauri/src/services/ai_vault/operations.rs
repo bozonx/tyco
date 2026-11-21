@@ -7,7 +7,7 @@ use crate::services::atomic_file::{create_private_dir, write_private};
 use crate::services::file_ids::{is_file_id, MAX_FILE_ID_LEN};
 use crate::services::storage::device::DeviceStore;
 
-const PROFILE_FILE: &str = "profile.json";
+pub(super) const PROFILE_FILE: &str = "profile.json";
 /// What an internal project keeps its settings in, next to its files.
 pub const PROJECT_FILE: &str = "project.json";
 const SOUL_FILE: &str = "SOUL.md";
@@ -74,7 +74,7 @@ pub fn ensure_vault_dirs(vault_root: &Path) -> Result<(), AppError> {
     Ok(())
 }
 
-fn create_entity_dir(path: &Path) -> Result<(), AppError> {
+pub(super) fn create_entity_dir(path: &Path) -> Result<(), AppError> {
     crate::services::storage::user_data::ensure_write_allowed(path)?;
     let mut builder = fs::DirBuilder::new();
     #[cfg(unix)]
@@ -91,7 +91,7 @@ fn create_entity_dir(path: &Path) -> Result<(), AppError> {
     })
 }
 
-fn not_found(what: &str, id: &str) -> AppError {
+pub(super) fn not_found(what: &str, id: &str) -> AppError {
     AppError::NotFound(format!("{what} not found: {id}"))
 }
 
@@ -143,7 +143,7 @@ fn read_entries<T: serde::de::DeserializeOwned + serde::Serialize>(
 // Profiles
 // ---------------------------------------------------------------------------
 
-fn profile_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
+pub(super) fn profile_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
     validate_id(id)?;
     Ok(vault_root.join("profiles").join(id))
 }
@@ -230,10 +230,10 @@ pub fn get_profile(vault_root: &Path, id: &str) -> Result<AiProfile, AppError> {
 }
 
 /// The hidden folder a new profile is laid out in; never a valid id.
-const STAGING_PREFIX: &str = ".creating-";
+pub(super) const STAGING_PREFIX: &str = ".creating-";
 
 /// Removes the folders profiles were laid out in that a crash left behind.
-fn remove_stale_staging(dir: &Path) {
+pub(super) fn remove_stale_staging(dir: &Path) {
     let Ok(entries) = fs::read_dir(dir) else {
         return;
     };
@@ -438,7 +438,7 @@ pub fn vault_dir_to_open(vault_root: &Path, profile_id: Option<&str>) -> Result<
 // Projects
 // ---------------------------------------------------------------------------
 
-fn project_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
+pub(super) fn project_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
     validate_id(id)?;
     Ok(vault_root.join("projects").join(id))
 }
@@ -456,7 +456,7 @@ pub struct ProjectPaths<'a> {
 }
 
 impl ProjectPaths<'_> {
-    fn get(&self, project_id: &str) -> Option<String> {
+    pub(super) fn get(&self, project_id: &str) -> Option<String> {
         self.device
             .snapshot()
             .ai_project_paths
@@ -465,7 +465,7 @@ impl ProjectPaths<'_> {
             .cloned()
     }
 
-    fn set(&self, project_id: &str, path: Option<&str>) -> Result<(), AppError> {
+    pub(super) fn set(&self, project_id: &str, path: Option<&str>) -> Result<(), AppError> {
         self.device.update(|file| {
             let paths = file
                 .ai_project_paths
@@ -700,7 +700,7 @@ pub fn save_project(
     Ok(revision)
 }
 
-fn read_project(dir: &Path) -> Result<AiProject, AppError> {
+pub(super) fn read_project(dir: &Path) -> Result<AiProject, AppError> {
     Ok(serde_json::from_str(&fs::read_to_string(
         dir.join(PROJECT_FILE),
     )?)?)
@@ -833,7 +833,7 @@ fn copy_project_files(from: &Path, to: &Path) -> Result<(), AppError> {
     Ok(())
 }
 
-fn check_no_links(path: &Path) -> Result<(), AppError> {
+pub(super) fn check_no_links(path: &Path) -> Result<(), AppError> {
     let kind = path.symlink_metadata()?.file_type();
     if kind.is_symlink() {
         return Err(AppError::InvalidInput(format!(
@@ -849,7 +849,7 @@ fn check_no_links(path: &Path) -> Result<(), AppError> {
     Ok(())
 }
 
-fn copy_tree(from: &Path, to: &Path) -> Result<(), AppError> {
+pub(super) fn copy_tree(from: &Path, to: &Path) -> Result<(), AppError> {
     if from.is_dir() {
         fs::create_dir(to)?;
         for entry in fs::read_dir(from)? {

@@ -36,6 +36,8 @@ pub struct VaultInfo {
     pub status: VaultStatus,
     /// Others may write to it: its profiles run the commands of this device.
     pub is_writable_by_others: bool,
+    /// The chat history settings of its profiles; empty when not connected.
+    pub chat_history: super::VaultChatHistory,
 }
 
 /// What a folder offered for a vault holds.
@@ -62,7 +64,7 @@ pub struct VaultFolder {
 }
 
 /// The folder offered inside one that holds other files.
-pub const VAULT_SUBFOLDER: &str = "TyCo Vault";
+pub const VAULT_SUBFOLDER: &str = "TyCo Workspace";
 
 /// Every vault this device knows of, the main one first. A vault that is not
 /// there is listed too: the user may point it to its folder or remove it.
@@ -77,6 +79,7 @@ pub fn list_vaults(app: &AppHandle) -> Result<Vec<VaultInfo>, AppError> {
         is_main: true,
         status: VaultStatus::Connected,
         is_writable_by_others: false,
+        chat_history: super::settings::read_chat_history(&main.root),
     }];
     for attached in attached_vaults(&state.user_config()) {
         vaults.push(attached_info(&attached));
@@ -102,6 +105,11 @@ fn attached_info(attached: &AttachedVault) -> VaultInfo {
         status,
         is_writable_by_others: status == VaultStatus::Connected
             && crate::services::storage::user_data::is_writable_by_others(path),
+        chat_history: if status == VaultStatus::Connected {
+            super::settings::read_chat_history(path)
+        } else {
+            super::VaultChatHistory::default()
+        },
     }
 }
 
@@ -347,6 +355,20 @@ pub fn rename_vault(app: &AppHandle, vault_id: &str, name: &str) -> Result<(), A
         }
         marker::rename_attached(&vault.root, name)
     })
+}
+
+/// Stores the chat history settings of a vault, on every device that syncs
+/// it; its chats are brought in line with them in the background.
+pub fn set_vault_chat_history(
+    app: &AppHandle,
+    vault_id: &str,
+    chat_history: super::VaultChatHistory,
+) -> Result<(), AppError> {
+    super::with_vault_of(app, vault_id, |vault| {
+        super::settings::write_chat_history(&vault.root, chat_history)
+    })?;
+    app.state::<AppState>().history.mark_chat_cleanup_pending();
+    Ok(())
 }
 
 /// The profile as the webview names it: its id and the projects it may use
