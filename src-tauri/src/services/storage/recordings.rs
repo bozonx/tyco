@@ -12,17 +12,56 @@
 //! (`discard`), with the whole history (`clear`), and when the retention
 //! limits drop the entry (`collect`). A file no entry names waits
 //! `orphan_files::ORPHAN_GRACE_MS` first: a sync tool may bring it before the
-//! journal that names it.
-use std::collections::HashSet;
+//! journal that names it. A recording still being written when its entry goes
+//! is removed as soon as it is finished, see `begin_writing`.
+use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 
 use tauri::AppHandle;
 
 use super::orphan_files::OrphanRecord;
 use super::user_data::{ensure_write_allowed, user_dir_for, UserDirAccess};
 use crate::errors::AppError;
+use crate::locks::MutexExt;
 use crate::services::atomic_file::create_private_dir;
+
+/// The recordings being written, by name: whether their entry went meanwhile.
+/// The file cannot be removed while it is open (Windows refuses, Linux would
+/// let it be published again), so the writer removes it when it closes.
+static WRITING: Mutex<BTreeMap<String, bool>> = Mutex::new(BTreeMap::new());
+
+/// The recording `name` starts being written, see `end_writing`.
+pub fn begin_writing(name: &str) {
+    WRITING.locked().insert(name.to_owned(), false);
+}
+
+/// The recording `name` is closed: whether its entry went while it was
+/// written, and the file must go instead of joining the history.
+pub fn end_writing(name: &str) -> bool {
+    WRITING.locked().remove(name).unwrap_or(false)
+}
+
+/// Marks the recording `name` for removal when it is being written; `false`
+/// when it is not.
+fn discard_when_closed(name: &str) -> bool {
+    match WRITING.locked().get_mut(name) {
+        Some(is_discarded) => {
+            *is_discarded = true;
+            true
+        }
+        None => false,
+    }
+}
+
+fn remove_file_if_present(path: &Path) -> Result<(), AppError> {
+    match fs::remove_file(path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error.into()),
+    }
+}
 
 /// The folder of the recordings in the user data folder.
 pub const RECORDINGS_DIR: &str = "history/recordings";
@@ -208,27 +247,35 @@ pub fn show(app: &AppHandle, name: &str) -> Result<(), AppError> {
     crate::services::platform::open_dir(&folder_of(&RecordingDirs::of_app(app)?, name)?)
 }
 
-fn remove_shared(dirs: &RecordingDirs, name: &str) -> Result<(), AppError> {
+/// Removes the recording `name` wherever it is: in the data folder, and in
+/// the state folder, at once when a previous run left it there, once it is
+/// closed when it is being written.
+fn remove(dirs: &RecordingDirs, name: &str) -> Result<(), AppError> {
     let path = dirs.shared.join(name);
     ensure_write_allowed(&path)?;
-    match fs::remove_file(&path) {
-        Ok(()) => Ok(()),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
-        Err(error) => Err(error.into()),
+    remove_file_if_present(&path)?;
+    if !discard_when_closed(name) {
+        remove_file_if_present(&dirs.active.join(name))?;
     }
+    Ok(())
 }
 
-/// Removes the recording `name` of the data folder.
+/// Removes the recording `name`, see `remove`.
 pub fn discard(dirs: &RecordingDirs, name: &str) -> Result<(), AppError> {
-    remove_shared(dirs, checked_name(name)?)
+    remove(dirs, checked_name(name)?)
 }
 
-/// Removes every recording of the data folder. One still being written is
-/// left: no entry names it once it is finished, and it is collected.
+/// Removes every recording, also those being written once they are closed:
+/// the entries that named them are gone.
 pub fn clear(dirs: &RecordingDirs) -> Result<(), AppError> {
     ensure_write_allowed(&dirs.shared)?;
     for (_, path) in super::user_files::list_own_files(&dirs.shared, is_recording_name)? {
-        fs::remove_file(path)?;
+        remove_file_if_present(&path)?;
+    }
+    for (name, path) in super::user_files::list_own_files(&dirs.active, is_recording_name)? {
+        if !discard_when_closed(&name) {
+            remove_file_if_present(&path)?;
+        }
     }
     Ok(())
 }
@@ -245,7 +292,7 @@ pub fn collect(
     ensure_write_allowed(&dirs.shared)?;
     for name in expired.difference(live) {
         if is_recording_name(name) {
-            remove_shared(dirs, name)?;
+            remove(dirs, name)?;
         }
     }
     let mut record = OrphanRecord::read(&dirs.orphans);
@@ -338,11 +385,37 @@ mod tests {
                 .shared
                 .join("2026-11-21 10-00-00 a1b2c3.sync-conflict-20261121-100000-ABCDEF.opus"),
         );
-        write(&dirs.active.join("2026-11-21 11-00-00 a1b2c3.opus"));
+        let leftover = "2026-11-21 11-00-00 a1b2c3.opus";
+        let running = "2026-11-21 11-00-00 c0ffee.opus";
+        write(&dirs.active.join(leftover));
+        write(&dirs.active.join(running));
+        begin_writing(running);
         clear(&dirs).unwrap();
         assert!(!dirs.shared.join(NAME).exists());
         assert_eq!(fs::read_dir(&dirs.shared).unwrap().count(), 1);
-        assert!(dirs.active.join("2026-11-21 11-00-00 a1b2c3.opus").exists());
+        assert!(!dirs.active.join(leftover).exists());
+        // still open: its writer removes it
+        assert!(dirs.active.join(running).exists());
+        assert!(end_writing(running));
+    }
+
+    #[test]
+    fn a_recording_discarded_while_written_goes_once_closed() {
+        let root = TestDir::new("recordings-discard-running");
+        let dirs = RecordingDirs::at(&root);
+        let running = "2026-11-21 12-00-00 0d15ca.opus";
+        let leftover = "2026-11-21 12-00-00 1eff00.opus";
+        write(&dirs.active.join(running));
+        write(&dirs.active.join(leftover));
+        begin_writing(running);
+        discard(&dirs, running).unwrap();
+        discard(&dirs, leftover).unwrap();
+        assert!(dirs.active.join(running).exists());
+        assert!(!dirs.active.join(leftover).exists());
+        assert!(end_writing(running));
+        // a recording no entry gave up is kept
+        begin_writing(running);
+        assert!(!end_writing(running));
     }
 
     #[test]

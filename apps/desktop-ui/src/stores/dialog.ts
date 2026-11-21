@@ -353,7 +353,20 @@ export const useDialogStore = defineStore('dialog', () => {
         `Could not save the dialog to the history: ${String(error)}`,
         'dialog'
       ),
+    onRecordingUnlinked: () => {
+      errorText.value = translate('dialog.recordingNotInHistory')
+      canFixInSettings.value = false
+    },
   })
+  // a history no longer kept on disk loses the entry that names the file
+  watch(
+    () => desktopStore.userConfig.editor.history.storage === 'disk',
+    (isOnDisk) => {
+      if (isOnDisk || !recording.value) return
+      errorText.value = translate('dialog.recordingNotInHistory')
+      canFixInSettings.value = false
+    }
+  )
   // the turns so far reach the history when the window hides and on quit
   watch(
     () => desktopStore.desktopState.isWindowShown,
@@ -449,6 +462,7 @@ export const useDialogStore = defineStore('dialog', () => {
     recording,
     start,
     stop,
+    stopAndSave,
     stopAndExpand,
     retryTranslation,
     acknowledgeRecordingNotice,

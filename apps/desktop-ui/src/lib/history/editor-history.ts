@@ -49,8 +49,10 @@ export function createEditorHistoryModel(
   ): Promise<string | null> => {
     // Intentional: with the history turned off nothing the user typed or
     // dictated is kept, here or anywhere else; it is the user's choice. The
-    // backend checks the same setting again
-    if (!canRecord() || !entry.text.trim()) return null
+    // backend checks the same setting again. A recorded dialog is kept before
+    // anything was recognized: its entry is the way back to the file
+    const isRecordedDialog = Boolean(entry.dialog?.recordingFile)
+    if (!canRecord() || (!entry.text.trim() && !isRecordedDialog)) return null
 
     const saved = await track(call('add_editor_history_item', { entry }))
 

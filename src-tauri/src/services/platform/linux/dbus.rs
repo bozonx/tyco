@@ -222,6 +222,8 @@ struct TycoKwin {
 impl TycoKwin {
     /// Reported by the KWin tracker script, see `platform::linux::kwin`.
     #[zbus(name = "KwinWindowActivated")]
+    // the arguments are the D-Bus signature the tracker script calls
+    #[allow(clippy::too_many_arguments)]
     async fn kwin_window_activated(
         &self,
         #[zbus(header)] header: Header<'_>,
@@ -230,9 +232,17 @@ impl TycoKwin {
         id: String,
         kind: String,
         class: String,
+        pid: String,
     ) -> zbus::fdo::Result<()> {
         ensure_sent_by_kwin(&header, connection).await?;
-        let applied = tracker().window_activated(&seq, &id, WindowKind::parse(&kind), &class);
+        let process = super::kwin::process_name(&pid);
+        let applied = tracker().window_activated_with_process(
+            &seq,
+            &id,
+            WindowKind::parse(&kind),
+            &class,
+            process,
+        );
         if applied {
             if let Err(error) = runtime::follow_target_window(&self.app) {
                 log::warn!("Could not follow the target window: {error}");

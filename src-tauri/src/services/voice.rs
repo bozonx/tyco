@@ -633,11 +633,13 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
     record_unprocessed(&context, recording.as_mut());
     let is_delivered = flush_pending(&context, sink, 1, recording.as_mut()).is_some();
     // the file is complete whether or not anyone still listens
-    if let Some(recording) = recording {
-        recording.finish();
-    }
+    let late_failure = recording.and_then(RecordingSink::finish);
     if !is_delivered {
         return Ok(());
+    }
+    // before the end: the listener still knows the session to mark
+    if let Some(message) = late_failure {
+        sink.send_event(&CaptureEvent::RecordingFailed { message });
     }
     let stream_error = context.stream_error.locked().take();
     let event = match stream_error {

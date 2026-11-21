@@ -174,8 +174,9 @@ impl SystemTextInjector {
                 thread::sleep(WAYLAND_FOCUS_SETTLE_DELAY);
                 tracker().active_window().is_some_and(|window| {
                     window.id == window_id
-                        && crate::services::platform::terminals::is_terminal_class(
+                        && crate::services::platform::terminals::is_terminal_window(
                             &window.class,
+                            window.process.as_deref(),
                             &terminal_apps,
                         )
                 })

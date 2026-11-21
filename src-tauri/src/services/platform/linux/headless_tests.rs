@@ -90,8 +90,14 @@ struct TrackerSink;
 #[zbus::interface(name = "org.tyco.KwinTracker")]
 impl TrackerSink {
     #[zbus(name = "KwinWindowActivated")]
-    fn activated(&self, seq: &str, id: &str, kind: &str, class: &str) {
-        tracker().window_activated(seq, id, WindowKind::parse(kind), class);
+    fn activated(&self, seq: &str, id: &str, kind: &str, class: &str, pid: &str) {
+        tracker().window_activated_with_process(
+            seq,
+            id,
+            WindowKind::parse(kind),
+            class,
+            super::kwin::process_name(pid),
+        );
     }
     #[zbus(name = "KwinWindowClosed")]
     fn closed(&self, seq: &str, id: &str) {

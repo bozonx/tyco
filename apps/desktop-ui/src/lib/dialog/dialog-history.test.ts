@@ -6,7 +6,10 @@ import { createDialogHistory } from './dialog-history'
 const meta = { startedAt: 1_000, source: 'microphoneAndSystem' as const }
 
 function setup(
-  options: { save?: (entry: EditorHistoryEntry) => Promise<string | null> } = {}
+  options: {
+    save?: (entry: EditorHistoryEntry) => Promise<string | null>
+    onRecordingUnlinked?: () => void
+  } = {}
 ) {
   vi.useFakeTimers()
   let text = ''
@@ -21,6 +24,7 @@ function setup(
       }),
     getText: () => text,
     reportError,
+    onRecordingUnlinked: options.onRecordingUnlinked,
     intervalMs: 15_000,
   })
   return {
@@ -134,6 +138,36 @@ describe('dialog history', () => {
     setText('Me: hi')
     await history.end()
     expect(saved.at(-1)).toMatchObject({ id: 'entry-2', text: 'Me: hi' })
+  })
+
+  it('tells once when a recording got no entry', async () => {
+    const recorded = {
+      ...meta,
+      recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
+    }
+    const onRecordingUnlinked = vi.fn()
+    const save = vi
+      .fn<(entry: EditorHistoryEntry) => Promise<string | null>>()
+      .mockRejectedValueOnce(new Error('disk'))
+      .mockResolvedValue(null)
+    const { history, setText } = setup({ save, onRecordingUnlinked })
+    await history.begin(recorded)
+    setText('Me: hi')
+    await history.checkpoint()
+    expect(onRecordingUnlinked).toHaveBeenCalledTimes(1)
+  })
+
+  it('stays quiet once the recording has its entry', async () => {
+    const onRecordingUnlinked = vi.fn()
+    const { history } = setup({ onRecordingUnlinked })
+    await history.begin({
+      ...meta,
+      recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
+    })
+    await history.end()
+    await history.begin(meta)
+    await history.end()
+    expect(onRecordingUnlinked).not.toHaveBeenCalled()
   })
 
   it('marks an entry whose recording stopped early', async () => {

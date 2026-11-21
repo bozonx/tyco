@@ -41,6 +41,8 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useUserDataFolder } from '../../composables/use-user-data-folder'
+import { useDialogStore } from '../../stores/dialog'
+import { useDialogStatusStore } from '../../stores/dialog-status'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useUserDataStore } from '../../stores/user-data'
 import Button from '../common/Button.vue'
@@ -54,7 +56,12 @@ const { t } = useI18n()
 const store = useUserDataStore()
 const userData = computed(() => store.state())
 const settingsSession = useSettingsSessionStore()
-const folder = useUserDataFolder(() => settingsSession.flushAll())
+const dialogStatus = useDialogStatusStore()
+// a running dialog ends first: its recording joins the folder being moved
+const folder = useUserDataFolder(async () => {
+  if (dialogStatus.isActive) await useDialogStore().stopAndSave()
+  return settingsSession.flushAll()
+})
 
 const sectionInfo = computed(() =>
   t('settings.userData.info', {

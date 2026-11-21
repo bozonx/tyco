@@ -305,13 +305,23 @@ pub fn inspect(app: &tauri::AppHandle, path: Option<&str>) -> Result<UserDataTar
 
 /// Changes the user data folder as the user asked, writes it into the device
 /// file and restarts the app. Every vault, settings and history operation
-/// waits meanwhile; the webview saves its drafts before it asks.
+/// waits meanwhile; the webview saves its drafts and stops the dialog before
+/// it asks. A running dialog refuses the change: its recording goes into the
+/// data folder once it stops, which would be the folder left behind.
 pub fn relocate(
     app: &tauri::AppHandle,
     mode: UserDataRelocationMode,
     path: Option<&str>,
 ) -> Result<(), AppError> {
     use tauri::Manager;
+    if app
+        .try_state::<crate::services::voice::session::VoiceSessionState>()
+        .is_some_and(|voice| voice.is_dialog_running())
+    {
+        return Err(AppError::CaptureBusy(
+            "The data folder cannot change while the dialog runs".into(),
+        ));
+    }
     let state = app.state::<crate::state::AppState>();
     let data = app.state::<super::user_data::UserData>();
     let device = app.state::<super::device::DeviceStore>();

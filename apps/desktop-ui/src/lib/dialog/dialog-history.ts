@@ -9,6 +9,11 @@ export interface DialogHistoryDependencies {
   /** The finished turns of the session as text; the guesses are left out */
   getText: () => string
   reportError: (error: unknown) => void
+  /**
+   * The recording of the session got no entry: the first write failed or stored
+   * nothing. Called once a session; the file waits unnamed
+   */
+  onRecordingUnlinked?: () => void
   setInterval?: (callback: () => void, ms: number) => unknown
   clearInterval?: (handle: unknown) => void
   intervalMs?: number
@@ -34,6 +39,8 @@ interface Session {
   savedText?: string
   /** The user deleted the entry: the session is not written again */
   isDropped: boolean
+  /** `onRecordingUnlinked` was called */
+  isUnlinkReported?: boolean
 }
 
 /**
@@ -63,6 +70,13 @@ export function createDialogHistory(
     timer = undefined
   }
 
+  const reportUnlinked = (target: Session) => {
+    if (!target.meta.recordingFile || target.id || target.isUnlinkReported)
+      return
+    target.isUnlinkReported = true
+    deps.onRecordingUnlinked?.()
+  }
+
   const write = (target: Session): Promise<void> => {
     pending = pending.then(async () => {
       if (target.isDropped) return
@@ -80,8 +94,10 @@ export function createDialogHistory(
         // nothing stored under a known id: the entry was deleted
         if (id === null && target.id) target.isDropped = true
         else if (id !== null) target.id = id
+        else reportUnlinked(target)
       } catch (error) {
         deps.reportError(error)
+        reportUnlinked(target)
       }
     })
     return pending

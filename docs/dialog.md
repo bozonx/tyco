@@ -116,7 +116,14 @@ missed sound is replaced by silence of the same length, so the file keeps
 the time of the call. If the file cannot be written at all (the disk is
 full, the folder is gone), the recording stops, the transcript goes on, and
 the history entry marks the recording as incomplete. A conversation stopped
-before any sound was captured leaves no file.
+before any sound was captured leaves no file. A recording deleted with its
+entry while the call still goes on is removed as soon as the call stops.
+
+If the history cannot keep the entry (it could not be saved, or the history
+is no longer saved to disk), TyCo says so: a recording no entry names is
+deleted after 7 days, so move the file out of `history/recordings` to keep
+it. The data folder cannot be moved while a dialog runs; moving it from the
+settings stops the dialog first.
 
 Recordings move and synchronize with the data folder. To keep them on another
 disk, or out of a synchronization, see `docs/data-folder.md`. Calls started

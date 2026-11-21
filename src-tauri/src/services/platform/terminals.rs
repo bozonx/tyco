@@ -1,7 +1,9 @@
 //! Windows of terminal emulators. Ctrl+C there interrupts the running
 //! program and Ctrl+V does not paste, so they take other keys, and a
-//! selection in them is read without pressing any. A window class that is
-//! not known here can be named in `windowInsertion.terminalApps`.
+//! selection in them is read without pressing any. A window is told by its
+//! class and, where the window tracker knows it, by the program name of its
+//! process. A terminal that is not known here can be named in
+//! `windowInsertion.terminalApps`.
 
 /// The last segment of the application id or the X11 class of a terminal.
 #[cfg(any(target_os = "linux", test))]
@@ -71,6 +73,15 @@ pub(crate) fn is_terminal_class(class: &str, extra: &[String]) -> bool {
         || is_listed(&class, extra)
 }
 
+/// Whether a window of application `class`, run by program `process`, is a
+/// terminal. The program name catches terminals whose application id is
+/// missing or generic, e.g. a terminal started without its desktop file.
+#[cfg(any(target_os = "linux", test))]
+pub(crate) fn is_terminal_window(class: &str, process: Option<&str>, extra: &[String]) -> bool {
+    is_terminal_class(class, extra)
+        || process.is_some_and(|process| is_terminal_class(process, extra))
+}
+
 /// Whether the user listed `class`, by its full name or its last segment.
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 pub(crate) fn is_listed(class: &str, extra: &[String]) -> bool {
@@ -103,6 +114,20 @@ mod tests {
         for class in ["firefox", "org.kde.kate", "telegramdesktop", "console", ""] {
             assert!(!is_terminal_class(class, &[]), "{class}");
         }
+    }
+
+    #[test]
+    fn recognizes_terminals_by_program_name() {
+        assert!(is_terminal_window("", Some("gnome-terminal-server"), &[]));
+        assert!(is_terminal_window("unknown", Some("foot"), &[]));
+        assert!(is_terminal_window("org.kde.konsole", None, &[]));
+        assert!(is_terminal_window(
+            "app",
+            Some("myterm"),
+            &[String::from("MyTerm")]
+        ));
+        assert!(!is_terminal_window("firefox", Some("firefox"), &[]));
+        assert!(!is_terminal_window("", None, &[]));
     }
 
     #[test]

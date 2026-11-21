@@ -364,7 +364,11 @@ copy keys: their selection is read from the primary selection; on Windows the
 console, Windows Terminal and mintty copy with `Ctrl+Insert`, Alacritty and
 WezTerm with `Ctrl+Shift+C`, and PuTTY-like terminals, which have no copy
 keys, are refused. A terminal selection is never replaced: the result goes to
-the clipboard. Other terminals can be named in `windowInsertion.terminalApps`.
+the clipboard. A terminal is told by its window class and, on KDE Plasma, also
+by the program that runs it. Other terminals can be named in
+`windowInsertion.terminalApps`. Where Tyco cannot track windows (GNOME under
+Wayland), terminals are not recognized and get the paste keys of other
+windows.
 
 Windows clipboard snapshots preserve HGLOBAL-backed formats; handle-backed
 and private formats are skipped, and snapshots over 16 MiB are rejected

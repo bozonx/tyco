@@ -210,6 +210,8 @@ impl<W: Write> OggOpusWriter<W> {
 /// encoder runs on a thread of its own. A failed write ends the recording
 /// only; the capture goes on.
 pub struct RecordingSink {
+    /// The file name, the same in both places.
+    name: String,
     /// Where the file is written.
     path: PathBuf,
     /// Where it goes once closed.
@@ -232,9 +234,9 @@ impl RecordingSink {
         channels: u16,
     ) -> Result<Self, AppError> {
         let NewRecording {
+            name,
             active_path: path,
             shared_path: destination,
-            ..
         } = recording;
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).map_err(|error| {
@@ -268,7 +270,9 @@ impl RecordingSink {
             })
             .map_err(|error| AppError::Failed(format!("Cannot start the recording: {error}")))?;
         log::info!("Recording the dialog to {}", path.display());
+        recordings::begin_writing(&name);
         Ok(Self {
+            name,
             path: file_path,
             destination,
             sender: Some(sender),
@@ -340,20 +344,27 @@ impl RecordingSink {
         )
     }
 
-    /// Encodes what is queued and closes the file.
-    pub fn finish(mut self) {
+    /// Encodes what is queued and closes the file. Why the recording
+    /// stopped, when it failed after the last `take_failure`: the end of the
+    /// file is missing.
+    pub fn finish(mut self) -> Option<String> {
         self.close();
+        self.take_failure()
     }
 
     /// A recording that got no audio, e.g. a dialog stopped while starting,
-    /// leaves no file; any other joins the history, also one that failed
-    /// midway: it holds the beginning of the call.
+    /// or whose entry went meanwhile leaves no file; any other joins the
+    /// history, also one that failed midway: it holds the beginning of the
+    /// call.
     fn close(&mut self) {
         self.sender = None;
         if let Some(thread) = self.thread.take() {
             let _ = thread.join();
-            if !self.has_audio && self.owed_samples == 0 {
-                let _ = std::fs::remove_file(&self.path);
+            let is_discarded = recordings::end_writing(&self.name);
+            if is_discarded || (!self.has_audio && self.owed_samples == 0) {
+                if let Err(error) = std::fs::remove_file(&self.path) {
+                    log::warn!("Could not remove the call recording {}: {error}", self.name);
+                }
             } else if let Err(error) = recordings::publish(&self.path, &self.destination) {
                 log::warn!(
                     "The call recording stays in {} until the next start: {error}",
@@ -491,7 +502,7 @@ mod tests {
         let mut sink = RecordingSink::start(recording.clone(), 16_000, 1).unwrap();
         sink.push(&vec![100; 16_000]);
         assert!(sink.take_failure().is_none());
-        sink.finish();
+        assert!(sink.finish().is_none());
         assert!(!recording.active_path.exists());
         let bytes = std::fs::read(&recording.shared_path).unwrap();
         assert!(pages(&bytes).len() >= 3);
@@ -502,7 +513,17 @@ mod tests {
 
     /// A recording written in `folder/active` that goes to `folder/shared`.
     fn target(folder: &std::path::Path) -> NewRecording {
-        let name = "2026-11-21 10-00-00 a1b2c3.opus".to_owned();
+        // unique: the recordings being written are known by name process-wide
+        let name = format!(
+            "2026-11-21 10-00-00 {:06x}.opus",
+            folder
+                .to_string_lossy()
+                .bytes()
+                .fold(0u32, |hash, byte| hash
+                    .wrapping_mul(31)
+                    .wrapping_add(u32::from(byte)))
+                & 0xff_ffff
+        );
         NewRecording {
             active_path: folder.join("active").join(&name),
             shared_path: folder.join("shared").join(&name),
@@ -552,6 +573,36 @@ mod tests {
         assert_eq!(sink.owed_samples, 10);
         sink.sender = real;
         sink.finish();
+        let _ = std::fs::remove_dir_all(folder);
+    }
+
+    #[test]
+    fn a_recording_whose_entry_went_is_removed_once_closed() {
+        let folder = temp_folder("discarded");
+        let recording = target(&folder);
+        let mut sink = RecordingSink::start(recording.clone(), 16_000, 1).unwrap();
+        sink.push(&vec![100; 16_000]);
+        let dirs = recordings::RecordingDirs::in_folders(
+            folder.join("shared"),
+            &folder.join("unused-state"),
+        );
+        recordings::discard(&dirs, &recording.name).unwrap();
+        assert!(recording.active_path.exists());
+        assert!(sink.finish().is_none());
+        assert!(!recording.active_path.exists());
+        assert!(!recording.shared_path.exists());
+        let _ = std::fs::remove_dir_all(folder);
+    }
+
+    #[test]
+    fn a_failure_while_finishing_is_reported() {
+        let folder = temp_folder("late-failure");
+        let mut sink = RecordingSink::start(target(&folder), 16_000, 1).unwrap();
+        sink.push(&vec![100; 1_000]);
+        // what the encoder thread records when its last write fails
+        *sink.failure.locked() = Some("No space left on device".into());
+        sink.is_failed.store(true, Ordering::SeqCst);
+        assert_eq!(sink.finish().as_deref(), Some("No space left on device"));
         let _ = std::fs::remove_dir_all(folder);
     }
 }

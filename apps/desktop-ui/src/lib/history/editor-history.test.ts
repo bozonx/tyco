@@ -66,3 +66,22 @@ it('does not record editor history or results when recording is disabled', async
   await model.saveSourceResult('saved', 'Late result')
   expect(call).toHaveBeenCalledTimes(1)
 })
+
+it('keeps a recorded dialog before anything was recognized, nothing else empty', async () => {
+  const call = vi
+    .fn<DesktopCall>()
+    .mockResolvedValue({ success: true, result: 'entry' })
+  const model = createEditorHistoryModel({ call: call as DesktopCall })
+  const dialog = { startedAt: 1, source: 'system' as const }
+  expect(
+    await model.saveEditorHistory({ text: ' ', kind: 'dialog', dialog })
+  ).toBeNull()
+  expect(
+    await model.saveEditorHistory({
+      text: '',
+      kind: 'dialog',
+      dialog: { ...dialog, recordingFile: '2026-11-21 10-00-00 a1b2c3.opus' },
+    })
+  ).toBe('entry')
+  expect(call).toHaveBeenCalledTimes(1)
+})

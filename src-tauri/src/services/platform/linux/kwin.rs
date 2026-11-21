@@ -67,8 +67,10 @@ function tycoReport(window) {
     const id = window ? window.internalId.toString() : "";
     const kind = window ? tycoKind(window) : "other";
     const resourceClass = window ? String(window.resourceClass || "") : "";
+    // a string: callDBus would send a JS number as a double
+    const pid = window && window.pid > 0 ? String(window.pid) : "";
     callDBus("org.tyco.Service", "/org/tyco/Object", "org.tyco.KwinTracker", "KwinWindowActivated",
-        tycoNextSeq(), id, kind, resourceClass);
+        tycoNextSeq(), id, kind, resourceClass, pid);
 }
 workspace.windowActivated.connect(tycoReport);
 workspace.windowRemoved.connect(function (window) {
@@ -475,6 +477,35 @@ fn center_from_fields(fields: &WindowInfo) -> Option<(i32, i32)> {
 }
 
 /// KWin window ids are UUIDs in braces; anything else must not reach a script.
+/// The program name of process `pid`, as the tracker script reports it.
+/// Inside a sandbox the pid belongs to another pid namespace, so it is not
+/// looked up there.
+pub fn process_name(pid: &str) -> Option<String> {
+    if crate::services::platform::session::is_sandboxed() {
+        return None;
+    }
+    process_name_in(std::path::Path::new("/proc"), pid)
+}
+
+fn process_name_in(proc_root: &std::path::Path, pid: &str) -> Option<String> {
+    let pid = pid.parse::<u32>().ok().filter(|pid| *pid > 0)?;
+    let dir = proc_root.join(pid.to_string());
+    // `comm` is cut to 15 bytes ("gnome-terminal-"), the executable is not
+    std::fs::read_link(dir.join("exe"))
+        .ok()
+        .and_then(|exe| {
+            exe.file_name()
+                .map(|name| name.to_string_lossy().into_owned())
+        })
+        .or_else(|| {
+            std::fs::read_to_string(dir.join("comm"))
+                .ok()
+                .map(|comm| comm.trim().to_owned())
+        })
+        .map(|name| name.trim_end_matches(" (deleted)").to_owned())
+        .filter(|name| !name.is_empty())
+}
+
 fn is_window_id(id: &str) -> bool {
     !id.is_empty()
         && id
@@ -625,6 +656,27 @@ mod tests {
     use super::*;
 
     const WINDOW: &str = "{da63572a-f14f-4bda-bc6e-fad90679a426}";
+
+    #[test]
+    fn reads_the_program_name_of_a_pid() {
+        let root = std::env::temp_dir().join(format!("tyco-proc-{}", std::process::id()));
+        let dir = root.join("42");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("comm"), "gnome-terminal-\n").unwrap();
+        assert_eq!(
+            process_name_in(&root, "42").as_deref(),
+            Some("gnome-terminal-")
+        );
+        std::os::unix::fs::symlink("/usr/libexec/gnome-terminal-server", dir.join("exe")).unwrap();
+        assert_eq!(
+            process_name_in(&root, "42").as_deref(),
+            Some("gnome-terminal-server")
+        );
+        for pid in ["", "0", "-1", "../42", "43"] {
+            assert_eq!(process_name_in(&root, pid), None, "{pid}");
+        }
+        std::fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn accepts_only_kwin_window_ids() {

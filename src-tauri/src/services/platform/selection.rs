@@ -38,11 +38,15 @@ use crate::services::selection_replace::{
 /// which tells a terminal; without it X11 can still tell the window.
 #[cfg(target_os = "linux")]
 fn active_target(terminal_apps: &[String]) -> Option<SelectionTarget> {
-    use super::{session, terminals::is_terminal_class, window_tracker::tracker};
+    use super::{session, terminals::is_terminal_window, window_tracker::tracker};
 
     if tracker().is_running() {
         return tracker().active_window().map(|window| SelectionTarget {
-            is_terminal: is_terminal_class(&window.class, terminal_apps),
+            is_terminal: is_terminal_window(
+                &window.class,
+                window.process.as_deref(),
+                terminal_apps,
+            ),
             id: window.id,
         });
     }

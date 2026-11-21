@@ -72,6 +72,9 @@ struct TrackerState {
     active_kind: WindowKind,
     /// The resource class (application id) of the active window.
     active_class: String,
+    /// The program name of the active window's process, where the backend
+    /// tells its pid.
+    active_process: Option<String>,
     last_foreign_window_id: Option<String>,
     missing_window_id: Option<String>,
 }
@@ -131,6 +134,7 @@ impl TrackerState {
             self.active_window_id = None;
             self.active_kind = WindowKind::Other;
             self.active_class.clear();
+            self.active_process = None;
         }
         if self.last_foreign_window_id.as_deref() == Some(id) {
             self.last_foreign_window_id = None;
@@ -142,6 +146,8 @@ impl TrackerState {
 pub struct ActiveWindow {
     pub id: String,
     pub class: String,
+    /// The program name of its process, if the backend knows it.
+    pub process: Option<String>,
 }
 
 pub struct WindowTracker {
@@ -166,12 +172,25 @@ impl WindowTracker {
 
     /// Applies a report of the backend; `false` when it was outdated.
     pub fn window_activated(&self, seq: &str, id: &str, kind: WindowKind, class: &str) -> bool {
+        self.window_activated_with_process(seq, id, kind, class, None)
+    }
+
+    /// Like `window_activated`, with the program name of the window's process.
+    pub fn window_activated_with_process(
+        &self,
+        seq: &str,
+        id: &str,
+        kind: WindowKind,
+        class: &str,
+        process: Option<String>,
+    ) -> bool {
         self.update(|state| {
             if !state.accept_report(seq) {
                 return false;
             }
             state.window_activated(id, kind);
             class.clone_into(&mut state.active_class);
+            state.active_process = process;
             true
         })
     }
@@ -211,6 +230,7 @@ impl WindowTracker {
         state.active_window_id.clone().map(|id| ActiveWindow {
             id,
             class: state.active_class.clone(),
+            process: state.active_process.clone(),
         })
     }
 
@@ -450,13 +470,26 @@ mod tests {
             tracker.active_window(),
             Some(ActiveWindow {
                 id: "a".into(),
-                class: "org.kde.konsole".into()
+                class: "org.kde.konsole".into(),
+                process: None,
             })
         );
-        tracker.window_activated(&seq(2), "tyco", WindowKind::Own, "tyco");
+        tracker.window_activated_with_process(
+            &seq(2),
+            "b",
+            WindowKind::Foreign,
+            "",
+            Some("konsole".into()),
+        );
+        assert_eq!(
+            tracker.active_window().unwrap().process.as_deref(),
+            Some("konsole")
+        );
+        tracker.window_activated(&seq(3), "tyco", WindowKind::Own, "tyco");
         assert!(tracker.is_own_window_active());
         assert_eq!(tracker.active_window().unwrap().id, "tyco");
-        tracker.window_activated(&seq(3), "desktop", WindowKind::Other, "plasmashell");
+        assert_eq!(tracker.active_window().unwrap().process, None);
+        tracker.window_activated(&seq(4), "desktop", WindowKind::Other, "plasmashell");
         assert!(!tracker.is_own_window_active());
         assert_eq!(tracker.active_window(), None);
     }
