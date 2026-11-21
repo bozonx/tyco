@@ -223,6 +223,12 @@ pub fn apply_editor_history_settings_on_startup(
     app: &AppHandle,
     user_config: &serde_json::Value,
 ) -> Result<(), AppError> {
+    // no recording runs yet: what a previous run left joins the history first
+    if let Err(error) = super::recordings::RecordingDirs::of_app(app)
+        .and_then(|dirs| super::recordings::settle_leftovers(&dirs))
+    {
+        log::warn!("Call recordings of a previous run wait for the next start: {error}");
+    }
     editor::enforce_editor_history_policy(app, &HistorySettings::from_config(user_config).editor)
 }
 
@@ -493,6 +499,14 @@ pub fn restore_editor_history_item(
 pub fn delete_editor_history_item(app: &AppHandle, id: String) -> Result<(), AppError> {
     change_editor(app, |config, memory| {
         editor::delete_editor_history_item(app, config, memory, id)
+    })
+}
+
+/// Removes the recording `file` of a removed dialog entry once its undo is
+/// over, unless an entry names it again.
+pub fn discard_dialog_recording(app: &AppHandle, file: String) -> Result<(), AppError> {
+    with_editor(app, |config, memory| {
+        editor::discard_recording(app, config, memory, file)
     })
 }
 

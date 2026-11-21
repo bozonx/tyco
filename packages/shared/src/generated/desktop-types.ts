@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: fd3ff6938151ebb2bbc03565aefbb87f39d5b4f41db258dd857874ab0c79d5d6
+// Source hash: 8b87f23a0a5f8dd6c637e696474dcedc2b1b3fbc770a64060ac977f25c73ffd0
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -543,22 +543,17 @@ export type DesktopWindowState = {
   canListenToApps: boolean
 }
 
-/** A dialog capture also recorded to a file, see `recording`. */
-export type DialogRecording = {
-  /** The recordings folder; empty or missing: the default one. */
-  folder?: string
-}
-
 /** The session a `Dialog` entry holds the transcript of. */
 export type EditorHistoryDialog = {
   /** Unix time in milliseconds. */
   startedAt: number
   source: EditorHistoryDialogSource
   /**
-   * The absolute path of the call recording, if the session was recorded. The
-   * file may have been moved or deleted since.
+   * The file name of the call recording in `history/recordings/` of the user
+   * data folder, if the session was recorded. The file goes with the entry; it
+   * may be missing, e.g. not synced yet.
    */
-  recordingPath?: string
+  recordingFile?: string
   /**
    * The recording stopped before the session did, e.g. the disk filled up: the
    * file holds only the beginning.
@@ -1212,8 +1207,11 @@ export type VoiceCaptureInfo = {
   channels: number
   /** What `stop_capture` takes to stop this capture and no other. */
   sessionId: number
-  /** The file the capture is recorded to, when it was asked for. */
-  recordingPath?: string
+  /**
+   * The file name of the call recording, when it was asked for; see
+   * `storage::recordings`.
+   */
+  recordingFile?: string
 }
 
 export type WebSearchResultItem = {

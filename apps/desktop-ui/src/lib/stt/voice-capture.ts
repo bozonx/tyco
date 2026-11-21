@@ -1,9 +1,5 @@
 import type { AudioChunk } from '@bozonx/ai-kit'
-import {
-  type CaptureSource,
-  type DialogRecording,
-  type VoiceCaptureEvent,
-} from '@tyco/shared'
+import { type CaptureSource, type VoiceCaptureEvent } from '@tyco/shared'
 
 import { createAsyncQueue } from '../net/async-queue'
 import { errorMessage, isArrayBuffer, type NetIpc } from '../net/net-ipc'
@@ -31,8 +27,11 @@ export interface VoiceCapture {
   audio: AsyncIterable<AudioChunk>
   /** Whether `audio` ended because a newer capture took the microphone */
   isSuperseded: () => boolean
-  /** The file a dialog is recorded to, when a recording was asked for */
-  recordingPath?: string
+  /**
+   * The file name of the recording of a dialog in the history, when one was
+   * asked for
+   */
+  recordingFile?: string
 }
 
 export interface VoiceCaptureControl {
@@ -41,8 +40,8 @@ export interface VoiceCaptureControl {
     source?: CaptureSource,
     handlers?: CaptureSourceHandlers,
     microphoneId?: string,
-    /** Also records a dialog to a new file */
-    recording?: DialogRecording
+    /** Also records a dialog to a new file of the history */
+    isRecorded?: boolean
   ) => Promise<VoiceCapture>
   /** Records another playback source in the running capture */
   switchSource: (source: CaptureSource) => Promise<void>
@@ -57,7 +56,7 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
   let sessionId: number | undefined
 
   return {
-    async start(source, handlers = {}, microphoneId, recording) {
+    async start(source, handlers = {}, microphoneId, isRecorded) {
       let overflowed = false
       let superseded = false
       let captureSessionId: number | undefined
@@ -100,7 +99,7 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
           onAudio: ipc.createChannel(onMessage),
           ...(source && { source }),
           ...(trimmedMic && { microphoneId: trimmedMic }),
-          ...(recording && { recording }),
+          ...(isRecorded && { isRecorded }),
         })
         captureSessionId = started.sessionId
         sessionId = captureSessionId
@@ -122,8 +121,8 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
             }
           })(),
           isSuperseded: () => superseded,
-          ...(started.recordingPath && {
-            recordingPath: started.recordingPath,
+          ...(started.recordingFile && {
+            recordingFile: started.recordingFile,
           }),
         }
       } catch (error) {

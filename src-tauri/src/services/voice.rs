@@ -23,20 +23,20 @@ pub use source::{
 pub use audio_processing::compute_audio_level;
 use audio_processing::{float_to_pcm16, mix_frame, pcm16_to_le_bytes, Downsampler};
 
-use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{mpsc as std_mpsc, Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
 use cpal::traits::DeviceTrait;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use tauri::AppHandle;
 
 use crate::errors::AppError;
 use crate::locks::MutexExt;
 use crate::services::clock::{MonotonicClock, SystemClock};
 use crate::services::net::EventSink;
+use crate::services::storage::recordings::NewRecording;
 use crate::services::voice::recording::RecordingSink;
 use crate::services::voice::session::VoiceSessionState;
 use crate::services::voice::session::{SourceSwitch, SourceSwitchSlot, VoiceCaptureSession};
@@ -79,19 +79,11 @@ pub struct VoiceCaptureInfo {
     pub channels: u16,
     /// What `stop_capture` takes to stop this capture and no other.
     pub session_id: u64,
-    /// The file the capture is recorded to, when it was asked for.
+    /// The file name of the call recording, when it was asked for; see
+    /// `storage::recordings`.
     #[ts(optional)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub recording_path: Option<String>,
-}
-
-/// A dialog capture also recorded to a file, see `recording`.
-#[derive(Deserialize, Debug, Clone, Default, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-pub struct DialogRecording {
-    /// The recordings folder; empty or missing: the default one.
-    #[ts(optional)]
-    pub folder: Option<String>,
+    pub recording_file: Option<String>,
 }
 
 /// Control messages on the audio channel; the audio itself goes as raw bytes.
@@ -160,7 +152,7 @@ pub async fn start_capture<S: EventSink>(
     state: &VoiceSessionState,
     capture_source: CaptureSource,
     microphone_id: Option<String>,
-    recording: Option<DialogRecording>,
+    is_recorded: bool,
     sink: S,
 ) -> Result<VoiceCaptureInfo, AppError> {
     if capture_source.is_playback() && !super::platform::audio::can_capture_playback() {
@@ -168,36 +160,41 @@ pub async fn start_capture<S: EventSink>(
             "Recording the computer sound is not available on this system".into(),
         ));
     }
-    let recording_path = match recording {
-        None => None,
-        Some(_) if !capture_source.is_dialog() => {
+    let recording = if is_recorded {
+        if !capture_source.is_dialog() {
             return Err(AppError::InvalidInput(
                 "Only a dialog is recorded to a file".into(),
-            ))
+            ));
         }
-        Some(recording) => Some(new_recording_path(recording.folder.as_deref())?),
+        Some(new_recording(app)?)
+    } else {
+        None
     };
     start_capture_with(
         super::platform::audio::SystemAudioSource { microphone_id },
         capture_source,
         app.clone(),
         state,
-        recording_path,
+        recording,
         sink,
     )
     .await
 }
 
-fn new_recording_path(folder: Option<&str>) -> Result<PathBuf, AppError> {
-    let folder =
-        super::platform::recordings::resolve_recordings_folder(folder).ok_or_else(|| {
-            AppError::ServiceUnavailable("No folder for the recordings was found".into())
-        })?;
+/// A recording belongs to its history entry: without a history kept on
+/// disk, nothing would ever name or remove the file.
+fn new_recording(app: &AppHandle) -> Result<NewRecording, AppError> {
+    use tauri::Manager;
+    let config = app.state::<crate::state::AppState>().user_config();
+    let policy = super::storage::HistorySettings::from_config(&config).editor;
+    if !policy.is_recording || policy.is_memory_only {
+        return Err(AppError::InvalidInput(
+            "A call is recorded only while the history is saved on disk".into(),
+        ));
+    }
+    let dirs = super::storage::recordings::RecordingDirs::of_app(app)?;
     let local_time = chrono::Local::now().format("%Y-%m-%d %H-%M-%S").to_string();
-    Ok(super::platform::recordings::recording_path(
-        &folder,
-        &local_time,
-    ))
+    super::storage::recordings::new_recording(&dirs, &local_time)
 }
 
 /// Records another source in the running capture: the provider goes on
@@ -239,7 +236,7 @@ async fn start_capture_with<A, L, S>(
     capture_source: CaptureSource,
     levels: L,
     state: &VoiceSessionState,
-    recording_path: Option<PathBuf>,
+    recording: Option<NewRecording>,
     sink: S,
 ) -> Result<VoiceCaptureInfo, AppError>
 where
@@ -264,7 +261,7 @@ where
     // One microphone: a new dictation ends the previous one.
     supersede_capture_unlocked(state).await?;
     let session_id = state.allocate_session_id();
-    let thread_recording_path = recording_path.clone();
+    let recording_file = recording.as_ref().map(|recording| recording.name.clone());
     let (session, format) = tokio::task::spawn_blocking(move || {
         create_capture_session(
             source,
@@ -274,7 +271,7 @@ where
             CaptureSessionOptions {
                 id: session_id,
                 setup_timeout: SETUP_TIMEOUT,
-                recording_path: thread_recording_path,
+                recording,
             },
         )
     })
@@ -292,7 +289,7 @@ where
         sample_rate_hz: format.sample_rate_hz,
         channels: format.channels,
         session_id,
-        recording_path: recording_path.map(|path| path.to_string_lossy().into_owned()),
+        recording_file,
     })
 }
 
@@ -356,8 +353,8 @@ struct CaptureFormat {
 struct CaptureSessionOptions {
     id: u64,
     setup_timeout: Duration,
-    /// Where the capture is recorded to, if anywhere.
-    recording_path: Option<PathBuf>,
+    /// The file the capture is recorded to, if any.
+    recording: Option<NewRecording>,
 }
 
 fn create_capture_session<A, L, S>(
@@ -382,7 +379,7 @@ where
     let CaptureSessionOptions {
         id,
         setup_timeout,
-        recording_path,
+        recording,
     } = options;
     let (setup_tx, setup_rx) = std_mpsc::sync_channel::<Result<CaptureFormat, AppError>>(1);
     let thread = thread::spawn(move || {
@@ -391,7 +388,7 @@ where
             stop_flag: &thread_stop_flag,
             superseded: &thread_superseded,
             switch: &thread_switch,
-            recording_path,
+            recording,
         };
         if let Err(error) = run_capture_thread(
             &source,
@@ -441,7 +438,7 @@ struct CaptureControl<'a> {
     stop_flag: &'a Arc<AtomicBool>,
     superseded: &'a AtomicBool,
     switch: &'a SourceSwitchSlot,
-    recording_path: Option<PathBuf>,
+    recording: Option<NewRecording>,
 }
 
 fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
@@ -463,9 +460,9 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
     // the file exists before the capture is reported started: a folder that
     // cannot be written fails the start
     let mut recording = control
-        .recording_path
+        .recording
         .clone()
-        .map(|path| RecordingSink::start(path, output_sample_rate_hz, channel_count))
+        .map(|recording| RecordingSink::start(recording, output_sample_rate_hz, channel_count))
         .transpose()?;
 
     setup_tx

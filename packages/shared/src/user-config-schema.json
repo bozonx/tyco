@@ -1392,11 +1392,6 @@
           "required": ["x", "y", "width", "height"],
           "x-scope": "device"
         },
-        "recordingsFolder": {
-          "type": "string",
-          "maxLength": 4096,
-          "x-scope": "device"
-        },
         "isRecordingNoticeAcknowledged": { "type": "boolean" }
       },
       "required": [

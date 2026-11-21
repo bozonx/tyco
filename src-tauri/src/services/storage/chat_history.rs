@@ -831,7 +831,15 @@ pub(super) fn enforce_chat_history_policy(
 pub fn clear_chats(dirs: &ChatDirs) -> Result<(), AppError> {
     super::user_data::ensure_write_allowed(&dirs.chats)?;
     for files_dir in [dirs.images(), dirs.attachments()] {
-        if files_dir.exists() {
+        // a folder kept elsewhere through a link stays linked: its files go
+        if crate::services::platform::filesystem::is_dir_link(&files_dir) {
+            for entry in fs::read_dir(&files_dir)? {
+                let path = entry?.path();
+                if fs::symlink_metadata(&path)?.is_file() {
+                    fs::remove_file(path)?;
+                }
+            }
+        } else if files_dir.exists() {
             fs::remove_dir_all(files_dir)?;
         }
     }

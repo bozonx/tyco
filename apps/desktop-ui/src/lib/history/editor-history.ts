@@ -143,6 +143,16 @@ export function createEditorHistoryModel(
     await loadEditorHistory()
   }
 
+  /**
+   * The undo of a removal is over: the recording of a removed dialog goes too,
+   * unless an entry names it again
+   */
+  const releaseEditorItem = async (item: EditorHistoryItem): Promise<void> => {
+    const file = item.dialog?.recordingFile
+    if (!file) return
+    await track(call('discard_dialog_recording', { file }))
+  }
+
   const clearEditorHistory = async (): Promise<void> => {
     await track(call('clear_editor_history'))
     editorListVersion += 1
@@ -161,6 +171,7 @@ export function createEditorHistoryModel(
     saveSourceFailure,
     removeFromEditorHistory,
     restoreEditorItem,
+    releaseEditorItem,
     clearEditorHistory,
   }
 }

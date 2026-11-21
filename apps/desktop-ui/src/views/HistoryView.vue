@@ -97,7 +97,6 @@ import { useEditorHistoryChanges } from '../composables/use-editor-history-chang
 import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
-import { recordingFileName } from '../lib/dialog/dialog-recording'
 import {
   getEditorHistoryNote,
   getEditorHistoryView,
@@ -128,6 +127,7 @@ const editorNavigation = useEditorNavigation()
 const removal = createRemovalUndo<EditorHistoryItem>({
   remove: historyStore.removeFromEditorHistory,
   restore: historyStore.restoreEditorItem,
+  release: historyStore.releaseEditorItem,
   clear: historyStore.clearEditorHistory,
   reportError: (error) => {
     clientLogger.warn(
@@ -207,9 +207,9 @@ const editorItems = computed<HistoryListItem[]>(() =>
       },
       searchText: label,
       time: item.createdAt,
-      ...(item.dialog?.recordingPath && {
+      ...(item.dialog?.recordingFile && {
         file: recordingFile(
-          item.dialog.recordingPath,
+          item.dialog.recordingFile,
           item.dialog.isRecordingIncomplete ?? false
         ),
       }),
@@ -217,30 +217,30 @@ const editorItems = computed<HistoryListItem[]>(() =>
   })
 )
 
-/** Whether each recording a dialog entry links to is still there */
+/** Whether each recording a dialog entry names is there */
 const recordingExists = ref<Record<string, boolean>>({})
-const recordingPaths = computed(() =>
+const recordingFiles = computed(() =>
   historyStore.editorHistory.flatMap((item) =>
-    item.dialog?.recordingPath ? [item.dialog.recordingPath] : []
+    item.dialog?.recordingFile ? [item.dialog.recordingFile] : []
   )
 )
 const checkRecordings = async () => {
-  const paths = [...new Set(recordingPaths.value)]
-  if (!paths.length) return
-  const result = await ipcStore.call('check_dialog_recordings', { paths })
+  const files = [...new Set(recordingFiles.value)]
+  if (!files.length) return
+  const result = await ipcStore.call('check_dialog_recordings', { files })
   if (!result.success || !result.result) return
   const exists = result.result
   recordingExists.value = Object.fromEntries(
-    paths.map((path, index) => [path, exists[index] ?? false])
+    files.map((file, index) => [file, exists[index] ?? false])
   )
 }
-// a running dialog rewrites its entry often: only other paths are checked again
+// a running dialog rewrites its entry often: only other files are checked again
 watch(
-  () => [...new Set(recordingPaths.value)].sort().join('\n'),
+  () => [...new Set(recordingFiles.value)].sort().join('\n'),
   () => void checkRecordings(),
   { immediate: true }
 )
-// a file may have been moved or deleted while the window was hidden
+// a file may have been synced or deleted while the window was hidden
 watch(
   () => desktopStore.desktopState.isWindowShown,
   (isShown) => {
@@ -249,12 +249,12 @@ watch(
 )
 
 const recordingFile = (
-  path: string,
+  file: string,
   isIncomplete: boolean
 ): HistoryListItem['file'] => ({
-  name: recordingFileName(path),
+  name: file,
   // unknown until checked: the action is offered
-  isMissing: recordingExists.value[path] === false,
+  isMissing: recordingExists.value[file] === false,
   missingLabel: t('history.recordingNotFound'),
   ...(isIncomplete && { note: t('history.recordingIncomplete') }),
   action: {
@@ -265,10 +265,10 @@ const recordingFile = (
 })
 
 const showRecording = async (item: HistoryListItem) => {
-  const path = historyStore.editorHistory.find((entry) => entry.id === item.id)
-    ?.dialog?.recordingPath
-  if (!path) return
-  const result = await ipcStore.callOrNotify('show_dialog_recording', { path })
+  const file = historyStore.editorHistory.find((entry) => entry.id === item.id)
+    ?.dialog?.recordingFile
+  if (!file) return
+  const result = await ipcStore.callOrNotify('show_dialog_recording', { file })
   if (!result.success) void checkRecordings()
 }
 

@@ -141,7 +141,6 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<services::runtime::subtitles_window::SubtitlesSnapshot>();
     visitor.visit::<services::runtime::subtitles_window::SubtitlesAction>();
     visitor.visit::<services::voice::VoiceCaptureInfo>();
-    visitor.visit::<services::voice::DialogRecording>();
     visitor.visit::<tyco_activation_protocol::Job>();
 }
 

@@ -29,10 +29,11 @@ the general rules in a few common programs.
    settings: the files can be moved to the new folder, or copied back into
    the workspace; the external folder itself is never deleted.
 
-Call recordings of the dialog are not in the data folder: they go to the
-Music folder, or the one chosen in **Settings → Dialog** on each computer
-(see `docs/dialog.md`). Synchronize or back them up on their own if you need
-them elsewhere.
+Call recordings of the dialog are part of the history, in
+`history/recordings` of the data folder (see `docs/dialog.md`). They are the
+largest files TyCo keeps; to leave them out of a synchronization, exclude
+that folder in your synchronization program, e.g. `/history/recordings` in
+Syncthing's `.stignore`, or keep it on another disk (see below).
 
 ## General rules
 
@@ -171,6 +172,32 @@ A profile keeps files in three places:
 
 In a chat, every file action of the AI is marked with where it happened: the
 chat file, the profile files or the project's name.
+
+## Folders on another disk
+
+TyCo has no settings for where its parts go: replace a folder with a link to
+a folder elsewhere, e.g. to keep the recordings on a larger disk. TyCo writes
+through these links and never replaces or removes them:
+
+- the data folder itself, and every attached workspace;
+- inside the data folder: `history`, `history/recordings`, `chats`,
+  `chats/images`, `chats/attachments`, `ai-vault` and `plugins`.
+
+On Linux use a symbolic link with an absolute target
+(`ln -s /mnt/big/tyco-recordings ~/.local/share/com.tyco.app/history/recordings`).
+On Windows use a junction (`mklink /J <folder> <target>`), which needs no
+administrator rights, or a symbolic link. Quit TyCo, move the folder's
+contents to the target, and put the link in its place. Links anywhere else,
+e.g. inside a profile or a project, are not followed; for your own folders
+use an external project.
+
+A link whose target is not there, such as a disk that is not mounted, is
+not replaced by a new folder: what would go there waits, e.g. a finished
+recording stays on this computer until the next start finds the target.
+Moving the data folder moves the link, not its target. Synchronization
+programs treat links differently: Syncthing sends the link itself, not what
+it leads to, and OneDrive does not follow them, so the linked folder is then
+synchronized on its own or not at all.
 
 ## Folders inside folders
 

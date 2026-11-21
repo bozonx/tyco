@@ -120,7 +120,10 @@ describe('dialog history', () => {
   })
 
   it('links a recording at once, even before any turn', async () => {
-    const recorded = { ...meta, recordingPath: '/music/call.opus' }
+    const recorded = {
+      ...meta,
+      recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
+    }
     const { history, saved, setText } = setup()
     await history.begin(recorded)
     expect(saved).toEqual([{ text: '', kind: 'dialog', dialog: recorded }])
@@ -134,7 +137,10 @@ describe('dialog history', () => {
   })
 
   it('marks an entry whose recording stopped early', async () => {
-    const recorded = { ...meta, recordingPath: '/music/call.opus' }
+    const recorded = {
+      ...meta,
+      recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
+    }
     const { history, saved, setText } = setup()
     await history.begin(recorded)
     setText('Me: hi')

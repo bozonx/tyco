@@ -39,11 +39,12 @@ pub struct EditorHistoryDialog {
     #[serde(rename = "startedAt")]
     pub started_at_ms: u64,
     pub source: EditorHistoryDialogSource,
-    /// The absolute path of the call recording, if the session was recorded.
-    /// The file may have been moved or deleted since.
+    /// The file name of the call recording in `history/recordings/` of the
+    /// user data folder, if the session was recorded. The file goes with the
+    /// entry; it may be missing, e.g. not synced yet.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
-    pub recording_path: Option<String>,
+    pub recording_file: Option<String>,
     /// The recording stopped before the session did, e.g. the disk filled up:
     /// the file holds only the beginning.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -196,7 +197,7 @@ mod tests {
 
     #[test]
     fn a_dialog_entry_keeps_its_session() {
-        let value = serde_json::json!({"id":"d", "text":"Me: hi", "kind":"dialog", "createdAt":5, "dialog":{"startedAt":1, "source":"microphoneAndSystem", "recordingPath":"/music/a.opus"}});
+        let value = serde_json::json!({"id":"d", "text":"Me: hi", "kind":"dialog", "createdAt":5, "dialog":{"startedAt":1, "source":"microphoneAndSystem", "recordingFile":"2026-11-21 10-00-00 a1b2c3.opus"}});
         let record: super::EditorHistoryItem = serde_json::from_value(value.clone()).unwrap();
         assert_eq!(record.kind, super::EditorHistoryKind::Dialog);
         assert_eq!(record.dialog.as_ref().unwrap().started_at_ms, 1);

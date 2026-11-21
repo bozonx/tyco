@@ -572,7 +572,7 @@ fn a_dialog_is_checkpointed_under_its_id_and_keeps_its_session() {
             "id": id,
             "text": text,
             "kind": "dialog",
-            "dialog": {"startedAt": 10, "source": "system", "recordingPath": "/music/call.opus"},
+            "dialog": {"startedAt": 10, "source": "system", "recordingFile": "2026-11-21 10-00-00 a1b2c3.opus"},
         }))
         .unwrap()
     };
@@ -588,8 +588,8 @@ fn a_dialog_is_checkpointed_under_its_id_and_keeps_its_session() {
     assert_eq!(saved.text, "Other side: hello again");
     assert_eq!(saved.kind, EditorHistoryKind::Dialog);
     assert_eq!(
-        saved.dialog.as_ref().unwrap().recording_path.as_deref(),
-        Some("/music/call.opus")
+        saved.dialog.as_ref().unwrap().recording_file.as_deref(),
+        Some("2026-11-21 10-00-00 a1b2c3.opus")
     );
     // a draft never takes a dialog's place
     let draft =
@@ -629,7 +629,7 @@ fn a_recorded_dialog_is_kept_without_any_text() {
         None
     );
     let recorded = dialog(json!({
-        "startedAt": 1, "source": "system", "recordingPath": "/music/call.opus"
+        "startedAt": 1, "source": "system", "recordingFile": "2026-11-21 10-00-00 a1b2c3.opus"
     }));
     assert!(save_editor_history_entry(&mut history, recorded)
         .unwrap()
@@ -637,7 +637,7 @@ fn a_recorded_dialog_is_kept_without_any_text() {
     // a draft without text is still dropped, whatever it claims
     let draft = serde_json::from_value(json!({
         "text": " ", "kind": "draft",
-        "dialog": {"startedAt": 1, "source": "system", "recordingPath": "/a.opus"}
+        "dialog": {"startedAt": 1, "source": "system", "recordingFile": "2026-11-21 10-00-00 a1b2c3.opus"}
     }))
     .unwrap();
     assert_eq!(
@@ -645,4 +645,98 @@ fn a_recorded_dialog_is_kept_without_any_text() {
         None
     );
     assert_eq!(history.load().unwrap().len(), 1);
+}
+
+const RECORDING: &str = "2026-11-21 10-00-00 a1b2c3.opus";
+
+fn recorded(id: &str, file: &str, created_at_ms: u64) -> EditorHistoryItem {
+    let mut item = history_item(id, "Me: hi", EditorHistoryKind::Dialog);
+    item.created_at_ms = created_at_ms;
+    item.dialog = Some(crate::models::EditorHistoryDialog {
+        started_at_ms: created_at_ms,
+        source: crate::models::EditorHistoryDialogSource::System,
+        recording_file: Some(file.to_owned()),
+        is_recording_incomplete: false,
+    });
+    item
+}
+
+fn write_recording(location: &HistoryLocation, name: &str) -> PathBuf {
+    let path = location.recordings().unwrap().shared.join(name);
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(&path, b"OggS").unwrap();
+    path
+}
+
+#[test]
+fn a_dialog_names_its_recording_by_a_file_name_only() {
+    let mut memory = Vec::new();
+    let mut history = EditorHistorySession {
+        store: EditorHistoryTarget::Memory(&mut memory),
+        policy: memory_only(),
+    };
+    for file in ["/music/call.opus", "../call.opus", "call.opus"] {
+        let entry = serde_json::from_value::<EditorHistoryEntry>(json!({
+            "text": "x", "kind": "dialog",
+            "dialog": {"startedAt": 1, "source": "system", "recordingFile": file},
+        }))
+        .unwrap();
+        assert!(
+            save_editor_history_entry(&mut history, entry).is_err(),
+            "{file}"
+        );
+    }
+    let mut restored = recorded("a-1", "/etc/passwd", 1);
+    assert!(validate_restored_item(&mut restored, 10).is_err());
+}
+
+#[test]
+fn a_removed_recording_goes_once_no_entry_names_it() {
+    let dir = TestDir::new("recording-discard");
+    let location = HistoryLocation::at(&dir, LAPTOP);
+    let file = write_recording(&location, RECORDING);
+    write_items(&own(&location), &[recorded("a-1", RECORDING, now_ms())]);
+    let history = session(&location, policy());
+    // the undo put the entry back: the file stays
+    discard_unnamed_recording(&location, &history, RECORDING).unwrap();
+    assert!(file.exists());
+    write_items(&own(&location), &[recent("b-1", "other")]);
+    discard_unnamed_recording(&location, &history, RECORDING).unwrap();
+    assert!(!file.exists());
+}
+
+#[test]
+fn clearing_the_history_removes_its_recordings() {
+    let dir = TestDir::new("recording-clear");
+    let location = HistoryLocation::at(&dir, LAPTOP);
+    let file = write_recording(&location, RECORDING);
+    write_items(&own(&location), &[recorded("a-1", RECORDING, now_ms())]);
+    clear_history(&location, &policy(), &mut Vec::new(), now_ms()).unwrap();
+    assert!(!file.exists());
+}
+
+#[test]
+fn the_retention_takes_the_recordings_of_the_entries_it_drops() {
+    let dir = TestDir::new("recording-retention");
+    let laptop = HistoryLocation::at(&dir, LAPTOP);
+    let desktop = HistoryLocation::at(&dir, DESKTOP);
+    let now = now_ms();
+    let old = "2026-11-01 10-00-00 000001.opus";
+    let fresh = "2026-11-21 10-00-00 000002.opus";
+    let synced_early = "2026-11-21 11-00-00 000003.opus";
+    let old_file = write_recording(&laptop, old);
+    let fresh_file = write_recording(&laptop, fresh);
+    let early_file = write_recording(&laptop, synced_early);
+    write_items(&own(&laptop), &[recorded("a-1", old, now - 40 * DAY_MS)]);
+    // the entry of another device keeps its recording
+    write_items(&own(&desktop), &[recorded("b-1", fresh, now)]);
+    let thirty_days = EditorHistoryPolicy {
+        retention_days: 30,
+        ..policy()
+    };
+    enforce_policy(&laptop, &thirty_days, now).unwrap();
+    assert!(!old_file.exists());
+    assert!(fresh_file.exists());
+    // no journal names it yet: it waits
+    assert!(early_file.exists());
 }

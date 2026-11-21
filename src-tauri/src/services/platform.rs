@@ -18,7 +18,6 @@ mod native_selection;
 pub mod notifications;
 mod panel_surface;
 pub(crate) mod process;
-pub mod recordings;
 pub(crate) mod screenshot;
 pub(crate) mod selection;
 pub mod session;

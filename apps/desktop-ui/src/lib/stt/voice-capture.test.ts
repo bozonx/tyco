@@ -45,7 +45,7 @@ describe('createVoiceCaptureControl', () => {
         sampleRate: 16_000,
         channels: 2,
         sessionId: 3,
-        recordingPath: '/music/TyCo dialog.opus',
+        recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
       }),
     })
     const failures: string[] = []
@@ -55,14 +55,14 @@ describe('createVoiceCaptureControl', () => {
       { kind: 'dialog', isMicrophoneEnabled: true },
       { onRecordingFailed: (message) => failures.push(message) },
       undefined,
-      { folder: '/music' }
+      true
     )
     fake.emit({ type: 'recordingFailed', message: 'disk full' })
 
-    expect(capture.recordingPath).toBe('/music/TyCo dialog.opus')
+    expect(capture.recordingFile).toBe('2026-11-21 10-00-00 a1b2c3.opus')
     expect(failures).toEqual(['disk full'])
     expect(fake.callsOf('start_voice_capture')[0].args).toMatchObject({
-      recording: { folder: '/music' },
+      isRecorded: true,
     })
   })
 

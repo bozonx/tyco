@@ -1,8 +1,4 @@
-import {
-  DESKTOP_EVENTS,
-  type DialogConfig,
-  type DialogRecording,
-} from '@tyco/shared'
+import { DESKTOP_EVENTS, type DialogConfig } from '@tyco/shared'
 import { defineStore } from 'pinia'
 import { computed, onScopeDispose, reactive, ref, shallowRef, watch } from 'vue'
 
@@ -51,7 +47,8 @@ const DEFAULT_DIALOG_CONFIG: DialogConfig = {
 
 /** The recording of the running session */
 export interface DialogRecordingState {
-  path: string
+  /** The file name in the recordings of the history */
+  file: string
   /** Unix time in milliseconds */
   startedAtMs: number
 }
@@ -142,9 +139,9 @@ export const useDialogStore = defineStore('dialog', () => {
   const capture = createVoiceCaptureControl(tauriNetIpc)
   const stt = createSttClient({ transport: createTauriTransport(tauriNetIpc) })
   let activeStt: DialogStt | undefined
-  /** What the next capture is asked to record to, if anything */
-  let recordingRequest: DialogRecording | undefined
-  let recordingPath: string | undefined
+  /** Whether the next capture is asked to record to a file */
+  let isRecordingRequested = false
+  let recordingFile: string | undefined
   /**
    * When the running session began recording: the segments are on the clock, so
    * the turns of several sessions without a clear stay in order
@@ -174,9 +171,9 @@ export const useDialogStore = defineStore('dialog', () => {
             },
           },
           desktopStore.userConfig.stt.microphoneId,
-          recordingRequest
+          isRecordingRequested
         )
-        recordingPath = started.recordingPath
+        recordingFile = started.recordingFile
         return started
       },
       stop: () => capture.stop(),
@@ -196,15 +193,15 @@ export const useDialogStore = defineStore('dialog', () => {
     onStatus: (next) => {
       if (next === 'running') {
         sessionStartedAtMs = Date.now()
-        if (recordingPath)
+        if (recordingFile)
           recording.value = {
-            path: recordingPath,
+            file: recordingFile,
             startedAtMs: sessionStartedAtMs,
           }
         void dialogHistory.begin({
           startedAt: sessionStartedAtMs,
           source: hasMicrophone.value ? 'microphoneAndSystem' : 'system',
-          ...(recordingPath && { recordingPath }),
+          ...(recordingFile && { recordingFile }),
         })
       }
       status.value = next
@@ -271,14 +268,8 @@ export const useDialogStore = defineStore('dialog', () => {
     await dialogHistory.end()
     translationQueue.clear()
     transcript.clear()
-    recordingRequest = options.isRecording
-      ? {
-          ...(config.value.recordingsFolder?.trim() && {
-            folder: config.value.recordingsFolder.trim(),
-          }),
-        }
-      : undefined
-    recordingPath = undefined
+    isRecordingRequested = options.isRecording === true
+    recordingFile = undefined
     try {
       activeStt = await resolveDialogStt({
         getConfig: () => desktopStore.userConfig.stt,

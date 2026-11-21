@@ -5,7 +5,7 @@ use crate::errors::AppError;
 use crate::services::voice;
 use crate::services::voice::apps::AudioAppsWatches;
 use crate::services::voice::session::VoiceSessionState;
-use crate::services::voice::{AudioInputDevice, CaptureSource, DialogRecording, VoiceCaptureInfo};
+use crate::services::voice::{AudioInputDevice, CaptureSource, VoiceCaptureInfo};
 
 /// Lists the microphones available on this machine.
 #[tauri::command]
@@ -16,8 +16,8 @@ pub async fn list_input_devices() -> Result<Vec<AudioInputDevice>, AppError> {
 }
 
 /// Starts recording `source`, the microphone by default; PCM16 chunks, then
-/// `end` or `error`, arrive through `on_audio`. A dialog with `recording` is
-/// also recorded to a new file, see `VoiceCaptureInfo::recording_path`.
+/// `end` or `error`, arrive through `on_audio`. A dialog with `is_recorded`
+/// is also recorded to a new file, see `VoiceCaptureInfo::recording_file`.
 #[tauri::command]
 pub async fn start_voice_capture(
     app: tauri::AppHandle,
@@ -25,14 +25,14 @@ pub async fn start_voice_capture(
     on_audio: Channel<InvokeResponseBody>,
     source: Option<CaptureSource>,
     microphone_id: Option<String>,
-    recording: Option<DialogRecording>,
+    is_recorded: Option<bool>,
 ) -> Result<VoiceCaptureInfo, AppError> {
     voice::start_capture(
         &app,
         &state,
         source.unwrap_or_default(),
         microphone_id,
-        recording,
+        is_recorded.unwrap_or(false),
         on_audio,
     )
     .await
@@ -77,36 +77,42 @@ pub async fn unwatch_audio_apps(
         .await
 }
 
-/// The folder recordings go to when the setting is empty.
+/// Opens the folder of the call recordings in the data folder, creating it.
 #[tauri::command]
-pub fn get_default_recordings_folder() -> Option<String> {
-    crate::services::platform::recordings::default_recordings_folder()
-        .map(|folder| folder.to_string_lossy().into_owned())
-}
-
-/// Opens the recordings folder, `folder` or the default one, creating it.
-#[tauri::command]
-pub async fn open_recordings_folder(folder: Option<String>) -> Result<(), AppError> {
+pub async fn open_recordings_folder(app: tauri::AppHandle) -> Result<(), AppError> {
     crate::services::background::run_blocking(move || {
-        crate::services::platform::recordings::open_recordings_folder(folder.as_deref())
+        crate::services::storage::recordings::open_folder(&app)
     })
     .await?
 }
 
-/// Which of the recordings `paths` are still there.
+/// Which of the recordings `files` are there.
 #[tauri::command]
-pub async fn check_dialog_recordings(paths: Vec<String>) -> Result<Vec<bool>, AppError> {
+pub async fn check_dialog_recordings(
+    app: tauri::AppHandle,
+    files: Vec<String>,
+) -> Result<Vec<bool>, AppError> {
     crate::services::background::run_blocking(move || {
-        crate::services::platform::recordings::recordings_exist(&paths)
+        crate::services::storage::recordings::check(&app, &files)
     })
-    .await
+    .await?
 }
 
-/// Opens the folder of the recording `path` in the file manager.
+/// Opens the folder of the recording `file` in the file manager.
 #[tauri::command]
-pub async fn show_dialog_recording(path: String) -> Result<(), AppError> {
+pub async fn show_dialog_recording(app: tauri::AppHandle, file: String) -> Result<(), AppError> {
     crate::services::background::run_blocking(move || {
-        crate::services::platform::recordings::show_recording(&path)
+        crate::services::storage::recordings::show(&app, &file)
+    })
+    .await?
+}
+
+/// Removes the recording `file` of a removed history entry once the undo of
+/// the removal is over; one an entry still names stays.
+#[tauri::command]
+pub async fn discard_dialog_recording(app: tauri::AppHandle, file: String) -> Result<(), AppError> {
+    crate::services::background::run_blocking(move || {
+        crate::services::storage::discard_dialog_recording(&app, file)
     })
     .await?
 }

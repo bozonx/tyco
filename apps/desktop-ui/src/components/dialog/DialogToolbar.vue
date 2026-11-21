@@ -171,10 +171,17 @@ const isStopping = computed(() => dialog.status === 'stopping')
 const isEmpty = computed(() => dialog.segments.length === 0)
 const isRecordingNoticeOpen = ref(false)
 
+// a recording belongs to its history entry: nothing would keep it otherwise
+const canRecord = computed(
+  () => desktopStore.userConfig.editor.history.storage === 'disk'
+)
 const startItems = computed<DropdownMenuItem[]>(() => [
   {
-    label: t('dialog.startRecording'),
+    label: canRecord.value
+      ? t('dialog.startRecording')
+      : t('dialog.startRecordingNeedsHistory'),
     icon: 'mdi:record-circle-outline',
+    disabled: !canRecord.value,
     action: startRecording,
   },
 ])

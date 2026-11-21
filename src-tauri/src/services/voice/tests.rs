@@ -4,7 +4,7 @@ fn capture_info_preserves_the_frontend_wire_names() {
         sample_rate_hz: 16_000,
         channels: 2,
         session_id: 7,
-        recording_path: None,
+        recording_file: None,
     };
     assert_eq!(
         serde_json::to_value(info).unwrap(),
@@ -29,7 +29,7 @@ fn run_capture<A: AudioSource, L: AudioLevelSink, S: EventSink>(
         stop_flag,
         superseded,
         switch: &switch,
-        recording_path: None,
+        recording: None,
     };
     run_capture_thread(
         source,
@@ -425,7 +425,7 @@ fn device_setup_errors_are_returned_without_a_tauri_runtime() {
         CaptureSessionOptions {
             id: 1,
             setup_timeout: Duration::from_secs(1),
-            recording_path: None,
+            recording: None,
         },
     )
     .err()
@@ -465,7 +465,7 @@ fn setup_timeout_signals_stop_without_joining_a_blocked_device() {
         CaptureSessionOptions {
             id: 1,
             setup_timeout: Duration::ZERO,
-            recording_path: None,
+            recording: None,
         },
     )
     .err()
@@ -840,7 +840,7 @@ fn silence_keeps_a_silent_playback_source_in_step_with_real_time() {
             stop_flag: &stop,
             superseded: &AtomicBool::new(false),
             switch: &switch,
-            recording_path: None,
+            recording: None,
         },
         &tx,
     )
@@ -893,7 +893,7 @@ fn a_switch_of_the_source_keeps_one_stream_and_reports_the_wait() {
             stop_flag: &stop,
             superseded: &AtomicBool::new(false),
             switch: &switch,
-            recording_path: None,
+            recording: None,
         },
         &tx,
     )
@@ -942,7 +942,7 @@ fn a_lost_application_waits_without_expanding_the_recorded_source() {
             stop_flag: &stop,
             superseded: &AtomicBool::new(false),
             switch: &switch,
-            recording_path: None,
+            recording: None,
         },
         &tx,
     )
@@ -1002,7 +1002,7 @@ fn a_source_switch_discards_audio_recorded_twice_during_setup() {
             stop_flag: &stop,
             superseded: &AtomicBool::new(false),
             switch: &switch,
-            recording_path: None,
+            recording: None,
         },
         &tx,
     )
@@ -1152,7 +1152,7 @@ fn a_stereo_capture_reports_its_channels_and_their_levels() {
         stop_flag: &stop,
         superseded: &AtomicBool::new(false),
         switch: &switch,
-        recording_path: None,
+        recording: None,
     };
     run_capture_thread(
         &StereoSource,
@@ -1207,7 +1207,13 @@ fn a_recorded_dialog_keeps_the_sound_as_heard_in_its_file() {
         std::process::id(),
         Instant::now()
     ));
-    let path = folder.join("call.opus");
+    let name = "2026-11-21 10-00-00 a1b2c3.opus".to_owned();
+    let recording = crate::services::storage::recordings::NewRecording {
+        active_path: folder.join("active").join(&name),
+        shared_path: folder.join("shared").join(&name),
+        name,
+    };
+    let path = recording.shared_path.clone();
     let stop = Arc::new(AtomicBool::new(false));
     let clock = TestRuntime {
         now: std::cell::Cell::new(Instant::now()),
@@ -1220,7 +1226,7 @@ fn a_recorded_dialog_keeps_the_sound_as_heard_in_its_file() {
         stop_flag: &stop,
         superseded: &AtomicBool::new(false),
         switch: &switch,
-        recording_path: Some(path.clone()),
+        recording: Some(recording),
     };
     run_capture_thread(
         &GatedSource,

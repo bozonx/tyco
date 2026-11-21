@@ -11,6 +11,25 @@ use std::path::{Path, PathBuf};
 use crate::errors::AppError;
 use crate::services::atomic_file::TEMPORARY_FILE_PREFIX;
 
+/// The folders of the user data folder that may be links to a folder
+/// elsewhere, a symbolic link or, on Windows, a junction: e.g. to keep the
+/// recordings on another disk. The app writes through such a link and never
+/// replaces or removes the link itself. Anywhere else a link is not followed.
+const LINKABLE_DIRS: [&str; 7] = [
+    "ai-vault",
+    "chats",
+    "chats/attachments",
+    "chats/images",
+    "history",
+    "history/recordings",
+    "plugins",
+];
+
+/// Whether `relative`, a path inside the user data folder, may be a link.
+pub fn is_linkable_dir(relative: &Path) -> bool {
+    LINKABLE_DIRS.iter().any(|dir| relative == Path::new(dir))
+}
+
 /// Whether `name` is a temporary file of a sync tool or of Tyco itself.
 pub fn is_temporary_name(name: &str) -> bool {
     name.starts_with(TEMPORARY_FILE_PREFIX)

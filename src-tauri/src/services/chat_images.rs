@@ -13,6 +13,7 @@ use crate::services::sha256::sha256_hex;
 use super::atomic_file::write_private_bytes;
 use crate::errors::AppError;
 use crate::models::{Chat, ChatAttachmentFile, ChatImage};
+use crate::services::storage::orphan_files::OrphanRecord;
 
 /// The folder of the attachment originals inside a chat folder.
 pub const ATTACHMENTS_DIR: &str = "attachments";
@@ -712,38 +713,23 @@ pub fn remove_dropped_files(chats_dir: &Path, dropped: &ChatFileIds) -> Result<(
     Ok(())
 }
 
-/// How long an image no chat refers to stays: a sync tool may bring an image
-/// before the chat that refers to it.
-pub const ORPHAN_IMAGE_GRACE_MS: u64 = 7 * 24 * 60 * 60 * 1000;
-
-/// When each image without a chat referring to it was first seen, by images
-/// folder and image id. The time of the file is no help: Syncthing and rsync
-/// keep the time of the original.
-type OrphanRecord = std::collections::BTreeMap<String, std::collections::BTreeMap<String, u64>>;
-
 /// Removes the images and attachment originals of `chats_dir` no chat has
-/// referred to for `ORPHAN_IMAGE_GRACE_MS`, by the times kept in
-/// `orphans_path`. A file that is referred to again leaves the record. An
-/// unreadable chat aborts collection: uncertain references are kept.
+/// referred to for `orphan_files::ORPHAN_GRACE_MS`, by the times kept in
+/// `orphans_path`. An unreadable chat aborts collection: uncertain
+/// references are kept.
 pub fn remove_orphan_images(
     chats_dir: &Path,
     orphans_path: &Path,
     now_ms: u64,
 ) -> Result<(), AppError> {
     crate::services::storage::user_data::ensure_write_allowed(chats_dir)?;
-    let mut record: OrphanRecord = fs::read(orphans_path)
-        .ok()
-        .and_then(|raw| serde_json::from_slice(&raw).ok())
-        .unwrap_or_default();
+    let mut record = OrphanRecord::read(orphans_path);
     let before = record.clone();
-    // a history that moved away, e.g. with the data folder, leaves its record
-    record.retain(|directory, _| Path::new(directory).is_dir());
 
     let Some(live) = live_file_ids(chats_dir)? else {
         return Ok(());
     };
-    let images = chats_dir.join(IMAGES_DIR);
-    collect_orphans(&mut record, &images, &live.images, now_ms, |name| {
+    record.collect(&chats_dir.join(IMAGES_DIR), &live.images, now_ms, |name| {
         let path = Path::new(name);
         let is_known = path
             .extension()
@@ -757,63 +743,19 @@ pub fn remove_orphan_images(
             })
             .flatten()
     })?;
-    let files = chats_dir.join(ATTACHMENTS_DIR);
-    collect_orphans(&mut record, &files, &live.files, now_ms, |name| {
-        validate_id(name).is_ok().then(|| name.to_owned())
-    })?;
-    if record != before {
-        if let Some(dir) = orphans_path.parent() {
-            crate::services::atomic_file::create_private_dir(dir)?;
-        }
-        crate::services::atomic_file::write_private(
-            orphans_path,
-            &serde_json::to_string(&record)?,
-        )?;
-    }
-    Ok(())
-}
-
-/// Collects the files of `directory` whose id, read from the name by
-/// `id_of`, is not in `live` and has been without a reference long enough.
-fn collect_orphans(
-    record: &mut OrphanRecord,
-    directory: &Path,
-    live: &HashSet<String>,
-    now_ms: u64,
-    id_of: impl Fn(&str) -> Option<String>,
-) -> Result<(), AppError> {
-    let key = directory.to_string_lossy().into_owned();
-    let entries = crate::services::storage::user_files::list_own_files(directory, |name| {
-        id_of(name).is_some()
-    })?;
-    let seen = record.entry(key.clone()).or_default();
-    let mut present = HashSet::new();
-    for (name, path) in entries {
-        let Some(id) = id_of(&name) else {
-            continue;
-        };
-        present.insert(id.clone());
-        if live.contains(&id) {
-            seen.remove(&id);
-            continue;
-        }
-        let first_seen = *seen.entry(id.clone()).or_insert(now_ms);
-        if now_ms.saturating_sub(first_seen) >= ORPHAN_IMAGE_GRACE_MS {
-            fs::remove_file(&path)?;
-            seen.remove(&id);
-            present.remove(&id);
-        }
-    }
-    seen.retain(|id, _| present.contains(id));
-    if seen.is_empty() {
-        record.remove(&key);
-    }
-    Ok(())
+    record.collect(
+        &chats_dir.join(ATTACHMENTS_DIR),
+        &live.files,
+        now_ms,
+        |name| validate_id(name).is_ok().then(|| name.to_owned()),
+    )?;
+    record.write_if_changed(orphans_path, &before)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::storage::orphan_files::ORPHAN_GRACE_MS;
     use crate::services::test_support::TestDir;
 
     #[test]
@@ -990,9 +932,9 @@ mod tests {
         // the time of the file says
         remove_orphan_images(&directory, &orphans, 1_000).unwrap();
         assert!(file.exists());
-        remove_orphan_images(&directory, &orphans, ORPHAN_IMAGE_GRACE_MS).unwrap();
+        remove_orphan_images(&directory, &orphans, ORPHAN_GRACE_MS).unwrap();
         assert!(file.exists());
-        remove_orphan_images(&directory, &orphans, 1_000 + ORPHAN_IMAGE_GRACE_MS).unwrap();
+        remove_orphan_images(&directory, &orphans, 1_000 + ORPHAN_GRACE_MS).unwrap();
         assert!(!file.exists());
         assert!(store.get(&directory.join("images"), &image.id).is_ok());
     }
@@ -1018,7 +960,7 @@ mod tests {
             }]}]
         });
         fs::write(directory.join("late.json"), chat.to_string()).unwrap();
-        remove_orphan_images(&directory, &orphans, 2 * ORPHAN_IMAGE_GRACE_MS).unwrap();
+        remove_orphan_images(&directory, &orphans, 2 * ORPHAN_GRACE_MS).unwrap();
         assert!(file.exists());
         assert!(!orphans.exists() || !fs::read_to_string(&orphans).unwrap().contains(&id));
     }

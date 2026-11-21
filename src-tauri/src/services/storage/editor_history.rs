@@ -9,6 +9,7 @@ use entries::{
 use journals::{changes, compact, merge_journals, HistoryRecord};
 pub use policy::EditorHistoryPolicy;
 
+use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -17,6 +18,7 @@ use tauri::{AppHandle, Manager};
 
 use super::json_files::{read_jsonl, remove_file_if_exists, write_jsonl};
 use super::new_history_id;
+use super::recordings::{self, RecordingDirs};
 use crate::errors::AppError;
 use crate::models::{
     EditorHistoryEntry, EditorHistoryFailure, EditorHistoryItem, EditorHistoryKind,
@@ -36,6 +38,9 @@ pub(super) struct HistoryLocation {
     device_id: String,
     /// The name of this computer, recorded in its shared journal.
     device_name: Option<String>,
+    /// The call recordings the dialog entries name; an error while the user
+    /// data folder cannot be used.
+    recordings: Result<RecordingDirs, String>,
 }
 
 impl HistoryLocation {
@@ -51,6 +56,7 @@ impl HistoryLocation {
             shared_dir,
             device_id,
             device_name: crate::services::platform::machine::host_name(),
+            recordings: RecordingDirs::of_app(app).map_err(|error| error.to_string()),
         })
     }
 
@@ -60,7 +66,14 @@ impl HistoryLocation {
             shared_dir: Ok(dir.join("user").join(SHARED_JOURNALS_DIR)),
             device_id: device_id.to_owned(),
             device_name: Some(format!("host-{device_id}")),
+            recordings: Ok(RecordingDirs::at(dir)),
         }
+    }
+
+    fn recordings(&self) -> Result<&RecordingDirs, AppError> {
+        self.recordings
+            .as_ref()
+            .map_err(|reason| AppError::UserDataUnavailable(reason.clone()))
     }
 
     fn shared_dir(&self) -> Result<&Path, AppError> {
@@ -309,7 +322,7 @@ fn save_editor_history_entry(
         && entry
             .dialog
             .as_ref()
-            .is_some_and(|dialog| dialog.recording_path.is_some());
+            .is_some_and(|dialog| dialog.recording_file.is_some());
     if !policy.is_recording
         || (entry.text.trim().is_empty() && !has_recording)
         || policy.max_entries == 0
@@ -318,11 +331,12 @@ fn save_editor_history_entry(
     }
     let is_checkpoint = entry.kind.is_checkpointed();
     if entry.kind == EditorHistoryKind::Dialog {
-        if entry.dialog.is_none() {
+        let Some(dialog) = &entry.dialog else {
             return Err(AppError::InvalidInput(
                 "A dialog entry needs its session".into(),
             ));
-        }
+        };
+        validate_recording_file(dialog)?;
     } else {
         entry.dialog = None;
     }
@@ -496,7 +510,53 @@ fn validate_restored_item(item: &mut EditorHistoryItem, now_ms: u64) -> Result<(
         return Err(AppError::InvalidInput("Invalid editor history id".into()));
     }
     item.created_at_ms = item.created_at_ms.min(now_ms);
-    Ok(())
+    match &item.dialog {
+        Some(dialog) => validate_recording_file(dialog),
+        None => Ok(()),
+    }
+}
+
+/// The webview names a recording by its file name: nothing else is taken.
+fn validate_recording_file(dialog: &crate::models::EditorHistoryDialog) -> Result<(), AppError> {
+    match &dialog.recording_file {
+        Some(name) if !recordings::is_recording_name(name) => Err(AppError::InvalidInput(
+            "Invalid name of a call recording".into(),
+        )),
+        _ => Ok(()),
+    }
+}
+
+/// The recordings the entries `items` name.
+fn recording_names(items: &[EditorHistoryItem]) -> HashSet<String> {
+    items
+        .iter()
+        .filter_map(|item| item.dialog.as_ref()?.recording_file.clone())
+        .collect()
+}
+
+/// Removes the recording `file` of a removed entry once its undo is over,
+/// unless an entry still names it, e.g. the restored one.
+pub fn discard_recording(
+    app: &AppHandle,
+    user_config: &Value,
+    memory: &mut Vec<EditorHistoryItem>,
+    file: String,
+) -> Result<(), AppError> {
+    let location = HistoryLocation::of_app(app)?;
+    let history = EditorHistorySession::open(location.clone(), user_config, memory)?;
+    discard_unnamed_recording(&location, &history, &file)
+}
+
+fn discard_unnamed_recording(
+    location: &HistoryLocation,
+    history: &EditorHistorySession,
+    file: &str,
+) -> Result<(), AppError> {
+    // every entry counts, also one over the limits of this device
+    if recording_names(&history.store.read()?).contains(file) {
+        return Ok(());
+    }
+    recordings::discard(location.recordings()?, file)
 }
 
 /// Ids are two hexadecimal numbers joined by a dash, see `new_history_id`.
@@ -546,7 +606,12 @@ fn clear_history(
         &[HistoryRecord::Event(journals::HistoryEvent::Clear {
             before: now_ms.saturating_add(1),
         })],
-    )
+    )?;
+    // the entries are gone already: a recording left now is collected later
+    if let Err(error) = location.recordings().and_then(recordings::clear) {
+        log::warn!("Could not remove the call recordings of the cleared history: {error}");
+    }
+    Ok(())
 }
 
 /// Brings this device's journal in line with `policy`: removes it when the
@@ -567,10 +632,54 @@ fn enforce_policy(
     now_ms: u64,
 ) -> Result<(), AppError> {
     let own = location.own_path()?;
+    // read before the journal drops them: their recordings go too
+    let every = every_entry(location, &[]);
     if policy.is_memory_only {
-        remove_journal(&own)
+        remove_journal(&own)?;
     } else {
-        compact_journal(location, &own, policy, now_ms)
+        compact_journal(location, &own, policy, now_ms)?;
+    }
+    collect_recordings(location, policy, every, now_ms);
+    Ok(())
+}
+
+/// The entries in `memory` and in every journal, whatever the limits.
+fn every_entry(
+    location: &HistoryLocation,
+    memory: &[EditorHistoryItem],
+) -> Result<Vec<EditorHistoryItem>, AppError> {
+    let mut every = memory.to_vec();
+    let own = location.own_path()?;
+    let paths = location.journal_paths(&own);
+    every.extend(merge_journals(&read_journals(&paths, &own)?));
+    Ok(every)
+}
+
+/// Removes the recordings of the entries of `every` the policy drops, and,
+/// after the grace period, those no entry names; see `recordings::collect`.
+/// The recordings of a history no longer kept on disk wait as well, as long
+/// as no next start finds an entry for them.
+///
+/// The history does not wait for it: a failure is logged, and the next
+/// cleanup tries again.
+fn collect_recordings(
+    location: &HistoryLocation,
+    policy: &EditorHistoryPolicy,
+    every: Result<Vec<EditorHistoryItem>, AppError>,
+    now_ms: u64,
+) {
+    let collected = every.and_then(|every| {
+        let mut kept = every.clone();
+        policy.limit(&mut kept, now_ms);
+        recordings::collect(
+            location.recordings()?,
+            &recording_names(&kept),
+            &recording_names(&every),
+            now_ms,
+        )
+    });
+    if let Err(error) = collected {
+        log::warn!("Could not remove the call recordings the history dropped: {error}");
     }
 }
 
@@ -692,6 +801,8 @@ fn commit_history_transition<T>(
             return Err(error);
         }
     };
+    // read before the cleanup drops them: their recordings go too
+    let every = (before != after).then(|| every_entry(location, memory));
     let cleanup = if let Some(items) = prepared_memory {
         *memory = items;
         remove_journal(&own)
@@ -710,6 +821,9 @@ fn commit_history_transition<T>(
         // write
         compact_journal(location, &own, after, now_ms())
     };
+    if let Some(every) = every {
+        collect_recordings(location, after, every, now_ms());
+    }
     let cleanup_failed = cleanup.is_err();
     if let Err(error) = cleanup {
         // The new policy remains committed. Subsequent saves and startup retry

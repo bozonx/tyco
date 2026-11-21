@@ -160,6 +160,85 @@ pub(crate) fn rename_path_no_replace(source: &Path, destination: &Path) -> io::R
     )
 }
 
+/// Whether `path` itself is a link to a folder: a symbolic link or, on
+/// Windows, a junction, which Rust counts among the symbolic links.
+pub(crate) fn is_dir_link(path: &Path) -> bool {
+    std::fs::symlink_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink())
+        && std::fs::metadata(path).is_ok_and(|meta| meta.is_dir())
+}
+
+/// Removes the link `path` itself, never what it leads to. Windows removes
+/// a link to a folder, or a junction, as a folder.
+pub(crate) fn remove_link(path: &Path) -> io::Result<()> {
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::FileTypeExt;
+        if std::fs::symlink_metadata(path)?
+            .file_type()
+            .is_symlink_dir()
+        {
+            return std::fs::remove_dir(path);
+        }
+    }
+    std::fs::remove_file(path)
+}
+
+/// Makes `link` lead where `source`, a link, leads.
+#[cfg(unix)]
+pub(crate) fn copy_link(source: &Path, link: &Path) -> io::Result<()> {
+    std::os::unix::fs::symlink(std::fs::read_link(source)?, link)
+}
+
+/// Makes `link` lead where `source`, a link, leads. A link to a folder that
+/// cannot be made a symbolic link, which needs a privilege or the developer
+/// mode, becomes a junction, which any user may make for a local folder.
+#[cfg(windows)]
+pub(crate) fn copy_link(source: &Path, link: &Path) -> io::Result<()> {
+    use std::os::windows::fs::FileTypeExt;
+    /// `ERROR_PRIVILEGE_NOT_HELD`
+    const PRIVILEGE_NOT_HELD: i32 = 1314;
+    let target = std::fs::read_link(source)?;
+    if !std::fs::symlink_metadata(source)?
+        .file_type()
+        .is_symlink_dir()
+    {
+        return std::os::windows::fs::symlink_file(target, link);
+    }
+    match std::os::windows::fs::symlink_dir(&target, link) {
+        Err(error) if error.raw_os_error() == Some(PRIVILEGE_NOT_HELD) => {
+            create_junction(&target, link)
+        }
+        result => result,
+    }
+}
+
+/// `mklink /J`: the standard library makes no junctions yet.
+#[cfg(windows)]
+fn create_junction(target: &Path, link: &Path) -> io::Result<()> {
+    // a junction takes a plain absolute path, not a verbatim one
+    let verbatim = target.to_string_lossy().into_owned();
+    let target: &str = verbatim.strip_prefix(r"\\?\").unwrap_or(&verbatim);
+    let mut command = std::process::Command::new("cmd");
+    command
+        .arg("/C")
+        .arg("mklink")
+        .arg("/J")
+        .arg(link)
+        .arg(target)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null());
+    super::process::hide_console_window(&mut command);
+    let status = command.status()?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(io::Error::other(format!(
+            "Could not make a junction {} to {target}",
+            link.display()
+        )))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -212,6 +291,25 @@ mod tests {
         let loser = if winner == "first" { "second" } else { "first" };
         assert_eq!(fs::read_to_string(root.join(loser)).unwrap(), loser);
         assert_eq!(fs::read_dir(&root).unwrap().count(), 2);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_link_is_copied_and_removed_without_its_target() {
+        let root = TestDir::new("dir-links");
+        fs::create_dir(root.join("target")).unwrap();
+        fs::write(root.join("target/data"), "kept").unwrap();
+        std::os::unix::fs::symlink(root.join("target"), root.join("link")).unwrap();
+        assert!(is_dir_link(&root.join("link")));
+        assert!(!is_dir_link(&root.join("target")));
+        copy_link(&root.join("link"), &root.join("copy")).unwrap();
+        assert_eq!(fs::read_to_string(root.join("copy/data")).unwrap(), "kept");
+        remove_link(&root.join("link")).unwrap();
+        remove_link(&root.join("copy")).unwrap();
+        assert_eq!(
+            fs::read_to_string(root.join("target/data")).unwrap(),
+            "kept"
+        );
     }
 
     #[test]

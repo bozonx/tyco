@@ -184,13 +184,15 @@ the system sound in one channel. A dialog capture is never superseded:
 another capture fails with `AppError::CaptureBusy` (`captureBusy`), which
 voice input, voice commands and listening show as "the sound is busy with the
 dialog"; a dialog itself supersedes dictation. It has no duration limit.
-A dialog started with `recording` (`DialogRecording`, the webview's
-`dialog.recordingsFolder` or the default from `platform/recordings.rs`:
-`dirs::audio_dir()/TyCo`, i.e. `XDG_MUSIC_DIR` or the Music known folder,
-else `$HOME/Music/TyCo`) is also written to a new file named by the local
-time with a ` (2)` suffix on a collision; `VoiceCaptureInfo::recording_path`
-returns it. The file is created before the capture reports started, so a
-folder that cannot be written fails the start. `voice/recording.rs` encodes
+A dialog started with `isRecorded` is also written to a new file of the
+history (`storage/recordings.rs`, see `config-storage.md`): named
+`YYYY-MM-DD HH-MM-SS <6 hex>.opus` by the local time, written in
+`recordings/` of the state folder and moved into `history/recordings/` of the
+data folder once closed; `VoiceCaptureInfo::recording_file` returns the name.
+A recording needs the editor history on disk (`AppError::InvalidInput`
+otherwise; the toolbar disables it) and a writable data folder. The file is
+created before the capture reports started, so a folder that cannot be
+written fails the start. `voice/recording.rs` encodes
 Ogg/Opus while capturing (libopus via the `opus` crate, built from source
 and linked statically; `ogg` for the pages): 16 kHz input, 20 ms frames,
 VoIP mode, stereo at 32 kbit/s (microphone, computer) or mono at 24 kbit/s,
@@ -206,10 +208,11 @@ minute), so the file keeps the call's timeline; a failed write stops the
 recording only and sends `recordingFailed` on the audio channel, and the
 webview marks the history entry `isRecordingIncomplete`. A file whose
 headers fail, or that received no audio, is removed. The capture's end, a stop or quit
-closes the file. The webview's history links a recording by absolute path (a `Dialog` entry with
-a `recordingPath` is stored even without text, so the file stays reachable);
-`check_dialog_recordings` and `show_dialog_recording` accept only absolute
-`.opus` paths.
+closes the file and moves it into the data folder. The webview's history
+names a recording by its file name (a `Dialog` entry with a `recordingFile`
+is stored even without text, so the file stays reachable);
+`check_dialog_recordings`, `show_dialog_recording` and
+`discard_dialog_recording` accept only names of that pattern.
 The dialog's subtitles are a window of their own, `subtitles`
 (`runtime/subtitles_window.rs`, behind a `SubtitlesHost`), created the first
 time they are shown; the main window is minimized meanwhile. With

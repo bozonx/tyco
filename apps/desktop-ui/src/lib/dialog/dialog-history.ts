@@ -67,7 +67,7 @@ export function createDialogHistory(
     pending = pending.then(async () => {
       if (target.isDropped) return
       const text = deps.getText()
-      if (!text.trim() && !target.meta.recordingPath) return
+      if (!text.trim() && !target.meta.recordingFile) return
       if (text === target.savedText) return
       try {
         const id = await deps.save({
@@ -112,7 +112,7 @@ export function createDialogHistory(
     end,
     markRecordingIncomplete() {
       const current = session
-      if (!current?.meta.recordingPath) return pending
+      if (!current?.meta.recordingFile) return pending
       current.meta = { ...current.meta, isRecordingIncomplete: true }
       // rewritten even if the text is the same
       current.savedText = undefined

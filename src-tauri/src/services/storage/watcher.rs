@@ -11,7 +11,7 @@ use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Manager};
 
 use super::user_data::UserData;
-use super::user_files::{conflict_original, is_temporary_name};
+use super::user_files::{conflict_original, is_linkable_dir, is_temporary_name};
 use crate::errors::AppError;
 use crate::locks::MutexExt;
 use crate::services::background::BackgroundServices;
@@ -223,6 +223,16 @@ fn scan_tree(
         }
         match entry.file_type() {
             Ok(kind) if kind.is_dir() => {
+                scan_tree(root, &path, files, previous, fingerprint, scoped)?
+            }
+            // the data areas the user may keep elsewhere; their paths stay
+            // those inside the root, as the app writes them
+            Ok(kind)
+                if kind.is_symlink()
+                    && scoped
+                    && is_linkable_dir(path.strip_prefix(root).unwrap_or(&path))
+                    && path.is_dir() =>
+            {
                 scan_tree(root, &path, files, previous, fingerprint, scoped)?
             }
             Ok(kind) if kind.is_file() => match fingerprint(&path) {
@@ -746,6 +756,32 @@ mod tests {
         assert!(!schedule.is_due(deadline));
         schedule.notify(deadline);
         assert!(schedule.is_due(deadline + DEBOUNCE));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn scans_follow_the_linkable_folders_only() {
+        let dir = TestDir::new("storage-scan-links");
+        let root = dir.join("user");
+        let elsewhere = dir.join("elsewhere");
+        for folder in ["chats", "profile"] {
+            std::fs::create_dir_all(elsewhere.join(folder)).unwrap();
+        }
+        std::fs::write(elsewhere.join("chats/a.json"), b"{}").unwrap();
+        std::fs::write(elsewhere.join("profile/profile.json"), b"{}").unwrap();
+        std::fs::create_dir_all(root.join("ai-vault/profiles")).unwrap();
+        std::os::unix::fs::symlink(elsewhere.join("chats"), root.join("chats")).unwrap();
+        std::os::unix::fs::symlink(
+            elsewhere.join("profile"),
+            root.join("ai-vault/profiles/profile-1"),
+        )
+        .unwrap();
+        let mut files = Snapshot::new();
+        scan(&root, &mut files).unwrap();
+        assert_eq!(
+            files.keys().collect::<Vec<_>>(),
+            [&root.join("chats/a.json")]
+        );
     }
 
     #[test]

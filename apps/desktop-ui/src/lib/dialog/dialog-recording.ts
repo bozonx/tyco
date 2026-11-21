@@ -9,8 +9,3 @@ export function formatRecordingElapsed(elapsedMs: number): string {
     ? `${hours}:${pad(minutes)}:${pad(seconds)}`
     : `${minutes}:${pad(seconds)}`
 }
-
-/** The name a recording is shown by: its file name without the folder */
-export function recordingFileName(path: string): string {
-  return path.split(/[\\/]/).pop() ?? path
-}

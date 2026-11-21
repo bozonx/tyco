@@ -207,8 +207,12 @@ impl Drop for StagingDirectory {
     }
 }
 
+/// Removes a moved entry; a link goes itself, its target stays.
 fn remove_tree(path: &Path) -> io::Result<()> {
-    if fs::symlink_metadata(path)?.is_dir() {
+    let file_type = fs::symlink_metadata(path)?.file_type();
+    if file_type.is_symlink() {
+        crate::services::platform::filesystem::remove_link(path)
+    } else if file_type.is_dir() {
         fs::remove_dir_all(path)
     } else {
         fs::remove_file(path)
@@ -221,7 +225,7 @@ fn copy_tree(source: &Path, destination: &Path) -> Result<(), AppError> {
     let metadata = fs::symlink_metadata(source)?;
     let file_type = metadata.file_type();
     if file_type.is_symlink() {
-        copy_link(source, destination)?;
+        crate::services::platform::filesystem::copy_link(source, destination)?;
     } else if file_type.is_dir() {
         fs::create_dir(destination)?;
         for entry in fs::read_dir(source)? {
@@ -256,21 +260,6 @@ fn copy_tree(source: &Path, destination: &Path) -> Result<(), AppError> {
         output.sync_all()?;
     }
     Ok(())
-}
-
-#[cfg(unix)]
-fn copy_link(source: &Path, destination: &Path) -> io::Result<()> {
-    std::os::unix::fs::symlink(fs::read_link(source)?, destination)
-}
-
-#[cfg(windows)]
-fn copy_link(source: &Path, destination: &Path) -> io::Result<()> {
-    let target = fs::read_link(source)?;
-    if fs::metadata(source).map(|m| m.is_dir()).unwrap_or(false) {
-        std::os::windows::fs::symlink_dir(target, destination)
-    } else {
-        std::os::windows::fs::symlink_file(target, destination)
-    }
 }
 
 #[cfg(test)]

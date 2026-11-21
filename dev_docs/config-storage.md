@@ -87,7 +87,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `plugins`           | per plugin id: `isEnabled` and the plugin-owned `settings`                                                                                                                                                                                                                                                                                                                                                                                          |
 | `chat`              | `history` (`storage`: `off` or `disk`, `retentionDays`)                                                                                                                                                                                                                                                                                                                                                                                             |
 | `stt`               | `provider`, `correctionMode`, `isVoiceInputHoldEnabled`, `isVoiceCommandsHoldEnabled`, `microphoneId` (device), `listenAppId` (device), `listenAppLabel` (device), `isStylingBarEnabled`, `isStylingBarDirectInsertEnabled`, `providers.deepgram`, `providers.sherpaOnnx`, `providers.geminiLive`                                                                                                                                                   |
-| `dialog`            | `isEnabled` (the Dialog tab and view; off: hidden, a running dialog stops and is saved), `source` (`microphoneAndSystem`, `system`), `translationTargetLanguage` (empty: no translation), `textDisplay` (`translation`, `original`, `both`), `translationProvider` (`default` or a translation provider), `compactGeometry` (device), `recordingsFolder` (device; empty: the Music folder), `isRecordingNoticeAcknowledged` (no setting of its own) |
+| `dialog`            | `isEnabled` (the Dialog tab and view; off: hidden, a running dialog stops and is saved), `source` (`microphoneAndSystem`, `system`), `translationTargetLanguage` (empty: no translation), `textDisplay` (`translation`, `original`, `both`), `translationProvider` (`default` or a translation provider), `compactGeometry` (device), `isRecordingNoticeAcknowledged` (no setting of its own) |
 
 The hotkeys of `hotkeys` are named as the activation modes they open
 (`quickInput`, `selectionActions`, `selectionActionsPage2`..`selectionActionsPage5`,
@@ -344,9 +344,9 @@ in `services/storage/app_paths.rs`; `TYCO_DEV_HOME` isolates development storage
 
 | Root                                                                             | Files                                                                                                                                                     |
 | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| User data (`~/.local/share/com.tyco.app` by default, or a folder the user chose) | `tyco-user.json`; `config.json`; `history/editor/<device id>.jsonl`; `chats/<id>.json`, `images/`; `plugins/<key>.json` and `<key>.previous`; `ai-vault/` |
+| User data (`~/.local/share/com.tyco.app` by default, or a folder the user chose) | `tyco-user.json`; `config.json`; `history/editor/<device id>.jsonl`, `history/recordings/`; `chats/<id>.json`, `images/`; `plugins/<key>.json` and `<key>.previous`; `ai-vault/` |
 | Device (`~/.config/com.tyco.app`; `%LOCALAPPDATA%\com.tyco.app\device`)          | `device.json`, `secrets.json`                                                                                                                             |
-| State (`~/.local/state/com.tyco.app`)                                            | `logs/`; `webview/`; `config.base.json`; `index/` (chat indexes, `orphan-images.json`); `recovery/`                                                       |
+| State (`~/.local/state/com.tyco.app`)                                            | `logs/`; `webview/`; `config.base.json`; `index/` (chat indexes, `orphan-images.json`, `orphan-recordings.json`); `recordings/`; `recovery/`                                                       |
 | Cache (`~/.cache/com.tyco.app`)                                                  | Platform cache directory, created when opened; no application-owned model downloads                                                                       |
 | User-selected paths                                                              | Plugin note files; attached vaults                                                                                                                        |
 
@@ -399,6 +399,20 @@ alone cannot prevent two machines writing the same base revision concurrently.
 Keep synchronizer conflict copies for manual recovery until conflict resolution
 is implemented. See `docs/data-folder.md` for setup and recovery.
 
+Some folders of the user data folder may be links to a folder elsewhere, a
+symbolic link or a Windows junction (Rust counts a junction as a symbolic
+link): `history`, `history/recordings`, `chats`, `chats/images`,
+`chats/attachments`, `ai-vault` and `plugins` (`user_files::is_linkable_dir`),
+besides the data folder and the attached vaults themselves. Paths stay those
+inside the root, as the app writes them; the watcher follows these links and
+no other (profiles, projects and the files inside them are never followed).
+Nothing replaces or removes such a link: `clear_chats` empties a linked
+`images/` or `attachments/` instead of removing it, and a dangling link makes
+`create_dir_all` fail instead of creating a folder in its place. Relocation
+moves a link as a link (`platform::filesystem::copy_link` across disks; on
+Windows a folder link that cannot be a symbolic link without the privilege
+becomes a junction through `mklink /J`) and removes only the link.
+
 The editor history is a journal per device: a device writes
 `history/editor/<device id>.jsonl` only, reads the journals of every device and
 merges them by time. A change to an entry of another device is a record of its
@@ -414,10 +428,25 @@ goes on: `lib/dialog/dialog-history.ts` opens one per dialog session (each
 Start), creates it with the first finished turn and checkpoints the transcript
 in the export format every 15 s while it changed, on Stop, when the window
 hides and on quit (`registerInputFlush`). `EditorHistoryItem::dialog` holds
-`startedAt`, `source` and the optional absolute `recordingPath` of the call
-recording, which lives outside the data folder; a missing file is shown as
-such, and deleting the entry leaves the file. A dialog never collapses with
-another entry of the same text, and a draft never replaces it.
+`startedAt`, `source` and the optional `recordingFile`, the name of the call
+recording in `history/recordings/`. A dialog never collapses with another
+entry of the same text, and a draft never replaces it.
+
+A call recording belongs to the entry that names it (`storage::recordings`).
+Its name, `YYYY-MM-DD HH-MM-SS <6 hex>.opus`, is the only form the backend
+takes from the webview, and the only one it lists, so conflict copies and
+other files stay. While the call runs the file is written in `recordings/` of
+the state folder, so that no sync tool sends a growing file, and it moves
+into the data folder once closed (renamed, or across disks copied and
+removed); a file left there, by a crash or a data folder that was away, moves
+at the next start, before any capture. It is removed with its entry: when the
+undo of a removal expires (`discard_dialog_recording`, which keeps a file an
+entry names again), by `clear`, and by the cleanup of the policy, which reads
+every journal before compacting and removes at once the recordings of the
+entries the limits drop. A file no entry names, e.g. one a sync tool brought
+before its journal, waits seven days, counted in `index/orphan-recordings.json`
+as for chat images (`storage::orphan_files`). The dialog records only while
+the history is kept on disk.
 
 A chat is its file, `chats/<id>.json`. The list is an index of the state folder
 (`index/chats.json`, and `index/ai-vault/<vault id>/<profile>/` for the chats

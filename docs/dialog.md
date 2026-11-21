@@ -83,7 +83,7 @@ you stop, hide the window or quit TyCo, so a crash loses little. Words still
 being recognized are not saved. A conversation in which nothing was
 recognized leaves no entry, unless it was recorded: then the entry is there
 from the start, so the recording can always be found. The entry is kept as long as other history
-entries and is deleted the same way.
+entries and is deleted the same way, together with its recording.
 
 ## Recording the call
 
@@ -91,7 +91,9 @@ The arrow next to **Start** offers **Start recording**: the conversation is
 transcribed as usual and its sound is also saved to a file. **Start** itself
 never records. The first time, TyCo reminds you to tell the other person
 before you record a conversation with them; **Got it** starts the recording,
-**Cancel** starts nothing.
+**Cancel** starts nothing. Recording is offered only while the history is
+saved to disk (**Settings → History**): a recording belongs to its history
+entry.
 
 While recording, the toolbar and the subtitles show a red dot with the time
 recorded. The file is an Opus audio file (`.opus`) that any modern player
@@ -100,21 +102,25 @@ the right one, as heard before the echo of the speakers is muted; without the
 microphone it is the computer sound alone. The file is written as the call
 goes, so after a crash it plays up to the last second or so.
 
-Recordings go to `TyCo` in your Music folder unless **Settings → Dialog →
-Recordings folder** names another one on this computer; changing the folder
-does not move the recordings made before. A file is named by the time it
-started, e.g. `TyCo dialog 2026-11-20 14-03-05.opus`. The history entry of a
-recorded conversation shows the file name and **Show in folder**, or "file
-not found" once the file was moved or deleted. Deleting the history entry
-leaves the file where it is. If the disk falls behind for a moment, the
+Recordings are kept with the history, in `history/recordings` of the TyCo
+data folder; **Settings → Dialog → Call recordings → Open folder** opens it.
+A file is named by the time it started and a short code, e.g.
+`2026-11-20 14-03-05 a1b2c3.opus`; do not rename it, or its history entry
+loses it. The history entry of a recorded conversation shows the file name
+and **Show in folder**, or "file not found" when the file is not there, e.g.
+not synchronized yet. A recording goes with its history entry: when you
+delete the entry (after the few seconds in which **Undo** brings both back),
+clear the history, or when the history settings no longer keep the entry. If
+the disk falls behind for a moment, the
 missed sound is replaced by silence of the same length, so the file keeps
 the time of the call. If the file cannot be written at all (the disk is
 full, the folder is gone), the recording stops, the transcript goes on, and
 the history entry marks the recording as incomplete. A conversation stopped
 before any sound was captured leaves no file.
 
-Recordings are not part of the TyCo data folder and are not synchronized with
-it. Calls started from the command line or D-Bus are never recorded.
+Recordings move and synchronize with the data folder. To keep them on another
+disk, or out of a synchronization, see `docs/data-folder.md`. Calls started
+from the command line or D-Bus are never recorded.
 
 Speech recognition uses the provider of the transcription settings; see
 `dev_docs/architecture.md` for how the sound is captured and recorded.

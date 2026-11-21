@@ -652,6 +652,26 @@ fn clearing_removes_the_chats_their_images_and_the_index() {
     assert!(dirs.chats.join("notes.txt").exists());
 }
 
+#[cfg(unix)]
+#[test]
+fn clearing_keeps_a_linked_images_folder_linked_and_empties_it() {
+    let dir = TestDir::new("chat-clear-linked");
+    let dirs = dirs(&dir);
+    let elsewhere = dir.join("elsewhere");
+    fs::create_dir_all(&elsewhere).unwrap();
+    fs::create_dir_all(&dirs.chats).unwrap();
+    std::os::unix::fs::symlink(&elsewhere, dirs.images()).unwrap();
+    fs::write(elsewhere.join("x.webp"), "x").unwrap();
+
+    clear_chats(&dirs).unwrap();
+
+    assert!(fs::symlink_metadata(dirs.images())
+        .unwrap()
+        .file_type()
+        .is_symlink());
+    assert_eq!(fs::read_dir(&elsewhere).unwrap().count(), 0);
+}
+
 #[test]
 fn renaming_an_unreadable_chat_sets_it_aside() {
     let dir = TestDir::new("chat-rename-broken");

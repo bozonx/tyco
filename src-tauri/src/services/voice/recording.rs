@@ -8,6 +8,9 @@
 //! queued becomes silence of the same length once the queue frees, so the
 //! file keeps the call's timeline.
 //!
+//! The file is written aside, in the state folder, and joins the history
+//! once closed, see `storage::recordings`.
+//!
 //! Granule positions follow RFC 7845: always counted at 48 kHz, whatever the
 //! input rate, starting with the encoder's pre-skip.
 use std::fs::File;
@@ -22,6 +25,7 @@ use ogg::writing::{PacketWriteEndInfo, PacketWriter};
 
 use crate::errors::AppError;
 use crate::locks::MutexExt;
+use crate::services::storage::recordings::{self, NewRecording};
 
 /// What Opus counts its time in, whatever it encodes.
 const GRANULE_RATE_HZ: u32 = 48_000;
@@ -206,7 +210,10 @@ impl<W: Write> OggOpusWriter<W> {
 /// encoder runs on a thread of its own. A failed write ends the recording
 /// only; the capture goes on.
 pub struct RecordingSink {
+    /// Where the file is written.
     path: PathBuf,
+    /// Where it goes once closed.
+    destination: PathBuf,
     sender: Option<SyncSender<Vec<i16>>>,
     /// Interleaved samples that did not fit the queue, owed as silence.
     owed_samples: usize,
@@ -219,7 +226,16 @@ pub struct RecordingSink {
 }
 
 impl RecordingSink {
-    pub fn start(path: PathBuf, sample_rate_hz: u32, channels: u16) -> Result<Self, AppError> {
+    pub fn start(
+        recording: NewRecording,
+        sample_rate_hz: u32,
+        channels: u16,
+    ) -> Result<Self, AppError> {
+        let NewRecording {
+            active_path: path,
+            shared_path: destination,
+            ..
+        } = recording;
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).map_err(|error| {
                 AppError::Failed(format!("Cannot create the recordings folder: {error}"))
@@ -254,6 +270,7 @@ impl RecordingSink {
         log::info!("Recording the dialog to {}", path.display());
         Ok(Self {
             path: file_path,
+            destination,
             sender: Some(sender),
             owed_samples: 0,
             max_owed_samples: sample_rate_hz as usize * usize::from(channels) * MAX_GAP_SECONDS,
@@ -329,13 +346,19 @@ impl RecordingSink {
     }
 
     /// A recording that got no audio, e.g. a dialog stopped while starting,
-    /// leaves no file.
+    /// leaves no file; any other joins the history, also one that failed
+    /// midway: it holds the beginning of the call.
     fn close(&mut self) {
         self.sender = None;
         if let Some(thread) = self.thread.take() {
             let _ = thread.join();
             if !self.has_audio && self.owed_samples == 0 {
                 let _ = std::fs::remove_file(&self.path);
+            } else if let Err(error) = recordings::publish(&self.path, &self.destination) {
+                log::warn!(
+                    "The call recording stays in {} until the next start: {error}",
+                    self.path.display()
+                );
             }
         }
     }
@@ -464,15 +487,27 @@ mod tests {
                 .unwrap()
                 .as_nanos()
         ));
-        let path = folder.join("nested").join("call.opus");
-        let mut sink = RecordingSink::start(path.clone(), 16_000, 1).unwrap();
+        let recording = target(&folder);
+        let mut sink = RecordingSink::start(recording.clone(), 16_000, 1).unwrap();
         sink.push(&vec![100; 16_000]);
         assert!(sink.take_failure().is_none());
         sink.finish();
-        let bytes = std::fs::read(&path).unwrap();
+        assert!(!recording.active_path.exists());
+        let bytes = std::fs::read(&recording.shared_path).unwrap();
         assert!(pages(&bytes).len() >= 3);
-        assert!(RecordingSink::start(path, 16_000, 1).is_err());
+        std::fs::write(&recording.active_path, b"").unwrap();
+        assert!(RecordingSink::start(recording, 16_000, 1).is_err());
         let _ = std::fs::remove_dir_all(folder);
+    }
+
+    /// A recording written in `folder/active` that goes to `folder/shared`.
+    fn target(folder: &std::path::Path) -> NewRecording {
+        let name = "2026-11-21 10-00-00 a1b2c3.opus".to_owned();
+        NewRecording {
+            active_path: folder.join("active").join(&name),
+            shared_path: folder.join("shared").join(&name),
+            name,
+        }
     }
 
     fn temp_folder(name: &str) -> PathBuf {
@@ -489,18 +524,19 @@ mod tests {
     #[test]
     fn a_recording_without_audio_leaves_no_file() {
         let folder = temp_folder("empty");
-        let path = folder.join("call.opus");
-        let sink = RecordingSink::start(path.clone(), 16_000, 1).unwrap();
-        assert!(path.exists());
+        let recording = target(&folder);
+        let sink = RecordingSink::start(recording.clone(), 16_000, 1).unwrap();
+        assert!(recording.active_path.exists());
         sink.finish();
-        assert!(!path.exists());
+        assert!(!recording.active_path.exists());
+        assert!(!recording.shared_path.exists());
         let _ = std::fs::remove_dir_all(folder);
     }
 
     #[test]
     fn a_stalled_queue_owes_silence_instead_of_failing() {
         let folder = temp_folder("stall");
-        let mut sink = RecordingSink::start(folder.join("call.opus"), 16_000, 1).unwrap();
+        let mut sink = RecordingSink::start(target(&folder), 16_000, 1).unwrap();
         // the encoder is never this slow; a sender with no room stands for it
         let (sender, receiver) = mpsc::sync_channel::<Vec<i16>>(1);
         let real = sink.sender.replace(sender);
