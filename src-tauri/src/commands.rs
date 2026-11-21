@@ -20,6 +20,7 @@ pub mod selection;
 pub mod settings;
 pub mod storage;
 pub mod system;
+pub mod visible_work;
 pub mod voice;
 pub mod window;
 

@@ -113,7 +113,7 @@ describe('registered-operation-adapter', () => {
       outputAction: 'none',
       isOutputLogged: true,
       isAvailableExternally: false,
-      externalTimeoutSec: 60,
+      runTimeoutSec: 60,
       isEnabled: true,
     }
 

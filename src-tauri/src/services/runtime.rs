@@ -299,7 +299,7 @@ fn activate_on_main_thread(
         snapshot.activation.custom_action_index = activation.custom_action_index;
         snapshot.activation.history_origin = activation.history_origin;
         snapshot.activation.settings_tab = activation.settings_tab;
-        snapshot.activation.access_request = activation.access_request;
+        snapshot.activation.command_run = activation.command_run;
         snapshot.window.is_window_shown = true;
         snapshot.window.window_profile = activation.mode.profile();
     });
@@ -345,7 +345,7 @@ fn window_label_for_mode(mode: ActivationMode) -> &'static str {
         | ActivationMode::ChatPrompts
         | ActivationMode::Favorites
         | ActivationMode::CustomAction
-        | ActivationMode::ExternalAccess => QUICK_WINDOW_LABEL,
+        | ActivationMode::CommandRun => QUICK_WINDOW_LABEL,
         ActivationMode::Editor
         | ActivationMode::Chat
         | ActivationMode::History
@@ -378,7 +378,7 @@ mod tests {
             ActivationMode::VoiceQuickAiRequest,
             ActivationMode::ChatPrompts,
             ActivationMode::Favorites,
-            ActivationMode::ExternalAccess,
+            ActivationMode::CommandRun,
         ] {
             assert_eq!(window_label_for_mode(mode), QUICK_WINDOW_LABEL);
         }

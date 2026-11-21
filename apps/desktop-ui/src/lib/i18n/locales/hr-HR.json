@@ -203,6 +203,22 @@
     },
     "replyBlocks": { "toolLabel": "Blokovi odgovora" }
   },
+  "commandRun": {
+    "cancelled": "Naredba je otkazana",
+    "cancelledTitle": "„{name}” je otkazana",
+    "done": "„{name}” je gotova",
+    "failed": "Naredba „{name}” nije uspjela",
+    "failedUnknown": "Nepoznata pogreška",
+    "inputPlaceholder": "Tekst za naredbu",
+    "missing": "Naredba nije u biblioteci",
+    "noOutput": "Naredba nije vratila tekst",
+    "rejected": "„{name}” nije pokrenuta: izvodi se „{running}”",
+    "run": "Pokreni",
+    "running": "Pokreće se „{name}”…",
+    "startFailed": "Naredbu nije moguće pokrenuti",
+    "timedOut": "Nije završeno za {seconds} s i zaustavljeno je",
+    "unavailable": "Naredba se više ne može pokrenuti: promijenjena je, uklonjena ili nije dopuštena"
+  },
   "commands": {
     "advanced": "Napredno",
     "afterRunCopy": "U međuspremnik",
@@ -253,11 +269,11 @@
     "errorUnknownType": "Nepoznata vrsta naredbe.",
     "external": "Dostupno izvana",
     "externalDescription": "Što lokalne aplikacije vaše sesije mogu raditi putem tyco-ctl i D-Busa. Pristup svakoj naredbi uključuje se u njezinim naprednim postavkama.",
-    "externalInfo": "Lokalne aplikacije i skripte mogu pokrenuti dopuštenu naredbu s tyco-ctl run <ID> ili tyco-ctl run --name <naziv>. Rezultat se vraća pozivatelju. --interactive dopušta sučelje za unos teksta; --selection --replace izričito traži zamjenu odabira.",
+    "externalInfo": "Lokalne aplikacije i skripte mogu pokrenuti dopuštenu naredbu s tyco-ctl run <ID> ili tyco-ctl run --name <naziv>. Naredba se izvodi u preklopu Tyca, jedna po jedna, a rezultat se vraća pozivatelju. Bez ulaza preklop traži tekst; --selection --replace izričito traži zamjenu odabira.",
     "externalSelection": "Čitanje i zamjena odabranog teksta",
     "externalSelectionInfo": "Aplikacija može dohvatiti tekst odabran u aktivnom prozoru i zamijeniti ga rezultatom naredbe (tyco-ctl run <ID> --selection --replace). Kad je ovo isključeno, Tyco traži dopuštenje pri svakom takvom pozivu.",
-    "externalTimeoutInfo": "Koliko dugo vanjski poziv smije raditi u pozadini, računajući od pokretanja naredbe; nakon toga se zaustavlja i prijavljuje kao isteklo vrijeme. Zadano {seconds}, najviše {max}. Izvođenja u prozoru nisu ograničena: vidite ih i možete ih otkazati.",
-    "externalTimeoutLabel": "Istek vremena u pozadini, sekunde",
+    "runTimeoutInfo": "Koliko smije trajati izvođenje naredbe od njezina pokretanja; nakon toga se zaustavlja i prijavljuje kao isteklo. Zadano {seconds}, najviše {max}. Svako izvođenje prikazuje se u preklopu naredbe, gdje ga možete ranije otkazati.",
+    "runTimeoutLabel": "Ograničenje izvođenja, sekunde",
     "externalTitle": "Vanjski pristup",
     "fieldOff": "Ne",
     "fieldOn": "Da",
@@ -452,13 +468,6 @@
     "settingsHint": "Da biste to trajno dopustili ili ponovno zabranili, idite na Postavke → Naredbe → Vanjski pristup.",
     "title": "Pristup odabranom tekstu",
     "unknownCaller": "Tyco ne može utvrditi koja aplikacija traži: to može učiniti bilo koji program vaše sesije."
-  },
-  "externalCommand": {
-    "failed": "Naredba „{name}” nije uspjela",
-    "missing": "Naredba nije u biblioteci",
-    "running": "Pokreće se „{name}”…",
-    "timedOut": "Nije završeno za {seconds} s i zaustavljeno je",
-    "unknown": "Nepoznata pogreška"
   },
   "history": {
     "chatsDisabled": "Povijest se ne sprema na disk",

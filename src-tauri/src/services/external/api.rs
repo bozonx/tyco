@@ -3,7 +3,10 @@
 mod job_execution;
 mod validation;
 
-pub use job_execution::{claim, complete, deny_selection, resume, spawn_reaper, JobCompletion};
+pub use job_execution::{
+    abandon_active, claim, complete, deny_selection, spawn_reaper, start_internal,
+    CommandRunPayload, JobCompletion,
+};
 
 use self::job_execution::{cancel, start};
 use self::validation::{describe, ensure_selection_access_allowed, is_selection_access_allowed};
@@ -15,7 +18,7 @@ use tyco_activation_protocol::{ErrorCode, Request, Response, API_VERSION};
 use crate::services::activation::{Activation, ActivationSource};
 use crate::services::external::command_library;
 use crate::services::external::jobs::ExternalJobs;
-use crate::services::{runtime, selection_replace};
+use crate::services::{runtime, selection_replace, visible_work};
 use crate::state::AppState;
 
 /// A failed request answers with a `Response` of its own; boxed, as it is large.
@@ -38,6 +41,7 @@ fn open(
     if selection {
         ensure_selection_access_allowed(&config)?;
     }
+    visible_work::end(app);
     let mut activation = Activation::from_mode(mode, source)
         .map_err(|error| Response::coded_error(ErrorCode::InvalidInput, error.to_string()))?;
     activation.selected_text = if selection {
@@ -76,7 +80,8 @@ fn replace_selection(app: &AppHandle, action: &str) -> ApiResult<()> {
     })
 }
 
-/// Whether the window may run external jobs: only the quick window does.
+/// Whether the window may run jobs: only the quick window, which shows the
+/// command overlay, does.
 pub fn is_job_window(window_label: &str) -> bool {
     window_label == runtime::QUICK_WINDOW_LABEL
 }
@@ -91,10 +96,29 @@ fn ensure_job_window(window_label: &str, action: &str) -> Result<(), crate::erro
     }
 }
 
-/// Hands the job over to the window; `false` when it is not the job window
+/// Hands the job over to the window; `None` when it is not the job window
 /// or the job is gone, taken or over.
-pub fn claim_for_window(app: &AppHandle, window_label: &str, id: &str) -> bool {
-    is_job_window(window_label) && claim(app, id)
+pub fn claim_for_window(
+    app: &AppHandle,
+    window_label: &str,
+    id: &str,
+) -> Option<CommandRunPayload> {
+    if is_job_window(window_label) {
+        claim(app, id)
+    } else {
+        None
+    }
+}
+
+/// Cancels the run of the window, as Esc in its overlay does.
+pub fn cancel_for_window(
+    app: &AppHandle,
+    window_label: &str,
+    id: &str,
+) -> Result<(), crate::errors::AppError> {
+    ensure_job_window(window_label, "cancels command runs")?;
+    cancel(app, id, ErrorCode::Cancelled);
+    Ok(())
 }
 
 /// Finishes the job the window ran and returns it as it ended up.

@@ -3,7 +3,6 @@
 //! listens with.
 
 use serde::Serialize;
-use serde_json::{Map, Value};
 use tauri::{Emitter, EventTarget, Runtime};
 use ts_rs::TS;
 
@@ -102,10 +101,14 @@ desktop_events! {
     VoiceAudioLevel = "app://voice-audio-level" => VoiceAudioLevelPayload;
     SelectionRun = "app://selection-run" => SelectionRunEvent;
     SelectionCancel = "app://selection-cancel" => SelectionCancelEvent;
-    /// An external call runs a command in the background.
-    CommandRun = "app://command-run" => CommandRunEvent;
-    /// Carries the id of the external job to stop.
+    /// A run was refused while another command runs; to the quick window,
+    /// which tells it in the running overlay.
+    CommandRunRejected = "app://command-run-rejected" => CommandRunRejectedEvent;
+    /// Carries the id of the job to stop.
     ExternalJobCancel = "app://external-job-cancel" => String;
+    /// Asks every window to end what it shows gracefully before an external
+    /// request; carries the request id to answer with `visible_work_ended`.
+    EndVisibleWork = "app://end-visible-work" => u64;
     /// What the subtitles of the dialog show; to the subtitles window.
     SubtitlesChanged = "app://subtitles-changed" =>
         crate::services::runtime::subtitles_window::SubtitlesView;
@@ -148,21 +151,9 @@ pub struct SelectionCancelEvent {
 
 #[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
-pub struct CommandRunEvent {
-    pub command_id: String,
-    pub job_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub text: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[ts(optional, type = "Record<string, unknown>")]
-    pub input: Option<Map<String, Value>>,
-    /// The selection the call captured, for `{{SELECTION}}`; it is the text
-    /// too, see `RunRequest::selection`.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub selection_text: Option<String>,
-    /// The quick window does not receive config changes made elsewhere.
-    #[ts(type = "UserConfig")]
-    pub user_config: std::sync::Arc<Value>,
+pub struct CommandRunRejectedEvent {
+    /// The command that was not started.
+    pub command_name: String,
+    /// The command that runs.
+    pub running_command_name: String,
 }

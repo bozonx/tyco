@@ -178,23 +178,23 @@
           class="command-field command-place-detail"
           vertical
           density="compact"
-          :label="t('commands.externalTimeoutLabel')"
+          :label="t('commands.runTimeoutLabel')"
         >
           <FieldNumber
             :min="1"
-            :max="EXTERNAL_TIMEOUT_MAX_SEC"
+            :max="RUN_TIMEOUT_MAX_SEC"
             :step="1"
-            :model-value="command.externalTimeoutSec"
-            :placeholder="String(EXTERNAL_TIMEOUT_DEFAULT_SEC)"
-            @update:model-value="updateExternalTimeout"
+            :model-value="command.runTimeoutSec"
+            :placeholder="String(RUN_TIMEOUT_DEFAULT_SEC)"
+            @update:model-value="updateRunTimeout"
           />
 
           <template #info
             ><InfoTooltip
               :text="
-                t('commands.externalTimeoutInfo', {
-                  seconds: EXTERNAL_TIMEOUT_DEFAULT_SEC,
-                  max: EXTERNAL_TIMEOUT_MAX_SEC,
+                t('commands.runTimeoutInfo', {
+                  seconds: RUN_TIMEOUT_DEFAULT_SEC,
+                  max: RUN_TIMEOUT_MAX_SEC,
                 })
               "
           /></template>
@@ -299,8 +299,8 @@ import {
   type CommandConfig,
   type CommandOutputAction,
   type CommandPlatform,
-  EXTERNAL_TIMEOUT_DEFAULT_SEC,
-  EXTERNAL_TIMEOUT_MAX_SEC,
+  RUN_TIMEOUT_DEFAULT_SEC,
+  RUN_TIMEOUT_MAX_SEC,
   type UserConfig,
 } from '@tyco/shared'
 
@@ -368,7 +368,7 @@ const {
   update,
   updateDescription,
   updateOperationConfig,
-  updateExternalTimeout,
+  updateRunTimeout,
   updateOutputAction,
 } = createCommandEditorModel({
   getCommand: () => props.command,

@@ -9,6 +9,8 @@
     "core:event:allow-unlisten",
     "allow-acknowledge-settings-shutdown",
     "allow-activate-mode",
+    "allow-start-command-run",
+    "allow-visible-work-ended",
     "allow-cancel-script-action",
     "allow-clear-chats",
     "allow-clear-editor-history",

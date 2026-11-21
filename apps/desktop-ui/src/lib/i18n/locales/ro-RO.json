@@ -203,6 +203,22 @@
     },
     "replyBlocks": { "toolLabel": "Blocuri de răspuns" }
   },
+  "commandRun": {
+    "cancelled": "Comanda a fost anulată",
+    "cancelledTitle": "„{name}” a fost anulată",
+    "done": "„{name}” s-a încheiat",
+    "failed": "Comanda „{name}” a eșuat",
+    "failedUnknown": "Eroare necunoscută",
+    "inputPlaceholder": "Text pentru comandă",
+    "missing": "Comanda nu se află în bibliotecă",
+    "noOutput": "Comanda nu a returnat text",
+    "rejected": "„{name}” nu a pornit: rulează „{running}”",
+    "run": "Rulează",
+    "running": "Se rulează „{name}”…",
+    "startFailed": "Comanda nu a putut fi pornită",
+    "timedOut": "Nu s-a terminat în {seconds} s și a fost oprită",
+    "unavailable": "Comanda nu mai poate rula: a fost modificată, eliminată sau nu este permisă"
+  },
   "commands": {
     "advanced": "Avansat",
     "afterRunCopy": "În clipboard",
@@ -253,11 +269,11 @@
     "errorUnknownType": "Tip de comandă necunoscut.",
     "external": "Disponibilă din exterior",
     "externalDescription": "Ce pot face aplicațiile locale din sesiunea dvs. prin tyco-ctl și D-Bus. Accesul la fiecare comandă se activează în setările ei avansate.",
-    "externalInfo": "Aplicațiile și scripturile locale pot rula o comandă permisă cu tyco-ctl run <ID> sau tyco-ctl run --name <nume>. Rezultatul este returnat apelantului. --interactive permite interfața de introducere a textului; --selection --replace cere explicit înlocuirea selecției.",
+    "externalInfo": "Aplicațiile și scripturile locale pot rula o comandă permisă cu tyco-ctl run <ID> sau tyco-ctl run --name <nume>. Comanda rulează în suprapunerea Tyco, câte una, iar rezultatul este returnat apelantului. Fără intrare, suprapunerea cere textul; --selection --replace cere explicit înlocuirea selecției.",
     "externalSelection": "Citirea și înlocuirea textului selectat",
     "externalSelectionInfo": "O aplicație poate obține textul selectat în fereastra activă și îl poate înlocui cu rezultatul unei comenzi (tyco-ctl run <ID> --selection --replace). Când opțiunea este dezactivată, Tyco cere permisiunea la fiecare astfel de apel.",
-    "externalTimeoutInfo": "Cât timp poate rula în fundal un apel extern, socotind de la pornirea comenzii; apoi este oprit și raportat ca expirat. Implicit {seconds}, cel mult {max}. Rulările într-o fereastră nu sunt limitate: le vedeți și le puteți anula.",
-    "externalTimeoutLabel": "Timp de expirare în fundal, secunde",
+    "runTimeoutInfo": "Cât poate dura o rulare a comenzii de la pornire; apoi este oprită și raportată ca expirată. {seconds} implicit, cel mult {max}. Fiecare rulare apare în suprapunerea comenzii, unde o puteți anula mai devreme.",
+    "runTimeoutLabel": "Limită de rulare, secunde",
     "externalTitle": "Acces extern",
     "fieldOff": "Nu",
     "fieldOn": "Da",
@@ -452,13 +468,6 @@
     "settingsHint": "Pentru a permite definitiv sau a interzice din nou, accesați Setări → Comenzi → Acces extern.",
     "title": "Acces la textul selectat",
     "unknownCaller": "Tyco nu poate afla ce aplicație cere: orice program din sesiunea dvs. poate face acest lucru."
-  },
-  "externalCommand": {
-    "failed": "Comanda „{name}” a eșuat",
-    "missing": "Comanda nu se află în bibliotecă",
-    "running": "Se rulează „{name}”…",
-    "timedOut": "Nu s-a terminat în {seconds} s și a fost oprită",
-    "unknown": "Eroare necunoscută"
   },
   "history": {
     "chatsDisabled": "Istoricul nu este salvat pe disc",

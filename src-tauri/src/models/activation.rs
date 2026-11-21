@@ -27,13 +27,13 @@ pub enum ActivationMode {
     History,
     Config,
     CustomAction,
-    /// Asks the user whether an external call may use the selection; Tyco
-    /// opens it itself, so no caller can name it.
-    ExternalAccess,
+    /// Shows the run of a library command, see `services::external`; Tyco
+    /// opens it itself for every run, so no caller can name it.
+    CommandRun,
 }
 
 impl ActivationMode {
-    /// The modes a caller may name: every one but `ExternalAccess`.
+    /// The modes a caller may name: every one but `CommandRun`.
     pub const PUBLIC_MODES: [Self; 20] = [
         Self::Editor,
         Self::QuickInput,
@@ -88,7 +88,7 @@ impl ActivationMode {
             Self::History => "history",
             Self::Config => "config",
             Self::CustomAction => "customAction",
-            Self::ExternalAccess => "externalAccess",
+            Self::CommandRun => "commandRun",
         }
     }
     pub fn is_screenshot(self) -> bool {
@@ -118,13 +118,20 @@ pub enum WindowProfile {
     Sheet,
 }
 
-/// What the prompt shows, see `DesktopSnapshot::access_request`.
+/// The run the command overlay shows, see `ActivationSnapshot::command_run`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
-pub struct AccessRequest {
+pub struct CommandRunRequest {
     pub job_id: String,
+    pub command_id: String,
     pub command_name: String,
+    /// An external call asks for the selection while that is not allowed:
+    /// the overlay asks the user first.
+    #[serde(rename = "needsAccess")]
+    pub should_ask_access: bool,
     /// The output is to replace the selection, not only to be returned.
     #[serde(rename = "replace")]
     pub should_replace: bool,
+    /// Started by a caller outside Tyco, not by a hotkey or a menu.
+    pub is_external: bool,
 }

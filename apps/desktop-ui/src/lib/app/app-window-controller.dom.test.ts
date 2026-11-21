@@ -73,8 +73,9 @@ function fixture(overrides: Partial<AppWindowControllerDependencies> = {}) {
     },
     runSelection: vi.fn(async () => {}),
     cancelSelection: vi.fn(),
-    runCommand: vi.fn(async () => {}),
+    rejectCommandRun: vi.fn(),
     cancelCommand: vi.fn(),
+    endVisibleWork: vi.fn(async () => {}),
     closeModals: vi.fn(),
     goToChat: vi.fn(async () => {}),
     startChat: vi.fn(async () => {}),
@@ -258,12 +259,20 @@ describe('application window events', () => {
     const main = fixture()
     const quick = fixture({ isQuickWindow: true })
     await Promise.all([main.controller.start(), quick.controller.start()])
-    expect(main.handlers.has(DESKTOP_EVENTS.COMMAND_RUN)).toBe(false)
+    expect(main.handlers.has(DESKTOP_EVENTS.COMMAND_RUN_REJECTED)).toBe(false)
     expect(main.handlers.has(DESKTOP_EVENTS.SELECTION_RUN)).toBe(false)
     expect(quick.handlers.has(DESKTOP_EVENTS.OPEN_MAIN_CHAT)).toBe(false)
     expect(quick.handlers.has(DESKTOP_EVENTS.OPEN_MAIN_EDITOR)).toBe(false)
     await quick.deliver(DESKTOP_EVENTS.EXTERNAL_JOB_CANCEL, 'job')
     expect(quick.deps.cancelCommand).toHaveBeenCalledWith('job')
+    const rejected = { commandName: 'Fan', runningCommandName: 'Lamp' }
+    await quick.deliver(DESKTOP_EVENTS.COMMAND_RUN_REJECTED, rejected)
+    expect(quick.deps.rejectCommandRun).toHaveBeenCalledWith(rejected)
+    // both windows end what they show before an external request
+    await main.deliver(DESKTOP_EVENTS.END_VISIBLE_WORK, 4)
+    await quick.deliver(DESKTOP_EVENTS.END_VISIBLE_WORK, 5)
+    expect(main.deps.endVisibleWork).toHaveBeenCalledWith(4)
+    expect(quick.deps.endVisibleWork).toHaveBeenCalledWith(5)
     await quick.deliver(DESKTOP_EVENTS.SELECTION_CANCEL, { runId: 3 })
     expect(quick.deps.cancelSelection).toHaveBeenCalledWith(3)
     expect(main.deps.startMetrics).not.toHaveBeenCalled()

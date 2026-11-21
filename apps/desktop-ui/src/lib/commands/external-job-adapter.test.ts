@@ -1,20 +1,23 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { DEFAULT_USER_CONFIG } from '@tyco/shared'
+
 import type { DesktopCall } from '../ipc/ipc-model'
 import { createExternalJobAdapter } from './external-job-adapter'
 
 describe('external job adapter', () => {
   it('claims only confirmed jobs and throws on a failed call', async () => {
+    const payload = { commandId: 'lamp', userConfig: DEFAULT_USER_CONFIG }
     const call = vi
       .fn<DesktopCall>()
       .mockResolvedValueOnce({ success: false, error: 'Unavailable' })
-      .mockResolvedValueOnce({ success: true, result: false })
-      .mockResolvedValueOnce({ success: true, result: true })
+      .mockResolvedValueOnce({ success: true, result: null })
+      .mockResolvedValueOnce({ success: true, result: payload })
     const adapter = createExternalJobAdapter({ call: call as DesktopCall })
     // a broken call is not mistaken for a job another window has taken
     await expect(adapter.claimJob('job')).rejects.toThrow('Unavailable')
-    expect(await adapter.claimJob('job')).toBe(false)
-    expect(await adapter.claimJob('job')).toBe(true)
+    expect(await adapter.claimJob('job')).toBeNull()
+    expect(await adapter.claimJob('job')).toBe(payload)
     expect(call).toHaveBeenCalledWith('claim_external_job', { id: 'job' })
   })
 

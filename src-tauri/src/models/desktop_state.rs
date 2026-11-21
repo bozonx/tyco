@@ -1,4 +1,4 @@
-use super::{AccessRequest, ActivationMode, SessionState, WindowProfile};
+use super::{ActivationMode, CommandRunRequest, SessionState, WindowProfile};
 use serde::Serialize;
 use serde_json::Value;
 /// Wire state is grouped by domain; all domains share a coherent revision.
@@ -37,7 +37,8 @@ pub struct ActivationSnapshot {
     pub history_origin: Option<super::EditorHistoryOrigin>,
     /// The tab the settings open on, e.g. from a menu that has nothing to show.
     pub settings_tab: Option<String>,
-    pub access_request: Option<AccessRequest>,
+    /// The run the command overlay shows, for `commandRun`.
+    pub command_run: Option<CommandRunRequest>,
 }
 #[derive(Debug, Clone, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]

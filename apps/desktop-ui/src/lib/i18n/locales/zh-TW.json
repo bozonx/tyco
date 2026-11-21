@@ -203,6 +203,22 @@
     },
     "replyBlocks": { "toolLabel": "回覆區塊" }
   },
+  "commandRun": {
+    "cancelled": "命令已取消",
+    "cancelledTitle": "「{name}」已取消",
+    "done": "「{name}」已完成",
+    "failed": "命令「{name}」執行失敗",
+    "failedUnknown": "未知的錯誤",
+    "inputPlaceholder": "命令的文字",
+    "missing": "命令庫中沒有該命令",
+    "noOutput": "命令未傳回文字",
+    "rejected": "「{name}」未啟動：「{running}」正在執行",
+    "run": "執行",
+    "running": "正在執行「{name}」…",
+    "startFailed": "無法啟動命令",
+    "timedOut": "未在 {seconds} 秒內完成，已停止",
+    "unavailable": "命令已無法執行：它已被變更、刪除或不被允許"
+  },
   "commands": {
     "advanced": "進階",
     "afterRunCopy": "複製到剪貼簿",
@@ -253,11 +269,11 @@
     "errorUnknownType": "未知的命令類型。",
     "external": "允許外部存取",
     "externalDescription": "您工作階段中的本機應用程式可透過 tyco-ctl 與 D-Bus 執行的操作。每個命令的存取權限均在其進階設定中啟用。",
-    "externalInfo": "本機應用程式與指令碼可使用 tyco-ctl run <ID> 或 tyco-ctl run --name <name> 執行獲允許的命令。結果將傳回給呼叫方。--interactive 允許文字輸入介面；--selection --replace 則明確請求取代選取內容。",
+    "externalInfo": "本機應用程式和指令碼可以透過 tyco-ctl run <ID> 或 tyco-ctl run --name <名稱> 執行允許的命令。命令在 Tyco 浮層中逐一執行，結果傳回給呼叫端。沒有輸入時，浮層會詢問文字；--selection --replace 明確要求取代選取內容。",
     "externalSelection": "讀取並取代選取的文字",
     "externalSelectionInfo": "應用程式可取得使用中視窗內選取的文字，並以命令的結果取代之 (tyco-ctl run <ID> --selection --replace)。關閉此選項時，Tyco 會在每次此類呼叫時請求權限。",
-    "externalTimeoutInfo": "外部呼叫在背景可執行的時間，從指令啟動時開始計算；逾時後會被停止並回報為逾時。預設 {seconds}，最多 {max}。在視窗中執行沒有時限：您可以看到執行過程並隨時取消。",
-    "externalTimeoutLabel": "背景執行逾時（秒）",
+    "runTimeoutInfo": "命令一次執行從開始起可持續的時間；逾時後將被停止並回報為逾時。預設 {seconds}，最多 {max}。每次執行都會顯示在命令浮層中，你可以在那裡提前取消。",
+    "runTimeoutLabel": "執行時限（秒）",
     "externalTitle": "外部存取",
     "fieldOff": "否",
     "fieldOn": "是",
@@ -452,13 +468,6 @@
     "settingsHint": "若要永久允許或再次停用，請前往「設定」→「命令」→「外部存取」。",
     "title": "存取選取的文字",
     "unknownCaller": "Tyco 無法判斷是哪個應用程式提出請求：您登入工作階段中的任何程式都可以進行此操作。"
-  },
-  "externalCommand": {
-    "failed": "命令「{name}」執行失敗",
-    "missing": "命令庫中沒有該命令",
-    "running": "正在執行「{name}」…",
-    "timedOut": "未在 {seconds} 秒內完成，已停止",
-    "unknown": "未知的錯誤"
   },
   "history": {
     "chatsDisabled": "歷史記錄未儲存至磁碟",

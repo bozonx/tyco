@@ -7,11 +7,11 @@ import {
   createActionMenuModel,
 } from '../lib/action-menu/action-menu-model'
 import { isMainActionVisible } from '../lib/action-menu/main-actions'
-import { resultOrThrow } from '../lib/ipc/ipc-model'
 import { clientLogger } from '../lib/logger'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useCorrectionWorkflowStore } from './correction-workflow'
 import { useHistoryStore } from './history'
+import { useCommandRunStore } from './command-run'
 import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
 import { MenuModals, useMenuModalsStore } from './menu-modals'
@@ -63,14 +63,10 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     saveOutput: async (text: string) => {
       await historyStore.saveOutput(text)
     },
-    logRun: async (record) => {
-      resultOrThrow(await useIpcStore().call('log_command_run', { record }))
-    },
     reportError: (error) =>
-      clientLogger.error('Could not log command run', error, 'action-menu'),
-    setPendingModal: (params, owner) =>
-      menuModalsStore.setPendingModal(params, owner),
-    clearPendingModal: (owner) => menuModalsStore.clearPendingModal(owner),
+      clientLogger.error('Action menu failed', error, 'action-menu'),
+    startCommandRun: (commandId, text) =>
+      useCommandRunStore().start(commandId, text),
     openTransformationModal: (text: string, transformationId?: string) => {
       menuModalsStore.nextModal(MenuModals.TRANSFORMATION, {
         text,

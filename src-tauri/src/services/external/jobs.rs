@@ -1,4 +1,5 @@
-//! Bounded, in-memory lifecycle of external command invocations.
+//! Bounded, in-memory lifecycle of command runs. One run is active at a
+//! time, whoever started it: an external call, a hotkey or the action menu.
 use crate::locks::MutexExt;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -8,7 +9,6 @@ use std::time::{Duration, Instant};
 use tyco_activation_protocol::{ErrorCode, Job, JobState, RunRequest};
 
 const MAX_JOBS: usize = 128;
-const MAX_ACTIVE_JOBS: usize = 32;
 /// How long a job may wait before it starts: for the user to answer the
 /// access prompt or to type the text in the command overlay.
 const START_TIMEOUT: Duration = Duration::from_secs(300);
@@ -18,6 +18,11 @@ const REPLACEMENT_TIMEOUT: Duration = Duration::from_secs(60);
 
 struct ExternalJobEntry {
     job: Job,
+    /// The name the user gave the command, for the overlay and its toasts.
+    command_name: String,
+    /// Started inside Tyco (a hotkey, the action menu), not by a caller:
+    /// the command needs no external grant.
+    is_internal: bool,
     request: RunRequest,
     created_at: Instant,
     selection_run_id: Option<u64>,
@@ -33,6 +38,34 @@ struct ExternalJobEntry {
     pending_since: Option<Instant>,
 }
 
+/// Why no job was created.
+#[derive(Debug, PartialEq, Eq)]
+pub enum CreateJobError {
+    /// Another command runs; carries its name.
+    Busy { running_command_name: String },
+    /// Every retained job is still running.
+    Full,
+}
+
+impl CreateJobError {
+    pub fn message(&self) -> String {
+        match self {
+            Self::Busy {
+                running_command_name,
+            } => format!("Another command is running: {running_command_name}"),
+            Self::Full => "Too many jobs".into(),
+        }
+    }
+}
+
+/// What a new job is created for.
+pub struct NewJob {
+    pub command_id: String,
+    pub command_name: String,
+    pub request: RunRequest,
+    pub is_internal: bool,
+}
+
 #[derive(Default)]
 pub struct ExternalJobs {
     next_job_sequence: AtomicU64,
@@ -44,30 +77,21 @@ impl ExternalJobs {
         self.entries.locked()
     }
 
-    pub fn create(
-        &self,
-        command_id: String,
-        request: RunRequest,
-        selection_run_id: Option<u64>,
-    ) -> Result<Job, &'static str> {
-        self.create_at(command_id, request, selection_run_id, Instant::now())
+    /// Reserves the one run slot: fails with `Busy` while another job is not
+    /// over, a pending selection replacement included.
+    pub fn create(&self, new_job: NewJob) -> Result<Job, CreateJobError> {
+        self.create_at(new_job, Instant::now())
     }
 
-    fn create_at(
-        &self,
-        command_id: String,
-        request: RunRequest,
-        selection_run_id: Option<u64>,
-        now: Instant,
-    ) -> Result<Job, &'static str> {
+    fn create_at(&self, new_job: NewJob, now: Instant) -> Result<Job, CreateJobError> {
         let mut entries = self.lock_entries();
-        if entries
+        if let Some(running) = entries
             .values()
-            .filter(|entry| !entry.job.state.is_terminal())
-            .count()
-            >= MAX_ACTIVE_JOBS
+            .find(|entry| !entry.job.state.is_terminal())
         {
-            return Err("Too many active jobs");
+            return Err(CreateJobError::Busy {
+                running_command_name: running.command_name.clone(),
+            });
         }
         while entries.len() >= MAX_JOBS {
             let oldest = entries
@@ -78,7 +102,7 @@ impl ExternalJobs {
             if let Some(id) = oldest {
                 entries.remove(&id);
             } else {
-                return Err("Too many jobs");
+                return Err(CreateJobError::Full);
             }
         }
         // not guessable: another local client must not read or cancel the job
@@ -90,7 +114,7 @@ impl ExternalJobs {
         );
         let job = Job {
             id: id.clone(),
-            command_id,
+            command_id: new_job.command_id,
             state: JobState::Accepted,
             output: None,
             error: None,
@@ -100,9 +124,11 @@ impl ExternalJobs {
             id,
             ExternalJobEntry {
                 job: job.clone(),
-                request,
+                command_name: new_job.command_name,
+                is_internal: new_job.is_internal,
+                request: new_job.request,
                 created_at: now,
-                selection_run_id,
+                selection_run_id: None,
                 command_snapshot: None,
                 pending_completion: None,
                 is_selection_approved: false,
@@ -112,6 +138,28 @@ impl ExternalJobs {
             },
         );
         Ok(job)
+    }
+
+    /// Gives the job the selection captured for it, after the slot was taken.
+    pub fn attach_selection(&self, id: &str, selection_run_id: u64, text: String) {
+        if let Some(entry) = self.lock_entries().get_mut(id) {
+            entry.selection_run_id = Some(selection_run_id);
+            entry.request.text = Some(text);
+        }
+    }
+
+    /// The job that holds the run slot, if any.
+    pub fn active_id(&self) -> Option<String> {
+        self.lock_entries()
+            .iter()
+            .find(|(_, entry)| !entry.job.state.is_terminal())
+            .map(|(id, _)| id.clone())
+    }
+
+    pub fn is_internal(&self, id: &str) -> bool {
+        self.lock_entries()
+            .get(id)
+            .is_some_and(|entry| entry.is_internal)
     }
 
     pub fn remember_command(&self, id: &str, command: serde_json::Value) {
@@ -127,6 +175,7 @@ impl ExternalJobs {
     }
 
     /// Limits the run of the job once it starts; `None` runs it unbounded.
+    #[cfg(test)]
     pub fn set_run_limit(&self, id: &str, limit: Option<Duration>) {
         if let Some(entry) = self.lock_entries().get_mut(id) {
             entry.run_limit = limit;
@@ -146,6 +195,7 @@ impl ExternalJobs {
     }
 
     /// The request of a job not claimed yet.
+    #[cfg(test)]
     pub fn accepted_request(&self, id: &str) -> Option<RunRequest> {
         self.lock_entries()
             .get(id)
@@ -175,11 +225,17 @@ impl ExternalJobs {
         self.lock_entries().get(id).map(|entry| entry.job.clone())
     }
 
-    pub fn claim(&self, id: &str) -> Option<(String, RunRequest)> {
-        self.claim_at(id, Instant::now())
+    /// Starts the job, limited to `run_limit` from now on.
+    pub fn claim(&self, id: &str, run_limit: Option<Duration>) -> Option<(String, RunRequest)> {
+        self.claim_at(id, run_limit, Instant::now())
     }
 
-    fn claim_at(&self, id: &str, now: Instant) -> Option<(String, RunRequest)> {
+    fn claim_at(
+        &self,
+        id: &str,
+        run_limit: Option<Duration>,
+        now: Instant,
+    ) -> Option<(String, RunRequest)> {
         let mut entries = self.lock_entries();
         let entry = entries.get_mut(id)?;
         if entry.job.state != JobState::Accepted {
@@ -187,6 +243,9 @@ impl ExternalJobs {
         }
         entry.job.state = JobState::Running;
         entry.claimed_at = Some(now);
+        if run_limit.is_some() {
+            entry.run_limit = run_limit;
+        }
         Some((entry.job.command_id.clone(), entry.request.clone()))
     }
 
@@ -306,8 +365,7 @@ impl ExternalJobs {
         self.expired_job_ids_at(Instant::now())
     }
 
-    /// Jobs that waited too long to start, and background runs over their
-    /// limit. A finished run that is replacing the selection is left alone.
+    /// Jobs that waited too long to start, and runs over their limit. A finished run that is replacing the selection is left alone.
     fn expired_job_ids_at(&self, now: Instant) -> Vec<String> {
         self.lock_entries()
             .iter()
@@ -332,21 +390,25 @@ impl ExternalJobs {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn new_job(name: &str) -> NewJob {
+        NewJob {
+            command_id: name.into(),
+            command_name: name.into(),
+            request: RunRequest::default(),
+            is_internal: false,
+        }
+    }
+
+    fn succeed(jobs: &ExternalJobs, id: &str) {
+        jobs.finish(id, JobState::Succeeded, None, None, None);
+    }
+
     #[test]
     fn lists_retained_jobs_newest_first_without_results() {
         let jobs = ExternalJobs::default();
         let now = Instant::now();
-        let first = jobs
-            .create_at("first".into(), RunRequest::default(), None, now)
-            .unwrap();
-        let second = jobs
-            .create_at(
-                "second".into(),
-                RunRequest::default(),
-                None,
-                now + Duration::from_secs(1),
-            )
-            .unwrap();
+        let first = jobs.create_at(new_job("first"), now).unwrap();
         jobs.finish(
             &first.id,
             JobState::Succeeded,
@@ -354,6 +416,9 @@ mod tests {
             None,
             None,
         );
+        let second = jobs
+            .create_at(new_job("second"), now + Duration::from_secs(1))
+            .unwrap();
         let listed = jobs.list();
         assert_eq!(
             listed.iter().map(|job| job.id.as_str()).collect::<Vec<_>>(),
@@ -367,31 +432,44 @@ mod tests {
     }
 
     #[test]
+    fn one_job_runs_at_a_time() {
+        let jobs = ExternalJobs::default();
+        let first = jobs.create(new_job("Lamp")).unwrap();
+        assert_eq!(jobs.active_id().as_deref(), Some(first.id.as_str()));
+        assert_eq!(
+            jobs.create(new_job("Fan")).unwrap_err(),
+            CreateJobError::Busy {
+                running_command_name: "Lamp".into()
+            }
+        );
+        jobs.claim(&first.id, None).unwrap();
+        assert!(jobs.create(new_job("Fan")).is_err());
+        succeed(&jobs, &first.id);
+        assert!(jobs.active_id().is_none());
+        assert!(jobs.create(new_job("Fan")).is_ok());
+    }
+
+    #[test]
     fn a_selection_approval_holds_for_its_job_only() {
         let jobs = ExternalJobs::default();
-        let first = jobs
-            .create("test".into(), RunRequest::default(), None)
-            .unwrap();
-        let second = jobs
-            .create("test".into(), RunRequest::default(), None)
-            .unwrap();
+        let first = jobs.create(new_job("test")).unwrap();
         jobs.approve_selection(&first.id);
         assert!(jobs.is_selection_approved(&first.id));
-        assert!(!jobs.is_selection_approved(&second.id));
         assert!(jobs.accepted_request(&first.id).is_some());
-        jobs.claim(&first.id);
+        jobs.claim(&first.id, None);
         // a claimed job is past the prompt and must not be handed off again
         assert!(jobs.accepted_request(&first.id).is_none());
+        succeed(&jobs, &first.id);
+        let second = jobs.create(new_job("test")).unwrap();
+        assert!(!jobs.is_selection_approved(&second.id));
     }
 
     #[test]
     fn claim_and_completion_are_single_use() {
         let jobs = ExternalJobs::default();
-        let job = jobs
-            .create("test".into(), RunRequest::default(), None)
-            .unwrap();
-        assert!(jobs.claim(&job.id).is_some());
-        assert!(jobs.claim(&job.id).is_none());
+        let job = jobs.create(new_job("test")).unwrap();
+        assert!(jobs.claim(&job.id, None).is_some());
+        assert!(jobs.claim(&job.id, None).is_none());
         jobs.finish(
             &job.id,
             JobState::Cancelled,
@@ -411,40 +489,22 @@ mod tests {
             .is_none());
         assert_eq!(jobs.get(&job.id).unwrap().state, JobState::Cancelled);
     }
+
     #[test]
-    fn active_jobs_are_bounded_and_terminal_jobs_are_evicted() {
+    fn terminal_jobs_are_evicted() {
         let jobs = ExternalJobs::default();
-        for _ in 0..MAX_ACTIVE_JOBS {
-            jobs.create("test".into(), RunRequest::default(), None)
-                .unwrap();
-        }
-        assert!(jobs
-            .create("test".into(), RunRequest::default(), None)
-            .is_err());
-        let ids = jobs
-            .entries
-            .lock()
-            .unwrap()
-            .keys()
-            .cloned()
-            .collect::<Vec<_>>();
-        for id in ids {
-            jobs.finish(&id, JobState::Succeeded, None, None, None);
-        }
-        for _ in 0..MAX_JOBS {
-            let job = jobs
-                .create("test".into(), RunRequest::default(), None)
-                .unwrap();
-            jobs.finish(&job.id, JobState::Succeeded, None, None, None);
+        for _ in 0..MAX_JOBS + 3 {
+            let job = jobs.create(new_job("test")).unwrap();
+            succeed(&jobs, &job.id);
         }
         assert_eq!(jobs.entries.lock().unwrap().len(), MAX_JOBS);
     }
+
     #[test]
     fn selection_completion_is_not_visible_until_insertion_finishes() {
         let jobs = ExternalJobs::default();
-        let job = jobs
-            .create("test".into(), RunRequest::default(), Some(1))
-            .unwrap();
+        let job = jobs.create(new_job("test")).unwrap();
+        jobs.attach_selection(&job.id, 1, "source".into());
         jobs.finish(
             &job.id,
             JobState::Succeeded,
@@ -454,21 +514,22 @@ mod tests {
         )
         .unwrap();
         assert_eq!(jobs.get(&job.id).unwrap().state, JobState::Running);
+        // the pending replacement still holds the slot
+        assert!(jobs.create(new_job("next")).is_err());
         assert!(jobs
             .finish(&job.id, JobState::Cancelled, None, None, None)
             .is_none());
         jobs.complete_selection_replacement(&job.id, Some("Focus changed".into()));
         assert_eq!(jobs.get(&job.id).unwrap().state, JobState::Failed);
         assert_eq!(jobs.get(&job.id).unwrap().output.as_deref(), Some("result"));
+        assert!(jobs.create(new_job("next")).is_ok());
     }
 
     #[test]
     fn oversized_output_and_abandoned_jobs_have_bounded_lifetimes() {
         let jobs = ExternalJobs::default();
         let now = Instant::now();
-        let job = jobs
-            .create_at("test".into(), RunRequest::default(), None, now)
-            .unwrap();
+        let job = jobs.create_at(new_job("test"), now).unwrap();
         assert!(jobs
             .expired_job_ids_at(now + START_TIMEOUT - Duration::from_nanos(1))
             .is_empty());
@@ -492,37 +553,39 @@ mod tests {
     }
 
     #[test]
-    fn a_background_run_is_limited_from_its_start_and_a_window_run_is_not() {
+    fn a_run_is_limited_from_its_start() {
         let jobs = ExternalJobs::default();
         let now = Instant::now();
-        let background = jobs
-            .create_at("test".into(), RunRequest::default(), None, now)
-            .unwrap();
-        let window = jobs
-            .create_at("test".into(), RunRequest::default(), None, now)
-            .unwrap();
+        let job = jobs.create_at(new_job("test"), now).unwrap();
         let limit = Duration::from_secs(120);
-        jobs.set_run_limit(&background.id, Some(limit));
         // the wait before the start does not count towards the limit
         let started = now + Duration::from_secs(200);
-        jobs.claim_at(&background.id, started).unwrap();
-        jobs.claim_at(&window.id, started).unwrap();
-        let hour_later = started + Duration::from_secs(3600);
+        jobs.claim_at(&job.id, Some(limit), started).unwrap();
         assert!(jobs
             .expired_job_ids_at(started + limit - Duration::from_nanos(1))
             .is_empty());
         assert_eq!(
             jobs.expired_job_ids_at(started + limit),
-            vec![background.id.clone()]
+            vec![job.id.clone()]
         );
-        assert!(!jobs.expired_job_ids_at(hour_later).contains(&window.id));
     }
+
+    #[test]
+    fn an_unlimited_run_does_not_expire() {
+        let jobs = ExternalJobs::default();
+        let now = Instant::now();
+        let job = jobs.create_at(new_job("test"), now).unwrap();
+        jobs.set_run_limit(&job.id, None);
+        jobs.claim_at(&job.id, None, now).unwrap();
+        assert!(jobs
+            .expired_job_ids_at(now + Duration::from_secs(3600))
+            .is_empty());
+    }
+
     #[test]
     fn escaped_output_must_fit_the_wire_envelope() {
         let jobs = ExternalJobs::default();
-        let job = jobs
-            .create("test".into(), RunRequest::default(), None)
-            .unwrap();
+        let job = jobs.create(new_job("test")).unwrap();
         jobs.finish(
             &job.id,
             JobState::Succeeded,
@@ -541,10 +604,9 @@ mod tests {
     fn a_replacement_that_never_finishes_fails_the_job_in_time() {
         let jobs = ExternalJobs::default();
         let now = Instant::now();
-        let job = jobs
-            .create_at("cmd".into(), RunRequest::default(), Some(7), now)
-            .unwrap();
-        jobs.claim_at(&job.id, now);
+        let job = jobs.create_at(new_job("cmd"), now).unwrap();
+        jobs.attach_selection(&job.id, 7, "source".into());
+        jobs.claim_at(&job.id, None, now);
         jobs.finish_at(
             &job.id,
             JobState::Succeeded,
@@ -567,12 +629,9 @@ mod tests {
     #[test]
     fn job_ids_cannot_be_guessed_from_one_another() {
         let jobs = ExternalJobs::default();
-        let first = jobs
-            .create("a".into(), RunRequest::default(), None)
-            .unwrap();
-        let second = jobs
-            .create("b".into(), RunRequest::default(), None)
-            .unwrap();
+        let first = jobs.create(new_job("a")).unwrap();
+        succeed(&jobs, &first.id);
+        let second = jobs.create(new_job("b")).unwrap();
         assert!(first.id.len() > 30);
         assert_ne!(
             first.id[first.id.len() - 12..],

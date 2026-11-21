@@ -6,8 +6,8 @@ import {
   type CommandOutputAction,
   type CommandPlatform,
   AI_COMMAND_MAX_STEPS_DEFAULT,
-  EXTERNAL_TIMEOUT_DEFAULT_SEC,
-  EXTERNAL_TIMEOUT_MAX_SEC,
+  RUN_TIMEOUT_DEFAULT_SEC,
+  RUN_TIMEOUT_MAX_SEC,
   normalizeCommands,
   type ScriptOperationConfig,
   type WebhookOperationConfig,
@@ -54,13 +54,13 @@ function headersOf(value: unknown): Record<string, string> {
  * The limit of a background external run as a whole number of seconds within
  * range, or the default for anything else
  */
-export function externalTimeoutOf(value: unknown): number {
+export function runTimeoutOf(value: unknown): number {
   if (typeof value !== 'number' || !Number.isFinite(value))
-    return EXTERNAL_TIMEOUT_DEFAULT_SEC
+    return RUN_TIMEOUT_DEFAULT_SEC
   const seconds = Math.round(value)
   return seconds >= 1
-    ? Math.min(seconds, EXTERNAL_TIMEOUT_MAX_SEC)
-    : EXTERNAL_TIMEOUT_DEFAULT_SEC
+    ? Math.min(seconds, RUN_TIMEOUT_MAX_SEC)
+    : RUN_TIMEOUT_DEFAULT_SEC
 }
 
 export function scriptOperationConfigOf(
@@ -174,7 +174,7 @@ export function createCommand(
     outputAction: outputActionOf(tool?.defaultOutputAction),
     isOutputLogged: false,
     isAvailableExternally: false,
-    externalTimeoutSec: EXTERNAL_TIMEOUT_DEFAULT_SEC,
+    runTimeoutSec: RUN_TIMEOUT_DEFAULT_SEC,
     isEnabled: true,
     ...(defaultPlatforms ? { platforms: defaultPlatforms } : {}),
   }

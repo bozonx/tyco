@@ -136,7 +136,8 @@ export async function adaptRegisteredOperation(
  * schema, label and command metadata. `run` executes the command the way the
  * other callers do (input checks, pre-transformation); without it the tool is
  * called directly. There is no time limit of its own: the user sees the chat
- * and stops it, and `externalTimeoutSec` bounds background runs only
+ * and stops it, and `runTimeoutSec` bounds library runs in the command overlay
+ * only
  */
 export async function adaptCommand(
   command: CommandConfig,

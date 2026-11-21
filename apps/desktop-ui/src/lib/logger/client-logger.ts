@@ -12,7 +12,7 @@ export type ClientLogScope =
   | 'ipc'
   | 'history'
   | 'bootstrap'
-  | 'external-commands'
+  | 'command-run'
   | (string & {})
 
 export interface ClientLoggerSender {

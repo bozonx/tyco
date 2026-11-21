@@ -4167,7 +4167,7 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "externalTimeoutSec": 120,
+          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         },
@@ -4184,7 +4184,7 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "externalTimeoutSec": 120,
+          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         },
@@ -4201,7 +4201,7 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "externalTimeoutSec": 120,
+          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         },
@@ -4218,7 +4218,7 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "externalTimeoutSec": 120,
+          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         }
@@ -4711,7 +4711,7 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "externalTimeoutSec": 120,
+          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         },
@@ -4728,7 +4728,7 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "externalTimeoutSec": 120,
+          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         },
@@ -4745,7 +4745,7 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "externalTimeoutSec": 120,
+          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         },
@@ -4762,7 +4762,7 @@
           "outputAction": "none",
           "isOutputLogged": false,
           "isAvailableExternally": false,
-          "externalTimeoutSec": 120,
+          "runTimeoutSec": 120,
           "isEnabled": true,
           "isVoiceEnabled": false
         }

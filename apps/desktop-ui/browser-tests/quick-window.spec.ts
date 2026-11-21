@@ -142,7 +142,7 @@ test.describe('action menu', () => {
         outputAction: 'showMenu',
         isOutputLogged: false,
         isAvailableExternally: false,
-        externalTimeoutSec: 120,
+        runTimeoutSec: 120,
       },
     ]
     desktop.userConfig.actionPages[0]!.slots.q = {

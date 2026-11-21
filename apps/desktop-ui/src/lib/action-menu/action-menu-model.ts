@@ -10,7 +10,6 @@ import {
   type ActionPageConfig,
   type ChatPromptConfig,
   type CommandConfig,
-  type CommandRunRecord,
   type CoreOperationId,
   type MainActionConfig,
   type ProfileActionKind,
@@ -23,8 +22,6 @@ import {
   commandTakesText,
   isMenuCommand,
 } from '../commands/command-runtime'
-import { commandRunRecord, logCommandRun } from '../commands/command-run-record'
-import { createCommandRunner } from '../commands/command-runner'
 import { i18n, translate } from '../i18n'
 import { messages } from '../i18n/messages'
 import { translationLanguageLabel } from '../translation/translation-languages'
@@ -33,7 +30,6 @@ import {
   type InvocationRunnerDependencies,
 } from '../invocation/invocation-runner'
 import { getLanguageLabelKey } from '../locale/language'
-import type { PendingModalParams } from '../modals/menu-modal-params'
 import { normalizeMainActions } from './main-actions'
 import { validateActionText } from './action-text-requirement'
 import { configProfileKey } from '../ai-profiles/profile-ref'
@@ -42,10 +38,12 @@ export type { ActionItem } from '../../types/plugins'
 export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** Records a text that leaves the app; runs before the window closes. */
   saveOutput: (text: string) => Promise<void>
-  logRun?: (record: CommandRunRecord) => Promise<void> | void
   reportError?: (error: unknown) => void
-  setPendingModal?: (params: PendingModalParams, owner?: number) => number
-  clearPendingModal?: (owner: number) => void
+  /**
+   * Runs a library command in the command overlay; `text` is null when the
+   * overlay has to ask for it
+   */
+  startCommandRun: (commandId: string, text: string | null) => Promise<unknown>
   openTransformationModal?: (text: string, transformationId?: string) => void
   openQuickAiRequestModal?: (
     text: string,
@@ -107,7 +105,6 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
 export function createActionMenuModel(deps: ActionMenuDependencies) {
   const registry = createContributionRegistry<ActionItem>()
   const registeredActionsMenu = registry.items
-  const commandRunner = createCommandRunner(deps)
   const invocationRunner = createInvocationRunner(deps)
 
   /**
@@ -138,33 +135,20 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     },
   })
 
-  /** The menu item of a command; the text, if it takes one, leaves the app */
+  /**
+   * The menu item of a command: it runs in the command overlay, which asks for
+   * the text when the command takes one and the menu has none
+   */
   const createCommandActionItem = (command: CommandConfig): ActionItem => ({
     id: `command:${command.id}`,
     name: commandLabel(command),
     icon: 'mdi:console-line',
     action: async (text: string) => {
       const takesText = commandTakesText(command, deps.operations)
-      if (takesText) await deps.saveOutput(text)
-      const controller = new AbortController()
-      const owner = deps.setPendingModal?.({
-        label: translate('commands.running', { name: commandLabel(command) }),
-        onCancel: () => controller.abort(),
-      })
-      try {
-        const outcome = await commandRunner.run(command, text, {
-          source: 'menu',
-          signal: controller.signal,
-        })
-        if (!outcome.cancelled) {
-          logCommandRun(
-            deps,
-            commandRunRecord(command, 'menu', takesText ? text : null, outcome)
-          )
-        }
-      } finally {
-        if (owner !== undefined) deps.clearPendingModal?.(owner)
-      }
+      await deps.startCommandRun(
+        command.id,
+        takesText && text?.trim() ? text : null
+      )
     },
   })
 

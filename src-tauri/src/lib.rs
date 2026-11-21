@@ -108,7 +108,8 @@ pub fn run() {
             .manage(services::voice::session::VoiceSessionState::default())
             .manage(services::voice::apps::AudioAppsWatches::default())
             .manage(services::runtime::subtitles_window::SubtitlesState::default())
-            .manage(services::external::access::AccessPrompt::default()),
+            .manage(services::external::access::AccessPrompt::default())
+            .manage(services::visible_work::VisibleWork::default()),
     ));
     let app = builder
         // reading a package may take a while; the main thread must not wait
@@ -204,6 +205,17 @@ pub fn run() {
             services::signals::spawn_signal_watcher(app.handle().clone());
             Ok(())
         })
+        // a reloaded command overlay has lost the run it showed
+        .on_page_load(|webview, payload| {
+            if webview.label() == runtime::QUICK_WINDOW_LABEL
+                && payload.event() == tauri::webview::PageLoadEvent::Started
+            {
+                let app = webview.app_handle().clone();
+                tauri::async_runtime::spawn_blocking(move || {
+                    services::external::api::abandon_active(&app);
+                });
+            }
+        })
         .on_window_event(|window, event| {
             runtime::handle_window_event(window.app_handle(), window.label(), event);
         })
@@ -286,9 +298,11 @@ pub fn run() {
             commands::editor_history::set_editor_history_item_result,
             commands::editor_history::set_editor_history_item_failure,
             commands::external_jobs::answer_external_access,
+            commands::external_jobs::cancel_external_job,
             commands::external_jobs::claim_external_job,
             commands::external_jobs::finish_external_job,
             commands::external_jobs::set_operation_catalog,
+            commands::external_jobs::start_command_run,
             commands::hotkeys::apply_hotkey,
             commands::hotkeys::get_hotkey_provider_info,
             commands::hotkeys::open_system_hotkey_settings,
@@ -332,6 +346,7 @@ pub fn run() {
             commands::system::restart_app,
             commands::system::show_desktop_notification,
             commands::system::show_status_overlay,
+            commands::visible_work::visible_work_ended,
             commands::voice::list_input_devices,
             commands::voice::start_voice_capture,
             commands::voice::stop_voice_capture,

@@ -203,6 +203,22 @@
     },
     "replyBlocks": { "toolLabel": "Blocchi di risposta" }
   },
+  "commandRun": {
+    "cancelled": "Il comando è stato annullato",
+    "cancelledTitle": "«{name}» è stato annullato",
+    "done": "«{name}» è terminato",
+    "failed": "Il comando «{name}» non è riuscito",
+    "failedUnknown": "Errore sconosciuto",
+    "inputPlaceholder": "Testo per il comando",
+    "missing": "Il comando non è nella libreria",
+    "noOutput": "Il comando non ha restituito testo",
+    "rejected": "«{name}» non è stato avviato: è in esecuzione «{running}»",
+    "run": "Esegui",
+    "running": "Esecuzione di «{name}»…",
+    "startFailed": "Impossibile avviare il comando",
+    "timedOut": "Non completato in {seconds} s ed è stato interrotto",
+    "unavailable": "Il comando non può più essere eseguito: è stato modificato, rimosso o non è consentito"
+  },
   "commands": {
     "advanced": "Avanzate",
     "afterRunCopy": "Negli appunti",
@@ -253,11 +269,11 @@
     "errorUnknownType": "Tipo di comando sconosciuto.",
     "external": "Disponibile dall’esterno",
     "externalDescription": "Cosa possono fare le applicazioni locali della tua sessione tramite tyco-ctl e D-Bus. L’accesso a ciascun comando si attiva nelle sue impostazioni avanzate.",
-    "externalInfo": "Applicazioni e script locali possono eseguire un comando consentito con tyco-ctl run <ID> o tyco-ctl run --name <nome>. Il risultato viene restituito al chiamante. --interactive consente l’interfaccia di inserimento testo; --selection --replace richiede esplicitamente la sostituzione della selezione.",
+    "externalInfo": "Applicazioni e script locali possono eseguire un comando consentito con tyco-ctl run <ID> o tyco-ctl run --name <nome>. Il comando viene eseguito nell’overlay di Tyco, uno alla volta, e il risultato viene restituito al chiamante. Senza input, l’overlay chiede il testo; --selection --replace richiede esplicitamente la sostituzione della selezione.",
     "externalSelection": "Leggere e sostituire il testo selezionato",
     "externalSelectionInfo": "Un’applicazione può ottenere il testo selezionato nella finestra attiva e sostituirlo con il risultato di un comando (tyco-ctl run <ID> --selection --replace). Se è disattivato, Tyco chiede il permesso a ogni chiamata di questo tipo.",
-    "externalTimeoutInfo": "Per quanto tempo una chiamata esterna può essere eseguita in background, contando dall’avvio del comando; poi viene interrotta e segnalata come scaduta. {seconds} per impostazione predefinita, al massimo {max}. Le esecuzioni in una finestra non hanno limiti: le vedi e puoi annullarle.",
-    "externalTimeoutLabel": "Timeout in background, secondi",
+    "runTimeoutInfo": "Quanto può durare un’esecuzione del comando dal suo avvio; poi viene fermata e segnalata come scaduta. {seconds} per impostazione predefinita, al massimo {max}. Ogni esecuzione è mostrata nell’overlay del comando, dove puoi annullarla prima.",
+    "runTimeoutLabel": "Limite di esecuzione, secondi",
     "externalTitle": "Accesso esterno",
     "fieldOff": "No",
     "fieldOn": "Sì",
@@ -452,13 +468,6 @@
     "settingsHint": "Per consentirlo definitivamente o vietarlo di nuovo, vai su Impostazioni → Comandi → Accesso esterno.",
     "title": "Accesso al testo selezionato",
     "unknownCaller": "Tyco non può sapere quale applicazione lo chiede: qualsiasi programma della tua sessione può farlo."
-  },
-  "externalCommand": {
-    "failed": "Il comando «{name}» non è riuscito",
-    "missing": "Il comando non è nella libreria",
-    "running": "Esecuzione di «{name}»…",
-    "timedOut": "Non completato in {seconds} s ed è stato interrotto",
-    "unknown": "Errore sconosciuto"
   },
   "history": {
     "chatsDisabled": "La cronologia non viene salvata su disco",

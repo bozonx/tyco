@@ -37,9 +37,12 @@ export const DESKTOP_EVENTS = {
   VOICE_AUDIO_LEVEL: 'app://voice-audio-level',
   SELECTION_RUN: 'app://selection-run',
   SELECTION_CANCEL: 'app://selection-cancel',
-  /** An external call runs a command in the background */
-  COMMAND_RUN: 'app://command-run',
+  /** A run was refused while another command runs; to the quick window */
+  COMMAND_RUN_REJECTED: 'app://command-run-rejected',
+  /** Carries the id of the job to stop */
   EXTERNAL_JOB_CANCEL: 'app://external-job-cancel',
+  /** End what the window shows before an external request; carries its id */
+  END_VISIBLE_WORK: 'app://end-visible-work',
   /** What the subtitles of the dialog show; to the subtitles window */
   SUBTITLES_CHANGED: 'app://subtitles-changed',
   /** A button of the subtitles; to the main window, where the dialog runs */

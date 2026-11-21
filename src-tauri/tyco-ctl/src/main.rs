@@ -12,8 +12,7 @@ const USAGE: &str = "Usage: tyco-ctl status
        tyco-ctl commands list [--json]
        tyco-ctl commands describe <id | --name NAME>
        tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]
-                    [--replace] [--interactive]
-                    [--wait] [--json] [--timeout SECONDS]
+                    [--replace] [--wait] [--json] [--timeout SECONDS]
        tyco-ctl replace correction
        tyco-ctl jobs list [--json]
        tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
@@ -22,7 +21,8 @@ Modes: editor, quick-input, chat, voice-commands, voice, selection-actions,
        chat-prompts, correction, translation, history, settings.
 Pages: selection-actions:N opens action page N; custom-action:N runs custom action slot N.
 Use --stdin for private text. Input is preserved exactly.
-Run defaults to non-interactive execution and always returns output.
+Run shows the command in the Tyco overlay; one command runs at a time.
+Without input, a text command asks for the text in the overlay.
 Use --replace to replace a selection.
 replace correction corrects the selection in place, as its hotkey does.
 All requests accept --json to format results and stderr errors as JSON.
@@ -154,7 +154,6 @@ fn parse_cli_invocation(args: &[String]) -> Result<CliInvocation, String> {
             let mut input_set = false;
             while index < args.len() {
                 match args[index].as_str() {
-                    "--interactive" => request.interactive = true,
                     "--replace" => request.replace = true,
                     "--wait" => command.wait = true,
                     "--timeout" => {
@@ -325,7 +324,7 @@ fn help(args: &[String]) -> Option<&'static str> {
         ["commands"] => "Usage: tyco-ctl commands <list [--json] | describe <id | --name NAME>>\nDiscover callable commands and inspect their accepted input without executing them.",
         ["commands", "list"] => "Usage: tyco-ctl commands list [--json]\nPrint callable commands as id<TAB>name lines, or JSON with --json.",
         ["commands", "describe"] => "Usage: tyco-ctl commands describe <id | --name NAME>\nPrint the command's effective input schema and capabilities as JSON.",
-        ["run"] => "Usage: tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]\n       [--replace] [--interactive] [--wait] [--json] [--timeout SECONDS]\nSubmit a library command. Without --wait, returns a job. With --wait, returns output.\n--json formats results and stderr errors as JSON. --timeout only bounds waiting.\nInput sources are exclusive; --replace requires --selection. Use --stdin for private text.",
+        ["run"] => "Usage: tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]\n       [--replace] [--wait] [--json] [--timeout SECONDS]\nRun a library command in the Tyco overlay; a run while another runs fails with Busy. Without --wait, returns a job. With --wait, returns output.\n--json formats results and stderr errors as JSON. --timeout only bounds waiting.\nInput sources are exclusive; --replace requires --selection. Use --stdin for private text.",
         ["replace"] | ["replace", "correction"] => "Usage: tyco-ctl replace correction\nRequest correction of the current selection without waiting; requires selection permission.",
         ["jobs"] => "Usage: tyco-ctl jobs list [--json]\n       tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]\nInspect retained invocations, cancel work, or collect results. Only wait accepts --timeout.",
         ["jobs", "list"] => "Usage: tyco-ctl jobs list [--json]\nPrint retained jobs as JSON, newest first, without output or error details. Use status for details.",
@@ -508,7 +507,7 @@ mod tests {
         let Request::Run { request } = parsed.request else {
             panic!()
         };
-        assert!(!request.interactive && !request.selection);
+        assert!(!request.selection);
         assert!(command(&["activate", "commandLauncher"]).is_err());
         assert!(command(&["commands"]).is_err());
         assert!(command(&["run", "test", "text"]).is_err());

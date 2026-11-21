@@ -82,7 +82,7 @@ export const MODE_ROUTE_MAP: Record<ActivationMode, AppRoutePath> = {
   [ActivationMode.HISTORY]: APP_ROUTES.HISTORY.path,
   [ActivationMode.CONFIG]: APP_ROUTES.CONFIG.path,
   // the quick window renders it by the mode, see `QuickOverlay`
-  [ActivationMode.EXTERNAL_ACCESS]: APP_ROUTES.HOME.path,
+  [ActivationMode.COMMAND_RUN]: APP_ROUTES.HOME.path,
   [ActivationMode.CUSTOM_ACTION]: APP_ROUTES.HOME.path,
 }
 
@@ -106,7 +106,7 @@ const QUICK_WINDOW_MODES: ReadonlySet<ActivationMode> = new Set([
   ActivationMode.VOICE_SCREENSHOT_QUICK_AI_REQUEST,
   ActivationMode.CHAT_PROMPTS,
   ActivationMode.FAVORITES,
-  ActivationMode.EXTERNAL_ACCESS,
+  ActivationMode.COMMAND_RUN,
   ActivationMode.CUSTOM_ACTION,
 ])
 

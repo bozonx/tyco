@@ -1,19 +1,11 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 1e31e4e75c1b21cbab92d97c1225c8be89eaea3dee29eeccef2d9f25f53cdeb2
+// Source hash: 4b89d1cb1e79c33910643fb15c35358ed123141a14f72c91455a9a48a09ab17e
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
 
 export type AccessDecision = 'once' | 'always' | 'deny'
-
-/** What the prompt shows, see `DesktopSnapshot::access_request`. */
-export type AccessRequest = {
-  jobId: string
-  commandName: string
-  /** The output is to replace the selection, not only to be returned. */
-  replace: boolean
-}
 
 /**
  * Asks the open action menu of `activation_id` to turn to `page_index`, or to
@@ -48,7 +40,7 @@ export type ActivationMode =
   | 'history'
   | 'config'
   | 'customAction'
-  | 'externalAccess'
+  | 'commandRun'
 
 /** A file attached to the conversation, as the webview names it. */
 export type AiAttachedFile = {
@@ -409,9 +401,9 @@ export type CommandInputDescription = {
   inputSchema: Record<string, unknown>
 }
 
-export type CommandRunEvent = {
+/** What the command overlay runs once it has taken the job. */
+export type CommandRunPayload = {
   commandId: string
-  jobId: string
   text?: string
   input?: Record<string, unknown>
   /**
@@ -433,6 +425,29 @@ export type CommandRunRecord = {
   success: boolean
   /** Why it failed, or what it reported. */
   message?: string | null
+}
+
+export type CommandRunRejectedEvent = {
+  /** The command that was not started. */
+  commandName: string
+  /** The command that runs. */
+  runningCommandName: string
+}
+
+/** The run the command overlay shows, see `ActivationSnapshot::command_run`. */
+export type CommandRunRequest = {
+  jobId: string
+  commandId: string
+  commandName: string
+  /**
+   * An external call asks for the selection while that is not allowed: the
+   * overlay asks the user first.
+   */
+  needsAccess: boolean
+  /** The output is to replace the selection, not only to be returned. */
+  replace: boolean
+  /** Started by a caller outside Tyco, not by a hotkey or a menu. */
+  isExternal: boolean
 }
 
 /** Where a command or a tool is invoked from. */
@@ -461,7 +476,8 @@ export type DesktopActivationState = {
   historyOrigin: EditorHistoryOrigin | null
   /** The tab the settings open on, e.g. from a menu that has nothing to show. */
   settingsTab: string | null
-  accessRequest: AccessRequest | null
+  /** The run the command overlay shows, for `commandRun`. */
+  commandRun: CommandRunRequest | null
 }
 
 /**
@@ -1241,8 +1257,9 @@ export interface DesktopEventPayloads {
   'app://voice-audio-level': VoiceAudioLevelPayload
   'app://selection-run': SelectionRunEvent
   'app://selection-cancel': SelectionCancelEvent
-  'app://command-run': CommandRunEvent
+  'app://command-run-rejected': CommandRunRejectedEvent
   'app://external-job-cancel': string
+  'app://end-visible-work': number
   'app://subtitles-changed': SubtitlesView
   'app://subtitles-action-requested': SubtitlesAction
 }

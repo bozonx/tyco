@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createCommand } from '../../lib/commands/command-config'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import CommandEditor from './CommandEditor.vue'
-import { type CommandConfig, EXTERNAL_TIMEOUT_DEFAULT_SEC } from '@tyco/shared'
+import { type CommandConfig, RUN_TIMEOUT_DEFAULT_SEC } from '@tyco/shared'
 import {
   installFakeDesktop,
   type TestDesktop,
@@ -235,11 +235,9 @@ describe('CommandEditor.vue', () => {
     )
     const input = wrapper.find('input[type="number"]')
     await input.setValue('90')
-    expect(lastUpdate(wrapper).externalTimeoutSec).toBe(90)
+    expect(lastUpdate(wrapper).runTimeoutSec).toBe(90)
     await input.setValue('')
-    expect(lastUpdate(wrapper).externalTimeoutSec).toBe(
-      EXTERNAL_TIMEOUT_DEFAULT_SEC
-    )
+    expect(lastUpdate(wrapper).runTimeoutSec).toBe(RUN_TIMEOUT_DEFAULT_SEC)
   })
 
   it('opens the log and tells when there is none yet', async () => {

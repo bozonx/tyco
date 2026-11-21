@@ -1,5 +1,6 @@
-//! Asks the user whether an external call may use the selection while
-//! `externalAccess.canAccessSelection` is off: once, from now on, or not at all.
+//! Asks the user in the command overlay whether an external call may use the
+//! selection while `externalAccess.canAccessSelection` is off: once, from now
+//! on, or not at all.
 use crate::locks::MutexExt;
 use std::sync::Mutex;
 
@@ -8,14 +9,9 @@ use serde_json::{json, Value};
 use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
-use crate::services::activation::{Activation, ActivationMode, ActivationSource};
 use crate::services::external::api;
 use crate::services::external::jobs::ExternalJobs;
-use crate::services::runtime::FOCUS_RELEASE_TIMEOUT;
-use crate::services::{runtime, settings};
-use crate::state::AppState;
-
-pub use crate::models::AccessRequest;
+use crate::services::settings;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
@@ -25,81 +21,37 @@ pub enum AccessDecision {
     Deny,
 }
 
-struct PendingAccessRequest {
-    job_id: String,
-}
-
-/// The one request waiting for an answer: a second one is refused rather
-/// than queued behind a prompt the user may not have seen yet.
+/// The job waiting for an answer; one run at a time, so at most one.
 #[derive(Default)]
-pub struct AccessPrompt(Mutex<Option<PendingAccessRequest>>);
+pub struct AccessPrompt(Mutex<Option<String>>);
 
 impl AccessPrompt {
-    pub fn is_pending(&self) -> bool {
-        self.0.locked().is_some()
+    fn set(&self, job_id: &str) {
+        *self.0.locked() = Some(job_id.to_owned());
     }
 
-    /// Takes the prompt for `pending`; false while another request waits.
-    /// One step, so that two requests at once cannot both take it.
-    fn try_claim(&self, pending: PendingAccessRequest) -> bool {
-        let mut slot = self.0.locked();
-        if slot.is_some() {
-            return false;
-        }
-        *slot = Some(pending);
-        true
-    }
-
-    fn take(&self, job_id: &str) -> Option<PendingAccessRequest> {
+    fn take(&self, job_id: &str) -> bool {
         let mut pending = self.0.locked();
-        if pending.as_ref().is_some_and(|item| item.job_id == job_id) {
-            pending.take()
+        if pending.as_deref() == Some(job_id) {
+            pending.take();
+            true
         } else {
-            None
+            false
         }
     }
 }
 
-/// Why the prompt was not shown.
-#[derive(Debug)]
-pub enum AccessPromptError {
-    /// Another request is waiting for an answer.
-    Busy,
-    Failed(AppError),
+/// The overlay of the job asks for access before it runs.
+pub fn begin(app: &AppHandle, job_id: &str) {
+    app.state::<AccessPrompt>().set(job_id);
 }
 
-/// Shows the prompt for the job; it runs once the user allows it.
-pub fn ask(
-    app: &AppHandle,
-    request: AccessRequest,
-    source: ActivationSource,
-) -> Result<(), AccessPromptError> {
-    let claimed = app.state::<AccessPrompt>().try_claim(PendingAccessRequest {
-        job_id: request.job_id.clone(),
-    });
-    if !claimed {
-        return Err(AccessPromptError::Busy);
-    }
-    let mut activation = Activation::new(ActivationMode::ExternalAccess, source);
-    // the selection is taken already; the prompt must not capture another
-    activation.selected_text = Some(String::new());
-    let job_id = request.job_id.clone();
-    activation.access_request = Some(request);
-    runtime::activate(app, activation).map_err(|error| {
-        app.state::<AccessPrompt>().take(&job_id);
-        AccessPromptError::Failed(error)
-    })
-}
-
-/// Applies the answer of the prompt; a job answered, cancelled or timed out
-/// before is left alone.
+/// Applies the answer of the overlay; a job answered, cancelled or timed out
+/// before is left alone. The overlay runs an allowed job itself.
 pub fn answer(app: &AppHandle, job_id: &str, decision: AccessDecision) -> Result<(), AppError> {
-    if app.state::<AccessPrompt>().take(job_id).is_none() {
+    if !app.state::<AccessPrompt>().take(job_id) {
         return Ok(());
     }
-    hide_prompt(app);
-    // the command and the replacement need the window of the selection back
-    runtime::wait_until_unfocused(app, FOCUS_RELEASE_TIMEOUT);
     match decision {
         AccessDecision::Deny => {
             api::deny_selection(app, job_id);
@@ -114,28 +66,12 @@ pub fn answer(app: &AppHandle, job_id: &str, decision: AccessDecision) -> Result
         AccessDecision::Once => {}
     }
     app.state::<ExternalJobs>().approve_selection(job_id);
-    api::resume(app, job_id);
     Ok(())
 }
 
-/// The job is over before the user answered: the prompt goes away.
+/// The job is over before the user answered.
 pub fn withdraw(app: &AppHandle, job_id: &str) {
-    if app.state::<AccessPrompt>().take(job_id).is_some() {
-        hide_prompt(app);
-    }
-}
-
-/// Hides the quick window while it still shows the prompt, not a mode the
-/// user has switched to since.
-fn hide_prompt(app: &AppHandle) {
-    let snapshot = app.state::<AppState>().snapshot();
-    if snapshot.window.is_window_shown
-        && snapshot.activation.mode == Some(ActivationMode::ExternalAccess)
-    {
-        if let Err(error) = runtime::hide_active_window(app) {
-            log::warn!("Could not hide the access prompt: {error}");
-        }
-    }
+    app.state::<AccessPrompt>().take(job_id);
 }
 
 fn allow_selection_from_now_on(app: &AppHandle) -> Result<(), AppError> {
@@ -186,19 +122,10 @@ mod tests {
     #[test]
     fn only_the_waiting_job_takes_the_prompt() {
         let prompt = AccessPrompt::default();
-        assert!(!prompt.is_pending());
-        assert!(prompt.try_claim(PendingAccessRequest {
-            job_id: "job-1".into(),
-        }));
-        assert!(prompt.is_pending());
-        // a second request does not take the prompt of the first
-        assert!(!prompt.try_claim(PendingAccessRequest {
-            job_id: "job-2".into(),
-        }));
-        assert!(prompt.take("job-2").is_none());
-        assert!(prompt.take("job-1").is_some());
-        assert!(!prompt.is_pending());
-        assert!(prompt.take("job-1").is_none());
+        prompt.set("job-1");
+        assert!(!prompt.take("job-2"));
+        assert!(prompt.take("job-1"));
+        assert!(!prompt.take("job-1"));
     }
 
     #[test]

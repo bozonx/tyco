@@ -322,7 +322,7 @@ fn default_key(mode: ActivationMode) -> Option<&'static str> {
         | ActivationMode::Favorites
         | ActivationMode::Config
         | ActivationMode::CustomAction
-        | ActivationMode::ExternalAccess => None,
+        | ActivationMode::CommandRun => None,
     }
 }
 
@@ -403,7 +403,7 @@ fn mode_description(mode: ActivationMode) -> &'static str {
         ActivationMode::History => "Open history",
         ActivationMode::Config => "Open settings",
         ActivationMode::CustomAction => "Run custom action",
-        ActivationMode::ExternalAccess => "Answer a request for the selection",
+        ActivationMode::CommandRun => "Show the run of a library command",
     }
 }
 

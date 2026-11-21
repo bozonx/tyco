@@ -1,3 +1,5 @@
+import type { CommandRunPayload } from '@tyco/shared'
+
 import type { DesktopCall } from '../ipc/ipc-model'
 import type { InvocationOutcome } from '../invocation/invocation-types'
 
@@ -8,15 +10,15 @@ export interface ExternalJobAdapterDependencies {
   reportError?: (error: unknown) => void
 }
 
-/** Maps desktop job responses to the outcome understood by both runners. */
+/** Maps desktop job responses to the outcome of the command overlay. */
 export function createExternalJobAdapter(deps: ExternalJobAdapterDependencies) {
   return {
-    /** False when the job is not ours; a failed call throws */
-    async claimJob(id: string): Promise<boolean> {
+    /** What the job runs; null when it is not ours; a failed call throws */
+    async claimJob(id: string): Promise<CommandRunPayload | null> {
       const result = await deps.call('claim_external_job', { id })
       if (!result.success)
         throw new Error(result.error ?? 'Could not claim the job')
-      return result.result === true
+      return result.result ?? null
     },
     async finishJob(
       id: string,

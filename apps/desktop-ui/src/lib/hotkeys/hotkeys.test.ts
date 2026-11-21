@@ -14,7 +14,7 @@ describe('hotkeys', () => {
       ...Object.values(ActivationMode).filter(
         (mode) =>
           mode !== ActivationMode.CONFIG &&
-          mode !== ActivationMode.EXTERNAL_ACCESS &&
+          mode !== ActivationMode.COMMAND_RUN &&
           mode !== ActivationMode.CUSTOM_ACTION
       ),
       'selectionActionsPage2',

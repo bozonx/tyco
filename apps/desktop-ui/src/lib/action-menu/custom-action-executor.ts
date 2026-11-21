@@ -21,7 +21,8 @@ export function isQuickWindowModeSwitchingAction(
   action: MainActionConfig | null | undefined
 ): boolean {
   if (!action) return false
-  if (action.type === 'actionPage') return true
+  // a library command runs in the command overlay
+  if (action.type === 'actionPage' || action.type === 'command') return true
   if (
     action.type === 'standard' &&
     QUICK_WINDOW_MODE_SWITCHING_STANDARD_ACTIONS.has(action.actionId)

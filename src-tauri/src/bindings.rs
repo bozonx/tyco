@@ -113,6 +113,7 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<services::custom_actions::ScriptExecutionResult>();
     visitor.visit::<services::external::access::AccessDecision>();
     visitor.visit::<services::external::api::JobCompletion>();
+    visitor.visit::<services::external::api::CommandRunPayload>();
     visitor.visit::<services::external::command_library::OperationCatalogEntry>();
     visitor.visit::<services::hotkeys::HotkeyApplyRequest>();
     visitor.visit::<services::hotkeys::HotkeyApplyResult>();

@@ -203,6 +203,22 @@
     },
     "replyBlocks": { "toolLabel": "Yanıt blokları" }
   },
+  "commandRun": {
+    "cancelled": "Komut iptal edildi",
+    "cancelledTitle": "“{name}” iptal edildi",
+    "done": "“{name}” tamamlandı",
+    "failed": "“{name}” komutu başarısız oldu",
+    "failedUnknown": "Bilinmeyen hata",
+    "inputPlaceholder": "Komut için metin",
+    "missing": "Komut kitaplıkta yok",
+    "noOutput": "Komut metin döndürmedi",
+    "rejected": "“{name}” başlatılmadı: “{running}” çalışıyor",
+    "run": "Çalıştır",
+    "running": "“{name}” çalıştırılıyor…",
+    "startFailed": "Komut başlatılamadı",
+    "timedOut": "{seconds} sn içinde bitmedi ve durduruldu",
+    "unavailable": "Komut artık çalıştırılamaz: değiştirildi, kaldırıldı veya izin verilmiyor"
+  },
   "commands": {
     "advanced": "Gelişmiş",
     "afterRunCopy": "Panoya",
@@ -253,11 +269,11 @@
     "errorUnknownType": "Bilinmeyen komut türü.",
     "external": "Dışarıdan erişilebilir",
     "externalDescription": "Oturumunuzdaki yerel uygulamaların tyco-ctl ve D-Bus üzerinden neler yapabileceği. Her komuta erişim, komutun gelişmiş ayarlarında etkinleştirilir.",
-    "externalInfo": "Yerel uygulamalar ve betikler izin verilen komutu tyco-ctl run <kimlik> veya tyco-ctl run --name <ad> ile çalıştırabilir. Sonuç çağırana döndürülür. --interactive metin girişi penceresine izin verir; --selection --replace seçimin değiştirilmesini açıkça ister.",
+    "externalInfo": "Yerel uygulamalar ve betikler izin verilen bir komutu tyco-ctl run <ID> veya tyco-ctl run --name <ad> ile çalıştırabilir. Komut Tyco katmanında, her seferinde bir tane çalışır ve sonuç çağırana döndürülür. Girdi yoksa katman metni sorar; --selection --replace seçimin değiştirilmesini açıkça ister.",
     "externalSelection": "Seçili metni okuma ve değiştirme",
     "externalSelectionInfo": "Bir uygulama etkin penceredeki seçili metni alabilir ve yerine bir komutun sonucunu koyabilir (tyco-ctl run <kimlik> --selection --replace). Kapalıysa Tyco bu tür her çağrıda izin ister.",
-    "externalTimeoutInfo": "Harici bir çağrının, komutun başlangıcından itibaren arka planda ne kadar çalışabileceği; sonrasında durdurulur ve zaman aşımı olarak bildirilir. Varsayılan {seconds}, en fazla {max}. Bir pencerede yapılan çalıştırmaların sınırı yoktur: onları görür ve iptal edebilirsiniz.",
-    "externalTimeoutLabel": "Arka plan zaman aşımı, saniye",
+    "runTimeoutInfo": "Komutun bir çalışmasının başlangıçtan itibaren ne kadar sürebileceği; sonrasında durdurulur ve zaman aşımı olarak bildirilir. Varsayılan {seconds}, en fazla {max}. Her çalışma komut katmanında gösterilir; orada daha önce iptal edebilirsiniz.",
+    "runTimeoutLabel": "Çalışma süresi sınırı, saniye",
     "externalTitle": "Dış erişim",
     "fieldOff": "Hayır",
     "fieldOn": "Evet",
@@ -452,13 +468,6 @@
     "settingsHint": "Kalıcı olarak izin vermek veya yeniden yasaklamak için Ayarlar → Komutlar → Dış erişim bölümüne gidin.",
     "title": "Seçili metne erişim",
     "unknownCaller": "Tyco hangi uygulamanın istediğini bilemez: oturumunuzdaki herhangi bir program bunu yapabilir."
-  },
-  "externalCommand": {
-    "failed": "“{name}” komutu başarısız oldu",
-    "missing": "Komut kitaplıkta yok",
-    "running": "“{name}” çalıştırılıyor…",
-    "timedOut": "{seconds} sn içinde bitmedi ve durduruldu",
-    "unknown": "Bilinmeyen hata"
   },
   "history": {
     "chatsDisabled": "Geçmiş diske kaydedilmiyor",

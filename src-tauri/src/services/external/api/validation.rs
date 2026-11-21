@@ -102,17 +102,7 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
             "This command requires structured input",
         )));
     }
-    if command.can_take_text
-        && request.text.is_none()
-        && request.input.is_none()
-        && !request.selection
-        && !request.interactive
-    {
-        return Err(Box::new(Response::coded_error(
-            ErrorCode::InputRequired,
-            "Provide text, structured input, or an explicit selection",
-        )));
-    }
+    // a text command without input asks for the text in the overlay
     Ok(())
 }
 
@@ -130,22 +120,15 @@ mod tests {
     }
 
     #[test]
-    fn automation_requires_explicit_input() {
+    fn a_text_command_runs_without_input_and_input_sources_are_exclusive() {
         let command = command();
         let mut request = RunRequest {
             target: "test".into(),
             ..Default::default()
         };
-        assert_eq!(
-            validate_run(&command, &request)
-                .unwrap_err()
-                .code
-                .as_deref(),
-            Some("InputRequired")
-        );
-        request.text = Some("\n".into());
+        // the overlay asks for the text
         assert!(validate_run(&command, &request).is_ok());
-        request.interactive = true;
+        request.text = Some("\n".into());
         assert!(validate_run(&command, &request).is_ok());
         request.selection = true;
         assert!(validate_run(&command, &request).is_err());

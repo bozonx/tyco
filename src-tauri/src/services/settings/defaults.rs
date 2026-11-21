@@ -46,7 +46,7 @@ pub fn default_desktop_snapshot(
             custom_action_index: None,
             history_origin: None,
             settings_tab: None,
-            access_request: None,
+            command_run: None,
         },
         window: WindowSnapshot {
             is_window_shown: false,

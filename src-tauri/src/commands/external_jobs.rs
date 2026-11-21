@@ -3,7 +3,7 @@ use crate::{
     errors::AppError,
     services::external::{
         access::AccessDecision,
-        api::{self, JobCompletion},
+        api::{self, CommandRunPayload, JobCompletion},
         command_library::{self, OperationCatalogEntry, OperationCatalogState},
     },
 };
@@ -27,8 +27,34 @@ pub fn set_operation_catalog(
 }
 
 #[tauri::command]
-pub fn claim_external_job(app: AppHandle, window: tauri::WebviewWindow, id: String) -> bool {
-    api::claim_for_window(&app, window.label(), &id)
+pub async fn claim_external_job(
+    app: AppHandle,
+    window: tauri::WebviewWindow,
+    id: String,
+) -> Result<Option<CommandRunPayload>, AppError> {
+    let label = window.label().to_owned();
+    run_blocking(move || api::claim_for_window(&app, &label, &id)).await
+}
+
+/// Runs a library command in the command overlay, for a hotkey or the
+/// action menu; fails with `Busy` while another command runs.
+#[tauri::command]
+pub async fn start_command_run(
+    app: AppHandle,
+    command_id: String,
+    text: Option<String>,
+) -> Result<ExternalJob, AppError> {
+    run_blocking(move || api::start_internal(&app, &command_id, text)).await?
+}
+
+#[tauri::command]
+pub async fn cancel_external_job(
+    app: AppHandle,
+    window: tauri::WebviewWindow,
+    id: String,
+) -> Result<(), AppError> {
+    let label = window.label().to_owned();
+    run_blocking(move || api::cancel_for_window(&app, &label, &id)).await?
 }
 
 #[tauri::command]

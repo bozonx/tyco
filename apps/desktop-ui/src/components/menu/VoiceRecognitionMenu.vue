@@ -119,6 +119,7 @@ import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickDismissStore } from '../../stores/quick-dismiss'
+import { useVisibleWorkStore } from '../../stores/visible-work'
 import { useVoiceReferenceStore } from '../../stores/voice-reference'
 import OverlayCloseButton from '../overlay/OverlayCloseButton.vue'
 import OverlayEscButton from '../overlay/OverlayEscButton.vue'
@@ -703,7 +704,15 @@ onMounted(async () => {
   }
 })
 
+// an external request ends the dictation as hiding the window does: the
+// recording stops and what was recognized is saved to the history first
+const unregisterVisibleWork = useVisibleWorkStore().register(async () => {
+  await model.cancelWithoutClosing()
+  await model.flushHistory()
+})
+
 onUnmounted(() => {
+  unregisterVisibleWork()
   releaseDismissHold()
   model.dispose()
 

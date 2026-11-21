@@ -110,7 +110,6 @@ impl TycoDbus {
     async fn run_command(&self, id: String) -> Result<(), ApiError> {
         self.run(RunRequest {
             target: id,
-            interactive: true,
             ..Default::default()
         })
         .await
@@ -123,7 +122,6 @@ impl TycoDbus {
             target: id,
             selection: true,
             replace: true,
-            interactive: true,
             ..Default::default()
         })
         .await

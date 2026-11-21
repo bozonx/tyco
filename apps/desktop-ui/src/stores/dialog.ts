@@ -35,6 +35,7 @@ import { createSttClient } from '../lib/stt/stt-client'
 import { createVoiceCaptureControl } from '../lib/stt/voice-capture'
 import { useDesktopStore } from './desktop'
 import { useHistoryStore } from './history'
+import { useVisibleWorkStore } from './visible-work'
 import { useIpcStore } from './ipc'
 import { useSecretsStore } from './secrets'
 import { useTranslationStore } from './translation'
@@ -287,6 +288,13 @@ export const useDialogStore = defineStore('dialog', () => {
     await session.stop()
   }
 
+  /** Stops a running dialog and resolves once its transcript is in the history */
+  async function stopAndSave() {
+    if (!isActive.value) return
+    await session.stop()
+    await dialogHistory.end()
+  }
+
   /** The subtitles have nothing to show once stopped: the window comes back */
   async function stopAndExpand() {
     await Promise.all([session.stop(), hideSubtitles()])
@@ -353,8 +361,11 @@ export const useDialogStore = defineStore('dialog', () => {
   const unregisterFlush = historyStore.registerInputFlush(() =>
     dialogHistory.checkpoint()
   )
+  // an external request stops a running dialog; the transcript is saved first
+  const unregisterVisibleWork = useVisibleWorkStore().register(stopAndSave)
   onScopeDispose(() => {
     unregisterFlush()
+    unregisterVisibleWork()
     dialogHistory.dispose()
   })
 

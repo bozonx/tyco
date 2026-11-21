@@ -32,8 +32,8 @@ export const ActivationMode = {
   CHAT: 'chat',
   HISTORY: 'history',
   CONFIG: 'config',
-  /** Asks whether an external call may use the selection; Tyco opens it itself */
-  EXTERNAL_ACCESS: 'externalAccess',
+  /** Shows the run of a library command; Tyco opens it itself */
+  COMMAND_RUN: 'commandRun',
   CUSTOM_ACTION: 'customAction',
 } as const satisfies Record<string, ActivationModeName>
 
@@ -72,7 +72,7 @@ export const DEFAULT_DESKTOP_VIEW_STATE: DesktopViewState = {
   customActionIndex: null,
   historyOrigin: null,
   settingsTab: null,
-  accessRequest: null,
+  commandRun: null,
   userConfig: DEFAULT_USER_CONFIG,
   sessionState: DEFAULT_SESSION_STATE,
   userData: DEFAULT_USER_DATA_STATE,
@@ -107,7 +107,7 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
     customActionIndex,
     historyOrigin,
     settingsTab,
-    accessRequest,
+    commandRun,
     isWindowShown,
     windowProfile,
     canMoveOverlay,
@@ -130,7 +130,7 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
       customActionIndex,
       historyOrigin,
       settingsTab,
-      accessRequest,
+      commandRun,
     },
     window: {
       isWindowShown,

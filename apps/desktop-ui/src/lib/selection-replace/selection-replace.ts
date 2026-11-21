@@ -2,7 +2,7 @@ import {
   PENDING_OVERLAY_DELAY_MS,
   ERROR_HIDE_MS,
   SELECTION_SUCCESS_HIDE_MS as SUCCESS_HIDE_MS,
-} from '../commands/status-overlay-timing'
+} from './status-overlay-timing'
 import { keepSurroundingWhitespace } from '@tyco/shared'
 import {
   type SelectionAction,
@@ -221,4 +221,4 @@ export function createSelectionReplace(deps: SelectionReplaceDependencies) {
   return { handleRun, handleCancel, dispose }
 }
 
-export { PENDING_OVERLAY_DELAY_MS } from '../commands/status-overlay-timing'
+export { PENDING_OVERLAY_DELAY_MS } from './status-overlay-timing'

@@ -1,7 +1,7 @@
 import commandNames from '../../../../../packages/shared/fixtures/command-names.json'
 import { describe, expect, it } from 'vitest'
 
-import { type CommandConfig, EXTERNAL_TIMEOUT_DEFAULT_SEC } from '@tyco/shared'
+import { type CommandConfig, RUN_TIMEOUT_DEFAULT_SEC } from '@tyco/shared'
 
 import { testOperations } from '../operations/testing'
 
@@ -21,7 +21,7 @@ import {
   normalizeCommandName,
 } from './command-external'
 import {
-  externalTimeoutOf,
+  runTimeoutOf,
   createCommand,
   isCommandOperation,
   normalizeCommands,
@@ -74,7 +74,7 @@ describe('normalizeCommands for one command', () => {
       outputAction: 'none',
       isOutputLogged: false,
       isAvailableExternally: false,
-      externalTimeoutSec: EXTERNAL_TIMEOUT_DEFAULT_SEC,
+      runTimeoutSec: RUN_TIMEOUT_DEFAULT_SEC,
       isEnabled: true,
       // fields it does not know stay for the build that wrote them
       afterRun: 'bogus',
@@ -149,13 +149,13 @@ describe('normalizeCommands for one command', () => {
   })
 })
 
-describe('externalTimeoutOf', () => {
+describe('runTimeoutOf', () => {
   it('keeps a whole positive limit up to an hour, the default otherwise', () => {
-    expect(externalTimeoutOf(90.4)).toBe(90)
-    expect(externalTimeoutOf(99999)).toBe(3600)
-    expect(externalTimeoutOf(0)).toBe(EXTERNAL_TIMEOUT_DEFAULT_SEC)
-    expect(externalTimeoutOf('30')).toBe(EXTERNAL_TIMEOUT_DEFAULT_SEC)
-    expect(externalTimeoutOf(Number.NaN)).toBe(EXTERNAL_TIMEOUT_DEFAULT_SEC)
+    expect(runTimeoutOf(90.4)).toBe(90)
+    expect(runTimeoutOf(99999)).toBe(3600)
+    expect(runTimeoutOf(0)).toBe(RUN_TIMEOUT_DEFAULT_SEC)
+    expect(runTimeoutOf('30')).toBe(RUN_TIMEOUT_DEFAULT_SEC)
+    expect(runTimeoutOf(Number.NaN)).toBe(RUN_TIMEOUT_DEFAULT_SEC)
   })
 })
 

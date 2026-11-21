@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  EXTERNAL_TIMEOUT_DEFAULT_SEC,
-  EXTERNAL_TIMEOUT_MAX_SEC,
-} from '@tyco/shared'
+import { RUN_TIMEOUT_DEFAULT_SEC, RUN_TIMEOUT_MAX_SEC } from '@tyco/shared'
 
 import { createCommand } from './command-config'
 import { createCommandEditorModel } from './command-editor-model'
@@ -23,14 +20,14 @@ describe('command editor model', () => {
     })
     model.updateDescription(' ')
     expect(command.description).toBe('')
-    model.updateExternalTimeout(String(EXTERNAL_TIMEOUT_MAX_SEC + 1))
-    expect(command.externalTimeoutSec).toBe(EXTERNAL_TIMEOUT_MAX_SEC)
-    model.updateExternalTimeout('1.6')
-    expect(command.externalTimeoutSec).toBe(2)
-    model.updateExternalTimeout('')
-    expect(command.externalTimeoutSec).toBe(EXTERNAL_TIMEOUT_DEFAULT_SEC)
-    model.updateExternalTimeout('10abc')
-    expect(command.externalTimeoutSec).toBe(EXTERNAL_TIMEOUT_DEFAULT_SEC)
+    model.updateRunTimeout(String(RUN_TIMEOUT_MAX_SEC + 1))
+    expect(command.runTimeoutSec).toBe(RUN_TIMEOUT_MAX_SEC)
+    model.updateRunTimeout('1.6')
+    expect(command.runTimeoutSec).toBe(2)
+    model.updateRunTimeout('')
+    expect(command.runTimeoutSec).toBe(RUN_TIMEOUT_DEFAULT_SEC)
+    model.updateRunTimeout('10abc')
+    expect(command.runTimeoutSec).toBe(RUN_TIMEOUT_DEFAULT_SEC)
     expect(command.operationConfig.command).toBe('echo test')
   })
   it('sets the output action of quick commands', () => {

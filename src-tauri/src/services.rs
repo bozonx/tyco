@@ -28,4 +28,5 @@ pub mod signals;
 pub mod status_overlay;
 pub mod storage;
 pub mod variables;
+pub mod visible_work;
 pub mod voice;

@@ -97,13 +97,14 @@ for command discovery, execution results, and job management.
 
 Settings → Commands controls external execution and selection
 capture/replacement. Every executable command needs an individual external
-grant. New core/plugin commands are not automatically exposed. Non-interactive
-calls require explicit input; `--interactive` permits input/confirmation UI.
+grant. New core/plugin commands are not automatically exposed. Every run is
+shown in the Tyco overlay, one at a time; a text command without input asks
+for the text there, and a run while another one runs fails with `Busy`.
 Use `--wait` to obtain actual command completion, or manage the returned job ID
 through `tyco-ctl jobs`. Selection replacement is explicit:
 
 ```sh
-tyco-ctl run my-fix --selection --replace --interactive --wait
+tyco-ctl run my-fix --selection --replace --wait
 tyco-ctl replace correction
 ```
 

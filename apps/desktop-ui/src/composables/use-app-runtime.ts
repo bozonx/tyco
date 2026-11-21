@@ -25,7 +25,8 @@ import {
   useProfileChatInputStore,
 } from '../stores/chat-input'
 import { useEditorInputStore } from '../stores/editor-input'
-import { useExternalCommandsStore } from '../stores/external-commands'
+import { useCommandRunStore } from '../stores/command-run'
+import { useVisibleWorkStore } from '../stores/visible-work'
 import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { useHistoryStore } from '../stores/history'
@@ -242,8 +243,9 @@ export function useAppRuntime() {
     shutdown: settingsShutdown,
     runSelection: (payload) => useSelectionReplaceStore().handleRun(payload),
     cancelSelection: (runId) => useSelectionReplaceStore().handleCancel(runId),
-    runCommand: (payload) => useExternalCommandsStore().handleRun(payload),
-    cancelCommand: (id) => useExternalCommandsStore().handleCancel(id),
+    rejectCommandRun: (payload) => useCommandRunStore().reject(payload),
+    cancelCommand: (id) => useCommandRunStore().handleJobCancelled(id),
+    endVisibleWork: (requestId) => useVisibleWorkStore().end(requestId),
     closeModals: menuModalsStore.closeAll,
     goToChat: appNavigation.goToChat,
     goToProfileChat: appNavigation.goToProfileChat,

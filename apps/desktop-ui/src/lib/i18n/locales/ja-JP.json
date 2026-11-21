@@ -203,6 +203,22 @@
     },
     "replyBlocks": { "toolLabel": "返答ブロック" }
   },
+  "commandRun": {
+    "cancelled": "コマンドはキャンセルされました",
+    "cancelledTitle": "「{name}」はキャンセルされました",
+    "done": "「{name}」が完了しました",
+    "failed": "コマンド「{name}」が失敗しました",
+    "failedUnknown": "不明なエラー",
+    "inputPlaceholder": "コマンドに渡すテキスト",
+    "missing": "コマンドがライブラリに見つかりません",
+    "noOutput": "コマンドはテキストを返しませんでした",
+    "rejected": "「{name}」は開始されませんでした：「{running}」を実行中です",
+    "run": "実行",
+    "running": "「{name}」を実行中…",
+    "startFailed": "コマンドを開始できませんでした",
+    "timedOut": "{seconds} 秒以内に完了しなかったため停止しました",
+    "unavailable": "コマンドはもう実行できません：変更、削除されたか、許可されていません"
+  },
   "commands": {
     "advanced": "高度な設定",
     "afterRunCopy": "クリップボードへ",
@@ -253,11 +269,11 @@
     "errorUnknownType": "不明なコマンドの種類です。",
     "external": "外部からの呼び出しを許可",
     "externalDescription": "現在のセッション内のローカルアプリケーションが、tyco-ctlおよびD-Busを介して実行できる操作。各コマンドへのアクセスは、高度な設定で有効にします。",
-    "externalInfo": "ローカルアプリケーションやスクリプトは、tyco-ctl run <ID> または tyco-ctl run --name <name> を使用して許可されたコマンドを実行できます。結果は呼び出し元に返されます。--interactive はテキスト入力UIを許可し、--selection --replace は選択テキストの置換を明示的に要求します。",
+    "externalInfo": "ローカルアプリケーションやスクリプトは、tyco-ctl run <ID> または tyco-ctl run --name <name> で許可されたコマンドを実行できます。コマンドは Tyco のオーバーレイで1つずつ実行され、結果は呼び出し元に返されます。入力がない場合はオーバーレイがテキストを尋ねます。--selection --replace は選択テキストの置換を明示的に要求します。",
     "externalSelection": "選択テキストの読み取りと置換",
     "externalSelectionInfo": "アプリケーションはアクティブウィンドウで選択されたテキストを取得し、コマンドの結果で置き換えることができます（tyco-ctl run <ID> --selection --replace）。これがオフの場合、Tycoはそのような呼び出しごとに許可を求めます。",
-    "externalTimeoutInfo": "外部呼び出しがバックグラウンドで実行できる時間（コマンドの開始から計測）。超えると停止され、タイムアウトとして報告されます。既定は {seconds}、最大 {max}。ウィンドウでの実行には上限がありません。実行状況が見え、キャンセルできるためです。",
-    "externalTimeoutLabel": "バックグラウンドのタイムアウト（秒）",
+    "runTimeoutInfo": "コマンドの1回の実行が開始から続けられる時間です。超えると停止され、タイムアウトとして報告されます。既定は {seconds}、最大 {max}。各実行はコマンドオーバーレイに表示され、そこで早めにキャンセルできます。",
+    "runTimeoutLabel": "実行時間の上限（秒）",
     "externalTitle": "外部アクセス",
     "fieldOff": "いいえ",
     "fieldOn": "はい",
@@ -452,13 +468,6 @@
     "settingsHint": "永続的に許可または再度禁止するには、「設定」→「コマンド」→「外部アクセス」に移動してください。",
     "title": "選択したテキストへのアクセス",
     "unknownCaller": "Tycoはどのアプリケーションが要求しているかを判別できません。セッション内の任意のプログラムがこれを実行できます。"
-  },
-  "externalCommand": {
-    "failed": "コマンド「{name}」が失敗しました",
-    "missing": "コマンドがライブラリに見つかりません",
-    "running": "「{name}」を実行中…",
-    "timedOut": "{seconds} 秒以内に完了しなかったため停止しました",
-    "unknown": "不明なエラー"
   },
   "history": {
     "chatsDisabled": "履歴はディスクに保存されません",

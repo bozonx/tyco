@@ -306,13 +306,13 @@ pub struct CommandConfig {
     pub is_enabled: bool,
     #[serde(default)]
     pub operation_config: Value,
-    /// The limit of a background external run, in seconds; see
-    /// `EXTERNAL_TIMEOUT_DEFAULT_SEC` in `commands-config.ts`.
+    /// How long a run of the command may take, in seconds; see
+    /// `RUN_TIMEOUT_DEFAULT_SEC` in `commands-config.ts`.
     #[serde(
-        default = "default_external_timeout_sec",
-        deserialize_with = "lenient_external_timeout"
+        default = "default_run_timeout_sec",
+        deserialize_with = "lenient_run_timeout"
     )]
-    pub external_timeout_sec: u64,
+    pub run_timeout_sec: u64,
     /// The platforms the command runs on, empty for every one. On another
     /// one it stays in the config and in the grids, but does not run.
     #[serde(default, deserialize_with = "lenient")]
@@ -335,10 +335,10 @@ pub fn is_on_this_platform(platforms: &[String]) -> bool {
             .any(|platform| platform == crate::services::platform::hotkeys::platform_name())
 }
 
-/// See `EXTERNAL_TIMEOUT_DEFAULT_SEC` in `commands-config.ts`.
-pub const EXTERNAL_TIMEOUT_DEFAULT_SEC: u64 = 120;
-/// See `EXTERNAL_TIMEOUT_MAX_SEC` in `commands-config.ts`.
-pub const EXTERNAL_TIMEOUT_MAX_SEC: u64 = 3600;
+/// See `RUN_TIMEOUT_DEFAULT_SEC` in `commands-config.ts`.
+pub const RUN_TIMEOUT_DEFAULT_SEC: u64 = 120;
+/// See `RUN_TIMEOUT_MAX_SEC` in `commands-config.ts`.
+pub const RUN_TIMEOUT_MAX_SEC: u64 = 3600;
 
 /// Only an explicit `false` disables a command, see `CommandConfig::is_enabled`.
 fn lenient_enabled<'de, D>(deserializer: D) -> Result<bool, D::Error>
@@ -366,20 +366,20 @@ fn short_script_label(script: &str) -> String {
     }
 }
 
-fn default_external_timeout_sec() -> u64 {
-    EXTERNAL_TIMEOUT_DEFAULT_SEC
+fn default_run_timeout_sec() -> u64 {
+    RUN_TIMEOUT_DEFAULT_SEC
 }
 
 /// A limit out of range falls back to the default, as the schema repair does.
-fn lenient_external_timeout<'de, D>(deserializer: D) -> Result<u64, D::Error>
+fn lenient_run_timeout<'de, D>(deserializer: D) -> Result<u64, D::Error>
 where
     D: Deserializer<'de>,
 {
     let value = Value::deserialize(deserializer)?;
     Ok(value
         .as_u64()
-        .filter(|seconds| (1..=EXTERNAL_TIMEOUT_MAX_SEC).contains(seconds))
-        .unwrap_or(EXTERNAL_TIMEOUT_DEFAULT_SEC))
+        .filter(|seconds| (1..=RUN_TIMEOUT_MAX_SEC).contains(seconds))
+        .unwrap_or(RUN_TIMEOUT_DEFAULT_SEC))
 }
 
 /// The saved commands in their order; one that is not an object is left out.
@@ -504,18 +504,18 @@ mod tests {
     }
 
     #[test]
-    fn external_timeouts_out_of_range_fall_back_to_the_default() {
+    fn run_timeouts_out_of_range_fall_back_to_the_default() {
         let config = json!({"commands": [
-            {"id": "a", "externalTimeoutSec": 30},
+            {"id": "a", "runTimeoutSec": 30},
             {"id": "b"},
-            {"id": "c", "externalTimeoutSec": 0},
-            {"id": "d", "externalTimeoutSec": 99999},
-            {"id": "e", "externalTimeoutSec": "60"},
+            {"id": "c", "runTimeoutSec": 0},
+            {"id": "d", "runTimeoutSec": 99999},
+            {"id": "e", "runTimeoutSec": "60"},
         ]});
-        let seconds = |id| command(&config, id).unwrap().external_timeout_sec;
+        let seconds = |id| command(&config, id).unwrap().run_timeout_sec;
         assert_eq!(seconds("a"), 30);
         for id in ["b", "c", "d", "e"] {
-            assert_eq!(seconds(id), EXTERNAL_TIMEOUT_DEFAULT_SEC);
+            assert_eq!(seconds(id), RUN_TIMEOUT_DEFAULT_SEC);
         }
     }
 

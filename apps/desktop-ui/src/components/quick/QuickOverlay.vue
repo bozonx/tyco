@@ -119,11 +119,11 @@
           :key="activationId"
         />
       </div>
-      <!-- gone with the window: a prompt hidden without an answer denies -->
-      <div v-show="currentMode === 'externalAccess'" class="quick-mode-layer">
-        <ExternalAccessView
+      <!-- the run lives in its store: hiding or leaving the mode ends it -->
+      <div v-show="currentMode === 'commandRun'" class="quick-mode-layer">
+        <CommandRunView
           v-if="
-            currentMode === 'externalAccess' &&
+            currentMode === 'commandRun' &&
             desktopStore.desktopState.isWindowShown
           "
         />
@@ -152,14 +152,15 @@ import {
   unionRect,
 } from '../../lib/quick-panel/input-region'
 import { createWindowFocus } from '../../lib/quick-panel/window-focus'
+import { useCommandRunStore } from '../../stores/command-run'
 import { useDesktopStore } from '../../stores/desktop'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickInputStore } from '../../stores/quick-input'
 import ChatPromptsView from '../../views/ChatPromptsView.vue'
+import CommandRunView from '../../views/CommandRunView.vue'
 import CorrectionView from '../../views/CorrectionView.vue'
 import CustomActionView from '../../views/CustomActionView.vue'
-import ExternalAccessView from '../../views/ExternalAccessView.vue'
 import FavoritesView from '../../views/FavoritesView.vue'
 import ListenView from '../../views/ListenView.vue'
 import QuickAiRequestView from '../../views/QuickAiRequestView.vue'
@@ -180,6 +181,8 @@ import {
 
 const ipcStore = useIpcStore()
 const desktopStore = useDesktopStore()
+// the run of a command follows the activations from the start
+useCommandRunStore()
 const menuModalsStore = useMenuModalsStore()
 const quickInputStore = useQuickInputStore()
 const cardRef = ref<HTMLElement | null>(null)

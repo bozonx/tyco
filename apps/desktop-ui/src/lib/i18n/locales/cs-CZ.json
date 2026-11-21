@@ -203,6 +203,22 @@
     },
     "replyBlocks": { "toolLabel": "Varianty odpovědí" }
   },
+  "commandRun": {
+    "cancelled": "Příkaz byl zrušen",
+    "cancelledTitle": "„{name}“ bylo zrušeno",
+    "done": "„{name}“ je hotovo",
+    "failed": "Příkaz „{name}“ selhal",
+    "failedUnknown": "Neznámá chyba",
+    "inputPlaceholder": "Text pro příkaz",
+    "missing": "Příkaz není v knihovně",
+    "noOutput": "Příkaz nevrátil žádný text",
+    "rejected": "„{name}“ nebylo spuštěno: běží „{running}“",
+    "run": "Spustit",
+    "running": "Spouští se „{name}“…",
+    "startFailed": "Příkaz se nepodařilo spustit",
+    "timedOut": "Nedokončeno do {seconds} s a zastaveno",
+    "unavailable": "Příkaz již nelze spustit: byl změněn, odstraněn nebo není povolen"
+  },
   "commands": {
     "advanced": "Pokročilé",
     "afterRunCopy": "Do schránky",
@@ -253,11 +269,11 @@
     "errorUnknownType": "Neznámý typ příkazu.",
     "external": "Dostupné zvenku",
     "externalDescription": "Co mohou místní aplikace vaší relace dělat přes tyco-ctl a D-Bus. Přístup ke každému příkazu se zapíná v jeho pokročilém nastavení.",
-    "externalInfo": "Místní aplikace a skripty mohou spustit povolený příkaz pomocí tyco-ctl run <ID> nebo tyco-ctl run --name <název>. Výsledek se vrátí volajícímu. --interactive povoluje rozhraní pro zadání textu; --selection --replace výslovně žádá nahrazení výběru.",
+    "externalInfo": "Místní aplikace a skripty mohou spustit povolený příkaz pomocí tyco-ctl run <ID> nebo tyco-ctl run --name <název>. Příkaz běží v překryvu Tyco, vždy jen jeden, a výsledek se vrací volajícímu. Bez vstupu se překryv zeptá na text; --selection --replace výslovně žádá nahrazení výběru.",
     "externalSelection": "Číst a nahrazovat vybraný text",
     "externalSelectionInfo": "Aplikace může získat text vybraný v aktivním okně a nahradit ho výsledkem příkazu (tyco-ctl run <ID> --selection --replace). Když je tato volba vypnutá, Tyco žádá o svolení při každém takovém volání.",
-    "externalTimeoutInfo": "Jak dlouho může externí volání běžet na pozadí, počítáno od spuštění příkazu; poté je zastaveno a nahlášeno jako vypršení času. Výchozí hodnota {seconds}, nejvýše {max}. Běhy v okně nejsou omezeny: vidíte je a můžete je zrušit.",
-    "externalTimeoutLabel": "Časový limit na pozadí, sekundy",
+    "runTimeoutInfo": "Jak dlouho smí běh příkazu trvat od jeho spuštění; poté je zastaven a nahlášen jako vypršelý. Výchozí {seconds}, nejvýše {max}. Každý běh se zobrazuje v překryvu příkazu, kde jej můžete zrušit dříve.",
+    "runTimeoutLabel": "Časový limit běhu, sekundy",
     "externalTitle": "Externí přístup",
     "fieldOff": "Ne",
     "fieldOn": "Ano",
@@ -452,13 +468,6 @@
     "settingsHint": "Chcete-li to povolit natrvalo nebo znovu zakázat, přejděte do Nastavení → Příkazy → Externí přístup.",
     "title": "Přístup k vybranému textu",
     "unknownCaller": "Tyco nedokáže zjistit, která aplikace žádá: může to udělat kterýkoli program vaší relace."
-  },
-  "externalCommand": {
-    "failed": "Příkaz „{name}“ selhal",
-    "missing": "Příkaz není v knihovně",
-    "running": "Spouští se „{name}“…",
-    "timedOut": "Nedokončeno do {seconds} s a zastaveno",
-    "unknown": "Neznámá chyba"
   },
   "history": {
     "chatsDisabled": "Historie se neukládá na disk",

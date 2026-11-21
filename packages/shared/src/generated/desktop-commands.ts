@@ -24,6 +24,7 @@ import type {
   ChatSummary,
   ChatTransfer,
   ClientLogLevel,
+  CommandRunPayload,
   CommandRunRecord,
   CropRect,
   DesktopSnapshot,
@@ -127,6 +128,7 @@ export interface DesktopCommands {
   }
   attach_ai_vault: { args: { path: string; name: string }; result: VaultInfo }
   cancel_ai_web_tool: { args: { runId: string }; result: boolean }
+  cancel_external_job: { args: { id: string }; result: void }
   cancel_net_task: { args: { id: number }; result: void }
   cancel_screenshot_crop: {
     args: { selectionId: number; closeAll?: boolean | null }
@@ -141,7 +143,7 @@ export interface DesktopCommands {
     args: { paths: Array<string> }
     result: Array<boolean>
   }
-  claim_external_job: { args: { id: string }; result: boolean }
+  claim_external_job: { args: { id: string }; result: CommandRunPayload | null }
   clear_ai_profile_memory: { args: { profileId: string }; result: void }
   clear_chats: { args: { profileId?: string | null }; result: void }
   clear_editor_history: { args: undefined; result: void }
@@ -468,6 +470,10 @@ export interface DesktopCommands {
     result: void
   }
   show_subtitles: { args: { geometry?: WindowGeometry | null }; result: void }
+  start_command_run: {
+    args: { commandId: string; text?: string | null }
+    result: ExternalJob
+  }
   start_fetch: {
     args: { request: FetchRequest; onEvent: DesktopChannel }
     result: number
@@ -514,6 +520,7 @@ export interface DesktopCommands {
   }
   uninstall_plugin_package: { args: { id: string }; result: void }
   unwatch_audio_apps: { args: { watchId: number }; result: void }
+  visible_work_ended: { args: { id: number }; result: void }
   watch_audio_apps: { args: { onApps: DesktopChannel }; result: number }
   write_ai_profile_soul: {
     args: { id: string; content: string; expectedRevision?: string | null }

@@ -14,7 +14,7 @@ use serde_json::Value;
 
 use crate::errors::AppError;
 use crate::models::user_config::{self, ActionInputMode};
-pub use crate::models::{AccessRequest, ActivationMode, WindowProfile};
+pub use crate::models::{ActivationMode, CommandRunRequest, WindowProfile};
 
 /// Logical size of every activated window; keep it in sync with the windows in
 /// `tauri.conf.json`. The quick input panel draws only its input field and
@@ -49,8 +49,8 @@ pub struct Activation {
     pub history_origin: Option<crate::models::EditorHistoryOrigin>,
     /// The tab the settings open on; only for `Config`.
     pub settings_tab: Option<String>,
-    /// What the access prompt asks about, see `services::external::access`.
-    pub access_request: Option<AccessRequest>,
+    /// The run the command overlay shows; only for `CommandRun`.
+    pub command_run: Option<CommandRunRequest>,
 }
 
 impl Activation {
@@ -75,7 +75,7 @@ impl Activation {
             custom_action_index: None,
             history_origin: None,
             settings_tab: None,
-            access_request: None,
+            command_run: None,
         }
     }
 

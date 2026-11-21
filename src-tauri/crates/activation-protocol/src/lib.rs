@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod transport;
 
-pub const API_VERSION: u32 = 2;
+pub const API_VERSION: u32 = 3;
 /// Room for the text of a command and the list of commands.
 pub const MAX_MESSAGE_BYTES: usize = 1024 * 1024;
 pub const START_MODES: &[&str] = &[
@@ -253,8 +253,6 @@ pub struct RunRequest {
     pub text: Option<String>,
     #[serde(default)]
     pub input: Option<serde_json::Map<String, serde_json::Value>>,
-    #[serde(default)]
-    pub interactive: bool,
     #[serde(default)]
     pub selection: bool,
     #[serde(default)]

@@ -3,8 +3,9 @@
 Tyco exposes a deliberately limited API for local desktop integration. It does
 not expose arbitrary Tauri functions, secret management, plugin installation,
 or configuration writes. The CLI and D-Bus share one Rust authorization and
-execution dispatcher. The current external API version is 2; version 2 removes
-the shutdown request and adds job listing.
+execution dispatcher. The current external API version is 3; version 3 shows
+every command run in the Tyco overlay, one at a time, and removes
+`--interactive`.
 
 ## Prerequisites and transports
 
@@ -111,13 +112,12 @@ It is off by default. Internal hotkeys and UI actions do not acquire external
 permissions merely because they share the underlying execution code.
 
 While it is off, `tyco-ctl run <id> --selection` does not fail at once: Tyco
-captures the selection and asks the user in its quick window whether the call
-may use it. **Allow once** runs this call only, **Always allow** turns the
-permission on, and **Deny**, Esc or closing the prompt fails the job with
-`AccessDenied`. The prompt cannot tell which application is asking. One prompt
-is shown at a time; another such call meanwhile fails with `AccessDenied`. A
-prompt left unanswered ends with the start limit of the job, see below. `open --selection` still
-requires the permission and does not ask.
+captures the selection and asks the user in the command overlay whether the
+call may use it. **Allow once** runs this call only, **Always allow** turns the
+permission on, and **Deny** or Esc fails the job with `AccessDenied`. The
+prompt cannot tell which application is asking. A prompt left unanswered ends
+with the start limit of the job, see below. `open --selection` still requires
+the permission and does not ask.
 
 Opening a mode that records, such as `voice` or `quick-input`, needs no
 permission: the recording happens in a visible Tyco window and nothing of it is
@@ -137,7 +137,7 @@ The corresponding user configuration is:
 
 A command's external grant does not bypass its operation's availability or permission
 checks. Permission and command configuration are checked again when the
-quick webview claims a job. A command changed after submission is rejected
+command overlay starts a job. A command changed after submission is rejected
 with `ConfigurationChanged` instead of executing a stale configuration.
 
 ## CLI
@@ -148,8 +148,7 @@ with `ConfigurationChanged` instead of executing a stale configuration.
  tyco-ctl commands list [--json]
  tyco-ctl commands describe <id | --name NAME>
  tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]
-              [--replace] [--interactive]
-              [--wait] [--json] [--timeout SECONDS]
+              [--replace] [--wait] [--json] [--timeout SECONDS]
  tyco-ctl replace correction
  tyco-ctl jobs list [--json]
  tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
@@ -278,10 +277,24 @@ tyco-ctl run my-backup --wait
 tyco-ctl run my-reminder --input-json '{"at":"18:00","message":"Call"}' --wait
 ```
 
-These commands require individual external grants. A normal `run` is
-non-interactive. Missing text returns `InputRequired`. It does not open a
-window, capture a selection,
-or perform the command's configured after-run action implicitly.
+These commands require individual external grants. Every run is shown in the
+Tyco command overlay: it shows the run, its result or its error, and Esc
+cancels it. A command that takes text and gets none asks for the text in the
+overlay; a command that takes only structured input fails with
+`InputRequired` without `--input-json`. A run never captures a selection
+implicitly, and it does not perform the command's configured after-run action:
+the output goes back to the caller.
+
+One command runs at a time, whoever started it: an external call, a hotkey or
+the action menu. A run requested while another one runs, including one that
+is still replacing its selection, fails with `Busy`, and the running overlay
+tells the user which command was not started. There is no queue. A finished
+run whose result is still shown does not count: the new run replaces it.
+
+Before a run starts or an `open` shows its window, Tyco ends what is visible
+gracefully: a voice dictation or the dialog stops recording and saves its
+result to the history, and a run of another command is cancelled. What the main
+window keeps while it is hidden, such as the editor or a chat, stays.
 
 `--stdin` preserves the input exactly, including trailing newlines. `--text`
 also preserves the supplied argument. Both text and JSON are limited by the
@@ -303,20 +316,18 @@ webhooks, Tyco substitutes `{{TEXT}}` with the provided input text (`TYCO_TEXT`
 environment variable in scripts) and `{{SELECTION}}` with the selection captured
 by `--selection` (`TYCO_SELECTION` in scripts); without one it is empty.
 
-### Interactive execution and selection
+### Selection
 
 ```sh
-tyco-ctl run my-command --interactive --wait
-tyco-ctl run my-fix --selection --replace --interactive --wait
+tyco-ctl run my-fix --selection --replace --wait
 tyco-ctl run my-transform --selection --wait
 ```
 
-Interactive execution does not open a window to ask for text: a command that
-takes text still needs `--text`, `--stdin` or `--selection`, and fails with
-`InputRequired` without one. It never implicitly uses a selection. `--selection` captures the focused application's selected
+`--selection` captures the focused application's selected
 text; without `--replace`, the output is returned and the clipboard is left as
 the user had it. `--replace` requires `--selection`, overrides configured after-run output handling, and inserts the
-result back into the original target. Empty replacement output is a failure.
+result back into the original target: the overlay hides first and the focus
+returns to that window. Empty replacement output is a failure.
 
 A changed foreground window prevents insertion: the result remains in the
 clipboard, the job fails with `SelectionFailed`, and its output remains
@@ -336,6 +347,8 @@ While the selection permission is off it fails with `AccessDenied`.
 Selection jobs are exclusive. A second external invocation returns a busy/
 selection error; it does not toggle cancellation of the first one. Internal
 selection hotkeys also cannot cancel an active external selection job.
+`replace correction` and the selection hotkeys are not library command runs:
+they work in the background and report through the status bubble.
 
 Capture presses the copy keys in the focused window and gives the clipboard
 its content back right away, so it holds neither the selection while a job
@@ -417,18 +430,20 @@ means dispatch succeeded, not that the operation completed. A job has optional
 cannot overwrite cancellation. Cancel is idempotent for a retained terminal job.
 
 Cancellation aborts the operation signal and restores an outstanding selection
-snapshot. An operation may already have performed irreversible side effects; cancel
+snapshot. Esc or the close button of the overlay cancels the job the same way;
+a click elsewhere does not, even when the quick window hides on focus loss. An operation may already have performed irreversible side effects; cancel
 is not rollback.
 
-Jobs are in-memory and disappear when Tyco exits. At most 32 jobs may be active;
-at most 128 are retained, evicting the oldest terminal jobs first. Two limits end
-a job with `TimedOut`:
+Jobs are in-memory and disappear when Tyco exits. One job is active at a time;
+at most 128 are retained, evicting the oldest terminal jobs first. A reload of
+the overlay fails the active job with `Unavailable`. Two limits end a job with
+`TimedOut`:
 
 - **Start**: a job must start within 300 seconds of the call. This covers the
-  access prompt for the selection.
+  access prompt for the selection and typing the text in the overlay.
 - **Run**: a command is stopped once it runs longer than its own limit,
   counted from its start. The limit is set per command in the settings
-  ("Background run limit"), 120 seconds by default, 1–3600.
+  ("Run time limit", `runTimeoutSec`), 120 seconds by default, 1–3600.
 
 A script is killed with its whole process tree when its job is cancelled or
 times out. Returned output
@@ -458,8 +473,8 @@ Machine error codes are stable identifiers separate from human-readable text.
 ## D-Bus
 
 D-Bus is a shortcut-friendly launcher on Linux: it opens Tyco windows and
-starts library commands the way a user would. It has no discovery, background
-execution, or job monitoring; use `tyco-ctl` for those. Both share the
+starts library commands the way a user would. It has no discovery or job
+monitoring; use `tyco-ctl` for those. Both share the
 authorization dispatcher, so the same grants and capabilities apply.
 
 | Method                    | Arguments           | What it does                                                     |
@@ -468,14 +483,13 @@ authorization dispatcher, so the same grants and capabilities apply.
 | `OpenWithText`            | `s` mode, `s` text  | Opens it with the text as input                                  |
 | `OpenWithSelection`       | `s` mode            | Opens it with the selection of the focused window                |
 | `OpenWithActivationToken` | `s` mode, `s` token | Opens it with an `xdg-activation-v1` token, so it gets the focus |
-| `RunCommand`              | `s` command ID      | Runs the command interactively                                   |
+| `RunCommand`              | `s` command ID      | Runs the command in the command overlay                          |
 | `ReplaceSelection`        | `s` command ID      | Replaces the selection with the command's output                 |
 | `CorrectSelection`        |                     | Corrects the selection in place                                  |
 
 Modes are those of `tyco-ctl open`. `RunCommand` behaves like
-`tyco-ctl run <id> --interactive`: no window asks for input, so a command
-that takes text fails with `InputRequired`. `ReplaceSelection` behaves like
-`tyco-ctl run <id> --selection --replace --interactive`, and
+`tyco-ctl run <id>`: a command that takes text asks for it in the overlay.
+`ReplaceSelection` behaves like `tyco-ctl run <id> --selection --replace`, and
 `CorrectSelection` like `tyco-ctl replace correction`. Command IDs are
 stable library IDs; display names are not accepted.
 

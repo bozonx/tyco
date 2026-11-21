@@ -33,10 +33,13 @@ export interface AppWindowControllerDependencies {
     payload: EventPayload<typeof DESKTOP_EVENTS.SELECTION_RUN>
   ) => Promise<unknown>
   cancelSelection: (runId: number) => void
-  runCommand: (
-    payload: EventPayload<typeof DESKTOP_EVENTS.COMMAND_RUN>
-  ) => Promise<unknown>
+  /** A run was refused while another command runs */
+  rejectCommandRun: (
+    payload: EventPayload<typeof DESKTOP_EVENTS.COMMAND_RUN_REJECTED>
+  ) => void
   cancelCommand: (id: string) => void
+  /** Ends what the window shows before an external request; resolves when done */
+  endVisibleWork: (requestId: number) => Promise<void>
   closeModals: () => void
   goToChat: () => Promise<void>
   goToProfileChat?: (profileId: string) => Promise<void>
@@ -177,6 +180,7 @@ export function createAppWindowController(
       subscribe(DESKTOP_EVENTS.QUIT_REQUESTED, deps.shutdown.request),
       subscribe(DESKTOP_EVENTS.QUIT_CANCELLED, deps.shutdown.cancel),
       subscribe(DESKTOP_EVENTS.PLUGINS_CHANGED, deps.refreshPlugins),
+      subscribe(DESKTOP_EVENTS.END_VISIBLE_WORK, deps.endVisibleWork),
       ...(deps.isQuickWindow
         ? [
             subscribe(DESKTOP_EVENTS.SCREENSHOT_FAILED, () =>
@@ -193,8 +197,8 @@ export function createAppWindowController(
         subscribe(DESKTOP_EVENTS.SELECTION_CANCEL, (payload) =>
           deps.cancelSelection(payload.runId)
         ),
-        subscribe(DESKTOP_EVENTS.COMMAND_RUN, async (payload) => {
-          await deps.runCommand(payload)
+        subscribe(DESKTOP_EVENTS.COMMAND_RUN_REJECTED, (payload) => {
+          deps.rejectCommandRun(payload)
         }),
         subscribe(DESKTOP_EVENTS.EXTERNAL_JOB_CANCEL, (id) => {
           deps.cancelCommand(id)

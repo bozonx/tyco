@@ -71,7 +71,8 @@ the reply blocks and its own attachments, and the web tools by that setting.
 (`models/user_config.rs`); it depends on no service. `services/` is grouped by
 domain: `activation/` (coordinator, metrics, local socket), `settings/`
 (schema, three-way merge, version, defaults, session state), `external/`
-(the API shared by `tyco-ctl` and D-Bus, its jobs, commands and access prompt),
+(the API shared by `tyco-ctl` and D-Bus, the command run slot, its jobs,
+commands and access step),
 `secrets/` (store, webhook headers, history redaction) and `voice/`.
 `services/platform/` owns OS/session APIs, the D-Bus server and the status
 overlay among them. `services/storage/` separates config loading, file paths,
@@ -114,6 +115,29 @@ The network gateway owns request startup and uses one limit of 32 active HTTP
 and WebSocket operations, including request preparation. Cancellation releases
 capacity only when the operation lease is dropped. Shutdown closes admission,
 rejects late socket registration and waits for outstanding leases.
+
+Library command runs are visible and sequential. `ExternalJobs`
+(`services/external/jobs.rs`) holds one run slot, taken atomically at the start
+of a run, before any selection capture, and released when the job is terminal,
+a pending selection replacement included; a second run fails with `Busy` and
+`CommandRunRejected` tells the running overlay. External runs
+(`api::job_execution::start`) and internal ones (`start_command_run`, from a
+hotkey slot or the action menu) take the same slot and open
+`ActivationMode::CommandRun`, an internal mode outside `PUBLIC_MODES`, with a
+`CommandRunRequest` in the snapshot. The overlay claims the job
+(`claim_external_job` returns what it runs and starts the run limit,
+`runTimeoutSec` of the command), asks for access or text when needed and
+finishes it; Esc cancels it through `cancel_external_job`. Before replacing a
+selection the backend hides the overlay and waits for the focus to leave it. A
+reload of the quick webview (`on_page_load`) fails the active job. The status
+bubble remains only for `replace correction` and the selection hotkeys.
+
+Before an external `run` or `open` shows anything, `services/visible_work.rs`
+asks both webviews (`EndVisibleWork`) to end what they show gracefully: the
+voice dictation and the dialog stop recording and save their history, a command
+run is cancelled. Each window answers with `visible_work_ended`; the request
+waits for the answers for at most three seconds, off the main thread. A
+rejected run ends nothing.
 
 Activation policy lives in `services/activation/coordinator.rs`, with a supplied
 window host and generation checks that discard late context captures. Generation

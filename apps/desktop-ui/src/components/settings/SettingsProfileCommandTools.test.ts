@@ -20,7 +20,7 @@ const commandWithDesc: CommandConfig = {
   outputAction: 'none',
   isOutputLogged: false,
   isAvailableExternally: false,
-  externalTimeoutSec: 120,
+  runTimeoutSec: 120,
   isEnabled: true,
 }
 
@@ -36,7 +36,7 @@ const commandWithoutDesc: CommandConfig = {
   outputAction: 'none',
   isOutputLogged: false,
   isAvailableExternally: false,
-  externalTimeoutSec: 120,
+  runTimeoutSec: 120,
   isEnabled: true,
 }
 

@@ -91,7 +91,7 @@ export class FakeDesktopBackend {
       customActionIndex: null,
       historyOrigin: null,
       settingsTab: null,
-      accessRequest: null,
+      commandRun: null,
       ...structuredClone(options.activation),
     }
     this.window = {

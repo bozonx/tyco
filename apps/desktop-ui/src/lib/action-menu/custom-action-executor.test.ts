@@ -58,15 +58,18 @@ describe('custom-action-executor', () => {
       ).toBe(true)
     })
 
+    it('keeps the window for a command, which runs in the overlay', () => {
+      expect(
+        isQuickWindowModeSwitchingAction({ type: 'command', commandId: 'cmd1' })
+      ).toBe(true)
+    })
+
     it('returns false for actions that do not switch quick-window modes', () => {
       expect(
         isQuickWindowModeSwitchingAction({
           type: 'standard',
           actionId: 'copyToClipboard',
         })
-      ).toBe(false)
-      expect(
-        isQuickWindowModeSwitchingAction({ type: 'command', commandId: 'cmd1' })
       ).toBe(false)
       expect(
         isQuickWindowModeSwitchingAction({

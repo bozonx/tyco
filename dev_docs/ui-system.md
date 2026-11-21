@@ -434,6 +434,21 @@ leaving attachments become inert immediately. Sortable lists retain their drag
 preview and settle into committed positions over 160 ms, canceling that feedback
 on another drag or disposal.
 
+## Command run overlay
+
+Every run of a library command is shown by `views/CommandRunView.vue` in the
+`commandRun` mode of the quick window, whoever started it. The state machine is
+`lib/commands/command-run-session.ts` (`access → input → running → result |
+failed | cancelled`), wired by `stores/command-run.ts`, which follows the
+activations: a new `commandRun` activation opens its run, leaving the mode or
+hiding the window cancels a run that has not finished. The overlay takes the
+keyboard; Esc or the close button cancels a run or closes a finished one. It
+keeps on focus loss. A command whose output action is the menu shows its result
+in the overlay, with the action menu one button away; a copy or an insertion
+hides the overlay. A run refused while another one runs is told by a toast in
+the running overlay. Features register how they end their visible work with
+`stores/visible-work.ts`, which answers the backend's `EndVisibleWork` request.
+
 ## Quick window reveal
 
 A new quick activation keeps the main window visible until the quick frontend

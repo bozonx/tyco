@@ -203,6 +203,22 @@
     },
     "replyBlocks": { "toolLabel": "Antwortblöcke" }
   },
+  "commandRun": {
+    "cancelled": "Der Befehl wurde abgebrochen",
+    "cancelledTitle": "„{name}“ wurde abgebrochen",
+    "done": "„{name}“ ist fertig",
+    "failed": "Der Befehl „{name}“ ist fehlgeschlagen",
+    "failedUnknown": "Unbekannter Fehler",
+    "inputPlaceholder": "Text für den Befehl",
+    "missing": "Der Befehl ist nicht in der Bibliothek",
+    "noOutput": "Der Befehl hat keinen Text zurückgegeben",
+    "rejected": "„{name}“ wurde nicht gestartet: „{running}“ läuft",
+    "run": "Ausführen",
+    "running": "„{name}“ wird ausgeführt…",
+    "startFailed": "Der Befehl konnte nicht gestartet werden",
+    "timedOut": "Nicht innerhalb von {seconds} s abgeschlossen und gestoppt",
+    "unavailable": "Der Befehl kann nicht mehr ausgeführt werden: Er wurde geändert, entfernt oder nicht erlaubt"
+  },
   "commands": {
     "advanced": "Erweitert",
     "afterRunCopy": "In die Zwischenablage",
@@ -253,11 +269,11 @@
     "errorUnknownType": "Unbekannter Befehlstyp.",
     "external": "Von außen verfügbar",
     "externalDescription": "Was lokale Anwendungen Ihrer Sitzung über tyco-ctl und D-Bus tun dürfen. Der Zugriff auf jeden Befehl wird in seinen erweiterten Einstellungen aktiviert.",
-    "externalInfo": "Lokale Anwendungen und Skripte können einen erlaubten Befehl mit tyco-ctl run <ID> oder tyco-ctl run --name <Name> ausführen. Das Ergebnis geht an den Aufrufer zurück. --interactive erlaubt eine Oberfläche zur Texteingabe; --selection --replace fordert ausdrücklich das Ersetzen der Auswahl an.",
+    "externalInfo": "Lokale Anwendungen und Skripte können einen erlaubten Befehl mit tyco-ctl run <ID> oder tyco-ctl run --name <Name> ausführen. Der Befehl läuft im Tyco-Overlay, einer nach dem anderen, und das Ergebnis geht an den Aufrufer zurück. Ohne Eingabe fragt das Overlay nach dem Text; --selection --replace fordert ausdrücklich das Ersetzen der Auswahl an.",
     "externalSelection": "Ausgewählten Text lesen und ersetzen",
     "externalSelectionInfo": "Eine Anwendung kann den im aktiven Fenster ausgewählten Text abrufen und durch das Ergebnis eines Befehls ersetzen (tyco-ctl run <ID> --selection --replace). Ist dies aus, fragt Tyco bei jedem solchen Aufruf um Erlaubnis.",
-    "externalTimeoutInfo": "Wie lange ein externer Aufruf im Hintergrund laufen darf, gezählt ab dem Start des Befehls; danach wird er gestoppt und als Zeitüberschreitung gemeldet. Standardmäßig {seconds}, höchstens {max}. Ausführungen in einem Fenster sind nicht begrenzt: Sie sehen sie und können sie abbrechen.",
-    "externalTimeoutLabel": "Hintergrund-Timeout, Sekunden",
+    "runTimeoutInfo": "Wie lange ein Lauf des Befehls ab seinem Start dauern darf; danach wird er gestoppt und als Zeitüberschreitung gemeldet. Standardmäßig {seconds}, höchstens {max}. Jeder Lauf wird im Befehls-Overlay angezeigt, wo Sie ihn früher abbrechen können.",
+    "runTimeoutLabel": "Laufzeitlimit, Sekunden",
     "externalTitle": "Externer Zugriff",
     "fieldOff": "Nein",
     "fieldOn": "Ja",
@@ -452,13 +468,6 @@
     "settingsHint": "Um es dauerhaft zu erlauben oder wieder zu verbieten, gehen Sie zu Einstellungen → Befehle → Externer Zugriff.",
     "title": "Zugriff auf ausgewählten Text",
     "unknownCaller": "Tyco kann nicht erkennen, welche Anwendung fragt: Jedes Programm Ihrer Sitzung kann das tun."
-  },
-  "externalCommand": {
-    "failed": "Der Befehl „{name}“ ist fehlgeschlagen",
-    "missing": "Der Befehl ist nicht in der Bibliothek",
-    "running": "„{name}“ wird ausgeführt…",
-    "timedOut": "Nicht innerhalb von {seconds} s abgeschlossen und gestoppt",
-    "unknown": "Unbekannter Fehler"
   },
   "history": {
     "chatsDisabled": "Der Verlauf wird nicht auf der Festplatte gespeichert",

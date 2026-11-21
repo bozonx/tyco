@@ -203,6 +203,22 @@
     },
     "replyBlocks": { "toolLabel": "Válaszblokkok" }
   },
+  "commandRun": {
+    "cancelled": "A parancs megszakítva",
+    "cancelledTitle": "„{name}” megszakítva",
+    "done": "„{name}” elkészült",
+    "failed": "A(z) „{name}” parancs sikertelen",
+    "failedUnknown": "Ismeretlen hiba",
+    "inputPlaceholder": "Szöveg a parancshoz",
+    "missing": "A parancs nincs a könyvtárban",
+    "noOutput": "A parancs nem adott vissza szöveget",
+    "rejected": "„{name}” nem indult el: „{running}” fut",
+    "run": "Futtatás",
+    "running": "„{name}” futtatása…",
+    "startFailed": "A parancsot nem sikerült elindítani",
+    "timedOut": "Nem fejeződött be {seconds} mp alatt, ezért leállt",
+    "unavailable": "A parancs már nem futtatható: módosították, eltávolították vagy nem engedélyezett"
+  },
   "commands": {
     "advanced": "Speciális",
     "afterRunCopy": "A vágólapra",
@@ -253,11 +269,11 @@
     "errorUnknownType": "Ismeretlen parancstípus.",
     "external": "Kívülről elérhető",
     "externalDescription": "Mit tehetnek a munkamenet helyi alkalmazásai a tyco-ctl és a D-Bus segítségével. Az egyes parancsokhoz való hozzáférés a parancs speciális beállításaiban kapcsolható be.",
-    "externalInfo": "A helyi alkalmazások és szkriptek a tyco-ctl run <ID> vagy a tyco-ctl run --name <név> paranccsal futtathatnak egy engedélyezett parancsot. Az eredmény a hívóhoz kerül vissza. A --interactive engedélyezi a szövegbeviteli felületet; a --selection --replace kifejezetten a kijelölés cseréjét kéri.",
+    "externalInfo": "A helyi alkalmazások és szkriptek engedélyezett parancsot futtathatnak a tyco-ctl run <ID> vagy a tyco-ctl run --name <név> paranccsal. A parancs a Tyco átfedésében fut, egyszerre egy, az eredmény pedig visszakerül a hívóhoz. Bemenet nélkül az átfedés kéri a szöveget; a --selection --replace kifejezetten a kijelölés cseréjét kéri.",
     "externalSelection": "Kijelölt szöveg olvasása és cseréje",
     "externalSelectionInfo": "Egy alkalmazás lekérheti az aktív ablakban kijelölt szöveget, és lecserélheti egy parancs eredményére (tyco-ctl run <ID> --selection --replace). Ha ez ki van kapcsolva, a Tyco minden ilyen hívásnál engedélyt kér.",
-    "externalTimeoutInfo": "Meddig futhat egy külső hívás a háttérben a parancs indításától számítva; utána leáll, és időtúllépésként jelenik meg. Alapértelmezés szerint {seconds}, legfeljebb {max}. Az ablakban futó parancsoknak nincs korlátja: látja őket, és megszakíthatja őket.",
-    "externalTimeoutLabel": "Háttérbeli időtúllépés, másodperc",
+    "runTimeoutInfo": "Mennyi ideig tarthat a parancs egy futása az indulástól számítva; utána leáll, és időtúllépésként jelenik meg. Alapértelmezés {seconds}, legfeljebb {max}. Minden futás látható a parancs-átfedésben, ahol korábban megszakíthatod.",
+    "runTimeoutLabel": "Futási időkorlát, másodperc",
     "externalTitle": "Külső hozzáférés",
     "fieldOff": "Nem",
     "fieldOn": "Igen",
@@ -452,13 +468,6 @@
     "settingsHint": "A végleges engedélyezéshez vagy az ismételt tiltáshoz lépjen a Beállítások → Parancsok → Külső hozzáférés részhez.",
     "title": "Hozzáférés a kijelölt szöveghez",
     "unknownCaller": "A Tyco nem tudja megállapítani, melyik alkalmazás kéri: a munkamenet bármely programja megteheti."
-  },
-  "externalCommand": {
-    "failed": "A(z) „{name}” parancs sikertelen",
-    "missing": "A parancs nincs a könyvtárban",
-    "running": "„{name}” futtatása…",
-    "timedOut": "Nem fejeződött be {seconds} mp alatt, ezért leállt",
-    "unknown": "Ismeretlen hiba"
   },
   "history": {
     "chatsDisabled": "Az előzmények nem kerülnek lemezre",

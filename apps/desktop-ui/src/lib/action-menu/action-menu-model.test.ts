@@ -47,6 +47,7 @@ describe('createActionMenuModel', () => {
       correctAndInsert: vi.fn().mockResolvedValue(undefined),
       showToast: vi.fn(),
       hideWindow: vi.fn(),
+      startCommandRun: vi.fn().mockResolvedValue(true),
       minCorrectionLength: () => 10,
       operations,
     }
@@ -520,6 +521,7 @@ describe('createActionMenuModel', () => {
       startCorrection: vi.fn().mockResolvedValue(undefined),
       correctAndInsert: vi.fn().mockResolvedValue(undefined),
       showToast: vi.fn(),
+      startCommandRun: vi.fn(),
       mainActions: () => mainActions,
       operations: testOperations(),
     }
@@ -564,12 +566,12 @@ describe('createActionMenuModel', () => {
     expect(store.getActionsMenu()).toHaveLength(1)
 
     await item?.action('editor text')
-    // the text does not leave the app with a command that takes none
-    expect(deps.saveOutput).not.toHaveBeenCalled()
-    expect(executeScriptAction.mock.calls[0][0]).toMatchObject({ text: '' })
+    // the text does not go with a command that takes none
+    expect(deps.startCommandRun).toHaveBeenCalledWith('sc1', null)
+    expect(executeScriptAction).not.toHaveBeenCalled()
   })
 
-  it('builds the items of enabled commands, in their slots', async () => {
+  it('builds the items of enabled commands, which run in the command overlay', async () => {
     const { deps } = setup()
     const script = {
       ...createCommand('script', 'sc1'),
@@ -581,20 +583,9 @@ describe('createActionMenuModel', () => {
       operationConfig: { url: 'https://x.test' },
     }
     const disabled = { ...createCommand('script', 'sc2'), isEnabled: false }
-    const executeScriptAction = vi
-      .fn()
-      .mockResolvedValue({
-        success: true,
-        exitCode: 0,
-        stdout: '',
-        stderr: '',
-        running: false,
-      })
-    const logRun = vi.fn()
     const store = createActionMenuModel({
       ...deps,
-      logRun,
-      operations: testOperations({ executeScriptAction }),
+      operations: testOperations({}),
       mainActions: () => ({
         q: { type: 'command', commandId: 'sc1' },
         w: { type: 'command', commandId: 'wh1' },
@@ -616,64 +607,15 @@ describe('createActionMenuModel', () => {
     expect(slots[0]).toMatchObject({ name: 'Echo', icon: 'mdi:console-line' })
 
     await slots[0]?.action('menu text')
-    expect(deps.saveOutput).toHaveBeenCalledWith('menu text')
-    expect(executeScriptAction.mock.calls[0][0]).toMatchObject({
-      commandId: 'sc1',
-      text: 'menu text',
-    })
-    expect(logRun).toHaveBeenCalledWith({
-      commandId: 'sc1',
-      name: 'Echo',
-      source: 'menu',
-      text: 'menu text',
-      success: true,
-    })
-  })
-
-  it('shows and clears pending modal while a command action runs and aborts on cancel', async () => {
-    const { deps } = setup()
-    const script = {
-      ...createCommand('script', 'sc1'),
-      name: 'Echo',
-      operationConfig: { command: 'echo {{TEXT}}' },
-    }
-    const setPendingModal = vi.fn().mockReturnValue(7)
-    const clearPendingModal = vi.fn()
-    const logRun = vi.fn()
-    const cancelScriptAction = vi.fn().mockResolvedValue(undefined)
-    const executeScriptAction = vi.fn().mockImplementation(async () => {
-      const pending = setPendingModal.mock.calls[0]?.[0]
-      pending?.onCancel?.()
-      return {
-        success: true,
-        exitCode: 0,
-        stdout: '',
-        stderr: '',
-        running: false,
-      }
-    })
-    const store = createActionMenuModel({
-      ...deps,
-      logRun,
-      setPendingModal,
-      clearPendingModal,
-      operations: testOperations({ executeScriptAction, cancelScriptAction }),
-      mainActions: () => ({ q: { type: 'command', commandId: 'sc1' } }),
-      commands: () => [script],
-    })
-
-    const [item] = store.getShortcutActions()
-    await item?.action('menu text')
-
-    expect(setPendingModal).toHaveBeenCalledWith(
-      expect.objectContaining({
-        label: 'Running “Echo”…',
-        onCancel: expect.any(Function),
-      })
-    )
-    expect(cancelScriptAction).toHaveBeenCalledOnce()
-    expect(clearPendingModal).toHaveBeenCalledWith(7)
-    expect(logRun).not.toHaveBeenCalled()
+    expect(deps.startCommandRun).toHaveBeenLastCalledWith('sc1', 'menu text')
+    // without a text the overlay asks for one
+    await slots[0]?.action('  ')
+    expect(deps.startCommandRun).toHaveBeenLastCalledWith('sc1', null)
+    // a command that takes no text gets none
+    await slots[1]?.action('menu text')
+    expect(deps.startCommandRun).toHaveBeenLastCalledWith('wh1', null)
+    // the overlay records the text once the command runs
+    expect(deps.saveOutput).not.toHaveBeenCalled()
   })
 
   it('builds the items of transformations and languages, which open their dialog', async () => {

@@ -203,6 +203,22 @@
     },
     "replyBlocks": { "toolLabel": "Reply Blocks" }
   },
+  "commandRun": {
+    "cancelled": "The command was cancelled",
+    "cancelledTitle": "“{name}” was cancelled",
+    "done": "“{name}” is done",
+    "failed": "The command “{name}” failed",
+    "failedUnknown": "Unknown error",
+    "inputPlaceholder": "Text for the command",
+    "missing": "The command is not in the library",
+    "noOutput": "The command returned no text",
+    "rejected": "“{name}” was not started: “{running}” is running",
+    "run": "Run",
+    "running": "Running “{name}”…",
+    "startFailed": "Could not start the command",
+    "timedOut": "Did not finish in {seconds} s and was stopped",
+    "unavailable": "The command can no longer run: it was changed, removed or not allowed"
+  },
   "commands": {
     "advanced": "Advanced",
     "afterRunCopy": "To clipboard",
@@ -253,11 +269,11 @@
     "errorUnknownType": "Unknown command type.",
     "external": "Available from outside",
     "externalDescription": "What local applications of your session may do through tyco-ctl and D-Bus. Access to each command is enabled in its advanced settings.",
-    "externalInfo": "Local applications and scripts can run an allowed command with tyco-ctl run <ID> or tyco-ctl run --name <name>. The result is returned to the caller. --interactive allows text input UI; --selection --replace explicitly requests selection replacement.",
+    "externalInfo": "Local applications and scripts can run an allowed command with tyco-ctl run <ID> or tyco-ctl run --name <name>. The command runs in the Tyco overlay, one at a time, and the result is returned to the caller. Without input, the overlay asks for the text; --selection --replace explicitly requests selection replacement.",
     "externalSelection": "Read and replace selected text",
     "externalSelectionInfo": "An application can get the text selected in the active window and put the result of a command in its place (tyco-ctl run <ID> --selection --replace). When this is off, Tyco asks for permission on every such call.",
-    "externalTimeoutInfo": "How long an external call may run in the background, counted from the start of the command; after that it is stopped and reported as timed out. {seconds} by default, at most {max}. Runs in a window have no limit: you see them and can cancel them.",
-    "externalTimeoutLabel": "Background timeout, seconds",
+    "runTimeoutInfo": "How long a run of the command may take, counted from its start; after that it is stopped and reported as timed out. {seconds} by default, at most {max}. Every run is shown in the command overlay, where you can cancel it earlier.",
+    "runTimeoutLabel": "Run time limit, seconds",
     "externalTitle": "External access",
     "fieldOff": "No",
     "fieldOn": "Yes",
@@ -452,13 +468,6 @@
     "settingsHint": "To allow it for good or forbid it again, go to Settings → Commands → External access.",
     "title": "Access to selected text",
     "unknownCaller": "Tyco cannot tell which application is asking: any program of your session can do this."
-  },
-  "externalCommand": {
-    "failed": "The command “{name}” failed",
-    "missing": "The command is not in the library",
-    "running": "Running “{name}”…",
-    "timedOut": "Did not finish in {seconds} s and was stopped",
-    "unknown": "Unknown error"
   },
   "history": {
     "chatsDisabled": "History is not saved to disk",
