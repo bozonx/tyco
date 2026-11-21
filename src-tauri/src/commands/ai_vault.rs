@@ -106,10 +106,12 @@ pub async fn list_ai_profiles(app: AppHandle) -> Result<Vec<AiProfile>, AppError
 pub async fn get_ai_profile(app: AppHandle, id: String) -> Result<AiProfile, AppError> {
     run_blocking(move || {
         let (vault_id, id) = ai_vault::split_ref(&id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
+        ai_vault::with_vault_of(&app, vault_id, |vault| {
+            // the main vault named by its own id still gets the bare reference
+            let vault_ref = ai_vault::canonical_vault_ref(&app, vault_id, vault);
             Ok(ai_vault::profile_to_ref(
-                vault_id,
-                ai_vault::get_profile(dir, id)?,
+                &vault_ref,
+                ai_vault::get_profile(&vault.root, id)?,
             ))
         })
     })
@@ -156,11 +158,19 @@ pub async fn save_ai_profile(
 pub async fn delete_ai_profile(app: AppHandle, id: String) -> Result<(), AppError> {
     run_blocking(move || {
         let (vault_id, id) = ai_vault::split_ref(&id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
+        ai_vault::with_vault_of(&app, vault_id, |vault| {
             // Vault access is already held; do not acquire it recursively.
             storage::while_chats_locked_in_vault(&app, || {
-                ai_vault::delete_profile(dir, &app.state::<ai_vault::MemoryReadVersions>(), id)
-            })
+                ai_vault::delete_profile(
+                    &vault.root,
+                    &app.state::<ai_vault::MemoryReadVersions>(),
+                    id,
+                )
+            })?;
+            if let Err(error) = storage::remove_profile_index(&app, &vault.id, id) {
+                log::warn!("Could not remove the chat index of the profile {id}: {error}");
+            }
+            Ok(())
         })
     })
     .await?
@@ -287,11 +297,13 @@ pub async fn list_ai_profile_memory_topics(
     .await?
 }
 
-/// Reads a profile memory file (`core.md` or a topic file).
+/// Reads a profile memory file (`core.md` or a topic file) for the model of
+/// the chat `chat_id`, whose later changes are checked against this read.
 #[tauri::command]
 pub async fn read_ai_profile_memory(
     app: AppHandle,
     profile_id: String,
+    chat_id: Option<String>,
     file: String,
 ) -> Result<String, AppError> {
     run_blocking(move || {
@@ -301,7 +313,51 @@ pub async fn read_ai_profile_memory(
                 dir,
                 &app.state::<ai_vault::MemoryReadVersions>(),
                 profile_id,
+                chat_id.as_deref(),
                 &file,
+            )
+        })
+    })
+    .await?
+}
+
+/// Reads a profile memory file without counting as a read of the model:
+/// for instructions, previews and the settings.
+#[tauri::command]
+pub async fn peek_ai_profile_memory(
+    app: AppHandle,
+    profile_id: String,
+    file: String,
+) -> Result<String, AppError> {
+    run_blocking(move || {
+        let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
+        ai_vault::with_vault(&app, vault_id, |dir| {
+            ai_vault::peek_profile_memory(dir, profile_id, &file)
+        })
+    })
+    .await?
+}
+
+/// Stores a memory file the user edited; with `expected_content` only over
+/// the file as the editor opened it.
+#[tauri::command]
+pub async fn save_ai_profile_memory(
+    app: AppHandle,
+    profile_id: String,
+    file: String,
+    content: String,
+    expected_content: Option<String>,
+) -> Result<(), AppError> {
+    run_blocking(move || {
+        let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
+        ai_vault::with_vault(&app, vault_id, |dir| {
+            ai_vault::save_profile_memory(
+                dir,
+                &app.state::<ai_vault::MemoryReadVersions>(),
+                profile_id,
+                &file,
+                &content,
+                expected_content.as_deref(),
             )
         })
     })
@@ -382,7 +438,7 @@ pub async fn replace_ai_profile_memory(
     .await?
 }
 
-/// Completely rewrites a memory file (e.g. for compaction).
+/// Completely rewrites a memory file for the model of a chat.
 #[tauri::command]
 pub async fn rewrite_ai_profile_memory(
     app: AppHandle,

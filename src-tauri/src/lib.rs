@@ -262,6 +262,8 @@ pub fn run() {
             commands::ai_vault::list_ai_projects,
             commands::ai_vault::open_ai_vault_location,
             commands::ai_vault::read_ai_profile_memory,
+            commands::ai_vault::peek_ai_profile_memory,
+            commands::ai_vault::save_ai_profile_memory,
             commands::ai_vault::read_ai_profile_soul,
             commands::ai_vault::replace_ai_profile_memory,
             commands::ai_vault::rewrite_ai_profile_memory,

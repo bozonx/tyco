@@ -29,7 +29,8 @@ describe('memory editor', () => {
     expect(model.editingFile.value).toBe('b.md')
     expect(model.editorContent.value).toBe('b.md')
     await model.saveEditor()
-    expect(deps.write).toHaveBeenCalledWith('profile', 'b.md', 'b.md')
+    // the save expects the file as it was opened
+    expect(deps.write).toHaveBeenCalledWith('profile', 'b.md', 'b.md', 'b.md')
     model.dispose()
   })
 

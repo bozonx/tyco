@@ -33,7 +33,8 @@ pub struct ToolGroupSettings {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileToolSettings {
-    /// By tool group id; a group that is not listed is off.
+    /// By tool group id; a group that is not listed has its default: the
+    /// web tools are on, the other groups off.
     #[serde(default)]
     pub groups: HashMap<String, ToolGroupSettings>,
     /// Model steps per turn; `DEFAULT_TOOL_STEP_COUNT` of `@tyco/shared` when
@@ -112,7 +113,8 @@ pub struct AiProfile {
     pub max_output_tokens: Option<u32>,
     #[serde(default)]
     pub project_permissions: HashMap<String, ProjectPermission>,
-    /// No tools when unset.
+    /// The defaults of every group when unset, see
+    /// [`ProfileToolSettings::groups`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub tools: Option<ProfileToolSettings>,

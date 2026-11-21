@@ -9,6 +9,7 @@ import type { JsonSchema } from '@tyco/plugin-sdk'
 
 import {
   appendMemoryBullet,
+  applyMemoryReplace,
   createMemoryTopic,
   formatMemoryBullet,
   normalizeMemorySection,
@@ -57,8 +58,9 @@ Where to write:
     area (health, work, a project), named in short lowercase kebab-case English
     (\`health.md\`, \`home-renovation.md\`), and pass \`description\`: one line
     saying what belongs there.
-12. Before \`memory_replace\` or \`memory_rewrite\` on a topic, read it first. \`core.md\`
-    is already in context.
+12. Before \`memory_replace\` on a topic, read it first; \`core.md\` is already in
+    context. Before \`memory_rewrite\` read the file with \`memory_read\`, \`core.md\`
+    included: a rewrite of a file this chat has not read is refused.
 13. If memory reports a size warning, compact the file with \`memory_rewrite\` at the end
     of your answer, not in the middle of the user's task.`
 
@@ -68,7 +70,14 @@ export interface MemoryFactPlacement {
 }
 
 export interface MemoryToolsDependencies {
-  readMemory: (profileId: string, file: string) => Promise<string>
+  /** Reads a file for the model of the chat; its changes are checked against it */
+  readMemory: (
+    profileId: string,
+    file: string,
+    chatId?: string | null
+  ) => Promise<string>
+  /** Reads a file without counting as a read of the model, for a preview */
+  peekMemory: (profileId: string, file: string) => Promise<string>
   searchMemory: (
     profileId: string,
     query: string
@@ -285,7 +294,7 @@ export function createMemoryToolProvider(
       switch (spec.name) {
         case 'memory_read': {
           const file = text(data.file)
-          return await deps.readMemory(profileId, file)
+          return await deps.readMemory(profileId, file, chatId)
         }
         case 'memory_search': {
           const query = text(data.query)
@@ -348,7 +357,7 @@ export function createMemoryToolProvider(
                 const bullet = formatMemoryBullet(text(data.fact))
                 const { section, description } = placementOf(data)
                 const before = await deps
-                  .readMemory(profileId, file)
+                  .peekMemory(profileId, file)
                   .catch(() => null)
                 const after =
                   before === null
@@ -365,9 +374,10 @@ export function createMemoryToolProvider(
                 const oldText = text(data.old)
                 const newText = text(data.new)
                 const before = await deps
-                  .readMemory(profileId, file)
+                  .peekMemory(profileId, file)
                   .catch(() => '')
-                const after = before.replace(oldText, newText)
+                const after =
+                  applyMemoryReplace(before, oldText, newText) ?? before
                 return {
                   kind: 'file-change',
                   path: `memory/${file}`,
@@ -378,7 +388,7 @@ export function createMemoryToolProvider(
               case 'memory_rewrite': {
                 const content = text(data.content)
                 const before = await deps
-                  .readMemory(profileId, file)
+                  .peekMemory(profileId, file)
                   .catch(() => '')
                 return {
                   kind: 'file-change',

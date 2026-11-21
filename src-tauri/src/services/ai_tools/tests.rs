@@ -738,6 +738,7 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
     let paths = ai_vault::ProjectPaths {
         device: &device,
         vault_id: "v",
+        protected_roots: Vec::new(),
     };
     let enabled = ProfileToolSettings {
         groups: HashMap::from([(
@@ -796,6 +797,7 @@ fn an_external_project_without_its_folder_here_is_named_and_refused() {
     let paths = ai_vault::ProjectPaths {
         device: &device,
         vault_id: "v",
+        protected_roots: Vec::new(),
     };
     let enabled = ProfileToolSettings {
         groups: HashMap::from([(

@@ -55,6 +55,10 @@ export interface DesktopChatToolsInvoke {
   ): Promise<ArrayBuffer | number[]>
   (
     command: 'read_ai_profile_memory',
+    args: { profileId: string; chatId?: string | null; file: string }
+  ): Promise<string>
+  (
+    command: 'peek_ai_profile_memory',
     args: { profileId: string; file: string }
   ): Promise<string>
   (
@@ -158,8 +162,10 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
     warn: deps.warn,
   })
   const memoryToolProvider = createMemoryToolProvider({
-    readMemory: (id, file) =>
-      deps.invoke('read_ai_profile_memory', { profileId: id, file }),
+    readMemory: (id, file, chatId) =>
+      deps.invoke('read_ai_profile_memory', { profileId: id, chatId, file }),
+    peekMemory: (id, file) =>
+      deps.invoke('peek_ai_profile_memory', { profileId: id, file }),
     searchMemory: (id, query) =>
       deps.invoke('search_ai_profile_memory', { profileId: id, query }),
     addFact: (id, file, fact, chatId, placement) =>

@@ -13,8 +13,12 @@ pub const PROFILE_MEMORY_DIR: &str = "memory";
 pub const MEMORY_TOPICS_DIR: &str = "topics";
 pub const MEMORY_SNAPSHOTS_DIR: &str = ".snapshots";
 pub const MEMORY_CORE_FILE: &str = "core.md";
-pub const DEFAULT_MEMORY_CORE: &str =
-    "# Ядро памяти\n\n## О пользователе\n\n## Постоянные правила\n";
+pub const DEFAULT_MEMORY_CORE: &str = "# Core memory\n\n## About the user\n\n## Standing rules\n";
+/// The title of `core.md` when its file has none.
+const MEMORY_CORE_TITLE: &str = "Core memory";
+/// Snapshots of chats not changed for this long are dropped.
+const MEMORY_SNAPSHOT_MAX_AGE: std::time::Duration =
+    std::time::Duration::from_secs(30 * 24 * 60 * 60);
 
 pub const MAX_MEMORY_FACT_LEN: usize = 4_000;
 pub const MAX_MEMORY_HEADING_LEN: usize = 120;
@@ -23,55 +27,82 @@ pub const MAX_MEMORY_FILE_BYTES: usize = 64 * 1024;
 pub const MAX_MEMORY_TOPIC_FILES: usize = 50;
 pub const MAX_MEMORY_SEARCH_RESULTS: usize = 100;
 
-/// The hash of each memory file as the AI last read it, per profile, so that
-/// a write based on a stale read is refused. Managed by Tauri.
+/// The hash of each memory file as the AI last read it, per profile and
+/// chat, so that a write based on a stale read is refused. Two chats of a
+/// profile never vouch for each other's reads. Managed by Tauri.
 #[derive(Default)]
-pub struct MemoryReadVersions(RwLock<HashMap<(PathBuf, String, String), String>>);
+pub struct MemoryReadVersions(RwLock<HashMap<MemoryReadKey, String>>);
+
+/// The vault, the profile, the chat and the file of a read.
+type MemoryReadKey = (PathBuf, String, String, String);
 
 impl MemoryReadVersions {
-    fn key(vault_root: &Path, profile_id: &str, file: &str) -> (PathBuf, String, String) {
+    fn key(
+        vault_root: &Path,
+        profile_id: &str,
+        chat_id: Option<&str>,
+        file: &str,
+    ) -> MemoryReadKey {
         (
             crate::services::storage::data_root_relocation::normalized(vault_root),
             profile_id.to_owned(),
+            safe_chat_key(chat_id),
             file.to_owned(),
         )
     }
 
-    fn record(&self, vault_root: &Path, profile_id: &str, file: &str, content: &str) {
+    fn record(
+        &self,
+        vault_root: &Path,
+        profile_id: &str,
+        chat_id: Option<&str>,
+        file: &str,
+        content: &str,
+    ) {
         self.0.write_locked().insert(
-            Self::key(vault_root, profile_id, file),
+            Self::key(vault_root, profile_id, chat_id, file),
             hash_content(content),
         );
     }
 
+    /// Forgets the reads of `file` in every chat of the profile.
     fn forget(&self, vault_root: &Path, profile_id: &str, file: &str) {
+        let root = crate::services::storage::data_root_relocation::normalized(vault_root);
         self.0
             .write_locked()
-            .remove(&Self::key(vault_root, profile_id, file));
+            .retain(|(vault, profile, _, read_file), _| {
+                vault != &root || profile != profile_id || read_file != file
+            });
     }
 
     pub fn clear_profile(&self, vault_root: &Path, profile_id: &str) {
         let root = crate::services::storage::data_root_relocation::normalized(vault_root);
         self.0
             .write_locked()
-            .retain(|(vault, profile, _), _| vault != &root || profile != profile_id);
+            .retain(|(vault, profile, _, _), _| vault != &root || profile != profile_id);
     }
 
-    /// Fails when the file on disk differs from the version last read.
+    /// Fails when the file on disk differs from the version this chat last
+    /// read; with `require_read`, also when the chat never read it.
     fn check(
         &self,
         vault_root: &Path,
         profile_id: &str,
+        chat_id: Option<&str>,
         file: &str,
         disk_content: &str,
+        require_read: bool,
     ) -> Result<(), AppError> {
         let versions = self.0.read_locked();
-        match versions.get(&Self::key(vault_root, profile_id, file)) {
+        match versions.get(&Self::key(vault_root, profile_id, chat_id, file)) {
             Some(last_hash) if *last_hash != hash_content(disk_content) => {
-                Err(AppError::InvalidInput(
+                Err(AppError::StaleRevision(
                     "The memory file was modified after it was read. Read it again before modifying.".into(),
                 ))
             }
+            None if require_read => Err(AppError::StaleRevision(format!(
+                "Read {file} with memory_read before rewriting it."
+            ))),
             _ => Ok(()),
         }
     }
@@ -99,6 +130,11 @@ pub fn normalize_and_validate_memory_file(file: &str) -> Result<String, AppError
         return Err(AppError::InvalidInput("Invalid memory file path".into()));
     }
     let normalized = trimmed.strip_prefix("topics/").unwrap_or(trimmed);
+    if normalized == MEMORY_CORE_FILE && normalized != trimmed {
+        return Err(AppError::InvalidInput(
+            "topics/core.md is not a topic: name the core file core.md".into(),
+        ));
+    }
     if normalized.contains('/') {
         return Err(AppError::InvalidInput(
             "Nested directories in memory are not allowed".into(),
@@ -222,14 +258,46 @@ fn parse_topic_metadata(content: &str, fallback_name: &str) -> (String, Option<S
     (title, description)
 }
 
+fn snapshot_dir(memory_dir: &Path, chat_id: Option<&str>) -> PathBuf {
+    memory_dir
+        .join(MEMORY_SNAPSHOTS_DIR)
+        .join(safe_chat_key(chat_id))
+}
+
+/// Drops the snapshots of chats that changed nothing for a long time: they
+/// sync with the vault, and nothing else removes them.
+fn prune_old_snapshots(memory_dir: &Path) {
+    let Ok(entries) = fs::read_dir(memory_dir.join(MEMORY_SNAPSHOTS_DIR)) else {
+        return;
+    };
+    let now = std::time::SystemTime::now();
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let is_old = entry
+            .metadata()
+            .and_then(|meta| meta.modified())
+            .ok()
+            .and_then(|modified| now.duration_since(modified).ok())
+            .is_some_and(|age| age > MEMORY_SNAPSHOT_MAX_AGE);
+        if is_old && path.is_dir() {
+            if let Err(error) = crate::services::storage::watcher::remove_tree(&path) {
+                log::warn!(
+                    "Could not remove the memory snapshots {}: {error}",
+                    path.display()
+                );
+            }
+        }
+    }
+}
+
 fn save_snapshot_if_needed(
     memory_dir: &Path,
     chat_id: Option<&str>,
     normalized_file: &str,
     target_path: &Path,
 ) -> Result<(), AppError> {
-    let chat_key = safe_chat_key(chat_id);
-    let snapshot_dir = memory_dir.join(MEMORY_SNAPSHOTS_DIR).join(chat_key);
+    prune_old_snapshots(memory_dir);
+    let snapshot_dir = snapshot_dir(memory_dir, chat_id);
     create_private_dir(&memory_dir.join(MEMORY_SNAPSHOTS_DIR))?;
     create_private_dir(&snapshot_dir)?;
 
@@ -248,13 +316,53 @@ fn save_snapshot_if_needed(
     Ok(())
 }
 
-/// Reads a memory file (`core.md` or topic file) and records its version for optimistic locking.
-pub fn read_profile_memory(
+/// Notes the content the chat's last change left, so that an undo can tell
+/// whether anyone changed the file since.
+fn note_chat_change(
+    memory_dir: &Path,
+    chat_id: Option<&str>,
+    normalized_file: &str,
+    content: &str,
+) -> Result<(), AppError> {
+    write_private(
+        &snapshot_dir(memory_dir, chat_id).join(format!("{normalized_file}.last")),
+        &hash_content(content),
+    )
+}
+
+/// Refuses a change by the model when the profile's memory mode does not let
+/// it write: only `auto` and `ask` do.
+fn ensure_model_may_write(vault_root: &Path, profile_id: &str) -> Result<(), AppError> {
+    let profile = super::operations::get_profile(vault_root, profile_id)?;
+    match profile.memory_mode {
+        super::types::ProfileMemoryMode::Auto | super::types::ProfileMemoryMode::Ask => Ok(()),
+        super::types::ProfileMemoryMode::ReadOnly | super::types::ProfileMemoryMode::Off => Err(
+            AppError::InvalidInput("The memory of this profile cannot be changed by the AI".into()),
+        ),
+    }
+}
+
+/// Indents the lines after the first under the bullet and escapes a heading
+/// among them, so that a fact never adds a section of its own.
+fn single_bullet_text(fact: &str) -> String {
+    let mut lines = fact.lines();
+    let mut text = lines.next().unwrap_or_default().to_owned();
+    for line in lines {
+        text.push_str("\n  ");
+        let trimmed = line.trim_start();
+        if trimmed.starts_with('#') {
+            text.push('\\');
+        }
+        text.push_str(trimmed);
+    }
+    text
+}
+
+fn read_memory_file(
     vault_root: &Path,
-    versions: &MemoryReadVersions,
     profile_id: &str,
     file: &str,
-) -> Result<String, AppError> {
+) -> Result<(String, String), AppError> {
     validate_id(profile_id)?;
     let normalized = normalize_and_validate_memory_file(file)?;
     let memory_dir = profile_memory_dir(vault_root, profile_id)?;
@@ -265,10 +373,77 @@ pub fn read_profile_memory(
             "Memory file not found: {normalized}"
         )));
     }
+    Ok((normalized, fs::read_to_string(&target_path)?))
+}
 
-    let content = fs::read_to_string(&target_path)?;
-    versions.record(vault_root, profile_id, &normalized, &content);
+/// Reads a memory file (`core.md` or topic file) for the model of a chat and
+/// records its version, so that the chat's later changes are checked
+/// against it.
+pub fn read_profile_memory(
+    vault_root: &Path,
+    versions: &MemoryReadVersions,
+    profile_id: &str,
+    chat_id: Option<&str>,
+    file: &str,
+) -> Result<String, AppError> {
+    let (normalized, content) = read_memory_file(vault_root, profile_id, file)?;
+    versions.record(vault_root, profile_id, chat_id, &normalized, &content);
     Ok(content)
+}
+
+/// Reads a memory file without recording a read: for the instructions of a
+/// chat, a preview or the settings.
+pub fn peek_profile_memory(
+    vault_root: &Path,
+    profile_id: &str,
+    file: &str,
+) -> Result<String, AppError> {
+    read_memory_file(vault_root, profile_id, file).map(|(_, content)| content)
+}
+
+/// Stores a memory file the user edited in the settings. With
+/// `expected_content` the file must still be as the editor opened it. The
+/// reads of every chat are forgotten: the model reads the file anew.
+pub fn save_profile_memory(
+    vault_root: &Path,
+    versions: &MemoryReadVersions,
+    profile_id: &str,
+    file: &str,
+    content: &str,
+    expected_content: Option<&str>,
+) -> Result<(), AppError> {
+    validate_id(profile_id)?;
+    let normalized = normalize_and_validate_memory_file(file)?;
+    if content.len() > MAX_MEMORY_FILE_BYTES {
+        return Err(AppError::ResourceLimit(format!(
+            "Memory file exceeds maximum allowed size of {MAX_MEMORY_FILE_BYTES} bytes"
+        )));
+    }
+    let memory_dir = profile_memory_dir(vault_root, profile_id)?;
+    let target_path = memory_file_path(&memory_dir, &normalized);
+    let current = match fs::read_to_string(&target_path) {
+        Ok(current) => Some(current),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+        Err(error) => return Err(error.into()),
+    };
+    if let Some(expected) = expected_content {
+        if current.as_deref() != Some(expected) {
+            return Err(AppError::StaleRevision(format!(
+                "{normalized} was changed after it was opened"
+            )));
+        }
+    }
+    if current.is_none() && normalized != MEMORY_CORE_FILE {
+        if count_topic_files(&memory_dir)? >= MAX_MEMORY_TOPIC_FILES {
+            return Err(AppError::ResourceLimit(format!(
+                "Maximum number of topic files ({MAX_MEMORY_TOPIC_FILES}) reached"
+            )));
+        }
+        create_private_dir(&memory_dir.join(MEMORY_TOPICS_DIR))?;
+    }
+    write_private(&target_path, content)?;
+    versions.forget(vault_root, profile_id, &normalized);
+    Ok(())
 }
 
 /// Appends a single fact/thesis to a memory file.
@@ -284,11 +459,12 @@ pub fn add_profile_memory_fact<'a>(
     let entry = entry.into();
     validate_id(profile_id)?;
     let normalized = normalize_and_validate_memory_file(file)?;
+    ensure_model_may_write(vault_root, profile_id)?;
     let fact_trimmed = entry.fact.trim();
     if fact_trimmed.is_empty() {
         return Err(AppError::InvalidInput("Memory fact cannot be empty".into()));
     }
-    if fact_trimmed.len() > MAX_MEMORY_FACT_LEN {
+    if fact_trimmed.chars().count() > MAX_MEMORY_FACT_LEN {
         return Err(AppError::InvalidInput(format!(
             "Memory fact exceeds maximum allowed length of {MAX_MEMORY_FACT_LEN} characters"
         )));
@@ -297,21 +473,28 @@ pub fn add_profile_memory_fact<'a>(
         .section
         .map(|section| section.trim().trim_start_matches('#').trim())
         .filter(|section| !section.is_empty());
-    if section
-        .is_some_and(|section| section.len() > MAX_MEMORY_HEADING_LEN || section.contains('\n'))
-    {
+    if section.is_some_and(|section| {
+        section.chars().count() > MAX_MEMORY_HEADING_LEN || section.contains('\n')
+    }) {
         return Err(AppError::InvalidInput(format!(
             "Memory section must be a single line of at most {MAX_MEMORY_HEADING_LEN} characters"
         )));
     }
-    let bullet = format_memory_bullet(fact_trimmed);
+    let bullet = format_memory_bullet(&single_bullet_text(fact_trimmed));
 
     let memory_dir = profile_memory_dir(vault_root, profile_id)?;
     let target_path = memory_file_path(&memory_dir, &normalized);
 
     let (before, after) = if target_path.exists() {
         let existing = fs::read_to_string(&target_path)?;
-        versions.check(vault_root, profile_id, &normalized, &existing)?;
+        versions.check(
+            vault_root,
+            profile_id,
+            chat_id,
+            &normalized,
+            &existing,
+            false,
+        )?;
         save_snapshot_if_needed(&memory_dir, chat_id, &normalized, &target_path)?;
         let next = append_memory_bullet(&existing, &bullet, section);
         (Some(existing), next)
@@ -333,7 +516,7 @@ pub fn add_profile_memory_fact<'a>(
             .map(|text| text.split_whitespace().collect::<Vec<_>>().join(" "))
             .filter(|text| !text.is_empty());
         if let Some(description) = description {
-            if description.len() > MAX_MEMORY_DESCRIPTION_LEN {
+            if description.chars().count() > MAX_MEMORY_DESCRIPTION_LEN {
                 return Err(AppError::InvalidInput(format!(
                     "Memory topic description exceeds {MAX_MEMORY_DESCRIPTION_LEN} characters"
                 )));
@@ -352,8 +535,13 @@ pub fn add_profile_memory_fact<'a>(
         )));
     }
 
+    if target_path.parent().is_some_and(|parent| !parent.is_dir()) {
+        // a sync may not bring an empty `topics/`
+        create_private_dir(&memory_dir.join(MEMORY_TOPICS_DIR))?;
+    }
     write_private(&target_path, &after)?;
-    versions.record(vault_root, profile_id, &normalized, &after);
+    versions.record(vault_root, profile_id, chat_id, &normalized, &after);
+    note_chat_change(&memory_dir, chat_id, &normalized, &after)?;
 
     Ok(ProfileMemoryChange {
         file: normalized,
@@ -513,7 +701,8 @@ pub fn replace_profile_memory(
 ) -> Result<ProfileMemoryChange, AppError> {
     validate_id(profile_id)?;
     let normalized = normalize_and_validate_memory_file(file)?;
-    if new_text.len() > MAX_MEMORY_FACT_LEN {
+    ensure_model_may_write(vault_root, profile_id)?;
+    if new_text.chars().count() > MAX_MEMORY_FACT_LEN {
         return Err(AppError::InvalidInput(format!(
             "Replacement text exceeds maximum allowed length of {MAX_MEMORY_FACT_LEN} characters"
         )));
@@ -529,7 +718,7 @@ pub fn replace_profile_memory(
     }
 
     let before = fs::read_to_string(&target_path)?;
-    versions.check(vault_root, profile_id, &normalized, &before)?;
+    versions.check(vault_root, profile_id, chat_id, &normalized, &before, false)?;
 
     let after = apply_memory_replace(&before, old_text, new_text)?;
     if after.len() > MAX_MEMORY_FILE_BYTES {
@@ -540,7 +729,8 @@ pub fn replace_profile_memory(
 
     save_snapshot_if_needed(&memory_dir, chat_id, &normalized, &target_path)?;
     write_private(&target_path, &after)?;
-    versions.record(vault_root, profile_id, &normalized, &after);
+    versions.record(vault_root, profile_id, chat_id, &normalized, &after);
+    note_chat_change(&memory_dir, chat_id, &normalized, &after)?;
 
     Ok(ProfileMemoryChange {
         file: normalized,
@@ -549,7 +739,8 @@ pub fn replace_profile_memory(
     })
 }
 
-/// Completely rewrites a memory file (e.g. for compaction).
+/// Completely rewrites a memory file for the model of a chat; an existing
+/// file must have been read by that chat first.
 pub fn rewrite_profile_memory(
     vault_root: &Path,
     versions: &MemoryReadVersions,
@@ -560,6 +751,7 @@ pub fn rewrite_profile_memory(
 ) -> Result<ProfileMemoryChange, AppError> {
     validate_id(profile_id)?;
     let normalized = normalize_and_validate_memory_file(file)?;
+    ensure_model_may_write(vault_root, profile_id)?;
     if content.len() > MAX_MEMORY_FILE_BYTES {
         return Err(AppError::ResourceLimit(format!(
             "Memory file exceeds maximum allowed size of {MAX_MEMORY_FILE_BYTES} bytes"
@@ -571,7 +763,14 @@ pub fn rewrite_profile_memory(
 
     let before = if target_path.exists() {
         let existing = fs::read_to_string(&target_path)?;
-        versions.check(vault_root, profile_id, &normalized, &existing)?;
+        versions.check(
+            vault_root,
+            profile_id,
+            chat_id,
+            &normalized,
+            &existing,
+            true,
+        )?;
         save_snapshot_if_needed(&memory_dir, chat_id, &normalized, &target_path)?;
         Some(existing)
     } else {
@@ -584,11 +783,13 @@ pub fn rewrite_profile_memory(
             }
         }
         save_snapshot_if_needed(&memory_dir, chat_id, &normalized, &target_path)?;
+        create_private_dir(&memory_dir.join(MEMORY_TOPICS_DIR))?;
         None
     };
 
     write_private(&target_path, content)?;
-    versions.record(vault_root, profile_id, &normalized, content);
+    versions.record(vault_root, profile_id, chat_id, &normalized, content);
+    note_chat_change(&memory_dir, chat_id, &normalized, content)?;
 
     Ok(ProfileMemoryChange {
         file: normalized,
@@ -610,10 +811,31 @@ pub fn undo_profile_memory(
     let memory_dir = profile_memory_dir(vault_root, profile_id)?;
     let target_path = memory_file_path(&memory_dir, &normalized);
 
-    let chat_key = safe_chat_key(chat_id);
-    let snapshot_dir = memory_dir.join(MEMORY_SNAPSHOTS_DIR).join(chat_key);
+    let snapshot_dir = snapshot_dir(&memory_dir, chat_id);
     let snapshot_file = snapshot_dir.join(format!("{normalized}.snapshot"));
     let absent_file = snapshot_dir.join(format!("{normalized}.absent"));
+    let last_file = snapshot_dir.join(format!("{normalized}.last"));
+
+    // an undo restores the file as it was before the chat only while the
+    // chat's own change is the last one: another chat's, or the user's,
+    // would be lost
+    if let Ok(last) = fs::read_to_string(&last_file) {
+        let current = match fs::read_to_string(&target_path) {
+            Ok(current) => Some(hash_content(&current)),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+            Err(error) => return Err(error.into()),
+        };
+        if current.as_deref() != Some(last.trim()) {
+            return Err(AppError::StaleRevision(format!(
+                "{normalized} was changed after this chat's change: undo it by editing the memory"
+            )));
+        }
+    }
+    let forget_last = || {
+        if fs::remove_file(&last_file).is_ok() {
+            crate::services::storage::watcher::deleted(&last_file);
+        }
+    };
 
     if absent_file.exists() {
         let before = if target_path.exists() {
@@ -628,6 +850,7 @@ pub fn undo_profile_memory(
         if fs::remove_file(&absent_file).is_ok() {
             crate::services::storage::watcher::deleted(&absent_file);
         }
+        forget_last();
         versions.forget(vault_root, profile_id, &normalized);
         return Ok(ProfileMemoryChange {
             file: normalized,
@@ -644,10 +867,11 @@ pub fn undo_profile_memory(
         };
         let restored = fs::read_to_string(&snapshot_file)?;
         write_private(&target_path, &restored)?;
-        versions.record(vault_root, profile_id, &normalized, &restored);
+        versions.forget(vault_root, profile_id, &normalized);
         if fs::remove_file(&snapshot_file).is_ok() {
             crate::services::storage::watcher::deleted(&snapshot_file);
         }
+        forget_last();
         return Ok(ProfileMemoryChange {
             file: normalized,
             before,
@@ -730,7 +954,7 @@ pub fn list_profile_memory_topics(
     if core_path.is_file() {
         let meta = fs::metadata(&core_path)?;
         let content = fs::read_to_string(&core_path).unwrap_or_default();
-        let (title, description) = parse_topic_metadata(&content, "Ядро памяти");
+        let (title, description) = parse_topic_metadata(&content, MEMORY_CORE_TITLE);
         let updated_at = meta
             .modified()
             .ok()

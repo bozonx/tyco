@@ -219,23 +219,29 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
   const listMemoryTopics = async (profileId: string) =>
     resultOrThrow(await call('list_ai_profile_memory_topics', { profileId }))
 
+  /** Reads a memory file for the user, not as a read of the model */
   const readMemory = async (profileId: string, file: string) =>
-    resultOrThrow(await call('read_ai_profile_memory', { profileId, file }))
+    resultOrThrow(await call('peek_ai_profile_memory', { profileId, file }))
 
+  /**
+   * Stores a memory file the user edited; with `expectedContent` only over the
+   * file as it was opened, failing with `staleRevision` otherwise
+   */
   const writeMemory = async (
     profileId: string,
     file: string,
     content: string,
-    chatId?: string | null
-  ) =>
+    expectedContent?: string
+  ) => {
     resultOrThrow(
-      await call('rewrite_ai_profile_memory', {
+      await call('save_ai_profile_memory', {
         profileId,
         file,
         content,
-        chatId,
+        expectedContent,
       })
     )
+  }
 
   const clearMemory = async (profileId: string) => {
     resultOrThrow(await call('clear_ai_profile_memory', { profileId }))

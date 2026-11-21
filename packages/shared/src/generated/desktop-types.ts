@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 4b89d1cb1e79c33910643fb15c35358ed123141a14f72c91455a9a48a09ab17e
+// Source hash: 2845f3d0b8fa7dacea695e3f772c457b02b28e74cc167ecac6503a463a9614eb
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -180,7 +180,10 @@ export type AiProfile = {
   /** Caps the answer length below the model's own limit. */
   maxOutputTokens?: number
   projectPermissions: { [key in string]: ProjectPermission }
-  /** No tools when unset. */
+  /**
+   * The defaults of every group when unset, see
+   * [`ProfileToolSettings::groups`].
+   */
   tools?: ProfileToolSettings
   /** Long-term memory mode; defaults to `auto`. */
   memoryMode: ProfileMemoryMode
@@ -810,7 +813,10 @@ export type ProfileSoul = { content: string; revision: string }
 
 /** The tools a profile's chat may use. */
 export type ProfileToolSettings = {
-  /** By tool group id; a group that is not listed is off. */
+  /**
+   * By tool group id; a group that is not listed has its default: the web tools
+   * are on, the other groups off.
+   */
   groups: { [key in string]: ToolGroupSettings }
   /**
    * Model steps per turn; `DEFAULT_TOOL_STEP_COUNT` of `@tyco/shared` when

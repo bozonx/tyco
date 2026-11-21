@@ -1,11 +1,56 @@
 // Mirrors `append_memory_bullet` and topic creation in
 // `src-tauri/src/services/ai_vault/memory.rs` so previews match the write.
 
+/**
+ * Indents the lines after the first under the bullet and escapes a heading
+ * among them, so that a fact never adds a section of its own
+ */
+function singleBulletText(fact: string): string {
+  const [first = '', ...rest] = fact.split(/\r?\n/)
+  return [
+    first,
+    ...rest.map((line) => {
+      const trimmed = line.trimStart()
+      return `  ${trimmed.startsWith('#') ? '\\' : ''}${trimmed}`
+    }),
+  ].join('\n')
+}
+
 export function formatMemoryBullet(fact: string): string {
-  const trimmed = fact.trim()
+  const trimmed = singleBulletText(fact.trim())
   return trimmed.startsWith('-') || trimmed.startsWith('*')
     ? trimmed
     : `- ${trimmed}`
+}
+
+/**
+ * The text with `oldText` replaced, as `apply_memory_replace` does it; an empty
+ * `newText` removes the line ending after it too. Undefined when the old text
+ * is missing, empty or not unique
+ */
+export function applyMemoryReplace(
+  text: string,
+  oldText: string,
+  newText: string
+): string | undefined {
+  if (!oldText) return undefined
+  const useCrlf =
+    !text.includes(oldText) &&
+    text.includes('\r\n') &&
+    !oldText.includes('\r\n')
+  const oldClean = useCrlf ? oldText.replaceAll('\n', '\r\n') : oldText
+  const newClean = useCrlf ? newText.replaceAll('\n', '\r\n') : newText
+  const count = (needle: string) => text.split(needle).length - 1
+  // a function keeps `$&` and the like in the new text literal
+  const replaceOnce = (needle: string, replacement: string) =>
+    text.replace(needle, () => replacement)
+  if (!newClean) {
+    for (const ending of ['\n', '\r\n']) {
+      if (count(`${oldClean}${ending}`) === 1)
+        return replaceOnce(`${oldClean}${ending}`, '')
+    }
+  }
+  return count(oldClean) === 1 ? replaceOnce(oldClean, newClean) : undefined
 }
 
 export function normalizeMemorySection(

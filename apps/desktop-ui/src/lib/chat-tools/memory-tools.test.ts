@@ -15,7 +15,9 @@ import {
 function createFakeMemoryDeps(
   overrides?: Partial<MemoryToolsDependencies>
 ): MemoryToolsDependencies {
-  return {
+  const deps: MemoryToolsDependencies = {
+    // a preview reads as the model does, without counting as its read
+    peekMemory: (profileId, file) => deps.readMemory(profileId, file),
     readMemory: vi.fn(async (_profileId: string, file: string) => {
       if (file === 'core.md') return '# Core\n- Fact 1'
       if (file === 'health.md') return '# Health\n- Allergy to dust'
@@ -40,6 +42,7 @@ function createFakeMemoryDeps(
     getChatId: vi.fn(() => 'chat-123'),
     ...overrides,
   }
+  return deps
 }
 
 describe('memory-tools', () => {
@@ -175,7 +178,11 @@ describe('memory-tools', () => {
           outputLimitCharacters: 1000,
         }
       )
-      expect(deps.readMemory).toHaveBeenCalledWith('prof-1', 'core.md')
+      expect(deps.readMemory).toHaveBeenCalledWith(
+        'prof-1',
+        'core.md',
+        'chat-123'
+      )
       expect(result).toBe('# Core\n- Fact 1')
     })
 

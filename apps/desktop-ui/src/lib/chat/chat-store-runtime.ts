@@ -144,7 +144,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     refreshProfile: (id) => deps.refreshProfile(id),
     readSoul: (id) => deps.readSoul(id),
     readCoreMemory: (id) =>
-      deps.invoke('read_ai_profile_memory', { profileId: id, file: 'core.md' }),
+      deps.invoke('peek_ai_profile_memory', { profileId: id, file: 'core.md' }),
     listMemoryTopics: (id) =>
       deps.invoke('list_ai_profile_memory_topics', { profileId: id }),
     warn,

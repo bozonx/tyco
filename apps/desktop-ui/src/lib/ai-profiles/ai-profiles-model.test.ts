@@ -362,6 +362,7 @@ describe('ai-profiles-model', () => {
     await model.loadProfiles()
     await model.updateProfile('tech-writer', {
       temperature: 0.3,
+      memoryMode: 'read-only',
       tools: { groups: { files: { isEnabled: true, access: 'ask' } } },
     })
 
@@ -372,7 +373,8 @@ describe('ai-profiles-model', () => {
       id: 'profile-abcd1234',
       name: 'Tech Writer 2',
       revision: 'r1',
-      memoryMode: 'auto',
+      // a copy remembers no more than its original
+      memoryMode: 'read-only',
       modelId: 'gpt-4o',
       temperature: 0.3,
       projectPermissions: mockProfile.projectPermissions,

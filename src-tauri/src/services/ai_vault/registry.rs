@@ -91,7 +91,7 @@ fn attached_info(attached: &AttachedVault) -> VaultInfo {
             (VaultStatus::Connected, vault.name.unwrap_or_default())
         }
         Ok(_) => (VaultStatus::NotConnected, String::new()),
-        Err(error) if error.to_string().contains("newer") => (VaultStatus::Newer, String::new()),
+        Err(_) if marker::is_from_newer_version(path) => (VaultStatus::Newer, String::new()),
         Err(_) => (VaultStatus::NotConnected, String::new()),
     };
     VaultInfo {
@@ -123,6 +123,16 @@ pub fn connected_vaults(app: &AppHandle) -> Vec<(String, Vault)> {
         }
     }
     vaults
+}
+
+/// The folders the external projects of every vault must stay out of: the
+/// data folder, which holds the main vault and the commands this device
+/// runs, and every attached vault.
+pub fn protected_roots(app: &AppHandle) -> Vec<PathBuf> {
+    other_roots(app, None)
+        .into_iter()
+        .map(|(path, _)| path)
+        .collect()
 }
 
 /// The roots a vault folder must stay out of: the data folder and every
@@ -256,6 +266,7 @@ pub fn attach_vault(app: &AppHandle, path: &str, name: &str) -> Result<VaultInfo
     let _access = state.write_vault();
     let path = checked_path(path)?;
     let kind = classify(app, &path, None)?;
+    let is_new = matches!(kind, VaultFolderKind::Empty);
     let vault = match kind {
         VaultFolderKind::Vault { .. } => marker::open_attached(&path)?,
         VaultFolderKind::Empty => marker::create_attached(&path, name)?,
@@ -265,7 +276,13 @@ pub fn attach_vault(app: &AppHandle, path: &str, name: &str) -> Result<VaultInfo
         path: path.to_string_lossy().into_owned(),
         vault_id: vault.id.clone(),
     };
-    save_attached(app, |attached| attached.push(entry.clone()))?;
+    if let Err(error) = save_attached(app, |attached| attached.push(entry.clone())) {
+        // a vault made just now is not left behind half attached
+        if is_new {
+            marker::remove_created(&path);
+        }
+        return Err(error);
+    }
     crate::services::storage::watcher::check_now(app);
     Ok(attached_info(&entry))
 }
@@ -442,6 +459,7 @@ pub fn list_all_projects(app: &AppHandle) -> Result<Vec<super::AiProject>, AppEr
         let paths = super::ProjectPaths {
             device: &device,
             vault_id: &vault.id,
+            protected_roots: Vec::new(),
         };
         let lock = super::locking::vault_lock(&vault.root);
         use crate::locks::MutexExt;

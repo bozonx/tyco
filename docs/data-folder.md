@@ -149,9 +149,11 @@ chat file, the workspace or the project's name.
 The data folder and the attached vaults never lie inside one another: TyCo
 refuses such a choice when you move the data folder or attach a vault.
 
-An external project may lie inside the data folder or a vault; its files are
-then synchronized with that folder. TyCo warns about it in the project; choose
-a folder outside if that is not what you want.
+The folder of an external project lies outside the data folder and every
+vault and holds none of them: the AI of a profile working in it could
+otherwise reach the memory and chats of other profiles, or the commands TyCo
+runs. TyCo refuses such a folder; a project that has one from an earlier
+version is shown as not available until you choose another folder.
 
 ## Missing folders and conflicts
 

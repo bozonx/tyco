@@ -128,6 +128,8 @@ fn main() {
             "preview_ai_file_change",
             "read_ai_file_bytes",
             "read_ai_profile_memory",
+            "peek_ai_profile_memory",
+            "save_ai_profile_memory",
             "read_ai_profile_soul",
             "read_chat_file",
             "read_chat_image",

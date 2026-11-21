@@ -218,8 +218,13 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
     const source = getProfile(id)
     if (!source) throw new Error(`Profile not found: ${id}`)
     const { content: soul } = await deps.readSoul(id)
-    const { modelId, quickRequestModelId, temperature, maxOutputTokens } =
-      source
+    const {
+      modelId,
+      quickRequestModelId,
+      temperature,
+      maxOutputTokens,
+      memoryMode,
+    } = source
     return createProfile({
       name,
       // a copy stays in the vault of the original
@@ -230,6 +235,7 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
         quickRequestModelId,
         temperature,
         maxOutputTokens,
+        memoryMode,
         projectPermissions: source.projectPermissions,
         tools: source.tools,
       },

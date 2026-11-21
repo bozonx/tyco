@@ -176,10 +176,11 @@ impl<'a> ConversationFiles<'a> {
             }
             // a project not connected on this device is still named, so that
             // the model is told why it cannot reach it
-            let (dir, unavailable) = match ai_vault::project_files_dir(vault_root, &project) {
-                Ok(dir) => (dir, None),
-                Err(error) => (PathBuf::new(), Some(error.to_string())),
-            };
+            let (dir, unavailable) =
+                match ai_vault::project_files_dir_checked(vault_root, paths, &project) {
+                    Ok(dir) => (dir, None),
+                    Err(error) => (PathBuf::new(), Some(error.to_string())),
+                };
             roots.push(AiFileRoot {
                 path: format!("{PROJECTS_ROOT}/{}", project.id),
                 name: Some(project.name.clone()),

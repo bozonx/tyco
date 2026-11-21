@@ -229,6 +229,34 @@ pub fn get_profile(vault_root: &Path, id: &str) -> Result<AiProfile, AppError> {
     })
 }
 
+/// The hidden folder a new profile is laid out in; never a valid id.
+const STAGING_PREFIX: &str = ".creating-";
+
+/// Removes the folders profiles were laid out in that a crash left behind.
+fn remove_stale_staging(dir: &Path) {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
+    let now = std::time::SystemTime::now();
+    for entry in entries.flatten() {
+        let is_staging = entry
+            .file_name()
+            .to_str()
+            .is_some_and(|name| name.starts_with(STAGING_PREFIX));
+        let is_old = entry
+            .metadata()
+            .and_then(|meta| meta.modified())
+            .ok()
+            .and_then(|modified| now.duration_since(modified).ok())
+            .is_some_and(|age| age.as_secs() > 60 * 60);
+        if is_staging && is_old {
+            if let Err(error) = crate::services::storage::watcher::remove_tree(&entry.path()) {
+                log::warn!("Could not remove {}: {error}", entry.path().display());
+            }
+        }
+    }
+}
+
 /// Creates the profile folder with its root instruction. An existing folder
 /// of that id is never written into: the caller picks another id.
 pub fn create_profile(
@@ -247,17 +275,47 @@ pub fn create_profile(
             profile.id
         )));
     }
-    create_entity_dir(&dir)?;
-    create_private_dir(&dir.join(PROFILE_CHATS_DIR))?;
-    let workspace = dir.join("workspace");
-    for sub in ["generated", "downloads"] {
-        create_private_dir(&workspace.join(sub))?;
-    }
-    let memory = dir.join(super::memory::PROFILE_MEMORY_DIR);
-    super::memory::ensure_memory_dir_initialized(&memory)?;
-    write_private(&dir.join(SOUL_FILE), soul)?;
+    // the profile is laid out in a hidden folder and moved into place
+    // whole, so a failure never leaves a folder that takes the id but has
+    // no profile in it
+    remove_stale_staging(&vault_root.join("profiles"));
+    let staging = vault_root.join("profiles").join(format!(
+        "{STAGING_PREFIX}{}-{}",
+        profile.id,
+        crate::services::random_id::new_uuid()
+    ));
+    create_entity_dir(&staging)?;
     let content = profile_file_content(&profile)?;
-    write_private(&dir.join(PROFILE_FILE), &content)?;
+    let laid_out = (|| -> Result<(), AppError> {
+        create_private_dir(&staging.join(PROFILE_CHATS_DIR))?;
+        let workspace = staging.join("workspace");
+        for sub in ["generated", "downloads"] {
+            create_private_dir(&workspace.join(sub))?;
+        }
+        let memory = staging.join(super::memory::PROFILE_MEMORY_DIR);
+        super::memory::ensure_memory_dir_initialized(&memory)?;
+        write_private(&staging.join(SOUL_FILE), soul)?;
+        write_private(&staging.join(PROFILE_FILE), &content)?;
+        if dir.symlink_metadata().is_ok() {
+            return Err(AppError::AlreadyExists(format!(
+                "Profile already exists: {}",
+                profile.id
+            )));
+        }
+        fs::rename(&staging, &dir).map_err(|error| {
+            if dir.symlink_metadata().is_ok() {
+                AppError::AlreadyExists(format!("Profile already exists: {}", profile.id))
+            } else {
+                error.into()
+            }
+        })
+    })();
+    if let Err(error) = laid_out {
+        if let Err(cleanup) = crate::services::storage::watcher::remove_tree(&staging) {
+            log::warn!("Could not remove {}: {cleanup}", staging.display());
+        }
+        return Err(error);
+    }
     Ok(crate::services::storage::watcher::content_hash(
         content.as_bytes(),
     ))
@@ -391,6 +449,10 @@ fn project_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
 pub struct ProjectPaths<'a> {
     pub device: &'a DeviceStore,
     pub vault_id: &'a str,
+    /// Folders an external project may neither lie in nor hold: the data
+    /// folder and every vault of this device. The vault of these paths is
+    /// always protected, listed or not.
+    pub protected_roots: Vec<PathBuf>,
 }
 
 impl ProjectPaths<'_> {
@@ -434,9 +496,42 @@ fn validate_project(project: &AiProject) -> Result<(), AppError> {
     Ok(())
 }
 
+/// The canonical form of `path`, or `path` itself when it is not there.
+fn canonical_or_same(path: &Path) -> PathBuf {
+    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+}
+
+/// Refuses a folder for an external project that lies inside a protected
+/// root or holds one: the file tools of its profiles would reach the
+/// profiles, memories and chats kept there.
+pub fn check_project_folder(
+    target: &Path,
+    vault_root: &Path,
+    protected_roots: &[PathBuf],
+) -> Result<(), AppError> {
+    let target = canonical_or_same(target);
+    let overlapping = std::iter::once(vault_root)
+        .chain(protected_roots.iter().map(PathBuf::as_path))
+        .map(canonical_or_same)
+        .find(|root| target.starts_with(root) || root.starts_with(&target));
+    match overlapping {
+        Some(root) => Err(AppError::InvalidInput(format!(
+            "The folder of an external project cannot be inside {} or hold it: \
+             TyCo keeps profiles and their memory there",
+            root.display()
+        ))),
+        None => Ok(()),
+    }
+}
+
 /// The folder an external project is given on this device, checked to be an
-/// existing absolute folder; `None` when none is given.
-fn checked_target(project: &AiProject) -> Result<Option<&str>, AppError> {
+/// existing absolute folder out of the protected roots; `None` when none is
+/// given.
+fn checked_target<'p>(
+    project: &'p AiProject,
+    vault_root: &Path,
+    paths: &ProjectPaths,
+) -> Result<Option<&'p str>, AppError> {
     let Some(target) = project
         .target_path
         .as_deref()
@@ -451,6 +546,7 @@ fn checked_target(project: &AiProject) -> Result<Option<&str>, AppError> {
             "External target path must be an existing absolute directory".into(),
         ));
     }
+    check_project_folder(target_path, vault_root, &paths.protected_roots)?;
     Ok(Some(target))
 }
 
@@ -476,6 +572,13 @@ pub fn project_files_dir(vault_root: &Path, project: &AiProject) -> Result<PathB
     }
     match project.target_path.as_deref().map(str::trim) {
         Some(target) if !target.is_empty() && Path::new(target).is_dir() => {
+            // a folder set by hand in `device.json` is checked too
+            check_project_folder(Path::new(target), vault_root, &[]).map_err(|error| {
+                AppError::ProjectUnavailable(format!(
+                    "The project {} is not available: {error}",
+                    project.id
+                ))
+            })?;
             Ok(PathBuf::from(target))
         }
         Some(target) if !target.is_empty() => Err(AppError::ProjectUnavailable(format!(
@@ -487,6 +590,25 @@ pub fn project_files_dir(vault_root: &Path, project: &AiProject) -> Result<PathB
             project.id
         ))),
     }
+}
+
+/// [`project_files_dir`], with the folder of an external project kept out of
+/// every protected root of `paths` as well.
+pub fn project_files_dir_checked(
+    vault_root: &Path,
+    paths: &ProjectPaths,
+    project: &AiProject,
+) -> Result<PathBuf, AppError> {
+    let dir = project_files_dir(vault_root, project)?;
+    if project.is_external {
+        check_project_folder(&dir, vault_root, &paths.protected_roots).map_err(|error| {
+            AppError::ProjectUnavailable(format!(
+                "The project {} is not available: {error}",
+                project.id
+            ))
+        })?;
+    }
+    Ok(dir)
 }
 
 /// The projects of the vault, each external one with its folder on this
@@ -519,7 +641,7 @@ pub fn create_project(
     project: AiProject,
 ) -> Result<String, AppError> {
     validate_project(&project)?;
-    let target = checked_target(&project)?;
+    let target = checked_target(&project, vault_root, paths)?;
     if project.is_external && target.is_none() {
         return Err(AppError::InvalidInput(
             "External project requires a target path".into(),
@@ -555,7 +677,7 @@ pub fn save_project(
     expected_revision: Option<&str>,
 ) -> Result<String, AppError> {
     validate_project(&project)?;
-    let target = checked_target(&project)?;
+    let target = checked_target(&project, vault_root, paths)?;
     let dir = project_dir(vault_root, &project.id)?;
     if !dir.join(PROJECT_FILE).is_file() {
         return Err(not_found("Project", &project.id));
@@ -622,7 +744,7 @@ pub fn convert_project(
     };
 
     if converted.is_external {
-        let target = checked_target(&converted)?.ok_or_else(|| {
+        let target = checked_target(&converted, vault_root, paths)?.ok_or_else(|| {
             AppError::InvalidInput("External project requires a target path".into())
         })?;
         let target = Path::new(target);
@@ -646,8 +768,9 @@ pub fn convert_project(
         Ok(revision)
     } else {
         if transfer_files {
-            let source = project_files_dir(
+            let source = project_files_dir_checked(
                 vault_root,
+                paths,
                 &AiProject {
                     target_path: paths.get(id),
                     ..stored
@@ -758,17 +881,17 @@ fn remove_project_files(dir: &Path) -> Result<(), AppError> {
 /// an external project stay where they are: only its link is removed.
 pub fn delete_project(vault_root: &Path, paths: &ProjectPaths, id: &str) -> Result<(), AppError> {
     let dir = project_dir(vault_root, id)?;
-    if dir.exists() {
-        crate::services::storage::watcher::remove_tree(&dir)?;
-    }
-    paths.set(id, None)?;
-
+    // the permissions go first: a failure there leaves the project, not
+    // profiles pointing to a project that is gone
     for mut profile in list_profiles(vault_root)? {
         if profile.project_permissions.remove(id).is_some() {
             let expected = profile.revision.clone();
             save_profile(vault_root, profile, expected.as_deref())?;
         }
     }
-
+    if dir.exists() {
+        crate::services::storage::watcher::remove_tree(&dir)?;
+    }
+    paths.set(id, None)?;
     Ok(())
 }

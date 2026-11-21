@@ -302,6 +302,8 @@ export class FakeDesktopBackend {
     // a fresh vault: profiles have no memory yet
     this.handle('list_ai_profile_memory_topics', () => [])
     this.handle('read_ai_profile_memory', () => '')
+    this.handle('peek_ai_profile_memory', () => '')
+    this.handle('save_ai_profile_memory', () => undefined)
     this.handle('list_installed_plugins', () => [])
     this.handle('get_secret_statuses', () => ({}))
     this.handle('get_secret_vault_state', () => 'available')

@@ -83,6 +83,16 @@ pub fn resolve_vault(app: &AppHandle, vault_id: &str) -> Result<Vault, AppError>
     Ok(vault)
 }
 
+/// The vault part of the references to `vault`, reached by `vault_id`: empty
+/// for the main vault, also when it is named by its own id.
+pub fn canonical_vault_ref(app: &AppHandle, vault_id: &str, vault: &Vault) -> String {
+    if vault_id.is_empty() || main_vault(app).is_ok_and(|main| main.id == vault.id) {
+        String::new()
+    } else {
+        vault_id.to_owned()
+    }
+}
+
 /// Runs `operation` on the root of the vault `vault_id` (empty: the main one);
 /// access is held until all I/O using the path has completed.
 pub fn with_vault<T>(
@@ -122,7 +132,38 @@ pub fn with_projects<T>(
             &ProjectPaths {
                 device: &device,
                 vault_id: &vault.id,
+                protected_roots: protected_roots(app),
             },
         )
     })
+}
+
+/// [`with_projects`] for work that may take long, such as a file tool
+/// searching a large project: `load` runs under the lock of the vault,
+/// `then` only with the vault access held, so that it holds up no other
+/// work on the vault while the folders cannot move away.
+pub fn with_projects_then<L, T>(
+    app: &AppHandle,
+    vault_id: &str,
+    load: impl FnOnce(&std::path::Path, &ProjectPaths) -> Result<L, AppError>,
+    then: impl FnOnce(L) -> Result<T, AppError>,
+) -> Result<T, AppError> {
+    let state = app.state::<crate::state::AppState>();
+    let _access = state.read_vault();
+    let vault = resolve_vault(app, vault_id)?;
+    let loaded = {
+        let lock = locking::vault_lock(&vault.root);
+        use crate::locks::MutexExt;
+        let _io = lock.locked();
+        let device = app.state::<crate::services::storage::device::DeviceStore>();
+        load(
+            &vault.root,
+            &ProjectPaths {
+                device: &device,
+                vault_id: &vault.id,
+                protected_roots: protected_roots(app),
+            },
+        )?
+    };
+    then(loaded)
 }

@@ -22,9 +22,9 @@ describe('chat-profile-memory', () => {
   })
 
   it('formats topic sizes in KB and MB', () => {
-    expect(formatMemoryTopicSize(400)).toBe('0.4 КБ')
-    expect(formatMemoryTopicSize(2150)).toBe('2.1 КБ')
-    expect(formatMemoryTopicSize(1024 * 1024 * 1.5)).toBe('1.5 МБ')
+    expect(formatMemoryTopicSize(400, 'en-US')).toBe('0.4 kB')
+    expect(formatMemoryTopicSize(2150, 'en-US')).toBe('2.1 kB')
+    expect(formatMemoryTopicSize(1024 * 1024 * 1.5, 'en-US')).toBe('1.5 MB')
   })
 
   it('formats topics list with descriptions or titles', () => {
@@ -121,5 +121,18 @@ describe('chat-profile-memory', () => {
       '- health.md — История болезней и анализы (~717 tokens)'
     )
     expect(memoryContext.block).toContain('</profile_memory>')
+  })
+})
+
+describe('memory warnings of a read-only profile', () => {
+  it('ask for no compaction the model cannot do', () => {
+    const warnings = detectMemoryWarnings({
+      coreTokens: CORE_MEMORY_WARN_TOKENS + 1,
+      isCoreClipped: false,
+      topics: [],
+      canWrite: false,
+    })
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]).not.toContain('memory_rewrite')
   })
 })

@@ -18,15 +18,15 @@ export function tokensToCharacters(tokens: number): number {
   return tokens * ESTIMATED_CHARACTERS_PER_TOKEN
 }
 
-/**
- * Formats byte size in KB or MB with 1 decimal digit (Russian unit as in
- * dev_docs §3.1).
- */
-export function formatMemoryTopicSize(bytes: number): string {
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} КБ`
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`
+/** Formats a byte size in KB or MB with one decimal digit, in `locale` */
+export function formatMemoryTopicSize(bytes: number, locale: string): string {
+  const isKilobytes = bytes < 1024 * 1024
+  return new Intl.NumberFormat(locale, {
+    style: 'unit',
+    unit: isKilobytes ? 'kilobyte' : 'megabyte',
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(isKilobytes ? bytes / 1024 : bytes / (1024 * 1024))
 }
 
 /**
@@ -55,27 +55,39 @@ export function clipCoreMemory(coreText: string): {
   }
 }
 
-/** Checks for size warnings on core.md and individual topic files. */
+/**
+ * Checks for size warnings on core.md and individual topic files. Only a model
+ * that may write memory is asked to compact it
+ */
 export function detectMemoryWarnings(options: {
   coreTokens: number
   isCoreClipped: boolean
   topics: readonly ProfileMemoryTopic[]
+  canWrite?: boolean
 }): string[] {
+  const canWrite = options.canWrite ?? true
+  const coreAdvice = canWrite
+    ? ' Compact it with memory_rewrite at the end of your answer and move details to topics.'
+    : ''
+  const topicAdvice = canWrite
+    ? ' Compact it with memory_rewrite at the end of your answer.'
+    : ''
   const warnings: string[] = []
   if (options.isCoreClipped) {
     warnings.push(
-      `Warning: core.md is clipped in context (over the ${CORE_MEMORY_HARD_LIMIT_TOKENS} token limit). Compact it with memory_rewrite at the end of your answer and move details to topics.`
+      `Warning: core.md is clipped in context (over the ${CORE_MEMORY_HARD_LIMIT_TOKENS} token limit).${coreAdvice}`
     )
   } else if (options.coreTokens > CORE_MEMORY_WARN_TOKENS) {
     warnings.push(
-      `Warning: core.md is ${options.coreTokens} tokens, over the ${CORE_MEMORY_WARN_TOKENS} token budget. Compact it with memory_rewrite at the end of your answer and move details to topics.`
+      `Warning: core.md is ${options.coreTokens} tokens, over the ${CORE_MEMORY_WARN_TOKENS} token budget.${coreAdvice}`
     )
   }
+  if (!canWrite) return warnings
   for (const topic of options.topics) {
     const topicTokens = estimateMemoryTokens(topic.bytes)
     if (topicTokens > TOPIC_MEMORY_WARN_TOKENS) {
       warnings.push(
-        `Warning: ${topic.file} is ${topicTokens} tokens, over the ${TOPIC_MEMORY_WARN_TOKENS} token budget. Compact it with memory_rewrite at the end of your answer.`
+        `Warning: ${topic.file} is ${topicTokens} tokens, over the ${TOPIC_MEMORY_WARN_TOKENS} token budget.${topicAdvice}`
       )
     }
   }
@@ -115,6 +127,8 @@ export interface ProfileMemoryContext {
 export function buildProfileMemoryBlock(options: {
   coreText: string
   topics: readonly ProfileMemoryTopic[]
+  /** Whether the model may change memory; true by default */
+  canWrite?: boolean
 }): ProfileMemoryContext {
   const {
     text: clippedCore,
@@ -125,6 +139,7 @@ export function buildProfileMemoryBlock(options: {
     coreTokens,
     isCoreClipped: isClipped,
     topics: options.topics,
+    canWrite: options.canWrite,
   })
   const topicsSection = formatTopicsList(options.topics)
   const warningsSection = warnings.length ? `\n\n${warnings.join('\n')}` : ''

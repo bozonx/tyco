@@ -182,6 +182,30 @@ pub fn inspect_attach_target(path: &Path) -> Result<AttachTarget, AppError> {
     }
 }
 
+/// Whether the marker in `dir` was written by a newer layout than this build
+/// knows; false when there is none or it is unreadable.
+pub fn is_from_newer_version(dir: &Path) -> bool {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Version {
+        format_version: u32,
+    }
+    fs::read_to_string(dir.join(VAULT_MARKER_FILE))
+        .ok()
+        .and_then(|raw| serde_json::from_str::<Version>(&raw).ok())
+        .is_some_and(|marker| marker.format_version > VAULT_FORMAT_VERSION)
+}
+
+/// Undoes [`create_attached`]: removes the marker, and the folder when it
+/// is empty then. Used when the vault could not be attached after all.
+pub fn remove_created(path: &Path) {
+    let marker = path.join(VAULT_MARKER_FILE);
+    if fs::remove_file(&marker).is_ok() {
+        crate::services::storage::watcher::deleted(&marker);
+    }
+    let _ = fs::remove_dir(path);
+}
+
 /// Makes a new vault in the empty folder `path`: a random id and `name`.
 pub fn create_attached(path: &Path, name: &str) -> Result<Vault, AppError> {
     if inspect_attach_target(path)? != AttachTarget::Empty {

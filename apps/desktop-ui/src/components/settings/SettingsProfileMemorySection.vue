@@ -258,7 +258,7 @@ const emit = defineEmits<{
   (e: 'update:memoryMode', mode: ProfileMemoryMode): void
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { toastKey, toastError } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 const llmStore = useLlmStore()
@@ -306,7 +306,7 @@ function topicTitle(topic: ProfileMemoryTopic) {
 }
 
 function topicDescription(topic: ProfileMemoryTopic) {
-  const size = formatMemoryTopicSize(topic.bytes)
+  const size = formatMemoryTopicSize(topic.bytes, locale.value)
   const tokens = estimateMemoryTokens(topic.bytes)
   const tokensText = t('settings.profileMemoryTokens', {
     tokens: String(tokens),
@@ -338,7 +338,8 @@ function topicWarning(
 
 const editor = createMemoryEditorModel({
   read: (id, file) => aiProfilesStore.readMemory(id, file),
-  write: (id, file, content) => aiProfilesStore.writeMemory(id, file, content),
+  write: (id, file, content, expected) =>
+    aiProfilesStore.writeMemory(id, file, content, expected),
   reportError: toastError,
   onSaved: () => {
     toastKey('settings.profileMemoryFileSaved', 'info')
@@ -358,7 +359,8 @@ function openEditor(file: string) {
 }
 const compaction = createMemoryCompactionModel({
   read: (id, file) => aiProfilesStore.readMemory(id, file),
-  write: (id, file, content) => aiProfilesStore.writeMemory(id, file, content),
+  write: (id, file, content, expected) =>
+    aiProfilesStore.writeMemory(id, file, content, expected),
   compact: (file, content) => {
     const modelId = resolveCompactionModelId()
     return compactMemoryContent({

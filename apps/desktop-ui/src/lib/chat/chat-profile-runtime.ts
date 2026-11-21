@@ -1,7 +1,10 @@
 import type { AiProfile, ProfileMemoryTopic } from '@tyco/shared'
 import { computed, ref } from 'vue'
 
-import { buildProfileMemoryBlock } from './chat-profile-memory'
+import {
+  buildProfileMemoryBlock,
+  type ProfileMemoryContext,
+} from './chat-profile-memory'
 
 export interface ChatProfileRuntimeDependencies {
   profileId: string | null
@@ -21,6 +24,35 @@ export interface ProfileInstructionsContext {
   warn?: (message: string) => void
 }
 
+type MemoryReaders = Pick<
+  ProfileInstructionsContext,
+  'readCoreMemory' | 'listMemoryTopics'
+>
+
+/**
+ * The <profile_memory> block of a profile, or null when its memory is off or
+ * cannot be read now
+ */
+async function readProfileMemoryContext(
+  profileId: string,
+  stored: AiProfile | undefined,
+  deps: MemoryReaders
+): Promise<ProfileMemoryContext | null> {
+  const mode = stored?.memoryMode
+  if (!mode || mode === 'off' || !deps.readCoreMemory) return null
+  const [coreText, topics] = await Promise.all([
+    deps.readCoreMemory(profileId),
+    deps.listMemoryTopics
+      ? deps.listMemoryTopics(profileId)
+      : Promise.resolve([]),
+  ])
+  return buildProfileMemoryBlock({
+    coreText,
+    topics,
+    canWrite: mode !== 'read-only',
+  })
+}
+
 /**
  * Resolves the full instructions (SOUL.md + memory block) for a profile without
  * requiring the full chat runtime or chat history loading.
@@ -37,25 +69,13 @@ export async function resolveProfileInstructions(
   ])
 
   let memoryBlock = ''
-  if (
-    stored?.memoryMode &&
-    stored.memoryMode !== 'off' &&
-    deps.readCoreMemory
-  ) {
-    try {
-      const [coreText, topics] = await Promise.all([
-        deps.readCoreMemory(profileId),
-        deps.listMemoryTopics
-          ? deps.listMemoryTopics(profileId)
-          : Promise.resolve([]),
-      ])
-      const memoryContext = buildProfileMemoryBlock({ coreText, topics })
-      memoryBlock = memoryContext.block
-    } catch (error) {
-      deps.warn?.(
-        `Could not read profile memory for ${profileId}: ${String(error)}`
-      )
-    }
+  try {
+    memoryBlock =
+      (await readProfileMemoryContext(profileId, stored, deps))?.block ?? ''
+  } catch (error) {
+    deps.warn?.(
+      `Could not read profile memory for ${profileId}: ${String(error)}`
+    )
   }
 
   return [soul, memoryBlock].filter(Boolean).join('\n\n')
@@ -95,35 +115,21 @@ export function createChatProfileRuntime(deps: ChatProfileRuntimeDependencies) {
     ])
     soul.value = content
 
-    if (
-      stored?.memoryMode &&
-      stored.memoryMode !== 'off' &&
-      deps.readCoreMemory
-    ) {
-      try {
-        const [coreText, topics] = await Promise.all([
-          deps.readCoreMemory(deps.profileId),
-          deps.listMemoryTopics
-            ? deps.listMemoryTopics(deps.profileId)
-            : Promise.resolve([]),
-        ])
-        const memoryContext = buildProfileMemoryBlock({ coreText, topics })
-        memoryBlock.value = memoryContext.block
-        isCoreClipped.value = memoryContext.isCoreClipped
-        memoryWarnings.value = memoryContext.warnings
-      } catch (error) {
-        memoryBlock.value = null
-        isCoreClipped.value = false
-        memoryWarnings.value = []
-        deps.warn(
-          `Could not read profile memory for ${deps.profileId}: ${String(error)}`
-        )
-      }
-    } else {
-      memoryBlock.value = null
-      isCoreClipped.value = false
-      memoryWarnings.value = []
+    let memoryContext: ProfileMemoryContext | null = null
+    try {
+      memoryContext = await readProfileMemoryContext(
+        deps.profileId,
+        stored,
+        deps
+      )
+    } catch (error) {
+      deps.warn(
+        `Could not read profile memory for ${deps.profileId}: ${String(error)}`
+      )
     }
+    memoryBlock.value = memoryContext?.block ?? null
+    isCoreClipped.value = memoryContext?.isCoreClipped ?? false
+    memoryWarnings.value = memoryContext?.warnings ?? []
 
     return stored
   }

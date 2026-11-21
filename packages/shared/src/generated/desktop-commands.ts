@@ -302,6 +302,10 @@ export interface DesktopCommands {
     args: { patch: SessionStatePatch }
     result: DesktopSnapshot
   }
+  peek_ai_profile_memory: {
+    args: { profileId: string; file: string }
+    result: string
+  }
   pick_directory: { args: undefined; result: string | null }
   pick_file: { args: undefined; result: string | null }
   pick_plugin_package: { args: undefined; result: PluginPackagePreview | null }
@@ -324,7 +328,7 @@ export interface DesktopCommands {
     result: ArrayBuffer
   }
   read_ai_profile_memory: {
-    args: { profileId: string; file: string }
+    args: { profileId: string; chatId?: string | null; file: string }
     result: string
   }
   read_ai_profile_soul: { args: { id: string }; result: ProfileSoul }
@@ -408,6 +412,15 @@ export interface DesktopCommands {
   save_ai_profile: {
     args: { profile: AiProfile; expectedRevision?: string | null }
     result: string
+  }
+  save_ai_profile_memory: {
+    args: {
+      profileId: string
+      file: string
+      content: string
+      expectedContent?: string | null
+    }
+    result: void
   }
   save_ai_project: {
     args: { project: AiProject; expectedRevision?: string | null }

@@ -2,7 +2,13 @@ import { ref } from 'vue'
 
 export interface MemoryEditorDependencies {
   read: (profileId: string, file: string) => Promise<string>
-  write: (profileId: string, file: string, content: string) => Promise<unknown>
+  /** Stores the file only while it is still `expectedContent` on disk */
+  write: (
+    profileId: string,
+    file: string,
+    content: string,
+    expectedContent: string
+  ) => Promise<unknown>
   reportError: (error: unknown) => void
   onSaved: () => void
 }
@@ -15,6 +21,8 @@ export function createMemoryEditorModel(deps: MemoryEditorDependencies) {
   const isSaving = ref(false)
   let revision = 0
   let profileId = ''
+  /** The file as it was opened, which a save must still find */
+  let openedContent = ''
   let isDisposed = false
 
   function closeEditor() {
@@ -33,6 +41,7 @@ export function createMemoryEditorModel(deps: MemoryEditorDependencies) {
       profileId = id
       editingFile.value = file
       editorContent.value = content
+      openedContent = content
       isEditorOpen.value = true
     } catch (error) {
       if (!isDisposed && request === revision) deps.reportError(error)
@@ -45,7 +54,8 @@ export function createMemoryEditorModel(deps: MemoryEditorDependencies) {
     const content = editorContent.value
     isSaving.value = true
     try {
-      await deps.write(profileId, file, content)
+      await deps.write(profileId, file, content, openedContent)
+      openedContent = content
       if (!isDisposed && request === revision) {
         // A user may keep typing while the write is running.
         if (editorContent.value === content) closeEditor()
@@ -70,6 +80,8 @@ export function createMemoryEditorModel(deps: MemoryEditorDependencies) {
       editorContent.value === original
     ) {
       editorContent.value = content
+      // the compaction wrote it: the file is that text now
+      openedContent = content
     }
   }
   function dispose() {

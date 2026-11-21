@@ -46,6 +46,7 @@ vi.mock('../../composables/use-toast', () => ({
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({
+    locale: { value: 'en-US' },
     t: (key: string, params?: Record<string, string>) => {
       if (params?.tokens) return `${key}:${params.tokens}`
       if (params?.file) return `${key}:${params.file}`

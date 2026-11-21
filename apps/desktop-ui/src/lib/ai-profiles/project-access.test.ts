@@ -16,14 +16,23 @@ describe('project access levels', () => {
     }
   })
 
-  it('maps older permissions to the closest level', () => {
+  it('shows permissions that match no level as custom', () => {
     expect(projectAccessLevelOf(undefined)).toBeUndefined()
     expect(projectAccessLevelOf({ read: 'deny', write: 'deny' })).toBe(
       undefined
     )
-    expect(projectAccessLevelOf({ read: 'ask', write: 'deny' })).toBe('read')
     expect(projectAccessLevelOf({ read: 'ask', write: 'ask' })).toBe('askAll')
-    expect(projectAccessLevelOf({ read: 'deny', write: 'allow' })).toBe('full')
+    for (const permission of [
+      { read: 'ask', write: 'deny' },
+      { read: 'deny', write: 'allow' },
+      { read: 'ask', write: 'allow' },
+    ] as const)
+      expect(projectAccessLevelOf(permission)).toBe('custom')
+  })
+
+  it('keeps a custom permission as it is', () => {
+    const custom = { docs: { read: 'ask', write: 'allow' } } as const
+    expect(withProjectAccess(custom, 'docs', 'custom')).toEqual(custom)
   })
 
   it('connects and removes one project, keeping the others', () => {

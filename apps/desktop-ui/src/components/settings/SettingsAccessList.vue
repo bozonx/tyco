@@ -24,7 +24,7 @@
         size="sm"
         :aria-label="`${entry.title}: ${t('settings.accessLevel')}`"
         :model-value="entry.level"
-        :options="levelOptions"
+        :options="levelOptionsFor(entry.level)"
         @update:model-value="
           emit('change', entry.id, $event as ProjectAccessLevel)
         "
@@ -110,6 +110,15 @@ const levelOptions = computed(() =>
     name: t(PROJECT_ACCESS_LABEL_KEYS[level]),
   }))
 )
+
+/** A custom permission is offered next to the levels, to keep it */
+function levelOptionsFor(level: ProjectAccessLevel) {
+  if (level !== 'custom') return levelOptions.value
+  return [
+    { id: level, name: t(PROJECT_ACCESS_LABEL_KEYS[level]) },
+    ...levelOptions.value,
+  ]
+}
 
 const addItems = computed<DropdownMenuItem[]>(() =>
   props.candidates.map((candidate) => ({

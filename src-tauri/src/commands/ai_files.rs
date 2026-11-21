@@ -39,14 +39,14 @@ fn with_conversation_files<T>(
         // a profile reaches the projects and files of its own vault only
         Some(profile_id) => {
             let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
-            ai_vault::with_projects(app, vault_id, |dir, paths| {
-                operation(&ConversationFiles::load(
-                    dir,
-                    paths,
-                    profile_id,
-                    attachments,
-                )?)
-            })
+            // the folders and permissions are read under the vault lock; the
+            // tool itself, which may read or search much, runs without it
+            ai_vault::with_projects_then(
+                app,
+                vault_id,
+                |dir, paths| ConversationFiles::load(dir, paths, profile_id, attachments),
+                |files| operation(&files),
+            )
         }
     }
 }

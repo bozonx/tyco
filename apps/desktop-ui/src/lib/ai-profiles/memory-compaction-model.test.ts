@@ -22,7 +22,13 @@ describe('memory compaction', () => {
     expect(deps.compact).toHaveBeenCalledWith('a.md', 'Unsaved text')
     expect(deps.write).not.toHaveBeenCalled()
     await model.applyCompaction()
-    expect(deps.write).toHaveBeenCalledWith('writer', 'a.md', 'Compact')
+    // made from unsaved text, the result expects no content on disk
+    expect(deps.write).toHaveBeenCalledWith(
+      'writer',
+      'a.md',
+      'Compact',
+      undefined
+    )
     expect(deps.onApplied).toHaveBeenCalledWith(
       'writer',
       'a.md',

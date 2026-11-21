@@ -3,7 +3,16 @@ import { ref } from 'vue'
 export interface MemoryCompactionDependencies {
   read: (profileId: string, file: string) => Promise<string>
   compact: (file: string, content: string) => Promise<string>
-  write: (profileId: string, file: string, content: string) => Promise<unknown>
+  /**
+   * Stores the file; with `expectedContent` only while it is still that text on
+   * disk
+   */
+  write: (
+    profileId: string,
+    file: string,
+    content: string,
+    expectedContent?: string
+  ) => Promise<unknown>
   reportError: (error: unknown) => void
   onUnchanged: () => void
   onApplied: (
@@ -25,6 +34,8 @@ export function createMemoryCompactionModel(
   const diffOldText = ref('')
   const diffNewText = ref('')
   let profileId = ''
+  /** The file on disk the result was made from; none for an editor's text */
+  let expectedContent: string | undefined
   let revision = 0
   let isDisposed = false
 
@@ -54,6 +65,7 @@ export function createMemoryCompactionModel(
         return
       }
       profileId = id
+      expectedContent = editorContent === undefined ? content : undefined
       compactingFile.value = file
       diffOldText.value = content
       diffNewText.value = result
@@ -73,7 +85,7 @@ export function createMemoryCompactionModel(
     const content = diffNewText.value
     isApplying.value = true
     try {
-      await deps.write(id, file, content)
+      await deps.write(id, file, content, expectedContent)
       if (!isDisposed && request === revision) {
         closeDiffModal()
         deps.onApplied(id, file, original, content)

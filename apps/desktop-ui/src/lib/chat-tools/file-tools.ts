@@ -336,7 +336,8 @@ export function createFileToolProvider(
   function definition(
     spec: FileToolSpec,
     scope: FileToolScope,
-    roots: readonly AiFileRoot[],
+    /** The roots of the turn, updated when a call finds them changed */
+    turn: { roots: readonly AiFileRoot[] },
     groupId: string,
     groupAccess: ProjectAccessMode
   ): ChatToolDefinition {
@@ -347,12 +348,45 @@ export function createFileToolProvider(
         .flatMap((path) =>
           isEmptyPath(path)
             ? spec.access === 'read'
-              ? roots.filter((root) => root.read !== 'deny')
+              ? turn.roots.filter((root) => root.read !== 'deny')
               : []
-            : [fileRootOf(roots, path)]
+            : [fileRootOf(turn.roots, path)]
         )
 
+    // the group's access is the most a call gets; each root may ask for less
+    const accessFor = (input: unknown): ProjectAccessMode => {
+      const callRoots = rootsOf(asInput(input))
+      // a path outside every root fails in Rust, with a reason for the model
+      if (callRoots.some((root) => !root)) return groupAccess
+      return stricterAccess(
+        groupAccess,
+        ...callRoots.map((root) => root![spec.access])
+      )
+    }
+
+    /**
+     * Fails when the permissions became stricter since the call was approved by
+     * the roots of the turn, e.g. `allow` turned to `ask` in the settings: Rust
+     * enforces `deny` only, so the call is not run without asking
+     */
+    const recheckAccess = async (input: unknown) => {
+      const approved = accessFor(input)
+      let current: AiFileRoot[]
+      try {
+        current = await deps.listRoots(scope)
+      } catch {
+        return
+      }
+      turn.roots = current
+      const now = accessFor(input)
+      if (ACCESS_ORDER.indexOf(now) > ACCESS_ORDER.indexOf(approved))
+        throw new Error(
+          'The access to this folder changed during the conversation: call the tool again to ask the user'
+        )
+    }
+
     const execute = async (input: unknown, options: ChatToolExecuteOptions) => {
+      await recheckAccess(input)
       const request = spec.request(
         asInput(input),
         options.outputLimitCharacters
@@ -387,21 +421,14 @@ export function createFileToolProvider(
       icon: spec.icon,
       description: spec.description,
       inputSchema: spec.inputSchema,
-      // the group's access is the most a call gets; each root may ask for less
-      accessFor: (input) => {
-        const callRoots = rootsOf(asInput(input))
-        // a path outside every root fails in Rust, with a reason for the model
-        if (callRoots.some((root) => !root)) return groupAccess
-        return stricterAccess(
-          groupAccess,
-          ...callRoots.map((root) => root![spec.access])
-        )
-      },
+      accessFor,
       approvalScope: (input) =>
         spec
           .paths(asInput(input))
           .map((path) =>
-            isEmptyPath(path) ? '*' : (fileRootOf(roots, path)?.path ?? path)
+            isEmptyPath(path)
+              ? '*'
+              : (fileRootOf(turn.roots, path)?.path ?? path)
           )
           .join('>'),
       ...(spec.hasPreview
@@ -439,13 +466,14 @@ export function createFileToolProvider(
         return []
       }
       turnRoots.set(context, roots)
+      const turn = { roots }
       if (hasFolders)
         return FILE_TOOLS.map((spec) =>
-          definition(spec, scope, roots, FILES_TOOL_GROUP_ID, group!.access)
+          definition(spec, scope, turn, FILES_TOOL_GROUP_ID, group!.access)
         )
       // the user's own files of this conversation: read freely, never changed
       return FILE_TOOLS.filter((spec) => spec.access === 'read').map((spec) =>
-        definition(spec, scope, roots, ATTACHMENTS_TOOL_GROUP_ID, 'allow')
+        definition(spec, scope, turn, ATTACHMENTS_TOOL_GROUP_ID, 'allow')
       )
     },
     instructions(context) {

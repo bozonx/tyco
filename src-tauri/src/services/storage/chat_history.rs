@@ -104,6 +104,21 @@ pub fn remove_vault_indexes(app: &AppHandle, vault_id: &str) -> Result<(), AppEr
     }
 }
 
+/// Forgets the index of the chats of one profile of the vault `vault_id`,
+/// once the profile is deleted.
+pub fn remove_profile_index(
+    app: &AppHandle,
+    vault_id: &str,
+    profile_id: &str,
+) -> Result<(), AppError> {
+    crate::services::ai_vault::validate_id(profile_id)?;
+    let index_dir = super::paths::state_sub_dir(app, INDEX_DIR)?;
+    match fs::remove_dir_all(vault_index_dir(&index_dir, vault_id).join(profile_id)) {
+        Err(error) if error.kind() != std::io::ErrorKind::NotFound => Err(error.into()),
+        _ => Ok(()),
+    }
+}
+
 /// A chat file as the index last saw it.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

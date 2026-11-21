@@ -17,6 +17,7 @@ fn paths() -> ProjectPaths<'static> {
     ProjectPaths {
         device: DEVICE.with(|device| *device),
         vault_id: "v",
+        protected_roots: Vec::new(),
     }
 }
 
@@ -468,6 +469,7 @@ fn an_external_project_has_its_folder_on_each_device() {
     let laptop_paths = ProjectPaths {
         device: &laptop,
         vault_id: "v",
+        protected_roots: Vec::new(),
     };
     let listed = list_projects(&vault_root, &laptop_paths).unwrap();
     assert_eq!(listed[0].target_path, None);
@@ -487,13 +489,23 @@ fn an_external_project_has_its_folder_on_each_device() {
     // setting the folder there checks it
     renamed.target_path = Some("relative".into());
     assert!(save_project(&vault_root, &laptop_paths, renamed.clone(), None).is_err());
-    renamed.target_path = Some(test_dir.to_str().unwrap().into());
+    // a folder that holds the vault, or lies in it, is refused
+    for refused in [test_dir.to_path_buf(), vault_root.join("profiles")] {
+        renamed.target_path = Some(refused.to_str().unwrap().into());
+        assert!(matches!(
+            save_project(&vault_root, &laptop_paths, renamed.clone(), None),
+            Err(AppError::InvalidInput(_))
+        ));
+    }
+    let laptop_dir = test_dir.join("laptop-site");
+    std::fs::create_dir_all(&laptop_dir).unwrap();
+    renamed.target_path = Some(laptop_dir.to_str().unwrap().into());
     save_project(&vault_root, &laptop_paths, renamed, None).unwrap();
     assert_eq!(
         list_projects(&vault_root, &laptop_paths).unwrap()[0]
             .target_path
             .as_deref(),
-        test_dir.to_str()
+        laptop_dir.to_str()
     );
 
     // a description a sync has not brought yet, or cannot be read now, keeps
@@ -514,7 +526,7 @@ fn an_external_project_has_its_folder_on_each_device() {
         list_projects(&vault_root, &laptop_paths).unwrap()[0]
             .target_path
             .as_deref(),
-        test_dir.to_str()
+        laptop_dir.to_str()
     );
 }
 
@@ -609,13 +621,19 @@ fn project_files_are_in_the_vault_or_the_linked_folder() {
         vault_root.join("projects/docs")
     );
 
+    let site = test_dir.join("site");
+    std::fs::create_dir_all(&site).unwrap();
     let mut external = project("site", 1);
     external.is_external = true;
-    external.target_path = Some(format!("  {}  ", test_dir.display()));
-    assert_eq!(
-        project_files_dir(&vault_root, &external).unwrap(),
-        test_dir.to_path_buf()
-    );
+    external.target_path = Some(format!("  {}  ", site.display()));
+    assert_eq!(project_files_dir(&vault_root, &external).unwrap(), site);
+    // a folder set by hand over the vault is not reached
+    std::fs::create_dir_all(&vault_root).unwrap();
+    external.target_path = Some(test_dir.display().to_string());
+    assert!(matches!(
+        project_files_dir(&vault_root, &external),
+        Err(AppError::ProjectUnavailable(_))
+    ));
     for target in [
         Some(String::from("   ")),
         None,
@@ -723,7 +741,7 @@ fn memory_path_isolation_and_file_name_validation() {
             "{invalid}"
         );
         assert!(
-            read_profile_memory(&vault_root, &versions, "writer", invalid).is_err(),
+            read_profile_memory(&vault_root, &versions, "writer", None, invalid).is_err(),
             "{invalid}"
         );
         assert!(
@@ -742,7 +760,7 @@ fn memory_crud_add_replace_rewrite_and_search() {
     create_profile(&vault_root, profile("doc", 1000), "").unwrap();
 
     // 1. Read core
-    let core = read_profile_memory(&vault_root, &versions, "doc", "core.md").unwrap();
+    let core = read_profile_memory(&vault_root, &versions, "doc", None, "core.md").unwrap();
     assert_eq!(core, DEFAULT_MEMORY_CORE);
 
     // 2. Add fact to core
@@ -776,7 +794,7 @@ fn memory_crud_add_replace_rewrite_and_search() {
     let topics = list_profile_memory_topics(&vault_root, "doc").unwrap();
     assert_eq!(topics.len(), 2);
     assert_eq!(topics[0].file, "core.md");
-    assert_eq!(topics[0].title, "Ядро памяти");
+    assert_eq!(topics[0].title, "Core memory");
     assert_eq!(topics[1].file, "health.md");
     assert_eq!(topics[1].title, "Health");
 
@@ -842,7 +860,7 @@ fn memory_crud_add_replace_rewrite_and_search() {
     assert_eq!(cleared_topics.len(), 1);
     assert_eq!(cleared_topics[0].file, "core.md");
     assert_eq!(
-        read_profile_memory(&vault_root, &versions, "doc", "core.md").unwrap(),
+        read_profile_memory(&vault_root, &versions, "doc", None, "core.md").unwrap(),
         DEFAULT_MEMORY_CORE
     );
 }
@@ -905,7 +923,7 @@ fn memory_optimistic_locking_rejects_concurrent_edits() {
     create_profile(&vault_root, profile("locked", 1000), "").unwrap();
 
     // 1. Read file to record its current version
-    let _ = read_profile_memory(&vault_root, &versions, "locked", "core.md").unwrap();
+    let _ = read_profile_memory(&vault_root, &versions, "locked", None, "core.md").unwrap();
 
     // 2. User modifies file directly on disk
     let core_path = vault_root.join("profiles/locked/memory/core.md");
@@ -923,7 +941,7 @@ fn memory_optimistic_locking_rejects_concurrent_edits() {
     assert!(add_result.is_err());
 
     // 4. Model re-reads file to update its recorded version
-    let re_read = read_profile_memory(&vault_root, &versions, "locked", "core.md").unwrap();
+    let re_read = read_profile_memory(&vault_root, &versions, "locked", None, "core.md").unwrap();
     assert_eq!(re_read, "# Modified by user in editor\n");
 
     // 5. Subsequent write succeeds
@@ -965,7 +983,8 @@ fn memory_undo_restores_snapshots_per_chat() {
     )
     .unwrap();
 
-    let current_core = read_profile_memory(&vault_root, &versions, "undo_prof", "core.md").unwrap();
+    let current_core =
+        read_profile_memory(&vault_root, &versions, "undo_prof", None, "core.md").unwrap();
     assert!(current_core.contains("First fact") && current_core.contains("Second fact"));
 
     // Undo chat-1: restores core.md to pre-chat state (DEFAULT_MEMORY_CORE)
@@ -979,7 +998,7 @@ fn memory_undo_restores_snapshots_per_chat() {
     .unwrap();
     assert_eq!(undone.after, DEFAULT_MEMORY_CORE);
     assert_eq!(
-        read_profile_memory(&vault_root, &versions, "undo_prof", "core.md").unwrap(),
+        read_profile_memory(&vault_root, &versions, "undo_prof", None, "core.md").unwrap(),
         DEFAULT_MEMORY_CORE
     );
 
@@ -993,7 +1012,7 @@ fn memory_undo_restores_snapshots_per_chat() {
         "Pollen allergy",
     )
     .unwrap();
-    assert!(read_profile_memory(&vault_root, &versions, "undo_prof", "allergies.md").is_ok());
+    assert!(read_profile_memory(&vault_root, &versions, "undo_prof", None, "allergies.md").is_ok());
 
     // Undo chat-2: deletes the newly created allergies.md
     let undone_topic = undo_profile_memory(
@@ -1005,7 +1024,9 @@ fn memory_undo_restores_snapshots_per_chat() {
     )
     .unwrap();
     assert_eq!(undone_topic.after, "");
-    assert!(read_profile_memory(&vault_root, &versions, "undo_prof", "allergies.md").is_err());
+    assert!(
+        read_profile_memory(&vault_root, &versions, "undo_prof", None, "allergies.md").is_err()
+    );
 
     // Case 3: Undo when no snapshot exists returns NotFound
     assert!(matches!(
@@ -1125,10 +1146,10 @@ fn memory_revision_checks_are_isolated_by_vault_even_for_equal_profile_ids() {
     for root in [&personal, &work] {
         create_profile(root, profile("writer", 1), "").unwrap();
     }
-    rewrite_profile_memory(&personal, &versions, "writer", None, "core.md", "Personal").unwrap();
-    rewrite_profile_memory(&work, &versions, "writer", None, "core.md", "Work").unwrap();
-    read_profile_memory(&personal, &versions, "writer", "core.md").unwrap();
-    read_profile_memory(&work, &versions, "writer", "core.md").unwrap();
+    for (root, content) in [(&personal, "Personal"), (&work, "Work")] {
+        read_profile_memory(root, &versions, "writer", None, "core.md").unwrap();
+        rewrite_profile_memory(root, &versions, "writer", None, "core.md", content).unwrap();
+    }
     fs::write(personal.join("profiles/writer/memory/core.md"), "External").unwrap();
     delete_profile(&work, &versions, "writer").unwrap();
     assert!(
@@ -1300,4 +1321,178 @@ fn converting_without_transfer_leaves_the_files_and_needs_a_folder() {
     assert!(own.join("b.md").is_file());
     assert!(!site.join("b.md").exists());
     assert!(list_projects(&vault_root, &paths()).unwrap()[0].is_external);
+}
+
+#[test]
+fn the_model_cannot_change_memory_its_profile_keeps_read_only() {
+    let vault_root = TestDir::new("vault-memory-mode");
+    let versions = MemoryReadVersions::default();
+    for (id, mode) in [
+        ("reader", ProfileMemoryMode::ReadOnly),
+        ("silent", ProfileMemoryMode::Off),
+    ] {
+        let mut stored = profile(id, 1);
+        stored.memory_mode = mode;
+        create_profile(&vault_root, stored, "").unwrap();
+        read_profile_memory(&vault_root, &versions, id, None, "core.md").unwrap();
+        assert!(add_profile_memory_fact(&vault_root, &versions, id, None, "core.md", "x").is_err());
+        assert!(rewrite_profile_memory(&vault_root, &versions, id, None, "core.md", "x").is_err());
+        assert!(replace_profile_memory(
+            &vault_root,
+            &versions,
+            id,
+            None,
+            "core.md",
+            "Core memory",
+            "x"
+        )
+        .is_err());
+        // the user edits it in the settings whatever the mode
+        save_profile_memory(&vault_root, &versions, id, "core.md", "Mine", None).unwrap();
+    }
+}
+
+#[test]
+fn a_rewrite_needs_a_read_of_its_own_chat() {
+    let vault_root = TestDir::new("vault-memory-chat-reads");
+    let versions = MemoryReadVersions::default();
+    create_profile(&vault_root, profile("writer", 1), "").unwrap();
+    let rewrite = |chat: &str, content: &str| {
+        rewrite_profile_memory(
+            &vault_root,
+            &versions,
+            "writer",
+            Some(chat),
+            "core.md",
+            content,
+        )
+    };
+    // never read
+    assert!(matches!(rewrite("a", "A"), Err(AppError::StaleRevision(_))));
+    // a peek is no read
+    peek_profile_memory(&vault_root, "writer", "core.md").unwrap();
+    assert!(rewrite("a", "A").is_err());
+
+    read_profile_memory(&vault_root, &versions, "writer", Some("a"), "core.md").unwrap();
+    read_profile_memory(&vault_root, &versions, "writer", Some("b"), "core.md").unwrap();
+    rewrite("b", "B").unwrap();
+    // chat a read the file before chat b changed it
+    assert!(matches!(rewrite("a", "A"), Err(AppError::StaleRevision(_))));
+}
+
+#[test]
+fn an_undo_keeps_a_later_change_of_another_chat() {
+    let vault_root = TestDir::new("vault-memory-undo-later");
+    let versions = MemoryReadVersions::default();
+    create_profile(&vault_root, profile("writer", 1), "").unwrap();
+    add_profile_memory_fact(
+        &vault_root,
+        &versions,
+        "writer",
+        Some("a"),
+        "core.md",
+        "from a",
+    )
+    .unwrap();
+    add_profile_memory_fact(
+        &vault_root,
+        &versions,
+        "writer",
+        Some("b"),
+        "core.md",
+        "from b",
+    )
+    .unwrap();
+    assert!(matches!(
+        undo_profile_memory(&vault_root, &versions, "writer", Some("a"), "core.md"),
+        Err(AppError::StaleRevision(_))
+    ));
+    // the last change can be undone
+    let undone =
+        undo_profile_memory(&vault_root, &versions, "writer", Some("b"), "core.md").unwrap();
+    assert!(undone.after.contains("from a") && !undone.after.contains("from b"));
+}
+
+#[test]
+fn the_settings_save_memory_only_over_what_they_opened() {
+    let vault_root = TestDir::new("vault-memory-settings");
+    let versions = MemoryReadVersions::default();
+    create_profile(&vault_root, profile("writer", 1), "").unwrap();
+    let opened = peek_profile_memory(&vault_root, "writer", "core.md").unwrap();
+    fs::write(
+        vault_root.join("profiles/writer/memory/core.md"),
+        "Elsewhere",
+    )
+    .unwrap();
+    assert!(matches!(
+        save_profile_memory(
+            &vault_root,
+            &versions,
+            "writer",
+            "core.md",
+            "Mine",
+            Some(&opened)
+        ),
+        Err(AppError::StaleRevision(_))
+    ));
+    save_profile_memory(
+        &vault_root,
+        &versions,
+        "writer",
+        "core.md",
+        "Mine",
+        Some("Elsewhere"),
+    )
+    .unwrap();
+    // a topic folder a sync did not bring is made again
+    fs::remove_dir(vault_root.join("profiles/writer/memory/topics")).unwrap();
+    save_profile_memory(
+        &vault_root,
+        &versions,
+        "writer",
+        "notes.md",
+        "# Notes",
+        None,
+    )
+    .unwrap();
+}
+
+#[test]
+fn a_fact_stays_one_bullet_and_core_is_no_topic() {
+    let vault_root = TestDir::new("vault-memory-fact-lines");
+    let versions = MemoryReadVersions::default();
+    create_profile(&vault_root, profile("writer", 1), "").unwrap();
+    let change = add_profile_memory_fact(
+        &vault_root,
+        &versions,
+        "writer",
+        None,
+        "core.md",
+        "first\n# Not a section",
+    )
+    .unwrap();
+    assert!(change.after.contains("- first\n  \\# Not a section"));
+    assert!(normalize_and_validate_memory_file("topics/core.md").is_err());
+    // the limit counts characters, not bytes
+    let cyrillic = "я".repeat(MAX_MEMORY_FACT_LEN);
+    add_profile_memory_fact(
+        &vault_root,
+        &versions,
+        "writer",
+        None,
+        "notes.md",
+        &cyrillic,
+    )
+    .unwrap();
+}
+
+#[test]
+fn a_new_profile_leaves_no_hidden_folder() {
+    let vault_root = TestDir::new("vault-profile-staging");
+    create_profile(&vault_root, profile("writer", 1), "Soul").unwrap();
+    let names: Vec<_> = fs::read_dir(vault_root.join("profiles"))
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name())
+        .collect();
+    assert_eq!(names, ["writer"]);
 }

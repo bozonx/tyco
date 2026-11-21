@@ -450,10 +450,27 @@ profile picks are serialized with typed profile saves. `SOUL.md` content and its
 hash come from one read, and its storage events refresh the instruction even
 when `profile.json` is unchanged. Internal callers may omit a revision. The settings
 offer to reload the file or to save theirs over it; a page without unsaved
-changes takes the change silently. Writes into the memory of a profile are
-refused the same way when the file changed since the model read it. Memory read
-versions are keyed by vault root, profile id and file, so matching legacy ids in
-different vaults do not share a baseline or clear each other's checks.
+changes takes the change silently.
+
+Memory has two kinds of writers. The model of a chat reads with
+`read_ai_profile_memory` (with its `chatId`) and changes memory with
+`add_`/`replace_`/`rewrite_ai_profile_memory`; Rust refuses those when the
+profile's `memoryMode` is `read-only` or `off`, and refuses with
+`staleRevision` a change over a file that changed since that chat read it, and
+a rewrite of a file the chat never read. Read versions are keyed by vault root,
+profile id, chat and file, so two chats, or equal legacy ids in different
+vaults, never vouch for each other. Instructions, previews and the settings
+read with `peek_ai_profile_memory`, which records nothing. The settings store
+the user's edits with `save_ai_profile_memory`, whatever the mode, and only
+over the text they opened; that forgets the reads of every chat. Each chat
+keeps under `memory/.snapshots/<chat>/` the file before its first change, for
+undo, and the hash its last change left: an undo is refused once another chat
+or the user changed the file since. Snapshots of chats untouched for 30 days
+are dropped.
+
+A new profile is laid out in a hidden `profiles/.creating-<id>-<uuid>` folder
+and renamed into place, so a failure never leaves a folder that takes the id.
+Deleting a project removes the profiles' permissions first, then its folder.
 
 These checks serialize TyCo's own operations, not external filesystem writers.
 An external process can still replace a file between the hash check and rename;
@@ -514,9 +531,12 @@ The description of a project (`projects/<id>/project.json`: `id`, `name`,
 `description`, `isExternal`) is synced with the vault; the folder of an
 external project is set on each device, in `aiProjectPaths` of `device.json`
 by vault id (of the marker), then project id. The webview gets it as
-`targetPath` of the project, with `isInsideSyncedFolder` when it lies inside
-the data folder or a vault (allowed; the settings warn that its files are
-synced with it). A save without a folder keeps the one the device has. A
+`targetPath` of the project. The folder may neither lie inside the data
+folder or a vault of the device nor hold one (`check_project_folder`): the
+file tools would reach other profiles, their memory and the commands of the
+device. Saving or converting refuses it, and the file tools treat a folder set
+by hand there as `projectUnavailable`; `isInsideSyncedFolder` only marks such a
+folder left by an earlier version. A save without a folder keeps the one the device has. A
 folder is forgotten only when the project is deleted on this device: a
 description a sync has not brought yet, or one that cannot be read, does not
 drop it. A project without a folder on this device is listed as such, and its

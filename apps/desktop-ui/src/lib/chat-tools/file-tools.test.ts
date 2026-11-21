@@ -327,4 +327,20 @@ describe('file-tools', () => {
       `- projects/book/ — the user's project "Book" (The novel); reading allowed, changing asks the user first.`
     )
   })
+
+  it('refuses a call whose folder turned to ask during the turn', async () => {
+    const { deps, provider } = setup()
+    const tools = await toolsOf(provider)
+    const write = tools.get('write_file')
+    const input = { path: 'workspace/a.md', content: 'x' }
+    expect(write!.accessFor!(input)).toBe('allow')
+
+    deps.listRoots.mockResolvedValue([
+      { path: 'workspace', read: 'allow', write: 'ask' },
+    ])
+    await expect(execute(write, input)).rejects.toThrow(/changed/)
+    expect(deps.run).not.toHaveBeenCalled()
+    // the next call asks
+    expect(write!.accessFor!(input)).toBe('ask')
+  })
 })

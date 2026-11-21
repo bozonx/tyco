@@ -15,7 +15,7 @@ pub mod user_data_relocation;
 pub mod user_files;
 pub mod watcher;
 
-pub use chat_history::remove_vault_indexes;
+pub use chat_history::{remove_profile_index, remove_vault_indexes};
 pub use history_store::*;
 pub use paths::{app_log_dir, get_storage_info, storage_dir};
 pub use user_data::{open_user_data, variable_values, UserDirAccess};
