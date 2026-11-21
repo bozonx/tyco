@@ -103,9 +103,6 @@ export const COMMAND_RUN_TIMEOUT_DEFAULT_SEC = 300
 /** The longest finite run limit of a command, in seconds */
 export const COMMAND_RUN_TIMEOUT_MAX_SEC = 3600
 
-export const RUN_TIMEOUT_DEFAULT_SEC = COMMAND_RUN_TIMEOUT_DEFAULT_SEC
-export const RUN_TIMEOUT_MAX_SEC = COMMAND_RUN_TIMEOUT_MAX_SEC
-
 /** How many model steps an AI command takes by default; each tool call is one */
 export const AI_COMMAND_MAX_STEPS_DEFAULT = 5
 /** The most model steps an AI command may take */

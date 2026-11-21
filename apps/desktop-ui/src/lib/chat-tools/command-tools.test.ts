@@ -226,6 +226,39 @@ describe('command-tools', () => {
     )
   })
 
+  it('stops a command at the shared run limit', async () => {
+    vi.useFakeTimers()
+    try {
+      let toolSignal: AbortSignal | undefined
+      const run = vi.fn(async (call: { signal: AbortSignal }) => {
+        toolSignal = call.signal
+        return new Promise<{ ok: boolean }>(() => {})
+      })
+      const provider = createCommandToolProvider({
+        commands: () => [mockCommand()],
+        operations: createLookup({ script: mockTool({ run }) }),
+        runLimitSec: () => 5,
+      })
+      const [chatTool] = await provider.tools({
+        profileId: 'p1',
+        modelId: 'm1',
+        settings: profileSettings(),
+      })
+      const result = chatTool!.execute(
+        { text: 'hello' },
+        { signal, toolCallId: 'call-1', outputLimitCharacters: 20_000 }
+      )
+      const rejection = expect(result).rejects.toThrow(
+        'The command did not finish within 5 s and was stopped'
+      )
+      await vi.advanceTimersByTimeAsync(5000)
+      await rejection
+      expect(toolSignal?.aborted).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('executes an adapted command successfully', async () => {
     const run = vi.fn(async () => ({ ok: true, content: 'Done executing' }))
     const tool = mockTool({ run })

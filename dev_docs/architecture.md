@@ -132,6 +132,11 @@ selection the backend hides the overlay and waits for the focus to leave it. A
 reload of the quick webview (`on_page_load`) fails the active job. The status
 bubble remains only for `replace correction` and the selection hotkeys.
 
+`commandRunTimeoutSec` (0: unbounded) is the one run limit of all library
+commands. The backend applies it to overlay jobs; runs outside the overlay,
+voice commands and the commands a chat calls as tools, are bounded in the
+webview by `runWithinCommandLimit` (`lib/commands/command-run-limit.ts`).
+
 Before an external `run` or `open` shows anything, `services/visible_work.rs`
 asks both webviews (`EndVisibleWork`) to end what they show gracefully: the
 voice dictation and the dialog stop recording and save their history, a command

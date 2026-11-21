@@ -176,8 +176,8 @@ function errorBodyExcerpt(body: string): string {
 
 /**
  * Sends the text; resolves with the response body. There is no time limit of
- * its own: the caller shows the run and cancels it through `signal`, a
- * background caller on its own limit
+ * its own: the caller shows the run and cancels it through `signal`, on the
+ * shared command run limit as well
  */
 export async function executeWebhook(
   target: WebhookTarget,

@@ -115,6 +115,7 @@ export function createQuickAiRequestRuntime(
         commands: () => deps.getUserConfig()?.commands ?? [],
         operations: deps.operations,
         environment: deps.environment,
+        commandRunLimitSec: () => deps.getUserConfig()?.commandRunTimeoutSec,
       }),
   })
   const toolsOf = (profileId: string | null) =>

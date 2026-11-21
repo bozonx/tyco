@@ -183,6 +183,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     commands: () => deps.getUserConfig()?.commands ?? [],
     operations: deps.operations,
     environment: deps.environment,
+    commandRunLimitSec: () => deps.getUserConfig()?.commandRunTimeoutSec,
   })
 
   /** What differs between "Ask AI" and a profile chat */

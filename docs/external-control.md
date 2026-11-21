@@ -447,9 +447,11 @@ A script is killed with its whole process tree when its job is cancelled or
 times out. Returned output
 is capped at 512 KiB and must also fit the escaped 1 MiB protocol envelope. Oversized output fails with `OutputTooLarge`.
 
-Client `--timeout` controls waiting (default 300, range 1–3600 seconds); it is
-accepted only together with waiting. A client
-wait timeout does not itself cancel the job; use `jobs cancel` explicitly. Local
+Client `--timeout` bounds waiting (1–3600 seconds); it is accepted only
+together with waiting. Without it `--wait` and `jobs wait` last until Tyco ends
+the job, which the start and run limits above bound; with the run limit set to
+0 that can take as long as the command runs. A client wait timeout does not
+itself cancel the job; use `jobs cancel` explicitly. Local
 IPC frames have a 10-second read/write deadline and a 1 MiB limit. Idle clients
 do not block the listener; connections are bounded.
 

@@ -1,6 +1,7 @@
 import { COMMANDS_TOOL_GROUP_ID, type CommandConfig } from '@tyco/shared'
 
 import { createCommandTransformer } from '../commands/command-runner'
+import { runWithinCommandLimit } from '../commands/command-run-limit'
 import { invocationUnavailableReason } from '../invocation/invoke-operation'
 import type { OperationLookup } from '../operations/operation-types'
 import {
@@ -25,6 +26,8 @@ export interface CommandToolProviderDependencies {
   environment?: () => CommandEnvironment
   /** Optional logger for skipped or problematic tools */
   warn?: (message: string) => void
+  /** `commandRunTimeoutSec`, the limit shared by all command runs */
+  runLimitSec?: () => number | undefined
 }
 
 /**
@@ -85,12 +88,24 @@ export function createCommandToolProvider(
 
         const chatTool = await adaptCommand(command, tool, {
           groupId: COMMANDS_TOOL_GROUP_ID,
-          run: (input, signal) =>
-            transform(
-              command,
-              typeof input.text === 'string' ? input.text : '',
-              { input, signal, source: 'chat', output: 'return' }
-            ),
+          run: async (input, signal) => {
+            const run = await runWithinCommandLimit(
+              deps.runLimitSec?.(),
+              signal,
+              (limited) =>
+                transform(
+                  command,
+                  typeof input.text === 'string' ? input.text : '',
+                  { input, signal: limited, source: 'chat', output: 'return' }
+                )
+            )
+            return run.isTimedOut
+              ? {
+                  ok: false,
+                  message: `The command did not finish within ${run.seconds} s and was stopped`,
+                }
+              : run.value
+          },
         })
         definitions.push(chatTool)
       }

@@ -18,9 +18,7 @@ import type {
 import { normalizeCommands } from './command-config'
 import { commandLabel } from './command-runtime'
 import { commandRunRecord, logCommandRun } from './command-run-record'
-
-/** The code of a job the backend stopped over its limit */
-const TIMED_OUT_CODE = 'TimedOut'
+import { COMMAND_TIMED_OUT_CODE as TIMED_OUT_CODE } from './command-run-limit'
 
 /**
  * Where the run is: asking for access to the selection, asking for the text,

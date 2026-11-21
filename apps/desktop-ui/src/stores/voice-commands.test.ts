@@ -99,6 +99,47 @@ describe('useVoiceCommandsStore', () => {
     })
   })
 
+  it('stops a voice command at the shared run limit', async () => {
+    const desktop = useDesktopStore()
+    desktop.applyViewState({
+      ...desktop.desktopState,
+      userConfig: {
+        ...desktop.desktopState.userConfig,
+        commandRunTimeoutSec: 2,
+      },
+    })
+    let runSignal: AbortSignal | undefined
+    mocks.runCommand.mockImplementationOnce(
+      (
+        _command: CommandConfig,
+        _text: string,
+        options: { signal: AbortSignal }
+      ) => {
+        runSignal = options.signal
+        return new Promise(() => {})
+      }
+    )
+    const store = useVoiceCommandsStore()
+    await store.start()
+    await store.finish('review')
+
+    vi.useFakeTimers()
+    try {
+      const run = store.run()
+      await vi.advanceTimersByTimeAsync(2000)
+      await run
+    } finally {
+      vi.useRealTimers()
+    }
+
+    expect(runSignal?.aborted).toBe(true)
+    expect(store.stage).toBe('review')
+    expect(store.error).toBe('Did not finish in 2 s and was stopped')
+    expect(mocks.call).toHaveBeenCalledWith('log_command_run', {
+      record: expect.objectContaining({ commandId: 'cmd-1', success: false }),
+    })
+  })
+
   it('handles cancellation and abort without running command', async () => {
     const store = useVoiceCommandsStore()
     await store.start()

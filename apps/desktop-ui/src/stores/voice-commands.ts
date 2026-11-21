@@ -15,6 +15,11 @@ import {
   voiceInputIssue,
 } from '../lib/voice-commands/voice-resolver'
 import { commandRunRecord } from '../lib/commands/command-run-record'
+import {
+  COMMAND_TIMED_OUT_CODE as TIMED_OUT_CODE,
+  runWithinCommandLimit,
+} from '../lib/commands/command-run-limit'
+import type { InvocationOutcome } from '../lib/invocation/invocation-types'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
@@ -58,15 +63,30 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
         return { success: false }
       await history.saveOutput(text).catch(() => undefined)
       if (signal.aborted) return { success: false, cancelled: true }
-      // the named parameters come as the input, as an agent gives them
-      const outcome = await runner.run(current, text, {
-        source: 'voice',
+      // the named parameters come as the input, as an agent gives them;
+      // the run is bounded by the limit shared by all command runs
+      const limited = await runWithinCommandLimit(
+        desktop.userConfig?.commandRunTimeoutSec,
         signal,
-        ...(context ? { context } : {}),
-        ...(Object.keys(parameters).length
-          ? { input: { text, ...parameters } }
-          : {}),
-      })
+        (runSignal) =>
+          runner.run(current, text, {
+            source: 'voice',
+            signal: runSignal,
+            ...(context ? { context } : {}),
+            ...(Object.keys(parameters).length
+              ? { input: { text, ...parameters } }
+              : {}),
+          })
+      )
+      const outcome: InvocationOutcome = limited.isTimedOut
+        ? {
+            success: false,
+            code: TIMED_OUT_CODE,
+            message: translate('commandRun.timedOut', {
+              seconds: String(limited.seconds),
+            }),
+          }
+        : limited.value
       await ipc
         .call('log_command_run', {
           record: commandRunRecord(current, 'voice', text, outcome),

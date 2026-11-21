@@ -38,7 +38,6 @@ struct CliInvocation {
     timeout_secs: Option<u64>,
 }
 
-const DEFAULT_JOB_WAIT_TIMEOUT_SECS: u64 = 300;
 const MAX_JOB_WAIT_TIMEOUT_SECS: u64 = 3600;
 
 fn canonical_activation_mode(value: &str) -> String {
@@ -289,10 +288,12 @@ fn command_lines(list: &serde_json::Value) -> String {
         .collect()
 }
 
-fn wait_for_job(mut job: Job, timeout_secs: u64) -> Result<Job, CliError> {
-    let deadline = Instant::now() + Duration::from_secs(timeout_secs);
+/// Polls the job until it is over. Without `timeout_secs` it waits as long as
+/// Tyco runs the job: the start limit and the command run limit end it there.
+fn wait_for_job(mut job: Job, timeout_secs: Option<u64>) -> Result<Job, CliError> {
+    let deadline = timeout_secs.map(|secs| Instant::now() + Duration::from_secs(secs));
     while !job.state.is_terminal() {
-        if Instant::now() >= deadline {
+        if deadline.is_some_and(|deadline| Instant::now() >= deadline) {
             return Err(CliError::new(
                 ErrorCode::TimedOut,
                 format!("Waiting for {}; the job may still be running", job.id),
@@ -317,12 +318,13 @@ fn help(args: &[String]) -> Option<&'static str> {
         ["commands"] => "Usage: tyco-ctl commands <list [--json] | describe <id | --name NAME>>\nDiscover callable commands and inspect their accepted input without executing them.",
         ["commands", "list"] => "Usage: tyco-ctl commands list [--json]\nPrint callable commands as id<TAB>name lines, or JSON with --json.",
         ["commands", "describe"] => "Usage: tyco-ctl commands describe <id | --name NAME>\nPrint the command's effective input schema and capabilities as JSON.",
-        ["run"] => "Usage: tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]\n       [--replace] [--wait] [--json] [--timeout SECONDS]\nRun a library command in the Tyco overlay; a run while another runs fails with Busy. Without --wait, returns a job. With --wait, returns output.\n--json formats results and stderr errors as JSON. --timeout only bounds waiting.\nInput sources are exclusive; --replace requires --selection. Use --stdin for private text.",
+        ["run"] => "Usage: tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]\n       [--replace] [--wait] [--json] [--timeout SECONDS]\nRun a library command in the Tyco overlay; a run while another runs fails with Busy. Without --wait, returns a job. With --wait, returns output.\n--json formats results and stderr errors as JSON. --timeout (1-3600 s) only bounds waiting;
+without it --wait lasts until Tyco ends the job, within its start and run limits.\nInput sources are exclusive; --replace requires --selection. Use --stdin for private text.",
         ["replace"] | ["replace", "correction"] => "Usage: tyco-ctl replace correction\nRequest correction of the current selection without waiting; requires selection permission.",
         ["jobs"] => "Usage: tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]\nInspect retained invocations, cancel work, or collect results. Only wait accepts --timeout.",
         ["jobs", "status"] => "Usage: tyco-ctl jobs status <job-id> [--json]\nPrint job details as JSON. Exit 0 means the job was found, even if it failed.",
         ["jobs", "cancel"] => "Usage: tyco-ctl jobs cancel <job-id> [--json]\nRequest cancellation and print job JSON. Does not roll back side effects.",
-        ["jobs", "wait"] => "Usage: tyco-ctl jobs wait <job-id> [--json] [--timeout SECONDS]\nWait for completion; return output or full terminal job JSON. Exit with the job's result.\nTimeout defaults to 300 seconds (1-3600); a client timeout does not cancel the job.",
+        ["jobs", "wait"] => "Usage: tyco-ctl jobs wait <job-id> [--json] [--timeout SECONDS]\nWait for completion; return output or full terminal job JSON. Exit with the job's result.\nWithout --timeout (1-3600 s) it waits until Tyco ends the job; a client timeout does not cancel the job.",
         _ => return None,
     })
 }
@@ -388,12 +390,7 @@ fn run() -> Result<(), CliError> {
     }
     let response = send(&command.request)?;
     if command.wait {
-        let job = wait_for_job(
-            decode_job_response(response)?,
-            command
-                .timeout_secs
-                .unwrap_or(DEFAULT_JOB_WAIT_TIMEOUT_SECS),
-        )?;
+        let job = wait_for_job(decode_job_response(response)?, command.timeout_secs)?;
         if command.json {
             println!("{}", serde_json::to_string(&job).unwrap());
         }

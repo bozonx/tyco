@@ -135,9 +135,8 @@ export async function adaptRegisteredOperation(
  * Adapts a user command to a chat tool definition, resolving its config,
  * schema, label and command metadata. `run` executes the command the way the
  * other callers do (input checks, pre-transformation); without it the tool is
- * called directly. There is no time limit of its own: the user sees the chat
- * and stops it, and `runTimeoutSec` bounds library runs in the command overlay
- * only
+ * called directly. There is no time limit here: `run` bounds the command with
+ * `commandRunTimeoutSec`, see `runWithinCommandLimit`
  */
 export async function adaptCommand(
   command: CommandConfig,

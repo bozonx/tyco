@@ -130,9 +130,10 @@ import { useSortableList } from '../../composables/use-sortable-list'
 import useToast from '../../composables/use-toast'
 import {
   createCommand,
+  isCommandOperation,
   normalizeCommands,
+  runTimeoutOf,
 } from '../../lib/commands/command-config'
-import { isCommandOperation } from '../../lib/commands/command-config'
 import { externalCommandNameConflicts } from '../../lib/commands/command-external'
 import { createCommandRemovalModel } from '../../lib/commands/command-removal-model'
 import {
@@ -192,13 +193,8 @@ const commandRunTimeoutSec = computed<number>(
   () => userConfig.value.commandRunTimeoutSec ?? COMMAND_RUN_TIMEOUT_DEFAULT_SEC
 )
 const setCommandRunTimeoutSec = (value: number | string) => {
-  const numeric = typeof value === 'number' ? value : Number(value)
-  const seconds = Number.isFinite(numeric)
-    ? Math.round(numeric)
-    : COMMAND_RUN_TIMEOUT_DEFAULT_SEC
-  userConfig.value.commandRunTimeoutSec = Math.max(
-    0,
-    Math.min(seconds, COMMAND_RUN_TIMEOUT_MAX_SEC)
+  userConfig.value.commandRunTimeoutSec = runTimeoutOf(
+    typeof value === 'number' ? value : Number(value)
   )
 }
 

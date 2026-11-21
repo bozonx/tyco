@@ -127,6 +127,8 @@ export interface DesktopChatToolsDependencies {
   commands?: () => readonly CommandConfig[]
   operations?: OperationLookup
   environment?: () => CommandEnvironment
+  /** `commandRunTimeoutSec`, the limit shared by all command runs */
+  commandRunLimitSec?: () => number | undefined
 }
 
 /**
@@ -214,6 +216,7 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
           operations: deps.operations,
           environment: deps.environment,
           warn: deps.warn,
+          runLimitSec: deps.commandRunLimitSec,
         })
       : undefined
 
