@@ -254,11 +254,9 @@ describe('CommandEditor.vue', () => {
     const phrases = voiceFields.get('textarea')
     await phrases.setValue('save note\nmake note')
     expect(lastUpdate(wrapper).phrases).toEqual(['save note', 'make note'])
-    expect(
-      voiceFields
-        .findComponent(InfoTooltip)
-        .props('text')
-    ).toBe('voiceCommands.phrasesInfo')
+    expect(voiceFields.findComponent(InfoTooltip).props('text')).toBe(
+      'voiceCommands.phrasesInfo'
+    )
     expect(wrapper.findAll('input[type="text"]')).toHaveLength(1)
     expect(voiceFields.findAll('.command-hint')).toHaveLength(0)
   })

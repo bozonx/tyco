@@ -34,6 +34,7 @@ import {
 import { createSttClient } from '../lib/stt/stt-client'
 import { createVoiceCaptureControl } from '../lib/stt/voice-capture'
 import { useDesktopStore } from './desktop'
+import { useDialogStatusStore } from './dialog-status'
 import { useHistoryStore } from './history'
 import { useVisibleWorkStore } from './visible-work'
 import { useIpcStore } from './ipc'
@@ -89,6 +90,14 @@ export const useDialogStore = defineStore('dialog', () => {
   const turns = computed(() => buildDialogTurns(segments.value))
   const isActive = computed(
     () => status.value === 'starting' || status.value === 'running'
+  )
+  const dialogStatus = useDialogStatusStore()
+  watch(
+    isActive,
+    (next) => {
+      dialogStatus.isActive = next
+    },
+    { immediate: true }
   )
 
   let nextSegmentId = 0

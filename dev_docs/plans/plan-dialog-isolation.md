@@ -13,27 +13,23 @@ other plugins use them.
 - `dialog.isEnabled` (default `true`) with a switch in Settings → Dialog.
   Off: the nav tab is hidden, the `/dialog` route redirects home, an open
   view goes to the editor, a running dialog stops and is saved to history.
-- `DialogView` is a lazily loaded route.
+- `DialogView` is a lazily loaded route, and the dialog store with
+  `lib/dialog/*` loads with it: the nav tab reads `stores/dialog-status`, which
+  the dialog store keeps up to date.
+- Service seams: the `lib/dialog/*` models already take their capture, STT,
+  translation and history dependencies injected; `stores/dialog.ts` is the
+  only place that wires them to other features. Further interfaces would add
+  nothing until a second consumer (a plugin API) exists.
 
 ## Step 1: finish the isolation inside the app
 
-1. **Narrow service seams.** `lib/dialog/*` reaches STT, translation,
-   history and secrets through the dependencies `stores/dialog.ts` injects.
-   Name them as interfaces (`DialogSttService`, `DialogTranslator`,
-   `DialogHistorySink`) in `lib/dialog/` so the dialog depends on contracts,
-   not on other features' modules (`stt-client`, `stt-readiness`,
-   `translation` store). These interfaces are the draft of future plugin APIs.
-2. **Load the store lazily.** `NavPanel` instantiates `useDialogStore` only
-   for the recording indicator. Expose a tiny `isDialogActive` flag (e.g. in
-   `visible-work` or a dedicated small store) so the dialog store and its
-   modules load only when the dialog view opens.
-3. **Generic history entries.** `EditorHistoryEntry.dialog`
+1. **Generic history entries.** `EditorHistoryEntry.dialog`
    (`src-tauri/src/models/editor_history.rs`) hard-wires the dialog into the
    history format. Replace it with a generic `source: { kind, meta }` block
    that features register a renderer for. This changes the stored journal
    format: needs a compatible reader for old entries (`config-storage.md`)
    and history tests on both sides.
-4. **Subtitles window.** `services/runtime/subtitles_window.rs` is a
+2. **Subtitles window.** `services/runtime/subtitles_window.rs` is a
    dialog-only window. Generalize it into an "overlay strip" service that
    takes a published view, so another feature could reuse it.
 

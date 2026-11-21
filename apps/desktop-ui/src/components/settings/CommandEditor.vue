@@ -66,11 +66,7 @@
       >
         <span class="command-group-title">{{ t('commands.advanced') }}</span>
         <template v-if="hasAdvancedCustomizations" #status>
-          <Badge
-            data-testid="command-advanced-badge"
-            tone="muted"
-            size="xs"
-          >
+          <Badge data-testid="command-advanced-badge" tone="muted" size="xs">
             {{ advancedCustomizationsCount }}
           </Badge>
         </template>

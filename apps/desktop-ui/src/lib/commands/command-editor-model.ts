@@ -13,15 +13,19 @@ export function countAdvancedCustomizations(
   let count = 0
   const defaultOutputAction = context?.defaultOutputAction ?? 'none'
   if (command.outputAction !== defaultOutputAction) count++
-  if (context?.canSelectPlatforms && (command.platforms?.length ?? 0) > 0) count++
+  if (context?.canSelectPlatforms && (command.platforms?.length ?? 0) > 0)
+    count++
   if (context?.canLogOutput && command.isOutputLogged) count++
   if (command.isAvailableExternally) count++
-  if (command.isVoiceEnabled || (command.phrases?.some((p) => p.trim()) ?? false)) count++
+  if (
+    command.isVoiceEnabled ||
+    (command.phrases?.some((p) => p.trim()) ?? false)
+  )
+    count++
   if (context?.canParseArguments && command.isLlmArgumentParsingEnabled) count++
   if (
     context?.canPreTransform !== false &&
-    (command.isLlmPreTransformEnabled ||
-      command.llmPreTransformPrompt?.trim())
+    (command.isLlmPreTransformEnabled || command.llmPreTransformPrompt?.trim())
   ) {
     count++
   }

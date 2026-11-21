@@ -7,6 +7,7 @@ import {
   loadFakeDesktop,
   type TestDesktop,
 } from '../../test/install-fake-desktop'
+import { useDialogStatusStore } from '../../stores/dialog-status'
 import NavPanel from './NavPanel.vue'
 
 const mocks = vi.hoisted(() => ({
@@ -108,6 +109,15 @@ describe('NavPanel.vue', () => {
     })
     await nextTick()
     expect(wrapper.text()).not.toContain('nav.dialog')
+  })
+
+  it('marks the dialog tab while a dialog runs', async () => {
+    const wrapper = shallowMount(NavPanel)
+    expect(wrapper.find('.dialog-recording').exists()).toBe(false)
+
+    useDialogStatusStore().isActive = true
+    await nextTick()
+    expect(wrapper.find('.dialog-recording').exists()).toBe(true)
   })
 
   it('renders divider and profile tabs when profiles are provided', async () => {

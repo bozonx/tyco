@@ -16,7 +16,7 @@
         {{ t('nav.editor') }}
       </button>
       <button
-        v-if="dialogStore.isEnabled"
+        v-if="isDialogEnabled"
         type="button"
         class="topbar-tab"
         :aria-current="isDialogActive ? 'page' : undefined"
@@ -25,10 +25,10 @@
       >
         <AppIcon
           :icon="
-            dialogStore.isActive ? 'mdi:record-circle' : 'mdi:account-voice'
+            dialogStatus.isActive ? 'mdi:record-circle' : 'mdi:account-voice'
           "
           size="md"
-          :class="{ 'dialog-recording': dialogStore.isActive }"
+          :class="{ 'dialog-recording': dialogStatus.isActive }"
         />
         {{ t('nav.dialog') }}
       </button>
@@ -119,7 +119,7 @@ import { appNavigation } from '../../navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useChatStore, useProfileChatStore } from '../../stores/chat'
 import { useDesktopStore } from '../../stores/desktop'
-import { useDialogStore } from '../../stores/dialog'
+import { useDialogStatusStore } from '../../stores/dialog-status'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useNavPanelStore } from '../../stores/nav-panel'
 import AppIcon from '../common/AppIcon.vue'
@@ -134,7 +134,11 @@ const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
 
 const desktopStore = useDesktopStore()
-const dialogStore = useDialogStore()
+// the status alone: the dialog itself loads with its view
+const dialogStatus = useDialogStatusStore()
+const isDialogEnabled = computed(
+  () => desktopStore.userConfig?.dialog?.isEnabled !== false
+)
 const isDialogActive = computed(() =>
   appNavigation.isCurrent(APP_ROUTES.DIALOG.path)
 )
