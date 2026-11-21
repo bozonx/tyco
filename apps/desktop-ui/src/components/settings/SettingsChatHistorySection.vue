@@ -15,6 +15,7 @@
     </FieldRow>
 
     <FieldRow
+      v-if="isChatSavingChecked"
       :label="t('settings.chatQuickRequestsSaved')"
       :info="t('settings.chatQuickRequestsSavedInfo')"
       inline
@@ -121,47 +122,27 @@ const isChatSavingChecked = computed(
 
 const isQuickRequestSavingChecked = computed(
   () =>
-    history.value.storage !== 'off' &&
+    isChatSavingChecked.value &&
     history.value.isQuickRequestSavingEnabled !== false
 )
 
-const isRetentionVisible = computed(
-  () => isChatSavingChecked.value || isQuickRequestSavingChecked.value
-)
+const isRetentionVisible = computed(() => isChatSavingChecked.value)
 
 function setChatSavingEnabled(isEnabled: boolean) {
   if (isEnabled) {
-    if (
-      history.value.storage === 'off' &&
-      history.value.isQuickRequestSavingEnabled === undefined
-    ) {
-      history.value.isQuickRequestSavingEnabled = false
-    }
     history.value.storage = 'disk'
     delete history.value.isChatSavingEnabled
   } else {
     history.value.isChatSavingEnabled = false
-    if (!isQuickRequestSavingChecked.value) {
-      history.value.storage = 'off'
-    }
+    history.value.storage = 'off'
   }
 }
 
 function setQuickRequestSaving(isEnabled: boolean) {
   if (isEnabled) {
-    if (
-      history.value.storage === 'off' &&
-      history.value.isChatSavingEnabled === undefined
-    ) {
-      history.value.isChatSavingEnabled = false
-    }
-    history.value.storage = 'disk'
     delete history.value.isQuickRequestSavingEnabled
   } else {
     history.value.isQuickRequestSavingEnabled = false
-    if (!isChatSavingChecked.value) {
-      history.value.storage = 'off'
-    }
   }
 }
 

@@ -710,10 +710,10 @@ pub struct ChatHistoryPolicy {
     /// Chats without a message for this many days are dropped; 0 keeps them
     /// forever.
     pub retention_days: u64,
-    /// Quick requests are saved.
-    pub saves_quick_requests: bool,
     /// Regular chats are saved.
     pub saves_chats: bool,
+    /// Quick requests are saved. Only possible when regular chats are saved.
+    pub saves_quick_requests: bool,
 }
 
 impl ChatHistoryPolicy {
@@ -727,13 +727,17 @@ impl ChatHistoryPolicy {
         user_config::profile_chat_history(user_config).into()
     }
 
-    /// The chat is to be stored: quick requests follow `saves_quick_requests`,
-    /// and regular chats follow `saves_chats`.
+    /// The chat is to be stored: regular chats follow `saves_chats`, and
+    /// quick requests follow `saves_quick_requests` only when regular chats are
+    /// saved.
     pub fn saves(&self, chat: &Chat) -> bool {
+        if !self.saves_chats {
+            return false;
+        }
         if chat.is_quick_request == Some(true) {
             self.saves_quick_requests
         } else {
-            self.saves_chats
+            true
         }
     }
 
@@ -761,9 +765,9 @@ impl From<ChatHistoryConfig> for ChatHistoryPolicy {
         let storage_enabled = config.storage != HistoryStorage::Off;
         let saves_chats = storage_enabled && config.is_chat_saving_enabled.unwrap_or(true);
         let saves_quick_requests =
-            storage_enabled && config.is_quick_request_saving_enabled.unwrap_or(true);
+            saves_chats && config.is_quick_request_saving_enabled.unwrap_or(true);
         Self {
-            is_enabled: saves_chats || saves_quick_requests,
+            is_enabled: saves_chats,
             retention_days: config.retention_days,
             saves_chats,
             saves_quick_requests,

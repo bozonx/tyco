@@ -41,16 +41,18 @@ export function chatHistoryRetentionChoices(saved: unknown): number[] {
 }
 
 /**
- * Quick requests are stored with the chats of their scope unless the settings
- * turn it off; saving is the default, kept as no field
+ * Quick requests are stored with the chats of their scope when chat saving is
+ * enabled and the settings do not turn quick requests off; saving is the
+ * default, kept as no field
  */
 export function isQuickRequestSavingEnabled(
   config: ChatHistorySettingsSource,
   profileId?: string | null
 ): boolean {
+  if (!isChatHistoryEnabled(config, profileId)) {
+    return false
+  }
   const scope: ChatHistoryScope = profileId ? 'profiles' : 'askAi'
   const history = chatHistoryConfig(config, scope)
-  return (
-    history.storage !== 'off' && history.isQuickRequestSavingEnabled !== false
-  )
+  return history.isQuickRequestSavingEnabled !== false
 }

@@ -115,7 +115,7 @@ describe('isQuickRequestSavingEnabled', () => {
           },
         },
       })
-    ).toBe(true)
+    ).toBe(false)
     expect(
       isQuickRequestSavingEnabled({
         ...DEFAULT_USER_CONFIG,

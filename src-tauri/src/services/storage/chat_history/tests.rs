@@ -353,9 +353,9 @@ fn chat_history_policy_reads_the_settings() {
             &json!({"chat":{"history":{"storage":"disk","isChatSavingEnabled":false,"isQuickRequestSavingEnabled":true}}})
         ),
         ChatHistoryPolicy {
-            is_enabled: true,
+            is_enabled: false,
             retention_days: 0,
-            saves_quick_requests: true,
+            saves_quick_requests: false,
             saves_chats: false,
         }
     );
@@ -1019,8 +1019,8 @@ fn quick_requests_are_not_saved_when_the_policy_leaves_them_out() {
 }
 
 #[test]
-fn regular_chats_are_not_saved_when_the_policy_leaves_them_out() {
-    let dir = TestDir::new("chats-off-quick-on-test");
+fn nothing_is_saved_when_chat_saving_is_turned_off() {
+    let dir = TestDir::new("chats-off-test");
     let dirs = dirs(&dir);
     let images = Mutex::new(ChatImageStore::default());
     let policy = ChatHistoryPolicy {
@@ -1038,7 +1038,7 @@ fn regular_chats_are_not_saved_when_the_policy_leaves_them_out() {
         .into_iter()
         .map(|chat| chat.id)
         .collect();
-    assert_eq!(ids, vec![String::from("q1")]);
+    assert!(ids.is_empty());
 }
 
 #[test]
