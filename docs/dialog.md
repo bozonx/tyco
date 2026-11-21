@@ -31,7 +31,7 @@ Pick it in the toolbar before you start; TyCo remembers the last choice.
 
 Hover over a bubble to see who spoke and when.
 
-With speakers instead of headphones TyCo mutes the echo of the call in your
+With speakers instead of headphones TyCo turns down the echo of the call in your
 microphone, so the other side is not transcribed twice. Headphones still give
 the cleanest result.
 
@@ -98,7 +98,7 @@ entry.
 While recording, the toolbar and the subtitles show a red dot with the time
 recorded. The file is an Opus audio file (`.opus`) that any modern player
 opens: with the microphone, your voice is the left channel and the other side
-the right one, as heard before the echo of the speakers is muted; without the
+the right one, as heard before the echo of the speakers is turned down; without the
 microphone it is the computer sound alone. The file is written as the call
 goes, so after a crash it plays up to the last second or so.
 

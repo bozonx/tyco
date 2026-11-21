@@ -10,6 +10,7 @@
 pub mod apps;
 mod audio_processing;
 mod echo_gate;
+mod limiter;
 pub(crate) mod microphone_mix;
 pub mod mixer;
 pub mod recording;

@@ -23,6 +23,8 @@ pub struct StreamMixer {
     cursors: HashMap<u32, Cursor>,
     lanes: usize,
     max_lag_samples: u64,
+    /// Whether the sum is cut at full scale; off when a limiter follows.
+    clips: bool,
 }
 
 impl StreamMixer {
@@ -39,7 +41,14 @@ impl StreamMixer {
             cursors: HashMap::new(),
             lanes: lanes.max(1),
             max_lag_samples,
+            clips: true,
         }
+    }
+
+    /// Hands the sum on past full scale, for a limiter that follows.
+    pub fn unclipped(mut self) -> Self {
+        self.clips = false;
+        self
     }
 
     fn head(&self) -> u64 {
@@ -117,9 +126,16 @@ impl StreamMixer {
         let ready_until = slowest.max(head.saturating_sub(self.max_lag_samples));
         let count = ready_until.saturating_sub(self.base) as usize;
         self.base += count as u64;
+        let clips = self.clips;
         self.buffer
             .drain(..count * self.lanes)
-            .map(|sample| sample.clamp(-1.0, 1.0))
+            .map(|sample| {
+                if clips {
+                    sample.clamp(-1.0, 1.0)
+                } else {
+                    sample
+                }
+            })
             .collect()
     }
 }
@@ -196,6 +212,16 @@ mod tests {
         mixer.push(1, &[0.8]);
         mixer.push(2, &[0.8]);
         assert_eq!(mixer.drain(), vec![1.0]);
+    }
+
+    #[test]
+    fn an_unclipped_sum_goes_past_full_scale() {
+        let mut mixer = StreamMixer::new(1_000).unclipped();
+        mixer.add_stream(1);
+        mixer.add_stream(2);
+        mixer.push(1, &[0.8]);
+        mixer.push(2, &[0.8]);
+        assert_eq!(mixer.drain(), vec![1.6]);
     }
 
     #[test]

@@ -1,13 +1,17 @@
 //! The microphone and the sound the computer plays together, so that a
 //! transcription hears both sides of a call.
 //!
-//! Each source is brought to a common loudness first: a quiet microphone
-//! next to a loud call, or the other way round, would otherwise leave one
-//! side to the speech model as a murmur. `StreamMixer` keeps the two in
-//! step and does not wait for playback while nothing plays. They are then
-//! summed into one stream (`MixLayout::Summed`), or kept apart as the two
-//! channels of a stereo stream (`MixLayout::Separate`), the microphone first,
-//! with the echo of the speakers muted in the microphone, see `EchoGate`.
+//! `StreamMixer` keeps the two in step and does not wait for playback while
+//! nothing plays. They are then summed into one stream (`MixLayout::Summed`),
+//! or kept apart as the two channels of a stereo stream
+//! (`MixLayout::Separate`), the microphone first, with the echo of the
+//! speakers lowered in the microphone, see `EchoGate`.
+//!
+//! Only a sum brings its sources to a common loudness first: a quiet
+//! microphone next to a loud call, or the other way round, would otherwise
+//! leave one side to the speech model as a murmur. Separate channels are
+//! transcribed each on its own, as recorded, like a dictation. Either way a
+//! `PeakLimiter` keeps the result from clipping.
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -15,6 +19,7 @@ use std::time::Duration;
 
 use super::audio_processing::{compute_audio_level, float_to_pcm16};
 use super::echo_gate::EchoGate;
+use super::limiter::PeakLimiter;
 use super::mixer::StreamMixer;
 use super::{OpenedCapture, StreamContext};
 use crate::errors::AppError;
@@ -26,10 +31,20 @@ const TARGET_RMS: f32 = 0.08;
 /// Below about -40 dBFS there is silence or room noise (a fan, keys): the
 /// gain holds, so that noise is not raised to the loudness of speech.
 const GATE_RMS: f32 = 0.01;
+/// Louder noise is told from speech by the noise floor: speech is at least
+/// about 10 dB above it.
+const SPEECH_OVER_NOISE: f32 = 3.16;
+/// How fast the noise floor follows a quieter moment, a pause between
+/// words...
+const NOISE_FALL_S: f32 = 0.1;
+/// ...and how slowly it rises with a louder one, in dB per second: speech
+/// falls back to the floor between words long before it gets there.
+const NOISE_RISE_DB_PER_S: f32 = 3.0;
 /// A loud source is lowered at most this much...
 const MIN_GAIN: f32 = 0.1;
-/// ...and a quiet one raised at most this much, about +18 dB.
-const MAX_GAIN: f32 = 8.0;
+/// ...and a quiet one raised at most this much, +12 dB: enough for a quiet
+/// microphone without raising its noise far.
+const MAX_GAIN: f32 = 4.0;
 /// The window of the short-term loudness that is compared with the gate.
 const POWER_WINDOW_S: f32 = 0.05;
 /// How fast the speech level follows a louder voice...
@@ -74,12 +89,15 @@ fn coefficient(time_s: f32, sample_rate_hz: u32) -> f32 {
 /// Brings speech to `TARGET_RMS` with a slowly moving gain.
 pub(crate) struct LoudnessNormalizer {
     power: f32,
+    noise_floor: f32,
     speech_level: f32,
     gain: f32,
     power_coefficient: f32,
     rise_coefficient: f32,
     fall_coefficient: f32,
     gain_coefficient: f32,
+    noise_fall_coefficient: f32,
+    noise_rise_factor: f32,
 }
 
 impl LoudnessNormalizer {
@@ -88,7 +106,11 @@ impl LoudnessNormalizer {
             power: 0.0,
             // starts as if speech were at the target: unity gain
             speech_level: TARGET_RMS,
+            // at first the fixed gate decides
+            noise_floor: GATE_RMS / SPEECH_OVER_NOISE,
             gain: 1.0,
+            noise_fall_coefficient: coefficient(NOISE_FALL_S, sample_rate_hz),
+            noise_rise_factor: 10_f32.powf(NOISE_RISE_DB_PER_S / 20.0 / sample_rate_hz as f32),
             power_coefficient: coefficient(POWER_WINDOW_S, sample_rate_hz),
             rise_coefficient: coefficient(LEVEL_RISE_S, sample_rate_hz),
             fall_coefficient: coefficient(LEVEL_FALL_S, sample_rate_hz),
@@ -100,7 +122,13 @@ impl LoudnessNormalizer {
         for sample in samples {
             self.power += self.power_coefficient * (*sample * *sample - self.power);
             let rms = self.power.sqrt();
-            if rms > GATE_RMS {
+            if rms < self.noise_floor {
+                self.noise_floor += self.noise_fall_coefficient * (rms - self.noise_floor);
+            } else {
+                self.noise_floor = (self.noise_floor * self.noise_rise_factor).min(rms);
+            }
+            // while it is not speech the level, and with it the gain, holds
+            if rms > GATE_RMS.max(self.noise_floor * SPEECH_OVER_NOISE) {
                 let rate = if rms > self.speech_level {
                     self.rise_coefficient
                 } else {
@@ -175,10 +203,12 @@ struct Mix {
     output: MixOutput,
     mixer: StreamMixer,
     upsampler: Upsampler,
-    microphone_loudness: LoudnessNormalizer,
-    playback_loudness: LoudnessNormalizer,
+    /// Only for `MixLayout::Summed`.
+    loudness: Option<(LoudnessNormalizer, LoudnessNormalizer)>,
     /// Only for `MixLayout::Separate`.
     echo_gate: Option<EchoGate>,
+    /// One per channel of the output.
+    limiters: Vec<PeakLimiter>,
 }
 
 impl Mix {
@@ -190,7 +220,8 @@ impl Mix {
     ) -> Self {
         let rate = playback.output_sample_rate_hz;
         let max_lag = u64::from(rate) * MAX_LAG_MS / 1_000;
-        let mut mixer = StreamMixer::with_lanes(max_lag, usize::from(layout.channel_count()));
+        let mut mixer =
+            StreamMixer::with_lanes(max_lag, usize::from(layout.channel_count())).unclipped();
         match layout {
             MixLayout::Summed => {
                 mixer.add_stream(MICROPHONE);
@@ -207,32 +238,32 @@ impl Mix {
             playback,
             output,
             mixer,
-            microphone_loudness: LoudnessNormalizer::new(rate),
-            playback_loudness: LoudnessNormalizer::new(rate),
+            loudness: (layout == MixLayout::Summed)
+                .then(|| (LoudnessNormalizer::new(rate), LoudnessNormalizer::new(rate))),
             echo_gate: (layout == MixLayout::Separate).then(|| EchoGate::new(rate)),
+            limiters: (0..layout.channel_count())
+                .map(|_| PeakLimiter::new(rate))
+                .collect(),
         }
     }
 
     /// Mixes what is ready; `is_final` also lets out what waits for the
     /// other source.
     fn step(&mut self, is_final: bool) {
-        // the echo gate compares the sources as recorded: they are brought
-        // to a common loudness after it
-        let is_separate = self.echo_gate.is_some();
         // playback first: when it resumes after silence it joins at the
         // present, which is where the microphone's batch of the same
         // moment begins
         let mut playback = take_samples(&self.playback.pending_pcm_samples);
-        if !is_separate {
-            self.playback_loudness.process(&mut playback);
+        if let Some((_, loudness)) = self.loudness.as_mut() {
+            loudness.process(&mut playback);
         }
         self.mixer.push(PLAYBACK, &playback);
 
         let recorded = take_samples(&self.microphone.pending_pcm_samples);
         let mut microphone = Vec::with_capacity(recorded.len() * 2);
         self.upsampler.push(&recorded, &mut microphone);
-        if !is_separate {
-            self.microphone_loudness.process(&mut microphone);
+        if let Some((loudness, _)) = self.loudness.as_mut() {
+            loudness.process(&mut microphone);
         }
         self.mixer.push(MICROPHONE, &microphone);
 
@@ -253,7 +284,7 @@ impl Mix {
                 .extend(mixed.iter().copied().map(float_to_pcm16));
         }
         let mixed = match self.echo_gate.as_mut() {
-            None => mixed,
+            None => limit(&mut self.limiters[0], &mixed, is_final),
             Some(gate) => {
                 let (microphone, playback): (Vec<f32>, Vec<f32>) = mixed
                     .as_chunks::<2>()
@@ -267,8 +298,8 @@ impl Mix {
                     microphone.extend(microphone_tail);
                     playback.extend(playback_tail);
                 }
-                self.microphone_loudness.process(&mut microphone);
-                self.playback_loudness.process(&mut playback);
+                let microphone = limit(&mut self.limiters[0], &microphone, is_final);
+                let playback = limit(&mut self.limiters[1], &playback, is_final);
                 microphone
                     .into_iter()
                     .zip(playback)
@@ -287,6 +318,14 @@ impl Mix {
         }
         self.output.pending.locked().extend_from_slice(&samples);
     }
+}
+
+fn limit(limiter: &mut PeakLimiter, samples: &[f32], is_final: bool) -> Vec<f32> {
+    let mut limited = limiter.process(samples);
+    if is_final {
+        limited.extend(limiter.finish());
+    }
+    limited
 }
 
 /// Both captures and the thread that mixes them; dropping it stops the
@@ -382,13 +421,26 @@ mod tests {
             .collect()
     }
 
+    /// A tone whose loudness rises and falls like syllables, down to silence.
+    fn syllables(amplitude: f32, seconds: f32) -> Vec<f32> {
+        tone(amplitude, seconds)
+            .into_iter()
+            .enumerate()
+            .map(|(index, sample)| {
+                let time = index as f32 / RATE as f32;
+                let envelope = (std::f32::consts::PI * 4.0 * time).sin().abs();
+                sample * envelope
+            })
+            .collect()
+    }
+
     fn rms(samples: &[f32]) -> f32 {
         (samples.iter().map(|sample| sample * sample).sum::<f32>() / samples.len() as f32).sqrt()
     }
 
     fn normalized_rms(amplitude: f32) -> f32 {
         let mut normalizer = LoudnessNormalizer::new(RATE);
-        let mut samples = tone(amplitude, 8.0);
+        let mut samples = syllables(amplitude, 8.0);
         normalizer.process(&mut samples);
         // once the level has settled
         rms(&samples[samples.len() - RATE as usize..])
@@ -396,10 +448,12 @@ mod tests {
 
     #[test]
     fn quiet_and_loud_speech_come_out_alike() {
-        let quiet = normalized_rms(0.02);
+        let quiet = normalized_rms(0.1);
         let loud = normalized_rms(0.6);
-        assert!((quiet - TARGET_RMS).abs() < TARGET_RMS * 0.15, "{quiet}");
-        assert!((loud - TARGET_RMS).abs() < TARGET_RMS * 0.15, "{loud}");
+        // the level follows the loud parts of syllables: the average of
+        // speech with its dips lies a little below the target
+        assert!((quiet - loud).abs() < loud * 0.15, "{quiet} {loud}");
+        assert!(loud > TARGET_RMS * 0.5 && loud < TARGET_RMS * 1.2, "{loud}");
     }
 
     #[test]
@@ -423,6 +477,48 @@ mod tests {
         // speech near the target keeps the gain near unity: the noise stays
         // far below speech instead of being raised towards it
         assert!(after < before * 1.3, "{after}");
+    }
+
+    #[test]
+    fn room_noise_above_the_gate_is_not_raised() {
+        let mut normalizer = LoudnessNormalizer::new(RATE);
+        let mut speech = syllables(0.06, 4.0);
+        normalizer.process(&mut speech);
+        // a fan at about -35 dBFS, above the fixed gate, for a long pause
+        let mut noise = tone(0.018, 8.0);
+        let before = rms(&noise);
+        normalizer.process(&mut noise);
+        let after = rms(&noise[noise.len() - RATE as usize..]);
+        // the gain of the quiet speech holds: the noise is not pulled up to
+        // the loudness of speech
+        assert!(after < TARGET_RMS * 0.6, "{after}");
+        assert!(after < before * MAX_GAIN, "{after}");
+    }
+
+    #[test]
+    fn a_loud_sum_is_limited_instead_of_clipped() {
+        let (mut mix, pending, _) = mix();
+        record(&mix.microphone, &[30_000; 1_600]);
+        record(&mix.playback, &[30_000; 1_600]);
+        mix.step(true);
+        let mixed = std::mem::take(&mut *pending.locked());
+        assert_eq!(mixed.len(), 1_600);
+        assert!(mixed.iter().all(|&sample| sample <= float_to_pcm16(0.9)));
+    }
+
+    #[test]
+    fn separate_channels_keep_their_loudness() {
+        let (mut mix, pending, _) = mix_as(MixLayout::Separate);
+        // a quiet microphone stays quiet: it is transcribed as recorded
+        record(&mix.microphone, &[300; 16_000]);
+        record(&mix.playback, &[0; 16_000]);
+        mix.step(true);
+        let frames = std::mem::take(&mut *pending.locked());
+        assert!(frames
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .all(|frame| frame[0] == 300));
     }
 
     #[test]
@@ -512,7 +608,8 @@ mod tests {
         record(&mix.playback, &[-4_000; 1_600]);
         mix.step(false);
         let mixed = std::mem::take(&mut *pending.locked());
-        assert_eq!(mixed.len(), 1_600);
+        let lookahead = PeakLimiter::new(RATE).lookahead();
+        assert_eq!(mixed.len(), 1_600 - lookahead);
         // both start at unity gain: the sum of the two
         assert!((i32::from(mixed[0]) - 4_000).abs() < 50, "{}", mixed[0]);
     }
@@ -524,7 +621,8 @@ mod tests {
         record(&mix.microphone, &[1_000; 16_000]);
         mix.step(false);
         let lag = (RATE as u64 * MAX_LAG_MS / 1_000) as usize;
-        assert_eq!(pending.locked().len(), 16_000 - lag);
+        let lookahead = PeakLimiter::new(RATE).lookahead();
+        assert_eq!(pending.locked().len(), 16_000 - lag - lookahead);
         mix.step(true);
         assert_eq!(pending.locked().len(), 16_000);
     }
