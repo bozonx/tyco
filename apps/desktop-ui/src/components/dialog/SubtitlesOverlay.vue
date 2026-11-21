@@ -27,6 +27,12 @@
       </p>
     </div>
     <div ref="actions" class="subtitles-actions" @mousedown.stop>
+      <DialogRecordingIndicator
+        v-if="view.isActive && view.recordingStartedAt"
+        class="subtitles-recording"
+        :started-at-ms="view.recordingStartedAt"
+        :label="view.recordingLabel"
+      />
       <IconButton
         v-if="view.isActive"
         icon="mdi:stop"
@@ -56,6 +62,7 @@ import { invokeDesktop } from '../../lib/desktop/invoke'
 import { getDesktopWindow } from '../../lib/desktop/window'
 import { clientLogger } from '../../lib/logger'
 import IconButton from '../common/IconButton.vue'
+import DialogRecordingIndicator from './DialogRecordingIndicator.vue'
 import {
   DESKTOP_EVENTS,
   type SubtitlesAction,
@@ -72,6 +79,8 @@ const EMPTY_VIEW: SubtitlesView = {
   isActive: false,
   stopLabel: '',
   expandLabel: '',
+  recordingStartedAt: null,
+  recordingLabel: '',
 }
 
 const view = ref<SubtitlesView>(EMPTY_VIEW)
@@ -235,8 +244,13 @@ body.subtitles-body {
 .subtitles-actions {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.25rem;
   cursor: default;
+}
+
+.subtitles-recording {
+  font-size: var(--text-micro);
 }
 
 .subtitles-grip {

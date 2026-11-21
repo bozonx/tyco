@@ -65,6 +65,12 @@ pub struct SubtitlesView {
     pub is_active: bool,
     pub stop_label: String,
     pub expand_label: String,
+    /// When the running session began recording to a file, in Unix
+    /// milliseconds; none: it is not recorded.
+    #[serde(default, rename = "recordingStartedAt")]
+    pub recording_started_at_ms: Option<u64>,
+    #[serde(default)]
+    pub recording_label: String,
 }
 
 /// What the strip knows when it loads.

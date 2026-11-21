@@ -509,7 +509,10 @@
     "today": "Danas",
     "undo": "Poništi",
     "yesterday": "Jučer",
-    "filterListen": "Zvuk sustava"
+    "filterListen": "Zvuk sustava",
+    "kindDialog": "Dijalog",
+    "recordingNotFound": "datoteka nije pronađena",
+    "showInFolder": "Prikaži u mapi"
   },
   "input": {
     "historySearchPlaceholder": "Pretraži povijest...",
@@ -1324,7 +1327,10 @@
     "dialogTranslationProvider": "Usluga prijevoda",
     "dialogTranslationProviderHint": "Usluga koja prevodi sugovornika. Prijevod teče tijekom razgovora, pa brza usluga manje kasni.",
     "dialogProviderDefault": "Kao u postavkama prijevoda",
-    "dialogProviderLlm": "AI model"
+    "dialogProviderLlm": "AI model",
+    "dialogRecordingsFolder": "Mapa snimki",
+    "dialogRecordingsFolderHint": "Gdje se spremaju snimke poziva. Promjena ne premješta ranije snimke.",
+    "dialogRecordingsFolderReset": "Vrati zadano"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
@@ -1664,7 +1670,6 @@
     "displayBoth": "Oboje",
     "copy": "Kopiraj transkript",
     "toActionMenu": "Pošalji u izbornik radnji",
-    "clear": "Očisti transkript",
     "collapse": "Sažmi u titlove",
     "expand": "Proširi",
     "noTranslation": "Bez prijevoda",
@@ -1677,8 +1682,13 @@
     "stopping": "Zaustavljanje…",
     "stopAndExpand": "Zaustavi i proširi",
     "retryTranslation": "Pokušaj ponovno",
-    "clearConfirmTitle": "Očistiti transkript?",
-    "clearConfirmMessage": "Cijeli transkript poziva bit će izbrisan. Nigdje se ne sprema pa ga nije moguće vratiti.",
-    "channelFailed": "zaustavljeno"
+    "channelFailed": "zaustavljeno",
+    "startOptions": "Mogućnosti pokretanja",
+    "startRecording": "Pokreni sa snimanjem",
+    "recording": "Snimanje u tijeku",
+    "recordingFailed": "Snimanje je zaustavljeno: datoteka se ne može zapisati. Transkripcija se nastavlja.",
+    "recordingNoticeTitle": "Snimanje razgovora",
+    "recordingNoticeMessage": "Ako snimate razgovor s drugom osobom, najprije joj to recite.",
+    "recordingNoticeConfirm": "Razumijem"
   }
 }

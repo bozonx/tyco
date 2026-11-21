@@ -509,7 +509,10 @@
     "today": "Oggi",
     "undo": "Annulla",
     "yesterday": "Ieri",
-    "filterListen": "Audio di sistema"
+    "filterListen": "Audio di sistema",
+    "kindDialog": "Dialogo",
+    "recordingNotFound": "file non trovato",
+    "showInFolder": "Mostra nella cartella"
   },
   "input": {
     "historySearchPlaceholder": "Cerca nella cronologia...",
@@ -1324,7 +1327,10 @@
     "dialogTranslationProvider": "Servizio di traduzione",
     "dialogTranslationProviderHint": "Il servizio che traduce l’interlocutore. La traduzione avviene durante la conversazione, quindi uno veloce resta meno indietro.",
     "dialogProviderDefault": "Come nelle impostazioni di traduzione",
-    "dialogProviderLlm": "Modello di IA"
+    "dialogProviderLlm": "Modello di IA",
+    "dialogRecordingsFolder": "Cartella delle registrazioni",
+    "dialogRecordingsFolderHint": "Dove vengono salvate le registrazioni delle chiamate. Cambiarla non sposta le registrazioni precedenti.",
+    "dialogRecordingsFolderReset": "Ripristina predefinita"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {
@@ -1664,7 +1670,6 @@
     "displayBoth": "Entrambi",
     "copy": "Copia la trascrizione",
     "toActionMenu": "Invia al menu delle azioni",
-    "clear": "Cancella la trascrizione",
     "collapse": "Riduci a sottotitoli",
     "expand": "Espandi",
     "noTranslation": "Nessuna traduzione",
@@ -1677,8 +1682,13 @@
     "stopping": "Arresto…",
     "stopAndExpand": "Ferma ed espandi",
     "retryTranslation": "Riprova",
-    "clearConfirmTitle": "Cancellare la trascrizione?",
-    "clearConfirmMessage": "L’intera trascrizione della chiamata verrà eliminata. Non viene salvata da nessuna parte e non potrà essere recuperata.",
-    "channelFailed": "fermato"
+    "channelFailed": "fermato",
+    "startOptions": "Opzioni di avvio",
+    "startRecording": "Avvia con registrazione",
+    "recording": "Registrazione in corso",
+    "recordingFailed": "La registrazione si è interrotta: impossibile scrivere il file. La trascrizione continua.",
+    "recordingNoticeTitle": "Registrare una conversazione",
+    "recordingNoticeMessage": "Se registri una conversazione con un’altra persona, avvisala prima.",
+    "recordingNoticeConfirm": "Ho capito"
   }
 }

@@ -10,6 +10,10 @@ is translated as it comes.
 Press **Start** during the call. The dialog keeps going when you switch tabs,
 hide or minimize the window, until you press **Stop** or quit TyCo.
 
+Every start begins a new conversation: the previous transcript leaves the
+feed. With the history turned on it is kept there (see
+[History](#history)); with the history off it is gone.
+
 While the dialog runs it holds the sound: voice input, voice commands and
 listening do not record and say that the sound is busy with the dialog.
 
@@ -66,7 +70,42 @@ to summarize it with a transformation:
 [14:03:18] Me: Да, если успеем с тестами
 ```
 
-Nothing of the call is saved: the transcript lives until you clear it (TyCo
-asks first) or quit TyCo. Stopping and starting again adds to the same
-transcript. Speech recognition uses the provider of the transcription settings; see
-`dev_docs/architecture.md` for how the sound is captured.
+## History
+
+With the history turned on (**Settings → History**), each conversation from
+**Start** to **Stop** becomes one entry of the **History** tab, in the format
+above. It is saved every few seconds while the conversation goes on, and when
+you stop, hide the window or quit TyCo, so a crash loses little. Words still
+being recognized are not saved. A conversation in which nothing was
+recognized leaves no entry. The entry is kept as long as other history
+entries and is deleted the same way.
+
+## Recording the call
+
+The arrow next to **Start** offers **Start recording**: the conversation is
+transcribed as usual and its sound is also saved to a file. **Start** itself
+never records. The first time, TyCo reminds you to tell the other person
+before you record a conversation with them; **Got it** starts the recording,
+**Cancel** starts nothing.
+
+While recording, the toolbar and the subtitles show a red dot with the time
+recorded. The file is an Opus audio file (`.opus`) that any modern player
+opens: with the microphone, your voice is the left channel and the other side
+the right one, as heard before the echo of the speakers is muted; without the
+microphone it is the computer sound alone. The file is written as the call
+goes, so after a crash it plays up to the last second or so.
+
+Recordings go to `TyCo` in your Music folder unless **Settings → Dialog →
+Recordings folder** names another one on this computer; changing the folder
+does not move the recordings made before. A file is named by the time it
+started, e.g. `TyCo dialog 2026-11-20 14-03-05.opus`. The history entry of a
+recorded conversation shows the file name and **Show in folder**, or "file
+not found" once the file was moved or deleted. Deleting the history entry
+leaves the file where it is. If the file cannot be written (the disk is
+full, the folder is gone), the recording stops and the transcript goes on.
+
+Recordings are not part of the TyCo data folder and are not synchronized with
+it. Calls started from the command line or D-Bus are never recorded.
+
+Speech recognition uses the provider of the transcription settings; see
+`dev_docs/architecture.md` for how the sound is captured and recorded.

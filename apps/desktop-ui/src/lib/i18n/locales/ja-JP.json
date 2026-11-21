@@ -509,7 +509,10 @@
     "today": "今日",
     "undo": "元に戻す",
     "yesterday": "昨日",
-    "filterListen": "システム音声"
+    "filterListen": "システム音声",
+    "kindDialog": "ダイアログ",
+    "recordingNotFound": "ファイルが見つかりません",
+    "showInFolder": "フォルダーに表示"
   },
   "input": {
     "historySearchPlaceholder": "履歴を検索...",
@@ -1321,7 +1324,10 @@
     "dialogTranslationProvider": "翻訳サービス",
     "dialogTranslationProviderHint": "相手の発言を翻訳するサービスです。会話中に翻訳するため、速いサービスほど遅れが少なくなります。",
     "dialogProviderDefault": "翻訳設定と同じ",
-    "dialogProviderLlm": "AI モデル"
+    "dialogProviderLlm": "AI モデル",
+    "dialogRecordingsFolder": "録音フォルダー",
+    "dialogRecordingsFolderHint": "通話の録音の保存先です。変更しても以前の録音は移動されません。",
+    "dialogRecordingsFolderReset": "既定に戻す"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {
@@ -1657,7 +1663,6 @@
     "displayBoth": "両方",
     "copy": "文字起こしをコピー",
     "toActionMenu": "アクションメニューに送る",
-    "clear": "文字起こしを消去",
     "collapse": "字幕に折りたたむ",
     "expand": "展開",
     "noTranslation": "翻訳なし",
@@ -1670,8 +1675,13 @@
     "stopping": "停止しています…",
     "stopAndExpand": "停止して元に戻す",
     "retryTranslation": "再試行",
-    "clearConfirmTitle": "文字起こしを消去しますか？",
-    "clearConfirmMessage": "通話の文字起こしがすべて削除されます。どこにも保存されないため、元に戻せません。",
-    "channelFailed": "停止"
+    "channelFailed": "停止",
+    "startOptions": "開始オプション",
+    "startRecording": "録音して開始",
+    "recording": "録音中",
+    "recordingFailed": "録音が停止しました: ファイルに書き込めませんでした。文字起こしは続行します。",
+    "recordingNoticeTitle": "会話の録音",
+    "recordingNoticeMessage": "他の人との会話を録音するときは、先に相手に伝えてください。",
+    "recordingNoticeConfirm": "了解"
   }
 }

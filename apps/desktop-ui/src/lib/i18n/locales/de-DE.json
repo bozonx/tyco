@@ -509,7 +509,10 @@
     "today": "Heute",
     "undo": "Rückgängig",
     "yesterday": "Gestern",
-    "filterListen": "Systemaudio"
+    "filterListen": "Systemaudio",
+    "kindDialog": "Dialog",
+    "recordingNotFound": "Datei nicht gefunden",
+    "showInFolder": "Im Ordner anzeigen"
   },
   "input": {
     "historySearchPlaceholder": "Verlauf durchsuchen...",
@@ -1324,7 +1327,10 @@
     "dialogTranslationProvider": "Übersetzungsdienst",
     "dialogTranslationProviderHint": "Der Dienst, der die Gegenseite übersetzt. Übersetzt wird während des Gesprächs, ein schneller Dienst hält daher besser mit.",
     "dialogProviderDefault": "Wie in den Übersetzungseinstellungen",
-    "dialogProviderLlm": "KI-Modell"
+    "dialogProviderLlm": "KI-Modell",
+    "dialogRecordingsFolder": "Ordner für Aufnahmen",
+    "dialogRecordingsFolderHint": "Wo Gesprächsaufnahmen gespeichert werden. Bei einer Änderung werden frühere Aufnahmen nicht verschoben.",
+    "dialogRecordingsFolderReset": "Auf Standard zurücksetzen"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {
@@ -1664,7 +1670,6 @@
     "displayBoth": "Beides",
     "copy": "Transkript kopieren",
     "toActionMenu": "An das Aktionsmenü senden",
-    "clear": "Transkript leeren",
     "collapse": "Zu Untertiteln einklappen",
     "expand": "Ausklappen",
     "noTranslation": "Keine Übersetzung",
@@ -1677,8 +1682,13 @@
     "stopping": "Wird beendet…",
     "stopAndExpand": "Beenden und erweitern",
     "retryTranslation": "Erneut versuchen",
-    "clearConfirmTitle": "Transkript löschen?",
-    "clearConfirmMessage": "Das gesamte Transkript des Anrufs wird gelöscht. Es wird nirgends gespeichert und lässt sich nicht wiederherstellen.",
-    "channelFailed": "gestoppt"
+    "channelFailed": "gestoppt",
+    "startOptions": "Startoptionen",
+    "startRecording": "Mit Aufnahme starten",
+    "recording": "Aufnahme läuft",
+    "recordingFailed": "Die Aufnahme wurde beendet: Die Datei konnte nicht geschrieben werden. Die Mitschrift läuft weiter.",
+    "recordingNoticeTitle": "Gespräch aufnehmen",
+    "recordingNoticeMessage": "Wenn Sie ein Gespräch mit einer anderen Person aufnehmen, sagen Sie es ihr vorher.",
+    "recordingNoticeConfirm": "Verstanden"
   }
 }

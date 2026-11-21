@@ -509,7 +509,10 @@
     "today": "Astăzi",
     "undo": "Anulează",
     "yesterday": "Ieri",
-    "filterListen": "Sunet sistem"
+    "filterListen": "Sunet sistem",
+    "kindDialog": "Dialog",
+    "recordingNotFound": "fișier negăsit",
+    "showInFolder": "Arată în dosar"
   },
   "input": {
     "historySearchPlaceholder": "Caută în istoric...",
@@ -1324,7 +1327,10 @@
     "dialogTranslationProvider": "Serviciu de traducere",
     "dialogTranslationProviderHint": "Serviciul care traduce interlocutorul. Traducerea se face în timpul conversației, așa că unul rapid rămâne mai puțin în urmă.",
     "dialogProviderDefault": "Ca în setările de traducere",
-    "dialogProviderLlm": "Model AI"
+    "dialogProviderLlm": "Model AI",
+    "dialogRecordingsFolder": "Dosarul înregistrărilor",
+    "dialogRecordingsFolderHint": "Unde se salvează înregistrările apelurilor. Schimbarea nu mută înregistrările anterioare.",
+    "dialogRecordingsFolderReset": "Revino la implicit"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
@@ -1664,7 +1670,6 @@
     "displayBoth": "Ambele",
     "copy": "Copiază transcrierea",
     "toActionMenu": "Trimite în meniul de acțiuni",
-    "clear": "Golește transcrierea",
     "collapse": "Restrânge la subtitrări",
     "expand": "Extinde",
     "noTranslation": "Fără traducere",
@@ -1677,8 +1682,13 @@
     "stopping": "Se oprește…",
     "stopAndExpand": "Oprește și extinde",
     "retryTranslation": "Reîncearcă",
-    "clearConfirmTitle": "Ștergeți transcrierea?",
-    "clearConfirmMessage": "Întreaga transcriere a apelului va fi ștearsă. Nu este salvată nicăieri, deci nu poate fi recuperată.",
-    "channelFailed": "oprit"
+    "channelFailed": "oprit",
+    "startOptions": "Opțiuni de pornire",
+    "startRecording": "Pornește cu înregistrare",
+    "recording": "Se înregistrează",
+    "recordingFailed": "Înregistrarea s-a oprit: fișierul nu a putut fi scris. Transcrierea continuă.",
+    "recordingNoticeTitle": "Înregistrarea unei conversații",
+    "recordingNoticeMessage": "Dacă înregistrați o conversație cu altă persoană, spuneți-i mai întâi.",
+    "recordingNoticeConfirm": "Am înțeles"
   }
 }

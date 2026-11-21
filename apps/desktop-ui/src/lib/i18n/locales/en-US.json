@@ -509,7 +509,10 @@
     "today": "Today",
     "undo": "Undo",
     "yesterday": "Yesterday",
-    "filterListen": "System audio"
+    "filterListen": "System audio",
+    "kindDialog": "Dialog",
+    "recordingNotFound": "file not found",
+    "showInFolder": "Show in folder"
   },
   "input": {
     "historySearchPlaceholder": "Search history...",
@@ -1324,7 +1327,10 @@
     "dialogTranslationProvider": "Translation service",
     "dialogTranslationProviderHint": "The service that translates the other side. Translation runs as they speak, so a fast one keeps up better.",
     "dialogProviderDefault": "As in the translation settings",
-    "dialogProviderLlm": "AI model"
+    "dialogProviderLlm": "AI model",
+    "dialogRecordingsFolder": "Recordings folder",
+    "dialogRecordingsFolderHint": "Where call recordings are saved. Changing it does not move recordings made before.",
+    "dialogRecordingsFolderReset": "Reset to default"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
@@ -1664,7 +1670,6 @@
     "displayBoth": "Both",
     "copy": "Copy the transcript",
     "toActionMenu": "Send to the action menu",
-    "clear": "Clear the transcript",
     "collapse": "Collapse to subtitles",
     "expand": "Expand",
     "noTranslation": "No translation",
@@ -1677,8 +1682,13 @@
     "stopping": "Stopping…",
     "stopAndExpand": "Stop and expand",
     "retryTranslation": "Try again",
-    "clearConfirmTitle": "Clear the transcript?",
-    "clearConfirmMessage": "The whole transcript of the call is deleted. Nothing of it is saved, so it cannot be restored.",
-    "channelFailed": "stopped"
+    "channelFailed": "stopped",
+    "startOptions": "Start options",
+    "startRecording": "Start recording",
+    "recording": "Recording",
+    "recordingFailed": "The recording stopped: the file could not be written. The transcript goes on.",
+    "recordingNoticeTitle": "Recording a conversation",
+    "recordingNoticeMessage": "When you record a conversation with another person, tell them first.",
+    "recordingNoticeConfirm": "Got it"
   }
 }

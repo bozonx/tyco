@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 79da4554925509cef0b8099b985ed27f26a92b86e2979e420a89ba347efee5b8
+// Source hash: 3518eb77c85a1ed6faf22fcbf43b04751e2501b942d926691d098fb0af8e058e
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -523,6 +523,27 @@ export type DesktopWindowState = {
   canListenToApps: boolean
 }
 
+/** A dialog capture also recorded to a file, see `recording`. */
+export type DialogRecording = {
+  /** The recordings folder; empty or missing: the default one. */
+  folder?: string
+}
+
+/** The session a `Dialog` entry holds the transcript of. */
+export type EditorHistoryDialog = {
+  /** Unix time in milliseconds. */
+  startedAt: number
+  source: EditorHistoryDialogSource
+  /**
+   * The absolute path of the call recording, if the session was recorded. The
+   * file may have been moved or deleted since.
+   */
+  recordingPath?: string
+}
+
+/** What the dialog listened to. */
+export type EditorHistoryDialogSource = 'microphoneAndSystem' | 'system'
+
 /** What the UI sends to add a text; id and time are assigned by the backend. */
 export type EditorHistoryEntry = {
   /** Stable identity of a live input; only unfinished entries may be replaced. */
@@ -533,6 +554,8 @@ export type EditorHistoryEntry = {
   origin?: EditorHistoryOrigin | null
   instruction?: EditorHistoryInstruction | null
   profileId?: string | null
+  /** Required for a `Dialog` entry, ignored for the others. */
+  dialog?: EditorHistoryDialog | null
 }
 
 /** What went wrong with the AI transformation of a `Source` entry. */
@@ -573,10 +596,12 @@ export type EditorHistoryItem = {
   isResultApplied?: boolean
   /** Why the AI produced no `result` for a `Source` entry. */
   failure?: EditorHistoryFailure
+  /** The session of a `Dialog` entry. */
+  dialog?: EditorHistoryDialog
 }
 
 /** Why a text got into the editor history. */
-export type EditorHistoryKind = 'output' | 'draft' | 'source'
+export type EditorHistoryKind = 'output' | 'draft' | 'source' | 'dialog'
 
 /** The AI transformation a `Source` entry was taken before. */
 export type EditorHistoryOperation =
@@ -971,6 +996,12 @@ export type SubtitlesView = {
   isActive: boolean
   stopLabel: string
   expandLabel: string
+  /**
+   * When the running session began recording to a file, in Unix milliseconds;
+   * none: it is not recorded.
+   */
+  recordingStartedAt?: number | null
+  recordingLabel: string
 }
 
 /** How Tyco finds the window to insert into. */
@@ -1117,6 +1148,7 @@ export type VoiceCaptureEvent =
   | { type: 'error'; message: string }
   | { type: 'sourceStatus'; isWaiting: boolean }
   | { type: 'sourceLost'; source: CaptureSource }
+  | { type: 'recordingFailed'; message: string }
 
 export type VoiceCaptureInfo = {
   /** Rate of the PCM16 chunks that follow. */
@@ -1128,6 +1160,8 @@ export type VoiceCaptureInfo = {
   channels: number
   /** What `stop_capture` takes to stop this capture and no other. */
   sessionId: number
+  /** The file the capture is recorded to, when it was asked for. */
+  recordingPath?: string
 }
 
 export type WebSearchResultItem = {

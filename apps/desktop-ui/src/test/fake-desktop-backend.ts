@@ -198,7 +198,12 @@ export class FakeDesktopBackend {
       if (entry.id) {
         const existing = this.history.find((item) => item.id === entry.id)
         if (!existing) return null
-        if (existing.kind !== 'draft') return existing.id
+        const isDialog = entry.kind === 'dialog'
+        if (
+          (existing.kind !== 'draft' && existing.kind !== 'dialog') ||
+          (existing.kind === 'dialog') !== isDialog
+        )
+          return existing.id
         this.history = this.history.filter((item) => item.id !== entry.id)
       }
       const {
@@ -207,6 +212,7 @@ export class FakeDesktopBackend {
         instruction,
         id: inputId,
         profileId,
+        dialog,
         ...rest
       } = entry
       const id = inputId ?? this.generateId('history')
@@ -216,6 +222,7 @@ export class FakeDesktopBackend {
         ...(origin ? { origin } : {}),
         ...(instruction ? { instruction } : {}),
         ...(profileId ? { profileId } : {}),
+        ...(dialog && entry.kind === 'dialog' ? { dialog } : {}),
         id,
         createdAt: Date.now(),
       })

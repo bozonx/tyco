@@ -4,6 +4,7 @@ fn capture_info_preserves_the_frontend_wire_names() {
         sample_rate_hz: 16_000,
         channels: 2,
         session_id: 7,
+        recording_path: None,
     };
     assert_eq!(
         serde_json::to_value(info).unwrap(),
@@ -28,6 +29,7 @@ fn run_capture<A: AudioSource, L: AudioLevelSink, S: EventSink>(
         stop_flag,
         superseded,
         switch: &switch,
+        recording_path: None,
     };
     run_capture_thread(
         source,
@@ -143,6 +145,7 @@ impl AudioSource for TestSource {
                 fills_gaps: false,
                 channel_count: 1,
                 status: Arc::default(),
+                unprocessed_pcm_samples: None,
             },
         })
     }
@@ -419,8 +422,11 @@ fn device_setup_errors_are_returned_without_a_tauri_runtime() {
         CaptureSource::Microphone,
         Trace::default(),
         Trace::default(),
-        1,
-        Duration::from_secs(1),
+        CaptureSessionOptions {
+            id: 1,
+            setup_timeout: Duration::from_secs(1),
+            recording_path: None,
+        },
     )
     .err()
     .unwrap();
@@ -456,8 +462,11 @@ fn setup_timeout_signals_stop_without_joining_a_blocked_device() {
         CaptureSource::Microphone,
         Trace::default(),
         Trace::default(),
-        1,
-        Duration::ZERO,
+        CaptureSessionOptions {
+            id: 1,
+            setup_timeout: Duration::ZERO,
+            recording_path: None,
+        },
     )
     .err()
     .unwrap();
@@ -479,6 +488,7 @@ async fn new_capture_replaces_the_old_one_and_a_stale_stop_leaves_it_running() {
         CaptureSource::Microphone,
         trace.clone(),
         &state,
+        None,
         trace.clone(),
     )
     .await
@@ -492,6 +502,7 @@ async fn new_capture_replaces_the_old_one_and_a_stale_stop_leaves_it_running() {
         CaptureSource::Microphone,
         trace.clone(),
         &state,
+        None,
         trace.clone(),
     )
     .await
@@ -527,17 +538,18 @@ async fn new_capture_replaces_the_old_one_and_a_stale_stop_leaves_it_running() {
 #[test]
 fn flushes_only_full_chunks_until_forced() {
     let sink = RecordingSink::default();
-    let pending_pcm_samples = Mutex::new(vec![1_i16, 2, 3]);
+    let context = pending_context(vec![1_i16, 2, 3]);
+    let pending_pcm_samples = &context.pending_pcm_samples;
 
-    assert!(flush_pending(&pending_pcm_samples, &sink, 4).is_some());
+    assert!(flush_pending(&context, &sink, 4, None).is_some());
     assert!(sink.chunks.lock().unwrap().is_empty());
 
-    assert!(flush_pending(&pending_pcm_samples, &sink, 1).is_some());
+    assert!(flush_pending(&context, &sink, 1, None).is_some());
     assert_eq!(sink.chunks.lock().unwrap().len(), 1);
     assert!(pending_pcm_samples.lock().unwrap().is_empty());
 
     // nothing left: no empty frame goes out
-    assert!(flush_pending(&pending_pcm_samples, &sink, 1).is_some());
+    assert!(flush_pending(&context, &sink, 1, None).is_some());
     assert_eq!(sink.chunks.lock().unwrap().len(), 1);
 }
 
@@ -547,7 +559,17 @@ fn reports_a_gone_listener() {
         closed: true,
         ..RecordingSink::default()
     };
-    assert!(flush_pending(&Mutex::new(vec![1_i16]), &sink, 1).is_none());
+    assert!(flush_pending(&pending_context(vec![1_i16]), &sink, 1, None).is_none());
+}
+
+fn pending_context(samples: Vec<i16>) -> StreamContext {
+    let context = StreamContext::new(
+        &Arc::default(),
+        TARGET_SAMPLE_RATE_HZ,
+        TARGET_SAMPLE_RATE_HZ,
+    );
+    *context.pending_pcm_samples.locked() = samples;
+    context
 }
 
 #[test]
@@ -578,6 +600,7 @@ async fn a_running_capture_is_told_when_a_new_one_takes_the_microphone() {
         CaptureSource::Microphone,
         Trace::default(),
         &state,
+        None,
         first_sink.clone(),
     )
     .await
@@ -590,6 +613,7 @@ async fn a_running_capture_is_told_when_a_new_one_takes_the_microphone() {
         CaptureSource::Microphone,
         Trace::default(),
         &state,
+        None,
         Trace::default(),
     )
     .await
@@ -816,6 +840,7 @@ fn silence_keeps_a_silent_playback_source_in_step_with_real_time() {
             stop_flag: &stop,
             superseded: &AtomicBool::new(false),
             switch: &switch,
+            recording_path: None,
         },
         &tx,
     )
@@ -868,6 +893,7 @@ fn a_switch_of_the_source_keeps_one_stream_and_reports_the_wait() {
             stop_flag: &stop,
             superseded: &AtomicBool::new(false),
             switch: &switch,
+            recording_path: None,
         },
         &tx,
     )
@@ -916,6 +942,7 @@ fn a_lost_application_waits_without_expanding_the_recorded_source() {
             stop_flag: &stop,
             superseded: &AtomicBool::new(false),
             switch: &switch,
+            recording_path: None,
         },
         &tx,
     )
@@ -975,6 +1002,7 @@ fn a_source_switch_discards_audio_recorded_twice_during_setup() {
             stop_flag: &stop,
             superseded: &AtomicBool::new(false),
             switch: &switch,
+            recording_path: None,
         },
         &tx,
     )
@@ -1008,6 +1036,7 @@ async fn a_running_dialog_is_not_taken_over_by_dictation() {
         },
         trace.clone(),
         &state,
+        None,
         trace.clone(),
     )
     .await
@@ -1017,6 +1046,7 @@ async fn a_running_dialog_is_not_taken_over_by_dictation() {
         CaptureSource::Microphone,
         Trace::default(),
         &state,
+        None,
         Trace::default(),
     )
     .await
@@ -1049,6 +1079,7 @@ async fn a_dialog_takes_the_sound_over_from_dictation() {
         CaptureSource::Microphone,
         trace.clone(),
         &state,
+        None,
         trace.clone(),
     )
     .await
@@ -1063,6 +1094,7 @@ async fn a_dialog_takes_the_sound_over_from_dictation() {
         },
         trace.clone(),
         &state,
+        None,
         trace.clone(),
     )
     .await
@@ -1120,6 +1152,7 @@ fn a_stereo_capture_reports_its_channels_and_their_levels() {
         stop_flag: &stop,
         superseded: &AtomicBool::new(false),
         switch: &switch,
+        recording_path: None,
     };
     run_capture_thread(
         &StereoSource,
@@ -1140,4 +1173,78 @@ fn a_stereo_capture_reports_its_channels_and_their_levels() {
     // whole frames only
     let bytes: usize = sink.chunks.lock().unwrap().iter().map(Vec::len).sum();
     assert_eq!(bytes, 2 * 2 * 1_600);
+}
+
+#[test]
+fn a_recorded_dialog_keeps_the_sound_as_heard_in_its_file() {
+    struct GatedSource;
+    impl AudioSource for GatedSource {
+        type Stream = ();
+        fn open(
+            &self,
+            _source: &CaptureSource,
+            stop_flag: &Arc<AtomicBool>,
+        ) -> Result<OpenedCapture<()>, AppError> {
+            let mut context =
+                StreamContext::new(stop_flag, TARGET_SAMPLE_RATE_HZ, TARGET_SAMPLE_RATE_HZ);
+            context.channel_count = 2;
+            context
+                .pending_pcm_samples
+                .locked()
+                .extend([0, 0].repeat(1_600));
+            // a second as heard, against a tenth of it processed
+            context.unprocessed_pcm_samples =
+                Some(Arc::new(Mutex::new([1_000, 2_000].repeat(16_000))));
+            Ok(OpenedCapture {
+                stream: (),
+                context,
+                output_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
+            })
+        }
+    }
+    let folder = std::env::temp_dir().join(format!(
+        "tyco-dialog-recording-{}-{:?}",
+        std::process::id(),
+        Instant::now()
+    ));
+    let path = folder.join("call.opus");
+    let stop = Arc::new(AtomicBool::new(false));
+    let clock = TestRuntime {
+        now: std::cell::Cell::new(Instant::now()),
+        stop: Arc::clone(&stop),
+    };
+    let sink = RecordingSink::default();
+    let (tx, _rx) = std_mpsc::sync_channel(1);
+    let switch = SourceSwitchSlot::default();
+    let control = CaptureControl {
+        stop_flag: &stop,
+        superseded: &AtomicBool::new(false),
+        switch: &switch,
+        recording_path: Some(path.clone()),
+    };
+    run_capture_thread(
+        &GatedSource,
+        CaptureSource::Dialog {
+            is_microphone_enabled: true,
+        },
+        &Trace::default(),
+        &clock,
+        &sink,
+        &control,
+        &tx,
+    )
+    .unwrap();
+    let bytes = std::fs::read(&path).unwrap();
+    let _ = std::fs::remove_dir_all(&folder);
+    // the granule of the last page: the pre-skip and a second at 48 kHz
+    let last = bytes
+        .windows(4)
+        .rposition(|window| window == b"OggS")
+        .unwrap();
+    let granule = u64::from_le_bytes(bytes[last + 6..last + 14].try_into().unwrap());
+    let pre_skip = u64::from(u16::from_le_bytes(bytes[38..40].try_into().unwrap()));
+    assert_eq!(granule - pre_skip, 48_000);
+    // the webview still got the processed stream
+    let delivered: usize = sink.chunks.lock().unwrap().iter().map(Vec::len).sum();
+    assert_eq!(delivered, 2 * 2 * 1_600);
 }

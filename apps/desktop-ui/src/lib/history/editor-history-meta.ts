@@ -57,6 +57,10 @@ export function getEditorHistoryMeta(
     return { icon: 'mdi:pencil-outline', labelKey: 'history.kindDraft' }
   }
 
+  if (item.kind === 'dialog') {
+    return { icon: 'mdi:account-voice', labelKey: 'history.kindDialog' }
+  }
+
   if (!item.operation) {
     return { icon: 'mdi:history', labelKey: 'history.kindSource' }
   }

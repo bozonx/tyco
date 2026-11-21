@@ -509,7 +509,10 @@
     "today": "今天",
     "undo": "復原",
     "yesterday": "昨天",
-    "filterListen": "系統音訊"
+    "filterListen": "系統音訊",
+    "kindDialog": "對話",
+    "recordingNotFound": "找不到檔案",
+    "showInFolder": "在資料夾中顯示"
   },
   "input": {
     "historySearchPlaceholder": "搜尋歷史記錄...",
@@ -1318,7 +1321,10 @@
     "dialogTranslationProvider": "翻譯服務",
     "dialogTranslationProviderHint": "翻譯對方發言的服務。翻譯在對話進行時完成，因此較快的服務延遲較小。",
     "dialogProviderDefault": "與翻譯設定相同",
-    "dialogProviderLlm": "AI 模型"
+    "dialogProviderLlm": "AI 模型",
+    "dialogRecordingsFolder": "錄音資料夾",
+    "dialogRecordingsFolderHint": "通話錄音的儲存位置。變更後，先前的錄音不會被移動。",
+    "dialogRecordingsFolderReset": "還原預設值"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
@@ -1654,7 +1660,6 @@
     "displayBoth": "兩者",
     "copy": "複製紀錄",
     "toActionMenu": "傳送到操作選單",
-    "clear": "清除紀錄",
     "collapse": "收合為字幕",
     "expand": "展開",
     "noTranslation": "不翻譯",
@@ -1667,8 +1672,13 @@
     "stopping": "正在停止…",
     "stopAndExpand": "停止並展開",
     "retryTranslation": "重試",
-    "clearConfirmTitle": "清除逐字稿？",
-    "clearConfirmMessage": "通話的完整逐字稿將被刪除。它不會儲存在任何地方，因此無法復原。",
-    "channelFailed": "已停止"
+    "channelFailed": "已停止",
+    "startOptions": "啟動選項",
+    "startRecording": "開始並錄音",
+    "recording": "正在錄音",
+    "recordingFailed": "錄音已停止：無法寫入檔案。轉錄繼續進行。",
+    "recordingNoticeTitle": "錄製對話",
+    "recordingNoticeMessage": "錄製與他人的對話時，請先告知對方。",
+    "recordingNoticeConfirm": "知道了"
   }
 }

@@ -22,4 +22,8 @@ export interface DialogConfig {
   translationProvider: 'default' | TranslationProvider
   /** Where the compact strip was last, on this device */
   compactGeometry?: DialogWindowGeometry
+  /** Where call recordings go on this device; empty: the music folder */
+  recordingsFolder?: string
+  /** The user was told to ask the other side before recording */
+  isRecordingNoticeAcknowledged?: boolean
 }

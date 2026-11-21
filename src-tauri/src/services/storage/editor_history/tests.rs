@@ -559,3 +559,53 @@ fn disk_checkpoints_keep_only_the_latest_text_in_the_own_journal() {
     assert_eq!(records.len(), 2);
     assert_eq!(history.load().unwrap()[0].text, "final");
 }
+
+#[test]
+fn a_dialog_is_checkpointed_under_its_id_and_keeps_its_session() {
+    let mut memory = Vec::new();
+    let mut history = EditorHistorySession {
+        store: EditorHistoryTarget::Memory(&mut memory),
+        policy: memory_only(),
+    };
+    let dialog = |id: Option<&str>, text: &str| {
+        serde_json::from_value::<EditorHistoryEntry>(json!({
+            "id": id,
+            "text": text,
+            "kind": "dialog",
+            "dialog": {"startedAt": 10, "source": "system", "recordingPath": "/music/call.opus"},
+        }))
+        .unwrap()
+    };
+    let id = save_editor_history_entry(&mut history, dialog(None, "Other side: hello"))
+        .unwrap()
+        .unwrap();
+    // an output of the same text stays apart from the transcript
+    save_editor_history_entry(&mut history, entry("Other side: hello")).unwrap();
+    save_editor_history_entry(&mut history, dialog(Some(&id), "Other side: hello again")).unwrap();
+    let items = history.load().unwrap();
+    assert_eq!(items.len(), 2);
+    let saved = items.iter().find(|item| item.id == id).unwrap();
+    assert_eq!(saved.text, "Other side: hello again");
+    assert_eq!(saved.kind, EditorHistoryKind::Dialog);
+    assert_eq!(
+        saved.dialog.as_ref().unwrap().recording_path.as_deref(),
+        Some("/music/call.opus")
+    );
+    // a draft never takes a dialog's place
+    let draft =
+        serde_json::from_value(json!({"id": id, "text": "typed", "kind": "draft"})).unwrap();
+    save_editor_history_entry(&mut history, draft).unwrap();
+    let items = history.load().unwrap();
+    assert!(items
+        .iter()
+        .any(|item| item.id == id && item.kind == EditorHistoryKind::Dialog));
+    // a deleted dialog is not brought back by a late checkpoint
+    history.save(&items.clone(), Vec::new()).unwrap();
+    assert_eq!(
+        save_editor_history_entry(&mut history, dialog(Some(&id), "late")).unwrap(),
+        None
+    );
+    // and a dialog without its session is refused
+    let bare = serde_json::from_value(json!({"text": "x", "kind": "dialog"})).unwrap();
+    assert!(save_editor_history_entry(&mut history, bare).is_err());
+}

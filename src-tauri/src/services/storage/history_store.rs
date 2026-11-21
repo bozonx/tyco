@@ -752,6 +752,7 @@ mod tests {
                         result: None,
                         is_result_applied: false,
                         failure: None,
+                        dialog: None,
                     });
                 });
             }

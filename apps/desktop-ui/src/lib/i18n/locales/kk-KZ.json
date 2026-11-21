@@ -509,7 +509,10 @@
     "today": "Бүгін",
     "undo": "Болдырмау",
     "yesterday": "Кеше",
-    "filterListen": "Жүйе дыбысы"
+    "filterListen": "Жүйе дыбысы",
+    "kindDialog": "Диалог",
+    "recordingNotFound": "файл табылмады",
+    "showInFolder": "Қалтадан көрсету"
   },
   "input": {
     "historySearchPlaceholder": "Тарихтан іздеу...",
@@ -1321,7 +1324,10 @@
     "dialogTranslationProvider": "Аударма қызметі",
     "dialogTranslationProviderHint": "Әңгімелесушінің сөзін аударатын қызмет. Аударма әңгіме барысында жүреді, сондықтан жылдам қызмет азырақ кешігеді.",
     "dialogProviderDefault": "Аударма параметрлеріндегідей",
-    "dialogProviderLlm": "AI моделі"
+    "dialogProviderLlm": "AI моделі",
+    "dialogRecordingsFolder": "Жазбалар қалтасы",
+    "dialogRecordingsFolderHint": "Қоңырау жазбалары сақталатын орын. Өзгерту бұрынғы жазбаларды жылжытпайды.",
+    "dialogRecordingsFolderReset": "Әдепкіге қайтару"
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {
@@ -1661,7 +1667,6 @@
     "displayBoth": "Екеуі де",
     "copy": "Транскриптті көшіру",
     "toActionMenu": "Әрекеттер мәзіріне жіберу",
-    "clear": "Транскриптті тазалау",
     "collapse": "Субтитрге жию",
     "expand": "Жазу",
     "noTranslation": "Аудармасыз",
@@ -1674,8 +1679,13 @@
     "stopping": "Тоқтатылуда…",
     "stopAndExpand": "Тоқтату және жаю",
     "retryTranslation": "Қайталау",
-    "clearConfirmTitle": "Транскрипт тазалансын ба?",
-    "clearConfirmMessage": "Қоңыраудың бүкіл транскрипті жойылады. Ол ешқайда сақталмайды, сондықтан оны қалпына келтіру мүмкін емес.",
-    "channelFailed": "тоқтатылды"
+    "channelFailed": "тоқтатылды",
+    "startOptions": "Іске қосу параметрлері",
+    "startRecording": "Жазбамен бастау",
+    "recording": "Жазылуда",
+    "recordingFailed": "Жазба тоқтады: файлды жазу мүмкін болмады. Транскрипция жалғасуда.",
+    "recordingNoticeTitle": "Сөйлесуді жазу",
+    "recordingNoticeMessage": "Басқа адаммен сөйлесуді жазсаңыз, алдымен оны ескертіңіз.",
+    "recordingNoticeConfirm": "Түсінікті"
   }
 }

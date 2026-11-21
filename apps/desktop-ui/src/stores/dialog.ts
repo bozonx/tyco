@@ -1,8 +1,13 @@
-import { DESKTOP_EVENTS, type DialogConfig } from '@tyco/shared'
+import {
+  DESKTOP_EVENTS,
+  type DialogConfig,
+  type DialogRecording,
+} from '@tyco/shared'
 import { defineStore } from 'pinia'
-import { computed, reactive, ref, shallowRef, watch } from 'vue'
+import { computed, onScopeDispose, reactive, ref, shallowRef, watch } from 'vue'
 
 import { exportDialogTranscript } from '../lib/dialog/dialog-export'
+import { createDialogHistory } from '../lib/dialog/dialog-history'
 import {
   createDialogSession,
   type DialogChannelStatus,
@@ -29,6 +34,7 @@ import {
 import { createSttClient } from '../lib/stt/stt-client'
 import { createVoiceCaptureControl } from '../lib/stt/voice-capture'
 import { useDesktopStore } from './desktop'
+import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
 import { useSecretsStore } from './secrets'
 import { useTranslationStore } from './translation'
@@ -40,13 +46,22 @@ const DEFAULT_DIALOG_CONFIG: DialogConfig = {
   translationProvider: 'default',
 }
 
+/** The recording of the running session */
+export interface DialogRecordingState {
+  path: string
+  /** Unix time in milliseconds */
+  startedAtMs: number
+}
+
 /**
  * The dialog: a long transcription of a call that runs in the background until
- * it is stopped, whatever tab the main window shows.
+ * it is stopped, whatever tab the main window shows. Every start begins a new
+ * session: a fresh transcript and, with the history on, an entry of its own.
  */
 export const useDialogStore = defineStore('dialog', () => {
   const desktopStore = useDesktopStore()
   const secretsStore = useSecretsStore()
+  const historyStore = useHistoryStore()
   const translationStore = useTranslationStore()
 
   const config = computed<DialogConfig>(() => ({
@@ -65,6 +80,8 @@ export const useDialogStore = defineStore('dialog', () => {
   const isSubtitlesShown = ref(false)
   /** Whether the running dialog records the microphone too */
   const hasMicrophone = ref(config.value.source === 'microphoneAndSystem')
+  /** The file the running session is recorded to; none: not recorded */
+  const recording = ref<DialogRecordingState>()
 
   const turns = computed(() => buildDialogTurns(segments.value))
   const isActive = computed(
@@ -113,6 +130,9 @@ export const useDialogStore = defineStore('dialog', () => {
   const capture = createVoiceCaptureControl(tauriNetIpc)
   const stt = createSttClient({ transport: createTauriTransport(tauriNetIpc) })
   let activeStt: DialogStt | undefined
+  /** What the next capture is asked to record to, if anything */
+  let recordingRequest: DialogRecording | undefined
+  let recordingPath: string | undefined
   /**
    * When the running session began recording: the segments are on the clock, so
    * the turns of several sessions without a clear stay in order
@@ -126,8 +146,26 @@ export const useDialogStore = defineStore('dialog', () => {
 
   const session = createDialogSession({
     capture: {
-      start: (source) =>
-        capture.start(source, {}, desktopStore.userConfig.stt.microphoneId),
+      start: async (source) => {
+        const started = await capture.start(
+          source,
+          {
+            onRecordingFailed: (message) => {
+              clientLogger.warn(
+                `Dialog recording stopped: ${message}`,
+                'dialog'
+              )
+              recording.value = undefined
+              errorText.value = translate('dialog.recordingFailed')
+              canFixInSettings.value = false
+            },
+          },
+          desktopStore.userConfig.stt.microphoneId,
+          recordingRequest
+        )
+        recordingPath = started.recordingPath
+        return started
+      },
       stop: () => capture.stop(),
     },
     transcribe: ({ side, audio, sampleRate, signal }) => {
@@ -143,12 +181,26 @@ export const useDialogStore = defineStore('dialog', () => {
       })
     },
     onStatus: (next) => {
-      if (next === 'running') sessionStartedAtMs = Date.now()
+      if (next === 'running') {
+        sessionStartedAtMs = Date.now()
+        if (recordingPath)
+          recording.value = {
+            path: recordingPath,
+            startedAtMs: sessionStartedAtMs,
+          }
+        void dialogHistory.begin({
+          startedAt: sessionStartedAtMs,
+          source: hasMicrophone.value ? 'microphoneAndSystem' : 'system',
+          ...(recordingPath && { recordingPath }),
+        })
+      }
       status.value = next
       if (next !== 'running') {
         levels.me = 0
         levels.remote = 0
+        recording.value = undefined
       }
+      if (next === 'idle' || next === 'failed') void dialogHistory.end()
     },
     onChannelStatus: (side, next) => {
       channelStatus[side] = next
@@ -193,12 +245,27 @@ export const useDialogStore = defineStore('dialog', () => {
 
   let isPreparing = false
 
-  async function start() {
+  /**
+   * A new session: the previous transcript goes, kept in the history when it is
+   * on. `isRecording`: the session is also recorded to a file
+   */
+  async function start(options: { isRecording?: boolean } = {}) {
     if (isActive.value || isPreparing) return
     isPreparing = true
     errorText.value = ''
     canFixInSettings.value = false
     for (const side of ['me', 'remote'] as const) delete channelStatus[side]
+    await dialogHistory.end()
+    translationQueue.clear()
+    transcript.clear()
+    recordingRequest = options.isRecording
+      ? {
+          ...(config.value.recordingsFolder?.trim() && {
+            folder: config.value.recordingsFolder.trim(),
+          }),
+        }
+      : undefined
+    recordingPath = undefined
     try {
       activeStt = await resolveDialogStt({
         getConfig: () => desktopStore.userConfig.stt,
@@ -229,10 +296,9 @@ export const useDialogStore = defineStore('dialog', () => {
     if (segment?.translationState === 'failed') translationQueue.retry(segment)
   }
 
-  function clear() {
-    translationQueue.clear()
-    transcript.clear()
-    errorText.value = ''
+  /** The user was told to ask the other side before a recording */
+  async function acknowledgeRecordingNotice() {
+    await updateConfig({ isRecordingNoticeAcknowledged: true })
   }
 
   /** The transcript as text, with the translations when they are shown */
@@ -267,6 +333,30 @@ export const useDialogStore = defineStore('dialog', () => {
     })
   }
 
+  const dialogHistory = createDialogHistory({
+    save: historyStore.saveEditorHistory,
+    getText: exportText,
+    reportError: (error) =>
+      clientLogger.warn(
+        `Could not save the dialog to the history: ${String(error)}`,
+        'dialog'
+      ),
+  })
+  // the turns so far reach the history when the window hides and on quit
+  watch(
+    () => desktopStore.desktopState.isWindowShown,
+    (isShown) => {
+      if (!isShown) void dialogHistory.checkpoint()
+    }
+  )
+  const unregisterFlush = historyStore.registerInputFlush(() =>
+    dialogHistory.checkpoint()
+  )
+  onScopeDispose(() => {
+    unregisterFlush()
+    dialogHistory.dispose()
+  })
+
   const subtitlesView = computed(() =>
     buildSubtitlesView({
       turns: turns.value,
@@ -274,11 +364,13 @@ export const useDialogStore = defineStore('dialog', () => {
       textDisplay: config.value.textDisplay,
       isActive: isActive.value,
       errorText: errorText.value,
+      recordingStartedAtMs: recording.value?.startedAtMs,
       labels: {
         waitingForSpeech: translate('dialog.waitingForSpeech'),
         notRunning: translate('dialog.notRunning'),
         stop: translate('dialog.stopAndExpand'),
         expand: translate('dialog.expand'),
+        recording: translate('dialog.recording'),
       },
     })
   )
@@ -325,11 +417,12 @@ export const useDialogStore = defineStore('dialog', () => {
     isActive,
     isSubtitlesShown,
     hasMicrophone,
+    recording,
     start,
     stop,
     stopAndExpand,
     retryTranslation,
-    clear,
+    acknowledgeRecordingNotice,
     exportText,
     updateConfig,
     copyTranscript,

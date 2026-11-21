@@ -63,6 +63,10 @@
     "allow-suspend-hotkeys",
     "allow-write-ai-profile-soul",
     "allow-show-subtitles",
+    "allow-get-default-recordings-folder",
+    "allow-open-recordings-folder",
+    "allow-check-dialog-recordings",
+    "allow-show-dialog-recording",
     "allow-hide-subtitles",
     "allow-publish-subtitles"
   ]

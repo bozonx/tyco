@@ -509,7 +509,10 @@
     "today": "Dnes",
     "undo": "Zpět",
     "yesterday": "Včera",
-    "filterListen": "Systémový zvuk"
+    "filterListen": "Systémový zvuk",
+    "kindDialog": "Dialog",
+    "recordingNotFound": "soubor nenalezen",
+    "showInFolder": "Zobrazit ve složce"
   },
   "input": {
     "historySearchPlaceholder": "Hledat v historii...",
@@ -1318,7 +1321,10 @@
     "dialogTranslationProvider": "Překladová služba",
     "dialogTranslationProviderHint": "Služba, která překládá druhou stranu. Překládá se během hovoru, takže rychlá služba méně zaostává.",
     "dialogProviderDefault": "Jako v nastavení překladu",
-    "dialogProviderLlm": "Model AI"
+    "dialogProviderLlm": "Model AI",
+    "dialogRecordingsFolder": "Složka nahrávek",
+    "dialogRecordingsFolderHint": "Kam se ukládají nahrávky hovorů. Změna nepřesune dřívější nahrávky.",
+    "dialogRecordingsFolderReset": "Obnovit výchozí"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
@@ -1658,7 +1664,6 @@
     "displayBoth": "Obojí",
     "copy": "Kopírovat přepis",
     "toActionMenu": "Odeslat do nabídky akcí",
-    "clear": "Vymazat přepis",
     "collapse": "Sbalit do titulků",
     "expand": "Rozbalit",
     "noTranslation": "Bez překladu",
@@ -1671,8 +1676,13 @@
     "stopping": "Zastavuji…",
     "stopAndExpand": "Zastavit a rozbalit",
     "retryTranslation": "Zkusit znovu",
-    "clearConfirmTitle": "Vymazat přepis?",
-    "clearConfirmMessage": "Celý přepis hovoru bude smazán. Nikde se neukládá, takže ho nelze obnovit.",
-    "channelFailed": "zastaveno"
+    "channelFailed": "zastaveno",
+    "startOptions": "Možnosti spuštění",
+    "startRecording": "Spustit s nahráváním",
+    "recording": "Nahrává se",
+    "recordingFailed": "Nahrávání se zastavilo: soubor nelze zapsat. Přepis pokračuje.",
+    "recordingNoticeTitle": "Nahrávání rozhovoru",
+    "recordingNoticeMessage": "Pokud nahráváte rozhovor s jinou osobou, nejprve ji na to upozorněte.",
+    "recordingNoticeConfirm": "Rozumím"
   }
 }

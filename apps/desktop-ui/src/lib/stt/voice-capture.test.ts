@@ -39,6 +39,33 @@ describe('createVoiceCaptureControl', () => {
     ])
   })
 
+  it('asks for a recording and tells when it fails', async () => {
+    const fake = createFakeNetIpc({
+      ['start_voice_capture']: () => ({
+        sampleRate: 16_000,
+        channels: 2,
+        sessionId: 3,
+        recordingPath: '/music/TyCo dialog.opus',
+      }),
+    })
+    const failures: string[] = []
+    const control = createVoiceCaptureControl(fake.ipc)
+
+    const capture = await control.start(
+      { kind: 'dialog', isMicrophoneEnabled: true },
+      { onRecordingFailed: (message) => failures.push(message) },
+      undefined,
+      { folder: '/music' }
+    )
+    fake.emit({ type: 'recordingFailed', message: 'disk full' })
+
+    expect(capture.recordingPath).toBe('/music/TyCo dialog.opus')
+    expect(failures).toEqual(['disk full'])
+    expect(fake.callsOf('start_voice_capture')[0].args).toMatchObject({
+      recording: { folder: '/music' },
+    })
+  })
+
   it('stops only the capture it started', async () => {
     let nextId = 1
     const fake = createFakeNetIpc({

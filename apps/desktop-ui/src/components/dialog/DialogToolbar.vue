@@ -1,14 +1,25 @@
 <template>
   <div class="dialog-toolbar">
-    <Button
-      v-if="isIdle"
-      class="dialog-toolbar-run"
-      variant="primary"
-      size="sm"
-      icon="mdi:record-circle-outline"
-      @click="dialog.start()"
-      >{{ t('dialog.start') }}</Button
-    >
+    <!-- Start never records; recording is asked for in its menu -->
+    <div v-if="isIdle" class="dialog-toolbar-split">
+      <Button
+        class="dialog-toolbar-run"
+        variant="primary"
+        size="sm"
+        icon="mdi:play"
+        @click="dialog.start()"
+        >{{ t('dialog.start') }}</Button
+      >
+      <DropdownMenu
+        class="dialog-toolbar-start-menu"
+        square
+        variant="primary"
+        icon="mdi:chevron-down"
+        hide-chevron
+        :title="t('dialog.startOptions')"
+        :items="startItems"
+      />
+    </div>
     <Button
       v-else
       class="dialog-toolbar-run"
@@ -30,6 +41,11 @@
       @update:model-value="(source) => dialog.updateConfig({ source })"
     />
     <div v-else class="dialog-toolbar-levels">
+      <DialogRecordingIndicator
+        v-if="dialog.recording"
+        :started-at-ms="dialog.recording.startedAtMs"
+        :label="t('dialog.recording')"
+      />
       <DialogLevel
         v-if="dialog.hasMicrophone"
         icon="mdi:microphone"
@@ -96,13 +112,12 @@
       :items="moreItems"
     />
     <ConfirmModal
-      :open="isClearConfirmOpen"
-      :title="t('dialog.clearConfirmTitle')"
-      :message="t('dialog.clearConfirmMessage')"
-      :confirm-text="t('dialog.clear')"
-      danger
-      @confirm="confirmClear"
-      @cancel="isClearConfirmOpen = false"
+      :open="isRecordingNoticeOpen"
+      :title="t('dialog.recordingNoticeTitle')"
+      :message="t('dialog.recordingNoticeMessage')"
+      :confirm-text="t('dialog.recordingNoticeConfirm')"
+      @confirm="confirmRecordingNotice"
+      @cancel="isRecordingNoticeOpen = false"
     />
   </div>
 </template>
@@ -125,6 +140,7 @@ import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import DialogLevel from './DialogLevel.vue'
+import DialogRecordingIndicator from './DialogRecordingIndicator.vue'
 import type { DialogSource, DialogTextDisplay } from '@tyco/shared'
 
 const dialog = useDialogStore()
@@ -136,7 +152,28 @@ const isIdle = computed(
 )
 const isStopping = computed(() => dialog.status === 'stopping')
 const isEmpty = computed(() => dialog.segments.length === 0)
-const isClearConfirmOpen = ref(false)
+const isRecordingNoticeOpen = ref(false)
+
+const startItems = computed<DropdownMenuItem[]>(() => [
+  {
+    label: t('dialog.startRecording'),
+    icon: 'mdi:record-circle-outline',
+    action: startRecording,
+  },
+])
+
+/** The first recording tells to ask the other side first */
+function startRecording() {
+  if (dialog.config.isRecordingNoticeAcknowledged)
+    void dialog.start({ isRecording: true })
+  else isRecordingNoticeOpen.value = true
+}
+
+async function confirmRecordingNotice() {
+  isRecordingNoticeOpen.value = false
+  await dialog.acknowledgeRecordingNotice()
+  await dialog.start({ isRecording: true })
+}
 
 const sourceOptions = computed<ControlOption<DialogSource>[]>(() => [
   {
@@ -173,20 +210,7 @@ const moreItems = computed<DropdownMenuItem[]>(() => [
     icon: 'mdi:lightning-bolt-outline',
     action: () => void dialog.sendToActionMenu(),
   },
-  {
-    label: t('dialog.clear'),
-    icon: 'mdi:delete-sweep-outline',
-    danger: true,
-    action: () => {
-      isClearConfirmOpen.value = true
-    },
-  },
 ])
-
-function confirmClear() {
-  isClearConfirmOpen.value = false
-  dialog.clear()
-}
 
 const channelNotice = computed(() => {
   const statuses = Object.values(dialog.channelStatus)
@@ -223,6 +247,25 @@ function levelLabel(side: DialogSide) {
 .dialog-toolbar-run {
   min-width: 7.5rem;
   justify-content: center;
+}
+
+/* Start and its menu read as one button */
+.dialog-toolbar-split {
+  display: flex;
+  align-items: stretch;
+}
+
+.dialog-toolbar-split > .dialog-toolbar-run {
+  min-width: 5.5rem;
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.dialog-toolbar-start-menu :deep(button) {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+  border-inline-start: 1px solid
+    color-mix(in oklab, var(--color-primary-content) 25%, transparent);
 }
 
 /* the icons say it, the tooltips name it */

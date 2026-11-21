@@ -509,7 +509,10 @@
     "today": "Hoje",
     "undo": "Desfazer",
     "yesterday": "Ontem",
-    "filterListen": "Áudio do sistema"
+    "filterListen": "Áudio do sistema",
+    "kindDialog": "Diálogo",
+    "recordingNotFound": "arquivo não encontrado",
+    "showInFolder": "Mostrar na pasta"
   },
   "input": {
     "historySearchPlaceholder": "Pesquisar no histórico...",
@@ -1324,7 +1327,10 @@
     "dialogTranslationProvider": "Serviço de tradução",
     "dialogTranslationProviderHint": "O serviço que traduz a outra pessoa. A tradução acontece durante a conversa, então um serviço rápido acompanha melhor.",
     "dialogProviderDefault": "Como nas configurações de tradução",
-    "dialogProviderLlm": "Modelo de IA"
+    "dialogProviderLlm": "Modelo de IA",
+    "dialogRecordingsFolder": "Pasta de gravações",
+    "dialogRecordingsFolderHint": "Onde as gravações de chamadas são salvas. Alterá-la não move as gravações anteriores.",
+    "dialogRecordingsFolderReset": "Restaurar padrão"
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {
@@ -1664,7 +1670,6 @@
     "displayBoth": "Ambos",
     "copy": "Copiar a transcrição",
     "toActionMenu": "Enviar ao menu de ações",
-    "clear": "Limpar a transcrição",
     "collapse": "Recolher em legendas",
     "expand": "Expandir",
     "noTranslation": "Sem tradução",
@@ -1677,8 +1682,13 @@
     "stopping": "Parando…",
     "stopAndExpand": "Parar e expandir",
     "retryTranslation": "Tentar novamente",
-    "clearConfirmTitle": "Limpar a transcrição?",
-    "clearConfirmMessage": "Toda a transcrição da chamada será excluída. Ela não é salva em lugar nenhum e não poderá ser recuperada.",
-    "channelFailed": "parado"
+    "channelFailed": "parado",
+    "startOptions": "Opções de início",
+    "startRecording": "Iniciar com gravação",
+    "recording": "Gravando",
+    "recordingFailed": "A gravação parou: não foi possível gravar o arquivo. A transcrição continua.",
+    "recordingNoticeTitle": "Gravar uma conversa",
+    "recordingNoticeMessage": "Se você gravar uma conversa com outra pessoa, avise-a antes.",
+    "recordingNoticeConfirm": "Entendi"
   }
 }

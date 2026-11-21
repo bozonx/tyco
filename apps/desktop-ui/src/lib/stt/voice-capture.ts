@@ -1,5 +1,9 @@
 import type { AudioChunk } from '@bozonx/ai-kit'
-import { type CaptureSource, type VoiceCaptureEvent } from '@tyco/shared'
+import {
+  type CaptureSource,
+  type DialogRecording,
+  type VoiceCaptureEvent,
+} from '@tyco/shared'
 
 import { createAsyncQueue } from '../net/async-queue'
 import { errorMessage, isArrayBuffer, type NetIpc } from '../net/net-ipc'
@@ -11,6 +15,8 @@ export interface CaptureSourceHandlers {
   onWaiting?: (isWaiting: boolean) => void
   /** Its application quit: capture waits for the same `source` */
   onSourceLost?: (source: CaptureSource) => void
+  /** The recording to a file stopped; the capture goes on */
+  onRecordingFailed?: (message: string) => void
 }
 
 export interface VoiceCapture {
@@ -25,6 +31,8 @@ export interface VoiceCapture {
   audio: AsyncIterable<AudioChunk>
   /** Whether `audio` ended because a newer capture took the microphone */
   isSuperseded: () => boolean
+  /** The file a dialog is recorded to, when a recording was asked for */
+  recordingPath?: string
 }
 
 export interface VoiceCaptureControl {
@@ -32,7 +40,9 @@ export interface VoiceCaptureControl {
   start: (
     source?: CaptureSource,
     handlers?: CaptureSourceHandlers,
-    microphoneId?: string
+    microphoneId?: string,
+    /** Also records a dialog to a new file */
+    recording?: DialogRecording
   ) => Promise<VoiceCapture>
   /** Records another playback source in the running capture */
   switchSource: (source: CaptureSource) => Promise<void>
@@ -47,7 +57,7 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
   let sessionId: number | undefined
 
   return {
-    async start(source, handlers = {}, microphoneId) {
+    async start(source, handlers = {}, microphoneId, recording) {
       let overflowed = false
       let superseded = false
       let captureSessionId: number | undefined
@@ -71,6 +81,8 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
         if (event.type === 'sourceStatus') handlers.onWaiting?.(event.isWaiting)
         else if (event.type === 'sourceLost')
           handlers.onSourceLost?.(event.source)
+        else if (event.type === 'recordingFailed')
+          handlers.onRecordingFailed?.(event.message)
         else if (event.type === 'end') queue.end()
         else if (event.type === 'superseded') {
           // the audio before it is complete: it ends as usual
@@ -88,6 +100,7 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
           onAudio: ipc.createChannel(onMessage),
           ...(source && { source }),
           ...(trimmedMic && { microphoneId: trimmedMic }),
+          ...(recording && { recording }),
         })
         captureSessionId = started.sessionId
         sessionId = captureSessionId
@@ -109,6 +122,9 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
             }
           })(),
           isSuperseded: () => superseded,
+          ...(started.recordingPath && {
+            recordingPath: started.recordingPath,
+          }),
         }
       } catch (error) {
         throw new Error(errorMessage(error), { cause: error })

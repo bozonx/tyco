@@ -76,6 +76,7 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<models::CropRect>();
     visitor.visit::<models::ChatSummary>();
     visitor.visit::<models::EditorHistoryEntry>();
+    visitor.visit::<models::EditorHistoryDialog>();
     visitor.visit::<models::EditorHistoryFailure>();
     visitor.visit::<models::DesktopSnapshot>();
     visitor.visit::<models::EditorHistoryItem>();
@@ -136,6 +137,7 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<services::runtime::subtitles_window::SubtitlesSnapshot>();
     visitor.visit::<services::runtime::subtitles_window::SubtitlesAction>();
     visitor.visit::<services::voice::VoiceCaptureInfo>();
+    visitor.visit::<services::voice::DialogRecording>();
     visitor.visit::<tyco_activation_protocol::Job>();
 }
 

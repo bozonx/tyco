@@ -509,7 +509,10 @@
     "today": "Hoy",
     "undo": "Deshacer",
     "yesterday": "Ayer",
-    "filterListen": "Audio del sistema"
+    "filterListen": "Audio del sistema",
+    "kindDialog": "Diálogo",
+    "recordingNotFound": "archivo no encontrado",
+    "showInFolder": "Mostrar en la carpeta"
   },
   "input": {
     "historySearchPlaceholder": "Buscar en el historial...",
@@ -1324,7 +1327,10 @@
     "dialogTranslationProvider": "Servicio de traducción",
     "dialogTranslationProviderHint": "El servicio que traduce a la otra parte. La traducción se hace durante la conversación, así que uno rápido se retrasa menos.",
     "dialogProviderDefault": "Como en los ajustes de traducción",
-    "dialogProviderLlm": "Modelo de IA"
+    "dialogProviderLlm": "Modelo de IA",
+    "dialogRecordingsFolder": "Carpeta de grabaciones",
+    "dialogRecordingsFolderHint": "Dónde se guardan las grabaciones de llamadas. Cambiarla no mueve las grabaciones anteriores.",
+    "dialogRecordingsFolderReset": "Restablecer valor predeterminado"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {
@@ -1664,7 +1670,6 @@
     "displayBoth": "Ambos",
     "copy": "Copiar la transcripción",
     "toActionMenu": "Enviar al menú de acciones",
-    "clear": "Borrar la transcripción",
     "collapse": "Contraer a subtítulos",
     "expand": "Expandir",
     "noTranslation": "Sin traducción",
@@ -1677,8 +1682,13 @@
     "stopping": "Deteniendo…",
     "stopAndExpand": "Detener y expandir",
     "retryTranslation": "Reintentar",
-    "clearConfirmTitle": "¿Borrar la transcripción?",
-    "clearConfirmMessage": "Se eliminará toda la transcripción de la llamada. No se guarda en ningún sitio, así que no se podrá recuperar.",
-    "channelFailed": "detenido"
+    "channelFailed": "detenido",
+    "startOptions": "Opciones de inicio",
+    "startRecording": "Iniciar con grabación",
+    "recording": "Grabando",
+    "recordingFailed": "La grabación se detuvo: no se pudo escribir el archivo. La transcripción continúa.",
+    "recordingNoticeTitle": "Grabar una conversación",
+    "recordingNoticeMessage": "Si grabas una conversación con otra persona, avísale antes.",
+    "recordingNoticeConfirm": "Entendido"
   }
 }

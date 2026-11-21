@@ -15,6 +15,7 @@ pub(super) fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> Edi
         result: None,
         is_result_applied: false,
         failure: None,
+        dialog: None,
     }
 }
 

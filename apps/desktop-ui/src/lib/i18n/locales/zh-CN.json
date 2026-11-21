@@ -509,7 +509,10 @@
     "today": "今天",
     "undo": "撤消",
     "yesterday": "昨天",
-    "filterListen": "系统音频"
+    "filterListen": "系统音频",
+    "kindDialog": "对话",
+    "recordingNotFound": "找不到文件",
+    "showInFolder": "在文件夹中显示"
   },
   "input": {
     "historySearchPlaceholder": "搜索历史记录…",
@@ -1318,7 +1321,10 @@
     "dialogTranslationProvider": "翻译服务",
     "dialogTranslationProviderHint": "翻译对方发言的服务。翻译在对话进行时完成，因此更快的服务延迟更小。",
     "dialogProviderDefault": "与翻译设置相同",
-    "dialogProviderLlm": "AI 模型"
+    "dialogProviderLlm": "AI 模型",
+    "dialogRecordingsFolder": "录音文件夹",
+    "dialogRecordingsFolderHint": "通话录音的保存位置。更改后，之前的录音不会被移动。",
+    "dialogRecordingsFolderReset": "恢复默认"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
@@ -1654,7 +1660,6 @@
     "displayBoth": "两者",
     "copy": "复制记录",
     "toActionMenu": "发送到操作菜单",
-    "clear": "清空记录",
     "collapse": "收起为字幕",
     "expand": "展开",
     "noTranslation": "不翻译",
@@ -1667,8 +1672,13 @@
     "stopping": "正在停止…",
     "stopAndExpand": "停止并展开",
     "retryTranslation": "重试",
-    "clearConfirmTitle": "清除转录？",
-    "clearConfirmMessage": "通话的全部转录将被删除。它不会保存在任何地方，因此无法恢复。",
-    "channelFailed": "已停止"
+    "channelFailed": "已停止",
+    "startOptions": "启动选项",
+    "startRecording": "开始并录音",
+    "recording": "正在录音",
+    "recordingFailed": "录音已停止：无法写入文件。转录继续进行。",
+    "recordingNoticeTitle": "录制对话",
+    "recordingNoticeMessage": "录制与他人的对话时，请先告知对方。",
+    "recordingNoticeConfirm": "知道了"
   }
 }

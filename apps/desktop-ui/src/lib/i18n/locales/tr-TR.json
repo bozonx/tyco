@@ -509,7 +509,10 @@
     "today": "Bugün",
     "undo": "Geri al",
     "yesterday": "Dün",
-    "filterListen": "Sistem sesi"
+    "filterListen": "Sistem sesi",
+    "kindDialog": "Diyalog",
+    "recordingNotFound": "dosya bulunamadı",
+    "showInFolder": "Klasörde göster"
   },
   "input": {
     "historySearchPlaceholder": "Geçmişte ara...",
@@ -1321,7 +1324,10 @@
     "dialogTranslationProvider": "Çeviri hizmeti",
     "dialogTranslationProviderHint": "Karşı tarafı çeviren hizmet. Çeviri konuşma sırasında yapılır; hızlı bir hizmet daha az geride kalır.",
     "dialogProviderDefault": "Çeviri ayarlarındaki gibi",
-    "dialogProviderLlm": "Yapay zekâ modeli"
+    "dialogProviderLlm": "Yapay zekâ modeli",
+    "dialogRecordingsFolder": "Kayıt klasörü",
+    "dialogRecordingsFolderHint": "Arama kayıtlarının kaydedildiği yer. Değiştirmek önceki kayıtları taşımaz.",
+    "dialogRecordingsFolderReset": "Varsayılana sıfırla"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
@@ -1657,7 +1663,6 @@
     "displayBoth": "İkisi de",
     "copy": "Dökümü kopyala",
     "toActionMenu": "Eylem menüsüne gönder",
-    "clear": "Dökümü temizle",
     "collapse": "Altyazıya daralt",
     "expand": "Genişlet",
     "noTranslation": "Çeviri yok",
@@ -1670,8 +1675,13 @@
     "stopping": "Durduruluyor…",
     "stopAndExpand": "Durdur ve genişlet",
     "retryTranslation": "Tekrar dene",
-    "clearConfirmTitle": "Transkript temizlensin mi?",
-    "clearConfirmMessage": "Görüşmenin tüm transkripti silinecek. Hiçbir yere kaydedilmediği için geri getirilemez.",
-    "channelFailed": "durduruldu"
+    "channelFailed": "durduruldu",
+    "startOptions": "Başlatma seçenekleri",
+    "startRecording": "Kayıtla başlat",
+    "recording": "Kaydediliyor",
+    "recordingFailed": "Kayıt durdu: dosya yazılamadı. Döküm devam ediyor.",
+    "recordingNoticeTitle": "Konuşmayı kaydetme",
+    "recordingNoticeMessage": "Başka biriyle yaptığınız bir konuşmayı kaydediyorsanız önce ona söyleyin.",
+    "recordingNoticeConfirm": "Anladım"
   }
 }

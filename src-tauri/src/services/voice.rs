@@ -12,6 +12,7 @@ mod audio_processing;
 mod echo_gate;
 pub(crate) mod microphone_mix;
 pub mod mixer;
+pub mod recording;
 pub mod session;
 pub mod source;
 
@@ -22,19 +23,21 @@ pub use source::{
 pub use audio_processing::compute_audio_level;
 use audio_processing::{float_to_pcm16, mix_frame, pcm16_to_le_bytes, Downsampler};
 
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{mpsc as std_mpsc, Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
 use cpal::traits::DeviceTrait;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
 use crate::errors::AppError;
 use crate::locks::MutexExt;
 use crate::services::clock::{MonotonicClock, SystemClock};
 use crate::services::net::EventSink;
+use crate::services::voice::recording::RecordingSink;
 use crate::services::voice::session::VoiceSessionState;
 use crate::services::voice::session::{SourceSwitch, SourceSwitchSlot, VoiceCaptureSession};
 
@@ -76,6 +79,19 @@ pub struct VoiceCaptureInfo {
     pub channels: u16,
     /// What `stop_capture` takes to stop this capture and no other.
     pub session_id: u64,
+    /// The file the capture is recorded to, when it was asked for.
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recording_path: Option<String>,
+}
+
+/// A dialog capture also recorded to a file, see `recording`.
+#[derive(Deserialize, Debug, Clone, Default, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct DialogRecording {
+    /// The recordings folder; empty or missing: the default one.
+    #[ts(optional)]
+    pub folder: Option<String>,
 }
 
 /// Control messages on the audio channel; the audio itself goes as raw bytes.
@@ -101,6 +117,11 @@ pub enum CaptureEvent {
     /// recording other applications.
     SourceLost {
         source: CaptureSource,
+    },
+    /// The recording to a file stopped, e.g. the disk is full; the capture
+    /// goes on.
+    RecordingFailed {
+        message: String,
     },
 }
 
@@ -139,6 +160,7 @@ pub async fn start_capture<S: EventSink>(
     state: &VoiceSessionState,
     capture_source: CaptureSource,
     microphone_id: Option<String>,
+    recording: Option<DialogRecording>,
     sink: S,
 ) -> Result<VoiceCaptureInfo, AppError> {
     if capture_source.is_playback() && !super::platform::audio::can_capture_playback() {
@@ -146,14 +168,36 @@ pub async fn start_capture<S: EventSink>(
             "Recording the computer sound is not available on this system".into(),
         ));
     }
+    let recording_path = match recording {
+        None => None,
+        Some(_) if !capture_source.is_dialog() => {
+            return Err(AppError::InvalidInput(
+                "Only a dialog is recorded to a file".into(),
+            ))
+        }
+        Some(recording) => Some(new_recording_path(recording.folder.as_deref())?),
+    };
     start_capture_with(
         super::platform::audio::SystemAudioSource { microphone_id },
         capture_source,
         app.clone(),
         state,
+        recording_path,
         sink,
     )
     .await
+}
+
+fn new_recording_path(folder: Option<&str>) -> Result<PathBuf, AppError> {
+    let folder =
+        super::platform::recordings::resolve_recordings_folder(folder).ok_or_else(|| {
+            AppError::ServiceUnavailable("No folder for the recordings was found".into())
+        })?;
+    let local_time = chrono::Local::now().format("%Y-%m-%d %H-%M-%S").to_string();
+    Ok(super::platform::recordings::recording_path(
+        &folder,
+        &local_time,
+    ))
 }
 
 /// Records another source in the running capture: the provider goes on
@@ -195,6 +239,7 @@ async fn start_capture_with<A, L, S>(
     capture_source: CaptureSource,
     levels: L,
     state: &VoiceSessionState,
+    recording_path: Option<PathBuf>,
     sink: S,
 ) -> Result<VoiceCaptureInfo, AppError>
 where
@@ -219,14 +264,18 @@ where
     // One microphone: a new dictation ends the previous one.
     supersede_capture_unlocked(state).await?;
     let session_id = state.allocate_session_id();
+    let thread_recording_path = recording_path.clone();
     let (session, format) = tokio::task::spawn_blocking(move || {
         create_capture_session(
             source,
             capture_source,
             levels,
             sink,
-            session_id,
-            SETUP_TIMEOUT,
+            CaptureSessionOptions {
+                id: session_id,
+                setup_timeout: SETUP_TIMEOUT,
+                recording_path: thread_recording_path,
+            },
         )
     })
     .await
@@ -243,6 +292,7 @@ where
         sample_rate_hz: format.sample_rate_hz,
         channels: format.channels,
         session_id,
+        recording_path: recording_path.map(|path| path.to_string_lossy().into_owned()),
     })
 }
 
@@ -303,13 +353,19 @@ struct CaptureFormat {
     channels: u16,
 }
 
+struct CaptureSessionOptions {
+    id: u64,
+    setup_timeout: Duration,
+    /// Where the capture is recorded to, if anywhere.
+    recording_path: Option<PathBuf>,
+}
+
 fn create_capture_session<A, L, S>(
     source: A,
     capture_source: CaptureSource,
     levels: L,
     sink: S,
-    id: u64,
-    setup_timeout: Duration,
+    options: CaptureSessionOptions,
 ) -> Result<(VoiceCaptureSession, CaptureFormat), AppError>
 where
     A: AudioSource + Send + 'static,
@@ -323,6 +379,11 @@ where
     let switch: SourceSwitchSlot = Arc::default();
     let thread_switch = Arc::clone(&switch);
     let is_dialog = capture_source.is_dialog();
+    let CaptureSessionOptions {
+        id,
+        setup_timeout,
+        recording_path,
+    } = options;
     let (setup_tx, setup_rx) = std_mpsc::sync_channel::<Result<CaptureFormat, AppError>>(1);
     let thread = thread::spawn(move || {
         // only setup can fail; later failures go through the channel
@@ -330,6 +391,7 @@ where
             stop_flag: &thread_stop_flag,
             superseded: &thread_superseded,
             switch: &thread_switch,
+            recording_path,
         };
         if let Err(error) = run_capture_thread(
             &source,
@@ -379,6 +441,7 @@ struct CaptureControl<'a> {
     stop_flag: &'a Arc<AtomicBool>,
     superseded: &'a AtomicBool,
     switch: &'a SourceSwitchSlot,
+    recording_path: Option<PathBuf>,
 }
 
 fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
@@ -397,6 +460,13 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
         output_sample_rate_hz,
     } = source.open(&capture_source, stop_flag)?;
     let channel_count = context.channel_count.max(1);
+    // the file exists before the capture is reported started: a folder that
+    // cannot be written fails the start
+    let mut recording = control
+        .recording_path
+        .clone()
+        .map(|path| RecordingSink::start(path, output_sample_rate_hz, channel_count))
+        .transpose()?;
 
     setup_tx
         .send(Ok(CaptureFormat {
@@ -521,7 +591,11 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
         if channels > 1 {
             channel_levels.measure(&context.pending_pcm_samples.locked());
         }
-        match flush_pending(&context.pending_pcm_samples, sink, chunk_samples) {
+        record_unprocessed(&context, recording.as_mut());
+        if let Some(message) = recording.as_mut().and_then(RecordingSink::take_failure) {
+            sink.send_event(&CaptureEvent::RecordingFailed { message });
+        }
+        match flush_pending(&context, sink, chunk_samples, recording.as_mut()) {
             Some(sent) => delivered_samples += sent as u64,
             None => {
                 // nobody is listening any more: the webview went away
@@ -558,7 +632,13 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
 
     // what was captured goes out first, whatever ended the capture: the
     // words spoken last are still transcribed
-    if flush_pending(&context.pending_pcm_samples, sink, 1).is_none() {
+    record_unprocessed(&context, recording.as_mut());
+    let is_delivered = flush_pending(&context, sink, 1, recording.as_mut()).is_some();
+    // the file is complete whether or not anyone still listens
+    if let Some(recording) = recording {
+        recording.finish();
+    }
+    if !is_delivered {
         return Ok(());
     }
     let stream_error = context.stream_error.locked().take();
@@ -610,20 +690,37 @@ impl ChannelLevels {
     }
 }
 
+/// Hands a recording the samples kept as heard; without a recording they
+/// are dropped.
+fn record_unprocessed(context: &StreamContext, recording: Option<&mut RecordingSink>) {
+    let Some(unprocessed) = &context.unprocessed_pcm_samples else {
+        return;
+    };
+    let samples = std::mem::take(&mut *unprocessed.locked());
+    if let Some(recording) = recording {
+        recording.push(&samples);
+    }
+}
+
 /// Sends what has accumulated once it reaches `min_samples`: the number of
-/// samples sent, `None` when the receiving side is gone.
+/// samples sent, `None` when the receiving side is gone. A recording gets
+/// them too unless it records the unprocessed samples.
 fn flush_pending<S: EventSink>(
-    pending_pcm_samples: &Mutex<Vec<i16>>,
+    context: &StreamContext,
     sink: &S,
     min_samples: usize,
+    recording: Option<&mut RecordingSink>,
 ) -> Option<usize> {
-    let samples = match pending_pcm_samples.lock() {
+    let samples = match context.pending_pcm_samples.lock() {
         Ok(mut pending_pcm_samples) if pending_pcm_samples.len() >= min_samples => {
             std::mem::take(&mut *pending_pcm_samples)
         }
         _ => return Some(0),
     };
     let count = samples.len();
+    if let Some(recording) = recording.filter(|_| context.unprocessed_pcm_samples.is_none()) {
+        recording.push(&samples);
+    }
     sink.send_bytes(pcm16_to_le_bytes(&samples))
         .then_some(count)
 }
@@ -646,6 +743,10 @@ pub(crate) struct StreamContext {
     /// Interleaved channels of `pending_pcm_samples`, 1 for mono
     pub channel_count: u16,
     pub status: Arc<Mutex<SourceStatus>>,
+    /// The samples as heard, when `pending_pcm_samples` are processed
+    /// further (the echo gate of a dialog): what a recording keeps. `None`:
+    /// the pending samples are as heard.
+    pub unprocessed_pcm_samples: Option<Arc<Mutex<Vec<i16>>>>,
 }
 
 /// Turns the interleaved float frames of a playback device into the
@@ -708,6 +809,7 @@ impl StreamContext {
             fills_gaps: false,
             channel_count: 1,
             status: Arc::default(),
+            unprocessed_pcm_samples: None,
         }
     }
 

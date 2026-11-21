@@ -17,6 +17,14 @@ export interface HistoryListItem {
   time?: number
   /** Additional localized terms included in search. */
   searchText?: string
+  /** A file the entry links to, e.g. the recording of a dialog */
+  file?: {
+    name: string
+    /** Gone from where the entry points: no action is offered */
+    isMissing: boolean
+    missingLabel: string
+    action: HistoryListAction
+  }
 }
 
 export interface HistoryListAction {

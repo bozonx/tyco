@@ -509,7 +509,10 @@
     "today": "Σήμερα",
     "undo": "Αναίρεση",
     "yesterday": "Χθες",
-    "filterListen": "Ήχος συστήματος"
+    "filterListen": "Ήχος συστήματος",
+    "kindDialog": "Διάλογος",
+    "recordingNotFound": "το αρχείο δεν βρέθηκε",
+    "showInFolder": "Εμφάνιση στον φάκελο"
   },
   "input": {
     "historySearchPlaceholder": "Αναζήτηση στο ιστορικό...",
@@ -1321,7 +1324,10 @@
     "dialogTranslationProvider": "Υπηρεσία μετάφρασης",
     "dialogTranslationProviderHint": "Η υπηρεσία που μεταφράζει τον συνομιλητή. Η μετάφραση γίνεται κατά τη συζήτηση, οπότε μια γρήγορη υπηρεσία καθυστερεί λιγότερο.",
     "dialogProviderDefault": "Όπως στις ρυθμίσεις μετάφρασης",
-    "dialogProviderLlm": "Μοντέλο AI"
+    "dialogProviderLlm": "Μοντέλο AI",
+    "dialogRecordingsFolder": "Φάκελος εγγραφών",
+    "dialogRecordingsFolderHint": "Πού αποθηκεύονται οι εγγραφές κλήσεων. Η αλλαγή δεν μετακινεί τις προηγούμενες εγγραφές.",
+    "dialogRecordingsFolderReset": "Επαναφορά προεπιλογής"
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {
@@ -1661,7 +1667,6 @@
     "displayBoth": "Και τα δύο",
     "copy": "Αντιγραφή απομαγνητοφώνησης",
     "toActionMenu": "Αποστολή στο μενού ενεργειών",
-    "clear": "Εκκαθάριση απομαγνητοφώνησης",
     "collapse": "Σύμπτυξη σε υπότιτλους",
     "expand": "Ανάπτυξη",
     "noTranslation": "Χωρίς μετάφραση",
@@ -1674,8 +1679,13 @@
     "stopping": "Διακοπή…",
     "stopAndExpand": "Διακοπή και ανάπτυξη",
     "retryTranslation": "Δοκιμάστε ξανά",
-    "clearConfirmTitle": "Εκκαθάριση απομαγνητοφώνησης;",
-    "clearConfirmMessage": "Ολόκληρη η απομαγνητοφώνηση της κλήσης θα διαγραφεί. Δεν αποθηκεύεται πουθενά, οπότε δεν μπορεί να ανακτηθεί.",
-    "channelFailed": "σταμάτησε"
+    "channelFailed": "σταμάτησε",
+    "startOptions": "Επιλογές έναρξης",
+    "startRecording": "Έναρξη με εγγραφή",
+    "recording": "Εγγραφή σε εξέλιξη",
+    "recordingFailed": "Η εγγραφή σταμάτησε: δεν ήταν δυνατή η εγγραφή του αρχείου. Η απομαγνητοφώνηση συνεχίζεται.",
+    "recordingNoticeTitle": "Εγγραφή συνομιλίας",
+    "recordingNoticeMessage": "Αν καταγράφετε μια συνομιλία με άλλο άτομο, ενημερώστε το πρώτα.",
+    "recordingNoticeConfirm": "Κατάλαβα"
   }
 }

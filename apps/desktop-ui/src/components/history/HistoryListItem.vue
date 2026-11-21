@@ -66,6 +66,24 @@
         {{ t('common.empty') }}
       </div>
 
+      <div v-if="item.file" class="history-file">
+        <AppIcon icon="mdi:file-music-outline" size="xs" />
+        <span class="history-file-name" :title="item.file.name">{{
+          item.file.name
+        }}</span>
+        <span v-if="item.file.isMissing" class="history-file-missing">{{
+          item.file.missingLabel
+        }}</span>
+        <Button
+          v-else
+          size="xs"
+          variant="ghost"
+          :icon="item.file.action.icon"
+          @click="emit('action', item.file.action.id, item)"
+          >{{ item.file.action.title }}</Button
+        >
+      </div>
+
       <DisclosureHeader
         v-if="isLong"
         class="history-expand-toggle"
@@ -120,6 +138,7 @@ import type {
   HistoryListItem,
 } from '../../lib/history/history-list-types'
 import AppIcon from '../common/AppIcon.vue'
+import Button from '../common/Button.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
 import IconButton from '../common/IconButton.vue'
 
@@ -188,6 +207,28 @@ const isLong = computed(
   font-size: var(--text-caption);
   color: var(--app-text-muted);
   user-select: none;
+}
+
+.history-file {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+  margin-top: var(--space-2xs);
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
+}
+
+.history-file-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-file-missing {
+  flex-shrink: 0;
+  color: var(--color-error);
 }
 
 .history-meta-badge {

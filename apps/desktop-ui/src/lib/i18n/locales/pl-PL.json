@@ -509,7 +509,10 @@
     "today": "Dzisiaj",
     "undo": "Cofnij",
     "yesterday": "Wczoraj",
-    "filterListen": "Dźwięk systemu"
+    "filterListen": "Dźwięk systemu",
+    "kindDialog": "Dialog",
+    "recordingNotFound": "nie znaleziono pliku",
+    "showInFolder": "Pokaż w folderze"
   },
   "input": {
     "historySearchPlaceholder": "Szukaj w historii...",
@@ -1324,7 +1327,10 @@
     "dialogTranslationProvider": "Usługa tłumaczenia",
     "dialogTranslationProviderHint": "Usługa, która tłumaczy rozmówcę. Tłumaczenie odbywa się w trakcie rozmowy, więc szybka usługa mniej się opóźnia.",
     "dialogProviderDefault": "Jak w ustawieniach tłumaczenia",
-    "dialogProviderLlm": "Model AI"
+    "dialogProviderLlm": "Model AI",
+    "dialogRecordingsFolder": "Folder nagrań",
+    "dialogRecordingsFolderHint": "Gdzie zapisywane są nagrania rozmów. Zmiana nie przenosi wcześniejszych nagrań.",
+    "dialogRecordingsFolderReset": "Przywróć domyślny"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
@@ -1664,7 +1670,6 @@
     "displayBoth": "Oba",
     "copy": "Kopiuj transkrypcję",
     "toActionMenu": "Wyślij do menu akcji",
-    "clear": "Wyczyść transkrypcję",
     "collapse": "Zwiń do napisów",
     "expand": "Rozwiń",
     "noTranslation": "Bez tłumaczenia",
@@ -1677,8 +1682,13 @@
     "stopping": "Zatrzymywanie…",
     "stopAndExpand": "Zatrzymaj i rozwiń",
     "retryTranslation": "Spróbuj ponownie",
-    "clearConfirmTitle": "Wyczyścić transkrypcję?",
-    "clearConfirmMessage": "Cała transkrypcja rozmowy zostanie usunięta. Nie jest nigdzie zapisywana, więc nie da się jej przywrócić.",
-    "channelFailed": "zatrzymano"
+    "channelFailed": "zatrzymano",
+    "startOptions": "Opcje uruchamiania",
+    "startRecording": "Rozpocznij z nagrywaniem",
+    "recording": "Nagrywanie",
+    "recordingFailed": "Nagrywanie zostało przerwane: nie udało się zapisać pliku. Transkrypcja trwa dalej.",
+    "recordingNoticeTitle": "Nagrywanie rozmowy",
+    "recordingNoticeMessage": "Jeśli nagrywasz rozmowę z inną osobą, najpierw ją o tym uprzedź.",
+    "recordingNoticeConfirm": "Rozumiem"
   }
 }

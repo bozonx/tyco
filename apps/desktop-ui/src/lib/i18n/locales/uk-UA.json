@@ -509,7 +509,10 @@
     "today": "Сьогодні",
     "undo": "Скасувати",
     "yesterday": "Учора",
-    "filterListen": "Звук системи"
+    "filterListen": "Звук системи",
+    "kindDialog": "Діалог",
+    "recordingNotFound": "файл не знайдено",
+    "showInFolder": "Показати в теці"
   },
   "input": {
     "historySearchPlaceholder": "Пошук в історії...",
@@ -1321,7 +1324,10 @@
     "dialogTranslationProvider": "Сервіс перекладу",
     "dialogTranslationProviderHint": "Сервіс, що перекладає мовлення співрозмовника. Переклад іде під час розмови, тож швидкий сервіс менше відстає.",
     "dialogProviderDefault": "Як у налаштуваннях перекладу",
-    "dialogProviderLlm": "AI-модель"
+    "dialogProviderLlm": "AI-модель",
+    "dialogRecordingsFolder": "Тека для записів",
+    "dialogRecordingsFolderHint": "Куди зберігаються записи дзвінків. Після зміни теки попередні записи не переносяться.",
+    "dialogRecordingsFolderReset": "Скинути до типового"
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {
@@ -1661,7 +1667,6 @@
     "displayBoth": "Обидва",
     "copy": "Копіювати транскрипт",
     "toActionMenu": "Надіслати в меню дій",
-    "clear": "Очистити транскрипт",
     "collapse": "Згорнути в субтитри",
     "expand": "Розгорнути",
     "noTranslation": "Без перекладу",
@@ -1674,8 +1679,13 @@
     "stopping": "Зупиняю…",
     "stopAndExpand": "Зупинити й розгорнути",
     "retryTranslation": "Повторити",
-    "clearConfirmTitle": "Очистити транскрипт?",
-    "clearConfirmMessage": "Увесь транскрипт дзвінка буде видалено. Він ніде не зберігається, відновити його не вдасться.",
-    "channelFailed": "зупинено"
+    "channelFailed": "зупинено",
+    "startOptions": "Варіанти запуску",
+    "startRecording": "Почати із записом",
+    "recording": "Триває запис",
+    "recordingFailed": "Запис зупинено: не вдалося записати файл. Розшифровка триває.",
+    "recordingNoticeTitle": "Запис розмови",
+    "recordingNoticeMessage": "Якщо ви записуєте розмову з іншою людиною, спершу попередьте її.",
+    "recordingNoticeConfirm": "Зрозуміло"
   }
 }

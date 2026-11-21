@@ -29,6 +29,11 @@ the general rules in a few common programs.
    settings: the files can be moved to the new folder, or copied back into
    the vault; the external folder itself is never deleted.
 
+Call recordings of the dialog are not in the data folder: they go to the
+Music folder, or the one chosen in **Settings → Dialog** on each computer
+(see `docs/dialog.md`). Synchronize or back them up on their own if you need
+them elsewhere.
+
 ## General rules
 
 - Synchronize the whole folder, including its marker (`tyco-user.json` for the

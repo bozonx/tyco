@@ -15,11 +15,14 @@ export interface DialogSubtitlesInput {
   textDisplay: DialogTextDisplay
   isActive: boolean
   errorText: string
+  /** When the session began recording to a file; none: not recorded */
+  recordingStartedAtMs?: number
   labels: {
     waitingForSpeech: string
     notRunning: string
     stop: string
     expand: string
+    recording: string
   }
 }
 
@@ -51,5 +54,7 @@ export function buildSubtitlesView(input: DialogSubtitlesInput): SubtitlesView {
     isActive: input.isActive,
     stopLabel: input.labels.stop,
     expandLabel: input.labels.expand,
+    recordingStartedAt: input.recordingStartedAtMs ?? null,
+    recordingLabel: input.labels.recording,
   }
 }

@@ -27,6 +27,7 @@ import type {
   CommandRunRecord,
   CropRect,
   DesktopSnapshot,
+  DialogRecording,
   EditorHistoryEntry,
   EditorHistoryFailure,
   EditorHistoryItem,
@@ -136,6 +137,10 @@ export interface DesktopCommands {
     args: { importId: string }
     result: ChatImage | null
   }
+  check_dialog_recordings: {
+    args: { paths: Array<string> }
+    result: Array<boolean>
+  }
   claim_external_job: { args: { id: string }; result: boolean }
   clear_ai_profile_memory: { args: { profileId: string }; result: void }
   clear_chats: { args: { profileId?: string | null }; result: void }
@@ -194,6 +199,7 @@ export interface DesktopCommands {
     args: { id: string; importId?: string | null; profileId?: string | null }
     result: Chat | null
   }
+  get_default_recordings_folder: { args: undefined; result: string | null }
   get_desktop_state: { args: undefined; result: DesktopSnapshot }
   get_editor_history: { args: undefined; result: Array<EditorHistoryItem> }
   get_hotkey_provider_info: { args: undefined; result: HotkeyProviderInfo }
@@ -275,6 +281,7 @@ export interface DesktopCommands {
     }
     result: void
   }
+  open_recordings_folder: { args: { folder?: string | null }; result: void }
   open_socket: {
     args: { request: SocketRequest; onEvent: DesktopChannel }
     result: number
@@ -455,6 +462,7 @@ export interface DesktopCommands {
     args: { summary: string; body: string }
     result: void
   }
+  show_dialog_recording: { args: { path: string }; result: void }
   show_status_overlay: {
     args: { request?: StatusOverlayRequest | null }
     result: void
@@ -469,6 +477,7 @@ export interface DesktopCommands {
       onAudio: DesktopChannel
       source?: CaptureSource | null
       microphoneId?: string | null
+      recording?: DialogRecording | null
     }
     result: VoiceCaptureInfo
   }

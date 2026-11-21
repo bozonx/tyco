@@ -6,7 +6,7 @@ use crate::models::{EditorHistoryFailure, EditorHistoryItem, EditorHistoryKind};
 /// the editor
 fn kind_rank(kind: EditorHistoryKind) -> u8 {
     match kind {
-        EditorHistoryKind::Draft => 0,
+        EditorHistoryKind::Draft | EditorHistoryKind::Dialog => 0,
         EditorHistoryKind::Source => 1,
         EditorHistoryKind::Output => 2,
     }
@@ -17,6 +17,8 @@ fn collapses_duplicate(new_kind: EditorHistoryKind, existing_kind: EditorHistory
         // A source supersedes an incidental draft, but every AI operation and
         // every actual output remains a separate event.
         (EditorHistoryKind::Source, EditorHistoryKind::Draft) => true,
+        // a transcript is a record of its own, whatever text repeats it
+        (EditorHistoryKind::Dialog, _) | (_, EditorHistoryKind::Dialog) => false,
         (EditorHistoryKind::Source, _) | (_, EditorHistoryKind::Source) => false,
         _ => true,
     }

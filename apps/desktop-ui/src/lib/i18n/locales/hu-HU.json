@@ -509,7 +509,10 @@
     "today": "Ma",
     "undo": "Visszavonás",
     "yesterday": "Tegnap",
-    "filterListen": "Rendszerhang"
+    "filterListen": "Rendszerhang",
+    "kindDialog": "Párbeszéd",
+    "recordingNotFound": "a fájl nem található",
+    "showInFolder": "Megjelenítés a mappában"
   },
   "input": {
     "historySearchPlaceholder": "Keresés az előzményekben...",
@@ -1321,7 +1324,10 @@
     "dialogTranslationProvider": "Fordítási szolgáltatás",
     "dialogTranslationProviderHint": "A szolgáltatás, amely a másik felet fordítja. A fordítás beszélgetés közben zajlik, így egy gyors szolgáltatás kevésbé marad le.",
     "dialogProviderDefault": "Mint a fordítási beállításokban",
-    "dialogProviderLlm": "MI-modell"
+    "dialogProviderLlm": "MI-modell",
+    "dialogRecordingsFolder": "Felvételek mappája",
+    "dialogRecordingsFolderHint": "Ahová a hívásfelvételek kerülnek. A módosítás nem helyezi át a korábbi felvételeket.",
+    "dialogRecordingsFolderReset": "Alapértelmezett visszaállítása"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
@@ -1661,7 +1667,6 @@
     "displayBoth": "Mindkettő",
     "copy": "Átirat másolása",
     "toActionMenu": "Küldés a műveletek menübe",
-    "clear": "Átirat törlése",
     "collapse": "Összecsukás feliratokká",
     "expand": "Kibontás",
     "noTranslation": "Nincs fordítás",
@@ -1674,8 +1679,13 @@
     "stopping": "Leállítás…",
     "stopAndExpand": "Leállítás és kibontás",
     "retryTranslation": "Újra",
-    "clearConfirmTitle": "Törli az átiratot?",
-    "clearConfirmMessage": "A hívás teljes átirata törlődik. Sehol nincs elmentve, így nem állítható vissza.",
-    "channelFailed": "leállt"
+    "channelFailed": "leállt",
+    "startOptions": "Indítási beállítások",
+    "startRecording": "Indítás felvétellel",
+    "recording": "Felvétel folyamatban",
+    "recordingFailed": "A felvétel leállt: a fájl nem írható. Az átirat folytatódik.",
+    "recordingNoticeTitle": "Beszélgetés rögzítése",
+    "recordingNoticeMessage": "Ha egy másik személlyel folytatott beszélgetést rögzít, előbb szóljon neki.",
+    "recordingNoticeConfirm": "Értem"
   }
 }

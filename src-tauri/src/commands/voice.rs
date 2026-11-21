@@ -5,7 +5,7 @@ use crate::errors::AppError;
 use crate::services::voice;
 use crate::services::voice::apps::AudioAppsWatches;
 use crate::services::voice::session::VoiceSessionState;
-use crate::services::voice::{AudioInputDevice, CaptureSource, VoiceCaptureInfo};
+use crate::services::voice::{AudioInputDevice, CaptureSource, DialogRecording, VoiceCaptureInfo};
 
 /// Lists the microphones available on this machine.
 #[tauri::command]
@@ -16,7 +16,8 @@ pub async fn list_input_devices() -> Result<Vec<AudioInputDevice>, AppError> {
 }
 
 /// Starts recording `source`, the microphone by default; PCM16 chunks, then
-/// `end` or `error`, arrive through `on_audio`.
+/// `end` or `error`, arrive through `on_audio`. A dialog with `recording` is
+/// also recorded to a new file, see `VoiceCaptureInfo::recording_path`.
 #[tauri::command]
 pub async fn start_voice_capture(
     app: tauri::AppHandle,
@@ -24,12 +25,14 @@ pub async fn start_voice_capture(
     on_audio: Channel<InvokeResponseBody>,
     source: Option<CaptureSource>,
     microphone_id: Option<String>,
+    recording: Option<DialogRecording>,
 ) -> Result<VoiceCaptureInfo, AppError> {
     voice::start_capture(
         &app,
         &state,
         source.unwrap_or_default(),
         microphone_id,
+        recording,
         on_audio,
     )
     .await
@@ -72,4 +75,38 @@ pub async fn unwatch_audio_apps(
     let watches = watches.inner().clone();
     crate::services::background::run_blocking(move || voice::apps::unwatch(&watches, watch_id))
         .await
+}
+
+/// The folder recordings go to when the setting is empty.
+#[tauri::command]
+pub fn get_default_recordings_folder() -> Option<String> {
+    crate::services::platform::recordings::default_recordings_folder()
+        .map(|folder| folder.to_string_lossy().into_owned())
+}
+
+/// Opens the recordings folder, `folder` or the default one, creating it.
+#[tauri::command]
+pub async fn open_recordings_folder(folder: Option<String>) -> Result<(), AppError> {
+    crate::services::background::run_blocking(move || {
+        crate::services::platform::recordings::open_recordings_folder(folder.as_deref())
+    })
+    .await?
+}
+
+/// Which of the recordings `paths` are still there.
+#[tauri::command]
+pub async fn check_dialog_recordings(paths: Vec<String>) -> Result<Vec<bool>, AppError> {
+    crate::services::background::run_blocking(move || {
+        crate::services::platform::recordings::recordings_exist(&paths)
+    })
+    .await
+}
+
+/// Opens the folder of the recording `path` in the file manager.
+#[tauri::command]
+pub async fn show_dialog_recording(path: String) -> Result<(), AppError> {
+    crate::services::background::run_blocking(move || {
+        crate::services::platform::recordings::show_recording(&path)
+    })
+    .await?
 }

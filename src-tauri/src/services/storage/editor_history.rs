@@ -18,7 +18,9 @@ use tauri::{AppHandle, Manager};
 use super::json_files::{read_jsonl, remove_file_if_exists, write_jsonl};
 use super::new_history_id;
 use crate::errors::AppError;
-use crate::models::{EditorHistoryEntry, EditorHistoryFailure, EditorHistoryItem};
+use crate::models::{
+    EditorHistoryEntry, EditorHistoryFailure, EditorHistoryItem, EditorHistoryKind,
+};
 use crate::services::clock::now_ms;
 
 pub(super) const DEFAULT_EDITOR_HISTORY_LIMIT: usize = 1000;
@@ -304,6 +306,16 @@ fn save_editor_history_entry(
     if !policy.is_recording || entry.text.trim().is_empty() || policy.max_entries == 0 {
         return Ok(None);
     }
+    let is_checkpoint = entry.kind.is_checkpointed();
+    if entry.kind == EditorHistoryKind::Dialog {
+        if entry.dialog.is_none() {
+            return Err(AppError::InvalidInput(
+                "A dialog entry needs its session".into(),
+            ));
+        }
+    } else {
+        entry.dialog = None;
+    }
 
     entry.text = policy.redact(entry.text);
     if let Some(instruction) = &mut entry.instruction {
@@ -316,11 +328,14 @@ fn save_editor_history_entry(
     let id = match entry.id {
         Some(id) => {
             // A live input may update its own unfinished record, never an AI
-            // source or an output that has already been finalized.
-            if items
-                .iter()
-                .any(|item| item.id == id && item.kind != crate::models::EditorHistoryKind::Draft)
-            {
+            // source or an output that has already been finalized. A dialog
+            // and a draft never take each other's place.
+            let is_dialog = entry.kind == EditorHistoryKind::Dialog;
+            if items.iter().any(|item| {
+                item.id == id
+                    && (!item.kind.is_checkpointed()
+                        || (item.kind == EditorHistoryKind::Dialog) != is_dialog)
+            }) {
                 return Ok(Some(id));
             }
             // Explicit deletion/clearing wins over an in-flight checkpoint.
@@ -332,7 +347,6 @@ fn save_editor_history_entry(
         }
         None => new_history_id(created_at_ms),
     };
-    let is_checkpoint = entry.kind == crate::models::EditorHistoryKind::Draft;
     let item = EditorHistoryItem {
         id,
         text: entry.text,
@@ -345,6 +359,7 @@ fn save_editor_history_entry(
         result: None,
         is_result_applied: false,
         failure: None,
+        dialog: entry.dialog,
     };
 
     let id = if is_checkpoint {

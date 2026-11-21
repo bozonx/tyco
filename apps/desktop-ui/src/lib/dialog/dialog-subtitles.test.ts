@@ -34,6 +34,7 @@ function input(
       notRunning: 'Stopped',
       stop: 'Stop',
       expand: 'Expand',
+      recording: 'Recording',
     },
     ...patch,
   }

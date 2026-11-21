@@ -97,6 +97,7 @@ import { useEditorHistoryChanges } from '../composables/use-editor-history-chang
 import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
+import { recordingFileName } from '../lib/dialog/dialog-recording'
 import {
   getEditorHistoryNote,
   getEditorHistoryView,
@@ -112,12 +113,14 @@ import { createRemovalUndo } from '../lib/history/removal-undo'
 import { clientLogger } from '../lib/logger'
 import { useDesktopStore } from '../stores/desktop'
 import { useHistoryStore } from '../stores/history'
+import { useIpcStore } from '../stores/ipc'
 import type { EditorHistoryItem } from '@tyco/shared'
 
 const { toastKey } = useToast()
 const { t } = useI18n()
 const historyStore = useHistoryStore()
 const desktopStore = useDesktopStore()
+const ipcStore = useIpcStore()
 // the text is already in the history and the window stays open
 const copyText = useCopyText({ saveOutput: false })
 const editorNavigation = useEditorNavigation()
@@ -204,9 +207,51 @@ const editorItems = computed<HistoryListItem[]>(() =>
       },
       searchText: label,
       time: item.createdAt,
+      ...(item.dialog?.recordingPath && {
+        file: recordingFile(item.dialog.recordingPath),
+      }),
     }
   })
 )
+
+/** Whether each recording a dialog entry links to is still there */
+const recordingExists = ref<Record<string, boolean>>({})
+const recordingPaths = computed(() =>
+  historyStore.editorHistory.flatMap((item) =>
+    item.dialog?.recordingPath ? [item.dialog.recordingPath] : []
+  )
+)
+const checkRecordings = async () => {
+  const paths = recordingPaths.value
+  if (!paths.length) return
+  const result = await ipcStore.call('check_dialog_recordings', { paths })
+  if (!result.success || !result.result) return
+  const exists = result.result
+  recordingExists.value = Object.fromEntries(
+    paths.map((path, index) => [path, exists[index] ?? false])
+  )
+}
+watch(recordingPaths, () => void checkRecordings(), { immediate: true })
+
+const recordingFile = (path: string): HistoryListItem['file'] => ({
+  name: recordingFileName(path),
+  // unknown until checked: the action is offered
+  isMissing: recordingExists.value[path] === false,
+  missingLabel: t('history.recordingNotFound'),
+  action: {
+    id: 'showRecording',
+    icon: 'mdi:folder-open-outline',
+    title: t('history.showInFolder'),
+  },
+})
+
+const showRecording = async (item: HistoryListItem) => {
+  const path = historyStore.editorHistory.find((entry) => entry.id === item.id)
+    ?.dialog?.recordingPath
+  if (!path) return
+  const result = await ipcStore.callOrNotify('show_dialog_recording', { path })
+  if (!result.success) void checkRecordings()
+}
 
 const editorActions = computed<HistoryListAction[]>(() => [
   {
@@ -278,6 +323,9 @@ const onEditorAction = async (actionId: string, item: HistoryListItem) => {
       break
     case 'remove':
       await removeEditorItem(item)
+      break
+    case 'showRecording':
+      await showRecording(item)
       break
   }
 }

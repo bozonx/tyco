@@ -509,7 +509,10 @@
     "today": "오늘",
     "undo": "실행 취소",
     "yesterday": "어제",
-    "filterListen": "시스템 오디오"
+    "filterListen": "시스템 오디오",
+    "kindDialog": "대화",
+    "recordingNotFound": "파일을 찾을 수 없음",
+    "showInFolder": "폴더에서 보기"
   },
   "input": {
     "historySearchPlaceholder": "기록 검색...",
@@ -1318,7 +1321,10 @@
     "dialogTranslationProvider": "번역 서비스",
     "dialogTranslationProviderHint": "상대방의 말을 번역하는 서비스입니다. 대화 중에 번역하므로 빠른 서비스일수록 덜 뒤처집니다.",
     "dialogProviderDefault": "번역 설정과 동일",
-    "dialogProviderLlm": "AI 모델"
+    "dialogProviderLlm": "AI 모델",
+    "dialogRecordingsFolder": "녹음 폴더",
+    "dialogRecordingsFolderHint": "통화 녹음이 저장되는 위치입니다. 변경해도 이전 녹음은 옮겨지지 않습니다.",
+    "dialogRecordingsFolderReset": "기본값으로 재설정"
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {
@@ -1658,7 +1664,6 @@
     "displayBoth": "둘 다",
     "copy": "기록 복사",
     "toActionMenu": "작업 메뉴로 보내기",
-    "clear": "기록 지우기",
     "collapse": "자막으로 접기",
     "expand": "펼치기",
     "noTranslation": "번역 안 함",
@@ -1671,8 +1676,13 @@
     "stopping": "중지하는 중…",
     "stopAndExpand": "중지하고 펼치기",
     "retryTranslation": "다시 시도",
-    "clearConfirmTitle": "대화록을 지울까요?",
-    "clearConfirmMessage": "통화 대화록 전체가 삭제됩니다. 어디에도 저장되지 않으므로 복구할 수 없습니다.",
-    "channelFailed": "중지됨"
+    "channelFailed": "중지됨",
+    "startOptions": "시작 옵션",
+    "startRecording": "녹음하며 시작",
+    "recording": "녹음 중",
+    "recordingFailed": "녹음이 중지되었습니다: 파일을 쓸 수 없습니다. 기록은 계속됩니다.",
+    "recordingNoticeTitle": "대화 녹음",
+    "recordingNoticeMessage": "다른 사람과의 대화를 녹음할 때는 먼저 상대에게 알리세요.",
+    "recordingNoticeConfirm": "확인"
   }
 }

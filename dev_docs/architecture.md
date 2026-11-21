@@ -144,6 +144,28 @@ the system sound in one channel. A dialog capture is never superseded:
 another capture fails with `AppError::CaptureBusy` (`captureBusy`), which
 voice input, voice commands and listening show as "the sound is busy with the
 dialog"; a dialog itself supersedes dictation. It has no duration limit.
+A dialog started with `recording` (`DialogRecording`, the webview's
+`dialog.recordingsFolder` or the default from `platform/recordings.rs`:
+`dirs::audio_dir()/TyCo`, i.e. `XDG_MUSIC_DIR` or the Music known folder,
+else `$HOME/Music/TyCo`) is also written to a new file named by the local
+time with a ` (2)` suffix on a collision; `VoiceCaptureInfo::recording_path`
+returns it. The file is created before the capture reports started, so a
+folder that cannot be written fails the start. `voice/recording.rs` encodes
+Ogg/Opus while capturing (libopus via the `opus` crate, built from source
+and linked statically; `ogg` for the pages): 16 kHz input, 20 ms frames,
+VoIP mode, stereo at 32 kbit/s (microphone, computer) or mono at 24 kbit/s,
+RFC 7845 granules at 48 kHz from the pre-skip, a page at least every second.
+Ogg pages stand alone, so a crash leaves a file playable to its last page;
+there is no finalization. The microphone is recorded as heard: `Mix` keeps
+the stereo frames before the echo gate and the loudness normalization in
+`StreamContext::unprocessed_pcm_samples`, which the capture loop drains into
+the recording; a mono capture records the chunks it sends. The encoder runs
+on a thread of its own behind a bounded queue (`RecordingSink`); a failed
+write or a queue that overflows stops the recording only and sends
+`recordingFailed` on the audio channel. The capture's end, a stop or quit
+closes the file. The webview's history links a recording by absolute path;
+`check_dialog_recordings` and `show_dialog_recording` accept only absolute
+`.opus` paths.
 The dialog's subtitles are a window of their own, `subtitles`
 (`runtime/subtitles_window.rs`, behind a `SubtitlesHost`), created the first
 time they are shown; the main window is minimized meanwhile. With
@@ -151,7 +173,8 @@ layer-shell it is a bottom-anchored overlay that never takes the keyboard and
 lets clicks through but on its buttons (`set_subtitles_input_region`); else
 a regular always-on-top window whose geometry is kept in
 `dialog.compactGeometry` (device). The dialog runs in the main window, which
-publishes a ready-to-render `SubtitlesView` (`publish_subtitles`,
+publishes a ready-to-render `SubtitlesView` (`publish_subtitles`; with
+`recordingStartedAt` while a recording runs),
 `app://subtitles-changed`); the strip loads only `subtitles.html` without the
 stores and hands its buttons back (`app://subtitles-action-requested`).
 A playback source delivers nothing while nothing plays, so the capture loop

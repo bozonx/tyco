@@ -27,10 +27,15 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 base64 = "0.23"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 cpal = "0.15"
 futures-util = "0.3"
 log = "0.4"
+dirs = "7"
 notify = "8"
+# call recordings: libopus, built from source and linked statically by opusic-sys
+ogg = "0.9"
+opus = "0.4"
 reqwest = { version = "0.13", default-features = false, features = ["rustls-no-provider", "stream", "http2"] }
 # the crypto provider reqwest leaves to the app; ring, as tokio-tungstenite uses
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
