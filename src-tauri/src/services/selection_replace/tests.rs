@@ -11,9 +11,7 @@ use super::*;
 
 #[test]
 fn validates_selection_actions() {
-    for valid in ["correction"] {
-        assert!(is_selection_action(valid), "{valid}");
-    }
+    assert!(is_selection_action("correction"));
     for invalid in [
         "",
         // slots of translation languages and AI tasks are not actions
@@ -143,7 +141,12 @@ fn start(runs: &SelectionRunCoordinator, backend: &Backend) -> u64 {
     else {
         panic!("capture expected");
     };
-    runs.capture_and_publish(backend, "correction".into(), TriggerWait::Now, guard);
+    runs.capture_and_publish(
+        backend,
+        "correction".into(),
+        TriggerWait::Delay(Duration::ZERO),
+        guard,
+    );
     backend.events.lock().unwrap().last().unwrap().run_id
 }
 

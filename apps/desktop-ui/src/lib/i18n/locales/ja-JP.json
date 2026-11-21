@@ -244,7 +244,6 @@
     "badgeIssuesHint": "コマンドの設定が不完全です。必須項目を確認してください",
     "badgeUnavailable": "利用不可",
     "badgeVoice": "音声コマンド",
-    "commandMissing": "コマンド「{id}」はライブラリにありません。",
     "copyCli": "実行コマンドをコピー",
     "copyId": "IDをコピー",
     "create": "コマンドを作成",

@@ -244,7 +244,6 @@
     "badgeIssuesHint": "El comando no está configurado por completo: revisa los campos obligatorios",
     "badgeUnavailable": "No disponible",
     "badgeVoice": "Comando de voz",
-    "commandMissing": "El comando {id} no está en la biblioteca.",
     "copyCli": "Copiar el comando de ejecución",
     "copyId": "Copiar ID",
     "create": "Crear un comando",

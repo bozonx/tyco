@@ -244,7 +244,6 @@
     "badgeIssuesHint": "명령이 완전히 구성되지 않았습니다. 필수 필드를 확인하세요.",
     "badgeUnavailable": "사용 불가",
     "badgeVoice": "음성 명령",
-    "commandMissing": "명령 {id}을(를) 라이브러리에서 찾을 수 없습니다.",
     "copyCli": "실행 명령 복사",
     "copyId": "ID 복사",
     "create": "명령 만들기",

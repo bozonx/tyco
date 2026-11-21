@@ -244,7 +244,6 @@
     "badgeIssuesHint": "A parancs nincs teljesen beállítva: ellenőrizze a kötelező mezőket",
     "badgeUnavailable": "Nem érhető el",
     "badgeVoice": "Hangparancs",
-    "commandMissing": "A(z) {id} parancs nincs a könyvtárban.",
     "copyCli": "Futtatási parancs másolása",
     "copyId": "Azonosító másolása",
     "create": "Parancs létrehozása",

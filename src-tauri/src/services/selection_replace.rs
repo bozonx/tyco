@@ -44,7 +44,6 @@ pub const SHORTCUT_RELEASE_DELAY: Duration = HOTKEY_RELEASE_TIMEOUT;
 
 /// When a trigger may start capturing the selection.
 pub enum TriggerWait {
-    Now,
     Delay(Duration),
     /// Once the keys of this hotkey press are released.
     HotkeyRelease(HotkeyPress),
@@ -143,7 +142,6 @@ impl SelectionBackend for SystemSelectionBackend<'_> {
     }
     fn wait(&self, wait: TriggerWait) {
         match wait {
-            TriggerWait::Now => {}
             TriggerWait::Delay(delay) => thread::sleep(delay),
             TriggerWait::HotkeyRelease(press) => {
                 press.wait(HOTKEY_RELEASE_TIMEOUT);

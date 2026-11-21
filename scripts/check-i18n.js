@@ -176,9 +176,9 @@ const DYNAMIC_KEYS = new Set([
     'id-ID',
     'ms-MY',
   ].map((code) => `language.${code}`),
-  ...['correction', 'command'].map((action) => `selection.working.${action}`),
-  ...['correction', 'command'].map((action) => `selection.failed.${action}`),
-  ...['correction', 'command'].map((action) => `selection.unchanged.${action}`),
+  ...['correction'].map((action) => `selection.working.${action}`),
+  ...['correction'].map((action) => `selection.failed.${action}`),
+  ...['correction'].map((action) => `selection.unchanged.${action}`),
   ...['today', 'yesterday', 'previousWeek', 'older'].map(
     (group) => `chat.group.${group}`
   ),

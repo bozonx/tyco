@@ -244,7 +244,6 @@
     "badgeIssuesHint": "Polecenie nie jest w pełni skonfigurowane: sprawdź wymagane pola",
     "badgeUnavailable": "Niedostępne",
     "badgeVoice": "Polecenie głosowe",
-    "commandMissing": "Polecenia {id} nie ma w bibliotece.",
     "copyCli": "Kopiuj polecenie uruchomienia",
     "copyId": "Kopiuj ID",
     "create": "Utwórz polecenie",

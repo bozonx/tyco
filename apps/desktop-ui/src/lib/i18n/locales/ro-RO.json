@@ -244,7 +244,6 @@
     "badgeIssuesHint": "Comanda nu este configurată complet: verificați câmpurile obligatorii",
     "badgeUnavailable": "Indisponibilă",
     "badgeVoice": "Comandă vocală",
-    "commandMissing": "Comanda {id} nu se află în bibliotecă.",
     "copyCli": "Copiază comanda de rulare",
     "copyId": "Copiază ID-ul",
     "create": "Creează o comandă",

@@ -130,8 +130,8 @@ describe('CommandEditor.vue', () => {
       'commands.launcherResultGroup'
     )
     expect(advanced.findAll('.command-place')).toHaveLength(0)
-    // the external toggle and its options, and the platforms
-    expect(advanced.findAll('input[type="checkbox"]')).toHaveLength(5)
+    // the external toggle, voice toggle, pre-transform, and platforms
+    expect(advanced.findAll('input[type="checkbox"]')).toHaveLength(6)
     expect(
       advanced.find('[data-testid="command-platform-linux"]').exists()
     ).toBe(true)
@@ -175,17 +175,19 @@ describe('CommandEditor.vue', () => {
     )
   })
 
-  it('places description outside advanced and does not show inline prompt warning on enable', async () => {
+  it('places description inside advanced, keeps advanced closed, and shows badge indicator', async () => {
     const wrapper = mountEditor(
       script({ command: 'ls' }, { name: 'List', description: 'Lists files' })
     )
     const advanced = wrapper.get('.command-group-advanced')
-    // description alone no longer opens advanced and lives outside it
+    // description does not open advanced and lives inside it
     expect(advanced.get('[aria-expanded]').attributes('aria-expanded')).toBe(
       'false'
     )
-    expect(advanced.find('.command-description').exists()).toBe(false)
-    expect(wrapper.find('.command-description').exists()).toBe(true)
+    expect(advanced.find('.command-description').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="command-advanced-badge"]').text()).toBe(
+      '1'
+    )
     expect(advanced.find('.command-llm-pre-transform-prompt').exists()).toBe(
       false
     )
@@ -240,35 +242,50 @@ describe('CommandEditor.vue', () => {
     await flushPromises()
     expect(toastKey).toHaveBeenCalledWith('commands.logEmpty')
   })
+
   it('shows voice phrases immediately after enabling a new command', async () => {
     const wrapper = mountEditor(script())
-    expect(
-      wrapper
-        .findComponent({ name: 'CommandVoiceFields' })
-        .find('textarea')
-        .exists()
-    ).toBe(false)
-    await wrapper.find('input[role="switch"]').setValue(true)
+    const voiceFields = wrapper.findComponent({ name: 'CommandVoiceFields' })
+    expect(voiceFields.find('textarea').exists()).toBe(false)
+    await voiceFields.find('input[role="switch"]').setValue(true)
     const command = lastUpdate(wrapper)
     expect(command.isVoiceEnabled).toBe(true)
     await wrapper.setProps({ command })
-    const phrases = wrapper
-      .findComponent({ name: 'CommandVoiceFields' })
-      .get('textarea')
+    const phrases = voiceFields.get('textarea')
     await phrases.setValue('save note\nmake note')
     expect(lastUpdate(wrapper).phrases).toEqual(['save note', 'make note'])
     expect(
-      wrapper
-        .findComponent({ name: 'CommandVoiceFields' })
+      voiceFields
         .findComponent(InfoTooltip)
         .props('text')
     ).toBe('voiceCommands.phrasesInfo')
     expect(wrapper.findAll('input[type="text"]')).toHaveLength(1)
+    expect(voiceFields.findAll('.command-hint')).toHaveLength(0)
+  })
+
+  it('does not auto-expand advanced, but shows badge indicator for customizations', async () => {
+    const wrapper = mountEditor(script({ command: 'ls' }, { name: 'List' }))
+    const advanced = wrapper.get('.command-group-advanced')
+    expect(advanced.get('[aria-expanded]').attributes('aria-expanded')).toBe(
+      'false'
+    )
     expect(
-      wrapper
-        .findComponent({ name: 'CommandVoiceFields' })
-        .findAll('.command-hint')
-    ).toHaveLength(0)
+      wrapper.find('[data-testid="command-advanced-badge"]').exists()
+    ).toBe(false)
+
+    await wrapper.setProps({
+      command: {
+        ...script({ command: 'ls' }, { name: 'List' }),
+        description: 'Tool description',
+        isVoiceEnabled: true,
+      },
+    })
+    expect(advanced.get('[aria-expanded]').attributes('aria-expanded')).toBe(
+      'false'
+    )
+    expect(wrapper.find('[data-testid="command-advanced-badge"]').text()).toBe(
+      '2'
+    )
   })
 
   it('shows test section for AI commands and hides pre-transformation', () => {

@@ -244,7 +244,6 @@
     "badgeIssuesHint": "命令未完全配置：请检查必填字段",
     "badgeUnavailable": "不可用",
     "badgeVoice": "语音命令",
-    "commandMissing": "命令 {id} 不在库中。",
     "copyCli": "复制运行命令",
     "copyId": "复制 ID",
     "create": "创建命令",

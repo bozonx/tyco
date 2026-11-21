@@ -244,7 +244,6 @@
     "badgeIssuesHint": "Der Befehl ist nicht vollständig eingerichtet: Prüfen Sie die Pflichtfelder",
     "badgeUnavailable": "Nicht verfügbar",
     "badgeVoice": "Sprachbefehl",
-    "commandMissing": "Der Befehl {id} ist nicht in der Bibliothek.",
     "copyCli": "Aufrufbefehl kopieren",
     "copyId": "ID kopieren",
     "create": "Befehl erstellen",

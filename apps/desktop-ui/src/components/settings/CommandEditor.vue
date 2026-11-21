@@ -41,30 +41,6 @@
       </p>
     </div>
 
-    <FieldRow
-      class="command-field"
-      vertical
-      density="compact"
-      :label="t('commands.descriptionLabel')"
-    >
-      <FieldTextArea
-        class="command-description"
-        :model-value="command.description ?? ''"
-        :placeholder="t('commands.descriptionPlaceholder')"
-        @update:model-value="updateDescription"
-      />
-
-      <template #info
-        ><InfoTooltip :text="t('commands.descriptionInfo')"
-      /></template>
-    </FieldRow>
-
-    <CommandVoiceFields
-      :command="command"
-      :user-config="userConfig"
-      @update="update"
-    />
-
     <section v-if="canTest" class="command-group">
       <DisclosureHeader
         :expanded="isTestOpen"
@@ -89,6 +65,15 @@
         @toggle="isAdvancedOpen = !isAdvancedOpen"
       >
         <span class="command-group-title">{{ t('commands.advanced') }}</span>
+        <template v-if="hasAdvancedCustomizations" #status>
+          <Badge
+            data-testid="command-advanced-badge"
+            tone="muted"
+            size="xs"
+          >
+            {{ advancedCustomizationsCount }}
+          </Badge>
+        </template>
       </DisclosureHeader>
       <div
         v-show="isAdvancedOpen"
@@ -123,42 +108,6 @@
             {{ t('commands.voiceOutputActionHint') }}
           </p>
         </section>
-        <FieldRow
-          v-if="tool?.canSelectPlatforms"
-          group
-          class="command-field"
-          density="compact"
-          :label="t('commands.platforms')"
-          :info="t('commands.platformsInfo')"
-        >
-          <div class="flex flex-wrap gap-3">
-            <FieldCheckbox
-              v-for="platform in COMMAND_PLATFORMS"
-              :key="platform"
-              :label="platformLabels[platform]"
-              :model-value="command.platforms?.includes(platform) ?? false"
-              :data-testid="`command-platform-${platform}`"
-              @update:model-value="togglePlatform(platform, $event)"
-            />
-          </div>
-        </FieldRow>
-        <div v-if="tool?.canLogOutput" class="command-field-row">
-          <FieldSwitch
-            :model-value="command.isOutputLogged"
-            :label="t('settings.actionLogOutput')"
-            @update:model-value="update({ isOutputLogged: $event })"
-          />
-          <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
-          <Button
-            class="command-open-log"
-            size="xs"
-            variant="ghost"
-            icon="mdi:file-document-outline"
-            @click="openLog"
-          >
-            {{ t('commands.openLog') }}
-          </Button>
-        </div>
         <div class="command-field-row">
           <FieldSwitch
             :model-value="command.isAvailableExternally"
@@ -183,6 +132,47 @@
             })
           }}
         </p>
+        <div v-if="tool?.canLogOutput" class="command-field-row">
+          <FieldSwitch
+            :model-value="command.isOutputLogged"
+            :label="t('settings.actionLogOutput')"
+            @update:model-value="update({ isOutputLogged: $event })"
+          />
+          <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
+          <Button
+            class="command-open-log"
+            size="xs"
+            variant="ghost"
+            icon="mdi:file-document-outline"
+            @click="openLog"
+          >
+            {{ t('commands.openLog') }}
+          </Button>
+        </div>
+        <FieldRow
+          v-if="tool?.canSelectPlatforms"
+          group
+          class="command-field"
+          density="compact"
+          :label="t('commands.platforms')"
+          :info="t('commands.platformsInfo')"
+        >
+          <div class="flex flex-wrap gap-3">
+            <FieldCheckbox
+              v-for="platform in COMMAND_PLATFORMS"
+              :key="platform"
+              :label="platformLabels[platform]"
+              :model-value="command.platforms?.includes(platform) ?? false"
+              :data-testid="`command-platform-${platform}`"
+              @update:model-value="togglePlatform(platform, $event)"
+            />
+          </div>
+        </FieldRow>
+        <CommandVoiceFields
+          :command="command"
+          :user-config="userConfig"
+          @update="update"
+        />
         <div v-if="canParseArguments" class="command-field-row">
           <FieldSwitch
             :model-value="command.isLlmArgumentParsingEnabled"
@@ -220,6 +210,23 @@
             <InfoTooltip :text="t('commands.llmPreTransformPromptInfo')" />
           </template>
         </FieldRow>
+        <FieldRow
+          class="command-field"
+          vertical
+          density="compact"
+          :label="t('commands.descriptionLabel')"
+        >
+          <FieldTextArea
+            class="command-description"
+            :model-value="command.description ?? ''"
+            :placeholder="t('commands.descriptionPlaceholder')"
+            @update:model-value="updateDescription"
+          />
+
+          <template #info
+            ><InfoTooltip :text="t('commands.descriptionInfo')"
+          /></template>
+        </FieldRow>
         <p v-if="origin" class="command-hint command-origin">{{ origin }}</p>
       </div>
     </section>
@@ -231,7 +238,11 @@ import { computed, ref, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
-import { createCommandEditorModel } from '../../lib/commands/command-editor-model'
+import { outputActionOf } from '../../lib/commands/command-config'
+import {
+  countAdvancedCustomizations,
+  createCommandEditorModel,
+} from '../../lib/commands/command-editor-model'
 import {
   commandCliCall,
   normalizeCommandName,
@@ -252,6 +263,7 @@ import {
 import { operationLabel } from '../../lib/operations/operation-label'
 import { useIpcStore } from '../../stores/ipc'
 import { useOperationsStore } from '../../stores/operations'
+import Badge from '../common/Badge.vue'
 import Button from '../common/Button.vue'
 import CopyButton from '../common/CopyButton.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
@@ -377,13 +389,22 @@ const origin = computed(() =>
 const isTestOpen = ref(false)
 const testBodyId = useId()
 const advancedBodyId = useId()
-const isAdvancedOpen = ref<boolean>(
-  Boolean(props.command.isOutputLogged) ||
-    Boolean(props.command.isAvailableExternally) ||
-    (canPreTransform.value &&
-      Boolean(props.command.isLlmPreTransformEnabled)) ||
-    (canParseArguments.value && props.command.isLlmArgumentParsingEnabled)
+const defaultOutputAction = computed<CommandOutputAction>(() =>
+  outputActionOf(tool.value?.defaultOutputAction)
 )
+const advancedCustomizationsCount = computed(() =>
+  countAdvancedCustomizations(props.command, {
+    defaultOutputAction: defaultOutputAction.value,
+    canSelectPlatforms: tool.value?.canSelectPlatforms,
+    canLogOutput: tool.value?.canLogOutput,
+    canPreTransform: canPreTransform.value,
+    canParseArguments: canParseArguments.value,
+  })
+)
+const hasAdvancedCustomizations = computed(
+  () => advancedCustomizationsCount.value > 0
+)
+const isAdvancedOpen = ref<boolean>(false)
 
 const platformLabels = computed<Record<CommandPlatform, string>>(() => ({
   linux: t('commands.platformLinux'),
