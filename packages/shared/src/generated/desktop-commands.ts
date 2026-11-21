@@ -370,7 +370,6 @@ export interface DesktopCommands {
     }
     result: ProfileMemoryChange
   }
-  replace_selection_with_command: { args: { commandId: string }; result: void }
   reposition_quick_window: { args: { activationId: number }; result: void }
   request_subtitles_action: { args: { action: SubtitlesAction }; result: void }
   request_text_insertion_permission: {

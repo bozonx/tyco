@@ -335,7 +335,6 @@ pub fn run() {
             commands::selection::get_text_insertion_status,
             commands::selection::request_text_insertion_permission,
             commands::selection::finish_selection_run,
-            commands::selection::replace_selection_with_command,
             commands::settings::acknowledge_settings_shutdown,
             commands::settings::patch_session_state,
             commands::settings::save_user_config,

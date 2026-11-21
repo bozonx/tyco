@@ -139,7 +139,6 @@ fn main() {
             "relocate_user_data",
             "rename_chat",
             "replace_ai_profile_memory",
-            "replace_selection_with_command",
             "request_text_insertion_permission",
             "restart_app",
             "restore_editor_history_item",

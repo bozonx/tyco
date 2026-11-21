@@ -48,7 +48,6 @@
     "allow-delete-chat",
     "allow-delete-editor-history-item",
     "allow-rename-chat",
-    "allow-replace-selection-with-command",
     "allow-restore-editor-history-item",
     "allow-save-chat",
     "allow-add-editor-history-item",

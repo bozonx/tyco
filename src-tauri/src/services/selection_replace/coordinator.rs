@@ -89,21 +89,10 @@ impl Drop for CapturingGuard {
     }
 }
 
-/// What a trigger does to a run already in progress.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TriggerKind {
-    /// A hotkey: pressing it again cancels the run it started.
-    Toggle,
-    /// A request for this action, e.g. a command picked in the overlay: it
-    /// takes the place of a run in progress.
-    Replace,
-}
-
+/// What a trigger does: a trigger pressed again cancels the run it started.
 pub(super) enum TriggerDecision {
     Busy,
     Cancel(SelectionRun, CapturingGuard),
-    /// Cancel this run, then capture anew.
-    Replace(SelectionRun, CapturingGuard),
     Capture(CapturingGuard),
 }
 
@@ -116,7 +105,6 @@ impl SelectionRunCoordinator {
     pub(super) fn begin_trigger(
         &self,
         action: &str,
-        kind: TriggerKind,
         now: Instant,
     ) -> Result<TriggerDecision, AppError> {
         if !is_selection_action(action) {
@@ -134,10 +122,7 @@ impl SelectionRunCoordinator {
             ));
         }
         match self.take_active_at(now) {
-            SelectionRunTakeOutcome::Active(run) => Ok(match kind {
-                TriggerKind::Toggle => TriggerDecision::Cancel(run, guard),
-                TriggerKind::Replace => TriggerDecision::Replace(run, guard),
-            }),
+            SelectionRunTakeOutcome::Active(run) => Ok(TriggerDecision::Cancel(run, guard)),
             SelectionRunTakeOutcome::Empty | SelectionRunTakeOutcome::Abandoned => {
                 Ok(TriggerDecision::Capture(guard))
             }

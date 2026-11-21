@@ -123,7 +123,6 @@ impl HotkeyTarget {
                 app,
                 CORRECTION_ACTION,
                 TriggerWait::HotkeyRelease(HotkeyPress::new(hotkey_id)),
-                selection_replace::TriggerKind::Toggle,
             ),
         }
     }

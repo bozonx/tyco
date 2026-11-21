@@ -70,7 +70,6 @@ fn replace_selection(app: &AppHandle, action: &str) -> ApiResult<()> {
         app,
         action,
         selection_replace::TriggerWait::Delay(selection_replace::SHORTCUT_RELEASE_DELAY),
-        selection_replace::TriggerKind::Toggle,
     )
     .map_err(|error| {
         Box::new(Response::coded_error(

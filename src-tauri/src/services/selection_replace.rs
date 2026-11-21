@@ -9,7 +9,7 @@ mod hotkey_release;
 #[cfg(test)]
 mod tests;
 
-pub use coordinator::{SelectionRunCoordinator, TriggerKind};
+pub use coordinator::SelectionRunCoordinator;
 pub use hotkey_release::{hotkey_released, HotkeyPress};
 
 use self::coordinator::{cancel_with, SelectionBackend, TriggerDecision};
@@ -30,19 +30,10 @@ use crate::state::AppState;
 /// The built-in selection action: the LLM correction of the text.
 pub const CORRECTION_ACTION: &str = "correction";
 
-/// Prefix of the selection action that runs a command of the library.
-pub const COMMAND_ACTION_PREFIX: &str = "command:";
-
 /// Actions that replace the selection in the focused window with their
-/// result: `correction`, and `command:<id>`, a command of the library that
-/// returns a text.
+/// result: only `correction`; a library command runs in the command overlay.
 pub fn is_selection_action(value: &str) -> bool {
-    if value == CORRECTION_ACTION {
-        return true;
-    }
-    value
-        .strip_prefix(COMMAND_ACTION_PREFIX)
-        .is_some_and(|id| !id.trim().is_empty())
+    value == CORRECTION_ACTION
 }
 
 /// The portal reports the press of a hotkey; its keys are still down then.
@@ -186,22 +177,17 @@ impl SelectionBackend for SystemSelectionBackend<'_> {
     }
 }
 
-/// Starts an action. A run already in progress is cancelled: by a hotkey
-/// pressed again, which starts nothing, see `TriggerKind`.
-pub fn trigger(
-    app: &AppHandle,
-    action: &str,
-    wait: TriggerWait,
-    kind: TriggerKind,
-) -> Result<(), AppError> {
+/// Starts an action. A trigger pressed again while its run is in progress
+/// cancels that run and starts nothing.
+pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), AppError> {
     if app.state::<AppState>().is_quitting() {
         return Err(AppError::ServiceUnavailable(
             "Selection service is stopping".into(),
         ));
     }
-    let decision =
-        app.state::<SelectionRunCoordinator>()
-            .begin_trigger(action, kind, Instant::now())?;
+    let decision = app
+        .state::<SelectionRunCoordinator>()
+        .begin_trigger(action, Instant::now())?;
     let guard = match decision {
         TriggerDecision::Busy => {
             log::debug!("Ignoring the {action} trigger: a selection is being captured");
@@ -210,10 +196,6 @@ pub fn trigger(
         TriggerDecision::Cancel(run, _guard) => {
             cancel_with(&SystemSelectionBackend(app), run);
             return Ok(());
-        }
-        TriggerDecision::Replace(run, guard) => {
-            cancel_with(&SystemSelectionBackend(app), run);
-            guard
         }
         TriggerDecision::Capture(guard) => guard,
     };
