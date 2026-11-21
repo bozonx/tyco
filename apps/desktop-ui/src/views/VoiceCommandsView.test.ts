@@ -59,6 +59,8 @@ const voice = reactive({
   hasMatchedCommand: false,
   canRunLive: false,
   activeCommand: undefined as CommandConfig | undefined,
+  activeParameter: undefined as OperationCommandParameter | undefined,
+  activeParameters: {} as Record<string, string>,
   command: undefined as CommandConfig | undefined,
   canRun: false,
   inputIssue: undefined,
@@ -130,6 +132,8 @@ describe('separate voice command overlay', () => {
     voice.hasMatchedCommand = false
     voice.canRunLive = false
     voice.activeCommand = undefined
+    voice.activeParameter = undefined
+    voice.activeParameters = {}
     voice.catalog = [translation, ...commands]
   })
   afterEach(() => desktop.dispose())
@@ -459,6 +463,57 @@ describe('separate voice command overlay', () => {
     voice.stage = 'review'
     await flushPromises()
     expect(menuModalsStore.pendingModal).toBeNull()
+    wrapper.unmount()
+  })
+
+  it('renders slot shortcut keys on the first 15 command cards and picks via slot key', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+
+    const slotKeys = wrapper.findAll('.voice-entry-slot-key')
+    expect(slotKeys).toHaveLength(15)
+    expect(slotKeys[0].text()).toBe('Q')
+    expect(slotKeys[1].text()).toBe('W')
+    expect(slotKeys[14].text()).toBe('B')
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'q', code: 'KeyQ' })
+    )
+    await flushPromises()
+    expect(mocks.pinCommand).toHaveBeenCalledWith(translation.id)
+    wrapper.unmount()
+  })
+
+  it('picks active parameter option via slot key and steps back on Backspace', async () => {
+    voice.activeCommand = translation
+    voice.activeParameter = {
+      name: 'language',
+      description: '',
+      voiceErrorKey: 'voiceCommands.languageMissing',
+      options: [
+        { value: 'es-AR', label: 'Spanish' },
+        { value: 'en-US', label: 'English' },
+      ],
+    }
+    voice.activeParameters = {}
+    const wrapper = mountView()
+    await flushPromises()
+
+    const paramSlots = wrapper.findAll('.voice-param-slot-key')
+    expect(paramSlots).toHaveLength(2)
+    expect(paramSlots[0].text()).toBe('Q')
+    expect(paramSlots[1].text()).toBe('W')
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'q', code: 'KeyQ' })
+    )
+    await flushPromises()
+    expect(mocks.pinParameter).toHaveBeenCalledWith('language', 'es-AR')
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace' }))
+    await flushPromises()
+    expect(mocks.pinCommand).toHaveBeenCalledWith(undefined)
+
     wrapper.unmount()
   })
 })

@@ -24,53 +24,36 @@
               v-model:disabled="isContextDisabled"
               :text="contextText"
             />
-            <section class="voice-listening-header">
-              <div class="voice-listening-status">
-                <div v-if="voice.activeCommand" class="voice-chosen">
-                  <button
-                    type="button"
-                    class="voice-breadcrumb-cmd"
-                    @click="voice.pinCommand(undefined)"
-                  >
-                    <AppIcon
-                      :icon="commandIcon(voice.activeCommand, tools)"
-                      size="lg"
-                      aria-hidden="true"
-                    />
-                    <span class="voice-chosen-name">{{
-                      commandLabel(voice.activeCommand)
-                    }}</span>
-                  </button>
-                  <template v-for="item in liveParameterItems" :key="item.name">
-                    <span class="voice-breadcrumb-sep" aria-hidden="true"
-                      >›</span
-                    >
-                    <Badge
-                      tone="accent"
-                      class="voice-param-chip"
-                      @click="voice.clearParameter(item.name)"
-                      >{{ item.label }}</Badge
-                    >
-                  </template>
-                  <template v-if="voice.activeParameter">
-                    <span class="voice-breadcrumb-sep" aria-hidden="true"
-                      >›</span
-                    >
-                    <Badge tone="neutral">{{
-                      t('voiceCommands.phaseAwaitingParameter', {
-                        parameter: parameterDisplayLabel(
-                          voice.activeParameter,
-                          t
-                        ),
-                      })
-                    }}</Badge>
-                  </template>
-                </div>
-                <p v-else class="voice-phase-hint">
-                  <AppIcon icon="mdi:microphone" size="md" aria-hidden="true" />
-                  <span>{{ t('voiceCommands.phaseAwaitingCommand') }}</span>
-                </p>
+            <section class="voice-listening-bar">
+              <div
+                class="voice-bar-mic"
+                :class="{ 'is-finishing': voice.stage === 'finishing' }"
+              >
+                <AppIcon
+                  :icon="
+                    voice.stage === 'finishing'
+                      ? 'mdi:loading'
+                      : 'mdi:microphone'
+                  "
+                  :class="{ 'animate-spin': voice.stage === 'finishing' }"
+                  size="md"
+                  aria-hidden="true"
+                />
+              </div>
+
+              <div class="voice-bar-transcript">
+                <LiveTranscript
+                  class="voice-live-compact"
+                  :committed="displayTranscript.committed"
+                  :draft="displayTranscript.draft"
+                  :placeholder="currentPlaceholder"
+                />
+              </div>
+
+              <div class="voice-bar-meter">
                 <AudioWaveform
+                  layout="inline"
+                  status-label=""
                   :level="audioLevel"
                   :peak="audioPeak"
                   :duration-ms="recordingDurationMs"
@@ -78,17 +61,85 @@
                   :auto-stop-deadline-ms="voice.autoStopWarning?.deadlineMs"
                 />
               </div>
-              <LiveTranscript
-                v-if="!isCapturingTextPhase"
-                class="voice-live-compact"
-                :committed="displayTranscript.committed"
-                :draft="displayTranscript.draft"
-              />
             </section>
+
+            <div v-if="voice.activeCommand" class="voice-pipeline-bar">
+              <button
+                type="button"
+                class="voice-pipeline-chip voice-breadcrumb-cmd"
+                :title="t('voiceCommands.backToCommands')"
+                @click="voice.pinCommand(undefined)"
+              >
+                <AppIcon
+                  :icon="commandIcon(voice.activeCommand, tools)"
+                  size="sm"
+                  aria-hidden="true"
+                />
+                <span class="voice-pipeline-label">{{
+                  commandLabel(voice.activeCommand)
+                }}</span>
+                <AppIcon
+                  icon="mdi:close"
+                  size="xs"
+                  class="voice-pipeline-close"
+                  aria-hidden="true"
+                />
+              </button>
+
+              <template v-for="item in liveParameterItems" :key="item.name">
+                <span
+                  class="voice-pipeline-sep voice-breadcrumb-sep"
+                  aria-hidden="true"
+                  >›</span
+                >
+                <button
+                  type="button"
+                  class="voice-pipeline-chip voice-param-chip is-set"
+                  :title="item.label"
+                  @click="voice.clearParameter(item.name)"
+                >
+                  <span class="voice-pipeline-label">{{ item.label }}</span>
+                  <AppIcon
+                    icon="mdi:close"
+                    size="xs"
+                    class="voice-pipeline-close"
+                    aria-hidden="true"
+                  />
+                </button>
+              </template>
+
+              <template v-if="voice.activeParameter">
+                <span
+                  class="voice-pipeline-sep voice-breadcrumb-sep"
+                  aria-hidden="true"
+                  >›</span
+                >
+                <div class="voice-pipeline-chip is-active-step">
+                  <span class="voice-pipeline-step-dot" />
+                  <span class="voice-pipeline-label">{{
+                    parameterDisplayLabel(voice.activeParameter, t)
+                  }}</span>
+                </div>
+              </template>
+              <template v-else-if="isCapturingTextPhase">
+                <span
+                  class="voice-pipeline-sep voice-breadcrumb-sep"
+                  aria-hidden="true"
+                  >›</span
+                >
+                <div class="voice-pipeline-chip is-active-step">
+                  <span class="voice-pipeline-step-dot" />
+                  <span class="voice-pipeline-label">{{
+                    t('voiceCommands.textPlaceholder')
+                  }}</span>
+                </div>
+              </template>
+            </div>
 
             <section class="voice-listening-body">
               <VoiceParameterPicker
                 v-if="voice.activeParameter && activeParameterOptions.length"
+                ref="paramPickerRef"
                 :parameter-label="
                   parameterDisplayLabel(voice.activeParameter, t)
                 "
@@ -103,14 +154,20 @@
                 "
                 @back="voice.pinCommand(undefined)"
               />
-              <LiveTranscript
+              <div
                 v-else-if="isCapturingTextPhase"
-                class="voice-live"
-                :committed="displayTranscript.committed"
-                :draft="displayTranscript.draft"
-              />
+                class="voice-live-text-container"
+              >
+                <LiveTranscript
+                  class="voice-live"
+                  :committed="displayTranscript.committed"
+                  :draft="displayTranscript.draft"
+                  :placeholder="t('voiceCommands.textPlaceholder')"
+                />
+              </div>
               <VoiceCommandCatalog
                 v-else
+                ref="catalogComponentRef"
                 :commands="voice.catalog"
                 :marks="marks"
                 :stage="voice.stage"
@@ -252,7 +309,6 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import AppIcon from '../components/common/AppIcon.vue'
-import Badge from '../components/common/Badge.vue'
 import Button from '../components/common/Button.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import FieldSelect from '../components/common/FieldSelect.vue'
@@ -387,10 +443,33 @@ const activeParameterOptions = computed(() =>
   voice.activeParameter ? voiceParameterOptions(voice.activeParameter, t) : []
 )
 
+const catalogComponentRef = ref<{
+  pickBySlot: (e: KeyboardEvent) => boolean
+} | null>(null)
+const paramPickerRef = ref<{
+  pickBySlot: (e: KeyboardEvent) => boolean
+} | null>(null)
+
 const isCapturingTextPhase = computed(
   () =>
     isListening.value && Boolean(voice.activeCommand) && !voice.activeParameter
 )
+
+const currentPlaceholder = computed(() => {
+  if (!voice.activeCommand) {
+    return t('voiceCommands.phaseAwaitingCommand')
+  }
+  if (voice.activeParameter) {
+    return t('voiceCommands.phaseAwaitingParameter', {
+      parameter: parameterDisplayLabel(voice.activeParameter, t),
+    })
+  }
+  return t('voiceCommands.textPlaceholder')
+})
+
+function isPlainKey(event: KeyboardEvent): boolean {
+  return !event.ctrlKey && !event.altKey && !event.metaKey
+}
 
 const displayTranscript = computed(() => {
   const { committed, draft } = voice.liveTranscript
@@ -600,10 +679,45 @@ const onKeyDown = (event: KeyboardEvent) => {
       // stops the recording for review even when no command was heard: the
       // text can then be edited and a command picked by hand
       void voice.finish('review')
+      return
     } else if (event.code === 'Space' || event.code === 'Enter') {
-      event.preventDefault()
       if (canRunLive.value) {
+        event.preventDefault()
         void voice.finish('run')
+        return
+      }
+    } else if (event.key === 'Backspace') {
+      if (isCapturingTextPhase.value) {
+        event.preventDefault()
+        const params = liveParameterItems.value
+        if (params.length > 0) {
+          voice.clearParameter(params[params.length - 1].name)
+        } else {
+          voice.pinCommand(undefined)
+        }
+        return
+      } else if (voice.activeParameter) {
+        event.preventDefault()
+        const params = liveParameterItems.value
+        if (params.length > 0) {
+          voice.clearParameter(params[params.length - 1].name)
+        } else {
+          voice.pinCommand(undefined)
+        }
+        return
+      }
+    }
+
+    if (!event.repeat && isPlainKey(event)) {
+      if (voice.activeParameter && paramPickerRef.value?.pickBySlot(event)) {
+        event.preventDefault()
+        return
+      } else if (
+        !voice.activeCommand &&
+        catalogComponentRef.value?.pickBySlot(event)
+      ) {
+        event.preventDefault()
+        return
       }
     }
     return
@@ -668,47 +782,130 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
-.voice-listening-header {
+.voice-listening-bar {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-xs) var(--space-sm);
   border-bottom: 1px solid var(--app-border-subtle);
-  min-width: 0;
+  background-color: var(--app-surface-raised);
+  min-height: 2.75rem;
+  box-sizing: border-box;
 }
 
-.voice-listening-status {
+.voice-bar-mic {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.voice-listening-status .voice-chosen {
-  flex: 0 1 auto;
-  min-width: 0;
-  flex-wrap: nowrap;
-  overflow: hidden;
-  justify-content: flex-end;
-}
-
-.voice-listening-status .voice-chosen > * {
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background-color: color-mix(in oklab, var(--color-primary) 15%, transparent);
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
-.voice-listening-status .voice-breadcrumb-cmd {
-  flex-shrink: 1;
+.voice-bar-mic.is-finishing {
+  color: var(--app-text-muted);
+  background-color: transparent;
+}
+
+.voice-bar-transcript {
+  flex: 1 1 0%;
   min-width: 0;
+  display: flex;
+  align-items: center;
 }
 
 .voice-live-compact {
-  flex: 0 1 40%;
+  width: 100%;
   min-width: 0;
-  max-height: 2.25rem;
-  overflow: hidden;
   white-space: nowrap;
+  overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.voice-bar-meter {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.voice-pipeline-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.375rem var(--space-sm);
+  background-color: var(--app-surface-sunken, rgba(0, 0, 0, 0.15));
+  border-bottom: 1px solid var(--app-border-subtle);
+  overflow-x: auto;
+  white-space: nowrap;
+  min-height: 2.25rem;
+  box-sizing: border-box;
+}
+
+.voice-pipeline-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--app-border-subtle);
+  background-color: var(--app-surface-raised);
+  color: var(--color-base-content);
+  font-size: var(--text-caption);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.voice-pipeline-chip:hover {
+  background-color: var(--app-hover);
+  border-color: var(--color-primary);
+}
+
+.voice-pipeline-chip.is-set {
+  background-color: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  border-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
+  color: var(--color-primary);
+}
+
+.voice-pipeline-chip.is-active-step {
+  cursor: default;
+  background-color: transparent;
+  border: 1px dashed var(--color-primary);
+  color: var(--color-primary);
+}
+
+.voice-pipeline-step-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+}
+
+.voice-pipeline-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.voice-pipeline-close {
+  opacity: 0.6;
+  margin-left: 2px;
+}
+
+.voice-pipeline-chip:hover .voice-pipeline-close {
+  opacity: 1;
+}
+
+.voice-pipeline-sep {
+  color: var(--app-text-muted);
+  font-size: var(--text-body);
+  user-select: none;
 }
 
 .voice-listening-body {
@@ -718,31 +915,21 @@ onUnmounted(() => {
   min-height: 0;
 }
 
-.voice-breadcrumb-cmd {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: 0.125rem 0.375rem;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-  min-width: 0;
+.voice-live-text-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  padding: var(--space-md);
 }
 
-.voice-breadcrumb-cmd:hover {
-  background: var(--app-hover);
-}
-
-.voice-breadcrumb-sep {
-  color: var(--app-text-muted);
-  font-weight: 400;
-}
-
-.voice-param-chip {
-  cursor: pointer;
+.voice-live {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  font-size: var(--text-lead);
+  line-height: 1.5;
 }
 
 .voice-main {
@@ -751,22 +938,6 @@ onUnmounted(() => {
   gap: var(--space-sm);
   min-height: 0;
   padding: var(--space-sm);
-}
-
-.voice-phase-hint {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  margin: 0;
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-}
-
-.voice-live {
-  flex: 1 1 0%;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 
 .voice-chosen {
