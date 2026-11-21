@@ -890,7 +890,8 @@
       "voice": "Sesli giriş",
       "voiceCommands": "Sesli komutlar",
       "voiceQuickAiRequest": "Sesli hızlı YZ isteği",
-      "voiceScreenshotQuickAiRequest": "Ekran görüntüsü ve sesli yapay zekâ sorusu"
+      "voiceScreenshotQuickAiRequest": "Ekran görüntüsü ve sesli yapay zekâ sorusu",
+      "dialog": "Diyalog"
     },
     "hotkeyDescriptions": {},
     "hotkeyGroups": {
@@ -1649,8 +1650,6 @@
     "microphoneAndSystemMix": "Mikrofon + tüm ses",
     "noPlayingApps": "Şu anda hiçbir uygulama ses çalmıyor",
     "sourceLabel": "Kaynak",
-    "sourceInfo": "Kısayolun kaydettiği: bilgisayarın tüm sesi, mikrofonla birlikte tüm ses (bir görüşmenin iki tarafı) ya da tek bir uygulama. Uygulama adıyla hatırlanır; henüz bir şey çalmıyorsa kayıt onun sesini bekler.",
-    "appIdPlaceholder": "Uygulama adı, ör. Telegram.exe",
     "privacyHint": "Bulut tanımada (Deepgram, Gemini), başkalarının konuşmaları dahil ses seçilen sağlayıcıya gönderilir. Sherpa sesi yapılandırılan sunucuya gönderir; ses yalnızca sunucu yerel olduğunda bu bilgisayarda kalır.",
     "privacyHintLabel": "Ses nereye gidiyor",
     "useSystemMix": "Tüm sesi kaydet",
@@ -1710,6 +1709,7 @@
     "recordingFailed": "Kayıt durdu: dosya yazılamadı. Döküm devam ediyor.",
     "recordingNoticeTitle": "Konuşmayı kaydetme",
     "recordingNoticeMessage": "Başka biriyle yaptığınız bir konuşmayı kaydediyorsanız önce ona söyleyin.",
-    "recordingNoticeConfirm": "Anladım"
+    "recordingNoticeConfirm": "Anladım",
+    "remoteLanguage": "Konuşmacı dili"
   }
 }

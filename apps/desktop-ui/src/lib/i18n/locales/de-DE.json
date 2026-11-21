@@ -890,7 +890,8 @@
       "voice": "Spracheingabe",
       "voiceCommands": "Sprachbefehle",
       "voiceQuickAiRequest": "Sprach-Schnellanfrage an KI",
-      "voiceScreenshotQuickAiRequest": "Bildschirmfoto und KI-Sprachfrage"
+      "voiceScreenshotQuickAiRequest": "Bildschirmfoto und KI-Sprachfrage",
+      "dialog": "Dialog"
     },
     "hotkeyDescriptions": {},
     "hotkeyGroups": {
@@ -1653,8 +1654,6 @@
     "microphoneAndSystemMix": "Mikrofon + gesamter Ton",
     "noPlayingApps": "Keine App gibt gerade Ton wieder",
     "sourceLabel": "Quelle",
-    "sourceInfo": "Was das Tastenkürzel aufnimmt: den gesamten Computerton, den gesamten Ton zusammen mit dem Mikrofon (beide Seiten eines Anrufs) oder eine App. Eine App wird über ihren Namen gemerkt; spielt sie noch nichts, wird auf ihren Ton gewartet.",
-    "appIdPlaceholder": "App-Name, z. B. Telegram.exe",
     "privacyHint": "Bei der Cloud-Erkennung (Deepgram, Gemini) wird der Ton einschließlich fremder Stimmen an den gewählten Anbieter gesendet. Sherpa sendet ihn an den konfigurierten Server; nur bei einem lokalen Server bleibt er auf diesem Computer.",
     "privacyHintLabel": "Wohin der Ton geht",
     "useSystemMix": "Gesamten Ton aufnehmen",
@@ -1714,6 +1713,7 @@
     "recordingFailed": "Die Aufnahme wurde beendet: Die Datei konnte nicht geschrieben werden. Die Mitschrift läuft weiter.",
     "recordingNoticeTitle": "Gespräch aufnehmen",
     "recordingNoticeMessage": "Wenn Sie ein Gespräch mit einer anderen Person aufnehmen, sagen Sie es ihr vorher.",
-    "recordingNoticeConfirm": "Verstanden"
+    "recordingNoticeConfirm": "Verstanden",
+    "remoteLanguage": "Sprache des Gesprächspartners"
   }
 }

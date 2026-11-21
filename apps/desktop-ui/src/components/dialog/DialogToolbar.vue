@@ -73,6 +73,19 @@
     <div class="dialog-toolbar-spacer" />
 
     <FieldSelect
+      v-if="isDeepgram"
+      class="dialog-toolbar-language"
+      :model-value="dialog.config.remoteLanguage || 'auto'"
+      size="sm"
+      :title="t('dialog.remoteLanguage')"
+      :aria-label="t('dialog.remoteLanguage')"
+      :options="remoteLanguageOptions"
+      @update:model-value="
+        (language) =>
+          dialog.updateConfig({ remoteLanguage: String(language ?? 'auto') })
+      "
+    />
+    <FieldSelect
       class="dialog-toolbar-language"
       :model-value="dialog.config.translationTargetLanguage"
       size="sm"
@@ -128,6 +141,10 @@ import { computed, ref } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { dialogLanguageOptions } from '../../lib/dialog/dialog-languages'
 import type { DialogSide } from '../../lib/dialog/dialog-transcript'
+import {
+  COMMON_LANGUAGE_OPTIONS,
+  buildLanguageOptions,
+} from '../../lib/locale/language'
 import { translationLanguageLabel } from '../../lib/translation/translation-languages'
 import type { ControlOption } from '../../lib/ui/control-option'
 import { useDesktopStore } from '../../stores/desktop'
@@ -189,6 +206,19 @@ const displayOptions = computed<ControlOption<DialogTextDisplay>[]>(() => [
   { id: 'original', name: t('dialog.displayOriginal') },
   { id: 'both', name: t('dialog.displayBoth') },
 ])
+
+const isDeepgram = computed(
+  () => desktopStore.userConfig.stt?.provider === 'deepgram'
+)
+
+const remoteLanguageOptions = computed(() =>
+  buildLanguageOptions(
+    [dialog.config.remoteLanguage],
+    true,
+    t,
+    COMMON_LANGUAGE_OPTIONS
+  )
+)
 
 const languageOptions = computed(() =>
   dialogLanguageOptions({

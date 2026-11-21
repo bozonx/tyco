@@ -106,7 +106,7 @@ describe('SettingsGlobalActionsTab.vue', () => {
     Icon: true,
   }
 
-  it('shows six primary hotkeys outside development mode', () => {
+  it('shows seven primary hotkeys outside development mode', () => {
     delete context.draft.value.isInDevelopment
     const wrapper = mount(SettingsGlobalActionsTab, {
       global: { provide: context.provide, stubs: globalStubs },
@@ -126,6 +126,7 @@ describe('SettingsGlobalActionsTab.vue', () => {
         'selectionActions',
         'selectionCorrection',
         'voiceCommands',
+        'dialog',
       ]
         .map((id) => `settings.hotkeyActions.${id}`)
         .sort()

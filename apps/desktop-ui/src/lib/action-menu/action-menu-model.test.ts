@@ -189,6 +189,10 @@ describe('createActionMenuModel', () => {
     store.setPage(1)
     store.repeatOpenPage(1)
     expect(store.pageIndex.value).toBe(2)
+
+    // Opening an out-of-range page falls back to page 0
+    store.openPage(5)
+    expect(store.pageIndex.value).toBe(0)
   })
 
   it('corrects and inserts directly only for sufficiently long text', async () => {

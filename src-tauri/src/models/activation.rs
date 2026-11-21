@@ -25,6 +25,7 @@ pub enum ActivationMode {
     ChatPrompts,
     Favorites,
     History,
+    Dialog,
     Config,
     CustomAction,
     /// Shows the run of a library command, see `services::external`; Tyco
@@ -34,7 +35,7 @@ pub enum ActivationMode {
 
 impl ActivationMode {
     /// The modes a caller may name: every one but `CommandRun`.
-    pub const PUBLIC_MODES: [Self; 20] = [
+    pub const PUBLIC_MODES: [Self; 21] = [
         Self::Editor,
         Self::QuickInput,
         Self::Chat,
@@ -53,6 +54,7 @@ impl ActivationMode {
         Self::ChatPrompts,
         Self::Favorites,
         Self::History,
+        Self::Dialog,
         Self::Config,
         Self::CustomAction,
     ];
@@ -86,6 +88,7 @@ impl ActivationMode {
             Self::ChatPrompts => "chatPrompts",
             Self::Favorites => "favorites",
             Self::History => "history",
+            Self::Dialog => "dialog",
             Self::Config => "config",
             Self::CustomAction => "customAction",
             Self::CommandRun => "commandRun",

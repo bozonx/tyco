@@ -180,6 +180,7 @@
         "chatPrompts": { "type": "string", "default": "" },
         "favorites": { "type": "string", "default": "" },
         "history": { "type": "string", "default": "" },
+        "dialog": { "type": "string", "default": "Ctrl+Alt+Shift+D" },
         "voiceCommands": { "type": "string", "default": "Ctrl+Alt+Shift+X" },
         "selectionCorrection": {
           "type": "string",
@@ -220,6 +221,7 @@
         "chatPrompts",
         "favorites",
         "history",
+        "dialog",
         "voiceCommands",
         "selectionCorrection",
         "customAction1",
@@ -401,6 +403,7 @@
                         "voiceCommands",
                         "openHistory",
                         "openEditor",
+                        "openDialog",
                         "voiceInput",
                         "listen",
                         "correction",
@@ -556,6 +559,7 @@
                       "voiceCommands",
                       "openHistory",
                       "openEditor",
+                      "openDialog",
                       "voiceInput",
                       "listen",
                       "translationMenu",
@@ -1363,6 +1367,11 @@
           "type": "string",
           "maxLength": 35,
           "default": ""
+        },
+        "remoteLanguage": {
+          "type": "string",
+          "maxLength": 35,
+          "default": "auto"
         },
         "textDisplay": {
           "enum": ["translation", "original", "both"],

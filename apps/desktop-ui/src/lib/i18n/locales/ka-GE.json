@@ -890,7 +890,8 @@
       "voice": "ხმოვანი შეყვანა",
       "voiceCommands": "ხმოვანი ბრძანებები",
       "voiceQuickAiRequest": "ხმოვანი სწრაფი AI მოთხოვნა",
-      "voiceScreenshotQuickAiRequest": "ეკრანის სურათი და ხმოვანი კითხვა AI-ს"
+      "voiceScreenshotQuickAiRequest": "ეკრანის სურათი და ხმოვანი კითხვა AI-ს",
+      "dialog": "დიალოგი"
     },
     "hotkeyDescriptions": {},
     "hotkeyGroups": {
@@ -1653,8 +1654,6 @@
     "microphoneAndSystemMix": "მიკროფონი + მთელი ხმა",
     "noPlayingApps": "ამჟამად არცერთი აპი არ უკრავს ხმას",
     "sourceLabel": "წყარო",
-    "sourceInfo": "რას იწერს ცხელი ღილაკი: კომპიუტერის მთელ ხმას, მთელ ხმას მიკროფონთან ერთად (ზარის ორივე მხარე) ან ერთ აპს. აპი სახელით ინახება; თუ ჯერ არაფერს უკრავს, ჩაწერა მის ხმას ელოდება.",
-    "appIdPlaceholder": "აპის სახელი, მაგ. Telegram.exe",
     "privacyHint": "ღრუბლოვანი ამოცნობისას (Deepgram, Gemini) ხმა, სხვების მეტყველების ჩათვლით, არჩეულ პროვაიდერს ეგზავნება. Sherpa ხმას მითითებულ სერვერზე აგზავნის; ის ამ კომპიუტერზე მხოლოდ ლოკალური სერვერის გამოყენებისას რჩება.",
     "privacyHintLabel": "სად მიდის ხმა",
     "useSystemMix": "მთელი ხმის ჩაწერა",
@@ -1714,6 +1713,7 @@
     "recordingFailed": "ჩაწერა შეწყდა: ფაილის ჩაწერა ვერ მოხერხდა. ტრანსკრიფცია გრძელდება.",
     "recordingNoticeTitle": "საუბრის ჩაწერა",
     "recordingNoticeMessage": "თუ სხვა ადამიანთან საუბარს იწერთ, ჯერ გააფრთხილეთ იგი.",
-    "recordingNoticeConfirm": "გასაგებია"
+    "recordingNoticeConfirm": "გასაგებია",
+    "remoteLanguage": "თანამოსაუბრის ენა"
   }
 }

@@ -349,6 +349,7 @@ fn window_label_for_mode(mode: ActivationMode) -> &'static str {
         ActivationMode::Editor
         | ActivationMode::Chat
         | ActivationMode::History
+        | ActivationMode::Dialog
         | ActivationMode::Config => MAIN_WINDOW_LABEL,
     }
 }

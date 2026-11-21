@@ -106,7 +106,6 @@ describe('SettingsVoiceTab.vue', () => {
             template:
               '<div class="secret-key-stub" :data-has-key="hasKey"><input class="secret-draft" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" /><button class="save-key-btn" @click="save?.()">Save</button><button class="remove-key-btn" @click="remove?.()">Remove</button></div>',
           },
-          ListenSourceField: { template: '<div class="listen-source-stub" />' },
           Button: {
             props: ['icon', 'variant', 'size'],
             emits: ['click'],

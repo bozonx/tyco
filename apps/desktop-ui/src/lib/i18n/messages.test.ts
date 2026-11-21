@@ -156,6 +156,7 @@ const DYNAMIC_KEYS = new Set([
     'listen',
     'editor',
     'chat',
+    'dialog',
     'voiceCommands',
     'selectionActions',
     'selectionActionsPage2',

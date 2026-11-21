@@ -80,6 +80,7 @@ export const MODE_ROUTE_MAP: Record<ActivationMode, AppRoutePath> = {
   [ActivationMode.QUICK_INPUT]: APP_ROUTES.WRITE.path,
   [ActivationMode.CHAT]: APP_ROUTES.CHAT.path,
   [ActivationMode.HISTORY]: APP_ROUTES.HISTORY.path,
+  [ActivationMode.DIALOG]: APP_ROUTES.DIALOG.path,
   [ActivationMode.CONFIG]: APP_ROUTES.CONFIG.path,
   // the quick window renders it by the mode, see `QuickOverlay`
   [ActivationMode.COMMAND_RUN]: APP_ROUTES.HOME.path,

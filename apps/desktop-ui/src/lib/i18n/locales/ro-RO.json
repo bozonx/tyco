@@ -890,7 +890,8 @@
       "voice": "Introducere vocală",
       "voiceCommands": "Comenzi vocale",
       "voiceQuickAiRequest": "Solicitare vocală rapidă IA",
-      "voiceScreenshotQuickAiRequest": "Captură de ecran și întrebare vocală pentru IA"
+      "voiceScreenshotQuickAiRequest": "Captură de ecran și întrebare vocală pentru IA",
+      "dialog": "Dialog"
     },
     "hotkeyDescriptions": {},
     "hotkeyGroups": {
@@ -1653,8 +1654,6 @@
     "microphoneAndSystemMix": "Microfon + tot sunetul",
     "noPlayingApps": "Nicio aplicație nu redă sunet",
     "sourceLabel": "Sursă",
-    "sourceInfo": "Ce înregistrează scurtătura: tot sunetul computerului, tot sunetul împreună cu microfonul (ambele părți ale unui apel) sau o aplicație. Aplicația este reținută după nume; dacă nu redă încă nimic, înregistrarea așteaptă sunetul ei.",
-    "appIdPlaceholder": "Numele aplicației, de ex. Telegram.exe",
     "privacyHint": "Cu recunoașterea în cloud (Deepgram, Gemini), sunetul, inclusiv vocile altor persoane, ajunge la furnizorul ales. Sherpa trimite sunetul la serverul configurat; rămâne pe acest computer doar dacă serverul este local.",
     "privacyHintLabel": "Unde ajunge sunetul",
     "useSystemMix": "Înregistrează tot sunetul",
@@ -1714,6 +1713,7 @@
     "recordingFailed": "Înregistrarea s-a oprit: fișierul nu a putut fi scris. Transcrierea continuă.",
     "recordingNoticeTitle": "Înregistrarea unei conversații",
     "recordingNoticeMessage": "Dacă înregistrați o conversație cu altă persoană, spuneți-i mai întâi.",
-    "recordingNoticeConfirm": "Am înțeles"
+    "recordingNoticeConfirm": "Am înțeles",
+    "remoteLanguage": "Limba interlocutorului"
   }
 }

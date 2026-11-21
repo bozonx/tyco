@@ -24,6 +24,7 @@ pub const START_MODES: &[&str] = &[
     "chatPrompts",
     "favorites",
     "history",
+    "dialog",
     "config",
     "customAction",
 ];

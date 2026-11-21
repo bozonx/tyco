@@ -85,6 +85,32 @@ describe('settings operations', () => {
     )
   })
 
+  it('removes an action page and shifts/clears hotkeys accordingly', () => {
+    const f = fixture()
+    f.config.actionPages = [
+      { inputMode: 'selection', slots: {} },
+      { inputMode: 'none', slots: {} },
+      { inputMode: 'none', slots: {} },
+      { inputMode: 'none', slots: {} },
+    ]
+    f.config.hotkeys.selectionActionsPage2 = 'Ctrl+Alt+2'
+    f.config.hotkeys.selectionActionsPage3 = 'Ctrl+Alt+3'
+    f.config.hotkeys.selectionActionsPage4 = 'Ctrl+Alt+4'
+
+    // Removing page at index 2 (page 3)
+    f.model.removeActionPage(2)
+    expect(f.config.actionPages).toHaveLength(3)
+    expect(f.config.hotkeys.selectionActionsPage2).toBe('Ctrl+Alt+2')
+    // Page 4 shifted to page 3, so its hotkey moved to selectionActionsPage3
+    expect(f.config.hotkeys.selectionActionsPage3).toBe('Ctrl+Alt+4')
+    // Old page 4 hotkey is cleared
+    expect(f.config.hotkeys.selectionActionsPage4).toBe('')
+
+    // Attempting to remove page 0 (primary page) does nothing
+    f.model.removeActionPage(0)
+    expect(f.config.actionPages).toHaveLength(3)
+  })
+
   it('stores each hotkey id where it belongs', () => {
     const f = fixture()
     f.model.updateHotkey('voice', 'Ctrl+Alt+V')

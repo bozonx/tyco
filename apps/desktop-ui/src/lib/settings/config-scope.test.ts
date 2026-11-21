@@ -38,9 +38,9 @@ const DEVICE_FIELD_NOTES: Record<
     'SettingsVoiceTab.vue',
     ':error="micTestError"\n        device-scoped',
   ],
-  'stt.listenAppId': ['SettingsVoiceTab.vue', '<ListenSourceField'],
-  'stt.listenAppLabel': ['SettingsVoiceTab.vue', '<ListenSourceField'],
-  'stt.isListenMicrophoneMixed': ['SettingsVoiceTab.vue', '<ListenSourceField'],
+  'stt.listenAppId': null,
+  'stt.listenAppLabel': null,
+  'stt.isListenMicrophoneMixed': null,
   'stt.providers.sherpaOnnx': [
     'SettingsVoiceTab.vue',
     ':error="sttServerUrlError"\n        device-scoped',
@@ -80,9 +80,6 @@ describe('config scopes', () => {
     for (const note of Object.values(DEVICE_FIELD_NOTES)) {
       if (note) expect(settingsSource(note[0])).toContain(note[1])
     }
-    expect(settingsSource('SettingsVoiceTab.vue')).toMatch(
-      /<ListenSourceField[^>]*device-scoped/
-    )
   })
 
   it('never marks a field inside an entity as one of this device', () => {

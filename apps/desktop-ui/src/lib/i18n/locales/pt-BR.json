@@ -890,7 +890,8 @@
       "voice": "Entrada de voz",
       "voiceCommands": "Comandos de voz",
       "voiceQuickAiRequest": "Requisição rápida de IA por voz",
-      "voiceScreenshotQuickAiRequest": "Captura de tela e pergunta por voz à IA"
+      "voiceScreenshotQuickAiRequest": "Captura de tela e pergunta por voz à IA",
+      "dialog": "Diálogo"
     },
     "hotkeyDescriptions": {},
     "hotkeyGroups": {
@@ -1653,8 +1654,6 @@
     "microphoneAndSystemMix": "Microfone + todo o som",
     "noPlayingApps": "Nenhum app está tocando som",
     "sourceLabel": "Fonte",
-    "sourceInfo": "O que o atalho grava: todo o som do computador, todo o som junto com o microfone (os dois lados de uma chamada) ou um app. O app é lembrado pelo nome; se ainda não tocar nada, a gravação aguarda o som dele.",
-    "appIdPlaceholder": "Nome do app, ex.: Telegram.exe",
     "privacyHint": "Com o reconhecimento na nuvem (Deepgram, Gemini), o áudio, incluindo a fala de outras pessoas, é enviado ao provedor escolhido. O Sherpa envia o áudio ao servidor configurado; ele só permanece neste computador se o servidor for local.",
     "privacyHintLabel": "Para onde vai o som",
     "useSystemMix": "Gravar todo o som",
@@ -1714,6 +1713,7 @@
     "recordingFailed": "A gravação parou: não foi possível gravar o arquivo. A transcrição continua.",
     "recordingNoticeTitle": "Gravar uma conversa",
     "recordingNoticeMessage": "Se você gravar uma conversa com outra pessoa, avise-a antes.",
-    "recordingNoticeConfirm": "Entendi"
+    "recordingNoticeConfirm": "Entendi",
+    "remoteLanguage": "Idioma do interlocutor"
   }
 }

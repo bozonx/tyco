@@ -9,6 +9,7 @@ export const PRIMARY_HOTKEY_IDS: readonly HotkeyId[] = [
   'voice',
   'quickInput',
   'history',
+  'dialog',
   'selectionActions',
   'selectionCorrection',
   'voiceCommands',

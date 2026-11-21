@@ -34,6 +34,7 @@ const LOCKED_FALSE_STANDARD_ACTIONS = new Set([
   'favoritesMenu',
   'openHistory',
   'openEditor',
+  'openDialog',
   'listen',
 ])
 

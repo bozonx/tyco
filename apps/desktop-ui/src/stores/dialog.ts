@@ -282,6 +282,7 @@ export const useDialogStore = defineStore('dialog', () => {
     try {
       activeStt = await resolveDialogStt({
         getConfig: () => desktopStore.userConfig.stt,
+        getRemoteLanguage: () => config.value.remoteLanguage,
         refreshSecrets: secretsStore.refreshSecrets,
         getSecrets: () => secretsStore.secrets,
         translate,

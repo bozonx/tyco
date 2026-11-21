@@ -135,9 +135,7 @@ function removePage() {
 
 function deletePage() {
   isRemoveConfirmOpen.value = false
-  operations.updateActionPages(
-    actionPages.value.filter((_, index) => index !== page.value)
-  )
+  operations.removeActionPage(page.value)
   page.value = Math.max(0, page.value - 1)
 }
 

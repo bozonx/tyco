@@ -890,7 +890,8 @@
       "voice": "Wprowadzanie głosowe",
       "voiceCommands": "Polecenia głosowe",
       "voiceQuickAiRequest": "Głosowe szybkie zapytanie do SI",
-      "voiceScreenshotQuickAiRequest": "Zrzut ekranu i głosowe pytanie do AI"
+      "voiceScreenshotQuickAiRequest": "Zrzut ekranu i głosowe pytanie do AI",
+      "dialog": "Dialog"
     },
     "hotkeyDescriptions": {},
     "hotkeyGroups": {
@@ -1653,8 +1654,6 @@
     "microphoneAndSystemMix": "Mikrofon + cały dźwięk",
     "noPlayingApps": "Żadna aplikacja nie odtwarza dźwięku",
     "sourceLabel": "Źródło",
-    "sourceInfo": "Co nagrywa skrót: cały dźwięk komputera, cały dźwięk razem z mikrofonem (obie strony rozmowy) albo jedną aplikację. Aplikacja jest zapamiętywana po nazwie; jeśli jeszcze nic nie odtwarza, nagrywanie czeka na jej dźwięk.",
-    "appIdPlaceholder": "Nazwa aplikacji, np. Telegram.exe",
     "privacyHint": "Przy rozpoznawaniu w chmurze (Deepgram, Gemini) dźwięk, w tym głosy innych osób, trafia do wybranego dostawcy. Sherpa wysyła dźwięk do skonfigurowanego serwera; pozostaje on na tym komputerze tylko przy serwerze lokalnym.",
     "privacyHintLabel": "Dokąd trafia dźwięk",
     "useSystemMix": "Nagrywaj cały dźwięk",
@@ -1714,6 +1713,7 @@
     "recordingFailed": "Nagrywanie zostało przerwane: nie udało się zapisać pliku. Transkrypcja trwa dalej.",
     "recordingNoticeTitle": "Nagrywanie rozmowy",
     "recordingNoticeMessage": "Jeśli nagrywasz rozmowę z inną osobą, najpierw ją o tym uprzedź.",
-    "recordingNoticeConfirm": "Rozumiem"
+    "recordingNoticeConfirm": "Rozumiem",
+    "remoteLanguage": "Język rozmówcy"
   }
 }

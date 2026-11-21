@@ -890,7 +890,8 @@
       "voice": "음성 입력",
       "voiceCommands": "음성 명령",
       "voiceQuickAiRequest": "음성 AI 빠른 요청",
-      "voiceScreenshotQuickAiRequest": "스크린샷과 AI 음성 질문"
+      "voiceScreenshotQuickAiRequest": "스크린샷과 AI 음성 질문",
+      "dialog": "대화"
     },
     "hotkeyDescriptions": {},
     "hotkeyGroups": {
@@ -1653,8 +1654,6 @@
     "microphoneAndSystemMix": "마이크 + 모든 소리",
     "noPlayingApps": "소리를 재생 중인 앱이 없습니다",
     "sourceLabel": "소스",
-    "sourceInfo": "단축키가 녹음하는 대상: 컴퓨터의 모든 소리, 마이크와 함께 모든 소리(통화 양쪽), 또는 하나의 앱. 앱은 이름으로 기억되며, 아직 아무것도 재생하지 않으면 소리를 기다립니다.",
-    "appIdPlaceholder": "앱 이름(예: Telegram.exe)",
     "privacyHint": "클라우드 인식(Deepgram, Gemini)을 사용하면 다른 사람의 음성을 포함한 오디오가 선택한 제공업체로 전송됩니다. Sherpa는 설정된 서버로 오디오를 전송하며 로컬 서버를 사용할 때만 이 컴퓨터에 오디오가 유지됩니다.",
     "privacyHintLabel": "소리가 전송되는 곳",
     "useSystemMix": "모든 소리 녹음",
@@ -1714,6 +1713,7 @@
     "recordingFailed": "녹음이 중지되었습니다: 파일을 쓸 수 없습니다. 기록은 계속됩니다.",
     "recordingNoticeTitle": "대화 녹음",
     "recordingNoticeMessage": "다른 사람과의 대화를 녹음할 때는 먼저 상대에게 알리세요.",
-    "recordingNoticeConfirm": "확인"
+    "recordingNoticeConfirm": "확인",
+    "remoteLanguage": "상대방 언어"
   }
 }

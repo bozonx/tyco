@@ -276,6 +276,7 @@ const GENERAL_HOTKEY_GROUPS: readonly {
       'selectionActions',
       'selectionCorrection',
       'history',
+      'dialog',
       'editor',
     ],
   },
@@ -348,6 +349,17 @@ const openCommandForMode = (mode: string) => {
   if (page) return `tyco-ctl open selection-actions:${page[1]}`
   return `tyco-ctl open ${mode}`
 }
+
+function isValidActionPageHotkey(id: string, count: number): boolean {
+  const match = /^selectionActionsPage(\d)$/.exec(id)
+  if (!match) return true
+  const pageNum = parseInt(match[1], 10)
+  return pageNum <= count
+}
+
+const actionPageCount = computed(
+  () => userConfig.value.actionPages?.length ?? 1
+)
 
 const customActionSlots = computed(() => {
   const current = userConfig.value.customActionSlots ?? []
@@ -457,22 +469,24 @@ function updateCustomAction(
 }
 
 const allRows = computed<HotkeyRow[]>(() => [
-  ...modes.map((mode) => ({
-    id: mode,
-    label: t(`settings.hotkeyActions.${mode}`),
-    value: displayedShortcut(
-      providerState,
-      mode,
-      userConfig.value.hotkeys[mode] ?? ''
-    ),
-    defaultValue: defaultShortcut(
-      providerState,
-      mode,
-      DEFAULT_USER_CONFIG.hotkeys[mode]
-    ),
-    command: activationCommand(providerState, mode, openCommandForMode(mode)),
-    externalHint: t('settings.externalMethodsHint'),
-  })),
+  ...modes
+    .filter((mode) => isValidActionPageHotkey(mode, actionPageCount.value))
+    .map((mode) => ({
+      id: mode,
+      label: t(`settings.hotkeyActions.${mode}`),
+      value: displayedShortcut(
+        providerState,
+        mode,
+        userConfig.value.hotkeys[mode] ?? ''
+      ),
+      defaultValue: defaultShortcut(
+        providerState,
+        mode,
+        DEFAULT_USER_CONFIG.hotkeys[mode]
+      ),
+      command: activationCommand(providerState, mode, openCommandForMode(mode)),
+      externalHint: t('settings.externalMethodsHint'),
+    })),
   {
     id: inlineId,
     label: t('settings.hotkeyActions.selectionCorrection'),
@@ -501,6 +515,7 @@ const rows = computed(() =>
   allRows.value.filter(
     (row) =>
       !CUSTOM_ACTION_HOTKEY_IDS.includes(row.id as HotkeyId) &&
+      isValidActionPageHotkey(row.id, actionPageCount.value) &&
       (PRIMARY_HOTKEY_IDS.includes(row.id as HotkeyId) ||
         Boolean(userConfig.value.hotkeys[row.id as HotkeyId]?.trim()) ||
         Boolean(displayedShortcut(providerState, row.id, '')))
@@ -520,6 +535,7 @@ const generalGroups = computed(() => {
   for (const groupDef of GENERAL_HOTKEY_GROUPS) {
     const groupRows: HotkeyRow[] = []
     for (const id of groupDef.hotkeyIds) {
+      if (!isValidActionPageHotkey(id, actionPageCount.value)) continue
       const row = rowMap.get(id)
       if (row) {
         groupRows.push(row)

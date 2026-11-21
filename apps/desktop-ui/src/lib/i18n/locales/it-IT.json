@@ -890,7 +890,8 @@
       "voice": "Input vocale",
       "voiceCommands": "Comandi vocali",
       "voiceQuickAiRequest": "Richiesta vocale rapida IA",
-      "voiceScreenshotQuickAiRequest": "Schermata e domanda vocale all’IA"
+      "voiceScreenshotQuickAiRequest": "Schermata e domanda vocale all’IA",
+      "dialog": "Dialogo"
     },
     "hotkeyDescriptions": {},
     "hotkeyGroups": {
@@ -1653,8 +1654,6 @@
     "microphoneAndSystemMix": "Microfono + tutto l’audio",
     "noPlayingApps": "Nessuna app sta riproducendo audio",
     "sourceLabel": "Sorgente",
-    "sourceInfo": "Cosa registra la scorciatoia: tutto l’audio del computer, tutto l’audio insieme al microfono (entrambi i lati di una chiamata) o un’app. L’app viene ricordata per nome; se non riproduce ancora nulla, la registrazione attende il suo audio.",
-    "appIdPlaceholder": "Nome dell’app, ad es. Telegram.exe",
     "privacyHint": "Con il riconoscimento cloud (Deepgram, Gemini), l’audio, comprese le voci di altre persone, viene inviato al fornitore scelto. Sherpa invia l’audio al server configurato; rimane su questo computer solo se il server è locale.",
     "privacyHintLabel": "Dove va l’audio",
     "useSystemMix": "Registra tutto l’audio",
@@ -1714,6 +1713,7 @@
     "recordingFailed": "La registrazione si è interrotta: impossibile scrivere il file. La trascrizione continua.",
     "recordingNoticeTitle": "Registrare una conversazione",
     "recordingNoticeMessage": "Se registri una conversazione con un’altra persona, avvisala prima.",
-    "recordingNoticeConfirm": "Ho capito"
+    "recordingNoticeConfirm": "Ho capito",
+    "remoteLanguage": "Lingua dell'interlocutore"
   }
 }

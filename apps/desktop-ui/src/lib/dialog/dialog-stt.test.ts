@@ -47,6 +47,29 @@ describe('resolveDialogStt', () => {
     expect(stt.languageOf('remote')).toBeUndefined()
   })
 
+  it('uses specific remote language when specified and not auto', async () => {
+    const stt = await resolveDialogStt({
+      getConfig: () =>
+        config({
+          providers: {
+            ...DEFAULT_USER_CONFIG.stt.providers,
+            deepgram: { modelId: 'nova-3', language: 'ru-RU' },
+          },
+        }),
+      getRemoteLanguage: () => 'en-US',
+      refreshSecrets: async () => undefined,
+      getSecrets: () => ({
+        'stt.deepgram': {
+          origins: ['https://api.deepgram.com'],
+          available: true,
+        },
+      }),
+      translate,
+    })
+    expect(stt.languageOf('me')).toBe('ru')
+    expect(stt.languageOf('remote')).toBe('en-US')
+  })
+
   it('reports an incomplete model', async () => {
     await expect(
       resolveDialogStt({

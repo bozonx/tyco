@@ -890,7 +890,8 @@
       "voice": "Glasovni unos",
       "voiceCommands": "Glasovne naredbe",
       "voiceQuickAiRequest": "Glasovni brzi upit za UI",
-      "voiceScreenshotQuickAiRequest": "Snimka zaslona i glasovno pitanje za AI"
+      "voiceScreenshotQuickAiRequest": "Snimka zaslona i glasovno pitanje za AI",
+      "dialog": "Dijalog"
     },
     "hotkeyDescriptions": {},
     "hotkeyGroups": {
@@ -1653,8 +1654,6 @@
     "microphoneAndSystemMix": "Mikrofon + sav zvuk",
     "noPlayingApps": "Nijedna aplikacija ne reproducira zvuk",
     "sourceLabel": "Izvor",
-    "sourceInfo": "Što prečac snima: sav zvuk računala, sav zvuk zajedno s mikrofonom (obje strane poziva) ili jednu aplikaciju. Aplikacija se pamti po nazivu; ako još ništa ne svira, snimanje čeka njezin zvuk.",
-    "appIdPlaceholder": "Naziv aplikacije, npr. Telegram.exe",
     "privacyHint": "Uz prepoznavanje u oblaku (Deepgram, Gemini), zvuk, uključujući govor drugih ljudi, šalje se odabranom pružatelju. Sherpa šalje zvuk konfiguriranom poslužitelju; na ovom računalu ostaje samo ako je poslužitelj lokalni.",
     "privacyHintLabel": "Kamo ide zvuk",
     "useSystemMix": "Snimaj sav zvuk",
@@ -1714,6 +1713,7 @@
     "recordingFailed": "Snimanje je zaustavljeno: datoteka se ne može zapisati. Transkripcija se nastavlja.",
     "recordingNoticeTitle": "Snimanje razgovora",
     "recordingNoticeMessage": "Ako snimate razgovor s drugom osobom, najprije joj to recite.",
-    "recordingNoticeConfirm": "Razumijem"
+    "recordingNoticeConfirm": "Razumijem",
+    "remoteLanguage": "Jezik sugovornika"
   }
 }

@@ -19,6 +19,11 @@ export interface DialogConfig {
   source: DialogSource
   /** The language the other side is translated into; empty: no translation */
   translationTargetLanguage: string
+  /**
+   * The language spoken by the other side when using Deepgram; empty or 'auto':
+   * automatic language detection
+   */
+  remoteLanguage?: string
   textDisplay: DialogTextDisplay
   /** `default`: the provider of the translation settings */
   translationProvider: 'default' | TranslationProvider

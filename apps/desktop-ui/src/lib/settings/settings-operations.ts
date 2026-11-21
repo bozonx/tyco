@@ -45,6 +45,33 @@ export function createSettingsOperations(deps: {
     config.actionPages = normalized
   }
 
+  const removeActionPage = (pageIndex: number) => {
+    const config = deps.getConfig()
+    const current = config.actionPages ?? []
+    if (pageIndex <= 0 || pageIndex >= current.length) return
+    if (current.length <= 1) return
+
+    config.actionPages = current.filter((_, index) => index !== pageIndex)
+
+    if (config.hotkeys) {
+      const secondaryIndex = pageIndex - 1
+      const secondaryKeys = [
+        'selectionActionsPage2',
+        'selectionActionsPage3',
+        'selectionActionsPage4',
+        'selectionActionsPage5',
+      ] as const
+
+      const shortcuts = secondaryKeys.map((key) => config.hotkeys[key] ?? '')
+      shortcuts.splice(secondaryIndex, 1)
+      shortcuts.push('')
+
+      for (let i = 0; i < secondaryKeys.length; i++) {
+        config.hotkeys[secondaryKeys[i]] = shortcuts[i]
+      }
+    }
+  }
+
   const updatePluginEnabled = (pluginId: string, isEnabled: boolean) => {
     const config = deps.getConfig()
     config.plugins[pluginId] = {
@@ -84,6 +111,7 @@ export function createSettingsOperations(deps: {
   return {
     finishProviderRemoval,
     updateActionPages,
+    removeActionPage,
     updateHotkey,
     updatePluginEnabled,
     updatePluginConfig,

@@ -18,6 +18,7 @@ export interface DialogStt {
 
 export interface DialogSttDependencies {
   getConfig: () => SttConfig
+  getRemoteLanguage?: () => string | undefined
   refreshSecrets: () => Promise<unknown>
   getSecrets: () => SecretsStatus
   translate: (key: string, params?: Record<string, string | number>) => string
@@ -50,9 +51,14 @@ export async function resolveDialogStt(
     assertSttKeyAvailable(deps.getSecrets(), model.provider, deps.translate)
   }
   const ownLanguage = dictationLanguageFor(model.language)
+  const rawRemote = deps.getRemoteLanguage?.()?.trim()
+  const remoteLanguage =
+    rawRemote && rawRemote !== 'auto'
+      ? dictationLanguageFor(rawRemote)
+      : undefined
   return {
     model,
     hasApiKey,
-    languageOf: (side) => (side === 'me' ? ownLanguage : undefined),
+    languageOf: (side) => (side === 'me' ? ownLanguage : remoteLanguage),
   }
 }

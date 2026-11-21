@@ -67,6 +67,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
     mode:
       | 'editor'
       | 'history'
+      | 'dialog'
       | 'voice'
       | 'listen'
       | 'screenshotQuickAiRequest'
@@ -466,6 +467,14 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           },
         },
         {
+          id: 'openDialog',
+          labelKey: 'nav.dialog',
+          icon: 'mdi:account-voice',
+          action: async () => {
+            await deps.activateMode?.('dialog')
+          },
+        },
+        {
           id: 'voiceInput',
           labelKey: 'menu.voiceInput',
           icon: 'mdi:microphone-outline',
@@ -587,8 +596,10 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
   })
 
   const clampPage = (index: number) => {
-    const max = pageCount.value - 1
-    return Math.max(0, Math.min(index, max))
+    if (index < 0 || index >= pageCount.value) {
+      return 0
+    }
+    return index
   }
   const setPage = (index: number) => {
     pageIndex.value = clampPage(index)

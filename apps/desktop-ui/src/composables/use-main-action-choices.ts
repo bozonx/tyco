@@ -151,13 +151,15 @@ export function useMainActionChoices(
             ? t('nav.editor')
             : actionId === 'openHistory'
               ? t('nav.history')
-              : actionId === 'voiceInput'
-                ? t('menu.voiceInput')
-                : actionId === 'listen'
-                  ? t('listen.title')
-                  : OPENS_DIALOG.has(actionId)
-                    ? `${t(`action.${actionId}`)}…`
-                    : t(`action.${actionId}`),
+              : actionId === 'openDialog'
+                ? t('nav.dialog')
+                : actionId === 'voiceInput'
+                  ? t('menu.voiceInput')
+                  : actionId === 'listen'
+                    ? t('listen.title')
+                    : OPENS_DIALOG.has(actionId)
+                      ? `${t(`action.${actionId}`)}…`
+                      : t(`action.${actionId}`),
       group: standardActionGroup(actionId),
     })),
     ...actionPages.value.map((_, index) => ({

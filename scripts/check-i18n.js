@@ -225,6 +225,7 @@ const DYNAMIC_KEYS = new Set([
     'chatPrompts',
     'favorites',
     'history',
+    'dialog',
     'customAction1',
     'customAction2',
     'customAction3',

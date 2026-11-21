@@ -180,7 +180,6 @@
       :title="t('settings.sttListenSection')"
       :info="t('settings.sttListenSectionInfo')"
     >
-      <ListenSourceField :nested="false" :separator="true" device-scoped />
       <FieldRow :label="t('settings.listenHotkeyLabel')" :separator="false">
         <InlineAction @click="navigate('global-actions#hotkey-listen')">
           {{ t('settings.configureInHotkeys') }}
@@ -224,7 +223,6 @@ import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
 import InlineAction from '../common/InlineAction.vue'
-import ListenSourceField from './ListenSourceField.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsTaskModel from './SettingsTaskModel.vue'

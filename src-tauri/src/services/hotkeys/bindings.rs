@@ -137,7 +137,7 @@ pub(crate) struct HotkeyBinding {
     pub(crate) description: String,
 }
 
-pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 17] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 18] = [
     ActivationMode::Editor,
     ActivationMode::QuickInput,
     ActivationMode::Chat,
@@ -155,6 +155,7 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 17] = [
     ActivationMode::ChatPrompts,
     ActivationMode::Favorites,
     ActivationMode::History,
+    ActivationMode::Dialog,
 ];
 
 /// Six primary entry points and five custom slots. Previously configured
@@ -236,6 +237,7 @@ fn is_primary_target(target: &HotkeyTarget) -> bool {
                 | ActivationMode::QuickInput
                 | ActivationMode::History
                 | ActivationMode::VoiceCommands
+                | ActivationMode::Dialog
         ) | HotkeyTarget::ActionPage(0)
             | HotkeyTarget::InlineCorrection
             | HotkeyTarget::CustomAction(_)
@@ -305,6 +307,7 @@ fn default_key(mode: ActivationMode) -> Option<&'static str> {
         ActivationMode::VoiceCommands => Some("X"),
         ActivationMode::QuickInput => Some("W"),
         ActivationMode::History => Some("H"),
+        ActivationMode::Dialog => Some("D"),
         ActivationMode::Editor
         | ActivationMode::Listen
         | ActivationMode::Chat
@@ -400,6 +403,7 @@ fn mode_description(mode: ActivationMode) -> &'static str {
         ActivationMode::ChatPrompts => "Show prompts",
         ActivationMode::Favorites => "Open favorites",
         ActivationMode::History => "Open history",
+        ActivationMode::Dialog => "Show dialog window",
         ActivationMode::Config => "Open settings",
         ActivationMode::CustomAction => "Run custom action",
         ActivationMode::CommandRun => "Show the run of a library command",
@@ -445,6 +449,7 @@ mod tests {
             "voiceCommands",
             "voice",
             "history",
+            "dialog",
             "selectionActions",
         ];
         if !cfg!(target_os = "macos") {
@@ -459,6 +464,10 @@ mod tests {
             default_hotkeys_config().get("history"),
             Some(&Value::String("Ctrl+Alt+Shift+H".to_owned()))
         );
+        assert_eq!(
+            default_hotkeys_config().get("dialog"),
+            Some(&Value::String("Ctrl+Alt+Shift+D".to_owned()))
+        );
     }
 
     #[test]
@@ -467,11 +476,12 @@ mod tests {
             .into_iter()
             .map(|binding| binding.target.id())
             .collect::<Vec<_>>();
-        assert_eq!(defaults.len(), 11);
+        assert_eq!(defaults.len(), 12);
         for id in [
             "voice",
             "quickInput",
             "history",
+            "dialog",
             "voiceCommands",
             "selectionCorrection",
             "selectionActions",
@@ -512,7 +522,7 @@ mod tests {
                 .find(|binding| binding.target.id() == id)
                 .and_then(|binding| binding.shortcut.clone())
         };
-        assert_eq!(bindings.len(), 14);
+        assert_eq!(bindings.len(), 15);
         assert_eq!(shortcut("editor").as_deref(), Some("Super+Space"));
         assert_eq!(shortcut("chatPrompts").as_deref(), Some("Ctrl+Alt+P"));
         assert_eq!(shortcut("customAction1").as_deref(), Some("Ctrl+Alt+C"));

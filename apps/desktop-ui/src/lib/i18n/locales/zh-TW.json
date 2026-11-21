@@ -890,7 +890,8 @@
       "voice": "語音輸入",
       "voiceCommands": "語音命令",
       "voiceQuickAiRequest": "語音 AI 快速請求",
-      "voiceScreenshotQuickAiRequest": "擷取螢幕並向 AI 語音提問"
+      "voiceScreenshotQuickAiRequest": "擷取螢幕並向 AI 語音提問",
+      "dialog": "對話"
     },
     "hotkeyDescriptions": {},
     "hotkeyGroups": {
@@ -1649,8 +1650,6 @@
     "microphoneAndSystemMix": "麥克風 + 全部聲音",
     "noPlayingApps": "目前沒有應用程式在播放聲音",
     "sourceLabel": "來源",
-    "sourceInfo": "快速鍵錄製的內容：電腦的全部聲音、全部聲音加麥克風（通話雙方）或某個應用程式。應用程式依名稱記住；若尚未播放任何內容，錄製會等待它的聲音。",
-    "appIdPlaceholder": "應用程式名稱，例如 Telegram.exe",
     "privacyHint": "使用雲端辨識（Deepgram、Gemini）時，音訊（包括他人的語音）會傳送給所選服務商。Sherpa 會將音訊傳送到設定的伺服器；只有使用本機伺服器時，音訊才會留在這台電腦上。",
     "privacyHintLabel": "聲音的去向",
     "useSystemMix": "錄製全部聲音",
@@ -1710,6 +1709,7 @@
     "recordingFailed": "錄音已停止：無法寫入檔案。轉錄繼續進行。",
     "recordingNoticeTitle": "錄製對話",
     "recordingNoticeMessage": "錄製與他人的對話時，請先告知對方。",
-    "recordingNoticeConfirm": "知道了"
+    "recordingNoticeConfirm": "知道了",
+    "remoteLanguage": "對方語言"
   }
 }

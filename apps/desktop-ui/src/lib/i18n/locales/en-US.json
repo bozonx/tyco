@@ -890,7 +890,8 @@
       "voice": "Voice input",
       "voiceCommands": "Voice commands",
       "voiceQuickAiRequest": "Voice quick AI request",
-      "voiceScreenshotQuickAiRequest": "Screenshot and voice AI question"
+      "voiceScreenshotQuickAiRequest": "Screenshot and voice AI question",
+      "dialog": "Dialog"
     },
     "hotkeyDescriptions": {},
     "hotkeyGroups": {
@@ -1653,8 +1654,6 @@
     "microphoneAndSystemMix": "Microphone + all sound",
     "noPlayingApps": "No app is playing sound",
     "sourceLabel": "Source",
-    "sourceInfo": "What the hotkey records: all the sound of the computer, all the sound together with the microphone (both sides of a call), or one app. An app is remembered by its name and waited for if it plays nothing yet.",
-    "appIdPlaceholder": "App name, e.g. Telegram.exe",
     "privacyHint": "With cloud recognition (Deepgram, Gemini), audio including other people's speech goes to the selected provider. Sherpa sends audio to the configured server; it stays on this computer only when that server is local.",
     "privacyHintLabel": "Where the sound goes",
     "useSystemMix": "Record all sound",
@@ -1714,6 +1713,7 @@
     "recordingFailed": "The recording stopped: the file could not be written. The transcript goes on.",
     "recordingNoticeTitle": "Recording a conversation",
     "recordingNoticeMessage": "When you record a conversation with another person, tell them first.",
-    "recordingNoticeConfirm": "Got it"
+    "recordingNoticeConfirm": "Got it",
+    "remoteLanguage": "Speaker language"
   }
 }

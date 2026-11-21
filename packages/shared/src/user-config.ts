@@ -157,6 +157,7 @@ export interface HotkeysConfig {
   chatPrompts: string
   favorites: string
   history: string
+  dialog: string
   voiceCommands: string
   selectionCorrection: string
   customAction1: string

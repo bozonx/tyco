@@ -890,7 +890,8 @@
       "voice": "Saisie vocale",
       "voiceCommands": "Commandes vocales",
       "voiceQuickAiRequest": "Requête vocale IA rapide",
-      "voiceScreenshotQuickAiRequest": "Capture d’écran et question vocale à l’IA"
+      "voiceScreenshotQuickAiRequest": "Capture d’écran et question vocale à l’IA",
+      "dialog": "Dialogue"
     },
     "hotkeyDescriptions": {},
     "hotkeyGroups": {
@@ -1653,8 +1654,6 @@
     "microphoneAndSystemMix": "Micro + tout le son",
     "noPlayingApps": "Aucune application ne joue de son",
     "sourceLabel": "Source",
-    "sourceInfo": "Ce que le raccourci enregistre : tout le son de l’ordinateur, tout le son avec le micro (les deux côtés d’un appel) ou une application. L’application est retenue par son nom ; si elle ne joue rien encore, l’enregistrement attend son son.",
-    "appIdPlaceholder": "Nom de l’application, p. ex. Telegram.exe",
     "privacyHint": "Avec la reconnaissance dans le cloud (Deepgram, Gemini), l’audio, y compris les voix d’autres personnes, est envoyé au fournisseur choisi. Sherpa envoie l’audio au serveur configuré ; il reste sur cet ordinateur uniquement si ce serveur est local.",
     "privacyHintLabel": "Où va le son",
     "useSystemMix": "Enregistrer tout le son",
@@ -1714,6 +1713,7 @@
     "recordingFailed": "L’enregistrement s’est arrêté : le fichier n’a pas pu être écrit. La transcription continue.",
     "recordingNoticeTitle": "Enregistrer une conversation",
     "recordingNoticeMessage": "Si vous enregistrez une conversation avec une autre personne, prévenez-la d’abord.",
-    "recordingNoticeConfirm": "J’ai compris"
+    "recordingNoticeConfirm": "J’ai compris",
+    "remoteLanguage": "Langue de l’interlocuteur"
   }
 }

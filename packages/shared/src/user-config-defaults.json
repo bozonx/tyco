@@ -68,6 +68,7 @@
     "chatPrompts": "",
     "favorites": "",
     "history": "Ctrl+Alt+Shift+H",
+    "dialog": "Ctrl+Alt+Shift+D",
     "voiceCommands": "Ctrl+Alt+Shift+X",
     "selectionCorrection": "Ctrl+Alt+Shift+F",
     "customAction1": "",
@@ -267,6 +268,7 @@
     "isEnabled": true,
     "source": "microphoneAndSystem",
     "translationTargetLanguage": "",
+    "remoteLanguage": "auto",
     "textDisplay": "both",
     "translationProvider": "default"
   }

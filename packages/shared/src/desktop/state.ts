@@ -31,6 +31,7 @@ export const ActivationMode = {
   QUICK_INPUT: 'quickInput',
   CHAT: 'chat',
   HISTORY: 'history',
+  DIALOG: 'dialog',
   CONFIG: 'config',
   /** Shows the run of a library command; Tyco opens it itself */
   COMMAND_RUN: 'commandRun',

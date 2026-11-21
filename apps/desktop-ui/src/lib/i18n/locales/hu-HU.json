@@ -890,7 +890,8 @@
       "voice": "Hangbevitel",
       "voiceCommands": "Hangparancsok",
       "voiceQuickAiRequest": "Hangalapú gyors MI kérés",
-      "voiceScreenshotQuickAiRequest": "Képernyőkép és hangos kérdés az MI-nek"
+      "voiceScreenshotQuickAiRequest": "Képernyőkép és hangos kérdés az MI-nek",
+      "dialog": "Párbeszéd"
     },
     "hotkeyDescriptions": {},
     "hotkeyGroups": {
@@ -1653,8 +1654,6 @@
     "microphoneAndSystemMix": "Mikrofon + teljes hang",
     "noPlayingApps": "Egy alkalmazás sem játszik le hangot",
     "sourceLabel": "Forrás",
-    "sourceInfo": "Mit rögzít a billentyűparancs: a számítógép teljes hangját, a teljes hangot a mikrofonnal együtt (egy hívás mindkét oldalát) vagy egy alkalmazást. Az alkalmazást a neve alapján jegyzi meg; ha még nem játszik le semmit, a rögzítés megvárja a hangját.",
-    "appIdPlaceholder": "Alkalmazás neve, pl. Telegram.exe",
     "privacyHint": "Felhőalapú felismerésnél (Deepgram, Gemini) a hang, mások beszédét is beleértve, a kiválasztott szolgáltatóhoz kerül. A Sherpa a beállított kiszolgálóra küldi a hangot; az csak helyi kiszolgáló esetén marad ezen a számítógépen.",
     "privacyHintLabel": "Hová kerül a hang",
     "useSystemMix": "Teljes hang rögzítése",
@@ -1714,6 +1713,7 @@
     "recordingFailed": "A felvétel leállt: a fájl nem írható. Az átirat folytatódik.",
     "recordingNoticeTitle": "Beszélgetés rögzítése",
     "recordingNoticeMessage": "Ha egy másik személlyel folytatott beszélgetést rögzít, előbb szóljon neki.",
-    "recordingNoticeConfirm": "Értem"
+    "recordingNoticeConfirm": "Értem",
+    "remoteLanguage": "Beszélő nyelve"
   }
 }
