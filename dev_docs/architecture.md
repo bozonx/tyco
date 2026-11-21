@@ -19,6 +19,17 @@ and their adjacent component tests retain PascalCase component names.
 Components are grouped by feature (`chat`, `editor`, `history`, `quick`,
 `settings`); shared presentation primitives live in `components/common`.
 
+Optional modes stay out of the startup path. The dialog (`docs/dialog.md`) is
+one: `dialog.isEnabled` hides its tab and route, and a running dialog stops
+and is saved when it is turned off. `DialogView` is a lazy route that brings
+`stores/dialog.ts` and `lib/dialog/*` with it; the nav tab reads only
+`stores/dialog-status.ts`. The `lib/dialog/*` models take capture, STT,
+translation and history injected, and `stores/dialog.ts` is the one place that
+wires them to other features. The history keeps a typed `dialog` block rather
+than an opaque feature payload: it acts on it (a recorded session is kept, its
+file is listed and checked) and journals are read by older builds on other
+devices, so a generic block would change the format for no new capability.
+
 Settings tabs edit a draft owned by `createSettingsSession`, not persisted
 state. The four tabs that deliberately mutate that draft have explicit local
 ESLint exceptions. Config normalization and autosave are separate tested models.
