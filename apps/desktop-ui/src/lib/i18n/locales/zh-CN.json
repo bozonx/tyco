@@ -1504,8 +1504,7 @@
     "missingSelection": "需要提供选中的文本。",
     "phrasesPlaceholder": "示例短语，每行一条",
     "parameterMissing": "请在命令名称旁选择参数值。",
-    "phaseAwaitingParameter": "Say {parameter}...",
-    "backToCommands": "All commands"
+    "phaseAwaitingParameter": "Say {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

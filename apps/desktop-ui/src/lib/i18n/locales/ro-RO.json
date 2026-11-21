@@ -1504,8 +1504,7 @@
     "missingSelection": "Este necesar textul selectat.",
     "phrasesPlaceholder": "Fraze demonstrative, câte una pe rând",
     "parameterMissing": "Alegeți valoarea parametrului lângă numele comenzii.",
-    "phaseAwaitingParameter": "Spuneți {parameter}...",
-    "backToCommands": "Toate comenzile"
+    "phaseAwaitingParameter": "Spuneți {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

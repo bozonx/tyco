@@ -1504,8 +1504,7 @@
     "missingSelection": "必須提供選取的文字。",
     "phrasesPlaceholder": "範例詞，每行一個",
     "parameterMissing": "請在命令名稱旁選擇參數值。",
-    "phaseAwaitingParameter": "請說出 {parameter}...",
-    "backToCommands": "所有指令"
+    "phaseAwaitingParameter": "請說出 {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

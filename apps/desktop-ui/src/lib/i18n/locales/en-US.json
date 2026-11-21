@@ -1504,8 +1504,7 @@
     "missingSelection": "Selection is required.",
     "phrasesPlaceholder": "Sample phrases, one per line",
     "parameterMissing": "Choose the parameter value next to the command name.",
-    "phaseAwaitingParameter": "Say {parameter}...",
-    "backToCommands": "All commands"
+    "phaseAwaitingParameter": "Say {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

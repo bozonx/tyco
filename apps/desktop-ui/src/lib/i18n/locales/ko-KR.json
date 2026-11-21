@@ -1504,8 +1504,7 @@
     "missingSelection": "선택한 텍스트가 필요합니다.",
     "phrasesPlaceholder": "예시 문구 (한 줄에 하나씩)",
     "parameterMissing": "명령 이름 옆에서 매개변수 값을 선택하세요.",
-    "phaseAwaitingParameter": "{parameter}을(를) 말하세요...",
-    "backToCommands": "모든 명령"
+    "phaseAwaitingParameter": "{parameter}을(를) 말하세요..."
   },
   "voiceGrammar": {
     "languages": {

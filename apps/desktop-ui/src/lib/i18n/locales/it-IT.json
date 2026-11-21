@@ -1504,8 +1504,7 @@
     "missingSelection": "Il testo selezionato è obbligatorio.",
     "phrasesPlaceholder": "Frasi di esempio, una per riga",
     "parameterMissing": "Scegli il valore del parametro accanto al nome del comando.",
-    "phaseAwaitingParameter": "Pronuncia {parameter}...",
-    "backToCommands": "Tutti i comandi"
+    "phaseAwaitingParameter": "Pronuncia {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

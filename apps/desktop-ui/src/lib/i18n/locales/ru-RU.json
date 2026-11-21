@@ -1504,8 +1504,7 @@
     "missingSelection": "Нужен выделенный текст.",
     "phrasesPlaceholder": "Примеры фраз построчно",
     "parameterMissing": "Выберите значение параметра рядом с названием команды.",
-    "phaseAwaitingParameter": "Назовите: {parameter}...",
-    "backToCommands": "Все команды"
+    "phaseAwaitingParameter": "Назовите: {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

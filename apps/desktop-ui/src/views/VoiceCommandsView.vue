@@ -6,6 +6,7 @@
       :on-esc="close"
     >
       <template #header-extra>
+        <InfoTooltip :text="t('voiceCommands.hint')" placement="bottom" />
         <SttLanguagePicker
           placement="bottom"
           align="right"
@@ -13,7 +14,6 @@
           :has-text="hasText"
           @change="handleLanguageChange"
         />
-        <InfoTooltip :text="t('voiceCommands.hint')" placement="bottom" />
       </template>
 
       <template #preview>
@@ -64,12 +64,7 @@
             </section>
 
             <div v-if="voice.activeCommand" class="voice-pipeline-bar">
-              <button
-                type="button"
-                class="voice-pipeline-chip voice-breadcrumb-cmd"
-                :title="t('voiceCommands.backToCommands')"
-                @click="voice.pinCommand(undefined)"
-              >
+              <div class="voice-pipeline-chip voice-breadcrumb-cmd">
                 <AppIcon
                   :icon="commandIcon(voice.activeCommand, tools)"
                   size="sm"
@@ -78,13 +73,7 @@
                 <span class="voice-pipeline-label">{{
                   commandLabel(voice.activeCommand)
                 }}</span>
-                <AppIcon
-                  icon="mdi:close"
-                  size="xs"
-                  class="voice-pipeline-close"
-                  aria-hidden="true"
-                />
-              </button>
+              </div>
 
               <template v-for="item in liveParameterItems" :key="item.name">
                 <span
@@ -92,20 +81,9 @@
                   aria-hidden="true"
                   >›</span
                 >
-                <button
-                  type="button"
-                  class="voice-pipeline-chip voice-param-chip is-set"
-                  :title="item.label"
-                  @click="voice.clearParameter(item.name)"
-                >
+                <div class="voice-pipeline-chip voice-param-chip is-set">
                   <span class="voice-pipeline-label">{{ item.label }}</span>
-                  <AppIcon
-                    icon="mdi:close"
-                    size="xs"
-                    class="voice-pipeline-close"
-                    aria-hidden="true"
-                  />
-                </button>
+                </div>
               </template>
 
               <template v-if="voice.activeParameter">
@@ -855,15 +833,8 @@ onUnmounted(() => {
   color: var(--color-base-content);
   font-size: var(--text-caption);
   font-weight: 500;
-  cursor: pointer;
-  transition:
-    background-color var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-.voice-pipeline-chip:hover {
-  background-color: var(--app-hover);
-  border-color: var(--color-primary);
+  cursor: default;
+  user-select: none;
 }
 
 .voice-pipeline-chip.is-set {
@@ -891,15 +862,6 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.voice-pipeline-close {
-  opacity: 0.6;
-  margin-left: 2px;
-}
-
-.voice-pipeline-chip:hover .voice-pipeline-close {
-  opacity: 1;
 }
 
 .voice-pipeline-sep {

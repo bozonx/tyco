@@ -1504,8 +1504,7 @@
     "missingSelection": "Je vyžadován výběr textu.",
     "phrasesPlaceholder": "Příklady frází, jedna na řádek",
     "parameterMissing": "Vyberte hodnotu parametru vedle názvu příkazu.",
-    "phaseAwaitingParameter": "Řekněte {parameter}...",
-    "backToCommands": "Všechny příkazy"
+    "phaseAwaitingParameter": "Řekněte {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

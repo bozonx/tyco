@@ -1504,8 +1504,7 @@
     "missingSelection": "Ausgewählter Text erforderlich.",
     "phrasesPlaceholder": "Beispielphrasen, eine pro Zeile",
     "parameterMissing": "Wählen Sie den Parameterwert neben dem Befehlsnamen.",
-    "phaseAwaitingParameter": "Nennen Sie {parameter}...",
-    "backToCommands": "Alle Befehle"
+    "phaseAwaitingParameter": "Nennen Sie {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

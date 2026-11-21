@@ -1504,8 +1504,7 @@
     "missingSelection": "Se necesita texto seleccionado.",
     "phrasesPlaceholder": "Frases de ejemplo, una por línea",
     "parameterMissing": "Elige el valor del parámetro junto al nombre del comando.",
-    "phaseAwaitingParameter": "Di {parameter}...",
-    "backToCommands": "Todos los comandos"
+    "phaseAwaitingParameter": "Di {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

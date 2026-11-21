@@ -1504,8 +1504,7 @@
     "missingSelection": "Απαιτείται επιλεγμένο κείμενο.",
     "phrasesPlaceholder": "Παραδείγματα φράσεων, μία ανά γραμμή",
     "parameterMissing": "Επιλέξτε την τιμή της παραμέτρου δίπλα στο όνομα της εντολής.",
-    "phaseAwaitingParameter": "Πείτε {parameter}...",
-    "backToCommands": "Όλες οι εντολές"
+    "phaseAwaitingParameter": "Πείτε {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

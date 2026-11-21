@@ -1504,8 +1504,7 @@
     "missingSelection": "Kijelölt szöveg szükséges.",
     "phrasesPlaceholder": "Példamondatok, soronként egy",
     "parameterMissing": "Válassza ki a paraméter értékét a parancs neve mellett.",
-    "phaseAwaitingParameter": "Mondja: {parameter}...",
-    "backToCommands": "Összes parancs"
+    "phaseAwaitingParameter": "Mondja: {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

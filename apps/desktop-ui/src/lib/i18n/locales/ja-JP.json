@@ -1504,8 +1504,7 @@
     "missingSelection": "選択されたテキストが必要です。",
     "phrasesPlaceholder": "フレーズの例（1行に1つ）",
     "parameterMissing": "コマンド名の横でパラメーターの値を選択してください。",
-    "phaseAwaitingParameter": "{parameter} を話してください...",
-    "backToCommands": "すべてのコマンド"
+    "phaseAwaitingParameter": "{parameter} を話してください..."
   },
   "voiceGrammar": {
     "languages": {

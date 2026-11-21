@@ -1504,8 +1504,7 @@
     "missingSelection": "Потрібен виділений текст.",
     "phrasesPlaceholder": "Приклади фраз построково",
     "parameterMissing": "Виберіть значення параметра поруч із назвою команди.",
-    "phaseAwaitingParameter": "Назвіть: {parameter}...",
-    "backToCommands": "Усі команди"
+    "phaseAwaitingParameter": "Назвіть: {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

@@ -1504,8 +1504,7 @@
     "missingSelection": "საჭიროა მონიშნული ტექსტი.",
     "phrasesPlaceholder": "სანიმუშო ფრაზები, თითო ხაზზე",
     "parameterMissing": "აირჩიეთ პარამეტრის მნიშვნელობა ბრძანების სახელის გვერდით.",
-    "phaseAwaitingParameter": "თქვით {parameter}...",
-    "backToCommands": "ყველა ბრძანება"
+    "phaseAwaitingParameter": "თქვით {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

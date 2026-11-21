@@ -1504,8 +1504,7 @@
     "missingSelection": "Wymagany jest zaznaczony tekst.",
     "phrasesPlaceholder": "Przykładowe frazy, jedna na wiersz",
     "parameterMissing": "Wybierz wartość parametru obok nazwy polecenia.",
-    "phaseAwaitingParameter": "Powiedz {parameter}...",
-    "backToCommands": "Wszystkie polecenia"
+    "phaseAwaitingParameter": "Powiedz {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

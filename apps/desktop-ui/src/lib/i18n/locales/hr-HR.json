@@ -1504,8 +1504,7 @@
     "missingSelection": "Potreban je odabrani tekst.",
     "phrasesPlaceholder": "Primjeri fraza, jedna po retku",
     "parameterMissing": "Odaberite vrijednost parametra pokraj naziva naredbe.",
-    "phaseAwaitingParameter": "Recite {parameter}...",
-    "backToCommands": "Sve naredbe"
+    "phaseAwaitingParameter": "Recite {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

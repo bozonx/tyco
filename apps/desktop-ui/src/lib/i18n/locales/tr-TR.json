@@ -1504,8 +1504,7 @@
     "missingSelection": "Seçili metin gerekli.",
     "phrasesPlaceholder": "Örnek ifadeler, her satıra bir tane",
     "parameterMissing": "Komut adının yanından parametre değerini seçin.",
-    "phaseAwaitingParameter": "Say {parameter}...",
-    "backToCommands": "All commands"
+    "phaseAwaitingParameter": "Say {parameter}..."
   },
   "voiceGrammar": {
     "languages": {

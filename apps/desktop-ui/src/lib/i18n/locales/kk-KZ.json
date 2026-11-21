@@ -1504,8 +1504,7 @@
     "missingSelection": "Бөліп көрсетілген мәтін қажет.",
     "phrasesPlaceholder": "Үлгі фразалар, әр жолға біреуден",
     "parameterMissing": "Команда атауының жанынан параметр мәнін таңдаңыз.",
-    "phaseAwaitingParameter": "Say {parameter}...",
-    "backToCommands": "All commands"
+    "phaseAwaitingParameter": "Say {parameter}..."
   },
   "voiceGrammar": {
     "languages": {
