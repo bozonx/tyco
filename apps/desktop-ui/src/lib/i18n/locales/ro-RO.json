@@ -519,6 +519,10 @@
     "filterListen": "Sunet sistem",
     "kindDialog": "Dialog",
     "recordingNotFound": "fișier negăsit",
+    "playRecording": "Redă înregistrarea",
+    "closeRecording": "Închide playerul",
+    "playRecordingDuringDialog": "Redarea nu este disponibilă în timpul unui dialog",
+    "recordingUnplayable": "nu poate fi redat",
     "recordingIncomplete": "înregistrare incompletă",
     "showInFolder": "Arată în dosar"
   },

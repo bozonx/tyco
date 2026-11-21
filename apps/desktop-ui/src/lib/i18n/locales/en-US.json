@@ -519,6 +519,10 @@
     "filterListen": "System audio",
     "kindDialog": "Dialog",
     "recordingNotFound": "file not found",
+    "playRecording": "Play the recording",
+    "closeRecording": "Close the player",
+    "playRecordingDuringDialog": "Playback is paused while a dialog is running",
+    "recordingUnplayable": "cannot be played",
     "recordingIncomplete": "recording incomplete",
     "showInFolder": "Show in folder"
   },

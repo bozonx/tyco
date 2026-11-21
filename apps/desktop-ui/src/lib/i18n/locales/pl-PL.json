@@ -519,6 +519,10 @@
     "filterListen": "Dźwięk systemu",
     "kindDialog": "Dialog",
     "recordingNotFound": "nie znaleziono pliku",
+    "playRecording": "Odtwórz nagranie",
+    "closeRecording": "Zamknij odtwarzacz",
+    "playRecordingDuringDialog": "Odtwarzanie jest niedostępne podczas dialogu",
+    "recordingUnplayable": "nie można odtworzyć",
     "recordingIncomplete": "nagranie niepełne",
     "showInFolder": "Pokaż w folderze"
   },

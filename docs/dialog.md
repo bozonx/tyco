@@ -108,7 +108,10 @@ A file is named by the time it started and a short code, e.g.
 `2026-11-20 14-03-05 a1b2c3.opus`; do not rename it, or its history entry
 loses it. The history entry of a recorded conversation shows the file name
 and **Show in folder**, or "file not found" when the file is not there, e.g.
-not synchronized yet. A recording goes with its history entry: when you
+not synchronized yet. The play button next to it opens a player right in the
+entry; one recording plays at a time, and none while a dialog is running, so
+that the sound does not go into the call. A recording still being written
+plays once the conversation stops. A recording goes with its history entry: when you
 delete the entry (after the few seconds in which **Undo** brings both back),
 clear the history, or when the history settings no longer keep the entry. If
 the disk falls behind for a moment, the

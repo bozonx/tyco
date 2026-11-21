@@ -1,5 +1,5 @@
 <template>
-  <div class="history-list">
+  <div class="history-list" @play.capture="pauseOtherPlayers">
     <slot name="notice" />
 
     <div v-if="$slots.search || items.length > 0" class="history-header-row">
@@ -105,6 +105,13 @@ const isNarrowed = computed(
   () => Boolean(props.searchQuery?.trim()) || props.isFiltered
 )
 
+/** One recording plays at a time: starting one pauses the others */
+function pauseOtherPlayers(event: Event) {
+  const root = event.currentTarget
+  if (!(root instanceof HTMLElement)) return
+  for (const media of root.querySelectorAll('audio, video'))
+    if (media !== event.target) (media as HTMLMediaElement).pause()
+}
 const scroller = ref<HTMLElement | null>(null)
 const expandedIds = ref(new Set<string>())
 const originalShownIds = ref(new Set<string>())

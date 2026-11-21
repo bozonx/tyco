@@ -97,6 +97,7 @@ import { useEditorHistoryChanges } from '../composables/use-editor-history-chang
 import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
+import { convertFileSrc } from '../lib/desktop/window'
 import {
   getEditorHistoryNote,
   getEditorHistoryView,
@@ -108,9 +109,11 @@ import {
   type HistoryFilter,
   filterEditorHistory,
 } from '../lib/history/history-filter'
+import { createRecordingMediaUrl } from '../lib/history/recording-media-url'
 import { createRemovalUndo } from '../lib/history/removal-undo'
 import { clientLogger } from '../lib/logger'
 import { useDesktopStore } from '../stores/desktop'
+import { useDialogStatusStore } from '../stores/dialog-status'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import type { EditorHistoryItem } from '@tyco/shared'
@@ -119,6 +122,7 @@ const { toastKey } = useToast()
 const { t } = useI18n()
 const historyStore = useHistoryStore()
 const desktopStore = useDesktopStore()
+const dialogStatus = useDialogStatusStore()
 const ipcStore = useIpcStore()
 // the text is already in the history and the window stays open
 const copyText = useCopyText({ saveOutput: false })
@@ -261,6 +265,16 @@ const recordingFile = (
     id: 'showRecording',
     icon: 'mdi:folder-open-outline',
     title: t('history.showInFolder'),
+  },
+  playback: {
+    source: () => createRecordingMediaUrl(file, convertFileSrc),
+    playTitle: t('history.playRecording'),
+    closeTitle: t('history.closeRecording'),
+    // the sound would go into the call's recording or transcript
+    ...(dialogStatus.isActive && {
+      disabledTitle: t('history.playRecordingDuringDialog'),
+    }),
+    unavailableLabel: t('history.recordingUnplayable'),
   },
 })
 

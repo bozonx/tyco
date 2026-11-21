@@ -519,6 +519,10 @@
     "filterListen": "Audio di sistema",
     "kindDialog": "Dialogo",
     "recordingNotFound": "file non trovato",
+    "playRecording": "Riproduci la registrazione",
+    "closeRecording": "Chiudi il lettore",
+    "playRecordingDuringDialog": "La riproduzione non è disponibile durante un dialogo",
+    "recordingUnplayable": "impossibile riprodurre",
     "recordingIncomplete": "registrazione incompleta",
     "showInFolder": "Mostra nella cartella"
   },

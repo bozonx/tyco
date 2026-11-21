@@ -26,7 +26,20 @@ export interface HistoryListItem {
     /** Said of a file that is there, e.g. that it holds only a part */
     note?: string
     action: HistoryListAction
+    /** Plays the file in place; missing when it cannot be played */
+    playback?: HistoryFilePlayback
   }
+}
+
+/** How an entry plays its file with the webview's own player */
+export interface HistoryFilePlayback {
+  /** The URL to play from, asked for only when the player opens */
+  source: () => string
+  playTitle: string
+  closeTitle: string
+  /** Why it cannot play now, e.g. while a dialog records the sound */
+  disabledTitle?: string
+  unavailableLabel: string
 }
 
 export interface HistoryListAction {

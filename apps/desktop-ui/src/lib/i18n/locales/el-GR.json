@@ -519,6 +519,10 @@
     "filterListen": "Ήχος συστήματος",
     "kindDialog": "Διάλογος",
     "recordingNotFound": "το αρχείο δεν βρέθηκε",
+    "playRecording": "Αναπαραγωγή της ηχογράφησης",
+    "closeRecording": "Κλείσιμο του προγράμματος αναπαραγωγής",
+    "playRecordingDuringDialog": "Η αναπαραγωγή δεν είναι διαθέσιμη κατά τη διάρκεια διαλόγου",
+    "recordingUnplayable": "δεν είναι δυνατή η αναπαραγωγή",
     "recordingIncomplete": "η εγγραφή είναι ελλιπής",
     "showInFolder": "Εμφάνιση στον φάκελο"
   },

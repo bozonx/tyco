@@ -122,6 +122,16 @@ pub fn run() {
                 });
             },
         )
+        // a recording is read from disk; the main thread must not wait
+        .register_asynchronous_uri_scheme_protocol(
+            services::media_protocol::SCHEME,
+            |context, request, responder| {
+                let app = context.app_handle().clone();
+                tauri::async_runtime::spawn_blocking(move || {
+                    responder.respond(services::media_protocol::respond(&app, &request));
+                });
+            },
+        )
         .plugin(logger_plugin())
         .plugin(tauri_plugin_dialog::init())
         .plugin(single_instance(|app, args, _cwd| {

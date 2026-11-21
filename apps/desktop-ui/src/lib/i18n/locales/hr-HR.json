@@ -519,6 +519,10 @@
     "filterListen": "Zvuk sustava",
     "kindDialog": "Dijalog",
     "recordingNotFound": "datoteka nije pronađena",
+    "playRecording": "Reproduciraj snimku",
+    "closeRecording": "Zatvori reproduktor",
+    "playRecordingDuringDialog": "Reprodukcija nije dostupna tijekom dijaloga",
+    "recordingUnplayable": "nije moguće reproducirati",
     "recordingIncomplete": "snimka je nepotpuna",
     "showInFolder": "Prikaži u mapi"
   },

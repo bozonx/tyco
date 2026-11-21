@@ -519,6 +519,10 @@
     "filterListen": "Жүйе дыбысы",
     "kindDialog": "Диалог",
     "recordingNotFound": "файл табылмады",
+    "playRecording": "Жазбаны ойнату",
+    "closeRecording": "Ойнатқышты жабу",
+    "playRecordingDuringDialog": "Диалог жүріп жатқанда ойнату қолжетімсіз",
+    "recordingUnplayable": "ойнату мүмкін емес",
     "recordingIncomplete": "жазба толық емес",
     "showInFolder": "Қалтадан көрсету"
   },

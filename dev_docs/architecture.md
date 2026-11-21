@@ -216,6 +216,14 @@ names a recording by its file name (a `Dialog` entry with a `recordingFile`
 is stored even without text, so the file stays reachable);
 `check_dialog_recordings`, `show_dialog_recording` and
 `discard_dialog_recording` accept only names of that pattern.
+The history plays a recording with the webview's own `<audio>` from the
+`tyco-media://` scheme (`services/media_protocol.rs`, allowed by `media-src`):
+`tyco-media://localhost/recording/<file name>`, or
+`http://tyco-media.localhost/...` on Windows (`lib/history/recording-media-url.ts`).
+The webview names the file, never a path; the scheme accepts only names of the
+pattern, serves no recording still being written, and answers byte ranges in
+chunks of at most 2 MiB, so the element streams and seeks a long call. Ogg/Opus
+plays in WebView2 and in WebKitGTK with the base GStreamer plugins.
 The dialog's subtitles are a window of their own, `subtitles`
 (`runtime/subtitles_window.rs`, behind a `SubtitlesHost`), created the first
 time they are shown; the main window is minimized meanwhile. With

@@ -519,6 +519,10 @@
     "filterListen": "Systémový zvuk",
     "kindDialog": "Dialog",
     "recordingNotFound": "soubor nenalezen",
+    "playRecording": "Přehrát nahrávku",
+    "closeRecording": "Zavřít přehrávač",
+    "playRecordingDuringDialog": "Během dialogu není přehrávání dostupné",
+    "recordingUnplayable": "nelze přehrát",
     "recordingIncomplete": "nahrávka je neúplná",
     "showInFolder": "Zobrazit ve složce"
   },

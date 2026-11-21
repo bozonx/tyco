@@ -519,6 +519,10 @@
     "filterListen": "Звук системы",
     "kindDialog": "Диалог",
     "recordingNotFound": "файл не найден",
+    "playRecording": "Воспроизвести запись",
+    "closeRecording": "Закрыть плеер",
+    "playRecordingDuringDialog": "Воспроизведение недоступно, пока идёт диалог",
+    "recordingUnplayable": "не удаётся воспроизвести",
     "recordingIncomplete": "запись неполная",
     "showInFolder": "Показать в папке"
   },

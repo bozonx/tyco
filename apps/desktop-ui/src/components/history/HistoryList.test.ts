@@ -200,4 +200,98 @@ describe('HistoryList.vue', () => {
     expect(wrapper.text()).not.toContain('history.empty')
     expect(wrapper.find('[aria-busy="true"]').exists()).toBe(true)
   })
+
+  describe('recording playback', () => {
+    const recordingItem = (
+      playback: Partial<
+        NonNullable<NonNullable<HistoryListItem['file']>['playback']>
+      > = {}
+    ): HistoryListItem => ({
+      id: 'dialog',
+      value: 'Call',
+      file: {
+        name: 'call.opus',
+        isMissing: false,
+        missingLabel: 'missing',
+        action: { id: 'show', icon: 'mdi:folder', title: 'Show' },
+        playback: {
+          source: () => 'tyco-media://localhost/recording/call.opus',
+          playTitle: 'Play',
+          closeTitle: 'Close',
+          unavailableLabel: 'unplayable',
+          ...playback,
+        },
+      },
+    })
+    const stubs = {
+      IconButton: {
+        props: ['label', 'disabled'],
+        template:
+          '<button class="icon-btn-stub" :aria-label="label" :disabled="disabled" />',
+      },
+      Button: true,
+      StateMessage: true,
+    }
+    const playButton = (wrapper: ReturnType<typeof mount>) =>
+      wrapper
+        .findAll('.icon-btn-stub')
+        .find((button) =>
+          ['Play', 'Close', 'Busy'].includes(
+            button.attributes('aria-label') ?? ''
+          )
+        )!
+
+    it('opens a player on the recording and closes it', async () => {
+      const wrapper = mount(HistoryList, {
+        props: { items: [recordingItem()] },
+        global: { stubs },
+      })
+      expect(wrapper.find('audio').exists()).toBe(false)
+
+      await playButton(wrapper).trigger('click')
+      expect(wrapper.get('audio').attributes('src')).toBe(
+        'tyco-media://localhost/recording/call.opus'
+      )
+
+      await wrapper.get('audio').trigger('error')
+      expect(wrapper.text()).toContain('unplayable')
+
+      await playButton(wrapper).trigger('click')
+      expect(wrapper.find('audio').exists()).toBe(false)
+    })
+
+    it('offers no playback while a dialog runs and stops the player', async () => {
+      const wrapper = mount(HistoryList, {
+        props: { items: [recordingItem()] },
+        global: { stubs },
+      })
+      await playButton(wrapper).trigger('click')
+      await wrapper.setProps({
+        items: [recordingItem({ disabledTitle: 'Busy' })],
+      })
+      expect(wrapper.find('audio').exists()).toBe(false)
+      expect(playButton(wrapper).attributes('disabled')).toBeDefined()
+    })
+
+    it('pauses the other players when one starts', async () => {
+      const wrapper = mount(HistoryList, {
+        props: { items: [{ ...recordingItem(), id: 'a' }, recordingItem()] },
+        global: { stubs },
+      })
+      for (const button of wrapper
+        .findAll('.icon-btn-stub')
+        .filter((item) => item.attributes('aria-label') === 'Play'))
+        await button.trigger('click')
+      const [first, second] = wrapper.findAll('audio')
+      const pause = vi
+        .spyOn(first.element as HTMLMediaElement, 'pause')
+        .mockImplementation(() => {})
+      const ownPause = vi
+        .spyOn(second.element as HTMLMediaElement, 'pause')
+        .mockImplementation(() => {})
+      second.element.dispatchEvent(new Event('play'))
+      expect(pause).toHaveBeenCalled()
+      expect(ownPause).not.toHaveBeenCalled()
+    })
+  })
 })

@@ -85,6 +85,33 @@
           @click="emit('action', item.file.action.id, item)"
           >{{ item.file.action.title }}</Button
         >
+        <IconButton
+          v-if="playback && !item.file.isMissing"
+          size="xs"
+          variant="ghost"
+          :disabled="!playerSource && Boolean(playback.disabledTitle)"
+          :label="
+            playerSource
+              ? playback.closeTitle
+              : playback.disabledTitle || playback.playTitle
+          "
+          :icon="playerSource ? 'mdi:close' : 'mdi:play'"
+          @click="togglePlayer"
+        />
+      </div>
+      <div v-if="playback && playerSource" class="history-player">
+        <audio
+          class="history-player-audio"
+          controls
+          autoplay
+          preload="metadata"
+          :src="playerSource"
+          @error="isPlayerFailed = true"
+          @loadedmetadata="isPlayerFailed = false"
+        />
+        <span v-if="isPlayerFailed" class="history-file-missing">{{
+          playback.unavailableLabel
+        }}</span>
       </div>
 
       <DisclosureHeader
@@ -129,7 +156,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, useId } from 'vue'
+import { computed, ref, useId, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import {
@@ -165,6 +192,25 @@ const LONG_ENTRY_LINE_LIMIT = 3
 
 const visibleActions = computed(() =>
   props.actions.filter((action) => action.isVisible?.(props.item) ?? true)
+)
+const playback = computed(() => props.item.file?.playback)
+/** The URL the open player plays; empty while it is closed */
+const playerSource = ref('')
+const isPlayerFailed = ref(false)
+function togglePlayer() {
+  isPlayerFailed.value = false
+  playerSource.value =
+    playerSource.value || !playback.value ? '' : playback.value.source()
+}
+// the file went, or a dialog started recording: the player stops
+watch(
+  () =>
+    !playback.value ||
+    Boolean(playback.value.disabledTitle) ||
+    Boolean(props.item.file?.isMissing),
+  (isUnplayable) => {
+    if (isUnplayable) playerSource.value = ''
+  }
 )
 const hasDetails = computed(() => Boolean(props.item.original))
 const detailsTitle = computed(() => props.item.original?.label ?? '')
@@ -220,6 +266,19 @@ const isLong = computed(
   margin-top: var(--space-2xs);
   font-size: var(--text-caption);
   color: var(--app-text-muted);
+}
+
+.history-player {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  margin-top: var(--space-2xs);
+  font-size: var(--text-caption);
+}
+
+.history-player-audio {
+  width: 100%;
+  height: 2rem;
 }
 
 .history-file-name {

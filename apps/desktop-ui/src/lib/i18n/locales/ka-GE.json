@@ -519,6 +519,10 @@
     "filterListen": "სისტემის ხმა",
     "kindDialog": "დიალოგი",
     "recordingNotFound": "ფაილი ვერ მოიძებნა",
+    "playRecording": "ჩანაწერის დაკვრა",
+    "closeRecording": "დამკვრელის დახურვა",
+    "playRecordingDuringDialog": "დიალოგის მიმდინარეობისას დაკვრა მიუწვდომელია",
+    "recordingUnplayable": "დაკვრა შეუძლებელია",
     "recordingIncomplete": "ჩანაწერი არასრულია",
     "showInFolder": "საქაღალდეში ჩვენება"
   },

@@ -519,6 +519,10 @@
     "filterListen": "Sistem sesi",
     "kindDialog": "Diyalog",
     "recordingNotFound": "dosya bulunamadı",
+    "playRecording": "Kaydı oynat",
+    "closeRecording": "Oynatıcıyı kapat",
+    "playRecordingDuringDialog": "Diyalog sürerken oynatma kullanılamaz",
+    "recordingUnplayable": "oynatılamıyor",
     "recordingIncomplete": "kayıt eksik",
     "showInFolder": "Klasörde göster"
   },

@@ -519,6 +519,10 @@
     "filterListen": "Systemaudio",
     "kindDialog": "Dialog",
     "recordingNotFound": "Datei nicht gefunden",
+    "playRecording": "Aufnahme abspielen",
+    "closeRecording": "Player schließen",
+    "playRecordingDuringDialog": "Während eines Dialogs ist die Wiedergabe nicht verfügbar",
+    "recordingUnplayable": "kann nicht abgespielt werden",
     "recordingIncomplete": "Aufnahme unvollständig",
     "showInFolder": "Im Ordner anzeigen"
   },

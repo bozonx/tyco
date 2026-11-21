@@ -519,6 +519,10 @@
     "filterListen": "Звук системи",
     "kindDialog": "Діалог",
     "recordingNotFound": "файл не знайдено",
+    "playRecording": "Відтворити запис",
+    "closeRecording": "Закрити програвач",
+    "playRecordingDuringDialog": "Відтворення недоступне, поки триває діалог",
+    "recordingUnplayable": "не вдається відтворити",
     "recordingIncomplete": "запис неповний",
     "showInFolder": "Показати в теці"
   },

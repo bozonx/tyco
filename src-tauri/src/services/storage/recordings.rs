@@ -216,6 +216,16 @@ pub fn exist(dirs: &RecordingDirs, names: &[String]) -> Vec<bool> {
         .collect()
 }
 
+/// The file of the recording `name` to play: a finished one only, as one
+/// being written still grows and has no final headers.
+pub fn playable_file(dirs: &RecordingDirs, name: &str) -> Result<PathBuf, AppError> {
+    let name = checked_name(name)?;
+    if WRITING.locked().contains_key(name) {
+        return Err(AppError::NotFound("The recording is being written".into()));
+    }
+    find(dirs, name).ok_or_else(|| AppError::NotFound("The recording file is not found".into()))
+}
+
 /// The folder that holds the recording `name`.
 pub fn folder_of(dirs: &RecordingDirs, name: &str) -> Result<PathBuf, AppError> {
     let file = find(dirs, checked_name(name)?)

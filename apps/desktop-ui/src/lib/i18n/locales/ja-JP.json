@@ -519,6 +519,10 @@
     "filterListen": "システム音声",
     "kindDialog": "ダイアログ",
     "recordingNotFound": "ファイルが見つかりません",
+    "playRecording": "録音を再生",
+    "closeRecording": "プレーヤーを閉じる",
+    "playRecordingDuringDialog": "ダイアログの実行中は再生できません",
+    "recordingUnplayable": "再生できません",
     "recordingIncomplete": "録音は不完全です",
     "showInFolder": "フォルダーに表示"
   },

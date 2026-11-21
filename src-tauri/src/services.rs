@@ -13,6 +13,7 @@ pub mod dropped_files;
 pub mod external;
 pub mod file_ids;
 pub mod hotkeys;
+pub mod media_protocol;
 pub mod net;
 pub mod notes;
 pub mod platform;

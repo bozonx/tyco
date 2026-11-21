@@ -519,6 +519,10 @@
     "filterListen": "Rendszerhang",
     "kindDialog": "Párbeszéd",
     "recordingNotFound": "a fájl nem található",
+    "playRecording": "Felvétel lejátszása",
+    "closeRecording": "Lejátszó bezárása",
+    "playRecordingDuringDialog": "Párbeszéd közben a lejátszás nem érhető el",
+    "recordingUnplayable": "nem játszható le",
     "recordingIncomplete": "a felvétel hiányos",
     "showInFolder": "Megjelenítés a mappában"
   },
