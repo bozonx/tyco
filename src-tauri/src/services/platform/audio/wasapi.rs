@@ -510,7 +510,6 @@ impl SharedContext {
                 fills_gaps: context.fills_gaps,
                 channel_count: context.channel_count,
                 status: Arc::clone(&context.status),
-                unprocessed_pcm_samples: context.unprocessed_pcm_samples.clone(),
             },
         }
     }

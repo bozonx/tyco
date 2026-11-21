@@ -198,10 +198,13 @@ and linked statically; `ogg` for the pages): 16 kHz input, 20 ms frames,
 VoIP mode, stereo at 32 kbit/s (microphone, computer) or mono at 24 kbit/s,
 RFC 7845 granules at 48 kHz from the pre-skip, a page at least every second.
 Ogg pages stand alone, so a crash leaves a file playable to its last page;
-there is no finalization. The microphone is recorded as heard: `Mix` keeps
-the stereo frames before the echo gate and the loudness normalization in
-`StreamContext::unprocessed_pcm_samples`, which the capture loop drains into
-the recording; a mono capture records the chunks it sends. The encoder runs
+there is no finalization. The file holds the very samples sent to the
+webview, after the echo gate and the limiter: listening to it is listening to
+what the speech provider got, short of Opus losses and of the audio a channel
+drops when its provider stalls past 30 s (logged by the webview). For a
+lossless copy set `TYCO_DUMP_STT_AUDIO=<folder>` before starting the app:
+every capture, dictation included, also writes a WAV of the bytes it sends
+(`voice/debug_dump.rs`). The encoder runs
 on a thread of its own behind a bounded queue (`RecordingSink`). Chunks that
 do not fit a full queue are owed and sent as silence once it frees (up to a
 minute), so the file keeps the call's timeline; a failed write stops the

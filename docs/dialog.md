@@ -98,7 +98,7 @@ entry.
 While recording, the toolbar and the subtitles show a red dot with the time
 recorded. The file is an Opus audio file (`.opus`) that any modern player
 opens: with the microphone, your voice is the left channel and the other side
-the right one, as heard before the echo of the speakers is turned down; without the
+the right one, exactly as the speech recognition heard them; without the
 microphone it is the computer sound alone. The file is written as the call
 goes, so after a crash it plays up to the last second or so.
 

@@ -145,7 +145,6 @@ impl AudioSource for TestSource {
                 fills_gaps: false,
                 channel_count: 1,
                 status: Arc::default(),
-                unprocessed_pcm_samples: None,
             },
         })
     }
@@ -541,15 +540,15 @@ fn flushes_only_full_chunks_until_forced() {
     let context = pending_context(vec![1_i16, 2, 3]);
     let pending_pcm_samples = &context.pending_pcm_samples;
 
-    assert!(flush_pending(&context, &sink, 4, None).is_some());
+    assert!(flush_pending(&context, &sink, 4, None, None).is_some());
     assert!(sink.chunks.lock().unwrap().is_empty());
 
-    assert!(flush_pending(&context, &sink, 1, None).is_some());
+    assert!(flush_pending(&context, &sink, 1, None, None).is_some());
     assert_eq!(sink.chunks.lock().unwrap().len(), 1);
     assert!(pending_pcm_samples.lock().unwrap().is_empty());
 
     // nothing left: no empty frame goes out
-    assert!(flush_pending(&context, &sink, 1, None).is_some());
+    assert!(flush_pending(&context, &sink, 1, None, None).is_some());
     assert_eq!(sink.chunks.lock().unwrap().len(), 1);
 }
 
@@ -559,7 +558,7 @@ fn reports_a_gone_listener() {
         closed: true,
         ..RecordingSink::default()
     };
-    assert!(flush_pending(&pending_context(vec![1_i16]), &sink, 1, None).is_none());
+    assert!(flush_pending(&pending_context(vec![1_i16]), &sink, 1, None, None).is_none());
 }
 
 fn pending_context(samples: Vec<i16>) -> StreamContext {
@@ -1176,7 +1175,7 @@ fn a_stereo_capture_reports_its_channels_and_their_levels() {
 }
 
 #[test]
-fn a_recorded_dialog_keeps_the_sound_as_heard_in_its_file() {
+fn a_recorded_dialog_keeps_what_the_speech_provider_was_sent() {
     struct GatedSource;
     impl AudioSource for GatedSource {
         type Stream = ();
@@ -1191,10 +1190,7 @@ fn a_recorded_dialog_keeps_the_sound_as_heard_in_its_file() {
             context
                 .pending_pcm_samples
                 .locked()
-                .extend([0, 0].repeat(1_600));
-            // a second as heard, against a tenth of it processed
-            context.unprocessed_pcm_samples =
-                Some(Arc::new(Mutex::new([1_000, 2_000].repeat(16_000))));
+                .extend([1_000, 2_000].repeat(1_600));
             Ok(OpenedCapture {
                 stream: (),
                 context,
@@ -1242,15 +1238,14 @@ fn a_recorded_dialog_keeps_the_sound_as_heard_in_its_file() {
     .unwrap();
     let bytes = std::fs::read(&path).unwrap();
     let _ = std::fs::remove_dir_all(&folder);
-    // the granule of the last page: the pre-skip and a second at 48 kHz
+    // the granule of the last page: the pre-skip and the 100 ms sent, at 48 kHz
     let last = bytes
         .windows(4)
         .rposition(|window| window == b"OggS")
         .unwrap();
     let granule = u64::from_le_bytes(bytes[last + 6..last + 14].try_into().unwrap());
     let pre_skip = u64::from(u16::from_le_bytes(bytes[38..40].try_into().unwrap()));
-    assert_eq!(granule - pre_skip, 48_000);
-    // the webview still got the processed stream
+    assert_eq!(granule - pre_skip, 4_800);
     let delivered: usize = sink.chunks.lock().unwrap().iter().map(Vec::len).sum();
     assert_eq!(delivered, 2 * 2 * 1_600);
 }

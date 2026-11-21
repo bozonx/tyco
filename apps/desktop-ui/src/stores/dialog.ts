@@ -212,6 +212,12 @@ export const useDialogStore = defineStore('dialog', () => {
       }
       if (next === 'idle' || next === 'failed') void dialogHistory.end()
     },
+    onAudioDropped: (side, droppedMs) => {
+      clientLogger.warn(
+        `Dialog ${side} channel dropped ${Math.round(droppedMs)} ms of audio its speech provider did not read`,
+        'dialog'
+      )
+    },
     onChannelStatus: (side, next) => {
       channelStatus[side] = next
     },

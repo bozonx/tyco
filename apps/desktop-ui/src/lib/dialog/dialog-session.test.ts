@@ -141,6 +141,16 @@ describe('createChannelPipe', () => {
       rest.push(Array.from(chunk.data))
     expect(rest).toEqual([[3, 3]])
   })
+
+  it('reports how much audio it dropped', () => {
+    const dropped: number[] = []
+    const pipe = createChannelPipe(4, (bytes) => dropped.push(bytes))
+    pipe.push(new Uint8Array([1, 1]))
+    pipe.push(new Uint8Array([2, 2]))
+    expect(dropped).toEqual([])
+    pipe.push(new Uint8Array([3, 3, 3, 3]))
+    expect(dropped).toEqual([4])
+  })
 })
 
 describe('createDialogSession', () => {

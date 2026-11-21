@@ -1,14 +1,16 @@
 //! Audio capture for live transcription: the microphone for dictation, the
 //! sound the computer plays for listening.
 //!
-//! Nothing is kept: the audio leaves as PCM16 chunks through the channel the
-//! webview passed in, which hands it on to the speech provider's socket.
+//! The audio leaves as PCM16 chunks through the channel the webview passed
+//! in, which hands it on to the speech provider's socket; nothing is kept
+//! but a dialog's call recording, which holds the very samples sent.
 //! A dictation can therefore last as long as the user keeps talking. The
 //! chunks are mono, but for a dialog with the microphone: two interleaved
 //! channels, the microphone and the computer sound.
 
 pub mod apps;
 mod audio_processing;
+mod debug_dump;
 mod echo_gate;
 mod limiter;
 pub(crate) mod microphone_mix;
@@ -38,6 +40,7 @@ use crate::locks::MutexExt;
 use crate::services::clock::{MonotonicClock, SystemClock};
 use crate::services::net::EventSink;
 use crate::services::storage::recordings::NewRecording;
+use crate::services::voice::debug_dump::CaptureDump;
 use crate::services::voice::recording::RecordingSink;
 use crate::services::voice::session::VoiceSessionState;
 use crate::services::voice::session::{SourceSwitch, SourceSwitchSlot, VoiceCaptureSession};
@@ -465,6 +468,7 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
         .clone()
         .map(|recording| RecordingSink::start(recording, output_sample_rate_hz, channel_count))
         .transpose()?;
+    let mut dump = CaptureDump::from_env(output_sample_rate_hz, channel_count);
 
     setup_tx
         .send(Ok(CaptureFormat {
@@ -589,11 +593,16 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
         if channels > 1 {
             channel_levels.measure(&context.pending_pcm_samples.locked());
         }
-        record_unprocessed(&context, recording.as_mut());
         if let Some(message) = recording.as_mut().and_then(RecordingSink::take_failure) {
             sink.send_event(&CaptureEvent::RecordingFailed { message });
         }
-        match flush_pending(&context, sink, chunk_samples, recording.as_mut()) {
+        match flush_pending(
+            &context,
+            sink,
+            chunk_samples,
+            recording.as_mut(),
+            Some(&mut dump),
+        ) {
             Some(sent) => delivered_samples += sent as u64,
             None => {
                 // nobody is listening any more: the webview went away
@@ -630,8 +639,8 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
 
     // what was captured goes out first, whatever ended the capture: the
     // words spoken last are still transcribed
-    record_unprocessed(&context, recording.as_mut());
-    let is_delivered = flush_pending(&context, sink, 1, recording.as_mut()).is_some();
+    let is_delivered =
+        flush_pending(&context, sink, 1, recording.as_mut(), Some(&mut dump)).is_some();
     // the file is complete whether or not anyone still listens
     let late_failure = recording.and_then(RecordingSink::finish);
     if !is_delivered {
@@ -690,26 +699,16 @@ impl ChannelLevels {
     }
 }
 
-/// Hands a recording the samples kept as heard; without a recording they
-/// are dropped.
-fn record_unprocessed(context: &StreamContext, recording: Option<&mut RecordingSink>) {
-    let Some(unprocessed) = &context.unprocessed_pcm_samples else {
-        return;
-    };
-    let samples = std::mem::take(&mut *unprocessed.locked());
-    if let Some(recording) = recording {
-        recording.push(&samples);
-    }
-}
-
 /// Sends what has accumulated once it reaches `min_samples`: the number of
 /// samples sent, `None` when the receiving side is gone. A recording gets
-/// them too unless it records the unprocessed samples.
+/// the very same samples: the file is what the speech provider was sent;
+/// so does a debugging dump, see `debug_dump`.
 fn flush_pending<S: EventSink>(
     context: &StreamContext,
     sink: &S,
     min_samples: usize,
     recording: Option<&mut RecordingSink>,
+    dump: Option<&mut CaptureDump>,
 ) -> Option<usize> {
     let samples = match context.pending_pcm_samples.lock() {
         Ok(mut pending_pcm_samples) if pending_pcm_samples.len() >= min_samples => {
@@ -718,11 +717,14 @@ fn flush_pending<S: EventSink>(
         _ => return Some(0),
     };
     let count = samples.len();
-    if let Some(recording) = recording.filter(|_| context.unprocessed_pcm_samples.is_none()) {
+    if let Some(recording) = recording {
         recording.push(&samples);
     }
-    sink.send_bytes(pcm16_to_le_bytes(&samples))
-        .then_some(count)
+    let bytes = pcm16_to_le_bytes(&samples);
+    if let Some(dump) = dump {
+        dump.push(&bytes);
+    }
+    sink.send_bytes(bytes).then_some(count)
 }
 
 pub(crate) struct StreamContext {
@@ -743,10 +745,6 @@ pub(crate) struct StreamContext {
     /// Interleaved channels of `pending_pcm_samples`, 1 for mono
     pub channel_count: u16,
     pub status: Arc<Mutex<SourceStatus>>,
-    /// The samples as heard, when `pending_pcm_samples` are processed
-    /// further (the echo gate of a dialog): what a recording keeps. `None`:
-    /// the pending samples are as heard.
-    pub unprocessed_pcm_samples: Option<Arc<Mutex<Vec<i16>>>>,
 }
 
 /// Turns the interleaved float frames of a playback device into the
@@ -809,7 +807,6 @@ impl StreamContext {
             fills_gaps: false,
             channel_count: 1,
             status: Arc::default(),
-            unprocessed_pcm_samples: None,
         }
     }
 

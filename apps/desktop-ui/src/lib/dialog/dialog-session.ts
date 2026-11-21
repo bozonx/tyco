@@ -65,6 +65,11 @@ export interface DialogSessionDependencies {
   /** A channel's connection is gone: its guess will not be settled */
   onDraftLost: (side: DialogSide) => void
   /**
+   * A channel's provider fell so far behind that its oldest audio was dropped:
+   * the call recording holds audio the provider never got.
+   */
+  onAudioDropped?: (side: DialogSide, droppedMs: number) => void
+  /**
    * The dialog or one channel of it failed. `isFatal`: the dialog is over;
    * otherwise only `side` stopped.
    */
@@ -146,7 +151,10 @@ export interface ChannelPipe {
   reader: (signal: AbortSignal) => AsyncIterable<AudioChunk>
 }
 
-export function createChannelPipe(maxBufferedBytes: number): ChannelPipe {
+export function createChannelPipe(
+  maxBufferedBytes: number,
+  onDrop?: (droppedBytes: number) => void
+): ChannelPipe {
   const queue: Uint8Array[] = []
   let queuedBytes = 0
   let positionBytes = 0
@@ -163,11 +171,14 @@ export function createChannelPipe(maxBufferedBytes: number): ChannelPipe {
       if (isEnded || data.byteLength === 0) return
       queue.push(data)
       queuedBytes += data.byteLength
+      let droppedBytes = 0
       while (queuedBytes > maxBufferedBytes && queue.length > 1) {
         const dropped = queue.shift()!
         queuedBytes -= dropped.byteLength
         positionBytes += dropped.byteLength
+        droppedBytes += dropped.byteLength
       }
+      if (droppedBytes > 0) onDrop?.(droppedBytes)
       notify()
     },
     end() {
@@ -343,7 +354,12 @@ export function createDialogSession(
       const sides = dialogSides(capture.channels)
       const maxBufferedBytes =
         (capture.sampleRate * SAMPLE_BYTES * MAX_BUFFERED_MS) / 1000
-      pipes = sides.map(() => createChannelPipe(maxBufferedBytes))
+      const bytesPerMs = (capture.sampleRate * SAMPLE_BYTES) / 1000
+      pipes = sides.map((side) =>
+        createChannelPipe(maxBufferedBytes, (droppedBytes) =>
+          deps.onAudioDropped?.(side, droppedBytes / bytesPerMs)
+        )
+      )
       channels = sides.map((side, index) =>
         runChannel(side, pipes[index], capture.sampleRate, current.signal)
       )
