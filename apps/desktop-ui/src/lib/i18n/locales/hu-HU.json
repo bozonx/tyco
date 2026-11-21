@@ -648,21 +648,15 @@
     "cancelled": "Megszakítva",
     "done": "Kész",
     "emptyResult": "A modell üres eredményt adott",
-    "failed": {
-      "command": "A parancs sikertelen",
-      "correction": "A javítás sikertelen"
-    },
+    "failed": { "correction": "A javítás sikertelen" },
     "focusChanged": "Közben megváltozott az ablak, ezért az eredmény a vágólapra került",
     "noSelection": "Nincs kijelölés",
     "noTarget": "Egyik alkalmazásablak sincs fókuszban",
     "resultInClipboard": "Az eredmény a vágólapon van",
     "selectionChanged": "A kijelölés időközben megváltozott, ezért az eredmény a vágólapra került",
     "terminalSelection": "A terminálban lévő kijelölés nem cserélhető le, ezért az eredmény a vágólapra került",
-    "unchanged": {
-      "command": "A parancs változatlanul hagyta a szöveget",
-      "correction": "Nem található hiba"
-    },
-    "working": { "command": "A parancs fut…", "correction": "Javítás…" }
+    "unchanged": { "correction": "Nem található hiba" },
+    "working": { "correction": "Javítás…" }
   },
   "settings": {
     "accessAllow": "Engedélyezés",

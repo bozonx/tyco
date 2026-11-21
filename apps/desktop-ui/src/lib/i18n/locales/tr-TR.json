@@ -648,21 +648,15 @@
     "cancelled": "İptal edildi",
     "done": "Tamam",
     "emptyResult": "Model boş bir sonuç döndürdü",
-    "failed": {
-      "command": "Komut başarısız oldu",
-      "correction": "Metin düzeltilemedi"
-    },
+    "failed": { "correction": "Metin düzeltilemedi" },
     "focusChanged": "Bu sırada pencere değişti, bu yüzden sonuç panoya kopyalandı",
     "noSelection": "Hiçbir şey seçili değil",
     "noTarget": "Odakta bir uygulama penceresi yok",
     "resultInClipboard": "Sonuç panoda",
     "selectionChanged": "Bu sırada seçim değişti, bu yüzden sonuç panoya kopyalandı",
     "terminalSelection": "Terminaldeki bir seçim değiştirilemez, bu yüzden sonuç panoya kopyalandı",
-    "unchanged": {
-      "command": "Komut metni olduğu gibi bıraktı",
-      "correction": "Hata bulunamadı"
-    },
-    "working": { "command": "Komut çalışıyor…", "correction": "Düzeltiliyor…" }
+    "unchanged": { "correction": "Hata bulunamadı" },
+    "working": { "correction": "Düzeltiliyor…" }
   },
   "settings": {
     "accessAllow": "İzin Ver",

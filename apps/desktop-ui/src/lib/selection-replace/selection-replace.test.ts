@@ -59,15 +59,8 @@ describe('selection actions', () => {
     expect(parseSelectionAction('translate.0')).toBeNull()
     expect(parseSelectionAction('aiTask.0')).toBeNull()
     expect(parseSelectionAction('other')).toBeNull()
-  })
-
-  it('carries the id of a command, whatever it holds', () => {
-    const id = 'translate-en'
-    expect(parseSelectionAction(`command:${id}`)).toEqual({
-      kind: 'command',
-      commandId: id,
-    })
-    expect(parseSelectionAction('command: ')).toBeNull()
+    // a library command is never a selection action: it runs in the overlay
+    expect(parseSelectionAction('command:fix')).toBeNull()
   })
 })
 
@@ -79,27 +72,11 @@ describe('keepSurroundingWhitespace', () => {
 })
 
 describe('createSelectionReplace', () => {
-  it('runs a command and pastes its output', async () => {
-    const { request, deps, model } = setup()
-    const running = model.handleRun(event({ action: 'command:fix' }))
-    expect(deps.run).toHaveBeenCalledWith(
-      { kind: 'command', commandId: 'fix' },
-      'helo world',
-      expect.any(AbortSignal)
-    )
-    expect(deps.showOverlay).toHaveBeenCalledWith(
-      expect.objectContaining({ text: 'selection.working.command' })
-    )
-    request.resolve('hello world')
-    await running
-    expect(deps.finish).toHaveBeenCalledWith(1, 'hello world')
-  })
-
   it('stays quiet about a run cancelled from within', async () => {
     const { request, deps, model } = setup({
       isAborted: (error: unknown) => error === 'cancelled',
     })
-    const running = model.handleRun(event({ action: 'command:fix' }))
+    const running = model.handleRun(event())
     request.reject('cancelled')
     await running
     expect(deps.notify).not.toHaveBeenCalled()
@@ -164,7 +141,7 @@ describe('createSelectionReplace', () => {
 
   it('reports a failed request in the bubble and a notification', async () => {
     const { request, deps, model } = setup()
-    const done = model.handleRun(event({ action: 'command:fix' }))
+    const done = model.handleRun(event())
     request.reject(new Error('quota'))
     await done
     expect(deps.finish).toHaveBeenCalledWith(1, null)
@@ -172,7 +149,7 @@ describe('createSelectionReplace', () => {
       expect.objectContaining({ kind: 'error', text: 'Error: quota' })
     )
     expect(deps.notify).toHaveBeenCalledWith(
-      'selection.failed.command',
+      'selection.failed.correction',
       'Error: quota'
     )
   })

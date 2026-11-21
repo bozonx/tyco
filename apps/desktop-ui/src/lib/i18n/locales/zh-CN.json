@@ -648,18 +648,15 @@
     "cancelled": "已取消",
     "done": "已完成",
     "emptyResult": "模型返回了空结果",
-    "failed": { "command": "命令执行失败", "correction": "纠错失败" },
+    "failed": { "correction": "纠错失败" },
     "focusChanged": "在此期间活动窗口已更改，结果已复制到剪贴板",
     "noSelection": "未选中任何内容",
     "noTarget": "没有具有焦点的应用程序窗口",
     "resultInClipboard": "结果已复制到剪贴板",
     "selectionChanged": "处理期间选区已改变，因此结果已复制到剪贴板",
     "terminalSelection": "终端中的选区无法替换，因此结果已复制到剪贴板",
-    "unchanged": {
-      "command": "命令未对文本做任何更改",
-      "correction": "未发现错误"
-    },
-    "working": { "command": "正在运行命令…", "correction": "正在纠错…" }
+    "unchanged": { "correction": "未发现错误" },
+    "working": { "correction": "正在纠错…" }
   },
   "settings": {
     "accessAllow": "允许",

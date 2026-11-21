@@ -648,24 +648,15 @@
     "cancelled": "Abgebrochen",
     "done": "Fertig",
     "emptyResult": "Das Modell hat ein leeres Ergebnis geliefert",
-    "failed": {
-      "command": "Befehl fehlgeschlagen",
-      "correction": "Korrektur fehlgeschlagen"
-    },
+    "failed": { "correction": "Korrektur fehlgeschlagen" },
     "focusChanged": "Das Fenster hat sich inzwischen geändert, daher wurde das Ergebnis in die Zwischenablage kopiert",
     "noSelection": "Nichts ausgewählt",
     "noTarget": "Kein Anwendungsfenster hat den Fokus",
     "resultInClipboard": "Das Ergebnis ist in der Zwischenablage",
     "selectionChanged": "Die Auswahl hat sich inzwischen geändert, daher wurde das Ergebnis in die Zwischenablage kopiert",
     "terminalSelection": "Eine Auswahl im Terminal kann nicht ersetzt werden, daher wurde das Ergebnis in die Zwischenablage kopiert",
-    "unchanged": {
-      "command": "Der Befehl hat den Text unverändert gelassen",
-      "correction": "Keine Fehler gefunden"
-    },
-    "working": {
-      "command": "Befehl wird ausgeführt…",
-      "correction": "Wird korrigiert…"
-    }
+    "unchanged": { "correction": "Keine Fehler gefunden" },
+    "working": { "correction": "Wird korrigiert…" }
   },
   "settings": {
     "accessAllow": "Zulassen",

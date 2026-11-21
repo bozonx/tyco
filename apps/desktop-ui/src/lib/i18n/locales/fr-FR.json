@@ -648,24 +648,15 @@
     "cancelled": "Annulé",
     "done": "Terminé",
     "emptyResult": "Le modèle a renvoyé un résultat vide",
-    "failed": {
-      "command": "La commande a échoué",
-      "correction": "La correction a échoué"
-    },
+    "failed": { "correction": "La correction a échoué" },
     "focusChanged": "La fenêtre a changé entre-temps, le résultat a donc été copié dans le presse-papiers",
     "noSelection": "Rien n’est sélectionné",
     "noTarget": "Aucune fenêtre d’application n’a le focus",
     "resultInClipboard": "Le résultat est dans le presse-papiers",
     "selectionChanged": "La sélection a changé entre-temps, le résultat a donc été copié dans le presse-papiers",
     "terminalSelection": "Une sélection dans un terminal ne peut pas être remplacée, le résultat a donc été copié dans le presse-papiers",
-    "unchanged": {
-      "command": "La commande a laissé le texte tel quel",
-      "correction": "Aucune faute trouvée"
-    },
-    "working": {
-      "command": "Exécution de la commande…",
-      "correction": "Correction…"
-    }
+    "unchanged": { "correction": "Aucune faute trouvée" },
+    "working": { "correction": "Correction…" }
   },
   "settings": {
     "accessAllow": "Autoriser",

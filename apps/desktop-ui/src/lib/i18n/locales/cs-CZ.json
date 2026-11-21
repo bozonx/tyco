@@ -648,18 +648,15 @@
     "cancelled": "Zrušeno",
     "done": "Hotovo",
     "emptyResult": "Model vrátil prázdný výsledek",
-    "failed": { "command": "Příkaz selhal", "correction": "Oprava selhala" },
+    "failed": { "correction": "Oprava selhala" },
     "focusChanged": "Mezitím se změnilo okno, proto byl výsledek zkopírován do schránky",
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
     "resultInClipboard": "Výsledek je ve schránce",
     "selectionChanged": "Výběr se mezitím změnil, proto byl výsledek zkopírován do schránky",
     "terminalSelection": "Výběr v terminálu nelze nahradit, proto byl výsledek zkopírován do schránky",
-    "unchanged": {
-      "command": "Příkaz ponechal text beze změny",
-      "correction": "Nenalezeny žádné chyby"
-    },
-    "working": { "command": "Spouští se příkaz…", "correction": "Opravuje se…" }
+    "unchanged": { "correction": "Nenalezeny žádné chyby" },
+    "working": { "correction": "Opravuje se…" }
   },
   "settings": {
     "accessAllow": "Povolit",

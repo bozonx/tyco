@@ -1,19 +1,16 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { createCommand } from '../commands/command-config'
 import {
   createSelectionAction,
   SelectionActionAbortedError,
   type SelectionActionDependencies,
 } from './selection-action'
 
+const action = { kind: 'correction' as const }
+
 function fixture() {
-  const command = { ...createCommand('script', 'command'), name: 'Transform' }
   const deps: SelectionActionDependencies = {
-    commands: () => [command],
     correct: vi.fn(async () => ({ ok: true, content: 'Corrected' })),
-    transform: vi.fn(async () => ({ ok: true, content: 'Transformed' })),
-    logRun: vi.fn(async () => undefined),
     history: {
       saveSource: vi.fn(async () => 'source'),
       saveSourceResult: vi.fn(async () => undefined),
@@ -23,7 +20,6 @@ function fixture() {
     reportError: vi.fn(),
   }
   return {
-    command,
     deps,
     model: createSelectionAction(deps),
     signal: new AbortController().signal,
@@ -33,7 +29,6 @@ function fixture() {
 describe('selection action', () => {
   it('corrects text and records its source and inserted result', async () => {
     const { deps, model, signal } = fixture()
-    const action = { kind: 'correction' as const }
     expect(await model.run(action, 'Original', signal)).toBe('Corrected')
     await model.saveResult(action, 'Original', 'Corrected')
     expect(deps.history.saveSource).toHaveBeenCalledWith(
@@ -45,34 +40,6 @@ describe('selection action', () => {
       'Corrected'
     )
     expect(deps.history.saveOutput).toHaveBeenCalledExactlyOnceWith('Corrected')
-    expect(deps.logRun).not.toHaveBeenCalled()
-  })
-
-  it('runs and logs a command and records its source and result', async () => {
-    const { deps, model, signal, command } = fixture()
-    const action = { kind: 'command' as const, commandId: command.id }
-    expect(await model.run(action, 'Original', signal)).toBe('Transformed')
-    expect(deps.logRun).toHaveBeenCalledWith({
-      commandId: command.id,
-      name: 'Transform',
-      source: 'selection',
-      text: 'Original',
-      success: true,
-    })
-    await model.saveResult(action, 'Original', 'Transformed')
-    expect(deps.history.saveSource).toHaveBeenCalledWith('Original', 'aiTask')
-    expect(deps.history.saveSourceResult).toHaveBeenCalledOnce()
-    expect(deps.history.saveOutput).toHaveBeenCalledExactlyOnceWith(
-      'Transformed'
-    )
-  })
-
-  it('rejects missing commands without invoking a tool', async () => {
-    const { deps, model, signal } = fixture()
-    await expect(
-      model.run({ kind: 'command', commandId: 'missing' }, 'Text', signal)
-    ).rejects.toThrow('commands.commandMissing')
-    expect(deps.transform).not.toHaveBeenCalled()
   })
 
   it('distinguishes tool cancellation from a failure', async () => {
@@ -80,34 +47,22 @@ describe('selection action', () => {
     vi.mocked(deps.correct)
       .mockResolvedValueOnce({ ok: false, cancelled: true })
       .mockResolvedValueOnce({ ok: false, message: 'Unavailable' })
-    await expect(
-      model.run({ kind: 'correction' }, 'Text', signal)
-    ).rejects.toBeInstanceOf(SelectionActionAbortedError)
-    await expect(
-      model.run({ kind: 'correction' }, 'Text', signal)
-    ).rejects.toThrow('Unavailable')
+    await expect(model.run(action, 'Text', signal)).rejects.toBeInstanceOf(
+      SelectionActionAbortedError
+    )
+    await expect(model.run(action, 'Text', signal)).rejects.toThrow(
+      'Unavailable'
+    )
     expect(model.isAborted(new SelectionActionAbortedError())).toBe(true)
     expect(model.isAborted(new Error())).toBe(false)
   })
 
-  it('reports history and log failures without failing insertion', async () => {
-    const { deps, model, signal, command } = fixture()
-    vi.mocked(deps.logRun).mockRejectedValueOnce(new Error('Log failed'))
-    expect(
-      await model.run(
-        { kind: 'command', commandId: command.id },
-        'Text',
-        signal
-      )
-    ).toBe('Transformed')
+  it('reports a history failure without failing insertion', async () => {
+    const { deps, model } = fixture()
     vi.mocked(deps.history.saveOutput).mockRejectedValueOnce(
       new Error('History failed')
     )
-    await model.saveResult(
-      { kind: 'command', commandId: command.id },
-      'Text',
-      'Result'
-    )
-    await vi.waitFor(() => expect(deps.reportError).toHaveBeenCalledTimes(2))
+    await model.saveResult(action, 'Text', 'Result')
+    expect(deps.reportError).toHaveBeenCalledOnce()
   })
 })

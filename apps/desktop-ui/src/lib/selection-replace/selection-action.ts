@@ -1,11 +1,5 @@
-import type {
-  CommandConfig,
-  CommandRunRecord,
-  SelectionAction,
-} from '@tyco/shared'
+import type { SelectionAction } from '@tyco/shared'
 
-import { normalizeCommands } from '../commands/command-config'
-import { commandRunRecord, logCommandRun } from '../commands/command-run-record'
 import type { createHistoryModel } from '../history/history-model'
 import { toolResultMessage } from '../invocation/invocation-result'
 import type { OperationResult } from '../operations/operation-types'
@@ -13,14 +7,7 @@ import type { OperationResult } from '../operations/operation-types'
 export class SelectionActionAbortedError extends Error {}
 
 export interface SelectionActionDependencies {
-  commands: () => unknown
   correct: (text: string, signal: AbortSignal) => Promise<OperationResult>
-  transform: (
-    command: CommandConfig,
-    text: string,
-    signal: AbortSignal
-  ) => Promise<OperationResult>
-  logRun: (record: CommandRunRecord) => Promise<void>
   history: Pick<
     ReturnType<typeof createHistoryModel>,
     'saveSource' | 'saveSourceResult' | 'saveOutput'
@@ -32,32 +19,11 @@ export interface SelectionActionDependencies {
 /** Runs a selection action and records text that leaves the application. */
 export function createSelectionAction(deps: SelectionActionDependencies) {
   const run = async (
-    action: SelectionAction,
+    _action: SelectionAction,
     text: string,
     signal: AbortSignal
   ): Promise<string> => {
-    let result: OperationResult
-    if (action.kind === 'correction') {
-      result = await deps.correct(text, signal)
-    } else {
-      const command = normalizeCommands(deps.commands()).find(
-        (item) => item.id === action.commandId
-      )
-      if (!command)
-        throw new Error(
-          deps.t('commands.commandMissing', { id: action.commandId })
-        )
-      result = await deps.transform(command, text, signal)
-      // a cancelled run did not fail
-      if (!result.cancelled)
-        logCommandRun(
-          deps,
-          commandRunRecord(command, 'selection', text, {
-            success: result.ok,
-            message: toolResultMessage(result, deps.t),
-          })
-        )
-    }
+    const result = await deps.correct(text, signal)
     if (result.cancelled) throw new SelectionActionAbortedError()
     if (!result.ok)
       throw new Error(
@@ -66,14 +32,13 @@ export function createSelectionAction(deps: SelectionActionDependencies) {
     return result.content ?? ''
   }
   const saveResult = async (
-    action: SelectionAction,
+    _action: SelectionAction,
     text: string,
     result: string
   ) => {
     try {
       // the selection is the source of the result, it never left the app
-      const operation = action.kind === 'correction' ? 'correction' : 'aiTask'
-      const sourceId = await deps.history.saveSource(text, operation)
+      const sourceId = await deps.history.saveSource(text, 'correction')
       await deps.history.saveSourceResult(sourceId, result)
       await deps.history.saveOutput(result)
     } catch (error) {

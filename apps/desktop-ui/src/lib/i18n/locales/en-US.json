@@ -648,24 +648,15 @@
     "cancelled": "Cancelled",
     "done": "Done",
     "emptyResult": "The model returned an empty result",
-    "failed": {
-      "command": "Command failed",
-      "correction": "Correction failed"
-    },
+    "failed": { "correction": "Correction failed" },
     "focusChanged": "The window changed meanwhile, so the result was copied to the clipboard",
     "noSelection": "Nothing is selected",
     "noTarget": "No application window has the focus",
     "resultInClipboard": "The result is in the clipboard",
     "selectionChanged": "The selection changed meanwhile, so the result was copied to the clipboard",
     "terminalSelection": "Text selected in a terminal cannot be replaced, so the result was copied to the clipboard",
-    "unchanged": {
-      "command": "The command left the text as it was",
-      "correction": "No mistakes found"
-    },
-    "working": {
-      "command": "Running the command…",
-      "correction": "Correcting…"
-    }
+    "unchanged": { "correction": "No mistakes found" },
+    "working": { "correction": "Correcting…" }
   },
   "settings": {
     "accessAllow": "Allow",

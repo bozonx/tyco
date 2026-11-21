@@ -648,18 +648,15 @@
     "cancelled": "已取消",
     "done": "完成",
     "emptyResult": "模型傳回了空白結果",
-    "failed": { "command": "命令執行失敗", "correction": "校對失敗" },
+    "failed": { "correction": "校對失敗" },
     "focusChanged": "視窗在此期間已切換，因此結果已複製到剪貼簿",
     "noSelection": "未選取任何內容",
     "noTarget": "沒有任何應用程式視窗取得焦點",
     "resultInClipboard": "結果已存入剪貼簿",
     "selectionChanged": "處理期間選取範圍已變更，因此結果已複製到剪貼簿",
     "terminalSelection": "終端機中的選取範圍無法取代，因此結果已複製到剪貼簿",
-    "unchanged": {
-      "command": "命令未對文字進行任何變更",
-      "correction": "未發現任何錯誤"
-    },
-    "working": { "command": "正在執行命令…", "correction": "正在校對…" }
+    "unchanged": { "correction": "未發現任何錯誤" },
+    "working": { "correction": "正在校對…" }
   },
   "settings": {
     "accessAllow": "允許",

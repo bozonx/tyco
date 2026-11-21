@@ -648,21 +648,15 @@
     "cancelled": "キャンセルされました",
     "done": "完了",
     "emptyResult": "モデルが空の結果を返しました",
-    "failed": {
-      "command": "コマンドが失敗しました",
-      "correction": "校正に失敗しました"
-    },
+    "failed": { "correction": "校正に失敗しました" },
     "focusChanged": "その間にアクティブウィンドウが変わったため、結果がクリップボードにコピーされました",
     "noSelection": "何も選択されていません",
     "noTarget": "フォーカスされているアプリケーションウィンドウがありません",
     "resultInClipboard": "結果をクリップボードにコピーしました",
     "selectionChanged": "処理中に選択範囲が変わったため、結果をクリップボードにコピーしました",
     "terminalSelection": "ターミナルの選択範囲は置き換えられないため、結果をクリップボードにコピーしました",
-    "unchanged": {
-      "command": "コマンドによるテキストの変更はありませんでした",
-      "correction": "修正箇所は見つかりませんでした"
-    },
-    "working": { "command": "コマンドを実行中…", "correction": "校正中…" }
+    "unchanged": { "correction": "修正箇所は見つかりませんでした" },
+    "working": { "correction": "校正中…" }
   },
   "settings": {
     "accessAllow": "許可",

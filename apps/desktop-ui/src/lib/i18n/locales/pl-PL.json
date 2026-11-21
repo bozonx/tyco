@@ -648,24 +648,15 @@
     "cancelled": "Anulowano",
     "done": "Gotowe",
     "emptyResult": "Model zwrócił pusty wynik",
-    "failed": {
-      "command": "Polecenie nie powiodło się",
-      "correction": "Korekta nie powiodła się"
-    },
+    "failed": { "correction": "Korekta nie powiodła się" },
     "focusChanged": "W międzyczasie zmieniło się okno, więc wynik skopiowano do schowka",
     "noSelection": "Nic nie jest zaznaczone",
     "noTarget": "Żadne okno aplikacji nie jest aktywne",
     "resultInClipboard": "Wynik jest w schowku",
     "selectionChanged": "W międzyczasie zaznaczenie się zmieniło, więc wynik skopiowano do schowka",
     "terminalSelection": "Zaznaczenia w terminalu nie można zastąpić, więc wynik skopiowano do schowka",
-    "unchanged": {
-      "command": "Polecenie pozostawiło tekst bez zmian",
-      "correction": "Nie znaleziono błędów"
-    },
-    "working": {
-      "command": "Wykonywanie polecenia…",
-      "correction": "Korygowanie…"
-    }
+    "unchanged": { "correction": "Nie znaleziono błędów" },
+    "working": { "correction": "Korygowanie…" }
   },
   "settings": {
     "accessAllow": "Zezwól",

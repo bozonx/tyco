@@ -648,24 +648,15 @@
     "cancelled": "Otkazano",
     "done": "Gotovo",
     "emptyResult": "Model je vratio prazan rezultat",
-    "failed": {
-      "command": "Naredba nije uspjela",
-      "correction": "Ispravak nije uspio"
-    },
+    "failed": { "correction": "Ispravak nije uspio" },
     "focusChanged": "U međuvremenu se prozor promijenio pa je rezultat kopiran u međuspremnik",
     "noSelection": "Ništa nije odabrano",
     "noTarget": "Nijedan prozor aplikacije nije u fokusu",
     "resultInClipboard": "Rezultat je u međuspremniku",
     "selectionChanged": "Odabir se u međuvremenu promijenio, pa je rezultat kopiran u međuspremnik",
     "terminalSelection": "Odabir u terminalu ne može se zamijeniti, pa je rezultat kopiran u međuspremnik",
-    "unchanged": {
-      "command": "Naredba je ostavila tekst nepromijenjen",
-      "correction": "Nisu pronađene pogreške"
-    },
-    "working": {
-      "command": "Pokreće se naredba…",
-      "correction": "Ispravljanje…"
-    }
+    "unchanged": { "correction": "Nisu pronađene pogreške" },
+    "working": { "correction": "Ispravljanje…" }
   },
   "settings": {
     "accessAllow": "Dopusti",

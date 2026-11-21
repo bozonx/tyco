@@ -648,24 +648,15 @@
     "cancelled": "Cancelado",
     "done": "Listo",
     "emptyResult": "El modelo devolvió un resultado vacío",
-    "failed": {
-      "command": "El comando falló",
-      "correction": "La corrección falló"
-    },
+    "failed": { "correction": "La corrección falló" },
     "focusChanged": "La ventana cambió mientras tanto, así que el resultado se copió al portapapeles",
     "noSelection": "No hay nada seleccionado",
     "noTarget": "Ninguna ventana de aplicación tiene el foco",
     "resultInClipboard": "El resultado está en el portapapeles",
     "selectionChanged": "La selección cambió mientras tanto, así que el resultado se copió al portapapeles",
     "terminalSelection": "Una selección en un terminal no se puede reemplazar, así que el resultado se copió al portapapeles",
-    "unchanged": {
-      "command": "El comando dejó el texto como estaba",
-      "correction": "No se encontraron errores"
-    },
-    "working": {
-      "command": "Ejecutando el comando…",
-      "correction": "Corrigiendo…"
-    }
+    "unchanged": { "correction": "No se encontraron errores" },
+    "working": { "correction": "Corrigiendo…" }
   },
   "settings": {
     "accessAllow": "Permitir",

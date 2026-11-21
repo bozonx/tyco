@@ -648,24 +648,15 @@
     "cancelled": "Annullato",
     "done": "Fatto",
     "emptyResult": "Il modello ha restituito un risultato vuoto",
-    "failed": {
-      "command": "Il comando non è riuscito",
-      "correction": "La correzione non è riuscita"
-    },
+    "failed": { "correction": "La correzione non è riuscita" },
     "focusChanged": "Nel frattempo la finestra è cambiata, quindi il risultato è stato copiato negli appunti",
     "noSelection": "Non è selezionato nulla",
     "noTarget": "Nessuna finestra di applicazione ha il focus",
     "resultInClipboard": "Il risultato è negli appunti",
     "selectionChanged": "Nel frattempo la selezione è cambiata, quindi il risultato è stato copiato negli appunti",
     "terminalSelection": "Una selezione in un terminale non può essere sostituita, quindi il risultato è stato copiato negli appunti",
-    "unchanged": {
-      "command": "Il comando ha lasciato il testo invariato",
-      "correction": "Nessun errore trovato"
-    },
-    "working": {
-      "command": "Esecuzione del comando…",
-      "correction": "Correzione…"
-    }
+    "unchanged": { "correction": "Nessun errore trovato" },
+    "working": { "correction": "Correzione…" }
   },
   "settings": {
     "accessAllow": "Consenti",
