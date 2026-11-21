@@ -517,14 +517,16 @@ describe('Settings.vue', () => {
       'settings.storageDevice',
       'settings.storageState · settings.storageCache · settings.storageLogs',
     ])
-    expect(storageItems[1].find('.storage-path').text()).toBe('/test/local')
+    expect(storageItems[1].find('.path-display-text').text()).toBe(
+      '/test/local'
+    )
 
     const copyBtn = storageItems[0].get(
-      '.storage-path-actions .storage-copy-btn'
+      '.path-display-actions .path-display-copy-btn'
     )
     expect(copyBtn.attributes('aria-label')).toBe('settings.storageCopyPath')
     const openBtn = storageItems[0].get(
-      '.storage-path-actions .storage-open-btn'
+      '.path-display-actions .path-display-open-btn'
     )
     expect(openBtn.attributes('aria-label')).toBe('settings.storageOpenFolder')
     expect(openBtn.attributes('title')).toBe('settings.storageOpenFolder')

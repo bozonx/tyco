@@ -15,32 +15,42 @@
     </template>
 
     <div class="settings-section-content">
-      <div class="settings-entity-list">
-        <SettingsEntityItem
+      <div class="settings-vault-list">
+        <div
           v-for="vault in vaults"
           :key="vault.vaultId"
-          :title="vaultLabel(vault, t('settings.aiVaults.main'))"
-          :description="vault.path"
+          class="settings-vault-item"
           :data-testid="`vault-${vault.vaultId || 'main'}`"
         >
-          <template #actions>
-            <Badge v-if="vault.status === 'notConnected'" tone="warning">
-              {{ t('settings.aiVaults.notConnected') }}
-            </Badge>
-            <Badge v-else-if="vault.status === 'newer'" tone="warning">
-              {{ t('settings.aiVaults.newer') }}
-            </Badge>
-            <DropdownMenu
-              size="xs"
-              square
-              hide-chevron
-              align="right"
-              icon="mdi:dots-vertical"
-              :title="t('commands.moreActions')"
-              :items="vaultMenuItems(vault)"
-            />
-          </template>
-        </SettingsEntityItem>
+          <div class="settings-vault-header">
+            <span class="settings-vault-title">
+              {{ vaultLabel(vault, t('settings.aiVaults.main')) }}
+            </span>
+            <div class="settings-vault-badges">
+              <Badge v-if="vault.status === 'notConnected'" tone="warning">
+                {{ t('settings.aiVaults.notConnected') }}
+              </Badge>
+              <Badge v-else-if="vault.status === 'newer'" tone="warning">
+                {{ t('settings.aiVaults.newer') }}
+              </Badge>
+              <DropdownMenu
+                v-if="vaultMenuItems(vault).length > 0"
+                size="xs"
+                square
+                hide-chevron
+                align="right"
+                icon="mdi:dots-vertical"
+                :title="t('commands.moreActions')"
+                :items="vaultMenuItems(vault)"
+              />
+            </div>
+          </div>
+          <PathDisplay
+            :path="vault.path"
+            :can-open="vault.status === 'connected'"
+            @open="openVault(vault)"
+          />
+        </div>
       </div>
       <InlineNotice
         v-for="vault in sharedVaults"
@@ -107,8 +117,8 @@ import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import InlineNotice from '../common/InlineNotice.vue'
+import PathDisplay from '../common/PathDisplay.vue'
 import SettingsCreateEntityModal from './SettingsCreateEntityModal.vue'
-import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsSection from './SettingsSection.vue'
 import type { VaultInfo } from '@tyco/shared'
 
@@ -205,16 +215,19 @@ async function detach() {
   }
 }
 
+function openVault(vault: VaultInfo) {
+  void store
+    .openVaultDir(undefined, vault.vaultId)
+    .catch((error: unknown) => toastError(error))
+}
+
 function vaultMenuItems(vault: VaultInfo): DropdownMenuItem[] {
   const items: DropdownMenuItem[] = []
   if (vault.status === 'connected')
     items.push({
       label: t('settings.aiVaults.open'),
       icon: 'mdi:folder-open-outline',
-      action: () =>
-        void store
-          .openVaultDir(undefined, vault.vaultId)
-          .catch((error: unknown) => toastError(error)),
+      action: () => openVault(vault),
     })
   if (vault.isMain) return items
   if (vault.status === 'connected')
@@ -239,3 +252,39 @@ function vaultMenuItems(vault: VaultInfo): DropdownMenuItem[] {
   return items
 }
 </script>
+
+<style scoped>
+.settings-vault-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+}
+
+.settings-vault-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.settings-vault-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-height: 1.5rem;
+}
+
+.settings-vault-title {
+  font-size: var(--text-caption);
+  font-weight: 500;
+  color: var(--app-text-muted);
+}
+
+.settings-vault-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-left: auto;
+}
+</style>

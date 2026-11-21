@@ -5,23 +5,8 @@
     </template>
 
     <div class="user-data">
-      <div class="user-data-path-box">
-        <code class="user-data-path" :title="userData.path">{{
-          userData.path
-        }}</code>
-        <div class="user-data-path-actions">
-          <CopyButton
-            :value="userData.path"
-            :label="t('settings.storageCopyPath')"
-            :copied-label="t('settings.storagePathCopied')"
-          />
-          <IconButton
-            size="sm"
-            variant="ghost"
-            icon="mdi:folder-open-outline"
-            :label="t('settings.storageOpenFolder')"
-            @click="open"
-          />
+      <PathDisplay :path="userData.path" can-open @open="open">
+        <template #actions>
           <Button
             size="sm"
             icon="mdi:folder-search-outline"
@@ -30,8 +15,8 @@
           >
             {{ t('common.change') }}
           </Button>
-        </div>
-      </div>
+        </template>
+      </PathDisplay>
 
       <InlineNotice
         v-if="userData.status === 'newerFormat'"
@@ -59,10 +44,9 @@ import { useUserDataFolder } from '../../composables/use-user-data-folder'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useUserDataStore } from '../../stores/user-data'
 import Button from '../common/Button.vue'
-import CopyButton from '../common/CopyButton.vue'
-import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import InlineNotice from '../common/InlineNotice.vue'
+import PathDisplay from '../common/PathDisplay.vue'
 import SettingsSection from './SettingsSection.vue'
 import UserDataRelocationModal from './UserDataRelocationModal.vue'
 
@@ -90,35 +74,5 @@ async function open() {
   flex-direction: column;
   gap: var(--space-sm);
   padding: var(--space-md) var(--space-lg);
-}
-
-.user-data-path-box {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  padding: 0.375rem 0.5rem 0.375rem 0.75rem;
-  border-radius: var(--radius-md);
-  background-color: var(--app-surface-sunken);
-  border: 1px solid var(--app-border-subtle);
-  min-width: 0;
-}
-
-.user-data-path {
-  flex: 1 1 12rem;
-  min-width: 0;
-  font-family: var(--font-mono);
-  font-size: var(--text-caption);
-  word-break: break-all;
-  user-select: all;
-}
-
-.user-data-path-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  margin-left: auto;
-  flex-shrink: 0;
 }
 </style>

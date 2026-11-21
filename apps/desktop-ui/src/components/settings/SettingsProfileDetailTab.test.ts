@@ -104,7 +104,14 @@ describe('SettingsProfileDetailTab.vue', () => {
     })
 
   const button = (wrapper: ReturnType<typeof mountTab>, label: string) =>
-    wrapper.findAll('button').find((item) => item.text().includes(label))!
+    wrapper
+      .findAll('button')
+      .find(
+        (item) =>
+          item.text().includes(label) ||
+          item.attributes('aria-label')?.includes(label) ||
+          item.attributes('title')?.includes(label)
+      )!
 
   it('creates a profile and opens it', async () => {
     const wrapper = mountTab('new')

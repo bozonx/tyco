@@ -97,7 +97,7 @@
             :label="t('settings.vaultFolder')"
             :info="t('settings.projectFolderFixedHint')"
           >
-            <code class="vault-folder">projects/{{ projectId }}</code>
+            <PathDisplay :path="`projects/${projectId}`" />
           </FieldRow>
           <FieldRow
             v-else-if="isExternal"
@@ -117,15 +117,22 @@
             "
             device-scoped
           >
-            <Button
-              size="sm"
-              variant="neutral"
-              icon="mdi:folder-open-outline"
-              :title="t('settings.projectFolderRelinkHint')"
-              @click="handlePickFolder"
+            <PathDisplay
+              :path="targetPath"
+              :placeholder="t('settings.projectFolderNotSelected')"
             >
-              {{ t('settings.selectFolder') }}
-            </Button>
+              <template #actions>
+                <Button
+                  size="sm"
+                  variant="neutral"
+                  icon="mdi:folder-open-outline"
+                  :title="t('settings.projectFolderRelinkHint')"
+                  @click="handlePickFolder"
+                >
+                  {{ t('settings.selectFolder') }}
+                </Button>
+              </template>
+            </PathDisplay>
           </FieldRow>
         </SettingsSection>
 
@@ -276,6 +283,7 @@ import FieldRow from '../common/FieldRow.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
+import PathDisplay from '../common/PathDisplay.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
@@ -540,11 +548,6 @@ async function handleCreate() {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-sm);
-  font-size: var(--text-control);
-}
-
-.vault-folder {
-  overflow-wrap: anywhere;
   font-size: var(--text-control);
 }
 

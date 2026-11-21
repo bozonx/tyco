@@ -27,27 +27,11 @@
         class="storage-item"
       >
         <span class="storage-item-label">{{ item.label }}</span>
-        <div class="storage-path-box">
-          <code class="storage-path" :title="item.value">{{ item.value }}</code>
-          <div class="storage-path-actions">
-            <CopyButton
-              class="storage-copy-btn"
-              size="xs"
-              :value="item.value"
-              :label="t('settings.storageCopyPath')"
-              :copied-label="t('settings.storagePathCopied')"
-            />
-            <IconButton
-              class="storage-open-btn"
-              size="xs"
-              variant="ghost"
-              tone="muted"
-              icon="mdi:folder-open-outline"
-              :label="t('settings.storageOpenFolder')"
-              @click="openStorageLocation(item.kind)"
-            />
-          </div>
-        </div>
+        <PathDisplay
+          :path="item.value"
+          can-open
+          @open="openStorageLocation(item.kind)"
+        />
       </div>
     </div>
   </section>
@@ -57,10 +41,9 @@ import { computed, onMounted, ref, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useIpcStore } from '../../stores/ipc'
-import CopyButton from '../common/CopyButton.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
-import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
+import PathDisplay from '../common/PathDisplay.vue'
 import StateMessage from '../common/StateMessage.vue'
 import type { StorageInfo, StorageKind } from '@tyco/shared'
 
@@ -151,73 +134,5 @@ onMounted(() => {
   font-size: var(--text-caption);
   font-weight: 500;
   color: var(--app-text-muted);
-}
-
-.storage-path-box {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  padding: 0.375rem 0.5rem 0.375rem 0.75rem;
-  border-radius: var(--radius-md);
-  background-color: var(--app-surface-sunken);
-  border: 1px solid var(--app-border-subtle);
-  min-width: 0;
-}
-
-.storage-path {
-  flex: 1 1 12rem;
-  font-family: var(--font-mono);
-  font-size: var(--text-caption);
-  color: var(--color-base-content);
-  word-break: break-all;
-  user-select: all;
-  min-width: 0;
-}
-
-.storage-path-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-.storage-copy-btn,
-.storage-open-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  margin: 0;
-  border: none;
-  background: transparent;
-  border-radius: var(--radius-sm);
-  color: var(--app-text-muted);
-  opacity: 0.8;
-  cursor: pointer;
-  outline: none;
-  flex-shrink: 0;
-  transition:
-    opacity var(--transition-fast),
-    background-color var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.storage-copy-btn:hover,
-.storage-copy-btn:focus-visible,
-.storage-open-btn:hover,
-.storage-open-btn:focus-visible {
-  opacity: 1;
-  background-color: var(--app-hover);
-  color: var(--color-base-content);
-}
-
-.storage-copy-btn:focus-visible,
-.storage-open-btn:focus-visible {
-  box-shadow: var(--app-focus-ring);
 }
 </style>

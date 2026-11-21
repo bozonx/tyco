@@ -66,17 +66,12 @@
           :label="t('settings.vaultFolder')"
           :info="t('settings.vaultFolderFixedHint')"
         >
-          <div class="profile-folder-row">
-            <code class="vault-folder">profiles/{{ profile.id }}</code>
-            <Button
-              size="sm"
-              variant="neutral"
-              icon="mdi:folder-open-outline"
-              @click="handleOpenFolder"
-            >
-              {{ t('settings.openProfileFolder') }}
-            </Button>
-          </div>
+          <PathDisplay
+            :path="`profiles/${profile.id}`"
+            can-open
+            :open-label="t('settings.openProfileFolder')"
+            @open="handleOpenFolder"
+          />
         </FieldRow>
 
         <SettingsAdvancedFields v-model:expanded="isAdvancedExpanded">
@@ -226,6 +221,7 @@ import FieldNumber from '../common/FieldNumber.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import InlineNotice from '../common/InlineNotice.vue'
+import PathDisplay from '../common/PathDisplay.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsAdvancedFields from './SettingsAdvancedFields.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
@@ -437,18 +433,5 @@ async function handleOpenFolder() {
 .profile-form-actions {
   display: flex;
   justify-content: flex-end;
-}
-
-.vault-folder {
-  overflow-wrap: anywhere;
-  font-size: var(--text-control);
-}
-
-.profile-folder-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  width: 100%;
 }
 </style>

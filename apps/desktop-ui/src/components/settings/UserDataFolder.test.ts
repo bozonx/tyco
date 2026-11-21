@@ -62,7 +62,7 @@ describe('UserDataFolder.vue', () => {
     expect(wrapper.find('.badge').exists()).toBe(false)
     expect(wrapper.find('.advanced-toggle').exists()).toBe(false)
 
-    const actionButtons = wrapper.findAll('.user-data-path-actions button')
+    const actionButtons = wrapper.findAll('.path-display-actions button')
     expect(actionButtons).toHaveLength(3)
     expect(actionButtons[0].attributes('aria-label')).toBe(
       'settings.storageCopyPath'
@@ -87,7 +87,7 @@ describe('UserDataFolder.vue', () => {
     }))
     d.backend.handle('relocate_user_data', () => undefined)
 
-    const actionButtons = wrapper.findAll('.user-data-path-actions button')
+    const actionButtons = wrapper.findAll('.path-display-actions button')
     await actionButtons[2].trigger('click')
     await flushPromises()
 
