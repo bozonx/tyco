@@ -20,7 +20,7 @@
         "selectionActionsPage2": "Ctrl+Alt+Q"
       },
       "externalAccess": { "canAccessSelection": true },
-      "windowInsertion": { "terminalApps": ["kitty"] },
+      "windowInsertion": { "linux": { "pasteShortcut": "Shift+Insert" } },
       "aiVaults": {
         "attached": [{ "path": "/home/user/work", "vaultId": "w1" }]
       },
@@ -55,7 +55,7 @@
         "selectionActionsPage2": "Ctrl+Alt+Q"
       },
       "externalAccess": { "canAccessSelection": true },
-      "windowInsertion": { "terminalApps": ["kitty"] },
+      "windowInsertion": { "linux": { "pasteShortcut": "Shift+Insert" } },
       "variables": [{ "id": "notes", "name": "NOTES_DIR" }],
       "variableValues": { "notes": "/home/user/notes" }
     },

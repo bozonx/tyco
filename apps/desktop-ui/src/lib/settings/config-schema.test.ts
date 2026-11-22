@@ -40,19 +40,20 @@ describe('portable user config schema', () => {
     )
   })
 
-  it('adds terminal paste defaults to older configs and preserves explicit choices', () => {
+  it('pastes automatically unless a known combination is chosen', () => {
     const config = structuredClone(DEFAULT_USER_CONFIG)
+    expect(config.windowInsertion.linux.pasteShortcut).toBe('auto')
     const linux: Record<string, unknown> = config.windowInsertion.linux
-    delete linux.terminalPasteShortcut
-    expect(
-      normalizeUserConfig(config).windowInsertion.linux.terminalPasteShortcut
-    ).toBe('Ctrl+Shift+V')
-    for (const choice of [null, 'Ctrl+V', 'Ctrl+Shift+V', 'Shift+Insert']) {
-      linux.terminalPasteShortcut = choice
+    for (const choice of ['auto', 'Ctrl+V', 'Ctrl+Shift+V', 'Shift+Insert']) {
+      linux.pasteShortcut = choice
       expect(
-        normalizeUserConfig(config).windowInsertion.linux.terminalPasteShortcut
+        normalizeUserConfig(config).windowInsertion.linux.pasteShortcut
       ).toBe(choice)
     }
+    linux.pasteShortcut = 'Ctrl+Alt+V'
+    expect(
+      normalizeUserConfig(config).windowInsertion.linux.pasteShortcut
+    ).toBe('auto')
   })
 
   it.each(cases)(

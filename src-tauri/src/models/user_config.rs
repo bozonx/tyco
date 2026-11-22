@@ -94,10 +94,15 @@ pub fn editor_history(config: &Value) -> EditorHistoryConfig {
 }
 
 #[cfg(any(target_os = "linux", test))]
-/// A key combination that pastes, `windowInsertion.linux.*PasteShortcut`.
+/// `windowInsertion.linux.pasteShortcut`: the keys that paste into the
+/// target window. A fixed combination is pressed as it is in every window,
+/// terminals included; `Auto` picks one by the kind of the window.
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
 pub enum PasteShortcut {
+    /// Ctrl+V, and Ctrl+Shift+V in a terminal.
     #[default]
+    #[serde(rename = "auto")]
+    Auto,
     #[serde(rename = "Ctrl+V")]
     CtrlV,
     #[serde(rename = "Ctrl+Shift+V")]
@@ -107,31 +112,12 @@ pub enum PasteShortcut {
 }
 
 #[cfg(any(target_os = "linux", test))]
-/// `windowInsertion.linux.terminalPasteShortcut`: `null` pastes into a
-/// terminal as into any other window.
+/// A key combination that pastes, `PasteShortcut` resolved for one window.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TerminalPasteShortcut {
-    SameAsOtherWindows,
-    Shortcut(PasteShortcut),
-}
-
-#[cfg(any(target_os = "linux", test))]
-impl Default for TerminalPasteShortcut {
-    fn default() -> Self {
-        Self::Shortcut(PasteShortcut::CtrlShiftV)
-    }
-}
-
-#[cfg(any(target_os = "linux", test))]
-impl<'de> Deserialize<'de> for TerminalPasteShortcut {
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        Ok(match Value::deserialize(deserializer)? {
-            Value::Null => Self::SameAsOtherWindows,
-            value => PasteShortcut::deserialize(value)
-                .map(Self::Shortcut)
-                .unwrap_or_default(),
-        })
-    }
+pub enum PasteKeys {
+    CtrlV,
+    CtrlShiftV,
+    ShiftInsert,
 }
 
 #[cfg(any(target_os = "linux", test))]
@@ -141,17 +127,17 @@ impl<'de> Deserialize<'de> for TerminalPasteShortcut {
 pub struct LinuxInsertionConfig {
     #[serde(default, deserialize_with = "lenient")]
     pub paste_shortcut: PasteShortcut,
-    #[serde(default)]
-    pub terminal_paste_shortcut: TerminalPasteShortcut,
 }
 
 #[cfg(any(target_os = "linux", test))]
 impl LinuxInsertionConfig {
     /// The keys that paste into a terminal or into another window.
-    pub fn paste_shortcut_for(&self, is_terminal: bool) -> PasteShortcut {
-        match self.terminal_paste_shortcut {
-            TerminalPasteShortcut::Shortcut(shortcut) if is_terminal => shortcut,
-            _ => self.paste_shortcut,
+    pub fn paste_keys_for(&self, is_terminal: bool) -> PasteKeys {
+        match self.paste_shortcut {
+            PasteShortcut::Auto if is_terminal => PasteKeys::CtrlShiftV,
+            PasteShortcut::Auto | PasteShortcut::CtrlV => PasteKeys::CtrlV,
+            PasteShortcut::CtrlShiftV => PasteKeys::CtrlShiftV,
+            PasteShortcut::ShiftInsert => PasteKeys::ShiftInsert,
         }
     }
 }
@@ -159,21 +145,6 @@ impl LinuxInsertionConfig {
 #[cfg(any(target_os = "linux", test))]
 pub fn linux_insertion(config: &Value) -> LinuxInsertionConfig {
     section_at(config, "/windowInsertion/linux")
-}
-
-/// `windowInsertion.terminalApps`: window classes the user marks as
-/// terminals, in addition to the known ones. Blank entries are dropped.
-pub fn terminal_apps(config: &Value) -> Vec<String> {
-    config
-        .pointer("/windowInsertion/terminalApps")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .filter_map(Value::as_str)
-        .map(str::trim)
-        .filter(|app| !app.is_empty())
-        .map(str::to_owned)
-        .collect()
 }
 
 /// What an action page takes as its input, `actionPages[].inputMode`.
@@ -609,38 +580,33 @@ mod tests {
     }
 
     #[test]
-    fn terminal_paste_is_explicit_and_falls_back_per_field() {
-        let insertion = |terminal: Value| {
-            linux_insertion(&json!({"windowInsertion": {"linux": {
-                "pasteShortcut": "Shift+Insert",
-                "terminalPasteShortcut": terminal,
-            }}}))
+    fn auto_paste_tells_terminals_and_fixed_keys_are_pressed_everywhere() {
+        let insertion = |shortcut: Value| {
+            linux_insertion(&json!({"windowInsertion": {"linux": {"pasteShortcut": shortcut}}}))
         };
-        for (setting, expected) in [
-            (json!("Ctrl+V"), PasteShortcut::CtrlV),
-            (json!("Ctrl+Shift+V"), PasteShortcut::CtrlShiftV),
-            (json!("Shift+Insert"), PasteShortcut::ShiftInsert),
-            (Value::Null, PasteShortcut::ShiftInsert),
-            (json!("invalid"), PasteShortcut::CtrlShiftV),
+        for (setting, other, terminal) in [
+            (json!("auto"), PasteKeys::CtrlV, PasteKeys::CtrlShiftV),
+            (json!("Ctrl+V"), PasteKeys::CtrlV, PasteKeys::CtrlV),
+            (
+                json!("Ctrl+Shift+V"),
+                PasteKeys::CtrlShiftV,
+                PasteKeys::CtrlShiftV,
+            ),
+            (
+                json!("Shift+Insert"),
+                PasteKeys::ShiftInsert,
+                PasteKeys::ShiftInsert,
+            ),
+            (json!("bogus"), PasteKeys::CtrlV, PasteKeys::CtrlShiftV),
+            (Value::Null, PasteKeys::CtrlV, PasteKeys::CtrlShiftV),
         ] {
-            let config = insertion(setting);
-            assert_eq!(config.paste_shortcut_for(true), expected);
-            assert_eq!(config.paste_shortcut_for(false), PasteShortcut::ShiftInsert);
+            let config = insertion(setting.clone());
+            assert_eq!(config.paste_keys_for(false), other, "{setting}");
+            assert_eq!(config.paste_keys_for(true), terminal, "{setting}");
         }
-        let missing = linux_insertion(&json!({}));
-        assert_eq!(missing.paste_shortcut_for(true), PasteShortcut::CtrlShiftV);
-        assert_eq!(missing.paste_shortcut_for(false), PasteShortcut::CtrlV);
-        let bogus =
-            linux_insertion(&json!({"windowInsertion": {"linux": {"pasteShortcut": "bogus"}}}));
-        assert_eq!(bogus.paste_shortcut_for(false), PasteShortcut::CtrlV);
-    }
-
-    #[test]
-    fn terminal_apps_keep_only_named_classes() {
-        let config =
-            json!({"windowInsertion": {"terminalApps": [" PuTTY ", "", 3, "org.example.Term"]}});
-        assert_eq!(terminal_apps(&config), ["PuTTY", "org.example.Term"]);
-        assert!(terminal_apps(&json!({})).is_empty());
-        assert!(terminal_apps(&json!({"windowInsertion": {"terminalApps": "x"}})).is_empty());
+        assert_eq!(
+            linux_insertion(&json!({})).paste_shortcut,
+            PasteShortcut::Auto
+        );
     }
 }

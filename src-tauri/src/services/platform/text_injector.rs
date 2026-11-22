@@ -162,10 +162,10 @@ fn inject_paste_impl(user_config: &Value, target_window_id: Option<&str>) -> Res
 
 #[cfg(target_os = "windows")]
 fn inject_paste_impl(
-    user_config: &Value,
+    _user_config: &Value,
     target_platform_id: Option<&str>,
 ) -> Result<(), AppError> {
-    super::windows::inject_paste(user_config, target_platform_id)
+    super::windows::inject_paste(target_platform_id)
 }
 
 #[cfg(target_os = "macos")]

@@ -29,10 +29,12 @@ export * from './user-config/commands-config'
 export const CONFIG_VERSION = configVersion
 
 /**
- * Keys pressed in the target window to paste the inserted text on Linux;
- * written as the hotkeys are
+ * Keys pressed in the target window to paste the inserted text on Linux,
+ * written as the hotkeys are. `auto` presses Ctrl+V, and Ctrl+Shift+V in a
+ * terminal; a combination is pressed as it is in every window
  */
 export const PASTE_SHORTCUTS = [
+  'auto',
   'Ctrl+V',
   'Ctrl+Shift+V',
   'Shift+Insert',
@@ -271,14 +273,7 @@ export interface UserConfig {
   hotkeys: HotkeysConfig
   externalAccess: ExternalAccess
   /** How the text is typed into other windows, per platform */
-  windowInsertion: {
-    linux: {
-      pasteShortcut: PasteShortcut
-      terminalPasteShortcut: PasteShortcut | null
-    }
-    /** Window classes treated as terminals besides the known ones */
-    terminalApps: string[]
-  }
+  windowInsertion: { linux: { pasteShortcut: PasteShortcut } }
   translation: TranslationConfig
   actionPages: ActionPageConfig[]
   customActionSlots: CustomActionSlotConfig[]

@@ -188,10 +188,7 @@ if ($null -ne $text) {
         .flatten()
 }
 
-pub fn inject_paste(
-    user_config: &serde_json::Value,
-    target_window_handle: Option<&str>,
-) -> Result<(), AppError> {
+pub fn inject_paste(target_window_handle: Option<&str>) -> Result<(), AppError> {
     let window_handle = target_window_handle
         .and_then(|value| value.parse::<isize>().ok())
         .map(|value| value as HWND)
@@ -217,8 +214,7 @@ pub fn inject_paste(
             "The target window did not receive focus".into(),
         ));
     }
-    let terminal_apps = crate::models::user_config::terminal_apps(user_config);
-    press_keys(window_keys(window_handle, &terminal_apps), KeyAction::Paste)
+    press_keys(window_keys(window_handle), KeyAction::Paste)
 }
 
 /// Gives keyboard focus back to `target_window_handle` when it is still a live,
@@ -312,24 +308,23 @@ pub(crate) enum KeyAction {
     Paste,
 }
 
-/// The keys of window `window_handle`, told by its class; `terminal_apps`
-/// are classes the user marks as terminals.
-pub(crate) fn window_keys(window_handle: HWND, terminal_apps: &[String]) -> WindowKeys {
+/// The keys of window `window_handle`, told by its class.
+pub(crate) fn window_keys(window_handle: HWND) -> WindowKeys {
     let class = foreground_tracker::class_name(window_handle);
     if class.is_empty() {
         return WindowKeys::Ctrl;
     }
-    keys_for_class(&class, terminal_apps)
+    keys_for_class(&class)
 }
 
 /// The keys of the window `id`, a decimal HWND.
-pub(crate) fn window_keys_of(id: &str, terminal_apps: &[String]) -> WindowKeys {
+pub(crate) fn window_keys_of(id: &str) -> WindowKeys {
     id.parse::<isize>()
-        .map(|value| window_keys(value as HWND, terminal_apps))
+        .map(|value| window_keys(value as HWND))
         .unwrap_or(WindowKeys::Ctrl)
 }
 
-fn keys_for_class(class: &str, terminal_apps: &[String]) -> WindowKeys {
+fn keys_for_class(class: &str) -> WindowKeys {
     match class.to_ascii_lowercase().as_str() {
         // Windows Terminal, the console host, ConEmu, mintty (Git Bash, MSYS2)
         "cascadia_hosting_window_class"
@@ -338,7 +333,6 @@ fn keys_for_class(class: &str, terminal_apps: &[String]) -> WindowKeys {
         | "mintty" => WindowKeys::Insert,
         "alacritty" | "wezterm" | "org.wezfurlong.wezterm" => WindowKeys::CtrlShift,
         "putty" | "kitty" | "tmobaxtermform" => WindowKeys::PasteOnly,
-        _ if super::terminals::is_listed(class, terminal_apps) => WindowKeys::Insert,
         _ => WindowKeys::Ctrl,
     }
 }
@@ -578,21 +572,14 @@ mod tests {
     #[test]
     fn terminals_copy_without_ctrl_c() {
         assert_eq!(
-            keys_for_class("CASCADIA_HOSTING_WINDOW_CLASS", &[]),
+            keys_for_class("CASCADIA_HOSTING_WINDOW_CLASS"),
             WindowKeys::Insert
         );
-        assert_eq!(
-            keys_for_class("ConsoleWindowClass", &[]),
-            WindowKeys::Insert
-        );
-        assert_eq!(keys_for_class("mintty", &[]), WindowKeys::Insert);
-        assert_eq!(keys_for_class("PuTTY", &[]), WindowKeys::PasteOnly);
-        assert_eq!(keys_for_class("Alacritty", &[]), WindowKeys::CtrlShift);
-        assert_eq!(keys_for_class("Notepad", &[]), WindowKeys::Ctrl);
-        assert_eq!(
-            keys_for_class("MyTerm", &[String::from("myterm")]),
-            WindowKeys::Insert
-        );
+        assert_eq!(keys_for_class("ConsoleWindowClass"), WindowKeys::Insert);
+        assert_eq!(keys_for_class("mintty"), WindowKeys::Insert);
+        assert_eq!(keys_for_class("PuTTY"), WindowKeys::PasteOnly);
+        assert_eq!(keys_for_class("Alacritty"), WindowKeys::CtrlShift);
+        assert_eq!(keys_for_class("Notepad"), WindowKeys::Ctrl);
         assert_eq!(
             combination(WindowKeys::Insert, KeyAction::Copy),
             Some((&[VK_CONTROL][..], VK_INSERT))

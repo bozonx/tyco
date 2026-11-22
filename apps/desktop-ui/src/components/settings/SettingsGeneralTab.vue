@@ -31,28 +31,6 @@
           :options="pasteShortcutOptions"
         />
       </FieldRow>
-      <FieldRow
-        :label="t('settings.terminalPasteShortcut')"
-        :info="t('settings.terminalPasteShortcutHint')"
-      >
-        <FieldSelect
-          :model-value="
-            userConfig.windowInsertion.linux.terminalPasteShortcut ?? 'same'
-          "
-          :options="terminalPasteShortcutOptions"
-          @update:model-value="updateTerminalPasteShortcut"
-        />
-      </FieldRow>
-      <FieldRow
-        :label="t('settings.terminalApps')"
-        :info="t('settings.terminalAppsHint')"
-      >
-        <FieldInput
-          :model-value="terminalAppsText"
-          placeholder="PuTTY, org.example.Terminal"
-          @update:model-value="updateTerminalApps"
-        />
-      </FieldRow>
     </SettingsSection>
 
     <UserDataFolder />
@@ -75,7 +53,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
@@ -85,7 +63,6 @@ import {
   buildLanguageOptions,
 } from '../../lib/locale/language'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
-import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
@@ -106,59 +83,13 @@ const themeOptions = computed<{ id: ThemeMode; name: string; icon: string }[]>(
   ]
 )
 
-const pasteShortcutOptions = computed(() => {
-  return [
-    { id: 'Ctrl+V', name: `Ctrl+V — ${t('settings.pasteShortcutRegular')}` },
-    {
-      id: 'Ctrl+Shift+V',
-      name: `Ctrl+Shift+V — ${t('settings.pasteShortcutTerminals')}`,
-    },
-    {
-      id: 'Shift+Insert',
-      name: `Shift+Insert — ${t('settings.pasteShortcutAnyLayout')}`,
-    },
+const pasteShortcutOptions = computed<{ id: PasteShortcut; name: string }[]>(
+  () => [
+    { id: 'auto', name: t('settings.pasteShortcutAuto') },
+    { id: 'Ctrl+V', name: 'Ctrl+V' },
+    { id: 'Ctrl+Shift+V', name: 'Ctrl+Shift+V' },
+    { id: 'Shift+Insert', name: 'Shift+Insert' },
   ]
-})
-
-const terminalPasteShortcutOptions = computed(() => [
-  { id: 'same', name: t('settings.terminalPasteShortcutSame') },
-  ...pasteShortcutOptions.value,
-])
-
-const updateTerminalPasteShortcut = (value: string | number | undefined) => {
-  if (value === undefined) return
-  userConfig.value.windowInsertion.linux.terminalPasteShortcut =
-    value === 'same' ? null : (value as PasteShortcut)
-}
-
-/** Window classes as the user types them: comma separated */
-const parseTerminalApps = (text: string) =>
-  text
-    .split(',')
-    .map((app) => app.trim())
-    .filter((app) => app !== '')
-
-const terminalAppsText = ref(
-  userConfig.value.windowInsertion.terminalApps.join(', ')
-)
-
-const updateTerminalApps = (value: string | number | undefined) => {
-  terminalAppsText.value = String(value ?? '')
-  userConfig.value.windowInsertion.terminalApps = parseTerminalApps(
-    terminalAppsText.value
-  )
-}
-
-// a change made elsewhere, e.g. a reset, shows up in the field; the text
-// being typed keeps its separators
-watch(
-  () => userConfig.value.windowInsertion.terminalApps,
-  (apps) => {
-    const typed = parseTerminalApps(terminalAppsText.value)
-    if (typed.join('\n') !== apps.join('\n')) {
-      terminalAppsText.value = apps.join(', ')
-    }
-  }
 )
 
 const appLanguageOptions = computed(() => {

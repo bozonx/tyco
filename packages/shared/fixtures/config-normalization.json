@@ -264,13 +264,7 @@
         "dialog": "Ctrl+Alt+Shift+D"
       },
       "externalAccess": { "canAccessSelection": false },
-      "windowInsertion": {
-        "linux": {
-          "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V"
-        },
-        "terminalApps": []
-      },
+      "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
@@ -669,13 +663,7 @@
         "dialog": "Ctrl+Alt+Shift+D"
       },
       "externalAccess": { "canAccessSelection": false },
-      "windowInsertion": {
-        "linux": {
-          "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V"
-        },
-        "terminalApps": []
-      },
+      "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
@@ -1096,13 +1084,7 @@
         "dialog": "Ctrl+Alt+Shift+D"
       },
       "externalAccess": { "canAccessSelection": false },
-      "windowInsertion": {
-        "linux": {
-          "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V"
-        },
-        "terminalApps": []
-      },
+      "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
@@ -1532,13 +1514,7 @@
         "dialog": "Ctrl+Alt+Shift+D"
       },
       "externalAccess": { "canAccessSelection": false },
-      "windowInsertion": {
-        "linux": {
-          "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V"
-        },
-        "terminalApps": []
-      },
+      "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
@@ -1963,13 +1939,7 @@
         "dialog": "Ctrl+Alt+Shift+D"
       },
       "externalAccess": { "canAccessSelection": false },
-      "windowInsertion": {
-        "linux": {
-          "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V"
-        },
-        "terminalApps": []
-      },
+      "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
@@ -2387,13 +2357,7 @@
         "dialog": "Ctrl+Alt+Shift+D"
       },
       "externalAccess": { "canAccessSelection": false },
-      "windowInsertion": {
-        "linux": {
-          "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V"
-        },
-        "terminalApps": []
-      },
+      "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
@@ -2820,13 +2784,7 @@
         "dialog": "Ctrl+Alt+Shift+D"
       },
       "externalAccess": { "canAccessSelection": false },
-      "windowInsertion": {
-        "linux": {
-          "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V"
-        },
-        "terminalApps": []
-      },
+      "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
@@ -3266,13 +3224,7 @@
         "dialog": "Ctrl+Alt+Shift+D"
       },
       "externalAccess": { "canAccessSelection": false },
-      "windowInsertion": {
-        "linux": {
-          "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V"
-        },
-        "terminalApps": []
-      },
+      "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
@@ -3497,7 +3449,6 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V",
           "method": "xdotool",
           "xdotoolPath": "",
           "ydotoolPath": ""
@@ -3711,13 +3662,7 @@
         "dialog": "Ctrl+Alt+Shift+D"
       },
       "externalAccess": { "canAccessSelection": false },
-      "windowInsertion": {
-        "linux": {
-          "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V"
-        },
-        "terminalApps": []
-      },
+      "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
@@ -4174,13 +4119,7 @@
         "dialog": "Ctrl+Alt+Shift+D"
       },
       "externalAccess": { "canAccessSelection": false },
-      "windowInsertion": {
-        "linux": {
-          "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V"
-        },
-        "terminalApps": []
-      },
+      "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
@@ -4717,13 +4656,7 @@
         "dialog": "Ctrl+Alt+Shift+D"
       },
       "externalAccess": { "canAccessSelection": false },
-      "windowInsertion": {
-        "linux": {
-          "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V"
-        },
-        "terminalApps": []
-      },
+      "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",

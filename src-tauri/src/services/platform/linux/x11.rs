@@ -238,7 +238,7 @@ fn is_any_key_down(keymap: &[u8; 32], keycodes: &[u8]) -> bool {
 }
 
 /// Read the target's class before activation, while Tyco may still have focus.
-pub(crate) fn is_terminal_window(id: &str, extra: &[String]) -> bool {
+pub(crate) fn is_terminal_window(id: &str) -> bool {
     let Some(window) = id.parse::<Window>().ok() else {
         return false;
     };
@@ -248,8 +248,8 @@ pub(crate) fn is_terminal_window(id: &str, extra: &[String]) -> bool {
             .and_then(|cookie| cookie.reply().ok().flatten())
             .is_some_and(|class| {
                 use crate::services::platform::terminals::is_terminal_class;
-                is_terminal_class(&String::from_utf8_lossy(class.class()), extra)
-                    || is_terminal_class(&String::from_utf8_lossy(class.instance()), extra)
+                is_terminal_class(&String::from_utf8_lossy(class.class()))
+                    || is_terminal_class(&String::from_utf8_lossy(class.instance()))
             }))
     })
     .unwrap_or(false)

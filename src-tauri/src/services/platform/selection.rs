@@ -37,16 +37,12 @@ use crate::services::selection_replace::{
 /// The window that has the keyboard focus now. The tracker knows its class,
 /// which tells a terminal; without it X11 can still tell the window.
 #[cfg(target_os = "linux")]
-fn active_target(terminal_apps: &[String]) -> Option<SelectionTarget> {
+fn active_target() -> Option<SelectionTarget> {
     use super::{session, terminals::is_terminal_window, window_tracker::tracker};
 
     if tracker().is_running() {
         return tracker().active_window().map(|window| SelectionTarget {
-            is_terminal: is_terminal_window(
-                &window.class,
-                window.process.as_deref(),
-                terminal_apps,
-            ),
+            is_terminal: is_terminal_window(&window.class, window.process.as_deref()),
             id: window.id,
         });
     }
@@ -55,14 +51,14 @@ fn active_target(terminal_apps: &[String]) -> Option<SelectionTarget> {
     }
     let id = super::linux::x11::active_window()?;
     Some(SelectionTarget {
-        is_terminal: super::linux::x11::is_terminal_window(&id, terminal_apps),
+        is_terminal: super::linux::x11::is_terminal_window(&id),
         id,
     })
 }
 
 #[cfg(target_os = "linux")]
 fn active_target_id() -> Option<String> {
-    active_target(&[]).map(|target| target.id)
+    active_target().map(|target| target.id)
 }
 
 /// The text the copy keys overwrite: a clipboard still holding it means
@@ -105,8 +101,7 @@ fn no_target_error() -> SelectionRunError {
 
 #[cfg(target_os = "linux")]
 pub(crate) fn capture(user_config: &Value) -> Result<(String, SelectionRun), SelectionRunError> {
-    let terminal_apps = crate::models::user_config::terminal_apps(user_config);
-    let target = active_target(&terminal_apps).ok_or_else(no_target_error)?;
+    let target = active_target().ok_or_else(no_target_error)?;
     let text = if target.is_terminal {
         terminal_selection(&target.id)?
     } else {
@@ -155,13 +150,12 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
 }
 
 #[cfg(target_os = "windows")]
-pub(crate) fn capture(user_config: &Value) -> Result<(String, SelectionRun), SelectionRunError> {
+pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), SelectionRunError> {
     use super::windows;
-    let terminal_apps = crate::models::user_config::terminal_apps(user_config);
     let id = windows::focused_foreground_target().ok_or_else(|| {
         SelectionRunError::new(SelectionRunErrorCode::NoTarget, "No foreground window")
     })?;
-    let keys = windows::window_keys_of(&id, &terminal_apps);
+    let keys = windows::window_keys_of(&id);
     if !keys.can_copy() {
         return Err(SelectionRunError::new(
             SelectionRunErrorCode::Capture,
@@ -579,9 +573,8 @@ impl PasteExecutor for SystemPasteExecutor<'_> {
         }
         #[cfg(target_os = "windows")]
         {
-            let terminal_apps = crate::models::user_config::terminal_apps(config);
-            let probe =
-                WindowsCopyProbe::new(super::windows::window_keys_of(&target.id, &terminal_apps));
+            let _ = config;
+            let probe = WindowsCopyProbe::new(super::windows::window_keys_of(&target.id));
             copy_with_probe(&probe, &SystemClock, &target.id, &probe_text())
         }
     }
@@ -611,9 +604,9 @@ impl PasteExecutor for SystemPasteExecutor<'_> {
         }
         #[cfg(target_os = "windows")]
         {
-            let terminal_apps = crate::models::user_config::terminal_apps(config);
+            let _ = config;
             super::windows::press_keys(
-                super::windows::window_keys_of(&target.id, &terminal_apps),
+                super::windows::window_keys_of(&target.id),
                 super::windows::KeyAction::Paste,
             )
         }

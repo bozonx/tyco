@@ -78,13 +78,7 @@
     "customAction5": ""
   },
   "externalAccess": { "canAccessSelection": false },
-  "windowInsertion": {
-    "linux": {
-      "pasteShortcut": "Ctrl+V",
-      "terminalPasteShortcut": "Ctrl+Shift+V"
-    },
-    "terminalApps": []
-  },
+  "windowInsertion": { "linux": { "pasteShortcut": "auto" } },
   "translation": {
     "provider": "llm",
     "providers": { "deepl": { "endpoint": "free" } },

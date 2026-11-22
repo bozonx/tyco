@@ -249,28 +249,16 @@
           "type": "object",
           "properties": {
             "pasteShortcut": {
-              "enum": ["Ctrl+V", "Ctrl+Shift+V", "Shift+Insert"],
-              "default": "Ctrl+V"
-            },
-            "terminalPasteShortcut": {
-              "enum": [null, "Ctrl+V", "Ctrl+Shift+V", "Shift+Insert"],
-              "default": "Ctrl+Shift+V"
+              "enum": ["auto", "Ctrl+V", "Ctrl+Shift+V", "Shift+Insert"],
+              "default": "auto"
             }
           },
-          "required": ["pasteShortcut", "terminalPasteShortcut"],
+          "required": ["pasteShortcut"],
           "additionalProperties": false,
-          "default": {
-            "pasteShortcut": "Ctrl+V",
-            "terminalPasteShortcut": "Ctrl+Shift+V"
-          }
-        },
-        "terminalApps": {
-          "type": "array",
-          "items": { "type": "string", "default": "" },
-          "default": []
+          "default": { "pasteShortcut": "auto" }
         }
       },
-      "required": ["linux", "terminalApps"],
+      "required": ["linux"],
       "defaultPath": "windowInsertion",
       "x-scope": "device"
     },

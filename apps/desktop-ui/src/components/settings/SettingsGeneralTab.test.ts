@@ -22,13 +22,7 @@ describe('SettingsGeneralTab.vue', () => {
         uiScalePercent: 100,
       },
       language: { ui: AUTO_LANGUAGE_VALUE },
-      windowInsertion: {
-        linux: {
-          pasteShortcut: 'Ctrl+V',
-          terminalPasteShortcut: 'Ctrl+Shift+V',
-        },
-        terminalApps: ['PuTTY'],
-      },
+      windowInsertion: { linux: { pasteShortcut: 'auto' } },
       ...overrides,
     }) as UserConfig
   }
@@ -127,33 +121,16 @@ describe('SettingsGeneralTab.vue', () => {
     expect(row.find('.field-select-stub').exists()).toBe(true)
   })
 
-  it('sets a separate terminal paste shortcut or follows the regular shortcut', async () => {
+  it('pastes automatically by default and takes a fixed combination', async () => {
     const config = createConfig()
     const wrapper = mountTab(config)
-    const field = wrapper.find(
-      '[data-label="settings.terminalPasteShortcut"] input'
-    )
-    expect(field.element).toHaveProperty('value', 'Ctrl+Shift+V')
+    const field = wrapper.find('[data-label="settings.pasteShortcut"] input')
+    expect(field.element).toHaveProperty('value', 'auto')
 
     await field.setValue('Shift+Insert')
-    expect(config.windowInsertion.linux.terminalPasteShortcut).toBe(
-      'Shift+Insert'
-    )
-    expect(config.windowInsertion.linux.pasteShortcut).toBe('Ctrl+V')
-
-    await field.setValue('same')
-    expect(config.windowInsertion.linux.terminalPasteShortcut).toBeNull()
-  })
-
-  it('edits the extra terminals as a comma separated list', async () => {
-    const config = createConfig()
-    const wrapper = mountTab(config)
-    const field = wrapper.find('[data-label="settings.terminalApps"] input')
-    expect(field.element).toHaveProperty('value', 'PuTTY')
-
-    await field.setValue('PuTTY, my-term, ')
-    expect(config.windowInsertion.terminalApps).toEqual(['PuTTY', 'my-term'])
-    // the separator being typed stays in the field
-    expect(field.element).toHaveProperty('value', 'PuTTY, my-term, ')
+    expect(config.windowInsertion.linux.pasteShortcut).toBe('Shift+Insert')
+    expect(
+      wrapper.find('[data-label="settings.terminalPasteShortcut"]').exists()
+    ).toBe(false)
   })
 })

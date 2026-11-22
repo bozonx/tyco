@@ -20,7 +20,7 @@ use serde_json::Value;
 use super::binary_paths::default_binary_path;
 use super::remote_desktop::{self, KeyEvent, PortalState};
 use crate::errors::AppError;
-use crate::models::user_config::{self, PasteShortcut};
+use crate::models::user_config::{self, PasteKeys};
 use crate::services::platform::session::{self, DisplayServer};
 use crate::services::platform::text_injector::{
     KeySender, KeysState, TargetTracking, TextInsertionProblem, TextInsertionStatus,
@@ -42,7 +42,7 @@ const YDOTOOL: &str = "ydotool";
 /// names instead.
 const YDOTOOL_KEYCODE_SYNTAX: &str = "<keycode>:<pressed>";
 
-impl PasteShortcut {
+impl PasteKeys {
     fn paste_keys(self) -> &'static [u16] {
         match self {
             Self::CtrlV => &[KEY_LEFT_CTRL, KEY_V],
@@ -110,10 +110,10 @@ pub enum FocusedKeyAction {
 }
 
 impl FocusedKeyAction {
-    fn keys(self, shortcut: PasteShortcut) -> &'static [u16] {
+    fn keys(self, paste: PasteKeys) -> &'static [u16] {
         match self {
             Self::Copy => &COPY_KEYS,
-            Self::Paste => shortcut.paste_keys(),
+            Self::Paste => paste.paste_keys(),
         }
     }
 }
@@ -148,7 +148,6 @@ impl SystemTextInjector {
     ) -> Result<(), AppError> {
         self.ensure_supported()?;
         let linux = user_config::linux_insertion(user_config);
-        let terminal_apps = user_config::terminal_apps(user_config);
         let terminal = match (self.session, target_window_id) {
             (_, None) => {
                 if tracker().is_running() {
@@ -160,7 +159,7 @@ impl SystemTextInjector {
                 false
             }
             (InjectionSessionKind::X11, Some(window_id)) => {
-                let terminal = super::x11::is_terminal_window(window_id, &terminal_apps);
+                let terminal = super::x11::is_terminal_window(window_id);
                 super::x11::activate_window(window_id)?;
                 thread::sleep(X11_FOCUS_SETTLE_DELAY);
                 terminal
@@ -177,13 +176,11 @@ impl SystemTextInjector {
                         && crate::services::platform::terminals::is_terminal_window(
                             &window.class,
                             window.process.as_deref(),
-                            &terminal_apps,
                         )
                 })
             }
         };
-        let shortcut = linux.paste_shortcut_for(terminal);
-        send_keys(combo_events(shortcut.paste_keys()))
+        send_keys(combo_events(linux.paste_keys_for(terminal).paste_keys()))
     }
 
     /// Presses the keys of `action` in whatever window has the keyboard
@@ -197,7 +194,7 @@ impl SystemTextInjector {
     ) -> Result<(), AppError> {
         self.ensure_supported()?;
         let linux = user_config::linux_insertion(user_config);
-        send_keys(combo_events(action.keys(linux.paste_shortcut_for(false))))
+        send_keys(combo_events(action.keys(linux.paste_keys_for(false))))
     }
 
     fn ensure_supported(&self) -> Result<(), AppError> {
@@ -500,7 +497,7 @@ mod tests {
 
     #[test]
     fn ydotool_presses_and_releases_paste_keys_after_clearing_modifiers() {
-        let events = combo_events(PasteShortcut::CtrlV.paste_keys());
+        let events = combo_events(PasteKeys::CtrlV.paste_keys());
         let args = ydotool_args(&events);
         assert_eq!(args[0], "key");
         assert_eq!(args.len(), 1 + MODIFIER_KEYS.len() + 4);
@@ -541,13 +538,12 @@ mod tests {
 
     #[test]
     fn copy_keys_are_ctrl_insert_whatever_pastes() {
-        for paste in ["Ctrl+V", "Ctrl+Shift+V", "Shift+Insert"] {
+        for paste in ["auto", "Ctrl+V", "Ctrl+Shift+V", "Shift+Insert"] {
             let linux = user_config::linux_insertion(&json!({"windowInsertion": {"linux": {
                 "pasteShortcut": paste,
             }}}));
-            let shortcut = linux.paste_shortcut_for(false);
             assert_eq!(
-                FocusedKeyAction::Copy.keys(shortcut),
+                FocusedKeyAction::Copy.keys(linux.paste_keys_for(false)),
                 [KEY_LEFT_CTRL, KEY_INSERT]
             );
         }
@@ -555,7 +551,7 @@ mod tests {
             "pasteShortcut": "Shift+Insert",
         }}}));
         assert_eq!(
-            FocusedKeyAction::Paste.keys(linux.paste_shortcut_for(false)),
+            FocusedKeyAction::Paste.keys(linux.paste_keys_for(false)),
             [KEY_LEFT_SHIFT, KEY_INSERT]
         );
     }
@@ -581,7 +577,7 @@ mod tests {
     fn combos_release_keys_in_reverse_order() {
         let tail = |keys: &[u16]| combo_events(keys)[MODIFIER_KEYS.len()..].to_vec();
         assert_eq!(
-            tail(PasteShortcut::CtrlShiftV.paste_keys()),
+            tail(PasteKeys::CtrlShiftV.paste_keys()),
             [
                 (29, true),
                 (42, true),
