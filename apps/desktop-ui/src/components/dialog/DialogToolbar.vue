@@ -7,7 +7,7 @@
         variant="primary"
         size="sm"
         icon="mdi:play"
-        @click="dialog.start()"
+        @click="handleStart"
         >{{ t('dialog.start') }}</Button
       >
       <DropdownMenu
@@ -77,6 +77,7 @@
     <IconButton
       icon="mdi:picture-in-picture-bottom-right-outline"
       :label="t('dialog.collapse')"
+      :disabled="!dialog.isActive"
       @click="dialog.showSubtitles()"
     />
     <DropdownMenu
@@ -86,6 +87,14 @@
       icon="mdi:dots-vertical"
       :title="t('common.more')"
       :items="moreItems"
+    />
+    <ConfirmModal
+      :open="isRestartConfirmOpen"
+      :title="t('dialog.restartTitle')"
+      :message="t('dialog.restartMessage')"
+      :confirm-text="t('dialog.restartConfirm')"
+      @confirm="confirmRestart"
+      @cancel="cancelRestart"
     />
     <ConfirmModal
       :open="isRecordingNoticeOpen"
@@ -126,7 +135,9 @@ const isIdle = computed(
 )
 const isStopping = computed(() => dialog.status === 'stopping')
 const isEmpty = computed(() => dialog.segments.length === 0)
+const isRestartConfirmOpen = ref(false)
 const isRecordingNoticeOpen = ref(false)
+const pendingAction = ref<'start' | 'record' | null>(null)
 
 // a recording belongs to its history entry: nothing would keep it otherwise
 const canRecord = computed(
@@ -134,31 +145,53 @@ const canRecord = computed(
 )
 const startItems = computed<DropdownMenuItem[]>(() => [
   {
-    label: t('dialog.startCompact'),
-    icon: 'mdi:picture-in-picture-bottom-right-outline',
-    action: startCompact,
-  },
-  {
     label: canRecord.value
       ? t('dialog.startRecording')
       : t('dialog.startRecordingNeedsHistory'),
     icon: 'mdi:record-circle-outline',
     disabled: !canRecord.value,
-    action: startRecording,
+    action: handleStartRecording,
   },
 ])
 
-/** Starts and folds the window into the subtitles strip at once */
-async function startCompact() {
-  await dialog.start()
-  if (dialog.isActive) await dialog.showSubtitles()
+function handleStart() {
+  if (isEmpty.value) {
+    void dialog.start()
+  } else {
+    pendingAction.value = 'start'
+    isRestartConfirmOpen.value = true
+  }
 }
 
-/** The first recording tells to ask the other side first */
-function startRecording() {
+function handleStartRecording() {
+  if (isEmpty.value) {
+    proceedWithRecording()
+  } else {
+    pendingAction.value = 'record'
+    isRestartConfirmOpen.value = true
+  }
+}
+
+function proceedWithRecording() {
   if (dialog.config.isRecordingNoticeAcknowledged)
     void dialog.start({ isRecording: true })
   else isRecordingNoticeOpen.value = true
+}
+
+function confirmRestart() {
+  isRestartConfirmOpen.value = false
+  const action = pendingAction.value
+  pendingAction.value = null
+  if (action === 'record') {
+    proceedWithRecording()
+  } else {
+    void dialog.start()
+  }
+}
+
+function cancelRestart() {
+  isRestartConfirmOpen.value = false
+  pendingAction.value = null
 }
 
 async function confirmRecordingNotice() {

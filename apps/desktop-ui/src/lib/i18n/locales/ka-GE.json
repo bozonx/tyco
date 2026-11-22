@@ -1737,8 +1737,10 @@
     "ownLanguageDictation": "როგორც კარნახში",
     "translationModel": "თარგმნის {model}",
     "translationModelNone": "თარგმანისთვის მოდელი არ არის არჩეული",
-    "startCompact": "დაწყება კომპაქტურ რეჟიმში",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "თავიდან დაწყება?",
+    "restartMessage": "მიმდინარე ტრანსკრიფცია გასუფთავდება და შეინახება ისტორიაში.",
+    "restartConfirm": "თავიდან დაწყება"
   },
   "toolPermissions": {
     "riskRead": "კითხვა",

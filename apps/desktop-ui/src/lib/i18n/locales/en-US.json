@@ -1737,8 +1737,10 @@
     "ownLanguageDictation": "As in dictation",
     "translationModel": "Translated by {model}",
     "translationModelNone": "No model is picked for the translation",
-    "startCompact": "Start in compact mode",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "Start over?",
+    "restartMessage": "The current transcript will be cleared and saved to history.",
+    "restartConfirm": "Start over"
   },
   "toolPermissions": {
     "riskRead": "Reads",

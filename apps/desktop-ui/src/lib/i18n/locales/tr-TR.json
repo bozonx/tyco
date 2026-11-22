@@ -1733,8 +1733,10 @@
     "ownLanguageDictation": "Dikte ile aynı",
     "translationModel": "Çeviren: {model}",
     "translationModelNone": "Çeviri için model seçilmedi",
-    "startCompact": "Kompakt modda başlat",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "Yeniden başlatılsın mı?",
+    "restartMessage": "Mevcut transkript temizlenecek ve geçmişe kaydedilecek.",
+    "restartConfirm": "Yeniden başlat"
   },
   "toolPermissions": {
     "riskRead": "Okuma",

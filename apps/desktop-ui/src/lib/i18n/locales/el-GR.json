@@ -1737,8 +1737,10 @@
     "ownLanguageDictation": "Όπως στην υπαγόρευση",
     "translationModel": "Μεταφράζει το {model}",
     "translationModelNone": "Δεν έχει επιλεγεί μοντέλο για τη μετάφραση",
-    "startCompact": "Έναρξη σε συμπαγή λειτουργία",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "Ξεκίνημα από την αρχή;",
+    "restartMessage": "Η τρέχουσα απομαγνητοφώνηση θα εκκαθαριστεί και θα αποθηκευτεί στο ιστορικό.",
+    "restartConfirm": "Ξεκίνημα από την αρχή"
   },
   "toolPermissions": {
     "riskRead": "Ανάγνωση",

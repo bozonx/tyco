@@ -1737,8 +1737,10 @@
     "ownLanguageDictation": "받아쓰기와 동일",
     "translationModel": "{model}이(가) 번역",
     "translationModelNone": "번역할 모델이 선택되지 않았습니다",
-    "startCompact": "간단히 보기로 시작",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "다시 시작할까요?",
+    "restartMessage": "현재 텍스트 변환 내용이 지워지고 기록에 저장됩니다.",
+    "restartConfirm": "다시 시작"
   },
   "toolPermissions": {
     "riskRead": "읽기",

@@ -1733,8 +1733,10 @@
     "ownLanguageDictation": "音声入力と同じ",
     "translationModel": "{model} が翻訳",
     "translationModelNone": "翻訳用のモデルが選択されていません",
-    "startCompact": "コンパクトモードで開始",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "最初からやり直しますか？",
+    "restartMessage": "現在の文字起こしは消去され、履歴に保存されます。",
+    "restartConfirm": "やり直す"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

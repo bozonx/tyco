@@ -15,7 +15,8 @@ Press **Start** during the call. The dialog keeps going when you switch tabs,
 hide or minimize the window, until you press **Stop** or quit TyCo.
 
 Every start begins a new conversation: the previous transcript leaves the
-feed. With the history turned on it is kept there (see
+feed. If a transcript is already present, TyCo asks for confirmation to start
+over before clearing it. With the history turned on it is kept there (see
 [History](#history)); with the history off it is gone.
 
 While the dialog runs it holds the sound: voice input, voice commands and
@@ -63,10 +64,10 @@ languages button shows a warning and nothing is translated.
 
 ## Subtitles
 
-The compact mode button (picture in picture) shows the latest words of the other side in a narrow strip over
-all windows and minimizes the main window. **Start in compact mode** in the
-menu of **Start** does both at once. **Expand** closes the strip and
-brings the main window back; **Stop** ends the dialog and brings it back too.
+The compact mode button (picture in picture) becomes available once recording
+or listening has started. It shows the latest words of the other side in a narrow strip over
+all windows and minimizes the main window. **Expand** closes the strip and
+brings the main window back.
 
 On Linux desktops that support it (KDE Plasma, Sway, Hyprland and others on
 Wayland), the strip stays at the bottom of the screen and clicks pass through

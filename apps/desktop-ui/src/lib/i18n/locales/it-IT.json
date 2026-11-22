@@ -1737,8 +1737,10 @@
     "ownLanguageDictation": "Come nella dettatura",
     "translationModel": "Traduce {model}",
     "translationModelNone": "Nessun modello scelto per la traduzione",
-    "startCompact": "Avvia in modalità compatta",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "Ricominciare?",
+    "restartMessage": "La trascrizione attuale verrà cancellata e salvata nella cronologia.",
+    "restartConfirm": "Ricomincia"
   },
   "toolPermissions": {
     "riskRead": "Lettura",

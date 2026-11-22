@@ -1737,8 +1737,10 @@
     "ownLanguageDictation": "Kao u diktiranju",
     "translationModel": "Prevodi {model}",
     "translationModelNone": "Nije odabran model za prijevod",
-    "startCompact": "Pokreni u kompaktnom načinu",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "Započeti iznova?",
+    "restartMessage": "Trenutni prijepis bit će izbrisan i spremljen u povijest.",
+    "restartConfirm": "Započni iznova"
   },
   "toolPermissions": {
     "riskRead": "Čitanje",

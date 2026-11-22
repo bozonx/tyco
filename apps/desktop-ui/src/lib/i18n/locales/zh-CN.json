@@ -1733,8 +1733,10 @@
     "ownLanguageDictation": "与听写相同",
     "translationModel": "由 {model} 翻译",
     "translationModelNone": "尚未选择翻译模型",
-    "startCompact": "以紧凑模式开始",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "重新开始？",
+    "restartMessage": "当前转录内容将被清空并保存到历史记录中。",
+    "restartConfirm": "重新开始"
   },
   "toolPermissions": {
     "riskRead": "读取",

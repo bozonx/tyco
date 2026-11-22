@@ -1737,8 +1737,10 @@
     "ownLanguageDictation": "Диктовкадағыдай",
     "translationModel": "Аударатын: {model}",
     "translationModelNone": "Аударма үшін модель таңдалмаған",
-    "startCompact": "Ықшам режимде бастау",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "Қайта бастау керек пе?",
+    "restartMessage": "Ағымдағы транскрипт тазартылып, тарихқа сақталады.",
+    "restartConfirm": "Қайта бастау"
   },
   "toolPermissions": {
     "riskRead": "Оқу",

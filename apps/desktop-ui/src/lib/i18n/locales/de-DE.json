@@ -1737,8 +1737,10 @@
     "ownLanguageDictation": "Wie beim Diktieren",
     "translationModel": "Übersetzt von {model}",
     "translationModelNone": "Kein Modell für die Übersetzung ausgewählt",
-    "startCompact": "Im Kompaktmodus starten",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "Neu beginnen?",
+    "restartMessage": "Das aktuelle Transkript wird gelöscht und im Verlauf gespeichert.",
+    "restartConfirm": "Neu beginnen"
   },
   "toolPermissions": {
     "riskRead": "Liest",

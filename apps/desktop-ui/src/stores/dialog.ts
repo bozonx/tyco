@@ -470,6 +470,7 @@ export const useDialogStore = defineStore('dialog', () => {
   })
 
   async function showSubtitles() {
+    if (!isActive.value) return
     await publishSubtitles()
     const result = await useIpcStore().callOrNotify('show_subtitles', {
       geometry: config.value.compactGeometry ?? null,

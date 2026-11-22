@@ -1737,8 +1737,10 @@
     "ownLanguageDictation": "Как в диктовке",
     "translationModel": "Переводит {model}",
     "translationModelNone": "Модель для перевода не выбрана",
-    "startCompact": "Начать в компактном режиме",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "Начать заново?",
+    "restartMessage": "Текущая расшифровка будет очищена и сохранена в историю.",
+    "restartConfirm": "Начать заново"
   },
   "toolPermissions": {
     "riskRead": "Чтение",

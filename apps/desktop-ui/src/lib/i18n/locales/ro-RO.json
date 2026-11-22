@@ -1737,8 +1737,10 @@
     "ownLanguageDictation": "Ca la dictare",
     "translationModel": "Tradus de {model}",
     "translationModelNone": "Niciun model ales pentru traducere",
-    "startCompact": "Pornește în modul compact",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "Începeți din nou?",
+    "restartMessage": "Transcrierea curentă va fi ștearsă și salvată în istoric.",
+    "restartConfirm": "Începe din nou"
   },
   "toolPermissions": {
     "riskRead": "Citire",

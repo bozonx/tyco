@@ -27,19 +27,6 @@
       </p>
     </div>
     <div ref="actions" class="subtitles-actions" @mousedown.stop>
-      <DialogRecordingIndicator
-        v-if="view.isActive && view.recordingStartedAt"
-        class="subtitles-recording"
-        :started-at-ms="view.recordingStartedAt"
-        :label="view.recordingLabel"
-      />
-      <IconButton
-        v-if="view.isActive"
-        size="sm"
-        icon="mdi:stop"
-        :label="view.stopLabel"
-        @click="requestAction('stop')"
-      />
       <IconButton
         size="sm"
         icon="mdi:arrow-expand"
@@ -64,7 +51,6 @@ import { invokeDesktop } from '../../lib/desktop/invoke'
 import { getDesktopWindow } from '../../lib/desktop/window'
 import { clientLogger } from '../../lib/logger'
 import IconButton from '../common/IconButton.vue'
-import DialogRecordingIndicator from './DialogRecordingIndicator.vue'
 import {
   DESKTOP_EVENTS,
   type SubtitlesAction,
@@ -155,8 +141,10 @@ onMounted(async () => {
   }
   await nextTick()
   await updateInputRegion()
-  resizeObserver = new ResizeObserver(() => void updateInputRegion())
-  if (actions.value) resizeObserver.observe(actions.value)
+  if (typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(() => void updateInputRegion())
+    if (actions.value) resizeObserver.observe(actions.value)
+  }
 })
 
 onBeforeUnmount(() => {
@@ -251,10 +239,6 @@ body.subtitles-body {
   gap: var(--space-xs);
   cursor: default;
   flex-shrink: 0;
-}
-
-.subtitles-recording {
-  font-size: var(--text-micro);
 }
 
 .subtitles-grip {

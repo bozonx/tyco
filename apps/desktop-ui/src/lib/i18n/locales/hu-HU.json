@@ -1737,8 +1737,10 @@
     "ownLanguageDictation": "Mint a diktálásnál",
     "translationModel": "Fordítja: {model}",
     "translationModelNone": "Nincs modell kiválasztva a fordításhoz",
-    "startCompact": "Indítás kompakt módban",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "Újrakezdés?",
+    "restartMessage": "Az aktuális átirat törlődik és mentésre kerül az előzményekbe.",
+    "restartConfirm": "Újrakezdés"
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

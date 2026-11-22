@@ -1737,8 +1737,10 @@
     "ownLanguageDictation": "Jako při diktování",
     "translationModel": "Překládá {model}",
     "translationModelNone": "Pro překlad není vybrán žádný model",
-    "startCompact": "Spustit v kompaktním režimu",
-    "route": "{from} → {to}"
+    "route": "{from} → {to}",
+    "restartTitle": "Začít znovu?",
+    "restartMessage": "Aktuální přepis bude vymazán a uložen do historie.",
+    "restartConfirm": "Začít znovu"
   },
   "toolPermissions": {
     "riskRead": "Čtení",
