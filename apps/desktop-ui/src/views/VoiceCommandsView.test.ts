@@ -293,16 +293,26 @@ describe('separate voice command overlay', () => {
     expect(mocks.run).not.toHaveBeenCalled()
     wrapper.unmount()
   })
-  it('switches the translation language of the chosen command', async () => {
-    const chosen = translation
+  it('shows the chosen language as a chip like the live view', () => {
     voice.stage = 'review'
     voice.selected = {
-      ...candidate(chosen.id),
+      ...candidate(translation.id),
       parameters: { language: 'en-US' },
     }
-    voice.command = chosen
+    voice.command = translation
     const wrapper = mountView()
     expect(wrapper.find('.voice-catalog').exists()).toBe(false)
+    expect(wrapper.find('.voice-language').exists()).toBe(false)
+    expect(wrapper.find('.voice-param-chip').text()).toBe(
+      translate(getLanguageLabelKey('en-US'))
+    )
+    wrapper.unmount()
+  })
+  it('asks for a language the recording did not set', async () => {
+    voice.stage = 'review'
+    voice.selected = { ...candidate(translation.id), parameters: {} }
+    voice.command = translation
+    const wrapper = mountView()
     const select = wrapper.find<HTMLSelectElement>('.voice-language')
     const index = [...select.element.options].findIndex(
       (option) => option.text === translate(getLanguageLabelKey('es-AR'))

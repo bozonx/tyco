@@ -94,7 +94,20 @@
                 :key="parameter.name"
               >
                 <span class="voice-pipeline-sep" aria-hidden="true">›</span>
+                <div
+                  v-if="voice.selected?.parameters[parameter.name]"
+                  class="voice-pipeline-chip voice-param-chip is-set"
+                >
+                  <span class="voice-pipeline-label">{{
+                    parameterValueDisplayLabel(
+                      parameter,
+                      voice.selected.parameters[parameter.name],
+                      t
+                    )
+                  }}</span>
+                </div>
                 <FieldSelect
+                  v-else
                   size="sm"
                   class="voice-language"
                   :title="parameterDisplayLabel(parameter, t)"
@@ -165,6 +178,7 @@
               <FieldTextArea
                 v-else-if="takesText"
                 ref="textRef"
+                appearance="plain"
                 class="voice-text"
                 :model-value="voice.inputText"
                 :placeholder="t('voiceCommands.textPlaceholder')"
@@ -911,7 +925,9 @@ onUnmounted(() => {
 .voice-text {
   flex: 1 1 0%;
   min-height: 4rem;
-  margin: var(--space-sm);
+  padding: var(--space-md);
+  font-size: var(--text-lead);
+  line-height: 1.5;
   resize: none;
 }
 
