@@ -528,11 +528,12 @@
     "kindDialog": "Dialog",
     "recordingNotFound": "file not found",
     "playRecording": "Play the recording",
-    "closeRecording": "Close the player",
     "playRecordingWhileCapturing": "Playback is unavailable while TyCo records sound",
     "recordingUnplayable": "cannot be played",
     "recordingIncomplete": "recording incomplete",
-    "showInFolder": "Show in folder"
+    "recordings": "Recordings",
+    "stopRecording": "Stop playback",
+    "playbackSpeed": "Playback speed"
   },
   "input": {
     "historySearchPlaceholder": "Search history...",

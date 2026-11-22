@@ -107,6 +107,18 @@ pub async fn show_dialog_recording(app: tauri::AppHandle, file: String) -> Resul
     .await?
 }
 
+/// The bytes of a finished call recording `file`.
+#[tauri::command]
+pub async fn read_dialog_recording(
+    app: tauri::AppHandle,
+    file: String,
+) -> Result<tauri::ipc::Response, AppError> {
+    crate::services::background::run_blocking(move || {
+        crate::services::storage::recordings::read_file(&app, &file).map(tauri::ipc::Response::new)
+    })
+    .await?
+}
+
 /// Removes the recording `file` of a removed history entry once the undo of
 /// the removal is over; one an entry still names stays.
 #[tauri::command]

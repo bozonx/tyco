@@ -528,11 +528,12 @@
     "kindDialog": "Dialog",
     "recordingNotFound": "Datei nicht gefunden",
     "playRecording": "Aufnahme abspielen",
-    "closeRecording": "Player schließen",
     "playRecordingWhileCapturing": "Die Wiedergabe ist nicht verfügbar, während TyCo Ton aufnimmt",
     "recordingUnplayable": "kann nicht abgespielt werden",
     "recordingIncomplete": "Aufnahme unvollständig",
-    "showInFolder": "Im Ordner anzeigen"
+    "recordings": "Aufnahmen",
+    "stopRecording": "Wiedergabe stoppen",
+    "playbackSpeed": "Wiedergabegeschwindigkeit"
   },
   "input": {
     "historySearchPlaceholder": "Verlauf durchsuchen...",

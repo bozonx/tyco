@@ -528,11 +528,12 @@
     "kindDialog": "Dialog",
     "recordingNotFound": "nie znaleziono pliku",
     "playRecording": "Odtwórz nagranie",
-    "closeRecording": "Zamknij odtwarzacz",
     "playRecordingWhileCapturing": "Odtwarzanie jest niedostępne, gdy TyCo nagrywa dźwięk",
     "recordingUnplayable": "nie można odtworzyć",
     "recordingIncomplete": "nagranie niepełne",
-    "showInFolder": "Pokaż w folderze"
+    "recordings": "Nagrania",
+    "stopRecording": "Zatrzymaj odtwarzanie",
+    "playbackSpeed": "Szybkość odtwarzania"
   },
   "input": {
     "historySearchPlaceholder": "Szukaj w historii...",

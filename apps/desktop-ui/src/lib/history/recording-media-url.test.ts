@@ -1,6 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-import { createRecordingMediaUrl } from './recording-media-url'
+import {
+  createRecordingMediaUrl,
+  loadRecordingMediaSource,
+} from './recording-media-url'
 
 describe('recording media URLs', () => {
   it.each([
@@ -17,6 +20,37 @@ describe('recording media URLs', () => {
     const convert = (path: string) => `tyco-media://localhost/${path}`
     expect(createRecordingMediaUrl('../x/y.opus', convert)).toBe(
       'tyco-media://localhost/recording/..%2Fx%2Fy.opus'
+    )
+  })
+
+  it('creates a blob URL on Linux where tyco-media:// is not a GStreamer URI scheme', async () => {
+    const convert = () => 'tyco-media://localhost/'
+    const readRecording = vi
+      .fn()
+      .mockResolvedValue(new Uint8Array([1, 2, 3]).buffer)
+    const source = await loadRecordingMediaSource(
+      '2026-11-20 14-03-05 a1b2c3.opus',
+      convert,
+      readRecording
+    )
+    expect(readRecording).toHaveBeenCalledWith(
+      '2026-11-20 14-03-05 a1b2c3.opus'
+    )
+    expect(source.url).toMatch(/^blob:/)
+    source.dispose?.()
+  })
+
+  it('streams directly from http://tyco-media.localhost/ on Windows', async () => {
+    const convert = () => 'http://tyco-media.localhost/'
+    const readRecording = vi.fn()
+    const source = await loadRecordingMediaSource(
+      '2026-11-20 14-03-05 a1b2c3.opus',
+      convert,
+      readRecording
+    )
+    expect(readRecording).not.toHaveBeenCalled()
+    expect(source.url).toBe(
+      'http://tyco-media.localhost/recording/2026-11-20%2014-03-05%20a1b2c3.opus'
     )
   })
 })

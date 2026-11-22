@@ -528,11 +528,12 @@
     "kindDialog": "Диалог",
     "recordingNotFound": "файл табылмады",
     "playRecording": "Жазбаны ойнату",
-    "closeRecording": "Ойнатқышты жабу",
     "playRecordingWhileCapturing": "TyCo дыбыс жазып жатқанда ойнату қолжетімсіз",
     "recordingUnplayable": "ойнату мүмкін емес",
     "recordingIncomplete": "жазба толық емес",
-    "showInFolder": "Қалтадан көрсету"
+    "recordings": "Жазбалар",
+    "stopRecording": "Ойнатуды тоқтату",
+    "playbackSpeed": "Ойнату жылдамдығы"
   },
   "input": {
     "historySearchPlaceholder": "Тарихтан іздеу...",

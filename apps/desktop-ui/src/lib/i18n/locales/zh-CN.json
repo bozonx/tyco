@@ -528,11 +528,12 @@
     "kindDialog": "对话",
     "recordingNotFound": "找不到文件",
     "playRecording": "播放录音",
-    "closeRecording": "关闭播放器",
     "playRecordingWhileCapturing": "TyCo 录音时无法播放",
     "recordingUnplayable": "无法播放",
     "recordingIncomplete": "录音不完整",
-    "showInFolder": "在文件夹中显示"
+    "recordings": "录音",
+    "stopRecording": "停止播放",
+    "playbackSpeed": "播放速度"
   },
   "input": {
     "historySearchPlaceholder": "搜索历史记录…",

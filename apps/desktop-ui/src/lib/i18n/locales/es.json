@@ -528,11 +528,12 @@
     "kindDialog": "Diálogo",
     "recordingNotFound": "archivo no encontrado",
     "playRecording": "Reproducir la grabación",
-    "closeRecording": "Cerrar el reproductor",
     "playRecordingWhileCapturing": "La reproducción no está disponible mientras TyCo graba sonido",
     "recordingUnplayable": "no se puede reproducir",
     "recordingIncomplete": "grabación incompleta",
-    "showInFolder": "Mostrar en la carpeta"
+    "recordings": "Grabaciones",
+    "stopRecording": "Detener la reproducción",
+    "playbackSpeed": "Velocidad de reproducción"
   },
   "input": {
     "historySearchPlaceholder": "Buscar en el historial...",

@@ -528,11 +528,12 @@
     "kindDialog": "დიალოგი",
     "recordingNotFound": "ფაილი ვერ მოიძებნა",
     "playRecording": "ჩანაწერის დაკვრა",
-    "closeRecording": "დამკვრელის დახურვა",
     "playRecordingWhileCapturing": "დაკვრა მიუწვდომელია, სანამ TyCo ხმას იწერს",
     "recordingUnplayable": "დაკვრა შეუძლებელია",
     "recordingIncomplete": "ჩანაწერი არასრულია",
-    "showInFolder": "საქაღალდეში ჩვენება"
+    "recordings": "ჩანაწერები",
+    "stopRecording": "დაკვრის შეჩერება",
+    "playbackSpeed": "დაკვრის სიჩქარე"
   },
   "input": {
     "historySearchPlaceholder": "ისტორიაში ძიება...",

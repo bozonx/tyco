@@ -66,56 +66,93 @@
         {{ t('common.empty') }}
       </div>
 
-      <template v-for="f in displayedFiles" :key="f.name">
-        <div class="history-file">
+      <div v-if="displayedFiles.length" class="history-files">
+        <div v-if="item.filesSection" class="history-files-header">
+          <span class="history-files-title">{{ item.filesSection.title }}</span>
+          <Button
+            v-if="item.filesSection.action"
+            size="xs"
+            variant="ghost"
+            :icon="item.filesSection.action.icon"
+            @click="emit('action', item.filesSection.action.id, item)"
+            >{{ item.filesSection.action.title }}</Button
+          >
+        </div>
+        <div
+          v-for="f in displayedFiles"
+          :key="f.name"
+          class="history-file"
+          :class="{ 'is-active': activePlayerFile === f.name }"
+        >
           <AppIcon icon="mdi:file-music-outline" size="xs" />
           <span class="history-file-name" :title="f.name">{{ f.name }}</span>
           <span v-if="f.isMissing" class="history-file-missing">{{
             f.missingLabel
           }}</span>
-          <span v-else-if="f.note" class="history-file-note">{{ f.note }}</span>
-          <Button
-            v-else
-            size="xs"
-            variant="ghost"
-            :icon="f.action.icon"
-            @click="emit('action', f.action.id, item)"
-            >{{ f.action.title }}</Button
-          >
-          <IconButton
-            v-if="f.playback && !f.isMissing"
-            size="xs"
-            variant="ghost"
-            :disabled="
-              activePlayerFile !== f.name && Boolean(f.playback.disabledTitle)
-            "
-            :label="
-              activePlayerFile === f.name
-                ? f.playback.closeTitle
-                : f.playback.disabledTitle || f.playback.playTitle
-            "
-            :icon="activePlayerFile === f.name ? 'mdi:close' : 'mdi:play'"
-            @click="togglePlayer(f)"
-          />
+          <template v-else>
+            <span v-if="f.note" class="history-file-note">{{ f.note }}</span>
+            <IconButton
+              v-if="f.playback"
+              size="xs"
+              variant="ghost"
+              :disabled="
+                activePlayerFile !== f.name && Boolean(f.playback.disabledTitle)
+              "
+              :label="
+                activePlayerFile === f.name
+                  ? f.playback.stopTitle
+                  : f.playback.disabledTitle || f.playback.playTitle
+              "
+              :icon="activePlayerFile === f.name ? 'mdi:stop' : 'mdi:play'"
+              @click="togglePlayer(f)"
+            />
+            <template v-if="f.playback && activePlayerFile === f.name">
+              <audio
+                ref="audioElement"
+                class="history-player-audio"
+                autoplay
+                preload="auto"
+                :src="playerSource"
+                @error="isPlayerFailed = true"
+                @loadedmetadata="onLoadedMetadata"
+                @durationchange="onDurationChange"
+                @timeupdate="onTimeUpdate"
+                @pause="onAudioPause"
+                @ended="stopPlayer"
+              />
+              <span v-if="isPlayerFailed" class="history-file-missing">{{
+                f.playback.unavailableLabel
+              }}</span>
+              <div v-else class="history-inline-player">
+                <input
+                  type="range"
+                  class="history-player-seek"
+                  min="0"
+                  :max="playerDuration || 0"
+                  step="0.1"
+                  :value="playerCurrentTime"
+                  :disabled="!playerDuration"
+                  :aria-label="f.name"
+                  @input="onSeekInput"
+                />
+                <span class="history-player-time">
+                  {{ formatPlaybackTime(playerCurrentTime) }} /
+                  {{ formatPlaybackTime(playerDuration) }}
+                </span>
+                <FieldSelect
+                  :model-value="playbackRate"
+                  size="xs"
+                  class="history-player-speed"
+                  :options="SPEED_OPTIONS"
+                  :title="f.playback.speedTitle"
+                  :aria-label="f.playback.speedTitle"
+                  @update:model-value="setPlaybackRate"
+                />
+              </div>
+            </template>
+          </template>
         </div>
-        <div
-          v-if="f.playback && activePlayerFile === f.name"
-          class="history-player"
-        >
-          <audio
-            class="history-player-audio"
-            controls
-            autoplay
-            preload="metadata"
-            :src="playerSource"
-            @error="isPlayerFailed = true"
-            @loadedmetadata="isPlayerFailed = false"
-          />
-          <span v-if="isPlayerFailed" class="history-file-missing">{{
-            f.playback.unavailableLabel
-          }}</span>
-        </div>
-      </template>
+      </div>
 
       <DisclosureHeader
         v-if="isLong"
@@ -159,7 +196,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref, useId, watch } from 'vue'
+import { computed, onUnmounted, ref, useId, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import {
@@ -174,6 +211,7 @@ import type {
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
+import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
 
 const props = defineProps<{
@@ -194,6 +232,12 @@ const originalId = useId()
 const LONG_ENTRY_CHAR_LIMIT = 200
 const LONG_ENTRY_LINE_LIMIT = 3
 
+const SPEED_OPTIONS = [
+  { id: 1, name: '1×' },
+  { id: 1.5, name: '1.5×' },
+  { id: 2, name: '2×' },
+]
+
 const visibleActions = computed(() =>
   props.actions.filter((action) => action.isVisible?.(props.item) ?? true)
 )
@@ -205,17 +249,117 @@ const activePlayerFile = ref<string>('')
 /** The URL the open player plays; empty while it is closed */
 const playerSource = ref('')
 const isPlayerFailed = ref(false)
+const audioElement = ref<HTMLAudioElement | HTMLAudioElement[] | null>(null)
+const playerCurrentTime = ref(0)
+const playerDuration = ref(0)
+const playbackRate = ref<number>(1)
+let disposePlayerSource: (() => void) | undefined
+let loadSequence = 0
 
-function togglePlayer(f: HistoryListItemFile) {
+function currentAudio(): HTMLAudioElement | null {
+  const el = audioElement.value
+  if (Array.isArray(el)) return el[0] ?? null
+  return el
+}
+
+function stopPlayer() {
+  loadSequence++
+  disposePlayerSource?.()
+  disposePlayerSource = undefined
+  activePlayerFile.value = ''
+  playerSource.value = ''
+  playerCurrentTime.value = 0
+  playerDuration.value = 0
+}
+
+async function togglePlayer(f: HistoryListItemFile) {
   isPlayerFailed.value = false
   if (activePlayerFile.value === f.name) {
-    activePlayerFile.value = ''
-    playerSource.value = ''
-  } else {
-    activePlayerFile.value = f.name
-    playerSource.value = f.playback ? f.playback.source() : ''
+    stopPlayer()
+    return
+  }
+  stopPlayer()
+  if (!f.playback) return
+  activePlayerFile.value = f.name
+  const seq = ++loadSequence
+  try {
+    const resolved = await f.playback.source()
+    if (seq !== loadSequence || activePlayerFile.value !== f.name) {
+      if (typeof resolved === 'object') resolved.dispose?.()
+      return
+    }
+    if (typeof resolved === 'string') {
+      playerSource.value = resolved
+    } else {
+      playerSource.value = resolved.url
+      disposePlayerSource = resolved.dispose
+    }
+  } catch {
+    if (seq === loadSequence && activePlayerFile.value === f.name) {
+      isPlayerFailed.value = true
+    }
   }
 }
+
+function onLoadedMetadata(event: Event) {
+  isPlayerFailed.value = false
+  const audio = event.target as HTMLAudioElement
+  audio.playbackRate = playbackRate.value
+  if (Number.isFinite(audio.duration) && audio.duration > 0) {
+    playerDuration.value = audio.duration
+  }
+}
+
+function onDurationChange(event: Event) {
+  const audio = event.target as HTMLAudioElement
+  if (Number.isFinite(audio.duration) && audio.duration > 0) {
+    playerDuration.value = audio.duration
+  }
+}
+
+function onTimeUpdate(event: Event) {
+  const audio = event.target as HTMLAudioElement
+  if (Number.isFinite(audio.currentTime)) {
+    playerCurrentTime.value = audio.currentTime
+  }
+}
+
+function onAudioPause(event: Event) {
+  const audio = event.target as HTMLAudioElement
+  // `pauseOtherPlayers` in HistoryList pauses this element when another starts
+  if (!audio.ended && !audio.seeking) {
+    stopPlayer()
+  }
+}
+
+function onSeekInput(event: Event) {
+  const input = event.target as HTMLInputElement
+  const nextTime = Number(input.value)
+  if (!Number.isFinite(nextTime)) return
+  playerCurrentTime.value = nextTime
+  const audio = currentAudio()
+  if (audio) audio.currentTime = nextTime
+}
+
+function setPlaybackRate(value: number | string | undefined) {
+  const rate = Number(value)
+  if (rate !== 1 && rate !== 1.5 && rate !== 2) return
+  playbackRate.value = rate
+  const audio = currentAudio()
+  if (audio) audio.playbackRate = rate
+}
+
+function formatPlaybackTime(seconds: number): string {
+  const total =
+    Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0
+  const mins = Math.floor(total / 60)
+  const secs = total % 60
+  return `${mins}:${String(secs).padStart(2, '0')}`
+}
+
+onUnmounted(() => {
+  stopPlayer()
+})
 
 // the file went, or a dialog started recording: the player stops
 watch(
@@ -231,8 +375,7 @@ watch(
   },
   (isUnplayable) => {
     if (isUnplayable) {
-      activePlayerFile.value = ''
-      playerSource.value = ''
+      stopPlayer()
     }
   }
 )
@@ -282,27 +425,71 @@ const isLong = computed(
   user-select: none;
 }
 
-.history-file {
+.history-files {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  margin-top: var(--space-xs);
+}
+
+.history-files-header {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  min-width: 0;
-  margin-top: var(--space-2xs);
   font-size: var(--text-caption);
   color: var(--app-text-muted);
 }
 
-.history-player {
+.history-files-title {
+  font-weight: 600;
+}
+
+.history-file {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2xs);
-  margin-top: var(--space-2xs);
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  min-width: 0;
   font-size: var(--text-caption);
+  color: var(--app-text-muted);
 }
 
 .history-player-audio {
-  width: 100%;
-  height: 2rem;
+  display: none;
+}
+
+.history-inline-player {
+  display: inline-flex;
+  align-items: center;
+  flex: 1 1 12rem;
+  gap: var(--space-xs);
+  min-width: 10rem;
+}
+
+.history-player-seek {
+  flex: 1 1 6rem;
+  min-width: 4rem;
+  max-width: 14rem;
+  height: 0.25rem;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.history-player-seek:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.history-player-time {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--app-text-faint);
+}
+
+.history-player-speed {
+  width: auto;
+  min-width: 3.75rem;
+  flex-shrink: 0;
 }
 
 .history-file-name {

@@ -293,12 +293,14 @@ names a recording by its file name (a `Dialog` entry with a `recordingFile`
 is stored even without text, so the file stays reachable);
 `check_dialog_recordings`, `show_dialog_recording` and
 `discard_dialog_recording` accept only names of that pattern.
-The history plays a recording with the webview's own `<audio>` from the
-`tyco-media://` scheme (`services/media_protocol.rs`, allowed by `media-src`):
-`tyco-media://localhost/recording/<file name>`, or
-`http://tyco-media.localhost/...` on Windows (`lib/history/recording-media-url.ts`).
-The webview names the file, never a path; the scheme accepts only names of the
-pattern, serves no recording still being written, and answers byte ranges in
+The history plays a recording inline with `<audio>`: on Windows from the
+`tyco-media://` scheme (`services/media_protocol.rs`, allowed by `media-src`,
+`http://tyco-media.localhost/recording/<file name>`), and on Linux from a
+`blob:` URL created over `read_dialog_recording` (`lib/history/recording-media-url.ts`),
+because WebKitGTK's GStreamer pipeline rejects custom URI schemes in
+`isProtocolAllowed` while `blob:` is allowed and seekable.
+The webview names the file, never a path; the backend accepts only names of the
+pattern, serves no recording still being written, and `tyco-media://` answers byte ranges in
 chunks of at most 2 MiB, so the element can seek a long call. A request
 without a byte range receives the whole file in memory. Ogg/Opus
 plays in WebView2 and in WebKitGTK with the base GStreamer plugins; the

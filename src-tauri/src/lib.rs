@@ -367,6 +367,7 @@ pub fn run() {
             commands::voice::open_recordings_folder,
             commands::voice::check_dialog_recordings,
             commands::voice::show_dialog_recording,
+            commands::voice::read_dialog_recording,
             commands::voice::discard_dialog_recording,
             commands::window::show_subtitles,
             commands::window::hide_subtitles,

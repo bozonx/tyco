@@ -70,6 +70,7 @@
     "allow-open-recordings-folder",
     "allow-check-dialog-recordings",
     "allow-show-dialog-recording",
+    "allow-read-dialog-recording",
     "allow-discard-dialog-recording",
     "allow-hide-subtitles",
     "allow-publish-subtitles"

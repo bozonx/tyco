@@ -177,6 +177,7 @@ fn main() {
             "open_recordings_folder",
             "check_dialog_recordings",
             "show_dialog_recording",
+            "read_dialog_recording",
             "discard_dialog_recording",
             "show_subtitles",
             "hide_subtitles",

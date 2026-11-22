@@ -261,6 +261,14 @@ pub fn show(app: &AppHandle, name: &str) -> Result<(), AppError> {
     crate::services::platform::open_dir(&folder_of(&RecordingDirs::of_app(app)?, name)?)
 }
 
+/// The bytes of a finished recording `name`.
+pub fn read_file(app: &AppHandle, name: &str) -> Result<Vec<u8>, AppError> {
+    Ok(fs::read(playable_file(
+        &RecordingDirs::of_app(app)?,
+        name,
+    )?)?)
+}
+
 /// Removes the recording `name` wherever it is: in the data folder, and in
 /// the state folder, at once when a previous run left it there, once it is
 /// closed when it is being written.

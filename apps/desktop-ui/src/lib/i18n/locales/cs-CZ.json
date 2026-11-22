@@ -528,11 +528,12 @@
     "kindDialog": "Dialog",
     "recordingNotFound": "soubor nenalezen",
     "playRecording": "Přehrát nahrávku",
-    "closeRecording": "Zavřít přehrávač",
     "playRecordingWhileCapturing": "Přehrávání není dostupné, dokud TyCo nahrává zvuk",
     "recordingUnplayable": "nelze přehrát",
     "recordingIncomplete": "nahrávka je neúplná",
-    "showInFolder": "Zobrazit ve složce"
+    "recordings": "Nahrávky",
+    "stopRecording": "Zastavit přehrávání",
+    "playbackSpeed": "Rychlost přehrávání"
   },
   "input": {
     "historySearchPlaceholder": "Hledat v historii...",

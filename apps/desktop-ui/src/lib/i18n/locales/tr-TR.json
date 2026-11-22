@@ -528,11 +528,12 @@
     "kindDialog": "Diyalog",
     "recordingNotFound": "dosya bulunamadı",
     "playRecording": "Kaydı oynat",
-    "closeRecording": "Oynatıcıyı kapat",
     "playRecordingWhileCapturing": "TyCo ses kaydederken oynatma kullanılamaz",
     "recordingUnplayable": "oynatılamıyor",
     "recordingIncomplete": "kayıt eksik",
-    "showInFolder": "Klasörde göster"
+    "recordings": "Kayıtlar",
+    "stopRecording": "Oynatmayı durdur",
+    "playbackSpeed": "Oynatma hızı"
   },
   "input": {
     "historySearchPlaceholder": "Geçmişte ara...",

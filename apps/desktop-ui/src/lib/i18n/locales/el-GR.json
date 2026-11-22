@@ -528,11 +528,12 @@
     "kindDialog": "Διάλογος",
     "recordingNotFound": "το αρχείο δεν βρέθηκε",
     "playRecording": "Αναπαραγωγή της ηχογράφησης",
-    "closeRecording": "Κλείσιμο του προγράμματος αναπαραγωγής",
     "playRecordingWhileCapturing": "Η αναπαραγωγή δεν είναι διαθέσιμη όσο το TyCo ηχογραφεί",
     "recordingUnplayable": "δεν είναι δυνατή η αναπαραγωγή",
     "recordingIncomplete": "η εγγραφή είναι ελλιπής",
-    "showInFolder": "Εμφάνιση στον φάκελο"
+    "recordings": "Ηχογραφήσεις",
+    "stopRecording": "Διακοπή αναπαραγωγής",
+    "playbackSpeed": "Ταχύτητα αναπαραγωγής"
   },
   "input": {
     "historySearchPlaceholder": "Αναζήτηση στο ιστορικό...",

@@ -528,11 +528,12 @@
     "kindDialog": "Dijalog",
     "recordingNotFound": "datoteka nije pronađena",
     "playRecording": "Reproduciraj snimku",
-    "closeRecording": "Zatvori reproduktor",
     "playRecordingWhileCapturing": "Reprodukcija nije dostupna dok TyCo snima zvuk",
     "recordingUnplayable": "nije moguće reproducirati",
     "recordingIncomplete": "snimka je nepotpuna",
-    "showInFolder": "Prikaži u mapi"
+    "recordings": "Snimke",
+    "stopRecording": "Zaustavi reprodukciju",
+    "playbackSpeed": "Brzina reprodukcije"
   },
   "input": {
     "historySearchPlaceholder": "Pretraži povijest...",

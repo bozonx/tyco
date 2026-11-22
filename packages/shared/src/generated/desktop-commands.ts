@@ -349,6 +349,7 @@ export interface DesktopCommands {
     args: { id: string; profileId?: string | null }
     result: ArrayBuffer
   }
+  read_dialog_recording: { args: { file: string }; result: ArrayBuffer }
   read_dropped_file: { args: { path: string }; result: ArrayBuffer }
   rebind_hotkeys: { args: undefined; result: void }
   release_deleted_chat_images: { args: { id: string }; result: void }

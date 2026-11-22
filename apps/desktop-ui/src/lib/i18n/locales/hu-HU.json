@@ -528,11 +528,12 @@
     "kindDialog": "Párbeszéd",
     "recordingNotFound": "a fájl nem található",
     "playRecording": "Felvétel lejátszása",
-    "closeRecording": "Lejátszó bezárása",
     "playRecordingWhileCapturing": "A lejátszás nem érhető el, amíg a TyCo hangot rögzít",
     "recordingUnplayable": "nem játszható le",
     "recordingIncomplete": "a felvétel hiányos",
-    "showInFolder": "Megjelenítés a mappában"
+    "recordings": "Felvételek",
+    "stopRecording": "Lejátszás leállítása",
+    "playbackSpeed": "Lejátszási sebesség"
   },
   "input": {
     "historySearchPlaceholder": "Keresés az előzményekben...",

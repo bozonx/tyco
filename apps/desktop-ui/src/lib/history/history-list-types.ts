@@ -5,7 +5,6 @@ export interface HistoryListItemFile {
   missingLabel: string
   /** Said of a file that is there, e.g. that it holds only a part */
   note?: string
-  action: HistoryListAction
   /** Plays the file in place; missing when it cannot be played */
   playback?: HistoryFilePlayback
 }
@@ -33,14 +32,25 @@ export interface HistoryListItem {
   file?: HistoryListItemFile
   /** Files the entry links to, if multiple recordings exist */
   files?: HistoryListItemFile[]
+  /** Heading above the entry's files, with an action for their folder */
+  filesSection?: { title: string; action?: HistoryListAction }
 }
 
-/** How an entry plays its file with the webview's own player */
+export interface HistoryFilePlaybackSource {
+  url: string
+  dispose?: () => void
+}
+
+/** How an entry plays its file inline */
 export interface HistoryFilePlayback {
-  /** The URL to play from, asked for only when the player opens */
-  source: () => string
+  /** The URL to play from, asked for only when playback starts */
+  source: () =>
+    | string
+    | HistoryFilePlaybackSource
+    | Promise<string | HistoryFilePlaybackSource>
   playTitle: string
-  closeTitle: string
+  stopTitle: string
+  speedTitle: string
   /** Why it cannot play now, e.g. while a dialog records the sound */
   disabledTitle?: string
   unavailableLabel: string

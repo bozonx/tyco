@@ -111,7 +111,7 @@ import {
   type HistoryFilter,
   filterEditorHistory,
 } from '../lib/history/history-filter'
-import { createRecordingMediaUrl } from '../lib/history/recording-media-url'
+import { loadRecordingMediaSource } from '../lib/history/recording-media-url'
 import { createRemovalUndo } from '../lib/history/removal-undo'
 import { clientLogger } from '../lib/logger'
 import { useDesktopStore } from '../stores/desktop'
@@ -227,6 +227,16 @@ const editorItems = computed<HistoryListItem[]>(() =>
       time: item.createdAt,
       ...(fileItems.length === 1 && { file: fileItems[0] }),
       ...(fileItems.length > 1 && { files: fileItems }),
+      ...(fileItems.length > 0 && {
+        filesSection: {
+          title: t('history.recordings'),
+          action: {
+            id: 'openRecordingsFolder',
+            icon: 'mdi:folder-open-outline',
+            title: t('settings.storageOpenFolder'),
+          },
+        },
+      }),
     }
   })
 )
@@ -275,6 +285,14 @@ watch(
 
 const isSoundCaptured = useSoundCaptureActivity()
 
+const readRecording = async (file: string): Promise<ArrayBuffer> => {
+  const result = await ipcStore.call('read_dialog_recording', { file })
+  if (!result.success || !result.result) {
+    throw new Error(result.error ?? 'Could not read the recording')
+  }
+  return result.result
+}
+
 const recordingFile = (
   file: string,
   isIncomplete: boolean
@@ -284,15 +302,11 @@ const recordingFile = (
   isMissing: recordingExists.value[file] === false,
   missingLabel: t('history.recordingNotFound'),
   ...(isIncomplete && { note: t('history.recordingIncomplete') }),
-  action: {
-    id: 'showRecording',
-    icon: 'mdi:folder-open-outline',
-    title: t('history.showInFolder'),
-  },
   playback: {
-    source: () => createRecordingMediaUrl(file, convertFileSrc),
+    source: () => loadRecordingMediaSource(file, convertFileSrc, readRecording),
     playTitle: t('history.playRecording'),
-    closeTitle: t('history.closeRecording'),
+    stopTitle: t('history.stopRecording'),
+    speedTitle: t('history.playbackSpeed'),
     // the sound would go into what is recorded or transcribed: a dialog,
     // listening or a dictation through the speakers
     ...((dialogStatus.isActive || isSoundCaptured.value) && {
@@ -302,15 +316,8 @@ const recordingFile = (
   },
 })
 
-const showRecording = async (item: HistoryListItem, filename?: string) => {
-  const entry = historyStore.editorHistory.find((e) => e.id === item.id)
-  const file =
-    filename ??
-    item.file?.name ??
-    entry?.dialog?.recordingFiles?.[0] ??
-    entry?.dialog?.recordingFile
-  if (!file) return
-  const result = await ipcStore.callOrNotify('show_dialog_recording', { file })
+const openRecordingsFolder = async () => {
+  const result = await ipcStore.callOrNotify('open_recordings_folder')
   if (!result.success) void checkRecordings()
 }
 
@@ -385,8 +392,8 @@ const onEditorAction = async (actionId: string, item: HistoryListItem) => {
     case 'remove':
       await removeEditorItem(item)
       break
-    case 'showRecording':
-      await showRecording(item)
+    case 'openRecordingsFolder':
+      await openRecordingsFolder()
       break
   }
 }

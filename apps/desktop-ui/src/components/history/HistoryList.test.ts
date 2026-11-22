@@ -209,15 +209,23 @@ describe('HistoryList.vue', () => {
     ): HistoryListItem => ({
       id: 'dialog',
       value: 'Call',
+      filesSection: {
+        title: 'Recordings',
+        action: {
+          id: 'openRecordingsFolder',
+          icon: 'mdi:folder-open-outline',
+          title: 'Open folder',
+        },
+      },
       file: {
         name: 'call.opus',
         isMissing: false,
         missingLabel: 'missing',
-        action: { id: 'show', icon: 'mdi:folder', title: 'Show' },
         playback: {
           source: () => 'tyco-media://localhost/recording/call.opus',
           playTitle: 'Play',
-          closeTitle: 'Close',
+          stopTitle: 'Stop',
+          speedTitle: 'Playback speed',
           unavailableLabel: 'unplayable',
           ...playback,
         },
@@ -229,35 +237,69 @@ describe('HistoryList.vue', () => {
         template:
           '<button class="icon-btn-stub" :aria-label="label" :disabled="disabled" />',
       },
-      Button: true,
+      Button: {
+        props: ['icon'],
+        template: '<button class="btn-stub"><slot /></button>',
+      },
       StateMessage: true,
     }
     const playButton = (wrapper: ReturnType<typeof mount>) =>
       wrapper
         .findAll('.icon-btn-stub')
         .find((button) =>
-          ['Play', 'Close', 'Busy'].includes(
+          ['Play', 'Stop', 'Busy'].includes(
             button.attributes('aria-label') ?? ''
           )
         )!
 
-    it('opens a player on the recording and closes it', async () => {
+    it('renders the recordings section header with open folder action and inline player', async () => {
       const wrapper = mount(HistoryList, {
         props: { items: [recordingItem()] },
         global: { stubs },
       })
+      expect(wrapper.find('.history-files-title').text()).toBe('Recordings')
+      await wrapper.find('.history-files-header .btn-stub').trigger('click')
+      expect(wrapper.emitted('action')?.[0]?.[0]).toBe('openRecordingsFolder')
       expect(wrapper.find('audio').exists()).toBe(false)
 
       await playButton(wrapper).trigger('click')
       expect(wrapper.get('audio').attributes('src')).toBe(
         'tyco-media://localhost/recording/call.opus'
       )
+      expect(wrapper.find('.history-player-seek').exists()).toBe(true)
+      const options = wrapper
+        .findAll('.history-player-speed option')
+        .map((option) => option.text())
+      expect(options).toEqual(['1×', '1.5×', '2×'])
 
       await wrapper.get('audio').trigger('error')
       expect(wrapper.text()).toContain('unplayable')
 
       await playButton(wrapper).trigger('click')
       expect(wrapper.find('audio').exists()).toBe(false)
+    })
+
+    it('seeks and changes playback speed in the inline player', async () => {
+      const wrapper = mount(HistoryList, {
+        props: { items: [recordingItem()] },
+        global: { stubs },
+      })
+      await playButton(wrapper).trigger('click')
+      const audio = wrapper.get('audio').element as HTMLAudioElement
+      Object.defineProperty(audio, 'duration', {
+        value: 20,
+        configurable: true,
+      })
+      await wrapper.get('audio').trigger('loadedmetadata')
+
+      const seek = wrapper.get('.history-player-seek')
+      await seek.setValue('12.5')
+      expect(audio.currentTime).toBe(12.5)
+
+      const select = wrapper.get('.history-player-speed')
+      ;(select.element as HTMLSelectElement).selectedIndex = 1
+      await select.trigger('change')
+      expect(audio.playbackRate).toBe(1.5)
     })
 
     it('offers no playback while a dialog runs and stops the player', async () => {

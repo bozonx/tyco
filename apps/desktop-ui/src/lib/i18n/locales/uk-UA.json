@@ -528,11 +528,12 @@
     "kindDialog": "Діалог",
     "recordingNotFound": "файл не знайдено",
     "playRecording": "Відтворити запис",
-    "closeRecording": "Закрити програвач",
     "playRecordingWhileCapturing": "Відтворення недоступне, поки TyCo записує звук",
     "recordingUnplayable": "не вдається відтворити",
     "recordingIncomplete": "запис неповний",
-    "showInFolder": "Показати в теці"
+    "recordings": "Записи",
+    "stopRecording": "Зупинити відтворення",
+    "playbackSpeed": "Швидкість відтворення"
   },
   "input": {
     "historySearchPlaceholder": "Пошук в історії...",

@@ -528,11 +528,12 @@
     "kindDialog": "Dialogue",
     "recordingNotFound": "fichier introuvable",
     "playRecording": "Lire l’enregistrement",
-    "closeRecording": "Fermer le lecteur",
     "playRecordingWhileCapturing": "La lecture est indisponible pendant que TyCo enregistre le son",
     "recordingUnplayable": "lecture impossible",
     "recordingIncomplete": "enregistrement incomplet",
-    "showInFolder": "Afficher dans le dossier"
+    "recordings": "Enregistrements",
+    "stopRecording": "Arrêter la lecture",
+    "playbackSpeed": "Vitesse de lecture"
   },
   "input": {
     "historySearchPlaceholder": "Rechercher dans l’historique...",

@@ -528,11 +528,12 @@
     "kindDialog": "ダイアログ",
     "recordingNotFound": "ファイルが見つかりません",
     "playRecording": "録音を再生",
-    "closeRecording": "プレーヤーを閉じる",
     "playRecordingWhileCapturing": "TyCo が録音している間は再生できません",
     "recordingUnplayable": "再生できません",
     "recordingIncomplete": "録音は不完全です",
-    "showInFolder": "フォルダーに表示"
+    "recordings": "録音",
+    "stopRecording": "再生を停止",
+    "playbackSpeed": "再生速度"
   },
   "input": {
     "historySearchPlaceholder": "履歴を検索...",

@@ -528,11 +528,12 @@
     "kindDialog": "Dialog",
     "recordingNotFound": "fișier negăsit",
     "playRecording": "Redă înregistrarea",
-    "closeRecording": "Închide playerul",
     "playRecordingWhileCapturing": "Redarea nu este disponibilă cât timp TyCo înregistrează sunet",
     "recordingUnplayable": "nu poate fi redat",
     "recordingIncomplete": "înregistrare incompletă",
-    "showInFolder": "Arată în dosar"
+    "recordings": "Înregistrări",
+    "stopRecording": "Oprește redarea",
+    "playbackSpeed": "Viteza de redare"
   },
   "input": {
     "historySearchPlaceholder": "Caută în istoric...",
