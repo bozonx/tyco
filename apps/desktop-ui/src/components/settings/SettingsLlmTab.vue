@@ -80,6 +80,26 @@
       </FieldRow>
     </SettingsSection>
 
+    <SettingsSection :title="t('settings.sectionLlmTools')">
+      <FieldRow
+        :label="t('settings.maxToolSteps')"
+        :info="t('settings.maxToolStepsHint')"
+        :error="
+          maxToolStepsError ? t('settings.maxToolStepsInvalid') : undefined
+        "
+      >
+        <FieldNumber
+          min="1"
+          :max="MAX_TOOL_STEPS"
+          :model-value="maxToolStepsText"
+          :placeholder="String(DEFAULT_MAX_TOOL_STEPS)"
+          :aria-invalid="maxToolStepsError || undefined"
+          @update:model-value="setMaxToolSteps"
+          @invalid-input="maxToolStepsError = true"
+        />
+      </FieldRow>
+    </SettingsSection>
+
     <SettingsSection
       :title="t('settings.sectionWebSearch')"
       :info="t('settings.webSearchSectionHint')"
@@ -171,11 +191,13 @@ import SettingsSection from './SettingsSection.vue'
 import {
   ASK_AI_WEB_ACCESS_DEFAULT,
   type AskAiWebAccess,
+  DEFAULT_MAX_TOOL_STEPS,
   DEFAULT_WEB_FETCH_MAX_CHARACTERS,
   LLM_TASKS,
   type LlmImageQuality,
   type LlmModelMode,
   type LlmProvider,
+  MAX_TOOL_STEPS,
   MAX_WEB_FETCH_MAX_CHARACTERS,
   MIN_WEB_FETCH_MAX_CHARACTERS,
   WEB_SECRET_IDS,
@@ -387,6 +409,26 @@ function setAskAiWebAccess(access: AskAiWebAccess) {
     ...userConfig.value.llm.webSearch,
     askAiAccess: access,
   }
+}
+
+const maxToolStepsError = ref(false)
+const maxToolStepsText = ref(String(llm.value.maxToolSteps ?? ''))
+/** Empty takes the default; a number out of range is not taken */
+function setMaxToolSteps(text: string) {
+  maxToolStepsText.value = text
+  const trimmed = text.trim()
+  if (!trimmed) {
+    maxToolStepsError.value = false
+    delete llm.value.maxToolSteps
+    return
+  }
+  const steps = Number(trimmed)
+  maxToolStepsError.value = !(
+    Number.isInteger(steps) &&
+    steps >= 1 &&
+    steps <= MAX_TOOL_STEPS
+  )
+  if (!maxToolStepsError.value) llm.value.maxToolSteps = steps
 }
 
 const webFetchMaxCharsError = ref(false)

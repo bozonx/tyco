@@ -119,6 +119,8 @@ export interface DesktopChatToolsDependencies {
   /** The originals attached to the conversation, for the file tools */
   getAttachedFiles?: () => readonly AiAttachedFile[]
   getFetchMaxCharacters?: () => number | undefined
+  /** Model steps one answer may take, see `llm.maxToolSteps` */
+  getMaxStepCount: () => number
   /** The web access of the "Ask AI" chat, used when `profileId` is null */
   getAskAiWebAccess?: () => AskAiWebAccess | undefined
   warn: (message: string) => void
@@ -230,6 +232,7 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
       ...(checkDebug() ? [debugToolProvider] : []),
     ],
     isDebugEnabled: () => checkDebug(),
+    getMaxStepCount: deps.getMaxStepCount,
     warn: deps.warn,
   })
 

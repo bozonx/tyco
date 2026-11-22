@@ -44,6 +44,24 @@ function setup() {
 describe('LLM settings cards', () => {
   beforeEach(() => vi.clearAllMocks())
 
+  it('sets the tool step limit of every answer and clears it back to the default', async () => {
+    const { llm, wrapper } = setup()
+    const field = wrapper
+      .findAllComponents(FieldRow)
+      .find((row) => row.props('label') === 'settings.maxToolSteps')!
+    const input = field.get('input')
+    expect(input.attributes('placeholder')).toBe('8')
+
+    await input.setValue('12')
+    expect(llm.maxToolSteps).toBe(12)
+    await input.setValue('51')
+    expect(llm.maxToolSteps).toBe(12)
+    expect(field.props('error')).toBe('settings.maxToolStepsInvalid')
+    await input.setValue('')
+    expect(llm.maxToolSteps).toBeUndefined()
+    expect(field.props('error')).toBeUndefined()
+  })
+
   it('edits the shared provider draft and updates the card summary', async () => {
     const { llm, localCard } = setup()
     const card = localCard()
@@ -379,6 +397,7 @@ describe('SettingsLlmTab.vue', () => {
         .map((row) => row.attributes('data-label'))
     ).toEqual([
       'settings.chatImageQuality',
+      'settings.maxToolSteps',
       'settings.webJinaApiKey',
       'settings.webFetchMaxCharacters',
       'settings.askAiWebAccess',
@@ -401,6 +420,7 @@ describe('SettingsLlmTab.vue', () => {
       'settings.stylingTab',
       'action.quickAiRequest',
       'settings.chatImageQuality',
+      'settings.maxToolSteps',
       'settings.webJinaApiKey',
       'settings.webFetchMaxCharacters',
       'settings.askAiWebAccess',

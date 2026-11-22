@@ -74,25 +74,6 @@
           />
         </FieldRow>
 
-        <SettingsAdvancedFields v-model:expanded="isAdvancedExpanded">
-          <FieldRow
-            :label="t('settings.profileToolSteps')"
-            :hint="t('settings.profileToolStepsHint')"
-            :error="
-              stepCountError ? t('settings.profileToolStepsInvalid') : undefined
-            "
-          >
-            <FieldNumber
-              min="1"
-              :max="MAX_TOOL_STEP_COUNT"
-              :model-value="stepCountText"
-              :placeholder="String(DEFAULT_TOOL_STEP_COUNT)"
-              :aria-invalid="stepCountError || undefined"
-              @update:model-value="changeStepCount"
-              @invalid-input="stepCountError = true"
-            />
-          </FieldRow>
-        </SettingsAdvancedFields>
       </SettingsSection>
 
       <SettingsProfileToolsSection
@@ -204,7 +185,6 @@ import {
   CHAT_TOOL_GROUPS,
   COMMANDS_TOOL_GROUP_ID,
   type ChatToolGroup,
-  MAX_TOOL_STEP_COUNT,
   toolGroupSettings,
   withToolGroup,
 } from '../../lib/chat-tools/chat-tool-groups'
@@ -217,13 +197,11 @@ import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useDesktopStore } from '../../stores/desktop'
 import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
-import FieldNumber from '../common/FieldNumber.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import PathDisplay from '../common/PathDisplay.vue'
 import StateMessage from '../common/StateMessage.vue'
-import SettingsAdvancedFields from './SettingsAdvancedFields.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsProfileCommandTools from './SettingsProfileCommandTools.vue'
@@ -231,7 +209,6 @@ import SettingsProfileMemorySection from './SettingsProfileMemorySection.vue'
 import SettingsProfileProjectAccess from './SettingsProfileProjectAccess.vue'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
 import SettingsSection from './SettingsSection.vue'
-import { DEFAULT_TOOL_STEP_COUNT } from '@tyco/shared'
 
 const props = defineProps<{ profileId: string }>()
 const { navigate } = useSettingsContext()
@@ -308,7 +285,6 @@ async function handleCreate() {
 // Advanced settings toggle
 // ---------------------------------------------------------------------------
 
-const isAdvancedExpanded = ref(false)
 
 // ---------------------------------------------------------------------------
 // Settings: typed ones are stored a moment after they change, picked ones
@@ -338,11 +314,8 @@ async function resolveConflict(keepMine: boolean) {
 }
 const {
   name,
-  stepCountText,
-  stepCountError,
   soulPrompt,
   changeName,
-  changeStepCount,
   changeSoul,
   changeMemoryMode,
   changeSettings,

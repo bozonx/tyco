@@ -657,7 +657,6 @@ mod tests {
 
         let profile_without_web = profile_with_tools(Some(ProfileToolSettings {
             groups: HashMap::new(),
-            max_step_count: None,
         }));
         assert!(ensure_web_enabled(&profile_without_web).is_ok());
 
@@ -670,10 +669,7 @@ mod tests {
                 command_ids: None,
             },
         );
-        let profile = profile_with_tools(Some(ProfileToolSettings {
-            groups,
-            max_step_count: None,
-        }));
+        let profile = profile_with_tools(Some(ProfileToolSettings { groups }));
         assert!(ensure_web_enabled(&profile).is_ok());
     }
 
@@ -702,7 +698,6 @@ mod tests {
         );
         let profile_disabled = profile_with_tools(Some(ProfileToolSettings {
             groups: groups_disabled,
-            max_step_count: None,
         }));
         assert!(ensure_web_enabled(&profile_disabled).is_err());
 
@@ -717,7 +712,6 @@ mod tests {
         );
         let profile_denied = profile_with_tools(Some(ProfileToolSettings {
             groups: groups_denied,
-            max_step_count: None,
         }));
         assert!(ensure_web_enabled(&profile_denied).is_err());
     }

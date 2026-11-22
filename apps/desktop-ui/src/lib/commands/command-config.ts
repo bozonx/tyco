@@ -5,7 +5,6 @@ import {
   type CommandConfig,
   type CommandOutputAction,
   type CommandPlatform,
-  AI_COMMAND_MAX_STEPS_DEFAULT,
   COMMAND_RUN_TIMEOUT_DEFAULT_SEC,
   COMMAND_RUN_TIMEOUT_MAX_SEC,
   normalizeCommands,
@@ -132,7 +131,6 @@ function defaultOperationConfig(operationId: string): Record<string, unknown> {
       return {
         prompt: '',
         allowedCommandIds: [],
-        maxSteps: AI_COMMAND_MAX_STEPS_DEFAULT,
         isToolsEnabled: true,
       }
     default:

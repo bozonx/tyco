@@ -184,13 +184,11 @@ describe('SettingsProfileDetailTab.vue', () => {
     expect(context.navigate).not.toHaveBeenCalled()
   })
 
-  it('toggles advanced settings for tool step count', async () => {
+  it('leaves the tool step limit to the LLM settings', async () => {
     const wrapper = mountTab()
     await flushPromises()
     expect(wrapper.find('input[type="number"]').exists()).toBe(false)
-    await button(wrapper, 'settings.showAdvanced').trigger('click')
-    await flushPromises()
-    expect(wrapper.findAll('input[type="number"]').length).toBe(1)
+    expect(wrapper.text()).not.toContain('settings.showAdvanced')
   })
 
   it('opens the profile folder and reports failures', async () => {

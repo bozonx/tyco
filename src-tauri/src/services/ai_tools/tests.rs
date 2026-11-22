@@ -749,7 +749,6 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
                 command_ids: None,
             },
         )]),
-        max_step_count: None,
     };
     ai_vault::create_profile(&vault, profile(Some(enabled)), "").unwrap();
     for (index, id) in ["book", "closed", "other"].iter().enumerate() {
@@ -808,7 +807,6 @@ fn an_external_project_without_its_folder_here_is_named_and_refused() {
                 command_ids: None,
             },
         )]),
-        max_step_count: None,
     };
     ai_vault::create_profile(&vault, profile(Some(enabled)), "").unwrap();
     // made on another device: the description is synced, the folder is not

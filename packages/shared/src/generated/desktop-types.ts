@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 8b87f23a0a5f8dd6c637e696474dcedc2b1b3fbc770a64060ac977f25c73ffd0
+// Source hash: c7cdb2efdf3394e98f7944a0dcb7ca07fbe82a2f85a9a51dff3b1c2a55bed535
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -820,11 +820,6 @@ export type ProfileToolSettings = {
    * are on, the other groups off.
    */
   groups: { [key in string]: ToolGroupSettings }
-  /**
-   * Model steps per turn; `DEFAULT_TOOL_STEP_COUNT` of `@tyco/shared` when
-   * unset.
-   */
-  maxStepCount?: number
 }
 
 export type ProjectAccessMode = 'allow' | 'ask' | 'deny'

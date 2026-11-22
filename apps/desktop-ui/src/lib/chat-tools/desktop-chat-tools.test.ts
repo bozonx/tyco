@@ -17,6 +17,7 @@ describe('desktop-chat-tools', () => {
     }) as unknown as DesktopChatToolsInvoke
 
     const chatTools = createDesktopChatTools({
+      getMaxStepCount: () => 4,
       profileId: 'writer',
       invoke,
       canUseTools: () => true,
@@ -26,7 +27,6 @@ describe('desktop-chat-tools', () => {
 
     const result = await chatTools.turnTools('gpt-4', 5000, {
       groups: { files: { isEnabled: true, access: 'allow' } },
-      maxStepCount: 4,
     })
 
     expect(result.canUseTools).toBe(true)
@@ -42,6 +42,7 @@ describe('desktop-chat-tools', () => {
     let supported = true
 
     const chatTools = createDesktopChatTools({
+      getMaxStepCount: () => 4,
       profileId: null,
       invoke,
       canUseTools: () => supported,
@@ -69,6 +70,7 @@ describe('desktop-chat-tools', () => {
     }) as unknown as DesktopChatToolsInvoke
 
     const chatTools = createDesktopChatTools({
+      getMaxStepCount: () => 4,
       profileId: 'writer',
       invoke,
       canUseTools: () => true,
@@ -93,6 +95,7 @@ describe('desktop-chat-tools', () => {
     const invoke = vi.fn(async () => []) as unknown as DesktopChatToolsInvoke
 
     const generalChatTools = createDesktopChatTools({
+      getMaxStepCount: () => 4,
       profileId: null,
       invoke,
       canUseTools: () => true,
@@ -106,6 +109,7 @@ describe('desktop-chat-tools', () => {
     expect(generalToolNames).toContain('web_fetch')
 
     const profileChatTools = createDesktopChatTools({
+      getMaxStepCount: () => 4,
       profileId: 'researcher',
       invoke,
       canUseTools: () => true,
@@ -136,6 +140,7 @@ describe('desktop-chat-tools', () => {
     const invoke = vi.fn(async () => []) as unknown as DesktopChatToolsInvoke
     let access: 'ask' | 'allow' | 'off' | undefined
     const chatTools = createDesktopChatTools({
+      getMaxStepCount: () => 4,
       profileId: null,
       invoke,
       canUseTools: () => true,
@@ -166,6 +171,7 @@ describe('desktop-chat-tools', () => {
     const invoke = vi.fn(async () => []) as unknown as DesktopChatToolsInvoke
 
     const chatTools = createDesktopChatTools({
+      getMaxStepCount: () => 4,
       profileId: 'coder',
       invoke,
       canUseTools: () => true,

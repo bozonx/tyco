@@ -57,8 +57,9 @@
     >
       <FieldNumber
         min="1"
-        :max="AI_COMMAND_MAX_STEPS_MAX"
-        :model-value="config.maxSteps"
+        :max="MAX_TOOL_STEPS"
+        :model-value="config.maxSteps ?? ''"
+        :placeholder="String(maxToolStepsOf(userConfig?.llm))"
         @update:model-value="setMaxSteps"
       />
     </FieldRow>
@@ -82,7 +83,8 @@ import FieldSwitch from '../common/FieldSwitch.vue'
 import VariableInsertMenu from './VariableInsertMenu.vue'
 import VariableReferenceHints from './VariableReferenceHints.vue'
 import {
-  AI_COMMAND_MAX_STEPS_MAX,
+  MAX_TOOL_STEPS,
+  maxToolStepsOf,
   type CommandConfig,
   type UserConfig,
 } from '@tyco/shared'
@@ -112,15 +114,17 @@ function toggleCommand(id: string, isAllowed: boolean) {
   emit('update', 'allowedCommandIds', isAllowed ? [...others, id] : others)
 }
 
-/** A number out of range or half typed is not taken */
+/**
+ * An empty field takes the limit of the LLM settings; a number out of range or
+ * half typed is not taken
+ */
 function setMaxSteps(text: string) {
+  if (!text.trim()) {
+    emit('update', 'maxSteps', undefined)
+    return
+  }
   const steps = Number(text)
-  if (
-    text.trim() &&
-    Number.isInteger(steps) &&
-    steps >= 1 &&
-    steps <= AI_COMMAND_MAX_STEPS_MAX
-  )
+  if (Number.isInteger(steps) && steps >= 1 && steps <= MAX_TOOL_STEPS)
     emit('update', 'maxSteps', steps)
 }
 </script>

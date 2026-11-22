@@ -109,11 +109,6 @@ export const COMMAND_RUN_TIMEOUT_DEFAULT_SEC = 300
 /** The longest finite run limit of a command, in seconds */
 export const COMMAND_RUN_TIMEOUT_MAX_SEC = 3600
 
-/** How many model steps an AI command takes by default; each tool call is one */
-export const AI_COMMAND_MAX_STEPS_DEFAULT = 5
-/** The most model steps an AI command may take */
-export const AI_COMMAND_MAX_STEPS_MAX = 50
-
 /**
  * `operationConfig` of an AI command, a command of the `core.aiTask` tool: an
  * LLM agent that follows `prompt` and may call the commands of
@@ -123,8 +118,11 @@ export interface AiCommandOperationConfig {
   prompt: string
   /** The commands the agent may run; never the command itself */
   allowedCommandIds: string[]
-  /** Maximum command calls per run; the final answer does not consume a call. */
-  maxSteps: number
+  /**
+   * Maximum command calls per run, 1 to `MAX_TOOL_STEPS`; the final answer
+   * does not consume a call. `llm.maxToolSteps` when unset
+   */
+  maxSteps?: number
   /**
    * Whether the agent is allowed to invoke tools (allowed commands). Defaults
    * to true if omitted

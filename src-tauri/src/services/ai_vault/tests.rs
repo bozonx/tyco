@@ -306,7 +306,7 @@ fn profile_temperature_accepts_the_contract_boundary_and_rejects_larger_values()
 }
 
 #[test]
-fn profile_tool_settings_round_trip_and_the_step_count_is_bounded() {
+fn profile_tool_settings_round_trip() {
     let test_dir = TestDir::new("ai_vault_profile_tools");
     let vault_root = test_dir.join("vault");
     create_profile(&vault_root, profile("writer", 1000), "").unwrap();
@@ -321,7 +321,6 @@ fn profile_tool_settings_round_trip_and_the_step_count_is_bounded() {
                 command_ids: None,
             },
         )]),
-        max_step_count: Some(8),
     });
     save_profile(&vault_root, updated.clone(), None).unwrap();
     assert_eq!(
@@ -334,21 +333,8 @@ fn profile_tool_settings_round_trip_and_the_step_count_is_bounded() {
     .unwrap();
     assert_eq!(
         stored["tools"],
-        serde_json::json!({"groups": {"debug": {"isEnabled": true, "access": "ask"}}, "maxStepCount": 8})
+        serde_json::json!({"groups": {"debug": {"isEnabled": true, "access": "ask"}}})
     );
-
-    updated.tools.as_mut().unwrap().max_step_count = Some(operations::MAX_TOOL_STEP_COUNT);
-    save_profile(&vault_root, updated.clone(), None).unwrap();
-    assert_eq!(
-        without_revision(get_profile(&vault_root, "writer").unwrap()),
-        updated
-    );
-
-    for count in [0, operations::MAX_TOOL_STEP_COUNT + 1] {
-        let mut invalid = updated.clone();
-        invalid.tools.as_mut().unwrap().max_step_count = Some(count);
-        assert!(save_profile(&vault_root, invalid, None).is_err());
-    }
 }
 
 #[test]

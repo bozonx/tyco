@@ -11,7 +11,7 @@ fn generate_desktop_contract() {
         assert!(name.chars().all(|c| c.is_ascii_uppercase() || c == '_'));
         let rust_type = match name.as_str() {
             "MAX_PROFILE_TEMPERATURE" => "f64",
-            "MAX_TOOL_STEP_COUNT" | "MAX_CHAT_IMAGE_DIMENSION" => "u32",
+            "MAX_CHAT_IMAGE_DIMENSION" => "u32",
             "MAX_CHAT_IMAGE_PIXELS" => "u64",
             _ if value.is_string() => "&str",
             _ => "usize",

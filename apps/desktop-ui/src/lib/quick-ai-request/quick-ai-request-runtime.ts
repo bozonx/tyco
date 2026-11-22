@@ -1,6 +1,7 @@
 import {
   APP_CONFIG,
   llmSecretId,
+  maxToolStepsOf,
   type AiProfile,
   type ProfileMemoryTopic,
   type UserConfig,
@@ -114,6 +115,7 @@ export function createQuickAiRequestRuntime(
           deps.getUserConfig()?.llm?.webSearch?.askAiAccess,
         getFetchMaxCharacters: () =>
           deps.getUserConfig()?.llm?.webSearch?.fetchMaxCharacters,
+        getMaxStepCount: () => maxToolStepsOf(deps.getUserConfig()?.llm),
         warn: (message) => deps.warn(message, 'tools'),
         commands: () => deps.getUserConfig()?.commands ?? [],
         operations: deps.operations,

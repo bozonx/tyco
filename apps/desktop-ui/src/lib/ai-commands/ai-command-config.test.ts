@@ -24,22 +24,22 @@ describe('aiCommandOperationConfigOf', () => {
     })
   })
 
-  it('falls back to the defaults', () => {
+  it('falls back to the defaults, leaving the step limit to the LLM settings', () => {
     expect(aiCommandOperationConfigOf({})).toEqual({
       prompt: '',
       allowedCommandIds: [],
-      maxSteps: 5,
       isToolsEnabled: true,
     })
   })
 })
 
 describe('maxStepsOf', () => {
-  it('keeps the limit within range', () => {
+  it('keeps the limit within range and drops what is not one', () => {
     expect(maxStepsOf(2.4)).toBe(2)
     expect(maxStepsOf(500)).toBe(50)
-    expect(maxStepsOf(0)).toBe(5)
-    expect(maxStepsOf('7')).toBe(5)
+    expect(maxStepsOf(0)).toBeUndefined()
+    expect(maxStepsOf('7')).toBeUndefined()
+    expect(maxStepsOf(undefined)).toBeUndefined()
   })
 })
 

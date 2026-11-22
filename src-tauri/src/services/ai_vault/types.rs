@@ -37,11 +37,6 @@ pub struct ProfileToolSettings {
     /// web tools are on, the other groups off.
     #[serde(default)]
     pub groups: HashMap<String, ToolGroupSettings>,
-    /// Model steps per turn; `DEFAULT_TOOL_STEP_COUNT` of `@tyco/shared` when
-    /// unset.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub max_step_count: Option<u32>,
 }
 
 /// The memory mode of a profile.

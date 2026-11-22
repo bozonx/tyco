@@ -143,27 +143,6 @@ describe('profile editor', () => {
     expect(deps.updateProfile).toHaveBeenCalledOnce()
   })
 
-  it('saves the step count with the tools it belongs to', async () => {
-    const { deps, editor } = setup()
-    const tools = { groups: { files: { isEnabled: true, access: 'ask' } } }
-    deps.getProfile.mockReturnValue({ ...profile, tools } as AiProfile)
-    await editor.load(profile)
-    editor.changeStepCount('99')
-    expect(editor.stepCountError.value).toBe(true)
-    editor.changeStepCount('12')
-    expect(editor.stepCountError.value).toBe(false)
-    await vi.advanceTimersByTimeAsync(100)
-
-    expect(deps.updateProfile).toHaveBeenCalledWith(
-      {
-        name: 'Writer',
-        temperature: 0.5,
-        tools: { ...tools, maxStepCount: 12 },
-      },
-      undefined
-    )
-  })
-
   it('shows picked values in the same save status', async () => {
     const { deps, editor } = setup()
     await editor.load(profile)

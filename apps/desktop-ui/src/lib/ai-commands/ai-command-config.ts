@@ -1,6 +1,5 @@
 import {
-  AI_COMMAND_MAX_STEPS_DEFAULT,
-  AI_COMMAND_MAX_STEPS_MAX,
+  MAX_TOOL_STEPS,
   type AiCommandOperationConfig,
   type CommandConfig,
   type CoreOperationId,
@@ -14,14 +13,14 @@ export const AI_COMMAND_OPERATION_ID = 'core.aiTask' satisfies CoreOperationId
 export const isAiCommand = (command: Pick<CommandConfig, 'operationId'>) =>
   command.operationId === AI_COMMAND_OPERATION_ID
 
-/** The step limit as a whole number within range, or the default */
-export function maxStepsOf(value: unknown): number {
-  if (typeof value !== 'number' || !Number.isFinite(value))
-    return AI_COMMAND_MAX_STEPS_DEFAULT
+/**
+ * The command's own step limit as a whole number within range; undefined when
+ * it has none and takes `llm.maxToolSteps`
+ */
+export function maxStepsOf(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined
   const steps = Math.round(value)
-  return steps >= 1
-    ? Math.min(steps, AI_COMMAND_MAX_STEPS_MAX)
-    : AI_COMMAND_MAX_STEPS_DEFAULT
+  return steps >= 1 ? Math.min(steps, MAX_TOOL_STEPS) : undefined
 }
 
 /** The settings of an AI command as read from its `operationConfig` */
@@ -33,10 +32,11 @@ export function aiCommandOperationConfigOf(
         (id): id is string => typeof id === 'string' && id.trim() !== ''
       )
     : []
+  const maxSteps = maxStepsOf(config.maxSteps)
   return {
     prompt: stringOr(config.prompt),
     allowedCommandIds: [...new Set(ids)],
-    maxSteps: maxStepsOf(config.maxSteps),
+    ...(maxSteps === undefined ? {} : { maxSteps }),
     isToolsEnabled: config.isToolsEnabled !== false,
   }
 }

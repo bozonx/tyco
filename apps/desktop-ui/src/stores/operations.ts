@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia'
 
-import { APP_CONFIG, TRANSLATION_SECRET_IDS, type LlmTask } from '@tyco/shared'
+import {
+  APP_CONFIG,
+  maxToolStepsOf,
+  TRANSLATION_SECRET_IDS,
+  type LlmTask,
+} from '@tyco/shared'
 
 import { useLlmStore } from './llm'
 import { executeWebhook } from '../lib/custom-actions/webhook-executor'
@@ -181,6 +186,7 @@ export const useOperationsStore = defineStore('tools', () => {
     stream: (task, prompt, options) =>
       llmStore.client.stream(task, prompt, options),
     instructions: () => APP_CONFIG.aiInstructions.aiTask,
+    defaultMaxSteps: () => maxToolStepsOf(desktopStore.userConfig?.llm),
     commands: () => desktopStore.userConfig?.commands ?? [],
     commandInputSchema: (command) => {
       const tool = registry.get(command.operationId)

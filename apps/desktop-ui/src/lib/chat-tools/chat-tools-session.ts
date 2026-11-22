@@ -1,5 +1,4 @@
 import {
-  DEFAULT_TOOL_STEP_COUNT,
   type AiAttachedFile,
   type ProfileMemoryMode,
   type ProfileToolSettings,
@@ -22,6 +21,8 @@ export interface ChatToolsSessionDependencies {
   providers: () => readonly ChatToolProvider[]
   /** Offers the debug tools to every chat of a development build */
   isDebugEnabled?: () => boolean
+  /** Model steps one answer may take, see `llm.maxToolSteps` */
+  getMaxStepCount: () => number
   warn?: (message: string) => void
 }
 
@@ -95,7 +96,7 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
     if (!tools) return undefined
     return {
       tools,
-      maxStepCount: settings?.maxStepCount ?? DEFAULT_TOOL_STEP_COUNT,
+      maxStepCount: deps.getMaxStepCount(),
       policy,
       // the user decides on what the call would change, when the tool can tell
       requestApproval: async (approval, signal) => {

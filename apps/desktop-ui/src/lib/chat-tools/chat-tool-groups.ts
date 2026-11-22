@@ -1,18 +1,14 @@
 import {
   COMMANDS_TOOL_GROUP_ID,
-  DEFAULT_TOOL_STEP_COUNT,
   FILES_TOOL_GROUP_ID,
-  MAX_TOOL_STEP_COUNT,
   type ProfileToolSettings,
   type ProjectAccessMode,
   type ToolGroupSettings,
   WEB_TOOL_GROUP_ID,
 } from '@tyco/shared'
 
-import {
-  type ParsedModelNumber,
-  parseOptionalNumber,
-} from '../llm/model-number'
+
+
 
 /** A group of tools a profile switches on as a whole */
 export interface ChatToolGroup {
@@ -74,7 +70,6 @@ export interface ProfileToolSettingsLike {
       readonly commandIds?: readonly string[]
     }
   }
-  readonly maxStepCount?: number
 }
 
 /**
@@ -117,28 +112,3 @@ export function withToolGroup(
     },
   }
 }
-
-/** The settings with another step limit; undefined goes back to the default */
-export function withToolStepCount(
-  settings: ProfileToolSettings | undefined,
-  maxStepCount: number | undefined
-): ProfileToolSettings {
-  const next: ProfileToolSettings = {
-    ...settings,
-    groups: settings?.groups ?? {},
-  }
-  if (maxStepCount === undefined) delete next.maxStepCount
-  else next.maxStepCount = maxStepCount
-  return next
-}
-
-/** A step limit typed in the settings; empty is the default */
-export function parseToolStepCount(text: string): ParsedModelNumber {
-  return parseOptionalNumber(
-    text,
-    (value) =>
-      Number.isSafeInteger(value) && value >= 1 && value <= MAX_TOOL_STEP_COUNT
-  )
-}
-
-export { DEFAULT_TOOL_STEP_COUNT, MAX_TOOL_STEP_COUNT }

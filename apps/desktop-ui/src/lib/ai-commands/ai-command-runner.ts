@@ -46,6 +46,8 @@ export interface AiCommandRunnerDependencies {
   ) => AsyncIterable<LlmStreamEvent>
   /** The app's instructions for every AI command */
   instructions: () => string
+  /** The call limit of a command without its own, see `llm.maxToolSteps` */
+  defaultMaxSteps: () => number
 }
 
 export interface AiCommandRunOptions {
@@ -106,6 +108,7 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
     tools: readonly AiCommandAgentTool[],
     options: AiCommandRunOptions
   ): Promise<string> => {
+    const maxSteps = config.maxSteps ?? deps.defaultMaxSteps()
     let callsUsed = 0
     /** What the last command that ran returned */
     let lastResult = ''
@@ -121,7 +124,7 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
         inputSchema: tool.inputSchema,
         execute: async (input, { signal }) => {
           // Reserve before awaiting: parallel calls share the same budget.
-          if (callsUsed >= config.maxSteps) return CALL_LIMIT_NOTICE
+          if (callsUsed >= maxSteps) return CALL_LIMIT_NOTICE
           callsUsed += 1
           const outcome = await tool.execute(
             isRecord(input) ? input : {},
@@ -178,7 +181,7 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
         },
         tools: toolSet,
         // the calls the command allows, then the answer
-        maxStepCount: config.maxSteps + 1,
+        maxStepCount: maxSteps + 1,
         signal: options.signal,
         onUpdate: (update) => {
           const calls = update.parts.filter((part) => part.type === 'tool-call')

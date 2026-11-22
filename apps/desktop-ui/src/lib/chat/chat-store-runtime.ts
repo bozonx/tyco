@@ -8,6 +8,7 @@ import {
   type StorageChangedEvent,
   type UserConfig,
   type VaultChatHistory,
+  maxToolStepsOf,
 } from '@tyco/shared'
 import { computed, unref, watch, type Ref } from 'vue'
 
@@ -182,6 +183,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     getAskAiWebAccess: () => deps.getUserConfig()?.llm?.webSearch?.askAiAccess,
     getFetchMaxCharacters: () =>
       deps.getUserConfig()?.llm?.webSearch?.fetchMaxCharacters,
+    getMaxStepCount: () => maxToolStepsOf(deps.getUserConfig()?.llm),
     warn,
     commands: () => deps.getUserConfig()?.commands ?? [],
     operations: deps.operations,

@@ -24,15 +24,13 @@ const request = {
   profileId: 'writer',
   modelId: 'model',
   canUseTools: true,
-  settings: {
-    groups: { notes: { isEnabled: true, access: 'ask' as const } },
-    maxStepCount: 3,
-  },
+  settings: { groups: { notes: { isEnabled: true, access: 'ask' as const } } },
 }
 
 describe('chat-tools-session', () => {
   it('offers reply blocks to every chat, without asking, even "Ask AI"', async () => {
     const session = createChatToolsSession({
+      getMaxStepCount: () => 3,
       providers: () => [createReplyBlocksToolProvider()],
     })
 
@@ -53,8 +51,11 @@ describe('chat-tools-session', () => {
     ).toBe('approved')
   })
 
-  it('gives a turn the tools of its profile and its step limit', async () => {
-    const session = createChatToolsSession({ providers: () => [notes] })
+  it('gives a turn the tools of its profile and the step limit of the settings', async () => {
+    const session = createChatToolsSession({
+      providers: () => [notes],
+      getMaxStepCount: () => 3,
+    })
 
     const tools = await session.toolsFor(request)
 
@@ -63,7 +64,10 @@ describe('chat-tools-session', () => {
   })
 
   it('gives none to a model without tools or a chat without settings', async () => {
-    const session = createChatToolsSession({ providers: () => [notes] })
+    const session = createChatToolsSession({
+      providers: () => [notes],
+      getMaxStepCount: () => 3,
+    })
 
     expect(
       await session.toolsFor({ ...request, canUseTools: false })
@@ -77,8 +81,9 @@ describe('chat-tools-session', () => {
     ).toBeUndefined()
   })
 
-  it('adds the debug tools when asked, with the default step limit', async () => {
+  it('adds the debug tools when asked', async () => {
     const session = createChatToolsSession({
+      getMaxStepCount: () => 3,
       providers: () => [createDebugChatToolProvider()],
       isDebugEnabled: () => true,
     })
@@ -92,11 +97,13 @@ describe('chat-tools-session', () => {
     expect(Object.keys(tools!.tools!.tools)).toEqual([
       await chatToolName('get_current_time'),
     ])
-    expect(tools!.maxStepCount).toBe(8)
   })
 
   it('forgets the permissions of a conversation and refuses what waits', async () => {
-    const session = createChatToolsSession({ providers: () => [notes] })
+    const session = createChatToolsSession({
+      providers: () => [notes],
+      getMaxStepCount: () => 3,
+    })
     const tools = (await session.toolsFor(request))!
     tools.policy.answer('read_note', 'allow-session')
     expect(tools.policy.decide('read_note', 'ask')).toBe('approved')
@@ -129,6 +136,7 @@ describe('chat-tools-session', () => {
       after: 'New',
     }
     const session = createChatToolsSession({
+      getMaxStepCount: () => 3,
       providers: () => [
         {
           id: 'files',
@@ -157,7 +165,10 @@ describe('chat-tools-session', () => {
 
 describe('chat-tools-session reserve', () => {
   it('knows without the providers whether a turn may get tools', () => {
-    const session = createChatToolsSession({ providers: () => [] })
+    const session = createChatToolsSession({
+      providers: () => [],
+      getMaxStepCount: () => 3,
+    })
     expect(session.mayOfferTools(request)).toBe(true)
     expect(session.mayOfferTools({ ...request, canUseTools: false })).toBe(
       false
@@ -171,6 +182,7 @@ describe('chat-tools-session reserve', () => {
     ).toBe(true)
     expect(
       createChatToolsSession({
+        getMaxStepCount: () => 3,
         providers: () => [],
         isDebugEnabled: () => true,
       }).mayOfferTools({ canUseTools: true, settings: undefined })

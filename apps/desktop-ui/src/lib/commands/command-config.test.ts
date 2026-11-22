@@ -405,7 +405,6 @@ describe('commands of the core tools', () => {
     expect(aiTask.operationConfig).toEqual({
       prompt: '',
       allowedCommandIds: [],
-      maxSteps: 5,
       isToolsEnabled: true,
     })
     expect(aiTask.outputAction).toBe('insertIntoWindow')

@@ -38,7 +38,11 @@ it('caps parallel command execution and disables tools for the final answer', as
     ).toEqual({ activeTools: [], toolChoice: 'none' })
     yield { type: 'text', text: 'Finished' }
   }
-  const run = createAiCommandRunner({ stream, instructions: () => '' })
+  const run = createAiCommandRunner({
+    stream,
+    instructions: () => '',
+    defaultMaxSteps: () => 8,
+  })
   expect(
     await run(
       { prompt: 'Do it', allowedCommandIds: ['one'], maxSteps: 1 },
@@ -76,7 +80,11 @@ it('answers with the output of the last command when the model says nothing afte
       }
     )
   }
-  const run = createAiCommandRunner({ stream, instructions: () => '' })
+  const run = createAiCommandRunner({
+    stream,
+    instructions: () => '',
+    defaultMaxSteps: () => 8,
+  })
   expect(
     await run(
       { prompt: 'Do it', allowedCommandIds: ['one'], maxSteps: 1 },
@@ -113,7 +121,11 @@ it('does not answer with the status of a command that returned no text', async (
       }
     )
   }
-  const run = createAiCommandRunner({ stream, instructions: () => '' })
+  const run = createAiCommandRunner({
+    stream,
+    instructions: () => '',
+    defaultMaxSteps: () => 8,
+  })
   expect(
     await run(
       { prompt: 'Do it', allowedCommandIds: ['one'], maxSteps: 1 },

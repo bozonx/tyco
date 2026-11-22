@@ -98,6 +98,25 @@ export type LlmImageQuality = 'economy' | 'balanced' | 'original'
 
 export type LlmModelMode = 'all' | 'perTask'
 
+/**
+ * Model steps one answer may take when it calls tools, in every chat, quick
+ * request and AI command without its own limit
+ */
+export const DEFAULT_MAX_TOOL_STEPS = 8
+/** The most model steps one answer may take */
+export const MAX_TOOL_STEPS = 50
+
+/** The step limit of `llm.maxToolSteps`, or the default when it is unset or out of range */
+export function maxToolStepsOf(llm: Pick<LlmConfig, 'maxToolSteps'> | undefined): number {
+  const steps = llm?.maxToolSteps
+  return typeof steps === 'number' &&
+    Number.isInteger(steps) &&
+    steps >= 1 &&
+    steps <= MAX_TOOL_STEPS
+    ? steps
+    : DEFAULT_MAX_TOOL_STEPS
+}
+
 export const DEFAULT_WEB_FETCH_MAX_CHARACTERS = 15_000
 export const MIN_WEB_FETCH_MAX_CHARACTERS = 1_000
 export const MAX_WEB_FETCH_MAX_CHARACTERS = 100_000
@@ -129,6 +148,11 @@ export interface LlmConfig {
   tasks: LlmTasksConfig
   /** Applies to every chat, the profile chats included */
   imageQuality: LlmImageQuality
+  /**
+   * Model steps one answer may take when it calls tools (1 to
+   * `MAX_TOOL_STEPS`); `DEFAULT_MAX_TOOL_STEPS` when unset
+   */
+  maxToolSteps?: number
   /** Web search and page fetch settings for AI agents */
   webSearch?: WebSearchConfig
 }

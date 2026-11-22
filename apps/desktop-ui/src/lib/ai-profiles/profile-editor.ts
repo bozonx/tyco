@@ -3,10 +3,6 @@ import { computed, ref } from 'vue'
 import type { AiProfile, ProfileMemoryMode, ProfileSoul } from '@tyco/shared'
 
 import {
-  parseToolStepCount,
-  withToolStepCount,
-} from '../chat-tools/chat-tool-groups'
-import {
   createAutosave,
   createAutosaveGroup,
   createSaveTracker,
@@ -63,10 +59,8 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
   const name = ref('')
   const temperatureText = ref('')
   const maxOutputTokensText = ref('')
-  const stepCountText = ref('')
   const temperatureError = ref(false)
   const maxOutputTokensError = ref(false)
-  const stepCountError = ref(false)
   const memoryMode = ref<ProfileMemoryMode>('auto')
   const soulPrompt = ref('')
   const isSoulLoaded = ref(false)
@@ -92,16 +86,11 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     save: async () => {
       const temperature = parseModelTemperature(temperatureText.value)
       const maxOutputTokens = parseModelTokenCount(maxOutputTokensText.value)
-      const stepCount = parseToolStepCount(stepCountText.value)
-      const tools = deps.getProfile()?.tools
       await updateProfile({
         ...(name.value.trim() ? { name: name.value.trim() } : {}),
         ...(temperature.isValid ? { temperature: temperature.value } : {}),
         ...(maxOutputTokens.isValid
           ? { maxOutputTokens: maxOutputTokens.value }
-          : {}),
-        ...(stepCount.isValid && stepCount.value !== tools?.maxStepCount
-          ? { tools: withToolStepCount(tools, stepCount.value) }
           : {}),
       })
     },
@@ -163,11 +152,9 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     name.value = profile.name
     temperatureText.value = String(profile.temperature ?? '')
     maxOutputTokensText.value = String(profile.maxOutputTokens ?? '')
-    stepCountText.value = String(profile.tools?.maxStepCount ?? '')
     memoryMode.value = profile.memoryMode ?? 'auto'
     temperatureError.value = false
     maxOutputTokensError.value = false
-    stepCountError.value = false
   }
 
   /** Fills profile fields once; a failed instruction read can be retried. */
@@ -191,7 +178,6 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
       isSettled(pickedSaves.status.value) &&
       !temperatureError.value &&
       !maxOutputTokensError.value &&
-      !stepCountError.value &&
       Boolean(name.value.trim())
     )
       fillFields(profile)
@@ -225,12 +211,6 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     maxOutputTokensText.value = value
     maxOutputTokensError.value = !parseModelTokenCount(value).isValid
     if (!maxOutputTokensError.value) profileAutosave.schedule()
-  }
-
-  const changeStepCount = (value: string) => {
-    stepCountText.value = value
-    stepCountError.value = !parseToolStepCount(value).isValid
-    if (!stepCountError.value) profileAutosave.schedule()
   }
 
   const changeSoul = () => {
@@ -288,10 +268,8 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     name,
     temperatureText,
     maxOutputTokensText,
-    stepCountText,
     temperatureError,
     maxOutputTokensError,
-    stepCountError,
     memoryMode,
     soulPrompt,
     isSoulLoaded,
@@ -306,7 +284,6 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     changeName,
     changeTemperature,
     changeMaxOutputTokens,
-    changeStepCount,
     changeMemoryMode,
     changeSoul,
     changeSettings,

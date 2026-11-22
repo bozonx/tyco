@@ -136,6 +136,7 @@ function setup(
   const tool = createAiCommandOperation({
     stream: model.stream,
     instructions: () => 'App instructions',
+    defaultMaxSteps: () => 8,
     commands: () => commands,
     commandInputSchema: (command) =>
       command.operationId === 'gone' ? undefined : TEXT_INPUT_SCHEMA,
@@ -209,6 +210,18 @@ describe('createAiCommandOperation', () => {
     expect(calls[0]).toMatchObject({ offered: ['one', 'two'], maxSteps: 5 })
     expect(ran).toEqual([{ id: 'two', input: { text: 'for two' } }])
     expect(onProgress).toHaveBeenCalledWith('TWO')
+  })
+
+  it('takes the step limit of the LLM settings when it has none of its own', async () => {
+    const command: CommandConfig = {
+      ...aiCommand('a', ['one']),
+      operationConfig: { prompt: 'Prompt of a', allowedCommandIds: ['one'] },
+    }
+    const { run, calls } = setup([command, script('one')], {
+      'Prompt of a': [{ call: 'one' }, 'Done'],
+    })
+    await run(command, 'the text')
+    expect(calls[0]).toMatchObject({ offered: ['one'], maxSteps: 9 })
   })
 
   it('offers no tools when isToolsEnabled is false', async () => {
@@ -327,6 +340,7 @@ describe('createAiCommandOperation', () => {
         throw new Error('Rate limit')
       },
       instructions: () => '',
+      defaultMaxSteps: () => 8,
       commands: () => [],
       commandInputSchema: () => undefined,
       runCommand: async () => ({ ok: true }),
@@ -370,6 +384,7 @@ describe('createAiCommandOperation', () => {
           yield { type: 'text-delta', text: 'done' }
         } as never,
         instructions: () => '',
+        defaultMaxSteps: () => 8,
         commands: () => [],
         commandInputSchema: () => undefined,
         runCommand: async () => ({ ok: true }),
