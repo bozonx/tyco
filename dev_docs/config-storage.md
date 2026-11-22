@@ -180,8 +180,7 @@ menu to pick from; one transformation, style or language is an item of the
 An AI command is a command of the `core.aiTask` operation. Its `operationConfig` holds
 `prompt`, `allowedCommandIds` (the commands its agent may run; the command
 itself never runs) and an optional `maxSteps` (1–50; `llm.maxToolSteps` when
-absent), see
-`dev_docs/design-ai-commands.md`.
+absent).
 
 A command may name the `platforms` it runs on (`linux`, `windows`; absent or
 empty for every one). On another platform it stays in the config and in the

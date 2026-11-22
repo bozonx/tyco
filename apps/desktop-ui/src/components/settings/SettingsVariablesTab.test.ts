@@ -35,11 +35,12 @@ describe('SettingsVariablesTab.vue', () => {
 
   const mountTab = (
     variables: Array<{ id: string; name: string }> = [],
-    commands: Partial<UserConfig>['commands'] = []
+    commands: Partial<UserConfig>['commands'] = [],
+    variableValues: Record<string, string> = {}
   ) => {
     const context = createTestSettingsContext({
       variables,
-      variableValues: {},
+      variableValues,
       ...(commands.length ? { commands } : {}),
     })
     return {
@@ -157,13 +158,48 @@ describe('SettingsVariablesTab.vue', () => {
     expect(context.draft.value.variables).toHaveLength(2)
   })
 
-  it('allows removing a variable', async () => {
+  it('removes an empty variable immediately without confirmation', async () => {
+    const { wrapper, context } = mountTab([{ id: 'v1', name: 'VAR' }])
+    const removeBtn = wrapper.find(
+      '[data-testid="variable-v1"] .variable-card-header button'
+    )
+    await removeBtn.trigger('click')
+
+    expect(context.draft.value.variables).toHaveLength(0)
+    expect(wrapper.find('.confirm-stub').exists()).toBe(false)
+  })
+
+  it('asks for confirmation before removing a variable when a field is set', async () => {
     const { wrapper, context } = mountTab([{ id: 'v1', name: 'CUSTOM_VAR' }])
     const removeBtn = wrapper.find(
       '[data-testid="variable-v1"] .variable-card-header button'
     )
     await removeBtn.trigger('click')
 
+    expect(context.draft.value.variables).toHaveLength(1)
+    expect(wrapper.find('.confirm-stub').exists()).toBe(true)
+    expect(wrapper.find('.confirm-stub').text()).toContain('CUSTOM_VAR')
+
+    await wrapper.find('.confirm-yes').trigger('click')
+    expect(context.draft.value.variables).toHaveLength(0)
+  })
+
+  it('asks for confirmation before removing an unused variable with a value', async () => {
+    const { wrapper, context } = mountTab(
+      [{ id: 'v1', name: 'VAR' }],
+      [],
+      { v1: 'https://example.com' }
+    )
+    const removeBtn = wrapper.find(
+      '[data-testid="variable-v1"] .variable-card-header button'
+    )
+    await removeBtn.trigger('click')
+
+    expect(context.draft.value.variables).toHaveLength(1)
+    expect(wrapper.find('.confirm-stub').exists()).toBe(true)
+    expect(wrapper.find('.confirm-stub').text()).toContain('VAR')
+
+    await wrapper.find('.confirm-yes').trigger('click')
     expect(context.draft.value.variables).toHaveLength(0)
   })
 

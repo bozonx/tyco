@@ -220,7 +220,6 @@
             ><InfoTooltip :text="t('commands.descriptionInfo')"
           /></template>
         </FieldRow>
-        <p v-if="origin" class="command-hint command-origin">{{ origin }}</p>
       </div>
     </section>
   </div>
@@ -358,15 +357,6 @@ const afterRunOptions = computed(() => [
   { id: 'copyToClipboard', name: t('commands.afterRunCopy') },
   { id: 'none', name: t('settings.actionAfterRunNone') },
 ])
-
-/** Which tool the command runs */
-const origin = computed(() =>
-  t('commands.typeInfo', {
-    type: tool.value
-      ? operationLabel(tool.value, t)
-      : props.command.operationId,
-  })
-)
 
 /** Shown open when one of its settings is set, so it is not missed */
 const isTestOpen = ref(false)
@@ -514,11 +504,6 @@ async function openLog() {
 .command-hint {
   font-size: var(--text-caption);
   color: var(--app-text-muted);
-}
-
-.command-origin {
-  margin: 0;
-  text-align: right;
 }
 
 .command-warning {

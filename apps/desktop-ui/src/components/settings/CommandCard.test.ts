@@ -93,4 +93,11 @@ describe('CommandCard.vue', () => {
     )
     expect(triggers.find('[title="commands.badgeAi"]').exists()).toBe(true)
   })
+
+  it('passes the command type as the header icon tooltip', () => {
+    const wrapper = mountCard({ operationId: 'script' })
+    const disclosureIcon = wrapper.find('.disclosure-icon')
+    expect(disclosureIcon.exists()).toBe(true)
+    expect(disclosureIcon.attributes('title')).toBe('Script')
+  })
 })

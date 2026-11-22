@@ -125,12 +125,6 @@ function openVault() {
 const menuItems = computed<DropdownMenuItem[]>(() => {
   const vault = props.vault
   const items: DropdownMenuItem[] = []
-  if (vault.status === 'connected')
-    items.push({
-      label: t('settings.aiVaults.open'),
-      icon: 'mdi:folder-open-outline',
-      action: openVault,
-    })
   if (vault.isMain) return items
   if (vault.status === 'connected')
     items.push({

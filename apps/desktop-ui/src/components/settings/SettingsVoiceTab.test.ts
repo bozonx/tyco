@@ -133,13 +133,11 @@ describe('SettingsVoiceTab.vue', () => {
     const wrapper = mountTab(config)
 
     const sections = wrapper.findAll('.section-stub')
+    expect(sections).toHaveLength(2)
     expect(sections[0].attributes('data-title')).toBe('settings.sttTab')
     expect(sections[0].attributes('data-info')).toBe('settings.sttTabInfo')
     expect(sections[1].attributes('data-title')).toBe(
       'settings.sttDictationSection'
-    )
-    expect(sections[2].attributes('data-title')).toBe(
-      'settings.sttListenSection'
     )
 
     const labels = wrapper

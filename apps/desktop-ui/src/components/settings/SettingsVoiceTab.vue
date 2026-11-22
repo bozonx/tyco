@@ -93,15 +93,6 @@
               :options="microphoneOptions"
               @update:model-value="setMicrophoneId"
             />
-            <IconButton
-              size="sm"
-              variant="ghost"
-              icon="mdi:refresh"
-              :disabled="isLoadingDevices"
-              :label="t('settings.refreshMicrophones')"
-              :title="t('settings.refreshMicrophones')"
-              @click="void refreshInputDevices()"
-            />
             <Button
               size="sm"
               :variant="isTestingMic ? 'primary' : 'ghost'"
@@ -175,17 +166,6 @@
         <FieldSwitch v-model="userConfig.stt.isStylingBarDirectInsertEnabled" />
       </FieldRow>
     </SettingsSection>
-
-    <SettingsSection
-      :title="t('settings.sttListenSection')"
-      :info="t('settings.sttListenSectionInfo')"
-    >
-      <FieldRow :label="t('settings.listenHotkeyLabel')" :separator="false">
-        <InlineAction @click="navigate('global-actions#hotkey-listen')">
-          {{ t('settings.configureInHotkeys') }}
-        </InlineAction>
-      </FieldRow>
-    </SettingsSection>
   </div>
 </template>
 <script setup lang="ts">
@@ -221,8 +201,6 @@ import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
-import IconButton from '../common/IconButton.vue'
-import InlineAction from '../common/InlineAction.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsTaskModel from './SettingsTaskModel.vue'
@@ -234,7 +212,7 @@ import {
   type VoiceCorrectionMode,
 } from '@tyco/shared'
 
-const { draft: userConfig, navigate } = useSettingsContext()
+const { draft: userConfig } = useSettingsContext()
 const { t } = useI18n()
 const secretsStore = useSecretsStore()
 const { toastError } = useToast()

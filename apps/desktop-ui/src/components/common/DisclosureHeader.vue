@@ -7,14 +7,17 @@
     :aria-controls="expanded ? controls : undefined"
     @click="emit('toggle')"
   >
-    <AppIcon
+    <span
       v-if="icon"
-      :icon="icon"
-      :size="iconSize"
-      class="shrink-0"
+      class="disclosure-icon shrink-0"
       :title="iconTitle"
-      aria-hidden="true"
-    />
+    >
+      <AppIcon
+        :icon="icon"
+        :size="iconSize"
+        aria-hidden="true"
+      />
+    </span>
     <span class="disclosure-copy"
       ><slot
         ><span class="disclosure-title">{{ title }}</span></slot
@@ -68,6 +71,11 @@ const emit = defineEmits<{ toggle: [] }>()
 }
 .disclosure-header:hover {
   background: var(--disclosure-hover-background, var(--app-surface-sunken));
+}
+.disclosure-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .disclosure-copy {
   display: flex;

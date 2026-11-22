@@ -35,11 +35,13 @@
       />
       <IconButton
         v-if="view.isActive"
+        size="sm"
         icon="mdi:stop"
         :label="view.stopLabel"
         @click="requestAction('stop')"
       />
       <IconButton
+        size="sm"
         icon="mdi:arrow-expand"
         :label="view.expandLabel"
         @click="requestAction('expand')"
@@ -179,7 +181,7 @@ body.subtitles-body {
   align-items: center;
   gap: var(--space-sm);
   height: 100dvh;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-xs) var(--space-md);
   border: 1px solid var(--app-border-subtle);
   border-radius: var(--radius-lg);
   background-color: color-mix(
@@ -202,19 +204,19 @@ body.subtitles-body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 0.125rem;
   max-height: 100%;
   overflow: hidden;
 }
 
 .subtitles-main {
-  font-size: 1.375rem;
+  font-size: 1.125rem;
   font-weight: 500;
-  line-height: 1.3;
+  line-height: 1.25;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -234,19 +236,21 @@ body.subtitles-body {
 .subtitles-secondary {
   font-size: var(--text-small, 0.8125rem);
   color: var(--app-text-muted);
+  line-height: 1.2;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .subtitles-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--space-xs);
   cursor: default;
+  flex-shrink: 0;
 }
 
 .subtitles-recording {

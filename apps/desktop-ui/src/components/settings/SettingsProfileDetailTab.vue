@@ -73,7 +73,6 @@
             @open="handleOpenFolder"
           />
         </FieldRow>
-
       </SettingsSection>
 
       <SettingsProfileToolsSection
@@ -284,7 +283,6 @@ async function handleCreate() {
 // ---------------------------------------------------------------------------
 // Advanced settings toggle
 // ---------------------------------------------------------------------------
-
 
 // ---------------------------------------------------------------------------
 // Settings: typed ones are stored a moment after they change, picked ones

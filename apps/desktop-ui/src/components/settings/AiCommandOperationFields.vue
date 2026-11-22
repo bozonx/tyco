@@ -51,7 +51,6 @@
       </p>
     </FieldRow>
     <FieldRow
-      v-if="config.allowedCommandIds.length"
       :label="t('commands.aiMaxSteps')"
       :info="t('commands.aiMaxStepsInfo')"
     >
@@ -83,10 +82,10 @@ import FieldSwitch from '../common/FieldSwitch.vue'
 import VariableInsertMenu from './VariableInsertMenu.vue'
 import VariableReferenceHints from './VariableReferenceHints.vue'
 import {
-  MAX_TOOL_STEPS,
-  maxToolStepsOf,
   type CommandConfig,
+  MAX_TOOL_STEPS,
   type UserConfig,
+  maxToolStepsOf,
 } from '@tyco/shared'
 
 const props = defineProps<{

@@ -7,9 +7,6 @@ import {
   WEB_TOOL_GROUP_ID,
 } from '@tyco/shared'
 
-
-
-
 /** A group of tools a profile switches on as a whole */
 export interface ChatToolGroup {
   id: string

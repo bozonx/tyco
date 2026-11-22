@@ -79,10 +79,14 @@
           danger
           :title="t('variables.removeConfirmTitle')"
           :message="
-            t('variables.removeConfirmMessage', {
-              name: pendingRemoval?.name ?? '',
-              count: pendingRemoval?.usageCount ?? 0,
-            })
+            pendingRemoval?.usageCount
+              ? t('variables.removeConfirmMessage', {
+                  name: pendingRemoval.name,
+                  count: pendingRemoval.usageCount,
+                })
+              : t('variables.removeConfirmPrompt', {
+                  name: pendingRemoval?.name ?? '',
+                })
           "
           :confirm-text="t('variables.remove')"
           @confirm="confirmRemove"
@@ -346,12 +350,22 @@ function usageCountOf(name: string): number {
   )
 }
 
-/** Removes at once a variable nothing uses; asks first otherwise */
+function isVariableEmpty(id: string): boolean {
+  const variable = draft.value.variables.find((item) => item.id === id)
+  if (!variable) return true
+  const value = draft.value.variableValues[id]?.trim() ?? ''
+  if (value.length > 0) return false
+  const name = (nameDrafts[id] ?? variable.name).trim()
+  if (name.length > 0 && !/^VAR(_\d+)?$/i.test(name)) return false
+  return true
+}
+
+/** Removes an empty and unused variable at once; asks first when any field is set or it is used */
 function requestRemove(id: string) {
   const variable = draft.value.variables.find((item) => item.id === id)
   if (!variable) return
   const usageCount = usageCountOf(variable.name)
-  if (!usageCount) return remove(id)
+  if (!usageCount && isVariableEmpty(id)) return remove(id)
   pendingRemoval.value = { id, name: variable.name, usageCount }
 }
 

@@ -106,8 +106,13 @@ export const DEFAULT_MAX_TOOL_STEPS = 8
 /** The most model steps one answer may take */
 export const MAX_TOOL_STEPS = 50
 
-/** The step limit of `llm.maxToolSteps`, or the default when it is unset or out of range */
-export function maxToolStepsOf(llm: Pick<LlmConfig, 'maxToolSteps'> | undefined): number {
+/**
+ * The step limit of `llm.maxToolSteps`, or the default when it is unset or out
+ * of range
+ */
+export function maxToolStepsOf(
+  llm: Pick<LlmConfig, 'maxToolSteps'> | undefined
+): number {
   const steps = llm?.maxToolSteps
   return typeof steps === 'number' &&
     Number.isInteger(steps) &&

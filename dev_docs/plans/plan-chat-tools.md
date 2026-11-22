@@ -55,7 +55,7 @@ computer use (отложен).
   (`chat-tools-session.ts`), сборка для десктопа (`desktop-chat-tools.ts`).
 - Бюджет контекста учитывает части; старые результаты сжимаются первыми;
   `toolOutputBudgetCharacters` делится между вызовами хода (не меньше 2 000).
-- `AiProfile.tools`: группы, доступ, лимит шагов (8). UI: `ChatToolCall.vue`,
+- `AiProfile.tools`: группы и доступ; лимит шагов общий — `llm.maxToolSteps` (8). UI: `ChatToolCall.vue`,
   `ChatToolApproval.vue`, `ChatToolChange.vue` (diff), «Стоп» через `AbortSignal`.
 - Отладочный `get_current_time` при `VITE_DEBUG_CHAT_TOOLS=true`.
 - `propose_replies` (группа `replyBlocks`, всегда `allow`, во всех чатах).

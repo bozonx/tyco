@@ -119,8 +119,8 @@ export interface AiCommandOperationConfig {
   /** The commands the agent may run; never the command itself */
   allowedCommandIds: string[]
   /**
-   * Maximum command calls per run, 1 to `MAX_TOOL_STEPS`; the final answer
-   * does not consume a call. `llm.maxToolSteps` when unset
+   * Maximum command calls per run, 1 to `MAX_TOOL_STEPS`; the final answer does
+   * not consume a call. `llm.maxToolSteps` when unset
    */
   maxSteps?: number
   /**
