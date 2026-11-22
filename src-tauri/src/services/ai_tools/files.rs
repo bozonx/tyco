@@ -185,6 +185,16 @@ pub enum AiFileToolRequest {
 
 impl AiFileToolRequest {
     /// The name the model calls the tool by.
+    /// Whether the call only reads the conversation's attachments.
+    pub fn reads_attachments(&self) -> bool {
+        match self {
+            Self::ListDir { path, .. }
+            | Self::ReadFile { path, .. }
+            | Self::SearchFiles { path, .. } => attachment_part_of(path),
+            _ => false,
+        }
+    }
+
     pub fn tool_name(&self) -> &'static str {
         match self {
             Self::ListDir { .. } => "list_files",
@@ -434,8 +444,13 @@ impl ConversationFiles<'_> {
 
 impl ConversationFiles<'_> {
     /// Refuses a tool the profile has turned off; without a profile the
-    /// roots alone decide.
+    /// roots alone decide. Reading the conversation's attachments is the
+    /// always-on `attachments` source, which a file tool switched off in the
+    /// profile does not take away.
     pub(super) fn ensure_tool_allowed(&self, request: &AiFileToolRequest) -> Result<(), AppError> {
+        if request.reads_attachments() {
+            return Ok(());
+        }
         match &self.profile {
             Some(profile) => permissions::ensure_file_tool_allowed(profile, request.tool_name()),
             None => Ok(()),

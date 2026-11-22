@@ -6,6 +6,7 @@ import {
   type ChatAttachment,
   type ChatImage,
   type ChatMessage,
+  type ChatToolPermissions,
 } from '@tyco/shared'
 
 import { conversationAttachedFiles } from '../chat/chat-attached-files'
@@ -575,6 +576,10 @@ export function createQuickAiRequestModel(
             : ''),
         lastMessageAt: Date.now(),
         messages: [...messages.value],
+        // the main chat keeps what was allowed "in this chat"
+        ...(currentChatParams.value.toolPermissions
+          ? { toolPermissions: currentChatParams.value.toolPermissions }
+          : {}),
       },
       question: draft,
       profileId: pId,
@@ -621,6 +626,10 @@ export function createQuickAiRequestModel(
     setModelId,
     stopGeneration,
     answerToolApproval,
+    /** Keeps the permissions "in this chat" with the conversation */
+    setToolPermissions: (toolPermissions: ChatToolPermissions) => {
+      currentChatParams.value = { ...currentChatParams.value, toolPermissions }
+    },
     submitPrompt,
     applyReplyBlock,
     switchToChat,

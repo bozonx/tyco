@@ -158,7 +158,8 @@
     "takeScreenshot": "Zrób zrzut ekranu",
     "toolAllowBatch": "Zezwól na wszystkie ({count})",
     "toolAllowAlways": "Zawsze zezwalaj",
-    "toolAllowAlwaysWriteDelete": "Zawsze zezwalaj na zapis i usuwanie"
+    "toolAllowAlwaysWriteDelete": "Zawsze zezwalaj na zapis i usuwanie",
+    "toolAllowAlwaysDelete": "Zawsze zezwalaj na usuwanie"
   },
   "chatTools": {
     "files": {
@@ -1083,7 +1084,7 @@
     "maxToolStepsHint": "Ile razy model może wywołać narzędzia w jednej odpowiedzi – we wszystkich czatach, szybkich zapytaniach i poleceniach AI. Limit chroni przed zapętleniem i zbędnymi kosztami.",
     "maxToolStepsInvalid": "Wpisz liczbę całkowitą od 1 do 50",
     "profileTools": "Narzędzia",
-    "profileToolsHint": "Z czego może korzystać agent profilu. Odczyt działa swobodnie, zmiany najpierw pytają; ustaw każde narzędzie na Wył., Pytaj lub Zezwalaj. Pamięć i obszar roboczy profilu nigdy nie pytają.",
+    "profileToolsHint": "Czego może używać agent profilu: ustaw każde narzędzie na Wył., Pytaj lub Zezwalaj. Odczyt działa swobodnie, zmiany najpierw pytają. Narzędzia plików podlegają też dostępowi do każdego projektu: Zezwalaj zostawia tu decyzję projektowi. Gdy czat przeczytał już Twoje dane, narzędzie działające na zewnątrz pyta raz na czat, nawet jeśli jest dozwolone. Pamięć i workspace nie pytają; zmiana pamięci pyta po stronie internetowej lub wyniku narzędzia.",
     "profileWebSearchLlmNotice": "Klucz API oraz limity rozmiaru stron są konfigurowane globalnie w ustawieniach LLM.",
     "projectAccessFileToolsOff": "Narzędzia plików są wyłączone",
     "projectChangedElsewhere": "Projekt zmieniono na innym urządzeniu lub poza TyCo. Twoje zmiany nie są jeszcze zapisane.",
@@ -1751,6 +1752,7 @@
     "pluginCapabilities": "Uprawnienia wtyczki: {capabilities}",
     "pluginSourceHint": "Narzędzia, które ta wtyczka udostępnia czatowi. Działają z uprawnieniami wtyczki.",
     "leakQuestion": "Ten czat odczytał Twoje dane, a to wywołanie sięga w nowe miejsce. Pytamy raz na miejsce w tym czacie.",
+    "untrustedQuestion": "Ten czat przeczytał już stronę internetową lub wynik narzędzia, a to wywołanie zmieniłoby pamięć, którą zobaczą wszystkie kolejne czaty.",
     "contextTokens": "≈{count} tokenów",
     "catalogHint": "Skąd pochodzą narzędzia agentów. Wtyczka wyłączona tutaj jest wyłączona we wszystkich profilach i poleceniach AI. Narzędzia wbudowane włącza się w „Zapytaj AI”, w każdym profilu i każdym poleceniu AI.",
     "catalogWhereHint": "Każdy profil wybiera swoje narzędzia i to, jak swobodnie działają, we własnych ustawieniach.",

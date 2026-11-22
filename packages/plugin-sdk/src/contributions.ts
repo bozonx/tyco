@@ -108,6 +108,12 @@ export function validateChatToolContribution(
     throw new Error(
       'A chat tool of a plugin with notes or browser must declare the external risk'
     )
+  // the editor holds text the user did not give to the chat, and its edits
+  // change the user's data
+  if (tool.risk === 'read' && capabilities.includes('editor'))
+    throw new Error(
+      'A chat tool of a plugin with editor must declare at least the write risk'
+    )
   if (typeof tool.run !== 'function') throw new Error('Missing chat tool run')
 }
 

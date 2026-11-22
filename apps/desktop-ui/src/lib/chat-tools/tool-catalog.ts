@@ -277,9 +277,13 @@ export const commandToolRef = (commandId: string): ToolRef => ({
   toolName: commandId,
 })
 
-/** The risks of the core tools a whitelist may name */
+/**
+ * The risks of the core tools a whitelist may name. The web is `external` here:
+ * an AI command reads any page without the chat's leak protection, so a chat
+ * that hands it its data must ask as for a tool that sends data out
+ */
 const CORE_TOOL_RISKS: Readonly<Record<string, ToolRisk>> = {
-  [CORE_SOURCE_IDS.web]: 'read',
+  [CORE_SOURCE_IDS.web]: 'external',
 }
 
 /**

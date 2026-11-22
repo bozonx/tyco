@@ -158,7 +158,8 @@
     "takeScreenshot": "Snimi snimku zaslona",
     "toolAllowBatch": "Dopusti sve ({count})",
     "toolAllowAlways": "Uvijek dopusti",
-    "toolAllowAlwaysWriteDelete": "Uvijek dopusti pisanje i brisanje"
+    "toolAllowAlwaysWriteDelete": "Uvijek dopusti pisanje i brisanje",
+    "toolAllowAlwaysDelete": "Uvijek dopusti brisanje"
   },
   "chatTools": {
     "files": {
@@ -1083,7 +1084,7 @@
     "maxToolStepsHint": "Koliko puta model smije pozvati alate u jednom odgovoru – u svim chatovima, brzim upitima i AI naredbama. Ograničenje štiti od petlji i nepotrebnih troškova.",
     "maxToolStepsInvalid": "Unesite cijeli broj od 1 do 50",
     "profileTools": "Alati",
-    "profileToolsHint": "Što agent profila smije koristiti. Čitanje radi slobodno, promjene prvo pitaju; postavite svaki alat na Isključeno, Pitaj ili Dopusti. Memorija i radni prostor profila nikad ne pitaju.",
+    "profileToolsHint": "Što agent profila smije koristiti: za svaki alat odaberite Isklj., Pitaj ili Dopusti. Čitanje radi slobodno, promjene najprije pitaju. Alati za datoteke slijede i pristup svakom projektu: Dopusti ovdje prepušta odluku projektu. Kad je razgovor već pročitao vaše podatke, alat koji djeluje izvana pita jednom po razgovoru, čak i kad je dopušten. Memorija i workspace ne pitaju; promjena memorije pita nakon web-stranice ili rezultata alata.",
     "profileWebSearchLlmNotice": "API ključ i ograničenja veličine stranice konfiguriraju se globalno u postavkama LLM-a.",
     "projectAccessFileToolsOff": "Alati za datoteke su isključeni",
     "projectChangedElsewhere": "Projekt je promijenjen na drugom uređaju ili izvan TyCo-a. Vaše promjene još nisu spremljene.",
@@ -1751,6 +1752,7 @@
     "pluginCapabilities": "Dopuštenja dodatka: {capabilities}",
     "pluginSourceHint": "Alati koje ovaj dodatak nudi razgovoru. Rade s dopuštenjima dodatka.",
     "leakQuestion": "Ovaj je razgovor pročitao vaše podatke, a ovaj bi poziv dosegnuo novo mjesto. Pita se jednom po mjestu u ovom razgovoru.",
+    "untrustedQuestion": "Ovaj je razgovor već pročitao web-stranicu ili rezultat alata, a ovaj bi poziv promijenio memoriju koju vide svi sljedeći razgovori.",
     "contextTokens": "≈{count} tokena",
     "catalogHint": "Odakle dolaze alati agenata. Dodatak isključen ovdje isključen je u svim profilima i AI naredbama. Ugrađeni alati uključuju se u „Pitaj AI”, u svakom profilu i u svakoj AI naredbi.",
     "catalogWhereHint": "Svaki profil u svojim postavkama bira alate i koliko slobodno rade.",

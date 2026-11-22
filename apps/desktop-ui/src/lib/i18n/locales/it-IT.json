@@ -158,7 +158,8 @@
     "takeScreenshot": "Acquisisci screenshot",
     "toolAllowBatch": "Consenti tutte ({count})",
     "toolAllowAlways": "Consenti sempre",
-    "toolAllowAlwaysWriteDelete": "Consenti sempre scrittura ed eliminazione"
+    "toolAllowAlwaysWriteDelete": "Consenti sempre scrittura ed eliminazione",
+    "toolAllowAlwaysDelete": "Consenti sempre l'eliminazione"
   },
   "chatTools": {
     "files": {
@@ -1083,7 +1084,7 @@
     "maxToolStepsHint": "Quante volte il modello può chiamare strumenti in una risposta, in tutte le chat, richieste rapide e comandi IA. Il limite evita cicli e costi inutili.",
     "maxToolStepsInvalid": "Inserisci un numero intero da 1 a 50",
     "profileTools": "Strumenti",
-    "profileToolsHint": "Cosa può usare l'agente del profilo. La lettura è libera, le modifiche chiedono prima; imposta ogni strumento su Disattivato, Chiedi o Consenti. Memoria e area di lavoro del profilo non chiedono mai.",
+    "profileToolsHint": "Cosa può usare l'agente del profilo: imposta ogni strumento su Disattivato, Chiedi o Consenti. La lettura è libera, le modifiche chiedono prima. Gli strumenti dei file seguono anche l'accesso a ogni progetto: Consenti qui lascia la decisione al progetto. Quando una chat ha già letto i tuoi dati, uno strumento che agisce all'esterno chiede una volta per chat, anche se consentito. La memoria e il workspace non chiedono; una modifica della memoria chiede dopo una pagina web o il risultato di uno strumento.",
     "profileWebSearchLlmNotice": "La chiave API e i limiti di dimensione della pagina sono configurati globalmente nelle impostazioni LLM.",
     "projectAccessFileToolsOff": "Strumenti file disattivati",
     "projectChangedElsewhere": "Il progetto è stato modificato su un altro dispositivo o fuori da TyCo. Le tue modifiche non sono ancora salvate.",
@@ -1751,6 +1752,7 @@
     "pluginCapabilities": "Permessi del plugin: {capabilities}",
     "pluginSourceHint": "Strumenti che questo plugin offre alla chat. Funzionano con i permessi del plugin.",
     "leakQuestion": "Questa chat ha letto i tuoi dati e questa chiamata raggiungerebbe un nuovo luogo. Si chiede una volta per luogo in questa chat.",
+    "untrustedQuestion": "Questa chat ha letto una pagina web o il risultato di uno strumento, e questa chiamata modificherebbe la memoria che vedranno tutte le chat successive.",
     "contextTokens": "≈{count} token",
     "catalogHint": "Da dove vengono gli strumenti degli agenti. Un plugin disattivato qui è disattivato per tutti i profili e i comandi IA. Gli strumenti integrati si attivano in «Chiedi all'IA», in ogni profilo e in ogni comando IA.",
     "catalogWhereHint": "Ogni profilo sceglie i propri strumenti e con quanta libertà funzionano nelle proprie impostazioni.",

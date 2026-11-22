@@ -81,10 +81,10 @@ describe('chat-tool-approvals', () => {
       { ...request('a2'), approvalKey: 'k2', leakTarget: 'host:x' },
       signal
     )
+    // allowing a leak target once allows it for the chat
     approvals.answer('a1', 'allow-once')
     expect(await a).toBe('allow-once')
-    expect(approvals.isPending('a2')).toBe(true)
-    approvals.answer('a2', 'allow-session')
-    expect(await b).toBe('allow-session')
+    expect(approvals.isPending('a2')).toBe(false)
+    expect(await b).toBe('allow-once')
   })
 })

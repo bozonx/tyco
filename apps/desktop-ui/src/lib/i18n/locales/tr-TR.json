@@ -158,7 +158,8 @@
     "takeScreenshot": "Ekran görüntüsü al",
     "toolAllowBatch": "Tümüne izin ver ({count})",
     "toolAllowAlways": "Her zaman izin ver",
-    "toolAllowAlwaysWriteDelete": "Yazma ve silmeye her zaman izin ver"
+    "toolAllowAlwaysWriteDelete": "Yazma ve silmeye her zaman izin ver",
+    "toolAllowAlwaysDelete": "Silmeye her zaman izin ver"
   },
   "chatTools": {
     "files": {
@@ -1083,7 +1084,7 @@
     "maxToolStepsHint": "Modelin tek bir yanıtta araçları kaç kez çağırabileceği; tüm sohbetlerde, hızlı isteklerde ve yapay zekâ komutlarında geçerlidir. Sınır döngülere ve gereksiz maliyetlere karşı korur.",
     "maxToolStepsInvalid": "1 ile 50 arasında bir tam sayı girin",
     "profileTools": "Araçlar",
-    "profileToolsHint": "Profil ajanının kullanabilecekleri. Okuma serbestçe çalışır, değişiklikler önce sorar; her aracı Kapalı, Sor veya İzin ver olarak ayarlayın. Bellek ve profilin çalışma alanı asla sormaz.",
+    "profileToolsHint": "Profil ajanının kullanabilecekleri: her araç için Kapalı, Sor veya İzin ver seçin. Okuma serbestçe çalışır, değişiklikler önce sorar. Dosya araçları her projenin erişimine de uyar: burada İzin ver, kararı projeye bırakır. Bir sohbet verilerinizi okuduktan sonra dışarıda iş yapan bir araç, izinli olsa bile sohbet başına bir kez sorar. Bellek ve workspace sormaz; bir web sayfası veya araç çıktısından sonra bellek değişikliği sorar.",
     "profileWebSearchLlmNotice": "API anahtarı ve sayfa boyutu sınırları, LLM ayarlarında genel olarak yapılandırılır.",
     "projectAccessFileToolsOff": "Dosya araçları kapalı",
     "projectChangedElsewhere": "Proje başka bir cihazda veya TyCo dışında değiştirildi. Değişiklikleriniz henüz kaydedilmedi.",
@@ -1747,6 +1748,7 @@
     "pluginCapabilities": "Eklenti izinleri: {capabilities}",
     "pluginSourceHint": "Bu eklentinin sohbete sunduğu araçlar. Eklentinin izinleriyle çalışır.",
     "leakQuestion": "Bu sohbet verilerinizi okudu ve bu çağrı yeni bir yere ulaşacak. Bu sohbette her yer için bir kez sorulur.",
+    "untrustedQuestion": "Bu sohbet bir web sayfasını veya bir aracın çıktısını okudu ve bu çağrı, sonraki tüm sohbetlerin gördüğü belleği değiştirecek.",
     "contextTokens": "≈{count} token",
     "catalogHint": "Ajanların araçlarının nereden geldiği. Burada kapatılan bir eklenti tüm profillerde ve yapay zekâ komutlarında kapalıdır. Yerleşik araçlar “Yapay zekâya sor”da, her profilde ve her yapay zekâ komutunda açılır.",
     "catalogWhereHint": "Her profil kendi ayarlarında araçlarını ve ne kadar serbest çalışacaklarını seçer.",

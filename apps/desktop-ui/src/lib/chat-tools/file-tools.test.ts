@@ -163,6 +163,10 @@ describe('file-tools', () => {
     expect(
       access('move_path', { from: 'workspace/a', to: 'projects/book/a' })
     ).toBe('ask')
+    // moving a file away deletes it where it was, even where writing is free
+    expect(
+      access('move_path', { from: 'projects/site/a', to: 'workspace/a' })
+    ).toBe('ask')
     // left for Rust to refuse with a reason
     expect(access('read_file', { path: 'nowhere/a.md' })).toBe('allow')
     // deleting follows its own permission
@@ -200,6 +204,9 @@ describe('file-tools', () => {
     expect(
       target('move_path', { from: 'projects/book/a', to: 'projects/site/a' })
     ).toBeUndefined()
+    expect(
+      target('move_path', { from: 'projects/site/a', to: 'projects/site/b' })
+    ).toEqual({ kind: 'project', projectId: 'site', operations: ['delete'] })
   })
 
   it('asks for a file tool the profile set to ask', async () => {
@@ -219,6 +226,38 @@ describe('file-tools', () => {
       'user-approval'
     )
     expect(decide('list_files', { path: 'workspace' })).toBe('approved')
+    // "always allow" raises the tool's policy, not only the project's
+    expect(
+      set!.approvalInfo('read_file', { path: 'workspace/a.md' }).alwaysAllow
+    ).toEqual([
+      {
+        kind: 'tool',
+        source: { kind: 'core', id: 'files' },
+        toolName: 'read_file',
+      },
+    ])
+  })
+
+  it('raises the tool and the project when both ask', async () => {
+    const { provider } = setup()
+    const registry = createChatToolRegistry({
+      providers: () => [provider],
+      policy: createChatToolPolicy({ canAsk: true }),
+    })
+    const set = await registry.resolve(
+      context(toolSettings({ tools: { 'core:files:write_file': 'ask' } }))
+    )
+    expect(
+      set!.approvalInfo('write_file', { path: 'projects/book/a.md' })
+        .alwaysAllow
+    ).toEqual([
+      {
+        kind: 'tool',
+        source: { kind: 'core', id: 'files' },
+        toolName: 'write_file',
+      },
+      { kind: 'project', projectId: 'book', operations: ['write'] },
+    ])
   })
 
   it('remembers "allow in this session" per root', async () => {

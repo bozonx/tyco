@@ -56,7 +56,7 @@ impl ConversationFiles<'_> {
     }
 
     pub(super) fn move_path(&self, from: &str, to: &str) -> Result<AiFileToolOutput, AppError> {
-        let source = self.resolve(from, Access::Write, false)?;
+        let source = self.resolve(from, Access::Delete, false)?;
         let destination = self.resolve(to, Access::Write, false)?;
         if source.is_root() || destination.is_root() {
             return Err(AppError::invalid_input("A root folder cannot be moved"));

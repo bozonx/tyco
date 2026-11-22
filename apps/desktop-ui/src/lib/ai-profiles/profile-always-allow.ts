@@ -35,3 +35,22 @@ export function alwaysAllowedProfilePatch(
     },
   }
 }
+
+/**
+ * What "always allow" of a call changes in the profile, all its targets at
+ * once; undefined when none of them changes anything
+ */
+export function alwaysAllowedProfilePatchOf(
+  profile: Pick<AiProfile, 'tools' | 'projectPermissions'>,
+  targets: readonly ChatToolAlwaysAllowTarget[]
+): Partial<Pick<AiProfile, 'tools' | 'projectPermissions'>> | undefined {
+  let current = profile
+  let patch: Partial<Pick<AiProfile, 'tools' | 'projectPermissions'>> = {}
+  for (const target of targets) {
+    const next = alwaysAllowedProfilePatch(current, target)
+    if (!next) continue
+    patch = { ...patch, ...next }
+    current = { ...current, ...next }
+  }
+  return Object.keys(patch).length ? patch : undefined
+}

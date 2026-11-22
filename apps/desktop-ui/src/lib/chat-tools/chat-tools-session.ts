@@ -22,7 +22,7 @@ export interface ChatToolsSessionDependencies {
    * Writes "always allow" into the profile; the call runs once it is saved,
    * since Rust reads the profile for every call
    */
-  alwaysAllow?: (target: ChatToolAlwaysAllowTarget) => Promise<void>
+  alwaysAllow?: (targets: readonly ChatToolAlwaysAllowTarget[]) => Promise<void>
   /** Told when the permissions "in this chat" change, to keep them with it */
   onPermissionsChange?: (state: ChatToolPermissionsState) => void
   warn?: (message: string) => void
@@ -45,6 +45,17 @@ export interface ChatToolsRequest {
   attachedFiles?: readonly AiAttachedFile[]
   /** What the user wrote: the URLs it names may be read without asking */
   conversationText?: string
+  /**
+   * The tool results already in the conversation, e.g. of a chat reopened from
+   * the history: what they brought in counts as in a call of this turn
+   */
+  previousToolResults?: readonly ChatToolResultRecord[]
+}
+
+/** A tool result the conversation holds */
+export interface ChatToolResultRecord {
+  toolName: string
+  output: string
 }
 
 /**
@@ -87,6 +98,12 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
       attachedFiles: request.attachedFiles,
     })
     if (!tools) return undefined
+    for (const result of request.previousToolResults ?? []) {
+      const tool = tools.definitions.get(result.toolName)
+      if (tool?.readsPersonalData) policy.notePersonalData()
+      if (tool?.givesUntrustedContent) policy.noteUntrustedContent()
+      if (tool?.givesKnownUrls) policy.noteKnownText(result.output)
+    }
     return {
       tools,
       maxStepCount: deps.getMaxStepCount(),
@@ -112,17 +129,22 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
     }
   }
 
-  /** Saves "always allow"; a failure still lets the call run this once */
+  /**
+   * Saves "always allow". The call is then allowed for the chat too: the turn
+   * keeps the policies it started with, and the call must not ask again in it,
+   * nor about its leak target later. A failure still lets the call run once
+   */
   const persistAlwaysAllow = async (
-    target: ChatToolAlwaysAllowTarget | undefined
+    targets: readonly ChatToolAlwaysAllowTarget[] | undefined
   ): Promise<ChatToolDecision> => {
-    if (!target || !deps.alwaysAllow) return 'allow-once'
+    if (!targets?.length || !deps.alwaysAllow) return 'allow-once'
     try {
-      await deps.alwaysAllow(target)
+      await deps.alwaysAllow(targets)
     } catch (error) {
       deps.warn?.(`Could not save the permission: ${String(error)}`)
+      return 'allow-once'
     }
-    return 'allow-once'
+    return 'allow-session'
   }
 
   /**

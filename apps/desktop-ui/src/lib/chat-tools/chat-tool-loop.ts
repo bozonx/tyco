@@ -314,7 +314,10 @@ export async function runChatToolLoop(
       const isApproved = deps.policy.answer(
         request.approvalKey,
         decisions[index]!,
-        request.leakTarget
+        {
+          leakTarget: request.leakTarget,
+          coveredLeakTarget: request.coveredLeakTarget,
+        }
       )
       setCallState(request.toolCallId, isApproved ? 'pending' : 'denied')
       return toolApprovalResponse({

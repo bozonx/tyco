@@ -150,6 +150,14 @@ describe('validateChatToolContribution', () => {
     expect(() =>
       validateChatToolContribution({ ...tool, risk: 'external' }, ['notes'])
     ).not.toThrow()
-    expect(() => validateChatToolContribution(tool, ['editor'])).not.toThrow()
+  })
+
+  it('makes a plugin with the editor declare at least the write risk', () => {
+    expect(() => validateChatToolContribution(tool, ['editor'])).toThrow(
+      /write/
+    )
+    expect(() =>
+      validateChatToolContribution({ ...tool, risk: 'write' }, ['editor'])
+    ).not.toThrow()
   })
 })

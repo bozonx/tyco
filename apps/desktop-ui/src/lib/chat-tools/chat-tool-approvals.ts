@@ -29,8 +29,8 @@ export function createChatToolApprovals() {
 
   /**
    * Answers a call. Allowing it for the chat or for good answers the calls
-   * waiting with the same key too, as allowing a leak target does for the calls
-   * to that target
+   * waiting with the same key too, as allowing a leak target in any way does
+   * for the calls to that target
    */
   const settle = (approvalId: string, answer: ChatToolAnswer) => {
     if (answer === 'allow-batch') {
@@ -41,7 +41,9 @@ export function createChatToolApprovals() {
     }
     const decision = answer
     const request = settleOne(approvalId, decision)
-    if (!request || decision === 'deny' || decision === 'allow-once') return
+    if (!request || decision === 'deny') return
+    // allowing a leak target once allows it for the chat
+    if (decision === 'allow-once' && !request.leakTarget) return
     for (const other of [...waiting.values()].map((entry) => entry.request)) {
       const isSame = request.leakTarget
         ? other.leakTarget === request.leakTarget

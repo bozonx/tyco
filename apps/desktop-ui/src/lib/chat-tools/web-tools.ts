@@ -208,6 +208,7 @@ export function createWebToolProvider(
           risk: 'read',
           // the pages it found may be read without asking again
           givesKnownUrls: true,
+          givesUntrustedContent: true,
           labelKey: 'chatTools.web.searchLabel',
           icon: 'mdi:search-web',
           description:
@@ -274,6 +275,7 @@ export function createWebToolProvider(
           name: 'web_fetch',
           source: WEB_SOURCE,
           risk: 'read',
+          givesUntrustedContent: true,
           // a URL nobody named could carry the conversation's data out
           leakTarget: (input, isKnownUrl) => {
             const host = hostOf(input)

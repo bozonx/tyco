@@ -91,9 +91,9 @@ export interface ChatToolDefinition {
    */
   accessFor?(input: unknown): ProjectAccessMode | undefined
   /**
-   * What "always allow" of a call raises, when not the tool's policy: the
-   * permission of the project a path is in, say. Undefined when the call cannot
-   * be allowed for good
+   * What "always allow" of a call raises besides the tool's policy, when its
+   * input asks: the permission of the project a path is in, say. Undefined when
+   * the call cannot be allowed for good
    */
   alwaysAllowTarget?(input: unknown): ChatToolAlwaysAllowTarget | undefined
   /**
@@ -110,6 +110,17 @@ export interface ChatToolDefinition {
   readsPersonalData?: boolean
   /** Its output names URLs the model may then read, e.g. search results */
   givesKnownUrls?: boolean
+  /**
+   * Its output is written by somebody else — a web page, a command, a plugin —
+   * and may try to steer the model
+   */
+  givesUntrustedContent?: boolean
+  /**
+   * Its calls change what outlives the chat, e.g. the memory: once the
+   * conversation holds untrusted content they ask, even when allowed, so that a
+   * page cannot plant instructions for the chats to come
+   */
+  asksAfterUntrustedContent?: boolean
   /**
    * What "allow in this session" covers besides the tool, e.g. the project a
    * path is in. The whole tool when absent
@@ -210,8 +221,21 @@ export interface ChatToolApprovalInfo {
    * send it somewhere new; allowing it allows the target for the chat
    */
   leakTarget?: string
-  /** What "always allow" raises; absent when it cannot be offered */
-  alwaysAllow?: ChatToolAlwaysAllowTarget
+  /**
+   * The call would ask about this target once it runs freely: allowing the call
+   * for the chat or for good allows the target too
+   */
+  coveredLeakTarget?: string
+  /**
+   * The call asks only because it would keep something past the chat after the
+   * conversation took in untrusted content
+   */
+  isAfterUntrustedContent?: boolean
+  /**
+   * What "always allow" raises, all of it, so that the call no longer asks;
+   * absent when it cannot be offered
+   */
+  alwaysAllow?: readonly ChatToolAlwaysAllowTarget[]
 }
 
 export interface ChatToolRegistryDependencies {
@@ -293,6 +317,7 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
             if (output.isTruncated) truncatedCallIds.add(toolCallId)
             if (tool.readsPersonalData) deps.policy.notePersonalData()
             if (tool.givesKnownUrls) deps.policy.noteKnownText(output.text)
+            if (tool.givesUntrustedContent) deps.policy.noteUntrustedContent()
             return output.text
           } finally {
             remainingCharacters += limitCharacters - usedCharacters
@@ -307,12 +332,13 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
         definitions.get(toolName)?.approvalScope?.(input)
       )
 
+    /** The policy of the tool where it is offered */
+    const policyOf = (tool: ChatToolDefinition) =>
+      policies.get(tool.name) ?? 'ask'
+
     /** The call's access by the tool's policy and by its input */
     const accessOf = (tool: ChatToolDefinition, input: unknown) =>
-      stricterAccess(
-        policies.get(tool.name) ?? 'ask',
-        tool.accessFor?.(input) ?? 'allow'
-      )
+      stricterAccess(policyOf(tool), tool.accessFor?.(input) ?? 'allow')
 
     /**
      * The target a call asks about because the conversation holds personal
@@ -329,13 +355,54 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
       return target && !deps.policy.isLeakAllowed(target) ? target : undefined
     }
 
+    /**
+     * Whether an allowed call asks since the conversation took in untrusted
+     * content
+     */
+    const asksForUntrustedContent = (
+      tool: ChatToolDefinition,
+      input: unknown
+    ) =>
+      context.scope.kind === 'profile' &&
+      Boolean(tool.asksAfterUntrustedContent) &&
+      deps.policy.hasUntrustedContent() &&
+      !deps.policy.isAllowedForSession(approvalKey(tool.name, input))
+
     const toolApproval: ToolApproval = ({ toolCall }) => {
       const tool = definitions.get(toolCall.toolName)
       if (!tool) return 'denied'
       const access = accessOf(tool, toolCall.input)
-      if (access === 'allow' && leakTargetOf(tool, toolCall.input))
+      if (
+        access === 'allow' &&
+        (leakTargetOf(tool, toolCall.input) ||
+          asksForUntrustedContent(tool, toolCall.input))
+      )
         return 'user-approval'
       return deps.policy.decide(approvalKey(tool.name, toolCall.input), access)
+    }
+
+    /**
+     * What "always allow" raises so that the call no longer asks: the tool's
+     * policy when it asks, and the project when the call's path asks. Nothing
+     * when one of them cannot be raised, e.g. a move between two projects
+     */
+    const alwaysAllowTargetsOf = (
+      tool: ChatToolDefinition,
+      input: unknown
+    ): ChatToolAlwaysAllowTarget[] | undefined => {
+      const targets: ChatToolAlwaysAllowTarget[] = []
+      if (policyOf(tool) !== 'allow')
+        targets.push({
+          kind: 'tool',
+          source: tool.source,
+          toolName: tool.catalogName ?? tool.name,
+        })
+      if ((tool.accessFor?.(input) ?? 'allow') !== 'allow') {
+        const target = tool.alwaysAllowTarget?.(input)
+        if (!target) return undefined
+        targets.push(target)
+      }
+      return targets.length ? targets : undefined
     }
 
     const approvalInfo = (
@@ -350,18 +417,16 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
           source: { kind: 'core', id: '' },
           risk: 'external',
         }
-      const isLeakCheck = accessOf(tool, input) === 'allow'
-      const leakTarget = isLeakCheck ? leakTargetOf(tool, input) : undefined
-      // "always allow" is a profile's, and pointless for a policy already `allow`
+      const isAllowed = accessOf(tool, input) === 'allow'
+      const target = leakTargetOf(tool, input)
+      const leakTarget = isAllowed ? target : undefined
+      const coveredLeakTarget = isAllowed ? undefined : target
+      const isAfterUntrustedContent =
+        isAllowed && !leakTarget && asksForUntrustedContent(tool, input)
+      // "always allow" is a profile's, and pointless for a call already allowed
       const alwaysAllow =
-        context.scope.kind === 'profile' && !leakTarget
-          ? tool.alwaysAllowTarget
-            ? tool.alwaysAllowTarget(input)
-            : {
-                kind: 'tool' as const,
-                source: tool.source,
-                toolName: tool.catalogName ?? tool.name,
-              }
+        context.scope.kind === 'profile' && !isAllowed
+          ? alwaysAllowTargetsOf(tool, input)
           : undefined
       return {
         approvalKey: key,
@@ -370,6 +435,8 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
         ...(tool.capabilities ? { capabilities: tool.capabilities } : {}),
         ...(tool.sourceLabel ? { sourceLabel: tool.sourceLabel } : {}),
         ...(leakTarget ? { leakTarget } : {}),
+        ...(coveredLeakTarget ? { coveredLeakTarget } : {}),
+        ...(isAfterUntrustedContent ? { isAfterUntrustedContent } : {}),
         ...(alwaysAllow ? { alwaysAllow } : {}),
       }
     }

@@ -40,6 +40,7 @@ export function createPluginChatToolProvider(
             risk: tool.risk,
             ...(deps.isBuiltin(tool.pluginId) ? {} : { isThirdParty: true }),
             capabilities: tool.capabilities,
+            givesUntrustedContent: true,
             sourceLabel: deps.pluginLabel?.(tool.pluginId) ?? tool.pluginId,
             labelKey: tool.labelKey,
             description: tool.description,

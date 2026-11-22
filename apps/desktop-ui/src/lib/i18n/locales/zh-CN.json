@@ -158,7 +158,8 @@
     "takeScreenshot": "截取屏幕",
     "toolAllowBatch": "全部允许（{count}）",
     "toolAllowAlways": "始终允许",
-    "toolAllowAlwaysWriteDelete": "始终允许写入和删除"
+    "toolAllowAlwaysWriteDelete": "始终允许写入和删除",
+    "toolAllowAlwaysDelete": "始终允许删除"
   },
   "chatTools": {
     "files": {
@@ -1083,7 +1084,7 @@
     "maxToolStepsHint": "模型在一次回答中可调用工具的次数，适用于所有聊天、快速请求和 AI 命令。该限制可防止循环和不必要的开销。",
     "maxToolStepsInvalid": "请输入 1 到 50 之间的整数",
     "profileTools": "工具",
-    "profileToolsHint": "配置文件的代理可以使用的内容。读取自由进行，更改会先询问；可将每个工具设为关闭、询问或允许。记忆和配置文件的工作区从不询问。",
+    "profileToolsHint": "配置文件的智能体可以使用的内容：将每个工具设为“关闭”“询问”或“允许”。读取自由进行，更改会先询问。文件工具还遵循每个项目的访问权限：此处的“允许”将决定交给项目。一旦聊天读取了你的数据，对外操作的工具即使已允许，每个聊天也会询问一次。记忆和 workspace 不会询问；在读取网页或工具输出之后更改记忆会询问。",
     "profileWebSearchLlmNotice": "API 密钥和页面大小限制在 LLM 设置中进行全局配置。",
     "projectAccessFileToolsOff": "文件工具已关闭",
     "projectChangedElsewhere": "项目已在其他设备上或 TyCo 之外被更改。您的更改尚未保存。",
@@ -1747,6 +1748,7 @@
     "pluginCapabilities": "插件权限：{capabilities}",
     "pluginSourceHint": "此插件为对话提供的工具。它们以插件的权限运行。",
     "leakQuestion": "此对话已读取你的数据，而此调用会访问一个新的地方。在此对话中每个地方只询问一次。",
+    "untrustedQuestion": "此聊天已读取网页或工具的输出，而此调用会更改之后所有聊天都会看到的记忆。",
     "contextTokens": "约 {count} 个 token",
     "catalogHint": "代理工具的来源。在这里关闭的插件会在所有配置文件和 AI 命令中关闭。内置工具在“询问 AI”、各个配置文件和各个 AI 命令中开关。",
     "catalogWhereHint": "每个配置文件在自己的设置中选择工具及其运行方式。",

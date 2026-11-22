@@ -218,7 +218,8 @@ describe('tool catalog', () => {
       )
     expect(riskOf('reader')).toBe('read')
     expect(riskOf('unknown')).toBe('external')
-    expect(riskOf('web')).toBe('read')
+    // the web of an AI command has no leak protection
+    expect(riskOf('web')).toBe('external')
     expect(riskOf('mixed')).toBe('external')
     expect(riskOf('loop')).toBe('read')
     expect(riskOf('empty')).toBe('read')

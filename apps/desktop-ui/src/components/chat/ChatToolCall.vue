@@ -61,7 +61,7 @@
     </div>
     <ChatToolApproval
       v-if="isAwaitingAnswer"
-      :tool-name="call.toolName"
+      :tool-label="label"
       :request="request"
       :batch-count="batchCount ?? 1"
       @decide="emit('decide', $event)"

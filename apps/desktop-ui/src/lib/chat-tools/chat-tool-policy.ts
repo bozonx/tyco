@@ -31,6 +31,14 @@ export interface ChatToolPermissionsState {
   leakAllowed: string[]
 }
 
+/** The leak targets an answer settles besides the call's approval key */
+export interface ChatToolAnswerTargets {
+  /** The target the call asked about */
+  leakTarget?: string
+  /** The target the call would ask about once allowed freely */
+  coveredLeakTarget?: string
+}
+
 const ACCESS_ORDER: readonly ProjectAccessMode[] = ['allow', 'ask', 'deny']
 
 /** The stricter of the access modes */
@@ -85,6 +93,7 @@ export function createChatToolPolicy(options: ChatToolPolicyOptions) {
   const leakAllowed = new Set<string>()
   const knownUrls = new Set<string>()
   let hasPersonalData = false
+  let hasUntrustedContent = false
 
   /**
    * @param approvalKey The tool and the scope of the call, from
@@ -104,17 +113,21 @@ export function createChatToolPolicy(options: ChatToolPolicyOptions) {
 
   /**
    * Applies the user's answer; true when the call may run. A call that asked
-   * about a leak target allows the target for the chat whatever the answer
+   * about a leak target allows the target for the chat whatever the answer.
+   * Allowing a call for the chat also allows the target it would ask about once
+   * it runs freely, so that it is not asked about twice
    */
   const answer = (
     approvalKey: string,
     decision: ChatToolDecision,
-    leakTarget?: string
+    targets: ChatToolAnswerTargets = {}
   ) => {
     if (decision === 'deny') return false
-    if (leakTarget) leakAllowed.add(leakTarget)
-    else if (decision === 'allow-session') sessionAllowed.add(approvalKey)
-    else return true
+    if (targets.leakTarget) leakAllowed.add(targets.leakTarget)
+    else if (decision === 'allow-session') {
+      sessionAllowed.add(approvalKey)
+      if (targets.coveredLeakTarget) leakAllowed.add(targets.coveredLeakTarget)
+    } else return true
     options.onPermissionsChange?.(exportPermissions())
     return true
   }
@@ -141,6 +154,14 @@ export function createChatToolPolicy(options: ChatToolPolicyOptions) {
       hasPersonalData = true
     },
     hasPersonalData: () => hasPersonalData,
+    /**
+     * The conversation now holds what somebody else wrote: a web page, a
+     * command's or a plugin's output. It may try to steer the model
+     */
+    noteUntrustedContent: () => {
+      hasUntrustedContent = true
+    },
+    hasUntrustedContent: () => hasUntrustedContent,
     /** Remembers the URLs a text names: the user's messages, search results */
     noteKnownText,
     isKnownUrl: (url: string) => {
@@ -165,6 +186,7 @@ export function createChatToolPolicy(options: ChatToolPolicyOptions) {
       leakAllowed.clear()
       knownUrls.clear()
       hasPersonalData = false
+      hasUntrustedContent = false
     },
   }
 }

@@ -21,6 +21,12 @@
       <span v-if="request?.leakTarget" class="tool-approval-hint">
         {{ t('toolPermissions.leakQuestion') }}
       </span>
+      <span
+        v-else-if="request?.isAfterUntrustedContent"
+        class="tool-approval-hint"
+      >
+        {{ t('toolPermissions.untrustedQuestion') }}
+      </span>
     </div>
     <div class="tool-approval-actions">
       <Button
@@ -41,6 +47,7 @@
         {{ t('chat.toolAllow') }}
       </Button>
       <Button
+        v-if="!request?.leakTarget"
         size="xs"
         variant="neutral"
         icon="mdi:check-circle-outline"
@@ -49,7 +56,7 @@
         {{ t('chat.toolAllowSession') }}
       </Button>
       <Button
-        v-if="request?.alwaysAllow && !request.leakTarget"
+        v-if="request?.alwaysAllow?.length && !request.leakTarget"
         size="xs"
         variant="neutral"
         icon="mdi:shield-check-outline"
@@ -82,7 +89,8 @@ import Button from '../common/Button.vue'
 
 const props = withDefaults(
   defineProps<{
-    toolName: string
+    /** The name the user knows the tool by */
+    toolLabel: string
     /** What the call asks with: its source, risk and what it may be answered */
     request?: ChatToolApprovalRequest
     /** The calls of the same step that wait too, this one among them */
@@ -94,7 +102,7 @@ const emit = defineEmits<{ decide: [decision: ChatToolAnswer] }>()
 const { t } = useI18n()
 
 const question = computed(() =>
-  t('chat.toolApprovalQuestion', { tool: props.toolName })
+  t('chat.toolApprovalQuestion', { tool: props.toolLabel })
 )
 
 const SOURCE_KEYS = {
@@ -111,11 +119,17 @@ const sourceText = computed(() => {
   return label ? `${kind}: ${label}` : kind
 })
 
-/** Deleting where writing asks raises both, and the button says so */
+/** Raising deleting in a project, with writing where it asks, is said so */
 const alwaysText = computed(() => {
-  const target = props.request?.alwaysAllow
-  if (target?.kind === 'project' && target.operations.length > 1)
-    return t('chat.toolAllowAlwaysWriteDelete')
+  const project = props.request?.alwaysAllow?.find(
+    (target) => target.kind === 'project'
+  )
+  if (project?.kind === 'project' && project.operations.includes('delete'))
+    return t(
+      project.operations.length > 1
+        ? 'chat.toolAllowAlwaysWriteDelete'
+        : 'chat.toolAllowAlwaysDelete'
+    )
   return t('chat.toolAllowAlways')
 })
 </script>

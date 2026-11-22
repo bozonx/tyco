@@ -115,8 +115,10 @@ export interface EditorInputSnapshot {
  * What a chat tool may do: `read` has no side effects, `write` changes the
  * user's data, `destructive` deletes or cannot be undone, `external` acts in
  * the world or outside the app's data. A plugin with `notes` or `browser`
- * declares `external`: it reaches past the app with them. The host shows the
- * risk; it asks before each call of a third-party plugin whatever it is
+ * declares `external`: it reaches past the app with them; one with `editor`
+ * declares at least `write`: it reads and changes the user's editor. The host
+ * shows the risk; it asks before each call of a third-party plugin whatever it
+ * is
  */
 export type ChatToolRisk = 'read' | 'write' | 'destructive' | 'external'
 

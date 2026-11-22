@@ -21,7 +21,10 @@ import type { OperationLookup } from '../operations/operation-types'
 import type { CommandEnvironment } from '../variables/command-variables'
 import type { ChatToolPermissionsState } from './chat-tool-policy'
 import type { ChatToolAlwaysAllowTarget } from './chat-tool-registry'
-import { createChatToolsSession } from './chat-tools-session'
+import {
+  createChatToolsSession,
+  type ChatToolResultRecord,
+} from './chat-tools-session'
 import { createCommandToolProvider } from './command-tools'
 import {
   createDebugChatToolProvider,
@@ -176,7 +179,9 @@ export interface DesktopChatToolsDependencies {
   /** What the user wrote in the conversation, for the URLs it names */
   getConversationText?: () => string | undefined
   /** Writes "always allow" into the chat's profile */
-  alwaysAllow?: (target: ChatToolAlwaysAllowTarget) => Promise<void>
+  alwaysAllow?: (targets: readonly ChatToolAlwaysAllowTarget[]) => Promise<void>
+  /** The tool results the conversation already holds */
+  getPreviousToolResults?: () => readonly ChatToolResultRecord[]
   /** The chat tools of the plugins */
   pluginTools?: PluginChatToolsDependencies
   /** Keeps the permissions "in this chat" with the chat */
@@ -323,6 +328,7 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
         outputBudgetCharacters,
         attachedFiles: deps.getAttachedFiles?.(),
         conversationText: deps.getConversationText?.(),
+        previousToolResults: deps.getPreviousToolResults?.(),
       }),
     }
   }

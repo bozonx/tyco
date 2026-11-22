@@ -190,7 +190,8 @@ fn denied_access_is_enforced() {
         &files,
         serde_json::json!({"operation": "movePath", "from": "projects/docs/readme.md", "to": "workspace/readme.md"}),
     ));
-    assert!(error.contains("may not change"), "{error}");
+    // moving a file away deletes it where it was
+    assert!(error.contains("may not delete"), "{error}");
 }
 
 #[test]
@@ -212,6 +213,32 @@ fn deleting_follows_its_own_permission() {
     ));
     assert!(error.contains("may not delete"), "{error}");
     assert!(dir.join("notes/a.md").exists());
+}
+
+#[test]
+fn a_move_takes_the_file_away_only_where_deleting_is_allowed() {
+    let dir = TestDir::new("ai_files_move_delete_deny");
+    for sub in ["workspace", "notes"] {
+        fs::create_dir_all(dir.join(sub)).unwrap();
+    }
+    fs::write(dir.join("notes/a.md"), "a").unwrap();
+    let mut notes = root("projects/notes", &dir.join("notes"), Allow, Allow);
+    notes.delete = Deny;
+    let files = ConversationFiles::from_roots(vec![
+        root("workspace", &dir.join("workspace"), Allow, Allow),
+        notes,
+    ]);
+    let error = message(run(
+        &files,
+        serde_json::json!({"operation": "movePath", "from": "projects/notes/a.md", "to": "workspace/a.md"}),
+    ));
+    assert!(error.contains("may not delete"), "{error}");
+    assert!(dir.join("notes/a.md").exists());
+    assert!(run(
+        &files,
+        serde_json::json!({"operation": "movePath", "from": "workspace/missing.md", "to": "projects/notes/b.md"}),
+    )
+    .is_err_and(|error| !error.to_string().contains("may not")));
 }
 
 #[test]
@@ -1207,4 +1234,30 @@ fn editing_utf8_preserves_the_bom() {
     )
     .unwrap();
     assert_eq!(fs::read_to_string(path).unwrap(), "\u{feff}changed\r\n");
+}
+
+#[test]
+fn a_file_tool_off_in_the_profile_still_reads_the_attachments() {
+    let (dir, _) = fixture("ai_files_attachments_tool_off");
+    fs::write(dir.join("workspace/b.txt"), "b").unwrap();
+    let settings = ProfileToolSettings {
+        sources: HashMap::new(),
+        tools: HashMap::from([("core:files:read_file".into(), ai_vault::ToolState::Off)]),
+        command_ids: Vec::new(),
+    };
+    let files = ConversationFiles::with_attachments(
+        vec![root("workspace", &dir.join("workspace"), Allow, Allow)],
+        attachments(vec![attached("a.txt", b"attached")]),
+    )
+    .with_profile(profile(Some(settings)));
+    assert!(run(
+        &files,
+        serde_json::json!({"operation": "readFile", "path": "attachments/a.txt"}),
+    )
+    .is_ok());
+    let error = message(run(
+        &files,
+        serde_json::json!({"operation": "readFile", "path": "workspace/b.txt"}),
+    ));
+    assert!(error.contains("turned off"), "{error}");
 }

@@ -208,16 +208,17 @@ describe('chat-tools-session permissions', () => {
         toolName: 'read_note',
         input: {},
         approvalKey: 'read_note',
-        alwaysAllow: target,
+        alwaysAllow: [target],
       },
       new AbortController().signal
     )
     await vi.waitFor(() =>
-      expect(session.pendingApprovals.value[0]?.alwaysAllow).toEqual(target)
+      expect(session.pendingApprovals.value[0]?.alwaysAllow).toEqual([target])
     )
     session.answerApproval('a1', 'allow-always')
-    expect(await answer).toBe('allow-once')
-    expect(alwaysAllow).toHaveBeenCalledWith(target)
+    // allowed for the chat too: the turn keeps the policies it started with
+    expect(await answer).toBe('allow-session')
+    expect(alwaysAllow).toHaveBeenCalledWith([target])
   })
 
   it('asks before a call could take personal data somewhere new', async () => {
@@ -246,9 +247,84 @@ describe('chat-tools-session permissions', () => {
     const info = tools.tools!.approvalInfo('send', {})
     expect(info.leakTarget).toBe('plugin:notes:send')
     expect(info.alwaysAllow).toBeUndefined()
-    tools.policy.answer(info.approvalKey, 'allow-once', info.leakTarget)
+    tools.policy.answer(info.approvalKey, 'allow-once', {
+      leakTarget: info.leakTarget,
+    })
     expect(decide({ toolCall: { toolName: 'send', input: {} } })).toBe(
       'approved'
     )
+  })
+
+  it('does not ask about the leak target of a call allowed for the chat', async () => {
+    const send: ChatToolDefinition = {
+      ...readNote,
+      name: 'send',
+      risk: 'external',
+    }
+    const session = createChatToolsSession({
+      providers: () => [{ id: 'notes', tools: () => [send] }],
+      getMaxStepCount: () => 3,
+    })
+    const tools = (await session.toolsFor({
+      ...toolContext('writer', toolSettings({})),
+      modelId: 'model',
+      canUseTools: true,
+      memoryMode: 'auto',
+    }))!
+    const info = tools.tools!.approvalInfo('send', {})
+    expect(info.leakTarget).toBeUndefined()
+    expect(info.coveredLeakTarget).toBe('plugin:notes:send')
+    expect(info.alwaysAllow).toEqual([
+      { kind: 'tool', source: send.source, toolName: 'send' },
+    ])
+    tools.policy.answer(info.approvalKey, 'allow-session', {
+      coveredLeakTarget: info.coveredLeakTarget,
+    })
+    expect(tools.policy.isLeakAllowed('plugin:notes:send')).toBe(true)
+  })
+
+  it('asks before the memory changes after untrusted content', async () => {
+    const remember: ChatToolDefinition = {
+      ...readNote,
+      name: 'remember',
+      source: { kind: 'core', id: 'memory' },
+      defaultPolicy: 'allow',
+      asksAfterUntrustedContent: true,
+    }
+    const page: ChatToolDefinition = {
+      ...readNote,
+      name: 'page',
+      givesUntrustedContent: true,
+    }
+    const session = createChatToolsSession({
+      providers: () => [{ id: 'notes', tools: () => [remember, page] }],
+      getMaxStepCount: () => 3,
+    })
+    const turn = async (previous: { toolName: string; output: string }[]) =>
+      (await session.toolsFor({
+        ...toolContext(
+          'writer',
+          toolSettings({ tools: { 'plugin:notes:page': 'allow' } })
+        ),
+        modelId: 'model',
+        canUseTools: true,
+        memoryMode: 'off',
+        previousToolResults: previous,
+      }))!
+    const call = { toolCall: { toolName: 'remember', input: {} } }
+    const first = await turn([])
+    const decide = first.tools!.toolApproval as (options: unknown) => unknown
+    expect(decide(call)).toBe('approved')
+    // a reopened chat whose history read a page
+    const second = await turn([{ toolName: 'page', output: 'text' }])
+    const decideAgain = second.tools!.toolApproval as (
+      options: unknown
+    ) => unknown
+    expect(decideAgain(call)).toBe('user-approval')
+    const info = second.tools!.approvalInfo('remember', {})
+    expect(info.isAfterUntrustedContent).toBe(true)
+    expect(info.alwaysAllow).toBeUndefined()
+    second.policy.answer(info.approvalKey, 'allow-session')
+    expect(decideAgain(call)).toBe('approved')
   })
 })

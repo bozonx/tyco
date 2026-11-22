@@ -44,7 +44,7 @@ import { findCurrentChat } from './chat-history-list'
 import { createChatModel } from './chat-model'
 import { createChatProfileRuntime } from './chat-profile-runtime'
 import { profileTurnOptions } from './chat-profile-turn'
-import { alwaysAllowedProfilePatch } from '../ai-profiles/profile-always-allow'
+import { alwaysAllowedProfilePatchOf } from '../ai-profiles/profile-always-allow'
 import { createChatRemoval } from './chat-removal'
 
 type SendChatOptions = NonNullable<
@@ -198,10 +198,19 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
         .filter((message) => message.role === 'user')
         .map((message) => message.content)
         .join('\n'),
-    alwaysAllow: async (target) => {
+    // a chat reopened from the history keeps what its calls brought in
+    getPreviousToolResults: () =>
+      model.messages.value.flatMap((message) =>
+        (message.parts ?? []).flatMap((part) =>
+          part.type === 'tool-result'
+            ? [{ toolName: part.toolName, output: part.output }]
+            : []
+        )
+      ),
+    alwaysAllow: async (targets) => {
       if (!profileId || !deps.updateProfilePermissions) return
       const current = (await deps.refreshProfile(profileId)) ?? profile.value
-      const patch = current && alwaysAllowedProfilePatch(current, target)
+      const patch = current && alwaysAllowedProfilePatchOf(current, targets)
       if (patch) await deps.updateProfilePermissions(profileId, patch)
     },
     // kept with the chat, so that it has them when opened from the history

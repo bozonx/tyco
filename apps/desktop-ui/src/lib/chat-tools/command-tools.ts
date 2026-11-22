@@ -106,7 +106,8 @@ export function createCommandToolProvider(
               : run.value
           },
         })
-        definitions.push(chatTool)
+        // a script or a webhook returns what somebody else may have written
+        definitions.push({ ...chatTool, givesUntrustedContent: true })
       }
 
       return definitions

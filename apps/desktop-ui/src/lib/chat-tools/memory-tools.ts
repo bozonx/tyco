@@ -386,11 +386,14 @@ export function createMemoryToolProvider(
 
     return {
       name: spec.name,
-      // the profile's own memory: it never asks, the steps show its changes
+      // the profile's own memory: it does not ask, the steps show its changes;
+      // a change after a web page or a tool's output asks, since the memory
+      // steers every chat to come
       source: MEMORY_SOURCE,
       risk: spec.access === 'read' ? 'read' : 'write',
       defaultPolicy: 'allow',
       readsPersonalData: true,
+      ...(spec.access === 'read' ? {} : { asksAfterUntrustedContent: true }),
       label: spec.label,
       labelKey: spec.labelKey,
       icon: spec.icon,

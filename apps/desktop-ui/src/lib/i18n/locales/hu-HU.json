@@ -158,7 +158,8 @@
     "takeScreenshot": "Képernyőkép készítése",
     "toolAllowBatch": "Mind a(z) {count} engedélyezése",
     "toolAllowAlways": "Mindig engedélyezve",
-    "toolAllowAlwaysWriteDelete": "Írás és törlés mindig engedélyezve"
+    "toolAllowAlwaysWriteDelete": "Írás és törlés mindig engedélyezve",
+    "toolAllowAlwaysDelete": "Törlés mindig engedélyezve"
   },
   "chatTools": {
     "files": {
@@ -1083,7 +1084,7 @@
     "maxToolStepsHint": "Hányszor hívhat a modell eszközöket egy válaszban – minden csevegésben, gyorskérésben és MI-parancsban. A korlát véd a végtelen ciklusok és a felesleges költségek ellen.",
     "maxToolStepsInvalid": "Adjon meg egy egész számot 1 és 50 között",
     "profileTools": "Eszközök",
-    "profileToolsHint": "Mit használhat a profil ügynöke. Az olvasás szabadon fut, a módosítás előbb kérdez; állítsa az eszközöket Ki, Kérdez vagy Engedélyez értékre. A memória és a profil munkaterülete sosem kérdez.",
+    "profileToolsHint": "Mit használhat a profil ügynöke: minden eszközt állítson Ki, Kérdez vagy Engedélyez értékre. Az olvasás szabadon fut, a módosítások előbb kérdeznek. A fájleszközök az egyes projektek hozzáférését is követik: az Engedélyez itt a projektre bízza a döntést. Ha egy csevegés már olvasta az adatait, a kifelé ható eszköz csevegésenként egyszer kérdez, akkor is, ha engedélyezett. A memória és a workspace nem kérdez; a memória módosítása kérdez egy weboldal vagy egy eszköz kimenete után.",
     "profileWebSearchLlmNotice": "Az API-kulcs és az oldalméret-korlátok globálisan, az LLM beállításaiban konfigurálhatók.",
     "projectAccessFileToolsOff": "A fájleszközök ki vannak kapcsolva",
     "projectChangedElsewhere": "A projekt egy másik eszközön vagy a TyCo-n kívül módosult. A módosításai még nincsenek mentve.",
@@ -1751,6 +1752,7 @@
     "pluginCapabilities": "A bővítmény jogai: {capabilities}",
     "pluginSourceHint": "A bővítmény által a csevegésnek kínált eszközök. A bővítmény jogaival futnak.",
     "leakQuestion": "Ez a csevegés már olvasta az adatait, és ez a hívás új helyre jutna. Csevegésenként helyenként egyszer kérdezünk.",
+    "untrustedQuestion": "Ez a csevegés már olvasott egy weboldalt vagy egy eszköz kimenetét, és ez a hívás megváltoztatná a memóriát, amelyet minden további csevegés lát.",
     "contextTokens": "≈{count} token",
     "catalogHint": "Honnan származnak az ügynökök eszközei. Az itt kikapcsolt bővítmény minden profilban és AI-parancsban ki van kapcsolva. A beépített eszközöket a „Kérdezd az AI-t”-ban, a profilokban és az AI-parancsokban kapcsolhatja.",
     "catalogWhereHint": "Minden profil a saját beállításaiban választja ki eszközeit és azt, mennyire szabadon futnak.",

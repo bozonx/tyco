@@ -158,7 +158,8 @@
     "takeScreenshot": "Fă o captură de ecran",
     "toolAllowBatch": "Permite toate ({count})",
     "toolAllowAlways": "Permite întotdeauna",
-    "toolAllowAlwaysWriteDelete": "Permite întotdeauna scrierea și ștergerea"
+    "toolAllowAlwaysWriteDelete": "Permite întotdeauna scrierea și ștergerea",
+    "toolAllowAlwaysDelete": "Permite mereu ștergerea"
   },
   "chatTools": {
     "files": {
@@ -1083,7 +1084,7 @@
     "maxToolStepsHint": "De câte ori poate modelul să apeleze instrumente într-un răspuns, în toate chaturile, cererile rapide și comenzile AI. Limita previne buclele și costurile inutile.",
     "maxToolStepsInvalid": "Introduceți un număr întreg de la 1 la 50",
     "profileTools": "Instrumente",
-    "profileToolsHint": "Ce poate folosi agentul profilului. Citirea rulează liber, modificările întreabă întâi; setați fiecare instrument pe Oprit, Întreabă sau Permite. Memoria și spațiul de lucru al profilului nu întreabă niciodată.",
+    "profileToolsHint": "Ce poate folosi agentul profilului: setați fiecare instrument pe Oprit, Întreabă sau Permite. Citirea merge liber, modificările întreabă mai întâi. Instrumentele de fișiere urmează și accesul la fiecare proiect: Permite aici lasă decizia proiectului. Odată ce un chat v-a citit datele, un instrument care acționează în afară întreabă o dată pe chat, chiar dacă e permis. Memoria și workspace-ul nu întreabă; o modificare a memoriei întreabă după o pagină web sau rezultatul unui instrument.",
     "profileWebSearchLlmNotice": "Cheia API și limitele de dimensiune a paginii sunt configurate global în setările LLM.",
     "projectAccessFileToolsOff": "Instrumentele pentru fișiere sunt oprite",
     "projectChangedElsewhere": "Proiectul a fost modificat pe alt dispozitiv sau în afara TyCo. Modificările dvs. nu sunt încă salvate.",
@@ -1751,6 +1752,7 @@
     "pluginCapabilities": "Permisiunile pluginului: {capabilities}",
     "pluginSourceHint": "Instrumente pe care acest plugin le oferă chatului. Rulează cu permisiunile pluginului.",
     "leakQuestion": "Acest chat a citit datele tale, iar acest apel ar ajunge într-un loc nou. Se întreabă o dată pe loc în acest chat.",
+    "untrustedQuestion": "Acest chat a citit deja o pagină web sau rezultatul unui instrument, iar acest apel ar schimba memoria pe care o văd toate chaturile următoare.",
     "contextTokens": "≈{count} tokenuri",
     "catalogHint": "De unde vin instrumentele agenților. Un plugin dezactivat aici e dezactivat în toate profilurile și comenzile AI. Instrumentele integrate se activează în „Întreabă AI”, în fiecare profil și în fiecare comandă AI.",
     "catalogWhereHint": "Fiecare profil își alege instrumentele și cât de liber rulează în propriile setări.",

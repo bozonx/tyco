@@ -13,7 +13,10 @@ something new.
 ## What an assistant sees out of the box
 
 - Its own `workspace/` folder and its memory. It uses them without asking; what
-  it changes in memory is shown in the steps of the answer.
+  it changes in memory is shown in the steps of the answer. Once the chat has
+  read a web page or the output of a command or plugin, a change to the memory
+  asks first: the memory shapes every chat to come, and the text it read could
+  try to plant instructions there.
 - The projects you connected to the profile, each with its own permission:
 
   | Level          | Read | Write | Delete |
@@ -22,7 +25,8 @@ something new.
   | Read and write | yes  | asks  | asks   |
   | Full           | yes  | yes   | asks   |
 
-  At the full level you can also tick **Delete without asking**.
+  At the full level you can also tick **Delete without asking**. Moving a file
+  out of a folder counts as deleting it there.
 
 - The files and screenshots you attach to the conversation.
 - The web (search and reading pages), unless you turn it off in the profile.
@@ -75,11 +79,19 @@ memory or attachments — an assistant asks before reading a web page nobody
 named in the conversation or in search results, and before any tool that acts
 outside TyCo, even if it is allowed. It asks once per site or tool in that chat.
 
+Since memory is on in most profiles, this means a tool that acts outside TyCo
+asks once in every new chat, even when it is set to "Allow".
+
 Accepted limits:
 
 - The text of a web search query is not checked.
-- In "Ask AI", your attachments and a web page could meet in one answer; you
-  gave both to that chat yourself.
+- "Ask AI" has no leak protection: your attachments, the text you started it
+  with (a selection, say) and a web page could meet in one answer. You gave
+  them to that chat yourself; turn the web off there in Settings → Ask AI if
+  you do not want that.
+- An AI command runs everything on its list freely, the web included. A chat
+  that calls an AI command with the web on its list asks as for a tool that
+  acts outside.
 
 Settings → **Tools** lists every source of tools, what each tool may do and its
 default; there you can turn a plugin off for every profile and AI command.

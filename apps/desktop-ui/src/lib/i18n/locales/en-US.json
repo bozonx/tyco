@@ -158,7 +158,8 @@
     "takeScreenshot": "Take screenshot",
     "toolAllowBatch": "Allow all {count}",
     "toolAllowAlways": "Always allow",
-    "toolAllowAlwaysWriteDelete": "Always allow writing and deleting"
+    "toolAllowAlwaysWriteDelete": "Always allow writing and deleting",
+    "toolAllowAlwaysDelete": "Always allow deleting"
   },
   "chatTools": {
     "files": {
@@ -1083,7 +1084,7 @@
     "maxToolStepsHint": "How many times the model may call tools within one answer, in every chat, quick request and AI command. The limit guards against loops and needless costs.",
     "maxToolStepsInvalid": "Enter a whole number from 1 to 50",
     "profileTools": "Tools",
-    "profileToolsHint": "What the profile's agent may use. Reading runs freely, changes ask first; set each tool to Off, Ask or Allow. Memory and the profile's workspace never ask.",
+    "profileToolsHint": "What the profile's agent may use: set each tool to Off, Ask or Allow. Reading runs freely, changes ask first. The file tools also follow each project's access: Allow here leaves the decision to the project. Once a chat has read your data, a tool that acts outside asks once per chat even when allowed. Memory and the workspace do not ask; a memory change asks after a web page or a tool's output.",
     "profileWebSearchLlmNotice": "API key and page size limits are configured globally in LLM settings.",
     "projectAccessFileToolsOff": "File tools are off",
     "projectChangedElsewhere": "The project was changed on another device or outside TyCo. Your changes are not saved yet.",
@@ -1751,6 +1752,7 @@
     "pluginCapabilities": "Plugin permissions: {capabilities}",
     "pluginSourceHint": "Tools this plugin offers to the chat. They run with the plugin's permissions.",
     "leakQuestion": "This chat has read your data, and this call would reach a new place. Asked once per place in this chat.",
+    "untrustedQuestion": "This chat has read a web page or a tool's output, and this call would change the memory every future chat sees.",
     "contextTokens": "≈{count} tokens",
     "catalogHint": "Where the agents' tools come from. A plugin switched off here is off for every profile and AI command. Built-in tools are switched in Ask AI, in each profile and in each AI command.",
     "catalogWhereHint": "Each profile picks its tools and how freely they run in its own settings.",

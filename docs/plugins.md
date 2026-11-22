@@ -142,7 +142,8 @@ ctx.registerChatTools([
 - `risk` says what the tool may do: `read` (no side effects), `write` (changes
   the user's data), `destructive` (deletes or cannot be undone) or `external`
   (acts in the world or outside TyCo's data). A plugin with the `notes` or
-  `browser` capability must declare `external`.
+  `browser` capability must declare `external`; one with `editor` must declare
+  at least `write`, since it reads and changes the text in your editor.
 - `run` gets the input the model gave and an `AbortSignal`. It has no access to
   the profile's files: if the tool needs a file, the model passes its text in
   the input. It runs with the plugin's capabilities.

@@ -88,13 +88,18 @@ tool; it stays only in project permissions.
 
 - Default policy: `read` → `allow`, the rest → `ask`. Commands ask (their risk
   is the user's `aiRisk`, `external` when unset); an AI command called as a tool
-  has the highest risk of its whitelist (`commandRisk`). A third-party plugin's
+  has the highest risk of its whitelist (`commandRisk`), the web counting as
+  `external` there, since inside the command it has no leak protection. A third-party plugin's
   tools ask whatever risk they declare; MCP hints will count only for a trusted
   server.
 - Memory, the reply blocks and the attachments are always on and never ask;
   `memoryMode` (`auto`, `read-only`, `off`) decides only whether the memory is
   there and writable. The file tools take their policy from the project
-  permissions; `workspace/` allows everything, deleting included.
+  permissions; `workspace/` allows everything, deleting included. `move_path`
+  needs deleting where the file comes from and writing where it goes.
+  Changing the memory asks once the chat took in untrusted content (a web
+  page, a command's or a plugin's output; `givesUntrustedContent`,
+  `asksAfterUntrustedContent`): the memory steers every chat to come.
 
 **Two levels.** Globally (`tools.sources` in the user config, Settings → Tools)
 a plugin or MCP source can be switched off everywhere; core sources are not
@@ -126,15 +131,20 @@ permission is not `deny`. Plugin tools run in the webview, which checks them.
 
 **Approvals** (`ChatToolApproval.vue`): allow once, allow in this chat (kept
 with the chat as `Chat.toolPermissions`, given back when it is reopened),
-always allow (writes `allow` into the profile, or raises the project
-permission; saved before the call runs) and deny. The calls of one model step
+always allow (writes `allow` into the profile for a tool that asks, and raises
+the project permission for a path that asks, both when both ask; saved before
+the call runs, and then also allowed in the chat, since a turn keeps the
+policies it started with) and deny. Allowing a call that asks also allows the
+leak target it would ask about once it runs freely (`coveredLeakTarget`). The calls of one model step
 that ask wait together and can be allowed at once.
 
 **Leak protection.** Once a profile chat holds personal data — memory in the
 instructions, attachments, a file or memory read — a call that could carry it
 somewhere new asks even at `allow`: `web_fetch` of a URL that neither the
-user's messages nor search results named, and any `external` tool. It asks
-once per host or tool in the chat and offers no "always allow". Accepted
+user's messages nor search results named, and any `external` tool. It asks once per host or tool in the chat and offers no "always allow"; any
+"allow" settles the target for the chat. A chat reopened from the history
+gets what its earlier calls brought in back from their results
+(`previousToolResults`): personal data, untrusted content, known URLs. Accepted
 residual risks: the text of a `web_search` query, and in "Ask AI" the user's
 own attachments with `web_fetch`.
 

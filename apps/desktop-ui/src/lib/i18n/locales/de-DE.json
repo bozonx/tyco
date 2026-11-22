@@ -158,7 +158,8 @@
     "takeScreenshot": "Screenshot aufnehmen",
     "toolAllowBatch": "Alle {count} erlauben",
     "toolAllowAlways": "Immer erlauben",
-    "toolAllowAlwaysWriteDelete": "Schreiben und Löschen immer erlauben"
+    "toolAllowAlwaysWriteDelete": "Schreiben und Löschen immer erlauben",
+    "toolAllowAlwaysDelete": "Löschen immer erlauben"
   },
   "chatTools": {
     "files": {
@@ -1083,7 +1084,7 @@
     "maxToolStepsHint": "Wie oft das Modell in einer Antwort Tools aufrufen darf – in allen Chats, Schnellanfragen und KI-Befehlen. Das Limit schützt vor Endlosschleifen und unnötigen Kosten.",
     "maxToolStepsInvalid": "Geben Sie eine ganze Zahl von 1 bis 50 ein",
     "profileTools": "Werkzeuge",
-    "profileToolsHint": "Was der Agent des Profils nutzen darf. Lesen läuft frei, Änderungen fragen zuerst; stellen Sie jedes Werkzeug auf Aus, Fragen oder Erlauben. Gedächtnis und Arbeitsbereich des Profils fragen nie.",
+    "profileToolsHint": "Was der Agent des Profils nutzen darf: Stelle jedes Werkzeug auf Aus, Fragen oder Erlauben. Lesen läuft frei, Änderungen fragen zuerst. Die Dateiwerkzeuge folgen zusätzlich dem Zugriff auf jedes Projekt: Erlauben überlässt hier die Entscheidung dem Projekt. Sobald ein Chat deine Daten gelesen hat, fragt ein Werkzeug, das nach außen wirkt, einmal pro Chat, auch wenn es erlaubt ist. Gedächtnis und Workspace fragen nicht; eine Änderung des Gedächtnisses fragt nach einer Webseite oder der Ausgabe eines Werkzeugs.",
     "profileWebSearchLlmNotice": "API-Schlüssel und Seitenlimits werden global in den LLM-Einstellungen konfiguriert.",
     "projectAccessFileToolsOff": "Dateiwerkzeuge sind aus",
     "projectChangedElsewhere": "Das Projekt wurde auf einem anderen Gerät oder außerhalb von TyCo geändert. Ihre Änderungen sind noch nicht gespeichert.",
@@ -1751,6 +1752,7 @@
     "pluginCapabilities": "Plugin-Rechte: {capabilities}",
     "pluginSourceHint": "Werkzeuge, die dieses Plugin dem Chat anbietet. Sie laufen mit den Rechten des Plugins.",
     "leakQuestion": "Dieser Chat hat Ihre Daten gelesen, und dieser Aufruf erreicht einen neuen Ort. Pro Ort wird in diesem Chat einmal gefragt.",
+    "untrustedQuestion": "Dieser Chat hat eine Webseite oder die Ausgabe eines Werkzeugs gelesen, und dieser Aufruf würde das Gedächtnis ändern, das jeder künftige Chat sieht.",
     "contextTokens": "≈{count} Tokens",
     "catalogHint": "Woher die Werkzeuge der Agenten kommen. Ein hier ausgeschaltetes Plugin ist für alle Profile und KI-Befehle aus. Integrierte Werkzeuge schalten Sie in „KI fragen“, in jedem Profil und in jedem KI-Befehl.",
     "catalogWhereHint": "Jedes Profil wählt seine Werkzeuge und wie frei sie laufen in seinen eigenen Einstellungen.",

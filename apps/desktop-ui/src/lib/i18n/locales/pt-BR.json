@@ -158,7 +158,8 @@
     "takeScreenshot": "Fazer captura de tela",
     "toolAllowBatch": "Permitir todas ({count})",
     "toolAllowAlways": "Sempre permitir",
-    "toolAllowAlwaysWriteDelete": "Sempre permitir gravar e excluir"
+    "toolAllowAlwaysWriteDelete": "Sempre permitir gravar e excluir",
+    "toolAllowAlwaysDelete": "Sempre permitir excluir"
   },
   "chatTools": {
     "files": {
@@ -1083,7 +1084,7 @@
     "maxToolStepsHint": "Quantas vezes o modelo pode chamar ferramentas em uma resposta, em todos os chats, solicitações rápidas e comandos de IA. O limite evita loops e custos desnecessários.",
     "maxToolStepsInvalid": "Digite um número inteiro de 1 a 50",
     "profileTools": "Ferramentas",
-    "profileToolsHint": "O que o agente do perfil pode usar. Leitura é livre, alterações perguntam antes; defina cada ferramenta como Desativado, Perguntar ou Permitir. A memória e a área de trabalho do perfil nunca perguntam.",
+    "profileToolsHint": "O que o agente do perfil pode usar: defina cada ferramenta como Desligada, Perguntar ou Permitir. A leitura é livre, as alterações perguntam antes. As ferramentas de arquivos também seguem o acesso a cada projeto: Permitir aqui deixa a decisão para o projeto. Depois que um chat leu seus dados, uma ferramenta que age fora pergunta uma vez por chat, mesmo se permitida. A memória e o workspace não perguntam; uma alteração na memória pergunta depois de uma página da web ou do resultado de uma ferramenta.",
     "profileWebSearchLlmNotice": "A chave de API e os limites de tamanho de página são configurados globalmente nas configurações de LLM.",
     "projectAccessFileToolsOff": "Ferramentas de arquivos desligadas",
     "projectChangedElsewhere": "O projeto foi alterado em outro dispositivo ou fora do TyCo. Suas alterações ainda não foram salvas.",
@@ -1751,6 +1752,7 @@
     "pluginCapabilities": "Permissões do plugin: {capabilities}",
     "pluginSourceHint": "Ferramentas que este plugin oferece ao chat. Elas rodam com as permissões do plugin.",
     "leakQuestion": "Este chat já leu seus dados e esta chamada chegaria a um novo lugar. Pergunta-se uma vez por lugar neste chat.",
+    "untrustedQuestion": "Este chat já leu uma página da web ou o resultado de uma ferramenta, e esta chamada mudaria a memória que todos os próximos chats verão.",
     "contextTokens": "≈{count} tokens",
     "catalogHint": "De onde vêm as ferramentas dos agentes. Um plugin desativado aqui fica desativado em todos os perfis e comandos de IA. As ferramentas integradas são ativadas em “Perguntar à IA”, em cada perfil e em cada comando de IA.",
     "catalogWhereHint": "Cada perfil escolhe suas ferramentas e com que liberdade elas rodam nas próprias configurações.",

@@ -94,6 +94,8 @@ const PATH: JsonSchema = {
     'A path starting with attachments/, workspace/ or projects/<project-id>/, e.g. "workspace/notes.md"',
 }
 
+type FileAccess = 'read' | 'write' | 'delete'
+
 interface FileToolSpec {
   name: string
   labelKey: string
@@ -101,9 +103,14 @@ interface FileToolSpec {
   description: string
   inputSchema: JsonSchema
   /** Whether the tool reads, changes or deletes files */
-  access: 'read' | 'write' | 'delete'
+  access: FileAccess
   /** The paths of a call, which decide its access and scope */
   paths(input: Input): string[]
+  /**
+   * The access each path of `paths` needs, when not `access`: a move takes its
+   * file away from where it was, which is deleting it there
+   */
+  pathAccess?: readonly FileAccess[]
   /** @param outputLimitCharacters How much output the call may give */
   request(input: Input, outputLimitCharacters: number): AiFileToolRequest
   /** Whether the user is shown the change before deciding */
@@ -299,6 +306,7 @@ const FILE_TOOLS: readonly FileToolSpec[] = [
     },
     access: 'write',
     paths: (input) => [text(input.from), text(input.to)],
+    pathAccess: ['delete', 'write'],
     request: (input) => ({
       operation: 'movePath',
       from: text(input.from),
@@ -342,25 +350,31 @@ export function createFileToolProvider(
     turn: { roots: readonly AiFileRoot[] },
     source: ToolSourceRef
   ): ChatToolDefinition {
-    /** The roots of a call; an empty path reaches all that can be read */
-    const rootsOf = (input: Input) =>
-      spec
-        .paths(input)
-        .flatMap((path) =>
-          isEmptyPath(path)
-            ? spec.access === 'read'
-              ? turn.roots.filter((root) => root.read !== 'deny')
-              : []
-            : [fileRootOf(turn.roots, path)]
-        )
+    /**
+     * The roots of a call with the access each needs; an empty path reaches all
+     * that can be read. A root is undefined for a path outside of them all
+     */
+    const targetsOf = (input: Input) =>
+      spec.paths(input).flatMap((path, index) => {
+        const access = spec.pathAccess?.[index] ?? spec.access
+        if (!isEmptyPath(path))
+          return [{ root: fileRootOf(turn.roots, path), access }]
+        return access === 'read'
+          ? turn.roots
+              .filter((root) => root.read !== 'deny')
+              .map((root) => ({ root, access }))
+          : []
+      })
 
     // the permissions of the roots of a call decide; the tool's policy may
     // ask for more
     const accessFor = (input: unknown): ProjectAccessMode => {
-      const callRoots = rootsOf(asInput(input))
+      const targets = targetsOf(asInput(input))
       // a path outside every root fails in Rust, with a reason for the model
-      if (callRoots.some((root) => !root)) return 'allow'
-      return stricterAccess(...callRoots.map((root) => root![spec.access]))
+      if (targets.some((target) => !target.root)) return 'allow'
+      return stricterAccess(
+        ...targets.map((target) => target.root![target.access])
+      )
     }
 
     /**
@@ -371,25 +385,26 @@ export function createFileToolProvider(
       input: unknown
     ): ChatToolAlwaysAllowTarget | undefined => {
       if (spec.access === 'read') return undefined
-      const callRoots = rootsOf(asInput(input))
-      if (callRoots.some((root) => !root)) return undefined
-      const projects = [
-        ...new Set(
-          callRoots.flatMap((root) =>
-            root!.path.startsWith(PROJECT_ROOT_PREFIX) ? [root!] : []
-          )
-        ),
-      ]
+      const targets = targetsOf(asInput(input))
+      if (targets.some((target) => !target.root)) return undefined
+      const inProjects = targets.filter((target) =>
+        target.root!.path.startsWith(PROJECT_ROOT_PREFIX)
+      )
+      const roots = [...new Set(inProjects.map((target) => target.root!))]
       // one project at a time: a move between two is allowed once
-      if (projects.length !== 1) return undefined
-      const root = projects[0]!
+      if (roots.length !== 1) return undefined
+      const root = roots[0]!
+      const needed = new Set(inProjects.map((target) => target.access))
+      if (needed.has('delete') && root.write !== 'allow') needed.add('write')
+      // only what still asks there, so that the button names what changes
+      const operations = (['write', 'delete'] as const).filter(
+        (operation) => needed.has(operation) && root[operation] !== 'allow'
+      )
+      if (!operations.length) return undefined
       return {
         kind: 'project',
         projectId: root.path.slice(PROJECT_ROOT_PREFIX.length),
-        operations:
-          spec.access === 'delete' && root.write !== 'allow'
-            ? ['write', 'delete']
-            : [spec.access],
+        operations,
       }
     }
 

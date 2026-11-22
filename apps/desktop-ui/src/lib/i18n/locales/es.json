@@ -158,7 +158,8 @@
     "takeScreenshot": "Hacer captura de pantalla",
     "toolAllowBatch": "Permitir las {count}",
     "toolAllowAlways": "Permitir siempre",
-    "toolAllowAlwaysWriteDelete": "Permitir siempre escribir y eliminar"
+    "toolAllowAlwaysWriteDelete": "Permitir siempre escribir y eliminar",
+    "toolAllowAlwaysDelete": "Permitir siempre eliminar"
   },
   "chatTools": {
     "files": {
@@ -1083,7 +1084,7 @@
     "maxToolStepsHint": "Cuántas veces puede el modelo llamar a herramientas en una respuesta, en todos los chats, solicitudes rápidas y comandos de IA. El límite evita bucles y gastos innecesarios.",
     "maxToolStepsInvalid": "Introduce un número entero del 1 al 50",
     "profileTools": "Herramientas",
-    "profileToolsHint": "Lo que puede usar el agente del perfil. Leer es libre; los cambios preguntan antes. Pon cada herramienta en Desactivado, Preguntar o Permitir. La memoria y el espacio de trabajo del perfil nunca preguntan.",
+    "profileToolsHint": "Lo que puede usar el agente del perfil: pon cada herramienta en Desactivada, Preguntar o Permitir. La lectura es libre, los cambios preguntan antes. Las herramientas de archivos siguen además el acceso a cada proyecto: Permitir aquí deja la decisión al proyecto. Cuando un chat ya ha leído tus datos, una herramienta que actúa fuera pregunta una vez por chat, aunque esté permitida. La memoria y el workspace no preguntan; un cambio en la memoria pregunta después de una página web o del resultado de una herramienta.",
     "profileWebSearchLlmNotice": "La clave de API y el límite de tamaño de página se configuran globalmente en los ajustes de LLM.",
     "projectAccessFileToolsOff": "Herramientas de archivos desactivadas",
     "projectChangedElsewhere": "El proyecto se cambió en otro dispositivo o fuera de TyCo. Tus cambios aún no se guardaron.",
@@ -1751,6 +1752,7 @@
     "pluginCapabilities": "Permisos del complemento: {capabilities}",
     "pluginSourceHint": "Herramientas que este complemento ofrece al chat. Se ejecutan con los permisos del complemento.",
     "leakQuestion": "Este chat ya leyó tus datos y esta llamada llegaría a un sitio nuevo. Se pregunta una vez por sitio en este chat.",
+    "untrustedQuestion": "Este chat ha leído una página web o el resultado de una herramienta, y esta llamada cambiaría la memoria que verán todos los chats siguientes.",
     "contextTokens": "≈{count} tokens",
     "catalogHint": "De dónde salen las herramientas de los agentes. Un complemento desactivado aquí lo está en todos los perfiles y comandos de IA. Las herramientas integradas se activan en «Preguntar a la IA», en cada perfil y en cada comando de IA.",
     "catalogWhereHint": "Cada perfil elige sus herramientas y con qué libertad se ejecutan en sus propios ajustes.",

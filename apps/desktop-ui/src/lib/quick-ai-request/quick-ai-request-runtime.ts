@@ -9,6 +9,7 @@ import {
 } from '@tyco/shared'
 import { computed } from 'vue'
 
+import { alwaysAllowedProfilePatchOf } from '../ai-profiles/profile-always-allow'
 import { createDesktopChatTools } from '../chat-tools/desktop-chat-tools'
 import type { PluginChatToolsDependencies } from '../chat-tools/plugin-chat-tools'
 import type { ChatToolApprovalRequest } from '../chat-tools/chat-tool-loop'
@@ -127,6 +128,18 @@ export function createQuickAiRequestRuntime(
         operations: deps.operations,
         environment: deps.environment,
         commandRunLimitSec: () => deps.getUserConfig()?.commandRunTimeoutSec,
+        onPermissionsChange: (toolPermissions) =>
+          model.setToolPermissions(toolPermissions),
+        ...(profileId
+          ? {
+              alwaysAllow: async (targets) => {
+                const current = deps.getProfile(profileId) ?? profile
+                const patch =
+                  current && alwaysAllowedProfilePatchOf(current, targets)
+                if (patch) await deps.updateProfile(profileId, patch)
+              },
+            }
+          : {}),
       }),
   })
   const toolsOf = (profileId: string | null) =>

@@ -158,7 +158,8 @@
     "takeScreenshot": "Pořídit snímek obrazovky",
     "toolAllowBatch": "Povolit vše ({count})",
     "toolAllowAlways": "Vždy povolit",
-    "toolAllowAlwaysWriteDelete": "Vždy povolit zápis a mazání"
+    "toolAllowAlwaysWriteDelete": "Vždy povolit zápis a mazání",
+    "toolAllowAlwaysDelete": "Vždy povolit mazání"
   },
   "chatTools": {
     "files": {
@@ -1083,7 +1084,7 @@
     "maxToolStepsHint": "Kolikrát může model v jedné odpovědi volat nástroje – ve všech chatech, rychlých dotazech a příkazech AI. Limit chrání před zacyklením a zbytečnými náklady.",
     "maxToolStepsInvalid": "Zadejte celé číslo od 1 do 50",
     "profileTools": "Nástroje",
-    "profileToolsHint": "Co smí agent profilu používat. Čtení běží volně, změny se nejdřív ptají; nastavte každý nástroj na Vypnuto, Ptát se nebo Povolit. Paměť a pracovní prostor profilu se nikdy neptají.",
+    "profileToolsHint": "Co smí agent profilu používat: u každého nástroje zvolte Vyp., Ptát se nebo Povolit. Čtení běží volně, změny se nejdřív ptají. Souborové nástroje se řídí i přístupem ke každému projektu: Povolit zde nechává rozhodnutí na projektu. Jakmile chat přečetl vaše data, nástroj působící navenek se zeptá jednou za chat, i když je povolen. Paměť a workspace se neptají; změna paměti se zeptá po webové stránce nebo výstupu nástroje.",
     "profileWebSearchLlmNotice": "Klíč API a limity velikosti stránek se konfigurují globálně v nastavení LLM.",
     "projectAccessFileToolsOff": "Souborové nástroje jsou vypnuté",
     "projectChangedElsewhere": "Projekt byl změněn na jiném zařízení nebo mimo TyCo. Vaše změny ještě nejsou uloženy.",
@@ -1751,6 +1752,7 @@
     "pluginCapabilities": "Oprávnění pluginu: {capabilities}",
     "pluginSourceHint": "Nástroje, které tento plugin nabízí chatu. Běží s oprávněními pluginu.",
     "leakQuestion": "Tento chat už četl vaše data a toto volání by se dostalo na nové místo. Ptáme se jednou na místo v tomto chatu.",
+    "untrustedQuestion": "Tento chat už přečetl webovou stránku nebo výstup nástroje a toto volání by změnilo paměť, kterou uvidí všechny další chaty.",
     "contextTokens": "≈{count} tokenů",
     "catalogHint": "Odkud pocházejí nástroje agentů. Plugin vypnutý zde je vypnutý ve všech profilech a AI příkazech. Vestavěné nástroje se zapínají v „Zeptat se AI“, v každém profilu a v každém AI příkazu.",
     "catalogWhereHint": "Každý profil si ve svém nastavení vybírá nástroje a jak volně běží.",
