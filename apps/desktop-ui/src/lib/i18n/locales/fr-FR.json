@@ -1741,10 +1741,16 @@
     "languageAuto": "Auto",
     "ownLanguage": "Vous parlez",
     "route": "{from} → {to}",
-    "restartTitle": "Recommencer ?",
-    "restartMessage": "La transcription actuelle sera effacée et enregistrée dans l'historique.",
-    "restartConfirm": "Recommencer",
-    "ownLanguageDefault": "Par défaut ({language})"
+    "ownLanguageDefault": "Par défaut ({language})",
+    "listen": "Écouter",
+    "resume": "Reprendre",
+    "listenRecording": "Écouter avec enregistrement",
+    "resumeRecording": "Reprendre avec enregistrement",
+    "clear": "Effacer",
+    "clearTitle": "Effacer la transcription ?",
+    "clearMessage": "L’historique est désactivé dans les paramètres. La transcription actuelle sera perdue.",
+    "clearConfirm": "Effacer",
+    "sourceLockedHint": "Effacez la transcription pour changer la source audio"
   },
   "toolPermissions": {
     "riskRead": "Lecture",

@@ -228,4 +228,19 @@ describe('dialog history', () => {
     await Promise.all([beginning, ending])
     expect(vi.getTimerCount()).toBe(0)
   })
+
+  it('appends additional recording files via addRecording', async () => {
+    const recorded = {
+      ...meta,
+      recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
+      recordingFiles: ['2026-11-21 10-00-00 a1b2c3.opus'],
+    }
+    const { history, saved } = setup()
+    await history.begin(recorded)
+    await history.addRecording('2026-11-21 10-05-00 d4e5f6.opus')
+    expect(saved.at(-1)?.dialog?.recordingFiles).toEqual([
+      '2026-11-21 10-00-00 a1b2c3.opus',
+      '2026-11-21 10-05-00 d4e5f6.opus',
+    ])
+  })
 })

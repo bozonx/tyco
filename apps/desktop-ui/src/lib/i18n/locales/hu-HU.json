@@ -1741,10 +1741,16 @@
     "languageAuto": "Auto",
     "ownLanguage": "Ön ezen beszél",
     "route": "{from} → {to}",
-    "restartTitle": "Újrakezdés?",
-    "restartMessage": "Az aktuális átirat törlődik és mentésre kerül az előzményekbe.",
-    "restartConfirm": "Újrakezdés",
-    "ownLanguageDefault": "Alapértelmezett ({language})"
+    "ownLanguageDefault": "Alapértelmezett ({language})",
+    "listen": "Hallgatás",
+    "resume": "Folytatás",
+    "listenRecording": "Hallgatás rögzítéssel",
+    "resumeRecording": "Folytatás rögzítéssel",
+    "clear": "Törlés",
+    "clearTitle": "Törli az átiratot?",
+    "clearMessage": "Az előzmények ki vannak kapcsolva a beállításokban. Az aktuális átirat elvész.",
+    "clearConfirm": "Törlés",
+    "sourceLockedHint": "A forrás módosításához törölje az átiratot"
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

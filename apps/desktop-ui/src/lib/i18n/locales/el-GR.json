@@ -1741,10 +1741,16 @@
     "languageAuto": "Αυτόματα",
     "ownLanguage": "Μιλάτε",
     "route": "{from} → {to}",
-    "restartTitle": "Ξεκίνημα από την αρχή;",
-    "restartMessage": "Η τρέχουσα απομαγνητοφώνηση θα εκκαθαριστεί και θα αποθηκευτεί στο ιστορικό.",
-    "restartConfirm": "Ξεκίνημα από την αρχή",
-    "ownLanguageDefault": "Προεπιλογή ({language})"
+    "ownLanguageDefault": "Προεπιλογή ({language})",
+    "listen": "Ακρόαση",
+    "resume": "Συνέχεια",
+    "listenRecording": "Ακρόαση με εγγραφή",
+    "resumeRecording": "Συνέχεια με εγγραφή",
+    "clear": "Εκκαθάριση",
+    "clearTitle": "Εκκαθάριση απομαγνητοφώνησης;",
+    "clearMessage": "Το ιστορικό είναι απενεργοποιημένο στις ρυθμίσεις. Η τρέχουσα απομαγνητοφώνηση θα χαθεί.",
+    "clearConfirm": "Εκκαθάριση",
+    "sourceLockedHint": "Εκκαθαρίστε την απομαγνητοφώνηση για να αλλάξετε την πηγή ήχου"
   },
   "toolPermissions": {
     "riskRead": "Ανάγνωση",

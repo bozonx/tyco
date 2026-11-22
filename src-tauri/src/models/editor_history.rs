@@ -45,6 +45,10 @@ pub struct EditorHistoryDialog {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub recording_file: Option<String>,
+    /// The file names of call recordings if the session was recorded.
+    /// Multiple files occur if recording was stopped and resumed within one dialog.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub recording_files: Vec<String>,
     /// The recording stopped before the session did, e.g. the disk filled up:
     /// the file holds only the beginning.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]

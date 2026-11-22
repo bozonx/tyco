@@ -219,13 +219,20 @@ export const useDialogStore = defineStore('dialog', () => {
             startedAtMs: sessionStartedAtMs,
           }
         isRecordingLinked = Boolean(recordingFile)
-        void dialogHistory.begin({
-          startedAt: sessionStartedAtMs,
-          source: hasMicrophone.value ? 'microphoneAndSystem' : 'system',
-          ...(recordingFile && { recordingFile }),
-          ...(recordingFile &&
-            isRecordingFailedEarly && { isRecordingIncomplete: true }),
-        })
+        if (segments.value.length === 0) {
+          void dialogHistory.begin({
+            startedAt: sessionStartedAtMs,
+            source: hasMicrophone.value ? 'microphoneAndSystem' : 'system',
+            ...(recordingFile && {
+              recordingFile,
+              recordingFiles: [recordingFile],
+            }),
+            ...(recordingFile &&
+              isRecordingFailedEarly && { isRecordingIncomplete: true }),
+          })
+        } else if (recordingFile) {
+          void dialogHistory.addRecording(recordingFile)
+        }
       }
       status.value = next
       if (next !== 'running') {
@@ -234,7 +241,7 @@ export const useDialogStore = defineStore('dialog', () => {
         recording.value = undefined
       }
       if (next === 'idle' || next === 'failed') {
-        void dialogHistory.end()
+        void dialogHistory.checkpoint()
         discardUnlinkedRecording()
       }
     },
@@ -308,8 +315,8 @@ export const useDialogStore = defineStore('dialog', () => {
   }
 
   /**
-   * A new session: the previous transcript goes, kept in the history when it is
-   * on. `isRecording`: the session is also recorded to a file
+   * Starts or resumes a dialog session. `isRecording`: whether this run is also
+   * recorded to an audio file.
    */
   async function start(options: { isRecording?: boolean } = {}) {
     if (isActive.value || isPreparing) return
@@ -317,9 +324,6 @@ export const useDialogStore = defineStore('dialog', () => {
     errorText.value = ''
     canFixInSettings.value = false
     for (const side of ['me', 'remote'] as const) delete channelStatus[side]
-    await dialogHistory.end()
-    translationQueue.clear()
-    transcript.clear()
     isRecordingRequested = options.isRecording === true
     recordingFile = undefined
     isRecordingFailedEarly = false
@@ -340,6 +344,16 @@ export const useDialogStore = defineStore('dialog', () => {
     } finally {
       isPreparing = false
     }
+  }
+
+  /** Clears the current transcript and closes the history session. */
+  async function clear() {
+    if (isActive.value) return
+    await dialogHistory.end()
+    translationQueue.clear()
+    transcript.clear()
+    errorText.value = ''
+    canFixInSettings.value = false
   }
 
   async function stop() {
@@ -516,6 +530,7 @@ export const useDialogStore = defineStore('dialog', () => {
     hasMicrophone,
     recording,
     start,
+    clear,
     stop,
     stopAndSave,
     stopAndExpand,

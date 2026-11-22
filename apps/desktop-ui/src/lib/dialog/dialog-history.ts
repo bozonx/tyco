@@ -22,6 +22,8 @@ export interface DialogHistoryDependencies {
 export interface DialogHistory {
   /** Ends the previous session, if any, and opens a new one */
   begin: (session: EditorHistoryDialog) => Promise<void>
+  /** Adds another recording file to the current session */
+  addRecording: (file: string) => Promise<void>
   /** Writes the session when its text changed since the last write */
   checkpoint: () => Promise<void>
   /** A last checkpoint; the session stays closed until `begin` */
@@ -69,8 +71,11 @@ export function createDialogHistory(
     timer = undefined
   }
 
+  const hasRecordings = (meta: EditorHistoryDialog) =>
+    Boolean(meta.recordingFile || meta.recordingFiles?.length)
+
   const reportUnlinked = (target: Session) => {
-    if (!target.meta.recordingFile || target.id || target.isUnlinkReported)
+    if (!hasRecordings(target.meta) || target.id || target.isUnlinkReported)
       return
     target.isUnlinkReported = true
     deps.onRecordingUnlinked?.()
@@ -79,7 +84,7 @@ export function createDialogHistory(
   const write = (target: Session): Promise<void> => {
     pending = pending.then(async () => {
       const text = deps.getText()
-      if (!text.trim() && !target.meta.recordingFile) return
+      if (!text.trim() && !hasRecordings(target.meta)) return
       const meta = target.meta
       if (text === target.savedText && meta === target.savedMeta) return
       try {
@@ -126,11 +131,26 @@ export function createDialogHistory(
       // the first write of a recorded session links its file at once
       await write(current)
     },
+    async addRecording(file) {
+      if (!session) return
+      const files = session.meta.recordingFiles
+        ? [...session.meta.recordingFiles]
+        : session.meta.recordingFile
+          ? [session.meta.recordingFile]
+          : []
+      if (!files.includes(file)) files.push(file)
+      session.meta = {
+        ...session.meta,
+        recordingFile: session.meta.recordingFile ?? file,
+        recordingFiles: files,
+      }
+      await write(session)
+    },
     checkpoint: () => (session ? write(session) : pending),
     end,
     markRecordingIncomplete() {
       const current = session
-      if (!current?.meta.recordingFile) return pending
+      if (!current || !hasRecordings(current.meta)) return pending
       current.meta = { ...current.meta, isRecordingIncomplete: true }
       return write(current)
     },

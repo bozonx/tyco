@@ -1,3 +1,15 @@
+export interface HistoryListItemFile {
+  name: string
+  /** Gone from where the entry points: no action is offered */
+  isMissing: boolean
+  missingLabel: string
+  /** Said of a file that is there, e.g. that it holds only a part */
+  note?: string
+  action: HistoryListAction
+  /** Plays the file in place; missing when it cannot be played */
+  playback?: HistoryFilePlayback
+}
+
 export interface HistoryListItem {
   id: string
   value: string
@@ -18,17 +30,9 @@ export interface HistoryListItem {
   /** Additional localized terms included in search. */
   searchText?: string
   /** A file the entry links to, e.g. the recording of a dialog */
-  file?: {
-    name: string
-    /** Gone from where the entry points: no action is offered */
-    isMissing: boolean
-    missingLabel: string
-    /** Said of a file that is there, e.g. that it holds only a part */
-    note?: string
-    action: HistoryListAction
-    /** Plays the file in place; missing when it cannot be played */
-    playback?: HistoryFilePlayback
-  }
+  file?: HistoryListItemFile
+  /** Files the entry links to, if multiple recordings exist */
+  files?: HistoryListItemFile[]
 }
 
 /** How an entry plays its file with the webview's own player */

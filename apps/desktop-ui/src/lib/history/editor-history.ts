@@ -51,7 +51,9 @@ export function createEditorHistoryModel(
     // dictated is kept, here or anywhere else; it is the user's choice. The
     // backend checks the same setting again. A recorded dialog is kept before
     // anything was recognized: its entry is the way back to the file
-    const isRecordedDialog = Boolean(entry.dialog?.recordingFile)
+    const isRecordedDialog = Boolean(
+      entry.dialog?.recordingFile || entry.dialog?.recordingFiles?.length
+    )
     if (!canRecord() || (!entry.text.trim() && !isRecordedDialog)) return null
 
     const saved = await track(call('add_editor_history_item', { entry }))
@@ -150,9 +152,14 @@ export function createEditorHistoryModel(
    * unless an entry names it again
    */
   const releaseEditorItem = async (item: EditorHistoryItem): Promise<void> => {
-    const file = item.dialog?.recordingFile
-    if (!file) return
-    await track(call('discard_dialog_recording', { file }))
+    const files = item.dialog?.recordingFiles?.length
+      ? item.dialog.recordingFiles
+      : item.dialog?.recordingFile
+        ? [item.dialog.recordingFile]
+        : []
+    for (const file of files) {
+      await track(call('discard_dialog_recording', { file }))
+    }
   }
 
   const clearEditorHistory = async (): Promise<void> => {

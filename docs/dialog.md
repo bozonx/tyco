@@ -11,20 +11,21 @@ transcript saved.
 
 ## Starting and stopping
 
-Press **Start** during the call. The dialog keeps going when you switch tabs,
+Press **Listen** during the call. The dialog keeps going when you switch tabs,
 hide or minimize the window, until you press **Stop** or quit TyCo.
 
-Every start begins a new conversation: the previous transcript leaves the
-feed. If a transcript is already present, TyCo asks for confirmation to start
-over before clearing it. With the history turned on it is kept there (see
-[History](#history)); with the history off it is gone.
+When stopped, pressing **Resume** continues the conversation in the same feed,
+preserving previous turns. To start with a clean slate, click **Clear**: the
+feed is cleared and saved to history (see [History](#history)); if history is
+turned off, TyCo asks for confirmation before clearing.
 
 While the dialog runs it holds the sound: voice input, voice commands and
 listening do not record and say that the sound is busy with the dialog.
 
 ## Source
 
-Pick it in the toolbar before you start; TyCo remembers the last choice.
+Pick it in the toolbar before you start; TyCo remembers the last choice. To
+change the source for an existing conversation, clear the feed first.
 
 - **Call**: your microphone and the other side are recorded apart and shown
   as bubbles on both sides. Use it for Zoom, Meet, Teams and other calls.
@@ -89,20 +90,21 @@ to summarize it with a transformation:
 
 ## History
 
-With the history turned on (**Settings → History**), each conversation from
-**Start** to **Stop** becomes one entry of the **History** tab, in the format
-above. It is saved every few seconds while the conversation goes on, and when
-you stop, hide the window or quit TyCo, so a crash loses little. Words still
-being recognized are not saved. A conversation in which nothing was
-recognized leaves no entry, unless it was recorded: then the entry is there
-from the start, so the recording can always be found. The entry is kept as long as other history
-entries and is deleted the same way, together with its recording.
+With the history turned on (**Settings → History**), each conversation becomes
+one entry of the **History** tab, in the format above. It is saved every few
+seconds while the conversation goes on, and when you stop, resume, hide the
+window or quit TyCo, so a crash loses little. Words still being recognized are
+not saved. A conversation in which nothing was recognized leaves no entry,
+unless it was recorded: then the entry is there from the start, so the
+recording can always be found. The entry is kept as long as other history
+entries and is deleted the same way, together with its recordings.
 
 ## Recording the call
 
-The arrow next to **Start** offers **Start recording**: the conversation is
-transcribed as usual and its sound is also saved to a file. **Start** itself
-never records. The first time, TyCo reminds you to tell the other person
+The arrow next to **Listen** (or **Resume**) offers **Listen with recording**
+(or **Resume with recording**): the conversation is transcribed as usual and
+its sound is also saved to a file. **Listen** itself never records. Resuming
+with recording appends a new audio file to the same conversation in history. The first time, TyCo reminds you to tell the other person
 before you record a conversation with them; **Got it** starts the recording,
 **Cancel** starts nothing. Recording is offered only while the history is
 saved to disk (**Settings → History**): a recording belongs to its history

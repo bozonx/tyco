@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 8fe0b9ff1d09675f735200f067000ae5ef258e4bc3e5a1ec54bec44240a17894
+// Source hash: 6092b99dc664d0f788421735e4c27a2886faea380de25ff09f6fb580d7bbceed
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -571,6 +571,11 @@ export type EditorHistoryDialog = {
    * may be missing, e.g. not synced yet.
    */
   recordingFile?: string
+  /**
+   * The file names of call recordings if the session was recorded. Multiple
+   * files occur if recording was stopped and resumed within one dialog.
+   */
+  recordingFiles?: Array<string>
   /**
    * The recording stopped before the session did, e.g. the disk filled up: the
    * file holds only the beginning.

@@ -1741,10 +1741,16 @@
     "languageAuto": "Auto",
     "ownLanguage": "You speak",
     "route": "{from} → {to}",
-    "restartTitle": "Start over?",
-    "restartMessage": "The current transcript will be cleared and saved to history.",
-    "restartConfirm": "Start over",
-    "ownLanguageDefault": "Default ({language})"
+    "ownLanguageDefault": "Default ({language})",
+    "listen": "Listen",
+    "resume": "Resume",
+    "listenRecording": "Listen with recording",
+    "resumeRecording": "Resume with recording",
+    "clear": "Clear",
+    "clearTitle": "Clear transcript?",
+    "clearMessage": "History is turned off in settings. The current transcript will be lost.",
+    "clearConfirm": "Clear",
+    "sourceLockedHint": "Clear the transcript to change the source"
   },
   "toolPermissions": {
     "riskRead": "Reads",

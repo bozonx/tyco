@@ -1741,10 +1741,16 @@
     "languageAuto": "Auto",
     "ownLanguage": "Sie sprechen",
     "route": "{from} → {to}",
-    "restartTitle": "Neu beginnen?",
-    "restartMessage": "Das aktuelle Transkript wird gelöscht und im Verlauf gespeichert.",
-    "restartConfirm": "Neu beginnen",
-    "ownLanguageDefault": "Standard ({language})"
+    "ownLanguageDefault": "Standard ({language})",
+    "listen": "Anhören",
+    "resume": "Fortsetzen",
+    "listenRecording": "Mit Aufnahme anhören",
+    "resumeRecording": "Mit Aufnahme fortsetzen",
+    "clear": "Löschen",
+    "clearTitle": "Transkript löschen?",
+    "clearMessage": "Der Verlauf ist in den Einstellungen deaktiviert. Das aktuelle Transkript geht verloren.",
+    "clearConfirm": "Löschen",
+    "sourceLockedHint": "Transkript löschen, um die Audioquelle zu ändern"
   },
   "toolPermissions": {
     "riskRead": "Liest",

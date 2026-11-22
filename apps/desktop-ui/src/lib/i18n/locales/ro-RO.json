@@ -1741,10 +1741,16 @@
     "languageAuto": "Auto",
     "ownLanguage": "Vorbiți",
     "route": "{from} → {to}",
-    "restartTitle": "Începeți din nou?",
-    "restartMessage": "Transcrierea curentă va fi ștearsă și salvată în istoric.",
-    "restartConfirm": "Începe din nou",
-    "ownLanguageDefault": "Implicit ({language})"
+    "ownLanguageDefault": "Implicit ({language})",
+    "listen": "Ascultă",
+    "resume": "Reia",
+    "listenRecording": "Ascultă cu înregistrare",
+    "resumeRecording": "Reia cu înregistrare",
+    "clear": "Șterge",
+    "clearTitle": "Ștergeți transcrierea?",
+    "clearMessage": "Istoricul este dezactivat în setări. Transcrierea curentă se va pierde.",
+    "clearConfirm": "Șterge",
+    "sourceLockedHint": "Ștergeți transcrierea pentru a schimba sursa audio"
   },
   "toolPermissions": {
     "riskRead": "Citire",

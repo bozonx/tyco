@@ -1741,10 +1741,16 @@
     "languageAuto": "Auto",
     "ownLanguage": "Mluvíte",
     "route": "{from} → {to}",
-    "restartTitle": "Začít znovu?",
-    "restartMessage": "Aktuální přepis bude vymazán a uložen do historie.",
-    "restartConfirm": "Začít znovu",
-    "ownLanguageDefault": "Výchozí ({language})"
+    "ownLanguageDefault": "Výchozí ({language})",
+    "listen": "Poslouchat",
+    "resume": "Pokračovat",
+    "listenRecording": "Poslouchat se záznamem",
+    "resumeRecording": "Pokračovat se záznamem",
+    "clear": "Vymazat",
+    "clearTitle": "Vymazat přepis?",
+    "clearMessage": "Historie je v nastavení vypnuta. Aktuální přepis bude ztracen.",
+    "clearConfirm": "Vymazat",
+    "sourceLockedHint": "Chcete-li změnit zdroj, vymažte přepis"
   },
   "toolPermissions": {
     "riskRead": "Čtení",

@@ -1741,10 +1741,16 @@
     "languageAuto": "Auto",
     "ownLanguage": "Hablas",
     "route": "{from} → {to}",
-    "restartTitle": "¿Empezar de nuevo?",
-    "restartMessage": "La transcripción actual se borrará y se guardará en el historial.",
-    "restartConfirm": "Empezar de nuevo",
-    "ownLanguageDefault": "Predeterminado ({language})"
+    "ownLanguageDefault": "Predeterminado ({language})",
+    "listen": "Escuchar",
+    "resume": "Continuar",
+    "listenRecording": "Escuchar con grabación",
+    "resumeRecording": "Continuar con grabación",
+    "clear": "Limpiar",
+    "clearTitle": "¿Borrar la transcripción?",
+    "clearMessage": "El historial está desactivado en la configuración. La transcripción actual se perderá.",
+    "clearConfirm": "Limpiar",
+    "sourceLockedHint": "Borra la transcripción para cambiar la fuente"
   },
   "toolPermissions": {
     "riskRead": "Lectura",

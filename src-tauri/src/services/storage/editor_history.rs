@@ -518,20 +518,37 @@ fn validate_restored_item(item: &mut EditorHistoryItem, now_ms: u64) -> Result<(
 
 /// The webview names a recording by its file name: nothing else is taken.
 fn validate_recording_file(dialog: &crate::models::EditorHistoryDialog) -> Result<(), AppError> {
-    match &dialog.recording_file {
-        Some(name) if !recordings::is_recording_name(name) => Err(AppError::InvalidInput(
-            "Invalid name of a call recording".into(),
-        )),
-        _ => Ok(()),
+    if let Some(name) = &dialog.recording_file {
+        if !recordings::is_recording_name(name) {
+            return Err(AppError::InvalidInput(
+                "Invalid name of a call recording".into(),
+            ));
+        }
     }
+    for name in &dialog.recording_files {
+        if !recordings::is_recording_name(name) {
+            return Err(AppError::InvalidInput(
+                "Invalid name of a call recording".into(),
+            ));
+        }
+    }
+    Ok(())
 }
 
 /// The recordings the entries `items` name.
 fn recording_names(items: &[EditorHistoryItem]) -> HashSet<String> {
-    items
-        .iter()
-        .filter_map(|item| item.dialog.as_ref()?.recording_file.clone())
-        .collect()
+    let mut names = HashSet::new();
+    for item in items {
+        if let Some(dialog) = &item.dialog {
+            if let Some(name) = &dialog.recording_file {
+                names.insert(name.clone());
+            }
+            for name in &dialog.recording_files {
+                names.insert(name.clone());
+            }
+        }
+    }
+    names
 }
 
 /// Removes the recording `file` of a removed entry once its undo is over,

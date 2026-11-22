@@ -1737,10 +1737,16 @@
     "languageAuto": "自動",
     "ownLanguage": "你說的語言",
     "route": "{from} → {to}",
-    "restartTitle": "重新開始？",
-    "restartMessage": "目前的逐字稿將被清除並儲存至歷史記錄中。",
-    "restartConfirm": "重新開始",
-    "ownLanguageDefault": "預設（{language}）"
+    "ownLanguageDefault": "預設（{language}）",
+    "listen": "聆聽",
+    "resume": "繼續",
+    "listenRecording": "錄音並聆聽",
+    "resumeRecording": "錄音並繼續",
+    "clear": "清除",
+    "clearTitle": "清除逐字稿？",
+    "clearMessage": "歷史記錄已在設定中關閉。目前的逐字稿將會遺失。",
+    "clearConfirm": "清除",
+    "sourceLockedHint": "清除逐字稿以更改音訊來源"
   },
   "toolPermissions": {
     "riskRead": "讀取",

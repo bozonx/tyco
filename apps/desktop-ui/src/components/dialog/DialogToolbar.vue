@@ -1,24 +1,35 @@
 <template>
   <div class="dialog-toolbar">
-    <!-- Start never records; recording is asked for in its menu -->
-    <div v-if="isIdle" class="dialog-toolbar-split">
+    <!-- Listen never records; recording is asked for in its menu -->
+    <div v-if="isIdle" class="dialog-toolbar-actions">
+      <div class="dialog-toolbar-split">
+        <Button
+          class="dialog-toolbar-run"
+          variant="primary"
+          size="sm"
+          :icon="isEmpty ? 'mdi:play' : 'mdi:play-pause'"
+          @click="handleRun"
+          >{{ isEmpty ? t('dialog.listen') : t('dialog.resume') }}</Button
+        >
+        <DropdownMenu
+          class="dialog-toolbar-start-menu"
+          square
+          variant="primary"
+          icon="mdi:chevron-down"
+          hide-chevron
+          :title="t('dialog.startOptions')"
+          :items="startItems"
+        />
+      </div>
       <Button
-        class="dialog-toolbar-run"
-        variant="primary"
+        v-if="!isEmpty"
+        class="dialog-toolbar-clear"
+        variant="ghost"
         size="sm"
-        icon="mdi:play"
-        @click="handleStart"
-        >{{ t('dialog.start') }}</Button
+        icon="mdi:broom"
+        @click="handleClear"
+        >{{ t('dialog.clear') }}</Button
       >
-      <DropdownMenu
-        class="dialog-toolbar-start-menu"
-        square
-        variant="primary"
-        icon="mdi:chevron-down"
-        hide-chevron
-        :title="t('dialog.startOptions')"
-        :items="startItems"
-      />
     </div>
     <Button
       v-else
@@ -36,7 +47,9 @@
       class="dialog-toolbar-source"
       :model-value="dialog.config.source"
       size="sm"
+      :disabled="!isEmpty"
       :label="t('dialog.source')"
+      :title="!isEmpty ? t('dialog.sourceLockedHint') : undefined"
       :options="sourceOptions"
       @update:model-value="(source) => dialog.updateConfig({ source })"
     />
@@ -89,12 +102,12 @@
       :items="moreItems"
     />
     <ConfirmModal
-      :open="isRestartConfirmOpen"
-      :title="t('dialog.restartTitle')"
-      :message="t('dialog.restartMessage')"
-      :confirm-text="t('dialog.restartConfirm')"
-      @confirm="confirmRestart"
-      @cancel="cancelRestart"
+      :open="isClearConfirmOpen"
+      :title="t('dialog.clearTitle')"
+      :message="t('dialog.clearMessage')"
+      :confirm-text="t('dialog.clearConfirm')"
+      @confirm="confirmClear"
+      @cancel="isClearConfirmOpen = false"
     />
     <ConfirmModal
       :open="isRecordingNoticeOpen"
@@ -135,63 +148,50 @@ const isIdle = computed(
 )
 const isStopping = computed(() => dialog.status === 'stopping')
 const isEmpty = computed(() => dialog.segments.length === 0)
-const isRestartConfirmOpen = ref(false)
+const isClearConfirmOpen = ref(false)
 const isRecordingNoticeOpen = ref(false)
-const pendingAction = ref<'start' | 'record' | null>(null)
 
 // a recording belongs to its history entry: nothing would keep it otherwise
 const canRecord = computed(
   () => desktopStore.userConfig.editor.history.storage === 'disk'
 )
-const startItems = computed<DropdownMenuItem[]>(() => [
-  {
-    label: canRecord.value
-      ? t('dialog.startRecording')
-      : t('dialog.startRecordingNeedsHistory'),
-    icon: 'mdi:record-circle-outline',
-    disabled: !canRecord.value,
-    action: handleStartRecording,
-  },
-])
+const startItems = computed<DropdownMenuItem[]>(() => {
+  const label = isEmpty.value
+    ? t('dialog.listenRecording')
+    : t('dialog.resumeRecording')
+  return [
+    {
+      label: canRecord.value ? label : t('dialog.startRecordingNeedsHistory'),
+      icon: 'mdi:record-circle-outline',
+      disabled: !canRecord.value,
+      action: handleStartRecording,
+    },
+  ]
+})
 
-function handleStart() {
-  if (isEmpty.value) {
-    void dialog.start()
-  } else {
-    pendingAction.value = 'start'
-    isRestartConfirmOpen.value = true
-  }
+function handleRun() {
+  void dialog.start()
 }
 
 function handleStartRecording() {
-  if (isEmpty.value) {
-    proceedWithRecording()
-  } else {
-    pendingAction.value = 'record'
-    isRestartConfirmOpen.value = true
-  }
-}
-
-function proceedWithRecording() {
-  if (dialog.config.isRecordingNoticeAcknowledged)
+  if (dialog.config.isRecordingNoticeAcknowledged) {
     void dialog.start({ isRecording: true })
-  else isRecordingNoticeOpen.value = true
-}
-
-function confirmRestart() {
-  isRestartConfirmOpen.value = false
-  const action = pendingAction.value
-  pendingAction.value = null
-  if (action === 'record') {
-    proceedWithRecording()
   } else {
-    void dialog.start()
+    isRecordingNoticeOpen.value = true
   }
 }
 
-function cancelRestart() {
-  isRestartConfirmOpen.value = false
-  pendingAction.value = null
+function handleClear() {
+  if (canRecord.value) {
+    void dialog.clear()
+  } else {
+    isClearConfirmOpen.value = true
+  }
+}
+
+function confirmClear() {
+  isClearConfirmOpen.value = false
+  void dialog.clear()
 }
 
 async function confirmRecordingNotice() {
@@ -281,10 +281,16 @@ function levelLabel(side: DialogSide) {
   flex-shrink: 0;
 }
 
-/* the same width while it reads Start, Stop or Stopping */
+/* the same width while it reads Listen, Resume, Stop or Stopping */
 .dialog-toolbar-run {
   min-width: 7.5rem;
   justify-content: center;
+}
+
+.dialog-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 /* Start and its menu read as one button */

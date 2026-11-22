@@ -1741,10 +1741,16 @@
     "languageAuto": "Авто",
     "ownLanguage": "Ви говорите",
     "route": "{from} → {to}",
-    "restartTitle": "Почати заново?",
-    "restartMessage": "Поточну розшифровку буде очищено та збережено в історію.",
-    "restartConfirm": "Почати заново",
-    "ownLanguageDefault": "За замовчуванням ({language})"
+    "ownLanguageDefault": "За замовчуванням ({language})",
+    "listen": "Слухати",
+    "resume": "Продовжити",
+    "listenRecording": "Слухати із записом",
+    "resumeRecording": "Продовжити із записом",
+    "clear": "Очистити",
+    "clearTitle": "Очистити розшифровку?",
+    "clearMessage": "Історію вимкнено в налаштуваннях. Поточну розшифровку буде втрачено.",
+    "clearConfirm": "Очистити",
+    "sourceLockedHint": "Очистіть розшифровку, щоб змінити джерело звуку"
   },
   "toolPermissions": {
     "riskRead": "Читання",

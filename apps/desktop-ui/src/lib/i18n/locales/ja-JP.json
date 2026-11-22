@@ -1737,10 +1737,16 @@
     "languageAuto": "自動",
     "ownLanguage": "あなたの言語",
     "route": "{from} → {to}",
-    "restartTitle": "最初からやり直しますか？",
-    "restartMessage": "現在の文字起こしは消去され、履歴に保存されます。",
-    "restartConfirm": "やり直す",
-    "ownLanguageDefault": "デフォルト（{language}）"
+    "ownLanguageDefault": "デフォルト（{language}）",
+    "listen": "聞き取る",
+    "resume": "再開",
+    "listenRecording": "録音しながら聞き取る",
+    "resumeRecording": "録音しながら再開",
+    "clear": "クリア",
+    "clearTitle": "文字起こしをクリアしますか？",
+    "clearMessage": "設定で履歴が無効になっています。現在の文字起こしは失われます。",
+    "clearConfirm": "クリア",
+    "sourceLockedHint": "音源を変更するには文字起こしをクリアしてください"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

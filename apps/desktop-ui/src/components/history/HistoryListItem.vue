@@ -66,53 +66,56 @@
         {{ t('common.empty') }}
       </div>
 
-      <div v-if="item.file" class="history-file">
-        <AppIcon icon="mdi:file-music-outline" size="xs" />
-        <span class="history-file-name" :title="item.file.name">{{
-          item.file.name
-        }}</span>
-        <span v-if="item.file.isMissing" class="history-file-missing">{{
-          item.file.missingLabel
-        }}</span>
-        <span v-else-if="item.file.note" class="history-file-note">{{
-          item.file.note
-        }}</span>
-        <Button
-          v-else
-          size="xs"
-          variant="ghost"
-          :icon="item.file.action.icon"
-          @click="emit('action', item.file.action.id, item)"
-          >{{ item.file.action.title }}</Button
+      <template v-for="f in displayedFiles" :key="f.name">
+        <div class="history-file">
+          <AppIcon icon="mdi:file-music-outline" size="xs" />
+          <span class="history-file-name" :title="f.name">{{ f.name }}</span>
+          <span v-if="f.isMissing" class="history-file-missing">{{
+            f.missingLabel
+          }}</span>
+          <span v-else-if="f.note" class="history-file-note">{{ f.note }}</span>
+          <Button
+            v-else
+            size="xs"
+            variant="ghost"
+            :icon="f.action.icon"
+            @click="emit('action', f.action.id, item)"
+            >{{ f.action.title }}</Button
+          >
+          <IconButton
+            v-if="f.playback && !f.isMissing"
+            size="xs"
+            variant="ghost"
+            :disabled="
+              activePlayerFile !== f.name && Boolean(f.playback.disabledTitle)
+            "
+            :label="
+              activePlayerFile === f.name
+                ? f.playback.closeTitle
+                : f.playback.disabledTitle || f.playback.playTitle
+            "
+            :icon="activePlayerFile === f.name ? 'mdi:close' : 'mdi:play'"
+            @click="togglePlayer(f)"
+          />
+        </div>
+        <div
+          v-if="f.playback && activePlayerFile === f.name"
+          class="history-player"
         >
-        <IconButton
-          v-if="playback && !item.file.isMissing"
-          size="xs"
-          variant="ghost"
-          :disabled="!playerSource && Boolean(playback.disabledTitle)"
-          :label="
-            playerSource
-              ? playback.closeTitle
-              : playback.disabledTitle || playback.playTitle
-          "
-          :icon="playerSource ? 'mdi:close' : 'mdi:play'"
-          @click="togglePlayer"
-        />
-      </div>
-      <div v-if="playback && playerSource" class="history-player">
-        <audio
-          class="history-player-audio"
-          controls
-          autoplay
-          preload="metadata"
-          :src="playerSource"
-          @error="isPlayerFailed = true"
-          @loadedmetadata="isPlayerFailed = false"
-        />
-        <span v-if="isPlayerFailed" class="history-file-missing">{{
-          playback.unavailableLabel
-        }}</span>
-      </div>
+          <audio
+            class="history-player-audio"
+            controls
+            autoplay
+            preload="metadata"
+            :src="playerSource"
+            @error="isPlayerFailed = true"
+            @loadedmetadata="isPlayerFailed = false"
+          />
+          <span v-if="isPlayerFailed" class="history-file-missing">{{
+            f.playback.unavailableLabel
+          }}</span>
+        </div>
+      </template>
 
       <DisclosureHeader
         v-if="isLong"
@@ -166,6 +169,7 @@ import {
 import type {
   HistoryListAction,
   HistoryListItem,
+  HistoryListItemFile,
 } from '../../lib/history/history-list-types'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
@@ -193,23 +197,43 @@ const LONG_ENTRY_LINE_LIMIT = 3
 const visibleActions = computed(() =>
   props.actions.filter((action) => action.isVisible?.(props.item) ?? true)
 )
-const playback = computed(() => props.item.file?.playback)
+const displayedFiles = computed<HistoryListItemFile[]>(() => {
+  if (props.item.files?.length) return props.item.files
+  return props.item.file ? [props.item.file] : []
+})
+const activePlayerFile = ref<string>('')
 /** The URL the open player plays; empty while it is closed */
 const playerSource = ref('')
 const isPlayerFailed = ref(false)
-function togglePlayer() {
+
+function togglePlayer(f: HistoryListItemFile) {
   isPlayerFailed.value = false
-  playerSource.value =
-    playerSource.value || !playback.value ? '' : playback.value.source()
+  if (activePlayerFile.value === f.name) {
+    activePlayerFile.value = ''
+    playerSource.value = ''
+  } else {
+    activePlayerFile.value = f.name
+    playerSource.value = f.playback ? f.playback.source() : ''
+  }
 }
+
 // the file went, or a dialog started recording: the player stops
 watch(
-  () =>
-    !playback.value ||
-    Boolean(playback.value.disabledTitle) ||
-    Boolean(props.item.file?.isMissing),
+  () => {
+    const active = displayedFiles.value.find(
+      (f) => f.name === activePlayerFile.value
+    )
+    return (
+      !active?.playback ||
+      Boolean(active.playback.disabledTitle) ||
+      Boolean(active.isMissing)
+    )
+  },
   (isUnplayable) => {
-    if (isUnplayable) playerSource.value = ''
+    if (isUnplayable) {
+      activePlayerFile.value = ''
+      playerSource.value = ''
+    }
   }
 )
 const hasDetails = computed(() => Boolean(props.item.original))

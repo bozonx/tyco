@@ -1741,10 +1741,16 @@
     "languageAuto": "자동",
     "ownLanguage": "내 언어",
     "route": "{from} → {to}",
-    "restartTitle": "다시 시작할까요?",
-    "restartMessage": "현재 텍스트 변환 내용이 지워지고 기록에 저장됩니다.",
-    "restartConfirm": "다시 시작",
-    "ownLanguageDefault": "기본값 ({language})"
+    "ownLanguageDefault": "기본값 ({language})",
+    "listen": "듣기",
+    "resume": "계속",
+    "listenRecording": "녹음과 함께 듣기",
+    "resumeRecording": "녹음과 함께 계속",
+    "clear": "지우기",
+    "clearTitle": "스크립트를 지우시겠습니까?",
+    "clearMessage": "설정에서 기록이 꺼져 있습니다. 현재 스크립트가 손실됩니다.",
+    "clearConfirm": "지우기",
+    "sourceLockedHint": "오디오 소스를 변경하려면 스크립트를 지우세요"
   },
   "toolPermissions": {
     "riskRead": "읽기",

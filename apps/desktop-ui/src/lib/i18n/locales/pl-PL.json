@@ -1741,10 +1741,16 @@
     "languageAuto": "Auto",
     "ownLanguage": "Mówisz po",
     "route": "{from} → {to}",
-    "restartTitle": "Zacząć od nowa?",
-    "restartMessage": "Bieżąca transkrypcja zostanie wyczyszczona i zapisana w historii.",
-    "restartConfirm": "Zacznij od nowa",
-    "ownLanguageDefault": "Domyślny ({language})"
+    "ownLanguageDefault": "Domyślny ({language})",
+    "listen": "Słuchaj",
+    "resume": "Wznów",
+    "listenRecording": "Słuchaj z nagrywaniem",
+    "resumeRecording": "Wznów z nagrywaniem",
+    "clear": "Wyczyść",
+    "clearTitle": "Wyczyścić transkrypcję?",
+    "clearMessage": "Historia jest wyłączona w ustawieniach. Bieżąca transkrypcja zostanie utracona.",
+    "clearConfirm": "Wyczyść",
+    "sourceLockedHint": "Wyczyść transkrypcję, aby zmienić źródło dźwięku"
   },
   "toolPermissions": {
     "riskRead": "Odczyt",

@@ -1737,10 +1737,16 @@
     "languageAuto": "自动",
     "ownLanguage": "你说的语言",
     "route": "{from} → {to}",
-    "restartTitle": "重新开始？",
-    "restartMessage": "当前转录内容将被清空并保存到历史记录中。",
-    "restartConfirm": "重新开始",
-    "ownLanguageDefault": "默认（{language}）"
+    "ownLanguageDefault": "默认（{language}）",
+    "listen": "聆听",
+    "resume": "继续",
+    "listenRecording": "录音并聆听",
+    "resumeRecording": "录音并继续",
+    "clear": "清空",
+    "clearTitle": "清空转录？",
+    "clearMessage": "历史记录已在设置中关闭。当前转录内容将丢失。",
+    "clearConfirm": "清空",
+    "sourceLockedHint": "清空转录内容以更改音频源"
   },
   "toolPermissions": {
     "riskRead": "读取",

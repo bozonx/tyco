@@ -65,6 +65,7 @@ const { t, locale } = useI18n()
 
 export type {
   HistoryListItem,
+  HistoryListItemFile,
   HistoryListAction,
 } from '../../lib/history/history-list-types'
 

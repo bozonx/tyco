@@ -656,6 +656,7 @@ fn recorded(id: &str, file: &str, created_at_ms: u64) -> EditorHistoryItem {
         started_at_ms: created_at_ms,
         source: crate::models::EditorHistoryDialogSource::System,
         recording_file: Some(file.to_owned()),
+        recording_files: vec![file.to_owned()],
         is_recording_incomplete: false,
     });
     item

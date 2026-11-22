@@ -1741,10 +1741,16 @@
     "languageAuto": "Авто",
     "ownLanguage": "Сіз сөйлейтін тіл",
     "route": "{from} → {to}",
-    "restartTitle": "Қайта бастау керек пе?",
-    "restartMessage": "Ағымдағы транскрипт тазартылып, тарихқа сақталады.",
-    "restartConfirm": "Қайта бастау",
-    "ownLanguageDefault": "Әдепкі бойынша ({language})"
+    "ownLanguageDefault": "Әдепкі бойынша ({language})",
+    "listen": "Тыңдау",
+    "resume": "Жалғастыру",
+    "listenRecording": "Жазумен тыңдау",
+    "resumeRecording": "Жазумен жалғастыру",
+    "clear": "Тазалау",
+    "clearTitle": "Транскриптті тазалау керек пе?",
+    "clearMessage": "Тарих баптауларда өшірілген. Ағымдағы транскрипт жойылады.",
+    "clearConfirm": "Тазалау",
+    "sourceLockedHint": "Дыбыс көзін өзгерту үшін транскриптті тазалаңыз"
   },
   "toolPermissions": {
     "riskRead": "Оқу",

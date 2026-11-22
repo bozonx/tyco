@@ -1741,10 +1741,16 @@
     "languageAuto": "Auto",
     "ownLanguage": "Parli",
     "route": "{from} → {to}",
-    "restartTitle": "Ricominciare?",
-    "restartMessage": "La trascrizione attuale verrà cancellata e salvata nella cronologia.",
-    "restartConfirm": "Ricomincia",
-    "ownLanguageDefault": "Predefinito ({language})"
+    "ownLanguageDefault": "Predefinito ({language})",
+    "listen": "Ascolta",
+    "resume": "Riprendi",
+    "listenRecording": "Ascolta con registrazione",
+    "resumeRecording": "Riprendi con registrazione",
+    "clear": "Cancella",
+    "clearTitle": "Cancellare la trascrizione?",
+    "clearMessage": "La cronologia è disattivata nelle impostazioni. La trascrizione attuale andrà persa.",
+    "clearConfirm": "Cancella",
+    "sourceLockedHint": "Cancella la trascrizione per modificare la sorgente audio"
   },
   "toolPermissions": {
     "riskRead": "Lettura",

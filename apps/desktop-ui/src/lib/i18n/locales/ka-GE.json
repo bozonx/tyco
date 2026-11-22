@@ -1741,10 +1741,16 @@
     "languageAuto": "ავტო",
     "ownLanguage": "თქვენ საუბრობთ",
     "route": "{from} → {to}",
-    "restartTitle": "თავიდან დაწყება?",
-    "restartMessage": "მიმდინარე ტრანსკრიფცია გასუფთავდება და შეინახება ისტორიაში.",
-    "restartConfirm": "თავიდან დაწყება",
-    "ownLanguageDefault": "ნაგულისხმევი ({language})"
+    "ownLanguageDefault": "ნაგულისხმევი ({language})",
+    "listen": "მოსმენა",
+    "resume": "გაგრძელება",
+    "listenRecording": "მოსმენა ჩაწერით",
+    "resumeRecording": "გაგრძელება ჩაწერით",
+    "clear": "გასუფთავება",
+    "clearTitle": "გასუფთავდეს ჩანაწერი?",
+    "clearMessage": "ისტორია გამორთულია პარამეტრებში. მიმდინარე ჩანაწერი დაიკარგება.",
+    "clearConfirm": "გასუფთავება",
+    "sourceLockedHint": "გაასუფთავეთ ჩანაწერი აუდიო წყაროს შესაცვლელად"
   },
   "toolPermissions": {
     "riskRead": "კითხვა",

@@ -1741,10 +1741,16 @@
     "languageAuto": "Авто",
     "ownLanguage": "Вы говорите на",
     "route": "{from} → {to}",
-    "restartTitle": "Начать заново?",
-    "restartMessage": "Текущая расшифровка будет очищена и сохранена в историю.",
-    "restartConfirm": "Начать заново",
-    "ownLanguageDefault": "По умолчанию ({language})"
+    "ownLanguageDefault": "По умолчанию ({language})",
+    "listen": "Слушать",
+    "resume": "Продолжить",
+    "listenRecording": "Слушать с записью",
+    "resumeRecording": "Продолжить с записью",
+    "clear": "Очистить",
+    "clearTitle": "Очистить транскрипт?",
+    "clearMessage": "История выключена в настройках. Текущий транскрипт будет удалён безвозвратно.",
+    "clearConfirm": "Очистить",
+    "sourceLockedHint": "Очистите транскрипт, чтобы изменить источник звука"
   },
   "toolPermissions": {
     "riskRead": "Чтение",

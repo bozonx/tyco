@@ -1737,10 +1737,16 @@
     "languageAuto": "Otomatik",
     "ownLanguage": "Konuştuğunuz dil",
     "route": "{from} → {to}",
-    "restartTitle": "Yeniden başlatılsın mı?",
-    "restartMessage": "Mevcut transkript temizlenecek ve geçmişe kaydedilecek.",
-    "restartConfirm": "Yeniden başlat",
-    "ownLanguageDefault": "Varsayılan ({language})"
+    "ownLanguageDefault": "Varsayılan ({language})",
+    "listen": "Dinle",
+    "resume": "Devam et",
+    "listenRecording": "Kayıtla dinle",
+    "resumeRecording": "Kayıtla devam et",
+    "clear": "Temizle",
+    "clearTitle": "Döküm temizlensin mi?",
+    "clearMessage": "Geçmiş ayarlarda kapalı. Geçerli döküm kaybolacak.",
+    "clearConfirm": "Temizle",
+    "sourceLockedHint": "Ses kaynağını değiştirmek için dökümü temizleyin"
   },
   "toolPermissions": {
     "riskRead": "Okuma",

@@ -1741,10 +1741,16 @@
     "languageAuto": "Auto",
     "ownLanguage": "Govorite",
     "route": "{from} → {to}",
-    "restartTitle": "Započeti iznova?",
-    "restartMessage": "Trenutni prijepis bit će izbrisan i spremljen u povijest.",
-    "restartConfirm": "Započni iznova",
-    "ownLanguageDefault": "Zadano ({language})"
+    "ownLanguageDefault": "Zadano ({language})",
+    "listen": "Slušaj",
+    "resume": "Nastavi",
+    "listenRecording": "Slušaj sa snimanjem",
+    "resumeRecording": "Nastavi sa snimanjem",
+    "clear": "Očisti",
+    "clearTitle": "Očistiti prijepis?",
+    "clearMessage": "Povijest je isključena u postavkama. Trenutni prijepis bit će izgubljen.",
+    "clearConfirm": "Očisti",
+    "sourceLockedHint": "Očistite prijepis da biste promijenili izvor zvuka"
   },
   "toolPermissions": {
     "riskRead": "Čitanje",

@@ -91,6 +91,7 @@ import SegmentedControl from '../components/common/SegmentedControl.vue'
 import HistoryList, {
   type HistoryListAction,
   type HistoryListItem,
+  type HistoryListItemFile,
 } from '../components/history/HistoryList.vue'
 import { useCopyText } from '../composables/use-copy-text'
 import { useEditorHistoryChanges } from '../composables/use-editor-history-changes'
@@ -117,7 +118,7 @@ import { useDesktopStore } from '../stores/desktop'
 import { useDialogStatusStore } from '../stores/dialog-status'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
-import type { EditorHistoryItem } from '@tyco/shared'
+import type { EditorHistoryDialog, EditorHistoryItem } from '@tyco/shared'
 
 const { toastKey } = useToast()
 const { t } = useI18n()
@@ -189,11 +190,23 @@ watch(
   { immediate: true }
 )
 
+const recordingFilesOfItem = (
+  dialog?: EditorHistoryDialog | null
+): string[] => {
+  if (!dialog) return []
+  if (dialog.recordingFiles?.length) return dialog.recordingFiles
+  return dialog.recordingFile ? [dialog.recordingFile] : []
+}
+
 const editorItems = computed<HistoryListItem[]>(() =>
   filterEditorHistory(historyStore.editorHistory, filter.value).map((item) => {
     const view = getEditorHistoryView(item)
     const label = t(view.labelKey)
     const note = getEditorHistoryNote(item)
+    const files = recordingFilesOfItem(item.dialog)
+    const fileItems = files.map((file) =>
+      recordingFile(file, item.dialog?.isRecordingIncomplete ?? false)
+    )
 
     return {
       id: item.id,
@@ -212,12 +225,8 @@ const editorItems = computed<HistoryListItem[]>(() =>
       },
       searchText: label,
       time: item.createdAt,
-      ...(item.dialog?.recordingFile && {
-        file: recordingFile(
-          item.dialog.recordingFile,
-          item.dialog.isRecordingIncomplete ?? false
-        ),
-      }),
+      ...(fileItems.length === 1 && { file: fileItems[0] }),
+      ...(fileItems.length > 1 && { files: fileItems }),
     }
   })
 )
@@ -226,7 +235,7 @@ const editorItems = computed<HistoryListItem[]>(() =>
 const recordingExists = ref<Record<string, boolean>>({})
 const recordingFiles = computed(() =>
   historyStore.editorHistory.flatMap((item) =>
-    item.dialog?.recordingFile ? [item.dialog.recordingFile] : []
+    recordingFilesOfItem(item.dialog)
   )
 )
 let recordingCheck = 0
@@ -269,7 +278,7 @@ const isSoundCaptured = useSoundCaptureActivity()
 const recordingFile = (
   file: string,
   isIncomplete: boolean
-): HistoryListItem['file'] => ({
+): HistoryListItemFile => ({
   name: file,
   // unknown until checked: the action is offered
   isMissing: recordingExists.value[file] === false,
@@ -293,9 +302,13 @@ const recordingFile = (
   },
 })
 
-const showRecording = async (item: HistoryListItem) => {
-  const file = historyStore.editorHistory.find((entry) => entry.id === item.id)
-    ?.dialog?.recordingFile
+const showRecording = async (item: HistoryListItem, filename?: string) => {
+  const entry = historyStore.editorHistory.find((e) => e.id === item.id)
+  const file =
+    filename ??
+    item.file?.name ??
+    entry?.dialog?.recordingFiles?.[0] ??
+    entry?.dialog?.recordingFile
   if (!file) return
   const result = await ipcStore.callOrNotify('show_dialog_recording', { file })
   if (!result.success) void checkRecordings()

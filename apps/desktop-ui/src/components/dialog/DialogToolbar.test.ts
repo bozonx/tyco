@@ -74,12 +74,12 @@ describe('DialogToolbar.vue', () => {
     ).toBe(false)
     expect(
       items.some(
-        (item) => item.label === i18n.global.t('dialog.startRecording')
+        (item) => item.label === i18n.global.t('dialog.listenRecording')
       )
     ).toBe(true)
   })
 
-  it('starts immediately when clicking Start with an empty transcript', async () => {
+  it('starts immediately when clicking Listen with an empty transcript', async () => {
     const dialog = useDialogStore()
     const startSpy = vi
       .spyOn(dialog, 'start')
@@ -90,6 +90,7 @@ describe('DialogToolbar.vue', () => {
     })
 
     const startButton = wrapper.find('.dialog-toolbar-run')
+    expect(startButton.text()).toBe(i18n.global.t('dialog.listen'))
     await startButton.trigger('click')
     await flushPromises()
 
@@ -100,12 +101,11 @@ describe('DialogToolbar.vue', () => {
     }
   })
 
-  it('asks for confirmation when clicking Start if transcript already exists', async () => {
+  it('resumes without clearing when clicking Resume with existing transcript', async () => {
     const dialog = useDialogStore()
     const startSpy = vi
       .spyOn(dialog, 'start')
       .mockImplementation(async () => {})
-    // simulate existing transcript
     dialog.segments = [
       {
         id: '1',
@@ -122,31 +122,23 @@ describe('DialogToolbar.vue', () => {
       global: { plugins: [i18n, desktop.pinia] },
     })
 
-    const startButton = wrapper.find('.dialog-toolbar-run')
-    await startButton.trigger('click')
-    await flushPromises()
-
-    expect(startSpy).not.toHaveBeenCalled()
-    const restartModal = wrapper
-      .findAllComponents(ConfirmModal)
-      .find((m) => m.props('title') === i18n.global.t('dialog.restartTitle'))
-    expect(restartModal).toBeDefined()
-    expect(restartModal!.props('open')).toBe(true)
-
-    // Confirm restart
-    restartModal!.vm.$emit('confirm')
+    const runButton = wrapper.find('.dialog-toolbar-run')
+    expect(runButton.text()).toBe(i18n.global.t('dialog.resume'))
+    await runButton.trigger('click')
     await flushPromises()
 
     expect(startSpy).toHaveBeenCalledTimes(1)
-    expect(restartModal!.props('open')).toBe(false)
+    const modals = wrapper.findAllComponents(ConfirmModal)
+    for (const modal of modals) {
+      expect(modal.props('open')).toBe(false)
+    }
   })
 
-  it('asks for confirmation when clicking Start Recording if transcript already exists', async () => {
+  it('clears transcript when clicking Clear button', async () => {
     const dialog = useDialogStore()
-    const startSpy = vi
-      .spyOn(dialog, 'start')
+    const clearSpy = vi
+      .spyOn(dialog, 'clear')
       .mockImplementation(async () => {})
-    // simulate existing transcript
     dialog.segments = [
       {
         id: '1',
@@ -163,26 +155,12 @@ describe('DialogToolbar.vue', () => {
       global: { plugins: [i18n, desktop.pinia] },
     })
 
-    const menu = wrapper.findComponent(DropdownMenu)
-    const recordItem = (menu.props('items') as any[]).find(
-      (item) => item.label === i18n.global.t('dialog.startRecording')
-    )
-    expect(recordItem).toBeDefined()
-
-    recordItem.action()
+    const clearButton = wrapper.find('.dialog-toolbar-clear')
+    expect(clearButton.exists()).toBe(true)
+    await clearButton.trigger('click')
     await flushPromises()
 
-    expect(startSpy).not.toHaveBeenCalled()
-    const restartModal = wrapper
-      .findAllComponents(ConfirmModal)
-      .find((m) => m.props('title') === i18n.global.t('dialog.restartTitle'))
-    expect(restartModal!.props('open')).toBe(true)
-
-    // Confirm restart
-    restartModal!.vm.$emit('confirm')
-    await flushPromises()
-
-    expect(startSpy).toHaveBeenCalledWith({ isRecording: true })
+    expect(clearSpy).toHaveBeenCalledTimes(1)
   })
 
   it('disables compact mode button when not active, enables when active', async () => {
