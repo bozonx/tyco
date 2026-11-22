@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Zakończ",
     "show": "Pokaż TyCo",
-    "tooltip": "TyCo — asystent pisania"
+    "tooltip": "TyCo — asystent pisania",
+    "recordingTooltip": "TyCo — nagrywanie dialogu"
   },
   "userDataMissing": {
     "title": "Nie znaleziono folderu danych",

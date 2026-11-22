@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "退出",
     "show": "显示 TyCo",
-    "tooltip": "TyCo — 智能输入伴侣"
+    "tooltip": "TyCo — 智能输入伴侣",
+    "recordingTooltip": "TyCo — 正在录制对话"
   },
   "userDataMissing": {
     "title": "找不到数据文件夹",

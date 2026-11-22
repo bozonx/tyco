@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Salir",
     "show": "Mostrar TyCo",
-    "tooltip": "TyCo — compañero de escritura"
+    "tooltip": "TyCo — compañero de escritura",
+    "recordingTooltip": "TyCo — grabando diálogo"
   },
   "userDataMissing": {
     "title": "No se encuentra la carpeta de datos",

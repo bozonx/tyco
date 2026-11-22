@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Izađi",
     "show": "Prikaži TyCo",
-    "tooltip": "TyCo — pomoćnik pri tipkanju"
+    "tooltip": "TyCo — pomoćnik pri tipkanju",
+    "recordingTooltip": "TyCo — snimanje dijaloga u tijeku"
   },
   "userDataMissing": {
     "title": "Mapa podataka nije pronađena",

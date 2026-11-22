@@ -487,6 +487,10 @@ export interface DesktopCommands {
     args: { showLabel: string; quitLabel: string; tooltipLabel?: string | null }
     result: void
   }
+  set_tray_recording: {
+    args: { isRecording: boolean; tooltipLabel?: string | null }
+    result: void
+  }
   show_desktop_notification: {
     args: { summary: string; body: string }
     result: void

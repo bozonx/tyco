@@ -8,6 +8,7 @@ import {
   type TestDesktop,
 } from '../../test/install-fake-desktop'
 import { useDesktopStore } from '../../stores/desktop'
+import { useDialogStatusStore } from '../../stores/dialog-status'
 import { useDialogStore } from '../../stores/dialog'
 import DialogToolbar from './DialogToolbar.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
@@ -305,5 +306,38 @@ describe('DialogToolbar.vue', () => {
     await flushPromises()
 
     expect(collapseButton!.props('disabled')).toBe(false)
+  })
+
+  it('updates tray recording state when recording starts and stops', async () => {
+    const dialog = useDialogStore()
+    const dialogStatus = useDialogStatusStore()
+
+    expect(dialogStatus.isRecording).toBe(false)
+
+    dialog.status = 'running'
+    dialog.recording = { file: 'test.opus', startedAtMs: Date.now() }
+    await flushPromises()
+
+    expect(dialogStatus.isRecording).toBe(true)
+    const recordingCalls = desktop.backend.calls.filter(
+      (call) => call.command === 'set_tray_recording'
+    )
+    expect(recordingCalls.length).toBeGreaterThan(0)
+    expect(recordingCalls.at(-1)?.args).toEqual({
+      isRecording: true,
+      tooltipLabel: i18n.global.t('tray.recordingTooltip'),
+    })
+
+    dialog.recording = undefined
+    await flushPromises()
+
+    expect(dialogStatus.isRecording).toBe(false)
+    const stoppedCalls = desktop.backend.calls.filter(
+      (call) => call.command === 'set_tray_recording'
+    )
+    expect(stoppedCalls.at(-1)?.args).toEqual({
+      isRecording: false,
+      tooltipLabel: i18n.global.t('tray.tooltip'),
+    })
   })
 })

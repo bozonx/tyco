@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Έξοδος",
     "show": "Εμφάνιση TyCo",
-    "tooltip": "TyCo — βοηθός πληκτρολόγησης"
+    "tooltip": "TyCo — βοηθός πληκτρολόγησης",
+    "recordingTooltip": "TyCo — εγγραφή διαλόγου σε εξέλιξη"
   },
   "userDataMissing": {
     "title": "Ο φάκελος δεδομένων δεν βρέθηκε",

@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Sair",
     "show": "Mostrar o TyCo",
-    "tooltip": "TyCo — assistente de digitação"
+    "tooltip": "TyCo — assistente de digitação",
+    "recordingTooltip": "TyCo — gravando diálogo"
   },
   "userDataMissing": {
     "title": "Pasta de dados não encontrada",

@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Kilépés",
     "show": "TyCo megjelenítése",
-    "tooltip": "TyCo — gépelési segéd"
+    "tooltip": "TyCo — gépelési segéd",
+    "recordingTooltip": "TyCo — párbeszéd rögzítése folyamatban"
   },
   "userDataMissing": {
     "title": "Az adatmappa nem található",

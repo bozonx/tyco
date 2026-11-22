@@ -8,5 +8,6 @@ import { ref } from 'vue'
  */
 export const useDialogStatusStore = defineStore('dialogStatus', () => {
   const isActive = ref(false)
-  return { isActive }
+  const isRecording = ref(false)
+  return { isActive, isRecording }
 })

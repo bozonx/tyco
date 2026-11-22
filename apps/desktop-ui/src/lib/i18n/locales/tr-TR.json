@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Çıkış",
     "show": "TyCo’yu göster",
-    "tooltip": "TyCo — yazma yardımcısı"
+    "tooltip": "TyCo — yazma yardımcısı",
+    "recordingTooltip": "TyCo — diyalog kaydediliyor"
   },
   "userDataMissing": {
     "title": "Veri klasörü bulunamadı",

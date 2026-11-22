@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "結束",
     "show": "顯示 TyCo",
-    "tooltip": "TyCo — 智慧輸入伴侶"
+    "tooltip": "TyCo — 智慧輸入伴侶",
+    "recordingTooltip": "TyCo — 正在錄製對話"
   },
   "userDataMissing": {
     "title": "找不到資料夾",

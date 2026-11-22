@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "გასვლა",
     "show": "TyCo-ს ჩვენება",
-    "tooltip": "TyCo — ბეჭდვის თანაშემწე"
+    "tooltip": "TyCo — ბეჭდვის თანაშემწე",
+    "recordingTooltip": "TyCo — მიმდინარეობს დიალოგის ჩაწერა"
   },
   "userDataMissing": {
     "title": "მონაცემთა საქაღალდე ვერ მოიძებნა",

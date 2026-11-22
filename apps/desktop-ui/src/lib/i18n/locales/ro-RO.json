@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Ieșire",
     "show": "Afișează TyCo",
-    "tooltip": "TyCo — asistent de tastare"
+    "tooltip": "TyCo — asistent de tastare",
+    "recordingTooltip": "TyCo — înregistrare dialog"
   },
   "userDataMissing": {
     "title": "Folderul de date nu a fost găsit",

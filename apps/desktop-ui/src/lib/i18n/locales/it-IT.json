@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Esci",
     "show": "Mostra TyCo",
-    "tooltip": "TyCo — assistente di digitazione"
+    "tooltip": "TyCo — assistente di digitazione",
+    "recordingTooltip": "TyCo — registrazione del dialogo in corso"
   },
   "userDataMissing": {
     "title": "Cartella dati non trovata",

@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Quit",
     "show": "Show TyCo",
-    "tooltip": "TyCo — typing companion"
+    "tooltip": "TyCo — typing companion",
+    "recordingTooltip": "TyCo — recording dialog"
   },
   "userDataMissing": {
     "title": "Data folder not found",

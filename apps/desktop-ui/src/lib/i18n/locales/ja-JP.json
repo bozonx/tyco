@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "終了",
     "show": "TyCoを表示",
-    "tooltip": "TyCo — 入力支援コンパニオン"
+    "tooltip": "TyCo — 入力支援コンパニオン",
+    "recordingTooltip": "TyCo — 対話を録音中"
   },
   "userDataMissing": {
     "title": "データフォルダーが見つかりません",

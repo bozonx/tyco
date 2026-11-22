@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Beenden",
     "show": "TyCo anzeigen",
-    "tooltip": "TyCo — Schreibassistent"
+    "tooltip": "TyCo — Schreibassistent",
+    "recordingTooltip": "TyCo — Dialogaufnahme läuft"
   },
   "userDataMissing": {
     "title": "Datenordner nicht gefunden",

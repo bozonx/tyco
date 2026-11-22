@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Вийти",
     "show": "Показати TyCo",
-    "tooltip": "TyCo — помічник введення"
+    "tooltip": "TyCo — помічник введення",
+    "recordingTooltip": "TyCo — триває запис діалогу"
   },
   "userDataMissing": {
     "title": "Папку даних не знайдено",

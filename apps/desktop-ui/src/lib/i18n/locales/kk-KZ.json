@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Шығу",
     "show": "TyCo-ны көрсету",
-    "tooltip": "TyCo — теру көмекшісі"
+    "tooltip": "TyCo — теру көмекшісі",
+    "recordingTooltip": "TyCo — диалог жазылуда"
   },
   "userDataMissing": {
     "title": "Деректер қалтасы табылмады",

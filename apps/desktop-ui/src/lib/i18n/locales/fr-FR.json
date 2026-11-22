@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Quitter",
     "show": "Afficher TyCo",
-    "tooltip": "TyCo — compagnon de saisie"
+    "tooltip": "TyCo — compagnon de saisie",
+    "recordingTooltip": "TyCo — enregistrement du dialogue en cours"
   },
   "userDataMissing": {
     "title": "Dossier de données introuvable",

@@ -112,7 +112,7 @@ saved to disk (**Settings → History**): a recording belongs to its history
 entry.
 
 While recording, the toolbar and the subtitles show a red dot with the time
-recorded. The file is an Opus audio file (`.opus`) that any modern player
+recorded, and the system tray icon displays a recording indicator badge. The file is an Opus audio file (`.opus`) that any modern player
 opens. Without the microphone it holds the computer sound alone. With the
 microphone, two settings in **Settings → Dialog** decide how it sounds:
 

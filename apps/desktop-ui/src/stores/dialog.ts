@@ -114,6 +114,26 @@ export const useDialogStore = defineStore('dialog', () => {
     },
     { immediate: true }
   )
+  watch(
+    () => Boolean(recording.value),
+    (isRecording) => {
+      dialogStatus.isRecording = isRecording
+      void useIpcStore()
+        .call('set_tray_recording', {
+          isRecording,
+          tooltipLabel: isRecording
+            ? translate('tray.recordingTooltip')
+            : translate('tray.tooltip'),
+        })
+        .catch((error: unknown) =>
+          clientLogger.warn(
+            `Could not update tray recording state: ${String(error)}`,
+            'dialog'
+          )
+        )
+    },
+    { immediate: true }
+  )
 
   let nextSegmentId = 0
   const transcript = createDialogTranscript({
@@ -482,6 +502,14 @@ export const useDialogStore = defineStore('dialog', () => {
     unregisterFlush()
     unregisterVisibleWork()
     dialogHistory.dispose()
+    if (recording.value) {
+      void useIpcStore()
+        .call('set_tray_recording', {
+          isRecording: false,
+          tooltipLabel: translate('tray.tooltip'),
+        })
+        .catch(() => undefined)
+    }
   })
 
   const subtitlesView = computed(() =>

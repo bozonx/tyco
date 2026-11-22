@@ -1471,7 +1471,8 @@
   "tray": {
     "quit": "Ukončit",
     "show": "Zobrazit TyCo",
-    "tooltip": "TyCo — společník pro psaní"
+    "tooltip": "TyCo — společník pro psaní",
+    "recordingTooltip": "TyCo — nahrávání dialogu"
   },
   "userDataMissing": {
     "title": "Složka dat nebyla nalezena",

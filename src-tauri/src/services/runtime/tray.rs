@@ -114,7 +114,7 @@ fn load_png_image(bytes: &[u8]) -> Result<tauri::image::Image<'static>, AppError
         png::ColorType::Rgba => buf,
         png::ColorType::Rgb => {
             let mut rgba = Vec::with_capacity((width * height * 4) as usize);
-            for chunk in buf.chunks_exact(3) {
+            for chunk in buf.as_chunks::<3>().0 {
                 rgba.extend_from_slice(chunk);
                 rgba.push(255);
             }
