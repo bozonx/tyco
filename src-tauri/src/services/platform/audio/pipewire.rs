@@ -341,6 +341,7 @@ impl Output {
             fills_gaps: true,
             channel_count: 1,
             status: Arc::clone(&self.status),
+            unprocessed_pcm_samples: None,
         };
         context.deliver(samples);
     }

@@ -93,6 +93,38 @@ pub fn editor_history(config: &Value) -> EditorHistoryConfig {
     section_at(config, "/editor/history")
 }
 
+fn yes() -> bool {
+    true
+}
+
+/// How `dialog` records a call to a file.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct DialogRecordingConfig {
+    /// `isRecordingMixedDown`: both sides in one mono channel rather than
+    /// the microphone left and the computer sound right.
+    #[serde(rename = "isRecordingMixedDown", default = "yes")]
+    pub is_mixed_down: bool,
+    /// `isRecordingProcessed`: the sound as the speech recognition gets it,
+    /// the echo lowered and the peaks limited, rather than as captured.
+    #[serde(rename = "isRecordingProcessed", default = "yes")]
+    pub is_processed: bool,
+}
+
+impl Default for DialogRecordingConfig {
+    fn default() -> Self {
+        Self {
+            is_mixed_down: true,
+            is_processed: true,
+        }
+    }
+}
+
+/// The recording options of `dialog`.
+pub fn dialog_recording(config: &Value) -> DialogRecordingConfig {
+    section(config, "dialog")
+}
+
 #[cfg(any(target_os = "linux", test))]
 /// `windowInsertion.linux.pasteShortcut`: the keys that paste into the
 /// target window. A fixed combination is pressed as it is in every window,
@@ -479,6 +511,20 @@ pub fn action_menu_position(config: &Value) -> ActionMenuPosition {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn a_dialog_is_recorded_mixed_down_and_processed_unless_told_otherwise() {
+        assert_eq!(
+            dialog_recording(&json!({})),
+            DialogRecordingConfig::default()
+        );
+        let options = dialog_recording(&json!({"dialog": {
+            "isRecordingMixedDown": false, "isRecordingProcessed": false
+        }}));
+        assert!(!options.is_mixed_down && !options.is_processed);
+        let options = dialog_recording(&json!({"dialog": {"isRecordingProcessed": false}}));
+        assert!(options.is_mixed_down && !options.is_processed);
+    }
 
     #[test]
     fn script_commands_are_found_by_id_with_their_label() {

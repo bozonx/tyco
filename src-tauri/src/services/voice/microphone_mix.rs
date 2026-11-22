@@ -189,6 +189,9 @@ fn take_samples(pending: &Mutex<Vec<i16>>) -> Vec<f32> {
 /// The parts of the mixed stream's `StreamContext` the mixing writes to.
 struct MixOutput {
     pending: Arc<Mutex<Vec<i16>>>,
+    /// `MixLayout::Separate` only: the two channels before the echo gate
+    /// and the limiters, for a call recording that is not processed.
+    unprocessed: Option<Arc<Mutex<Vec<i16>>>>,
     level: Arc<Mutex<(f32, f32)>>,
     stream_error: Arc<Mutex<Option<String>>>,
 }
@@ -275,6 +278,11 @@ impl Mix {
         } else {
             self.mixer.drain()
         };
+        if let Some(unprocessed) = &self.output.unprocessed {
+            unprocessed
+                .locked()
+                .extend(mixed.iter().copied().map(float_to_pcm16));
+        }
         let mixed = match self.echo_gate.as_mut() {
             None => limit(&mut self.limiters[0], &mixed, is_final),
             Some(gate) => {
@@ -366,9 +374,11 @@ pub(crate) fn mix_captures<M, P>(
         fills_gaps: false,
         channel_count: layout.channel_count(),
         status: Arc::clone(&playback.context.status),
+        unprocessed_pcm_samples: (layout == MixLayout::Separate).then(Arc::default),
     };
     let output = MixOutput {
         pending: Arc::clone(&context.pending_pcm_samples),
+        unprocessed: context.unprocessed_pcm_samples.clone(),
         level: Arc::clone(&context.current_level),
         stream_error: Arc::clone(&context.stream_error),
     };
@@ -573,6 +583,7 @@ mod tests {
         let stream_error: Arc<Mutex<Option<String>>> = Arc::default();
         let output = MixOutput {
             pending: Arc::clone(&pending),
+            unprocessed: None,
             level: Arc::default(),
             stream_error: Arc::clone(&stream_error),
         };
@@ -677,6 +688,25 @@ mod tests {
             .0
             .iter()
             .all(|frame| frame[0] > 0 && frame[1] < 0));
+    }
+
+    #[test]
+    fn separate_channels_are_also_held_aside_unprocessed() {
+        let (mut mix, pending, _) = mix_as(MixLayout::Separate);
+        let unprocessed: Samples = Arc::default();
+        mix.output.unprocessed = Some(Arc::clone(&unprocessed));
+        // the microphone hears the speakers: the gate would lower it
+        record(&mix.microphone, &[4_000; 1_600]);
+        record(&mix.playback, &[8_000; 1_600]);
+        mix.step(true);
+        let raw = std::mem::take(&mut *unprocessed.locked());
+        assert_eq!(raw.len(), 3_200);
+        assert!(raw
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .all(|frame| frame[0].abs_diff(4_000) <= 1 && frame[1].abs_diff(8_000) <= 1));
+        assert_eq!(pending.locked().len(), raw.len());
     }
 
     #[test]

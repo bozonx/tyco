@@ -31,4 +31,14 @@ export interface DialogConfig {
   compactGeometry?: DialogWindowGeometry
   /** The user was told to ask the other side before recording */
   isRecordingNoticeAcknowledged?: boolean
+  /**
+   * A call is recorded in one channel, both sides together; otherwise the
+   * microphone left and the computer sound right
+   */
+  isRecordingMixedDown: boolean
+  /**
+   * A call is recorded as the speech recognition hears it, the echo of the
+   * speakers lowered and the peaks limited; otherwise as captured
+   */
+  isRecordingProcessed: boolean
 }

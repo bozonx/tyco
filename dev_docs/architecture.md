@@ -198,10 +198,17 @@ and linked statically; `ogg` for the pages): 16 kHz input, 20 ms frames,
 VoIP mode, stereo at 32 kbit/s (microphone, computer) or mono at 24 kbit/s,
 RFC 7845 granules at 48 kHz, a page at least every second.
 The final page accounts for encoder delay and trims padding. Ogg pages stand
-alone, so a crash leaves a file playable to its last complete page. The file holds the very samples sent to the
-webview, after the echo gate and the limiter: listening to it is listening to
-what the speech provider got, short of Opus losses and of the audio a channel
-drops when its provider stalls past 30 s (logged by the webview). For a
+alone, so a crash leaves a file playable to its last complete page. By default (`dialog.isRecordingProcessed`) the file holds the very samples
+sent to the webview, after the echo gate and the limiter: listening to it is
+listening to what the speech provider got, short of Opus losses and of the
+audio a channel drops when its provider stalls past 30 s (logged by the
+webview). Unprocessed, it takes the two channels as the mix aligned them,
+before the gate and the limiters: the mix keeps a copy of them in
+`StreamContext::unprocessed_pcm_samples`, which `flush_pending` drains with
+every flush; a capture without the microphone has none and records what it
+sends. `dialog.isRecordingMixedDown`, on by default, writes the two channels
+as one, their saturating sum (`RecordingSink::push`). Both are read from the
+config when the recording starts (`models::user_config::dialog_recording`). For a
 lossless copy set `TYCO_DUMP_STT_AUDIO=<folder>` before starting the app:
 every capture, dictation included, also writes a WAV of the bytes it sends
 (`voice/debug_dump.rs`). The encoder runs
@@ -224,7 +231,13 @@ The webview names the file, never a path; the scheme accepts only names of the
 pattern, serves no recording still being written, and answers byte ranges in
 chunks of at most 2 MiB, so the element can seek a long call. A request
 without a byte range receives the whole file in memory. Ogg/Opus
-plays in WebView2 and in WebKitGTK with the base GStreamer plugins.
+plays in WebView2 and in WebKitGTK with the base GStreamer plugins; the
+AppImage bundles them (`bundle.linux.appimage.bundleMediaFramework`). The
+history offers no playback while any capture runs: every capture publishes
+`app://voice-audio-level` to all windows, which
+`lib/voice/sound-capture-activity.ts` reads as a capture running. A dialog
+stopped while its capture starts never names its recording in an entry: the
+webview discards the file (`onCaptureAbandoned`).
 The dialog's subtitles are a window of their own, `subtitles`
 (`runtime/subtitles_window.rs`, behind a `SubtitlesHost`), created the first
 time they are shown; the main window is minimized meanwhile. With

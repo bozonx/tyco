@@ -1382,14 +1382,18 @@
           "required": ["x", "y", "width", "height"],
           "x-scope": "device"
         },
-        "isRecordingNoticeAcknowledged": { "type": "boolean" }
+        "isRecordingNoticeAcknowledged": { "type": "boolean" },
+        "isRecordingMixedDown": { "type": "boolean", "default": true },
+        "isRecordingProcessed": { "type": "boolean", "default": true }
       },
       "required": [
         "isEnabled",
         "source",
         "translationTargetLanguage",
         "textDisplay",
-        "translationProvider"
+        "translationProvider",
+        "isRecordingMixedDown",
+        "isRecordingProcessed"
       ],
       "defaultPath": "dialog"
     }

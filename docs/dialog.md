@@ -97,9 +97,21 @@ entry.
 
 While recording, the toolbar and the subtitles show a red dot with the time
 recorded. The file is an Opus audio file (`.opus`) that any modern player
-opens: with the microphone, your voice is the left channel and the other side
-the right one, exactly as the speech recognition heard them; without the
-microphone it is the computer sound alone. The file is written as the call
+opens. Without the microphone it holds the computer sound alone. With the
+microphone, two settings in **Settings → Dialog** decide how it sounds:
+
+- **One channel for both sides** (on by default): your voice and the other
+  side are in one channel, so both are heard in both ears. Off, your voice
+  is the left channel and the other side the right one.
+- **Record what the speech recognition hears** (on by default): the echo of
+  the speakers in your microphone is lowered, and loud peaks are limited.
+  When TyCo takes your voice for that echo, it is quiet in the recording
+  too. Off, the sound is kept as captured, echo included: with speakers
+  instead of headphones the other side is then heard twice, a little apart.
+
+Either way the sound is recorded at the quality speech recognition uses,
+which is enough for voices but not for music. The settings apply to the
+next recording. The file is written as the call
 goes, so after a crash it plays up to the last second or so.
 
 Recordings are kept with the history, in `history/recordings` of the TyCo
@@ -109,8 +121,9 @@ A file is named by the time it started and a short code, e.g.
 loses it. The history entry of a recorded conversation shows the file name
 and **Show in folder**, or "file not found" when the file is not there, e.g.
 not synchronized yet. The play button next to it opens a player right in the
-entry; one recording plays at a time, and none while a dialog is running, so
-that the sound does not go into the call. A recording still being written
+entry; one recording plays at a time, and none while TyCo records sound (a
+dialog, listening or voice input), so that it does not go into what is
+recorded. A recording still being written
 plays once the conversation stops. A recording goes with its history entry: when you
 delete the entry (after the few seconds in which **Undo** brings both back),
 clear the history, or when the history settings no longer keep the entry. If
@@ -119,7 +132,7 @@ missed sound is replaced by silence of the same length, so the file keeps
 the time of the call. If the disk stays behind for more than a minute or the
 file cannot be written, the recording stops, the transcript goes on, and
 the history entry marks the recording as incomplete. A conversation stopped
-before any sound was captured leaves no file. A recording deleted with its
+before it started leaves no file. A recording deleted with its
 entry while the call still goes on is removed as soon as the call stops.
 
 If the history cannot keep the entry (it could not be saved, or the history

@@ -81,6 +81,7 @@ function harness(
     onPart: (side, part, offsetMs) => parts.push([side, part, offsetMs]),
     onDraftLost: (side) => events.push(`${side}:draft-lost`),
     onError: (error, failure) => errors.push([error, failure]),
+    onCaptureAbandoned: () => events.push('abandoned'),
     sleep: async () => undefined,
     finishTimeoutMs: 1000,
   }
@@ -154,6 +155,15 @@ describe('createChannelPipe', () => {
 })
 
 describe('createDialogSession', () => {
+  it('tells of a capture abandoned by a stop while it started', async () => {
+    const { session, events } = harness()
+    const starting = session.start({ isMicrophoneEnabled: true })
+    const stopping = session.stop()
+    await Promise.all([starting, stopping])
+    expect(events).toContain('abandoned')
+    expect(events).not.toContain('status:running')
+  })
+
   it('records the dialog and hands each side its own channel', async () => {
     const test = harness()
     await test.session.start({ isMicrophoneEnabled: true })

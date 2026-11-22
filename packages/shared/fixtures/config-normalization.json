@@ -411,7 +411,9 @@
         "translationTargetLanguage": "",
         "textDisplay": "both",
         "translationProvider": "default",
-        "remoteLanguage": "auto"
+        "remoteLanguage": "auto",
+        "isRecordingMixedDown": true,
+        "isRecordingProcessed": true
       }
     }
   },
@@ -843,7 +845,9 @@
         "translationTargetLanguage": "",
         "textDisplay": "both",
         "translationProvider": "default",
-        "remoteLanguage": "auto"
+        "remoteLanguage": "auto",
+        "isRecordingMixedDown": true,
+        "isRecordingProcessed": true
       }
     }
   },
@@ -1268,7 +1272,9 @@
         "translationTargetLanguage": "",
         "textDisplay": "both",
         "translationProvider": "default",
-        "remoteLanguage": "auto"
+        "remoteLanguage": "auto",
+        "isRecordingMixedDown": true,
+        "isRecordingProcessed": true
       }
     }
   },
@@ -1703,7 +1709,9 @@
         "translationTargetLanguage": "",
         "textDisplay": "both",
         "translationProvider": "default",
-        "remoteLanguage": "auto"
+        "remoteLanguage": "auto",
+        "isRecordingMixedDown": true,
+        "isRecordingProcessed": true
       }
     }
   },
@@ -2116,7 +2124,9 @@
         "translationTargetLanguage": "",
         "textDisplay": "both",
         "translationProvider": "default",
-        "remoteLanguage": "auto"
+        "remoteLanguage": "auto",
+        "isRecordingMixedDown": true,
+        "isRecordingProcessed": true
       }
     }
   },
@@ -2541,7 +2551,9 @@
         "translationTargetLanguage": "",
         "textDisplay": "both",
         "translationProvider": "default",
-        "remoteLanguage": "auto"
+        "remoteLanguage": "auto",
+        "isRecordingMixedDown": true,
+        "isRecordingProcessed": true
       }
     }
   },
@@ -2968,7 +2980,9 @@
         "translationTargetLanguage": "",
         "textDisplay": "both",
         "translationProvider": "default",
-        "remoteLanguage": "auto"
+        "remoteLanguage": "auto",
+        "isRecordingMixedDown": true,
+        "isRecordingProcessed": true
       }
     }
   },
@@ -3402,7 +3416,9 @@
         "translationTargetLanguage": "",
         "textDisplay": "both",
         "translationProvider": "default",
-        "remoteLanguage": "auto"
+        "remoteLanguage": "auto",
+        "isRecordingMixedDown": true,
+        "isRecordingProcessed": true
       }
     }
   },
@@ -3847,7 +3863,9 @@
         "translationTargetLanguage": "",
         "textDisplay": "both",
         "translationProvider": "default",
-        "remoteLanguage": "auto"
+        "remoteLanguage": "auto",
+        "isRecordingMixedDown": true,
+        "isRecordingProcessed": true
       }
     }
   },
@@ -4368,7 +4386,9 @@
         "translationTargetLanguage": "",
         "textDisplay": "both",
         "translationProvider": "default",
-        "remoteLanguage": "auto"
+        "remoteLanguage": "auto",
+        "isRecordingMixedDown": true,
+        "isRecordingProcessed": true
       }
     }
   },
@@ -4909,7 +4929,9 @@
         "translationTargetLanguage": "",
         "textDisplay": "both",
         "translationProvider": "default",
-        "remoteLanguage": "auto"
+        "remoteLanguage": "auto",
+        "isRecordingMixedDown": true,
+        "isRecordingProcessed": true
       }
     }
   }

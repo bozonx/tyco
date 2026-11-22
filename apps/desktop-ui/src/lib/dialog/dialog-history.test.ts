@@ -92,21 +92,27 @@ describe('dialog history', () => {
     expect(saved[1].dialog?.startedAt).toBe(2_000)
   })
 
-  it('stops writing a session whose entry was deleted', async () => {
-    let calls = 0
+  it('keeps trying a deleted entry, so that its undo gets the later turns', async () => {
+    let isDeleted = false
+    const saved: EditorHistoryEntry[] = []
     const save = vi.fn(async (entry: EditorHistoryEntry) => {
-      calls += 1
-      return entry.id ? null : 'entry'
+      if (entry.id && isDeleted) return null
+      saved.push(entry)
+      return 'entry'
     })
     const { history, setText } = setup({ save })
     await history.begin(meta)
     setText('one')
     await history.checkpoint()
+    isDeleted = true
     setText('two')
     await history.checkpoint()
-    setText('three')
     await history.checkpoint()
-    expect(calls).toBe(2)
+    expect(saved.map((entry) => entry.text)).toEqual(['one'])
+    // the undo brought the entry back
+    isDeleted = false
+    await history.checkpoint()
+    expect(saved.map((entry) => entry.text)).toEqual(['one', 'two'])
   })
 
   it('reports a failed write and tries again with the next checkpoint', async () => {

@@ -43,6 +43,8 @@ const DEFAULT_DIALOG_CONFIG: DialogConfig = {
   translationTargetLanguage: '',
   textDisplay: 'both',
   translationProvider: 'default',
+  isRecordingMixedDown: true,
+  isRecordingProcessed: true,
 }
 
 /** The recording of the running session */
@@ -142,6 +144,10 @@ export const useDialogStore = defineStore('dialog', () => {
   /** Whether the next capture is asked to record to a file */
   let isRecordingRequested = false
   let recordingFile: string | undefined
+  /** The recording stopped before the session ran: its entry says so */
+  let isRecordingFailedEarly = false
+  /** The history entry of the session names `recordingFile` */
+  let isRecordingLinked = false
   /**
    * When the running session began recording: the segments are on the clock, so
    * the turns of several sessions without a clear stay in order
@@ -167,7 +173,9 @@ export const useDialogStore = defineStore('dialog', () => {
               recording.value = undefined
               errorText.value = translate('dialog.recordingFailed')
               canFixInSettings.value = false
-              void dialogHistory.markRecordingIncomplete()
+              if (isRecordingLinked)
+                void dialogHistory.markRecordingIncomplete()
+              else isRecordingFailedEarly = true
             },
           },
           desktopStore.userConfig.stt.microphoneId,
@@ -193,15 +201,18 @@ export const useDialogStore = defineStore('dialog', () => {
     onStatus: (next) => {
       if (next === 'running') {
         sessionStartedAtMs = Date.now()
-        if (recordingFile)
+        if (recordingFile && !isRecordingFailedEarly)
           recording.value = {
             file: recordingFile,
             startedAtMs: sessionStartedAtMs,
           }
+        isRecordingLinked = Boolean(recordingFile)
         void dialogHistory.begin({
           startedAt: sessionStartedAtMs,
           source: hasMicrophone.value ? 'microphoneAndSystem' : 'system',
           ...(recordingFile && { recordingFile }),
+          ...(recordingFile &&
+            isRecordingFailedEarly && { isRecordingIncomplete: true }),
         })
       }
       status.value = next
@@ -210,8 +221,12 @@ export const useDialogStore = defineStore('dialog', () => {
         levels.remote = 0
         recording.value = undefined
       }
-      if (next === 'idle' || next === 'failed') void dialogHistory.end()
+      if (next === 'idle' || next === 'failed') {
+        void dialogHistory.end()
+        discardUnlinkedRecording()
+      }
     },
+    onCaptureAbandoned: () => discardUnlinkedRecording(),
     onAudioDropped: (side, droppedMs) => {
       clientLogger.warn(
         `Dialog ${side} channel dropped ${Math.round(droppedMs)} ms of audio its speech provider did not read`,
@@ -262,6 +277,25 @@ export const useDialogStore = defineStore('dialog', () => {
   let isPreparing = false
 
   /**
+   * A session stopped while it started never got an entry: its recording,
+   * closed by now, would wait unnamed for days
+   */
+  function discardUnlinkedRecording() {
+    const file = recordingFile
+    if (!file || isRecordingLinked) return
+    recordingFile = undefined
+    void useIpcStore()
+      .call('discard_dialog_recording', { file })
+      .then((result) => {
+        if (!result.success)
+          clientLogger.warn(
+            `Could not remove an unused dialog recording: ${result.error}`,
+            'dialog'
+          )
+      })
+  }
+
+  /**
    * A new session: the previous transcript goes, kept in the history when it is
    * on. `isRecording`: the session is also recorded to a file
    */
@@ -276,6 +310,8 @@ export const useDialogStore = defineStore('dialog', () => {
     transcript.clear()
     isRecordingRequested = options.isRecording === true
     recordingFile = undefined
+    isRecordingFailedEarly = false
+    isRecordingLinked = false
     try {
       activeStt = await resolveDialogStt({
         getConfig: () => desktopStore.userConfig.stt,

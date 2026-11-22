@@ -96,6 +96,7 @@ import { useCopyText } from '../composables/use-copy-text'
 import { useEditorHistoryChanges } from '../composables/use-editor-history-changes'
 import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useI18n } from '../composables/use-i18n'
+import { useSoundCaptureActivity } from '../composables/use-sound-capture-activity'
 import useToast from '../composables/use-toast'
 import { convertFileSrc } from '../lib/desktop/window'
 import {
@@ -263,6 +264,8 @@ watch(
   { immediate: true }
 )
 
+const isSoundCaptured = useSoundCaptureActivity()
+
 const recordingFile = (
   file: string,
   isIncomplete: boolean
@@ -281,9 +284,10 @@ const recordingFile = (
     source: () => createRecordingMediaUrl(file, convertFileSrc),
     playTitle: t('history.playRecording'),
     closeTitle: t('history.closeRecording'),
-    // the sound would go into the call's recording or transcript
-    ...(dialogStatus.isActive && {
-      disabledTitle: t('history.playRecordingDuringDialog'),
+    // the sound would go into what is recorded or transcribed: a dialog,
+    // listening or a dictation through the speakers
+    ...((dialogStatus.isActive || isSoundCaptured.value) && {
+      disabledTitle: t('history.playRecordingWhileCapturing'),
     }),
     unavailableLabel: t('history.recordingUnplayable'),
   },

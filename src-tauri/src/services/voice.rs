@@ -39,9 +39,8 @@ use crate::errors::AppError;
 use crate::locks::MutexExt;
 use crate::services::clock::{MonotonicClock, SystemClock};
 use crate::services::net::EventSink;
-use crate::services::storage::recordings::NewRecording;
 use crate::services::voice::debug_dump::CaptureDump;
-use crate::services::voice::recording::RecordingSink;
+use crate::services::voice::recording::{RecordingRequest, RecordingSink};
 use crate::services::voice::session::VoiceSessionState;
 use crate::services::voice::session::{SourceSwitch, SourceSwitchSlot, VoiceCaptureSession};
 
@@ -187,7 +186,7 @@ pub async fn start_capture<S: EventSink>(
 
 /// A recording belongs to its history entry: without a history kept on
 /// disk, nothing would ever name or remove the file.
-fn new_recording(app: &AppHandle) -> Result<NewRecording, AppError> {
+fn new_recording(app: &AppHandle) -> Result<RecordingRequest, AppError> {
     use tauri::Manager;
     let config = app.state::<crate::state::AppState>().user_config();
     let policy = super::storage::HistorySettings::from_config(&config).editor;
@@ -198,7 +197,12 @@ fn new_recording(app: &AppHandle) -> Result<NewRecording, AppError> {
     }
     let dirs = super::storage::recordings::RecordingDirs::of_app(app)?;
     let local_time = chrono::Local::now().format("%Y-%m-%d %H-%M-%S").to_string();
-    super::storage::recordings::new_recording(&dirs, &local_time)
+    let options = crate::models::user_config::dialog_recording(&config);
+    Ok(RecordingRequest {
+        target: super::storage::recordings::new_recording(&dirs, &local_time)?,
+        is_mixed_down: options.is_mixed_down,
+        is_processed: options.is_processed,
+    })
 }
 
 /// Records another source in the running capture: the provider goes on
@@ -240,7 +244,7 @@ async fn start_capture_with<A, L, S>(
     capture_source: CaptureSource,
     levels: L,
     state: &VoiceSessionState,
-    recording: Option<NewRecording>,
+    recording: Option<RecordingRequest>,
     sink: S,
 ) -> Result<VoiceCaptureInfo, AppError>
 where
@@ -265,7 +269,9 @@ where
     // One microphone: a new dictation ends the previous one.
     supersede_capture_unlocked(state).await?;
     let session_id = state.allocate_session_id();
-    let recording_file = recording.as_ref().map(|recording| recording.name.clone());
+    let recording_file = recording
+        .as_ref()
+        .map(|recording| recording.target.name.clone());
     let (session, format) = tokio::task::spawn_blocking(move || {
         create_capture_session(
             source,
@@ -358,7 +364,7 @@ struct CaptureSessionOptions {
     id: u64,
     setup_timeout: Duration,
     /// The file the capture is recorded to, if any.
-    recording: Option<NewRecording>,
+    recording: Option<RecordingRequest>,
 }
 
 fn create_capture_session<A, L, S>(
@@ -442,7 +448,7 @@ struct CaptureControl<'a> {
     stop_flag: &'a Arc<AtomicBool>,
     superseded: &'a AtomicBool,
     switch: &'a SourceSwitchSlot,
-    recording: Option<NewRecording>,
+    recording: Option<RecordingRequest>,
 }
 
 fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
@@ -700,9 +706,11 @@ impl ChannelLevels {
 }
 
 /// Sends what has accumulated once it reaches `min_samples`: the number of
-/// samples sent, `None` when the receiving side is gone. A recording gets
-/// the very same samples: the file is what the speech provider was sent;
-/// so does a debugging dump, see `debug_dump`.
+/// samples sent, `None` when the receiving side is gone. A processed
+/// recording gets the very same samples: the file is what the speech
+/// provider was sent; an unprocessed one gets them as they were before the
+/// echo gate and the limiter, where the capture has them. A debugging dump
+/// gets what is sent, see `debug_dump`.
 fn flush_pending<S: EventSink>(
     context: &StreamContext,
     sink: &S,
@@ -717,8 +725,16 @@ fn flush_pending<S: EventSink>(
         _ => return Some(0),
     };
     let count = samples.len();
+    // taken whatever the recording, so that it does not pile up
+    let unprocessed = context
+        .unprocessed_pcm_samples
+        .as_ref()
+        .map(|unprocessed| std::mem::take(&mut *unprocessed.locked()));
     if let Some(recording) = recording {
-        recording.push(&samples);
+        match unprocessed {
+            Some(unprocessed) if !recording.is_processed() => recording.push(&unprocessed),
+            _ => recording.push(&samples),
+        }
     }
     let bytes = pcm16_to_le_bytes(&samples);
     if let Some(dump) = dump {
@@ -745,6 +761,10 @@ pub(crate) struct StreamContext {
     /// Interleaved channels of `pending_pcm_samples`, 1 for mono
     pub channel_count: u16,
     pub status: Arc<Mutex<SourceStatus>>,
+    /// The same samples before the echo gate and the limiter, for a call
+    /// recording that is not processed; only a dialog with the microphone
+    /// has them, see `microphone_mix`.
+    pub unprocessed_pcm_samples: Option<Arc<Mutex<Vec<i16>>>>,
 }
 
 /// Turns the interleaved float frames of a playback device into the
@@ -807,6 +827,7 @@ impl StreamContext {
             fills_gaps: false,
             channel_count: 1,
             status: Arc::default(),
+            unprocessed_pcm_samples: None,
         }
     }
 

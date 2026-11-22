@@ -77,6 +77,11 @@ export interface DialogSessionDependencies {
     error: unknown,
     failure: { isFatal: boolean; side?: DialogSide }
   ) => void
+  /**
+   * The dialog was stopped while its capture started: the capture is stopped
+   * again, and nothing of it reaches `onStatus('running')`
+   */
+  onCaptureAbandoned?: () => void
   /** Whether a provider error is not worth another connection, e.g. a bad key */
   isPermanentError?: (error: unknown) => boolean
   sleep?: (ms: number, signal: AbortSignal) => Promise<void>
@@ -349,6 +354,7 @@ export function createDialogSession(
       }
       if (current.signal.aborted) {
         await deps.capture.stop().catch(() => undefined)
+        deps.onCaptureAbandoned?.()
         return
       }
       const sides = dialogSides(capture.channels)

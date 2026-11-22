@@ -211,6 +211,29 @@ impl<W: Write> OggOpusWriter<W> {
     }
 }
 
+/// A recording asked for, with how it is made, see
+/// `models::user_config::DialogRecordingConfig`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RecordingRequest {
+    pub target: NewRecording,
+    /// Two channels go into the file as one, their sum.
+    pub is_mixed_down: bool,
+    /// The file gets what the speech recognition gets; otherwise the sound
+    /// before the echo gate and the limiter, where the capture has it.
+    pub is_processed: bool,
+}
+
+/// Two interleaved channels as one: their sum, which keeps each side as loud
+/// as it was; the rare moment both speak loudly is clipped.
+fn mix_down(interleaved: &[i16]) -> Vec<i16> {
+    interleaved
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|&[left, right]| left.saturating_add(right))
+        .collect()
+}
+
 /// A recording the capture loop feeds without waiting for the disk: the
 /// encoder runs on a thread of its own. A failed write ends the recording
 /// only; the capture goes on.
@@ -230,19 +253,31 @@ pub struct RecordingSink {
     failure: Arc<Mutex<Option<String>>>,
     is_failed: Arc<AtomicBool>,
     is_failure_reported: bool,
+    /// Stereo input written as mono.
+    is_mixed_down: bool,
+    is_processed: bool,
 }
 
 impl RecordingSink {
+    /// `channels`: what the capture delivers; the file may have fewer, see
+    /// `RecordingRequest::is_mixed_down`.
     pub fn start(
-        recording: NewRecording,
+        request: RecordingRequest,
         sample_rate_hz: u32,
         channels: u16,
     ) -> Result<Self, AppError> {
-        let NewRecording {
-            name,
-            active_path: path,
-            shared_path: destination,
-        } = recording;
+        let RecordingRequest {
+            target:
+                NewRecording {
+                    name,
+                    active_path: path,
+                    shared_path: destination,
+                },
+            is_mixed_down,
+            is_processed,
+        } = request;
+        let is_mixed_down = is_mixed_down && channels == 2;
+        let channels = if is_mixed_down { 1 } else { channels };
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).map_err(|error| {
                 AppError::Failed(format!("Cannot create the recordings folder: {error}"))
@@ -288,14 +323,30 @@ impl RecordingSink {
             failure,
             is_failed,
             is_failure_reported: false,
+            is_mixed_down,
+            is_processed,
         })
     }
 
-    /// Hands samples to the encoder; dropped once the recording failed.
+    /// Whether the file takes the samples sent to the speech recognition
+    /// rather than the unprocessed ones.
+    pub fn is_processed(&self) -> bool {
+        self.is_processed
+    }
+
+    /// Hands interleaved samples of the capture to the encoder; dropped once
+    /// the recording failed.
     pub fn push(&mut self, samples: &[i16]) {
         if samples.is_empty() || self.is_failed.load(Ordering::SeqCst) {
             return;
         }
+        let mixed;
+        let samples = if self.is_mixed_down {
+            mixed = mix_down(samples);
+            mixed.as_slice()
+        } else {
+            samples
+        };
         if self.owed_samples > 0 {
             if !self.send(vec![0; self.owed_samples]) {
                 self.owe(samples.len());
@@ -404,6 +455,45 @@ impl Drop for RecordingSink {
 mod tests {
     use super::*;
     use std::io::Cursor;
+
+    fn request(target: NewRecording) -> RecordingRequest {
+        RecordingRequest {
+            target,
+            is_mixed_down: true,
+            is_processed: true,
+        }
+    }
+
+    #[test]
+    fn two_channels_mix_down_to_their_sum() {
+        assert_eq!(
+            mix_down(&[100, 200, -30_000, -30_000, 32_000, 1_000]),
+            vec![300, i16::MIN, i16::MAX]
+        );
+    }
+
+    #[test]
+    fn a_mixed_down_recording_has_one_channel() {
+        let folder = temp_folder("mixed-down");
+        let recording = target(&folder);
+        let mut sink = RecordingSink::start(request(recording.clone()), 16_000, 2).unwrap();
+        sink.push(&vec![100; 32_000]);
+        assert!(sink.finish().is_none());
+        let bytes = std::fs::read(&recording.shared_path).unwrap();
+        assert_eq!(pages(&bytes)[0].body[9], 1);
+
+        let recording = target(&folder.join("stereo"));
+        let stereo = RecordingRequest {
+            is_mixed_down: false,
+            ..request(recording.clone())
+        };
+        let mut sink = RecordingSink::start(stereo, 16_000, 2).unwrap();
+        sink.push(&vec![100; 32_000]);
+        assert!(sink.finish().is_none());
+        let bytes = std::fs::read(&recording.shared_path).unwrap();
+        assert_eq!(pages(&bytes)[0].body[9], 2);
+        let _ = std::fs::remove_dir_all(folder);
+    }
 
     struct Page {
         header_type: u8,
@@ -545,7 +635,7 @@ mod tests {
                 .as_nanos()
         ));
         let recording = target(&folder);
-        let mut sink = RecordingSink::start(recording.clone(), 16_000, 1).unwrap();
+        let mut sink = RecordingSink::start(request(recording.clone()), 16_000, 1).unwrap();
         sink.push(&vec![100; 16_000]);
         assert!(sink.take_failure().is_none());
         assert!(sink.finish().is_none());
@@ -553,7 +643,7 @@ mod tests {
         let bytes = std::fs::read(&recording.shared_path).unwrap();
         assert!(pages(&bytes).len() >= 3);
         std::fs::write(&recording.active_path, b"").unwrap();
-        assert!(RecordingSink::start(recording, 16_000, 1).is_err());
+        assert!(RecordingSink::start(request(recording), 16_000, 1).is_err());
         let _ = std::fs::remove_dir_all(folder);
     }
 
@@ -592,7 +682,7 @@ mod tests {
     fn a_recording_without_audio_leaves_no_file() {
         let folder = temp_folder("empty");
         let recording = target(&folder);
-        let sink = RecordingSink::start(recording.clone(), 16_000, 1).unwrap();
+        let sink = RecordingSink::start(request(recording.clone()), 16_000, 1).unwrap();
         assert!(recording.active_path.exists());
         sink.finish();
         assert!(!recording.active_path.exists());
@@ -603,7 +693,7 @@ mod tests {
     #[test]
     fn a_stalled_queue_owes_silence_instead_of_failing() {
         let folder = temp_folder("stall");
-        let mut sink = RecordingSink::start(target(&folder), 16_000, 1).unwrap();
+        let mut sink = RecordingSink::start(request(target(&folder)), 16_000, 1).unwrap();
         // the encoder is never this slow; a sender with no room stands for it
         let (sender, receiver) = mpsc::sync_channel::<Vec<i16>>(1);
         let real = sink.sender.replace(sender);
@@ -626,7 +716,7 @@ mod tests {
     fn stopping_writes_owed_silence_and_reports_an_overlong_stall() {
         let folder = temp_folder("stall-at-stop");
         let recording = target(&folder);
-        let mut sink = RecordingSink::start(recording.clone(), 16_000, 1).unwrap();
+        let mut sink = RecordingSink::start(request(recording.clone()), 16_000, 1).unwrap();
         sink.push(&vec![100; 1_000]);
         sink.max_owed_samples = 600;
         sink.owe(700);
@@ -645,7 +735,7 @@ mod tests {
     fn a_recording_whose_entry_went_is_removed_once_closed() {
         let folder = temp_folder("discarded");
         let recording = target(&folder);
-        let mut sink = RecordingSink::start(recording.clone(), 16_000, 1).unwrap();
+        let mut sink = RecordingSink::start(request(recording.clone()), 16_000, 1).unwrap();
         sink.push(&vec![100; 16_000]);
         let dirs = recordings::RecordingDirs::in_folders(
             folder.join("shared"),
@@ -662,7 +752,7 @@ mod tests {
     #[test]
     fn a_failure_while_finishing_is_reported() {
         let folder = temp_folder("late-failure");
-        let mut sink = RecordingSink::start(target(&folder), 16_000, 1).unwrap();
+        let mut sink = RecordingSink::start(request(target(&folder)), 16_000, 1).unwrap();
         sink.push(&vec![100; 1_000]);
         // what the encoder thread records when its last write fails
         *sink.failure.locked() = Some("No space left on device".into());

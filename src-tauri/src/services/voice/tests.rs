@@ -145,6 +145,7 @@ impl AudioSource for TestSource {
                 fills_gaps: false,
                 channel_count: 1,
                 status: Arc::default(),
+                unprocessed_pcm_samples: None,
             },
         })
     }
@@ -1174,8 +1175,9 @@ fn a_stereo_capture_reports_its_channels_and_their_levels() {
     assert_eq!(bytes, 2 * 2 * 1_600);
 }
 
-#[test]
-fn a_recorded_dialog_keeps_what_the_speech_provider_was_sent() {
+/// Records a dialog whose capture sends 100 ms of stereo and holds 50 ms
+/// unprocessed; the samples per channel in the file, and the bytes sent.
+fn record_dialog(is_processed: bool) -> (u64, usize) {
     struct GatedSource;
     impl AudioSource for GatedSource {
         type Stream = ();
@@ -1191,6 +1193,8 @@ fn a_recorded_dialog_keeps_what_the_speech_provider_was_sent() {
                 .pending_pcm_samples
                 .locked()
                 .extend([1_000, 2_000].repeat(1_600));
+            context.unprocessed_pcm_samples =
+                Some(Arc::new(Mutex::new([3_000, 4_000].repeat(800))));
             Ok(OpenedCapture {
                 stream: (),
                 context,
@@ -1199,11 +1203,16 @@ fn a_recorded_dialog_keeps_what_the_speech_provider_was_sent() {
         }
     }
     let folder = std::env::temp_dir().join(format!(
-        "tyco-dialog-recording-{}-{:?}",
+        "tyco-dialog-recording-{is_processed}-{}-{:?}",
         std::process::id(),
         Instant::now()
     ));
-    let name = "2026-11-21 10-00-00 a1b2c3.opus".to_owned();
+    let name = if is_processed {
+        "2026-11-21 10-00-00 a1b2c3.opus"
+    } else {
+        "2026-11-21 10-00-00 a1b2c4.opus"
+    }
+    .to_owned();
     let recording = crate::services::storage::recordings::NewRecording {
         active_path: folder.join("active").join(&name),
         shared_path: folder.join("shared").join(&name),
@@ -1222,7 +1231,11 @@ fn a_recorded_dialog_keeps_what_the_speech_provider_was_sent() {
         stop_flag: &stop,
         superseded: &AtomicBool::new(false),
         switch: &switch,
-        recording: Some(recording),
+        recording: Some(RecordingRequest {
+            target: recording,
+            is_mixed_down: false,
+            is_processed,
+        }),
     };
     run_capture_thread(
         &GatedSource,
@@ -1245,7 +1258,19 @@ fn a_recorded_dialog_keeps_what_the_speech_provider_was_sent() {
         .unwrap();
     let granule = u64::from_le_bytes(bytes[last + 6..last + 14].try_into().unwrap());
     let pre_skip = u64::from(u16::from_le_bytes(bytes[38..40].try_into().unwrap()));
-    assert_eq!(granule - pre_skip, 4_800);
+    assert_eq!(bytes[37], 2, "two channels");
     let delivered: usize = sink.chunks.lock().unwrap().iter().map(Vec::len).sum();
-    assert_eq!(delivered, 2 * 2 * 1_600);
+    ((granule - pre_skip) / 3, delivered)
+}
+
+#[test]
+fn a_recorded_dialog_keeps_what_the_speech_provider_was_sent() {
+    // 100 ms at 16 kHz, whatever is held aside
+    assert_eq!(record_dialog(true), (1_600, 2 * 2 * 1_600));
+}
+
+#[test]
+fn an_unprocessed_recording_takes_the_samples_held_aside() {
+    // the provider still gets the processed samples
+    assert_eq!(record_dialog(false), (800, 2 * 2 * 1_600));
 }

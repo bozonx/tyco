@@ -35,6 +35,24 @@
         t('settings.storageOpenFolder')
       }}</Button>
     </FieldRow>
+    <FieldRow
+      :label="t('settings.dialogRecordingMixedDown')"
+      :hint="t('settings.dialogRecordingMixedDownHint')"
+    >
+      <FieldSwitch
+        :model-value="dialog.isRecordingMixedDown"
+        @update:model-value="setDialog({ isRecordingMixedDown: $event })"
+      />
+    </FieldRow>
+    <FieldRow
+      :label="t('settings.dialogRecordingProcessed')"
+      :hint="t('settings.dialogRecordingProcessedHint')"
+    >
+      <FieldSwitch
+        :model-value="dialog.isRecordingProcessed"
+        @update:model-value="setDialog({ isRecordingProcessed: $event })"
+      />
+    </FieldRow>
   </SettingsSection>
 </template>
 

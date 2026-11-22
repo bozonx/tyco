@@ -38,8 +38,6 @@ interface Session {
   /** The text last written; none: the entry was never written */
   savedText?: string
   savedMeta?: EditorHistoryDialog
-  /** The user deleted the entry: the session is not written again */
-  isDropped: boolean
   /** `onRecordingUnlinked` was called */
   isUnlinkReported?: boolean
 }
@@ -80,7 +78,6 @@ export function createDialogHistory(
 
   const write = (target: Session): Promise<void> => {
     pending = pending.then(async () => {
-      if (target.isDropped) return
       const text = deps.getText()
       if (!text.trim() && !target.meta.recordingFile) return
       const meta = target.meta
@@ -92,11 +89,13 @@ export function createDialogHistory(
           kind: 'dialog',
           dialog: meta,
         })
+        // nothing stored under a known id: the entry was deleted. The
+        // history never brings it back itself, but the undo of the deletion
+        // may, so the next checkpoint tries again
+        if (id === null && target.id) return
         target.savedText = text
         target.savedMeta = meta
-        // nothing stored under a known id: the entry was deleted
-        if (id === null && target.id) target.isDropped = true
-        else if (id !== null) target.id = id
+        if (id !== null) target.id = id
         else reportUnlinked(target)
       } catch (error) {
         deps.reportError(error)
@@ -118,7 +117,7 @@ export function createDialogHistory(
   return {
     async begin(meta) {
       const ending = end()
-      const current: Session = { meta, isDropped: false }
+      const current: Session = { meta }
       session = current
       timer = startInterval(() => {
         void write(current)

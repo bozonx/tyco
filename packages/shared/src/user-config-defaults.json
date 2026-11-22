@@ -264,6 +264,8 @@
     "translationTargetLanguage": "",
     "remoteLanguage": "auto",
     "textDisplay": "both",
-    "translationProvider": "default"
+    "translationProvider": "default",
+    "isRecordingMixedDown": true,
+    "isRecordingProcessed": true
   }
 }
