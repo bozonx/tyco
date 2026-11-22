@@ -112,7 +112,7 @@ describe('SttLanguagePicker', () => {
     wrapper.unmount()
   })
 
-  it('disables the picker and updates title when recognition has started', async () => {
+  it('stays open while speaking and warns that a change starts over', async () => {
     desktop = await loadFakeDesktop({
       userConfig: {
         ...DEFAULT_USER_CONFIG,
@@ -122,16 +122,56 @@ describe('SttLanguagePicker', () => {
     const wrapper = mount(SttLanguagePicker, {
       props: { hasText: true },
       global: { plugins: [i18n, desktop.pinia] },
+      attachTo: document.body,
     })
 
     const trigger = wrapper.get('button.dropdown-trigger')
-    expect(trigger.attributes('disabled')).toBeDefined()
-    expect(trigger.classes()).toContain('btn-disabled')
-    expect(trigger.attributes('title')).toBe(
-      i18n.global.t('stt.cannotChangeLanguage')
+    expect(trigger.attributes('disabled')).toBeUndefined()
+    await trigger.trigger('click')
+    await flushPromises()
+
+    const items = Array.from(
+      document.body.querySelectorAll('[role="menuitem"]')
     )
-    expect(wrapper.get('.stt-language-picker').attributes('title')).toBe(
-      i18n.global.t('stt.cannotChangeLanguage')
+    expect(items[0]?.textContent).toContain(
+      i18n.global.t('stt.languageRestartsRecording')
+    )
+    wrapper.unmount()
+  })
+
+  it('keeps the computer sound language apart from the own language', async () => {
+    desktop = await loadFakeDesktop({
+      userConfig: {
+        ...DEFAULT_USER_CONFIG,
+        stt: {
+          ...DEFAULT_USER_CONFIG.stt,
+          provider: 'deepgram',
+          providers: {
+            ...DEFAULT_USER_CONFIG.stt.providers,
+            deepgram: { modelId: 'nova-3', language: 'ru-RU' },
+          },
+        },
+      },
+    })
+    const wrapper = mount(SttLanguagePicker, {
+      props: { target: 'computer' },
+      global: { plugins: [i18n, desktop.pinia] },
+      attachTo: document.body,
+    })
+
+    await wrapper.find('button.dropdown-trigger').trigger('click')
+    await flushPromises()
+    const deLabel = i18n.global.t('language.de-DE')
+    const deButton = Array.from(
+      document.body.querySelectorAll('[role="menuitem"]')
+    ).find((el) => el.textContent?.includes(deLabel)) as
+      HTMLButtonElement | undefined
+    deButton!.click()
+    await flushPromises()
+
+    expect(desktop.backend.userConfig.stt.listenLanguage).toBe('de-DE')
+    expect(desktop.backend.userConfig.stt.providers.deepgram.language).toBe(
+      'ru-RU'
     )
     wrapper.unmount()
   })

@@ -1470,7 +1470,6 @@
     "ambiguous": "有多個相符的命令。請從清單中選擇正確的命令。",
     "catalog": "已註冊的語音命令",
     "conflicts": "衝突或巢狀片語",
-    "edit": "編輯",
     "empty": "在命令的設定中開啟語音功能，即可在此處看到該命令。",
     "enabled": "語音啟動",
     "extraText": "此命令不需要文字。請在執行前清除多餘的文字。",
@@ -1487,7 +1486,7 @@
     "nothingHeard": "未辨識到語音。請重新錄音。",
     "phaseAwaitingCommand": "請說出命令...",
     "phrases": "觸發詞",
-    "phrasesInfo": "輸入同義觸發詞，每行一個。說出其中任何一個即可觸發此指令。指令名稱本身不用於識別。",
+    "phrasesInfo": "呼叫該指令的短語，每行一個。開啟語音時會在此填入指令名稱，可自行修改。只辨識此欄位中的短語，從不使用名稱本身。",
     "recordAgain": "重新錄音",
     "run": "執行",
     "textPlaceholder": "您的文字",
@@ -1495,7 +1494,13 @@
     "missingSelection": "必須提供選取的文字。",
     "phrasesPlaceholder": "範例詞，每行一個",
     "parameterMissing": "請在命令名稱旁選擇參數值。",
-    "phaseAwaitingParameter": "請說出 {parameter}..."
+    "phaseAwaitingParameter": "請說出 {parameter}...",
+    "stopAndReview": "停止並檢查",
+    "stopAndReviewHint": "點擊停止錄音並編輯文字和指令",
+    "selectionAsText": "所選文字",
+    "runsOnSelection": "指令將作用於所選文字。若要使用說出的文字，請移除所選內容。",
+    "selectionUnused": "此指令不使用所選文字",
+    "morePhrases": "更多短語"
   },
   "voiceGrammar": {
     "languages": {
@@ -1656,9 +1661,12 @@
     "waitingPlaceholder": "等待音訊…"
   },
   "stt": {
-    "cannotChangeLanguage": "無法變更語言：辨識已開始",
     "languageSavedForNext": "已儲存語言，將於下次錄音時套用",
-    "openSettings": "轉錄設定…"
+    "openSettings": "轉錄設定…",
+    "computerLanguage": "電腦聲音的語言",
+    "languageRestartsRecording": "變更語言將重新開始錄音",
+    "languageAppliesFromNow": "新語言從現在開始生效，已有轉寫保留",
+    "recordingRestarted": "已用新語言重新開始錄音"
   },
   "dialog": {
     "sideMe": "我",

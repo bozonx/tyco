@@ -127,6 +127,7 @@ export function createAiCommandOperation(
 
   return {
     id: AI_COMMAND_OPERATION_ID,
+    voiceSelectionRole: 'attach',
     labelKey: 'operations.aiTask',
     descriptionKey: 'operations.aiTaskDescription',
     icon: 'mdi:robot-outline',

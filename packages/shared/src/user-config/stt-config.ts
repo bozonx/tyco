@@ -61,6 +61,12 @@ export interface SttConfig {
   /** What the user saw for `listenAppId` when choosing it */
   listenAppLabel?: string
   /**
+   * The language of the computer sound the listening mode transcribes, chosen
+   * in its window only: it is not the user's own language. Absent or `auto`:
+   * the provider detects it
+   */
+  listenLanguage?: string
+  /**
    * Whether the listening hotkey mixes the microphone into all the computer
    * sound, to transcribe both sides of a call; ignored with `listenAppId`
    */

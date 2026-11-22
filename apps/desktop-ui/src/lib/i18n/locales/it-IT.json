@@ -1470,7 +1470,6 @@
     "ambiguous": "Corrispondono più comandi. Scegli quello giusto dall’elenco.",
     "catalog": "Comandi vocali registrati",
     "conflicts": "Frasi in conflitto o annidate",
-    "edit": "Modifica",
     "empty": "Attiva la voce nelle impostazioni di un comando per vederlo qui.",
     "enabled": "Avvio vocale",
     "extraText": "Questo comando non accetta testo. Cancella il testo in eccesso prima di eseguirlo.",
@@ -1487,7 +1486,7 @@
     "nothingHeard": "Nessun parlato riconosciuto. Registra di nuovo.",
     "phaseAwaitingCommand": "Pronuncia un comando...",
     "phrases": "Frasi di attivazione",
-    "phrasesInfo": "Inserisci frasi sinonime, una per riga. Pronunciare una qualsiasi di esse avvierà questo comando. Il nome del comando non viene utilizzato per il riconoscimento.",
+    "phrasesInfo": "Frasi che richiamano il comando, una per riga. Attivando la voce qui viene inserito il nome del comando: puoi cambiarlo. Vengono riconosciute solo le frasi di questo campo, mai il nome stesso.",
     "recordAgain": "Registra di nuovo",
     "run": "Esegui",
     "textPlaceholder": "il tuo testo",
@@ -1495,7 +1494,13 @@
     "missingSelection": "Il testo selezionato è obbligatorio.",
     "phrasesPlaceholder": "Frasi di esempio, una per riga",
     "parameterMissing": "Scegli il valore del parametro accanto al nome del comando.",
-    "phaseAwaitingParameter": "Pronuncia {parameter}..."
+    "phaseAwaitingParameter": "Pronuncia {parameter}...",
+    "stopAndReview": "Ferma e rivedi",
+    "stopAndReviewHint": "Fai clic per fermare la registrazione e modificare testo e comando",
+    "selectionAsText": "testo selezionato",
+    "runsOnSelection": "Il comando agisce sul testo selezionato. Per usare il testo dettato, rimuovi la selezione.",
+    "selectionUnused": "Questo comando non usa il testo selezionato",
+    "morePhrases": "Altre frasi"
   },
   "voiceGrammar": {
     "languages": {
@@ -1660,9 +1665,12 @@
     "waitingPlaceholder": "In attesa dell’audio…"
   },
   "stt": {
-    "cannotChangeLanguage": "Impossibile cambiare lingua: il riconoscimento è già iniziato",
     "languageSavedForNext": "Lingua salvata per la prossima registrazione",
-    "openSettings": "Impostazioni di trascrizione…"
+    "openSettings": "Impostazioni di trascrizione…",
+    "computerLanguage": "Lingua dell’audio del computer",
+    "languageRestartsRecording": "Cambiare lingua riavvia la registrazione",
+    "languageAppliesFromNow": "La nuova lingua vale da adesso; la trascrizione resta",
+    "recordingRestarted": "La registrazione è ripartita nella nuova lingua"
   },
   "dialog": {
     "sideMe": "Io",

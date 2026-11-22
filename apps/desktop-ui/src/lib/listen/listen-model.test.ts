@@ -74,6 +74,22 @@ function setup(overrides: Partial<ListenModelDependencies> = {}) {
 }
 
 describe('listen model', () => {
+  it('goes on in another language with the transcript so far', async () => {
+    const { model, deps, handlers } = setup({
+      finishDictation: vi.fn(async () => 'Guten Tag'),
+    })
+    await model.start()
+    handlers().onText({ committed: 'Good morning', draft: '' })
+    await model.restartKeepingText()
+    expect(deps.cancelDictation).toHaveBeenCalledOnce()
+    expect(deps.startDictation).toHaveBeenCalledTimes(2)
+    expect(model.transcript.value.committed).toBe('Good morning')
+    handlers().onText({ committed: 'Guten', draft: '' })
+    expect(model.transcript.value.committed).toBe('Good morning Guten')
+    await model.stop()
+    expect(model.resultText.value).toBe('Good morning Guten Tag')
+  })
+
   it('checkpoints the transcript in one record while it records', async () => {
     vi.useFakeTimers()
     try {

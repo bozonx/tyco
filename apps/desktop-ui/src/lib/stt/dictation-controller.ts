@@ -15,6 +15,11 @@ export interface DictationHandlers extends Pick<
 > {
   onText: (state: LiveTranscriptState) => void
   onError: (error: Error) => void
+  /**
+   * The language setting to recognize in place of the user's own, such as the
+   * language of the computer sound; `auto` lets the provider detect it
+   */
+  language?: string
 }
 
 export interface DictationControllerDependencies {
@@ -38,10 +43,18 @@ export function createDictationController(
   const shouldFormatRecognizedText = (target: DictationTarget = 'external') =>
     target === 'external' && deps.getConfig().stt.correctionMode === 'onSubmit'
 
-  const currentDictationLanguage = (model: SttModel) =>
-    dictationLanguageFor(model.language)
+  const currentDictationLanguage = (model: SttModel, setting?: string) =>
+    // only a provider with a choice of language takes another one
+    dictationLanguageFor(
+      model.language !== undefined && setting !== undefined
+        ? setting
+        : model.language
+    )
 
-  const startDictation = async (handlers: DictationHandlers) => {
+  const startDictation = async ({
+    language: languageSetting,
+    ...handlers
+  }: DictationHandlers) => {
     const runGeneration = ++generation
     const sttConfig = deps.getConfig().stt
     const model = activeSttModel(sttConfig)
@@ -69,7 +82,7 @@ export function createDictationController(
     await deps.dictation.start({
       model,
       microphoneId: sttConfig.microphoneId,
-      language: currentDictationLanguage(model),
+      language: currentDictationLanguage(model, languageSetting),
       hasApiKey: needsKey,
       ...handlers,
       onError: (error) => {

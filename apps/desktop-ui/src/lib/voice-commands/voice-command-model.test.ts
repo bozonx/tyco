@@ -670,3 +670,35 @@ it('returns to the review when a running command is cancelled', async () => {
   expect(model.inputText.value).toBe('Hello!')
   expect(model.error.value).toBe('')
 })
+
+it('translates the selection: the spoken words only name the language', async () => {
+  const { model, deps } = setup({
+    finishDictation: vi.fn(async () => 'translate to German'),
+  })
+  model.setContext({ selectionText: 'Selected passage' })
+  await model.start()
+  await model.finish('review')
+
+  expect(model.command.value?.id).toBe('translate')
+  expect(model.isRunningOnSelection.value).toBe(true)
+  expect(model.inputIssue.value).toBeUndefined()
+  await model.run()
+  expect(deps.run).toHaveBeenCalledWith(
+    expect.objectContaining({ id: 'translate' }),
+    'Selected passage',
+    expect.any(AbortSignal),
+    { selectionText: 'Selected passage' },
+    { language: expect.stringMatching(/^de/) }
+  )
+})
+
+it('restarts the recording and keeps what was heard in the history', async () => {
+  const { model, deps, partial } = setup()
+  await model.start()
+  partial('save note wrong language')
+  await model.restart()
+  expect(deps.saveTranscript).toHaveBeenCalledWith('save note wrong language')
+  expect(deps.startDictation).toHaveBeenCalledTimes(2)
+  expect(model.stage.value).toBe('recording')
+  expect(model.transcript.value).toBe('')
+})

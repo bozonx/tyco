@@ -13,6 +13,7 @@ import {
   openCommandParameters,
   parameterVariants,
 } from '../operations/command-parameters'
+import { voiceRunText, voiceSelectionUse } from './voice-selection'
 
 export interface VoiceParameter {
   name: string
@@ -676,6 +677,38 @@ export function voiceInputIssue(
     return 'missing-parameter'
 
   if (commandTakesText(command, operations))
-    return text.trim() ? undefined : 'missing-text'
+    return voiceRunText(
+      voiceSelectionUse(command, operations),
+      text,
+      context?.selectionText
+    ).trim()
+      ? undefined
+      : 'missing-text'
   return text.trim() ? 'extra-text' : undefined
+}
+
+/**
+ * The change of turning voice calls of the command on or off. Turned on with no
+ * phrases, it starts with the name as its phrase for the user to change: the
+ * name itself is never spoken. A command whose phrase names a parameter keeps
+ * the phrases of its tool. Turned off, the phrases stay for the next time.
+ */
+export function voiceEnabledPatch(
+  command: CommandConfig,
+  isEnabled: boolean,
+  operations: OperationLookup
+): Partial<CommandConfig> {
+  const hasPhrases = command.phrases.some((phrase) => phrase.trim())
+  const name = command.name.trim()
+  if (
+    !isEnabled ||
+    hasPhrases ||
+    !name ||
+    openCommandParameters(
+      operations.get(command.operationId),
+      command.operationConfig
+    ).length
+  )
+    return { isVoiceEnabled: isEnabled }
+  return { isVoiceEnabled: true, phrases: [name] }
 }

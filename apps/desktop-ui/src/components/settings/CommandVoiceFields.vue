@@ -4,7 +4,9 @@
     <FieldSwitch
       :model-value="command.isVoiceEnabled"
       :label="t('voiceCommands.enabled')"
-      @update:model-value="emit('update', { isVoiceEnabled: $event })"
+      @update:model-value="
+        emit('update', voiceEnabledPatch(command, $event, operationsStore))
+      "
     />
     <template v-if="command.isVoiceEnabled">
       <FieldRow
@@ -47,6 +49,7 @@ import {
   compileVoiceRoutes,
   findVoiceConflicts,
   grammarVariants,
+  voiceEnabledPatch,
   voiceParameterIssue,
 } from '../../lib/voice-commands/voice-resolver'
 import { voiceParameters } from '../../lib/voice-commands/voice-view-presenter'

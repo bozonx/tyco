@@ -1470,7 +1470,6 @@
     "ambiguous": "Pasuje kilka poleceń. Wybierz właściwe z listy.",
     "catalog": "Zarejestrowane polecenia głosowe",
     "conflicts": "Kolidujące lub zagnieżdżone frazy",
-    "edit": "Edytuj",
     "empty": "Włącz głos w ustawieniach polecenia, aby pojawiło się tutaj.",
     "enabled": "Uruchamianie głosem",
     "extraText": "To polecenie nie przyjmuje tekstu. Usuń nadmiarowy tekst przed uruchomieniem.",
@@ -1487,7 +1486,7 @@
     "nothingHeard": "Nie rozpoznano mowy. Nagraj ponownie.",
     "phaseAwaitingCommand": "Wypowiedz polecenie...",
     "phrases": "Frazy aktywujące",
-    "phrasesInfo": "Wpisz synonimiczne frazy, po jednej w wierszu. Wypowiedzenie dowolnej z nich uruchomi to polecenie. Sama nazwa polecenia nie jest używana do rozpoznawania.",
+    "phrasesInfo": "Frazy wywołujące polecenie, po jednej w wierszu. Po włączeniu głosu wstawia się tu nazwa polecenia — możesz ją zmienić. Rozpoznawane są tylko frazy z tego pola, nigdy sama nazwa.",
     "recordAgain": "Nagraj ponownie",
     "run": "Uruchom",
     "textPlaceholder": "twój tekst",
@@ -1495,7 +1494,13 @@
     "missingSelection": "Wymagany jest zaznaczony tekst.",
     "phrasesPlaceholder": "Przykładowe frazy, jedna na wiersz",
     "parameterMissing": "Wybierz wartość parametru obok nazwy polecenia.",
-    "phaseAwaitingParameter": "Powiedz {parameter}..."
+    "phaseAwaitingParameter": "Powiedz {parameter}...",
+    "stopAndReview": "Zatrzymaj i sprawdź",
+    "stopAndReviewHint": "Kliknij, aby zatrzymać nagrywanie i edytować tekst oraz polecenie",
+    "selectionAsText": "zaznaczony tekst",
+    "runsOnSelection": "Polecenie zostanie wykonane na zaznaczonym tekście. Aby użyć wypowiedzianego tekstu, usuń zaznaczenie.",
+    "selectionUnused": "To polecenie nie używa zaznaczonego tekstu",
+    "morePhrases": "Więcej fraz"
   },
   "voiceGrammar": {
     "languages": {
@@ -1660,9 +1665,12 @@
     "waitingPlaceholder": "Oczekiwanie na dźwięk…"
   },
   "stt": {
-    "cannotChangeLanguage": "Nie można zmienić języka: rozpoznawanie już się rozpoczęło",
     "languageSavedForNext": "Język zapisany dla następnego nagrania",
-    "openSettings": "Ustawienia transkrypcji…"
+    "openSettings": "Ustawienia transkrypcji…",
+    "computerLanguage": "Język dźwięku komputera",
+    "languageRestartsRecording": "Zmiana języka rozpocznie nagrywanie od nowa",
+    "languageAppliesFromNow": "Nowy język obowiązuje od teraz, transkrypcja zostaje",
+    "recordingRestarted": "Nagrywanie rozpoczęto od nowa w nowym języku"
   },
   "dialog": {
     "sideMe": "Ja",

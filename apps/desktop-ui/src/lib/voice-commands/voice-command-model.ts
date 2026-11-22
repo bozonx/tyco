@@ -28,6 +28,11 @@ import {
   voiceInputIssue,
   type VoiceCandidate,
 } from './voice-resolver'
+import {
+  runsOnSelection,
+  voiceRunText,
+  voiceSelectionUse,
+} from './voice-selection'
 
 export interface VoiceCommandContext {
   selectionText: string
@@ -297,6 +302,20 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     return !issue
   })
 
+  /** How the command of the live phase or of the review uses the selection */
+  const selectionUseOf = (target: CommandConfig | undefined) =>
+    target ? voiceSelectionUse(target, deps.operations) : 'none'
+  const activeSelectionUse = computed(() => selectionUseOf(activeCommand.value))
+  const selectionUse = computed(() => selectionUseOf(command.value))
+  /** The live command runs on the selection: no text is spoken for it */
+  const activeRunsOnSelection = computed(() =>
+    runsOnSelection(activeSelectionUse.value, context.value?.selectionText)
+  )
+  /** The reviewed command runs on the selection, not on the field */
+  const isRunningOnSelection = computed(() =>
+    runsOnSelection(selectionUse.value, context.value?.selectionText)
+  )
+
   const choose = (candidate: VoiceCandidate) => {
     if (stage.value !== 'review') return
     selected.value = candidate
@@ -331,7 +350,11 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     )
       return
     const current = generation
-    const text = inputText.value
+    const text = voiceRunText(
+      voiceSelectionUse(target, deps.operations),
+      inputText.value,
+      context.value?.selectionText
+    )
     controller = new AbortController()
     error.value = ''
     stage.value = 'running'
@@ -618,6 +641,10 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     discardedText,
     canRun,
     canRunLive,
+    activeSelectionUse,
+    selectionUse,
+    activeRunsOnSelection,
+    isRunningOnSelection,
     choose,
     chooseCommand,
     setParameter,
@@ -637,6 +664,17 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       if (commandId) chooseCommand(commandId)
     },
     cancel,
+    /**
+     * Starts the recording over, e.g. in another language; what was heard goes
+     * to the history
+     */
+    restart: async () => {
+      if (stage.value !== 'recording') return
+      const heard = liveTranscriptText(liveTranscript.value)
+      if (heard.trim()) void deps.saveTranscript?.(heard).catch(() => undefined)
+      await cancel()
+      await start()
+    },
     cancelRun,
     dispose() {
       disposed = true

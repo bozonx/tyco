@@ -88,6 +88,8 @@ function transformTool(
 ): OperationDefinition {
   return {
     defaultOutputAction: 'insertIntoWindow',
+    // a spoken command transforms the selection rather than spoken text
+    voiceSelectionRole: 'text',
     ...tool,
     inputSchema: TEXT_INPUT_SCHEMA,
     run: async (call) => {
@@ -160,6 +162,7 @@ export function createCoreOperations(
 
   const askInChat: OperationDefinition = {
     id: 'core.askInChat' satisfies CoreOperationId,
+    voiceSelectionRole: 'attach',
     labelKey: 'operations.askInCurrentChat',
     descriptionKey: 'operations.askInCurrentChatDescription',
     icon: 'mdi:chat-question-outline',
@@ -176,6 +179,7 @@ export function createCoreOperations(
 
   const askInCurrentChat: OperationDefinition = {
     id: 'core.askInCurrentChat' satisfies CoreOperationId,
+    voiceSelectionRole: 'attach',
     labelKey: 'operations.askInCurrentChat',
     descriptionKey: 'operations.askInCurrentChatDescription',
     icon: 'mdi:chat-outline',
@@ -191,6 +195,7 @@ export function createCoreOperations(
 
   const askInNewChat: OperationDefinition = {
     id: 'core.askInNewChat' satisfies CoreOperationId,
+    voiceSelectionRole: 'attach',
     labelKey: 'operations.askInNewChat',
     descriptionKey: 'operations.askInNewChatDescription',
     icon: 'mdi:chat-plus-outline',

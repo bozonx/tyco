@@ -1283,6 +1283,7 @@
         "microphoneId": { "type": "string", "x-scope": "device" },
         "listenAppId": { "type": "string", "x-scope": "device" },
         "listenAppLabel": { "type": "string", "x-scope": "device" },
+        "listenLanguage": { "type": "string", "maxLength": 35 },
         "isListenMicrophoneMixed": { "type": "boolean", "x-scope": "device" },
         "isStylingBarEnabled": { "type": "boolean", "default": false },
         "isStylingBarDirectInsertEnabled": {

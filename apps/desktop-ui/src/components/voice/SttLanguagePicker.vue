@@ -37,9 +37,21 @@ const props = withDefaults(
     placement?: 'top' | 'bottom'
     align?: 'left' | 'right'
     disabled?: boolean
+    /** The recording has text: a change starts over, or goes on from now */
     hasText?: boolean
+    /**
+     * Whose speech: `own` is the user's language of the STT settings,
+     * `computer` the language of the computer sound, set only here
+     */
+    target?: 'own' | 'computer'
   }>(),
-  { placement: 'top', align: 'left', disabled: false, hasText: false }
+  {
+    placement: 'top',
+    align: 'left',
+    disabled: false,
+    hasText: false,
+    target: 'own',
+  }
 )
 
 const emit = defineEmits<{ (e: 'change', language: string): void }>()
@@ -55,7 +67,9 @@ const isDeepgram = computed(
 
 const currentLanguage = computed(() =>
   normalizeDeepgramLanguage(
-    desktopStore.userConfig.stt?.providers?.deepgram?.language
+    props.target === 'computer'
+      ? desktopStore.userConfig.stt?.listenLanguage
+      : desktopStore.userConfig.stt?.providers?.deepgram?.language
   )
 )
 
@@ -63,17 +77,18 @@ const badgeLabel = computed(() =>
   deepgramLanguageBadge(currentLanguage.value, t('language.auto'))
 )
 
-const isDisabled = computed(
-  () => props.disabled || props.hasText || isSaving.value
-)
+const isDisabled = computed(() => props.disabled || isSaving.value)
 
 const tooltipLabel = computed(() => {
-  if (props.hasText) return t('stt.cannotChangeLanguage')
   const name =
     currentLanguage.value === DICTATION_LANGUAGE_AUTO
       ? t('language.auto')
       : t(getLanguageLabelKey(currentLanguage.value))
-  return `${t('settings.sttLanguage')}: ${name}`
+  const label =
+    props.target === 'computer'
+      ? t('stt.computerLanguage')
+      : t('settings.sttLanguage')
+  return `${label}: ${name}`
 })
 
 async function selectLanguage(language: string) {
@@ -81,8 +96,12 @@ async function selectLanguage(language: string) {
   if (next === currentLanguage.value || isSaving.value) return
   isSaving.value = true
   try {
+    const stt = desktopStore.savedUserConfig.stt
     const result = await desktopStore.updateUserConfig({
-      stt: withDeepgramLanguage(desktopStore.savedUserConfig.stt, next),
+      stt:
+        props.target === 'computer'
+          ? { ...stt, listenLanguage: next }
+          : withDeepgramLanguage(stt, next),
     })
     if (result.success) emit('change', next)
   } finally {
@@ -117,13 +136,23 @@ const items = computed<DropdownMenuItem[]>(() => {
     ? allLanguages.filter((opt) => opt.id !== active)
     : allLanguages
 
-  const list: DropdownMenuItem[] = [
-    {
-      label: t('language.auto'),
-      icon: active === DICTATION_LANGUAGE_AUTO ? 'mdi:check' : undefined,
-      action: () => selectLanguage(DICTATION_LANGUAGE_AUTO),
-    },
-  ]
+  const list: DropdownMenuItem[] = []
+  // the change is told before it is made: the user may not expect it
+  if (props.hasText)
+    list.push({
+      label:
+        props.target === 'computer'
+          ? t('stt.languageAppliesFromNow')
+          : t('stt.languageRestartsRecording'),
+      icon: 'mdi:information-outline',
+      disabled: true,
+      action: () => undefined,
+    })
+  list.push({
+    label: t('language.auto'),
+    icon: active === DICTATION_LANGUAGE_AUTO ? 'mdi:check' : undefined,
+    action: () => selectLanguage(DICTATION_LANGUAGE_AUTO),
+  })
   if (activeOption) {
     list.push({
       label: activeOption.name,

@@ -1470,7 +1470,6 @@
     "ambiguous": "複数のコマンドが一致しました。一覧から適切なものを選択してください。",
     "catalog": "登録済み音声コマンド",
     "conflicts": "重複または競合しているフレーズ",
-    "edit": "編集",
     "empty": "コマンドの設定で音声を有効にすると、ここに表示されます。",
     "enabled": "音声起動",
     "extraText": "このコマンドはテキストを受け取りません。実行する前に余分なテキストを消去してください。",
@@ -1487,7 +1486,7 @@
     "nothingHeard": "音声が認識されませんでした。もう一度録音してください。",
     "phaseAwaitingCommand": "コマンドを話してください...",
     "phrases": "起動フレーズ",
-    "phrasesInfo": "類義フレーズを1行に1つずつ入力してください。いずれかを発声するとこのコマンドが実行されます。コマンド名自体は音声認識には使用されません。",
+    "phrasesInfo": "コマンドを呼び出すフレーズを1行に1つずつ入力します。音声を有効にするとコマンド名がここに入ります（変更できます）。認識されるのはこの欄のフレーズだけで、名前そのものは使われません。",
     "recordAgain": "もう一度録音",
     "run": "実行",
     "textPlaceholder": "テキスト",
@@ -1495,7 +1494,13 @@
     "missingSelection": "選択されたテキストが必要です。",
     "phrasesPlaceholder": "フレーズの例（1行に1つ）",
     "parameterMissing": "コマンド名の横でパラメーターの値を選択してください。",
-    "phaseAwaitingParameter": "{parameter} を話してください..."
+    "phaseAwaitingParameter": "{parameter} を話してください...",
+    "stopAndReview": "停止して確認",
+    "stopAndReviewHint": "クリックすると録音を停止し、テキストとコマンドを編集できます",
+    "selectionAsText": "選択したテキスト",
+    "runsOnSelection": "コマンドは選択したテキストに対して実行されます。話したテキストを使うには選択を外してください。",
+    "selectionUnused": "このコマンドは選択したテキストを使用しません",
+    "morePhrases": "その他のフレーズ"
   },
   "voiceGrammar": {
     "languages": {
@@ -1656,9 +1661,12 @@
     "waitingPlaceholder": "音声を待機中…"
   },
   "stt": {
-    "cannotChangeLanguage": "言語を変更できません: 音声認識は既に開始されています",
     "languageSavedForNext": "次回の録音用に言語を保存しました",
-    "openSettings": "文字起こし設定…"
+    "openSettings": "文字起こし設定…",
+    "computerLanguage": "PC音声の言語",
+    "languageRestartsRecording": "言語を変えると録音は最初からやり直しになります",
+    "languageAppliesFromNow": "新しい言語はここから適用され、文字起こしは残ります",
+    "recordingRestarted": "新しい言語で録音をやり直しました"
   },
   "dialog": {
     "sideMe": "自分",

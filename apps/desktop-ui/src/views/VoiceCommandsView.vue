@@ -19,11 +19,19 @@
       <template #preview>
         <div class="voice-commands" :class="{ 'is-listening': isListening }">
           <template v-if="isListening">
-            <ContextPreview
+            <div
               v-if="contextText"
-              v-model:disabled="isContextDisabled"
-              :text="contextText"
-            />
+              class="voice-context"
+              :class="{ 'is-unused': isLiveSelectionUnused }"
+            >
+              <ContextPreview
+                v-model:disabled="isContextDisabled"
+                :text="contextText"
+              />
+              <p v-if="isLiveSelectionUnused" class="voice-context-note">
+                {{ t('voiceCommands.selectionUnused') }}
+              </p>
+            </div>
             <section class="voice-listening-bar">
               <div
                 class="voice-bar-mic"
@@ -41,7 +49,11 @@
                 />
               </div>
 
-              <div class="voice-bar-transcript">
+              <div
+                class="voice-bar-transcript"
+                :title="t('voiceCommands.stopAndReviewHint')"
+                @click="stopForReview"
+              >
                 <LiveTranscript
                   class="voice-live-compact"
                   :committed="displayTranscript.committed"
@@ -108,7 +120,9 @@
                 <div class="voice-pipeline-chip is-active-step">
                   <span class="voice-pipeline-step-dot" />
                   <span class="voice-pipeline-label">{{
-                    t('voiceCommands.textPlaceholder')
+                    voice.activeRunsOnSelection
+                      ? t('voiceCommands.selectionAsText')
+                      : t('voiceCommands.textPlaceholder')
                   }}</span>
                 </div>
               </template>
@@ -157,11 +171,19 @@
 
           <template v-else-if="voice.stage !== 'running'">
             <section class="voice-main">
-              <ContextPreview
+              <div
                 v-if="contextText"
-                v-model:disabled="isContextDisabled"
-                :text="contextText"
-              />
+                class="voice-context"
+                :class="{ 'is-unused': isReviewSelectionUnused }"
+              >
+                <ContextPreview
+                  v-model:disabled="isContextDisabled"
+                  :text="contextText"
+                />
+                <p v-if="isReviewSelectionUnused" class="voice-context-note">
+                  {{ t('voiceCommands.selectionUnused') }}
+                </p>
+              </div>
               <div v-if="voice.command" class="voice-chosen">
                 <AppIcon
                   :icon="commandIcon(voice.command, tools)"
@@ -204,7 +226,12 @@
                   {{ t('common.openSettings') }}
                 </Button>
               </InlineNotice>
+              <p v-if="voice.isRunningOnSelection" class="voice-on-selection">
+                <AppIcon icon="mdi:text-box-check-outline" aria-hidden="true" />
+                {{ t('voiceCommands.runsOnSelection') }}
+              </p>
               <FieldTextArea
+                v-else
                 ref="textRef"
                 class="voice-text"
                 :model-value="voice.inputText"
@@ -231,9 +258,9 @@
             <ShortcutButton
               :keys="['Shift', 'Space']"
               :disabled="voice.stage === 'finishing'"
-              @click="void voice.finish('review')"
+              @click="stopForReview"
             >
-              {{ t('voiceCommands.edit') }}
+              {{ t('voiceCommands.stopAndReview') }}
             </ShortcutButton>
             <ShortcutButton
               :keys="withHotkey(['Space', 'Enter'])"
@@ -392,6 +419,26 @@ const isListening = computed(
   () => voice.stage === 'recording' || voice.stage === 'finishing'
 )
 
+/** The command at hand ignores the selection: it is shown dimmed */
+const isLiveSelectionUnused = computed(
+  () =>
+    Boolean(voice.activeCommand) &&
+    !isContextDisabled.value &&
+    voice.activeSelectionUse === 'none'
+)
+const isReviewSelectionUnused = computed(
+  () =>
+    Boolean(voice.command) &&
+    !isContextDisabled.value &&
+    voice.selectionUse === 'none'
+)
+
+/** Stops the recording without running: the text and the command can be fixed */
+function stopForReview() {
+  if (voice.stage !== 'recording') return
+  void voice.finish('review')
+}
+
 /** Rows the recognizer points at: live while recording, the choice after */
 const marks = computed(() =>
   matchVoiceCatalog(
@@ -477,7 +524,7 @@ watch(
       activeCmd &&
       !activeParam &&
       canRun &&
-      !commandTakesText(activeCmd, tools)
+      (!commandTakesText(activeCmd, tools) || voice.activeRunsOnSelection)
     ) {
       void voice.finish('run')
     }
@@ -527,12 +574,11 @@ function openSttSettings() {
 }
 
 async function handleLanguageChange() {
-  if (
-    voice.stage === 'recording' &&
-    !liveTranscriptText(voice.liveTranscript).trim()
-  ) {
-    await voice.cancel()
-    await voice.start()
+  // a wrong language is noticed while speaking: the recording starts over
+  if (voice.stage === 'recording') {
+    const hadText = hasText.value
+    await voice.restart()
+    if (hadText) toastKey('stt.recordingRestarted', 'info')
     return
   }
   toastKey('stt.languageSavedForNext', 'info')
@@ -656,7 +702,7 @@ const onKeyDown = (event: KeyboardEvent) => {
       event.preventDefault()
       // stops the recording for review even when no command was heard: the
       // text can then be edited and a command picked by hand
-      void voice.finish('review')
+      stopForReview()
       return
     } else if (event.code === 'Space' || event.code === 'Enter') {
       if (canRunLive.value) {
@@ -748,6 +794,33 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.voice-context {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.voice-context.is-unused > :first-child {
+  opacity: 0.5;
+}
+
+.voice-context-note,
+.voice-on-selection {
+  margin: 0;
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
+}
+
+.voice-on-selection {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+}
+
+.voice-bar-transcript {
+  cursor: text;
+}
 .voice-commands {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);

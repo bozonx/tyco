@@ -1470,7 +1470,6 @@
     "ambiguous": "匹配到多个命令。请从列表中选择正确的命令。",
     "catalog": "已注册的语音命令",
     "conflicts": "存在冲突或嵌套的短语",
-    "edit": "编辑",
     "empty": "在命令的设置中开启语音后即可在此显示。",
     "enabled": "语音启动",
     "extraText": "此命令不需要文本。运行前请清除多余的文本。",
@@ -1487,7 +1486,7 @@
     "nothingHeard": "未识别到语音。请重新录制。",
     "phaseAwaitingCommand": "请说出命令…",
     "phrases": "触发短语",
-    "phrasesInfo": "输入同义短语，每行一条。说出其中任意一条即可触发此命令。命令名称本身不用于语音识别。",
+    "phrasesInfo": "调用该命令的短语，每行一个。开启语音时会在此填入命令名称，可自行修改。只识别此字段中的短语，从不使用名称本身。",
     "recordAgain": "重新录音",
     "run": "运行",
     "textPlaceholder": "您的文本",
@@ -1495,7 +1494,13 @@
     "missingSelection": "需要提供选中的文本。",
     "phrasesPlaceholder": "示例短语，每行一条",
     "parameterMissing": "请在命令名称旁选择参数值。",
-    "phaseAwaitingParameter": "Say {parameter}..."
+    "phaseAwaitingParameter": "Say {parameter}...",
+    "stopAndReview": "停止并检查",
+    "stopAndReviewHint": "点击停止录音并编辑文本和命令",
+    "selectionAsText": "所选文本",
+    "runsOnSelection": "命令将作用于所选文本。要使用说出的文本，请移除所选内容。",
+    "selectionUnused": "此命令不使用所选文本",
+    "morePhrases": "更多短语"
   },
   "voiceGrammar": {
     "languages": {
@@ -1656,9 +1661,12 @@
     "waitingPlaceholder": "等待音频…"
   },
   "stt": {
-    "cannotChangeLanguage": "无法更改语言：识别已开始",
     "languageSavedForNext": "已保存语言，将在下次录音时生效",
-    "openSettings": "转录设置…"
+    "openSettings": "转录设置…",
+    "computerLanguage": "电脑声音的语言",
+    "languageRestartsRecording": "更改语言将重新开始录音",
+    "languageAppliesFromNow": "新语言从现在开始生效，已有转写保留",
+    "recordingRestarted": "已用新语言重新开始录音"
   },
   "dialog": {
     "sideMe": "我",

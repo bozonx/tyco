@@ -52,7 +52,6 @@ import {
 } from '../lib/listen/listen-model'
 import { clientLogger } from '../lib/logger'
 import { describeDictationError } from '../lib/stt/dictation-error'
-import { liveTranscriptText } from '../lib/stt/live-transcript'
 import { createKeyPressTracker } from '../lib/ui/key-press-tracker'
 import { isTextEntryTarget } from '../lib/ui/text-entry-target'
 import { stoppedRecordingActions } from '../lib/voice/stopped-recording-actions'
@@ -106,7 +105,12 @@ async function handleBack() {
 const handoff = useDictationHandoffStore()
 const model = createListenModel({
   initialText: handoff.take('listen', desktopStore.desktopState.activationId),
-  startDictation,
+  // the computer sound has a language of its own, see `listenLanguage`
+  startDictation: (handlers) =>
+    startDictation({
+      ...handlers,
+      language: desktopStore.userConfig.stt?.listenLanguage ?? 'auto',
+    }),
   finishDictation,
   cancelDictation,
   switchSource,
@@ -269,11 +273,9 @@ async function switchToVoice() {
 }
 
 function handleLanguageChange() {
-  if (
-    model.phase.value === 'recording' &&
-    !liveTranscriptText(model.transcript.value).trim()
-  ) {
-    void model.restartWithCurrentSource()
+  // the transcript so far stays: the new language applies from now on
+  if (model.phase.value === 'recording') {
+    void model.restartKeepingText()
     return
   }
   if (model.phase.value === 'failed') {

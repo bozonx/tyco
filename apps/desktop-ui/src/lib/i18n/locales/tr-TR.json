@@ -1470,7 +1470,6 @@
     "ambiguous": "Birden fazla komut eşleşiyor. Listeden doğru olanı seçin.",
     "catalog": "Kayıtlı sesli komutlar",
     "conflicts": "Çakışan veya iç içe ifadeler",
-    "edit": "Düzenle",
     "empty": "Burada görmek için bir komutun ayarlarında sesi açın.",
     "enabled": "Sesle başlat",
     "extraText": "Bu komut metin kabul etmiyor. Çalıştırmadan önce fazla metni silin.",
@@ -1487,7 +1486,7 @@
     "nothingHeard": "Konuşma tanınmadı. Yeniden kaydedin.",
     "phaseAwaitingCommand": "Bir komut söyleyin...",
     "phrases": "Tetikleme ifadeleri",
-    "phrasesInfo": "Her satıra bir tane olacak şekilde eşanlamlı ifadeler girin. Bunlardan herhangi birini söylemek bu komutu çalıştırır. Komutun adı tanıma için kullanılmaz.",
+    "phrasesInfo": "Komutu çağıran ifadeler, her satıra bir tane. Ses açıldığında buraya komut adı eklenir; değiştirebilirsiniz. Yalnızca bu alandaki ifadeler tanınır, adın kendisi asla.",
     "recordAgain": "Yeniden kaydet",
     "run": "Çalıştır",
     "textPlaceholder": "metniniz",
@@ -1495,7 +1494,13 @@
     "missingSelection": "Seçili metin gerekli.",
     "phrasesPlaceholder": "Örnek ifadeler, her satıra bir tane",
     "parameterMissing": "Komut adının yanından parametre değerini seçin.",
-    "phaseAwaitingParameter": "Say {parameter}..."
+    "phaseAwaitingParameter": "Say {parameter}...",
+    "stopAndReview": "Durdur ve gözden geçir",
+    "stopAndReviewHint": "Kaydı durdurup metni ve komutu düzenlemek için tıklayın",
+    "selectionAsText": "seçili metin",
+    "runsOnSelection": "Komut seçili metne uygulanır. Söylenen metni kullanmak için seçimi kaldırın.",
+    "selectionUnused": "Bu komut seçili metni kullanmaz",
+    "morePhrases": "Diğer ifadeler"
   },
   "voiceGrammar": {
     "languages": {
@@ -1656,9 +1661,12 @@
     "waitingPlaceholder": "Ses bekleniyor…"
   },
   "stt": {
-    "cannotChangeLanguage": "Dil değiştirilemez: tanıma zaten başladı",
     "languageSavedForNext": "Dil bir sonraki kayıt için kaydedildi",
-    "openSettings": "Deşifre ayarları…"
+    "openSettings": "Deşifre ayarları…",
+    "computerLanguage": "Bilgisayar sesinin dili",
+    "languageRestartsRecording": "Dili değiştirmek kaydı baştan başlatır",
+    "languageAppliesFromNow": "Yeni dil şu andan itibaren geçerli; döküm korunur",
+    "recordingRestarted": "Kayıt yeni dilde baştan başladı"
   },
   "dialog": {
     "sideMe": "Ben",

@@ -1470,7 +1470,6 @@
     "ambiguous": "Plusieurs commandes correspondent. Choisissez la bonne dans la liste.",
     "catalog": "Commandes vocales enregistrées",
     "conflicts": "Phrases en conflit ou imbriquées",
-    "edit": "Modifier",
     "empty": "Activez la voix dans les paramètres d’une commande pour la voir ici.",
     "enabled": "Lancement vocal",
     "extraText": "Cette commande ne prend pas de texte. Effacez le texte en trop avant de l’exécuter.",
@@ -1487,7 +1486,7 @@
     "nothingHeard": "Aucune parole reconnue. Enregistrez de nouveau.",
     "phaseAwaitingCommand": "Dites une commande...",
     "phrases": "Phrases de déclenchement",
-    "phrasesInfo": "Indiquez des phrases synonymes, une par ligne. Prononcer l’une d’elles déclenchera cette commande. Le nom de la commande n’est pas utilisé pour la reconnaissance.",
+    "phrasesInfo": "Phrases qui appellent la commande, une par ligne. En activant la voix, le nom de la commande est inséré ici — vous pouvez le modifier. Seules les phrases de ce champ sont reconnues, jamais le nom lui-même.",
     "recordAgain": "Réenregistrer",
     "run": "Exécuter",
     "textPlaceholder": "votre texte",
@@ -1495,7 +1494,13 @@
     "missingSelection": "Un texte sélectionné est nécessaire.",
     "phrasesPlaceholder": "Exemples de phrases, une par ligne",
     "parameterMissing": "Choisissez la valeur du paramètre à côté du nom de la commande.",
-    "phaseAwaitingParameter": "Dites {parameter}..."
+    "phaseAwaitingParameter": "Dites {parameter}...",
+    "stopAndReview": "Arrêter et vérifier",
+    "stopAndReviewHint": "Cliquez pour arrêter l’enregistrement et modifier le texte et la commande",
+    "selectionAsText": "texte sélectionné",
+    "runsOnSelection": "La commande s’applique au texte sélectionné. Pour utiliser le texte dicté, retirez la sélection.",
+    "selectionUnused": "Cette commande n’utilise pas le texte sélectionné",
+    "morePhrases": "Autres phrases"
   },
   "voiceGrammar": {
     "languages": {
@@ -1660,9 +1665,12 @@
     "waitingPlaceholder": "En attente d’audio…"
   },
   "stt": {
-    "cannotChangeLanguage": "Impossible de changer de langue : la reconnaissance a déjà commencé",
     "languageSavedForNext": "Langue enregistrée pour le prochain enregistrement",
-    "openSettings": "Paramètres de transcription…"
+    "openSettings": "Paramètres de transcription…",
+    "computerLanguage": "Langue du son de l’ordinateur",
+    "languageRestartsRecording": "Changer de langue recommence l’enregistrement",
+    "languageAppliesFromNow": "La nouvelle langue s’applique dès maintenant ; la transcription est conservée",
+    "recordingRestarted": "L’enregistrement a recommencé dans la nouvelle langue"
   },
   "dialog": {
     "sideMe": "Moi",

@@ -1470,7 +1470,6 @@
     "ambiguous": "Vários comandos correspondem. Escolha o certo na lista.",
     "catalog": "Comandos de voz registrados",
     "conflicts": "Frases conflitantes ou aninhadas",
-    "edit": "Editar",
     "empty": "Ative a voz nas configurações de um comando para vê-lo aqui.",
     "enabled": "Início por voz",
     "extraText": "Este comando não aceita texto. Apague o texto extra antes de executar.",
@@ -1487,7 +1486,7 @@
     "nothingHeard": "Nenhuma fala reconhecida. Grave de novo.",
     "phaseAwaitingCommand": "Diga um comando...",
     "phrases": "Frases de ativação",
-    "phrasesInfo": "Insira frases sinônimas, uma por linha. Dizer qualquer uma delas ativará este comando. O nome do comando em si não é usado para o reconhecimento.",
+    "phrasesInfo": "Frases que acionam o comando, uma por linha. Ao ativar a voz, o nome do comando é inserido aqui — você pode alterá-lo. Só as frases deste campo são reconhecidas, nunca o próprio nome.",
     "recordAgain": "Gravar novamente",
     "run": "Executar",
     "textPlaceholder": "seu texto",
@@ -1495,7 +1494,13 @@
     "missingSelection": "É necessário texto selecionado.",
     "phrasesPlaceholder": "Frases de exemplo, uma por linha",
     "parameterMissing": "Escolha o valor do parâmetro ao lado do nome do comando.",
-    "phaseAwaitingParameter": "Diga {parameter}..."
+    "phaseAwaitingParameter": "Diga {parameter}...",
+    "stopAndReview": "Parar e revisar",
+    "stopAndReviewHint": "Clique para parar a gravação e editar o texto e o comando",
+    "selectionAsText": "texto selecionado",
+    "runsOnSelection": "O comando é aplicado ao texto selecionado. Para usar o texto falado, remova a seleção.",
+    "selectionUnused": "Este comando não usa o texto selecionado",
+    "morePhrases": "Mais frases"
   },
   "voiceGrammar": {
     "languages": {
@@ -1660,9 +1665,12 @@
     "waitingPlaceholder": "Aguardando áudio…"
   },
   "stt": {
-    "cannotChangeLanguage": "Não é possível alterar o idioma: o reconhecimento já começou",
     "languageSavedForNext": "Idioma salvo para a próxima gravação",
-    "openSettings": "Configurações de transcrição…"
+    "openSettings": "Configurações de transcrição…",
+    "computerLanguage": "Idioma do som do computador",
+    "languageRestartsRecording": "Mudar o idioma reinicia a gravação",
+    "languageAppliesFromNow": "O novo idioma vale a partir de agora; a transcrição é mantida",
+    "recordingRestarted": "A gravação recomeçou no novo idioma"
   },
   "dialog": {
     "sideMe": "Eu",

@@ -1470,7 +1470,6 @@
     "ambiguous": "Se potrivesc mai multe comenzi. Alegeți-o pe cea corectă din listă.",
     "catalog": "Comenzi vocale înregistrate",
     "conflicts": "Fraze în conflict sau imbricate",
-    "edit": "Editează",
     "empty": "Activați vocea în setările unei comenzi pentru a o vedea aici.",
     "enabled": "Pornire vocală",
     "extraText": "Această comandă nu acceptă text. Ștergeți textul în plus înainte de rulare.",
@@ -1487,7 +1486,7 @@
     "nothingHeard": "Nu s-a recunoscut vorbire. Înregistrați din nou.",
     "phaseAwaitingCommand": "Spuneți o comandă...",
     "phrases": "Fraze de declanșare",
-    "phrasesInfo": "Introduceți fraze sinonime, câte una pe rând. Rostirea oricăreia dintre ele va declanșa această comandă. Numele comenzii nu este folosit pentru recunoaștere.",
+    "phrasesInfo": "Frazele care apelează comanda, câte una pe rând. La activarea vocii, aici se inserează numele comenzii — îl puteți schimba. Sunt recunoscute doar frazele din acest câmp, niciodată numele în sine.",
     "recordAgain": "Înregistrează din nou",
     "run": "Rulează",
     "textPlaceholder": "textul dvs.",
@@ -1495,7 +1494,13 @@
     "missingSelection": "Este necesar textul selectat.",
     "phrasesPlaceholder": "Fraze demonstrative, câte una pe rând",
     "parameterMissing": "Alegeți valoarea parametrului lângă numele comenzii.",
-    "phaseAwaitingParameter": "Spuneți {parameter}..."
+    "phaseAwaitingParameter": "Spuneți {parameter}...",
+    "stopAndReview": "Oprește și verifică",
+    "stopAndReviewHint": "Faceți clic pentru a opri înregistrarea și a edita textul și comanda",
+    "selectionAsText": "textul selectat",
+    "runsOnSelection": "Comanda se aplică textului selectat. Pentru a folosi textul rostit, eliminați selecția.",
+    "selectionUnused": "Această comandă nu folosește textul selectat",
+    "morePhrases": "Mai multe fraze"
   },
   "voiceGrammar": {
     "languages": {
@@ -1660,9 +1665,12 @@
     "waitingPlaceholder": "Aștept sunet…"
   },
   "stt": {
-    "cannotChangeLanguage": "Limba nu poate fi schimbată: recunoașterea a început deja",
     "languageSavedForNext": "Limbă salvată pentru următoarea înregistrare",
-    "openSettings": "Setări de transcriere…"
+    "openSettings": "Setări de transcriere…",
+    "computerLanguage": "Limba sunetului computerului",
+    "languageRestartsRecording": "Schimbarea limbii repornește înregistrarea",
+    "languageAppliesFromNow": "Noua limbă se aplică de acum; transcrierea rămâne",
+    "recordingRestarted": "Înregistrarea a repornit în noua limbă"
   },
   "dialog": {
     "sideMe": "Eu",

@@ -452,8 +452,11 @@ function handleLanguageChange() {
     retryAfterError()
     return
   }
-  if (!liveTranscriptText(transcript.value).trim() && !isFinishing.value) {
+  // a wrong language is noticed while speaking: the recording starts over
+  const hadText = Boolean(liveTranscriptText(transcript.value).trim())
+  if (!isFinishing.value && (isStarted.value || !hadText)) {
     void model.restartSession()
+    if (hadText) toastKey('stt.recordingRestarted', 'info')
     return
   }
   toastKey('stt.languageSavedForNext', 'info')

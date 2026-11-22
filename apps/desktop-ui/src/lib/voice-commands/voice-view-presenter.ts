@@ -203,3 +203,43 @@ export function pickVoiceCommand(
   else if (!candidate) deps.chooseCommand(command.id)
   return true
 }
+
+/** A piece of a spoken phrase: words, or the place of a parameter */
+export type VoicePhrasePart =
+  { kind: 'words'; text: string } | { kind: 'slot'; label: string }
+
+/**
+ * The phrases of the command as pieces, to show the parameter apart from the
+ * words: its phrases, or the first phrase of its tool in the UI language
+ */
+export const voicePhraseParts = (
+  command: CommandConfig,
+  operations: OperationLookup,
+  t: Translate
+): VoicePhrasePart[][] => {
+  const own = [
+    ...new Set(command.phrases.map((phrase) => phrase.trim()).filter(Boolean)),
+  ]
+  const [parameter] = voiceParameters(command, operations)
+  if (!parameter) return own.map((text) => [{ kind: 'words', text }])
+  const slot = `{${parameter.name}}`
+  const key = operations.get(command.operationId)?.voicePhrasesKey
+  const templates = own.length
+    ? own
+    : key
+      ? grammarVariants(rawMessage(t, key, parameter.name)).slice(0, 1)
+      : []
+  const label = parameter.placeholderKey
+    ? t(parameter.placeholderKey)
+    : (parameter.placeholder ?? parameter.name)
+  return templates.map((template) => {
+    const at = template.indexOf(slot)
+    const before = at < 0 ? template : template.slice(0, at)
+    const after = at < 0 ? '' : template.slice(at + slot.length)
+    const parts: VoicePhrasePart[] = []
+    if (before.trim()) parts.push({ kind: 'words', text: before.trim() })
+    parts.push({ kind: 'slot', label })
+    if (after.trim()) parts.push({ kind: 'words', text: after.trim() })
+    return parts
+  })
+}

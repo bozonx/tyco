@@ -1470,7 +1470,6 @@
     "ambiguous": "Több parancs is egyezik. Válassza ki a megfelelőt a listából.",
     "catalog": "Regisztrált hangparancsok",
     "conflicts": "Ütköző vagy egymásba ágyazott kifejezések",
-    "edit": "Szerkesztés",
     "empty": "Kapcsolja be a hangot egy parancs beállításaiban, hogy itt megjelenjen.",
     "enabled": "Hangos indítás",
     "extraText": "Ez a parancs nem fogad szöveget. Futtatás előtt törölje a felesleges szöveget.",
@@ -1487,7 +1486,7 @@
     "nothingHeard": "Nem sikerült beszédet felismerni. Vegye fel újra.",
     "phaseAwaitingCommand": "Mondjon egy parancsot...",
     "phrases": "Indítókifejezések",
-    "phrasesInfo": "Adjon meg szinonim kifejezéseket, soronként egyet. Bármelyik kimondása elindítja a parancsot. Maga a parancs neve nem használatos a felismeréshez.",
+    "phrasesInfo": "A parancsot hívó kifejezések, soronként egy. A hang bekapcsolásakor ide kerül a parancs neve – módosíthatja. Csak a mező kifejezéseit ismeri fel, magát a nevet soha.",
     "recordAgain": "Újrafelvétel",
     "run": "Futtatás",
     "textPlaceholder": "az Ön szövege",
@@ -1495,7 +1494,13 @@
     "missingSelection": "Kijelölt szöveg szükséges.",
     "phrasesPlaceholder": "Példamondatok, soronként egy",
     "parameterMissing": "Válassza ki a paraméter értékét a parancs neve mellett.",
-    "phaseAwaitingParameter": "Mondja: {parameter}..."
+    "phaseAwaitingParameter": "Mondja: {parameter}...",
+    "stopAndReview": "Leállítás és ellenőrzés",
+    "stopAndReviewHint": "Kattintson a felvétel leállításához és a szöveg és a parancs szerkesztéséhez",
+    "selectionAsText": "kijelölt szöveg",
+    "runsOnSelection": "A parancs a kijelölt szövegen fut. A kimondott szöveghez távolítsa el a kijelölést.",
+    "selectionUnused": "Ez a parancs nem használja a kijelölt szöveget",
+    "morePhrases": "További kifejezések"
   },
   "voiceGrammar": {
     "languages": {
@@ -1660,9 +1665,12 @@
     "waitingPlaceholder": "Várakozás hangra…"
   },
   "stt": {
-    "cannotChangeLanguage": "A nyelv nem módosítható: a felismerés már elkezdődött",
     "languageSavedForNext": "A nyelv elmentve a következő felvételhez",
-    "openSettings": "Átírási beállítások…"
+    "openSettings": "Átírási beállítások…",
+    "computerLanguage": "A számítógép hangjának nyelve",
+    "languageRestartsRecording": "A nyelv módosítása újraindítja a felvételt",
+    "languageAppliesFromNow": "Az új nyelv mostantól érvényes, az átirat megmarad",
+    "recordingRestarted": "A felvétel újraindult az új nyelven"
   },
   "dialog": {
     "sideMe": "Én",

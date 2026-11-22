@@ -161,14 +161,17 @@ export function createListenModel(deps: ListenModelDependencies) {
     }
   }
 
-  async function start(startSource: CaptureSource = lastStartSource) {
+  async function start(
+    startSource: CaptureSource = lastStartSource,
+    continuesRecord = false
+  ) {
     const run = ++generation
     isStarting.value = true
     isSwitching.value = false
     lastStartSource = startSource
     source.value = startSource
     // whatever an earlier run left unsaved goes in before the new record
-    keepInHistory()
+    if (!continuesRecord) keepInHistory()
     transcript.value = { committed: carriedText, draft: '' }
     lastState = transcript.value
     isWaiting.value = startSource.kind === 'application'
@@ -292,6 +295,20 @@ export function createListenModel(deps: ListenModelDependencies) {
     }
   }
 
+  /**
+   * Starts recognizing anew, e.g. in another language, from now on: the
+   * transcript so far stays, in the same history record
+   */
+  async function restartKeepingText() {
+    if (phase.value !== 'recording') return
+    const run = ++generation
+    session.stopTimer()
+    carriedText = liveTranscriptText(transcript.value).trim()
+    await deps.cancelDictation().catch(() => undefined)
+    if (run !== generation) return
+    await start(source.value, true)
+  }
+
   /** The listening hotkey again: stops a recording, closes what follows */
   async function repeatHotkey() {
     if (phase.value === 'recording') return stop()
@@ -325,6 +342,7 @@ export function createListenModel(deps: ListenModelDependencies) {
     close,
     retry: () => start(lastStartSource),
     restartWithCurrentSource: () => start(source.value),
+    restartKeepingText,
     selectSource,
     repeatHotkey,
     dispose: () => {

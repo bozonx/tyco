@@ -42,6 +42,8 @@
           aria-hidden="true"
         />
 
+        <span class="voice-entry-label">{{ commandLabel(command) }}</span>
+
         <AppIcon
           v-if="unavailableReason(command)"
           class="voice-entry-warning"
@@ -54,9 +56,21 @@
 
       <div class="voice-entry-body">
         <div class="voice-entry-name">
-          <span class="voice-entry-title">{{
-            primaryPhrase(command) || commandLabel(command)
-          }}</span>
+          <span class="voice-entry-title">
+            <template
+              v-for="(part, partIndex) in firstPhrase(command)"
+              :key="partIndex"
+            >
+              <span v-if="part.kind === 'words'">{{ part.text }}</span>
+              <span v-else class="voice-entry-slot">{{ part.label }}</span>
+            </template>
+          </span>
+          <span
+            v-if="morePhraseCount(command)"
+            class="voice-entry-more"
+            :aria-label="t('voiceCommands.morePhrases')"
+            >+{{ morePhraseCount(command) }}</span
+          >
           <Badge
             v-for="label in parameterLabels(command)"
             :key="label"
@@ -64,9 +78,6 @@
             size="xs"
             >{{ label }}</Badge
           >
-        </div>
-        <div v-if="showSecondaryName(command)" class="voice-entry-phrase">
-          {{ commandLabel(command) }}
         </div>
       </div>
     </button>
@@ -91,6 +102,7 @@ import type { VoiceCandidate } from '../../lib/voice-commands/voice-resolver'
 import {
   voiceCommandPhrases,
   voiceParameterLabels,
+  voicePhraseParts,
 } from '../../lib/voice-commands/voice-view-presenter'
 import { useOperationsStore } from '../../stores/operations'
 import AppIcon from '../common/AppIcon.vue'
@@ -147,13 +159,20 @@ function onCatalogScroll() {
   }
 }
 
-const primaryPhrase = (command: CommandConfig) =>
-  voiceCommandPhrases(command, tools, t).slice(0, 2).join(' · ')
-
-const showSecondaryName = (command: CommandConfig) => {
-  const phrase = primaryPhrase(command)
-  return Boolean(phrase && phrase !== commandLabel(command))
-}
+/** What is said is shown first: the name only labels the card */
+const phraseParts = computed(
+  () =>
+    new Map(
+      props.commands.map((command) => [
+        command.id,
+        voicePhraseParts(command, tools, t),
+      ])
+    )
+)
+const firstPhrase = (command: CommandConfig) =>
+  phraseParts.value.get(command.id)?.[0]
+const morePhraseCount = (command: CommandConfig) =>
+  Math.max(0, (phraseParts.value.get(command.id)?.length ?? 0) - 1)
 
 const entryTooltip = (command: CommandConfig) => {
   const phrases = voiceCommandPhrases(command, tools, t)
@@ -362,6 +381,15 @@ defineExpose({ pickBySlot, pageStart })
   color: var(--color-primary);
 }
 
+.voice-entry-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-nano);
+  color: var(--app-text-muted);
+}
+
 .voice-entry-warning {
   margin-left: auto;
   flex-shrink: 0;
@@ -379,11 +407,12 @@ defineExpose({ pickBySlot, pageStart })
 .voice-entry-name {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
   gap: 0.25rem;
-  font-size: var(--text-caption);
+  font-size: var(--text-body);
   font-weight: 500;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
 .voice-entry-title {
@@ -393,13 +422,21 @@ defineExpose({ pickBySlot, pageStart })
   white-space: nowrap;
 }
 
-.voice-entry-phrase {
-  font-family: var(--font-mono);
+.voice-entry-title > span + span {
+  margin-left: 0.25em;
+}
+
+.voice-entry-slot {
+  padding: 0 0.25rem;
+  border-radius: var(--radius-sm);
+  background-color: color-mix(in oklab, var(--color-primary) 15%, transparent);
+  color: var(--color-primary);
+}
+
+.voice-entry-more {
+  flex-shrink: 0;
   font-size: var(--text-nano);
   color: var(--app-text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .voice-empty {

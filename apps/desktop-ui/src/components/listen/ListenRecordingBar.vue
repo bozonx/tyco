@@ -33,6 +33,7 @@
         align="right"
         :disabled="isFinishing"
         :has-text="hasText"
+        target="computer"
         @change="emit('language-change')"
       />
       <OverlayEscButton

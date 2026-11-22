@@ -5,6 +5,7 @@ import {
   compileVoiceRoutes,
   findVoiceConflicts,
   resolveVoice,
+  voiceEnabledPatch,
   voiceInputIssue,
   voiceParameterIssue,
   type VoiceRoute,
@@ -553,5 +554,41 @@ describe('generic voice parameters', () => {
         several
       )
     ).toBe('unspeakable-parameter')
+  })
+})
+
+describe('voiceEnabledPatch', () => {
+  const tools = testOperations({}, [testTranslateOperation()])
+  const note = {
+    ...createCommand('script', 'note'),
+    name: 'Save note',
+    operationConfig: { command: 'echo {{TEXT}}' },
+  }
+
+  it('starts with the name as the phrase when there is none', () => {
+    expect(voiceEnabledPatch(note, true, tools)).toEqual({
+      isVoiceEnabled: true,
+      phrases: ['Save note'],
+    })
+  })
+
+  it('keeps the phrases when turned off and restores them when turned on', () => {
+    const withPhrases = { ...note, phrases: ['jot down'] }
+    expect(voiceEnabledPatch(withPhrases, false, tools)).toEqual({
+      isVoiceEnabled: false,
+    })
+    expect(voiceEnabledPatch(withPhrases, true, tools)).toEqual({
+      isVoiceEnabled: true,
+    })
+  })
+
+  it('leaves a command with a spoken parameter to the phrases of its tool', () => {
+    const translate = {
+      ...createCommand('core.translate', 't'),
+      name: 'Translate',
+    }
+    expect(voiceEnabledPatch(translate, true, tools)).toEqual({
+      isVoiceEnabled: true,
+    })
   })
 })

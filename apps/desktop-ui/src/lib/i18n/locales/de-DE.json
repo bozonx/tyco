@@ -1470,7 +1470,6 @@
     "ambiguous": "Mehrere Befehle passen. Wählen Sie den richtigen aus der Liste.",
     "catalog": "Registrierte Sprachbefehle",
     "conflicts": "Kollidierende oder verschachtelte Phrasen",
-    "edit": "Bearbeiten",
     "empty": "Aktivieren Sie die Sprache in den Einstellungen eines Befehls, damit er hier erscheint.",
     "enabled": "Per Stimme starten",
     "extraText": "Dieser Befehl nimmt keinen Text an. Entfernen Sie den überzähligen Text vor dem Ausführen.",
@@ -1487,7 +1486,7 @@
     "nothingHeard": "Keine Sprache erkannt. Nehmen Sie erneut auf.",
     "phaseAwaitingCommand": "Sprechen Sie einen Befehl...",
     "phrases": "Auslösephrasen",
-    "phrasesInfo": "Geben Sie synonyme Phrasen ein, eine pro Zeile. Das Sprechen einer davon startet diesen Befehl. Der Befehlsname selbst wird nicht zur Erkennung verwendet.",
+    "phrasesInfo": "Phrasen, die den Befehl auslösen, eine pro Zeile. Beim Aktivieren der Sprachsteuerung wird hier der Befehlsname eingetragen – Sie können ihn ändern. Erkannt werden nur die Phrasen in diesem Feld, nicht der Name selbst.",
     "recordAgain": "Erneut aufnehmen",
     "run": "Ausführen",
     "textPlaceholder": "Ihr Text",
@@ -1495,7 +1494,13 @@
     "missingSelection": "Ausgewählter Text erforderlich.",
     "phrasesPlaceholder": "Beispielphrasen, eine pro Zeile",
     "parameterMissing": "Wählen Sie den Parameterwert neben dem Befehlsnamen.",
-    "phaseAwaitingParameter": "Nennen Sie {parameter}..."
+    "phaseAwaitingParameter": "Nennen Sie {parameter}...",
+    "stopAndReview": "Stoppen und prüfen",
+    "stopAndReviewHint": "Klicken, um die Aufnahme zu stoppen und Text und Befehl zu bearbeiten",
+    "selectionAsText": "markierter Text",
+    "runsOnSelection": "Der Befehl wird auf den markierten Text angewendet. Um den gesprochenen Text zu verwenden, entfernen Sie die Markierung.",
+    "selectionUnused": "Dieser Befehl verwendet den markierten Text nicht",
+    "morePhrases": "Weitere Phrasen"
   },
   "voiceGrammar": {
     "languages": {
@@ -1660,9 +1665,12 @@
     "waitingPlaceholder": "Warte auf Audio…"
   },
   "stt": {
-    "cannotChangeLanguage": "Sprache kann nicht geändert werden: Erkennung hat bereits begonnen",
     "languageSavedForNext": "Sprache für die nächste Aufnahme gespeichert",
-    "openSettings": "Transkriptionseinstellungen…"
+    "openSettings": "Transkriptionseinstellungen…",
+    "computerLanguage": "Sprache des Computertons",
+    "languageRestartsRecording": "Ein Sprachwechsel startet die Aufnahme neu",
+    "languageAppliesFromNow": "Die neue Sprache gilt ab jetzt, das Transkript bleibt erhalten",
+    "recordingRestarted": "Die Aufnahme wurde in der neuen Sprache neu gestartet"
   },
   "dialog": {
     "sideMe": "Ich",
