@@ -228,11 +228,16 @@ const recordingFiles = computed(() =>
     item.dialog?.recordingFile ? [item.dialog.recordingFile] : []
   )
 )
+let recordingCheck = 0
 const checkRecordings = async () => {
+  const check = ++recordingCheck
   const files = [...new Set(recordingFiles.value)]
-  if (!files.length) return
+  if (!files.length) {
+    recordingExists.value = {}
+    return
+  }
   const result = await ipcStore.call('check_dialog_recordings', { files })
-  if (!result.success || !result.result) return
+  if (check !== recordingCheck || !result.success || !result.result) return
   const exists = result.result
   recordingExists.value = Object.fromEntries(
     files.map((file, index) => [file, exists[index] ?? false])
@@ -244,12 +249,18 @@ watch(
   () => void checkRecordings(),
   { immediate: true }
 )
-// a file may have been synced or deleted while the window was hidden
+// Sync can add or remove a file without changing its history entry.
 watch(
-  () => desktopStore.desktopState.isWindowShown,
-  (isShown) => {
-    if (isShown) void checkRecordings()
-  }
+  [() => desktopStore.desktopState.isWindowShown, () => dialogStatus.isActive],
+  ([isShown, isDialogActive], _, onCleanup) => {
+    if (!isShown) return
+    if (!isDialogActive) void checkRecordings()
+    const timer = setInterval(() => {
+      if (recordingFiles.value.length) void checkRecordings()
+    }, 5_000)
+    onCleanup(() => clearInterval(timer))
+  },
+  { immediate: true }
 )
 
 const recordingFile = (

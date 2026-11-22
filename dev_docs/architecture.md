@@ -196,9 +196,9 @@ written fails the start. `voice/recording.rs` encodes
 Ogg/Opus while capturing (libopus via the `opus` crate, built from source
 and linked statically; `ogg` for the pages): 16 kHz input, 20 ms frames,
 VoIP mode, stereo at 32 kbit/s (microphone, computer) or mono at 24 kbit/s,
-RFC 7845 granules at 48 kHz from the pre-skip, a page at least every second.
-Ogg pages stand alone, so a crash leaves a file playable to its last page;
-there is no finalization. The file holds the very samples sent to the
+RFC 7845 granules at 48 kHz, a page at least every second.
+The final page accounts for encoder delay and trims padding. Ogg pages stand
+alone, so a crash leaves a file playable to its last complete page. The file holds the very samples sent to the
 webview, after the echo gate and the limiter: listening to it is listening to
 what the speech provider got, short of Opus losses and of the audio a channel
 drops when its provider stalls past 30 s (logged by the webview). For a
@@ -206,8 +206,8 @@ lossless copy set `TYCO_DUMP_STT_AUDIO=<folder>` before starting the app:
 every capture, dictation included, also writes a WAV of the bytes it sends
 (`voice/debug_dump.rs`). The encoder runs
 on a thread of its own behind a bounded queue (`RecordingSink`). Chunks that
-do not fit a full queue are owed and sent as silence once it frees (up to a
-minute), so the file keeps the call's timeline; a failed write stops the
+do not fit a full queue are owed and sent as silence when it frees or when
+the recording closes. A gap over one minute or a failed write stops the
 recording only and sends `recordingFailed` on the audio channel, and the
 webview marks the history entry `isRecordingIncomplete`. A file whose
 headers fail, or that received no audio, is removed. The capture's end, a stop or quit
@@ -222,7 +222,8 @@ The history plays a recording with the webview's own `<audio>` from the
 `http://tyco-media.localhost/...` on Windows (`lib/history/recording-media-url.ts`).
 The webview names the file, never a path; the scheme accepts only names of the
 pattern, serves no recording still being written, and answers byte ranges in
-chunks of at most 2 MiB, so the element streams and seeks a long call. Ogg/Opus
+chunks of at most 2 MiB, so the element can seek a long call. A request
+without a byte range receives the whole file in memory. Ogg/Opus
 plays in WebView2 and in WebKitGTK with the base GStreamer plugins.
 The dialog's subtitles are a window of their own, `subtitles`
 (`runtime/subtitles_window.rs`, behind a `SubtitlesHost`), created the first

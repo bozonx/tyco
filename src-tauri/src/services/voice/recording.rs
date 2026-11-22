@@ -2,9 +2,9 @@
 //!
 //! Nothing is buffered beyond a second: a page is flushed at least that
 //! often, and Ogg pages stand on their own, so a crash leaves a file that
-//! plays up to its last page. There is no finalization to miss.
+//! plays up to its last page even without the final end-of-stream page.
 //!
-//! A disk that falls behind costs no audio up to a minute: what could not be
+//! A disk that falls behind can leave a gap of up to a minute: what could not be
 //! queued becomes silence of the same length once the queue frees, so the
 //! file keeps the call's timeline.
 //!
@@ -12,7 +12,7 @@
 //! once closed, see `storage::recordings`.
 //!
 //! Granule positions follow RFC 7845: always counted at 48 kHz, whatever the
-//! input rate, starting with the encoder's pre-skip.
+//! input rate, with the encoder’s pre-skip included in the final position.
 use std::fs::File;
 use std::io::{self, BufWriter, Write};
 use std::path::{Path, PathBuf};
@@ -163,10 +163,6 @@ impl<W: Write> OggOpusWriter<W> {
         Ok(())
     }
 
-    fn granule(&self) -> u64 {
-        self.pre_skip + self.encoded_samples * self.granule_factor
-    }
-
     /// `samples`: how many of the frame's samples per channel are real; the
     /// rest is padding the last granule trims.
     fn encode_frame(&mut self, frame: &[i16], samples: usize, is_last: bool) -> io::Result<()> {
@@ -183,7 +179,7 @@ impl<W: Write> OggOpusWriter<W> {
         } else {
             PacketWriteEndInfo::NormalPacket
         };
-        let granule = self.granule();
+        let granule = self.encoded_samples * self.granule_factor;
         self.packets
             .write_packet(self.packet[..size].to_vec(), self.serial, end, granule)?;
         if end != PacketWriteEndInfo::NormalPacket {
@@ -199,7 +195,16 @@ impl<W: Write> OggOpusWriter<W> {
         let mut frame = std::mem::take(&mut self.pending);
         let samples = frame.len() / self.channels;
         frame.resize(frame_len, 0);
-        self.encode_frame(&frame, samples, true)?;
+        let pre_skip_samples = (self.pre_skip / self.granule_factor) as usize;
+        let final_samples = samples + pre_skip_samples;
+        let final_frame_samples = if final_samples > self.frame_samples {
+            self.encode_frame(&frame, self.frame_samples, false)?;
+            frame.fill(0);
+            final_samples - self.frame_samples
+        } else {
+            final_samples
+        };
+        self.encode_frame(&frame, final_frame_samples, true)?;
         let mut writer = self.packets.into_inner();
         writer.flush()?;
         Ok(writer)
@@ -325,9 +330,15 @@ impl RecordingSink {
         }
     }
 
-    /// Beyond the longest gap the stall shortens the file instead.
+    /// A stall beyond the longest gap ends the recording as incomplete.
     fn owe(&mut self, samples: usize) {
-        self.owed_samples = (self.owed_samples + samples).min(self.max_owed_samples);
+        let total = self.owed_samples + samples;
+        self.owed_samples = total.min(self.max_owed_samples);
+        if total > self.max_owed_samples {
+            let mut failure = self.failure.locked();
+            failure.get_or_insert_with(|| "The recording queue stalled for too long".into());
+            self.is_failed.store(true, Ordering::SeqCst);
+        }
     }
 
     /// Why the recording stopped, once: the capture tells the webview.
@@ -357,18 +368,26 @@ impl RecordingSink {
     /// history, also one that failed midway: it holds the beginning of the
     /// call.
     fn close(&mut self) {
-        self.sender = None;
+        if let Some(sender) = self.sender.take() {
+            if self.owed_samples > 0 {
+                let _ = sender.send(vec![0; self.owed_samples]);
+            }
+        }
         if let Some(thread) = self.thread.take() {
-            let _ = thread.join();
-            let is_discarded = recordings::end_writing(&self.name);
-            if is_discarded || (!self.has_audio && self.owed_samples == 0) {
-                if let Err(error) = std::fs::remove_file(&self.path) {
-                    log::warn!("Could not remove the call recording {}: {error}", self.name);
-                }
-            } else if let Err(error) = recordings::publish(&self.path, &self.destination) {
+            if thread.join().is_err() {
+                let mut failure = self.failure.locked();
+                failure.get_or_insert_with(|| "The recording writer stopped unexpectedly".into());
+                self.is_failed.store(true, Ordering::SeqCst);
+            }
+            if let Err(error) = recordings::finish_writing(
+                &self.name,
+                &self.path,
+                &self.destination,
+                self.has_audio || self.owed_samples > 0,
+            ) {
                 log::warn!(
-                    "The call recording stays in {} until the next start: {error}",
-                    self.path.display()
+                    "Could not finalize the call recording {}: {error}",
+                    self.name
                 );
             }
         }
@@ -474,6 +493,33 @@ mod tests {
     }
 
     #[test]
+    fn the_final_packets_cover_the_input_and_encoder_delay() {
+        let input_samples = 16_319;
+        let mut writer = OggOpusWriter::new(Vec::new(), 16_000, 1).unwrap();
+        writer.push(&vec![100; input_samples]).unwrap();
+        let bytes = writer.finish().unwrap();
+        let pages = pages(&bytes);
+        assert_eq!(pages[2].granule, 48_000);
+        let pre_skip = usize::from(u16::from_le_bytes(
+            pages[0].body[10..12].try_into().unwrap(),
+        ));
+        let final_granule = pages.last().unwrap().granule as usize;
+        assert_eq!(final_granule - pre_skip, input_samples * 3);
+
+        let mut reader = ogg::PacketReader::new(Cursor::new(bytes));
+        reader.read_packet_expected().unwrap();
+        reader.read_packet_expected().unwrap();
+        let mut decoder = opus::Decoder::new(48_000, opus::Channels::Mono).unwrap();
+        let mut decoded = [0; 960];
+        let mut decoded_samples = 0;
+        while let Some(packet) = reader.read_packet().unwrap() {
+            decoded_samples += decoder.decode(&packet.data, &mut decoded, false).unwrap();
+        }
+        assert!(decoded_samples >= final_granule);
+        assert!(decoded_samples - final_granule < decoded.len());
+    }
+
+    #[test]
     fn a_truncated_file_keeps_its_whole_pages() {
         let bytes = record(2, 3.0);
         let whole = pages(&bytes).len();
@@ -573,6 +619,25 @@ mod tests {
         assert_eq!(sink.owed_samples, 10);
         sink.sender = real;
         sink.finish();
+        let _ = std::fs::remove_dir_all(folder);
+    }
+
+    #[test]
+    fn stopping_writes_owed_silence_and_reports_an_overlong_stall() {
+        let folder = temp_folder("stall-at-stop");
+        let recording = target(&folder);
+        let mut sink = RecordingSink::start(recording.clone(), 16_000, 1).unwrap();
+        sink.push(&vec![100; 1_000]);
+        sink.max_owed_samples = 600;
+        sink.owe(700);
+        assert!(sink.finish().is_some());
+
+        let bytes = std::fs::read(recording.shared_path).unwrap();
+        let pages = pages(&bytes);
+        let pre_skip = u64::from(u16::from_le_bytes(
+            pages[0].body[10..12].try_into().unwrap(),
+        ));
+        assert_eq!(pages.last().unwrap().granule - pre_skip, 1_600 * 3);
         let _ = std::fs::remove_dir_all(folder);
     }
 

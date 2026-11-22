@@ -48,7 +48,7 @@ fn requested_range(value: Option<&str>, size: u64) -> Result<Option<ByteRange>, 
         if suffix == 0 || size == 0 {
             return Err(());
         }
-        (size.saturating_sub(suffix), size - 1)
+        (size.saturating_sub(suffix.min(MAX_CHUNK_BYTES)), size - 1)
     } else {
         let Ok(start) = start.parse::<u64>() else {
             return Ok(None);
@@ -95,7 +95,7 @@ fn text_response(status: StatusCode, text: &str) -> Response<Vec<u8>> {
 }
 
 /// Serves the file at `path` of `content_type`, the range the request asks
-/// for or, without one, all of a small file and the first chunk of a large one.
+/// for or, without one, the complete representation.
 fn file_response(
     path: &Path,
     content_type: &str,
@@ -114,18 +114,11 @@ fn file_response(
     };
     let (status, range) = match range {
         Some(range) => (StatusCode::PARTIAL_CONTENT, range),
-        None if size <= MAX_CHUNK_BYTES => (
+        None => (
             StatusCode::OK,
             ByteRange {
                 start: 0,
                 end: size.saturating_sub(1),
-            },
-        ),
-        None => (
-            StatusCode::PARTIAL_CONTENT,
-            ByteRange {
-                start: 0,
-                end: MAX_CHUNK_BYTES - 1,
             },
         ),
     };
@@ -264,6 +257,28 @@ mod tests {
         let past = respond_with(&dirs, &request(ENCODED_PATH, Some("bytes=10-")));
         assert_eq!(past.status(), StatusCode::RANGE_NOT_SATISFIABLE);
         assert_eq!(past.headers()[header::CONTENT_RANGE], "bytes */10");
+    }
+
+    #[test]
+    fn large_recordings_support_whole_reads_and_a_seek_past_the_first_chunk() {
+        let boundary = MAX_CHUNK_BYTES as usize;
+        let mut bytes = vec![0; boundary + 3];
+        bytes[boundary..].copy_from_slice(b"end");
+        let (_root, dirs) = with_recording("large-media-recording", &bytes);
+
+        let whole = respond_with(&dirs, &request(ENCODED_PATH, None));
+        assert_eq!(whole.status(), StatusCode::OK);
+        assert_eq!(whole.body(), &bytes);
+        assert!(!whole.headers().contains_key(header::CONTENT_RANGE));
+
+        let first = respond_with(&dirs, &request(ENCODED_PATH, Some("bytes=0-")));
+        assert_eq!(first.body().len(), boundary);
+        let rest = respond_with(
+            &dirs,
+            &request(ENCODED_PATH, Some(&format!("bytes={boundary}-"))),
+        );
+        assert_eq!(rest.status(), StatusCode::PARTIAL_CONTENT);
+        assert_eq!(rest.body(), b"end");
     }
 
     #[test]

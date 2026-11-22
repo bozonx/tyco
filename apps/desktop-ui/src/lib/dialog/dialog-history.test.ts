@@ -188,6 +188,33 @@ describe('dialog history', () => {
     })
   })
 
+  it('persists the incomplete flag when a text save is already in flight', async () => {
+    const recorded = {
+      ...meta,
+      recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
+    }
+    let completeSave!: (id: string) => void
+    const inFlight = new Promise<string>((resolve) => {
+      completeSave = resolve
+    })
+    const save = vi
+      .fn<(entry: EditorHistoryEntry) => Promise<string | null>>()
+      .mockReturnValueOnce(inFlight)
+      .mockResolvedValue('entry')
+    const { history } = setup({ save })
+    const beginning = history.begin(recorded)
+    await vi.waitFor(() => expect(save).toHaveBeenCalledOnce())
+    const marking = history.markRecordingIncomplete()
+    completeSave('entry')
+    await Promise.all([beginning, marking])
+    expect(save).toHaveBeenLastCalledWith({
+      id: 'entry',
+      text: '',
+      kind: 'dialog',
+      dialog: { ...recorded, isRecordingIncomplete: true },
+    })
+  })
+
   it('leaves no interval behind when a session ends while it begins', async () => {
     const { history } = setup()
     const beginning = history.begin(meta)

@@ -37,6 +37,7 @@ interface Session {
   id?: string
   /** The text last written; none: the entry was never written */
   savedText?: string
+  savedMeta?: EditorHistoryDialog
   /** The user deleted the entry: the session is not written again */
   isDropped: boolean
   /** `onRecordingUnlinked` was called */
@@ -82,15 +83,17 @@ export function createDialogHistory(
       if (target.isDropped) return
       const text = deps.getText()
       if (!text.trim() && !target.meta.recordingFile) return
-      if (text === target.savedText) return
+      const meta = target.meta
+      if (text === target.savedText && meta === target.savedMeta) return
       try {
         const id = await deps.save({
           ...(target.id && { id: target.id }),
           text,
           kind: 'dialog',
-          dialog: target.meta,
+          dialog: meta,
         })
         target.savedText = text
+        target.savedMeta = meta
         // nothing stored under a known id: the entry was deleted
         if (id === null && target.id) target.isDropped = true
         else if (id !== null) target.id = id
@@ -130,8 +133,6 @@ export function createDialogHistory(
       const current = session
       if (!current?.meta.recordingFile) return pending
       current.meta = { ...current.meta, isRecordingIncomplete: true }
-      // rewritten even if the text is the same
-      current.savedText = undefined
       return write(current)
     },
     dispose() {

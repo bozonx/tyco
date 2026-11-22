@@ -37,22 +37,26 @@ pub fn begin_writing(name: &str) {
     WRITING.locked().insert(name.to_owned(), false);
 }
 
-/// The recording `name` is closed: whether its entry went while it was
-/// written, and the file must go instead of joining the history.
-pub fn end_writing(name: &str) -> bool {
-    WRITING.locked().remove(name).unwrap_or(false)
+/// Publishes or removes the closed file under the same lock as history deletion.
+pub fn finish_writing(
+    name: &str,
+    active_path: &Path,
+    shared_path: &Path,
+    has_audio: bool,
+) -> Result<(), AppError> {
+    let mut writing = WRITING.locked();
+    let result = if writing.get(name).copied().unwrap_or(false) || !has_audio {
+        remove_file_if_present(active_path)
+    } else {
+        publish(active_path, shared_path)
+    };
+    writing.remove(name);
+    result
 }
 
-/// Marks the recording `name` for removal when it is being written; `false`
-/// when it is not.
-fn discard_when_closed(name: &str) -> bool {
-    match WRITING.locked().get_mut(name) {
-        Some(is_discarded) => {
-            *is_discarded = true;
-            true
-        }
-        None => false,
-    }
+#[cfg(test)]
+pub fn end_writing(name: &str) -> bool {
+    WRITING.locked().remove(name).unwrap_or(false)
 }
 
 fn remove_file_if_present(path: &Path) -> Result<(), AppError> {
@@ -261,10 +265,13 @@ pub fn show(app: &AppHandle, name: &str) -> Result<(), AppError> {
 /// the state folder, at once when a previous run left it there, once it is
 /// closed when it is being written.
 fn remove(dirs: &RecordingDirs, name: &str) -> Result<(), AppError> {
+    let mut writing = WRITING.locked();
     let path = dirs.shared.join(name);
     ensure_write_allowed(&path)?;
     remove_file_if_present(&path)?;
-    if !discard_when_closed(name) {
+    if let Some(discard) = writing.get_mut(name) {
+        *discard = true;
+    } else {
         remove_file_if_present(&dirs.active.join(name))?;
     }
     Ok(())
@@ -278,12 +285,15 @@ pub fn discard(dirs: &RecordingDirs, name: &str) -> Result<(), AppError> {
 /// Removes every recording, also those being written once they are closed:
 /// the entries that named them are gone.
 pub fn clear(dirs: &RecordingDirs) -> Result<(), AppError> {
+    let mut writing = WRITING.locked();
     ensure_write_allowed(&dirs.shared)?;
     for (_, path) in super::user_files::list_own_files(&dirs.shared, is_recording_name)? {
         remove_file_if_present(&path)?;
     }
     for (name, path) in super::user_files::list_own_files(&dirs.active, is_recording_name)? {
-        if !discard_when_closed(&name) {
+        if let Some(discard) = writing.get_mut(&name) {
+            *discard = true;
+        } else {
             remove_file_if_present(&path)?;
         }
     }

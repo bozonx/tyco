@@ -207,6 +207,46 @@ describe('HistoryView.vue', () => {
     expect(wrapper.text()).toContain('history.textsDisabled')
   })
 
+  it('refreshes a synced recording while history stays visible', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+    const recordingFile = '2026-11-21 10-00-00 a1b2c3.opus'
+    let isPresent = false
+    desktop.backend.handle('check_dialog_recordings', () => [isPresent])
+    desktop.setState({ isWindowShown: true })
+    const historyStore = useHistoryStore()
+    historyStore.editorHistory = [
+      {
+        id: 'recorded-dialog',
+        kind: 'dialog',
+        text: '',
+        createdAt: 1,
+        dialog: { startedAt: 1, source: 'system', recordingFile },
+      },
+    ]
+    vi.spyOn(historyStore, 'loadEditorHistory').mockResolvedValue()
+    const wrapper = mount(HistoryView, {
+      global: {
+        stubs: {
+          SearchInput: true,
+          HistoryList: {
+            props: ['items'],
+            template: '<div>{{ items[0]?.file?.isMissing }}</div>',
+          },
+        },
+      },
+    })
+    try {
+      await flushPromises()
+      expect(wrapper.text()).toBe('true')
+      isPresent = true
+      await vi.advanceTimersByTimeAsync(5_000)
+      expect(wrapper.text()).toBe('false')
+    } finally {
+      wrapper.unmount()
+      vi.useRealTimers()
+    }
+  })
+
   it('opens filtered by the origin of the activation', async () => {
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'loadEditorHistory').mockImplementation(async () => {

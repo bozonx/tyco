@@ -116,8 +116,8 @@ delete the entry (after the few seconds in which **Undo** brings both back),
 clear the history, or when the history settings no longer keep the entry. If
 the disk falls behind for a moment, the
 missed sound is replaced by silence of the same length, so the file keeps
-the time of the call. If the file cannot be written at all (the disk is
-full, the folder is gone), the recording stops, the transcript goes on, and
+the time of the call. If the disk stays behind for more than a minute or the
+file cannot be written, the recording stops, the transcript goes on, and
 the history entry marks the recording as incomplete. A conversation stopped
 before any sound was captured leaves no file. A recording deleted with its
 entry while the call still goes on is removed as soon as the call stops.
