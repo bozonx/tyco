@@ -74,17 +74,6 @@
 
     <div class="dialog-toolbar-spacer" />
 
-    <!-- set before anything is said: a mode without text just shows nothing -->
-    <SegmentedControl
-      class="dialog-toolbar-display"
-      :model-value="dialog.config.textDisplay"
-      size="sm"
-      :label="t('dialog.textDisplay')"
-      :options="displayOptions"
-      @update:model-value="
-        (textDisplay) => dialog.updateConfig({ textDisplay })
-      "
-    />
     <IconButton
       icon="mdi:picture-in-picture-bottom-right-outline"
       :label="t('dialog.collapse')"
@@ -199,7 +188,7 @@ const displayOptions = computed<ControlOption<DialogTextDisplay>[]>(() => [
   { id: 'both', name: t('dialog.displayBoth') },
 ])
 
-// the view is offered here too: the toolbar drops its control when narrow
+// text display mode (translation / original / both) and transcript actions
 const moreItems = computed<DropdownMenuItem[]>(() => [
   ...displayOptions.value.map((option) => ({
     label: `${t('dialog.textDisplay')}: ${option.name}`,
@@ -310,12 +299,6 @@ function levelLabel(side: DialogSide) {
 /* the route of the languages gives way first */
 .dialog-toolbar > .dialog-route {
   flex-shrink: 1;
-}
-
-@media (max-width: 48rem) {
-  .dialog-toolbar-display {
-    display: none;
-  }
 }
 
 /* narrower still, the sources keep their icons, the tooltips name them */

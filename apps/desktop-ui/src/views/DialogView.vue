@@ -27,7 +27,7 @@
         <template #empty>
           <StateMessage
             class="dialog-empty"
-            icon="mdi:account-voice"
+            :icon="emptyIcon"
             :title="emptyTitle"
             :message="emptyMessage"
           />
@@ -46,15 +46,11 @@ import StateMessage from '../components/common/StateMessage.vue'
 import DialogFeed from '../components/dialog/DialogFeed.vue'
 import DialogToolbar from '../components/dialog/DialogToolbar.vue'
 import { useI18n } from '../composables/use-i18n'
-import { dialogRouteLabel } from '../lib/dialog/dialog-languages'
-import { translationLanguageLabel } from '../lib/translation/translation-languages'
 import { appNavigation } from '../navigation'
-import { useDesktopStore } from '../stores/desktop'
 import { useDialogStore } from '../stores/dialog'
 
 const dialog = useDialogStore()
-const desktopStore = useDesktopStore()
-const { t, locale } = useI18n()
+const { t } = useI18n()
 
 // the mode turned off in the settings takes its view away
 watch(
@@ -75,29 +71,26 @@ const textDisplay = computed(() =>
     ? dialog.config.textDisplay
     : 'original'
 )
-const emptyTitle = computed(() =>
-  dialog.isActive ? t('dialog.waitingForSpeech') : t('dialog.emptyTitle')
-)
 
-const isDeepgram = computed(
-  () => desktopStore.userConfig.stt?.provider === 'deepgram'
-)
-/** Before the start, the hint ends with what the dialog is set to do */
+const emptyIcon = computed(() => {
+  if (dialog.isActive) return 'mdi:waveform'
+  return dialog.config.source === 'microphoneAndSystem'
+    ? 'mdi:account-voice'
+    : 'mdi:monitor-speaker'
+})
+
+const emptyTitle = computed(() => {
+  if (dialog.isActive) return t('dialog.waitingForSpeech')
+  return dialog.config.source === 'microphoneAndSystem'
+    ? t('dialog.emptyTitleCall')
+    : t('dialog.emptyTitleComputer')
+})
+
 const emptyMessage = computed(() => {
-  if (dialog.isActive) return t('dialog.emptyHint')
-  const source =
-    dialog.config.source === 'microphoneAndSystem'
-      ? t('dialog.sourceCall')
-      : t('dialog.sourceComputer')
-  const route = dialogRouteLabel({
-    translationTargetLanguage: dialog.config.translationTargetLanguage,
-    remoteLanguage: isDeepgram.value
-      ? (dialog.config.remoteLanguage ?? 'auto')
-      : undefined,
-    labelOf: (id) => translationLanguageLabel(id, String(locale.value)),
-    translate: t,
-  })
-  return `${t('dialog.emptyHint')}\n\n${source} · ${route}`
+  if (dialog.isActive) return t('dialog.waitingForSpeechHint')
+  return dialog.config.source === 'microphoneAndSystem'
+    ? t('dialog.emptyHintCall')
+    : t('dialog.emptyHintComputer')
 })
 
 function retryTranslation(ids: string[]) {
@@ -131,10 +124,6 @@ function openSttSettings() {
 
 .dialog-empty {
   margin: auto;
-}
-
-/* the hint and, apart, what the dialog is set to do */
-.dialog-empty :deep(.ui-state-message) {
-  white-space: pre-line;
+  max-width: 32rem;
 }
 </style>
