@@ -24,6 +24,9 @@ describe('audio-playback-rate', () => {
 
     fakeStorage.setItem(PLAYBACK_RATE_STORAGE_KEY, '-1')
     expect(readStoredPlaybackRate(fakeStorage)).toBe(DEFAULT_PLAYBACK_RATE)
+
+    fakeStorage.setItem(PLAYBACK_RATE_STORAGE_KEY, '1.25')
+    expect(readStoredPlaybackRate(fakeStorage)).toBe(DEFAULT_PLAYBACK_RATE)
   })
 
   it('reads and writes valid stored rate', () => {

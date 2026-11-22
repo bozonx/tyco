@@ -5,7 +5,6 @@ export const DEFAULT_PLAYBACK_RATE = 1
 
 export const SPEED_OPTIONS: ControlOption<number>[] = [
   { id: 1, name: '1×' },
-  { id: 1.25, name: '1.25×' },
   { id: 1.5, name: '1.5×' },
   { id: 2, name: '2×' },
 ]
@@ -18,7 +17,7 @@ export function readStoredPlaybackRate(
     const raw = storage.getItem(PLAYBACK_RATE_STORAGE_KEY)
     if (!raw) return DEFAULT_PLAYBACK_RATE
     const parsed = Number(raw)
-    return Number.isFinite(parsed) && parsed > 0
+    return SPEED_OPTIONS.some((opt) => opt.id === parsed)
       ? parsed
       : DEFAULT_PLAYBACK_RATE
   } catch {

@@ -103,37 +103,6 @@ describe('HistoryList.vue', () => {
     expect(wrapper.find('.ui-state-stub').text()).toBe('history.nothingFound')
   })
 
-  it('handles clear confirmation workflow', async () => {
-    const wrapper = mount(HistoryList, {
-      props: { items: sampleItems, totalCount: 2 },
-      global: {
-        stubs: {
-          Button: { props: ['variant'], template: '<button><slot /></button>' },
-          ConfirmModal: {
-            props: ['open', 'title', 'message'],
-            template:
-              '<div v-if="open" class="confirm-modal-stub"><button class="confirm-clear-btn" @click="$emit(\'confirm\')">Confirm</button></div>',
-          },
-          IconButton: true,
-          StateMessage: true,
-          Icon: true,
-        },
-      },
-    })
-
-    // Click clear button
-    const clearBtn = wrapper.find('.clear-btn')
-    expect(clearBtn.exists()).toBe(true)
-    await clearBtn.trigger('click')
-
-    // Confirm button should appear
-    const confirmBtn = wrapper.find('.confirm-clear-btn')
-    expect(confirmBtn.exists()).toBe(true)
-
-    await confirmBtn.trigger('click')
-    expect(wrapper.emitted('clear')).toHaveLength(1)
-  })
-
   it('toggles expand for long items', async () => {
     const wrapper = mount(HistoryList, {
       props: { items: sampleItems },
@@ -270,7 +239,7 @@ describe('HistoryList.vue', () => {
       const options = wrapper
         .findAll('.history-player-speed .option-label')
         .map((option) => option.text())
-      expect(options).toEqual(['1×', '1.25×', '1.5×', '2×'])
+      expect(options).toEqual(['1×', '1.5×', '2×'])
 
       await wrapper.get('audio').trigger('error')
       expect(wrapper.text()).toContain('unplayable')

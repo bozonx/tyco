@@ -2,12 +2,9 @@
   <div class="history-list" @play.capture="pauseOtherPlayers">
     <slot name="notice" />
 
-    <div v-if="$slots.search || items.length > 0" class="history-header-row">
+    <div v-if="$slots.search" class="history-header-row">
       <div class="history-search-col">
         <slot name="search" />
-      </div>
-      <div v-if="items.length > 0" class="history-toolbar-col">
-        <HistoryClearActions :total-count="totalCount" @clear="emit('clear')" />
       </div>
     </div>
 
@@ -58,7 +55,6 @@ import type {
   HistoryListItem,
 } from '../../lib/history/history-list-types'
 import StateMessage from '../common/StateMessage.vue'
-import HistoryClearActions from './HistoryClearActions.vue'
 import HistoryListItemView from './HistoryListItem.vue'
 
 const { t, locale } = useI18n()
@@ -72,7 +68,6 @@ export type {
 const emit = defineEmits<{
   (e: 'open', item: HistoryListItem): void
   (e: 'action', actionId: string, item: HistoryListItem): void
-  (e: 'clear'): void
 }>()
 
 const props = withDefaults(
@@ -84,8 +79,6 @@ const props = withDefaults(
     /** Shown next to an expanded `original`. */
     originalActions?: HistoryListAction[]
     emptyHint?: string
-    /** Number affected by clearing; may be larger than a filtered list. */
-    totalCount?: number
     /** `items` are narrowed by a filter of the caller */
     isFiltered?: boolean
     /** The items have not arrived yet: show neither the list nor "empty". */
@@ -97,7 +90,6 @@ const props = withDefaults(
     actions: () => [],
     originalActions: () => [],
     emptyHint: '',
-    totalCount: 0,
     isFiltered: false,
     isLoading: false,
   }
@@ -155,24 +147,14 @@ const groups = computed(() =>
 .history-header-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
   min-height: 2.25rem;
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-lg);
   padding: 0 var(--space-xs);
 }
 
 .history-search-col {
   flex: 1 1 0;
   min-width: 0;
-}
-
-.history-toolbar-col {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-xs);
-  margin-left: auto;
 }
 
 .history-items {

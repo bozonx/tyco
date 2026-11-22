@@ -7,12 +7,10 @@
       :actions="editorActions"
       :original-actions="originalActions"
       :empty-hint="t('history.emptyHint')"
-      :total-count="historyStore.editorHistory.length"
       :is-filtered="isFiltered"
       :is-loading="isEditorHistoryLoading"
       @open="toEditor"
       @action="onEditorAction"
-      @clear="clearEditorHistory"
     >
       <template #search>
         <div class="history-search">
@@ -145,7 +143,6 @@ const removal = createRemovalUndo<EditorHistoryItem>({
 })
 const removedItem = removal.removed
 const undoRemove = removal.undo
-const clearEditorHistory = removal.clear
 const hasEditorLoadError = ref(false)
 const isEditorHistoryLoading = computed(
   () => !historyStore.isEditorHistoryLoaded && !hasEditorLoadError.value
@@ -417,13 +414,11 @@ const toEditor = (item: HistoryListItem) => {
 .history-filters {
   display: flex;
   align-items: center;
-  /* a narrow window scrolls the filters instead of wrapping them */
-  overflow-x: auto;
 }
 
 .history-filters :deep(.segmented-control) {
-  flex-wrap: nowrap;
-  flex-shrink: 0;
+  flex-wrap: wrap;
+  row-gap: 4px;
 }
 
 .history-filters :deep(.segmented-option) {
@@ -435,11 +430,9 @@ const toEditor = (item: HistoryListItem) => {
   flex-direction: column;
   gap: var(--space-md);
   width: 100%;
-  max-width: 880px;
   height: 100%;
   min-height: 0;
-  margin: 0 auto;
-  padding: var(--space-xl) var(--space-xl) 0;
+  padding: var(--space-md) var(--space-lg) 0;
 }
 
 .history-notice {
