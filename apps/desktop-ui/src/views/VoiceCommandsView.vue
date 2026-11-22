@@ -794,10 +794,21 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* a long selection must not push the transcript and the commands away */
 .voice-context {
   display: flex;
   flex-direction: column;
+  flex: 0 0 auto;
   gap: var(--space-2xs);
+  max-height: min(9rem, 35%);
+  min-height: 0;
+}
+
+.voice-context > :first-child {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  overflow: auto;
 }
 
 .voice-context.is-unused > :first-child {
