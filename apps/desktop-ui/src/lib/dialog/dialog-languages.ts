@@ -33,3 +33,26 @@ export function dialogLanguageOptions(options: {
     ...ids.map((id) => ({ id, name: options.labelOf(id) })),
   ]
 }
+
+/**
+ * The route of the languages as one label: "{from} → {to}" when the language of
+ * the other side is asked for, else the target language alone
+ */
+export function dialogRouteLabel(options: {
+  translationTargetLanguage: string
+  /** Undefined: the provider is not told the language of the other side */
+  remoteLanguage: string | undefined
+  labelOf: (id: string) => string
+  translate: (key: string, params?: Record<string, string>) => string
+}): string {
+  const { translationTargetLanguage: target, remoteLanguage: remote } = options
+  const to = target
+    ? options.labelOf(target)
+    : options.translate('dialog.noTranslation')
+  if (remote === undefined) return to
+  const from =
+    remote && remote !== 'auto'
+      ? options.labelOf(remote)
+      : options.translate('dialog.languageAuto')
+  return options.translate('dialog.route', { from, to })
+}

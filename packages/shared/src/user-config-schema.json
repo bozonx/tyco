@@ -877,6 +877,15 @@
               "required": ["modelId", "rule", "qualityGateRule"],
               "default": { "modelId": "", "rule": "", "qualityGateRule": "" }
             },
+            "dialogTranslation": {
+              "type": "object",
+              "properties": {
+                "modelId": { "type": "string", "default": "" },
+                "rule": { "type": "string", "default": "" }
+              },
+              "required": ["modelId", "rule"],
+              "default": { "modelId": "", "rule": "" }
+            },
             "voiceCorrection": {
               "type": "object",
               "properties": {
@@ -918,6 +927,7 @@
             "chat",
             "correction",
             "translation",
+            "dialogTranslation",
             "voiceCorrection",
             "aiTask",
             "transformation",
@@ -1363,13 +1373,10 @@
           "maxLength": 35,
           "default": "auto"
         },
+        "ownLanguage": { "type": "string", "maxLength": 35 },
         "textDisplay": {
           "enum": ["translation", "original", "both"],
           "default": "both"
-        },
-        "translationProvider": {
-          "enum": ["default", "deepl", "google", "llm"],
-          "default": "default"
         },
         "compactGeometry": {
           "type": "object",
@@ -1391,7 +1398,6 @@
         "source",
         "translationTargetLanguage",
         "textDisplay",
-        "translationProvider",
         "isRecordingMixedDown",
         "isRecordingProcessed"
       ],

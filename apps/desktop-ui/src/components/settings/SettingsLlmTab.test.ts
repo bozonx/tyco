@@ -413,6 +413,7 @@ describe('SettingsLlmTab.vue', () => {
         .map((row) => row.attributes('data-label'))
     ).toEqual([
       'action.translationMenu',
+      'settings.dialogTranslationTask',
       'settings.voiceTextCorrection',
       'settings.textCorrection',
       'settings.aiCommands',

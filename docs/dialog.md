@@ -25,9 +25,10 @@ listening do not record and say that the sound is busy with the dialog.
 
 Pick it in the toolbar before you start; TyCo remembers the last choice.
 
-- **Microphone and computer**: your speech and the other side are recorded
-  apart and shown as bubbles on both sides.
-- **Computer only**: only the other side, shown as paragraphs.
+- **Call**: your microphone and the other side are recorded apart and shown
+  as bubbles on both sides. Use it for Zoom, Meet, Teams and other calls.
+- **Computer sound**: only what the computer plays, such as a video, a webinar
+  or a podcast, shown as paragraphs.
 
 Hover over a bubble to see who spoke and when.
 
@@ -37,23 +38,35 @@ the cleanest result.
 
 ## Translation
 
-Pick the language to translate into in the toolbar; without one only the
-original is shown. The toolbar also switches between the translation, the
-original and both (the translation large, the original small under it), and
-remembers both choices. While a phrase is being translated, its original
-words stay dimmed in place of the translation. Your own speech is not
-translated, but it helps to translate what the other side answers to. A
-phrase that could not be translated offers **Try again**.
+The languages button in the toolbar shows the route, such as
+**English → Russian**, and opens the language settings:
 
-The translation service is the one of the translation settings unless
-**Settings → Dialog** names another. An AI model translates with the context
-of the conversation; DeepL and Google answer faster but see each phrase
-alone.
+- **The other side speaks**: needed only with Deepgram, which is told the
+  language; **Auto** lets it detect the language.
+- **Translate into**: without a language only the original is shown.
+- **You speak**: the language your own speech is recognized in; by default
+  the one of the dictation.
+
+The toolbar also switches between the translation, the original and both (the
+translation large, the original small under it); pick the view before you start
+if you like, and TyCo remembers it. When the toolbar is narrow, the view is in
+its **⋮** menu. While a phrase is being translated, its original words stay
+dimmed in place of the translation. Your own speech is not translated, but it
+helps to translate what the other side answers to. A phrase that could not be
+translated offers **Try again**.
+
+An AI model translates the dialog: it sees the phrases said before, so short
+pieces of speech come out right, and it follows the glossary of the translation
+settings. Pick the model under **Settings → LLM → Dialog translation** or
+**Settings → Dialog**, where you can also add your own instructions, such as
+a conversational tone. A fast model keeps up better. Without a model the
+languages button shows a warning and nothing is translated.
 
 ## Subtitles
 
-**Subtitles** shows the latest words of the other side in a narrow strip over
-all windows and minimizes the main window. **Expand** closes the strip and
+The compact mode button (picture in picture) shows the latest words of the other side in a narrow strip over
+all windows and minimizes the main window. **Start in compact mode** in the
+menu of **Start** does both at once. **Expand** closes the strip and
 brings the main window back; **Stop** ends the dialog and brings it back too.
 
 On Linux desktops that support it (KDE Plasma, Sway, Hyprland and others on

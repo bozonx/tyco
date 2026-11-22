@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { TranslationProvider } from '@tyco/shared'
+import type { TranslationConfig } from '@tyco/shared'
 import { markRaw } from 'vue'
 
 import { translate } from '../lib/i18n'
@@ -19,38 +19,42 @@ import { useLlmStore } from './llm'
 import { useSecretsStore } from './secrets'
 import { useToastStore } from './toast'
 
+/** The LLM tasks that translate */
+type TranslationLlmTask = 'translation' | 'dialogTranslation'
+
 export const useTranslationStore = defineStore('translation', () => {
   const desktopStore = useDesktopStore()
   const llmStore = useLlmStore()
   const secretsStore = useSecretsStore()
   const toast = useToastStore()
   /**
-   * A client of the translation settings; `provider` overrides their provider,
-   * e.g. for the dialog
+   * A client of the translation settings; `overrides` replaces some of them and
+   * `task` is the LLM task that answers, e.g. for the dialog
    */
-  const createClient = (provider: () => TranslationProvider | undefined) =>
-    createTranslationClient({
-      getConfig: () => {
-        const config = normalizeTranslationConfig(
-          desktopStore.userConfig?.translation
-        )
-        const override = provider()
-        return override ? { ...config, provider: override } : config
-      },
+  const createClient = (
+    options: {
+      task?: TranslationLlmTask
+      overrides?: Partial<TranslationConfig>
+    } = {}
+  ) => {
+    const task = options.task ?? 'translation'
+    return createTranslationClient({
+      getConfig: () => ({
+        ...normalizeTranslationConfig(desktopStore.userConfig?.translation),
+        ...options.overrides,
+      }),
       getLlmLimits: () =>
-        taskModelLimits(
-          normalizeLlmConfig(desktopStore.userConfig?.llm),
-          'translation'
-        ),
+        taskModelLimits(normalizeLlmConfig(desktopStore.userConfig?.llm), task),
       transport: createTauriTransport(tauriNetIpc),
       keys: createSecretKeyProvider(
         () => secretsStore.client.status(),
         translationKitSecretId
       ),
-      runLlm: (prompt, signal, options = {}) =>
-        llmStore.client.run('translation', prompt, { signal, ...options }),
+      runLlm: (prompt, signal, runOptions = {}) =>
+        llmStore.client.run(task, prompt, { signal, ...runOptions }),
     })
-  const client = createClient(() => undefined)
+  }
+  const client = createClient()
   const actions = createTranslationActions({
     client,
     getUserConfig: () => desktopStore.userConfig,

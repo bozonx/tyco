@@ -53,6 +53,7 @@ export interface LlmModel {
 /** The LLM tasks that run on a model of their own */
 export const LLM_TASKS = [
   'translation',
+  'dialogTranslation',
   'voiceCorrection',
   'correction',
   'aiTask',
@@ -82,6 +83,8 @@ export interface LlmTasksConfig {
     /** The review pass, see `TranslationConfig.qualityGate` */
     qualityGateRule: string
   }
+  /** The live translation of the dialog: what the other side says */
+  dialogTranslation: LlmTaskConfig
   voiceCorrection: LlmTaskConfig
   /** Each AI command has its own prompt, see `AiCommandOperationConfig` */
   aiTask: Pick<LlmTaskConfig, 'modelId'>

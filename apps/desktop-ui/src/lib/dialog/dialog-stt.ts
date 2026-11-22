@@ -19,6 +19,8 @@ export interface DialogStt {
 export interface DialogSttDependencies {
   getConfig: () => SttConfig
   getRemoteLanguage?: () => string | undefined
+  /** The language the user speaks; empty: the language of the dictation */
+  getOwnLanguage?: () => string | undefined
   refreshSecrets: () => Promise<unknown>
   getSecrets: () => SecretsStatus
   translate: (key: string, params?: Record<string, string | number>) => string
@@ -27,7 +29,8 @@ export interface DialogSttDependencies {
 /**
  * The speech recognition of the settings, checked before the dialog records: a
  * model that can be reached and a key it can use. The user speaks the language
- * of the dictation; the other side may speak any language.
+ * picked for the dialog, else that of the dictation; the other side may speak
+ * any language.
  */
 export async function resolveDialogStt(
   deps: DialogSttDependencies
@@ -50,7 +53,9 @@ export async function resolveDialogStt(
     }
     assertSttKeyAvailable(deps.getSecrets(), model.provider, deps.translate)
   }
-  const ownLanguage = dictationLanguageFor(model.language)
+  const ownLanguage = dictationLanguageFor(
+    deps.getOwnLanguage?.()?.trim() || model.language
+  )
   const rawRemote = deps.getRemoteLanguage?.()?.trim()
   const remoteLanguage =
     rawRemote && rawRemote !== 'auto'

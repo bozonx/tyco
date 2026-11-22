@@ -70,48 +70,23 @@
       />
     </div>
 
+    <DialogLanguageRoute />
+
     <div class="dialog-toolbar-spacer" />
 
-    <FieldSelect
-      v-if="isDeepgram"
-      class="dialog-toolbar-language"
-      :model-value="dialog.config.remoteLanguage || 'auto'"
-      size="sm"
-      :title="t('dialog.remoteLanguage')"
-      :aria-label="t('dialog.remoteLanguage')"
-      :options="remoteLanguageOptions"
-      @update:model-value="
-        (language) =>
-          dialog.updateConfig({ remoteLanguage: String(language ?? 'auto') })
-      "
-    />
-    <FieldSelect
-      class="dialog-toolbar-language"
-      :model-value="dialog.config.translationTargetLanguage"
-      size="sm"
-      :title="t('dialog.translationLanguage')"
-      :aria-label="t('dialog.translationLanguage')"
-      :options="languageOptions"
-      @update:model-value="
-        (language) =>
-          dialog.updateConfig({
-            translationTargetLanguage: String(language ?? ''),
-          })
-      "
-    />
+    <!-- set before anything is said: a mode without text just shows nothing -->
     <SegmentedControl
       class="dialog-toolbar-display"
       :model-value="dialog.config.textDisplay"
       size="sm"
       :label="t('dialog.textDisplay')"
       :options="displayOptions"
-      :disabled="!dialog.config.translationTargetLanguage"
       @update:model-value="
         (textDisplay) => dialog.updateConfig({ textDisplay })
       "
     />
     <IconButton
-      icon="mdi:subtitles-outline"
+      icon="mdi:picture-in-picture-bottom-right-outline"
       :label="t('dialog.collapse')"
       @click="dialog.showSubtitles()"
     />
@@ -121,7 +96,6 @@
       align="right"
       icon="mdi:dots-vertical"
       :title="t('common.more')"
-      :disabled="isEmpty"
       :items="moreItems"
     />
     <ConfirmModal
@@ -139,13 +113,7 @@
 import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { dialogLanguageOptions } from '../../lib/dialog/dialog-languages'
 import type { DialogSide } from '../../lib/dialog/dialog-transcript'
-import {
-  COMMON_LANGUAGE_OPTIONS,
-  buildLanguageOptions,
-} from '../../lib/locale/language'
-import { translationLanguageLabel } from '../../lib/translation/translation-languages'
 import type { ControlOption } from '../../lib/ui/control-option'
 import { useDesktopStore } from '../../stores/desktop'
 import { useDialogStore } from '../../stores/dialog'
@@ -153,16 +121,16 @@ import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
-import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
+import DialogLanguageRoute from './DialogLanguageRoute.vue'
 import DialogLevel from './DialogLevel.vue'
 import DialogRecordingIndicator from './DialogRecordingIndicator.vue'
 import type { DialogSource, DialogTextDisplay } from '@tyco/shared'
 
 const dialog = useDialogStore()
 const desktopStore = useDesktopStore()
-const { t, locale } = useI18n()
+const { t } = useI18n()
 
 const isIdle = computed(
   () => dialog.status === 'idle' || dialog.status === 'failed'
@@ -177,6 +145,11 @@ const canRecord = computed(
 )
 const startItems = computed<DropdownMenuItem[]>(() => [
   {
+    label: t('dialog.startCompact'),
+    icon: 'mdi:picture-in-picture-bottom-right-outline',
+    action: startCompact,
+  },
+  {
     label: canRecord.value
       ? t('dialog.startRecording')
       : t('dialog.startRecordingNeedsHistory'),
@@ -185,6 +158,12 @@ const startItems = computed<DropdownMenuItem[]>(() => [
     action: startRecording,
   },
 ])
+
+/** Starts and folds the window into the subtitles strip at once */
+async function startCompact() {
+  await dialog.start()
+  if (dialog.isActive) await dialog.showSubtitles()
+}
 
 /** The first recording tells to ask the other side first */
 function startRecording() {
@@ -202,10 +181,16 @@ async function confirmRecordingNotice() {
 const sourceOptions = computed<ControlOption<DialogSource>[]>(() => [
   {
     id: 'microphoneAndSystem',
-    name: t('dialog.sourceMicrophoneAndSystem'),
-    icon: 'mdi:account-voice',
+    name: t('dialog.sourceCall'),
+    icon: 'mdi:account-multiple-outline',
+    title: t('dialog.sourceCallHint'),
   },
-  { id: 'system', name: t('dialog.sourceSystem'), icon: 'mdi:volume-high' },
+  {
+    id: 'system',
+    name: t('dialog.sourceComputer'),
+    icon: 'mdi:monitor-speaker',
+    title: t('dialog.sourceComputerHint'),
+  },
 ])
 
 const displayOptions = computed<ControlOption<DialogTextDisplay>[]>(() => [
@@ -214,37 +199,26 @@ const displayOptions = computed<ControlOption<DialogTextDisplay>[]>(() => [
   { id: 'both', name: t('dialog.displayBoth') },
 ])
 
-const isDeepgram = computed(
-  () => desktopStore.userConfig.stt?.provider === 'deepgram'
-)
-
-const remoteLanguageOptions = computed(() =>
-  buildLanguageOptions(
-    [dialog.config.remoteLanguage],
-    true,
-    t,
-    COMMON_LANGUAGE_OPTIONS
-  )
-)
-
-const languageOptions = computed(() =>
-  dialogLanguageOptions({
-    targetLanguages: desktopStore.userConfig.translation?.targetLanguages,
-    current: dialog.config.translationTargetLanguage,
-    offLabel: t('dialog.noTranslation'),
-    labelOf: (id) => translationLanguageLabel(id, String(locale.value)),
-  })
-)
-
+// the view is offered here too: the toolbar drops its control when narrow
 const moreItems = computed<DropdownMenuItem[]>(() => [
+  ...displayOptions.value.map((option) => ({
+    label: `${t('dialog.textDisplay')}: ${option.name}`,
+    icon:
+      dialog.config.textDisplay === option.id
+        ? 'mdi:radiobox-marked'
+        : 'mdi:radiobox-blank',
+    action: () => void dialog.updateConfig({ textDisplay: option.id }),
+  })),
   {
     label: t('dialog.copy'),
     icon: 'mdi:content-copy',
+    disabled: isEmpty.value,
     action: () => void dialog.copyTranscript(),
   },
   {
     label: t('dialog.toActionMenu'),
     icon: 'mdi:lightning-bolt-outline',
+    disabled: isEmpty.value,
     action: () => void dialog.sendToActionMenu(),
   },
 ])
@@ -305,11 +279,6 @@ function levelLabel(side: DialogSide) {
     color-mix(in oklab, var(--color-primary-content) 25%, transparent);
 }
 
-/* the icons say it, the tooltips name it */
-.dialog-toolbar-source :deep(.option-label) {
-  display: none;
-}
-
 .dialog-toolbar-levels {
   display: flex;
   align-items: center;
@@ -338,14 +307,20 @@ function levelLabel(side: DialogSide) {
   min-width: 0;
 }
 
-.dialog-toolbar-language {
+/* the route of the languages gives way first */
+.dialog-toolbar > .dialog-route {
   flex-shrink: 1;
-  min-width: 7rem;
-  max-width: 12rem;
 }
 
-@media (max-width: 40rem) {
+@media (max-width: 48rem) {
   .dialog-toolbar-display {
+    display: none;
+  }
+}
+
+/* narrower still, the sources keep their icons, the tooltips name them */
+@media (max-width: 36rem) {
+  .dialog-toolbar-source :deep(.option-label) {
     display: none;
   }
 }

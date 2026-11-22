@@ -255,13 +255,13 @@
         "chatPrompts": "",
         "favorites": "",
         "history": "",
+        "dialog": "Ctrl+Alt+Shift+D",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
         "customAction4": "",
-        "customAction5": "",
-        "dialog": "Ctrl+Alt+Shift+D"
+        "customAction5": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
@@ -340,6 +340,7 @@
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
+          "dialogTranslation": { "modelId": "", "rule": "" },
           "transformation": { "modelId": "" },
           "styling": { "modelId": "" },
           "quickRequest": { "modelId": "", "rule": "" }
@@ -409,9 +410,8 @@
         "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
-        "textDisplay": "both",
-        "translationProvider": "default",
         "remoteLanguage": "auto",
+        "textDisplay": "both",
         "isRecordingMixedDown": true,
         "isRecordingProcessed": true
       }
@@ -656,13 +656,13 @@
         "chatPrompts": "",
         "favorites": "",
         "history": "",
+        "dialog": "Ctrl+Alt+Shift+D",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
         "customAction4": "",
-        "customAction5": "",
-        "dialog": "Ctrl+Alt+Shift+D"
+        "customAction5": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
@@ -737,6 +737,7 @@
           "translation": { "modelId": "", "rule": "", "qualityGateRule": "" },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
+          "dialogTranslation": { "modelId": "", "rule": "" },
           "transformation": { "modelId": "" },
           "styling": { "modelId": "" },
           "quickRequest": { "modelId": "", "rule": "" }
@@ -843,9 +844,8 @@
         "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
-        "textDisplay": "both",
-        "translationProvider": "default",
         "remoteLanguage": "auto",
+        "textDisplay": "both",
         "isRecordingMixedDown": true,
         "isRecordingProcessed": true
       }
@@ -1079,13 +1079,13 @@
         "chatPrompts": "",
         "favorites": "",
         "history": "",
+        "dialog": "Ctrl+Alt+Shift+D",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
         "customAction4": "",
-        "customAction5": "",
-        "dialog": "Ctrl+Alt+Shift+D"
+        "customAction5": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
@@ -1164,6 +1164,7 @@
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
+          "dialogTranslation": { "modelId": "", "rule": "" },
           "transformation": { "modelId": "" },
           "styling": { "modelId": "" },
           "quickRequest": { "modelId": "", "rule": "" }
@@ -1270,9 +1271,8 @@
         "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
-        "textDisplay": "both",
-        "translationProvider": "default",
         "remoteLanguage": "auto",
+        "textDisplay": "both",
         "isRecordingMixedDown": true,
         "isRecordingProcessed": true
       }
@@ -1511,13 +1511,13 @@
         "chatPrompts": "",
         "favorites": "",
         "history": "",
+        "dialog": "Ctrl+Alt+Shift+D",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
         "customAction4": "",
-        "customAction5": "",
-        "dialog": "Ctrl+Alt+Shift+D"
+        "customAction5": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
@@ -1596,6 +1596,7 @@
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
+          "dialogTranslation": { "modelId": "", "rule": "" },
           "transformation": { "modelId": "" },
           "styling": { "modelId": "" },
           "quickRequest": { "modelId": "", "rule": "" }
@@ -1707,9 +1708,8 @@
         "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
-        "textDisplay": "both",
-        "translationProvider": "default",
         "remoteLanguage": "auto",
+        "textDisplay": "both",
         "isRecordingMixedDown": true,
         "isRecordingProcessed": true
       }
@@ -1938,13 +1938,13 @@
         "chatPrompts": "",
         "favorites": "",
         "history": "",
+        "dialog": "Ctrl+Alt+Shift+D",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
         "customAction4": "",
-        "customAction5": "",
-        "dialog": "Ctrl+Alt+Shift+D"
+        "customAction5": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
@@ -2016,6 +2016,7 @@
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
+          "dialogTranslation": { "modelId": "", "rule": "" },
           "transformation": { "modelId": "" },
           "styling": { "modelId": "" },
           "quickRequest": { "modelId": "", "rule": "" }
@@ -2122,9 +2123,8 @@
         "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
-        "textDisplay": "both",
-        "translationProvider": "default",
         "remoteLanguage": "auto",
+        "textDisplay": "both",
         "isRecordingMixedDown": true,
         "isRecordingProcessed": true
       }
@@ -2358,13 +2358,13 @@
         "chatPrompts": "",
         "favorites": "",
         "history": "",
+        "dialog": "Ctrl+Alt+Shift+D",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
         "customAction4": "",
-        "customAction5": "",
-        "dialog": "Ctrl+Alt+Shift+D"
+        "customAction5": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
@@ -2443,6 +2443,7 @@
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
+          "dialogTranslation": { "modelId": "", "rule": "" },
           "transformation": { "modelId": "" },
           "styling": { "modelId": "" },
           "quickRequest": { "modelId": "", "rule": "" }
@@ -2549,9 +2550,8 @@
         "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
-        "textDisplay": "both",
-        "translationProvider": "default",
         "remoteLanguage": "auto",
+        "textDisplay": "both",
         "isRecordingMixedDown": true,
         "isRecordingProcessed": true
       }
@@ -2787,13 +2787,13 @@
         "chatPrompts": "",
         "favorites": "",
         "history": "",
+        "dialog": "Ctrl+Alt+Shift+D",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
         "customAction4": "",
-        "customAction5": "",
-        "dialog": "Ctrl+Alt+Shift+D"
+        "customAction5": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
@@ -2872,6 +2872,7 @@
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
+          "dialogTranslation": { "modelId": "", "rule": "" },
           "transformation": { "modelId": "" },
           "styling": { "modelId": "" },
           "quickRequest": { "modelId": "", "rule": "" }
@@ -2978,9 +2979,8 @@
         "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
-        "textDisplay": "both",
-        "translationProvider": "default",
         "remoteLanguage": "auto",
+        "textDisplay": "both",
         "isRecordingMixedDown": true,
         "isRecordingProcessed": true
       }
@@ -3230,12 +3230,12 @@
         "chatPrompts": "",
         "favorites": "",
         "history": "",
+        "dialog": "Ctrl+Alt+Shift+D",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
         "customAction4": "",
-        "customAction5": "",
-        "dialog": "Ctrl+Alt+Shift+D"
+        "customAction5": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
@@ -3314,6 +3314,7 @@
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
+          "dialogTranslation": { "modelId": "", "rule": "" },
           "transformation": { "modelId": "" },
           "styling": { "modelId": "" },
           "quickRequest": { "modelId": "", "rule": "" }
@@ -3414,9 +3415,8 @@
         "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
-        "textDisplay": "both",
-        "translationProvider": "default",
         "remoteLanguage": "auto",
+        "textDisplay": "both",
         "isRecordingMixedDown": true,
         "isRecordingProcessed": true
       }
@@ -3670,12 +3670,12 @@
         "chatPrompts": "",
         "favorites": "",
         "history": "",
+        "dialog": "Ctrl+Alt+Shift+D",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
         "customAction4": "",
-        "customAction5": "",
-        "dialog": "Ctrl+Alt+Shift+D"
+        "customAction5": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
@@ -3761,6 +3761,7 @@
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
+          "dialogTranslation": { "modelId": "", "rule": "" },
           "transformation": { "modelId": "" },
           "styling": { "modelId": "" },
           "quickRequest": { "modelId": "", "rule": "" }
@@ -3861,9 +3862,8 @@
         "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
-        "textDisplay": "both",
-        "translationProvider": "default",
         "remoteLanguage": "auto",
+        "textDisplay": "both",
         "isRecordingMixedDown": true,
         "isRecordingProcessed": true
       }
@@ -4128,13 +4128,13 @@
         "chatPrompts": "",
         "favorites": "",
         "history": "",
+        "dialog": "Ctrl+Alt+Shift+D",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
         "customAction4": "",
-        "customAction5": "",
-        "dialog": "Ctrl+Alt+Shift+D"
+        "customAction5": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
@@ -4278,6 +4278,7 @@
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
+          "dialogTranslation": { "modelId": "", "rule": "" },
           "transformation": { "modelId": "" },
           "styling": { "modelId": "" },
           "quickRequest": { "modelId": "", "rule": "" }
@@ -4384,9 +4385,8 @@
         "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
-        "textDisplay": "both",
-        "translationProvider": "default",
         "remoteLanguage": "auto",
+        "textDisplay": "both",
         "isRecordingMixedDown": true,
         "isRecordingProcessed": true
       }
@@ -4667,13 +4667,13 @@
         "chatPrompts": "",
         "favorites": "",
         "history": "",
+        "dialog": "Ctrl+Alt+Shift+D",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "customAction1": "",
         "customAction2": "",
         "customAction3": "",
         "customAction4": "",
-        "customAction5": "",
-        "dialog": "Ctrl+Alt+Shift+D"
+        "customAction5": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": { "linux": { "pasteShortcut": "Ctrl+V" } },
@@ -4823,6 +4823,7 @@
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
+          "dialogTranslation": { "modelId": "", "rule": "" },
           "transformation": { "modelId": "" },
           "styling": { "modelId": "" },
           "quickRequest": { "modelId": "", "rule": "" }
@@ -4927,9 +4928,8 @@
         "isEnabled": true,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
-        "textDisplay": "both",
-        "translationProvider": "default",
         "remoteLanguage": "auto",
+        "textDisplay": "both",
         "isRecordingMixedDown": true,
         "isRecordingProcessed": true
       }

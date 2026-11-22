@@ -20,6 +20,7 @@ import { buildSubtitlesView } from '../lib/dialog/dialog-subtitles'
 import { createDialogTranslationQueue } from '../lib/dialog/dialog-translation'
 import { desktopClient } from '../lib/desktop/client'
 import { translate } from '../lib/i18n'
+import { normalizeLlmConfig, taskModel } from '../lib/llm/llm-config'
 import { clientLogger } from '../lib/logger'
 import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
 import {
@@ -42,7 +43,6 @@ const DEFAULT_DIALOG_CONFIG: DialogConfig = {
   source: 'microphoneAndSystem',
   translationTargetLanguage: '',
   textDisplay: 'both',
-  translationProvider: 'default',
   isRecordingMixedDown: true,
   isRecordingProcessed: true,
 }
@@ -71,6 +71,13 @@ export const useDialogStore = defineStore('dialog', () => {
     ...desktopStore.userConfig?.dialog,
   }))
   const isEnabled = computed(() => config.value.isEnabled)
+  /** The model that translates the other side; none: nothing is translated */
+  const translationModel = computed(() =>
+    taskModel(
+      normalizeLlmConfig(desktopStore.userConfig?.llm),
+      'dialogTranslation'
+    )
+  )
   const status = ref<DialogSessionStatus>('idle')
   const channelStatus = reactive<
     Partial<Record<DialogSide, DialogChannelStatus>>
@@ -107,13 +114,17 @@ export const useDialogStore = defineStore('dialog', () => {
     },
   })
 
-  const translationClient = translationStore.createClient(() => {
-    const provider = config.value.translationProvider
-    return provider === 'default' ? undefined : provider
+  // a live call is translated a line at a time, with the lines before it as
+  // context, which only a model reads; a review pass would double the delay
+  const translationClient = translationStore.createClient({
+    task: 'dialogTranslation',
+    overrides: { provider: 'llm', qualityGate: 'off' },
   })
   const translationQueue = createDialogTranslationQueue({
     targetLanguage: () => config.value.translationTargetLanguage,
     translate: async ({ text, targetLanguage, context, signal }) => {
+      const userRule =
+        desktopStore.userConfig.llm?.tasks.dialogTranslation?.rule.trim()
       const rules = [
         'The text is what the other side of a live call said, recognized from speech.',
         ...(context.length
@@ -125,6 +136,7 @@ export const useDialogStore = defineStore('dialog', () => {
               ),
             ]
           : []),
+        ...(userRule ? [userRule] : []),
       ].join('\n')
       const result = await translationClient.translate(text, {
         targetLanguage,
@@ -316,6 +328,7 @@ export const useDialogStore = defineStore('dialog', () => {
       activeStt = await resolveDialogStt({
         getConfig: () => desktopStore.userConfig.stt,
         getRemoteLanguage: () => config.value.remoteLanguage,
+        getOwnLanguage: () => config.value.ownLanguage,
         refreshSecrets: secretsStore.refreshSecrets,
         getSecrets: () => secretsStore.secrets,
         translate,
@@ -491,6 +504,7 @@ export const useDialogStore = defineStore('dialog', () => {
   return {
     isEnabled,
     config,
+    translationModel,
     status,
     channelStatus,
     levels,

@@ -206,6 +206,7 @@ import {
 
 const TASK_LABEL_KEYS = {
   translation: 'action.translationMenu',
+  dialogTranslation: 'settings.dialogTranslationTask',
   voiceCorrection: 'settings.voiceTextCorrection',
   correction: 'settings.textCorrection',
   aiTask: 'settings.aiCommands',

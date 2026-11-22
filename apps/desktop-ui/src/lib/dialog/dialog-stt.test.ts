@@ -70,6 +70,28 @@ describe('resolveDialogStt', () => {
     expect(stt.languageOf('remote')).toBe('en-US')
   })
 
+  it('takes the own language of the dialog over that of the dictation', async () => {
+    const stt = await resolveDialogStt({
+      getConfig: () =>
+        config({
+          providers: {
+            ...DEFAULT_USER_CONFIG.stt.providers,
+            deepgram: { modelId: 'nova-3', language: 'ru-RU' },
+          },
+        }),
+      getOwnLanguage: () => 'de-DE',
+      refreshSecrets: async () => undefined,
+      getSecrets: () => ({
+        'stt.deepgram': {
+          origins: ['https://api.deepgram.com'],
+          available: true,
+        },
+      }),
+      translate,
+    })
+    expect(stt.languageOf('me')).toBe('de')
+  })
+
   it('reports an incomplete model', async () => {
     await expect(
       resolveDialogStt({

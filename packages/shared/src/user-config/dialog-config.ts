@@ -1,5 +1,3 @@
-import type { TranslationProvider } from './translation-config'
-
 /** What the dialog listens to: both sides apart, or the computer alone */
 export type DialogSource = 'microphoneAndSystem' | 'system'
 /** What a remote turn shows: its translation, the original, or both */
@@ -17,16 +15,22 @@ export interface DialogConfig {
   /** Whether the dialog mode is offered: its tab, its view and its settings */
   isEnabled: boolean
   source: DialogSource
-  /** The language the other side is translated into; empty: no translation */
+  /**
+   * The language the other side is translated into, by the model of
+   * `llm.tasks.dialogTranslation`; empty: no translation
+   */
   translationTargetLanguage: string
   /**
    * The language spoken by the other side when using Deepgram; empty or 'auto':
    * automatic language detection
    */
   remoteLanguage?: string
+  /**
+   * The language the user speaks; empty or absent: the language of the
+   * dictation
+   */
+  ownLanguage?: string
   textDisplay: DialogTextDisplay
-  /** `default`: the provider of the translation settings */
-  translationProvider: 'default' | TranslationProvider
   /** Where the compact strip was last, on this device */
   compactGeometry?: DialogWindowGeometry
   /** The user was told to ask the other side before recording */

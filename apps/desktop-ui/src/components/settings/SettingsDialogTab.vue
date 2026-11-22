@@ -11,20 +11,18 @@
     </FieldRow>
   </SettingsSection>
   <SettingsSection v-if="dialog.isEnabled">
+    <SettingsTaskModel
+      task="dialogTranslation"
+      :info="t('settings.dialogTranslationModelInfo')"
+    />
     <FieldRow
-      :label="t('settings.dialogTranslationProvider')"
-      :hint="t('settings.dialogTranslationProviderHint')"
+      :label="t('settings.dialogTranslationRules')"
+      :info="t('settings.dialogTranslationRulesInfo')"
+      vertical
     >
-      <FieldSelect
-        :model-value="dialog.translationProvider"
-        :options="providerOptions"
-        @update:model-value="
-          (provider) =>
-            setDialog({
-              translationProvider:
-                provider as DialogConfig['translationProvider'],
-            })
-        "
+      <FieldPromptTextArea
+        v-model="draft.llm.tasks.dialogTranslation.rule"
+        :modal-title="t('settings.dialogTranslationRules')"
       />
     </FieldRow>
     <FieldRow
@@ -63,14 +61,16 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import { useIpcStore } from '../../stores/ipc'
 import Button from '../common/Button.vue'
+import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
-import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import SettingsSection from './SettingsSection.vue'
+import SettingsTaskModel from './SettingsTaskModel.vue'
 import { DEFAULT_USER_CONFIG, type DialogConfig } from '@tyco/shared'
 
 // the source, the language and the view are remembered from the dialog's
-// toolbar; only what the toolbar does not offer is set here. The notice about
+// toolbar; only what the toolbar does not offer is set here, with the model
+// that translates (only a model reads the lines before as context). The notice about
 // recordings is acknowledged once, in the dialog, and has no setting
 const { t } = useI18n()
 const { draft } = useSettingsContext()
@@ -80,15 +80,6 @@ const dialog = computed<DialogConfig>(
 const setDialog = (patch: Partial<DialogConfig>) => {
   draft.value.dialog = { ...dialog.value, ...patch }
 }
-
-const providerOptions = computed<
-  { id: DialogConfig['translationProvider']; name: string }[]
->(() => [
-  { id: 'default', name: t('settings.dialogProviderDefault') },
-  { id: 'llm', name: t('settings.dialogProviderLlm') },
-  { id: 'deepl', name: 'DeepL' },
-  { id: 'google', name: 'Google' },
-])
 
 const ipc = useIpcStore()
 // the recordings of the history, the folder created when it is not there yet

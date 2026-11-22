@@ -198,6 +198,7 @@
         "rule": "",
         "qualityGateRule": ""
       },
+      "dialogTranslation": { "modelId": "ollama-qwen", "rule": "" },
       "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
       "aiTask": { "modelId": "ollama-qwen" },
       "transformation": { "modelId": "ollama-qwen" },
@@ -264,7 +265,6 @@
     "translationTargetLanguage": "",
     "remoteLanguage": "auto",
     "textDisplay": "both",
-    "translationProvider": "default",
     "isRecordingMixedDown": true,
     "isRecordingProcessed": true
   }
