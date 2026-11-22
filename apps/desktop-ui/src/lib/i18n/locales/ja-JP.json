@@ -1604,7 +1604,11 @@
     "valuePlaceholder": "パス、アドレス、その他のテキスト",
     "removeConfirmPrompt": "変数「{name}」を削除しますか？"
   },
-  "favorites": { "noMatches": "一致するお気に入りがありません" },
+  "favorites": {
+    "noMatches": "一致するお気に入りがありません",
+    "deleteConfirmTitle": "お気に入りを削除しますか？",
+    "deleteConfirmMessage": "このお気に入りフレーズを削除しますか？"
+  },
   "replyBlocks": {
     "insertIntoWindow": "ウィンドウに挿入",
     "insertIntoEditor": "エディタへ",
@@ -1648,7 +1652,9 @@
     "empty": "プロンプトはまだありません",
     "emptyHint": "設定でプロンプトを追加してください。",
     "everyProfile": "プロファイルなし（AIへの質問）",
-    "actionName": "プロンプト: {prompt}"
+    "actionName": "プロンプト: {prompt}",
+    "deleteConfirmTitle": "プロンプトを削除しますか？",
+    "deleteConfirmMessage": "プロンプト「{name}」を削除しますか？"
   },
   "listen": {
     "title": "システム音声",

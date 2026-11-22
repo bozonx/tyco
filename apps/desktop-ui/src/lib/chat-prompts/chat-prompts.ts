@@ -212,13 +212,18 @@ export function chatPromptProfileOptions(
   return result
 }
 
+/** Whether a prompt has neither a name nor a text */
+export function isChatPromptEmpty(
+  prompt: Pick<ChatPromptConfig, 'name' | 'rule'>
+): boolean {
+  return !prompt.name.trim() && !prompt.rule.trim()
+}
+
 /** The ids of the prompts left without a name and a text */
 export function emptyChatPromptIds(
   items: readonly ChatPromptConfig[]
 ): string[] {
-  return items
-    .filter((item) => !item.name.trim() && !item.rule.trim())
-    .map((item) => item.id)
+  return items.filter(isChatPromptEmpty).map((item) => item.id)
 }
 
 type PromptConfigPart = Pick<

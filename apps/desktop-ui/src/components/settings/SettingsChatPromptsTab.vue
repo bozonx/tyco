@@ -70,11 +70,24 @@
               variant="ghost"
               icon="mdi:trash-can-outline"
               :label="t('common.delete')"
-              @click="removePrompts([prompt.id])"
+              @click="requestDeletePrompt(prompt)"
             />
           </div>
         </div>
       </div>
+      <ConfirmModal
+        :open="Boolean(promptToDelete)"
+        :title="t('chatPrompts.deleteConfirmTitle')"
+        :message="
+          t('chatPrompts.deleteConfirmMessage', {
+            name: promptToDelete ? chatPromptLabel(promptToDelete) : '',
+          })
+        "
+        :confirm-text="t('common.delete')"
+        danger
+        @confirm="confirmDeletePrompt"
+        @cancel="promptToDelete = null"
+      />
     </SettingsSection>
   </div>
 </template>
@@ -90,15 +103,18 @@ import {
   configProfileKey,
 } from '../../lib/ai-profiles/profile-ref'
 import {
+  chatPromptLabel,
   chatPromptProfileOptions,
   describeChatPrompt,
   emptyChatPromptIds,
+  isChatPromptEmpty,
   moveChatPrompt,
   newChatPrompt,
   withoutChatPrompts,
 } from '../../lib/chat-prompts/chat-prompts'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
+import ConfirmModal from '../common/ConfirmModal.vue'
 import DragHandle from '../common/DragHandle.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
@@ -180,6 +196,24 @@ function setProfile(index: number, value: string | number | undefined) {
 function removePrompts(ids: readonly string[]) {
   if (!ids.length) return
   Object.assign(userConfig.value, withoutChatPrompts(userConfig.value, ids))
+}
+
+const promptToDelete = ref<ChatPromptConfig | null>(null)
+
+function requestDeletePrompt(prompt: ChatPromptConfig) {
+  if (isChatPromptEmpty(prompt)) {
+    removePrompts([prompt.id])
+    return
+  }
+  promptToDelete.value = prompt
+}
+
+function confirmDeletePrompt() {
+  const prompt = promptToDelete.value
+  promptToDelete.value = null
+  if (prompt) {
+    removePrompts([prompt.id])
+  }
 }
 
 /** A prompt left without a name and a text is dropped */

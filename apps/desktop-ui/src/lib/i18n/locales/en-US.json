@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "A path, an address or other text",
     "removeConfirmPrompt": "Remove variable “{name}”?"
   },
-  "favorites": { "noMatches": "No matching favorites" },
+  "favorites": {
+    "noMatches": "No matching favorites",
+    "deleteConfirmTitle": "Delete favorite?",
+    "deleteConfirmMessage": "Delete this favorite phrase?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Insert into window",
     "insertIntoEditor": "To editor",
@@ -1652,7 +1656,9 @@
     "empty": "No prompts yet",
     "emptyHint": "Add prompts in the settings.",
     "everyProfile": "No profile (Ask AI)",
-    "actionName": "Prompt: {prompt}"
+    "actionName": "Prompt: {prompt}",
+    "deleteConfirmTitle": "Delete prompt?",
+    "deleteConfirmMessage": "Delete the prompt “{name}”?"
   },
   "listen": {
     "title": "System audio",

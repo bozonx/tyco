@@ -1604,7 +1604,11 @@
     "valuePlaceholder": "Bir yol, adres veya başka bir metin",
     "removeConfirmPrompt": "“{name}” değişkeni silinsin mi?"
   },
-  "favorites": { "noMatches": "Eşleşen favori yok" },
+  "favorites": {
+    "noMatches": "Eşleşen favori yok",
+    "deleteConfirmTitle": "Favori silinsin mi?",
+    "deleteConfirmMessage": "Bu favori ifade silinsin mi?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Pencereye ekle",
     "insertIntoEditor": "Düzenleyiciye",
@@ -1648,7 +1652,9 @@
     "empty": "Henüz istem yok",
     "emptyHint": "İstemleri ayarlardan ekleyin.",
     "everyProfile": "Profil yok (Yapay Zekaya Soru)",
-    "actionName": "İstem: {prompt}"
+    "actionName": "İstem: {prompt}",
+    "deleteConfirmTitle": "İstem silinsin mi?",
+    "deleteConfirmMessage": "“{name}” istemi silinsin mi?"
   },
   "listen": {
     "title": "Sistem sesi",

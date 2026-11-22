@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "Um caminho, um endereço ou outro texto",
     "removeConfirmPrompt": "Remover a variável “{name}”?"
   },
-  "favorites": { "noMatches": "Não há favoritos correspondentes" },
+  "favorites": {
+    "noMatches": "Não há favoritos correspondentes",
+    "deleteConfirmTitle": "Excluir favorito?",
+    "deleteConfirmMessage": "Excluir esta frase favorita?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Inserir na janela",
     "insertIntoEditor": "No editor",
@@ -1652,7 +1656,9 @@
     "empty": "Ainda não há prompts",
     "emptyHint": "Adicione prompts nas configurações.",
     "everyProfile": "Sem perfil (Pergunta à IA)",
-    "actionName": "Prompt: {prompt}"
+    "actionName": "Prompt: {prompt}",
+    "deleteConfirmTitle": "Excluir prompt?",
+    "deleteConfirmMessage": "Excluir o prompt “{name}”?"
   },
   "listen": {
     "title": "Áudio do sistema",

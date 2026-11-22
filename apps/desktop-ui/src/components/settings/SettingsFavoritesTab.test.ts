@@ -47,6 +47,7 @@ describe('SettingsFavoritesTab', () => {
             props: ['message'],
             template: '<div class="state-message">{{ message }}</div>',
           },
+          ConfirmModal: true,
         },
       },
     })
@@ -117,7 +118,7 @@ describe('SettingsFavoritesTab', () => {
     )
   })
 
-  it('deletes a favorite when delete button is clicked', async () => {
+  it('deletes a non-empty favorite only upon confirmation', async () => {
     const { wrapper, context } = mountTab({
       favorites: {
         items: [
@@ -132,6 +133,35 @@ describe('SettingsFavoritesTab', () => {
     await deleteButtons[1]?.trigger('click')
     await nextTick()
 
+    // Not deleted before confirmation
+    expect(context.draft.value.favorites.items).toHaveLength(2)
+
+    const modal = wrapper.findComponent({ name: 'ConfirmModal' })
+    expect(modal.props('open')).toBe(true)
+    modal.vm.$emit('confirm')
+    await nextTick()
+
+    expect(context.draft.value.favorites.items).toHaveLength(1)
+    expect(context.draft.value.favorites.items[0]?.id).toBe('favorite-1')
+  })
+
+  it('deletes an empty favorite immediately without confirmation', async () => {
+    const { wrapper, context } = mountTab({
+      favorites: {
+        items: [
+          { id: 'favorite-1', text: 'Keep' },
+          { id: 'favorite-2', text: '' },
+        ],
+      },
+    })
+
+    const deleteButtons = wrapper.findAll('.icon-btn')
+    expect(deleteButtons).toHaveLength(2)
+    await deleteButtons[1]?.trigger('click')
+    await nextTick()
+
+    const modal = wrapper.findComponent({ name: 'ConfirmModal' })
+    expect(modal.props('open')).toBe(false)
     expect(context.draft.value.favorites.items).toHaveLength(1)
     expect(context.draft.value.favorites.items[0]?.id).toBe('favorite-1')
   })

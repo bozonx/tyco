@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "Жол, мекенжай немесе басқа мәтін",
     "removeConfirmPrompt": "«{name}» айнымалысын жою керек пе?"
   },
-  "favorites": { "noMatches": "Сәйкес келетін фавориттер жоқ" },
+  "favorites": {
+    "noMatches": "Сәйкес келетін фавориттер жоқ",
+    "deleteConfirmTitle": "Таңдаулыны жою керек пе?",
+    "deleteConfirmMessage": "Бұл таңдаулы тіркесті жою керек пе?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Терезеге кірістіру",
     "insertIntoEditor": "Редакторға",
@@ -1652,7 +1656,9 @@
     "empty": "Әзірге промпттар жоқ",
     "emptyHint": "Промпттарды баптауларда қосыңыз.",
     "everyProfile": "Профильсіз (ЖИ-ға сұрақ)",
-    "actionName": "Промпт: {prompt}"
+    "actionName": "Промпт: {prompt}",
+    "deleteConfirmTitle": "Нұсқаулықты жою керек пе?",
+    "deleteConfirmMessage": "«{name}» нұсқаулығын жою керек пе?"
   },
   "listen": {
     "title": "Жүйе дыбысы",

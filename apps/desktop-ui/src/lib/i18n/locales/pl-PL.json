@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "Ścieżka, adres lub inny tekst",
     "removeConfirmPrompt": "Usunąć zmienną „{name}”?"
   },
-  "favorites": { "noMatches": "Brak pasujących ulubionych" },
+  "favorites": {
+    "noMatches": "Brak pasujących ulubionych",
+    "deleteConfirmTitle": "Usunąć z ulubionych?",
+    "deleteConfirmMessage": "Usunąć tę ulubioną frazę?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Wstaw do okna",
     "insertIntoEditor": "Do edytora",
@@ -1652,7 +1656,9 @@
     "empty": "Nie ma jeszcze promptów",
     "emptyHint": "Dodaj prompty w ustawieniach.",
     "everyProfile": "Bez profilu (Pytanie do AI)",
-    "actionName": "Prompt: {prompt}"
+    "actionName": "Prompt: {prompt}",
+    "deleteConfirmTitle": "Usunąć prompt?",
+    "deleteConfirmMessage": "Usunąć prompt „{name}”?"
   },
   "listen": {
     "title": "Dźwięk systemu",

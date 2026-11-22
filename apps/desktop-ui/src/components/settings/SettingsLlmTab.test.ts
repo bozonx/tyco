@@ -182,6 +182,25 @@ describe('LLM settings cards', () => {
     expect(context.deps.persist).toHaveBeenCalled()
   })
 
+  it('removes an empty provider immediately without confirmation', async () => {
+    const { llm, wrapper, localCard } = setup()
+    llm.models = llm.models.filter((m) => m.providerId !== 'ollama')
+    const card = localCard()
+    await card.get('.disclosure-header').trigger('click')
+
+    const remove = card
+      .findAll('.connection-actions button')
+      .find((button) => button.text() === 'settings.removeProvider')!
+    await remove.trigger('click')
+    await flushPromises()
+
+    const confirmation = wrapper.findAllComponents(ConfirmModal).at(-1)!
+    expect(confirmation.props('open')).toBe(false)
+    expect(llm.providers.some((provider) => provider.id === 'ollama')).toBe(
+      false
+    )
+  })
+
   it('discards an unsaved model without a confirmation', async () => {
     const { llm, localCard } = setup()
     const card = localCard()

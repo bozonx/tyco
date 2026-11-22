@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "Putanja, adresa ili drugi tekst",
     "removeConfirmPrompt": "Ukloniti varijablu „{name}”?"
   },
-  "favorites": { "noMatches": "Nema podudarnih favorita" },
+  "favorites": {
+    "noMatches": "Nema podudarnih favorita",
+    "deleteConfirmTitle": "Obrisati favorit?",
+    "deleteConfirmMessage": "Obrisati ovu omiljenu frazu?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Umetni u prozor",
     "insertIntoEditor": "U uređivač",
@@ -1652,7 +1656,9 @@
     "empty": "Još nema promptova",
     "emptyHint": "Dodajte promptove u postavkama.",
     "everyProfile": "Bez profila (Pitanje za AI)",
-    "actionName": "Prompt: {prompt}"
+    "actionName": "Prompt: {prompt}",
+    "deleteConfirmTitle": "Obrisati upit?",
+    "deleteConfirmMessage": "Obrisati upit „{name}“?"
   },
   "listen": {
     "title": "Zvuk sustava",

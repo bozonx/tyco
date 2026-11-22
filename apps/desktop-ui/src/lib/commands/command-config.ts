@@ -172,3 +172,18 @@ export function createCommand(
     ...(defaultPlatforms ? { platforms: defaultPlatforms } : {}),
   }
 }
+
+/** Whether a command has no name, description, phrases, or pre-transform prompt */
+export function isCommandEmpty(
+  command: Pick<
+    CommandConfig,
+    'name' | 'description' | 'phrases' | 'llmPreTransformPrompt'
+  >
+): boolean {
+  return (
+    !command.name.trim() &&
+    !command.description.trim() &&
+    command.phrases.length === 0 &&
+    !command.llmPreTransformPrompt?.trim()
+  )
+}

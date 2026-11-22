@@ -130,6 +130,7 @@ import { useSortableList } from '../../composables/use-sortable-list'
 import useToast from '../../composables/use-toast'
 import {
   createCommand,
+  isCommandEmpty,
   isCommandOperation,
   normalizeCommands,
   runTimeoutOf,
@@ -385,6 +386,13 @@ const commandToDeleteName = computed(() =>
 )
 
 function requestDeleteCommand(command: CommandConfig) {
+  if (isCommandEmpty(command)) {
+    if (focusedCommandId.value === command.id) {
+      focusedCommandId.value = null
+    }
+    removeCommand(command)
+    return
+  }
   commandToDelete.value = command
 }
 

@@ -28,7 +28,7 @@
           :llm="llm"
           :settings="settings"
           :secrets="secretsStore.secrets"
-          @remove="pendingProviderId = $event"
+          @remove="requestRemoveProvider($event)"
           @update="Object.assign(provider, $event)"
         />
       </div>
@@ -325,6 +325,15 @@ function toggleProvider(providerId: string) {
   if (expanded.has(providerId)) expanded.delete(providerId)
   else expanded.add(providerId)
 }
+function requestRemoveProvider(providerId: string) {
+  const hasModels = llm.value.models.some((m) => m.providerId === providerId)
+  if (!hasModels && !hasKey(providerId)) {
+    removeProviderById(providerId)
+    return
+  }
+  pendingProviderId.value = providerId
+}
+
 function confirmProviderRemoval() {
   if (pendingProviderId.value) removeProviderById(pendingProviderId.value)
   pendingProviderId.value = null

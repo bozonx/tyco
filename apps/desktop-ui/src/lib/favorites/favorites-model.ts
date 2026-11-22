@@ -75,6 +75,13 @@ export function removeFavorite(
   return favorites.filter((item) => item.id !== id)
 }
 
+/** Whether a favorite has neither a text nor a name */
+export function isFavoriteEmpty(
+  item: Pick<FavoriteConfig, 'text'> & { name?: string }
+): boolean {
+  return !item.text.trim() && !item.name?.trim()
+}
+
 /** Moves a favorite from one index to another (drag-and-drop reordering). */
 export function reorderFavorites(
   favorites: readonly FavoriteConfig[],

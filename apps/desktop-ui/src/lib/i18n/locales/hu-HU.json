@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "Útvonal, cím vagy más szöveg",
     "removeConfirmPrompt": "Törli a(z) „{name}” változót?"
   },
-  "favorites": { "noMatches": "Nincsenek egyező kedvencek" },
+  "favorites": {
+    "noMatches": "Nincsenek egyező kedvencek",
+    "deleteConfirmTitle": "Kedvenc törlése?",
+    "deleteConfirmMessage": "Törli ezt a kedvenc kifejezést?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Beszúrás az ablakba",
     "insertIntoEditor": "A szerkesztőbe",
@@ -1652,7 +1656,9 @@
     "empty": "Még nincsenek promptok",
     "emptyHint": "Adjon hozzá promptokat a beállításokban.",
     "everyProfile": "Profil nélkül (Kérdés az AI-hoz)",
-    "actionName": "Prompt: {prompt}"
+    "actionName": "Prompt: {prompt}",
+    "deleteConfirmTitle": "Prompt törlése?",
+    "deleteConfirmMessage": "Törli a(z) „{name}” promptot?"
   },
   "listen": {
     "title": "Rendszerhang",

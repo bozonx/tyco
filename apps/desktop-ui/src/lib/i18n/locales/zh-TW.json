@@ -1604,7 +1604,11 @@
     "valuePlaceholder": "路徑、位址或其他文字",
     "removeConfirmPrompt": "要刪除變數「{name}」嗎？"
   },
-  "favorites": { "noMatches": "沒有相符的收藏" },
+  "favorites": {
+    "noMatches": "沒有相符的收藏",
+    "deleteConfirmTitle": "刪除收藏？",
+    "deleteConfirmMessage": "刪除此收藏短語？"
+  },
   "replyBlocks": {
     "insertIntoWindow": "插入至視窗",
     "insertIntoEditor": "至編輯器",
@@ -1648,7 +1652,9 @@
     "empty": "還沒有提示詞",
     "emptyHint": "請在設定中新增提示詞。",
     "everyProfile": "無設定檔（向 AI 提問）",
-    "actionName": "提示詞：{prompt}"
+    "actionName": "提示詞：{prompt}",
+    "deleteConfirmTitle": "刪除提示詞？",
+    "deleteConfirmMessage": "刪除提示詞「{name}」？"
   },
   "listen": {
     "title": "系統音訊",

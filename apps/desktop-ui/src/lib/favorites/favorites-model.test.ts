@@ -7,6 +7,7 @@ import {
   removeFavorite,
   reorderFavorites,
   favoritePreview,
+  isFavoriteEmpty,
   updateFavorite,
 } from './favorites-model'
 import type { FavoriteConfig } from '@tyco/shared'
@@ -154,6 +155,18 @@ describe('favorites-model', () => {
       const preview = favoritePreview(long, 20)
       expect(preview.length).toBe(20)
       expect(preview.endsWith('…')).toBe(true)
+    })
+  })
+
+  describe('isFavoriteEmpty', () => {
+    it('returns true when text and name are empty', () => {
+      expect(isFavoriteEmpty({ text: '' })).toBe(true)
+      expect(isFavoriteEmpty({ text: '   ', name: '  ' })).toBe(true)
+    })
+
+    it('returns false when text or name is present', () => {
+      expect(isFavoriteEmpty({ text: 'Hello' })).toBe(false)
+      expect(isFavoriteEmpty({ text: '', name: 'Greeting' })).toBe(false)
     })
   })
 })

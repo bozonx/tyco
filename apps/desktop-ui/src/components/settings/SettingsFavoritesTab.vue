@@ -60,12 +60,21 @@
                 variant="ghost"
                 icon="mdi:trash-can-outline"
                 :label="t('common.delete')"
-                @click="deleteFavorite(index)"
+                @click="requestDeleteFavorite(index)"
               />
             </div>
           </div>
         </div>
       </div>
+      <ConfirmModal
+        :open="favoriteToDeleteIndex !== null"
+        :title="t('favorites.deleteConfirmTitle')"
+        :message="t('favorites.deleteConfirmMessage')"
+        :confirm-text="t('common.delete')"
+        danger
+        @confirm="confirmDeleteFavorite"
+        @cancel="favoriteToDeleteIndex = null"
+      />
     </SettingsSection>
   </div>
 </template>
@@ -77,10 +86,12 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import { useSortableList } from '../../composables/use-sortable-list'
 import {
+  isFavoriteEmpty,
   nextFavoriteId,
   reorderFavorites,
 } from '../../lib/favorites/favorites-model'
 import Button from '../common/Button.vue'
+import ConfirmModal from '../common/ConfirmModal.vue'
 import DragHandle from '../common/DragHandle.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
@@ -150,6 +161,24 @@ function deleteFavorite(index: number) {
   const current = [...favorites.value]
   current.splice(index, 1)
   userConfig.value.favorites = { items: current }
+}
+
+const favoriteToDeleteIndex = ref<number | null>(null)
+
+function requestDeleteFavorite(index: number) {
+  const favorite = favorites.value[index]
+  if (!favorite || isFavoriteEmpty(favorite)) {
+    deleteFavorite(index)
+    return
+  }
+  favoriteToDeleteIndex.value = index
+}
+
+function confirmDeleteFavorite() {
+  if (favoriteToDeleteIndex.value !== null) {
+    deleteFavorite(favoriteToDeleteIndex.value)
+    favoriteToDeleteIndex.value = null
+  }
 }
 </script>
 

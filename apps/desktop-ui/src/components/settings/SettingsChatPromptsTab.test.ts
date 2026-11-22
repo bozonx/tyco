@@ -30,7 +30,11 @@ describe('SettingsChatPromptsTab', () => {
   const mountTab = (config: Partial<UserConfig> = {}) => {
     const context = createTestSettingsContext(config)
     const wrapper = mount(SettingsChatPromptsTab, {
-      global: { plugins: [desktop.pinia], provide: context.provide },
+      global: {
+        plugins: [desktop.pinia],
+        provide: context.provide,
+        stubs: { ConfirmModal: true },
+      },
     })
     return { context, wrapper }
   }
@@ -73,7 +77,7 @@ describe('SettingsChatPromptsTab', () => {
     ).toContain('chatPrompts.missingProfile')
   })
 
-  it('removes a prompt together with the actions that run it', async () => {
+  it('removes a non-empty prompt only upon confirmation and drops its actions', async () => {
     const { context, wrapper } = mountTab({
       chatPrompts: {
         items: [
@@ -101,12 +105,46 @@ describe('SettingsChatPromptsTab', () => {
       .find((button) => button.attributes('aria-label') === 'common.delete')!
       .trigger('click')
 
+    // Still not deleted before confirmation
+    expect(
+      context.draft.value.chatPrompts.items.map((item) => item.id)
+    ).toEqual(['a', 'b'])
+
+    // Confirm removal
+    const modal = wrapper.findComponent({ name: 'ConfirmModal' })
+    expect(modal.props('open')).toBe(true)
+    modal.vm.$emit('confirm')
+    await flushPromises()
+
     const draft = context.draft.value
     expect(draft.chatPrompts.items.map((item) => item.id)).toEqual(['b'])
     expect(draft.actionPages[0]?.slots).toEqual({
       w: { type: 'chatPrompt', promptId: 'b' },
     })
     expect(draft.customActionSlots[0]?.action).toBeNull()
+  })
+
+  it('removes an empty prompt immediately without confirmation', async () => {
+    const { context, wrapper } = mountTab({
+      chatPrompts: {
+        items: [
+          { id: 'empty', name: '', rule: '', profileId: '' },
+          { id: 'b', name: 'B', rule: 'Do that', profileId: '' },
+        ],
+      },
+    })
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.attributes('aria-label') === 'common.delete')!
+      .trigger('click')
+
+    const modal = wrapper.findComponent({ name: 'ConfirmModal' })
+    expect(modal.props('open')).toBe(false)
+    expect(
+      context.draft.value.chatPrompts.items.map((item) => item.id)
+    ).toEqual(['b'])
   })
 
   it('drops the prompts left empty when it closes', async () => {

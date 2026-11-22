@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "გზა, მისამართი ან სხვა ტექსტი",
     "removeConfirmPrompt": "წაიშალოს ცვლადი „{name}“?"
   },
-  "favorites": { "noMatches": "Შესატყვისი რჩეულები არ არის" },
+  "favorites": {
+    "noMatches": "Შესატყვისი რჩეულები არ არის",
+    "deleteConfirmTitle": "წაიშალოს რჩეული?",
+    "deleteConfirmMessage": "წაიშალოს ეს რჩეული ფრაზა?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "ფანჯარაში ჩასმა",
     "insertIntoEditor": "რედაქტორში",
@@ -1652,7 +1656,9 @@
     "empty": "პრომპტები ჯერ არ არის",
     "emptyHint": "დაამატეთ პრომპტები პარამეტრებში.",
     "everyProfile": "პროფილის გარეშე (კითხვა AI-ს)",
-    "actionName": "პრომპტი: {prompt}"
+    "actionName": "პრომპტი: {prompt}",
+    "deleteConfirmTitle": "წაიშალოს მითითება?",
+    "deleteConfirmMessage": "წაიშალოს მითითება «{name}»?"
   },
   "listen": {
     "title": "სისტემის ხმა",

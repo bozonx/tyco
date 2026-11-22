@@ -409,7 +409,7 @@ function getRowMenuItems(item: ChatSummary): DropdownMenuItem[] {
       label: t('chat.deleteChat'),
       icon: 'mdi:trash-can-outline',
       action: () => {
-        chatToDelete.value = item.id
+        void requestDeleteChat(item.id)
       },
     },
   ]
@@ -475,6 +475,25 @@ async function finishRename(item: ChatSummary) {
   } catch {
     // The chat store reports rename failures.
   }
+}
+
+async function requestDeleteChat(id: string) {
+  let isChatEmpty = false
+  if (chatStore.currentChatParams?.id === id) {
+    isChatEmpty = chatStore.messages.length === 0
+  } else if (typeof history.loadChat === 'function') {
+    try {
+      const targetChat = await history.loadChat(id)
+      isChatEmpty = !targetChat || targetChat.messages.length === 0
+    } catch {
+      isChatEmpty = false
+    }
+  }
+  if (isChatEmpty) {
+    await chatStore.removeChat(id)
+    return
+  }
+  chatToDelete.value = id
 }
 
 async function confirmDeleteChat() {

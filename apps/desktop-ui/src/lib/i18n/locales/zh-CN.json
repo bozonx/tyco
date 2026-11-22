@@ -1604,7 +1604,11 @@
     "valuePlaceholder": "路径、地址或其他文本",
     "removeConfirmPrompt": "删除变量“{name}”？"
   },
-  "favorites": { "noMatches": "没有匹配的收藏夹" },
+  "favorites": {
+    "noMatches": "没有匹配的收藏夹",
+    "deleteConfirmTitle": "删除收藏？",
+    "deleteConfirmMessage": "删除这条收藏的短语？"
+  },
   "replyBlocks": {
     "insertIntoWindow": "插入到窗口",
     "insertIntoEditor": "到编辑器",
@@ -1648,7 +1652,9 @@
     "empty": "还没有提示词",
     "emptyHint": "请在设置中添加提示词。",
     "everyProfile": "无配置文件（向 AI 提问）",
-    "actionName": "提示词：{prompt}"
+    "actionName": "提示词：{prompt}",
+    "deleteConfirmTitle": "删除提示词？",
+    "deleteConfirmMessage": "删除提示词“{name}”？"
   },
   "listen": {
     "title": "系统音频",

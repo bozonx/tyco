@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "Путь, адрес или другой текст",
     "removeConfirmPrompt": "Удалить переменную «{name}»?"
   },
-  "favorites": { "noMatches": "Ничего не найдено" },
+  "favorites": {
+    "noMatches": "Ничего не найдено",
+    "deleteConfirmTitle": "Удалить из избранного?",
+    "deleteConfirmMessage": "Удалить эту избранную фразу?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Вставить в окно",
     "insertIntoEditor": "В редактор",
@@ -1652,7 +1656,9 @@
     "empty": "Промптов пока нет",
     "emptyHint": "Добавьте промпты в настройках.",
     "everyProfile": "Без профиля (Спросить ИИ)",
-    "actionName": "Промпт: {prompt}"
+    "actionName": "Промпт: {prompt}",
+    "deleteConfirmTitle": "Удалить промпт?",
+    "deleteConfirmMessage": "Удалить промпт «{name}»?"
   },
   "listen": {
     "title": "Звук системы",

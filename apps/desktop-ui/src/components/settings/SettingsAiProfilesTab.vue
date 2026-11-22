@@ -397,9 +397,26 @@ const deleteProfileMessage = computed(() => {
 
 async function askDeleteProfile(profile: { id: string; name: string }) {
   profileToDelete.value = profile
-  chatCount.value = await aiProfilesStore
-    .countChats(profile.id)
-    .catch(() => null)
+  const count = await aiProfilesStore.countChats(profile.id).catch(() => null)
+  chatCount.value = count
+
+  let isProfileEmpty = false
+  if (count === 0) {
+    try {
+      const [soul, memory] = await Promise.all([
+        aiProfilesStore.readSoul(profile.id).catch(() => ''),
+        aiProfilesStore.listMemoryTopics(profile.id).catch(() => []),
+      ])
+      isProfileEmpty = !soul.trim() && memory.length === 0
+    } catch {
+      isProfileEmpty = false
+    }
+  }
+
+  if (isProfileEmpty) {
+    await handleDeleteProfile()
+    return
+  }
   showDeleteProfileConfirm.value = true
 }
 
@@ -444,6 +461,10 @@ const projectToDelete = ref<AiProject | null>(null)
 
 function askDeleteProject(project: AiProject) {
   projectToDelete.value = project
+  if (!project.targetPath && !project.description?.trim()) {
+    void handleDeleteProject()
+    return
+  }
   showDeleteProjectConfirm.value = true
 }
 

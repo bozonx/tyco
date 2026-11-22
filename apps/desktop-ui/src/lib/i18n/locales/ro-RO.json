@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "O cale, o adresă sau alt text",
     "removeConfirmPrompt": "Eliminați variabila „{name}”?"
   },
-  "favorites": { "noMatches": "Nu există favorite care să se potrivească" },
+  "favorites": {
+    "noMatches": "Nu există favorite care să se potrivească",
+    "deleteConfirmTitle": "Ștergeți din favorite?",
+    "deleteConfirmMessage": "Ștergeți această frază favorită?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Inserează în fereastră",
     "insertIntoEditor": "În editor",
@@ -1652,7 +1656,9 @@
     "empty": "Încă nu există prompturi",
     "emptyHint": "Adăugați prompturi în setări.",
     "everyProfile": "Fără profil (Întrebare pentru AI)",
-    "actionName": "Prompt: {prompt}"
+    "actionName": "Prompt: {prompt}",
+    "deleteConfirmTitle": "Ștergeți promptul?",
+    "deleteConfirmMessage": "Ștergeți promptul „{name}”?"
   },
   "listen": {
     "title": "Sunet sistem",

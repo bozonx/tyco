@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "Шлях, адреса або інший текст",
     "removeConfirmPrompt": "Видалити змінну «{name}»?"
   },
-  "favorites": { "noMatches": "Немає відповідних елементів вибраного" },
+  "favorites": {
+    "noMatches": "Немає відповідних елементів вибраного",
+    "deleteConfirmTitle": "Видалити з обраного?",
+    "deleteConfirmMessage": "Видалити цю обрану фразу?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Вставити у вікно",
     "insertIntoEditor": "В редактор",
@@ -1652,7 +1656,9 @@
     "empty": "Промптів поки немає",
     "emptyHint": "Додайте промпти в налаштуваннях.",
     "everyProfile": "Без профілю (Спитати ШІ)",
-    "actionName": "Промпт: {prompt}"
+    "actionName": "Промпт: {prompt}",
+    "deleteConfirmTitle": "Видалити промпт?",
+    "deleteConfirmMessage": "Видалити промпт «{name}»?"
   },
   "listen": {
     "title": "Звук системи",

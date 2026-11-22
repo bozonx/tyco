@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "Una ruta, una dirección u otro texto",
     "removeConfirmPrompt": "¿Eliminar la variable «{name}»?"
   },
-  "favorites": { "noMatches": "No hay favoritos que coincidan" },
+  "favorites": {
+    "noMatches": "No hay favoritos que coincidan",
+    "deleteConfirmTitle": "¿Eliminar favorito?",
+    "deleteConfirmMessage": "¿Eliminar esta frase favorita?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Insertar en la ventana",
     "insertIntoEditor": "Al editor",
@@ -1652,7 +1656,9 @@
     "empty": "Todavía no hay prompts",
     "emptyHint": "Añada prompts en la configuración.",
     "everyProfile": "Sin perfil (Pregunta a la IA)",
-    "actionName": "Prompt: {prompt}"
+    "actionName": "Prompt: {prompt}",
+    "deleteConfirmTitle": "¿Eliminar prompt?",
+    "deleteConfirmMessage": "¿Eliminar el prompt «{name}»?"
   },
   "listen": {
     "title": "Audio del sistema",

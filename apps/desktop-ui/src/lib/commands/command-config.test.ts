@@ -26,6 +26,7 @@ import {
 import {
   runTimeoutOf,
   createCommand,
+  isCommandEmpty,
   isCommandOperation,
   normalizeCommands,
   scriptOperationConfigOf,
@@ -527,5 +528,30 @@ describe('operationConfigText', () => {
     expect(operationConfigText(command, 'language')).toBe('de-DE')
     expect(operationConfigText(command, 'count')).toBe('')
     expect(operationConfigText(command, 'missing')).toBe('')
+  })
+})
+
+describe('isCommandEmpty', () => {
+  it('returns true when a command has no name, description, phrases, or pre-transform prompt', () => {
+    const command = createCommand('script')
+    expect(isCommandEmpty(command)).toBe(true)
+  })
+
+  it('returns false when any meaningful field is set', () => {
+    expect(isCommandEmpty({ ...createCommand('script'), name: 'Test' })).toBe(
+      false
+    )
+    expect(
+      isCommandEmpty({ ...createCommand('script'), description: 'Desc' })
+    ).toBe(false)
+    expect(
+      isCommandEmpty({ ...createCommand('script'), phrases: ['phrase'] })
+    ).toBe(false)
+    expect(
+      isCommandEmpty({
+        ...createCommand('script'),
+        llmPreTransformPrompt: 'Prompt',
+      })
+    ).toBe(false)
   })
 })

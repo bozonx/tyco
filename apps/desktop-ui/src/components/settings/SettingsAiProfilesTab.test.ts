@@ -58,6 +58,8 @@ function createStore() {
     pickFolder: vi.fn(async (): Promise<string | null> => '/elsewhere'),
     duplicateProfile: vi.fn(async () => ({ id: 'writer-copy' })),
     countChats: vi.fn(async () => 5),
+    readSoul: vi.fn(async () => ''),
+    listMemoryTopics: vi.fn(async () => []),
     createProfile: vi.fn(async ({ name }: { name: string }) => ({
       id: 'created-profile',
       name,
@@ -336,8 +338,12 @@ describe('SettingsAiProfilesTab.vue', () => {
     expect(store.deleteProfile).toHaveBeenCalledWith('writer')
   })
 
-  it('deletes a project through its menu', async () => {
-    store.projects.push({ id: 'proj-1', name: 'Project 1' })
+  it('deletes a project through its menu upon confirmation when not empty', async () => {
+    store.projects.push({
+      id: 'proj-1',
+      name: 'Project 1',
+      targetPath: '/some/path',
+    })
     const wrapper = mountTab()
     const items = wrapper.findAllComponents({ name: 'SettingsEntityItem' })
     const projectItem = items[0]!
@@ -356,5 +362,46 @@ describe('SettingsAiProfilesTab.vue', () => {
     await confirm.get('.confirm-yes').trigger('click')
     await flushPromises()
     expect(store.deleteProject).toHaveBeenCalledWith('proj-1')
+  })
+
+  it('deletes an empty project immediately without confirmation', async () => {
+    store.projects.push({ id: 'proj-empty', name: 'Empty Project' })
+    const wrapper = mountTab()
+    const items = wrapper.findAllComponents({ name: 'SettingsEntityItem' })
+    const projectItem = items[0]!
+    const menu = projectItem.findComponent({ name: 'DropdownMenu' })
+    const menuItems = menu.props('items') as Array<{
+      label: string
+      action: () => void
+    }>
+
+    await menuItems[0]!.action()
+    await flushPromises()
+    const confirm = wrapper.get('[data-title="settings.deleteProject"]')
+    expect(confirm.attributes('data-open')).toBe('false')
+    expect(store.deleteProject).toHaveBeenCalledWith('proj-empty')
+  })
+
+  it('deletes an empty profile immediately without confirmation', async () => {
+    store.profiles.push(profile({}))
+    store.countChats = vi.fn(async () => 0)
+    store.readSoul = vi.fn(async () => '')
+    store.listMemoryTopics = vi.fn(async () => [])
+
+    const wrapper = mountTab()
+    const profileItem = wrapper.findAllComponents({
+      name: 'SettingsEntityItem',
+    })[0]!
+    const menu = profileItem.findComponent({ name: 'DropdownMenu' })
+    const menuItems = menu.props('items') as Array<{
+      label: string
+      action: () => void
+    }>
+    await menuItems[1]!.action()
+    await flushPromises()
+
+    const confirm = wrapper.get('[data-title="settings.deleteProfile"]')
+    expect(confirm.attributes('data-open')).toBe('false')
+    expect(store.deleteProfile).toHaveBeenCalledWith('writer')
   })
 })

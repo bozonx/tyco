@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "Μια διαδρομή, μια διεύθυνση ή άλλο κείμενο",
     "removeConfirmPrompt": "Κατάργηση της μεταβλητής «{name}»;"
   },
-  "favorites": { "noMatches": "Δεν υπάρχουν αγαπημένα που να ταιριάζουν" },
+  "favorites": {
+    "noMatches": "Δεν υπάρχουν αγαπημένα που να ταιριάζουν",
+    "deleteConfirmTitle": "Διαγραφή αγαπημένου;",
+    "deleteConfirmMessage": "Διαγραφή αυτής της αγαπημένης φράσης;"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Εισαγωγή στο παράθυρο",
     "insertIntoEditor": "Στον επεξεργαστή",
@@ -1652,7 +1656,9 @@
     "empty": "Δεν υπάρχουν ακόμη προτροπές",
     "emptyHint": "Προσθέστε προτροπές στις ρυθμίσεις.",
     "everyProfile": "Χωρίς προφίλ (Ερώτηση στο AI)",
-    "actionName": "Προτροπή: {prompt}"
+    "actionName": "Προτροπή: {prompt}",
+    "deleteConfirmTitle": "Διαγραφή prompt;",
+    "deleteConfirmMessage": "Διαγραφή του prompt «{name}»;"
   },
   "listen": {
     "title": "Ήχος συστήματος",

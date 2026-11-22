@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "Ein Pfad, eine Adresse oder anderer Text",
     "removeConfirmPrompt": "Variable „{name}“ entfernen?"
   },
-  "favorites": { "noMatches": "Keine passenden Favoriten" },
+  "favorites": {
+    "noMatches": "Keine passenden Favoriten",
+    "deleteConfirmTitle": "Favorit löschen?",
+    "deleteConfirmMessage": "Diesen Favoritentext löschen?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "In Fenster einfügen",
     "insertIntoEditor": "In Editor",
@@ -1652,7 +1656,9 @@
     "empty": "Noch keine Prompts",
     "emptyHint": "Fügen Sie Prompts in den Einstellungen hinzu.",
     "everyProfile": "Kein Profil (Frage an die KI)",
-    "actionName": "Prompt: {prompt}"
+    "actionName": "Prompt: {prompt}",
+    "deleteConfirmTitle": "Prompt löschen?",
+    "deleteConfirmMessage": "Prompt „{name}“ löschen?"
   },
   "listen": {
     "title": "Systemaudio",

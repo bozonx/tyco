@@ -32,6 +32,12 @@ const mocks = vi.hoisted(() => ({
 mocks.history = reactive({
   chatHistory: mocks.chatHistory,
   loadChatHistory: vi.fn(async () => {}),
+  loadChat: vi.fn(async (id: string) => ({
+    id,
+    title: 'Chat',
+    lastMessageAt: Date.now(),
+    messages: [{ id: 'm1', role: 'user', content: 'test' }],
+  })),
   searchChats: mocks.searchChats,
   clearChats: mocks.clearChats,
   deleteChat: mocks.deleteChat,
@@ -194,10 +200,11 @@ describe('ChatSidebar.vue', () => {
       id: 'image-chat',
       title: 'Image chat',
       lastMessageAt: Date.now(),
-      messages: [],
+      messages: [{ id: 'm1', role: 'user', content: 'img' }],
     }
     mocks.chatHistory.push(item)
     mocks.deleteChat.mockResolvedValueOnce(item)
+    ;(mocks.history as { loadChat: any }).loadChat.mockResolvedValueOnce(item)
     const wrapper = mount(ChatSidebar, {
       global: {
         stubs: {
@@ -295,6 +302,50 @@ describe('ChatSidebar.vue', () => {
     expect(mocks.restoreChatItem).toHaveBeenCalledTimes(2)
     expect(mocks.releaseUndo).toHaveBeenCalledExactlyOnceWith('image-chat')
     expect(wrapper.find('.sidebar-notice').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('deletes an empty chat immediately without confirmation', async () => {
+    const item = {
+      id: 'empty-chat',
+      title: 'Empty chat',
+      lastMessageAt: Date.now(),
+      messages: [],
+    }
+    mocks.chatHistory.push(item)
+    mocks.deleteChat.mockResolvedValueOnce(item)
+    ;(mocks.history as { loadChat: any }).loadChat.mockResolvedValueOnce(item)
+
+    const wrapper = mount(ChatSidebar, {
+      global: {
+        stubs: {
+          Button: { template: '<button><slot /></button>' },
+          Icon: true,
+          SearchInput: true,
+          DropdownMenu: {
+            name: 'DropdownMenu',
+            props: ['items'],
+            template: '<span />',
+          },
+          ConfirmModal: {
+            name: 'ConfirmModal',
+            props: ['open'],
+            template: '<span />',
+          },
+        },
+      },
+    })
+    const menu = wrapper.findComponent({ name: 'DropdownMenu' })
+    const actions = menu.props('items') as Array<{
+      label: string
+      action: () => void
+    }>
+    actions.find((action) => action.label === 'chat.deleteChat')!.action()
+    await flushPromises()
+
+    const confirmModal = wrapper.findComponent({ name: 'ConfirmModal' })
+    expect(confirmModal.props('open')).toBe(false)
+    expect(mocks.deleteChat).toHaveBeenCalledWith('empty-chat')
     wrapper.unmount()
   })
 })

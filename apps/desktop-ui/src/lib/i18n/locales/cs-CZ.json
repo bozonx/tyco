@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "Cesta, adresa nebo jiný text",
     "removeConfirmPrompt": "Odebrat proměnnou „{name}“?"
   },
-  "favorites": { "noMatches": "Žádné odpovídající oblíbené" },
+  "favorites": {
+    "noMatches": "Žádné odpovídající oblíbené",
+    "deleteConfirmTitle": "Smazat oblíbenou položku?",
+    "deleteConfirmMessage": "Smazat tuto oblíbenou frázi?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "Vložit do okna",
     "insertIntoEditor": "Do editoru",
@@ -1652,7 +1656,9 @@
     "empty": "Zatím žádné prompty",
     "emptyHint": "Přidejte prompty v nastavení.",
     "everyProfile": "Bez profilu (Dotaz na AI)",
-    "actionName": "Prompt: {prompt}"
+    "actionName": "Prompt: {prompt}",
+    "deleteConfirmTitle": "Smazat výzvu?",
+    "deleteConfirmMessage": "Smazat výzvu „{name}“?"
   },
   "listen": {
     "title": "Systémový zvuk",

@@ -331,6 +331,17 @@ describe('SettingsCommandsTab.vue', () => {
     )
   })
 
+  it('deletes an empty command immediately without confirmation', async () => {
+    const wrapper = mountTab()
+    context.draft.value.commands = [createCommand('script', 'empty1')]
+    await nextTick()
+    await pickMenuItem(wrapper, 0, 1)
+
+    const modal = wrapper.findComponent({ name: 'ConfirmModal' })
+    expect(modal.props('open')).toBe(false)
+    expect(commandIds()).toEqual([])
+  })
+
   it('switches a command on and off with a matching title', async () => {
     const wrapper = mountTab()
     const card = wrapper.findAll('.command-card')[1]

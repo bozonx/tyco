@@ -1608,7 +1608,11 @@
     "valuePlaceholder": "경로, 주소 또는 다른 텍스트",
     "removeConfirmPrompt": "“{name}” 변수를 삭제하시겠습니까?"
   },
-  "favorites": { "noMatches": "일치하는 즐겨찾기 없음" },
+  "favorites": {
+    "noMatches": "일치하는 즐겨찾기 없음",
+    "deleteConfirmTitle": "즐겨찾기를 삭제하시겠습니까?",
+    "deleteConfirmMessage": "이 즐겨찾기 문구를 삭제하시겠습니까?"
+  },
   "replyBlocks": {
     "insertIntoWindow": "창에 삽입",
     "insertIntoEditor": "편집기로",
@@ -1652,7 +1656,9 @@
     "empty": "아직 프롬프트가 없습니다",
     "emptyHint": "설정에서 프롬프트를 추가하세요.",
     "everyProfile": "프로필 없음 (AI에게 질문)",
-    "actionName": "프롬프트: {prompt}"
+    "actionName": "프롬프트: {prompt}",
+    "deleteConfirmTitle": "프롬프트를 삭제하시겠습니까?",
+    "deleteConfirmMessage": "“{name}” 프롬프트를 삭제하시겠습니까?"
   },
   "listen": {
     "title": "시스템 오디오",
