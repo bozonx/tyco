@@ -23,7 +23,9 @@
     "voiceScreenshotQuickAiRequest": "截圖，語音向 AI",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "附加檔案",
     "alertCaution": "注意",
@@ -207,7 +209,9 @@
       "deselectAll": "取消全選",
       "unsupportedCommands": "不支援的指令"
     },
-    "replyBlocks": { "toolLabel": "回覆區塊" }
+    "replyBlocks": {
+      "toolLabel": "回覆區塊"
+    }
   },
   "commandRun": {
     "cancelled": "命令已取消",
@@ -661,15 +665,21 @@
     "cancelled": "已取消",
     "done": "完成",
     "emptyResult": "模型傳回了空白結果",
-    "failed": { "correction": "校對失敗" },
+    "failed": {
+      "correction": "校對失敗"
+    },
     "focusChanged": "視窗在此期間已切換，因此結果已複製到剪貼簿",
     "noSelection": "未選取任何內容",
     "noTarget": "沒有任何應用程式視窗取得焦點",
     "resultInClipboard": "結果已存入剪貼簿",
     "selectionChanged": "處理期間選取範圍已變更，因此結果已複製到剪貼簿",
     "terminalSelection": "終端機中的選取範圍無法取代，因此結果已複製到剪貼簿",
-    "unchanged": { "correction": "未發現任何錯誤" },
-    "working": { "correction": "正在校對…" }
+    "unchanged": {
+      "correction": "未發現任何錯誤"
+    },
+    "working": {
+      "correction": "正在校對…"
+    }
   },
   "settings": {
     "accessAllow": "允許",
@@ -1364,7 +1374,9 @@
     "dialogRecordingMixedDownInfo": "您的聲音與對方的聲音合併為一個聲道，雙耳都能聽到。關閉：分離立體聲（您的聲音在左聲道，對方在右聲道）。",
     "dialogRecordingProcessedInfo": "降低麥克風中喇叭的回音，並限制過大的音量峰值（類似語音辨識所聽到的效果）。關閉：依原樣錄製聲音，不進行軟體處理。"
   },
-  "shortcuts": { "insertIntoEditor": "插入至編輯器" },
+  "shortcuts": {
+    "insertIntoEditor": "插入至編輯器"
+  },
   "theme": {
     "auto": "跟隨系統",
     "dark": "深色",
@@ -1551,7 +1563,11 @@
     "clickToFocus": "按一下以繼續",
     "moveOverlay": "拖曳以移動",
     "cyclePosition": "位置：{position} (Alt+P)",
-    "position": { "center": "置中", "right": "右側", "bottomRight": "右下角" },
+    "position": {
+      "center": "置中",
+      "right": "右側",
+      "bottomRight": "右下角"
+    },
     "collapseRecording": "收合錄音列",
     "expandRecording": "展開錄音列"
   },
@@ -1721,7 +1737,6 @@
     "stopAndExpand": "停止並展開",
     "retryTranslation": "重試",
     "channelFailed": "已停止",
-    "startOptions": "啟動選項",
     "startRecording": "開始並錄音",
     "startRecordingNeedsHistory": "錄音需要將歷史記錄儲存到磁碟",
     "recording": "正在錄音",
@@ -1742,8 +1757,6 @@
     "ownLanguageDefault": "預設（{language}）",
     "listen": "聆聽",
     "resume": "繼續",
-    "listenRecording": "錄音並聆聽",
-    "resumeRecording": "錄音並繼續",
     "clear": "清除",
     "clearTitle": "清除逐字稿？",
     "clearMessage": "歷史記錄已在設定中關閉。目前的逐字稿將會遺失。",
@@ -1752,7 +1765,9 @@
     "clearHintSaved": "清除逐字稿（對話已儲存至歷史記錄）",
     "clearHintUnsaved": "清除逐字稿（歷史記錄已關閉）",
     "sessionResumed": "工作階段已恢復",
-    "sessionResumedRecording": "錄音已恢復"
+    "sessionResumedRecording": "錄音已恢復",
+    "record": "錄音",
+    "recordStopToChangeHint": "停止以更改"
   },
   "toolPermissions": {
     "riskRead": "讀取",

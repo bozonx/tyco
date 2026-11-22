@@ -23,7 +23,9 @@
     "voiceScreenshotQuickAiRequest": "Знімок, голосом до ШІ",
     "webhook": "Вебхук"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Прикріпити файл",
     "alertCaution": "Обережно",
@@ -207,7 +209,9 @@
       "deselectAll": "Зняти все",
       "unsupportedCommands": "Непідтримувані команди"
     },
-    "replyBlocks": { "toolLabel": "Варіанти відповіді" }
+    "replyBlocks": {
+      "toolLabel": "Варіанти відповіді"
+    }
   },
   "commandRun": {
     "cancelled": "Команду скасовано",
@@ -661,15 +665,21 @@
     "cancelled": "Скасовано",
     "done": "Готово",
     "emptyResult": "Модель повернула порожній результат",
-    "failed": { "correction": "Не вдалося виправити" },
+    "failed": {
+      "correction": "Не вдалося виправити"
+    },
     "focusChanged": "Тим часом вікно змінилося, тому результат скопійовано в буфер обміну",
     "noSelection": "Нічого не виділено",
     "noTarget": "Жодне вікно застосунку не має фокусу",
     "resultInClipboard": "Результат у буфері обміну",
     "selectionChanged": "Поки тривала обробка, виділення змінилося, тому результат скопійовано в буфер обміну",
     "terminalSelection": "Виділення в терміналі не можна замінити, тому результат скопійовано в буфер обміну",
-    "unchanged": { "correction": "Помилок не знайдено" },
-    "working": { "correction": "Виправлення…" }
+    "unchanged": {
+      "correction": "Помилок не знайдено"
+    },
+    "working": {
+      "correction": "Виправлення…"
+    }
   },
   "settings": {
     "accessAllow": "Дозволити",
@@ -1364,7 +1374,9 @@
     "dialogRecordingMixedDownInfo": "Ваш голос і співрозмовник зводяться в один канал і звучать в обох вухах. Вимкнено: роздільне стерео (ваш голос у лівому каналі, співрозмовник у правому).",
     "dialogRecordingProcessedInfo": "Приглушує відлуння динаміків у мікрофоні та обмежує різкі піки гучності (як під час розпізнавання мовлення). Вимкнено: звук записується як є, без програмної обробки."
   },
-  "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
+  "shortcuts": {
+    "insertIntoEditor": "Вставити в редактор"
+  },
   "theme": {
     "auto": "Як у системі",
     "dark": "Темна",
@@ -1725,7 +1737,6 @@
     "stopAndExpand": "Зупинити й розгорнути",
     "retryTranslation": "Повторити",
     "channelFailed": "зупинено",
-    "startOptions": "Варіанти запуску",
     "startRecording": "Почати із записом",
     "startRecordingNeedsHistory": "Запис доступний, коли історія зберігається на диск",
     "recording": "Триває запис",
@@ -1746,8 +1757,6 @@
     "ownLanguageDefault": "За замовчуванням ({language})",
     "listen": "Слухати",
     "resume": "Продовжити",
-    "listenRecording": "Слухати із записом",
-    "resumeRecording": "Продовжити із записом",
     "clear": "Очистити",
     "clearTitle": "Очистити розшифровку?",
     "clearMessage": "Історію вимкнено в налаштуваннях. Поточну розшифровку буде втрачено.",
@@ -1756,7 +1765,9 @@
     "clearHintSaved": "Очистити розшифровку (розмову збережено в історії)",
     "clearHintUnsaved": "Очистити розшифровку (історію вимкнено)",
     "sessionResumed": "Сесію відновлено",
-    "sessionResumedRecording": "Запис відновлено"
+    "sessionResumedRecording": "Запис відновлено",
+    "record": "Запис",
+    "recordStopToChangeHint": "Зупиніть, щоб змінити"
   },
   "toolPermissions": {
     "riskRead": "Читання",

@@ -23,7 +23,9 @@
     "voiceScreenshotQuickAiRequest": "Snímek, hlasem na AI",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Přiložit soubor",
     "alertCaution": "Pozor",
@@ -207,7 +209,9 @@
       "deselectAll": "Zrušit výběr",
       "unsupportedCommands": "Nepodporované příkazy"
     },
-    "replyBlocks": { "toolLabel": "Varianty odpovědí" }
+    "replyBlocks": {
+      "toolLabel": "Varianty odpovědí"
+    }
   },
   "commandRun": {
     "cancelled": "Příkaz byl zrušen",
@@ -661,15 +665,21 @@
     "cancelled": "Zrušeno",
     "done": "Hotovo",
     "emptyResult": "Model vrátil prázdný výsledek",
-    "failed": { "correction": "Oprava selhala" },
+    "failed": {
+      "correction": "Oprava selhala"
+    },
     "focusChanged": "Mezitím se změnilo okno, proto byl výsledek zkopírován do schránky",
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
     "resultInClipboard": "Výsledek je ve schránce",
     "selectionChanged": "Výběr se mezitím změnil, proto byl výsledek zkopírován do schránky",
     "terminalSelection": "Výběr v terminálu nelze nahradit, proto byl výsledek zkopírován do schránky",
-    "unchanged": { "correction": "Nenalezeny žádné chyby" },
-    "working": { "correction": "Opravuje se…" }
+    "unchanged": {
+      "correction": "Nenalezeny žádné chyby"
+    },
+    "working": {
+      "correction": "Opravuje se…"
+    }
   },
   "settings": {
     "accessAllow": "Povolit",
@@ -1364,7 +1374,9 @@
     "dialogRecordingMixedDownInfo": "Váš hlas a protistrana se sloučí do jednoho kanálu a zní v obou uších. Vypnuto: oddělené stereo (váš hlas v levém kanálu, protistrana v pravém).",
     "dialogRecordingProcessedInfo": "Potlačuje ozvěnu reproduktorů v mikrofonu a omezuje hlasité špičky (jak slyší rozpoznávání řeči). Vypnuto: zvuk se nahrává tak, jak byl zachycen, bez softwarového zpracování."
   },
-  "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
+  "shortcuts": {
+    "insertIntoEditor": "Vložit do editoru"
+  },
   "theme": {
     "auto": "Podle systému",
     "dark": "Tmavý",
@@ -1725,7 +1737,6 @@
     "stopAndExpand": "Zastavit a rozbalit",
     "retryTranslation": "Zkusit znovu",
     "channelFailed": "zastaveno",
-    "startOptions": "Možnosti spuštění",
     "startRecording": "Spustit s nahráváním",
     "startRecordingNeedsHistory": "Nahrávání vyžaduje historii ukládanou na disk",
     "recording": "Nahrává se",
@@ -1746,8 +1757,6 @@
     "ownLanguageDefault": "Výchozí ({language})",
     "listen": "Poslouchat",
     "resume": "Pokračovat",
-    "listenRecording": "Poslouchat se záznamem",
-    "resumeRecording": "Pokračovat se záznamem",
     "clear": "Vymazat",
     "clearTitle": "Vymazat přepis?",
     "clearMessage": "Historie je v nastavení vypnuta. Aktuální přepis bude ztracen.",
@@ -1756,7 +1765,9 @@
     "clearHintSaved": "Vymazat přepis (konverzace je uložena v historii)",
     "clearHintUnsaved": "Vymazat přepis (historie je vypnuta)",
     "sessionResumed": "Relace obnovena",
-    "sessionResumedRecording": "Záznam obnoven"
+    "sessionResumedRecording": "Záznam obnoven",
+    "record": "Záznam",
+    "recordStopToChangeHint": "Zastavte pro změnu"
   },
   "toolPermissions": {
     "riskRead": "Čtení",

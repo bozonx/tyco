@@ -23,7 +23,9 @@
     "voiceScreenshotQuickAiRequest": "スクリーンショット、音声でAIへ",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "ファイルを添付",
     "alertCaution": "注意",
@@ -207,7 +209,9 @@
       "deselectAll": "すべて選択解除",
       "unsupportedCommands": "サポートされていないコマンド"
     },
-    "replyBlocks": { "toolLabel": "返答ブロック" }
+    "replyBlocks": {
+      "toolLabel": "返答ブロック"
+    }
   },
   "commandRun": {
     "cancelled": "コマンドはキャンセルされました",
@@ -661,15 +665,21 @@
     "cancelled": "キャンセルされました",
     "done": "完了",
     "emptyResult": "モデルが空の結果を返しました",
-    "failed": { "correction": "校正に失敗しました" },
+    "failed": {
+      "correction": "校正に失敗しました"
+    },
     "focusChanged": "その間にアクティブウィンドウが変わったため、結果がクリップボードにコピーされました",
     "noSelection": "何も選択されていません",
     "noTarget": "フォーカスされているアプリケーションウィンドウがありません",
     "resultInClipboard": "結果をクリップボードにコピーしました",
     "selectionChanged": "処理中に選択範囲が変わったため、結果をクリップボードにコピーしました",
     "terminalSelection": "ターミナルの選択範囲は置き換えられないため、結果をクリップボードにコピーしました",
-    "unchanged": { "correction": "修正箇所は見つかりませんでした" },
-    "working": { "correction": "校正中…" }
+    "unchanged": {
+      "correction": "修正箇所は見つかりませんでした"
+    },
+    "working": {
+      "correction": "校正中…"
+    }
   },
   "settings": {
     "accessAllow": "許可",
@@ -1364,7 +1374,9 @@
     "dialogRecordingMixedDownInfo": "自分の声と相手の声が1つのチャンネルに統合され、両耳で聞こえます。オフ時：左右分離ステレオ（自分の声が左チャンネル、相手が右チャンネル）。",
     "dialogRecordingProcessedInfo": "マイクに入り込むスピーカーのエコーを抑え、大きな音量ピークを制限します（音声認識が聞き取る状態）。オフ時：ソフトウェア処理を行わず、そのままの音声が録音されます。"
   },
-  "shortcuts": { "insertIntoEditor": "エディターに挿入" },
+  "shortcuts": {
+    "insertIntoEditor": "エディターに挿入"
+  },
   "theme": {
     "auto": "システム設定に従う",
     "dark": "ダーク",
@@ -1551,7 +1563,11 @@
     "clickToFocus": "クリックして続行",
     "moveOverlay": "ドラッグして移動",
     "cyclePosition": "位置：{position} (Alt+P)",
-    "position": { "center": "中央", "right": "右", "bottomRight": "右下" },
+    "position": {
+      "center": "中央",
+      "right": "右",
+      "bottomRight": "右下"
+    },
     "collapseRecording": "録音バーを折りたたむ",
     "expandRecording": "録音バーを展開"
   },
@@ -1721,7 +1737,6 @@
     "stopAndExpand": "停止して元に戻す",
     "retryTranslation": "再試行",
     "channelFailed": "停止",
-    "startOptions": "開始オプション",
     "startRecording": "録音して開始",
     "startRecordingNeedsHistory": "録音するには履歴をディスクに保存する設定が必要です",
     "recording": "録音中",
@@ -1742,8 +1757,6 @@
     "ownLanguageDefault": "デフォルト（{language}）",
     "listen": "聞き取る",
     "resume": "再開",
-    "listenRecording": "録音しながら聞き取る",
-    "resumeRecording": "録音しながら再開",
     "clear": "クリア",
     "clearTitle": "文字起こしをクリアしますか？",
     "clearMessage": "設定で履歴が無効になっています。現在の文字起こしは失われます。",
@@ -1752,7 +1765,9 @@
     "clearHintSaved": "文字起こしをクリア（会話は履歴に保存されます）",
     "clearHintUnsaved": "文字起こしをクリア（履歴は無効です）",
     "sessionResumed": "セッションを再開しました",
-    "sessionResumedRecording": "録音を再開しました"
+    "sessionResumedRecording": "録音を再開しました",
+    "record": "録音",
+    "recordStopToChangeHint": "変更するには停止してください"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

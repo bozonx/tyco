@@ -23,7 +23,9 @@
     "voiceScreenshotQuickAiRequest": "Скриншот, голосом к ИИ",
     "webhook": "Вебхук"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Прикрепить файл",
     "alertCaution": "Осторожно",
@@ -207,7 +209,9 @@
       "deselectAll": "Снять все",
       "unsupportedCommands": "Неподдерживаемые команды"
     },
-    "replyBlocks": { "toolLabel": "Варианты ответа" }
+    "replyBlocks": {
+      "toolLabel": "Варианты ответа"
+    }
   },
   "commandRun": {
     "cancelled": "Команда отменена",
@@ -661,15 +665,21 @@
     "cancelled": "Отменено",
     "done": "Готово",
     "emptyResult": "Модель вернула пустой результат",
-    "failed": { "correction": "Не удалось исправить текст" },
+    "failed": {
+      "correction": "Не удалось исправить текст"
+    },
     "focusChanged": "Пока шла обработка, окно сменилось, поэтому результат скопирован в буфер обмена",
     "noSelection": "Ничего не выделено",
     "noTarget": "Нет активного окна приложения",
     "resultInClipboard": "Результат в буфере обмена",
     "selectionChanged": "Пока шла обработка, выделение изменилось, поэтому результат скопирован в буфер обмена",
     "terminalSelection": "Выделение в терминале нельзя заменить, поэтому результат скопирован в буфер обмена",
-    "unchanged": { "correction": "Ошибок не найдено" },
-    "working": { "correction": "Исправляю…" }
+    "unchanged": {
+      "correction": "Ошибок не найдено"
+    },
+    "working": {
+      "correction": "Исправляю…"
+    }
   },
   "settings": {
     "accessAllow": "Разрешено",
@@ -1364,7 +1374,9 @@
     "dialogRecordingMixedDownInfo": "Ваш голос и собеседник сводятся в один канал и звучат в обоих ушах. Выключено: раздельное стерео (ваш голос в левом канале, собеседник в правом).",
     "dialogRecordingProcessedInfo": "Приглушает эхо динамиков в микрофоне и ограничивает резкие пики громкости (как при распознавании речи). Выключено: звук записывается как есть, без программной обработки."
   },
-  "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
+  "shortcuts": {
+    "insertIntoEditor": "Вставить в редактор"
+  },
   "theme": {
     "auto": "Как в системе",
     "dark": "Темная",
@@ -1725,7 +1737,6 @@
     "stopAndExpand": "Остановить и развернуть",
     "retryTranslation": "Повторить",
     "channelFailed": "остановлено",
-    "startOptions": "Варианты запуска",
     "startRecording": "Начать с записью",
     "startRecordingNeedsHistory": "Запись доступна, когда история сохраняется на диск",
     "recording": "Идёт запись",
@@ -1746,8 +1757,6 @@
     "ownLanguageDefault": "По умолчанию ({language})",
     "listen": "Слушать",
     "resume": "Продолжить",
-    "listenRecording": "Слушать с записью",
-    "resumeRecording": "Продолжить с записью",
     "clear": "Очистить",
     "clearTitle": "Очистить транскрипт?",
     "clearMessage": "История выключена в настройках. Текущий транскрипт будет удалён безвозвратно.",
@@ -1756,7 +1765,9 @@
     "clearHintSaved": "Очистить транскрипт (разговор сохранён в истории)",
     "clearHintUnsaved": "Очистить транскрипт (история выключена)",
     "sessionResumed": "Сессия возобновлена",
-    "sessionResumedRecording": "Запись возобновлена"
+    "sessionResumedRecording": "Запись возобновлена",
+    "record": "Запись",
+    "recordStopToChangeHint": "Остановите, чтобы изменить"
   },
   "toolPermissions": {
     "riskRead": "Чтение",

@@ -23,7 +23,9 @@
     "voiceScreenshotQuickAiRequest": "截图，语音向 AI",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "添加附件",
     "alertCaution": "小心",
@@ -207,7 +209,9 @@
       "deselectAll": "取消全选",
       "unsupportedCommands": "不支持的命令"
     },
-    "replyBlocks": { "toolLabel": "回复块" }
+    "replyBlocks": {
+      "toolLabel": "回复块"
+    }
   },
   "commandRun": {
     "cancelled": "命令已取消",
@@ -661,15 +665,21 @@
     "cancelled": "已取消",
     "done": "已完成",
     "emptyResult": "模型返回了空结果",
-    "failed": { "correction": "纠错失败" },
+    "failed": {
+      "correction": "纠错失败"
+    },
     "focusChanged": "在此期间活动窗口已更改，结果已复制到剪贴板",
     "noSelection": "未选中任何内容",
     "noTarget": "没有具有焦点的应用程序窗口",
     "resultInClipboard": "结果已复制到剪贴板",
     "selectionChanged": "处理期间选区已改变，因此结果已复制到剪贴板",
     "terminalSelection": "终端中的选区无法替换，因此结果已复制到剪贴板",
-    "unchanged": { "correction": "未发现错误" },
-    "working": { "correction": "正在纠错…" }
+    "unchanged": {
+      "correction": "未发现错误"
+    },
+    "working": {
+      "correction": "正在纠错…"
+    }
   },
   "settings": {
     "accessAllow": "允许",
@@ -1364,7 +1374,9 @@
     "dialogRecordingMixedDownInfo": "您的声音与对方的声音合并为一个声道，两只耳朵都能听到。关闭：分离立体声（您的声音在左声道，对方在右声道）。",
     "dialogRecordingProcessedInfo": "降低麦克风中扬声器的回声，并限制过大的音量峰值（类似语音识别所听到的效果）。关闭：原样录制声音，不进行软件处理。"
   },
-  "shortcuts": { "insertIntoEditor": "插入到编辑器" },
+  "shortcuts": {
+    "insertIntoEditor": "插入到编辑器"
+  },
   "theme": {
     "auto": "跟随系统",
     "dark": "深色",
@@ -1551,7 +1563,11 @@
     "clickToFocus": "点击以继续",
     "moveOverlay": "拖动以移动",
     "cyclePosition": "位置：{position} (Alt+P)",
-    "position": { "center": "居中", "right": "右侧", "bottomRight": "右下角" },
+    "position": {
+      "center": "居中",
+      "right": "右侧",
+      "bottomRight": "右下角"
+    },
     "collapseRecording": "收起录音栏",
     "expandRecording": "展开录音栏"
   },
@@ -1721,7 +1737,6 @@
     "stopAndExpand": "停止并展开",
     "retryTranslation": "重试",
     "channelFailed": "已停止",
-    "startOptions": "启动选项",
     "startRecording": "开始并录音",
     "startRecordingNeedsHistory": "录音需要将历史记录保存到磁盘",
     "recording": "正在录音",
@@ -1742,8 +1757,6 @@
     "ownLanguageDefault": "默认（{language}）",
     "listen": "聆听",
     "resume": "继续",
-    "listenRecording": "录音并聆听",
-    "resumeRecording": "录音并继续",
     "clear": "清空",
     "clearTitle": "清空转录？",
     "clearMessage": "历史记录已在设置中关闭。当前转录内容将丢失。",
@@ -1752,7 +1765,9 @@
     "clearHintSaved": "清空转录（对话已保存至历史记录）",
     "clearHintUnsaved": "清空转录（历史记录已关闭）",
     "sessionResumed": "会话已恢复",
-    "sessionResumedRecording": "录音已恢复"
+    "sessionResumedRecording": "录音已恢复",
+    "record": "录音",
+    "recordStopToChangeHint": "停止以更改"
   },
   "toolPermissions": {
     "riskRead": "读取",

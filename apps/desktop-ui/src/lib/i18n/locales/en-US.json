@@ -23,7 +23,9 @@
     "voiceScreenshotQuickAiRequest": "Screenshot, voice to AI",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Attach file",
     "alertCaution": "Caution",
@@ -207,7 +209,9 @@
       "deselectAll": "Deselect all",
       "unsupportedCommands": "Unsupported commands"
     },
-    "replyBlocks": { "toolLabel": "Reply Blocks" }
+    "replyBlocks": {
+      "toolLabel": "Reply Blocks"
+    }
   },
   "commandRun": {
     "cancelled": "The command was cancelled",
@@ -661,15 +665,21 @@
     "cancelled": "Cancelled",
     "done": "Done",
     "emptyResult": "The model returned an empty result",
-    "failed": { "correction": "Correction failed" },
+    "failed": {
+      "correction": "Correction failed"
+    },
     "focusChanged": "The window changed meanwhile, so the result was copied to the clipboard",
     "noSelection": "Nothing is selected",
     "noTarget": "No application window has the focus",
     "resultInClipboard": "The result is in the clipboard",
     "selectionChanged": "The selection changed meanwhile, so the result was copied to the clipboard",
     "terminalSelection": "Text selected in a terminal cannot be replaced, so the result was copied to the clipboard",
-    "unchanged": { "correction": "No mistakes found" },
-    "working": { "correction": "Correcting…" }
+    "unchanged": {
+      "correction": "No mistakes found"
+    },
+    "working": {
+      "correction": "Correcting…"
+    }
   },
   "settings": {
     "accessAllow": "Allow",
@@ -1364,7 +1374,9 @@
     "dialogRecordingMixedDownInfo": "Your voice and the other side are mixed into one channel and heard in both ears. Off: split stereo (your voice in the left channel, the other side in the right).",
     "dialogRecordingProcessedInfo": "Muffles speaker echo in the microphone and limits loud volume peaks (the way speech recognition hears it). Off: sound is recorded as captured, without software processing."
   },
-  "shortcuts": { "insertIntoEditor": "Insert into editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Insert into editor"
+  },
   "theme": {
     "auto": "System default",
     "dark": "Dark",
@@ -1725,7 +1737,6 @@
     "stopAndExpand": "Stop and expand",
     "retryTranslation": "Try again",
     "channelFailed": "stopped",
-    "startOptions": "Start options",
     "startRecording": "Start recording",
     "startRecordingNeedsHistory": "Recording needs the history saved to disk",
     "recording": "Recording",
@@ -1746,8 +1757,6 @@
     "ownLanguageDefault": "Default ({language})",
     "listen": "Listen",
     "resume": "Resume",
-    "listenRecording": "Listen with recording",
-    "resumeRecording": "Resume with recording",
     "clear": "Clear",
     "clearTitle": "Clear transcript?",
     "clearMessage": "History is turned off in settings. The current transcript will be lost.",
@@ -1756,7 +1765,9 @@
     "clearHintSaved": "Clear transcript (conversation is saved to history)",
     "clearHintUnsaved": "Clear transcript (history is turned off)",
     "sessionResumed": "Session resumed",
-    "sessionResumedRecording": "Recording resumed"
+    "sessionResumedRecording": "Recording resumed",
+    "record": "Record",
+    "recordStopToChangeHint": "Stop to change"
   },
   "toolPermissions": {
     "riskRead": "Reads",

@@ -23,7 +23,9 @@
     "voiceScreenshotQuickAiRequest": "სკრინშოტი, ხმით AI-ს",
     "webhook": "ვებჰუკი"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "ფაილის მიმაგრება",
     "alertCaution": "ყურადღება",
@@ -207,7 +209,9 @@
       "deselectAll": "არჩევის გაუქმება",
       "unsupportedCommands": "მხარდაუჭერელი ბრძანებები"
     },
-    "replyBlocks": { "toolLabel": "პასუხის ბლოკები" }
+    "replyBlocks": {
+      "toolLabel": "პასუხის ბლოკები"
+    }
   },
   "commandRun": {
     "cancelled": "ბრძანება გაუქმდა",
@@ -661,15 +665,21 @@
     "cancelled": "გაუქმებულია",
     "done": "მზადაა",
     "emptyResult": "მოდელმა ცარიელი შედეგი დააბრუნა",
-    "failed": { "correction": "შესწორება ვერ მოხერხდა" },
+    "failed": {
+      "correction": "შესწორება ვერ მოხერხდა"
+    },
     "focusChanged": "ამასობაში ფანჯარა შეიცვალა, ამიტომ შედეგი ბუფერში დაკოპირდა",
     "noSelection": "არაფერია მონიშნული",
     "noTarget": "აპის არცერთ ფანჯარას ფოკუსი არ აქვს",
     "resultInClipboard": "შედეგი ბუფერშია",
     "selectionChanged": "ამასობაში მონიშვნა შეიცვალა, ამიტომ შედეგი ბუფერში დაკოპირდა",
     "terminalSelection": "ტერმინალში მონიშნული ტექსტის ჩანაცვლება შეუძლებელია, ამიტომ შედეგი ბუფერში დაკოპირდა",
-    "unchanged": { "correction": "შეცდომები ვერ მოიძებნა" },
-    "working": { "correction": "სწორდება…" }
+    "unchanged": {
+      "correction": "შეცდომები ვერ მოიძებნა"
+    },
+    "working": {
+      "correction": "სწორდება…"
+    }
   },
   "settings": {
     "accessAllow": "დაშვება",
@@ -1364,7 +1374,9 @@
     "dialogRecordingMixedDownInfo": "თქვენი ხმა და თანამოსაუბრე ერთიანდება ერთ არხში და ისმის ორივე ყურში. გამორთული: განცალკევებული სტერეო (თქვენი ხმა მარცხენა არხში, თანამოსაუბრის მარჯვენაში).",
     "dialogRecordingProcessedInfo": "ახშობს დინამიკების ექოს მიკროფონში და ზღუდავს ხმის მკვეთრ პიკებს (როგორც მეტყველების ამოცნობას ესმის). გამორთული: ხმა იწერება პირვანდელი სახით, პროგრამული დამუშავების გარეშე."
   },
-  "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
+  "shortcuts": {
+    "insertIntoEditor": "რედაქტორში ჩასმა"
+  },
   "theme": {
     "auto": "სისტემის მიხედვით",
     "dark": "მუქი",
@@ -1725,7 +1737,6 @@
     "stopAndExpand": "გაჩერება და გაშლა",
     "retryTranslation": "ხელახლა ცდა",
     "channelFailed": "გაჩერდა",
-    "startOptions": "გაშვების პარამეტრები",
     "startRecording": "ჩაწერით დაწყება",
     "startRecordingNeedsHistory": "ჩაწერისთვის საჭიროა ისტორიის დისკზე შენახვა",
     "recording": "მიმდინარეობს ჩაწერა",
@@ -1746,8 +1757,6 @@
     "ownLanguageDefault": "ნაგულისხმევი ({language})",
     "listen": "მოსმენა",
     "resume": "გაგრძელება",
-    "listenRecording": "მოსმენა ჩაწერით",
-    "resumeRecording": "გაგრძელება ჩაწერით",
     "clear": "გასუფთავება",
     "clearTitle": "გასუფთავდეს ჩანაწერი?",
     "clearMessage": "ისტორია გამორთულია პარამეტრებში. მიმდინარე ჩანაწერი დაიკარგება.",
@@ -1756,7 +1765,9 @@
     "clearHintSaved": "ჩანაწერის გასუფთავება (საუბარი შენახულია ისტორიაში)",
     "clearHintUnsaved": "ჩანაწერის გასუფთავება (ისტორია გამორთულია)",
     "sessionResumed": "სესია განახლდა",
-    "sessionResumedRecording": "ჩაწერა განახლდა"
+    "sessionResumedRecording": "ჩაწერა განახლდა",
+    "record": "ჩაწერა",
+    "recordStopToChangeHint": "შეცვლისთვის შეაჩერეთ"
   },
   "toolPermissions": {
     "riskRead": "კითხვა",

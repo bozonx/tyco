@@ -23,7 +23,9 @@
     "voiceScreenshotQuickAiRequest": "Bildschirmfoto, Sprache an KI",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Datei anhängen",
     "alertCaution": "Vorsicht",
@@ -207,7 +209,9 @@
       "deselectAll": "Auswahl aufheben",
       "unsupportedCommands": "Nicht unterstützte Befehle"
     },
-    "replyBlocks": { "toolLabel": "Antwortblöcke" }
+    "replyBlocks": {
+      "toolLabel": "Antwortblöcke"
+    }
   },
   "commandRun": {
     "cancelled": "Der Befehl wurde abgebrochen",
@@ -661,15 +665,21 @@
     "cancelled": "Abgebrochen",
     "done": "Fertig",
     "emptyResult": "Das Modell hat ein leeres Ergebnis geliefert",
-    "failed": { "correction": "Korrektur fehlgeschlagen" },
+    "failed": {
+      "correction": "Korrektur fehlgeschlagen"
+    },
     "focusChanged": "Das Fenster hat sich inzwischen geändert, daher wurde das Ergebnis in die Zwischenablage kopiert",
     "noSelection": "Nichts ausgewählt",
     "noTarget": "Kein Anwendungsfenster hat den Fokus",
     "resultInClipboard": "Das Ergebnis ist in der Zwischenablage",
     "selectionChanged": "Die Auswahl hat sich inzwischen geändert, daher wurde das Ergebnis in die Zwischenablage kopiert",
     "terminalSelection": "Eine Auswahl im Terminal kann nicht ersetzt werden, daher wurde das Ergebnis in die Zwischenablage kopiert",
-    "unchanged": { "correction": "Keine Fehler gefunden" },
-    "working": { "correction": "Wird korrigiert…" }
+    "unchanged": {
+      "correction": "Keine Fehler gefunden"
+    },
+    "working": {
+      "correction": "Wird korrigiert…"
+    }
   },
   "settings": {
     "accessAllow": "Zulassen",
@@ -1364,7 +1374,9 @@
     "dialogRecordingMixedDownInfo": "Ihre Stimme und die Gegenseite werden in einen Kanal gemischt und auf beiden Ohren gehört. Aus: getrenntes Stereo (Ihre Stimme im linken Kanal, die Gegenseite im rechten).",
     "dialogRecordingProcessedInfo": "Dämpft das Echo der Lautsprecher im Mikrofon und begrenzt laute Pegelspitzen (wie bei der Spracherkennung). Aus: Der Ton wird unverändert ohne Softwareverarbeitung aufgenommen."
   },
-  "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
+  "shortcuts": {
+    "insertIntoEditor": "In den Editor einfügen"
+  },
   "theme": {
     "auto": "Wie im System",
     "dark": "Dunkel",
@@ -1725,7 +1737,6 @@
     "stopAndExpand": "Beenden und erweitern",
     "retryTranslation": "Erneut versuchen",
     "channelFailed": "gestoppt",
-    "startOptions": "Startoptionen",
     "startRecording": "Mit Aufnahme starten",
     "startRecordingNeedsHistory": "Aufnehmen ist nur möglich, wenn der Verlauf auf dem Datenträger gespeichert wird",
     "recording": "Aufnahme läuft",
@@ -1746,8 +1757,6 @@
     "ownLanguageDefault": "Standard ({language})",
     "listen": "Anhören",
     "resume": "Fortsetzen",
-    "listenRecording": "Mit Aufnahme anhören",
-    "resumeRecording": "Mit Aufnahme fortsetzen",
     "clear": "Löschen",
     "clearTitle": "Transkript löschen?",
     "clearMessage": "Der Verlauf ist in den Einstellungen deaktiviert. Das aktuelle Transkript geht verloren.",
@@ -1756,7 +1765,9 @@
     "clearHintSaved": "Transkript löschen (Unterhaltung ist im Verlauf gespeichert)",
     "clearHintUnsaved": "Transkript löschen (Verlauf ist deaktiviert)",
     "sessionResumed": "Sitzung fortgesetzt",
-    "sessionResumedRecording": "Aufnahme fortgesetzt"
+    "sessionResumedRecording": "Aufnahme fortgesetzt",
+    "record": "Aufnahme",
+    "recordStopToChangeHint": "Anhalten zum Ändern"
   },
   "toolPermissions": {
     "riskRead": "Liest",

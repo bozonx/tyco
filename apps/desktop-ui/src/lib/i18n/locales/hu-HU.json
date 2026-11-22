@@ -23,7 +23,9 @@
     "voiceScreenshotQuickAiRequest": "Képernyőkép, hang az MI-nek",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Fájl csatolása",
     "alertCaution": "Vigyázat",
@@ -207,7 +209,9 @@
       "deselectAll": "Kijelölés törlése",
       "unsupportedCommands": "Nem támogatott parancsok"
     },
-    "replyBlocks": { "toolLabel": "Válaszblokkok" }
+    "replyBlocks": {
+      "toolLabel": "Válaszblokkok"
+    }
   },
   "commandRun": {
     "cancelled": "A parancs megszakítva",
@@ -661,15 +665,21 @@
     "cancelled": "Megszakítva",
     "done": "Kész",
     "emptyResult": "A modell üres eredményt adott",
-    "failed": { "correction": "A javítás sikertelen" },
+    "failed": {
+      "correction": "A javítás sikertelen"
+    },
     "focusChanged": "Közben megváltozott az ablak, ezért az eredmény a vágólapra került",
     "noSelection": "Nincs kijelölés",
     "noTarget": "Egyik alkalmazásablak sincs fókuszban",
     "resultInClipboard": "Az eredmény a vágólapon van",
     "selectionChanged": "A kijelölés időközben megváltozott, ezért az eredmény a vágólapra került",
     "terminalSelection": "A terminálban lévő kijelölés nem cserélhető le, ezért az eredmény a vágólapra került",
-    "unchanged": { "correction": "Nem található hiba" },
-    "working": { "correction": "Javítás…" }
+    "unchanged": {
+      "correction": "Nem található hiba"
+    },
+    "working": {
+      "correction": "Javítás…"
+    }
   },
   "settings": {
     "accessAllow": "Engedélyezés",
@@ -1364,7 +1374,9 @@
     "dialogRecordingMixedDownInfo": "Az Ön hangja és a partner hangja egyetlen csatornába keveredik, és mindkét fülben hallható. Kikapcsolva: osztott sztereó (az Ön hangja a bal, a partneré a jobb csatornában).",
     "dialogRecordingProcessedInfo": "Csillapítja a hangszórók visszhangját a mikrofonban, és korlátozza a hangerőcsúcsokat (ahogy a beszédfelismerés hallja). Kikapcsolva: a hang szoftveres feldolgozás nélkül, nyersen rögzül."
   },
-  "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
+  "shortcuts": {
+    "insertIntoEditor": "Beillesztés a szerkesztőbe"
+  },
   "theme": {
     "auto": "Rendszer szerint",
     "dark": "Sötét",
@@ -1725,7 +1737,6 @@
     "stopAndExpand": "Leállítás és kibontás",
     "retryTranslation": "Újra",
     "channelFailed": "leállt",
-    "startOptions": "Indítási beállítások",
     "startRecording": "Indítás felvétellel",
     "startRecordingNeedsHistory": "A felvételhez lemezre mentett előzmények szükségesek",
     "recording": "Felvétel folyamatban",
@@ -1746,8 +1757,6 @@
     "ownLanguageDefault": "Alapértelmezett ({language})",
     "listen": "Hallgatás",
     "resume": "Folytatás",
-    "listenRecording": "Hallgatás rögzítéssel",
-    "resumeRecording": "Folytatás rögzítéssel",
     "clear": "Törlés",
     "clearTitle": "Törli az átiratot?",
     "clearMessage": "Az előzmények ki vannak kapcsolva a beállításokban. Az aktuális átirat elvész.",
@@ -1756,7 +1765,9 @@
     "clearHintSaved": "Átirat törlése (a beszélgetés elmentve az előzményekbe)",
     "clearHintUnsaved": "Átirat törlése (az előzmények ki vannak kapcsolva)",
     "sessionResumed": "Munkamenet folytatva",
-    "sessionResumedRecording": "Rögzítés folytatva"
+    "sessionResumedRecording": "Rögzítés folytatva",
+    "record": "Felvétel",
+    "recordStopToChangeHint": "Állítsa le a módosításhoz"
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

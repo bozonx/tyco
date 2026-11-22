@@ -1,28 +1,62 @@
 <template>
   <div class="dialog-toolbar">
-    <!-- Listen never records; recording is asked for in its menu -->
-    <div v-if="isIdle" class="dialog-toolbar-actions">
-      <div class="dialog-toolbar-split">
-        <Button
-          class="dialog-toolbar-run"
-          variant="primary"
-          size="sm"
-          :icon="isEmpty ? 'mdi:play' : 'mdi:play-pause'"
-          @click="handleRun"
-          >{{ isEmpty ? t('dialog.listen') : t('dialog.resume') }}</Button
-        >
-        <DropdownMenu
-          class="dialog-toolbar-start-menu"
-          square
-          variant="primary"
-          icon="mdi:chevron-down"
-          hide-chevron
-          :title="t('dialog.startOptions')"
-          :items="startItems"
-        />
-      </div>
+    <div class="dialog-toolbar-actions">
       <Button
-        v-if="!isEmpty"
+        class="dialog-toolbar-record-toggle"
+        :class="{ 'is-running': !isIdle }"
+        :variant="dialog.isRecordEnabled ? 'neutral' : 'ghost'"
+        size="sm"
+        :tone="!dialog.isRecordEnabled ? 'muted' : undefined"
+        :aria-pressed="dialog.isRecordEnabled"
+        :disabled="isRecordToggleDisabled"
+        :title="recordToggleTitle"
+        @click="handleToggleRecord"
+      >
+        <template v-if="isRecordingRunning">
+          <span
+            class="dialog-record-dot dialog-record-dot-pulsing"
+            aria-hidden="true"
+          />
+          <span class="sr-only">{{ t('dialog.recording') }}</span>
+          <span class="dialog-record-rec">REC</span>
+          <span class="dialog-record-timer">{{ elapsed }}</span>
+        </template>
+        <template v-else-if="dialog.isRecordEnabled">
+          <span class="dialog-record-dot" aria-hidden="true" />
+          <span>{{ t('dialog.record') }}</span>
+        </template>
+        <template v-else>
+          <AppIcon
+            icon="mdi:record-circle-outline"
+            size="md"
+            class="shrink-0"
+          />
+          <span>{{ t('dialog.record') }}</span>
+        </template>
+      </Button>
+
+      <Button
+        v-if="isIdle"
+        class="dialog-toolbar-run"
+        variant="primary"
+        size="sm"
+        :icon="isEmpty ? 'mdi:play' : 'mdi:play-pause'"
+        @click="handleRun"
+        >{{ isEmpty ? t('dialog.listen') : t('dialog.resume') }}</Button
+      >
+      <Button
+        v-else
+        class="dialog-toolbar-run"
+        size="sm"
+        icon="mdi:stop"
+        :loading="isStopping"
+        :disabled="isStopping"
+        @click="dialog.stop()"
+        >{{ isStopping ? t('dialog.stopping') : t('dialog.stop') }}</Button
+      >
+
+      <Button
+        v-if="isIdle && !isEmpty"
         class="dialog-toolbar-clear"
         variant="ghost"
         size="sm"
@@ -34,16 +68,7 @@
         >{{ t('dialog.clear') }}</Button
       >
     </div>
-    <Button
-      v-else
-      class="dialog-toolbar-run"
-      size="sm"
-      icon="mdi:stop"
-      :loading="isStopping"
-      :disabled="isStopping"
-      @click="dialog.stop()"
-      >{{ isStopping ? t('dialog.stopping') : t('dialog.stop') }}</Button
-    >
+
     <!-- the source is chosen before the dialog; while it runs, its sound -->
     <SegmentedControl
       v-if="isIdle"
@@ -57,11 +82,6 @@
       @update:model-value="(source) => dialog.updateConfig({ source })"
     />
     <div v-else class="dialog-toolbar-levels">
-      <DialogRecordingIndicator
-        v-if="dialog.recording"
-        :started-at-ms="dialog.recording.startedAtMs"
-        :label="t('dialog.recording')"
-      />
       <DialogLevel
         v-if="dialog.hasMicrophone"
         icon="mdi:microphone"
@@ -124,9 +144,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { formatRecordingElapsed } from '../../lib/dialog/dialog-recording'
 import type { DialogSide } from '../../lib/dialog/dialog-transcript'
 import type { ControlOption } from '../../lib/ui/control-option'
 import { useDesktopStore } from '../../stores/desktop'
@@ -139,7 +160,6 @@ import IconButton from '../common/IconButton.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import DialogLanguageRoute from './DialogLanguageRoute.vue'
 import DialogLevel from './DialogLevel.vue'
-import DialogRecordingIndicator from './DialogRecordingIndicator.vue'
 import type { DialogSource } from '@tyco/shared'
 
 const dialog = useDialogStore()
@@ -158,30 +178,74 @@ const isRecordingNoticeOpen = ref(false)
 const canRecord = computed(
   () => desktopStore.userConfig.editor.history.storage === 'disk'
 )
-const startItems = computed<DropdownMenuItem[]>(() => {
-  const label = isEmpty.value
-    ? t('dialog.listenRecording')
-    : t('dialog.resumeRecording')
-  return [
-    {
-      label: canRecord.value ? label : t('dialog.startRecordingNeedsHistory'),
-      icon: 'mdi:record-circle-outline',
-      disabled: !canRecord.value,
-      action: handleStartRecording,
-    },
-  ]
+
+const isRecordToggleDisabled = computed(
+  () => !canRecord.value || !isIdle.value
+)
+
+const recordToggleTitle = computed(() => {
+  if (!canRecord.value) return t('dialog.startRecordingNeedsHistory')
+  if (!isIdle.value) return t('dialog.recordStopToChangeHint')
+  return undefined
 })
 
-function handleRun() {
-  void dialog.start()
+const isRecordingRunning = computed(
+  () => !isIdle.value && Boolean(dialog.recording)
+)
+
+const now = ref(Date.now())
+let recordTimer: ReturnType<typeof setInterval> | undefined
+
+watch(
+  () => dialog.recording?.startedAtMs,
+  (startedAt) => {
+    if (startedAt) {
+      now.value = Date.now()
+      if (!recordTimer) {
+        recordTimer = setInterval(() => {
+          now.value = Date.now()
+        }, 1000)
+      }
+    } else if (recordTimer) {
+      clearInterval(recordTimer)
+      recordTimer = undefined
+    }
+  },
+  { immediate: true }
+)
+
+onBeforeUnmount(() => {
+  if (recordTimer) clearInterval(recordTimer)
+})
+
+const elapsed = computed(() => {
+  const startedAt = dialog.recording?.startedAtMs
+  if (!startedAt) return ''
+  return formatRecordingElapsed(now.value - startedAt)
+})
+
+function handleToggleRecord() {
+  if (isRecordToggleDisabled.value) return
+
+  if (!dialog.isRecordEnabled) {
+    if (dialog.config.isRecordingNoticeAcknowledged) {
+      dialog.isRecordEnabled = true
+    } else {
+      isRecordingNoticeOpen.value = true
+    }
+  } else {
+    dialog.isRecordEnabled = false
+  }
 }
 
-function handleStartRecording() {
-  if (dialog.config.isRecordingNoticeAcknowledged) {
-    void dialog.start({ isRecording: true })
-  } else {
-    isRecordingNoticeOpen.value = true
-  }
+async function confirmRecordingNotice() {
+  isRecordingNoticeOpen.value = false
+  await dialog.acknowledgeRecordingNotice()
+  dialog.isRecordEnabled = true
+}
+
+function handleRun() {
+  void dialog.start({ isRecording: dialog.isRecordEnabled && canRecord.value })
 }
 
 function handleClear() {
@@ -195,12 +259,6 @@ function handleClear() {
 function confirmClear() {
   isClearConfirmOpen.value = false
   void dialog.clear()
-}
-
-async function confirmRecordingNotice() {
-  isRecordingNoticeOpen.value = false
-  await dialog.acknowledgeRecordingNotice()
-  await dialog.start({ isRecording: true })
 }
 
 const sourceOptions = computed<ControlOption<DialogSource>[]>(() => [
@@ -296,23 +354,65 @@ function levelLabel(side: DialogSide) {
   gap: var(--space-xs);
 }
 
-/* Start and its menu read as one button */
-.dialog-toolbar-split {
-  display: flex;
-  align-items: stretch;
-}
-
-.dialog-toolbar-split > .dialog-toolbar-run {
+.dialog-toolbar-record-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
   min-width: 5.5rem;
-  border-start-end-radius: 0;
-  border-end-end-radius: 0;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
 }
 
-.dialog-toolbar-start-menu :deep(button) {
-  border-start-start-radius: 0;
-  border-end-start-radius: 0;
-  border-inline-start: 1px solid
-    color-mix(in oklab, var(--color-primary-content) 25%, transparent);
+.dialog-toolbar-record-toggle:disabled {
+  pointer-events: auto;
+  cursor: not-allowed;
+}
+
+.dialog-toolbar-record-toggle.is-running {
+  cursor: default;
+  opacity: 1;
+}
+
+.dialog-toolbar-record-toggle.is-running:is(:disabled, .btn-disabled) {
+  color: var(--color-base-content);
+  --btn-bg: var(--color-base-200);
+  --btn-border: var(--app-border-subtle);
+}
+
+.dialog-record-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-error);
+  flex-shrink: 0;
+}
+
+.dialog-record-dot-pulsing {
+  animation: dialog-record-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes dialog-record-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-record-dot-pulsing {
+    animation: none;
+  }
+}
+
+.dialog-record-rec {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-size: var(--text-caption);
+  color: var(--color-error);
+}
+
+.dialog-record-timer {
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-caption);
 }
 
 .dialog-toolbar-levels {

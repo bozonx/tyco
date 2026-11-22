@@ -96,6 +96,8 @@ export const useDialogStore = defineStore('dialog', () => {
   const hasMicrophone = ref(config.value.source === 'microphoneAndSystem')
   /** The file the running session is recorded to; none: not recorded */
   const recording = ref<DialogRecordingState>()
+  /** Whether the next session run will be recorded to an audio file */
+  const isRecordEnabled = ref(false)
 
   const turns = computed(() => buildDialogTurns(segments.value))
   const feedItems = computed<DialogFeedItem[]>(() =>
@@ -190,6 +192,7 @@ export const useDialogStore = defineStore('dialog', () => {
                 'dialog'
               )
               recording.value = undefined
+              isRecordEnabled.value = false
               errorText.value = translate('dialog.recordingFailed')
               canFixInSettings.value = false
               if (isRecordingLinked)
@@ -220,11 +223,13 @@ export const useDialogStore = defineStore('dialog', () => {
     onStatus: (next) => {
       if (next === 'running') {
         sessionStartedAtMs = Date.now()
-        if (recordingFile && !isRecordingFailedEarly)
+        if (recordingFile && !isRecordingFailedEarly) {
           recording.value = {
             file: recordingFile,
             startedAtMs: sessionStartedAtMs,
           }
+          isRecordEnabled.value = true
+        }
         isRecordingLinked = Boolean(recordingFile)
         if (segments.value.length === 0) {
           sessionBreaks.value = []
@@ -331,7 +336,7 @@ export const useDialogStore = defineStore('dialog', () => {
 
   /**
    * Starts or resumes a dialog session. `isRecording`: whether this run is also
-   * recorded to an audio file.
+   * recorded to an audio file. If omitted, uses `isRecordEnabled.value`.
    */
   async function start(options: { isRecording?: boolean } = {}) {
     if (isActive.value || isPreparing) return
@@ -339,7 +344,8 @@ export const useDialogStore = defineStore('dialog', () => {
     errorText.value = ''
     canFixInSettings.value = false
     for (const side of ['me', 'remote'] as const) delete channelStatus[side]
-    isRecordingRequested = options.isRecording === true
+    isRecordingRequested = options.isRecording ?? isRecordEnabled.value
+    isRecordEnabled.value = isRecordingRequested
     recordingFile = undefined
     isRecordingFailedEarly = false
     isRecordingLinked = false
@@ -370,6 +376,7 @@ export const useDialogStore = defineStore('dialog', () => {
     sessionBreaks.value = []
     errorText.value = ''
     canFixInSettings.value = false
+    isRecordEnabled.value = false
   }
 
   async function stop() {
@@ -448,6 +455,7 @@ export const useDialogStore = defineStore('dialog', () => {
   watch(
     () => desktopStore.userConfig.editor.history.storage === 'disk',
     (isOnDisk) => {
+      if (!isOnDisk) isRecordEnabled.value = false
       if (isOnDisk || !recording.value) return
       errorText.value = translate('dialog.recordingNotInHistory')
       canFixInSettings.value = false
@@ -549,6 +557,7 @@ export const useDialogStore = defineStore('dialog', () => {
     isSubtitlesShown,
     hasMicrophone,
     recording,
+    isRecordEnabled,
     start,
     clear,
     stop,

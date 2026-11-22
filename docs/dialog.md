@@ -101,12 +101,13 @@ entries and is deleted the same way, together with its recordings.
 
 ## Recording the call
 
-The arrow next to **Listen** (or **Resume**) offers **Listen with recording**
-(or **Resume with recording**): the conversation is transcribed as usual and
-its sound is also saved to a file. **Listen** itself never records. Resuming
-with recording appends a new audio file to the same conversation in history. The first time, TyCo reminds you to tell the other person
-before you record a conversation with them; **Got it** starts the recording,
-**Cancel** starts nothing. Recording is offered only while the history is
+Next to **Listen** (or **Resume**), the **Record** toggle button turns audio recording on or off:
+the conversation is transcribed as usual and its sound is also saved to an audio file.
+**Listen** starts listening with or without recording, depending on whether the **Record**
+toggle is enabled. While a session is paused, the toggle remains in the state it was in, so
+**Resume** continues with that setting (and you can toggle recording before resuming).
+The first time you turn on recording, TyCo reminds you to tell the other person
+before you record a conversation with them; **Got it** enables recording. Recording is available only while the history is
 saved to disk (**Settings → History**): a recording belongs to its history
 entry.
 

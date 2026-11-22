@@ -23,7 +23,9 @@
     "voiceScreenshotQuickAiRequest": "Captură, voce către IA",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Atașează un fișier",
     "alertCaution": "Atenție",
@@ -207,7 +209,9 @@
       "deselectAll": "Deselectează tot",
       "unsupportedCommands": "Comenzi neacceptate"
     },
-    "replyBlocks": { "toolLabel": "Blocuri de răspuns" }
+    "replyBlocks": {
+      "toolLabel": "Blocuri de răspuns"
+    }
   },
   "commandRun": {
     "cancelled": "Comanda a fost anulată",
@@ -661,15 +665,21 @@
     "cancelled": "Anulat",
     "done": "Gata",
     "emptyResult": "Modelul a returnat un rezultat gol",
-    "failed": { "correction": "Corectarea a eșuat" },
+    "failed": {
+      "correction": "Corectarea a eșuat"
+    },
     "focusChanged": "Între timp fereastra s-a schimbat, așa că rezultatul a fost copiat în clipboard",
     "noSelection": "Nu este selectat nimic",
     "noTarget": "Nicio fereastră de aplicație nu are focusul",
     "resultInClipboard": "Rezultatul este în clipboard",
     "selectionChanged": "Între timp selecția s-a schimbat, așa că rezultatul a fost copiat în clipboard",
     "terminalSelection": "O selecție dintr-un terminal nu poate fi înlocuită, așa că rezultatul a fost copiat în clipboard",
-    "unchanged": { "correction": "Nu s-au găsit greșeli" },
-    "working": { "correction": "Se corectează…" }
+    "unchanged": {
+      "correction": "Nu s-au găsit greșeli"
+    },
+    "working": {
+      "correction": "Se corectează…"
+    }
   },
   "settings": {
     "accessAllow": "Permite",
@@ -1364,7 +1374,9 @@
     "dialogRecordingMixedDownInfo": "Vocea dvs. și interlocutorul sunt combinate într-un singur canal și se aud în ambele urechi. Dezactivat: stereo separat (vocea dvs. în canalul stâng, interlocutorul în cel drept).",
     "dialogRecordingProcessedInfo": "Atenuează ecoul difuzoarelor în microfon și limitează vârfurile mari de volum (așa cum aude recunoașterea vocală). Dezactivat: sunetul este înregistrat brut, fără procesare software."
   },
-  "shortcuts": { "insertIntoEditor": "Inserează în editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserează în editor"
+  },
   "theme": {
     "auto": "Ca în sistem",
     "dark": "Întunecată",
@@ -1725,7 +1737,6 @@
     "stopAndExpand": "Oprește și extinde",
     "retryTranslation": "Reîncearcă",
     "channelFailed": "oprit",
-    "startOptions": "Opțiuni de pornire",
     "startRecording": "Pornește cu înregistrare",
     "startRecordingNeedsHistory": "Înregistrarea necesită istoricul salvat pe disc",
     "recording": "Se înregistrează",
@@ -1746,8 +1757,6 @@
     "ownLanguageDefault": "Implicit ({language})",
     "listen": "Ascultă",
     "resume": "Reia",
-    "listenRecording": "Ascultă cu înregistrare",
-    "resumeRecording": "Reia cu înregistrare",
     "clear": "Șterge",
     "clearTitle": "Ștergeți transcrierea?",
     "clearMessage": "Istoricul este dezactivat în setări. Transcrierea curentă se va pierde.",
@@ -1756,7 +1765,9 @@
     "clearHintSaved": "Ștergeți transcrierea (conversația este salvată în istoric)",
     "clearHintUnsaved": "Ștergeți transcrierea (istoricul este dezactivat)",
     "sessionResumed": "Sesiune reluată",
-    "sessionResumedRecording": "Înregistrare reluată"
+    "sessionResumedRecording": "Înregistrare reluată",
+    "record": "Înregistrare",
+    "recordStopToChangeHint": "Opriți pentru a modifica"
   },
   "toolPermissions": {
     "riskRead": "Citire",

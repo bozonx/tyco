@@ -23,7 +23,9 @@
     "voiceScreenshotQuickAiRequest": "Captura, voz a IA",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Adjuntar archivo",
     "alertCaution": "Precaución",
@@ -207,7 +209,9 @@
       "deselectAll": "Deseleccionar todo",
       "unsupportedCommands": "Comandos no compatibles"
     },
-    "replyBlocks": { "toolLabel": "Bloques de respuesta" }
+    "replyBlocks": {
+      "toolLabel": "Bloques de respuesta"
+    }
   },
   "commandRun": {
     "cancelled": "El comando se ha cancelado",
@@ -661,15 +665,21 @@
     "cancelled": "Cancelado",
     "done": "Listo",
     "emptyResult": "El modelo devolvió un resultado vacío",
-    "failed": { "correction": "La corrección falló" },
+    "failed": {
+      "correction": "La corrección falló"
+    },
     "focusChanged": "La ventana cambió mientras tanto, así que el resultado se copió al portapapeles",
     "noSelection": "No hay nada seleccionado",
     "noTarget": "Ninguna ventana de aplicación tiene el foco",
     "resultInClipboard": "El resultado está en el portapapeles",
     "selectionChanged": "La selección cambió mientras tanto, así que el resultado se copió al portapapeles",
     "terminalSelection": "Una selección en un terminal no se puede reemplazar, así que el resultado se copió al portapapeles",
-    "unchanged": { "correction": "No se encontraron errores" },
-    "working": { "correction": "Corrigiendo…" }
+    "unchanged": {
+      "correction": "No se encontraron errores"
+    },
+    "working": {
+      "correction": "Corrigiendo…"
+    }
   },
   "settings": {
     "accessAllow": "Permitir",
@@ -1364,7 +1374,9 @@
     "dialogRecordingMixedDownInfo": "Su voz y la del interlocutor se combinan en un solo canal y se escuchan en ambos oídos. Desactivado: estéreo dividido (su voz en el canal izquierdo, el interlocutor en el derecho).",
     "dialogRecordingProcessedInfo": "Atenúa el eco de los altavoces en el micrófono y limita picos de volumen altos (tal como lo percibe el reconocimiento de voz). Desactivado: el sonido se graba tal como se captura, sin procesamiento de software."
   },
-  "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Insertar en el editor"
+  },
   "theme": {
     "auto": "Como en el sistema",
     "dark": "Oscuro",
@@ -1725,7 +1737,6 @@
     "stopAndExpand": "Detener y expandir",
     "retryTranslation": "Reintentar",
     "channelFailed": "detenido",
-    "startOptions": "Opciones de inicio",
     "startRecording": "Iniciar con grabación",
     "startRecordingNeedsHistory": "Para grabar, el historial debe guardarse en el disco",
     "recording": "Grabando",
@@ -1746,8 +1757,6 @@
     "ownLanguageDefault": "Predeterminado ({language})",
     "listen": "Escuchar",
     "resume": "Continuar",
-    "listenRecording": "Escuchar con grabación",
-    "resumeRecording": "Continuar con grabación",
     "clear": "Limpiar",
     "clearTitle": "¿Borrar la transcripción?",
     "clearMessage": "El historial está desactivado en la configuración. La transcripción actual se perderá.",
@@ -1756,7 +1765,9 @@
     "clearHintSaved": "Borrar transcripción (la conversación se guarda en el historial)",
     "clearHintUnsaved": "Borrar transcripción (el historial está desactivado)",
     "sessionResumed": "Sesión reanudada",
-    "sessionResumedRecording": "Grabación reanudada"
+    "sessionResumedRecording": "Grabación reanudada",
+    "record": "Grabar",
+    "recordStopToChangeHint": "Detén para cambiar"
   },
   "toolPermissions": {
     "riskRead": "Lectura",

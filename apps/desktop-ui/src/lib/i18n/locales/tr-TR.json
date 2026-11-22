@@ -23,7 +23,9 @@
     "voiceScreenshotQuickAiRequest": "Ekran görüntüsü, sesle YZ’ye",
     "webhook": "Web kancası"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Dosya ekle",
     "alertCaution": "Dikkat",
@@ -207,7 +209,9 @@
       "deselectAll": "Tüm seçimi kaldır",
       "unsupportedCommands": "Desteklenmeyen komutlar"
     },
-    "replyBlocks": { "toolLabel": "Yanıt blokları" }
+    "replyBlocks": {
+      "toolLabel": "Yanıt blokları"
+    }
   },
   "commandRun": {
     "cancelled": "Komut iptal edildi",
@@ -661,15 +665,21 @@
     "cancelled": "İptal edildi",
     "done": "Tamam",
     "emptyResult": "Model boş bir sonuç döndürdü",
-    "failed": { "correction": "Metin düzeltilemedi" },
+    "failed": {
+      "correction": "Metin düzeltilemedi"
+    },
     "focusChanged": "Bu sırada pencere değişti, bu yüzden sonuç panoya kopyalandı",
     "noSelection": "Hiçbir şey seçili değil",
     "noTarget": "Odakta bir uygulama penceresi yok",
     "resultInClipboard": "Sonuç panoda",
     "selectionChanged": "Bu sırada seçim değişti, bu yüzden sonuç panoya kopyalandı",
     "terminalSelection": "Terminaldeki bir seçim değiştirilemez, bu yüzden sonuç panoya kopyalandı",
-    "unchanged": { "correction": "Hata bulunamadı" },
-    "working": { "correction": "Düzeltiliyor…" }
+    "unchanged": {
+      "correction": "Hata bulunamadı"
+    },
+    "working": {
+      "correction": "Düzeltiliyor…"
+    }
   },
   "settings": {
     "accessAllow": "İzin Ver",
@@ -1364,7 +1374,9 @@
     "dialogRecordingMixedDownInfo": "Sesiniz ve karşı taraf tek bir kanalda birleştirilir ve iki kulakta da duyulur. Kapalı: ayrılmış stereo (sesiniz sol kanalda, karşı taraf sağ kanalda).",
     "dialogRecordingProcessedInfo": "Mikrofondaki hoparlör yankısını azaltır ve yüksek ses tepe noktalarını sınırlar (konuşma tanımanın duyduğu şekilde). Kapalı: ses herhangi bir yazılımsal işlem olmadan kaydedilir."
   },
-  "shortcuts": { "insertIntoEditor": "Editöre ekle" },
+  "shortcuts": {
+    "insertIntoEditor": "Editöre ekle"
+  },
   "theme": {
     "auto": "Sistem dili",
     "dark": "Koyu",
@@ -1551,7 +1563,11 @@
     "clickToFocus": "Devam etmek için tıklayın",
     "moveOverlay": "Taşımak için sürükleyin",
     "cyclePosition": "Konum: {position} (Alt+P)",
-    "position": { "center": "Orta", "right": "Sağ", "bottomRight": "Sağ alt" },
+    "position": {
+      "center": "Orta",
+      "right": "Sağ",
+      "bottomRight": "Sağ alt"
+    },
     "collapseRecording": "Kayıt çubuğunu daralt",
     "expandRecording": "Kayıt çubuğunu genişlet"
   },
@@ -1721,7 +1737,6 @@
     "stopAndExpand": "Durdur ve genişlet",
     "retryTranslation": "Tekrar dene",
     "channelFailed": "durduruldu",
-    "startOptions": "Başlatma seçenekleri",
     "startRecording": "Kayıtla başlat",
     "startRecordingNeedsHistory": "Kayıt için geçmişin diske kaydedilmesi gerekir",
     "recording": "Kaydediliyor",
@@ -1742,8 +1757,6 @@
     "ownLanguageDefault": "Varsayılan ({language})",
     "listen": "Dinle",
     "resume": "Devam et",
-    "listenRecording": "Kayıtla dinle",
-    "resumeRecording": "Kayıtla devam et",
     "clear": "Temizle",
     "clearTitle": "Döküm temizlensin mi?",
     "clearMessage": "Geçmiş ayarlarda kapalı. Geçerli döküm kaybolacak.",
@@ -1752,7 +1765,9 @@
     "clearHintSaved": "Dökümü temizle (konuşma geçmişe kaydedildi)",
     "clearHintUnsaved": "Dökümü temizle (geçmiş kapalı)",
     "sessionResumed": "Oturum devam ettirildi",
-    "sessionResumedRecording": "Kayıt devam ettirildi"
+    "sessionResumedRecording": "Kayıt devam ettirildi",
+    "record": "Kayıt",
+    "recordStopToChangeHint": "Değiştirmek için durdurun"
   },
   "toolPermissions": {
     "riskRead": "Okuma",

@@ -23,7 +23,9 @@
     "voiceScreenshotQuickAiRequest": "Скриншот, дауыспен ЖИ-ге",
     "webhook": "Вебхук"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Файл тіркеу",
     "alertCaution": "Абайлаңыз",
@@ -207,7 +209,9 @@
       "deselectAll": "Барлығын алып тастау",
       "unsupportedCommands": "Қолдау көрсетілмейтін командалар"
     },
-    "replyBlocks": { "toolLabel": "Жауап нұсқалары" }
+    "replyBlocks": {
+      "toolLabel": "Жауап нұсқалары"
+    }
   },
   "commandRun": {
     "cancelled": "Команда болдырылмады",
@@ -661,15 +665,21 @@
     "cancelled": "Бас тартылды",
     "done": "Дайын",
     "emptyResult": "Модель бос нәтиже қайтарды",
-    "failed": { "correction": "Түзету сәтсіз аяқталды" },
+    "failed": {
+      "correction": "Түзету сәтсіз аяқталды"
+    },
     "focusChanged": "Осы аралықта терезе ауысты, сондықтан нәтиже алмасу буферіне көшірілді",
     "noSelection": "Ештеңе белгіленбеген",
     "noTarget": "Ешбір қолданба терезесі фокуста емес",
     "resultInClipboard": "Нәтиже алмасу буферінде",
     "selectionChanged": "Өңдеу кезінде белгіленген мәтін өзгерді, сондықтан нәтиже алмасу буферіне көшірілді",
     "terminalSelection": "Терминалдағы белгілеуді ауыстыру мүмкін емес, сондықтан нәтиже алмасу буферіне көшірілді",
-    "unchanged": { "correction": "Қате табылмады" },
-    "working": { "correction": "Түзетілуде…" }
+    "unchanged": {
+      "correction": "Қате табылмады"
+    },
+    "working": {
+      "correction": "Түзетілуде…"
+    }
   },
   "settings": {
     "accessAllow": "Рұқсат ету",
@@ -1364,7 +1374,9 @@
     "dialogRecordingMixedDownInfo": "Сіздің дауысыңыз бен сұхбаттасушы бір арнаға біріктіріліп, екі құлақта да естіледі. Өшірулі: бөлек стерео (сіздің дауысыңыз сол жақ арнада, сұхбаттасушы оң жақта).",
     "dialogRecordingProcessedInfo": "Микрофондағы динамиктердің жаңғырығын басады және қатты дыбыс шыңдарын шектейді (сөйлеуді тану еститіндей). Өшірулі: дыбыс бағдарламалық өңдеусіз, сол қалпында жазылады."
   },
-  "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
+  "shortcuts": {
+    "insertIntoEditor": "Редакторға кірістіру"
+  },
   "theme": {
     "auto": "Жүйедегідей",
     "dark": "Қараңғы",
@@ -1725,7 +1737,6 @@
     "stopAndExpand": "Тоқтату және жаю",
     "retryTranslation": "Қайталау",
     "channelFailed": "тоқтатылды",
-    "startOptions": "Іске қосу параметрлері",
     "startRecording": "Жазбамен бастау",
     "startRecordingNeedsHistory": "Жазу үшін тарих дискіге сақталуы керек",
     "recording": "Жазылуда",
@@ -1746,8 +1757,6 @@
     "ownLanguageDefault": "Әдепкі бойынша ({language})",
     "listen": "Тыңдау",
     "resume": "Жалғастыру",
-    "listenRecording": "Жазумен тыңдау",
-    "resumeRecording": "Жазумен жалғастыру",
     "clear": "Тазалау",
     "clearTitle": "Транскриптті тазалау керек пе?",
     "clearMessage": "Тарих баптауларда өшірілген. Ағымдағы транскрипт жойылады.",
@@ -1756,7 +1765,9 @@
     "clearHintSaved": "Транскриптті тазалау (әңгіме тарихта сақталған)",
     "clearHintUnsaved": "Транскриптті тазалау (тарих өшірулі)",
     "sessionResumed": "Сессия жалғастырылды",
-    "sessionResumedRecording": "Жазу жалғастырылды"
+    "sessionResumedRecording": "Жазу жалғастырылды",
+    "record": "Жазу",
+    "recordStopToChangeHint": "Өзгерту үшін тоқтатыңыз"
   },
   "toolPermissions": {
     "riskRead": "Оқу",
