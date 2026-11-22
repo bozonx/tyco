@@ -136,8 +136,8 @@ const { t } = useI18n()
 const desktopStore = useDesktopStore()
 // the status alone: the dialog itself loads with its view
 const dialogStatus = useDialogStatusStore()
-const isDialogEnabled = computed(
-  () => desktopStore.userConfig?.dialog?.isEnabled !== false
+const isDialogEnabled = computed(() =>
+  Boolean(desktopStore.userConfig?.dialog?.isEnabled)
 )
 const isDialogActive = computed(() =>
   appNavigation.isCurrent(APP_ROUTES.DIALOG.path)

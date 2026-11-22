@@ -115,10 +115,10 @@ recorded. The file is an Opus audio file (`.opus`) that any modern player
 opens. Without the microphone it holds the computer sound alone. With the
 microphone, two settings in **Settings → Dialog** decide how it sounds:
 
-- **One channel for both sides** (on by default): your voice and the other
+- **Mix down to mono** (off by default): your voice and the other
   side are in one channel, so both are heard in both ears. Off, your voice
   is the left channel and the other side the right one.
-- **Record what the speech recognition hears** (on by default): the echo of
+- **Record processed audio** (on by default): the echo of
   the speakers in your microphone is lowered, and loud peaks are limited.
   When TyCo takes your voice for that echo, it is quiet in the recording
   too. Off, the sound is kept as captured, echo included: with speakers
@@ -130,7 +130,7 @@ next recording. The file is written as the call
 goes, so after a crash it plays up to the last second or so.
 
 Recordings are kept with the history, in `history/recordings` of the TyCo
-data folder; **Settings → Dialog → Call recordings → Open folder** opens it.
+data folder.
 A file is named by the time it started and a short code, e.g.
 `2026-11-20 14-03-05 a1b2c3.opus`; do not rename it, or its history entry
 loses it. The history entry of a recorded conversation lists its recordings

@@ -60,7 +60,7 @@ const router = createRouter({
       // an optional mode: its view loads only when opened
       component: () => import('../views/DialogView.vue'),
       beforeEnter: () =>
-        useDesktopStore().userConfig?.dialog?.isEnabled === false
+        !useDesktopStore().userConfig?.dialog?.isEnabled
           ? APP_ROUTES.HOME.path
           : true,
     },

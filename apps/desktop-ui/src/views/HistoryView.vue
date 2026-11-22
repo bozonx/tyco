@@ -414,10 +414,17 @@ const toEditor = (item: HistoryListItem) => {
 .history-filters {
   display: flex;
   align-items: center;
+  width: 100%;
+  min-width: 0;
 }
 
 .history-filters :deep(.segmented-control) {
+  display: inline-flex;
   flex-wrap: wrap;
+  white-space: normal;
+  max-width: 100%;
+  flex-shrink: 1;
+  min-width: 0;
   row-gap: 4px;
 }
 

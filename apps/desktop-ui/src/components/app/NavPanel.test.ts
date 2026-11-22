@@ -77,7 +77,10 @@ describe('NavPanel.vue', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     desktop = await loadFakeDesktop()
-    desktop.setUserConfig({ isInDevelopment: true })
+    desktop.setUserConfig({
+      isInDevelopment: true,
+      dialog: { ...DEFAULT_USER_CONFIG.dialog, isEnabled: true },
+    })
     mocks.currentRoute.value = { path: '/chat', query: {} }
     mocks.aiProfilesStore.profiles = []
     mocks.appNavigation.isCurrent.mockImplementation(
@@ -101,17 +104,25 @@ describe('NavPanel.vue', () => {
   })
 
   it('hides the dialog tab while the dialog mode is off', async () => {
-    const wrapper = shallowMount(NavPanel)
-    expect(wrapper.text()).toContain('nav.dialog')
-
     desktop.setUserConfig({
       dialog: { ...DEFAULT_USER_CONFIG.dialog, isEnabled: false },
     })
     await nextTick()
+    const wrapper = shallowMount(NavPanel)
     expect(wrapper.text()).not.toContain('nav.dialog')
+
+    desktop.setUserConfig({
+      dialog: { ...DEFAULT_USER_CONFIG.dialog, isEnabled: true },
+    })
+    await nextTick()
+    expect(wrapper.text()).toContain('nav.dialog')
   })
 
   it('marks the dialog tab while a dialog runs', async () => {
+    desktop.setUserConfig({
+      dialog: { ...DEFAULT_USER_CONFIG.dialog, isEnabled: true },
+    })
+    await nextTick()
     const wrapper = shallowMount(NavPanel)
     expect(wrapper.find('.dialog-recording').exists()).toBe(false)
 

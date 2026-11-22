@@ -1,57 +1,57 @@
 <template>
-  <SettingsSection>
-    <FieldRow
-      :label="t('settings.dialogEnabled')"
-      :hint="t('settings.dialogEnabledHint')"
-    >
-      <FieldSwitch
-        :model-value="dialog.isEnabled"
-        @update:model-value="setDialog({ isEnabled: $event })"
-      />
-    </FieldRow>
-  </SettingsSection>
-  <SettingsSection v-if="dialog.isEnabled">
-    <SettingsTaskModel
-      task="dialogTranslation"
-      :info="t('settings.dialogTranslationModelInfo')"
-    />
-    <FieldRow
-      :label="t('settings.dialogTranslationRules')"
-      :info="t('settings.dialogTranslationRulesInfo')"
-      vertical
-    >
-      <FieldPromptTextArea
-        v-model="draft.llm.tasks.dialogTranslation.rule"
-        :modal-title="t('settings.dialogTranslationRules')"
-      />
-    </FieldRow>
-    <FieldRow
-      :label="t('settings.dialogRecordings')"
-      :hint="t('settings.dialogRecordingsHint')"
-    >
-      <Button size="sm" variant="ghost" @click="openFolder">{{
-        t('settings.storageOpenFolder')
-      }}</Button>
-    </FieldRow>
-    <FieldRow
-      :label="t('settings.dialogRecordingMixedDown')"
-      :hint="t('settings.dialogRecordingMixedDownHint')"
-    >
-      <FieldSwitch
-        :model-value="dialog.isRecordingMixedDown"
-        @update:model-value="setDialog({ isRecordingMixedDown: $event })"
-      />
-    </FieldRow>
-    <FieldRow
-      :label="t('settings.dialogRecordingProcessed')"
-      :hint="t('settings.dialogRecordingProcessedHint')"
-    >
-      <FieldSwitch
-        :model-value="dialog.isRecordingProcessed"
-        @update:model-value="setDialog({ isRecordingProcessed: $event })"
-      />
-    </FieldRow>
-  </SettingsSection>
+  <div class="settings-stack">
+    <SettingsSection>
+      <FieldRow
+        :label="t('settings.dialogEnabled')"
+        :info="t('settings.dialogEnabledInfo')"
+      >
+        <FieldSwitch
+          :model-value="dialog.isEnabled"
+          @update:model-value="setDialog({ isEnabled: $event })"
+        />
+      </FieldRow>
+    </SettingsSection>
+
+    <template v-if="dialog.isEnabled">
+      <SettingsSection :title="t('settings.dialogTranslationSection')">
+        <SettingsTaskModel
+          task="dialogTranslation"
+          :info="t('settings.dialogTranslationModelInfo')"
+        />
+        <FieldRow
+          :label="t('settings.dialogTranslationRules')"
+          :info="t('settings.dialogTranslationRulesInfo')"
+          vertical
+        >
+          <FieldPromptTextArea
+            v-model="draft.llm.tasks.dialogTranslation.rule"
+            :modal-title="t('settings.dialogTranslationRules')"
+          />
+        </FieldRow>
+      </SettingsSection>
+
+      <SettingsSection :title="t('settings.dialogRecordingSection')">
+        <FieldRow
+          :label="t('settings.dialogRecordingMixedDown')"
+          :info="t('settings.dialogRecordingMixedDownInfo')"
+        >
+          <FieldSwitch
+            :model-value="dialog.isRecordingMixedDown"
+            @update:model-value="setDialog({ isRecordingMixedDown: $event })"
+          />
+        </FieldRow>
+        <FieldRow
+          :label="t('settings.dialogRecordingProcessed')"
+          :info="t('settings.dialogRecordingProcessedInfo')"
+        >
+          <FieldSwitch
+            :model-value="dialog.isRecordingProcessed"
+            @update:model-value="setDialog({ isRecordingProcessed: $event })"
+          />
+        </FieldRow>
+      </SettingsSection>
+    </template>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -59,8 +59,6 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
-import { useIpcStore } from '../../stores/ipc'
-import Button from '../common/Button.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
@@ -79,11 +77,5 @@ const dialog = computed<DialogConfig>(
 )
 const setDialog = (patch: Partial<DialogConfig>) => {
   draft.value.dialog = { ...dialog.value, ...patch }
-}
-
-const ipc = useIpcStore()
-// the recordings of the history, the folder created when it is not there yet
-async function openFolder() {
-  await ipc.callOrNotify('open_recordings_folder')
 }
 </script>

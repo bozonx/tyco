@@ -408,12 +408,12 @@
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
-        "isEnabled": true,
+        "isEnabled": false,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
-        "isRecordingMixedDown": true,
+        "isRecordingMixedDown": false,
         "isRecordingProcessed": true
       }
     }
@@ -843,12 +843,12 @@
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
-        "isEnabled": true,
+        "isEnabled": false,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
-        "isRecordingMixedDown": true,
+        "isRecordingMixedDown": false,
         "isRecordingProcessed": true
       }
     }
@@ -1271,12 +1271,12 @@
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
-        "isEnabled": true,
+        "isEnabled": false,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
-        "isRecordingMixedDown": true,
+        "isRecordingMixedDown": false,
         "isRecordingProcessed": true
       }
     }
@@ -1709,12 +1709,12 @@
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
-        "isEnabled": true,
+        "isEnabled": false,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
-        "isRecordingMixedDown": true,
+        "isRecordingMixedDown": false,
         "isRecordingProcessed": true
       }
     }
@@ -2125,12 +2125,12 @@
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
-        "isEnabled": true,
+        "isEnabled": false,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
-        "isRecordingMixedDown": true,
+        "isRecordingMixedDown": false,
         "isRecordingProcessed": true
       }
     }
@@ -2553,12 +2553,12 @@
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
-        "isEnabled": true,
+        "isEnabled": false,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
-        "isRecordingMixedDown": true,
+        "isRecordingMixedDown": false,
         "isRecordingProcessed": true
       }
     }
@@ -2983,12 +2983,12 @@
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
-        "isEnabled": true,
+        "isEnabled": false,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
-        "isRecordingMixedDown": true,
+        "isRecordingMixedDown": false,
         "isRecordingProcessed": true
       }
     }
@@ -3420,12 +3420,12 @@
       "favorites": { "items": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
-        "isEnabled": true,
+        "isEnabled": false,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
-        "isRecordingMixedDown": true,
+        "isRecordingMixedDown": false,
         "isRecordingProcessed": true
       }
     }
@@ -3868,12 +3868,12 @@
       "favorites": { "items": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
-        "isEnabled": true,
+        "isEnabled": false,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
-        "isRecordingMixedDown": true,
+        "isRecordingMixedDown": false,
         "isRecordingProcessed": true
       }
     }
@@ -4392,12 +4392,12 @@
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
-        "isEnabled": true,
+        "isEnabled": false,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
-        "isRecordingMixedDown": true,
+        "isRecordingMixedDown": false,
         "isRecordingProcessed": true
       }
     }
@@ -4936,12 +4936,12 @@
       "aiVaults": { "attached": [] },
       "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
-        "isEnabled": true,
+        "isEnabled": false,
         "source": "microphoneAndSystem",
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
-        "isRecordingMixedDown": true,
+        "isRecordingMixedDown": false,
         "isRecordingProcessed": true
       }
     }

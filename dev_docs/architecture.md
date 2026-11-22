@@ -276,7 +276,7 @@ webview). Unprocessed, it takes the two channels as the mix aligned them,
 before the gate and the limiters: the mix keeps a copy of them in
 `StreamContext::unprocessed_pcm_samples`, which `flush_pending` drains with
 every flush; a capture without the microphone has none and records what it
-sends. `dialog.isRecordingMixedDown`, on by default, writes the two channels
+sends. `dialog.isRecordingMixedDown`, off by default, writes the two channels
 as one, their saturating sum (`RecordingSink::push`). Both are read from the
 config when the recording starts (`models::user_config::dialog_recording`). For a
 lossless copy set `TYCO_DUMP_STT_AUDIO=<folder>` before starting the app:

@@ -42,11 +42,11 @@ import { useSecretsStore } from './secrets'
 import { useTranslationStore } from './translation'
 
 const DEFAULT_DIALOG_CONFIG: DialogConfig = {
-  isEnabled: true,
+  isEnabled: false,
   source: 'microphoneAndSystem',
   translationTargetLanguage: '',
   isTranslationOnly: false,
-  isRecordingMixedDown: true,
+  isRecordingMixedDown: false,
   isRecordingProcessed: true,
 }
 

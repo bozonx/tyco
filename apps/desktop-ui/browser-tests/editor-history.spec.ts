@@ -61,3 +61,17 @@ test('puts an item into the editor', async ({ page }) => {
     'Sent text'
   )
 })
+
+test('wraps filter buttons to a second row on narrower screens', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 700, height: 600 })
+  const options = page.locator('.history-filters .segmented-option')
+  const count = await options.count()
+  expect(count).toBeGreaterThan(1)
+  const firstBox = await options.first().boundingBox()
+  const lastBox = await options.last().boundingBox()
+  expect(firstBox).not.toBeNull()
+  expect(lastBox).not.toBeNull()
+  expect(lastBox!.y).toBeGreaterThan(firstBox!.y)
+})

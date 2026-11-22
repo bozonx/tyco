@@ -130,7 +130,7 @@ fn yes() -> bool {
 pub struct DialogRecordingConfig {
     /// `isRecordingMixedDown`: both sides in one mono channel rather than
     /// the microphone left and the computer sound right.
-    #[serde(rename = "isRecordingMixedDown", default = "yes")]
+    #[serde(rename = "isRecordingMixedDown", default)]
     pub is_mixed_down: bool,
     /// `isRecordingProcessed`: the sound as the speech recognition gets it,
     /// the echo lowered and the peaks limited, rather than as captured.
@@ -141,7 +141,7 @@ pub struct DialogRecordingConfig {
 impl Default for DialogRecordingConfig {
     fn default() -> Self {
         Self {
-            is_mixed_down: true,
+            is_mixed_down: false,
             is_processed: true,
         }
     }
@@ -540,17 +540,17 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn a_dialog_is_recorded_mixed_down_and_processed_unless_told_otherwise() {
+    fn a_dialog_is_recorded_stereo_and_processed_unless_told_otherwise() {
         assert_eq!(
             dialog_recording(&json!({})),
             DialogRecordingConfig::default()
         );
         let options = dialog_recording(&json!({"dialog": {
-            "isRecordingMixedDown": false, "isRecordingProcessed": false
+            "isRecordingMixedDown": true, "isRecordingProcessed": false
         }}));
-        assert!(!options.is_mixed_down && !options.is_processed);
-        let options = dialog_recording(&json!({"dialog": {"isRecordingProcessed": false}}));
         assert!(options.is_mixed_down && !options.is_processed);
+        let options = dialog_recording(&json!({"dialog": {"isRecordingProcessed": false}}));
+        assert!(!options.is_mixed_down && !options.is_processed);
     }
 
     #[test]

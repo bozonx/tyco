@@ -1379,7 +1379,7 @@
     "dialog": {
       "type": "object",
       "properties": {
-        "isEnabled": { "type": "boolean", "default": true },
+        "isEnabled": { "type": "boolean", "default": false },
         "source": {
           "enum": ["microphoneAndSystem", "system"],
           "default": "microphoneAndSystem"
@@ -1408,7 +1408,7 @@
           "x-scope": "device"
         },
         "isRecordingNoticeAcknowledged": { "type": "boolean" },
-        "isRecordingMixedDown": { "type": "boolean", "default": true },
+        "isRecordingMixedDown": { "type": "boolean", "default": false },
         "isRecordingProcessed": { "type": "boolean", "default": true }
       },
       "required": [

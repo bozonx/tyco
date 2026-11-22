@@ -261,12 +261,12 @@
     }
   },
   "dialog": {
-    "isEnabled": true,
+    "isEnabled": false,
     "source": "microphoneAndSystem",
     "translationTargetLanguage": "",
     "remoteLanguage": "auto",
     "isTranslationOnly": false,
-    "isRecordingMixedDown": true,
+    "isRecordingMixedDown": false,
     "isRecordingProcessed": true
   }
 }
