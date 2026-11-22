@@ -715,3 +715,35 @@ it('keeps the heard language when the recording restarts', async () => {
   expect(model.activeParameters.value.language).toBe(language)
   expect(model.activeParameter.value).toBeUndefined()
 })
+
+describe('stepping back', () => {
+  it('drops the spoken text, then the command, then has nothing left', async () => {
+    const { model, partial } = setup()
+    await model.start()
+    expect(model.canStepBack.value).toBe(false)
+    partial('save note Hello')
+    expect(await model.stepBack()).toBe(true)
+    expect(model.stage.value).toBe('recording')
+    expect(model.activeCommand.value).toBeUndefined()
+    expect(await model.stepBack()).toBe(false)
+  })
+
+  it('drops the last heard value and keeps the command', async () => {
+    const { model, partial } = setup()
+    await model.start()
+    partial('translate to german')
+    await model.stepBack()
+    expect(model.activeCommand.value?.id).toBe('translate')
+    expect(model.activeParameter.value?.name).toBe('language')
+  })
+
+  it('returns from the review of the text to speaking it', async () => {
+    const { model } = setup()
+    await model.start()
+    await model.finish('review')
+    expect(model.command.value?.id).toBe('note')
+    expect(await model.stepBack()).toBe(true)
+    expect(model.stage.value).toBe('recording')
+    expect(model.activeCommand.value?.id).toBe('note')
+  })
+})

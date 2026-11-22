@@ -589,6 +589,58 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     await pending
   }
 
+  /**
+   * Records again from a step: the command and the values given stay, the rest
+   * is spoken anew. What was heard goes to the history
+   */
+  const recordFrom = async (
+    commandId: string | undefined,
+    parameters: Record<string, string>
+  ) => {
+    const heard = liveTranscriptText(liveTranscript.value)
+    if (heard.trim()) void deps.saveTranscript?.(heard).catch(() => undefined)
+    await cancel()
+    // `start` clears the pins before its first await: they are set after it
+    const starting = start()
+    pinnedCommandId.value = commandId
+    pinnedParameters.value = parameters
+    await starting
+  }
+
+  /** There is a step of the command to go back to before leaving the window */
+  const canStepBack = computed(
+    () =>
+      (stage.value === 'recording' && Boolean(activeCommand.value)) ||
+      (stage.value === 'review' && Boolean(command.value))
+  )
+
+  /**
+   * Goes one step back: the review of the text returns to speaking it, a spoken
+   * value or the command is dropped and spoken anew. False when there is no
+   * step to go back to
+   */
+  const stepBack = async (): Promise<boolean> => {
+    if (!canStepBack.value) return false
+    if (stage.value === 'review') {
+      const reviewed = command.value!
+      const values = { ...(selected.value?.parameters ?? {}) }
+      await recordFrom(reviewed.id, values)
+      return true
+    }
+    const heard = activeOpenParameters.value.filter(
+      (param) => activeParameters.value[param.name]
+    )
+    const last = heard[heard.length - 1]
+    if (!last) {
+      await recordFrom(undefined, {})
+      return true
+    }
+    const values = { ...activeParameters.value }
+    delete values[last.name]
+    await recordFrom(activeCommand.value!.id, values)
+    return true
+  }
+
   const cancel = () => {
     generation += 1
     voiceSession.abort()
@@ -666,17 +718,14 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
      */
     restart: async () => {
       if (stage.value !== 'recording') return
-      const heard = liveTranscriptText(liveTranscript.value)
-      if (heard.trim()) void deps.saveTranscript?.(heard).catch(() => undefined)
       const commandId = activeCommand.value?.id
-      const parameters = commandId ? { ...activeParameters.value } : {}
-      await cancel()
-      // `start` clears the pins before its first await: they are set after it
-      const starting = start()
-      pinnedCommandId.value = commandId
-      pinnedParameters.value = parameters
-      await starting
+      await recordFrom(
+        commandId,
+        commandId ? { ...activeParameters.value } : {}
+      )
     },
+    canStepBack,
+    stepBack,
     cancelRun,
     dispose() {
       disposed = true

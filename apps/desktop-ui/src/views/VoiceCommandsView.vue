@@ -3,7 +3,8 @@
     <ActionOverlayLayout
       :other-actions-text="contextText"
       :title="t('voiceCommands.windowTitle')"
-      :on-esc="close"
+      :esc-mode="voice.canStepBack ? 'back' : 'auto'"
+      :on-esc="goBack"
     >
       <template #header-extra>
         <InfoTooltip :text="t('voiceCommands.hint')" placement="bottom" />
@@ -203,7 +204,7 @@
                   voice.activeParameter &&
                   voice.pinParameter(voice.activeParameter.name, val)
               "
-              @back="voice.pinCommand(undefined)"
+              @back="void voice.stepBack()"
             />
             <div
               v-else-if="isCapturingTextPhase"
@@ -592,6 +593,11 @@ const close = () => {
   handleEsc()
 }
 
+/** Back goes a step back in the command, then leaves the window */
+async function goBack() {
+  if (!(await voice.stepBack())) close()
+}
+
 let runningPendingOwner: number | undefined
 
 const syncRunningPending = () => {
@@ -673,23 +679,9 @@ const onKeyDown = (event: KeyboardEvent) => {
         return
       }
     } else if (event.key === 'Backspace') {
-      if (isCapturingTextPhase.value) {
+      if (voice.canStepBack) {
         event.preventDefault()
-        const params = liveParameterItems.value
-        if (params.length > 0) {
-          voice.clearParameter(params[params.length - 1].name)
-        } else {
-          voice.pinCommand(undefined)
-        }
-        return
-      } else if (voice.activeParameter) {
-        event.preventDefault()
-        const params = liveParameterItems.value
-        if (params.length > 0) {
-          voice.clearParameter(params[params.length - 1].name)
-        } else {
-          voice.pinCommand(undefined)
-        }
+        void voice.stepBack()
         return
       }
     }

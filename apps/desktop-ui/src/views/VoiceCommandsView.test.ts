@@ -30,6 +30,7 @@ const mocks = vi.hoisted(() => ({
   pinCommand: vi.fn(),
   pinParameter: vi.fn(),
   clearParameter: vi.fn(),
+  stepBack: vi.fn(async () => true),
   choose: vi.fn(),
   setParameter: vi.fn(),
   setContext: vi.fn(),
@@ -63,6 +64,7 @@ const voice = reactive({
   activeParameters: {} as Record<string, string>,
   command: undefined as CommandConfig | undefined,
   canRun: false,
+  canStepBack: false,
   inputIssue: undefined,
   catalog: [translation, ...commands] as CommandConfig[],
   unavailableReason: vi.fn<() => string | undefined>(() => undefined),
@@ -494,6 +496,7 @@ describe('separate voice command overlay', () => {
       ],
     }
     voice.activeParameters = {}
+    voice.canStepBack = true
     const wrapper = mountView()
     await flushPromises()
 
@@ -510,8 +513,9 @@ describe('separate voice command overlay', () => {
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace' }))
     await flushPromises()
-    expect(mocks.pinCommand).toHaveBeenCalledWith(undefined)
+    expect(mocks.stepBack).toHaveBeenCalledOnce()
 
+    voice.canStepBack = false
     wrapper.unmount()
   })
 })
