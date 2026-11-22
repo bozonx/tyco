@@ -660,15 +660,22 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     finish,
     cancel,
     /**
-     * Starts the recording over, e.g. in another language; what was heard goes
-     * to the history
+     * Starts the current step of the recording over, e.g. in another language:
+     * the command and the values already heard stay, the step being spoken is
+     * heard anew. What was heard goes to the history
      */
     restart: async () => {
       if (stage.value !== 'recording') return
       const heard = liveTranscriptText(liveTranscript.value)
       if (heard.trim()) void deps.saveTranscript?.(heard).catch(() => undefined)
+      const commandId = activeCommand.value?.id
+      const parameters = commandId ? { ...activeParameters.value } : {}
       await cancel()
-      await start()
+      // `start` clears the pins before its first await: they are set after it
+      const starting = start()
+      pinnedCommandId.value = commandId
+      pinnedParameters.value = parameters
+      await starting
     },
     cancelRun,
     dispose() {

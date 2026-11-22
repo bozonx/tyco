@@ -690,4 +690,28 @@ it('restarts the recording and keeps what was heard in the history', async () =>
   expect(deps.startDictation).toHaveBeenCalledTimes(2)
   expect(model.stage.value).toBe('recording')
   expect(model.transcript.value).toBe('')
+  // the command was heard: only its text is spoken anew
+  expect(model.activeCommand.value?.id).toBe('note')
+  partial('Hello')
+  expect(model.activeCandidate.value?.text).toBe('Hello')
+})
+
+it('restarts from the command when none was heard yet', async () => {
+  const { model, partial } = setup()
+  await model.start()
+  partial('wrong language')
+  await model.restart()
+  expect(model.activeCommand.value).toBeUndefined()
+})
+
+it('keeps the heard language when the recording restarts', async () => {
+  const { model, partial } = setup()
+  await model.start()
+  partial('translate to german')
+  const language = model.activeParameters.value.language
+  expect(language).toMatch(/^de/)
+  await model.restart()
+  expect(model.activeCommand.value?.id).toBe('translate')
+  expect(model.activeParameters.value.language).toBe(language)
+  expect(model.activeParameter.value).toBeUndefined()
 })
