@@ -6,6 +6,7 @@ test('streams an answer, persists it and restores the chat after reload', async 
   desktop,
 }) => {
   const llm = installLlm(desktop)
+  desktop.userConfig.llm.models[0]!.canUseTools = true
   await page.goto('/')
   await page
     .getByRole('banner')
@@ -52,6 +53,7 @@ test('stops an in-flight response and retries from the UI', async ({
   desktop,
 }) => {
   const llm = installLlm(desktop)
+  desktop.userConfig.llm.models[0]!.canUseTools = true
   await page.goto('/')
   await page
     .getByRole('banner')
@@ -89,6 +91,7 @@ test('reports a provider error and recovers on retry', async ({
     /LLM request "chat" failed:.*Browser test authorization denied/s
   )
   const llm = installLlm(desktop)
+  desktop.userConfig.llm.models[0]!.canUseTools = true
   await page.goto('/')
   await page
     .getByRole('banner')
@@ -113,6 +116,14 @@ test('attaches a text file from the clipboard and sends its content', async ({
   desktop,
 }) => {
   const llm = installLlm(desktop)
+  desktop.userConfig.llm.models[0]!.canUseTools = true
+  desktop.handle('list_ai_file_roots', () => [
+    { path: 'attachments', read: 'allow', write: 'deny', delete: 'deny' },
+  ])
+  desktop.handle('store_chat_file', ({ bytes }) => ({
+    id: 'a'.repeat(64),
+    size: bytes.length,
+  }))
   await page.goto('/')
   await page
     .getByRole('banner')
@@ -218,7 +229,8 @@ for (const decision of ['Allow', 'Deny'] as const) {
     if (decision === 'Allow') {
       expect(desktop.callsOf('run_ai_file_tool')).toEqual([
         {
-          profileId: profile.id,
+          context: { kind: 'profile', profileId: profile.id },
+          attachments: [],
           request: expect.objectContaining({
             operation: 'readFile',
             path: 'workspace/note.txt',

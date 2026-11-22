@@ -156,6 +156,8 @@
       "workspaceHint": "I file del profilo: conservati fuori dalla cronologia delle chat, disponibili in ogni chat del profilo"
     },
     "takeScreenshot": "Acquisisci screenshot",
+    "toolRevokeChat": "Revoca autorizzazioni della chat ({count})",
+    "toolDenyBatch": "Rifiuta tutti ({count})",
     "toolAllowBatch": "Consenti tutte ({count})",
     "toolAllowAlways": "Consenti sempre",
     "toolAllowAlwaysWriteDelete": "Consenti sempre scrittura ed eliminazione",
@@ -1754,7 +1756,7 @@
     "sourceOffEverywhere": "Disattivato nelle impostazioni Strumenti",
     "pluginCapabilities": "Permessi del plugin: {capabilities}",
     "pluginSourceHint": "Strumenti che questo plugin offre alla chat. Funzionano con i permessi del plugin.",
-    "leakQuestion": "Questa chat ha letto i tuoi dati e questa chiamata raggiungerebbe un nuovo luogo. Si chiede una volta per luogo in questa chat.",
+    "leakQuestion": "Questa chat ha letto i tuoi dati e questa chiamata raggiungerebbe un nuovo luogo.",
     "untrustedQuestion": "Questa chat ha letto una pagina web o il risultato di uno strumento, e questa chiamata modificherebbe la memoria che vedranno tutte le chat successive.",
     "contextTokens": "≈{count} token",
     "catalogHint": "Da dove vengono gli strumenti degli agenti. Un plugin disattivato qui è disattivato per tutti i profili e i comandi IA. Gli strumenti integrati si attivano in «Chiedi all'IA», in ogni profilo e in ogni comando IA.",

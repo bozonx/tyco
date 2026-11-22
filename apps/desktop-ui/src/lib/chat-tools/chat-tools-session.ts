@@ -37,6 +37,7 @@ export interface ChatToolsRequest {
   canUseTools: boolean
   /** Where the tools are offered, see `ToolScope` */
   scope: ToolScope
+  getCurrentScope?: () => ToolScope
   /** The profile's long-term memory mode */
   memoryMode?: ProfileMemoryMode
   /** How much the outputs of the turn's tools may add to the request */
@@ -45,6 +46,7 @@ export interface ChatToolsRequest {
   attachedFiles?: readonly AiAttachedFile[]
   /** What the user wrote: the URLs it names may be read without asking */
   conversationText?: string
+  hasPersonalData?: boolean
   /**
    * The tool results already in the conversation, e.g. of a chat reopened from
    * the history: what they brought in counts as in a call of this turn
@@ -83,15 +85,17 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
     // the memory is in the instructions of a profile chat, and attachments
     // are the user's own: from the start the chat holds personal data
     if (
-      request.scope.kind === 'profile' &&
-      ((request.memoryMode ?? 'auto') !== 'off' ||
-        Boolean(request.attachedFiles?.length))
+      (request.scope.kind === 'profile' &&
+        (request.memoryMode ?? 'auto') !== 'off') ||
+      Boolean(request.attachedFiles?.length) ||
+      request.hasPersonalData
     )
       policy.notePersonalData()
     const tools = await registry.resolve({
       profileId: request.scope.kind === 'profile' ? request.profileId : null,
       modelId: request.modelId,
       scope: request.scope,
+      getCurrentScope: request.getCurrentScope,
       callContext: toolCallContextOf(request.scope),
       memoryMode: request.memoryMode,
       outputBudgetCharacters: request.outputBudgetCharacters,
@@ -100,9 +104,8 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
     if (!tools) return undefined
     for (const result of request.previousToolResults ?? []) {
       const tool = tools.definitions.get(result.toolName)
-      if (tool?.readsPersonalData) policy.notePersonalData()
-      if (tool?.givesUntrustedContent) policy.noteUntrustedContent()
-      if (tool?.givesKnownUrls) policy.noteKnownText(result.output)
+      if (!tool || tool.readsPersonalData) policy.notePersonalData()
+      if (!tool || tool.givesUntrustedContent) policy.noteUntrustedContent()
     }
     return {
       tools,
@@ -112,7 +115,7 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
       requestApproval: async (approval, signal) => {
         const preview = await tools.definitions
           .get(approval.toolName)
-          ?.preview?.(approval.input, signal)
+          ?.preview?.(approval.input, signal, approval.toolCallId)
           .catch(() => undefined)
         // "always allow" only where it can be saved
         const { alwaysAllow, ...rest } = approval
@@ -130,9 +133,8 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
   }
 
   /**
-   * Saves "always allow". The call is then allowed for the chat too: the turn
-   * keeps the policies it started with, and the call must not ask again in it,
-   * nor about its leak target later. A failure still lets the call run once
+   * Saves "always allow" in the profile. A failure still lets the call run
+   * once.
    */
   const persistAlwaysAllow = async (
     targets: readonly ChatToolAlwaysAllowTarget[] | undefined
@@ -144,7 +146,7 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
       deps.warn?.(`Could not save the permission: ${String(error)}`)
       return 'allow-once'
     }
-    return 'allow-session'
+    return 'allow-always'
   }
 
   /**

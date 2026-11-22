@@ -206,6 +206,7 @@ export function createWebToolProvider(
           name: 'web_search',
           source: WEB_SOURCE,
           risk: 'read',
+          leakTarget: () => 'host:s.jina.ai',
           // the pages it found may be read without asking again
           givesKnownUrls: true,
           givesUntrustedContent: true,
@@ -268,6 +269,8 @@ export function createWebToolProvider(
               throw new Error('Unexpected response operation from web search')
             }
 
+            for (const result of response.results)
+              options.noteKnownUrl?.(result.url)
             return formatSearchResults(response.results)
           },
         },

@@ -156,6 +156,8 @@
       "workspaceHint": "Fișierele profilului: păstrate în afara istoricului de chat, disponibile în toate chaturile profilului"
     },
     "takeScreenshot": "Fă o captură de ecran",
+    "toolRevokeChat": "Revocă permisiunile conversației ({count})",
+    "toolDenyBatch": "Respinge toate cele {count}",
     "toolAllowBatch": "Permite toate ({count})",
     "toolAllowAlways": "Permite întotdeauna",
     "toolAllowAlwaysWriteDelete": "Permite întotdeauna scrierea și ștergerea",
@@ -1754,7 +1756,7 @@
     "sourceOffEverywhere": "Dezactivat în setările Instrumente",
     "pluginCapabilities": "Permisiunile pluginului: {capabilities}",
     "pluginSourceHint": "Instrumente pe care acest plugin le oferă chatului. Rulează cu permisiunile pluginului.",
-    "leakQuestion": "Acest chat a citit datele tale, iar acest apel ar ajunge într-un loc nou. Se întreabă o dată pe loc în acest chat.",
+    "leakQuestion": "Acest chat a citit datele tale, iar acest apel ar ajunge într-un loc nou.",
     "untrustedQuestion": "Acest chat a citit deja o pagină web sau rezultatul unui instrument, iar acest apel ar schimba memoria pe care o văd toate chaturile următoare.",
     "contextTokens": "≈{count} tokenuri",
     "catalogHint": "De unde vin instrumentele agenților. Un plugin dezactivat aici e dezactivat în toate profilurile și comenzile AI. Instrumentele integrate se activează în „Întreabă AI”, în fiecare profil și în fiecare comandă AI.",

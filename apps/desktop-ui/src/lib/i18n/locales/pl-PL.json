@@ -156,6 +156,8 @@
       "workspaceHint": "Pliki profilu: przechowywane poza historią czatów, dostępne we wszystkich czatach profilu"
     },
     "takeScreenshot": "Zrób zrzut ekranu",
+    "toolRevokeChat": "Cofnij uprawnienia czatu ({count})",
+    "toolDenyBatch": "Odrzuć wszystkie ({count})",
     "toolAllowBatch": "Zezwól na wszystkie ({count})",
     "toolAllowAlways": "Zawsze zezwalaj",
     "toolAllowAlwaysWriteDelete": "Zawsze zezwalaj na zapis i usuwanie",
@@ -1754,7 +1756,7 @@
     "sourceOffEverywhere": "Wyłączone w ustawieniach Narzędzia",
     "pluginCapabilities": "Uprawnienia wtyczki: {capabilities}",
     "pluginSourceHint": "Narzędzia, które ta wtyczka udostępnia czatowi. Działają z uprawnieniami wtyczki.",
-    "leakQuestion": "Ten czat odczytał Twoje dane, a to wywołanie sięga w nowe miejsce. Pytamy raz na miejsce w tym czacie.",
+    "leakQuestion": "Ten czat odczytał Twoje dane, a to wywołanie sięga w nowe miejsce.",
     "untrustedQuestion": "Ten czat przeczytał już stronę internetową lub wynik narzędzia, a to wywołanie zmieniłoby pamięć, którą zobaczą wszystkie kolejne czaty.",
     "contextTokens": "≈{count} tokenów",
     "catalogHint": "Skąd pochodzą narzędzia agentów. Wtyczka wyłączona tutaj jest wyłączona we wszystkich profilach i poleceniach AI. Narzędzia wbudowane włącza się w „Zapytaj AI”, w każdym profilu i każdym poleceniu AI.",

@@ -33,7 +33,10 @@ export interface AiCommandOperationDependencies extends AiCommandRunnerDependenc
    * The input the agent gives the command, or undefined when the command cannot
    * run now
    */
-  commandInputSchema: (command: CommandConfig) => JsonSchema | undefined
+  commandInputSchema: (
+    command: CommandConfig,
+    source: CommandRunSource
+  ) => JsonSchema | undefined
   /** Runs a command for the agent on its input and reports nothing */
   runCommand: (
     command: CommandConfig,
@@ -100,7 +103,7 @@ export function createAiCommandOperation(
       if (chain.includes(id)) return []
       const command = commands.find((item) => item.id === id)
       if (!command?.isEnabled) return []
-      const inputSchema = deps.commandInputSchema(command)
+      const inputSchema = deps.commandInputSchema(command, source)
       if (!inputSchema) return []
       const label = commandLabel(command)
       const about = command.description.trim()
@@ -111,6 +114,12 @@ export function createAiCommandOperation(
           description: about ? `${label}: ${about}` : label,
           inputSchema,
           execute: async (input, signal) => {
+            const current = deps.commands().find((item) => item.id === id)
+            if (
+              !current?.isEnabled ||
+              JSON.stringify(current) !== JSON.stringify(command)
+            )
+              throw new Error('The command changed during this turn')
             const controller = new AbortController()
             const abort = () => controller.abort()
             for (const parent of [signal, runSignal]) {
@@ -183,6 +192,24 @@ export function createAiCommandOperation(
           ...(call.command ? { commandId: call.command.id } : {}),
           providers: deps.toolProviders?.() ?? [],
           catalog: deps.toolCatalog?.(),
+          ...(call.command && {
+            getCurrentScope: () => {
+              const commandId = call.command!.id
+              const current = deps
+                .commands()
+                .find((command) => command.id === commandId)
+              return {
+                kind: 'aiCommand',
+                commandId,
+                tools:
+                  current?.isEnabled &&
+                  current.operationId === AI_COMMAND_OPERATION_ID
+                    ? aiCommandOperationConfigOf(current.operationConfig).tools
+                    : [],
+                catalog: deps.toolCatalog?.(),
+              }
+            },
+          }),
           ...(call.onProgress ? { onStep: call.onProgress } : {}),
         })
         if (call.signal.aborted) return cancelled

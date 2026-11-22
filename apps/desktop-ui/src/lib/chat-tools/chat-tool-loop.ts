@@ -302,7 +302,8 @@ export async function runChatToolLoop(
     // together, one by one or all at the same time
     const decisions = await Promise.all(
       requests.map((request) =>
-        deps.policy.isAllowedForSession(request.approvalKey) ||
+        (!request.leakTarget &&
+          deps.policy.isAllowedForSession(request.approvalKey)) ||
         (request.leakTarget !== undefined &&
           deps.policy.isLeakAllowed(request.leakTarget))
           ? Promise.resolve<ChatToolDecision>('allow-once')

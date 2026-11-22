@@ -156,6 +156,8 @@
       "workspaceHint": "Die Dateien des Profils: außerhalb des Chatverlaufs gespeichert, in jedem Chat des Profils verfügbar"
     },
     "takeScreenshot": "Screenshot aufnehmen",
+    "toolRevokeChat": "Chat-Berechtigungen widerrufen ({count})",
+    "toolDenyBatch": "Alle {count} ablehnen",
     "toolAllowBatch": "Alle {count} erlauben",
     "toolAllowAlways": "Immer erlauben",
     "toolAllowAlwaysWriteDelete": "Schreiben und Löschen immer erlauben",
@@ -1754,7 +1756,7 @@
     "sourceOffEverywhere": "In den Werkzeug-Einstellungen aus",
     "pluginCapabilities": "Plugin-Rechte: {capabilities}",
     "pluginSourceHint": "Werkzeuge, die dieses Plugin dem Chat anbietet. Sie laufen mit den Rechten des Plugins.",
-    "leakQuestion": "Dieser Chat hat Ihre Daten gelesen, und dieser Aufruf erreicht einen neuen Ort. Pro Ort wird in diesem Chat einmal gefragt.",
+    "leakQuestion": "Dieser Chat hat Ihre Daten gelesen, und dieser Aufruf erreicht einen neuen Ort.",
     "untrustedQuestion": "Dieser Chat hat eine Webseite oder die Ausgabe eines Werkzeugs gelesen, und dieser Aufruf würde das Gedächtnis ändern, das jeder künftige Chat sieht.",
     "contextTokens": "≈{count} Tokens",
     "catalogHint": "Woher die Werkzeuge der Agenten kommen. Ein hier ausgeschaltetes Plugin ist für alle Profile und KI-Befehle aus. Integrierte Werkzeuge schalten Sie in „KI fragen“, in jedem Profil und in jedem KI-Befehl.",

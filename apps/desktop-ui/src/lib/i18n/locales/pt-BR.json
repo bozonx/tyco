@@ -156,6 +156,8 @@
       "workspaceHint": "Os arquivos do perfil: guardados fora do histórico de chats e disponíveis em todos os chats do perfil"
     },
     "takeScreenshot": "Fazer captura de tela",
+    "toolRevokeChat": "Revogar permissões do chat ({count})",
+    "toolDenyBatch": "Recusar todos os {count}",
     "toolAllowBatch": "Permitir todas ({count})",
     "toolAllowAlways": "Sempre permitir",
     "toolAllowAlwaysWriteDelete": "Sempre permitir gravar e excluir",
@@ -1754,7 +1756,7 @@
     "sourceOffEverywhere": "Desativado em Ferramentas",
     "pluginCapabilities": "Permissões do plugin: {capabilities}",
     "pluginSourceHint": "Ferramentas que este plugin oferece ao chat. Elas rodam com as permissões do plugin.",
-    "leakQuestion": "Este chat já leu seus dados e esta chamada chegaria a um novo lugar. Pergunta-se uma vez por lugar neste chat.",
+    "leakQuestion": "Este chat já leu seus dados e esta chamada chegaria a um novo lugar.",
     "untrustedQuestion": "Este chat já leu uma página da web ou o resultado de uma ferramenta, e esta chamada mudaria a memória que todos os próximos chats verão.",
     "contextTokens": "≈{count} tokens",
     "catalogHint": "De onde vêm as ferramentas dos agentes. Um plugin desativado aqui fica desativado em todos os perfis e comandos de IA. As ferramentas integradas são ativadas em “Perguntar à IA”, em cada perfil e em cada comando de IA.",

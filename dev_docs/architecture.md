@@ -95,7 +95,7 @@ tool; it stays only in project permissions.
 - Memory, the reply blocks and the attachments are always on and never ask;
   `memoryMode` (`auto`, `read-only`, `off`) decides only whether the memory is
   there and writable. The file tools take their policy from the project
-  permissions; `workspace/` allows everything, deleting included. `move_path`
+  permissions; changes to existing files in `workspace/` ask. New files can use the create-only option, which refuses to overwrite an existing file. `move_path`
   needs deleting where the file comes from and writing where it goes.
   Changing the memory asks once the chat took in untrusted content (a web
   page, a command's or a plugin's output; `givesUntrustedContent`,
@@ -131,22 +131,19 @@ permission is not `deny`. Plugin tools run in the webview, which checks them.
 
 **Approvals** (`ChatToolApproval.vue`): allow once, allow in this chat (kept
 with the chat as `Chat.toolPermissions`, given back when it is reopened),
-always allow (writes `allow` into the profile for a tool that asks, and raises
-the project permission for a path that asks, both when both ask; saved before
-the call runs, and then also allowed in the chat, since a turn keeps the
-policies it started with) and deny. Allowing a call that asks also allows the
-leak target it would ask about once it runs freely (`coveredLeakTarget`). The calls of one model step
-that ask wait together and can be allowed at once.
+always allow (writes `allow` into the profile for a tool that asks, raises the
+project permission when applicable, and saves before the call runs), and deny.
+The chat header can clear chat-level grants. Calls of one model step can be
+allowed or denied together. A reviewed file write checks its preview again
+before applying the change.
 
-**Leak protection.** Once a profile chat holds personal data — memory in the
-instructions, attachments, a file or memory read — a call that could carry it
-somewhere new asks even at `allow`: `web_fetch` of a URL that neither the
-user's messages nor search results named, and any `external` tool. It asks once per host or tool in the chat and offers no "always allow"; any
-"allow" settles the target for the chat. A chat reopened from the history
-gets what its earlier calls brought in back from their results
-(`previousToolResults`): personal data, untrusted content, known URLs. Accepted
-residual risks: the text of a `web_search` query, and in "Ask AI" the user's
-own attachments with `web_fetch`.
+**Leak protection.** Once a chat holds personal data, network calls can
+require approval even when the tool is enabled. A one-time approval covers the
+current invocation. Chat-level approval can remember a destination. Search
+results register structured result URLs while the chat is open. History
+restores data and content sensitivity from earlier tool results, conservatively
+treating results from unavailable tools as personal and untrusted. AI commands
+use their own whitelist without interactive confirmation.
 
 ## Backend and trust boundaries
 

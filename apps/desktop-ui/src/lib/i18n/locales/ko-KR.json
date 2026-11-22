@@ -156,6 +156,8 @@
       "workspaceHint": "프로필 파일: 채팅 기록과 별도로 보관되며 프로필의 모든 채팅에서 사용할 수 있습니다"
     },
     "takeScreenshot": "스크린샷 찍기",
+    "toolRevokeChat": "채팅 권한 취소 ({count})",
+    "toolDenyBatch": "{count}개 모두 거부",
     "toolAllowBatch": "{count}개 모두 허용",
     "toolAllowAlways": "항상 허용",
     "toolAllowAlwaysWriteDelete": "쓰기와 삭제를 항상 허용",
@@ -1754,7 +1756,7 @@
     "sourceOffEverywhere": "도구 설정에서 꺼짐",
     "pluginCapabilities": "플러그인 권한: {capabilities}",
     "pluginSourceHint": "이 플러그인이 채팅에 제공하는 도구입니다. 플러그인의 권한으로 실행됩니다.",
-    "leakQuestion": "이 채팅은 이미 데이터를 읽었으며 이 호출은 새로운 곳에 닿습니다. 이 채팅에서 장소마다 한 번만 묻습니다.",
+    "leakQuestion": "이 채팅은 이미 데이터를 읽었으며 이 호출은 새로운 곳에 닿습니다.",
     "untrustedQuestion": "이 채팅은 이미 웹 페이지나 도구의 출력을 읽었으며, 이 호출은 이후 모든 채팅이 보는 메모리를 변경합니다.",
     "contextTokens": "약 {count}토큰",
     "catalogHint": "에이전트 도구의 출처입니다. 여기서 끈 플러그인은 모든 프로필과 AI 명령에서 꺼집니다. 기본 제공 도구는 “AI에게 묻기”, 각 프로필, 각 AI 명령에서 켜고 끕니다.",

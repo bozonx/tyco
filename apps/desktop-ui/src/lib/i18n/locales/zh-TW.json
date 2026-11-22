@@ -156,6 +156,8 @@
       "workspaceHint": "設定檔的檔案：保存在聊天記錄之外，可在該設定檔的所有聊天中使用"
     },
     "takeScreenshot": "擷取螢幕",
+    "toolRevokeChat": "撤銷聊天權限（{count} 項）",
+    "toolDenyBatch": "拒絕全部 {count} 項",
     "toolAllowBatch": "全部允許（{count}）",
     "toolAllowAlways": "一律允許",
     "toolAllowAlwaysWriteDelete": "一律允許寫入與刪除",
@@ -1750,7 +1752,7 @@
     "sourceOffEverywhere": "已在「工具」設定中關閉",
     "pluginCapabilities": "外掛權限：{capabilities}",
     "pluginSourceHint": "此外掛為對話提供的工具。它們以外掛的權限執行。",
-    "leakQuestion": "此對話已讀取你的資料，而此呼叫會存取新的地方。在此對話中每個地方只詢問一次。",
+    "leakQuestion": "此對話已讀取你的資料，而此呼叫會存取新的地方。",
     "untrustedQuestion": "此聊天已讀取網頁或工具的輸出，而此呼叫會變更之後所有聊天都會看到的記憶。",
     "contextTokens": "約 {count} 個 token",
     "catalogHint": "代理工具的來源。在此關閉的外掛會在所有設定檔與 AI 指令中關閉。內建工具在「詢問 AI」、各個設定檔與各個 AI 指令中開關。",

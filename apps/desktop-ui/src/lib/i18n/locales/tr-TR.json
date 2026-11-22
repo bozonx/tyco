@@ -156,6 +156,8 @@
       "workspaceHint": "Profil dosyaları: sohbet geçmişi dışında tutulur ve profilin tüm sohbetlerinde kullanılabilir"
     },
     "takeScreenshot": "Ekran görüntüsü al",
+    "toolRevokeChat": "Sohbet izinlerini geri al ({count})",
+    "toolDenyBatch": "{count} isteğin tümünü reddet",
     "toolAllowBatch": "Tümüne izin ver ({count})",
     "toolAllowAlways": "Her zaman izin ver",
     "toolAllowAlwaysWriteDelete": "Yazma ve silmeye her zaman izin ver",
@@ -1750,7 +1752,7 @@
     "sourceOffEverywhere": "Araçlar ayarlarında kapalı",
     "pluginCapabilities": "Eklenti izinleri: {capabilities}",
     "pluginSourceHint": "Bu eklentinin sohbete sunduğu araçlar. Eklentinin izinleriyle çalışır.",
-    "leakQuestion": "Bu sohbet verilerinizi okudu ve bu çağrı yeni bir yere ulaşacak. Bu sohbette her yer için bir kez sorulur.",
+    "leakQuestion": "Bu sohbet verilerinizi okudu ve bu çağrı yeni bir yere ulaşacak.",
     "untrustedQuestion": "Bu sohbet bir web sayfasını veya bir aracın çıktısını okudu ve bu çağrı, sonraki tüm sohbetlerin gördüğü belleği değiştirecek.",
     "contextTokens": "≈{count} token",
     "catalogHint": "Ajanların araçlarının nereden geldiği. Burada kapatılan bir eklenti tüm profillerde ve yapay zekâ komutlarında kapalıdır. Yerleşik araçlar “Yapay zekâya sor”da, her profilde ve her yapay zekâ komutunda açılır.",

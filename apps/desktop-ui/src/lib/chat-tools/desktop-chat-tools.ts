@@ -175,8 +175,10 @@ export interface DesktopChatToolsDependencies {
   /** Whether the "Ask AI" chat has the web, used when `profileId` is null */
   isAskAiWebEnabled?: () => boolean | undefined
   /** The sources switched off everywhere */
+  getProfileTools?: () => ProfileToolSettings | undefined
   getToolCatalog?: () => ToolCatalogSettings | undefined
   /** What the user wrote in the conversation, for the URLs it names */
+  getHasPersonalData?: () => boolean
   getConversationText?: () => string | undefined
   /** Writes "always allow" into the chat's profile */
   alwaysAllow?: (targets: readonly ChatToolAlwaysAllowTarget[]) => Promise<void>
@@ -208,8 +210,12 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
   const fileToolProvider = createFileToolProvider({
     listRoots: (scope) =>
       deps.invoke('list_ai_file_roots', fileToolArgs(scope)),
-    run: (scope, request) =>
-      deps.invoke('run_ai_file_tool', { ...fileToolArgs(scope), request }),
+    run: (scope, request, preview) =>
+      deps.invoke('run_ai_file_tool', {
+        ...fileToolArgs(scope),
+        request,
+        ...(preview ? { preview } : {}),
+      }),
     preview: (scope, request) =>
       deps.invoke('preview_ai_file_change', {
         ...fileToolArgs(scope),
@@ -324,10 +330,15 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
         modelId,
         canUseTools,
         scope: toolScope(profileTools),
+        getCurrentScope: () =>
+          toolScope(
+            deps.getProfileTools ? deps.getProfileTools() : profileTools
+          ),
         memoryMode: resolvedMode,
         outputBudgetCharacters,
         attachedFiles: deps.getAttachedFiles?.(),
         conversationText: deps.getConversationText?.(),
+        hasPersonalData: deps.getHasPersonalData?.(),
         previousToolResults: deps.getPreviousToolResults?.(),
       }),
     }

@@ -431,6 +431,37 @@ fn an_edit_replaces_one_unique_fragment() {
 }
 
 #[test]
+fn reviewed_write_does_not_overwrite_a_changed_file() {
+    let (dir, files) = fixture("ai_files_review");
+    let path = dir.join("workspace/note.md");
+    fs::write(&path, "Original").unwrap();
+    let request = AiFileToolRequest::WriteFile {
+        path: "workspace/note.md".into(),
+        content: "Approved content".into(),
+        create_only: false,
+    };
+    let preview = files.preview(request.clone()).unwrap();
+    fs::write(&path, "Changed after review").unwrap();
+    assert!(files.run_reviewed(request, Some(preview)).is_err());
+    assert_eq!(fs::read_to_string(path).unwrap(), "Changed after review");
+}
+
+#[test]
+fn a_create_only_write_preserves_an_existing_file() {
+    let (dir, files) = fixture("ai_files_create");
+    let path = dir.join("workspace/new.md");
+    let request = AiFileToolRequest::WriteFile {
+        path: "workspace/new.md".into(),
+        content: "New file".into(),
+        create_only: true,
+    };
+    assert!(files.run(request.clone()).is_ok());
+    fs::write(&path, "Changed").unwrap();
+    assert!(files.run(request).is_err());
+    assert_eq!(fs::read_to_string(path).unwrap(), "Changed");
+}
+
+#[test]
 fn a_preview_changes_nothing() {
     let (dir, files) = fixture("ai_files_preview");
     fs::write(dir.join("site/page.md"), "Hello world\n").unwrap();
@@ -931,6 +962,7 @@ fn oversized_edits_and_previews_leave_the_file_unchanged() {
         files.preview(AiFileToolRequest::WriteFile {
             path: "workspace/file.txt".into(),
             content: "b".repeat(MAX_WRITE_BYTES + 1),
+            create_only: false,
         }),
         Err(AppError::ResourceLimit(_))
     ));

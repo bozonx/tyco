@@ -80,9 +80,12 @@ pub async fn run_ai_file_tool(
     context: ToolCallContext,
     attachments: Vec<AiAttachedFile>,
     request: AiFileToolRequest,
+    preview: Option<AiFileChangePreview>,
 ) -> Result<AiFileToolOutput, AppError> {
     run_blocking(move || {
-        with_conversation_files(&app, context, attachments, |files| files.run(request))
+        with_conversation_files(&app, context, attachments, |files| {
+            files.run_reviewed(request, preview)
+        })
     })
     .await?
 }

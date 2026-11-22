@@ -88,6 +88,14 @@ export function createCommandToolProvider(
         const chatTool = await adaptCommand(command, tool, {
           risk: commandRisk(command, riskLookup),
           run: async (input, signal) => {
+            const current = deps
+              .commands()
+              .find((item) => item.id === command.id)
+            if (
+              !current?.isEnabled ||
+              JSON.stringify(current) !== JSON.stringify(command)
+            )
+              throw new Error('The command changed during this turn')
             const run = await runWithinCommandLimit(
               deps.runLimitSec?.(),
               signal,

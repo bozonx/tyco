@@ -216,8 +216,8 @@ describe('chat-tools-session permissions', () => {
       expect(session.pendingApprovals.value[0]?.alwaysAllow).toEqual([target])
     )
     session.answerApproval('a1', 'allow-always')
-    // allowed for the chat too: the turn keeps the policies it started with
-    expect(await answer).toBe('allow-session')
+    expect(await answer).toBe('allow-always')
+    expect(session.exportPermissions().allowed).toEqual([])
     expect(alwaysAllow).toHaveBeenCalledWith([target])
   })
 
@@ -251,7 +251,7 @@ describe('chat-tools-session permissions', () => {
       leakTarget: info.leakTarget,
     })
     expect(decide({ toolCall: { toolName: 'send', input: {} } })).toBe(
-      'approved'
+      'user-approval'
     )
   })
 

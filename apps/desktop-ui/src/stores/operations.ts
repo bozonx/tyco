@@ -203,10 +203,11 @@ export const useOperationsStore = defineStore('tools', () => {
     instructions: () => APP_CONFIG.aiInstructions.aiTask,
     defaultMaxSteps: () => maxToolStepsOf(desktopStore.userConfig?.llm),
     commands: () => desktopStore.userConfig?.commands ?? [],
-    commandInputSchema: (command) => {
+    commandInputSchema: (command, source) => {
       const tool = registry.get(command.operationId)
       if (
         !tool ||
+        (source === 'chat' && tool.canRunFromChat === false) ||
         invocationUnavailableReason(
           command,
           { get: registry.get, environment },

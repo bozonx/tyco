@@ -156,6 +156,8 @@
       "workspaceHint": "プロファイルのファイル：チャット履歴とは別に保存され、プロファイルのすべてのチャットで使えます"
     },
     "takeScreenshot": "スクリーンショットを撮る",
+    "toolRevokeChat": "チャットの権限を取り消す（{count} 件）",
+    "toolDenyBatch": "{count} 件すべて拒否",
     "toolAllowBatch": "{count} 件すべて許可",
     "toolAllowAlways": "常に許可",
     "toolAllowAlwaysWriteDelete": "書き込みと削除を常に許可",
@@ -1750,7 +1752,7 @@
     "sourceOffEverywhere": "ツール設定でオフ",
     "pluginCapabilities": "プラグインの権限: {capabilities}",
     "pluginSourceHint": "このプラグインがチャットに提供するツール。プラグインの権限で動作します。",
-    "leakQuestion": "このチャットはあなたのデータを読み取っており、この呼び出しは新しい場所に届きます。このチャットでは場所ごとに一度だけ確認します。",
+    "leakQuestion": "このチャットはあなたのデータを読み取っており、この呼び出しは新しい場所に届きます。",
     "untrustedQuestion": "このチャットはすでにウェブページまたはツールの出力を読み込んでおり、この呼び出しは今後のすべてのチャットが参照するメモリを変更します。",
     "contextTokens": "約 {count} トークン",
     "catalogHint": "エージェントのツールの出どころ。ここでオフにしたプラグインはすべてのプロファイルと AI コマンドでオフになります。組み込みツールは「AI に質問」、各プロファイル、各 AI コマンドで切り替えます。",

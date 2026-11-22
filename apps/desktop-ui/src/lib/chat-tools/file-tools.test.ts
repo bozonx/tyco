@@ -170,7 +170,7 @@ describe('file-tools', () => {
     // left for Rust to refuse with a reason
     expect(access('read_file', { path: 'nowhere/a.md' })).toBe('allow')
     // deleting follows its own permission
-    expect(access('delete_path', { path: 'workspace/a.md' })).toBe('allow')
+    expect(access('delete_path', { path: 'workspace/a.md' })).toBe('ask')
     expect(access('delete_path', { path: 'projects/site/a.md' })).toBe('ask')
     expect(access('write_file', { path: 'projects/site/a.md' })).toBe('allow')
     expect(tools.get('delete_path')!.risk).toBe('destructive')
@@ -445,12 +445,14 @@ describe('file-tools', () => {
     const { deps, provider } = setup()
     const tools = await toolsOf(provider)
     const write = tools.get('write_file')
-    const input = { path: 'workspace/a.md', content: 'x' }
+    const input = { path: 'projects/site/a.md', content: 'x' }
     expect(write!.accessFor!(input)).toBe('allow')
 
-    deps.listRoots.mockResolvedValue([
-      { path: 'workspace', read: 'allow', write: 'ask', delete: 'ask' },
-    ])
+    deps.listRoots.mockResolvedValue(
+      roots.map((root) =>
+        root.path === 'projects/site' ? { ...root, write: 'ask' } : root
+      )
+    )
     await expect(execute(write, input)).rejects.toThrow(/changed/)
     expect(deps.run).not.toHaveBeenCalled()
     // the next call asks

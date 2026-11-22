@@ -70,7 +70,7 @@ describe('chat-tool-approvals', () => {
     expect(await d).toBe('deny')
   })
 
-  it('allows the calls to the same leak target together', async () => {
+  it('keeps other calls to the same target pending after a one-time approval', async () => {
     const approvals = createChatToolApprovals()
     const signal = new AbortController().signal
     const a = approvals.request(
@@ -81,10 +81,10 @@ describe('chat-tool-approvals', () => {
       { ...request('a2'), approvalKey: 'k2', leakTarget: 'host:x' },
       signal
     )
-    // allowing a leak target once allows it for the chat
     approvals.answer('a1', 'allow-once')
     expect(await a).toBe('allow-once')
-    expect(approvals.isPending('a2')).toBe(false)
-    expect(await b).toBe('allow-once')
+    expect(approvals.isPending('a2')).toBe(true)
+    approvals.answer('a2', 'deny')
+    expect(await b).toBe('deny')
   })
 })

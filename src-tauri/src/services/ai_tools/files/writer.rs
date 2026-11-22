@@ -14,6 +14,7 @@ impl ConversationFiles<'_> {
         &self,
         path: &str,
         content: &str,
+        create_only: bool,
     ) -> Result<AiFileToolOutput, AppError> {
         ensure_write_size(content.len())?;
         let target = self.resolve(path, Access::Write, true)?;
@@ -28,8 +29,11 @@ impl ConversationFiles<'_> {
             Err(error) if error.kind() == io::ErrorKind::NotFound => true,
             Err(error) => return Err(error.into()),
         };
+        if create_only && !is_created {
+            return Err(AppError::invalid_input(format!("{path} already exists")));
+        }
         let (parent, name) = target.parent(true)?;
-        scoped_io::write_file(&parent, name, content.as_bytes(), true)?;
+        scoped_io::write_file(&parent, name, content.as_bytes(), !create_only)?;
         Ok(AiFileToolOutput::WriteFile {
             path: target.virtual_path(),
             is_created,
@@ -104,7 +108,7 @@ impl ConversationFiles<'_> {
             _ => {}
         }
         match request {
-            AiFileToolRequest::WriteFile { path, content } => {
+            AiFileToolRequest::WriteFile { path, content, .. } => {
                 ensure_write_size(content.len())?;
                 let target = self.resolve(&path, Access::Write, true)?;
                 if target.is_root() {

@@ -156,6 +156,8 @@
       "workspaceHint": "The profile files: kept outside the chat history and available in every chat of the profile"
     },
     "takeScreenshot": "Take screenshot",
+    "toolRevokeChat": "Revoke chat permissions ({count})",
+    "toolDenyBatch": "Deny all {count}",
     "toolAllowBatch": "Allow all {count}",
     "toolAllowAlways": "Always allow",
     "toolAllowAlwaysWriteDelete": "Always allow writing and deleting",
@@ -1754,7 +1756,7 @@
     "sourceOffEverywhere": "Off in the Tools settings",
     "pluginCapabilities": "Plugin permissions: {capabilities}",
     "pluginSourceHint": "Tools this plugin offers to the chat. They run with the plugin's permissions.",
-    "leakQuestion": "This chat has read your data, and this call would reach a new place. Asked once per place in this chat.",
+    "leakQuestion": "This chat has read your data, and this call would reach a new place.",
     "untrustedQuestion": "This chat has read a web page or a tool's output, and this call would change the memory every future chat sees.",
     "contextTokens": "≈{count} tokens",
     "catalogHint": "Where the agents' tools come from. A plugin switched off here is off for every profile and AI command. Built-in tools are switched in Ask AI, in each profile and in each AI command.",

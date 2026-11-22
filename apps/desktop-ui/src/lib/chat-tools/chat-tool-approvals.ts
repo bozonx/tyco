@@ -33,17 +33,17 @@ export function createChatToolApprovals() {
    * for the calls to that target
    */
   const settle = (approvalId: string, answer: ChatToolAnswer) => {
-    if (answer === 'allow-batch') {
+    if (answer === 'allow-batch' || answer === 'deny-batch') {
       const batchId = waiting.get(approvalId)?.request.batchId
-      if (batchId) settleBatch(batchId, 'allow-once')
-      else settleOne(approvalId, 'allow-once')
+      const decision = answer === 'allow-batch' ? 'allow-once' : 'deny'
+      if (batchId) settleBatch(batchId, decision)
+      else settleOne(approvalId, decision)
       return
     }
     const decision = answer
     const request = settleOne(approvalId, decision)
     if (!request || decision === 'deny') return
-    // allowing a leak target once allows it for the chat
-    if (decision === 'allow-once' && !request.leakTarget) return
+    if (decision === 'allow-once') return
     for (const other of [...waiting.values()].map((entry) => entry.request)) {
       const isSame = request.leakTarget
         ? other.leakTarget === request.leakTarget

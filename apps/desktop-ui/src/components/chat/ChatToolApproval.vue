@@ -18,7 +18,10 @@
           }}
         </span>
       </span>
-      <span v-if="request?.leakTarget" class="tool-approval-hint">
+      <span
+        v-if="request?.leakTarget || request?.coveredLeakTarget"
+        class="tool-approval-hint"
+      >
         {{ t('toolPermissions.leakQuestion') }}
       </span>
       <span
@@ -32,7 +35,7 @@
       <Button
         v-if="batchCount > 1"
         size="xs"
-        variant="primary"
+        variant="neutral"
         icon="mdi:check-all"
         @click="emit('decide', 'allow-batch')"
       >
@@ -40,14 +43,13 @@
       </Button>
       <Button
         size="xs"
-        :variant="batchCount > 1 ? 'neutral' : 'primary'"
+        variant="primary"
         icon="mdi:check"
         @click="emit('decide', 'allow-once')"
       >
         {{ t('chat.toolAllow') }}
       </Button>
       <Button
-        v-if="!request?.leakTarget"
         size="xs"
         variant="neutral"
         icon="mdi:check-circle-outline"
@@ -71,6 +73,14 @@
         @click="emit('decide', 'deny')"
       >
         {{ t('chat.toolDeny') }}
+      </Button>
+      <Button
+        v-if="batchCount > 1"
+        size="xs"
+        variant="danger-ghost"
+        @click="emit('decide', 'deny-batch')"
+      >
+        {{ t('chat.toolDenyBatch', { count: batchCount }) }}
       </Button>
     </div>
   </div>

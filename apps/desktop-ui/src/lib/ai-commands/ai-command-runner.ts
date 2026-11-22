@@ -66,6 +66,7 @@ export interface AiCommandRunOptions {
   providers?: readonly ChatToolProvider[]
   /** The sources switched off everywhere */
   catalog?: ToolCatalogSettings
+  getCurrentScope?: () => ToolScope
   /** Tells which tool the agent runs now, by its name */
   onStep?: (label: string) => void
 }
@@ -196,6 +197,7 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
             profileId: null,
             modelId: '',
             scope,
+            getCurrentScope: options.getCurrentScope,
             callContext: toolCallContextOf(scope),
           })
         : null

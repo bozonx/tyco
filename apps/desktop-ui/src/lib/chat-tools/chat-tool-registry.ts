@@ -44,6 +44,7 @@ export interface ChatToolExecuteOptions {
    * its output fits a page into it
    */
   outputLimitCharacters: number
+  noteKnownUrl?: (url: string) => void
 }
 
 /** What the user is shown of a call before deciding on it */
@@ -129,7 +130,8 @@ export interface ChatToolDefinition {
   /** Shown with the approval request; a failure only leaves it out */
   preview?(
     input: unknown,
-    signal: AbortSignal
+    signal: AbortSignal,
+    toolCallId?: string
   ): Promise<ChatToolPreview | undefined>
   /** How much of the output the model is given */
   outputLimitCharacters?: number
@@ -163,6 +165,7 @@ export interface ChatToolContext {
   modelId: string
   /** Where the tools are offered, which decides about each of them */
   scope: ToolScope
+  getCurrentScope?: () => ToolScope
   /** Where Rust is told the calls come from */
   callContext: ToolCallContext
   /** Profile long-term memory mode */
@@ -289,6 +292,8 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
     let remainingCharacters =
       context.outputBudgetCharacters ?? Number.POSITIVE_INFINITY
     const tools: ToolSet = {}
+    const automaticCalls = new Set<string>()
+    const automaticMemoryCalls = new Set<string>()
     for (const tool of definitions.values()) {
       tools[tool.name] = dynamicTool({
         description: tool.description,
@@ -296,6 +301,23 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
           tool.inputSchema as Parameters<typeof jsonSchema>[0]
         ),
         execute: async (input, { abortSignal, toolCallId }) => {
+          const current = currentStateOf(tool)
+          const original = policies.get(tool.name)
+          if (abortSignal?.aborted) throw abortSignal.reason
+          if (
+            current === 'off' ||
+            (original === 'allow' &&
+              current === 'ask' &&
+              automaticCalls.has(toolCallId))
+          )
+            throw new Error('The tool permissions changed during this turn')
+          if (
+            automaticMemoryCalls.has(toolCallId) &&
+            asksForUntrustedContent(tool, input)
+          )
+            throw new Error(
+              'External content requires approval before updating memory. Request approval again.'
+            )
           const toolLimit = tool.outputLimitCharacters ?? TOOL_OUTPUT_CHARACTERS
           const minCharacters = Math.min(toolLimit, MIN_TOOL_OUTPUT_CHARACTERS)
           const limitCharacters = Math.max(
@@ -310,13 +332,13 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
                 signal: abortSignal ?? new AbortController().signal,
                 toolCallId,
                 outputLimitCharacters: limitCharacters,
+                noteKnownUrl: deps.policy.noteKnownUrl,
               }),
               limitCharacters
             )
             usedCharacters = output.text.length
             if (output.isTruncated) truncatedCallIds.add(toolCallId)
             if (tool.readsPersonalData) deps.policy.notePersonalData()
-            if (tool.givesKnownUrls) deps.policy.noteKnownText(output.text)
             if (tool.givesUntrustedContent) deps.policy.noteUntrustedContent()
             return output.text
           } finally {
@@ -333,8 +355,16 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
       )
 
     /** The policy of the tool where it is offered */
-    const policyOf = (tool: ChatToolDefinition) =>
-      policies.get(tool.name) ?? 'ask'
+    const currentStateOf = (tool: ChatToolDefinition) =>
+      toolStateIn(
+        context.getCurrentScope?.() ?? context.scope,
+        catalogToolOf(tool)
+      )
+
+    const policyOf = (tool: ChatToolDefinition): ProjectAccessMode => {
+      const state = currentStateOf(tool)
+      return state === 'off' ? 'deny' : state
+    }
 
     /** The call's access by the tool's policy and by its input */
     const accessOf = (tool: ChatToolDefinition, input: unknown) =>
@@ -345,7 +375,7 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
      * data; only where somebody can answer, and not once allowed in the chat
      */
     const leakTargetOf = (tool: ChatToolDefinition, input: unknown) => {
-      if (context.scope.kind !== 'profile' || !deps.policy.hasPersonalData())
+      if (context.scope.kind === 'aiCommand' || !deps.policy.hasPersonalData())
         return undefined
       const target = tool.leakTarget
         ? tool.leakTarget(input, deps.policy.isKnownUrl)
@@ -371,14 +401,27 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
     const toolApproval: ToolApproval = ({ toolCall }) => {
       const tool = definitions.get(toolCall.toolName)
       if (!tool) return 'denied'
-      const access = accessOf(tool, toolCall.input)
+      const input = toolCall.input
+      const decision = deps.policy.decide(
+        approvalKey(tool.name, input),
+        accessOf(tool, input)
+      )
+      automaticCalls.delete(toolCall.toolCallId)
+      if (decision === 'denied') return decision
+      if (tool.givesUntrustedContent) deps.policy.noteUntrustedContent()
       if (
-        access === 'allow' &&
-        (leakTargetOf(tool, toolCall.input) ||
-          asksForUntrustedContent(tool, toolCall.input))
+        decision === 'approved' &&
+        (leakTargetOf(tool, input) || asksForUntrustedContent(tool, input))
       )
         return 'user-approval'
-      return deps.policy.decide(approvalKey(tool.name, toolCall.input), access)
+      if (
+        decision === 'approved' &&
+        tool.asksAfterUntrustedContent &&
+        !deps.policy.hasUntrustedContent()
+      )
+        automaticMemoryCalls.add(toolCall.toolCallId)
+      if (decision === 'approved') automaticCalls.add(toolCall.toolCallId)
+      return decision
     }
 
     /**
@@ -417,7 +460,8 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
           source: { kind: 'core', id: '' },
           risk: 'external',
         }
-      const isAllowed = accessOf(tool, input) === 'allow'
+      const isAllowed =
+        deps.policy.decide(key, accessOf(tool, input)) === 'approved'
       const target = leakTargetOf(tool, input)
       const leakTarget = isAllowed ? target : undefined
       const coveredLeakTarget = isAllowed ? undefined : target

@@ -48,7 +48,8 @@ export interface FileToolsDependencies {
   listRoots: (scope: FileToolScope) => Promise<AiFileRoot[]>
   run: (
     scope: FileToolScope,
-    request: AiFileToolRequest
+    request: AiFileToolRequest,
+    preview?: AiFileChangePreview
   ) => Promise<AiFileToolOutput>
   preview: (
     scope: FileToolScope,
@@ -245,12 +246,16 @@ const FILE_TOOLS: readonly FileToolSpec[] = [
     labelKey: 'chatTools.files.writeFile',
     icon: 'mdi:file-edit-outline',
     description:
-      'Creates a text file of any format (Markdown, code, JSON, CSV…), or replaces the whole content of one. Folders on the way are created. Files the user asks to save go to workspace/ unless they name a project. To change part of a file, use edit_file.',
+      'Creates a text file of any format (Markdown, code, JSON, CSV…), or replaces the whole content of one. Folders on the way are created. Files the user asks to save go to workspace/ unless they name a project. Set createOnly when creating a new file to prevent overwrites. To change part of a file, use edit_file.',
     inputSchema: {
       type: 'object',
       properties: {
         path: PATH,
         content: { type: 'string', description: 'The whole new content' },
+        createOnly: {
+          type: 'boolean',
+          description: 'Refuse if the file already exists',
+        },
       },
       required: ['path', 'content'],
     },
@@ -260,6 +265,7 @@ const FILE_TOOLS: readonly FileToolSpec[] = [
       operation: 'writeFile',
       path: text(input.path),
       content: text(input.content),
+      ...(input.createOnly === true ? { createOnly: true } : {}),
     }),
     hasPreview: true,
   },
@@ -373,7 +379,13 @@ export function createFileToolProvider(
       // a path outside every root fails in Rust, with a reason for the model
       if (targets.some((target) => !target.root)) return 'allow'
       return stricterAccess(
-        ...targets.map((target) => target.root![target.access])
+        ...targets.map(({ root, access }) =>
+          root!.path === 'workspace' &&
+          access !== 'read' &&
+          !(spec.name === 'write_file' && asInput(input).createOnly === true)
+            ? stricterAccess(root![access], 'ask')
+            : root![access]
+        )
       )
     }
 
@@ -415,13 +427,7 @@ export function createFileToolProvider(
      */
     const recheckAccess = async (input: unknown) => {
       const approved = accessFor(input)
-      let current: AiFileRoot[]
-      try {
-        current = await deps.listRoots(scope)
-      } catch {
-        return
-      }
-      turn.roots = current
+      turn.roots = await deps.listRoots(scope)
       const now = accessFor(input)
       if (isStricterAccess(now, approved))
         throw new Error(
@@ -429,13 +435,19 @@ export function createFileToolProvider(
         )
     }
 
+    const previews = new Map<string, AiFileChangePreview>()
     const execute = async (input: unknown, options: ChatToolExecuteOptions) => {
       await recheckAccess(input)
+      if (options.signal.aborted) throw options.signal.reason
       const request = spec.request(
         asInput(input),
         options.outputLimitCharacters
       )
-      const output = await deps.run(scope, request)
+      const preview = previews.get(options.toolCallId)
+      previews.delete(options.toolCallId)
+      const output = preview
+        ? await deps.run(scope, request, preview)
+        : await deps.run(scope, request)
       if (output.operation !== 'readDocument')
         return formatFileToolOutput(output)
       const documentText = await deps.readDocumentText(
@@ -482,11 +494,16 @@ export function createFileToolProvider(
           .join('>'),
       ...(spec.hasPreview
         ? {
-            preview: async (input: unknown) => {
+            preview: async (
+              input: unknown,
+              _signal: AbortSignal,
+              toolCallId?: string
+            ) => {
               const change = await deps.preview(
                 scope,
                 spec.request(asInput(input), 0)
               )
+              if (toolCallId) previews.set(toolCallId, change)
               return { kind: 'file-change' as const, ...change }
             },
           }

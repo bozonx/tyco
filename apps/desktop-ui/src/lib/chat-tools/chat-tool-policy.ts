@@ -11,7 +11,7 @@ export type ChatToolDecision =
   'allow-once' | 'allow-session' | 'allow-always' | 'deny'
 
 /** What the user may answer a call with: its decision, or allowing its batch */
-export type ChatToolAnswer = ChatToolDecision | 'allow-batch'
+export type ChatToolAnswer = ChatToolDecision | 'allow-batch' | 'deny-batch'
 
 export interface ChatToolPolicyOptions {
   /**
@@ -113,9 +113,9 @@ export function createChatToolPolicy(options: ChatToolPolicyOptions) {
 
   /**
    * Applies the user's answer; true when the call may run. A call that asked
-   * about a leak target allows the target for the chat whatever the answer.
-   * Allowing a call for the chat also allows the target it would ask about once
-   * it runs freely, so that it is not asked about twice
+   * about a leak target allows the target for the chat when explicitly
+   * requested. Allowing a call for the chat also allows the target it would ask
+   * about once it runs freely, so that it is not asked about twice
    */
   const answer = (
     approvalKey: string,
@@ -123,11 +123,12 @@ export function createChatToolPolicy(options: ChatToolPolicyOptions) {
     targets: ChatToolAnswerTargets = {}
   ) => {
     if (decision === 'deny') return false
+    if (decision !== 'allow-session') return true
     if (targets.leakTarget) leakAllowed.add(targets.leakTarget)
-    else if (decision === 'allow-session') {
+    else {
       sessionAllowed.add(approvalKey)
       if (targets.coveredLeakTarget) leakAllowed.add(targets.coveredLeakTarget)
-    } else return true
+    }
     options.onPermissionsChange?.(exportPermissions())
     return true
   }
@@ -137,11 +138,13 @@ export function createChatToolPolicy(options: ChatToolPolicyOptions) {
     leakAllowed: [...leakAllowed],
   })
 
+  const noteKnownUrl = (value: string) => {
+    const url = normalizedUrl(value)
+    if (url) knownUrls.add(url)
+  }
+
   const noteKnownText = (text: string | undefined) => {
-    for (const match of text?.match(URL_PATTERN) ?? []) {
-      const url = normalizedUrl(match)
-      if (url) knownUrls.add(url)
-    }
+    for (const match of text?.match(URL_PATTERN) ?? []) noteKnownUrl(match)
   }
 
   return {
@@ -164,6 +167,7 @@ export function createChatToolPolicy(options: ChatToolPolicyOptions) {
     hasUntrustedContent: () => hasUntrustedContent,
     /** Remembers the URLs a text names: the user's messages, search results */
     noteKnownText,
+    noteKnownUrl,
     isKnownUrl: (url: string) => {
       const normalized = normalizedUrl(url)
       return normalized !== undefined && knownUrls.has(normalized)

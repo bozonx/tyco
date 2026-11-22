@@ -191,8 +191,13 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
       ),
     isAskAiWebEnabled: () =>
       deps.getUserConfig()?.llm?.tasks.chat.isWebSearchEnabled,
+    getProfileTools: () => profile.value?.tools,
     getToolCatalog: () => deps.getUserConfig()?.tools,
     pluginTools: deps.pluginTools,
+    getHasPersonalData: () =>
+      model.messages.value.some((message) =>
+        Boolean(message.attachments?.length || message.images?.length)
+      ),
     getConversationText: () =>
       model.messages.value
         .filter((message) => message.role === 'user')
@@ -603,6 +608,22 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     /** The tool calls of the answer that wait for the user */
     pendingToolApprovals: chatTools.pendingApprovals,
     answerToolApproval: chatTools.answerApproval,
+    toolPermissionCount: computed(() => {
+      const permissions = model.currentChatParams.value.toolPermissions
+      return (
+        (permissions?.allowed.length ?? 0) +
+        (permissions?.leakAllowed.length ?? 0)
+      )
+    }),
+    async revokeChatToolPermissions() {
+      if (model.isGenerating.value) return
+      chatTools.restorePermissions(undefined)
+      model.currentChatParams.value = {
+        ...model.currentChatParams.value,
+        toolPermissions: undefined,
+      }
+      if (isHistoryEnabled()) await model.persistCurrentChat()
+    },
     /** The profile this chat belongs to; null for "Ask AI" */
     profileId,
     soul,

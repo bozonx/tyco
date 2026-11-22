@@ -12,7 +12,7 @@ something new.
 
 ## What an assistant sees out of the box
 
-- Its own `workspace/` folder and its memory. It uses them without asking; what
+- Its own `workspace/` folder and its memory. Reading the workspace and creating new files there are automatic. Overwriting, editing, moving and deleting existing files ask first. What
   it changes in memory is shown in the steps of the answer. Once the chat has
   read a web page or the output of a command or plugin, a change to the memory
   asks first: the memory shapes every chat to come, and the text it read could
@@ -55,11 +55,11 @@ and plugin tools are picked per profile in its settings.
 
 ## Where tools are available
 
-| Where          | Tools                                                      | Asks?                    |
-| -------------- | ---------------------------------------------------------- | ------------------------ |
-| Ask AI         | the web (switch in Settings → Ask AI), your attachments    | never                    |
-| AI command     | only what you put on its list: commands, web, plugin tools | never, all of it allowed |
-| A profile chat | as set in the profile                                      | by each tool's setting   |
+| Where          | Tools                                                      | Asks?                                                 |
+| -------------- | ---------------------------------------------------------- | ----------------------------------------------------- |
+| Ask AI         | the web (switch in Settings → Ask AI), your attachments    | asks about new destinations after reading attachments |
+| AI command     | only what you put on its list: commands, web, plugin tools | never, all of it allowed                              |
+| A profile chat | as set in the profile                                      | by each tool's setting                                |
 
 "Ask AI" is meant for quick answers and checking facts: pick a fast model for
 it. It never sees your files, memory or commands. An AI command often runs with
@@ -72,12 +72,12 @@ When a call needs your approval, the message shows where the tool comes from,
 what it may do, and for a plugin its capabilities. You can allow it once, allow
 it in this chat (kept when you open the chat from the history again; a new chat
 starts without), always allow it in this profile, or deny it. When the model
-asks for several calls at once, you can allow them together.
+asks for several calls at once, you can allow or deny them together. The chat header lets you revoke permissions remembered for the chat.
 
 **Protection from leaks.** Once a profile chat has read your data — files,
 memory or attachments — an assistant asks before reading a web page nobody
-named in the conversation or in search results, and before any tool that acts
-outside TyCo, even if it is allowed. It asks once per site or tool in that chat.
+named in the conversation or in search results, before sending a web search to Jina, and before any tool that acts
+outside TyCo, even if it is allowed. It can remember a site or tool for the chat when you choose to allow it in this chat. A one-time approval covers the current call.
 
 Since memory is on in most profiles, this means a tool that acts outside TyCo
 asks once in every new chat, even when it is set to "Allow".
@@ -85,10 +85,6 @@ asks once in every new chat, even when it is set to "Allow".
 Accepted limits:
 
 - The text of a web search query is not checked.
-- "Ask AI" has no leak protection: your attachments, the text you started it
-  with (a selection, say) and a web page could meet in one answer. You gave
-  them to that chat yourself; turn the web off there in Settings → Ask AI if
-  you do not want that.
 - An AI command runs everything on its list freely, the web included. A chat
   that calls an AI command with the web on its list asks as for a tool that
   acts outside.

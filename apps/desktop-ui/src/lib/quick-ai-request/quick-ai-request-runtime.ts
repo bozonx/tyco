@@ -117,8 +117,11 @@ export function createQuickAiRequestRuntime(
         getAttachedFiles: () => model.attachedFiles(),
         isAskAiWebEnabled: () =>
           deps.getUserConfig()?.llm?.tasks.chat.isWebSearchEnabled,
+        getProfileTools: () => profileOf(profileId)?.tools,
         getToolCatalog: () => deps.getUserConfig()?.tools,
         pluginTools: deps.pluginTools,
+        getHasPersonalData: () =>
+          Boolean(model.sourceText.value || model.sourceImages.value.length),
         getConversationText: () => model.conversationText(),
         getFetchMaxCharacters: () =>
           deps.getUserConfig()?.llm?.webSearch?.fetchMaxCharacters,

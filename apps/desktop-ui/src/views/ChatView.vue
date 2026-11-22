@@ -56,6 +56,18 @@
           />
         </div>
       </div>
+      <div v-if="chatStore.toolPermissionCount" class="profile-header">
+        <button
+          type="button"
+          class="profile-capabilities"
+          :disabled="chatStore.isGenerating"
+          @click="chatStore.revokeChatToolPermissions()"
+        >
+          {{
+            t('chat.toolRevokeChat', { count: chatStore.toolPermissionCount })
+          }}
+        </button>
+      </div>
       <AiChat :key="scopeKey" class="chat-body" />
     </div>
   </div>

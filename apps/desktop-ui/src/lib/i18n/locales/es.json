@@ -156,6 +156,8 @@
       "workspaceHint": "Los archivos del perfil: guardados fuera del historial de chats y disponibles en todos los chats del perfil"
     },
     "takeScreenshot": "Hacer captura de pantalla",
+    "toolRevokeChat": "Revocar permisos del chat ({count})",
+    "toolDenyBatch": "Rechazar los {count}",
     "toolAllowBatch": "Permitir las {count}",
     "toolAllowAlways": "Permitir siempre",
     "toolAllowAlwaysWriteDelete": "Permitir siempre escribir y eliminar",
@@ -1754,7 +1756,7 @@
     "sourceOffEverywhere": "Desactivado en Herramientas",
     "pluginCapabilities": "Permisos del complemento: {capabilities}",
     "pluginSourceHint": "Herramientas que este complemento ofrece al chat. Se ejecutan con los permisos del complemento.",
-    "leakQuestion": "Este chat ya leyó tus datos y esta llamada llegaría a un sitio nuevo. Se pregunta una vez por sitio en este chat.",
+    "leakQuestion": "Este chat ya leyó tus datos y esta llamada llegaría a un sitio nuevo.",
     "untrustedQuestion": "Este chat ha leído una página web o el resultado de una herramienta, y esta llamada cambiaría la memoria que verán todos los chats siguientes.",
     "contextTokens": "≈{count} tokens",
     "catalogHint": "De dónde salen las herramientas de los agentes. Un complemento desactivado aquí lo está en todos los perfiles y comandos de IA. Las herramientas integradas se activan en «Preguntar a la IA», en cada perfil y en cada comando de IA.",

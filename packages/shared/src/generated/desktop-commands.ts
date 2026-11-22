@@ -406,6 +406,7 @@ export interface DesktopCommands {
       context: ToolCallContext
       attachments: Array<AiAttachedFile>
       request: AiFileToolRequest
+      preview?: AiFileChangePreview | null
     }
     result: AiFileToolOutput
   }

@@ -91,6 +91,7 @@ export function createChatModel(deps: ChatModelDependencies) {
       }
     },
     /** Resolves once the writes started so far are done */
+    persistCurrentChat: () => persistence.persist(state.messages.value),
     whenSaved: persistence.whenSaved,
   }
 }

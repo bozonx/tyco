@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 69f5cd0346be0d4cc555fb317ee8433bfe1ca0e3e403948486de9bdc948dad0f
+// Source hash: 8fe0b9ff1d09675f735200f067000ae5ef258e4bc3e5a1ec54bec44240a17894
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -156,7 +156,12 @@ export type AiFileToolRequest =
       namePattern?: string | null
       isRegex?: boolean
     }
-  | { operation: 'writeFile'; path: string; content: string }
+  | {
+      operation: 'writeFile'
+      path: string
+      content: string
+      createOnly?: boolean
+    }
   | {
       operation: 'editFile'
       path: string

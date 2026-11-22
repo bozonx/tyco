@@ -165,6 +165,9 @@ pub enum AiFileToolRequest {
     WriteFile {
         path: String,
         content: String,
+        #[serde(default)]
+        #[ts(as = "Option<bool>", optional)]
+        create_only: bool,
     },
     EditFile {
         path: String,
@@ -298,7 +301,7 @@ pub enum AiFileToolOutput {
 }
 
 /// A change the user is asked about, before it is made.
-#[derive(Debug, Clone, Serialize, PartialEq, Eq, ts_rs::TS)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct AiFileChangePreview {
     pub path: String,
@@ -356,7 +359,37 @@ impl ConversationFiles<'_> {
         &self.roots
     }
 
+    #[cfg(test)]
     pub fn run(&self, request: AiFileToolRequest) -> Result<AiFileToolOutput, AppError> {
+        self.run_reviewed(request, None)
+    }
+
+    pub fn run_reviewed(
+        &self,
+        mut request: AiFileToolRequest,
+        preview: Option<AiFileChangePreview>,
+    ) -> Result<AiFileToolOutput, AppError> {
+        static MUTATIONS: std::sync::Mutex<()> = std::sync::Mutex::new(());
+        let _guard = matches!(
+            &request,
+            AiFileToolRequest::WriteFile { .. }
+                | AiFileToolRequest::EditFile { .. }
+                | AiFileToolRequest::MovePath { .. }
+                | AiFileToolRequest::DeletePath { .. }
+        )
+        .then(|| MUTATIONS.lock().unwrap_or_else(|error| error.into_inner()));
+        if let Some(preview) = preview {
+            if self.preview(request.clone())? != preview {
+                return Err(AppError::invalid_input(
+                    "The file changed since approval. Request a new preview.",
+                ));
+            }
+            if let (None, AiFileToolRequest::WriteFile { create_only, .. }) =
+                (preview.before, &mut request)
+            {
+                *create_only = true;
+            }
+        }
         self.run_with(request, |path| {
             trash::delete(path)
                 .map_err(|error| AppError::Failed(format!("Could not move to the trash: {error}")))
@@ -419,7 +452,11 @@ impl ConversationFiles<'_> {
                 name_pattern.as_deref(),
                 is_regex,
             ),
-            AiFileToolRequest::WriteFile { path, content } => self.write_file(&path, &content),
+            AiFileToolRequest::WriteFile {
+                path,
+                content,
+                create_only,
+            } => self.write_file(&path, &content, create_only),
             AiFileToolRequest::EditFile {
                 path,
                 old_text,

@@ -156,6 +156,8 @@
       "workspaceHint": "Soubory profilu: uložené mimo historii chatů, dostupné ve všech chatech profilu"
     },
     "takeScreenshot": "Pořídit snímek obrazovky",
+    "toolRevokeChat": "Odebrat oprávnění chatu ({count})",
+    "toolDenyBatch": "Zamítnout všech {count}",
     "toolAllowBatch": "Povolit vše ({count})",
     "toolAllowAlways": "Vždy povolit",
     "toolAllowAlwaysWriteDelete": "Vždy povolit zápis a mazání",
@@ -1754,7 +1756,7 @@
     "sourceOffEverywhere": "Vypnuto v nastavení Nástroje",
     "pluginCapabilities": "Oprávnění pluginu: {capabilities}",
     "pluginSourceHint": "Nástroje, které tento plugin nabízí chatu. Běží s oprávněními pluginu.",
-    "leakQuestion": "Tento chat už četl vaše data a toto volání by se dostalo na nové místo. Ptáme se jednou na místo v tomto chatu.",
+    "leakQuestion": "Tento chat už četl vaše data a toto volání by se dostalo na nové místo.",
     "untrustedQuestion": "Tento chat už přečetl webovou stránku nebo výstup nástroje a toto volání by změnilo paměť, kterou uvidí všechny další chaty.",
     "contextTokens": "≈{count} tokenů",
     "catalogHint": "Odkud pocházejí nástroje agentů. Plugin vypnutý zde je vypnutý ve všech profilech a AI příkazech. Vestavěné nástroje se zapínají v „Zeptat se AI“, v každém profilu a v každém AI příkazu.",

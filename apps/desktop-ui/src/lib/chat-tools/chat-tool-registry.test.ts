@@ -115,6 +115,52 @@ describe('chat-tool-registry', () => {
     )
   })
 
+  it('blocks a queued call after its source is disabled', async () => {
+    const execute = vi.fn(async () => 'note text')
+    const registry = createChatToolRegistry({
+      providers: () => [provider([tool({ execute })])],
+      policy: createChatToolPolicy({ canAsk: true }),
+    })
+    const initial = context(settings({}))
+    let scope = initial.scope
+    const set = (await registry.resolve({
+      ...initial,
+      getCurrentScope: () => scope,
+    }))!
+    scope = context().scope
+    await expect(run(set, 'read_note', {})).rejects.toThrow(
+      /permissions changed/
+    )
+    expect(execute).not.toHaveBeenCalled()
+  })
+
+  it('blocks an automatic memory update queued before an external read in the same step', async () => {
+    const execute = vi.fn(async () => 'saved')
+    const registry = createChatToolRegistry({
+      providers: () => [
+        provider([
+          tool({ name: 'remember', asksAfterUntrustedContent: true, execute }),
+          tool({ name: 'read_page', givesUntrustedContent: true }),
+        ]),
+      ],
+      policy: createChatToolPolicy({ canAsk: true }),
+    })
+    const set = (await registry.resolve(context(settings({}))))!
+    const decide = set.toolApproval as (options: unknown) => unknown
+    expect(
+      decide({
+        toolCall: { toolName: 'remember', toolCallId: 'c1', input: {} },
+      })
+    ).toBe('approved')
+    expect(
+      decide({
+        toolCall: { toolName: 'read_page', toolCallId: 'c2', input: {} },
+      })
+    ).toBe('approved')
+    await expect(run(set, 'remember', {})).rejects.toThrow(/requires approval/)
+    expect(execute).not.toHaveBeenCalled()
+  })
+
   it('cuts a long output and remembers the call', async () => {
     const registry = createChatToolRegistry({
       providers: () => [

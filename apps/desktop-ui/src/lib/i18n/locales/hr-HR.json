@@ -156,6 +156,8 @@
       "workspaceHint": "Datoteke profila: izvan povijesti razgovora, dostupne u svim razgovorima profila"
     },
     "takeScreenshot": "Snimi snimku zaslona",
+    "toolRevokeChat": "Opozovi dopuštenja razgovora ({count})",
+    "toolDenyBatch": "Odbij sve ({count})",
     "toolAllowBatch": "Dopusti sve ({count})",
     "toolAllowAlways": "Uvijek dopusti",
     "toolAllowAlwaysWriteDelete": "Uvijek dopusti pisanje i brisanje",
@@ -1754,7 +1756,7 @@
     "sourceOffEverywhere": "Isključeno u postavkama Alati",
     "pluginCapabilities": "Dopuštenja dodatka: {capabilities}",
     "pluginSourceHint": "Alati koje ovaj dodatak nudi razgovoru. Rade s dopuštenjima dodatka.",
-    "leakQuestion": "Ovaj je razgovor pročitao vaše podatke, a ovaj bi poziv dosegnuo novo mjesto. Pita se jednom po mjestu u ovom razgovoru.",
+    "leakQuestion": "Ovaj je razgovor pročitao vaše podatke, a ovaj bi poziv dosegnuo novo mjesto.",
     "untrustedQuestion": "Ovaj je razgovor već pročitao web-stranicu ili rezultat alata, a ovaj bi poziv promijenio memoriju koju vide svi sljedeći razgovori.",
     "contextTokens": "≈{count} tokena",
     "catalogHint": "Odakle dolaze alati agenata. Dodatak isključen ovdje isključen je u svim profilima i AI naredbama. Ugrađeni alati uključuju se u „Pitaj AI”, u svakom profilu i u svakoj AI naredbi.",
