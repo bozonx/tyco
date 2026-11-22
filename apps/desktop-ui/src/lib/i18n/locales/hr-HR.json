@@ -23,9 +23,7 @@
     "voiceScreenshotQuickAiRequest": "Snimka, glasom na AI",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Priloži datoteku",
     "alertCaution": "Oprez",
@@ -209,9 +207,7 @@
       "deselectAll": "Poništi odabir",
       "unsupportedCommands": "Nepodržane naredbe"
     },
-    "replyBlocks": {
-      "toolLabel": "Blokovi odgovora"
-    }
+    "replyBlocks": { "toolLabel": "Blokovi odgovora" }
   },
   "commandRun": {
     "cancelled": "Naredba je otkazana",
@@ -665,21 +661,15 @@
     "cancelled": "Otkazano",
     "done": "Gotovo",
     "emptyResult": "Model je vratio prazan rezultat",
-    "failed": {
-      "correction": "Ispravak nije uspio"
-    },
+    "failed": { "correction": "Ispravak nije uspio" },
     "focusChanged": "U međuvremenu se prozor promijenio pa je rezultat kopiran u međuspremnik",
     "noSelection": "Ništa nije odabrano",
     "noTarget": "Nijedan prozor aplikacije nije u fokusu",
     "resultInClipboard": "Rezultat je u međuspremniku",
     "selectionChanged": "Odabir se u međuvremenu promijenio, pa je rezultat kopiran u međuspremnik",
     "terminalSelection": "Odabir u terminalu ne može se zamijeniti, pa je rezultat kopiran u međuspremnik",
-    "unchanged": {
-      "correction": "Nisu pronađene pogreške"
-    },
-    "working": {
-      "correction": "Ispravljanje…"
-    }
+    "unchanged": { "correction": "Nisu pronađene pogreške" },
+    "working": { "correction": "Ispravljanje…" }
   },
   "settings": {
     "accessAllow": "Dopusti",
@@ -1374,9 +1364,7 @@
     "dialogRecordingMixedDownInfo": "Vaš glas i sugovornik spajaju se u jedan kanal i čuju se u oba uha. Isključeno: podijeljeni stereo (vaš glas u lijevom kanalu, sugovornik u desnom).",
     "dialogRecordingProcessedInfo": "Utišava jeku zvučnika u mikrofonu i ograničava glasne vrhove (onako kako ih čuje prepoznavanje govora). Isključeno: zvuk se snima izvorno, bez softverske obrade."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Umetni u uređivač"
-  },
+  "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
     "auto": "Kao u sustavu",
     "dark": "Tamna",

@@ -64,6 +64,7 @@
     "allow-delete-secret",
     "allow-set-secret",
     "allow-set-tray-menu-labels",
+    "allow-set-tray-recording",
     "allow-suspend-hotkeys",
     "allow-write-ai-profile-soul",
     "allow-show-subtitles",

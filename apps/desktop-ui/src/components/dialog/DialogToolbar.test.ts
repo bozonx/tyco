@@ -83,7 +83,9 @@ describe('DialogToolbar.vue', () => {
 
     const noticeModal = wrapper
       .findAllComponents(ConfirmModal)
-      .find((m) => m.props('title') === i18n.global.t('dialog.recordingNoticeTitle'))
+      .find(
+        (m) => m.props('title') === i18n.global.t('dialog.recordingNoticeTitle')
+      )
     expect(noticeModal?.props('open')).toBe(true)
 
     // Confirm notice
@@ -91,7 +93,9 @@ describe('DialogToolbar.vue', () => {
     await flushPromises()
 
     const desktopStore = useDesktopStore()
-    expect(desktopStore.userConfig.dialog.isRecordingNoticeAcknowledged).toBe(true)
+    expect(desktopStore.userConfig.dialog.isRecordingNoticeAcknowledged).toBe(
+      true
+    )
     const dialog = useDialogStore()
     expect(dialog.isRecordEnabled).toBe(true)
     expect(toggle.attributes('aria-pressed')).toBe('true')
@@ -150,7 +154,9 @@ describe('DialogToolbar.vue', () => {
     const toggle = wrapper.find('.dialog-toolbar-record-toggle')
     expect(toggle.classes()).toContain('is-running')
     expect(toggle.attributes('disabled')).toBeDefined()
-    expect(toggle.attributes('title')).toBe(i18n.global.t('dialog.recordStopToChangeHint'))
+    expect(toggle.attributes('title')).toBe(
+      i18n.global.t('dialog.recordStopToChangeHint')
+    )
     expect(toggle.find('.dialog-record-rec').text()).toBe('REC')
     expect(toggle.find('.dialog-record-dot-pulsing').exists()).toBe(true)
   })
@@ -234,7 +240,7 @@ describe('DialogToolbar.vue', () => {
     desktop.setUserConfig({
       editor: {
         ...DEFAULT_USER_CONFIG.editor,
-        history: { ...DEFAULT_USER_CONFIG.editor.history, storage: 'memory' },
+        history: { ...DEFAULT_USER_CONFIG.editor.history, storage: 'off' },
       },
     })
     const wrapper = mount(DialogToolbar, {
@@ -250,12 +256,10 @@ describe('DialogToolbar.vue', () => {
 
   it('clears transcript and resets record toggle when clicking Clear button', async () => {
     const dialog = useDialogStore()
-    const clearSpy = vi
-      .spyOn(dialog, 'clear')
-      .mockImplementation(async () => {
-        dialog.isRecordEnabled = false
-        dialog.segments = []
-      })
+    const clearSpy = vi.spyOn(dialog, 'clear').mockImplementation(async () => {
+      dialog.isRecordEnabled = false
+      dialog.segments = []
+    })
     dialog.segments = [
       {
         id: '1',

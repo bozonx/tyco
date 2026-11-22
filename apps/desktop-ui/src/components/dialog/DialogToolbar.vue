@@ -179,9 +179,7 @@ const canRecord = computed(
   () => desktopStore.userConfig.editor.history.storage === 'disk'
 )
 
-const isRecordToggleDisabled = computed(
-  () => !canRecord.value || !isIdle.value
-)
+const isRecordToggleDisabled = computed(() => !canRecord.value || !isIdle.value)
 
 const recordToggleTitle = computed(() => {
   if (!canRecord.value) return t('dialog.startRecordingNeedsHistory')

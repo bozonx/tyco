@@ -23,9 +23,7 @@
     "voiceScreenshotQuickAiRequest": "스크린샷, 음성으로 AI에게",
     "webhook": "웹후크"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "파일 첨부",
     "alertCaution": "주의",
@@ -209,9 +207,7 @@
       "deselectAll": "모두 선택 해제",
       "unsupportedCommands": "지원되지 않는 명령어"
     },
-    "replyBlocks": {
-      "toolLabel": "답변 블록"
-    }
+    "replyBlocks": { "toolLabel": "답변 블록" }
   },
   "commandRun": {
     "cancelled": "명령이 취소되었습니다",
@@ -665,21 +661,15 @@
     "cancelled": "취소됨",
     "done": "완료",
     "emptyResult": "모델이 빈 결과를 반환했습니다",
-    "failed": {
-      "correction": "교정 실패"
-    },
+    "failed": { "correction": "교정 실패" },
     "focusChanged": "그 사이에 활성 창이 변경되어 결과가 클립보드에 복사되었습니다",
     "noSelection": "선택된 내용이 없습니다",
     "noTarget": "포커스가 있는 애플리케이션 창이 없습니다",
     "resultInClipboard": "결과가 클립보드에 복사되었습니다",
     "selectionChanged": "처리하는 동안 선택 영역이 바뀌어 결과를 클립보드에 복사했습니다",
     "terminalSelection": "터미널의 선택 영역은 바꿀 수 없어 결과를 클립보드에 복사했습니다",
-    "unchanged": {
-      "correction": "오류를 찾지 못했습니다"
-    },
-    "working": {
-      "correction": "교정 중…"
-    }
+    "unchanged": { "correction": "오류를 찾지 못했습니다" },
+    "working": { "correction": "교정 중…" }
   },
   "settings": {
     "accessAllow": "허용",
@@ -1374,9 +1364,7 @@
     "dialogRecordingMixedDownInfo": "자신의 음성과 상대방의 음성이 하나의 채널로 합쳐져 양쪽 귀에서 들립니다. 끄기: 분리된 스테레오(자신의 음성은 왼쪽 채널, 상대방은 오른쪽 채널).",
     "dialogRecordingProcessedInfo": "마이크로 들어가는 스피커 에코를 줄이고 급격한 볼륨 피크를 제한합니다(음성 인식이 듣는 방식). 끄기: 소프트웨어 처리 없이 있는 그대로 녹음됩니다."
   },
-  "shortcuts": {
-    "insertIntoEditor": "편집기에 삽입"
-  },
+  "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {
     "auto": "시스템 설정 따르기",
     "dark": "다크",

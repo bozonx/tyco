@@ -23,9 +23,7 @@
     "voiceScreenshotQuickAiRequest": "Zrzut, głosem do AI",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Dołącz plik",
     "alertCaution": "Ostrożnie",
@@ -209,9 +207,7 @@
       "deselectAll": "Odznacz wszystko",
       "unsupportedCommands": "Nieobsługiwane polecenia"
     },
-    "replyBlocks": {
-      "toolLabel": "Warianty odpowiedzi"
-    }
+    "replyBlocks": { "toolLabel": "Warianty odpowiedzi" }
   },
   "commandRun": {
     "cancelled": "Polecenie zostało anulowane",
@@ -665,21 +661,15 @@
     "cancelled": "Anulowano",
     "done": "Gotowe",
     "emptyResult": "Model zwrócił pusty wynik",
-    "failed": {
-      "correction": "Korekta nie powiodła się"
-    },
+    "failed": { "correction": "Korekta nie powiodła się" },
     "focusChanged": "W międzyczasie zmieniło się okno, więc wynik skopiowano do schowka",
     "noSelection": "Nic nie jest zaznaczone",
     "noTarget": "Żadne okno aplikacji nie jest aktywne",
     "resultInClipboard": "Wynik jest w schowku",
     "selectionChanged": "W międzyczasie zaznaczenie się zmieniło, więc wynik skopiowano do schowka",
     "terminalSelection": "Zaznaczenia w terminalu nie można zastąpić, więc wynik skopiowano do schowka",
-    "unchanged": {
-      "correction": "Nie znaleziono błędów"
-    },
-    "working": {
-      "correction": "Korygowanie…"
-    }
+    "unchanged": { "correction": "Nie znaleziono błędów" },
+    "working": { "correction": "Korygowanie…" }
   },
   "settings": {
     "accessAllow": "Zezwól",
@@ -1374,9 +1364,7 @@
     "dialogRecordingMixedDownInfo": "Twój głos i rozmówca są łączeni w jeden kanał i słyszalni w obu uszach. Wyłączone: rozdzielone stereo (twój głos w lewym kanale, rozmówca w prawym).",
     "dialogRecordingProcessedInfo": "Tłumi echo głośników w mikrofonie i ogranicza głośne skoki (tak jak słyszy to rozpoznawanie mowy). Wyłączone: dźwięk jest nagrywany w postaci surowej, bez przetwarzania programowego."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Wstaw do edytora"
-  },
+  "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
     "auto": "Jak w systemie",
     "dark": "Ciemny",

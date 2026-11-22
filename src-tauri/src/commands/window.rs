@@ -88,6 +88,15 @@ pub fn set_tray_menu_labels(
     runtime::set_tray_menu_labels(&app, &show_label, &quit_label, tooltip_label.as_deref())
 }
 
+#[tauri::command]
+pub fn set_tray_recording(
+    app: AppHandle,
+    is_recording: bool,
+    tooltip_label: Option<String>,
+) -> Result<(), AppError> {
+    runtime::set_tray_recording(&app, is_recording, tooltip_label.as_deref())
+}
+
 /// Adds another screenshot while retaining the quick request activation and draft.
 #[tauri::command]
 pub async fn add_screenshot(

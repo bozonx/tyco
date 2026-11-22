@@ -392,6 +392,7 @@ pub fn run() {
             commands::window::reposition_quick_window,
             commands::window::set_quick_input_region,
             commands::window::set_tray_menu_labels,
+            commands::window::set_tray_recording,
         ])
         .build(tauri::generate_context!());
     // a failed start ends with a word in the log and on stderr rather than

@@ -14,7 +14,7 @@ pub use lifecycle::{create_windows, manage_state, request_exit, request_restart,
 pub use panel_layer::{reposition_quick_window, reveal_quick_window, set_quick_input_region};
 pub use target_focus::{follow_target_window, forget_target_window, wait_until_unfocused};
 pub use target_paste::paste_into_target;
-pub use tray::set_tray_menu_labels;
+pub use tray::{set_tray_menu_labels, set_tray_recording};
 pub use window_visibility::{
     handle_window_event, hide_active_window, hide_quick_window_on_blur, hide_window,
     hide_window_without_refocus, open_main_chat, open_main_editor, show_application,

@@ -23,9 +23,7 @@
     "voiceScreenshotQuickAiRequest": "Snímek, hlasem na AI",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "addFile": "Přiložit soubor",
     "alertCaution": "Pozor",
@@ -209,9 +207,7 @@
       "deselectAll": "Zrušit výběr",
       "unsupportedCommands": "Nepodporované příkazy"
     },
-    "replyBlocks": {
-      "toolLabel": "Varianty odpovědí"
-    }
+    "replyBlocks": { "toolLabel": "Varianty odpovědí" }
   },
   "commandRun": {
     "cancelled": "Příkaz byl zrušen",
@@ -665,21 +661,15 @@
     "cancelled": "Zrušeno",
     "done": "Hotovo",
     "emptyResult": "Model vrátil prázdný výsledek",
-    "failed": {
-      "correction": "Oprava selhala"
-    },
+    "failed": { "correction": "Oprava selhala" },
     "focusChanged": "Mezitím se změnilo okno, proto byl výsledek zkopírován do schránky",
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
     "resultInClipboard": "Výsledek je ve schránce",
     "selectionChanged": "Výběr se mezitím změnil, proto byl výsledek zkopírován do schránky",
     "terminalSelection": "Výběr v terminálu nelze nahradit, proto byl výsledek zkopírován do schránky",
-    "unchanged": {
-      "correction": "Nenalezeny žádné chyby"
-    },
-    "working": {
-      "correction": "Opravuje se…"
-    }
+    "unchanged": { "correction": "Nenalezeny žádné chyby" },
+    "working": { "correction": "Opravuje se…" }
   },
   "settings": {
     "accessAllow": "Povolit",
@@ -1374,9 +1364,7 @@
     "dialogRecordingMixedDownInfo": "Váš hlas a protistrana se sloučí do jednoho kanálu a zní v obou uších. Vypnuto: oddělené stereo (váš hlas v levém kanálu, protistrana v pravém).",
     "dialogRecordingProcessedInfo": "Potlačuje ozvěnu reproduktorů v mikrofonu a omezuje hlasité špičky (jak slyší rozpoznávání řeči). Vypnuto: zvuk se nahrává tak, jak byl zachycen, bez softwarového zpracování."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Vložit do editoru"
-  },
+  "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
     "auto": "Podle systému",
     "dark": "Tmavý",

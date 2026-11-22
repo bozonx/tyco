@@ -166,6 +166,7 @@ fn main() {
             "set_secret",
             "set_operation_catalog",
             "set_tray_menu_labels",
+            "set_tray_recording",
             "show_desktop_notification",
             "show_status_overlay",
             "start_command_run",
