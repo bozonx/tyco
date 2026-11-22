@@ -1190,7 +1190,7 @@
     "storageState": "狀態",
     "sttDictationSection": "語音輸入",
     "sttDictationSectionInfo": "麥克風聽寫設定：輸入裝置、LLM 文字校正與樣式列。",
-    "sttLanguage": "聽寫語言",
+    "sttLanguage": "主要語音語言",
     "sttLanguageHint": "自動模式下，服務供應商會自行偵測語音語言。選擇特定語言可明確指定辨識語言。並非每個模型都支援所有語言：如果聽寫無法開始，請選擇「自動」或其他模型。",
     "sttLlmRules": "後處理規則",
     "sttLlmRulesInfo": "用於處理辨識語音的 AI 模型附加指示。例如可以指定：去除贅字、添加標點、設定清單格式或維持特定風格。",
@@ -1736,13 +1736,11 @@
     "languages": "語言",
     "languageAuto": "自動",
     "ownLanguage": "你說的語言",
-    "ownLanguageDictation": "與聽寫相同",
-    "translationModel": "由 {model} 翻譯",
-    "translationModelNone": "尚未選擇翻譯模型",
     "route": "{from} → {to}",
     "restartTitle": "重新開始？",
     "restartMessage": "目前的逐字稿將被清除並儲存至歷史記錄中。",
-    "restartConfirm": "重新開始"
+    "restartConfirm": "重新開始",
+    "ownLanguageDefault": "預設（{language}）"
   },
   "toolPermissions": {
     "riskRead": "讀取",

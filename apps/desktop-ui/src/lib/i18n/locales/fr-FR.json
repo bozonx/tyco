@@ -1190,7 +1190,7 @@
     "storageState": "État",
     "sttDictationSection": "Saisie vocale",
     "sttDictationSectionInfo": "Paramètres de dictée au microphone : périphérique d’entrée, correction par LLM et barre de styles.",
-    "sttLanguage": "Langue de dictée",
+    "sttLanguage": "Langue parlée principale",
     "sttLanguageHint": "En mode automatique, le fournisseur détecte la langue parlée. Sélectionnez une langue pour la définir explicitement. Tous les modèles ne prennent pas en charge toutes les langues : si la dictée ne démarre pas, choisissez Auto ou un autre modèle.",
     "sttLlmRules": "Règles de post-traitement",
     "sttLlmRulesInfo": "Instructions supplémentaires pour le modèle IA concernant le traitement de la parole reconnue. Vous pouvez par exemple spécifier : supprimer les tics de langage, ponctuer, formater des listes ou conserver un style particulier.",
@@ -1740,13 +1740,11 @@
     "languages": "Langues",
     "languageAuto": "Auto",
     "ownLanguage": "Vous parlez",
-    "ownLanguageDictation": "Comme pour la dictée",
-    "translationModel": "Traduit par {model}",
-    "translationModelNone": "Aucun modèle choisi pour la traduction",
     "route": "{from} → {to}",
     "restartTitle": "Recommencer ?",
     "restartMessage": "La transcription actuelle sera effacée et enregistrée dans l'historique.",
-    "restartConfirm": "Recommencer"
+    "restartConfirm": "Recommencer",
+    "ownLanguageDefault": "Par défaut ({language})"
   },
   "toolPermissions": {
     "riskRead": "Lecture",

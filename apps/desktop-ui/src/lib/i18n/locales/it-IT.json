@@ -1190,7 +1190,7 @@
     "storageState": "Stato",
     "sttDictationSection": "Input vocale",
     "sttDictationSectionInfo": "Impostazioni della dettatura da microfono: dispositivo di ingresso, correzione LLM e barra degli stili.",
-    "sttLanguage": "Lingua di dettatura",
+    "sttLanguage": "Lingua parlata principale",
     "sttLanguageHint": "In modalità automatica, il fornitore rileva la lingua parlata. Seleziona una lingua per indicarla esplicitamente. Non tutti i modelli supportano tutte le lingue: se la dettatura non si avvia, scegli Automatico o un altro modello.",
     "sttLlmRules": "Regole di post-elaborazione",
     "sttLlmRulesInfo": "Istruzioni aggiuntive per il modello IA sull'elaborazione del parlato riconosciuto. Puoi specificare ad esempio: rimuovere intercalari, punteggiare, formattare elenchi o seguire uno stile particolare.",
@@ -1740,13 +1740,11 @@
     "languages": "Lingue",
     "languageAuto": "Auto",
     "ownLanguage": "Parli",
-    "ownLanguageDictation": "Come nella dettatura",
-    "translationModel": "Traduce {model}",
-    "translationModelNone": "Nessun modello scelto per la traduzione",
     "route": "{from} → {to}",
     "restartTitle": "Ricominciare?",
     "restartMessage": "La trascrizione attuale verrà cancellata e salvata nella cronologia.",
-    "restartConfirm": "Ricomincia"
+    "restartConfirm": "Ricomincia",
+    "ownLanguageDefault": "Predefinito ({language})"
   },
   "toolPermissions": {
     "riskRead": "Lettura",

@@ -1190,7 +1190,7 @@
     "storageState": "Durum",
     "sttDictationSection": "Sesli giriş",
     "sttDictationSectionInfo": "Mikrofonla dikte ayarları: giriş aygıtı, LLM metin düzeltme ve stil çubuğu.",
-    "sttLanguage": "Dikte dili",
+    "sttLanguage": "Birincil konuşma dili",
     "sttLanguageHint": "Otomatik modda sağlayıcı konuşulan dili algılar. Dili açıkça belirtmek için bir dil seçin. Her model her dili desteklemez: dikte başlamazsa Otomatik’i veya başka bir modeli seçin.",
     "sttLlmRules": "İşleme kuralları",
     "sttLlmRulesInfo": "Tanınan konuşmanın işlenmesi için yapay zekâ modeline ek talimatlar. Örneğin dolgu sözcükleri kaldırma, noktalama işaretlerini koyma, listeleri biçimlendirme veya belirli bir üslubu koruma gibi kurallar belirtebilirsiniz.",
@@ -1736,13 +1736,11 @@
     "languages": "Diller",
     "languageAuto": "Otomatik",
     "ownLanguage": "Konuştuğunuz dil",
-    "ownLanguageDictation": "Dikte ile aynı",
-    "translationModel": "Çeviren: {model}",
-    "translationModelNone": "Çeviri için model seçilmedi",
     "route": "{from} → {to}",
     "restartTitle": "Yeniden başlatılsın mı?",
     "restartMessage": "Mevcut transkript temizlenecek ve geçmişe kaydedilecek.",
-    "restartConfirm": "Yeniden başlat"
+    "restartConfirm": "Yeniden başlat",
+    "ownLanguageDefault": "Varsayılan ({language})"
   },
   "toolPermissions": {
     "riskRead": "Okuma",

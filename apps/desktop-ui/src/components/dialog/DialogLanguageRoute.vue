@@ -71,16 +71,6 @@
             "
           />
         </label>
-        <p class="dialog-route-model" :class="{ 'is-missing': !model }">
-          <span>{{
-            model
-              ? t('dialog.translationModel', { model: modelLabel(model) })
-              : t('dialog.translationModelNone')
-          }}</span>
-          <InlineAction @click="openLlmSettings">{{
-            t('settings.taskModelChange')
-          }}</InlineAction>
-        </p>
         <hr class="dialog-route-separator" />
         <label class="dialog-route-field is-secondary">
           <span>{{ t('dialog.ownLanguage') }}</span>
@@ -109,16 +99,16 @@ import {
   dialogLanguageOptions,
   dialogRouteLabel,
 } from '../../lib/dialog/dialog-languages'
-import { modelLabel } from '../../lib/llm/llm-config'
 import { COMMON_LANGUAGE_OPTIONS } from '../../lib/locale/language'
+import { normalizeDeepgramLanguage } from '../../lib/stt/deepgram-language'
+import { DICTATION_LANGUAGE_AUTO } from '../../lib/stt/dictation-language'
+import { activeSttModel } from '../../lib/stt/stt-config'
 import { translationLanguageLabel } from '../../lib/translation/translation-languages'
-import { appNavigation } from '../../navigation'
 import { useDesktopStore } from '../../stores/desktop'
 import { useDialogStore } from '../../stores/dialog'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import FieldSelect from '../common/FieldSelect.vue'
-import InlineAction from '../common/InlineAction.vue'
 
 const dialog = useDialogStore()
 const desktopStore = useDesktopStore()
@@ -131,7 +121,6 @@ const {
   triggerRef,
   panelRef,
   toggle,
-  close,
   onFocusout,
   onEscape,
 } = usePopover()
@@ -169,8 +158,20 @@ const remoteLanguageOptions = computed(() => {
     ...languageList(current === 'auto' ? undefined : current),
   ]
 })
+const defaultLanguage = computed(() => {
+  const stt = desktopStore.userConfig.stt
+  const sttModel = activeSttModel(stt)
+  const normalized = normalizeDeepgramLanguage(sttModel.language)
+  return normalized === DICTATION_LANGUAGE_AUTO
+    ? t('dialog.languageAuto')
+    : labelOf(normalized)
+})
+
 const ownLanguageOptions = computed(() => [
-  { id: '', name: t('dialog.ownLanguageDictation') },
+  {
+    id: '',
+    name: t('dialog.ownLanguageDefault', { language: defaultLanguage.value }),
+  },
   ...languageList(dialog.config.ownLanguage),
 ])
 const targetLanguageOptions = computed(() =>
@@ -192,11 +193,6 @@ const routeLabel = computed(() =>
     translate: t,
   })
 )
-
-function openLlmSettings() {
-  close()
-  void appNavigation.goToConfig('llm')
-}
 </script>
 
 <style scoped>
@@ -248,20 +244,6 @@ function openLlmSettings() {
 
 .dialog-route-field.is-secondary {
   color: var(--app-text-muted);
-}
-
-.dialog-route-model {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-xs) var(--space-sm);
-  margin: 0;
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-}
-
-.dialog-route-model.is-missing {
-  color: var(--color-warning);
 }
 
 .dialog-route-separator {

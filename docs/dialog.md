@@ -46,7 +46,7 @@ The languages button in the toolbar shows the route, such as
   language; **Auto** lets it detect the language.
 - **Translate into**: without a language only the original is shown.
 - **You speak**: the language your own speech is recognized in; by default
-  the one of the dictation.
+  your primary spoken language from **Settings → Voice**.
 
 A translated phrase shows the translation large and the original small under
 it. **Translation only** in the **⋮** menu of the toolbar hides the original;

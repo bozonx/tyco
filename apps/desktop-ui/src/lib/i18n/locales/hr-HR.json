@@ -1190,7 +1190,7 @@
     "storageState": "Stanje",
     "sttDictationSection": "Glasovni unos",
     "sttDictationSectionInfo": "Postavke diktiranja mikrofonom: ulazni uređaj, LLM ispravak teksta i traka stilova.",
-    "sttLanguage": "Jezik diktiranja",
+    "sttLanguage": "Glavni govorni jezik",
     "sttLanguageHint": "U automatskom načinu pružatelj otkriva jezik govora. Odaberite jezik da biste ga izričito zadali. Ne podržava svaki model svaki jezik: ako se diktiranje ne pokrene, odaberite Automatski ili drugi model.",
     "sttLlmRules": "Pravila naknadne obrade",
     "sttLlmRulesInfo": "Dodatne upute za AI model o obradi prepoznatog govora. Možete navesti npr.: uklanjanje poštapalica, interpunkciju, oblikovanje popisa ili određeni stil.",
@@ -1740,13 +1740,11 @@
     "languages": "Jezici",
     "languageAuto": "Auto",
     "ownLanguage": "Govorite",
-    "ownLanguageDictation": "Kao u diktiranju",
-    "translationModel": "Prevodi {model}",
-    "translationModelNone": "Nije odabran model za prijevod",
     "route": "{from} → {to}",
     "restartTitle": "Započeti iznova?",
     "restartMessage": "Trenutni prijepis bit će izbrisan i spremljen u povijest.",
-    "restartConfirm": "Započni iznova"
+    "restartConfirm": "Započni iznova",
+    "ownLanguageDefault": "Zadano ({language})"
   },
   "toolPermissions": {
     "riskRead": "Čitanje",

@@ -1190,7 +1190,7 @@
     "storageState": "状态",
     "sttDictationSection": "语音输入",
     "sttDictationSectionInfo": "麦克风听写设置：输入设备、LLM 文本纠错和样式栏。",
-    "sttLanguage": "听写语言",
+    "sttLanguage": "主要语音语言",
     "sttLanguageHint": "自动模式下，服务商会自行识别语音语言。选择具体语言可明确指定识别语言。并非每个模型都支持所有语言：如果听写无法开始，请选择“自动”或其他模型。",
     "sttLlmRules": "后处理规则",
     "sttLlmRulesInfo": "用于处理识别语音的 AI 模型附加说明。例如可以指定：去除口头禅、添加标点、设置列表格式或保持特定风格。",
@@ -1736,13 +1736,11 @@
     "languages": "语言",
     "languageAuto": "自动",
     "ownLanguage": "你说的语言",
-    "ownLanguageDictation": "与听写相同",
-    "translationModel": "由 {model} 翻译",
-    "translationModelNone": "尚未选择翻译模型",
     "route": "{from} → {to}",
     "restartTitle": "重新开始？",
     "restartMessage": "当前转录内容将被清空并保存到历史记录中。",
-    "restartConfirm": "重新开始"
+    "restartConfirm": "重新开始",
+    "ownLanguageDefault": "默认（{language}）"
   },
   "toolPermissions": {
     "riskRead": "读取",

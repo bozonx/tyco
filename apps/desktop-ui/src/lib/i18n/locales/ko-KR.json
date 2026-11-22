@@ -1190,7 +1190,7 @@
     "storageState": "상태",
     "sttDictationSection": "음성 입력",
     "sttDictationSectionInfo": "마이크 받아쓰기 설정: 입력 장치, LLM 텍스트 교정, 스타일 바.",
-    "sttLanguage": "받아쓰기 언어",
+    "sttLanguage": "기본 음성 언어",
     "sttLanguageHint": "자동 모드에서는 제공업체가 음성 언어를 감지합니다. 언어를 명시적으로 지정하려면 언어를 선택하세요. 모든 모델이 모든 언어를 지원하지는 않습니다. 받아쓰기가 시작되지 않으면 '자동' 또는 다른 모델을 선택하세요.",
     "sttLlmRules": "후처리 규칙",
     "sttLlmRulesInfo": "인식된 음성을 처리하기 위한 AI 모델 추가 지침입니다. 예를 들어 불필요한 추임새 제거, 문장 부호 지정, 목록 서식 지정, 특정 스타일 유지 등을 지정할 수 있습니다.",
@@ -1740,13 +1740,11 @@
     "languages": "언어",
     "languageAuto": "자동",
     "ownLanguage": "내 언어",
-    "ownLanguageDictation": "받아쓰기와 동일",
-    "translationModel": "{model}이(가) 번역",
-    "translationModelNone": "번역할 모델이 선택되지 않았습니다",
     "route": "{from} → {to}",
     "restartTitle": "다시 시작할까요?",
     "restartMessage": "현재 텍스트 변환 내용이 지워지고 기록에 저장됩니다.",
-    "restartConfirm": "다시 시작"
+    "restartConfirm": "다시 시작",
+    "ownLanguageDefault": "기본값 ({language})"
   },
   "toolPermissions": {
     "riskRead": "읽기",

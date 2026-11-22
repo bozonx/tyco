@@ -1190,7 +1190,7 @@
     "storageState": "Zustand",
     "sttDictationSection": "Spracheingabe",
     "sttDictationSectionInfo": "Einstellungen für die Mikrofon-Diktierfunktion: Eingabegerät, LLM-Textkorrektur und Stilleiste.",
-    "sttLanguage": "Diktiersprache",
+    "sttLanguage": "Bevorzugte gesprochene Sprache",
     "sttLanguageHint": "Im automatischen Modus erkennt der Anbieter die gesprochene Sprache. Wähle eine Sprache, um sie ausdrücklich vorzugeben. Nicht jedes Modell unterstützt jede Sprache: Startet das Diktat nicht, wähle „Automatisch“ oder ein anderes Modell.",
     "sttLlmRules": "Regeln für die Nachbearbeitung",
     "sttLlmRulesInfo": "Zusätzliche Anweisungen für das KI-Modell zur Verarbeitung der erkannten Sprache. Du kannst z. B. angeben: Füllwörter entfernen, Zeichensetzung ergänzen, Listen formatieren oder einen bestimmten Stil einhalten.",
@@ -1740,13 +1740,11 @@
     "languages": "Sprachen",
     "languageAuto": "Auto",
     "ownLanguage": "Sie sprechen",
-    "ownLanguageDictation": "Wie beim Diktieren",
-    "translationModel": "Übersetzt von {model}",
-    "translationModelNone": "Kein Modell für die Übersetzung ausgewählt",
     "route": "{from} → {to}",
     "restartTitle": "Neu beginnen?",
     "restartMessage": "Das aktuelle Transkript wird gelöscht und im Verlauf gespeichert.",
-    "restartConfirm": "Neu beginnen"
+    "restartConfirm": "Neu beginnen",
+    "ownLanguageDefault": "Standard ({language})"
   },
   "toolPermissions": {
     "riskRead": "Liest",

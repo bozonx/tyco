@@ -1190,7 +1190,7 @@
     "storageState": "Stav",
     "sttDictationSection": "Hlasový vstup",
     "sttDictationSectionInfo": "Nastavení diktování z mikrofonu: vstupní zařízení, korekce pomocí LLM a lišta stylů.",
-    "sttLanguage": "Jazyk diktování",
+    "sttLanguage": "Hlavní jazyk řeči",
     "sttLanguageHint": "V automatickém režimu poskytovatel rozpozná jazyk řeči. Vyberte jazyk, pokud jej chcete určit přímo. Ne každý model podporuje každý jazyk: pokud se diktování nespustí, zvolte Automaticky nebo jiný model.",
     "sttLlmRules": "Pravidla dodatečného zpracování",
     "sttLlmRulesInfo": "Dodatečné pokyny pro model AI ke zpracování rozpoznané řeči. Můžete například uvést: odstranit vycpávková slova, doplnit interpunkci, formátovat seznamy nebo dodržovat určitý styl.",
@@ -1740,13 +1740,11 @@
     "languages": "Jazyky",
     "languageAuto": "Auto",
     "ownLanguage": "Mluvíte",
-    "ownLanguageDictation": "Jako při diktování",
-    "translationModel": "Překládá {model}",
-    "translationModelNone": "Pro překlad není vybrán žádný model",
     "route": "{from} → {to}",
     "restartTitle": "Začít znovu?",
     "restartMessage": "Aktuální přepis bude vymazán a uložen do historie.",
-    "restartConfirm": "Začít znovu"
+    "restartConfirm": "Začít znovu",
+    "ownLanguageDefault": "Výchozí ({language})"
   },
   "toolPermissions": {
     "riskRead": "Čtení",

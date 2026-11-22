@@ -1190,7 +1190,7 @@
     "storageState": "Állapot",
     "sttDictationSection": "Hangbevitel",
     "sttDictationSectionInfo": "Mikrofonos diktálás beállításai: bemeneti eszköz, LLM-szövegjavítás és stílussáv.",
-    "sttLanguage": "Diktálás nyelve",
+    "sttLanguage": "Fő beszélt nyelv",
     "sttLanguageHint": "Automatikus módban a szolgáltató felismeri a beszéd nyelvét. Válasszon nyelvet, ha azt kifejezetten meg szeretné adni. Nem minden modell támogat minden nyelvet: ha a diktálás nem indul el, válaszd az Automatikus beállítást vagy egy másik modellt.",
     "sttLlmRules": "Utófeldolgozási szabályok",
     "sttLlmRulesInfo": "További utasítások az MI-modell számára a felismert beszéd feldolgozásához. Megadhatja például: töltelékszavak eltávolítása, központozás, listák formázása vagy adott stílus követése.",
@@ -1740,13 +1740,11 @@
     "languages": "Nyelvek",
     "languageAuto": "Auto",
     "ownLanguage": "Ön ezen beszél",
-    "ownLanguageDictation": "Mint a diktálásnál",
-    "translationModel": "Fordítja: {model}",
-    "translationModelNone": "Nincs modell kiválasztva a fordításhoz",
     "route": "{from} → {to}",
     "restartTitle": "Újrakezdés?",
     "restartMessage": "Az aktuális átirat törlődik és mentésre kerül az előzményekbe.",
-    "restartConfirm": "Újrakezdés"
+    "restartConfirm": "Újrakezdés",
+    "ownLanguageDefault": "Alapértelmezett ({language})"
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

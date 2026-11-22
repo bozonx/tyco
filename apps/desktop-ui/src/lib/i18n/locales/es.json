@@ -1190,7 +1190,7 @@
     "storageState": "Estado",
     "sttDictationSection": "Entrada de voz",
     "sttDictationSectionInfo": "Ajustes de dictado con micrófono: dispositivo de entrada, corrección con LLM y barra de estilos.",
-    "sttLanguage": "Idioma de dictado",
+    "sttLanguage": "Idioma principal hablado",
     "sttLanguageHint": "En modo automático, el proveedor detecta el idioma hablado. Elegí un idioma para indicarlo explícitamente. No todos los modelos admiten todos los idiomas: si el dictado no se inicia, elige Automático u otro modelo.",
     "sttLlmRules": "Reglas de posprocesamiento",
     "sttLlmRulesInfo": "Instrucciones adicionales para el modelo de IA sobre el procesamiento del habla reconocida. Podés indicar, por ejemplo: eliminar muletillas, puntuar, formatear listas o mantener un estilo específico.",
@@ -1740,13 +1740,11 @@
     "languages": "Idiomas",
     "languageAuto": "Auto",
     "ownLanguage": "Hablas",
-    "ownLanguageDictation": "Como en el dictado",
-    "translationModel": "Traduce {model}",
-    "translationModelNone": "No hay ningún modelo elegido para la traducción",
     "route": "{from} → {to}",
     "restartTitle": "¿Empezar de nuevo?",
     "restartMessage": "La transcripción actual se borrará y se guardará en el historial.",
-    "restartConfirm": "Empezar de nuevo"
+    "restartConfirm": "Empezar de nuevo",
+    "ownLanguageDefault": "Predeterminado ({language})"
   },
   "toolPermissions": {
     "riskRead": "Lectura",

@@ -1190,7 +1190,7 @@
     "storageState": "状態",
     "sttDictationSection": "音声入力",
     "sttDictationSectionInfo": "マイクからの音声入力設定：入力デバイス、LLMによるテキスト補正、スタイルバー。",
-    "sttLanguage": "音声認識の言語",
+    "sttLanguage": "主な音声言語",
     "sttLanguageHint": "自動モードでは、プロバイダーが音声の言語を判定します。言語を明示的に指定するには、言語を選択してください。すべてのモデルがすべての言語に対応しているわけではありません。音声入力が開始しない場合は、「自動」または別のモデルを選択してください。",
     "sttLlmRules": "後処理ルール",
     "sttLlmRulesInfo": "認識された音声の処理に関するAIモデルへの追加指示。例えば、つなぎ言葉の削除、句読点の付与、箇条書きの整形、特定のスタイルの維持などを指定できます。",
@@ -1736,13 +1736,11 @@
     "languages": "言語",
     "languageAuto": "自動",
     "ownLanguage": "あなたの言語",
-    "ownLanguageDictation": "音声入力と同じ",
-    "translationModel": "{model} が翻訳",
-    "translationModelNone": "翻訳用のモデルが選択されていません",
     "route": "{from} → {to}",
     "restartTitle": "最初からやり直しますか？",
     "restartMessage": "現在の文字起こしは消去され、履歴に保存されます。",
-    "restartConfirm": "やり直す"
+    "restartConfirm": "やり直す",
+    "ownLanguageDefault": "デフォルト（{language}）"
   },
   "toolPermissions": {
     "riskRead": "読み取り",
