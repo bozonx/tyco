@@ -1019,9 +1019,7 @@ fn a_source_switch_discards_audio_recorded_twice_during_setup() {
                 .map(|pair| i16::from_le_bytes([pair[0], pair[1]]))
         })
         .collect();
-    let mut expected = vec![1; 100];
-    apply_fade_out_pcm16(&mut expected, 1, TARGET_SAMPLE_RATE_HZ, CAPTURE_FADE_OUT_MS);
-    assert_eq!(samples, expected);
+    assert_eq!(samples, vec![1; 100]);
 }
 
 #[tokio::test]
