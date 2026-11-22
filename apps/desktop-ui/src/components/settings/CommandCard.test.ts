@@ -98,6 +98,6 @@ describe('CommandCard.vue', () => {
     const wrapper = mountCard({ operationId: 'script' })
     const disclosureIcon = wrapper.find('.disclosure-icon')
     expect(disclosureIcon.exists()).toBe(true)
-    expect(disclosureIcon.attributes('title')).toBe('Script')
+    expect(disclosureIcon.attributes('title')).toBe('action.script')
   })
 })

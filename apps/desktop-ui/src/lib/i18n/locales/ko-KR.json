@@ -316,7 +316,6 @@
     "testRunsAllowedCommands": "테스트는 이 AI 명령이 호출할 수 있는 명령을 실제로 실행합니다. 스크립트가 실행되고 웹훅이 전송됩니다.",
     "testStop": "중지",
     "testTextPlaceholder": "테스트할 텍스트",
-    "typeInfo": "유형: {type}",
     "typeLabel": "명령 유형",
     "typeMissing": "이 유형을 사용할 수 없습니다: 플러그인이 비활성화되었거나 누락되었습니다",
     "unavailableInMenu": "{name} (메뉴에서 사용 불가)",
@@ -723,7 +722,6 @@
       "newVault": "새 작업 공간",
       "newer": "최신 TyCo에서 만듦",
       "notConnected": "이 기기에서 연결되지 않음",
-      "open": "폴더 열기",
       "refused": {
         "duplicate": "{detail}은(는) 이미 있는 작업 공간(예: 기본 작업 공간)의 사본입니다. 원본 폴더를 연결하세요.",
         "nested": "작업 공간은 데이터 폴더나 다른 작업 공간 안에 있거나 그것들을 포함할 수 없습니다: {detail}",
@@ -785,7 +783,6 @@
     "configPreview": "미리보기",
     "configureGlobalHotkeys": "시스템에서 변경",
     "configureHotkeysError": "시스템 단축키 설정을 열 수 없습니다",
-    "configureInHotkeys": "단축키에서 설정",
     "conflictKeepMine": "내 변경 사항 저장",
     "conflictReload": "다시 불러오기",
     "connectProject": "프로젝트 연결",
@@ -935,7 +932,6 @@
     "keySaveFailed": "키 업데이트 실패",
     "keySavedOnDevice": "키가 이 기기에만 저장되었습니다",
     "languagesTab": "번역 언어",
-    "listenHotkeyLabel": "단축키",
     "llmConnections": "연결",
     "llmConnectionsHint": "Tyco가 AI 요청을 보낼 위치: Google, OpenRouter, DeepSeek 또는 로컬 Ollama, LM Studio와 같이 OpenAI 호환 API를 지원하는 서버입니다. 모델은 각 연결 내에서 추가됩니다. 저장된 키는 보안 저장소로 이동하며 다시 표시되지 않습니다.",
     "llmTab": "LLM",
@@ -1133,7 +1129,6 @@
     "rebindHotkeys": "다시 등록",
     "rebindHotkeysError": "단축키를 다시 등록할 수 없습니다",
     "rebindHotkeysHint": "시스템 설정에서 제거된 단축키를 다시 가져옵니다. 변경한 단축키는 유지됩니다. 오래된 단축키를 삭제하려면 먼저 시스템 설정에서 Tyco를 제거하세요.",
-    "refreshMicrophones": "마이크 목록 새로고침",
     "removeActionPage": "페이지 삭제",
     "removeActionPageConfirm": "이 페이지에 작업이 있습니다. 삭제하시겠습니까?",
     "removeKey": "키 제거",
@@ -1192,8 +1187,6 @@
     "sttDictationSectionInfo": "마이크 받아쓰기 설정: 입력 장치, LLM 텍스트 교정, 스타일 바.",
     "sttLanguage": "받아쓰기 언어",
     "sttLanguageHint": "자동 모드에서는 제공업체가 음성 언어를 감지합니다. 언어를 명시적으로 지정하려면 언어를 선택하세요. 모든 모델이 모든 언어를 지원하지는 않습니다. 받아쓰기가 시작되지 않으면 '자동' 또는 다른 모델을 선택하세요.",
-    "sttListenSection": "컴퓨터 오디오 듣기",
-    "sttListenSectionInfo": "이 컴퓨터의 동영상, 음성 메시지 및 기타 앱에서 나오는 음성을 텍스트로 변환합니다.",
     "sttLlmRules": "후처리 규칙",
     "sttLlmRulesInfo": "인식된 음성을 처리하기 위한 AI 모델 추가 지침입니다. 예를 들어 불필요한 추임새 제거, 문장 부호 지정, 목록 서식 지정, 특정 스타일 유지 등을 지정할 수 있습니다.",
     "sttNavTab": "받아쓰기",
@@ -1594,7 +1587,8 @@
     "usedBy": "사용처: {count}",
     "value": "값",
     "valueNotSet": "이 기기에 값이 없음: 이 변수를 쓰는 명령은 실행되지 않습니다",
-    "valuePlaceholder": "경로, 주소 또는 다른 텍스트"
+    "valuePlaceholder": "경로, 주소 또는 다른 텍스트",
+    "removeConfirmPrompt": "“{name}” 변수를 삭제하시겠습니까?"
   },
   "favorites": { "noMatches": "일치하는 즐겨찾기 없음" },
   "replyBlocks": {

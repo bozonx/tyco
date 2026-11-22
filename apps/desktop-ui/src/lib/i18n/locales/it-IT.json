@@ -316,7 +316,6 @@
     "testRunsAllowedCommands": "Il test esegue davvero i comandi che questo comando IA può chiamare: gli script vengono eseguiti e i webhook inviati.",
     "testStop": "Interrompi",
     "testTextPlaceholder": "Testo di prova",
-    "typeInfo": "Tipo: {type}",
     "typeLabel": "Tipo di comando",
     "typeMissing": "Il suo tipo non è disponibile: il plugin è disattivato o mancante",
     "unavailableInMenu": "{name} (non disponibile nel menu)",
@@ -723,7 +722,6 @@
       "newVault": "Nuova area di lavoro",
       "newer": "Creato da un TyCo più recente",
       "notConnected": "Non collegato su questo dispositivo",
-      "open": "Apri cartella",
       "refused": {
         "duplicate": "{detail} è una copia di un’area di lavoro già presente, ad esempio quella principale. Collega invece la cartella originale.",
         "nested": "L’area di lavoro non può trovarsi nella cartella dei dati o in un’altra area di lavoro, né contenerle: {detail}",
@@ -785,7 +783,6 @@
     "configPreview": "Anteprima",
     "configureGlobalHotkeys": "Cambia nel sistema",
     "configureHotkeysError": "Impossibile aprire le impostazioni delle scorciatoie di sistema",
-    "configureInHotkeys": "Configura in Scorciatoie",
     "conflictKeepMine": "Salva le mie",
     "conflictReload": "Ricarica",
     "connectProject": "Collega un progetto",
@@ -935,7 +932,6 @@
     "keySaveFailed": "Impossibile aggiornare la chiave",
     "keySavedOnDevice": "La chiave è salvata solo su questo dispositivo",
     "languagesTab": "Lingue di traduzione",
-    "listenHotkeyLabel": "Scorciatoia",
     "llmConnections": "Connessioni",
     "llmConnectionsHint": "Dove Tyco invia le richieste IA: Google, OpenRouter, DeepSeek o qualsiasi server con un’API compatibile con OpenAI, come Ollama o LM Studio in locale. I modelli si aggiungono all’interno della loro connessione. Una chiave salvata va nell’archivio sicuro e non viene più mostrata.",
     "llmTab": "LLM",
@@ -1133,7 +1129,6 @@
     "rebindHotkeys": "Registra di nuovo",
     "rebindHotkeysError": "Impossibile registrare di nuovo le scorciatoie",
     "rebindHotkeysHint": "Ripristina le scorciatoie rimosse nelle impostazioni di sistema; quelle che hai modificato vengono mantenute. Per eliminare scorciatoie obsolete, rimuovi prima Tyco nelle impostazioni di sistema.",
-    "refreshMicrophones": "Aggiorna microfoni",
     "removeActionPage": "Rimuovi pagina",
     "removeActionPageConfirm": "Questa pagina contiene azioni. Rimuoverla?",
     "removeKey": "Rimuovi la chiave",
@@ -1192,8 +1187,6 @@
     "sttDictationSectionInfo": "Impostazioni della dettatura da microfono: dispositivo di ingresso, correzione LLM e barra degli stili.",
     "sttLanguage": "Lingua di dettatura",
     "sttLanguageHint": "In modalità automatica, il fornitore rileva la lingua parlata. Seleziona una lingua per indicarla esplicitamente. Non tutti i modelli supportano tutte le lingue: se la dettatura non si avvia, scegli Automatico o un altro modello.",
-    "sttListenSection": "Ascolto audio del computer",
-    "sttListenSectionInfo": "Trascrive il parlato da video, messaggi vocali e altre applicazioni su questo computer.",
     "sttLlmRules": "Regole di post-elaborazione",
     "sttLlmRulesInfo": "Istruzioni aggiuntive per il modello IA sull'elaborazione del parlato riconosciuto. Puoi specificare ad esempio: rimuovere intercalari, punteggiare, formattare elenchi o seguire uno stile particolare.",
     "sttNavTab": "Trascrizione",
@@ -1594,7 +1587,8 @@
     "usedBy": "Usata da: {count}",
     "value": "Valore",
     "valueNotSet": "Nessun valore su questo dispositivo: i comandi che la usano non vengono eseguiti",
-    "valuePlaceholder": "Un percorso, un indirizzo o altro testo"
+    "valuePlaceholder": "Un percorso, un indirizzo o altro testo",
+    "removeConfirmPrompt": "Rimuovere la variabile «{name}»?"
   },
   "favorites": { "noMatches": "Nessun preferito corrispondente" },
   "replyBlocks": {

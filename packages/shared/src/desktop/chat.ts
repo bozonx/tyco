@@ -78,9 +78,14 @@ export function parseOpenMainChatEvent(value: unknown): OpenMainChatEvent {
     !record(value) ||
     Object.keys(value).some(
       (key) =>
-        !['attachment', 'question', 'autoSend', 'profileId', 'chatId'].includes(
-          key
-        )
+        ![
+          'attachment',
+          'question',
+          'autoSend',
+          'profileId',
+          'chatId',
+          'newChat',
+        ].includes(key)
     )
   )
     throw new Error('Invalid main chat event')
@@ -90,6 +95,8 @@ export function parseOpenMainChatEvent(value: unknown): OpenMainChatEvent {
     throw new Error('Invalid chat id')
   if (value.autoSend !== undefined && typeof value.autoSend !== 'boolean')
     throw new Error('Invalid chat submit flag')
+  if (value.newChat != null && typeof value.newChat !== 'boolean')
+    throw new Error('Invalid new chat flag')
   if (value.attachment != null) {
     const attachment = value.attachment
     if (!record(attachment) || typeof attachment.text !== 'string')

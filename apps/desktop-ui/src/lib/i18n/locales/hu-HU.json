@@ -316,7 +316,6 @@
     "testRunsAllowedCommands": "A teszt ténylegesen futtatja azokat a parancsokat, amelyeket ez az AI-parancs meghívhat: a szkriptek lefutnak, a webhookok elküldésre kerülnek.",
     "testStop": "Leállítás",
     "testTextPlaceholder": "Tesztszöveg",
-    "typeInfo": "Típus: {type}",
     "typeLabel": "Parancstípus",
     "typeMissing": "A típusa nem érhető el: a bővítmény ki van kapcsolva vagy hiányzik",
     "unavailableInMenu": "{name} (a menüben nem érhető el)",
@@ -723,7 +722,6 @@
       "newVault": "Új munkaterület",
       "newer": "Újabb TyCo hozta létre",
       "notConnected": "Ezen az eszközön nincs csatlakoztatva",
-      "open": "Mappa megnyitása",
       "refused": {
         "duplicate": "{detail} egy már meglévő munkaterület másolata, például a főé. Inkább az eredeti mappát csatolja.",
         "nested": "A munkaterület nem lehet az adatmappában vagy másik munkaterületen belül, és nem is tartalmazhatja őket: {detail}",
@@ -785,7 +783,6 @@
     "configPreview": "Előnézet",
     "configureGlobalHotkeys": "Módosítás a rendszerben",
     "configureHotkeysError": "A rendszer billentyűparancs-beállításait nem sikerült megnyitni",
-    "configureInHotkeys": "Beállítás a Gyorsbillentyűknél",
     "conflictKeepMine": "Az enyém mentése",
     "conflictReload": "Újratöltés",
     "connectProject": "Projekt csatlakoztatása",
@@ -935,7 +932,6 @@
     "keySaveFailed": "A kulcsot nem sikerült frissíteni",
     "keySavedOnDevice": "A kulcs csak ezen az eszközön lett mentve",
     "languagesTab": "Fordítási nyelvek",
-    "listenHotkeyLabel": "Gyorsbillentyű",
     "llmConnections": "Kapcsolatok",
     "llmConnectionsHint": "Hova küldi a Tyco az MI-kéréseket: Google, OpenRouter, DeepSeek vagy bármely OpenAI-kompatibilis API-val rendelkező szerver, például helyi Ollama vagy LM Studio. A modelleket a saját kapcsolatukon belül kell hozzáadni. A mentett kulcs a biztonságos tárolóba kerül, és soha többé nem jelenik meg.",
     "llmTab": "LLM",
@@ -1133,7 +1129,6 @@
     "rebindHotkeys": "Újraregisztrálás",
     "rebindHotkeysError": "A billentyűparancsokat nem sikerült újraregisztrálni",
     "rebindHotkeysHint": "Visszaállítja a rendszerbeállításokban eltávolított billentyűparancsokat; az Ön által módosítottak megmaradnak. Az elavult billentyűparancsok megszüntetéséhez először távolítsa el a Tycót a rendszerbeállításokban.",
-    "refreshMicrophones": "Mikrofonok frissítése",
     "removeActionPage": "Oldal eltávolítása",
     "removeActionPageConfirm": "Ez az oldal műveleteket tartalmaz. Eltávolítja?",
     "removeKey": "Kulcs eltávolítása",
@@ -1192,8 +1187,6 @@
     "sttDictationSectionInfo": "Mikrofonos diktálás beállításai: bemeneti eszköz, LLM-szövegjavítás és stílussáv.",
     "sttLanguage": "Diktálás nyelve",
     "sttLanguageHint": "Automatikus módban a szolgáltató felismeri a beszéd nyelvét. Válasszon nyelvet, ha azt kifejezetten meg szeretné adni. Nem minden modell támogat minden nyelvet: ha a diktálás nem indul el, válaszd az Automatikus beállítást vagy egy másik modellt.",
-    "sttListenSection": "Számítógép hangjának figyelése",
-    "sttListenSectionInfo": "Videók, hangüzenetek és más alkalmazások beszédét írja át ezen a számítógépen.",
     "sttLlmRules": "Utófeldolgozási szabályok",
     "sttLlmRulesInfo": "További utasítások az MI-modell számára a felismert beszéd feldolgozásához. Megadhatja például: töltelékszavak eltávolítása, központozás, listák formázása vagy adott stílus követése.",
     "sttNavTab": "Átírás",
@@ -1594,7 +1587,8 @@
     "usedBy": "Használja: {count}",
     "value": "Érték",
     "valueNotSet": "Nincs érték ezen az eszközön: az ezt használó parancsok nem futnak",
-    "valuePlaceholder": "Útvonal, cím vagy más szöveg"
+    "valuePlaceholder": "Útvonal, cím vagy más szöveg",
+    "removeConfirmPrompt": "Törli a(z) „{name}” változót?"
   },
   "favorites": { "noMatches": "Nincsenek egyező kedvencek" },
   "replyBlocks": {

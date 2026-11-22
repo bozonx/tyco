@@ -316,7 +316,6 @@
     "testRunsAllowedCommands": "O teste executa de verdade os comandos que este comando de IA pode chamar: scripts são executados e webhooks são enviados.",
     "testStop": "Parar",
     "testTextPlaceholder": "Texto para testar",
-    "typeInfo": "Tipo: {type}",
     "typeLabel": "Tipo de comando",
     "typeMissing": "O tipo dele não está disponível: o plugin está desativado ou ausente",
     "unavailableInMenu": "{name} (indisponível no menu)",
@@ -723,7 +722,6 @@
       "newVault": "Novo espaço de trabalho",
       "newer": "Criado por um TyCo mais novo",
       "notConnected": "Não conectado neste dispositivo",
-      "open": "Abrir pasta",
       "refused": {
         "duplicate": "{detail} é uma cópia de um espaço de trabalho que já está aqui, por exemplo o principal. Conecte a pasta original.",
         "nested": "O espaço de trabalho não pode ficar dentro da pasta de dados ou de outro espaço de trabalho, nem contê-los: {detail}",
@@ -785,7 +783,6 @@
     "configPreview": "Pré-visualização",
     "configureGlobalHotkeys": "Alterar no sistema",
     "configureHotkeysError": "Não foi possível abrir as configurações de atalhos do sistema",
-    "configureInHotkeys": "Configurar em Atalhos",
     "conflictKeepMine": "Salvar as minhas",
     "conflictReload": "Recarregar",
     "connectProject": "Conectar um projeto",
@@ -935,7 +932,6 @@
     "keySaveFailed": "Não foi possível atualizar a chave",
     "keySavedOnDevice": "A chave foi salva apenas neste dispositivo",
     "languagesTab": "Idiomas de tradução",
-    "listenHotkeyLabel": "Atalho",
     "llmConnections": "Conexões",
     "llmConnectionsHint": "Para onde o Tyco envia as solicitações de IA: Google, OpenRouter, DeepSeek ou qualquer servidor com API compatível com OpenAI, como um Ollama ou LM Studio local. Os modelos são adicionados dentro da conexão. Uma chave salva vai para o armazenamento seguro e nunca mais é exibida.",
     "llmTab": "LLM",
@@ -1133,7 +1129,6 @@
     "rebindHotkeys": "Registrar novamente",
     "rebindHotkeysError": "Não foi possível registrar os atalhos novamente",
     "rebindHotkeysHint": "Recupera os atalhos removidos nas configurações do sistema; os atalhos que você alterou são mantidos. Para descartar atalhos obsoletos, primeiro remova o Tyco nas configurações do sistema.",
-    "refreshMicrophones": "Atualizar microfones",
     "removeActionPage": "Remover página",
     "removeActionPageConfirm": "Esta página contém ações. Removê-la?",
     "removeKey": "Remover chave",
@@ -1192,8 +1187,6 @@
     "sttDictationSectionInfo": "Configurações do ditado por microfone: dispositivo de entrada, correção por LLM e barra de estilos.",
     "sttLanguage": "Idioma do ditado",
     "sttLanguageHint": "No modo automático, o provedor detecta o idioma falado. Selecione um idioma para defini-lo explicitamente. Nem todo modelo oferece suporte a todos os idiomas: se o ditado não iniciar, escolha Automático ou outro modelo.",
-    "sttListenSection": "Escuta do áudio do computador",
-    "sttListenSectionInfo": "Transcreve fala de vídeos, mensagens de voz e outros aplicativos neste computador.",
     "sttLlmRules": "Regras de pós-processamento",
     "sttLlmRulesInfo": "Instruções adicionais para o modelo de IA sobre o processamento da fala reconhecida. Você pode especificar, por exemplo: remover palavras de preenchimento, pontuar, formatar listas ou manter um estilo específico.",
     "sttNavTab": "Transcrição",
@@ -1594,7 +1587,8 @@
     "usedBy": "Usada por: {count}",
     "value": "Valor",
     "valueNotSet": "Sem valor neste dispositivo: os comandos que a usam não são executados",
-    "valuePlaceholder": "Um caminho, um endereço ou outro texto"
+    "valuePlaceholder": "Um caminho, um endereço ou outro texto",
+    "removeConfirmPrompt": "Remover a variável “{name}”?"
   },
   "favorites": { "noMatches": "Não há favoritos correspondentes" },
   "replyBlocks": {

@@ -316,7 +316,6 @@
     "testRunsAllowedCommands": "测试会真正运行此 AI 命令可以调用的命令：脚本会执行，Webhook 会发送。",
     "testStop": "停止",
     "testTextPlaceholder": "用于测试的文本",
-    "typeInfo": "类型：{type}",
     "typeLabel": "命令类型",
     "typeMissing": "其类型不可用：插件已禁用或缺失",
     "unavailableInMenu": "{name}（在菜单中不可用）",
@@ -723,7 +722,6 @@
       "newVault": "新工作区",
       "newer": "由更新版本的 TyCo 创建",
       "notConnected": "此设备上未连接",
-      "open": "打开文件夹",
       "refused": {
         "duplicate": "{detail} 是已有工作区（例如主工作区）的副本。请改为连接原始文件夹。",
         "nested": "工作区不能位于数据文件夹或其他工作区内，也不能包含它们：{detail}",
@@ -785,7 +783,6 @@
     "configPreview": "预览",
     "configureGlobalHotkeys": "在系统中更改",
     "configureHotkeysError": "无法打开系统快捷键设置",
-    "configureInHotkeys": "在快捷键中配置",
     "conflictKeepMine": "保存我的",
     "conflictReload": "重新读取",
     "connectProject": "连接项目",
@@ -935,7 +932,6 @@
     "keySaveFailed": "更新密钥失败",
     "keySavedOnDevice": "密钥仅保存在此设备上",
     "languagesTab": "翻译语言",
-    "listenHotkeyLabel": "快捷键",
     "llmConnections": "连接",
     "llmConnectionsHint": "Tyco 发送 AI 请求的目标：Google、OpenRouter、DeepSeek 或任何具有兼容 OpenAI API 的服务器，例如本地的 Ollama 或 LM Studio。模型添加在其连接内部。保存的密钥将存入安全存储区，不再显示。",
     "llmTab": "LLM",
@@ -1133,7 +1129,6 @@
     "rebindHotkeys": "重新注册",
     "rebindHotkeysError": "无法重新注册快捷键",
     "rebindHotkeysHint": "恢复在系统设置中被移除的快捷键；您修改过的快捷键将被保留。若要废弃旧快捷键，请先在系统设置中移除 Tyco。",
-    "refreshMicrophones": "刷新麦克风列表",
     "removeActionPage": "删除页面",
     "removeActionPageConfirm": "此页面包含操作。要删除吗？",
     "removeKey": "移除密钥",
@@ -1192,8 +1187,6 @@
     "sttDictationSectionInfo": "麦克风听写设置：输入设备、LLM 文本纠错和样式栏。",
     "sttLanguage": "听写语言",
     "sttLanguageHint": "自动模式下，服务商会自行识别语音语言。选择具体语言可明确指定识别语言。并非每个模型都支持所有语言：如果听写无法开始，请选择“自动”或其他模型。",
-    "sttListenSection": "监听电脑音频",
-    "sttListenSectionInfo": "转录此电脑上的视频、语音消息和其他应用中的语音。",
     "sttLlmRules": "后处理规则",
     "sttLlmRulesInfo": "用于处理识别语音的 AI 模型附加说明。例如可以指定：去除口头禅、添加标点、设置列表格式或保持特定风格。",
     "sttNavTab": "转录",
@@ -1590,7 +1583,8 @@
     "usedBy": "使用者：{count}",
     "value": "值",
     "valueNotSet": "此设备上没有值：使用它的命令不会运行",
-    "valuePlaceholder": "路径、地址或其他文本"
+    "valuePlaceholder": "路径、地址或其他文本",
+    "removeConfirmPrompt": "删除变量“{name}”？"
   },
   "favorites": { "noMatches": "没有匹配的收藏夹" },
   "replyBlocks": {

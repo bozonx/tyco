@@ -7,16 +7,8 @@
     :aria-controls="expanded ? controls : undefined"
     @click="emit('toggle')"
   >
-    <span
-      v-if="icon"
-      class="disclosure-icon shrink-0"
-      :title="iconTitle"
-    >
-      <AppIcon
-        :icon="icon"
-        :size="iconSize"
-        aria-hidden="true"
-      />
+    <span v-if="icon" class="disclosure-icon shrink-0" :title="iconTitle">
+      <AppIcon :icon="icon" :size="iconSize" aria-hidden="true" />
     </span>
     <span class="disclosure-copy"
       ><slot

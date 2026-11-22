@@ -252,7 +252,6 @@ import {
   operationInputSchema,
   schemaShape,
 } from '../../lib/operations/operation-input'
-import { operationLabel } from '../../lib/operations/operation-label'
 import { useIpcStore } from '../../stores/ipc'
 import { useOperationsStore } from '../../stores/operations'
 import Badge from '../common/Badge.vue'

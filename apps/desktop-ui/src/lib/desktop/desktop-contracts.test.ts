@@ -18,10 +18,20 @@ describe('desktop wire contracts', () => {
     expect(event.autoSend).toBe(true)
     expect(editor.sourceText).toBe('Original text')
   })
+  it('accepts the chat target the Rust event carries', () => {
+    for (const newChat of [true, false])
+      expect(parseOpenMainChatEvent({ autoSend: false, newChat }).newChat).toBe(
+        newChat
+      )
+    expect(
+      parseOpenMainChatEvent({ autoSend: false, chatId: 'c1' }).chatId
+    ).toBe('c1')
+  })
   it('rejects legacy and malformed event payloads', () => {
     for (const payload of [
       { text: 'Wrong field' },
       { autoSend: 'yes' },
+      { newChat: 'yes' },
       { attachment: { text: 1 } },
       { attachment: { text: 'x', source: 'unknown' } },
     ])

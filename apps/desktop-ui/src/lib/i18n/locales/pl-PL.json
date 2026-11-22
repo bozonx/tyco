@@ -316,7 +316,6 @@
     "testRunsAllowedCommands": "Test naprawdę uruchamia polecenia, które to polecenie AI może wywołać: skrypty są wykonywane, a webhooki wysyłane.",
     "testStop": "Zatrzymaj",
     "testTextPlaceholder": "Tekst do testu",
-    "typeInfo": "Typ: {type}",
     "typeLabel": "Typ polecenia",
     "typeMissing": "Jego typ jest niedostępny: wtyczka jest wyłączona lub jej brak",
     "unavailableInMenu": "{name} (niedostępne w menu)",
@@ -723,7 +722,6 @@
       "newVault": "Nowa przestrzeń robocza",
       "newer": "Utworzony przez nowszy TyCo",
       "notConnected": "Niepodłączony na tym urządzeniu",
-      "open": "Otwórz folder",
       "refused": {
         "duplicate": "{detail} to kopia przestrzeni roboczej, która już tu jest, np. głównej. Podłącz zamiast tego oryginalny folder.",
         "nested": "Przestrzeń robocza nie może leżeć w folderze danych ani w innej przestrzeni roboczej, ani ich zawierać: {detail}",
@@ -785,7 +783,6 @@
     "configPreview": "Podgląd",
     "configureGlobalHotkeys": "Zmień w systemie",
     "configureHotkeysError": "Nie udało się otworzyć systemowych ustawień skrótów",
-    "configureInHotkeys": "Konfiguruj w Skrótach",
     "conflictKeepMine": "Zapisz moje",
     "conflictReload": "Wczytaj ponownie",
     "connectProject": "Podłącz projekt",
@@ -935,7 +932,6 @@
     "keySaveFailed": "Nie udało się zaktualizować klucza",
     "keySavedOnDevice": "Klucz zapisano tylko na tym urządzeniu",
     "languagesTab": "Języki tłumaczenia",
-    "listenHotkeyLabel": "Skrót klawiszowy",
     "llmConnections": "Połączenia",
     "llmConnectionsHint": "Dokąd Tyco wysyła zapytania AI: Google, OpenRouter, DeepSeek lub dowolny serwer z API zgodnym z OpenAI, np. lokalna Ollama lub LM Studio. Modele dodaje się wewnątrz połączenia. Zapisany klucz trafia do bezpiecznego magazynu i nigdy więcej nie jest wyświetlany.",
     "llmTab": "LLM",
@@ -1133,7 +1129,6 @@
     "rebindHotkeys": "Zarejestruj ponownie",
     "rebindHotkeysError": "Nie udało się ponownie zarejestrować skrótów",
     "rebindHotkeysHint": "Przywraca skróty usunięte w ustawieniach systemu; zmienione przez Ciebie skróty są zachowywane. Aby pozbyć się przestarzałych skrótów, najpierw usuń Tyco w ustawieniach systemu.",
-    "refreshMicrophones": "Odśwież mikrofony",
     "removeActionPage": "Usuń stronę",
     "removeActionPageConfirm": "Ta strona zawiera działania. Usunąć ją?",
     "removeKey": "Usuń klucz",
@@ -1192,8 +1187,6 @@
     "sttDictationSectionInfo": "Ustawienia dyktowania z mikrofonu: urządzenie wejściowe, korekta LLM i pasek stylów.",
     "sttLanguage": "Język dyktowania",
     "sttLanguageHint": "W trybie automatycznym dostawca wykrywa język mowy. Wybierz język, aby wskazać go bezpośrednio. Nie każdy model obsługuje każdy język: jeśli dyktowanie się nie uruchamia, wybierz Automatycznie lub inny model.",
-    "sttListenSection": "Nasłuchiwanie dźwięku komputera",
-    "sttListenSectionInfo": "Transkrybuje mowę z filmów, wiadomości głosowych i innych aplikacji na tym komputerze.",
     "sttLlmRules": "Zasady przetwarzania końcowego",
     "sttLlmRulesInfo": "Dodatkowe instrukcje dla modelu AI dotyczące przetwarzania rozpoznanej mowy. Możesz na przykład określić: usuwanie wtrąceń, interpunkcję, formatowanie list lub zachowanie określonego stylu.",
     "sttNavTab": "Transkrypcja",
@@ -1594,7 +1587,8 @@
     "usedBy": "Używana przez: {count}",
     "value": "Wartość",
     "valueNotSet": "Brak wartości na tym urządzeniu: polecenia, które jej używają, nie są wykonywane",
-    "valuePlaceholder": "Ścieżka, adres lub inny tekst"
+    "valuePlaceholder": "Ścieżka, adres lub inny tekst",
+    "removeConfirmPrompt": "Usunąć zmienną „{name}”?"
   },
   "favorites": { "noMatches": "Brak pasujących ulubionych" },
   "replyBlocks": {

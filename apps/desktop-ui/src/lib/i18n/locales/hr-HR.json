@@ -316,7 +316,6 @@
     "testRunsAllowedCommands": "Test stvarno pokreće naredbe koje ova AI naredba smije pozivati: skripte se izvršavaju, a webhookovi šalju.",
     "testStop": "Zaustavi",
     "testTextPlaceholder": "Tekst za testiranje",
-    "typeInfo": "Vrsta: {type}",
     "typeLabel": "Vrsta naredbe",
     "typeMissing": "Njezina vrsta nije dostupna: dodatak je onemogućen ili nedostaje",
     "unavailableInMenu": "{name} (nedostupno u izborniku)",
@@ -723,7 +722,6 @@
       "newVault": "Novi radni prostor",
       "newer": "Stvoreno novijim TyCo-om",
       "notConnected": "Nije povezano na ovom uređaju",
-      "open": "Otvori mapu",
       "refused": {
         "duplicate": "{detail} je kopija radnog prostora koji je već ovdje, npr. glavnog. Umjesto toga priključite izvornu mapu.",
         "nested": "Radni prostor ne može biti unutar mape podataka ili drugog radnog prostora niti ih sadržavati: {detail}",
@@ -785,7 +783,6 @@
     "configPreview": "Pregled",
     "configureGlobalHotkeys": "Promijeni u sustavu",
     "configureHotkeysError": "Postavke prečaca sustava nisu se mogle otvoriti",
-    "configureInHotkeys": "Postavi u Prečacima",
     "conflictKeepMine": "Spremi moje",
     "conflictReload": "Ponovno učitaj",
     "connectProject": "Poveži projekt",
@@ -935,7 +932,6 @@
     "keySaveFailed": "Ključ se nije mogao ažurirati",
     "keySavedOnDevice": "Ključ je spremljen samo na ovom uređaju",
     "languagesTab": "Jezici prijevoda",
-    "listenHotkeyLabel": "Tipkovni prečac",
     "llmConnections": "Veze",
     "llmConnectionsHint": "Kamo Tyco šalje AI zahtjeve: Google, OpenRouter, DeepSeek ili bilo koji poslužitelj s API-jem kompatibilnim s OpenAI-jem, npr. lokalni Ollama ili LM Studio. Modeli se dodaju unutar svoje veze. Spremljeni ključ ide u sigurnu pohranu i više se nikad ne prikazuje.",
     "llmTab": "LLM",
@@ -1133,7 +1129,6 @@
     "rebindHotkeys": "Ponovno registriraj",
     "rebindHotkeysError": "Prečaci se nisu mogli ponovno registrirati",
     "rebindHotkeysHint": "Vraća prečace uklonjene u postavkama sustava; prečaci koje ste promijenili ostaju. Da biste se riješili zastarjelih prečaca, najprije uklonite Tyco u postavkama sustava.",
-    "refreshMicrophones": "Osvježi mikrofone",
     "removeActionPage": "Ukloni stranicu",
     "removeActionPageConfirm": "Ova stranica sadrži radnje. Ukloniti je?",
     "removeKey": "Ukloni ključ",
@@ -1192,8 +1187,6 @@
     "sttDictationSectionInfo": "Postavke diktiranja mikrofonom: ulazni uređaj, LLM ispravak teksta i traka stilova.",
     "sttLanguage": "Jezik diktiranja",
     "sttLanguageHint": "U automatskom načinu pružatelj otkriva jezik govora. Odaberite jezik da biste ga izričito zadali. Ne podržava svaki model svaki jezik: ako se diktiranje ne pokrene, odaberite Automatski ili drugi model.",
-    "sttListenSection": "Slušanje zvuka računala",
-    "sttListenSectionInfo": "Transkribira govor iz videozapisa, glasovnih poruka i drugih aplikacija na ovom računalu.",
     "sttLlmRules": "Pravila naknadne obrade",
     "sttLlmRulesInfo": "Dodatne upute za AI model o obradi prepoznatog govora. Možete navesti npr.: uklanjanje poštapalica, interpunkciju, oblikovanje popisa ili određeni stil.",
     "sttNavTab": "Transkripcija",
@@ -1594,7 +1587,8 @@
     "usedBy": "Koristi: {count}",
     "value": "Vrijednost",
     "valueNotSet": "Nema vrijednosti na ovom uređaju: naredbe koje je koriste ne izvršavaju se",
-    "valuePlaceholder": "Putanja, adresa ili drugi tekst"
+    "valuePlaceholder": "Putanja, adresa ili drugi tekst",
+    "removeConfirmPrompt": "Ukloniti varijablu „{name}”?"
   },
   "favorites": { "noMatches": "Nema podudarnih favorita" },
   "replyBlocks": {

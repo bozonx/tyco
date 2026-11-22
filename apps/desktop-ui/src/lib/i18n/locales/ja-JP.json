@@ -316,7 +316,6 @@
     "testRunsAllowedCommands": "テストでは、この AI コマンドが呼び出せるコマンドが実際に実行されます。スクリプトが実行され、Webhook が送信されます。",
     "testStop": "停止",
     "testTextPlaceholder": "テスト用テキスト",
-    "typeInfo": "種類: {type}",
     "typeLabel": "コマンドの種類",
     "typeMissing": "この種類は利用できません。プラグインが無効か見つかりません",
     "unavailableInMenu": "{name}（メニューでは利用不可）",
@@ -723,7 +722,6 @@
       "newVault": "新しいワークスペース",
       "newer": "新しい TyCo で作成",
       "notConnected": "このデバイスでは未接続",
-      "open": "フォルダーを開く",
       "refused": {
         "duplicate": "{detail} は、すでにあるワークスペース（メインなど）のコピーです。元のフォルダーを接続してください。",
         "nested": "ワークスペースはデータフォルダーや別のワークスペースの中に置くことも、それらを含むこともできません: {detail}",
@@ -785,7 +783,6 @@
     "configPreview": "プレビュー",
     "configureGlobalHotkeys": "システム設定で変更",
     "configureHotkeysError": "システムのショートカット設定を開けませんでした",
-    "configureInHotkeys": "ホットキーで設定",
     "conflictKeepMine": "自分の変更を保存",
     "conflictReload": "再読み込み",
     "connectProject": "プロジェクトを接続",
@@ -935,7 +932,6 @@
     "keySaveFailed": "キーの更新に失敗しました",
     "keySavedOnDevice": "キーはこのデバイスにのみ保存されました",
     "languagesTab": "翻訳言語",
-    "listenHotkeyLabel": "ショートカット",
     "llmConnections": "接続",
     "llmConnectionsHint": "TyCoがAIリクエストを送信する場所：Google、OpenRouter、DeepSeek、またはローカルのOllamaやLM StudioなどのOpenAI互換APIを持つサーバー。モデルは接続内に追加されます。保存されたキーは安全なストレージに送られ、再表示されることはありません。",
     "llmTab": "LLM",
@@ -1133,7 +1129,6 @@
     "rebindHotkeys": "再登録",
     "rebindHotkeysError": "ショートカットを再登録できませんでした",
     "rebindHotkeysHint": "システム設定で削除されたショートカットを再登録します。変更したショートカットは維持されます。古いショートカットを破棄するには、まずシステム設定でTycoを削除してください。",
-    "refreshMicrophones": "マイク一覧を更新",
     "removeActionPage": "ページを削除",
     "removeActionPageConfirm": "このページにはアクションがあります。削除しますか？",
     "removeKey": "キーを削除",
@@ -1192,8 +1187,6 @@
     "sttDictationSectionInfo": "マイクからの音声入力設定：入力デバイス、LLMによるテキスト補正、スタイルバー。",
     "sttLanguage": "音声認識の言語",
     "sttLanguageHint": "自動モードでは、プロバイダーが音声の言語を判定します。言語を明示的に指定するには、言語を選択してください。すべてのモデルがすべての言語に対応しているわけではありません。音声入力が開始しない場合は、「自動」または別のモデルを選択してください。",
-    "sttListenSection": "コンピューター音声の聞き取り",
-    "sttListenSectionInfo": "このコンピューター上の動画、音声メッセージ、その他のアプリの音声を文字起こしします。",
     "sttLlmRules": "後処理ルール",
     "sttLlmRulesInfo": "認識された音声の処理に関するAIモデルへの追加指示。例えば、つなぎ言葉の削除、句読点の付与、箇条書きの整形、特定のスタイルの維持などを指定できます。",
     "sttNavTab": "文字起こし",
@@ -1590,7 +1583,8 @@
     "usedBy": "使用箇所: {count}",
     "value": "値",
     "valueNotSet": "このデバイスに値がありません: この変数を使うコマンドは実行されません",
-    "valuePlaceholder": "パス、アドレス、その他のテキスト"
+    "valuePlaceholder": "パス、アドレス、その他のテキスト",
+    "removeConfirmPrompt": "変数「{name}」を削除しますか？"
   },
   "favorites": { "noMatches": "一致するお気に入りがありません" },
   "replyBlocks": {

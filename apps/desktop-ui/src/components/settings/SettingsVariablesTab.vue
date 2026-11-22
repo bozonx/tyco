@@ -360,7 +360,10 @@ function isVariableEmpty(id: string): boolean {
   return true
 }
 
-/** Removes an empty and unused variable at once; asks first when any field is set or it is used */
+/**
+ * Removes an empty and unused variable at once; asks first when any field is
+ * set or it is used
+ */
 function requestRemove(id: string) {
   const variable = draft.value.variables.find((item) => item.id === id)
   if (!variable) return

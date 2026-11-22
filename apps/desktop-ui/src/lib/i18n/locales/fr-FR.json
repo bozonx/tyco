@@ -316,7 +316,6 @@
     "testRunsAllowedCommands": "Le test exécute réellement les commandes que cette commande IA peut appeler : les scripts s’exécutent et les webhooks sont envoyés.",
     "testStop": "Arrêter",
     "testTextPlaceholder": "Texte de test",
-    "typeInfo": "Type : {type}",
     "typeLabel": "Type de commande",
     "typeMissing": "Son type n’est pas disponible : le plugin est désactivé ou absent",
     "unavailableInMenu": "{name} (indisponible dans le menu)",
@@ -723,7 +722,6 @@
       "newVault": "Nouvel espace de travail",
       "newer": "Créé par un TyCo plus récent",
       "notConnected": "Non connecté sur cet appareil",
-      "open": "Ouvrir le dossier",
       "refused": {
         "duplicate": "{detail} est une copie d’un espace de travail déjà présent, par exemple le principal. Ajoutez plutôt le dossier d’origine.",
         "nested": "L’espace de travail ne peut pas se trouver dans le dossier de données ou dans un autre espace de travail, ni en contenir un : {detail}",
@@ -785,7 +783,6 @@
     "configPreview": "Aperçu",
     "configureGlobalHotkeys": "Modifier dans le système",
     "configureHotkeysError": "Impossible d’ouvrir les paramètres de raccourcis du système",
-    "configureInHotkeys": "Configurer dans Raccourcis",
     "conflictKeepMine": "Enregistrer les miennes",
     "conflictReload": "Recharger",
     "connectProject": "Connecter un projet",
@@ -935,7 +932,6 @@
     "keySaveFailed": "Impossible de mettre à jour la clé",
     "keySavedOnDevice": "La clé est enregistrée sur cet appareil uniquement",
     "languagesTab": "Langues de traduction",
-    "listenHotkeyLabel": "Raccourci",
     "llmConnections": "Connexions",
     "llmConnectionsHint": "Où Tyco envoie les requêtes IA : Google, OpenRouter, DeepSeek ou tout serveur doté d’une API compatible OpenAI, comme un Ollama ou un LM Studio local. Les modèles s’ajoutent dans leur connexion. Une clé enregistrée va dans le stockage sécurisé et n’est plus jamais affichée.",
     "llmTab": "LLM",
@@ -1133,7 +1129,6 @@
     "rebindHotkeys": "Réenregistrer",
     "rebindHotkeysError": "Impossible de réenregistrer les raccourcis",
     "rebindHotkeysHint": "Rétablit les raccourcis supprimés dans les paramètres du système ; les raccourcis que vous avez modifiés sont conservés. Pour éliminer les raccourcis obsolètes, supprimez d’abord Tyco dans les paramètres du système.",
-    "refreshMicrophones": "Actualiser les microphones",
     "removeActionPage": "Supprimer la page",
     "removeActionPageConfirm": "Cette page contient des actions. La supprimer ?",
     "removeKey": "Retirer la clé",
@@ -1192,8 +1187,6 @@
     "sttDictationSectionInfo": "Paramètres de dictée au microphone : périphérique d’entrée, correction par LLM et barre de styles.",
     "sttLanguage": "Langue de dictée",
     "sttLanguageHint": "En mode automatique, le fournisseur détecte la langue parlée. Sélectionnez une langue pour la définir explicitement. Tous les modèles ne prennent pas en charge toutes les langues : si la dictée ne démarre pas, choisissez Auto ou un autre modèle.",
-    "sttListenSection": "Écoute de l’audio de l’ordinateur",
-    "sttListenSectionInfo": "Transcrit la parole issue des vidéos, messages vocaux et autres applications sur cet ordinateur.",
     "sttLlmRules": "Règles de post-traitement",
     "sttLlmRulesInfo": "Instructions supplémentaires pour le modèle IA concernant le traitement de la parole reconnue. Vous pouvez par exemple spécifier : supprimer les tics de langage, ponctuer, formater des listes ou conserver un style particulier.",
     "sttNavTab": "Transcription",
@@ -1594,7 +1587,8 @@
     "usedBy": "Utilisée par : {count}",
     "value": "Valeur",
     "valueNotSet": "Aucune valeur sur cet appareil : les commandes qui l’utilisent ne s’exécutent pas",
-    "valuePlaceholder": "Un chemin, une adresse ou un autre texte"
+    "valuePlaceholder": "Un chemin, une adresse ou un autre texte",
+    "removeConfirmPrompt": "Supprimer la variable « {name} » ?"
   },
   "favorites": { "noMatches": "Aucun favori correspondant" },
   "replyBlocks": {

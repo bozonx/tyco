@@ -316,7 +316,6 @@
     "testRunsAllowedCommands": "測試會真正執行此 AI 命令可呼叫的命令：腳本會執行，Webhook 會傳送。",
     "testStop": "停止",
     "testTextPlaceholder": "用於測試的文字",
-    "typeInfo": "類型：{type}",
     "typeLabel": "指令類型",
     "typeMissing": "其類型無法使用：外掛程式已停用或遺失",
     "unavailableInMenu": "{name}（在選單中無法使用）",
@@ -723,7 +722,6 @@
       "newVault": "新工作區",
       "newer": "由較新版本的 TyCo 建立",
       "notConnected": "此裝置上未連接",
-      "open": "開啟資料夾",
       "refused": {
         "duplicate": "{detail} 是已有工作區（例如主工作區）的副本。請改為連接原始資料夾。",
         "nested": "工作區不能位於資料夾或其他工作區內，也不能包含它們：{detail}",
@@ -785,7 +783,6 @@
     "configPreview": "預覽",
     "configureGlobalHotkeys": "在系統中變更",
     "configureHotkeysError": "無法開啟系統快捷鍵設定",
-    "configureInHotkeys": "在快速鍵中設定",
     "conflictKeepMine": "儲存我的",
     "conflictReload": "重新讀取",
     "connectProject": "連接專案",
@@ -935,7 +932,6 @@
     "keySaveFailed": "更新金鑰失敗",
     "keySavedOnDevice": "金鑰僅儲存在此裝置上",
     "languagesTab": "翻譯語言",
-    "listenHotkeyLabel": "快速鍵",
     "llmConnections": "連線",
     "llmConnectionsHint": "Tyco 發送 AI 請求的端點：Google、OpenRouter、DeepSeek 或任何具有 OpenAI 相容 API 的伺服器，例如本機的 Ollama 或 LM Studio。模型會在各連線內部新增。儲存的金鑰將存入安全存放區，不再顯示。",
     "llmTab": "LLM",
@@ -1133,7 +1129,6 @@
     "rebindHotkeys": "重新註冊",
     "rebindHotkeysError": "無法重新註冊快捷鍵",
     "rebindHotkeysHint": "還原在系統設定中被移除的快捷鍵；已自訂的快捷鍵將予以保留。若要捨棄過時的快捷鍵，請先在系統設定中移除 Tyco。",
-    "refreshMicrophones": "重新整理麥克風清單",
     "removeActionPage": "移除分頁",
     "removeActionPageConfirm": "此頁面包含動作。要移除嗎？",
     "removeKey": "移除金鑰",
@@ -1192,8 +1187,6 @@
     "sttDictationSectionInfo": "麥克風聽寫設定：輸入裝置、LLM 文字校正與樣式列。",
     "sttLanguage": "聽寫語言",
     "sttLanguageHint": "自動模式下，服務供應商會自行偵測語音語言。選擇特定語言可明確指定辨識語言。並非每個模型都支援所有語言：如果聽寫無法開始，請選擇「自動」或其他模型。",
-    "sttListenSection": "監聽電腦音訊",
-    "sttListenSectionInfo": "轉錄此電腦上影片、語音訊息與其他應用程式中的語音。",
     "sttLlmRules": "後處理規則",
     "sttLlmRulesInfo": "用於處理辨識語音的 AI 模型附加指示。例如可以指定：去除贅字、添加標點、設定清單格式或維持特定風格。",
     "sttNavTab": "轉錄",
@@ -1590,7 +1583,8 @@
     "usedBy": "使用者：{count}",
     "value": "值",
     "valueNotSet": "此裝置上沒有值：使用它的命令不會執行",
-    "valuePlaceholder": "路徑、位址或其他文字"
+    "valuePlaceholder": "路徑、位址或其他文字",
+    "removeConfirmPrompt": "要刪除變數「{name}」嗎？"
   },
   "favorites": { "noMatches": "沒有相符的收藏" },
   "replyBlocks": {

@@ -316,7 +316,6 @@
     "testRunsAllowedCommands": "Der Test führt die Befehle, die dieser KI-Befehl aufrufen darf, wirklich aus: Skripte laufen, Webhooks werden gesendet.",
     "testStop": "Stoppen",
     "testTextPlaceholder": "Text zum Testen",
-    "typeInfo": "Typ: {type}",
     "typeLabel": "Befehlstyp",
     "typeMissing": "Sein Typ ist nicht verfügbar: Das Plugin ist deaktiviert oder fehlt",
     "unavailableInMenu": "{name} (im Menü nicht verfügbar)",
@@ -723,7 +722,6 @@
       "newVault": "Neuer Arbeitsbereich",
       "newer": "Von neuerem TyCo angelegt",
       "notConnected": "Auf diesem Gerät nicht verbunden",
-      "open": "Ordner öffnen",
       "refused": {
         "duplicate": "{detail} ist eine Kopie eines bereits vorhandenen Arbeitsbereichs, etwa des Hauptbereichs. Binde stattdessen den ursprünglichen Ordner an.",
         "nested": "Der Arbeitsbereich darf nicht im Datenordner oder einem anderen Arbeitsbereich liegen und keinen davon enthalten: {detail}",
@@ -785,7 +783,6 @@
     "configPreview": "Vorschau",
     "configureGlobalHotkeys": "Im System ändern",
     "configureHotkeysError": "Die Tastenkürzel-Einstellungen des Systems konnten nicht geöffnet werden",
-    "configureInHotkeys": "Unter Tastenkürzel festlegen",
     "conflictKeepMine": "Meine speichern",
     "conflictReload": "Neu laden",
     "connectProject": "Projekt verbinden",
@@ -935,7 +932,6 @@
     "keySaveFailed": "Der Schlüssel konnte nicht aktualisiert werden",
     "keySavedOnDevice": "Der Schlüssel ist nur auf diesem Gerät gespeichert",
     "languagesTab": "Übersetzungssprachen",
-    "listenHotkeyLabel": "Tastenkürzel",
     "llmConnections": "Verbindungen",
     "llmConnectionsHint": "Wohin Tyco KI-Anfragen sendet: Google, OpenRouter, DeepSeek oder ein beliebiger Server mit OpenAI-kompatibler API, etwa ein lokales Ollama oder LM Studio. Modelle werden innerhalb ihrer Verbindung hinzugefügt. Ein gespeicherter Schlüssel kommt in den sicheren Speicher und wird nie wieder angezeigt.",
     "llmTab": "LLM",
@@ -1133,7 +1129,6 @@
     "rebindHotkeys": "Erneut registrieren",
     "rebindHotkeysError": "Die Tastenkürzel konnten nicht erneut registriert werden",
     "rebindHotkeysHint": "Holt die in den Systemeinstellungen entfernten Tastenkürzel zurück; von Ihnen geänderte Kürzel bleiben erhalten. Um veraltete Kürzel loszuwerden, entfernen Sie Tyco zuerst in den Systemeinstellungen.",
-    "refreshMicrophones": "Mikrofone aktualisieren",
     "removeActionPage": "Seite entfernen",
     "removeActionPageConfirm": "Diese Seite enthält Aktionen. Entfernen?",
     "removeKey": "Schlüssel entfernen",
@@ -1192,8 +1187,6 @@
     "sttDictationSectionInfo": "Einstellungen für die Mikrofon-Diktierfunktion: Eingabegerät, LLM-Textkorrektur und Stilleiste.",
     "sttLanguage": "Diktiersprache",
     "sttLanguageHint": "Im automatischen Modus erkennt der Anbieter die gesprochene Sprache. Wähle eine Sprache, um sie ausdrücklich vorzugeben. Nicht jedes Modell unterstützt jede Sprache: Startet das Diktat nicht, wähle „Automatisch“ oder ein anderes Modell.",
-    "sttListenSection": "Computeraudio mithören",
-    "sttListenSectionInfo": "Transkribiert Sprache aus Videos, Sprachnachrichten und anderen Anwendungen auf diesem Gerät.",
     "sttLlmRules": "Regeln für die Nachbearbeitung",
     "sttLlmRulesInfo": "Zusätzliche Anweisungen für das KI-Modell zur Verarbeitung der erkannten Sprache. Du kannst z. B. angeben: Füllwörter entfernen, Zeichensetzung ergänzen, Listen formatieren oder einen bestimmten Stil einhalten.",
     "sttNavTab": "Transkription",
@@ -1594,7 +1587,8 @@
     "usedBy": "Verwendet von: {count}",
     "value": "Wert",
     "valueNotSet": "Kein Wert auf diesem Gerät: Befehle, die sie nutzen, werden nicht ausgeführt",
-    "valuePlaceholder": "Ein Pfad, eine Adresse oder anderer Text"
+    "valuePlaceholder": "Ein Pfad, eine Adresse oder anderer Text",
+    "removeConfirmPrompt": "Variable „{name}“ entfernen?"
   },
   "favorites": { "noMatches": "Keine passenden Favoriten" },
   "replyBlocks": {

@@ -316,7 +316,6 @@
     "testRunsAllowedCommands": "Test skutečně spustí příkazy, které tento AI příkaz smí volat: skripty se provedou a webhooky odešlou.",
     "testStop": "Zastavit",
     "testTextPlaceholder": "Text k otestování",
-    "typeInfo": "Typ: {type}",
     "typeLabel": "Typ příkazu",
     "typeMissing": "Jeho typ není k dispozici: plugin je vypnutý nebo chybí",
     "unavailableInMenu": "{name} (v nabídce nedostupné)",
@@ -723,7 +722,6 @@
       "newVault": "Nový prostor",
       "newer": "Vytvořeno novějším TyCo",
       "notConnected": "Na tomto zařízení nepřipojeno",
-      "open": "Otevřít složku",
       "refused": {
         "duplicate": "{detail} je kopie prostoru, který tu už je, třeba hlavního. Připojte raději původní složku.",
         "nested": "Prostor nemůže být uvnitř složky dat nebo jiného prostoru ani je obsahovat: {detail}",
@@ -785,7 +783,6 @@
     "configPreview": "Náhled",
     "configureGlobalHotkeys": "Změnit v systému",
     "configureHotkeysError": "Systémové nastavení klávesových zkratek se nepodařilo otevřít",
-    "configureInHotkeys": "Nastavit v Klávesových zkratkách",
     "conflictKeepMine": "Uložit moje",
     "conflictReload": "Načíst znovu",
     "connectProject": "Připojit projekt",
@@ -935,7 +932,6 @@
     "keySaveFailed": "Klíč se nepodařilo aktualizovat",
     "keySavedOnDevice": "Klíč je uložen jen na tomto zařízení",
     "languagesTab": "Jazyky překladu",
-    "listenHotkeyLabel": "Klávesová zkratka",
     "llmConnections": "Připojení",
     "llmConnectionsHint": "Kam Tyco posílá požadavky na AI: Google, OpenRouter, DeepSeek nebo libovolný server s API kompatibilním s OpenAI, třeba místní Ollama či LM Studio. Modely se přidávají uvnitř svého připojení. Uložený klíč jde do zabezpečeného úložiště a už se nikdy nezobrazí.",
     "llmTab": "LLM",
@@ -1133,7 +1129,6 @@
     "rebindHotkeys": "Znovu zaregistrovat",
     "rebindHotkeysError": "Zkratky se nepodařilo znovu zaregistrovat",
     "rebindHotkeysHint": "Vrátí zkratky odstraněné v nastavení systému; zkratky, které jste změnili, zůstanou. Chcete-li se zbavit zastaralých zkratek, nejprve odeberte Tyco v nastavení systému.",
-    "refreshMicrophones": "Obnovit mikrofony",
     "removeActionPage": "Odebrat stránku",
     "removeActionPageConfirm": "Tato stránka obsahuje akce. Odebrat ji?",
     "removeKey": "Odebrat klíč",
@@ -1192,8 +1187,6 @@
     "sttDictationSectionInfo": "Nastavení diktování z mikrofonu: vstupní zařízení, korekce pomocí LLM a lišta stylů.",
     "sttLanguage": "Jazyk diktování",
     "sttLanguageHint": "V automatickém režimu poskytovatel rozpozná jazyk řeči. Vyberte jazyk, pokud jej chcete určit přímo. Ne každý model podporuje každý jazyk: pokud se diktování nespustí, zvolte Automaticky nebo jiný model.",
-    "sttListenSection": "Poslech zvuku z počítače",
-    "sttListenSectionInfo": "Přepisuje řeč z videí, hlasových zpráv a dalších aplikací v tomto počítači.",
     "sttLlmRules": "Pravidla dodatečného zpracování",
     "sttLlmRulesInfo": "Dodatečné pokyny pro model AI ke zpracování rozpoznané řeči. Můžete například uvést: odstranit vycpávková slova, doplnit interpunkci, formátovat seznamy nebo dodržovat určitý styl.",
     "sttNavTab": "Přepis řeči",
@@ -1594,7 +1587,8 @@
     "usedBy": "Používá: {count}",
     "value": "Hodnota",
     "valueNotSet": "Žádná hodnota na tomto zařízení: příkazy, které ji používají, se nespustí",
-    "valuePlaceholder": "Cesta, adresa nebo jiný text"
+    "valuePlaceholder": "Cesta, adresa nebo jiný text",
+    "removeConfirmPrompt": "Odebrat proměnnou „{name}“?"
   },
   "favorites": { "noMatches": "Žádné odpovídající oblíbené" },
   "replyBlocks": {

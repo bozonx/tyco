@@ -185,11 +185,9 @@ describe('SettingsVariablesTab.vue', () => {
   })
 
   it('asks for confirmation before removing an unused variable with a value', async () => {
-    const { wrapper, context } = mountTab(
-      [{ id: 'v1', name: 'VAR' }],
-      [],
-      { v1: 'https://example.com' }
-    )
+    const { wrapper, context } = mountTab([{ id: 'v1', name: 'VAR' }], [], {
+      v1: 'https://example.com',
+    })
     const removeBtn = wrapper.find(
       '[data-testid="variable-v1"] .variable-card-header button'
     )

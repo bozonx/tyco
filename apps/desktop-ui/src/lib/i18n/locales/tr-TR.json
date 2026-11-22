@@ -316,7 +316,6 @@
     "testRunsAllowedCommands": "Test, bu yapay zekâ komutunun çağırabileceği komutları gerçekten çalıştırır: betikler çalışır ve webhook’lar gönderilir.",
     "testStop": "Durdur",
     "testTextPlaceholder": "Deneme metni",
-    "typeInfo": "Tür: {type}",
     "typeLabel": "Komut türü",
     "typeMissing": "Türü kullanılamıyor: eklenti kapalı veya yok",
     "unavailableInMenu": "{name} (menüde kullanılamaz)",
@@ -723,7 +722,6 @@
       "newVault": "Yeni çalışma alanı",
       "newer": "Daha yeni bir TyCo tarafından oluşturuldu",
       "notConnected": "Bu cihazda bağlı değil",
-      "open": "Klasörü aç",
       "refused": {
         "duplicate": "{detail}, burada zaten bulunan bir çalışma alanının (örneğin ana olanın) kopyası. Bunun yerine özgün klasörü bağlayın.",
         "nested": "Çalışma alanı veri klasörünün veya başka bir çalışma alanının içinde olamaz, onları da içeremez: {detail}",
@@ -785,7 +783,6 @@
     "configPreview": "Önizleme",
     "configureGlobalHotkeys": "Sistemde değiştir",
     "configureHotkeysError": "Sistem kısayol ayarları açılamadı",
-    "configureInHotkeys": "Kısayollarda yapılandır",
     "conflictKeepMine": "Benimkini kaydet",
     "conflictReload": "Yeniden yükle",
     "connectProject": "Proje bağla",
@@ -935,7 +932,6 @@
     "keySaveFailed": "Anahtar güncellenemedi",
     "keySavedOnDevice": "Anahtar yalnızca bu cihaza kaydedildi",
     "languagesTab": "Çeviri dilleri",
-    "listenHotkeyLabel": "Kısayol",
     "llmConnections": "Bağlantılar",
     "llmConnectionsHint": "Tyco’nun yapay zekâ isteklerini gönderdiği yer: Google, OpenRouter, DeepSeek ya da yerel Ollama veya LM Studio gibi OpenAI uyumlu API’ye sahip herhangi bir sunucu. Modeller kendi bağlantılarının içine eklenir. Kaydedilen anahtar güvenli depolamaya alınır ve bir daha gösterilmez.",
     "llmTab": "LLM",
@@ -1133,7 +1129,6 @@
     "rebindHotkeys": "Yeniden kaydet",
     "rebindHotkeysError": "Kısayollar yeniden kaydedilemedi",
     "rebindHotkeysHint": "Sistem ayarlarında silinen kısayolları geri getirir; değiştirdiğiniz kısayollar korunur. Eski kısayolları kaldırmak için önce sistem ayarlarında Tyco’yu silin.",
-    "refreshMicrophones": "Mikrofonları yenile",
     "removeActionPage": "Sayfayı kaldır",
     "removeActionPageConfirm": "Bu sayfa eylemler içeriyor. Kaldırılsın mı?",
     "removeKey": "Anahtarı kaldır",
@@ -1192,8 +1187,6 @@
     "sttDictationSectionInfo": "Mikrofonla dikte ayarları: giriş aygıtı, LLM metin düzeltme ve stil çubuğu.",
     "sttLanguage": "Dikte dili",
     "sttLanguageHint": "Otomatik modda sağlayıcı konuşulan dili algılar. Dili açıkça belirtmek için bir dil seçin. Her model her dili desteklemez: dikte başlamazsa Otomatik’i veya başka bir modeli seçin.",
-    "sttListenSection": "Bilgisayar sesini dinleme",
-    "sttListenSectionInfo": "Bu bilgisayardaki videolardan, sesli mesajlardan ve diğer uygulamalardan gelen konuşmaları yazıya döker.",
     "sttLlmRules": "İşleme kuralları",
     "sttLlmRulesInfo": "Tanınan konuşmanın işlenmesi için yapay zekâ modeline ek talimatlar. Örneğin dolgu sözcükleri kaldırma, noktalama işaretlerini koyma, listeleri biçimlendirme veya belirli bir üslubu koruma gibi kurallar belirtebilirsiniz.",
     "sttNavTab": "Deşifre",
@@ -1590,7 +1583,8 @@
     "usedBy": "Kullanan: {count}",
     "value": "Değer",
     "valueNotSet": "Bu cihazda değer yok: onu kullanan komutlar çalışmaz",
-    "valuePlaceholder": "Bir yol, adres veya başka bir metin"
+    "valuePlaceholder": "Bir yol, adres veya başka bir metin",
+    "removeConfirmPrompt": "“{name}” değişkeni silinsin mi?"
   },
   "favorites": { "noMatches": "Eşleşen favori yok" },
   "replyBlocks": {
