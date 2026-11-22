@@ -773,7 +773,7 @@
     "chatHistoryRetentionNever": "Nunca",
     "chatImageQuality": "Calidad de imagen",
     "chatImageQualityHint": "Se aplica a todos los adjuntos nuevos en todos los chats. Se eliminan los metadatos EXIF de las imágenes y se convierten a WebP (límites de hasta 24 MP и 5 MB tras la compresión). Equilibrada (2048 px) conserva las capturas Full HD 1:1, Económica (1024 px) ahorra tókenes y Máxima (hasta 8000 px) mantiene la resolución original.",
-    "chatInfo": "Un chat rápido con IA para tareas cotidianas. A diferencia de los perfiles de IA con roles y herramientas aislados, esta es una conversación universal no vinculada a un perfil específico. Puede hacer preguntas, usar texto seleccionado como contexto, adjuntar imágenes, configurar un prompt general del sistema y administrar el historial local de chats.",
+    "chatInfo": "Un chat rápido con IA para tareas cotidianas. A diferencia de los perfiles de IA con roles y herramientas aislados, esta es una conversación universal no vinculada a un perfil específico. Puede hacer preguntas, usar texto seleccionado como contexto, adjuntar imágenes, configurar un prompt general del sistema y administrar el historial local de chats. Para esta función es mejor usar modelos rápidos: son adecuados para respuestas rápidas y verificación de datos.",
     "chatInstructions": "Instrucciones de «Preguntar a la IA»",
     "chatInstructionsInfo": "Se aplica al chat y a las consultas rápidas sin perfil. Puedes indicar requisitos distintos para cada entorno: chat o consultas rápidas.",
     "chatPromptProfile": "Perfil",
@@ -1362,7 +1362,6 @@
     "accessLevelReadWrite": "Lectura y escritura",
     "askAiWebSearch": "Búsqueda web",
     "askAiWebSearchHint": "Permite que el chat «Preguntar a la IA» busque en la web y lea páginas sin preguntar. Nunca ve tus archivos, tu memoria ni tus comandos.",
-    "askAiFastModelsHint": "«Preguntar a la IA» funciona mejor con un modelo rápido: está pensado para respuestas rápidas y verificar datos.",
     "toolsTab": "Herramientas"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },

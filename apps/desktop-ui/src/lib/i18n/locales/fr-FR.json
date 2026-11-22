@@ -773,7 +773,7 @@
     "chatHistoryRetentionNever": "Jamais",
     "chatImageQuality": "Qualité des images",
     "chatImageQualityHint": "S’applique à toutes les nouvelles pièces jointes dans tous les chats. Les métadonnées EXIF sont supprimées et les images sont converties en WebP (limites jusqu’à 24 Mpx et 5 Mo après compression). Équilibrée (2048 px) préserve les captures Full HD 1:1, Économique (1024 px) économise les jetons et Maximale (jusqu’à 8000 px) conserve la résolution d’origine.",
-    "chatInfo": "Un chat IA rapide pour les tâches quotidiennes. Contrairement aux profils IA avec des rôles et outils isolés, il s'agit d'une conversation universelle sans profil spécifique. Vous pouvez poser des questions, utiliser le texte sélectionné comme contexte, joindre des images, configurer une instruction système générale et gérer l'historique local des discussions.",
+    "chatInfo": "Un chat IA rapide pour les tâches quotidiennes. Contrairement aux profils IA avec des rôles et outils isolés, il s'agit d'une conversation universelle sans profil spécifique. Vous pouvez poser des questions, utiliser le texte sélectionné comme contexte, joindre des images, configurer une instruction système générale et gérer l'historique local des discussions. Il est préférable d'utiliser des modèles rapides pour cette fonction : ils conviennent aux réponses rapides et à la vérification des faits.",
     "chatInstructions": "Instructions de « Demander à l’IA »",
     "chatInstructionsInfo": "S’applique au chat et aux requêtes rapides sans profil. Vous pouvez préciser des exigences différentes pour chaque environnement : chat ou requêtes rapides.",
     "chatPromptProfile": "Profil",
@@ -1362,7 +1362,6 @@
     "accessLevelReadWrite": "Lecture et écriture",
     "askAiWebSearch": "Recherche sur le web",
     "askAiWebSearchHint": "Permet au chat « Demander à l'IA » de chercher sur le web et de lire des pages sans demander. Il ne voit jamais vos fichiers, votre mémoire ni vos commandes.",
-    "askAiFastModelsHint": "« Demander à l'IA » fonctionne mieux avec un modèle rapide : il sert aux réponses rapides et à la vérification des faits.",
     "toolsTab": "Outils"
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },

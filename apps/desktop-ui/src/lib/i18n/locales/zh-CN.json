@@ -773,7 +773,7 @@
     "chatHistoryRetentionNever": "从不",
     "chatImageQuality": "图像画质",
     "chatImageQualityHint": "适用于所有聊天中的所有新附件。图像将清除 EXIF 元数据并转换为 WebP（压缩后限制最高 2400 万像素和 5 MB）。“均衡”（2048 像素）以 1:1 保持全高清截图，“经济”（1024 像素）节省令牌，“最高”（最高 8000 像素）保留原始分辨率。",
-    "chatInfo": "用于日常任务的快速 AI 对话。与拥有独立角色和工具的 AI 配置文件不同，这是不绑定任何配置文件的通用对话。你可以提问、将所选文本作为上下文、附加图片、配置通用系统提示词并管理本地对话历史记录。",
+    "chatInfo": "用于日常任务的快速 AI 对话。与拥有独立角色和工具的 AI 配置文件不同，这是不绑定任何配置文件的通用对话。你可以提问、将所选文本作为上下文、附加图片、配置通用系统提示词并管理本地对话历史记录。 此功能建议使用快速模型：适合快速回答和事实核查。",
     "chatInstructions": "“询问 AI”指令",
     "chatInstructionsInfo": "适用于未选择配置的聊天和快速请求。可以为聊天或快速请求这两种环境分别指定要求。",
     "chatPromptProfile": "配置文件",
@@ -1362,7 +1362,6 @@
     "accessLevelReadWrite": "读取和写入",
     "askAiWebSearch": "网络搜索",
     "askAiWebSearchHint": "允许“询问 AI”对话无需询问即可搜索网络并阅读网页。它永远看不到你的文件、记忆或命令。",
-    "askAiFastModelsHint": "“询问 AI”搭配快速模型效果最佳：它用于快速回答和核实事实。",
     "toolsTab": "工具"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },

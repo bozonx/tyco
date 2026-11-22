@@ -773,7 +773,7 @@
     "chatHistoryRetentionNever": "Soha",
     "chatImageQuality": "Képminőség",
     "chatImageQualityHint": "Minden csevegés összes új mellékletére érvényes. A képekről törlődnek az EXIF metaadatok, és WebP formátumba konvertálódnak (korlát: legfeljebb 24 MP és tömörítés után 5 MB). A Kiegyensúlyozott (2048 px) 1:1 arányban megőrzi a Full HD képernyőképeket, a Takarékos (1024 px) tokeneket spórol, a Maximális (legfeljebb 8000 px) pedig megtartja az eredeti felbontást.",
-    "chatInfo": "Gyors AI-csevegés a mindennapi feladatokhoz. Az izolált szerepkörökkel és eszközökkel rendelkező AI-profilokkal ellentétben ez egy univerzális beszélgetés, amely nem kötődik konkrét profilhoz. Feltehet kérdéseket, használhatja a kijelölt szöveget kontextusként, csatolhat képeket, beállíthat általános rendszerpromptot és kezelheti a helyi csevegési előzményeket.",
+    "chatInfo": "Gyors AI-csevegés a mindennapi feladatokhoz. Az izolált szerepkörökkel és eszközökkel rendelkező AI-profilokkal ellentétben ez egy univerzális beszélgetés, amely nem kötődik konkrét profilhoz. Feltehet kérdéseket, használhatja a kijelölt szöveget kontextusként, csatolhat képeket, beállíthat általános rendszerpromptot és kezelheti a helyi csevegési előzményeket. Ehhez a funkcióhoz érdemes gyors modelleket használni: kiválóan alkalmasak gyors válaszokra és tényellenőrzésre.",
     "chatInstructions": "Az „AI kérdezése” utasításai",
     "chatInstructionsInfo": "Profil nélkül a csevegésre és a gyors kérésekre vonatkozik. Környezetenként eltérő követelmények adhatók meg: csevegés vagy gyors kérések.",
     "chatPromptProfile": "Profil",
@@ -1362,7 +1362,6 @@
     "accessLevelReadWrite": "Olvasás és írás",
     "askAiWebSearch": "Webes keresés",
     "askAiWebSearchHint": "Lehetővé teszi, hogy a „Kérdezd az AI-t” csevegés kérdés nélkül keressen a weben és oldalakat olvasson. Sosem látja a fájljait, memóriáját vagy parancsait.",
-    "askAiFastModelsHint": "A „Kérdezd az AI-t” egy gyors modellel működik a legjobban: gyors válaszokra és tények ellenőrzésére való.",
     "toolsTab": "Eszközök"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },

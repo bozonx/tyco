@@ -773,7 +773,7 @@
     "chatHistoryRetentionNever": "永不",
     "chatImageQuality": "圖片品質",
     "chatImageQualityHint": "套用至所有聊天中的所有新附件。圖片將清除 EXIF 中繼資料並轉換為 WebP（壓縮後限制最高 24 MP 與 5 MB）。「均衡」（2048 像素）以 1:1 保留 Full HD 螢幕截圖，「省流」（1024 像素）節省權杖，「最高」（最高 8000 像素）保留原始解析度。",
-    "chatInfo": "用於日常任務的快速 AI 對話。與擁有獨立角色和工具的 AI 設定檔不同，這是未綁定任何特定設定檔的通用對話。您可以發問、將選取的文字作為上下文、附加圖片、設定通用系統提示詞並管理本機對話歷程記錄。",
+    "chatInfo": "用於日常任務的快速 AI 對話。與擁有獨立角色和工具的 AI 設定檔不同，這是未綁定任何特定設定檔的通用對話。您可以發問、將選取的文字作為上下文、附加圖片、設定通用系統提示詞並管理本機對話歷程記錄。 此功能建議使用快速模型：適合快速回答與事實查證。",
     "chatInstructions": "「詢問 AI」指令",
     "chatInstructionsInfo": "適用於未選擇設定檔的聊天和快速請求。可以為聊天或快速請求這兩種環境分別指定要求。",
     "chatPromptProfile": "設定檔",
@@ -1362,7 +1362,6 @@
     "accessLevelReadWrite": "讀取與寫入",
     "askAiWebSearch": "網路搜尋",
     "askAiWebSearchHint": "允許「詢問 AI」對話不經詢問即可搜尋網路並閱讀網頁。它永遠看不到你的檔案、記憶或指令。",
-    "askAiFastModelsHint": "「詢問 AI」搭配快速模型效果最佳：它用於快速回答與查證事實。",
     "toolsTab": "工具"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },

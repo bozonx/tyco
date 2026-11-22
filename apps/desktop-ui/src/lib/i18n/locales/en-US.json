@@ -773,7 +773,7 @@
     "chatHistoryRetentionNever": "Never",
     "chatImageQuality": "Image quality",
     "chatImageQualityHint": "Applies to all new attachments in all chats. Images are stripped of EXIF metadata and converted to WebP (limits are up to 24 MP and 5 MB after compression). Balanced (2048 px) preserves Full HD screenshots 1:1, Economy (1024 px) saves tokens, and Maximum (up to 8000 px) preserves original resolution.",
-    "chatInfo": "A quick AI chat for everyday tasks. Unlike AI profiles with isolated roles and tools, this is a universal conversation not tied to a specific profile. You can ask questions, use selected text as context, attach images, set a general system prompt, and manage local chat history.",
+    "chatInfo": "A quick AI chat for everyday tasks. Unlike AI profiles with isolated roles and tools, this is a universal conversation not tied to a specific profile. You can ask questions, use selected text as context, attach images, set a general system prompt, and manage local chat history. It is best to use fast models for this feature: they are suited for quick answers and fact checking.",
     "chatInstructions": "Ask AI instructions",
     "chatInstructionsInfo": "Applies to chat and quick requests without a profile. You can specify different requirements for each environment: chat or quick requests.",
     "chatPromptProfile": "Profile",
@@ -1362,7 +1362,6 @@
     "accessLevelReadWrite": "Read and write",
     "askAiWebSearch": "Web search",
     "askAiWebSearchHint": "Lets the Ask AI chat search the web and read pages, without asking. Ask AI never sees your files, memory or commands.",
-    "askAiFastModelsHint": "Ask AI works best with a fast model: it is meant for quick answers and checking facts.",
     "toolsTab": "Tools"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },

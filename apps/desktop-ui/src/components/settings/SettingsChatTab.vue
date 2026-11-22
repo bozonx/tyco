@@ -23,12 +23,6 @@
           "
         />
       </FieldRow>
-      <InlineNotice
-        density="compact"
-        kind="info"
-        icon="mdi:lightning-bolt-outline"
-        :message="t('settings.askAiFastModelsHint')"
-      />
     </SettingsSection>
 
     <SettingsSection bare>
@@ -49,7 +43,6 @@ import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import InlineAction from '../common/InlineAction.vue'
-import InlineNotice from '../common/InlineNotice.vue'
 import SettingsSection from './SettingsSection.vue'
 
 const { t } = useI18n()

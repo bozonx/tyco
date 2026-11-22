@@ -773,7 +773,7 @@
     "chatHistoryRetentionNever": "Nie",
     "chatImageQuality": "Bildqualität",
     "chatImageQualityHint": "Gilt für alle neuen Anhänge in allen Chats. Bilder werden von EXIF-Metadaten bereinigt und in WebP konvertiert (Grenzen: bis zu 24 MP und 5 MB nach Komprimierung). Ausgewogen (2048 px) erhält Full-HD-Screenshots 1:1, Sparsam (1024 px) spart Tokens und Maximal (bis 8000 px) behält die Originalauflösung bei.",
-    "chatInfo": "Ein schneller KI-Chat für alltägliche Aufgaben. Im Gegensatz zu KI-Profilen mit isolierten Rollen und Werkzeugen ist dies ein universeller Chat ohne Bindung an ein Profil. Sie können Fragen stellen, markierten Text als Kontext nutzen, Bilder anhängen, einen allgemeinen Systemprompt festlegen und den lokalen Chatverlauf verwalten.",
+    "chatInfo": "Ein schneller KI-Chat für alltägliche Aufgaben. Im Gegensatz zu KI-Profilen mit isolierten Rollen und Werkzeugen ist dies ein universeller Chat ohne Bindung an ein Profil. Sie können Fragen stellen, markierten Text als Kontext nutzen, Bilder anhängen, einen allgemeinen Systemprompt festlegen und den lokalen Chatverlauf verwalten. Für diese Funktion werden schnelle Modelle empfohlen: Sie eignen sich für zügige Antworten und Faktenchecks.",
     "chatInstructions": "Anweisungen für „KI fragen“",
     "chatInstructionsInfo": "Gilt im Chat und bei Schnellanfragen ohne Profil. Für jede Umgebung können eigene Anforderungen angegeben werden: Chat oder Schnellanfragen.",
     "chatPromptProfile": "Profil",
@@ -1362,7 +1362,6 @@
     "accessLevelReadWrite": "Lesen und Schreiben",
     "askAiWebSearch": "Websuche",
     "askAiWebSearchHint": "Erlaubt dem Chat „KI fragen“, ohne Rückfrage im Web zu suchen und Seiten zu lesen. „KI fragen“ sieht nie Ihre Dateien, Ihr Gedächtnis oder Ihre Befehle.",
-    "askAiFastModelsHint": "„KI fragen“ funktioniert am besten mit einem schnellen Modell: Es ist für schnelle Antworten und Faktenprüfung gedacht.",
     "toolsTab": "Werkzeuge"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },

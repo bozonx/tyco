@@ -773,7 +773,7 @@
     "chatHistoryRetentionNever": "Niciodată",
     "chatImageQuality": "Calitatea imaginilor",
     "chatImageQualityHint": "Se aplică tuturor atașamentelor noi din toate chaturile. Imaginile sunt curățate de metadatele EXIF și convertite în WebP (limite de până la 24 MP și 5 MB după comprimare). Echilibrată (2048 px) păstrează capturile de ecran Full HD 1:1, Economică (1024 px) economisește tokenuri, iar Maximă (până la 8000 px) păstrează rezoluția originală.",
-    "chatInfo": "Un chat rapid cu IA pentru sarcini zilnice. Spre deosebire de profilurile IA cu roluri și instrumente izolate, aceasta este o conversație universală nelegată de un profil anume. Puteți pune întrebări, utiliza textul selectat drept context, atașa imagini, configura un prompt general de sistem și gestiona istoricul local de conversații.",
+    "chatInfo": "Un chat rapid cu IA pentru sarcini zilnice. Spre deosebire de profilurile IA cu roluri și instrumente izolate, aceasta este o conversație universală nelegată de un profil anume. Puteți pune întrebări, utiliza textul selectat drept context, atașa imagini, configura un prompt general de sistem și gestiona istoricul local de conversații. Pentru această funcție este recomandat să folosiți modele rapide: sunt ideale pentru răspunsuri rapide și verificarea faptelor.",
     "chatInstructions": "Instrucțiuni „Întreabă AI”",
     "chatInstructionsInfo": "Se aplică chatului și cererilor rapide fără profil. Puteți specifica cerințe diferite pentru fiecare mediu: chat sau cereri rapide.",
     "chatPromptProfile": "Profil",
@@ -1362,7 +1362,6 @@
     "accessLevelReadWrite": "Citire și scriere",
     "askAiWebSearch": "Căutare pe web",
     "askAiWebSearchHint": "Permite chatului „Întreabă AI” să caute pe web și să citească pagini fără întrebare. Nu vede niciodată fișierele, memoria sau comenzile tale.",
-    "askAiFastModelsHint": "„Întreabă AI” funcționează cel mai bine cu un model rapid: e gândit pentru răspunsuri rapide și verificarea faptelor.",
     "toolsTab": "Instrumente"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },

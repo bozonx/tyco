@@ -773,7 +773,7 @@
     "chatHistoryRetentionNever": "Asla",
     "chatImageQuality": "Görsel kalitesi",
     "chatImageQualityHint": "Tüm sohbetlerdeki tüm yeni eklere uygulanır. Görsellerden EXIF meta verileri temizlenir ve WebP biçimine dönüştürülür (sıkıştırma sonrası en fazla 24 MP ve 5 MB sınırları). Dengeli (2048 px) Full HD ekran görüntülerini 1:1 korur, Ekonomik (1024 px) belirteç tasarrufu sağlar ve En yüksek (8000 px'e kadar) orijinal çözünürlüğü korur.",
-    "chatInfo": "Günlük görevler için hızlı bir yapay zeka sohbeti. İzole rollere ve araçlara sahip yapay zeka profillerinin aksine bu, belirli bir profile bağlı olmayan evrensel bir sohbettir. Soru sorabilir, seçili metni bağlam olarak kullanabilir, görsel ekleyebilir, genel bir sistem istemi ayarlayabilir ve yerel sohbet geçmişini yönetebilirsiniz.",
+    "chatInfo": "Günlük görevler için hızlı bir yapay zeka sohbeti. İzole rollere ve araçlara sahip yapay zeka profillerinin aksine bu, belirli bir profile bağlı olmayan evrensel bir sohbettir. Soru sorabilir, seçili metni bağlam olarak kullanabilir, görsel ekleyebilir, genel bir sistem istemi ayarlayabilir ve yerel sohbet geçmişini yönetebilirsiniz. Bu işlev için hızlı modelleri kullanmak en iyisidir: hızlı yanıtlar ve olgu denetimi için uygundurlar.",
     "chatInstructions": "“Yapay zekâya sor” talimatları",
     "chatInstructionsInfo": "Profil olmadan sohbet ve hızlı isteklere uygulanır. Her ortam için farklı gereksinimler belirtebilirsiniz: sohbet veya hızlı istekler.",
     "chatPromptProfile": "Profil",
@@ -1362,7 +1362,6 @@
     "accessLevelReadWrite": "Okuma ve yazma",
     "askAiWebSearch": "Web araması",
     "askAiWebSearchHint": "“Yapay zekâya sor” sohbetinin sormadan web’de arama yapmasına ve sayfa okumasına izin verir. Dosyalarınızı, belleğinizi ve komutlarınızı asla görmez.",
-    "askAiFastModelsHint": "“Yapay zekâya sor” en iyi hızlı bir modelle çalışır: hızlı yanıtlar ve bilgi doğrulama içindir.",
     "toolsTab": "Araçlar"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },

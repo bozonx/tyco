@@ -773,7 +773,7 @@
     "chatHistoryRetentionNever": "Nikdy",
     "chatImageQuality": "Kvalita obrázků",
     "chatImageQualityHint": "Platí pro všechny nové přílohy ve všech chatech. Z obrázků se odstraní metadata EXIF a převedou se do WebP (limity jsou do 24 MP a 5 MB po kompresi). Vyvážená (2048 px) zachová snímky obrazovky Full HD 1:1, Úsporná (1024 px) šetří tokeny a Maximální (do 8000 px) zachová původní rozlišení.",
-    "chatInfo": "Rychlý chat s umělou inteligencí pro každodenní úkoly. Na rozdíl od profilů AI s oddělenými rolemi a nástroji jde o univerzální konverzaci bez vazby na konkrétní profil. Můžete pokládat dotazy, použít vybraný text jako kontext, přikládat obrázky, nastavit obecný systémový prompt a spravovat lokální historii chatu.",
+    "chatInfo": "Rychlý chat s umělou inteligencí pro každodenní úkoly. Na rozdíl od profilů AI s oddělenými rolemi a nástroji jde o univerzální konverzaci bez vazby na konkrétní profil. Můžete pokládat dotazy, použít vybraný text jako kontext, přikládat obrázky, nastavit obecný systémový prompt a spravovat lokální historii chatu. Pro tuto funkci je nejlepší používat rychlé modely: hodí se pro rychlé odpovědi a ověřování faktů.",
     "chatInstructions": "Instrukce pro „Zeptat se AI“",
     "chatInstructionsInfo": "Platí pro chat a rychlé dotazy bez profilu. Pro každé prostředí lze zadat jiné požadavky: chat nebo rychlé dotazy.",
     "chatPromptProfile": "Profil",
@@ -1362,7 +1362,6 @@
     "accessLevelReadWrite": "Čtení a zápis",
     "askAiWebSearch": "Vyhledávání na webu",
     "askAiWebSearchHint": "Umožní chatu „Zeptat se AI“ hledat na webu a číst stránky bez ptaní. Nikdy nevidí vaše soubory, paměť ani příkazy.",
-    "askAiFastModelsHint": "„Zeptat se AI“ funguje nejlépe s rychlým modelem: je určen pro rychlé odpovědi a ověřování faktů.",
     "toolsTab": "Nástroje"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },

@@ -773,7 +773,7 @@
     "chatHistoryRetentionNever": "Nikad",
     "chatImageQuality": "Kvaliteta slike",
     "chatImageQualityHint": "Vrijedi za sve nove privitke u svim chatovima. Slikama se uklanjaju EXIF metapodaci i pretvaraju se u WebP (ograničenja do 24 MP i 5 MB nakon sažimanja). Uravnotežena (2048 px) čuva Full HD snimke zaslona 1:1, Štedljiva (1024 px) štedi tokene, a Najviša (do 8000 px) zadržava izvornu razlučivost.",
-    "chatInfo": "Brzi AI chat za svakodnevne zadatke. Za razliku od AI profila s izoliranim ulogama i alatima, ovo je univerzalni razgovor bez vezivanja uz određeni profil. Možete postavljati pitanja, koristiti označeni tekst kao kontekst, priložiti slike, postaviti opći sistemski prompt i upravljati lokalnom poviješću razgovora.",
+    "chatInfo": "Brzi AI chat za svakodnevne zadatke. Za razliku od AI profila s izoliranim ulogama i alatima, ovo je univerzalni razgovor bez vezivanja uz određeni profil. Možete postavljati pitanja, koristiti označeni tekst kao kontekst, priložiti slike, postaviti opći sistemski prompt i upravljati lokalnom poviješću razgovora. Za ovu je značajku najbolje koristiti brze modele: prikladni su za brze odgovore i provjeru činjenica.",
     "chatInstructions": "Upute za „Pitaj AI“",
     "chatInstructionsInfo": "Primjenjuje se na chat i brze upite bez profila. Možete navesti različite zahtjeve za svako okruženje: chat ili brze upite.",
     "chatPromptProfile": "Profil",
@@ -1362,7 +1362,6 @@
     "accessLevelReadWrite": "Čitanje i pisanje",
     "askAiWebSearch": "Pretraživanje weba",
     "askAiWebSearchHint": "Omogućuje razgovoru „Pitaj AI” da pretražuje web i čita stranice bez pitanja. Nikad ne vidi vaše datoteke, memoriju ni naredbe.",
-    "askAiFastModelsHint": "„Pitaj AI” najbolje radi s brzim modelom: namijenjen je brzim odgovorima i provjeri činjenica.",
     "toolsTab": "Alati"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },

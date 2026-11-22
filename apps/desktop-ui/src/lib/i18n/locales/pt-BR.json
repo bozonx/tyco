@@ -773,7 +773,7 @@
     "chatHistoryRetentionNever": "Nunca",
     "chatImageQuality": "Qualidade da imagem",
     "chatImageQualityHint": "Aplica-se a todos os novos anexos em todos os chats. As imagens têm os metadados EXIF removidos e são convertidas para WebP (limites de até 24 MP e 5 MB após a compressão). Equilibrada (2048 px) preserva capturas de tela Full HD 1:1, Econômica (1024 px) economiza tokens e Máxima (até 8000 px) preserva a resolução original.",
-    "chatInfo": "Um chat rápido com IA para tarefas do dia a dia. Ao contrário dos perfis de IA com papéis e ferramentas isolados, esta é uma conversa universal não vinculada a um perfil específico. Você pode fazer perguntas, usar texto selecionado como contexto, anexar imagens, configurar um prompt de sistema geral e gerenciar o histórico local de conversas.",
+    "chatInfo": "Um chat rápido com IA para tarefas do dia a dia. Ao contrário dos perfis de IA com papéis e ferramentas isolados, esta é uma conversa universal não vinculada a um perfil específico. Você pode fazer perguntas, usar texto selecionado como contexto, anexar imagens, configurar um prompt de sistema geral e gerenciar o histórico local de conversas. Para este recurso, é melhor usar modelos rápidos: eles são adequados para respostas rápidas e checagem de fatos.",
     "chatInstructions": "Instruções de “Perguntar à IA”",
     "chatInstructionsInfo": "Aplica-se ao chat e às consultas rápidas sem perfil. Você pode definir requisitos diferentes para cada ambiente: chat ou consultas rápidas.",
     "chatPromptProfile": "Perfil",
@@ -1362,7 +1362,6 @@
     "accessLevelReadWrite": "Leitura e escrita",
     "askAiWebSearch": "Pesquisa na web",
     "askAiWebSearchHint": "Permite que o chat “Perguntar à IA” pesquise na web e leia páginas sem perguntar. Ele nunca vê seus arquivos, sua memória ou seus comandos.",
-    "askAiFastModelsHint": "“Perguntar à IA” funciona melhor com um modelo rápido: ele serve para respostas rápidas e checagem de fatos.",
     "toolsTab": "Ferramentas"
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },

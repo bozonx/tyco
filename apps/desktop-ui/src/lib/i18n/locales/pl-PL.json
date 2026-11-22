@@ -773,7 +773,7 @@
     "chatHistoryRetentionNever": "Nigdy",
     "chatImageQuality": "Jakość obrazów",
     "chatImageQualityHint": "Dotyczy wszystkich nowych załączników we wszystkich czatach. Z obrazów usuwane są metadane EXIF i są one konwertowane do formatu WebP (limity do 24 MP i 5 MB po kompresji). Zrównoważona (2048 px) zachowuje zrzuty ekranu Full HD 1:1, Oszczędna (1024 px) oszczędza tokeny, a Maksymalna (do 8000 px) zachowuje oryginalną rozdzielczość.",
-    "chatInfo": "Szybki czat z AI do codziennych zadań. W przeciwieństwie do profili AI z odrębnymi rolami i narzędziami jest to uniwersalna konwersacja niepowiązana z konkretnym profilem. Możesz zadawać pytania, przekazywać zaznaczony tekst jako kontekst, dołączać obrazy, ustawiać ogólny prompt systemowy i zarządzać lokalną historią czatów.",
+    "chatInfo": "Szybki czat z AI do codziennych zadań. W przeciwieństwie do profili AI z odrębnymi rolami i narzędziami jest to uniwersalna konwersacja niepowiązana z konkretnym profilem. Możesz zadawać pytania, przekazywać zaznaczony tekst jako kontekst, dołączać obrazy, ustawiać ogólny prompt systemowy i zarządzać lokalną historią czatów. Do tej funkcji najlepiej używać szybkich modeli: sprawdzają się przy szybkich odpowiedziach i weryfikacji faktów.",
     "chatInstructions": "Instrukcje „Zapytaj AI”",
     "chatInstructionsInfo": "Dotyczy czatu i szybkich zapytań bez profilu. Możesz podać różne wymagania dla każdego środowiska: czatu lub szybkich zapytań.",
     "chatPromptProfile": "Profil",
@@ -1362,7 +1362,6 @@
     "accessLevelReadWrite": "Odczyt i zapis",
     "askAiWebSearch": "Wyszukiwanie w internecie",
     "askAiWebSearchHint": "Pozwala czatowi „Zapytaj AI” szukać w internecie i czytać strony bez pytania. Nigdy nie widzi Twoich plików, pamięci ani poleceń.",
-    "askAiFastModelsHint": "„Zapytaj AI” działa najlepiej z szybkim modelem: służy do szybkich odpowiedzi i sprawdzania faktów.",
     "toolsTab": "Narzędzia"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
