@@ -268,9 +268,9 @@ describe('HistoryList.vue', () => {
       )
       expect(wrapper.find('.history-player-seek').exists()).toBe(true)
       const options = wrapper
-        .findAll('.history-player-speed option')
+        .findAll('.history-player-speed .option-label')
         .map((option) => option.text())
-      expect(options).toEqual(['1×', '1.5×', '2×'])
+      expect(options).toEqual(['1×', '1.25×', '1.5×', '2×'])
 
       await wrapper.get('audio').trigger('error')
       expect(wrapper.text()).toContain('unplayable')
@@ -296,9 +296,8 @@ describe('HistoryList.vue', () => {
       await seek.setValue('12.5')
       expect(audio.currentTime).toBe(12.5)
 
-      const select = wrapper.get('.history-player-speed')
-      ;(select.element as HTMLSelectElement).selectedIndex = 1
-      await select.trigger('change')
+      const radio = wrapper.get('input[type="radio"][value="1.5"]')
+      await radio.setValue()
       expect(audio.playbackRate).toBe(1.5)
     })
 

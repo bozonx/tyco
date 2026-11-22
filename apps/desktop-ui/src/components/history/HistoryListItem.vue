@@ -66,6 +66,16 @@
         {{ t('common.empty') }}
       </div>
 
+      <DisclosureHeader
+        v-if="isLong"
+        class="history-expand-toggle"
+        density="compact"
+        :expanded="expanded"
+        :controls="textId"
+        :title="expanded ? t('history.collapse') : t('history.expand')"
+        @toggle="emit('toggleExpanded')"
+      />
+
       <div v-if="displayedFiles.length" class="history-files">
         <div v-if="item.filesSection" class="history-files-header">
           <span class="history-files-title">{{ item.filesSection.title }}</span>
@@ -140,30 +150,19 @@
                   {{ formatPlaybackTime(playerCurrentTime) }} /
                   {{ formatPlaybackTime(playerDuration) }}
                 </span>
-                <FieldSelect
+                <SegmentedControl
                   :model-value="playbackRate"
                   size="xs"
                   class="history-player-speed"
                   :options="SPEED_OPTIONS"
-                  :title="f.playback.speedTitle"
-                  :aria-label="f.playback.speedTitle"
-                  @update:model-value="setPlaybackRate"
+                  :label="f.playback.speedTitle"
+                  @update:model-value="onPlaybackRateChange"
                 />
               </div>
             </template>
           </template>
         </div>
       </div>
-
-      <DisclosureHeader
-        v-if="isLong"
-        class="history-expand-toggle"
-        density="compact"
-        :expanded="expanded"
-        :controls="textId"
-        :title="expanded ? t('history.collapse') : t('history.expand')"
-        @toggle="emit('toggleExpanded')"
-      />
 
       <div v-if="hasDetails" class="history-original">
         <DisclosureHeader
@@ -199,7 +198,9 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, useId, watch } from 'vue'
 
+import { useAudioPlaybackRate } from '../../composables/use-audio-playback-rate'
 import { useI18n } from '../../composables/use-i18n'
+import { SPEED_OPTIONS } from '../../lib/history/audio-playback-rate'
 import {
   formatHistoryDateTime,
   formatHistoryTime,
@@ -212,8 +213,8 @@ import type {
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
-import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
+import SegmentedControl from '../common/SegmentedControl.vue'
 
 const props = defineProps<{
   expanded: boolean
@@ -233,12 +234,6 @@ const originalId = useId()
 const LONG_ENTRY_CHAR_LIMIT = 200
 const LONG_ENTRY_LINE_LIMIT = 3
 
-const SPEED_OPTIONS = [
-  { id: 1, name: '1×' },
-  { id: 1.5, name: '1.5×' },
-  { id: 2, name: '2×' },
-]
-
 const visibleActions = computed(() =>
   props.actions.filter((action) => action.isVisible?.(props.item) ?? true)
 )
@@ -253,7 +248,7 @@ const isPlayerFailed = ref(false)
 const audioElement = ref<HTMLAudioElement | HTMLAudioElement[] | null>(null)
 const playerCurrentTime = ref(0)
 const playerDuration = ref(0)
-const playbackRate = ref<number>(1)
+const { playbackRate, setPlaybackRate } = useAudioPlaybackRate()
 let disposePlayerSource: (() => void) | undefined
 let loadSequence = 0
 
@@ -358,10 +353,10 @@ function onSeekInput(event: Event) {
   if (audio) audio.currentTime = nextTime
 }
 
-function setPlaybackRate(value: number | string | undefined) {
+function onPlaybackRateChange(value: number) {
   const rate = Number(value)
-  if (rate !== 1 && rate !== 1.5 && rate !== 2) return
-  playbackRate.value = rate
+  if (!SPEED_OPTIONS.some((opt) => opt.id === rate)) return
+  setPlaybackRate(rate)
   const audio = currentAudio()
   if (audio) audio.playbackRate = rate
 }
@@ -504,8 +499,6 @@ const isLong = computed(
 }
 
 .history-player-speed {
-  width: auto;
-  min-width: 3.75rem;
   flex-shrink: 0;
 }
 
