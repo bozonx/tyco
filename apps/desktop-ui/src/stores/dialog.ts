@@ -42,7 +42,7 @@ const DEFAULT_DIALOG_CONFIG: DialogConfig = {
   isEnabled: true,
   source: 'microphoneAndSystem',
   translationTargetLanguage: '',
-  textDisplay: 'both',
+  isTranslationOnly: false,
   isRecordingMixedDown: true,
   isRecordingProcessed: true,
 }
@@ -368,12 +368,10 @@ export const useDialogStore = defineStore('dialog', () => {
     await updateConfig({ isRecordingNoticeAcknowledged: true })
   }
 
-  /** The transcript as text, with the translations when they are shown */
+  /** The transcript as text, with the translations when there are any */
   function exportText(): string {
     return exportDialogTranscript(segments.value, {
-      includeTranslation:
-        Boolean(config.value.translationTargetLanguage) &&
-        config.value.textDisplay !== 'original',
+      includeTranslation: Boolean(config.value.translationTargetLanguage),
       labels: {
         me: translate('dialog.sideMe'),
         remote: translate('dialog.sideRemote'),
@@ -449,7 +447,7 @@ export const useDialogStore = defineStore('dialog', () => {
     buildSubtitlesView({
       turns: turns.value,
       translationLanguage: config.value.translationTargetLanguage,
-      textDisplay: config.value.textDisplay,
+      isTranslationOnly: config.value.isTranslationOnly,
       isActive: isActive.value,
       errorText: errorText.value,
       recordingStartedAtMs: recording.value?.startedAtMs,

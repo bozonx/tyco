@@ -13,7 +13,7 @@
       :key="turn.id"
       :turn="turn"
       :is-bubble="isBubble"
-      :text-display="textDisplay"
+      :is-translation-only="isTranslationOnly"
       :translation-lang="translationLang"
       @retry="(ids) => emit('retry', ids)"
     />
@@ -36,7 +36,6 @@ import { useI18n } from '../../composables/use-i18n'
 import type { DialogTurn as Turn } from '../../lib/dialog/dialog-transcript'
 import Button from '../common/Button.vue'
 import DialogTurn from './DialogTurn.vue'
-import type { DialogTextDisplay } from '@tyco/shared'
 
 /** How close to the end still counts as being at the end, in pixels */
 const FOLLOW_THRESHOLD_PX = 48
@@ -44,7 +43,8 @@ const FOLLOW_THRESHOLD_PX = 48
 const props = defineProps<{
   turns: readonly Turn[]
   isBubble: boolean
-  textDisplay: DialogTextDisplay
+  /** A translated turn shows its translation without the original */
+  isTranslationOnly: boolean
   translationLang?: string
 }>()
 

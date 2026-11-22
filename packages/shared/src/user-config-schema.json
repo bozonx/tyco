@@ -1395,10 +1395,7 @@
           "default": "auto"
         },
         "ownLanguage": { "type": "string", "maxLength": 35 },
-        "textDisplay": {
-          "enum": ["translation", "original", "both"],
-          "default": "both"
-        },
+        "isTranslationOnly": { "type": "boolean", "default": false },
         "compactGeometry": {
           "type": "object",
           "properties": {
@@ -1418,7 +1415,7 @@
         "isEnabled",
         "source",
         "translationTargetLanguage",
-        "textDisplay",
+        "isTranslationOnly",
         "isRecordingMixedDown",
         "isRecordingProcessed"
       ],

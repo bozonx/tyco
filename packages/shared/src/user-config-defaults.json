@@ -265,7 +265,7 @@
     "source": "microphoneAndSystem",
     "translationTargetLanguage": "",
     "remoteLanguage": "auto",
-    "textDisplay": "both",
+    "isTranslationOnly": false,
     "isRecordingMixedDown": true,
     "isRecordingProcessed": true
   }

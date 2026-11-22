@@ -47,11 +47,10 @@ The languages button in the toolbar shows the route, such as
 - **You speak**: the language your own speech is recognized in; by default
   the one of the dictation.
 
-The toolbar also switches between the translation, the original and both (the
-translation large, the original small under it); pick the view before you start
-if you like, and TyCo remembers it. When the toolbar is narrow, the view is in
-its **⋮** menu. While a phrase is being translated, its original words stay
-dimmed in place of the translation. Your own speech is not translated, but it
+A translated phrase shows the translation large and the original small under
+it. **Translation only** in the **⋮** menu of the toolbar hides the original;
+TyCo remembers the choice. While a phrase is being translated, its original
+words stay dimmed in place of the translation. Your own speech is not translated, but it
 helps to translate what the other side answers to. A phrase that could not be
 translated offers **Try again**.
 

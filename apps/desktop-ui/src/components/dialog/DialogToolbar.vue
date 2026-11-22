@@ -115,7 +115,7 @@ import SegmentedControl from '../common/SegmentedControl.vue'
 import DialogLanguageRoute from './DialogLanguageRoute.vue'
 import DialogLevel from './DialogLevel.vue'
 import DialogRecordingIndicator from './DialogRecordingIndicator.vue'
-import type { DialogSource, DialogTextDisplay } from '@tyco/shared'
+import type { DialogSource } from '@tyco/shared'
 
 const dialog = useDialogStore()
 const desktopStore = useDesktopStore()
@@ -182,22 +182,27 @@ const sourceOptions = computed<ControlOption<DialogSource>[]>(() => [
   },
 ])
 
-const displayOptions = computed<ControlOption<DialogTextDisplay>[]>(() => [
-  { id: 'translation', name: t('dialog.displayTranslation') },
-  { id: 'original', name: t('dialog.displayOriginal') },
-  { id: 'both', name: t('dialog.displayBoth') },
-])
+// the original is hidden only under a translation, so the switch needs one
+const displayItems = computed<DropdownMenuItem[]>(() =>
+  dialog.config.translationTargetLanguage
+    ? [
+        {
+          label: t('dialog.translationOnly'),
+          icon: dialog.config.isTranslationOnly
+            ? 'mdi:checkbox-marked-outline'
+            : 'mdi:checkbox-blank-outline',
+          action: () =>
+            void dialog.updateConfig({
+              isTranslationOnly: !dialog.config.isTranslationOnly,
+            }),
+        },
+      ]
+    : []
+)
 
-// text display mode (translation / original / both) and transcript actions
+// the translation alone or with the original, and transcript actions
 const moreItems = computed<DropdownMenuItem[]>(() => [
-  ...displayOptions.value.map((option) => ({
-    label: `${t('dialog.textDisplay')}: ${option.name}`,
-    icon:
-      dialog.config.textDisplay === option.id
-        ? 'mdi:radiobox-marked'
-        : 'mdi:radiobox-blank',
-    action: () => void dialog.updateConfig({ textDisplay: option.id }),
-  })),
+  ...displayItems.value,
   {
     label: t('dialog.copy'),
     icon: 'mdi:content-copy',

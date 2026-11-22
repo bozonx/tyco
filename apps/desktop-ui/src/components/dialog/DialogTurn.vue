@@ -52,13 +52,14 @@ import { useI18n } from '../../composables/use-i18n'
 import { formatDialogClock } from '../../lib/dialog/dialog-export'
 import type { DialogTurn } from '../../lib/dialog/dialog-transcript'
 import InlineAction from '../common/InlineAction.vue'
-import type { DialogTextDisplay } from '@tyco/shared'
 
 const props = defineProps<{
   turn: DialogTurn
   /** Bubbles on both sides, or paragraphs when only the computer is heard */
   isBubble: boolean
-  textDisplay: DialogTextDisplay
+  /** A translated turn shows its translation without the original */
+  isTranslationOnly: boolean
+  /** The language translated into; none: no translation */
   translationLang?: string
 }>()
 
@@ -83,7 +84,7 @@ const isDraft = computed(() =>
 )
 // the user's own speech is never translated
 const showsTranslation = computed(
-  () => props.turn.side === 'remote' && props.textDisplay !== 'original'
+  () => props.turn.side === 'remote' && Boolean(props.translationLang)
 )
 const hasTranslation = computed(() =>
   props.turn.segments.some((segment) => segment.translationState === 'complete')
@@ -98,15 +99,13 @@ const translatedParts = computed(() =>
       return segment.translation
         ? [{ id: segment.id, text: segment.translation, isOriginal: false }]
         : []
-    if (props.textDisplay !== 'translation') return []
+    if (!props.isTranslationOnly) return []
     return [{ id: segment.id, text: segment.text, isOriginal: true }]
   })
 )
 const showsOriginal = computed(
   () =>
-    props.turn.side === 'me' ||
-    props.textDisplay !== 'translation' ||
-    !hasTranslation.value
+    !showsTranslation.value || !props.isTranslationOnly || !hasTranslation.value
 )
 const failedIds = computed(() =>
   props.turn.segments

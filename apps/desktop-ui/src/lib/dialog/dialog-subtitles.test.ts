@@ -26,7 +26,7 @@ function input(
   return {
     turns: buildDialogTurns(segments),
     translationLanguage: 'ru-RU',
-    textDisplay: 'both',
+    isTranslationOnly: false,
     isActive: true,
     errorText: '',
     labels: {
@@ -61,7 +61,7 @@ describe('buildSubtitlesView', () => {
           translated,
           segment({ id: 'b', startMs: 200, endMs: 300, text: 'how are you' }),
         ],
-        { textDisplay: 'translation' }
+        { isTranslationOnly: true }
       )
     )
     expect(view.mainText).toBe('Привет')
@@ -69,10 +69,7 @@ describe('buildSubtitlesView', () => {
     expect(view.secondaryText).toBe('')
   })
 
-  it('shows the original without a translation or when asked to', () => {
-    expect(
-      buildSubtitlesView(input([translated], { textDisplay: 'original' }))
-    ).toMatchObject({ mainText: 'Hello there', mainLang: null })
+  it('shows the original alone without a translation', () => {
     expect(
       buildSubtitlesView(input([translated], { translationLanguage: '' }))
     ).toMatchObject({ mainText: 'Hello there', secondaryText: '' })

@@ -20,7 +20,7 @@
       <DialogFeed
         :turns="dialog.turns"
         :is-bubble="isBubble"
-        :text-display="textDisplay"
+        :is-translation-only="dialog.config.isTranslationOnly"
         :translation-lang="dialog.config.translationTargetLanguage || undefined"
         @retry="retryTranslation"
       >
@@ -65,11 +65,6 @@ const isBubble = computed(() =>
   dialog.isActive
     ? dialog.hasMicrophone
     : dialog.config.source === 'microphoneAndSystem'
-)
-const textDisplay = computed(() =>
-  dialog.config.translationTargetLanguage
-    ? dialog.config.textDisplay
-    : 'original'
 )
 
 const emptyIcon = computed(() => {

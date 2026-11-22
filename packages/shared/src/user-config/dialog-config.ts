@@ -1,7 +1,5 @@
 /** What the dialog listens to: both sides apart, or the computer alone */
 export type DialogSource = 'microphoneAndSystem' | 'system'
-/** What a remote turn shows: its translation, the original, or both */
-export type DialogTextDisplay = 'translation' | 'original' | 'both'
 
 /** The strip of the compact dialog, in physical pixels of the desktop */
 export interface DialogWindowGeometry {
@@ -30,7 +28,11 @@ export interface DialogConfig {
    * dictation
    */
   ownLanguage?: string
-  textDisplay: DialogTextDisplay
+  /**
+   * A translated turn of the other side shows its translation alone, without
+   * the original under it
+   */
+  isTranslationOnly: boolean
   /** Where the compact strip was last, on this device */
   compactGeometry?: DialogWindowGeometry
   /** The user was told to ask the other side before recording */
