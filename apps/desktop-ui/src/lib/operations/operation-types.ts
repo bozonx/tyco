@@ -46,15 +46,7 @@ export interface OperationDefinition extends SdkOperationDefinition {
    * command: a translation opens the result menu to choose what to do with it
    */
   voiceOutputAction?: CommandOutputAction
-  /**
-   * What a voice call does with the selected text: `text` runs on it in place
-   * of spoken text, `attach` puts the spoken words after it; none ignores it
-   */
-  voiceSelectionRole?: VoiceSelectionRole
 }
-
-/** See `OperationDefinition.voiceSelectionRole` */
-export type VoiceSelectionRole = 'text' | 'attach'
 
 /** A setting of a command its caller gives, see `commandParameters` */
 export interface OperationCommandParameter extends SdkOperationCommandParameter {

@@ -1494,7 +1494,7 @@
     "run": "Futtatás",
     "textPlaceholder": "az Ön szövege",
     "title": "Hangparancsok",
-    "missingSelection": "Kijelölt szöveg szükséges.",
+    "missingSelection": "A parancs kijelölt szöveget vár, de nincs kijelölés.",
     "phrasesPlaceholder": "Példamondatok, soronként egy",
     "parameterMissing": "Válassza ki a paraméter értékét a parancs neve mellett.",
     "phaseAwaitingParameter": "Mondja: {parameter}...",

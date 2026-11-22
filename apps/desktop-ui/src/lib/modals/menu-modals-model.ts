@@ -79,6 +79,18 @@ export function createMenuModalsModel(deps: MenuModalsDependencies = {}) {
     return id
   }
 
+  /**
+   * Replaces the stack with the outcome of the work it ran, such as a voice
+   * command's result: Back cannot return to a run that is over. Unlike
+   * `startScenario`, the work that hands its outcome is not cancelled.
+   */
+  const showOutcome = (...request: OpenModalArgs): number => {
+    closeAll()
+    const id = nextModal(...request)
+    rootStepId.value = id
+    return id
+  }
+
   const setBufferedIntent = (intent: BufferedPendingAction | null) => {
     bufferedIntent.value = intent
   }
@@ -168,6 +180,7 @@ export function createMenuModalsModel(deps: MenuModalsDependencies = {}) {
     closeAll,
     cancelAndCloseAll,
     startScenario,
+    showOutcome,
     isScenarioRoot: computed(
       () => topStep.value !== undefined && topStep.value.id === rootStepId.value
     ),

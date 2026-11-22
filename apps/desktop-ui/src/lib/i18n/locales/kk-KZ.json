@@ -1494,7 +1494,7 @@
     "run": "Орындау",
     "textPlaceholder": "сіздің мәтініңіз",
     "title": "Дауыстық командалар",
-    "missingSelection": "Бөліп көрсетілген мәтін қажет.",
+    "missingSelection": "Команда таңдалған мәтінді күтеді, бірақ ештеңе таңдалмаған.",
     "phrasesPlaceholder": "Үлгі фразалар, әр жолға біреуден",
     "parameterMissing": "Команда атауының жанынан параметр мәнін таңдаңыз.",
     "phaseAwaitingParameter": "Say {parameter}...",

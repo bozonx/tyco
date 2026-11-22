@@ -248,4 +248,16 @@ describe('modal visibility and cancellation', () => {
     store.nextModal(MenuModals.TRANSLATE, { text: 'a' })
     expect(store.isScenarioRoot.value).toBe(false)
   })
+
+  it('shows an outcome over the stack without cancelling the work', () => {
+    const store = createMenuModalsModel()
+    const onCancel = vi.fn()
+    store.nextModal(MenuModals.VOICE_COMMANDS)
+    store.setPendingModal({ label: 'Running', onCancel })
+    store.showOutcome(MenuModals.PREVIEW, { text: 'out' })
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(store.pendingModal.value).toBeNull()
+    expect(store.menuBreadcrumbs.value).toEqual([MenuModals.PREVIEW])
+    expect(store.isScenarioRoot.value).toBe(true)
+  })
 })

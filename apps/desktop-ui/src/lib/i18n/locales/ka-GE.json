@@ -1494,7 +1494,7 @@
     "run": "გაშვება",
     "textPlaceholder": "თქვენი ტექსტი",
     "title": "ხმოვანი ბრძანებები",
-    "missingSelection": "საჭიროა მონიშნული ტექსტი.",
+    "missingSelection": "ბრძანება მონიშნულ ტექსტს ელოდება, მაგრამ არაფერია მონიშნული.",
     "phrasesPlaceholder": "სანიმუშო ფრაზები, თითო ხაზზე",
     "parameterMissing": "აირჩიეთ პარამეტრის მნიშვნელობა ბრძანების სახელის გვერდით.",
     "phaseAwaitingParameter": "თქვით {parameter}...",

@@ -177,6 +177,11 @@ export function createPluginOperationAdapter(
         typeof definition.previewConfig !== 'function'
       )
         throw new Error('Invalid plugin settings preview')
+      if (
+        definition.voiceSelectionRole !== undefined &&
+        !['text', 'attach'].includes(definition.voiceSelectionRole)
+      )
+        throw new Error('Invalid plugin voice selection role')
       if (definition.configFields) validatePluginFields(definition.configFields)
       if (lifecycle.capabilities.includes('notes')) {
         const directoryField = lifecycle.notesDirectoryField ?? 'pathToNotes'

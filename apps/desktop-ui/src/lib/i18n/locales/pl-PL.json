@@ -1494,7 +1494,7 @@
     "run": "Uruchom",
     "textPlaceholder": "twój tekst",
     "title": "Polecenia głosowe",
-    "missingSelection": "Wymagany jest zaznaczony tekst.",
+    "missingSelection": "Polecenie oczekuje zaznaczonego tekstu, ale nic nie jest zaznaczone.",
     "phrasesPlaceholder": "Przykładowe frazy, jedna na wiersz",
     "parameterMissing": "Wybierz wartość parametru obok nazwy polecenia.",
     "phaseAwaitingParameter": "Powiedz {parameter}...",

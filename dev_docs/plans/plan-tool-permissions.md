@@ -371,7 +371,7 @@ Rust по контексту решает «можно ли вызвать»: д
 - [ ] `lib/chat-tools/tool-catalog.ts`: источники, риск, ключи, умолчания по
       виду источника, политика по умолчанию (с исключениями § 2.1, включая
       риск ИИ-команды по её белому списку); `effectiveToolPolicy(catalog,
-  profile, tool)` с тестами.
+profile, tool)` с тестами.
 - [ ] Заменить `chat-tool-groups.ts` и `ProfileToolSettings.groups` новой
       моделью; `project-access.ts` — поле `delete`, три пресета, галочка
       удаления и инвариант `delete` ≤ `write`, убрать `askAll`.

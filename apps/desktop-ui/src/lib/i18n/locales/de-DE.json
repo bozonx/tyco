@@ -1494,7 +1494,7 @@
     "run": "Ausführen",
     "textPlaceholder": "Ihr Text",
     "title": "Sprachbefehle",
-    "missingSelection": "Ausgewählter Text erforderlich.",
+    "missingSelection": "Der Befehl erwartet markierten Text, aber nichts ist markiert.",
     "phrasesPlaceholder": "Beispielphrasen, eine pro Zeile",
     "parameterMissing": "Wählen Sie den Parameterwert neben dem Befehlsnamen.",
     "phaseAwaitingParameter": "Nennen Sie {parameter}...",

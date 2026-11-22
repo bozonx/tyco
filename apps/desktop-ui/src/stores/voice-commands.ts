@@ -31,7 +31,10 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
   const desktop = useDesktopStore()
   const history = useHistoryStore()
   const tools = useOperationsStore()
-  const runner = createCommandRunner(useInvocationRunnerDependencies())
+  const runner = createCommandRunner(
+    // the result replaces the voice window: the command has already run
+    useInvocationRunnerDependencies({ isResultFinal: true })
+  )
 
   const effectiveCommands = (): readonly CommandConfig[] => {
     const userCommands = desktop.userConfig?.commands ?? []

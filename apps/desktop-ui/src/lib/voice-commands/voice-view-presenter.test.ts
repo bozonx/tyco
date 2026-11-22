@@ -72,6 +72,20 @@ describe('voice-view-presenter', () => {
         t
       )
     ).toEqual({ kind: 'error', message: 'voiceCommands.failed' })
+    expect(
+      resolveVoiceNotice(
+        {
+          error: '',
+          command: undefined,
+          unavailableReason: () => undefined,
+          inputIssue: undefined,
+          stage: 'recording',
+          resolutionKind: 'match',
+          isLiveSelectionMissing: true,
+        },
+        t
+      )
+    ).toEqual({ kind: 'warning', message: 'voiceCommands.missingSelection' })
 
     expect(
       resolveVoiceNotice(

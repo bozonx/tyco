@@ -1494,7 +1494,7 @@
     "run": "실행",
     "textPlaceholder": "입력할 텍스트",
     "title": "음성 명령",
-    "missingSelection": "선택한 텍스트가 필요합니다.",
+    "missingSelection": "이 명령은 선택한 텍스트가 필요하지만 선택된 내용이 없습니다.",
     "phrasesPlaceholder": "예시 문구 (한 줄에 하나씩)",
     "parameterMissing": "명령 이름 옆에서 매개변수 값을 선택하세요.",
     "phaseAwaitingParameter": "{parameter}을(를) 말하세요...",

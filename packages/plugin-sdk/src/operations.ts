@@ -178,6 +178,9 @@ export interface OperationCommandParameter {
   ): ParameterResolveResult | Promise<ParameterResolveResult>
 }
 
+/** See `OperationDefinition.voiceSelectionRole` */
+export type VoiceSelectionRole = 'text' | 'attach'
+
 export interface OperationDefinition {
   /** Local to the plugin; the full id becomes `<pluginName>.<id>` */
   id: string
@@ -221,6 +224,12 @@ export interface OperationDefinition {
   defaultOutputAction?: CommandOutputAction
   /** Phrases suggested when the user creates a command for this tool */
   defaultPhrasesKey?: string
+  /**
+   * What a voice call does with the selected text, also read as
+   * `call.context.selectionText`: `text` runs on it in place of spoken text,
+   * `attach` puts the spoken words after it; absent, the tool ignores it
+   */
+  voiceSelectionRole?: VoiceSelectionRole
   /**
    * Parameters that a command may leave to its caller (voice, chat, external).
    * Core handles step-by-step voice matching, tail discarding, and UI

@@ -1494,7 +1494,7 @@
     "run": "Pokreni",
     "textPlaceholder": "vaš tekst",
     "title": "Glasovne naredbe",
-    "missingSelection": "Potreban je odabrani tekst.",
+    "missingSelection": "Naredba očekuje odabrani tekst, ali ništa nije odabrano.",
     "phrasesPlaceholder": "Primjeri fraza, jedna po retku",
     "parameterMissing": "Odaberite vrijednost parametra pokraj naziva naredbe.",
     "phaseAwaitingParameter": "Recite {parameter}...",

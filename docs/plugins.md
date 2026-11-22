@@ -84,6 +84,10 @@ Rules to keep in mind:
   `selectionOnly` when the whole text would be a surprise), toolbar buttons,
   action-menu items and operations. An operation can be put on the toolbar by its id and
   used by the user's commands.
+- **Selection in voice calls.** A voice command of an operation ignores the
+  selected text unless the operation sets `voiceSelectionRole`: `text` runs on
+  the selection instead of the spoken text, `attach` puts the spoken words
+  after it. The voice window shows the user which one applies.
 - **Settings are declarative.** Describe fields in `defaultConfig`; TyCo draws
   the form, applies defaults and gives the plugin only its own validated
   settings. Fields can be shown conditionally (`visibleWhen`), filled by

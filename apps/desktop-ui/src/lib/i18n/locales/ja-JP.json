@@ -1494,7 +1494,7 @@
     "run": "実行",
     "textPlaceholder": "テキスト",
     "title": "音声コマンド",
-    "missingSelection": "選択されたテキストが必要です。",
+    "missingSelection": "このコマンドは選択したテキストを必要としますが、何も選択されていません。",
     "phrasesPlaceholder": "フレーズの例（1行に1つ）",
     "parameterMissing": "コマンド名の横でパラメーターの値を選択してください。",
     "phaseAwaitingParameter": "{parameter} を話してください...",

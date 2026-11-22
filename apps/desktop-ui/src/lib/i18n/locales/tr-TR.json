@@ -1494,7 +1494,7 @@
     "run": "Çalıştır",
     "textPlaceholder": "metniniz",
     "title": "Sesli komutlar",
-    "missingSelection": "Seçili metin gerekli.",
+    "missingSelection": "Komut seçili metin bekliyor, ancak hiçbir şey seçili değil.",
     "phrasesPlaceholder": "Örnek ifadeler, her satıra bir tane",
     "parameterMissing": "Komut adının yanından parametre değerini seçin.",
     "phaseAwaitingParameter": "Say {parameter}...",

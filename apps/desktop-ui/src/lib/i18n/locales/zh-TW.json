@@ -1494,7 +1494,7 @@
     "run": "執行",
     "textPlaceholder": "您的文字",
     "title": "語音命令",
-    "missingSelection": "必須提供選取的文字。",
+    "missingSelection": "此指令需要選取的文字，但未選取任何內容。",
     "phrasesPlaceholder": "範例詞，每行一個",
     "parameterMissing": "請在命令名稱旁選擇參數值。",
     "phaseAwaitingParameter": "請說出 {parameter}...",

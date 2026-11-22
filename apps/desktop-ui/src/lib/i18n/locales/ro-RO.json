@@ -1494,7 +1494,7 @@
     "run": "Rulează",
     "textPlaceholder": "textul dvs.",
     "title": "Comenzi vocale",
-    "missingSelection": "Este necesar textul selectat.",
+    "missingSelection": "Comanda așteaptă text selectat, dar nu este selectat nimic.",
     "phrasesPlaceholder": "Fraze demonstrative, câte una pe rând",
     "parameterMissing": "Alegeți valoarea parametrului lângă numele comenzii.",
     "phaseAwaitingParameter": "Spuneți {parameter}...",

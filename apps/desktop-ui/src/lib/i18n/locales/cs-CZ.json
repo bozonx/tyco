@@ -1494,7 +1494,7 @@
     "run": "Spustit",
     "textPlaceholder": "váš text",
     "title": "Hlasové příkazy",
-    "missingSelection": "Je vyžadován výběr textu.",
+    "missingSelection": "Příkaz očekává vybraný text, ale nic není vybráno.",
     "phrasesPlaceholder": "Příklady frází, jedna na řádek",
     "parameterMissing": "Vyberte hodnotu parametru vedle názvu příkazu.",
     "phaseAwaitingParameter": "Řekněte {parameter}...",

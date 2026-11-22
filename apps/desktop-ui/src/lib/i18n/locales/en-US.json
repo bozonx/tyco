@@ -1494,7 +1494,7 @@
     "run": "Run",
     "textPlaceholder": "your text",
     "title": "Voice commands",
-    "missingSelection": "Selection is required.",
+    "missingSelection": "The command expects selected text, but nothing is selected.",
     "phrasesPlaceholder": "Sample phrases, one per line",
     "parameterMissing": "Choose the parameter value next to the command name.",
     "phaseAwaitingParameter": "Say {parameter}...",

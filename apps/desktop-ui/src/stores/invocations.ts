@@ -20,7 +20,9 @@ import { useOperationsStore } from './operations'
  * or a built-in action, in the action menu or the command overlay. Call it from
  * a store's setup
  */
-export function useInvocationRunnerDependencies(): InvocationRunnerDependencies {
+export function useInvocationRunnerDependencies(
+  options: { isResultFinal?: boolean } = {}
+): InvocationRunnerDependencies {
   const ipcStore = useIpcStore()
   const menuModalsStore = useMenuModalsStore()
   const operationsStore = useOperationsStore()
@@ -44,7 +46,10 @@ export function useInvocationRunnerDependencies(): InvocationRunnerDependencies 
       )
     },
     showResultMenu: (text, sourceText, meta) => {
-      menuModalsStore.nextModal(MenuModals.PREVIEW, {
+      const open = options.isResultFinal
+        ? menuModalsStore.showOutcome
+        : menuModalsStore.nextModal
+      open(MenuModals.PREVIEW, {
         text,
         sourceText,
         translationMeta: translationMetaOf(meta),

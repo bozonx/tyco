@@ -638,6 +638,7 @@ describe('plugin context registrations', () => {
     [{ description: undefined }, 'Invalid plugin tool'],
     [{ inputSchema: null }, 'Invalid plugin tool'],
     [{ parseText: 'parse' }, 'Invalid plugin parser'],
+    [{ voiceSelectionRole: 'context' }, 'Invalid plugin voice selection role'],
   ])('rejects malformed tool definitions: %j', (patch, message) => {
     const { context, deps } = setup()
     expect(() =>

@@ -130,6 +130,8 @@ export function resolveVoiceNotice(
     candidates?: readonly VoiceCandidate[]
     /** The parameter whose spoken value is not recognized */
     failedParameter?: OperationCommandParameter
+    /** The command heard while recording expects a selection there is not */
+    isLiveSelectionMissing?: boolean
   },
   t: Translate
 ): VoiceNotice | undefined {
@@ -137,6 +139,8 @@ export function resolveVoiceNotice(
     const key = state.error
     return { kind: 'error', message: MESSAGE_KEY.test(key) ? t(key) : key }
   }
+  if (state.isLiveSelectionMissing)
+    return { kind: 'warning', message: t('voiceCommands.missingSelection') }
   if (state.command) {
     const reason = state.unavailableReason(state.command)
     if (reason) return { kind: 'warning', message: t(reason) }

@@ -1494,7 +1494,7 @@
     "run": "运行",
     "textPlaceholder": "您的文本",
     "title": "语音命令",
-    "missingSelection": "需要提供选中的文本。",
+    "missingSelection": "该命令需要所选文本，但未选择任何内容。",
     "phrasesPlaceholder": "示例短语，每行一条",
     "parameterMissing": "请在命令名称旁选择参数值。",
     "phaseAwaitingParameter": "Say {parameter}...",

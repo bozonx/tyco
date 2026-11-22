@@ -1494,7 +1494,7 @@
     "run": "Виконати",
     "textPlaceholder": "ваш текст",
     "title": "Голосові команди",
-    "missingSelection": "Потрібен виділений текст.",
+    "missingSelection": "Команда очікує виділений текст, але нічого не виділено.",
     "phrasesPlaceholder": "Приклади фраз построково",
     "parameterMissing": "Виберіть значення параметра поруч із назвою команди.",
     "phaseAwaitingParameter": "Назвіть: {parameter}...",

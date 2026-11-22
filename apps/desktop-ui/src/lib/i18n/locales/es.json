@@ -1494,7 +1494,7 @@
     "run": "Ejecutar",
     "textPlaceholder": "tu texto",
     "title": "Comandos de voz",
-    "missingSelection": "Se necesita texto seleccionado.",
+    "missingSelection": "El comando espera texto seleccionado, pero no hay nada seleccionado.",
     "phrasesPlaceholder": "Frases de ejemplo, una por línea",
     "parameterMissing": "Elige el valor del parámetro junto al nombre del comando.",
     "phaseAwaitingParameter": "Di {parameter}...",

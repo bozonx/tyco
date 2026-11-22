@@ -320,7 +320,7 @@ import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useOperationsStore } from '../stores/operations'
 import { useQuickDismissStore } from '../stores/quick-dismiss'
 import { useVoiceCommandsStore } from '../stores/voice-commands'
-import type { CommandConfig } from '@tyco/shared'
+import { type CommandConfig, commandTakesSelection } from '@tyco/shared'
 
 const props = withDefaults(
   defineProps<{
@@ -530,6 +530,11 @@ const notice = computed(() =>
       resolutionKind: voice.resolution.kind,
       candidates: voice.resolution.candidates,
       failedParameter: voice.failedParameter,
+      isLiveSelectionMissing:
+        isListening.value &&
+        Boolean(voice.activeCommand) &&
+        commandTakesSelection(voice.activeCommand!) &&
+        !activeContextText.value.trim(),
     },
     t
   )
