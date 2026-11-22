@@ -44,7 +44,7 @@ const SOURCE_LABELS: Record<EditorHistoryOperation, string> = {
 /** Icon and label that tell the user why the text is in the history. */
 export function getEditorHistoryMeta(
   item: Pick<EditorHistoryItem, 'kind' | 'operation' | 'result'> &
-    Partial<Pick<EditorHistoryItem, 'origin'>>
+    Partial<Pick<EditorHistoryItem, 'origin' | 'instruction'>>
 ): EditorHistoryMeta {
   if (item.kind === 'output') {
     // the conversation itself is kept with the chats
@@ -54,7 +54,9 @@ export function getEditorHistoryMeta(
   }
 
   if (item.kind === 'draft') {
-    return { icon: 'mdi:pencil-outline', labelKey: 'history.kindDraft' }
+    return item.instruction?.inputKind === 'voice'
+      ? { icon: 'mdi:microphone', labelKey: 'commands.badgeVoice' }
+      : { icon: 'mdi:pencil-outline', labelKey: 'history.kindDraft' }
   }
 
   if (item.kind === 'dialog') {
@@ -62,7 +64,9 @@ export function getEditorHistoryMeta(
   }
 
   if (!item.operation) {
-    return { icon: 'mdi:history', labelKey: 'history.kindSource' }
+    return item.instruction?.inputKind === 'voice'
+      ? { icon: 'mdi:microphone', labelKey: 'commands.badgeVoice' }
+      : { icon: 'mdi:history', labelKey: 'history.kindSource' }
   }
 
   return {
@@ -73,7 +77,9 @@ export function getEditorHistoryMeta(
 
 export function getEditorHistoryView(
   item: Pick<EditorHistoryItem, 'kind' | 'operation' | 'result' | 'text'> &
-    Partial<Pick<EditorHistoryItem, 'isResultApplied' | 'origin'>>
+    Partial<
+      Pick<EditorHistoryItem, 'isResultApplied' | 'origin' | 'instruction'>
+    >
 ): EditorHistoryView {
   const meta = getEditorHistoryMeta(item)
 

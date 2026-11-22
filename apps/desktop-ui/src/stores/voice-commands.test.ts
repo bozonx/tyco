@@ -1,18 +1,14 @@
-import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CommandConfig } from '@tyco/shared'
 
 import type * as CommandRunnerModule from '../lib/commands/command-runner'
 import { createCommand } from '../lib/commands/command-config'
-import { useDesktopStore } from './desktop'
+import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import { useHistoryStore } from './history'
-import { useIpcStore } from './ipc'
 import { useVoiceCommandsStore } from './voice-commands'
 
 const mocks = vi.hoisted(() => ({
   runCommand: vi.fn(),
-  saveOutput: vi.fn(),
-  call: vi.fn(),
   dictationText: 'test voice hello voice',
 }))
 
@@ -30,22 +26,12 @@ vi.mock('../composables/use-dictation-actions', () => ({
 }))
 
 describe('useVoiceCommandsStore', () => {
-  let pinia: ReturnType<typeof createPinia>
+  let desktop: TestDesktop
 
-  beforeEach(() => {
-    pinia = createPinia()
-    setActivePinia(pinia)
+  beforeEach(async () => {
     vi.clearAllMocks()
-
+    desktop = await loadFakeDesktop()
     mocks.dictationText = 'test voice hello voice'
-
-    const history = useHistoryStore()
-    mocks.saveOutput.mockResolvedValue('out-1')
-    vi.spyOn(history, 'saveOutput').mockImplementation(mocks.saveOutput)
-
-    const ipc = useIpcStore()
-    mocks.call.mockResolvedValue({ success: true })
-    vi.spyOn(ipc, 'call').mockImplementation(mocks.call)
 
     const validVoiceCommand: CommandConfig = {
       ...createCommand('core.correct', 'cmd-1'),
@@ -55,23 +41,26 @@ describe('useVoiceCommandsStore', () => {
       phrases: ['test voice'],
     }
 
-    const desktop = useDesktopStore()
-    desktop.applyViewState({
-      ...desktop.desktopState,
-      userConfig: {
-        ...desktop.desktopState.userConfig,
-        commands: [validVoiceCommand],
-      },
-    })
+    desktop.setUserConfig({ commands: [validVoiceCommand] })
   })
 
   afterEach(() => {
-    disposePinia(pinia)
+    desktop.dispose()
   })
 
-  it('runs a voice command through finish and run, saving output and logging', async () => {
-    mocks.runCommand.mockResolvedValueOnce({ success: true, message: 'Done' })
+  it('runs a voice command through finish and run, updating history and logging', async () => {
+    mocks.runCommand.mockImplementationOnce(
+      (
+        _command: CommandConfig,
+        _text: string,
+        options: { onOutput?: (output: string) => void }
+      ) => {
+        options.onOutput?.('Hello voice.')
+        return Promise.resolve({ success: true, message: 'Done' })
+      }
+    )
     const store = useVoiceCommandsStore()
+    const history = useHistoryStore()
 
     await store.start()
     await store.finish('review')
@@ -79,34 +68,88 @@ describe('useVoiceCommandsStore', () => {
     expect(store.selected?.commandId).toBe('cmd-1')
     expect(store.canRun).toBe(true)
 
+    await history.loadEditorHistory()
+    expect(history.editorHistory).toEqual([
+      expect.objectContaining({
+        text: 'test voice hello voice',
+        kind: 'draft',
+        origin: 'voice',
+        instruction: { text: '', inputKind: 'voice' },
+      }),
+    ])
+    const draftId = history.editorHistory[0]?.id
+
     await store.run()
 
-    expect(mocks.saveOutput).toHaveBeenCalledWith('hello voice')
     expect(mocks.runCommand).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'cmd-1' }),
       'hello voice',
       expect.objectContaining({ source: 'voice' })
     )
-    expect(mocks.call).toHaveBeenCalledWith('log_command_run', {
-      record: {
-        commandId: 'cmd-1',
-        name: 'Test Voice Command',
-        source: 'voice',
+    expect(desktop.backend.callsOf('add_editor_history_item')).toContainEqual({
+      entry: {
+        id: draftId,
         text: 'hello voice',
-        success: true,
-        message: 'Done',
+        kind: 'source',
+        operation: 'correction',
+        origin: 'voice',
+        instruction: { text: 'Test Voice Command', inputKind: 'voice' },
       },
+    })
+    expect(
+      desktop.backend.callsOf('set_editor_history_item_result')
+    ).toContainEqual({ id: draftId, result: 'Hello voice.' })
+    expect(desktop.backend.callsOf('log_command_run')).toEqual([
+      {
+        record: {
+          commandId: 'cmd-1',
+          name: 'Test Voice Command',
+          source: 'voice',
+          text: 'hello voice',
+          success: true,
+          message: 'Done',
+        },
+      },
+    ])
+  })
+
+  it('marks a voice command without output as completed and records failures', async () => {
+    const scriptCommand: CommandConfig = {
+      ...createCommand('script', 'cmd-script'),
+      name: 'Run Script',
+      isEnabled: true,
+      isVoiceEnabled: true,
+      phrases: ['test voice'],
+      operationConfig: { command: 'echo {{TEXT}}' },
+      outputAction: 'none',
+    }
+    desktop.setUserConfig({ commands: [scriptCommand] })
+    mocks.runCommand
+      .mockResolvedValueOnce({ success: false, message: 'Exit code 1' })
+      .mockResolvedValueOnce({ success: true })
+
+    const store = useVoiceCommandsStore()
+    await store.start()
+    await store.finish('review')
+    await store.run()
+
+    expect(desktop.backend.callsOf('set_editor_history_item_failure')).toEqual([
+      {
+        id: expect.any(String),
+        failure: { kind: 'error', message: 'Exit code 1' },
+      },
+    ])
+
+    await store.run()
+    expect(desktop.backend.callsOf('add_editor_history_item')).toContainEqual({
+      entry: { text: 'hello voice', kind: 'output', origin: 'voice' },
     })
   })
 
-  it('stops a voice command at the shared run limit', async () => {
-    const desktop = useDesktopStore()
-    desktop.applyViewState({
-      ...desktop.desktopState,
-      userConfig: {
-        ...desktop.desktopState.userConfig,
-        commandRunTimeoutSec: 2,
-      },
+  it('stops a voice command at the shared run limit and records timeout failure in history', async () => {
+    desktop.setUserConfig({
+      commands: desktop.backend.userConfig.commands,
+      commandRunTimeoutSec: 2,
     })
     let runSignal: AbortSignal | undefined
     mocks.runCommand.mockImplementationOnce(
@@ -135,9 +178,14 @@ describe('useVoiceCommandsStore', () => {
     expect(runSignal?.aborted).toBe(true)
     expect(store.stage).toBe('review')
     expect(store.error).toBe('Did not finish in 2 s and was stopped')
-    expect(mocks.call).toHaveBeenCalledWith('log_command_run', {
-      record: expect.objectContaining({ commandId: 'cmd-1', success: false }),
-    })
+    expect(desktop.backend.callsOf('set_editor_history_item_failure')).toEqual([
+      { id: expect.any(String), failure: { kind: 'timeout' } },
+    ])
+    expect(desktop.backend.callsOf('log_command_run')).toEqual([
+      {
+        record: expect.objectContaining({ commandId: 'cmd-1', success: false }),
+      },
+    ])
   })
 
   it('handles cancellation and abort without running command', async () => {
@@ -150,28 +198,19 @@ describe('useVoiceCommandsStore', () => {
   })
 
   it('includes builtin translation command in catalog when isVoiceCommandEnabled is true and excludes when false', async () => {
-    const desktop = useDesktopStore()
-    desktop.applyViewState({
-      ...desktop.desktopState,
-      userConfig: {
-        ...desktop.desktopState.userConfig,
-        translation: {
-          ...desktop.desktopState.userConfig.translation,
-          isVoiceCommandEnabled: true,
-        },
+    desktop.setUserConfig({
+      translation: {
+        ...desktop.backend.userConfig.translation,
+        isVoiceCommandEnabled: true,
       },
     })
     let store = useVoiceCommandsStore()
     expect(store.catalog.some((c) => c.id === 'translate')).toBe(true)
 
-    desktop.applyViewState({
-      ...desktop.desktopState,
-      userConfig: {
-        ...desktop.desktopState.userConfig,
-        translation: {
-          ...desktop.desktopState.userConfig.translation,
-          isVoiceCommandEnabled: false,
-        },
+    desktop.setUserConfig({
+      translation: {
+        ...desktop.backend.userConfig.translation,
+        isVoiceCommandEnabled: false,
       },
     })
     store = useVoiceCommandsStore()

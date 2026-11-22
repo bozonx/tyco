@@ -452,7 +452,8 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     text: string,
     intent: VoiceCommandFinishIntent,
     brokenBy?: string,
-    expected?: VoiceCandidate
+    expected?: VoiceCandidate,
+    savingTranscript?: Promise<unknown>
   ) => {
     transcript.value = text
     liveTranscript.value = { committed: text, draft: '' }
@@ -469,8 +470,10 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
         isSameCall(candidate, expected) &&
         !candidate.commandOffset &&
         canRun.value
-      )
-        await run()
+      ) {
+        await savingTranscript
+        if (stage.value === 'review' && canRun.value) await run()
+      }
     } else if (result.parameterChoices?.[0]) {
       choose(result.parameterChoices[0])
     }
@@ -498,8 +501,8 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       }
       // the only copy of what was said: it cannot be dictated the same way
       // twice, and the review may end without running anything
-      void deps.saveTranscript?.(finalText).catch(() => undefined)
-      await review(finalText, intent, interruption, expected)
+      const saving = deps.saveTranscript?.(finalText).catch(() => undefined)
+      await review(finalText, intent, interruption, expected, saving)
     } catch (cause) {
       if (current !== generation || disposed) return
       error.value = errorText(cause, deps.describeError)

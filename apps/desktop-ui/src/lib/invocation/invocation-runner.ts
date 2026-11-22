@@ -184,6 +184,10 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
         result.code
       )
     }
+    if (result.content !== undefined) {
+      const cleaned = outputText(result.content)
+      if (cleaned !== null) options.onOutput?.(cleaned)
+    }
     switch (resolveSink(invocation, options)) {
       case 'return':
         return { success: true, output: result.content }

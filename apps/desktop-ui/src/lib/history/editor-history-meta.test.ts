@@ -43,10 +43,22 @@ describe('getEditorHistoryMeta', () => {
     ).toBe('history.kindVoiceTranscript')
   })
 
-  it('falls back for a source without an operation', () => {
+  it('falls back for a source without an operation and labels voice commands', () => {
     expect(getEditorHistoryMeta({ kind: 'source' }).labelKey).toBe(
       'history.kindSource'
     )
+    expect(
+      getEditorHistoryMeta({
+        kind: 'draft',
+        instruction: { text: '', inputKind: 'voice' },
+      })
+    ).toEqual({ icon: 'mdi:microphone', labelKey: 'commands.badgeVoice' })
+    expect(
+      getEditorHistoryMeta({
+        kind: 'source',
+        instruction: { text: 'Run script', inputKind: 'voice' },
+      })
+    ).toEqual({ icon: 'mdi:microphone', labelKey: 'commands.badgeVoice' })
   })
 })
 

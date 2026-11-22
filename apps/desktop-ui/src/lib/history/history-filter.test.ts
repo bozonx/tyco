@@ -26,6 +26,24 @@ describe('history filter', () => {
       result: 'Applied.',
       isResultApplied: true,
     }),
+    item('voiceCmd', {
+      origin: 'voice',
+      kind: 'source',
+      operation: 'translation',
+      instruction: { text: 'Translate', inputKind: 'voice' },
+      result: 'Translated.',
+      isResultApplied: true,
+    }),
+    item('dialogCall', {
+      kind: 'dialog',
+      dialog: { startedAt: 1, source: 'system' },
+    }),
+    item('aiResult', {
+      kind: 'source',
+      operation: 'aiTask',
+      result: 'Done.',
+      isResultApplied: true,
+    }),
     item('failed', {
       kind: 'source',
       operation: 'translation',
@@ -41,12 +59,15 @@ describe('history filter', () => {
       'sent',
       'dictated',
       'applied',
+      'voiceCmd',
+      'dialogCall',
+      'aiResult',
       'failed',
       'old',
     ])
   })
 
-  it('filters by origin', () => {
+  it('filters by origin, voice command, dialog and operation', () => {
     expect(ids(filterEditorHistory(items, 'quickInput'))).toEqual([
       'typed',
       'sent',
@@ -55,6 +76,15 @@ describe('history filter', () => {
       'dictated',
       'applied',
     ])
+    expect(ids(filterEditorHistory(items, 'voiceCommands'))).toEqual([
+      'voiceCmd',
+    ])
+    expect(ids(filterEditorHistory(items, 'dialog'))).toEqual(['dialogCall'])
+    expect(ids(filterEditorHistory(items, 'translation'))).toEqual([
+      'voiceCmd',
+      'failed',
+    ])
+    expect(ids(filterEditorHistory(items, 'aiTask'))).toEqual(['aiResult'])
   })
 
   it('keeps drafts, failed operations and results that never left the app', () => {

@@ -1,21 +1,39 @@
 import type { EditorHistoryItem, EditorHistoryOrigin } from '@tyco/shared'
 
 /**
- * What the history list shows: every entry, entries of one source, or the
- * problem ones. `all` includes entries without a source.
+ * What the history list shows: every entry, entries of one source or kind, or
+ * the problem ones. `all` includes entries without a source.
  */
-export type HistoryFilter = 'all' | EditorHistoryOrigin | 'problems'
+export type HistoryFilter =
+  | 'all'
+  | EditorHistoryOrigin
+  | 'voiceCommands'
+  | 'dialog'
+  | 'translation'
+  | 'aiTask'
+  | 'problems'
 
 export const HISTORY_FILTERS: readonly HistoryFilter[] = [
   'all',
   'quickInput',
   'voice',
+  'voiceCommands',
   'listen',
+  'dialog',
   'quickAiRequest',
+  'translation',
+  'aiTask',
   'problems',
 ]
 
 export const DEFAULT_HISTORY_FILTER: HistoryFilter = 'all'
+
+/** Whether the entry was created by the voice commands overlay */
+export function isVoiceCommandHistoryItem(
+  item: Pick<EditorHistoryItem, 'instruction'>
+): boolean {
+  return item.instruction?.inputKind === 'voice'
+}
 
 /**
  * A text that may be what the user lost: a draft, or the source of an AI
@@ -31,9 +49,29 @@ export function isProblemHistoryItem(
 }
 
 export function filterEditorHistory<
-  T extends Pick<EditorHistoryItem, 'kind' | 'isResultApplied' | 'origin'>,
+  T extends Pick<
+    EditorHistoryItem,
+    'kind' | 'isResultApplied' | 'origin' | 'operation' | 'instruction'
+  >,
 >(items: readonly T[], filter: HistoryFilter): T[] {
-  if (filter === 'all') return [...items]
-  if (filter === 'problems') return items.filter(isProblemHistoryItem)
-  return items.filter((item) => item.origin === filter)
+  switch (filter) {
+    case 'all':
+      return [...items]
+    case 'problems':
+      return items.filter(isProblemHistoryItem)
+    case 'voice':
+      return items.filter(
+        (item) => item.origin === 'voice' && !isVoiceCommandHistoryItem(item)
+      )
+    case 'voiceCommands':
+      return items.filter(isVoiceCommandHistoryItem)
+    case 'dialog':
+      return items.filter((item) => item.kind === 'dialog')
+    case 'translation':
+      return items.filter((item) => item.operation === 'translation')
+    case 'aiTask':
+      return items.filter((item) => item.operation === 'aiTask')
+    default:
+      return items.filter((item) => item.origin === filter)
+  }
 }

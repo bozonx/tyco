@@ -48,6 +48,8 @@ export interface InvocationOptions {
   callerCommandIds?: readonly string[]
   /** Whether to report successful execution to the user (e.g. via toast) */
   notifySuccess?: boolean
+  /** Receives the text output of a successful tool call, if any */
+  onOutput?: (output: string) => void
 }
 
 /** How a run ended; the user has been told already */

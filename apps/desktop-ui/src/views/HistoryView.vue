@@ -162,8 +162,12 @@ const FILTER_LABELS: Record<HistoryFilter, string> = {
   all: 'history.filterAll',
   quickInput: 'history.filterQuickInput',
   voice: 'history.filterVoice',
+  voiceCommands: 'action.voiceCommands',
   listen: 'history.filterListen',
+  dialog: 'history.kindDialog',
   quickAiRequest: 'chat.quickAiRequests',
+  translation: 'history.kindTranslate',
+  aiTask: 'history.kindAiTask',
   problems: 'history.filterProblems',
 }
 const filterOptions = computed(() =>
