@@ -24,7 +24,7 @@ pub use source::{
 };
 
 pub use audio_processing::compute_audio_level;
-use audio_processing::{float_to_pcm16, mix_frame, pcm16_to_le_bytes, Downsampler};
+use audio_processing::{mix_frame, pcm16_to_le_bytes, Downsampler, StartupFadeIn};
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{mpsc as std_mpsc, Arc, Mutex};
@@ -46,6 +46,11 @@ use crate::services::voice::session::{SourceSwitch, SourceSwitchSlot, VoiceCaptu
 
 /// What speech models are trained on; a higher device rate is averaged down.
 pub(crate) const TARGET_SAMPLE_RATE_HZ: u32 = 16_000;
+/// Suppresses the hardware DC pop / power-up transient when an input device
+/// wakes from power-saving mode (~25 ms in practice).
+const MICROPHONE_FADE_IN_MS: u32 = 40;
+/// Smooths the initial sample when attaching to an active playback stream.
+const PLAYBACK_FADE_IN_MS: u32 = 10;
 /// Chunks of about 100 ms: what Deepgram recommends, and few enough IPC calls.
 const CHUNK_MS: usize = 100;
 const POLL_INTERVAL: Duration = Duration::from_millis(20);
@@ -769,14 +774,13 @@ pub(crate) struct StreamContext {
 
 /// Turns the interleaved float frames of a playback device into the
 /// samples of a `StreamContext`: mixed down and brought to its rate.
-#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 pub(crate) struct PlaybackConverter {
     downsampler: Downsampler,
+    fade_in: StartupFadeIn,
     channels: usize,
     converted: Vec<i16>,
 }
 
-#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 impl PlaybackConverter {
     pub(crate) fn new(
         device_sample_rate_hz: u32,
@@ -785,6 +789,7 @@ impl PlaybackConverter {
     ) -> Self {
         Self {
             downsampler: Downsampler::new(device_sample_rate_hz, output_sample_rate_hz),
+            fade_in: StartupFadeIn::new(device_sample_rate_hz, PLAYBACK_FADE_IN_MS),
             channels: channels.max(1),
             converted: Vec::new(),
         }
@@ -794,7 +799,8 @@ impl PlaybackConverter {
         context.callback_count.fetch_add(1, Ordering::Relaxed);
         self.converted.clear();
         for frame in interleaved.chunks(self.channels) {
-            self.downsampler.push(mix_frame(frame), &mut self.converted);
+            let sample = self.fade_in.apply_f32(mix_frame(frame));
+            self.downsampler.push(sample, &mut self.converted);
         }
         if self.converted.is_empty() {
             return;
@@ -830,22 +836,6 @@ impl StreamContext {
             unprocessed_pcm_samples: None,
         }
     }
-
-    /// Adds samples a playback backend converted to the output format.
-    pub(crate) fn deliver(&self, samples: &[f32]) {
-        self.callback_count.fetch_add(1, Ordering::Relaxed);
-        if samples.is_empty() {
-            return;
-        }
-        let converted: Vec<i16> = samples.iter().copied().map(float_to_pcm16).collect();
-        if let Ok(mut level) = self.current_level.lock() {
-            let (rms, peak) = compute_audio_level(&converted);
-            *level = (level.0.max(rms), level.1.max(peak));
-        }
-        if let Ok(mut pending) = self.pending_pcm_samples.lock() {
-            pending.extend_from_slice(&converted);
-        }
-    }
 }
 
 /// A device that is gone does not come back; other errors may pass, see
@@ -877,6 +867,7 @@ where
     let error_stop_flag = Arc::clone(&context.stop_flag);
     let mut downsampler =
         Downsampler::new(context.device_sample_rate_hz, context.output_sample_rate_hz);
+    let mut fade_in = StartupFadeIn::new(context.device_sample_rate_hz, MICROPHONE_FADE_IN_MS);
     let mut converted = Vec::new();
     let error_callback = move |error: cpal::StreamError| {
         let message = format!("Audio input stream failed: {error}");
@@ -899,7 +890,8 @@ where
                 converted.clear();
                 for frame in data.chunks(channels) {
                     if !frame.is_empty() {
-                        downsampler.push(mix_frame(frame), &mut converted);
+                        let sample = fade_in.apply_f32(mix_frame(frame));
+                        downsampler.push(sample, &mut converted);
                     }
                 }
                 if converted.is_empty() {

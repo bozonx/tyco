@@ -52,6 +52,59 @@ const BUTTERWORTH_Q: [f64; 2] = [0.541_196_1, 1.306_563];
 /// Nyquist rate, which is half of it
 const CUTOFF_SHARE: f64 = 0.43;
 
+/// Ramps the beginning of a stream from silence to unity gain so that an
+/// input device waking from power-saving mode (a DC pop or startup transient
+/// in the first ~25 ms) or a loopback stream attaching mid-waveform does not
+/// start with an audible click.
+pub(crate) struct StartupFadeIn {
+    position: usize,
+    total_samples: usize,
+}
+
+impl StartupFadeIn {
+    pub(crate) fn new(sample_rate_hz: u32, duration_ms: u32) -> Self {
+        Self {
+            position: 0,
+            total_samples: (sample_rate_hz as usize * duration_ms as usize) / 1_000,
+        }
+    }
+
+    pub(crate) fn apply_f32(&mut self, sample: f32) -> f32 {
+        if self.position >= self.total_samples {
+            return sample;
+        }
+        let gain = self.position as f32 / self.total_samples as f32;
+        self.position += 1;
+        sample * gain
+    }
+}
+
+/// Ramps the tail of a stream (interleaved `channels`) down to silence over
+/// the last `duration_ms`, so stopping a capture while someone speaks or
+/// sound plays does not leave a step discontinuity at the end of the file.
+pub(crate) fn apply_fade_out_pcm16(
+    samples: &mut [i16],
+    channels: usize,
+    sample_rate_hz: u32,
+    duration_ms: u32,
+) {
+    let channels = channels.max(1);
+    let fade_frames = (sample_rate_hz as usize * duration_ms as usize) / 1_000;
+    let total_frames = samples.len() / channels;
+    let count = fade_frames.min(total_frames);
+    if count == 0 {
+        return;
+    }
+    let start_frame = total_frames - count;
+    for index in 0..count {
+        let gain = (count - 1 - index) as f32 / count as f32;
+        let base = (start_frame + index) * channels;
+        for sample in &mut samples[base..base + channels] {
+            *sample = (*sample as f32 * gain).round() as i16;
+        }
+    }
+}
+
 /// Lowers the sample rate for speech recognition. A fourth-order low-pass
 /// first removes what the new rate cannot hold: left in, sibilants above it
 /// would fold back into the speech band as noise. Each window of the filtered
@@ -237,5 +290,20 @@ mod tests {
         let (level, peak) = compute_audio_level(&[16_384, -16_384]);
         assert!((peak - 0.5).abs() < 1e-3);
         assert!((level - 0.5).abs() < 1e-3);
+    }
+
+    #[test]
+    fn startup_fade_in_ramps_from_zero_to_unity() {
+        let mut fade = StartupFadeIn::new(1_000, 4);
+        let ramped: Vec<f32> = (0..6).map(|_| fade.apply_f32(1.0)).collect();
+        assert_eq!(ramped, vec![0.0, 0.25, 0.5, 0.75, 1.0, 1.0]);
+    }
+
+    #[test]
+    fn fade_out_ramps_the_tail_frames_to_zero_across_channels() {
+        let mut stereo = vec![1_000, -1_000, 1_000, -1_000, 1_000, -1_000, 1_000, -1_000];
+        apply_fade_out_pcm16(&mut stereo, 2, 1_000, 3);
+        // 3 frames (6 samples) at the tail are ramped by 2/3, 1/3, 0/3; the first frame stays untouched
+        assert_eq!(stereo, vec![1_000, -1_000, 667, -667, 333, -333, 0, 0]);
     }
 }

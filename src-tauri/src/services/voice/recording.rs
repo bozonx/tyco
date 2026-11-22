@@ -26,10 +26,14 @@ use ogg::writing::{PacketWriteEndInfo, PacketWriter};
 use crate::errors::AppError;
 use crate::locks::MutexExt;
 use crate::services::storage::recordings::{self, NewRecording};
+use crate::services::voice::audio_processing::apply_fade_out_pcm16;
 
 /// What Opus counts its time in, whatever it encodes.
 const GRANULE_RATE_HZ: u32 = 48_000;
 const FRAME_MS: u32 = 20;
+/// Ramps the tail of a recording to silence so stopping mid-waveform does not
+/// leave a click at the end of the file.
+const RECORDING_FADE_OUT_MS: u32 = 15;
 /// A page at least this often: what a crash may lose at most.
 const PAGE_INTERVAL_MS: u32 = 1_000;
 /// Large enough for a 20 ms frame at any bitrate used here.
@@ -149,12 +153,13 @@ impl<W: Write> OggOpusWriter<W> {
         self.packets.inner_mut().flush()
     }
 
-    /// Takes interleaved samples; whole frames are encoded at once.
+    /// Takes interleaved samples; whole frames are encoded at once, leaving at
+    /// least one frame in `pending` so `finish` can ramp the tail down.
     pub fn push(&mut self, samples: &[i16]) -> io::Result<()> {
         self.pending.extend_from_slice(samples);
         let frame_len = self.frame_samples * self.channels;
         let mut offset = 0;
-        while self.pending.len() - offset >= frame_len {
+        while self.pending.len() - offset >= frame_len * 2 {
             let frame: Vec<i16> = self.pending[offset..offset + frame_len].to_vec();
             offset += frame_len;
             self.encode_frame(&frame, self.frame_samples, false)?;
@@ -192,6 +197,17 @@ impl<W: Write> OggOpusWriter<W> {
     /// Encodes what is left, padded to a frame, and ends the stream.
     pub fn finish(mut self) -> io::Result<W> {
         let frame_len = self.frame_samples * self.channels;
+        let sample_rate_hz = GRANULE_RATE_HZ / self.granule_factor as u32;
+        apply_fade_out_pcm16(
+            &mut self.pending,
+            self.channels,
+            sample_rate_hz,
+            RECORDING_FADE_OUT_MS,
+        );
+        while self.pending.len() >= frame_len {
+            let frame: Vec<i16> = self.pending.drain(..frame_len).collect();
+            self.encode_frame(&frame, self.frame_samples, false)?;
+        }
         let mut frame = std::mem::take(&mut self.pending);
         let samples = frame.len() / self.channels;
         frame.resize(frame_len, 0);

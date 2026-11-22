@@ -23,8 +23,8 @@ use crate::errors::AppError;
 use crate::locks::MutexExt;
 use crate::services::voice::mixer::StreamMixer;
 use crate::services::voice::{
-    AudioApp, AudioAppId, CaptureSource, OpenedCapture, SourceStatus, StreamContext,
-    TARGET_SAMPLE_RATE_HZ,
+    AudioApp, AudioAppId, CaptureSource, OpenedCapture, PlaybackConverter, SourceStatus,
+    StreamContext, TARGET_SAMPLE_RATE_HZ,
 };
 
 const SETUP_TIMEOUT: Duration = Duration::from_secs(5);
@@ -298,6 +298,11 @@ pub(super) fn open_playback(
         callback_count: Arc::clone(&context.callback_count),
         stream_error: Arc::clone(&context.stream_error),
         status: Arc::clone(&context.status),
+        converter: Arc::new(Mutex::new(PlaybackConverter::new(
+            TARGET_SAMPLE_RATE_HZ,
+            TARGET_SAMPLE_RATE_HZ,
+            1,
+        ))),
     };
     let source = source.clone();
     let stream = spawn_loop("tyco-pw-capture", move |main_loop, core, ready| {
@@ -325,6 +330,7 @@ struct Output {
     callback_count: Arc<std::sync::atomic::AtomicU64>,
     stream_error: Arc<Mutex<Option<String>>>,
     status: Arc<Mutex<SourceStatus>>,
+    converter: Arc<Mutex<PlaybackConverter>>,
 }
 
 impl Output {
@@ -343,7 +349,7 @@ impl Output {
             status: Arc::clone(&self.status),
             unprocessed_pcm_samples: None,
         };
-        context.deliver(samples);
+        self.converter.locked().deliver(&context, samples);
     }
 
     fn fail(&self, message: String) {
@@ -1016,6 +1022,11 @@ mod core_error_tests {
             callback_count: Arc::clone(&context.callback_count),
             stream_error: Arc::clone(&context.stream_error),
             status: Arc::clone(&context.status),
+            converter: Arc::new(Mutex::new(PlaybackConverter::new(
+                TARGET_SAMPLE_RATE_HZ,
+                TARGET_SAMPLE_RATE_HZ,
+                1,
+            ))),
         };
         handle_core_error(&output, 0, -libc::ENOENT, "unknown resource 15 op:7");
         handle_core_error(&output, 0, -libc::ENODEV, "node removed");
