@@ -1491,7 +1491,6 @@
     "phaseAwaitingCommand": "Diga um comando...",
     "phrases": "Frases de ativação",
     "phrasesInfo": "Frases que acionam o comando, uma por linha. Ao ativar a voz, o nome do comando é inserido aqui — você pode alterá-lo. Só as frases deste campo são reconhecidas, nunca o próprio nome.",
-    "recordAgain": "Gravar novamente",
     "run": "Executar",
     "textPlaceholder": "seu texto",
     "title": "Comandos de voz",
@@ -1499,12 +1498,13 @@
     "phrasesPlaceholder": "Frases de exemplo, uma por linha",
     "parameterMissing": "Escolha o valor do parâmetro ao lado do nome do comando.",
     "phaseAwaitingParameter": "Diga {parameter}...",
-    "stopAndReview": "Parar e revisar",
-    "stopAndReviewHint": "Clique para parar a gravação e editar o texto e o comando",
     "selectionAsText": "texto selecionado",
     "runsOnSelection": "O comando é aplicado ao texto selecionado. Para usar o texto falado, remova a seleção.",
     "selectionUnused": "Este comando não usa o texto selecionado",
-    "morePhrases": "Mais frases"
+    "morePhrases": "Mais frases",
+    "windowTitle": "Comando de voz",
+    "editText": "Editar texto",
+    "editTextHint": "Clique para parar a gravação e editar o texto reconhecido"
   },
   "voiceGrammar": {
     "languages": {

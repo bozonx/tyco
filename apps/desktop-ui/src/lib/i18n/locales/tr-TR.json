@@ -1491,7 +1491,6 @@
     "phaseAwaitingCommand": "Bir komut söyleyin...",
     "phrases": "Tetikleme ifadeleri",
     "phrasesInfo": "Komutu çağıran ifadeler, her satıra bir tane. Ses açıldığında buraya komut adı eklenir; değiştirebilirsiniz. Yalnızca bu alandaki ifadeler tanınır, adın kendisi asla.",
-    "recordAgain": "Yeniden kaydet",
     "run": "Çalıştır",
     "textPlaceholder": "metniniz",
     "title": "Sesli komutlar",
@@ -1499,12 +1498,13 @@
     "phrasesPlaceholder": "Örnek ifadeler, her satıra bir tane",
     "parameterMissing": "Komut adının yanından parametre değerini seçin.",
     "phaseAwaitingParameter": "Say {parameter}...",
-    "stopAndReview": "Durdur ve gözden geçir",
-    "stopAndReviewHint": "Kaydı durdurup metni ve komutu düzenlemek için tıklayın",
     "selectionAsText": "seçili metin",
     "runsOnSelection": "Komut seçili metne uygulanır. Söylenen metni kullanmak için seçimi kaldırın.",
     "selectionUnused": "Bu komut seçili metni kullanmaz",
-    "morePhrases": "Diğer ifadeler"
+    "morePhrases": "Diğer ifadeler",
+    "windowTitle": "Sesli komut",
+    "editText": "Metni düzenle",
+    "editTextHint": "Kaydı durdurup tanınan metni düzenlemek için tıklayın"
   },
   "voiceGrammar": {
     "languages": {

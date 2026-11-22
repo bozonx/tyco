@@ -113,6 +113,8 @@ const mountView = (
 const entry = (wrapper: ReturnType<typeof mountView>, key: string) =>
   wrapper.find(`.voice-entry[data-key="${key}"]`)
 const TRANSLATE_KEY = 'translate'
+const contextField = (wrapper: ReturnType<typeof mountView>) =>
+  wrapper.find<HTMLTextAreaElement>('.voice-context textarea')
 
 describe('separate voice command overlay', () => {
   beforeEach(async () => {
@@ -207,16 +209,17 @@ describe('separate voice command overlay', () => {
     hotkeys.shortcutLabel.mockImplementation(() => '')
     wrapper.unmount()
   })
-  it('runs on Space only once recognized and stops for review on Shift+Space at any time', async () => {
+  it('runs on Space only once recognized and stops to edit the text on Shift+Space', async () => {
     const wrapper = mountView()
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
     expect(mocks.finish).not.toHaveBeenCalled()
+    // no text is spoken before the command: there is nothing to edit
     window.dispatchEvent(
       new KeyboardEvent('keydown', { code: 'Space', shiftKey: true })
     )
-    expect(mocks.finish).toHaveBeenLastCalledWith('review')
-    mocks.finish.mockClear()
+    expect(mocks.finish).not.toHaveBeenCalled()
 
+    voice.activeCommand = translation
     voice.hasMatchedCommand = true
     voice.canRunLive = true
     await flushPromises()
@@ -299,9 +302,7 @@ describe('separate voice command overlay', () => {
     }
     voice.command = chosen
     const wrapper = mountView()
-    expect(entry(wrapper, TRANSLATE_KEY).text()).toContain(
-      translate(getLanguageLabelKey('en-US'))
-    )
+    expect(wrapper.find('.voice-catalog').exists()).toBe(false)
     const select = wrapper.find<HTMLSelectElement>('.voice-language')
     const index = [...select.element.options].findIndex(
       (option) => option.text === translate(getLanguageLabelKey('es-AR'))
@@ -327,34 +328,17 @@ describe('separate voice command overlay', () => {
     expect(mocks.run).toHaveBeenCalledOnce()
     wrapper.unmount()
   })
-  it('opens actions for reviewed speech without running a command', () => {
+  it('edits the recognized text of the chosen command in place', async () => {
     voice.stage = 'review'
-    voice.inputText = 'Use these words elsewhere'
+    voice.command = translation
+    voice.selected = { ...candidate(translation.id), parameters: {} }
+    voice.inputText = 'Hello there'
     const wrapper = mountView()
-    window.dispatchEvent(
-      new KeyboardEvent('keydown', {
-        code: 'Space',
-        shiftKey: true,
-        cancelable: true,
-      })
-    )
-    expect(useMenuModalsStore().currentModalParams).toMatchObject({
-      text: 'Use these words elsewhere',
-    })
-    expect(useMenuModalsStore().currentModalParams).not.toHaveProperty(
-      'escMode'
-    )
-    expect(mocks.run).not.toHaveBeenCalled()
-    wrapper.unmount()
-  })
-
-  it('records again from the review', async () => {
-    voice.stage = 'review'
-    const wrapper = mountView()
-    await flushPromises()
-    mocks.start.mockClear()
-    await wrapper.find('[data-testid="voice-record-again"]').trigger('click')
-    expect(mocks.start).toHaveBeenCalledOnce()
+    const field = wrapper.find<HTMLTextAreaElement>('.voice-body textarea')
+    expect(field.element.value).toBe('Hello there')
+    await field.setValue('Hello, there')
+    expect(voice.inputText).toBe('Hello, there')
+    expect(wrapper.text()).not.toContain(translate('menu.actions'))
     wrapper.unmount()
   })
   it('shows a short hint when no commands are enabled', () => {
@@ -387,12 +371,12 @@ describe('separate voice command overlay', () => {
     expect(mocks.setContext).toHaveBeenLastCalledWith({
       selectionText: 'Late selected text',
     })
-    expect(wrapper.text()).toContain('Late selected text')
+    expect(contextField(wrapper).element.value).toBe('Late selected text')
 
     desktop.setState({ activationId: 13, selectedText: 'Another activation' })
     await flushPromises()
     expect(mocks.setContext).toHaveBeenLastCalledWith(undefined)
-    expect(wrapper.text()).not.toContain('Another activation')
+    expect(wrapper.find('.voice-context').exists()).toBe(false)
     wrapper.unmount()
   })
 
@@ -401,7 +385,7 @@ describe('separate voice command overlay', () => {
     desktop.setState({ selectedText: 'Unrelated selection' })
     await flushPromises()
     expect(mocks.setContext).toHaveBeenLastCalledWith(undefined)
-    expect(wrapper.text()).not.toContain('Unrelated selection')
+    expect(wrapper.find('.voice-context').exists()).toBe(false)
     wrapper.unmount()
   })
 
@@ -410,7 +394,11 @@ describe('separate voice command overlay', () => {
     expect(mocks.setContext).toHaveBeenCalledWith({
       selectionText: 'Selected text preview',
     })
-    expect(wrapper.text()).toContain('Selected text preview')
+    expect(contextField(wrapper).element.value).toBe('Selected text preview')
+    await contextField(wrapper).setValue('Corrected selection')
+    expect(mocks.setContext).toHaveBeenLastCalledWith({
+      selectionText: 'Corrected selection',
+    })
     wrapper.unmount()
   })
 

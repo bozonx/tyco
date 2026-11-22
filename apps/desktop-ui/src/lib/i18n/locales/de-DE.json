@@ -1491,7 +1491,6 @@
     "phaseAwaitingCommand": "Sprechen Sie einen Befehl...",
     "phrases": "Auslösephrasen",
     "phrasesInfo": "Phrasen, die den Befehl auslösen, eine pro Zeile. Beim Aktivieren der Sprachsteuerung wird hier der Befehlsname eingetragen – Sie können ihn ändern. Erkannt werden nur die Phrasen in diesem Feld, nicht der Name selbst.",
-    "recordAgain": "Erneut aufnehmen",
     "run": "Ausführen",
     "textPlaceholder": "Ihr Text",
     "title": "Sprachbefehle",
@@ -1499,12 +1498,13 @@
     "phrasesPlaceholder": "Beispielphrasen, eine pro Zeile",
     "parameterMissing": "Wählen Sie den Parameterwert neben dem Befehlsnamen.",
     "phaseAwaitingParameter": "Nennen Sie {parameter}...",
-    "stopAndReview": "Stoppen und prüfen",
-    "stopAndReviewHint": "Klicken, um die Aufnahme zu stoppen und Text und Befehl zu bearbeiten",
     "selectionAsText": "markierter Text",
     "runsOnSelection": "Der Befehl wird auf den markierten Text angewendet. Um den gesprochenen Text zu verwenden, entfernen Sie die Markierung.",
     "selectionUnused": "Dieser Befehl verwendet den markierten Text nicht",
-    "morePhrases": "Weitere Phrasen"
+    "morePhrases": "Weitere Phrasen",
+    "windowTitle": "Sprachbefehl",
+    "editText": "Text bearbeiten",
+    "editTextHint": "Klicken, um die Aufnahme zu stoppen und den erkannten Text zu bearbeiten"
   },
   "voiceGrammar": {
     "languages": {

@@ -1491,7 +1491,6 @@
     "phaseAwaitingCommand": "Say a command...",
     "phrases": "Trigger phrases",
     "phrasesInfo": "Phrases that call the command, one per line. Turning voice on puts the command name here — you can change it. Only the phrases in this field are recognized, never the name itself.",
-    "recordAgain": "Record again",
     "run": "Run",
     "textPlaceholder": "your text",
     "title": "Voice commands",
@@ -1499,12 +1498,13 @@
     "phrasesPlaceholder": "Sample phrases, one per line",
     "parameterMissing": "Choose the parameter value next to the command name.",
     "phaseAwaitingParameter": "Say {parameter}...",
-    "stopAndReview": "Stop and review",
-    "stopAndReviewHint": "Click to stop recording and edit the text and the command",
     "selectionAsText": "selected text",
     "runsOnSelection": "The command runs on the selected text. To use the spoken text, remove the selection.",
     "selectionUnused": "This command does not use the selected text",
-    "morePhrases": "More phrases"
+    "morePhrases": "More phrases",
+    "windowTitle": "Voice command",
+    "editText": "Edit text",
+    "editTextHint": "Click to stop recording and edit the recognized text"
   },
   "voiceGrammar": {
     "languages": {

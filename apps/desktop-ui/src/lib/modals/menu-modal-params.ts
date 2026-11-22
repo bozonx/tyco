@@ -65,9 +65,6 @@ export interface QuickAiRequestMenuParams {
   prompt?: string
 }
 export interface VoiceCommandsMenuParams {
-  /** Restores a reviewed command after visiting its text actions. */
-  reviewText?: string
-  reviewCommandId?: string
   /** Follows a late selection capture from this action-menu activation only. */
   selectionActivationId?: number
   text?: string

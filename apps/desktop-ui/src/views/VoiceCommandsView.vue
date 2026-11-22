@@ -2,7 +2,7 @@
   <ContentPadding>
     <ActionOverlayLayout
       :other-actions-text="contextText"
-      :title="t('voiceCommands.title')"
+      :title="t('voiceCommands.windowTitle')"
       :on-esc="close"
     >
       <template #header-extra>
@@ -17,185 +17,84 @@
       </template>
 
       <template #preview>
-        <div class="voice-commands" :class="{ 'is-listening': isListening }">
-          <template v-if="isListening">
+        <div v-if="voice.stage !== 'running'" class="voice-commands">
+          <div
+            v-if="contextText"
+            class="voice-context"
+            :class="{ 'is-unused': isSelectionUnused }"
+          >
+            <ContextPreview
+              v-model:disabled="isContextDisabled"
+              editable
+              :text="editedContext"
+              @update:text="(value) => (editedContext = value)"
+            />
+            <p v-if="isSelectionUnused" class="voice-context-note">
+              {{ t('voiceCommands.selectionUnused') }}
+            </p>
+          </div>
+
+          <section v-if="isListening" class="voice-listening-bar">
             <div
-              v-if="contextText"
-              class="voice-context"
-              :class="{ 'is-unused': isLiveSelectionUnused }"
+              class="voice-bar-mic"
+              :class="{ 'is-finishing': voice.stage === 'finishing' }"
             >
-              <ContextPreview
-                v-model:disabled="isContextDisabled"
-                :text="contextText"
+              <AppIcon
+                :icon="
+                  voice.stage === 'finishing' ? 'mdi:loading' : 'mdi:microphone'
+                "
+                :class="{ 'animate-spin': voice.stage === 'finishing' }"
+                size="md"
+                aria-hidden="true"
               />
-              <p v-if="isLiveSelectionUnused" class="voice-context-note">
-                {{ t('voiceCommands.selectionUnused') }}
-              </p>
-            </div>
-            <section class="voice-listening-bar">
-              <div
-                class="voice-bar-mic"
-                :class="{ 'is-finishing': voice.stage === 'finishing' }"
-              >
-                <AppIcon
-                  :icon="
-                    voice.stage === 'finishing'
-                      ? 'mdi:loading'
-                      : 'mdi:microphone'
-                  "
-                  :class="{ 'animate-spin': voice.stage === 'finishing' }"
-                  size="md"
-                  aria-hidden="true"
-                />
-              </div>
-
-              <div
-                class="voice-bar-transcript"
-                :title="t('voiceCommands.stopAndReviewHint')"
-                @click="stopForReview"
-              >
-                <LiveTranscript
-                  class="voice-live-compact"
-                  :committed="displayTranscript.committed"
-                  :draft="displayTranscript.draft"
-                  :placeholder="currentPlaceholder"
-                />
-              </div>
-
-              <div class="voice-bar-meter">
-                <AudioWaveform
-                  layout="inline"
-                  status-label=""
-                  :level="audioLevel"
-                  :peak="audioPeak"
-                  :duration-ms="recordingDurationMs"
-                  :is-transcribing="voice.stage === 'finishing'"
-                  :auto-stop-deadline-ms="voice.autoStopWarning?.deadlineMs"
-                />
-              </div>
-            </section>
-
-            <div v-if="voice.activeCommand" class="voice-pipeline-bar">
-              <div class="voice-pipeline-chip voice-breadcrumb-cmd">
-                <AppIcon
-                  :icon="commandIcon(voice.activeCommand, tools)"
-                  size="sm"
-                  aria-hidden="true"
-                />
-                <span class="voice-pipeline-label">{{
-                  commandLabel(voice.activeCommand)
-                }}</span>
-              </div>
-
-              <template v-for="item in liveParameterItems" :key="item.name">
-                <span
-                  class="voice-pipeline-sep voice-breadcrumb-sep"
-                  aria-hidden="true"
-                  >›</span
-                >
-                <div class="voice-pipeline-chip voice-param-chip is-set">
-                  <span class="voice-pipeline-label">{{ item.label }}</span>
-                </div>
-              </template>
-
-              <template v-if="voice.activeParameter">
-                <span
-                  class="voice-pipeline-sep voice-breadcrumb-sep"
-                  aria-hidden="true"
-                  >›</span
-                >
-                <div class="voice-pipeline-chip is-active-step">
-                  <span class="voice-pipeline-step-dot" />
-                  <span class="voice-pipeline-label">{{
-                    parameterDisplayLabel(voice.activeParameter, t)
-                  }}</span>
-                </div>
-              </template>
-              <template v-else-if="isCapturingTextPhase">
-                <span
-                  class="voice-pipeline-sep voice-breadcrumb-sep"
-                  aria-hidden="true"
-                  >›</span
-                >
-                <div class="voice-pipeline-chip is-active-step">
-                  <span class="voice-pipeline-step-dot" />
-                  <span class="voice-pipeline-label">{{
-                    voice.activeRunsOnSelection
-                      ? t('voiceCommands.selectionAsText')
-                      : t('voiceCommands.textPlaceholder')
-                  }}</span>
-                </div>
-              </template>
             </div>
 
-            <section class="voice-listening-body">
-              <VoiceParameterPicker
-                v-if="voice.activeParameter && activeParameterOptions.length"
-                ref="paramPickerRef"
-                :parameter-label="
-                  parameterDisplayLabel(voice.activeParameter, t)
-                "
-                :options="activeParameterOptions"
-                :selected-value="
-                  voice.activeParameters[voice.activeParameter.name]
-                "
-                @pick="
-                  (val) =>
-                    voice.activeParameter &&
-                    voice.pinParameter(voice.activeParameter.name, val)
-                "
-                @back="voice.pinCommand(undefined)"
+            <div
+              class="voice-bar-transcript"
+              :class="{ 'is-editable': canEditText }"
+              :title="canEditText ? t('voiceCommands.editTextHint') : undefined"
+              @click="editText"
+            >
+              <LiveTranscript
+                class="voice-live-compact"
+                :committed="displayTranscript.committed"
+                :draft="displayTranscript.draft"
+                :placeholder="currentPlaceholder"
               />
-              <div
-                v-else-if="isCapturingTextPhase"
-                class="voice-live-text-container"
-              >
-                <LiveTranscript
-                  class="voice-live"
-                  :committed="displayTranscript.committed"
-                  :draft="displayTranscript.draft"
-                  :placeholder="t('voiceCommands.textPlaceholder')"
-                />
-              </div>
-              <VoiceCommandCatalog
-                v-else
-                ref="catalogComponentRef"
-                :commands="voice.catalog"
-                :marks="marks"
-                :stage="voice.stage"
-                :unavailable-reason="voice.unavailableReason"
-                @pick="pick"
-              />
-            </section>
-          </template>
+            </div>
 
-          <template v-else-if="voice.stage !== 'running'">
-            <section class="voice-main">
-              <div
-                v-if="contextText"
-                class="voice-context"
-                :class="{ 'is-unused': isReviewSelectionUnused }"
+            <div class="voice-bar-meter">
+              <AudioWaveform
+                layout="inline"
+                status-label=""
+                :level="audioLevel"
+                :peak="audioPeak"
+                :duration-ms="recordingDurationMs"
+                :is-transcribing="voice.stage === 'finishing'"
+                :auto-stop-deadline-ms="voice.autoStopWarning?.deadlineMs"
+              />
+            </div>
+          </section>
+
+          <div v-if="flowCommand" class="voice-pipeline-bar">
+            <div class="voice-pipeline-chip voice-breadcrumb-cmd">
+              <AppIcon
+                :icon="commandIcon(flowCommand, tools)"
+                size="sm"
+                aria-hidden="true"
+              />
+              <span class="voice-pipeline-label">{{
+                commandLabel(flowCommand)
+              }}</span>
+            </div>
+
+            <template v-if="isEditing">
+              <template
+                v-for="parameter in chosenParameters"
+                :key="parameter.name"
               >
-                <ContextPreview
-                  v-model:disabled="isContextDisabled"
-                  :text="contextText"
-                />
-                <p v-if="isReviewSelectionUnused" class="voice-context-note">
-                  {{ t('voiceCommands.selectionUnused') }}
-                </p>
-              </div>
-              <div v-if="voice.command" class="voice-chosen">
-                <AppIcon
-                  :icon="commandIcon(voice.command, tools)"
-                  size="xl"
-                  aria-hidden="true"
-                />
-                <span class="voice-chosen-name">{{
-                  commandLabel(voice.command)
-                }}</span>
+                <span class="voice-pipeline-sep" aria-hidden="true">›</span>
                 <FieldSelect
-                  v-for="parameter in chosenParameters"
-                  :key="parameter.name"
                   size="sm"
                   class="voice-language"
                   :title="parameterDisplayLabel(parameter, t)"
@@ -207,31 +106,64 @@
                       value && voice.setParameter(parameter.name, String(value))
                   "
                 />
-              </div>
-              <code v-if="target" class="command-target">{{ target }}</code>
-              <InlineNotice
-                v-if="notice"
-                :kind="notice.kind"
-                :message="notice.message"
-                density="compact"
-                announcement="polite"
-              >
-                <Button
-                  v-if="canOpenSttSettings"
-                  size="xs"
-                  variant="ghost"
-                  icon="mdi:cog-outline"
-                  @click="openSttSettings"
-                >
-                  {{ t('common.openSettings') }}
-                </Button>
-              </InlineNotice>
+              </template>
+            </template>
+            <template v-else>
+              <template v-for="item in liveParameterItems" :key="item.name">
+                <span class="voice-pipeline-sep" aria-hidden="true">›</span>
+                <div class="voice-pipeline-chip voice-param-chip is-set">
+                  <span class="voice-pipeline-label">{{ item.label }}</span>
+                </div>
+              </template>
+              <template v-if="voice.activeParameter">
+                <span class="voice-pipeline-sep" aria-hidden="true">›</span>
+                <div class="voice-pipeline-chip is-active-step">
+                  <span class="voice-pipeline-step-dot" />
+                  <span class="voice-pipeline-label">{{
+                    parameterDisplayLabel(voice.activeParameter, t)
+                  }}</span>
+                </div>
+              </template>
+              <template v-else-if="isCapturingTextPhase">
+                <span class="voice-pipeline-sep" aria-hidden="true">›</span>
+                <div class="voice-pipeline-chip is-active-step">
+                  <span class="voice-pipeline-step-dot" />
+                  <span class="voice-pipeline-label">{{
+                    voice.activeRunsOnSelection
+                      ? t('voiceCommands.selectionAsText')
+                      : t('voiceCommands.textPlaceholder')
+                  }}</span>
+                </div>
+              </template>
+            </template>
+          </div>
+
+          <InlineNotice
+            v-if="notice"
+            :kind="notice.kind"
+            :message="notice.message"
+            density="compact"
+            announcement="polite"
+          >
+            <Button
+              v-if="canOpenSttSettings"
+              size="xs"
+              variant="ghost"
+              icon="mdi:cog-outline"
+              @click="openSttSettings"
+            >
+              {{ t('common.openSettings') }}
+            </Button>
+          </InlineNotice>
+
+          <section class="voice-body">
+            <template v-if="isEditing">
               <p v-if="voice.isRunningOnSelection" class="voice-on-selection">
                 <AppIcon icon="mdi:text-box-check-outline" aria-hidden="true" />
                 {{ t('voiceCommands.runsOnSelection') }}
               </p>
               <FieldTextArea
-                v-else
+                v-else-if="takesText"
                 ref="textRef"
                 class="voice-text"
                 :model-value="voice.inputText"
@@ -239,71 +171,85 @@
                 :aria-label="t('voiceCommands.textPlaceholder')"
                 @update:model-value="(value) => (voice.inputText = value)"
               />
-            </section>
-
+            </template>
+            <VoiceParameterPicker
+              v-else-if="
+                isListening &&
+                voice.activeParameter &&
+                activeParameterOptions.length
+              "
+              ref="paramPickerRef"
+              :parameter-label="parameterDisplayLabel(voice.activeParameter, t)"
+              :options="activeParameterOptions"
+              :selected-value="
+                voice.activeParameters[voice.activeParameter.name]
+              "
+              @pick="
+                (val) =>
+                  voice.activeParameter &&
+                  voice.pinParameter(voice.activeParameter.name, val)
+              "
+              @back="voice.pinCommand(undefined)"
+            />
+            <div
+              v-else-if="isCapturingTextPhase"
+              class="voice-live-text-container"
+            >
+              <LiveTranscript
+                class="voice-live"
+                :committed="displayTranscript.committed"
+                :draft="displayTranscript.draft"
+                :placeholder="t('voiceCommands.textPlaceholder')"
+              />
+            </div>
             <VoiceCommandCatalog
+              v-else
+              ref="catalogComponentRef"
               :commands="voice.catalog"
               :marks="marks"
               :stage="voice.stage"
               :unavailable-reason="voice.unavailableReason"
               @pick="pick"
             />
-          </template>
+          </section>
         </div>
       </template>
 
       <template #actions>
         <div class="voice-actions">
-          <template v-if="isListening">
-            <ShortcutButton
-              :keys="['Shift', 'Space']"
-              :disabled="voice.stage === 'finishing'"
-              @click="stopForReview"
-            >
-              {{ t('voiceCommands.stopAndReview') }}
-            </ShortcutButton>
-            <ShortcutButton
-              :keys="withHotkey(['Space', 'Enter'])"
-              variant="primary"
-              :disabled="!canRunLive || voice.stage === 'finishing'"
-              @click="void voice.finish('run')"
-            >
-              {{
-                voice.stage === 'finishing'
-                  ? t('common.inProgress')
-                  : t('voiceCommands.run')
-              }}
-            </ShortcutButton>
-          </template>
-          <template v-else>
-            <ShortcutButton
-              :keys="[]"
-              :disabled="voice.stage === 'running'"
-              data-testid="voice-record-again"
-              @click="void voice.start()"
-            >
-              {{ t('voiceCommands.recordAgain') }}
-            </ShortcutButton>
-            <ShortcutButton
-              :keys="['Shift', 'Space']"
-              :disabled="voice.stage === 'running' || !voice.inputText.trim()"
-              @click="openTextActions"
-              >{{ t('menu.actions') }}</ShortcutButton
-            >
-            <!-- the text stays until the new recording replaces it -->
-            <ShortcutButton
-              :keys="
-                withHotkey([
-                  resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey),
-                ])
-              "
-              variant="primary"
-              :disabled="!voice.canRun"
-              @click="void voice.run()"
-            >
-              {{ t('voiceCommands.run') }}
-            </ShortcutButton>
-          </template>
+          <ShortcutButton
+            v-if="canEditText"
+            :keys="['Shift', 'Space']"
+            @click="editText"
+          >
+            {{ t('voiceCommands.editText') }}
+          </ShortcutButton>
+          <ShortcutButton
+            v-if="isListening"
+            :keys="withHotkey(['Space', 'Enter'])"
+            variant="primary"
+            :disabled="!canRunLive || voice.stage === 'finishing'"
+            @click="void voice.finish('run')"
+          >
+            {{
+              voice.stage === 'finishing'
+                ? t('common.inProgress')
+                : t('voiceCommands.run')
+            }}
+          </ShortcutButton>
+          <ShortcutButton
+            v-else-if="voice.command"
+            :keys="
+              withHotkey([
+                resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey),
+              ])
+            "
+            variant="primary"
+            :disabled="!voice.canRun"
+            @click="void voice.run()"
+          >
+            {{ t('voiceCommands.run') }}
+          </ShortcutButton>
         </div>
       </template>
     </ActionOverlayLayout>
@@ -337,7 +283,6 @@ import {
   commandIcon,
   commandLabel,
   commandTakesText,
-  commandTarget,
 } from '../lib/commands/command-runtime'
 import {
   resolveInputKeyAction,
@@ -355,7 +300,6 @@ import {
   voiceParameterOptions,
   voiceParameters,
 } from '../lib/voice-commands/voice-view-presenter'
-import { useActionMenuStore } from '../stores/action-menu'
 import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
@@ -366,8 +310,6 @@ import type { CommandConfig } from '@tyco/shared'
 
 const props = withDefaults(
   defineProps<{
-    reviewText?: string
-    reviewCommandId?: string
     text?: string
     shortcutsDisabled?: boolean
     selectionActivationId?: number
@@ -377,7 +319,6 @@ const props = withDefaults(
 
 const { t } = useI18n()
 const { toastKey } = useToast()
-const actionMenuStore = useActionMenuStore()
 const desktopStore = useDesktopStore()
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
@@ -398,8 +339,14 @@ const contextText = computed(() => {
   return text?.trim() ? text : ''
 })
 
+/** The selection as the user corrected it; a new selection replaces it */
+const editedContext = ref('')
+watch(contextText, (text) => (editedContext.value = text), { immediate: true })
+
 const activeContextText = computed(() =>
-  isContextDisabled.value ? '' : contextText.value
+  isContextDisabled.value || !editedContext.value.trim()
+    ? ''
+    : editedContext.value
 )
 
 watch(
@@ -419,25 +366,29 @@ const isListening = computed(
   () => voice.stage === 'recording' || voice.stage === 'finishing'
 )
 
-/** The command at hand ignores the selection: it is shown dimmed */
-const isLiveSelectionUnused = computed(
-  () =>
-    Boolean(voice.activeCommand) &&
-    !isContextDisabled.value &&
-    voice.activeSelectionUse === 'none'
+/** The recording stopped on a command: its text and parameters are edited */
+const isEditing = computed(
+  () => voice.stage === 'review' && Boolean(voice.command)
 )
-const isReviewSelectionUnused = computed(
-  () =>
-    Boolean(voice.command) &&
-    !isContextDisabled.value &&
-    voice.selectionUse === 'none'
+/** The command of the chips: the one heard live, then the one being edited */
+const flowCommand = computed(() =>
+  isListening.value
+    ? voice.activeCommand
+    : isEditing.value
+      ? voice.command
+      : undefined
+)
+const takesText = computed(() =>
+  voice.command ? commandTakesText(voice.command, tools) : false
 )
 
-/** Stops the recording without running: the text and the command can be fixed */
-function stopForReview() {
-  if (voice.stage !== 'recording') return
-  void voice.finish('review')
-}
+/** The command at hand ignores the selection: it is shown dimmed */
+const isSelectionUnused = computed(
+  () =>
+    Boolean(flowCommand.value) &&
+    !isContextDisabled.value &&
+    (isEditing.value ? voice.selectionUse : voice.activeSelectionUse) === 'none'
+)
 
 /** Rows the recognizer points at: live while recording, the choice after */
 const marks = computed(() =>
@@ -479,6 +430,20 @@ const isCapturingTextPhase = computed(
   () =>
     isListening.value && Boolean(voice.activeCommand) && !voice.activeParameter
 )
+
+/** The text is spoken now: it can be stopped to correct it by hand */
+const canEditText = computed(
+  () =>
+    voice.stage === 'recording' &&
+    isCapturingTextPhase.value &&
+    !voice.activeRunsOnSelection &&
+    commandTakesText(voice.activeCommand!, tools)
+)
+
+/** Stops the recording without running: the recognized text is corrected */
+function editText() {
+  if (canEditText.value) void voice.finish('review')
+}
 
 const currentPlaceholder = computed(() => {
   if (!voice.activeCommand) {
@@ -534,9 +499,6 @@ watch(
 /** The parameters of the chosen command the user can set by hand */
 const chosenParameters = computed(() =>
   voice.command ? voiceParameters(voice.command, tools) : []
-)
-const target = computed(() =>
-  voice.command ? commandTarget(voice.command).trim() : ''
 )
 
 const hasText = computed(() =>
@@ -668,23 +630,6 @@ const finishHotkey = useVoiceFinishSignal(
 const withHotkey = (keys: string[]) =>
   finishHotkey.value ? [...keys, finishHotkey.value] : keys
 
-function openTextActions() {
-  if (voice.stage !== 'review' || !voice.inputText.trim()) return
-  if (
-    menuModalsStore.currentModal === MenuModals.VOICE_COMMANDS &&
-    menuModalsStore.currentStepId !== undefined
-  )
-    menuModalsStore.updateStep(
-      menuModalsStore.currentStepId,
-      MenuModals.VOICE_COMMANDS,
-      { reviewText: voice.inputText, reviewCommandId: voice.command?.id }
-    )
-  // opened by its hotkey, the text actions start the scenario anew; opened
-  // from the action menu, Esc returns to this review
-  actionMenuStore.openPage(0)
-  menuModalsStore.nextModal(MenuModals.INSERT, { text: voice.inputText })
-}
-
 const onKeyDown = (event: KeyboardEvent) => {
   // Enter that confirms an IME composition belongs to the text
   if (event.repeat || event.isComposing || event.keyCode === 229) return
@@ -700,9 +645,7 @@ const onKeyDown = (event: KeyboardEvent) => {
     if (event.ctrlKey || event.metaKey || event.altKey) return
     if (event.code === 'Space' && event.shiftKey) {
       event.preventDefault()
-      // stops the recording for review even when no command was heard: the
-      // text can then be edited and a command picked by hand
-      stopForReview()
+      editText()
       return
     } else if (event.code === 'Space' || event.code === 'Enter') {
       if (canRunLive.value) {
@@ -747,18 +690,6 @@ const onKeyDown = (event: KeyboardEvent) => {
     return
   }
   if (voice.stage !== 'review') return
-  if (
-    event.code === 'Space' &&
-    event.shiftKey &&
-    !event.ctrlKey &&
-    !event.metaKey &&
-    !event.altKey &&
-    voice.inputText.trim()
-  ) {
-    event.preventDefault()
-    openTextActions()
-    return
-  }
   // a focused row takes Enter itself; Shift+Enter starts a new line
   const isOnRow = (event.target as HTMLElement | null)?.closest?.(
     '.voice-entry'
@@ -777,9 +708,7 @@ const onKeyDown = (event: KeyboardEvent) => {
 
 onMounted(() => {
   window.addEventListener('keydown', onKeyDown)
-  if (props.reviewText !== undefined)
-    void voice.restoreReview(props.reviewText, props.reviewCommandId)
-  else void voice.start()
+  void voice.start()
 })
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeyDown)
@@ -829,19 +758,15 @@ onUnmounted(() => {
   padding: var(--space-sm);
 }
 
-.voice-bar-transcript {
+.voice-bar-transcript.is-editable {
   cursor: text;
 }
-.voice-commands {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  height: 100%;
-  min-height: 0;
-}
 
-.voice-commands.is-listening {
+.voice-commands {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 .voice-listening-bar {
@@ -954,7 +879,7 @@ onUnmounted(() => {
   user-select: none;
 }
 
-.voice-listening-body {
+.voice-body {
   display: flex;
   flex-direction: column;
   flex: 1 1 0%;
@@ -978,39 +903,15 @@ onUnmounted(() => {
   line-height: 1.5;
 }
 
-.voice-main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  min-height: 0;
-  padding: var(--space-sm);
-}
-
-.voice-chosen {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  font-size: var(--text-title);
-  font-weight: 600;
-}
-
-.voice-chosen-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .voice-language {
   width: auto;
   max-width: 14rem;
-  margin-left: auto;
-  font-weight: 400;
 }
 
 .voice-text {
   flex: 1 1 0%;
   min-height: 4rem;
+  margin: var(--space-sm);
   resize: none;
 }
 
@@ -1022,12 +923,5 @@ onUnmounted(() => {
   gap: var(--space-sm);
   --shortcut-flex: 0 0 auto;
   --shortcut-width: auto;
-}
-
-@container (max-width: 600px) {
-  .voice-commands {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
-  }
 }
 </style>

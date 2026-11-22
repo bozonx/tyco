@@ -1491,7 +1491,6 @@
     "phaseAwaitingCommand": "Spuneți o comandă...",
     "phrases": "Fraze de declanșare",
     "phrasesInfo": "Frazele care apelează comanda, câte una pe rând. La activarea vocii, aici se inserează numele comenzii — îl puteți schimba. Sunt recunoscute doar frazele din acest câmp, niciodată numele în sine.",
-    "recordAgain": "Înregistrează din nou",
     "run": "Rulează",
     "textPlaceholder": "textul dvs.",
     "title": "Comenzi vocale",
@@ -1499,12 +1498,13 @@
     "phrasesPlaceholder": "Fraze demonstrative, câte una pe rând",
     "parameterMissing": "Alegeți valoarea parametrului lângă numele comenzii.",
     "phaseAwaitingParameter": "Spuneți {parameter}...",
-    "stopAndReview": "Oprește și verifică",
-    "stopAndReviewHint": "Faceți clic pentru a opri înregistrarea și a edita textul și comanda",
     "selectionAsText": "textul selectat",
     "runsOnSelection": "Comanda se aplică textului selectat. Pentru a folosi textul rostit, eliminați selecția.",
     "selectionUnused": "Această comandă nu folosește textul selectat",
-    "morePhrases": "Mai multe fraze"
+    "morePhrases": "Mai multe fraze",
+    "windowTitle": "Comandă vocală",
+    "editText": "Editează textul",
+    "editTextHint": "Faceți clic pentru a opri înregistrarea și a edita textul recunoscut"
   },
   "voiceGrammar": {
     "languages": {

@@ -1491,7 +1491,6 @@
     "phaseAwaitingCommand": "Dites une commande...",
     "phrases": "Phrases de déclenchement",
     "phrasesInfo": "Phrases qui appellent la commande, une par ligne. En activant la voix, le nom de la commande est inséré ici — vous pouvez le modifier. Seules les phrases de ce champ sont reconnues, jamais le nom lui-même.",
-    "recordAgain": "Réenregistrer",
     "run": "Exécuter",
     "textPlaceholder": "votre texte",
     "title": "Commandes vocales",
@@ -1499,12 +1498,13 @@
     "phrasesPlaceholder": "Exemples de phrases, une par ligne",
     "parameterMissing": "Choisissez la valeur du paramètre à côté du nom de la commande.",
     "phaseAwaitingParameter": "Dites {parameter}...",
-    "stopAndReview": "Arrêter et vérifier",
-    "stopAndReviewHint": "Cliquez pour arrêter l’enregistrement et modifier le texte et la commande",
     "selectionAsText": "texte sélectionné",
     "runsOnSelection": "La commande s’applique au texte sélectionné. Pour utiliser le texte dicté, retirez la sélection.",
     "selectionUnused": "Cette commande n’utilise pas le texte sélectionné",
-    "morePhrases": "Autres phrases"
+    "morePhrases": "Autres phrases",
+    "windowTitle": "Commande vocale",
+    "editText": "Modifier le texte",
+    "editTextHint": "Cliquez pour arrêter l’enregistrement et modifier le texte reconnu"
   },
   "voiceGrammar": {
     "languages": {

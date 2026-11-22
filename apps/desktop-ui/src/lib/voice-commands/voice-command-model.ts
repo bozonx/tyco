@@ -658,11 +658,6 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     run,
     start,
     finish,
-    restoreReview: async (text: string, commandId?: string) => {
-      await review(text, 'review')
-      inputText.value = text
-      if (commandId) chooseCommand(commandId)
-    },
     cancel,
     /**
      * Starts the recording over, e.g. in another language; what was heard goes

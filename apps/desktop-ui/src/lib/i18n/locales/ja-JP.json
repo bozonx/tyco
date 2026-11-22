@@ -1491,7 +1491,6 @@
     "phaseAwaitingCommand": "コマンドを話してください...",
     "phrases": "起動フレーズ",
     "phrasesInfo": "コマンドを呼び出すフレーズを1行に1つずつ入力します。音声を有効にするとコマンド名がここに入ります（変更できます）。認識されるのはこの欄のフレーズだけで、名前そのものは使われません。",
-    "recordAgain": "もう一度録音",
     "run": "実行",
     "textPlaceholder": "テキスト",
     "title": "音声コマンド",
@@ -1499,12 +1498,13 @@
     "phrasesPlaceholder": "フレーズの例（1行に1つ）",
     "parameterMissing": "コマンド名の横でパラメーターの値を選択してください。",
     "phaseAwaitingParameter": "{parameter} を話してください...",
-    "stopAndReview": "停止して確認",
-    "stopAndReviewHint": "クリックすると録音を停止し、テキストとコマンドを編集できます",
     "selectionAsText": "選択したテキスト",
     "runsOnSelection": "コマンドは選択したテキストに対して実行されます。話したテキストを使うには選択を外してください。",
     "selectionUnused": "このコマンドは選択したテキストを使用しません",
-    "morePhrases": "その他のフレーズ"
+    "morePhrases": "その他のフレーズ",
+    "windowTitle": "音声コマンド",
+    "editText": "テキストを編集",
+    "editTextHint": "クリックすると録音を停止し、認識されたテキストを編集できます"
   },
   "voiceGrammar": {
     "languages": {

@@ -1491,7 +1491,6 @@
     "phaseAwaitingCommand": "Pronuncia un comando...",
     "phrases": "Frasi di attivazione",
     "phrasesInfo": "Frasi che richiamano il comando, una per riga. Attivando la voce qui viene inserito il nome del comando: puoi cambiarlo. Vengono riconosciute solo le frasi di questo campo, mai il nome stesso.",
-    "recordAgain": "Registra di nuovo",
     "run": "Esegui",
     "textPlaceholder": "il tuo testo",
     "title": "Comandi vocali",
@@ -1499,12 +1498,13 @@
     "phrasesPlaceholder": "Frasi di esempio, una per riga",
     "parameterMissing": "Scegli il valore del parametro accanto al nome del comando.",
     "phaseAwaitingParameter": "Pronuncia {parameter}...",
-    "stopAndReview": "Ferma e rivedi",
-    "stopAndReviewHint": "Fai clic per fermare la registrazione e modificare testo e comando",
     "selectionAsText": "testo selezionato",
     "runsOnSelection": "Il comando agisce sul testo selezionato. Per usare il testo dettato, rimuovi la selezione.",
     "selectionUnused": "Questo comando non usa il testo selezionato",
-    "morePhrases": "Altre frasi"
+    "morePhrases": "Altre frasi",
+    "windowTitle": "Comando vocale",
+    "editText": "Modifica testo",
+    "editTextHint": "Fai clic per fermare la registrazione e modificare il testo riconosciuto"
   },
   "voiceGrammar": {
     "languages": {

@@ -1491,7 +1491,6 @@
     "phaseAwaitingCommand": "Řekněte příkaz...",
     "phrases": "Aktivační fráze",
     "phrasesInfo": "Fráze, kterými se příkaz vyvolá, jedna na řádek. Při zapnutí hlasu se sem vloží název příkazu – můžete ho změnit. Rozpoznávají se jen fráze z tohoto pole, samotný název ne.",
-    "recordAgain": "Nahrát znovu",
     "run": "Spustit",
     "textPlaceholder": "váš text",
     "title": "Hlasové příkazy",
@@ -1499,12 +1498,13 @@
     "phrasesPlaceholder": "Příklady frází, jedna na řádek",
     "parameterMissing": "Vyberte hodnotu parametru vedle názvu příkazu.",
     "phaseAwaitingParameter": "Řekněte {parameter}...",
-    "stopAndReview": "Zastavit a zkontrolovat",
-    "stopAndReviewHint": "Klepnutím zastavíte nahrávání a upravíte text a příkaz",
     "selectionAsText": "vybraný text",
     "runsOnSelection": "Příkaz se provede s vybraným textem. Chcete-li použít vyslovený text, odeberte výběr.",
     "selectionUnused": "Tento příkaz vybraný text nepoužívá",
-    "morePhrases": "Další fráze"
+    "morePhrases": "Další fráze",
+    "windowTitle": "Hlasový příkaz",
+    "editText": "Upravit text",
+    "editTextHint": "Klepnutím zastavíte nahrávání a upravíte rozpoznaný text"
   },
   "voiceGrammar": {
     "languages": {

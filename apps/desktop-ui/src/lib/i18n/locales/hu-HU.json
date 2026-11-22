@@ -1491,7 +1491,6 @@
     "phaseAwaitingCommand": "Mondjon egy parancsot...",
     "phrases": "Indítókifejezések",
     "phrasesInfo": "A parancsot hívó kifejezések, soronként egy. A hang bekapcsolásakor ide kerül a parancs neve – módosíthatja. Csak a mező kifejezéseit ismeri fel, magát a nevet soha.",
-    "recordAgain": "Újrafelvétel",
     "run": "Futtatás",
     "textPlaceholder": "az Ön szövege",
     "title": "Hangparancsok",
@@ -1499,12 +1498,13 @@
     "phrasesPlaceholder": "Példamondatok, soronként egy",
     "parameterMissing": "Válassza ki a paraméter értékét a parancs neve mellett.",
     "phaseAwaitingParameter": "Mondja: {parameter}...",
-    "stopAndReview": "Leállítás és ellenőrzés",
-    "stopAndReviewHint": "Kattintson a felvétel leállításához és a szöveg és a parancs szerkesztéséhez",
     "selectionAsText": "kijelölt szöveg",
     "runsOnSelection": "A parancs a kijelölt szövegen fut. A kimondott szöveghez távolítsa el a kijelölést.",
     "selectionUnused": "Ez a parancs nem használja a kijelölt szöveget",
-    "morePhrases": "További kifejezések"
+    "morePhrases": "További kifejezések",
+    "windowTitle": "Hangparancs",
+    "editText": "Szöveg szerkesztése",
+    "editTextHint": "Kattintson a felvétel leállításához és a felismert szöveg szerkesztéséhez"
   },
   "voiceGrammar": {
     "languages": {

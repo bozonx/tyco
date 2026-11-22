@@ -1491,7 +1491,6 @@
     "phaseAwaitingCommand": "Wypowiedz polecenie...",
     "phrases": "Frazy aktywujące",
     "phrasesInfo": "Frazy wywołujące polecenie, po jednej w wierszu. Po włączeniu głosu wstawia się tu nazwa polecenia — możesz ją zmienić. Rozpoznawane są tylko frazy z tego pola, nigdy sama nazwa.",
-    "recordAgain": "Nagraj ponownie",
     "run": "Uruchom",
     "textPlaceholder": "twój tekst",
     "title": "Polecenia głosowe",
@@ -1499,12 +1498,13 @@
     "phrasesPlaceholder": "Przykładowe frazy, jedna na wiersz",
     "parameterMissing": "Wybierz wartość parametru obok nazwy polecenia.",
     "phaseAwaitingParameter": "Powiedz {parameter}...",
-    "stopAndReview": "Zatrzymaj i sprawdź",
-    "stopAndReviewHint": "Kliknij, aby zatrzymać nagrywanie i edytować tekst oraz polecenie",
     "selectionAsText": "zaznaczony tekst",
     "runsOnSelection": "Polecenie zostanie wykonane na zaznaczonym tekście. Aby użyć wypowiedzianego tekstu, usuń zaznaczenie.",
     "selectionUnused": "To polecenie nie używa zaznaczonego tekstu",
-    "morePhrases": "Więcej fraz"
+    "morePhrases": "Więcej fraz",
+    "windowTitle": "Polecenie głosowe",
+    "editText": "Edytuj tekst",
+    "editTextHint": "Kliknij, aby zatrzymać nagrywanie i edytować rozpoznany tekst"
   },
   "voiceGrammar": {
     "languages": {

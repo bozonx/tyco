@@ -1491,7 +1491,6 @@
     "phaseAwaitingCommand": "Izgovorite naredbu...",
     "phrases": "Fraze za pokretanje",
     "phrasesInfo": "Fraze koje pozivaju naredbu, jedna po retku. Uključivanjem glasa ovdje se upisuje naziv naredbe — možete ga promijeniti. Prepoznaju se samo fraze iz ovog polja, nikad sam naziv.",
-    "recordAgain": "Snimi ponovno",
     "run": "Pokreni",
     "textPlaceholder": "vaš tekst",
     "title": "Glasovne naredbe",
@@ -1499,12 +1498,13 @@
     "phrasesPlaceholder": "Primjeri fraza, jedna po retku",
     "parameterMissing": "Odaberite vrijednost parametra pokraj naziva naredbe.",
     "phaseAwaitingParameter": "Recite {parameter}...",
-    "stopAndReview": "Zaustavi i provjeri",
-    "stopAndReviewHint": "Kliknite za zaustavljanje snimanja i uređivanje teksta i naredbe",
     "selectionAsText": "odabrani tekst",
     "runsOnSelection": "Naredba se izvršava nad odabranim tekstom. Za izgovoreni tekst uklonite odabir.",
     "selectionUnused": "Ova naredba ne koristi odabrani tekst",
-    "morePhrases": "Više fraza"
+    "morePhrases": "Više fraza",
+    "windowTitle": "Glasovna naredba",
+    "editText": "Uredi tekst",
+    "editTextHint": "Kliknite za zaustavljanje snimanja i uređivanje prepoznatog teksta"
   },
   "voiceGrammar": {
     "languages": {
