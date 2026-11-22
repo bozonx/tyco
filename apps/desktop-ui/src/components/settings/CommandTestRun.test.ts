@@ -85,6 +85,21 @@ describe('CommandTestRun.vue', () => {
     expect(wrapper.find('pre.is-error').exists()).toBe(false)
   })
 
+  it('shows a detached script as started without streams', async () => {
+    const wrapper = await runWith({
+      kind: 'script',
+      result: {
+        success: true,
+        exitCode: null,
+        stdout: '',
+        stderr: '',
+        detached: true,
+      },
+    } as CommandTestResult)
+    expect(wrapper.text()).toContain('commands.testDetachedStarted')
+    expect(wrapper.find('.test-run-stream').exists()).toBe(false)
+  })
+
   it('shows the output of a tool', async () => {
     const wrapper = await runWith({ kind: 'output', output: 'Result' })
     expect(wrapper.get('pre').text()).toBe('Result')

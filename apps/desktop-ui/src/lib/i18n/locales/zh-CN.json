@@ -332,7 +332,9 @@
     "aiToolUnavailable": "不可用",
     "aiToolsRiskyWarning": "列表中的部分工具可以更改或删除数据，或在应用之外操作，并且无需询问即运行。",
     "aiRiskLabel": "对 AI 的风险",
-    "aiRiskInfo": "当 AI 调用该命令时它可能做的事。Tyco 无法知道命令会做什么，因此除非你另选，否则视为应用之外的操作。"
+    "aiRiskInfo": "当 AI 调用该命令时它可能做的事。Tyco 无法知道命令会做什么，因此除非你另选，否则视为应用之外的操作。",
+    "detachedOutputActionHint": "命令在单独的进程中运行，因此不会捕获其输出。",
+    "testDetachedStarted": "命令已在单独的进程中启动"
   },
   "common": {
     "add": "添加",
@@ -1747,7 +1749,11 @@
     "clearTitle": "清空转录？",
     "clearMessage": "历史记录已在设置中关闭。当前转录内容将丢失。",
     "clearConfirm": "清空",
-    "sourceLockedHint": "清空转录内容以更改音频源"
+    "sourceLockedHint": "清空转录内容以更改音频源",
+    "clearHintSaved": "清空转录（对话已保存至历史记录）",
+    "clearHintUnsaved": "清空转录（历史记录已关闭）",
+    "sessionResumed": "会话已恢复",
+    "sessionResumedRecording": "录音已恢复"
   },
   "toolPermissions": {
     "riskRead": "读取",

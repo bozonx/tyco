@@ -332,7 +332,9 @@
     "aiToolUnavailable": "Nedostupné",
     "aiToolsRiskyWarning": "Některé nástroje ze seznamu mohou měnit či mazat data nebo jednat mimo aplikaci – a běží bez ptaní.",
     "aiRiskLabel": "Riziko pro AI",
-    "aiRiskInfo": "Co může příkaz udělat, když ho zavolá AI. Tyco nemůže vědět, co příkaz dělá, proto se počítá jako akce mimo aplikaci, pokud nezvolíte jinak."
+    "aiRiskInfo": "Co může příkaz udělat, když ho zavolá AI. Tyco nemůže vědět, co příkaz dělá, proto se počítá jako akce mimo aplikaci, pokud nezvolíte jinak.",
+    "detachedOutputActionHint": "Příkaz běží v samostatném procesu, takže jeho výstup není zachycen.",
+    "testDetachedStarted": "Příkaz byl spuštěn v samostatném procesu"
   },
   "common": {
     "add": "Přidat",
@@ -1751,7 +1753,11 @@
     "clearTitle": "Vymazat přepis?",
     "clearMessage": "Historie je v nastavení vypnuta. Aktuální přepis bude ztracen.",
     "clearConfirm": "Vymazat",
-    "sourceLockedHint": "Chcete-li změnit zdroj, vymažte přepis"
+    "sourceLockedHint": "Chcete-li změnit zdroj, vymažte přepis",
+    "clearHintSaved": "Vymazat přepis (konverzace je uložena v historii)",
+    "clearHintUnsaved": "Vymazat přepis (historie je vypnuta)",
+    "sessionResumed": "Relace obnovena",
+    "sessionResumedRecording": "Záznam obnoven"
   },
   "toolPermissions": {
     "riskRead": "Čtení",

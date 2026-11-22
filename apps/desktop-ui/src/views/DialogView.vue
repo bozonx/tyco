@@ -18,7 +18,7 @@
     </InlineNotice>
     <div class="dialog-body">
       <DialogFeed
-        :turns="dialog.turns"
+        :items="dialog.feedItems"
         :is-bubble="isBubble"
         :is-translation-only="dialog.config.isTranslationOnly"
         :translation-lang="dialog.config.translationTargetLanguage || undefined"

@@ -332,7 +332,9 @@
     "aiToolUnavailable": "Unavailable",
     "aiToolsRiskyWarning": "Some tools on the list can change or delete data or act outside the app, and they run without asking.",
     "aiRiskLabel": "Risk for the AI",
-    "aiRiskInfo": "What the command may do when an AI calls it. Tyco cannot know what a command does, so it counts as acting outside the app unless you choose otherwise."
+    "aiRiskInfo": "What the command may do when an AI calls it. Tyco cannot know what a command does, so it counts as acting outside the app unless you choose otherwise.",
+    "detachedOutputActionHint": "The command runs in a separate process, so its output is not captured.",
+    "testDetachedStarted": "The command was started in a separate process"
   },
   "common": {
     "add": "Add",
@@ -1751,7 +1753,11 @@
     "clearTitle": "Clear transcript?",
     "clearMessage": "History is turned off in settings. The current transcript will be lost.",
     "clearConfirm": "Clear",
-    "sourceLockedHint": "Clear the transcript to change the source"
+    "sourceLockedHint": "Clear the transcript to change the source",
+    "clearHintSaved": "Clear transcript (conversation is saved to history)",
+    "clearHintUnsaved": "Clear transcript (history is turned off)",
+    "sessionResumed": "Session resumed",
+    "sessionResumedRecording": "Recording resumed"
   },
   "toolPermissions": {
     "riskRead": "Reads",

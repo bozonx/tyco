@@ -108,22 +108,23 @@
             />
             <template v-if="f.playback && activePlayerFile === f.name">
               <audio
+                v-if="playerSource"
                 ref="audioElement"
                 class="history-player-audio"
                 autoplay
                 preload="auto"
                 :src="playerSource"
-                @error="isPlayerFailed = true"
-                @loadedmetadata="onLoadedMetadata"
-                @durationchange="onDurationChange"
-                @timeupdate="onTimeUpdate"
-                @pause="onAudioPause"
-                @ended="stopPlayer"
+                @error="onAudioError($event, f.name)"
+                @loadedmetadata="onLoadedMetadata($event, f.name)"
+                @durationchange="onDurationChange($event, f.name)"
+                @timeupdate="onTimeUpdate($event, f.name)"
+                @pause="onAudioPause($event, f.name)"
+                @ended="onAudioEnded(f.name)"
               />
               <span v-if="isPlayerFailed" class="history-file-missing">{{
                 f.playback.unavailableLabel
               }}</span>
-              <div v-else class="history-inline-player">
+              <div v-else-if="playerSource" class="history-inline-player">
                 <input
                   type="range"
                   class="history-player-seek"
@@ -301,7 +302,14 @@ async function togglePlayer(f: HistoryListItemFile) {
   }
 }
 
-function onLoadedMetadata(event: Event) {
+function onAudioError(_event: Event, fileName: string) {
+  if (activePlayerFile.value === fileName && playerSource.value) {
+    isPlayerFailed.value = true
+  }
+}
+
+function onLoadedMetadata(event: Event, fileName: string) {
+  if (activePlayerFile.value !== fileName) return
   isPlayerFailed.value = false
   const audio = event.target as HTMLAudioElement
   audio.playbackRate = playbackRate.value
@@ -310,24 +318,33 @@ function onLoadedMetadata(event: Event) {
   }
 }
 
-function onDurationChange(event: Event) {
+function onDurationChange(event: Event, fileName: string) {
+  if (activePlayerFile.value !== fileName) return
   const audio = event.target as HTMLAudioElement
   if (Number.isFinite(audio.duration) && audio.duration > 0) {
     playerDuration.value = audio.duration
   }
 }
 
-function onTimeUpdate(event: Event) {
+function onTimeUpdate(event: Event, fileName: string) {
+  if (activePlayerFile.value !== fileName) return
   const audio = event.target as HTMLAudioElement
   if (Number.isFinite(audio.currentTime)) {
     playerCurrentTime.value = audio.currentTime
   }
 }
 
-function onAudioPause(event: Event) {
+function onAudioPause(event: Event, fileName: string) {
+  if (activePlayerFile.value !== fileName) return
   const audio = event.target as HTMLAudioElement
   // `pauseOtherPlayers` in HistoryList pauses this element when another starts
   if (!audio.ended && !audio.seeking) {
+    stopPlayer()
+  }
+}
+
+function onAudioEnded(fileName: string) {
+  if (activePlayerFile.value === fileName) {
     stopPlayer()
   }
 }

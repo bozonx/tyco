@@ -77,7 +77,10 @@ describe('CommandEditor.vue', () => {
     expect(nameInput.props('autofocus')).toBe(true)
   })
 
-  const optionValue = (select: DOMWrapper<Element>, text: string) =>
+  const optionValue = (
+    select: Pick<DOMWrapper<Element>, 'findAll'>,
+    text: string
+  ) =>
     select
       .findAll('option')
       .find((option) => option.text() === text)!
@@ -101,6 +104,20 @@ describe('CommandEditor.vue', () => {
   it('offers the insertion for a command without text too', () => {
     const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
     expect(wrapper.text()).toContain('commands.afterRunInsert')
+  })
+
+  it('disables the output action and forces none for detached scripts', () => {
+    const command = script(
+      { command: 'firefox', isDetached: true },
+      { name: 'Firefox', outputAction: 'insertIntoWindow' }
+    )
+    const wrapper = mountEditor(command)
+    const select = wrapper.find('select')
+    expect(select.attributes('disabled')).toBeDefined()
+    expect((select.element as HTMLSelectElement).value).toBe(
+      optionValue(select, 'settings.actionAfterRunNone')
+    )
+    expect(wrapper.text()).toContain('commands.detachedOutputActionHint')
   })
 
   it('shows the call from outside only for a command allowed there', () => {

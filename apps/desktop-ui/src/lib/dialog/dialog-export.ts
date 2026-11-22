@@ -3,13 +3,20 @@ import {
   turnText,
   turnTranslation,
   type DialogSegment,
+  type DialogSessionBreak,
   type DialogSide,
 } from './dialog-transcript'
 
 export interface DialogExportOptions {
   includeTranslation: boolean
   /** The localized names of the sides and of the translation line */
-  labels: Record<DialogSide, string> & { translation: string }
+  labels: Record<DialogSide, string> & {
+    translation: string
+    sessionResumed?: string
+    sessionResumedRecording?: string
+  }
+  /** Breaks between resumed sessions */
+  breaks?: readonly DialogSessionBreak[]
   /** How the start of a turn is written; the clock time by default */
   formatTime?: (startMs: number) => string
 }
@@ -31,18 +38,40 @@ export function exportDialogTranscript(
   options: DialogExportOptions
 ): string {
   const formatTime = options.formatTime ?? formatDialogClock
-  return buildDialogTurns(segments.filter((segment) => segment.isFinal))
-    .flatMap((turn) => {
-      const text = turnText(turn)
-      if (!text) return []
-      const prefix = `[${formatTime(turn.startMs)}] `
-      const lines = [`${prefix}${options.labels[turn.side]}: ${text}`]
-      const translation = turnTranslation(turn)
-      if (options.includeTranslation && translation)
-        lines.push(
-          `${' '.repeat(prefix.length)}${options.labels.translation}: ${translation}`
-        )
-      return [lines.join('\n')]
-    })
+  const turns = buildDialogTurns(segments.filter((segment) => segment.isFinal))
+  type ExportItem =
+    | { type: 'turn'; timestampMs: number; lines: string[] }
+    | { type: 'break'; timestampMs: number; text: string }
+
+  const items: ExportItem[] = []
+  for (const turn of turns) {
+    const text = turnText(turn)
+    if (!text) continue
+    const prefix = `[${formatTime(turn.startMs)}] `
+    const lines = [`${prefix}${options.labels[turn.side]}: ${text}`]
+    const translation = turnTranslation(turn)
+    if (options.includeTranslation && translation)
+      lines.push(
+        `${' '.repeat(prefix.length)}${options.labels.translation}: ${translation}`
+      )
+    items.push({ type: 'turn', timestampMs: turn.startMs, lines })
+  }
+
+  if (options.breaks) {
+    for (const b of options.breaks) {
+      const label = b.isRecording
+        ? (options.labels.sessionResumedRecording ?? 'Recording resumed')
+        : (options.labels.sessionResumed ?? 'Session resumed')
+      items.push({
+        type: 'break',
+        timestampMs: b.timestampMs,
+        text: `--- ${label} · ${formatTime(b.timestampMs)} ---`,
+      })
+    }
+  }
+
+  items.sort((a, b) => a.timestampMs - b.timestampMs)
+  return items
+    .map((item) => (item.type === 'turn' ? item.lines.join('\n') : item.text))
     .join('\n')
 }

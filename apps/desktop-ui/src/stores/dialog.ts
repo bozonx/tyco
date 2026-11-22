@@ -11,9 +11,12 @@ import {
 } from '../lib/dialog/dialog-session'
 import { resolveDialogStt, type DialogStt } from '../lib/dialog/dialog-stt'
 import {
+  buildDialogFeedItems,
   buildDialogTurns,
   createDialogTranscript,
+  type DialogFeedItem,
   type DialogSegment,
+  type DialogSessionBreak,
   type DialogSide,
 } from '../lib/dialog/dialog-transcript'
 import { buildSubtitlesView } from '../lib/dialog/dialog-subtitles'
@@ -84,6 +87,7 @@ export const useDialogStore = defineStore('dialog', () => {
   >({})
   const levels = reactive<Record<DialogSide, number>>({ me: 0, remote: 0 })
   const segments = shallowRef<readonly DialogSegment[]>([])
+  const sessionBreaks = ref<DialogSessionBreak[]>([])
   const errorText = ref('')
   const canFixInSettings = ref(false)
   /** Whether the subtitles window is shown, with the main window minimized */
@@ -94,6 +98,9 @@ export const useDialogStore = defineStore('dialog', () => {
   const recording = ref<DialogRecordingState>()
 
   const turns = computed(() => buildDialogTurns(segments.value))
+  const feedItems = computed<DialogFeedItem[]>(() =>
+    buildDialogFeedItems(turns.value, sessionBreaks.value)
+  )
   const isActive = computed(
     () => status.value === 'starting' || status.value === 'running'
   )
@@ -220,6 +227,7 @@ export const useDialogStore = defineStore('dialog', () => {
           }
         isRecordingLinked = Boolean(recordingFile)
         if (segments.value.length === 0) {
+          sessionBreaks.value = []
           void dialogHistory.begin({
             startedAt: sessionStartedAtMs,
             source: hasMicrophone.value ? 'microphoneAndSystem' : 'system',
@@ -230,8 +238,15 @@ export const useDialogStore = defineStore('dialog', () => {
             ...(recordingFile &&
               isRecordingFailedEarly && { isRecordingIncomplete: true }),
           })
-        } else if (recordingFile) {
-          void dialogHistory.addRecording(recordingFile)
+        } else {
+          sessionBreaks.value.push({
+            id: `break-${Date.now()}`,
+            timestampMs: sessionStartedAtMs,
+            isRecording: Boolean(recordingFile),
+          })
+          if (recordingFile) {
+            void dialogHistory.addRecording(recordingFile)
+          }
         }
       }
       status.value = next
@@ -352,6 +367,7 @@ export const useDialogStore = defineStore('dialog', () => {
     await dialogHistory.end()
     translationQueue.clear()
     transcript.clear()
+    sessionBreaks.value = []
     errorText.value = ''
     canFixInSettings.value = false
   }
@@ -386,10 +402,13 @@ export const useDialogStore = defineStore('dialog', () => {
   function exportText(): string {
     return exportDialogTranscript(segments.value, {
       includeTranslation: Boolean(config.value.translationTargetLanguage),
+      breaks: sessionBreaks.value,
       labels: {
         me: translate('dialog.sideMe'),
         remote: translate('dialog.sideRemote'),
         translation: translate('dialog.translationLabel'),
+        sessionResumed: translate('dialog.sessionResumed'),
+        sessionResumedRecording: translate('dialog.sessionResumedRecording'),
       },
     })
   }
@@ -523,6 +542,7 @@ export const useDialogStore = defineStore('dialog', () => {
     levels,
     segments,
     turns,
+    feedItems,
     errorText,
     canFixInSettings,
     isActive,

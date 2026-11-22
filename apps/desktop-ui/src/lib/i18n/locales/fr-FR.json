@@ -332,7 +332,9 @@
     "aiToolUnavailable": "Indisponible",
     "aiToolsRiskyWarning": "Certains outils de la liste peuvent modifier ou supprimer des données ou agir hors de l'application, et ils s'exécutent sans demander.",
     "aiRiskLabel": "Risque pour l'IA",
-    "aiRiskInfo": "Ce que la commande peut faire quand une IA l'appelle. Tyco ne peut pas savoir ce que fait une commande : elle compte comme une action hors de l'application, sauf si vous choisissez autre chose."
+    "aiRiskInfo": "Ce que la commande peut faire quand une IA l'appelle. Tyco ne peut pas savoir ce que fait une commande : elle compte comme une action hors de l'application, sauf si vous choisissez autre chose.",
+    "detachedOutputActionHint": "La commande s'exécute dans un processus distinct, sa sortie n'est donc pas capturée.",
+    "testDetachedStarted": "La commande a été lancée dans un processus distinct"
   },
   "common": {
     "add": "Ajouter",
@@ -1751,7 +1753,11 @@
     "clearTitle": "Effacer la transcription ?",
     "clearMessage": "L’historique est désactivé dans les paramètres. La transcription actuelle sera perdue.",
     "clearConfirm": "Effacer",
-    "sourceLockedHint": "Effacez la transcription pour changer la source audio"
+    "sourceLockedHint": "Effacez la transcription pour changer la source audio",
+    "clearHintSaved": "Effacer la transcription (la conversation est enregistrée dans l’historique)",
+    "clearHintUnsaved": "Effacer la transcription (l’historique est désactivé)",
+    "sessionResumed": "Session reprise",
+    "sessionResumedRecording": "Enregistrement repris"
   },
   "toolPermissions": {
     "riskRead": "Lecture",

@@ -37,24 +37,29 @@
     </div>
 
     <template v-if="result?.kind === 'script'">
-      <p
-        class="test-run-status"
-        :class="result.result.success ? 'is-success' : 'is-error'"
-      >
-        {{
-          result.result.exitCode === null
-            ? t('commands.testNoExitCode')
-            : t('commands.testExitCode', { code: result.result.exitCode })
-        }}
+      <p v-if="result.result.detached" class="test-run-status is-success">
+        {{ t('commands.testDetachedStarted') }}
       </p>
-      <div class="test-run-stream">
-        <span class="test-run-stream-label">stdout</span>
-        <pre class="test-run-output">{{ result.result.stdout || '—' }}</pre>
-      </div>
-      <div v-if="result.result.stderr" class="test-run-stream">
-        <span class="test-run-stream-label">stderr</span>
-        <pre class="test-run-output is-error">{{ result.result.stderr }}</pre>
-      </div>
+      <template v-else>
+        <p
+          class="test-run-status"
+          :class="result.result.success ? 'is-success' : 'is-error'"
+        >
+          {{
+            result.result.exitCode === null
+              ? t('commands.testNoExitCode')
+              : t('commands.testExitCode', { code: result.result.exitCode })
+          }}
+        </p>
+        <div class="test-run-stream">
+          <span class="test-run-stream-label">stdout</span>
+          <pre class="test-run-output">{{ result.result.stdout || '—' }}</pre>
+        </div>
+        <div v-if="result.result.stderr" class="test-run-stream">
+          <span class="test-run-stream-label">stderr</span>
+          <pre class="test-run-output is-error">{{ result.result.stderr }}</pre>
+        </div>
+      </template>
     </template>
     <div v-else-if="result?.kind === 'output'" class="test-run-stream">
       <span class="test-run-stream-label">{{ t('commands.testOutput') }}</span>

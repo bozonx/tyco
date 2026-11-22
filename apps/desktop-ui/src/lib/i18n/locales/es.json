@@ -332,7 +332,9 @@
     "aiToolUnavailable": "No disponible",
     "aiToolsRiskyWarning": "Algunas herramientas de la lista pueden cambiar o eliminar datos o actuar fuera de la aplicación, y se ejecutan sin preguntar.",
     "aiRiskLabel": "Riesgo para la IA",
-    "aiRiskInfo": "Lo que el comando puede hacer cuando una IA lo llama. Tyco no puede saber qué hace un comando, así que cuenta como una acción fuera de la aplicación salvo que elijas otra cosa."
+    "aiRiskInfo": "Lo que el comando puede hacer cuando una IA lo llama. Tyco no puede saber qué hace un comando, así que cuenta como una acción fuera de la aplicación salvo que elijas otra cosa.",
+    "detachedOutputActionHint": "El comando se ejecuta en un proceso independiente, por lo que su salida no se captura.",
+    "testDetachedStarted": "El comando se inició en un proceso independiente"
   },
   "common": {
     "add": "Agregar",
@@ -1751,7 +1753,11 @@
     "clearTitle": "¿Borrar la transcripción?",
     "clearMessage": "El historial está desactivado en la configuración. La transcripción actual se perderá.",
     "clearConfirm": "Limpiar",
-    "sourceLockedHint": "Borra la transcripción para cambiar la fuente"
+    "sourceLockedHint": "Borra la transcripción para cambiar la fuente",
+    "clearHintSaved": "Borrar transcripción (la conversación se guarda en el historial)",
+    "clearHintUnsaved": "Borrar transcripción (el historial está desactivado)",
+    "sessionResumed": "Sesión reanudada",
+    "sessionResumedRecording": "Grabación reanudada"
   },
   "toolPermissions": {
     "riskRead": "Lectura",

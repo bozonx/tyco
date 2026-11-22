@@ -332,7 +332,9 @@
     "aiToolUnavailable": "利用不可",
     "aiToolsRiskyWarning": "リストの一部のツールはデータを変更・削除したり、アプリの外で動作したりでき、確認なしで実行されます。",
     "aiRiskLabel": "AI 向けのリスク",
-    "aiRiskInfo": "AI が呼び出したときにコマンドができること。Tyco はコマンドの動作を知り得ないため、別の選択をしない限りアプリ外の操作として扱います。"
+    "aiRiskInfo": "AI が呼び出したときにコマンドができること。Tyco はコマンドの動作を知り得ないため、別の選択をしない限りアプリ外の操作として扱います。",
+    "detachedOutputActionHint": "コマンドは別のプロセスで実行されるため、その出力はキャプチャされません。",
+    "testDetachedStarted": "コマンドは別のプロセスで起動されました"
   },
   "common": {
     "add": "追加",
@@ -1747,7 +1749,11 @@
     "clearTitle": "文字起こしをクリアしますか？",
     "clearMessage": "設定で履歴が無効になっています。現在の文字起こしは失われます。",
     "clearConfirm": "クリア",
-    "sourceLockedHint": "音源を変更するには文字起こしをクリアしてください"
+    "sourceLockedHint": "音源を変更するには文字起こしをクリアしてください",
+    "clearHintSaved": "文字起こしをクリア（会話は履歴に保存されます）",
+    "clearHintUnsaved": "文字起こしをクリア（履歴は無効です）",
+    "sessionResumed": "セッションを再開しました",
+    "sessionResumedRecording": "録音を再開しました"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

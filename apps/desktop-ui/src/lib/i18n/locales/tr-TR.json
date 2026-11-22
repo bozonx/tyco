@@ -332,7 +332,9 @@
     "aiToolUnavailable": "Kullanılamıyor",
     "aiToolsRiskyWarning": "Listedeki bazı araçlar verileri değiştirebilir, silebilir ya da uygulamanın dışında işlem yapabilir ve sormadan çalışır.",
     "aiRiskLabel": "Yapay zekâ için risk",
-    "aiRiskInfo": "Bir yapay zekâ çağırdığında komutun neler yapabileceği. Tyco bir komutun ne yaptığını bilemez; başka bir seçim yapmadıkça uygulama dışında işlem sayılır."
+    "aiRiskInfo": "Bir yapay zekâ çağırdığında komutun neler yapabileceği. Tyco bir komutun ne yaptığını bilemez; başka bir seçim yapmadıkça uygulama dışında işlem sayılır.",
+    "detachedOutputActionHint": "Komut ayrı bir işlemde çalışır, bu nedenle çıktısı yakalanmaz.",
+    "testDetachedStarted": "Komut ayrı bir işlemde başlatıldı"
   },
   "common": {
     "add": "Ekle",
@@ -1747,7 +1749,11 @@
     "clearTitle": "Döküm temizlensin mi?",
     "clearMessage": "Geçmiş ayarlarda kapalı. Geçerli döküm kaybolacak.",
     "clearConfirm": "Temizle",
-    "sourceLockedHint": "Ses kaynağını değiştirmek için dökümü temizleyin"
+    "sourceLockedHint": "Ses kaynağını değiştirmek için dökümü temizleyin",
+    "clearHintSaved": "Dökümü temizle (konuşma geçmişe kaydedildi)",
+    "clearHintUnsaved": "Dökümü temizle (geçmiş kapalı)",
+    "sessionResumed": "Oturum devam ettirildi",
+    "sessionResumedRecording": "Kayıt devam ettirildi"
   },
   "toolPermissions": {
     "riskRead": "Okuma",

@@ -332,7 +332,9 @@
     "aiToolUnavailable": "Niedostępne",
     "aiToolsRiskyWarning": "Niektóre narzędzia z listy mogą zmieniać lub usuwać dane albo działać poza aplikacją — i działają bez pytania.",
     "aiRiskLabel": "Ryzyko dla AI",
-    "aiRiskInfo": "Co polecenie może zrobić, gdy wywoła je AI. Tyco nie wie, co robi polecenie, więc uznaje je za działanie poza aplikacją, chyba że wybierzesz inaczej."
+    "aiRiskInfo": "Co polecenie może zrobić, gdy wywoła je AI. Tyco nie wie, co robi polecenie, więc uznaje je za działanie poza aplikacją, chyba że wybierzesz inaczej.",
+    "detachedOutputActionHint": "Polecenie działa w osobnym procesie, więc jego wyjście nie jest przechwytywane.",
+    "testDetachedStarted": "Polecenie zostało uruchomione w osobnym procesie"
   },
   "common": {
     "add": "Dodaj",
@@ -1751,7 +1753,11 @@
     "clearTitle": "Wyczyścić transkrypcję?",
     "clearMessage": "Historia jest wyłączona w ustawieniach. Bieżąca transkrypcja zostanie utracona.",
     "clearConfirm": "Wyczyść",
-    "sourceLockedHint": "Wyczyść transkrypcję, aby zmienić źródło dźwięku"
+    "sourceLockedHint": "Wyczyść transkrypcję, aby zmienić źródło dźwięku",
+    "clearHintSaved": "Wyczyść transkrypcję (rozmowa jest zapisana w historii)",
+    "clearHintUnsaved": "Wyczyść transkrypcję (historia jest wyłączona)",
+    "sessionResumed": "Wznowiono sesję",
+    "sessionResumedRecording": "Wznowiono nagrywanie"
   },
   "toolPermissions": {
     "riskRead": "Odczyt",

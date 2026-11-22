@@ -332,7 +332,9 @@
     "aiToolUnavailable": "無法使用",
     "aiToolsRiskyWarning": "清單中的部分工具可以變更或刪除資料，或在應用程式之外操作，且不經詢問即執行。",
     "aiRiskLabel": "對 AI 的風險",
-    "aiRiskInfo": "當 AI 呼叫該指令時它可能做的事。Tyco 無法得知指令會做什麼，因此除非你另選，否則視為應用程式之外的操作。"
+    "aiRiskInfo": "當 AI 呼叫該指令時它可能做的事。Tyco 無法得知指令會做什麼，因此除非你另選，否則視為應用程式之外的操作。",
+    "detachedOutputActionHint": "命令在單獨的處理程序中執行，因此不會擷取其輸出。",
+    "testDetachedStarted": "命令已在單獨的處理程序中啟動"
   },
   "common": {
     "add": "新增",
@@ -1747,7 +1749,11 @@
     "clearTitle": "清除逐字稿？",
     "clearMessage": "歷史記錄已在設定中關閉。目前的逐字稿將會遺失。",
     "clearConfirm": "清除",
-    "sourceLockedHint": "清除逐字稿以更改音訊來源"
+    "sourceLockedHint": "清除逐字稿以更改音訊來源",
+    "clearHintSaved": "清除逐字稿（對話已儲存至歷史記錄）",
+    "clearHintUnsaved": "清除逐字稿（歷史記錄已關閉）",
+    "sessionResumed": "工作階段已恢復",
+    "sessionResumedRecording": "錄音已恢復"
   },
   "toolPermissions": {
     "riskRead": "讀取",

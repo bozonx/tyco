@@ -332,7 +332,9 @@
     "aiToolUnavailable": "Nedostupno",
     "aiToolsRiskyWarning": "Neki alati s popisa mogu mijenjati ili brisati podatke ili djelovati izvan aplikacije – i rade bez pitanja.",
     "aiRiskLabel": "Rizik za AI",
-    "aiRiskInfo": "Što naredba može učiniti kad je pozove AI. Tyco ne može znati što naredba radi pa se smatra radnjom izvan aplikacije, osim ako ne odaberete drugačije."
+    "aiRiskInfo": "Što naredba može učiniti kad je pozove AI. Tyco ne može znati što naredba radi pa se smatra radnjom izvan aplikacije, osim ako ne odaberete drugačije.",
+    "detachedOutputActionHint": "Naredba se izvodi u zasebnom procesu, stoga se njezin izlaz ne bilježi.",
+    "testDetachedStarted": "Naredba je pokrenuta u zasebnom procesu"
   },
   "common": {
     "add": "Dodaj",
@@ -1751,7 +1753,11 @@
     "clearTitle": "Očistiti prijepis?",
     "clearMessage": "Povijest je isključena u postavkama. Trenutni prijepis bit će izgubljen.",
     "clearConfirm": "Očisti",
-    "sourceLockedHint": "Očistite prijepis da biste promijenili izvor zvuka"
+    "sourceLockedHint": "Očistite prijepis da biste promijenili izvor zvuka",
+    "clearHintSaved": "Očisti prijepis (razgovor je spremljen u povijesti)",
+    "clearHintUnsaved": "Očisti prijepis (povijest je isključena)",
+    "sessionResumed": "Sesija nastavljena",
+    "sessionResumedRecording": "Snimanje nastavljeno"
   },
   "toolPermissions": {
     "riskRead": "Čitanje",

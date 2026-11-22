@@ -332,7 +332,9 @@
     "aiToolUnavailable": "Non disponibile",
     "aiToolsRiskyWarning": "Alcuni strumenti dell'elenco possono modificare o eliminare dati o agire fuori dall'app, e vengono eseguiti senza chiedere.",
     "aiRiskLabel": "Rischio per l'IA",
-    "aiRiskInfo": "Ciò che il comando può fare quando un'IA lo chiama. Tyco non può sapere cosa fa un comando, quindi conta come azione fuori dall'app, a meno che tu non scelga altro."
+    "aiRiskInfo": "Ciò che il comando può fare quando un'IA lo chiama. Tyco non può sapere cosa fa un comando, quindi conta come azione fuori dall'app, a meno che tu non scelga altro.",
+    "detachedOutputActionHint": "Il comando viene eseguito in un processo separato, pertanto il suo output non viene catturato.",
+    "testDetachedStarted": "Il comando è stato avviato in un processo separato"
   },
   "common": {
     "add": "Aggiungi",
@@ -1751,7 +1753,11 @@
     "clearTitle": "Cancellare la trascrizione?",
     "clearMessage": "La cronologia è disattivata nelle impostazioni. La trascrizione attuale andrà persa.",
     "clearConfirm": "Cancella",
-    "sourceLockedHint": "Cancella la trascrizione per modificare la sorgente audio"
+    "sourceLockedHint": "Cancella la trascrizione per modificare la sorgente audio",
+    "clearHintSaved": "Cancella trascrizione (la conversazione è salvata nella cronologia)",
+    "clearHintUnsaved": "Cancella trascrizione (la cronologia è disattivata)",
+    "sessionResumed": "Sessione ripresa",
+    "sessionResumedRecording": "Registrazione ripresa"
   },
   "toolPermissions": {
     "riskRead": "Lettura",

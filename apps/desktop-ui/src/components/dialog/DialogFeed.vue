@@ -8,19 +8,46 @@
     :aria-label="t('dialog.feedLabel')"
     @scroll.passive="onScroll"
   >
-    <DialogTurn
-      v-for="turn in turns"
-      :key="turn.id"
-      :turn="turn"
-      :is-bubble="isBubble"
-      :is-translation-only="isTranslationOnly"
-      :translation-lang="translationLang"
-      @retry="(ids) => emit('retry', ids)"
-    />
-    <slot v-if="turns.length === 0" name="empty" />
+    <template
+      v-for="item in items"
+      :key="item.type === 'turn' ? item.turn.id : item.sessionBreak.id"
+    >
+      <DialogTurn
+        v-if="item.type === 'turn'"
+        :turn="item.turn"
+        :is-bubble="isBubble"
+        :is-translation-only="isTranslationOnly"
+        :translation-lang="translationLang"
+        @retry="(ids) => emit('retry', ids)"
+      />
+      <div v-else class="dialog-feed-break">
+        <span class="dialog-feed-break-line" />
+        <span class="dialog-feed-break-badge">
+          <AppIcon
+            :icon="
+              item.sessionBreak.isRecording
+                ? 'mdi:record-circle-outline'
+                : 'mdi:play-pause'
+            "
+            size="xs"
+            :class="{ 'is-recording': item.sessionBreak.isRecording }"
+          />
+          <span>{{
+            item.sessionBreak.isRecording
+              ? t('dialog.sessionResumedRecording')
+              : t('dialog.sessionResumed')
+          }}</span>
+          <span class="dialog-feed-break-time">{{
+            formatTime(item.sessionBreak.timestampMs)
+          }}</span>
+        </span>
+        <span class="dialog-feed-break-line" />
+      </div>
+    </template>
+    <slot v-if="items.length === 0" name="empty" />
   </div>
   <Button
-    v-if="!isFollowing && turns.length > 0"
+    v-if="!isFollowing && items.length > 0"
     class="dialog-feed-latest"
     size="sm"
     icon="mdi:arrow-down"
@@ -33,7 +60,9 @@
 import { nextTick, onMounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import type { DialogTurn as Turn } from '../../lib/dialog/dialog-transcript'
+import { formatDialogClock } from '../../lib/dialog/dialog-export'
+import type { DialogFeedItem } from '../../lib/dialog/dialog-transcript'
+import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import DialogTurn from './DialogTurn.vue'
 
@@ -41,7 +70,7 @@ import DialogTurn from './DialogTurn.vue'
 const FOLLOW_THRESHOLD_PX = 48
 
 const props = defineProps<{
-  turns: readonly Turn[]
+  items: readonly DialogFeedItem[]
   isBubble: boolean
   /** A translated turn shows its translation without the original */
   isTranslationOnly: boolean
@@ -57,6 +86,10 @@ const { t } = useI18n()
 const scroller = ref<HTMLElement | null>(null)
 /** Follows new speech until the user scrolls up to read */
 const isFollowing = ref(true)
+
+function formatTime(timestampMs: number): string {
+  return formatDialogClock(timestampMs)
+}
 
 function onScroll() {
   const element = scroller.value
@@ -74,7 +107,7 @@ function scrollToEnd() {
 }
 
 watch(
-  () => props.turns,
+  () => props.items,
   async () => {
     if (!isFollowing.value) return
     await nextTick()
@@ -95,6 +128,39 @@ onMounted(scrollToEnd)
   flex-direction: column;
   gap: 0.75rem;
   padding: var(--space-md);
+}
+
+.dialog-feed-break {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: var(--space-xs) 0;
+  color: var(--app-text-muted);
+  font-size: var(--text-caption);
+  user-select: none;
+}
+
+.dialog-feed-break-line {
+  flex: 1;
+  height: 1px;
+  background-color: var(--app-border-subtle);
+}
+
+.dialog-feed-break-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: 2px var(--space-xs);
+  background-color: var(--app-surface-sunken);
+  border-radius: var(--radius-full);
+}
+
+.dialog-feed-break-badge .is-recording {
+  color: var(--color-error);
+}
+
+.dialog-feed-break-time {
+  opacity: 0.75;
 }
 
 .dialog-feed-latest {

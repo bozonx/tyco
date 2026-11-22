@@ -332,7 +332,9 @@
     "aiToolUnavailable": "Nem elérhető",
     "aiToolsRiskyWarning": "A lista egyes eszközei adatokat módosíthatnak vagy törölhetnek, illetve az alkalmazáson kívül is cselekedhetnek – és kérdés nélkül futnak.",
     "aiRiskLabel": "Kockázat az AI számára",
-    "aiRiskInfo": "Mit tehet a parancs, ha egy AI hívja meg. A Tyco nem tudhatja, mit csinál egy parancs, ezért az alkalmazáson kívüli műveletnek számít, hacsak mást nem választ."
+    "aiRiskInfo": "Mit tehet a parancs, ha egy AI hívja meg. A Tyco nem tudhatja, mit csinál egy parancs, ezért az alkalmazáson kívüli műveletnek számít, hacsak mást nem választ.",
+    "detachedOutputActionHint": "A parancs külön folyamatban fut, így a kimenete nem rögzíthető.",
+    "testDetachedStarted": "A parancs külön folyamatban elindult"
   },
   "common": {
     "add": "Hozzáadás",
@@ -1751,7 +1753,11 @@
     "clearTitle": "Törli az átiratot?",
     "clearMessage": "Az előzmények ki vannak kapcsolva a beállításokban. Az aktuális átirat elvész.",
     "clearConfirm": "Törlés",
-    "sourceLockedHint": "A forrás módosításához törölje az átiratot"
+    "sourceLockedHint": "A forrás módosításához törölje az átiratot",
+    "clearHintSaved": "Átirat törlése (a beszélgetés elmentve az előzményekbe)",
+    "clearHintUnsaved": "Átirat törlése (az előzmények ki vannak kapcsolva)",
+    "sessionResumed": "Munkamenet folytatva",
+    "sessionResumedRecording": "Rögzítés folytatva"
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

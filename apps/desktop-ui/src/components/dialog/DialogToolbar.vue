@@ -27,6 +27,9 @@
         variant="ghost"
         size="sm"
         icon="mdi:broom"
+        :title="
+          canRecord ? t('dialog.clearHintSaved') : t('dialog.clearHintUnsaved')
+        "
         @click="handleClear"
         >{{ t('dialog.clear') }}</Button
       >

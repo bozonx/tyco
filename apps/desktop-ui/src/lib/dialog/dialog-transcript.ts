@@ -17,6 +17,18 @@ export interface DialogSegment {
   translationState: DialogTranslationState
 }
 
+/** A divider marking a resumed dialog session */
+export interface DialogSessionBreak {
+  id: string
+  timestampMs: number
+  isRecording: boolean
+}
+
+/** An item in the dialog feed: either a turn of speech or a session break */
+export type DialogFeedItem =
+  | { type: 'turn'; turn: DialogTurn }
+  | { type: 'break'; sessionBreak: DialogSessionBreak }
+
 /** Speech of one side without the other side or a long pause in between */
 export interface DialogTurn {
   /** The id of its first segment: stable while the turn grows */
@@ -67,7 +79,24 @@ export function buildDialogTurns(
   return turns
 }
 
-/** The text of a turn as recognized */
+/** Interleaves turns and session breaks into an ordered feed. */
+export function buildDialogFeedItems(
+  turns: readonly DialogTurn[],
+  breaks: readonly DialogSessionBreak[]
+): DialogFeedItem[] {
+  const items: { timestampMs: number; item: DialogFeedItem }[] = []
+  for (const turn of turns) {
+    items.push({ timestampMs: turn.startMs, item: { type: 'turn', turn } })
+  }
+  for (const sessionBreak of breaks) {
+    items.push({
+      timestampMs: sessionBreak.timestampMs,
+      item: { type: 'break', sessionBreak },
+    })
+  }
+  items.sort((a, b) => a.timestampMs - b.timestampMs)
+  return items.map((entry) => entry.item)
+}
 export function turnText(turn: DialogTurn): string {
   return joinTexts(turn.segments.map((segment) => segment.text))
 }

@@ -332,7 +332,9 @@
     "aiToolUnavailable": "Indisponibil",
     "aiToolsRiskyWarning": "Unele instrumente din listă pot modifica sau șterge date ori pot acționa în afara aplicației și rulează fără întrebare.",
     "aiRiskLabel": "Risc pentru AI",
-    "aiRiskInfo": "Ce poate face comanda când o apelează un AI. Tyco nu poate ști ce face o comandă, așa că o consideră acțiune în afara aplicației, dacă nu alegeți altceva."
+    "aiRiskInfo": "Ce poate face comanda când o apelează un AI. Tyco nu poate ști ce face o comandă, așa că o consideră acțiune în afara aplicației, dacă nu alegeți altceva.",
+    "detachedOutputActionHint": "Comanda rulează într-un proces separat, astfel încât ieșirea acesteia nu este capturată.",
+    "testDetachedStarted": "Comanda a fost pornită într-un proces separat"
   },
   "common": {
     "add": "Adaugă",
@@ -1751,7 +1753,11 @@
     "clearTitle": "Ștergeți transcrierea?",
     "clearMessage": "Istoricul este dezactivat în setări. Transcrierea curentă se va pierde.",
     "clearConfirm": "Șterge",
-    "sourceLockedHint": "Ștergeți transcrierea pentru a schimba sursa audio"
+    "sourceLockedHint": "Ștergeți transcrierea pentru a schimba sursa audio",
+    "clearHintSaved": "Ștergeți transcrierea (conversația este salvată în istoric)",
+    "clearHintUnsaved": "Ștergeți transcrierea (istoricul este dezactivat)",
+    "sessionResumed": "Sesiune reluată",
+    "sessionResumedRecording": "Înregistrare reluată"
   },
   "toolPermissions": {
     "riskRead": "Citire",

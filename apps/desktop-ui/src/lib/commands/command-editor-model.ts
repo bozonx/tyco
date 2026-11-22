@@ -8,11 +8,13 @@ export function countAdvancedCustomizations(
     canLogOutput?: boolean
     canPreTransform?: boolean
     canParseArguments?: boolean
+    isDetached?: boolean
   }
 ): number {
   let count = 0
   const defaultOutputAction = context?.defaultOutputAction ?? 'none'
-  if (command.outputAction !== defaultOutputAction) count++
+  if (!context?.isDetached && command.outputAction !== defaultOutputAction)
+    count++
   if (context?.canSelectPlatforms && (command.platforms?.length ?? 0) > 0)
     count++
   if (context?.canLogOutput && command.isOutputLogged) count++

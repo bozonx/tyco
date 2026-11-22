@@ -86,16 +86,20 @@
               t('commands.launcherResult')
             }}</span>
             <FieldSelect
-              :model-value="command.outputAction"
+              :model-value="isDetachedScript ? 'none' : command.outputAction"
               :title="t('commands.launcherResult')"
               :options="afterRunOptions"
+              :disabled="isDetachedScript"
               @update:model-value="
                 updateOutputAction($event as CommandOutputAction)
               "
             />
           </label>
+          <p v-if="isDetachedScript" class="command-place-detail command-hint">
+            {{ t('commands.detachedOutputActionHint') }}
+          </p>
           <p
-            v-if="command.isVoiceEnabled && tool?.voiceOutputAction"
+            v-else-if="command.isVoiceEnabled && tool?.voiceOutputAction"
             class="command-place-detail command-hint"
           >
             {{ t('commands.voiceOutputActionHint') }}
@@ -248,7 +252,10 @@ import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { isAiCommand } from '../../lib/ai-commands/ai-command-config'
 import { TOOL_RISK_LABEL_KEYS } from '../../lib/chat-tools/tool-catalog-entries'
-import { outputActionOf } from '../../lib/commands/command-config'
+import {
+  outputActionOf,
+  scriptOperationConfig,
+} from '../../lib/commands/command-config'
 import {
   countAdvancedCustomizations,
   createCommandEditorModel,
@@ -384,6 +391,11 @@ const advancedBodyId = useId()
 const defaultOutputAction = computed<CommandOutputAction>(() =>
   outputActionOf(tool.value?.defaultOutputAction)
 )
+const isDetachedScript = computed(
+  () =>
+    props.command.operationId === 'script' &&
+    scriptOperationConfig(props.command).isDetached
+)
 const advancedCustomizationsCount = computed(() =>
   countAdvancedCustomizations(props.command, {
     defaultOutputAction: defaultOutputAction.value,
@@ -391,6 +403,7 @@ const advancedCustomizationsCount = computed(() =>
     canLogOutput: tool.value?.canLogOutput,
     canPreTransform: canPreTransform.value,
     canParseArguments: canParseArguments.value,
+    isDetached: isDetachedScript.value,
   })
 )
 const hasAdvancedCustomizations = computed(

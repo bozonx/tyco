@@ -74,5 +74,12 @@ describe('command editor model', () => {
         }
       )
     ).toBe(8)
+
+    expect(
+      countAdvancedCustomizations(
+        { ...base, outputAction: 'copyToClipboard' },
+        { defaultOutputAction: 'none', isDetached: true }
+      )
+    ).toBe(0)
   })
 })

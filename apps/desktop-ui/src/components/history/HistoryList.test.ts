@@ -315,6 +315,72 @@ describe('HistoryList.vue', () => {
       expect(playButton(wrapper).attributes('disabled')).toBeDefined()
     })
 
+    it('switches playback between two recordings in the same item without showing a transient error', async () => {
+      let resolveFirst!: (url: string) => void
+      let resolveSecond!: (url: string) => void
+      const item: HistoryListItem = {
+        id: 'dialog',
+        value: 'Call',
+        files: [
+          {
+            name: 'first.opus',
+            isMissing: false,
+            missingLabel: 'missing',
+            playback: {
+              source: () =>
+                new Promise<string>((resolve) => {
+                  resolveFirst = resolve
+                }),
+              playTitle: 'Play',
+              stopTitle: 'Stop',
+              speedTitle: 'Playback speed',
+              unavailableLabel: 'unplayable',
+            },
+          },
+          {
+            name: 'second.opus',
+            isMissing: false,
+            missingLabel: 'missing',
+            playback: {
+              source: () =>
+                new Promise<string>((resolve) => {
+                  resolveSecond = resolve
+                }),
+              playTitle: 'Play',
+              stopTitle: 'Stop',
+              speedTitle: 'Playback speed',
+              unavailableLabel: 'unplayable',
+            },
+          },
+        ],
+      }
+      const wrapper = mount(HistoryList, {
+        props: { items: [item] },
+        global: { stubs },
+      })
+      const rows = wrapper.findAll('.history-file')
+      await rows[0].get('.icon-btn-stub').trigger('click')
+      // While the async source is loading, no <audio> with empty src or error is mounted
+      expect(wrapper.find('audio').exists()).toBe(false)
+      expect(wrapper.text()).not.toContain('unplayable')
+
+      resolveFirst('blob:first')
+      await Promise.resolve()
+      await wrapper.vm.$nextTick()
+      const firstAudio = rows[0].get('audio')
+      expect(firstAudio.attributes('src')).toBe('blob:first')
+
+      // Clicking play on the second recording in the same entry must not be
+      // cancelled by the first <audio>'s unmount pause event
+      await rows[1].get('.icon-btn-stub').trigger('click')
+      await firstAudio.trigger('pause')
+      resolveSecond('blob:second')
+      await Promise.resolve()
+      await wrapper.vm.$nextTick()
+      expect(rows[0].find('audio').exists()).toBe(false)
+      expect(rows[1].get('audio').attributes('src')).toBe('blob:second')
+    })
+
     it('pauses the other players when one starts', async () => {
       const wrapper = mount(HistoryList, {
         props: { items: [{ ...recordingItem(), id: 'a' }, recordingItem()] },
