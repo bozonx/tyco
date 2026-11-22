@@ -21,8 +21,9 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
 use super::file_search;
+use super::permissions;
 use crate::errors::AppError;
-use crate::services::ai_vault::ProjectAccessMode;
+use crate::services::ai_vault::{AiProfile, ProjectAccessMode};
 
 pub use self::attachments::{AiAttachedFile, Attachments, ATTACHMENTS_ROOT};
 
@@ -37,7 +38,6 @@ pub(super) use self::sandbox::{is_forbidden, virtual_path, Resolved};
 #[cfg(test)]
 pub(super) use self::writer::apply_edit;
 
-pub use crate::desktop_contract::FILES_TOOL_GROUP_ID as FILES_TOOL_GROUP;
 pub const WORKSPACE_ROOT: &str = "workspace";
 pub const PROJECTS_ROOT: &str = "projects";
 
@@ -50,6 +50,7 @@ pub use crate::desktop_contract::MAX_CHAT_FILE_BYTES as MAX_UPLOAD_BYTES;
 pub enum Access {
     Read,
     Write,
+    Delete,
 }
 
 /// A folder the model may reach, as the profile sees it.
@@ -67,6 +68,8 @@ pub struct AiFileRoot {
     pub description: Option<String>,
     pub read: ProjectAccessMode,
     pub write: ProjectAccessMode,
+    /// Never freer than `write`.
+    pub delete: ProjectAccessMode,
     #[serde(skip)]
     pub(super) dir: PathBuf,
     /// An internal project keeps `project.json` at its top.
@@ -92,6 +95,7 @@ impl AiFileRoot {
             path: path.into(),
             name: None,
             description: None,
+            delete: write.clone(),
             read,
             write,
             dir: dir.to_path_buf(),
@@ -104,6 +108,7 @@ impl AiFileRoot {
         match access {
             Access::Read => &self.read,
             Access::Write => &self.write,
+            Access::Delete => &self.delete,
         }
     }
 }
@@ -176,6 +181,21 @@ pub enum AiFileToolRequest {
     DeletePath {
         path: String,
     },
+}
+
+impl AiFileToolRequest {
+    /// The name the model calls the tool by.
+    pub fn tool_name(&self) -> &'static str {
+        match self {
+            Self::ListDir { .. } => "list_files",
+            Self::ReadFile { .. } => "read_file",
+            Self::SearchFiles { .. } => "search_files",
+            Self::WriteFile { .. } => "write_file",
+            Self::EditFile { .. } => "edit_file",
+            Self::MovePath { .. } => "move_path",
+            Self::DeletePath { .. } => "delete_path",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq, ts_rs::TS)]
@@ -284,6 +304,8 @@ pub struct ConversationFiles<'a> {
     attachments: Attachments<'a>,
     /// Why the profile's folders are out of reach, when they are.
     folders_off: Option<&'static str>,
+    /// The profile of a profile chat, whose tool settings each call follows.
+    profile: Option<AiProfile>,
 }
 
 impl<'a> ConversationFiles<'a> {
@@ -299,7 +321,13 @@ impl<'a> ConversationFiles<'a> {
             roots,
             attachments,
             folders_off,
+            profile: None,
         }
+    }
+
+    pub(super) fn with_profile(mut self, profile: AiProfile) -> Self {
+        self.profile = Some(profile);
+        self
     }
 
     #[cfg(test)]
@@ -331,6 +359,7 @@ impl ConversationFiles<'_> {
         request: AiFileToolRequest,
         remove: impl FnOnce(&Path) -> Result<(), AppError>,
     ) -> Result<AiFileToolOutput, AppError> {
+        self.ensure_tool_allowed(&request)?;
         match &request {
             AiFileToolRequest::WriteFile { path, .. }
             | AiFileToolRequest::EditFile { path, .. }
@@ -389,7 +418,7 @@ impl ConversationFiles<'_> {
             } => self.edit_file(&path, &old_text, &new_text, replace_all),
             AiFileToolRequest::MovePath { from, to } => self.move_path(&from, &to),
             AiFileToolRequest::DeletePath { path } => {
-                let target = self.resolve(&path, Access::Write, false)?;
+                let target = self.resolve(&path, Access::Delete, false)?;
                 if target.is_root() {
                     return Err(AppError::invalid_input("A root folder cannot be deleted"));
                 }
@@ -399,6 +428,17 @@ impl ConversationFiles<'_> {
                 remove(&target.path)?;
                 Ok(AiFileToolOutput::DeletePath { path })
             }
+        }
+    }
+}
+
+impl ConversationFiles<'_> {
+    /// Refuses a tool the profile has turned off; without a profile the
+    /// roots alone decide.
+    pub(super) fn ensure_tool_allowed(&self, request: &AiFileToolRequest) -> Result<(), AppError> {
+        match &self.profile {
+            Some(profile) => permissions::ensure_file_tool_allowed(profile, request.tool_name()),
+            None => Ok(()),
         }
     }
 }

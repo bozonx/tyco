@@ -1,11 +1,7 @@
-import type { ProfileToolSettings } from '@tyco/shared'
-
 import type { RegisteredOperation } from '../operations/operation-types'
 import type { ChatToolProvider } from './chat-tool-registry'
 import { adaptRegisteredOperation } from './registered-operation-adapter'
-
-/** The group of the debug tools */
-const DEBUG_TOOL_GROUP_ID = 'debug'
+import { DEBUG_SOURCE } from './tool-catalog'
 
 /** Whether a development build offers the debug tools to every chat */
 export function isDebugChatToolsEnabled(
@@ -57,21 +53,9 @@ export function createDebugChatToolProvider(): ChatToolProvider {
     id: 'debug',
     tools: async () => [
       await adaptRegisteredOperation(CURRENT_TIME_TOOL, {
-        groupId: DEBUG_TOOL_GROUP_ID,
-      }),
+        source: DEBUG_SOURCE,
+        risk: 'read',
+      }).then((tool) => ({ ...tool, defaultPolicy: 'ask' as const })),
     ],
-  }
-}
-
-/** The settings with the debug group on, asking before each call */
-export function withDebugToolGroup(
-  settings: ProfileToolSettings | undefined
-): ProfileToolSettings {
-  return {
-    ...settings,
-    groups: {
-      ...settings?.groups,
-      [DEBUG_TOOL_GROUP_ID]: { isEnabled: true, access: 'ask' },
-    },
   }
 }

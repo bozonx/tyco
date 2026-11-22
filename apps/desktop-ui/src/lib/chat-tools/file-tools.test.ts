@@ -1,3 +1,4 @@
+import { toolContext, toolSettings } from '../../test/chat-tool-context'
 import type { AiFileRoot, ProfileToolSettings } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -15,23 +16,40 @@ import {
 } from './file-tools'
 
 const roots: AiFileRoot[] = [
-  { path: 'workspace', read: 'allow', write: 'allow' },
+  { path: 'workspace', read: 'allow', write: 'allow', delete: 'allow' },
   {
     path: 'projects/book',
     name: 'Book',
     description: 'The novel',
     read: 'allow',
     write: 'ask',
+    delete: 'ask',
   },
-  { path: 'projects/notes', name: 'Notes', read: 'ask', write: 'deny' },
+  {
+    path: 'projects/notes',
+    name: 'Notes',
+    read: 'ask',
+    write: 'deny',
+    delete: 'deny',
+  },
+  {
+    path: 'projects/site',
+    name: 'Site',
+    read: 'allow',
+    write: 'allow',
+    delete: 'ask',
+  },
 ]
 
-const SCOPE = { profileId: 'writer', attachments: [] }
+const SCOPE = {
+  context: { kind: 'profile' as const, profileId: 'writer' },
+  attachments: [],
+}
 
-const settings = (
-  access: 'allow' | 'ask' = 'allow',
-  isEnabled = true
-): ProfileToolSettings => ({ groups: { files: { isEnabled, access } } })
+const settings = (isEnabled = true): ProfileToolSettings =>
+  toolSettings(
+    isEnabled ? {} : { sources: { 'core:files': { isEnabled: false } } }
+  )
 
 function setup(overrides: Partial<FileToolsDependencies> = {}) {
   const deps = {
@@ -48,9 +66,12 @@ function setup(overrides: Partial<FileToolsDependencies> = {}) {
 }
 
 const context = (
-  toolSettings: ProfileToolSettings | undefined = settings(),
+  profileSettings: ProfileToolSettings | undefined = settings(),
   profileId: string | null = 'writer'
-): ChatToolContext => ({ profileId, modelId: 'model', settings: toolSettings })
+): ChatToolContext => ({
+  ...toolContext(profileId, profileSettings),
+  modelId: 'model',
+})
 
 async function toolsOf(
   provider: ReturnType<typeof setup>['provider'],
@@ -83,8 +104,7 @@ describe('file-tools', () => {
   it('offers nothing to "Ask AI" or a profile with the group off', async () => {
     const { provider, deps } = setup()
     expect(await provider.tools(context(settings(), null))).toEqual([])
-    expect(await provider.tools(context(settings('allow', false)))).toEqual([])
-    expect(await provider.tools(context({ groups: {} }))).toEqual([])
+    expect(await provider.tools(context(settings(false)))).toEqual([])
     expect(deps.listRoots).not.toHaveBeenCalled()
   })
 
@@ -92,7 +112,12 @@ describe('file-tools', () => {
     const attachments = [{ name: 'a.md', id: 'a'.repeat(64) }]
     const { provider, deps } = setup({
       listRoots: vi.fn(async () => [
-        { path: 'attachments', read: 'allow' as const, write: 'deny' as const },
+        {
+          path: 'attachments',
+          read: 'allow' as const,
+          write: 'deny' as const,
+          delete: 'deny' as const,
+        },
       ]),
     })
     const tools = await provider.tools({
@@ -104,10 +129,10 @@ describe('file-tools', () => {
       'read_file',
       'search_files',
     ])
-    expect(tools.every((tool) => tool.groupId === 'attachments')).toBe(true)
+    expect(tools.every((tool) => tool.source.id === 'attachments')).toBe(true)
     expect(tools[1].accessFor!({ path: 'attachments/a.md' })).toBe('allow')
     expect(deps.listRoots).toHaveBeenCalledWith({
-      profileId: null,
+      context: { kind: 'askAi' },
       attachments,
     })
   })
@@ -140,11 +165,60 @@ describe('file-tools', () => {
     ).toBe('ask')
     // left for Rust to refuse with a reason
     expect(access('read_file', { path: 'nowhere/a.md' })).toBe('allow')
+    // deleting follows its own permission
+    expect(access('delete_path', { path: 'workspace/a.md' })).toBe('allow')
+    expect(access('delete_path', { path: 'projects/site/a.md' })).toBe('ask')
+    expect(access('write_file', { path: 'projects/site/a.md' })).toBe('allow')
+    expect(tools.get('delete_path')!.risk).toBe('destructive')
+    expect(tools.get('write_file')!.risk).toBe('write')
+    expect(tools.get('read_file')!.defaultPolicy).toBe('allow')
+  })
 
-    const asking = await toolsOf(provider, context(settings('ask')))
+  it('raises the project permission on "always allow"', async () => {
+    const { provider } = setup()
+    const tools = await toolsOf(provider)
+    const target = (name: string, input: unknown) =>
+      tools.get(name)!.alwaysAllowTarget!(input)
+
+    expect(target('write_file', { path: 'projects/book/a.md' })).toEqual({
+      kind: 'project',
+      projectId: 'book',
+      operations: ['write'],
+    })
+    // writing asks there too, so both are raised
+    expect(target('delete_path', { path: 'projects/book/a.md' })).toEqual({
+      kind: 'project',
+      projectId: 'book',
+      operations: ['write', 'delete'],
+    })
+    expect(target('delete_path', { path: 'projects/site/a.md' })).toEqual({
+      kind: 'project',
+      projectId: 'site',
+      operations: ['delete'],
+    })
+    expect(target('read_file', { path: 'projects/book/a.md' })).toBeUndefined()
     expect(
-      asking.get('read_file')!.accessFor!({ path: 'workspace/a.md' })
-    ).toBe('ask')
+      target('move_path', { from: 'projects/book/a', to: 'projects/site/a' })
+    ).toBeUndefined()
+  })
+
+  it('asks for a file tool the profile set to ask', async () => {
+    const { provider } = setup()
+    const registry = createChatToolRegistry({
+      providers: () => [provider],
+      policy: createChatToolPolicy({ canAsk: true }),
+    })
+    const set = await registry.resolve(
+      context(toolSettings({ tools: { 'core:files:read_file': 'ask' } }))
+    )
+    const decide = (toolName: string, input: unknown) =>
+      (set!.toolApproval as (options: unknown) => unknown)({
+        toolCall: { toolName, input },
+      })
+    expect(decide('read_file', { path: 'workspace/a.md' })).toBe(
+      'user-approval'
+    )
+    expect(decide('list_files', { path: 'workspace' })).toBe('approved')
   })
 
   it('remembers "allow in this session" per root', async () => {
@@ -336,7 +410,7 @@ describe('file-tools', () => {
     expect(write!.accessFor!(input)).toBe('allow')
 
     deps.listRoots.mockResolvedValue([
-      { path: 'workspace', read: 'allow', write: 'ask' },
+      { path: 'workspace', read: 'allow', write: 'ask', delete: 'ask' },
     ])
     await expect(execute(write, input)).rejects.toThrow(/changed/)
     expect(deps.run).not.toHaveBeenCalled()

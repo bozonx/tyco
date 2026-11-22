@@ -10,6 +10,7 @@ fn chat_item(id: &str) -> Chat {
         last_message_at_ms: 0,
         messages: Vec::new(),
         is_quick_request: None,
+        tool_permissions: None,
     }
 }
 

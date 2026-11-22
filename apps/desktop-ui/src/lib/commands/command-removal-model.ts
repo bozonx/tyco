@@ -1,3 +1,4 @@
+import { isRecord } from '@tyco/shared/value-guards'
 import type {
   ActionPageConfig,
   CommandConfig,
@@ -112,19 +113,21 @@ export function removeCommandFromAiCommands(
   commands: readonly CommandConfig[],
   commandId: string
 ): CommandConfig[] {
+  const isRemoved = (ref: unknown) =>
+    isRecord(ref) && ref.sourceKind === 'commands' && ref.toolName === commandId
   return commands.map((command) => {
-    const allowed = command.operationConfig.allowedCommandIds
+    const tools = command.operationConfig.tools
     if (
       command.operationId !== AI_COMMAND_OPERATION_ID ||
-      !Array.isArray(allowed) ||
-      !allowed.includes(commandId)
+      !Array.isArray(tools) ||
+      !tools.some(isRemoved)
     )
       return command
     return {
       ...command,
       operationConfig: {
         ...command.operationConfig,
-        allowedCommandIds: allowed.filter((id) => id !== commandId),
+        tools: tools.filter((ref) => !isRemoved(ref)),
       },
     }
   })

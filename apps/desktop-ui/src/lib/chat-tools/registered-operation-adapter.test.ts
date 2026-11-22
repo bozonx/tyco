@@ -1,3 +1,4 @@
+import { toolContext } from '../../test/chat-tool-context'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { CommandConfig } from '@tyco/shared'
@@ -6,7 +7,6 @@ import {
   CURRENT_TIME_TOOL,
   createDebugChatToolProvider,
   isDebugChatToolsEnabled,
-  withDebugToolGroup,
 } from './debug-chat-tools'
 import {
   adaptCommand,
@@ -62,13 +62,15 @@ describe('registered-operation-adapter', () => {
     }
 
     const definition = await adaptRegisteredOperation(tool, {
-      groupId: 'commands',
+      source: { kind: 'core', id: 'debug' },
+      risk: 'read',
       config: { strict: true },
     })
 
     expect(definition).toMatchObject({
       name: await chatToolName('text.upper'),
-      groupId: 'commands',
+      source: { kind: 'core', id: 'debug' },
+      risk: 'read',
       labelKey: 'operations.upper',
       icon: 'mdi:format-letter-case-upper',
       description: 'Upper-cases a text',
@@ -116,9 +118,10 @@ describe('registered-operation-adapter', () => {
       isEnabled: true,
     }
 
-    const definition = await adaptCommand(command, tool, {
-      groupId: 'commands',
-    })
+    const definition = await adaptCommand(command, tool, { risk: 'external' })
+    expect(definition.source).toEqual({ kind: 'commands', id: 'commands' })
+    expect(definition.catalogName).toBe('cmd-1')
+    expect(definition.sourceLabel).toBe('My Custom Script')
     expect(definition.name).toBe(await chatToolName('cmd-1'))
     expect(definition.label).toBe('My Custom Script')
     expect(definition.description).toBe('Performs useful work')
@@ -155,9 +158,8 @@ describe('debug-chat-tools', () => {
 
   it('tell the time and fail on an unknown zone', async () => {
     const [tool] = await createDebugChatToolProvider().tools({
-      profileId: null,
+      ...toolContext(null),
       modelId: 'm',
-      settings: undefined,
     })
     expect(tool.name).toBe(await chatToolName('get_current_time'))
     expect(
@@ -175,16 +177,11 @@ describe('debug-chat-tools', () => {
     expect(CURRENT_TIME_TOOL.inputSchema.type).toBe('object')
   })
 
-  it('switch their group on, asking first', () => {
-    expect(
-      withDebugToolGroup({
-        groups: { files: { isEnabled: true, access: 'allow' } },
-      })
-    ).toEqual({
-      groups: {
-        files: { isEnabled: true, access: 'allow' },
-        debug: { isEnabled: true, access: 'ask' },
-      },
+  it('ask first, to try the approval', async () => {
+    const [tool] = await createDebugChatToolProvider().tools({
+      ...toolContext(null),
+      modelId: 'm',
     })
+    expect(tool.defaultPolicy).toBe('ask')
   })
 })

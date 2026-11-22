@@ -2,6 +2,8 @@ import { chatToolName } from './tool-name'
 
 import { describe, expect, it, vi } from 'vitest'
 
+import { toolContext, toolSettings } from '../../test/chat-tool-context'
+
 import type { ChatToolDefinition, ChatToolProvider } from './chat-tool-registry'
 import { createChatToolsSession } from './chat-tools-session'
 import { createDebugChatToolProvider } from './debug-chat-tools'
@@ -12,7 +14,8 @@ import {
 
 const readNote: ChatToolDefinition = {
   name: 'read_note',
-  groupId: 'notes',
+  source: { kind: 'plugin', id: 'notes' },
+  risk: 'write',
   description: 'Reads a note',
   inputSchema: { type: 'object', properties: {} },
   execute: async () => 'text',
@@ -21,11 +24,12 @@ const readNote: ChatToolDefinition = {
 const notes: ChatToolProvider = { id: 'notes', tools: () => [readNote] }
 
 const request = {
-  profileId: 'writer',
+  ...toolContext('writer'),
   modelId: 'model',
   canUseTools: true,
-  settings: { groups: { notes: { isEnabled: true, access: 'ask' as const } } },
 }
+
+const askAi = { ...toolContext(null), modelId: 'model', canUseTools: true }
 
 describe('chat-tools-session', () => {
   it('offers reply blocks to every chat, without asking, even "Ask AI"', async () => {
@@ -34,12 +38,7 @@ describe('chat-tools-session', () => {
       providers: () => [createReplyBlocksToolProvider()],
     })
 
-    const tools = await session.toolsFor({
-      profileId: null,
-      modelId: 'model',
-      canUseTools: true,
-      settings: undefined,
-    })
+    const tools = await session.toolsFor(askAi)
 
     expect(Object.keys(tools!.tools!.tools)).toEqual([REPLY_BLOCKS_TOOL_NAME])
     expect(tools!.tools!.instructions).toContain(REPLY_BLOCKS_TOOL_NAME)
@@ -72,27 +71,17 @@ describe('chat-tools-session', () => {
     expect(
       await session.toolsFor({ ...request, canUseTools: false })
     ).toBeUndefined()
-    expect(
-      await session.toolsFor({
-        ...request,
-        profileId: null,
-        settings: undefined,
-      })
-    ).toBeUndefined()
+    // "Ask AI" gets no plugin tools
+    expect(await session.toolsFor(askAi)).toBeUndefined()
   })
 
   it('adds the debug tools when asked', async () => {
     const session = createChatToolsSession({
       getMaxStepCount: () => 3,
       providers: () => [createDebugChatToolProvider()],
-      isDebugEnabled: () => true,
     })
 
-    const tools = await session.toolsFor({
-      ...request,
-      profileId: null,
-      settings: undefined,
-    })
+    const tools = await session.toolsFor(askAi)
 
     expect(Object.keys(tools!.tools!.tools)).toEqual([
       await chatToolName('get_current_time'),
@@ -173,19 +162,93 @@ describe('chat-tools-session reserve', () => {
     expect(session.mayOfferTools({ ...request, canUseTools: false })).toBe(
       false
     )
-    // reply blocks are offered even when every group is denied
-    expect(
-      session.mayOfferTools({
-        canUseTools: true,
-        settings: { groups: { notes: { isEnabled: true, access: 'deny' } } },
-      })
-    ).toBe(true)
-    expect(
-      createChatToolsSession({
-        getMaxStepCount: () => 3,
-        providers: () => [],
-        isDebugEnabled: () => true,
-      }).mayOfferTools({ canUseTools: true, settings: undefined })
-    ).toBe(true)
+    // reply blocks are offered to every chat
+    expect(session.mayOfferTools({ canUseTools: true })).toBe(true)
+  })
+})
+
+describe('chat-tools-session permissions', () => {
+  it('keeps the permissions of a chat and gives them back', async () => {
+    const onPermissionsChange = vi.fn()
+    const session = createChatToolsSession({
+      providers: () => [notes],
+      getMaxStepCount: () => 3,
+      onPermissionsChange,
+    })
+    const tools = (await session.toolsFor(request))!
+    tools.policy.answer('read_note', 'allow-session')
+    expect(onPermissionsChange).toHaveBeenLastCalledWith({
+      allowed: ['read_note'],
+      leakAllowed: [],
+    })
+    const saved = session.exportPermissions()
+    session.resetPermissions()
+    expect(tools.policy.decide('read_note', 'ask')).toBe('user-approval')
+    session.restorePermissions(saved)
+    expect(tools.policy.decide('read_note', 'ask')).toBe('approved')
+  })
+
+  it('saves "always allow" before the call runs', async () => {
+    const alwaysAllow = vi.fn(async () => {})
+    const session = createChatToolsSession({
+      providers: () => [notes],
+      getMaxStepCount: () => 3,
+      alwaysAllow,
+    })
+    const tools = (await session.toolsFor(request))!
+    const target = {
+      kind: 'tool' as const,
+      source: readNote.source,
+      toolName: 'read_note',
+    }
+    const answer = tools.requestApproval(
+      {
+        approvalId: 'a1',
+        toolCallId: 'c1',
+        toolName: 'read_note',
+        input: {},
+        approvalKey: 'read_note',
+        alwaysAllow: target,
+      },
+      new AbortController().signal
+    )
+    await vi.waitFor(() =>
+      expect(session.pendingApprovals.value[0]?.alwaysAllow).toEqual(target)
+    )
+    session.answerApproval('a1', 'allow-always')
+    expect(await answer).toBe('allow-once')
+    expect(alwaysAllow).toHaveBeenCalledWith(target)
+  })
+
+  it('asks before a call could take personal data somewhere new', async () => {
+    const send: ChatToolDefinition = {
+      ...readNote,
+      name: 'send',
+      risk: 'external',
+    }
+    const session = createChatToolsSession({
+      providers: () => [{ id: 'notes', tools: () => [send] }],
+      getMaxStepCount: () => 3,
+    })
+    const tools = (await session.toolsFor({
+      ...toolContext(
+        'writer',
+        toolSettings({ tools: { 'plugin:notes:send': 'allow' } })
+      ),
+      modelId: 'model',
+      canUseTools: true,
+      memoryMode: 'auto',
+    }))!
+    const decide = tools.tools!.toolApproval as (options: unknown) => unknown
+    expect(decide({ toolCall: { toolName: 'send', input: {} } })).toBe(
+      'user-approval'
+    )
+    const info = tools.tools!.approvalInfo('send', {})
+    expect(info.leakTarget).toBe('plugin:notes:send')
+    expect(info.alwaysAllow).toBeUndefined()
+    tools.policy.answer(info.approvalKey, 'allow-once', info.leakTarget)
+    expect(decide({ toolCall: { toolName: 'send', input: {} } })).toBe(
+      'approved'
+    )
   })
 })

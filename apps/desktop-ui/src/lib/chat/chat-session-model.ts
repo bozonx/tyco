@@ -182,7 +182,14 @@ export function createChatSessionModel(
     }
 
     stopGeneration()
-    reset({ id: chat.id, title: chat.title, attachments: [] })
+    reset({
+      id: chat.id,
+      title: chat.title,
+      attachments: [],
+      ...(chat.toolPermissions
+        ? { toolPermissions: chat.toolPermissions }
+        : {}),
+    })
     messages.value = [...chat.messages]
     await deps.saveSessionState({ lastChatId: chat.id })
     if (!isCurrent(request)) return false

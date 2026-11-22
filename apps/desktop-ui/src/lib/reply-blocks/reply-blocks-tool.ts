@@ -1,12 +1,10 @@
-import type { ProfileToolSettings } from '@tyco/shared'
-
+import { REPLY_BLOCKS_SOURCE } from '../chat-tools/tool-catalog'
 import type {
   ChatToolDefinition,
   ChatToolProvider,
 } from '../chat-tools/chat-tool-registry'
 
 export const REPLY_BLOCKS_TOOL_NAME = 'propose_replies'
-export const REPLY_BLOCKS_TOOL_GROUP_ID = 'replyBlocks'
 
 export interface ReplyBlockData {
   title?: string
@@ -61,7 +59,8 @@ export function extractReplyBlocks(input: unknown): ReplyBlockData[] {
 export function createReplyBlocksTool(): ChatToolDefinition {
   return {
     name: REPLY_BLOCKS_TOOL_NAME,
-    groupId: REPLY_BLOCKS_TOOL_GROUP_ID,
+    source: REPLY_BLOCKS_SOURCE,
+    risk: 'read',
     labelKey: 'chatTools.replyBlocks.toolLabel',
     icon: 'mdi:format-list-checks',
     // the blocks are the answer: a step after them only repeats them
@@ -118,21 +117,5 @@ export function createReplyBlocksToolProvider(): ChatToolProvider {
     id: 'reply-blocks',
     tools: () => [tool],
     instructions: () => REPLY_BLOCKS_INSTRUCTIONS,
-  }
-}
-
-/**
- * Injects the replyBlocks tool group settings into ProfileToolSettings,
- * ensuring propose_replies is enabled and permitted without confirmation.
- */
-export function withReplyBlocksToolGroup(
-  settings: ProfileToolSettings | undefined
-): ProfileToolSettings {
-  return {
-    ...settings,
-    groups: {
-      ...settings?.groups,
-      [REPLY_BLOCKS_TOOL_GROUP_ID]: { isEnabled: true, access: 'allow' },
-    },
   }
 }

@@ -2,8 +2,6 @@ import type {
   ProfileMemoryChange,
   ProfileMemoryMode,
   ProfileMemorySearchResult,
-  ProfileToolSettings,
-  ProjectAccessMode,
 } from '@tyco/shared'
 import type { JsonSchema } from '@tyco/plugin-sdk'
 
@@ -19,8 +17,7 @@ import type {
   ChatToolPreview,
   ChatToolProvider,
 } from './chat-tool-registry'
-
-export const MEMORY_TOOL_GROUP_ID = 'memory'
+import { MEMORY_SOURCE } from './tool-catalog'
 
 export const MEMORY_INSTRUCTIONS_READ_ONLY = `## Long-term memory
 
@@ -256,36 +253,12 @@ const MEMORY_TOOLS: readonly MemoryToolSpec[] = [
   },
 ]
 
-/**
- * Injects memory tool group settings into ProfileToolSettings based on
- * memoryMode.
- */
-export function withMemoryToolGroup(
-  settings: ProfileToolSettings | undefined,
-  memoryMode: ProfileMemoryMode | undefined
-): ProfileToolSettings | undefined {
-  if (!memoryMode || memoryMode === 'off') {
-    return settings
-  }
-  return {
-    ...settings,
-    groups: {
-      ...settings?.groups,
-      [MEMORY_TOOL_GROUP_ID]: {
-        isEnabled: true,
-        access: memoryMode === 'ask' ? 'ask' : 'allow',
-      },
-    },
-  }
-}
-
 export function createMemoryToolProvider(
   deps: MemoryToolsDependencies
 ): ChatToolProvider {
   function definition(
     spec: MemoryToolSpec,
-    profileId: string,
-    mode: ProfileMemoryMode
+    profileId: string
   ): ChatToolDefinition {
     const execute = async (input: unknown): Promise<string> => {
       const data = asInput(input)
@@ -406,12 +379,6 @@ export function createMemoryToolProvider(
         }
       : undefined
 
-    const accessFor = (input: unknown): ProjectAccessMode => {
-      void input
-      if (spec.access === 'read') return 'allow'
-      return mode === 'ask' ? 'ask' : 'allow'
-    }
-
     const approvalScope = (input: unknown): string => {
       const file = text(asInput(input).file)
       return file || '*'
@@ -419,13 +386,16 @@ export function createMemoryToolProvider(
 
     return {
       name: spec.name,
-      groupId: MEMORY_TOOL_GROUP_ID,
+      // the profile's own memory: it never asks, the steps show its changes
+      source: MEMORY_SOURCE,
+      risk: spec.access === 'read' ? 'read' : 'write',
+      defaultPolicy: 'allow',
+      readsPersonalData: true,
       label: spec.label,
       labelKey: spec.labelKey,
       icon: spec.icon,
       description: spec.description,
       inputSchema: spec.inputSchema,
-      accessFor,
       approvalScope,
       preview,
       execute,
@@ -452,7 +422,7 @@ export function createMemoryToolProvider(
           ? MEMORY_TOOLS.filter((s) => s.access === 'read')
           : MEMORY_TOOLS
 
-      return specs.map((spec) => definition(spec, context.profileId!, mode))
+      return specs.map((spec) => definition(spec, context.profileId!))
     },
     instructions(context) {
       if (!context.profileId) return undefined

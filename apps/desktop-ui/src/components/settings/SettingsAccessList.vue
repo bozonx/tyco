@@ -29,6 +29,12 @@
           emit('change', entry.id, $event as ProjectAccessLevel)
         "
       />
+      <FieldCheckbox
+        v-if="entry.level === 'full'"
+        :label="t('settings.accessDeleteWithoutAsking')"
+        :model-value="Boolean(entry.isDeleteAllowed)"
+        @update:model-value="emit('deleteAllowed', entry.id, $event)"
+      />
       <template #actions>
         <IconButton
           size="xs"
@@ -68,6 +74,7 @@ import {
 } from '../../lib/ai-profiles/project-access'
 import AppIcon from '../common/AppIcon.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
+import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
 import StateMessage from '../common/StateMessage.vue'
@@ -81,6 +88,8 @@ export interface AccessListEntry {
   level: ProjectAccessLevel
   /** Why the access does nothing now */
   warning?: string
+  /** Deletes without asking; offered at the full level only */
+  isDeleteAllowed?: boolean
 }
 
 export interface AccessListCandidate {
@@ -101,6 +110,7 @@ const emit = defineEmits<{
   /** `undefined` disconnects */
   change: [id: string, level: ProjectAccessLevel | undefined]
   open: [id: string]
+  deleteAllowed: [id: string, isAllowed: boolean]
 }>()
 const { t } = useI18n()
 

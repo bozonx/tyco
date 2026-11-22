@@ -1,90 +1,83 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
+import { CORE_CATALOG } from '../../lib/chat-tools/tool-catalog-entries'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-const web = {
-  id: 'web',
-  labelKey: 'web.label',
-  descriptionKey: 'web.description',
-  icon: 'mdi:web',
-  defaultAccess: 'allow' as const,
+const web = CORE_CATALOG.find((entry) => entry.source.id === 'web')!
+const plugin = {
+  source: { kind: 'plugin' as const, id: 'notes' },
+  label: 'Notes',
+  icon: 'mdi:puzzle-outline',
+  capabilities: ['notes'],
+  tools: [
+    {
+      source: { kind: 'plugin' as const, id: 'notes' },
+      name: 'append',
+      label: 'Append',
+      risk: 'external' as const,
+    },
+  ],
 }
 
 describe('SettingsProfileToolsSection', () => {
-  it('switches a group on with its default access', async () => {
+  it('shows the tools of a source that is on by default', () => {
     const wrapper = mount(SettingsProfileToolsSection, {
-      props: { groups: [web], tools: undefined },
+      props: { sources: [web], tools: undefined, catalog: undefined },
     })
+    expect(wrapper.text()).toContain('chatTools.web.group')
+    expect(wrapper.find('[data-tool="web_search"]').exists()).toBe(true)
+    expect(wrapper.find('[data-tool="web_fetch"]').exists()).toBe(true)
+  })
 
-    expect(wrapper.text()).toContain('web.label')
-    await wrapper.get('input[type="checkbox"]').setValue(true)
-
+  it('switches a source off, keeping only the difference', async () => {
+    const wrapper = mount(SettingsProfileToolsSection, {
+      props: { sources: [web], tools: undefined, catalog: undefined },
+    })
+    await wrapper.get('input[type="checkbox"]').setValue(false)
     expect(wrapper.emitted('update')?.[0]).toEqual([
-      { groups: { web: { isEnabled: true, access: 'allow' } } },
+      {
+        sources: { 'core:web': { isEnabled: false } },
+        tools: {},
+        commandIds: [],
+      },
     ])
   })
 
-  it('shows group details only for a group with hasDetails that is on', async () => {
-    const webWithDetails = { ...web, hasDetails: true }
-    const wrapper = mount(SettingsProfileToolsSection, {
-      props: { groups: [webWithDetails], tools: { groups: {} } },
-      slots: { group: '<p class="details">details</p>' },
-    })
-    expect(wrapper.find('.details').exists()).toBe(false)
-
-    await wrapper.setProps({
-      tools: { groups: { web: { isEnabled: true, access: 'ask' } } },
-    })
-    expect(wrapper.find('.details').exists()).toBe(true)
-  })
-
-  it('does not render group details when group has no hasDetails flag', async () => {
-    const files = {
-      id: 'files',
-      labelKey: 'files.label',
-      descriptionKey: 'files.description',
-      icon: 'mdi:folder',
-      defaultAccess: 'allow' as const,
-    }
+  it('hides the tools of a source that is off', () => {
     const wrapper = mount(SettingsProfileToolsSection, {
       props: {
-        groups: [files],
-        tools: { groups: { files: { isEnabled: true, access: 'allow' } } },
-      },
-      slots: { group: '<p class="details">details</p>' },
-    })
-    expect(wrapper.find('.details').exists()).toBe(false)
-    expect(wrapper.find('.tool-group-details').exists()).toBe(false)
-  })
-
-  it('renders access control only for groups that enable it', () => {
-    const commands = {
-      id: 'commands',
-      labelKey: 'commands.label',
-      descriptionKey: 'commands.description',
-      icon: 'mdi:console',
-      defaultAccess: 'ask' as const,
-      hasAccessControl: true,
-    }
-    const wrapper = mount(SettingsProfileToolsSection, {
-      props: {
-        groups: [web, commands],
+        sources: [web],
         tools: {
-          groups: {
-            web: { isEnabled: true, access: 'allow' },
-            commands: { isEnabled: true, access: 'ask' },
-          },
+          sources: { 'core:web': { isEnabled: false } },
+          tools: {},
+          commandIds: [],
         },
+        catalog: undefined,
       },
     })
+    expect(wrapper.find('[data-tool="web_search"]').exists()).toBe(false)
+  })
 
-    const segmented = wrapper.findAllComponents({ name: 'SegmentedControl' })
-    expect(segmented).toHaveLength(1)
-    expect(segmented[0]!.props('label')).toContain('commands.label')
+  it('shows a plugin off everywhere as such, and its capabilities', () => {
+    const off = mount(SettingsProfileToolsSection, {
+      props: {
+        sources: [plugin],
+        tools: undefined,
+        catalog: { sources: { 'plugin:notes': { isEnabled: false } } },
+      },
+    })
+    expect(off.text()).toContain('toolPermissions.sourceOffEverywhere')
+    expect(off.find('[data-tool="append"]').exists()).toBe(false)
+
+    const on = mount(SettingsProfileToolsSection, {
+      props: { sources: [plugin], tools: undefined, catalog: undefined },
+    })
+    expect(on.text()).toContain('toolPermissions.pluginCapabilities')
+    expect(on.text()).toContain('toolPermissions.riskExternal')
   })
 })

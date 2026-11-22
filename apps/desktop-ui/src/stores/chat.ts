@@ -7,6 +7,7 @@ import { createIpcChatSessionStorageDriver } from '../lib/chat/chat-session-stor
 import { createChatStoreRuntime } from '../lib/chat/chat-store-runtime'
 import { desktopClient } from '../lib/desktop/client'
 import { invokeDesktop } from '../lib/desktop/invoke'
+import { usePluginChatToolsStore } from './plugin-chat-tools'
 import { describeError } from '../lib/errors/describe-error'
 import { getDesktopWindowLabel } from '../lib/desktop/window'
 import { createChatHistoryModel } from '../lib/history/chat-history'
@@ -85,10 +86,14 @@ function createChatStoreSetup(profileId: string | null) {
       readSoul: (id) => aiProfilesStore.readSoul(id),
       updateProfileModel: (id, modelId) =>
         aiProfilesStore.updateProfile(id, { modelId }),
+      updateProfilePermissions: async (id, patch) => {
+        await aiProfilesStore.updateProfile(id, patch)
+      },
       getUserConfig: () => desktopStore.userConfig,
       getVaultChatHistory: aiProfilesStore.vaultChatHistoryOf,
       operations: operationsStore,
       environment: operationsStore.environment,
+      pluginTools: usePluginChatToolsStore().dependencies,
       getSessionState: () => desktopStore.sessionState,
       saveSessionState: desktopStore.patchSessionState,
       saveChatModelId: async (modelId) => {

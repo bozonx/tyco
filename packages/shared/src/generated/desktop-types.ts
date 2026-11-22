@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: c7cdb2efdf3394e98f7944a0dcb7ca07fbe82a2f85a9a51dff3b1c2a55bed535
+// Source hash: 69f5cd0346be0d4cc555fb317ee8433bfe1ca0e3e403948486de9bdc948dad0f
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -77,6 +77,8 @@ export type AiFileRoot = {
   description?: string
   read: ProjectAccessMode
   write: ProjectAccessMode
+  /** Never freer than `write`. */
+  delete: ProjectAccessMode
   /**
    * Why the folder cannot be reached on this device: an external project
    * without its folder here.
@@ -182,8 +184,8 @@ export type AiProfile = {
   maxOutputTokens?: number
   projectPermissions: { [key in string]: ProjectPermission }
   /**
-   * The defaults of every group when unset, see
-   * [`ProfileToolSettings::groups`].
+   * The defaults of every source and tool when unset, see
+   * [`ProfileToolSettings`].
    */
   tools?: ProfileToolSettings
   /** Long-term memory mode; defaults to `auto`. */
@@ -294,6 +296,8 @@ export type Chat = {
   lastMessageAt: number
   messages: Array<ChatMessage>
   isQuickRequest?: boolean
+  /** What the user allowed "in this chat"; given back when it is reopened. */
+  toolPermissions?: ChatToolPermissions
 }
 
 /** A text the user attached to a chat message. */
@@ -370,6 +374,14 @@ export type ChatSummary = {
   /** Unix time in milliseconds. */
   lastMessageAt: number
   isQuickRequest?: boolean
+}
+
+/** The tool permissions a chat keeps for itself. */
+export type ChatToolPermissions = {
+  /** The approval keys allowed for the chat. */
+  allowed: Array<string>
+  /** The targets allowed to receive data once the chat held personal data. */
+  leakAllowed: Array<string>
 }
 
 /**
@@ -792,7 +804,7 @@ export type ProfileMemoryChange = {
 }
 
 /** The memory mode of a profile. */
-export type ProfileMemoryMode = 'auto' | 'ask' | 'read-only' | 'off'
+export type ProfileMemoryMode = 'auto' | 'read-only' | 'off'
 
 /** A line matching a memory text search. */
 export type ProfileMemorySearchResult = {
@@ -813,13 +825,18 @@ export type ProfileMemoryTopic = {
 /** The root instruction of a profile with its revision, empty for no file. */
 export type ProfileSoul = { content: string; revision: string }
 
-/** The tools a profile's chat may use. */
+/**
+ * The tools a profile's chat may use, as the differences from the defaults: the
+ * `core` and `plugin` sources are on, `mcp` servers and commands are picked; a
+ * tool's policy comes from its risk. See `dev_docs/architecture.md`.
+ */
 export type ProfileToolSettings = {
-  /**
-   * By tool group id; a group that is not listed has its default: the web tools
-   * are on, the other groups off.
-   */
-  groups: { [key in string]: ToolGroupSettings }
+  /** By source key, `<kind>:<id>`. */
+  sources: { [key in string]: ToolSourceSettings }
+  /** By tool key, `<kind>:<id>:<tool>`. */
+  tools: { [key in string]: ToolState }
+  /** The commands the profile's chat may run. */
+  commandIds: Array<string>
 }
 
 export type ProjectAccessMode = 'allow' | 'ask' | 'deny'
@@ -827,6 +844,8 @@ export type ProjectAccessMode = 'allow' | 'ask' | 'deny'
 export type ProjectPermission = {
   read: ProjectAccessMode
   write: ProjectAccessMode
+  /** Never freer than `write`: the stricter of the two applies. */
+  delete: ProjectAccessMode
 }
 
 export type ScreenshotAreaSelection = {
@@ -1058,17 +1077,20 @@ export type TextInsertionStatus = {
   missingClipboardTools: Array<string>
 }
 
-/** Whether a group of tools is offered to the model, and how freely. */
-export type ToolGroupSettings = {
-  isEnabled: boolean
-  /** `ask` waits for the user before each call; with no UI it means `deny`. */
-  access: ProjectAccessMode
-  /**
-   * Commands selected for this group, when the group offers them (e.g.
-   * `commands`).
-   */
-  commandIds?: Array<string>
-}
+/** Where a tool call comes from. */
+export type ToolCallContext =
+  | { kind: 'askAi' }
+  | { kind: 'profile'; profileId: string }
+  | { kind: 'aiCommand'; commandId: string }
+
+/** Whether a tool source is switched on. */
+export type ToolSourceSettings = { isEnabled: boolean }
+
+/**
+ * The state of one tool in a profile: off (the model does not see it), asking
+ * before each call, or allowed.
+ */
+export type ToolState = 'off' | 'ask' | 'allow'
 
 /**
  * How `relocate_user_data` changes the user data folder; the user says it, the

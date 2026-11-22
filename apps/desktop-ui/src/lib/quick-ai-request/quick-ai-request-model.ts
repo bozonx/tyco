@@ -9,7 +9,7 @@ import {
 } from '@tyco/shared'
 
 import { conversationAttachedFiles } from '../chat/chat-attached-files'
-import type { ChatToolDecision } from '../chat-tools/chat-tool-policy'
+import type { ChatToolAnswer } from '../chat-tools/chat-tool-policy'
 import type { ChatToolLoopState } from '../chat-tools/chat-tool-loop'
 import { hasAnswer } from '../chat-tools/chat-message-steps'
 import { createChatGenerationModel } from '../chat/chat-generation-model'
@@ -98,7 +98,7 @@ export interface QuickAiRequestModelDependencies {
     messages: ChatMessage[],
     options: QuickAiRequestTurnOptions
   ) => Promise<ChatToolLoopState>
-  answerToolApproval: (approvalId: string, decision: ChatToolDecision) => void
+  answerToolApproval: (approvalId: string, decision: ChatToolAnswer) => void
   /** Cancels the calls waiting for the user */
   cancelToolApprovals: () => void
 
@@ -437,10 +437,7 @@ export function createQuickAiRequestModel(
     deps.cancelToolApprovals()
   }
 
-  const answerToolApproval = (
-    approvalId: string,
-    decision: ChatToolDecision
-  ) => {
+  const answerToolApproval = (approvalId: string, decision: ChatToolAnswer) => {
     deps.answerToolApproval(approvalId, decision)
   }
 
@@ -501,6 +498,13 @@ export function createQuickAiRequestModel(
     conversationAttachedFiles(
       messages.value.flatMap((message) => message.attachments || [])
     )
+
+  /** What the user wrote, for the URLs the tools may read without asking */
+  const conversationText = () =>
+    messages.value
+      .filter((message) => message.role === 'user')
+      .map((message) => message.content)
+      .join('\n')
 
   const applyReplyBlock = async (
     block: ReplyBlockData,
@@ -610,6 +614,7 @@ export function createQuickAiRequestModel(
     selectedReplyBlock,
     selectReplyBlock,
     attachedFiles,
+    conversationText,
     error,
     setInputMode,
     setProfileId,

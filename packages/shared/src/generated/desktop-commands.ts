@@ -61,6 +61,7 @@ import type {
   SubtitlesSnapshot,
   SubtitlesView,
   TextInsertionStatus,
+  ToolCallContext,
   UserDataRelocationMode,
   UserDataTarget,
   VaultChatHistory,
@@ -223,7 +224,7 @@ export interface DesktopCommands {
     result: InstalledPlugin
   }
   list_ai_file_roots: {
-    args: { profileId?: string | null; attachments: Array<AiAttachedFile> }
+    args: { context: ToolCallContext; attachments: Array<AiAttachedFile> }
     result: Array<AiFileRoot>
   }
   list_ai_profile_memory_topics: {
@@ -320,7 +321,7 @@ export interface DesktopCommands {
   pick_script_file: { args: undefined; result: string | null }
   preview_ai_file_change: {
     args: {
-      profileId?: string | null
+      context: ToolCallContext
       attachments: Array<AiAttachedFile>
       request: AiFileToolRequest
     }
@@ -329,7 +330,7 @@ export interface DesktopCommands {
   publish_subtitles: { args: { view: SubtitlesView }; result: void }
   read_ai_file_bytes: {
     args: {
-      profileId?: string | null
+      context: ToolCallContext
       attachments: Array<AiAttachedFile>
       path: string
     }
@@ -402,7 +403,7 @@ export interface DesktopCommands {
   }
   run_ai_file_tool: {
     args: {
-      profileId?: string | null
+      context: ToolCallContext
       attachments: Array<AiAttachedFile>
       request: AiFileToolRequest
     }
@@ -410,7 +411,7 @@ export interface DesktopCommands {
   }
   run_ai_web_tool: {
     args: {
-      profileId?: string | null
+      context: ToolCallContext
       request: AiWebToolRequest
       runId?: string | null
     }

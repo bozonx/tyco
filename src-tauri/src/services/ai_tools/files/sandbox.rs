@@ -5,10 +5,11 @@ use std::fs;
 use std::path::{Component, Path, PathBuf};
 
 use super::{
-    Access, AiFileRoot, Attachments, ConversationFiles, ATTACHMENTS_ROOT, FILES_TOOL_GROUP,
-    PROJECTS_ROOT, WORKSPACE_ROOT,
+    Access, AiFileRoot, Attachments, ConversationFiles, ATTACHMENTS_ROOT, PROJECTS_ROOT,
+    WORKSPACE_ROOT,
 };
 use crate::errors::AppError;
+use crate::services::ai_tools::permissions::{self, CORE_SOURCE_KIND, FILES_SOURCE_ID};
 use crate::services::ai_vault::{self, AiProfile, ProjectAccessMode};
 
 /// A path resolved inside one of the roots.
@@ -164,6 +165,7 @@ impl<'a> ConversationFiles<'a> {
                 Some("The file tools are off for this profile"),
             ));
         }
+        let settings = profile.clone();
         let mut roots = vec![workspace_root(vault_root, profile_id)?];
         for project in ai_vault::list_projects(vault_root, paths)? {
             let Some(permission) = profile.project_permissions.get(&project.id) else {
@@ -190,12 +192,13 @@ impl<'a> ConversationFiles<'a> {
                     .filter(|text| !text.trim().is_empty()),
                 read: permission.read.clone(),
                 write: permission.write.clone(),
+                delete: permission.effective_delete(),
                 dir,
                 has_project_file: !project.is_external,
                 unavailable,
             });
         }
-        Ok(Self::new(roots, attachments, None))
+        Ok(Self::new(roots, attachments, None).with_profile(settings))
     }
 }
 
@@ -274,6 +277,7 @@ impl ConversationFiles<'_> {
                 match access {
                     Access::Read => "read",
                     Access::Write => "change",
+                    Access::Delete => "delete in",
                 },
                 root.path
             )));
@@ -322,18 +326,21 @@ fn workspace_root(vault_root: &Path, profile_id: &str) -> Result<AiFileRoot, App
         description: None,
         read: ProjectAccessMode::Allow,
         write: ProjectAccessMode::Allow,
+        delete: ProjectAccessMode::Allow,
         dir: ai_vault::profile_workspace_dir(vault_root, profile_id)?,
         has_project_file: false,
         unavailable: None,
     })
 }
 
+/// Whether the profile has its file source on; it is by default.
 fn files_enabled(profile: &AiProfile) -> bool {
-    let group = profile
-        .tools
-        .as_ref()
-        .and_then(|tools| tools.groups.get(FILES_TOOL_GROUP));
-    group.is_some_and(|group| group.is_enabled && group.access != ProjectAccessMode::Deny)
+    profile.tools.as_ref().is_none_or(|tools| {
+        tools
+            .sources
+            .get(&permissions::source_key(CORE_SOURCE_KIND, FILES_SOURCE_ID))
+            .is_none_or(|source| source.is_enabled)
+    })
 }
 
 #[cfg(all(test, unix))]

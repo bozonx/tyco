@@ -12,6 +12,7 @@ import {
   type RegisteredOperation,
   type OperationCall,
 } from '../operations/operation-types'
+import { commandToolRef } from '../chat-tools/tool-catalog'
 import {
   AI_COMMAND_MAX_DEPTH,
   createAiCommandOperation,
@@ -24,7 +25,11 @@ const aiCommand = (
 ): CommandConfig => ({
   ...createCommand('core.aiTask', id),
   name: id.toUpperCase(),
-  operationConfig: { prompt, allowedCommandIds, maxSteps: 4 },
+  operationConfig: {
+    prompt,
+    tools: allowedCommandIds.map(commandToolRef),
+    maxSteps: 4,
+  },
 })
 
 const script = (id: string): CommandConfig => ({
@@ -215,7 +220,10 @@ describe('createAiCommandOperation', () => {
   it('takes the step limit of the LLM settings when it has none of its own', async () => {
     const command: CommandConfig = {
       ...aiCommand('a', ['one']),
-      operationConfig: { prompt: 'Prompt of a', allowedCommandIds: ['one'] },
+      operationConfig: {
+        prompt: 'Prompt of a',
+        tools: ['one'].map(commandToolRef),
+      },
     }
     const { run, calls } = setup([command, script('one')], {
       'Prompt of a': [{ call: 'one' }, 'Done'],
@@ -224,16 +232,8 @@ describe('createAiCommandOperation', () => {
     expect(calls[0]).toMatchObject({ offered: ['one'], maxSteps: 9 })
   })
 
-  it('offers no tools when isToolsEnabled is false', async () => {
-    const command = {
-      ...aiCommand('a', ['one', 'two']),
-      operationConfig: {
-        prompt: 'Prompt of a',
-        allowedCommandIds: ['one', 'two'],
-        maxSteps: 4,
-        isToolsEnabled: false,
-      },
-    }
+  it('offers no tools with an empty whitelist', async () => {
+    const command = aiCommand('a', [])
     const { run, calls } = setup([command, script('one'), script('two')], {
       'Prompt of a': ['Answer without tools'],
     })
@@ -394,7 +394,10 @@ describe('createAiCommandOperation', () => {
       })
     const call: OperationCall = {
       input: { text: 'x' },
-      config: { prompt: 'Look in {{var:NOTES_DIR}}', allowedCommandIds: [] },
+      config: {
+        prompt: 'Look in {{var:NOTES_DIR}}',
+        tools: [].map(commandToolRef),
+      },
       source: 'launcher',
       signal: new AbortController().signal,
       isOutputRequested: true,

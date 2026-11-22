@@ -126,7 +126,7 @@
     "stop": "Zaustavi",
     "stopped": "Zaustavljeno",
     "toolAllow": "Dopusti",
-    "toolAllowSession": "Dopusti u ovoj sesiji",
+    "toolAllowSession": "Dopusti u ovom razgovoru",
     "toolApprovalQuestion": "Dopustiti pokretanje alata {tool}?",
     "toolArguments": "Argumenti",
     "toolDeny": "Odbij",
@@ -155,7 +155,10 @@
       "workspace": "Datoteke",
       "workspaceHint": "Datoteke profila: izvan povijesti razgovora, dostupne u svim razgovorima profila"
     },
-    "takeScreenshot": "Snimi snimku zaslona"
+    "takeScreenshot": "Snimi snimku zaslona",
+    "toolAllowBatch": "Dopusti sve ({count})",
+    "toolAllowAlways": "Uvijek dopusti",
+    "toolAllowAlwaysWriteDelete": "Uvijek dopusti pisanje i brisanje"
   },
   "chatTools": {
     "files": {
@@ -188,12 +191,12 @@
     "web": {
       "fetchLabel": "Pročitaj web-stranicu",
       "group": "Web pretraživanje",
-      "groupHint": "Pretražujte web i dohvaćajte web-stranice pomoću Jina AI. „Pitaj” traži potvrdu prije svakog poziva.",
+      "groupHint": "Pretraživanje weba i čitanje stranica putem Jina AI.",
       "searchLabel": "Web pretraživanje"
     },
     "commands": {
       "group": "Naredbe",
-      "groupHint": "Dopustite modelu pokretanje odabranih naredbi. Mogu se odabrati samo naredbe s opisom za AI. „Pitaj” traži potvrdu prije svakog poziva.",
+      "groupHint": "Model smije pokretati odabrane naredbe. Mogu se odabrati samo naredbe s opisom za AI. Svaki poziv prvo pita, osim ako ga ne dopustite.",
       "needsDescription": "Potreban je opis za AI u postavkama naredbe",
       "noCommands": "Još nema konfiguriranih prilagođenih naredbi.",
       "noCommandsHint": "Prvo stvorite naredbe u Postavke → Naredbe.",
@@ -224,8 +227,6 @@
     "afterRunCopy": "U međuspremnik",
     "afterRunInsert": "Umetni u prozor",
     "afterRunShowResult": "Prikaži rezultat",
-    "aiAllowedCommands": "Naredbe koje smije pokretati",
-    "aiAllowedCommandsInfo": "AI pokreće ove naredbe bez pitanja kad god ih prompt treba. Naredba nikad ne pokreće samu sebe ni AI naredbu koja ju je pozvala.",
     "aiDescription": "AI naredba obrađuje tekst prema vašoj uputi u jednom koraku, bez dijaloga, i može pokretati naredbe koje joj dopustite. Za početak razgovora s AI-jem koristite promptove. Ovaj model služi svim AI naredbama.",
     "aiMaxSteps": "Ograničenje koraka",
     "aiMaxStepsInfo": "Najveći broj naredbi koje AI smije pokrenuti. Konačni odgovor se ne broji u ograničenje. Ostavite prazno za ograničenje iz LLM postavki.",
@@ -234,8 +235,6 @@
     "aiPromptLabel": "Prompt",
     "aiPromptPlaceholder": "Npr. Pronađi datum i vrijeme u tekstu i dodaj događaj u moj kalendar",
     "aiTaskModel": "Model za AI naredbe",
-    "aiToolsEnabledInfo": "Kada je uključeno, AI može pozivati druge dopuštene naredbe.",
-    "aiToolsEnabledLabel": "Dopusti alate",
     "badgeAi": "Dostupno za AI (ima opis)",
     "badgeExternal": "Dostupno izvana (CLI, D-Bus)",
     "badgeInLauncher": "Radnje: stranica {page} ({key})",
@@ -323,7 +322,14 @@
     "unnamed": "Naredba bez naziva",
     "variablesNotSet": "Varijabla koju koristi nema vrijednost na ovom uređaju",
     "voiceOutputActionHint": "Pokrenuta glasom, ova naredba uvijek otvara izbornik rezultata.",
-    "warningExternalNameTwins": "Druge naredbe imaju isti naziv: {names}. Poziv tim nazivom odbija se kao dvosmislen; koristite ID."
+    "warningExternalNameTwins": "Druge naredbe imaju isti naziv: {names}. Poziv tim nazivom odbija se kao dvosmislen; koristite ID.",
+    "aiTools": "Alati agenta",
+    "aiToolsInfo": "Što agent smije pozvati. Sve s popisa radi bez pitanja jer AI naredba često radi bez prozora u kojem bi pitala. Datoteke i memorija nikad mu nisu dostupne.",
+    "aiToolsUnavailable": "Trenutačno nedostupno",
+    "aiToolUnavailable": "Nedostupno",
+    "aiToolsRiskyWarning": "Neki alati s popisa mogu mijenjati ili brisati podatke ili djelovati izvan aplikacije – i rade bez pitanja.",
+    "aiRiskLabel": "Rizik za AI",
+    "aiRiskInfo": "Što naredba može učiniti kad je pozove AI. Tyco ne može znati što naredba radi pa se smatra radnjom izvan aplikacije, osim ako ne odaberete drugačije."
   },
   "common": {
     "add": "Dodaj",
@@ -664,11 +670,9 @@
     "accessAsk": "Pitaj",
     "accessOff": "Isključeno",
     "accessLevel": "Pristup",
-    "accessLevelAskAll": "Pitaj za čitanje i pisanje",
     "accessLevelFull": "Potpuni pristup",
     "accessLevelCustom": "Prilagođeno (postavljeno ručno)",
     "accessLevelRead": "Samo čitanje",
-    "accessLevelReadWriteAsk": "Čitanje i pisanje uz potvrdu",
     "accessRemove": "Ukloni pristup",
     "actionAfterRunNone": "Ništa",
     "actionCommandInfo": "Pokreće se u ljusci sustava (sh, zsh ili PowerShell). Naredba dobiva tekst samo ondje gdje se pojavljuje {placeholder}. Zamjenjuje se tekstom koji je već u navodnicima i escapiran, pa navodnici oko njega nisu potrebni.",
@@ -1062,7 +1066,6 @@
     "profileMemoryHardTopic": "Premašeno strogo ograničenje (~4.000 tokena) — pisanje blokirano",
     "profileMemoryHint": "Činjenice, stabilne preferencije i bilješke sačuvane kroz razgovore.",
     "profileMemoryMode": "Način memorije",
-    "profileMemoryModeAsk": "Pitaj prije pisanja (zahtijeva odobrenje)",
     "profileMemoryModeAuto": "Automatski (sprema bez pitanja)",
     "profileMemoryModeOff": "Isključeno",
     "profileMemoryModeReadOnly": "Samo za čitanje",
@@ -1076,12 +1079,11 @@
     "profileNotFoundHint": "Možda je izbrisan ili je u drugom radnom prostoru.",
     "profileSoulPrompt": "Temeljna uputa (SOUL.md)",
     "profileSoulPromptHint": "Osobnost, uloga, ton i pravila ovog asistenta. Profil slijedi samo to: upute i pravila „Pitaj AI” ne vrijede. Ponovno se čita prije svakog zahtjeva, pa se računaju i izmjene na disku. Možete navesti različite zahtjeve za svako okruženje: chat ili brze upite.",
-    "profileToolAccess": "pristup",
     "maxToolSteps": "Koraka po odgovoru",
     "maxToolStepsHint": "Koliko puta model smije pozvati alate u jednom odgovoru – u svim chatovima, brzim upitima i AI naredbama. Ograničenje štiti od petlji i nepotrebnih troškova.",
     "maxToolStepsInvalid": "Unesite cijeli broj od 1 do 50",
     "profileTools": "Alati",
-    "profileToolsHint": "Što model profila smije sam raditi u chatu. Pozivi postavljeni na „Pitaj” čekaju vaše odobrenje u poruci.",
+    "profileToolsHint": "Što agent profila smije koristiti. Čitanje radi slobodno, promjene prvo pitaju; postavite svaki alat na Isključeno, Pitaj ili Dopusti. Memorija i radni prostor profila nikad ne pitaju.",
     "profileWebSearchLlmNotice": "API ključ i ograničenja veličine stranice konfiguriraju se globalno u postavkama LLM-a.",
     "projectAccessFileToolsOff": "Alati za datoteke su isključeni",
     "projectChangedElsewhere": "Projekt je promijenjen na drugom uređaju ili izvan TyCo-a. Vaše promjene još nisu spremljene.",
@@ -1311,8 +1313,6 @@
     "webJinaApiKey": "Jina AI API ključ",
     "webJinaApiKeyHint": "Neobavezno. Bez ključa, zahtjevi koriste besplatnu razinu sa zajedničkim ograničenjima.",
     "webSearchSectionHint": "Postavke za alate za pretraživanje weba i čitanje stranica koje koriste AI modeli i profili.",
-    "askAiWebAccess": "Web u „Pitaj AI”",
-    "askAiWebAccessHint": "Smije li chat „Pitaj AI”, koji nema profil, pretraživati web i čitati stranice. „Pitaj” čeka vaše odobrenje prije svakog poziva. Profili to postavljaju u vlastitim alatima.",
     "translationVoiceCommand": "Glasovna naredba",
     "translationVoiceCommandInfo": "Uključuje naredbu prijevoda u glasovne naredbe („prevedi na [jezik]“).",
     "dialogTab": "Dijalog",
@@ -1351,7 +1351,13 @@
       "projectLoses": "Ovi profili gube pristup njemu: {names}.",
       "externalFolder": "Vanjska mapa ostaje gdje jest; na drugim računalima postavite je ponovno.",
       "otherDevices": "Na računalima na kojima ciljni radni prostor nije priključen nestaje dok se ondje ne priključi."
-    }
+    },
+    "accessDeleteWithoutAsking": "Briši bez pitanja",
+    "accessLevelReadWrite": "Čitanje i pisanje",
+    "askAiWebSearch": "Pretraživanje weba",
+    "askAiWebSearchHint": "Omogućuje razgovoru „Pitaj AI” da pretražuje web i čita stranice bez pitanja. Nikad ne vidi vaše datoteke, memoriju ni naredbe.",
+    "askAiFastModelsHint": "„Pitaj AI” najbolje radi s brzim modelom: namijenjen je brzim odgovorima i provjeri činjenica.",
+    "toolsTab": "Alati"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
@@ -1730,5 +1736,32 @@
     "translationModelNone": "Nije odabran model za prijevod",
     "startCompact": "Pokreni u kompaktnom načinu",
     "route": "{from} → {to}"
+  },
+  "toolPermissions": {
+    "riskRead": "Čitanje",
+    "riskWrite": "Mijenja podatke",
+    "riskDestructive": "Briše",
+    "riskExternal": "Djeluje izvana",
+    "sourceCore": "Ugrađeno",
+    "sourcePlugin": "Dodatak",
+    "sourceThirdPartyPlugin": "Dodatak treće strane",
+    "sourceMcp": "MCP poslužitelj",
+    "sourceCommand": "Naredba",
+    "sourceOffEverywhere": "Isključeno u postavkama Alati",
+    "pluginCapabilities": "Dopuštenja dodatka: {capabilities}",
+    "pluginSourceHint": "Alati koje ovaj dodatak nudi razgovoru. Rade s dopuštenjima dodatka.",
+    "leakQuestion": "Ovaj je razgovor pročitao vaše podatke, a ovaj bi poziv dosegnuo novo mjesto. Pita se jednom po mjestu u ovom razgovoru.",
+    "contextTokens": "≈{count} tokena",
+    "catalogHint": "Odakle dolaze alati agenata. Dodatak isključen ovdje isključen je u svim profilima i AI naredbama. Ugrađeni alati uključuju se u „Pitaj AI”, u svakom profilu i u svakoj AI naredbi.",
+    "catalogWhereHint": "Svaki profil u svojim postavkama bira alate i koliko slobodno rade.",
+    "defaultPolicy": "Zadano: {policy}",
+    "summaryWorkspace": "radni prostor",
+    "summaryProjects": "projekti: {count}",
+    "summaryProjectsRead": "projekti: {count} (čitanje)",
+    "summaryWeb": "web",
+    "summaryCommands": "naredbe: {count}",
+    "summaryPlugins": "dodaci: {count}",
+    "summaryNothing": "samo razgovor",
+    "summaryTitle": "Što agent može — otvori postavke profila"
   }
 }

@@ -29,10 +29,18 @@ const tool: RegisteredOperation = {
 
 describe('OperationConfigFields', () => {
   it('shows the step limit of an AI command, empty for the one of the LLM settings', async () => {
+    const desktop = installFakeDesktop()
+    const command = createCommand('core.aiTask', 'agent')
     const wrapper = mount(OperationConfigFields, {
       props: {
         tool: { ...tool, id: 'core.aiTask' },
-        command: createCommand('core.aiTask', 'agent'),
+        command: {
+          ...command,
+          operationConfig: {
+            ...command.operationConfig,
+            tools: [{ sourceKind: 'core', sourceId: 'web' }],
+          },
+        },
         userConfig: { llm: { maxToolSteps: 12 } } as never,
       },
     })
@@ -43,6 +51,8 @@ describe('OperationConfigFields', () => {
     expect(wrapper.emitted('update')?.at(-1)).toEqual(['maxSteps', 3])
     await input.setValue('')
     expect(wrapper.emitted('update')?.at(-1)).toEqual(['maxSteps', undefined])
+    wrapper.unmount()
+    desktop.dispose()
   })
 
   it('preserves explicit false and clears a boolean override when inheritance is selected', async () => {

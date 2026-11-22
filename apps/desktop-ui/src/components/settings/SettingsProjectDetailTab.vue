@@ -421,7 +421,7 @@ function accessLevelTone(
   switch (level) {
     case 'full':
       return 'success'
-    case 'readWriteAsk':
+    case 'readWrite':
       return 'accent'
     case 'read':
     default:

@@ -10,6 +10,7 @@ import {
 import { computed } from 'vue'
 
 import { createDesktopChatTools } from '../chat-tools/desktop-chat-tools'
+import type { PluginChatToolsDependencies } from '../chat-tools/plugin-chat-tools'
 import type { ChatToolApprovalRequest } from '../chat-tools/chat-tool-loop'
 import { isQuickRequestSavingEnabled } from '../chat/chat-history-settings'
 import { chatModelOptions } from '../chat/chat-llm-selection'
@@ -62,6 +63,8 @@ export interface QuickAiRequestRuntimeDependencies {
   listMemoryTopics: (id: string) => Promise<ProfileMemoryTopic[]>
 
   operations?: OperationLookup
+  /** The chat tools of the plugins */
+  pluginTools?: PluginChatToolsDependencies
   environment?: () => CommandEnvironment
 
   /** Keeps an answer the user took in the editor history */
@@ -111,8 +114,11 @@ export function createQuickAiRequestRuntime(
         getMemoryMode: () => profile?.memoryMode,
         getChatId: () => chatId,
         getAttachedFiles: () => model.attachedFiles(),
-        getAskAiWebAccess: () =>
-          deps.getUserConfig()?.llm?.webSearch?.askAiAccess,
+        isAskAiWebEnabled: () =>
+          deps.getUserConfig()?.llm?.tasks.chat.isWebSearchEnabled,
+        getToolCatalog: () => deps.getUserConfig()?.tools,
+        pluginTools: deps.pluginTools,
+        getConversationText: () => model.conversationText(),
         getFetchMaxCharacters: () =>
           deps.getUserConfig()?.llm?.webSearch?.fetchMaxCharacters,
         getMaxStepCount: () => maxToolStepsOf(deps.getUserConfig()?.llm),
@@ -176,14 +182,8 @@ export function createQuickAiRequestRuntime(
       ]
         .filter(Boolean)
         .join('\n\n'),
-    mayOfferTools: (profileId) => {
-      const profile = profileOf(profileId)
-      return toolsOf(profileId).mayOfferTools({
-        canUseTools: true,
-        settings: profile?.tools,
-        memoryMode: profile?.memoryMode,
-      })
-    },
+    mayOfferTools: (profileId) =>
+      toolsOf(profileId).mayOfferTools({ canUseTools: true }),
     sendTurn: async (
       message,
       prevMessages,

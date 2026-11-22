@@ -126,7 +126,7 @@
     "stop": "Durdur",
     "stopped": "Durduruldu",
     "toolAllow": "İzin ver",
-    "toolAllowSession": "Bu oturumda izin ver",
+    "toolAllowSession": "Bu sohbette izin ver",
     "toolApprovalQuestion": "{tool} çalıştırılsın mı?",
     "toolArguments": "Argümanlar",
     "toolDeny": "Reddet",
@@ -155,7 +155,10 @@
       "workspace": "Dosyalar",
       "workspaceHint": "Profil dosyaları: sohbet geçmişi dışında tutulur ve profilin tüm sohbetlerinde kullanılabilir"
     },
-    "takeScreenshot": "Ekran görüntüsü al"
+    "takeScreenshot": "Ekran görüntüsü al",
+    "toolAllowBatch": "Tümüne izin ver ({count})",
+    "toolAllowAlways": "Her zaman izin ver",
+    "toolAllowAlwaysWriteDelete": "Yazma ve silmeye her zaman izin ver"
   },
   "chatTools": {
     "files": {
@@ -188,12 +191,12 @@
     "web": {
       "fetchLabel": "Web sayfasını oku",
       "group": "Web Araması",
-      "groupHint": "Jina AI kullanarak web’de arama yapın ve web sayfalarını getirin. \"Sor\", her çağrıdan önce onay ister.",
+      "groupHint": "Jina AI ile web’de arama ve sayfa okuma.",
       "searchLabel": "Web araması"
     },
     "commands": {
       "group": "Komutlar",
-      "groupHint": "Modelin seçilen komutları çalıştırmasına izin verin. Yalnızca yapay zekâ için açıklaması olan komutlar seçilebilir. \"Sor\", her çağrıdan önce onay ister.",
+      "groupHint": "Model seçilen komutları çalıştırabilir. Yalnızca yapay zekâ için açıklaması olan komutlar seçilebilir. İzin vermedikçe her çağrı önce sorar.",
       "needsDescription": "Komut ayarlarında yapay zeka için bir açıklama gereklidir",
       "noCommands": "Henüz özel komut yapılandırılmadı.",
       "noCommandsHint": "Önce Ayarlar → Komutlar bölümünde komut oluşturun.",
@@ -224,8 +227,6 @@
     "afterRunCopy": "Panoya",
     "afterRunInsert": "Pencereye ekle",
     "afterRunShowResult": "Sonucu göster",
-    "aiAllowedCommands": "Çalıştırabileceği komutlar",
-    "aiAllowedCommandsInfo": "Yapay zekâ, istem gerektirdiğinde bu komutları sormadan çalıştırır. Bir komut asla kendini veya onu çağıran yapay zekâ komutunu çalıştırmaz.",
     "aiDescription": "Bir yapay zekâ komutu, metni talimatınıza göre tek adımda, diyalog olmadan işler ve izin verdiğiniz komutları çalıştırabilir. Yapay zekâ ile sohbet başlatmak için promptları kullanın. Bu model tüm yapay zekâ komutlarına hizmet eder.",
     "aiMaxSteps": "Adım sınırı",
     "aiMaxStepsInfo": "Yapay zekânın çalıştırabileceği en fazla komut sayısı. Son yanıt bu sınıra dahil değildir. LLM ayarlarındaki sınırı kullanmak için boş bırakın.",
@@ -234,8 +235,6 @@
     "aiPromptLabel": "İstem",
     "aiPromptPlaceholder": "Ör. Metindeki tarihi ve saati bul ve etkinliği takvimime ekle",
     "aiTaskModel": "Yapay zekâ komutları modeli",
-    "aiToolsEnabledInfo": "Etkinleştirildiğinde, yapay zekâ izin verilen diğer komutları çağırabilir.",
-    "aiToolsEnabledLabel": "Araçlara izin ver",
     "badgeAi": "Yapay zeka için kullanılabilir (açıklama mevcut)",
     "badgeExternal": "Harici olarak kullanılabilir (CLI, D-Bus)",
     "badgeInLauncher": "Eylemler: sayfa {page} ({key})",
@@ -323,7 +322,14 @@
     "unnamed": "Adsız komut",
     "variablesNotSet": "Kullandığı bir değişkenin bu cihazda değeri yok",
     "voiceOutputActionHint": "Sesle çalıştırıldığında bu komut her zaman sonuç menüsünü açar.",
-    "warningExternalNameTwins": "Aynı ada sahip başka komutlar var: {names}. Bu adla yapılan çağrı belirsiz olduğu için reddedilir; kimliği kullanın."
+    "warningExternalNameTwins": "Aynı ada sahip başka komutlar var: {names}. Bu adla yapılan çağrı belirsiz olduğu için reddedilir; kimliği kullanın.",
+    "aiTools": "Ajanın araçları",
+    "aiToolsInfo": "Ajanın çağırabileceği şeyler. Listedeki her şey sormadan çalışır; bir yapay zekâ komutu çoğu zaman sorabileceği bir pencere olmadan çalışır. Dosyalar ve bellek ona asla açık değildir.",
+    "aiToolsUnavailable": "Şu anda kullanılamıyor",
+    "aiToolUnavailable": "Kullanılamıyor",
+    "aiToolsRiskyWarning": "Listedeki bazı araçlar verileri değiştirebilir, silebilir ya da uygulamanın dışında işlem yapabilir ve sormadan çalışır.",
+    "aiRiskLabel": "Yapay zekâ için risk",
+    "aiRiskInfo": "Bir yapay zekâ çağırdığında komutun neler yapabileceği. Tyco bir komutun ne yaptığını bilemez; başka bir seçim yapmadıkça uygulama dışında işlem sayılır."
   },
   "common": {
     "add": "Ekle",
@@ -664,11 +670,9 @@
     "accessAsk": "Sor",
     "accessOff": "Kapalı",
     "accessLevel": "Erişim",
-    "accessLevelAskAll": "Okuma ve yazma için sor",
     "accessLevelFull": "Tam erişim",
     "accessLevelCustom": "Özel (elle ayarlandı)",
     "accessLevelRead": "Yalnızca okuma",
-    "accessLevelReadWriteAsk": "Onaylı okuma ve yazma",
     "accessRemove": "Erişimi kaldır",
     "actionAfterRunNone": "Hiçbir şey",
     "actionCommandInfo": "Sistem kabuğunda (sh, zsh veya PowerShell) çalışır. Metin yalnızca {placeholder} yerine eklenir. Metin zaten tırnak içinde ve kaçışlıdır, ek tırnak gerekmez.",
@@ -1062,7 +1066,6 @@
     "profileMemoryHardTopic": "Katı sınır aşıldı (~4.000 belirteç) — yazma engellendi",
     "profileMemoryHint": "Sohbetler arasında korunan olgular, kararlı tercihler ve notlar.",
     "profileMemoryMode": "Bellek modu",
-    "profileMemoryModeAsk": "Yazmadan önce sor (onay gerektirir)",
     "profileMemoryModeAuto": "Otomatik (sormadan kaydeder)",
     "profileMemoryModeOff": "Kapalı",
     "profileMemoryModeReadOnly": "Salt okunur",
@@ -1076,12 +1079,11 @@
     "profileNotFoundHint": "Silinmiş ya da başka bir çalışma alanında olabilir.",
     "profileSoulPrompt": "Kök talimat (SOUL.md)",
     "profileSoulPromptHint": "Bu asistanın kişiliği, rolü, üslubu ve kuralları. Profil yalnızca buna uyar: Yapay Zekâya Sor talimatları ve kuralları uygulanmaz. Her istekten önce yeniden okunur, bu yüzden diskteki düzenlemeler de geçerlidir. Her ortam için farklı gereksinimler belirtebilirsiniz: sohbet veya hızlı istekler.",
-    "profileToolAccess": "erişim",
     "maxToolSteps": "Yanıt başına adım",
     "maxToolStepsHint": "Modelin tek bir yanıtta araçları kaç kez çağırabileceği; tüm sohbetlerde, hızlı isteklerde ve yapay zekâ komutlarında geçerlidir. Sınır döngülere ve gereksiz maliyetlere karşı korur.",
     "maxToolStepsInvalid": "1 ile 50 arasında bir tam sayı girin",
     "profileTools": "Araçlar",
-    "profileToolsHint": "Profil modelinin sohbette kendi başına yapabilecekleri. “Sor” olarak ayarlanan çağrılar mesajda onayınızı bekler.",
+    "profileToolsHint": "Profil ajanının kullanabilecekleri. Okuma serbestçe çalışır, değişiklikler önce sorar; her aracı Kapalı, Sor veya İzin ver olarak ayarlayın. Bellek ve profilin çalışma alanı asla sormaz.",
     "profileWebSearchLlmNotice": "API anahtarı ve sayfa boyutu sınırları, LLM ayarlarında genel olarak yapılandırılır.",
     "projectAccessFileToolsOff": "Dosya araçları kapalı",
     "projectChangedElsewhere": "Proje başka bir cihazda veya TyCo dışında değiştirildi. Değişiklikleriniz henüz kaydedilmedi.",
@@ -1311,8 +1313,6 @@
     "webJinaApiKey": "Jina AI API anahtarı",
     "webJinaApiKeyHint": "İsteğe bağlı. Anahtar olmadan istekler paylaşılan hız sınırlarına sahip ücretsiz katmanı kullanır.",
     "webSearchSectionHint": "Yapay zeka modelleri ve profilleri tarafından kullanılan web araması ve sayfa okuma araçları için ayarlar.",
-    "askAiWebAccess": "\"Yapay Zekâya Sor\" içinde web",
-    "askAiWebAccessHint": "Profili olmayan \"Yapay Zekâya Sor\" sohbetinin web’de arama yapıp sayfa okuyup okuyamayacağı. \"Sor\" her çağrıdan önce onayınızı bekler. Profiller bunu kendi araçlarında ayarlar.",
     "translationVoiceCommand": "Sesli komut",
     "translationVoiceCommandInfo": "Çeviri komutunu sesli komutlara dahil eder („[dil] çevir”).",
     "dialogTab": "Diyalog",
@@ -1351,7 +1351,13 @@
       "projectLoses": "Bu profiller ona erişimini kaybeder: {names}.",
       "externalFolder": "Harici klasör yerinde kalır; diğer bilgisayarlarda yeniden ayarlayın.",
       "otherDevices": "Hedef çalışma alanının bağlı olmadığı bilgisayarlarda, orada bağlanana kadar görünmez."
-    }
+    },
+    "accessDeleteWithoutAsking": "Sormadan sil",
+    "accessLevelReadWrite": "Okuma ve yazma",
+    "askAiWebSearch": "Web araması",
+    "askAiWebSearchHint": "“Yapay zekâya sor” sohbetinin sormadan web’de arama yapmasına ve sayfa okumasına izin verir. Dosyalarınızı, belleğinizi ve komutlarınızı asla görmez.",
+    "askAiFastModelsHint": "“Yapay zekâya sor” en iyi hızlı bir modelle çalışır: hızlı yanıtlar ve bilgi doğrulama içindir.",
+    "toolsTab": "Araçlar"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
@@ -1726,5 +1732,32 @@
     "translationModelNone": "Çeviri için model seçilmedi",
     "startCompact": "Kompakt modda başlat",
     "route": "{from} → {to}"
+  },
+  "toolPermissions": {
+    "riskRead": "Okuma",
+    "riskWrite": "Veri değiştirir",
+    "riskDestructive": "Siler",
+    "riskExternal": "Dışarıda işlem yapar",
+    "sourceCore": "Yerleşik",
+    "sourcePlugin": "Eklenti",
+    "sourceThirdPartyPlugin": "Üçüncü taraf eklenti",
+    "sourceMcp": "MCP sunucusu",
+    "sourceCommand": "Komut",
+    "sourceOffEverywhere": "Araçlar ayarlarında kapalı",
+    "pluginCapabilities": "Eklenti izinleri: {capabilities}",
+    "pluginSourceHint": "Bu eklentinin sohbete sunduğu araçlar. Eklentinin izinleriyle çalışır.",
+    "leakQuestion": "Bu sohbet verilerinizi okudu ve bu çağrı yeni bir yere ulaşacak. Bu sohbette her yer için bir kez sorulur.",
+    "contextTokens": "≈{count} token",
+    "catalogHint": "Ajanların araçlarının nereden geldiği. Burada kapatılan bir eklenti tüm profillerde ve yapay zekâ komutlarında kapalıdır. Yerleşik araçlar “Yapay zekâya sor”da, her profilde ve her yapay zekâ komutunda açılır.",
+    "catalogWhereHint": "Her profil kendi ayarlarında araçlarını ve ne kadar serbest çalışacaklarını seçer.",
+    "defaultPolicy": "Varsayılan: {policy}",
+    "summaryWorkspace": "çalışma alanı",
+    "summaryProjects": "projeler: {count}",
+    "summaryProjectsRead": "projeler: {count} (okuma)",
+    "summaryWeb": "web",
+    "summaryCommands": "komutlar: {count}",
+    "summaryPlugins": "eklentiler: {count}",
+    "summaryNothing": "yalnızca sohbet",
+    "summaryTitle": "Ajanın yapabilecekleri — profil ayarlarını aç"
   }
 }

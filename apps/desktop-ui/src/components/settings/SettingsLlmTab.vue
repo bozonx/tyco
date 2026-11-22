@@ -137,18 +137,6 @@
           @invalid-input="webFetchMaxCharsError = true"
         />
       </FieldRow>
-      <FieldRow
-        :label="t('settings.askAiWebAccess')"
-        :info="t('settings.askAiWebAccessHint')"
-      >
-        <SegmentedControl
-          size="sm"
-          :label="t('settings.askAiWebAccess')"
-          :model-value="askAiWebAccess"
-          :options="askAiWebAccessOptions"
-          @update:model-value="setAskAiWebAccess($event as AskAiWebAccess)"
-        />
-      </FieldRow>
     </SettingsSection>
 
     <ConfirmModal
@@ -189,8 +177,6 @@ import SecretKeyField from './SecretKeyField.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
 import SettingsSection from './SettingsSection.vue'
 import {
-  ASK_AI_WEB_ACCESS_DEFAULT,
-  type AskAiWebAccess,
   DEFAULT_MAX_TOOL_STEPS,
   DEFAULT_WEB_FETCH_MAX_CHARACTERS,
   LLM_TASKS,
@@ -396,21 +382,6 @@ const jinaKeyEditor = createSecretKeyEditor({
 })
 const saveJinaKey = () => jinaKeyEditor.save()
 const removeJinaKey = jinaKeyEditor.remove
-
-const askAiWebAccess = computed<AskAiWebAccess>(
-  () => userConfig.value.llm.webSearch?.askAiAccess ?? ASK_AI_WEB_ACCESS_DEFAULT
-)
-const askAiWebAccessOptions = computed(() => [
-  { id: 'off', name: t('settings.accessOff') },
-  { id: 'ask', name: t('settings.accessAsk') },
-  { id: 'allow', name: t('settings.accessAllow') },
-])
-function setAskAiWebAccess(access: AskAiWebAccess) {
-  userConfig.value.llm.webSearch = {
-    ...userConfig.value.llm.webSearch,
-    askAiAccess: access,
-  }
-}
 
 const maxToolStepsError = ref(false)
 const maxToolStepsText = ref(String(llm.value.maxToolSteps ?? ''))

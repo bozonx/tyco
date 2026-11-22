@@ -14,29 +14,64 @@ pub enum ProjectAccessMode {
 pub struct ProjectPermission {
     pub read: ProjectAccessMode,
     pub write: ProjectAccessMode,
+    /// Never freer than `write`: the stricter of the two applies.
+    pub delete: ProjectAccessMode,
 }
 
-/// Whether a group of tools is offered to the model, and how freely.
+impl ProjectPermission {
+    /// The access to deleting, kept no freer than writing.
+    pub fn effective_delete(&self) -> ProjectAccessMode {
+        stricter_access(&self.write, &self.delete)
+    }
+}
+
+/// The stricter of two access modes.
+pub fn stricter_access(a: &ProjectAccessMode, b: &ProjectAccessMode) -> ProjectAccessMode {
+    let rank = |mode: &ProjectAccessMode| match mode {
+        ProjectAccessMode::Allow => 0,
+        ProjectAccessMode::Ask => 1,
+        ProjectAccessMode::Deny => 2,
+    };
+    if rank(a) >= rank(b) {
+        a.clone()
+    } else {
+        b.clone()
+    }
+}
+
+/// The state of one tool in a profile: off (the model does not see it),
+/// asking before each call, or allowed.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, ts_rs::TS)]
+#[serde(rename_all = "lowercase")]
+pub enum ToolState {
+    Off,
+    Ask,
+    Allow,
+}
+
+/// Whether a tool source is switched on.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
-pub struct ToolGroupSettings {
+pub struct ToolSourceSettings {
     pub is_enabled: bool,
-    /// `ask` waits for the user before each call; with no UI it means `deny`.
-    pub access: ProjectAccessMode,
-    /// Commands selected for this group, when the group offers them (e.g. `commands`).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub command_ids: Option<Vec<String>>,
 }
 
-/// The tools a profile's chat may use.
+/// The tools a profile's chat may use, as the differences from the defaults:
+/// the `core` and `plugin` sources are on, `mcp` servers and commands are
+/// picked; a tool's policy comes from its risk. See
+/// `dev_docs/architecture.md`.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileToolSettings {
-    /// By tool group id; a group that is not listed has its default: the
-    /// web tools are on, the other groups off.
+    /// By source key, `<kind>:<id>`.
     #[serde(default)]
-    pub groups: HashMap<String, ToolGroupSettings>,
+    pub sources: HashMap<String, ToolSourceSettings>,
+    /// By tool key, `<kind>:<id>:<tool>`.
+    #[serde(default)]
+    pub tools: HashMap<String, ToolState>,
+    /// The commands the profile's chat may run.
+    #[serde(default)]
+    pub command_ids: Vec<String>,
 }
 
 /// The memory mode of a profile.
@@ -45,7 +80,6 @@ pub struct ProfileToolSettings {
 pub enum ProfileMemoryMode {
     #[default]
     Auto,
-    Ask,
     ReadOnly,
     Off,
 }
@@ -108,8 +142,8 @@ pub struct AiProfile {
     pub max_output_tokens: Option<u32>,
     #[serde(default)]
     pub project_permissions: HashMap<String, ProjectPermission>,
-    /// The defaults of every group when unset, see
-    /// [`ProfileToolSettings::groups`].
+    /// The defaults of every source and tool when unset, see
+    /// [`ProfileToolSettings`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub tools: Option<ProfileToolSettings>,

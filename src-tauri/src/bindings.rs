@@ -88,6 +88,7 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<services::storage::user_data_relocation::UserDataTarget>();
     visitor.visit::<services::activation::ActivationMode>();
     visitor.visit::<services::activation::metrics::ActivationMetricMark>();
+    visitor.visit::<services::ai_tools::permissions::ToolCallContext>();
     visitor.visit::<services::ai_tools::files::AiFileChangePreview>();
     visitor.visit::<services::ai_tools::files::AiAttachedFile>();
     visitor.visit::<services::ai_tools::files::AiFileRoot>();
@@ -110,6 +111,8 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<models::VaultChange>();
     visitor.visit::<services::ai_vault::ProfileMemoryChange>();
     visitor.visit::<services::ai_vault::ProfileMemoryMode>();
+    visitor.visit::<services::ai_vault::ProfileToolSettings>();
+    visitor.visit::<services::ai_vault::ToolState>();
     visitor.visit::<services::ai_vault::ProfileMemorySearchResult>();
     visitor.visit::<services::ai_vault::ProfileMemoryTopic>();
     visitor.visit::<services::custom_actions::CommandRunRecord>();

@@ -3,6 +3,7 @@ import {
   hasContributionIdFormat,
 } from './package-format.js'
 import { isRecord } from './value-guards.js'
+import { CHAT_TOOL_RISKS, type ChatToolRisk } from './plugin.js'
 import type {
   OperationResult,
   ParseResult,
@@ -12,7 +13,7 @@ import type {
 /** Check untrusted registration data before it reaches a host registry. */
 export function validateContribution(
   value: unknown,
-  kind: 'action' | 'edit' | 'toolbar' | 'tool'
+  kind: 'action' | 'edit' | 'toolbar' | 'tool' | 'chatTool'
 ): void {
   if (
     !isRecord(value) ||
@@ -68,9 +69,50 @@ export function validateContribution(
       throw new Error(`Invalid ${kind} tool reference`)
     return
   }
+  if (kind === 'chatTool') return
   if (kind !== 'tool' && typeof value.action !== 'function')
     throw new Error('Missing plugin callback')
 }
+
+/** Longest description of a chat tool for the model */
+export const MAX_CHAT_TOOL_DESCRIPTION_LENGTH = 2000
+
+/**
+ * Checks a chat tool of a plugin: a description for the model, an input schema,
+ * a risk and a callback. A plugin with `notes` or `browser` reaches past the
+ * app, so its tools declare `external`
+ */
+export function validateChatToolContribution(
+  value: unknown,
+  capabilities: readonly string[]
+): void {
+  validateContribution(value, 'chatTool')
+  const tool = value as Record<string, unknown>
+  if (typeof tool.labelKey !== 'string' || !tool.labelKey)
+    throw new Error('Missing chat tool label')
+  if (
+    typeof tool.description !== 'string' ||
+    !tool.description.trim() ||
+    tool.description.length > MAX_CHAT_TOOL_DESCRIPTION_LENGTH
+  )
+    throw new Error('Invalid chat tool description')
+  validateOperationSchema(tool.inputSchema)
+  if (!CHAT_TOOL_RISKS.includes(tool.risk as ChatToolRisk))
+    throw new Error('Invalid chat tool risk')
+  if (
+    tool.risk !== 'external' &&
+    capabilities.some((capability) =>
+      EXTERNAL_CAPABILITIES.includes(capability)
+    )
+  )
+    throw new Error(
+      'A chat tool of a plugin with notes or browser must declare the external risk'
+    )
+  if (typeof tool.run !== 'function') throw new Error('Missing chat tool run')
+}
+
+/** The capabilities that reach past the app's data */
+const EXTERNAL_CAPABILITIES: readonly string[] = ['notes', 'browser']
 
 export function validateOperationResult(
   value: unknown

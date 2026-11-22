@@ -217,11 +217,11 @@ describe('profile editor', () => {
     await editor.load({ ...profile, memoryMode: 'auto' })
     expect(editor.memoryMode.value).toBe('auto')
 
-    editor.changeMemoryMode('ask')
-    expect(editor.memoryMode.value).toBe('ask')
+    editor.changeMemoryMode('read-only')
+    expect(editor.memoryMode.value).toBe('read-only')
     await vi.advanceTimersByTimeAsync(0)
     expect(deps.updateProfile).toHaveBeenCalledWith(
-      { memoryMode: 'ask' },
+      { memoryMode: 'read-only' },
       undefined
     )
   })

@@ -126,7 +126,7 @@
     "stop": "중지",
     "stopped": "중지됨",
     "toolAllow": "허용",
-    "toolAllowSession": "이 세션에서 허용",
+    "toolAllowSession": "이 채팅에서 허용",
     "toolApprovalQuestion": "{tool} 실행을 허용하시겠습니까?",
     "toolArguments": "인수",
     "toolDeny": "거부",
@@ -155,7 +155,10 @@
       "workspace": "파일",
       "workspaceHint": "프로필 파일: 채팅 기록과 별도로 보관되며 프로필의 모든 채팅에서 사용할 수 있습니다"
     },
-    "takeScreenshot": "스크린샷 찍기"
+    "takeScreenshot": "스크린샷 찍기",
+    "toolAllowBatch": "{count}개 모두 허용",
+    "toolAllowAlways": "항상 허용",
+    "toolAllowAlwaysWriteDelete": "쓰기와 삭제를 항상 허용"
   },
   "chatTools": {
     "files": {
@@ -188,12 +191,12 @@
     "web": {
       "fetchLabel": "웹 페이지 읽기",
       "group": "웹 검색",
-      "groupHint": "Jina AI를 사용하여 웹을 검색하고 웹 페이지를 가져옵니다. \"확인\"은 각 호출 전에 확인을 요청합니다.",
+      "groupHint": "Jina AI로 웹을 검색하고 페이지를 읽습니다.",
       "searchLabel": "웹 검색"
     },
     "commands": {
       "group": "명령어",
-      "groupHint": "모델이 선택한 명령을 실행하도록 허용합니다. AI용 설명이 있는 명령만 선택할 수 있습니다. '확인'은 호출할 때마다 확인합니다.",
+      "groupHint": "모델이 선택한 명령을 실행할 수 있습니다. AI용 설명이 있는 명령만 고를 수 있습니다. 허용하지 않으면 호출마다 먼저 묻습니다.",
       "needsDescription": "명령어 설정에 AI용 설명이 필요합니다",
       "noCommands": "아직 구성된 사용자 지정 명령어가 없습니다.",
       "noCommandsHint": "먼저 설정 → 명령어에서 명령어를 생성하세요.",
@@ -224,8 +227,6 @@
     "afterRunCopy": "클립보드로 복사",
     "afterRunInsert": "창에 삽입",
     "afterRunShowResult": "결과 표시",
-    "aiAllowedCommands": "실행할 수 있는 명령",
-    "aiAllowedCommandsInfo": "프롬프트에 필요하면 AI가 묻지 않고 이 명령들을 실행합니다. 명령은 자기 자신이나 자신을 호출한 AI 명령을 실행하지 않습니다.",
     "aiDescription": "AI 명령은 지시에 따라 텍스트를 대화 없이 한 번에 처리하며, 허용한 명령을 실행할 수 있습니다. AI와 대화를 시작하려면 프롬프트를 사용하세요. 이 모델은 모든 AI 명령에 사용됩니다.",
     "aiMaxSteps": "단계 제한",
     "aiMaxStepsInfo": "AI가 실행할 수 있는 최대 명령 수입니다. 최종 답변은 이 한도에 포함되지 않습니다. 비워 두면 LLM 설정의 한도를 사용합니다.",
@@ -234,8 +235,6 @@
     "aiPromptLabel": "프롬프트",
     "aiPromptPlaceholder": "예: 텍스트에서 날짜와 시간을 찾아 내 캘린더에 일정을 추가해 줘",
     "aiTaskModel": "AI 명령 모델",
-    "aiToolsEnabledInfo": "활성화하면 AI가 허용된 다른 명령을 호출할 수 있습니다.",
-    "aiToolsEnabledLabel": "도구 허용",
     "badgeAi": "AI에서 사용 가능 (설명 있음)",
     "badgeExternal": "외부에서 사용 가능 (CLI, D-Bus)",
     "badgeInLauncher": "작업: {page}페이지 ({key})",
@@ -323,7 +322,14 @@
     "unnamed": "제목 없는 명령",
     "variablesNotSet": "사용하는 변수에 이 기기의 값이 없습니다",
     "voiceOutputActionHint": "음성으로 실행하면 이 명령은 항상 결과 메뉴를 엽니다.",
-    "warningExternalNameTwins": "동일한 이름을 가진 다른 명령이 있습니다: {names}. 이름으로 호출하면 모호하여 거부되므로 ID를 사용하세요."
+    "warningExternalNameTwins": "동일한 이름을 가진 다른 명령이 있습니다: {names}. 이름으로 호출하면 모호하여 거부되므로 ID를 사용하세요.",
+    "aiTools": "에이전트 도구",
+    "aiToolsInfo": "에이전트가 호출할 수 있는 항목입니다. AI 명령은 물어볼 창 없이 실행되는 경우가 많아 목록의 항목은 모두 묻지 않고 실행됩니다. 파일과 메모리는 사용할 수 없습니다.",
+    "aiToolsUnavailable": "지금은 사용할 수 없음",
+    "aiToolUnavailable": "사용 불가",
+    "aiToolsRiskyWarning": "목록의 일부 도구는 데이터를 변경하거나 삭제하고 앱 밖에서 동작할 수 있으며, 묻지 않고 실행됩니다.",
+    "aiRiskLabel": "AI용 위험도",
+    "aiRiskInfo": "AI가 호출할 때 명령이 할 수 있는 일입니다. Tyco는 명령이 무엇을 하는지 알 수 없으므로, 따로 선택하지 않으면 앱 밖의 동작으로 간주합니다."
   },
   "common": {
     "add": "추가",
@@ -664,11 +670,9 @@
     "accessAsk": "확인 필요",
     "accessOff": "끄기",
     "accessLevel": "접근",
-    "accessLevelAskAll": "읽기 및 쓰기 시 확인",
     "accessLevelFull": "전체 접근",
     "accessLevelCustom": "사용자 지정(직접 설정)",
     "accessLevelRead": "읽기 전용",
-    "accessLevelReadWriteAsk": "확인 후 읽기 및 쓰기",
     "accessRemove": "접근 제거",
     "actionAfterRunNone": "동작 없음",
     "actionCommandInfo": "시스템 셸(sh, zsh 또는 PowerShell)에서 실행됩니다. 명령은 {placeholder}가 나타나는 위치에만 텍스트를 전달받습니다. 따옴표로 감싸고 이스케이프 처리된 텍스트로 치환되므로 주변에 따옴표를 붙일 필요가 없습니다.",
@@ -1062,7 +1066,6 @@
     "profileMemoryHardTopic": "최대 한도 초과 (~4,000 토큰) — 쓰기 차단됨",
     "profileMemoryHint": "대화 전반에 걸쳐 보존되는 사실, 선호 사항 및 메모.",
     "profileMemoryMode": "메모리 모드",
-    "profileMemoryModeAsk": "확인 후 쓰기 (승인 필요)",
     "profileMemoryModeAuto": "자동 (확인 없이 저장)",
     "profileMemoryModeOff": "꺼짐",
     "profileMemoryModeReadOnly": "읽기 전용",
@@ -1076,12 +1079,11 @@
     "profileNotFoundHint": "삭제되었거나 다른 작업 공간에 있을 수 있습니다.",
     "profileSoulPrompt": "루트 지시 사항 (SOUL.md)",
     "profileSoulPromptHint": "이 어시스턴트의 페르소나, 역할, 어조 및 규칙입니다. 프로필은 오직 이 내용만 따릅니다. AI에게 질문의 지시 사항과 규칙은 적용되지 않습니다. 모든 요청 전에 새로 읽어오므로 디스크에서 편집한 내용도 즉시 반영됩니다. 채팅 또는 빠른 요청 환경별로 다른 요구 사항을 지정할 수 있습니다.",
-    "profileToolAccess": "접근 권한",
     "maxToolSteps": "응답당 단계 수",
     "maxToolStepsHint": "한 번의 답변에서 모델이 도구를 호출할 수 있는 횟수입니다. 모든 채팅, 빠른 요청, AI 명령에 적용됩니다. 무한 반복과 불필요한 비용을 막아 줍니다.",
     "maxToolStepsInvalid": "1에서 50 사이의 정수를 입력하세요",
     "profileTools": "도구",
-    "profileToolsHint": "프로필의 모델이 채팅에서 스스로 수행할 수 있는 작업입니다. “확인 필요”로 설정된 호출은 메시지에서 사용자의 승인을 기다립니다.",
+    "profileToolsHint": "프로필 에이전트가 쓸 수 있는 항목입니다. 읽기는 자유롭게 실행되고 변경은 먼저 묻습니다. 각 도구를 끔, 묻기, 허용으로 설정하세요. 메모리와 프로필 작업 공간은 묻지 않습니다.",
     "profileWebSearchLlmNotice": "API 키와 페이지 크기 제한은 LLM 설정에서 전역으로 구성됩니다.",
     "projectAccessFileToolsOff": "파일 도구가 꺼져 있음",
     "projectChangedElsewhere": "다른 기기나 TyCo 밖에서 프로젝트가 변경되었습니다. 변경 사항은 아직 저장되지 않았습니다.",
@@ -1311,8 +1313,6 @@
     "webJinaApiKey": "Jina AI API 키",
     "webJinaApiKeyHint": "선택 사항입니다. 키가 없으면 공유 속도 제한이 있는 무료 요금제가 사용됩니다.",
     "webSearchSectionHint": "AI 모델 및 프로필에서 사용하는 웹 검색 및 페이지 읽기 도구 설정입니다.",
-    "askAiWebAccess": "\"AI에게 질문\"의 웹",
-    "askAiWebAccessHint": "프로필이 없는 \"AI에게 질문\" 채팅이 웹을 검색하고 페이지를 읽을 수 있는지 여부입니다. \"묻기\"는 호출할 때마다 승인을 기다립니다. 프로필은 자체 도구에서 설정합니다.",
     "translationVoiceCommand": "음성 명령",
     "translationVoiceCommandInfo": "음성 명령에 번역 명령을 포함합니다(“[언어]로 번역”).",
     "dialogTab": "대화",
@@ -1351,7 +1351,13 @@
       "projectLoses": "다음 프로필이 접근 권한을 잃습니다: {names}.",
       "externalFolder": "외부 폴더는 그대로 남습니다. 다른 컴퓨터에서는 다시 설정하세요.",
       "otherDevices": "대상 작업 공간이 연결되지 않은 컴퓨터에서는 연결될 때까지 보이지 않습니다."
-    }
+    },
+    "accessDeleteWithoutAsking": "묻지 않고 삭제",
+    "accessLevelReadWrite": "읽기 및 쓰기",
+    "askAiWebSearch": "웹 검색",
+    "askAiWebSearchHint": "“AI에게 묻기” 채팅이 묻지 않고 웹을 검색하고 페이지를 읽게 합니다. 파일, 메모리, 명령은 절대 보지 못합니다.",
+    "askAiFastModelsHint": "“AI에게 묻기”는 빠른 모델에서 가장 잘 작동합니다. 빠른 답변과 사실 확인을 위한 기능입니다.",
+    "toolsTab": "도구"
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {
@@ -1730,5 +1736,32 @@
     "translationModelNone": "번역할 모델이 선택되지 않았습니다",
     "startCompact": "간단히 보기로 시작",
     "route": "{from} → {to}"
+  },
+  "toolPermissions": {
+    "riskRead": "읽기",
+    "riskWrite": "데이터 변경",
+    "riskDestructive": "삭제",
+    "riskExternal": "외부에서 동작",
+    "sourceCore": "기본 제공",
+    "sourcePlugin": "플러그인",
+    "sourceThirdPartyPlugin": "타사 플러그인",
+    "sourceMcp": "MCP 서버",
+    "sourceCommand": "명령",
+    "sourceOffEverywhere": "도구 설정에서 꺼짐",
+    "pluginCapabilities": "플러그인 권한: {capabilities}",
+    "pluginSourceHint": "이 플러그인이 채팅에 제공하는 도구입니다. 플러그인의 권한으로 실행됩니다.",
+    "leakQuestion": "이 채팅은 이미 데이터를 읽었으며 이 호출은 새로운 곳에 닿습니다. 이 채팅에서 장소마다 한 번만 묻습니다.",
+    "contextTokens": "약 {count}토큰",
+    "catalogHint": "에이전트 도구의 출처입니다. 여기서 끈 플러그인은 모든 프로필과 AI 명령에서 꺼집니다. 기본 제공 도구는 “AI에게 묻기”, 각 프로필, 각 AI 명령에서 켜고 끕니다.",
+    "catalogWhereHint": "각 프로필은 자체 설정에서 도구와 실행 방식을 고릅니다.",
+    "defaultPolicy": "기본값: {policy}",
+    "summaryWorkspace": "작업 공간",
+    "summaryProjects": "프로젝트: {count}",
+    "summaryProjectsRead": "프로젝트: {count}(읽기)",
+    "summaryWeb": "웹",
+    "summaryCommands": "명령: {count}",
+    "summaryPlugins": "플러그인: {count}",
+    "summaryNothing": "채팅만",
+    "summaryTitle": "에이전트가 할 수 있는 일 — 프로필 설정 열기"
   }
 }

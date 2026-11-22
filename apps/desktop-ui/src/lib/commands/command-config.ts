@@ -128,7 +128,7 @@ function defaultOperationConfig(operationId: string): Record<string, unknown> {
         isAuthEnabled: false,
       }
     case 'core.aiTask':
-      return { prompt: '', allowedCommandIds: [], isToolsEnabled: true }
+      return { prompt: '', tools: [] }
     default:
       // a plugin tool falls back to the plugin settings for empty fields
       return {}

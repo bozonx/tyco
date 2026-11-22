@@ -11,7 +11,8 @@ import {
 function tool(overrides: Partial<ChatToolDefinition> = {}): ChatToolDefinition {
   return {
     name: 'read_note',
-    groupId: 'notes',
+    source: { kind: 'plugin', id: 'notes' },
+    risk: 'read',
     description: 'Reads a note',
     inputSchema: { type: 'object', properties: { id: { type: 'string' } } },
     execute: async () => 'note text',
@@ -23,14 +24,42 @@ function provider(tools: ChatToolDefinition[]): ChatToolProvider {
   return { id: 'test', tools: () => tools }
 }
 
+/** The settings of a plugin source as the old groups put them */
 const settings = (
-  groups: ProfileToolSettings['groups']
-): ProfileToolSettings => ({ groups })
+  groups: Record<
+    string,
+    { isEnabled: boolean; access: 'ask' | 'allow' | 'deny' }
+  >
+): ProfileToolSettings => {
+  const result: ProfileToolSettings = {
+    sources: { 'plugin:off': { isEnabled: false } },
+    tools: {},
+    commandIds: [],
+  }
+  for (const [id, group] of Object.entries(groups)) {
+    if (!group.isEnabled || group.access === 'deny')
+      result.sources[`plugin:${id}`] = { isEnabled: false }
+    if (group.access === 'ask')
+      for (const name of ['read_note', 'write_note'])
+        result.tools[`plugin:${id}:${name}`] = 'ask'
+  }
+  return result
+}
 
-const context = (toolSettings?: ProfileToolSettings) => ({
+const context = (
+  toolSettings: ProfileToolSettings = settings({
+    notes: { isEnabled: false, access: 'allow' },
+  })
+) => ({
   profileId: 'writer',
   modelId: 'model',
-  settings: toolSettings,
+  scope: {
+    kind: 'profile' as const,
+    profileId: 'writer',
+    settings: toolSettings,
+    catalog: undefined,
+  },
+  callContext: { kind: 'profile' as const, profileId: 'writer' },
 })
 
 const run = (
@@ -274,7 +303,9 @@ describe('chat-tool-registry', () => {
         { ...provider([tool()]), instructions: () => 'Roots: workspace/' },
         {
           id: 'off',
-          tools: () => [tool({ name: 'other', groupId: 'off' })],
+          tools: () => [
+            tool({ name: 'other', source: { kind: 'plugin', id: 'off' } }),
+          ],
           instructions: () => 'Never shown',
         },
       ],

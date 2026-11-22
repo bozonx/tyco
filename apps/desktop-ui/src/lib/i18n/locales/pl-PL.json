@@ -126,7 +126,7 @@
     "stop": "Zatrzymaj",
     "stopped": "Zatrzymano",
     "toolAllow": "Zezwól",
-    "toolAllowSession": "Zezwól w tej sesji",
+    "toolAllowSession": "Zezwól w tym czacie",
     "toolApprovalQuestion": "Zezwolić na uruchomienie {tool}?",
     "toolArguments": "Argumenty",
     "toolDeny": "Odmów",
@@ -155,7 +155,10 @@
       "workspace": "Pliki",
       "workspaceHint": "Pliki profilu: przechowywane poza historią czatów, dostępne we wszystkich czatach profilu"
     },
-    "takeScreenshot": "Zrób zrzut ekranu"
+    "takeScreenshot": "Zrób zrzut ekranu",
+    "toolAllowBatch": "Zezwól na wszystkie ({count})",
+    "toolAllowAlways": "Zawsze zezwalaj",
+    "toolAllowAlwaysWriteDelete": "Zawsze zezwalaj na zapis i usuwanie"
   },
   "chatTools": {
     "files": {
@@ -188,12 +191,12 @@
     "web": {
       "fetchLabel": "Czytaj stronę",
       "group": "Wyszukiwanie w internecie",
-      "groupHint": "Wyszukuj w internecie i pobieraj strony internetowe za pomocą Jina AI. „Pytaj” pyta o potwierdzenie przed każdym wywołaniem.",
+      "groupHint": "Wyszukiwanie w internecie i czytanie stron przez Jina AI.",
       "searchLabel": "Wyszukiwanie w internecie"
     },
     "commands": {
       "group": "Polecenia",
-      "groupHint": "Zezwól modelowi na uruchamianie wybranych poleceń. Wybrać można tylko polecenia z opisem dla AI. „Pytaj” wymaga potwierdzenia przed każdym wywołaniem.",
+      "groupHint": "Model może uruchamiać wybrane polecenia. Wybrać można tylko polecenia z opisem dla AI. Każde wywołanie najpierw pyta, chyba że na nie zezwolisz.",
       "needsDescription": "Wymaga opisu dla AI w ustawieniach polecenia",
       "noCommands": "Nie skonfigurowano jeszcze poleceń użytkownika.",
       "noCommandsHint": "Najpierw utwórz polecenia w Ustawienia → Polecenia.",
@@ -224,8 +227,6 @@
     "afterRunCopy": "Do schowka",
     "afterRunInsert": "Wstaw do okna",
     "afterRunShowResult": "Pokaż wynik",
-    "aiAllowedCommands": "Polecenia, które może uruchamiać",
-    "aiAllowedCommandsInfo": "AI uruchamia te polecenia bez pytania, gdy prompt tego wymaga. Polecenie nigdy nie uruchamia samego siebie ani polecenia AI, które je wywołało.",
     "aiDescription": "Polecenie AI przetwarza tekst według Twojej instrukcji w jednym kroku, bez dialogu, i może uruchamiać polecenia, na które mu pozwolisz. Aby rozpocząć rozmowę z AI, użyj promptów. Ten model obsługuje wszystkie polecenia AI.",
     "aiMaxSteps": "Limit kroków",
     "aiMaxStepsInfo": "Maksymalna liczba poleceń, które może uruchomić AI. Ostateczna odpowiedź nie wlicza się do limitu. Pozostaw puste, aby użyć limitu z ustawień LLM.",
@@ -234,8 +235,6 @@
     "aiPromptLabel": "Prompt",
     "aiPromptPlaceholder": "Np. Znajdź w tekście datę i godzinę i dodaj wydarzenie do mojego kalendarza",
     "aiTaskModel": "Model dla poleceń AI",
-    "aiToolsEnabledInfo": "Gdy włączone, AI może wywoływać inne dozwolone polecenia.",
-    "aiToolsEnabledLabel": "Zezwalaj na narzędzia",
     "badgeAi": "Dostępne dla AI (zawiera opis)",
     "badgeExternal": "Dostępne zewnętrznie (CLI, D-Bus)",
     "badgeInLauncher": "Działania: strona {page} ({key})",
@@ -323,7 +322,14 @@
     "unnamed": "Polecenie bez nazwy",
     "variablesNotSet": "Używana zmienna nie ma wartości na tym urządzeniu",
     "voiceOutputActionHint": "Uruchomione głosem to polecenie zawsze otwiera menu wyniku.",
-    "warningExternalNameTwins": "Inne polecenia mają tę samą nazwę: {names}. Wywołanie po tej nazwie jest odrzucane jako niejednoznaczne; użyj ID."
+    "warningExternalNameTwins": "Inne polecenia mają tę samą nazwę: {names}. Wywołanie po tej nazwie jest odrzucane jako niejednoznaczne; użyj ID.",
+    "aiTools": "Narzędzia agenta",
+    "aiToolsInfo": "Co agent może wywoływać. Wszystko z listy działa bez pytania, bo polecenie AI często działa bez okna, w którym można zapytać. Pliki i pamięć nigdy nie są mu dostępne.",
+    "aiToolsUnavailable": "Obecnie niedostępne",
+    "aiToolUnavailable": "Niedostępne",
+    "aiToolsRiskyWarning": "Niektóre narzędzia z listy mogą zmieniać lub usuwać dane albo działać poza aplikacją — i działają bez pytania.",
+    "aiRiskLabel": "Ryzyko dla AI",
+    "aiRiskInfo": "Co polecenie może zrobić, gdy wywoła je AI. Tyco nie wie, co robi polecenie, więc uznaje je za działanie poza aplikacją, chyba że wybierzesz inaczej."
   },
   "common": {
     "add": "Dodaj",
@@ -664,11 +670,9 @@
     "accessAsk": "Pytaj",
     "accessOff": "Wył.",
     "accessLevel": "Dostęp",
-    "accessLevelAskAll": "Pytaj o odczyt i zapis",
     "accessLevelFull": "Pełny dostęp",
     "accessLevelCustom": "Niestandardowy (ustawiony ręcznie)",
     "accessLevelRead": "Tylko odczyt",
-    "accessLevelReadWriteAsk": "Odczyt i zapis z potwierdzeniem",
     "accessRemove": "Usuń dostęp",
     "actionAfterRunNone": "Nic",
     "actionCommandInfo": "Uruchamiane w powłoce systemowej (sh, zsh lub PowerShell). Polecenie otrzymuje tekst tylko tam, gdzie występuje {placeholder}. Jest ono zastępowane tekstem już ujętym w cudzysłów i zabezpieczonym, więc cudzysłowy wokół nie są potrzebne.",
@@ -1062,7 +1066,6 @@
     "profileMemoryHardTopic": "Przekroczono twardy limit (~4 000 tokenów) — zapis zablokowany",
     "profileMemoryHint": "Fakty, trwałe preferencje i notatki zachowywane między rozmowami.",
     "profileMemoryMode": "Tryb pamięci",
-    "profileMemoryModeAsk": "Z pytaniem (wymaga potwierdzenia)",
     "profileMemoryModeAuto": "Automatyczny (zapis bez pytania)",
     "profileMemoryModeOff": "Wyłączona",
     "profileMemoryModeReadOnly": "Tylko do odczytu",
@@ -1076,12 +1079,11 @@
     "profileNotFoundHint": "Mógł zostać usunięty lub jest w innej przestrzeni roboczej.",
     "profileSoulPrompt": "Instrukcja główna (SOUL.md)",
     "profileSoulPromptHint": "Osobowość, rola, ton i zasady tego asystenta. Tylko tego trzyma się profil: instrukcje i zasady „Zapytaj AI” nie mają zastosowania. Odczytywana na nowo przed każdym zapytaniem, więc liczą się też zmiany na dysku. Możesz podać różne wymagania dla każdego środowiska: czatu lub szybkich zapytań.",
-    "profileToolAccess": "dostęp",
     "maxToolSteps": "Kroki na odpowiedź",
     "maxToolStepsHint": "Ile razy model może wywołać narzędzia w jednej odpowiedzi – we wszystkich czatach, szybkich zapytaniach i poleceniach AI. Limit chroni przed zapętleniem i zbędnymi kosztami.",
     "maxToolStepsInvalid": "Wpisz liczbę całkowitą od 1 do 50",
     "profileTools": "Narzędzia",
-    "profileToolsHint": "Co model profilu może robić samodzielnie na czacie. Wywołania ustawione na „Pytaj” czekają w wiadomości na Twoją zgodę.",
+    "profileToolsHint": "Z czego może korzystać agent profilu. Odczyt działa swobodnie, zmiany najpierw pytają; ustaw każde narzędzie na Wył., Pytaj lub Zezwalaj. Pamięć i obszar roboczy profilu nigdy nie pytają.",
     "profileWebSearchLlmNotice": "Klucz API oraz limity rozmiaru stron są konfigurowane globalnie w ustawieniach LLM.",
     "projectAccessFileToolsOff": "Narzędzia plików są wyłączone",
     "projectChangedElsewhere": "Projekt zmieniono na innym urządzeniu lub poza TyCo. Twoje zmiany nie są jeszcze zapisane.",
@@ -1311,8 +1313,6 @@
     "webJinaApiKey": "Klucz API Jina AI",
     "webJinaApiKeyHint": "Opcjonalnie. Bez klucza żądania korzystają z bezpłatnego planu ze wspólnymi limitami.",
     "webSearchSectionHint": "Ustawienia wyszukiwania w sieci i czytania stron używanych przez modele i profile AI.",
-    "askAiWebAccess": "Sieć w „Zapytaj AI”",
-    "askAiWebAccessHint": "Czy czat „Zapytaj AI”, który nie ma profilu, może wyszukiwać w sieci i czytać strony. „Pytaj” czeka na Twoją zgodę przed każdym wywołaniem. Profile ustawiają to we własnych narzędziach.",
     "translationVoiceCommand": "Polecenie głosowe",
     "translationVoiceCommandInfo": "Dołącza polecenie tłumaczenia do poleceń głosowych („przetłumacz na [język]”).",
     "dialogTab": "Dialog",
@@ -1351,7 +1351,13 @@
       "projectLoses": "Te profile stracą do niego dostęp: {names}.",
       "externalFolder": "Folder zewnętrzny zostaje na miejscu; na innych komputerach ustaw go ponownie.",
       "otherDevices": "Na komputerach, gdzie docelowa przestrzeń robocza nie jest podłączona, zniknie, dopóki nie zostanie tam podłączona."
-    }
+    },
+    "accessDeleteWithoutAsking": "Usuwaj bez pytania",
+    "accessLevelReadWrite": "Odczyt i zapis",
+    "askAiWebSearch": "Wyszukiwanie w internecie",
+    "askAiWebSearchHint": "Pozwala czatowi „Zapytaj AI” szukać w internecie i czytać strony bez pytania. Nigdy nie widzi Twoich plików, pamięci ani poleceń.",
+    "askAiFastModelsHint": "„Zapytaj AI” działa najlepiej z szybkim modelem: służy do szybkich odpowiedzi i sprawdzania faktów.",
+    "toolsTab": "Narzędzia"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
@@ -1730,5 +1736,32 @@
     "translationModelNone": "Nie wybrano modelu do tłumaczenia",
     "startCompact": "Uruchom w trybie kompaktowym",
     "route": "{from} → {to}"
+  },
+  "toolPermissions": {
+    "riskRead": "Odczyt",
+    "riskWrite": "Zmienia dane",
+    "riskDestructive": "Usuwa",
+    "riskExternal": "Działa na zewnątrz",
+    "sourceCore": "Wbudowane",
+    "sourcePlugin": "Wtyczka",
+    "sourceThirdPartyPlugin": "Wtyczka zewnętrzna",
+    "sourceMcp": "Serwer MCP",
+    "sourceCommand": "Polecenie",
+    "sourceOffEverywhere": "Wyłączone w ustawieniach Narzędzia",
+    "pluginCapabilities": "Uprawnienia wtyczki: {capabilities}",
+    "pluginSourceHint": "Narzędzia, które ta wtyczka udostępnia czatowi. Działają z uprawnieniami wtyczki.",
+    "leakQuestion": "Ten czat odczytał Twoje dane, a to wywołanie sięga w nowe miejsce. Pytamy raz na miejsce w tym czacie.",
+    "contextTokens": "≈{count} tokenów",
+    "catalogHint": "Skąd pochodzą narzędzia agentów. Wtyczka wyłączona tutaj jest wyłączona we wszystkich profilach i poleceniach AI. Narzędzia wbudowane włącza się w „Zapytaj AI”, w każdym profilu i każdym poleceniu AI.",
+    "catalogWhereHint": "Każdy profil wybiera swoje narzędzia i to, jak swobodnie działają, we własnych ustawieniach.",
+    "defaultPolicy": "Domyślnie: {policy}",
+    "summaryWorkspace": "obszar roboczy",
+    "summaryProjects": "projekty: {count}",
+    "summaryProjectsRead": "projekty: {count} (odczyt)",
+    "summaryWeb": "internet",
+    "summaryCommands": "polecenia: {count}",
+    "summaryPlugins": "wtyczki: {count}",
+    "summaryNothing": "tylko czat",
+    "summaryTitle": "Co może agent — otwórz ustawienia profilu"
   }
 }

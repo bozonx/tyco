@@ -126,7 +126,7 @@
     "stop": "Zastavit",
     "stopped": "Zastaveno",
     "toolAllow": "Povolit",
-    "toolAllowSession": "Povolit v této relaci",
+    "toolAllowSession": "Povolit v tomto chatu",
     "toolApprovalQuestion": "Povolit spuštění {tool}?",
     "toolArguments": "Argumenty",
     "toolDeny": "Zamítnout",
@@ -155,7 +155,10 @@
       "workspace": "Soubory",
       "workspaceHint": "Soubory profilu: uložené mimo historii chatů, dostupné ve všech chatech profilu"
     },
-    "takeScreenshot": "Pořídit snímek obrazovky"
+    "takeScreenshot": "Pořídit snímek obrazovky",
+    "toolAllowBatch": "Povolit vše ({count})",
+    "toolAllowAlways": "Vždy povolit",
+    "toolAllowAlwaysWriteDelete": "Vždy povolit zápis a mazání"
   },
   "chatTools": {
     "files": {
@@ -188,12 +191,12 @@
     "web": {
       "fetchLabel": "Přečíst webovou stránku",
       "group": "Webové vyhledávání",
-      "groupHint": "Hledejte na webu a stahujte webové stránky pomocí Jina AI. „Ptát se“ vyžaduje potvrzení před každým voláním.",
+      "groupHint": "Vyhledávání na webu a čtení stránek přes Jina AI.",
       "searchLabel": "Webové vyhledávání"
     },
     "commands": {
       "group": "Příkazy",
-      "groupHint": "Povolit modelu spouštět vybrané příkazy. Vybrat lze jen příkazy s popisem pro AI. „Zeptat se“ se zeptá před každým voláním.",
+      "groupHint": "Model smí spouštět vybrané příkazy. Vybrat lze jen příkazy s popisem pro AI. Každé volání se nejdřív zeptá, pokud ho nepovolíte.",
       "needsDescription": "Vyžaduje popis pro AI v nastavení příkazu",
       "noCommands": "Zatím nejsou nakonfigurovány žádné uživatelské příkazy.",
       "noCommandsHint": "Nejprve vytvořte příkazy v Nastavení → Příkazy.",
@@ -224,8 +227,6 @@
     "afterRunCopy": "Do schránky",
     "afterRunInsert": "Vložit do okna",
     "afterRunShowResult": "Zobrazit výsledek",
-    "aiAllowedCommands": "Příkazy, které smí spouštět",
-    "aiAllowedCommandsInfo": "AI spouští tyto příkazy bez ptaní, kdykoli je prompt potřebuje. Příkaz nikdy nespustí sám sebe ani AI příkaz, který ho zavolal.",
     "aiDescription": "AI příkaz zpracuje text podle vašeho pokynu v jednom kroku, bez dialogu, a může spouštět příkazy, které mu povolíte. Chcete-li začít rozhovor s AI, použijte prompty. Tento model slouží všem AI příkazům.",
     "aiMaxSteps": "Limit kroků",
     "aiMaxStepsInfo": "Maximální počet příkazů, které může AI spustit. Konečná odpověď se do limitu nepočítá. Ponechte prázdné pro limit z nastavení LLM.",
@@ -234,8 +235,6 @@
     "aiPromptLabel": "Prompt",
     "aiPromptPlaceholder": "Např. Najdi v textu datum a čas a přidej událost do mého kalendáře",
     "aiTaskModel": "Model pro AI příkazy",
-    "aiToolsEnabledInfo": "Pokud je povoleno, AI může volat další povolené příkazy.",
-    "aiToolsEnabledLabel": "Povolit nástroje",
     "badgeAi": "Dostupné pro AI (má popis)",
     "badgeExternal": "Dostupné externě (CLI, D-Bus)",
     "badgeInLauncher": "Akce: stránka {page} ({key})",
@@ -323,7 +322,14 @@
     "unnamed": "Příkaz bez názvu",
     "variablesNotSet": "Proměnná, kterou používá, nemá na tomto zařízení hodnotu",
     "voiceOutputActionHint": "Při hlasovém spuštění tento příkaz vždy otevře nabídku výsledku.",
-    "warningExternalNameTwins": "Jiné příkazy mají stejný název: {names}. Volání tímto názvem se odmítne jako nejednoznačné; použijte ID."
+    "warningExternalNameTwins": "Jiné příkazy mají stejný název: {names}. Volání tímto názvem se odmítne jako nejednoznačné; použijte ID.",
+    "aiTools": "Nástroje agenta",
+    "aiToolsInfo": "Co může agent volat. Vše ze seznamu běží bez ptaní, protože AI příkaz často běží bez okna, kde by se dalo zeptat. Soubory a paměť mu nikdy nejsou dostupné.",
+    "aiToolsUnavailable": "Nyní nedostupné",
+    "aiToolUnavailable": "Nedostupné",
+    "aiToolsRiskyWarning": "Některé nástroje ze seznamu mohou měnit či mazat data nebo jednat mimo aplikaci – a běží bez ptaní.",
+    "aiRiskLabel": "Riziko pro AI",
+    "aiRiskInfo": "Co může příkaz udělat, když ho zavolá AI. Tyco nemůže vědět, co příkaz dělá, proto se počítá jako akce mimo aplikaci, pokud nezvolíte jinak."
   },
   "common": {
     "add": "Přidat",
@@ -664,11 +670,9 @@
     "accessAsk": "Ptát se",
     "accessOff": "Vypnuto",
     "accessLevel": "Přístup",
-    "accessLevelAskAll": "Ptát se na čtení a zápis",
     "accessLevelFull": "Plný přístup",
     "accessLevelCustom": "Vlastní (nastaveno ručně)",
     "accessLevelRead": "Jen čtení",
-    "accessLevelReadWriteAsk": "Čtení a zápis s potvrzením",
     "accessRemove": "Odebrat přístup",
     "actionAfterRunNone": "Nic",
     "actionCommandInfo": "Spouští se v systémovém shellu (sh, zsh nebo PowerShell). Příkaz dostane text jen tam, kde je {placeholder}. Nahradí se textem, který je už v uvozovkách a escapovaný, takže uvozovky kolem nejsou potřeba.",
@@ -1062,7 +1066,6 @@
     "profileMemoryHardTopic": "Překročen tvrdý limit (~4 000 tokenů) — zápis blokován",
     "profileMemoryHint": "Fakta, trvalé preference a poznámky uchovávané mezi konverzacemi.",
     "profileMemoryMode": "Režim paměti",
-    "profileMemoryModeAsk": "S dotazem (vyžaduje potvrzení)",
     "profileMemoryModeAuto": "Automaticky (zápis bez ptaní)",
     "profileMemoryModeOff": "Vypnuto",
     "profileMemoryModeReadOnly": "Pouze pro čtení",
@@ -1076,12 +1079,11 @@
     "profileNotFoundHint": "Možná byl smazán nebo je v jiném prostoru.",
     "profileSoulPrompt": "Kořenová instrukce (SOUL.md)",
     "profileSoulPromptHint": "Osobnost, role, tón a pravidla tohoto asistenta. Profil se řídí jen tímto: instrukce a pravidla „Zeptat se AI“ neplatí. Načítá se znovu před každým požadavkem, takže platí i úpravy na disku. Pro každé prostředí lze zadat jiné požadavky: chat nebo rychlé dotazy.",
-    "profileToolAccess": "přístup",
     "maxToolSteps": "Kroků na odpověď",
     "maxToolStepsHint": "Kolikrát může model v jedné odpovědi volat nástroje – ve všech chatech, rychlých dotazech a příkazech AI. Limit chrání před zacyklením a zbytečnými náklady.",
     "maxToolStepsInvalid": "Zadejte celé číslo od 1 do 50",
     "profileTools": "Nástroje",
-    "profileToolsHint": "Co smí model profilu v chatu dělat sám. Volání nastavená na „Ptát se“ čekají ve zprávě na vaše schválení.",
+    "profileToolsHint": "Co smí agent profilu používat. Čtení běží volně, změny se nejdřív ptají; nastavte každý nástroj na Vypnuto, Ptát se nebo Povolit. Paměť a pracovní prostor profilu se nikdy neptají.",
     "profileWebSearchLlmNotice": "Klíč API a limity velikosti stránek se konfigurují globálně v nastavení LLM.",
     "projectAccessFileToolsOff": "Souborové nástroje jsou vypnuté",
     "projectChangedElsewhere": "Projekt byl změněn na jiném zařízení nebo mimo TyCo. Vaše změny ještě nejsou uloženy.",
@@ -1311,8 +1313,6 @@
     "webJinaApiKey": "Klíč API Jina AI",
     "webJinaApiKeyHint": "Volitelné. Bez klíče požadavky využívají bezplatný tarif se sdílenými limity.",
     "webSearchSectionHint": "Nastavení nástrojů pro vyhledávání na webu a čtení stránek používaných modely a profily AI.",
-    "askAiWebAccess": "Web v „Zeptat se AI“",
-    "askAiWebAccessHint": "Zda chat „Zeptat se AI“, který nemá profil, smí hledat na webu a číst stránky. „Ptát se“ čeká před každým voláním na vaše schválení. Profily to nastavují ve svých nástrojích.",
     "translationVoiceCommand": "Hlasový příkaz",
     "translationVoiceCommandInfo": "Zahrne příkaz překladu do hlasových příkazů („přelož do [jazyk]“).",
     "dialogTab": "Dialog",
@@ -1351,7 +1351,13 @@
       "projectLoses": "Tyto profily k němu ztratí přístup: {names}.",
       "externalFolder": "Externí složka zůstane na místě; na jiných počítačích ji nastavte znovu.",
       "otherDevices": "Na počítačích, kde cílový prostor není připojen, zmizí, dokud tam prostor nepřipojíte."
-    }
+    },
+    "accessDeleteWithoutAsking": "Mazat bez ptaní",
+    "accessLevelReadWrite": "Čtení a zápis",
+    "askAiWebSearch": "Vyhledávání na webu",
+    "askAiWebSearchHint": "Umožní chatu „Zeptat se AI“ hledat na webu a číst stránky bez ptaní. Nikdy nevidí vaše soubory, paměť ani příkazy.",
+    "askAiFastModelsHint": "„Zeptat se AI“ funguje nejlépe s rychlým modelem: je určen pro rychlé odpovědi a ověřování faktů.",
+    "toolsTab": "Nástroje"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
@@ -1730,5 +1736,32 @@
     "translationModelNone": "Pro překlad není vybrán žádný model",
     "startCompact": "Spustit v kompaktním režimu",
     "route": "{from} → {to}"
+  },
+  "toolPermissions": {
+    "riskRead": "Čtení",
+    "riskWrite": "Mění data",
+    "riskDestructive": "Maže",
+    "riskExternal": "Jedná navenek",
+    "sourceCore": "Vestavěné",
+    "sourcePlugin": "Plugin",
+    "sourceThirdPartyPlugin": "Plugin třetí strany",
+    "sourceMcp": "Server MCP",
+    "sourceCommand": "Příkaz",
+    "sourceOffEverywhere": "Vypnuto v nastavení Nástroje",
+    "pluginCapabilities": "Oprávnění pluginu: {capabilities}",
+    "pluginSourceHint": "Nástroje, které tento plugin nabízí chatu. Běží s oprávněními pluginu.",
+    "leakQuestion": "Tento chat už četl vaše data a toto volání by se dostalo na nové místo. Ptáme se jednou na místo v tomto chatu.",
+    "contextTokens": "≈{count} tokenů",
+    "catalogHint": "Odkud pocházejí nástroje agentů. Plugin vypnutý zde je vypnutý ve všech profilech a AI příkazech. Vestavěné nástroje se zapínají v „Zeptat se AI“, v každém profilu a v každém AI příkazu.",
+    "catalogWhereHint": "Každý profil si ve svém nastavení vybírá nástroje a jak volně běží.",
+    "defaultPolicy": "Výchozí: {policy}",
+    "summaryWorkspace": "pracovní prostor",
+    "summaryProjects": "projekty: {count}",
+    "summaryProjectsRead": "projekty: {count} (čtení)",
+    "summaryWeb": "web",
+    "summaryCommands": "příkazy: {count}",
+    "summaryPlugins": "pluginy: {count}",
+    "summaryNothing": "jen chat",
+    "summaryTitle": "Co agent umí — otevřít nastavení profilu"
   }
 }

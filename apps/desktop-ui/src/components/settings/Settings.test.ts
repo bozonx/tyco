@@ -287,7 +287,7 @@ describe('Settings.vue', () => {
         'languages',
         'favorites',
       ],
-      ['commands', 'variables'],
+      ['commands', 'variables', 'tools'],
       ['plugins', 'plugin:PluginA', 'plugin:PluginB'],
     ])
   })

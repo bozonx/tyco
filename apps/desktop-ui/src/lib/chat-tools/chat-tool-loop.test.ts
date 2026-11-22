@@ -17,6 +17,11 @@ const toolSet: ChatToolSet = {
   definitions: new Map(),
   truncatedCallIds: new Set(),
   approvalKey: (toolName) => toolName,
+  approvalInfo: (toolName) => ({
+    approvalKey: toolName,
+    source: { kind: 'core', id: 'test' },
+    risk: 'read',
+  }),
 }
 
 const assistantCall: ModelMessage = {
@@ -112,13 +117,16 @@ describe('chat-tool-loop', () => {
     const result = await runChatToolLoop(deps, input)
 
     expect(requestApproval).toHaveBeenCalledWith(
-      {
+      expect.objectContaining({
         approvalId: 'a1',
         toolCallId: 'c1',
         toolName: 'now',
         input: {},
         approvalKey: 'now',
-      },
+        source: { kind: 'core', id: 'test' },
+        risk: 'read',
+        batchId: 'step-0',
+      }),
       input.signal
     )
     expect(stateWhileAsking).toMatchObject({
@@ -222,7 +230,9 @@ describe('chat-tool-loop', () => {
     },
   ]
 
-  it('asks again for a call of another scope in the batch', async () => {
+  // every call of a batch waits at once; the approvals answer the calls of
+  // the same key together, see chat-tool-approvals.test.ts
+  it('remembers each scope a batch was allowed for', async () => {
     const { deps, input, requestApproval, policy } = setup(
       [
         batchOf([{ root: 'a' }, { root: 'b' }, { root: 'a' }]),
@@ -240,12 +250,13 @@ describe('chat-tool-loop', () => {
       },
     })
 
-    expect(requestApproval).toHaveBeenCalledTimes(2)
+    expect(requestApproval).toHaveBeenCalledTimes(3)
     expect(policy.isAllowedForSession('now:a')).toBe(true)
+    expect(policy.isAllowedForSession('now:b')).toBe(true)
     expect(policy.isAllowedForSession('now')).toBe(false)
   })
 
-  it('asks once for a batch of calls allowed for the session', async () => {
+  it('asks about the whole batch at once', async () => {
     const batch = batchOf([{}, {}])
     const { deps, input, fake, requestApproval } = setup(
       [batch, textAnswer('Noon')],
@@ -254,7 +265,7 @@ describe('chat-tool-loop', () => {
 
     await runChatToolLoop(deps, input)
 
-    expect(requestApproval).toHaveBeenCalledTimes(1)
+    expect(requestApproval).toHaveBeenCalledTimes(2)
     expect(fake.calls[1].prompt.messages.slice(-2)).toEqual(
       ['a1', 'a2'].map((approvalId) => ({
         role: 'tool',
@@ -278,7 +289,8 @@ describe('chat-tool-loop', () => {
         'now',
         {
           name: 'now',
-          groupId: 'debug',
+          source: { kind: 'core' as const, id: 'debug' },
+          risk: 'read' as const,
           label: 'Current time',
           icon: 'mdi:clock-outline',
           description: 'Tells the time',
@@ -361,7 +373,8 @@ describe('chat-tool-loop', () => {
         'propose_replies',
         {
           name: 'propose_replies',
-          groupId: 'reply-blocks',
+          source: { kind: 'core' as const, id: 'replyBlocks' },
+          risk: 'read' as const,
           description: '',
           inputSchema: { type: 'object' as const },
           endsTurn: true,

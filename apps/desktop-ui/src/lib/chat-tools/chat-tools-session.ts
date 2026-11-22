@@ -1,59 +1,50 @@
-import {
-  type AiAttachedFile,
-  type ProfileMemoryMode,
-  type ProfileToolSettings,
-} from '@tyco/shared'
+import type { AiAttachedFile, ProfileMemoryMode } from '@tyco/shared'
 
 import type { AiChatTools } from '../llm/llm-request'
 import { createChatToolApprovals } from './chat-tool-approvals'
-import { createChatToolPolicy } from './chat-tool-policy'
+import {
+  createChatToolPolicy,
+  type ChatToolDecision,
+  type ChatToolPermissionsState,
+} from './chat-tool-policy'
 import {
   createChatToolRegistry,
+  type ChatToolAlwaysAllowTarget,
   type ChatToolProvider,
 } from './chat-tool-registry'
-import { withReplyBlocksToolGroup } from '../reply-blocks/reply-blocks-tool'
-import { withDebugToolGroup } from './debug-chat-tools'
-import { ATTACHMENTS_TOOL_GROUP_ID } from './file-tools'
-import { withMemoryToolGroup } from './memory-tools'
-import { withWebToolGroup } from './web-tools'
+import { toolCallContextOf, type ToolScope } from './tool-catalog'
 
 export interface ChatToolsSessionDependencies {
   providers: () => readonly ChatToolProvider[]
-  /** Offers the debug tools to every chat of a development build */
-  isDebugEnabled?: () => boolean
   /** Model steps one answer may take, see `llm.maxToolSteps` */
   getMaxStepCount: () => number
+  /**
+   * Writes "always allow" into the profile; the call runs once it is saved,
+   * since Rust reads the profile for every call
+   */
+  alwaysAllow?: (target: ChatToolAlwaysAllowTarget) => Promise<void>
+  /** Told when the permissions "in this chat" change, to keep them with it */
+  onPermissionsChange?: (state: ChatToolPermissionsState) => void
   warn?: (message: string) => void
 }
 
 /** What a turn is asked for tools with */
 export interface ChatToolsRequest {
-  /** Null for "Ask AI" */
+  /** Null outside a profile chat */
   profileId: string | null
   modelId: string
   /** Whether the model can call tools at all */
   canUseTools: boolean
-  /** The profile's settings; "Ask AI" has none, and so no tools */
-  settings: ProfileToolSettings | undefined
+  /** Where the tools are offered, see `ToolScope` */
+  scope: ToolScope
   /** The profile's long-term memory mode */
   memoryMode?: ProfileMemoryMode
   /** How much the outputs of the turn's tools may add to the request */
   outputBudgetCharacters?: number
   /** The originals attached to the conversation, for the file tools */
   attachedFiles?: readonly AiAttachedFile[]
-}
-
-/** Reading the user's own attachments is part of every chat with tools */
-function withAttachmentsToolGroup(
-  settings: ProfileToolSettings
-): ProfileToolSettings {
-  return {
-    ...settings,
-    groups: {
-      ...settings.groups,
-      [ATTACHMENTS_TOOL_GROUP_ID]: { isEnabled: true, access: 'allow' },
-    },
-  }
+  /** What the user wrote: the URLs it names may be read without asking */
+  conversationText?: string
 }
 
 /**
@@ -61,7 +52,10 @@ function withAttachmentsToolGroup(
  * this conversation, and the calls waiting for the user
  */
 export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
-  const policy = createChatToolPolicy({ canAsk: true })
+  const policy = createChatToolPolicy({
+    canAsk: true,
+    onPermissionsChange: deps.onPermissionsChange,
+  })
   const approvals = createChatToolApprovals()
   const registry = createChatToolRegistry({
     providers: deps.providers,
@@ -74,21 +68,20 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
     request: ChatToolsRequest
   ): Promise<AiChatTools | undefined> => {
     if (!request.canUseTools) return undefined
-    const baseSettings = deps.isDebugEnabled?.()
-      ? withDebugToolGroup(request.settings)
-      : request.settings
-    // reply blocks, attachments and web tools are part of every chat that can call tools
-    const settings = withWebToolGroup(
-      withAttachmentsToolGroup(
-        withReplyBlocksToolGroup(
-          withMemoryToolGroup(baseSettings, request.memoryMode)
-        )
-      )
+    policy.noteKnownText(request.conversationText)
+    // the memory is in the instructions of a profile chat, and attachments
+    // are the user's own: from the start the chat holds personal data
+    if (
+      request.scope.kind === 'profile' &&
+      ((request.memoryMode ?? 'auto') !== 'off' ||
+        Boolean(request.attachedFiles?.length))
     )
+      policy.notePersonalData()
     const tools = await registry.resolve({
-      profileId: request.profileId,
+      profileId: request.scope.kind === 'profile' ? request.profileId : null,
       modelId: request.modelId,
-      settings,
+      scope: request.scope,
+      callContext: toolCallContextOf(request.scope),
       memoryMode: request.memoryMode,
       outputBudgetCharacters: request.outputBudgetCharacters,
       attachedFiles: request.attachedFiles,
@@ -104,12 +97,32 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
           .get(approval.toolName)
           ?.preview?.(approval.input, signal)
           .catch(() => undefined)
-        return approvals.request(
-          preview ? { ...approval, preview } : approval,
-          signal
-        )
+        // "always allow" only where it can be saved
+        const { alwaysAllow, ...rest } = approval
+        const shown = {
+          ...rest,
+          ...(alwaysAllow && deps.alwaysAllow ? { alwaysAllow } : {}),
+          ...(preview ? { preview } : {}),
+        }
+        const decision = await approvals.request(shown, signal)
+        return decision === 'allow-always'
+          ? persistAlwaysAllow(approval.alwaysAllow)
+          : decision
       },
     }
+  }
+
+  /** Saves "always allow"; a failure still lets the call run this once */
+  const persistAlwaysAllow = async (
+    target: ChatToolAlwaysAllowTarget | undefined
+  ): Promise<ChatToolDecision> => {
+    if (!target || !deps.alwaysAllow) return 'allow-once'
+    try {
+      await deps.alwaysAllow(target)
+    } catch (error) {
+      deps.warn?.(`Could not save the permission: ${String(error)}`)
+    }
+    return 'allow-once'
   }
 
   /**
@@ -117,9 +130,8 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
    * enough to keep part of the context for the steps. Reply blocks are always
    * offered, so any model that calls tools gets some
    */
-  const mayOfferTools = (
-    request: Pick<ChatToolsRequest, 'canUseTools' | 'settings' | 'memoryMode'>
-  ) => request.canUseTools
+  const mayOfferTools = (request: Pick<ChatToolsRequest, 'canUseTools'>) =>
+    request.canUseTools
 
   return {
     toolsFor,
@@ -127,8 +139,14 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
     /** The calls waiting for the user, oldest first */
     pendingApprovals: approvals.pending,
     answerApproval: approvals.answer,
+    /** Answers every call of a batch that still waits */
+    answerApprovalBatch: approvals.answerBatch,
     /** A new conversation starts without the permissions of the last one */
     resetPermissions: policy.reset,
+    /** What the chat keeps of its permissions, saved with it */
+    exportPermissions: policy.exportPermissions,
+    /** Gives a reopened chat its permissions back */
+    restorePermissions: policy.restorePermissions,
     dispose: approvals.cancelAll,
   }
 }

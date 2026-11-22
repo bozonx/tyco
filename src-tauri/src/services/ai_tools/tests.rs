@@ -6,7 +6,7 @@ use super::files::*;
 use crate::errors::AppError;
 use crate::services::ai_vault::{
     self, AiProfile, AiProject, ProfileToolSettings, ProjectAccessMode, ProjectPermission,
-    ToolGroupSettings,
+    ToolSourceSettings,
 };
 use crate::services::test_support::TestDir;
 
@@ -183,7 +183,7 @@ fn denied_access_is_enforced() {
         &files,
         serde_json::json!({"operation": "deletePath", "path": "projects/docs/readme.md"}),
     ));
-    assert!(error.contains("may not change"), "{error}");
+    assert!(error.contains("may not delete"), "{error}");
     assert!(dir.join("docs/readme.md").exists());
 
     let error = message(run(
@@ -191,6 +191,27 @@ fn denied_access_is_enforced() {
         serde_json::json!({"operation": "movePath", "from": "projects/docs/readme.md", "to": "workspace/readme.md"}),
     ));
     assert!(error.contains("may not change"), "{error}");
+}
+
+#[test]
+fn deleting_follows_its_own_permission() {
+    let dir = TestDir::new("ai_files_delete_deny");
+    fs::create_dir_all(dir.join("notes")).unwrap();
+    fs::write(dir.join("notes/a.md"), "a").unwrap();
+    let mut notes = root("projects/notes", &dir.join("notes"), Allow, Allow);
+    notes.delete = Deny;
+    let files = ConversationFiles::from_roots(vec![notes]);
+    assert!(run(
+        &files,
+        serde_json::json!({"operation": "writeFile", "path": "projects/notes/b.md", "content": "b"}),
+    )
+    .is_ok());
+    let error = message(run(
+        &files,
+        serde_json::json!({"operation": "deletePath", "path": "projects/notes/a.md"}),
+    ));
+    assert!(error.contains("may not delete"), "{error}");
+    assert!(dir.join("notes/a.md").exists());
 }
 
 #[test]
@@ -699,6 +720,7 @@ fn profile(tools: Option<ProfileToolSettings>) -> AiProfile {
                 ProjectPermission {
                     read: Allow,
                     write: Ask,
+                    delete: Allow,
                 },
             ),
             (
@@ -706,6 +728,7 @@ fn profile(tools: Option<ProfileToolSettings>) -> AiProfile {
                 ProjectPermission {
                     read: Deny,
                     write: Deny,
+                    delete: Deny,
                 },
             ),
         ]),
@@ -740,16 +763,7 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
         vault_id: "v",
         protected_roots: Vec::new(),
     };
-    let enabled = ProfileToolSettings {
-        groups: HashMap::from([(
-            FILES_TOOL_GROUP.to_string(),
-            ToolGroupSettings {
-                is_enabled: true,
-                access: Allow,
-                command_ids: None,
-            },
-        )]),
-    };
+    let enabled = ProfileToolSettings::default();
     ai_vault::create_profile(&vault, profile(Some(enabled)), "").unwrap();
     for (index, id) in ["book", "closed", "other"].iter().enumerate() {
         ai_vault::create_project(&vault, &paths, project(id, index as u64)).unwrap();
@@ -759,17 +773,28 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
     let roots: Vec<_> = files
         .roots()
         .iter()
-        .map(|root| (root.path.as_str(), root.read.clone(), root.write.clone()))
+        .map(|root| {
+            (
+                root.path.as_str(),
+                root.read.clone(),
+                root.write.clone(),
+                root.delete.clone(),
+            )
+        })
         .collect();
+    // deleting is never freer than writing
     assert_eq!(
         roots,
-        [("workspace", Allow, Allow), ("projects/book", Allow, Ask)]
+        [
+            ("workspace", Allow, Allow, Allow),
+            ("projects/book", Allow, Ask, Ask)
+        ]
     );
     assert_eq!(
         serde_json::to_value(&files.roots()[1]).unwrap(),
         serde_json::json!({
             "path": "projects/book", "name": "Project book",
-            "description": "About it", "read": "allow", "write": "ask"
+            "description": "About it", "read": "allow", "write": "ask", "delete": "ask"
         })
     );
     let error = message(run(
@@ -778,8 +803,33 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
     ));
     assert!(error.contains("not available"), "{error}");
 
-    // with its file tools off a profile reaches its attachments only
-    ai_vault::save_profile(&vault, profile(None), None).unwrap();
+    // one file tool turned off is refused, the others still run
+    let one_off = ProfileToolSettings {
+        tools: HashMap::from([("core:files:read_file".to_string(), ai_vault::ToolState::Off)]),
+        ..Default::default()
+    };
+    ai_vault::save_profile(&vault, profile(Some(one_off)), None).unwrap();
+    let files = ConversationFiles::load(&vault, &paths, "writer", Attachments::none()).unwrap();
+    let error = message(run(
+        &files,
+        serde_json::json!({"operation": "readFile", "path": "workspace/a.md"}),
+    ));
+    assert!(error.contains("turned off"), "{error}");
+    assert!(run(
+        &files,
+        serde_json::json!({"operation": "listDir", "path": "workspace"})
+    )
+    .is_ok());
+
+    // with its file source off a profile reaches its attachments only
+    let files_off = ProfileToolSettings {
+        sources: HashMap::from([(
+            "core:files".to_string(),
+            ToolSourceSettings { is_enabled: false },
+        )]),
+        ..Default::default()
+    };
+    ai_vault::save_profile(&vault, profile(Some(files_off)), None).unwrap();
     let files = ConversationFiles::load(&vault, &paths, "writer", Attachments::none()).unwrap();
     assert!(files.roots().is_empty());
     let error = message(run(
@@ -798,16 +848,7 @@ fn an_external_project_without_its_folder_here_is_named_and_refused() {
         vault_id: "v",
         protected_roots: Vec::new(),
     };
-    let enabled = ProfileToolSettings {
-        groups: HashMap::from([(
-            FILES_TOOL_GROUP.to_string(),
-            ToolGroupSettings {
-                is_enabled: true,
-                access: Allow,
-                command_ids: None,
-            },
-        )]),
-    };
+    let enabled = ProfileToolSettings::default();
     ai_vault::create_profile(&vault, profile(Some(enabled)), "").unwrap();
     // made on another device: the description is synced, the folder is not
     let dir = vault.join("projects/book");

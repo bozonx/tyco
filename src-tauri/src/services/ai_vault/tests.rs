@@ -313,14 +313,12 @@ fn profile_tool_settings_round_trip() {
 
     let mut updated = profile("writer", 1000);
     updated.tools = Some(ProfileToolSettings {
-        groups: HashMap::from([(
-            "debug".to_string(),
-            ToolGroupSettings {
-                is_enabled: true,
-                access: ProjectAccessMode::Ask,
-                command_ids: None,
-            },
+        sources: HashMap::from([(
+            "core:web".to_string(),
+            ToolSourceSettings { is_enabled: false },
         )]),
+        tools: HashMap::from([("core:files:write_file".to_string(), ToolState::Ask)]),
+        command_ids: vec!["notes".into()],
     });
     save_profile(&vault_root, updated.clone(), None).unwrap();
     assert_eq!(
@@ -333,7 +331,11 @@ fn profile_tool_settings_round_trip() {
     .unwrap();
     assert_eq!(
         stored["tools"],
-        serde_json::json!({"groups": {"debug": {"isEnabled": true, "access": "ask"}}})
+        serde_json::json!({
+            "sources": {"core:web": {"isEnabled": false}},
+            "tools": {"core:files:write_file": "ask"},
+            "commandIds": ["notes"]
+        })
     );
 }
 
@@ -527,6 +529,7 @@ fn deleting_a_project_removes_the_permissions_for_it() {
         ProjectPermission {
             read: ProjectAccessMode::Allow,
             write: ProjectAccessMode::Deny,
+            delete: ProjectAccessMode::Deny,
         },
     );
     create_profile(&vault_root, writer, "").unwrap();
@@ -1320,7 +1323,13 @@ fn the_model_cannot_change_memory_its_profile_keeps_read_only() {
         let mut stored = profile(id, 1);
         stored.memory_mode = mode;
         create_profile(&vault_root, stored, "").unwrap();
-        read_profile_memory(&vault_root, &versions, id, None, "core.md").unwrap();
+        // the model reads a read-only memory, not one that is off
+        let read = read_profile_memory(&vault_root, &versions, id, None, "core.md");
+        assert_eq!(read.is_ok(), mode == ProfileMemoryMode::ReadOnly);
+        assert_eq!(
+            search_profile_memory(&vault_root, id, "core").is_ok(),
+            mode == ProfileMemoryMode::ReadOnly
+        );
         assert!(add_profile_memory_fact(&vault_root, &versions, id, None, "core.md", "x").is_err());
         assert!(rewrite_profile_memory(&vault_root, &versions, id, None, "core.md", "x").is_err());
         assert!(replace_profile_memory(
@@ -1560,4 +1569,18 @@ fn a_folder_that_holds_another_vault_now_is_not_connected() {
     assert!(
         connected_vaults_in(Err(AppError::UserDataUnavailable("x".into())), &attached).is_empty()
     );
+}
+
+#[test]
+fn deleting_is_never_freer_than_writing() {
+    use ProjectAccessMode::{Allow, Ask, Deny};
+    let permission = |write, delete| ProjectPermission {
+        read: Allow,
+        write,
+        delete,
+    };
+    assert_eq!(permission(Ask, Allow).effective_delete(), Ask);
+    assert_eq!(permission(Deny, Allow).effective_delete(), Deny);
+    assert_eq!(permission(Allow, Ask).effective_delete(), Ask);
+    assert_eq!(permission(Allow, Allow).effective_delete(), Allow);
 }

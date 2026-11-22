@@ -1,8 +1,7 @@
 import { isRecord } from '@tyco/shared/value-guards'
-import {
-  COMMANDS_TOOL_GROUP_ID,
-  type AiCommandOperationConfig,
-  type ProfileToolSettings,
+import type {
+  AiCommandOperationConfig,
+  ToolCatalogSettings,
 } from '@tyco/shared'
 
 import {
@@ -13,7 +12,13 @@ import { createChatToolPolicy } from '../chat-tools/chat-tool-policy'
 import {
   createChatToolRegistry,
   type ChatToolDefinition,
+  type ChatToolProvider,
 } from '../chat-tools/chat-tool-registry'
+import {
+  COMMANDS_SOURCE,
+  toolCallContextOf,
+  type ToolScope,
+} from '../chat-tools/tool-catalog'
 import { toolResultForModel } from '../chat-tools/registered-operation-adapter'
 import type {
   LlmRunName,
@@ -52,7 +57,16 @@ export interface AiCommandRunnerDependencies {
 
 export interface AiCommandRunOptions {
   signal: AbortSignal
-  /** Tells which command the agent runs now, by its name */
+  /** The AI command that runs, whose whitelist Rust checks its calls by */
+  commandId?: string
+  /**
+   * The other sources of the whitelist: the web, plugins, MCP servers. Only the
+   * tools on the whitelist are offered
+   */
+  providers?: readonly ChatToolProvider[]
+  /** The sources switched off everywhere */
+  catalog?: ToolCatalogSettings
+  /** Tells which tool the agent runs now, by its name */
   onStep?: (label: string) => void
 }
 
@@ -113,19 +127,25 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
     /** What the last command that ran returned */
     let lastResult = ''
     const labels = new Map<string, string>()
+    /** Counts a call against the limit; parallel calls share the budget */
+    const reserveCall = () => {
+      if (callsUsed >= maxSteps) return false
+      callsUsed += 1
+      return true
+    }
     const definitions: ChatToolDefinition[] = tools.map((tool, index) => {
       const name = agentToolName(index, tool.commandId)
       labels.set(name, tool.label)
       return {
         name,
-        groupId: COMMANDS_TOOL_GROUP_ID,
+        source: COMMANDS_SOURCE,
+        catalogName: tool.commandId,
+        risk: 'external',
         label: tool.label,
         description: tool.description,
         inputSchema: tool.inputSchema,
         execute: async (input, { signal }) => {
-          // Reserve before awaiting: parallel calls share the same budget.
-          if (callsUsed >= maxSteps) return CALL_LIMIT_NOTICE
-          callsUsed += 1
+          if (!reserveCall()) return CALL_LIMIT_NOTICE
           const outcome = await tool.execute(
             isRecord(input) ? input : {},
             signal
@@ -138,21 +158,47 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
         },
       }
     })
+    /** The tools of another source, counted against the same limit */
+    const limited = (provider: ChatToolProvider): ChatToolProvider => ({
+      ...provider,
+      tools: async (context) =>
+        (await provider.tools(context)).map((tool) => {
+          labels.set(tool.name, tool.label ?? tool.name)
+          return {
+            ...tool,
+            execute: (input, executeOptions) =>
+              reserveCall()
+                ? tool.execute(input, executeOptions)
+                : Promise.resolve(CALL_LIMIT_NOTICE),
+          }
+        }),
+    })
 
-    // The user picked the commands of the agent, and an AI command often runs
+    // The user put the tools on the whitelist, and an AI command often runs
     // with no window to ask in: they run without asking
     const policy = createChatToolPolicy({ canAsk: false })
-    const settings: ProfileToolSettings = {
-      groups: {
-        [COMMANDS_TOOL_GROUP_ID]: { isEnabled: true, access: 'allow' },
-      },
+    const scope: ToolScope = {
+      kind: 'aiCommand',
+      commandId: options.commandId ?? '',
+      tools: config.tools,
+      catalog: options.catalog,
     }
-    const toolSet = definitions.length
-      ? await createChatToolRegistry({
-          providers: () => [{ id: 'aiCommand', tools: () => definitions }],
-          policy,
-        }).resolve({ profileId: null, modelId: '', settings })
-      : null
+    const providers: ChatToolProvider[] = [
+      { id: 'aiCommand', tools: () => definitions },
+      ...(options.providers ?? []).map(limited),
+    ]
+    const toolSet =
+      config.tools.length && (definitions.length || options.providers?.length)
+        ? await createChatToolRegistry({
+            providers: () => providers,
+            policy,
+          }).resolve({
+            profileId: null,
+            modelId: '',
+            scope,
+            callContext: toolCallContextOf(scope),
+          })
+        : null
 
     const system = [
       deps.instructions().trim(),

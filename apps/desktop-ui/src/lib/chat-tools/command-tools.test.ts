@@ -1,9 +1,6 @@
+import { toolContext } from '../../test/chat-tool-context'
 import { describe, expect, it, vi } from 'vitest'
-import {
-  COMMANDS_TOOL_GROUP_ID,
-  type CommandConfig,
-  type ProfileToolSettings,
-} from '@tyco/shared'
+import type { CommandConfig, ProfileToolSettings } from '@tyco/shared'
 
 import type {
   RegisteredOperation,
@@ -46,47 +43,22 @@ const createLookup = (
 ): OperationLookup => ({ get: (id) => tools[id] })
 
 const profileSettings = (
-  patch: Partial<ProfileToolSettings['groups'][string]> = {}
+  patch: { commandIds?: string[] } = {}
 ): ProfileToolSettings => ({
-  groups: {
-    [COMMANDS_TOOL_GROUP_ID]: {
-      isEnabled: true,
-      access: 'ask',
-      commandIds: ['cmd-1'],
-      ...patch,
-    },
-  },
+  sources: {},
+  tools: {},
+  commandIds: patch.commandIds ?? ['cmd-1'],
 })
 
 describe('command-tools', () => {
-  it('returns no tools when the group is disabled or denied', async () => {
+  it('returns no tools when the profile picked no command', async () => {
     const provider = createCommandToolProvider({
       commands: () => [mockCommand()],
       operations: createLookup(),
     })
 
     expect(
-      await provider.tools({
-        profileId: 'p1',
-        modelId: 'm1',
-        settings: undefined,
-      })
-    ).toEqual([])
-
-    expect(
-      await provider.tools({
-        profileId: 'p1',
-        modelId: 'm1',
-        settings: profileSettings({ isEnabled: false }),
-      })
-    ).toEqual([])
-
-    expect(
-      await provider.tools({
-        profileId: 'p1',
-        modelId: 'm1',
-        settings: profileSettings({ access: 'deny' }),
-      })
+      await provider.tools({ ...toolContext('p1'), modelId: 'm1' })
     ).toEqual([])
   })
 
@@ -98,17 +70,15 @@ describe('command-tools', () => {
 
     expect(
       await provider.tools({
-        profileId: 'p1',
+        ...toolContext('p1', profileSettings({ commandIds: [] })),
         modelId: 'm1',
-        settings: profileSettings({ commandIds: [] }),
       })
     ).toEqual([])
 
     expect(
       await provider.tools({
-        profileId: 'p1',
+        ...toolContext('p1', profileSettings({ commandIds: [] })),
         modelId: 'm1',
-        settings: profileSettings({ commandIds: undefined }),
       })
     ).toEqual([])
   })
@@ -122,9 +92,8 @@ describe('command-tools', () => {
     })
 
     const tools = await provider.tools({
-      profileId: 'p1',
+      ...toolContext('p1', profileSettings({ commandIds: ['cmd-1'] })),
       modelId: 'm1',
-      settings: profileSettings({ commandIds: ['cmd-1'] }),
     })
 
     expect(tools).toHaveLength(1)
@@ -141,9 +110,8 @@ describe('command-tools', () => {
     })
 
     const tools = await provider.tools({
-      profileId: 'p1',
+      ...toolContext('p1', profileSettings({ commandIds: ['cmd-1', 'cmd-2'] })),
       modelId: 'm1',
-      settings: profileSettings({ commandIds: ['cmd-1', 'cmd-2'] }),
     })
 
     expect(tools).toEqual([])
@@ -157,9 +125,8 @@ describe('command-tools', () => {
     })
 
     const tools = await provider.tools({
-      profileId: 'p1',
+      ...toolContext('p1', profileSettings({ commandIds: ['cmd-1'] })),
       modelId: 'm1',
-      settings: profileSettings({ commandIds: ['cmd-1'] }),
     })
 
     expect(tools).toEqual([])
@@ -173,9 +140,8 @@ describe('command-tools', () => {
     })
 
     const tools = await provider.tools({
-      profileId: 'p1',
+      ...toolContext('p1', profileSettings({ commandIds: ['cmd-1'] })),
       modelId: 'm1',
-      settings: profileSettings({ commandIds: ['cmd-1'] }),
     })
 
     expect(tools).toEqual([])
@@ -190,9 +156,8 @@ describe('command-tools', () => {
     })
 
     const tools = await provider.tools({
-      profileId: 'p1',
+      ...toolContext('p1', profileSettings({ commandIds: ['cmd-1'] })),
       modelId: 'm1',
-      settings: profileSettings({ commandIds: ['cmd-1'] }),
     })
 
     expect(tools).toEqual([])
@@ -213,9 +178,8 @@ describe('command-tools', () => {
     })
 
     const tools = await provider.tools({
-      profileId: 'p1',
+      ...toolContext('p1', profileSettings({ commandIds: ['cmd-1', 'cmd-2'] })),
       modelId: 'm1',
-      settings: profileSettings({ commandIds: ['cmd-1', 'cmd-2'] }),
     })
 
     expect(tools).toEqual([])
@@ -240,9 +204,8 @@ describe('command-tools', () => {
         runLimitSec: () => 5,
       })
       const [chatTool] = await provider.tools({
-        profileId: 'p1',
+        ...toolContext('p1', profileSettings()),
         modelId: 'm1',
-        settings: profileSettings(),
       })
       const result = chatTool!.execute(
         { text: 'hello' },
@@ -274,9 +237,8 @@ describe('command-tools', () => {
     })
 
     const [chatTool] = await provider.tools({
-      profileId: 'p1',
+      ...toolContext('p1', profileSettings({ commandIds: ['cmd-exec'] })),
       modelId: 'm1',
-      settings: profileSettings({ commandIds: ['cmd-exec'] }),
     })
 
     expect(chatTool).toBeDefined()

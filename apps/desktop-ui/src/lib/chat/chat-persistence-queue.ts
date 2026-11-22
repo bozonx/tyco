@@ -56,6 +56,9 @@ export function createChatPersistenceQueue(
       title: chatParams.title || '',
       lastMessageAt: deps.nowMs(),
       messages: [...chatMessages],
+      ...(chatParams.toolPermissions
+        ? { toolPermissions: chatParams.toolPermissions }
+        : {}),
     }
     const held = chatMessages.flatMap((message) => message.images || [])
     savingImages.value.push(...held)

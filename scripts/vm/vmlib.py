@@ -212,7 +212,9 @@ class Vm:
         self.config = json.loads(self.profile.read_text())
         self.directory = Path(directory).resolve()
         self.directory.mkdir(parents=True, exist_ok=True)
-        self.original_base = Path(self.config["base"]).expanduser().resolve()
+        self.original_base = (
+            self.profile.parent / Path(self.config["base"]).expanduser()
+        ).resolve()
         self.prepared = self.directory / "prepared.qcow2"
         self.base = self.original_base if prepare else self.prepared
         self.key = Path(self.config["ssh_key"]).expanduser().resolve()

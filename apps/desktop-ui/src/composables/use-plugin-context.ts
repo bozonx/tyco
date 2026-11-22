@@ -13,6 +13,7 @@ import { useIpcStore } from '../stores/ipc'
 import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useToolbarStore } from '../stores/toolbar'
 import { useOperationsStore } from '../stores/operations'
+import { usePluginChatToolsStore } from '../stores/plugin-chat-tools'
 import useToast from './use-toast'
 
 export default function usePluginContext() {
@@ -20,6 +21,7 @@ export default function usePluginContext() {
   const edits = useEditMenuStore()
   const toolbar = useToolbarStore()
   const tools = useOperationsStore()
+  const pluginChatTools = usePluginChatToolsStore()
   const invokeOperation = createOperationInvoker({ operations: tools })
   const invocationRunner = createInvocationRunner(
     useInvocationRunnerDependencies()
@@ -43,6 +45,7 @@ export default function usePluginContext() {
       registerToolbarItems: (items) => toolbar.registerToolbarItems(items),
       registerOperations: (items, baseConfig) =>
         tools.registerPluginOperations(id, items, baseConfig),
+      registerChatTools: (items) => pluginChatTools.register(items),
       invokeOperation: (operationId, snapshot, signal) =>
         invokeOperation(
           {

@@ -140,7 +140,12 @@ describe('SettingsProfileDetailTab.vue', () => {
       { id: 'site', name: 'Site', isExternal: true, createdAt: 1, updatedAt: 1 }
     )
     store.profiles[0]!.projectPermissions = {
-      docs: { read: 'allow', write: 'deny' },
+      docs: { read: 'allow', write: 'deny', delete: 'deny' },
+    }
+    store.profiles[0]!.tools = {
+      sources: { 'core:files': { isEnabled: false } },
+      tools: {},
+      commandIds: [],
     }
     const wrapper = mountTab()
     await flushPromises()
@@ -158,8 +163,8 @@ describe('SettingsProfileDetailTab.vue', () => {
       'writer',
       {
         projectPermissions: {
-          docs: { read: 'allow', write: 'deny' },
-          site: { read: 'allow', write: 'allow' },
+          docs: { read: 'allow', write: 'deny', delete: 'deny' },
+          site: { read: 'allow', write: 'allow', delete: 'ask' },
         },
       },
       undefined

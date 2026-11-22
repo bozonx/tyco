@@ -1,5 +1,6 @@
-import { COMMANDS_TOOL_GROUP_ID, type CommandConfig } from '@tyco/shared'
+import type { CommandConfig } from '@tyco/shared'
 
+import { commandRiskLookup } from '../ai-commands/ai-command-config'
 import { createCommandTransformer } from '../commands/command-runner'
 import { runWithinCommandLimit } from '../commands/command-run-limit'
 import { invocationUnavailableReason } from '../invocation/invoke-operation'
@@ -14,8 +15,7 @@ import type {
   ChatToolProvider,
 } from './chat-tool-registry'
 import { adaptCommand } from './registered-operation-adapter'
-
-export { COMMANDS_TOOL_GROUP_ID }
+import { commandRisk } from './tool-catalog'
 
 export interface CommandToolProviderDependencies {
   /** All user commands configured in the app */
@@ -46,13 +46,12 @@ export function createCommandToolProvider(
       const transform = createCommandTransformer({
         operations: deps.operations,
       })
-      const group = context.settings?.groups[COMMANDS_TOOL_GROUP_ID]
-      if (!group?.isEnabled || group.access === 'deny') return []
-
-      const allowedIds = new Set(group.commandIds ?? [])
+      if (context.scope.kind !== 'profile') return []
+      const allowedIds = new Set(context.scope.settings?.commandIds ?? [])
       if (allowedIds.size === 0) return []
 
       const allCommands = deps.commands()
+      const riskLookup = commandRiskLookup(allCommands)
       const env = deps.environment?.()
       const definitions: ChatToolDefinition[] = []
 
@@ -87,7 +86,7 @@ export function createCommandToolProvider(
           continue
 
         const chatTool = await adaptCommand(command, tool, {
-          groupId: COMMANDS_TOOL_GROUP_ID,
+          risk: commandRisk(command, riskLookup),
           run: async (input, signal) => {
             const run = await runWithinCommandLimit(
               deps.runLimitSec?.(),

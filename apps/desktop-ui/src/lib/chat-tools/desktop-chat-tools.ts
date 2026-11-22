@@ -1,5 +1,4 @@
 import {
-  type AskAiWebAccess,
   type AiAttachedFile,
   type AiFileChangePreview,
   type AiFileRoot,
@@ -13,11 +12,15 @@ import {
   type ProfileMemorySearchResult,
   type ProfileMemoryTopic,
   type ProfileToolSettings,
+  type ToolCallContext,
+  type ToolCatalogSettings,
 } from '@tyco/shared'
 
 import { createReplyBlocksToolProvider } from '../reply-blocks/reply-blocks-tool'
 import type { OperationLookup } from '../operations/operation-types'
 import type { CommandEnvironment } from '../variables/command-variables'
+import type { ChatToolPermissionsState } from './chat-tool-policy'
+import type { ChatToolAlwaysAllowTarget } from './chat-tool-registry'
 import { createChatToolsSession } from './chat-tools-session'
 import { createCommandToolProvider } from './command-tools'
 import {
@@ -27,15 +30,20 @@ import {
 import { readDocumentText } from './file-document-text'
 import { createFileToolProvider, type FileToolScope } from './file-tools'
 import { createMemoryToolProvider } from './memory-tools'
-import { askAiToolSettings, createWebToolProvider } from './web-tools'
+import {
+  createPluginChatToolProvider,
+  type PluginChatToolsDependencies,
+} from './plugin-chat-tools'
+import type { ToolScope } from './tool-catalog'
+import { createWebToolProvider } from './web-tools'
 
 interface FileToolArgs {
-  profileId: string | null
+  context: ToolCallContext
   attachments: AiAttachedFile[]
 }
 
 const fileToolArgs = (scope: FileToolScope): FileToolArgs => ({
-  profileId: scope.profileId,
+  context: scope.context,
   attachments: [...scope.attachments],
 })
 
@@ -102,12 +110,52 @@ export interface DesktopChatToolsInvoke {
   (
     command: 'run_ai_web_tool',
     args: {
-      profileId: string | null
+      context: ToolCallContext
       request: AiWebToolRequest
       runId?: string
     }
   ): Promise<AiWebToolOutput>
   (command: 'cancel_ai_web_tool', args: { runId: string }): Promise<boolean>
+}
+
+/** The IPC commands the chat tools call: none of them changes a setting */
+export const CHAT_TOOL_COMMANDS = [
+  'list_ai_file_roots',
+  'run_ai_file_tool',
+  'preview_ai_file_change',
+  'read_ai_file_bytes',
+  'run_ai_web_tool',
+  'cancel_ai_web_tool',
+  'read_ai_profile_memory',
+  'peek_ai_profile_memory',
+  'search_ai_profile_memory',
+  'list_ai_profile_memory_topics',
+  'add_ai_profile_memory_fact',
+  'replace_ai_profile_memory',
+  'rewrite_ai_profile_memory',
+] as const
+
+export interface DesktopWebToolsDependencies {
+  invoke: DesktopChatToolsInvoke
+  getFetchMaxCharacters?: () => number | undefined
+  warn: (message: string) => void
+}
+
+/** The web tools as the desktop runs them, for the chats and AI commands */
+export function createDesktopWebToolProvider(
+  deps: DesktopWebToolsDependencies
+) {
+  return createWebToolProvider({
+    run: (context, request, runId) =>
+      deps.invoke('run_ai_web_tool', { context, request, runId }),
+    cancel: (runId) => {
+      deps.invoke('cancel_ai_web_tool', { runId }).catch((error: unknown) => {
+        deps.warn(`Could not cancel the web tool call: ${String(error)}`)
+      })
+    },
+    getMaxCharacters: deps.getFetchMaxCharacters,
+    warn: deps.warn,
+  })
 }
 
 export interface DesktopChatToolsDependencies {
@@ -121,8 +169,18 @@ export interface DesktopChatToolsDependencies {
   getFetchMaxCharacters?: () => number | undefined
   /** Model steps one answer may take, see `llm.maxToolSteps` */
   getMaxStepCount: () => number
-  /** The web access of the "Ask AI" chat, used when `profileId` is null */
-  getAskAiWebAccess?: () => AskAiWebAccess | undefined
+  /** Whether the "Ask AI" chat has the web, used when `profileId` is null */
+  isAskAiWebEnabled?: () => boolean | undefined
+  /** The sources switched off everywhere */
+  getToolCatalog?: () => ToolCatalogSettings | undefined
+  /** What the user wrote in the conversation, for the URLs it names */
+  getConversationText?: () => string | undefined
+  /** Writes "always allow" into the chat's profile */
+  alwaysAllow?: (target: ChatToolAlwaysAllowTarget) => Promise<void>
+  /** The chat tools of the plugins */
+  pluginTools?: PluginChatToolsDependencies
+  /** Keeps the permissions "in this chat" with the chat */
+  onPermissionsChange?: (state: ChatToolPermissionsState) => void
   warn: (message: string) => void
   extractDocumentText?: typeof readDocumentText
   isDebugEnabled?: () => boolean
@@ -200,17 +258,7 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
     getChatId: deps.getChatId,
     warn: deps.warn,
   })
-  const webToolProvider = createWebToolProvider({
-    run: (profileId, request, runId) =>
-      deps.invoke('run_ai_web_tool', { profileId, request, runId }),
-    cancel: (runId) => {
-      deps.invoke('cancel_ai_web_tool', { runId }).catch((error: unknown) => {
-        deps.warn(`Could not cancel the web tool call: ${String(error)}`)
-      })
-    },
-    getMaxCharacters: deps.getFetchMaxCharacters,
-    warn: deps.warn,
-  })
+  const webToolProvider = createDesktopWebToolProvider(deps)
   const commandToolProvider =
     deps.commands && deps.operations
       ? createCommandToolProvider({
@@ -222,6 +270,10 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
         })
       : undefined
 
+  const pluginToolProvider = deps.pluginTools
+    ? createPluginChatToolProvider(deps.pluginTools)
+    : undefined
+
   const session = createChatToolsSession({
     providers: () => [
       replyBlocksToolProvider,
@@ -229,18 +281,27 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
       memoryToolProvider,
       webToolProvider,
       ...(commandToolProvider ? [commandToolProvider] : []),
+      ...(pluginToolProvider ? [pluginToolProvider] : []),
       ...(checkDebug() ? [debugToolProvider] : []),
     ],
-    isDebugEnabled: () => checkDebug(),
     getMaxStepCount: deps.getMaxStepCount,
+    alwaysAllow: deps.alwaysAllow,
+    onPermissionsChange: deps.onPermissionsChange,
     warn: deps.warn,
   })
 
-  /** A profile's own settings, or those of "Ask AI" for a chat without one */
-  const toolSettings = (profileTools: ProfileToolSettings | undefined) =>
+  /** Where the chat's tools are offered: "Ask AI" or the profile */
+  const toolScope = (
+    profileTools: ProfileToolSettings | undefined
+  ): ToolScope =>
     deps.profileId === null
-      ? askAiToolSettings(deps.getAskAiWebAccess?.())
-      : profileTools
+      ? { kind: 'askAi', isWebEnabled: deps.isAskAiWebEnabled?.() !== false }
+      : {
+          kind: 'profile',
+          profileId: deps.profileId,
+          settings: profileTools,
+          catalog: deps.getToolCatalog?.(),
+        }
 
   /** The tools of a turn on the model picked in the chat */
   const turnTools = async (
@@ -257,24 +318,17 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
         profileId: deps.profileId,
         modelId,
         canUseTools,
-        settings: toolSettings(profileTools),
+        scope: toolScope(profileTools),
         memoryMode: resolvedMode,
         outputBudgetCharacters,
         attachedFiles: deps.getAttachedFiles?.(),
+        conversationText: deps.getConversationText?.(),
       }),
     }
   }
 
-  const mayOfferTools = (request: {
-    canUseTools: boolean
-    settings?: ProfileToolSettings
-    memoryMode?: ProfileMemoryMode
-  }) =>
-    session.mayOfferTools({
-      canUseTools: request.canUseTools,
-      settings: toolSettings(request.settings),
-      memoryMode: request.memoryMode ?? deps.getMemoryMode?.(),
-    })
+  const mayOfferTools = (request: { canUseTools: boolean }) =>
+    session.mayOfferTools({ canUseTools: request.canUseTools })
 
   return { ...session, turnTools, mayOfferTools }
 }

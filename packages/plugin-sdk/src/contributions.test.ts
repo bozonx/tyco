@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  validateChatToolContribution,
   cancelledOperationResult,
   validateContribution,
   validateParseResult,
@@ -112,5 +113,43 @@ describe('plugin contribution validation', () => {
       { samples: ['x'.repeat(65_537)] },
     ])
       expect(() => validateOperationConfigPreview(value)).toThrow()
+  })
+})
+
+describe('validateChatToolContribution', () => {
+  const tool = {
+    id: 'count',
+    labelKey: 'count',
+    description: 'Counts words',
+    inputSchema: { type: 'object', properties: { text: { type: 'string' } } },
+    risk: 'read',
+    run: () => ({ ok: true }),
+  }
+
+  it('accepts a described tool with a risk and a callback', () => {
+    expect(() => validateChatToolContribution(tool, [])).not.toThrow()
+  })
+
+  it('refuses a tool without a description, risk or callback', () => {
+    expect(() =>
+      validateChatToolContribution({ ...tool, description: ' ' }, [])
+    ).toThrow()
+    expect(() =>
+      validateChatToolContribution({ ...tool, risk: 'none' }, [])
+    ).toThrow()
+    expect(() =>
+      validateChatToolContribution({ ...tool, run: undefined }, [])
+    ).toThrow()
+  })
+
+  it('makes a plugin that reaches past the app declare the external risk', () => {
+    expect(() => validateChatToolContribution(tool, ['notes'])).toThrow(
+      /external/
+    )
+    expect(() => validateChatToolContribution(tool, ['browser'])).toThrow()
+    expect(() =>
+      validateChatToolContribution({ ...tool, risk: 'external' }, ['notes'])
+    ).not.toThrow()
+    expect(() => validateChatToolContribution(tool, ['editor'])).not.toThrow()
   })
 })

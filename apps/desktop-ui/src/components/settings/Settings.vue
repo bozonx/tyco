@@ -143,6 +143,7 @@ import SettingsProfileDetailTab from './SettingsProfileDetailTab.vue'
 import SettingsProjectDetailTab from './SettingsProjectDetailTab.vue'
 import SettingsSaveStatus from './SettingsSaveStatus.vue'
 import SettingsStylingTab from './SettingsStylingTab.vue'
+import SettingsToolsTab from './SettingsToolsTab.vue'
 import SettingsTransformationsTab from './SettingsTransformationsTab.vue'
 import SettingsTranslationsTab from './SettingsTranslationsTab.vue'
 import SettingsVariablesTab from './SettingsVariablesTab.vue'
@@ -165,6 +166,7 @@ const SECTION_TABS: Record<
   accessibility: SettingsAccessibilityTab,
   dialog: SettingsDialogTab,
   variables: SettingsVariablesTab,
+  tools: SettingsToolsTab,
   plugins: SettingsPluginsTab,
   'main-actions': SettingsMainActionsTab,
   transformations: SettingsTransformationsTab,

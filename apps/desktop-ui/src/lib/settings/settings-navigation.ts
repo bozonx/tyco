@@ -118,6 +118,7 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         labelKey: 'settings.variablesTab',
         icon: 'mdi:variable',
       },
+      { id: 'tools', labelKey: 'settings.toolsTab', icon: 'mdi:tools' },
     ],
   },
   {
@@ -405,6 +406,7 @@ const CONFIG_SECTION_TABS: Record<string, SettingsSectionId> = {
   aiVaults: 'ai-profiles',
   aiProfiles: 'ai-profiles',
   plugins: 'plugins',
+  tools: 'tools',
   chat: 'chat',
   stt: 'stt',
   dialog: 'dialog',

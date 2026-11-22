@@ -358,19 +358,29 @@ function withRepairedId(
   if (typeof command.id === 'string' && repairs.has(command.id))
     result = { ...result, id: repairs.get(command.id) }
   const config = command.operationConfig
+  const isRenamedRef = (ref: unknown) =>
+    isRecord(ref) &&
+    ref.sourceKind === 'commands' &&
+    typeof ref.toolName === 'string' &&
+    repairs.has(ref.toolName)
   if (
     isRecord(config) &&
-    Array.isArray(config.allowedCommandIds) &&
-    config.allowedCommandIds.some(
-      (id) => typeof id === 'string' && repairs.has(id)
-    )
+    Array.isArray(config.tools) &&
+    config.tools.some(isRenamedRef)
   )
     result = {
       ...result,
       operationConfig: {
         ...config,
-        allowedCommandIds: config.allowedCommandIds.map((id: unknown) =>
-          typeof id === 'string' ? (repairs.get(id) ?? id) : id
+        tools: config.tools.map((ref: unknown) =>
+          isRenamedRef(ref)
+            ? {
+                ...(ref as Record<string, unknown>),
+                toolName: repairs.get(
+                  (ref as Record<string, unknown>).toolName as string
+                ),
+              }
+            : ref
         ),
       },
     }

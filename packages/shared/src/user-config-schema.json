@@ -701,7 +701,8 @@
             "items": { "enum": ["linux", "windows"] },
             "uniqueItems": true,
             "default": []
-          }
+          },
+          "aiRisk": { "enum": ["read", "write", "destructive", "external"] }
         },
         "required": [
           "id",
@@ -853,7 +854,8 @@
               "type": "object",
               "properties": {
                 "modelId": { "type": "string", "default": "" },
-                "rule": { "type": "string", "default": "" }
+                "rule": { "type": "string", "default": "" },
+                "isWebSearchEnabled": { "type": "boolean" }
               },
               "required": ["modelId", "rule"],
               "default": { "modelId": "", "rule": "" }
@@ -947,8 +949,7 @@
               "type": "integer",
               "minimum": 1000,
               "maximum": 100000
-            },
-            "askAiAccess": { "enum": ["ask", "allow", "off"], "default": "ask" }
+            }
           }
         }
       },
@@ -1254,6 +1255,26 @@
       },
       "defaultPath": "plugins"
     },
+    "tools": {
+      "type": "object",
+      "properties": {
+        "sources": {
+          "type": "object",
+          "properties": {},
+          "required": [],
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "isEnabled": { "type": "boolean", "default": true }
+            },
+            "required": ["isEnabled"]
+          },
+          "default": {}
+        }
+      },
+      "required": ["sources"],
+      "defaultPath": "tools"
+    },
     "chat": {
       "type": "object",
       "properties": {
@@ -1427,6 +1448,7 @@
     "favorites",
     "markdown",
     "plugins",
+    "tools",
     "chat",
     "stt",
     "aiVaults",

@@ -331,15 +331,26 @@ fn note_chat_change(
 }
 
 /// Refuses a change by the model when the profile's memory mode does not let
-/// it write: only `auto` and `ask` do.
+/// it write: only `auto` does.
 fn ensure_model_may_write(vault_root: &Path, profile_id: &str) -> Result<(), AppError> {
     let profile = super::operations::get_profile(vault_root, profile_id)?;
     match profile.memory_mode {
-        super::types::ProfileMemoryMode::Auto | super::types::ProfileMemoryMode::Ask => Ok(()),
+        super::types::ProfileMemoryMode::Auto => Ok(()),
         super::types::ProfileMemoryMode::ReadOnly | super::types::ProfileMemoryMode::Off => Err(
             AppError::InvalidInput("The memory of this profile cannot be changed by the AI".into()),
         ),
     }
+}
+
+/// Refuses a read by the model when the profile's memory is off.
+fn ensure_model_may_read(vault_root: &Path, profile_id: &str) -> Result<(), AppError> {
+    let profile = super::operations::get_profile(vault_root, profile_id)?;
+    if profile.memory_mode == super::types::ProfileMemoryMode::Off {
+        return Err(AppError::InvalidInput(
+            "The memory of this profile is off".into(),
+        ));
+    }
+    Ok(())
 }
 
 /// Indents the lines after the first under the bullet and escapes a heading
@@ -386,6 +397,7 @@ pub fn read_profile_memory(
     chat_id: Option<&str>,
     file: &str,
 ) -> Result<String, AppError> {
+    ensure_model_may_read(vault_root, profile_id)?;
     let (normalized, content) = read_memory_file(vault_root, profile_id, file)?;
     versions.record(vault_root, profile_id, chat_id, &normalized, &content);
     Ok(content)
@@ -891,6 +903,7 @@ pub fn search_profile_memory(
     query: &str,
 ) -> Result<Vec<ProfileMemorySearchResult>, AppError> {
     validate_id(profile_id)?;
+    ensure_model_may_read(vault_root, profile_id)?;
     let query_trimmed = query.trim();
     if query_trimmed.is_empty() {
         return Ok(Vec::new());

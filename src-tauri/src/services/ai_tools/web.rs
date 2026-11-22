@@ -8,9 +8,6 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::Notify;
 
 use crate::errors::AppError;
-use crate::services::ai_vault::{AiProfile, ProjectAccessMode};
-
-pub use crate::desktop_contract::WEB_TOOL_GROUP_ID as WEB_TOOL_GROUP;
 
 const JINA_SEARCH_ENDPOINT: &str = "https://s.jina.ai/";
 const DEFAULT_SEARCH_COUNT: usize = 5;
@@ -75,6 +72,16 @@ pub enum AiWebToolRequest {
         #[ts(optional)]
         locale: Option<String>,
     },
+}
+
+impl AiWebToolRequest {
+    /// The name the model calls the tool by.
+    pub fn tool_name(&self) -> &'static str {
+        match self {
+            Self::Search { .. } => "web_search",
+            Self::Fetch { .. } => "web_fetch",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, ts_rs::TS)]
@@ -170,40 +177,6 @@ struct PreparedFetch {
     offset: usize,
     limit: usize,
     locale: Option<HeaderValue>,
-}
-
-/// Checks that the "Ask AI" chat, which has no profile, may use the web tools:
-/// `llm.webSearch.askAiAccess` is not `off`. Absent or unknown, it is `ask`.
-pub fn ensure_ask_ai_web_enabled(user_config: &serde_json::Value) -> Result<(), AppError> {
-    let access = user_config
-        .pointer("/llm/webSearch/askAiAccess")
-        .and_then(serde_json::Value::as_str);
-    if access == Some("off") {
-        Err(AppError::InvalidInput(
-            "Web tools are turned off for the Ask AI chat".into(),
-        ))
-    } else {
-        Ok(())
-    }
-}
-
-/// Checks that the profile has the web tool group enabled and not set to `deny`.
-/// When the profile has no explicit `web` entry, defaults to enabled (matching the UI default).
-pub fn ensure_web_enabled(profile: &AiProfile) -> Result<(), AppError> {
-    let group = profile
-        .tools
-        .as_ref()
-        .and_then(|tools| tools.groups.get(WEB_TOOL_GROUP));
-    let is_allowed = group
-        .map(|g| g.is_enabled && g.access != ProjectAccessMode::Deny)
-        .unwrap_or(true);
-    if is_allowed {
-        Ok(())
-    } else {
-        Err(AppError::InvalidInput(
-            "Web tools are not enabled for this profile".into(),
-        ))
-    }
 }
 
 fn format_jina_http_error(
@@ -630,92 +603,6 @@ pub async fn run(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::ai_vault::{ProfileToolSettings, ToolGroupSettings};
-    use std::collections::HashMap;
-
-    fn profile_with_tools(tools: Option<ProfileToolSettings>) -> AiProfile {
-        AiProfile {
-            id: "p1".into(),
-            name: "Test Profile".into(),
-            model_id: None,
-            temperature: None,
-            quick_request_model_id: None,
-            max_output_tokens: None,
-            memory_mode: Default::default(),
-            tools,
-            project_permissions: HashMap::new(),
-            created_at: 1,
-            updated_at: 1,
-            revision: None,
-        }
-    }
-
-    #[test]
-    fn test_ensure_web_enabled_allows_by_default_and_when_configured() {
-        let profile_no_tools = profile_with_tools(None);
-        assert!(ensure_web_enabled(&profile_no_tools).is_ok());
-
-        let profile_without_web = profile_with_tools(Some(ProfileToolSettings {
-            groups: HashMap::new(),
-        }));
-        assert!(ensure_web_enabled(&profile_without_web).is_ok());
-
-        let mut groups = HashMap::new();
-        groups.insert(
-            WEB_TOOL_GROUP.to_string(),
-            ToolGroupSettings {
-                is_enabled: true,
-                access: ProjectAccessMode::Allow,
-                command_ids: None,
-            },
-        );
-        let profile = profile_with_tools(Some(ProfileToolSettings { groups }));
-        assert!(ensure_web_enabled(&profile).is_ok());
-    }
-
-    #[test]
-    fn test_ensure_ask_ai_web_enabled_follows_the_config() {
-        use serde_json::json;
-        assert!(ensure_ask_ai_web_enabled(&json!({})).is_ok());
-        for access in ["ask", "allow"] {
-            let config = json!({ "llm": { "webSearch": { "askAiAccess": access } } });
-            assert!(ensure_ask_ai_web_enabled(&config).is_ok());
-        }
-        let off = json!({ "llm": { "webSearch": { "askAiAccess": "off" } } });
-        assert!(ensure_ask_ai_web_enabled(&off).is_err());
-    }
-
-    #[test]
-    fn test_ensure_web_enabled_denies_when_disabled_or_denied() {
-        let mut groups_disabled = HashMap::new();
-        groups_disabled.insert(
-            WEB_TOOL_GROUP.to_string(),
-            ToolGroupSettings {
-                is_enabled: false,
-                access: ProjectAccessMode::Allow,
-                command_ids: None,
-            },
-        );
-        let profile_disabled = profile_with_tools(Some(ProfileToolSettings {
-            groups: groups_disabled,
-        }));
-        assert!(ensure_web_enabled(&profile_disabled).is_err());
-
-        let mut groups_denied = HashMap::new();
-        groups_denied.insert(
-            WEB_TOOL_GROUP.to_string(),
-            ToolGroupSettings {
-                is_enabled: true,
-                access: ProjectAccessMode::Deny,
-                command_ids: None,
-            },
-        );
-        let profile_denied = profile_with_tools(Some(ProfileToolSettings {
-            groups: groups_denied,
-        }));
-        assert!(ensure_web_enabled(&profile_denied).is_err());
-    }
-
     #[test]
     fn test_prepare_and_build_search_request() {
         let prepared = prepare_search(

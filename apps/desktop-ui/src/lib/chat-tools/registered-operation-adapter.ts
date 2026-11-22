@@ -1,4 +1,4 @@
-import type { CommandConfig } from '@tyco/shared'
+import type { CommandConfig, ToolRisk } from '@tyco/shared'
 import type { JsonSchema, OperationCallCommand } from '@tyco/plugin-sdk'
 import { commandLabel } from '../commands/command-runtime'
 import { commandInputSchema } from '../operations/command-parameters'
@@ -11,6 +11,8 @@ import type {
 import type { ChatToolDefinition } from './chat-tool-registry'
 
 import { chatToolName } from './tool-name'
+
+import { COMMANDS_SOURCE, type ToolSourceRef } from './tool-catalog'
 
 export { chatToolName } from './tool-name'
 
@@ -26,7 +28,11 @@ export function toolResultForModel(result: OperationResult): string {
 }
 
 export interface RegisteredOperationAdapterOptions {
-  groupId: string
+  /** Where the tool comes from, and what it may do */
+  source: ToolSourceRef
+  risk: ToolRisk
+  /** The tool's name in the settings; the model's name when absent */
+  catalogName?: string
   /** The tool's `operationConfig` for the call, e.g. a command's own settings */
   config?: Record<string, unknown>
   /** The command a tool is called for */
@@ -57,7 +63,9 @@ export async function adaptRegisteredOperation(
   const name = options.name ?? (await chatToolName(tool.id))
   return {
     name,
-    groupId: options.groupId,
+    source: options.source,
+    risk: options.risk,
+    ...(options.catalogName ? { catalogName: options.catalogName } : {}),
     ...(tool.labelKey ? { labelKey: tool.labelKey } : {}),
     ...(options.label
       ? { label: options.label }
@@ -142,7 +150,8 @@ export async function adaptCommand(
   command: CommandConfig,
   tool: RegisteredOperation,
   options: {
-    groupId: string
+    /** What the command may do, see `commandRisk` */
+    risk: ToolRisk
     run?: (
       input: Record<string, unknown>,
       signal: AbortSignal
@@ -153,7 +162,9 @@ export async function adaptCommand(
   const inputSchema = commandInputSchema(tool, command.operationConfig)
   const label = commandLabel(command)
   const definition = await adaptRegisteredOperation(tool, {
-    groupId: options.groupId,
+    source: COMMANDS_SOURCE,
+    risk: options.risk,
+    catalogName: command.id,
     name: await chatToolName(command.id),
     label,
     description: command.description.trim(),
@@ -161,10 +172,11 @@ export async function adaptCommand(
     config,
     command: operationCallCommand(command.id, label, command.isOutputLogged),
   })
+  const withSource = { ...definition, sourceLabel: label }
   const run = options.run
-  if (!run) return definition
+  if (!run) return withSource
   return {
-    ...definition,
+    ...withSource,
     execute: async (input, { signal }) =>
       toolResultForModel(
         await run(

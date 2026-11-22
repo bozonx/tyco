@@ -12,24 +12,28 @@ describe('aiCommandOperationConfigOf', () => {
     expect(
       aiCommandOperationConfigOf({
         prompt: 'Do it',
-        allowedCommandIds: ['a', 'a', ' ', 7, 'b'],
+        tools: [
+          { sourceKind: 'commands', sourceId: 'commands', toolName: 'a' },
+          { sourceKind: 'commands', sourceId: 'commands', toolName: 'a' },
+          { sourceKind: 'core', sourceId: 'web' },
+          { sourceKind: 'bogus', sourceId: 'x' },
+          { sourceKind: 'core', sourceId: ' ' },
+          7,
+        ],
         maxSteps: 3,
-        isToolsEnabled: false,
       })
     ).toEqual({
       prompt: 'Do it',
-      allowedCommandIds: ['a', 'b'],
+      tools: [
+        { sourceKind: 'commands', sourceId: 'commands', toolName: 'a' },
+        { sourceKind: 'core', sourceId: 'web' },
+      ],
       maxSteps: 3,
-      isToolsEnabled: false,
     })
   })
 
   it('falls back to the defaults, leaving the step limit to the LLM settings', () => {
-    expect(aiCommandOperationConfigOf({})).toEqual({
-      prompt: '',
-      allowedCommandIds: [],
-      isToolsEnabled: true,
-    })
+    expect(aiCommandOperationConfigOf({})).toEqual({ prompt: '', tools: [] })
   })
 })
 

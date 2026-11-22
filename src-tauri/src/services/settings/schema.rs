@@ -1009,12 +1009,19 @@ fn repair_command_ids(config: &mut Value) {
             renamed(id);
         }
         // the commands an AI command may run follow them too
-        if let Some(allowed) = command
+        if let Some(tools) = command
             .get_mut("operationConfig")
-            .and_then(|config| config.get_mut("allowedCommandIds"))
+            .and_then(|config| config.get_mut("tools"))
             .and_then(Value::as_array_mut)
         {
-            allowed.iter_mut().for_each(&renamed);
+            for tool in tools
+                .iter_mut()
+                .filter(|tool| tool["sourceKind"] == "commands")
+            {
+                if let Some(name) = tool.get_mut("toolName") {
+                    renamed(name);
+                }
+            }
         }
     }
     if let Some(slots) = config

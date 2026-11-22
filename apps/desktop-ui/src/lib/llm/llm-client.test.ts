@@ -694,7 +694,9 @@ describe('llm-client stream', () => {
       await run(
         {
           prompt: 'Report the time',
-          allowedCommandIds: ['clock'],
+          tools: [
+            { sourceKind: 'commands', sourceId: 'commands', toolName: 'clock' },
+          ],
           maxSteps: 1,
         },
         '',

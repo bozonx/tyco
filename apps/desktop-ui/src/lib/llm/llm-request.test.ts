@@ -164,6 +164,11 @@ describe('LLM request', () => {
           definitions: new Map(),
           truncatedCallIds: new Set(),
           approvalKey: (toolName) => toolName,
+          approvalInfo: (toolName) => ({
+            approvalKey: toolName,
+            source: { kind: 'core', id: 'files' },
+            risk: 'read',
+          }),
           instructions: 'Roots: workspace/',
         },
         maxStepCount: 2,

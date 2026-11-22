@@ -106,3 +106,51 @@ Build with `tsc` followed by `tyco-plugin-build` (from `@tyco/plugin-build`).
 The build writes `dist/plugin.tyco-plugin`, the file to install. Everything
 must be bundled into one module: extra chunks, external imports and separate
 CSS files are refused. The plugins in `packages/plugin-*` are working examples.
+
+## Tools for the chat
+
+A plugin can offer tools to the model of a profile chat with
+`ctx.registerChatTools`:
+
+```ts
+ctx.registerChatTools([
+  {
+    id: 'word_count',
+    labelKey: 'wordCount',
+    description:
+      'Counts the words of a text. Use it when asked how long a text is.',
+    inputSchema: {
+      type: 'object',
+      properties: { text: { type: 'string' } },
+      required: ['text'],
+    },
+    risk: 'read',
+    run: async (input, { signal }) => ({
+      ok: true,
+      content: String(
+        String(input.text ?? '')
+          .split(/\s+/)
+          .filter(Boolean).length
+      ),
+    }),
+  },
+])
+```
+
+- `description` is for the model, in English: what the tool does and when to
+  use it.
+- `risk` says what the tool may do: `read` (no side effects), `write` (changes
+  the user's data), `destructive` (deletes or cannot be undone) or `external`
+  (acts in the world or outside TyCo's data). A plugin with the `notes` or
+  `browser` capability must declare `external`.
+- `run` gets the input the model gave and an `AbortSignal`. It has no access to
+  the profile's files: if the tool needs a file, the model passes its text in
+  the input. It runs with the plugin's capabilities.
+
+The user sees the plugin's tools, their risk and the plugin's capabilities in
+**Settings → Tools** and in each profile, and turns them on and off there. The
+tools of a plugin that does not come with TyCo ask before each call unless the
+user allows them.
+
+Keep any access outside TyCo explicit: write only to the folders the user chose
+in the plugin's settings, never to a path the model makes up.

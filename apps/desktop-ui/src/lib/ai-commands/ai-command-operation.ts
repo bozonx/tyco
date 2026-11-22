@@ -12,9 +12,13 @@ import {
   type OperationDefinition,
   type OperationResult,
 } from '../operations/operation-types'
+import type { ToolCatalogSettings } from '@tyco/shared'
+
+import type { ChatToolProvider } from '../chat-tools/chat-tool-registry'
 import {
   AI_COMMAND_OPERATION_ID,
   aiCommandOperationConfigOf,
+  whitelistedCommandIds,
 } from './ai-command-config'
 import {
   createAiCommandRunner,
@@ -47,6 +51,10 @@ export interface AiCommandOperationDependencies extends AiCommandRunnerDependenc
   describeError: (error: unknown) => string
   /** The values of the variables on this device, for `{{var:NAME}}` */
   variables?: () => VariableValues
+  /** The tool sources besides commands a whitelist may name: web, plugins */
+  toolProviders?: () => readonly ChatToolProvider[]
+  /** The sources switched off everywhere */
+  toolCatalog?: () => ToolCatalogSettings | undefined
 }
 
 /** A toast shows the start of a long answer of a command without output */
@@ -164,17 +172,17 @@ export function createAiCommandOperation(
         ...(call.command ? [call.command.id] : []),
       ]
       try {
-        const tools =
-          config.isToolsEnabled !== false
-            ? agentTools(
-                config.allowedCommandIds,
-                chain,
-                call.signal,
-                call.source
-              )
-            : []
+        const tools = agentTools(
+          whitelistedCommandIds(config.tools),
+          chain,
+          call.signal,
+          call.source
+        )
         const content = await run(config, text, tools, {
           signal: call.signal,
+          ...(call.command ? { commandId: call.command.id } : {}),
+          providers: deps.toolProviders?.() ?? [],
+          catalog: deps.toolCatalog?.(),
           ...(call.onProgress ? { onStep: call.onProgress } : {}),
         })
         if (call.signal.aborted) return cancelled

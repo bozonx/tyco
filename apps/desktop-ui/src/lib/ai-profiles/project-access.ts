@@ -1,15 +1,14 @@
-import type { ProjectPermission } from '@tyco/shared'
+import type { ProjectAccessMode, ProjectPermission } from '@tyco/shared'
 
+import { stricterAccess } from '../chat-tools/chat-tool-policy'
 import {
-  CHAT_TOOL_GROUPS,
-  FILES_TOOL_GROUP_ID,
-  type ProfileToolSettingsLike,
-  toolGroupSettings,
-} from '../chat-tools/chat-tool-groups'
+  FILES_SOURCE,
+  isSourceEnabledInProfile,
+  type ProfileToolSettingsView,
+} from '../chat-tools/tool-catalog'
 
 /** A level the settings offer for a project a profile is connected to */
-export type SelectableProjectAccessLevel =
-  'askAll' | 'read' | 'readWriteAsk' | 'full'
+export type SelectableProjectAccessLevel = 'read' | 'readWrite' | 'full'
 
 /**
  * How far a profile may go in a project it is connected to; `custom` for
@@ -18,16 +17,14 @@ export type SelectableProjectAccessLevel =
 export type ProjectAccessLevel = SelectableProjectAccessLevel | 'custom'
 
 export const PROJECT_ACCESS_LEVELS: readonly SelectableProjectAccessLevel[] = [
-  'askAll',
   'read',
-  'readWriteAsk',
+  'readWrite',
   'full',
 ]
 
 export const PROJECT_ACCESS_LABEL_KEYS: Record<ProjectAccessLevel, string> = {
-  askAll: 'settings.accessLevelAskAll',
   read: 'settings.accessLevelRead',
-  readWriteAsk: 'settings.accessLevelReadWriteAsk',
+  readWrite: 'settings.accessLevelReadWrite',
   full: 'settings.accessLevelFull',
   custom: 'settings.accessLevelCustom',
 }
@@ -36,17 +33,38 @@ export const PROJECT_ACCESS_LABEL_KEYS: Record<ProjectAccessLevel, string> = {
 export const DEFAULT_PROJECT_ACCESS_LEVEL: SelectableProjectAccessLevel = 'read'
 
 const PERMISSIONS: Record<SelectableProjectAccessLevel, ProjectPermission> = {
-  askAll: { read: 'ask', write: 'ask' },
-  read: { read: 'allow', write: 'deny' },
-  readWriteAsk: { read: 'allow', write: 'ask' },
-  full: { read: 'allow', write: 'allow' },
+  read: { read: 'allow', write: 'deny', delete: 'deny' },
+  readWrite: { read: 'allow', write: 'ask', delete: 'ask' },
+  full: { read: 'allow', write: 'allow', delete: 'ask' },
 }
 
+/**
+ * The permissions of a level; deleting without asking is offered only where
+ * writing does not ask
+ */
 export function projectPermissionFor(
-  level: SelectableProjectAccessLevel
+  level: SelectableProjectAccessLevel,
+  isDeleteAllowed = false
 ): ProjectPermission {
-  return { ...PERMISSIONS[level] }
+  const permission = { ...PERMISSIONS[level] }
+  return isDeleteAllowed && permission.write === 'allow'
+    ? { ...permission, delete: 'allow' }
+    : permission
 }
+
+/** The permissions with deleting no freer than writing, as Rust applies them */
+export function normalizedProjectPermission(
+  permission: ProjectPermission
+): ProjectPermission {
+  return {
+    ...permission,
+    delete: stricterAccess(permission.write, permission.delete),
+  }
+}
+
+/** Whether the profile deletes in the project without asking */
+export const isDeleteAllowed = (permission: ProjectPermission | undefined) =>
+  permission?.write === 'allow' && permission.delete === 'allow'
 
 /**
  * The level of a stored permission; `undefined` when the profile is not
@@ -59,20 +77,23 @@ export function projectAccessLevelOf(
   if (!permission) return undefined
   if (permission.read === 'deny' && permission.write === 'deny')
     return undefined
-  const level = PROJECT_ACCESS_LEVELS.find(
-    (candidate) =>
-      PERMISSIONS[candidate].read === permission.read &&
-      PERMISSIONS[candidate].write === permission.write
-  )
+  const level = PROJECT_ACCESS_LEVELS.find((candidate) => {
+    const preset = PERMISSIONS[candidate]
+    return (
+      preset.read === permission.read &&
+      preset.write === permission.write &&
+      (preset.delete === permission.delete ||
+        (candidate === 'full' && permission.delete === 'allow'))
+    )
+  })
   return level ?? 'custom'
 }
 
 /** The profile's file tools are off, so its project access does nothing */
 export function hasFileToolsOff(profile: {
-  tools?: ProfileToolSettingsLike | undefined
+  readonly tools?: ProfileToolSettingsView | undefined
 }): boolean {
-  const group = CHAT_TOOL_GROUPS.find(({ id }) => id === FILES_TOOL_GROUP_ID)
-  return !group || !toolGroupSettings(profile.tools, group).isEnabled
+  return !isSourceEnabledInProfile(profile.tools, FILES_SOURCE)
 }
 
 /** The permissions with one project connected at `level`, or removed */
@@ -83,6 +104,43 @@ export function withProjectAccess(
 ): Record<string, ProjectPermission> {
   // a custom permission stays as it is
   if (level === 'custom') return { ...permissions }
-  const { [projectId]: _removed, ...rest } = permissions
-  return level ? { ...rest, [projectId]: projectPermissionFor(level) } : rest
+  const { [projectId]: removed, ...rest } = permissions
+  return level
+    ? {
+        ...rest,
+        [projectId]: projectPermissionFor(level, isDeleteAllowed(removed)),
+      }
+    : rest
+}
+
+/** The permissions with deleting in a project allowed without asking, or not */
+export function withProjectDeleteAllowed(
+  permissions: Readonly<Record<string, ProjectPermission>>,
+  projectId: string,
+  isAllowed: boolean
+): Record<string, ProjectPermission> {
+  const current = permissions[projectId]
+  if (!current || current.write !== 'allow') return { ...permissions }
+  return {
+    ...permissions,
+    [projectId]: { ...current, delete: isAllowed ? 'allow' : 'ask' },
+  }
+}
+
+const raise = (mode: ProjectAccessMode, isRaised: boolean) =>
+  isRaised ? 'allow' : mode
+
+/**
+ * The permission with the operations "always allowed" from a call: what it
+ * names becomes `allow`, deleting staying no freer than writing
+ */
+export function withAlwaysAllowedOperations(
+  permission: ProjectPermission,
+  operations: readonly ('read' | 'write' | 'delete')[]
+): ProjectPermission {
+  return normalizedProjectPermission({
+    read: raise(permission.read, operations.includes('read')),
+    write: raise(permission.write, operations.includes('write')),
+    delete: raise(permission.delete, operations.includes('delete')),
+  })
 }

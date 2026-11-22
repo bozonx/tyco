@@ -126,7 +126,7 @@
     "stop": "Stop",
     "stopped": "Stopped",
     "toolAllow": "Allow",
-    "toolAllowSession": "Allow in this session",
+    "toolAllowSession": "Allow in this chat",
     "toolApprovalQuestion": "Allow {tool} to run?",
     "toolArguments": "Arguments",
     "toolDeny": "Deny",
@@ -155,7 +155,10 @@
       "workspace": "Files",
       "workspaceHint": "The profile files: kept outside the chat history and available in every chat of the profile"
     },
-    "takeScreenshot": "Take screenshot"
+    "takeScreenshot": "Take screenshot",
+    "toolAllowBatch": "Allow all {count}",
+    "toolAllowAlways": "Always allow",
+    "toolAllowAlwaysWriteDelete": "Always allow writing and deleting"
   },
   "chatTools": {
     "files": {
@@ -188,12 +191,12 @@
     "web": {
       "fetchLabel": "Read webpage",
       "group": "Web Search",
-      "groupHint": "Search the web and fetch web pages using Jina AI. “Ask” asks before every call.",
+      "groupHint": "Search the web and read web pages using Jina AI.",
       "searchLabel": "Web search"
     },
     "commands": {
       "group": "Commands",
-      "groupHint": "Allow the model to run the selected commands. Only commands with a description for the AI can be selected. “Ask” asks before every call.",
+      "groupHint": "Let the model run the selected commands. Only commands with a description for the AI can be picked. Each call asks first unless you allow it.",
       "needsDescription": "Requires a description for AI in command settings",
       "noCommands": "No custom commands configured yet.",
       "noCommandsHint": "Create commands in Settings → Commands first.",
@@ -224,8 +227,6 @@
     "afterRunCopy": "To clipboard",
     "afterRunInsert": "Insert into window",
     "afterRunShowResult": "Show result",
-    "aiAllowedCommands": "Commands it may run",
-    "aiAllowedCommandsInfo": "The AI runs these commands without asking whenever the prompt needs them. A command never runs itself or an AI command that called it.",
     "aiDescription": "An AI command processes text by your instruction in one step, without a dialog, and can run the commands you allow it. To start a conversation with the AI, use prompts. This model serves every AI command.",
     "aiMaxSteps": "Step limit",
     "aiMaxStepsInfo": "Maximum number of commands the AI may run. The final answer does not count toward this limit. Leave empty to use the limit from the LLM settings.",
@@ -234,8 +235,6 @@
     "aiPromptLabel": "Prompt",
     "aiPromptPlaceholder": "E.g. Find the date and time in the text and add the event to my calendar",
     "aiTaskModel": "AI command model",
-    "aiToolsEnabledInfo": "When enabled, the AI can invoke other allowed commands.",
-    "aiToolsEnabledLabel": "Allow tools",
     "badgeAi": "Available for AI (has description)",
     "badgeExternal": "Available externally (CLI, D-Bus)",
     "badgeInLauncher": "Actions: page {page} ({key})",
@@ -323,7 +322,14 @@
     "unnamed": "Untitled command",
     "variablesNotSet": "A variable it uses has no value on this device",
     "voiceOutputActionHint": "Voice runs of this command always open the result menu.",
-    "warningExternalNameTwins": "Other commands have the same name: {names}. A call by this name is refused as ambiguous; use the ID."
+    "warningExternalNameTwins": "Other commands have the same name: {names}. A call by this name is refused as ambiguous; use the ID.",
+    "aiTools": "Tools of the agent",
+    "aiToolsInfo": "What the agent may call. Everything on the list runs without asking, since an AI command often runs with no window to ask in. Files and memory are never available to it.",
+    "aiToolsUnavailable": "Not available now",
+    "aiToolUnavailable": "Unavailable",
+    "aiToolsRiskyWarning": "Some tools on the list can change or delete data or act outside the app, and they run without asking.",
+    "aiRiskLabel": "Risk for the AI",
+    "aiRiskInfo": "What the command may do when an AI calls it. Tyco cannot know what a command does, so it counts as acting outside the app unless you choose otherwise."
   },
   "common": {
     "add": "Add",
@@ -664,11 +670,9 @@
     "accessAsk": "Ask",
     "accessOff": "Off",
     "accessLevel": "Access",
-    "accessLevelAskAll": "Ask for read and write",
     "accessLevelFull": "Full access",
     "accessLevelCustom": "Custom (set by hand)",
     "accessLevelRead": "Read only",
-    "accessLevelReadWriteAsk": "Read and write with confirmation",
     "accessRemove": "Remove access",
     "actionAfterRunNone": "Nothing",
     "actionCommandInfo": "Runs in the system shell (sh, zsh or PowerShell). The command gets the text only where {placeholder} appears. It is replaced with the text, already quoted and escaped, so no quotes are needed around it.",
@@ -1062,7 +1066,6 @@
     "profileMemoryHardTopic": "Hard limit exceeded (~4,000 tokens) — writes blocked",
     "profileMemoryHint": "Facts, stable preferences, and notes preserved across conversations.",
     "profileMemoryMode": "Memory mode",
-    "profileMemoryModeAsk": "Ask before write (requires approval)",
     "profileMemoryModeAuto": "Automatic (saves without asking)",
     "profileMemoryModeOff": "Off",
     "profileMemoryModeReadOnly": "Read-only",
@@ -1076,12 +1079,11 @@
     "profileNotFoundHint": "It may have been deleted or live in another workspace.",
     "profileSoulPrompt": "Root Instruction (SOUL.md)",
     "profileSoulPromptHint": "The persona, role, tone and rules of this assistant. It is all the profile follows: the instructions and rules of Ask AI do not apply. Read anew before every request, so edits on disk count too. You can specify different requirements for each environment: chat or quick requests.",
-    "profileToolAccess": "access",
     "maxToolSteps": "Steps per answer",
     "maxToolStepsHint": "How many times the model may call tools within one answer, in every chat, quick request and AI command. The limit guards against loops and needless costs.",
     "maxToolStepsInvalid": "Enter a whole number from 1 to 50",
     "profileTools": "Tools",
-    "profileToolsHint": "What the profile's model may do in the chat on its own. Calls set to “Ask” wait for your approval in the message.",
+    "profileToolsHint": "What the profile's agent may use. Reading runs freely, changes ask first; set each tool to Off, Ask or Allow. Memory and the profile's workspace never ask.",
     "profileWebSearchLlmNotice": "API key and page size limits are configured globally in LLM settings.",
     "projectAccessFileToolsOff": "File tools are off",
     "projectChangedElsewhere": "The project was changed on another device or outside TyCo. Your changes are not saved yet.",
@@ -1311,8 +1313,6 @@
     "webJinaApiKey": "Jina AI API key",
     "webJinaApiKeyHint": "Optional. Without a key, requests use the free tier with shared rate limits.",
     "webSearchSectionHint": "Settings for web search and page reading tools used by AI models and profiles.",
-    "askAiWebAccess": "Web in \"Ask AI\"",
-    "askAiWebAccessHint": "Whether the \"Ask AI\" chat, which has no profile, may search the web and read pages. \"Ask\" waits for your approval before each call. Profiles set this in their own tools.",
     "translationVoiceCommand": "Voice command",
     "translationVoiceCommandInfo": "Includes the translation command in voice commands (\"translate to [language]\").",
     "dialogTab": "Dialog",
@@ -1351,7 +1351,13 @@
       "projectLoses": "These profiles lose access to it: {names}.",
       "externalFolder": "The external folder stays where it is; on other computers, set it again.",
       "otherDevices": "On computers where the target workspace is not attached, it disappears until the workspace is attached there."
-    }
+    },
+    "accessDeleteWithoutAsking": "Delete without asking",
+    "accessLevelReadWrite": "Read and write",
+    "askAiWebSearch": "Web search",
+    "askAiWebSearchHint": "Lets the Ask AI chat search the web and read pages, without asking. Ask AI never sees your files, memory or commands.",
+    "askAiFastModelsHint": "Ask AI works best with a fast model: it is meant for quick answers and checking facts.",
+    "toolsTab": "Tools"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
@@ -1730,5 +1736,32 @@
     "translationModelNone": "No model is picked for the translation",
     "startCompact": "Start in compact mode",
     "route": "{from} → {to}"
+  },
+  "toolPermissions": {
+    "riskRead": "Reads",
+    "riskWrite": "Changes data",
+    "riskDestructive": "Deletes",
+    "riskExternal": "Acts outside",
+    "sourceCore": "Built-in",
+    "sourcePlugin": "Plugin",
+    "sourceThirdPartyPlugin": "Third-party plugin",
+    "sourceMcp": "MCP server",
+    "sourceCommand": "Command",
+    "sourceOffEverywhere": "Off in the Tools settings",
+    "pluginCapabilities": "Plugin permissions: {capabilities}",
+    "pluginSourceHint": "Tools this plugin offers to the chat. They run with the plugin's permissions.",
+    "leakQuestion": "This chat has read your data, and this call would reach a new place. Asked once per place in this chat.",
+    "contextTokens": "≈{count} tokens",
+    "catalogHint": "Where the agents' tools come from. A plugin switched off here is off for every profile and AI command. Built-in tools are switched in Ask AI, in each profile and in each AI command.",
+    "catalogWhereHint": "Each profile picks its tools and how freely they run in its own settings.",
+    "defaultPolicy": "By default: {policy}",
+    "summaryWorkspace": "workspace",
+    "summaryProjects": "projects: {count}",
+    "summaryProjectsRead": "projects: {count} (read)",
+    "summaryWeb": "web",
+    "summaryCommands": "commands: {count}",
+    "summaryPlugins": "plugins: {count}",
+    "summaryNothing": "chat only",
+    "summaryTitle": "What the agent can do — open the profile settings"
   }
 }

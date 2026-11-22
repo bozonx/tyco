@@ -912,6 +912,7 @@ mod tests {
                 status: None,
             }],
             is_quick_request: None,
+            tool_permissions: None,
         };
         store.persist(&directory.join("images"), &chat).unwrap();
         fs::write(
@@ -982,6 +983,7 @@ mod tests {
                 status: None,
             }],
             is_quick_request: None,
+            tool_permissions: None,
         };
         assert!(store.persist(Path::new("/nonexistent"), &chat).is_err());
         let mut full = ChatImageStore {

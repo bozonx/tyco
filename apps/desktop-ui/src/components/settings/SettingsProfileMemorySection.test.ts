@@ -218,7 +218,7 @@ describe('SettingsProfileMemorySection', () => {
             template: `
               <select :value="modelValue" @change="$emit('update:modelValue', $event.target.value)">
                 <option value="auto">auto</option>
-                <option value="ask">ask</option>
+                <option value="read-only">read-only</option>
               </select>
             `,
           },
@@ -230,9 +230,9 @@ describe('SettingsProfileMemorySection', () => {
     })
 
     const select = wrapper.find('select')
-    select.setValue('ask')
+    select.setValue('read-only')
 
-    expect(wrapper.emitted('update:memoryMode')?.[0]).toEqual(['ask'])
+    expect(wrapper.emitted('update:memoryMode')?.[0]).toEqual(['read-only'])
   })
 
   it('opens confirm modal on clear button click and clears memory', async () => {

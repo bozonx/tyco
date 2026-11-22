@@ -126,7 +126,7 @@
     "stop": "Oprește",
     "stopped": "Oprit",
     "toolAllow": "Permite",
-    "toolAllowSession": "Permite în această sesiune",
+    "toolAllowSession": "Permite în acest chat",
     "toolApprovalQuestion": "Permiteți rularea {tool}?",
     "toolArguments": "Argumente",
     "toolDeny": "Refuză",
@@ -155,7 +155,10 @@
       "workspace": "Fișiere",
       "workspaceHint": "Fișierele profilului: păstrate în afara istoricului de chat, disponibile în toate chaturile profilului"
     },
-    "takeScreenshot": "Fă o captură de ecran"
+    "takeScreenshot": "Fă o captură de ecran",
+    "toolAllowBatch": "Permite toate ({count})",
+    "toolAllowAlways": "Permite întotdeauna",
+    "toolAllowAlwaysWriteDelete": "Permite întotdeauna scrierea și ștergerea"
   },
   "chatTools": {
     "files": {
@@ -188,12 +191,12 @@
     "web": {
       "fetchLabel": "Citește pagina web",
       "group": "Căutare web",
-      "groupHint": "Căutați pe web și descărcați pagini web folosind Jina AI. „Întreabă” solicită confirmare înainte de fiecare apel.",
+      "groupHint": "Căutare pe web și citirea paginilor cu Jina AI.",
       "searchLabel": "Căutare web"
     },
     "commands": {
       "group": "Comenzi",
-      "groupHint": "Permiteți modelului să execute comenzile selectate. Se pot alege doar comenzi cu o descriere pentru AI. „Întreabă” cere confirmare înainte de fiecare apel.",
+      "groupHint": "Modelul poate rula comenzile alese. Pot fi alese doar comenzi cu descriere pentru AI. Fiecare apel întreabă întâi, dacă nu îl permiteți.",
       "needsDescription": "Necesită o descriere pentru AI în setările comenzii",
       "noCommands": "Nu există încă comenzi personalizate configurate.",
       "noCommandsHint": "Creați mai întâi comenzi în Setări → Comenzi.",
@@ -224,8 +227,6 @@
     "afterRunCopy": "În clipboard",
     "afterRunInsert": "Inserează în fereastră",
     "afterRunShowResult": "Afișează rezultatul",
-    "aiAllowedCommands": "Comenzi pe care le poate rula",
-    "aiAllowedCommandsInfo": "AI-ul rulează aceste comenzi fără să întrebe ori de câte ori promptul are nevoie de ele. O comandă nu se rulează niciodată pe sine și nici comanda AI care a apelat-o.",
     "aiDescription": "O comandă AI procesează textul după instrucțiunea ta într-un singur pas, fără dialog, și poate rula comenzile pe care i le permiți. Pentru a începe o conversație cu AI, folosește prompturile. Acest model deservește toate comenzile AI.",
     "aiMaxSteps": "Limită de pași",
     "aiMaxStepsInfo": "Numărul maxim de comenzi pe care le poate rula AI. Răspunsul final nu se numără în limită. Lăsați gol pentru a folosi limita din setările LLM.",
@@ -234,8 +235,6 @@
     "aiPromptLabel": "Prompt",
     "aiPromptPlaceholder": "De ex. Găsește data și ora în text și adaugă evenimentul în calendarul meu",
     "aiTaskModel": "Model pentru comenzi AI",
-    "aiToolsEnabledInfo": "Când este activat, AI poate apela alte comenzi permise.",
-    "aiToolsEnabledLabel": "Permite instrumente",
     "badgeAi": "Disponibil pentru AI (are descriere)",
     "badgeExternal": "Disponibil extern (CLI, D-Bus)",
     "badgeInLauncher": "Acțiuni: pagina {page} ({key})",
@@ -323,7 +322,14 @@
     "unnamed": "Comandă fără nume",
     "variablesNotSet": "O variabilă pe care o folosește nu are valoare pe acest dispozitiv",
     "voiceOutputActionHint": "Pornită prin voce, această comandă deschide mereu meniul rezultatului.",
-    "warningExternalNameTwins": "Alte comenzi au același nume: {names}. Un apel cu acest nume este refuzat ca ambiguu; folosiți ID-ul."
+    "warningExternalNameTwins": "Alte comenzi au același nume: {names}. Un apel cu acest nume este refuzat ca ambiguu; folosiți ID-ul.",
+    "aiTools": "Instrumentele agentului",
+    "aiToolsInfo": "Ce poate apela agentul. Tot ce e pe listă rulează fără întrebare, deoarece o comandă AI rulează adesea fără o fereastră în care să întrebe. Fișierele și memoria nu îi sunt niciodată disponibile.",
+    "aiToolsUnavailable": "Indisponibile acum",
+    "aiToolUnavailable": "Indisponibil",
+    "aiToolsRiskyWarning": "Unele instrumente din listă pot modifica sau șterge date ori pot acționa în afara aplicației și rulează fără întrebare.",
+    "aiRiskLabel": "Risc pentru AI",
+    "aiRiskInfo": "Ce poate face comanda când o apelează un AI. Tyco nu poate ști ce face o comandă, așa că o consideră acțiune în afara aplicației, dacă nu alegeți altceva."
   },
   "common": {
     "add": "Adaugă",
@@ -664,11 +670,9 @@
     "accessAsk": "Întreabă",
     "accessOff": "Oprit",
     "accessLevel": "Acces",
-    "accessLevelAskAll": "Întreabă pentru citire și scriere",
     "accessLevelFull": "Acces complet",
     "accessLevelCustom": "Personalizat (setat manual)",
     "accessLevelRead": "Doar citire",
-    "accessLevelReadWriteAsk": "Citire și scriere cu confirmare",
     "accessRemove": "Elimină accesul",
     "actionAfterRunNone": "Nimic",
     "actionCommandInfo": "Rulează în shellul sistemului (sh, zsh sau PowerShell). Comanda primește textul doar acolo unde apare {placeholder}. Acesta este înlocuit cu textul, deja pus între ghilimele și escapat, deci nu sunt necesare ghilimele în jurul lui.",
@@ -1062,7 +1066,6 @@
     "profileMemoryHardTopic": "Limită strictă depășită (~4.000 jetoane) — scriere blocată",
     "profileMemoryHint": "Fapte, preferințe stabile și note păstrate de-a lungul conversațiilor.",
     "profileMemoryMode": "Mod memorie",
-    "profileMemoryModeAsk": "Întreabă înainte de a scrie (necesită aprobare)",
     "profileMemoryModeAuto": "Automat (salvează fără confirmare)",
     "profileMemoryModeOff": "Dezactivat",
     "profileMemoryModeReadOnly": "Doar citire",
@@ -1076,12 +1079,11 @@
     "profileNotFoundHint": "Poate a fost șters sau se află în alt spațiu de lucru.",
     "profileSoulPrompt": "Instrucțiune de bază (SOUL.md)",
     "profileSoulPromptHint": "Personalitatea, rolul, tonul și regulile acestui asistent. Este tot ce urmează profilul: instrucțiunile și regulile din „Întreabă AI” nu se aplică. Este recitită înaintea fiecărei cereri, deci contează și modificările făcute pe disc. Puteți specifica cerințe diferite pentru fiecare mediu: chat sau cereri rapide.",
-    "profileToolAccess": "acces",
     "maxToolSteps": "Pași per răspuns",
     "maxToolStepsHint": "De câte ori poate modelul să apeleze instrumente într-un răspuns, în toate chaturile, cererile rapide și comenzile AI. Limita previne buclele și costurile inutile.",
     "maxToolStepsInvalid": "Introduceți un număr întreg de la 1 la 50",
     "profileTools": "Instrumente",
-    "profileToolsHint": "Ce poate face singur modelul profilului în chat. Apelurile setate pe „Întreabă” așteaptă aprobarea dvs. în mesaj.",
+    "profileToolsHint": "Ce poate folosi agentul profilului. Citirea rulează liber, modificările întreabă întâi; setați fiecare instrument pe Oprit, Întreabă sau Permite. Memoria și spațiul de lucru al profilului nu întreabă niciodată.",
     "profileWebSearchLlmNotice": "Cheia API și limitele de dimensiune a paginii sunt configurate global în setările LLM.",
     "projectAccessFileToolsOff": "Instrumentele pentru fișiere sunt oprite",
     "projectChangedElsewhere": "Proiectul a fost modificat pe alt dispozitiv sau în afara TyCo. Modificările dvs. nu sunt încă salvate.",
@@ -1311,8 +1313,6 @@
     "webJinaApiKey": "Cheie API Jina AI",
     "webJinaApiKeyHint": "Opțional. Fără cheie, cererile folosesc nivelul gratuit cu limite partajate.",
     "webSearchSectionHint": "Setări pentru instrumentele de căutare web și citire a paginilor utilizate de modelele și profilurile AI.",
-    "askAiWebAccess": "Web în „Întreabă AI”",
-    "askAiWebAccessHint": "Dacă chatul „Întreabă AI”, care nu are profil, poate căuta pe web și citi pagini. „Întreabă” așteaptă aprobarea ta înainte de fiecare apel. Profilurile setează acest lucru în propriile instrumente.",
     "translationVoiceCommand": "Comandă vocală",
     "translationVoiceCommandInfo": "Include comanda de traducere în comenzile vocale („tradu în [limbă]”).",
     "dialogTab": "Dialog",
@@ -1351,7 +1351,13 @@
       "projectLoses": "Aceste profiluri pierd accesul la el: {names}.",
       "externalFolder": "Dosarul extern rămâne unde este; pe alte computere, setați-l din nou.",
       "otherDevices": "Pe computerele unde spațiul de lucru țintă nu este atașat, dispare până când este atașat acolo."
-    }
+    },
+    "accessDeleteWithoutAsking": "Șterge fără întrebare",
+    "accessLevelReadWrite": "Citire și scriere",
+    "askAiWebSearch": "Căutare pe web",
+    "askAiWebSearchHint": "Permite chatului „Întreabă AI” să caute pe web și să citească pagini fără întrebare. Nu vede niciodată fișierele, memoria sau comenzile tale.",
+    "askAiFastModelsHint": "„Întreabă AI” funcționează cel mai bine cu un model rapid: e gândit pentru răspunsuri rapide și verificarea faptelor.",
+    "toolsTab": "Instrumente"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
@@ -1730,5 +1736,32 @@
     "translationModelNone": "Niciun model ales pentru traducere",
     "startCompact": "Pornește în modul compact",
     "route": "{from} → {to}"
+  },
+  "toolPermissions": {
+    "riskRead": "Citire",
+    "riskWrite": "Modifică date",
+    "riskDestructive": "Șterge",
+    "riskExternal": "Acționează în afară",
+    "sourceCore": "Integrat",
+    "sourcePlugin": "Plugin",
+    "sourceThirdPartyPlugin": "Plugin terț",
+    "sourceMcp": "Server MCP",
+    "sourceCommand": "Comandă",
+    "sourceOffEverywhere": "Dezactivat în setările Instrumente",
+    "pluginCapabilities": "Permisiunile pluginului: {capabilities}",
+    "pluginSourceHint": "Instrumente pe care acest plugin le oferă chatului. Rulează cu permisiunile pluginului.",
+    "leakQuestion": "Acest chat a citit datele tale, iar acest apel ar ajunge într-un loc nou. Se întreabă o dată pe loc în acest chat.",
+    "contextTokens": "≈{count} tokenuri",
+    "catalogHint": "De unde vin instrumentele agenților. Un plugin dezactivat aici e dezactivat în toate profilurile și comenzile AI. Instrumentele integrate se activează în „Întreabă AI”, în fiecare profil și în fiecare comandă AI.",
+    "catalogWhereHint": "Fiecare profil își alege instrumentele și cât de liber rulează în propriile setări.",
+    "defaultPolicy": "Implicit: {policy}",
+    "summaryWorkspace": "spațiu de lucru",
+    "summaryProjects": "proiecte: {count}",
+    "summaryProjectsRead": "proiecte: {count} (citire)",
+    "summaryWeb": "web",
+    "summaryCommands": "comenzi: {count}",
+    "summaryPlugins": "pluginuri: {count}",
+    "summaryNothing": "doar chat",
+    "summaryTitle": "Ce poate agentul — deschide setările profilului"
   }
 }

@@ -110,6 +110,9 @@ export function createPluginTestContext(
         }
       }
     }),
+    registerChatTools: vi.fn<PluginContext['registerChatTools']>(
+      () => () => {}
+    ),
     getEditorInputValue: vi.fn(async () => value),
     getEditorInputSelectedText: vi.fn(async () => selectedText),
     getEditorInputSnapshot: vi.fn(async () => ({

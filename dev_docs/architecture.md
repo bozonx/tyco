@@ -62,18 +62,81 @@ docs and UI:
 - A **tool** (`lib/chat-tools/`, `ChatToolDefinition`) is what an LLM sees and
   calls in a tool loop. Tools come only from `ChatToolProvider`s: built-in ones
   (files, web, memory, reply blocks), the `commands` provider (commands the
-  profile selected, each with a description for the AI) and MCP servers. An
-  operation never becomes a tool without a command.
+  profile selected, each with a description for the AI), plugin `chatTools`
+  and, later, MCP servers. An operation never becomes a tool without a command
+  or a `chatTools` contribution.
 
-An AI command (`core.aiTask`) runs its agent through the same tool loop as the
-chat (`chat-tools/chat-tool-loop.ts`): `ai-command-runner.ts` only turns the
-commands the AI command allows into tools, all `allow`, since the user picked
-them and the command often runs with no window to ask in.
+## Tool sources and permissions
 
-The "Ask AI" chat has no profile and so no tool settings of its own besides
-`llm.webSearch.askAiAccess` (`ask` by default, `allow`, `off`): it always gets
-the reply blocks and its own attachments, and the web tools by that setting.
-`run_ai_web_tool` refuses a call without a profile when it is `off`.
+TyCo's profiles are assistants, not code agents, and the rule is
+predictability: the agent can do exactly what the user set up and nothing more.
+Out of the box a profile's tools see only its `workspace/` and the projects
+connected to it; an outside folder is reached only as an external project.
+Plugins and commands may reach further, but only because the user installed or
+wrote them. There is no computer use: no screen, clipboard, selection or window
+tools. No tool changes settings, permissions, profiles, projects or commands
+(`TOOL_COMMANDS` in `services/ai_tools/permissions.rs` and
+`CHAT_TOOL_COMMANDS` in `desktop-chat-tools.ts` keep the list).
+
+**Sources.** Every `ChatToolDefinition` names its `source` (`core`, `plugin`,
+`mcp`, `commands` + id) and its `risk`: `read`, `write`, `destructive`,
+`external`. `lib/chat-tools/tool-catalog.ts` holds the keys (`<kind>:<id>` and
+`<kind>:<id>:<tool>`, `:` escaped; Rust mirrors them), the defaults and
+`toolStateIn(scope, tool)`, which decides a tool's state where it is offered:
+`off` (the model does not see it), `ask` or `allow`. There is no `deny` for a
+tool; it stays only in project permissions.
+
+- Default policy: `read` → `allow`, the rest → `ask`. Commands ask (their risk
+  is the user's `aiRisk`, `external` when unset); an AI command called as a tool
+  has the highest risk of its whitelist (`commandRisk`). A third-party plugin's
+  tools ask whatever risk they declare; MCP hints will count only for a trusted
+  server.
+- Memory, the reply blocks and the attachments are always on and never ask;
+  `memoryMode` (`auto`, `read-only`, `off`) decides only whether the memory is
+  there and writable. The file tools take their policy from the project
+  permissions; `workspace/` allows everything, deleting included.
+
+**Two levels.** Globally (`tools.sources` in the user config, Settings → Tools)
+a plugin or MCP source can be switched off everywhere; core sources are not
+switched there. A profile (`AiProfile.tools`: `sources`, `tools`, `commandIds`)
+keeps only its differences from the defaults: `core` and `plugin` sources are
+on, commands and MCP servers are picked. Project permissions are on the
+profile ↔ project link with `read`, `write` and `delete` (never freer than
+`write`; `normalizedProjectPermission`, `ProjectPermission::effective_delete`).
+
+**Where the call comes from** (`ToolScope` in the webview, `ToolCallContext`
+over IPC):
+
+- `askAi`: the web by `llm.tasks.chat.isWebSearchEnabled` (on when unset), the
+  reply blocks and the attachments, all `allow`. No files, memory, commands,
+  plugin tools or MCP: that is a boundary, not a setting.
+- `profile`: the profile's settings as above; `ask` reaches the user in the
+  chat window.
+- `aiCommand`: its whitelist `AiCommandOperationConfig.tools: ToolRef[]`, all
+  `allow`, since an AI command often runs with no window to ask in. No files or
+  memory. An AI command never runs itself or a command that led to it, and
+  nests at most `AI_COMMAND_MAX_DEPTH` deep. Called from a profile chat it runs
+  in its own context; the chat asks about the call by its risk.
+
+Rust checks every call of the tools it runs (`ensure_web_tool_allowed`,
+`ensure_file_tool_allowed`, the project permissions, `memoryMode`), reading the
+profile or the config anew each time. It does not know whether the user was
+asked; it checks that the source is on, the tool is not `off` and the project
+permission is not `deny`. Plugin tools run in the webview, which checks them.
+
+**Approvals** (`ChatToolApproval.vue`): allow once, allow in this chat (kept
+with the chat as `Chat.toolPermissions`, given back when it is reopened),
+always allow (writes `allow` into the profile, or raises the project
+permission; saved before the call runs) and deny. The calls of one model step
+that ask wait together and can be allowed at once.
+
+**Leak protection.** Once a profile chat holds personal data — memory in the
+instructions, attachments, a file or memory read — a call that could carry it
+somewhere new asks even at `allow`: `web_fetch` of a URL that neither the
+user's messages nor search results named, and any `external` tool. It asks
+once per host or tool in the chat and offers no "always allow". Accepted
+residual risks: the text of a `web_search` query, and in "Ask AI" the user's
+own attachments with `web_fetch`.
 
 ## Backend and trust boundaries
 

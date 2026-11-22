@@ -9,7 +9,9 @@ describe('ai-profiles-model', () => {
     name: 'Tech Writer',
     memoryMode: 'auto',
     modelId: 'gpt-4o',
-    projectPermissions: { 'docs-proj': { read: 'allow', write: 'ask' } },
+    projectPermissions: {
+      'docs-proj': { read: 'allow', write: 'ask', delete: 'ask' },
+    },
     createdAt: 1000,
     updatedAt: 1000,
   }
@@ -340,8 +342,8 @@ describe('ai-profiles-model', () => {
     expect(deps.saveProfile).toHaveBeenLastCalledWith(
       expect.objectContaining({
         projectPermissions: {
-          'docs-proj': { read: 'allow', write: 'ask' },
-          'new-proj': { read: 'allow', write: 'allow' },
+          'docs-proj': { read: 'allow', write: 'ask', delete: 'ask' },
+          'new-proj': { read: 'allow', write: 'allow', delete: 'ask' },
         },
       }),
       undefined
@@ -350,7 +352,9 @@ describe('ai-profiles-model', () => {
     await model.setProjectAccess('tech-writer', 'docs-proj', undefined)
     expect(deps.saveProfile).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        projectPermissions: { 'new-proj': { read: 'allow', write: 'allow' } },
+        projectPermissions: {
+          'new-proj': { read: 'allow', write: 'allow', delete: 'ask' },
+        },
       }),
       'r2'
     )
@@ -363,7 +367,11 @@ describe('ai-profiles-model', () => {
     await model.updateProfile('tech-writer', {
       temperature: 0.3,
       memoryMode: 'read-only',
-      tools: { groups: { files: { isEnabled: true, access: 'ask' } } },
+      tools: {
+        sources: {},
+        tools: { 'core:files:write_file': 'ask' },
+        commandIds: [],
+      },
     })
 
     const copy = await model.duplicateProfile('tech-writer', 'Tech Writer 2')
@@ -378,7 +386,11 @@ describe('ai-profiles-model', () => {
       modelId: 'gpt-4o',
       temperature: 0.3,
       projectPermissions: mockProfile.projectPermissions,
-      tools: { groups: { files: { isEnabled: true, access: 'ask' } } },
+      tools: {
+        sources: {},
+        tools: { 'core:files:write_file': 'ask' },
+        commandIds: [],
+      },
       createdAt: 2000,
       updatedAt: 2000,
     })

@@ -56,6 +56,8 @@
             :result="step.result"
             :is-awaiting-answer="Boolean(pendingApproval(step.call))"
             :preview="pendingApproval(step.call)?.preview"
+            :request="pendingApproval(step.call)"
+            :batch-count="batchCountOf(step.call)"
             @decide="emit('tool-approval', step.call.approvalId!, $event)"
           />
         </template>
@@ -119,7 +121,7 @@ import { useFeedbackMotion } from '../../composables/use-feedback-motion'
 import { useI18n } from '../../composables/use-i18n'
 import { messageSteps } from '../../lib/chat-tools/chat-message-steps'
 import type { ChatToolApprovalRequest } from '../../lib/chat-tools/chat-tool-loop'
-import type { ChatToolDecision } from '../../lib/chat-tools/chat-tool-policy'
+import type { ChatToolAnswer } from '../../lib/chat-tools/chat-tool-policy'
 import {
   REPLY_BLOCKS_TOOL_NAME,
   extractReplyBlocks,
@@ -146,7 +148,7 @@ const emit = defineEmits<{
   (e: 'regenerate'): void
   (e: 'copy-markdown-to-point'): void
   (e: 'content-resized'): void
-  (e: 'tool-approval', approvalId: string, decision: ChatToolDecision): void
+  (e: 'tool-approval', approvalId: string, decision: ChatToolAnswer): void
   (e: 'insert-reply-block', text: string): void
   (e: 'insert-editor-reply-block', text: string): void
 }>()
@@ -158,6 +160,17 @@ const pendingApproval = (
   call.state === 'awaiting-approval' && call.approvalId
     ? props.pendingApprovals?.get(call.approvalId)
     : undefined
+
+/** How many calls of the step of a waiting call wait with it */
+const batchCountOf = (
+  call: Extract<ChatMessagePart, { type: 'tool-call' }>
+) => {
+  const batchId = pendingApproval(call)?.batchId
+  if (!batchId) return 1
+  return [...(props.pendingApprovals?.values() ?? [])].filter(
+    (request) => request.batchId === batchId
+  ).length
+}
 
 /** The answer's text and tool calls in order; null for a plain answer */
 const steps = computed(() => messageSteps(props.message))

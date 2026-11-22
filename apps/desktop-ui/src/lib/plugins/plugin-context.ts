@@ -10,6 +10,9 @@ import {
   type PluginCapability,
   type PluginContext,
   type EditorInputSnapshot,
+  type ChatToolContribution,
+  validateChatToolContribution,
+  validateOperationResult,
 } from '@tyco/plugin-sdk'
 
 import type { ActionItem, EditItem, ToolbarItem } from '../../types/plugins'
@@ -19,6 +22,23 @@ import type { PluginLifecycle } from './plugin-manager'
 import { pluginMessageKey } from './plugin-resources'
 import { createPluginRegistration } from './plugin-registration'
 import { createPluginOperationAdapter } from './plugin-operation-adapter'
+
+/** A chat tool of a plugin, as the host keeps it */
+export interface HostPluginChatTool {
+  pluginId: string
+  /** The tool's own id within the plugin */
+  toolId: string
+  labelKey: string
+  description: string
+  inputSchema: ChatToolContribution['inputSchema']
+  risk: ChatToolContribution['risk']
+  /** The plugin's capabilities, which the tool runs with */
+  capabilities: readonly PluginCapability[]
+  run(
+    input: Record<string, unknown>,
+    signal: AbortSignal
+  ): Promise<OperationResult>
+}
 
 export interface PluginContextDependencies {
   registerActionsItems(items: ActionItem[]): PluginDisposer | void
@@ -30,6 +50,7 @@ export interface PluginContextDependencies {
     tools: HostOperationDefinition[],
     config: () => Record<string, unknown>
   ): PluginDisposer | void
+  registerChatTools?(tools: HostPluginChatTool[]): PluginDisposer | void
   invokeOperation?(
     operationId: string,
     snapshot: EditorInputSnapshot,
@@ -235,6 +256,32 @@ export function createPluginContext(
         items,
         () => items.map(tools.adapt),
         (definitions) => deps.registerOperations(definitions, config)
+      )
+    },
+    registerChatTools: (items: ChatToolContribution[]) => {
+      for (const item of Array.isArray(items) ? items : [])
+        validateChatToolContribution(item, lifecycle.capabilities)
+      return registration(
+        'chatTool',
+        items,
+        (scoped) =>
+          scoped.map((item, index): HostPluginChatTool => ({
+            pluginId: id,
+            toolId: items[index]!.id,
+            labelKey: item.labelKey,
+            description: item.description,
+            inputSchema: item.inputSchema,
+            risk: item.risk,
+            capabilities: [...lifecycle.capabilities],
+            run: async (input, signal) => {
+              check()
+              const result: unknown = await item.run(input, { signal })
+              check()
+              validateOperationResult(result)
+              return result
+            },
+          })),
+        (tools) => deps.registerChatTools?.(tools)
       )
     },
     getEditorInputValue: async () =>

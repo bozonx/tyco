@@ -77,7 +77,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `commands`          | the commands of the user: `operationId`, `operationConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, `platforms`, …                                                                                                                                                                                                                                                                                                                                           |
 | `variables`         | the variables commands refer to as `{{var:NAME}}`: `id`, `name`, `description`                                                                                                                                                                                                                                                                                                                                                                                      |
 | `variableValues`    | the value of each variable on this device, by variable id (device)                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `llm`               | `imageQuality`, `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below), `maxToolSteps` (model steps per answer with tools in every chat, quick request and AI command without its own limit; 8 when absent), `webSearch` (`fetchMaxCharacters`, `askAiAccess`)                                                                                                                                                                   |
+| `llm`               | `imageQuality`, `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below), `maxToolSteps` (model steps per answer with tools in every chat, quick request and AI command without its own limit; 8 when absent), `webSearch` (`fetchMaxCharacters`); `tasks.chat.isWebSearchEnabled` lets "Ask AI" use the web (on when absent)                                                                                                      |
 | `transformations`   | `items`, the transformation library; `slots`, the transformation menu (a shortcut grid of transformation ids)                                                                                                                                                                                                                                                                                                                                                       |
 | `styling`           | `items`, the styling library; `slots`, the styling menu (a shortcut grid of styling ids)                                                                                                                                                                                                                                                                                                                                                                            |
 | `chatPrompts`       | `items`, the prompt library: each prompt has `profileId`, empty for a prompt of every profile                                                                                                                                                                                                                                                                                                                                                                       |
@@ -179,9 +179,13 @@ menu to pick from; one transformation, style or language is an item of the
 `transformation`, `styling` or `translation` type.
 
 An AI command is a command of the `core.aiTask` operation. Its `operationConfig` holds
-`prompt`, `allowedCommandIds` (the commands its agent may run; the command
+`prompt`, `tools` (the whitelist of its agent: `{ sourceKind, sourceId,
+toolName? }` references to commands, the web, plugin and MCP tools; the command
 itself never runs) and an optional `maxSteps` (1–50; `llm.maxToolSteps` when
-absent).
+absent). A command's `aiRisk` (`read`, `write`, `destructive`, `external`) is
+what it may do when an AI calls it; `external` when absent. The top-level
+`tools.sources` switches plugin and MCP tool sources off everywhere, by
+`<kind>:<id>`. See `architecture.md`, "Tool sources and permissions".
 
 A command may name the `platforms` it runs on (`linux`, `windows`; absent or
 empty for every one). On another platform it stays in the config and in the
@@ -485,7 +489,8 @@ changes takes the change silently.
 Memory has two kinds of writers. The model of a chat reads with
 `read_ai_profile_memory` (with its `chatId`) and changes memory with
 `add_`/`replace_`/`rewrite_ai_profile_memory`; Rust refuses those when the
-profile's `memoryMode` is `read-only` or `off`, and refuses with
+profile's `memoryMode` is `read-only` or `off` (and a read or search by the
+model when it is `off`), and refuses with
 `staleRevision` a change over a file that changed since that chat read it, and
 a rewrite of a file the chat never read. Read versions are keyed by vault root,
 profile id, chat and file, so two chats, or equal legacy ids in different

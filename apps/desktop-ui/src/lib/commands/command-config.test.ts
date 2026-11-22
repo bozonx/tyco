@@ -402,11 +402,7 @@ describe('commands of the core tools', () => {
     const aiTask = createCommand('core.aiTask', 'a', {
       defaultOutputAction: 'insertIntoWindow',
     })
-    expect(aiTask.operationConfig).toEqual({
-      prompt: '',
-      allowedCommandIds: [],
-      isToolsEnabled: true,
-    })
+    expect(aiTask.operationConfig).toEqual({ prompt: '', tools: [] })
     expect(aiTask.outputAction).toBe('insertIntoWindow')
     expect(aiTask.platforms).toBeUndefined()
     expect(createCommand('Notes.write', 'n').operationConfig).toEqual({})

@@ -1,16 +1,15 @@
+import { toolContext } from '../../test/chat-tool-context'
 import { describe, expect, it, vi } from 'vitest'
 
-import { createChatToolApprovals } from './chat-tool-approvals'
 import { createChatToolPolicy } from './chat-tool-policy'
 import { createChatToolRegistry } from './chat-tool-registry'
 import {
   createMemoryToolProvider,
   MEMORY_INSTRUCTIONS_FULL,
   MEMORY_INSTRUCTIONS_READ_ONLY,
-  MEMORY_TOOL_GROUP_ID,
   type MemoryToolsDependencies,
-  withMemoryToolGroup,
 } from './memory-tools'
+import { MEMORY_SOURCE } from './tool-catalog'
 
 function createFakeMemoryDeps(
   overrides?: Partial<MemoryToolsDependencies>
@@ -50,9 +49,8 @@ describe('memory-tools', () => {
     const deps = createFakeMemoryDeps()
     const provider = createMemoryToolProvider(deps)
     const tools = await provider.tools({
-      profileId: 'prof-1',
+      ...toolContext('prof-1'),
       modelId: 'gpt-4',
-      settings: undefined,
       memoryMode: 'auto',
     })
 
@@ -65,57 +63,34 @@ describe('memory-tools', () => {
     ])
 
     for (const tool of tools) {
-      expect(tool.groupId).toBe(MEMORY_TOOL_GROUP_ID)
-      expect(tool.accessFor?.({})).toBe('allow')
+      expect(tool.source).toEqual(MEMORY_SOURCE)
+      expect(tool.defaultPolicy).toBe('allow')
+      expect(tool.readsPersonalData).toBe(true)
     }
 
     expect(
       provider.instructions?.({
-        profileId: 'prof-1',
+        ...toolContext('prof-1'),
         modelId: 'gpt-4',
-        settings: undefined,
         memoryMode: 'auto',
       })
     ).toBe(MEMORY_INSTRUCTIONS_FULL)
-  })
-
-  it('sets write tools access to ask in ask mode', async () => {
-    const deps = createFakeMemoryDeps()
-    const provider = createMemoryToolProvider(deps)
-    const tools = await provider.tools({
-      profileId: 'prof-1',
-      modelId: 'gpt-4',
-      settings: undefined,
-      memoryMode: 'ask',
-    })
-
-    const readTool = tools.find((t) => t.name === 'memory_read')
-    const addTool = tools.find((t) => t.name === 'memory_add')
-    const replaceTool = tools.find((t) => t.name === 'memory_replace')
-    const rewriteTool = tools.find((t) => t.name === 'memory_rewrite')
-
-    expect(readTool?.accessFor?.({})).toBe('allow')
-    expect(addTool?.accessFor?.({})).toBe('ask')
-    expect(replaceTool?.accessFor?.({})).toBe('ask')
-    expect(rewriteTool?.accessFor?.({})).toBe('ask')
   })
 
   it('only registers read tools in read-only mode and provides read-only instructions', async () => {
     const deps = createFakeMemoryDeps()
     const provider = createMemoryToolProvider(deps)
     const tools = await provider.tools({
-      profileId: 'prof-1',
+      ...toolContext('prof-1'),
       modelId: 'gpt-4',
-      settings: undefined,
       memoryMode: 'read-only',
     })
 
     expect(tools.map((t) => t.name)).toEqual(['memory_read', 'memory_search'])
     expect(
       provider.instructions?.({
-        profileId: 'prof-1',
+        ...toolContext('prof-1'),
         modelId: 'gpt-4',
-        settings: undefined,
         memoryMode: 'read-only',
       })
     ).toBe(MEMORY_INSTRUCTIONS_READ_ONLY)
@@ -127,34 +102,24 @@ describe('memory-tools', () => {
 
     expect(
       await provider.tools({
-        profileId: 'prof-1',
+        ...toolContext('prof-1'),
         modelId: 'gpt-4',
-        settings: undefined,
         memoryMode: 'off',
       })
     ).toEqual([])
     expect(
       provider.instructions?.({
-        profileId: 'prof-1',
+        ...toolContext('prof-1'),
         modelId: 'gpt-4',
-        settings: undefined,
         memoryMode: 'off',
       })
     ).toBeUndefined()
 
     expect(
-      await provider.tools({
-        profileId: null,
-        modelId: 'gpt-4',
-        settings: undefined,
-      })
+      await provider.tools({ ...toolContext(null), modelId: 'gpt-4' })
     ).toEqual([])
     expect(
-      provider.instructions?.({
-        profileId: null,
-        modelId: 'gpt-4',
-        settings: undefined,
-      })
+      provider.instructions?.({ ...toolContext(null), modelId: 'gpt-4' })
     ).toBeUndefined()
   })
 
@@ -163,9 +128,8 @@ describe('memory-tools', () => {
       const deps = createFakeMemoryDeps()
       const provider = createMemoryToolProvider(deps)
       const tools = await provider.tools({
-        profileId: 'prof-1',
+        ...toolContext('prof-1'),
         modelId: 'gpt-4',
-        settings: undefined,
         memoryMode: 'auto',
       })
       const readTool = tools.find((t) => t.name === 'memory_read')!
@@ -190,9 +154,8 @@ describe('memory-tools', () => {
       const deps = createFakeMemoryDeps()
       const provider = createMemoryToolProvider(deps)
       const tools = await provider.tools({
-        profileId: 'prof-1',
+        ...toolContext('prof-1'),
         modelId: 'gpt-4',
-        settings: undefined,
         memoryMode: 'auto',
       })
       const searchTool = tools.find((t) => t.name === 'memory_search')!
@@ -225,9 +188,8 @@ describe('memory-tools', () => {
       const deps = createFakeMemoryDeps()
       const provider = createMemoryToolProvider(deps)
       const tools = await provider.tools({
-        profileId: 'prof-1',
+        ...toolContext('prof-1'),
         modelId: 'gpt-4',
-        settings: undefined,
         memoryMode: 'auto',
       })
       const addTool = tools.find((t) => t.name === 'memory_add')!
@@ -254,9 +216,8 @@ describe('memory-tools', () => {
       const deps = createFakeMemoryDeps()
       const provider = createMemoryToolProvider(deps)
       const tools = await provider.tools({
-        profileId: 'prof-1',
+        ...toolContext('prof-1'),
         modelId: 'gpt-4',
-        settings: undefined,
         memoryMode: 'auto',
       })
       const replaceTool = tools.find((t) => t.name === 'memory_replace')!
@@ -293,9 +254,8 @@ describe('memory-tools', () => {
       const deps = createFakeMemoryDeps()
       const provider = createMemoryToolProvider(deps)
       const tools = await provider.tools({
-        profileId: 'prof-1',
+        ...toolContext('prof-1'),
         modelId: 'gpt-4',
-        settings: undefined,
         memoryMode: 'auto',
       })
       const rewriteTool = tools.find((t) => t.name === 'memory_rewrite')!
@@ -323,9 +283,8 @@ describe('memory-tools', () => {
       const deps = createFakeMemoryDeps()
       const provider = createMemoryToolProvider(deps)
       const tools = await provider.tools({
-        profileId: 'prof-1',
+        ...toolContext('prof-1'),
         modelId: 'gpt-4',
-        settings: undefined,
         memoryMode: 'auto',
       })
       const addTool = tools.find((t) => t.name === 'memory_add')!
@@ -386,9 +345,8 @@ describe('memory-tools', () => {
       const deps = createFakeMemoryDeps()
       const provider = createMemoryToolProvider(deps)
       const tools = await provider.tools({
-        profileId: 'prof-1',
+        ...toolContext('prof-1'),
         modelId: 'gpt-4',
-        settings: undefined,
         memoryMode: 'auto',
       })
       const replaceTool = tools.find((t) => t.name === 'memory_replace')!
@@ -422,30 +380,18 @@ describe('memory-tools', () => {
     })
   })
 
-  describe('registry integration and approvals', () => {
-    it('requires approval in ask mode and allows execution upon approval', async () => {
-      const deps = createFakeMemoryDeps()
-      const provider = createMemoryToolProvider(deps)
-      const policy = createChatToolPolicy({ canAsk: true })
-      const approvals = createChatToolApprovals()
+  describe('registry integration', () => {
+    it('runs the memory of a profile without asking', async () => {
+      const provider = createMemoryToolProvider(createFakeMemoryDeps())
       const registry = createChatToolRegistry({
         providers: () => [provider],
-        policy,
+        policy: createChatToolPolicy({ canAsk: true }),
       })
-
-      const settings = withMemoryToolGroup(undefined, 'ask')
       const toolSet = await registry.resolve({
-        profileId: 'prof-1',
+        ...toolContext('prof-1'),
         modelId: 'gpt-4',
-        settings,
-        memoryMode: 'ask',
+        memoryMode: 'auto',
       })
-
-      expect(toolSet).not.toBeNull()
-      const addTool = toolSet!.tools['memory_add']
-      expect(addTool).toBeDefined()
-
-      // Ask mode: tool approval returns 'user-approval'
       const decide = (toolSet!.toolApproval as (options: unknown) => unknown)({
         toolCall: {
           toolCallId: 'c1',
@@ -453,42 +399,15 @@ describe('memory-tools', () => {
           input: { file: 'health.md', fact: 'Fact' },
         },
       })
-      expect(decide).toBe('user-approval')
-
-      // Request approval through chat-tool-approvals
-      const pendingPromise = approvals.request(
-        {
-          approvalId: 'app-1',
-          toolCallId: 'c1',
-          toolName: 'memory_add',
-          input: { file: 'health.md', fact: 'Fact' },
-          approvalKey: 'memory_add:health.md',
-        },
-        new AbortController().signal
-      )
-      expect(approvals.pending.value).toHaveLength(1)
-      approvals.answer('app-1', 'allow-once')
-      const approved = await pendingPromise
-      expect(approved).toBe('allow-once')
-    })
-  })
-
-  describe('withMemoryToolGroup helper', () => {
-    it('adds memory tool group based on mode', () => {
-      expect(withMemoryToolGroup(undefined, 'off')).toBeUndefined()
-      expect(withMemoryToolGroup(undefined, 'auto')).toEqual({
-        groups: {
-          [MEMORY_TOOL_GROUP_ID]: { isEnabled: true, access: 'allow' },
-        },
-      })
-      expect(withMemoryToolGroup(undefined, 'ask')).toEqual({
-        groups: { [MEMORY_TOOL_GROUP_ID]: { isEnabled: true, access: 'ask' } },
-      })
-      expect(withMemoryToolGroup(undefined, 'read-only')).toEqual({
-        groups: {
-          [MEMORY_TOOL_GROUP_ID]: { isEnabled: true, access: 'allow' },
-        },
-      })
+      expect(decide).toBe('approved')
+      // "Ask AI" has no memory
+      expect(
+        await registry.resolve({
+          ...toolContext(null),
+          modelId: 'gpt-4',
+          memoryMode: 'auto',
+        })
+      ).toBeNull()
     })
   })
 })

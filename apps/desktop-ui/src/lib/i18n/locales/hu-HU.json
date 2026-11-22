@@ -126,7 +126,7 @@
     "stop": "Leállítás",
     "stopped": "Leállítva",
     "toolAllow": "Engedélyezés",
-    "toolAllowSession": "Engedélyezés ebben a munkamenetben",
+    "toolAllowSession": "Engedélyezés ebben a csevegésben",
     "toolApprovalQuestion": "Engedélyezi a(z) {tool} futtatását?",
     "toolArguments": "Argumentumok",
     "toolDeny": "Elutasítás",
@@ -155,7 +155,10 @@
       "workspace": "Fájlok",
       "workspaceHint": "A profil fájljai: a csevegési előzményeken kívül tárolva, a profil minden csevegésében elérhetők"
     },
-    "takeScreenshot": "Képernyőkép készítése"
+    "takeScreenshot": "Képernyőkép készítése",
+    "toolAllowBatch": "Mind a(z) {count} engedélyezése",
+    "toolAllowAlways": "Mindig engedélyezve",
+    "toolAllowAlwaysWriteDelete": "Írás és törlés mindig engedélyezve"
   },
   "chatTools": {
     "files": {
@@ -188,12 +191,12 @@
     "web": {
       "fetchLabel": "Weboldal olvasása",
       "group": "Webes keresés",
-      "groupHint": "Keresés a weben és weboldalak letöltése a Jina AI segítségével. A „Kérdezzen” minden hívás előtt megerősítést kér.",
+      "groupHint": "Webes keresés és oldalak olvasása a Jina AI-jal.",
       "searchLabel": "Webes keresés"
     },
     "commands": {
       "group": "Parancsok",
-      "groupHint": "A modell futtathatja a kiválasztott parancsokat. Csak MI-nek szóló leírással rendelkező parancsok választhatók. A „Kérdezés” minden hívás előtt megerősítést kér.",
+      "groupHint": "A modell futtathatja a kijelölt parancsokat. Csak AI-leírással rendelkező parancs választható. Minden hívás előbb kérdez, hacsak nem engedélyezi.",
       "needsDescription": "Leírás szükséges az AI számára a parancs beállításaiban",
       "noCommands": "Még nincsenek egyéni parancsok konfigurálva.",
       "noCommandsHint": "Először hozzon létre parancsokat a Beállítások → Parancsok menüben.",
@@ -224,8 +227,6 @@
     "afterRunCopy": "A vágólapra",
     "afterRunInsert": "Beillesztés az ablakba",
     "afterRunShowResult": "Eredmény megjelenítése",
-    "aiAllowedCommands": "Futtatható parancsok",
-    "aiAllowedCommandsInfo": "Az MI kérdés nélkül futtatja ezeket a parancsokat, amikor a promptnak szüksége van rájuk. Egy parancs soha nem futtatja önmagát, sem azt az MI-parancsot, amely meghívta.",
     "aiDescription": "Az MI-parancs egy lépésben, párbeszéd nélkül dolgozza fel a szöveget az utasítása szerint, és futtathatja az engedélyezett parancsokat. Ha beszélgetést szeretne indítani az MI-vel, használjon promptokat. Ez a modell szolgálja ki az összes MI-parancsot.",
     "aiMaxSteps": "Lépéskorlát",
     "aiMaxStepsInfo": "Az MI által futtatható parancsok maximális száma. A végső válasz nem számít bele. Hagyja üresen az LLM-beállítások korlátjának használatához.",
@@ -234,8 +235,6 @@
     "aiPromptLabel": "Prompt",
     "aiPromptPlaceholder": "Pl. Keresd meg a dátumot és az időt a szövegben, és vedd fel az eseményt a naptáramba",
     "aiTaskModel": "Modell az MI-parancsokhoz",
-    "aiToolsEnabledInfo": "Ha be van kapcsolva, az MI meghívhat más engedélyezett parancsokat.",
-    "aiToolsEnabledLabel": "Eszközök engedélyezése",
     "badgeAi": "Elérhető az AI számára (van leírása)",
     "badgeExternal": "Kívülről elérhető (CLI, D-Bus)",
     "badgeInLauncher": "Műveletek: {page}. oldal ({key})",
@@ -323,7 +322,14 @@
     "unnamed": "Névtelen parancs",
     "variablesNotSet": "Egy általa használt változónak nincs értéke ezen az eszközön",
     "voiceOutputActionHint": "Hanggal indítva ez a parancs mindig megnyitja az eredmény menüjét.",
-    "warningExternalNameTwins": "Más parancsoknak is ez a neve: {names}. Az ezzel a névvel történő hívás kétértelműként elutasításra kerül; használja az azonosítót."
+    "warningExternalNameTwins": "Más parancsoknak is ez a neve: {names}. Az ezzel a névvel történő hívás kétértelműként elutasításra kerül; használja az azonosítót.",
+    "aiTools": "Az ügynök eszközei",
+    "aiToolsInfo": "Amit az ügynök meghívhat. A listán szereplők kérdés nélkül futnak, mert egy AI-parancs gyakran olyan ablak nélkül fut, ahol kérdezhetne. Fájlokhoz és memóriához sosem fér hozzá.",
+    "aiToolsUnavailable": "Most nem elérhetők",
+    "aiToolUnavailable": "Nem elérhető",
+    "aiToolsRiskyWarning": "A lista egyes eszközei adatokat módosíthatnak vagy törölhetnek, illetve az alkalmazáson kívül is cselekedhetnek – és kérdés nélkül futnak.",
+    "aiRiskLabel": "Kockázat az AI számára",
+    "aiRiskInfo": "Mit tehet a parancs, ha egy AI hívja meg. A Tyco nem tudhatja, mit csinál egy parancs, ezért az alkalmazáson kívüli műveletnek számít, hacsak mást nem választ."
   },
   "common": {
     "add": "Hozzáadás",
@@ -664,11 +670,9 @@
     "accessAsk": "Kérdés",
     "accessOff": "Ki",
     "accessLevel": "Hozzáférés",
-    "accessLevelAskAll": "Kérdezzen rá az olvasásra és az írásra",
     "accessLevelFull": "Teljes hozzáférés",
     "accessLevelCustom": "Egyéni (kézzel beállítva)",
     "accessLevelRead": "Csak olvasás",
-    "accessLevelReadWriteAsk": "Olvasás és írás megerősítéssel",
     "accessRemove": "Hozzáférés megszüntetése",
     "actionAfterRunNone": "Semmi",
     "actionCommandInfo": "A rendszer shelljében fut (sh, zsh vagy PowerShell). A parancs csak ott kapja meg a szöveget, ahol {placeholder} szerepel. Ezt a már idézőjelek közé tett és escape-elt szöveg helyettesíti, így nem kell köré idézőjel.",
@@ -1062,7 +1066,6 @@
     "profileMemoryHardTopic": "Szigorú limit túllépve (~4 000 token) — írás letiltva",
     "profileMemoryHint": "Tények, stabil preferenciák és feljegyzések a beszélgetések között megőrizve.",
     "profileMemoryMode": "Memória mód",
-    "profileMemoryModeAsk": "Kérdezzen rá (jóváhagyást igényel)",
     "profileMemoryModeAuto": "Automatikus (mentés jóváhagyás nélkül)",
     "profileMemoryModeOff": "Kikapcsolva",
     "profileMemoryModeReadOnly": "Csak olvasható",
@@ -1076,12 +1079,11 @@
     "profileNotFoundHint": "Lehet, hogy törölték, vagy másik munkaterületen van.",
     "profileSoulPrompt": "Alaputasítás (SOUL.md)",
     "profileSoulPromptHint": "Az asszisztens személyisége, szerepe, hangneme és szabályai. A profil csak ezt követi: a „Kérdezze az MI-t” utasításai és szabályai nem érvényesek. Minden kérés előtt újra beolvasásra kerül, így a lemezen végzett módosítások is számítanak. Környezetenként eltérő követelmények adhatók meg: csevegés vagy gyors kérések.",
-    "profileToolAccess": "hozzáférés",
     "maxToolSteps": "Lépések válaszonként",
     "maxToolStepsHint": "Hányszor hívhat a modell eszközöket egy válaszban – minden csevegésben, gyorskérésben és MI-parancsban. A korlát véd a végtelen ciklusok és a felesleges költségek ellen.",
     "maxToolStepsInvalid": "Adjon meg egy egész számot 1 és 50 között",
     "profileTools": "Eszközök",
-    "profileToolsHint": "Mit tehet a profil modellje önállóan a csevegésben. A „Kérdés” beállítású hívások az üzenetben várnak a jóváhagyására.",
+    "profileToolsHint": "Mit használhat a profil ügynöke. Az olvasás szabadon fut, a módosítás előbb kérdez; állítsa az eszközöket Ki, Kérdez vagy Engedélyez értékre. A memória és a profil munkaterülete sosem kérdez.",
     "profileWebSearchLlmNotice": "Az API-kulcs és az oldalméret-korlátok globálisan, az LLM beállításaiban konfigurálhatók.",
     "projectAccessFileToolsOff": "A fájleszközök ki vannak kapcsolva",
     "projectChangedElsewhere": "A projekt egy másik eszközön vagy a TyCo-n kívül módosult. A módosításai még nincsenek mentve.",
@@ -1311,8 +1313,6 @@
     "webJinaApiKey": "Jina AI API-kulcs",
     "webJinaApiKeyHint": "Opcionális. Kulcs nélkül a kérések az ingyenes szintet használják megosztott korlátokkal.",
     "webSearchSectionHint": "Az AI modellek és profilok által használt webes keresési és oldalolvasási eszközök beállításai.",
-    "askAiWebAccess": "Web a „Kérdezze az MI-t” csevegésben",
-    "askAiWebAccessHint": "Kereshet-e a weben és olvashat-e oldalakat a profil nélküli „Kérdezze az MI-t” csevegés. A „Kérdez” minden hívás előtt megvárja a jóváhagyását. A profilok ezt a saját eszközeikben állítják be.",
     "translationVoiceCommand": "Hangparancs",
     "translationVoiceCommandInfo": "Bekapcsolja a fordítási parancsot a hangparancsok közé („fordítsd le [nyelv] nyelvre”).",
     "dialogTab": "Párbeszéd",
@@ -1351,7 +1351,13 @@
       "projectLoses": "Ezek a profilok elvesztik a hozzáférést hozzá: {names}.",
       "externalFolder": "A külső mappa a helyén marad; más számítógépeken állítsa be újra.",
       "otherDevices": "Azokon a számítógépeken, ahol a cél munkaterület nincs csatolva, eltűnik, amíg ott csatolják."
-    }
+    },
+    "accessDeleteWithoutAsking": "Törlés kérdés nélkül",
+    "accessLevelReadWrite": "Olvasás és írás",
+    "askAiWebSearch": "Webes keresés",
+    "askAiWebSearchHint": "Lehetővé teszi, hogy a „Kérdezd az AI-t” csevegés kérdés nélkül keressen a weben és oldalakat olvasson. Sosem látja a fájljait, memóriáját vagy parancsait.",
+    "askAiFastModelsHint": "A „Kérdezd az AI-t” egy gyors modellel működik a legjobban: gyors válaszokra és tények ellenőrzésére való.",
+    "toolsTab": "Eszközök"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
@@ -1730,5 +1736,32 @@
     "translationModelNone": "Nincs modell kiválasztva a fordításhoz",
     "startCompact": "Indítás kompakt módban",
     "route": "{from} → {to}"
+  },
+  "toolPermissions": {
+    "riskRead": "Olvasás",
+    "riskWrite": "Adatot módosít",
+    "riskDestructive": "Töröl",
+    "riskExternal": "Kifelé hat",
+    "sourceCore": "Beépített",
+    "sourcePlugin": "Bővítmény",
+    "sourceThirdPartyPlugin": "Külső bővítmény",
+    "sourceMcp": "MCP-kiszolgáló",
+    "sourceCommand": "Parancs",
+    "sourceOffEverywhere": "Kikapcsolva az Eszközök beállításban",
+    "pluginCapabilities": "A bővítmény jogai: {capabilities}",
+    "pluginSourceHint": "A bővítmény által a csevegésnek kínált eszközök. A bővítmény jogaival futnak.",
+    "leakQuestion": "Ez a csevegés már olvasta az adatait, és ez a hívás új helyre jutna. Csevegésenként helyenként egyszer kérdezünk.",
+    "contextTokens": "≈{count} token",
+    "catalogHint": "Honnan származnak az ügynökök eszközei. Az itt kikapcsolt bővítmény minden profilban és AI-parancsban ki van kapcsolva. A beépített eszközöket a „Kérdezd az AI-t”-ban, a profilokban és az AI-parancsokban kapcsolhatja.",
+    "catalogWhereHint": "Minden profil a saját beállításaiban választja ki eszközeit és azt, mennyire szabadon futnak.",
+    "defaultPolicy": "Alapértelmezés: {policy}",
+    "summaryWorkspace": "munkaterület",
+    "summaryProjects": "projektek: {count}",
+    "summaryProjectsRead": "projektek: {count} (olvasás)",
+    "summaryWeb": "web",
+    "summaryCommands": "parancsok: {count}",
+    "summaryPlugins": "bővítmények: {count}",
+    "summaryNothing": "csak csevegés",
+    "summaryTitle": "Mire képes az ügynök – profilbeállítások megnyitása"
   }
 }

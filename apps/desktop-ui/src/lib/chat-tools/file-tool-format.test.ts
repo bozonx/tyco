@@ -133,9 +133,15 @@ describe('file-tool-format', () => {
 
   it('describes the roots with their permissions', () => {
     const text = formatFileRoots([
-      { path: 'attachments', read: 'allow', write: 'deny' },
-      { path: 'workspace', read: 'allow', write: 'allow' },
-      { path: 'projects/site', name: 'Site', read: 'ask', write: 'deny' },
+      { path: 'attachments', read: 'allow', write: 'deny', delete: 'deny' },
+      { path: 'workspace', read: 'allow', write: 'allow', delete: 'allow' },
+      {
+        path: 'projects/site',
+        name: 'Site',
+        read: 'ask',
+        write: 'deny',
+        delete: 'deny',
+      },
     ])
     expect(text).toContain('- attachments/ — the files the user attached')
     expect(text).toContain("- workspace/ — the profile's own folder")
@@ -147,7 +153,7 @@ describe('file-tool-format', () => {
 
   it('gives no saving rules without a workspace', () => {
     const text = formatFileRoots([
-      { path: 'attachments', read: 'allow', write: 'deny' },
+      { path: 'attachments', read: 'allow', write: 'deny', delete: 'deny' },
     ])
     expect(text).not.toContain('Where things go')
   })

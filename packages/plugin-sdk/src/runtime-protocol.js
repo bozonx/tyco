@@ -145,6 +145,7 @@ export const PLUGIN_REGISTRATION_METHODS = Object.freeze([
   'registerFormatItems',
   'registerToolbarItems',
   'registerOperations',
+  'registerChatTools',
 ])
 export const PLUGIN_EFFECT_METHODS = Object.freeze([
   ...PLUGIN_REGISTRATION_METHODS,

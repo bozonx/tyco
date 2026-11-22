@@ -1,0 +1,37 @@
+/**
+ * Tool sources and the permissions to them, see `dev_docs/architecture.md`,
+ * "Tool sources and permissions"
+ */
+
+/** Where a tool comes from */
+export const TOOL_SOURCE_KINDS = ['core', 'plugin', 'mcp', 'commands'] as const
+export type ToolSourceKind = (typeof TOOL_SOURCE_KINDS)[number]
+
+/**
+ * What a tool may do: `read` without side effects, `write` changes the user's
+ * data, `destructive` deletes or cannot be undone, `external` acts in the world
+ * or outside the app's data
+ */
+export const TOOL_RISKS = ['read', 'write', 'destructive', 'external'] as const
+export type ToolRisk = (typeof TOOL_RISKS)[number]
+
+/** How freely an enabled tool runs */
+export type ToolPolicy = 'ask' | 'allow'
+
+/** A stable reference to a tool source, or to one of its tools */
+export interface ToolRef {
+  sourceKind: ToolSourceKind
+  /** `files`, `web`, a plugin id, an MCP server id, or `commands` */
+  sourceId: string
+  /** The whole source when absent */
+  toolName?: string
+}
+
+/**
+ * The tool catalog: the plugin and MCP sources switched off for every profile
+ * and AI command. A source not listed is on
+ */
+export interface ToolCatalogSettings {
+  /** By source key, `<kind>:<id>` */
+  sources: Record<string, { isEnabled: boolean }>
+}

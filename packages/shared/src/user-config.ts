@@ -3,6 +3,7 @@ import configVersion from './config-version.json' with { type: 'json' }
 import type { MarkdownConfig } from './markdown'
 import type { AppearanceSettings } from './appearance'
 import type { LlmConfig } from './user-config/llm-config'
+import type { ToolCatalogSettings } from './user-config/tools-config'
 import type {
   ShortcutSlots,
   TranslationConfig,
@@ -21,6 +22,7 @@ export * from './user-config/translation-config'
 export * from './user-config/dialog-config'
 export * from './user-config/stt-config'
 export * from './user-config/commands-config'
+export * from './user-config/tools-config'
 
 /**
  * The supported schema version; the backend rejects future schemas without
@@ -299,6 +301,8 @@ export interface UserConfig {
   aiProfiles: AiProfilesConfig
   markdown: MarkdownConfig
   plugins: Record<string, PluginEntryConfig>
+  /** The tool sources switched off everywhere, see `ToolCatalogSettings` */
+  tools: ToolCatalogSettings
   chat: ChatConfig
   stt: SttConfig
   dialog: DialogConfig

@@ -13,16 +13,24 @@ import {
 import type { LlmPrompt } from '../llm/llm-prompt'
 import { toolOutputText } from './chat-tool-output'
 import type { ChatToolDecision, ChatToolPolicy } from './chat-tool-policy'
-import type { ChatToolPreview, ChatToolSet } from './chat-tool-registry'
+import type {
+  ChatToolApprovalInfo,
+  ChatToolPreview,
+  ChatToolSet,
+} from './chat-tool-registry'
 
 /** A call the model made that waits for the user */
-export interface ChatToolApprovalRequest {
+export interface ChatToolApprovalRequest extends Partial<
+  Omit<ChatToolApprovalInfo, 'approvalKey'>
+> {
   approvalId: string
   toolCallId: string
   toolName: string
   input: unknown
-  /** What "allow in this session" of the call is remembered by */
+  /** What "allow in this chat" of the call is remembered by */
   approvalKey: string
+  /** The calls of the same model step that ask too, this one among them */
+  batchId?: string
   /** What the call would change, when the tool can tell */
   preview?: ChatToolPreview
 }
@@ -244,6 +252,7 @@ export async function runChatToolLoop(
               approvalId: event.approvalId,
             }))
             requests.push({
+              ...input.tools?.approvalInfo(event.toolName, event.input),
               approvalId: event.approvalId,
               toolCallId: event.toolCallId,
               toolName: event.toolName,
@@ -251,6 +260,7 @@ export async function runChatToolLoop(
               approvalKey:
                 input.tools?.approvalKey(event.toolName, event.input) ??
                 event.toolName,
+              batchId: `step-${stepsUsed}`,
             })
             break
           }
@@ -288,24 +298,32 @@ export async function runChatToolLoop(
     if (!finish || input.signal.aborted) return state
     if (finish.finishReason === 'stop' || requests.length === 0) return state
 
-    const responses: ModelMessage[] = []
-    for (const request of requests) {
-      // allowed for the session by an answer to an earlier call of this batch
-      const decision = deps.policy.isAllowedForSession(request.approvalKey)
-        ? 'allow-once'
-        : await deps.requestApproval(request, input.signal)
-      if (input.signal.aborted) return state
-      const isApproved = deps.policy.answer(request.approvalKey, decision)
-      setCallState(request.toolCallId, isApproved ? 'pending' : 'denied')
-      publish()
-      responses.push(
-        toolApprovalResponse({
-          approvalId: request.approvalId,
-          approved: isApproved,
-          ...(isApproved ? {} : { reason: DENIED_REASON }),
-        })
+    // every call of the step that asks waits at once: the user answers them
+    // together, one by one or all at the same time
+    const decisions = await Promise.all(
+      requests.map((request) =>
+        deps.policy.isAllowedForSession(request.approvalKey) ||
+        (request.leakTarget !== undefined &&
+          deps.policy.isLeakAllowed(request.leakTarget))
+          ? Promise.resolve<ChatToolDecision>('allow-once')
+          : deps.requestApproval(request, input.signal)
       )
-    }
+    )
+    if (input.signal.aborted) return state
+    const responses: ModelMessage[] = requests.map((request, index) => {
+      const isApproved = deps.policy.answer(
+        request.approvalKey,
+        decisions[index]!,
+        request.leakTarget
+      )
+      setCallState(request.toolCallId, isApproved ? 'pending' : 'denied')
+      return toolApprovalResponse({
+        approvalId: request.approvalId,
+        approved: isApproved,
+        ...(isApproved ? {} : { reason: DENIED_REASON }),
+      })
+    })
+    publish()
     messages = [...messages, ...finish.responseMessages, ...responses]
   }
 }

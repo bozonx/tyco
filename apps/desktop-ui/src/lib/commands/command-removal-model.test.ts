@@ -174,14 +174,24 @@ describe('command removal model', () => {
   it('takes the command away from the AI commands allowed to run it', () => {
     const ai = {
       ...createCommand('core.aiTask', 'ai'),
-      operationConfig: { prompt: 'p', allowedCommandIds: ['gone', 'kept'] },
+      operationConfig: {
+        prompt: 'p',
+        tools: [
+          { sourceKind: 'commands', sourceId: 'commands', toolName: 'gone' },
+          { sourceKind: 'commands', sourceId: 'commands', toolName: 'kept' },
+          { sourceKind: 'core', sourceId: 'web' },
+        ],
+      },
     }
     const script = createCommand('script', 'gone')
     const [nextAi, nextScript] = removeCommandFromAiCommands(
       [ai, script],
       'gone'
     )
-    expect(nextAi.operationConfig.allowedCommandIds).toEqual(['kept'])
+    expect(nextAi.operationConfig.tools).toEqual([
+      { sourceKind: 'commands', sourceId: 'commands', toolName: 'kept' },
+      { sourceKind: 'core', sourceId: 'web' },
+    ])
     expect(nextScript).toBe(script)
   })
 })

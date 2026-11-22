@@ -18,7 +18,7 @@ export function createPluginRegistration(
   const ids = new Set<string>()
   const key = (value: string) => pluginMessageKey(id, value)!
   function scope<T extends { id?: string; labelKey?: string }>(
-    kind: 'action' | 'edit' | 'toolbar' | 'tool',
+    kind: 'action' | 'edit' | 'toolbar' | 'tool' | 'chatTool',
     items: T[]
   ): T[] {
     check()
@@ -50,7 +50,7 @@ export function createPluginRegistration(
     return result
   }
   function registration<T extends { id?: string; labelKey?: string }, R>(
-    kind: 'action' | 'edit' | 'toolbar' | 'tool',
+    kind: 'action' | 'edit' | 'toolbar' | 'tool' | 'chatTool',
     items: T[],
     build: (scoped: T[]) => R[],
     register: (items: R[]) => PluginDisposer | void

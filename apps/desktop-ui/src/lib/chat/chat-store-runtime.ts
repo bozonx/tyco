@@ -15,6 +15,7 @@ import { computed, unref, watch, type Ref } from 'vue'
 import { LlmInstructionKind } from '../../types'
 import { changedChatFiles } from './chat-storage-changes'
 import { createDesktopChatTools } from '../chat-tools/desktop-chat-tools'
+import type { PluginChatToolsDependencies } from '../chat-tools/plugin-chat-tools'
 import type { invokeDesktop } from '../desktop/invoke'
 import type { createChatHistoryModel } from '../history/chat-history'
 import type { createLlmActions } from '../llm/llm-actions'
@@ -43,6 +44,7 @@ import { findCurrentChat } from './chat-history-list'
 import { createChatModel } from './chat-model'
 import { createChatProfileRuntime } from './chat-profile-runtime'
 import { profileTurnOptions } from './chat-profile-turn'
+import { alwaysAllowedProfilePatch } from '../ai-profiles/profile-always-allow'
 import { createChatRemoval } from './chat-removal'
 
 type SendChatOptions = NonNullable<
@@ -69,6 +71,11 @@ export interface ChatStoreRuntimeDependencies {
   refreshProfile: (id: string) => Promise<AiProfile | undefined>
   readSoul: (id: string) => Promise<string>
   updateProfileModel: (id: string, modelId: string) => Promise<unknown>
+  /** Saves a change of the profile's tool permissions; rejects on failure */
+  updateProfilePermissions?: (
+    id: string,
+    patch: Partial<Pick<AiProfile, 'tools' | 'projectPermissions'>>
+  ) => Promise<void>
   getUserConfig: () => UserConfig | undefined
   /** The chat history settings of the workspace of a profile */
   getVaultChatHistory?: (profileId: string) => VaultChatHistory | undefined
@@ -94,6 +101,8 @@ export interface ChatStoreRuntimeDependencies {
   toastText: (message: string, kind: 'error' | 'warn') => void
   toastKey: (key: string, kind: 'error' | 'warn') => void
   warn: (message: string) => void
+  /** The chat tools of the plugins */
+  pluginTools?: PluginChatToolsDependencies
   /** Tool registry to look up tools for custom commands in chat */
   operations?: OperationLookup
   /** The platform and variable values of this device */
@@ -180,7 +189,28 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
       conversationAttachedFiles(
         model.messages.value.flatMap((message) => message.attachments || [])
       ),
-    getAskAiWebAccess: () => deps.getUserConfig()?.llm?.webSearch?.askAiAccess,
+    isAskAiWebEnabled: () =>
+      deps.getUserConfig()?.llm?.tasks.chat.isWebSearchEnabled,
+    getToolCatalog: () => deps.getUserConfig()?.tools,
+    pluginTools: deps.pluginTools,
+    getConversationText: () =>
+      model.messages.value
+        .filter((message) => message.role === 'user')
+        .map((message) => message.content)
+        .join('\n'),
+    alwaysAllow: async (target) => {
+      if (!profileId || !deps.updateProfilePermissions) return
+      const current = (await deps.refreshProfile(profileId)) ?? profile.value
+      const patch = current && alwaysAllowedProfilePatch(current, target)
+      if (patch) await deps.updateProfilePermissions(profileId, patch)
+    },
+    // kept with the chat, so that it has them when opened from the history
+    onPermissionsChange: (toolPermissions) => {
+      model.currentChatParams.value = {
+        ...model.currentChatParams.value,
+        toolPermissions,
+      }
+    },
     getFetchMaxCharacters: () =>
       deps.getUserConfig()?.llm?.webSearch?.fetchMaxCharacters,
     getMaxStepCount: () => maxToolStepsOf(deps.getUserConfig()?.llm),
@@ -407,18 +437,22 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
             budgetCharacters: requestBudgetCharacters(),
             reservesToolSteps: chatTools.mayOfferTools({
               canUseTools: picked.canUseTools,
-              settings: profileId ? profile.value?.tools : undefined,
-              memoryMode: profileId ? profile.value?.memoryMode : undefined,
             }),
           }
         : null
     },
   })
 
-  // permissions given "for this session" end with the conversation
+  // permissions given "in this chat" stay with it: a new chat starts without
+  // any, one opened from the history gets its own back
   watch(
     () => model.currentChatParams.value.id,
-    () => chatTools.resetPermissions()
+    () => {
+      chatTools.resetPermissions()
+      chatTools.restorePermissions(
+        model.currentChatParams.value.toolPermissions
+      )
+    }
   )
 
   const files = createChatDesktopFiles({

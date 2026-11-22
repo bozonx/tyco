@@ -29,7 +29,8 @@ Rust backend and a Vue 3 frontend, organized as a pnpm + Turborepo monorepo.
   when one is done, move its outcome into the matching note and delete it.
 - `docs/` — guides for users and integrators: `data-folder.md` (data folder
   and sync), `external-control.md` (CLI/D-Bus API), `editor.md` (editor keys
-  and formatting), `plugins.md` (writing and installing plugins), `dialog.md`
+  and formatting), `plugins.md` (writing and installing plugins),
+  `assistant-capabilities.md` (what assistants can and cannot do), `dialog.md`
   (the call transcript with live translation). Keep them
   free of implementation details and link to `dev_docs/` for those.
 

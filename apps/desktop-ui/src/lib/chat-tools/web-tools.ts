@@ -1,18 +1,12 @@
-import {
-  ASK_AI_WEB_ACCESS_DEFAULT,
-  type AskAiWebAccess,
-  type AiWebToolOutput,
-  type AiWebToolRequest,
-  type ProfileToolSettings,
-  type WebSearchResultItem,
+import type {
+  AiWebToolOutput,
+  AiWebToolRequest,
+  ToolCallContext,
+  WebSearchResultItem,
 } from '@tyco/shared'
 import type { JsonSchema } from '@tyco/plugin-sdk'
 
-import {
-  CHAT_TOOL_GROUPS,
-  WEB_TOOL_GROUP_ID,
-  withToolGroup,
-} from './chat-tool-groups'
+import { WEB_SOURCE } from './tool-catalog'
 import type {
   ChatToolContext,
   ChatToolDefinition,
@@ -23,7 +17,7 @@ import type {
 export interface WebToolsDependencies {
   /** Runs a call; `runId` lets `cancel` stop the request in the backend */
   run: (
-    profileId: string | null,
+    context: ToolCallContext,
     request: AiWebToolRequest,
     runId?: string
   ) => Promise<AiWebToolOutput>
@@ -46,43 +40,6 @@ const optionalText = (value: unknown) => {
 }
 const count = (value: unknown) =>
   typeof value === 'number' && Number.isFinite(value) ? value : undefined
-
-const WEB_GROUP_FALLBACK = {
-  id: WEB_TOOL_GROUP_ID,
-  defaultAccess: 'allow' as const,
-  defaultEnabled: true,
-}
-
-/**
- * Injects default web tool group settings when absent, so web search and fetch
- * are available in general chats and profiles without explicit overrides.
- */
-export function withWebToolGroup(
-  settings: ProfileToolSettings | undefined
-): ProfileToolSettings {
-  if (settings?.groups[WEB_TOOL_GROUP_ID]) return settings
-  const group =
-    CHAT_TOOL_GROUPS.find((g) => g.id === WEB_TOOL_GROUP_ID) ??
-    WEB_GROUP_FALLBACK
-  return withToolGroup(settings, group, {})
-}
-
-/**
- * The tool settings of the "Ask AI" chat, which has no profile: only its web
- * access is the user's to set
- */
-export function askAiToolSettings(
-  access: AskAiWebAccess = ASK_AI_WEB_ACCESS_DEFAULT
-): ProfileToolSettings {
-  return {
-    groups: {
-      [WEB_TOOL_GROUP_ID]:
-        access === 'off'
-          ? { isEnabled: false, access: 'deny' }
-          : { isEnabled: true, access },
-    },
-  }
-}
 
 /** Room left in the output for the page title, source and the note */
 const PAGE_FRAME_CHARACTERS = 500
@@ -239,15 +196,18 @@ export function createWebToolProvider(
   deps: WebToolsDependencies
 ): ChatToolProvider {
   return {
-    id: WEB_TOOL_GROUP_ID,
+    id: WEB_SOURCE.id,
     instructions: () => WEB_INSTRUCTIONS,
     tools: (context: ChatToolContext): ChatToolDefinition[] => {
-      const profileId = context.profileId
+      const callContext = context.callContext
 
       return [
         {
           name: 'web_search',
-          groupId: WEB_TOOL_GROUP_ID,
+          source: WEB_SOURCE,
+          risk: 'read',
+          // the pages it found may be read without asking again
+          givesKnownUrls: true,
           labelKey: 'chatTools.web.searchLabel',
           icon: 'mdi:search-web',
           description:
@@ -284,7 +244,7 @@ export function createWebToolProvider(
             const response = await withAbort(
               () =>
                 deps.run(
-                  profileId,
+                  callContext,
                   {
                     operation: 'search',
                     query,
@@ -312,7 +272,15 @@ export function createWebToolProvider(
         },
         {
           name: 'web_fetch',
-          groupId: WEB_TOOL_GROUP_ID,
+          source: WEB_SOURCE,
+          risk: 'read',
+          // a URL nobody named could carry the conversation's data out
+          leakTarget: (input, isKnownUrl) => {
+            const host = hostOf(input)
+            return host && !isKnownUrl(text(asInput(input).url).trim())
+              ? `host:${host}`
+              : undefined
+          },
           labelKey: 'chatTools.web.fetchLabel',
           icon: 'mdi:web',
           description:
@@ -343,7 +311,7 @@ export function createWebToolProvider(
             const response = await withAbort(
               () =>
                 deps.run(
-                  profileId,
+                  callContext,
                   {
                     operation: 'fetch',
                     url,

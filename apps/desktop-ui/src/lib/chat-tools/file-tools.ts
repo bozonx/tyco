@@ -5,17 +5,27 @@ import type {
   AiFileToolOutput,
   AiFileToolRequest,
   ProjectAccessMode,
+  ToolCallContext,
+  ToolRisk,
 } from '@tyco/shared'
 import type { JsonSchema } from '@tyco/plugin-sdk'
 
-import { FILES_TOOL_GROUP_ID } from './chat-tool-groups'
+import { isStricterAccess, stricterAccess } from './chat-tool-policy'
 import { fileRootPathOf } from './file-location'
 import type {
+  ChatToolAlwaysAllowTarget,
   ChatToolContext,
   ChatToolDefinition,
   ChatToolExecuteOptions,
   ChatToolProvider,
 } from './chat-tool-registry'
+import {
+  ATTACHMENTS_SOURCE,
+  FILES_SOURCE,
+  isSourceAvailable,
+  isSourceEnabledInProfile,
+  type ToolSourceRef,
+} from './tool-catalog'
 import {
   formatFileRoots,
   formatFileToolOutput,
@@ -29,13 +39,10 @@ import {
  * of its profile. Rust resolves both; see `dev_docs/chat-files.md`
  */
 export interface FileToolScope {
-  /** Null for "Ask AI" */
-  profileId: string | null
+  /** Where the call comes from: a profile chat reaches its folders */
+  context: ToolCallContext
   attachments: readonly AiAttachedFile[]
 }
-
-/** The group of the read-only tools on the attachments alone */
-export const ATTACHMENTS_TOOL_GROUP_ID = 'attachments'
 
 export interface FileToolsDependencies {
   listRoots: (scope: FileToolScope) => Promise<AiFileRoot[]>
@@ -67,20 +74,7 @@ const text = (value: unknown) => (typeof value === 'string' ? value : '')
 const count = (value: unknown) =>
   typeof value === 'number' && Number.isFinite(value) ? value : undefined
 
-const ACCESS_ORDER: readonly ProjectAccessMode[] = ['allow', 'ask', 'deny']
-
-/** The stricter of the access modes */
-export function stricterAccess(
-  ...modes: ProjectAccessMode[]
-): ProjectAccessMode {
-  return modes.reduce<ProjectAccessMode>(
-    (strictest, mode) =>
-      ACCESS_ORDER.indexOf(mode) > ACCESS_ORDER.indexOf(strictest)
-        ? mode
-        : strictest,
-    'allow'
-  )
-}
+export { stricterAccess }
 
 /** The root a model's path is in; undefined for a path outside of them all */
 export function fileRootOf(
@@ -106,8 +100,8 @@ interface FileToolSpec {
   icon: string
   description: string
   inputSchema: JsonSchema
-  /** Whether the tool reads or changes files */
-  access: 'read' | 'write'
+  /** Whether the tool reads, changes or deletes files */
+  access: 'read' | 'write' | 'delete'
   /** The paths of a call, which decide its access and scope */
   paths(input: Input): string[]
   /** @param outputLimitCharacters How much output the call may give */
@@ -115,6 +109,14 @@ interface FileToolSpec {
   /** Whether the user is shown the change before deciding */
   hasPreview?: boolean
 }
+
+const RISK_OF: Record<FileToolSpec['access'], ToolRisk> = {
+  read: 'read',
+  write: 'write',
+  delete: 'destructive',
+}
+
+const PROJECT_ROOT_PREFIX = 'projects/'
 
 // The output limiter counts UTF-16 units; one Unicode scalar may take two.
 // Keep the continuation note within that budget even for non-BMP text.
@@ -314,7 +316,7 @@ const FILE_TOOLS: readonly FileToolSpec[] = [
       properties: { path: PATH },
       required: ['path'],
     },
-    access: 'write',
+    access: 'delete',
     paths: (input) => [text(input.path)],
     request: (input) => ({ operation: 'deletePath', path: text(input.path) }),
   },
@@ -338,8 +340,7 @@ export function createFileToolProvider(
     scope: FileToolScope,
     /** The roots of the turn, updated when a call finds them changed */
     turn: { roots: readonly AiFileRoot[] },
-    groupId: string,
-    groupAccess: ProjectAccessMode
+    source: ToolSourceRef
   ): ChatToolDefinition {
     /** The roots of a call; an empty path reaches all that can be read */
     const rootsOf = (input: Input) =>
@@ -353,15 +354,43 @@ export function createFileToolProvider(
             : [fileRootOf(turn.roots, path)]
         )
 
-    // the group's access is the most a call gets; each root may ask for less
+    // the permissions of the roots of a call decide; the tool's policy may
+    // ask for more
     const accessFor = (input: unknown): ProjectAccessMode => {
       const callRoots = rootsOf(asInput(input))
       // a path outside every root fails in Rust, with a reason for the model
-      if (callRoots.some((root) => !root)) return groupAccess
-      return stricterAccess(
-        groupAccess,
-        ...callRoots.map((root) => root![spec.access])
-      )
+      if (callRoots.some((root) => !root)) return 'allow'
+      return stricterAccess(...callRoots.map((root) => root![spec.access]))
+    }
+
+    /**
+     * "Always allow" raises the permission of the call's project; deleting
+     * where writing asks raises both, as the button says
+     */
+    const alwaysAllowTarget = (
+      input: unknown
+    ): ChatToolAlwaysAllowTarget | undefined => {
+      if (spec.access === 'read') return undefined
+      const callRoots = rootsOf(asInput(input))
+      if (callRoots.some((root) => !root)) return undefined
+      const projects = [
+        ...new Set(
+          callRoots.flatMap((root) =>
+            root!.path.startsWith(PROJECT_ROOT_PREFIX) ? [root!] : []
+          )
+        ),
+      ]
+      // one project at a time: a move between two is allowed once
+      if (projects.length !== 1) return undefined
+      const root = projects[0]!
+      return {
+        kind: 'project',
+        projectId: root.path.slice(PROJECT_ROOT_PREFIX.length),
+        operations:
+          spec.access === 'delete' && root.write !== 'allow'
+            ? ['write', 'delete']
+            : [spec.access],
+      }
     }
 
     /**
@@ -379,7 +408,7 @@ export function createFileToolProvider(
       }
       turn.roots = current
       const now = accessFor(input)
-      if (ACCESS_ORDER.indexOf(now) > ACCESS_ORDER.indexOf(approved))
+      if (isStricterAccess(now, approved))
         throw new Error(
           'The access to this folder changed during the conversation: call the tool again to ask the user'
         )
@@ -416,12 +445,17 @@ export function createFileToolProvider(
 
     return {
       name: spec.name,
-      groupId,
+      source,
+      risk: RISK_OF[spec.access],
+      // the project permissions decide; the workspace is the profile's own
+      defaultPolicy: 'allow',
+      readsPersonalData: true,
       labelKey: spec.labelKey,
       icon: spec.icon,
       description: spec.description,
       inputSchema: spec.inputSchema,
       accessFor,
+      ...(source === FILES_SOURCE ? { alwaysAllowTarget } : {}),
       approvalScope: (input) =>
         spec
           .paths(asInput(input))
@@ -450,13 +484,14 @@ export function createFileToolProvider(
     id: 'files',
     async tools(context) {
       const scope: FileToolScope = {
-        profileId: context.profileId,
+        context: context.callContext,
         attachments: context.attachedFiles ?? [],
       }
-      const group = context.settings?.groups[FILES_TOOL_GROUP_ID]
-      const hasFolders = Boolean(
-        context.profileId && group?.isEnabled && group.access !== 'deny'
-      )
+      const { scope: toolScope } = context
+      const hasFolders =
+        toolScope.kind === 'profile' &&
+        isSourceAvailable(toolScope.catalog, FILES_SOURCE) &&
+        isSourceEnabledInProfile(toolScope.settings, FILES_SOURCE)
       if (!hasFolders && !scope.attachments.length) return []
       let roots: AiFileRoot[]
       try {
@@ -469,11 +504,11 @@ export function createFileToolProvider(
       const turn = { roots }
       if (hasFolders)
         return FILE_TOOLS.map((spec) =>
-          definition(spec, scope, turn, FILES_TOOL_GROUP_ID, group!.access)
+          definition(spec, scope, turn, FILES_SOURCE)
         )
       // the user's own files of this conversation: read freely, never changed
       return FILE_TOOLS.filter((spec) => spec.access === 'read').map((spec) =>
-        definition(spec, scope, turn, ATTACHMENTS_TOOL_GROUP_ID, 'allow')
+        definition(spec, scope, turn, ATTACHMENTS_SOURCE)
       )
     },
     instructions(context) {
@@ -487,3 +522,11 @@ export function createFileToolProvider(
 export const FILE_TOOL_NAMES: ReadonlySet<string> = new Set(
   FILE_TOOLS.map((spec) => spec.name)
 )
+
+/** The file tools as the catalog lists them */
+export const FILE_TOOL_CATALOG = FILE_TOOLS.map((spec) => ({
+  name: spec.name,
+  labelKey: spec.labelKey,
+  risk: RISK_OF[spec.access],
+  defaultPolicy: 'allow' as const,
+}))

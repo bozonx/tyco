@@ -1,4 +1,5 @@
-//! The file tools of a conversation. The webview names the profile, if any,
+//! The file tools of a conversation. The webview names where the call comes
+//! from (see `ToolCallContext`),
 //! the attachments of the conversation by name and id, and a path the model
 //! gave; the folders and the permissions are read here, anew for every call,
 //! since the user may change them by hand meanwhile. See
@@ -13,16 +14,23 @@ use crate::{
         AiAttachedFile, AiFileChangePreview, AiFileRoot, AiFileToolOutput, AiFileToolRequest,
         Attachments, ConversationFiles,
     },
+    services::ai_tools::permissions::ToolCallContext,
     services::{ai_vault, chat_images::ChatImages, storage, storage::ChatScope},
 };
 
 /// Runs `operation` on what the file tools of the conversation reach.
 fn with_conversation_files<T>(
     app: &AppHandle,
-    profile_id: Option<String>,
+    context: ToolCallContext,
     attached: Vec<AiAttachedFile>,
     operation: impl FnOnce(&ConversationFiles<'_>) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
+    let profile_id = context.profile_id().map(str::to_owned);
+    // an AI command has no conversation, and so no attachments nor folders
+    let attached = match context {
+        ToolCallContext::AiCommand { .. } => Vec::new(),
+        _ => attached,
+    };
     let scope = ChatScope::from_profile_id(profile_id.clone());
     let attachments = if attached.is_empty() {
         Attachments::none()
@@ -55,11 +63,11 @@ fn with_conversation_files<T>(
 #[tauri::command]
 pub async fn list_ai_file_roots(
     app: AppHandle,
-    profile_id: Option<String>,
+    context: ToolCallContext,
     attachments: Vec<AiAttachedFile>,
 ) -> Result<Vec<AiFileRoot>, AppError> {
     run_blocking(move || {
-        with_conversation_files(&app, profile_id, attachments, |files| {
+        with_conversation_files(&app, context, attachments, |files| {
             Ok(files.roots().to_vec())
         })
     })
@@ -69,12 +77,12 @@ pub async fn list_ai_file_roots(
 #[tauri::command]
 pub async fn run_ai_file_tool(
     app: AppHandle,
-    profile_id: Option<String>,
+    context: ToolCallContext,
     attachments: Vec<AiAttachedFile>,
     request: AiFileToolRequest,
 ) -> Result<AiFileToolOutput, AppError> {
     run_blocking(move || {
-        with_conversation_files(&app, profile_id, attachments, |files| files.run(request))
+        with_conversation_files(&app, context, attachments, |files| files.run(request))
     })
     .await?
 }
@@ -83,14 +91,12 @@ pub async fn run_ai_file_tool(
 #[tauri::command]
 pub async fn preview_ai_file_change(
     app: AppHandle,
-    profile_id: Option<String>,
+    context: ToolCallContext,
     attachments: Vec<AiAttachedFile>,
     request: AiFileToolRequest,
 ) -> Result<AiFileChangePreview, AppError> {
     run_blocking(move || {
-        with_conversation_files(&app, profile_id, attachments, |files| {
-            files.preview(request)
-        })
+        with_conversation_files(&app, context, attachments, |files| files.preview(request))
     })
     .await?
 }
@@ -99,12 +105,12 @@ pub async fn preview_ai_file_change(
 #[tauri::command]
 pub async fn read_ai_file_bytes(
     app: AppHandle,
-    profile_id: Option<String>,
+    context: ToolCallContext,
     attachments: Vec<AiAttachedFile>,
     path: String,
 ) -> Result<tauri::ipc::Response, AppError> {
     run_blocking(move || {
-        with_conversation_files(&app, profile_id, attachments, |files| {
+        with_conversation_files(&app, context, attachments, |files| {
             files.read_bytes(&path).map(tauri::ipc::Response::new)
         })
     })

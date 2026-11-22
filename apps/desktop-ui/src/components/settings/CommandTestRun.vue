@@ -124,7 +124,7 @@ const takesText = computed(
 const runsOtherCommands = computed(() => {
   if (props.command.operationId !== AI_COMMAND_OPERATION_ID) return false
   const config = aiCommandOperationConfigOf(props.command.operationConfig)
-  return config.isToolsEnabled !== false && config.allowedCommandIds.length > 0
+  return config.tools.some((ref) => ref.sourceKind === 'commands')
 })
 /** A name or a warning alone does not keep the command from running */
 const hasIssues = computed(() =>

@@ -1,8 +1,13 @@
 import { chatToolName } from './tool-name'
 
+import { readFileSync } from 'node:fs'
+
 import { describe, expect, it, vi } from 'vitest'
 
+import { toolSettings } from '../../test/chat-tool-context'
+
 import {
+  CHAT_TOOL_COMMANDS,
   createDesktopChatTools,
   type DesktopChatToolsInvoke,
 } from './desktop-chat-tools'
@@ -11,7 +16,9 @@ describe('desktop-chat-tools', () => {
   it('resolves file tools for an enabled profile and delegates IPC calls', async () => {
     const invoke = vi.fn(async (command: string) => {
       if (command === 'list_ai_file_roots') {
-        return [{ path: 'workspace', read: 'allow', write: 'allow' }]
+        return [
+          { path: 'workspace', read: 'allow', write: 'allow', delete: 'allow' },
+        ]
       }
       return []
     }) as unknown as DesktopChatToolsInvoke
@@ -25,14 +32,12 @@ describe('desktop-chat-tools', () => {
       isDebugEnabled: () => false,
     })
 
-    const result = await chatTools.turnTools('gpt-4', 5000, {
-      groups: { files: { isEnabled: true, access: 'allow' } },
-    })
+    const result = await chatTools.turnTools('gpt-4', 5000, toolSettings())
 
     expect(result.canUseTools).toBe(true)
     expect(result.tools?.maxStepCount).toBe(4)
     expect(invoke).toHaveBeenCalledWith('list_ai_file_roots', {
-      profileId: 'writer',
+      context: { kind: 'profile', profileId: 'writer' },
       attachments: [],
     })
   })
@@ -80,9 +85,7 @@ describe('desktop-chat-tools', () => {
       isDebugEnabled: () => false,
     })
 
-    expect(
-      chatTools.mayOfferTools({ canUseTools: true, memoryMode: 'auto' })
-    ).toBe(true)
+    expect(chatTools.mayOfferTools({ canUseTools: true })).toBe(true)
 
     const result = await chatTools.turnTools('gpt-4', 5000, undefined, 'auto')
     expect(result.canUseTools).toBe(true)
@@ -127,7 +130,7 @@ describe('desktop-chat-tools', () => {
     const disabledProfileResult = await profileChatTools.turnTools(
       'gpt-4',
       5000,
-      { groups: { web: { isEnabled: false, access: 'allow' } } }
+      toolSettings({ sources: { 'core:web': { isEnabled: false } } })
     )
     const disabledProfileToolNames = Object.keys(
       disabledProfileResult.tools!.tools!.tools
@@ -138,13 +141,13 @@ describe('desktop-chat-tools', () => {
 
   it('gives the "Ask AI" chat the web access of the config', async () => {
     const invoke = vi.fn(async () => []) as unknown as DesktopChatToolsInvoke
-    let access: 'ask' | 'allow' | 'off' | undefined
+    const web: { isEnabled?: boolean } = {}
     const chatTools = createDesktopChatTools({
       getMaxStepCount: () => 4,
       profileId: null,
       invoke,
       canUseTools: () => true,
-      getAskAiWebAccess: () => access,
+      isAskAiWebEnabled: () => web.isEnabled,
       warn: vi.fn(),
       isDebugEnabled: () => false,
     })
@@ -155,14 +158,11 @@ describe('desktop-chat-tools', () => {
         toolCall: { toolName: 'web_search', input: { query: 'x' } },
       })
 
+    // "Ask AI" never asks
     const byDefault = await chatTools.turnTools('gpt-4', 5000)
-    expect(approvalOf(byDefault)).toBe('user-approval')
+    expect(approvalOf(byDefault)).toBe('approved')
 
-    access = 'allow'
-    const allowed = await chatTools.turnTools('gpt-4', 5000)
-    expect(approvalOf(allowed)).toBe('approved')
-
-    access = 'off'
+    web.isEnabled = false
     const off = await chatTools.turnTools('gpt-4', 5000)
     expect(Object.keys(off.tools!.tools!.tools)).not.toContain('web_search')
   })
@@ -207,18 +207,30 @@ describe('desktop-chat-tools', () => {
       },
     })
 
-    const result = await chatTools.turnTools('gpt-4', 5000, {
-      groups: {
-        commands: {
-          isEnabled: true,
-          access: 'ask',
-          commandIds: ['custom-cmd'],
-        },
-      },
-    })
+    const result = await chatTools.turnTools(
+      'gpt-4',
+      5000,
+      toolSettings({ commandIds: ['custom-cmd'] })
+    )
 
     expect(result.canUseTools).toBe(true)
     const toolNames = Object.keys(result.tools!.tools!.tools)
     expect(toolNames).toContain(await chatToolName('custom-cmd'))
+  })
+})
+
+describe('desktop-chat-tools commands', () => {
+  it('calls only the tool commands, none of which changes a setting', () => {
+    const source = readFileSync(
+      new URL('./desktop-chat-tools.ts', import.meta.url),
+      'utf8'
+    )
+    const called = [...source.matchAll(/invoke\(\s*'([a-z_]+)'/g)].map(
+      (match) => match[1]
+    )
+    expect(called.length).toBeGreaterThan(0)
+    for (const command of called) expect(CHAT_TOOL_COMMANDS).toContain(command)
+    for (const command of CHAT_TOOL_COMMANDS)
+      expect(command).not.toMatch(/config|save_ai_profile|update|project/)
   })
 })

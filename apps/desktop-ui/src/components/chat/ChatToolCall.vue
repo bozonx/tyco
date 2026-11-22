@@ -62,6 +62,8 @@
     <ChatToolApproval
       v-if="isAwaitingAnswer"
       :tool-name="call.toolName"
+      :request="request"
+      :batch-count="batchCount ?? 1"
       @decide="emit('decide', $event)"
     />
   </div>
@@ -71,7 +73,8 @@
 import { computed, ref, useId, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import type { ChatToolDecision } from '../../lib/chat-tools/chat-tool-policy'
+import type { ChatToolApprovalRequest } from '../../lib/chat-tools/chat-tool-loop'
+import type { ChatToolAnswer } from '../../lib/chat-tools/chat-tool-policy'
 import type { ChatToolPreview } from '../../lib/chat-tools/chat-tool-registry'
 import { fileLocationsOfInput } from '../../lib/chat-tools/file-location'
 import { FILE_TOOL_NAMES } from '../../lib/chat-tools/file-tools'
@@ -93,8 +96,12 @@ const props = defineProps<{
   isAwaitingAnswer?: boolean
   /** What the waiting call would change, shown instead of its arguments */
   preview?: ChatToolPreview
+  /** What the waiting call asks with */
+  request?: ChatToolApprovalRequest
+  /** The calls of its step that wait too, itself among them */
+  batchCount?: number
 }>()
-const emit = defineEmits<{ decide: [decision: ChatToolDecision] }>()
+const emit = defineEmits<{ decide: [decision: ChatToolAnswer] }>()
 const { t } = useI18n()
 const isExpanded = ref(false)
 const detailsId = useId()

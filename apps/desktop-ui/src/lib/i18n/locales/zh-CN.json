@@ -126,7 +126,7 @@
     "stop": "停止",
     "stopped": "已停止",
     "toolAllow": "允许",
-    "toolAllowSession": "在本次会话中允许",
+    "toolAllowSession": "在此对话中允许",
     "toolApprovalQuestion": "允许运行 {tool}？",
     "toolArguments": "参数",
     "toolDeny": "拒绝",
@@ -155,7 +155,10 @@
       "workspace": "文件",
       "workspaceHint": "配置文件的文件：保存在聊天记录之外，可在该配置文件的所有聊天中使用"
     },
-    "takeScreenshot": "截取屏幕"
+    "takeScreenshot": "截取屏幕",
+    "toolAllowBatch": "全部允许（{count}）",
+    "toolAllowAlways": "始终允许",
+    "toolAllowAlwaysWriteDelete": "始终允许写入和删除"
   },
   "chatTools": {
     "files": {
@@ -188,12 +191,12 @@
     "web": {
       "fetchLabel": "阅读网页",
       "group": "网页搜索",
-      "groupHint": "使用 Jina AI 进行网页搜索并获取网页内容。“询问”将在每次调用前请求确认。",
+      "groupHint": "通过 Jina AI 搜索网络并阅读网页。",
       "searchLabel": "网页搜索"
     },
     "commands": {
       "group": "命令",
-      "groupHint": "允许模型运行选定的命令。只能选择带有 AI 描述的命令。“询问”在每次调用前确认。",
+      "groupHint": "模型可以运行所选命令。只能选择带有 AI 说明的命令。除非你允许，否则每次调用都会先询问。",
       "needsDescription": "需要在命令设置中填写 AI 说明",
       "noCommands": "尚未配置自定义命令。",
       "noCommandsHint": "请先在设置 → 命令中创建命令。",
@@ -224,8 +227,6 @@
     "afterRunCopy": "复制到剪贴板",
     "afterRunInsert": "插入到窗口",
     "afterRunShowResult": "显示结果",
-    "aiAllowedCommands": "可运行的命令",
-    "aiAllowedCommandsInfo": "当提示词需要时，AI 会直接运行这些命令而不询问。命令永远不会运行自身，也不会运行调用它的 AI 命令。",
     "aiDescription": "AI 命令按你的指令一步处理文本，无需对话，并可运行你允许的命令。若要开启与 AI 的对话，请使用提示词。此模型用于所有 AI 命令。",
     "aiMaxSteps": "步数上限",
     "aiMaxStepsInfo": "AI 可运行的最大命令数。最终回答不计入此限制。留空则使用 LLM 设置中的限制。",
@@ -234,8 +235,6 @@
     "aiPromptLabel": "提示词",
     "aiPromptPlaceholder": "例如：找出文本中的日期和时间，并把事件添加到我的日历",
     "aiTaskModel": "AI 命令模型",
-    "aiToolsEnabledInfo": "启用后，AI 可以调用其他被允许的命令。",
-    "aiToolsEnabledLabel": "允许使用工具",
     "badgeAi": "可供 AI 使用（有描述）",
     "badgeExternal": "可从外部访问 (CLI, D-Bus)",
     "badgeInLauncher": "操作：第 {page} 页 ({key})",
@@ -323,7 +322,14 @@
     "unnamed": "未命名命令",
     "variablesNotSet": "其使用的变量在此设备上没有值",
     "voiceOutputActionHint": "通过语音运行时，此命令始终打开结果菜单。",
-    "warningExternalNameTwins": "其他命令使用了相同的名称：{names}。按此名称调用将因重名而被拒绝；请使用 ID。"
+    "warningExternalNameTwins": "其他命令使用了相同的名称：{names}。按此名称调用将因重名而被拒绝；请使用 ID。",
+    "aiTools": "代理的工具",
+    "aiToolsInfo": "代理可以调用的内容。AI 命令常常在没有可询问的窗口时运行，因此列表中的一切都无需询问即运行。它永远无法访问文件和记忆。",
+    "aiToolsUnavailable": "当前不可用",
+    "aiToolUnavailable": "不可用",
+    "aiToolsRiskyWarning": "列表中的部分工具可以更改或删除数据，或在应用之外操作，并且无需询问即运行。",
+    "aiRiskLabel": "对 AI 的风险",
+    "aiRiskInfo": "当 AI 调用该命令时它可能做的事。Tyco 无法知道命令会做什么，因此除非你另选，否则视为应用之外的操作。"
   },
   "common": {
     "add": "添加",
@@ -664,11 +670,9 @@
     "accessAsk": "每次询问",
     "accessOff": "关闭",
     "accessLevel": "访问",
-    "accessLevelAskAll": "读写时均询问",
     "accessLevelFull": "完全访问",
     "accessLevelCustom": "自定义（手动设置）",
     "accessLevelRead": "只读",
-    "accessLevelReadWriteAsk": "读写需确认",
     "accessRemove": "移除访问",
     "actionAfterRunNone": "无",
     "actionCommandInfo": "在系统 Shell（sh、zsh 或 PowerShell）中运行。命令仅在出现 {placeholder} 的位置获取文本。该占位符会被替换为已转义并加引号的文本，因此占位符外无需加引号。",
@@ -1062,7 +1066,6 @@
     "profileMemoryHardTopic": "超出硬限制（约 4,000 词元）— 写入被阻止",
     "profileMemoryHint": "跨对话保留的事实、偏好和笔记。",
     "profileMemoryMode": "记忆模式",
-    "profileMemoryModeAsk": "写入前询问（需确认）",
     "profileMemoryModeAuto": "自动（无需确认即可保存）",
     "profileMemoryModeOff": "关闭",
     "profileMemoryModeReadOnly": "只读",
@@ -1076,12 +1079,11 @@
     "profileNotFoundHint": "它可能已被删除，或位于其他工作区。",
     "profileSoulPrompt": "根指令 (SOUL.md)",
     "profileSoulPromptHint": "此助手的角色人设、定位、语气和规则。配置文件仅遵循此处的设定：询问 AI 的指令与规则不适用于此处。每次请求前都会重新读取，因此磁盘上的修改也会即时生效。 可以为聊天或快速请求这两种环境分别指定要求。",
-    "profileToolAccess": "访问权限",
     "maxToolSteps": "每次回答的最大步数",
     "maxToolStepsHint": "模型在一次回答中可调用工具的次数，适用于所有聊天、快速请求和 AI 命令。该限制可防止循环和不必要的开销。",
     "maxToolStepsInvalid": "请输入 1 到 50 之间的整数",
     "profileTools": "工具",
-    "profileToolsHint": "该配置文件的模型在聊天中可自主执行的操作。设置为“每次询问”的调用会在消息中等待您的确认。",
+    "profileToolsHint": "配置文件的代理可以使用的内容。读取自由进行，更改会先询问；可将每个工具设为关闭、询问或允许。记忆和配置文件的工作区从不询问。",
     "profileWebSearchLlmNotice": "API 密钥和页面大小限制在 LLM 设置中进行全局配置。",
     "projectAccessFileToolsOff": "文件工具已关闭",
     "projectChangedElsewhere": "项目已在其他设备上或 TyCo 之外被更改。您的更改尚未保存。",
@@ -1311,8 +1313,6 @@
     "webJinaApiKey": "Jina AI API 密钥",
     "webJinaApiKeyHint": "可选。未配置密钥时，请求将使用具有共享速率限制的免费层级。",
     "webSearchSectionHint": "AI 模型和配置文件使用的网页搜索与页面读取工具的设置。",
-    "askAiWebAccess": "“询问 AI”中的网络",
-    "askAiWebAccessHint": "没有配置文件的“询问 AI”聊天能否搜索网络和读取网页。“询问”会在每次调用前等待你的批准。配置文件在各自的工具中设置。",
     "translationVoiceCommand": "语音命令",
     "translationVoiceCommandInfo": "在语音命令中包含翻译命令（“翻译成[语言]”）。",
     "dialogTab": "对话",
@@ -1351,7 +1351,13 @@
       "projectLoses": "以下配置文件将失去对它的访问权限：{names}。",
       "externalFolder": "外部文件夹保留在原处；在其他电脑上需要重新设置。",
       "otherDevices": "在未连接目标工作区的电脑上，它会消失，直到那里连接了该工作区。"
-    }
+    },
+    "accessDeleteWithoutAsking": "删除时不询问",
+    "accessLevelReadWrite": "读取和写入",
+    "askAiWebSearch": "网络搜索",
+    "askAiWebSearchHint": "允许“询问 AI”对话无需询问即可搜索网络并阅读网页。它永远看不到你的文件、记忆或命令。",
+    "askAiFastModelsHint": "“询问 AI”搭配快速模型效果最佳：它用于快速回答和核实事实。",
+    "toolsTab": "工具"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
@@ -1726,5 +1732,32 @@
     "translationModelNone": "尚未选择翻译模型",
     "startCompact": "以紧凑模式开始",
     "route": "{from} → {to}"
+  },
+  "toolPermissions": {
+    "riskRead": "读取",
+    "riskWrite": "更改数据",
+    "riskDestructive": "删除",
+    "riskExternal": "对外操作",
+    "sourceCore": "内置",
+    "sourcePlugin": "插件",
+    "sourceThirdPartyPlugin": "第三方插件",
+    "sourceMcp": "MCP 服务器",
+    "sourceCommand": "命令",
+    "sourceOffEverywhere": "已在“工具”设置中关闭",
+    "pluginCapabilities": "插件权限：{capabilities}",
+    "pluginSourceHint": "此插件为对话提供的工具。它们以插件的权限运行。",
+    "leakQuestion": "此对话已读取你的数据，而此调用会访问一个新的地方。在此对话中每个地方只询问一次。",
+    "contextTokens": "约 {count} 个 token",
+    "catalogHint": "代理工具的来源。在这里关闭的插件会在所有配置文件和 AI 命令中关闭。内置工具在“询问 AI”、各个配置文件和各个 AI 命令中开关。",
+    "catalogWhereHint": "每个配置文件在自己的设置中选择工具及其运行方式。",
+    "defaultPolicy": "默认：{policy}",
+    "summaryWorkspace": "工作区",
+    "summaryProjects": "项目：{count}",
+    "summaryProjectsRead": "项目：{count}（只读）",
+    "summaryWeb": "网络",
+    "summaryCommands": "命令：{count}",
+    "summaryPlugins": "插件：{count}",
+    "summaryNothing": "仅对话",
+    "summaryTitle": "代理能做什么——打开配置文件设置"
   }
 }

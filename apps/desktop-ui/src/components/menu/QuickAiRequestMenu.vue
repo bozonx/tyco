@@ -299,6 +299,7 @@ import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useOperationsStore } from '../../stores/operations'
+import { usePluginChatToolsStore } from '../../stores/plugin-chat-tools'
 import { useSecretsStore } from '../../stores/secrets'
 import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
 import AppIcon from '../common/AppIcon.vue'
@@ -400,6 +401,7 @@ const runtime = createQuickAiRequestRuntime({
   readMemory: (id, file) => aiProfilesStore.readMemory(id, file),
   listMemoryTopics: (id) => aiProfilesStore.listMemoryTopics(id),
   operations: operationsStore,
+  pluginTools: usePluginChatToolsStore().dependencies,
   environment: operationsStore.environment,
   saveOutput: (text) => void historyStore.saveOutput(text, 'quickAiRequest'),
   toEditor: (text, sourceText) => editorNavigation.toEditor(text, sourceText),

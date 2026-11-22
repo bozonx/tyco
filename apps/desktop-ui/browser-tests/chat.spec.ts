@@ -164,7 +164,11 @@ for (const decision of ['Allow', 'Deny'] as const) {
       projectPermissions: {},
       createdAt: 1,
       updatedAt: 1,
-      tools: { groups: { files: { isEnabled: true, access: 'ask' as const } } },
+      tools: {
+        sources: {},
+        tools: { 'core:files:read_file': 'ask' as const },
+        commandIds: [],
+      },
     }
     desktop.handle('list_ai_profiles', () => [profile])
     desktop.handle('get_ai_profile', () => profile)
@@ -173,7 +177,7 @@ for (const decision of ['Allow', 'Deny'] as const) {
       revision: '',
     }))
     desktop.handle('list_ai_file_roots', () => [
-      { path: 'workspace', read: 'ask', write: 'ask' },
+      { path: 'workspace', read: 'ask', write: 'ask', delete: 'ask' },
     ])
     desktop.handle('run_ai_file_tool', () => ({
       operation: 'readFile',

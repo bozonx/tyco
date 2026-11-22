@@ -82,12 +82,15 @@ alike (`sync_chat_images`).
 ## Tools
 
 The file tools get their roots from the conversation, resolved in Rust
-(`ConversationFiles`). The webview names ids and model paths, never absolute
-paths.
+(`ConversationFiles`). The webview names where the call comes from
+(`ToolCallContext`), ids and model paths, never absolute paths.
 
 - general: `attachments/` of the conversation, read-only;
-- profile: `attachments/`, plus `workspace/` and the permitted projects when
-  the profile's file tools are on;
+- profile: `attachments/`, plus `workspace/` (everything allowed, deleting
+  too) and the connected projects by their `read`, `write` and `delete`
+  permissions when the profile's file source is on; a file tool the profile
+  turned off is refused;
+- AI command: no files at all;
 - memory stays a separate capability of a profile.
 
 `attachments/<name>` names an attachment by its file name; equal names get

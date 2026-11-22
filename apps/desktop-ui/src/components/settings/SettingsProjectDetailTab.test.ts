@@ -40,6 +40,12 @@ const profile = (permissions: AiProfile['projectPermissions']): AiProfile => ({
   name: 'Writer',
   memoryMode: 'auto',
   projectPermissions: permissions,
+  // the file tools are off, so the access does nothing yet
+  tools: {
+    sources: { 'core:files': { isEnabled: false } },
+    tools: {},
+    commandIds: [],
+  },
   createdAt: 1,
   updatedAt: 1,
 })
@@ -227,14 +233,13 @@ describe('SettingsProjectDetailTab.vue', () => {
   })
 
   it('lists the profiles with access and offers the others', async () => {
-    store.profiles.push(profile({ notes: { read: 'allow', write: 'ask' } }), {
-      ...profile({}),
-      id: 'reader',
-      name: 'Reader',
-    })
+    store.profiles.push(
+      profile({ notes: { read: 'allow', write: 'ask', delete: 'ask' } }),
+      { ...profile({}), id: 'reader', name: 'Reader' }
+    )
     const wrapper = mountTab()
     const badge = wrapper.findComponent({ name: 'Badge' })
-    expect(badge.text()).toBe('settings.accessLevelReadWriteAsk')
+    expect(badge.text()).toBe('settings.accessLevelReadWrite')
     expect(wrapper.text()).toContain('settings.projectAccessFileToolsOff')
 
     const menu = wrapper.findComponent({ name: 'DropdownMenu' })

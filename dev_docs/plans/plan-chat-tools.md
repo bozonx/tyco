@@ -141,7 +141,7 @@ computer use (отложен).
 - Серверы в конфиге: `id`, название, транспорт, команда/URL, окружение
   (секреты — `tyco-secret:<id>`). Импорт JSON `mcpServers` (Claude Desktop /
   Cursor).
-- Сервер — источник `mcp` в модели `plan-tool-permissions.md`: включается
+- Сервер — источник `mcp` в модели `architecture.md`, «Tool sources and permissions»: включается
   глобально, в профиле выбирается явно, политика — на инструмент;
   `readOnlyHint` / `destructiveHint` / `openWorldHint` задают риск и политику
   по умолчанию (без подсказок — `external`, `ask`).
@@ -181,7 +181,7 @@ MCP-инструмент — это инструмент чата, а не оп�
   проверить это тестом.
 - Цикл ИИ-команд идёт через `chat-tool-loop` (см. `architecture.md`); MCP
   он получает из своего белого списка `tools` напрямую
-  (`plan-tool-permissions.md`, 3.2), `core.mcp` для этого не нужен.
+  (`architecture.md`, «Tool sources and permissions»), `core.mcp` для этого не нужен.
 
 ---
 

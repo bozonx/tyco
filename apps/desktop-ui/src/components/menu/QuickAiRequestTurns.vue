@@ -52,6 +52,8 @@
             :result="step.result"
             :is-awaiting-answer="Boolean(pendingApproval(step.call))"
             :preview="pendingApproval(step.call)?.preview"
+            :request="pendingApproval(step.call)"
+            :batch-count="batchCountOf(step.call)"
             @decide="emit('answerToolApproval', step.call.approvalId!, $event)"
           />
         </template>
@@ -88,7 +90,7 @@ import {
   messageSteps,
 } from '../../lib/chat-tools/chat-message-steps'
 import type { ChatToolApprovalRequest } from '../../lib/chat-tools/chat-tool-loop'
-import type { ChatToolDecision } from '../../lib/chat-tools/chat-tool-policy'
+import type { ChatToolAnswer } from '../../lib/chat-tools/chat-tool-policy'
 import type { QuickAiRequestTurn } from '../../lib/quick-ai-request/quick-ai-request-model'
 import {
   REPLY_BLOCKS_TOOL_NAME,
@@ -116,7 +118,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   applyReplyBlock: [block: ReplyBlockData, target: 'window' | 'editor']
-  answerToolApproval: [approvalId: string, decision: ChatToolDecision]
+  answerToolApproval: [approvalId: string, decision: ChatToolAnswer]
 }>()
 
 const { t } = useI18n()
@@ -133,6 +135,17 @@ const pendingApproval = (
   call.state === 'awaiting-approval' && call.approvalId
     ? props.pendingApprovals?.get(call.approvalId)
     : undefined
+
+/** How many calls of the step of a waiting call wait with it */
+const batchCountOf = (
+  call: Extract<ChatMessagePart, { type: 'tool-call' }>
+) => {
+  const batchId = pendingApproval(call)?.batchId
+  if (!batchId) return 1
+  return [...(props.pendingApprovals?.values() ?? [])].filter(
+    (request) => request.batchId === batchId
+  ).length
+}
 
 // the feed follows the answer while the user has not scrolled up
 const { scroller, handleScroll, handleContentResized } = useChatScroll({

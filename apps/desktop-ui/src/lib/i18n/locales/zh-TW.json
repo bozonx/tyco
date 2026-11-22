@@ -126,7 +126,7 @@
     "stop": "停止",
     "stopped": "已停止",
     "toolAllow": "允許",
-    "toolAllowSession": "在此工作階段中允許",
+    "toolAllowSession": "在此對話中允許",
     "toolApprovalQuestion": "允許執行 {tool} 嗎？",
     "toolArguments": "引數",
     "toolDeny": "拒絕",
@@ -155,7 +155,10 @@
       "workspace": "檔案",
       "workspaceHint": "設定檔的檔案：保存在聊天記錄之外，可在該設定檔的所有聊天中使用"
     },
-    "takeScreenshot": "擷取螢幕"
+    "takeScreenshot": "擷取螢幕",
+    "toolAllowBatch": "全部允許（{count}）",
+    "toolAllowAlways": "一律允許",
+    "toolAllowAlwaysWriteDelete": "一律允許寫入與刪除"
   },
   "chatTools": {
     "files": {
@@ -188,12 +191,12 @@
     "web": {
       "fetchLabel": "閱讀網頁",
       "group": "網頁搜尋",
-      "groupHint": "使用 Jina AI 進行網頁搜尋並獲取網頁內容。「詢問」將在每次呼叫前請求確認。",
+      "groupHint": "透過 Jina AI 搜尋網路並閱讀網頁。",
       "searchLabel": "網頁搜尋"
     },
     "commands": {
       "group": "命令",
-      "groupHint": "允許模型執行選定的命令。只能選擇附有 AI 描述的命令。「詢問」會在每次呼叫前確認。",
+      "groupHint": "模型可以執行所選指令。只能選擇附有 AI 說明的指令。除非你允許，否則每次呼叫都會先詢問。",
       "needsDescription": "需要在命令設定中填寫 AI 說明",
       "noCommands": "尚未設定自訂命令。",
       "noCommandsHint": "請先在設定 → 命令中建立命令。",
@@ -224,8 +227,6 @@
     "afterRunCopy": "複製到剪貼簿",
     "afterRunInsert": "插入至視窗",
     "afterRunShowResult": "顯示結果",
-    "aiAllowedCommands": "可執行的指令",
-    "aiAllowedCommandsInfo": "當提示詞需要時，AI 會直接執行這些指令而不詢問。指令永遠不會執行自己，也不會執行呼叫它的 AI 指令。",
     "aiDescription": "AI 指令依你的指示一步處理文字，無需對話，並可執行你允許的指令。若要開啟與 AI 的對話，請使用提示詞。此模型用於所有 AI 指令。",
     "aiMaxSteps": "步數上限",
     "aiMaxStepsInfo": "AI 可執行的最大命令數。最終回答不計入此限制。留空則使用 LLM 設定中的限制。",
@@ -234,8 +235,6 @@
     "aiPromptLabel": "提示詞",
     "aiPromptPlaceholder": "例如：找出文字中的日期和時間，並把活動加入我的行事曆",
     "aiTaskModel": "AI 指令模型",
-    "aiToolsEnabledInfo": "啟用後，AI 可以呼叫其他被允許的指令。",
-    "aiToolsEnabledLabel": "允許使用工具",
     "badgeAi": "可供 AI 使用（有描述）",
     "badgeExternal": "可從外部存取 (CLI, D-Bus)",
     "badgeInLauncher": "操作：第 {page} 頁 ({key})",
@@ -323,7 +322,14 @@
     "unnamed": "未命名命令",
     "variablesNotSet": "其使用的變數在此裝置上沒有值",
     "voiceOutputActionHint": "透過語音執行時，此命令一律開啟結果選單。",
-    "warningExternalNameTwins": "其他命令具有相同名稱：{names}。依此名稱呼叫會因不明確而遭拒；請改用 ID。"
+    "warningExternalNameTwins": "其他命令具有相同名稱：{names}。依此名稱呼叫會因不明確而遭拒；請改用 ID。",
+    "aiTools": "代理的工具",
+    "aiToolsInfo": "代理可以呼叫的內容。AI 指令常在沒有可詢問的視窗時執行，因此清單中的一切都不經詢問即執行。它永遠無法存取檔案與記憶。",
+    "aiToolsUnavailable": "目前無法使用",
+    "aiToolUnavailable": "無法使用",
+    "aiToolsRiskyWarning": "清單中的部分工具可以變更或刪除資料，或在應用程式之外操作，且不經詢問即執行。",
+    "aiRiskLabel": "對 AI 的風險",
+    "aiRiskInfo": "當 AI 呼叫該指令時它可能做的事。Tyco 無法得知指令會做什麼，因此除非你另選，否則視為應用程式之外的操作。"
   },
   "common": {
     "add": "新增",
@@ -664,11 +670,9 @@
     "accessAsk": "詢問",
     "accessOff": "關閉",
     "accessLevel": "存取",
-    "accessLevelAskAll": "讀寫時均詢問",
     "accessLevelFull": "完整存取",
     "accessLevelCustom": "自訂（手動設定）",
     "accessLevelRead": "唯讀",
-    "accessLevelReadWriteAsk": "讀寫需確認",
     "accessRemove": "移除存取",
     "actionAfterRunNone": "無",
     "actionCommandInfo": "在系統 Shell（sh、zsh 或 PowerShell）中執行。命令僅在出現 {placeholder} 的位置接收文字。該預留位置將被替換為已加上引號並逸出的文字，因此兩側無需再加上引號。",
@@ -1062,7 +1066,6 @@
     "profileMemoryHardTopic": "超出硬限制（約 4,000 權標）— 寫入遭阻止",
     "profileMemoryHint": "跨對話保留的事實、偏好和筆記。",
     "profileMemoryMode": "記憶模式",
-    "profileMemoryModeAsk": "寫入前詢問（需確認）",
     "profileMemoryModeAuto": "自動（無需確認即可儲存）",
     "profileMemoryModeOff": "關閉",
     "profileMemoryModeReadOnly": "唯讀",
@@ -1076,12 +1079,11 @@
     "profileNotFoundHint": "它可能已被刪除，或位於其他工作區。",
     "profileSoulPrompt": "根指示 (SOUL.md)",
     "profileSoulPromptHint": "此助手的角色設定、身分、語調與規則。這是該設定檔唯一遵循的規範：「詢問 AI」的指示與規則將不適用。每次請求前都會重新讀取，因此磁碟上的修改也會立即生效。 可以為聊天或快速請求這兩種環境分別指定要求。",
-    "profileToolAccess": "存取權限",
     "maxToolSteps": "每個回覆的步驟數",
     "maxToolStepsHint": "模型在一次回答中可呼叫工具的次數，適用於所有聊天、快速請求和 AI 命令。此限制可防止迴圈和不必要的開銷。",
     "maxToolStepsInvalid": "請輸入 1 至 50 之間的整數",
     "profileTools": "工具",
-    "profileToolsHint": "設定檔模型可在聊天中自行執行的操作。設為「詢問」的呼叫會在訊息中等待您的核准。",
+    "profileToolsHint": "設定檔的代理可以使用的內容。讀取自由進行，變更會先詢問；可將每個工具設為關閉、詢問或允許。記憶與設定檔的工作區從不詢問。",
     "profileWebSearchLlmNotice": "API 金鑰和頁面大小限制在 LLM 設定中進行全域設定。",
     "projectAccessFileToolsOff": "檔案工具已關閉",
     "projectChangedElsewhere": "專案已在其他裝置上或 TyCo 之外被變更。您的變更尚未儲存。",
@@ -1311,8 +1313,6 @@
     "webJinaApiKey": "Jina AI API 金鑰",
     "webJinaApiKeyHint": "選填。未配置金鑰時，請求將使用具有共用速率限制的免費層級。",
     "webSearchSectionHint": "AI 模型與設定檔使用的網頁搜尋與頁面讀取工具設定。",
-    "askAiWebAccess": "「詢問 AI」中的網路",
-    "askAiWebAccessHint": "沒有設定檔的「詢問 AI」聊天能否搜尋網路及讀取網頁。「詢問」會在每次呼叫前等待你的核准。設定檔在各自的工具中設定。",
     "translationVoiceCommand": "語音指令",
     "translationVoiceCommandInfo": "在語音指令中包含翻譯指令（「翻譯成[語言]」）。",
     "dialogTab": "對話",
@@ -1351,7 +1351,13 @@
       "projectLoses": "下列設定檔將失去對它的存取權：{names}。",
       "externalFolder": "外部資料夾保留在原處；在其他電腦上需要重新設定。",
       "otherDevices": "在未連接目標工作區的電腦上，它會消失，直到那裡連接了該工作區。"
-    }
+    },
+    "accessDeleteWithoutAsking": "刪除時不詢問",
+    "accessLevelReadWrite": "讀取與寫入",
+    "askAiWebSearch": "網路搜尋",
+    "askAiWebSearchHint": "允許「詢問 AI」對話不經詢問即可搜尋網路並閱讀網頁。它永遠看不到你的檔案、記憶或指令。",
+    "askAiFastModelsHint": "「詢問 AI」搭配快速模型效果最佳：它用於快速回答與查證事實。",
+    "toolsTab": "工具"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
@@ -1726,5 +1732,32 @@
     "translationModelNone": "尚未選擇翻譯模型",
     "startCompact": "以精簡模式開始",
     "route": "{from} → {to}"
+  },
+  "toolPermissions": {
+    "riskRead": "讀取",
+    "riskWrite": "變更資料",
+    "riskDestructive": "刪除",
+    "riskExternal": "對外操作",
+    "sourceCore": "內建",
+    "sourcePlugin": "外掛",
+    "sourceThirdPartyPlugin": "第三方外掛",
+    "sourceMcp": "MCP 伺服器",
+    "sourceCommand": "指令",
+    "sourceOffEverywhere": "已在「工具」設定中關閉",
+    "pluginCapabilities": "外掛權限：{capabilities}",
+    "pluginSourceHint": "此外掛為對話提供的工具。它們以外掛的權限執行。",
+    "leakQuestion": "此對話已讀取你的資料，而此呼叫會存取新的地方。在此對話中每個地方只詢問一次。",
+    "contextTokens": "約 {count} 個 token",
+    "catalogHint": "代理工具的來源。在此關閉的外掛會在所有設定檔與 AI 指令中關閉。內建工具在「詢問 AI」、各個設定檔與各個 AI 指令中開關。",
+    "catalogWhereHint": "每個設定檔在自己的設定中選擇工具及其執行方式。",
+    "defaultPolicy": "預設：{policy}",
+    "summaryWorkspace": "工作區",
+    "summaryProjects": "專案：{count}",
+    "summaryProjectsRead": "專案：{count}（唯讀）",
+    "summaryWeb": "網路",
+    "summaryCommands": "指令：{count}",
+    "summaryPlugins": "外掛：{count}",
+    "summaryNothing": "僅對話",
+    "summaryTitle": "代理能做什麼——開啟設定檔設定"
   }
 }

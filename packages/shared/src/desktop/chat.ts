@@ -3,6 +3,7 @@ import type {
   ChatAttachment,
   ChatImage,
   ChatMessage,
+  ChatToolPermissions,
   OpenMainChatEvent,
 } from '../generated/desktop-types'
 
@@ -70,6 +71,8 @@ export interface ChatParams {
   messages?: ChatMessage[]
   images?: ChatImage[]
   attachments?: ChatAttachment[]
+  /** What the user allowed "in this chat", kept with it */
+  toolPermissions?: ChatToolPermissions
 }
 
 /** Rejects malformed externally delivered chat events before UI side effects. */

@@ -1,10 +1,40 @@
 <template>
   <div class="tool-approval" role="group" :aria-label="question">
-    <span class="tool-approval-question">{{ question }}</span>
+    <div class="tool-approval-text">
+      <span class="tool-approval-question">{{ question }}</span>
+      <span class="tool-approval-meta">
+        <Badge tone="muted">{{ sourceText }}</Badge>
+        <Badge
+          v-if="request?.risk"
+          :tone="isRiskyTool(request.risk) ? 'warning' : 'muted'"
+        >
+          {{ t(TOOL_RISK_LABEL_KEYS[request.risk]) }}
+        </Badge>
+        <span v-if="request?.capabilities?.length" class="tool-approval-hint">
+          {{
+            t('toolPermissions.pluginCapabilities', {
+              capabilities: request.capabilities.join(', '),
+            })
+          }}
+        </span>
+      </span>
+      <span v-if="request?.leakTarget" class="tool-approval-hint">
+        {{ t('toolPermissions.leakQuestion') }}
+      </span>
+    </div>
     <div class="tool-approval-actions">
       <Button
+        v-if="batchCount > 1"
         size="xs"
         variant="primary"
+        icon="mdi:check-all"
+        @click="emit('decide', 'allow-batch')"
+      >
+        {{ t('chat.toolAllowBatch', { count: batchCount }) }}
+      </Button>
+      <Button
+        size="xs"
+        :variant="batchCount > 1 ? 'neutral' : 'primary'"
         icon="mdi:check"
         @click="emit('decide', 'allow-once')"
       >
@@ -13,10 +43,19 @@
       <Button
         size="xs"
         variant="neutral"
-        icon="mdi:check-all"
+        icon="mdi:check-circle-outline"
         @click="emit('decide', 'allow-session')"
       >
         {{ t('chat.toolAllowSession') }}
+      </Button>
+      <Button
+        v-if="request?.alwaysAllow && !request.leakTarget"
+        size="xs"
+        variant="neutral"
+        icon="mdi:shield-check-outline"
+        @click="emit('decide', 'allow-always')"
+      >
+        {{ alwaysText }}
       </Button>
       <Button
         size="xs"
@@ -34,16 +73,51 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import type { ChatToolDecision } from '../../lib/chat-tools/chat-tool-policy'
+import type { ChatToolApprovalRequest } from '../../lib/chat-tools/chat-tool-loop'
+import type { ChatToolAnswer } from '../../lib/chat-tools/chat-tool-policy'
+import { isRiskyTool } from '../../lib/chat-tools/tool-catalog'
+import { TOOL_RISK_LABEL_KEYS } from '../../lib/chat-tools/tool-catalog-entries'
+import Badge from '../common/Badge.vue'
 import Button from '../common/Button.vue'
 
-const props = defineProps<{ toolName: string }>()
-const emit = defineEmits<{ decide: [decision: ChatToolDecision] }>()
+const props = withDefaults(
+  defineProps<{
+    toolName: string
+    /** What the call asks with: its source, risk and what it may be answered */
+    request?: ChatToolApprovalRequest
+    /** The calls of the same step that wait too, this one among them */
+    batchCount?: number
+  }>(),
+  { request: undefined, batchCount: 1 }
+)
+const emit = defineEmits<{ decide: [decision: ChatToolAnswer] }>()
 const { t } = useI18n()
 
 const question = computed(() =>
   t('chat.toolApprovalQuestion', { tool: props.toolName })
 )
+
+const SOURCE_KEYS = {
+  core: 'toolPermissions.sourceCore',
+  plugin: 'toolPermissions.sourcePlugin',
+  mcp: 'toolPermissions.sourceMcp',
+  commands: 'toolPermissions.sourceCommand',
+} as const
+
+const sourceText = computed(() => {
+  const source = props.request?.source
+  const kind = t(SOURCE_KEYS[source?.kind ?? 'core'])
+  const label = props.request?.sourceLabel
+  return label ? `${kind}: ${label}` : kind
+})
+
+/** Deleting where writing asks raises both, and the button says so */
+const alwaysText = computed(() => {
+  const target = props.request?.alwaysAllow
+  if (target?.kind === 'project' && target.operations.length > 1)
+    return t('chat.toolAllowAlwaysWriteDelete')
+  return t('chat.toolAllowAlways')
+})
 </script>
 
 <style scoped>
@@ -57,9 +131,24 @@ const question = computed(() =>
   border-top: 1px solid var(--app-border-subtle);
   background: var(--app-surface-raised);
 }
+.tool-approval-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
 .tool-approval-question {
   font-size: var(--text-caption);
   font-weight: 500;
+}
+.tool-approval-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.tool-approval-hint {
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
 }
 .tool-approval-actions {
   display: flex;

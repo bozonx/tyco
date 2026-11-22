@@ -116,7 +116,7 @@ describe('settings navigation', () => {
           'favorites',
         ],
       ],
-      ['settings.automationCategory', ['commands', 'variables']],
+      ['settings.automationCategory', ['commands', 'variables', 'tools']],
       ['settings.pluginsTab', ['plugins', 'plugin:case']],
     ])
     const [allPlugins, plugin] = groups.at(-1)!.items

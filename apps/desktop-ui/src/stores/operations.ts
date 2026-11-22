@@ -19,6 +19,11 @@ import { createTauriFetch } from '../lib/net/tauri-fetch'
 import { tauriNetIpc } from '../lib/net/tauri-net'
 import { createScriptAndWebhookOperations } from '../lib/operations/script-and-webhook-operations'
 import { createAiCommandOperation } from '../lib/ai-commands/ai-command-operation'
+import { createDesktopWebToolProvider } from '../lib/chat-tools/desktop-chat-tools'
+import { invokeDesktop } from '../lib/desktop/invoke'
+import { clientLogger } from '../lib/logger'
+import { createPluginChatToolProvider } from '../lib/chat-tools/plugin-chat-tools'
+import { usePluginChatToolsStore } from './plugin-chat-tools'
 import { createCommandTransformer } from '../lib/commands/command-runner'
 import { invocationUnavailableReason } from '../lib/invocation/invoke-operation'
 import { createCoreOperations } from '../lib/operations/core-operations'
@@ -182,6 +187,16 @@ export const useOperationsStore = defineStore('tools', () => {
   const transformCommand = createCommandTransformer({
     operations: { get: (id) => registry.get(id), environment },
   })
+  // the web of an AI command's whitelist, checked by Rust against it
+  const webTools = createDesktopWebToolProvider({
+    invoke: invokeDesktop,
+    getFetchMaxCharacters: () =>
+      desktopStore.userConfig?.llm?.webSearch?.fetchMaxCharacters,
+    warn: (message) => clientLogger.warn(message, 'tools'),
+  })
+  const pluginTools = createPluginChatToolProvider(
+    usePluginChatToolsStore().dependencies
+  )
   const aiCommandOperation = createAiCommandOperation({
     stream: (task, prompt, options) =>
       llmStore.client.stream(task, prompt, options),
@@ -211,6 +226,8 @@ export const useOperationsStore = defineStore('tools', () => {
     getUnavailableReasonKey: () => getLlmUnavailableReasonKey('aiTask'),
     describeError: (error) => describeError(error, translate),
     variables: () => environment().variables,
+    toolProviders: () => [webTools, pluginTools],
+    toolCatalog: () => desktopStore.userConfig?.tools,
   })
 
   const registry = createOperationRegistry([

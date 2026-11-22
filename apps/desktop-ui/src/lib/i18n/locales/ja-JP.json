@@ -126,7 +126,7 @@
     "stop": "停止",
     "stopped": "停止しました",
     "toolAllow": "許可",
-    "toolAllowSession": "このセッション中許可",
+    "toolAllowSession": "このチャットで許可",
     "toolApprovalQuestion": "{tool} の実行を許可しますか？",
     "toolArguments": "引数",
     "toolDeny": "拒否",
@@ -155,7 +155,10 @@
       "workspace": "ファイル",
       "workspaceHint": "プロファイルのファイル：チャット履歴とは別に保存され、プロファイルのすべてのチャットで使えます"
     },
-    "takeScreenshot": "スクリーンショットを撮る"
+    "takeScreenshot": "スクリーンショットを撮る",
+    "toolAllowBatch": "{count} 件すべて許可",
+    "toolAllowAlways": "常に許可",
+    "toolAllowAlwaysWriteDelete": "書き込みと削除を常に許可"
   },
   "chatTools": {
     "files": {
@@ -188,12 +191,12 @@
     "web": {
       "fetchLabel": "ウェブページを読み取る",
       "group": "ウェブ検索",
-      "groupHint": "Jina AI を使用してウェブを検索し、ウェブページを取得します。「確認」は呼び出しごとに確認を求めます。",
+      "groupHint": "Jina AI でウェブを検索し、ページを読みます。",
       "searchLabel": "ウェブ検索"
     },
     "commands": {
       "group": "コマンド",
-      "groupHint": "選択したコマンドの実行をモデルに許可します。AI向けの説明があるコマンドのみ選択できます。「確認」は呼び出しごとに確認します。",
+      "groupHint": "モデルは選んだコマンドを実行できます。AI 向けの説明があるコマンドだけを選べます。許可しない限り、呼び出しごとに確認します。",
       "needsDescription": "コマンド設定で AI 用の説明が必要です",
       "noCommands": "カスタムコマンドはまだ設定されていません。",
       "noCommandsHint": "最初に「設定 → コマンド」でコマンドを作成してください。",
@@ -224,8 +227,6 @@
     "afterRunCopy": "クリップボードへ",
     "afterRunInsert": "ウィンドウに挿入",
     "afterRunShowResult": "結果を表示",
-    "aiAllowedCommands": "実行できるコマンド",
-    "aiAllowedCommandsInfo": "プロンプトが必要とするとき、AI はこれらのコマンドを確認なしで実行します。コマンドが自分自身や自分を呼び出した AI コマンドを実行することはありません。",
     "aiDescription": "AI コマンドは、指示に従ってテキストを会話なしで 1 ステップで処理し、許可したコマンドを実行できます。AI との会話を始めるには、プロンプトを使います。このモデルはすべての AI コマンドで使われます。",
     "aiMaxSteps": "ステップ上限",
     "aiMaxStepsInfo": "AI が実行できるコマンドの最大数です。最終回答はこの上限に含まれません。空欄にすると LLM 設定の上限が使われます。",
@@ -234,8 +235,6 @@
     "aiPromptLabel": "プロンプト",
     "aiPromptPlaceholder": "例：テキストから日時を見つけて、予定をカレンダーに追加して",
     "aiTaskModel": "AI コマンドのモデル",
-    "aiToolsEnabledInfo": "有効にすると、AIは許可された他のコマンドを呼び出すことができます。",
-    "aiToolsEnabledLabel": "ツールの使用を許可",
     "badgeAi": "AIで利用可能 (説明あり)",
     "badgeExternal": "外部から利用可能 (CLI、D-Bus)",
     "badgeInLauncher": "アクション: ページ {page} ({key})",
@@ -323,7 +322,14 @@
     "unnamed": "無題のコマンド",
     "variablesNotSet": "使用している変数にこのデバイスの値がありません",
     "voiceOutputActionHint": "音声で実行すると、このコマンドは常に結果メニューを開きます。",
-    "warningExternalNameTwins": "同じ名前のコマンドが他に存在します: {names}。この名前での呼び出しは曖昧なため拒否されます。IDを使用してください。"
+    "warningExternalNameTwins": "同じ名前のコマンドが他に存在します: {names}。この名前での呼び出しは曖昧なため拒否されます。IDを使用してください。",
+    "aiTools": "エージェントのツール",
+    "aiToolsInfo": "エージェントが呼び出せるもの。AI コマンドは確認できるウィンドウなしで動くことが多いため、リストのものはすべて確認なしで実行されます。ファイルとメモリは使えません。",
+    "aiToolsUnavailable": "現在利用できません",
+    "aiToolUnavailable": "利用不可",
+    "aiToolsRiskyWarning": "リストの一部のツールはデータを変更・削除したり、アプリの外で動作したりでき、確認なしで実行されます。",
+    "aiRiskLabel": "AI 向けのリスク",
+    "aiRiskInfo": "AI が呼び出したときにコマンドができること。Tyco はコマンドの動作を知り得ないため、別の選択をしない限りアプリ外の操作として扱います。"
   },
   "common": {
     "add": "追加",
@@ -664,11 +670,9 @@
     "accessAsk": "確認",
     "accessOff": "オフ",
     "accessLevel": "アクセス",
-    "accessLevelAskAll": "読み取りと書き込み時に確認",
     "accessLevelFull": "フルアクセス",
     "accessLevelCustom": "カスタム（手動で設定）",
     "accessLevelRead": "読み取りのみ",
-    "accessLevelReadWriteAsk": "確認付きで読み書き",
     "accessRemove": "アクセスを削除",
     "actionAfterRunNone": "何もしない",
     "actionCommandInfo": "システムシェル（sh、zsh、PowerShell）で実行されます。コマンドは {placeholder} がある位置にのみテキストを受け取ります。引用符やエスケープが適用された状態で置換されるため、前後に引用符を付ける必要はありません。",
@@ -1062,7 +1066,6 @@
     "profileMemoryHardTopic": "ハードリミット超過（約4,000トークン）— 書き込みがブロックされました",
     "profileMemoryHint": "会話をまたいで保持される事実、安定した設定、およびメモ。",
     "profileMemoryMode": "メモリモード",
-    "profileMemoryModeAsk": "確認してから書き込み（承認が必要）",
     "profileMemoryModeAuto": "自動（確認なしで保存）",
     "profileMemoryModeOff": "オフ",
     "profileMemoryModeReadOnly": "読み取り専用",
@@ -1076,12 +1079,11 @@
     "profileNotFoundHint": "削除されたか、別のワークスペースにある可能性があります。",
     "profileSoulPrompt": "システムプロンプト (SOUL.md)",
     "profileSoulPromptHint": "プロファイルの基本的な役割、性格、動作ルールを定義します。プロファイルフォルダーの SOUL.md に保存されます。 チャットとクイックリクエストの各環境に異なる要件を指定できます。",
-    "profileToolAccess": "ツールへのアクセス",
     "maxToolSteps": "最大ツールステップ数",
     "maxToolStepsHint": "1 回の回答でモデルがツールを呼び出せる回数です。すべてのチャット、クイックリクエスト、AI コマンドに適用されます。ループや無駄なコストを防ぎます。",
     "maxToolStepsInvalid": "1 から 50 までの整数を入力してください",
     "profileTools": "利用可能なツール",
-    "profileToolsHint": "プロファイルのモデルがチャット内で自律的に実行できる操作です。「確認」に設定された呼び出しはメッセージ内であなたの承認を待ちます。",
+    "profileToolsHint": "プロファイルのエージェントが使えるもの。読み取りは自由に動き、変更はまず確認します。各ツールをオフ・確認・許可に設定してください。メモリとプロファイルのワークスペースは確認しません。",
     "profileWebSearchLlmNotice": "APIキーとページサイズ制限は、LLM設定でグローバルに構成されます。",
     "projectAccessFileToolsOff": "ファイルツールがオフです",
     "projectChangedElsewhere": "プロジェクトが別のデバイスまたは TyCo の外で変更されました。あなたの変更はまだ保存されていません。",
@@ -1311,8 +1313,6 @@
     "webJinaApiKey": "Jina AI API キー",
     "webJinaApiKeyHint": "省略可能。キーがない場合、リクエストは共有レート制限のある無料枠を使用します。",
     "webSearchSectionHint": "AIモデルやプロファイルが使用するウェブ検索およびページ読み取りツールの設定。",
-    "askAiWebAccess": "「AIに質問」でのウェブ",
-    "askAiWebAccessHint": "プロファイルのない「AIに質問」チャットがウェブ検索やページの読み取りを行えるかどうか。「確認」は呼び出しのたびに承認を待ちます。プロファイルは各自のツールで設定します。",
     "translationVoiceCommand": "音声コマンド",
     "translationVoiceCommandInfo": "音声コマンドに翻訳コマンドを含めます（「[言語]に翻訳」）。",
     "dialogTab": "会話",
@@ -1351,7 +1351,13 @@
       "projectLoses": "次のプロファイルがアクセスを失います: {names}。",
       "externalFolder": "外部フォルダーはそのまま残ります。ほかのコンピューターでは改めて設定してください。",
       "otherDevices": "移動先のワークスペースが接続されていないコンピューターでは、接続されるまで表示されません。"
-    }
+    },
+    "accessDeleteWithoutAsking": "確認なしで削除",
+    "accessLevelReadWrite": "読み取りと書き込み",
+    "askAiWebSearch": "ウェブ検索",
+    "askAiWebSearchHint": "「AI に質問」チャットが確認なしでウェブを検索し、ページを読めるようにします。ファイル、メモリ、コマンドは一切見えません。",
+    "askAiFastModelsHint": "「AI に質問」は高速なモデルで最もよく動きます。素早い回答や事実確認のためのものです。",
+    "toolsTab": "ツール"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {
@@ -1726,5 +1732,32 @@
     "translationModelNone": "翻訳用のモデルが選択されていません",
     "startCompact": "コンパクトモードで開始",
     "route": "{from} → {to}"
+  },
+  "toolPermissions": {
+    "riskRead": "読み取り",
+    "riskWrite": "データを変更",
+    "riskDestructive": "削除",
+    "riskExternal": "外部に作用",
+    "sourceCore": "組み込み",
+    "sourcePlugin": "プラグイン",
+    "sourceThirdPartyPlugin": "サードパーティのプラグイン",
+    "sourceMcp": "MCP サーバー",
+    "sourceCommand": "コマンド",
+    "sourceOffEverywhere": "ツール設定でオフ",
+    "pluginCapabilities": "プラグインの権限: {capabilities}",
+    "pluginSourceHint": "このプラグインがチャットに提供するツール。プラグインの権限で動作します。",
+    "leakQuestion": "このチャットはあなたのデータを読み取っており、この呼び出しは新しい場所に届きます。このチャットでは場所ごとに一度だけ確認します。",
+    "contextTokens": "約 {count} トークン",
+    "catalogHint": "エージェントのツールの出どころ。ここでオフにしたプラグインはすべてのプロファイルと AI コマンドでオフになります。組み込みツールは「AI に質問」、各プロファイル、各 AI コマンドで切り替えます。",
+    "catalogWhereHint": "各プロファイルは自身の設定でツールとその実行の自由度を選びます。",
+    "defaultPolicy": "既定: {policy}",
+    "summaryWorkspace": "ワークスペース",
+    "summaryProjects": "プロジェクト: {count}",
+    "summaryProjectsRead": "プロジェクト: {count}（読み取り）",
+    "summaryWeb": "ウェブ",
+    "summaryCommands": "コマンド: {count}",
+    "summaryPlugins": "プラグイン: {count}",
+    "summaryNothing": "チャットのみ",
+    "summaryTitle": "エージェントにできること — プロファイル設定を開く"
   }
 }

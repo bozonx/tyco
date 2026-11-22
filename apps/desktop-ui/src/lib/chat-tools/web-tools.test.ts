@@ -1,3 +1,4 @@
+import { toolContext } from '../../test/chat-tool-context'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { AiWebToolOutput } from '@tyco/shared'
@@ -6,7 +7,6 @@ import {
   createWebToolProvider,
   formatFetchedPage,
   formatSearchResults,
-  withWebToolGroup,
 } from './web-tools'
 
 describe('web-tools', () => {
@@ -38,9 +38,8 @@ describe('web-tools', () => {
       } satisfies AiWebToolOutput)
     const provider = createWebToolProvider({ run })
     const tools = await provider.tools({
-      profileId: null,
+      ...toolContext(null),
       modelId: 'gemini',
-      settings: undefined,
     })
     expect(tools.map((t) => t.name)).toEqual(['web_search', 'web_fetch'])
 
@@ -53,30 +52,28 @@ describe('web-tools', () => {
       }
     )
     expect(run).toHaveBeenCalledWith(
-      null,
+      { kind: 'askAi' },
       { operation: 'search', query: 'weather' },
       'web-call-general'
     )
   })
 
-  it('withWebToolGroup defaults web group to enabled and preserves explicit settings', () => {
-    expect(withWebToolGroup(undefined)).toEqual({
-      groups: { web: { isEnabled: true, access: 'allow' } },
+  it('asks about a page nobody named, once the chat holds personal data', async () => {
+    const provider = createWebToolProvider({ run: vi.fn() })
+    const tools = await provider.tools({
+      ...toolContext('prof-1'),
+      modelId: 'm',
     })
-    expect(
-      withWebToolGroup({
-        groups: { files: { isEnabled: true, access: 'ask' } },
-      })
-    ).toEqual({
-      groups: {
-        files: { isEnabled: true, access: 'ask' },
-        web: { isEnabled: true, access: 'allow' },
-      },
-    })
-    const explicitDisabled = {
-      groups: { web: { isEnabled: false, access: 'allow' as const } },
-    }
-    expect(withWebToolGroup(explicitDisabled)).toBe(explicitDisabled)
+    const fetch = tools.find((tool) => tool.name === 'web_fetch')!
+    const search = tools.find((tool) => tool.name === 'web_search')!
+    expect(search.givesKnownUrls).toBe(true)
+    const known = (url: string) => url === 'https://known.example/a'
+    expect(fetch.leakTarget?.({ url: 'https://known.example/a' }, known)).toBe(
+      undefined
+    )
+    expect(fetch.leakTarget?.({ url: 'https://evil.example/x' }, known)).toBe(
+      'host:evil.example'
+    )
   })
 
   it('formats fetched webpage', () => {
@@ -109,9 +106,8 @@ describe('web-tools', () => {
 
     const provider = createWebToolProvider({ run })
     const tools = await provider.tools({
-      profileId: 'prof-1',
+      ...toolContext('prof-1'),
       modelId: 'gemini',
-      settings: undefined,
     })
 
     const searchTool = tools.find((t) => t.name === 'web_search')
@@ -135,7 +131,7 @@ describe('web-tools', () => {
     )
 
     expect(run).toHaveBeenCalledWith(
-      'prof-1',
+      { kind: 'profile', profileId: 'prof-1' },
       {
         operation: 'search',
         query: 'test query',
@@ -165,9 +161,8 @@ describe('web-tools', () => {
 
     const provider = createWebToolProvider({ run })
     const tools = await provider.tools({
-      profileId: 'prof-1',
+      ...toolContext('prof-1'),
       modelId: 'gemini',
-      settings: undefined,
     })
 
     const fetchTool = tools.find((t) => t.name === 'web_fetch')
@@ -183,7 +178,7 @@ describe('web-tools', () => {
     )
 
     expect(run).toHaveBeenCalledWith(
-      'prof-1',
+      { kind: 'profile', profileId: 'prof-1' },
       {
         operation: 'fetch',
         url: 'https://example.com/page',
@@ -215,9 +210,8 @@ describe('web-tools', () => {
       getMaxCharacters: () => 8000,
     })
     const tools = await provider.tools({
-      profileId: 'prof-1',
+      ...toolContext('prof-1'),
       modelId: 'gemini',
-      settings: undefined,
     })
 
     const fetchTool = tools.find((t) => t.name === 'web_fetch')!
@@ -234,7 +228,7 @@ describe('web-tools', () => {
     )
 
     expect(run).toHaveBeenCalledWith(
-      'prof-1',
+      { kind: 'profile', profileId: 'prof-1' },
       {
         operation: 'fetch',
         url: 'https://example.com/page',
@@ -254,7 +248,7 @@ describe('web-tools', () => {
     )
 
     expect(run).toHaveBeenCalledWith(
-      'prof-1',
+      { kind: 'profile', profileId: 'prof-1' },
       {
         operation: 'fetch',
         url: 'https://example.com/page',
@@ -276,9 +270,8 @@ describe('web-tools', () => {
       } satisfies AiWebToolOutput)
     const provider = createWebToolProvider({ run })
     const tools = await provider.tools({
-      profileId: 'prof-1',
+      ...toolContext('prof-1'),
       modelId: 'gemini',
-      settings: undefined,
     })
     const fetchTool = tools.find((t) => t.name === 'web_fetch')!
 
@@ -300,9 +293,8 @@ describe('web-tools', () => {
   it('scopes the session approval of web_fetch to the host', async () => {
     const provider = createWebToolProvider({ run: vi.fn() })
     const tools = await provider.tools({
-      profileId: 'prof-1',
+      ...toolContext('prof-1'),
       modelId: 'gemini',
-      settings: undefined,
     })
     const fetchTool = tools.find((t) => t.name === 'web_fetch')!
     expect(
@@ -317,9 +309,8 @@ describe('web-tools', () => {
     const run = vi.fn(() => new Promise<never>(() => {}))
     const provider = createWebToolProvider({ run, cancel })
     const tools = await provider.tools({
-      profileId: 'prof-1',
+      ...toolContext('prof-1'),
       modelId: 'gemini',
-      settings: undefined,
     })
     const promise = tools
       .find((t) => t.name === 'web_fetch')!
@@ -340,9 +331,8 @@ describe('web-tools', () => {
     const run = vi.fn()
     const provider = createWebToolProvider({ run })
     const tools = await provider.tools({
-      profileId: 'prof-1',
+      ...toolContext('prof-1'),
       modelId: 'gemini',
-      settings: undefined,
     })
 
     const searchTool = tools.find((t) => t.name === 'web_search')!
@@ -368,9 +358,8 @@ describe('web-tools', () => {
     )
     const provider = createWebToolProvider({ run })
     const tools = await provider.tools({
-      profileId: 'prof-1',
+      ...toolContext('prof-1'),
       modelId: 'gemini',
-      settings: undefined,
     })
 
     const searchTool = tools.find((t) => t.name === 'web_search')!
@@ -389,9 +378,8 @@ describe('web-tools', () => {
   it('provides grounding instructions to avoid fabricating unverified facts or URLs', () => {
     const provider = createWebToolProvider({ run: vi.fn() })
     const instructions = provider.instructions?.({
-      profileId: null,
+      ...toolContext(null),
       modelId: 'gemini',
-      settings: undefined,
     })
 
     expect(instructions).toContain('web_search')

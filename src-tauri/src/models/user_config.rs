@@ -73,6 +73,33 @@ pub fn profile_chat_history(config: &Value) -> ChatHistoryConfig {
     section_at(config, "/aiProfiles/chatHistory")
 }
 
+/// Whether the "Ask AI" chat may search and read the web:
+/// `llm.tasks.chat.isWebSearchEnabled`, on when unset.
+pub fn is_ask_ai_web_search_enabled(config: &Value) -> bool {
+    config
+        .pointer("/llm/tasks/chat/isWebSearchEnabled")
+        .and_then(Value::as_bool)
+        .unwrap_or(true)
+}
+
+/// The tool whitelist of the AI command `command_id`, as stored; empty when
+/// there is no such AI command.
+pub fn ai_command_tools(config: &Value, command_id: &str) -> Vec<Value> {
+    config
+        .get("commands")
+        .and_then(Value::as_array)
+        .and_then(|commands| {
+            commands.iter().find(|command| {
+                command.get("id").and_then(Value::as_str) == Some(command_id)
+                    && command.get("operationId").and_then(Value::as_str) == Some("core.aiTask")
+            })
+        })
+        .and_then(|command| command.pointer("/operationConfig/tools"))
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default()
+}
+
 /// `editor.history`.
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]

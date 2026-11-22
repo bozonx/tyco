@@ -1,12 +1,11 @@
+import { toolContext } from '../../test/chat-tool-context'
 import { describe, expect, it } from 'vitest'
 
 import {
   createReplyBlocksTool,
   createReplyBlocksToolProvider,
   extractReplyBlocks,
-  REPLY_BLOCKS_TOOL_GROUP_ID,
   REPLY_BLOCKS_TOOL_NAME,
-  withReplyBlocksToolGroup,
 } from './reply-blocks-tool'
 
 describe('reply-blocks-tool', () => {
@@ -43,7 +42,7 @@ describe('reply-blocks-tool', () => {
     it('creates tool definition with expected metadata and schema', async () => {
       const tool = createReplyBlocksTool()
       expect(tool.name).toBe(REPLY_BLOCKS_TOOL_NAME)
-      expect(tool.groupId).toBe(REPLY_BLOCKS_TOOL_GROUP_ID)
+      expect(tool.source).toEqual({ kind: 'core', id: 'replyBlocks' })
       expect(tool.inputSchema.required).toContain('blocks')
 
       const result = await tool.execute(
@@ -65,35 +64,12 @@ describe('reply-blocks-tool', () => {
       expect(provider.id).toBe('reply-blocks')
 
       const tools = await provider.tools({
-        profileId: null,
+        ...toolContext(null),
         modelId: 'test-model',
-        settings: undefined,
       })
 
       expect(tools).toHaveLength(1)
       expect(tools[0].name).toBe(REPLY_BLOCKS_TOOL_NAME)
-    })
-  })
-
-  describe('withReplyBlocksToolGroup', () => {
-    it('adds replyBlocks group to settings with enabled allow access', () => {
-      const settings = withReplyBlocksToolGroup(undefined)
-      expect(settings.groups[REPLY_BLOCKS_TOOL_GROUP_ID]).toEqual({
-        isEnabled: true,
-        access: 'allow',
-      })
-    })
-
-    it('preserves other existing groups', () => {
-      const initial = {
-        groups: { files: { isEnabled: true, access: 'ask' as const } },
-      }
-      const settings = withReplyBlocksToolGroup(initial)
-      expect(settings.groups.files).toEqual({ isEnabled: true, access: 'ask' })
-      expect(settings.groups[REPLY_BLOCKS_TOOL_GROUP_ID]).toEqual({
-        isEnabled: true,
-        access: 'allow',
-      })
     })
   })
 })

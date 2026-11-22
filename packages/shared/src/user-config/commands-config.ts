@@ -1,3 +1,4 @@
+import type { ToolRef, ToolRisk } from './tools-config'
 import configDefaults from '../user-config-defaults.json' with { type: 'json' }
 import type { ShortcutSlots } from './translation-config'
 
@@ -111,23 +112,21 @@ export const COMMAND_RUN_TIMEOUT_MAX_SEC = 3600
 
 /**
  * `operationConfig` of an AI command, a command of the `core.aiTask` tool: an
- * LLM agent that follows `prompt` and may call the commands of
- * `allowedCommandIds`
+ * LLM agent that follows `prompt` and may call the tools of `tools`
  */
 export interface AiCommandOperationConfig {
   prompt: string
-  /** The commands the agent may run; never the command itself */
-  allowedCommandIds: string[]
   /**
-   * Maximum command calls per run, 1 to `MAX_TOOL_STEPS`; the final answer does
+   * The whitelist of the agent: commands (never the command itself), the web,
+   * plugin tools, MCP tools. All of them run without asking; empty for an agent
+   * without tools
+   */
+  tools: ToolRef[]
+  /**
+   * Maximum tool calls per run, 1 to `MAX_TOOL_STEPS`; the final answer does
    * not consume a call. `llm.maxToolSteps` when unset
    */
   maxSteps?: number
-  /**
-   * Whether the agent is allowed to invoke tools (allowed commands). Defaults
-   * to true if omitted
-   */
-  isToolsEnabled?: boolean
 }
 
 /** `operationConfig` of a `webhook` command */
@@ -257,6 +256,11 @@ export interface CommandConfig {
   isEnabled: boolean
   /** The platforms it runs on; absent or empty for every one */
   platforms?: CommandPlatform[]
+  /**
+   * What the command may do when an AI calls it, as the user judges it;
+   * `external` when unset, since Tyco cannot know
+   */
+  aiRisk?: ToolRisk
 }
 
 /** A command of the library placed in the action menu */

@@ -7,9 +7,10 @@ import {
 import type {
   AiAttachedFile,
   ProfileMemoryMode,
-  ProfileToolSettings,
   ProjectAccessMode,
-  ToolGroupSettings,
+  ToolCallContext,
+  ToolPolicy,
+  ToolRisk,
 } from '@tyco/shared'
 import type { JsonSchema } from '@tyco/plugin-sdk'
 
@@ -18,7 +19,17 @@ import {
   normalizeToolOutput,
   TOOL_OUTPUT_CHARACTERS,
 } from './chat-tool-output'
-import { chatToolApprovalKey, type ChatToolPolicy } from './chat-tool-policy'
+import {
+  chatToolApprovalKey,
+  stricterAccess,
+  type ChatToolPolicy,
+} from './chat-tool-policy'
+import {
+  toolKey,
+  toolStateIn,
+  type ToolScope,
+  type ToolSourceRef,
+} from './tool-catalog'
 import { MAX_TOOL_NAME_LENGTH } from './tool-name'
 
 /** Names the AI providers accept for a tool */
@@ -48,8 +59,23 @@ export interface ChatToolPreview {
 export interface ChatToolDefinition {
   /** Unique in a request; what the model calls the tool by */
   name: string
-  /** The group whose settings decide whether it is offered and how freely */
-  groupId: string
+  /** Where the tool comes from; its settings decide whether it is offered */
+  source: ToolSourceRef
+  /**
+   * The tool's name in the settings, unique in its source; the model's name
+   * when absent. A command's is its id, say
+   */
+  catalogName?: string
+  /** What the tool may do, which sets its default policy */
+  risk: ToolRisk
+  /** The policy when the user set none, over the one of its risk */
+  defaultPolicy?: ToolPolicy
+  /** A tool of a plugin that does not come with Tyco: it asks by default */
+  isThirdParty?: boolean
+  /** The plugin's permissions, shown when a call asks */
+  capabilities?: readonly string[]
+  /** The name of the plugin, MCP server or command, shown when a call asks */
+  sourceLabel?: string
   /** The name the chat shows: an i18n key for a core tool */
   labelKey?: string
   /** The name the chat shows when it comes from a plugin or MCP server */
@@ -61,9 +87,29 @@ export interface ChatToolDefinition {
   inputSchema: JsonSchema
   /**
    * The access of one call, when it depends on the input — a path in a
-   * read-only project, say. The group's access when absent or undefined
+   * read-only project, say. Never freer than the tool's policy
    */
   accessFor?(input: unknown): ProjectAccessMode | undefined
+  /**
+   * What "always allow" of a call raises, when not the tool's policy: the
+   * permission of the project a path is in, say. Undefined when the call cannot
+   * be allowed for good
+   */
+  alwaysAllowTarget?(input: unknown): ChatToolAlwaysAllowTarget | undefined
+  /**
+   * Where a call may send data out, once the conversation holds personal data:
+   * asked about once per target in a chat, even when allowed. A tool of the
+   * `external` risk is a target of its own when absent; undefined for a call
+   * that sends nothing new out, e.g. a page the conversation named
+   */
+  leakTarget?(
+    input: unknown,
+    isKnownUrl: (url: string) => boolean
+  ): string | undefined
+  /** Its calls bring personal data into the conversation: files, memory */
+  readsPersonalData?: boolean
+  /** Its output names URLs the model may then read, e.g. search results */
+  givesKnownUrls?: boolean
   /**
    * What "allow in this session" covers besides the tool, e.g. the project a
    * path is in. The whole tool when absent
@@ -88,12 +134,26 @@ export interface ChatToolDefinition {
   execute(input: unknown, options: ChatToolExecuteOptions): Promise<unknown>
 }
 
+/** What "always allow" of a call writes into the profile */
+export type ChatToolAlwaysAllowTarget =
+  /** The tool's policy becomes `allow` */
+  | { kind: 'tool'; source: ToolSourceRef; toolName: string }
+  /** The project's permissions for these operations become `allow` */
+  | {
+      kind: 'project'
+      projectId: string
+      operations: readonly ('read' | 'write' | 'delete')[]
+    }
+
 /** What a request offers tools for */
 export interface ChatToolContext {
-  /** Null for "Ask AI" */
+  /** Null outside a profile chat */
   profileId: string | null
   modelId: string
-  settings: ProfileToolSettings | undefined
+  /** Where the tools are offered, which decides about each of them */
+  scope: ToolScope
+  /** Where Rust is told the calls come from */
+  callContext: ToolCallContext
   /** Profile long-term memory mode */
   memoryMode?: ProfileMemoryMode
   /** The originals attached to the conversation, by the names the model uses */
@@ -131,8 +191,27 @@ export interface ChatToolSet {
   truncatedCallIds: ReadonlySet<string>
   /** What "allow in this session" of a call is remembered by */
   approvalKey(toolName: string, input: unknown): string
+  /** What the user is told of a call that asks, and may answer it with */
+  approvalInfo(toolName: string, input: unknown): ChatToolApprovalInfo
   /** Added to the system instructions; absent when no provider has any */
   instructions?: string
+}
+
+/** What the user is shown of a call that asks */
+export interface ChatToolApprovalInfo {
+  /** What "allow in this chat" is remembered by */
+  approvalKey: string
+  source: ToolSourceRef
+  risk: ToolRisk
+  capabilities?: readonly string[]
+  sourceLabel?: string
+  /**
+   * The call asks only because the conversation holds personal data and it may
+   * send it somewhere new; allowing it allows the target for the chat
+   */
+  leakTarget?: string
+  /** What "always allow" raises; absent when it cannot be offered */
+  alwaysAllow?: ChatToolAlwaysAllowTarget
 }
 
 export interface ChatToolRegistryDependencies {
@@ -142,32 +221,38 @@ export interface ChatToolRegistryDependencies {
   warn?: (message: string) => void
 }
 
-const groupOf = (
-  settings: ProfileToolSettings | undefined,
-  groupId: string
-): ToolGroupSettings | undefined => settings?.groups[groupId]
+/** What the catalog decides a definition by */
+const catalogToolOf = (tool: ChatToolDefinition) => ({
+  source: tool.source,
+  name: tool.catalogName ?? tool.name,
+  risk: tool.risk,
+  ...(tool.defaultPolicy ? { defaultPolicy: tool.defaultPolicy } : {}),
+  ...(tool.isThirdParty ? { isThirdParty: true } : {}),
+})
 
 export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
   /**
-   * The tools the request may offer: those of enabled groups that are not
-   * denied outright. Null when there are none, so that a chat without tools
-   * sends exactly what it always did
+   * The tools the request may offer: those not off where they are offered. Null
+   * when there are none, so that a chat without tools sends exactly what it
+   * always did
    */
   async function resolve(
     context: ChatToolContext
   ): Promise<ChatToolSet | null> {
     const definitions = new Map<string, ChatToolDefinition>()
+    const policies = new Map<string, ToolPolicy>()
     const instructions: string[] = []
     for (const provider of deps.providers()) {
       let isOffered = false
       for (const tool of await provider.tools(context)) {
-        const group = groupOf(context.settings, tool.groupId)
-        if (!group?.isEnabled || group.access === 'deny') continue
+        const state = toolStateIn(context.scope, catalogToolOf(tool))
+        if (state === 'off') continue
         if (!TOOL_NAME.test(tool.name) || definitions.has(tool.name)) {
           deps.warn?.(`Chat tool "${tool.name}" of ${provider.id} is skipped`)
           continue
         }
         definitions.set(tool.name, tool)
+        policies.set(tool.name, state)
         isOffered = true
       }
       const text = isOffered ? provider.instructions?.(context)?.trim() : ''
@@ -206,6 +291,8 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
             )
             usedCharacters = output.text.length
             if (output.isTruncated) truncatedCallIds.add(toolCallId)
+            if (tool.readsPersonalData) deps.policy.notePersonalData()
+            if (tool.givesKnownUrls) deps.policy.noteKnownText(output.text)
             return output.text
           } finally {
             remainingCharacters += limitCharacters - usedCharacters
@@ -220,15 +307,71 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
         definitions.get(toolName)?.approvalScope?.(input)
       )
 
+    /** The call's access by the tool's policy and by its input */
+    const accessOf = (tool: ChatToolDefinition, input: unknown) =>
+      stricterAccess(
+        policies.get(tool.name) ?? 'ask',
+        tool.accessFor?.(input) ?? 'allow'
+      )
+
+    /**
+     * The target a call asks about because the conversation holds personal
+     * data; only where somebody can answer, and not once allowed in the chat
+     */
+    const leakTargetOf = (tool: ChatToolDefinition, input: unknown) => {
+      if (context.scope.kind !== 'profile' || !deps.policy.hasPersonalData())
+        return undefined
+      const target = tool.leakTarget
+        ? tool.leakTarget(input, deps.policy.isKnownUrl)
+        : tool.risk === 'external'
+          ? toolKey(tool.source, tool.catalogName ?? tool.name)
+          : undefined
+      return target && !deps.policy.isLeakAllowed(target) ? target : undefined
+    }
+
     const toolApproval: ToolApproval = ({ toolCall }) => {
       const tool = definitions.get(toolCall.toolName)
       if (!tool) return 'denied'
-      const groupAccess =
-        groupOf(context.settings, tool.groupId)?.access ?? 'deny'
-      return deps.policy.decide(
-        approvalKey(tool.name, toolCall.input),
-        tool.accessFor?.(toolCall.input) ?? groupAccess
-      )
+      const access = accessOf(tool, toolCall.input)
+      if (access === 'allow' && leakTargetOf(tool, toolCall.input))
+        return 'user-approval'
+      return deps.policy.decide(approvalKey(tool.name, toolCall.input), access)
+    }
+
+    const approvalInfo = (
+      toolName: string,
+      input: unknown
+    ): ChatToolApprovalInfo => {
+      const key = approvalKey(toolName, input)
+      const tool = definitions.get(toolName)
+      if (!tool)
+        return {
+          approvalKey: key,
+          source: { kind: 'core', id: '' },
+          risk: 'external',
+        }
+      const isLeakCheck = accessOf(tool, input) === 'allow'
+      const leakTarget = isLeakCheck ? leakTargetOf(tool, input) : undefined
+      // "always allow" is a profile's, and pointless for a policy already `allow`
+      const alwaysAllow =
+        context.scope.kind === 'profile' && !leakTarget
+          ? tool.alwaysAllowTarget
+            ? tool.alwaysAllowTarget(input)
+            : {
+                kind: 'tool' as const,
+                source: tool.source,
+                toolName: tool.catalogName ?? tool.name,
+              }
+          : undefined
+      return {
+        approvalKey: key,
+        source: tool.source,
+        risk: tool.risk,
+        ...(tool.capabilities ? { capabilities: tool.capabilities } : {}),
+        ...(tool.sourceLabel ? { sourceLabel: tool.sourceLabel } : {}),
+        ...(leakTarget ? { leakTarget } : {}),
+        ...(alwaysAllow ? { alwaysAllow } : {}),
+      }
     }
 
     return {
@@ -237,6 +380,7 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
       definitions,
       truncatedCallIds,
       approvalKey,
+      approvalInfo,
       ...(instructions.length
         ? { instructions: instructions.join('\n\n') }
         : {}),

@@ -549,6 +549,7 @@ mod tests {
                         ProjectPermission {
                             read: ProjectAccessMode::Allow,
                             write: ProjectAccessMode::Ask,
+                            delete: ProjectAccessMode::Ask,
                         },
                     )
                 })

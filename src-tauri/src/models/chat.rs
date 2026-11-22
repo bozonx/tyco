@@ -142,6 +142,22 @@ pub struct Chat {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub is_quick_request: Option<bool>,
+    /// What the user allowed "in this chat"; given back when it is reopened.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub tool_permissions: Option<ChatToolPermissions>,
+}
+
+/// The tool permissions a chat keeps for itself.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct ChatToolPermissions {
+    /// The approval keys allowed for the chat.
+    #[serde(default)]
+    pub allowed: Vec<String>,
+    /// The targets allowed to receive data once the chat held personal data.
+    #[serde(default)]
+    pub leak_allowed: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ts_rs::TS)]

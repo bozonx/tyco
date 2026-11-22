@@ -400,7 +400,6 @@ describe('SettingsLlmTab.vue', () => {
       'settings.maxToolSteps',
       'settings.webJinaApiKey',
       'settings.webFetchMaxCharacters',
-      'settings.askAiWebAccess',
     ])
 
     const modeControl = wrapper.findComponent({ name: 'SegmentedControl' })
@@ -424,7 +423,6 @@ describe('SettingsLlmTab.vue', () => {
       'settings.maxToolSteps',
       'settings.webJinaApiKey',
       'settings.webFetchMaxCharacters',
-      'settings.askAiWebAccess',
     ])
   })
 })

@@ -1,5 +1,9 @@
 import type { InputConfigItem } from './config.js'
-import type { OperationDefinition } from './operations.js'
+import type {
+  JsonSchema,
+  OperationDefinition,
+  OperationResult,
+} from './operations.js'
 
 export const PLUGIN_API_VERSION = 2
 export type PluginCapability = 'editor' | 'browser' | 'notes'
@@ -107,6 +111,40 @@ export interface EditorInputSnapshot {
   selectionEnd: number
   revision: number
 }
+/**
+ * What a chat tool may do: `read` has no side effects, `write` changes the
+ * user's data, `destructive` deletes or cannot be undone, `external` acts in
+ * the world or outside the app's data. A plugin with `notes` or `browser`
+ * declares `external`: it reaches past the app with them. The host shows the
+ * risk; it asks before each call of a third-party plugin whatever it is
+ */
+export type ChatToolRisk = 'read' | 'write' | 'destructive' | 'external'
+
+export const CHAT_TOOL_RISKS: readonly ChatToolRisk[] = [
+  'read',
+  'write',
+  'destructive',
+  'external',
+]
+
+/**
+ * A tool the model of a profile chat may call. It gets the input the model gave
+ * and no access to the profile's files: a file the tool needs comes as text in
+ * the input. It runs with the plugin's capabilities
+ */
+export interface ChatToolContribution {
+  id: string
+  labelKey: string
+  /** What the tool does and when to use it, for the model, in English */
+  description: string
+  inputSchema: JsonSchema
+  risk: ChatToolRisk
+  run(
+    input: Record<string, unknown>,
+    context: { signal: AbortSignal }
+  ): OperationResult | Promise<OperationResult>
+}
+
 export interface PluginContext {
   readonly signal: AbortSignal
   onDispose(cleanup: () => void | Promise<void>): void
@@ -116,6 +154,8 @@ export interface PluginContext {
   registerFormatItems(items: EditContribution[]): PluginDisposer
   registerToolbarItems(items: ToolbarContribution[]): PluginDisposer
   registerOperations(items: OperationDefinition[]): PluginDisposer
+  /** Tools for the model of a profile chat, see `ChatToolContribution` */
+  registerChatTools(items: ChatToolContribution[]): PluginDisposer
   getEditorInputValue(): Promise<string>
   getEditorInputSelectedText(): Promise<string>
   getEditorInputSnapshot(): Promise<EditorInputSnapshot>

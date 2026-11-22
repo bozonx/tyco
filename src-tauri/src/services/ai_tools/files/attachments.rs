@@ -78,6 +78,7 @@ impl<'a> Attachments<'a> {
             description: Some("Files attached to this conversation, read-only".into()),
             read: ProjectAccessMode::Allow,
             write: ProjectAccessMode::Deny,
+            delete: ProjectAccessMode::Deny,
             dir: Default::default(),
             has_project_file: false,
             unavailable: None,

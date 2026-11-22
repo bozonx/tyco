@@ -22,8 +22,8 @@ describe('chat-tool-approvals', () => {
       'a2',
     ])
 
-    approvals.answer('a2', 'allow-session')
     approvals.answer('a1', 'deny')
+    approvals.answer('a2', 'allow-session')
     approvals.answer('a1', 'allow-once')
 
     expect(await first).toBe('deny')
@@ -46,5 +46,45 @@ describe('chat-tool-approvals', () => {
     const left = approvals.request(request('a3'), new AbortController().signal)
     approvals.cancelAll()
     expect(await left).toBe('deny')
+  })
+
+  it('allows the waiting calls of the same key, and a batch at once', async () => {
+    const approvals = createChatToolApprovals()
+    const signal = new AbortController().signal
+    const ask = (approvalId: string, extra: object) =>
+      approvals.request({ ...request(approvalId), ...extra }, signal)
+
+    const a = ask('a1', { approvalKey: 'k', batchId: 's' })
+    const b = ask('a2', { approvalKey: 'k', batchId: 's' })
+    const c = ask('a3', { approvalKey: 'other', batchId: 's' })
+    approvals.answer('a1', 'allow-session')
+    expect(await a).toBe('allow-session')
+    expect(await b).toBe('allow-once')
+    expect(approvals.isPending('a3')).toBe(true)
+
+    const d = ask('a4', { approvalKey: 'x', batchId: 't' })
+    approvals.answer('a3', 'allow-batch')
+    expect(await c).toBe('allow-once')
+    expect(approvals.isPending('a4')).toBe(true)
+    approvals.answer('a4', 'deny')
+    expect(await d).toBe('deny')
+  })
+
+  it('allows the calls to the same leak target together', async () => {
+    const approvals = createChatToolApprovals()
+    const signal = new AbortController().signal
+    const a = approvals.request(
+      { ...request('a1'), approvalKey: 'k1', leakTarget: 'host:x' },
+      signal
+    )
+    const b = approvals.request(
+      { ...request('a2'), approvalKey: 'k2', leakTarget: 'host:x' },
+      signal
+    )
+    approvals.answer('a1', 'allow-once')
+    expect(await a).toBe('allow-once')
+    expect(approvals.isPending('a2')).toBe(true)
+    approvals.answer('a2', 'allow-session')
+    expect(await b).toBe('allow-session')
   })
 })

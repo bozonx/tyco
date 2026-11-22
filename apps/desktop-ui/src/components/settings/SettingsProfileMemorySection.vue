@@ -267,18 +267,12 @@ const secretsStore = useSecretsStore()
 
 const modeOptions = computed(() => [
   { id: 'auto', name: t('settings.profileMemoryModeAuto') },
-  { id: 'ask', name: t('settings.profileMemoryModeAsk') },
   { id: 'read-only', name: t('settings.profileMemoryModeReadOnly') },
   { id: 'off', name: t('settings.profileMemoryModeOff') },
 ])
 
 function handleModeChange(value: number | string | undefined) {
-  if (
-    value === 'auto' ||
-    value === 'ask' ||
-    value === 'read-only' ||
-    value === 'off'
-  ) {
+  if (value === 'auto' || value === 'read-only' || value === 'off') {
     emit('update:memoryMode', value)
   }
 }

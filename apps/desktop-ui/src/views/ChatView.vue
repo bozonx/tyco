@@ -32,6 +32,14 @@
     <div class="chat-main">
       <div v-if="profile" class="profile-header">
         <span class="profile-name">{{ profile.name }}</span>
+        <button
+          type="button"
+          class="profile-capabilities"
+          :title="t('toolPermissions.summaryTitle')"
+          @click="openProfileSettings"
+        >
+          {{ capabilitiesText }}
+        </button>
         <div class="profile-header-actions">
           <IconButton
             class="profile-memory-indicator"
@@ -65,10 +73,12 @@ import {
   resolveChatScope,
 } from '../composables/use-chat-scope'
 import { useI18n } from '../composables/use-i18n'
+import { profileCapabilities } from '../lib/ai-profiles/profile-capabilities'
 import { appNavigation } from '../navigation'
 import { useAiProfilesStore } from '../stores/ai-profiles'
 import { useChatLayoutStore } from '../stores/chat-layout'
 import { useDesktopStore } from '../stores/desktop'
+import { usePluginChatToolsStore } from '../stores/plugin-chat-tools'
 import type { ProfileMemoryMode } from '@tyco/shared'
 
 const desktopStore = useDesktopStore()
@@ -100,7 +110,6 @@ const profile = computed(() =>
 
 const MEMORY_MODE_ICONS: Record<ProfileMemoryMode, string> = {
   auto: 'mdi:brain',
-  ask: 'mdi:shield-check',
   'read-only': 'mdi:eye-outline',
   off: 'mdi:database-off-outline',
 }
@@ -108,6 +117,21 @@ const MEMORY_MODE_ICONS: Record<ProfileMemoryMode, string> = {
 const memoryModeIcon = computed(
   () => MEMORY_MODE_ICONS[profile.value?.memoryMode ?? 'auto']
 )
+
+const pluginChatTools = usePluginChatToolsStore()
+/** What the agent may do, in short; its settings are a click away */
+const capabilitiesText = computed(() => {
+  if (!profile.value) return ''
+  const pluginIds = [
+    ...new Set(pluginChatTools.tools.map((tool) => tool.pluginId)),
+  ]
+  const parts = profileCapabilities(
+    profile.value,
+    desktopStore.userConfig?.tools,
+    pluginIds
+  ).map((part) => (part.params ? t(part.key, part.params) : t(part.key)))
+  return parts.length ? parts.join(' · ') : t('toolPermissions.summaryNothing')
+})
 
 const memoryModeTooltip = computed(() => {
   const mode = profile.value?.memoryMode ?? 'auto'
@@ -192,6 +216,20 @@ onMounted(() => {
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.profile-capabilities {
+  min-width: 0;
+  overflow: hidden;
+  border: 0;
+  background: none;
+  color: var(--app-text-muted);
+  font-size: var(--text-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.profile-capabilities:hover {
+  color: var(--color-base-content);
 }
 .profile-header-actions {
   display: flex;

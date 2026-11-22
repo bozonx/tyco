@@ -76,24 +76,30 @@
       </SettingsSection>
 
       <SettingsProfileToolsSection
-        v-if="CHAT_TOOL_GROUPS.length > 0"
-        :groups="CHAT_TOOL_GROUPS"
+        :sources="toolSources"
         :tools="profile.tools"
+        :catalog="desktopStore.userConfig?.tools"
         @update="changeSettings({ tools: $event })"
       >
-        <template #group="{ group, settings }">
-          <div v-if="group.id === COMMANDS_TOOL_GROUP_ID" class="pt-2">
-            <SettingsProfileCommandTools
-              :commands="commands"
-              :selected-ids="settings.commandIds ?? []"
-              :current-platform="desktopStore.userData?.platform"
-              @toggle="
-                (id, enabled) => toggleProfileCommand(group, id, enabled)
-              "
-              @update-selected="(ids) => setProfileCommands(group, ids)"
-            />
-          </div>
-        </template>
+        <SettingsEntityItem
+          icon="mdi:console-line"
+          icon-tone="secondary"
+          :title="t('chatTools.commands.group')"
+          :info="t('chatTools.commands.groupHint')"
+        >
+          <Badge tone="muted">
+            {{ t('toolPermissions.contextTokens', { count: commandTokens }) }}
+          </Badge>
+        </SettingsEntityItem>
+        <div class="pt-2">
+          <SettingsProfileCommandTools
+            :commands="commands"
+            :selected-ids="profile.tools?.commandIds ?? []"
+            :current-platform="desktopStore.userData?.platform"
+            @toggle="toggleProfileCommand"
+            @update-selected="setProfileCommands"
+          />
+        </div>
       </SettingsProfileToolsSection>
 
       <SettingsSection
@@ -112,6 +118,7 @@
             :projects="projects"
             :permissions="profile.projectPermissions"
             @change="setProjectAccess"
+            @delete-allowed="setProjectDeleteAllowed"
             @open="(projectId) => navigate(projectTab(projectId))"
           />
         </div>
@@ -169,6 +176,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { useBusyAction } from '../../composables/use-busy-action'
 import { useI18n } from '../../composables/use-i18n'
+import { usePluginToolSources } from '../../composables/use-plugin-tool-sources'
 import { useRetryToast } from '../../composables/use-retry-toast'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import { useSettingsDraft } from '../../composables/use-settings-draft'
@@ -179,14 +187,13 @@ import {
   type ProjectAccessLevel,
   hasFileToolsOff,
   withProjectAccess,
+  withProjectDeleteAllowed,
 } from '../../lib/ai-profiles/project-access'
+import { withCommandSelected } from '../../lib/chat-tools/tool-catalog'
 import {
-  CHAT_TOOL_GROUPS,
-  COMMANDS_TOOL_GROUP_ID,
-  type ChatToolGroup,
-  toolGroupSettings,
-  withToolGroup,
-} from '../../lib/chat-tools/chat-tool-groups'
+  CORE_CATALOG,
+  estimateToolTokens,
+} from '../../lib/chat-tools/tool-catalog-entries'
 import {
   AI_OVERVIEW_TAB,
   NEW_ENTITY_ID,
@@ -194,6 +201,7 @@ import {
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useDesktopStore } from '../../stores/desktop'
+import Badge from '../common/Badge.vue'
 import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
@@ -203,6 +211,7 @@ import PathDisplay from '../common/PathDisplay.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
+import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsProfileCommandTools from './SettingsProfileCommandTools.vue'
 import SettingsProfileMemorySection from './SettingsProfileMemorySection.vue'
 import SettingsProfileProjectAccess from './SettingsProfileProjectAccess.vue'
@@ -219,27 +228,57 @@ const desktopStore = useDesktopStore()
 
 const commands = computed(() => desktopStore.userConfig?.commands ?? [])
 
-function toggleProfileCommand(
-  group: ChatToolGroup,
-  commandId: string,
-  enabled: boolean
-) {
+const pluginToolSources = usePluginToolSources()
+const toolSources = computed(() => [
+  ...CORE_CATALOG,
+  ...pluginToolSources.value,
+])
+
+function toggleProfileCommand(commandId: string, enabled: boolean) {
   // the ids of removed commands go with any change of the list
   const known = new Set(commands.value.map((command) => command.id))
-  const current = (
-    toolGroupSettings(profile.value?.tools, group).commandIds ?? []
-  ).filter((id) => known.has(id))
-  const next = enabled
-    ? [...new Set([...current, commandId])]
-    : current.filter((id) => id !== commandId)
+  const tools = withCommandSelected(profile.value?.tools, commandId, enabled)
   void changeSettings({
-    tools: withToolGroup(profile.value?.tools, group, { commandIds: next }),
+    tools: {
+      ...tools,
+      commandIds: tools.commandIds.filter((id) => known.has(id)),
+    },
   })
 }
 
-function setProfileCommands(group: ChatToolGroup, commandIds: string[]) {
+function setProfileCommands(commandIds: string[]) {
   void changeSettings({
-    tools: withToolGroup(profile.value?.tools, group, { commandIds }),
+    tools: {
+      ...withCommandSelected(profile.value?.tools, '', false),
+      commandIds,
+    },
+  })
+}
+
+/** About how much of the context the picked commands take */
+const commandTokens = computed(() => {
+  const selected = new Set(profile.value?.tools?.commandIds ?? [])
+  return commands.value
+    .filter((command) => selected.has(command.id))
+    .reduce(
+      (total, command) =>
+        total +
+        estimateToolTokens({
+          name: command.id,
+          description: command.description,
+        }),
+      0
+    )
+})
+
+function setProjectDeleteAllowed(projectId: string, isAllowed: boolean) {
+  if (!profile.value) return
+  void changeSettings({
+    projectPermissions: withProjectDeleteAllowed(
+      profile.value.projectPermissions,
+      projectId,
+      isAllowed
+    ),
   })
 }
 

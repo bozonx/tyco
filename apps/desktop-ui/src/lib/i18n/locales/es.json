@@ -126,7 +126,7 @@
     "stop": "Detener",
     "stopped": "Detenido",
     "toolAllow": "Permitir",
-    "toolAllowSession": "Permitir en esta sesión",
+    "toolAllowSession": "Permitir en este chat",
     "toolApprovalQuestion": "¿Permitir que se ejecute {tool}?",
     "toolArguments": "Argumentos",
     "toolDeny": "Denegar",
@@ -155,7 +155,10 @@
       "workspace": "Archivos",
       "workspaceHint": "Los archivos del perfil: guardados fuera del historial de chats y disponibles en todos los chats del perfil"
     },
-    "takeScreenshot": "Hacer captura de pantalla"
+    "takeScreenshot": "Hacer captura de pantalla",
+    "toolAllowBatch": "Permitir las {count}",
+    "toolAllowAlways": "Permitir siempre",
+    "toolAllowAlwaysWriteDelete": "Permitir siempre escribir y eliminar"
   },
   "chatTools": {
     "files": {
@@ -188,12 +191,12 @@
     "web": {
       "fetchLabel": "Leer página web",
       "group": "Búsqueda web",
-      "groupHint": "Busque en la web y obtenga páginas web mediante Jina AI. «Preguntar» pide confirmación antes de cada llamada.",
+      "groupHint": "Buscar en la web y leer páginas con Jina AI.",
       "searchLabel": "Búsqueda web"
     },
     "commands": {
       "group": "Comandos",
-      "groupHint": "Permitir que el modelo ejecute los comandos seleccionados. Solo se pueden elegir comandos con una descripción para la IA. «Preguntar» pide confirmación antes de cada llamada.",
+      "groupHint": "El modelo puede ejecutar los comandos elegidos. Solo se pueden elegir comandos con una descripción para la IA. Cada llamada pregunta antes, salvo que la permitas.",
       "needsDescription": "Requiere una descripción para la IA en la configuración del comando",
       "noCommands": "Aún no se han configurado comandos personalizados.",
       "noCommandsHint": "Cree comandos primero en Configuración → Comandos.",
@@ -224,8 +227,6 @@
     "afterRunCopy": "Al portapapeles",
     "afterRunInsert": "Insertar en la ventana",
     "afterRunShowResult": "Mostrar el resultado",
-    "aiAllowedCommands": "Comandos que puede ejecutar",
-    "aiAllowedCommandsInfo": "La IA ejecuta estos comandos sin preguntar cuando el prompt los necesita. Un comando nunca se ejecuta a sí mismo ni a un comando de IA que lo llamó.",
     "aiDescription": "Un comando de IA procesa el texto según tu instrucción en un solo paso, sin diálogo, y puede ejecutar los comandos que le permitas. Para iniciar una conversación con la IA, usa los prompts. Este modelo se usa para todos los comandos de IA.",
     "aiMaxSteps": "Límite de pasos",
     "aiMaxStepsInfo": "Número máximo de comandos que puede ejecutar la IA. La respuesta final no cuenta para este límite. Déjalo vacío para usar el límite de los ajustes de LLM.",
@@ -234,8 +235,6 @@
     "aiPromptLabel": "Prompt",
     "aiPromptPlaceholder": "P. ej. Busca la fecha y la hora en el texto y añade el evento a mi calendario",
     "aiTaskModel": "Modelo para comandos de IA",
-    "aiToolsEnabledInfo": "Cuando está habilitado, la IA puede invocar otros comandos permitidos.",
-    "aiToolsEnabledLabel": "Permitir herramientas",
     "badgeAi": "Disponible para IA (tiene descripción)",
     "badgeExternal": "Disponible externamente (CLI, D-Bus)",
     "badgeInLauncher": "Acciones: página {page} ({key})",
@@ -323,7 +322,14 @@
     "unnamed": "Comando sin título",
     "variablesNotSet": "Una variable que usa no tiene valor en este dispositivo",
     "voiceOutputActionHint": "Al ejecutarse por voz, este comando siempre abre el menú del resultado.",
-    "warningExternalNameTwins": "Otros comandos tienen el mismo nombre: {names}. Una llamada con este nombre se rechaza por ambigua; usa el ID."
+    "warningExternalNameTwins": "Otros comandos tienen el mismo nombre: {names}. Una llamada con este nombre se rechaza por ambigua; usa el ID.",
+    "aiTools": "Herramientas del agente",
+    "aiToolsInfo": "Lo que el agente puede llamar. Todo lo de la lista se ejecuta sin preguntar, porque un comando de IA suele ejecutarse sin ventana donde preguntar. Los archivos y la memoria nunca están disponibles para él.",
+    "aiToolsUnavailable": "No disponibles ahora",
+    "aiToolUnavailable": "No disponible",
+    "aiToolsRiskyWarning": "Algunas herramientas de la lista pueden cambiar o eliminar datos o actuar fuera de la aplicación, y se ejecutan sin preguntar.",
+    "aiRiskLabel": "Riesgo para la IA",
+    "aiRiskInfo": "Lo que el comando puede hacer cuando una IA lo llama. Tyco no puede saber qué hace un comando, así que cuenta como una acción fuera de la aplicación salvo que elijas otra cosa."
   },
   "common": {
     "add": "Agregar",
@@ -664,11 +670,9 @@
     "accessAsk": "Preguntar",
     "accessOff": "Desactivado",
     "accessLevel": "Acceso",
-    "accessLevelAskAll": "Preguntar para leer y escribir",
     "accessLevelFull": "Acceso completo",
     "accessLevelCustom": "Personalizado (definido a mano)",
     "accessLevelRead": "Solo lectura",
-    "accessLevelReadWriteAsk": "Lectura y escritura con confirmación",
     "accessRemove": "Quitar acceso",
     "actionAfterRunNone": "Nada",
     "actionCommandInfo": "Se ejecuta en la shell del sistema (sh, zsh o PowerShell). El comando recibe el texto solo donde aparece {placeholder}. Se reemplaza por el texto, ya entrecomillado y escapado, así que no hacen falta comillas alrededor.",
@@ -1062,7 +1066,6 @@
     "profileMemoryHardTopic": "Límite estricto superado (~4.000 tokens) — escritura bloqueada",
     "profileMemoryHint": "Hechos, preferencias estables y notas conservadas entre conversaciones.",
     "profileMemoryMode": "Modo de memoria",
-    "profileMemoryModeAsk": "Preguntar antes de escribir (requiere aprobación)",
     "profileMemoryModeAuto": "Automático (guarda sin preguntar)",
     "profileMemoryModeOff": "Desactivado",
     "profileMemoryModeReadOnly": "Solo lectura",
@@ -1076,12 +1079,11 @@
     "profileNotFoundHint": "Puede que se haya eliminado o que esté en otro espacio de trabajo.",
     "profileSoulPrompt": "Instrucción raíz (SOUL.md)",
     "profileSoulPromptHint": "La personalidad, el rol, el tono y las reglas de este asistente. Es todo lo que sigue el perfil: las instrucciones y reglas de «Preguntar a la IA» no se aplican. Se vuelve a leer antes de cada solicitud, así que también cuentan los cambios hechos en el disco. Puedes indicar requisitos distintos para cada entorno: chat o consultas rápidas.",
-    "profileToolAccess": "acceso",
     "maxToolSteps": "Pasos por respuesta",
     "maxToolStepsHint": "Cuántas veces puede el modelo llamar a herramientas en una respuesta, en todos los chats, solicitudes rápidas y comandos de IA. El límite evita bucles y gastos innecesarios.",
     "maxToolStepsInvalid": "Introduce un número entero del 1 al 50",
     "profileTools": "Herramientas",
-    "profileToolsHint": "Lo que el modelo del perfil puede hacer por su cuenta en el chat. Las llamadas configuradas como «Preguntar» esperan tu aprobación en el mensaje.",
+    "profileToolsHint": "Lo que puede usar el agente del perfil. Leer es libre; los cambios preguntan antes. Pon cada herramienta en Desactivado, Preguntar o Permitir. La memoria y el espacio de trabajo del perfil nunca preguntan.",
     "profileWebSearchLlmNotice": "La clave de API y el límite de tamaño de página se configuran globalmente en los ajustes de LLM.",
     "projectAccessFileToolsOff": "Herramientas de archivos desactivadas",
     "projectChangedElsewhere": "El proyecto se cambió en otro dispositivo o fuera de TyCo. Tus cambios aún no se guardaron.",
@@ -1311,8 +1313,6 @@
     "webJinaApiKey": "Clave de API de Jina AI",
     "webJinaApiKeyHint": "Opcional. Sin una clave, las solicitudes usan el nivel gratuito con límites compartidos.",
     "webSearchSectionHint": "Configuración para la búsqueda web y lectura de páginas usadas por los modelos y perfiles de IA.",
-    "askAiWebAccess": "Web en «Preguntar a la IA»",
-    "askAiWebAccessHint": "Si el chat «Preguntar a la IA», que no tiene perfil, puede buscar en la web y leer páginas. «Preguntar» espera tu aprobación antes de cada llamada. Los perfiles lo configuran en sus propias herramientas.",
     "translationVoiceCommand": "Comando de voz",
     "translationVoiceCommandInfo": "Incluye el comando de traducción en los comandos de voz («traduce al [idioma]»).",
     "dialogTab": "Diálogo",
@@ -1351,7 +1351,13 @@
       "projectLoses": "Estos perfiles pierden el acceso a él: {names}.",
       "externalFolder": "La carpeta externa se queda donde está; en otros ordenadores, configúrala de nuevo.",
       "otherDevices": "En los ordenadores donde el espacio de trabajo de destino no está conectado, desaparece hasta que se conecte allí."
-    }
+    },
+    "accessDeleteWithoutAsking": "Eliminar sin preguntar",
+    "accessLevelReadWrite": "Lectura y escritura",
+    "askAiWebSearch": "Búsqueda web",
+    "askAiWebSearchHint": "Permite que el chat «Preguntar a la IA» busque en la web y lea páginas sin preguntar. Nunca ve tus archivos, tu memoria ni tus comandos.",
+    "askAiFastModelsHint": "«Preguntar a la IA» funciona mejor con un modelo rápido: está pensado para respuestas rápidas y verificar datos.",
+    "toolsTab": "Herramientas"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {
@@ -1730,5 +1736,32 @@
     "translationModelNone": "No hay ningún modelo elegido para la traducción",
     "startCompact": "Iniciar en modo compacto",
     "route": "{from} → {to}"
+  },
+  "toolPermissions": {
+    "riskRead": "Lectura",
+    "riskWrite": "Cambia datos",
+    "riskDestructive": "Elimina",
+    "riskExternal": "Actúa fuera",
+    "sourceCore": "Integrado",
+    "sourcePlugin": "Complemento",
+    "sourceThirdPartyPlugin": "Complemento de terceros",
+    "sourceMcp": "Servidor MCP",
+    "sourceCommand": "Comando",
+    "sourceOffEverywhere": "Desactivado en Herramientas",
+    "pluginCapabilities": "Permisos del complemento: {capabilities}",
+    "pluginSourceHint": "Herramientas que este complemento ofrece al chat. Se ejecutan con los permisos del complemento.",
+    "leakQuestion": "Este chat ya leyó tus datos y esta llamada llegaría a un sitio nuevo. Se pregunta una vez por sitio en este chat.",
+    "contextTokens": "≈{count} tokens",
+    "catalogHint": "De dónde salen las herramientas de los agentes. Un complemento desactivado aquí lo está en todos los perfiles y comandos de IA. Las herramientas integradas se activan en «Preguntar a la IA», en cada perfil y en cada comando de IA.",
+    "catalogWhereHint": "Cada perfil elige sus herramientas y con qué libertad se ejecutan en sus propios ajustes.",
+    "defaultPolicy": "Por defecto: {policy}",
+    "summaryWorkspace": "espacio de trabajo",
+    "summaryProjects": "proyectos: {count}",
+    "summaryProjectsRead": "proyectos: {count} (lectura)",
+    "summaryWeb": "web",
+    "summaryCommands": "comandos: {count}",
+    "summaryPlugins": "complementos: {count}",
+    "summaryNothing": "solo chat",
+    "summaryTitle": "Lo que puede el agente: abrir los ajustes del perfil"
   }
 }
