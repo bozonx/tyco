@@ -200,7 +200,6 @@
             :model-value="command.llmPreTransformPrompt ?? ''"
             :placeholder="t('commands.llmPreTransformPromptPlaceholder')"
             :modal-title="t('commands.llmPreTransformPromptLabel')"
-            auto-resize
             @update:model-value="update({ llmPreTransformPrompt: $event })"
           />
           <template #info>
@@ -517,7 +516,8 @@ const riskOptions = computed(() =>
   min-height: 4rem;
 }
 
-.command-llm-pre-transform-prompt {
+.command-llm-pre-transform-prompt,
+:deep(.command-llm-pre-transform-prompt textarea) {
   min-height: 4rem;
 }
 
