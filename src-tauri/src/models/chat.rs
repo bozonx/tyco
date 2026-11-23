@@ -229,7 +229,10 @@ pub enum ChatRole {
 #[serde(rename_all = "lowercase")]
 pub enum ChatMessageStatus {
     Complete,
+    /// The user stopped the answer.
     Stopped,
+    /// An error cut the answer short.
+    Failed,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]

@@ -39,6 +39,9 @@ pub(super) enum HistoryEvent {
 /// A line of a journal.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
+// lines are read into a short-lived list, mostly entries: boxing them would
+// cost an allocation each for no gain
+#[allow(clippy::large_enum_variant)]
 pub(super) enum HistoryRecord {
     Event(HistoryEvent),
     Item(EditorHistoryItem),

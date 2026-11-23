@@ -4,6 +4,7 @@ import {
   type CommandConfig,
   type EditorHistoryOperation,
 } from '@tyco/shared'
+import { errorMessage } from '@tyco/shared/value-guards'
 import { defineStore } from 'pinia'
 import { onScopeDispose } from 'vue'
 import { translate } from '../lib/i18n'
@@ -68,24 +69,30 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
     return userCommands
   }
 
-  let transcriptHistoryId: string | null = null
-  let transcriptHistoryText = ''
+  /**
+   * The draft entry of the transcript under review: a command run on it turns
+   * it into its source. `saving` is the write still on its way
+   */
+  let transcriptEntry: { text: string; saving: Promise<string | null> } | null =
+    null
 
   const model = createVoiceCommandModel({
     commands: effectiveCommands,
     operations: tools,
     ...useDictationActions(),
     describeError: (cause) => describeDictationError(cause, translate),
-    saveTranscript: async (text) => {
-      transcriptHistoryText = text
-      const id = await history.saveEditorHistory({
+    saveTranscript: (text) => {
+      const saving = history.saveEditorHistory({
         text,
         kind: 'draft',
         origin: 'voice',
         instruction: { text: '', inputKind: 'voice' },
       })
-      transcriptHistoryId = id
-      return id
+      transcriptEntry = { text, saving: saving.catch(() => null) }
+      return saving
+    },
+    forgetTranscript: () => {
+      transcriptEntry = null
     },
     run: async (command, text, signal, context, parameters) => {
       if (signal.aborted) return { success: false, cancelled: true }
@@ -98,11 +105,15 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
         return { success: false }
       const label = commandLabel(current)
       const instruction = { text: label, inputKind: 'voice' as const }
-      const historyText = text.trim() || transcriptHistoryText || label
+      // the transcript is taken once: a second run is an entry of its own
+      const transcript = transcriptEntry
+      transcriptEntry = null
+      const transcriptId = (await transcript?.saving) ?? null
+      const historyText = text.trim() || transcript?.text || label
       const operation = historyOperationOfCommand(current)
       const sourceId = await history
         .saveEditorHistory({
-          ...(transcriptHistoryId ? { id: transcriptHistoryId } : {}),
+          ...(transcriptId ? { id: transcriptId } : {}),
           text: historyText,
           kind: 'source',
           ...(operation ? { operation } : {}),
@@ -110,7 +121,6 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
           instruction,
         })
         .catch(() => null)
-      transcriptHistoryId = null
       if (signal.aborted) {
         await history
           .saveSourceFailure(sourceId, { kind: 'cancelled' })
@@ -123,18 +133,24 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
       const limited = await runWithinCommandLimit(
         desktop.userConfig?.commandRunTimeoutSec,
         signal,
-        (runSignal) =>
-          runner.run(current, text, {
-            source: 'voice',
-            signal: runSignal,
-            onOutput: (output) => {
-              producedOutput = output
-            },
-            ...(context ? { context } : {}),
-            ...(Object.keys(parameters).length
-              ? { input: { text, ...parameters } }
-              : {}),
-          })
+        // a run that throws is a failed one: its source and its log say so
+        (runSignal): Promise<InvocationOutcome> =>
+          runner
+            .run(current, text, {
+              source: 'voice',
+              signal: runSignal,
+              onOutput: (output) => {
+                producedOutput = output
+              },
+              ...(context ? { context } : {}),
+              ...(Object.keys(parameters).length
+                ? { input: { text, ...parameters } }
+                : {}),
+            })
+            .catch((cause: unknown): InvocationOutcome => ({
+              success: false,
+              message: errorMessage(cause),
+            }))
       )
       const outcome: InvocationOutcome = limited.isTimedOut
         ? {
@@ -159,7 +175,15 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
             await history.saveOutput(outputText, 'voice').catch(() => undefined)
           }
         } else {
-          await history.saveOutput(historyText, 'voice').catch(() => undefined)
+          // nothing came out: the run is done with its source. The text did
+          // not leave the app, so the output listeners are not told
+          await history
+            .saveEditorHistory({
+              text: historyText,
+              kind: 'output',
+              origin: 'voice',
+            })
+            .catch(() => undefined)
         }
       } else if (outcome.cancelled || signal.aborted) {
         await history

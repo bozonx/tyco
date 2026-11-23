@@ -55,6 +55,11 @@ export interface VoiceCommandDependencies extends TimerDependencies {
   ) => Promise<InvocationOutcome>
   /** The recognized speech, kept in the history before anything runs */
   saveTranscript?: (text: string) => Promise<unknown>
+  /**
+   * A new recording starts: a transcript saved before belongs to an earlier
+   * one, and no command run now may take its history entry
+   */
+  forgetTranscript?: () => void
   /** A dictation failure with its details, in the user's language */
   describeError?: (cause: unknown) => string
   /** Silence is billed too: a forgotten recording must not run all day */
@@ -519,6 +524,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     )
       return
     const current = ++generation
+    deps.forgetTranscript?.()
     stage.value = 'recording'
     error.value = ''
     errorCause.value = undefined

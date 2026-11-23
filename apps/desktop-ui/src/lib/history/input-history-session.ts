@@ -140,7 +140,7 @@ export function createInputHistorySession(deps: {
   }
   const complete = (
     text: string,
-    kind: 'source' | 'output',
+    kind: 'source' | 'output' | 'transcript',
     operation?: EditorHistoryOperation
   ) => {
     stopTimer()

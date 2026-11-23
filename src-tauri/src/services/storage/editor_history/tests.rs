@@ -657,7 +657,7 @@ fn recorded(id: &str, file: &str, created_at_ms: u64) -> EditorHistoryItem {
         source: crate::models::EditorHistoryDialogSource::System,
         recording_file: Some(file.to_owned()),
         recording_files: vec![file.to_owned()],
-        is_recording_incomplete: false,
+        incomplete_recording_files: Vec::new(),
     });
     item
 }
@@ -740,4 +740,58 @@ fn the_retention_takes_the_recordings_of_the_entries_it_drops() {
     assert!(fresh_file.exists());
     // no journal names it yet: it waits
     assert!(early_file.exists());
+}
+
+#[test]
+fn a_finished_transcript_replaces_its_draft_and_becomes_the_output_once_sent() {
+    let mut memory = Vec::new();
+    let mut history = EditorHistorySession {
+        store: EditorHistoryTarget::Memory(&mut memory),
+        policy: memory_only(),
+    };
+    let id = save_editor_history_entry(&mut history, entry("heard so far"))
+        .unwrap()
+        .unwrap();
+    let transcript = serde_json::from_value(
+        json!({"id": id, "text": "heard words", "kind": "transcript", "origin": "listen"}),
+    )
+    .unwrap();
+    assert_eq!(
+        save_editor_history_entry(&mut history, transcript).unwrap(),
+        Some(id.clone())
+    );
+    let items = history.load().unwrap();
+    assert_eq!(items.len(), 1);
+    assert_eq!(items[0].kind, EditorHistoryKind::Transcript);
+    // a finished transcript is not rewritten by a late checkpoint
+    let late = serde_json::from_value(json!({"id": id, "text": "late", "kind": "draft"})).unwrap();
+    save_editor_history_entry(&mut history, late).unwrap();
+    assert_eq!(history.load().unwrap()[0].text, "heard words");
+
+    let output = serde_json::from_value(json!({"text": "heard words", "kind": "output"})).unwrap();
+    save_editor_history_entry(&mut history, output).unwrap();
+    let items = history.load().unwrap();
+    assert_eq!(items.len(), 1);
+    assert_eq!(items[0].kind, EditorHistoryKind::Output);
+    assert_eq!(
+        items[0].origin,
+        Some(crate::models::EditorHistoryOrigin::Listen)
+    );
+}
+
+#[test]
+fn a_dialog_named_by_its_recording_list_is_kept_without_text() {
+    let mut memory = Vec::new();
+    let mut history = EditorHistorySession {
+        store: EditorHistoryTarget::Memory(&mut memory),
+        policy: memory_only(),
+    };
+    let entry = serde_json::from_value(json!({
+        "text": "", "kind": "dialog",
+        "dialog": {"startedAt": 1, "source": "system", "recordingFiles": [RECORDING]}
+    }))
+    .unwrap();
+    assert!(save_editor_history_entry(&mut history, entry)
+        .unwrap()
+        .is_some());
 }

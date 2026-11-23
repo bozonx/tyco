@@ -56,7 +56,12 @@ export const useCorrectionWorkflowStore = defineStore(
       executeBufferedIntent: runBufferedIntent,
       saveResult: async (text, result) => {
         try {
-          const sourceId = await historyStore.saveSource(text, 'correction')
+          // the text of the quick input ends its record as the source: a
+          // separate source would take the record's entry from under it
+          const sourceId =
+            text === quickInput.value
+              ? await quickInput.saveSource(text, 'correction')
+              : await historyStore.saveSource(text, 'correction')
           await historyStore.saveSourceResult(sourceId, result)
         } catch {
           toastKey('history.operationFailed', 'error')

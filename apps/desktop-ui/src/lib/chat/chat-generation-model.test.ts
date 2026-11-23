@@ -139,7 +139,7 @@ describe('createChatGenerationModel', () => {
       expect(state.lastFailedTurn.value).toMatchObject({
         message: 'Failing request',
       })
-      expect(state.messages.value.at(-1)?.status).toBe('stopped')
+      expect(state.messages.value.at(-1)?.status).toBe('failed')
     })
 
     it('cleans up assistant message when error occurs before any content arrives', async () => {
@@ -464,7 +464,7 @@ describe('createChatGenerationModel', () => {
 
       expect(state.messages.value).toHaveLength(2)
       expect(state.messages.value.at(-1)).toMatchObject({
-        status: 'stopped',
+        status: 'failed',
         parts: [{ type: 'tool-call', state: 'denied' }],
       })
     })

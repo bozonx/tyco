@@ -619,6 +619,31 @@ describe('voice recognition failures', () => {
     expect(deps.onCorrected).not.toHaveBeenCalled()
   })
 
+  it('marks the transcript cancelled when its correction is cancelled', async () => {
+    const saveSourceFailure = vi.fn().mockResolvedValue(undefined)
+    const { deps, model } = setup({
+      saveSourceFailure,
+      voiceCorrection: vi.fn(
+        (_text: string, signal?: AbortSignal) =>
+          new Promise<string>((_resolve, reject) => {
+            signal?.addEventListener('abort', () =>
+              reject(new Error('aborted'))
+            )
+          })
+      ),
+    })
+    await model.startSession()
+    const finishing = model.finish()
+    await vi.waitFor(() => expect(deps.setPendingModal).toHaveBeenCalled())
+    vi.mocked(deps.setPendingModal).mock.calls[0]![0].onCancel()
+    await finishing
+    await vi.waitFor(() =>
+      expect(saveSourceFailure).toHaveBeenCalledWith('source-id', {
+        kind: 'cancelled',
+      })
+    )
+  })
+
   it('preserves chat input that is only after the caret', async () => {
     vi.useFakeTimers()
     const { deps, model } = setup({
@@ -842,12 +867,17 @@ describe('voice recognition failures', () => {
     model.dispose()
   })
 
-  it('saves raw recognized text to history even when formatting is disabled', async () => {
+  it('saves raw recognized text to history as a finished transcript when formatting is disabled', async () => {
     vi.useFakeTimers()
-    const { deps, model } = setup({ shouldFormatRecognizedText: () => false })
+    const saveTranscript = vi.fn().mockResolvedValue('t')
+    const { deps, model } = setup({
+      shouldFormatRecognizedText: () => false,
+      saveTranscript,
+    })
     await model.startSession()
     await model.finish('insert')
-    expect(deps.saveSource).toHaveBeenCalledWith('Raw words', 'voiceCorrection')
+    expect(saveTranscript).toHaveBeenCalledWith('Raw words')
+    expect(deps.saveSource).not.toHaveBeenCalled()
     expect(deps.saveSourceResult).not.toHaveBeenCalled()
     expect(deps.voiceCorrection).not.toHaveBeenCalled()
     expect(deps.onCorrected).toHaveBeenCalledWith(

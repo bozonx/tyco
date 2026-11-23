@@ -8,6 +8,9 @@ pub enum EditorHistoryKind {
     Output,
     /// Unfinished or cancelled user input, periodically checkpointed.
     Draft,
+    /// Finished input that did not leave the app, e.g. a transcript that was
+    /// read, edited further or put into the editor.
+    Transcript,
     /// Snapshot taken right before an AI transformation.
     Source,
     /// The transcript of a dialog session, checkpointed while it runs; see
@@ -49,11 +52,11 @@ pub struct EditorHistoryDialog {
     /// Multiple files occur if recording was stopped and resumed within one dialog.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub recording_files: Vec<String>,
-    /// The recording stopped before the session did, e.g. the disk filled up:
-    /// the file holds only the beginning.
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[ts(as = "Option<bool>", optional)]
-    pub is_recording_incomplete: bool,
+    /// The recordings that stopped before their run did, e.g. the disk filled
+    /// up: such a file holds only the beginning.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<String>>", optional)]
+    pub incomplete_recording_files: Vec<String>,
 }
 
 /// The AI transformation a `Source` entry was taken before.

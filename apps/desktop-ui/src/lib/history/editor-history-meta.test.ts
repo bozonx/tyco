@@ -204,3 +204,26 @@ describe('getEditorHistoryNote', () => {
     ).toBeUndefined()
   })
 })
+
+describe('finished transcripts', () => {
+  it('names a dictation and a listening without marking them interrupted', () => {
+    expect(
+      getEditorHistoryMeta({ kind: 'transcript', origin: 'voice' }).labelKey
+    ).toBe('history.kindVoiceInput')
+    expect(
+      getEditorHistoryMeta({ kind: 'transcript', origin: 'listen' }).labelKey
+    ).toBe('history.filterListen')
+    expect(getEditorHistoryNote({ kind: 'transcript' })).toBeUndefined()
+  })
+
+  it('keeps the failure of an operation whose text was used as it was', () => {
+    expect(
+      getEditorHistoryNote({
+        kind: 'source',
+        operation: 'voiceCorrection',
+        isResultApplied: true,
+        failure: { kind: 'error', message: 'Offline' },
+      })
+    ).toMatchObject({ labelKey: 'history.requestFailed', detail: 'Offline' })
+  })
+})

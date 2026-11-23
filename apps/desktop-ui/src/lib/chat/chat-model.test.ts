@@ -201,7 +201,7 @@ describe('chat-model', () => {
     await store.sendMessage('Question')
     expect(store.messages.value.at(-1)).toMatchObject({
       content: 'Partial',
-      status: 'stopped',
+      status: 'failed',
     })
 
     await store.retryLastTurn()

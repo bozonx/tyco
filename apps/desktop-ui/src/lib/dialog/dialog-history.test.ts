@@ -185,13 +185,47 @@ describe('dialog history', () => {
     await history.begin(recorded)
     setText('Me: hi')
     await history.checkpoint()
-    await history.markRecordingIncomplete()
+    await history.markRecordingIncomplete(recorded.recordingFile)
     expect(saved.at(-1)).toEqual({
       id: 'entry-1',
       text: 'Me: hi',
       kind: 'dialog',
-      dialog: { ...recorded, isRecordingIncomplete: true },
+      dialog: {
+        ...recorded,
+        incompleteRecordingFiles: [recorded.recordingFile],
+      },
     })
+  })
+
+  it('goes on in the same entry when a closed session is resumed', async () => {
+    const { history, saved, setText } = setup()
+    await history.begin(meta)
+    setText('Me: hi')
+    await history.end()
+    expect(history.resume()).toBe(true)
+    await history.addRecording('2026-11-21 10-00-00 a1b2c3.opus')
+    setText('Me: hi\nThem: hello')
+    await history.end()
+    expect(saved.at(-1)).toEqual({
+      id: 'entry-1',
+      text: 'Me: hi\nThem: hello',
+      kind: 'dialog',
+      dialog: {
+        ...meta,
+        recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
+        recordingFiles: ['2026-11-21 10-00-00 a1b2c3.opus'],
+      },
+    })
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('has nothing to resume after a new session or before any', async () => {
+    const { history } = setup()
+    expect(history.resume()).toBe(false)
+    await history.begin(meta)
+    await history.end()
+    history.dispose()
+    expect(history.resume()).toBe(false)
   })
 
   it('persists the incomplete flag when a text save is already in flight', async () => {
@@ -210,14 +244,17 @@ describe('dialog history', () => {
     const { history } = setup({ save })
     const beginning = history.begin(recorded)
     await vi.waitFor(() => expect(save).toHaveBeenCalledOnce())
-    const marking = history.markRecordingIncomplete()
+    const marking = history.markRecordingIncomplete(recorded.recordingFile)
     completeSave('entry')
     await Promise.all([beginning, marking])
     expect(save).toHaveBeenLastCalledWith({
       id: 'entry',
       text: '',
       kind: 'dialog',
-      dialog: { ...recorded, isRecordingIncomplete: true },
+      dialog: {
+        ...recorded,
+        incompleteRecordingFiles: [recorded.recordingFile],
+      },
     })
   })
 

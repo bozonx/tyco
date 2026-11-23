@@ -59,6 +59,12 @@ export function getEditorHistoryMeta(
       : { icon: 'mdi:pencil-outline', labelKey: 'history.kindDraft' }
   }
 
+  if (item.kind === 'transcript') {
+    return item.origin === 'listen'
+      ? { icon: 'mdi:volume-high', labelKey: 'history.filterListen' }
+      : { icon: 'mdi:microphone-outline', labelKey: 'history.kindVoiceInput' }
+  }
+
   if (item.kind === 'dialog') {
     return { icon: 'mdi:account-voice', labelKey: 'history.kindDialog' }
   }
@@ -125,9 +131,22 @@ export function getEditorHistoryNote(
   item: Pick<EditorHistoryItem, 'kind' | 'operation' | 'result'> &
     Partial<Pick<EditorHistoryItem, 'isResultApplied' | 'failure'>>
 ): EditorHistoryNote | undefined {
-  if (item.kind === 'output' || item.isResultApplied) {
-    return undefined
+  if (item.kind === 'output') return undefined
+
+  // a failed operation stays marked even when its text was used as it was
+  if (item.kind === 'source' && !item.result && item.failure) {
+    return {
+      labelKey: FAILURE_LABELS[item.failure.kind],
+      tone: 'error',
+      icon:
+        item.failure.kind === 'cancelled'
+          ? 'mdi:cancel'
+          : 'mdi:alert-circle-outline',
+      ...(item.failure.message && { detail: item.failure.message }),
+    }
   }
+
+  if (item.isResultApplied) return undefined
 
   if (item.kind === 'draft') {
     return {
@@ -138,17 +157,6 @@ export function getEditorHistoryNote(
   }
 
   if (item.kind === 'source') {
-    if (!item.result && item.failure) {
-      return {
-        labelKey: FAILURE_LABELS[item.failure.kind],
-        tone: 'error',
-        icon:
-          item.failure.kind === 'cancelled'
-            ? 'mdi:cancel'
-            : 'mdi:alert-circle-outline',
-        ...(item.failure.message && { detail: item.failure.message }),
-      }
-    }
     if (!item.result) {
       return {
         labelKey:

@@ -155,6 +155,7 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
         return
       }
       if (!result.trim()) throw new Error('Correction returned empty text')
+      // unchanged, the insertion marks the source as sent
       if (result !== text) await saveSourceResult(sourceId, result)
       if (active !== run) {
         await saveFailure(run)
@@ -200,7 +201,9 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
         return
       }
       if (!result.trim()) throw new Error('Correction returned empty text')
-      if (result !== text) await saveSourceResult(sourceId, result)
+      // the step may end without an output: an unchanged text is a
+      // correction too, not a failed one
+      await saveSourceResult(sourceId, result)
       if (active !== run) {
         await saveFailure(run)
         return

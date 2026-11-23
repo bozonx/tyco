@@ -277,6 +277,14 @@ describe('quick insertion history', () => {
     expect(deps.insert).toHaveBeenCalledWith('Clean text')
   })
 
+  it('records an unchanged correction for the actions step as its result', async () => {
+    const { deps, model } = setupWithHistory()
+    deps.correct.mockResolvedValueOnce('Clean text')
+    await model.next('Clean text')
+    expect(deps.saveSourceResult).toHaveBeenCalledWith('source-1', 'Clean text')
+    expect(deps.saveSourceFailure).not.toHaveBeenCalled()
+  })
+
   it('goes on with the submission when the history cannot be written', async () => {
     const { deps, model } = setupWithHistory()
     const failure = new Error('Disk full')

@@ -22,14 +22,25 @@ export interface DialogHistoryDependencies {
 export interface DialogHistory {
   /** Ends the previous session, if any, and opens a new one */
   begin: (session: EditorHistoryDialog) => Promise<void>
-  /** Adds another recording file to the current session */
-  addRecording: (file: string) => Promise<void>
+  /**
+   * Opens the session `end` closed again, so that a dialog resumed after it
+   * goes on in the same entry; false when there is none to reopen
+   */
+  resume: () => boolean
+  /**
+   * Adds another recording file to the current session; `isIncomplete`: it
+   * stopped before its run began
+   */
+  addRecording: (
+    file: string,
+    options?: { isIncomplete?: boolean }
+  ) => Promise<void>
   /** Writes the session when its text changed since the last write */
   checkpoint: () => Promise<void>
   /** A last checkpoint; the session stays closed until `begin` */
   end: () => Promise<void>
-  /** The recording of the session stopped early: the entry tells so */
-  markRecordingIncomplete: () => Promise<void>
+  /** The recording `file` stopped early: the entry tells so */
+  markRecordingIncomplete: (file: string) => Promise<void>
   dispose: () => void
 }
 
@@ -50,6 +61,10 @@ interface Session {
  * recognized nothing leaves no entry unless it was recorded: the entry is the
  * way back to the file.
  */
+function withFile(files: readonly string[] | undefined, file: string) {
+  return files?.includes(file) ? [...files] : [...(files ?? []), file]
+}
+
 export function createDialogHistory(
   deps: DialogHistoryDependencies
 ): DialogHistory {
@@ -61,6 +76,8 @@ export function createDialogHistory(
     ((handle: unknown) =>
       globalThis.clearInterval(handle as ReturnType<typeof setInterval>))
   let session: Session | undefined
+  /** The session `end` closed last; `begin` and `dispose` forget it */
+  let closed: Session | undefined
   let timer: unknown
   // writes go one after another: an id comes back before the next one
   let pending = Promise.resolve()
@@ -69,6 +86,12 @@ export function createDialogHistory(
     if (timer === undefined) return
     stopInterval(timer)
     timer = undefined
+  }
+
+  const startTimer = (current: Session) => {
+    timer = startInterval(() => {
+      void write(current)
+    }, deps.intervalMs ?? DIALOG_HISTORY_INTERVAL_MS)
   }
 
   const hasRecordings = (meta: EditorHistoryDialog) =>
@@ -116,22 +139,30 @@ export function createDialogHistory(
     const ending = session
     session = undefined
     if (!ending) return pending
+    closed = ending
     await write(ending)
   }
 
   return {
     async begin(meta) {
       const ending = end()
+      closed = undefined
       const current: Session = { meta }
       session = current
-      timer = startInterval(() => {
-        void write(current)
-      }, deps.intervalMs ?? DIALOG_HISTORY_INTERVAL_MS)
+      startTimer(current)
       await ending
       // the first write of a recorded session links its file at once
       await write(current)
     },
-    async addRecording(file) {
+    resume() {
+      if (session) return true
+      if (!closed) return false
+      session = closed
+      closed = undefined
+      startTimer(session)
+      return true
+    },
+    async addRecording(file, options = {}) {
       if (!session) return
       const files = session.meta.recordingFiles
         ? [...session.meta.recordingFiles]
@@ -143,20 +174,33 @@ export function createDialogHistory(
         ...session.meta,
         recordingFile: session.meta.recordingFile ?? file,
         recordingFiles: files,
+        ...(options.isIncomplete && {
+          incompleteRecordingFiles: withFile(
+            session.meta.incompleteRecordingFiles,
+            file
+          ),
+        }),
       }
       await write(session)
     },
     checkpoint: () => (session ? write(session) : pending),
     end,
-    markRecordingIncomplete() {
+    markRecordingIncomplete(file) {
       const current = session
       if (!current || !hasRecordings(current.meta)) return pending
-      current.meta = { ...current.meta, isRecordingIncomplete: true }
+      current.meta = {
+        ...current.meta,
+        incompleteRecordingFiles: withFile(
+          current.meta.incompleteRecordingFiles,
+          file
+        ),
+      }
       return write(current)
     },
     dispose() {
       stopTimer()
       session = undefined
+      closed = undefined
     },
   }
 }

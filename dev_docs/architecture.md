@@ -293,7 +293,7 @@ on a thread of its own behind a bounded queue (`RecordingSink`). Chunks that
 do not fit a full queue are owed and sent as silence when it frees or when
 the recording closes. A gap over one minute or a failed write stops the
 recording only and sends `recordingFailed` on the audio channel, and the
-webview marks the history entry `isRecordingIncomplete`. A file whose
+webview names the file in `incompleteRecordingFiles` of its history entry. A file whose
 headers fail, or that received no audio, is removed. The capture's end, a stop or quit
 closes the file and moves it into the data folder. The webview's history
 names a recording by its file name (a `Dialog` entry with a `recordingFile`

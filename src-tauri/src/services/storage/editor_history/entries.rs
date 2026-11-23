@@ -7,7 +7,7 @@ use crate::models::{EditorHistoryFailure, EditorHistoryItem, EditorHistoryKind};
 fn kind_rank(kind: EditorHistoryKind) -> u8 {
     match kind {
         EditorHistoryKind::Draft | EditorHistoryKind::Dialog => 0,
-        EditorHistoryKind::Source => 1,
+        EditorHistoryKind::Transcript | EditorHistoryKind::Source => 1,
         EditorHistoryKind::Output => 2,
     }
 }

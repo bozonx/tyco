@@ -88,6 +88,8 @@ export interface ListenModelDependencies extends TimerDependencies {
 /** The part of `createInputHistorySession` a listening uses */
 export interface ListenHistorySession {
   update: (text: string) => void
+  /** The listening is over with `text`: a finished transcript */
+  complete: (text: string, kind: 'transcript') => Promise<unknown>
   end: () => void
   dispose: () => void
 }
@@ -249,7 +251,9 @@ export function createListenModel(deps: ListenModelDependencies) {
     carriedText = ''
     resultText.value = text
     phase.value = 'result'
-    keepInHistory(text)
+    // finished: the record is a transcript, not an interrupted input. A failed
+    // write is retried and reported by the session
+    void history?.complete(text, 'transcript').catch(() => undefined)
   }
 
   async function cancel() {

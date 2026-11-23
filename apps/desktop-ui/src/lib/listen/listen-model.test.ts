@@ -105,6 +105,10 @@ describe('listen model', () => {
       expect(await saved()).toEqual(['First words and more'])
       await model.stop()
       expect(await saved()).toEqual(['Hello there'])
+      // a finished listening is a transcript, not an interrupted input
+      expect(save).toHaveBeenLastCalledWith(
+        expect.objectContaining({ text: 'Hello there', kind: 'transcript' })
+      )
       model.dispose()
     } finally {
       vi.useRealTimers()

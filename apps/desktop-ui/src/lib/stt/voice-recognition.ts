@@ -74,6 +74,11 @@ export interface VoiceRecognitionDependencies extends TimerDependencies {
     action: 'voiceCorrection'
   ) => Promise<string | null>
   saveSourceResult: (sourceId: string | null, text: string) => Promise<unknown>
+  /**
+   * Keeps a transcript no AI pass follows, without `createHistorySession`; the
+   * transcript is not kept when missing
+   */
+  saveTranscript?: (text: string) => Promise<unknown>
   /** Why the correction of the transcript `sourceId` produced nothing */
   saveSourceFailure?: (
     sourceId: string | null,
@@ -166,6 +171,9 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       toastKey('history.operationFailed', 'error')
     })
   }
+  /** The dictation was cancelled while its transcript was being corrected */
+  const saveCancelled = (sourceId: string | null) =>
+    saveFailure(sourceId, undefined, { isTimedOut: false, isCancelled: true })
   const transcript = ref(createLiveTranscriptState())
   const hasText = computed(() => Boolean(liveTranscriptText(transcript.value)))
   const isFinishing = ref(false)
@@ -339,24 +347,6 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       let postProcessAborted = false
       let postProcessFailed = false
 
-      // the raw transcript is the only copy of what was said: the LLM may
-      // distort it, the insertion may fail, and it cannot be dictated the
-      // same way twice
-      let sourceId: string | null = null
-      try {
-        sourceId = historySession
-          ? await historySession.complete(
-              recognizedText,
-              'source',
-              'voiceCorrection'
-            )
-          : await deps.saveSource(recognizedText, 'voiceCorrection')
-      } catch {
-        // the text is still here; only its copy in the history is missing
-        toastKey('history.operationFailed', 'error')
-      }
-      if (!isCurrent()) return
-
       const styleRule = options?.styleRule
       const voiceStyling = deps.voiceStyling
       const correctContextually = contextual
@@ -391,6 +381,33 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
                       voiceCorrection(recognizedText, postSignal),
                   }
                 : null
+
+      // the raw transcript is the only copy of what was said: the LLM may
+      // distort it, the insertion may fail, and it cannot be dictated the
+      // same way twice. Without an AI pass it is a finished transcript
+      let sourceId: string | null = null
+      try {
+        if (postProcess) {
+          sourceId = historySession
+            ? await historySession.complete(
+                recognizedText,
+                'source',
+                'voiceCorrection'
+              )
+            : await deps.saveSource(recognizedText, 'voiceCorrection')
+        } else if (historySession) {
+          await historySession.complete(recognizedText, 'transcript')
+        } else {
+          await deps.saveTranscript?.(recognizedText)
+        }
+      } catch {
+        // the text is still here; only its copy in the history is missing
+        toastKey('history.operationFailed', 'error')
+      }
+      if (!isCurrent()) {
+        if (postProcess) void saveCancelled(sourceId)
+        return
+      }
 
       if (postProcess) {
         if ('styling' in postProcess.pending && postProcess.pending.styling) {
@@ -431,7 +448,10 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
             controller.signal
           )
 
-          if (!isCurrent()) return
+          if (!isCurrent()) {
+            void saveCancelled(sourceId)
+            return
+          }
           // a reply that arrived after the user cancelled it is not used
           if (!controller.signal.aborted && processedText.trim()) {
             resultText = processedText
@@ -450,7 +470,10 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
         } catch (error) {
           postProcessFailed = true
           // the request has told the failure; keep available contextual text
-          if (!isCurrent()) return
+          if (!isCurrent()) {
+            void saveCancelled(sourceId)
+            return
+          }
           if (correctContextually && correctContextually.text.trim()) {
             resultText = correctContextually.text
             correctedText = correctContextually.text

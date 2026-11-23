@@ -319,10 +319,9 @@ fn save_editor_history_entry(
     // a recorded dialog is kept even when nothing was recognized: the entry
     // is the only way back to its recording
     let has_recording = entry.kind == EditorHistoryKind::Dialog
-        && entry
-            .dialog
-            .as_ref()
-            .is_some_and(|dialog| dialog.recording_file.is_some());
+        && entry.dialog.as_ref().is_some_and(|dialog| {
+            dialog.recording_file.is_some() || !dialog.recording_files.is_empty()
+        });
     if !policy.is_recording
         || (entry.text.trim().is_empty() && !has_recording)
         || policy.max_entries == 0
@@ -525,7 +524,11 @@ fn validate_recording_file(dialog: &crate::models::EditorHistoryDialog) -> Resul
             ));
         }
     }
-    for name in &dialog.recording_files {
+    for name in dialog
+        .recording_files
+        .iter()
+        .chain(&dialog.incomplete_recording_files)
+    {
         if !recordings::is_recording_name(name) {
             return Err(AppError::InvalidInput(
                 "Invalid name of a call recording".into(),

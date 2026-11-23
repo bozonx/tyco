@@ -242,7 +242,7 @@ export function createChatGenerationModel(
           abortController = null
           return FAILED
         }
-        assistantMessage.status = 'stopped'
+        assistantMessage.status = 'failed'
         lastFailedTurn.value = { message, attachments, images }
       }
     } finally {
@@ -290,7 +290,10 @@ export function createChatGenerationModel(
     const previousMessages = [...messages.value]
     const beforeGeneration = generationId
     const last = messages.value.at(-1)
-    if (last?.role === 'assistant' && last.status === 'stopped') {
+    if (
+      last?.role === 'assistant' &&
+      (last.status === 'stopped' || last.status === 'failed')
+    ) {
       messages.value.pop()
     }
     const lastUser = messages.value.at(-1)

@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 6092b99dc664d0f788421735e4c27a2886faea380de25ff09f6fb580d7bbceed
+// Source hash: 814760dfc5a229566132e8606bf302b00407e27ce895818515651e19da928776
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -369,7 +369,7 @@ export type ChatMessage = {
   status?: ChatMessageStatus
 }
 
-export type ChatMessageStatus = 'complete' | 'stopped'
+export type ChatMessageStatus = 'complete' | 'stopped' | 'failed'
 
 export type ChatRole = 'user' | 'assistant' | 'developer'
 
@@ -577,10 +577,10 @@ export type EditorHistoryDialog = {
    */
   recordingFiles?: Array<string>
   /**
-   * The recording stopped before the session did, e.g. the disk filled up: the
-   * file holds only the beginning.
+   * The recordings that stopped before their run did, e.g. the disk filled up:
+   * such a file holds only the beginning.
    */
-  isRecordingIncomplete?: boolean
+  incompleteRecordingFiles?: Array<string>
 }
 
 /** What the dialog listened to. */
@@ -643,7 +643,8 @@ export type EditorHistoryItem = {
 }
 
 /** Why a text got into the editor history. */
-export type EditorHistoryKind = 'output' | 'draft' | 'source' | 'dialog'
+export type EditorHistoryKind =
+  'output' | 'draft' | 'transcript' | 'source' | 'dialog'
 
 /** The AI transformation a `Source` entry was taken before. */
 export type EditorHistoryOperation =

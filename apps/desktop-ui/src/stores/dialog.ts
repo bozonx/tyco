@@ -215,8 +215,8 @@ export const useDialogStore = defineStore('dialog', () => {
               isRecordEnabled.value = false
               errorText.value = translate('dialog.recordingFailed')
               canFixInSettings.value = false
-              if (isRecordingLinked)
-                void dialogHistory.markRecordingIncomplete()
+              if (isRecordingLinked && recordingFile)
+                void dialogHistory.markRecordingIncomplete(recordingFile)
               else isRecordingFailedEarly = true
             },
           },
@@ -254,7 +254,6 @@ export const useDialogStore = defineStore('dialog', () => {
         const isRecorded = Boolean(recordingFile && !isRecordingFailedEarly)
         const isFirstRun =
           segments.value.length === 0 && sessionBreaks.value.length === 0
-
         if (isFirstRun) {
           sessionBreaks.value = [
             {
@@ -265,16 +264,6 @@ export const useDialogStore = defineStore('dialog', () => {
               action: 'started',
             },
           ]
-          void dialogHistory.begin({
-            startedAt: sessionStartedAtMs,
-            source: hasMicrophone.value ? 'microphoneAndSystem' : 'system',
-            ...(recordingFile && {
-              recordingFile,
-              recordingFiles: [recordingFile],
-            }),
-            ...(recordingFile &&
-              isRecordingFailedEarly && { isRecordingIncomplete: true }),
-          })
         } else {
           const hadRecordingBefore = sessionBreaks.value.some(
             (b) => b.isRecording
@@ -288,9 +277,28 @@ export const useDialogStore = defineStore('dialog', () => {
             recordingFile: isRecorded ? recordingFile : undefined,
             action,
           })
+        }
+        // a dialog stopped and saved, e.g. by an external request, goes on
+        // in the entry it already has
+        if (!isFirstRun && dialogHistory.resume()) {
           if (recordingFile) {
-            void dialogHistory.addRecording(recordingFile)
+            void dialogHistory.addRecording(recordingFile, {
+              isIncomplete: isRecordingFailedEarly,
+            })
           }
+        } else {
+          void dialogHistory.begin({
+            startedAt: sessionStartedAtMs,
+            source: hasMicrophone.value ? 'microphoneAndSystem' : 'system',
+            ...(recordingFile && {
+              recordingFile,
+              recordingFiles: [recordingFile],
+            }),
+            ...(recordingFile &&
+              isRecordingFailedEarly && {
+                incompleteRecordingFiles: [recordingFile],
+              }),
+          })
         }
       }
       status.value = next

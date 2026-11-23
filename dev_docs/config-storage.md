@@ -427,13 +427,20 @@ compacts its own journal, keeping the records that still name an entry and its
 latest `clear`. Times are the clocks of the devices: a clock that is off moves
 entries in the order, nothing more.
 
+A `transcript` is input finished without leaving the app: a listening that
+was stopped, a dictation without an AI pass. It takes the place of its
+`draft` under the same id, is no longer rewritten, and an `output` of the same
+text takes its place. Unlike a draft it is not shown as interrupted.
+
 Like a `draft`, a `dialog` entry is rewritten under its id while its input
-goes on: `lib/dialog/dialog-history.ts` opens one per dialog session (each
-Start), creates it with the first finished turn and checkpoints the transcript
+goes on: `lib/dialog/dialog-history.ts` opens one per dialog session (a
+Start after Clear; a dialog resumed after Stop, also after a stop that saved
+it, goes on in the same entry), creates it with the first finished turn and checkpoints the transcript
 in the export format every 15 s while it changed, on Stop, when the window
 hides and on quit (`registerInputFlush`). `EditorHistoryItem::dialog` holds
-`startedAt`, `source` and the optional `recordingFile`, the name of the call
-recording in `history/recordings/`. A dialog never collapses with another
+`startedAt`, `source`, the call recordings in `history/recordings/`
+(`recordingFile`, `recordingFiles`) and `incompleteRecordingFiles`, the ones
+that stopped before their run did. A dialog never collapses with another
 entry of the same text, and a draft never replaces it.
 
 A call recording belongs to the entry that names it (`storage::recordings`).

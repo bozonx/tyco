@@ -206,7 +206,10 @@ const editorItems = computed<HistoryListItem[]>(() =>
     const note = getEditorHistoryNote(item)
     const files = recordingFilesOfItem(item.dialog)
     const fileItems = files.map((file) =>
-      recordingFile(file, item.dialog?.isRecordingIncomplete ?? false)
+      recordingFile(
+        file,
+        item.dialog?.incompleteRecordingFiles?.includes(file) ?? false
+      )
     )
 
     return {
