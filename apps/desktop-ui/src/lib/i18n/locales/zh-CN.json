@@ -1752,7 +1752,10 @@
     "sessionResumed": "会话已恢复",
     "sessionResumedRecording": "录音已恢复",
     "record": "录音",
-    "recordStopToChangeHint": "停止以更改"
+    "recordStopToChangeHint": "停止以更改",
+    "headphonesNotice": "建议佩戴耳机，以防扬声器中对方的声音被麦克风重新录入并产生回声。",
+    "headphonesNoticeConfirm": "知道了",
+    "emptyHeadphonesHint": "提示：建议使用耳机以避免扬声器回声。"
   },
   "toolPermissions": {
     "riskRead": "读取",

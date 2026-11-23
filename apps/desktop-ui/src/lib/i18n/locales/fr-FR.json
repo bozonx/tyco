@@ -1756,7 +1756,10 @@
     "sessionResumed": "Session reprise",
     "sessionResumedRecording": "Enregistrement repris",
     "record": "Enregistrement",
-    "recordStopToChangeHint": "Arrêter pour modifier"
+    "recordStopToChangeHint": "Arrêter pour modifier",
+    "headphonesNotice": "Le port d’un casque ou d’écouteurs est recommandé pour éviter que la voix de l’interlocuteur dans les haut-parleurs ne soit captée par le micro et ne crée d’écho.",
+    "headphonesNoticeConfirm": "J’ai compris",
+    "emptyHeadphonesHint": "Conseil : utilisez un casque pour éviter l’écho des haut-parleurs."
   },
   "toolPermissions": {
     "riskRead": "Lecture",

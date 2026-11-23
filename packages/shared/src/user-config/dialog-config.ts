@@ -37,6 +37,8 @@ export interface DialogConfig {
   compactGeometry?: DialogWindowGeometry
   /** The user was told to ask the other side before recording */
   isRecordingNoticeAcknowledged?: boolean
+  /** The user was told to use headphones to avoid echo during a call */
+  isHeadphonesNoticeAcknowledged?: boolean
   /**
    * A call is recorded in one channel, both sides together; otherwise the
    * microphone left and the computer sound right

@@ -2,6 +2,18 @@
   <div class="dialog-page">
     <DialogToolbar />
     <InlineNotice
+      v-if="showHeadphonesNotice"
+      class="dialog-headphones-notice"
+      kind="info"
+      density="compact"
+      icon="mdi:headphones"
+      :message="t('dialog.headphonesNotice')"
+    >
+      <Button size="xs" variant="ghost" @click="confirmHeadphonesNotice">{{
+        t('dialog.headphonesNoticeConfirm')
+      }}</Button>
+    </InlineNotice>
+    <InlineNotice
       v-if="dialog.errorText"
       class="dialog-error"
       kind="error"
@@ -30,7 +42,15 @@
             :icon="emptyIcon"
             :title="emptyTitle"
             :message="emptyMessage"
-          />
+          >
+            <p
+              v-if="dialog.config.source === 'microphoneAndSystem'"
+              class="dialog-empty-hint"
+            >
+              <AppIcon icon="mdi:headphones" size="sm" class="shrink-0" />
+              <span>{{ t('dialog.emptyHeadphonesHint') }}</span>
+            </p>
+          </StateMessage>
         </template>
       </DialogFeed>
     </div>
@@ -40,6 +60,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 
+import AppIcon from '../components/common/AppIcon.vue'
 import Button from '../components/common/Button.vue'
 import InlineNotice from '../components/common/InlineNotice.vue'
 import StateMessage from '../components/common/StateMessage.vue'
@@ -51,6 +72,16 @@ import { useDialogStore } from '../stores/dialog'
 
 const dialog = useDialogStore()
 const { t } = useI18n()
+
+const showHeadphonesNotice = computed(
+  () =>
+    dialog.config.source === 'microphoneAndSystem' &&
+    !dialog.config.isHeadphonesNoticeAcknowledged
+)
+
+async function confirmHeadphonesNotice() {
+  await dialog.acknowledgeHeadphonesNotice()
+}
 
 // the mode turned off in the settings takes its view away
 watch(
@@ -105,6 +136,10 @@ function openSttSettings() {
   min-height: 0;
 }
 
+.dialog-headphones-notice {
+  margin: var(--space-sm) var(--space-md) 0;
+}
+
 .dialog-error {
   margin: var(--space-sm) var(--space-md) 0;
 }
@@ -120,5 +155,15 @@ function openSttSettings() {
 .dialog-empty {
   margin: auto;
   max-width: 32rem;
+}
+
+.dialog-empty-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+  margin-top: var(--space-xs);
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
 }
 </style>

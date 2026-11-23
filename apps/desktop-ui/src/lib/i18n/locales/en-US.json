@@ -1756,7 +1756,10 @@
     "sessionResumed": "Session resumed",
     "sessionResumedRecording": "Recording resumed",
     "record": "Record",
-    "recordStopToChangeHint": "Stop to change"
+    "recordStopToChangeHint": "Stop to change",
+    "headphonesNotice": "Headphones are recommended so the other person's voice from your speakers does not leak into your microphone and create echo.",
+    "headphonesNoticeConfirm": "Got it",
+    "emptyHeadphonesHint": "Tip: use headphones to avoid speaker echo."
   },
   "toolPermissions": {
     "riskRead": "Reads",

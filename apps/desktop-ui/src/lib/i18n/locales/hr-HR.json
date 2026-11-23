@@ -1756,7 +1756,10 @@
     "sessionResumed": "Sesija nastavljena",
     "sessionResumedRecording": "Snimanje nastavljeno",
     "record": "Snimanje",
-    "recordStopToChangeHint": "Zaustavite za promjenu"
+    "recordStopToChangeHint": "Zaustavite za promjenu",
+    "headphonesNotice": "Preporučuje se korištenje slušalica kako glas sugovornika iz zvučnika ne bi ulazio u mikrofon i stvarao jeku.",
+    "headphonesNoticeConfirm": "Razumijem",
+    "emptyHeadphonesHint": "Savjet: koristite slušalice kako biste izbjegli jeku iz zvučnika."
   },
   "toolPermissions": {
     "riskRead": "Čitanje",

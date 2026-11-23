@@ -1752,7 +1752,10 @@
     "sessionResumed": "工作階段已恢復",
     "sessionResumedRecording": "錄音已恢復",
     "record": "錄音",
-    "recordStopToChangeHint": "停止以更改"
+    "recordStopToChangeHint": "停止以更改",
+    "headphonesNotice": "建議配戴耳機，以防揚聲器中對方的聲音被麥克風重新錄入並產生回音。",
+    "headphonesNoticeConfirm": "知道了",
+    "emptyHeadphonesHint": "提示：建議使用耳機以避免揚聲器回音。"
   },
   "toolPermissions": {
     "riskRead": "讀取",

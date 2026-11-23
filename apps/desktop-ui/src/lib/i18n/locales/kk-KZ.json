@@ -1756,7 +1756,10 @@
     "sessionResumed": "Сессия жалғастырылды",
     "sessionResumedRecording": "Жазу жалғастырылды",
     "record": "Жазу",
-    "recordStopToChangeHint": "Өзгерту үшін тоқтатыңыз"
+    "recordStopToChangeHint": "Өзгерту үшін тоқтатыңыз",
+    "headphonesNotice": "Сөйлесушінің динамиктен шыққан дауысы микрофонға түсіп, жаңғырық тудырмауы үшін құлаққап пайдалану ұсынылады.",
+    "headphonesNoticeConfirm": "Түсінікті",
+    "emptyHeadphonesHint": "Кеңес: динамиктердің жаңғырығын болдырмау үшін құлаққап пайдаланыңыз."
   },
   "toolPermissions": {
     "riskRead": "Оқу",

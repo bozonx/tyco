@@ -1,39 +1,41 @@
 <template>
   <div class="dialog-toolbar">
     <div class="dialog-toolbar-actions">
-      <Button
-        class="dialog-toolbar-record-toggle"
-        :class="{ 'is-running': !isIdle }"
-        :variant="dialog.isRecordEnabled ? 'neutral' : 'ghost'"
-        size="sm"
-        :tone="!dialog.isRecordEnabled ? 'muted' : undefined"
-        :aria-pressed="dialog.isRecordEnabled"
-        :disabled="isRecordToggleDisabled"
-        :title="recordToggleTitle"
-        @click="handleToggleRecord"
-      >
-        <template v-if="isRecordingRunning">
-          <span
-            class="dialog-record-dot dialog-record-dot-pulsing"
-            aria-hidden="true"
-          />
-          <span class="sr-only">{{ t('dialog.recording') }}</span>
-          <span class="dialog-record-rec">REC</span>
-          <span class="dialog-record-timer">{{ elapsed }}</span>
-        </template>
-        <template v-else-if="dialog.isRecordEnabled">
-          <span class="dialog-record-dot" aria-hidden="true" />
-          <span>{{ t('dialog.record') }}</span>
-        </template>
-        <template v-else>
-          <AppIcon
-            icon="mdi:record-circle-outline"
-            size="md"
-            class="shrink-0"
-          />
-          <span>{{ t('dialog.record') }}</span>
-        </template>
-      </Button>
+      <div ref="recordContainerRef" class="dialog-toolbar-record-container">
+        <Button
+          class="dialog-toolbar-record-toggle"
+          :class="{ 'is-running': !isIdle }"
+          :variant="dialog.isRecordEnabled ? 'neutral' : 'ghost'"
+          size="sm"
+          :tone="!dialog.isRecordEnabled ? 'muted' : undefined"
+          :aria-pressed="dialog.isRecordEnabled"
+          :disabled="isRecordToggleDisabled"
+          :title="recordToggleTitle"
+          @click="handleToggleRecord"
+        >
+          <template v-if="isRecordingRunning">
+            <span
+              class="dialog-record-dot dialog-record-dot-pulsing"
+              aria-hidden="true"
+            />
+            <span class="sr-only">{{ t('dialog.recording') }}</span>
+            <span class="dialog-record-rec">REC</span>
+            <span class="dialog-record-timer">{{ elapsed }}</span>
+          </template>
+          <template v-else-if="dialog.isRecordEnabled">
+            <span class="dialog-record-dot" aria-hidden="true" />
+            <span>{{ t('dialog.record') }}</span>
+          </template>
+          <template v-else>
+            <AppIcon
+              icon="mdi:record-circle-outline"
+              size="md"
+              class="shrink-0"
+            />
+            <span>{{ t('dialog.record') }}</span>
+          </template>
+        </Button>
+      </div>
 
       <Button
         v-if="isIdle"
@@ -132,20 +134,49 @@
       @confirm="confirmClear"
       @cancel="isClearConfirmOpen = false"
     />
-    <ConfirmModal
-      :open="isRecordingNoticeOpen"
-      :title="t('dialog.recordingNoticeTitle')"
-      :message="t('dialog.recordingNoticeMessage')"
-      :confirm-text="t('dialog.recordingNoticeConfirm')"
-      @confirm="confirmRecordingNotice"
-      @cancel="isRecordingNoticeOpen = false"
-    />
+    <Teleport to="body">
+      <Transition name="notice-fade">
+        <div
+          v-if="isRecordingNoticeOpen"
+          ref="recordingNoticePanelRef"
+          class="dialog-recording-notice-popover"
+          :style="recordingNoticePanelStyle"
+          :data-theme="recordingNoticePanelTheme"
+          role="region"
+          :aria-label="t('dialog.recordingNoticeTitle')"
+          tabindex="-1"
+          @focusout="onRecordingNoticeFocusout"
+          @keydown="onRecordingNoticeKeydown"
+        >
+          <div class="dialog-recording-notice-content">
+            <AppIcon
+              icon="mdi:information-outline"
+              size="md"
+              class="dialog-recording-notice-icon"
+            />
+            <p class="dialog-recording-notice-text">
+              {{ t('dialog.recordingNoticeMessage') }}
+            </p>
+          </div>
+          <div class="dialog-recording-notice-actions">
+            <Button size="xs" variant="primary" @click="confirmRecordingNotice">
+              {{ t('dialog.recordingNoticeConfirm') }}
+            </Button>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
+import { useAnchoredPanel } from '../../composables/use-anchored-panel'
+import {
+  isWithinDismissibleLayer,
+  useDismissibleLayer,
+} from '../../composables/use-dismissible-layer'
 import { useI18n } from '../../composables/use-i18n'
 import { formatRecordingElapsed } from '../../lib/dialog/dialog-recording'
 import type { DialogSide } from '../../lib/dialog/dialog-transcript'
@@ -173,6 +204,51 @@ const isStopping = computed(() => dialog.status === 'stopping')
 const isEmpty = computed(() => dialog.segments.length === 0)
 const isClearConfirmOpen = ref(false)
 const isRecordingNoticeOpen = ref(false)
+const recordContainerRef = ref<HTMLElement | null>(null)
+const recordingNoticePanelRef = ref<HTMLElement | null>(null)
+
+const { style: recordingNoticePanelStyle, theme: recordingNoticePanelTheme } =
+  useAnchoredPanel({
+    isOpen: () => isRecordingNoticeOpen.value,
+    anchor: () => recordContainerRef.value?.querySelector('button') ?? null,
+    panel: () => recordingNoticePanelRef.value,
+    placement: () => 'bottom',
+    align: () => 'start',
+  })
+
+function closeRecordingNotice() {
+  isRecordingNoticeOpen.value = false
+}
+
+function onRecordingNoticeKeydown(event: KeyboardEvent) {
+  if (isRecordingNoticeOpen.value && event.key === 'Escape') {
+    event.preventDefault()
+    event.stopPropagation()
+    closeRecordingNotice()
+    recordContainerRef.value?.querySelector('button')?.focus()
+  }
+}
+
+async function onRecordingNoticeFocusout(event: FocusEvent) {
+  const elements = [recordContainerRef.value, recordingNoticePanelRef.value]
+  if (event.relatedTarget instanceof Node) {
+    if (!isWithinDismissibleLayer(elements, event.relatedTarget)) {
+      closeRecordingNotice()
+    }
+    return
+  }
+  await nextTick()
+  if (!isWithinDismissibleLayer(elements, document.activeElement)) {
+    closeRecordingNotice()
+  }
+}
+
+useDismissibleLayer({
+  isOpen: () => isRecordingNoticeOpen.value,
+  elements: () => [recordContainerRef.value, recordingNoticePanelRef.value],
+  dismiss: closeRecordingNotice,
+  keydown: onRecordingNoticeKeydown,
+})
 
 // a recording belongs to its history entry: nothing would keep it otherwise
 const canRecord = computed(
@@ -226,20 +302,19 @@ function handleToggleRecord() {
   if (isRecordToggleDisabled.value) return
 
   if (!dialog.isRecordEnabled) {
-    if (dialog.config.isRecordingNoticeAcknowledged) {
-      dialog.isRecordEnabled = true
-    } else {
+    dialog.isRecordEnabled = true
+    if (!dialog.config.isRecordingNoticeAcknowledged) {
       isRecordingNoticeOpen.value = true
     }
   } else {
     dialog.isRecordEnabled = false
+    isRecordingNoticeOpen.value = false
   }
 }
 
 async function confirmRecordingNotice() {
   isRecordingNoticeOpen.value = false
   await dialog.acknowledgeRecordingNotice()
-  dialog.isRecordEnabled = true
 }
 
 function handleRun() {
@@ -451,5 +526,62 @@ function levelLabel(side: DialogSide) {
   .dialog-toolbar-source :deep(.option-label) {
     display: none;
   }
+}
+
+.dialog-toolbar-record-container {
+  display: inline-flex;
+  min-width: 0;
+}
+
+.dialog-recording-notice-popover {
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 18rem;
+  max-width: calc(100vw - 2 * var(--space-md));
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--app-surface-raised);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--app-shadow-lg);
+  outline: none;
+}
+
+.dialog-recording-notice-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+
+.dialog-recording-notice-icon {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  color: var(--color-primary);
+}
+
+.dialog-recording-notice-text {
+  margin: 0;
+  font-size: var(--text-caption);
+  line-height: 1.45;
+  color: var(--color-base-content);
+}
+
+.dialog-recording-notice-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.notice-fade-enter-active,
+.notice-fade-leave-active {
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.notice-fade-enter-from,
+.notice-fade-leave-to {
+  opacity: 0;
+  transform: translateY(3px);
 }
 </style>

@@ -1756,7 +1756,10 @@
     "sessionResumed": "Η συνεδρία συνεχίστηκε",
     "sessionResumedRecording": "Η εγγραφή συνεχίστηκε",
     "record": "Εγγραφή",
-    "recordStopToChangeHint": "Διακόψτε για αλλαγή"
+    "recordStopToChangeHint": "Διακόψτε για αλλαγή",
+    "headphonesNotice": "Συνιστάται η χρήση ακουστικών, ώστε η φωνή του συνομιλητή από τα ηχεία να μην περνάει στο μικρόφωνο και δημιουργεί ηχώ.",
+    "headphonesNoticeConfirm": "Κατάλαβα",
+    "emptyHeadphonesHint": "Συμβουλή: χρησιμοποιήστε ακουστικά για να αποφύγετε την ηχώ από τα ηχεία."
   },
   "toolPermissions": {
     "riskRead": "Ανάγνωση",

@@ -106,8 +106,8 @@ the conversation is transcribed as usual and its sound is also saved to an audio
 **Listen** starts listening with or without recording, depending on whether the **Record**
 toggle is enabled. While a session is paused, the toggle remains in the state it was in, so
 **Resume** continues with that setting (and you can toggle recording before resuming).
-The first time you turn on recording, TyCo reminds you to tell the other person
-before you record a conversation with them; **Got it** enables recording. Recording is available only while the history is
+The first time you turn on recording, TyCo shows a prompt reminding you to tell the other person
+before you record a conversation with them; **Got it** dismisses the reminder. Recording is available only while the history is
 saved to disk (**Settings → History**): a recording belongs to its history
 entry.
 

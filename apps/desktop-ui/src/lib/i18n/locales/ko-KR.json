@@ -1756,7 +1756,10 @@
     "sessionResumed": "세션 다시 시작됨",
     "sessionResumedRecording": "녹음 다시 시작됨",
     "record": "녹음",
-    "recordStopToChangeHint": "변경하려면 중지하세요"
+    "recordStopToChangeHint": "변경하려면 중지하세요",
+    "headphonesNotice": "스피커로 나오는 상대방 음성이 마이크로 들어가 에코가 발생하지 않도록 헤드폰 사용을 권장합니다.",
+    "headphonesNoticeConfirm": "확인",
+    "emptyHeadphonesHint": "팁: 스피커 에코를 방지하려면 헤드폰을 사용하세요."
   },
   "toolPermissions": {
     "riskRead": "읽기",

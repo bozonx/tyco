@@ -1756,7 +1756,10 @@
     "sessionResumed": "Sesiune reluată",
     "sessionResumedRecording": "Înregistrare reluată",
     "record": "Înregistrare",
-    "recordStopToChangeHint": "Opriți pentru a modifica"
+    "recordStopToChangeHint": "Opriți pentru a modifica",
+    "headphonesNotice": "Se recomandă folosirea căștilor pentru ca vocea interlocutorului din difuzoare să nu ajungă în microfon și să creeze ecou.",
+    "headphonesNoticeConfirm": "Am înțeles",
+    "emptyHeadphonesHint": "Sfat: folosiți căști pentru a evita ecoul din difuzoare."
   },
   "toolPermissions": {
     "riskRead": "Citire",

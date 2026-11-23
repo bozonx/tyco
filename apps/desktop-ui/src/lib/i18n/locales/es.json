@@ -1756,7 +1756,10 @@
     "sessionResumed": "Sesión reanudada",
     "sessionResumedRecording": "Grabación reanudada",
     "record": "Grabar",
-    "recordStopToChangeHint": "Detén para cambiar"
+    "recordStopToChangeHint": "Detén para cambiar",
+    "headphonesNotice": "Se recomienda usar auriculares para que la voz de la otra persona no entre por el micrófono desde los altavoces ni cree eco.",
+    "headphonesNoticeConfirm": "Entendido",
+    "emptyHeadphonesHint": "Consejo: usa auriculares para evitar el eco de los altavoces."
   },
   "toolPermissions": {
     "riskRead": "Lectura",

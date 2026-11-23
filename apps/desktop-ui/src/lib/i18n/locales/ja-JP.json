@@ -1752,7 +1752,10 @@
     "sessionResumed": "セッションを再開しました",
     "sessionResumedRecording": "録音を再開しました",
     "record": "録音",
-    "recordStopToChangeHint": "変更するには停止してください"
+    "recordStopToChangeHint": "変更するには停止してください",
+    "headphonesNotice": "スピーカーの音声がマイクに入ってエコーが発生するのを防ぐため、ヘッドホンの使用をおすすめします。",
+    "headphonesNoticeConfirm": "了解",
+    "emptyHeadphonesHint": "ヒント：スピーカーのエコーを防ぐため、ヘッドホンの使用をおすすめします。"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

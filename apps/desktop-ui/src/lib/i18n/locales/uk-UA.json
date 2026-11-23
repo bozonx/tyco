@@ -1756,7 +1756,10 @@
     "sessionResumed": "Сесію відновлено",
     "sessionResumedRecording": "Запис відновлено",
     "record": "Запис",
-    "recordStopToChangeHint": "Зупиніть, щоб змінити"
+    "recordStopToChangeHint": "Зупиніть, щоб змінити",
+    "headphonesNotice": "Рекомендується використовувати навушники, щоб звук співрозмовника з динаміків не потрапляв у мікрофон і не створював відлуння.",
+    "headphonesNoticeConfirm": "Зрозуміло",
+    "emptyHeadphonesHint": "Порада: використовуйте навушники, щоб уникнути відлуння від динаміків."
   },
   "toolPermissions": {
     "riskRead": "Читання",

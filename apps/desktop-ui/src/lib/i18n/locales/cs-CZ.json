@@ -1756,7 +1756,10 @@
     "sessionResumed": "Relace obnovena",
     "sessionResumedRecording": "Záznam obnoven",
     "record": "Záznam",
-    "recordStopToChangeHint": "Zastavte pro změnu"
+    "recordStopToChangeHint": "Zastavte pro změnu",
+    "headphonesNotice": "Doporučujeme použít sluchátka, aby hlas druhé strany z reproduktorů nepronikal do mikrofonu a nevytvářel ozvěnu.",
+    "headphonesNoticeConfirm": "Rozumím",
+    "emptyHeadphonesHint": "Tip: použijte sluchátka, abyste se vyhnuli ozvěně z reproduktorů."
   },
   "toolPermissions": {
     "riskRead": "Čtení",

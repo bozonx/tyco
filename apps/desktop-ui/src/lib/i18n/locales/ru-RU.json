@@ -1756,7 +1756,10 @@
     "sessionResumed": "Сессия возобновлена",
     "sessionResumedRecording": "Запись возобновлена",
     "record": "Запись",
-    "recordStopToChangeHint": "Остановите, чтобы изменить"
+    "recordStopToChangeHint": "Остановите, чтобы изменить",
+    "headphonesNotice": "Рекомендуется использовать наушники, чтобы звук собеседника из колонок не попадал в микрофон и не двоился.",
+    "headphonesNoticeConfirm": "Понятно",
+    "emptyHeadphonesHint": "Совет: используйте наушники, чтобы избежать эха от динамиков."
   },
   "toolPermissions": {
     "riskRead": "Чтение",

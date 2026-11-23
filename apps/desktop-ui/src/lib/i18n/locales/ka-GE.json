@@ -1756,7 +1756,10 @@
     "sessionResumed": "სესია განახლდა",
     "sessionResumedRecording": "ჩაწერა განახლდა",
     "record": "ჩაწერა",
-    "recordStopToChangeHint": "შეცვლისთვის შეაჩერეთ"
+    "recordStopToChangeHint": "შეცვლისთვის შეაჩერეთ",
+    "headphonesNotice": "რეკომენდებულია ყურსასმენების გამოყენება, რათა დინამიკებიდან თანამოსაუბრის ხმა მიკროფონში არ მოხვდეს და ექო არ გამოიწვიოს.",
+    "headphonesNoticeConfirm": "გასაგებია",
+    "emptyHeadphonesHint": "რჩევა: გამოიყენეთ ყურსასმენები დინამიკების ექოს თავიდან ასაცილებლად."
   },
   "toolPermissions": {
     "riskRead": "კითხვა",

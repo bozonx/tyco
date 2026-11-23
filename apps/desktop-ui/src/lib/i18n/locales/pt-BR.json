@@ -1756,7 +1756,10 @@
     "sessionResumed": "Sessão retomada",
     "sessionResumedRecording": "Gravação retomada",
     "record": "Gravação",
-    "recordStopToChangeHint": "Pare para alterar"
+    "recordStopToChangeHint": "Pare para alterar",
+    "headphonesNotice": "Recomenda-se usar fones de ouvido para evitar que a voz do interlocutor saia pelas caixas de som, entre no microfone e cause eco.",
+    "headphonesNoticeConfirm": "Entendi",
+    "emptyHeadphonesHint": "Dica: use fones de ouvido para evitar o eco das caixas de som."
   },
   "toolPermissions": {
     "riskRead": "Leitura",

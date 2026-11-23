@@ -1756,7 +1756,10 @@
     "sessionResumed": "Munkamenet folytatva",
     "sessionResumedRecording": "Rögzítés folytatva",
     "record": "Felvétel",
-    "recordStopToChangeHint": "Állítsa le a módosításhoz"
+    "recordStopToChangeHint": "Állítsa le a módosításhoz",
+    "headphonesNotice": "Javasoljuk fülhallgató használatát, hogy a másik fél hangszóróból jövő hangja ne jusson a mikrofonba és ne okozzon visszhangot.",
+    "headphonesNoticeConfirm": "Értem",
+    "emptyHeadphonesHint": "Tipp: használjon fülhallgatót a hangszóró visszhangjának elkerüléséhez."
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

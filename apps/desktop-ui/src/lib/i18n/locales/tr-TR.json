@@ -1752,7 +1752,10 @@
     "sessionResumed": "Oturum devam ettirildi",
     "sessionResumedRecording": "Kayıt devam ettirildi",
     "record": "Kayıt",
-    "recordStopToChangeHint": "Değiştirmek için durdurun"
+    "recordStopToChangeHint": "Değiştirmek için durdurun",
+    "headphonesNotice": "Hoparlörden gelen karşı tarafın sesinin mikrofona girip yankı yapmasını önlemek için kulaklık kullanılması önerilir.",
+    "headphonesNoticeConfirm": "Anladım",
+    "emptyHeadphonesHint": "İpucu: Hoparlör yankısını önlemek için kulaklık kullanın."
   },
   "toolPermissions": {
     "riskRead": "Okuma",

@@ -1756,7 +1756,10 @@
     "sessionResumed": "Sitzung fortgesetzt",
     "sessionResumedRecording": "Aufnahme fortgesetzt",
     "record": "Aufnahme",
-    "recordStopToChangeHint": "Anhalten zum Ändern"
+    "recordStopToChangeHint": "Anhalten zum Ändern",
+    "headphonesNotice": "Kopfhörer werden empfohlen, damit der Ton der Gegenseite aus den Lautsprechern nicht ins Mikrofon gelangt und ein Echo erzeugt.",
+    "headphonesNoticeConfirm": "Verstanden",
+    "emptyHeadphonesHint": "Tipp: Verwenden Sie Kopfhörer, um Lautsprecherecho zu vermeiden."
   },
   "toolPermissions": {
     "riskRead": "Liest",

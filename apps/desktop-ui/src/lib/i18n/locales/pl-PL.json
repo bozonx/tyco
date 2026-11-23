@@ -1756,7 +1756,10 @@
     "sessionResumed": "Wznowiono sesję",
     "sessionResumedRecording": "Wznowiono nagrywanie",
     "record": "Nagrywanie",
-    "recordStopToChangeHint": "Zatrzymaj, aby zmienić"
+    "recordStopToChangeHint": "Zatrzymaj, aby zmienić",
+    "headphonesNotice": "Zaleca się używanie słuchawek, aby głos rozmówcy z głośników nie trafiał do mikrofonu i nie tworzył echa.",
+    "headphonesNoticeConfirm": "Rozumiem",
+    "emptyHeadphonesHint": "Wskazówka: używaj słuchawek, aby uniknąć echa z głośników."
   },
   "toolPermissions": {
     "riskRead": "Odczyt",

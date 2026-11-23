@@ -11,7 +11,6 @@ import { useDesktopStore } from '../../stores/desktop'
 import { useDialogStatusStore } from '../../stores/dialog-status'
 import { useDialogStore } from '../../stores/dialog'
 import DialogToolbar from './DialogToolbar.vue'
-import ConfirmModal from '../common/ConfirmModal.vue'
 import IconButton from '../common/IconButton.vue'
 
 vi.mock('./DialogLanguageRoute.vue', () => ({
@@ -67,7 +66,7 @@ describe('DialogToolbar.vue', () => {
     expect(toggle.text()).toContain(i18n.global.t('dialog.record'))
   })
 
-  it('shows recording notice modal when toggling record on if not yet acknowledged', async () => {
+  it('enables recording immediately and shows recording notice popover when not yet acknowledged', async () => {
     desktop.setUserConfig({
       dialog: {
         ...DEFAULT_USER_CONFIG.dialog,
@@ -77,29 +76,40 @@ describe('DialogToolbar.vue', () => {
     })
     const wrapper = mount(DialogToolbar, {
       global: { plugins: [i18n, desktop.pinia] },
+      attachTo: document.body,
     })
     const toggle = wrapper.find('.dialog-toolbar-record-toggle')
     await toggle.trigger('click')
     await flushPromises()
 
-    const noticeModal = wrapper
-      .findAllComponents(ConfirmModal)
-      .find(
-        (m) => m.props('title') === i18n.global.t('dialog.recordingNoticeTitle')
-      )
-    expect(noticeModal?.props('open')).toBe(true)
+    const dialog = useDialogStore()
+    expect(dialog.isRecordEnabled).toBe(true)
+    expect(toggle.attributes('aria-pressed')).toBe('true')
 
-    // Confirm notice
-    await noticeModal?.vm.$emit('confirm')
+    const popover = document.body.querySelector(
+      '.dialog-recording-notice-popover'
+    )
+    expect(popover).not.toBeNull()
+    expect(popover?.textContent).toContain(
+      i18n.global.t('dialog.recordingNoticeMessage')
+    )
+
+    // Confirm notice in popover
+    const confirmButton = popover?.querySelector(
+      '.dialog-recording-notice-actions button'
+    ) as HTMLButtonElement | null
+    expect(confirmButton).not.toBeNull()
+    confirmButton?.click()
     await flushPromises()
 
     const desktopStore = useDesktopStore()
     expect(desktopStore.userConfig.dialog.isRecordingNoticeAcknowledged).toBe(
       true
     )
-    const dialog = useDialogStore()
-    expect(dialog.isRecordEnabled).toBe(true)
-    expect(toggle.attributes('aria-pressed')).toBe('true')
+    expect(
+      document.body.querySelector('.dialog-recording-notice-popover')
+    ).toBeNull()
+    wrapper.unmount()
   })
 
   it('starts with recording when record toggle is enabled', async () => {

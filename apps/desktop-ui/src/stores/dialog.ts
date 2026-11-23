@@ -425,6 +425,11 @@ export const useDialogStore = defineStore('dialog', () => {
     await updateConfig({ isRecordingNoticeAcknowledged: true })
   }
 
+  /** The user was told to use headphones to avoid echo during a call */
+  async function acknowledgeHeadphonesNotice() {
+    await updateConfig({ isHeadphonesNoticeAcknowledged: true })
+  }
+
   /** The transcript as text, with the translations when there are any */
   function exportText(): string {
     return exportDialogTranscript(segments.value, {
@@ -593,6 +598,7 @@ export const useDialogStore = defineStore('dialog', () => {
     stopAndExpand,
     retryTranslation,
     acknowledgeRecordingNotice,
+    acknowledgeHeadphonesNotice,
     exportText,
     updateConfig,
     copyTranscript,

@@ -1756,7 +1756,10 @@
     "sessionResumed": "Sessione ripresa",
     "sessionResumedRecording": "Registrazione ripresa",
     "record": "Registra",
-    "recordStopToChangeHint": "Interrompi per modificare"
+    "recordStopToChangeHint": "Interrompi per modificare",
+    "headphonesNotice": "Si consiglia di usare le cuffie per evitare che la voce dell’interlocutore esca dagli altoparlanti, rientri nel microfono e crei eco.",
+    "headphonesNoticeConfirm": "Ho capito",
+    "emptyHeadphonesHint": "Suggerimento: usa le cuffie per evitare l’eco degli altoparlanti."
   },
   "toolPermissions": {
     "riskRead": "Lettura",
