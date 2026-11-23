@@ -94,7 +94,6 @@ export function createProjectEditor(deps: ProjectEditorDependencies) {
     isStored,
     isValid,
     fields,
-    saveStatus: autosaves.status,
     load,
     syncFromStored: (project: AiProject) => {
       if (

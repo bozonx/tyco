@@ -120,9 +120,7 @@
       <SettingsDetailHeader
         back-label="Back to the overview"
         @back="detailBacks++"
-      >
-        <SettingsAutosaveStatus status="error" />
-      </SettingsDetailHeader>
+      />
       <div class="settings-entity-list">
         <SettingsEntityItem
           icon="mdi:account-outline"
@@ -148,10 +146,6 @@
           />
         </SettingsEntityItem>
       </div>
-      <SettingsDangerZone
-        message="Removing the profile deletes its folder"
-        action-label="Delete profile"
-      />
     </section>
     <section class="surface catalog-section ui-form-container">
       <h2>Quick surfaces and long content</h2>
@@ -279,7 +273,6 @@
             { label: 'Show notification', action: notify },
             {
               label: 'Confirm deletion',
-              danger: true,
               action: () => {
                 dialogOpen = true
               },
@@ -463,8 +456,6 @@ import ToastContainer from '../components/common/ToastContainer.vue'
 import EditorContextMenu from '../components/editor/EditorContextMenu.vue'
 import ShortcutButton from '../components/overlay/ShortcutButton.vue'
 import ShortcutHint from '../components/overlay/ShortcutHint.vue'
-import SettingsAutosaveStatus from '../components/settings/SettingsAutosaveStatus.vue'
-import SettingsDangerZone from '../components/settings/SettingsDangerZone.vue'
 import SettingsDetailHeader from '../components/settings/SettingsDetailHeader.vue'
 import SettingsEntityItem from '../components/settings/SettingsEntityItem.vue'
 import AudioWaveform from '../components/voice/AudioWaveform.vue'

@@ -5,7 +5,6 @@ import {
   createAutosave,
   createAutosaveGroup,
   createSaveTracker,
-  summarizeAutosave,
 } from './autosave'
 
 describe('createAutosave', () => {
@@ -170,15 +169,6 @@ describe('createAutosave', () => {
   })
 })
 
-describe('autosave summary', () => {
-  it('shows the worst state of the parts', () => {
-    expect(summarizeAutosave(['saved', 'error', 'saving'])).toBe('error')
-    expect(summarizeAutosave(['saved', 'pending'])).toBe('saving')
-    expect(summarizeAutosave(['idle', 'saved'])).toBe('saved')
-    expect(summarizeAutosave(['idle'])).toBe('')
-  })
-})
-
 describe('save tracker', () => {
   it('shows saving until every save ends, then keeps a failure', async () => {
     const tracker = createSaveTracker({ resave: async () => {} })
@@ -248,7 +238,7 @@ describe('autosave group', () => {
 
     autosave.schedule()
     expect(await group.flush()).toBe(false)
-    expect(group.status.value).toBe('error')
+    expect(autosave.status.value).toBe('error')
     expect(reportError).toHaveBeenCalledWith('disk full', expect.any(Function))
 
     const [, retry] = reportError.mock.calls[0] as [string, () => void]
@@ -256,7 +246,7 @@ describe('autosave group', () => {
     await vi.waitFor(() => expect(reportError).toHaveBeenCalledTimes(2))
 
     retry()
-    await vi.waitFor(() => expect(group.status.value).toBe('saved'))
+    await vi.waitFor(() => expect(autosave.status.value).toBe('saved'))
     expect(save).toHaveBeenCalledTimes(3)
   })
 
@@ -271,14 +261,11 @@ describe('autosave group', () => {
 
     first.schedule()
     second.schedule()
-    expect(group.status.value).toBe('saving')
     expect(await group.flush()).toBe(true)
-    expect(group.status.value).toBe('saved')
 
     second.schedule()
     group.cancel()
     await group.flush()
     expect(secondSave).toHaveBeenCalledOnce()
-    expect(group.status.value).toBe('')
   })
 })

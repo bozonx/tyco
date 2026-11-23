@@ -15,9 +15,10 @@ remain bundled and work offline.
   `variant="primary"` explicitly. `loading` blocks activation, exposes `aria-busy`
   and preserves the label beside a decorative spinner. Do not reintroduce boolean
   variant/size aliases. Shared types live in `lib/ui/control-types.ts`.
-  Delete and remove buttons must not be red: never use `danger` or `danger-ghost`
-  for delete actions; use regular buttons (`neutral` or `ghost`, or `primary` for
-  dialog confirmation).
+  Delete, remove and clear buttons and menu items must not be red: never use
+  `danger`, `danger-ghost` or `--color-error` for delete, remove or clear
+  actions; use regular controls (`neutral` or `ghost`, or `primary` for dialog
+  confirmation).
 - `ShortcutButton`: use `variant="primary|ghost"` and `size="xs|sm|md"`;
   the default is ghost/md. The label comes first, its keys sit at the right.
   Quick surface footer actions use this control with visible borders and text
@@ -145,8 +146,10 @@ and `navigate`/`editCommand`. A tab reads it with `useSettingsContext()`, edits
 the draft in place and emits nothing; detail tabs take only their entity id or
 plugin as a prop. The navigation tree, tab availability and titles live in
 `lib/settings/settings-navigation.ts`. A detail page uses `SettingsDetailHeader`
-and saves automatically, showing `SettingsAutosaveStatus`; only creating an
-entity waits for an explicit button.
+and saves automatically without any saving/saved indicator (failures show an
+error toast); only creating an entity waits for an explicit button. Never show
+saving spinners, `"Saving…"` / `"Saved"` labels, or success toasts when settings
+save normally.
 
 Keep business edits and validation in tested DI models. Command editing and
 undoable removal live in `lib/commands/*-model.ts`; LLM key operations, connection
@@ -423,11 +426,10 @@ animating transcript tokens. Send/stop and copy/check icons change within the
 same button, preserving focus. Request completion briefly reveals chat actions;
 quick request results and follow-up composers fade at their state boundary.
 
-Autosave status reserves space for localized saving/saved labels. Detail pages
-use their existing autosave summary; the settings session also includes its
-pending changes and displays confirmed success for 1.5 seconds. Failures remain
-visible with the existing retry/conflict controls. Labels are translated in all
-core locales.
+Settings save silently: never show saving spinners, `"Saving…"` / `"Saved"`
+labels, or confirmation toasts when settings or entity drafts save normally.
+Only when a save fails or conflicts is the user notified with a toast (and the
+applicable retry/conflict controls).
 
 Attachment groups use stable object/image keys and short layout transitions;
 leaving attachments become inert immediately. Sortable lists retain their drag

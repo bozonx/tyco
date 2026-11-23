@@ -222,7 +222,7 @@ onMounted(() => {
 }
 .chat-attachment-remove:hover {
   background: var(--app-hover);
-  color: var(--color-error);
+  color: var(--color-base-content);
 }
 .chat-attachment-preview {
   flex-basis: 100%;

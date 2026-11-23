@@ -1,5 +1,6 @@
 <template>
   <BaseDialog
+    class="user-data-dialog"
     :open="Boolean(model.action.value)"
     :labelledby="titleId"
     @close="model.cancel"
@@ -9,12 +10,15 @@
         {{ title }}
       </h3>
 
-      <div v-if="currentPath" class="user-data-modal-row">
-        <span class="user-data-modal-label">{{
-          t('settings.userData.current')
-        }}</span>
-        <code class="user-data-modal-path">{{ currentPath }}</code>
-      </div>
+      <FieldRow
+        v-if="currentPath"
+        class="user-data-modal-field"
+        vertical
+        :separator="false"
+        :label="t('settings.userData.current')"
+      >
+        <PathDisplay :path="currentPath" />
+      </FieldRow>
 
       <FieldCheckbox
         v-if="model.action.value === 'choose'"
@@ -25,14 +29,15 @@
       />
 
       <template v-if="model.target.value && relocation">
-        <div class="user-data-modal-row">
-          <span class="user-data-modal-label">{{
-            t('settings.userData.target')
-          }}</span>
-          <code class="user-data-modal-path">{{
-            model.target.value.path
-          }}</code>
-        </div>
+        <FieldRow
+          class="user-data-modal-field"
+          vertical
+          :separator="false"
+          :label="t('settings.userData.target')"
+        >
+          <PathDisplay :path="model.target.value.path" />
+        </FieldRow>
+
         <InlineNotice
           density="compact"
           appearance="surface"
@@ -44,7 +49,8 @@
             })
           "
         />
-        <div v-if="relocation.subfolderPath" class="user-data-modal-actions">
+
+        <div v-if="relocation.subfolderPath" class="user-data-modal-subfolder">
           <Button
             size="sm"
             variant="neutral"
@@ -55,6 +61,7 @@
             {{ t('settings.userData.useSubfolder') }}
           </Button>
         </div>
+
         <InlineNotice
           v-if="model.isConfirmingCrossDisk.value"
           density="compact"
@@ -68,6 +75,7 @@
             })
           "
         />
+
         <p v-if="relocation.mode" class="user-data-modal-restart">
           {{ t('settings.userData.restartNotice') }}
         </p>
@@ -76,6 +84,7 @@
       <InlineNotice
         v-if="model.errorMessage.value"
         density="compact"
+        appearance="surface"
         kind="error"
         announcement="polite"
         :message="model.errorMessage.value"
@@ -95,6 +104,7 @@
             size="sm"
             variant="primary"
             :disabled="model.isBusy.value"
+            :loading="model.isApplying.value"
             @click="model.apply"
           >
             {{ t('settings.userData.applyMove') }}
@@ -127,6 +137,7 @@
             size="sm"
             variant="primary"
             :disabled="model.isBusy.value"
+            :loading="model.isApplying.value"
             @click="model.apply"
           >
             {{ applyLabel }}
@@ -145,7 +156,9 @@ import type { UserDataFolderModel } from '../../lib/storage/user-data-folder-mod
 import BaseDialog from '../common/BaseDialog.vue'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
+import FieldRow from '../common/FieldRow.vue'
 import InlineNotice from '../common/InlineNotice.vue'
+import PathDisplay from '../common/PathDisplay.vue'
 
 const props = defineProps<{
   model: UserDataFolderModel
@@ -174,11 +187,14 @@ const applyLabel = computed(() =>
 </script>
 
 <style scoped>
+.user-data-dialog {
+  width: min(100% - 2 * var(--space-lg), 34rem);
+}
+
 .user-data-modal {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  min-width: min(32rem, 80vw);
 }
 
 .user-data-modal-title {
@@ -186,30 +202,34 @@ const applyLabel = computed(() =>
   color: var(--color-base-content);
   font-size: var(--text-title);
   font-weight: 600;
+  line-height: var(--leading-tight);
 }
 
-.user-data-modal-row {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2xs);
+.user-data-modal-field {
+  padding: 0;
 }
 
-.user-data-modal-label,
+.user-data-modal-field :deep(.field-row-control) {
+  width: 100%;
+}
+
 .user-data-modal-restart {
   margin: 0;
   color: var(--app-text-muted);
-  font-size: var(--text-control);
+  font-size: var(--text-caption);
+  line-height: 1.4;
 }
 
-.user-data-modal-path {
-  overflow-wrap: anywhere;
-  font-size: var(--text-control);
+.user-data-modal-subfolder {
+  display: flex;
 }
 
 .user-data-modal-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: var(--space-xs);
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
 }
 </style>

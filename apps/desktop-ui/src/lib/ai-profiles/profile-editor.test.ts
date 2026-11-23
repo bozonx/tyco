@@ -54,7 +54,6 @@ describe('profile editor', () => {
     editor.name.value = ' Editor '
     editor.changeName()
     editor.changeTemperature('0.7')
-    expect(editor.saveStatus.value).toBe('saving')
     await vi.advanceTimersByTimeAsync(100)
 
     expect(deps.updateProfile).toHaveBeenCalledOnce()
@@ -62,7 +61,6 @@ describe('profile editor', () => {
       { name: 'Editor', temperature: 0.7 },
       undefined
     )
-    expect(editor.saveStatus.value).toBe('saved')
   })
 
   it('holds an invalid number back', async () => {
@@ -82,9 +80,8 @@ describe('profile editor', () => {
     expect(deps.reportError).toHaveBeenCalledWith('gone', expect.any(Function))
     editor.soulPrompt.value = 'New'
     editor.changeSoul()
-    await editor.flush()
+    expect(await editor.flush()).toBe(false)
     expect(deps.writeSoul).not.toHaveBeenCalled()
-    expect(editor.saveStatus.value).toBe('error')
   })
 
   it('retries a failed instruction read without resetting profile edits', async () => {
@@ -131,7 +128,6 @@ describe('profile editor', () => {
     editor.changeTemperature('1')
     await editor.flush()
     await nextTick()
-    expect(editor.saveStatus.value).toBe('error')
     expect(deps.reportError).toHaveBeenCalledWith(
       'disk full',
       expect.any(Function)
@@ -143,7 +139,7 @@ describe('profile editor', () => {
     expect(deps.updateProfile).toHaveBeenCalledOnce()
   })
 
-  it('shows picked values in the same save status', async () => {
+  it('tracks picked values and reports failures', async () => {
     const { deps, editor } = setup()
     await editor.load(profile)
     let resolveSave!: () => void
@@ -153,15 +149,12 @@ describe('profile editor', () => {
       })
     )
     const saved = editor.changeSettings({ modelId: 'model-a' })
-    expect(editor.saveStatus.value).toBe('saving')
     resolveSave()
     expect(await saved).toBe(true)
-    expect(editor.saveStatus.value).toBe('saved')
 
     deps.updateProfile.mockRejectedValueOnce(new Error('disk full'))
     expect(await editor.changeSettings({ modelId: 'model-b' })).toBe(false)
     await nextTick()
-    expect(editor.saveStatus.value).toBe('error')
     expect(deps.reportError).toHaveBeenCalledWith(
       'disk full',
       expect.any(Function)
@@ -179,7 +172,6 @@ describe('profile editor', () => {
     await vi.advanceTimersByTimeAsync(0)
 
     expect(deps.updateProfile).toHaveBeenLastCalledWith({}, undefined)
-    expect(editor.saveStatus.value).toBe('saved')
   })
 
   it('reports a failure again when the retry fails too', async () => {

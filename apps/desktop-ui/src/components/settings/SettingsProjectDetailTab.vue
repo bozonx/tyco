@@ -16,7 +16,6 @@
       >
         {{ t('settings.saveProject') }}
       </Button>
-      <SettingsAutosaveStatus v-else :status="saveStatus" />
     </SettingsDetailHeader>
 
     <form
@@ -286,7 +285,6 @@ import InlineNotice from '../common/InlineNotice.vue'
 import PathDisplay from '../common/PathDisplay.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import StateMessage from '../common/StateMessage.vue'
-import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsProjectConvertDialog from './SettingsProjectConvertDialog.vue'
@@ -356,15 +354,7 @@ async function resolveConflict(keepMine: boolean) {
     toastError(error)
   }
 }
-const {
-  name,
-  description,
-  isExternal,
-  targetPath,
-  isStored,
-  isValid,
-  saveStatus,
-} = editor
+const { name, description, isExternal, targetPath, isStored, isValid } = editor
 
 // the fields take the project once it is there; the settings may open
 // before the vault is read

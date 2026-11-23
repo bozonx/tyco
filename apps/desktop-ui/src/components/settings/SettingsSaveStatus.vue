@@ -6,12 +6,6 @@
     role="status"
     aria-live="polite"
   >
-    <SettingsAutosaveStatus
-      v-if="!configIsNewer && !statusMessage"
-      :status="
-        isSaving || hasUnsavedChanges ? 'saving' : hasSaved ? 'saved' : ''
-      "
-    />
     <p v-if="configIsNewer" class="settings-config-warning" role="alert">
       <AppIcon icon="mdi:alert-outline" size="md" class="shrink-0" />
       <span>{{ t('settings.configNewerWarning') }}</span>
@@ -57,16 +51,14 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
-import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 
 const props = defineProps<{
   configIsNewer: boolean
-  hasUnsavedChanges?: boolean
   isSaving: boolean
   isReloading: boolean
   saveError: string
@@ -80,39 +72,6 @@ const emit = defineEmits<{
   retry: []
 }>()
 const { t } = useI18n()
-
-const hasSaved = ref(false)
-let savedTimer: ReturnType<typeof setTimeout> | undefined
-watch(
-  () =>
-    [
-      props.isSaving,
-      props.hasUnsavedChanges,
-      props.isReloading,
-      props.saveError,
-      props.conflicts.length,
-      props.configIsNewer,
-    ] as const,
-  ([saving, dirty, reloading, error, conflicts, newer], previous) => {
-    clearTimeout(savedTimer)
-    hasSaved.value = false
-    if (
-      previous[0] &&
-      !saving &&
-      !dirty &&
-      !reloading &&
-      !error &&
-      !conflicts &&
-      !newer
-    ) {
-      hasSaved.value = true
-      savedTimer = setTimeout(() => {
-        hasSaved.value = false
-      }, 1500)
-    }
-  }
-)
-onBeforeUnmount(() => clearTimeout(savedTimer))
 
 const statusMessage = computed(() => {
   if (props.saveError || props.conflicts.length) return t('settings.saveFailed')

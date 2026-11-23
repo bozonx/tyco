@@ -1,10 +1,9 @@
 import { mount } from '@vue/test-utils'
-import { afterEach, expect, it, vi } from 'vitest'
+import { expect, it } from 'vitest'
 
 import { i18n } from '../../lib/i18n'
 import SettingsSaveStatus from './SettingsSaveStatus.vue'
 
-afterEach(() => vi.useRealTimers())
 const initial = {
   configIsNewer: false,
   isSaving: false,
@@ -13,25 +12,20 @@ const initial = {
   conflicts: [] as string[],
 }
 
-it('shows pending saves and only briefly confirms a completed save', async () => {
-  vi.useFakeTimers()
+it('shows nothing while saving or after a successful save', async () => {
   const wrapper = mount(SettingsSaveStatus, {
     props: initial,
     global: { plugins: [i18n] },
   })
-  const status = () => wrapper.get('.settings-autosave-content').text()
-  expect(status()).toBe('')
-  await wrapper.setProps({ hasUnsavedChanges: true })
-  expect(status()).toBe(i18n.global.t('settings.autosaveSaving'))
+  expect(wrapper.get('[role="status"]').text()).toBe('')
   await wrapper.setProps({ isSaving: true })
-  await wrapper.setProps({ isSaving: false, hasUnsavedChanges: false })
-  expect(status()).toBe(i18n.global.t('settings.autosaveSaved'))
-  await vi.advanceTimersByTimeAsync(1500)
-  expect(status()).toBe('')
+  expect(wrapper.get('[role="status"]').text()).toBe('')
+  await wrapper.setProps({ isSaving: false })
+  expect(wrapper.get('[role="status"]').text()).toBe('')
   wrapper.unmount()
 })
 
-it('keeps a failed save visible and does not report success until retry succeeds', async () => {
+it('shows a failed save and clears it once retry succeeds', async () => {
   const wrapper = mount(SettingsSaveStatus, {
     props: initial,
     global: { plugins: [i18n] },
@@ -39,12 +33,9 @@ it('keeps a failed save visible and does not report success until retry succeeds
   await wrapper.setProps({ isSaving: true })
   await wrapper.setProps({ isSaving: false, saveError: 'Disk is full' })
   expect(wrapper.text()).toContain('Disk is full')
-  expect(wrapper.find('.settings-autosave-content').exists()).toBe(false)
   await wrapper.setProps({ isSaving: true })
   expect(wrapper.text()).toContain('Disk is full')
   await wrapper.setProps({ isSaving: false, saveError: '' })
-  expect(wrapper.get('.settings-autosave-content').text()).toBe(
-    i18n.global.t('settings.autosaveSaved')
-  )
+  expect(wrapper.get('[role="status"]').text()).toBe('')
   wrapper.unmount()
 })

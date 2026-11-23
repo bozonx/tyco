@@ -3,11 +3,7 @@
     <SettingsDetailHeader
       :back-label="t('settings.aiProfilesTab')"
       @back="navigate(AI_OVERVIEW_TAB)"
-    >
-      <template v-if="profile && !isNew">
-        <SettingsAutosaveStatus :status="editor.saveStatus.value" />
-      </template>
-    </SettingsDetailHeader>
+    />
 
     <template v-if="isNew">
       <SettingsSection :title="t('settings.newProfile')">
@@ -209,7 +205,6 @@ import FieldRow from '../common/FieldRow.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import PathDisplay from '../common/PathDisplay.vue'
 import StateMessage from '../common/StateMessage.vue'
-import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsProfileCommandTools from './SettingsProfileCommandTools.vue'

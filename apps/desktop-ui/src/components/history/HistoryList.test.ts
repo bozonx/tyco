@@ -134,7 +134,7 @@ describe('HistoryList.vue', () => {
   it('emits action event when action button is clicked', async () => {
     const actions = [
       { id: 'copy', icon: 'mdi:content-copy', title: 'Copy' },
-      { id: 'delete', icon: 'mdi:delete', title: 'Delete', danger: true },
+      { id: 'delete', icon: 'mdi:delete', title: 'Delete' },
     ]
 
     const wrapper = mount(HistoryList, {

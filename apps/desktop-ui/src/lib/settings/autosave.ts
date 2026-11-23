@@ -1,5 +1,5 @@
 import { errorMessage } from '@tyco/shared/value-guards'
-import { computed, ref, watch, type Ref } from 'vue'
+import { ref, watch, type Ref } from 'vue'
 
 import {
   type TimerDependencies,
@@ -107,28 +107,14 @@ export function createAutosave(deps: AutosaveDependencies) {
   return { status, error, schedule, flush, cancel }
 }
 
-/** What a page with several autosaved parts shows: the worst state first */
-export type AutosaveSummary = 'error' | 'saving' | 'saved' | ''
-
-export function summarizeAutosave(
-  statuses: readonly AutosaveStatus[]
-): AutosaveSummary {
-  if (statuses.includes('error')) return 'error'
-  if (statuses.includes('saving') || statuses.includes('pending'))
-    return 'saving'
-  if (statuses.includes('saved')) return 'saved'
-  return ''
-}
-
 export interface SaveTrackerDependencies {
   /** Stores the current value again, once a save has failed */
   resave: () => Promise<unknown>
 }
 
 /**
- * The state of saves that start at once, e.g. of a switch, shown the way an
- * autosave is. A failed save keeps the error until a flush stores the current
- * value again
+ * The state of saves that start at once, e.g. of a switch. A failed save keeps
+ * the error until a flush stores the current value again
  */
 export function createSaveTracker(deps: SaveTrackerDependencies) {
   const status = ref<AutosaveStatus>('idle')
@@ -191,12 +177,8 @@ export interface AutosaveGroupDependencies {
   reportError: (message: string, retry: () => void) => void
 }
 
-/** The autosaved parts of a page, shown, saved and forgotten together */
+/** The autosaved parts of a page, saved and forgotten together */
 export function createAutosaveGroup(deps: AutosaveGroupDependencies) {
-  const status = computed<AutosaveSummary>(() =>
-    summarizeAutosave(deps.parts.map((part) => part.status.value))
-  )
-
   /** Saves the waiting changes now, e.g. when the page is left */
   const flush = async (): Promise<boolean> => {
     const saved = await Promise.all(deps.parts.map((part) => part.flush()))
@@ -220,5 +202,5 @@ export function createAutosaveGroup(deps: AutosaveGroupDependencies) {
     )
   }
 
-  return { status, flush, cancel }
+  return { flush, cancel }
 }

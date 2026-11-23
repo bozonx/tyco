@@ -58,6 +58,15 @@ Run the desktop app with `pnpm tauri:dev`, not `pnpm tauri dev`.
 - Composables called from a store setup must not use lifecycle hooks or `inject`.
 - A lower-level store never imports a feature store; the feature hands itself
   in (e.g. the chat provides `core.askInChat` to the tool registry).
+- **Silent normal saves.** Settings and drafts save automatically in the
+  background. Never show saving spinners, `"Saving…"` / `"Saved"` status labels,
+  or confirmation toasts when saving succeeds normally. Show nothing on
+  normal saves; only when a save fails (or conflicts), show a toast (and any
+  applicable error/conflict recovery banner).
+- **No red delete or clear buttons.** Delete, remove, and clear buttons and
+  menu items ("Delete", "Remove", "Clear") must be ordinary controls (`neutral`
+  or `ghost`, or `primary` in confirmation dialogs) — never style them red
+  (`danger`, `danger-ghost`, `--color-error`).
 
 ## Naming
 

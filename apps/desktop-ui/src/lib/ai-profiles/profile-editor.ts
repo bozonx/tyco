@@ -7,7 +7,6 @@ import {
   createAutosaveGroup,
   createSaveTracker,
   type AutosaveStatus,
-  type AutosaveSummary,
   type AutosaveTimers,
 } from '../settings/autosave'
 import { isIpcErrorCode } from '../ipc/ipc-model'
@@ -221,10 +220,6 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
   const changeSettings = (patch: AiProfilePatch): Promise<boolean> =>
     pickedSaves.track(updateProfile(patch))
 
-  const saveStatus = computed<AutosaveSummary>(() =>
-    soulLoadError.value ? 'error' : autosaves.status.value
-  )
-
   const changeMemoryMode = (mode: ProfileMemoryMode) => {
     memoryMode.value = mode
     void changeSettings({ memoryMode: mode })
@@ -278,7 +273,6 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     hasConflict,
     resolveConflict,
     loadSoul,
-    saveStatus,
     load,
     syncFromStored,
     changeName,

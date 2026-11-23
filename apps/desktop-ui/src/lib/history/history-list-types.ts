@@ -60,6 +60,5 @@ export interface HistoryListAction {
   id: string
   icon: string
   title: string
-  danger?: boolean
   isVisible?: (item: HistoryListItem) => boolean
 }

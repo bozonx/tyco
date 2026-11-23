@@ -47,7 +47,6 @@ describe('project editor', () => {
     editor.load(project)
     editor.name.value = ' Journal '
     editor.change()
-    expect(editor.saveStatus.value).toBe('saving')
     await vi.advanceTimersByTimeAsync(100)
 
     expect(deps.saveProject).toHaveBeenCalledOnce()
@@ -60,7 +59,6 @@ describe('project editor', () => {
       },
       undefined
     )
-    expect(editor.saveStatus.value).toBe('saved')
   })
 
   it('holds a new external project without a folder back', async () => {
@@ -124,7 +122,6 @@ describe('project editor', () => {
     editor.change()
     await vi.advanceTimersByTimeAsync(100)
     await nextTick()
-    expect(editor.saveStatus.value).toBe('error')
     expect(deps.reportError).toHaveBeenCalledWith(
       'disk full',
       expect.any(Function)
