@@ -25,11 +25,7 @@ const aiCommand = (
 ): CommandConfig => ({
   ...createCommand('core.aiTask', id),
   name: id.toUpperCase(),
-  operationConfig: {
-    prompt,
-    tools: allowedCommandIds.map(commandToolRef),
-    maxSteps: 4,
-  },
+  operationConfig: { prompt, tools: allowedCommandIds.map(commandToolRef) },
 })
 
 const script = (id: string): CommandConfig => ({
@@ -212,12 +208,12 @@ describe('createAiCommandOperation', () => {
       ok: true,
       content: 'Two is done',
     })
-    expect(calls[0]).toMatchObject({ offered: ['one', 'two'], maxSteps: 5 })
+    expect(calls[0]).toMatchObject({ offered: ['one', 'two'], maxSteps: 9 })
     expect(ran).toEqual([{ id: 'two', input: { text: 'for two' } }])
     expect(onProgress).toHaveBeenCalledWith('TWO')
   })
 
-  it('takes the step limit of the LLM settings when it has none of its own', async () => {
+  it('takes the step limit of the settings', async () => {
     const command: CommandConfig = {
       ...aiCommand('a', ['one']),
       operationConfig: {

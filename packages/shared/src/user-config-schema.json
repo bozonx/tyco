@@ -728,6 +728,7 @@
       "maximum": 3600,
       "default": 300
     },
+    "commandAiMaxSteps": { "type": "integer", "minimum": 1, "maximum": 50 },
     "variables": {
       "type": "array",
       "items": {

@@ -28,7 +28,7 @@ const tool: RegisteredOperation = {
 }
 
 describe('OperationConfigFields', () => {
-  it('shows the step limit of an AI command, empty for the one of the LLM settings', async () => {
+  it('renders prompt input for an AI command and does not show step limit', async () => {
     const desktop = installFakeDesktop()
     const command = createCommand('core.aiTask', 'agent')
     const wrapper = mount(OperationConfigFields, {
@@ -38,19 +38,14 @@ describe('OperationConfigFields', () => {
           ...command,
           operationConfig: {
             ...command.operationConfig,
+            prompt: 'Hello AI',
             tools: [{ sourceKind: 'core', sourceId: 'web' }],
           },
         },
-        userConfig: { llm: { maxToolSteps: 12 } } as never,
       },
     })
-    const input = wrapper.get('input[type="number"]')
-    expect((input.element as HTMLInputElement).value).toBe('')
-    expect(input.attributes('placeholder')).toBe('12')
-    await input.setValue('3')
-    expect(wrapper.emitted('update')?.at(-1)).toEqual(['maxSteps', 3])
-    await input.setValue('')
-    expect(wrapper.emitted('update')?.at(-1)).toEqual(['maxSteps', undefined])
+    expect(wrapper.find('textarea').exists()).toBe(true)
+    expect(wrapper.find('input[type="number"]').exists()).toBe(false)
     wrapper.unmount()
     desktop.dispose()
   })

@@ -60,12 +60,7 @@ export function aiCommandOperationConfigOf(
     const ref = toolRefOf(value)
     if (ref && !tools.some((item) => isSameToolRef(item, ref))) tools.push(ref)
   }
-  const maxSteps = maxStepsOf(config.maxSteps)
-  return {
-    prompt: stringOr(config.prompt),
-    tools,
-    ...(maxSteps === undefined ? {} : { maxSteps }),
-  }
+  return { prompt: stringOr(config.prompt), tools }
 }
 
 /** The ids of the commands on an AI command's whitelist */

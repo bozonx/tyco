@@ -116,6 +116,19 @@
           @update:model-value="setCommandRunTimeoutSec"
         />
       </FieldRow>
+      <FieldRow
+        :label="t('commands.aiMaxSteps')"
+        :info="t('commands.aiMaxStepsInfo')"
+      >
+        <FieldNumber
+          :min="1"
+          :max="MAX_TOOL_STEPS"
+          :step="1"
+          :model-value="commandAiMaxSteps"
+          :placeholder="String(maxToolStepsOf(userConfig?.llm))"
+          @update:model-value="setCommandAiMaxSteps"
+        />
+      </FieldRow>
     </SettingsSection>
   </div>
 </template>
@@ -167,6 +180,8 @@ import {
   type CommandConfig,
   DEFAULT_EXTERNAL_ACCESS,
   type ExternalAccess,
+  MAX_TOOL_STEPS,
+  maxToolStepsOf,
 } from '@tyco/shared'
 
 const props = defineProps<{
@@ -197,6 +212,23 @@ const setCommandRunTimeoutSec = (value: number | string) => {
   userConfig.value.commandRunTimeoutSec = runTimeoutOf(
     typeof value === 'number' ? value : Number(value)
   )
+}
+
+const commandAiMaxSteps = computed<string>(() =>
+  userConfig.value.commandAiMaxSteps !== undefined
+    ? String(userConfig.value.commandAiMaxSteps)
+    : ''
+)
+const setCommandAiMaxSteps = (value: number | string) => {
+  const text = String(value).trim()
+  if (!text) {
+    delete userConfig.value.commandAiMaxSteps
+    return
+  }
+  const steps = Number(text)
+  if (Number.isInteger(steps) && steps >= 1 && steps <= MAX_TOOL_STEPS) {
+    userConfig.value.commandAiMaxSteps = steps
+  }
 }
 
 const setCommands = (next: CommandConfig[]) => {

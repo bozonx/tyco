@@ -20,7 +20,6 @@ describe('aiCommandOperationConfigOf', () => {
           { sourceKind: 'core', sourceId: ' ' },
           7,
         ],
-        maxSteps: 3,
       })
     ).toEqual({
       prompt: 'Do it',
@@ -28,11 +27,10 @@ describe('aiCommandOperationConfigOf', () => {
         { sourceKind: 'commands', sourceId: 'commands', toolName: 'a' },
         { sourceKind: 'core', sourceId: 'web' },
       ],
-      maxSteps: 3,
     })
   })
 
-  it('falls back to the defaults, leaving the step limit to the LLM settings', () => {
+  it('falls back to the defaults', () => {
     expect(aiCommandOperationConfigOf({})).toEqual({ prompt: '', tools: [] })
   })
 })

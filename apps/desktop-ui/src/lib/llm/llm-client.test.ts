@@ -688,7 +688,7 @@ describe('llm-client stream', () => {
     const run = createAiCommandRunner({
       stream: client.stream,
       instructions: () => '',
-      defaultMaxSteps: () => 8,
+      defaultMaxSteps: () => 1,
     })
     expect(
       await run(
@@ -697,7 +697,6 @@ describe('llm-client stream', () => {
           tools: [
             { sourceKind: 'commands', sourceId: 'commands', toolName: 'clock' },
           ],
-          maxSteps: 1,
         },
         '',
         [

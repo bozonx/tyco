@@ -285,6 +285,11 @@ export interface UserConfig {
    * (unbounded). Defaults to 300 (5 minutes).
    */
   commandRunTimeoutSec: number
+  /**
+   * Maximum tool steps AI commands may take (1 to `MAX_TOOL_STEPS`);
+   * `llm.maxToolSteps` (or `DEFAULT_MAX_TOOL_STEPS`) when unset.
+   */
+  commandAiMaxSteps?: number
   /** The variables commands refer to as `{{var:NAME}}`, see `variables.ts` */
   variables: VariableConfig[]
   /**

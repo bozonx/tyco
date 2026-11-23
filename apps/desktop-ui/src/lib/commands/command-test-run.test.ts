@@ -312,7 +312,7 @@ describe('runCommandTest', () => {
     const aiCommand: CommandConfig = {
       ...createCommand('core.aiTask', 'ai1'),
       name: 'Summarize',
-      operationConfig: { prompt: 'Summarize this', maxSteps: 3 },
+      operationConfig: { prompt: 'Summarize this' },
     }
     const result = await runCommandTest(
       aiCommand,
@@ -325,7 +325,7 @@ describe('runCommandTest', () => {
     expect(aiTaskTool.run).toHaveBeenCalledWith(
       expect.objectContaining({
         input: { text: 'Input text' },
-        config: { prompt: 'Summarize this', maxSteps: 3 },
+        config: { prompt: 'Summarize this' },
       })
     )
   })

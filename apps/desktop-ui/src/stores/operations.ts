@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 import {
   APP_CONFIG,
-  maxToolStepsOf,
+  commandAiMaxStepsOf,
   TRANSLATION_SECRET_IDS,
   type LlmTask,
 } from '@tyco/shared'
@@ -201,7 +201,7 @@ export const useOperationsStore = defineStore('tools', () => {
     stream: (task, prompt, options) =>
       llmStore.client.stream(task, prompt, options),
     instructions: () => APP_CONFIG.aiInstructions.aiTask,
-    defaultMaxSteps: () => maxToolStepsOf(desktopStore.userConfig?.llm),
+    defaultMaxSteps: () => commandAiMaxStepsOf(desktopStore.userConfig),
     commands: () => desktopStore.userConfig?.commands ?? [],
     commandInputSchema: (command, source) => {
       const tool = registry.get(command.operationId)

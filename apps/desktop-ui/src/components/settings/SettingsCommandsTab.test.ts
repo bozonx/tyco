@@ -394,13 +394,28 @@ describe('SettingsCommandsTab.vue', () => {
 
   it('updates the command run timeout setting including 0 for unbounded', async () => {
     const wrapper = mountTab()
-    const numberInput = wrapper.find(
+    const numberInputs = wrapper.findAll(
       '.commands-settings-section input[type="number"]'
     )
-    expect(numberInput.exists()).toBe(true)
-    await numberInput.setValue('60')
+    expect(numberInputs.length).toBe(2)
+    const timeoutInput = numberInputs[0]
+    await timeoutInput.setValue('60')
     expect(context.draft.value.commandRunTimeoutSec).toBe(60)
-    await numberInput.setValue('0')
+    await timeoutInput.setValue('0')
     expect(context.draft.value.commandRunTimeoutSec).toBe(0)
+  })
+
+  it('updates the AI commands step limit setting', async () => {
+    const wrapper = mountTab()
+    const numberInputs = wrapper.findAll(
+      '.commands-settings-section input[type="number"]'
+    )
+    expect(numberInputs.length).toBe(2)
+    const stepsInput = numberInputs[1]
+    expect(stepsInput.attributes('placeholder')).toBe('8')
+    await stepsInput.setValue('12')
+    expect(context.draft.value.commandAiMaxSteps).toBe(12)
+    await stepsInput.setValue('')
+    expect(context.draft.value.commandAiMaxSteps).toBeUndefined()
   })
 })

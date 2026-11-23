@@ -127,19 +127,6 @@
       @cancel="toolToRemove = null"
     />
   </FieldRow>
-  <FieldRow
-    v-if="config.tools.length"
-    :label="t('commands.aiMaxSteps')"
-    :info="t('commands.aiMaxStepsInfo')"
-  >
-    <FieldNumber
-      min="1"
-      :max="MAX_TOOL_STEPS"
-      :model-value="config.maxSteps ?? ''"
-      :placeholder="String(maxToolStepsOf(userConfig?.llm))"
-      @update:model-value="setMaxSteps"
-    />
-  </FieldRow>
 </template>
 <script setup lang="ts">
 import { computed, ref } from 'vue'
@@ -171,7 +158,6 @@ import AppIcon from '../common/AppIcon.vue'
 import Badge from '../common/Badge.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
-import FieldNumber from '../common/FieldNumber.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import IconButton from '../common/IconButton.vue'
@@ -181,13 +167,7 @@ import AiCommandAddToolModal, {
 } from './AiCommandAddToolModal.vue'
 import VariableInsertMenu from './VariableInsertMenu.vue'
 import VariableReferenceHints from './VariableReferenceHints.vue'
-import {
-  type CommandConfig,
-  MAX_TOOL_STEPS,
-  type ToolRef,
-  type UserConfig,
-  maxToolStepsOf,
-} from '@tyco/shared'
+import { type CommandConfig, type ToolRef, type UserConfig } from '@tyco/shared'
 
 const props = defineProps<{
   command: CommandConfig
@@ -345,20 +325,6 @@ function confirmRemoveTool() {
   if (!toolToRemove.value) return
   toggleTool(toolToRemove.value.ref, false)
   toolToRemove.value = null
-}
-
-/**
- * An empty field takes the limit of the LLM settings; a number out of range or
- * half typed is not taken
- */
-function setMaxSteps(text: string) {
-  if (!text.trim()) {
-    emit('update', 'maxSteps', undefined)
-    return
-  }
-  const steps = Number(text)
-  if (Number.isInteger(steps) && steps >= 1 && steps <= MAX_TOOL_STEPS)
-    emit('update', 'maxSteps', steps)
 }
 </script>
 <style scoped>

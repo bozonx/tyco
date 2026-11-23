@@ -123,7 +123,7 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
     tools: readonly AiCommandAgentTool[],
     options: AiCommandRunOptions
   ): Promise<string> => {
-    const maxSteps = config.maxSteps ?? deps.defaultMaxSteps()
+    const maxSteps = deps.defaultMaxSteps()
     let callsUsed = 0
     /** What the last command that ran returned */
     let lastResult = ''

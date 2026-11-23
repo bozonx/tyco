@@ -1,5 +1,6 @@
 import type { ToolRef } from './tools-config'
 import configDefaults from '../user-config-defaults.json' with { type: 'json' }
+import { type LlmConfig, MAX_TOOL_STEPS, maxToolStepsOf } from './llm-config'
 import type { ShortcutSlots } from './translation-config'
 
 /**
@@ -111,6 +112,24 @@ export const COMMAND_RUN_TIMEOUT_DEFAULT_SEC = 300
 export const COMMAND_RUN_TIMEOUT_MAX_SEC = 3600
 
 /**
+ * The step limit for AI commands from `commandAiMaxSteps`, or
+ * `llm.maxToolSteps` (or `DEFAULT_MAX_TOOL_STEPS`) when unset or out of range.
+ */
+export function commandAiMaxStepsOf(
+  config:
+    | { commandAiMaxSteps?: number; llm?: Pick<LlmConfig, 'maxToolSteps'> }
+    | undefined
+): number {
+  const steps = config?.commandAiMaxSteps
+  return typeof steps === 'number' &&
+    Number.isInteger(steps) &&
+    steps >= 1 &&
+    steps <= MAX_TOOL_STEPS
+    ? steps
+    : maxToolStepsOf(config?.llm)
+}
+
+/**
  * `operationConfig` of an AI command, a command of the `core.aiTask` tool: an
  * LLM agent that follows `prompt` and may call the tools of `tools`
  */
@@ -122,11 +141,6 @@ export interface AiCommandOperationConfig {
    * without tools
    */
   tools: ToolRef[]
-  /**
-   * Maximum tool calls per run, 1 to `MAX_TOOL_STEPS`; the final answer does
-   * not consume a call. `llm.maxToolSteps` when unset
-   */
-  maxSteps?: number
 }
 
 /** `operationConfig` of a `webhook` command */
