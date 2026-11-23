@@ -24,6 +24,9 @@
         <slot name="info" :device-scope-note="deviceScopeNote">
           <InfoTooltip v-if="infoText" :text="infoText" />
         </slot>
+        <div v-if="$slots.action" class="field-row-action">
+          <slot name="action" />
+        </div>
       </div>
       <div v-if="hint" :id="hintId" class="field-row-hint">{{ hint }}</div>
       <FieldMessages
@@ -163,6 +166,19 @@ const { errors, warnings, labelId, hintId, errorId, warningId, controlId } =
   align-items: center;
   gap: var(--space-xs);
   font-size: var(--text-control);
+  width: 100%;
+}
+
+.vertical .field-row-control {
+  min-height: 0;
+}
+
+.vertical .field-row-control:empty {
+  display: none;
+}
+
+.field-row-action {
+  margin-inline-start: auto;
 }
 
 .field-row--inline {

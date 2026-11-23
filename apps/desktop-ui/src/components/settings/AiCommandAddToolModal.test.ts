@@ -61,7 +61,7 @@ describe('AiCommandAddToolModal', () => {
     expect(wrapper.text()).toContain('My Custom Command')
   })
 
-  it('marks already selected tools as added and disables their button', () => {
+  it('marks already selected tools as added and disables click', () => {
     const selectedRef: ToolRef = {
       sourceKind: 'core',
       sourceId: 'web',
@@ -81,8 +81,8 @@ describe('AiCommandAddToolModal', () => {
 
     const rows = wrapper.findAll('[role="listitem"]')
     expect(rows[0].text()).toContain('commands.aiToolAlreadyAdded')
-    expect(rows[0].find('button').exists()).toBe(false)
-    expect(rows[1].find('button').exists()).toBe(true)
+    expect(rows[0].classes()).toContain('is-added')
+    expect(rows[1].classes()).toContain('is-clickable')
   })
 
   it('filters tools by search query', async () => {
@@ -102,25 +102,7 @@ describe('AiCommandAddToolModal', () => {
     expect(wrapper.text()).toContain('My Custom Command')
   })
 
-  it('emits add event when clicking an unadded tool', async () => {
-    const wrapper = mount(AiCommandAddToolModal, {
-      props: {
-        open: true,
-        candidateGroups: mockGroups,
-        isSelected: () => false,
-      },
-      global: { stubs: { BaseDialog: { template: '<div><slot /></div>' } } },
-    })
-
-    const rows = wrapper.findAll('[role="listitem"]')
-    await rows[1].find('button').trigger('click')
-
-    expect(wrapper.emitted('add')?.[0]).toEqual([
-      { sourceKind: 'core', sourceId: 'web', toolName: 'webFetch' },
-    ])
-  })
-
-  it('emits add event when clicking an unadded tool row directly', async () => {
+  it('emits add event when clicking an unadded tool row', async () => {
     const wrapper = mount(AiCommandAddToolModal, {
       props: {
         open: true,

@@ -35,8 +35,8 @@ describe('AiCommandOperationFields', () => {
       global: { stubs: { AiCommandAddToolModal: true, ConfirmModal: true } },
     })
 
-    expect(wrapper.text()).toContain('commands.aiNoTools')
-    expect(wrapper.find('.ai-tools-actions button').text()).toContain(
+    expect(wrapper.text()).not.toContain('commands.aiNoTools')
+    expect(wrapper.find('.field-row-action button').text()).toContain(
       'commands.aiAddTool'
     )
     expect(wrapper.find('input[type="number"]').exists()).toBe(false)

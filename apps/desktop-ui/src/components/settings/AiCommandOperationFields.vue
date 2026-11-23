@@ -27,11 +27,23 @@
     :label="t('commands.aiTools')"
     :info="t('commands.aiToolsInfo')"
   >
-    <div class="ai-tools-container">
-      <div
-        v-if="selectedCandidates.length || unavailable.length"
-        class="ai-tools-list"
+    <template #action>
+      <Button
+        size="sm"
+        variant="neutral"
+        icon="mdi:plus"
+        type="button"
+        @click="isAddModalOpen = true"
       >
+        {{ t('commands.aiAddTool') }}
+      </Button>
+    </template>
+
+    <div
+      v-if="selectedCandidates.length || unavailable.length"
+      class="ai-tools-container"
+    >
+      <div class="ai-tools-list">
         <div
           v-for="item in selectedCandidates"
           :key="refKey(item.ref)"
@@ -90,22 +102,6 @@
             />
           </div>
         </template>
-      </div>
-
-      <p v-else class="ai-tools-empty">
-        {{ t('commands.aiNoTools') }}
-      </p>
-
-      <div class="ai-tools-actions">
-        <Button
-          size="sm"
-          variant="neutral"
-          icon="mdi:plus"
-          type="button"
-          @click="isAddModalOpen = true"
-        >
-          {{ t('commands.aiAddTool') }}
-        </Button>
       </div>
     </div>
 
@@ -433,17 +429,5 @@ function setMaxSteps(text: string) {
   font-size: var(--text-caption);
   font-weight: 600;
   color: var(--app-text-muted);
-}
-
-.ai-tools-empty {
-  margin: var(--space-xs) 0;
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-}
-
-.ai-tools-actions {
-  display: flex;
-  align-items: center;
-  margin-top: var(--space-xs);
 }
 </style>
