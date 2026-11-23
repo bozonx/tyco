@@ -186,21 +186,13 @@ function close() {
 
 <style scoped>
 .add-tool-dialog {
-  width: min(100% - 2 * var(--space-lg), 40rem);
-  max-height: calc(100dvh - 3rem);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden !important;
-  padding: var(--space-md) var(--space-lg);
+  width: min(100% - 2 * var(--space-lg), 36rem);
 }
 
 .add-tool-modal {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  min-height: 0;
-  max-height: 100%;
-  flex: 1 1 auto;
+  gap: var(--space-md);
 }
 
 .add-tool-modal-header {
@@ -208,7 +200,6 @@ function close() {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
-  flex-shrink: 0;
 }
 
 .add-tool-modal-title {
@@ -222,16 +213,13 @@ function close() {
 .add-tool-search {
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
 }
 
 .add-tool-content {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  max-height: 24rem;
-  min-height: 0;
-  flex: 1 1 auto;
+  max-height: 22rem;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-right: var(--space-2xs);
@@ -240,14 +228,14 @@ function close() {
 .add-tool-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2xs);
+  gap: var(--space-xs);
 }
 
 .add-tool-group-header {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-2xs) var(--space-3xs);
+  padding: var(--space-xs) var(--space-2xs) 0;
 }
 
 .add-tool-group-icon {
@@ -274,7 +262,7 @@ function close() {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
-  min-height: var(--control-size-md);
+  min-height: 2.25rem;
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-md);
   border: 1px solid var(--app-border-subtle);
@@ -307,7 +295,7 @@ function close() {
   flex: 1 1 auto;
   min-width: 0;
   font-size: var(--text-body);
-  color: var(--app-text);
+  color: var(--color-base-content);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
