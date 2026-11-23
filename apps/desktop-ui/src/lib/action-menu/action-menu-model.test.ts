@@ -146,6 +146,35 @@ describe('createActionMenuModel', () => {
     expect(store.takesText.value).toBe(true)
   })
 
+  it('lists the pages that take text and steps within them', () => {
+    const { deps } = setup()
+    const store = createActionMenuModel({
+      ...deps,
+      actionPages: () => [
+        { inputMode: 'none', slots: {} },
+        { inputMode: 'selection', slots: {} },
+        { inputMode: 'none', slots: {} },
+        { inputMode: 'selection', slots: {} },
+      ],
+    })
+    // the first page takes text whatever its mode
+    expect(store.textPageIndexes.value).toEqual([0, 1, 3])
+
+    store.stepPageWithin(store.textPageIndexes.value, 1)
+    expect(store.pageIndex.value).toBe(1)
+    store.stepPageWithin(store.textPageIndexes.value, 1)
+    expect(store.pageIndex.value).toBe(3)
+    store.stepPageWithin(store.textPageIndexes.value, 1)
+    expect(store.pageIndex.value).toBe(0)
+    store.stepPageWithin(store.textPageIndexes.value, -1)
+    expect(store.pageIndex.value).toBe(3)
+
+    // from a page outside the list it goes to the first listed page
+    store.setPage(2)
+    store.stepPageWithin([1, 3], 1)
+    expect(store.pageIndex.value).toBe(1)
+  })
+
   it('cycles all pages on repeated hotkey presses and jumps to a different page first', () => {
     const { deps } = setup()
     const store = createActionMenuModel({

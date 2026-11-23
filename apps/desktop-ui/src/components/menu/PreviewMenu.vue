@@ -9,6 +9,12 @@
           size="sm"
           @click="currentText = props.text"
         />
+        <ActionPagesBar
+          v-if="hasPages"
+          :page-indexes="pageIndexes"
+          :active-index="pageIndex"
+          @select="selectPage"
+        />
         <ResultViewModeToggle
           preset="parallel"
           v-if="props.sourceText"
@@ -51,6 +57,8 @@
     <template #actions>
       <ShortcutList
         editor-shortcut
+        :page-index="pageIndex"
+        :motion-direction="motionDirection"
         :text="currentText"
         :source-text="props.sourceText"
         :left-letter-keys="leftLetterKeys"
@@ -78,6 +86,7 @@ import ParallelTextPreview from '../common/ParallelTextPreview.vue'
 import ResultTextEditor from '../common/ResultTextEditor.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
+import ActionPagesBar from './ActionPagesBar.vue'
 import ResultViewModeToggle from './ResultViewModeToggle.vue'
 
 const props = defineProps<PreviewMenuParams>()
@@ -167,9 +176,16 @@ const qualityStatusKind = computed<'info' | 'warning' | 'success'>(() => {
   return 'success'
 })
 
-const { leftLetterKeys, spaceKey, isEditorTarget } = useResultActions(
-  () => props.sourceText
-)
+const {
+  pageIndex,
+  pageIndexes,
+  hasPages,
+  motionDirection,
+  selectPage,
+  leftLetterKeys,
+  spaceKey,
+  isEditorTarget,
+} = useResultActions(() => props.sourceText)
 </script>
 
 <style scoped>

@@ -590,10 +590,16 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
   const currentPage = computed(
     () => deps.actionPages?.()?.[pageIndex.value] ?? deps.actionPages?.()?.[0]
   )
-  const takesText = computed(() => {
-    if (pageIndex.value === 0) return true
-    return currentPage.value?.inputMode !== 'none'
-  })
+  /** The first page always acts on text; another may be set to take none. */
+  const pageTakesText = (index: number) =>
+    index === 0 || deps.actionPages?.()?.[index]?.inputMode !== 'none'
+  const takesText = computed(() => pageTakesText(pageIndex.value))
+  /** Pages whose actions can run on a result text, in page order. */
+  const textPageIndexes = computed(() =>
+    Array.from({ length: pageCount.value }, (_, index) => index).filter(
+      pageTakesText
+    )
+  )
 
   const clampPage = (index: number) => {
     if (index < 0 || index >= pageCount.value) {
@@ -613,6 +619,20 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
   }
   const prevPage = () => {
     pageIndex.value = (pageIndex.value - 1 + pageCount.value) % pageCount.value
+  }
+  /**
+   * Steps to the previous or the next page among `indexes`, wrapping around;
+   * from a page outside them it goes to the first one.
+   */
+  const stepPageWithin = (indexes: readonly number[], direction: 1 | -1) => {
+    if (indexes.length === 0) return
+    const position = indexes.indexOf(pageIndex.value)
+    if (position < 0) {
+      pageIndex.value = indexes[0]
+      return
+    }
+    const next = (position + direction + indexes.length) % indexes.length
+    pageIndex.value = indexes[next]
   }
   /**
    * Handles an action-page hotkey or command while the action menu is already
@@ -747,7 +767,9 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     pageCount,
     currentPage,
     takesText,
+    textPageIndexes,
     setPage,
+    stepPageWithin,
     openPage,
     repeatOpenPage,
     nextPage,

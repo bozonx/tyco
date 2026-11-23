@@ -11,37 +11,13 @@
     >
       <ActionMenuPositionButton />
     </template>
-    <template v-if="hasDiff || actionMenuStore.pageCount > 1" #header-extra>
-      <div
-        v-if="actionMenuStore.pageCount > 1"
-        ref="pagesBar"
-        class="action-pages-bar"
-        role="group"
-        :aria-label="t('settings.mainActionGroups.actionPages')"
-      >
-        <span
-          class="action-page-highlight"
-          :style="highlightStyle"
-          aria-hidden="true"
-        />
-        <KeyboardKey class="action-pages-hint">Tab</KeyboardKey>
-        <button
-          v-for="index in actionMenuStore.pageCount"
-          :key="index"
-          type="button"
-          tabindex="-1"
-          class="action-page-button"
-          :class="{ 'is-active': actionMenuStore.pageIndex === index - 1 }"
-          :aria-pressed="actionMenuStore.pageIndex === index - 1"
-          @pointerdown="handlePagePointerDown"
-          @click="handlePageClick($event, index - 1)"
-        >
-          <KeyboardKey v-if="index <= 10">{{
-            index === 10 ? 0 : index
-          }}</KeyboardKey>
-          <span>{{ t('settings.actionPage', { page: index }) }}</span>
-        </button>
-      </div>
+    <template v-if="hasDiff || hasPages" #header-extra>
+      <ActionPagesBar
+        v-if="hasPages"
+        :page-indexes="pageIndexes"
+        :active-index="actionMenuStore.pageIndex"
+        @select="selectPage"
+      />
       <ResultViewModeToggle v-if="hasDiff" v-model="diffMode" preset="diff" />
     </template>
 
@@ -80,8 +56,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
+import { useActionPages } from '../../composables/use-action-pages'
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
@@ -93,17 +70,16 @@ import {
 import { isQuickWindow } from '../../lib/desktop/window'
 import { voiceReplyActionParams } from '../../lib/listen/listen-reply-actions'
 import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
-import { isTextEntryTarget } from '../../lib/ui/text-entry-target'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useToastStore } from '../../stores/toast'
-import KeyboardKey from '../common/KeyboardKey.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ContextPreview from '../overlay/ContextPreview.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
 import ActionMenuPositionButton from '../quick/ActionMenuPositionButton.vue'
+import ActionPagesBar from './ActionPagesBar.vue'
 import ResultViewModeToggle from './ResultViewModeToggle.vue'
 import { APP_CONFIG } from '@tyco/shared'
 
@@ -142,27 +118,8 @@ watch(draftText, (text) => {
 const inQuickWindow = isQuickWindow()
 const desktopStore = useDesktopStore()
 const actionMenuStore = useActionMenuStore()
-const pagesBar = ref<HTMLElement>()
-const highlightStyle = ref<Record<string, string>>({ opacity: '0' })
-const motionDirection = ref(1)
-function updateHighlight() {
-  const active = pagesBar.value?.querySelector<HTMLElement>('.is-active')
-  if (!active) return
-  highlightStyle.value = {
-    width: `${active.offsetWidth}px`,
-    height: `${active.offsetHeight}px`,
-    transform: `translate(${active.offsetLeft}px, ${active.offsetTop}px)`,
-  }
-}
-watch(
-  () => actionMenuStore.pageIndex,
-  (index, previous) => {
-    motionDirection.value = index > previous ? 1 : -1
-    void nextTick(updateHighlight)
-  },
-  { flush: 'sync' }
-)
-let pagesResizeObserver: ResizeObserver | undefined
+const { pageIndexes, hasPages, motionDirection, stepPage, selectPage } =
+  useActionPages({ isDisabled: () => props.shortcutsDisabled })
 onMounted(() => {
   if (
     menuModalsStore.currentModal === MenuModals.INSERT ||
@@ -171,12 +128,7 @@ onMounted(() => {
   ) {
     actionMenuStore.openPage(0)
   }
-  updateHighlight()
-  if (typeof ResizeObserver === 'undefined') return
-  pagesResizeObserver = new ResizeObserver(updateHighlight)
-  if (pagesBar.value) pagesResizeObserver.observe(pagesBar.value)
 })
-onUnmounted(() => pagesResizeObserver?.disconnect())
 
 const menuModalsStore = useMenuModalsStore()
 const editorInputStore = useEditorInputStore()
@@ -247,12 +199,8 @@ watch(
 useViewModeArrowKeys((step) => {
   if (hasDiff.value) {
     stepMode(step)
-  } else if (actionMenuStore.pageCount > 1) {
-    if (step === 1) {
-      stepPage(1)
-    } else if (step === -1) {
-      stepPage(-1)
-    }
+  } else if (hasPages.value) {
+    stepPage(step)
   }
 })
 
@@ -359,122 +307,9 @@ const primaryAction = computed<ActionItem | undefined>(() => {
 
   return { ...insertAction, disabled, hint }
 })
-
-function stepPage(direction: number) {
-  if (direction > 0) actionMenuStore.nextPage()
-  else actionMenuStore.prevPage()
-  motionDirection.value = direction
-}
-
-function handlePagePointerDown(event: PointerEvent) {
-  if (event.pointerType === 'mouse') {
-    event.preventDefault()
-  }
-}
-
-function handlePageClick(event: MouseEvent, pageIndex: number) {
-  ;(event.currentTarget as HTMLElement | null)?.blur()
-  actionMenuStore.setPage(pageIndex)
-}
-
-function onKeyDown(event: KeyboardEvent) {
-  if (props.shortcutsDisabled || actionMenuStore.pageCount <= 1) return
-  if (event.isComposing || isTextEntryTarget(event.target)) return
-
-  // Tab cycles the pages: the menu is driven by letter keys, not by focus
-  if (
-    event.key === 'Tab' &&
-    !event.ctrlKey &&
-    !event.altKey &&
-    !event.metaKey
-  ) {
-    event.preventDefault()
-    if (event.shiftKey) {
-      stepPage(-1)
-    } else {
-      stepPage(1)
-    }
-    return
-  }
-
-  if (event.ctrlKey || event.altKey || event.metaKey) {
-    return
-  }
-  if (event.key === 'PageDown') {
-    event.preventDefault()
-    stepPage(1)
-  } else if (event.key === 'PageUp') {
-    event.preventDefault()
-    stepPage(-1)
-  } else if (/^[1-9]$/.test(event.key) || event.key === '0') {
-    const target = event.key === '0' ? 9 : Number(event.key) - 1
-    if (target < actionMenuStore.pageCount) {
-      event.preventDefault()
-      actionMenuStore.setPage(target)
-    }
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', onKeyDown)
-})
-onUnmounted(() => {
-  window.removeEventListener('keydown', onKeyDown)
-})
 </script>
 
 <style scoped>
-/* Page tabs: a segmented control with the page number keys */
-.action-pages-bar {
-  position: relative;
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--segment-gap);
-  padding: var(--segment-padding);
-  border-radius: var(--radius-md);
-  background-color: var(--app-surface-sunken);
-
-  --key-size: var(--quick-kbd-size);
-  --key-font-size: var(--quick-kbd-font-size);
-}
-
-.action-pages-hint {
-  margin-inline: var(--space-xs);
-}
-
-.action-page-button {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-2xs) var(--space-sm) var(--space-2xs) var(--space-2xs);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-  background: transparent;
-  cursor: pointer;
-  transition:
-    background-color var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.action-page-button:hover {
-  color: var(--color-base-content);
-}
-
-.action-page-button.is-active {
-  color: var(--color-base-content);
-
-  font-weight: 500;
-}
-
-.action-page-button:focus-visible {
-  outline: var(--app-focus-outline-width) solid var(--color-primary);
-  outline-offset: 1px;
-}
-
 .preview-area {
   position: relative;
   width: 100%;
@@ -482,24 +317,5 @@ onUnmounted(() => {
   display: flex;
   flex: 1 1 0%;
   min-height: 0;
-}
-
-.action-page-highlight {
-  position: absolute;
-  left: 0;
-  top: 0;
-  pointer-events: none;
-  border-radius: var(--radius-sm);
-  background: var(--app-surface-raised);
-  box-shadow: var(--app-shadow-segment);
-  transition:
-    transform 170ms cubic-bezier(0.2, 0, 0, 1),
-    width 170ms ease-out,
-    height 170ms ease-out;
-}
-@media (prefers-reduced-motion: reduce) {
-  .action-page-highlight {
-    transition: none;
-  }
 }
 </style>

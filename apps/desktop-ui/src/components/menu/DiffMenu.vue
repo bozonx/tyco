@@ -13,6 +13,12 @@
         size="sm"
         @click="draftText = props.newText"
       />
+      <ActionPagesBar
+        v-if="hasPages"
+        :page-indexes="pageIndexes"
+        :active-index="pageIndex"
+        @select="selectPage"
+      />
       <ResultViewModeToggle preset="diff" v-model="diffMode" />
     </template>
 
@@ -28,6 +34,8 @@
     <template #actions>
       <ShortcutList
         editor-shortcut
+        :page-index="pageIndex"
+        :motion-direction="motionDirection"
         :text="draftText"
         :source-text="props.oldText"
         :left-letter-keys="props.replaceEditor ? [] : leftLetterKeys"
@@ -52,6 +60,7 @@ import Diff from '../common/Diff.vue'
 import IconButton from '../common/IconButton.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
+import ActionPagesBar from './ActionPagesBar.vue'
 import ResultViewModeToggle from './ResultViewModeToggle.vue'
 import type { ActionItem } from '@tyco/plugin-sdk'
 
@@ -81,7 +90,17 @@ const { diffMode, stepMode } = usePersistedDiffMode()
 
 useViewModeArrowKeys(stepMode)
 
-const { leftLetterKeys, spaceKey, isEditorTarget } = useResultActions(
-  () => props.oldText
-)
+const {
+  pageIndex,
+  pageIndexes,
+  hasPages,
+  motionDirection,
+  selectPage,
+  leftLetterKeys,
+  spaceKey,
+  isEditorTarget,
+} = useResultActions(() => props.oldText, {
+  // resolving an editor conflict offers no letter actions to page through
+  hasActionKeys: () => !props.replaceEditor,
+})
 </script>
