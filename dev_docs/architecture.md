@@ -87,7 +87,7 @@ tools. No tool changes settings, permissions, profiles, projects or commands
 tool; it stays only in project permissions.
 
 - Default policy: `read` → `allow`, the rest → `ask`. Commands ask (their risk
-  is the user's `aiRisk`, `external` when unset); an AI command called as a tool
+  is `external`: Tyco cannot know what they do; the profile may allow them); an AI command called as a tool
   has the highest risk of its whitelist (`commandRisk`), the web counting as
   `external` there, since inside the command it has no leak protection. A third-party plugin's
   tools ask whatever risk they declare; MCP hints will count only for a trusted

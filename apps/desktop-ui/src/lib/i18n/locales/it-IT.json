@@ -331,8 +331,6 @@
     "aiToolsUnavailable": "Non disponibili ora",
     "aiToolUnavailable": "Non disponibile",
     "aiToolsRiskyWarning": "Alcuni strumenti dell'elenco possono modificare o eliminare dati o agire fuori dall'app, e vengono eseguiti senza chiedere.",
-    "aiRiskLabel": "Rischio per l'IA",
-    "aiRiskInfo": "Ciò che il comando può fare quando un'IA lo chiama. Tyco non può sapere cosa fa un comando, quindi conta come azione fuori dall'app, a meno che tu non scelga altro.",
     "detachedOutputActionHint": "Il comando viene eseguito in un processo separato, pertanto il suo output non viene catturato.",
     "testDetachedStarted": "Il comando è stato avviato in un processo separato"
   },

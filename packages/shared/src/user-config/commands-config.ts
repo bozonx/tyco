@@ -1,4 +1,4 @@
-import type { ToolRef, ToolRisk } from './tools-config'
+import type { ToolRef } from './tools-config'
 import configDefaults from '../user-config-defaults.json' with { type: 'json' }
 import type { ShortcutSlots } from './translation-config'
 
@@ -256,11 +256,6 @@ export interface CommandConfig {
   isEnabled: boolean
   /** The platforms it runs on; absent or empty for every one */
   platforms?: CommandPlatform[]
-  /**
-   * What the command may do when an AI calls it, as the user judges it;
-   * `external` when unset, since Tyco cannot know
-   */
-  aiRisk?: ToolRisk
 }
 
 /** A command of the library placed in the action menu */

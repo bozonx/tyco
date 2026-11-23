@@ -331,8 +331,6 @@
     "aiToolsUnavailable": "Obecnie niedostępne",
     "aiToolUnavailable": "Niedostępne",
     "aiToolsRiskyWarning": "Niektóre narzędzia z listy mogą zmieniać lub usuwać dane albo działać poza aplikacją — i działają bez pytania.",
-    "aiRiskLabel": "Ryzyko dla AI",
-    "aiRiskInfo": "Co polecenie może zrobić, gdy wywoła je AI. Tyco nie wie, co robi polecenie, więc uznaje je za działanie poza aplikacją, chyba że wybierzesz inaczej.",
     "detachedOutputActionHint": "Polecenie działa w osobnym procesie, więc jego wyjście nie jest przechwytywane.",
     "testDetachedStarted": "Polecenie zostało uruchomione w osobnym procesie"
   },

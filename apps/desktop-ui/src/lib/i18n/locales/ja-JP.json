@@ -331,8 +331,6 @@
     "aiToolsUnavailable": "現在利用できません",
     "aiToolUnavailable": "利用不可",
     "aiToolsRiskyWarning": "リストの一部のツールはデータを変更・削除したり、アプリの外で動作したりでき、確認なしで実行されます。",
-    "aiRiskLabel": "AI 向けのリスク",
-    "aiRiskInfo": "AI が呼び出したときにコマンドができること。Tyco はコマンドの動作を知り得ないため、別の選択をしない限りアプリ外の操作として扱います。",
     "detachedOutputActionHint": "コマンドは別のプロセスで実行されるため、その出力はキャプチャされません。",
     "testDetachedStarted": "コマンドは別のプロセスで起動されました"
   },

@@ -299,8 +299,8 @@ export interface CommandRiskLookup {
 }
 
 /**
- * The risk of a command an AI calls: the one the user gave it, `external` when
- * none; for an AI command, the highest risk on its whitelist
+ * The risk of a command an AI calls: `external`, since Tyco cannot know what it
+ * does; for an AI command, the highest risk on its whitelist
  */
 export function commandRisk(
   command: CommandConfig,
@@ -308,7 +308,7 @@ export function commandRisk(
   seen: ReadonlySet<string> = new Set()
 ): ToolRisk {
   const whitelist = lookup.whitelistOf(command)
-  if (!whitelist) return command.aiRisk ?? 'external'
+  if (!whitelist) return 'external'
   const chain = new Set([...seen, command.id])
   return highestRisk(
     whitelist.map((ref) => {

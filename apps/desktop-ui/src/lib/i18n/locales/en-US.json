@@ -331,8 +331,6 @@
     "aiToolsUnavailable": "Not available now",
     "aiToolUnavailable": "Unavailable",
     "aiToolsRiskyWarning": "Some tools on the list can change or delete data or act outside the app, and they run without asking.",
-    "aiRiskLabel": "Risk for the AI",
-    "aiRiskInfo": "What the command may do when an AI calls it. Tyco cannot know what a command does, so it counts as acting outside the app unless you choose otherwise.",
     "detachedOutputActionHint": "The command runs in a separate process, so its output is not captured.",
     "testDetachedStarted": "The command was started in a separate process"
   },

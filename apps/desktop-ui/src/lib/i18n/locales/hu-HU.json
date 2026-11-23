@@ -331,8 +331,6 @@
     "aiToolsUnavailable": "Most nem elérhetők",
     "aiToolUnavailable": "Nem elérhető",
     "aiToolsRiskyWarning": "A lista egyes eszközei adatokat módosíthatnak vagy törölhetnek, illetve az alkalmazáson kívül is cselekedhetnek – és kérdés nélkül futnak.",
-    "aiRiskLabel": "Kockázat az AI számára",
-    "aiRiskInfo": "Mit tehet a parancs, ha egy AI hívja meg. A Tyco nem tudhatja, mit csinál egy parancs, ezért az alkalmazáson kívüli műveletnek számít, hacsak mást nem választ.",
     "detachedOutputActionHint": "A parancs külön folyamatban fut, így a kimenete nem rögzíthető.",
     "testDetachedStarted": "A parancs külön folyamatban elindult"
   },

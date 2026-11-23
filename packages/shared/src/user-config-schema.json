@@ -701,8 +701,7 @@
             "items": { "enum": ["linux", "windows"] },
             "uniqueItems": true,
             "default": []
-          },
-          "aiRisk": { "enum": ["read", "write", "destructive", "external"] }
+          }
         },
         "required": [
           "id",

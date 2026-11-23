@@ -331,8 +331,6 @@
     "aiToolsUnavailable": "Indisponibile acum",
     "aiToolUnavailable": "Indisponibil",
     "aiToolsRiskyWarning": "Unele instrumente din listă pot modifica sau șterge date ori pot acționa în afara aplicației și rulează fără întrebare.",
-    "aiRiskLabel": "Risc pentru AI",
-    "aiRiskInfo": "Ce poate face comanda când o apelează un AI. Tyco nu poate ști ce face o comandă, așa că o consideră acțiune în afara aplicației, dacă nu alegeți altceva.",
     "detachedOutputActionHint": "Comanda rulează într-un proces separat, astfel încât ieșirea acesteia nu este capturată.",
     "testDetachedStarted": "Comanda a fost pornită într-un proces separat"
   },

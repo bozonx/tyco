@@ -223,22 +223,6 @@
             ><InfoTooltip :text="t('commands.descriptionInfo')"
           /></template>
         </FieldRow>
-        <FieldRow
-          v-if="command.description?.trim() && !isAiAgent"
-          class="command-field"
-          :label="t('commands.aiRiskLabel')"
-        >
-          <FieldSelect
-            size="sm"
-            :aria-label="t('commands.aiRiskLabel')"
-            :model-value="command.aiRisk ?? 'external'"
-            :options="riskOptions"
-            @update:model-value="update({ aiRisk: $event as ToolRisk })"
-          />
-          <template #info
-            ><InfoTooltip :text="t('commands.aiRiskInfo')"
-          /></template>
-        </FieldRow>
       </div>
     </section>
   </div>
@@ -249,8 +233,6 @@ import { computed, ref, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
-import { isAiCommand } from '../../lib/ai-commands/ai-command-config'
-import { TOOL_RISK_LABEL_KEYS } from '../../lib/chat-tools/tool-catalog-entries'
 import {
   outputActionOf,
   scriptOperationConfig,
@@ -299,8 +281,6 @@ import {
   type CommandConfig,
   type CommandOutputAction,
   type CommandPlatform,
-  TOOL_RISKS,
-  type ToolRisk,
   type UserConfig,
 } from '@tyco/shared'
 
@@ -439,12 +419,6 @@ async function openLog() {
   if (!res.success) toastKey('commands.openLogFailed', 'error')
   else if (!res.result) toastKey('commands.logEmpty')
 }
-
-/** An AI command takes its risk from its whitelist */
-const isAiAgent = computed(() => isAiCommand(props.command))
-const riskOptions = computed(() =>
-  TOOL_RISKS.map((risk) => ({ id: risk, name: t(TOOL_RISK_LABEL_KEYS[risk]) }))
-)
 </script>
 
 <style scoped>

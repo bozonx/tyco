@@ -331,8 +331,6 @@
     "aiToolsUnavailable": "Trenutačno nedostupno",
     "aiToolUnavailable": "Nedostupno",
     "aiToolsRiskyWarning": "Neki alati s popisa mogu mijenjati ili brisati podatke ili djelovati izvan aplikacije – i rade bez pitanja.",
-    "aiRiskLabel": "Rizik za AI",
-    "aiRiskInfo": "Što naredba može učiniti kad je pozove AI. Tyco ne može znati što naredba radi pa se smatra radnjom izvan aplikacije, osim ako ne odaberete drugačije.",
     "detachedOutputActionHint": "Naredba se izvodi u zasebnom procesu, stoga se njezin izlaz ne bilježi.",
     "testDetachedStarted": "Naredba je pokrenuta u zasebnom procesu"
   },

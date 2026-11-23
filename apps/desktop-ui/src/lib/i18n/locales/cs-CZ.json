@@ -331,8 +331,6 @@
     "aiToolsUnavailable": "Nyní nedostupné",
     "aiToolUnavailable": "Nedostupné",
     "aiToolsRiskyWarning": "Některé nástroje ze seznamu mohou měnit či mazat data nebo jednat mimo aplikaci – a běží bez ptaní.",
-    "aiRiskLabel": "Riziko pro AI",
-    "aiRiskInfo": "Co může příkaz udělat, když ho zavolá AI. Tyco nemůže vědět, co příkaz dělá, proto se počítá jako akce mimo aplikaci, pokud nezvolíte jinak.",
     "detachedOutputActionHint": "Příkaz běží v samostatném procesu, takže jeho výstup není zachycen.",
     "testDetachedStarted": "Příkaz byl spuštěn v samostatném procesu"
   },

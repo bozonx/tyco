@@ -182,8 +182,7 @@ An AI command is a command of the `core.aiTask` operation. Its `operationConfig`
 `prompt`, `tools` (the whitelist of its agent: `{ sourceKind, sourceId,
 toolName? }` references to commands, the web, plugin and MCP tools; the command
 itself never runs) and an optional `maxSteps` (1–50; `llm.maxToolSteps` when
-absent). A command's `aiRisk` (`read`, `write`, `destructive`, `external`) is
-what it may do when an AI calls it; `external` when absent. The top-level
+absent). The top-level
 `tools.sources` switches plugin and MCP tool sources off everywhere, by
 `<kind>:<id>`. See `architecture.md`, "Tool sources and permissions".
 

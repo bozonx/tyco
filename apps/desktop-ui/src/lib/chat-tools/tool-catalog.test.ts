@@ -192,7 +192,7 @@ describe('tool catalog', () => {
     const agent = (id: string, tools: unknown[]) =>
       command(id, { operationId: 'core.aiTask', operationConfig: { tools } })
     const commands = [
-      command('reader', { aiRisk: 'read' }),
+      agent('reader', []),
       command('unknown'),
       agent('web', [{ sourceKind: 'core', sourceId: 'web' }]),
       agent('mixed', [

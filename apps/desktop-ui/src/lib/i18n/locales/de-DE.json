@@ -331,8 +331,6 @@
     "aiToolsUnavailable": "Derzeit nicht verfügbar",
     "aiToolUnavailable": "Nicht verfügbar",
     "aiToolsRiskyWarning": "Einige Werkzeuge der Liste können Daten ändern oder löschen oder außerhalb der App handeln – und laufen ohne Rückfrage.",
-    "aiRiskLabel": "Risiko für die KI",
-    "aiRiskInfo": "Was der Befehl tun kann, wenn eine KI ihn aufruft. Tyco kann nicht wissen, was ein Befehl tut, daher gilt er als Handlung außerhalb der App, sofern Sie nichts anderes wählen.",
     "detachedOutputActionHint": "Der Befehl läuft in einem separaten Prozess, daher wird seine Ausgabe nicht erfasst.",
     "testDetachedStarted": "Der Befehl wurde in einem separaten Prozess gestartet"
   },

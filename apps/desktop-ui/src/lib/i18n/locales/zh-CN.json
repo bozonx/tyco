@@ -331,8 +331,6 @@
     "aiToolsUnavailable": "当前不可用",
     "aiToolUnavailable": "不可用",
     "aiToolsRiskyWarning": "列表中的部分工具可以更改或删除数据，或在应用之外操作，并且无需询问即运行。",
-    "aiRiskLabel": "对 AI 的风险",
-    "aiRiskInfo": "当 AI 调用该命令时它可能做的事。Tyco 无法知道命令会做什么，因此除非你另选，否则视为应用之外的操作。",
     "detachedOutputActionHint": "命令在单独的进程中运行，因此不会捕获其输出。",
     "testDetachedStarted": "命令已在单独的进程中启动"
   },
