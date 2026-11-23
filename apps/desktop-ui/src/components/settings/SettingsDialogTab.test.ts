@@ -74,6 +74,13 @@ describe('SettingsDialogTab.vue', () => {
       'settings.dialogTranslationModelInfo'
     )
 
+    const glossaryAction = wrapper.find('.inline-action')
+    expect(glossaryAction.exists()).toBe(true)
+    await glossaryAction.trigger('click')
+    expect(context.navigate).toHaveBeenCalledWith(
+      'translations#translation-glossary'
+    )
+
     const textarea = wrapper.get('textarea')
     await textarea.setValue('Speak naturally')
     expect(context.draft.value.llm.tasks.dialogTranslation.rule).toBe(

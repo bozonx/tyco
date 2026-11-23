@@ -41,6 +41,7 @@ defineProps<{
   border: 1px solid var(--app-border-subtle);
   border-radius: var(--radius-md);
   background-color: var(--app-surface-raised);
+  overflow: hidden;
 }
 
 .tool-source-header {

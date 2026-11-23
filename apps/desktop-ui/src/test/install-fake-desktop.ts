@@ -57,6 +57,15 @@ export function installFakeDesktop(
   const pinia: Pinia = createPinia()
   setActivePinia(pinia)
   mockWindows(windowLabel)
+  const tauri = window as unknown as {
+    __TAURI_INTERNALS__?: {
+      convertFileSrc?: (filePath: string, protocol?: string) => string
+    }
+  }
+  if (tauri.__TAURI_INTERNALS__ && !tauri.__TAURI_INTERNALS__.convertFileSrc) {
+    tauri.__TAURI_INTERNALS__.convertFileSrc = (filePath, protocol = 'asset') =>
+      `${protocol}://localhost/${encodeURIComponent(filePath)}`
+  }
   ;(globalThis as Globals).isTauri = true
   mockIPC(
     async (command, payload) => {

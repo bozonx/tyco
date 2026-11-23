@@ -59,13 +59,17 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { formatDialogClock } from '../../lib/dialog/dialog-export'
-import type { DialogFeedItem } from '../../lib/dialog/dialog-transcript'
+import type {
+  DialogFeedItem,
+  DialogSessionBreak,
+} from '../../lib/dialog/dialog-transcript'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
+import DialogRecordingPlayer from './DialogRecordingPlayer.vue'
 import DialogTurn from './DialogTurn.vue'
 
 /** How close to the end still counts as being at the end, in pixels */
@@ -88,6 +92,21 @@ const { t } = useI18n()
 const scroller = ref<HTMLElement | null>(null)
 /** Follows new speech until the user scrolls up to read */
 const isFollowing = ref(true)
+
+const hasTurns = computed(() =>
+  props.items.some((item) => item.type === 'turn')
+)
+
+function breakLabel(sessionBreak: DialogSessionBreak): string {
+  if (sessionBreak.action === 'started') {
+    return sessionBreak.isRecording
+      ? t('dialog.sessionStartedRecording')
+      : t('dialog.sessionStartedListening')
+  }
+  return sessionBreak.isRecording
+    ? t('dialog.sessionResumedRecording')
+    : t('dialog.sessionResumedListening')
+}
 
 function formatTime(timestampMs: number): string {
   return formatDialogClock(timestampMs)
@@ -146,6 +165,14 @@ onMounted(scrollToEnd)
   flex: 1;
   height: 1px;
   background-color: var(--app-border-subtle);
+}
+
+.dialog-feed-break-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  max-width: 100%;
 }
 
 .dialog-feed-break-badge {

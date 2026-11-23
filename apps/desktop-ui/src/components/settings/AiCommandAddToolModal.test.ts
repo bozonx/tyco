@@ -120,6 +120,24 @@ describe('AiCommandAddToolModal', () => {
     ])
   })
 
+  it('emits add event when clicking an unadded tool row directly', async () => {
+    const wrapper = mount(AiCommandAddToolModal, {
+      props: {
+        open: true,
+        candidateGroups: mockGroups,
+        isSelected: () => false,
+      },
+      global: { stubs: { BaseDialog: { template: '<div><slot /></div>' } } },
+    })
+
+    const rows = wrapper.findAll('[role="listitem"]')
+    await rows[1].trigger('click')
+
+    expect(wrapper.emitted('add')?.[0]).toEqual([
+      { sourceKind: 'core', sourceId: 'web', toolName: 'webFetch' },
+    ])
+  })
+
   it('emits close event when clicking close icon button', async () => {
     const wrapper = mount(AiCommandAddToolModal, {
       props: {

@@ -56,7 +56,7 @@ describe('DialogToolbar.vue', () => {
     desktop.dispose()
   })
 
-  it('renders record toggle button with aria-pressed false by default', () => {
+  it('renders record toggle button with aria-pressed false by default and explanatory tooltip', () => {
     const wrapper = mount(DialogToolbar, {
       global: { plugins: [i18n, desktop.pinia] },
     })
@@ -64,6 +64,14 @@ describe('DialogToolbar.vue', () => {
     expect(toggle.exists()).toBe(true)
     expect(toggle.attributes('aria-pressed')).toBe('false')
     expect(toggle.text()).toContain(i18n.global.t('dialog.record'))
+    expect(toggle.attributes('title')).toBe(
+      i18n.global.t('dialog.recordToggleEnableHint')
+    )
+
+    const runBtn = wrapper.find('.dialog-toolbar-run')
+    expect(runBtn.attributes('title')).toBe(
+      i18n.global.t('dialog.listenTooltip')
+    )
   })
 
   it('enables recording immediately and shows recording notice popover when not yet acknowledged', async () => {
@@ -203,8 +211,15 @@ describe('DialogToolbar.vue', () => {
     expect(toggle.find('.dialog-record-dot-pulsing').exists()).toBe(false)
     expect(toggle.text()).toContain(i18n.global.t('dialog.record'))
 
+    expect(toggle.attributes('title')).toBe(
+      i18n.global.t('dialog.recordToggleDisableHint')
+    )
+
     const resumeButton = wrapper.find('.dialog-toolbar-run')
     expect(resumeButton.text()).toBe(i18n.global.t('dialog.resume'))
+    expect(resumeButton.attributes('title')).toBe(
+      i18n.global.t('dialog.resumeTooltipWithRecord')
+    )
     await resumeButton.trigger('click')
     await flushPromises()
 

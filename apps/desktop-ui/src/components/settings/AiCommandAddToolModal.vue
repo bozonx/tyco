@@ -21,9 +21,11 @@
 
       <div class="add-tool-search">
         <FieldInput
+          ref="searchInputRef"
           :model-value="searchQuery"
           :placeholder="t('commands.aiAddToolSearchPlaceholder')"
           :aria-label="t('commands.aiAddToolSearchPlaceholder')"
+          autofocus
           @update:model-value="searchQuery = $event"
         />
       </div>
@@ -41,6 +43,9 @@
               :name="refKey(item.ref)"
               :label="item.label"
               :risk="item.risk"
+              :clickable="!isSelected(item.ref)"
+              :disabled="isSelected(item.ref)"
+              @click="handleAdd(item)"
             >
               <Badge v-if="isSelected(item.ref)" tone="muted">
                 {{ t('commands.aiToolAlreadyAdded') }}
@@ -51,7 +56,7 @@
                 size="sm"
                 variant="ghost"
                 :label="`${t('commands.aiAddTool')}: ${item.label}`"
-                @click="handleAdd(item)"
+                @click.stop="handleAdd(item)"
               />
             </SettingsToolRow>
           </SettingsToolSource>
@@ -69,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useId, watch } from 'vue'
+import { computed, nextTick, ref, useId, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import Badge from '../common/Badge.vue'
@@ -105,12 +110,16 @@ const emit = defineEmits<{ close: []; add: [ref: ToolRef] }>()
 const { t } = useI18n()
 const titleId = useId()
 const searchQuery = ref('')
+const searchInputRef = ref<InstanceType<typeof FieldInput> | null>(null)
 
 watch(
   () => props.open,
-  (isOpen) => {
+  async (isOpen) => {
     if (isOpen) {
       searchQuery.value = ''
+      await nextTick()
+      await nextTick()
+      searchInputRef.value?.focus()
     }
   }
 )
@@ -146,7 +155,7 @@ function close() {
 
 <style scoped>
 .add-tool-dialog {
-  width: min(100% - 2 * var(--space-lg), 32rem);
+  width: min(100% - 2 * var(--space-lg), 42rem);
 }
 
 .add-tool-modal {
@@ -179,7 +188,8 @@ function close() {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  max-height: 22rem;
+  height: 26rem;
+  max-height: calc(85vh - 10rem);
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-right: var(--space-2xs);

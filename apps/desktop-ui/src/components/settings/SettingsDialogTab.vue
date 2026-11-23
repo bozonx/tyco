@@ -19,6 +19,19 @@
           :info="t('settings.dialogTranslationModelInfo')"
         />
         <FieldRow
+          :label="t('settings.dialogTranslationGlossary')"
+          :info="t('settings.dialogTranslationGlossaryInfo')"
+        >
+          <div class="dialog-translation-glossary">
+            <span class="text-sm text-muted">
+              {{ t('settings.dialogTranslationGlossaryShared') }}
+            </span>
+            <InlineAction @click="navigate('translations#translation-glossary')">
+              {{ t('settings.dialogTranslationGlossaryOpen') }}
+            </InlineAction>
+          </div>
+        </FieldRow>
+        <FieldRow
           :label="t('settings.dialogTranslationRules')"
           :info="t('settings.dialogTranslationRulesInfo')"
           vertical
@@ -62,6 +75,7 @@ import { useSettingsContext } from '../../composables/use-settings-context'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
+import InlineAction from '../common/InlineAction.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsTaskModel from './SettingsTaskModel.vue'
 import { DEFAULT_USER_CONFIG, type DialogConfig } from '@tyco/shared'
@@ -71,7 +85,7 @@ import { DEFAULT_USER_CONFIG, type DialogConfig } from '@tyco/shared'
 // that translates (only a model reads the lines before as context). The notice about
 // recordings is acknowledged once, in the dialog, and has no setting
 const { t } = useI18n()
-const { draft } = useSettingsContext()
+const { draft, navigate } = useSettingsContext()
 const dialog = computed<DialogConfig>(
   () => draft.value.dialog ?? DEFAULT_USER_CONFIG.dialog
 )
@@ -79,3 +93,13 @@ const setDialog = (patch: Partial<DialogConfig>) => {
   draft.value.dialog = { ...dialog.value, ...patch }
 }
 </script>
+
+<style scoped>
+.dialog-translation-glossary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-sm);
+  min-width: 0;
+}
+</style>

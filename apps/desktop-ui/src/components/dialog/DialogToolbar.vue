@@ -7,6 +7,7 @@
         variant="primary"
         size="sm"
         :icon="isEmpty ? 'mdi:play' : 'mdi:play-pause'"
+        :title="runButtonTitle"
         @click="handleRun"
         >{{ isEmpty ? t('dialog.listen') : t('dialog.resume') }}</Button
       >
@@ -264,7 +265,21 @@ const isRecordToggleDisabled = computed(() => !canRecord.value || !isIdle.value)
 const recordToggleTitle = computed(() => {
   if (!canRecord.value) return t('dialog.startRecordingNeedsHistory')
   if (!isIdle.value) return t('dialog.recordStopToChangeHint')
-  return undefined
+  return dialog.isRecordEnabled
+    ? t('dialog.recordToggleDisableHint')
+    : t('dialog.recordToggleEnableHint')
+})
+
+const runButtonTitle = computed(() => {
+  const isRecording = dialog.isRecordEnabled && canRecord.value
+  if (isEmpty.value) {
+    return isRecording
+      ? t('dialog.listenTooltipWithRecord')
+      : t('dialog.listenTooltip')
+  }
+  return isRecording
+    ? t('dialog.resumeTooltipWithRecord')
+    : t('dialog.resumeTooltip')
 })
 
 const isRecordingRunning = computed(

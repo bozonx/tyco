@@ -82,4 +82,43 @@ describe('exportDialogTranscript', () => {
     const epochMs = new Date(2026, 10, 20, 9, 5, 7).getTime()
     expect(formatDialogClock(epochMs)).toBe('09:05:07')
   })
+
+  it('formats breaks with distinct labels for started and resumed listening/recording', () => {
+    const segments = [
+      segment({ id: 'Hello', side: 'me', startMs: 1000 }),
+      segment({ id: 'Hi', side: 'remote', startMs: 5000 }),
+    ]
+    const breaks = [
+      {
+        id: 'b1',
+        timestampMs: 0,
+        isRecording: false,
+        action: 'started' as const,
+      },
+      {
+        id: 'b2',
+        timestampMs: 4000,
+        isRecording: true,
+        action: 'resumed' as const,
+      },
+    ]
+    const result = exportDialogTranscript(segments, {
+      labels: {
+        ...labels,
+        sessionStartedListening: 'Listening started',
+        sessionResumedRecording: 'Recording resumed',
+      },
+      formatTime,
+      includeTranslation: false,
+      breaks,
+    })
+    expect(result).toBe(
+      [
+        '--- Listening started · 00:00 ---',
+        '[00:01] Me: Hello',
+        '--- Recording resumed · 00:04 ---',
+        '[00:05] Remote: Hi',
+      ].join('\n')
+    )
+  })
 })

@@ -103,6 +103,7 @@
     </SettingsSection>
 
     <SettingsSection
+      id="translation-glossary"
       :title="t('settings.translationGlossary')"
       :info="t('settings.translationGlossaryInfo')"
       :description="glossaryHint"
