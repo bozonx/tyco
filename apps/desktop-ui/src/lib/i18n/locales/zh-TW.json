@@ -1301,7 +1301,11 @@
       "targetUserData": "此資料夾中有 Tyco 資料，Tyco 將使用它。你目前的資料保留在 {current}。",
       "title": "資料夾",
       "useSubfolder": "使用子資料夾",
-      "writableByOthers": "其他使用者可以寫入此資料夾或其上層資料夾，而其中的命令會在這台電腦上執行。請選擇只有你能寫入的資料夾。"
+      "writableByOthers": "其他使用者可以寫入此資料夾或其上層資料夾，而其中的命令會在這台電腦上執行。請選擇只有你能寫入的資料夾。",
+      "moveCurrentFolder": "移動目前資料夾",
+      "selectLocation": "選擇新位置…",
+      "targetEmptyCreate": "此資料夾為空 — 將在此處建立新的資料夾。你目前的資料保留在 {current}。",
+      "crossDiskConfirm": "資料夾 {path} 位於另一個磁碟上。確認將檔案從 {current} 移動到該磁碟嗎？"
     },
     "variablesTab": "變數",
     "vaultFolder": "資料夾",
@@ -1806,5 +1810,15 @@
     "asksByDefault": "會詢問",
     "toolOffEverywhere": "已在「工具」設定中關閉",
     "catalogTitle": "設定檔與指令的工具"
+  },
+  "userDataSetup": {
+    "title": "設定資料夾",
+    "description": "你是否已有 TyCo 資料夾（例如從另一台電腦同步而來）並希望使用它，還是重新開始？",
+    "existingTitle": "選擇資料夾",
+    "existingDescription": "連接現有的 TyCo 資料夾，使用其中的設定、命令、AI 設定檔、聊天與編輯器歷史記錄。",
+    "freshTitle": "重新開始",
+    "freshDescription": "在此電腦的標準位置建立一個具有預設設定的新資料夾：",
+    "selectFolder": "選擇資料夾",
+    "startFresh": "重新開始"
   }
 }

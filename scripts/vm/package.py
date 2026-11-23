@@ -75,6 +75,9 @@ def run_package_checks(*, vm, args, guest, record, report, setup_observer):
     vm.ssh(
         "mkdir -p .config/com.tyco.app .local/lib/tyco .local/bin .local/share/applications .local/share/com.tyco.app"
     )
+    vm.ssh(
+        'printf %s \'{"formatVersion":1,"dataId":"00000000-0000-4000-8000-000000000001"}\' > .local/share/com.tyco.app/tyco-user.json'
+    )
     if not args.previous_artifact:
         vm.copy_to(fixture, ".local/share/com.tyco.app/config.json")
     vm.ssh(

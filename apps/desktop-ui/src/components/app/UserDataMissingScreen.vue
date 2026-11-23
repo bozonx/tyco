@@ -1,6 +1,64 @@
 <template>
   <main class="user-data-missing" :aria-labelledby="titleId">
-    <div class="user-data-missing-card surface">
+    <div v-if="isFirstStart" class="user-data-missing-card surface">
+      <AppIcon icon="mdi:folder-sync-outline" size="3xl" class="text-muted" />
+      <h1 :id="titleId" class="user-data-missing-title">
+        {{ t('userDataSetup.title') }}
+      </h1>
+      <p class="user-data-missing-text">
+        {{ t('userDataSetup.description') }}
+      </p>
+
+      <div class="user-data-setup-options">
+        <div class="user-data-setup-option">
+          <strong class="user-data-setup-option-title">
+            {{ t('userDataSetup.existingTitle') }}
+          </strong>
+          <p class="user-data-missing-text">
+            {{ t('userDataSetup.existingDescription') }}
+          </p>
+        </div>
+        <div class="user-data-setup-option">
+          <strong class="user-data-setup-option-title">
+            {{ t('userDataSetup.freshTitle') }}
+          </strong>
+          <p class="user-data-missing-text">
+            {{ t('userDataSetup.freshDescription') }}
+          </p>
+          <code class="user-data-missing-path">{{ userData.defaultPath }}</code>
+        </div>
+      </div>
+
+      <InlineNotice
+        v-if="errorMessage"
+        density="compact"
+        kind="error"
+        announcement="polite"
+        :message="errorMessage"
+      />
+
+      <div class="user-data-missing-actions">
+        <Button
+          size="sm"
+          variant="primary"
+          icon="mdi:folder-search-outline"
+          :disabled="folder.isBusy.value"
+          @click="folder.start('connect')"
+        >
+          {{ t('userDataSetup.selectFolder') }}
+        </Button>
+        <Button
+          size="sm"
+          variant="neutral"
+          icon="mdi:plus-circle-outline"
+          :disabled="folder.isBusy.value"
+          @click="useDefault"
+        >
+          {{ t('userDataSetup.startFresh') }}
+        </Button>
+      </div>
+    </div>
+    <div v-else class="user-data-missing-card surface">
       <AppIcon icon="mdi:folder-alert-outline" size="3xl" class="text-muted" />
       <h1 :id="titleId" class="user-data-missing-title">
         {{ t('userDataMissing.title') }}
@@ -64,7 +122,10 @@
         </template>
       </div>
     </div>
-    <UserDataRelocationModal :model="folder" :current-path="userData.path" />
+    <UserDataRelocationModal
+      :model="folder"
+      :current-path="isFirstStart ? undefined : userData.path"
+    />
   </main>
 </template>
 
@@ -87,7 +148,8 @@ const { t } = useI18n()
 const titleId = useId()
 const store = useUserDataStore()
 const userData = computed(() => store.state())
-// nothing can be saved while the folder is missing
+const isFirstStart = computed(() => userData.value.status === 'notInitialized')
+// nothing can be saved while the folder is missing or not initialized yet
 const folder = useUserDataFolder(() => Promise.resolve(true))
 const isConfirmingDefault = ref(false)
 const errorMessage = ref('')
@@ -161,6 +223,29 @@ const useDefault = () => run(() => store.relocate('useDefault'))
 .user-data-missing-path {
   overflow-wrap: anywhere;
   font-size: var(--text-control);
+}
+
+.user-data-setup-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.user-data-setup-option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding: var(--space-md);
+  border: 1px solid var(--app-border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--app-surface-sunken);
+}
+
+.user-data-setup-option-title {
+  color: var(--color-base-content);
+  font-size: var(--text-body);
+  font-weight: 600;
 }
 
 .user-data-missing-actions {

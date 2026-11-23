@@ -77,13 +77,14 @@ describe('UserDataFolder.vue', () => {
     expect(wrapper.find('input[type="checkbox"]').exists()).toBe(false)
   })
 
-  it('picks a folder immediately and opens the confirmation modal with move or connect', async () => {
+  it('opens the modal with move checkbox and select location button, then confirms cross-disk move or creates a new folder', async () => {
     const { desktop: d, wrapper } = await mountSection(true)
-    d.backend.handle('pick_directory', () => '/sync/TyCo')
+    d.backend.handle('pick_directory', () => '/mnt/other/TyCo')
     d.backend.handle('inspect_user_data_target', ({ path }) => ({
-      path: path ?? '/sync/TyCo',
+      path: path ?? '/mnt/other/TyCo',
       isDefault: false,
-      contents: { kind: 'userData', formatVersion: 1, isSupported: true },
+      isOtherDisk: true,
+      contents: { kind: 'empty' },
     }))
     d.backend.handle('relocate_user_data', () => undefined)
 
@@ -92,13 +93,60 @@ describe('UserDataFolder.vue', () => {
     await flushPromises()
 
     const dialog = wrapper.get('.dialog-stub')
-    expect(dialog.text()).toContain('settings.userData.connectTitle')
+    expect(dialog.find('input[type="checkbox"]').exists()).toBe(true)
+    expect(
+      (dialog.get('input[type="checkbox"]').element as HTMLInputElement).checked
+    ).toBe(true)
+    expect(dialog.text()).toContain('settings.userData.selectLocation')
+    expect(d.backend.callsOf('pick_directory')).toHaveLength(0)
+
+    await dialog.get('button.btn-primary').trigger('click')
+    await flushPromises()
+
+    expect(dialog.text()).toContain('settings.userData.moveTitle')
+    expect(dialog.text()).toContain('settings.userData.applyMove')
+
+    // First click on applyMove triggers cross-disk confirmation
+    await dialog.get('button.btn-primary').trigger('click')
+    await flushPromises()
+    expect(dialog.text()).toContain('settings.userData.crossDiskConfirm')
+    expect(d.backend.callsOf('relocate_user_data')).toHaveLength(0)
+
+    // Second click confirms the move
+    await dialog.get('button.btn-primary').trigger('click')
+    await flushPromises()
+    expect(d.backend.callsOf('relocate_user_data')).toEqual([
+      { mode: 'move', path: '/mnt/other/TyCo' },
+    ])
+  })
+
+  it('creates a new folder without moving when the move checkbox is unchecked', async () => {
+    const { desktop: d, wrapper } = await mountSection(true)
+    d.backend.handle('pick_directory', () => '/mnt/other/TyCo')
+    d.backend.handle('inspect_user_data_target', ({ path }) => ({
+      path: path ?? '/mnt/other/TyCo',
+      isDefault: false,
+      isOtherDisk: true,
+      contents: { kind: 'empty' },
+    }))
+    d.backend.handle('relocate_user_data', () => undefined)
+
+    const actionButtons = wrapper.findAll('.path-display-actions button')
+    await actionButtons[2].trigger('click')
+    await flushPromises()
+
+    const dialog = wrapper.get('.dialog-stub')
+    await dialog.get('input[type="checkbox"]').setValue(false)
+    await dialog.get('button.btn-primary').trigger('click')
+    await flushPromises()
+
+    expect(dialog.text()).toContain('settings.userData.targetEmptyCreate')
     expect(dialog.text()).toContain('settings.userData.applyConnect')
 
     await dialog.get('button.btn-primary').trigger('click')
     await flushPromises()
     expect(d.backend.callsOf('relocate_user_data')).toEqual([
-      { mode: 'connect', path: '/sync/TyCo' },
+      { mode: 'create', path: '/mnt/other/TyCo' },
     ])
   })
 })

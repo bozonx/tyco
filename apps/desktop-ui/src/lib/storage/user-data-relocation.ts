@@ -15,6 +15,11 @@ export interface UserDataRelocation {
   notice: UserDataNotice
   /** A subfolder to use instead of a folder with files of its own */
   subfolderPath?: string
+  /**
+   * Whether moving to this folder crosses a disk boundary and needs
+   * confirmation
+   */
+  requiresCrossDiskConfirm?: boolean
 }
 
 const refusal = (
@@ -24,27 +29,39 @@ const refusal = (
 
 /**
  * What `action` does with the folder `target`: `choose` moves into an empty
- * folder or connects one that already holds TyCo data; `connect` (used when the
- * configured folder is missing) only connects an existing folder.
+ * folder (when `moveCurrent` is true), creates a new folder there (when
+ * `moveCurrent` is false) or connects one that already holds TyCo data;
+ * `connect` (used when the configured folder is missing or on first start) only
+ * connects an existing folder.
  */
 export function describeUserDataRelocation(
   action: UserDataAction,
-  target: UserDataTarget
+  target: UserDataTarget,
+  moveCurrent = true
 ): UserDataRelocation {
   const contents = target.contents
   switch (contents.kind) {
     case 'current':
       return refusal('settings.userData.targetCurrent', 'info')
     case 'empty':
-      return action === 'choose'
+      if (action !== 'choose')
+        return refusal('settings.userData.targetEmptyConnect')
+      return moveCurrent
         ? {
             mode: 'move',
             notice: {
               kind: 'info',
               messageKey: 'settings.userData.targetEmpty',
             },
+            requiresCrossDiskConfirm: target.isOtherDisk,
           }
-        : refusal('settings.userData.targetEmptyConnect')
+        : {
+            mode: 'create',
+            notice: {
+              kind: 'warning',
+              messageKey: 'settings.userData.targetEmptyCreate',
+            },
+          }
     case 'userData':
       if (!contents.isSupported)
         return refusal('settings.userData.targetNewer', 'error')

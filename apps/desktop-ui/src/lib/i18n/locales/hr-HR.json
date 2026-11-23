@@ -1301,7 +1301,11 @@
       "targetUserData": "Ova mapa sadrži podatke Tycoa i Tyco će ih koristiti. Vaši trenutni podaci ostaju u {current}.",
       "title": "Mapa podataka",
       "useSubfolder": "Upotrijebi podmapu",
-      "writableByOthers": "Drugi korisnici mogu pisati u ovu mapu ili njezinu nadređenu mapu, a naredbe iz nje pokreću se na ovom računalu. Odaberite mapu u koju samo vi možete pisati."
+      "writableByOthers": "Drugi korisnici mogu pisati u ovu mapu ili njezinu nadređenu mapu, a naredbe iz nje pokreću se na ovom računalu. Odaberite mapu u koju samo vi možete pisati.",
+      "moveCurrentFolder": "Premjesti trenutnu mapu",
+      "selectLocation": "Odaberi novu lokaciju…",
+      "targetEmptyCreate": "Ova je mapa prazna — ovdje će se stvoriti nova mapa podataka. Vaši trenutni podaci ostaju u {current}.",
+      "crossDiskConfirm": "Mapa {path} nalazi se na drugom disku. Potvrđujete li premještanje datoteka iz {current} na drugi disk?"
     },
     "variablesTab": "Varijable",
     "vaultFolder": "Mapa",
@@ -1810,5 +1814,15 @@
     "asksByDefault": "Pita",
     "toolOffEverywhere": "Isključeno u postavkama Alata",
     "catalogTitle": "Alati za profile i naredbe"
+  },
+  "userDataSetup": {
+    "title": "Postavljanje mape podataka",
+    "description": "Imate li već svoju TyCo mapu podataka (primjerice sinkroniziranu s drugog računala) i želite li je koristiti, ili početi ispočetka?",
+    "existingTitle": "Odaberi mapu",
+    "existingDescription": "Povežite postojeću TyCo mapu s vašim postavkama, naredbama, AI profilima, razgovorima i poviješću uređivača.",
+    "freshTitle": "Počni ispočetka",
+    "freshDescription": "Stvorite novu mapu podataka sa zadanim postavkama na standardnoj lokaciji na ovom računalu:",
+    "selectFolder": "Odaberi mapu",
+    "startFresh": "Počni ispočetka"
   }
 }

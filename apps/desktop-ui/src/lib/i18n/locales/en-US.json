@@ -1301,7 +1301,11 @@
       "targetUserData": "This folder holds Tyco data, and Tyco will use it. Your current data stays in {current}.",
       "title": "Data folder",
       "useSubfolder": "Use a subfolder",
-      "writableByOthers": "Other users can write into this folder or its parent, and commands from it run on this computer. Choose a folder only you can write to."
+      "writableByOthers": "Other users can write into this folder or its parent, and commands from it run on this computer. Choose a folder only you can write to.",
+      "moveCurrentFolder": "Move current folder",
+      "selectLocation": "Select new location…",
+      "targetEmptyCreate": "This folder is empty — a new data folder will be created here. Your current data stays in {current}.",
+      "crossDiskConfirm": "The folder {path} is on another drive. Confirm moving your files from {current} to the new drive?"
     },
     "variablesTab": "Variables",
     "vaultFolder": "Folder",
@@ -1810,5 +1814,15 @@
     "asksByDefault": "Asks",
     "toolOffEverywhere": "Off in the Tools settings",
     "catalogTitle": "Tools for profiles and commands"
+  },
+  "userDataSetup": {
+    "title": "Set up your data folder",
+    "description": "Do you already have a TyCo data folder (for example, synced from another computer) and want to use it, or start fresh?",
+    "existingTitle": "Select folder",
+    "existingDescription": "Connect an existing TyCo folder with your settings, commands, AI profiles, chats and editor history.",
+    "freshTitle": "Start fresh",
+    "freshDescription": "Create a new data folder with default settings in the standard location on this computer:",
+    "selectFolder": "Select folder",
+    "startFresh": "Start fresh"
   }
 }

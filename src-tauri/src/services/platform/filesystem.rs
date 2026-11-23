@@ -167,6 +167,53 @@ pub(crate) fn is_dir_link(path: &Path) -> bool {
         && std::fs::metadata(path).is_ok_and(|meta| meta.is_dir())
 }
 
+/// Whether `first` and `second`, or their closest existing ancestor folders,
+/// lie on different filesystems / drives.
+pub(crate) fn is_other_disk(first: &Path, second: &Path) -> bool {
+    fn existing(path: &Path) -> Option<std::path::PathBuf> {
+        let mut current = path;
+        loop {
+            if current.exists() {
+                return Some(current.to_path_buf());
+            }
+            current = current.parent()?;
+        }
+    }
+    let (Some(first), Some(second)) = (existing(first), existing(second)) else {
+        return false;
+    };
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        match (std::fs::metadata(&first), std::fs::metadata(&second)) {
+            (Ok(a), Ok(b)) => a.dev() != b.dev(),
+            _ => false,
+        }
+    }
+    #[cfg(windows)]
+    {
+        let root_of = |path: &Path| {
+            std::fs::canonicalize(path)
+                .unwrap_or_else(|_| path.to_path_buf())
+                .components()
+                .find_map(|part| match part {
+                    std::path::Component::Prefix(prefix) => Some(
+                        prefix
+                            .as_os_str()
+                            .to_string_lossy()
+                            .trim_start_matches(r"\\?\")
+                            .to_ascii_lowercase(),
+                    ),
+                    _ => None,
+                })
+        };
+        match (root_of(&first), root_of(&second)) {
+            (Some(a), Some(b)) => a != b,
+            _ => false,
+        }
+    }
+}
+
 /// Removes the link `path` itself, never what it leads to. Windows removes
 /// a link to a folder, or a junction, as a folder.
 pub(crate) fn remove_link(path: &Path) -> io::Result<()> {

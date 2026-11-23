@@ -124,6 +124,18 @@ impl ActivationHost for RuntimeActivationHost<'_> {
 }
 
 pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError> {
+    if app
+        .try_state::<super::storage::user_data::UserData>()
+        .is_some_and(|data| {
+            matches!(
+                data.state().status,
+                crate::models::UserDataStatus::NotInitialized
+                    | crate::models::UserDataStatus::NotConnected
+            )
+        })
+    {
+        return show_application(app);
+    }
     if activation.mode.is_screenshot() {
         let snapshot = app.state::<AppState>().snapshot();
         if !activation

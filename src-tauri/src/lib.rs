@@ -62,8 +62,21 @@ fn logger_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
 
 /// Runs the activation the command line asks for. Arguments that cannot be
 /// parsed still show the application: a launch must never end up without a
-/// window and without a word to the user.
+/// window and without a word to the user. While the user data folder is not
+/// initialized or not connected, always opens the main window so the user
+/// sees the setup or recovery screen.
 fn activate_from_args(app: &tauri::AppHandle, args: &[String]) -> Result<(), errors::AppError> {
+    if app
+        .try_state::<storage::user_data::UserData>()
+        .is_some_and(|data| {
+            matches!(
+                data.state().status,
+                models::UserDataStatus::NotInitialized | models::UserDataStatus::NotConnected
+            )
+        })
+    {
+        return runtime::show_application(app);
+    }
     match runtime::Activation::from_args(args) {
         Ok(Some(activation)) => runtime::activate(app, activation),
         Ok(None) => runtime::show_application(app),

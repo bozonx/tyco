@@ -1301,7 +1301,11 @@
       "targetUserData": "Esta carpeta contiene datos de Tyco, y Tyco los usará. Tus datos actuales se quedan en {current}.",
       "title": "Carpeta de datos",
       "useSubfolder": "Usar una subcarpeta",
-      "writableByOthers": "Otros usuarios pueden escribir en esta carpeta o en la superior, y sus comandos se ejecutan en este equipo. Elige una carpeta en la que solo tú puedas escribir."
+      "writableByOthers": "Otros usuarios pueden escribir en esta carpeta o en la superior, y sus comandos se ejecutan en este equipo. Elige una carpeta en la que solo tú puedas escribir.",
+      "moveCurrentFolder": "Mover la carpeta actual",
+      "selectLocation": "Seleccionar nueva ubicación…",
+      "targetEmptyCreate": "Esta carpeta está vacía — se creará aquí una nueva carpeta de datos. Tus datos actuales se quedan en {current}.",
+      "crossDiskConfirm": "La carpeta {path} está en otro disco. ¿Confirmas el traslado de tus archivos de {current} al otro disco?"
     },
     "variablesTab": "Variables",
     "vaultFolder": "Carpeta",
@@ -1810,5 +1814,15 @@
     "asksByDefault": "Pregunta",
     "toolOffEverywhere": "Desactivada en los ajustes de Herramientas",
     "catalogTitle": "Herramientas de perfiles y comandos"
+  },
+  "userDataSetup": {
+    "title": "Configurar la carpeta de datos",
+    "description": "¿Ya tienes una carpeta de datos de TyCo (por ejemplo, sincronizada desde otro ordenador) y quieres usarla, o prefieres empezar de cero?",
+    "existingTitle": "Seleccionar carpeta",
+    "existingDescription": "Conectar una carpeta de TyCo existente con tus ajustes, comandos, perfiles de IA, chats e historial del editor.",
+    "freshTitle": "Empezar de cero",
+    "freshDescription": "Crear una nueva carpeta de datos con los ajustes predeterminados en la ubicación estándar de este ordenador:",
+    "selectFolder": "Seleccionar carpeta",
+    "startFresh": "Empezar de cero"
   }
 }

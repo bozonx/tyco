@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { UserDataRelocationMode, UserDataTarget } from '@tyco/shared'
 
 import {
@@ -26,6 +26,8 @@ export interface UserDataFolderDependencies {
 export function createUserDataFolderModel(deps: UserDataFolderDependencies) {
   const action = ref<UserDataAction | null>(null)
   const target = ref<UserDataTarget | null>(null)
+  const moveCurrent = ref(true)
+  const isConfirmingCrossDisk = ref(false)
   const errorMessage = ref('')
   const isPicking = ref(false)
   const isInspecting = ref(false)
@@ -36,9 +38,17 @@ export function createUserDataFolderModel(deps: UserDataFolderDependencies) {
 
   const relocation = computed(() =>
     action.value && target.value
-      ? describeUserDataRelocation(action.value, target.value)
+      ? describeUserDataRelocation(
+          action.value,
+          target.value,
+          moveCurrent.value
+        )
       : null
   )
+
+  watch([target, moveCurrent], () => {
+    isConfirmingCrossDisk.value = false
+  })
 
   async function inspect(path?: string) {
     isInspecting.value = true
@@ -53,12 +63,22 @@ export function createUserDataFolderModel(deps: UserDataFolderDependencies) {
     }
   }
 
-  /** Opens the folder picker first; cancels silently if no folder was chosen */
+  /**
+   * For `choose`, opens the modal with the move option and a button to pick the
+   * new location; for `connect`, opens the folder picker first and cancels
+   * silently if no folder was chosen.
+   */
   async function start(next: UserDataAction) {
     if (isBusy.value) return
-    isPicking.value = true
     errorMessage.value = ''
     target.value = null
+    moveCurrent.value = true
+    isConfirmingCrossDisk.value = false
+    if (next === 'choose') {
+      action.value = next
+      return
+    }
+    isPicking.value = true
     try {
       const picked = await deps.pickFolder()
       if (!picked) return
@@ -76,7 +96,18 @@ export function createUserDataFolderModel(deps: UserDataFolderDependencies) {
     if (isApplying.value) return
     action.value = null
     target.value = null
+    isConfirmingCrossDisk.value = false
     errorMessage.value = ''
+  }
+
+  function dismissCrossDiskConfirm() {
+    if (isApplying.value) return
+    isConfirmingCrossDisk.value = false
+  }
+
+  function setMoveCurrent(value: boolean) {
+    if (isBusy.value) return
+    moveCurrent.value = value
   }
 
   async function pickFolder() {
@@ -97,10 +128,21 @@ export function createUserDataFolderModel(deps: UserDataFolderDependencies) {
     if (path) await inspect(path)
   }
 
-  /** Applies the change; the app restarts when it succeeds */
+  /**
+   * Applies the change; when moving across disks, asks for confirmation first
+   * and returns false until the user confirms. The app restarts when it
+   * succeeds.
+   */
   async function apply(): Promise<boolean> {
     const mode = relocation.value?.mode
     if (!mode || !target.value || isBusy.value) return false
+    if (
+      relocation.value?.requiresCrossDiskConfirm &&
+      !isConfirmingCrossDisk.value
+    ) {
+      isConfirmingCrossDisk.value = true
+      return false
+    }
     isApplying.value = true
     errorMessage.value = ''
     try {
@@ -121,12 +163,16 @@ export function createUserDataFolderModel(deps: UserDataFolderDependencies) {
   return {
     action,
     target,
+    moveCurrent,
+    isConfirmingCrossDisk,
     relocation,
     errorMessage,
     isBusy,
     isApplying,
     start,
     cancel,
+    dismissCrossDiskConfirm,
+    setMoveCurrent,
     pickFolder,
     useSubfolder,
     apply,

@@ -27,6 +27,17 @@ const binary = resolve(
 )
 const runtimeDir = resolve(home, 'runtime')
 await mkdir(runtimeDir, { mode: 0o700 })
+const defaultUserDataDir = isWindows
+  ? resolve(home, 'AppData/Roaming/com.tyco.app')
+  : resolve(home, '.local/share/com.tyco.app')
+await mkdir(defaultUserDataDir, { recursive: true })
+await writeFile(
+  resolve(defaultUserDataDir, 'tyco-user.json'),
+  JSON.stringify({
+    formatVersion: 1,
+    dataId: '00000000-0000-4000-8000-000000000001',
+  })
+)
 // Xvfb reads no input devices: a stand-in ydotool replays the keys through
 // XTest, so the quick insertion runs Tyco's whole path
 const toolsDir = resolve(home, 'bin')

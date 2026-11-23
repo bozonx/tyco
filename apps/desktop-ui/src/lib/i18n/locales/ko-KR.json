@@ -1301,7 +1301,11 @@
       "targetUserData": "이 폴더에는 Tyco 데이터가 있으며 Tyco가 이를 사용합니다. 현재 데이터는 {current}에 남습니다.",
       "title": "데이터 폴더",
       "useSubfolder": "하위 폴더 사용",
-      "writableByOthers": "다른 사용자가 이 폴더나 상위 폴더에 쓸 수 있으며, 여기의 명령은 이 컴퓨터에서 실행됩니다. 본인만 쓸 수 있는 폴더를 선택하세요."
+      "writableByOthers": "다른 사용자가 이 폴더나 상위 폴더에 쓸 수 있으며, 여기의 명령은 이 컴퓨터에서 실행됩니다. 본인만 쓸 수 있는 폴더를 선택하세요.",
+      "moveCurrentFolder": "현재 폴더 이동",
+      "selectLocation": "새 위치 선택…",
+      "targetEmptyCreate": "이 폴더는 비어 있습니다 — 여기에 새 데이터 폴더가 생성됩니다. 현재 데이터는 {current}에 남습니다.",
+      "crossDiskConfirm": "{path} 폴더가 다른 드라이브에 있습니다. {current}에서 다른 드라이브로 파일을 이동하시겠습니까?"
     },
     "variablesTab": "변수",
     "vaultFolder": "폴더",
@@ -1810,5 +1814,15 @@
     "asksByDefault": "확인 요청",
     "toolOffEverywhere": "도구 설정에서 꺼짐",
     "catalogTitle": "프로필과 명령용 도구"
+  },
+  "userDataSetup": {
+    "title": "데이터 폴더 설정",
+    "description": "이미 TyCo 데이터 폴더(예: 다른 컴퓨터에서 동기화된 폴더)가 있어 이를 사용하시겠습니까, 아니면 처음부터 시작하시겠습니까?",
+    "existingTitle": "폴더 선택",
+    "existingDescription": "설정, 명령, AI 프로필, 채팅 및 편집기 기록이 담긴 기존 TyCo 폴더를 연결합니다.",
+    "freshTitle": "처음부터 시작",
+    "freshDescription": "이 컴퓨터의 기본 위치에 기본 설정으로 새 데이터 폴더를 만듭니다:",
+    "selectFolder": "폴더 선택",
+    "startFresh": "처음부터 시작"
   }
 }

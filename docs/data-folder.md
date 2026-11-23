@@ -60,24 +60,33 @@ folder and do not synchronize the same folder with a second program.
 
 ## First computer
 
-1. Choose a folder controlled by you. TyCo trusts its commands, scripts and
-   plugins, including changes delivered from other computers. Chat and history
-   files may contain private text. TyCo warns when other users of the computer
-   may write to the folder (Linux).
-2. Click **Select folder…** and choose an empty location, such as a `TyCo`
-   subfolder in your synchronized directory. TyCo moves its data, the main
-   workspace with it, and restarts. If a folder already contains TyCo data and its marker,
-   TyCo connects to it and leaves your previous data where it was; it does not
-   merge two collections.
-3. Synchronize the folder and wait for the initial transfer.
+1. On the first launch, choose **Start fresh** to create your data folder in the
+   standard location (or **Select folder** if you already have a synchronized
+   TyCo folder).
+2. To move the folder into a synchronized directory later, choose a folder
+   controlled by you. TyCo trusts its commands, scripts and plugins, including
+   changes delivered from other computers. Chat and history files may contain
+   private text. TyCo warns when other users of the computer may write to the
+   folder (Linux).
+3. Click **Change** in **Settings → Data folder**, keep **Move current folder**
+   checked, click **Select new location…** and choose an empty location, such as
+   a `TyCo` subfolder in your synchronized directory (if the folder is on
+   another drive, TyCo asks for confirmation before moving the files; if
+   **Move current folder** is unchecked, TyCo creates a new folder there and
+   leaves your previous data untouched). TyCo moves its data, the main
+   workspace with it, and restarts. If a folder already contains TyCo data and
+   its marker, TyCo connects to it and leaves your previous data where it was;
+   it does not merge two collections.
+4. Synchronize the folder and wait for the initial transfer.
 
 ## Second computer
 
-Wait until the folder is fully available, then click **Select folder…** and
-choose the synchronized folder. A folder without its marker is refused, even
-when some data files have arrived. A layout made by a newer TyCo version
-requires updating TyCo; a previously configured folder of that layout is opened
-for reading only.
+Wait until the folder is fully available, then choose **Select folder** on the
+first launch (or **Change → Select new location…** in **Settings → Data
+folder**) and choose the synchronized folder. A folder without its marker is
+refused, even when some data files have arrived. A layout made by a newer TyCo
+version requires updating TyCo; a previously configured folder of that layout is
+opened for reading only.
 
 Set up the values that belong to this computer:
 

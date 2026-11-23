@@ -1301,7 +1301,11 @@
       "targetUserData": "Ce dossier contient des données Tyco, que Tyco utilisera. Vos données actuelles restent dans {current}.",
       "title": "Dossier de données",
       "useSubfolder": "Utiliser un sous-dossier",
-      "writableByOthers": "D’autres utilisateurs peuvent écrire dans ce dossier ou son parent, et ses commandes s’exécutent sur cet ordinateur. Choisissez un dossier dans lequel vous seul pouvez écrire."
+      "writableByOthers": "D’autres utilisateurs peuvent écrire dans ce dossier ou son parent, et ses commandes s’exécutent sur cet ordinateur. Choisissez un dossier dans lequel vous seul pouvez écrire.",
+      "moveCurrentFolder": "Déplacer le dossier actuel",
+      "selectLocation": "Choisir un nouvel emplacement…",
+      "targetEmptyCreate": "Ce dossier est vide — un nouveau dossier de données sera créé ici. Vos données actuelles restent dans {current}.",
+      "crossDiskConfirm": "Le dossier {path} se trouve sur un autre disque. Confirmez-vous le déplacement de vos fichiers de {current} vers cet autre disque ?"
     },
     "variablesTab": "Variables",
     "vaultFolder": "Dossier",
@@ -1810,5 +1814,15 @@
     "asksByDefault": "Demande",
     "toolOffEverywhere": "Désactivé dans les paramètres Outils",
     "catalogTitle": "Outils des profils et des commandes"
+  },
+  "userDataSetup": {
+    "title": "Configuration du dossier de données",
+    "description": "Avez-vous déjà un dossier de données TyCo (par exemple synchronisé depuis un autre ordinateur) que vous souhaitez utiliser, ou voulez-vous recommencer à zéro ?",
+    "existingTitle": "Choisir un dossier",
+    "existingDescription": "Connecter un dossier TyCo existant contenant vos paramètres, commandes, profils IA, discussions et historique de l’éditeur.",
+    "freshTitle": "Recommencer à zéro",
+    "freshDescription": "Créer un nouveau dossier de données avec les paramètres par défaut à l’emplacement standard sur cet ordinateur :",
+    "selectFolder": "Choisir un dossier",
+    "startFresh": "Recommencer à zéro"
   }
 }

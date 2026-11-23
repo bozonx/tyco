@@ -45,9 +45,11 @@ import { useImageViewerStore } from './stores/image-viewer'
 const { settingsShutdown, t, isQuickWindow, navPanelStore } = useAppRuntime()
 const desktop = useDesktopStore()
 const imageViewer = useImageViewerStore()
-/** The chosen data folder is not there: nothing else can work */
+/** The data folder is not there or not set up yet: nothing else can work */
 const isUserDataMissing = computed(
-  () => desktop.userData.status === 'notConnected'
+  () =>
+    desktop.userData.status === 'notConnected' ||
+    desktop.userData.status === 'notInitialized'
 )
 </script>
 

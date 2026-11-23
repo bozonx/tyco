@@ -366,28 +366,34 @@ a copy of the device folder on another machine gets a new `deviceId`,
 
 `tyco-user.json` (`{ "formatVersion": 1, "dataId": "<uuid>" }`) marks the
 user data folder; its version counts layouts of the folder, apart from
-`configVersion`, and `dataId` is made once with the marker. The default
-folder gets it when it has none, and what it holds already is used as it is. A
-chosen folder that is missing, empty or has no marker is not connected:
-nothing is created or written there, every write fails with
-`userDataUnavailable`, and the main window offers to retry, to connect another
-folder or to use the default one, since an empty set of data a sync tool spread
-would wipe out the real one. A folder of a newer layout is read and never
-written, including quarantine and directory creation. Cached paths are guarded
-before mutations too. Losing the folder or its marker during a session blocks
-further writes and requires a restart after the data returns. The watcher
-publishes the disconnected state. Reading chats, journals and the default vault
-needs no write access. The settings warn when other users may write into the chosen folder
-(Linux): its commands run on this machine.
+`configVersion`, and `dataId` is made once with the marker. On first start,
+when no folder is configured and the default folder has no marker and no Tyco
+files yet, the status is `notInitialized` and the main window shows the startup
+choice: connect an existing folder or start fresh in the default folder. An
+existing installation in the default folder gets the marker when it has none,
+and what it holds already is used as it is. A chosen folder that is missing,
+empty or has no marker is not connected: nothing is created or written there,
+every write fails with `userDataUnavailable`, and the main window offers to
+retry, to connect another folder or to use the default one, since an empty set
+of data a sync tool spread would wipe out the real one. A folder of a newer
+layout is read and never written, including quarantine and directory creation.
+Cached paths are guarded before mutations too. Losing the folder or its marker
+during a session blocks further writes and requires a restart after the data
+returns. The watcher publishes the disconnected state. Reading chats, journals
+and the default vault needs no write access. The settings warn when other users
+may write into the chosen folder (Linux): its commands run on this machine.
 
 The folder is changed by `relocate_user_data` only (`desktop-api.md`), never by
 a settings save, and the app restarts. `move` moves the known entries into an
-empty folder; `connect` uses a folder with a marker of a known version and
-leaves the current data where it is; a folder with Tyco files but no marker is
-refused as a sync that has not finished; a folder with files of its own, or a
-folder of the app, is refused. `useDefault` uses the default folder with what
-it holds, moving nothing. The main vault, `ai-vault/`, moves with the data
-folder (`storage::data_root_relocation`). The new folder may not lie inside an
+empty folder (asking for confirmation in the UI when the destination is on
+another disk); `create` initializes a new data folder in an empty folder and
+leaves the current data where it is; `connect` uses a folder with a marker of a
+known version and leaves the current data where it is; a folder with Tyco files
+but no marker is refused as a sync that has not finished; a folder with files
+of its own, or a folder of the app, is refused. `useDefault` uses the default
+folder with what it holds (initializing it when empty), moving nothing. The
+main vault, `ai-vault/`, moves with the data folder
+(`storage::data_root_relocation`). The new folder may not lie inside an
 attached vault or hold one (`storage::sync_roots::check_sync_roots`: symlinks
 resolved, on Windows without case and the `\\?\` prefix).
 

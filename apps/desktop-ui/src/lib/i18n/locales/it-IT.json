@@ -1301,7 +1301,11 @@
       "targetUserData": "Questa cartella contiene dati di Tyco, che Tyco userà. I tuoi dati attuali restano in {current}.",
       "title": "Cartella dati",
       "useSubfolder": "Usa una sottocartella",
-      "writableByOthers": "Altri utenti possono scrivere in questa cartella o in quella superiore, e i suoi comandi vengono eseguiti su questo computer. Scegli una cartella in cui puoi scrivere solo tu."
+      "writableByOthers": "Altri utenti possono scrivere in questa cartella o in quella superiore, e i suoi comandi vengono eseguiti su questo computer. Scegli una cartella in cui puoi scrivere solo tu.",
+      "moveCurrentFolder": "Sposta la cartella attuale",
+      "selectLocation": "Seleziona nuova posizione…",
+      "targetEmptyCreate": "Questa cartella è vuota — qui verrà creata una nuova cartella dati. I tuoi dati attuali restano in {current}.",
+      "crossDiskConfirm": "La cartella {path} si trova su un altro disco. Confermi lo spostamento dei file da {current} all’altro disco?"
     },
     "variablesTab": "Variabili",
     "vaultFolder": "Cartella",
@@ -1810,5 +1814,15 @@
     "asksByDefault": "Chiede",
     "toolOffEverywhere": "Disattivato nelle impostazioni Strumenti",
     "catalogTitle": "Strumenti per profili e comandi"
+  },
+  "userDataSetup": {
+    "title": "Configura la cartella dati",
+    "description": "Hai già una cartella dati di TyCo (ad esempio sincronizzata da un altro computer) e vuoi usarla, oppure vuoi iniziare da zero?",
+    "existingTitle": "Seleziona cartella",
+    "existingDescription": "Collega una cartella TyCo esistente con impostazioni, comandi, profili IA, chat e cronologia dell’editor.",
+    "freshTitle": "Inizia da zero",
+    "freshDescription": "Crea una nuova cartella dati con le impostazioni predefinite nella posizione standard su questo computer:",
+    "selectFolder": "Seleziona cartella",
+    "startFresh": "Inizia da zero"
   }
 }

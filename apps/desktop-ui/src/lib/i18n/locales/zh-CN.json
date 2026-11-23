@@ -1301,7 +1301,11 @@
       "targetUserData": "此文件夹中有 Tyco 数据，Tyco 将使用它。你当前的数据保留在 {current}。",
       "title": "数据文件夹",
       "useSubfolder": "使用子文件夹",
-      "writableByOthers": "其他用户可以写入此文件夹或其上级文件夹，而其中的命令会在这台电脑上运行。请选择只有你能写入的文件夹。"
+      "writableByOthers": "其他用户可以写入此文件夹或其上级文件夹，而其中的命令会在这台电脑上运行。请选择只有你能写入的文件夹。",
+      "moveCurrentFolder": "移动当前文件夹",
+      "selectLocation": "选择新位置…",
+      "targetEmptyCreate": "此文件夹为空 — 将在此处创建新的数据文件夹。你当前的数据保留在 {current}。",
+      "crossDiskConfirm": "文件夹 {path} 位于另一个磁盘上。确认将文件从 {current} 移动到该磁盘吗？"
     },
     "variablesTab": "变量",
     "vaultFolder": "文件夹",
@@ -1806,5 +1810,15 @@
     "asksByDefault": "会询问",
     "toolOffEverywhere": "已在“工具”设置中关闭",
     "catalogTitle": "配置文件与命令的工具"
+  },
+  "userDataSetup": {
+    "title": "设置数据文件夹",
+    "description": "你是否已有 TyCo 数据文件夹（例如从另一台电脑同步而来）并希望使用它，还是重新开始？",
+    "existingTitle": "选择文件夹",
+    "existingDescription": "连接现有的 TyCo 文件夹，使用其中的设置、命令、AI 配置文件、聊天和编辑器历史记录。",
+    "freshTitle": "重新开始",
+    "freshDescription": "在此电脑的标准位置创建一个具有默认设置的新数据文件夹：",
+    "selectFolder": "选择文件夹",
+    "startFresh": "重新开始"
   }
 }

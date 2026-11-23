@@ -1301,7 +1301,11 @@
       "targetUserData": "Acest folder conține date Tyco, pe care Tyco le va folosi. Datele curente rămân în {current}.",
       "title": "Folder de date",
       "useSubfolder": "Folosește un subfolder",
-      "writableByOthers": "Alți utilizatori pot scrie în acest folder sau în cel părinte, iar comenzile din el rulează pe acest computer. Alegeți un folder în care doar dumneavoastră puteți scrie."
+      "writableByOthers": "Alți utilizatori pot scrie în acest folder sau în cel părinte, iar comenzile din el rulează pe acest computer. Alegeți un folder în care doar dumneavoastră puteți scrie.",
+      "moveCurrentFolder": "Mută folderul curent",
+      "selectLocation": "Selectează o locație nouă…",
+      "targetEmptyCreate": "Acest folder este gol — aici va fi creat un nou folder de date. Datele curente rămân în {current}.",
+      "crossDiskConfirm": "Folderul {path} se află pe alt disc. Confirmi mutarea fișierelor din {current} pe celălalt disc?"
     },
     "variablesTab": "Variabile",
     "vaultFolder": "Dosar",
@@ -1810,5 +1814,15 @@
     "asksByDefault": "Întreabă",
     "toolOffEverywhere": "Dezactivat în setările Instrumente",
     "catalogTitle": "Instrumente pentru profiluri și comenzi"
+  },
+  "userDataSetup": {
+    "title": "Configurarea folderului de date",
+    "description": "Ai deja un folder de date TyCo (de exemplu, sincronizat de pe alt computer) și vrei să îl folosești, sau vrei să începi de la zero?",
+    "existingTitle": "Selectează folderul",
+    "existingDescription": "Conectează un folder TyCo existent cu setările, comenzile, profilurile IA, conversațiile și istoricul editorului.",
+    "freshTitle": "Începe de la zero",
+    "freshDescription": "Creează un folder de date nou cu setările implicite în locația standard de pe acest computer:",
+    "selectFolder": "Selectează folderul",
+    "startFresh": "Începe de la zero"
   }
 }

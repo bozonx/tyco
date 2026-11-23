@@ -1301,7 +1301,11 @@
       "targetUserData": "Ten folder zawiera dane Tyco i Tyco będzie z nich korzystać. Twoje bieżące dane zostaną w {current}.",
       "title": "Folder danych",
       "useSubfolder": "Użyj podfolderu",
-      "writableByOthers": "Inni użytkownicy mogą zapisywać w tym folderze lub w folderze nadrzędnym, a polecenia z niego działają na tym komputerze. Wybierz folder, w którym tylko ty możesz zapisywać."
+      "writableByOthers": "Inni użytkownicy mogą zapisywać w tym folderze lub w folderze nadrzędnym, a polecenia z niego działają na tym komputerze. Wybierz folder, w którym tylko ty możesz zapisywać.",
+      "moveCurrentFolder": "Przenieś bieżący folder",
+      "selectLocation": "Wybierz nową lokalizację…",
+      "targetEmptyCreate": "Ten folder jest pusty — zostanie tu utworzony nowy folder danych. Twoje bieżące dane zostaną w {current}.",
+      "crossDiskConfirm": "Folder {path} znajduje się na innym dysku. Czy potwierdzasz przeniesienie plików z {current} na inny dysk?"
     },
     "variablesTab": "Zmienne",
     "vaultFolder": "Folder",
@@ -1810,5 +1814,15 @@
     "asksByDefault": "Pyta",
     "toolOffEverywhere": "Wyłączone w ustawieniach Narzędzia",
     "catalogTitle": "Narzędzia dla profili i poleceń"
+  },
+  "userDataSetup": {
+    "title": "Konfiguracja folderu danych",
+    "description": "Czy masz już folder danych TyCo (na przykład zsynchronizowany z innego komputera) i chcesz go użyć, czy zacząć od nowa?",
+    "existingTitle": "Wybierz folder",
+    "existingDescription": "Połącz istniejący folder TyCo zawierający Twoje ustawienia, polecenia, profile AI, czaty i historię edytora.",
+    "freshTitle": "Zacznij od nowa",
+    "freshDescription": "Utwórz nowy folder danych z domyślnymi ustawieniami w standardowej lokalizacji na tym komputerze:",
+    "selectFolder": "Wybierz folder",
+    "startFresh": "Zacznij od nowa"
   }
 }

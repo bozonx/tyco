@@ -1301,7 +1301,11 @@
       "targetUserData": "Bu klasörde Tyco verisi var ve Tyco bunları kullanacak. Geçerli verileriniz {current} içinde kalır.",
       "title": "Veri klasörü",
       "useSubfolder": "Alt klasör kullan",
-      "writableByOthers": "Başka kullanıcılar bu klasöre veya üst klasörüne yazabilir ve buradaki komutlar bu bilgisayarda çalışır. Yalnızca sizin yazabildiğiniz bir klasör seçin."
+      "writableByOthers": "Başka kullanıcılar bu klasöre veya üst klasörüne yazabilir ve buradaki komutlar bu bilgisayarda çalışır. Yalnızca sizin yazabildiğiniz bir klasör seçin.",
+      "moveCurrentFolder": "Mevcut klasörü taşı",
+      "selectLocation": "Yeni konum seç…",
+      "targetEmptyCreate": "Bu klasör boş — burada yeni bir veri klasörü oluşturulacak. Geçerli verileriniz {current} içinde kalır.",
+      "crossDiskConfirm": "{path} klasörü başka bir diskte bulunuyor. Dosyalarınızın {current} konumundan diğer diske taşınmasını onaylıyor musunuz?"
     },
     "variablesTab": "Değişkenler",
     "vaultFolder": "Klasör",
@@ -1806,5 +1810,15 @@
     "asksByDefault": "Sorar",
     "toolOffEverywhere": "Araçlar ayarlarında kapalı",
     "catalogTitle": "Profiller ve komutlar için araçlar"
+  },
+  "userDataSetup": {
+    "title": "Veri klasörünü ayarla",
+    "description": "Zaten bir TyCo veri klasörünüz var mı (örneğin başka bir bilgisayardan eşitlenmiş) ve onu kullanmak mı istiyorsunuz, yoksa sıfırdan mı başlamak istiyorsunuz?",
+    "existingTitle": "Klasör seç",
+    "existingDescription": "Ayarlarınızı, komutlarınızı, YZ profillerinizi, sohbetlerinizi ve düzenleyici geçmişinizi içeren mevcut bir TyCo klasörünü bağlayın.",
+    "freshTitle": "Sıfırdan başla",
+    "freshDescription": "Bu bilgisayardaki standart konumda varsayılan ayarlarla yeni bir veri klasörü oluşturun:",
+    "selectFolder": "Klasör seç",
+    "startFresh": "Sıfırdan başla"
   }
 }

@@ -35,6 +35,9 @@ pub struct StorageInfo {
 #[serde(rename_all = "camelCase")]
 pub enum UserDataStatus {
     Connected,
+    /// First start: no folder was chosen and the default folder has no data yet.
+    /// Nothing is created until the user chooses an existing folder or starts fresh.
+    NotInitialized,
     /// The chosen folder is missing, empty or has no `tyco-user.json`, e.g.
     /// an unmounted drive or a sync that has not arrived yet. Nothing is
     /// created or written there.
@@ -75,10 +78,13 @@ pub struct UserDataState {
 pub enum UserDataRelocationMode {
     /// Moves the data into an empty or missing folder.
     Move,
+    /// Creates a new data folder in an empty or missing folder; the current data stays.
+    Create,
     /// Uses a folder that holds Tyco data already; the current data stays.
     Connect,
-    /// Uses the default folder with what it holds, moving nothing: after a
-    /// chosen folder went missing, or to use the data left in the default one.
+    /// Uses the default folder with what it holds, or initializes it when empty,
+    /// moving nothing: on first start, after a chosen folder went missing, or
+    /// to use the data left in the default one.
     UseDefault,
 }
 

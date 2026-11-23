@@ -117,8 +117,11 @@ pub struct ConfigFiles {
 
 impl ConfigFiles {
     pub fn new(user_data: &UserData, state_dir: &Path) -> Self {
-        let user_path = (user_data.status != UserDataStatus::NotConnected)
-            .then(|| user_data.dir.join(CONFIG_FILE_NAME));
+        let user_path = (!matches!(
+            user_data.status,
+            UserDataStatus::NotConnected | UserDataStatus::NotInitialized
+        ))
+        .then(|| user_data.dir.join(CONFIG_FILE_NAME));
         let unavailable = match user_data.dir_for(crate::services::storage::UserDirAccess::Write) {
             Ok(_) => String::new(),
             Err(error) => error.to_string(),

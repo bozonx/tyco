@@ -1301,7 +1301,11 @@
       "targetUserData": "Esta pasta tem dados do Tyco, e o Tyco vai usá-los. Seus dados atuais ficam em {current}.",
       "title": "Pasta de dados",
       "useSubfolder": "Usar uma subpasta",
-      "writableByOthers": "Outros usuários podem gravar nesta pasta ou na pasta acima, e os comandos dela são executados neste computador. Escolha uma pasta em que só você possa gravar."
+      "writableByOthers": "Outros usuários podem gravar nesta pasta ou na pasta acima, e os comandos dela são executados neste computador. Escolha uma pasta em que só você possa gravar.",
+      "moveCurrentFolder": "Mover a pasta atual",
+      "selectLocation": "Selecionar novo local…",
+      "targetEmptyCreate": "Esta pasta está vazia — uma nova pasta de dados será criada aqui. Seus dados atuais ficam em {current}.",
+      "crossDiskConfirm": "A pasta {path} está em outro disco. Confirma a movimentação dos seus arquivos de {current} para o outro disco?"
     },
     "variablesTab": "Variáveis",
     "vaultFolder": "Pasta",
@@ -1810,5 +1814,15 @@
     "asksByDefault": "Pergunta",
     "toolOffEverywhere": "Desativada nas configurações de Ferramentas",
     "catalogTitle": "Ferramentas para perfis e comandos"
+  },
+  "userDataSetup": {
+    "title": "Configurar pasta de dados",
+    "description": "Você já tem uma pasta de dados do TyCo (por exemplo, sincronizada de outro computador) e deseja usá-la, ou quer começar do zero?",
+    "existingTitle": "Selecionar pasta",
+    "existingDescription": "Conectar uma pasta existente do TyCo com suas configurações, comandos, perfis de IA, conversas e histórico do editor.",
+    "freshTitle": "Começar do zero",
+    "freshDescription": "Criar uma nova pasta de dados com as configurações padrão no local padrão deste computador:",
+    "selectFolder": "Selecionar pasta",
+    "startFresh": "Começar do zero"
   }
 }

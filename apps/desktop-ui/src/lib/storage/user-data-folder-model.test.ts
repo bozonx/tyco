@@ -9,6 +9,7 @@ import {
 const empty: UserDataTarget = {
   path: '/sync/TyCo',
   isDefault: false,
+  isOtherDisk: false,
   contents: { kind: 'empty' },
 }
 
@@ -26,9 +27,14 @@ function fixture(overrides: Partial<UserDataFolderDependencies> = {}) {
 }
 
 describe('createUserDataFolderModel', () => {
-  it('picks a folder at once and moves the data into an empty folder after saving drafts', async () => {
+  it('opens the modal for choose without picking yet, then picks a folder and moves the data into an empty folder after saving drafts', async () => {
     const { deps, model } = fixture()
     await model.start('choose')
+    expect(model.action.value).toBe('choose')
+    expect(model.moveCurrent.value).toBe(true)
+    expect(deps.pickFolder).not.toHaveBeenCalled()
+
+    await model.pickFolder()
     expect(deps.pickFolder).toHaveBeenCalledOnce()
     expect(model.relocation.value?.mode).toBe('move')
     expect(await model.apply()).toBe(true)
@@ -36,11 +42,43 @@ describe('createUserDataFolderModel', () => {
     expect(deps.relocate).toHaveBeenCalledWith('move', '/sync/TyCo')
   })
 
-  it('stays closed when the folder picker is cancelled', async () => {
+  it('creates a new data folder without moving when moveCurrent is unchecked', async () => {
+    const { deps, model } = fixture()
+    await model.start('choose')
+    model.moveCurrent.value = false
+    await model.pickFolder()
+    expect(model.relocation.value?.mode).toBe('create')
+    expect(await model.apply()).toBe(true)
+    expect(deps.relocate).toHaveBeenCalledWith('create', '/sync/TyCo')
+  })
+
+  it('asks for confirmation before moving to another disk', async () => {
+    const { deps, model } = fixture({
+      inspect: vi.fn().mockResolvedValue({ ...empty, isOtherDisk: true }),
+    })
+    await model.start('choose')
+    await model.pickFolder()
+    expect(model.relocation.value?.mode).toBe('move')
+    expect(model.isConfirmingCrossDisk.value).toBe(false)
+
+    expect(await model.apply()).toBe(false)
+    expect(model.isConfirmingCrossDisk.value).toBe(true)
+    expect(deps.relocate).not.toHaveBeenCalled()
+
+    model.dismissCrossDiskConfirm()
+    expect(model.isConfirmingCrossDisk.value).toBe(false)
+
+    expect(await model.apply()).toBe(false)
+    expect(model.isConfirmingCrossDisk.value).toBe(true)
+    expect(await model.apply()).toBe(true)
+    expect(deps.relocate).toHaveBeenCalledWith('move', '/sync/TyCo')
+  })
+
+  it('stays closed when the folder picker is cancelled for connect', async () => {
     const { deps, model } = fixture({
       pickFolder: vi.fn().mockResolvedValue(null),
     })
-    await model.start('choose')
+    await model.start('connect')
     expect(model.action.value).toBeNull()
     expect(deps.inspect).not.toHaveBeenCalled()
   })
@@ -52,10 +90,12 @@ describe('createUserDataFolderModel', () => {
         .mockResolvedValue({
           path: '/sync/TyCo',
           isDefault: false,
+          isOtherDisk: false,
           contents: { kind: 'userData', formatVersion: 1, isSupported: true },
         }),
     })
     await model.start('choose')
+    await model.pickFolder()
     expect(model.relocation.value?.mode).toBe('connect')
     expect(await model.apply()).toBe(true)
     expect(deps.relocate).toHaveBeenCalledWith('connect', '/sync/TyCo')
@@ -66,6 +106,7 @@ describe('createUserDataFolderModel', () => {
       flushDrafts: vi.fn().mockResolvedValue(false),
     })
     await model.start('choose')
+    await model.pickFolder()
     expect(await model.apply()).toBe(false)
     expect(deps.relocate).not.toHaveBeenCalled()
     expect(model.errorMessage.value).toBe('Drafts not saved')
@@ -82,6 +123,7 @@ describe('createUserDataFolderModel', () => {
       relocate: vi.fn().mockRejectedValue('Disk full'),
     })
     await failing.model.start('choose')
+    await failing.model.pickFolder()
     expect(await failing.model.apply()).toBe(false)
     expect(failing.model.errorMessage.value).toBe('Disk full')
   })
@@ -97,6 +139,7 @@ describe('createUserDataFolderModel', () => {
       .mockResolvedValueOnce(empty)
     const { model } = fixture({ inspect })
     await model.start('choose')
+    await model.pickFolder()
     await model.useSubfolder()
     expect(inspect).toHaveBeenLastCalledWith('/docs/TyCo')
     expect(model.relocation.value?.mode).toBe('move')

@@ -1301,7 +1301,11 @@
       "targetUserData": "このフォルダーには Tyco のデータがあり、Tyco はそれを使います。現在のデータは {current} に残ります。",
       "title": "データフォルダー",
       "useSubfolder": "サブフォルダーを使う",
-      "writableByOthers": "このフォルダーまたはその親フォルダーには他のユーザーも書き込めます。ここのコマンドはこのコンピューターで実行されます。自分だけが書き込めるフォルダーを選んでください。"
+      "writableByOthers": "このフォルダーまたはその親フォルダーには他のユーザーも書き込めます。ここのコマンドはこのコンピューターで実行されます。自分だけが書き込めるフォルダーを選んでください。",
+      "moveCurrentFolder": "現在のフォルダーを移動する",
+      "selectLocation": "新しい場所を選択…",
+      "targetEmptyCreate": "このフォルダーは空です — ここに新しいデータフォルダーが作成されます。現在のデータは {current} に残ります。",
+      "crossDiskConfirm": "フォルダー {path} は別のドライブにあります。{current} から別のドライブへファイルを移動してもよろしいですか？"
     },
     "variablesTab": "変数",
     "vaultFolder": "フォルダー",
@@ -1806,5 +1810,15 @@
     "asksByDefault": "確認する",
     "toolOffEverywhere": "「ツール」設定でオフ",
     "catalogTitle": "プロファイルとコマンドのツール"
+  },
+  "userDataSetup": {
+    "title": "データフォルダーの設定",
+    "description": "すでに TyCo のデータフォルダー（別のコンピューターから同期したものなど）をお持ちでそれを使用しますか、それとも最初から始めますか？",
+    "existingTitle": "フォルダーを選択",
+    "existingDescription": "設定、コマンド、AI プロファイル、チャット、エディター履歴が含まれる既存の TyCo フォルダーを接続します。",
+    "freshTitle": "最初から始める",
+    "freshDescription": "このコンピューターの標準の場所に、初期設定の新しいデータフォルダーを作成します:",
+    "selectFolder": "フォルダーを選択",
+    "startFresh": "最初から始める"
   }
 }

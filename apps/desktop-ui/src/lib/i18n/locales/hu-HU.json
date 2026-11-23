@@ -1301,7 +1301,11 @@
       "targetUserData": "Ebben a mappában Tyco-adatok vannak, és a Tyco ezeket fogja használni. A jelenlegi adatai a(z) {current} mappában maradnak.",
       "title": "Adatmappa",
       "useSubfolder": "Almappa használata",
-      "writableByOthers": "Más felhasználók is írhatnak ebbe a mappába vagy a szülőmappájába, és a benne lévő parancsok ezen a számítógépen futnak. Válasszon olyan mappát, amelybe csak Ön írhat."
+      "writableByOthers": "Más felhasználók is írhatnak ebbe a mappába vagy a szülőmappájába, és a benne lévő parancsok ezen a számítógépen futnak. Válasszon olyan mappát, amelybe csak Ön írhat.",
+      "moveCurrentFolder": "Jelenlegi mappa áthelyezése",
+      "selectLocation": "Új hely kiválasztása…",
+      "targetEmptyCreate": "Ez a mappa üres — itt egy új adatmappa jön létre. A jelenlegi adatai a(z) {current} mappában maradnak.",
+      "crossDiskConfirm": "A(z) {path} mappa másik meghajtón található. Megerősíti a fájlok áthelyezését a(z) {current} mappából a másik meghajtóra?"
     },
     "variablesTab": "Változók",
     "vaultFolder": "Mappa",
@@ -1810,5 +1814,15 @@
     "asksByDefault": "Rákérdez",
     "toolOffEverywhere": "Kikapcsolva az Eszközök beállításaiban",
     "catalogTitle": "Eszközök profilokhoz és parancsokhoz"
+  },
+  "userDataSetup": {
+    "title": "Adatmappa beállítása",
+    "description": "Van már TyCo adatmappája (például egy másik számítógépről szinkronizálva), és szeretné azt használni, vagy elölről kezdené?",
+    "existingTitle": "Mappa kiválasztása",
+    "existingDescription": "Meglévő TyCo mappa csatlakoztatása a beállításokkal, parancsokkal, MI-profilokkal, csevegésekkel és a szerkesztési előzményekkel.",
+    "freshTitle": "Újrakezdés elölről",
+    "freshDescription": "Új adatmappa létrehozása alapértelmezett beállításokkal a szokásos helyen ezen a számítógépen:",
+    "selectFolder": "Mappa kiválasztása",
+    "startFresh": "Újrakezdés elölről"
   }
 }

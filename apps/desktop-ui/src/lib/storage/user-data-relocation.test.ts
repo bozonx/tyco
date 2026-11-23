@@ -3,17 +3,37 @@ import type { UserDataTarget } from '@tyco/shared'
 
 import { describeUserDataRelocation } from './user-data-relocation'
 
-const target = (contents: UserDataTarget['contents']): UserDataTarget => ({
+const target = (
+  contents: UserDataTarget['contents'],
+  isOtherDisk = false
+): UserDataTarget => ({
   path: '/sync/TyCo',
   isDefault: false,
+  isOtherDisk,
   contents,
 })
 
 describe('describeUserDataRelocation', () => {
-  it('moves into an empty folder or connects one with data when choosing, and only connects when restoring a missing folder', () => {
+  it('moves into an empty folder when moveCurrent is true, creates when false, connects one with data, and only connects when restoring or starting fresh', () => {
     expect(
-      describeUserDataRelocation('choose', target({ kind: 'empty' }))
-    ).toMatchObject({ mode: 'move' })
+      describeUserDataRelocation('choose', target({ kind: 'empty' }), true)
+    ).toMatchObject({ mode: 'move', requiresCrossDiskConfirm: false })
+    expect(
+      describeUserDataRelocation(
+        'choose',
+        target({ kind: 'empty' }, true),
+        true
+      )
+    ).toMatchObject({ mode: 'move', requiresCrossDiskConfirm: true })
+    expect(
+      describeUserDataRelocation('choose', target({ kind: 'empty' }), false)
+    ).toMatchObject({
+      mode: 'create',
+      notice: {
+        kind: 'warning',
+        messageKey: 'settings.userData.targetEmptyCreate',
+      },
+    })
     expect(
       describeUserDataRelocation('connect', target({ kind: 'empty' }))
     ).toMatchObject({
@@ -25,7 +45,11 @@ describe('describeUserDataRelocation', () => {
       formatVersion: 1,
       isSupported: true,
     })
-    expect(describeUserDataRelocation('choose', data)).toMatchObject({
+    expect(describeUserDataRelocation('choose', data, true)).toMatchObject({
+      mode: 'connect',
+      notice: { kind: 'warning' },
+    })
+    expect(describeUserDataRelocation('choose', data, false)).toMatchObject({
       mode: 'connect',
       notice: { kind: 'warning' },
     })

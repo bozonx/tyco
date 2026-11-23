@@ -1301,7 +1301,11 @@
       "targetUserData": "Tato složka obsahuje data Tyco a Tyco je bude používat. Vaše aktuální data zůstanou v {current}.",
       "title": "Složka dat",
       "useSubfolder": "Použít podsložku",
-      "writableByOthers": "Do této složky nebo do nadřazené mohou zapisovat jiní uživatelé a příkazy z ní se spouštějí na tomto počítači. Vyberte složku, do které můžete zapisovat jen vy."
+      "writableByOthers": "Do této složky nebo do nadřazené mohou zapisovat jiní uživatelé a příkazy z ní se spouštějí na tomto počítači. Vyberte složku, do které můžete zapisovat jen vy.",
+      "moveCurrentFolder": "Přesunout aktuální složku",
+      "selectLocation": "Vybrat nové umístění…",
+      "targetEmptyCreate": "Tato složka je prázdná — bude zde vytvořena nová složka dat. Vaše aktuální data zůstanou v {current}.",
+      "crossDiskConfirm": "Složka {path} je na jiném disku. Potvrzujete přesun souborů z {current} na jiný disk?"
     },
     "variablesTab": "Proměnné",
     "vaultFolder": "Složka",
@@ -1810,5 +1814,15 @@
     "asksByDefault": "Ptá se",
     "toolOffEverywhere": "Vypnuto v nastavení Nástroje",
     "catalogTitle": "Nástroje pro profily a příkazy"
+  },
+  "userDataSetup": {
+    "title": "Nastavení složky dat",
+    "description": "Máte již složku dat TyCo (například synchronizovanou z jiného počítače) a chcete ji použít, nebo začít od začátku?",
+    "existingTitle": "Vybrat složku",
+    "existingDescription": "Připojit existující složku TyCo s vašimi nastaveními, příkazy, profily AI, chaty a historií editoru.",
+    "freshTitle": "Začít od začátku",
+    "freshDescription": "Vytvořit novou složku dat s výchozím nastavením na standardním místě v tomto počítači:",
+    "selectFolder": "Vybrat složku",
+    "startFresh": "Začít od začátku"
   }
 }

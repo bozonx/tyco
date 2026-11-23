@@ -1301,7 +1301,11 @@
       "targetUserData": "Dieser Ordner enthält Tyco-Daten, und Tyco wird sie verwenden. Deine aktuellen Daten bleiben in {current}.",
       "title": "Datenordner",
       "useSubfolder": "Unterordner verwenden",
-      "writableByOthers": "Andere Benutzer können in diesen Ordner oder seinen übergeordneten Ordner schreiben, und Befehle daraus laufen auf diesem Computer. Wähle einen Ordner, in den nur du schreiben kannst."
+      "writableByOthers": "Andere Benutzer können in diesen Ordner oder seinen übergeordneten Ordner schreiben, und Befehle daraus laufen auf diesem Computer. Wähle einen Ordner, in den nur du schreiben kannst.",
+      "moveCurrentFolder": "Aktuellen Ordner verschieben",
+      "selectLocation": "Neuen Speicherort wählen…",
+      "targetEmptyCreate": "Dieser Ordner ist leer — hier wird ein neuer Datenordner erstellt. Deine aktuellen Daten bleiben in {current}.",
+      "crossDiskConfirm": "Der Ordner {path} befindet sich auf einem anderen Laufwerk. Möchtest du deine Dateien von {current} auf das andere Laufwerk verschieben?"
     },
     "variablesTab": "Variablen",
     "vaultFolder": "Ordner",
@@ -1810,5 +1814,15 @@
     "asksByDefault": "Fragt nach",
     "toolOffEverywhere": "In den Werkzeug-Einstellungen aus",
     "catalogTitle": "Werkzeuge für Profile und Befehle"
+  },
+  "userDataSetup": {
+    "title": "Datenordner einrichten",
+    "description": "Hast du bereits einen TyCo-Datenordner (zum Beispiel von einem anderen Computer synchronisiert) und möchtest ihn verwenden, oder neu beginnen?",
+    "existingTitle": "Ordner auswählen",
+    "existingDescription": "Einen vorhandenen TyCo-Ordner mit deinen Einstellungen, Befehlen, KI-Profilen, Chats und dem Editorverlauf verbinden.",
+    "freshTitle": "Neu beginnen",
+    "freshDescription": "Einen neuen Datenordner mit Standardeinstellungen am Standardspeicherort auf diesem Computer erstellen:",
+    "selectFolder": "Ordner auswählen",
+    "startFresh": "Neu beginnen"
   }
 }

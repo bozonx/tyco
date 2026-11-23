@@ -9,12 +9,20 @@
         {{ title }}
       </h3>
 
-      <div class="user-data-modal-row">
+      <div v-if="currentPath" class="user-data-modal-row">
         <span class="user-data-modal-label">{{
           t('settings.userData.current')
         }}</span>
-        <code class="user-data-modal-path">{{ currentPath || '—' }}</code>
+        <code class="user-data-modal-path">{{ currentPath }}</code>
       </div>
+
+      <FieldCheckbox
+        v-if="model.action.value === 'choose'"
+        :model-value="model.moveCurrent.value"
+        :disabled="model.isBusy.value"
+        :label="t('settings.userData.moveCurrentFolder')"
+        @update:model-value="model.setMoveCurrent"
+      />
 
       <template v-if="model.target.value && relocation">
         <div class="user-data-modal-row">
@@ -47,6 +55,19 @@
             {{ t('settings.userData.useSubfolder') }}
           </Button>
         </div>
+        <InlineNotice
+          v-if="model.isConfirmingCrossDisk.value"
+          density="compact"
+          appearance="surface"
+          kind="warning"
+          announcement="polite"
+          :message="
+            t('settings.userData.crossDiskConfirm', {
+              current: currentPath,
+              path: model.target.value.path,
+            })
+          "
+        />
         <p v-if="relocation.mode" class="user-data-modal-restart">
           {{ t('settings.userData.restartNotice') }}
         </p>
@@ -61,33 +82,56 @@
       />
 
       <div class="user-data-modal-actions">
-        <Button
-          size="sm"
-          variant="ghost"
-          :disabled="model.isApplying.value"
-          @click="model.cancel"
-        >
-          {{ t('common.cancel') }}
-        </Button>
-        <Button
-          v-if="relocation?.mode"
-          size="sm"
-          variant="primary"
-          :disabled="model.isBusy.value"
-          @click="model.apply"
-        >
-          {{ applyLabel }}
-        </Button>
-        <Button
-          v-else
-          size="sm"
-          variant="neutral"
-          icon="mdi:folder-search-outline"
-          :disabled="model.isBusy.value"
-          @click="model.pickFolder"
-        >
-          {{ t('settings.selectFolder') }}
-        </Button>
+        <template v-if="model.isConfirmingCrossDisk.value">
+          <Button
+            size="sm"
+            variant="ghost"
+            :disabled="model.isApplying.value"
+            @click="model.dismissCrossDiskConfirm"
+          >
+            {{ t('common.cancel') }}
+          </Button>
+          <Button
+            size="sm"
+            variant="primary"
+            :disabled="model.isBusy.value"
+            @click="model.apply"
+          >
+            {{ t('settings.userData.applyMove') }}
+          </Button>
+        </template>
+        <template v-else>
+          <Button
+            size="sm"
+            variant="ghost"
+            :disabled="model.isApplying.value"
+            @click="model.cancel"
+          >
+            {{ t('common.cancel') }}
+          </Button>
+          <Button
+            size="sm"
+            :variant="relocation?.mode ? 'neutral' : 'primary'"
+            icon="mdi:folder-search-outline"
+            :disabled="model.isBusy.value"
+            @click="model.pickFolder"
+          >
+            {{
+              model.action.value === 'choose'
+                ? t('settings.userData.selectLocation')
+                : t('settings.selectFolder')
+            }}
+          </Button>
+          <Button
+            v-if="relocation?.mode"
+            size="sm"
+            variant="primary"
+            :disabled="model.isBusy.value"
+            @click="model.apply"
+          >
+            {{ applyLabel }}
+          </Button>
+        </template>
       </div>
     </div>
   </BaseDialog>
@@ -100,9 +144,13 @@ import { useI18n } from '../../composables/use-i18n'
 import type { UserDataFolderModel } from '../../lib/storage/user-data-folder-model'
 import BaseDialog from '../common/BaseDialog.vue'
 import Button from '../common/Button.vue'
+import FieldCheckbox from '../common/FieldCheckbox.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 
-const props = defineProps<{ model: UserDataFolderModel; currentPath: string }>()
+const props = defineProps<{
+  model: UserDataFolderModel
+  currentPath?: string
+}>()
 
 const { t } = useI18n()
 const titleId = useId()

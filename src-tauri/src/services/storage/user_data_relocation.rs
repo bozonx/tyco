@@ -17,24 +17,15 @@ use std::path::{Path, PathBuf};
 use serde::Serialize;
 
 use super::data_root_relocation::{is_nested, normalized, relocate_with, RootMove};
-use super::user_data::{has_marker, marker_version, USER_FORMAT_VERSION, USER_MARKER_FILE};
+use super::user_data::{
+    has_known_entries, has_marker, init_dir, marker_version, USER_DATA_ENTRIES,
+    USER_FORMAT_VERSION, USER_MARKER_FILE, VAULT_ENTRY,
+};
 use crate::errors::AppError;
-use crate::models::UserDataRelocationMode;
+use crate::models::{UserDataRelocationMode, UserDataStatus};
 
 /// The subfolder offered when the chosen folder holds files of its own.
 pub const USER_DATA_SUBFOLDER_NAME: &str = "TyCo";
-
-/// The entries of the user data folder a move takes along; anything else in
-/// the folder is not Tyco's.
-const USER_DATA_ENTRIES: [&str; 5] = [
-    USER_MARKER_FILE,
-    "config.json",
-    "history",
-    "chats",
-    "plugins",
-];
-/// The vault of the default location, which goes along when it is in use.
-const VAULT_ENTRY: &str = "ai-vault";
 
 /// What a folder the user data may go to holds.
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, ts_rs::TS)]
@@ -66,19 +57,14 @@ pub struct UserDataTarget {
     pub path: String,
     /// The default folder of the platform.
     pub is_default: bool,
+    /// Whether the folder is on another disk / filesystem than the current one.
+    pub is_other_disk: bool,
     pub contents: UserDataTargetKind,
 }
 
 /// The folders of the app the user data must stay out of: the device, state,
 /// cache and log folders, and an external AI vault.
 pub struct Forbidden<'a>(pub Vec<&'a Path>);
-
-fn has_known_entries(dir: &Path) -> bool {
-    USER_DATA_ENTRIES
-        .iter()
-        .chain([&VAULT_ENTRY])
-        .any(|entry| fs::symlink_metadata(dir.join(entry)).is_ok())
-}
 
 /// What `target` holds, as seen from the user data folder at `current`.
 pub fn inspect_target(
@@ -133,15 +119,20 @@ pub fn inspect_target(
 pub enum RelocationPlan {
     /// Moves the data from the current folder into `to`.
     Move { to: PathBuf },
+    /// Creates a new data folder in `to`; nothing moves.
+    Create { to: PathBuf },
     /// Uses `to` as it is; nothing moves.
     Use { to: PathBuf },
+    /// Uses the default folder `to`, initializing it when it has no marker yet; nothing moves.
+    UseDefault { to: PathBuf },
 }
 
 /// Checks a relocation the user asked for. `target` is the chosen folder of
-/// `move` and `connect`; the default folder is `default_dir`.
+/// `move`, `create` and `connect`; the default folder is `default_dir`.
 pub fn plan(
     mode: UserDataRelocationMode,
     current: &Path,
+    current_status: UserDataStatus,
     default_dir: &Path,
     target: Option<&Path>,
     forbidden: &Forbidden,
@@ -156,6 +147,17 @@ pub fn plan(
             let to = chosen()?;
             match inspect_target(current, &to, forbidden)? {
                 UserDataTargetKind::Empty => Ok(RelocationPlan::Move { to }),
+                UserDataTargetKind::UserData { .. } => Err(AppError::InvalidInput(format!(
+                    "{} holds Tyco data already: connect it instead",
+                    to.display()
+                ))),
+                kind => Err(refusal(&to, &kind)),
+            }
+        }
+        UserDataRelocationMode::Create => {
+            let to = chosen()?;
+            match inspect_target(current, &to, forbidden)? {
+                UserDataTargetKind::Empty => Ok(RelocationPlan::Create { to }),
                 UserDataTargetKind::UserData { .. } => Err(AppError::InvalidInput(format!(
                     "{} holds Tyco data already: connect it instead",
                     to.display()
@@ -185,7 +187,9 @@ pub fn plan(
             }
         }
         UserDataRelocationMode::UseDefault => {
-            if normalized(current) == normalized(default_dir) {
+            if normalized(current) == normalized(default_dir)
+                && current_status != UserDataStatus::NotInitialized
+            {
                 return Err(AppError::InvalidInput(
                     "The data is in the default folder already".into(),
                 ));
@@ -197,7 +201,7 @@ pub fn plan(
                     default_dir.display()
                 )));
             }
-            Ok(RelocationPlan::Use {
+            Ok(RelocationPlan::UseDefault {
                 to: default_dir.to_path_buf(),
             })
         }
@@ -247,7 +251,26 @@ pub fn execute(
             }),
             || commit(to),
         ),
+        RelocationPlan::Create { to } => {
+            let had_dir = to.exists();
+            let had_marker = has_marker(to);
+            init_dir(to)?;
+            if let Err(error) = commit(to) {
+                if !had_marker {
+                    let _ = fs::remove_file(to.join(USER_MARKER_FILE));
+                }
+                if !had_dir {
+                    let _ = fs::remove_dir(to);
+                }
+                return Err(error);
+            }
+            Ok(())
+        }
         RelocationPlan::Use { to } => relocate_with(None, || commit(to)),
+        RelocationPlan::UseDefault { to } => {
+            init_dir(to)?;
+            relocate_with(None, || commit(to))
+        }
     }
 }
 
@@ -298,6 +321,7 @@ pub fn inspect(app: &tauri::AppHandle, path: Option<&str>) -> Result<UserDataTar
     )?;
     Ok(UserDataTarget {
         is_default: normalized(&target) == normalized(&data.default_dir),
+        is_other_disk: crate::services::platform::filesystem::is_other_disk(&data.dir, &target),
         path: target.to_string_lossy().into_owned(),
         contents,
     })
@@ -341,6 +365,7 @@ pub fn relocate(
         let plan = plan(
             mode,
             &data.dir,
+            data.state().status,
             &data.default_dir,
             target.as_deref(),
             &Forbidden(forbidden.iter().map(PathBuf::as_path).collect()),
@@ -415,6 +440,7 @@ mod tests {
             plan(
                 mode,
                 &self.current,
+                UserDataStatus::Connected,
                 &self.default,
                 target,
                 &self.forbidden(),
@@ -577,6 +603,20 @@ mod tests {
     }
 
     #[test]
+    fn creating_a_new_folder_leaves_the_current_data_in_place() {
+        let folders = Folders::new("user-data-create");
+        let target = folders.dir.join("new-folder");
+        let plan = folders
+            .plan(UserDataRelocationMode::Create, Some(&target))
+            .unwrap();
+        assert_eq!(plan, RelocationPlan::Create { to: target.clone() });
+        execute(&plan, &folders.current, |_| Ok(())).unwrap();
+        assert!(target.join(USER_MARKER_FILE).is_file());
+        assert!(!target.join("chats").exists());
+        assert!(folders.current.join("chats/a.json").is_file());
+    }
+
+    #[test]
     fn use_default_uses_the_default_folder_only_when_supported() {
         let folders = Folders::new("user-data-reset");
         fs::create_dir_all(folders.default.join("chats")).unwrap();
@@ -584,7 +624,22 @@ mod tests {
             folders
                 .plan(UserDataRelocationMode::UseDefault, None)
                 .unwrap(),
-            RelocationPlan::Use {
+            RelocationPlan::UseDefault {
+                to: folders.default.clone()
+            }
+        );
+        // first start initializes the default folder even when current == default
+        assert_eq!(
+            plan(
+                UserDataRelocationMode::UseDefault,
+                &folders.default,
+                UserDataStatus::NotInitialized,
+                &folders.default,
+                None,
+                &folders.forbidden(),
+            )
+            .unwrap(),
+            RelocationPlan::UseDefault {
                 to: folders.default.clone()
             }
         );

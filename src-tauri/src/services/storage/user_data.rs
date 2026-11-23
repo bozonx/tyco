@@ -79,6 +79,47 @@ pub fn marker_data_id(dir: &Path) -> Option<String> {
         .filter(|id| !id.trim().is_empty())
 }
 
+/// The entries of the user data folder that belong to Tyco.
+pub const USER_DATA_ENTRIES: [&str; 5] = [
+    USER_MARKER_FILE,
+    "config.json",
+    "history",
+    "chats",
+    "plugins",
+];
+/// The vault of the default location, which goes along when it is in use.
+pub const VAULT_ENTRY: &str = "ai-vault";
+
+pub fn has_known_entries(dir: &Path) -> bool {
+    USER_DATA_ENTRIES
+        .iter()
+        .chain([&VAULT_ENTRY])
+        .any(|entry| fs::symlink_metadata(dir.join(entry)).is_ok())
+}
+
+pub fn init_dir(dir: &Path) -> Result<(), AppError> {
+    create_private_dir(dir)?;
+    match read_marker(dir) {
+        Marker::Version(version) if version > USER_FORMAT_VERSION => {
+            Err(AppError::UnsupportedConfig(format!(
+                "The data in {} was laid out by a newer version of Tyco; update Tyco to use it",
+                dir.display()
+            )))
+        }
+        Marker::Version(_) => Ok(()),
+        marker => {
+            if marker == Marker::Unreadable {
+                if let Err(error) =
+                    crate::services::atomic_file::quarantine(&dir.join(USER_MARKER_FILE))
+                {
+                    log::warn!("Could not set the unreadable data folder marker aside: {error}");
+                }
+            }
+            write_marker(dir)
+        }
+    }
+}
+
 pub fn write_marker(dir: &Path) -> Result<(), AppError> {
     write_private(
         &dir.join(USER_MARKER_FILE),
@@ -121,8 +162,10 @@ impl UserData {
             let status = chosen_dir_status(&dir);
             (dir, status)
         };
-        let is_writable_by_others = status != UserDataStatus::NotConnected
-            && !configured.is_empty()
+        let is_writable_by_others = !matches!(
+            status,
+            UserDataStatus::NotConnected | UserDataStatus::NotInitialized
+        ) && !configured.is_empty()
             && is_writable_by_others(&dir);
         Self {
             dir,
@@ -139,13 +182,17 @@ impl UserData {
     }
 
     pub fn state(&self) -> UserDataState {
+        let status = self.current_status();
         UserDataState {
-            main_vault_id: (self.current_status() != UserDataStatus::NotConnected)
-                .then(|| crate::services::ai_vault::marker::main_vault_id(&self.dir)),
+            main_vault_id: (!matches!(
+                status,
+                UserDataStatus::NotConnected | UserDataStatus::NotInitialized
+            ))
+            .then(|| crate::services::ai_vault::marker::main_vault_id(&self.dir)),
             path: self.dir.to_string_lossy().into_owned(),
             default_path: self.default_dir.to_string_lossy().into_owned(),
             is_default: self.is_default(),
-            status: self.current_status(),
+            status,
             is_writable_by_others: self.is_writable_by_others,
             device_id: self.device_id.clone(),
             platform: crate::services::platform::hotkeys::platform_name().to_owned(),
@@ -158,6 +205,10 @@ impl UserData {
             (UserDataStatus::Connected, _) | (UserDataStatus::NewerFormat, UserDirAccess::Read) => {
                 Ok(&self.dir)
             }
+            (UserDataStatus::NotInitialized, _) => Err(AppError::UserDataUnavailable(format!(
+                "The data folder is not initialized: {}",
+                self.dir.display()
+            ))),
             (UserDataStatus::NotConnected, _) => Err(AppError::UserDataUnavailable(format!(
                 "The data folder is not connected: {}",
                 self.dir.display()
@@ -176,6 +227,9 @@ impl UserData {
     }
 
     fn current_status(&self) -> UserDataStatus {
+        if self.status == UserDataStatus::NotInitialized {
+            return UserDataStatus::NotInitialized;
+        }
         // Once disconnected, resuming requires a restart, including when a
         // mounted folder returns. Cached services must not reconnect silently.
         if self.status == UserDataStatus::NotConnected || self.disconnected.load(Ordering::SeqCst) {
@@ -223,38 +277,25 @@ fn ensure_access_allowed(path: &Path, access: UserDirAccess) -> Result<(), AppEr
     Ok(())
 }
 
-/// The default folder is not chosen by the user and never counts as synced:
-/// it is created, and marked, when it is not there. What it holds already,
-/// e.g. data of an earlier installation, is used as it is.
+/// The default folder is not chosen by the user and never counts as synced.
+/// On first start, when it holds no marker and no Tyco files yet, nothing is
+/// created until the user decides whether to connect an existing folder or
+/// start fresh (`NotInitialized`). What it holds already, e.g. data of an
+/// earlier installation, is marked and used as it is.
 fn open_default_dir(dir: &Path) -> UserDataStatus {
-    if matches!(read_marker(dir), Marker::Version(version) if version > USER_FORMAT_VERSION) {
-        return UserDataStatus::NewerFormat;
-    }
-    if let Err(error) = create_private_dir(dir) {
-        log::error!(
-            "Could not create the data folder {}: {error}",
-            dir.display()
-        );
-        return UserDataStatus::NotConnected;
-    }
     match read_marker(dir) {
-        Marker::Version(version) if version > USER_FORMAT_VERSION => UserDataStatus::NewerFormat,
-        Marker::Version(_) => UserDataStatus::Connected,
-        marker => {
-            if marker == Marker::Unreadable {
-                if let Err(error) =
-                    crate::services::atomic_file::quarantine(&dir.join(USER_MARKER_FILE))
-                {
-                    log::warn!("Could not set the unreadable data folder marker aside: {error}");
-                }
-            }
-            match write_marker(dir) {
-                Ok(()) => UserDataStatus::Connected,
-                Err(error) => {
-                    log::error!("Could not mark the data folder {}: {error}", dir.display());
-                    UserDataStatus::NotConnected
-                }
-            }
+        Marker::Version(version) if version > USER_FORMAT_VERSION => {
+            return UserDataStatus::NewerFormat
+        }
+        Marker::Version(_) => return UserDataStatus::Connected,
+        Marker::Missing if !has_known_entries(dir) => return UserDataStatus::NotInitialized,
+        Marker::Missing | Marker::Unreadable => {}
+    }
+    match init_dir(dir) {
+        Ok(()) => UserDataStatus::Connected,
+        Err(error) => {
+            log::error!("Could not mark the data folder {}: {error}", dir.display());
+            UserDataStatus::NotConnected
         }
     }
 }
@@ -324,6 +365,12 @@ pub fn open_user_data(app: &tauri::App) -> Result<UserData, AppError> {
             register_recovery_root(&data.dir, &recovery.join("user"));
             app.manage(PluginStore::read_only(data.dir.join(PLUGINS_DIR)));
         }
+        UserDataStatus::NotInitialized => {
+            app.manage(PluginStore::unavailable(format!(
+                "The data folder is not initialized: {}",
+                data.dir.display()
+            )));
+        }
         UserDataStatus::NotConnected => {
             log::warn!("The data folder is not connected: {}", data.dir.display());
             app.manage(PluginStore::unavailable(format!(
@@ -386,9 +433,16 @@ mod tests {
     use crate::services::test_support::TestDir;
 
     #[test]
-    fn the_default_folder_is_created_and_marked() {
+    fn the_default_folder_waits_for_the_first_start_choice_and_can_be_initialized() {
         let dir = TestDir::new("user-data-default");
         let default = dir.join("share/com.tyco.app");
+        let data = UserData::resolve(&default, "");
+        assert_eq!(data.status, UserDataStatus::NotInitialized);
+        assert!(data.is_default());
+        assert!(!default.exists());
+        assert!(data.dir_for(UserDirAccess::Read).is_err());
+
+        init_dir(&default).unwrap();
         let data = UserData::resolve(&default, "");
         assert_eq!(data.status, UserDataStatus::Connected);
         assert!(data.is_default());
