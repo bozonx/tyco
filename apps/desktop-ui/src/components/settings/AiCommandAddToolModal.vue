@@ -187,6 +187,7 @@ function close() {
 <style scoped>
 .add-tool-dialog {
   width: min(100% - 2 * var(--space-lg), 36rem);
+  overflow: hidden;
 }
 
 .add-tool-modal {
@@ -200,6 +201,7 @@ function close() {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
+  flex-shrink: 0;
 }
 
 .add-tool-modal-title {
@@ -213,13 +215,14 @@ function close() {
 .add-tool-search {
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
 }
 
 .add-tool-content {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  max-height: 22rem;
+  max-height: min(18rem, calc(100dvh - 14rem));
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-right: var(--space-2xs);
