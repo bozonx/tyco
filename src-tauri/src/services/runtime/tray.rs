@@ -236,7 +236,7 @@ mod tests {
         let icon = load_png_image(RECORDING_ICON_BYTES);
         assert!(icon.is_ok());
         let icon = icon.unwrap();
-        assert_eq!(icon.width(), 128);
-        assert_eq!(icon.height(), 128);
+        assert_eq!(icon.width(), 32);
+        assert_eq!(icon.height(), 32);
     }
 }

@@ -63,6 +63,9 @@ describe('SubtitlesOverlay.vue', () => {
     expect(wrapper.text()).toContain('Hello world')
     expect(wrapper.text()).toContain('pending')
     expect(wrapper.text()).toContain('Привет мир')
+    expect(wrapper.find('.subtitles-main').classes()).toContain(
+      'is-single-line'
+    )
 
     // Only one action button is rendered: Expand button
     const buttons = wrapper.findAllComponents(IconButton)
@@ -116,6 +119,9 @@ describe('SubtitlesOverlay.vue', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('Live subtitle update')
+    expect(wrapper.find('.subtitles-main').classes()).not.toContain(
+      'is-single-line'
+    )
     const buttons = wrapper.findAllComponents(IconButton)
     expect(buttons).toHaveLength(1)
     expect(buttons[0]!.props('icon')).toBe('mdi:arrow-expand')

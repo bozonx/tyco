@@ -13,7 +13,11 @@
       >
         {{ view.errorText }}
       </p>
-      <p v-if="view.mainText" class="subtitles-main">
+      <p
+        v-if="view.mainText"
+        class="subtitles-main"
+        :class="{ 'is-single-line': Boolean(view.secondaryText) }"
+      >
         <span :lang="view.mainLang ?? undefined">{{ view.mainText }}</span>
         <span v-if="view.pendingText" class="subtitles-pending">
           {{ view.pendingText }}</span
@@ -199,7 +203,7 @@ body.subtitles-body {
 }
 
 .subtitles-main {
-  font-size: 1.125rem;
+  font-size: var(--text-title, 1rem);
   font-weight: 500;
   line-height: 1.25;
   display: -webkit-box;
@@ -207,6 +211,11 @@ body.subtitles-body {
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.subtitles-main.is-single-line {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
 }
 
 .subtitles-pending {
