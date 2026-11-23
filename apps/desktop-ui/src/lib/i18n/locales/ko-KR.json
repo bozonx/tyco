@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "예: 텍스트에서 날짜와 시간을 찾아 내 캘린더에 일정을 추가해 줘",
     "aiTaskModel": "AI 명령 모델",
     "badgeAi": "AI에서 사용 가능 (설명 있음)",
+    "badgeTools": "도구 포함",
     "badgeExternal": "외부에서 사용 가능 (CLI, D-Bus)",
     "badgeInLauncher": "작업: {page}페이지 ({key})",
     "badgeInMenu": "작업 ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "에이전트가 호출할 수 있는 항목입니다. AI 명령은 물어볼 창 없이 실행되는 경우가 많아 목록의 항목은 모두 묻지 않고 실행됩니다. 파일과 메모리는 사용할 수 없습니다.",
     "aiToolsUnavailable": "지금은 사용할 수 없음",
     "aiToolUnavailable": "사용 불가",
-    "aiToolsRiskyWarning": "목록의 일부 도구는 데이터를 변경하거나 삭제하고 앱 밖에서 동작할 수 있으며, 묻지 않고 실행됩니다.",
     "detachedOutputActionHint": "명령이 별도의 프로세스에서 실행되므로 출력이 캡처되지 않습니다.",
     "testDetachedStarted": "명령이 별도의 프로세스에서 시작되었습니다",
     "aiAddTool": "도구 추가",
-    "aiNoTools": "아직 추가된 도구가 없습니다",
     "aiAddToolModalTitle": "도구 추가",
     "aiAddToolSearchPlaceholder": "도구 검색...",
     "aiAddToolEmpty": "추가할 수 있는 도구가 없습니다",
@@ -1778,7 +1777,8 @@
     "resumeTooltip": "오디오 녹음 없이 음성 인식 계속",
     "resumeTooltipWithRecord": "음성 인식 및 오디오 파일 녹음 계속",
     "recordToggleEnableHint": "시작 시 오디오 파일 녹음 및 기록 저장 활성화",
-    "recordToggleDisableHint": "오디오 녹음 비활성화 (음성 인식만 수행)"
+    "recordToggleDisableHint": "오디오 녹음 비활성화 (음성 인식만 수행)",
+    "clearMessageSaved": "현재 스크립트가 창에서 지워집니다. 대화는 기록에 저장된 상태로 유지됩니다."
   },
   "toolPermissions": {
     "riskRead": "읽기",

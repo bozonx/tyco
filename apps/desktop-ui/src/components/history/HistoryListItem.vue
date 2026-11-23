@@ -88,80 +88,14 @@
             >{{ item.filesSection.action.title }}</Button
           >
         </div>
-        <div
+        <HistoryFilePlayer
           v-for="f in displayedFiles"
           :key="f.name"
-          class="history-file"
-          :class="{ 'is-active': activePlayerFile === f.name }"
-        >
-          <AppIcon icon="mdi:file-music-outline" size="xs" />
-          <span class="history-file-name" :title="f.name">{{ f.name }}</span>
-          <span v-if="f.isMissing" class="history-file-missing">{{
-            f.missingLabel
-          }}</span>
-          <template v-else>
-            <span v-if="f.note" class="history-file-note">{{ f.note }}</span>
-            <IconButton
-              v-if="f.playback"
-              size="xs"
-              variant="ghost"
-              :disabled="
-                activePlayerFile !== f.name && Boolean(f.playback.disabledTitle)
-              "
-              :label="
-                activePlayerFile === f.name
-                  ? f.playback.stopTitle
-                  : f.playback.disabledTitle || f.playback.playTitle
-              "
-              :icon="activePlayerFile === f.name ? 'mdi:stop' : 'mdi:play'"
-              @click="togglePlayer(f)"
-            />
-            <template v-if="f.playback && activePlayerFile === f.name">
-              <audio
-                v-if="playerSource"
-                ref="audioElement"
-                class="history-player-audio"
-                autoplay
-                preload="auto"
-                :src="playerSource"
-                @error="onAudioError($event, f.name)"
-                @loadedmetadata="onLoadedMetadata($event, f.name)"
-                @durationchange="onDurationChange($event, f.name)"
-                @timeupdate="onTimeUpdate($event, f.name)"
-                @pause="onAudioPause($event, f.name)"
-                @ended="onAudioEnded(f.name)"
-              />
-              <span v-if="isPlayerFailed" class="history-file-missing">{{
-                f.playback.unavailableLabel
-              }}</span>
-              <div v-else-if="playerSource" class="history-inline-player">
-                <input
-                  type="range"
-                  class="history-player-seek"
-                  min="0"
-                  :max="playerDuration || 0"
-                  step="0.1"
-                  :value="playerCurrentTime"
-                  :disabled="!playerDuration"
-                  :aria-label="f.name"
-                  @input="onSeekInput"
-                />
-                <span class="history-player-time">
-                  {{ formatPlaybackTime(playerCurrentTime) }} /
-                  {{ formatPlaybackTime(playerDuration) }}
-                </span>
-                <SegmentedControl
-                  :model-value="playbackRate"
-                  size="xs"
-                  class="history-player-speed"
-                  :options="SPEED_OPTIONS"
-                  :label="f.playback.speedTitle"
-                  @update:model-value="onPlaybackRateChange"
-                />
-              </div>
-            </template>
-          </template>
-        </div>
+          :file="f"
+          :is-active="activePlayerFile === f.name"
+          @toggle="togglePlayer(f)"
+          @stop="stopPlayer"
+        />
       </div>
 
       <div v-if="hasDetails" class="history-original">
@@ -198,9 +132,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, useId, watch } from 'vue'
 
-import { useAudioPlaybackRate } from '../../composables/use-audio-playback-rate'
 import { useI18n } from '../../composables/use-i18n'
-import { SPEED_OPTIONS } from '../../lib/history/audio-playback-rate'
 import {
   formatHistoryDateTime,
   formatHistoryTime,
@@ -214,7 +146,7 @@ import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
 import IconButton from '../common/IconButton.vue'
-import SegmentedControl from '../common/SegmentedControl.vue'
+import HistoryFilePlayer from './HistoryFilePlayer.vue'
 
 const props = defineProps<{
   expanded: boolean
@@ -242,131 +174,18 @@ const displayedFiles = computed<HistoryListItemFile[]>(() => {
   return props.item.file ? [props.item.file] : []
 })
 const activePlayerFile = ref<string>('')
-/** The URL the open player plays; empty while it is closed */
-const playerSource = ref('')
-const isPlayerFailed = ref(false)
-const audioElement = ref<HTMLAudioElement | HTMLAudioElement[] | null>(null)
-const playerCurrentTime = ref(0)
-const playerDuration = ref(0)
-const { playbackRate, setPlaybackRate } = useAudioPlaybackRate()
-let disposePlayerSource: (() => void) | undefined
-let loadSequence = 0
-
-function currentAudio(): HTMLAudioElement | null {
-  const el = audioElement.value
-  if (Array.isArray(el)) return el[0] ?? null
-  return el
-}
 
 function stopPlayer() {
-  loadSequence++
-  disposePlayerSource?.()
-  disposePlayerSource = undefined
   activePlayerFile.value = ''
-  playerSource.value = ''
-  playerCurrentTime.value = 0
-  playerDuration.value = 0
 }
 
-async function togglePlayer(f: HistoryListItemFile) {
-  isPlayerFailed.value = false
+function togglePlayer(f: HistoryListItemFile) {
   if (activePlayerFile.value === f.name) {
     stopPlayer()
     return
   }
-  stopPlayer()
-  if (!f.playback) return
+  if (!f.playback || Boolean(f.playback.disabledTitle)) return
   activePlayerFile.value = f.name
-  const seq = ++loadSequence
-  try {
-    const resolved = await f.playback.source()
-    if (seq !== loadSequence || activePlayerFile.value !== f.name) {
-      if (typeof resolved === 'object') resolved.dispose?.()
-      return
-    }
-    if (typeof resolved === 'string') {
-      playerSource.value = resolved
-    } else {
-      playerSource.value = resolved.url
-      disposePlayerSource = resolved.dispose
-    }
-  } catch {
-    if (seq === loadSequence && activePlayerFile.value === f.name) {
-      isPlayerFailed.value = true
-    }
-  }
-}
-
-function onAudioError(_event: Event, fileName: string) {
-  if (activePlayerFile.value === fileName && playerSource.value) {
-    isPlayerFailed.value = true
-  }
-}
-
-function onLoadedMetadata(event: Event, fileName: string) {
-  if (activePlayerFile.value !== fileName) return
-  isPlayerFailed.value = false
-  const audio = event.target as HTMLAudioElement
-  audio.playbackRate = playbackRate.value
-  if (Number.isFinite(audio.duration) && audio.duration > 0) {
-    playerDuration.value = audio.duration
-  }
-}
-
-function onDurationChange(event: Event, fileName: string) {
-  if (activePlayerFile.value !== fileName) return
-  const audio = event.target as HTMLAudioElement
-  if (Number.isFinite(audio.duration) && audio.duration > 0) {
-    playerDuration.value = audio.duration
-  }
-}
-
-function onTimeUpdate(event: Event, fileName: string) {
-  if (activePlayerFile.value !== fileName) return
-  const audio = event.target as HTMLAudioElement
-  if (Number.isFinite(audio.currentTime)) {
-    playerCurrentTime.value = audio.currentTime
-  }
-}
-
-function onAudioPause(event: Event, fileName: string) {
-  if (activePlayerFile.value !== fileName) return
-  const audio = event.target as HTMLAudioElement
-  // `pauseOtherPlayers` in HistoryList pauses this element when another starts
-  if (!audio.ended && !audio.seeking) {
-    stopPlayer()
-  }
-}
-
-function onAudioEnded(fileName: string) {
-  if (activePlayerFile.value === fileName) {
-    stopPlayer()
-  }
-}
-
-function onSeekInput(event: Event) {
-  const input = event.target as HTMLInputElement
-  const nextTime = Number(input.value)
-  if (!Number.isFinite(nextTime)) return
-  playerCurrentTime.value = nextTime
-  const audio = currentAudio()
-  if (audio) audio.currentTime = nextTime
-}
-
-function onPlaybackRateChange(value: number) {
-  const rate = Number(value)
-  if (!SPEED_OPTIONS.some((opt) => opt.id === rate)) return
-  setPlaybackRate(rate)
-  const audio = currentAudio()
-  if (audio) audio.playbackRate = rate
-}
-
-function formatPlaybackTime(seconds: number): string {
-  const total =
-    Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0
-  const mins = Math.floor(total / 60)
-  const secs = total % 60
-  return `${mins}:${String(secs).padStart(2, '0')}`
 }
 
 onUnmounted(() => {

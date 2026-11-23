@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "P. ej. Busca la fecha y la hora en el texto y añade el evento a mi calendario",
     "aiTaskModel": "Modelo para comandos de IA",
     "badgeAi": "Disponible para IA (tiene descripción)",
+    "badgeTools": "Tiene herramientas",
     "badgeExternal": "Disponible externamente (CLI, D-Bus)",
     "badgeInLauncher": "Acciones: página {page} ({key})",
     "badgeInMenu": "Acciones ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "Lo que el agente puede llamar. Todo lo de la lista se ejecuta sin preguntar, porque un comando de IA suele ejecutarse sin ventana donde preguntar. Los archivos y la memoria nunca están disponibles para él.",
     "aiToolsUnavailable": "No disponibles ahora",
     "aiToolUnavailable": "No disponible",
-    "aiToolsRiskyWarning": "Algunas herramientas de la lista pueden cambiar o eliminar datos o actuar fuera de la aplicación, y se ejecutan sin preguntar.",
     "detachedOutputActionHint": "El comando se ejecuta en un proceso independiente, por lo que su salida no se captura.",
     "testDetachedStarted": "El comando se inició en un proceso independiente",
     "aiAddTool": "Añadir herramienta",
-    "aiNoTools": "Aún no se han añadido herramientas",
     "aiAddToolModalTitle": "Añadir herramienta",
     "aiAddToolSearchPlaceholder": "Buscar herramientas...",
     "aiAddToolEmpty": "No hay herramientas disponibles para añadir",
@@ -1778,7 +1777,8 @@
     "resumeTooltip": "Continuar reconocimiento de voz sin grabar audio",
     "resumeTooltipWithRecord": "Continuar reconocimiento de voz y grabación en archivo de audio",
     "recordToggleEnableHint": "Habilitar grabación de audio en archivo y guardar en el historial al iniciar",
-    "recordToggleDisableHint": "Desactivar grabación de audio (solo reconocimiento de voz)"
+    "recordToggleDisableHint": "Desactivar grabación de audio (solo reconocimiento de voz)",
+    "clearMessageSaved": "La transcripción actual se borrará de la ventana. La conversación permanecerá guardada en el historial."
   },
   "toolPermissions": {
     "riskRead": "Lectura",

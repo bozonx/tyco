@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "Z. B. Finde Datum und Uhrzeit im Text und trage den Termin in meinen Kalender ein",
     "aiTaskModel": "Modell für KI-Befehle",
     "badgeAi": "Für KI verfügbar (hat Beschreibung)",
+    "badgeTools": "Hat Werkzeuge",
     "badgeExternal": "Extern verfügbar (CLI, D-Bus)",
     "badgeInLauncher": "Aktionen: Seite {page} ({key})",
     "badgeInMenu": "Aktionen ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "Was der Agent aufrufen darf. Alles auf der Liste läuft ohne Rückfrage, da ein KI-Befehl oft ohne Fenster für Rückfragen läuft. Dateien und Gedächtnis stehen ihm nie zur Verfügung.",
     "aiToolsUnavailable": "Derzeit nicht verfügbar",
     "aiToolUnavailable": "Nicht verfügbar",
-    "aiToolsRiskyWarning": "Einige Werkzeuge der Liste können Daten ändern oder löschen oder außerhalb der App handeln – und laufen ohne Rückfrage.",
     "detachedOutputActionHint": "Der Befehl läuft in einem separaten Prozess, daher wird seine Ausgabe nicht erfasst.",
     "testDetachedStarted": "Der Befehl wurde in einem separaten Prozess gestartet",
     "aiAddTool": "Werkzeug hinzufügen",
-    "aiNoTools": "Noch keine Werkzeuge hinzugefügt",
     "aiAddToolModalTitle": "Werkzeug hinzufügen",
     "aiAddToolSearchPlaceholder": "Werkzeuge suchen...",
     "aiAddToolEmpty": "Keine Werkzeuge zum Hinzufügen verfügbar",
@@ -1778,7 +1777,8 @@
     "resumeTooltip": "Spracherkennung ohne Audioaufnahme fortsetzen",
     "resumeTooltipWithRecord": "Spracherkennung und Aufnahme in Audiodatei fortsetzen",
     "recordToggleEnableHint": "Audioaufnahme in Datei und Speichern im Verlauf beim Start aktivieren",
-    "recordToggleDisableHint": "Audioaufnahme deaktivieren (nur Spracherkennung)"
+    "recordToggleDisableHint": "Audioaufnahme deaktivieren (nur Spracherkennung)",
+    "clearMessageSaved": "Das aktuelle Transkript wird aus dem Fenster gelöscht. Das Gespräch bleibt im Verlauf gespeichert."
   },
   "toolPermissions": {
     "riskRead": "Liest",

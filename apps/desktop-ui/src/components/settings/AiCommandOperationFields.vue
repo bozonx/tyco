@@ -105,14 +105,6 @@
       </div>
     </div>
 
-    <InlineNotice
-      v-if="hasRiskyTools"
-      density="compact"
-      kind="warning"
-      icon="mdi:alert-outline"
-      :message="t('commands.aiToolsRiskyWarning')"
-    />
-
     <AiCommandAddToolModal
       :open="isAddModalOpen"
       :candidate-groups="candidateGroups"
@@ -183,7 +175,6 @@ import FieldNumber from '../common/FieldNumber.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import IconButton from '../common/IconButton.vue'
-import InlineNotice from '../common/InlineNotice.vue'
 import AiCommandAddToolModal, {
   type ToolCandidate,
   type ToolCandidateGroup,
@@ -315,12 +306,6 @@ const unavailable = computed(() =>
             item.ref.sourceKind === ref.sourceKind &&
             item.ref.sourceId === ref.sourceId)
       )
-  )
-)
-
-const hasRiskyTools = computed(() =>
-  candidates.value.some(
-    (item) => isSelected(item.ref) && isRiskyTool(item.risk)
   )
 )
 

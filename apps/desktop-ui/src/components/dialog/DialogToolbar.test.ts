@@ -11,6 +11,7 @@ import { useDesktopStore } from '../../stores/desktop'
 import { useDialogStatusStore } from '../../stores/dialog-status'
 import { useDialogStore } from '../../stores/dialog'
 import DialogToolbar from './DialogToolbar.vue'
+import ConfirmModal from '../common/ConfirmModal.vue'
 import IconButton from '../common/IconButton.vue'
 
 vi.mock('./DialogLanguageRoute.vue', () => ({
@@ -306,6 +307,11 @@ describe('DialogToolbar.vue', () => {
     const clearButton = wrapper.find('.dialog-toolbar-clear')
     expect(clearButton.exists()).toBe(true)
     await clearButton.trigger('click')
+    await flushPromises()
+
+    const confirmModal = wrapper.findComponent(ConfirmModal)
+    expect(confirmModal.props('open')).toBe(true)
+    await confirmModal.vm.$emit('confirm')
     await flushPromises()
 
     expect(clearSpy).toHaveBeenCalledTimes(1)

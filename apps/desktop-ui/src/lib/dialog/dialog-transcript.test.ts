@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  buildDialogFeedItems,
   buildDialogTurns,
   createDialogTranscript,
   lastRemoteTurn,
@@ -8,6 +9,7 @@ import {
   turnTranslation,
   turnUntranslatedText,
   type DialogSegment,
+  type DialogSessionBreak,
   type DialogSide,
 } from './dialog-transcript'
 
@@ -153,5 +155,41 @@ describe('createDialogTranscript', () => {
     model.clear()
     expect(model.segments).toEqual([])
     expect(changes).toHaveLength(3)
+  })
+})
+
+describe('buildDialogFeedItems', () => {
+  it('places session break before turn when starting at the exact same millisecond', () => {
+    const turns = buildDialogTurns([segment('a', 'me', 1000, 2000)])
+    const breaks: DialogSessionBreak[] = [
+      {
+        id: 'break-1',
+        timestampMs: 1000,
+        isRecording: false,
+        action: 'started',
+      },
+    ]
+
+    const items = buildDialogFeedItems(turns, breaks)
+    expect(items).toHaveLength(2)
+    expect(items[0]).toEqual({ type: 'break', sessionBreak: breaks[0] })
+    expect(items[1]).toEqual({ type: 'turn', turn: turns[0] })
+  })
+
+  it('guarantees the first break is placed before the first turn even if timestamp was later', () => {
+    const turns = buildDialogTurns([segment('a', 'me', 1000, 2000)])
+    const breaks: DialogSessionBreak[] = [
+      {
+        id: 'break-1',
+        timestampMs: 1050,
+        isRecording: false,
+        action: 'started',
+      },
+    ]
+
+    const items = buildDialogFeedItems(turns, breaks)
+    expect(items).toHaveLength(2)
+    expect(items[0].type).toBe('break')
+    expect(items[1].type).toBe('turn')
   })
 })

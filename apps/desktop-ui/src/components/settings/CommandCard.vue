@@ -42,6 +42,9 @@
         >
           <AppIcon icon="mdi:robot-outline" size="sm" />
         </Badge>
+        <Badge v-if="hasTools" tone="muted" :title="t('commands.badgeTools')">
+          <AppIcon icon="mdi:tools" size="sm" />
+        </Badge>
       </div>
       <Badge
         v-if="command.isEnabled && unavailableReasonKey"
@@ -109,6 +112,7 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { aiCommandOperationConfigOf } from '../../lib/ai-commands/ai-command-config'
 import {
   commandIcon,
   commandUnavailableReason,
@@ -151,11 +155,18 @@ const displayName = computed(() => props.command.name)
 const unavailableReasonKey = computed(() =>
   commandUnavailableReason(props.command, operationsStore)
 )
+const hasTools = computed(() => {
+  if (props.command.operationId !== 'core.aiTask') return false
+  return (
+    aiCommandOperationConfigOf(props.command.operationConfig).tools.length > 0
+  )
+})
 const hasTriggers = computed(() =>
   Boolean(
     props.command.isVoiceEnabled ||
     props.command.isAvailableExternally ||
-    props.command.description?.trim()
+    props.command.description?.trim() ||
+    hasTools.value
   )
 )
 const hasIssues = computed(

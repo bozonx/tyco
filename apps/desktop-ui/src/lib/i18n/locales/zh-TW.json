@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "例如：找出文字中的日期和時間，並把活動加入我的行事曆",
     "aiTaskModel": "AI 指令模型",
     "badgeAi": "可供 AI 使用（有描述）",
+    "badgeTools": "包含工具",
     "badgeExternal": "可從外部存取 (CLI, D-Bus)",
     "badgeInLauncher": "操作：第 {page} 頁 ({key})",
     "badgeInMenu": "動作 ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "代理可以呼叫的內容。AI 指令常在沒有可詢問的視窗時執行，因此清單中的一切都不經詢問即執行。它永遠無法存取檔案與記憶。",
     "aiToolsUnavailable": "目前無法使用",
     "aiToolUnavailable": "無法使用",
-    "aiToolsRiskyWarning": "清單中的部分工具可以變更或刪除資料，或在應用程式之外操作，且不經詢問即執行。",
     "detachedOutputActionHint": "命令在單獨的處理程序中執行，因此不會擷取其輸出。",
     "testDetachedStarted": "命令已在單獨的處理程序中啟動",
     "aiAddTool": "新增工具",
-    "aiNoTools": "尚未新增工具",
     "aiAddToolModalTitle": "新增工具",
     "aiAddToolSearchPlaceholder": "搜尋工具...",
     "aiAddToolEmpty": "沒有可新增的工具",
@@ -1774,7 +1773,8 @@
     "resumeTooltip": "繼續語音辨識（不錄製音訊）",
     "resumeTooltipWithRecord": "繼續語音辨識並錄製為音訊檔案",
     "recordToggleEnableHint": "在啟動時啟用錄製為音訊檔案並儲存至歷史紀錄",
-    "recordToggleDisableHint": "停用音訊錄製（僅語音辨識）"
+    "recordToggleDisableHint": "停用音訊錄製（僅語音辨識）",
+    "clearMessageSaved": "目前的逐字稿將從視窗中清除。對話仍會保留在歷史記錄中。"
   },
   "toolPermissions": {
     "riskRead": "讀取",

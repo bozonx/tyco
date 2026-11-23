@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "Par ex. Trouve la date et l’heure dans le texte et ajoute l’événement à mon agenda",
     "aiTaskModel": "Modèle pour les commandes IA",
     "badgeAi": "Disponible pour l'IA (a une description)",
+    "badgeTools": "Dispose d'outils",
     "badgeExternal": "Disponible en externe (CLI, D-Bus)",
     "badgeInLauncher": "Actions : page {page} ({key})",
     "badgeInMenu": "Actions ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "Ce que l'agent peut appeler. Tout ce qui figure dans la liste s'exécute sans demander, car une commande IA tourne souvent sans fenêtre où demander. Les fichiers et la mémoire ne lui sont jamais accessibles.",
     "aiToolsUnavailable": "Indisponibles pour le moment",
     "aiToolUnavailable": "Indisponible",
-    "aiToolsRiskyWarning": "Certains outils de la liste peuvent modifier ou supprimer des données ou agir hors de l'application, et ils s'exécutent sans demander.",
     "detachedOutputActionHint": "La commande s'exécute dans un processus distinct, sa sortie n'est donc pas capturée.",
     "testDetachedStarted": "La commande a été lancée dans un processus distinct",
     "aiAddTool": "Ajouter un outil",
-    "aiNoTools": "Aucun outil ajouté pour le moment",
     "aiAddToolModalTitle": "Ajouter un outil",
     "aiAddToolSearchPlaceholder": "Rechercher des outils...",
     "aiAddToolEmpty": "Aucun outil disponible à ajouter",
@@ -1778,7 +1777,8 @@
     "resumeTooltip": "Reprendre la reconnaissance vocale sans enregistrement audio",
     "resumeTooltipWithRecord": "Reprendre la reconnaissance vocale et l'enregistrement audio",
     "recordToggleEnableHint": "Activer l'enregistrement audio dans un fichier et l'enregistrement dans l'historique au démarrage",
-    "recordToggleDisableHint": "Désactiver l'enregistrement audio (reconnaissance vocale uniquement)"
+    "recordToggleDisableHint": "Désactiver l'enregistrement audio (reconnaissance vocale uniquement)",
+    "clearMessageSaved": "La transcription actuelle sera effacée de la fenêtre. La conversation reste enregistrée dans l’historique."
   },
   "toolPermissions": {
     "riskRead": "Lecture",

@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "Ör. Metindeki tarihi ve saati bul ve etkinliği takvimime ekle",
     "aiTaskModel": "Yapay zekâ komutları modeli",
     "badgeAi": "Yapay zeka için kullanılabilir (açıklama mevcut)",
+    "badgeTools": "Araçlara sahip",
     "badgeExternal": "Harici olarak kullanılabilir (CLI, D-Bus)",
     "badgeInLauncher": "Eylemler: sayfa {page} ({key})",
     "badgeInMenu": "Eylemler ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "Ajanın çağırabileceği şeyler. Listedeki her şey sormadan çalışır; bir yapay zekâ komutu çoğu zaman sorabileceği bir pencere olmadan çalışır. Dosyalar ve bellek ona asla açık değildir.",
     "aiToolsUnavailable": "Şu anda kullanılamıyor",
     "aiToolUnavailable": "Kullanılamıyor",
-    "aiToolsRiskyWarning": "Listedeki bazı araçlar verileri değiştirebilir, silebilir ya da uygulamanın dışında işlem yapabilir ve sormadan çalışır.",
     "detachedOutputActionHint": "Komut ayrı bir işlemde çalışır, bu nedenle çıktısı yakalanmaz.",
     "testDetachedStarted": "Komut ayrı bir işlemde başlatıldı",
     "aiAddTool": "Araç ekle",
-    "aiNoTools": "Henüz araç eklenmedi",
     "aiAddToolModalTitle": "Araç ekle",
     "aiAddToolSearchPlaceholder": "Araçları ara...",
     "aiAddToolEmpty": "Eklenebilecek uygun araç yok",
@@ -1774,7 +1773,8 @@
     "resumeTooltip": "Ses kaydı olmadan konuşma tanımaya devam et",
     "resumeTooltipWithRecord": "Konuşma tanımaya ve ses dosyasına kaydetmeye devam et",
     "recordToggleEnableHint": "Başlatıldığında sesin dosyaya kaydedilmesini ve geçmişe eklenmesini etkinleştir",
-    "recordToggleDisableHint": "Ses kaydını devre dışı bırak (yalnızca konuşma tanıma)"
+    "recordToggleDisableHint": "Ses kaydını devre dışı bırak (yalnızca konuşma tanıma)",
+    "clearMessageSaved": "Geçerli döküm pencereden temizlenecek. Konuşma geçmişte kayıtlı kalır."
   },
   "toolPermissions": {
     "riskRead": "Okuma",

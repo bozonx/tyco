@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "Npr. Pronađi datum i vrijeme u tekstu i dodaj događaj u moj kalendar",
     "aiTaskModel": "Model za AI naredbe",
     "badgeAi": "Dostupno za AI (ima opis)",
+    "badgeTools": "Ima alate",
     "badgeExternal": "Dostupno izvana (CLI, D-Bus)",
     "badgeInLauncher": "Radnje: stranica {page} ({key})",
     "badgeInMenu": "Radnje ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "Što agent smije pozvati. Sve s popisa radi bez pitanja jer AI naredba često radi bez prozora u kojem bi pitala. Datoteke i memorija nikad mu nisu dostupne.",
     "aiToolsUnavailable": "Trenutačno nedostupno",
     "aiToolUnavailable": "Nedostupno",
-    "aiToolsRiskyWarning": "Neki alati s popisa mogu mijenjati ili brisati podatke ili djelovati izvan aplikacije – i rade bez pitanja.",
     "detachedOutputActionHint": "Naredba se izvodi u zasebnom procesu, stoga se njezin izlaz ne bilježi.",
     "testDetachedStarted": "Naredba je pokrenuta u zasebnom procesu",
     "aiAddTool": "Dodaj alat",
-    "aiNoTools": "Još nema dodanih alata",
     "aiAddToolModalTitle": "Dodaj alat",
     "aiAddToolSearchPlaceholder": "Pretraži alate...",
     "aiAddToolEmpty": "Nema dostupnih alata za dodavanje",
@@ -1778,7 +1777,8 @@
     "resumeTooltip": "Nastavi prepoznavanje govora bez snimanja zvuka",
     "resumeTooltipWithRecord": "Nastavi prepoznavanje govora i snimanje u audio datoteku",
     "recordToggleEnableHint": "Omogući snimanje zvuka u datoteku i spremanje u povijest pri pokretanju",
-    "recordToggleDisableHint": "Isključi snimanje zvuka (samo prepoznavanje govora)"
+    "recordToggleDisableHint": "Isključi snimanje zvuka (samo prepoznavanje govora)",
+    "clearMessageSaved": "Trenutni prijepis bit će izbrisan iz prozora. Razgovor ostaje spremljen u povijesti."
   },
   "toolPermissions": {
     "riskRead": "Čitanje",

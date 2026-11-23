@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "De ex. Găsește data și ora în text și adaugă evenimentul în calendarul meu",
     "aiTaskModel": "Model pentru comenzi AI",
     "badgeAi": "Disponibil pentru AI (are descriere)",
+    "badgeTools": "Dispune de instrumente",
     "badgeExternal": "Disponibil extern (CLI, D-Bus)",
     "badgeInLauncher": "Acțiuni: pagina {page} ({key})",
     "badgeInMenu": "Acțiuni ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "Ce poate apela agentul. Tot ce e pe listă rulează fără întrebare, deoarece o comandă AI rulează adesea fără o fereastră în care să întrebe. Fișierele și memoria nu îi sunt niciodată disponibile.",
     "aiToolsUnavailable": "Indisponibile acum",
     "aiToolUnavailable": "Indisponibil",
-    "aiToolsRiskyWarning": "Unele instrumente din listă pot modifica sau șterge date ori pot acționa în afara aplicației și rulează fără întrebare.",
     "detachedOutputActionHint": "Comanda rulează într-un proces separat, astfel încât ieșirea acesteia nu este capturată.",
     "testDetachedStarted": "Comanda a fost pornită într-un proces separat",
     "aiAddTool": "Adaugă instrument",
-    "aiNoTools": "Nu a fost adăugat niciun instrument încă",
     "aiAddToolModalTitle": "Adaugă instrument",
     "aiAddToolSearchPlaceholder": "Căutare instrumente...",
     "aiAddToolEmpty": "Nu există instrumente disponibile pentru adăugare",
@@ -1778,7 +1777,8 @@
     "resumeTooltip": "Continuați recunoașterea vocală fără înregistrare audio",
     "resumeTooltipWithRecord": "Continuați recunoașterea vocală și înregistrarea într-un fișier audio",
     "recordToggleEnableHint": "Activați înregistrarea audio în fișier și salvarea în istoric la pornire",
-    "recordToggleDisableHint": "Dezactivați înregistrarea audio (doar recunoaștere vocală)"
+    "recordToggleDisableHint": "Dezactivați înregistrarea audio (doar recunoaștere vocală)",
+    "clearMessageSaved": "Transcrierea curentă va fi ștearsă din fereastră. Conversația rămâne salvată în istoric."
   },
   "toolPermissions": {
     "riskRead": "Citire",

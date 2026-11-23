@@ -79,8 +79,30 @@ describe('CommandCard.vue', () => {
     )
   })
 
+  it('displays tools badge when AI command has tools', () => {
+    const wrapper = mountCard({
+      operationId: 'core.aiTask',
+      operationConfig: {
+        tools: [
+          { sourceKind: 'core', sourceId: 'web', toolName: 'web_search' },
+        ],
+      },
+    })
+    const triggers = wrapper.find('.command-triggers')
+    expect(triggers.exists()).toBe(true)
+    const toolsBadge = triggers.find('[title="commands.badgeTools"]')
+    expect(toolsBadge.exists()).toBe(true)
+    expect(toolsBadge.findComponent(AppIcon).props('icon')).toBe('mdi:tools')
+  })
+
   it('displays all trigger badges when all are active', () => {
     const wrapper = mountCard({
+      operationId: 'core.aiTask',
+      operationConfig: {
+        tools: [
+          { sourceKind: 'core', sourceId: 'web', toolName: 'web_search' },
+        ],
+      },
       isVoiceEnabled: true,
       isAvailableExternally: true,
       description: 'Performs automated diagnostics',
@@ -92,6 +114,7 @@ describe('CommandCard.vue', () => {
       true
     )
     expect(triggers.find('[title="commands.badgeAi"]').exists()).toBe(true)
+    expect(triggers.find('[title="commands.badgeTools"]').exists()).toBe(true)
   })
 
   it('passes the command type as the header icon tooltip', () => {

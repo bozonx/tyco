@@ -86,17 +86,38 @@ export function buildDialogFeedItems(
   turns: readonly DialogTurn[],
   breaks: readonly DialogSessionBreak[]
 ): DialogFeedItem[] {
-  const items: { timestampMs: number; item: DialogFeedItem }[] = []
-  for (const turn of turns) {
-    items.push({ timestampMs: turn.startMs, item: { type: 'turn', turn } })
+  if (breaks.length === 0) {
+    return turns.map((turn) => ({ type: 'turn', turn }))
   }
-  for (const sessionBreak of breaks) {
+  if (turns.length === 0) {
+    return breaks.map((sessionBreak) => ({ type: 'break', sessionBreak }))
+  }
+
+  const effectiveBreaks = breaks.map((b, index) => {
+    if (index === 0 && turns.length > 0 && b.timestampMs > turns[0].startMs) {
+      return { ...b, timestampMs: turns[0].startMs }
+    }
+    return b
+  })
+
+  const items: { timestampMs: number; item: DialogFeedItem }[] = []
+  for (const sessionBreak of effectiveBreaks) {
     items.push({
       timestampMs: sessionBreak.timestampMs,
       item: { type: 'break', sessionBreak },
     })
   }
-  items.sort((a, b) => a.timestampMs - b.timestampMs)
+  for (const turn of turns) {
+    items.push({ timestampMs: turn.startMs, item: { type: 'turn', turn } })
+  }
+  items.sort((a, b) => {
+    if (a.timestampMs !== b.timestampMs) {
+      return a.timestampMs - b.timestampMs
+    }
+    if (a.item.type === 'break' && b.item.type !== 'break') return -1
+    if (a.item.type !== 'break' && b.item.type === 'break') return 1
+    return 0
+  })
   return items.map((entry) => entry.item)
 }
 export function turnText(turn: DialogTurn): string {
@@ -200,7 +221,7 @@ export function createDialogTranscript(
         }
         const id = deps.createId()
         draftIds.set(side, id)
-        const startMs = part.startMs + offsetMs
+        const startMs = Math.max(offsetMs, part.startMs + offsetMs)
         commit([
           ...rest,
           {
@@ -224,7 +245,7 @@ export function createDialogTranscript(
       const segment: DialogSegment = {
         id: deps.createId(),
         side,
-        startMs: part.segment.startMs + offsetMs,
+        startMs: Math.max(offsetMs, part.segment.startMs + offsetMs),
         endMs: Math.max(part.segment.endMs, part.segment.startMs) + offsetMs,
         text,
         isFinal: true,

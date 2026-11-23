@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "Ex.: Encontre a data e a hora no texto e adicione o evento à minha agenda",
     "aiTaskModel": "Modelo para comandos de IA",
     "badgeAi": "Disponível para IA (tem descrição)",
+    "badgeTools": "Possui ferramentas",
     "badgeExternal": "Disponível externamente (CLI, D-Bus)",
     "badgeInLauncher": "Ações: página {page} ({key})",
     "badgeInMenu": "Ações ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "O que o agente pode chamar. Tudo na lista roda sem perguntar, pois um comando de IA muitas vezes roda sem uma janela para perguntar. Arquivos e memória nunca ficam disponíveis para ele.",
     "aiToolsUnavailable": "Indisponíveis agora",
     "aiToolUnavailable": "Indisponível",
-    "aiToolsRiskyWarning": "Algumas ferramentas da lista podem alterar ou excluir dados ou agir fora do app, e rodam sem perguntar.",
     "detachedOutputActionHint": "O comando é executado em um processo separado, portanto sua saída não é capturada.",
     "testDetachedStarted": "O comando foi iniciado em um processo separado",
     "aiAddTool": "Adicionar ferramenta",
-    "aiNoTools": "Nenhuma ferramenta adicionada ainda",
     "aiAddToolModalTitle": "Adicionar ferramenta",
     "aiAddToolSearchPlaceholder": "Buscar ferramentas...",
     "aiAddToolEmpty": "Nenhuma ferramenta disponível para adicionar",
@@ -1778,7 +1777,8 @@
     "resumeTooltip": "Continuar reconhecimento de fala sem gravar áudio",
     "resumeTooltipWithRecord": "Continuar reconhecimento de fala e gravação em arquivo de áudio",
     "recordToggleEnableHint": "Ativar gravação de áudio em arquivo e salvamento no histórico ao iniciar",
-    "recordToggleDisableHint": "Desativar gravação de áudio (apenas reconhecimento de fala)"
+    "recordToggleDisableHint": "Desativar gravação de áudio (apenas reconhecimento de fala)",
+    "clearMessageSaved": "A transcrição atual será limpa da janela. A conversa continuará salva no histórico."
   },
   "toolPermissions": {
     "riskRead": "Leitura",

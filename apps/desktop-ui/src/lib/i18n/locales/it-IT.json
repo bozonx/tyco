@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "Ad es. Trova data e ora nel testo e aggiungi l’evento al mio calendario",
     "aiTaskModel": "Modello per comandi IA",
     "badgeAi": "Disponibile per l'IA (ha una descrizione)",
+    "badgeTools": "Dispone di strumenti",
     "badgeExternal": "Disponibile esternamente (CLI, D-Bus)",
     "badgeInLauncher": "Azioni: pagina {page} ({key})",
     "badgeInMenu": "Azioni ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "Ciò che l'agente può chiamare. Tutto ciò che è nell'elenco viene eseguito senza chiedere, perché un comando IA spesso gira senza una finestra in cui chiedere. File e memoria non gli sono mai disponibili.",
     "aiToolsUnavailable": "Non disponibili ora",
     "aiToolUnavailable": "Non disponibile",
-    "aiToolsRiskyWarning": "Alcuni strumenti dell'elenco possono modificare o eliminare dati o agire fuori dall'app, e vengono eseguiti senza chiedere.",
     "detachedOutputActionHint": "Il comando viene eseguito in un processo separato, pertanto il suo output non viene catturato.",
     "testDetachedStarted": "Il comando è stato avviato in un processo separato",
     "aiAddTool": "Aggiungi strumento",
-    "aiNoTools": "Nessuno strumento ancora aggiunto",
     "aiAddToolModalTitle": "Aggiungi strumento",
     "aiAddToolSearchPlaceholder": "Cerca strumenti...",
     "aiAddToolEmpty": "Nessuno strumento disponibile da aggiungere",
@@ -1778,7 +1777,8 @@
     "resumeTooltip": "Riprendi il riconoscimento vocale senza registrare l'audio",
     "resumeTooltipWithRecord": "Riprendi il riconoscimento vocale e registra in un file audio",
     "recordToggleEnableHint": "Abilita la registrazione audio su file e il salvataggio nella cronologia all'avvio",
-    "recordToggleDisableHint": "Disabilita registrazione audio (solo riconoscimento vocale)"
+    "recordToggleDisableHint": "Disabilita registrazione audio (solo riconoscimento vocale)",
+    "clearMessageSaved": "La trascrizione attuale verrà cancellata dalla finestra. La conversazione rimarrà salvata nella cronologia."
   },
   "toolPermissions": {
     "riskRead": "Lettura",

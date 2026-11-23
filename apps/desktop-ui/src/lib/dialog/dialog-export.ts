@@ -61,7 +61,13 @@ export function exportDialogTranscript(
   }
 
   if (options.breaks) {
-    for (const b of options.breaks) {
+    const effectiveBreaks = options.breaks.map((b, index) => {
+      if (index === 0 && turns.length > 0 && b.timestampMs > turns[0].startMs) {
+        return { ...b, timestampMs: turns[0].startMs }
+      }
+      return b
+    })
+    for (const b of effectiveBreaks) {
       const label =
         b.action === 'started'
           ? b.isRecording
@@ -80,7 +86,14 @@ export function exportDialogTranscript(
     }
   }
 
-  items.sort((a, b) => a.timestampMs - b.timestampMs)
+  items.sort((a, b) => {
+    if (a.timestampMs !== b.timestampMs) {
+      return a.timestampMs - b.timestampMs
+    }
+    if (a.type === 'break' && b.type !== 'break') return -1
+    if (a.type !== 'break' && b.type === 'break') return 1
+    return 0
+  })
   return items
     .map((item) => (item.type === 'turn' ? item.lines.join('\n') : item.text))
     .join('\n')

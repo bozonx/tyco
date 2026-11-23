@@ -318,7 +318,7 @@ export const useDialogStore = defineStore('dialog', () => {
       const settled = transcript.apply(
         side,
         part,
-        sessionStartedAtMs + offsetMs
+        Math.max(sessionStartedAtMs, sessionStartedAtMs + Math.max(0, offsetMs))
       )
       if (settled) translationQueue.enqueue(settled)
     },

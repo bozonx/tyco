@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "Např. Najdi v textu datum a čas a přidej událost do mého kalendáře",
     "aiTaskModel": "Model pro AI příkazy",
     "badgeAi": "Dostupné pro AI (má popis)",
+    "badgeTools": "Používá nástroje",
     "badgeExternal": "Dostupné externě (CLI, D-Bus)",
     "badgeInLauncher": "Akce: stránka {page} ({key})",
     "badgeInMenu": "Akce ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "Co může agent volat. Vše ze seznamu běží bez ptaní, protože AI příkaz často běží bez okna, kde by se dalo zeptat. Soubory a paměť mu nikdy nejsou dostupné.",
     "aiToolsUnavailable": "Nyní nedostupné",
     "aiToolUnavailable": "Nedostupné",
-    "aiToolsRiskyWarning": "Některé nástroje ze seznamu mohou měnit či mazat data nebo jednat mimo aplikaci – a běží bez ptaní.",
     "detachedOutputActionHint": "Příkaz běží v samostatném procesu, takže jeho výstup není zachycen.",
     "testDetachedStarted": "Příkaz byl spuštěn v samostatném procesu",
     "aiAddTool": "Přidat nástroj",
-    "aiNoTools": "Dosud nebyly přidány žádné nástroje",
     "aiAddToolModalTitle": "Přidat nástroj",
     "aiAddToolSearchPlaceholder": "Hledat nástroje...",
     "aiAddToolEmpty": "Žádné dostupné nástroje k přidání",
@@ -1778,7 +1777,8 @@
     "resumeTooltip": "Pokračovat v rozpoznávání řeči bez nahrávání zvuku",
     "resumeTooltipWithRecord": "Pokračovat v rozpoznávání řeči a záznamu do zvukového souboru",
     "recordToggleEnableHint": "Při spuštění zapnout nahrávání zvuku do souboru a ukládání do historie",
-    "recordToggleDisableHint": "Vypnout nahrávání zvuku (pouze rozpoznávání řeči)"
+    "recordToggleDisableHint": "Vypnout nahrávání zvuku (pouze rozpoznávání řeči)",
+    "clearMessageSaved": "Aktuální přepis bude z okna vymazán. Konverzace zůstane uložena v historii."
   },
   "toolPermissions": {
     "riskRead": "Čtení",

@@ -134,7 +134,7 @@
     <ConfirmModal
       :open="isClearConfirmOpen"
       :title="t('dialog.clearTitle')"
-      :message="t('dialog.clearMessage')"
+      :message="clearModalMessage"
       :confirm-text="t('dialog.clearConfirm')"
       @confirm="confirmClear"
       @cancel="isClearConfirmOpen = false"
@@ -340,12 +340,12 @@ function handleRun() {
   void dialog.start({ isRecording: dialog.isRecordEnabled && canRecord.value })
 }
 
+const clearModalMessage = computed(() =>
+  canRecord.value ? t('dialog.clearMessageSaved') : t('dialog.clearMessage')
+)
+
 function handleClear() {
-  if (canRecord.value) {
-    void dialog.clear()
-  } else {
-    isClearConfirmOpen.value = true
-  }
+  isClearConfirmOpen.value = true
 }
 
 function confirmClear() {

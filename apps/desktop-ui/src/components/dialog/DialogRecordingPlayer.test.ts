@@ -20,19 +20,20 @@ describe('DialogRecordingPlayer.vue', () => {
     desktop.dispose()
   })
 
-  it('renders recording file name, open folder button, and play button', () => {
+  it('renders recording file name and play button', () => {
     const wrapper = mount(DialogRecordingPlayer, {
       props: { file: '2026-11-23 12-00-00 a1b2c3.opus' },
       global: { plugins: [i18n, desktop.pinia] },
     })
 
     expect(wrapper.text()).toContain('2026-11-23 12-00-00 a1b2c3.opus')
-    expect(wrapper.find('.dialog-recording-name').attributes('title')).toBe(
+    expect(wrapper.find('.history-file-name').attributes('title')).toBe(
       '2026-11-23 12-00-00 a1b2c3.opus'
     )
-    const buttons = wrapper.findAll('button')
-    // Open folder button & Play button
-    expect(buttons).toHaveLength(2)
+    const playBtn = wrapper.find('button')
+    expect(playBtn.attributes('aria-label')).toBe(
+      i18n.global.t('history.playRecording')
+    )
   })
 
   it('disables play button when dialog is active', async () => {
@@ -44,33 +45,14 @@ describe('DialogRecordingPlayer.vue', () => {
       global: { plugins: [i18n, desktop.pinia] },
     })
 
-    const playBtn = wrapper.findAll('button')[1]
+    const playBtn = wrapper.find('button')
     expect(playBtn.attributes('disabled')).toBeDefined()
     expect(playBtn.attributes('aria-label')).toBe(
       i18n.global.t('history.playRecordingWhileCapturing')
     )
   })
 
-  it('calls show_dialog_recording when clicking the open folder button', async () => {
-    let shownFile: string | undefined
-    desktop.backend.handle('show_dialog_recording', (args) => {
-      shownFile = (args as { file: string }).file
-      return undefined
-    })
-
-    const wrapper = mount(DialogRecordingPlayer, {
-      props: { file: 'call.opus' },
-      global: { plugins: [i18n, desktop.pinia] },
-    })
-
-    const folderBtn = wrapper.findAll('button')[0]
-    await folderBtn.trigger('click')
-    await flushPromises()
-
-    expect(shownFile).toBe('call.opus')
-  })
-
-  it('starts playback when play button is clicked', async () => {
+  it('starts playback when play button is clicked and shows seekbar and speeds', async () => {
     desktop.backend.handle('read_dialog_recording', () => new ArrayBuffer(8))
 
     const wrapper = mount(DialogRecordingPlayer, {
@@ -78,11 +60,15 @@ describe('DialogRecordingPlayer.vue', () => {
       global: { plugins: [i18n, desktop.pinia] },
     })
 
-    const playBtn = wrapper.findAll('button')[1]
+    const playBtn = wrapper.find('button')
     await playBtn.trigger('click')
     await flushPromises()
 
     expect(wrapper.find('audio').exists()).toBe(true)
-    expect(wrapper.find('.dialog-player-seek').exists()).toBe(true)
+    expect(wrapper.find('.history-player-seek').exists()).toBe(true)
+    const options = wrapper
+      .findAll('.history-player-speed .option-label')
+      .map((option) => option.text())
+    expect(options).toEqual(['1×', '1.5×', '2×'])
   })
 })

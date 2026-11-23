@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "例如：找出文本中的日期和时间，并把事件添加到我的日历",
     "aiTaskModel": "AI 命令模型",
     "badgeAi": "可供 AI 使用（有描述）",
+    "badgeTools": "包含工具",
     "badgeExternal": "可从外部访问 (CLI, D-Bus)",
     "badgeInLauncher": "操作：第 {page} 页 ({key})",
     "badgeInMenu": "操作 ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "代理可以调用的内容。AI 命令常常在没有可询问的窗口时运行，因此列表中的一切都无需询问即运行。它永远无法访问文件和记忆。",
     "aiToolsUnavailable": "当前不可用",
     "aiToolUnavailable": "不可用",
-    "aiToolsRiskyWarning": "列表中的部分工具可以更改或删除数据，或在应用之外操作，并且无需询问即运行。",
     "detachedOutputActionHint": "命令在单独的进程中运行，因此不会捕获其输出。",
     "testDetachedStarted": "命令已在单独的进程中启动",
     "aiAddTool": "添加工具",
-    "aiNoTools": "尚未添加工具",
     "aiAddToolModalTitle": "添加工具",
     "aiAddToolSearchPlaceholder": "搜索工具...",
     "aiAddToolEmpty": "没有可添加的工具",
@@ -1774,7 +1773,8 @@
     "resumeTooltip": "继续语音识别（不录制音频）",
     "resumeTooltipWithRecord": "继续语音识别并录制到音频文件",
     "recordToggleEnableHint": "在启动时启用录制到音频文件并保存到历史记录",
-    "recordToggleDisableHint": "禁用音频录制（仅语音识别）"
+    "recordToggleDisableHint": "禁用音频录制（仅语音识别）",
+    "clearMessageSaved": "当前转录内容将从窗口中清除。对话仍将保存在历史记录中。"
   },
   "toolPermissions": {
     "riskRead": "读取",

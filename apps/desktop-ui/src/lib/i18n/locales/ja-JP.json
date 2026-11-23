@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "例：テキストから日時を見つけて、予定をカレンダーに追加して",
     "aiTaskModel": "AI コマンドのモデル",
     "badgeAi": "AIで利用可能 (説明あり)",
+    "badgeTools": "ツールが設定されています",
     "badgeExternal": "外部から利用可能 (CLI、D-Bus)",
     "badgeInLauncher": "アクション: ページ {page} ({key})",
     "badgeInMenu": "アクション ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "エージェントが呼び出せるもの。AI コマンドは確認できるウィンドウなしで動くことが多いため、リストのものはすべて確認なしで実行されます。ファイルとメモリは使えません。",
     "aiToolsUnavailable": "現在利用できません",
     "aiToolUnavailable": "利用不可",
-    "aiToolsRiskyWarning": "リストの一部のツールはデータを変更・削除したり、アプリの外で動作したりでき、確認なしで実行されます。",
     "detachedOutputActionHint": "コマンドは別のプロセスで実行されるため、その出力はキャプチャされません。",
     "testDetachedStarted": "コマンドは別のプロセスで起動されました",
     "aiAddTool": "ツールを追加",
-    "aiNoTools": "まだツールが追加されていません",
     "aiAddToolModalTitle": "ツールを追加",
     "aiAddToolSearchPlaceholder": "ツールを検索...",
     "aiAddToolEmpty": "追加可能なツールがありません",
@@ -1774,7 +1773,8 @@
     "resumeTooltip": "音声録音なしで音声認識を再開",
     "resumeTooltipWithRecord": "音声認識と音声ファイルへの録音を再開",
     "recordToggleEnableHint": "開始時に音声ファイルへの録音と履歴への保存を有効にする",
-    "recordToggleDisableHint": "音声録音を無効にする（音声認識のみ）"
+    "recordToggleDisableHint": "音声録音を無効にする（音声認識のみ）",
+    "clearMessageSaved": "現在の文字起こしはウィンドウから消去されます。会話は履歴に保存されたままになります。"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

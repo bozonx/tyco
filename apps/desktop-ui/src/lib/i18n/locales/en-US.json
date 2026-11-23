@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "E.g. Find the date and time in the text and add the event to my calendar",
     "aiTaskModel": "AI command model",
     "badgeAi": "Available for AI (has description)",
+    "badgeTools": "Has tools",
     "badgeExternal": "Available externally (CLI, D-Bus)",
     "badgeInLauncher": "Actions: page {page} ({key})",
     "badgeInMenu": "Actions ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "What the agent may call. Everything on the list runs without asking, since an AI command often runs with no window to ask in. Files and memory are never available to it.",
     "aiToolsUnavailable": "Not available now",
     "aiToolUnavailable": "Unavailable",
-    "aiToolsRiskyWarning": "Some tools on the list can change or delete data or act outside the app, and they run without asking.",
     "detachedOutputActionHint": "The command runs in a separate process, so its output is not captured.",
     "testDetachedStarted": "The command was started in a separate process",
     "aiAddTool": "Add tool",
-    "aiNoTools": "No tools added yet",
     "aiAddToolModalTitle": "Add tool",
     "aiAddToolSearchPlaceholder": "Search tools...",
     "aiAddToolEmpty": "No tools available to add",
@@ -1778,7 +1777,8 @@
     "resumeTooltip": "Resume speech recognition without audio recording",
     "resumeTooltipWithRecord": "Resume speech recognition and record to audio file",
     "recordToggleEnableHint": "Enable audio recording to file and saving to history on start",
-    "recordToggleDisableHint": "Disable audio recording (speech recognition only)"
+    "recordToggleDisableHint": "Disable audio recording (speech recognition only)",
+    "clearMessageSaved": "The current transcript will be cleared from the window. The conversation remains saved in history."
   },
   "toolPermissions": {
     "riskRead": "Reads",

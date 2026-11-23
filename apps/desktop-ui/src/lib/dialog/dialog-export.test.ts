@@ -121,4 +121,25 @@ describe('exportDialogTranscript', () => {
       ].join('\n')
     )
   })
+
+  it('places break before turn even when starting at the same millisecond', () => {
+    const segments = [segment({ id: 'Hello', side: 'me', startMs: 1000 })]
+    const breaks = [
+      {
+        id: 'b1',
+        timestampMs: 1000,
+        isRecording: false,
+        action: 'started' as const,
+      },
+    ]
+    const result = exportDialogTranscript(segments, {
+      labels: { ...labels, sessionStartedListening: 'Listening started' },
+      formatTime,
+      includeTranslation: false,
+      breaks,
+    })
+    expect(result).toBe(
+      ['--- Listening started · 00:01 ---', '[00:01] Me: Hello'].join('\n')
+    )
+  })
 })

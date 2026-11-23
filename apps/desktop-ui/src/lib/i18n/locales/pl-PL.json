@@ -239,6 +239,7 @@
     "aiPromptPlaceholder": "Np. Znajdź w tekście datę i godzinę i dodaj wydarzenie do mojego kalendarza",
     "aiTaskModel": "Model dla poleceń AI",
     "badgeAi": "Dostępne dla AI (zawiera opis)",
+    "badgeTools": "Zawiera narzędzia",
     "badgeExternal": "Dostępne zewnętrznie (CLI, D-Bus)",
     "badgeInLauncher": "Działania: strona {page} ({key})",
     "badgeInMenu": "Akcje ({key})",
@@ -330,11 +331,9 @@
     "aiToolsInfo": "Co agent może wywoływać. Wszystko z listy działa bez pytania, bo polecenie AI często działa bez okna, w którym można zapytać. Pliki i pamięć nigdy nie są mu dostępne.",
     "aiToolsUnavailable": "Obecnie niedostępne",
     "aiToolUnavailable": "Niedostępne",
-    "aiToolsRiskyWarning": "Niektóre narzędzia z listy mogą zmieniać lub usuwać dane albo działać poza aplikacją — i działają bez pytania.",
     "detachedOutputActionHint": "Polecenie działa w osobnym procesie, więc jego wyjście nie jest przechwytywane.",
     "testDetachedStarted": "Polecenie zostało uruchomione w osobnym procesie",
     "aiAddTool": "Dodaj narzędzie",
-    "aiNoTools": "Nie dodano jeszcze żadnych narzędzi",
     "aiAddToolModalTitle": "Dodaj narzędzie",
     "aiAddToolSearchPlaceholder": "Szukaj narzędzi...",
     "aiAddToolEmpty": "Brak dostępnych narzędzi do dodania",
@@ -1778,7 +1777,8 @@
     "resumeTooltip": "Wznów rozpoznawanie mowy bez nagrywania dźwięku",
     "resumeTooltipWithRecord": "Wznów rozpoznawanie mowy i nagrywanie do pliku audio",
     "recordToggleEnableHint": "Włącz nagrywanie dźwięku do pliku i zapisywanie w historii przy uruchomieniu",
-    "recordToggleDisableHint": "Wyłącz nagrywanie dźwięku (tylko rozpoznawanie mowy)"
+    "recordToggleDisableHint": "Wyłącz nagrywanie dźwięku (tylko rozpoznawanie mowy)",
+    "clearMessageSaved": "Bieżąca transkrypcja zostanie usunięta z okna. Rozmowa pozostanie zapisana w historii."
   },
   "toolPermissions": {
     "riskRead": "Odczyt",
