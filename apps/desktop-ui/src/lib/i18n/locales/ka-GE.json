@@ -332,7 +332,15 @@
     "aiToolUnavailable": "მიუწვდომელი",
     "aiToolsRiskyWarning": "სიის ზოგ ხელსაწყოს შეუძლია მონაცემების შეცვლა ან წაშლა, ან აპის გარეთ მოქმედება — და ისინი შეკითხვის გარეშე სრულდება.",
     "detachedOutputActionHint": "ბრძანება ეშვება ცალკე პროცესში, ამიტომ მისი გამომავალი არ ჩაიწერება.",
-    "testDetachedStarted": "ბრძანება გაეშვა ცალკე პროცესში"
+    "testDetachedStarted": "ბრძანება გაეშვა ცალკე პროცესში",
+    "aiAddTool": "ხელსაწყოს დამატება",
+    "aiNoTools": "ხელსაწყოები ჯერ არ არის დამატებული",
+    "aiAddToolModalTitle": "ხელსაწყოს დამატება",
+    "aiAddToolSearchPlaceholder": "ხელსაწყოების ძიება...",
+    "aiAddToolEmpty": "დასამატებელი ხელსაწყოები არ არის",
+    "aiToolAlreadyAdded": "დამატებულია",
+    "aiRemoveToolConfirmTitle": "წაიშალოს ხელსაწყო?",
+    "aiRemoveToolConfirmMessage": "ამოიშალოს {name} აგენტის ნებადართული ხელსაწყოებიდან?"
   },
   "common": {
     "add": "დამატება",

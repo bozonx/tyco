@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Μη διαθέσιμο",
     "aiToolsRiskyWarning": "Ορισμένα εργαλεία της λίστας μπορούν να αλλάξουν ή να διαγράψουν δεδομένα ή να δράσουν εκτός εφαρμογής, και εκτελούνται χωρίς ερώτηση.",
     "detachedOutputActionHint": "Η εντολή εκτελείται σε ξεχωριστή διεργασία, επομένως η έξοδός της δεν καταγράφεται.",
-    "testDetachedStarted": "Η εντολή ξεκίνησε σε ξεχωριστή διεργασία"
+    "testDetachedStarted": "Η εντολή ξεκίνησε σε ξεχωριστή διεργασία",
+    "aiAddTool": "Προσθήκη εργαλείου",
+    "aiNoTools": "Δεν έχουν προστεθεί εργαλεία ακόμα",
+    "aiAddToolModalTitle": "Προσθήκη εργαλείου",
+    "aiAddToolSearchPlaceholder": "Αναζήτηση εργαλείων...",
+    "aiAddToolEmpty": "Δεν υπάρχουν διαθέσιμα εργαλεία για προσθήκη",
+    "aiToolAlreadyAdded": "Προστέθηκε",
+    "aiRemoveToolConfirmTitle": "Αφαίρεση εργαλείου;",
+    "aiRemoveToolConfirmMessage": "Να αφαιρεθεί το {name} από τα επιτρεπόμενα εργαλεία του πράκτορα;"
   },
   "common": {
     "add": "Προσθήκη",

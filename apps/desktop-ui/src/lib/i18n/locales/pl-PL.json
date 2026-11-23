@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Niedostępne",
     "aiToolsRiskyWarning": "Niektóre narzędzia z listy mogą zmieniać lub usuwać dane albo działać poza aplikacją — i działają bez pytania.",
     "detachedOutputActionHint": "Polecenie działa w osobnym procesie, więc jego wyjście nie jest przechwytywane.",
-    "testDetachedStarted": "Polecenie zostało uruchomione w osobnym procesie"
+    "testDetachedStarted": "Polecenie zostało uruchomione w osobnym procesie",
+    "aiAddTool": "Dodaj narzędzie",
+    "aiNoTools": "Nie dodano jeszcze żadnych narzędzi",
+    "aiAddToolModalTitle": "Dodaj narzędzie",
+    "aiAddToolSearchPlaceholder": "Szukaj narzędzi...",
+    "aiAddToolEmpty": "Brak dostępnych narzędzi do dodania",
+    "aiToolAlreadyAdded": "Dodano",
+    "aiRemoveToolConfirmTitle": "Usunąć narzędzie?",
+    "aiRemoveToolConfirmMessage": "Usunąć {name} z dozwolonych narzędzi agenta?"
   },
   "common": {
     "add": "Dodaj",

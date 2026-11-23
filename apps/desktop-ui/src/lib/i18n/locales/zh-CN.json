@@ -332,7 +332,15 @@
     "aiToolUnavailable": "不可用",
     "aiToolsRiskyWarning": "列表中的部分工具可以更改或删除数据，或在应用之外操作，并且无需询问即运行。",
     "detachedOutputActionHint": "命令在单独的进程中运行，因此不会捕获其输出。",
-    "testDetachedStarted": "命令已在单独的进程中启动"
+    "testDetachedStarted": "命令已在单独的进程中启动",
+    "aiAddTool": "添加工具",
+    "aiNoTools": "尚未添加工具",
+    "aiAddToolModalTitle": "添加工具",
+    "aiAddToolSearchPlaceholder": "搜索工具...",
+    "aiAddToolEmpty": "没有可添加的工具",
+    "aiToolAlreadyAdded": "已添加",
+    "aiRemoveToolConfirmTitle": "删除工具？",
+    "aiRemoveToolConfirmMessage": "是否从代理允许的工具中移除 {name}？"
   },
   "common": {
     "add": "添加",

@@ -27,49 +27,116 @@
     :label="t('commands.aiTools')"
     :info="t('commands.aiToolsInfo')"
   >
-    <div class="ai-command-list">
-      <template v-for="group in candidateGroups" :key="group.id">
-        <p class="ai-command-group">{{ group.label }}</p>
+    <div class="ai-tools-container">
+      <div
+        v-if="selectedCandidates.length || unavailable.length"
+        class="ai-tools-list"
+      >
         <div
-          v-for="item in group.items"
+          v-for="item in selectedCandidates"
           :key="refKey(item.ref)"
-          class="ai-command-item"
+          class="ai-tool-row"
         >
-          <FieldCheckbox
-            :model-value="isSelected(item.ref)"
-            :label="item.label"
-            @update:model-value="toggleTool(item.ref, $event)"
+          <div class="ai-tool-row-main">
+            <AppIcon
+              :icon="toolIcon(item.ref)"
+              size="sm"
+              class="ai-tool-row-icon"
+              aria-hidden="true"
+            />
+            <span class="ai-tool-row-label">{{ item.label }}</span>
+            <Badge v-if="isRiskyTool(item.risk)" tone="warning">
+              {{ t(TOOL_RISK_LABEL_KEYS[item.risk]) }}
+            </Badge>
+          </div>
+          <IconButton
+            size="sm"
+            variant="ghost"
+            icon="mdi:trash-can-outline"
+            :label="t('common.delete')"
+            type="button"
+            @click="promptRemoveTool(item)"
           />
-          <Badge v-if="isRiskyTool(item.risk)" tone="warning">
-            {{ t(TOOL_RISK_LABEL_KEYS[item.risk]) }}
-          </Badge>
         </div>
-        <p v-if="!group.items.length" class="ai-command-empty">
-          {{ group.emptyMessage }}
-        </p>
-      </template>
-      <template v-if="unavailable.length">
-        <p class="ai-command-group">{{ t('commands.aiToolsUnavailable') }}</p>
-        <div
-          v-for="ref in unavailable"
-          :key="refKey(ref)"
-          class="ai-command-item"
+
+        <template v-if="unavailable.length">
+          <p class="ai-tools-unavailable-label">
+            {{ t('commands.aiToolsUnavailable') }}
+          </p>
+          <div
+            v-for="toolRef in unavailable"
+            :key="refKey(toolRef)"
+            class="ai-tool-row"
+          >
+            <div class="ai-tool-row-main">
+              <AppIcon
+                :icon="toolIcon(toolRef)"
+                size="sm"
+                class="ai-tool-row-icon"
+                aria-hidden="true"
+              />
+              <span class="ai-tool-row-label">{{
+                toolRef.toolName ?? toolRef.sourceId
+              }}</span>
+              <Badge tone="muted">{{ t('commands.aiToolUnavailable') }}</Badge>
+            </div>
+            <IconButton
+              size="sm"
+              variant="ghost"
+              icon="mdi:trash-can-outline"
+              :label="t('common.delete')"
+              type="button"
+              @click="promptRemoveUnavailable(toolRef)"
+            />
+          </div>
+        </template>
+      </div>
+
+      <p v-else class="ai-tools-empty">
+        {{ t('commands.aiNoTools') }}
+      </p>
+
+      <div class="ai-tools-actions">
+        <Button
+          size="sm"
+          variant="neutral"
+          icon="mdi:plus"
+          type="button"
+          @click="isAddModalOpen = true"
         >
-          <FieldCheckbox
-            :model-value="true"
-            :label="ref.toolName ?? ref.sourceId"
-            @update:model-value="toggleTool(ref, false)"
-          />
-          <Badge tone="muted">{{ t('commands.aiToolUnavailable') }}</Badge>
-        </div>
-      </template>
+          {{ t('commands.aiAddTool') }}
+        </Button>
+      </div>
     </div>
+
     <InlineNotice
       v-if="hasRiskyTools"
       density="compact"
       kind="warning"
       icon="mdi:alert-outline"
       :message="t('commands.aiToolsRiskyWarning')"
+    />
+
+    <AiCommandAddToolModal
+      :open="isAddModalOpen"
+      :candidate-groups="candidateGroups"
+      :is-selected="isSelected"
+      @close="isAddModalOpen = false"
+      @add="handleAddTool"
+    />
+
+    <ConfirmModal
+      :open="toolToRemove !== null"
+      :title="t('commands.aiRemoveToolConfirmTitle')"
+      :message="
+        t('commands.aiRemoveToolConfirmMessage', {
+          name: toolToRemove?.label ?? '',
+        })
+      "
+      :confirm-text="t('common.delete')"
+      danger
+      @confirm="confirmRemoveTool"
+      @cancel="toolToRemove = null"
     />
   </FieldRow>
   <FieldRow
@@ -87,7 +154,7 @@
   </FieldRow>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { usePluginToolSources } from '../../composables/use-plugin-tool-sources'
@@ -110,19 +177,25 @@ import {
 } from '../../lib/chat-tools/tool-catalog-entries'
 import { normalizeCommands } from '../../lib/commands/command-config'
 import { commandLabel } from '../../lib/commands/command-runtime'
+import AppIcon from '../common/AppIcon.vue'
 import Badge from '../common/Badge.vue'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
+import Button from '../common/Button.vue'
+import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldNumber from '../common/FieldNumber.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
+import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
+import AiCommandAddToolModal, {
+  type ToolCandidate,
+  type ToolCandidateGroup,
+} from './AiCommandAddToolModal.vue'
 import VariableInsertMenu from './VariableInsertMenu.vue'
 import VariableReferenceHints from './VariableReferenceHints.vue'
 import {
   type CommandConfig,
   MAX_TOOL_STEPS,
   type ToolRef,
-  type ToolRisk,
   type UserConfig,
   maxToolStepsOf,
 } from '@tyco/shared'
@@ -139,17 +212,21 @@ const config = computed(() =>
   aiCommandOperationConfigOf(props.command.operationConfig)
 )
 
-interface ToolCandidate {
-  ref: ToolRef
-  label: string
-  risk: ToolRisk
-}
-
 const commands = computed(() => normalizeCommands(props.userConfig?.commands))
 const pluginSources = usePluginToolSources()
 
+const isAddModalOpen = ref(false)
+const toolToRemove = ref<{ ref: ToolRef; label: string } | null>(null)
+
+function toolIcon(ref: ToolRef): string {
+  if (ref.sourceKind === 'core' && ref.sourceId === 'web') return 'mdi:web'
+  if (ref.sourceKind === 'commands') return 'mdi:lightning-bolt-outline'
+  if (ref.sourceKind === 'plugin') return 'mdi:puzzle-outline'
+  return 'mdi:wrench-outline'
+}
+
 /** What the agent may be allowed to call, by source */
-const candidateGroups = computed(() => {
+const candidateGroups = computed<ToolCandidateGroup[]>(() => {
   const web = CORE_CATALOG.find((entry) => entry.source.id === 'web')!
   const lookup = commandRiskLookup(commands.value)
   return [
@@ -211,6 +288,10 @@ const isSelected = (ref: ToolRef) =>
     ref.toolName ?? ''
   )
 
+const selectedCandidates = computed(() =>
+  candidates.value.filter((item) => isSelected(item.ref))
+)
+
 /** What the whitelist names that is not there now: it is left out of a run */
 const unavailable = computed(() =>
   config.value.tools.filter(
@@ -250,6 +331,25 @@ function toggleTool(ref: ToolRef, isAllowed: boolean) {
   emit('update', 'tools', isAllowed ? [...others, ref] : others)
 }
 
+function handleAddTool(ref: ToolRef) {
+  toggleTool(ref, true)
+  isAddModalOpen.value = false
+}
+
+function promptRemoveTool(item: ToolCandidate) {
+  toolToRemove.value = { ref: item.ref, label: item.label }
+}
+
+function promptRemoveUnavailable(ref: ToolRef) {
+  toolToRemove.value = { ref, label: ref.toolName ?? ref.sourceId }
+}
+
+function confirmRemoveTool() {
+  if (!toolToRemove.value) return
+  toggleTool(toolToRemove.value.ref, false)
+  toolToRemove.value = null
+}
+
 /**
  * An empty field takes the limit of the LLM settings; a number out of range or
  * half typed is not taken
@@ -265,30 +365,69 @@ function setMaxSteps(text: string) {
 }
 </script>
 <style scoped>
-.ai-command-list {
+.ai-tools-container {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  max-height: 14rem;
+}
+
+.ai-tools-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  max-height: 16rem;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 
-.ai-command-group {
-  margin: var(--space-xs) 0 0;
-  font-size: var(--text-caption);
-  font-weight: 600;
+.ai-tool-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--app-border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--app-surface-raised);
 }
 
-.ai-command-item {
+.ai-tool-row-main {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
+  min-width: 0;
+  flex: 1;
 }
 
-.ai-command-empty {
-  margin: 0;
+.ai-tool-row-icon {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.ai-tool-row-label {
+  font-size: var(--text-body);
+  color: var(--color-base-content);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-tools-unavailable-label {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--app-text-muted);
+}
+
+.ai-tools-empty {
+  margin: var(--space-xs) 0;
   font-size: var(--text-caption);
   color: var(--app-text-muted);
+}
+
+.ai-tools-actions {
+  display: flex;
+  align-items: center;
+  margin-top: var(--space-xs);
 }
 </style>

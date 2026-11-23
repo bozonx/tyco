@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Nedostupno",
     "aiToolsRiskyWarning": "Neki alati s popisa mogu mijenjati ili brisati podatke ili djelovati izvan aplikacije – i rade bez pitanja.",
     "detachedOutputActionHint": "Naredba se izvodi u zasebnom procesu, stoga se njezin izlaz ne bilježi.",
-    "testDetachedStarted": "Naredba je pokrenuta u zasebnom procesu"
+    "testDetachedStarted": "Naredba je pokrenuta u zasebnom procesu",
+    "aiAddTool": "Dodaj alat",
+    "aiNoTools": "Još nema dodanih alata",
+    "aiAddToolModalTitle": "Dodaj alat",
+    "aiAddToolSearchPlaceholder": "Pretraži alate...",
+    "aiAddToolEmpty": "Nema dostupnih alata za dodavanje",
+    "aiToolAlreadyAdded": "Dodano",
+    "aiRemoveToolConfirmTitle": "Ukloniti alat?",
+    "aiRemoveToolConfirmMessage": "Ukloniti {name} iz dopuštenih alata agenta?"
   },
   "common": {
     "add": "Dodaj",

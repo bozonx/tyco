@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Indisponible",
     "aiToolsRiskyWarning": "Certains outils de la liste peuvent modifier ou supprimer des données ou agir hors de l'application, et ils s'exécutent sans demander.",
     "detachedOutputActionHint": "La commande s'exécute dans un processus distinct, sa sortie n'est donc pas capturée.",
-    "testDetachedStarted": "La commande a été lancée dans un processus distinct"
+    "testDetachedStarted": "La commande a été lancée dans un processus distinct",
+    "aiAddTool": "Ajouter un outil",
+    "aiNoTools": "Aucun outil ajouté pour le moment",
+    "aiAddToolModalTitle": "Ajouter un outil",
+    "aiAddToolSearchPlaceholder": "Rechercher des outils...",
+    "aiAddToolEmpty": "Aucun outil disponible à ajouter",
+    "aiToolAlreadyAdded": "Ajouté",
+    "aiRemoveToolConfirmTitle": "Supprimer l’outil ?",
+    "aiRemoveToolConfirmMessage": "Retirer {name} des outils autorisés de l’agent ?"
   },
   "common": {
     "add": "Ajouter",

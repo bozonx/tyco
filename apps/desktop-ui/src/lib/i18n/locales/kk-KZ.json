@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Қолжетімсіз",
     "aiToolsRiskyWarning": "Тізімдегі кейбір құралдар деректерді өзгертіп не жоя алады немесе қолданбадан тыс әрекет етеді — және сұраусыз орындалады.",
     "detachedOutputActionHint": "Команда бөлек процесте орындалады, сондықтан оның шығысы түсірілмейді.",
-    "testDetachedStarted": "Команда бөлек процесте іске қосылды"
+    "testDetachedStarted": "Команда бөлек процесте іске қосылды",
+    "aiAddTool": "Құралды қосу",
+    "aiNoTools": "Әзірге ешқандай құрал қосылмаған",
+    "aiAddToolModalTitle": "Құралды қосу",
+    "aiAddToolSearchPlaceholder": "Құралдарды іздеу...",
+    "aiAddToolEmpty": "Қосуға болатын қолжетімді құралдар жоқ",
+    "aiToolAlreadyAdded": "Қосылды",
+    "aiRemoveToolConfirmTitle": "Құралды жою керек пе?",
+    "aiRemoveToolConfirmMessage": "{name} құралын агенттің рұқсат етілген құралдарынан алып тастау керек пе?"
   },
   "common": {
     "add": "Қосу",

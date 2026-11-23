@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Kullanılamıyor",
     "aiToolsRiskyWarning": "Listedeki bazı araçlar verileri değiştirebilir, silebilir ya da uygulamanın dışında işlem yapabilir ve sormadan çalışır.",
     "detachedOutputActionHint": "Komut ayrı bir işlemde çalışır, bu nedenle çıktısı yakalanmaz.",
-    "testDetachedStarted": "Komut ayrı bir işlemde başlatıldı"
+    "testDetachedStarted": "Komut ayrı bir işlemde başlatıldı",
+    "aiAddTool": "Araç ekle",
+    "aiNoTools": "Henüz araç eklenmedi",
+    "aiAddToolModalTitle": "Araç ekle",
+    "aiAddToolSearchPlaceholder": "Araçları ara...",
+    "aiAddToolEmpty": "Eklenebilecek uygun araç yok",
+    "aiToolAlreadyAdded": "Eklendi",
+    "aiRemoveToolConfirmTitle": "Araç kaldırılsın mı?",
+    "aiRemoveToolConfirmMessage": "{name} ajanın izin verilen araçlarından kaldırılsın mı?"
   },
   "common": {
     "add": "Ekle",

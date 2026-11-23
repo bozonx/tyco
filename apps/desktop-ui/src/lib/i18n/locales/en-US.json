@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Unavailable",
     "aiToolsRiskyWarning": "Some tools on the list can change or delete data or act outside the app, and they run without asking.",
     "detachedOutputActionHint": "The command runs in a separate process, so its output is not captured.",
-    "testDetachedStarted": "The command was started in a separate process"
+    "testDetachedStarted": "The command was started in a separate process",
+    "aiAddTool": "Add tool",
+    "aiNoTools": "No tools added yet",
+    "aiAddToolModalTitle": "Add tool",
+    "aiAddToolSearchPlaceholder": "Search tools...",
+    "aiAddToolEmpty": "No tools available to add",
+    "aiToolAlreadyAdded": "Added",
+    "aiRemoveToolConfirmTitle": "Remove tool?",
+    "aiRemoveToolConfirmMessage": "Remove {name} from the agent’s allowed tools?"
   },
   "common": {
     "add": "Add",

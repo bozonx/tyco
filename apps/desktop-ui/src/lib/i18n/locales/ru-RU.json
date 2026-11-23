@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Недоступен",
     "aiToolsRiskyWarning": "Некоторые инструменты из списка могут менять или удалять данные или действовать вне приложения — и выполняются без вопросов.",
     "detachedOutputActionHint": "Команда запускается в отдельном процессе, поэтому её вывод не перехватывается.",
-    "testDetachedStarted": "Команда запущена в отдельном процессе"
+    "testDetachedStarted": "Команда запущена в отдельном процессе",
+    "aiAddTool": "Добавить инструмент",
+    "aiNoTools": "Инструменты не добавлены",
+    "aiAddToolModalTitle": "Добавить инструмент",
+    "aiAddToolSearchPlaceholder": "Поиск инструментов...",
+    "aiAddToolEmpty": "Нет доступных инструментов",
+    "aiToolAlreadyAdded": "Добавлен",
+    "aiRemoveToolConfirmTitle": "Удалить инструмент?",
+    "aiRemoveToolConfirmMessage": "Убрать инструмент «{name}» из белого списка агента?"
   },
   "common": {
     "add": "Добавить",

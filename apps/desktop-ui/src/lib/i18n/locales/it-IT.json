@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Non disponibile",
     "aiToolsRiskyWarning": "Alcuni strumenti dell'elenco possono modificare o eliminare dati o agire fuori dall'app, e vengono eseguiti senza chiedere.",
     "detachedOutputActionHint": "Il comando viene eseguito in un processo separato, pertanto il suo output non viene catturato.",
-    "testDetachedStarted": "Il comando è stato avviato in un processo separato"
+    "testDetachedStarted": "Il comando è stato avviato in un processo separato",
+    "aiAddTool": "Aggiungi strumento",
+    "aiNoTools": "Nessuno strumento ancora aggiunto",
+    "aiAddToolModalTitle": "Aggiungi strumento",
+    "aiAddToolSearchPlaceholder": "Cerca strumenti...",
+    "aiAddToolEmpty": "Nessuno strumento disponibile da aggiungere",
+    "aiToolAlreadyAdded": "Aggiunto",
+    "aiRemoveToolConfirmTitle": "Rimuovere lo strumento?",
+    "aiRemoveToolConfirmMessage": "Rimuovere {name} dagli strumenti consentiti dell’agente?"
   },
   "common": {
     "add": "Aggiungi",

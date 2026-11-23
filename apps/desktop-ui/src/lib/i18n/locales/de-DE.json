@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Nicht verfügbar",
     "aiToolsRiskyWarning": "Einige Werkzeuge der Liste können Daten ändern oder löschen oder außerhalb der App handeln – und laufen ohne Rückfrage.",
     "detachedOutputActionHint": "Der Befehl läuft in einem separaten Prozess, daher wird seine Ausgabe nicht erfasst.",
-    "testDetachedStarted": "Der Befehl wurde in einem separaten Prozess gestartet"
+    "testDetachedStarted": "Der Befehl wurde in einem separaten Prozess gestartet",
+    "aiAddTool": "Werkzeug hinzufügen",
+    "aiNoTools": "Noch keine Werkzeuge hinzugefügt",
+    "aiAddToolModalTitle": "Werkzeug hinzufügen",
+    "aiAddToolSearchPlaceholder": "Werkzeuge suchen...",
+    "aiAddToolEmpty": "Keine Werkzeuge zum Hinzufügen verfügbar",
+    "aiToolAlreadyAdded": "Hinzugefügt",
+    "aiRemoveToolConfirmTitle": "Werkzeug entfernen?",
+    "aiRemoveToolConfirmMessage": "{name} aus den erlaubten Werkzeugen des Agenten entfernen?"
   },
   "common": {
     "add": "Hinzufügen",

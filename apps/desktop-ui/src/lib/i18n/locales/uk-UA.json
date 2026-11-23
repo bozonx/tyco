@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Недоступний",
     "aiToolsRiskyWarning": "Деякі інструменти зі списку можуть змінювати чи видаляти дані або діяти поза застосунком — і виконуються без запитань.",
     "detachedOutputActionHint": "Команда виконується в окремому процесі, тому її вивід не перехоплюється.",
-    "testDetachedStarted": "Команду запущено в окремому процесі"
+    "testDetachedStarted": "Команду запущено в окремому процесі",
+    "aiAddTool": "Додати інструмент",
+    "aiNoTools": "Інструменти ще не додані",
+    "aiAddToolModalTitle": "Додати інструмент",
+    "aiAddToolSearchPlaceholder": "Пошук інструментів...",
+    "aiAddToolEmpty": "Немає доступних інструментів для додавання",
+    "aiToolAlreadyAdded": "Додано",
+    "aiRemoveToolConfirmTitle": "Видалити інструмент?",
+    "aiRemoveToolConfirmMessage": "Вилучити інструмент «{name}» зі списку дозволених інструментів агента?"
   },
   "common": {
     "add": "Додати",

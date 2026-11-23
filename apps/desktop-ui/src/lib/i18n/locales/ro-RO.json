@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Indisponibil",
     "aiToolsRiskyWarning": "Unele instrumente din listă pot modifica sau șterge date ori pot acționa în afara aplicației și rulează fără întrebare.",
     "detachedOutputActionHint": "Comanda rulează într-un proces separat, astfel încât ieșirea acesteia nu este capturată.",
-    "testDetachedStarted": "Comanda a fost pornită într-un proces separat"
+    "testDetachedStarted": "Comanda a fost pornită într-un proces separat",
+    "aiAddTool": "Adaugă instrument",
+    "aiNoTools": "Nu a fost adăugat niciun instrument încă",
+    "aiAddToolModalTitle": "Adaugă instrument",
+    "aiAddToolSearchPlaceholder": "Căutare instrumente...",
+    "aiAddToolEmpty": "Nu există instrumente disponibile pentru adăugare",
+    "aiToolAlreadyAdded": "Adăugat",
+    "aiRemoveToolConfirmTitle": "Eliminați instrumentul?",
+    "aiRemoveToolConfirmMessage": "Eliminați {name} din instrumentele permise ale agentului?"
   },
   "common": {
     "add": "Adaugă",

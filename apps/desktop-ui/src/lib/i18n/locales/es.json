@@ -332,7 +332,15 @@
     "aiToolUnavailable": "No disponible",
     "aiToolsRiskyWarning": "Algunas herramientas de la lista pueden cambiar o eliminar datos o actuar fuera de la aplicación, y se ejecutan sin preguntar.",
     "detachedOutputActionHint": "El comando se ejecuta en un proceso independiente, por lo que su salida no se captura.",
-    "testDetachedStarted": "El comando se inició en un proceso independiente"
+    "testDetachedStarted": "El comando se inició en un proceso independiente",
+    "aiAddTool": "Añadir herramienta",
+    "aiNoTools": "Aún no se han añadido herramientas",
+    "aiAddToolModalTitle": "Añadir herramienta",
+    "aiAddToolSearchPlaceholder": "Buscar herramientas...",
+    "aiAddToolEmpty": "No hay herramientas disponibles para añadir",
+    "aiToolAlreadyAdded": "Añadido",
+    "aiRemoveToolConfirmTitle": "¿Eliminar herramienta?",
+    "aiRemoveToolConfirmMessage": "¿Quitar {name} de las herramientas permitidas del agente?"
   },
   "common": {
     "add": "Agregar",

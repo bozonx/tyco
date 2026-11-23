@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Indisponível",
     "aiToolsRiskyWarning": "Algumas ferramentas da lista podem alterar ou excluir dados ou agir fora do app, e rodam sem perguntar.",
     "detachedOutputActionHint": "O comando é executado em um processo separado, portanto sua saída não é capturada.",
-    "testDetachedStarted": "O comando foi iniciado em um processo separado"
+    "testDetachedStarted": "O comando foi iniciado em um processo separado",
+    "aiAddTool": "Adicionar ferramenta",
+    "aiNoTools": "Nenhuma ferramenta adicionada ainda",
+    "aiAddToolModalTitle": "Adicionar ferramenta",
+    "aiAddToolSearchPlaceholder": "Buscar ferramentas...",
+    "aiAddToolEmpty": "Nenhuma ferramenta disponível para adicionar",
+    "aiToolAlreadyAdded": "Adicionado",
+    "aiRemoveToolConfirmTitle": "Remover ferramenta?",
+    "aiRemoveToolConfirmMessage": "Remover {name} das ferramentas permitidas do agente?"
   },
   "common": {
     "add": "Adicionar",

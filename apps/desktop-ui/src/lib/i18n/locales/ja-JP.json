@@ -332,7 +332,15 @@
     "aiToolUnavailable": "利用不可",
     "aiToolsRiskyWarning": "リストの一部のツールはデータを変更・削除したり、アプリの外で動作したりでき、確認なしで実行されます。",
     "detachedOutputActionHint": "コマンドは別のプロセスで実行されるため、その出力はキャプチャされません。",
-    "testDetachedStarted": "コマンドは別のプロセスで起動されました"
+    "testDetachedStarted": "コマンドは別のプロセスで起動されました",
+    "aiAddTool": "ツールを追加",
+    "aiNoTools": "まだツールが追加されていません",
+    "aiAddToolModalTitle": "ツールを追加",
+    "aiAddToolSearchPlaceholder": "ツールを検索...",
+    "aiAddToolEmpty": "追加可能なツールがありません",
+    "aiToolAlreadyAdded": "追加済み",
+    "aiRemoveToolConfirmTitle": "ツールを削除しますか？",
+    "aiRemoveToolConfirmMessage": "エージェントの許可されたツールから {name} を削除しますか？"
   },
   "common": {
     "add": "追加",

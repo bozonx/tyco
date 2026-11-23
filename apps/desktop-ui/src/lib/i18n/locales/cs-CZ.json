@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Nedostupné",
     "aiToolsRiskyWarning": "Některé nástroje ze seznamu mohou měnit či mazat data nebo jednat mimo aplikaci – a běží bez ptaní.",
     "detachedOutputActionHint": "Příkaz běží v samostatném procesu, takže jeho výstup není zachycen.",
-    "testDetachedStarted": "Příkaz byl spuštěn v samostatném procesu"
+    "testDetachedStarted": "Příkaz byl spuštěn v samostatném procesu",
+    "aiAddTool": "Přidat nástroj",
+    "aiNoTools": "Dosud nebyly přidány žádné nástroje",
+    "aiAddToolModalTitle": "Přidat nástroj",
+    "aiAddToolSearchPlaceholder": "Hledat nástroje...",
+    "aiAddToolEmpty": "Žádné dostupné nástroje k přidání",
+    "aiToolAlreadyAdded": "Přidáno",
+    "aiRemoveToolConfirmTitle": "Odebrat nástroj?",
+    "aiRemoveToolConfirmMessage": "Odebrat {name} z povolených nástrojů agenta?"
   },
   "common": {
     "add": "Přidat",

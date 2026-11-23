@@ -332,7 +332,15 @@
     "aiToolUnavailable": "Nem elérhető",
     "aiToolsRiskyWarning": "A lista egyes eszközei adatokat módosíthatnak vagy törölhetnek, illetve az alkalmazáson kívül is cselekedhetnek – és kérdés nélkül futnak.",
     "detachedOutputActionHint": "A parancs külön folyamatban fut, így a kimenete nem rögzíthető.",
-    "testDetachedStarted": "A parancs külön folyamatban elindult"
+    "testDetachedStarted": "A parancs külön folyamatban elindult",
+    "aiAddTool": "Eszköz hozzáadása",
+    "aiNoTools": "Még nincsenek hozzáadott eszközök",
+    "aiAddToolModalTitle": "Eszköz hozzáadása",
+    "aiAddToolSearchPlaceholder": "Eszközök keresése...",
+    "aiAddToolEmpty": "Nincs hozzáadható eszköz",
+    "aiToolAlreadyAdded": "Hozzáadva",
+    "aiRemoveToolConfirmTitle": "Eszköz eltávolítása?",
+    "aiRemoveToolConfirmMessage": "Eltávolítja a(z) {name} eszközt az ügynök engedélyezett eszközei közül?"
   },
   "common": {
     "add": "Hozzáadás",

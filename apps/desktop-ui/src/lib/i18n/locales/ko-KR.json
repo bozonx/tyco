@@ -332,7 +332,15 @@
     "aiToolUnavailable": "사용 불가",
     "aiToolsRiskyWarning": "목록의 일부 도구는 데이터를 변경하거나 삭제하고 앱 밖에서 동작할 수 있으며, 묻지 않고 실행됩니다.",
     "detachedOutputActionHint": "명령이 별도의 프로세스에서 실행되므로 출력이 캡처되지 않습니다.",
-    "testDetachedStarted": "명령이 별도의 프로세스에서 시작되었습니다"
+    "testDetachedStarted": "명령이 별도의 프로세스에서 시작되었습니다",
+    "aiAddTool": "도구 추가",
+    "aiNoTools": "아직 추가된 도구가 없습니다",
+    "aiAddToolModalTitle": "도구 추가",
+    "aiAddToolSearchPlaceholder": "도구 검색...",
+    "aiAddToolEmpty": "추가할 수 있는 도구가 없습니다",
+    "aiToolAlreadyAdded": "추가됨",
+    "aiRemoveToolConfirmTitle": "도구를 제거하시겠습니까?",
+    "aiRemoveToolConfirmMessage": "에이전트의 허용된 도구에서 {name}을(를) 제거하시겠습니까?"
   },
   "common": {
     "add": "추가",
