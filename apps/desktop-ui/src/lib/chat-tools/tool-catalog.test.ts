@@ -119,11 +119,7 @@ describe('tool catalog', () => {
   })
 
   it('gives "Ask AI" the web by its switch and the helpers only', () => {
-    const on = {
-      kind: 'askAi' as const,
-      isWebEnabled: true,
-      catalog: undefined,
-    }
+    const on = { kind: 'askAi' as const, isWebEnabled: true }
     expect(toolStateIn(on, webFetch)).toBe('allow')
     expect(toolStateIn({ ...on, isWebEnabled: false }, webFetch)).toBe('off')
     expect(
@@ -134,15 +130,16 @@ describe('tool catalog', () => {
     expect(toolStateIn(on, plugin(false, 'read'))).toBe('off')
   })
 
-  it('offers a tool switched off everywhere nowhere', () => {
+  it('offers a tool switched off in the catalog to no profile or command', () => {
     const catalog = withToolAvailable(undefined, webFetch, false)
     expect(catalog.tools).toEqual({
       'core:web:web_fetch': { isEnabled: false },
     })
     expect(isToolAvailable(catalog, webFetch)).toBe(false)
-    expect(
-      toolStateIn({ kind: 'askAi', isWebEnabled: true, catalog }, webFetch)
-    ).toBe('off')
+    // "Ask AI" has its own web switch
+    expect(toolStateIn({ kind: 'askAi', isWebEnabled: true }, webFetch)).toBe(
+      'allow'
+    )
     expect(
       toolStateIn(
         { kind: 'profile', profileId: 'p', settings: undefined, catalog },

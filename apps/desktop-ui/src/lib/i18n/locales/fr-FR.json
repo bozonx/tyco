@@ -1783,7 +1783,7 @@
     "leakQuestion": "Ce chat a lu vos données et cet appel atteindrait un nouvel endroit.",
     "untrustedQuestion": "Ce chat a lu une page web ou le résultat d'un outil, et cet appel modifierait la mémoire que verront tous les chats suivants.",
     "contextTokens": "≈{count} jetons",
-    "catalogHint": "Les outils sont des actions que l’IA effectue elle-même : lire et modifier des fichiers, chercher sur le web. Ici, chaque outil peut être désactivé : un outil désactivé n’est disponible pour l’IA nulle part — ni dans les profils, ni dans les commandes IA, ni dans « Demander à l’IA ».\n\nChaque profil règle lui-même les outils activés : lesquels utiliser et lesquels confirmer d’abord. L’IA n’accède aux fichiers que selon les autorisations du projet. Une commande IA n’utilise que les outils de sa liste.\n\nParmi les outils, « Demander à l’IA » n’utilise que la recherche web et la lecture de pages web, si la recherche est activée dans ses paramètres.",
+    "catalogHint": "Les outils sont des actions que l’IA effectue elle-même : lire et modifier des fichiers, chercher sur le web. Ici, chaque outil peut être désactivé : aucun profil ni aucune commande IA ne reçoit un outil désactivé.\n\nChaque profil règle lui-même les outils activés : lesquels utiliser et lesquels confirmer d’abord. L’IA n’accède aux fichiers que selon les autorisations du projet. Une commande IA n’utilise que les outils de sa liste.\n\n« Demander à l’IA » n’est pas concerné par cette page : il n’utilise que la recherche web, activée dans ses propres paramètres.",
     "summaryWorkspace": "espace de travail",
     "summaryProjects": "projets : {count}",
     "summaryProjectsRead": "projets : {count} (lecture)",
@@ -1795,6 +1795,7 @@
     "groupBuiltin": "Intégrés",
     "groupPlugins": "Plugins",
     "asksByDefault": "Demande",
-    "toolOffEverywhere": "Désactivé dans les paramètres Outils"
+    "toolOffEverywhere": "Désactivé dans les paramètres Outils",
+    "catalogTitle": "Outils des profils et des commandes"
   }
 }

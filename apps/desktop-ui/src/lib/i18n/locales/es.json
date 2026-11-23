@@ -1783,7 +1783,7 @@
     "leakQuestion": "Este chat ya leyó tus datos y esta llamada llegaría a un sitio nuevo.",
     "untrustedQuestion": "Este chat ha leído una página web o el resultado de una herramienta, y esta llamada cambiaría la memoria que verán todos los chats siguientes.",
     "contextTokens": "≈{count} tokens",
-    "catalogHint": "Las herramientas son acciones que la IA realiza por sí misma: leer y cambiar archivos, buscar en internet. Aquí se puede desactivar cualquier herramienta: una herramienta desactivada no está disponible para la IA en ningún sitio, ni en los perfiles, ni en los comandos de IA, ni en «Preguntar a la IA».\n\nCada perfil configura las herramientas activadas en sus ajustes: cuáles usar y cuáles confirmar antes. La IA accede a los archivos solo según los permisos del proyecto. Un comando de IA usa solo las herramientas de su lista.\n\nDe las herramientas, «Preguntar a la IA» usa solo la búsqueda web y la lectura de páginas web, si la búsqueda está activada en sus ajustes.",
+    "catalogHint": "Las herramientas son acciones que la IA realiza por sí misma: leer y cambiar archivos, buscar en internet. Aquí se puede desactivar cualquier herramienta: ningún perfil ni comando de IA recibe una herramienta desactivada.\n\nCada perfil configura las herramientas activadas en sus ajustes: cuáles usar y cuáles confirmar antes. La IA accede a los archivos solo según los permisos del proyecto. Un comando de IA usa solo las herramientas de su lista.\n\n«Preguntar a la IA» no depende de esta página: solo usa la búsqueda web, que se activa en sus propios ajustes.",
     "summaryWorkspace": "espacio de trabajo",
     "summaryProjects": "proyectos: {count}",
     "summaryProjectsRead": "proyectos: {count} (lectura)",
@@ -1795,6 +1795,7 @@
     "groupBuiltin": "Integradas",
     "groupPlugins": "Plugins",
     "asksByDefault": "Pregunta",
-    "toolOffEverywhere": "Desactivada en los ajustes de Herramientas"
+    "toolOffEverywhere": "Desactivada en los ajustes de Herramientas",
+    "catalogTitle": "Herramientas de perfiles y comandos"
   }
 }

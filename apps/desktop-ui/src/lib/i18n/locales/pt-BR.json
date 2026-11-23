@@ -1783,7 +1783,7 @@
     "leakQuestion": "Este chat já leu seus dados e esta chamada chegaria a um novo lugar.",
     "untrustedQuestion": "Este chat já leu uma página da web ou o resultado de uma ferramenta, e esta chamada mudaria a memória que todos os próximos chats verão.",
     "contextTokens": "≈{count} tokens",
-    "catalogHint": "Ferramentas são ações que a IA realiza sozinha: ler e alterar arquivos, pesquisar na internet. Aqui é possível desativar qualquer ferramenta: uma ferramenta desativada não fica disponível para a IA em lugar nenhum — nem nos perfis, nem nos comandos de IA, nem em “Perguntar à IA”.\n\nCada perfil configura as ferramentas ativadas nas próprias configurações: quais usar e quais confirmar antes. A IA acessa arquivos apenas conforme as permissões do projeto. Um comando de IA usa apenas as ferramentas da sua lista.\n\nDas ferramentas, “Perguntar à IA” usa apenas a pesquisa na web e a leitura de páginas, se a pesquisa estiver ativada nas suas configurações.",
+    "catalogHint": "Ferramentas são ações que a IA realiza sozinha: ler e alterar arquivos, pesquisar na internet. Aqui é possível desativar qualquer ferramenta: nenhum perfil nem comando de IA recebe uma ferramenta desativada.\n\nCada perfil configura as ferramentas ativadas nas próprias configurações: quais usar e quais confirmar antes. A IA acessa arquivos apenas conforme as permissões do projeto. Um comando de IA usa apenas as ferramentas da sua lista.\n\n“Perguntar à IA” não depende desta página: usa apenas a pesquisa na web, ativada nas suas próprias configurações.",
     "summaryWorkspace": "área de trabalho",
     "summaryProjects": "projetos: {count}",
     "summaryProjectsRead": "projetos: {count} (leitura)",
@@ -1795,6 +1795,7 @@
     "groupBuiltin": "Integradas",
     "groupPlugins": "Plugins",
     "asksByDefault": "Pergunta",
-    "toolOffEverywhere": "Desativada nas configurações de Ferramentas"
+    "toolOffEverywhere": "Desativada nas configurações de Ferramentas",
+    "catalogTitle": "Ferramentas para perfis e comandos"
   }
 }

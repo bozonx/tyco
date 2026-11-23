@@ -1779,7 +1779,7 @@
     "leakQuestion": "此對話已讀取你的資料，而此呼叫會存取新的地方。",
     "untrustedQuestion": "此聊天已讀取網頁或工具的輸出，而此呼叫會變更之後所有聊天都會看到的記憶。",
     "contextTokens": "約 {count} 個 token",
-    "catalogHint": "工具是 AI 自行執行的動作：讀取和修改檔案、上網搜尋。這裡可以關閉任何工具：關閉的工具在任何地方都不提供給 AI——無論是設定檔、AI 指令還是「問 AI」。\n\n已開啟的工具由各設定檔在自己的設定中調整：使用哪些、哪些需要先確認。AI 只能依專案權限存取檔案。AI 指令只使用其清單中的工具。\n\n在工具中，「問 AI」只使用網路搜尋和讀取網頁，且需在其設定中開啟搜尋。",
+    "catalogHint": "工具是 AI 自行執行的動作：讀取和修改檔案、上網搜尋。這裡可以關閉任何工具：關閉的工具不會提供給任何設定檔或 AI 指令。\n\n已開啟的工具由各設定檔在自己的設定中調整：使用哪些、哪些需要先確認。AI 只能依專案權限存取檔案。AI 指令只使用其清單中的工具。\n\n「問 AI」不受此頁面影響：它只使用網路搜尋，並在自己的設定中單獨開關。",
     "summaryWorkspace": "工作區",
     "summaryProjects": "專案：{count}",
     "summaryProjectsRead": "專案：{count}（唯讀）",
@@ -1791,6 +1791,7 @@
     "groupBuiltin": "內建",
     "groupPlugins": "外掛",
     "asksByDefault": "會詢問",
-    "toolOffEverywhere": "已在「工具」設定中關閉"
+    "toolOffEverywhere": "已在「工具」設定中關閉",
+    "catalogTitle": "設定檔與指令的工具"
   }
 }

@@ -1,12 +1,18 @@
 <template>
-  <div class="settings-stack">
-    <SettingsSection
-      v-for="(group, index) in groups"
-      :key="group.id"
-      :title="group.title"
-      :info="index === 0 ? t('toolPermissions.catalogHint') : undefined"
-    >
-      <div class="settings-section-content">
+  <SettingsSection
+    :title="t('toolPermissions.catalogTitle')"
+    :info="t('toolPermissions.catalogHint')"
+  >
+    <div class="settings-section-content">
+      <section
+        v-for="group in groups"
+        :key="group.id"
+        class="tool-group"
+        :aria-labelledby="`tool-group-${group.id}`"
+      >
+        <h4 :id="`tool-group-${group.id}`" class="tool-group-title">
+          {{ group.title }}
+        </h4>
         <SettingsToolSource
           v-for="entry in group.sources"
           :key="sourceKey(entry.source)"
@@ -43,9 +49,9 @@
             />
           </SettingsToolRow>
         </SettingsToolSource>
-      </div>
-    </SettingsSection>
-  </div>
+      </section>
+    </div>
+  </SettingsSection>
 </template>
 
 <script setup lang="ts">
@@ -123,3 +129,19 @@ function setToolOn(tool: CatalogToolEntry, isEnabled: boolean) {
   userConfig.value.tools = withToolAvailable(catalog.value, tool, isEnabled)
 }
 </script>
+
+<style scoped>
+.tool-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.tool-group-title {
+  margin: 0;
+  padding: 0 var(--space-xs);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--app-text-muted);
+}
+</style>

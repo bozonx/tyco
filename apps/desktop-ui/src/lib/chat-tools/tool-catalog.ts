@@ -157,8 +157,9 @@ export function isSourceAvailable(
 }
 
 /**
- * Whether a tool is available at all: its source is and the user did not switch
- * the tool off everywhere. Nothing offers an unavailable tool
+ * Whether a tool is available to profiles and AI commands: its source is and
+ * the user did not switch the tool off everywhere. Nothing offers an
+ * unavailable tool
  */
 export function isToolAvailable(
   catalog: ToolCatalogSettings | undefined,
@@ -373,11 +374,7 @@ export function commandRisk(
 /** Where tools are offered, and what decides about them */
 export type ToolScope =
   /** The "Ask AI" chat: the web by its switch and the helpers, never asking */
-  | {
-      kind: 'askAi'
-      isWebEnabled: boolean
-      catalog: ToolCatalogSettings | undefined
-    }
+  | { kind: 'askAi'; isWebEnabled: boolean }
   /** A profile's chat: its settings, its memory mode */
   | {
       kind: 'profile'
@@ -404,7 +401,8 @@ export function toolStateIn(scope: ToolScope, tool: CatalogTool): ToolState {
         return 'off'
       if (tool.source.id === CORE_SOURCE_IDS.web && !scope.isWebEnabled)
         return 'off'
-      return isToolAvailable(scope.catalog, tool) ? 'allow' : 'off'
+      // its own web switch decides, not the catalog of profiles and commands
+      return 'allow'
     case 'profile':
       if (isAlwaysOnSource(tool.source)) return tool.defaultPolicy ?? 'allow'
       return effectiveToolState(scope.catalog, scope.settings, tool)

@@ -1783,7 +1783,7 @@
     "leakQuestion": "This chat has read your data, and this call would reach a new place.",
     "untrustedQuestion": "This chat has read a web page or a tool's output, and this call would change the memory every future chat sees.",
     "contextTokens": "≈{count} tokens",
-    "catalogHint": "Tools are actions the AI takes on its own: reading and changing files, searching the web. Any tool can be switched off here: a tool switched off is not available to the AI anywhere — not in profiles, AI commands or Ask AI.\n\nA profile sets up the tools that are on in its own settings: which to use and which to confirm first. The AI reaches files only through the project permissions. An AI command uses only the tools on its list.\n\nOf the tools, Ask AI uses only web search and reading web pages, when search is on in its settings.",
+    "catalogHint": "Tools are actions the AI takes on its own: reading and changing files, searching the web. Any tool can be switched off here: no profile or AI command gets a tool that is off.\n\nA profile sets up the tools that are on in its own settings: which to use and which to confirm first. The AI reaches files only through the project permissions. An AI command uses only the tools on its list.\n\nAsk AI is not covered by this page: it uses only web search, which is switched in its own settings.",
     "summaryWorkspace": "workspace",
     "summaryProjects": "projects: {count}",
     "summaryProjectsRead": "projects: {count} (read)",
@@ -1795,6 +1795,7 @@
     "groupBuiltin": "Built-in",
     "groupPlugins": "Plugins",
     "asksByDefault": "Asks",
-    "toolOffEverywhere": "Off in the Tools settings"
+    "toolOffEverywhere": "Off in the Tools settings",
+    "catalogTitle": "Tools for profiles and commands"
   }
 }

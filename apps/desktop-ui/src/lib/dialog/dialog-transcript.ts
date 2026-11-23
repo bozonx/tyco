@@ -22,6 +22,8 @@ export interface DialogSessionBreak {
   id: string
   timestampMs: number
   isRecording: boolean
+  recordingFile?: string
+  action?: 'started' | 'resumed'
 }
 
 /** An item in the dialog feed: either a turn of speech or a session break */

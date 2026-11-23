@@ -1783,7 +1783,7 @@
     "leakQuestion": "Ez a csevegés már olvasta az adatait, és ez a hívás új helyre jutna.",
     "untrustedQuestion": "Ez a csevegés már olvasott egy weboldalt vagy egy eszköz kimenetét, és ez a hívás megváltoztatná a memóriát, amelyet minden további csevegés lát.",
     "contextTokens": "≈{count} token",
-    "catalogHint": "Az eszközök olyan műveletek, amelyeket az MI maga végez: fájlokat olvas és módosít, keres az interneten. Itt bármelyik eszköz kikapcsolható: a kikapcsolt eszköz sehol sem érhető el az MI számára — sem a profilokban, sem az MI-parancsokban, sem a „Kérdezd az MI-t” funkcióban.\n\nA bekapcsolt eszközöket minden profil maga állítja be: melyeket használja, és mire kérjen előbb megerősítést. A fájlokhoz az MI csak a projekt jogosultságai szerint fér hozzá. Egy MI-parancs csak a listáján szereplő eszközöket használja.\n\nAz eszközök közül a „Kérdezd az MI-t” csak a webes keresést és a weboldalak olvasását használja, ha a keresés be van kapcsolva a beállításaiban.",
+    "catalogHint": "Az eszközök olyan műveletek, amelyeket az MI maga végez: fájlokat olvas és módosít, keres az interneten. Itt bármelyik eszköz kikapcsolható: kikapcsolt eszközt egyetlen profil és MI-parancs sem kap meg.\n\nA bekapcsolt eszközöket minden profil maga állítja be: melyeket használja, és mire kérjen előbb megerősítést. A fájlokhoz az MI csak a projekt jogosultságai szerint fér hozzá. Egy MI-parancs csak a listáján szereplő eszközöket használja.\n\nA „Kérdezd az MI-t” funkcióra ez az oldal nem vonatkozik: csak a webes keresést használja, amelyet a saját beállításaiban lehet be- és kikapcsolni.",
     "summaryWorkspace": "munkaterület",
     "summaryProjects": "projektek: {count}",
     "summaryProjectsRead": "projektek: {count} (olvasás)",
@@ -1795,6 +1795,7 @@
     "groupBuiltin": "Beépített",
     "groupPlugins": "Bővítmények",
     "asksByDefault": "Rákérdez",
-    "toolOffEverywhere": "Kikapcsolva az Eszközök beállításaiban"
+    "toolOffEverywhere": "Kikapcsolva az Eszközök beállításaiban",
+    "catalogTitle": "Eszközök profilokhoz és parancsokhoz"
   }
 }

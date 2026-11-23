@@ -306,11 +306,7 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
     profileTools: ProfileToolSettings | undefined
   ): ToolScope =>
     deps.profileId === null
-      ? {
-          kind: 'askAi',
-          isWebEnabled: deps.isAskAiWebEnabled?.() !== false,
-          catalog: deps.getToolCatalog?.(),
-        }
+      ? { kind: 'askAi', isWebEnabled: deps.isAskAiWebEnabled?.() !== false }
       : {
           kind: 'profile',
           profileId: deps.profileId,

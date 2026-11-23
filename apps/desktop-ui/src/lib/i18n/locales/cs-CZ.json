@@ -1783,7 +1783,7 @@
     "leakQuestion": "Tento chat už četl vaše data a toto volání by se dostalo na nové místo.",
     "untrustedQuestion": "Tento chat už přečetl webovou stránku nebo výstup nástroje a toto volání by změnilo paměť, kterou uvidí všechny další chaty.",
     "contextTokens": "≈{count} tokenů",
-    "catalogHint": "Nástroje jsou akce, které AI provádí sama: čte a mění soubory, hledá na internetu. Zde lze vypnout kterýkoli nástroj: vypnutý nástroj není AI dostupný nikde — v profilech, v příkazech AI ani v „Zeptat se AI“.\n\nZapnuté nástroje si každý profil nastavuje sám: které používat a na co se nejdřív ptát. K souborům má AI přístup jen podle oprávnění projektu. Příkaz AI používá jen nástroje ze svého seznamu.\n\nZ nástrojů „Zeptat se AI“ používá jen vyhledávání na webu a čtení webových stránek, pokud je vyhledávání zapnuté v jeho nastavení.",
+    "catalogHint": "Nástroje jsou akce, které AI provádí sama: čte a mění soubory, hledá na internetu. Zde lze vypnout kterýkoli nástroj: vypnutý nástroj nedostane žádný profil ani příkaz AI.\n\nZapnuté nástroje si každý profil nastavuje sám: které používat a na co se nejdřív ptát. K souborům má AI přístup jen podle oprávnění projektu. Příkaz AI používá jen nástroje ze svého seznamu.\n\n„Zeptat se AI“ se této stránky netýká: používá jen vyhledávání na webu, které se zapíná v jeho vlastním nastavení.",
     "summaryWorkspace": "pracovní prostor",
     "summaryProjects": "projekty: {count}",
     "summaryProjectsRead": "projekty: {count} (čtení)",
@@ -1795,6 +1795,7 @@
     "groupBuiltin": "Vestavěné",
     "groupPlugins": "Pluginy",
     "asksByDefault": "Ptá se",
-    "toolOffEverywhere": "Vypnuto v nastavení Nástroje"
+    "toolOffEverywhere": "Vypnuto v nastavení Nástroje",
+    "catalogTitle": "Nástroje pro profily a příkazy"
   }
 }

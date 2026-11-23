@@ -22,29 +22,31 @@
       />
       <div v-else class="dialog-feed-break">
         <span class="dialog-feed-break-line" />
-        <span class="dialog-feed-break-badge">
-          <AppIcon
-            :icon="
-              item.sessionBreak.isRecording
-                ? 'mdi:record-circle-outline'
-                : 'mdi:play-pause'
-            "
-            size="xs"
-            :class="{ 'is-recording': item.sessionBreak.isRecording }"
+        <div class="dialog-feed-break-content">
+          <span class="dialog-feed-break-badge">
+            <AppIcon
+              :icon="
+                item.sessionBreak.isRecording
+                  ? 'mdi:record-circle-outline'
+                  : 'mdi:play-pause'
+              "
+              size="xs"
+              :class="{ 'is-recording': item.sessionBreak.isRecording }"
+            />
+            <span>{{ breakLabel(item.sessionBreak) }}</span>
+            <span class="dialog-feed-break-time">{{
+              formatTime(item.sessionBreak.timestampMs)
+            }}</span>
+          </span>
+          <DialogRecordingPlayer
+            v-if="item.sessionBreak.recordingFile"
+            :file="item.sessionBreak.recordingFile"
           />
-          <span>{{
-            item.sessionBreak.isRecording
-              ? t('dialog.sessionResumedRecording')
-              : t('dialog.sessionResumed')
-          }}</span>
-          <span class="dialog-feed-break-time">{{
-            formatTime(item.sessionBreak.timestampMs)
-          }}</span>
-        </span>
+        </div>
         <span class="dialog-feed-break-line" />
       </div>
     </template>
-    <slot v-if="items.length === 0" name="empty" />
+    <slot v-if="!hasTurns" name="empty" />
   </div>
   <Button
     v-if="!isFollowing && items.length > 0"

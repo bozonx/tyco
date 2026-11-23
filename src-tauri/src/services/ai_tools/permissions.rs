@@ -141,7 +141,10 @@ pub fn ensure_web_tool_allowed(
     config: &Value,
     profile: Option<&AiProfile>,
 ) -> Result<(), AppError> {
-    let is_allowed = is_tool_available(config, CORE_SOURCE_KIND, WEB_SOURCE_ID, tool_name)
+    // "Ask AI" has its own web switch; the catalog is for profiles and commands
+    let is_available = matches!(context, ToolCallContext::AskAi)
+        || is_tool_available(config, CORE_SOURCE_KIND, WEB_SOURCE_ID, tool_name);
+    let is_allowed = is_available
         && match context {
             ToolCallContext::AskAi => user_config::is_ask_ai_web_search_enabled(config),
             ToolCallContext::Profile { .. } => profile
@@ -316,7 +319,7 @@ mod tests {
     }
 
     #[test]
-    fn a_tool_switched_off_everywhere_is_refused_in_every_context() {
+    fn a_tool_switched_off_in_the_catalog_is_refused_to_profiles_and_commands() {
         let config = json!({
             "llm": { "tasks": { "chat": { "isWebSearchEnabled": true } } },
             "tools": {
@@ -330,11 +333,11 @@ mod tests {
         let command = ToolCallContext::AiCommand {
             command_id: "web".into(),
         };
-        for (context, profile) in [
-            (ToolCallContext::AskAi, None),
-            (profile_context(), Some(&profile)),
-            (command, None),
-        ] {
+        // "Ask AI" follows its own web switch only
+        assert!(
+            ensure_web_tool_allowed(&ToolCallContext::AskAi, "web_fetch", &config, None).is_ok()
+        );
+        for (context, profile) in [(profile_context(), Some(&profile)), (command, None)] {
             assert!(ensure_web_tool_allowed(&context, "web_fetch", &config, profile).is_err());
             assert!(ensure_web_tool_allowed(&context, "web_search", &config, profile).is_ok());
         }

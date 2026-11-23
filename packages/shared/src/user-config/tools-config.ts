@@ -28,8 +28,9 @@ export interface ToolRef {
 }
 
 /**
- * The tool catalog: the sources and tools switched off everywhere, for "Ask
- * AI", every profile and every AI command. What is not listed is on
+ * The tool catalog: the sources and tools switched off everywhere, for every
+ * profile and AI command; "Ask AI" has its own web switch. What is not listed
+ * is on
  */
 export interface ToolCatalogSettings {
   /** By source key, `<kind>:<id>` */

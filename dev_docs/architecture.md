@@ -107,8 +107,9 @@ tool; it stays only in project permissions.
 
 **Two levels.** Globally (`tools.sources` and `tools.tools` in the user
 config, Settings → Tools) any source or single tool of the catalog, core ones
-included, can be switched off everywhere: "Ask AI", profiles and AI commands
-never get it (`isToolAvailable`; Rust `is_tool_available`). Everything is on by
+included, can be switched off for every profile and AI command
+(`isToolAvailable`; Rust `is_tool_available`). "Ask AI" is not bound by it: its
+web search has its own switch. Everything is on by
 default; the always-on helpers are not switched there. A profile (`AiProfile.tools`: `sources`, `tools`, `commandIds`)
 keeps only its differences from the defaults: `core` and `plugin` sources are
 on, commands and MCP servers are picked. Project permissions are on the

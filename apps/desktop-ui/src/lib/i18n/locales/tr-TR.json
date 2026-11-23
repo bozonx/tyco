@@ -1779,7 +1779,7 @@
     "leakQuestion": "Bu sohbet verilerinizi okudu ve bu çağrı yeni bir yere ulaşacak.",
     "untrustedQuestion": "Bu sohbet bir web sayfasını veya bir aracın çıktısını okudu ve bu çağrı, sonraki tüm sohbetlerin gördüğü belleği değiştirecek.",
     "contextTokens": "≈{count} token",
-    "catalogHint": "Araçlar, yapay zekânın kendi başına yaptığı işlemlerdir: dosyaları okur ve değiştirir, internette arar. Burada herhangi bir aracı kapatabilirsiniz: kapatılan araç yapay zekâ için hiçbir yerde kullanılamaz — ne profillerde, ne YZ komutlarında, ne de “YZ'ye sor”da.\n\nAçık araçları her profil kendi ayarlarında düzenler: hangilerini kullanacağını ve hangileri için önce onay isteyeceğini. Yapay zekâ dosyalara yalnızca proje izinlerine göre erişir. Bir YZ komutu yalnızca kendi listesindeki araçları kullanır.\n\nAraçlardan “YZ'ye sor” yalnızca web aramasını ve web sayfası okumayı kullanır; bunun için ayarlarında aramanın açık olması gerekir.",
+    "catalogHint": "Araçlar, yapay zekânın kendi başına yaptığı işlemlerdir: dosyaları okur ve değiştirir, internette arar. Burada herhangi bir aracı kapatabilirsiniz: kapalı bir aracı hiçbir profil ve YZ komutu almaz.\n\nAçık araçları her profil kendi ayarlarında düzenler: hangilerini kullanacağını ve hangileri için önce onay isteyeceğini. Yapay zekâ dosyalara yalnızca proje izinlerine göre erişir. Bir YZ komutu yalnızca kendi listesindeki araçları kullanır.\n\n“YZ'ye sor” bu sayfaya bağlı değildir: yalnızca kendi ayarlarında açılan web aramasını kullanır.",
     "summaryWorkspace": "çalışma alanı",
     "summaryProjects": "projeler: {count}",
     "summaryProjectsRead": "projeler: {count} (okuma)",
@@ -1791,6 +1791,7 @@
     "groupBuiltin": "Yerleşik",
     "groupPlugins": "Eklentiler",
     "asksByDefault": "Sorar",
-    "toolOffEverywhere": "Araçlar ayarlarında kapalı"
+    "toolOffEverywhere": "Araçlar ayarlarında kapalı",
+    "catalogTitle": "Profiller ve komutlar için araçlar"
   }
 }

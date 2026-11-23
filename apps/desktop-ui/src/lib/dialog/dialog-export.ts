@@ -14,6 +14,9 @@ export interface DialogExportOptions {
     translation: string
     sessionResumed?: string
     sessionResumedRecording?: string
+    sessionStartedListening?: string
+    sessionStartedRecording?: string
+    sessionResumedListening?: string
   }
   /** Breaks between resumed sessions */
   breaks?: readonly DialogSessionBreak[]
@@ -59,9 +62,16 @@ export function exportDialogTranscript(
 
   if (options.breaks) {
     for (const b of options.breaks) {
-      const label = b.isRecording
-        ? (options.labels.sessionResumedRecording ?? 'Recording resumed')
-        : (options.labels.sessionResumed ?? 'Session resumed')
+      const label =
+        b.action === 'started'
+          ? b.isRecording
+            ? (options.labels.sessionStartedRecording ?? 'Recording started')
+            : (options.labels.sessionStartedListening ?? 'Listening started')
+          : b.isRecording
+            ? (options.labels.sessionResumedRecording ?? 'Recording resumed')
+            : (options.labels.sessionResumedListening ??
+              options.labels.sessionResumed ??
+              'Listening resumed')
       items.push({
         type: 'break',
         timestampMs: b.timestampMs,

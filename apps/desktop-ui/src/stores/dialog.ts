@@ -251,8 +251,20 @@ export const useDialogStore = defineStore('dialog', () => {
           isRecordEnabled.value = true
         }
         isRecordingLinked = Boolean(recordingFile)
-        if (segments.value.length === 0) {
-          sessionBreaks.value = []
+        const isRecorded = Boolean(recordingFile && !isRecordingFailedEarly)
+        const isFirstRun =
+          segments.value.length === 0 && sessionBreaks.value.length === 0
+
+        if (isFirstRun) {
+          sessionBreaks.value = [
+            {
+              id: `break-${Date.now()}`,
+              timestampMs: sessionStartedAtMs,
+              isRecording: isRecorded,
+              recordingFile: isRecorded ? recordingFile : undefined,
+              action: 'started',
+            },
+          ]
           void dialogHistory.begin({
             startedAt: sessionStartedAtMs,
             source: hasMicrophone.value ? 'microphoneAndSystem' : 'system',
@@ -264,10 +276,16 @@ export const useDialogStore = defineStore('dialog', () => {
               isRecordingFailedEarly && { isRecordingIncomplete: true }),
           })
         } else {
+          const hadRecordingBefore = sessionBreaks.value.some(
+            (b) => b.isRecording
+          )
+          const action = isRecorded && !hadRecordingBefore ? 'started' : 'resumed'
           sessionBreaks.value.push({
             id: `break-${Date.now()}`,
             timestampMs: sessionStartedAtMs,
-            isRecording: Boolean(recordingFile),
+            isRecording: isRecorded,
+            recordingFile: isRecorded ? recordingFile : undefined,
+            action,
           })
           if (recordingFile) {
             void dialogHistory.addRecording(recordingFile)
@@ -439,8 +457,11 @@ export const useDialogStore = defineStore('dialog', () => {
         me: translate('dialog.sideMe'),
         remote: translate('dialog.sideRemote'),
         translation: translate('dialog.translationLabel'),
-        sessionResumed: translate('dialog.sessionResumed'),
+        sessionResumed: translate('dialog.sessionResumedListening'),
         sessionResumedRecording: translate('dialog.sessionResumedRecording'),
+        sessionStartedListening: translate('dialog.sessionStartedListening'),
+        sessionStartedRecording: translate('dialog.sessionStartedRecording'),
+        sessionResumedListening: translate('dialog.sessionResumedListening'),
       },
     })
   }

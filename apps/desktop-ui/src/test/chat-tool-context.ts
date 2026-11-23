@@ -16,11 +16,7 @@ export function toolContext(
 ) {
   const scope: ToolScope =
     profileId === null
-      ? {
-          kind: 'askAi',
-          isWebEnabled: options.isWebEnabled ?? true,
-          catalog: undefined,
-        }
+      ? { kind: 'askAi', isWebEnabled: options.isWebEnabled ?? true }
       : { kind: 'profile', profileId, settings, catalog: undefined }
   return { profileId, scope, callContext: toolCallContextOf(scope) }
 }

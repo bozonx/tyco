@@ -1783,7 +1783,7 @@
     "leakQuestion": "Acest chat a citit datele tale, iar acest apel ar ajunge într-un loc nou.",
     "untrustedQuestion": "Acest chat a citit deja o pagină web sau rezultatul unui instrument, iar acest apel ar schimba memoria pe care o văd toate chaturile următoare.",
     "contextTokens": "≈{count} tokenuri",
-    "catalogHint": "Instrumentele sunt acțiuni pe care IA le face singură: citește și modifică fișiere, caută pe internet. Aici poate fi dezactivat orice instrument: un instrument dezactivat nu este disponibil pentru IA nicăieri — nici în profiluri, nici în comenzile IA, nici în „Întreabă IA”.\n\nFiecare profil configurează instrumentele activate în propriile setări: pe care să le folosească și pentru care să ceară mai întâi confirmare. IA accesează fișierele doar conform permisiunilor proiectului. O comandă IA folosește doar instrumentele din lista ei.\n\nDintre instrumente, „Întreabă IA” folosește doar căutarea pe web și citirea paginilor web, dacă căutarea este activată în setările sale.",
+    "catalogHint": "Instrumentele sunt acțiuni pe care IA le face singură: citește și modifică fișiere, caută pe internet. Aici poate fi dezactivat orice instrument: niciun profil și nicio comandă IA nu primește un instrument dezactivat.\n\nFiecare profil configurează instrumentele activate în propriile setări: pe care să le folosească și pentru care să ceară mai întâi confirmare. IA accesează fișierele doar conform permisiunilor proiectului. O comandă IA folosește doar instrumentele din lista ei.\n\n„Întreabă IA” nu ține de această pagină: folosește doar căutarea pe web, activată din propriile sale setări.",
     "summaryWorkspace": "spațiu de lucru",
     "summaryProjects": "proiecte: {count}",
     "summaryProjectsRead": "proiecte: {count} (citire)",
@@ -1795,6 +1795,7 @@
     "groupBuiltin": "Integrate",
     "groupPlugins": "Pluginuri",
     "asksByDefault": "Întreabă",
-    "toolOffEverywhere": "Dezactivat în setările Instrumente"
+    "toolOffEverywhere": "Dezactivat în setările Instrumente",
+    "catalogTitle": "Instrumente pentru profiluri și comenzi"
   }
 }

@@ -1783,7 +1783,7 @@
     "leakQuestion": "Ten czat odczytał Twoje dane, a to wywołanie sięga w nowe miejsce.",
     "untrustedQuestion": "Ten czat przeczytał już stronę internetową lub wynik narzędzia, a to wywołanie zmieniłoby pamięć, którą zobaczą wszystkie kolejne czaty.",
     "contextTokens": "≈{count} tokenów",
-    "catalogHint": "Narzędzia to działania, które AI wykonuje samodzielnie: czyta i zmienia pliki, szuka w internecie. Tutaj można wyłączyć każde narzędzie: wyłączone narzędzie nie jest dostępne dla AI nigdzie — ani w profilach, ani w poleceniach AI, ani w „Zapytaj AI”.\n\nKażdy profil ustawia włączone narzędzia u siebie: których używać i o co pytać przed wykonaniem. Do plików AI ma dostęp tylko zgodnie z uprawnieniami projektu. Polecenie AI używa tylko narzędzi ze swojej listy.\n\nZ narzędzi „Zapytaj AI” używa tylko wyszukiwania w internecie i czytania stron, jeśli wyszukiwanie jest włączone w jego ustawieniach.",
+    "catalogHint": "Narzędzia to działania, które AI wykonuje samodzielnie: czyta i zmienia pliki, szuka w internecie. Tutaj można wyłączyć każde narzędzie: wyłączonego narzędzia nie dostanie żaden profil ani polecenie AI.\n\nKażdy profil ustawia włączone narzędzia u siebie: których używać i o co pytać przed wykonaniem. Do plików AI ma dostęp tylko zgodnie z uprawnieniami projektu. Polecenie AI używa tylko narzędzi ze swojej listy.\n\n„Zapytaj AI” nie podlega tej stronie: używa tylko wyszukiwania w internecie, włączanego w jego własnych ustawieniach.",
     "summaryWorkspace": "obszar roboczy",
     "summaryProjects": "projekty: {count}",
     "summaryProjectsRead": "projekty: {count} (odczyt)",
@@ -1795,6 +1795,7 @@
     "groupBuiltin": "Wbudowane",
     "groupPlugins": "Wtyczki",
     "asksByDefault": "Pyta",
-    "toolOffEverywhere": "Wyłączone w ustawieniach Narzędzia"
+    "toolOffEverywhere": "Wyłączone w ustawieniach Narzędzia",
+    "catalogTitle": "Narzędzia dla profili i poleceń"
   }
 }
