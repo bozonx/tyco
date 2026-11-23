@@ -1767,7 +1767,7 @@
     "riskRead": "読み取り",
     "riskWrite": "データを変更",
     "riskDestructive": "削除",
-    "riskExternal": "外部に作用",
+    "riskExternal": "外部リクエスト",
     "sourceCore": "組み込み",
     "sourcePlugin": "プラグイン",
     "sourceThirdPartyPlugin": "サードパーティのプラグイン",
@@ -1779,9 +1779,7 @@
     "leakQuestion": "このチャットはあなたのデータを読み取っており、この呼び出しは新しい場所に届きます。",
     "untrustedQuestion": "このチャットはすでにウェブページまたはツールの出力を読み込んでおり、この呼び出しは今後のすべてのチャットが参照するメモリを変更します。",
     "contextTokens": "約 {count} トークン",
-    "catalogHint": "エージェントのツールの出どころ。ここでオフにしたプラグインはすべてのプロファイルと AI コマンドでオフになります。組み込みツールは「AI に質問」、各プロファイル、各 AI コマンドで切り替えます。",
-    "catalogWhereHint": "各プロファイルは自身の設定でツールとその実行の自由度を選びます。",
-    "defaultPolicy": "既定: {policy}",
+    "catalogHint": "ツールとは、AI が自ら行う操作です。ファイルの読み取りや変更、Web 検索などがあります。ここではどのツールもオフにでき、オフにしたツールはプロファイル、AI コマンド、「AI に質問」のどこでも AI から使えません。\n\nオンのツールは各プロファイルが自分の設定で調整します。どれを使うか、どれを実行前に確認するかを決められます。AI がファイルにアクセスできるのはプロジェクトの権限の範囲内だけです。AI コマンドは自分のリストにあるツールだけを使います。\n\n「AI に質問」が使うツールは Web 検索と Web ページの読み取りだけで、その設定で検索がオンの場合に限ります。",
     "summaryWorkspace": "ワークスペース",
     "summaryProjects": "プロジェクト: {count}",
     "summaryProjectsRead": "プロジェクト: {count}（読み取り）",
@@ -1789,6 +1787,10 @@
     "summaryCommands": "コマンド: {count}",
     "summaryPlugins": "プラグイン: {count}",
     "summaryNothing": "チャットのみ",
-    "summaryTitle": "エージェントにできること — プロファイル設定を開く"
+    "summaryTitle": "エージェントにできること — プロファイル設定を開く",
+    "groupBuiltin": "組み込み",
+    "groupPlugins": "プラグイン",
+    "asksByDefault": "確認する",
+    "toolOffEverywhere": "「ツール」設定でオフ"
   }
 }

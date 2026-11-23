@@ -4,60 +4,51 @@
     :info="t('settings.profileToolsHint')"
   >
     <div class="settings-section-content">
-      <template v-for="entry in sources" :key="sourceKey(entry.source)">
-        <SettingsEntityItem
-          :icon="entry.icon"
-          icon-tone="secondary"
-          :title="entry.label ?? t(entry.labelKey ?? '')"
-          :info="sourceInfo(entry)"
-        >
+      <SettingsToolSource
+        v-for="entry in sources"
+        :key="sourceKey(entry.source)"
+        :icon="entry.icon"
+        :title="sourceLabel(entry)"
+        :info="sourceInfo(entry)"
+        :off="!isAvailable(entry) || !isEnabled(entry)"
+      >
+        <template #actions>
           <Badge v-if="!isAvailable(entry)" tone="muted">
             {{ t('toolPermissions.sourceOffEverywhere') }}
           </Badge>
           <FieldSwitch
-            :aria-label="entry.label ?? t(entry.labelKey ?? '')"
+            :aria-label="sourceLabel(entry)"
             :disabled="!isAvailable(entry)"
             :model-value="isAvailable(entry) && isEnabled(entry)"
             @update:model-value="
               emit('update', withSourceEnabled(tools, entry.source, $event))
             "
           />
-        </SettingsEntityItem>
-        <div
-          v-if="isAvailable(entry) && isEnabled(entry)"
-          class="tool-group-details"
-        >
-          <div
+        </template>
+        <template v-if="isAvailable(entry) && isEnabled(entry)">
+          <SettingsToolRow
             v-for="tool in entry.tools"
             :key="tool.name"
-            class="tool-row"
-            :data-tool="tool.name"
+            :name="tool.name"
+            :label="toolLabel(tool)"
+            :risk="tool.risk"
           >
-            <span class="tool-row-name">
-              {{ tool.label ?? t(tool.labelKey ?? tool.name) }}
-            </span>
-            <Badge :tone="isRiskyTool(tool.risk) ? 'warning' : 'muted'">
-              {{ t(TOOL_RISK_LABEL_KEYS[tool.risk]) }}
+            <Badge v-if="!isToolAvailable(catalog, tool)" tone="muted">
+              {{ t('toolPermissions.toolOffEverywhere') }}
             </Badge>
             <SegmentedControl
+              v-else
               size="sm"
-              :label="tool.label ?? t(tool.labelKey ?? tool.name)"
+              :label="toolLabel(tool)"
               :model-value="stateOf(tool)"
               :options="stateOptions"
               @update:model-value="
                 emit('update', withToolState(tools, tool, $event as ToolState))
               "
             />
-          </div>
-          <p v-if="entry.capabilities?.length" class="tool-row-hint">
-            {{
-              t('toolPermissions.pluginCapabilities', {
-                capabilities: entry.capabilities.join(', '),
-              })
-            }}
-          </p>
-        </div>
-      </template>
+          </SettingsToolRow>
+        </template>
+      </SettingsToolSource>
       <slot />
     </div>
   </SettingsSection>
@@ -70,22 +61,23 @@ import { useI18n } from '../../composables/use-i18n'
 import {
   type CatalogTool,
   effectiveToolState,
-  isRiskyTool,
   isSourceAvailable,
   isSourceEnabledInProfile,
+  isToolAvailable,
   sourceKey,
   withSourceEnabled,
   withToolState,
 } from '../../lib/chat-tools/tool-catalog'
-import {
-  type CatalogSourceEntry,
-  TOOL_RISK_LABEL_KEYS,
+import type {
+  CatalogSourceEntry,
+  CatalogToolEntry,
 } from '../../lib/chat-tools/tool-catalog-entries'
 import Badge from '../common/Badge.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
-import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsSection from './SettingsSection.vue'
+import SettingsToolRow from './SettingsToolRow.vue'
+import SettingsToolSource from './SettingsToolSource.vue'
 import type {
   ProfileToolSettings,
   ToolCatalogSettings,
@@ -117,34 +109,22 @@ const isEnabled = (entry: CatalogSourceEntry) =>
 const stateOf = (tool: CatalogTool) =>
   effectiveToolState(props.catalog, props.tools, tool)
 
+const sourceLabel = (entry: CatalogSourceEntry) =>
+  entry.label ?? t(entry.labelKey ?? '')
+const toolLabel = (tool: CatalogToolEntry) =>
+  tool.label ?? t(tool.labelKey ?? tool.name)
+
 function sourceInfo(entry: CatalogSourceEntry): string {
   const description = entry.description ?? t(entry.descriptionKey ?? '')
-  if (entry.source.kind === 'core' && entry.source.id === 'web')
-    return `${description}\n\n${t('settings.profileWebSearchLlmNotice')}`
-  return description
+  const capabilities = entry.capabilities?.length
+    ? t('toolPermissions.pluginCapabilities', {
+        capabilities: entry.capabilities.join(', '),
+      })
+    : ''
+  const webNotice =
+    entry.source.kind === 'core' && entry.source.id === 'web'
+      ? t('settings.profileWebSearchLlmNotice')
+      : ''
+  return [description, capabilities, webNotice].filter(Boolean).join('\n\n')
 }
 </script>
-
-<style scoped>
-.tool-group-details {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  padding-inline-start: var(--space-lg);
-  border-inline-start: 2px solid var(--app-border-subtle);
-}
-.tool-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-}
-.tool-row-name {
-  flex: 1 1 10rem;
-  font-size: var(--text-caption);
-}
-.tool-row-hint {
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-}
-</style>

@@ -205,7 +205,10 @@ export function createWebToolProvider(
         {
           name: 'web_search',
           source: WEB_SOURCE,
-          risk: 'read',
+          risk: 'external',
+          // a request to the network, yet it runs freely: the leak target asks
+          // when the chat holds personal data
+          defaultPolicy: 'allow',
           leakTarget: () => 'host:s.jina.ai',
           // the pages it found may be read without asking again
           givesKnownUrls: true,
@@ -277,7 +280,10 @@ export function createWebToolProvider(
         {
           name: 'web_fetch',
           source: WEB_SOURCE,
-          risk: 'read',
+          risk: 'external',
+          // a request to the network, yet it runs freely: the leak target asks
+          // when the chat holds personal data
+          defaultPolicy: 'allow',
           givesUntrustedContent: true,
           // a URL nobody named could carry the conversation's data out
           leakTarget: (input, isKnownUrl) => {

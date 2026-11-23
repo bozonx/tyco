@@ -9,6 +9,7 @@ use tauri::{App, Manager};
 
 const TRAY_SHOW_ID: &str = "show";
 const TRAY_QUIT_ID: &str = "quit";
+const TRAY_ICON_BYTES: &[u8] = include_bytes!("../../../icons/icon-tray.png");
 const RECORDING_ICON_BYTES: &[u8] = include_bytes!("../../../icons/icon-recording.png");
 
 #[derive(Debug, PartialEq, Eq)]
@@ -138,9 +139,7 @@ pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
         .items(&[&quit_item])
         .build()?;
 
-    let default_icon = app.default_window_icon().map(|icon| {
-        tauri::image::Image::new_owned(icon.rgba().to_vec(), icon.width(), icon.height())
-    });
+    let default_icon = Some(load_png_image(TRAY_ICON_BYTES)?);
     let recording_icon = match load_png_image(RECORDING_ICON_BYTES) {
         Ok(icon) => Some(icon),
         Err(error) => {

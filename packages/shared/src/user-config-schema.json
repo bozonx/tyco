@@ -1269,6 +1269,19 @@
             "required": ["isEnabled"]
           },
           "default": {}
+        },
+        "tools": {
+          "type": "object",
+          "properties": {},
+          "required": [],
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "isEnabled": { "type": "boolean", "default": true }
+            },
+            "required": ["isEnabled"]
+          },
+          "default": {}
         }
       },
       "required": ["sources"],

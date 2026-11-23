@@ -1771,7 +1771,7 @@
     "riskRead": "Lectura",
     "riskWrite": "Cambia datos",
     "riskDestructive": "Elimina",
-    "riskExternal": "Actúa fuera",
+    "riskExternal": "Solicitud externa",
     "sourceCore": "Integrado",
     "sourcePlugin": "Complemento",
     "sourceThirdPartyPlugin": "Complemento de terceros",
@@ -1783,9 +1783,7 @@
     "leakQuestion": "Este chat ya leyó tus datos y esta llamada llegaría a un sitio nuevo.",
     "untrustedQuestion": "Este chat ha leído una página web o el resultado de una herramienta, y esta llamada cambiaría la memoria que verán todos los chats siguientes.",
     "contextTokens": "≈{count} tokens",
-    "catalogHint": "De dónde salen las herramientas de los agentes. Un complemento desactivado aquí lo está en todos los perfiles y comandos de IA. Las herramientas integradas se activan en «Preguntar a la IA», en cada perfil y en cada comando de IA.",
-    "catalogWhereHint": "Cada perfil elige sus herramientas y con qué libertad se ejecutan en sus propios ajustes.",
-    "defaultPolicy": "Por defecto: {policy}",
+    "catalogHint": "Las herramientas son acciones que la IA realiza por sí misma: leer y cambiar archivos, buscar en internet. Aquí se puede desactivar cualquier herramienta: una herramienta desactivada no está disponible para la IA en ningún sitio, ni en los perfiles, ni en los comandos de IA, ni en «Preguntar a la IA».\n\nCada perfil configura las herramientas activadas en sus ajustes: cuáles usar y cuáles confirmar antes. La IA accede a los archivos solo según los permisos del proyecto. Un comando de IA usa solo las herramientas de su lista.\n\nDe las herramientas, «Preguntar a la IA» usa solo la búsqueda web y la lectura de páginas web, si la búsqueda está activada en sus ajustes.",
     "summaryWorkspace": "espacio de trabajo",
     "summaryProjects": "proyectos: {count}",
     "summaryProjectsRead": "proyectos: {count} (lectura)",
@@ -1793,6 +1791,10 @@
     "summaryCommands": "comandos: {count}",
     "summaryPlugins": "complementos: {count}",
     "summaryNothing": "solo chat",
-    "summaryTitle": "Lo que puede el agente: abrir los ajustes del perfil"
+    "summaryTitle": "Lo que puede el agente: abrir los ajustes del perfil",
+    "groupBuiltin": "Integradas",
+    "groupPlugins": "Plugins",
+    "asksByDefault": "Pregunta",
+    "toolOffEverywhere": "Desactivada en los ajustes de Herramientas"
   }
 }

@@ -18,6 +18,9 @@ import {
   toolStateIn,
   withCommandSelected,
   withSourceEnabled,
+  withSourceAvailable,
+  withToolAvailable,
+  isToolAvailable,
   withToolState,
   type CatalogTool,
 } from './tool-catalog'
@@ -116,7 +119,11 @@ describe('tool catalog', () => {
   })
 
   it('gives "Ask AI" the web by its switch and the helpers only', () => {
-    const on = { kind: 'askAi' as const, isWebEnabled: true }
+    const on = {
+      kind: 'askAi' as const,
+      isWebEnabled: true,
+      catalog: undefined,
+    }
     expect(toolStateIn(on, webFetch)).toBe('allow')
     expect(toolStateIn({ ...on, isWebEnabled: false }, webFetch)).toBe('off')
     expect(
@@ -125,6 +132,49 @@ describe('tool catalog', () => {
     for (const source of [FILES_SOURCE, MEMORY_SOURCE, COMMANDS_SOURCE])
       expect(toolStateIn(on, { source, name: 'x', risk: 'read' })).toBe('off')
     expect(toolStateIn(on, plugin(false, 'read'))).toBe('off')
+  })
+
+  it('offers a tool switched off everywhere nowhere', () => {
+    const catalog = withToolAvailable(undefined, webFetch, false)
+    expect(catalog.tools).toEqual({
+      'core:web:web_fetch': { isEnabled: false },
+    })
+    expect(isToolAvailable(catalog, webFetch)).toBe(false)
+    expect(
+      toolStateIn({ kind: 'askAi', isWebEnabled: true, catalog }, webFetch)
+    ).toBe('off')
+    expect(
+      toolStateIn(
+        { kind: 'profile', profileId: 'p', settings: undefined, catalog },
+        webFetch
+      )
+    ).toBe('off')
+    expect(
+      toolStateIn(
+        {
+          kind: 'aiCommand',
+          commandId: 'c',
+          tools: [{ sourceKind: 'core', sourceId: 'web' }],
+          catalog,
+        },
+        webFetch
+      )
+    ).toBe('off')
+    expect(withToolAvailable(catalog, webFetch, true).tools).toEqual({})
+    const filesOff = withSourceAvailable(undefined, FILES_SOURCE, false)
+    expect(
+      isToolAvailable(filesOff, { source: FILES_SOURCE, name: 'read_file' })
+    ).toBe(false)
+    expect(withSourceAvailable(filesOff, FILES_SOURCE, true).sources).toEqual(
+      {}
+    )
+    // the helpers cannot be switched off
+    expect(
+      isToolAvailable(withSourceAvailable(undefined, MEMORY_SOURCE, false), {
+        source: MEMORY_SOURCE,
+        name: 'x',
+      })
+    ).toBe(true)
   })
 
   it('gives a profile its memory always, the rest by its settings', () => {

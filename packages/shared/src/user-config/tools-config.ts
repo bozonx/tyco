@@ -9,8 +9,8 @@ export type ToolSourceKind = (typeof TOOL_SOURCE_KINDS)[number]
 
 /**
  * What a tool may do: `read` without side effects, `write` changes the user's
- * data, `destructive` deletes or cannot be undone, `external` acts in the world
- * or outside the app's data
+ * data, `destructive` deletes or cannot be undone, `external` makes a request
+ * outside the app: the network, a script, another program
  */
 export const TOOL_RISKS = ['read', 'write', 'destructive', 'external'] as const
 export type ToolRisk = (typeof TOOL_RISKS)[number]
@@ -28,10 +28,12 @@ export interface ToolRef {
 }
 
 /**
- * The tool catalog: the plugin and MCP sources switched off for every profile
- * and AI command. A source not listed is on
+ * The tool catalog: the sources and tools switched off everywhere, for "Ask
+ * AI", every profile and every AI command. What is not listed is on
  */
 export interface ToolCatalogSettings {
   /** By source key, `<kind>:<id>` */
   sources: Record<string, { isEnabled: boolean }>
+  /** By tool key, `<kind>:<id>:<tool>` */
+  tools?: Record<string, { isEnabled: boolean }>
 }

@@ -1767,7 +1767,7 @@
     "riskRead": "读取",
     "riskWrite": "更改数据",
     "riskDestructive": "删除",
-    "riskExternal": "对外操作",
+    "riskExternal": "外部请求",
     "sourceCore": "内置",
     "sourcePlugin": "插件",
     "sourceThirdPartyPlugin": "第三方插件",
@@ -1779,9 +1779,7 @@
     "leakQuestion": "此对话已读取你的数据，而此调用会访问一个新的地方。",
     "untrustedQuestion": "此聊天已读取网页或工具的输出，而此调用会更改之后所有聊天都会看到的记忆。",
     "contextTokens": "约 {count} 个 token",
-    "catalogHint": "代理工具的来源。在这里关闭的插件会在所有配置文件和 AI 命令中关闭。内置工具在“询问 AI”、各个配置文件和各个 AI 命令中开关。",
-    "catalogWhereHint": "每个配置文件在自己的设置中选择工具及其运行方式。",
-    "defaultPolicy": "默认：{policy}",
+    "catalogHint": "工具是 AI 自行执行的操作：读取和修改文件、联网搜索。这里可以关闭任何工具：关闭的工具在任何地方都不对 AI 开放——无论是配置文件、AI 命令还是“问 AI”。\n\n已开启的工具由各配置文件在自己的设置中调整：使用哪些、哪些需要先确认。AI 只能按项目权限访问文件。AI 命令只使用其列表中的工具。\n\n在工具中，“问 AI”只使用联网搜索和读取网页，且需在其设置中开启搜索。",
     "summaryWorkspace": "工作区",
     "summaryProjects": "项目：{count}",
     "summaryProjectsRead": "项目：{count}（只读）",
@@ -1789,6 +1787,10 @@
     "summaryCommands": "命令：{count}",
     "summaryPlugins": "插件：{count}",
     "summaryNothing": "仅对话",
-    "summaryTitle": "代理能做什么——打开配置文件设置"
+    "summaryTitle": "代理能做什么——打开配置文件设置",
+    "groupBuiltin": "内置",
+    "groupPlugins": "插件",
+    "asksByDefault": "会询问",
+    "toolOffEverywhere": "已在“工具”设置中关闭"
   }
 }

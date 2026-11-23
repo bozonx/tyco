@@ -1771,7 +1771,7 @@
     "riskRead": "Reads",
     "riskWrite": "Changes data",
     "riskDestructive": "Deletes",
-    "riskExternal": "Acts outside",
+    "riskExternal": "External request",
     "sourceCore": "Built-in",
     "sourcePlugin": "Plugin",
     "sourceThirdPartyPlugin": "Third-party plugin",
@@ -1783,9 +1783,7 @@
     "leakQuestion": "This chat has read your data, and this call would reach a new place.",
     "untrustedQuestion": "This chat has read a web page or a tool's output, and this call would change the memory every future chat sees.",
     "contextTokens": "≈{count} tokens",
-    "catalogHint": "Where the agents' tools come from. A plugin switched off here is off for every profile and AI command. Built-in tools are switched in Ask AI, in each profile and in each AI command.",
-    "catalogWhereHint": "Each profile picks its tools and how freely they run in its own settings.",
-    "defaultPolicy": "By default: {policy}",
+    "catalogHint": "Tools are actions the AI takes on its own: reading and changing files, searching the web. Any tool can be switched off here: a tool switched off is not available to the AI anywhere — not in profiles, AI commands or Ask AI.\n\nA profile sets up the tools that are on in its own settings: which to use and which to confirm first. The AI reaches files only through the project permissions. An AI command uses only the tools on its list.\n\nOf the tools, Ask AI uses only web search and reading web pages, when search is on in its settings.",
     "summaryWorkspace": "workspace",
     "summaryProjects": "projects: {count}",
     "summaryProjectsRead": "projects: {count} (read)",
@@ -1793,6 +1791,10 @@
     "summaryCommands": "commands: {count}",
     "summaryPlugins": "plugins: {count}",
     "summaryNothing": "chat only",
-    "summaryTitle": "What the agent can do — open the profile settings"
+    "summaryTitle": "What the agent can do — open the profile settings",
+    "groupBuiltin": "Built-in",
+    "groupPlugins": "Plugins",
+    "asksByDefault": "Asks",
+    "toolOffEverywhere": "Off in the Tools settings"
   }
 }

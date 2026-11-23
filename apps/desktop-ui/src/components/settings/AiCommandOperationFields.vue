@@ -164,11 +164,13 @@ import {
   commandRiskLookup,
 } from '../../lib/ai-commands/ai-command-config'
 import {
+  type CatalogTool,
   commandRisk,
   commandToolRef,
   isRiskyTool,
   isSameToolRef,
   isSourceAvailable,
+  isToolAvailable,
   whitelistHas,
 } from '../../lib/chat-tools/tool-catalog'
 import {
@@ -219,11 +221,22 @@ const isAddModalOpen = ref(false)
 const toolToRemove = ref<{ ref: ToolRef; label: string } | null>(null)
 
 function toolIcon(ref: ToolRef): string {
-  if (ref.sourceKind === 'core' && ref.sourceId === 'web') return 'mdi:web'
-  if (ref.sourceKind === 'commands') return 'mdi:lightning-bolt-outline'
-  if (ref.sourceKind === 'plugin') return 'mdi:puzzle-outline'
-  return 'mdi:wrench-outline'
+  return (
+    candidateGroups.value.find((group) =>
+      group.items.some(
+        (item) =>
+          item.ref.sourceKind === ref.sourceKind &&
+          item.ref.sourceId === ref.sourceId
+      )
+    )?.icon ?? 'mdi:wrench-outline'
+  )
 }
+
+const COMMANDS_ICON = 'mdi:lightning-bolt-outline'
+
+/** The tools not switched off everywhere: nothing offers the others */
+const available = <T extends CatalogTool>(tools: readonly T[]) =>
+  tools.filter((tool) => isToolAvailable(props.userConfig?.tools, tool))
 
 /** What the agent may be allowed to call, by source */
 const candidateGroups = computed<ToolCandidateGroup[]>(() => {
@@ -233,8 +246,9 @@ const candidateGroups = computed<ToolCandidateGroup[]>(() => {
     {
       id: 'web',
       label: t(web.labelKey!),
+      icon: web.icon,
       emptyMessage: '',
-      items: web.tools.map((tool): ToolCandidate => ({
+      items: available(web.tools).map((tool): ToolCandidate => ({
         ref: { sourceKind: 'core', sourceId: 'web', toolName: tool.name },
         label: t(tool.labelKey!),
         risk: tool.risk,
@@ -243,6 +257,7 @@ const candidateGroups = computed<ToolCandidateGroup[]>(() => {
     {
       id: 'commands',
       label: t('chatTools.commands.group'),
+      icon: COMMANDS_ICON,
       emptyMessage: t('commands.aiNoOtherCommands'),
       // any command but this one
       items: callableCommands(props.command, commands.value).map(
@@ -260,8 +275,9 @@ const candidateGroups = computed<ToolCandidateGroup[]>(() => {
       .map((entry) => ({
         id: `plugin:${entry.source.id}`,
         label: entry.label ?? entry.source.id,
+        icon: entry.icon,
         emptyMessage: '',
-        items: entry.tools.map((tool): ToolCandidate => ({
+        items: available(entry.tools).map((tool): ToolCandidate => ({
           ref: {
             sourceKind: 'plugin',
             sourceId: entry.source.id,

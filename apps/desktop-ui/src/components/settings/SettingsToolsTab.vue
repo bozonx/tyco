@@ -1,60 +1,48 @@
 <template>
   <div class="settings-stack">
     <SettingsSection
-      :title="t('settings.toolsTab')"
-      :info="t('toolPermissions.catalogHint')"
+      v-for="(group, index) in groups"
+      :key="group.id"
+      :title="group.title"
+      :info="index === 0 ? t('toolPermissions.catalogHint') : undefined"
     >
       <div class="settings-section-content">
-        <template v-for="entry in sources" :key="sourceKey(entry.source)">
-          <SettingsEntityItem
-            :icon="entry.icon"
-            icon-tone="secondary"
-            :title="entry.label ?? t(entry.labelKey ?? '')"
-            :info="entry.description ?? t(entry.descriptionKey ?? '')"
-          >
-            <Badge tone="muted">{{ sourceKindText(entry) }}</Badge>
+        <SettingsToolSource
+          v-for="entry in group.sources"
+          :key="sourceKey(entry.source)"
+          :icon="entry.icon"
+          :title="sourceLabel(entry)"
+          :info="sourceInfo(entry)"
+          :off="!isSourceOn(entry)"
+        >
+          <template #actions>
+            <Badge v-if="entry.isThirdParty" tone="warning">
+              {{ t('toolPermissions.sourceThirdPartyPlugin') }}
+            </Badge>
             <FieldSwitch
-              v-if="canSwitch(entry)"
-              :aria-label="entry.label ?? t(entry.labelKey ?? '')"
-              :model-value="isSourceAvailable(userConfig.tools, entry.source)"
-              @update:model-value="setAvailable(entry, $event)"
+              :aria-label="sourceLabel(entry)"
+              :model-value="isSourceOn(entry)"
+              @update:model-value="setSourceOn(entry, $event)"
             />
-          </SettingsEntityItem>
-          <div class="tool-catalog-details">
-            <div
-              v-for="tool in entry.tools"
-              :key="tool.name"
-              class="tool-catalog-row"
-            >
-              <span class="tool-catalog-name">
-                {{ tool.label ?? t(tool.labelKey ?? tool.name) }}
-              </span>
-              <Badge :tone="isRiskyTool(tool.risk) ? 'warning' : 'muted'">
-                {{ t(TOOL_RISK_LABEL_KEYS[tool.risk]) }}
-              </Badge>
-              <Badge tone="muted">
-                {{
-                  t('toolPermissions.defaultPolicy', {
-                    policy: t(TOOL_POLICY_LABEL_KEYS[defaultToolPolicy(tool)]),
-                  })
-                }}
-              </Badge>
-            </div>
-            <p v-if="entry.capabilities?.length" class="tool-catalog-hint">
-              {{
-                t('toolPermissions.pluginCapabilities', {
-                  capabilities: entry.capabilities.join(', '),
-                })
-              }}
-            </p>
-          </div>
-        </template>
-        <InlineNotice
-          density="compact"
-          kind="info"
-          icon="mdi:information-outline"
-          :message="t('toolPermissions.catalogWhereHint')"
-        />
+          </template>
+          <SettingsToolRow
+            v-for="tool in entry.tools"
+            :key="tool.name"
+            :name="tool.name"
+            :label="toolLabel(tool)"
+            :risk="tool.risk"
+          >
+            <Badge v-if="defaultToolPolicy(tool) === 'ask'" tone="muted">
+              {{ t('toolPermissions.asksByDefault') }}
+            </Badge>
+            <FieldSwitch
+              :aria-label="toolLabel(tool)"
+              :disabled="!isSourceOn(entry)"
+              :model-value="isToolAvailable(catalog, tool)"
+              @update:model-value="setToolOn(tool, $event)"
+            />
+          </SettingsToolRow>
+        </SettingsToolSource>
       </div>
     </SettingsSection>
   </div>
@@ -68,72 +56,70 @@ import { usePluginToolSources } from '../../composables/use-plugin-tool-sources'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import {
   defaultToolPolicy,
-  isRiskyTool,
   isSourceAvailable,
+  isToolAvailable,
   sourceKey,
+  withSourceAvailable,
+  withToolAvailable,
 } from '../../lib/chat-tools/tool-catalog'
 import {
   CORE_CATALOG,
   type CatalogSourceEntry,
-  TOOL_POLICY_LABEL_KEYS,
-  TOOL_RISK_LABEL_KEYS,
+  type CatalogToolEntry,
 } from '../../lib/chat-tools/tool-catalog-entries'
 import Badge from '../common/Badge.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
-import InlineNotice from '../common/InlineNotice.vue'
-import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsSection from './SettingsSection.vue'
+import SettingsToolRow from './SettingsToolRow.vue'
+import SettingsToolSource from './SettingsToolSource.vue'
 
 const { t } = useI18n()
 const { draft: userConfig } = useSettingsContext()
 const pluginSources = usePluginToolSources()
 
-const sources = computed(() => [...CORE_CATALOG, ...pluginSources.value])
+const catalog = computed(() => userConfig.value.tools)
 
-/** Built-in sources are switched where they are used, never everywhere */
-const canSwitch = (entry: CatalogSourceEntry) =>
-  entry.source.kind === 'plugin' || entry.source.kind === 'mcp'
+/** The sources by where they come from; a group with nothing is left out */
+const groups = computed(() =>
+  [
+    {
+      id: 'core',
+      title: t('toolPermissions.groupBuiltin'),
+      sources: CORE_CATALOG,
+    },
+    {
+      id: 'plugin',
+      title: t('toolPermissions.groupPlugins'),
+      sources: pluginSources.value,
+    },
+  ].filter((group) => group.sources.length > 0)
+)
 
-function sourceKindText(entry: CatalogSourceEntry) {
-  if (entry.source.kind === 'plugin')
-    return t(
-      entry.isThirdParty
-        ? 'toolPermissions.sourceThirdPartyPlugin'
-        : 'toolPermissions.sourcePlugin'
-    )
-  return t('toolPermissions.sourceCore')
+const sourceLabel = (entry: CatalogSourceEntry) =>
+  entry.label ?? t(entry.labelKey ?? '')
+const toolLabel = (tool: CatalogToolEntry) =>
+  tool.label ?? t(tool.labelKey ?? tool.name)
+
+/** Only what the list does not tell: the permissions a plugin runs with */
+const sourceInfo = (entry: CatalogSourceEntry) =>
+  entry.capabilities?.length
+    ? t('toolPermissions.pluginCapabilities', {
+        capabilities: entry.capabilities.join(', '),
+      })
+    : undefined
+
+const isSourceOn = (entry: CatalogSourceEntry) =>
+  isSourceAvailable(catalog.value, entry.source)
+
+function setSourceOn(entry: CatalogSourceEntry, isEnabled: boolean) {
+  userConfig.value.tools = withSourceAvailable(
+    catalog.value,
+    entry.source,
+    isEnabled
+  )
 }
 
-function setAvailable(entry: CatalogSourceEntry, isEnabled: boolean) {
-  const key = sourceKey(entry.source)
-  const { [key]: _removed, ...rest } = userConfig.value.tools?.sources ?? {}
-  userConfig.value.tools = {
-    ...userConfig.value.tools,
-    sources: isEnabled ? rest : { ...rest, [key]: { isEnabled: false } },
-  }
+function setToolOn(tool: CatalogToolEntry, isEnabled: boolean) {
+  userConfig.value.tools = withToolAvailable(catalog.value, tool, isEnabled)
 }
 </script>
-
-<style scoped>
-.tool-catalog-details {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  padding-inline-start: var(--space-lg);
-  border-inline-start: 2px solid var(--app-border-subtle);
-}
-.tool-catalog-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-}
-.tool-catalog-name {
-  flex: 1 1 10rem;
-  font-size: var(--text-caption);
-}
-.tool-catalog-hint {
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-}
-</style>

@@ -16,6 +16,7 @@ use crate::{
     },
     services::ai_tools::permissions::ToolCallContext,
     services::{ai_vault, chat_images::ChatImages, storage, storage::ChatScope},
+    state::AppState,
 };
 
 /// Runs `operation` on what the file tools of the conversation reach.
@@ -26,6 +27,7 @@ fn with_conversation_files<T>(
     operation: impl FnOnce(&ConversationFiles<'_>) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
     let profile_id = context.profile_id().map(str::to_owned);
+    let config = app.state::<AppState>().user_config();
     // an AI command has no conversation, and so no attachments nor folders
     let attached = match context {
         ToolCallContext::AiCommand { .. } => Vec::new(),
@@ -43,7 +45,7 @@ fn with_conversation_files<T>(
         )?
     };
     match profile_id {
-        None => operation(&ConversationFiles::general(attachments)),
+        None => operation(&ConversationFiles::general(attachments).with_config(config)),
         // a profile reaches the projects and files of its own vault only
         Some(profile_id) => {
             let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
@@ -52,7 +54,10 @@ fn with_conversation_files<T>(
             ai_vault::with_projects_then(
                 app,
                 vault_id,
-                |dir, paths| ConversationFiles::load(dir, paths, profile_id, attachments),
+                |dir, paths| {
+                    ConversationFiles::load(dir, paths, profile_id, attachments)
+                        .map(|files| files.with_config(config))
+                },
                 |files| operation(&files),
             )
         }

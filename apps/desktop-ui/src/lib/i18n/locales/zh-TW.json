@@ -1767,7 +1767,7 @@
     "riskRead": "讀取",
     "riskWrite": "變更資料",
     "riskDestructive": "刪除",
-    "riskExternal": "對外操作",
+    "riskExternal": "外部請求",
     "sourceCore": "內建",
     "sourcePlugin": "外掛",
     "sourceThirdPartyPlugin": "第三方外掛",
@@ -1779,9 +1779,7 @@
     "leakQuestion": "此對話已讀取你的資料，而此呼叫會存取新的地方。",
     "untrustedQuestion": "此聊天已讀取網頁或工具的輸出，而此呼叫會變更之後所有聊天都會看到的記憶。",
     "contextTokens": "約 {count} 個 token",
-    "catalogHint": "代理工具的來源。在此關閉的外掛會在所有設定檔與 AI 指令中關閉。內建工具在「詢問 AI」、各個設定檔與各個 AI 指令中開關。",
-    "catalogWhereHint": "每個設定檔在自己的設定中選擇工具及其執行方式。",
-    "defaultPolicy": "預設：{policy}",
+    "catalogHint": "工具是 AI 自行執行的動作：讀取和修改檔案、上網搜尋。這裡可以關閉任何工具：關閉的工具在任何地方都不提供給 AI——無論是設定檔、AI 指令還是「問 AI」。\n\n已開啟的工具由各設定檔在自己的設定中調整：使用哪些、哪些需要先確認。AI 只能依專案權限存取檔案。AI 指令只使用其清單中的工具。\n\n在工具中，「問 AI」只使用網路搜尋和讀取網頁，且需在其設定中開啟搜尋。",
     "summaryWorkspace": "工作區",
     "summaryProjects": "專案：{count}",
     "summaryProjectsRead": "專案：{count}（唯讀）",
@@ -1789,6 +1787,10 @@
     "summaryCommands": "指令：{count}",
     "summaryPlugins": "外掛：{count}",
     "summaryNothing": "僅對話",
-    "summaryTitle": "代理能做什麼——開啟設定檔設定"
+    "summaryTitle": "代理能做什麼——開啟設定檔設定",
+    "groupBuiltin": "內建",
+    "groupPlugins": "外掛",
+    "asksByDefault": "會詢問",
+    "toolOffEverywhere": "已在「工具」設定中關閉"
   }
 }

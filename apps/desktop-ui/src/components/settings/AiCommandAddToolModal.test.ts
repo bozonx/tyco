@@ -14,6 +14,7 @@ const mockGroups: ToolCandidateGroup[] = [
   {
     id: 'web',
     label: 'Web search',
+    icon: 'mdi:search-web',
     items: [
       {
         ref: { sourceKind: 'core', sourceId: 'web', toolName: 'webSearch' },
@@ -30,6 +31,7 @@ const mockGroups: ToolCandidateGroup[] = [
   {
     id: 'commands',
     label: 'Commands',
+    icon: 'mdi:lightning-bolt-outline',
     emptyMessage: 'No commands',
     items: [
       {
@@ -77,11 +79,10 @@ describe('AiCommandAddToolModal', () => {
       global: { stubs: { BaseDialog: { template: '<div><slot /></div>' } } },
     })
 
-    const buttons = wrapper.findAll('button.add-tool-item')
-    expect(buttons[0].attributes('disabled')).toBeDefined()
-    expect(buttons[0].text()).toContain('commands.aiToolAlreadyAdded')
-
-    expect(buttons[1].attributes('disabled')).toBeUndefined()
+    const rows = wrapper.findAll('[role="listitem"]')
+    expect(rows[0].text()).toContain('commands.aiToolAlreadyAdded')
+    expect(rows[0].find('button').exists()).toBe(false)
+    expect(rows[1].find('button').exists()).toBe(true)
   })
 
   it('filters tools by search query', async () => {
@@ -111,8 +112,8 @@ describe('AiCommandAddToolModal', () => {
       global: { stubs: { BaseDialog: { template: '<div><slot /></div>' } } },
     })
 
-    const buttons = wrapper.findAll('button.add-tool-item')
-    await buttons[1].trigger('click')
+    const rows = wrapper.findAll('[role="listitem"]')
+    await rows[1].find('button').trigger('click')
 
     expect(wrapper.emitted('add')?.[0]).toEqual([
       { sourceKind: 'core', sourceId: 'web', toolName: 'webFetch' },

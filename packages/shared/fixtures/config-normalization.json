@@ -367,7 +367,7 @@
         }
       },
       "plugins": {},
-      "tools": { "sources": {} },
+      "tools": { "sources": {}, "tools": {} },
       "chat": { "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
@@ -765,7 +765,7 @@
         }
       },
       "plugins": {},
-      "tools": { "sources": {} },
+      "tools": { "sources": {}, "tools": {} },
       "chat": { "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
@@ -1193,7 +1193,7 @@
         }
       },
       "plugins": {},
-      "tools": { "sources": {} },
+      "tools": { "sources": {}, "tools": {} },
       "chat": { "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
@@ -1631,7 +1631,7 @@
           "settings": { "nested": { "count": 3 } }
         }
       },
-      "tools": { "sources": {} },
+      "tools": { "sources": {}, "tools": {} },
       "chat": { "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
@@ -2047,7 +2047,7 @@
         }
       },
       "plugins": {},
-      "tools": { "sources": {} },
+      "tools": { "sources": {}, "tools": {} },
       "chat": { "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
@@ -2475,7 +2475,7 @@
         }
       },
       "plugins": {},
-      "tools": { "sources": {} },
+      "tools": { "sources": {}, "tools": {} },
       "chat": { "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
@@ -2905,7 +2905,7 @@
         }
       },
       "plugins": {},
-      "tools": { "sources": {} },
+      "tools": { "sources": {}, "tools": {} },
       "chat": { "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
@@ -3348,7 +3348,7 @@
         }
       },
       "plugins": {},
-      "tools": { "sources": {} },
+      "tools": { "sources": {}, "tools": {} },
       "chat": { "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
@@ -3796,7 +3796,7 @@
         }
       },
       "plugins": {},
-      "tools": { "sources": {} },
+      "tools": { "sources": {}, "tools": {} },
       "chat": { "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
@@ -4314,7 +4314,7 @@
         }
       },
       "plugins": {},
-      "tools": { "sources": {} },
+      "tools": { "sources": {}, "tools": {} },
       "chat": { "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
@@ -4860,7 +4860,7 @@
         }
       },
       "plugins": {},
-      "tools": { "sources": {} },
+      "tools": { "sources": {}, "tools": {} },
       "chat": { "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",

@@ -83,6 +83,11 @@ const ASK_AI_CORE_IDS: ReadonlySet<string> = new Set([
 const keyPart = (part: string) =>
   part.replaceAll('%', '%25').replaceAll(':', '%3A')
 
+const withoutKey = <T>(record: Record<string, T>, key: string) => {
+  const { [key]: _removed, ...rest } = record
+  return rest
+}
+
 /** The key of a source in the settings: `<kind>:<id>` */
 export const sourceKey = (source: ToolSourceRef) =>
   `${keyPart(source.kind)}:${keyPart(source.id)}`
@@ -139,13 +144,59 @@ export function defaultToolPolicy(tool: CatalogTool): ToolPolicy {
 export const isSourceEnabledByDefault = (kind: ToolSourceKind) =>
   kind === 'core' || kind === 'plugin'
 
-/** Whether a source is available at all: plugins and MCP servers can be off */
+/**
+ * Whether a source is available at all; the user may switch any source of the
+ * catalog off everywhere. The always-on helpers are never switched
+ */
 export function isSourceAvailable(
   catalog: ToolCatalogSettings | undefined,
   source: ToolSourceRef
 ): boolean {
-  if (source.kind !== 'plugin' && source.kind !== 'mcp') return true
+  if (isAlwaysOnSource(source)) return true
   return catalog?.sources[sourceKey(source)]?.isEnabled !== false
+}
+
+/**
+ * Whether a tool is available at all: its source is and the user did not switch
+ * the tool off everywhere. Nothing offers an unavailable tool
+ */
+export function isToolAvailable(
+  catalog: ToolCatalogSettings | undefined,
+  tool: Pick<CatalogTool, 'source' | 'name'>
+): boolean {
+  if (!isSourceAvailable(catalog, tool.source)) return false
+  if (isAlwaysOnSource(tool.source)) return true
+  return catalog?.tools?.[toolKey(tool.source, tool.name)]?.isEnabled !== false
+}
+
+/** The catalog with a source switched everywhere; only "off" is kept */
+export function withSourceAvailable(
+  catalog: ToolCatalogSettings | undefined,
+  source: ToolSourceRef,
+  isEnabled: boolean
+): ToolCatalogSettings {
+  const sources = withoutKey(catalog?.sources ?? {}, sourceKey(source))
+  return {
+    ...catalog,
+    sources: isEnabled
+      ? sources
+      : { ...sources, [sourceKey(source)]: { isEnabled } },
+  }
+}
+
+/** The catalog with a tool switched everywhere; only "off" is kept */
+export function withToolAvailable(
+  catalog: ToolCatalogSettings | undefined,
+  tool: Pick<CatalogTool, 'source' | 'name'>,
+  isEnabled: boolean
+): ToolCatalogSettings {
+  const key = toolKey(tool.source, tool.name)
+  const tools = withoutKey(catalog?.tools ?? {}, key)
+  return {
+    sources: catalog?.sources ?? {},
+    ...catalog,
+    tools: isEnabled ? tools : { ...tools, [key]: { isEnabled } },
+  }
 }
 
 /** Whether the profile has the source on; commands are picked one by one */
@@ -171,7 +222,7 @@ export function effectiveToolState(
   settings: ProfileToolSettingsView | undefined,
   tool: CatalogTool
 ): ToolState {
-  if (!isSourceAvailable(catalog, tool.source)) return 'off'
+  if (!isToolAvailable(catalog, tool)) return 'off'
   if (tool.source.kind === 'commands') {
     if (!settings?.commandIds.includes(tool.name)) return 'off'
   } else if (!isSourceEnabledInProfile(settings, tool.source)) return 'off'
@@ -196,11 +247,6 @@ export const emptyProfileToolSettings = (): ProfileToolSettings => ({
   tools: {},
   commandIds: [],
 })
-
-const withoutKey = <T>(record: Record<string, T>, key: string) => {
-  const { [key]: _removed, ...rest } = record
-  return rest
-}
 
 /** The settings with a source switched; only a change from the default is kept */
 export function withSourceEnabled(
@@ -327,7 +373,11 @@ export function commandRisk(
 /** Where tools are offered, and what decides about them */
 export type ToolScope =
   /** The "Ask AI" chat: the web by its switch and the helpers, never asking */
-  | { kind: 'askAi'; isWebEnabled: boolean }
+  | {
+      kind: 'askAi'
+      isWebEnabled: boolean
+      catalog: ToolCatalogSettings | undefined
+    }
   /** A profile's chat: its settings, its memory mode */
   | {
       kind: 'profile'
@@ -354,12 +404,12 @@ export function toolStateIn(scope: ToolScope, tool: CatalogTool): ToolState {
         return 'off'
       if (tool.source.id === CORE_SOURCE_IDS.web && !scope.isWebEnabled)
         return 'off'
-      return 'allow'
+      return isToolAvailable(scope.catalog, tool) ? 'allow' : 'off'
     case 'profile':
       if (isAlwaysOnSource(tool.source)) return tool.defaultPolicy ?? 'allow'
       return effectiveToolState(scope.catalog, scope.settings, tool)
     case 'aiCommand':
-      return isSourceAvailable(scope.catalog, tool.source) &&
+      return isToolAvailable(scope.catalog, tool) &&
         whitelistHas(scope.tools, tool.source, tool.name)
         ? 'allow'
         : 'off'

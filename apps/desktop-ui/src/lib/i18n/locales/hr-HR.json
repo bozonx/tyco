@@ -1771,7 +1771,7 @@
     "riskRead": "Čitanje",
     "riskWrite": "Mijenja podatke",
     "riskDestructive": "Briše",
-    "riskExternal": "Djeluje izvana",
+    "riskExternal": "Vanjski zahtjev",
     "sourceCore": "Ugrađeno",
     "sourcePlugin": "Dodatak",
     "sourceThirdPartyPlugin": "Dodatak treće strane",
@@ -1783,9 +1783,7 @@
     "leakQuestion": "Ovaj je razgovor pročitao vaše podatke, a ovaj bi poziv dosegnuo novo mjesto.",
     "untrustedQuestion": "Ovaj je razgovor već pročitao web-stranicu ili rezultat alata, a ovaj bi poziv promijenio memoriju koju vide svi sljedeći razgovori.",
     "contextTokens": "≈{count} tokena",
-    "catalogHint": "Odakle dolaze alati agenata. Dodatak isključen ovdje isključen je u svim profilima i AI naredbama. Ugrađeni alati uključuju se u „Pitaj AI”, u svakom profilu i u svakoj AI naredbi.",
-    "catalogWhereHint": "Svaki profil u svojim postavkama bira alate i koliko slobodno rade.",
-    "defaultPolicy": "Zadano: {policy}",
+    "catalogHint": "Alati su radnje koje AI izvodi sam: čita i mijenja datoteke, pretražuje internet. Ovdje se može isključiti bilo koji alat: isključeni alat AI-ju nije dostupan nigdje — ni u profilima, ni u AI naredbama, ni u „Pitaj AI”.\n\nUključene alate svaki profil postavlja kod sebe: koje koristiti i za što najprije tražiti potvrdu. Datotekama AI pristupa samo prema dozvolama projekta. AI naredba koristi samo alate sa svog popisa.\n\nOd alata „Pitaj AI” koristi samo pretraživanje interneta i čitanje web-stranica, ako je pretraživanje uključeno u njegovim postavkama.",
     "summaryWorkspace": "radni prostor",
     "summaryProjects": "projekti: {count}",
     "summaryProjectsRead": "projekti: {count} (čitanje)",
@@ -1793,6 +1791,10 @@
     "summaryCommands": "naredbe: {count}",
     "summaryPlugins": "dodaci: {count}",
     "summaryNothing": "samo razgovor",
-    "summaryTitle": "Što agent može — otvori postavke profila"
+    "summaryTitle": "Što agent može — otvori postavke profila",
+    "groupBuiltin": "Ugrađeni",
+    "groupPlugins": "Dodaci",
+    "asksByDefault": "Pita",
+    "toolOffEverywhere": "Isključeno u postavkama Alata"
   }
 }

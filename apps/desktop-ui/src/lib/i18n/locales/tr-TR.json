@@ -1767,7 +1767,7 @@
     "riskRead": "Okuma",
     "riskWrite": "Veri değiştirir",
     "riskDestructive": "Siler",
-    "riskExternal": "Dışarıda işlem yapar",
+    "riskExternal": "Dış istek",
     "sourceCore": "Yerleşik",
     "sourcePlugin": "Eklenti",
     "sourceThirdPartyPlugin": "Üçüncü taraf eklenti",
@@ -1779,9 +1779,7 @@
     "leakQuestion": "Bu sohbet verilerinizi okudu ve bu çağrı yeni bir yere ulaşacak.",
     "untrustedQuestion": "Bu sohbet bir web sayfasını veya bir aracın çıktısını okudu ve bu çağrı, sonraki tüm sohbetlerin gördüğü belleği değiştirecek.",
     "contextTokens": "≈{count} token",
-    "catalogHint": "Ajanların araçlarının nereden geldiği. Burada kapatılan bir eklenti tüm profillerde ve yapay zekâ komutlarında kapalıdır. Yerleşik araçlar “Yapay zekâya sor”da, her profilde ve her yapay zekâ komutunda açılır.",
-    "catalogWhereHint": "Her profil kendi ayarlarında araçlarını ve ne kadar serbest çalışacaklarını seçer.",
-    "defaultPolicy": "Varsayılan: {policy}",
+    "catalogHint": "Araçlar, yapay zekânın kendi başına yaptığı işlemlerdir: dosyaları okur ve değiştirir, internette arar. Burada herhangi bir aracı kapatabilirsiniz: kapatılan araç yapay zekâ için hiçbir yerde kullanılamaz — ne profillerde, ne YZ komutlarında, ne de “YZ'ye sor”da.\n\nAçık araçları her profil kendi ayarlarında düzenler: hangilerini kullanacağını ve hangileri için önce onay isteyeceğini. Yapay zekâ dosyalara yalnızca proje izinlerine göre erişir. Bir YZ komutu yalnızca kendi listesindeki araçları kullanır.\n\nAraçlardan “YZ'ye sor” yalnızca web aramasını ve web sayfası okumayı kullanır; bunun için ayarlarında aramanın açık olması gerekir.",
     "summaryWorkspace": "çalışma alanı",
     "summaryProjects": "projeler: {count}",
     "summaryProjectsRead": "projeler: {count} (okuma)",
@@ -1789,6 +1787,10 @@
     "summaryCommands": "komutlar: {count}",
     "summaryPlugins": "eklentiler: {count}",
     "summaryNothing": "yalnızca sohbet",
-    "summaryTitle": "Ajanın yapabilecekleri — profil ayarlarını aç"
+    "summaryTitle": "Ajanın yapabilecekleri — profil ayarlarını aç",
+    "groupBuiltin": "Yerleşik",
+    "groupPlugins": "Eklentiler",
+    "asksByDefault": "Sorar",
+    "toolOffEverywhere": "Araçlar ayarlarında kapalı"
   }
 }

@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 import { CORE_CATALOG } from '../../lib/chat-tools/tool-catalog-entries'
+import InfoTooltip from '../common/InfoTooltip.vue'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -77,7 +78,10 @@ describe('SettingsProfileToolsSection', () => {
     const on = mount(SettingsProfileToolsSection, {
       props: { sources: [plugin], tools: undefined, catalog: undefined },
     })
-    expect(on.text()).toContain('toolPermissions.pluginCapabilities')
+    const hints = on
+      .findAllComponents(InfoTooltip)
+      .map((tooltip) => String(tooltip.props('text')))
+    expect(hints.join('\n')).toContain('toolPermissions.pluginCapabilities')
     expect(on.text()).toContain('toolPermissions.riskExternal')
   })
 })

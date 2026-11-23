@@ -1,18 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="TyCo Recording">
-  <rect width="32" height="32" rx="7" fill="#3b82f6" />
-  <path
-    d="M8 10.5h10.5M13.25 10.5V22"
-    fill="none"
-    stroke="#fff"
-    stroke-width="2.6"
-    stroke-linecap="round"
-  />
-  <path
-    d="M24.5 13.4a4.6 4.6 0 1 0 0 7.2"
-    fill="none"
-    stroke="#fff"
-    stroke-width="2.6"
-    stroke-linecap="round"
-  />
-  <circle cx="24" cy="8" r="6" fill="#ef4444" stroke="#ffffff" stroke-width="1.5" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="TyCo recording">
+  <path d="M7.5 26 21 12" stroke="#173D49" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M7.5 26 21 12" stroke="#FFF7E8" stroke-width="2" stroke-linecap="round"/>
+  <path d="M11 22C5 14 14 5 26 5c0 12-7 20-15 17Z" fill="#FFF7E8" stroke="#173D49" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="m11 22 9-10" stroke="#173D49" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="24.5" cy="24.5" r="4.5" fill="#E33D4F" stroke="#FFF7E8" stroke-width="1.5"/>
 </svg>

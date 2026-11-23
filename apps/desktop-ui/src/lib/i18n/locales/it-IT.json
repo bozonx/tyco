@@ -1771,7 +1771,7 @@
     "riskRead": "Lettura",
     "riskWrite": "Modifica dati",
     "riskDestructive": "Elimina",
-    "riskExternal": "Agisce all'esterno",
+    "riskExternal": "Richiesta esterna",
     "sourceCore": "Integrato",
     "sourcePlugin": "Plugin",
     "sourceThirdPartyPlugin": "Plugin di terze parti",
@@ -1783,9 +1783,7 @@
     "leakQuestion": "Questa chat ha letto i tuoi dati e questa chiamata raggiungerebbe un nuovo luogo.",
     "untrustedQuestion": "Questa chat ha letto una pagina web o il risultato di uno strumento, e questa chiamata modificherebbe la memoria che vedranno tutte le chat successive.",
     "contextTokens": "≈{count} token",
-    "catalogHint": "Da dove vengono gli strumenti degli agenti. Un plugin disattivato qui è disattivato per tutti i profili e i comandi IA. Gli strumenti integrati si attivano in «Chiedi all'IA», in ogni profilo e in ogni comando IA.",
-    "catalogWhereHint": "Ogni profilo sceglie i propri strumenti e con quanta libertà funzionano nelle proprie impostazioni.",
-    "defaultPolicy": "Predefinito: {policy}",
+    "catalogHint": "Gli strumenti sono azioni che l’IA compie da sola: leggere e modificare file, cercare sul web. Qui si può disattivare qualsiasi strumento: uno strumento disattivato non è disponibile per l’IA da nessuna parte, né nei profili, né nei comandi IA, né in «Chiedi all’IA».\n\nOgni profilo configura gli strumenti attivi nelle proprie impostazioni: quali usare e quali confermare prima. L’IA accede ai file solo secondo i permessi del progetto. Un comando IA usa solo gli strumenti del suo elenco.\n\nTra gli strumenti, «Chiedi all’IA» usa solo la ricerca web e la lettura di pagine web, se la ricerca è attiva nelle sue impostazioni.",
     "summaryWorkspace": "area di lavoro",
     "summaryProjects": "progetti: {count}",
     "summaryProjectsRead": "progetti: {count} (lettura)",
@@ -1793,6 +1791,10 @@
     "summaryCommands": "comandi: {count}",
     "summaryPlugins": "plugin: {count}",
     "summaryNothing": "solo chat",
-    "summaryTitle": "Cosa può fare l'agente — apri le impostazioni del profilo"
+    "summaryTitle": "Cosa può fare l'agente — apri le impostazioni del profilo",
+    "groupBuiltin": "Integrati",
+    "groupPlugins": "Plugin",
+    "asksByDefault": "Chiede",
+    "toolOffEverywhere": "Disattivato nelle impostazioni Strumenti"
   }
 }

@@ -17,8 +17,10 @@ mod writer;
 
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use super::file_search;
 use super::permissions;
@@ -319,6 +321,8 @@ pub struct ConversationFiles<'a> {
     folders_off: Option<&'static str>,
     /// The profile of a profile chat, whose tool settings each call follows.
     profile: Option<AiProfile>,
+    /// The user config, read for the call: the tools switched off everywhere.
+    config: Arc<Value>,
 }
 
 impl<'a> ConversationFiles<'a> {
@@ -335,7 +339,14 @@ impl<'a> ConversationFiles<'a> {
             attachments,
             folders_off,
             profile: None,
+            config: Arc::new(Value::Null),
         }
+    }
+
+    /// Follows the tools the user config switches off everywhere.
+    pub fn with_config(mut self, config: Arc<Value>) -> Self {
+        self.config = config;
+        self
     }
 
     pub(super) fn with_profile(mut self, profile: AiProfile) -> Self {
@@ -488,9 +499,10 @@ impl ConversationFiles<'_> {
         if request.reads_attachments() {
             return Ok(());
         }
-        match &self.profile {
-            Some(profile) => permissions::ensure_file_tool_allowed(profile, request.tool_name()),
-            None => Ok(()),
-        }
+        permissions::ensure_file_tool_allowed(
+            &self.config,
+            self.profile.as_ref(),
+            request.tool_name(),
+        )
     }
 }

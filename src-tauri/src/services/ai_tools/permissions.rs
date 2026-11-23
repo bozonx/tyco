@@ -3,8 +3,9 @@
 //! what to offer and asks the user about `ask`; this checks every call again
 //! by what the user configured, read anew each time, so that a call the
 //! webview should not have made is refused. It never knows whether the user
-//! was asked: it checks that the source is on, the tool is not off, and, for
-//! files, that the project's permission is not `deny`.
+//! was asked: it checks that the source and the tool are not switched off
+//! everywhere nor in the profile, and, for files, that the project's
+//! permission is not `deny`.
 //! See `dev_docs/architecture.md`, "Tool sources and permissions".
 
 use serde::{Deserialize, Serialize};
@@ -91,6 +92,23 @@ pub fn is_core_tool_enabled(profile: &AiProfile, source_id: &str, tool_name: &st
             != Some(&ToolState::Off)
 }
 
+/// Whether a tool is available at all: neither its source nor the tool is
+/// switched off everywhere (`tools` of the user config). Keep in sync with
+/// `isToolAvailable` in `lib/chat-tools/tool-catalog.ts`.
+pub fn is_tool_available(config: &Value, kind: &str, source_id: &str, tool_name: &str) -> bool {
+    let is_on = |group: &str, key: &str| {
+        config
+            .get("tools")
+            .and_then(|tools| tools.get(group))
+            .and_then(|items| items.get(key))
+            .and_then(|item| item.get("isEnabled"))
+            .and_then(Value::as_bool)
+            != Some(false)
+    };
+    is_on("sources", &source_key(kind, source_id))
+        && is_on("tools", &tool_key(kind, source_id, tool_name))
+}
+
 /// Whether a whitelist has a tool: the whole source or the tool itself.
 pub fn whitelist_has(refs: &[ToolRef], kind: &str, source_id: &str, tool_name: &str) -> bool {
     refs.iter().any(|item| {
@@ -123,18 +141,18 @@ pub fn ensure_web_tool_allowed(
     config: &Value,
     profile: Option<&AiProfile>,
 ) -> Result<(), AppError> {
-    let is_allowed = match context {
-        ToolCallContext::AskAi => user_config::is_ask_ai_web_search_enabled(config),
-        ToolCallContext::Profile { .. } => {
-            profile.is_some_and(|profile| is_core_tool_enabled(profile, WEB_SOURCE_ID, tool_name))
-        }
-        ToolCallContext::AiCommand { command_id } => whitelist_has(
-            &ai_command_tools(config, command_id),
-            CORE_SOURCE_KIND,
-            WEB_SOURCE_ID,
-            tool_name,
-        ),
-    };
+    let is_allowed = is_tool_available(config, CORE_SOURCE_KIND, WEB_SOURCE_ID, tool_name)
+        && match context {
+            ToolCallContext::AskAi => user_config::is_ask_ai_web_search_enabled(config),
+            ToolCallContext::Profile { .. } => profile
+                .is_some_and(|profile| is_core_tool_enabled(profile, WEB_SOURCE_ID, tool_name)),
+            ToolCallContext::AiCommand { command_id } => whitelist_has(
+                &ai_command_tools(config, command_id),
+                CORE_SOURCE_KIND,
+                WEB_SOURCE_ID,
+                tool_name,
+            ),
+        };
     if is_allowed {
         Ok(())
     } else {
@@ -142,11 +160,18 @@ pub fn ensure_web_tool_allowed(
     }
 }
 
-/// Checks that a file tool may be called in a profile's chat. The "Ask AI"
-/// chat reaches its attachments only and an AI command no files at all; the
-/// file tools enforce that by the roots they are given.
-pub fn ensure_file_tool_allowed(profile: &AiProfile, tool_name: &str) -> Result<(), AppError> {
-    if is_core_tool_enabled(profile, FILES_SOURCE_ID, tool_name) {
+/// Checks that a file tool may be called: it is not switched off everywhere
+/// and, in a profile's chat, not in the profile. The "Ask AI" chat reaches
+/// its attachments only and an AI command no files at all; the file tools
+/// enforce that by the roots they are given.
+pub fn ensure_file_tool_allowed(
+    config: &Value,
+    profile: Option<&AiProfile>,
+    tool_name: &str,
+) -> Result<(), AppError> {
+    if is_tool_available(config, CORE_SOURCE_KIND, FILES_SOURCE_ID, tool_name)
+        && profile.is_none_or(|profile| is_core_tool_enabled(profile, FILES_SOURCE_ID, tool_name))
+    {
         Ok(())
     } else {
         Err(refused(format!(
@@ -250,7 +275,7 @@ mod tests {
             ensure_web_tool_allowed(&profile_context(), "web_fetch", &config, Some(&profile))
                 .is_ok()
         );
-        assert!(ensure_file_tool_allowed(&profile, "delete_path").is_ok());
+        assert!(ensure_file_tool_allowed(&config, Some(&profile), "delete_path").is_ok());
     }
 
     #[test]
@@ -283,11 +308,39 @@ mod tests {
             &[],
             &[("core:files:write_file", ToolState::Ask)],
         )));
-        assert!(ensure_file_tool_allowed(&asking, "write_file").is_ok());
+        assert!(ensure_file_tool_allowed(&config, Some(&asking), "write_file").is_ok());
         let files_off = profile(Some(settings(&[("core:files", false)], &[])));
-        assert!(ensure_file_tool_allowed(&files_off, "read_file").is_err());
+        assert!(ensure_file_tool_allowed(&config, Some(&files_off), "read_file").is_err());
         // a profile chat without its profile is refused
         assert!(ensure_web_tool_allowed(&profile_context(), "web_search", &config, None).is_err());
+    }
+
+    #[test]
+    fn a_tool_switched_off_everywhere_is_refused_in_every_context() {
+        let config = json!({
+            "llm": { "tasks": { "chat": { "isWebSearchEnabled": true } } },
+            "tools": {
+                "sources": { "core:files": { "isEnabled": false } },
+                "tools": { "core:web:web_fetch": { "isEnabled": false } }
+            },
+            "commands": [{ "id": "web", "operationId": "core.aiTask",
+              "operationConfig": { "tools": [{ "sourceKind": "core", "sourceId": "web" }] } }]
+        });
+        let profile = profile(None);
+        let command = ToolCallContext::AiCommand {
+            command_id: "web".into(),
+        };
+        for (context, profile) in [
+            (ToolCallContext::AskAi, None),
+            (profile_context(), Some(&profile)),
+            (command, None),
+        ] {
+            assert!(ensure_web_tool_allowed(&context, "web_fetch", &config, profile).is_err());
+            assert!(ensure_web_tool_allowed(&context, "web_search", &config, profile).is_ok());
+        }
+        assert!(ensure_file_tool_allowed(&config, Some(&profile), "read_file").is_err());
+        assert!(ensure_file_tool_allowed(&config, None, "read_file").is_err());
+        assert!(ensure_file_tool_allowed(&json!({}), None, "read_file").is_ok());
     }
 
     #[test]

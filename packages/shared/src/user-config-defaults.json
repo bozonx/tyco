@@ -245,7 +245,7 @@
     "FastNote": { "isEnabled": true, "settings": {} },
     "SearchInInternet": { "isEnabled": true, "settings": {} }
   },
-  "tools": { "sources": {} },
+  "tools": { "sources": {}, "tools": {} },
   "chat": { "history": { "storage": "disk" } },
   "stt": {
     "provider": "deepgram",

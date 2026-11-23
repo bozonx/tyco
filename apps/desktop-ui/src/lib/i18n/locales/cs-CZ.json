@@ -1771,7 +1771,7 @@
     "riskRead": "Čtení",
     "riskWrite": "Mění data",
     "riskDestructive": "Maže",
-    "riskExternal": "Jedná navenek",
+    "riskExternal": "Externí požadavek",
     "sourceCore": "Vestavěné",
     "sourcePlugin": "Plugin",
     "sourceThirdPartyPlugin": "Plugin třetí strany",
@@ -1783,9 +1783,7 @@
     "leakQuestion": "Tento chat už četl vaše data a toto volání by se dostalo na nové místo.",
     "untrustedQuestion": "Tento chat už přečetl webovou stránku nebo výstup nástroje a toto volání by změnilo paměť, kterou uvidí všechny další chaty.",
     "contextTokens": "≈{count} tokenů",
-    "catalogHint": "Odkud pocházejí nástroje agentů. Plugin vypnutý zde je vypnutý ve všech profilech a AI příkazech. Vestavěné nástroje se zapínají v „Zeptat se AI“, v každém profilu a v každém AI příkazu.",
-    "catalogWhereHint": "Každý profil si ve svém nastavení vybírá nástroje a jak volně běží.",
-    "defaultPolicy": "Výchozí: {policy}",
+    "catalogHint": "Nástroje jsou akce, které AI provádí sama: čte a mění soubory, hledá na internetu. Zde lze vypnout kterýkoli nástroj: vypnutý nástroj není AI dostupný nikde — v profilech, v příkazech AI ani v „Zeptat se AI“.\n\nZapnuté nástroje si každý profil nastavuje sám: které používat a na co se nejdřív ptát. K souborům má AI přístup jen podle oprávnění projektu. Příkaz AI používá jen nástroje ze svého seznamu.\n\nZ nástrojů „Zeptat se AI“ používá jen vyhledávání na webu a čtení webových stránek, pokud je vyhledávání zapnuté v jeho nastavení.",
     "summaryWorkspace": "pracovní prostor",
     "summaryProjects": "projekty: {count}",
     "summaryProjectsRead": "projekty: {count} (čtení)",
@@ -1793,6 +1791,10 @@
     "summaryCommands": "příkazy: {count}",
     "summaryPlugins": "pluginy: {count}",
     "summaryNothing": "jen chat",
-    "summaryTitle": "Co agent umí — otevřít nastavení profilu"
+    "summaryTitle": "Co agent umí — otevřít nastavení profilu",
+    "groupBuiltin": "Vestavěné",
+    "groupPlugins": "Pluginy",
+    "asksByDefault": "Ptá se",
+    "toolOffEverywhere": "Vypnuto v nastavení Nástroje"
   }
 }

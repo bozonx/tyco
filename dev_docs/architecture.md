@@ -86,6 +86,10 @@ tools. No tool changes settings, permissions, profiles, projects or commands
 `off` (the model does not see it), `ask` or `allow`. There is no `deny` for a
 tool; it stays only in project permissions.
 
+- `external` is a request outside the app: the network, a script, another
+  program. The web tools are `external` yet run freely by default
+  (`defaultPolicy: 'allow'`); their leak target asks once the chat holds
+  personal data.
 - Default policy: `read` → `allow`, the rest → `ask`. Commands ask (their risk
   is `external`: Tyco cannot know what they do; the profile may allow them); an AI command called as a tool
   has the highest risk of its whitelist (`commandRisk`), the web counting as
@@ -101,9 +105,11 @@ tool; it stays only in project permissions.
   page, a command's or a plugin's output; `givesUntrustedContent`,
   `asksAfterUntrustedContent`): the memory steers every chat to come.
 
-**Two levels.** Globally (`tools.sources` in the user config, Settings → Tools)
-a plugin or MCP source can be switched off everywhere; core sources are not
-switched there. A profile (`AiProfile.tools`: `sources`, `tools`, `commandIds`)
+**Two levels.** Globally (`tools.sources` and `tools.tools` in the user
+config, Settings → Tools) any source or single tool of the catalog, core ones
+included, can be switched off everywhere: "Ask AI", profiles and AI commands
+never get it (`isToolAvailable`; Rust `is_tool_available`). Everything is on by
+default; the always-on helpers are not switched there. A profile (`AiProfile.tools`: `sources`, `tools`, `commandIds`)
 keeps only its differences from the defaults: `core` and `plugin` sources are
 on, commands and MCP servers are picked. Project permissions are on the
 profile ↔ project link with `read`, `write` and `delete` (never freer than
@@ -126,8 +132,8 @@ over IPC):
 Rust checks every call of the tools it runs (`ensure_web_tool_allowed`,
 `ensure_file_tool_allowed`, the project permissions, `memoryMode`), reading the
 profile or the config anew each time. It does not know whether the user was
-asked; it checks that the source is on, the tool is not `off` and the project
-permission is not `deny`. Plugin tools run in the webview, which checks them.
+asked; it checks that the source and the tool are not switched off everywhere
+nor `off` in the profile, and that the project permission is not `deny`. Plugin tools run in the webview, which checks them.
 
 **Approvals** (`ChatToolApproval.vue`): allow once, allow in this chat (kept
 with the chat as `Chat.toolPermissions`, given back when it is reopened),

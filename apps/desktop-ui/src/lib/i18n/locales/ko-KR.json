@@ -1771,7 +1771,7 @@
     "riskRead": "읽기",
     "riskWrite": "데이터 변경",
     "riskDestructive": "삭제",
-    "riskExternal": "외부에서 동작",
+    "riskExternal": "외부 요청",
     "sourceCore": "기본 제공",
     "sourcePlugin": "플러그인",
     "sourceThirdPartyPlugin": "타사 플러그인",
@@ -1783,9 +1783,7 @@
     "leakQuestion": "이 채팅은 이미 데이터를 읽었으며 이 호출은 새로운 곳에 닿습니다.",
     "untrustedQuestion": "이 채팅은 이미 웹 페이지나 도구의 출력을 읽었으며, 이 호출은 이후 모든 채팅이 보는 메모리를 변경합니다.",
     "contextTokens": "약 {count}토큰",
-    "catalogHint": "에이전트 도구의 출처입니다. 여기서 끈 플러그인은 모든 프로필과 AI 명령에서 꺼집니다. 기본 제공 도구는 “AI에게 묻기”, 각 프로필, 각 AI 명령에서 켜고 끕니다.",
-    "catalogWhereHint": "각 프로필은 자체 설정에서 도구와 실행 방식을 고릅니다.",
-    "defaultPolicy": "기본값: {policy}",
+    "catalogHint": "도구는 AI가 스스로 수행하는 작업입니다. 파일을 읽고 바꾸거나 인터넷을 검색합니다. 여기서 어떤 도구든 끌 수 있으며, 꺼진 도구는 프로필, AI 명령, 'AI에게 묻기' 어디에서도 AI가 사용할 수 없습니다.\n\n켜진 도구는 각 프로필이 자체 설정에서 조정합니다. 어떤 도구를 쓸지, 어떤 도구는 먼저 확인을 받을지 정합니다. AI는 프로젝트 권한에 따라서만 파일에 접근합니다. AI 명령은 자기 목록에 있는 도구만 사용합니다.\n\n'AI에게 묻기'는 도구 중 웹 검색과 웹 페이지 읽기만 사용하며, 설정에서 검색이 켜져 있을 때만 사용합니다.",
     "summaryWorkspace": "작업 공간",
     "summaryProjects": "프로젝트: {count}",
     "summaryProjectsRead": "프로젝트: {count}(읽기)",
@@ -1793,6 +1791,10 @@
     "summaryCommands": "명령: {count}",
     "summaryPlugins": "플러그인: {count}",
     "summaryNothing": "채팅만",
-    "summaryTitle": "에이전트가 할 수 있는 일 — 프로필 설정 열기"
+    "summaryTitle": "에이전트가 할 수 있는 일 — 프로필 설정 열기",
+    "groupBuiltin": "기본 제공",
+    "groupPlugins": "플러그인",
+    "asksByDefault": "확인 요청",
+    "toolOffEverywhere": "도구 설정에서 꺼짐"
   }
 }

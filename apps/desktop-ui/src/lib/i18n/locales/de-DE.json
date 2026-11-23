@@ -1771,7 +1771,7 @@
     "riskRead": "Liest",
     "riskWrite": "Ändert Daten",
     "riskDestructive": "Löscht",
-    "riskExternal": "Wirkt nach außen",
+    "riskExternal": "Externe Anfrage",
     "sourceCore": "Integriert",
     "sourcePlugin": "Plugin",
     "sourceThirdPartyPlugin": "Fremdes Plugin",
@@ -1783,9 +1783,7 @@
     "leakQuestion": "Dieser Chat hat Ihre Daten gelesen, und dieser Aufruf erreicht einen neuen Ort.",
     "untrustedQuestion": "Dieser Chat hat eine Webseite oder die Ausgabe eines Werkzeugs gelesen, und dieser Aufruf würde das Gedächtnis ändern, das jeder künftige Chat sieht.",
     "contextTokens": "≈{count} Tokens",
-    "catalogHint": "Woher die Werkzeuge der Agenten kommen. Ein hier ausgeschaltetes Plugin ist für alle Profile und KI-Befehle aus. Integrierte Werkzeuge schalten Sie in „KI fragen“, in jedem Profil und in jedem KI-Befehl.",
-    "catalogWhereHint": "Jedes Profil wählt seine Werkzeuge und wie frei sie laufen in seinen eigenen Einstellungen.",
-    "defaultPolicy": "Standard: {policy}",
+    "catalogHint": "Werkzeuge sind Aktionen, die die KI selbst ausführt: Dateien lesen und ändern, im Internet suchen. Hier lässt sich jedes Werkzeug ausschalten: Ein ausgeschaltetes Werkzeug steht der KI nirgends zur Verfügung — weder in Profilen noch in KI-Befehlen noch in „KI fragen“.\n\nEingeschaltete Werkzeuge richtet jedes Profil selbst ein: welche es nutzt und wofür es nachfragt. Auf Dateien greift die KI nur gemäß den Projektberechtigungen zu. Ein KI-Befehl nutzt nur die Werkzeuge auf seiner Liste.\n\n„KI fragen“ nutzt von den Werkzeugen nur die Websuche und das Lesen von Webseiten, wenn die Suche in seinen Einstellungen aktiviert ist.",
     "summaryWorkspace": "Arbeitsbereich",
     "summaryProjects": "Projekte: {count}",
     "summaryProjectsRead": "Projekte: {count} (lesen)",
@@ -1793,6 +1791,10 @@
     "summaryCommands": "Befehle: {count}",
     "summaryPlugins": "Plugins: {count}",
     "summaryNothing": "nur Chat",
-    "summaryTitle": "Was der Agent kann – Profileinstellungen öffnen"
+    "summaryTitle": "Was der Agent kann – Profileinstellungen öffnen",
+    "groupBuiltin": "Integriert",
+    "groupPlugins": "Plugins",
+    "asksByDefault": "Fragt nach",
+    "toolOffEverywhere": "In den Werkzeug-Einstellungen aus"
   }
 }

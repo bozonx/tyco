@@ -1771,7 +1771,7 @@
     "riskRead": "Citire",
     "riskWrite": "Modifică date",
     "riskDestructive": "Șterge",
-    "riskExternal": "Acționează în afară",
+    "riskExternal": "Cerere externă",
     "sourceCore": "Integrat",
     "sourcePlugin": "Plugin",
     "sourceThirdPartyPlugin": "Plugin terț",
@@ -1783,9 +1783,7 @@
     "leakQuestion": "Acest chat a citit datele tale, iar acest apel ar ajunge într-un loc nou.",
     "untrustedQuestion": "Acest chat a citit deja o pagină web sau rezultatul unui instrument, iar acest apel ar schimba memoria pe care o văd toate chaturile următoare.",
     "contextTokens": "≈{count} tokenuri",
-    "catalogHint": "De unde vin instrumentele agenților. Un plugin dezactivat aici e dezactivat în toate profilurile și comenzile AI. Instrumentele integrate se activează în „Întreabă AI”, în fiecare profil și în fiecare comandă AI.",
-    "catalogWhereHint": "Fiecare profil își alege instrumentele și cât de liber rulează în propriile setări.",
-    "defaultPolicy": "Implicit: {policy}",
+    "catalogHint": "Instrumentele sunt acțiuni pe care IA le face singură: citește și modifică fișiere, caută pe internet. Aici poate fi dezactivat orice instrument: un instrument dezactivat nu este disponibil pentru IA nicăieri — nici în profiluri, nici în comenzile IA, nici în „Întreabă IA”.\n\nFiecare profil configurează instrumentele activate în propriile setări: pe care să le folosească și pentru care să ceară mai întâi confirmare. IA accesează fișierele doar conform permisiunilor proiectului. O comandă IA folosește doar instrumentele din lista ei.\n\nDintre instrumente, „Întreabă IA” folosește doar căutarea pe web și citirea paginilor web, dacă căutarea este activată în setările sale.",
     "summaryWorkspace": "spațiu de lucru",
     "summaryProjects": "proiecte: {count}",
     "summaryProjectsRead": "proiecte: {count} (citire)",
@@ -1793,6 +1791,10 @@
     "summaryCommands": "comenzi: {count}",
     "summaryPlugins": "pluginuri: {count}",
     "summaryNothing": "doar chat",
-    "summaryTitle": "Ce poate agentul — deschide setările profilului"
+    "summaryTitle": "Ce poate agentul — deschide setările profilului",
+    "groupBuiltin": "Integrate",
+    "groupPlugins": "Pluginuri",
+    "asksByDefault": "Întreabă",
+    "toolOffEverywhere": "Dezactivat în setările Instrumente"
   }
 }
