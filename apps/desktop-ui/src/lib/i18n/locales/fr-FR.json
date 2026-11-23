@@ -1264,7 +1264,7 @@
     "translationCorrectionPromptAdd": "Définir le prompt de correction",
     "translationCorrectionPromptInfo": "Instructions supplémentaires pour la correction en mode « Toujours », par ex. « rends le texte familier » ou « garde une terminologie cohérente ». Elles s’ajoutent au prompt système et aux instructions de traduction sans les remplacer.",
     "translationGlossary": "Glossaire",
-    "translationGlossaryInfo": "Règles de traduction (une entrée par ligne) :\n\n• Terme = Traduction : toujours traduire le mot ou l’expression ainsi, quelle que soit la langue cible.\n\n• Terme = code: Traduction; code: Traduction : une traduction propre à certaines langues (un code comme es ou pt-BR ; es vaut aussi pour es-AR). Une traduction sans code s’applique aux autres langues.\nExemple : workspace = fr: espace de travail; es: espacio de trabajo\n\n• !Terme : ne pas traduire le mot ou l’expression (le garder tel quel dans tout le texte).\nExemple : !TyCo\n(Un point d’exclamation en début de ligne protège toute l’expression qui suit.)\n\n« ! » fonctionne avec toutes les méthodes de traduction. Un modèle IA applique directement les règles « = » ; avec DeepL et Google, elles sont seulement vérifiées et corrigées si la correction après traduction est activée.",
+    "translationGlossaryInfo": "Glossaire partagé : les règles s'appliquent aussi bien à la traduction générale qu'à la traduction vocale dans les dialogues.\n\nRègles de traduction (une entrée par ligne) :\n\n• Terme = Traduction : toujours traduire le mot ou l’expression ainsi, quelle que soit la langue cible.\n\n• Terme = code: Traduction; code: Traduction : une traduction propre à certaines langues (un code comme es ou pt-BR ; es vaut aussi pour es-AR). Une traduction sans code s’applique aux autres langues.\nExemple : workspace = fr: espace de travail; es: espacio de trabajo\n\n• !Terme : ne pas traduire le mot ou l’expression (le garder tel quel dans tout le texte).\nExemple : !TyCo\n(Un point d’exclamation en début de ligne protège toute l’expression qui suit.)\n\n« ! » fonctionne avec toutes les méthodes de traduction. Un modèle IA applique directement les règles « = » ; avec DeepL et Google, elles sont seulement vérifiées et corrigées si la correction après traduction est activée.",
     "translationGlossaryMachineHint": "Avec DeepL et Google sans correction, seuls les termes non traduits (!terme) fonctionnent. Pour appliquer les règles de traduction (=), activez la correction après traduction.",
     "translationGlossaryPlaceholder": "workspace = fr: espace de travail; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "non disponible",
@@ -1368,7 +1368,11 @@
     "dialogTranslationSection": "Traduction",
     "dialogRecordingSection": "Enregistrement d’appels",
     "dialogRecordingMixedDownInfo": "Votre voix et celle de l’interlocuteur sont mixées dans un seul canal et entendues dans les deux oreilles. Désactivé : stéréo séparée (votre voix à gauche, l’interlocuteur à droite).",
-    "dialogRecordingProcessedInfo": "Atténue l'écho des haut-parleurs dans le micro et limite les pics de volume (comme pour la reconnaissance vocale). Désactivé : le son est enregistré brut, sans traitement logiciel."
+    "dialogRecordingProcessedInfo": "Atténue l'écho des haut-parleurs dans le micro et limite les pics de volume (comme pour la reconnaissance vocale). Désactivé : le son est enregistré brut, sans traitement logiciel.",
+    "dialogTranslationGlossary": "Glossaire",
+    "dialogTranslationGlossaryInfo": "La traduction vocale du dialogue utilise le glossaire partagé des paramètres de traduction. Vous pouvez définir des règles pour les termes ou protéger certains mots de la traduction.",
+    "dialogTranslationGlossaryShared": "Utilise le glossaire partagé",
+    "dialogTranslationGlossaryOpen": "Configurer le glossaire"
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {
@@ -1712,7 +1716,7 @@
     "source": "Source",
     "levelMe": "Niveau du micro",
     "levelRemote": "Niveau du son de l'ordinateur",
-    "translationLanguage": "Traduire en",
+    "translationLanguage": "Traduire l’interlocuteur en",
     "translationOnly": "Traduction seule",
     "copy": "Copier la transcription",
     "toActionMenu": "Envoyer au menu des actions",
@@ -1765,7 +1769,16 @@
     "recordStopToChangeHint": "Arrêter pour modifier",
     "headphonesNotice": "Le port d’un casque ou d’écouteurs est recommandé pour éviter que la voix de l’interlocuteur dans les haut-parleurs ne soit captée par le micro et ne crée d’écho.",
     "headphonesNoticeConfirm": "J’ai compris",
-    "emptyHeadphonesHint": "Conseil : utilisez un casque pour éviter l’écho des haut-parleurs."
+    "emptyHeadphonesHint": "Conseil : utilisez un casque pour éviter l’écho des haut-parleurs.",
+    "sessionStartedListening": "Écoute commencée",
+    "sessionStartedRecording": "Enregistrement commencé",
+    "sessionResumedListening": "Écoute reprise",
+    "listenTooltip": "Démarrer la reconnaissance vocale sans enregistrement audio",
+    "listenTooltipWithRecord": "Démarrer la reconnaissance vocale et l'enregistrement audio",
+    "resumeTooltip": "Reprendre la reconnaissance vocale sans enregistrement audio",
+    "resumeTooltipWithRecord": "Reprendre la reconnaissance vocale et l'enregistrement audio",
+    "recordToggleEnableHint": "Activer l'enregistrement audio dans un fichier et l'enregistrement dans l'historique au démarrage",
+    "recordToggleDisableHint": "Désactiver l'enregistrement audio (reconnaissance vocale uniquement)"
   },
   "toolPermissions": {
     "riskRead": "Lecture",

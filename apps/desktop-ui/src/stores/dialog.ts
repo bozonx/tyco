@@ -279,7 +279,8 @@ export const useDialogStore = defineStore('dialog', () => {
           const hadRecordingBefore = sessionBreaks.value.some(
             (b) => b.isRecording
           )
-          const action = isRecorded && !hadRecordingBefore ? 'started' : 'resumed'
+          const action =
+            isRecorded && !hadRecordingBefore ? 'started' : 'resumed'
           sessionBreaks.value.push({
             id: `break-${Date.now()}`,
             timestampMs: sessionStartedAtMs,

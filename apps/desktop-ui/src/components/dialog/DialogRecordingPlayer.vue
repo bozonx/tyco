@@ -78,9 +78,7 @@ import AppIcon from '../common/AppIcon.vue'
 import IconButton from '../common/IconButton.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 
-const props = defineProps<{
-  file: string
-}>()
+const props = defineProps<{ file: string }>()
 
 const SPEED_OPTIONS: ControlOption<number>[] = [
   { id: 0.75, name: '0.75×' },

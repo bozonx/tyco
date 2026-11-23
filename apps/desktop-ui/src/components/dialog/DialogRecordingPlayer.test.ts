@@ -1,5 +1,5 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { i18n } from '../../lib/i18n'
 import {

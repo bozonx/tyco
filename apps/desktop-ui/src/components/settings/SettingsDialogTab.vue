@@ -26,7 +26,9 @@
             <span class="text-sm text-muted">
               {{ t('settings.dialogTranslationGlossaryShared') }}
             </span>
-            <InlineAction @click="navigate('translations#translation-glossary')">
+            <InlineAction
+              @click="navigate('translations#translation-glossary')"
+            >
               {{ t('settings.dialogTranslationGlossaryOpen') }}
             </InlineAction>
           </div>

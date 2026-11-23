@@ -1264,7 +1264,7 @@
     "translationCorrectionPromptAdd": "Setează promptul de corectare",
     "translationCorrectionPromptInfo": "Instrucțiuni suplimentare pentru corectarea în modul „Întotdeauna”, de ex. „fă textul colocvial” sau „păstrează terminologia consecventă”. Sunt adăugate la promptul de sistem și la instrucțiunile de traducere, fără a le înlocui.",
     "translationGlossary": "Glosar",
-    "translationGlossaryInfo": "Reguli de traducere (o intrare pe rând):\n\n• Termen = Traducere – traduceți întotdeauna cuvântul sau expresia astfel, indiferent de limba țintă.\n\n• Termen = cod: Traducere; cod: Traducere – o traducere proprie pentru anumite limbi (un cod precum es sau pt-BR; es este valabil și pentru es-AR). Traducerea fără cod se aplică celorlalte limbi.\nExemplu: workspace = ro: spațiu de lucru; es: espacio de trabajo\n\n• !Termen – nu traduceți cuvântul sau expresia (rămâne neschimbat în tot textul).\nExemplu: !TyCo\n(Un semn de exclamare la începutul rândului protejează întreaga expresie care urmează.)\n\n„!” funcționează cu orice metodă de traducere. Un model AI aplică regulile „=” imediat; cu DeepL și Google ele sunt doar verificate și corectate dacă este activată corectarea după traducere.",
+    "translationGlossaryInfo": "Glosar comun: regulile se aplică atât pentru traducerea generală, cât și pentru traducerea vorbirii în dialoguri.\n\nReguli de traducere (o intrare pe rând):\n\n• Termen = Traducere – traduceți întotdeauna cuvântul sau expresia astfel, indiferent de limba țintă.\n\n• Termen = cod: Traducere; cod: Traducere – o traducere proprie pentru anumite limbi (un cod precum es sau pt-BR; es este valabil și pentru es-AR). Traducerea fără cod se aplică celorlalte limbi.\nExemplu: workspace = ro: spațiu de lucru; es: espacio de trabajo\n\n• !Termen – nu traduceți cuvântul sau expresia (rămâne neschimbat în tot textul).\nExemplu: !TyCo\n(Un semn de exclamare la începutul rândului protejează întreaga expresie care urmează.)\n\n„!” funcționează cu orice metodă de traducere. Un model AI aplică regulile „=” imediat; cu DeepL și Google ele sunt doar verificate și corectate dacă este activată corectarea după traducere.",
     "translationGlossaryMachineHint": "Cu DeepL și Google fără corectare funcționează doar termenii netraduși (!termen). Pentru a aplica reguli de traducere (=), activați corectarea după traducere.",
     "translationGlossaryPlaceholder": "workspace = ro: spațiu de lucru; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "indisponibil",
@@ -1368,7 +1368,11 @@
     "dialogTranslationSection": "Traducere",
     "dialogRecordingSection": "Înregistrare apeluri",
     "dialogRecordingMixedDownInfo": "Vocea dvs. și interlocutorul sunt combinate într-un singur canal și se aud în ambele urechi. Dezactivat: stereo separat (vocea dvs. în canalul stâng, interlocutorul în cel drept).",
-    "dialogRecordingProcessedInfo": "Atenuează ecoul difuzoarelor în microfon și limitează vârfurile mari de volum (așa cum aude recunoașterea vocală). Dezactivat: sunetul este înregistrat brut, fără procesare software."
+    "dialogRecordingProcessedInfo": "Atenuează ecoul difuzoarelor în microfon și limitează vârfurile mari de volum (așa cum aude recunoașterea vocală). Dezactivat: sunetul este înregistrat brut, fără procesare software.",
+    "dialogTranslationGlossary": "Glosar",
+    "dialogTranslationGlossaryInfo": "Traducerea vorbirii în dialog utilizează glosarul comun din setările de traducere. Puteți defini reguli pentru termeni sau puteți proteja anumite cuvinte de traducere.",
+    "dialogTranslationGlossaryShared": "Utilizează glosarul comun",
+    "dialogTranslationGlossaryOpen": "Configurare glosar"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
@@ -1712,7 +1716,7 @@
     "source": "Sursă",
     "levelMe": "Nivelul microfonului",
     "levelRemote": "Nivelul sunetului computerului",
-    "translationLanguage": "Tradu în",
+    "translationLanguage": "Tradu interlocutorul în",
     "translationOnly": "Doar traducerea",
     "copy": "Copiază transcrierea",
     "toActionMenu": "Trimite în meniul de acțiuni",
@@ -1765,7 +1769,16 @@
     "recordStopToChangeHint": "Opriți pentru a modifica",
     "headphonesNotice": "Se recomandă folosirea căștilor pentru ca vocea interlocutorului din difuzoare să nu ajungă în microfon și să creeze ecou.",
     "headphonesNoticeConfirm": "Am înțeles",
-    "emptyHeadphonesHint": "Sfat: folosiți căști pentru a evita ecoul din difuzoare."
+    "emptyHeadphonesHint": "Sfat: folosiți căști pentru a evita ecoul din difuzoare.",
+    "sessionStartedListening": "Ascultare pornită",
+    "sessionStartedRecording": "Înregistrare pornită",
+    "sessionResumedListening": "Ascultare reluată",
+    "listenTooltip": "Porniți recunoașterea vocală fără înregistrare audio",
+    "listenTooltipWithRecord": "Porniți recunoașterea vocală și înregistrarea într-un fișier audio",
+    "resumeTooltip": "Continuați recunoașterea vocală fără înregistrare audio",
+    "resumeTooltipWithRecord": "Continuați recunoașterea vocală și înregistrarea într-un fișier audio",
+    "recordToggleEnableHint": "Activați înregistrarea audio în fișier și salvarea în istoric la pornire",
+    "recordToggleDisableHint": "Dezactivați înregistrarea audio (doar recunoaștere vocală)"
   },
   "toolPermissions": {
     "riskRead": "Citire",

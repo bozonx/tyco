@@ -1264,7 +1264,7 @@
     "translationCorrectionPromptAdd": "校正プロンプトを設定",
     "translationCorrectionPromptInfo": "「常に実行」モードでの校正に対する追加の指示。",
     "translationGlossary": "用語集",
-    "translationGlossaryInfo": "翻訳ルール（1行に1項目）:\n\n• 原文 = 訳文 — 翻訳先の言語にかかわらず、常にこの訳語を使います。\n\n• 原文 = コード: 訳文; コード: 訳文 — 特定の言語用の訳語（es や pt-BR などのコード。es は es-AR にも適用）。コードのない訳語はその他の言語に使われます。\n例: workspace = ja: ワークスペース; es: espacio de trabajo\n\n• !除外語（翻訳しない単語）\n例: !TyCo",
+    "translationGlossaryInfo": "共通用語集: ルールは通常の翻訳と会話の音声翻訳の両方に適用されます。\n\n翻訳ルール（1行に1項目）:\n\n• 原文 = 訳文 — 翻訳先の言語にかかわらず、常にこの訳語を使います。\n\n• 原文 = コード: 訳文; コード: 訳文 — 特定の言語用の訳語（es や pt-BR などのコード。es は es-AR にも適用）。コードのない訳語はその他の言語に使われます。\n例: workspace = ja: ワークスペース; es: espacio de trabajo\n\n• !除外語（翻訳しない単語）\n例: !TyCo",
     "translationGlossaryMachineHint": "校正が無効な場合、DeepLとGoogleでは未翻訳の用語（!用語）のみが保持されます。翻訳ルール（=）を適用するには、翻訳後の校正を有効にしてください。",
     "translationGlossaryPlaceholder": "workspace = ja: ワークスペース; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "利用不可",
@@ -1368,7 +1368,11 @@
     "dialogTranslationSection": "翻訳",
     "dialogRecordingSection": "通話の録音",
     "dialogRecordingMixedDownInfo": "自分の声と相手の声が1つのチャンネルに統合され、両耳で聞こえます。オフ時：左右分離ステレオ（自分の声が左チャンネル、相手が右チャンネル）。",
-    "dialogRecordingProcessedInfo": "マイクに入り込むスピーカーのエコーを抑え、大きな音量ピークを制限します（音声認識が聞き取る状態）。オフ時：ソフトウェア処理を行わず、そのままの音声が録音されます。"
+    "dialogRecordingProcessedInfo": "マイクに入り込むスピーカーのエコーを抑え、大きな音量ピークを制限します（音声認識が聞き取る状態）。オフ時：ソフトウェア処理を行わず、そのままの音声が録音されます。",
+    "dialogTranslationGlossary": "用語集",
+    "dialogTranslationGlossaryInfo": "会話の音声翻訳には、翻訳設定の共通用語集が使用されます。用語の翻訳ルールを設定したり、特定の単語を翻訳から除外したりできます。",
+    "dialogTranslationGlossaryShared": "共通用語集を使用",
+    "dialogTranslationGlossaryOpen": "用語集を設定"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {
@@ -1708,7 +1712,7 @@
     "source": "ソース",
     "levelMe": "マイクのレベル",
     "levelRemote": "コンピューターの音声レベル",
-    "translationLanguage": "翻訳先",
+    "translationLanguage": "相手の発言の翻訳先",
     "translationOnly": "翻訳のみ",
     "copy": "文字起こしをコピー",
     "toActionMenu": "アクションメニューに送る",
@@ -1761,7 +1765,16 @@
     "recordStopToChangeHint": "変更するには停止してください",
     "headphonesNotice": "スピーカーの音声がマイクに入ってエコーが発生するのを防ぐため、ヘッドホンの使用をおすすめします。",
     "headphonesNoticeConfirm": "了解",
-    "emptyHeadphonesHint": "ヒント：スピーカーのエコーを防ぐため、ヘッドホンの使用をおすすめします。"
+    "emptyHeadphonesHint": "ヒント：スピーカーのエコーを防ぐため、ヘッドホンの使用をおすすめします。",
+    "sessionStartedListening": "聞き取りを開始しました",
+    "sessionStartedRecording": "録音を開始しました",
+    "sessionResumedListening": "聞き取りを再開しました",
+    "listenTooltip": "音声録音なしで音声認識を開始",
+    "listenTooltipWithRecord": "音声認識と音声ファイルへの録音を開始",
+    "resumeTooltip": "音声録音なしで音声認識を再開",
+    "resumeTooltipWithRecord": "音声認識と音声ファイルへの録音を再開",
+    "recordToggleEnableHint": "開始時に音声ファイルへの録音と履歴への保存を有効にする",
+    "recordToggleDisableHint": "音声録音を無効にする（音声認識のみ）"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

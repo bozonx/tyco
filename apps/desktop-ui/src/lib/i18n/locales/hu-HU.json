@@ -1264,7 +1264,7 @@
     "translationCorrectionPromptAdd": "Javítási prompt megadása",
     "translationCorrectionPromptInfo": "További utasítások a „Mindig” módban végzett javításhoz, pl. „legyen társalgási a szöveg” vagy „használj egységes terminológiát”. A rendszerprompthoz és a fordítási utasításokhoz adódnak hozzá, nem helyettesítik őket.",
     "translationGlossary": "Szójegyzék",
-    "translationGlossaryInfo": "Fordítási szabályok (soronként egy bejegyzés):\n\n• Kifejezés = Fordítás – a szót vagy kifejezést mindig így kell fordítani, bármilyen nyelvre is fordítunk.\n\n• Kifejezés = kód: Fordítás; kód: Fordítás – külön fordítás bizonyos nyelvekre (kód, például es vagy pt-BR; az es az es-AR-ra is érvényes). A kód nélküli fordítás a többi nyelvre vonatkozik.\nPélda: workspace = hu: munkaterület; es: espacio de trabajo\n\n• !Kifejezés – a szót vagy kifejezést nem kell lefordítani (a teljes szövegben változatlan marad).\nPélda: !TyCo\n(A sor elején álló felkiáltójel az utána következő teljes kifejezést védi.)\n\nA „!” bármely fordítási móddal működik. Az MI-modell az „=” szabályokat azonnal alkalmazza; DeepL és Google esetén ezek csak ellenőrzésre kerülnek, és akkor javítódnak, ha a fordítás utáni javítás be van kapcsolva.",
+    "translationGlossaryInfo": "Közös szójegyzék: a szabályok az általános fordításra és a párbeszédek beszédfordítására is érvényesek.\n\nFordítási szabályok (soronként egy bejegyzés):\n\n• Kifejezés = Fordítás – a szót vagy kifejezést mindig így kell fordítani, bármilyen nyelvre is fordítunk.\n\n• Kifejezés = kód: Fordítás; kód: Fordítás – külön fordítás bizonyos nyelvekre (kód, például es vagy pt-BR; az es az es-AR-ra is érvényes). A kód nélküli fordítás a többi nyelvre vonatkozik.\nPélda: workspace = hu: munkaterület; es: espacio de trabajo\n\n• !Kifejezés – a szót vagy kifejezést nem kell lefordítani (a teljes szövegben változatlan marad).\nPélda: !TyCo\n(A sor elején álló felkiáltójel az utána következő teljes kifejezést védi.)\n\nA „!” bármely fordítási móddal működik. Az MI-modell az „=” szabályokat azonnal alkalmazza; DeepL és Google esetén ezek csak ellenőrzésre kerülnek, és akkor javítódnak, ha a fordítás utáni javítás be van kapcsolva.",
     "translationGlossaryMachineHint": "DeepL és Google esetén javítás nélkül csak a lefordítatlan kifejezések (!kifejezés) működnek. A fordítási szabályok (=) alkalmazásához kapcsolja be a fordítás utáni javítást.",
     "translationGlossaryPlaceholder": "workspace = hu: munkaterület; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "nem érhető el",
@@ -1368,7 +1368,11 @@
     "dialogTranslationSection": "Fordítás",
     "dialogRecordingSection": "Hívásrögzítés",
     "dialogRecordingMixedDownInfo": "Az Ön hangja és a partner hangja egyetlen csatornába keveredik, és mindkét fülben hallható. Kikapcsolva: osztott sztereó (az Ön hangja a bal, a partneré a jobb csatornában).",
-    "dialogRecordingProcessedInfo": "Csillapítja a hangszórók visszhangját a mikrofonban, és korlátozza a hangerőcsúcsokat (ahogy a beszédfelismerés hallja). Kikapcsolva: a hang szoftveres feldolgozás nélkül, nyersen rögzül."
+    "dialogRecordingProcessedInfo": "Csillapítja a hangszórók visszhangját a mikrofonban, és korlátozza a hangerőcsúcsokat (ahogy a beszédfelismerés hallja). Kikapcsolva: a hang szoftveres feldolgozás nélkül, nyersen rögzül.",
+    "dialogTranslationGlossary": "Szójegyzék",
+    "dialogTranslationGlossaryInfo": "A párbeszédek beszédfordítása a fordítási beállítások közös szójegyzékét használja. Megadhat kifejezésszabályokat, vagy védhet szavakat a lefordítástól.",
+    "dialogTranslationGlossaryShared": "Közös szójegyzéket használ",
+    "dialogTranslationGlossaryOpen": "Szójegyzék beállítása"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
@@ -1712,7 +1716,7 @@
     "source": "Forrás",
     "levelMe": "Mikrofon szintje",
     "levelRemote": "A számítógép hangjának szintje",
-    "translationLanguage": "Fordítás erre",
+    "translationLanguage": "Beszélgetőpartner fordítása erre",
     "translationOnly": "Csak fordítás",
     "copy": "Átirat másolása",
     "toActionMenu": "Küldés a műveletek menübe",
@@ -1765,7 +1769,16 @@
     "recordStopToChangeHint": "Állítsa le a módosításhoz",
     "headphonesNotice": "Javasoljuk fülhallgató használatát, hogy a másik fél hangszóróból jövő hangja ne jusson a mikrofonba és ne okozzon visszhangot.",
     "headphonesNoticeConfirm": "Értem",
-    "emptyHeadphonesHint": "Tipp: használjon fülhallgatót a hangszóró visszhangjának elkerüléséhez."
+    "emptyHeadphonesHint": "Tipp: használjon fülhallgatót a hangszóró visszhangjának elkerüléséhez.",
+    "sessionStartedListening": "Figyelés elindítva",
+    "sessionStartedRecording": "Rögzítés elindítva",
+    "sessionResumedListening": "Figyelés folytatva",
+    "listenTooltip": "Beszédfelismerés indítása hangfelvétel nélkül",
+    "listenTooltipWithRecord": "Beszédfelismerés és hangfájlba rögzítés indítása",
+    "resumeTooltip": "Beszédfelismerés folytatása hangfelvétel nélkül",
+    "resumeTooltipWithRecord": "Beszédfelismerés és hangfájlba rögzítés folytatása",
+    "recordToggleEnableHint": "Hangfájlba rögzítés és előzményekbe mentés bekapcsolása indításkor",
+    "recordToggleDisableHint": "Hangfelvétel kikapcsolása (csak beszédfelismerés)"
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

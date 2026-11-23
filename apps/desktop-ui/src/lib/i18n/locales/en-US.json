@@ -1264,7 +1264,7 @@
     "translationCorrectionPromptAdd": "Set correction prompt",
     "translationCorrectionPromptInfo": "Extra instructions for the correction in the \"Always\" mode, e.g. \"make the text conversational\" or \"keep terminology consistent\". They are added to the system prompt and the translation instructions without replacing them.",
     "translationGlossary": "Glossary",
-    "translationGlossaryInfo": "Translation rules (one entry per line):\n\n• Term = Translation — always translate the word or phrase this way, whatever the target language.\n\n• Term = code: Translation; code: Translation — a separate wording for particular languages (a code like es or pt-BR; es also covers es-AR). A translation without a code applies to the other languages.\nExample: workspace = es: espacio de trabajo; de: Arbeitsbereich\n\n• !Term — do not translate the word or phrase (keep as is in the entire text).\nExample: !TyCo\n(An exclamation mark at the start of the line protects the entire phrase after it).\n\nUntranslated terms (!term) work with any translation method. An AI model applies translation rules (=) right away; with DeepL and Google they are applied only when post-translation correction is enabled.",
+    "translationGlossaryInfo": "Shared glossary: rules apply both to general text translation and to dialog speech translation.\n\nTranslation rules (one entry per line):\n\n• Term = Translation — always translate the word or phrase this way, whatever the target language.\n\n• Term = code: Translation; code: Translation — a separate wording for particular languages (a code like es or pt-BR; es also covers es-AR). A translation without a code applies to the other languages.\nExample: workspace = es: espacio de trabajo; de: Arbeitsbereich\n\n• !Term — do not translate the word or phrase (keep as is in the entire text).\nExample: !TyCo\n(An exclamation mark at the start of the line protects the entire phrase after it).\n\nUntranslated terms (!term) work with any translation method. An AI model applies translation rules (=) right away; with DeepL and Google they are applied only when post-translation correction is enabled.",
     "translationGlossaryMachineHint": "DeepL and Google without correction only support untranslated terms (!term). To apply translation rules (=), enable post-translation correction.",
     "translationGlossaryPlaceholder": "workspace = es: espacio de trabajo; de: Arbeitsbereich\n!TyCo",
     "translationLanguageUnavailable": "unavailable",
@@ -1368,7 +1368,11 @@
     "dialogTranslationSection": "Translation",
     "dialogRecordingSection": "Call recording",
     "dialogRecordingMixedDownInfo": "Your voice and the other side are mixed into one channel and heard in both ears. Off: split stereo (your voice in the left channel, the other side in the right).",
-    "dialogRecordingProcessedInfo": "Muffles speaker echo in the microphone and limits loud volume peaks (the way speech recognition hears it). Off: sound is recorded as captured, without software processing."
+    "dialogRecordingProcessedInfo": "Muffles speaker echo in the microphone and limits loud volume peaks (the way speech recognition hears it). Off: sound is recorded as captured, without software processing.",
+    "dialogTranslationGlossary": "Glossary",
+    "dialogTranslationGlossaryInfo": "Speech translation in dialogs uses the shared glossary from translation settings. You can define term translations or protect specific words from being translated.",
+    "dialogTranslationGlossaryShared": "Uses the shared glossary",
+    "dialogTranslationGlossaryOpen": "Configure glossary"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
@@ -1712,7 +1716,7 @@
     "source": "Source",
     "levelMe": "Microphone level",
     "levelRemote": "Computer sound level",
-    "translationLanguage": "Translate into",
+    "translationLanguage": "Translate conversation partner into",
     "translationOnly": "Translation only",
     "copy": "Copy the transcript",
     "toActionMenu": "Send to the action menu",
@@ -1765,7 +1769,16 @@
     "recordStopToChangeHint": "Stop to change",
     "headphonesNotice": "Headphones are recommended so the other person's voice from your speakers does not leak into your microphone and create echo.",
     "headphonesNoticeConfirm": "Got it",
-    "emptyHeadphonesHint": "Tip: use headphones to avoid speaker echo."
+    "emptyHeadphonesHint": "Tip: use headphones to avoid speaker echo.",
+    "sessionStartedListening": "Listening started",
+    "sessionStartedRecording": "Recording started",
+    "sessionResumedListening": "Listening resumed",
+    "listenTooltip": "Start speech recognition without audio recording",
+    "listenTooltipWithRecord": "Start speech recognition and record to audio file",
+    "resumeTooltip": "Resume speech recognition without audio recording",
+    "resumeTooltipWithRecord": "Resume speech recognition and record to audio file",
+    "recordToggleEnableHint": "Enable audio recording to file and saving to history on start",
+    "recordToggleDisableHint": "Disable audio recording (speech recognition only)"
   },
   "toolPermissions": {
     "riskRead": "Reads",

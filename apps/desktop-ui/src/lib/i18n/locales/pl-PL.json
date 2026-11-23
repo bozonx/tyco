@@ -1264,7 +1264,7 @@
     "translationCorrectionPromptAdd": "Ustaw prompt korekty",
     "translationCorrectionPromptInfo": "Dodatkowe instrukcje dla korekty w trybie „Zawsze”, np. „nadaj tekstowi potoczny styl” lub „zachowaj spójną terminologię”. Są dodawane do promptu systemowego i instrukcji tłumaczenia, nie zastępując ich.",
     "translationGlossary": "Słowniczek",
-    "translationGlossaryInfo": "Zasady tłumaczenia (jeden wpis na wiersz):\n\n• Termin = Tłumaczenie — zawsze tłumacz słowo lub wyrażenie w ten sposób, niezależnie od języka docelowego.\n\n• Termin = kod: Tłumaczenie; kod: Tłumaczenie — osobne tłumaczenie dla wybranych języków (kod taki jak es lub pt-BR; es obejmuje też es-AR). Tłumaczenie bez kodu obowiązuje dla pozostałych języków.\nPrzykład: workspace = pl: przestrzeń robocza; es: espacio de trabajo\n\n• !Termin — nie tłumacz słowa lub wyrażenia (zostaw bez zmian w całym tekście).\nPrzykład: !TyCo\n(Wykrzyknik na początku wiersza chroni całe następujące po nim wyrażenie.)\n\n„!” działa z każdą metodą tłumaczenia. Model AI stosuje reguły „=” od razu; przy DeepL i Google są one tylko sprawdzane i poprawiane, gdy włączona jest korekta po tłumaczeniu.",
+    "translationGlossaryInfo": "Wspólny glosariusz: reguły obowiązują zarówno przy zwykłym tłumaczeniu, jak i przy tłumaczeniu mowy w dialogach.\n\nZasady tłumaczenia (jeden wpis na wiersz):\n\n• Termin = Tłumaczenie — zawsze tłumacz słowo lub wyrażenie w ten sposób, niezależnie od języka docelowego.\n\n• Termin = kod: Tłumaczenie; kod: Tłumaczenie — osobne tłumaczenie dla wybranych języków (kod taki jak es lub pt-BR; es obejmuje też es-AR). Tłumaczenie bez kodu obowiązuje dla pozostałych języków.\nPrzykład: workspace = pl: przestrzeń robocza; es: espacio de trabajo\n\n• !Termin — nie tłumacz słowa lub wyrażenia (zostaw bez zmian w całym tekście).\nPrzykład: !TyCo\n(Wykrzyknik na początku wiersza chroni całe następujące po nim wyrażenie.)\n\n„!” działa z każdą metodą tłumaczenia. Model AI stosuje reguły „=” od razu; przy DeepL i Google są one tylko sprawdzane i poprawiane, gdy włączona jest korekta po tłumaczeniu.",
     "translationGlossaryMachineHint": "W DeepL i Google bez korekty działają tylko nieprzetłumaczone terminy (!termin). Aby stosować reguły tłumaczenia (=), włącz korektę po tłumaczeniu.",
     "translationGlossaryPlaceholder": "workspace = pl: przestrzeń robocza; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "niedostępny",
@@ -1368,7 +1368,11 @@
     "dialogTranslationSection": "Tłumaczenie",
     "dialogRecordingSection": "Nagrywanie rozmów",
     "dialogRecordingMixedDownInfo": "Twój głos i rozmówca są łączeni w jeden kanał i słyszalni w obu uszach. Wyłączone: rozdzielone stereo (twój głos w lewym kanale, rozmówca w prawym).",
-    "dialogRecordingProcessedInfo": "Tłumi echo głośników w mikrofonie i ogranicza głośne skoki (tak jak słyszy to rozpoznawanie mowy). Wyłączone: dźwięk jest nagrywany w postaci surowej, bez przetwarzania programowego."
+    "dialogRecordingProcessedInfo": "Tłumi echo głośników w mikrofonie i ogranicza głośne skoki (tak jak słyszy to rozpoznawanie mowy). Wyłączone: dźwięk jest nagrywany w postaci surowej, bez przetwarzania programowego.",
+    "dialogTranslationGlossary": "Glosariusz",
+    "dialogTranslationGlossaryInfo": "Tłumaczenie mowy w dialogu korzysta ze wspólnego glosariusza z ustawień tłumaczenia. Możesz zdefiniować reguły dla terminów lub chronić słowa przed tłumaczeniem.",
+    "dialogTranslationGlossaryShared": "Używa wspólnego glosariusza",
+    "dialogTranslationGlossaryOpen": "Konfiguruj glosariusz"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
@@ -1712,7 +1716,7 @@
     "source": "Źródło",
     "levelMe": "Poziom mikrofonu",
     "levelRemote": "Poziom dźwięku komputera",
-    "translationLanguage": "Tłumacz na",
+    "translationLanguage": "Tłumacz rozmówcę na",
     "translationOnly": "Tylko tłumaczenie",
     "copy": "Kopiuj transkrypcję",
     "toActionMenu": "Wyślij do menu akcji",
@@ -1765,7 +1769,16 @@
     "recordStopToChangeHint": "Zatrzymaj, aby zmienić",
     "headphonesNotice": "Zaleca się używanie słuchawek, aby głos rozmówcy z głośników nie trafiał do mikrofonu i nie tworzył echa.",
     "headphonesNoticeConfirm": "Rozumiem",
-    "emptyHeadphonesHint": "Wskazówka: używaj słuchawek, aby uniknąć echa z głośników."
+    "emptyHeadphonesHint": "Wskazówka: używaj słuchawek, aby uniknąć echa z głośników.",
+    "sessionStartedListening": "Rozpoczęto słuchanie",
+    "sessionStartedRecording": "Rozpoczęto nagrywanie",
+    "sessionResumedListening": "Wznowiono słuchanie",
+    "listenTooltip": "Rozpocznij rozpoznawanie mowy bez nagrywania dźwięku",
+    "listenTooltipWithRecord": "Rozpocznij rozpoznawanie mowy i nagrywanie do pliku audio",
+    "resumeTooltip": "Wznów rozpoznawanie mowy bez nagrywania dźwięku",
+    "resumeTooltipWithRecord": "Wznów rozpoznawanie mowy i nagrywanie do pliku audio",
+    "recordToggleEnableHint": "Włącz nagrywanie dźwięku do pliku i zapisywanie w historii przy uruchomieniu",
+    "recordToggleDisableHint": "Wyłącz nagrywanie dźwięku (tylko rozpoznawanie mowy)"
   },
   "toolPermissions": {
     "riskRead": "Odczyt",
