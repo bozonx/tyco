@@ -1,10 +1,34 @@
 <template>
   <div class="dialog-toolbar">
     <div class="dialog-toolbar-actions">
+      <Button
+        v-if="isIdle"
+        class="dialog-toolbar-run"
+        variant="primary"
+        size="sm"
+        :icon="isEmpty ? 'mdi:play' : 'mdi:play-pause'"
+        @click="handleRun"
+        >{{ isEmpty ? t('dialog.listen') : t('dialog.resume') }}</Button
+      >
+      <Button
+        v-else
+        class="dialog-toolbar-run"
+        size="sm"
+        icon="mdi:stop"
+        :loading="isStopping"
+        :disabled="isStopping"
+        @click="dialog.stop()"
+        >{{ isStopping ? t('dialog.stopping') : t('dialog.stop') }}</Button
+      >
+
+      <!-- recording modifies the session, so it follows the run button -->
       <div ref="recordContainerRef" class="dialog-toolbar-record-container">
         <Button
           class="dialog-toolbar-record-toggle"
-          :class="{ 'is-running': !isIdle }"
+          :class="{
+            'is-running': !isIdle,
+            'is-armed': isIdle && dialog.isRecordEnabled,
+          }"
           :variant="dialog.isRecordEnabled ? 'neutral' : 'ghost'"
           size="sm"
           :tone="!dialog.isRecordEnabled ? 'muted' : undefined"
@@ -36,26 +60,6 @@
           </template>
         </Button>
       </div>
-
-      <Button
-        v-if="isIdle"
-        class="dialog-toolbar-run"
-        variant="primary"
-        size="sm"
-        :icon="isEmpty ? 'mdi:play' : 'mdi:play-pause'"
-        @click="handleRun"
-        >{{ isEmpty ? t('dialog.listen') : t('dialog.resume') }}</Button
-      >
-      <Button
-        v-else
-        class="dialog-toolbar-run"
-        size="sm"
-        icon="mdi:stop"
-        :loading="isStopping"
-        :disabled="isStopping"
-        @click="dialog.stop()"
-        >{{ isStopping ? t('dialog.stopping') : t('dialog.stop') }}</Button
-      >
 
       <Button
         v-if="isIdle && !isEmpty"
@@ -450,6 +454,12 @@ function levelLabel(side: DialogSide) {
   color: var(--color-base-content);
   --btn-bg: var(--color-base-200);
   --btn-border: var(--app-border-subtle);
+}
+
+.dialog-toolbar-record-toggle.is-armed {
+  color: var(--color-error);
+  --btn-border: color-mix(in oklab, var(--color-error) 55%, transparent);
+  --btn-bg: color-mix(in oklab, var(--color-error) 10%, transparent);
 }
 
 .dialog-record-dot {
