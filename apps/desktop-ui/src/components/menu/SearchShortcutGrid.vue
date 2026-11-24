@@ -22,8 +22,10 @@
         <button
           v-if="query"
           type="button"
+          tabindex="-1"
           class="search-grid-search-clear"
           :aria-label="t('editor.clear')"
+          @pointerdown="preventMouseFocus"
           @click="clearQuery"
         >
           <AppIcon icon="mdi:close" size="sm" />
@@ -87,6 +89,7 @@ import {
   windowStartAtScroll,
   windowStartFor,
 } from '../../lib/shortcut-grid/shortcut-pages'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import AppIcon from '../common/AppIcon.vue'
 import KeyboardKey from '../common/KeyboardKey.vue'
 import { SHORTCUT_SLOT_KEYS, type ShortcutSlotKey } from '@tyco/shared'

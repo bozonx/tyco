@@ -79,8 +79,10 @@
               <button
                 v-if="sourceQuery"
                 type="button"
+                tabindex="-1"
                 class="translate-query-clear-btn"
                 :title="t('editor.clear')"
+                @pointerdown="preventMouseFocus"
                 @click.stop="clearQuery('source')"
               >
                 <AppIcon icon="mdi:close" size="xs" />
@@ -163,10 +165,12 @@
           <div class="translate-swap-container">
             <button
               type="button"
+              tabindex="-1"
               class="translate-swap-button"
               :disabled="isAutoSource || isInputDisabled"
               :title="`${t('menu.translateSwapLanguages')} (Ctrl+Shift+S)`"
               :aria-label="t('menu.translateSwapLanguages')"
+              @pointerdown="preventMouseFocus"
               @click="swapLanguages"
             >
               <AppIcon icon="mdi:swap-horizontal" size="md" />
@@ -228,8 +232,10 @@
               <button
                 v-if="targetQuery"
                 type="button"
+                tabindex="-1"
                 class="translate-query-clear-btn"
                 :title="t('editor.clear')"
+                @pointerdown="preventMouseFocus"
                 @click.stop="clearQuery('target')"
               >
                 <AppIcon icon="mdi:close" size="xs" />
@@ -385,6 +391,7 @@ import {
   languageSearchNames,
   nativeLanguageName,
 } from '../../lib/translation/translation-picker'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import { type ActionItem } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
 import { useInvocationsStore } from '../../stores/invocations'

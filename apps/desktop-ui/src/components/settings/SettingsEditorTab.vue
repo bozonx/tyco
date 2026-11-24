@@ -74,6 +74,7 @@
           <a
             href="#editor-shortcuts"
             class="inline-action"
+            @pointerdown="preventMouseFocus"
             @click.prevent="navigate('global-actions#editor-shortcuts')"
           >
             {{ t('settings.hotkeysTab') }}
@@ -89,6 +90,7 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'

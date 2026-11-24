@@ -24,6 +24,7 @@
       @click="handleCancel"
       variant="ghost"
       size="sm"
+      tabindex="-1"
     >
       {{ props.cancelLabel || t('common.cancel') }}
     </Button>
@@ -38,9 +39,11 @@
         <span class="buffered-hint">({{ t('menu.cancelIntentHint') }})</span>
         <button
           type="button"
+          tabindex="-1"
           class="buffered-dismiss"
           :title="t('menu.cancelIntentHint')"
           :aria-label="t('menu.cancelIntentHint')"
+          @pointerdown="preventMouseFocus"
           @click="menuModalsStore.clearBufferedIntent"
         >
           <AppIcon icon="mdi:close" size="xs" />
@@ -58,6 +61,7 @@ import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import type { PendingModalParams } from '../../lib/modals/menu-modal-params'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
 import { useMenuModalsStore } from '../../stores/menu-modals'

@@ -39,7 +39,7 @@
         kind="info"
         :message="t('chatPrompts.emptyHint')"
       >
-        <Button size="sm" variant="ghost" @click="openSettings">
+        <Button size="sm" variant="ghost" tabindex="-1" @click="openSettings">
           {{ t('chatPrompts.openSettings') }}
         </Button>
       </InlineNotice>

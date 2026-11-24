@@ -24,7 +24,7 @@
       :aria-label="label ?? title ?? translate('common.more')"
       @keydown.down.stop.prevent="openAndFocus(0)"
       @keydown.up.stop.prevent="openAndFocus(-1)"
-      @click="toggleMenu"
+      @click="toggleMenu($event)"
     >
       <AppIcon v-if="icon" :icon="icon" size="md" />
       <span v-if="label && !square" class="truncate max-w-44 sm:max-w-64">{{
@@ -60,7 +60,7 @@
           :icon="item.icon"
           :danger="item.danger"
           :disabled="item.disabled"
-          @click="selectItem(item)"
+          @click="selectItem(item, $event)"
         />
       </MenuSurface>
     </Teleport>
@@ -157,9 +157,9 @@ async function openAndFocus(index: number) {
   const items = menuButtons(panelRef.value)
   items.at(index)?.focus()
 }
-function toggleMenu() {
+function toggleMenu(event?: MouseEvent) {
   if (props.disabled) return
-  if (isOpen.value) close(true)
+  if (isOpen.value) close(!event || event.detail === 0)
   else void openAndFocus(0)
 }
 function onMenuKeydown(event: KeyboardEvent) {
@@ -178,8 +178,8 @@ function onMenuKeydown(event: KeyboardEvent) {
     event.stopPropagation()
   }
 }
-const selectItem = async (item: DropdownMenuItem) => {
-  close(true)
+const selectItem = async (item: DropdownMenuItem, event?: MouseEvent) => {
+  close(!event || event.detail === 0)
   await item.action()
 }
 </script>

@@ -11,7 +11,8 @@
       :aria-expanded="isOpen"
       aria-haspopup="listbox"
       :aria-controls="isOpen ? listboxId : undefined"
-      @click="toggleDropdown"
+      @pointerdown="preventMouseFocus"
+      @click="toggleDropdown($event)"
       @keydown="onTriggerKeydown"
     >
       <span class="truncate block" :class="{ 'opacity-60': !selectedOption }">
@@ -62,7 +63,8 @@
             }"
             :aria-selected="option.id === selectedLanguage"
             :disabled="option.disabled"
-            @click="pickLanguage(option.id)"
+            @pointerdown="preventMouseFocus"
+            @click="pickLanguage(option.id, $event)"
             @mousemove="activeIndex = index"
           >
             <AppIcon
@@ -97,6 +99,7 @@ import {
   translationLanguageSearchNames,
 } from '../../lib/translation/translation-languages'
 import type { ControlSize } from '../../lib/ui/control-types'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import { focusAfterTrigger } from '../../lib/ui/focus-navigation'
 import AppIcon from '../common/AppIcon.vue'
 import MenuSurface from '../common/MenuSurface.vue'
@@ -250,10 +253,10 @@ async function openDropdown() {
   scrollToActiveOption()
 }
 
-function toggleDropdown() {
+function toggleDropdown(event?: MouseEvent) {
   if (props.disabled) return
   if (isOpen.value) {
-    close(true)
+    close(!event || event.detail === 0)
   } else {
     void openDropdown()
   }
@@ -312,11 +315,11 @@ function onPanelKeydown(event: KeyboardEvent) {
   }
 }
 
-function pickLanguage(value: string | number | undefined) {
+function pickLanguage(value: string | number | undefined, event?: MouseEvent) {
   if (typeof value !== 'string') return
   emit('update:modelValue', value)
   query.value = ''
-  close(true)
+  close(!event || event.detail === 0)
 }
 
 watch(query, () => {

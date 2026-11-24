@@ -18,8 +18,10 @@
     <button
       v-if="isSidebarOpen"
       type="button"
+      tabindex="-1"
       class="sidebar-backdrop"
       :aria-label="t('common.close')"
+      @pointerdown="preventMouseFocus"
       @click="isSidebarOpen = false"
     />
     <ChatSidebar
@@ -36,6 +38,7 @@
           type="button"
           class="profile-capabilities"
           :title="t('toolPermissions.summaryTitle')"
+          @pointerdown="preventMouseFocus"
           @click="openProfileSettings"
         >
           {{ capabilitiesText }}
@@ -61,6 +64,7 @@
           type="button"
           class="profile-capabilities"
           :disabled="chatStore.isGenerating"
+          @pointerdown="preventMouseFocus"
           @click="chatStore.revokeChatToolPermissions()"
         >
           {{
@@ -86,6 +90,7 @@ import {
 } from '../composables/use-chat-scope'
 import { useI18n } from '../composables/use-i18n'
 import { profileCapabilities } from '../lib/ai-profiles/profile-capabilities'
+import { preventMouseFocus } from '../lib/ui/focus'
 import { appNavigation } from '../navigation'
 import { useAiProfilesStore } from '../stores/ai-profiles'
 import { useChatLayoutStore } from '../stores/chat-layout'

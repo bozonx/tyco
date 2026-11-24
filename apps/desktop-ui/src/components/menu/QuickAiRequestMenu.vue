@@ -9,6 +9,7 @@
         v-if="canOpenSelectionActions"
         variant="ghost"
         size="sm"
+        tabindex="-1"
         :disabled="isInputBlocked || model.isGenerating.value || isApplying"
         @click="openSelectionActions"
         >{{ t('menu.otherActions') }}</Button
@@ -35,6 +36,7 @@
           <div class="quick-context-actions">
             <CopyButton
               class="quick-context-action-btn"
+              tabindex="-1"
               :value="model.rawSourceText.value ?? props.text"
               :label="t('action.copy')"
               size="xs"
@@ -70,10 +72,12 @@
         />
         <button
           type="button"
+          tabindex="-1"
           class="add-screenshot-btn"
           :aria-label="t('screenshot.addArea')"
           :title="t('screenshot.addArea')"
           :disabled="isCapturing || model.isSourceImageLocked.value"
+          @pointerdown="preventMouseFocus"
           @click="addScreenshot"
         >
           <AppIcon icon="mdi:selection-drag" size="lg" aria-hidden="true" />
@@ -109,7 +113,13 @@
       <div v-if="bannerText" class="quick-error-banner" role="alert">
         <AppIcon icon="mdi:alert-circle-outline" size="md" />
         <span class="quick-error-text">{{ bannerText }}</span>
-        <button type="button" class="quick-error-link" @click="goToSettings">
+        <button
+          type="button"
+          tabindex="-1"
+          class="quick-error-link"
+          @pointerdown="preventMouseFocus"
+          @click="goToSettings"
+        >
           {{ t('chat.configureModels') }}
         </button>
       </div>
@@ -222,6 +232,7 @@
             icon="mdi:microphone-outline"
             size="md"
             variant="ghost"
+            tabindex="-1"
             class="mic-action-btn"
             :disabled="isInputBlocked || model.isGenerating.value"
             :label="t('chat.voiceInput')"
@@ -242,6 +253,7 @@
           <Button
             variant="ghost"
             size="sm"
+            tabindex="-1"
             icon="mdi:chat-question-outline"
             :disabled="isInputBlocked"
             @click="switchToChat"
@@ -290,6 +302,7 @@ import { clientLogger } from '../../lib/logger'
 import type { QuickAiRequestMenuParams } from '../../lib/modals/menu-modal-params'
 import { createQuickAiRequestRuntime } from '../../lib/quick-ai-request/quick-ai-request-runtime'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import { isTextEntryTarget } from '../../lib/ui/text-entry-target'
 import { useActionMenuStore } from '../../stores/action-menu'
 import { useAiProfilesStore } from '../../stores/ai-profiles'

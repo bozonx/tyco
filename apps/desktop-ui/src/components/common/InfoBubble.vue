@@ -18,6 +18,7 @@
       :aria-controls="interactive && isOpen ? tooltipId : undefined"
       @keydown.down.prevent="openInteractive"
       :aria-expanded="isOpen"
+      @pointerdown="preventMouseFocus"
       @click="toggleClick"
       @keydown.escape.stop.prevent="dismiss"
     >
@@ -67,6 +68,7 @@ import {
   useDismissibleLayer,
 } from '../../composables/use-dismissible-layer'
 import { translate } from '../../lib/i18n'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import { focusAfterTrigger } from '../../lib/ui/focus-navigation'
 import type { IconSize } from '../../lib/ui/icon-size'
 import AppIcon from './AppIcon.vue'

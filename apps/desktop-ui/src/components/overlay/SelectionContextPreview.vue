@@ -7,6 +7,7 @@
         class="context-preview-remove"
         size="xs"
         variant="ghost"
+        tabindex="-1"
         :label="removeTitle"
         icon="mdi:broom"
         @mousedown.prevent

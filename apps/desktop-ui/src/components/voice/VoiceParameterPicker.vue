@@ -13,11 +13,13 @@
         :key="option.id"
         :ref="(el) => setOptionRef(index, el)"
         type="button"
+        tabindex="-1"
         class="voice-param-option"
         :class="{
           'is-selected': option.id === selectedValue,
           'is-focused': index === selectedIndex,
         }"
+        @pointerdown="preventMouseFocus"
         @click="emit('pick', option.id)"
         @mouseenter="selectedIndex = index"
       >
@@ -45,6 +47,7 @@ import {
   shortcutTarget,
   windowStartAtScroll,
 } from '../../lib/shortcut-grid/shortcut-pages'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import KeyboardKey from '../common/KeyboardKey.vue'
 import { SHORTCUT_SLOT_KEYS, type ShortcutSlotKey } from '@tyco/shared'
 

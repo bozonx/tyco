@@ -7,6 +7,7 @@
     :style="$attrs.style"
     class="boolean-control"
     :title="title"
+    @pointerdown="preventMouseFocus"
   >
     <input
       v-bind="controlAttrs()"
@@ -31,6 +32,7 @@ import { computed } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
 import type { BooleanControlProps } from '../../lib/ui/boolean-control'
+import { preventMouseFocus } from '../../lib/ui/focus'
 
 defineOptions({ inheritAttrs: false })
 

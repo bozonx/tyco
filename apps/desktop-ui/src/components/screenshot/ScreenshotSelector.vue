@@ -91,8 +91,9 @@
       >
         <button
           type="button"
+          tabindex="-1"
           class="selection-confirm"
-          @pointerdown.stop
+          @pointerdown.stop="preventMouseFocus"
           @click.stop="onConfirm"
         >
           {{ t('screenshot.confirmArea') }}
@@ -126,6 +127,7 @@ import {
   isSelection,
   toPhysicalCrop,
 } from '../../lib/screenshot/area-selection'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import type { CropRect, ScreenshotAreaSelection } from '@tyco/shared'
 
 const props = defineProps<{ selection: ScreenshotAreaSelection }>()

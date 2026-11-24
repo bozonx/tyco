@@ -8,6 +8,7 @@
           v-for="action in actions"
           :key="action.id"
           variant="neutral"
+          tabindex="-1"
           class="justify-start text-left w-full"
           @click="selectAction(action.id)"
         >

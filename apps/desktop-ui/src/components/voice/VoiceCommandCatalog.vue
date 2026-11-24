@@ -12,6 +12,7 @@
       :key="command.id"
       :ref="(el) => setEntryRef(index, el)"
       type="button"
+      tabindex="-1"
       class="voice-entry"
       :class="{
         'is-marked': marks.has(command.id),
@@ -23,6 +24,7 @@
       :aria-current="marks.has(command.id) || undefined"
       :aria-disabled="!canPick(command) || undefined"
       :title="entryTooltip(command)"
+      @pointerdown="preventMouseFocus"
       @click="emit('pick', command)"
       @mouseenter="selectedIndex = index"
     >
@@ -98,6 +100,7 @@ import {
   shortcutTarget,
   windowStartAtScroll,
 } from '../../lib/shortcut-grid/shortcut-pages'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import type { VoiceCandidate } from '../../lib/voice-commands/voice-resolver'
 import {
   voiceCommandPhrases,

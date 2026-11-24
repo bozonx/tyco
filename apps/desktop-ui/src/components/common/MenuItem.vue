@@ -6,6 +6,7 @@
     class="menu-item"
     :class="{ 'is-danger': danger, 'is-accent': accent, 'is-open': active }"
     :disabled="disabled"
+    @pointerdown="preventMouseFocus"
   >
     <AppIcon
       v-if="icon"
@@ -31,6 +32,7 @@
   </button>
 </template>
 <script setup lang="ts">
+import { preventMouseFocus } from '../../lib/ui/focus'
 import AppIcon from './AppIcon.vue'
 
 defineProps<{

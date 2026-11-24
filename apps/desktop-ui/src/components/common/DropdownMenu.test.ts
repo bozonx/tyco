@@ -118,4 +118,28 @@ describe('DropdownMenu', () => {
     expect(wrapper.find('[role="menu"]').exists()).toBe(false)
     expect(document.activeElement).toBe(outside)
   })
+  it('does not restore focus to the trigger when closing via mouse click', async () => {
+    const actionSpy = vi.fn()
+    const wrapper = mount(DropdownMenu, {
+      attachTo: document.body,
+      global: { stubs: { Teleport: true } },
+      props: {
+        label: 'Actions',
+        items: [{ label: 'First', action: actionSpy }],
+      },
+    })
+    const trigger = wrapper.get('button')
+    trigger.element.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, detail: 1 })
+    )
+    await flushPromises()
+    const item = wrapper.get('[role="menuitem"]')
+    item.element.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, detail: 1 })
+    )
+    await flushPromises()
+    expect(actionSpy).toHaveBeenCalledTimes(1)
+    expect(wrapper.find('[role="menu"]').exists()).toBe(false)
+    expect(document.activeElement).not.toBe(trigger.element)
+  })
 })

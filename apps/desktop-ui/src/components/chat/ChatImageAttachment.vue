@@ -8,6 +8,7 @@
       class="image-preview-btn"
       :title="hasFailed ? t('chat.imageError') : t('chat.viewImage')"
       :disabled="!url && !hasFailed"
+      @pointerdown="preventMouseFocus"
       @click="hasFailed ? load() : (isViewerOpen = true)"
     >
       <img
@@ -47,6 +48,7 @@ import { getChatImage } from '../../lib/chat/chat-image-storage'
 import { changedChatFiles } from '../../lib/chat/chat-storage-changes'
 import { desktopClient } from '../../lib/desktop/client'
 import { clientLogger } from '../../lib/logger'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import IconButton from '../common/IconButton.vue'
 import ImageViewerDialog from '../common/ImageViewerDialog.vue'
 import { DESKTOP_EVENTS } from '@tyco/shared'

@@ -13,6 +13,7 @@
       :title="toggleTitle"
       :aria-expanded="isOpen"
       :aria-controls="isOpen ? previewId : undefined"
+      @pointerdown="preventMouseFocus"
       @click="isOpen = !isOpen"
     >
       <AppIcon
@@ -66,6 +67,7 @@ import {
   attachmentLabelKey,
   attachmentTitle,
 } from '../../lib/chat/chat-attachment'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import { useIpcStore } from '../../stores/ipc'
 import AppIcon from '../common/AppIcon.vue'
 import IconButton from '../common/IconButton.vue'

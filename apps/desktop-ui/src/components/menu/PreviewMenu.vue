@@ -7,6 +7,7 @@
           icon="mdi:restore"
           :label="t('diff.resetResult')"
           size="sm"
+          tabindex="-1"
           @click="currentText = props.text"
         />
         <ActionPagesBar
