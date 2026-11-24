@@ -111,8 +111,8 @@ test.describe('action menu', () => {
           activation: { ...state.activation, selectedText },
         })
       }
-      const preview = page.locator('.voice-main pre')
-      await expect(preview).toHaveText(selectedText)
+      const preview = page.getByRole('textbox', { name: 'Edit text' })
+      await expect(preview).toHaveValue(selectedText)
       await expect(preview).toBeVisible()
       const box = await preview.boundingBox()
       expect(box!.height).toBeGreaterThan(40)
@@ -173,6 +173,7 @@ test.describe('command configuration', () => {
     desktop,
   }) => {
     installQuickWindow(desktop)
+    delete desktop.userConfig.actionPages[0]?.slots.q
     desktop.handle('log_command_run', () => undefined)
     desktop.handle('execute_script_action', () => ({
       success: true,

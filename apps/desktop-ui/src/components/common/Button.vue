@@ -5,7 +5,6 @@
     :type="props.type ?? 'button'"
     :disabled="props.disabled || props.loading"
     :aria-busy="props.loading || undefined"
-    @pointerdown="onPointerDown"
     @click="onClick"
   >
     <span
@@ -27,7 +26,6 @@
 import { computed, ref } from 'vue'
 
 import type { ButtonProps } from '../../lib/ui/control-types'
-import { preventMouseFocus } from '../../lib/ui/focus'
 import AppIcon from './AppIcon.vue'
 
 const props = defineProps<ButtonProps>()
@@ -55,10 +53,6 @@ const buttonRef = ref<HTMLButtonElement | null>(null)
 defineExpose({ focus: () => buttonRef.value?.focus() })
 
 const emit = defineEmits<{ (e: 'click', event: MouseEvent): void }>()
-
-const onPointerDown = (event: PointerEvent) => {
-  if (!props.disabled && !props.loading) preventMouseFocus(event)
-}
 
 const onClick = (event: MouseEvent) => {
   if (!props.disabled && !props.loading) emit('click', event)

@@ -102,10 +102,11 @@ test('configures a connection and model through settings and uses them in chat',
   await model
     .getByRole('textbox', { name: 'Model ID', exact: true })
     .fill('browser-model')
+  await model.getByRole('switch', { name: 'Tool calling' }).click()
   await expect
     .poll(() =>
       desktop.userConfig.llm.models.some(
-        (item) => item.providerModelId === 'browser-model'
+        (item) => item.providerModelId === 'browser-model' && item.canUseTools
       )
     )
     .toBe(true)

@@ -44,6 +44,7 @@ test('enables a plugin, uses its editor action and disables it', async ({
     .click()
   const editor = page.getByRole('textbox', { name: 'Text editor' })
   await editor.fill('hello browser')
+  await page.getByRole('button', { name: 'Select all', exact: true }).click()
   await page.getByRole('button', { name: 'Case', exact: true }).click()
   await page.getByRole('menuitem', { name: 'snake_case', exact: true }).click()
   await expect(editor).toHaveText('hello_browser')

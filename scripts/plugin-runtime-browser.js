@@ -139,7 +139,7 @@ async function main() {
         })
         if (manifest.id === 'WebFormatter')
           assert(
-            result === '<root>\n  <item />\n</root>\n',
+            result === '<root>\n  <item />\n</root>',
             'Packaged formatter failed in worker'
           )
         if (contribution.run) assert(result.ok, `Tool failed: ${manifest.id}`)
