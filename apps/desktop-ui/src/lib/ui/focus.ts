@@ -11,11 +11,11 @@ export function blurActiveElement(): void {
 
 /**
  * Prevents mouse clicks from giving DOM focus to buttons or controls,
- * preserving keyboard navigation (Tab / Shift+Tab) and preventing focus ring retention.
+ * preserving keyboard navigation (Tab / Shift+Tab) and preventing focus ring
+ * retention.
  */
 export function preventMouseFocus(event: PointerEvent): void {
   if (event.pointerType === 'mouse') {
     event.preventDefault()
   }
 }
-

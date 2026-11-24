@@ -395,6 +395,7 @@
   "diff": {
     "resetResult": "Eredmény visszaállítása",
     "modeResult": "Csak az eredmény",
+    "modeSwitchHint": "Nézet váltása: Shift+←/→",
     "modeSplit": "Egymás mellett",
     "modeUnified": "Egyesítve",
     "modified": "Módosított",

@@ -395,6 +395,7 @@
   "diff": {
     "resetResult": "Вернуть исходный результат",
     "modeResult": "Только результат",
+    "modeSwitchHint": "Сменить вид: Shift+←/→",
     "modeSplit": "В две колонки",
     "modeUnified": "В одну строку",
     "modified": "Стало",

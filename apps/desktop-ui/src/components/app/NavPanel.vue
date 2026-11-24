@@ -10,6 +10,7 @@
         :class="{
           'is-active': appNavigation.isCurrent(APP_ROUTES.EDITOR.path),
         }"
+        @pointerdown="preventMouseFocus"
         @click="editorNavigation.toEditor()"
       >
         <AppIcon icon="mdi:pencil-outline" size="md" />
@@ -21,6 +22,7 @@
         class="topbar-tab"
         :aria-current="isDialogActive ? 'page' : undefined"
         :class="{ 'is-active': isDialogActive }"
+        @pointerdown="preventMouseFocus"
         @click="openDialog"
       >
         <AppIcon
@@ -38,6 +40,7 @@
         class="topbar-tab"
         :aria-current="isBaseChatActive ? 'page' : undefined"
         :class="{ 'is-active': isBaseChatActive }"
+        @pointerdown="preventMouseFocus"
         @click="openChat"
       >
         <AppIcon icon="mdi:chat-processing-outline" size="md" />
@@ -63,6 +66,7 @@
             :aria-current="isProfileActive(profile.id) ? 'page' : undefined"
             :class="{ 'is-active': isProfileActive(profile.id) }"
             :title="profile.name"
+            @pointerdown="preventMouseFocus"
             @click="openProfileChat(profile.id)"
           >
             <span class="truncate max-w-[120px]">{{ profile.name }}</span>
@@ -115,6 +119,7 @@ import {
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { APP_ROUTES } from '../../lib/navigation/routes'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import { appNavigation } from '../../navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useChatStore, useProfileChatStore } from '../../stores/chat'

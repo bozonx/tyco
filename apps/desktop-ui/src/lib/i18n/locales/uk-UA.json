@@ -395,6 +395,7 @@
   "diff": {
     "resetResult": "Відновити результат",
     "modeResult": "Лише результат",
+    "modeSwitchHint": "Змінити вигляд: Shift+←/→",
     "modeSplit": "Поруч",
     "modeUnified": "Суміщено",
     "modified": "Змінено",

@@ -395,6 +395,7 @@
   "diff": {
     "resetResult": "重設結果",
     "modeResult": "僅顯示結果",
+    "modeSwitchHint": "切換檢視：Shift+←/→",
     "modeSplit": "並排比較",
     "modeUnified": "內嵌比較",
     "modified": "已修改",

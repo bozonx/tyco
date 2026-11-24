@@ -395,6 +395,7 @@
   "diff": {
     "resetResult": "Επαναφορά αποτελέσματος",
     "modeResult": "Μόνο αποτέλεσμα",
+    "modeSwitchHint": "Αλλαγή προβολής: Shift+←/→",
     "modeSplit": "Δίπλα-δίπλα",
     "modeUnified": "Ενοποιημένη",
     "modified": "Τροποποιημένο",

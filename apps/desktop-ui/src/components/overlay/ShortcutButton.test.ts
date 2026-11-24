@@ -43,7 +43,7 @@ describe('ShortcutButton', () => {
     expect(wrapper.emitted('click')).toBeUndefined()
   })
 
-  it('sets tabindex to -1 for tile buttons to keep them out of Tab navigation', () => {
+  it('sets tabindex to -1 to keep overlay buttons out of Tab navigation', () => {
     const tileWrapper = mount(ShortcutButton, {
       props: { keys: ['Q'], tile: true },
       slots: { default: 'Tile action' },
@@ -54,7 +54,7 @@ describe('ShortcutButton', () => {
       props: { keys: ['Space'] },
       slots: { default: 'Normal action' },
     })
-    expect(regularWrapper.find('button').attributes('tabindex')).toBeUndefined()
+    expect(regularWrapper.find('button').attributes('tabindex')).toBe('-1')
   })
 
   it('prevents default on mouse pointerdown to avoid retaining focus', async () => {

@@ -395,6 +395,7 @@
   "diff": {
     "resetResult": "Resetează rezultatul",
     "modeResult": "Doar rezultatul",
+    "modeSwitchHint": "Schimbă vizualizarea: Shift+←/→",
     "modeSplit": "Alăturat",
     "modeUnified": "Unificat",
     "modified": "Modificat",

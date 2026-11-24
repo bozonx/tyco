@@ -395,6 +395,7 @@
   "diff": {
     "resetResult": "შედეგის აღდგენა",
     "modeResult": "მხოლოდ შედეგი",
+    "modeSwitchHint": "ხედის შეცვლა: Shift+←/→",
     "modeSplit": "გვერდიგვერდ",
     "modeUnified": "გაერთიანებული",
     "modified": "შეცვლილი",

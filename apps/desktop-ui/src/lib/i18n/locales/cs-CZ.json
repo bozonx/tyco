@@ -395,6 +395,7 @@
   "diff": {
     "resetResult": "Obnovit výsledek",
     "modeResult": "Jen výsledek",
+    "modeSwitchHint": "Přepnout zobrazení: Shift+←/→",
     "modeSplit": "Vedle sebe",
     "modeUnified": "V jednom",
     "modified": "Změněno",

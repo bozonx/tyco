@@ -395,6 +395,7 @@
   "diff": {
     "resetResult": "Ergebnis zurücksetzen",
     "modeResult": "Nur Ergebnis",
+    "modeSwitchHint": "Ansicht wechseln: Shift+←/→",
     "modeSplit": "Nebeneinander",
     "modeUnified": "Inline",
     "modified": "Geändert",

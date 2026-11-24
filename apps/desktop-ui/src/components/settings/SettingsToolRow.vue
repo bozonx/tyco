@@ -8,6 +8,9 @@
     role="listitem"
     :data-tool="name"
     :tabindex="clickable && !disabled ? 0 : undefined"
+    @pointerdown="
+      clickable && !disabled ? preventMouseFocus($event) : undefined
+    "
     @click="onClick"
     @keydown="onKeydown"
   >
@@ -25,6 +28,7 @@
 import { useI18n } from '../../composables/use-i18n'
 import { isRiskyTool } from '../../lib/chat-tools/tool-catalog'
 import { TOOL_RISK_LABEL_KEYS } from '../../lib/chat-tools/tool-catalog-entries'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import Badge from '../common/Badge.vue'
 import type { ToolRisk } from '@tyco/shared'
 
@@ -85,7 +89,7 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 .tool-row--clickable:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--app-focus-outline-width) solid var(--color-primary);
   outline-offset: -2px;
 }
 

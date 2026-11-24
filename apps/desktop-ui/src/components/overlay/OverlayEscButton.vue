@@ -1,10 +1,12 @@
 <template>
   <button
     type="button"
+    tabindex="-1"
     class="overlay-esc-button action-overlay-esc"
     :class="{ 'is-disabled': disabled }"
     :disabled="disabled"
     :title="resolvedTitle"
+    @pointerdown="handlePointerDown"
     @click="handleClick"
   >
     <AppIcon
@@ -54,6 +56,10 @@ const resolvedTitle = computed(() => {
   if (resolvedMode.value === 'back') return resolvedLabel.value
   return t('common.closeAllHint')
 })
+
+function handlePointerDown(event: PointerEvent) {
+  if (event.pointerType === 'mouse') event.preventDefault()
+}
 
 function handleClick(event: MouseEvent) {
   if (props.disabled) return

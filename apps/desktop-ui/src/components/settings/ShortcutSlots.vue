@@ -36,6 +36,7 @@
         type="button"
         class="empty-slot"
         :title="t('common.add')"
+        @pointerdown="preventMouseFocus"
         @click="$emit('add', index)"
       >
         <AppIcon icon="mdi:plus" size="md" />
@@ -50,6 +51,7 @@ import { ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSortableList } from '../../composables/use-sortable-list'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
 import AppIcon from '../common/AppIcon.vue'
 import DragHandle from '../common/DragHandle.vue'

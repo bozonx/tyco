@@ -21,6 +21,7 @@
         </div>
         <Button
           v-if="canOpenOtherActions"
+          tabindex="-1"
           size="sm"
           variant="ghost"
           @click="openOtherActions"

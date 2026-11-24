@@ -8,6 +8,7 @@
       v-if="openable && openTarget !== 'title'"
       type="button"
       class="settings-entity-target"
+      @pointerdown="preventMouseFocus"
       @click="emit('open')"
     >
       <AppIcon
@@ -43,6 +44,7 @@
             v-if="openable && openTarget === 'title'"
             type="button"
             class="settings-entity-title-btn"
+            @pointerdown="preventMouseFocus"
             @click.stop="emit('open')"
           >
             <span class="settings-entity-title-text">{{ title }}</span>
@@ -74,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+import { preventMouseFocus } from '../../lib/ui/focus'
 import AppIcon from '../common/AppIcon.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 

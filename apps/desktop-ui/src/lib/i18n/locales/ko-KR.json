@@ -395,6 +395,7 @@
   "diff": {
     "resetResult": "결과 초기화",
     "modeResult": "결과만",
+    "modeSwitchHint": "보기 전환: Shift+←/→",
     "modeSplit": "나란히 보기",
     "modeUnified": "인라인",
     "modified": "수정됨",

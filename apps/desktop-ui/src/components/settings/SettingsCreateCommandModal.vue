@@ -23,10 +23,13 @@
         <span class="create-command-label">{{ t('commands.typeLabel') }}</span>
 
         <div class="create-command-list" role="list">
-          <template v-for="item in commandItems" :key="item.key">
+          <template v-for="(item, index) in commandItems" :key="item.key">
             <button
               type="button"
               class="create-command-item"
+              :autofocus="index === 0 ? true : undefined"
+              @pointerdown="preventMouseFocus"
+              @keydown="handleItemKeydown($event, index)"
               @click="handleSelect(item)"
             >
               <AppIcon
@@ -53,6 +56,7 @@
 import { computed, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import AppIcon from '../common/AppIcon.vue'
 import BaseDialog from '../common/BaseDialog.vue'
 import IconButton from '../common/IconButton.vue'
@@ -105,6 +109,33 @@ const commandItems = computed<CommandItemOption[]>(() =>
 
 function handleSelect(item: CommandItemOption) {
   emit('submit', { operationId: item.operationId })
+}
+
+function handleItemKeydown(event: KeyboardEvent, index: number) {
+  const items = Array.from(
+    (
+      event.currentTarget as HTMLElement | null
+    )?.parentElement?.querySelectorAll<HTMLButtonElement>(
+      '.create-command-item'
+    ) ?? []
+  )
+  if (items.length <= 1) return
+
+  let nextIndex: number
+  if (event.key === 'ArrowDown') {
+    nextIndex = (index + 1) % items.length
+  } else if (event.key === 'ArrowUp') {
+    nextIndex = (index - 1 + items.length) % items.length
+  } else if (event.key === 'Home') {
+    nextIndex = 0
+  } else if (event.key === 'End') {
+    nextIndex = items.length - 1
+  } else {
+    return
+  }
+
+  event.preventDefault()
+  items[nextIndex]?.focus()
 }
 
 function close() {

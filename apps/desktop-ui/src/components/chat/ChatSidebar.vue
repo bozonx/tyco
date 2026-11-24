@@ -90,6 +90,7 @@
                   'is-active': chatStore.currentChatParams?.id === item.id,
                 }"
                 :title="item.title"
+                @pointerdown="preventMouseFocus"
                 @click="openChat(item.id)"
               >
                 <AppIcon
@@ -127,6 +128,7 @@
         type="button"
         class="quick-requests-header"
         :aria-expanded="isQuickRequestsExpanded"
+        @pointerdown="preventMouseFocus"
         @click="isQuickRequestsExpanded = !isQuickRequestsExpanded"
       >
         <div class="header-title">
@@ -188,6 +190,7 @@
                     'is-active': chatStore.currentChatParams?.id === item.id,
                   }"
                   :title="item.title"
+                  @pointerdown="preventMouseFocus"
                   @click="openChat(item.id)"
                 >
                   <AppIcon
@@ -249,6 +252,7 @@ import {
 } from '../../lib/chat/chat-history-list'
 import { isChatHistoryEnabled } from '../../lib/chat/chat-history-settings'
 import { clientLogger } from '../../lib/logger'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useDesktopStore } from '../../stores/desktop'
 import AppIcon from '../common/AppIcon.vue'

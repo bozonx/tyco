@@ -395,6 +395,7 @@
   "diff": {
     "resetResult": "結果をリセット",
     "modeResult": "結果のみ",
+    "modeSwitchHint": "表示を切り替え: Shift+←/→",
     "modeSplit": "左右に並べて表示",
     "modeUnified": "インライン表示",
     "modified": "変更後",

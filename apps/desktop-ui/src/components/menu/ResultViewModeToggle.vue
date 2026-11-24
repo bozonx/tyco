@@ -51,11 +51,16 @@ const resolvedModes = computed<T[]>(
 )
 
 const options = computed(() =>
-  resolvedModes.value.map((id) => ({
-    id,
-    name: t(MODE_OPTIONS[id].labelKey),
-    icon: MODE_OPTIONS[id].icon,
-  }))
+  resolvedModes.value.map((id) => {
+    const name = t(MODE_OPTIONS[id].labelKey)
+    return {
+      id,
+      name,
+      // the window switches the view with Shift+←/→ as well as by mouse
+      title: `${name} — ${t('diff.modeSwitchHint')}`,
+      icon: MODE_OPTIONS[id].icon,
+    }
+  })
 )
 function selectMode(mode: T) {
   if (props.modelValue !== mode) emit('update:modelValue', mode)

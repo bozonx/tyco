@@ -13,6 +13,7 @@
       class="segmented-option"
       :class="{ active: option.id === props.modelValue }"
       :title="option.title ?? option.name"
+      @pointerdown="preventMouseFocus"
     >
       <input
         class="sr-only"
@@ -37,6 +38,7 @@ import { useId } from 'vue'
 import { useFieldControl } from '../../composables/use-field-control'
 import type { ControlOption } from '../../lib/ui/control-option'
 import type { ControlSize } from '../../lib/ui/control-types'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import AppIcon from './AppIcon.vue'
 
 defineOptions({ inheritAttrs: false })

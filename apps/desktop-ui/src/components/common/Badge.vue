@@ -4,12 +4,14 @@
     :type="interactive ? 'button' : undefined"
     class="ui-badge"
     :class="[`ui-badge--${tone}`, `ui-badge--${size}`]"
+    @pointerdown="interactive ? preventMouseFocus($event) : undefined"
   >
     <slot />
   </component>
 </template>
 <script setup lang="ts">
 import type { ControlSize } from '../../lib/ui/control-types'
+import { preventMouseFocus } from '../../lib/ui/focus'
 
 withDefaults(
   defineProps<{

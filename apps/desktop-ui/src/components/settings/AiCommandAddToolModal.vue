@@ -27,6 +27,7 @@
           :aria-label="t('commands.aiAddToolSearchPlaceholder')"
           autofocus
           @update:model-value="searchQuery = $event"
+          @keydown.down.prevent="focusFirstTool"
         />
       </div>
 
@@ -49,9 +50,10 @@
             </div>
 
             <div class="add-tool-group-items" role="list">
-              <div
+              <button
                 v-for="item in group.items"
                 :key="refKey(item.ref)"
+                type="button"
                 role="listitem"
                 :data-tool="refKey(item.ref)"
                 class="add-tool-row"
@@ -59,10 +61,10 @@
                   'is-clickable': !isSelected(item.ref),
                   'is-added': isSelected(item.ref),
                 }"
-                :tabindex="isSelected(item.ref) ? undefined : 0"
+                :disabled="isSelected(item.ref)"
+                @pointerdown="preventMouseFocus"
+                @keydown="handleToolKeydown($event)"
                 @click="handleAdd(item)"
-                @keydown.enter.prevent="handleAdd(item)"
-                @keydown.space.prevent="handleAdd(item)"
               >
                 <span class="add-tool-row-label">{{ item.label }}</span>
                 <div class="add-tool-row-meta">
@@ -73,7 +75,7 @@
                     {{ t('commands.aiToolAlreadyAdded') }}
                   </Badge>
                 </div>
-              </div>
+              </button>
             </div>
           </template>
 
@@ -109,6 +111,7 @@ import { computed, nextTick, ref, useId, watch } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { isRiskyTool } from '../../lib/chat-tools/tool-catalog'
 import { TOOL_RISK_LABEL_KEYS } from '../../lib/chat-tools/tool-catalog-entries'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import AppIcon from '../common/AppIcon.vue'
 import Badge from '../common/Badge.vue'
 import BaseDialog from '../common/BaseDialog.vue'
@@ -173,6 +176,52 @@ const filteredGroups = computed(() => {
 const totalMatchingItems = computed(() =>
   filteredGroups.value.reduce((acc, group) => acc + group.items.length, 0)
 )
+
+function focusFirstTool() {
+  const root = searchInputRef.value?.$el
+  const container =
+    root instanceof Element ? root.closest('.add-tool-modal') : null
+  const firstButton = container?.querySelector('.add-tool-row:not(:disabled)')
+  if (firstButton instanceof HTMLElement) {
+    firstButton.focus()
+  }
+}
+
+function handleToolKeydown(event: KeyboardEvent) {
+  const container = (event.currentTarget as HTMLElement | null)?.closest(
+    '.add-tool-content'
+  )
+  const buttons = Array.from(
+    container?.querySelectorAll<HTMLButtonElement>(
+      '.add-tool-row:not(:disabled)'
+    ) ?? []
+  )
+  if (buttons.length === 0) return
+
+  const currentIndex = buttons.indexOf(event.currentTarget as HTMLButtonElement)
+  if (currentIndex < 0) return
+
+  let nextIndex: number
+  if (event.key === 'ArrowDown') {
+    nextIndex = (currentIndex + 1) % buttons.length
+  } else if (event.key === 'ArrowUp') {
+    if (currentIndex === 0) {
+      event.preventDefault()
+      searchInputRef.value?.focus()
+      return
+    }
+    nextIndex = (currentIndex - 1 + buttons.length) % buttons.length
+  } else if (event.key === 'Home') {
+    nextIndex = 0
+  } else if (event.key === 'End') {
+    nextIndex = buttons.length - 1
+  } else {
+    return
+  }
+
+  event.preventDefault()
+  buttons[nextIndex]?.focus()
+}
 
 function handleAdd(item: ToolCandidate) {
   if (props.isSelected(item.ref)) return

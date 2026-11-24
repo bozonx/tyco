@@ -9,6 +9,7 @@
       <span class="context-disabled-text">{{ t('menu.contextRemoved') }}</span>
     </div>
     <Button
+      tabindex="-1"
       class="context-restore-btn"
       size="xs"
       variant="ghost"
@@ -39,6 +40,7 @@
     <div v-if="activeText" class="preview-actions">
       <IconButton
         v-if="props.allowFavorite"
+        tabindex="-1"
         class="preview-action-btn"
         size="sm"
         :label="
@@ -51,6 +53,7 @@
       />
       <CopyButton
         v-if="props.allowCopy"
+        tabindex="-1"
         class="preview-action-btn"
         :value="activeText"
         :label="t('action.copy')"
@@ -58,6 +61,7 @@
       />
       <IconButton
         v-if="props.allowDisable"
+        tabindex="-1"
         class="preview-action-btn"
         size="sm"
         :label="t('action.removeContext')"

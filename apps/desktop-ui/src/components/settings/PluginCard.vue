@@ -16,6 +16,7 @@
             v-if="openable"
             type="button"
             class="plugin-card-open"
+            @pointerdown="preventMouseFocus"
             @click="emit('open')"
           >
             {{ title }}
@@ -59,6 +60,7 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import type { InstalledPluginItem } from '../../lib/plugins/plugin-settings'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import AppIcon from '../common/AppIcon.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 

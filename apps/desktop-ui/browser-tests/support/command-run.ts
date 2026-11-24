@@ -23,16 +23,19 @@ export function installCommandRun(desktop: FakeDesktop) {
     await desktop.emit(DESKTOP_EVENTS.STATE_CHANGED, {
       ...state,
       revision: revision++,
-      mode: ActivationMode.COMMAND_RUN,
-      isWindowShown: true,
-      activationId: state.activationId + 1,
-      commandRun: {
-        jobId,
-        commandId,
-        commandName: command?.name ?? commandId,
-        needsAccess: false,
-        replace: false,
-        isExternal: false,
+      window: { ...state.window, isWindowShown: true },
+      activation: {
+        ...state.activation,
+        mode: ActivationMode.COMMAND_RUN,
+        activationId: state.activation.activationId + 1,
+        commandRun: {
+          jobId,
+          commandId,
+          commandName: command?.name ?? commandId,
+          needsAccess: false,
+          replace: false,
+          isExternal: false,
+        },
       },
     })
     return { id: jobId, commandId, state: 'accepted' }

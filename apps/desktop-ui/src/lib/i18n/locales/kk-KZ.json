@@ -395,6 +395,7 @@
   "diff": {
     "resetResult": "Нәтижені қалпына келтіру",
     "modeResult": "Тек нәтиже",
+    "modeSwitchHint": "Көріністі ауыстыру: Shift+←/→",
     "modeSplit": "Қатар",
     "modeUnified": "Біріктірілген",
     "modified": "Өзгертілген",

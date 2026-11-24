@@ -5,6 +5,7 @@
     :class="{ 'disclosure-header--compact': density === 'compact' }"
     :aria-expanded="expanded"
     :aria-controls="expanded ? controls : undefined"
+    @pointerdown="preventMouseFocus"
     @click="emit('toggle')"
   >
     <span v-if="icon" class="disclosure-icon shrink-0" :title="iconTitle">
@@ -29,6 +30,7 @@
   </button>
 </template>
 <script setup lang="ts">
+import { preventMouseFocus } from '../../lib/ui/focus'
 import type { IconSize } from '../../lib/ui/icon-size'
 import AppIcon from './AppIcon.vue'
 

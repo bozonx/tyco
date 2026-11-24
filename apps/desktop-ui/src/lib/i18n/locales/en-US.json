@@ -395,6 +395,7 @@
   "diff": {
     "resetResult": "Reset result",
     "modeResult": "Result only",
+    "modeSwitchHint": "Switch view: Shift+←/→",
     "modeSplit": "Side by side",
     "modeUnified": "Inline",
     "modified": "Modified",

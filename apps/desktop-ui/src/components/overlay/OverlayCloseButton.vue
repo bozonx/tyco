@@ -1,5 +1,6 @@
 <template>
   <IconButton
+    tabindex="-1"
     class="overlay-close-button action-overlay-close"
     icon="mdi:close"
     :label="t('common.close')"

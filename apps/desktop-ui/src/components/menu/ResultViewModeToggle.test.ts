@@ -24,6 +24,15 @@ describe('result view mode toggle', () => {
       'diff.modeSplit',
       'diff.modeResult',
     ])
+    // each option names the Shift+arrows that switch the view too
+    expect(
+      wrapper
+        .findAll('.segmented-option')
+        .map((option) => option.attributes('title'))
+    ).toEqual([
+      'diff.modeSplit — diff.modeSwitchHint',
+      'diff.modeResult — diff.modeSwitchHint',
+    ])
     await inputs[0].trigger('change')
     expect(wrapper.emitted('update:modelValue')).toBeUndefined()
     await inputs[1].setValue(true)

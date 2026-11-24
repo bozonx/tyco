@@ -1,6 +1,11 @@
 <template>
-  <button type="button" class="inline-action"><slot /></button>
+  <button type="button" class="inline-action" @pointerdown="preventMouseFocus">
+    <slot />
+  </button>
 </template>
+<script setup lang="ts">
+import { preventMouseFocus } from '../../lib/ui/focus'
+</script>
 <style scoped>
 .inline-action {
   display: inline;

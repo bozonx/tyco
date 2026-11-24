@@ -45,8 +45,10 @@
       <button
         v-else
         type="button"
+        tabindex="-1"
         class="development-features-trigger"
         :aria-label="t('settings.developmentFeatures')"
+        @pointerdown="preventMouseFocus"
         @click="userConfig.isInDevelopment = true"
       />
     </div>
@@ -62,6 +64,7 @@ import {
   SUPPORTED_UI_LANGUAGE_OPTIONS,
   buildLanguageOptions,
 } from '../../lib/locale/language'
+import { preventMouseFocus } from '../../lib/ui/focus'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'

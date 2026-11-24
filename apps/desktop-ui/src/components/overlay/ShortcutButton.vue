@@ -1,7 +1,7 @@
 <template>
   <button
     type="button"
-    :tabindex="tile ? -1 : undefined"
+    tabindex="-1"
     class="shortcut"
     :class="{
       'is-primary': variant === 'primary',

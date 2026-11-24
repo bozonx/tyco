@@ -16,6 +16,7 @@
           :aria-current="item.id === modelValue ? 'page' : undefined"
           :aria-label="item.name"
           :title="item.name"
+          @pointerdown="preventMouseFocus"
           @click="emit('update:modelValue', item.id)"
         >
           <AppIcon
@@ -38,6 +39,7 @@
   </nav>
 </template>
 <script setup lang="ts">
+import { preventMouseFocus } from '../../lib/ui/focus'
 import type { NavigationItem } from '../../lib/ui/navigation-item'
 import AppIcon from './AppIcon.vue'
 import Badge from './Badge.vue'
