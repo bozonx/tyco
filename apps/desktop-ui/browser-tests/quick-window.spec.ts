@@ -2,6 +2,7 @@ import { ActivationMode, DESKTOP_EVENTS } from '@tyco/shared'
 
 import { expect, test } from './support/fixtures'
 import { FakeDesktop } from './support/fake-desktop'
+import { installCommandRun } from './support/command-run'
 import { installLlm } from './support/llm'
 import { installQuickWindow } from './support/quick-window'
 import { installVoice } from './support/voice'
@@ -99,10 +100,6 @@ test.describe('action menu', () => {
       const voice = installVoice(desktop)
       const selectedText = 'Selected context for voice commands'
       desktop.activation.selectedText = isLateCapture ? null : selectedText
-      desktop.userConfig.actionPages[0]!.slots.q = {
-        type: 'standard',
-        actionId: 'voiceCommands',
-      }
       await page.goto('/')
       await page.getByRole('button', { name: /Voice commands/ }).click()
       await voice.partial('Ask in chat explain this')
@@ -128,6 +125,7 @@ test.describe('action menu', () => {
     desktop,
   }) => {
     installQuickWindow(desktop)
+    installCommandRun(desktop)
     desktop.userConfig.commands = [
       {
         id: 'browser-command',
@@ -201,7 +199,7 @@ test.describe('command configuration', () => {
     await command
       .getByRole('textbox', { name: 'Command', exact: true })
       .fill('printf configured')
-    await command.getByRole('button', { name: 'Advanced', exact: true }).click()
+    await command.getByRole('button', { name: /^Advanced/ }).click()
     await command
       .getByRole('combobox', { name: 'Action', exact: true })
       .selectOption({ label: 'Show result' })
@@ -229,6 +227,7 @@ test.describe('command configuration', () => {
       userConfig: desktop.userConfig,
     })
     installQuickWindow(launcherDesktop)
+    installCommandRun(launcherDesktop)
     launcherDesktop.handle('log_command_run', () => undefined)
     launcherDesktop.handle('execute_script_action', () => ({
       success: true,
