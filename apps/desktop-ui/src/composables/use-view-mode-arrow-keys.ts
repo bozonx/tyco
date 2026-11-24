@@ -15,12 +15,16 @@ function isTextInput(target: EventTarget | null): boolean {
   )
 }
 
-/** ←/→ pick the previous or the next view mode of a result. */
+/**
+ * Shift+←/→ pick the previous or the next view mode of a result; the plain
+ * arrows are left to the action pages.
+ */
 export function useViewModeArrowKeys(step: (step: ModeStep) => void) {
   function handleKeyDown(event: KeyboardEvent) {
     const modeStep = ARROW_STEPS[event.key]
     if (!modeStep || event.defaultPrevented) return
-    if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return
+    if (!event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)
+      return
     if (isTextInput(event.target)) return
     event.preventDefault()
     step(modeStep)

@@ -118,8 +118,9 @@ watch(draftText, (text) => {
 const inQuickWindow = isQuickWindow()
 const desktopStore = useDesktopStore()
 const actionMenuStore = useActionMenuStore()
-const { pageIndexes, hasPages, motionDirection, stepPage, selectPage } =
-  useActionPages({ isDisabled: () => props.shortcutsDisabled })
+const { pageIndexes, hasPages, motionDirection, selectPage } = useActionPages({
+  isDisabled: () => props.shortcutsDisabled,
+})
 onMounted(() => {
   if (
     menuModalsStore.currentModal === MenuModals.INSERT ||
@@ -197,11 +198,7 @@ watch(
 )
 
 useViewModeArrowKeys((step) => {
-  if (hasDiff.value) {
-    stepMode(step)
-  } else if (hasPages.value) {
-    stepPage(step)
-  }
+  if (hasDiff.value) stepMode(step)
 })
 
 const activeActionText = computed(() => {

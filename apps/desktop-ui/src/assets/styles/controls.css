@@ -38,7 +38,7 @@
     cursor: pointer;
     user-select: none;
     touch-action: manipulation;
-    outline-color: var(--btn-color, var(--color-base-content));
+    outline-color: var(--color-primary);
     outline-offset: 2px;
     transition-property: color, background-color, border-color, box-shadow;
     transition-duration: 0.2s;
@@ -57,8 +57,7 @@
   }
 
   .btn:focus-visible {
-    outline-width: 2px;
-    outline-style: solid;
+    outline: var(--app-focus-outline-width) solid var(--color-primary);
   }
 
   .btn:active:not(.btn-active, [aria-pressed='true']),

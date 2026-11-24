@@ -11,7 +11,7 @@ export interface ActionPagesOptions {
 }
 
 /**
- * The action pages a window offers and their keys: Tab and Shift+Tab or
+ * The action pages a window offers and their keys: Tab and Shift+Tab, ←/→ or
  * PageDown and PageUp step through them, a digit opens a page by its number (0
  * is the tenth). A text field keeps these keys for itself.
  */
@@ -54,6 +54,13 @@ export function useActionPages(options: ActionPagesOptions = {}) {
     if (event.key === 'Tab') {
       event.preventDefault()
       stepPage(event.shiftKey ? -1 : 1)
+    } else if (
+      (event.key === 'ArrowRight' || event.key === 'ArrowLeft') &&
+      !event.shiftKey
+    ) {
+      // Shift+←/→ belong to the view modes of a result
+      event.preventDefault()
+      stepPage(event.key === 'ArrowRight' ? 1 : -1)
     } else if (event.key === 'PageDown') {
       event.preventDefault()
       stepPage(1)

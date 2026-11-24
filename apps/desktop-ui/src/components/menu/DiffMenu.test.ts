@@ -136,6 +136,11 @@ describe('action pages on a result', () => {
     pressKey('3')
     expect(actionMenuStore.pageIndex).toBe(2)
 
+    // the plain arrows page as well; Shift+arrows switch the view instead
+    pressKey('ArrowLeft')
+    expect(actionMenuStore.pageIndex).toBe(0)
+    pressKey('ArrowRight', { shiftKey: true })
+    expect(actionMenuStore.pageIndex).toBe(0)
     pressKey('ArrowRight')
     expect(actionMenuStore.pageIndex).toBe(2)
 
