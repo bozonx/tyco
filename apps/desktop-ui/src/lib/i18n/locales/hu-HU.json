@@ -1809,7 +1809,12 @@
     "microphoneOn": "Mikrofon",
     "microphoneOff": "Mikrofon nélkül",
     "microphoneOnHint": "Saját hang felismerése (kattintson a mikrofon némításához)",
-    "microphoneOffHint": "Csak a másik fél hangja (kattintson a mikrofon bekapcsolásához)"
+    "microphoneOffHint": "Csak a másik fél hangja (kattintson a mikrofon bekapcsolásához)",
+    "selectTurn": "Üzenet kijelölése",
+    "deselectTurn": "Kijelölés megszüntetése",
+    "selectRangeUpTo": "Összes kijelölése eddig az üzenetig",
+    "copyTurn": "Üzenet másolása",
+    "copyTurnTranslation": "Fordítás másolása"
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

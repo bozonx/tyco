@@ -1809,7 +1809,12 @@
     "microphoneOn": "Microfon",
     "microphoneOff": "Fără microfon",
     "microphoneOnHint": "Recunoaște vocea ta (faceți clic pentru a dezactiva microfonul)",
-    "microphoneOffHint": "Doar sunetul interlocutorului (faceți clic pentru a activa microfonul)"
+    "microphoneOffHint": "Doar sunetul interlocutorului (faceți clic pentru a activa microfonul)",
+    "selectTurn": "Selectează mesajul",
+    "deselectTurn": "Deselectează mesajul",
+    "selectRangeUpTo": "Selectează totul până la acest mesaj",
+    "copyTurn": "Copiază mesajul",
+    "copyTurnTranslation": "Copiază traducerea"
   },
   "toolPermissions": {
     "riskRead": "Citire",

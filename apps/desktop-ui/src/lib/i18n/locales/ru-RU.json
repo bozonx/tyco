@@ -1809,7 +1809,12 @@
     "microphoneOn": "Микрофон",
     "microphoneOff": "Без микрофона",
     "microphoneOnHint": "Распознавать ваш голос (нажмите, чтобы выключить микрофон)",
-    "microphoneOffHint": "Только звук собеседника (нажмите, чтобы включить микрофон)"
+    "microphoneOffHint": "Только звук собеседника (нажмите, чтобы включить микрофон)",
+    "selectTurn": "Выбрать сообщение",
+    "deselectTurn": "Снять выделение",
+    "selectRangeUpTo": "Выбрать всё до этого сообщения",
+    "copyTurn": "Скопировать сообщение",
+    "copyTurnTranslation": "Скопировать перевод"
   },
   "toolPermissions": {
     "riskRead": "Чтение",

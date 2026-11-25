@@ -1809,7 +1809,12 @@
     "microphoneOn": "Mikrofon",
     "microphoneOff": "Bez mikrofona",
     "microphoneOnHint": "Prepoznaj svoj glas (kliknite za isključivanje mikrofona)",
-    "microphoneOffHint": "Samo zvuk sugovornika (kliknite za uključivanje mikrofona)"
+    "microphoneOffHint": "Samo zvuk sugovornika (kliknite za uključivanje mikrofona)",
+    "selectTurn": "Odaberi poruku",
+    "deselectTurn": "Poništi odabir poruke",
+    "selectRangeUpTo": "Odaberi sve do ove poruke",
+    "copyTurn": "Kopiraj poruku",
+    "copyTurnTranslation": "Kopiraj prijevod"
   },
   "toolPermissions": {
     "riskRead": "Čitanje",

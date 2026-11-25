@@ -1809,7 +1809,12 @@
     "microphoneOn": "Mikrofon",
     "microphoneOff": "Bez mikrofonu",
     "microphoneOnHint": "Rozpoznávat váš hlas (kliknutím ztlumíte mikrofon)",
-    "microphoneOffHint": "Pouze zvuk protistrany (kliknutím zapnete mikrofon)"
+    "microphoneOffHint": "Pouze zvuk protistrany (kliknutím zapnete mikrofon)",
+    "selectTurn": "Vybrat zprávu",
+    "deselectTurn": "Zrušit výběr zprávy",
+    "selectRangeUpTo": "Vybrat vše až k této zprávě",
+    "copyTurn": "Kopírovat zprávu",
+    "copyTurnTranslation": "Kopírovat překlad"
   },
   "toolPermissions": {
     "riskRead": "Čtení",

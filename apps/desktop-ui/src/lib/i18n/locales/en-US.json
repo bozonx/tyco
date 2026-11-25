@@ -1809,7 +1809,12 @@
     "microphoneOn": "Microphone",
     "microphoneOff": "Microphone off",
     "microphoneOnHint": "Transcribe your voice (click to mute microphone)",
-    "microphoneOffHint": "Transcribe other side only (click to unmute microphone)"
+    "microphoneOffHint": "Transcribe other side only (click to unmute microphone)",
+    "selectTurn": "Select message",
+    "deselectTurn": "Deselect message",
+    "selectRangeUpTo": "Select all up to this message",
+    "copyTurn": "Copy message",
+    "copyTurnTranslation": "Copy translation"
   },
   "toolPermissions": {
     "riskRead": "Reads",

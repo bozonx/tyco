@@ -163,7 +163,7 @@ for (const file of (await readdir(commandsDir))
   .sort()) {
   const source = await readFile(resolve(commandsDir, file), 'utf8')
   const pattern =
-    /#\[tauri::command(?:\([^\]]*\))?\]\s*pub\s+(?:async\s+)?fn\s+(\w+)\s*\(([\s\S]*?)\)\s*(?:->\s*([\s\S]*?))?\s*\{/g
+    /(?:#\[[^\]]*\]\s*)*#\[tauri::command(?:\([^\]]*\))?\]\s*(?:#\[[^\]]*\]\s*)*pub\s+(?:async\s+)?fn\s+(\w+)\s*\(([\s\S]*?)\)\s*(?:->\s*([\s\S]*?))?\s*\{/g
   for (const match of source.matchAll(pattern)) {
     const name = match[1]
     const fields = []

@@ -1809,7 +1809,12 @@
     "microphoneOn": "Микрофон",
     "microphoneOff": "Микрофонсыз",
     "microphoneOnHint": "Дауысыңызды тану (микрофонды өшіру үшін басыңыз)",
-    "microphoneOffHint": "Тек әңгімелесушінің дыбысы (микрофонды қосу үшін басыңыз)"
+    "microphoneOffHint": "Тек әңгімелесушінің дыбысы (микрофонды қосу үшін басыңыз)",
+    "selectTurn": "Хабарламаны таңдау",
+    "deselectTurn": "Таңдауды алып тастау",
+    "selectRangeUpTo": "Осы хабарламаға дейінгі барлығын таңдау",
+    "copyTurn": "Хабарламаны көшіру",
+    "copyTurnTranslation": "Аударманы көшіру"
   },
   "toolPermissions": {
     "riskRead": "Оқу",

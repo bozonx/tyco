@@ -19,8 +19,13 @@
         :is-translation-only="isTranslationOnly"
         :translation-lang="translationLang"
         :is-selected="isSelected(item.turn.id)"
+        :is-selection-mode="hasSelection"
+        :is-excluded="isExcluded(item.turn)"
+        :use-translation="useTranslation"
         @retry="(ids) => emit('retry', ids)"
         @select="(event) => emit('select-turn', item.turn.id, event.shiftKey)"
+        @toggle-single="() => emit('toggle-single-turn', item.turn.id)"
+        @contextmenu="(event) => openContextMenu(event, item.turn)"
       />
       <div v-else class="dialog-feed-break">
         <span class="dialog-feed-break-line" />
@@ -58,6 +63,17 @@
       </div>
     </template>
     <slot v-if="!hasTurns" name="empty" />
+
+    <DialogTurnContextMenu
+      v-if="contextMenuState"
+      :x="contextMenuState.x"
+      :y="contextMenuState.y"
+      :is-selected="isSelected(contextMenuState.turn.id)"
+      :has-selection="hasSelection"
+      :has-translation="turnHasTranslation(contextMenuState.turn)"
+      @action="onContextMenuAction"
+      @close="contextMenuState = null"
+    />
   </div>
   <Button
     v-if="!isFollowing && items.length > 0"
@@ -77,11 +93,13 @@ import { formatDialogClock } from '../../lib/dialog/dialog-export'
 import type {
   DialogFeedItem,
   DialogSessionBreak,
+  DialogTurn as DialogTurnType,
 } from '../../lib/dialog/dialog-transcript'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import DialogRecordingPlayer from './DialogRecordingPlayer.vue'
 import DialogTurn from './DialogTurn.vue'
+import DialogTurnContextMenu from './DialogTurnContextMenu.vue'
 
 /** How close to the end still counts as being at the end, in pixels */
 const FOLLOW_THRESHOLD_PX = 48
@@ -96,6 +114,8 @@ const props = defineProps<{
   recordingExists?: Record<string, boolean>
   incompleteRecordingFiles?: readonly string[]
   selectedTurnIds?: readonly string[]
+  selectionIncludeMe?: boolean
+  useTranslation?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -103,6 +123,14 @@ const emit = defineEmits<{
   (e: 'retry', ids: string[]): void
   /** Shift+click on a turn to select/extend range */
   (e: 'select-turn', turnId: string, isShift: boolean): void
+  /** Toggle single turn selection */
+  (e: 'toggle-single-turn', turnId: string): void
+  /** Select range up to this turn */
+  (e: 'select-range-up-to', turnId: string): void
+  /** Copy a turn's original text */
+  (e: 'copy-turn-text', turnId: string): void
+  /** Copy a turn's translated text */
+  (e: 'copy-turn-translation', turnId: string): void
 }>()
 
 const { t } = useI18n()
@@ -110,12 +138,55 @@ const scroller = ref<HTMLElement | null>(null)
 /** Follows new speech until the user scrolls up to read */
 const isFollowing = ref(true)
 
+const contextMenuState = ref<{
+  x: number
+  y: number
+  turn: DialogTurnType
+} | null>(null)
+
 const hasTurns = computed(() =>
   props.items.some((item) => item.type === 'turn')
 )
 
+const hasSelection = computed(() => (props.selectedTurnIds?.length ?? 0) > 0)
+
 function isSelected(turnId: string): boolean {
   return Boolean(props.selectedTurnIds?.includes(turnId))
+}
+
+function isExcluded(turn: DialogTurnType): boolean {
+  return (
+    isSelected(turn.id) &&
+    turn.side === 'me' &&
+    props.selectionIncludeMe === false
+  )
+}
+
+function turnHasTranslation(turn: DialogTurnType): boolean {
+  return turn.segments.some(
+    (s) => s.translationState === 'complete' && Boolean(s.translation)
+  )
+}
+
+function openContextMenu(event: MouseEvent, turn: DialogTurnType) {
+  contextMenuState.value = { x: event.clientX, y: event.clientY, turn }
+}
+
+function onContextMenuAction(
+  action:
+    'toggle-select' | 'select-range-up-to' | 'copy-turn' | 'copy-translation'
+) {
+  if (!contextMenuState.value) return
+  const turn = contextMenuState.value.turn
+  if (action === 'toggle-select') {
+    emit('toggle-single-turn', turn.id)
+  } else if (action === 'select-range-up-to') {
+    emit('select-range-up-to', turn.id)
+  } else if (action === 'copy-turn') {
+    emit('copy-turn-text', turn.id)
+  } else if (action === 'copy-translation') {
+    emit('copy-turn-translation', turn.id)
+  }
 }
 
 function breakLabel(sessionBreak: DialogSessionBreak): string {

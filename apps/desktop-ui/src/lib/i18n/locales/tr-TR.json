@@ -1805,7 +1805,12 @@
     "microphoneOn": "Mikrofon",
     "microphoneOff": "Mikrofon kapalı",
     "microphoneOnHint": "Sesinizi tanıyın (mikrofonu kapatmak için tıklayın)",
-    "microphoneOffHint": "Yalnızca karşı tarafın sesi (mikrofonu açmak için tıklayın)"
+    "microphoneOffHint": "Yalnızca karşı tarafın sesi (mikrofonu açmak için tıklayın)",
+    "selectTurn": "Mesajı seç",
+    "deselectTurn": "Seçimi kaldır",
+    "selectRangeUpTo": "Bu mesaja kadar olanları seç",
+    "copyTurn": "Mesajı kopyala",
+    "copyTurnTranslation": "Çeviriyi kopyala"
   },
   "toolPermissions": {
     "riskRead": "Okuma",

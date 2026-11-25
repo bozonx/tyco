@@ -1809,7 +1809,12 @@
     "microphoneOn": "Micro",
     "microphoneOff": "Sans micro",
     "microphoneOnHint": "Reconnaître votre voix (cliquez pour couper le micro)",
-    "microphoneOffHint": "Son de l’interlocuteur uniquement (cliquez pour réactiver le micro)"
+    "microphoneOffHint": "Son de l’interlocuteur uniquement (cliquez pour réactiver le micro)",
+    "selectTurn": "Sélectionner le message",
+    "deselectTurn": "Désélectionner le message",
+    "selectRangeUpTo": "Tout sélectionner jusqu’à ce message",
+    "copyTurn": "Copier le message",
+    "copyTurnTranslation": "Copier la traduction"
   },
   "toolPermissions": {
     "riskRead": "Lecture",

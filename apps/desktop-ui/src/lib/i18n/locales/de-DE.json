@@ -1809,7 +1809,12 @@
     "microphoneOn": "Mikrofon",
     "microphoneOff": "Ohne Mikrofon",
     "microphoneOnHint": "Ihre Stimme erkennen (klicken, um Mikrofon stummzuschalten)",
-    "microphoneOffHint": "Nur Ton der Gegenseite (klicken, um Mikrofon einzuschalten)"
+    "microphoneOffHint": "Nur Ton der Gegenseite (klicken, um Mikrofon einzuschalten)",
+    "selectTurn": "Nachricht auswählen",
+    "deselectTurn": "Auswahl aufheben",
+    "selectRangeUpTo": "Alles bis zu dieser Nachricht auswählen",
+    "copyTurn": "Nachricht kopieren",
+    "copyTurnTranslation": "Übersetzung kopieren"
   },
   "toolPermissions": {
     "riskRead": "Liest",

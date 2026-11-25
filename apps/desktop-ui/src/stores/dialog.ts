@@ -14,7 +14,9 @@ import { isDialogHistoryEnabled } from '../lib/dialog/dialog-history-storage'
 import { createDialogId } from '../lib/dialog/dialog-id'
 import {
   formatSelectedTurns,
+  selectRangeUpTo,
   toggleShiftTurnSelection,
+  toggleSingleTurnSelection,
 } from '../lib/dialog/dialog-selection'
 import {
   createDialogSession,
@@ -27,6 +29,8 @@ import {
   buildDialogFeedItems,
   buildDialogTurns,
   createDialogTranscript,
+  turnText,
+  turnTranslation,
   type DialogFeedItem,
   type DialogSegment,
   type DialogSessionBreak,
@@ -202,6 +206,45 @@ export const useDialogStore = defineStore('dialog', () => {
     )
     selectedTurnIds.value = result.selectedIds
     selectionAnchorId.value = result.anchorId
+  }
+
+  function toggleSingleTurn(turnId: string) {
+    const result = toggleSingleTurnSelection(
+      selectedTurnIds.value,
+      turnId,
+      selectionAnchorId.value
+    )
+    selectedTurnIds.value = result.selectedIds
+    selectionAnchorId.value = result.anchorId
+  }
+
+  function selectRangeUpToTurn(turnId: string) {
+    const result = selectRangeUpTo(
+      selectedTurnIds.value,
+      turnId,
+      turns.value,
+      selectionAnchorId.value
+    )
+    selectedTurnIds.value = result.selectedIds
+    selectionAnchorId.value = result.anchorId
+  }
+
+  async function copyTurnText(turnId: string) {
+    const turn = turns.value.find((t) => t.id === turnId)
+    if (!turn) return
+    const text = turnText(turn)
+    if (!text) return
+    await useIpcStore().callOrNotify('copy_text', { text })
+    useToastStore().toastKey('common.copied', 'success')
+  }
+
+  async function copyTurnTranslation(turnId: string) {
+    const turn = turns.value.find((t) => t.id === turnId)
+    if (!turn) return
+    const text = turnTranslation(turn)
+    if (!text) return
+    await useIpcStore().callOrNotify('copy_text', { text })
+    useToastStore().toastKey('common.copied', 'success')
   }
 
   function clearSelection() {
@@ -747,7 +790,7 @@ export const useDialogStore = defineStore('dialog', () => {
     const text = formatSelectedText()
     if (!text) return
     const chatInputStore = useChatInputStore()
-    chatInputStore.setValue(text)
+    chatInputStore.setValue(text + '\n\n')
     chatInputStore.requestFocus()
     await appNavigation.goToChat()
   }
@@ -986,6 +1029,10 @@ export const useDialogStore = defineStore('dialog', () => {
     selectedCount,
     activeSelectedCount,
     toggleTurnSelection,
+    toggleSingleTurn,
+    selectRangeUpToTurn,
+    copyTurnText,
+    copyTurnTranslation,
     clearSelection,
     formatSelectedText,
     copySelected,

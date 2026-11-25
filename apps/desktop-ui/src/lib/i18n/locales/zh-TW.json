@@ -1805,7 +1805,12 @@
     "microphoneOn": "麥克風",
     "microphoneOff": "無麥克風",
     "microphoneOnHint": "識別您的聲音（點擊靜音麥克風）",
-    "microphoneOffHint": "僅對方聲音（點擊開啟麥克風）"
+    "microphoneOffHint": "僅對方聲音（點擊開啟麥克風）",
+    "selectTurn": "選取訊息",
+    "deselectTurn": "取消選取訊息",
+    "selectRangeUpTo": "選取至此訊息的所有內容",
+    "copyTurn": "複製訊息",
+    "copyTurnTranslation": "複製翻譯"
   },
   "toolPermissions": {
     "riskRead": "讀取",

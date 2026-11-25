@@ -1809,7 +1809,12 @@
     "microphoneOn": "마이크",
     "microphoneOff": "마이크 끔",
     "microphoneOnHint": "내 음성 인식 (클릭하여 마이크 음소거)",
-    "microphoneOffHint": "상대방 소리만 인식 (클릭하여 마이크 켜기)"
+    "microphoneOffHint": "상대방 소리만 인식 (클릭하여 마이크 켜기)",
+    "selectTurn": "메시지 선택",
+    "deselectTurn": "선택 취소",
+    "selectRangeUpTo": "이 메시지까지 모두 선택",
+    "copyTurn": "메시지 복사",
+    "copyTurnTranslation": "번역 복사"
   },
   "toolPermissions": {
     "riskRead": "읽기",

@@ -1805,7 +1805,12 @@
     "microphoneOn": "マイク",
     "microphoneOff": "マイクオフ",
     "microphoneOnHint": "自分の声を認識（クリックでマイクをミュート）",
-    "microphoneOffHint": "相手の音声のみ（クリックでマイクをオン）"
+    "microphoneOffHint": "相手の音声のみ（クリックでマイクをオン）",
+    "selectTurn": "メッセージを選択",
+    "deselectTurn": "選択を解除",
+    "selectRangeUpTo": "このメッセージまでをすべて選択",
+    "copyTurn": "メッセージをコピー",
+    "copyTurnTranslation": "翻訳をコピー"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

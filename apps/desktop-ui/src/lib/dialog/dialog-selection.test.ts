@@ -4,7 +4,9 @@ import {
   formatSelectedTurns,
   getTurnContent,
   getTurnRange,
+  selectRangeUpTo,
   toggleShiftTurnSelection,
+  toggleSingleTurnSelection,
 } from './dialog-selection'
 import type { DialogTurn } from './dialog-transcript'
 
@@ -78,21 +80,19 @@ describe('dialog-selection', () => {
       expect(result).toBe('Привет мир')
     })
 
-    it('returns speaker-attributed lines for multiple turns', () => {
+    it('returns speaker-attributed lines when multiple speakers are present', () => {
       const result = formatSelectedTurns(turns.slice(0, 2), options)
       expect(result).toBe(
         '[12:00:00] Собеседник: Hello world\n[12:00:00] Я: Hi there'
       )
     })
 
-    it('filters out me turns when includeMe is false', () => {
+    it('omits redundant speaker labels when only remote speaker turns are selected', () => {
       const result = formatSelectedTurns(turns.slice(0, 3), {
         ...options,
         includeMe: false,
       })
-      expect(result).toBe(
-        '[12:00:00] Собеседник: Hello world\n[12:00:00] Собеседник: How are you?'
-      )
+      expect(result).toBe('[12:00:00] Hello world\n[12:00:00] How are you?')
     })
 
     it('returns plain text if filtering leaves only one turn', () => {
@@ -147,6 +147,30 @@ describe('dialog-selection', () => {
 
     it('uses first selected id as anchor if anchorId is null', () => {
       const result = toggleShiftTurnSelection(['1'], '3', turns, null)
+      expect(result).toEqual({ selectedIds: ['1', '2', '3'], anchorId: '1' })
+    })
+  })
+
+  describe('toggleSingleTurnSelection', () => {
+    it('adds unselected turn to selection', () => {
+      const result = toggleSingleTurnSelection(['1'], '3', '1')
+      expect(result).toEqual({ selectedIds: ['1', '3'], anchorId: '1' })
+    })
+
+    it('removes selected turn from selection', () => {
+      const result = toggleSingleTurnSelection(['1', '3'], '1', '1')
+      expect(result).toEqual({ selectedIds: ['3'], anchorId: '3' })
+    })
+
+    it('clears anchor if last item is deselected', () => {
+      const result = toggleSingleTurnSelection(['1'], '1', '1')
+      expect(result).toEqual({ selectedIds: [], anchorId: null })
+    })
+  })
+
+  describe('selectRangeUpTo', () => {
+    it('selects range from anchor to target turn', () => {
+      const result = selectRangeUpTo(['1'], '3', turns, '1')
       expect(result).toEqual({ selectedIds: ['1', '2', '3'], anchorId: '1' })
     })
   })

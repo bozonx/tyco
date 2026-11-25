@@ -40,10 +40,16 @@
           :recording-exists="dialog.recordingExists"
           :incomplete-recording-files="dialog.incompleteRecordingFiles"
           :selected-turn-ids="dialog.selectedTurnIds"
+          :selection-include-me="dialog.selectionIncludeMe"
+          :use-translation="dialog.selectionUseTranslation"
           @retry="retryTranslation"
           @select-turn="
             (id, isShift) => dialog.toggleTurnSelection(id, isShift)
           "
+          @toggle-single-turn="(id) => dialog.toggleSingleTurn(id)"
+          @select-range-up-to="(id) => dialog.selectRangeUpToTurn(id)"
+          @copy-turn-text="(id) => dialog.copyTurnText(id)"
+          @copy-turn-translation="(id) => dialog.copyTurnTranslation(id)"
         >
           <template #empty>
             <StateMessage

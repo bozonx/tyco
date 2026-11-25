@@ -1805,7 +1805,12 @@
     "microphoneOn": "麦克风",
     "microphoneOff": "无麦克风",
     "microphoneOnHint": "识别您的声音（点击静音麦克风）",
-    "microphoneOffHint": "仅对方声音（点击开启麦克风）"
+    "microphoneOffHint": "仅对方声音（点击开启麦克风）",
+    "selectTurn": "选择消息",
+    "deselectTurn": "取消选择消息",
+    "selectRangeUpTo": "选择到此消息的所有内容",
+    "copyTurn": "复制消息",
+    "copyTurnTranslation": "复制翻译"
   },
   "toolPermissions": {
     "riskRead": "读取",

@@ -24,9 +24,13 @@ export function getTurnContent(
 }
 
 /**
- * Formats selected turns into text. When a single turn is selected, outputs its
- * plain content. When multiple turns are selected, outputs speaker-attributed
- * lines with timestamps.
+ * Formats selected turns into text.
+ *
+ * - When a single turn is selected, outputs its plain content.
+ * - When multiple turns from different speakers are selected, outputs
+ *   speaker-attributed lines with timestamps.
+ * - When multiple turns from the same speaker are selected (e.g. only remote),
+ *   outputs lines with timestamps only, avoiding redundant speaker labels.
  */
 export function formatSelectedTurns(
   turns: readonly DialogTurn[],
@@ -43,12 +47,17 @@ export function formatSelectedTurns(
     return getTurnContent(filtered[0], options.useTranslation)
   }
 
+  const hasMultipleSpeakers = new Set(filtered.map((t) => t.side)).size > 1
+
   return filtered
     .map((turn) => {
       const time = formatTime(turn.startMs)
-      const speaker = options.labels[turn.side]
       const content = getTurnContent(turn, options.useTranslation)
-      return `[${time}] ${speaker}: ${content}`
+      if (hasMultipleSpeakers) {
+        const speaker = options.labels[turn.side]
+        return `[${time}] ${speaker}: ${content}`
+      }
+      return `[${time}] ${content}`
     })
     .join('\n')
 }
@@ -101,5 +110,44 @@ export function toggleShiftTurnSelection(
 
   const effectiveAnchor = anchorId ?? currentSelectedIds[0]
   const range = getTurnRange(allTurns, effectiveAnchor, clickedId)
+  return { selectedIds: range, anchorId: effectiveAnchor }
+}
+
+/**
+ * Toggles a single turn selection (Ctrl/Cmd-click or individual checkbox
+ * toggle).
+ */
+export function toggleSingleTurnSelection(
+  currentSelectedIds: readonly string[],
+  clickedId: string,
+  anchorId: string | null
+): { selectedIds: string[]; anchorId: string | null } {
+  if (currentSelectedIds.includes(clickedId)) {
+    const next = currentSelectedIds.filter((id) => id !== clickedId)
+    return {
+      selectedIds: next,
+      anchorId:
+        next.length === 0 ? null : anchorId === clickedId ? next[0] : anchorId,
+    }
+  }
+
+  return {
+    selectedIds: [...currentSelectedIds, clickedId],
+    anchorId: anchorId ?? clickedId,
+  }
+}
+
+/**
+ * Selects all turns between the existing anchor (or first selected) and
+ * targetId.
+ */
+export function selectRangeUpTo(
+  currentSelectedIds: readonly string[],
+  targetId: string,
+  allTurns: readonly { id: string }[],
+  anchorId: string | null
+): { selectedIds: string[]; anchorId: string | null } {
+  const effectiveAnchor = anchorId ?? currentSelectedIds[0] ?? targetId
+  const range = getTurnRange(allTurns, effectiveAnchor, targetId)
   return { selectedIds: range, anchorId: effectiveAnchor }
 }

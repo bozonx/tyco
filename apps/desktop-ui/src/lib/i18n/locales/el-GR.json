@@ -1809,7 +1809,12 @@
     "microphoneOn": "Μικρόφωνο",
     "microphoneOff": "Χωρίς μικρόφωνο",
     "microphoneOnHint": "Αναγνώριση της φωνής σας (κάντε κλικ για σίγαση)",
-    "microphoneOffHint": "Μόνο ήχος συνομιλητή (κάντε κλικ για ενεργοποίηση μικροφώνου)"
+    "microphoneOffHint": "Μόνο ήχος συνομιλητή (κάντε κλικ για ενεργοποίηση μικροφώνου)",
+    "selectTurn": "Επιλογή μηνύματος",
+    "deselectTurn": "Αποεπιλογή μηνύματος",
+    "selectRangeUpTo": "Επιλογή όλων μέχρι αυτό το μήνυμα",
+    "copyTurn": "Αντιγραφή μηνύματος",
+    "copyTurnTranslation": "Αντιγραφή μετάφρασης"
   },
   "toolPermissions": {
     "riskRead": "Ανάγνωση",

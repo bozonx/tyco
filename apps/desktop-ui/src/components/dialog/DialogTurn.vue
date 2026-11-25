@@ -4,14 +4,35 @@
     :class="[
       `is-${turn.side}`,
       isBubble ? 'is-bubble' : 'is-paragraph',
-      { 'is-draft': isDraft, 'is-selected': isSelected },
+      {
+        'is-draft': isDraft,
+        'is-selected': isSelected,
+        'is-excluded': isExcluded,
+        'is-use-translation': useTranslation,
+      },
     ]"
     :title="hoverText"
     :aria-label="isBubble ? sideLabel : undefined"
     @click="onClick"
+    @contextmenu.prevent="emit('contextmenu', $event)"
   >
-    <div v-if="isSelected" class="dialog-turn-selected-badge">
-      <AppIcon icon="mdi:check-circle" size="xs" />
+    <div
+      v-if="isSelectionMode"
+      class="dialog-turn-checkbox"
+      :class="{ 'is-checked': isSelected && !isExcluded }"
+      role="checkbox"
+      :aria-checked="isSelected && !isExcluded"
+      :title="t(isSelected ? 'dialog.deselectTurn' : 'dialog.selectTurn')"
+      @click.stop="emit('toggle-single')"
+    >
+      <AppIcon
+        :icon="
+          isSelected && !isExcluded
+            ? 'mdi:checkbox-marked'
+            : 'mdi:checkbox-blank-outline'
+        "
+        size="xs"
+      />
     </div>
     <p
       v-if="showsTranslation && hasTranslation"
@@ -68,6 +89,15 @@ const props = defineProps<{
   translationLang?: string
   /** Whether this turn is in the active selection */
   isSelected?: boolean
+  /** Whether selection mode is currently active (at least one turn selected) */
+  isSelectionMode?: boolean
+  /**
+   * Whether this turn is selected but excluded by filters (e.g. Include Me is
+   * false)
+   */
+  isExcluded?: boolean
+  /** Whether selection prefers translation over original */
+  useTranslation?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -75,10 +105,17 @@ const emit = defineEmits<{
   (e: 'retry', ids: string[]): void
   /** Shift+click on this turn */
   (e: 'select', event: MouseEvent): void
+  /** Toggle single turn selection (Ctrl/Cmd click or checkbox click) */
+  (e: 'toggle-single'): void
+  /** Right-click context menu */
+  (e: 'contextmenu', event: MouseEvent): void
 }>()
 
 function onClick(event: MouseEvent) {
-  if (event.shiftKey) {
+  if (event.ctrlKey || event.metaKey) {
+    event.preventDefault()
+    emit('toggle-single')
+  } else if (event.shiftKey) {
     event.preventDefault()
     emit('select', event)
   }
@@ -142,18 +179,35 @@ const hasFailedTranslation = computed(
   max-width: 100%;
 }
 
-.dialog-turn-selected-badge {
+.dialog-turn-checkbox {
   position: absolute;
-  top: -0.375rem;
-  right: -0.375rem;
-  color: var(--color-primary);
-  background-color: var(--app-surface);
-  border-radius: var(--radius-full);
+  top: 0.375rem;
+  color: var(--app-text-muted);
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
   z-index: 2;
+  padding: 0.125rem;
+  border-radius: var(--radius-sm);
+  transition: color 150ms ease;
+}
+
+.dialog-turn.is-bubble.is-remote .dialog-turn-checkbox {
+  left: -1.5rem;
+}
+
+.dialog-turn.is-bubble.is-me .dialog-turn-checkbox {
+  right: -1.5rem;
+}
+
+.dialog-turn.is-paragraph .dialog-turn-checkbox {
+  left: -1.5rem;
+}
+
+.dialog-turn-checkbox:hover,
+.dialog-turn-checkbox.is-checked {
+  color: var(--color-primary);
 }
 
 .dialog-turn.is-bubble {
@@ -164,7 +218,8 @@ const hasFailedTranslation = computed(
   border: 1px solid var(--app-border-subtle);
   transition:
     border-color 150ms ease,
-    box-shadow 150ms ease;
+    box-shadow 150ms ease,
+    opacity 150ms ease;
 }
 
 .dialog-turn.is-bubble.is-selected {
@@ -177,19 +232,36 @@ const hasFailedTranslation = computed(
   );
 }
 
+.dialog-turn.is-bubble.is-selected.is-excluded {
+  border-style: dashed;
+  border-color: var(--app-border-subtle);
+  box-shadow: none;
+  opacity: 0.55;
+  background-color: var(--app-surface-raised);
+}
+
 .dialog-turn.is-paragraph {
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-md);
   border: 1px solid transparent;
   transition:
     border-color 150ms ease,
-    box-shadow 150ms ease;
+    box-shadow 150ms ease,
+    opacity 150ms ease;
 }
 
 .dialog-turn.is-paragraph.is-selected {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 1px var(--color-primary);
   background-color: color-mix(in oklab, var(--color-primary) 8%, transparent);
+}
+
+.dialog-turn.is-paragraph.is-selected.is-excluded {
+  border-style: dashed;
+  border-color: var(--app-border-subtle);
+  box-shadow: none;
+  opacity: 0.55;
+  background-color: transparent;
 }
 
 .dialog-turn.is-bubble.is-remote {
@@ -207,6 +279,14 @@ const hasFailedTranslation = computed(
   );
 }
 
+.dialog-turn.is-bubble.is-me.is-selected.is-excluded {
+  background-color: color-mix(
+    in oklab,
+    var(--app-border-subtle) 12%,
+    var(--app-surface)
+  );
+}
+
 .dialog-turn.is-draft {
   opacity: 0.75;
 }
@@ -215,16 +295,27 @@ const hasFailedTranslation = computed(
   font-size: 1.0625rem;
   line-height: 1.45;
   white-space: pre-wrap;
+  transition: opacity 150ms ease;
 }
 
 .dialog-turn-text {
   line-height: 1.45;
   white-space: pre-wrap;
+  transition: opacity 150ms ease;
 }
 
 .dialog-turn-text.is-secondary {
   font-size: var(--text-small, 0.8125rem);
   color: var(--app-text-muted);
+}
+
+/* When selected, highlight the text part being exported and dim the other */
+.dialog-turn.is-selected.is-use-translation .dialog-turn-text.is-secondary {
+  opacity: 0.45;
+}
+
+.dialog-turn.is-selected:not(.is-use-translation) .dialog-turn-main {
+  opacity: 0.55;
 }
 
 .is-interim,
