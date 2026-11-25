@@ -199,14 +199,18 @@ const routeLabel = computed(() =>
 .dialog-route {
   display: inline-flex;
   min-width: 0;
+  flex-shrink: 1;
 }
 
 .dialog-route-trigger {
   min-width: 0;
   max-width: 18rem;
+  flex-shrink: 1;
 }
 
 .dialog-route-label {
+  flex-shrink: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

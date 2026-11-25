@@ -1772,8 +1772,6 @@
     "clearMessage": "Istoricul este dezactivat în setări. Transcrierea curentă se va pierde.",
     "clearConfirm": "Șterge",
     "sourceLockedHint": "Ștergeți transcrierea pentru a schimba sursa audio",
-    "clearHintSaved": "Ștergeți transcrierea (conversația este salvată în istoric)",
-    "clearHintUnsaved": "Ștergeți transcrierea (istoricul este dezactivat)",
     "sessionResumed": "Sesiune reluată",
     "sessionResumedRecording": "Înregistrare reluată",
     "record": "Înregistrare",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "Deschide dosarul de înregistrări",
     "stopToSwitchHint": "Oprește dialogul pentru a deschide altul",
     "notFound": "Dialogul nu a fost găsit. Este posibil să fi fost șters.",
-    "clearHistoryConfirmTitle": "Ștergi istoricul dialogurilor?"
+    "clearHistoryConfirmTitle": "Ștergi istoricul dialogurilor?",
+    "startNewDialog": "Începe un nou dialog"
   },
   "toolPermissions": {
     "riskRead": "Citire",

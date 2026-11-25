@@ -1772,8 +1772,6 @@
     "clearMessage": "Az előzmények ki vannak kapcsolva a beállításokban. Az aktuális átirat elvész.",
     "clearConfirm": "Törlés",
     "sourceLockedHint": "A forrás módosításához törölje az átiratot",
-    "clearHintSaved": "Átirat törlése (a beszélgetés elmentve az előzményekbe)",
-    "clearHintUnsaved": "Átirat törlése (az előzmények ki vannak kapcsolva)",
     "sessionResumed": "Munkamenet folytatva",
     "sessionResumedRecording": "Rögzítés folytatva",
     "record": "Felvétel",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "Felvételek mappájának megnyitása",
     "stopToSwitchHint": "Állítsa le a párbeszédet egy másik megnyitásához",
     "notFound": "A párbeszéd nem található. Lehet, hogy törölték.",
-    "clearHistoryConfirmTitle": "Törli a párbeszédek előzményeit?"
+    "clearHistoryConfirmTitle": "Törli a párbeszédek előzményeit?",
+    "startNewDialog": "Új párbeszéd indítása"
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

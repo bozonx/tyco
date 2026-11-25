@@ -1772,8 +1772,6 @@
     "clearMessage": "Der Verlauf ist in den Einstellungen deaktiviert. Das aktuelle Transkript geht verloren.",
     "clearConfirm": "Löschen",
     "sourceLockedHint": "Transkript löschen, um die Audioquelle zu ändern",
-    "clearHintSaved": "Transkript löschen (Unterhaltung ist im Verlauf gespeichert)",
-    "clearHintUnsaved": "Transkript löschen (Verlauf ist deaktiviert)",
     "sessionResumed": "Sitzung fortgesetzt",
     "sessionResumedRecording": "Aufnahme fortgesetzt",
     "record": "Aufnahme",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "Aufnahmeordner öffnen",
     "stopToSwitchHint": "Beenden Sie den Dialog, um einen anderen zu öffnen",
     "notFound": "Dialog nicht gefunden. Er wurde möglicherweise gelöscht.",
-    "clearHistoryConfirmTitle": "Dialogverlauf leeren?"
+    "clearHistoryConfirmTitle": "Dialogverlauf leeren?",
+    "startNewDialog": "Neuen Dialog starten"
   },
   "toolPermissions": {
     "riskRead": "Liest",

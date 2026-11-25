@@ -1772,8 +1772,6 @@
     "clearMessage": "L’historique est désactivé dans les paramètres. La transcription actuelle sera perdue.",
     "clearConfirm": "Effacer",
     "sourceLockedHint": "Effacez la transcription pour changer la source audio",
-    "clearHintSaved": "Effacer la transcription (la conversation est enregistrée dans l’historique)",
-    "clearHintUnsaved": "Effacer la transcription (l’historique est désactivé)",
     "sessionResumed": "Session reprise",
     "sessionResumedRecording": "Enregistrement repris",
     "record": "Enregistrement",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "Ouvrir le dossier des enregistrements",
     "stopToSwitchHint": "Arrêtez le dialogue pour en ouvrir un autre",
     "notFound": "Dialogue introuvable. Il a peut-être été supprimé.",
-    "clearHistoryConfirmTitle": "Effacer l’historique des dialogues ?"
+    "clearHistoryConfirmTitle": "Effacer l’historique des dialogues ?",
+    "startNewDialog": "Démarrer un nouveau dialogue"
   },
   "toolPermissions": {
     "riskRead": "Lecture",

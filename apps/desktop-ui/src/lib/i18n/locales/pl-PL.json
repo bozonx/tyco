@@ -1772,8 +1772,6 @@
     "clearMessage": "Historia jest wyłączona w ustawieniach. Bieżąca transkrypcja zostanie utracona.",
     "clearConfirm": "Wyczyść",
     "sourceLockedHint": "Wyczyść transkrypcję, aby zmienić źródło dźwięku",
-    "clearHintSaved": "Wyczyść transkrypcję (rozmowa jest zapisana w historii)",
-    "clearHintUnsaved": "Wyczyść transkrypcję (historia jest wyłączona)",
     "sessionResumed": "Wznowiono sesję",
     "sessionResumedRecording": "Wznowiono nagrywanie",
     "record": "Nagrywanie",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "Otwórz folder nagrań",
     "stopToSwitchHint": "Zatrzymaj dialog, aby otworzyć inny",
     "notFound": "Nie znaleziono dialogu. Mógł zostać usunięty.",
-    "clearHistoryConfirmTitle": "Wyczyścić historię dialogów?"
+    "clearHistoryConfirmTitle": "Wyczyścić historię dialogów?",
+    "startNewDialog": "Rozpocznij nowy dialog"
   },
   "toolPermissions": {
     "riskRead": "Odczyt",

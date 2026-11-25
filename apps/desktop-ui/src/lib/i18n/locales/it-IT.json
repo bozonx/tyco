@@ -1772,8 +1772,6 @@
     "clearMessage": "La cronologia è disattivata nelle impostazioni. La trascrizione attuale andrà persa.",
     "clearConfirm": "Cancella",
     "sourceLockedHint": "Cancella la trascrizione per modificare la sorgente audio",
-    "clearHintSaved": "Cancella trascrizione (la conversazione è salvata nella cronologia)",
-    "clearHintUnsaved": "Cancella trascrizione (la cronologia è disattivata)",
     "sessionResumed": "Sessione ripresa",
     "sessionResumedRecording": "Registrazione ripresa",
     "record": "Registra",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "Apri cartella registrazioni",
     "stopToSwitchHint": "Interrompi il dialogo per aprirne un altro",
     "notFound": "Dialogo non trovato. Potrebbe essere stato eliminato.",
-    "clearHistoryConfirmTitle": "Cancellare la cronologia dei dialoghi?"
+    "clearHistoryConfirmTitle": "Cancellare la cronologia dei dialoghi?",
+    "startNewDialog": "Inizia una nuova conversazione"
   },
   "toolPermissions": {
     "riskRead": "Lettura",

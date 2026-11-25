@@ -1772,8 +1772,6 @@
     "clearMessage": "설정에서 기록이 꺼져 있습니다. 현재 스크립트가 손실됩니다.",
     "clearConfirm": "지우기",
     "sourceLockedHint": "오디오 소스를 변경하려면 스크립트를 지우세요",
-    "clearHintSaved": "스크립트 지우기 (대화가 기록에 저장됨)",
-    "clearHintUnsaved": "스크립트 지우기 (기록이 꺼져 있음)",
     "sessionResumed": "세션 다시 시작됨",
     "sessionResumedRecording": "녹음 다시 시작됨",
     "record": "녹음",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "녹음 폴더 열기",
     "stopToSwitchHint": "다른 대화를 열려면 현재 대화를 중지하세요",
     "notFound": "대화를 찾을 수 없습니다. 삭제되었을 수 있습니다.",
-    "clearHistoryConfirmTitle": "대화 기록을 비우시겠습니까?"
+    "clearHistoryConfirmTitle": "대화 기록을 비우시겠습니까?",
+    "startNewDialog": "새 대화 시작"
   },
   "toolPermissions": {
     "riskRead": "읽기",

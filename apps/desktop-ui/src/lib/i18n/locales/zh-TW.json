@@ -1768,8 +1768,6 @@
     "clearMessage": "歷史記錄已在設定中關閉。目前的逐字稿將會遺失。",
     "clearConfirm": "清除",
     "sourceLockedHint": "清除逐字稿以更改音訊來源",
-    "clearHintSaved": "清除逐字稿（對話已儲存至歷史記錄）",
-    "clearHintUnsaved": "清除逐字稿（歷史記錄已關閉）",
     "sessionResumed": "工作階段已恢復",
     "sessionResumedRecording": "已恢復錄音",
     "record": "錄音",
@@ -1795,7 +1793,8 @@
     "openRecordingsFolder": "開啟錄音資料夾",
     "stopToSwitchHint": "請先停止目前對話再開啟其他對話",
     "notFound": "找不到對話，可能已被刪除。",
-    "clearHistoryConfirmTitle": "清除對話歷史紀錄？"
+    "clearHistoryConfirmTitle": "清除對話歷史紀錄？",
+    "startNewDialog": "開始新對話"
   },
   "toolPermissions": {
     "riskRead": "讀取",

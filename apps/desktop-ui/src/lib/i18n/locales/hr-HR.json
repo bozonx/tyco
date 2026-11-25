@@ -1772,8 +1772,6 @@
     "clearMessage": "Povijest je isključena u postavkama. Trenutni prijepis bit će izgubljen.",
     "clearConfirm": "Očisti",
     "sourceLockedHint": "Očistite prijepis da biste promijenili izvor zvuka",
-    "clearHintSaved": "Očisti prijepis (razgovor je spremljen u povijesti)",
-    "clearHintUnsaved": "Očisti prijepis (povijest je isključena)",
     "sessionResumed": "Sesija nastavljena",
     "sessionResumedRecording": "Snimanje nastavljeno",
     "record": "Snimanje",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "Otvori mapu snimki",
     "stopToSwitchHint": "Zaustavite dijalog da biste otvorili drugi",
     "notFound": "Dijalog nije pronađen. Možda je izbrisan.",
-    "clearHistoryConfirmTitle": "Očistiti povijest dijaloga?"
+    "clearHistoryConfirmTitle": "Očistiti povijest dijaloga?",
+    "startNewDialog": "Započni novi dijalog"
   },
   "toolPermissions": {
     "riskRead": "Čitanje",

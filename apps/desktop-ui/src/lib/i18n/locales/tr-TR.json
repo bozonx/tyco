@@ -1768,8 +1768,6 @@
     "clearMessage": "Geçmiş ayarlarda kapalı. Geçerli döküm kaybolacak.",
     "clearConfirm": "Temizle",
     "sourceLockedHint": "Ses kaynağını değiştirmek için dökümü temizleyin",
-    "clearHintSaved": "Dökümü temizle (konuşma geçmişe kaydedildi)",
-    "clearHintUnsaved": "Dökümü temizle (geçmiş kapalı)",
     "sessionResumed": "Oturum devam ettirildi",
     "sessionResumedRecording": "Kayıt devam ettirildi",
     "record": "Kayıt",
@@ -1795,7 +1793,8 @@
     "openRecordingsFolder": "Kayıt klasörünü aç",
     "stopToSwitchHint": "Başka bir diyalog açmak için mevcut diyaloğu durdurun",
     "notFound": "Diyalog bulunamadı. Silinmiş olabilir.",
-    "clearHistoryConfirmTitle": "Diyalog geçmişi temizlensin mi?"
+    "clearHistoryConfirmTitle": "Diyalog geçmişi temizlensin mi?",
+    "startNewDialog": "Yeni bir diyalog başlat"
   },
   "toolPermissions": {
     "riskRead": "Okuma",

@@ -1768,8 +1768,6 @@
     "clearMessage": "設定で履歴が無効になっています。現在の文字起こしは失われます。",
     "clearConfirm": "クリア",
     "sourceLockedHint": "音源を変更するには文字起こしをクリアしてください",
-    "clearHintSaved": "文字起こしをクリア（会話は履歴に保存されます）",
-    "clearHintUnsaved": "文字起こしをクリア（履歴は無効です）",
     "sessionResumed": "セッションを再開しました",
     "sessionResumedRecording": "録音を再開しました",
     "record": "録音",
@@ -1795,7 +1793,8 @@
     "openRecordingsFolder": "録音フォルダーを開く",
     "stopToSwitchHint": "別のダイアログを開くには現在のダイアログを停止してください",
     "notFound": "ダイアログが見つかりません。削除された可能性があります。",
-    "clearHistoryConfirmTitle": "ダイアログ履歴を消去しますか？"
+    "clearHistoryConfirmTitle": "ダイアログ履歴を消去しますか？",
+    "startNewDialog": "新しいダイアログを開始"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

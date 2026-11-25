@@ -1772,8 +1772,6 @@
     "clearMessage": "History is turned off in settings. The current transcript will be lost.",
     "clearConfirm": "Clear",
     "sourceLockedHint": "Clear the transcript to change the source",
-    "clearHintSaved": "Clear transcript (conversation is saved to history)",
-    "clearHintUnsaved": "Clear transcript (history is turned off)",
     "sessionResumed": "Session resumed",
     "sessionResumedRecording": "Recording resumed",
     "record": "Record",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "Open recordings folder",
     "stopToSwitchHint": "Stop the dialog to open another one",
     "notFound": "Dialog not found. It may have been deleted.",
-    "clearHistoryConfirmTitle": "Clear dialog history?"
+    "clearHistoryConfirmTitle": "Clear dialog history?",
+    "startNewDialog": "Start a new dialog"
   },
   "toolPermissions": {
     "riskRead": "Reads",

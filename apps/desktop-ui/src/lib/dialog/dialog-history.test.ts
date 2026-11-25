@@ -215,6 +215,41 @@ describe('dialog history', () => {
     expect(saved[0].recordingFiles).toEqual(['rec-1.opus'])
   })
 
+  it('appends new recordings to loaded dialog when resumed with a recording', async () => {
+    const { history, saved, setSegments } = setup()
+    const existing: Dialog = {
+      id: '2026-11-20_09-00-00_abcdef',
+      title: 'Standup',
+      startedAt: 100,
+      updatedAt: 200,
+      source: 'system',
+      translationTargetLanguage: 'en',
+      segments: [
+        {
+          id: '1',
+          side: 'remote',
+          startMs: 0,
+          endMs: 500,
+          text: 'Old line',
+          translationState: 'idle',
+        },
+      ],
+      sessionBreaks: [],
+      recordingFiles: ['rec-1.opus'],
+      incompleteRecordingFiles: [],
+    }
+    history.load(existing)
+    expect(history.resume()).toBe(true)
+    await history.addRecording('rec-2.opus')
+    setSegments([finalSegment('1', 'Old line'), finalSegment('2', 'New line')])
+    await history.end()
+    expect(saved.at(-1)).toMatchObject({
+      id: existing.id,
+      recordingFiles: ['rec-1.opus', 'rec-2.opus'],
+    })
+    expect(saved.at(-1)?.segments).toHaveLength(2)
+  })
+
   it('has nothing to resume after reset or dispose', async () => {
     const { history } = setup()
     expect(history.resume()).toBe(false)

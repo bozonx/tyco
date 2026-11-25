@@ -1772,8 +1772,6 @@
     "clearMessage": "O histórico está desativado nas configurações. A transcrição atual será perdida.",
     "clearConfirm": "Limpiar",
     "sourceLockedHint": "Limpe a transcrição para alterar a fonte de áudio",
-    "clearHintSaved": "Limpar transcrição (a conversa está salva no histórico)",
-    "clearHintUnsaved": "Limpar transcrição (o histórico está desativado)",
     "sessionResumed": "Sessão retomada",
     "sessionResumedRecording": "Gravação retomada",
     "record": "Gravação",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "Abrir pasta de gravações",
     "stopToSwitchHint": "Pare o diálogo para abrir outro",
     "notFound": "Diálogo não encontrado. Ele pode ter sido excluído.",
-    "clearHistoryConfirmTitle": "Limpar histórico de diálogos?"
+    "clearHistoryConfirmTitle": "Limpar histórico de diálogos?",
+    "startNewDialog": "Iniciar novo diálogo"
   },
   "toolPermissions": {
     "riskRead": "Leitura",

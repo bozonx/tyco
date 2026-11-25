@@ -1772,8 +1772,6 @@
     "clearMessage": "Тарих баптауларда өшірілген. Ағымдағы транскрипт жойылады.",
     "clearConfirm": "Тазалау",
     "sourceLockedHint": "Дыбыс көзін өзгерту үшін транскриптті тазалаңыз",
-    "clearHintSaved": "Транскриптті тазалау (әңгіме тарихта сақталған)",
-    "clearHintUnsaved": "Транскриптті тазалау (тарих өшірулі)",
     "sessionResumed": "Сессия жалғастырылды",
     "sessionResumedRecording": "Жазу жалғастырылды",
     "record": "Жазу",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "Жазбалар қалтасын ашу",
     "stopToSwitchHint": "Басқа диалогты ашу үшін ағымдағысын тоқтатыңыз",
     "notFound": "Диалог табылмады. Ол жойылған болуы мүмкін.",
-    "clearHistoryConfirmTitle": "Диалог тарихын тазалау керек пе?"
+    "clearHistoryConfirmTitle": "Диалог тарихын тазалау керек пе?",
+    "startNewDialog": "Жаңа диалогты бастау"
   },
   "toolPermissions": {
     "riskRead": "Оқу",

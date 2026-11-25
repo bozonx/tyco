@@ -1768,8 +1768,6 @@
     "clearMessage": "历史记录已在设置中关闭。当前转录内容将丢失。",
     "clearConfirm": "清空",
     "sourceLockedHint": "清空转录内容以更改音频源",
-    "clearHintSaved": "清空转录（对话已保存至历史记录）",
-    "clearHintUnsaved": "清空转录（历史记录已关闭）",
     "sessionResumed": "会话已恢复",
     "sessionResumedRecording": "已恢复录音",
     "record": "录音",
@@ -1795,7 +1793,8 @@
     "openRecordingsFolder": "打开录音文件夹",
     "stopToSwitchHint": "请先停止当前对话再打开其他对话",
     "notFound": "未找到对话，可能已被删除。",
-    "clearHistoryConfirmTitle": "清空对话历史记录？"
+    "clearHistoryConfirmTitle": "清空对话历史记录？",
+    "startNewDialog": "开始新对话"
   },
   "toolPermissions": {
     "riskRead": "读取",

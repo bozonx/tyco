@@ -1772,8 +1772,6 @@
     "clearMessage": "ისტორია გამორთულია პარამეტრებში. მიმდინარე ჩანაწერი დაიკარგება.",
     "clearConfirm": "გასუფთავება",
     "sourceLockedHint": "გაასუფთავეთ ჩანაწერი აუდიო წყაროს შესაცვლელად",
-    "clearHintSaved": "ჩანაწერის გასუფთავება (საუბარი შენახულია ისტორიაში)",
-    "clearHintUnsaved": "ჩანაწერის გასუფთავება (ისტორია გამორთულია)",
     "sessionResumed": "სესია განახლდა",
     "sessionResumedRecording": "ჩაწერა განახლდა",
     "record": "ჩაწერა",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "ჩანაწერების საქაღალდის გახსნა",
     "stopToSwitchHint": "სხვა დიალოგის გასახსნელად შეაჩერეთ მიმდინარე",
     "notFound": "დიალოგი ვერ მოიძებნა. შესაძლოა წაიშალა.",
-    "clearHistoryConfirmTitle": "გასუფთავდეს დიალოგების ისტორია?"
+    "clearHistoryConfirmTitle": "გასუფთავდეს დიალოგების ისტორია?",
+    "startNewDialog": "ახალი დიალოგის დაწყება"
   },
   "toolPermissions": {
     "riskRead": "კითხვა",

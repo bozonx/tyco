@@ -1772,8 +1772,6 @@
     "clearMessage": "История выключена в настройках. Текущий транскрипт будет удалён безвозвратно.",
     "clearConfirm": "Очистить",
     "sourceLockedHint": "Очистите транскрипт, чтобы изменить источник звука",
-    "clearHintSaved": "Очистить транскрипт (разговор сохранён в истории)",
-    "clearHintUnsaved": "Очистить транскрипт (история выключена)",
     "sessionResumed": "Сессия возобновлена",
     "sessionResumedRecording": "Запись продолжена",
     "record": "Запись",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "Открыть папку записей",
     "stopToSwitchHint": "Остановите диалог, чтобы открыть другой",
     "notFound": "Диалог не найден. Возможно, он был удалён.",
-    "clearHistoryConfirmTitle": "Очистить историю диалогов?"
+    "clearHistoryConfirmTitle": "Очистить историю диалогов?",
+    "startNewDialog": "Начать новый диалог"
   },
   "toolPermissions": {
     "riskRead": "Чтение",

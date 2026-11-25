@@ -305,7 +305,7 @@ describe('DialogToolbar.vue', () => {
       global: { plugins: [i18n, desktop.pinia] },
     })
 
-    const clearButton = wrapper.find('.dialog-toolbar-clear')
+    const clearButton = wrapper.find('.dialog-toolbar-new')
     expect(clearButton.exists()).toBe(true)
     await clearButton.trigger('click')
     await flushPromises()
@@ -344,7 +344,7 @@ describe('DialogToolbar.vue', () => {
       global: { plugins: [i18n, desktop.pinia] },
     })
 
-    const clearButton = wrapper.find('.dialog-toolbar-clear')
+    const clearButton = wrapper.find('.dialog-toolbar-new')
     await clearButton.trigger('click')
     await flushPromises()
 

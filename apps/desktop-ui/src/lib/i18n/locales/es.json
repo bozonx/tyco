@@ -1772,8 +1772,6 @@
     "clearMessage": "El historial está desactivado en la configuración. La transcripción actual se perderá.",
     "clearConfirm": "Limpiar",
     "sourceLockedHint": "Borra la transcripción para cambiar la fuente",
-    "clearHintSaved": "Borrar transcripción (la conversación se guarda en el historial)",
-    "clearHintUnsaved": "Borrar transcripción (el historial está desactivado)",
     "sessionResumed": "Sesión reanudada",
     "sessionResumedRecording": "Grabación reanudada",
     "record": "Grabar",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "Abrir carpeta de grabaciones",
     "stopToSwitchHint": "Detén el diálogo para abrir otro",
     "notFound": "No se encontró el diálogo. Es posible que se haya eliminado.",
-    "clearHistoryConfirmTitle": "¿Borrar el historial de diálogos?"
+    "clearHistoryConfirmTitle": "¿Borrar el historial de diálogos?",
+    "startNewDialog": "Iniciar un nuevo diálogo"
   },
   "toolPermissions": {
     "riskRead": "Lectura",

@@ -1,5 +1,16 @@
 <template>
   <div class="dialog-toolbar">
+    <IconButton
+      v-if="isIdle && !isEmpty"
+      class="dialog-toolbar-new"
+      variant="ghost"
+      size="sm"
+      icon="mdi:file-document-plus-outline"
+      :label="t('dialog.startNewDialog')"
+      :title="t('dialog.startNewDialog')"
+      @click="handleClear"
+    />
+
     <div class="dialog-toolbar-actions">
       <Button
         v-if="isIdle"
@@ -61,19 +72,6 @@
           </template>
         </Button>
       </div>
-
-      <Button
-        v-if="isIdle && !isEmpty"
-        class="dialog-toolbar-clear"
-        variant="ghost"
-        size="sm"
-        :icon="canRecord ? 'mdi:plus' : 'mdi:broom'"
-        :title="
-          canRecord ? t('dialog.clearHintSaved') : t('dialog.clearHintUnsaved')
-        "
-        @click="handleClear"
-        >{{ canRecord ? t('dialog.newDialog') : t('dialog.clear') }}</Button
-      >
     </div>
 
     <!-- the source is chosen before the dialog; while it runs, its sound -->
@@ -552,8 +550,10 @@ function levelLabel(side: DialogSide) {
 }
 
 /* the route of the languages gives way first */
+.dialog-toolbar :deep(.dialog-route),
 .dialog-toolbar > .dialog-route {
   flex-shrink: 1;
+  min-width: 0;
 }
 
 /* narrower still, the sources keep their icons, the tooltips name them */

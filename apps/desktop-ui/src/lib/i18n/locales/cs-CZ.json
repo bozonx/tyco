@@ -1772,8 +1772,6 @@
     "clearMessage": "Historie je v nastavení vypnuta. Aktuální přepis bude ztracen.",
     "clearConfirm": "Vymazat",
     "sourceLockedHint": "Chcete-li změnit zdroj, vymažte přepis",
-    "clearHintSaved": "Vymazat přepis (konverzace je uložena v historii)",
-    "clearHintUnsaved": "Vymazat přepis (historie je vypnuta)",
     "sessionResumed": "Relace obnovena",
     "sessionResumedRecording": "Záznam pokračuje",
     "record": "Záznam",
@@ -1799,7 +1797,8 @@
     "openRecordingsFolder": "Otevřít složku nahrávek",
     "stopToSwitchHint": "Zastavte dialog pro otevření jiného",
     "notFound": "Dialog nebyl nalezen. Možná byl smazán.",
-    "clearHistoryConfirmTitle": "Vymazat historii dialogů?"
+    "clearHistoryConfirmTitle": "Vymazat historii dialogů?",
+    "startNewDialog": "Zahájit nový dialog"
   },
   "toolPermissions": {
     "riskRead": "Čtení",
