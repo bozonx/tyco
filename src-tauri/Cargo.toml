@@ -68,6 +68,7 @@ cap-std = "4.0.3"
 evdev = "0.13"
 
 [target.'cfg(target_os = "linux")'.dependencies]
+tray-icon = { version = "0.25", features = ["ksni"] }
 # the Secret Service over zbus, like the rest of the D-Bus code
 zbus-secret-service-keyring-store = { version = "1", features = ["rt-async-io-crypto-rust"] }
 # remote_desktop does not build without screencast

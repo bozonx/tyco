@@ -165,6 +165,7 @@ pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
 
     builder
         .menu(&menu)
+        .show_menu_on_left_click(false)
         .tooltip("TyCo — typing companion")
         .on_menu_event(move |app, event| {
             if app.try_state::<AppState>().is_some() {
