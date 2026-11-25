@@ -1794,7 +1794,9 @@
     "stopToSwitchHint": "別のダイアログを開くには現在のダイアログを停止してください",
     "notFound": "ダイアログが見つかりません。削除された可能性があります。",
     "clearHistoryConfirmTitle": "ダイアログ履歴を消去しますか？",
-    "startNewDialog": "新しいダイアログを開始"
+    "startNewDialog": "新しいダイアログを開始",
+    "deleteConfirmTitle": "ダイアログを削除しますか？",
+    "deleteConfirmMessage": "このダイアログは完全に削除されます。"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

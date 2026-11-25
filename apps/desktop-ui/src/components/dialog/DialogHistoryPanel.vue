@@ -22,13 +22,6 @@
       <IconButton
         size="sm"
         variant="ghost"
-        :label="t('dialog.openRecordingsFolder')"
-        icon="mdi:folder-open-outline"
-        @click="openAllRecordingsFolder"
-      />
-      <IconButton
-        size="sm"
-        variant="ghost"
         :label="t('chat.collapseSidebar')"
         icon="mdi:dock-right"
         @click="emit('collapse')"
@@ -106,16 +99,19 @@
                 <div class="dialog-item-body">
                   <span class="dialog-item-title">{{ itemLabel(item) }}</span>
                   <span class="dialog-item-meta">
-                    <span>{{ formatDialogClock(item.startedAt) }}</span>
+                    <span
+                      :title="formatHistoryDateTime(item.startedAt, locale)"
+                      >{{ formatDialogStartTime(item.startedAt) }}</span
+                    >
                     <span v-if="item.durationMs > 0">
-                      · {{ formatDialogDuration(item.durationMs) }}
+                      · {{ formatDialogDuration(item.durationMs, locale) }}
                     </span>
                     <span
                       v-if="item.recordingCount > 0"
                       class="dialog-item-rec"
                       :title="t('history.recordings')"
                     >
-                      <AppIcon icon="mdi:record-circle-outline" size="xs" />
+                      <AppIcon icon="mdi:waveform" size="xs" />
                       <span v-if="item.recordingCount > 1">{{
                         item.recordingCount
                       }}</span>
@@ -144,6 +140,15 @@
         {{ t('history.chatsDisabled') }}
       </p>
     </div>
+
+    <ConfirmModal
+      :open="Boolean(dialogToDelete)"
+      :title="t('dialog.deleteConfirmTitle')"
+      :message="t('dialog.deleteConfirmMessage')"
+      :confirm-text="t('common.delete')"
+      @confirm="confirmDeleteDialog"
+      @cancel="dialogToDelete = null"
+    />
   </aside>
 </template>
 
@@ -154,21 +159,21 @@ import { useCopyValue } from '../../composables/use-copy-value'
 import { useI18n } from '../../composables/use-i18n'
 import { useNow } from '../../composables/use-now'
 import useToast from '../../composables/use-toast'
-import {
-  exportDialogTranscript,
-  formatDialogClock,
-} from '../../lib/dialog/dialog-export'
+import { exportDialogTranscript } from '../../lib/dialog/dialog-export'
 import {
   filterDialogHistory,
   formatDialogDuration,
+  formatDialogStartTime,
   groupDialogHistory,
 } from '../../lib/dialog/dialog-history-list'
+import { formatHistoryDateTime } from '../../lib/history/history-list'
 import { clientLogger } from '../../lib/logger'
 import { preventMouseFocus } from '../../lib/ui/focus'
 import { useDialogStore } from '../../stores/dialog'
 import { useDialogHistoryStore } from '../../stores/dialog-history'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
+import ConfirmModal from '../common/ConfirmModal.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
@@ -181,7 +186,7 @@ const SEARCH_DEBOUNCE_MS = 200
 
 const emit = defineEmits<{ (e: 'collapse'): void; (e: 'navigate'): void }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { toastKey } = useToast()
 const copyValue = useCopyValue()
 const dialog = useDialogStore()
@@ -290,8 +295,13 @@ async function selectDialog(id: string) {
   }
 }
 
-async function openAllRecordingsFolder() {
-  await dialog.openRecordingsFolder()
+const dialogToDelete = ref<string | null>(null)
+
+async function confirmDeleteDialog() {
+  const id = dialogToDelete.value
+  dialogToDelete.value = null
+  if (!id) return
+  await dialogHistory.removeDialog(id)
 }
 
 const renamingId = ref<string | null>(null)
@@ -396,7 +406,7 @@ function getRowMenuItems(item: DialogSummary): DropdownMenuItem[] {
       label: t('dialog.deleteDialog'),
       icon: 'mdi:trash-can-outline',
       action: () => {
-        void dialogHistory.removeDialog(item.id)
+        dialogToDelete.value = item.id
       },
     },
   ]
@@ -527,9 +537,10 @@ function getRowMenuItems(item: DialogSummary): DropdownMenuItem[] {
 }
 
 .dialog-item-meta {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 4px;
+  width: 100%;
   font-size: var(--text-micro);
   color: var(--app-text-faint);
   font-variant-numeric: tabular-nums;
@@ -539,7 +550,8 @@ function getRowMenuItems(item: DialogSummary): DropdownMenuItem[] {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  color: var(--color-error);
+  margin-left: auto;
+  color: var(--app-text-muted);
 }
 
 .row-menu {

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import {
   filterDialogHistory,
   formatDialogDuration,
+  formatDialogStartTime,
   groupDialogHistory,
 } from './dialog-history-list'
 
@@ -79,9 +80,17 @@ describe('dialog-history-list', () => {
     ])
   })
 
-  it('formats durations as M:SS or H:MM:SS', () => {
-    expect(formatDialogDuration(0)).toBe('0:00')
-    expect(formatDialogDuration(65_000)).toBe('1:05')
-    expect(formatDialogDuration(3_661_000)).toBe('1:01:01')
+  it('formats durations in human-readable localized format', () => {
+    expect(formatDialogDuration(0, 'en-US')).toBe('0 sec')
+    expect(formatDialogDuration(45_000, 'en-US')).toBe('45 sec')
+    expect(formatDialogDuration(65_000, 'en-US')).toBe('1 min')
+    expect(formatDialogDuration(3_661_000, 'en-US')).toBe('1 hr 1 min')
+    expect(formatDialogDuration(3_600_000, 'en-US')).toBe('1 hr')
+  })
+
+  it('formats start time with system clock preference', () => {
+    const epochMs = new Date(2026, 10, 20, 9, 3, 40).getTime()
+    const formatted = formatDialogStartTime(epochMs)
+    expect(formatted).toMatch(/9:03|09:03/)
   })
 })

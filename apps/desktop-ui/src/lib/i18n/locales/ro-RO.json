@@ -1798,7 +1798,9 @@
     "stopToSwitchHint": "Oprește dialogul pentru a deschide altul",
     "notFound": "Dialogul nu a fost găsit. Este posibil să fi fost șters.",
     "clearHistoryConfirmTitle": "Ștergi istoricul dialogurilor?",
-    "startNewDialog": "Începe un nou dialog"
+    "startNewDialog": "Începe un nou dialog",
+    "deleteConfirmTitle": "Ștergeți dialogul?",
+    "deleteConfirmMessage": "Acest dialog va fi șters definitiv."
   },
   "toolPermissions": {
     "riskRead": "Citire",

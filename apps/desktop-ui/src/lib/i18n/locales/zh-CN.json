@@ -1794,7 +1794,9 @@
     "stopToSwitchHint": "请先停止当前对话再打开其他对话",
     "notFound": "未找到对话，可能已被删除。",
     "clearHistoryConfirmTitle": "清空对话历史记录？",
-    "startNewDialog": "开始新对话"
+    "startNewDialog": "开始新对话",
+    "deleteConfirmTitle": "删除对话？",
+    "deleteConfirmMessage": "此对话将被永久删除。"
   },
   "toolPermissions": {
     "riskRead": "读取",

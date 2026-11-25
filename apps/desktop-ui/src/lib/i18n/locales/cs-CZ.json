@@ -1798,7 +1798,9 @@
     "stopToSwitchHint": "Zastavte dialog pro otevření jiného",
     "notFound": "Dialog nebyl nalezen. Možná byl smazán.",
     "clearHistoryConfirmTitle": "Vymazat historii dialogů?",
-    "startNewDialog": "Zahájit nový dialog"
+    "startNewDialog": "Zahájit nový dialog",
+    "deleteConfirmTitle": "Smazat dialog?",
+    "deleteConfirmMessage": "Tento dialog bude trvale smazán."
   },
   "toolPermissions": {
     "riskRead": "Čtení",

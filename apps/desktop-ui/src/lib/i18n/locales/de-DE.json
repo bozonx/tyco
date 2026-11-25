@@ -1798,7 +1798,9 @@
     "stopToSwitchHint": "Beenden Sie den Dialog, um einen anderen zu öffnen",
     "notFound": "Dialog nicht gefunden. Er wurde möglicherweise gelöscht.",
     "clearHistoryConfirmTitle": "Dialogverlauf leeren?",
-    "startNewDialog": "Neuen Dialog starten"
+    "startNewDialog": "Neuen Dialog starten",
+    "deleteConfirmTitle": "Dialog löschen?",
+    "deleteConfirmMessage": "Dieser Dialog wird endgültig gelöscht."
   },
   "toolPermissions": {
     "riskRead": "Liest",

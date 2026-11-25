@@ -1798,7 +1798,9 @@
     "stopToSwitchHint": "Zaustavite dijalog da biste otvorili drugi",
     "notFound": "Dijalog nije pronađen. Možda je izbrisan.",
     "clearHistoryConfirmTitle": "Očistiti povijest dijaloga?",
-    "startNewDialog": "Započni novi dijalog"
+    "startNewDialog": "Započni novi dijalog",
+    "deleteConfirmTitle": "Izbrisati dijalog?",
+    "deleteConfirmMessage": "Ovaj dijalog bit će trajno izbrisan."
   },
   "toolPermissions": {
     "riskRead": "Čitanje",

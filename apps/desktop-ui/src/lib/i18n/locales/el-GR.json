@@ -1798,7 +1798,9 @@
     "stopToSwitchHint": "Σταματήστε τον διάλογο για να ανοίξετε άλλον",
     "notFound": "Ο διάλογος δεν βρέθηκε. Ίσως έχει διαγραφεί.",
     "clearHistoryConfirmTitle": "Εκκαθάριση ιστορικού διαλόγων;",
-    "startNewDialog": "Έναρξη νέου διαλόγου"
+    "startNewDialog": "Έναρξη νέου διαλόγου",
+    "deleteConfirmTitle": "Διαγραφή διαλόγου;",
+    "deleteConfirmMessage": "Αυτός ο διάλογος θα διαγραφεί οριστικά."
   },
   "toolPermissions": {
     "riskRead": "Ανάγνωση",

@@ -1798,7 +1798,9 @@
     "stopToSwitchHint": "Állítsa le a párbeszédet egy másik megnyitásához",
     "notFound": "A párbeszéd nem található. Lehet, hogy törölték.",
     "clearHistoryConfirmTitle": "Törli a párbeszédek előzményeit?",
-    "startNewDialog": "Új párbeszéd indítása"
+    "startNewDialog": "Új párbeszéd indítása",
+    "deleteConfirmTitle": "Törli a párbeszédet?",
+    "deleteConfirmMessage": "Ez a párbeszéd véglegesen törlődik."
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

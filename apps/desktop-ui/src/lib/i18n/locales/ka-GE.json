@@ -1798,7 +1798,9 @@
     "stopToSwitchHint": "სხვა დიალოგის გასახსნელად შეაჩერეთ მიმდინარე",
     "notFound": "დიალოგი ვერ მოიძებნა. შესაძლოა წაიშალა.",
     "clearHistoryConfirmTitle": "გასუფთავდეს დიალოგების ისტორია?",
-    "startNewDialog": "ახალი დიალოგის დაწყება"
+    "startNewDialog": "ახალი დიალოგის დაწყება",
+    "deleteConfirmTitle": "წაიშალოს დიალოგი?",
+    "deleteConfirmMessage": "ეს დიალოგი სამუდამოდ წაიშლება."
   },
   "toolPermissions": {
     "riskRead": "კითხვა",

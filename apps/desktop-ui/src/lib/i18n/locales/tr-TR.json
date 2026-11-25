@@ -1794,7 +1794,9 @@
     "stopToSwitchHint": "Başka bir diyalog açmak için mevcut diyaloğu durdurun",
     "notFound": "Diyalog bulunamadı. Silinmiş olabilir.",
     "clearHistoryConfirmTitle": "Diyalog geçmişi temizlensin mi?",
-    "startNewDialog": "Yeni bir diyalog başlat"
+    "startNewDialog": "Yeni bir diyalog başlat",
+    "deleteConfirmTitle": "Diyalog silinsin mi?",
+    "deleteConfirmMessage": "Bu diyalog kalıcı olarak silinecek."
   },
   "toolPermissions": {
     "riskRead": "Okuma",

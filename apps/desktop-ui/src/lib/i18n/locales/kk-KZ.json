@@ -1798,7 +1798,9 @@
     "stopToSwitchHint": "Басқа диалогты ашу үшін ағымдағысын тоқтатыңыз",
     "notFound": "Диалог табылмады. Ол жойылған болуы мүмкін.",
     "clearHistoryConfirmTitle": "Диалог тарихын тазалау керек пе?",
-    "startNewDialog": "Жаңа диалогты бастау"
+    "startNewDialog": "Жаңа диалогты бастау",
+    "deleteConfirmTitle": "Диалогты жою керек пе?",
+    "deleteConfirmMessage": "Бұл диалог біржола жойылады."
   },
   "toolPermissions": {
     "riskRead": "Оқу",

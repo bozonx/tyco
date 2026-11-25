@@ -1798,7 +1798,9 @@
     "stopToSwitchHint": "Остановите диалог, чтобы открыть другой",
     "notFound": "Диалог не найден. Возможно, он был удалён.",
     "clearHistoryConfirmTitle": "Очистить историю диалогов?",
-    "startNewDialog": "Начать новый диалог"
+    "startNewDialog": "Начать новый диалог",
+    "deleteConfirmTitle": "Удалить диалог?",
+    "deleteConfirmMessage": "Этот диалог будет удалён навсегда."
   },
   "toolPermissions": {
     "riskRead": "Чтение",

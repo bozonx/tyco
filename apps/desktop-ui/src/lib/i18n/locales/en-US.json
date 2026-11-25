@@ -1798,7 +1798,9 @@
     "stopToSwitchHint": "Stop the dialog to open another one",
     "notFound": "Dialog not found. It may have been deleted.",
     "clearHistoryConfirmTitle": "Clear dialog history?",
-    "startNewDialog": "Start a new dialog"
+    "startNewDialog": "Start a new dialog",
+    "deleteConfirmTitle": "Delete dialog?",
+    "deleteConfirmMessage": "This dialog will be permanently deleted."
   },
   "toolPermissions": {
     "riskRead": "Reads",

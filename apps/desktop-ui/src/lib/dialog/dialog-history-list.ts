@@ -59,14 +59,55 @@ export function groupDialogHistory(
     .map((key) => ({ key, items: groups.get(key) || [] }))
 }
 
-/** Formats a dialog duration in milliseconds as `M:SS` or `H:MM:SS`. */
-export function formatDialogDuration(durationMs: number): string {
+/**
+ * Formats a dialog start timestamp as a clock time without seconds, respecting
+ * the system locale and 12/24-hour preference (e.g., `9:03 AM` or `09:03`).
+ */
+export function formatDialogStartTime(epochMs: number): string {
+  try {
+    return new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(
+      epochMs
+    )
+  } catch {
+    const date = new Date(epochMs)
+    const pad = (value: number) => String(value).padStart(2, '0')
+    return `${pad(date.getHours())}:${pad(date.getMinutes())}`
+  }
+}
+
+/**
+ * Formats a dialog duration in milliseconds as human-readable localized text
+ * (e.g. `5 min`, `1 hr 15 min`, `45 sec`).
+ */
+export function formatDialogDuration(
+  durationMs: number,
+  locale?: string
+): string {
   const totalSeconds = Math.max(0, Math.floor(durationMs / 1000))
   const hours = Math.floor(totalSeconds / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)
   const seconds = totalSeconds % 60
-  const pad = (value: number) => String(value).padStart(2, '0')
-  return hours > 0
-    ? `${hours}:${pad(minutes)}:${pad(seconds)}`
-    : `${minutes}:${pad(seconds)}`
+
+  const formatUnit = (value: number, unit: 'hour' | 'minute' | 'second') => {
+    try {
+      return new Intl.NumberFormat(locale || undefined, {
+        style: 'unit',
+        unit,
+        unitDisplay: 'short',
+      }).format(value)
+    } catch {
+      const fallback = unit === 'hour' ? 'h' : unit === 'minute' ? 'min' : 's'
+      return `${value} ${fallback}`
+    }
+  }
+
+  if (hours > 0) {
+    return minutes > 0
+      ? `${formatUnit(hours, 'hour')} ${formatUnit(minutes, 'minute')}`
+      : formatUnit(hours, 'hour')
+  }
+  if (minutes > 0) {
+    return formatUnit(minutes, 'minute')
+  }
+  return formatUnit(seconds, 'second')
 }

@@ -1798,7 +1798,9 @@
     "stopToSwitchHint": "Interrompi il dialogo per aprirne un altro",
     "notFound": "Dialogo non trovato. Potrebbe essere stato eliminato.",
     "clearHistoryConfirmTitle": "Cancellare la cronologia dei dialoghi?",
-    "startNewDialog": "Inizia una nuova conversazione"
+    "startNewDialog": "Inizia una nuova conversazione",
+    "deleteConfirmTitle": "Eliminare il dialogo?",
+    "deleteConfirmMessage": "Questo dialogo verrà eliminato definitivamente."
   },
   "toolPermissions": {
     "riskRead": "Lettura",

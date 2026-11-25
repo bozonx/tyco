@@ -1798,7 +1798,9 @@
     "stopToSwitchHint": "Detén el diálogo para abrir otro",
     "notFound": "No se encontró el diálogo. Es posible que se haya eliminado.",
     "clearHistoryConfirmTitle": "¿Borrar el historial de diálogos?",
-    "startNewDialog": "Iniciar un nuevo diálogo"
+    "startNewDialog": "Iniciar un nuevo diálogo",
+    "deleteConfirmTitle": "¿Eliminar el diálogo?",
+    "deleteConfirmMessage": "Este diálogo se eliminará de forma permanente."
   },
   "toolPermissions": {
     "riskRead": "Lectura",

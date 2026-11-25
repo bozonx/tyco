@@ -1798,7 +1798,9 @@
     "stopToSwitchHint": "Arrêtez le dialogue pour en ouvrir un autre",
     "notFound": "Dialogue introuvable. Il a peut-être été supprimé.",
     "clearHistoryConfirmTitle": "Effacer l’historique des dialogues ?",
-    "startNewDialog": "Démarrer un nouveau dialogue"
+    "startNewDialog": "Démarrer un nouveau dialogue",
+    "deleteConfirmTitle": "Supprimer le dialogue ?",
+    "deleteConfirmMessage": "Ce dialogue sera définitivement supprimé."
   },
   "toolPermissions": {
     "riskRead": "Lecture",

@@ -1,16 +1,5 @@
 <template>
   <div class="dialog-toolbar">
-    <IconButton
-      v-if="isIdle && !isEmpty"
-      class="dialog-toolbar-new"
-      variant="ghost"
-      size="sm"
-      icon="mdi:file-document-plus-outline"
-      :label="t('dialog.startNewDialog')"
-      :title="t('dialog.startNewDialog')"
-      @click="handleClear"
-    />
-
     <div class="dialog-toolbar-actions">
       <Button
         v-if="isIdle"
@@ -120,6 +109,16 @@
       :label="t('dialog.collapse')"
       :disabled="!dialog.isActive"
       @click="dialog.showSubtitles()"
+    />
+    <IconButton
+      v-if="!dialog.isHistoryOpen && isIdle && !isEmpty"
+      class="dialog-toolbar-new"
+      variant="ghost"
+      size="sm"
+      icon="mdi:file-document-plus-outline"
+      :label="t('dialog.startNewDialog')"
+      :title="t('dialog.startNewDialog')"
+      @click="handleClear"
     />
     <IconButton
       class="dialog-toolbar-history"
