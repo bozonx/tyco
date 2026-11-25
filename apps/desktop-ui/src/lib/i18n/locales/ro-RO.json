@@ -1800,7 +1800,15 @@
     "clearHistoryConfirmTitle": "Ștergi istoricul dialogurilor?",
     "startNewDialog": "Începe un nou dialog",
     "deleteConfirmTitle": "Ștergeți dialogul?",
-    "deleteConfirmMessage": "Acest dialog va fi șters definitiv."
+    "deleteConfirmMessage": "Acest dialog va fi șters definitiv.",
+    "selectionToolbarLabel": "Acțiuni de selecție",
+    "selectionCount": "{count} selectate",
+    "clearSelection": "Șterge selecția",
+    "selectionIncludeMe": "Include-mă pe mine",
+    "selectionUseTranslation": "Utilizează traducerea",
+    "copySelected": "Copiază selecția",
+    "sendToChat": "În chat",
+    "promptAi": "Prompt către AI"
   },
   "toolPermissions": {
     "riskRead": "Citire",

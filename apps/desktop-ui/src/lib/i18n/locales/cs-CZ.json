@@ -1800,7 +1800,15 @@
     "clearHistoryConfirmTitle": "Vymazat historii dialogů?",
     "startNewDialog": "Zahájit nový dialog",
     "deleteConfirmTitle": "Smazat dialog?",
-    "deleteConfirmMessage": "Tento dialog bude trvale smazán."
+    "deleteConfirmMessage": "Tento dialog bude trvale smazán.",
+    "selectionToolbarLabel": "Akce výběru",
+    "selectionCount": "Vybráno: {count}",
+    "clearSelection": "Zrušit výběr",
+    "selectionIncludeMe": "Zahrnout mě",
+    "selectionUseTranslation": "Použít překlad",
+    "copySelected": "Kopírovat výběr",
+    "sendToChat": "Do chatu",
+    "promptAi": "Prompt pro AI"
   },
   "toolPermissions": {
     "riskRead": "Čtení",

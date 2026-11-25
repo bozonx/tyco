@@ -1800,7 +1800,15 @@
     "clearHistoryConfirmTitle": "Törli a párbeszédek előzményeit?",
     "startNewDialog": "Új párbeszéd indítása",
     "deleteConfirmTitle": "Törli a párbeszédet?",
-    "deleteConfirmMessage": "Ez a párbeszéd véglegesen törlődik."
+    "deleteConfirmMessage": "Ez a párbeszéd véglegesen törlődik.",
+    "selectionToolbarLabel": "Kijelölési műveletek",
+    "selectionCount": "{count} kiválasztva",
+    "clearSelection": "Kijelölés törlése",
+    "selectionIncludeMe": "Saját magam beleértve",
+    "selectionUseTranslation": "Fordítás használata",
+    "copySelected": "Kijelöltek másolása",
+    "sendToChat": "A csevegésbe",
+    "promptAi": "Prompt az MI-nek"
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

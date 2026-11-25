@@ -1800,7 +1800,15 @@
     "clearHistoryConfirmTitle": "대화 기록을 비우시겠습니까?",
     "startNewDialog": "새 대화 시작",
     "deleteConfirmTitle": "대화를 삭제하시겠습니까?",
-    "deleteConfirmMessage": "이 대화는 영구적으로 삭제됩니다."
+    "deleteConfirmMessage": "이 대화는 영구적으로 삭제됩니다.",
+    "selectionToolbarLabel": "선택 작업",
+    "selectionCount": "{count}개 선택됨",
+    "clearSelection": "선택 해제",
+    "selectionIncludeMe": "내 발언 포함",
+    "selectionUseTranslation": "번역 사용",
+    "copySelected": "선택 항목 복사",
+    "sendToChat": "채팅으로",
+    "promptAi": "AI에 프롬프트"
   },
   "toolPermissions": {
     "riskRead": "읽기",

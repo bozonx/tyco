@@ -1,6 +1,7 @@
 <template>
   <div class="dialog-view">
     <DialogToolbar />
+    <DialogSelectionToolbar v-if="dialog.hasSelection" />
     <InlineNotice
       v-if="showHeadphonesNotice"
       class="dialog-headphones-notice"
@@ -38,7 +39,11 @@
           :dialog-id="dialog.currentDialogId"
           :recording-exists="dialog.recordingExists"
           :incomplete-recording-files="dialog.incompleteRecordingFiles"
+          :selected-turn-ids="dialog.selectedTurnIds"
           @retry="retryTranslation"
+          @select-turn="
+            (id, isShift) => dialog.toggleTurnSelection(id, isShift)
+          "
         >
           <template #empty>
             <StateMessage
@@ -85,6 +90,7 @@ import InlineNotice from '../components/common/InlineNotice.vue'
 import StateMessage from '../components/common/StateMessage.vue'
 import DialogFeed from '../components/dialog/DialogFeed.vue'
 import DialogHistoryPanel from '../components/dialog/DialogHistoryPanel.vue'
+import DialogSelectionToolbar from '../components/dialog/DialogSelectionToolbar.vue'
 import DialogToolbar from '../components/dialog/DialogToolbar.vue'
 import { useI18n } from '../composables/use-i18n'
 import { preventMouseFocus } from '../lib/ui/focus'

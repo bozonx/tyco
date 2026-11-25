@@ -1796,7 +1796,15 @@
     "clearHistoryConfirmTitle": "ダイアログ履歴を消去しますか？",
     "startNewDialog": "新しいダイアログを開始",
     "deleteConfirmTitle": "ダイアログを削除しますか？",
-    "deleteConfirmMessage": "このダイアログは完全に削除されます。"
+    "deleteConfirmMessage": "このダイアログは完全に削除されます。",
+    "selectionToolbarLabel": "選択アクション",
+    "selectionCount": "{count} 件選択中",
+    "clearSelection": "選択を解除",
+    "selectionIncludeMe": "自分を含める",
+    "selectionUseTranslation": "翻訳を使用",
+    "copySelected": "選択項目をコピー",
+    "sendToChat": "チャットへ",
+    "promptAi": "AI にプロンプト"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

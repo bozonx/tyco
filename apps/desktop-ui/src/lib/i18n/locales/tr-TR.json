@@ -1796,7 +1796,15 @@
     "clearHistoryConfirmTitle": "Diyalog geçmişi temizlensin mi?",
     "startNewDialog": "Yeni bir diyalog başlat",
     "deleteConfirmTitle": "Diyalog silinsin mi?",
-    "deleteConfirmMessage": "Bu diyalog kalıcı olarak silinecek."
+    "deleteConfirmMessage": "Bu diyalog kalıcı olarak silinecek.",
+    "selectionToolbarLabel": "Seçim eylemleri",
+    "selectionCount": "{count} seçildi",
+    "clearSelection": "Seçimi temizle",
+    "selectionIncludeMe": "Beni dahil et",
+    "selectionUseTranslation": "Çeviriyi kullan",
+    "copySelected": "Seçileni kopyala",
+    "sendToChat": "Sohbete",
+    "promptAi": "YZ'ye prompt"
   },
   "toolPermissions": {
     "riskRead": "Okuma",

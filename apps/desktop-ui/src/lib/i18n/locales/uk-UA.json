@@ -1800,7 +1800,15 @@
     "clearHistoryConfirmTitle": "Очистити історію діалогів?",
     "startNewDialog": "Почати новий діалог",
     "deleteConfirmTitle": "Видалити діалог?",
-    "deleteConfirmMessage": "Цей діалог буде видалено назавжди."
+    "deleteConfirmMessage": "Цей діалог буде видалено назавжди.",
+    "selectionToolbarLabel": "Дії з виділенням",
+    "selectionCount": "Вибрано: {count}",
+    "clearSelection": "Скинути виділення",
+    "selectionIncludeMe": "Включати мене",
+    "selectionUseTranslation": "Використовувати переклад",
+    "copySelected": "Скопіювати виділене",
+    "sendToChat": "В чат",
+    "promptAi": "Промпт в ШІ"
   },
   "toolPermissions": {
     "riskRead": "Читання",

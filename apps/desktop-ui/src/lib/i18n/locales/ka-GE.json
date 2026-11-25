@@ -1800,7 +1800,15 @@
     "clearHistoryConfirmTitle": "გასუფთავდეს დიალოგების ისტორია?",
     "startNewDialog": "ახალი დიალოგის დაწყება",
     "deleteConfirmTitle": "წაიშალოს დიალოგი?",
-    "deleteConfirmMessage": "ეს დიალოგი სამუდამოდ წაიშლება."
+    "deleteConfirmMessage": "ეს დიალოგი სამუდამოდ წაიშლება.",
+    "selectionToolbarLabel": "მონიშვნის მოქმედებები",
+    "selectionCount": "მონიშნულია: {count}",
+    "clearSelection": "მონიშვნის გასუფთავება",
+    "selectionIncludeMe": "ჩემი ჩართვა",
+    "selectionUseTranslation": "თარგმანის გამოყენება",
+    "copySelected": "მონიშნულის კოპირება",
+    "sendToChat": "ჩატში",
+    "promptAi": "პრომპტი AI-სთვის"
   },
   "toolPermissions": {
     "riskRead": "კითხვა",

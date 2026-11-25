@@ -13,6 +13,10 @@ import { createDialogHistory } from '../lib/dialog/dialog-history'
 import { isDialogHistoryEnabled } from '../lib/dialog/dialog-history-storage'
 import { createDialogId } from '../lib/dialog/dialog-id'
 import {
+  formatSelectedTurns,
+  toggleShiftTurnSelection,
+} from '../lib/dialog/dialog-selection'
+import {
   createDialogSession,
   type DialogChannelStatus,
   type DialogSessionStatus,
@@ -27,6 +31,7 @@ import {
   type DialogSegment,
   type DialogSessionBreak,
   type DialogSide,
+  type DialogTurn,
 } from '../lib/dialog/dialog-transcript'
 import { createDialogTranslationQueue } from '../lib/dialog/dialog-translation'
 import { translate } from '../lib/i18n'
@@ -41,11 +46,14 @@ import {
 import { createSttClient } from '../lib/stt/stt-client'
 import { createVoiceCaptureControl } from '../lib/stt/voice-capture'
 import { useDesktopStore } from './desktop'
+import { appNavigation } from '../navigation'
+import { useChatInputStore } from './chat-input'
 import { useDialogHistoryStore } from './dialog-history'
 import { useDialogStatusStore } from './dialog-status'
 import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
 import { useSecretsStore } from './secrets'
+import { useToastStore } from './toast'
 import { useTranslationStore } from './translation'
 import { useVisibleWorkStore } from './visible-work'
 
@@ -57,6 +65,8 @@ const DEFAULT_DIALOG_CONFIG: DialogConfig = {
   isTranslationOnly: false,
   isRecordingMixedDown: false,
   isRecordingProcessed: true,
+  selectionIncludeMe: true,
+  selectionUseTranslation: false,
 }
 
 /** The recording of the running session */
@@ -146,6 +156,58 @@ export const useDialogStore = defineStore('dialog', () => {
   const feedItems = computed<DialogFeedItem[]>(() =>
     buildDialogFeedItems(turns.value, sessionBreaks.value)
   )
+
+  const selectedTurnIds = ref<string[]>([])
+  const selectionAnchorId = ref<string | null>(null)
+
+  const selectionIncludeMe = computed({
+    get: () => config.value.selectionIncludeMe ?? true,
+    set: (value: boolean) => {
+      void updateConfig({ selectionIncludeMe: value })
+    },
+  })
+
+  const selectionUseTranslation = computed({
+    get: () => config.value.selectionUseTranslation ?? false,
+    set: (value: boolean) => {
+      void updateConfig({ selectionUseTranslation: value })
+    },
+  })
+
+  const hasSelection = computed(() => selectedTurnIds.value.length > 0)
+
+  const selectedTurns = computed<DialogTurn[]>(() => {
+    if (selectedTurnIds.value.length === 0) return []
+    const selectedSet = new Set(selectedTurnIds.value)
+    return turns.value.filter((turn) => selectedSet.has(turn.id))
+  })
+
+  const activeSelectedTurns = computed<DialogTurn[]>(() => {
+    if (!selectionIncludeMe.value) {
+      return selectedTurns.value.filter((turn) => turn.side !== 'me')
+    }
+    return selectedTurns.value
+  })
+
+  const selectedCount = computed(() => selectedTurnIds.value.length)
+  const activeSelectedCount = computed(() => activeSelectedTurns.value.length)
+
+  function toggleTurnSelection(turnId: string, isShift: boolean) {
+    if (!isShift && selectedTurnIds.value.length === 0) return
+    const result = toggleShiftTurnSelection(
+      selectedTurnIds.value,
+      turnId,
+      turns.value,
+      selectionAnchorId.value
+    )
+    selectedTurnIds.value = result.selectedIds
+    selectionAnchorId.value = result.anchorId
+  }
+
+  function clearSelection() {
+    selectedTurnIds.value = []
+    selectionAnchorId.value = null
+  }
   const isActive = computed(
     () => status.value === 'starting' || status.value === 'running'
   )
@@ -512,6 +574,7 @@ export const useDialogStore = defineStore('dialog', () => {
   }
 
   function resetLocalState() {
+    clearSelection()
     translationQueue.clear()
     transcript.clear()
     sessionBreaks.value = []
@@ -540,6 +603,7 @@ export const useDialogStore = defineStore('dialog', () => {
     await dialogHistory.end()
     const loaded: Dialog | null = await dialogHistoryStore.getDialog(id)
     if (!loaded) return false
+    clearSelection()
     translationQueue.clear()
     currentDialogId.value = loaded.id
     currentDialogTitle.value = loaded.title
@@ -620,6 +684,42 @@ export const useDialogStore = defineStore('dialog', () => {
 
   async function copyTranscript() {
     return useIpcStore().callOrNotify('copy_text', { text: exportText() })
+  }
+
+  function formatSelectedText(): string {
+    return formatSelectedTurns(selectedTurns.value, {
+      includeMe: selectionIncludeMe.value,
+      useTranslation: selectionUseTranslation.value,
+      labels: {
+        me: translate('dialog.sideMe'),
+        remote: translate('dialog.sideRemote'),
+      },
+    })
+  }
+
+  async function copySelected() {
+    const text = formatSelectedText()
+    if (!text) return
+    await useIpcStore().callOrNotify('copy_text', { text })
+    useToastStore().toastKey('common.copied', 'success')
+  }
+
+  async function sendSelectedToChat() {
+    const text = formatSelectedText()
+    if (!text) return
+    const chatInputStore = useChatInputStore()
+    chatInputStore.setValue(text)
+    chatInputStore.requestFocus()
+    await appNavigation.goToChat()
+  }
+
+  async function promptAiSelected() {
+    const text = formatSelectedText()
+    if (!text) return
+    return useIpcStore().callOrNotify('activate_mode', {
+      mode: 'chatPrompts',
+      text,
+    })
   }
 
   /** The transcript goes to the action menu as if it were selected text */
@@ -836,5 +936,20 @@ export const useDialogStore = defineStore('dialog', () => {
     showRecording,
     showSubtitles,
     hideSubtitles,
+    selectedTurnIds,
+    selectionAnchorId,
+    selectionIncludeMe,
+    selectionUseTranslation,
+    hasSelection,
+    selectedTurns,
+    activeSelectedTurns,
+    selectedCount,
+    activeSelectedCount,
+    toggleTurnSelection,
+    clearSelection,
+    formatSelectedText,
+    copySelected,
+    sendSelectedToChat,
+    promptAiSelected,
   }
 })

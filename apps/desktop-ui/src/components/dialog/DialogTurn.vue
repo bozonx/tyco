@@ -4,11 +4,15 @@
     :class="[
       `is-${turn.side}`,
       isBubble ? 'is-bubble' : 'is-paragraph',
-      { 'is-draft': isDraft },
+      { 'is-draft': isDraft, 'is-selected': isSelected },
     ]"
     :title="hoverText"
     :aria-label="isBubble ? sideLabel : undefined"
+    @click="onClick"
   >
+    <div v-if="isSelected" class="dialog-turn-selected-badge">
+      <AppIcon icon="mdi:check-circle" size="xs" />
+    </div>
     <p
       v-if="showsTranslation && hasTranslation"
       class="dialog-turn-main"
@@ -51,6 +55,7 @@ import { computed } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { formatDialogClock } from '../../lib/dialog/dialog-export'
 import type { DialogTurn } from '../../lib/dialog/dialog-transcript'
+import AppIcon from '../common/AppIcon.vue'
 import InlineAction from '../common/InlineAction.vue'
 
 const props = defineProps<{
@@ -61,12 +66,23 @@ const props = defineProps<{
   isTranslationOnly: boolean
   /** The language translated into; none: no translation */
   translationLang?: string
+  /** Whether this turn is in the active selection */
+  isSelected?: boolean
 }>()
 
 const emit = defineEmits<{
   /** Translate these segments again */
   (e: 'retry', ids: string[]): void
+  /** Shift+click on this turn */
+  (e: 'select', event: MouseEvent): void
 }>()
+
+function onClick(event: MouseEvent) {
+  if (event.shiftKey) {
+    event.preventDefault()
+    emit('select', event)
+  }
+}
 
 const { t } = useI18n()
 
@@ -119,10 +135,25 @@ const hasFailedTranslation = computed(
 
 <style scoped>
 .dialog-turn {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   max-width: 100%;
+}
+
+.dialog-turn-selected-badge {
+  position: absolute;
+  top: -0.375rem;
+  right: -0.375rem;
+  color: var(--color-primary);
+  background-color: var(--app-surface);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
+  z-index: 2;
 }
 
 .dialog-turn.is-bubble {
@@ -131,6 +162,34 @@ const hasFailedTranslation = computed(
   border-radius: var(--radius-lg);
   background-color: var(--app-surface-raised);
   border: 1px solid var(--app-border-subtle);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.dialog-turn.is-bubble.is-selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+  background-color: color-mix(
+    in oklab,
+    var(--color-primary) 8%,
+    var(--app-surface-raised)
+  );
+}
+
+.dialog-turn.is-paragraph {
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.dialog-turn.is-paragraph.is-selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+  background-color: color-mix(in oklab, var(--color-primary) 8%, transparent);
 }
 
 .dialog-turn.is-bubble.is-remote {

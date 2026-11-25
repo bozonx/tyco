@@ -1796,7 +1796,15 @@
     "clearHistoryConfirmTitle": "清除對話歷史紀錄？",
     "startNewDialog": "開始新對話",
     "deleteConfirmTitle": "刪除對話？",
-    "deleteConfirmMessage": "此對話將被永久刪除。"
+    "deleteConfirmMessage": "此對話將被永久刪除。",
+    "selectionToolbarLabel": "選取操作",
+    "selectionCount": "已選取 {count} 項",
+    "clearSelection": "取消選取",
+    "selectionIncludeMe": "包含我的發言",
+    "selectionUseTranslation": "使用翻譯",
+    "copySelected": "複製所選內容",
+    "sendToChat": "發送到聊天",
+    "promptAi": "發送提示至 AI"
   },
   "toolPermissions": {
     "riskRead": "讀取",

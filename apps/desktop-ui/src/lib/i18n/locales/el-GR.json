@@ -1800,7 +1800,15 @@
     "clearHistoryConfirmTitle": "Εκκαθάριση ιστορικού διαλόγων;",
     "startNewDialog": "Έναρξη νέου διαλόγου",
     "deleteConfirmTitle": "Διαγραφή διαλόγου;",
-    "deleteConfirmMessage": "Αυτός ο διάλογος θα διαγραφεί οριστικά."
+    "deleteConfirmMessage": "Αυτός ο διάλογος θα διαγραφεί οριστικά.",
+    "selectionToolbarLabel": "Ενέργειες επιλογής",
+    "selectionCount": "{count} επιλέχθηκαν",
+    "clearSelection": "Καθαρισμός επιλογής",
+    "selectionIncludeMe": "Συμπερίληψη εμένα",
+    "selectionUseTranslation": "Χρήση μετάφρασης",
+    "copySelected": "Αντιγραφή επιλεγμένων",
+    "sendToChat": "Στη συνομιλία",
+    "promptAi": "Προτροπή στο AI"
   },
   "toolPermissions": {
     "riskRead": "Ανάγνωση",

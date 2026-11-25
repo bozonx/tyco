@@ -1800,7 +1800,15 @@
     "clearHistoryConfirmTitle": "Диалог тарихын тазалау керек пе?",
     "startNewDialog": "Жаңа диалогты бастау",
     "deleteConfirmTitle": "Диалогты жою керек пе?",
-    "deleteConfirmMessage": "Бұл диалог біржола жойылады."
+    "deleteConfirmMessage": "Бұл диалог біржола жойылады.",
+    "selectionToolbarLabel": "Таңдау әрекеттері",
+    "selectionCount": "{count} таңдалды",
+    "clearSelection": "Таңдауды тазалау",
+    "selectionIncludeMe": "Мені қосу",
+    "selectionUseTranslation": "Аударманы қолдану",
+    "copySelected": "Таңдалғанды көшіру",
+    "sendToChat": "Чатқа",
+    "promptAi": "ЖИ-ге промпт"
   },
   "toolPermissions": {
     "riskRead": "Оқу",

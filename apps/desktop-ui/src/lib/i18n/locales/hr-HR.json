@@ -1800,7 +1800,15 @@
     "clearHistoryConfirmTitle": "Očistiti povijest dijaloga?",
     "startNewDialog": "Započni novi dijalog",
     "deleteConfirmTitle": "Izbrisati dijalog?",
-    "deleteConfirmMessage": "Ovaj dijalog bit će trajno izbrisan."
+    "deleteConfirmMessage": "Ovaj dijalog bit će trajno izbrisan.",
+    "selectionToolbarLabel": "Radnje odabira",
+    "selectionCount": "Odabrano: {count}",
+    "clearSelection": "Očisti odabir",
+    "selectionIncludeMe": "Uključi mene",
+    "selectionUseTranslation": "Koristi prijevod",
+    "copySelected": "Kopiraj odabrano",
+    "sendToChat": "U chat",
+    "promptAi": "Upit za AI"
   },
   "toolPermissions": {
     "riskRead": "Čitanje",

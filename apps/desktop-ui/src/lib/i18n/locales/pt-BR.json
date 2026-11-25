@@ -1800,7 +1800,15 @@
     "clearHistoryConfirmTitle": "Limpar histórico de diálogos?",
     "startNewDialog": "Iniciar novo diálogo",
     "deleteConfirmTitle": "Excluir o diálogo?",
-    "deleteConfirmMessage": "Este diálogo será excluído permanentemente."
+    "deleteConfirmMessage": "Este diálogo será excluído permanentemente.",
+    "selectionToolbarLabel": "Ações de seleção",
+    "selectionCount": "{count} selecionado(s)",
+    "clearSelection": "Desmarcar",
+    "selectionIncludeMe": "Incluir-me",
+    "selectionUseTranslation": "Usar tradução",
+    "copySelected": "Copiar seleção",
+    "sendToChat": "Para o chat",
+    "promptAi": "Prompt para a IA"
   },
   "toolPermissions": {
     "riskRead": "Leitura",

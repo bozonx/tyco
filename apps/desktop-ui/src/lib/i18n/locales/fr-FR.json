@@ -1800,7 +1800,15 @@
     "clearHistoryConfirmTitle": "Effacer l’historique des dialogues ?",
     "startNewDialog": "Démarrer un nouveau dialogue",
     "deleteConfirmTitle": "Supprimer le dialogue ?",
-    "deleteConfirmMessage": "Ce dialogue sera définitivement supprimé."
+    "deleteConfirmMessage": "Ce dialogue sera définitivement supprimé.",
+    "selectionToolbarLabel": "Actions de sélection",
+    "selectionCount": "{count} sélectionné(s)",
+    "clearSelection": "Désélectionner",
+    "selectionIncludeMe": "M'inclure",
+    "selectionUseTranslation": "Utiliser la traduction",
+    "copySelected": "Copier la sélection",
+    "sendToChat": "Vers le chat",
+    "promptAi": "Prompt à l'IA"
   },
   "toolPermissions": {
     "riskRead": "Lecture",

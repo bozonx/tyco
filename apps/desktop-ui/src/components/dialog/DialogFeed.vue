@@ -18,7 +18,9 @@
         :is-bubble="isBubble"
         :is-translation-only="isTranslationOnly"
         :translation-lang="translationLang"
+        :is-selected="isSelected(item.turn.id)"
         @retry="(ids) => emit('retry', ids)"
+        @select="(event) => emit('select-turn', item.turn.id, event.shiftKey)"
       />
       <div v-else class="dialog-feed-break">
         <span class="dialog-feed-break-line" />
@@ -93,11 +95,14 @@ const props = defineProps<{
   dialogId?: string | null
   recordingExists?: Record<string, boolean>
   incompleteRecordingFiles?: readonly string[]
+  selectedTurnIds?: readonly string[]
 }>()
 
 const emit = defineEmits<{
   /** Translate these segments again */
   (e: 'retry', ids: string[]): void
+  /** Shift+click on a turn to select/extend range */
+  (e: 'select-turn', turnId: string, isShift: boolean): void
 }>()
 
 const { t } = useI18n()
@@ -108,6 +113,10 @@ const isFollowing = ref(true)
 const hasTurns = computed(() =>
   props.items.some((item) => item.type === 'turn')
 )
+
+function isSelected(turnId: string): boolean {
+  return Boolean(props.selectedTurnIds?.includes(turnId))
+}
 
 function breakLabel(sessionBreak: DialogSessionBreak): string {
   if (sessionBreak.action === 'started') {

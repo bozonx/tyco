@@ -60,4 +60,11 @@ export interface DialogConfig {
    * speakers lowered and the peaks limited; otherwise as captured
    */
   isRecordingProcessed: boolean
+  /** Whether to include own speech in the selected feed range (defaults to true) */
+  selectionIncludeMe?: boolean
+  /**
+   * Whether to use translation instead of original text for selected remote
+   * turns
+   */
+  selectionUseTranslation?: boolean
 }
