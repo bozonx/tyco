@@ -1,49 +1,34 @@
 <template>
   <div class="dialog-view">
-    <button
-      v-if="dialog.isHistoryOpen"
-      type="button"
-      tabindex="-1"
-      class="history-backdrop"
-      :aria-label="t('common.close')"
-      @pointerdown="preventMouseFocus"
-      @click="dialog.isHistoryOpen = false"
-    />
-    <DialogHistoryPanel
-      v-if="dialog.isHistoryOpen"
-      class="dialog-history-drawer"
-      @collapse="dialog.isHistoryOpen = false"
-      @navigate="closeMobileHistory"
-    />
-    <div class="dialog-page">
-      <DialogToolbar />
-      <InlineNotice
-        v-if="showHeadphonesNotice"
-        class="dialog-headphones-notice"
-        kind="info"
-        density="compact"
-        icon="mdi:headphones"
-        :message="t('dialog.headphonesNotice')"
+    <DialogToolbar />
+    <InlineNotice
+      v-if="showHeadphonesNotice"
+      class="dialog-headphones-notice"
+      kind="info"
+      density="compact"
+      icon="mdi:headphones"
+      :message="t('dialog.headphonesNotice')"
+    >
+      <Button size="xs" variant="ghost" @click="confirmHeadphonesNotice">{{
+        t('dialog.headphonesNoticeConfirm')
+      }}</Button>
+    </InlineNotice>
+    <InlineNotice
+      v-if="dialog.errorText"
+      class="dialog-error"
+      kind="error"
+      announcement="assertive"
+      density="compact"
+      :message="dialog.errorText"
+    >
+      <Button
+        v-if="dialog.canFixInSettings"
+        size="xs"
+        @click="openSttSettings"
+        >{{ t('common.openSettings') }}</Button
       >
-        <Button size="xs" variant="ghost" @click="confirmHeadphonesNotice">{{
-          t('dialog.headphonesNoticeConfirm')
-        }}</Button>
-      </InlineNotice>
-      <InlineNotice
-        v-if="dialog.errorText"
-        class="dialog-error"
-        kind="error"
-        announcement="assertive"
-        density="compact"
-        :message="dialog.errorText"
-      >
-        <Button
-          v-if="dialog.canFixInSettings"
-          size="xs"
-          @click="openSttSettings"
-          >{{ t('common.openSettings') }}</Button
-        >
-      </InlineNotice>
+    </InlineNotice>
+    <div class="dialog-content">
       <div class="dialog-body">
         <DialogFeed
           :items="dialog.feedItems"
@@ -73,6 +58,21 @@
           </template>
         </DialogFeed>
       </div>
+      <button
+        v-if="dialog.isHistoryOpen"
+        type="button"
+        tabindex="-1"
+        class="history-backdrop"
+        :aria-label="t('common.close')"
+        @pointerdown="preventMouseFocus"
+        @click="dialog.isHistoryOpen = false"
+      />
+      <DialogHistoryPanel
+        v-if="dialog.isHistoryOpen"
+        class="dialog-history-drawer"
+        @collapse="dialog.isHistoryOpen = false"
+        @navigate="closeMobileHistory"
+      />
     </div>
   </div>
 </template>
@@ -159,24 +159,28 @@ function closeMobileHistory() {
 .dialog-view {
   position: relative;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   height: 100%;
   min-height: 0;
   min-width: 0;
   background-color: var(--app-surface);
 }
 
+.dialog-content {
+  position: relative;
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+}
+
 .history-backdrop {
   display: none;
 }
 
-.dialog-page {
-  flex: 1 1 0%;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
+.dialog-history-drawer {
+  flex-shrink: 0;
 }
 
 .dialog-error,
@@ -188,6 +192,7 @@ function closeMobileHistory() {
   position: relative;
   flex: 1 1 0%;
   min-height: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
@@ -222,7 +227,8 @@ function closeMobileHistory() {
     position: absolute;
     top: 0;
     bottom: 0;
-    left: 0;
+    right: 0;
+    left: auto;
     z-index: calc(var(--z-popover) - 1);
     box-shadow: var(--app-shadow-lg);
   }

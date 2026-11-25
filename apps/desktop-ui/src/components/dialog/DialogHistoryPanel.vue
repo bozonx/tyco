@@ -30,7 +30,7 @@
         size="sm"
         variant="ghost"
         :label="t('chat.collapseSidebar')"
-        icon="mdi:dock-left"
+        icon="mdi:dock-right"
         @click="emit('collapse')"
       />
     </div>
@@ -411,7 +411,7 @@ function getRowMenuItems(item: DialogSummary): DropdownMenuItem[] {
   min-width: 15rem;
   height: 100%;
   min-height: 0;
-  border-right: 1px solid var(--app-border-subtle);
+  border-left: 1px solid var(--app-border-subtle);
   background-color: var(--app-surface-sunken);
 }
 

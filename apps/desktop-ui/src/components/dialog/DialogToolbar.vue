@@ -1,18 +1,5 @@
 <template>
   <div class="dialog-toolbar">
-    <Button
-      class="dialog-toolbar-history"
-      :variant="dialog.isHistoryOpen ? 'neutral' : 'ghost'"
-      size="sm"
-      icon="mdi:history"
-      :aria-pressed="dialog.isHistoryOpen"
-      :title="t('dialog.history')"
-      @click="dialog.isHistoryOpen = !dialog.isHistoryOpen"
-      ><span class="dialog-toolbar-history-label">{{
-        t('dialog.history')
-      }}</span></Button
-    >
-
     <div class="dialog-toolbar-actions">
       <Button
         v-if="isIdle"
@@ -135,6 +122,16 @@
       :label="t('dialog.collapse')"
       :disabled="!dialog.isActive"
       @click="dialog.showSubtitles()"
+    />
+    <IconButton
+      class="dialog-toolbar-history"
+      :variant="dialog.isHistoryOpen ? 'neutral' : 'ghost'"
+      :active="dialog.isHistoryOpen"
+      :aria-pressed="dialog.isHistoryOpen"
+      icon="mdi:history"
+      :label="t('dialog.history')"
+      :title="t('dialog.history')"
+      @click="dialog.isHistoryOpen = !dialog.isHistoryOpen"
     />
     <DropdownMenu
       square
@@ -559,10 +556,9 @@ function levelLabel(side: DialogSide) {
   flex-shrink: 1;
 }
 
-/* narrower still, the sources and history keep their icons, the tooltips name them */
+/* narrower still, the sources keep their icons, the tooltips name them */
 @media (max-width: 36rem) {
-  .dialog-toolbar-source :deep(.option-label),
-  .dialog-toolbar-history-label {
+  .dialog-toolbar-source :deep(.option-label) {
     display: none;
   }
 }
