@@ -70,7 +70,6 @@
       <DialogHistoryPanel
         v-if="dialog.isHistoryOpen"
         class="dialog-history-drawer"
-        @collapse="dialog.isHistoryOpen = false"
         @navigate="closeMobileHistory"
       />
     </div>

@@ -19,13 +19,6 @@
         icon="mdi:magnify"
         @click="toggleSearch"
       />
-      <IconButton
-        size="sm"
-        variant="ghost"
-        :label="t('chat.collapseSidebar')"
-        icon="mdi:dock-right"
-        @click="emit('collapse')"
-      />
     </div>
 
     <InlineNotice
@@ -184,7 +177,7 @@ import type { DialogSummary } from '@tyco/shared'
 const MAX_DIALOG_TITLE_LENGTH = 120
 const SEARCH_DEBOUNCE_MS = 200
 
-const emit = defineEmits<{ (e: 'collapse'): void; (e: 'navigate'): void }>()
+const emit = defineEmits<{ (e: 'navigate'): void }>()
 
 const { t, locale } = useI18n()
 const { toastKey } = useToast()
