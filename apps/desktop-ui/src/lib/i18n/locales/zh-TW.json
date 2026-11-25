@@ -1753,9 +1753,7 @@
     "recordingNoticeConfirm": "知道了",
     "remoteLanguage": "對方說的語言",
     "sourceCall": "通話",
-    "sourceCallHint": "通話：分別收錄你的麥克風和對方的聲音，發言標為「我」和「對方」。適用於 Zoom、Meet、Teams 等通話。",
     "sourceComputer": "電腦聲音",
-    "sourceComputerHint": "只收錄電腦聲音，不用麥克風：影片、網路研討會、Podcast。",
     "languages": "語言",
     "languageAuto": "自動",
     "ownLanguage": "你說的語言",
@@ -1767,7 +1765,6 @@
     "clearTitle": "清除逐字稿？",
     "clearMessage": "歷史記錄已在設定中關閉。目前的逐字稿將會遺失。",
     "clearConfirm": "清除",
-    "sourceLockedHint": "清除逐字稿以更改音訊來源",
     "sessionResumed": "工作階段已恢復",
     "sessionResumedRecording": "已恢復錄音",
     "record": "錄音",
@@ -1804,7 +1801,11 @@
     "selectionUseTranslation": "使用翻譯",
     "copySelected": "複製所選內容",
     "sendToChat": "發送到聊天",
-    "promptAi": "發送提示至 AI"
+    "promptAi": "發送提示至 AI",
+    "microphoneOn": "麥克風",
+    "microphoneOff": "無麥克風",
+    "microphoneOnHint": "識別您的聲音（點擊靜音麥克風）",
+    "microphoneOffHint": "僅對方聲音（點擊開啟麥克風）"
   },
   "toolPermissions": {
     "riskRead": "讀取",

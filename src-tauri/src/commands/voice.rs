@@ -20,6 +20,7 @@ pub async fn list_input_devices() -> Result<Vec<AudioInputDevice>, AppError> {
 /// is also recorded to a new file under `dialogs/recordings/<dialog_id>/`, see
 /// `VoiceCaptureInfo::recording_file`.
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub async fn start_voice_capture(
     app: tauri::AppHandle,
     state: State<'_, VoiceSessionState>,
@@ -28,6 +29,7 @@ pub async fn start_voice_capture(
     microphone_id: Option<String>,
     is_recorded: Option<bool>,
     dialog_id: Option<String>,
+    is_microphone_muted: Option<bool>,
 ) -> Result<VoiceCaptureInfo, AppError> {
     voice::start_capture(
         &app,
@@ -36,6 +38,7 @@ pub async fn start_voice_capture(
         microphone_id,
         is_recorded.unwrap_or(false),
         dialog_id,
+        is_microphone_muted,
         on_audio,
     )
     .await
@@ -47,6 +50,16 @@ pub async fn stop_voice_capture(
     session_id: Option<u64>,
 ) -> Result<(), AppError> {
     voice::stop_capture(&state, session_id).await
+}
+
+/// Sets whether the microphone channel is muted in the running capture.
+#[tauri::command]
+pub async fn set_capture_microphone_muted(
+    state: State<'_, VoiceSessionState>,
+    session_id: Option<u64>,
+    is_muted: bool,
+) -> Result<(), AppError> {
+    voice::set_microphone_muted(&state, session_id, is_muted).await
 }
 
 /// Records another playback source in the running capture `session_id`.

@@ -1753,9 +1753,7 @@
     "recordingNoticeConfirm": "Anladım",
     "remoteLanguage": "Karşı tarafın dili",
     "sourceCall": "Arama",
-    "sourceCallHint": "Arama: mikrofonunuz ve karşı tarafın sesi ayrı, konuşmalar “Ben” ve “Karşı taraf” olarak işaretlenir. Zoom, Meet, Teams ve diğer aramalar için.",
     "sourceComputer": "PC sesi",
-    "sourceComputerHint": "Mikrofon olmadan yalnızca bilgisayarın sesi: video, web semineri, podcast.",
     "languages": "Diller",
     "languageAuto": "Otomatik",
     "ownLanguage": "Konuştuğunuz dil",
@@ -1767,7 +1765,6 @@
     "clearTitle": "Döküm temizlensin mi?",
     "clearMessage": "Geçmiş ayarlarda kapalı. Geçerli döküm kaybolacak.",
     "clearConfirm": "Temizle",
-    "sourceLockedHint": "Ses kaynağını değiştirmek için dökümü temizleyin",
     "sessionResumed": "Oturum devam ettirildi",
     "sessionResumedRecording": "Kayıt devam ettirildi",
     "record": "Kayıt",
@@ -1804,7 +1801,11 @@
     "selectionUseTranslation": "Çeviriyi kullan",
     "copySelected": "Seçileni kopyala",
     "sendToChat": "Sohbete",
-    "promptAi": "YZ'ye prompt"
+    "promptAi": "YZ'ye prompt",
+    "microphoneOn": "Mikrofon",
+    "microphoneOff": "Mikrofon kapalı",
+    "microphoneOnHint": "Sesinizi tanıyın (mikrofonu kapatmak için tıklayın)",
+    "microphoneOffHint": "Yalnızca karşı tarafın sesi (mikrofonu açmak için tıklayın)"
   },
   "toolPermissions": {
     "riskRead": "Okuma",

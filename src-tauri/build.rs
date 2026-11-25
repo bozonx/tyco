@@ -182,6 +182,7 @@ fn main() {
             "list_input_devices",
             "start_voice_capture",
             "stop_voice_capture",
+            "set_capture_microphone_muted",
             "switch_capture_source",
             "open_recordings_folder",
             "check_dialog_recordings",

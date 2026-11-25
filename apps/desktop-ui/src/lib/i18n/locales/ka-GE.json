@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "გასაგებია",
     "remoteLanguage": "თანამოსაუბრე საუბრობს",
     "sourceCall": "ზარი",
-    "sourceCallHint": "ზარი: თქვენი მიკროფონი და თანამოსაუბრის ხმა ცალ-ცალკე, რეპლიკები მონიშნულია „მე“ და „თანამოსაუბრე“. Zoom-ის, Meet-ის, Teams-ისა და სხვა ზარებისთვის.",
     "sourceComputer": "კომპიუტერის ხმა",
-    "sourceComputerHint": "მხოლოდ კომპიუტერის ხმა, მიკროფონის გარეშე: ვიდეო, ვებინარი, პოდკასტი.",
     "languages": "ენები",
     "languageAuto": "ავტო",
     "ownLanguage": "თქვენ საუბრობთ",
@@ -1771,7 +1769,6 @@
     "clearTitle": "გასუფთავდეს ჩანაწერი?",
     "clearMessage": "ისტორია გამორთულია პარამეტრებში. მიმდინარე ჩანაწერი დაიკარგება.",
     "clearConfirm": "გასუფთავება",
-    "sourceLockedHint": "გაასუფთავეთ ჩანაწერი აუდიო წყაროს შესაცვლელად",
     "sessionResumed": "სესია განახლდა",
     "sessionResumedRecording": "ჩაწერა განახლდა",
     "record": "ჩაწერა",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "თარგმანის გამოყენება",
     "copySelected": "მონიშნულის კოპირება",
     "sendToChat": "ჩატში",
-    "promptAi": "პრომპტი AI-სთვის"
+    "promptAi": "პრომპტი AI-სთვის",
+    "microphoneOn": "მიკროფონი",
+    "microphoneOff": "მიკროფონის გარეშე",
+    "microphoneOnHint": "თქვენი ხმის ამოცნობა (დააწკაპუნეთ მიკროფონის გასათიშად)",
+    "microphoneOffHint": "მხოლოდ თანამოსაუბრის ხმა (დააწკაპუნეთ მიკროფონის ჩასართავად)"
   },
   "toolPermissions": {
     "riskRead": "კითხვა",

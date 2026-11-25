@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "Got it",
     "remoteLanguage": "The other side speaks",
     "sourceCall": "Call",
-    "sourceCallHint": "Call: your microphone and the other side's sound apart, lines marked Me and Other side. For Zoom, Meet, Teams and other calls.",
     "sourceComputer": "Computer sound",
-    "sourceComputerHint": "Only the computer's sound, without the microphone: a video, a webinar, a podcast.",
     "languages": "Languages",
     "languageAuto": "Auto",
     "ownLanguage": "You speak",
@@ -1771,7 +1769,6 @@
     "clearTitle": "Clear transcript?",
     "clearMessage": "History is turned off in settings. The current transcript will be lost.",
     "clearConfirm": "Clear",
-    "sourceLockedHint": "Clear the transcript to change the source",
     "sessionResumed": "Session resumed",
     "sessionResumedRecording": "Recording resumed",
     "record": "Record",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "Use translation",
     "copySelected": "Copy selected",
     "sendToChat": "To chat",
-    "promptAi": "Prompt in AI"
+    "promptAi": "Prompt in AI",
+    "microphoneOn": "Microphone",
+    "microphoneOff": "Microphone off",
+    "microphoneOnHint": "Transcribe your voice (click to mute microphone)",
+    "microphoneOffHint": "Transcribe other side only (click to unmute microphone)"
   },
   "toolPermissions": {
     "riskRead": "Reads",

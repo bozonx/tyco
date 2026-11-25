@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "Κατάλαβα",
     "remoteLanguage": "Ο συνομιλητής μιλά",
     "sourceCall": "Κλήση",
-    "sourceCallHint": "Κλήση: το μικρόφωνό σας και ο ήχος του συνομιλητή χωριστά, με σήμανση «Εγώ» και «Συνομιλητής». Για Zoom, Meet, Teams και άλλες κλήσεις.",
     "sourceComputer": "Ήχος υπολογιστή",
-    "sourceComputerHint": "Μόνο ο ήχος του υπολογιστή, χωρίς μικρόφωνο: βίντεο, διαδικτυακό σεμινάριο, podcast.",
     "languages": "Γλώσσες",
     "languageAuto": "Αυτόματα",
     "ownLanguage": "Μιλάτε",
@@ -1771,7 +1769,6 @@
     "clearTitle": "Εκκαθάριση απομαγνητοφώνησης;",
     "clearMessage": "Το ιστορικό είναι απενεργοποιημένο στις ρυθμίσεις. Η τρέχουσα απομαγνητοφώνηση θα χαθεί.",
     "clearConfirm": "Εκκαθάριση",
-    "sourceLockedHint": "Εκκαθαρίστε την απομαγνητοφώνηση για να αλλάξετε την πηγή ήχου",
     "sessionResumed": "Η συνεδρία συνεχίστηκε",
     "sessionResumedRecording": "Η εγγραφή συνεχίστηκε",
     "record": "Εγγραφή",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "Χρήση μετάφρασης",
     "copySelected": "Αντιγραφή επιλεγμένων",
     "sendToChat": "Στη συνομιλία",
-    "promptAi": "Προτροπή στο AI"
+    "promptAi": "Προτροπή στο AI",
+    "microphoneOn": "Μικρόφωνο",
+    "microphoneOff": "Χωρίς μικρόφωνο",
+    "microphoneOnHint": "Αναγνώριση της φωνής σας (κάντε κλικ για σίγαση)",
+    "microphoneOffHint": "Μόνο ήχος συνομιλητή (κάντε κλικ για ενεργοποίηση μικροφώνου)"
   },
   "toolPermissions": {
     "riskRead": "Ανάγνωση",

@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "Ho capito",
     "remoteLanguage": "L’interlocutore parla",
     "sourceCall": "Chiamata",
-    "sourceCallHint": "Chiamata: il tuo microfono e l’audio dell’interlocutore separati, battute segnate «Io» e «Interlocutore». Per Zoom, Meet, Teams e altre chiamate.",
     "sourceComputer": "Audio del PC",
-    "sourceComputerHint": "Solo l’audio del computer, senza microfono: un video, un webinar, un podcast.",
     "languages": "Lingue",
     "languageAuto": "Auto",
     "ownLanguage": "Parli",
@@ -1771,7 +1769,6 @@
     "clearTitle": "Cancellare la trascrizione?",
     "clearMessage": "La cronologia è disattivata nelle impostazioni. La trascrizione attuale andrà persa.",
     "clearConfirm": "Cancella",
-    "sourceLockedHint": "Cancella la trascrizione per modificare la sorgente audio",
     "sessionResumed": "Sessione ripresa",
     "sessionResumedRecording": "Registrazione ripresa",
     "record": "Registra",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "Usa traduzione",
     "copySelected": "Copia selezione",
     "sendToChat": "Alla chat",
-    "promptAi": "Prompt all'IA"
+    "promptAi": "Prompt all'IA",
+    "microphoneOn": "Microfono",
+    "microphoneOff": "Senza microfono",
+    "microphoneOnHint": "Riconosci la tua voce (fai clic per disattivare il microfono)",
+    "microphoneOffHint": "Solo audio dell’interlocutore (fai clic per attivare il microfono)"
   },
   "toolPermissions": {
     "riskRead": "Lettura",

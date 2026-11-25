@@ -475,6 +475,10 @@ export interface DesktopCommands {
     args: { vaultId: string; chatHistory: VaultChatHistory }
     result: void
   }
+  set_capture_microphone_muted: {
+    args: { sessionId?: number | null; isMuted: boolean }
+    result: void
+  }
   set_editor_history_item_failure: {
     args: { id: string; failure: EditorHistoryFailure }
     result: void
@@ -535,6 +539,7 @@ export interface DesktopCommands {
       microphoneId?: string | null
       isRecorded?: boolean | null
       dialogId?: string | null
+      isMicrophoneMuted?: boolean | null
     }
     result: VoiceCaptureInfo
   }

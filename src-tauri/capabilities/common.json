@@ -59,6 +59,7 @@
     "allow-set-editor-history-item-failure",
     "allow-show-status-overlay",
     "allow-start-voice-capture",
+    "allow-set-capture-microphone-muted",
     "allow-stop-voice-capture",
     "allow-switch-capture-source",
     "allow-switch-quick-mode",

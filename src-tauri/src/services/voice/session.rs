@@ -25,6 +25,8 @@ pub struct VoiceCaptureSession {
     /// A dialog: other captures do not take the sound over from it.
     pub is_dialog: bool,
     pub switch: SourceSwitchSlot,
+    /// Whether the microphone channel (channel 0 in stereo dialogs) is muted.
+    pub is_microphone_muted: Arc<AtomicBool>,
     pub thread: std::thread::JoinHandle<()>,
 }
 
@@ -121,6 +123,29 @@ impl VoiceSessionState {
         self.next_id.fetch_add(1, Ordering::SeqCst)
     }
 
+    /// Sets whether the microphone channel is muted in the running capture `id`.
+    pub fn set_microphone_muted(
+        &self,
+        id: Option<u64>,
+        is_muted: bool,
+    ) -> Result<(), crate::errors::AppError> {
+        let guard = self.session.locked();
+        match (id, guard.session.as_ref()) {
+            (Some(id), Some(session)) if session.id != id => Err(crate::errors::AppError::Stale(
+                "The capture session is no longer running".into(),
+            )),
+            (_, Some(session)) => {
+                session
+                    .is_microphone_muted
+                    .store(is_muted, Ordering::SeqCst);
+                Ok(())
+            }
+            _ => Err(crate::errors::AppError::Stale(
+                "No running capture session".into(),
+            )),
+        }
+    }
+
     pub async fn lock_capture_operation(&self) -> tokio::sync::MutexGuard<'_, ()> {
         self.capture_operation_lock.lock().await
     }
@@ -137,6 +162,7 @@ mod tests {
             superseded: Arc::new(AtomicBool::new(false)),
             is_dialog: false,
             switch: Arc::default(),
+            is_microphone_muted: Arc::new(AtomicBool::new(false)),
             thread: std::thread::spawn(|| {}),
         }
     }
@@ -167,6 +193,7 @@ mod tests {
             superseded: Arc::new(AtomicBool::new(false)),
             is_dialog: false,
             switch: Arc::default(),
+            is_microphone_muted: Arc::new(AtomicBool::new(false)),
             thread: std::thread::spawn(move || {
                 let _ = waiting.recv();
             }),

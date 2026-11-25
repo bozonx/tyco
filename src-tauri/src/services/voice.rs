@@ -155,6 +155,7 @@ pub fn list_input_devices() -> Result<Vec<AudioInputDevice>, AppError> {
     super::platform::audio::list_input_devices()
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn start_capture<S: EventSink>(
     app: &AppHandle,
     state: &VoiceSessionState,
@@ -162,6 +163,7 @@ pub async fn start_capture<S: EventSink>(
     microphone_id: Option<String>,
     is_recorded: bool,
     dialog_id: Option<String>,
+    is_microphone_muted: Option<bool>,
     sink: S,
 ) -> Result<VoiceCaptureInfo, AppError> {
     if capture_source.is_playback() && !super::platform::audio::can_capture_playback() {
@@ -188,6 +190,7 @@ pub async fn start_capture<S: EventSink>(
         app.clone(),
         state,
         recording,
+        is_microphone_muted.unwrap_or(false),
         sink,
     )
     .await
@@ -254,6 +257,7 @@ async fn start_capture_with<A, L, S>(
     levels: L,
     state: &VoiceSessionState,
     recording: Option<RecordingRequest>,
+    is_microphone_muted: bool,
     sink: S,
 ) -> Result<VoiceCaptureInfo, AppError>
 where
@@ -291,6 +295,7 @@ where
                 id: session_id,
                 setup_timeout: SETUP_TIMEOUT,
                 recording,
+                is_microphone_muted,
             },
         )
     })
@@ -320,6 +325,15 @@ pub async fn stop_capture(
 ) -> Result<(), AppError> {
     let _operation = state.lock_capture_operation().await;
     stop_capture_unlocked(state, session_id).await
+}
+
+/// Sets whether the microphone channel is muted in the running capture.
+pub async fn set_microphone_muted(
+    state: &VoiceSessionState,
+    session_id: Option<u64>,
+    is_muted: bool,
+) -> Result<(), AppError> {
+    state.set_microphone_muted(session_id, is_muted)
 }
 
 async fn stop_capture_unlocked(
@@ -372,6 +386,7 @@ struct CaptureFormat {
 struct CaptureSessionOptions {
     id: u64,
     setup_timeout: Duration,
+    is_microphone_muted: bool,
     /// The file the capture is recorded to, if any.
     recording: Option<RecordingRequest>,
 }
@@ -398,8 +413,11 @@ where
     let CaptureSessionOptions {
         id,
         setup_timeout,
+        is_microphone_muted,
         recording,
     } = options;
+    let is_microphone_muted = Arc::new(AtomicBool::new(is_microphone_muted));
+    let thread_is_microphone_muted = Arc::clone(&is_microphone_muted);
     let (setup_tx, setup_rx) = std_mpsc::sync_channel::<Result<CaptureFormat, AppError>>(1);
     let thread = thread::spawn(move || {
         // only setup can fail; later failures go through the channel
@@ -407,6 +425,7 @@ where
             stop_flag: &thread_stop_flag,
             superseded: &thread_superseded,
             switch: &thread_switch,
+            is_microphone_muted: &thread_is_microphone_muted,
             recording,
         };
         if let Err(error) = run_capture_thread(
@@ -431,6 +450,7 @@ where
                 superseded,
                 is_dialog,
                 switch,
+                is_microphone_muted,
                 thread,
             },
             format,
@@ -457,6 +477,7 @@ struct CaptureControl<'a> {
     stop_flag: &'a Arc<AtomicBool>,
     superseded: &'a AtomicBool,
     switch: &'a SourceSwitchSlot,
+    is_microphone_muted: &'a AtomicBool,
     recording: Option<RecordingRequest>,
 }
 
@@ -605,8 +626,15 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
             pending.extend(std::iter::repeat_n(0, gap * channels));
         }
 
+        let is_muted = control.is_microphone_muted.load(Ordering::Relaxed);
         if channels > 1 {
-            channel_levels.measure(&context.pending_pcm_samples.locked());
+            let mut pending = context.pending_pcm_samples.locked();
+            if is_muted {
+                for sample in pending.iter_mut().step_by(channels) {
+                    *sample = 0;
+                }
+            }
+            channel_levels.measure(&pending);
         }
         if let Some(message) = recording.as_mut().and_then(RecordingSink::take_failure) {
             sink.send_event(&CaptureEvent::RecordingFailed { message });
@@ -617,6 +645,8 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
             chunk_samples,
             recording.as_mut(),
             Some(&mut dump),
+            is_muted,
+            channels,
         ) {
             Some(sent) => delivered_samples += sent as u64,
             None => {
@@ -654,8 +684,16 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
 
     // what was captured goes out first, whatever ended the capture: the
     // words spoken last are still transcribed
-    let is_delivered =
-        flush_pending(&context, sink, 1, recording.as_mut(), Some(&mut dump)).is_some();
+    let is_delivered = flush_pending(
+        &context,
+        sink,
+        1,
+        recording.as_mut(),
+        Some(&mut dump),
+        control.is_microphone_muted.load(Ordering::Relaxed),
+        channels,
+    )
+    .is_some();
     // the file is complete whether or not anyone still listens
     let late_failure = recording.and_then(RecordingSink::finish);
     if !is_delivered {
@@ -726,19 +764,33 @@ fn flush_pending<S: EventSink>(
     min_samples: usize,
     recording: Option<&mut RecordingSink>,
     dump: Option<&mut CaptureDump>,
+    is_microphone_muted: bool,
+    channels: usize,
 ) -> Option<usize> {
-    let samples = match context.pending_pcm_samples.lock() {
+    let mut samples = match context.pending_pcm_samples.lock() {
         Ok(mut pending_pcm_samples) if pending_pcm_samples.len() >= min_samples => {
             std::mem::take(&mut *pending_pcm_samples)
         }
         _ => return Some(0),
     };
     let count = samples.len();
+    if is_microphone_muted && channels > 1 {
+        for sample in samples.iter_mut().step_by(channels) {
+            *sample = 0;
+        }
+    }
     // taken whatever the recording, so that it does not pile up
-    let unprocessed = context
+    let mut unprocessed = context
         .unprocessed_pcm_samples
         .as_ref()
         .map(|unprocessed| std::mem::take(&mut *unprocessed.locked()));
+    if is_microphone_muted && channels > 1 {
+        if let Some(unprocessed) = unprocessed.as_mut() {
+            for sample in unprocessed.iter_mut().step_by(channels) {
+                *sample = 0;
+            }
+        }
+    }
     if let Some(recording) = recording {
         match unprocessed {
             Some(unprocessed) if !recording.is_processed() => recording.push(&unprocessed),

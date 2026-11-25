@@ -385,6 +385,7 @@ pub fn run() {
             commands::voice::list_input_devices,
             commands::voice::start_voice_capture,
             commands::voice::stop_voice_capture,
+            commands::voice::set_capture_microphone_muted,
             commands::voice::switch_capture_source,
             commands::voice::open_recordings_folder,
             commands::voice::check_dialog_recordings,

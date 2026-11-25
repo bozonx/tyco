@@ -52,10 +52,7 @@
               :title="emptyTitle"
               :message="emptyMessage"
             >
-              <p
-                v-if="dialog.effectiveSource === 'microphoneAndSystem'"
-                class="dialog-empty-hint"
-              >
+              <p v-if="dialog.hasMicrophone" class="dialog-empty-hint">
                 <AppIcon icon="mdi:headphones" size="sm" class="shrink-0" />
                 <span>{{ t('dialog.emptyHeadphonesHint') }}</span>
               </p>
@@ -101,9 +98,7 @@ const dialog = useDialogStore()
 const { t } = useI18n()
 
 const showHeadphonesNotice = computed(
-  () =>
-    dialog.effectiveSource === 'microphoneAndSystem' &&
-    !dialog.config.isHeadphonesNoticeAcknowledged
+  () => dialog.hasMicrophone && !dialog.config.isHeadphonesNoticeAcknowledged
 )
 
 async function confirmHeadphonesNotice() {
@@ -119,29 +114,23 @@ watch(
 )
 
 /** Bubbles on both sides when the user is heard too, else paragraphs */
-const isBubble = computed(() =>
-  dialog.isActive
-    ? dialog.hasMicrophone
-    : dialog.effectiveSource === 'microphoneAndSystem'
-)
+const isBubble = computed(() => dialog.hasMicrophone)
 
 const emptyIcon = computed(() => {
   if (dialog.isActive) return 'mdi:waveform'
-  return dialog.effectiveSource === 'microphoneAndSystem'
-    ? 'mdi:account-voice'
-    : 'mdi:monitor-speaker'
+  return dialog.hasMicrophone ? 'mdi:account-voice' : 'mdi:monitor-speaker'
 })
 
 const emptyTitle = computed(() => {
   if (dialog.isActive) return t('dialog.waitingForSpeech')
-  return dialog.effectiveSource === 'microphoneAndSystem'
+  return dialog.hasMicrophone
     ? t('dialog.emptyTitleCall')
     : t('dialog.emptyTitleComputer')
 })
 
 const emptyMessage = computed(() => {
   if (dialog.isActive) return t('dialog.waitingForSpeechHint')
-  return dialog.effectiveSource === 'microphoneAndSystem'
+  return dialog.hasMicrophone
     ? t('dialog.emptyHintCall')
     : t('dialog.emptyHintComputer')
 })

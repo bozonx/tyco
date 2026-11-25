@@ -1753,9 +1753,7 @@
     "recordingNoticeConfirm": "了解",
     "remoteLanguage": "相手の言語",
     "sourceCall": "通話",
-    "sourceCallHint": "通話：マイクと相手の音声を分けて、発言に「自分」「相手」と表示します。Zoom、Meet、Teams などの通話向けです。",
     "sourceComputer": "PC の音",
-    "sourceComputerHint": "マイクなしで PC の音だけ：動画、ウェビナー、ポッドキャスト。",
     "languages": "言語",
     "languageAuto": "自動",
     "ownLanguage": "あなたの言語",
@@ -1767,7 +1765,6 @@
     "clearTitle": "文字起こしをクリアしますか？",
     "clearMessage": "設定で履歴が無効になっています。現在の文字起こしは失われます。",
     "clearConfirm": "クリア",
-    "sourceLockedHint": "音源を変更するには文字起こしをクリアしてください",
     "sessionResumed": "セッションを再開しました",
     "sessionResumedRecording": "録音を再開しました",
     "record": "録音",
@@ -1804,7 +1801,11 @@
     "selectionUseTranslation": "翻訳を使用",
     "copySelected": "選択項目をコピー",
     "sendToChat": "チャットへ",
-    "promptAi": "AI にプロンプト"
+    "promptAi": "AI にプロンプト",
+    "microphoneOn": "マイク",
+    "microphoneOff": "マイクオフ",
+    "microphoneOnHint": "自分の声を認識（クリックでマイクをミュート）",
+    "microphoneOffHint": "相手の音声のみ（クリックでマイクをオン）"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

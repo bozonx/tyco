@@ -267,4 +267,71 @@ describe('createDialogSession', () => {
     ).rejects.toBe(refusal)
     expect(test.session.status).toBe('failed')
   })
+
+  it('mutes the microphone on the fly, disconnecting STT and setting muted status', async () => {
+    const test = harness()
+    await test.session.start({ isMicrophoneEnabled: true })
+    test.audio.push({
+      data: stereo([
+        [1, 2],
+        [3, 4],
+      ]),
+    })
+    for (let index = 0; index < 5; index += 1) await flush()
+    expect(test.events).toContain('me:live')
+
+    test.session.setMicrophoneMuted(true)
+    for (let index = 0; index < 5; index += 1) await flush()
+    expect(test.events).toContain('me:muted')
+    expect(test.events).toContain('me:draft-lost')
+
+    // Audio arriving while muted is not delivered to me transcribe
+    const countBefore = test.heard.get('me')?.length ?? 0
+    test.audio.push({
+      data: stereo([
+        [5, 6],
+        [7, 8],
+      ]),
+    })
+    for (let index = 0; index < 5; index += 1) await flush()
+    expect(test.heard.get('me')?.length).toBe(countBefore)
+
+    // Remote side continues receiving audio
+    expect(test.heard.get('remote')?.length).toBeGreaterThan(0)
+
+    // Unmuting reconnects and resumes transcription for me
+    test.session.setMicrophoneMuted(false)
+    for (let index = 0; index < 5; index += 1) await flush()
+    test.audio.push({
+      data: stereo([
+        [9, 10],
+        [11, 12],
+      ]),
+    })
+    for (let index = 0; index < 5; index += 1) await flush()
+    expect(test.heard.get('me')?.length).toBeGreaterThan(countBefore)
+
+    await test.session.stop()
+  })
+
+  it('starts with microphone muted and does not connect until unmuted', async () => {
+    const test = harness()
+    await test.session.start({
+      isMicrophoneEnabled: true,
+      isMicrophoneMuted: true,
+    })
+    for (let index = 0; index < 5; index += 1) await flush()
+    expect(test.events).toContain('me:muted')
+    expect(test.events).not.toContain('me:live')
+    expect(test.events).toContain('remote:connecting')
+
+    test.session.setMicrophoneMuted(false)
+    for (let index = 0; index < 5; index += 1) await flush()
+    test.audio.push({ data: stereo([[100, 200]]) })
+    for (let index = 0; index < 5; index += 1) await flush()
+    expect(test.events).toContain('me:live')
+    expect(test.events).toContain('remote:live')
+
+    await test.session.stop()
+  })
 })

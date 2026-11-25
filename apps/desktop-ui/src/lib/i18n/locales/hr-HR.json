@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "Razumijem",
     "remoteLanguage": "Sugovornik govori",
     "sourceCall": "Poziv",
-    "sourceCallHint": "Poziv: vaš mikrofon i zvuk sugovornika odvojeno, replike označene „Ja” i „Sugovornik”. Za Zoom, Meet, Teams i druge pozive.",
     "sourceComputer": "Zvuk računala",
-    "sourceComputerHint": "Samo zvuk računala, bez mikrofona: video, webinar, podcast.",
     "languages": "Jezici",
     "languageAuto": "Auto",
     "ownLanguage": "Govorite",
@@ -1771,7 +1769,6 @@
     "clearTitle": "Očistiti prijepis?",
     "clearMessage": "Povijest je isključena u postavkama. Trenutni prijepis bit će izgubljen.",
     "clearConfirm": "Očisti",
-    "sourceLockedHint": "Očistite prijepis da biste promijenili izvor zvuka",
     "sessionResumed": "Sesija nastavljena",
     "sessionResumedRecording": "Snimanje nastavljeno",
     "record": "Snimanje",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "Koristi prijevod",
     "copySelected": "Kopiraj odabrano",
     "sendToChat": "U chat",
-    "promptAi": "Upit za AI"
+    "promptAi": "Upit za AI",
+    "microphoneOn": "Mikrofon",
+    "microphoneOff": "Bez mikrofona",
+    "microphoneOnHint": "Prepoznaj svoj glas (kliknite za isključivanje mikrofona)",
+    "microphoneOffHint": "Samo zvuk sugovornika (kliknite za uključivanje mikrofona)"
   },
   "toolPermissions": {
     "riskRead": "Čitanje",

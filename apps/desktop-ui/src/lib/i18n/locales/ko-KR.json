@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "확인",
     "remoteLanguage": "상대방 언어",
     "sourceCall": "통화",
-    "sourceCallHint": "통화: 마이크와 상대방 소리를 따로 받아 발언에 ‘나’와 ‘상대방’을 표시합니다. Zoom, Meet, Teams 등의 통화용입니다.",
     "sourceComputer": "PC 소리",
-    "sourceComputerHint": "마이크 없이 컴퓨터 소리만: 동영상, 웨비나, 팟캐스트.",
     "languages": "언어",
     "languageAuto": "자동",
     "ownLanguage": "내 언어",
@@ -1771,7 +1769,6 @@
     "clearTitle": "스크립트를 지우시겠습니까?",
     "clearMessage": "설정에서 기록이 꺼져 있습니다. 현재 스크립트가 손실됩니다.",
     "clearConfirm": "지우기",
-    "sourceLockedHint": "오디오 소스를 변경하려면 스크립트를 지우세요",
     "sessionResumed": "세션 다시 시작됨",
     "sessionResumedRecording": "녹음 다시 시작됨",
     "record": "녹음",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "번역 사용",
     "copySelected": "선택 항목 복사",
     "sendToChat": "채팅으로",
-    "promptAi": "AI에 프롬프트"
+    "promptAi": "AI에 프롬프트",
+    "microphoneOn": "마이크",
+    "microphoneOff": "마이크 끔",
+    "microphoneOnHint": "내 음성 인식 (클릭하여 마이크 음소거)",
+    "microphoneOffHint": "상대방 소리만 인식 (클릭하여 마이크 켜기)"
   },
   "toolPermissions": {
     "riskRead": "읽기",

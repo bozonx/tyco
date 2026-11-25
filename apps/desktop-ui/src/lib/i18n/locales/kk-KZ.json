@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "Түсінікті",
     "remoteLanguage": "Әңгімелесуші сөйлейтін тіл",
     "sourceCall": "Қоңырау",
-    "sourceCallHint": "Қоңырау: микрофоныңыз бен әңгімелесушінің дыбысы бөлек, сөздер «Мен» және «Әңгімелесуші» деп белгіленеді. Zoom, Meet, Teams және басқа қоңыраулар үшін.",
     "sourceComputer": "Компьютер дыбысы",
-    "sourceComputerHint": "Тек компьютер дыбысы, микрофонсыз: бейне, вебинар, подкаст.",
     "languages": "Тілдер",
     "languageAuto": "Авто",
     "ownLanguage": "Сіз сөйлейтін тіл",
@@ -1771,7 +1769,6 @@
     "clearTitle": "Транскриптті тазалау керек пе?",
     "clearMessage": "Тарих баптауларда өшірілген. Ағымдағы транскрипт жойылады.",
     "clearConfirm": "Тазалау",
-    "sourceLockedHint": "Дыбыс көзін өзгерту үшін транскриптті тазалаңыз",
     "sessionResumed": "Сессия жалғастырылды",
     "sessionResumedRecording": "Жазу жалғастырылды",
     "record": "Жазу",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "Аударманы қолдану",
     "copySelected": "Таңдалғанды көшіру",
     "sendToChat": "Чатқа",
-    "promptAi": "ЖИ-ге промпт"
+    "promptAi": "ЖИ-ге промпт",
+    "microphoneOn": "Микрофон",
+    "microphoneOff": "Микрофонсыз",
+    "microphoneOnHint": "Дауысыңызды тану (микрофонды өшіру үшін басыңыз)",
+    "microphoneOffHint": "Тек әңгімелесушінің дыбысы (микрофонды қосу үшін басыңыз)"
   },
   "toolPermissions": {
     "riskRead": "Оқу",

@@ -43,7 +43,9 @@ export interface VoiceCaptureControl {
     /** Also records a dialog to a new file in `dialogs/recordings/<dialogId>/` */
     isRecorded?: boolean,
     /** The dialog id owning the recording folder when `isRecorded` is true */
-    dialogId?: string
+    dialogId?: string,
+    /** Whether the microphone channel starts muted in a stereo dialog */
+    isMicrophoneMuted?: boolean
   ) => Promise<VoiceCapture>
   /** Records another playback source in the running capture */
   switchSource: (source: CaptureSource) => Promise<void>
@@ -58,7 +60,14 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
   let sessionId: number | undefined
 
   return {
-    async start(source, handlers = {}, microphoneId, isRecorded, dialogId) {
+    async start(
+      source,
+      handlers = {},
+      microphoneId,
+      isRecorded,
+      dialogId,
+      isMicrophoneMuted
+    ) {
       let overflowed = false
       let superseded = false
       let captureSessionId: number | undefined
@@ -103,6 +112,7 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
           ...(trimmedMic && { microphoneId: trimmedMic }),
           ...(isRecorded && { isRecorded }),
           ...(isRecorded && dialogId && { dialogId }),
+          ...(isMicrophoneMuted !== undefined && { isMicrophoneMuted }),
         })
         captureSessionId = started.sessionId
         sessionId = captureSessionId

@@ -335,7 +335,7 @@ export const useDialogStore = defineStore('dialog', () => {
 
   const session = createDialogSession({
     capture: {
-      start: async (source) => {
+      start: async (source, isMicrophoneMuted) => {
         const dialogId = currentDialogId.value ?? undefined
         const started = await capture.start(
           source,
@@ -365,7 +365,8 @@ export const useDialogStore = defineStore('dialog', () => {
           },
           desktopStore.userConfig.stt.microphoneId,
           isRecordingRequested,
-          dialogId
+          dialogId,
+          isMicrophoneMuted
         )
         recordingFile = started.recordingFile
         return started
@@ -505,7 +506,7 @@ export const useDialogStore = defineStore('dialog', () => {
     .listen(DESKTOP_EVENTS.VOICE_AUDIO_LEVEL, (payload) => {
       if (status.value !== 'running') return
       if (payload.channels && payload.channels.length >= 2) {
-        levels.me = payload.channels[0]
+        levels.me = hasMicrophone.value ? payload.channels[0] : 0
         levels.remote = payload.channels[1]
       } else {
         levels.remote = payload.level
@@ -514,6 +515,26 @@ export const useDialogStore = defineStore('dialog', () => {
     .catch(() => undefined)
 
   let isPreparing = false
+
+  /**
+   * Toggles the user's microphone on or off. If the dialog is running, it
+   * mutes/unmutes on the fly: when muted, STT disconnects to avoid consuming
+   * tokens and recording writes silence on channel 0.
+   */
+  async function toggleMicrophone() {
+    const nextActive = !hasMicrophone.value
+    hasMicrophone.value = nextActive
+    void updateConfig({ source: nextActive ? 'microphoneAndSystem' : 'system' })
+    if (status.value === 'running') {
+      session.setMicrophoneMuted(!nextActive)
+      await useIpcStore().call('set_capture_microphone_muted', {
+        isMuted: !nextActive,
+      })
+      if (!nextActive) {
+        levels.me = 0
+      }
+    }
+  }
 
   /**
    * A session stopped while it started never got a saved dialog: its recording
@@ -564,7 +585,25 @@ export const useDialogStore = defineStore('dialog', () => {
       })
       const source = currentDialogSource.value ?? config.value.source
       hasMicrophone.value = source === 'microphoneAndSystem'
-      await session.start({ isMicrophoneEnabled: hasMicrophone.value })
+      let startError: unknown
+      try {
+        await session.start({
+          isMicrophoneEnabled: true,
+          isMicrophoneMuted: !hasMicrophone.value,
+        })
+      } catch (error) {
+        startError = error
+      }
+      if (startError) {
+        if (!hasMicrophone.value) {
+          await session.start({
+            isMicrophoneEnabled: false,
+            isMicrophoneMuted: true,
+          })
+        } else {
+          throw startError
+        }
+      }
     } catch (error) {
       if (!hasContent.value) currentDialogId.value = null
       showError(asDictationError('microphone', error))
@@ -917,6 +956,7 @@ export const useDialogStore = defineStore('dialog', () => {
     isActive,
     isSubtitlesShown,
     hasMicrophone,
+    toggleMicrophone,
     recording,
     isRecordEnabled,
     start,

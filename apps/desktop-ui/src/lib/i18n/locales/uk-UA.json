@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "Зрозуміло",
     "remoteLanguage": "Співрозмовник говорить",
     "sourceCall": "Дзвінок",
-    "sourceCallHint": "Дзвінок: ваш мікрофон і звук співрозмовника окремо, репліки підписані «Я» і «Співрозмовник». Для Zoom, Meet, Teams та інших дзвінків.",
     "sourceComputer": "Звук ПК",
-    "sourceComputerHint": "Лише звук комп’ютера, без мікрофона: відео, вебінар, подкаст.",
     "languages": "Мови",
     "languageAuto": "Авто",
     "ownLanguage": "Ви говорите",
@@ -1771,7 +1769,6 @@
     "clearTitle": "Очистити розшифровку?",
     "clearMessage": "Історію вимкнено в налаштуваннях. Поточну розшифровку буде втрачено.",
     "clearConfirm": "Очистити",
-    "sourceLockedHint": "Очистіть розшифровку, щоб змінити джерело звуку",
     "sessionResumed": "Сесію відновлено",
     "sessionResumedRecording": "Запис продовжено",
     "record": "Запис",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "Використовувати переклад",
     "copySelected": "Скопіювати виділене",
     "sendToChat": "В чат",
-    "promptAi": "Промпт в ШІ"
+    "promptAi": "Промпт в ШІ",
+    "microphoneOn": "Мікрофон",
+    "microphoneOff": "Без мікрофона",
+    "microphoneOnHint": "Розпізнавати ваш голос (натисніть, щоб вимкнути мікрофон)",
+    "microphoneOffHint": "Лише звук співрозмовника (натисніть, щоб увімкнути мікрофон)"
   },
   "toolPermissions": {
     "riskRead": "Читання",

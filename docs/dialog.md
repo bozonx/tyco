@@ -22,15 +22,19 @@ confirmation before clearing).
 While the dialog runs it holds the sound: voice input, voice commands and
 listening do not record and say that the sound is busy with the dialog.
 
-## Source
+## Microphone and sound source
 
-Pick it in the toolbar before you start; TyCo remembers the last choice. To
-change the source for an existing conversation, clear the feed first.
+You can toggle your microphone on or off at any time using the **Microphone** button
+in the toolbar — both before starting and on the fly while the dialog is running.
+TyCo remembers your choice.
 
-- **Call**: your microphone and the other side are recorded apart and shown
-  as bubbles on both sides. Use it for Zoom, Meet, Teams and other calls.
-- **Computer sound**: only what the computer plays, such as a video, a webinar
-  or a podcast, shown as paragraphs.
+- **Microphone on**: your speech and the other side are recorded separately and
+  transcribed as bubbles on both sides. Use it for Zoom, Meet, Teams and other calls.
+- **Microphone off**: only computer audio is transcribed (e.g. video, webinar,
+  podcast, or listening to a call without transcribing yourself). When turned off during
+  an active dialog, the speech recognition connection for your microphone is immediately
+  closed to save tokens and costs, while computer audio continues recording and transcribing.
+  You can toggle it back on at any point to resume speech recognition for your voice.
 
 Hover over a bubble to see who spoke and when.
 

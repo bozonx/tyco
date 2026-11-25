@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "Verstanden",
     "remoteLanguage": "Die Gegenseite spricht",
     "sourceCall": "Anruf",
-    "sourceCallHint": "Anruf: Ihr Mikrofon und der Ton der Gegenseite getrennt, Beiträge markiert mit „Ich“ und „Gegenseite“. Für Zoom, Meet, Teams und andere Anrufe.",
     "sourceComputer": "PC-Ton",
-    "sourceComputerHint": "Nur der Ton des Computers, ohne Mikrofon: ein Video, ein Webinar, ein Podcast.",
     "languages": "Sprachen",
     "languageAuto": "Auto",
     "ownLanguage": "Sie sprechen",
@@ -1771,7 +1769,6 @@
     "clearTitle": "Transkript löschen?",
     "clearMessage": "Der Verlauf ist in den Einstellungen deaktiviert. Das aktuelle Transkript geht verloren.",
     "clearConfirm": "Löschen",
-    "sourceLockedHint": "Transkript löschen, um die Audioquelle zu ändern",
     "sessionResumed": "Sitzung fortgesetzt",
     "sessionResumedRecording": "Aufnahme fortgesetzt",
     "record": "Aufnahme",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "Übersetzung verwenden",
     "copySelected": "Auswahl kopieren",
     "sendToChat": "In den Chat",
-    "promptAi": "Prompt an KI"
+    "promptAi": "Prompt an KI",
+    "microphoneOn": "Mikrofon",
+    "microphoneOff": "Ohne Mikrofon",
+    "microphoneOnHint": "Ihre Stimme erkennen (klicken, um Mikrofon stummzuschalten)",
+    "microphoneOffHint": "Nur Ton der Gegenseite (klicken, um Mikrofon einzuschalten)"
   },
   "toolPermissions": {
     "riskRead": "Liest",

@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "Am înțeles",
     "remoteLanguage": "Interlocutorul vorbește",
     "sourceCall": "Apel",
-    "sourceCallHint": "Apel: microfonul dvs. și sunetul interlocutorului separat, replici marcate „Eu” și „Interlocutor”. Pentru Zoom, Meet, Teams și alte apeluri.",
     "sourceComputer": "Sunetul PC",
-    "sourceComputerHint": "Doar sunetul computerului, fără microfon: un videoclip, un webinar, un podcast.",
     "languages": "Limbi",
     "languageAuto": "Auto",
     "ownLanguage": "Vorbiți",
@@ -1771,7 +1769,6 @@
     "clearTitle": "Ștergeți transcrierea?",
     "clearMessage": "Istoricul este dezactivat în setări. Transcrierea curentă se va pierde.",
     "clearConfirm": "Șterge",
-    "sourceLockedHint": "Ștergeți transcrierea pentru a schimba sursa audio",
     "sessionResumed": "Sesiune reluată",
     "sessionResumedRecording": "Înregistrare reluată",
     "record": "Înregistrare",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "Utilizează traducerea",
     "copySelected": "Copiază selecția",
     "sendToChat": "În chat",
-    "promptAi": "Prompt către AI"
+    "promptAi": "Prompt către AI",
+    "microphoneOn": "Microfon",
+    "microphoneOff": "Fără microfon",
+    "microphoneOnHint": "Recunoaște vocea ta (faceți clic pentru a dezactiva microfonul)",
+    "microphoneOffHint": "Doar sunetul interlocutorului (faceți clic pentru a activa microfonul)"
   },
   "toolPermissions": {
     "riskRead": "Citire",

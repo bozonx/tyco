@@ -25,7 +25,10 @@ export interface DialogCapture {
 }
 
 export interface DialogCaptureControl {
-  start: (source: CaptureSource) => Promise<DialogCapture>
+  start: (
+    source: CaptureSource,
+    isMicrophoneMuted?: boolean
+  ) => Promise<DialogCapture>
   stop: () => Promise<void>
 }
 
@@ -46,10 +49,11 @@ export type DialogSessionStatus =
  * - `connecting`: the provider of the channel is reached for the first time;
  * - `live`: it transcribes;
  * - `reconnecting`: its connection broke, another one follows;
- * - `failed`: it gave up; the other channel goes on.
+ * - `failed`: it gave up; the other channel goes on;
+ * - `muted`: the channel is muted by the user and not connected.
  */
 export type DialogChannelStatus =
-  'connecting' | 'live' | 'reconnecting' | 'failed'
+  'connecting' | 'live' | 'reconnecting' | 'failed' | 'muted'
 
 export interface DialogSessionDependencies {
   capture: DialogCaptureControl
@@ -91,10 +95,16 @@ export interface DialogSessionDependencies {
 
 export interface DialogSession {
   readonly status: DialogSessionStatus
+  readonly isMicrophoneMuted: boolean
   /** Resolves once the sound is recorded; the providers connect meanwhile */
-  start: (options: { isMicrophoneEnabled: boolean }) => Promise<void>
+  start: (options: {
+    isMicrophoneEnabled: boolean
+    isMicrophoneMuted?: boolean
+  }) => Promise<void>
   /** Stops recording and waits for the providers' last words */
   stop: () => Promise<void>
+  /** Sets whether the microphone channel is muted on the fly */
+  setMicrophoneMuted: (isMuted: boolean) => void
 }
 
 /** The sides of the channels of a capture, in their order */
@@ -148,6 +158,8 @@ function defaultSleep(ms: number, signal: AbortSignal): Promise<void> {
  */
 export interface ChannelPipe {
   push: (data: Uint8Array) => void
+  /** Drops all currently queued unread bytes, advancing the clock */
+  drain: () => void
   end: () => void
   /** Audio read or dropped so far, in bytes: the channel's clock */
   readonly positionBytes: number
@@ -185,6 +197,13 @@ export function createChannelPipe(
       }
       if (droppedBytes > 0) onDrop?.(droppedBytes)
       notify()
+    },
+    drain() {
+      while (queue.length > 0) {
+        const dropped = queue.shift()!
+        queuedBytes -= dropped.byteLength
+        positionBytes += dropped.byteLength
+      }
     },
     end() {
       isEnded = true
@@ -238,6 +257,9 @@ export function createDialogSession(
   const delays = deps.reconnectDelaysMs ?? RECONNECT_DELAYS_MS
   let status: DialogSessionStatus = 'idle'
   let controller: AbortController | undefined
+  let isMicrophoneMuted = false
+  let meConnection: AbortController | undefined
+  let meWake: (() => void) | undefined
   let pipes: ChannelPipe[] = []
   let channels: Promise<void>[] = []
   let pump: Promise<void> | undefined
@@ -249,6 +271,18 @@ export function createDialogSession(
     deps.onStatus(next)
   }
 
+  const setMicrophoneMuted = (muted: boolean) => {
+    if (isMicrophoneMuted === muted) return
+    isMicrophoneMuted = muted
+    if (muted) {
+      meConnection?.abort()
+    } else {
+      const wake = meWake
+      meWake = undefined
+      wake?.()
+    }
+  }
+
   const runChannel = async (
     side: DialogSide,
     pipe: ChannelPipe,
@@ -257,9 +291,30 @@ export function createDialogSession(
   ) => {
     const bytesPerMs = (sampleRate * SAMPLE_BYTES) / 1000
     let failures = 0
-    deps.onChannelStatus(side, 'connecting')
     while (!signal.aborted) {
+      if (side === 'me' && isMicrophoneMuted) {
+        deps.onChannelStatus(side, 'muted')
+        await new Promise<void>((resolve) => {
+          if (signal.aborted) return resolve()
+          const onAbort = () => {
+            signal.removeEventListener('abort', onAbort)
+            resolve()
+          }
+          signal.addEventListener('abort', onAbort)
+          meWake = () => {
+            signal.removeEventListener('abort', onAbort)
+            resolve()
+          }
+        })
+        if (signal.aborted) return
+        pipe.drain()
+      }
+      deps.onChannelStatus(side, 'connecting')
+
       const connection = new AbortController()
+      if (side === 'me') {
+        meConnection = connection
+      }
       const abortConnection = () => connection.abort()
       signal.addEventListener('abort', abortConnection)
       const offsetMs = pipe.positionBytes / bytesPerMs
@@ -284,10 +339,20 @@ export function createDialogSession(
       } finally {
         signal.removeEventListener('abort', abortConnection)
         connection.abort()
+        if (side === 'me' && meConnection === connection) {
+          meConnection = undefined
+        }
       }
       deps.onDraftLost(side)
       // the audio is over: the dialog was stopped
       if (pipe.isEnded || signal.aborted) return
+
+      // If muted, this disconnection was expected and should not count as failure
+      if (side === 'me' && isMicrophoneMuted) {
+        failures = 0
+        continue
+      }
+
       failures += 1
       if (
         failures >= MAX_FAILURES_IN_ROW ||
@@ -309,6 +374,9 @@ export function createDialogSession(
     if (isStopping) return
     isStopping = true
     setStatus('stopping')
+    const wake = meWake
+    meWake = undefined
+    wake?.()
     await deps.capture.stop().catch(() => undefined)
     for (const pipe of pipes) pipe.end()
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -333,20 +401,27 @@ export function createDialogSession(
     get status() {
       return status
     },
+    get isMicrophoneMuted() {
+      return isMicrophoneMuted
+    },
 
-    async start({ isMicrophoneEnabled }) {
+    async start({
+      isMicrophoneEnabled,
+      isMicrophoneMuted: initialMuted = false,
+    }) {
       if (status === 'starting' || status === 'running') return
       if (status === 'stopping') await pump
       isStopping = false
+      isMicrophoneMuted = initialMuted
       setStatus('starting')
       const current = new AbortController()
       controller = current
       let capture: DialogCapture
       try {
-        capture = await deps.capture.start({
-          kind: 'dialog',
-          isMicrophoneEnabled,
-        })
+        capture = await deps.capture.start(
+          { kind: 'dialog', isMicrophoneEnabled },
+          isMicrophoneMuted
+        )
       } catch (error) {
         controller = undefined
         setStatus('failed')
@@ -394,5 +469,7 @@ export function createDialogSession(
       await finish()
       await pump
     },
+
+    setMicrophoneMuted,
   }
 }

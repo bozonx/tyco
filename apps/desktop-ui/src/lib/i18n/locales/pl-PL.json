@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "Rozumiem",
     "remoteLanguage": "Rozmówca mówi po",
     "sourceCall": "Rozmowa",
-    "sourceCallHint": "Rozmowa: Twój mikrofon i dźwięk rozmówcy osobno, wypowiedzi oznaczone „Ja” i „Rozmówca”. Do Zoom, Meet, Teams i innych rozmów.",
     "sourceComputer": "Dźwięk PC",
-    "sourceComputerHint": "Tylko dźwięk komputera, bez mikrofonu: wideo, webinar, podcast.",
     "languages": "Języki",
     "languageAuto": "Auto",
     "ownLanguage": "Mówisz po",
@@ -1771,7 +1769,6 @@
     "clearTitle": "Wyczyścić transkrypcję?",
     "clearMessage": "Historia jest wyłączona w ustawieniach. Bieżąca transkrypcja zostanie utracona.",
     "clearConfirm": "Wyczyść",
-    "sourceLockedHint": "Wyczyść transkrypcję, aby zmienić źródło dźwięku",
     "sessionResumed": "Wznowiono sesję",
     "sessionResumedRecording": "Wznowiono nagrywanie",
     "record": "Nagrywanie",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "Użyj tłumaczenia",
     "copySelected": "Kopiuj zaznaczone",
     "sendToChat": "Do czatu",
-    "promptAi": "Prompt do AI"
+    "promptAi": "Prompt do AI",
+    "microphoneOn": "Mikrofon",
+    "microphoneOff": "Bez mikrofonu",
+    "microphoneOnHint": "Rozpoznawaj Twój głos (kliknij, aby wyciszyć mikrofon)",
+    "microphoneOffHint": "Tylko dźwięk rozmówcy (kliknij, aby włączyć mikrofon)"
   },
   "toolPermissions": {
     "riskRead": "Odczyt",

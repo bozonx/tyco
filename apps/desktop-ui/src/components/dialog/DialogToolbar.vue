@@ -61,21 +61,26 @@
           </template>
         </Button>
       </div>
+
+      <Button
+        class="dialog-toolbar-mic-toggle"
+        :variant="dialog.hasMicrophone ? 'neutral' : 'ghost'"
+        size="sm"
+        :tone="!dialog.hasMicrophone ? 'muted' : undefined"
+        :icon="dialog.hasMicrophone ? 'mdi:microphone' : 'mdi:microphone-off'"
+        :aria-pressed="dialog.hasMicrophone"
+        :title="micToggleTitle"
+        @click="dialog.toggleMicrophone()"
+      >
+        <span>{{
+          dialog.hasMicrophone
+            ? t('dialog.microphoneOn')
+            : t('dialog.microphoneOff')
+        }}</span>
+      </Button>
     </div>
 
-    <!-- the source is chosen before the dialog; while it runs, its sound -->
-    <SegmentedControl
-      v-if="isIdle"
-      class="dialog-toolbar-source"
-      :model-value="dialog.effectiveSource"
-      size="sm"
-      :disabled="!isEmpty"
-      :label="t('dialog.source')"
-      :title="!isEmpty ? t('dialog.sourceLockedHint') : undefined"
-      :options="sourceOptions"
-      @update:model-value="(source) => dialog.updateConfig({ source })"
-    />
-    <div v-else class="dialog-toolbar-levels">
+    <div v-if="!isIdle" class="dialog-toolbar-levels">
       <DialogLevel
         v-if="dialog.hasMicrophone"
         icon="mdi:microphone"
@@ -192,17 +197,14 @@ import {
 import { useI18n } from '../../composables/use-i18n'
 import { formatRecordingElapsed } from '../../lib/dialog/dialog-recording'
 import type { DialogSide } from '../../lib/dialog/dialog-transcript'
-import type { ControlOption } from '../../lib/ui/control-option'
 import { useDialogStore } from '../../stores/dialog'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
-import SegmentedControl from '../common/SegmentedControl.vue'
 import DialogLanguageRoute from './DialogLanguageRoute.vue'
 import DialogLevel from './DialogLevel.vue'
-import type { DialogSource } from '@tyco/shared'
 
 const dialog = useDialogStore()
 const { t } = useI18n()
@@ -285,6 +287,12 @@ const runButtonTitle = computed(() => {
     : t('dialog.resumeTooltip')
 })
 
+const micToggleTitle = computed(() =>
+  dialog.hasMicrophone
+    ? t('dialog.microphoneOnHint')
+    : t('dialog.microphoneOffHint')
+)
+
 const isRecordingRunning = computed(
   () => !isIdle.value && Boolean(dialog.recording)
 )
@@ -359,21 +367,6 @@ function confirmClear() {
   isClearConfirmOpen.value = false
   void dialog.clear()
 }
-
-const sourceOptions = computed<ControlOption<DialogSource>[]>(() => [
-  {
-    id: 'microphoneAndSystem',
-    name: t('dialog.sourceCall'),
-    icon: 'mdi:account-multiple-outline',
-    title: t('dialog.sourceCallHint'),
-  },
-  {
-    id: 'system',
-    name: t('dialog.sourceComputer'),
-    icon: 'mdi:monitor-speaker',
-    title: t('dialog.sourceComputerHint'),
-  },
-])
 
 // the original is hidden only under a translation, so the switch needs one
 const displayItems = computed<DropdownMenuItem[]>(() =>
@@ -518,6 +511,14 @@ function levelLabel(side: DialogSide) {
 .dialog-record-timer {
   font-variant-numeric: tabular-nums;
   font-size: var(--text-caption);
+}
+
+.dialog-toolbar-mic-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 5.5rem;
+  justify-content: center;
 }
 
 .dialog-toolbar-levels {

@@ -73,6 +73,25 @@ describe('DialogToolbar.vue', () => {
     expect(runBtn.attributes('title')).toBe(
       i18n.global.t('dialog.listenTooltip')
     )
+
+    const micToggle = wrapper.find('.dialog-toolbar-mic-toggle')
+    expect(micToggle.exists()).toBe(true)
+    expect(micToggle.attributes('aria-pressed')).toBe('true')
+    expect(micToggle.text()).toContain(i18n.global.t('dialog.microphoneOn'))
+  })
+
+  it('toggles microphone on click', async () => {
+    const dialog = useDialogStore()
+    const toggleSpy = vi.spyOn(dialog, 'toggleMicrophone')
+    const wrapper = mount(DialogToolbar, {
+      global: { plugins: [i18n, desktop.pinia] },
+    })
+
+    const micToggle = wrapper.find('.dialog-toolbar-mic-toggle')
+    await micToggle.trigger('click')
+    await flushPromises()
+
+    expect(toggleSpy).toHaveBeenCalled()
   })
 
   it('enables recording immediately and shows recording notice popover when not yet acknowledged', async () => {

@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "Понятно",
     "remoteLanguage": "Собеседник говорит на",
     "sourceCall": "Звонок",
-    "sourceCallHint": "Звонок: ваш микрофон и звук собеседника раздельно, реплики подписаны «Я» и «Собеседник». Для Zoom, Meet, Teams и других звонков.",
     "sourceComputer": "Звук ПК",
-    "sourceComputerHint": "Только звук компьютера, без микрофона: видео, вебинар, подкаст.",
     "languages": "Языки",
     "languageAuto": "Авто",
     "ownLanguage": "Вы говорите на",
@@ -1771,7 +1769,6 @@
     "clearTitle": "Очистить транскрипт?",
     "clearMessage": "История выключена в настройках. Текущий транскрипт будет удалён безвозвратно.",
     "clearConfirm": "Очистить",
-    "sourceLockedHint": "Очистите транскрипт, чтобы изменить источник звука",
     "sessionResumed": "Сессия возобновлена",
     "sessionResumedRecording": "Запись продолжена",
     "record": "Запись",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "Использовать перевод",
     "copySelected": "Скопировать выделенное",
     "sendToChat": "В чат",
-    "promptAi": "Промпт в ИИ"
+    "promptAi": "Промпт в ИИ",
+    "microphoneOn": "Микрофон",
+    "microphoneOff": "Без микрофона",
+    "microphoneOnHint": "Распознавать ваш голос (нажмите, чтобы выключить микрофон)",
+    "microphoneOffHint": "Только звук собеседника (нажмите, чтобы включить микрофон)"
   },
   "toolPermissions": {
     "riskRead": "Чтение",

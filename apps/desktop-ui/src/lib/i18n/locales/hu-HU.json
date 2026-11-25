@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "Értem",
     "remoteLanguage": "A másik fél ezen beszél",
     "sourceCall": "Hívás",
-    "sourceCallHint": "Hívás: a mikrofonja és a másik fél hangja külön, a megszólalások „Én” és „Másik fél” jelöléssel. Zoomhoz, Meethez, Teamshez és más hívásokhoz.",
     "sourceComputer": "Gép hangja",
-    "sourceComputerHint": "Csak a számítógép hangja, mikrofon nélkül: videó, webinárium, podcast.",
     "languages": "Nyelvek",
     "languageAuto": "Auto",
     "ownLanguage": "Ön ezen beszél",
@@ -1771,7 +1769,6 @@
     "clearTitle": "Törli az átiratot?",
     "clearMessage": "Az előzmények ki vannak kapcsolva a beállításokban. Az aktuális átirat elvész.",
     "clearConfirm": "Törlés",
-    "sourceLockedHint": "A forrás módosításához törölje az átiratot",
     "sessionResumed": "Munkamenet folytatva",
     "sessionResumedRecording": "Rögzítés folytatva",
     "record": "Felvétel",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "Fordítás használata",
     "copySelected": "Kijelöltek másolása",
     "sendToChat": "A csevegésbe",
-    "promptAi": "Prompt az MI-nek"
+    "promptAi": "Prompt az MI-nek",
+    "microphoneOn": "Mikrofon",
+    "microphoneOff": "Mikrofon nélkül",
+    "microphoneOnHint": "Saját hang felismerése (kattintson a mikrofon némításához)",
+    "microphoneOffHint": "Csak a másik fél hangja (kattintson a mikrofon bekapcsolásához)"
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

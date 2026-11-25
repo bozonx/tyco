@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "Rozumím",
     "remoteLanguage": "Protistrana mluví",
     "sourceCall": "Hovor",
-    "sourceCallHint": "Hovor: váš mikrofon a zvuk protistrany zvlášť, repliky označené „Já“ a „Protistrana“. Pro Zoom, Meet, Teams a další hovory.",
     "sourceComputer": "Zvuk PC",
-    "sourceComputerHint": "Jen zvuk počítače, bez mikrofonu: video, webinář, podcast.",
     "languages": "Jazyky",
     "languageAuto": "Auto",
     "ownLanguage": "Mluvíte",
@@ -1771,7 +1769,6 @@
     "clearTitle": "Vymazat přepis?",
     "clearMessage": "Historie je v nastavení vypnuta. Aktuální přepis bude ztracen.",
     "clearConfirm": "Vymazat",
-    "sourceLockedHint": "Chcete-li změnit zdroj, vymažte přepis",
     "sessionResumed": "Relace obnovena",
     "sessionResumedRecording": "Záznam pokračuje",
     "record": "Záznam",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "Použít překlad",
     "copySelected": "Kopírovat výběr",
     "sendToChat": "Do chatu",
-    "promptAi": "Prompt pro AI"
+    "promptAi": "Prompt pro AI",
+    "microphoneOn": "Mikrofon",
+    "microphoneOff": "Bez mikrofonu",
+    "microphoneOnHint": "Rozpoznávat váš hlas (kliknutím ztlumíte mikrofon)",
+    "microphoneOffHint": "Pouze zvuk protistrany (kliknutím zapnete mikrofon)"
   },
   "toolPermissions": {
     "riskRead": "Čtení",

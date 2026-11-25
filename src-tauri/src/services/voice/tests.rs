@@ -25,10 +25,12 @@ fn run_capture<A: AudioSource, L: AudioLevelSink, S: EventSink>(
     setup_tx: &std_mpsc::SyncSender<Result<CaptureFormat, AppError>>,
 ) -> Result<(), AppError> {
     let switch = SourceSwitchSlot::default();
+    let is_mic_muted = AtomicBool::new(false);
     let control = CaptureControl {
         stop_flag,
         superseded,
         switch: &switch,
+        is_microphone_muted: &is_mic_muted,
         recording: None,
     };
     run_capture_thread(
@@ -425,6 +427,7 @@ fn device_setup_errors_are_returned_without_a_tauri_runtime() {
         CaptureSessionOptions {
             id: 1,
             setup_timeout: Duration::from_secs(1),
+            is_microphone_muted: false,
             recording: None,
         },
     )
@@ -465,6 +468,7 @@ fn setup_timeout_signals_stop_without_joining_a_blocked_device() {
         CaptureSessionOptions {
             id: 1,
             setup_timeout: Duration::ZERO,
+            is_microphone_muted: false,
             recording: None,
         },
     )
@@ -489,6 +493,7 @@ async fn new_capture_replaces_the_old_one_and_a_stale_stop_leaves_it_running() {
         trace.clone(),
         &state,
         None,
+        false,
         trace.clone(),
     )
     .await
@@ -503,6 +508,7 @@ async fn new_capture_replaces_the_old_one_and_a_stale_stop_leaves_it_running() {
         trace.clone(),
         &state,
         None,
+        false,
         trace.clone(),
     )
     .await
@@ -541,15 +547,15 @@ fn flushes_only_full_chunks_until_forced() {
     let context = pending_context(vec![1_i16, 2, 3]);
     let pending_pcm_samples = &context.pending_pcm_samples;
 
-    assert!(flush_pending(&context, &sink, 4, None, None).is_some());
+    assert!(flush_pending(&context, &sink, 4, None, None, false, 1).is_some());
     assert!(sink.chunks.lock().unwrap().is_empty());
 
-    assert!(flush_pending(&context, &sink, 1, None, None).is_some());
+    assert!(flush_pending(&context, &sink, 1, None, None, false, 1).is_some());
     assert_eq!(sink.chunks.lock().unwrap().len(), 1);
     assert!(pending_pcm_samples.lock().unwrap().is_empty());
 
     // nothing left: no empty frame goes out
-    assert!(flush_pending(&context, &sink, 1, None, None).is_some());
+    assert!(flush_pending(&context, &sink, 1, None, None, false, 1).is_some());
     assert_eq!(sink.chunks.lock().unwrap().len(), 1);
 }
 
@@ -559,7 +565,16 @@ fn reports_a_gone_listener() {
         closed: true,
         ..RecordingSink::default()
     };
-    assert!(flush_pending(&pending_context(vec![1_i16]), &sink, 1, None, None).is_none());
+    assert!(flush_pending(
+        &pending_context(vec![1_i16]),
+        &sink,
+        1,
+        None,
+        None,
+        false,
+        1
+    )
+    .is_none());
 }
 
 fn pending_context(samples: Vec<i16>) -> StreamContext {
@@ -601,6 +616,7 @@ async fn a_running_capture_is_told_when_a_new_one_takes_the_microphone() {
         Trace::default(),
         &state,
         None,
+        false,
         first_sink.clone(),
     )
     .await
@@ -614,6 +630,7 @@ async fn a_running_capture_is_told_when_a_new_one_takes_the_microphone() {
         Trace::default(),
         &state,
         None,
+        false,
         Trace::default(),
     )
     .await
@@ -840,6 +857,7 @@ fn silence_keeps_a_silent_playback_source_in_step_with_real_time() {
             stop_flag: &stop,
             superseded: &AtomicBool::new(false),
             switch: &switch,
+            is_microphone_muted: &AtomicBool::new(false),
             recording: None,
         },
         &tx,
@@ -893,6 +911,7 @@ fn a_switch_of_the_source_keeps_one_stream_and_reports_the_wait() {
             stop_flag: &stop,
             superseded: &AtomicBool::new(false),
             switch: &switch,
+            is_microphone_muted: &AtomicBool::new(false),
             recording: None,
         },
         &tx,
@@ -942,6 +961,7 @@ fn a_lost_application_waits_without_expanding_the_recorded_source() {
             stop_flag: &stop,
             superseded: &AtomicBool::new(false),
             switch: &switch,
+            is_microphone_muted: &AtomicBool::new(false),
             recording: None,
         },
         &tx,
@@ -1002,6 +1022,7 @@ fn a_source_switch_discards_audio_recorded_twice_during_setup() {
             stop_flag: &stop,
             superseded: &AtomicBool::new(false),
             switch: &switch,
+            is_microphone_muted: &AtomicBool::new(false),
             recording: None,
         },
         &tx,
@@ -1037,6 +1058,7 @@ async fn a_running_dialog_is_not_taken_over_by_dictation() {
         trace.clone(),
         &state,
         None,
+        false,
         trace.clone(),
     )
     .await
@@ -1047,6 +1069,7 @@ async fn a_running_dialog_is_not_taken_over_by_dictation() {
         Trace::default(),
         &state,
         None,
+        false,
         Trace::default(),
     )
     .await
@@ -1080,6 +1103,7 @@ async fn a_dialog_takes_the_sound_over_from_dictation() {
         trace.clone(),
         &state,
         None,
+        false,
         trace.clone(),
     )
     .await
@@ -1095,6 +1119,7 @@ async fn a_dialog_takes_the_sound_over_from_dictation() {
         trace.clone(),
         &state,
         None,
+        false,
         trace.clone(),
     )
     .await
@@ -1152,6 +1177,7 @@ fn a_stereo_capture_reports_its_channels_and_their_levels() {
         stop_flag: &stop,
         superseded: &AtomicBool::new(false),
         switch: &switch,
+        is_microphone_muted: &AtomicBool::new(false),
         recording: None,
     };
     run_capture_thread(
@@ -1229,10 +1255,12 @@ fn record_dialog(is_processed: bool) -> (u64, usize) {
     let sink = RecordingSink::default();
     let (tx, _rx) = std_mpsc::sync_channel(1);
     let switch = SourceSwitchSlot::default();
+    let is_mic_muted = AtomicBool::new(false);
     let control = CaptureControl {
         stop_flag: &stop,
         superseded: &AtomicBool::new(false),
         switch: &switch,
+        is_microphone_muted: &is_mic_muted,
         recording: Some(RecordingRequest {
             target: recording,
             is_mixed_down: false,
@@ -1275,4 +1303,33 @@ fn a_recorded_dialog_keeps_what_the_speech_provider_was_sent() {
 fn an_unprocessed_recording_takes_the_samples_held_aside() {
     // the provider still gets the processed samples
     assert_eq!(record_dialog(false), (800, 2 * 2 * 1_600));
+}
+
+#[tokio::test]
+async fn microphone_muting_updates_session_state() {
+    let state = VoiceSessionState::default();
+    let trace = Trace::default();
+    let dialog = start_capture_with(
+        TestSource {
+            trace: trace.clone(),
+            ..TestSource::default()
+        },
+        CaptureSource::Dialog {
+            is_microphone_enabled: true,
+        },
+        trace.clone(),
+        &state,
+        None,
+        false,
+        trace.clone(),
+    )
+    .await
+    .unwrap();
+    assert!(set_microphone_muted(&state, Some(dialog.session_id), true)
+        .await
+        .is_ok());
+    assert!(set_microphone_muted(&state, Some(dialog.session_id), false)
+        .await
+        .is_ok());
+    stop_capture(&state, Some(dialog.session_id)).await.unwrap();
 }

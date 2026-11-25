@@ -1757,9 +1757,7 @@
     "recordingNoticeConfirm": "Entendi",
     "remoteLanguage": "O interlocutor fala",
     "sourceCall": "Chamada",
-    "sourceCallHint": "Chamada: seu microfone e o som do interlocutor separados, falas marcadas “Eu” e “Interlocutor”. Para Zoom, Meet, Teams e outras chamadas.",
     "sourceComputer": "Som do PC",
-    "sourceComputerHint": "Só o som do computador, sem microfone: um vídeo, um webinar, um podcast.",
     "languages": "Idiomas",
     "languageAuto": "Auto",
     "ownLanguage": "Você fala",
@@ -1771,7 +1769,6 @@
     "clearTitle": "Limpar transcrição?",
     "clearMessage": "O histórico está desativado nas configurações. A transcrição atual será perdida.",
     "clearConfirm": "Limpiar",
-    "sourceLockedHint": "Limpe a transcrição para alterar a fonte de áudio",
     "sessionResumed": "Sessão retomada",
     "sessionResumedRecording": "Gravação retomada",
     "record": "Gravação",
@@ -1808,7 +1805,11 @@
     "selectionUseTranslation": "Usar tradução",
     "copySelected": "Copiar seleção",
     "sendToChat": "Para o chat",
-    "promptAi": "Prompt para a IA"
+    "promptAi": "Prompt para a IA",
+    "microphoneOn": "Microfone",
+    "microphoneOff": "Sem microfone",
+    "microphoneOnHint": "Reconhecer sua voz (clique para silenciar o microfone)",
+    "microphoneOffHint": "Apenas som do interlocutor (clique para ativar o microfone)"
   },
   "toolPermissions": {
     "riskRead": "Leitura",
