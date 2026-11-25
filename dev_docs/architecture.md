@@ -246,8 +246,11 @@ computer plays natively: PipeWire on Linux (`audio/pipewire.rs`: the default
 sink's monitor, or every output stream of one application, mixed by
 `voice/mixer.rs`) and WASAPI loopback on Windows (`audio/wasapi.rs`).
 `microphoneAndSystemMix` opens the microphone and the system sound together;
-`voice/microphone_mix.rs` brings each to a common loudness (a slow gated gain)
-and sums them through the same mixer. The microphone keeps time and owns
+`voice/microphone_mix.rs` brings each to a common loudness (a slow gated gain,
+`LoudnessProfile`: the microphone holds below -40 dBFS and gains at most
++12 dB; playback, which is digital and may be turned down in the calling app,
+holds below -65 dBFS and gains up to +30 dB) and sums them through the same
+mixer. The microphone keeps time and owns
 the callback watchdog, so the mixed stream fills no gaps; a playback error
 ends it like a microphone error.
 The dialog (`CaptureSource::Dialog`) records the same two sources but keeps
@@ -256,7 +259,8 @@ sends stereo PCM16, the microphone in the first channel; `VoiceCaptureInfo`
 names the channel count and level events carry a level per channel. Before
 normalization `voice/echo_gate.rs` mutes microphone blocks that are clearly
 quieter than playback and follow its envelope: the speakers' echo without
-headphones (real AEC is a later step). Without the microphone the dialog is
+headphones (real AEC is a later step). After the gate each channel is
+levelled on its own with the same profiles. Without the microphone the dialog is
 the system sound in one channel. A dialog capture is never superseded:
 another capture fails with `AppError::CaptureBusy` (`captureBusy`), which
 voice input, voice commands and listening show as "the sound is busy with the
@@ -278,11 +282,11 @@ VoIP mode, stereo at 32 kbit/s (microphone, computer) or mono at 24 kbit/s,
 RFC 7845 granules at 48 kHz, a page at least every second.
 The final page accounts for encoder delay and trims padding. Ogg pages stand
 alone, so a crash leaves a file playable to its last complete page. By default (`dialog.isRecordingProcessed`) the file holds the very samples
-sent to the webview, after the echo gate and the limiter: listening to it is
+sent to the webview, after the echo gate, the levelling and the limiter: listening to it is
 listening to what the speech provider got, short of Opus losses and of the
 audio a channel drops when its provider stalls past 30 s (logged by the
 webview). Unprocessed, it takes the two channels as the mix aligned them,
-before the gate and the limiters: the mix keeps a copy of them in
+before the gate, the levelling and the limiters: the mix keeps a copy of them in
 `StreamContext::unprocessed_pcm_samples`, which `flush_pending` drains with
 every flush; a capture without the microphone has none and records what it
 sends. `dialog.isRecordingMixedDown`, off by default, writes the two channels
@@ -305,9 +309,12 @@ is stored even without text, so the file stays reachable);
 The history plays a recording inline with `<audio>`: on Windows from the
 `tyco-media://` scheme (`services/media_protocol.rs`, allowed by `media-src`,
 `http://tyco-media.localhost/recording/<file name>`), and on Linux from a
-`blob:` URL created over `read_dialog_recording` (`lib/history/recording-media-url.ts`),
+`data:` URL built over `read_dialog_recording` (`lib/history/recording-media-url.ts`),
 because WebKitGTK's GStreamer pipeline rejects custom URI schemes in
-`isProtocolAllowed` while `blob:` is allowed and seekable.
+`isProtocolAllowed`. Not `blob:`: WebKitGTK 2.54 serves an Ogg blob to
+`oggdemux` in pull mode with wrong data after its seek to the end for the
+duration, so a long recording jumps ahead by minutes at 1×; `data:` plays and
+seeks like a file.
 The webview names the file, never a path; the backend accepts only names of the
 pattern, serves no recording still being written, and `tyco-media://` answers byte ranges in
 chunks of at most 2 MiB, so the element can seek a long call. A request

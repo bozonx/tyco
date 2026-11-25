@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import {
+  createDataUrl,
   createRecordingMediaUrl,
   loadRecordingMediaSource,
 } from './recording-media-url'
@@ -31,7 +32,15 @@ describe('recording media URLs', () => {
     )
   })
 
-  it('creates a blob URL on Linux where tyco-media:// is not a GStreamer URI scheme', async () => {
+  it('encodes bytes as a data URL', () => {
+    const bytes = new Uint8Array(0x8000 * 2 + 3).map((_, index) => index % 251)
+    const url = createDataUrl(bytes.buffer, 'audio/ogg')
+    expect(url.startsWith('data:audio/ogg;base64,')).toBe(true)
+    const decoded = Buffer.from(url.slice(url.indexOf(',') + 1), 'base64')
+    expect(new Uint8Array(decoded)).toEqual(bytes)
+  })
+
+  it('creates a data URL on Linux where tyco-media:// is not a GStreamer URI scheme', async () => {
     const convert = () => 'tyco-media://localhost/'
     const readRecording = vi
       .fn()
@@ -46,8 +55,7 @@ describe('recording media URLs', () => {
       DIALOG_ID,
       '2026-11-20 14-03-05 a1b2c3.opus'
     )
-    expect(source.url).toMatch(/^blob:/)
-    source.dispose?.()
+    expect(source.url).toBe('data:audio/ogg;base64,AQID')
   })
 
   it('streams directly from http://tyco-media.localhost/ on Windows', async () => {

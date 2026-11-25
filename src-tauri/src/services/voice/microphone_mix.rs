@@ -7,10 +7,11 @@
 //! (`MixLayout::Separate`), the microphone first, with the echo of the
 //! speakers lowered in the microphone, see `EchoGate`.
 //!
-//! Only a sum brings its sources to a common loudness first: a quiet
-//! microphone next to a loud call, or the other way round, would otherwise
-//! leave one side to the speech model as a murmur. Separate channels are
-//! transcribed each on its own, as recorded, like a dictation. Either way a
+//! Both layouts bring each source to a common loudness: a quiet microphone
+//! next to a loud call, or a call played far below the microphone, would
+//! otherwise leave one side to the speech model as a murmur. A sum is
+//! levelled before it is summed; separate channels after the echo gate,
+//! which compares the levels as they were recorded. Either way a
 //! `PeakLimiter` keeps the result from clipping.
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -28,9 +29,13 @@ use crate::locks::MutexExt;
 /// The loudness speech is brought to: about -22 dBFS, leaving headroom for
 /// both sources speaking at once.
 const TARGET_RMS: f32 = 0.08;
-/// Below about -40 dBFS there is silence or room noise (a fan, keys): the
-/// gain holds, so that noise is not raised to the loudness of speech.
+/// Below about -40 dBFS a microphone hears silence or room noise (a fan,
+/// keys): the gain holds, so that noise is not raised to the loudness of
+/// speech.
 const GATE_RMS: f32 = 0.01;
+/// Playback is digital: its silence is silence, and a call played at a low
+/// application volume speaks at -50 dBFS. Below about -65 dBFS it holds.
+const PLAYBACK_GATE_RMS: f32 = 0.000_56;
 /// Louder noise is told from speech by the noise floor: speech is at least
 /// about 10 dB above it.
 const SPEECH_OVER_NOISE: f32 = 3.16;
@@ -45,6 +50,8 @@ const MIN_GAIN: f32 = 0.1;
 /// ...and a quiet one raised at most this much, +12 dB: enough for a quiet
 /// microphone without raising its noise far.
 const MAX_GAIN: f32 = 4.0;
+/// Playback has no room noise to raise: +30 dB lifts a call played quietly.
+const PLAYBACK_MAX_GAIN: f32 = 31.6;
 /// The window of the short-term loudness that is compared with the gate.
 const POWER_WINDOW_S: f32 = 0.05;
 /// How fast the speech level follows a louder voice...
@@ -86,8 +93,30 @@ fn coefficient(time_s: f32, sample_rate_hz: u32) -> f32 {
     1.0 - (-1.0 / (time_s * sample_rate_hz as f32)).exp()
 }
 
+/// How far a `LoudnessNormalizer` trusts its source.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct LoudnessProfile {
+    /// Below it the gain holds.
+    gate_rms: f32,
+    max_gain: f32,
+}
+
+impl LoudnessProfile {
+    /// A microphone: room noise must not be raised.
+    pub(crate) const MICROPHONE: Self = Self {
+        gate_rms: GATE_RMS,
+        max_gain: MAX_GAIN,
+    };
+    /// What the computer plays: quiet, but clean.
+    pub(crate) const PLAYBACK: Self = Self {
+        gate_rms: PLAYBACK_GATE_RMS,
+        max_gain: PLAYBACK_MAX_GAIN,
+    };
+}
+
 /// Brings speech to `TARGET_RMS` with a slowly moving gain.
 pub(crate) struct LoudnessNormalizer {
+    profile: LoudnessProfile,
     power: f32,
     noise_floor: f32,
     speech_level: f32,
@@ -101,13 +130,14 @@ pub(crate) struct LoudnessNormalizer {
 }
 
 impl LoudnessNormalizer {
-    pub(crate) fn new(sample_rate_hz: u32) -> Self {
+    pub(crate) fn new(sample_rate_hz: u32, profile: LoudnessProfile) -> Self {
         Self {
+            profile,
             power: 0.0,
             // starts as if speech were at the target: unity gain
             speech_level: TARGET_RMS,
             // at first the fixed gate decides
-            noise_floor: GATE_RMS / SPEECH_OVER_NOISE,
+            noise_floor: profile.gate_rms / SPEECH_OVER_NOISE,
             gain: 1.0,
             noise_fall_coefficient: coefficient(NOISE_FALL_S, sample_rate_hz),
             noise_rise_factor: 10_f32.powf(NOISE_RISE_DB_PER_S / 20.0 / sample_rate_hz as f32),
@@ -128,7 +158,12 @@ impl LoudnessNormalizer {
                 self.noise_floor = (self.noise_floor * self.noise_rise_factor).min(rms);
             }
             // while it is not speech the level, and with it the gain, holds
-            if rms > GATE_RMS.max(self.noise_floor * SPEECH_OVER_NOISE) {
+            if rms
+                > self
+                    .profile
+                    .gate_rms
+                    .max(self.noise_floor * SPEECH_OVER_NOISE)
+            {
                 let rate = if rms > self.speech_level {
                     self.rise_coefficient
                 } else {
@@ -136,7 +171,7 @@ impl LoudnessNormalizer {
                 };
                 self.speech_level += rate * (rms - self.speech_level);
             }
-            let wanted = (TARGET_RMS / self.speech_level).clamp(MIN_GAIN, MAX_GAIN);
+            let wanted = (TARGET_RMS / self.speech_level).clamp(MIN_GAIN, self.profile.max_gain);
             self.gain += self.gain_coefficient * (wanted - self.gain);
             *sample *= self.gain;
         }
@@ -203,8 +238,10 @@ struct Mix {
     output: MixOutput,
     mixer: StreamMixer,
     upsampler: Upsampler,
-    /// Only for `MixLayout::Summed`.
-    loudness: Option<(LoudnessNormalizer, LoudnessNormalizer)>,
+    /// The microphone, then playback: before the sum, or after the echo
+    /// gate of separate channels.
+    loudness: (LoudnessNormalizer, LoudnessNormalizer),
+    layout: MixLayout,
     /// Only for `MixLayout::Separate`.
     echo_gate: Option<EchoGate>,
     /// One per channel of the output.
@@ -238,8 +275,11 @@ impl Mix {
             playback,
             output,
             mixer,
-            loudness: (layout == MixLayout::Summed)
-                .then(|| (LoudnessNormalizer::new(rate), LoudnessNormalizer::new(rate))),
+            loudness: (
+                LoudnessNormalizer::new(rate, LoudnessProfile::MICROPHONE),
+                LoudnessNormalizer::new(rate, LoudnessProfile::PLAYBACK),
+            ),
+            layout,
             echo_gate: (layout == MixLayout::Separate).then(|| EchoGate::new(rate)),
             limiters: (0..layout.channel_count())
                 .map(|_| PeakLimiter::new(rate))
@@ -253,17 +293,18 @@ impl Mix {
         // playback first: when it resumes after silence it joins at the
         // present, which is where the microphone's batch of the same
         // moment begins
+        let is_summed = self.layout == MixLayout::Summed;
         let mut playback = take_samples(&self.playback.pending_pcm_samples);
-        if let Some((_, loudness)) = self.loudness.as_mut() {
-            loudness.process(&mut playback);
+        if is_summed {
+            self.loudness.1.process(&mut playback);
         }
         self.mixer.push(PLAYBACK, &playback);
 
         let recorded = take_samples(&self.microphone.pending_pcm_samples);
         let mut microphone = Vec::with_capacity(recorded.len() * 2);
         self.upsampler.push(&recorded, &mut microphone);
-        if let Some((loudness, _)) = self.loudness.as_mut() {
-            loudness.process(&mut microphone);
+        if is_summed {
+            self.loudness.0.process(&mut microphone);
         }
         self.mixer.push(MICROPHONE, &microphone);
 
@@ -298,6 +339,8 @@ impl Mix {
                     microphone.extend(microphone_tail);
                     playback.extend(playback_tail);
                 }
+                self.loudness.0.process(&mut microphone);
+                self.loudness.1.process(&mut playback);
                 let microphone = limit(&mut self.limiters[0], &microphone, is_final);
                 let playback = limit(&mut self.limiters[1], &playback, is_final);
                 microphone
@@ -439,7 +482,7 @@ mod tests {
     }
 
     fn normalized_rms(amplitude: f32) -> f32 {
-        let mut normalizer = LoudnessNormalizer::new(RATE);
+        let mut normalizer = LoudnessNormalizer::new(RATE, LoudnessProfile::MICROPHONE);
         let mut samples = syllables(amplitude, 8.0);
         normalizer.process(&mut samples);
         // once the level has settled
@@ -458,7 +501,7 @@ mod tests {
 
     #[test]
     fn silence_and_noise_are_not_raised() {
-        let mut normalizer = LoudnessNormalizer::new(RATE);
+        let mut normalizer = LoudnessNormalizer::new(RATE, LoudnessProfile::MICROPHONE);
         let mut noise = tone(0.001, 4.0);
         normalizer.process(&mut noise);
         assert!(rms(&noise) <= 0.001, "{}", rms(&noise));
@@ -466,7 +509,7 @@ mod tests {
 
     #[test]
     fn room_noise_after_speech_is_not_raised() {
-        let mut normalizer = LoudnessNormalizer::new(RATE);
+        let mut normalizer = LoudnessNormalizer::new(RATE, LoudnessProfile::MICROPHONE);
         let mut speech = tone(0.1, 4.0);
         normalizer.process(&mut speech);
         // a fan at about -43 dBFS for long pauses
@@ -481,7 +524,7 @@ mod tests {
 
     #[test]
     fn room_noise_above_the_gate_is_not_raised() {
-        let mut normalizer = LoudnessNormalizer::new(RATE);
+        let mut normalizer = LoudnessNormalizer::new(RATE, LoudnessProfile::MICROPHONE);
         let mut speech = syllables(0.06, 4.0);
         normalizer.process(&mut speech);
         // a fan at about -35 dBFS, above the fixed gate, for a long pause
@@ -507,9 +550,9 @@ mod tests {
     }
 
     #[test]
-    fn separate_channels_keep_their_loudness() {
+    fn separate_channels_keep_microphone_noise_as_recorded() {
         let (mut mix, pending, _) = mix_as(MixLayout::Separate);
-        // a quiet microphone stays quiet: it is transcribed as recorded
+        // a constant level below the gate is noise, not speech: not raised
         record(&mix.microphone, &[300; 16_000]);
         record(&mix.playback, &[0; 16_000]);
         mix.step(true);
@@ -519,6 +562,41 @@ mod tests {
             .0
             .iter()
             .all(|frame| frame[0] == 300));
+    }
+
+    #[test]
+    fn separate_channels_raise_a_quiet_call() {
+        let (mut mix, pending, _) = mix_as(MixLayout::Separate);
+        // a call played at about -48 dBFS while the user is silent
+        let quiet: Vec<i16> = syllables(0.006, 8.0)
+            .into_iter()
+            .map(float_to_pcm16)
+            .collect();
+        record(&mix.playback, &quiet);
+        record(&mix.microphone, &vec![0; quiet.len()]);
+        mix.step(true);
+        let frames = std::mem::take(&mut *pending.locked());
+        let playback: Vec<f32> = frames
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|frame| f32::from(frame[1]) / 32768.0)
+            .collect();
+        let settled = rms(&playback[playback.len() - RATE as usize..]);
+        assert!(settled > TARGET_RMS * 0.4, "{settled}");
+    }
+
+    #[test]
+    fn the_playback_profile_raises_further_than_the_microphone() {
+        let raised = |profile| {
+            let mut normalizer = LoudnessNormalizer::new(RATE, profile);
+            let mut samples = syllables(0.006, 8.0);
+            normalizer.process(&mut samples);
+            rms(&samples[samples.len() - RATE as usize..])
+        };
+        let microphone = raised(LoudnessProfile::MICROPHONE);
+        let playback = raised(LoudnessProfile::PLAYBACK);
+        assert!(playback > microphone * 4.0, "{microphone} {playback}");
     }
 
     #[test]
@@ -539,7 +617,7 @@ mod tests {
 
     #[test]
     fn a_whisper_is_raised_no_more_than_the_limit() {
-        let mut normalizer = LoudnessNormalizer::new(RATE);
+        let mut normalizer = LoudnessNormalizer::new(RATE, LoudnessProfile::MICROPHONE);
         let mut samples = tone(0.008, 4.0);
         let before = rms(&samples);
         normalizer.process(&mut samples);

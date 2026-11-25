@@ -125,7 +125,9 @@ microphone, two settings in **Settings → Dialog** decide how it sounds:
   side are in one channel, so both are heard in both ears. Off, your voice
   is the left channel and the other side the right one.
 - **Record processed audio** (on by default): the echo of
-  the speakers in your microphone is lowered, and loud peaks are limited.
+  the speakers in your microphone is lowered, each side is brought to a
+  similar loudness, so a call played quietly is not lost next to your voice,
+  and loud peaks are limited.
   When TyCo takes your voice for that echo, it is quiet in the recording
   too. Off, the sound is kept as captured, echo included: with speakers
   instead of headphones the other side is then heard twice, a little apart.
