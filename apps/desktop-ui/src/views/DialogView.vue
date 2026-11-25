@@ -33,7 +33,7 @@
       <div class="dialog-body">
         <DialogFeed
           :items="dialog.feedItems"
-          :is-bubble="isBubble"
+          :is-bubble="true"
           :is-translation-only="dialog.config.isTranslationOnly"
           :translation-lang="dialog.effectiveTranslationLanguage || undefined"
           :dialog-id="dialog.currentDialogId"
@@ -119,9 +119,6 @@ watch(
   }
 )
 
-/** Bubbles on both sides when the user is heard too, else paragraphs */
-const isBubble = computed(() => dialog.hasMicrophone)
-
 const emptyIcon = computed(() => {
   if (dialog.isActive) return 'mdi:waveform'
   return dialog.hasMicrophone ? 'mdi:account-voice' : 'mdi:monitor-speaker'
@@ -129,9 +126,7 @@ const emptyIcon = computed(() => {
 
 const emptyTitle = computed(() => {
   if (dialog.isActive) return t('dialog.waitingForSpeech')
-  return dialog.hasMicrophone
-    ? t('dialog.emptyTitleCall')
-    : t('dialog.emptyTitleComputer')
+  return t('dialog.emptyTitleCall')
 })
 
 const emptyMessage = computed(() => {
@@ -198,18 +193,19 @@ function closeMobileHistory() {
 }
 
 .dialog-empty {
-  flex: 1 1 0%;
-  max-width: 26rem;
   margin: auto;
+  max-width: 28rem;
 }
 
 .dialog-empty-hint {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-xs);
   margin: var(--space-xs) 0 0;
   font-size: var(--text-caption);
   color: var(--app-text-faint);
+  line-height: 1.4;
 }
 
 @media (max-width: 47.5rem) {
