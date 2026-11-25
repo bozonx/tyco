@@ -135,13 +135,25 @@
       :title="t('dialog.history')"
       @click="dialog.isHistoryOpen = !dialog.isHistoryOpen"
     />
-    <DropdownMenu
-      square
-      hide-chevron
-      align="right"
-      icon="mdi:dots-vertical"
-      :title="t('common.more')"
-      :items="moreItems"
+    <IconButton
+      class="dialog-toolbar-copy"
+      variant="ghost"
+      size="sm"
+      icon="mdi:content-copy"
+      :disabled="isEmpty"
+      :label="t('dialog.copy')"
+      :title="t('dialog.copy')"
+      @click="dialog.copyTranscript()"
+    />
+    <IconButton
+      class="dialog-toolbar-action-menu"
+      variant="ghost"
+      size="sm"
+      icon="mdi:lightning-bolt-outline"
+      :disabled="isEmpty"
+      :label="t('dialog.toActionMenu')"
+      :title="t('dialog.toActionMenu')"
+      @click="dialog.sendToActionMenu()"
     />
     <ConfirmModal
       :open="isClearConfirmOpen"
@@ -201,7 +213,6 @@ import { useDialogStore } from '../../stores/dialog'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
-import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
 import DialogLanguageRoute from './DialogLanguageRoute.vue'
 import DialogLevel from './DialogLevel.vue'
@@ -367,41 +378,6 @@ function confirmClear() {
   isClearConfirmOpen.value = false
   void dialog.clear()
 }
-
-// the original is hidden only under a translation, so the switch needs one
-const displayItems = computed<DropdownMenuItem[]>(() =>
-  dialog.config.translationTargetLanguage
-    ? [
-        {
-          label: t('dialog.translationOnly'),
-          icon: dialog.config.isTranslationOnly
-            ? 'mdi:checkbox-marked-outline'
-            : 'mdi:checkbox-blank-outline',
-          action: () =>
-            void dialog.updateConfig({
-              isTranslationOnly: !dialog.config.isTranslationOnly,
-            }),
-        },
-      ]
-    : []
-)
-
-// the translation alone or with the original, and transcript actions
-const moreItems = computed<DropdownMenuItem[]>(() => [
-  ...displayItems.value,
-  {
-    label: t('dialog.copy'),
-    icon: 'mdi:content-copy',
-    disabled: isEmpty.value,
-    action: () => void dialog.copyTranscript(),
-  },
-  {
-    label: t('dialog.toActionMenu'),
-    icon: 'mdi:lightning-bolt-outline',
-    disabled: isEmpty.value,
-    action: () => void dialog.sendToActionMenu(),
-  },
-])
 
 const channelNotice = computed(() => {
   const statuses = Object.values(dialog.channelStatus)

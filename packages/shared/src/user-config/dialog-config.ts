@@ -67,4 +67,6 @@ export interface DialogConfig {
    * turns
    */
   selectionUseTranslation?: boolean
+  /** Whether the history sidebar panel is open in the dialog view */
+  isHistoryOpen?: boolean
 }

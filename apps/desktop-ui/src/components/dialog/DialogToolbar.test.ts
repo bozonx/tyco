@@ -429,4 +429,70 @@ describe('DialogToolbar.vue', () => {
       tooltipLabel: i18n.global.t('tray.tooltip'),
     })
   })
+
+  it('renders copy transcript and action menu icon buttons instead of more menu', async () => {
+    const dialog = useDialogStore()
+    const copySpy = vi
+      .spyOn(dialog, 'copyTranscript')
+      .mockResolvedValue({ success: true, result: undefined })
+    const actionSpy = vi
+      .spyOn(dialog, 'sendToActionMenu')
+      .mockResolvedValue({ success: true, result: undefined })
+
+    const wrapper = mount(DialogToolbar, {
+      global: { plugins: [i18n, desktop.pinia] },
+    })
+
+    const copyBtn = wrapper.find('button.dialog-toolbar-copy')
+    const actionBtn = wrapper.find('button.dialog-toolbar-action-menu')
+
+    expect(copyBtn.exists()).toBe(true)
+    expect(actionBtn.exists()).toBe(true)
+    // Disabled when empty
+    expect(copyBtn.attributes('disabled')).toBeDefined()
+    expect(actionBtn.attributes('disabled')).toBeDefined()
+
+    // Simulate content
+    dialog.segments = [
+      {
+        id: '1',
+        side: 'remote',
+        startMs: 0,
+        endMs: 100,
+        text: 'Hello',
+        isFinal: true,
+        translationState: 'idle',
+      },
+    ]
+    await flushPromises()
+
+    expect(copyBtn.attributes('disabled')).toBeUndefined()
+    expect(actionBtn.attributes('disabled')).toBeUndefined()
+
+    await copyBtn.trigger('click')
+    expect(copySpy).toHaveBeenCalledTimes(1)
+
+    await actionBtn.trigger('click')
+    expect(actionSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('persists history panel open state in user config', async () => {
+    const wrapper = mount(DialogToolbar, {
+      global: { plugins: [i18n, desktop.pinia] },
+    })
+
+    const historyBtn = wrapper.find('button.dialog-toolbar-history')
+    expect(historyBtn.exists()).toBe(true)
+    expect(desktop.backend.userConfig.dialog.isHistoryOpen).toBeFalsy()
+
+    await historyBtn.trigger('click')
+    await flushPromises()
+
+    expect(desktop.backend.userConfig.dialog.isHistoryOpen).toBe(true)
+
+    await historyBtn.trigger('click')
+    await flushPromises()
+
+    expect(desktop.backend.userConfig.dialog.isHistoryOpen).toBe(false)
+  })
 })

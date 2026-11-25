@@ -1436,7 +1436,8 @@
         "isRecordingNoticeAcknowledged": { "type": "boolean" },
         "isHeadphonesNoticeAcknowledged": { "type": "boolean" },
         "isRecordingMixedDown": { "type": "boolean", "default": false },
-        "isRecordingProcessed": { "type": "boolean", "default": true }
+        "isRecordingProcessed": { "type": "boolean", "default": true },
+        "isHistoryOpen": { "type": "boolean", "default": false }
       },
       "required": [
         "isEnabled",

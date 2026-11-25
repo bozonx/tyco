@@ -1,14 +1,6 @@
 <template>
   <div class="dialog-recording-player">
     <HistoryFilePlayer :file="recordingFileItem" />
-    <IconButton
-      v-if="!isMissing"
-      size="xs"
-      variant="ghost"
-      icon="mdi:folder-open-outline"
-      :label="t('dialog.openRecordingsFolder')"
-      @click="openFolder"
-    />
   </div>
 </template>
 
@@ -22,7 +14,6 @@ import type { HistoryListItemFile } from '../../lib/history/history-list-types'
 import { loadRecordingMediaSource } from '../../lib/history/recording-media-url'
 import { useDialogStore } from '../../stores/dialog'
 import { useIpcStore } from '../../stores/ipc'
-import IconButton from '../common/IconButton.vue'
 import HistoryFilePlayer from '../history/HistoryFilePlayer.vue'
 
 const props = withDefaults(
@@ -41,10 +32,6 @@ const ipcStore = useIpcStore()
 const isSoundCaptured = useSoundCaptureActivity()
 
 const isPlayDisabled = computed(() => dialog.isActive || isSoundCaptured.value)
-
-function openFolder() {
-  void dialog.showRecording(props.dialogId, props.file)
-}
 
 const recordingFileItem = computed<HistoryListItemFile>(() => ({
   name: props.file,

@@ -71,6 +71,7 @@ const DEFAULT_DIALOG_CONFIG: DialogConfig = {
   isRecordingProcessed: true,
   selectionIncludeMe: true,
   selectionUseTranslation: false,
+  isHistoryOpen: false,
 }
 
 /** The recording of the running session */
@@ -137,7 +138,12 @@ export const useDialogStore = defineStore('dialog', () => {
   /** Whether each recording file of the current dialog exists on disk */
   const recordingExists = ref<Record<string, boolean>>({})
   /** Whether the history sidebar panel is open in DialogView */
-  const isHistoryOpen = ref(false)
+  const isHistoryOpen = computed({
+    get: () => config.value.isHistoryOpen ?? false,
+    set: (value: boolean) => {
+      void updateConfig({ isHistoryOpen: value })
+    },
+  })
   /** Whether the running dialog records the microphone too */
   const hasMicrophone = ref(config.value.source === 'microphoneAndSystem')
   /** The file the running session is recorded to; none: not recorded */

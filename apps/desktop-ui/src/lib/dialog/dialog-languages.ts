@@ -35,24 +35,37 @@ export function dialogLanguageOptions(options: {
 }
 
 /**
- * The route of the languages as one label: "{from} → {to}" when the language of
- * the other side is asked for, else the target language alone
+ * Formats a language tag into a compact language code (e.g. 'ru-RU' -> 'RU',
+ * 'en-US' -> 'EN', 'zh-CN' -> 'ZH-CN', 'auto' -> 'AUTO', empty -> '—').
+ */
+export function dialogLanguageCode(id: string | undefined | null): string {
+  if (!id) return '—'
+  const trimmed = id.trim()
+  if (!trimmed) return '—'
+  if (trimmed.toLowerCase() === 'auto') return 'AUTO'
+  const [base, region] = trimmed.split('-')
+  if (base.toLowerCase() === 'zh' && region) {
+    return `ZH-${region.toUpperCase()}`
+  }
+  return base.toUpperCase()
+}
+
+/**
+ * The route of the languages as a compact code label: "{remote} → {target} /
+ * {own}" or "{remote} → {target}" when Gemini is used.
  */
 export function dialogRouteLabel(options: {
   translationTargetLanguage: string
-  /** Undefined: the provider is not told the language of the other side */
   remoteLanguage: string | undefined
-  labelOf: (id: string) => string
-  translate: (key: string, params?: Record<string, string>) => string
+  ownLanguage?: string | undefined
+  isGemini?: boolean
 }): string {
-  const { translationTargetLanguage: target, remoteLanguage: remote } = options
-  const to = target
-    ? options.labelOf(target)
-    : options.translate('dialog.noTranslation')
-  if (remote === undefined) return to
-  const from =
-    remote && remote !== 'auto'
-      ? options.labelOf(remote)
-      : options.translate('dialog.languageAuto')
-  return options.translate('dialog.route', { from, to })
+  const remote = dialogLanguageCode(options.remoteLanguage ?? 'auto')
+  const to = dialogLanguageCode(options.translationTargetLanguage)
+  const route = `${remote} → ${to}`
+  if (options.isGemini) {
+    return route
+  }
+  const own = dialogLanguageCode(options.ownLanguage)
+  return `${route} / ${own}`
 }

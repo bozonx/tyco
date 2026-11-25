@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { dialogLanguageOptions, dialogRouteLabel } from './dialog-languages'
+import {
+  dialogLanguageCode,
+  dialogLanguageOptions,
+  dialogRouteLabel,
+} from './dialog-languages'
 
 describe('dialogLanguageOptions', () => {
   it('lists off, the menu languages, the current one and the common ones once', () => {
@@ -22,37 +26,52 @@ describe('dialogLanguageOptions', () => {
   })
 })
 
-describe('dialogRouteLabel', () => {
-  const base = {
-    labelOf: (id: string) => `name ${id}`,
-    translate: (key: string, params?: Record<string, string>) =>
-      params ? `${key} ${params.from} ${params.to}` : key,
-  }
+describe('dialogLanguageCode', () => {
+  it('formats language tags to uppercase codes', () => {
+    expect(dialogLanguageCode('en-US')).toBe('EN')
+    expect(dialogLanguageCode('ru-RU')).toBe('RU')
+    expect(dialogLanguageCode('de')).toBe('DE')
+    expect(dialogLanguageCode('zh-CN')).toBe('ZH-CN')
+    expect(dialogLanguageCode('zh-TW')).toBe('ZH-TW')
+    expect(dialogLanguageCode('auto')).toBe('AUTO')
+    expect(dialogLanguageCode('')).toBe('—')
+    expect(dialogLanguageCode(undefined)).toBe('—')
+  })
+})
 
-  it('reads from the other side to the target when the source is asked for', () => {
+describe('dialogRouteLabel', () => {
+  it('formats remote, target and own language codes with arrow and slash', () => {
     expect(
       dialogRouteLabel({
-        ...base,
         translationTargetLanguage: 'ru-RU',
         remoteLanguage: 'en-US',
+        ownLanguage: 'ru-RU',
       })
-    ).toBe('dialog.route name en-US name ru-RU')
+    ).toBe('EN → RU / RU')
     expect(
       dialogRouteLabel({
-        ...base,
         translationTargetLanguage: '',
         remoteLanguage: 'auto',
+        ownLanguage: 'en-US',
       })
-    ).toBe('dialog.route dialog.languageAuto dialog.noTranslation')
+    ).toBe('AUTO → — / EN')
   })
 
-  it('names only the target when the provider follows the speech', () => {
+  it('omits own language when Gemini transcription is used', () => {
     expect(
       dialogRouteLabel({
-        ...base,
         translationTargetLanguage: 'ru-RU',
-        remoteLanguage: undefined,
+        remoteLanguage: 'auto',
+        ownLanguage: 'ru-RU',
+        isGemini: true,
       })
-    ).toBe('name ru-RU')
+    ).toBe('AUTO → RU')
+    expect(
+      dialogRouteLabel({
+        translationTargetLanguage: '',
+        remoteLanguage: 'auto',
+        isGemini: true,
+      })
+    ).toBe('AUTO → —')
   })
 })

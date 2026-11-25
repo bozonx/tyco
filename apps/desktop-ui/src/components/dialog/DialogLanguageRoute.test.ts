@@ -1,6 +1,6 @@
 import { DEFAULT_USER_CONFIG } from '@tyco/shared'
 import { mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { i18n } from '../../lib/i18n'
 import {
@@ -11,8 +11,11 @@ import DialogLanguageRoute from './DialogLanguageRoute.vue'
 
 describe('DialogLanguageRoute.vue', () => {
   let desktop: TestDesktop
+  let container: HTMLDivElement
 
   beforeEach(async () => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
     desktop = await loadFakeDesktop({
       userConfig: {
         ...DEFAULT_USER_CONFIG,
@@ -36,10 +39,15 @@ describe('DialogLanguageRoute.vue', () => {
     })
   })
 
+  afterEach(() => {
+    desktop.dispose()
+    document.body.innerHTML = ''
+  })
+
   it('renders trigger button and opens language panel without model indication', async () => {
     const wrapper = mount(DialogLanguageRoute, {
       global: { plugins: [i18n] },
-      attachTo: document.body,
+      attachTo: container,
     })
 
     const button = wrapper.find('button.dialog-route-trigger')
@@ -81,7 +89,7 @@ describe('DialogLanguageRoute.vue', () => {
 
     const wrapper = mount(DialogLanguageRoute, {
       global: { plugins: [i18n] },
-      attachTo: document.body,
+      attachTo: container,
     })
 
     await wrapper.find('button.dialog-route-trigger').trigger('click')
@@ -91,6 +99,68 @@ describe('DialogLanguageRoute.vue', () => {
     const ownLanguageSelect = selects[selects.length - 1]
     const firstOption = ownLanguageSelect.querySelector('option')
     expect(firstOption?.textContent).toContain('Auto')
+
+    wrapper.unmount()
+  })
+
+  it('renders show translation only checkbox and toggles it', async () => {
+    desktop.setUserConfig({
+      dialog: {
+        ...desktop.backend.userConfig.dialog,
+        translationTargetLanguage: 'ru-RU',
+        isTranslationOnly: false,
+      },
+    })
+
+    const wrapper = mount(DialogLanguageRoute, {
+      global: { plugins: [i18n] },
+      attachTo: container,
+    })
+
+    expect(wrapper.find('button.dialog-route-trigger').text()).toContain(
+      'AUTO → RU / RU'
+    )
+
+    await wrapper.find('button.dialog-route-trigger').trigger('click')
+
+    const checkbox = document.body.querySelector(
+      '.dialog-route-panel input[type="checkbox"]'
+    ) as HTMLInputElement | null
+    expect(checkbox).not.toBeNull()
+    expect(checkbox?.checked).toBe(false)
+    expect(checkbox?.disabled).toBe(false)
+
+    checkbox?.click()
+
+    expect(desktop.backend.userConfig.dialog.isTranslationOnly).toBe(true)
+
+    wrapper.unmount()
+  })
+
+  it('hides own language and formats trigger without own language when Gemini Live is used', async () => {
+    desktop.setUserConfig({
+      stt: { ...desktop.backend.userConfig.stt, provider: 'geminiLive' },
+      dialog: {
+        ...desktop.backend.userConfig.dialog,
+        translationTargetLanguage: 'ru-RU',
+      },
+    })
+
+    const wrapper = mount(DialogLanguageRoute, {
+      global: { plugins: [i18n] },
+      attachTo: container,
+    })
+
+    expect(wrapper.find('button.dialog-route-trigger').text()).toContain(
+      'AUTO → RU'
+    )
+
+    await wrapper.find('button.dialog-route-trigger').trigger('click')
+
+    const panel = document.body.querySelector('.dialog-route-panel')
+    expect(panel?.textContent).not.toContain(
+      i18n.global.t('dialog.ownLanguage')
+    )
 
     wrapper.unmount()
   })

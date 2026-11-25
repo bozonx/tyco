@@ -71,19 +71,29 @@
             "
           />
         </label>
-        <hr class="dialog-route-separator" />
-        <label class="dialog-route-field is-secondary">
-          <span>{{ t('dialog.ownLanguage') }}</span>
-          <FieldSelect
-            :model-value="dialog.config.ownLanguage || ''"
-            size="sm"
-            :options="ownLanguageOptions"
-            @update:model-value="
-              (language) =>
-                dialog.updateConfig({ ownLanguage: String(language ?? '') })
-            "
-          />
-        </label>
+        <FieldCheckbox
+          :disabled="!dialog.config.translationTargetLanguage"
+          :model-value="dialog.config.isTranslationOnly"
+          :label="t('dialog.showTranslationOnly')"
+          @update:model-value="
+            (value) => dialog.updateConfig({ isTranslationOnly: value })
+          "
+        />
+        <template v-if="!isGeminiLive">
+          <hr class="dialog-route-separator" />
+          <label class="dialog-route-field is-secondary">
+            <span>{{ t('dialog.ownLanguage') }}</span>
+            <FieldSelect
+              :model-value="dialog.config.ownLanguage || ''"
+              size="sm"
+              :options="ownLanguageOptions"
+              @update:model-value="
+                (language) =>
+                  dialog.updateConfig({ ownLanguage: String(language ?? '') })
+              "
+            />
+          </label>
+        </template>
       </div>
     </Teleport>
   </div>
@@ -108,6 +118,7 @@ import { useDesktopStore } from '../../stores/desktop'
 import { useDialogStore } from '../../stores/dialog'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
+import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 
 const dialog = useDialogStore()
@@ -135,6 +146,9 @@ const { style: panelStyle, theme: panelTheme } = useAnchoredPanel({
 // only Deepgram is told the language of the other side
 const isDeepgram = computed(
   () => desktopStore.userConfig.stt?.provider === 'deepgram'
+)
+const isGeminiLive = computed(
+  () => desktopStore.userConfig.stt?.provider === 'geminiLive'
 )
 const model = computed(() => dialog.translationModel)
 const isTranslationWithoutModel = computed(
@@ -183,14 +197,23 @@ const targetLanguageOptions = computed(() =>
   })
 )
 
+const currentOwnLanguageTag = computed(() => {
+  const custom = dialog.config.ownLanguage?.trim()
+  if (custom) return custom
+  const stt = desktopStore.userConfig.stt
+  const sttModel = activeSttModel(stt)
+  const normalized = normalizeDeepgramLanguage(sttModel.language)
+  return normalized === DICTATION_LANGUAGE_AUTO ? 'auto' : normalized
+})
+
 const routeLabel = computed(() =>
   dialogRouteLabel({
     translationTargetLanguage: dialog.config.translationTargetLanguage,
     remoteLanguage: isDeepgram.value
       ? (dialog.config.remoteLanguage ?? 'auto')
-      : undefined,
-    labelOf,
-    translate: t,
+      : 'auto',
+    ownLanguage: currentOwnLanguageTag.value,
+    isGemini: isGeminiLive.value,
   })
 )
 </script>
