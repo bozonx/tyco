@@ -22,7 +22,10 @@ describe('DialogRecordingPlayer.vue', () => {
 
   it('renders recording file name and play button', () => {
     const wrapper = mount(DialogRecordingPlayer, {
-      props: { file: '2026-11-23 12-00-00 a1b2c3.opus' },
+      props: {
+        dialogId: '2026-11-23_12-00-00_a1b2c3',
+        file: '2026-11-23 12-00-00 a1b2c3.opus',
+      },
       global: { plugins: [i18n, desktop.pinia] },
     })
 
@@ -41,7 +44,7 @@ describe('DialogRecordingPlayer.vue', () => {
     dialog.status = 'running'
 
     const wrapper = mount(DialogRecordingPlayer, {
-      props: { file: 'test.opus' },
+      props: { dialogId: '2026-11-23_12-00-00_a1b2c3', file: 'test.opus' },
       global: { plugins: [i18n, desktop.pinia] },
     })
 
@@ -56,7 +59,7 @@ describe('DialogRecordingPlayer.vue', () => {
     desktop.backend.handle('read_dialog_recording', () => new ArrayBuffer(8))
 
     const wrapper = mount(DialogRecordingPlayer, {
-      props: { file: 'call.opus' },
+      props: { dialogId: '2026-11-23_12-00-00_a1b2c3', file: 'call.opus' },
       global: { plugins: [i18n, desktop.pinia] },
     })
 

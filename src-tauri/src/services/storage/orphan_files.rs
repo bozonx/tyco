@@ -81,6 +81,19 @@ impl OrphanRecord {
         Ok(())
     }
 
+    /// Mutable access to the seen map of `key`, for folder-based orphan
+    /// collection such as per-dialog recording folders.
+    pub fn entries_mut(&mut self, key: &str) -> &mut BTreeMap<String, u64> {
+        self.0.entry(key.to_owned()).or_default()
+    }
+
+    /// Removes `key` if it holds no orphan entries.
+    pub fn prune_empty(&mut self, key: &str) {
+        if self.0.get(key).is_some_and(BTreeMap::is_empty) {
+            self.0.remove(key);
+        }
+    }
+
     #[cfg(test)]
     pub fn contains(&self, id: &str) -> bool {
         self.0.values().any(|ids| ids.contains_key(id))

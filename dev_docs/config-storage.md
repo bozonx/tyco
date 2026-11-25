@@ -346,13 +346,13 @@ avoid a flash before the authoritative config arrives.
 Linux paths below honor XDG overrides. macOS and Windows use the platform paths
 in `services/storage/app_paths.rs`; `TYCO_DEV_HOME` isolates development storage.
 
-| Root                                                                             | Files                                                                                                                                                                            |
-| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| User data (`~/.local/share/com.tyco.app` by default, or a folder the user chose) | `tyco-user.json`; `config.json`; `history/editor/<device id>.jsonl`, `history/recordings/`; `chats/<id>.json`, `images/`; `plugins/<key>.json` and `<key>.previous`; `ai-vault/` |
-| Device (`~/.config/com.tyco.app`; `%LOCALAPPDATA%\com.tyco.app\device`)          | `device.json`, `secrets.json`                                                                                                                                                    |
-| State (`~/.local/state/com.tyco.app`)                                            | `logs/`; `webview/`; `config.base.json`; `index/` (chat indexes, `orphan-images.json`, `orphan-recordings.json`); `recordings/`; `recovery/`                                     |
-| Cache (`~/.cache/com.tyco.app`)                                                  | Platform cache directory, created when opened; no application-owned model downloads                                                                                              |
-| User-selected paths                                                              | Plugin note files; attached vaults                                                                                                                                               |
+| Root                                                                             | Files                                                                                                                                                                                                      |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| User data (`~/.local/share/com.tyco.app` by default, or a folder the user chose) | `tyco-user.json`; `config.json`; `history/editor/<device id>.jsonl`; `dialogs/<id>.json`, `dialogs/recordings/<id>/`; `chats/<id>.json`, `images/`; `plugins/<key>.json` and `<key>.previous`; `ai-vault/` |
+| Device (`~/.config/com.tyco.app`; `%LOCALAPPDATA%\com.tyco.app\device`)          | `device.json`, `secrets.json`                                                                                                                                                                              |
+| State (`~/.local/state/com.tyco.app`)                                            | `logs/`; `webview/`; `config.base.json`; `index/` (chat and dialog indexes, `orphan-images.json`, `orphan-recordings.json`); `recordings/`; `recovery/`                                                    |
+| Cache (`~/.cache/com.tyco.app`)                                                  | Platform cache directory, created when opened; no application-owned model downloads                                                                                                                        |
+| User-selected paths                                                              | Plugin note files; attached vaults                                                                                                                                                                         |
 
 The user data folder holds everything the user made and set up, and nothing
 else: it may be synced to other machines (Syncthing, Nextcloud, Dropbox,
@@ -411,7 +411,7 @@ is implemented. See `docs/data-folder.md` for setup and recovery.
 
 Some folders of the user data folder may be links to a folder elsewhere, a
 symbolic link or a Windows junction (Rust counts a junction as a symbolic
-link): `history`, `history/recordings`, `chats`, `chats/images`,
+link): `history`, `dialogs`, `dialogs/recordings`, `chats`, `chats/images`,
 `chats/attachments`, `ai-vault` and `plugins` (`user_files::is_linkable_dir`),
 besides the data folder and the attached vaults themselves. Paths stay those
 inside the root, as the app writes them; the watcher follows these links and
@@ -438,32 +438,20 @@ was stopped, a dictation without an AI pass. It takes the place of its
 `draft` under the same id, is no longer rewritten, and an `output` of the same
 text takes its place. Unlike a draft it is not shown as interrupted.
 
-Like a `draft`, a `dialog` entry is rewritten under its id while its input
-goes on: `lib/dialog/dialog-history.ts` opens one per dialog session (a
-Start after Clear; a dialog resumed after Stop, also after a stop that saved
-it, goes on in the same entry), creates it with the first finished turn and checkpoints the transcript
-in the export format every 15 s while it changed, on Stop, when the window
-hides and on quit (`registerInputFlush`). `EditorHistoryItem::dialog` holds
-`startedAt`, `source`, the call recordings in `history/recordings/`
-(`recordingFile`, `recordingFiles`) and `incompleteRecordingFiles`, the ones
-that stopped before their run did. A dialog never collapses with another
-entry of the same text, and a draft never replaces it.
-
-A call recording belongs to the entry that names it (`storage::recordings`).
-Its name, `YYYY-MM-DD HH-MM-SS <6 hex>.opus`, is the only form the backend
-takes from the webview, and the only one it lists, so conflict copies and
-other files stay. While the call runs the file is written in `recordings/` of
-the state folder, so that no sync tool sends a growing file, and it moves
-into the data folder once closed (renamed, or across disks copied and
-removed); a file left there, by a crash or a data folder that was away, moves
-at the next start, before any capture. It is removed with its entry: when the
-undo of a removal expires (`discard_dialog_recording`, which keeps a file an
-entry names again), by `clear`, and by the cleanup of the policy, which reads
-every journal before compacting and removes at once the recordings of the
-entries the limits drop. A file no entry names, e.g. one a sync tool brought
-before its journal, waits seven days, counted in `index/orphan-recordings.json`
-as for chat images (`storage::orphan_files`). The dialog records only while
-the history is kept on disk.
+A dialog has its own history (`storage::dialog_history`), independent of editor
+history: one structured JSON file per session in `dialogs/<id>.json` (id format
+`YYYY-MM-DD_HH-MM-SS_<6 hex>`), with a derived index in `index/dialogs-v1.json`
+of the state folder. `lib/dialog/dialog-history.ts` checkpoints settled segments,
+session breaks, and recording file names every 15 s while it changed, on Stop,
+when the window hides, and on quit (`registerInputFlush`). Call recordings live
+per dialog in `dialogs/recordings/<dialog id>/` (`storage::recordings`), written
+in `recordings/<dialog id>/` of the state folder while running and moved into
+the data folder once closed; leftovers move at the next start. Deleting a dialog
+keeps its recording folder during the undo window and removes it on
+`release_dialog_recordings`; retention cleanup and `clear_dialogs` remove
+recording folders immediately; orphaned recording folders without a matching
+`<id>.json` are collected after seven days via `index/orphan-recordings.json`.
+Recording requires `dialog.history.storage == "disk"`.
 
 A chat is its file, `chats/<id>.json`. The list is an index of the state folder
 (`index/chats.json`, and `index/ai-vault/<vault id>/<profile>/` for the chats

@@ -65,6 +65,15 @@
           />
         </FieldRow>
       </SettingsSection>
+
+      <SettingsSection bare>
+        <template #description>
+          {{ t('settings.dialogHistoryLink') }}
+          <InlineAction @click="navigate('history')">
+            {{ t('settings.historyTab') }}</InlineAction
+          >.
+        </template>
+      </SettingsSection>
     </template>
   </div>
 </template>

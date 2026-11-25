@@ -533,7 +533,6 @@
     "undo": "Rückgängig",
     "yesterday": "Gestern",
     "filterListen": "Systemaudio",
-    "kindDialog": "Dialog",
     "recordingNotFound": "Datei nicht gefunden",
     "playRecording": "Aufnahme abspielen",
     "playRecordingWhileCapturing": "Die Wiedergabe ist nicht verfügbar, während TyCo Ton aufnimmt",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Glossar",
     "dialogTranslationGlossaryInfo": "Die Sprachübersetzung im Dialog nutzt das gemeinsame Glossar aus den Übersetzungseinstellungen. Sie können Übersetzungsregeln festlegen oder Wörter vor Übersetzung schützen.",
     "dialogTranslationGlossaryShared": "Nutzt das gemeinsame Glossar",
-    "dialogTranslationGlossaryOpen": "Glossar anpassen"
+    "dialogTranslationGlossaryOpen": "Glossar anpassen",
+    "sectionDialogHistory": "Dialogverlauf",
+    "dialogHistoryHint": "Gespeicherte Gesprächstranskripte und ihre Audioaufnahmen.",
+    "dialogHistoryEnabled": "Dialoge speichern",
+    "dialogHistoryEnabledInfo": "Transkripte und Aufnahmen auf der Festplatte speichern, um sie später erneut zu öffnen.",
+    "dialogHistoryRetentionDays": "Dialoge aufbewahren für",
+    "dialogHistoryRetentionDaysHint": "Ältere Dialoge und ihre Aufnahmen werden automatisch gelöscht.",
+    "dialogHistoryRetentionConfirm": "Dialoge älter als {period} und ihre Aufnahmen werden gelöscht.",
+    "deleteAllDialogs": "Alle Dialoge löschen",
+    "dialogCount": "Gespeicherte Dialoge: {count}",
+    "clearDialogsConfirmDialog": "Alle gespeicherten Dialoge und ihre Audioaufnahmen werden dauerhaft gelöscht.",
+    "dialogHistoryLink": "Einstellungen zu Dialogverlauf und Aufbewahrung finden Sie unter"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "Spracherkennung und Aufnahme in Audiodatei fortsetzen",
     "recordToggleEnableHint": "Audioaufnahme in Datei und Speichern im Verlauf beim Start aktivieren",
     "recordToggleDisableHint": "Audioaufnahme deaktivieren (nur Spracherkennung)",
-    "clearMessageSaved": "Das aktuelle Transkript wird aus dem Fenster gelöscht. Das Gespräch bleibt im Verlauf gespeichert."
+    "clearMessageSaved": "Das aktuelle Transkript wird aus dem Fenster gelöscht. Das Gespräch bleibt im Verlauf gespeichert.",
+    "history": "Verlauf",
+    "newDialog": "Neuer Dialog",
+    "searchHistory": "Dialoge durchsuchen",
+    "renameDialog": "Dialog umbenennen",
+    "deleteDialog": "Dialog löschen",
+    "openRecordingsFolder": "Aufnahmeordner öffnen",
+    "stopToSwitchHint": "Beenden Sie den Dialog, um einen anderen zu öffnen",
+    "notFound": "Dialog nicht gefunden. Er wurde möglicherweise gelöscht.",
+    "clearHistoryConfirmTitle": "Dialogverlauf leeren?"
   },
   "toolPermissions": {
     "riskRead": "Liest",

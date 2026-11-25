@@ -13,50 +13,14 @@ pub enum EditorHistoryKind {
     Transcript,
     /// Snapshot taken right before an AI transformation.
     Source,
-    /// The transcript of a dialog session, checkpointed while it runs; see
-    /// `EditorHistoryDialog`.
-    Dialog,
 }
 
 impl EditorHistoryKind {
     /// An entry rewritten under its id while its input goes on, instead of
     /// being added once.
     pub fn is_checkpointed(self) -> bool {
-        matches!(self, Self::Draft | Self::Dialog)
+        matches!(self, Self::Draft)
     }
-}
-
-/// What the dialog listened to.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-pub enum EditorHistoryDialogSource {
-    MicrophoneAndSystem,
-    System,
-}
-
-/// The session a `Dialog` entry holds the transcript of.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-pub struct EditorHistoryDialog {
-    /// Unix time in milliseconds.
-    #[serde(rename = "startedAt")]
-    pub started_at_ms: u64,
-    pub source: EditorHistoryDialogSource,
-    /// The file name of the call recording in `history/recordings/` of the
-    /// user data folder, if the session was recorded. The file goes with the
-    /// entry; it may be missing, e.g. not synced yet.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub recording_file: Option<String>,
-    /// The file names of call recordings if the session was recorded.
-    /// Multiple files occur if recording was stopped and resumed within one dialog.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub recording_files: Vec<String>,
-    /// The recordings that stopped before their run did, e.g. the disk filled
-    /// up: such a file holds only the beginning.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[ts(as = "Option<Vec<String>>", optional)]
-    pub incomplete_recording_files: Vec<String>,
 }
 
 /// The AI transformation a `Source` entry was taken before.
@@ -155,10 +119,6 @@ pub struct EditorHistoryItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub failure: Option<EditorHistoryFailure>,
-    /// The session of a `Dialog` entry.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub dialog: Option<EditorHistoryDialog>,
 }
 
 /// What the UI sends to add a text; id and time are assigned by the backend.
@@ -179,9 +139,6 @@ pub struct EditorHistoryEntry {
     pub instruction: Option<EditorHistoryInstruction>,
     #[serde(default)]
     pub profile_id: Option<String>,
-    /// Required for a `Dialog` entry, ignored for the others.
-    #[serde(default)]
-    pub dialog: Option<EditorHistoryDialog>,
 }
 
 #[cfg(test)]
@@ -199,15 +156,6 @@ mod tests {
                 input_kind: super::EditorHistoryInputKind::Typed,
             })
         );
-        assert_eq!(serde_json::to_value(record).unwrap(), value);
-    }
-
-    #[test]
-    fn a_dialog_entry_keeps_its_session() {
-        let value = serde_json::json!({"id":"d", "text":"Me: hi", "kind":"dialog", "createdAt":5, "dialog":{"startedAt":1, "source":"microphoneAndSystem", "recordingFile":"2026-11-21 10-00-00 a1b2c3.opus"}});
-        let record: super::EditorHistoryItem = serde_json::from_value(value.clone()).unwrap();
-        assert_eq!(record.kind, super::EditorHistoryKind::Dialog);
-        assert_eq!(record.dialog.as_ref().unwrap().started_at_ms, 1);
         assert_eq!(serde_json::to_value(record).unwrap(), value);
     }
 

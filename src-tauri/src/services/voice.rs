@@ -161,6 +161,7 @@ pub async fn start_capture<S: EventSink>(
     capture_source: CaptureSource,
     microphone_id: Option<String>,
     is_recorded: bool,
+    dialog_id: Option<String>,
     sink: S,
 ) -> Result<VoiceCaptureInfo, AppError> {
     if capture_source.is_playback() && !super::platform::audio::can_capture_playback() {
@@ -174,7 +175,10 @@ pub async fn start_capture<S: EventSink>(
                 "Only a dialog is recorded to a file".into(),
             ));
         }
-        Some(new_recording(app)?)
+        let dialog_id = dialog_id
+            .filter(|id| !id.trim().is_empty())
+            .ok_or_else(|| AppError::InvalidInput("A recording requires a dialog id".into()))?;
+        Some(new_recording(app, &dialog_id)?)
     } else {
         None
     };
@@ -189,22 +193,22 @@ pub async fn start_capture<S: EventSink>(
     .await
 }
 
-/// A recording belongs to its history entry: without a history kept on
-/// disk, nothing would ever name or remove the file.
-fn new_recording(app: &AppHandle) -> Result<RecordingRequest, AppError> {
+/// A recording belongs to its dialog history entry: without dialog history
+/// kept on disk, nothing would ever name or remove the file.
+fn new_recording(app: &AppHandle, dialog_id: &str) -> Result<RecordingRequest, AppError> {
     use tauri::Manager;
     let config = app.state::<crate::state::AppState>().user_config();
-    let policy = super::storage::HistorySettings::from_config(&config).editor;
-    if !policy.is_recording || policy.is_memory_only {
+    let policy = super::storage::HistorySettings::from_config(&config).dialog;
+    if !policy.is_enabled {
         return Err(AppError::InvalidInput(
-            "A call is recorded only while the history is saved on disk".into(),
+            "A call is recorded only while dialog history is saved on disk".into(),
         ));
     }
     let dirs = super::storage::recordings::RecordingDirs::of_app(app)?;
     let local_time = chrono::Local::now().format("%Y-%m-%d %H-%M-%S").to_string();
     let options = crate::models::user_config::dialog_recording(&config);
     Ok(RecordingRequest {
-        target: super::storage::recordings::new_recording(&dirs, &local_time)?,
+        target: super::storage::recordings::new_recording(&dirs, dialog_id, &local_time)?,
         is_mixed_down: options.is_mixed_down,
         is_processed: options.is_processed,
     })

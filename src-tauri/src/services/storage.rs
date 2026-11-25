@@ -5,6 +5,7 @@ pub mod app_paths;
 mod chat_history;
 pub mod data_root_relocation;
 pub mod device;
+mod dialog_history;
 mod editor_history;
 mod history_store;
 mod json_files;

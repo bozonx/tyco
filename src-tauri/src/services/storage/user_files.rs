@@ -15,13 +15,14 @@ use crate::services::atomic_file::TEMPORARY_FILE_PREFIX;
 /// elsewhere, a symbolic link or, on Windows, a junction: e.g. to keep the
 /// recordings on another disk. The app writes through such a link and never
 /// replaces or removes the link itself. Anywhere else a link is not followed.
-const LINKABLE_DIRS: [&str; 7] = [
+const LINKABLE_DIRS: [&str; 8] = [
     "ai-vault",
     "chats",
     "chats/attachments",
     "chats/images",
+    "dialogs",
+    "dialogs/recordings",
     "history",
-    "history/recordings",
     "plugins",
 ];
 

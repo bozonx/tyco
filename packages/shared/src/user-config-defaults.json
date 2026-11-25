@@ -263,6 +263,7 @@
   "dialog": {
     "isEnabled": false,
     "source": "microphoneAndSystem",
+    "history": { "storage": "disk" },
     "translationTargetLanguage": "",
     "remoteLanguage": "auto",
     "isTranslationOnly": false,

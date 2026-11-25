@@ -14,10 +14,6 @@ describe('getEditorHistoryMeta', () => {
     expect(getEditorHistoryMeta({ kind: 'draft' }).labelKey).toBe(
       'history.kindDraft'
     )
-    expect(getEditorHistoryMeta({ kind: 'dialog' }).labelKey).toBe(
-      'history.kindDialog'
-    )
-    expect(getEditorHistoryNote({ kind: 'dialog' })).toBeUndefined()
   })
 
   it('names the operation that produced a result', () => {

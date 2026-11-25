@@ -29,11 +29,11 @@ the general rules in a few common programs.
    settings: the files can be moved to the new folder, or copied back into
    the workspace; the external folder itself is never deleted.
 
-Call recordings of the dialog are part of the history, in
-`history/recordings` of the data folder (see `docs/dialog.md`). They are the
-largest files TyCo keeps; to leave them out of a synchronization, exclude
-that folder in your synchronization program, e.g. `/history/recordings` in
-Syncthing's `.stignore`, or keep it on another disk (see below).
+Call recordings of the dialog are kept per dialog in
+`dialogs/recordings/<dialog-id>/` of the data folder (see `docs/dialog.md`).
+They are the largest files TyCo keeps; to leave them out of a synchronization,
+exclude that folder in your synchronization program, e.g. `/dialogs/recordings`
+in Syncthing's `.stignore`, or keep it on another disk (see below).
 
 ## General rules
 
@@ -189,11 +189,11 @@ a folder elsewhere, e.g. to keep the recordings on a larger disk. TyCo writes
 through these links and never replaces or removes them:
 
 - the data folder itself, and every attached workspace;
-- inside the data folder: `history`, `history/recordings`, `chats`,
+- inside the data folder: `history`, `dialogs`, `dialogs/recordings`, `chats`,
   `chats/images`, `chats/attachments`, `ai-vault` and `plugins`.
 
 On Linux use a symbolic link with an absolute target
-(`ln -s /mnt/big/tyco-recordings ~/.local/share/com.tyco.app/history/recordings`).
+(`ln -s /mnt/big/tyco-recordings ~/.local/share/com.tyco.app/dialogs/recordings`).
 On Windows use a junction (`mklink /J <folder> <target>`), which needs no
 administrator rights, or a symbolic link. Quit TyCo, move the folder's
 contents to the target, and put the link in its place. Links anywhere else,

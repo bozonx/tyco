@@ -533,7 +533,6 @@
     "undo": "დაბრუნება",
     "yesterday": "გუშინ",
     "filterListen": "სისტემის ხმა",
-    "kindDialog": "დიალოგი",
     "recordingNotFound": "ფაილი ვერ მოიძებნა",
     "playRecording": "ჩანაწერის დაკვრა",
     "playRecordingWhileCapturing": "დაკვრა მიუწვდომელია, სანამ TyCo ხმას იწერს",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "ლექსიკონი",
     "dialogTranslationGlossaryInfo": "დიალოგში საუბრის თარგმნისთვის გამოიყენება თარგმნის პარამეტრების საერთო ლექსიკონი. შეგიძლიათ განსაზღვროთ ტერმინების წესები ან დაიცვათ სიტყვები თარგმნისგან.",
     "dialogTranslationGlossaryShared": "გამოიყენება საერთო ლექსიკონი",
-    "dialogTranslationGlossaryOpen": "ლექსიკონის მორგება"
+    "dialogTranslationGlossaryOpen": "ლექსიკონის მორგება",
+    "sectionDialogHistory": "დიალოგების ისტორია",
+    "dialogHistoryHint": "შენახული ზარების ტრანსკრიპტები და აუდიოჩანაწერები.",
+    "dialogHistoryEnabled": "დიალოგების შენახვა",
+    "dialogHistoryEnabledInfo": "შეინახეთ ტრანსკრიპტები და ჩანაწერები დისკზე, რათა მოგვიანებით კვლავ გახსნათ.",
+    "dialogHistoryRetentionDays": "დიალოგების შენახვის ვადა",
+    "dialogHistoryRetentionDaysHint": "უფრო ძველი დიალოგები და მათი ჩანაწერები ავტომატურად იშლება.",
+    "dialogHistoryRetentionConfirm": "{period}-ზე ძველი დიალოგები და მათი ჩანაწერები წაიშლება.",
+    "deleteAllDialogs": "ყველა დიალოგის წაშლა",
+    "dialogCount": "შენახული დიალოგები: {count}",
+    "clearDialogsConfirmDialog": "ყველა შენახული დიალოგი და მათი აუდიოჩანაწერები სამუდამოდ წაიშლება.",
+    "dialogHistoryLink": "დიალოგების ისტორიისა და შენახვის პარამეტრები მდებარეობს განყოფილებაში"
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "მეტყველების ამოცნობის და აუდიოფაილში ჩაწერის გაგრძელება",
     "recordToggleEnableHint": "გაშვებისას აუდიოფაილში ჩაწერისა და ისტორიაში შენახვის ჩართვა",
     "recordToggleDisableHint": "აუდიოჩაწერის გამორთვა (მხოლოდ მეტყველების ამოცნობა)",
-    "clearMessageSaved": "მიმდინარე ჩანაწერი გასუფთავდება ფანჯრიდან. საუბარი შენახული დარჩება ისტორიაში."
+    "clearMessageSaved": "მიმდინარე ჩანაწერი გასუფთავდება ფანჯრიდან. საუბარი შენახული დარჩება ისტორიაში.",
+    "history": "ისტორია",
+    "newDialog": "ახალი დიალოგი",
+    "searchHistory": "დიალოგების ძიება",
+    "renameDialog": "დიალოგის გადარქმევა",
+    "deleteDialog": "დიალოგის წაშლა",
+    "openRecordingsFolder": "ჩანაწერების საქაღალდის გახსნა",
+    "stopToSwitchHint": "სხვა დიალოგის გასახსნელად შეაჩერეთ მიმდინარე",
+    "notFound": "დიალოგი ვერ მოიძებნა. შესაძლოა წაიშალა.",
+    "clearHistoryConfirmTitle": "გასუფთავდეს დიალოგების ისტორია?"
   },
   "toolPermissions": {
     "riskRead": "კითხვა",

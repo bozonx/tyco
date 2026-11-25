@@ -533,7 +533,6 @@
     "undo": "Αναίρεση",
     "yesterday": "Χθες",
     "filterListen": "Ήχος συστήματος",
-    "kindDialog": "Διάλογος",
     "recordingNotFound": "το αρχείο δεν βρέθηκε",
     "playRecording": "Αναπαραγωγή της ηχογράφησης",
     "playRecordingWhileCapturing": "Η αναπαραγωγή δεν είναι διαθέσιμη όσο το TyCo ηχογραφεί",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Γλωσσάριο",
     "dialogTranslationGlossaryInfo": "Η μετάφραση ομιλίας στον διάλογο χρησιμοποιεί το κοινό γλωσσάριο από τις ρυθμίσεις μετάφρασης. Μπορείτε να ορίσετε κανόνες για όρους ή να προστατεύσετε λέξεις από μετάφραση.",
     "dialogTranslationGlossaryShared": "Χρησιμοποιείται το κοινό γλωσσάριο",
-    "dialogTranslationGlossaryOpen": "Ρύθμιση γλωσσαρίου"
+    "dialogTranslationGlossaryOpen": "Ρύθμιση γλωσσαρίου",
+    "sectionDialogHistory": "Ιστορικό διαλόγων",
+    "dialogHistoryHint": "Αποθηκευμένες απομαγνητοφωνήσεις κλήσεων και εγγραφές.",
+    "dialogHistoryEnabled": "Αποθήκευση διαλόγων",
+    "dialogHistoryEnabledInfo": "Διατήρηση απομαγνητοφωνήσεων και εγγραφών στον δίσκο για μελλοντική προβολή.",
+    "dialogHistoryRetentionDays": "Διατήρηση διαλόγων για",
+    "dialogHistoryRetentionDaysHint": "Παλαιότεροι διάλογοι και οι εγγραφές τους διαγράφονται αυτόματα.",
+    "dialogHistoryRetentionConfirm": "Διάλογοι παλαιότεροι από {period} και οι εγγραφές τους θα διαγραφούν.",
+    "deleteAllDialogs": "Διαγραφή όλων των διαλόγων",
+    "dialogCount": "Αποθηκευμένοι διάλογοι: {count}",
+    "clearDialogsConfirmDialog": "Όλοι οι αποθηκευμένοι διάλογοι και οι ηχογραφήσεις τους θα διαγραφούν οριστικά.",
+    "dialogHistoryLink": "Οι ρυθμίσεις ιστορικού και διατήρησης διαλόγων βρίσκονται στην ενότητα"
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "Συνέχιση αναγνώρισης ομιλίας και εγγραφής σε αρχείο ήχου",
     "recordToggleEnableHint": "Ενεργοποίηση εγγραφής ήχου σε αρχείο και αποθήκευσης στο ιστορικό κατά την εκκίνηση",
     "recordToggleDisableHint": "Απενεργοποίηση εγγραφής ήχου (μόνο αναγνώριση ομιλίας)",
-    "clearMessageSaved": "Η τρέχουσα απομαγνητοφώνηση θα εκκαθαριστεί από το παράθυρο. Η συνομιλία παραμένει αποθηκευμένη στο ιστορικό."
+    "clearMessageSaved": "Η τρέχουσα απομαγνητοφώνηση θα εκκαθαριστεί από το παράθυρο. Η συνομιλία παραμένει αποθηκευμένη στο ιστορικό.",
+    "history": "Ιστορικό",
+    "newDialog": "Νέος διάλογος",
+    "searchHistory": "Αναζήτηση διαλόγων",
+    "renameDialog": "Μετονομασία διαλόγου",
+    "deleteDialog": "Διαγραφή διαλόγου",
+    "openRecordingsFolder": "Άνοιγμα φακέλου εγγραφών",
+    "stopToSwitchHint": "Σταματήστε τον διάλογο για να ανοίξετε άλλον",
+    "notFound": "Ο διάλογος δεν βρέθηκε. Ίσως έχει διαγραφεί.",
+    "clearHistoryConfirmTitle": "Εκκαθάριση ιστορικού διαλόγων;"
   },
   "toolPermissions": {
     "riskRead": "Ανάγνωση",

@@ -1213,9 +1213,11 @@ fn record_dialog(is_processed: bool) -> (u64, usize) {
         "2026-11-21 10-00-00 a1b2c4.opus"
     }
     .to_owned();
+    let dialog_id = String::from("2026-11-21_10-00-00_a1b2c3");
     let recording = crate::services::storage::recordings::NewRecording {
-        active_path: folder.join("active").join(&name),
-        shared_path: folder.join("shared").join(&name),
+        active_path: folder.join("active").join(&dialog_id).join(&name),
+        shared_path: folder.join("shared").join(&dialog_id).join(&name),
+        dialog_id,
         name,
     };
     let path = recording.shared_path.clone();

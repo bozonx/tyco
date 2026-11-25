@@ -533,7 +533,6 @@
     "undo": "Undo",
     "yesterday": "Yesterday",
     "filterListen": "System audio",
-    "kindDialog": "Dialog",
     "recordingNotFound": "file not found",
     "playRecording": "Play the recording",
     "playRecordingWhileCapturing": "Playback is unavailable while TyCo records sound",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Glossary",
     "dialogTranslationGlossaryInfo": "Speech translation in dialogs uses the shared glossary from translation settings. You can define term translations or protect specific words from being translated.",
     "dialogTranslationGlossaryShared": "Uses the shared glossary",
-    "dialogTranslationGlossaryOpen": "Configure glossary"
+    "dialogTranslationGlossaryOpen": "Configure glossary",
+    "sectionDialogHistory": "Dialog history",
+    "dialogHistoryHint": "Saved call transcripts and their audio recordings.",
+    "dialogHistoryEnabled": "Save dialogs",
+    "dialogHistoryEnabledInfo": "Keep call transcripts and recordings on disk so you can reopen them later.",
+    "dialogHistoryRetentionDays": "Keep dialogs for",
+    "dialogHistoryRetentionDaysHint": "Older dialogs and their recordings are deleted automatically.",
+    "dialogHistoryRetentionConfirm": "Dialogs older than {period} and their recordings will be deleted.",
+    "deleteAllDialogs": "Delete all dialogs",
+    "dialogCount": "Saved dialogs: {count}",
+    "clearDialogsConfirmDialog": "All saved dialogs and their audio recordings will be permanently deleted.",
+    "dialogHistoryLink": "Dialog history and retention settings are in"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "Resume speech recognition and record to audio file",
     "recordToggleEnableHint": "Enable audio recording to file and saving to history on start",
     "recordToggleDisableHint": "Disable audio recording (speech recognition only)",
-    "clearMessageSaved": "The current transcript will be cleared from the window. The conversation remains saved in history."
+    "clearMessageSaved": "The current transcript will be cleared from the window. The conversation remains saved in history.",
+    "history": "History",
+    "newDialog": "New dialog",
+    "searchHistory": "Search dialogs",
+    "renameDialog": "Rename dialog",
+    "deleteDialog": "Delete dialog",
+    "openRecordingsFolder": "Open recordings folder",
+    "stopToSwitchHint": "Stop the dialog to open another one",
+    "notFound": "Dialog not found. It may have been deleted.",
+    "clearHistoryConfirmTitle": "Clear dialog history?"
   },
   "toolPermissions": {
     "riskRead": "Reads",

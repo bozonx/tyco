@@ -533,7 +533,6 @@
     "undo": "Poništi",
     "yesterday": "Jučer",
     "filterListen": "Zvuk sustava",
-    "kindDialog": "Dijalog",
     "recordingNotFound": "datoteka nije pronađena",
     "playRecording": "Reproduciraj snimku",
     "playRecordingWhileCapturing": "Reprodukcija nije dostupna dok TyCo snima zvuk",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Rječnik",
     "dialogTranslationGlossaryInfo": "Prijevod govora u dijalogu koristi zajednički rječnik iz postavki prijevoda. Možete definirati pravila za pojmove ili zaštititi određene riječi od prijevoda.",
     "dialogTranslationGlossaryShared": "Koristi zajednički rječnik",
-    "dialogTranslationGlossaryOpen": "Podesi rječnik"
+    "dialogTranslationGlossaryOpen": "Podesi rječnik",
+    "sectionDialogHistory": "Povijest dijaloga",
+    "dialogHistoryHint": "Spremljeni transkripti poziva i njihove audio snimke.",
+    "dialogHistoryEnabled": "Spremaj dijaloge",
+    "dialogHistoryEnabledInfo": "Čuvaj transkripte i snimke poziva na disku kako biste ih kasnije mogli ponovno otvoriti.",
+    "dialogHistoryRetentionDays": "Čuvaj dijaloge",
+    "dialogHistoryRetentionDaysHint": "Stariji dijalozi i njihove snimke automatski se brišu.",
+    "dialogHistoryRetentionConfirm": "Dijalozi stariji od {period} i njihove snimke bit će izbrisani.",
+    "deleteAllDialogs": "Izbriši sve dijaloge",
+    "dialogCount": "Spremljenih dijaloga: {count}",
+    "clearDialogsConfirmDialog": "Svi spremljeni dijalozi i njihove audio snimke bit će trajno izbrisani.",
+    "dialogHistoryLink": "Postavke povijesti i čuvanja dijaloga nalaze se u"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "Nastavi prepoznavanje govora i snimanje u audio datoteku",
     "recordToggleEnableHint": "Omogući snimanje zvuka u datoteku i spremanje u povijest pri pokretanju",
     "recordToggleDisableHint": "Isključi snimanje zvuka (samo prepoznavanje govora)",
-    "clearMessageSaved": "Trenutni prijepis bit će izbrisan iz prozora. Razgovor ostaje spremljen u povijesti."
+    "clearMessageSaved": "Trenutni prijepis bit će izbrisan iz prozora. Razgovor ostaje spremljen u povijesti.",
+    "history": "Povijest",
+    "newDialog": "Novi dijalog",
+    "searchHistory": "Pretraži dijaloge",
+    "renameDialog": "Preimenuj dijalog",
+    "deleteDialog": "Izbriši dijalog",
+    "openRecordingsFolder": "Otvori mapu snimki",
+    "stopToSwitchHint": "Zaustavite dijalog da biste otvorili drugi",
+    "notFound": "Dijalog nije pronađen. Možda je izbrisan.",
+    "clearHistoryConfirmTitle": "Očistiti povijest dijaloga?"
   },
   "toolPermissions": {
     "riskRead": "Čitanje",

@@ -533,7 +533,6 @@
     "undo": "Болдырмау",
     "yesterday": "Кеше",
     "filterListen": "Жүйе дыбысы",
-    "kindDialog": "Диалог",
     "recordingNotFound": "файл табылмады",
     "playRecording": "Жазбаны ойнату",
     "playRecordingWhileCapturing": "TyCo дыбыс жазып жатқанда ойнату қолжетімсіз",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Глоссарий",
     "dialogTranslationGlossaryInfo": "Диалогта сөйлеуді аудару үшін аударма баптауларындағы ортақ глоссарий қолданылады. Терминдер ережелерін белгілеуге немесе кейбір сөздерді аударудан қорғауға болады.",
     "dialogTranslationGlossaryShared": "Ортақ глоссарий қолданылады",
-    "dialogTranslationGlossaryOpen": "Глоссарийді баптау"
+    "dialogTranslationGlossaryOpen": "Глоссарийді баптау",
+    "sectionDialogHistory": "Диалог тарихы",
+    "dialogHistoryHint": "Сақталған қоңырау транскрипттері мен аудиожазбалары.",
+    "dialogHistoryEnabled": "Диалогтарды сақтау",
+    "dialogHistoryEnabledInfo": "Кейін қайта ашу үшін қоңырау транскрипттері мен жазбаларын дискіде сақтау.",
+    "dialogHistoryRetentionDays": "Диалогтарды сақтау мерзімі",
+    "dialogHistoryRetentionDaysHint": "Ескі диалогтар мен олардың жазбалары автоматты түрде жойылады.",
+    "dialogHistoryRetentionConfirm": "{period} мерзімінен ескі диалогтар мен олардың жазбалары жойылады.",
+    "deleteAllDialogs": "Барлық диалогты жою",
+    "dialogCount": "Сақталған диалогтар: {count}",
+    "clearDialogsConfirmDialog": "Барлық сақталған диалогтар мен олардың аудиожазбалары біржола жойылады.",
+    "dialogHistoryLink": "Диалог тарихы мен сақтау мерзімі баптаулары мына бөлімде орналасқан:"
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "Сөйлеуді тануды және аудиофайлға жазуды жалғастыру",
     "recordToggleEnableHint": "Іске қосқан кезде аудионы файлға жазуды және тарихқа сақтауды қосу",
     "recordToggleDisableHint": "Аудиожазбаны өшіру (тек сөйлеуді тану)",
-    "clearMessageSaved": "Ағымдағы транскрипт терезеден өшіріледі. Әңгіме тарихта сақталып қалады."
+    "clearMessageSaved": "Ағымдағы транскрипт терезеден өшіріледі. Әңгіме тарихта сақталып қалады.",
+    "history": "Тарих",
+    "newDialog": "Жаңа диалог",
+    "searchHistory": "Диалогтардан іздеу",
+    "renameDialog": "Диалогтың атын өзгерту",
+    "deleteDialog": "Диалогты жою",
+    "openRecordingsFolder": "Жазбалар қалтасын ашу",
+    "stopToSwitchHint": "Басқа диалогты ашу үшін ағымдағысын тоқтатыңыз",
+    "notFound": "Диалог табылмады. Ол жойылған болуы мүмкін.",
+    "clearHistoryConfirmTitle": "Диалог тарихын тазалау керек пе?"
   },
   "toolPermissions": {
     "riskRead": "Оқу",

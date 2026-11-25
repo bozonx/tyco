@@ -1397,6 +1397,19 @@
           "enum": ["microphoneAndSystem", "system"],
           "default": "microphoneAndSystem"
         },
+        "history": {
+          "type": "object",
+          "properties": {
+            "storage": { "enum": ["off", "disk"], "default": "disk" },
+            "retentionDays": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": ["storage"],
+          "default": { "storage": "disk" }
+        },
         "translationTargetLanguage": {
           "type": "string",
           "maxLength": 35,
@@ -1428,6 +1441,7 @@
       "required": [
         "isEnabled",
         "source",
+        "history",
         "translationTargetLanguage",
         "isTranslationOnly",
         "isRecordingMixedDown",

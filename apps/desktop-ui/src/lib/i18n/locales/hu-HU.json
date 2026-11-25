@@ -533,7 +533,6 @@
     "undo": "Visszavonás",
     "yesterday": "Tegnap",
     "filterListen": "Rendszerhang",
-    "kindDialog": "Párbeszéd",
     "recordingNotFound": "a fájl nem található",
     "playRecording": "Felvétel lejátszása",
     "playRecordingWhileCapturing": "A lejátszás nem érhető el, amíg a TyCo hangot rögzít",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Szójegyzék",
     "dialogTranslationGlossaryInfo": "A párbeszédek beszédfordítása a fordítási beállítások közös szójegyzékét használja. Megadhat kifejezésszabályokat, vagy védhet szavakat a lefordítástól.",
     "dialogTranslationGlossaryShared": "Közös szójegyzéket használ",
-    "dialogTranslationGlossaryOpen": "Szójegyzék beállítása"
+    "dialogTranslationGlossaryOpen": "Szójegyzék beállítása",
+    "sectionDialogHistory": "Párbeszéd-előzmények",
+    "dialogHistoryHint": "Mentett hívásleiratok és hangfelvételeik.",
+    "dialogHistoryEnabled": "Párbeszédek mentése",
+    "dialogHistoryEnabledInfo": "A hívásleiratok és felvételek mentése lemezre későbbi megnyitáshoz.",
+    "dialogHistoryRetentionDays": "Párbeszédek megőrzése",
+    "dialogHistoryRetentionDaysHint": "A régebbi párbeszédek és felvételeik automatikusan törlődnek.",
+    "dialogHistoryRetentionConfirm": "A(z) {period} időszaknál régebbi párbeszédek és felvételeik törlődnek.",
+    "deleteAllDialogs": "Összes párbeszéd törlése",
+    "dialogCount": "Mentett párbeszédek: {count}",
+    "clearDialogsConfirmDialog": "Minden mentett párbeszéd és hangfelvétel véglegesen törlődik.",
+    "dialogHistoryLink": "A párbeszédek előzményeinek és megőrzésének beállításai itt találhatók:"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "Beszédfelismerés és hangfájlba rögzítés folytatása",
     "recordToggleEnableHint": "Hangfájlba rögzítés és előzményekbe mentés bekapcsolása indításkor",
     "recordToggleDisableHint": "Hangfelvétel kikapcsolása (csak beszédfelismerés)",
-    "clearMessageSaved": "Az aktuális átirat törlődik az ablakból. A beszélgetés elmentve marad az előzményekben."
+    "clearMessageSaved": "Az aktuális átirat törlődik az ablakból. A beszélgetés elmentve marad az előzményekben.",
+    "history": "Előzmények",
+    "newDialog": "Új párbeszéd",
+    "searchHistory": "Párbeszédek keresése",
+    "renameDialog": "Párbeszéd átnevezése",
+    "deleteDialog": "Párbeszéd törlése",
+    "openRecordingsFolder": "Felvételek mappájának megnyitása",
+    "stopToSwitchHint": "Állítsa le a párbeszédet egy másik megnyitásához",
+    "notFound": "A párbeszéd nem található. Lehet, hogy törölték.",
+    "clearHistoryConfirmTitle": "Törli a párbeszédek előzményeit?"
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

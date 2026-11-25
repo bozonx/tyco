@@ -533,7 +533,6 @@
     "undo": "Zpět",
     "yesterday": "Včera",
     "filterListen": "Systémový zvuk",
-    "kindDialog": "Dialog",
     "recordingNotFound": "soubor nenalezen",
     "playRecording": "Přehrát nahrávku",
     "playRecordingWhileCapturing": "Přehrávání není dostupné, dokud TyCo nahrává zvuk",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Glosář",
     "dialogTranslationGlossaryInfo": "Překlad řeči v dialozích využívá sdílený glosář z nastavení překladu. Můžete definovat pravidla pro termíny nebo chránit určitá slova před překladem.",
     "dialogTranslationGlossaryShared": "Používá se sdílený glosář",
-    "dialogTranslationGlossaryOpen": "Nastavit glosář"
+    "dialogTranslationGlossaryOpen": "Nastavit glosář",
+    "sectionDialogHistory": "Historie dialogů",
+    "dialogHistoryHint": "Uložené přepisy hovorů a jejich zvukové nahrávky.",
+    "dialogHistoryEnabled": "Ukládat dialogy",
+    "dialogHistoryEnabledInfo": "Ukládat přepisy a nahrávky hovorů na disk, abyste je mohli později znovu otevřít.",
+    "dialogHistoryRetentionDays": "Uchovávat dialogy po dobu",
+    "dialogHistoryRetentionDaysHint": "Starší dialogy a jejich nahrávky se automaticky mažou.",
+    "dialogHistoryRetentionConfirm": "Dialogy starší než {period} a jejich nahrávky budou smazány.",
+    "deleteAllDialogs": "Smazat všechny dialogy",
+    "dialogCount": "Uložených dialogů: {count}",
+    "clearDialogsConfirmDialog": "Všechny uložené dialogy a jejich zvukové nahrávky budou trvale smazány.",
+    "dialogHistoryLink": "Nastavení historie a uchovávání dialogů najdete v"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "Pokračovat v rozpoznávání řeči a záznamu do zvukového souboru",
     "recordToggleEnableHint": "Při spuštění zapnout nahrávání zvuku do souboru a ukládání do historie",
     "recordToggleDisableHint": "Vypnout nahrávání zvuku (pouze rozpoznávání řeči)",
-    "clearMessageSaved": "Aktuální přepis bude z okna vymazán. Konverzace zůstane uložena v historii."
+    "clearMessageSaved": "Aktuální přepis bude z okna vymazán. Konverzace zůstane uložena v historii.",
+    "history": "Historie",
+    "newDialog": "Nový dialog",
+    "searchHistory": "Hledat v dialozích",
+    "renameDialog": "Přejmenovat dialog",
+    "deleteDialog": "Smazat dialog",
+    "openRecordingsFolder": "Otevřít složku nahrávek",
+    "stopToSwitchHint": "Zastavte dialog pro otevření jiného",
+    "notFound": "Dialog nebyl nalezen. Možná byl smazán.",
+    "clearHistoryConfirmTitle": "Vymazat historii dialogů?"
   },
   "toolPermissions": {
     "riskRead": "Čtení",

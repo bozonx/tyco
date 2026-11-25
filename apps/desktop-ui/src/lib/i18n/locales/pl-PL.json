@@ -533,7 +533,6 @@
     "undo": "Cofnij",
     "yesterday": "Wczoraj",
     "filterListen": "Dźwięk systemu",
-    "kindDialog": "Dialog",
     "recordingNotFound": "nie znaleziono pliku",
     "playRecording": "Odtwórz nagranie",
     "playRecordingWhileCapturing": "Odtwarzanie jest niedostępne, gdy TyCo nagrywa dźwięk",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Glosariusz",
     "dialogTranslationGlossaryInfo": "Tłumaczenie mowy w dialogu korzysta ze wspólnego glosariusza z ustawień tłumaczenia. Możesz zdefiniować reguły dla terminów lub chronić słowa przed tłumaczeniem.",
     "dialogTranslationGlossaryShared": "Używa wspólnego glosariusza",
-    "dialogTranslationGlossaryOpen": "Konfiguruj glosariusz"
+    "dialogTranslationGlossaryOpen": "Konfiguruj glosariusz",
+    "sectionDialogHistory": "Historia dialogów",
+    "dialogHistoryHint": "Zapisane transkrypcje rozmów i ich nagrania audio.",
+    "dialogHistoryEnabled": "Zapisuj dialogi",
+    "dialogHistoryEnabledInfo": "Zapisuj transkrypcje i nagrania na dysku, aby móc je później ponownie otworzyć.",
+    "dialogHistoryRetentionDays": "Przechowuj dialogi przez",
+    "dialogHistoryRetentionDaysHint": "Starsze dialogi i ich nagrania są usuwane automatycznie.",
+    "dialogHistoryRetentionConfirm": "Dialogi starsze niż {period} oraz ich nagrania zostaną usunięte.",
+    "deleteAllDialogs": "Usuń wszystkie dialogi",
+    "dialogCount": "Zapisane dialogi: {count}",
+    "clearDialogsConfirmDialog": "Wszystkie zapisane dialogi i ich nagrania audio zostaną trwale usunięte.",
+    "dialogHistoryLink": "Ustawienia historii i przechowywania dialogów znajdują się w"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "Wznów rozpoznawanie mowy i nagrywanie do pliku audio",
     "recordToggleEnableHint": "Włącz nagrywanie dźwięku do pliku i zapisywanie w historii przy uruchomieniu",
     "recordToggleDisableHint": "Wyłącz nagrywanie dźwięku (tylko rozpoznawanie mowy)",
-    "clearMessageSaved": "Bieżąca transkrypcja zostanie usunięta z okna. Rozmowa pozostanie zapisana w historii."
+    "clearMessageSaved": "Bieżąca transkrypcja zostanie usunięta z okna. Rozmowa pozostanie zapisana w historii.",
+    "history": "Historia",
+    "newDialog": "Nowy dialog",
+    "searchHistory": "Szukaj w dialogach",
+    "renameDialog": "Zmień nazwę dialogu",
+    "deleteDialog": "Usuń dialog",
+    "openRecordingsFolder": "Otwórz folder nagrań",
+    "stopToSwitchHint": "Zatrzymaj dialog, aby otworzyć inny",
+    "notFound": "Nie znaleziono dialogu. Mógł zostać usunięty.",
+    "clearHistoryConfirmTitle": "Wyczyścić historię dialogów?"
   },
   "toolPermissions": {
     "riskRead": "Odczyt",

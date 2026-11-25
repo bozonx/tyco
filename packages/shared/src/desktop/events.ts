@@ -17,6 +17,8 @@ export const DESKTOP_EVENTS = {
   OPEN_MAIN_EDITOR: 'app://open-main-editor',
   /** A chat history changed in storage */
   CHATS_CHANGED: 'app://chats-changed',
+  /** The dialog history changed in storage */
+  DIALOGS_CHANGED: 'app://dialogs-changed',
   /** The editor history changed in storage */
   EDITOR_HISTORY_CHANGED: 'app://editor-history-changed',
   /**

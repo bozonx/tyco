@@ -9,6 +9,7 @@ pub mod chat_images;
 pub mod chats;
 pub mod desktop_state;
 pub mod diagnostics;
+pub mod dialogs;
 pub mod editor_history;
 pub mod external_jobs;
 pub mod hotkeys;

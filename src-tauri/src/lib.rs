@@ -186,6 +186,7 @@ pub fn run() {
             // the chats are brought in line with the settings in the
             // background, see `spawn_cleanup_retry`
             if user_data.is_writable() {
+                history.mark_dialog_cleanup_pending();
                 history.mark_chat_cleanup_pending();
             }
             app.manage(services::secrets::SecretStore::load_for_app(app.handle())?);
@@ -317,6 +318,14 @@ pub fn run() {
             commands::desktop_state::get_desktop_state,
             commands::diagnostics::mark_activation_metric,
             commands::diagnostics::submit_activation_metric_value,
+            commands::dialogs::clear_dialogs,
+            commands::dialogs::delete_dialog,
+            commands::dialogs::get_dialog,
+            commands::dialogs::list_dialogs,
+            commands::dialogs::release_dialog_recordings,
+            commands::dialogs::rename_dialog,
+            commands::dialogs::save_dialog,
+            commands::dialogs::search_dialogs,
             commands::editor_history::add_editor_history_item,
             commands::editor_history::clear_editor_history,
             commands::editor_history::delete_editor_history_item,

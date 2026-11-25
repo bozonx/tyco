@@ -533,7 +533,6 @@
     "undo": "元に戻す",
     "yesterday": "昨日",
     "filterListen": "システム音声",
-    "kindDialog": "ダイアログ",
     "recordingNotFound": "ファイルが見つかりません",
     "playRecording": "録音を再生",
     "playRecordingWhileCapturing": "TyCo が録音している間は再生できません",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "用語集",
     "dialogTranslationGlossaryInfo": "会話の音声翻訳には、翻訳設定の共通用語集が使用されます。用語の翻訳ルールを設定したり、特定の単語を翻訳から除外したりできます。",
     "dialogTranslationGlossaryShared": "共通用語集を使用",
-    "dialogTranslationGlossaryOpen": "用語集を設定"
+    "dialogTranslationGlossaryOpen": "用語集を設定",
+    "sectionDialogHistory": "ダイアログ履歴",
+    "dialogHistoryHint": "保存された通話の文字起こしと音声録音です。",
+    "dialogHistoryEnabled": "ダイアログを保存",
+    "dialogHistoryEnabledInfo": "後で開き直せるように、通話の文字起こしと録音をディスクに保存します。",
+    "dialogHistoryRetentionDays": "ダイアログの保存期間",
+    "dialogHistoryRetentionDaysHint": "期間を過ぎたダイアログと録音は自動的に削除されます。",
+    "dialogHistoryRetentionConfirm": "{period}より前のダイアログと録音が削除されます。",
+    "deleteAllDialogs": "すべてのダイアログを削除",
+    "dialogCount": "保存済みダイアログ: {count}",
+    "clearDialogsConfirmDialog": "保存されているすべてのダイアログと音声録音が完全に削除されます。",
+    "dialogHistoryLink": "ダイアログの履歴と保存期間の設定は次にあります:"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {
@@ -1776,7 +1786,16 @@
     "resumeTooltipWithRecord": "音声認識と音声ファイルへの録音を再開",
     "recordToggleEnableHint": "開始時に音声ファイルへの録音と履歴への保存を有効にする",
     "recordToggleDisableHint": "音声録音を無効にする（音声認識のみ）",
-    "clearMessageSaved": "現在の文字起こしはウィンドウから消去されます。会話は履歴に保存されたままになります。"
+    "clearMessageSaved": "現在の文字起こしはウィンドウから消去されます。会話は履歴に保存されたままになります。",
+    "history": "履歴",
+    "newDialog": "新しいダイアログ",
+    "searchHistory": "ダイアログを検索",
+    "renameDialog": "ダイアログ名を変更",
+    "deleteDialog": "ダイアログを削除",
+    "openRecordingsFolder": "録音フォルダーを開く",
+    "stopToSwitchHint": "別のダイアログを開くには現在のダイアログを停止してください",
+    "notFound": "ダイアログが見つかりません。削除された可能性があります。",
+    "clearHistoryConfirmTitle": "ダイアログ履歴を消去しますか？"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

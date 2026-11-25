@@ -9,7 +9,10 @@ export * from './hotkeys'
 export * from './markdown'
 export * from './selection'
 export * from './user-config'
-export type { ScreenshotCaptureMode } from './generated/desktop-types'
+export type {
+  DialogSource,
+  ScreenshotCaptureMode,
+} from './generated/desktop-types'
 export * from './variables'
 export * from './desktop-transport'
 export * from './secret-ids'

@@ -410,6 +410,7 @@
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
+        "history": { "storage": "disk" },
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
@@ -845,6 +846,7 @@
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
+        "history": { "storage": "disk" },
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
@@ -1273,6 +1275,7 @@
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
+        "history": { "storage": "disk" },
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
@@ -1711,6 +1714,7 @@
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
+        "history": { "storage": "disk" },
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
@@ -2127,6 +2131,7 @@
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
+        "history": { "storage": "disk" },
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
@@ -2555,6 +2560,7 @@
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
+        "history": { "storage": "disk" },
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
@@ -2985,6 +2991,7 @@
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
+        "history": { "storage": "disk" },
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
@@ -3422,6 +3429,7 @@
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
+        "history": { "storage": "disk" },
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
@@ -3870,6 +3878,7 @@
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
+        "history": { "storage": "disk" },
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
@@ -4394,6 +4403,7 @@
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
+        "history": { "storage": "disk" },
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,
@@ -4938,6 +4948,7 @@
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
+        "history": { "storage": "disk" },
         "translationTargetLanguage": "",
         "remoteLanguage": "auto",
         "isTranslationOnly": false,

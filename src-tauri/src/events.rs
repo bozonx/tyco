@@ -7,8 +7,8 @@ use tauri::{Emitter, EventTarget, Runtime};
 use ts_rs::TS;
 
 use crate::models::{
-    ChatsChangedEvent, DesktopSnapshot, OpenMainChatEvent, SettingsConflictEvent,
-    StorageChangedEvent,
+    ChatsChangedEvent, DesktopSnapshot, DialogsChangedEvent, OpenMainChatEvent,
+    SettingsConflictEvent, StorageChangedEvent,
 };
 use crate::services::selection_replace::SelectionRunEvent;
 use crate::services::voice::VoiceAudioLevelPayload;
@@ -78,6 +78,8 @@ desktop_events! {
     OpenMainEditor = "app://open-main-editor" => EditorTransfer;
     /// A chat history changed in storage.
     ChatsChanged = "app://chats-changed" => ChatsChangedEvent;
+    /// The dialog history changed in storage.
+    DialogsChanged = "app://dialogs-changed" => DialogsChangedEvent;
     /// The editor history changed in storage.
     EditorHistoryChanged = "app://editor-history-changed" => ();
     /// A settings save merged a change another device synced into the same

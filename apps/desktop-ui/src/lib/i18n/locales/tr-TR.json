@@ -533,7 +533,6 @@
     "undo": "Geri al",
     "yesterday": "Dün",
     "filterListen": "Sistem sesi",
-    "kindDialog": "Diyalog",
     "recordingNotFound": "dosya bulunamadı",
     "playRecording": "Kaydı oynat",
     "playRecordingWhileCapturing": "TyCo ses kaydederken oynatma kullanılamaz",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Sözlük",
     "dialogTranslationGlossaryInfo": "Diyaloglardaki konuşma çevirisi, çeviri ayarlarındaki paylaşılan sözlüğü kullanır. Terim kuralları tanımlayabilir veya belirli kelimelerin çevrilmesini önleyebilirsiniz.",
     "dialogTranslationGlossaryShared": "Paylaşılan sözlük kullanılır",
-    "dialogTranslationGlossaryOpen": "Sözlüğü yapılandır"
+    "dialogTranslationGlossaryOpen": "Sözlüğü yapılandır",
+    "sectionDialogHistory": "Diyalog geçmişi",
+    "dialogHistoryHint": "Kaydedilen görüşme dökümleri ve ses kayıtları.",
+    "dialogHistoryEnabled": "Diyalogları kaydet",
+    "dialogHistoryEnabledInfo": "Daha sonra yeniden açabilmek için görüşme dökümlerini ve kayıtları diskte saklayın.",
+    "dialogHistoryRetentionDays": "Diyalogları saklama süresi",
+    "dialogHistoryRetentionDaysHint": "Daha eski diyaloglar ve kayıtları otomatik olarak silinir.",
+    "dialogHistoryRetentionConfirm": "{period} süresinden eski diyaloglar ve kayıtları silinecek.",
+    "deleteAllDialogs": "Tüm diyalogları sil",
+    "dialogCount": "Kaydedilen diyaloglar: {count}",
+    "clearDialogsConfirmDialog": "Kaydedilen tüm diyaloglar ve ses kayıtları kalıcı olarak silinecek.",
+    "dialogHistoryLink": "Diyalog geçmişi ve saklama ayarları şurada bulunur:"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
@@ -1776,7 +1786,16 @@
     "resumeTooltipWithRecord": "Konuşma tanımaya ve ses dosyasına kaydetmeye devam et",
     "recordToggleEnableHint": "Başlatıldığında sesin dosyaya kaydedilmesini ve geçmişe eklenmesini etkinleştir",
     "recordToggleDisableHint": "Ses kaydını devre dışı bırak (yalnızca konuşma tanıma)",
-    "clearMessageSaved": "Geçerli döküm pencereden temizlenecek. Konuşma geçmişte kayıtlı kalır."
+    "clearMessageSaved": "Geçerli döküm pencereden temizlenecek. Konuşma geçmişte kayıtlı kalır.",
+    "history": "Geçmiş",
+    "newDialog": "Yeni diyalog",
+    "searchHistory": "Diyaloglarda ara",
+    "renameDialog": "Diyaloğu yeniden adlandır",
+    "deleteDialog": "Diyaloğu sil",
+    "openRecordingsFolder": "Kayıt klasörünü aç",
+    "stopToSwitchHint": "Başka bir diyalog açmak için mevcut diyaloğu durdurun",
+    "notFound": "Diyalog bulunamadı. Silinmiş olabilir.",
+    "clearHistoryConfirmTitle": "Diyalog geçmişi temizlensin mi?"
   },
   "toolPermissions": {
     "riskRead": "Okuma",

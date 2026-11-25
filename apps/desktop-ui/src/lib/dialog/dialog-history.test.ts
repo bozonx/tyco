@@ -1,38 +1,68 @@
-import type { EditorHistoryEntry } from '@tyco/shared'
+import type { Dialog } from '@tyco/shared'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createDialogHistory } from './dialog-history'
+import {
+  createDialogHistory,
+  type DialogHistorySnapshot,
+} from './dialog-history'
+import type { DialogSegment } from './dialog-transcript'
 
-const meta = { startedAt: 1_000, source: 'microphoneAndSystem' as const }
+const baseInit = {
+  id: '2026-11-21_10-00-00_a1b2c3',
+  startedAt: 1_000,
+  source: 'microphoneAndSystem' as const,
+}
+
+function finalSegment(id: string, text: string): DialogSegment {
+  return {
+    id,
+    side: 'me',
+    startMs: 0,
+    endMs: 1_000,
+    text,
+    isFinal: true,
+    translationState: 'idle',
+  }
+}
 
 function setup(
   options: {
-    save?: (entry: EditorHistoryEntry) => Promise<string | null>
+    isEnabled?: () => boolean
+    save?: (dialog: Dialog) => Promise<void>
     onRecordingUnlinked?: () => void
   } = {}
 ) {
   vi.useFakeTimers()
-  let text = ''
-  const saved: EditorHistoryEntry[] = []
+  let snapshot: DialogHistorySnapshot = {
+    title: '',
+    translationTargetLanguage: 'en',
+    segments: [],
+    sessionBreaks: [],
+  }
+  const saved: Dialog[] = []
   const reportError = vi.fn()
   const history = createDialogHistory({
+    isEnabled: options.isEnabled ?? (() => true),
     save:
       options.save ??
-      (async (entry) => {
-        saved.push(entry)
-        return entry.id ?? `entry-${saved.length}`
+      (async (dialog) => {
+        saved.push(dialog)
       }),
-    getText: () => text,
+    getSnapshot: () => snapshot,
     reportError,
     onRecordingUnlinked: options.onRecordingUnlinked,
+    now: () => 5_000,
     intervalMs: 15_000,
   })
   return {
     history,
     saved,
     reportError,
-    setText: (next: string) => {
-      text = next
+    setSegments: (segments: DialogSegment[]) => {
+      snapshot = { ...snapshot, segments }
+    },
+    setSnapshot: (next: Partial<DialogHistorySnapshot>) => {
+      snapshot = { ...snapshot, ...next }
     },
   }
 }
@@ -44,85 +74,57 @@ afterEach(() => {
 describe('dialog history', () => {
   it('creates no entry for a session without turns', async () => {
     const { history, saved } = setup()
-    await history.begin(meta)
+    await history.begin(baseInit)
     await vi.advanceTimersByTimeAsync(30_000)
     await history.end()
     expect(saved).toEqual([])
   })
 
-  it('checkpoints on the interval only when the text changed', async () => {
-    const { history, saved, setText } = setup()
-    await history.begin(meta)
-    setText('Me: hello')
+  it('checkpoints on the interval only when settled segments changed', async () => {
+    const { history, saved, setSegments } = setup()
+    await history.begin(baseInit)
+    setSegments([
+      { ...finalSegment('interim', 'still speaking'), isFinal: false },
+    ])
     await vi.advanceTimersByTimeAsync(15_000)
-    expect(saved).toEqual([{ text: 'Me: hello', kind: 'dialog', dialog: meta }])
+    expect(saved).toHaveLength(0)
+
+    setSegments([finalSegment('1', 'hello')])
     await vi.advanceTimersByTimeAsync(15_000)
     expect(saved).toHaveLength(1)
-    setText('Me: hello\nOther side: hi')
-    await vi.advanceTimersByTimeAsync(15_000)
-    expect(saved[1]).toMatchObject({
-      id: 'entry-1',
-      text: 'Me: hello\nOther side: hi',
+    expect(saved[0]).toMatchObject({
+      id: baseInit.id,
+      startedAt: 1_000,
+      source: 'microphoneAndSystem',
+      segments: [{ id: '1', text: 'hello' }],
     })
+
+    await vi.advanceTimersByTimeAsync(15_000)
+    expect(saved).toHaveLength(1)
+
+    setSegments([finalSegment('1', 'hello'), finalSegment('2', 'hi')])
+    await vi.advanceTimersByTimeAsync(15_000)
+    expect(saved).toHaveLength(2)
+    expect(saved[1].segments).toHaveLength(2)
   })
 
   it('writes the last turns on end and stops the interval', async () => {
-    const { history, saved, setText } = setup()
-    await history.begin(meta)
-    setText('Me: bye')
+    const { history, saved, setSegments } = setup()
+    await history.begin(baseInit)
+    setSegments([finalSegment('1', 'bye')])
     await history.end()
-    expect(saved).toEqual([{ text: 'Me: bye', kind: 'dialog', dialog: meta }])
-    expect(vi.getTimerCount()).toBe(0)
-    setText('Me: bye again')
-    await history.checkpoint()
     expect(saved).toHaveLength(1)
-  })
-
-  it('opens a new entry per session', async () => {
-    const { history, saved, setText } = setup()
-    await history.begin(meta)
-    setText('first')
-    await history.checkpoint()
-    await history.end()
-    setText('')
-    await history.begin({ ...meta, startedAt: 2_000 })
-    setText('second')
-    await history.checkpoint()
-    expect(saved.map((entry) => entry.id)).toEqual([undefined, undefined])
-    expect(saved[1].dialog?.startedAt).toBe(2_000)
-  })
-
-  it('keeps trying a deleted entry, so that its undo gets the later turns', async () => {
-    let isDeleted = false
-    const saved: EditorHistoryEntry[] = []
-    const save = vi.fn(async (entry: EditorHistoryEntry) => {
-      if (entry.id && isDeleted) return null
-      saved.push(entry)
-      return 'entry'
-    })
-    const { history, setText } = setup({ save })
-    await history.begin(meta)
-    setText('one')
-    await history.checkpoint()
-    isDeleted = true
-    setText('two')
-    await history.checkpoint()
-    await history.checkpoint()
-    expect(saved.map((entry) => entry.text)).toEqual(['one'])
-    // the undo brought the entry back
-    isDeleted = false
-    await history.checkpoint()
-    expect(saved.map((entry) => entry.text)).toEqual(['one', 'two'])
+    expect(vi.getTimerCount()).toBe(0)
   })
 
   it('reports a failed write and tries again with the next checkpoint', async () => {
     const save = vi
-      .fn<(entry: EditorHistoryEntry) => Promise<string | null>>()
+      .fn<(dialog: Dialog) => Promise<void>>()
       .mockRejectedValueOnce(new Error('disk'))
-      .mockResolvedValue('entry')
-    const { history, reportError, setText } = setup({ save })
-    await history.begin(meta)
-    setText('text')
+      .mockResolvedValue()
+    const { history, reportError, setSegments } = setup({ save })
+    await history.begin(baseInit)
+    setSegments([finalSegment('1', 'text')])
     await history.checkpoint()
     expect(reportError).toHaveBeenCalledOnce()
     await history.checkpoint()
@@ -130,154 +132,103 @@ describe('dialog history', () => {
   })
 
   it('links a recording at once, even before any turn', async () => {
-    const recorded = {
-      ...meta,
-      recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
-    }
-    const { history, saved, setText } = setup()
-    await history.begin(recorded)
-    expect(saved).toEqual([{ text: '', kind: 'dialog', dialog: recorded }])
-    await history.end()
+    const recordingFile = '2026-11-21 10-00-00 a1b2c3.opus'
+    const { history, saved, setSegments } = setup()
+    await history.begin({ ...baseInit, recordingFiles: [recordingFile] })
     expect(saved).toHaveLength(1)
-    setText('')
-    await history.begin(recorded)
-    setText('Me: hi')
+    expect(saved[0].recordingFiles).toEqual([recordingFile])
+    expect(saved[0].segments).toEqual([])
+
+    setSegments([finalSegment('1', 'hi')])
     await history.end()
-    expect(saved.at(-1)).toMatchObject({ id: 'entry-2', text: 'Me: hi' })
+    expect(saved).toHaveLength(2)
+    expect(saved[1].segments).toHaveLength(1)
   })
 
-  it('tells once when a recording got no entry', async () => {
-    const recorded = {
-      ...meta,
-      recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
-    }
+  it('tells once when a recording got no saved dialog', async () => {
+    const recordingFile = '2026-11-21 10-00-00 a1b2c3.opus'
     const onRecordingUnlinked = vi.fn()
     const save = vi
-      .fn<(entry: EditorHistoryEntry) => Promise<string | null>>()
-      .mockRejectedValueOnce(new Error('disk'))
-      .mockResolvedValue(null)
-    const { history, setText } = setup({ save, onRecordingUnlinked })
-    await history.begin(recorded)
-    setText('Me: hi')
+      .fn<(dialog: Dialog) => Promise<void>>()
+      .mockRejectedValue(new Error('disk'))
+    const { history, setSegments } = setup({ save, onRecordingUnlinked })
+    await history.begin({ ...baseInit, recordingFiles: [recordingFile] })
+    setSegments([finalSegment('1', 'hi')])
     await history.checkpoint()
     expect(onRecordingUnlinked).toHaveBeenCalledTimes(1)
   })
 
-  it('stays quiet once the recording has its entry', async () => {
-    const onRecordingUnlinked = vi.fn()
-    const { history } = setup({ onRecordingUnlinked })
-    await history.begin({
-      ...meta,
-      recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
-    })
-    await history.end()
-    await history.begin(meta)
-    await history.end()
-    expect(onRecordingUnlinked).not.toHaveBeenCalled()
+  it('marks a recording as incomplete and persists it', async () => {
+    const recordingFile = '2026-11-21 10-00-00 a1b2c3.opus'
+    const { history, saved } = setup()
+    await history.begin({ ...baseInit, recordingFiles: [recordingFile] })
+    await history.markRecordingIncomplete(recordingFile)
+    expect(saved.at(-1)?.incompleteRecordingFiles).toEqual([recordingFile])
   })
 
-  it('marks an entry whose recording stopped early', async () => {
-    const recorded = {
-      ...meta,
-      recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
-    }
-    const { history, saved, setText } = setup()
-    await history.begin(recorded)
-    setText('Me: hi')
-    await history.checkpoint()
-    await history.markRecordingIncomplete(recorded.recordingFile)
-    expect(saved.at(-1)).toEqual({
-      id: 'entry-1',
-      text: 'Me: hi',
-      kind: 'dialog',
-      dialog: {
-        ...recorded,
-        incompleteRecordingFiles: [recorded.recordingFile],
-      },
-    })
-  })
-
-  it('goes on in the same entry when a closed session is resumed', async () => {
-    const { history, saved, setText } = setup()
-    await history.begin(meta)
-    setText('Me: hi')
+  it('continues under the same id when a closed or loaded dialog is resumed', async () => {
+    const { history, saved, setSegments } = setup()
+    await history.begin(baseInit)
+    setSegments([finalSegment('1', 'hi')])
     await history.end()
     expect(history.resume()).toBe(true)
-    await history.addRecording('2026-11-21 10-00-00 a1b2c3.opus')
-    setText('Me: hi\nThem: hello')
+    await history.addRecording('2026-11-21 10-05-00 d4e5f6.opus')
+    setSegments([finalSegment('1', 'hi'), finalSegment('2', 'hello')])
     await history.end()
-    expect(saved.at(-1)).toEqual({
-      id: 'entry-1',
-      text: 'Me: hi\nThem: hello',
-      kind: 'dialog',
-      dialog: {
-        ...meta,
-        recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
-        recordingFiles: ['2026-11-21 10-00-00 a1b2c3.opus'],
-      },
+    expect(saved.at(-1)).toMatchObject({
+      id: baseInit.id,
+      recordingFiles: ['2026-11-21 10-05-00 d4e5f6.opus'],
     })
+    expect(saved.at(-1)?.segments).toHaveLength(2)
     expect(vi.getTimerCount()).toBe(0)
   })
 
-  it('has nothing to resume after a new session or before any', async () => {
-    const { history } = setup()
-    expect(history.resume()).toBe(false)
-    await history.begin(meta)
+  it('attaches an existing dialog via load so resuming updates it', async () => {
+    const { history, saved, setSegments } = setup()
+    const existing: Dialog = {
+      id: '2026-11-20_09-00-00_abcdef',
+      title: 'Standup',
+      startedAt: 100,
+      updatedAt: 200,
+      source: 'system',
+      translationTargetLanguage: 'en',
+      segments: [
+        {
+          id: '1',
+          side: 'remote',
+          startMs: 0,
+          endMs: 500,
+          text: 'Old line',
+          translationState: 'idle',
+        },
+      ],
+      sessionBreaks: [],
+      recordingFiles: ['rec-1.opus'],
+      incompleteRecordingFiles: [],
+    }
+    history.load(existing)
+    expect(history.resume()).toBe(true)
+    setSegments([finalSegment('1', 'Old line'), finalSegment('2', 'New line')])
     await history.end()
-    history.dispose()
-    expect(history.resume()).toBe(false)
+    expect(saved).toHaveLength(1)
+    expect(saved[0].id).toBe(existing.id)
+    expect(saved[0].recordingFiles).toEqual(['rec-1.opus'])
   })
 
-  it('persists the incomplete flag when a text save is already in flight', async () => {
-    const recorded = {
-      ...meta,
-      recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
-    }
-    let completeSave!: (id: string) => void
-    const inFlight = new Promise<string>((resolve) => {
-      completeSave = resolve
-    })
-    const save = vi
-      .fn<(entry: EditorHistoryEntry) => Promise<string | null>>()
-      .mockReturnValueOnce(inFlight)
-      .mockResolvedValue('entry')
-    const { history } = setup({ save })
-    const beginning = history.begin(recorded)
-    await vi.waitFor(() => expect(save).toHaveBeenCalledOnce())
-    const marking = history.markRecordingIncomplete(recorded.recordingFile)
-    completeSave('entry')
-    await Promise.all([beginning, marking])
-    expect(save).toHaveBeenLastCalledWith({
-      id: 'entry',
-      text: '',
-      kind: 'dialog',
-      dialog: {
-        ...recorded,
-        incompleteRecordingFiles: [recorded.recordingFile],
-      },
-    })
+  it('has nothing to resume after reset or dispose', async () => {
+    const { history } = setup()
+    expect(history.resume()).toBe(false)
+    await history.begin(baseInit)
+    await history.end()
+    history.reset()
+    expect(history.resume()).toBe(false)
   })
 
   it('leaves no interval behind when a session ends while it begins', async () => {
     const { history } = setup()
-    const beginning = history.begin(meta)
+    const beginning = history.begin(baseInit)
     const ending = history.end()
     await Promise.all([beginning, ending])
     expect(vi.getTimerCount()).toBe(0)
-  })
-
-  it('appends additional recording files via addRecording', async () => {
-    const recorded = {
-      ...meta,
-      recordingFile: '2026-11-21 10-00-00 a1b2c3.opus',
-      recordingFiles: ['2026-11-21 10-00-00 a1b2c3.opus'],
-    }
-    const { history, saved } = setup()
-    await history.begin(recorded)
-    await history.addRecording('2026-11-21 10-05-00 d4e5f6.opus')
-    expect(saved.at(-1)?.dialog?.recordingFiles).toEqual([
-      '2026-11-21 10-00-00 a1b2c3.opus',
-      '2026-11-21 10-05-00 d4e5f6.opus',
-    ])
   })
 })

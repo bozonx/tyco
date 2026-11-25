@@ -533,7 +533,6 @@
     "undo": "Anulează",
     "yesterday": "Ieri",
     "filterListen": "Sunet sistem",
-    "kindDialog": "Dialog",
     "recordingNotFound": "fișier negăsit",
     "playRecording": "Redă înregistrarea",
     "playRecordingWhileCapturing": "Redarea nu este disponibilă cât timp TyCo înregistrează sunet",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Glosar",
     "dialogTranslationGlossaryInfo": "Traducerea vorbirii în dialog utilizează glosarul comun din setările de traducere. Puteți defini reguli pentru termeni sau puteți proteja anumite cuvinte de traducere.",
     "dialogTranslationGlossaryShared": "Utilizează glosarul comun",
-    "dialogTranslationGlossaryOpen": "Configurare glosar"
+    "dialogTranslationGlossaryOpen": "Configurare glosar",
+    "sectionDialogHistory": "Istoricul dialogurilor",
+    "dialogHistoryHint": "Transcrierile salvate ale apelurilor și înregistrările audio.",
+    "dialogHistoryEnabled": "Salvează dialogurile",
+    "dialogHistoryEnabledInfo": "Păstrează transcrierile și înregistrările pe disc pentru a le redeschide mai târziu.",
+    "dialogHistoryRetentionDays": "Păstrează dialogurile timp de",
+    "dialogHistoryRetentionDaysHint": "Dialogurile mai vechi și înregistrările lor sunt șterse automat.",
+    "dialogHistoryRetentionConfirm": "Dialogurile mai vechi de {period} și înregistrările lor vor fi șterse.",
+    "deleteAllDialogs": "Șterge toate dialogurile",
+    "dialogCount": "Dialoguri salvate: {count}",
+    "clearDialogsConfirmDialog": "Toate dialogurile salvate și înregistrările lor audio vor fi șterse definitiv.",
+    "dialogHistoryLink": "Setările de istoric și păstrare a dialogurilor se află în"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "Continuați recunoașterea vocală și înregistrarea într-un fișier audio",
     "recordToggleEnableHint": "Activați înregistrarea audio în fișier și salvarea în istoric la pornire",
     "recordToggleDisableHint": "Dezactivați înregistrarea audio (doar recunoaștere vocală)",
-    "clearMessageSaved": "Transcrierea curentă va fi ștearsă din fereastră. Conversația rămâne salvată în istoric."
+    "clearMessageSaved": "Transcrierea curentă va fi ștearsă din fereastră. Conversația rămâne salvată în istoric.",
+    "history": "Istoric",
+    "newDialog": "Dialog nou",
+    "searchHistory": "Caută dialoguri",
+    "renameDialog": "Redenumește dialogul",
+    "deleteDialog": "Șterge dialogul",
+    "openRecordingsFolder": "Deschide dosarul de înregistrări",
+    "stopToSwitchHint": "Oprește dialogul pentru a deschide altul",
+    "notFound": "Dialogul nu a fost găsit. Este posibil să fi fost șters.",
+    "clearHistoryConfirmTitle": "Ștergi istoricul dialogurilor?"
   },
   "toolPermissions": {
     "riskRead": "Citire",

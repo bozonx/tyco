@@ -254,6 +254,8 @@ fn mix_down(interleaved: &[i16]) -> Vec<i16> {
 /// encoder runs on a thread of its own. A failed write ends the recording
 /// only; the capture goes on.
 pub struct RecordingSink {
+    /// The dialog this recording belongs to.
+    dialog_id: String,
     /// The file name, the same in both places.
     name: String,
     /// Where the file is written.
@@ -285,6 +287,7 @@ impl RecordingSink {
         let RecordingRequest {
             target:
                 NewRecording {
+                    dialog_id,
                     name,
                     active_path: path,
                     shared_path: destination,
@@ -326,8 +329,9 @@ impl RecordingSink {
             })
             .map_err(|error| AppError::Failed(format!("Cannot start the recording: {error}")))?;
         log::info!("Recording the dialog to {}", path.display());
-        recordings::begin_writing(&name);
+        recordings::begin_writing(&dialog_id, &name);
         Ok(Self {
+            dialog_id,
             name,
             path: file_path,
             destination,
@@ -447,6 +451,7 @@ impl RecordingSink {
                 self.is_failed.store(true, Ordering::SeqCst);
             }
             if let Err(error) = recordings::finish_writing(
+                &self.dialog_id,
                 &self.name,
                 &self.path,
                 &self.destination,
@@ -658,6 +663,7 @@ mod tests {
         assert!(!recording.active_path.exists());
         let bytes = std::fs::read(&recording.shared_path).unwrap();
         assert!(pages(&bytes).len() >= 3);
+        std::fs::create_dir_all(recording.active_path.parent().unwrap()).unwrap();
         std::fs::write(&recording.active_path, b"").unwrap();
         assert!(RecordingSink::start(request(recording), 16_000, 1).is_err());
         let _ = std::fs::remove_dir_all(folder);
@@ -676,9 +682,11 @@ mod tests {
                     .wrapping_add(u32::from(byte)))
                 & 0xff_ffff
         );
+        let dialog_id = String::from("2026-11-21_10-00-00_a1b2c3");
         NewRecording {
-            active_path: folder.join("active").join(&name),
-            shared_path: folder.join("shared").join(&name),
+            active_path: folder.join("active").join(&dialog_id).join(&name),
+            shared_path: folder.join("shared").join(&dialog_id).join(&name),
+            dialog_id,
             name,
         }
     }
@@ -757,7 +765,7 @@ mod tests {
             folder.join("shared"),
             &folder.join("unused-state"),
         );
-        recordings::discard(&dirs, &recording.name).unwrap();
+        recordings::discard(&dirs, &recording.dialog_id, &recording.name).unwrap();
         assert!(recording.active_path.exists());
         assert!(sink.finish().is_none());
         assert!(!recording.active_path.exists());

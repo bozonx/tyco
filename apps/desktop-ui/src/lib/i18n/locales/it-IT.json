@@ -533,7 +533,6 @@
     "undo": "Annulla",
     "yesterday": "Ieri",
     "filterListen": "Audio di sistema",
-    "kindDialog": "Dialogo",
     "recordingNotFound": "file non trovato",
     "playRecording": "Riproduci la registrazione",
     "playRecordingWhileCapturing": "La riproduzione non è disponibile mentre TyCo registra l’audio",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Glossario",
     "dialogTranslationGlossaryInfo": "La traduzione vocale nei dialoghi utilizza il glossario condiviso delle impostazioni di traduzione. Puoi definire regole per i termini o proteggere parole dalla traduzione.",
     "dialogTranslationGlossaryShared": "Usa il glossario condiviso",
-    "dialogTranslationGlossaryOpen": "Configura glossario"
+    "dialogTranslationGlossaryOpen": "Configura glossario",
+    "sectionDialogHistory": "Cronologia dialoghi",
+    "dialogHistoryHint": "Trascrizioni delle chiamate salvate e relative registrazioni audio.",
+    "dialogHistoryEnabled": "Salva dialoghi",
+    "dialogHistoryEnabledInfo": "Conserva trascrizioni e registrazioni su disco per riaprirle in seguito.",
+    "dialogHistoryRetentionDays": "Conserva i dialoghi per",
+    "dialogHistoryRetentionDaysHint": "I dialoghi più vecchi e le relative registrazioni vengono eliminati automaticamente.",
+    "dialogHistoryRetentionConfirm": "I dialoghi più vecchi di {period} e le relative registrazioni verranno eliminati.",
+    "deleteAllDialogs": "Elimina tutti i dialoghi",
+    "dialogCount": "Dialoghi salvati: {count}",
+    "clearDialogsConfirmDialog": "Tutti i dialoghi salvati e le relative registrazioni audio verranno eliminati definitivamente.",
+    "dialogHistoryLink": "Le impostazioni di cronologia e conservazione dei dialoghi sono in"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "Riprendi il riconoscimento vocale e registra in un file audio",
     "recordToggleEnableHint": "Abilita la registrazione audio su file e il salvataggio nella cronologia all'avvio",
     "recordToggleDisableHint": "Disabilita registrazione audio (solo riconoscimento vocale)",
-    "clearMessageSaved": "La trascrizione attuale verrà cancellata dalla finestra. La conversazione rimarrà salvata nella cronologia."
+    "clearMessageSaved": "La trascrizione attuale verrà cancellata dalla finestra. La conversazione rimarrà salvata nella cronologia.",
+    "history": "Cronologia",
+    "newDialog": "Nuovo dialogo",
+    "searchHistory": "Cerca nei dialoghi",
+    "renameDialog": "Rinomina dialogo",
+    "deleteDialog": "Elimina dialogo",
+    "openRecordingsFolder": "Apri cartella registrazioni",
+    "stopToSwitchHint": "Interrompi il dialogo per aprirne un altro",
+    "notFound": "Dialogo non trovato. Potrebbe essere stato eliminato.",
+    "clearHistoryConfirmTitle": "Cancellare la cronologia dei dialoghi?"
   },
   "toolPermissions": {
     "riskRead": "Lettura",

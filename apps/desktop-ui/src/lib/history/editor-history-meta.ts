@@ -65,10 +65,6 @@ export function getEditorHistoryMeta(
       : { icon: 'mdi:microphone-outline', labelKey: 'history.kindVoiceInput' }
   }
 
-  if (item.kind === 'dialog') {
-    return { icon: 'mdi:account-voice', labelKey: 'history.kindDialog' }
-  }
-
   if (!item.operation) {
     return item.instruction?.inputKind === 'voice'
       ? { icon: 'mdi:microphone', labelKey: 'commands.badgeVoice' }

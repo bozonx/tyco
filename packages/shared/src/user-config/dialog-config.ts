@@ -1,6 +1,16 @@
 /** What the dialog listens to: both sides apart, or the computer alone */
 export type DialogSource = 'microphoneAndSystem' | 'system'
 
+/** Saved dialogs live on the disk or are not kept at all */
+export const DIALOG_HISTORY_STORAGES = ['off', 'disk'] as const
+export type DialogHistoryStorage = (typeof DIALOG_HISTORY_STORAGES)[number]
+
+export interface DialogHistoryConfig {
+  storage: DialogHistoryStorage
+  /** Absent: dialogs are kept indefinitely */
+  retentionDays?: number
+}
+
 /** The strip of the compact dialog, in physical pixels of the desktop */
 export interface DialogWindowGeometry {
   x: number
@@ -13,6 +23,7 @@ export interface DialogConfig {
   /** Whether the dialog mode is offered: its tab, its view and its settings */
   isEnabled: boolean
   source: DialogSource
+  history: DialogHistoryConfig
   /**
    * The language the other side is translated into, by the model of
    * `llm.tasks.dialogTranslation`; empty: no translation

@@ -80,11 +80,12 @@ pub fn marker_data_id(dir: &Path) -> Option<String> {
 }
 
 /// The entries of the user data folder that belong to Tyco.
-pub const USER_DATA_ENTRIES: [&str; 5] = [
+pub const USER_DATA_ENTRIES: [&str; 6] = [
     USER_MARKER_FILE,
     "config.json",
     "history",
     "chats",
+    "dialogs",
     "plugins",
 ];
 /// The vault of the default location, which goes along when it is in use.

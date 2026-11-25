@@ -183,6 +183,8 @@ export interface DialogTranscript {
     id: string,
     patch: Partial<Pick<DialogSegment, 'translation' | 'translationState'>>
   ) => void
+  /** Replaces the transcript with previously saved settled segments */
+  load: (next: readonly DialogSegment[]) => void
   clear: () => void
 }
 
@@ -265,6 +267,10 @@ export function createDialogTranscript(
           segment.id === id ? { ...segment, ...patch } : segment
         )
       )
+    },
+    load(next) {
+      draftIds.clear()
+      commit(next.map((segment) => ({ ...segment })))
     },
     clear() {
       draftIds.clear()

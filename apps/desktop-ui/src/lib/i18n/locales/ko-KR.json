@@ -533,7 +533,6 @@
     "undo": "실행 취소",
     "yesterday": "어제",
     "filterListen": "시스템 오디오",
-    "kindDialog": "대화",
     "recordingNotFound": "파일을 찾을 수 없음",
     "playRecording": "녹음 재생",
     "playRecordingWhileCapturing": "TyCo가 소리를 녹음하는 동안에는 재생할 수 없습니다",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "용어집",
     "dialogTranslationGlossaryInfo": "대화의 음성 번역에는 번역 설정의 공유 용어집이 사용됩니다. 용어 번역 규칙을 정의하거나 특정 단어의 번역을 방지할 수 있습니다.",
     "dialogTranslationGlossaryShared": "공유 용어집 사용",
-    "dialogTranslationGlossaryOpen": "용어집 설정"
+    "dialogTranslationGlossaryOpen": "용어집 설정",
+    "sectionDialogHistory": "대화 기록",
+    "dialogHistoryHint": "저장된 통화 전사와 오디오 녹음 파일입니다.",
+    "dialogHistoryEnabled": "대화 저장",
+    "dialogHistoryEnabledInfo": "나중에 다시 열어볼 수 있도록 통화 전사와 녹음을 디스크에 저장합니다.",
+    "dialogHistoryRetentionDays": "대화 보관 기간",
+    "dialogHistoryRetentionDaysHint": "보관 기간이 지난 대화와 녹음은 자동으로 삭제됩니다.",
+    "dialogHistoryRetentionConfirm": "{period}보다 오래된 대화와 녹음이 삭제됩니다.",
+    "deleteAllDialogs": "모든 대화 삭제",
+    "dialogCount": "저장된 대화: {count}",
+    "clearDialogsConfirmDialog": "저장된 모든 대화와 오디오 녹음이 영구적으로 삭제됩니다.",
+    "dialogHistoryLink": "대화 기록 및 보관 설정은 다음 위치에 있습니다:"
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "음성 인식 및 오디오 파일 녹음 계속",
     "recordToggleEnableHint": "시작 시 오디오 파일 녹음 및 기록 저장 활성화",
     "recordToggleDisableHint": "오디오 녹음 비활성화 (음성 인식만 수행)",
-    "clearMessageSaved": "현재 스크립트가 창에서 지워집니다. 대화는 기록에 저장된 상태로 유지됩니다."
+    "clearMessageSaved": "현재 스크립트가 창에서 지워집니다. 대화는 기록에 저장된 상태로 유지됩니다.",
+    "history": "기록",
+    "newDialog": "새 대화",
+    "searchHistory": "대화 검색",
+    "renameDialog": "대화 이름 변경",
+    "deleteDialog": "대화 삭제",
+    "openRecordingsFolder": "녹음 폴더 열기",
+    "stopToSwitchHint": "다른 대화를 열려면 현재 대화를 중지하세요",
+    "notFound": "대화를 찾을 수 없습니다. 삭제되었을 수 있습니다.",
+    "clearHistoryConfirmTitle": "대화 기록을 비우시겠습니까?"
   },
   "toolPermissions": {
     "riskRead": "읽기",

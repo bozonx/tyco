@@ -533,7 +533,6 @@
     "undo": "Annuler",
     "yesterday": "Hier",
     "filterListen": "Audio système",
-    "kindDialog": "Dialogue",
     "recordingNotFound": "fichier introuvable",
     "playRecording": "Lire l’enregistrement",
     "playRecordingWhileCapturing": "La lecture est indisponible pendant que TyCo enregistre le son",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Glossaire",
     "dialogTranslationGlossaryInfo": "La traduction vocale du dialogue utilise le glossaire partagé des paramètres de traduction. Vous pouvez définir des règles pour les termes ou protéger certains mots de la traduction.",
     "dialogTranslationGlossaryShared": "Utilise le glossaire partagé",
-    "dialogTranslationGlossaryOpen": "Configurer le glossaire"
+    "dialogTranslationGlossaryOpen": "Configurer le glossaire",
+    "sectionDialogHistory": "Historique des dialogues",
+    "dialogHistoryHint": "Transcriptions d’appels enregistrées et leurs fichiers audio.",
+    "dialogHistoryEnabled": "Enregistrer les dialogues",
+    "dialogHistoryEnabledInfo": "Conserver les transcriptions et enregistrements sur le disque pour les rouvrir plus tard.",
+    "dialogHistoryRetentionDays": "Conserver les dialogues pendant",
+    "dialogHistoryRetentionDaysHint": "Les dialogues plus anciens et leurs enregistrements sont supprimés automatiquement.",
+    "dialogHistoryRetentionConfirm": "Les dialogues de plus de {period} et leurs enregistrements seront supprimés.",
+    "deleteAllDialogs": "Supprimer tous les dialogues",
+    "dialogCount": "Dialogues enregistrés : {count}",
+    "clearDialogsConfirmDialog": "Tous les dialogues enregistrés et leurs enregistrements audio seront définitivement supprimés.",
+    "dialogHistoryLink": "Les paramètres d’historique et de conservation des dialogues se trouvent dans"
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "Reprendre la reconnaissance vocale et l'enregistrement audio",
     "recordToggleEnableHint": "Activer l'enregistrement audio dans un fichier et l'enregistrement dans l'historique au démarrage",
     "recordToggleDisableHint": "Désactiver l'enregistrement audio (reconnaissance vocale uniquement)",
-    "clearMessageSaved": "La transcription actuelle sera effacée de la fenêtre. La conversation reste enregistrée dans l’historique."
+    "clearMessageSaved": "La transcription actuelle sera effacée de la fenêtre. La conversation reste enregistrée dans l’historique.",
+    "history": "Historique",
+    "newDialog": "Nouveau dialogue",
+    "searchHistory": "Rechercher dans les dialogues",
+    "renameDialog": "Renommer le dialogue",
+    "deleteDialog": "Supprimer le dialogue",
+    "openRecordingsFolder": "Ouvrir le dossier des enregistrements",
+    "stopToSwitchHint": "Arrêtez le dialogue pour en ouvrir un autre",
+    "notFound": "Dialogue introuvable. Il a peut-être été supprimé.",
+    "clearHistoryConfirmTitle": "Effacer l’historique des dialogues ?"
   },
   "toolPermissions": {
     "riskRead": "Lecture",

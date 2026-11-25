@@ -1,58 +1,78 @@
 <template>
-  <div class="dialog-page">
-    <DialogToolbar />
-    <InlineNotice
-      v-if="showHeadphonesNotice"
-      class="dialog-headphones-notice"
-      kind="info"
-      density="compact"
-      icon="mdi:headphones"
-      :message="t('dialog.headphonesNotice')"
-    >
-      <Button size="xs" variant="ghost" @click="confirmHeadphonesNotice">{{
-        t('dialog.headphonesNoticeConfirm')
-      }}</Button>
-    </InlineNotice>
-    <InlineNotice
-      v-if="dialog.errorText"
-      class="dialog-error"
-      kind="error"
-      announcement="assertive"
-      density="compact"
-      :message="dialog.errorText"
-    >
-      <Button
-        v-if="dialog.canFixInSettings"
-        size="xs"
-        @click="openSttSettings"
-        >{{ t('common.openSettings') }}</Button
+  <div class="dialog-view">
+    <button
+      v-if="dialog.isHistoryOpen"
+      type="button"
+      tabindex="-1"
+      class="history-backdrop"
+      :aria-label="t('common.close')"
+      @pointerdown="preventMouseFocus"
+      @click="dialog.isHistoryOpen = false"
+    />
+    <DialogHistoryPanel
+      v-if="dialog.isHistoryOpen"
+      class="dialog-history-drawer"
+      @collapse="dialog.isHistoryOpen = false"
+      @navigate="closeMobileHistory"
+    />
+    <div class="dialog-page">
+      <DialogToolbar />
+      <InlineNotice
+        v-if="showHeadphonesNotice"
+        class="dialog-headphones-notice"
+        kind="info"
+        density="compact"
+        icon="mdi:headphones"
+        :message="t('dialog.headphonesNotice')"
       >
-    </InlineNotice>
-    <div class="dialog-body">
-      <DialogFeed
-        :items="dialog.feedItems"
-        :is-bubble="isBubble"
-        :is-translation-only="dialog.config.isTranslationOnly"
-        :translation-lang="dialog.config.translationTargetLanguage || undefined"
-        @retry="retryTranslation"
+        <Button size="xs" variant="ghost" @click="confirmHeadphonesNotice">{{
+          t('dialog.headphonesNoticeConfirm')
+        }}</Button>
+      </InlineNotice>
+      <InlineNotice
+        v-if="dialog.errorText"
+        class="dialog-error"
+        kind="error"
+        announcement="assertive"
+        density="compact"
+        :message="dialog.errorText"
       >
-        <template #empty>
-          <StateMessage
-            class="dialog-empty"
-            :icon="emptyIcon"
-            :title="emptyTitle"
-            :message="emptyMessage"
-          >
-            <p
-              v-if="dialog.config.source === 'microphoneAndSystem'"
-              class="dialog-empty-hint"
+        <Button
+          v-if="dialog.canFixInSettings"
+          size="xs"
+          @click="openSttSettings"
+          >{{ t('common.openSettings') }}</Button
+        >
+      </InlineNotice>
+      <div class="dialog-body">
+        <DialogFeed
+          :items="dialog.feedItems"
+          :is-bubble="isBubble"
+          :is-translation-only="dialog.config.isTranslationOnly"
+          :translation-lang="dialog.effectiveTranslationLanguage || undefined"
+          :dialog-id="dialog.currentDialogId"
+          :recording-exists="dialog.recordingExists"
+          :incomplete-recording-files="dialog.incompleteRecordingFiles"
+          @retry="retryTranslation"
+        >
+          <template #empty>
+            <StateMessage
+              class="dialog-empty"
+              :icon="emptyIcon"
+              :title="emptyTitle"
+              :message="emptyMessage"
             >
-              <AppIcon icon="mdi:headphones" size="sm" class="shrink-0" />
-              <span>{{ t('dialog.emptyHeadphonesHint') }}</span>
-            </p>
-          </StateMessage>
-        </template>
-      </DialogFeed>
+              <p
+                v-if="dialog.effectiveSource === 'microphoneAndSystem'"
+                class="dialog-empty-hint"
+              >
+                <AppIcon icon="mdi:headphones" size="sm" class="shrink-0" />
+                <span>{{ t('dialog.emptyHeadphonesHint') }}</span>
+              </p>
+            </StateMessage>
+          </template>
+        </DialogFeed>
+      </div>
     </div>
   </div>
 </template>
@@ -65,8 +85,10 @@ import Button from '../components/common/Button.vue'
 import InlineNotice from '../components/common/InlineNotice.vue'
 import StateMessage from '../components/common/StateMessage.vue'
 import DialogFeed from '../components/dialog/DialogFeed.vue'
+import DialogHistoryPanel from '../components/dialog/DialogHistoryPanel.vue'
 import DialogToolbar from '../components/dialog/DialogToolbar.vue'
 import { useI18n } from '../composables/use-i18n'
+import { preventMouseFocus } from '../lib/ui/focus'
 import { appNavigation } from '../navigation'
 import { useDialogStore } from '../stores/dialog'
 
@@ -75,7 +97,7 @@ const { t } = useI18n()
 
 const showHeadphonesNotice = computed(
   () =>
-    dialog.config.source === 'microphoneAndSystem' &&
+    dialog.effectiveSource === 'microphoneAndSystem' &&
     !dialog.config.isHeadphonesNoticeAcknowledged
 )
 
@@ -95,26 +117,26 @@ watch(
 const isBubble = computed(() =>
   dialog.isActive
     ? dialog.hasMicrophone
-    : dialog.config.source === 'microphoneAndSystem'
+    : dialog.effectiveSource === 'microphoneAndSystem'
 )
 
 const emptyIcon = computed(() => {
   if (dialog.isActive) return 'mdi:waveform'
-  return dialog.config.source === 'microphoneAndSystem'
+  return dialog.effectiveSource === 'microphoneAndSystem'
     ? 'mdi:account-voice'
     : 'mdi:monitor-speaker'
 })
 
 const emptyTitle = computed(() => {
   if (dialog.isActive) return t('dialog.waitingForSpeech')
-  return dialog.config.source === 'microphoneAndSystem'
+  return dialog.effectiveSource === 'microphoneAndSystem'
     ? t('dialog.emptyTitleCall')
     : t('dialog.emptyTitleComputer')
 })
 
 const emptyMessage = computed(() => {
   if (dialog.isActive) return t('dialog.waitingForSpeechHint')
-  return dialog.config.source === 'microphoneAndSystem'
+  return dialog.effectiveSource === 'microphoneAndSystem'
     ? t('dialog.emptyHintCall')
     : t('dialog.emptyHintComputer')
 })
@@ -124,23 +146,41 @@ function retryTranslation(ids: string[]) {
 }
 
 function openSttSettings() {
-  void appNavigation.goToConfig('stt')
+  void appNavigation.goToConfig('voice')
+}
+
+function closeMobileHistory() {
+  if (window.matchMedia('(max-width: 47.5rem)').matches)
+    dialog.isHistoryOpen = false
 }
 </script>
 
 <style scoped>
+.dialog-view {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  background-color: var(--app-surface);
+}
+
+.history-backdrop {
+  display: none;
+}
+
 .dialog-page {
+  flex: 1 1 0%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
 }
 
+.dialog-error,
 .dialog-headphones-notice {
-  margin: var(--space-sm) var(--space-md) 0;
-}
-
-.dialog-error {
   margin: var(--space-sm) var(--space-md) 0;
 }
 
@@ -153,17 +193,38 @@ function openSttSettings() {
 }
 
 .dialog-empty {
+  flex: 1 1 0%;
+  max-width: 26rem;
   margin: auto;
-  max-width: 32rem;
 }
 
 .dialog-empty-hint {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-2xs);
-  margin-top: var(--space-xs);
+  gap: var(--space-xs);
+  margin: var(--space-xs) 0 0;
   font-size: var(--text-caption);
-  color: var(--app-text-muted);
+  color: var(--app-text-faint);
+}
+
+@media (max-width: 47.5rem) {
+  .history-backdrop {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: calc(var(--z-popover) - 2);
+    border: none;
+    background-color: var(--app-backdrop, rgb(0 0 0 / 0.3));
+    cursor: default;
+  }
+
+  .dialog-history-drawer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: calc(var(--z-popover) - 1);
+    box-shadow: var(--app-shadow-lg);
+  }
 }
 </style>

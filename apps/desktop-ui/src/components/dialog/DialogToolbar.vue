@@ -1,5 +1,18 @@
 <template>
   <div class="dialog-toolbar">
+    <Button
+      class="dialog-toolbar-history"
+      :variant="dialog.isHistoryOpen ? 'neutral' : 'ghost'"
+      size="sm"
+      icon="mdi:history"
+      :aria-pressed="dialog.isHistoryOpen"
+      :title="t('dialog.history')"
+      @click="dialog.isHistoryOpen = !dialog.isHistoryOpen"
+      ><span class="dialog-toolbar-history-label">{{
+        t('dialog.history')
+      }}</span></Button
+    >
+
     <div class="dialog-toolbar-actions">
       <Button
         v-if="isIdle"
@@ -67,12 +80,12 @@
         class="dialog-toolbar-clear"
         variant="ghost"
         size="sm"
-        icon="mdi:broom"
+        :icon="canRecord ? 'mdi:plus' : 'mdi:broom'"
         :title="
           canRecord ? t('dialog.clearHintSaved') : t('dialog.clearHintUnsaved')
         "
         @click="handleClear"
-        >{{ t('dialog.clear') }}</Button
+        >{{ canRecord ? t('dialog.newDialog') : t('dialog.clear') }}</Button
       >
     </div>
 
@@ -80,7 +93,7 @@
     <SegmentedControl
       v-if="isIdle"
       class="dialog-toolbar-source"
-      :model-value="dialog.config.source"
+      :model-value="dialog.effectiveSource"
       size="sm"
       :disabled="!isEmpty"
       :label="t('dialog.source')"
@@ -186,7 +199,6 @@ import { useI18n } from '../../composables/use-i18n'
 import { formatRecordingElapsed } from '../../lib/dialog/dialog-recording'
 import type { DialogSide } from '../../lib/dialog/dialog-transcript'
 import type { ControlOption } from '../../lib/ui/control-option'
-import { useDesktopStore } from '../../stores/desktop'
 import { useDialogStore } from '../../stores/dialog'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
@@ -199,14 +211,13 @@ import DialogLevel from './DialogLevel.vue'
 import type { DialogSource } from '@tyco/shared'
 
 const dialog = useDialogStore()
-const desktopStore = useDesktopStore()
 const { t } = useI18n()
 
 const isIdle = computed(
   () => dialog.status === 'idle' || dialog.status === 'failed'
 )
 const isStopping = computed(() => dialog.status === 'stopping')
-const isEmpty = computed(() => dialog.segments.length === 0)
+const isEmpty = computed(() => !dialog.hasContent)
 const isClearConfirmOpen = ref(false)
 const isRecordingNoticeOpen = ref(false)
 const recordContainerRef = ref<HTMLElement | null>(null)
@@ -255,10 +266,8 @@ useDismissibleLayer({
   keydown: onRecordingNoticeKeydown,
 })
 
-// a recording belongs to its history entry: nothing would keep it otherwise
-const canRecord = computed(
-  () => desktopStore.userConfig.editor.history.storage === 'disk'
-)
+// a recording belongs to its dialog history entry: nothing would keep it otherwise
+const canRecord = computed(() => dialog.isHistoryEnabled)
 
 const isRecordToggleDisabled = computed(() => !canRecord.value || !isIdle.value)
 
@@ -345,6 +354,10 @@ const clearModalMessage = computed(() =>
 )
 
 function handleClear() {
+  if (canRecord.value) {
+    void dialog.clear()
+    return
+  }
   isClearConfirmOpen.value = true
 }
 
@@ -546,9 +559,10 @@ function levelLabel(side: DialogSide) {
   flex-shrink: 1;
 }
 
-/* narrower still, the sources keep their icons, the tooltips name them */
+/* narrower still, the sources and history keep their icons, the tooltips name them */
 @media (max-width: 36rem) {
-  .dialog-toolbar-source :deep(.option-label) {
+  .dialog-toolbar-source :deep(.option-label),
+  .dialog-toolbar-history-label {
     display: none;
   }
 }

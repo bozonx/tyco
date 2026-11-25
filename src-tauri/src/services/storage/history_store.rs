@@ -7,10 +7,11 @@ use std::time::Duration;
 
 use tauri::{AppHandle, Manager};
 
-use super::{chat_history as chats, editor_history as editor};
+use super::{chat_history as chats, dialog_history as dialogs, editor_history as editor};
 use crate::errors::AppError;
 use crate::models::{
-    Chat, ChatSummary, EditorHistoryEntry, EditorHistoryFailure, EditorHistoryItem,
+    Chat, ChatSummary, Dialog, DialogSummary, EditorHistoryEntry, EditorHistoryFailure,
+    EditorHistoryItem,
 };
 use crate::services::chat_images::ChatImages;
 use crate::state::AppState;
@@ -19,6 +20,7 @@ use crate::state::AppState;
 #[derive(Clone, PartialEq)]
 pub struct HistorySettings {
     pub editor: editor::EditorHistoryPolicy,
+    pub dialog: dialogs::DialogHistoryPolicy,
     pub chat: chats::ChatHistoryPolicy,
     pub profile_chat: chats::ChatHistoryPolicy,
 }
@@ -27,6 +29,7 @@ impl HistorySettings {
     pub fn from_config(config: &serde_json::Value) -> Self {
         Self {
             editor: editor::EditorHistoryPolicy::from_config(config),
+            dialog: dialogs::DialogHistoryPolicy::from_config(config),
             chat: chats::ChatHistoryPolicy::from_config(config),
             profile_chat: chats::ChatHistoryPolicy::for_profiles(config),
         }
@@ -36,10 +39,14 @@ impl HistorySettings {
 #[derive(Default)]
 pub struct HistoryStorageCoordinator {
     editor_history: Mutex<Vec<EditorHistoryItem>>,
+    dialog_history_lock: Mutex<()>,
+    dialog_search: dialogs::DialogSearchCache,
     chat_history_lock: Mutex<()>,
     chat_search: chats::ChatSearchCache,
     /// The editor history file still holds what the committed policy drops.
     editor_cleanup_pending: AtomicBool,
+    /// The dialog history still holds what the committed policy drops.
+    dialog_cleanup_pending: AtomicBool,
     /// Some chat history still holds what the committed policies drop.
     chat_cleanup_pending: AtomicBool,
 }
@@ -50,8 +57,17 @@ impl HistoryStorageCoordinator {
         self.chat_search.invalidate(path);
     }
 
+    pub(crate) fn invalidate_dialog_search(&self, path: &Path) {
+        let _dialogs = self.lock_dialog_history();
+        self.dialog_search.invalidate(path);
+    }
+
     fn lock_editor_history(&self) -> MutexGuard<'_, Vec<EditorHistoryItem>> {
         self.editor_history.locked()
+    }
+
+    fn lock_dialog_history(&self) -> MutexGuard<'_, ()> {
+        self.dialog_history_lock.locked()
     }
 
     fn lock_chat_history(&self) -> MutexGuard<'_, ()> {
@@ -74,6 +90,7 @@ impl HistoryStorageCoordinator {
         commit: impl FnOnce() -> Result<T, AppError>,
     ) -> Result<T, AppError> {
         let mut memory = self.lock_editor_history();
+        let _dialogs = self.lock_dialog_history();
         let _chats = self.lock_chat_history();
         if self.editor_cleanup_pending.load(Ordering::SeqCst) {
             match editor::enforce_editor_history_policy(app, &before.editor) {
@@ -95,6 +112,15 @@ impl HistoryStorageCoordinator {
         if before.editor != after.editor {
             notify_editor_history_changed(app);
         }
+        let dialog_settings_changed = before.dialog != after.dialog;
+        if dialog_settings_changed || self.dialog_cleanup_pending.load(Ordering::SeqCst) {
+            let dialog_cleanup = enforce_dialog_history_policy(app, after.dialog);
+            self.dialog_cleanup_pending
+                .store(dialog_cleanup.is_err(), Ordering::SeqCst);
+            if let Err(error) = dialog_cleanup {
+                log::warn!("Settings committed; dialog history cleanup will be retried: {error}");
+            }
+        }
         let chat_settings_changed =
             before.chat != after.chat || before.profile_chat != after.profile_chat;
         if chat_settings_changed || self.chat_cleanup_pending.load(Ordering::SeqCst) {
@@ -113,6 +139,7 @@ impl HistoryStorageCoordinator {
     /// user data folder.
     pub fn while_locked<T>(&self, operation: impl FnOnce() -> T) -> T {
         let _editor = self.lock_editor_history();
+        let _dialogs = self.lock_dialog_history();
         let _chats = self.lock_chat_history();
         operation()
     }
@@ -123,6 +150,11 @@ impl HistoryStorageCoordinator {
         self.editor_cleanup_pending.store(true, Ordering::SeqCst);
     }
 
+    /// The dialog history is brought in line with its policy in the background.
+    pub fn mark_dialog_cleanup_pending(&self) {
+        self.dialog_cleanup_pending.store(true, Ordering::SeqCst);
+    }
+
     /// The chat histories are brought in line with the policies in the
     /// background, e.g. at startup, without holding up the first window.
     pub fn mark_chat_cleanup_pending(&self) {
@@ -131,6 +163,7 @@ impl HistoryStorageCoordinator {
 
     fn is_cleanup_pending(&self) -> bool {
         self.editor_cleanup_pending.load(Ordering::SeqCst)
+            || self.dialog_cleanup_pending.load(Ordering::SeqCst)
             || self.chat_cleanup_pending.load(Ordering::SeqCst)
     }
 
@@ -143,6 +176,7 @@ impl HistoryStorageCoordinator {
         let _vault = state.read_vault();
         let _settings = state.lock_settings_update();
         let _editor = self.lock_editor_history();
+        let _dialogs = self.lock_dialog_history();
         let _chats = self.lock_chat_history();
         let config = state.user_config();
         let policy = HistorySettings::from_config(&config);
@@ -156,6 +190,15 @@ impl HistoryStorageCoordinator {
                 Err(error) => {
                     log::warn!("Editor history cleanup failed; it will be retried: {error}");
                     result = Err(error);
+                }
+            }
+        }
+        if self.dialog_cleanup_pending.load(Ordering::SeqCst) {
+            match enforce_dialog_history_policy(app, policy.dialog) {
+                Ok(()) => self.dialog_cleanup_pending.store(false, Ordering::SeqCst),
+                Err(error) => {
+                    log::warn!("Dialog history cleanup failed; it will be retried: {error}");
+                    result = result.and(Err(error));
                 }
             }
         }
@@ -312,6 +355,32 @@ fn notify_chats_changed(
     };
     if let Err(error) = crate::events::emit::<crate::events::ChatsChanged, _>(app, payload) {
         log::warn!("Could not announce a chat history change: {error}");
+    }
+}
+
+/// Brings the dialog history in line with its policy and collects orphan
+/// recording folders.
+fn enforce_dialog_history_policy(
+    app: &AppHandle,
+    policy: dialogs::DialogHistoryPolicy,
+) -> Result<(), AppError> {
+    super::user_data::user_dir(app)?;
+    let dirs = dialogs::app_dialog_dirs(app)?;
+    let removed = dialogs::enforce_dialog_history_policy(&dirs, policy)?;
+    if !removed.is_empty() {
+        notify_dialogs_changed(app, removed, false);
+    }
+    Ok(())
+}
+
+/// Tells every window that the dialog history changed.
+fn notify_dialogs_changed(app: &AppHandle, removed_dialog_ids: Vec<String>, is_cleared: bool) {
+    let payload = crate::models::DialogsChangedEvent {
+        removed_dialog_ids,
+        is_cleared,
+    };
+    if let Err(error) = crate::events::emit::<crate::events::DialogsChanged, _>(app, payload) {
+        log::warn!("Could not announce a dialog history change: {error}");
     }
 }
 
@@ -502,12 +571,93 @@ pub fn delete_editor_history_item(app: &AppHandle, id: String) -> Result<(), App
     })
 }
 
-/// Removes the recording `file` of a removed dialog entry once its undo is
-/// over, unless an entry names it again.
-pub fn discard_dialog_recording(app: &AppHandle, file: String) -> Result<(), AppError> {
-    with_editor(app, |config, memory| {
-        editor::discard_recording(app, config, memory, file)
+/// Removes the recording `file` of `dialog_id` unless the saved dialog still
+/// names it.
+pub fn discard_dialog_recording(
+    app: &AppHandle,
+    dialog_id: String,
+    file: String,
+) -> Result<(), AppError> {
+    with_dialogs(app, ChatAccess::Write, |_, dirs| {
+        dialogs::discard_recording(dirs, &dialog_id, &file)
     })
+}
+
+fn with_dialogs<T>(
+    app: &AppHandle,
+    access: ChatAccess,
+    operation: impl FnOnce(&AppState, &dialogs::DialogDirs) -> Result<T, AppError>,
+) -> Result<T, AppError> {
+    let state = app.state::<AppState>();
+    let _guard = state.history.lock_dialog_history();
+    let dirs = dialogs::app_dialog_dirs(app)?;
+    if access == ChatAccess::Write {
+        super::user_data::ensure_write_allowed(&dirs.dialogs)?;
+    }
+    operation(&state, &dirs)
+}
+
+pub fn list_dialogs(app: &AppHandle) -> Result<Vec<DialogSummary>, AppError> {
+    with_dialogs(app, ChatAccess::Read, |_, dirs| dialogs::list_dialogs(dirs))
+}
+
+pub fn read_dialog(app: &AppHandle, id: String) -> Result<Option<Dialog>, AppError> {
+    with_dialogs(app, ChatAccess::Read, |_, dirs| {
+        dialogs::open_dialog(dirs, &id)
+    })
+}
+
+pub fn save_dialog(app: &AppHandle, dialog: Dialog) -> Result<(), AppError> {
+    let removed = with_dialogs(app, ChatAccess::Write, |state, dirs| {
+        let config = state.user_config();
+        let policy = dialogs::DialogHistoryPolicy::from_config(&config);
+        if !policy.is_enabled {
+            return Ok(None);
+        }
+        dialogs::save_dialog(dirs, policy, dialog).map(Some)
+    })?;
+    if let Some(removed) = removed {
+        notify_dialogs_changed(app, removed, false);
+    }
+    Ok(())
+}
+
+pub fn rename_dialog(app: &AppHandle, id: String, title: String) -> Result<(), AppError> {
+    with_dialogs(app, ChatAccess::Write, |_, dirs| {
+        dialogs::rename_dialog(dirs, &id, &title)
+    })?;
+    notify_dialogs_changed(app, Vec::new(), false);
+    Ok(())
+}
+
+pub fn search_dialogs(app: &AppHandle, query: String) -> Result<Vec<String>, AppError> {
+    let state = app.state::<AppState>();
+    let (dialogs_dir, history) = with_dialogs(app, ChatAccess::Read, |_, dirs| {
+        Ok((dirs.dialogs.clone(), dialogs::list_dialogs(dirs)?))
+    })?;
+    dialogs::search_dialogs(&dialogs_dir, history, query, &state.history.dialog_search)
+}
+
+pub fn delete_dialog(app: &AppHandle, id: String) -> Result<Option<Dialog>, AppError> {
+    let id_for_event = id.clone();
+    with_dialogs(app, ChatAccess::Write, |_, dirs| {
+        dialogs::delete_dialog(dirs, &id)
+    })
+    .inspect(|_| notify_dialogs_changed(app, vec![id_for_event], false))
+}
+
+pub fn release_dialog_recordings(app: &AppHandle, id: String) -> Result<(), AppError> {
+    with_dialogs(app, ChatAccess::Write, |_, dirs| {
+        dialogs::release_dialog_recordings(dirs, &id)
+    })
+}
+
+pub fn clear_dialogs(app: &AppHandle) -> Result<(), AppError> {
+    with_dialogs(app, ChatAccess::Write, |_, dirs| {
+        dialogs::clear_dialogs(dirs)
+    })?;
+    notify_dialogs_changed(app, Vec::new(), true);
+    Ok(())
 }
 
 pub fn clear_editor_history(app: &AppHandle) -> Result<(), AppError> {
@@ -784,7 +934,6 @@ mod tests {
                         result: None,
                         is_result_applied: false,
                         failure: None,
-                        dialog: None,
                     });
                 });
             }

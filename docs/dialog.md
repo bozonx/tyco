@@ -15,9 +15,9 @@ Press **Listen** during the call. The dialog keeps going when you switch tabs,
 hide or minimize the window, until you press **Stop** or quit TyCo.
 
 When stopped, pressing **Resume** continues the conversation in the same feed,
-preserving previous turns. To start with a clean slate, click **Clear**: the
-feed is cleared and saved to history (see [History](#history)); if history is
-turned off, TyCo asks for confirmation before clearing.
+preserving previous turns. To start with a clean slate, click **New dialog** (or
+**Clear** when dialog history is turned off, in which case TyCo asks for
+confirmation before clearing).
 
 While the dialog runs it holds the sound: voice input, voice commands and
 listening do not record and say that the sound is busy with the dialog.
@@ -90,14 +90,20 @@ to summarize it with a transformation:
 
 ## History
 
-With the history turned on (**Settings → History**), each conversation becomes
-one entry of the **History** tab, in the format above. It is saved every few
-seconds while the conversation goes on, and when you stop, resume, hide the
-window or quit TyCo, so a crash loses little. Words still being recognized are
-not saved. A conversation in which nothing was recognized leaves no entry,
-unless it was recorded: then the entry is there from the start, so the
-recording can always be found. The entry is kept as long as other history
-entries and is deleted the same way, together with its recordings.
+Dialog has its own history, independent of the editor history. Click **History**
+in the toolbar to browse, search, rename, delete (with **Undo**), or reopen past
+conversations right inside the **Dialog** tab, with their original bubbles,
+translations, session breaks, and inline audio players.
+
+With dialog history turned on (**Settings → History → Dialog history**), each
+conversation is saved as its own file in `dialogs/<dialog-id>.json` of the data
+folder. It is saved every few seconds while the conversation goes on, and when
+you stop, resume, hide the window or quit TyCo, so a crash loses little. Words
+still being recognized are not saved. A conversation in which nothing was
+recognized leaves no entry, unless it was recorded: then the entry is there from
+the start, so the recording can always be found. Dialogs are kept according to
+the dialog retention period in **Settings → History** and are deleted together
+with their recordings.
 
 ## Recording the call
 
@@ -107,9 +113,8 @@ the conversation is transcribed as usual and its sound is also saved to an audio
 toggle is enabled. While a session is paused, the toggle remains in the state it was in, so
 **Resume** continues with that setting (and you can toggle recording before resuming).
 The first time you turn on recording, TyCo shows a prompt reminding you to tell the other person
-before you record a conversation with them; **Got it** dismisses the reminder. Recording is available only while the history is
-saved to disk (**Settings → History**): a recording belongs to its history
-entry.
+before you record a conversation with them; **Got it** dismisses the reminder. Recording is available only while dialog history is
+saved to disk (**Settings → History**): a recording belongs to its dialog.
 
 While recording, the toolbar and the subtitles show a red dot with the time
 recorded, and the system tray icon displays a recording indicator badge. The file is an Opus audio file (`.opus`) that any modern player
@@ -130,33 +135,31 @@ which is enough for voices but not for music. The settings apply to the
 next recording. The file is written as the call
 goes, so after a crash it plays up to the last second or so.
 
-Recordings are kept with the history, in `history/recordings` of the TyCo
-data folder.
+Recordings are kept with the dialog history, each dialog in its own folder under
+`dialogs/recordings/<dialog-id>/` of the TyCo data folder.
 A file is named by the time it started and a short code, e.g.
-`2026-11-20 14-03-05 a1b2c3.opus`; do not rename it, or its history entry
-loses it. The history entry of a recorded conversation lists its recordings
-under **Recordings** with **Open folder**, and shows each file name, or "file
-not found" when the file is not there, e.g. not synchronized yet. The play
-button next to a file plays it right on the row, with a seek bar and a speed
-selector (1×, 1.5×, 2×); one recording plays at a time, and none while TyCo records sound (a
-dialog, listening or voice input), so that it does not go into what is
-recorded. A recording still being written
-plays once the conversation stops. A recording goes with its history entry: when you
-delete the entry (after the few seconds in which **Undo** brings both back),
-clear the history, or when the history settings no longer keep the entry. If
-the disk falls behind for a moment, the
-missed sound is replaced by silence of the same length, so the file keeps
-the time of the call. If the disk stays behind for more than a minute or the
-file cannot be written, the recording stops, the transcript goes on, and
-the history entry marks the recording as incomplete. A conversation stopped
-before it started leaves no file. A recording deleted with its
-entry while the call still goes on is removed as soon as the call stops.
+`2026-11-20 14-03-05 a1b2c3.opus`; do not rename it, or its dialog loses it.
+When you view a conversation in **Dialog**, each recorded segment shows an
+inline player with a seek bar, a speed selector (1×, 1.5×, 2×), and a button to
+open that dialog's recordings folder (or "file not found" when the file is not
+there, e.g. not synchronized yet). One recording plays at a time, and none while
+TyCo records sound (a dialog, listening or voice input), so that it does not go
+into what is recorded. A recording still being written plays once the
+conversation stops. A recording folder goes with its dialog: when you delete the
+dialog (after the few seconds in which **Undo** brings it back), clear dialog
+history, or when dialog retention drops it. If the disk falls behind for a
+moment, the missed sound is replaced by silence of the same length, so the file
+keeps the time of the call. If the disk stays behind for more than a minute or
+the file cannot be written, the recording stops, the transcript goes on, and the
+dialog marks the recording as incomplete. A conversation stopped before it
+started leaves no file. A recording deleted with its dialog while the call still
+goes on is removed as soon as the call stops.
 
-If the history cannot keep the entry (it could not be saved, or the history
-is no longer saved to disk), TyCo says so: a recording no entry names is
-deleted after 7 days, so move the file out of `history/recordings` to keep
-it. The data folder cannot be moved while a dialog runs; moving it from the
-settings stops the dialog first.
+If dialog history cannot keep the entry (it could not be saved, or dialog
+history is no longer saved to disk), TyCo says so: a recording folder no dialog
+names is deleted after 7 days, so move the files out of `dialogs/recordings` to
+keep them. The data folder cannot be moved while a dialog runs; moving it from
+the settings stops the dialog first.
 
 Recordings move and synchronize with the data folder. To keep them on another
 disk, or out of a synchronization, see `docs/data-folder.md`. Calls started

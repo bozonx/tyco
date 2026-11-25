@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 0d8ddd2cd0048ab2df990b2fc481b70f904f18dfe034ca19168bba497a2246d8
+// Source hash: aec557cf02e795a8c6f0aa4f66a089f2ee5398a5da83e9f103df9882f78bbf0f
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -560,31 +560,88 @@ export type DesktopWindowState = {
   canListenToApps: boolean
 }
 
-/** The session a `Dialog` entry holds the transcript of. */
-export type EditorHistoryDialog = {
-  /** Unix time in milliseconds. */
+/**
+ * A saved dialog session stored in `dialogs/<id>.json`, with its audio files
+ * kept in `dialogs/recordings/<id>/`.
+ */
+export type Dialog = {
+  id: string
+  /** Optional user-assigned title; empty when untitled. */
+  title: string
+  /** Unix time in milliseconds when the dialog started. */
   startedAt: number
-  source: EditorHistoryDialogSource
-  /**
-   * The file name of the call recording in `history/recordings/` of the user
-   * data folder, if the session was recorded. The file goes with the entry; it
-   * may be missing, e.g. not synced yet.
-   */
-  recordingFile?: string
-  /**
-   * The file names of call recordings if the session was recorded. Multiple
-   * files occur if recording was stopped and resumed within one dialog.
-   */
+  /** Unix time in milliseconds when the dialog was last updated. */
+  updatedAt: number
+  source: DialogSource
+  /** Target language of translations in this dialog; empty when untranslated. */
+  translationTargetLanguage: string
+  segments: Array<DialogSegment>
+  sessionBreaks?: Array<DialogSessionBreak>
+  /** File names in `dialogs/recordings/<id>/`. */
   recordingFiles?: Array<string>
-  /**
-   * The recordings that stopped before their run did, e.g. the disk filled up:
-   * such a file holds only the beginning.
-   */
+  /** Recordings that stopped early before their capture ended. */
   incompleteRecordingFiles?: Array<string>
 }
 
-/** What the dialog listened to. */
-export type EditorHistoryDialogSource = 'microphoneAndSystem' | 'system'
+/** Whether a session break started or resumed a dialog. */
+export type DialogBreakAction = 'started' | 'resumed'
+
+/** One settled piece of recognized speech in a saved dialog. */
+export type DialogSegment = {
+  id: string
+  side: DialogSide
+  startMs: number
+  endMs: number
+  text: string
+  translation?: string
+  translationState: DialogTranslationState
+}
+
+/** A divider marking the start or resumption of a dialog session. */
+export type DialogSessionBreak = {
+  id: string
+  timestampMs: number
+  isRecording: boolean
+  recordingFile?: string
+  action?: DialogBreakAction
+}
+
+/** Who spoke in a dialog segment. */
+export type DialogSide = 'me' | 'remote'
+
+/**
+ * What a dialog session listened to: both sides apart, or the computer sound
+ * alone.
+ */
+export type DialogSource = 'microphoneAndSystem' | 'system'
+
+/** Summary of a saved dialog returned by `list_dialogs`. */
+export type DialogSummary = {
+  id: string
+  title: string
+  /** Short excerpt of the recognized speech for list display. */
+  preview: string
+  startedAt: number
+  updatedAt: number
+  durationMs: number
+  segmentCount: number
+  source: DialogSource
+  translationTargetLanguage?: string
+  recordingCount: number
+  hasIncompleteRecording?: boolean
+}
+
+/** Translation state of a recognized dialog segment. */
+export type DialogTranslationState = 'idle' | 'pending' | 'complete' | 'failed'
+
+/**
+ * The dialog history changed in storage: windows reload their list, and a
+ * window viewing a deleted dialog clears it if idle.
+ */
+export type DialogsChangedEvent = {
+  removedDialogIds: Array<string>
+  isCleared: boolean
+}
 
 /** What the UI sends to add a text; id and time are assigned by the backend. */
 export type EditorHistoryEntry = {
@@ -596,8 +653,6 @@ export type EditorHistoryEntry = {
   origin?: EditorHistoryOrigin | null
   instruction?: EditorHistoryInstruction | null
   profileId?: string | null
-  /** Required for a `Dialog` entry, ignored for the others. */
-  dialog?: EditorHistoryDialog | null
 }
 
 /** What went wrong with the AI transformation of a `Source` entry. */
@@ -638,13 +693,10 @@ export type EditorHistoryItem = {
   isResultApplied?: boolean
   /** Why the AI produced no `result` for a `Source` entry. */
   failure?: EditorHistoryFailure
-  /** The session of a `Dialog` entry. */
-  dialog?: EditorHistoryDialog
 }
 
 /** Why a text got into the editor history. */
-export type EditorHistoryKind =
-  'output' | 'draft' | 'transcript' | 'source' | 'dialog'
+export type EditorHistoryKind = 'output' | 'draft' | 'transcript' | 'source'
 
 /** The AI transformation a `Source` entry was taken before. */
 export type EditorHistoryOperation =
@@ -1307,6 +1359,7 @@ export interface DesktopEventPayloads {
   'app://open-main-chat': OpenMainChatEvent
   'app://open-main-editor': EditorTransfer
   'app://chats-changed': ChatsChangedEvent
+  'app://dialogs-changed': DialogsChangedEvent
   'app://editor-history-changed': null
   'app://settings-conflict': SettingsConflictEvent
   'app://main-window-closed': null

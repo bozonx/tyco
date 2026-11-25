@@ -533,7 +533,6 @@
     "undo": "Desfazer",
     "yesterday": "Ontem",
     "filterListen": "Áudio do sistema",
-    "kindDialog": "Diálogo",
     "recordingNotFound": "arquivo não encontrado",
     "playRecording": "Reproduzir a gravação",
     "playRecordingWhileCapturing": "A reprodução não está disponível enquanto o TyCo grava som",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Glossário",
     "dialogTranslationGlossaryInfo": "A tradução de fala nos diálogos usa o glossário compartilhado das configurações de tradução. Você pode definir regras para termos ou proteger palavras de tradução.",
     "dialogTranslationGlossaryShared": "Usa o glossário compartilhado",
-    "dialogTranslationGlossaryOpen": "Configurar glossário"
+    "dialogTranslationGlossaryOpen": "Configurar glossário",
+    "sectionDialogHistory": "Histórico de diálogos",
+    "dialogHistoryHint": "Transcrições de chamadas salvas e suas gravações de áudio.",
+    "dialogHistoryEnabled": "Salvar diálogos",
+    "dialogHistoryEnabledInfo": "Mantenha transcrições e gravações no disco para reabri-las depois.",
+    "dialogHistoryRetentionDays": "Manter diálogos por",
+    "dialogHistoryRetentionDaysHint": "Diálogos mais antigos e suas gravações são excluídos automaticamente.",
+    "dialogHistoryRetentionConfirm": "Diálogos com mais de {period} e suas gravações serão excluídos.",
+    "deleteAllDialogs": "Excluir todos os diálogos",
+    "dialogCount": "Diálogos salvos: {count}",
+    "clearDialogsConfirmDialog": "Todos os diálogos salvos e suas gravações de áudio serão excluídos permanentemente.",
+    "dialogHistoryLink": "As configurações de histórico e retenção de diálogos estão em"
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "Continuar reconhecimento de fala e gravação em arquivo de áudio",
     "recordToggleEnableHint": "Ativar gravação de áudio em arquivo e salvamento no histórico ao iniciar",
     "recordToggleDisableHint": "Desativar gravação de áudio (apenas reconhecimento de fala)",
-    "clearMessageSaved": "A transcrição atual será limpa da janela. A conversa continuará salva no histórico."
+    "clearMessageSaved": "A transcrição atual será limpa da janela. A conversa continuará salva no histórico.",
+    "history": "Histórico",
+    "newDialog": "Novo diálogo",
+    "searchHistory": "Pesquisar diálogos",
+    "renameDialog": "Renomear diálogo",
+    "deleteDialog": "Excluir diálogo",
+    "openRecordingsFolder": "Abrir pasta de gravações",
+    "stopToSwitchHint": "Pare o diálogo para abrir outro",
+    "notFound": "Diálogo não encontrado. Ele pode ter sido excluído.",
+    "clearHistoryConfirmTitle": "Limpar histórico de diálogos?"
   },
   "toolPermissions": {
     "riskRead": "Leitura",

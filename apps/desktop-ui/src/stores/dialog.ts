@@ -1,15 +1,24 @@
-import { DESKTOP_EVENTS, type DialogConfig } from '@tyco/shared'
+import {
+  DESKTOP_EVENTS,
+  type Dialog,
+  type DialogConfig,
+  type DialogSource,
+} from '@tyco/shared'
 import { defineStore } from 'pinia'
 import { computed, onScopeDispose, reactive, ref, shallowRef, watch } from 'vue'
 
+import { desktopClient } from '../lib/desktop/client'
 import { exportDialogTranscript } from '../lib/dialog/dialog-export'
 import { createDialogHistory } from '../lib/dialog/dialog-history'
+import { isDialogHistoryEnabled } from '../lib/dialog/dialog-history-storage'
+import { createDialogId } from '../lib/dialog/dialog-id'
 import {
   createDialogSession,
   type DialogChannelStatus,
   type DialogSessionStatus,
 } from '../lib/dialog/dialog-session'
 import { resolveDialogStt, type DialogStt } from '../lib/dialog/dialog-stt'
+import { buildSubtitlesView } from '../lib/dialog/dialog-subtitles'
 import {
   buildDialogFeedItems,
   buildDialogTurns,
@@ -19,9 +28,7 @@ import {
   type DialogSessionBreak,
   type DialogSide,
 } from '../lib/dialog/dialog-transcript'
-import { buildSubtitlesView } from '../lib/dialog/dialog-subtitles'
 import { createDialogTranslationQueue } from '../lib/dialog/dialog-translation'
-import { desktopClient } from '../lib/desktop/client'
 import { translate } from '../lib/i18n'
 import { normalizeLlmConfig, taskModel } from '../lib/llm/llm-config'
 import { clientLogger } from '../lib/logger'
@@ -34,16 +41,18 @@ import {
 import { createSttClient } from '../lib/stt/stt-client'
 import { createVoiceCaptureControl } from '../lib/stt/voice-capture'
 import { useDesktopStore } from './desktop'
+import { useDialogHistoryStore } from './dialog-history'
 import { useDialogStatusStore } from './dialog-status'
 import { useHistoryStore } from './history'
-import { useVisibleWorkStore } from './visible-work'
 import { useIpcStore } from './ipc'
 import { useSecretsStore } from './secrets'
 import { useTranslationStore } from './translation'
+import { useVisibleWorkStore } from './visible-work'
 
 const DEFAULT_DIALOG_CONFIG: DialogConfig = {
   isEnabled: false,
   source: 'microphoneAndSystem',
+  history: { storage: 'disk' },
   translationTargetLanguage: '',
   isTranslationOnly: false,
   isRecordingMixedDown: false,
@@ -52,7 +61,7 @@ const DEFAULT_DIALOG_CONFIG: DialogConfig = {
 
 /** The recording of the running session */
 export interface DialogRecordingState {
-  /** The file name in the recordings of the history */
+  /** The file name inside `dialogs/recordings/<dialogId>/` */
   file: string
   /** Unix time in milliseconds */
   startedAtMs: number
@@ -60,20 +69,29 @@ export interface DialogRecordingState {
 
 /**
  * The dialog: a long transcription of a call that runs in the background until
- * it is stopped, whatever tab the main window shows. Every start begins a new
- * session: a fresh transcript and, with the history on, an entry of its own.
+ * it is stopped, whatever tab the main window shows. Each conversation has its
+ * own id (`dialogs/<id>.json`) and its own audio folder
+ * (`dialogs/recordings/<id>/`) and can be reopened from history.
  */
 export const useDialogStore = defineStore('dialog', () => {
   const desktopStore = useDesktopStore()
   const secretsStore = useSecretsStore()
   const historyStore = useHistoryStore()
+  const dialogHistoryStore = useDialogHistoryStore()
   const translationStore = useTranslationStore()
 
   const config = computed<DialogConfig>(() => ({
     ...DEFAULT_DIALOG_CONFIG,
     ...desktopStore.userConfig?.dialog,
+    history: {
+      ...DEFAULT_DIALOG_CONFIG.history,
+      ...desktopStore.userConfig?.dialog?.history,
+    },
   }))
   const isEnabled = computed(() => config.value.isEnabled)
+  const isHistoryEnabled = computed(() =>
+    isDialogHistoryEnabled(desktopStore.userConfig)
+  )
   /** The model that translates the other side; none: nothing is translated */
   const translationModel = computed(() =>
     taskModel(
@@ -92,12 +110,37 @@ export const useDialogStore = defineStore('dialog', () => {
   const canFixInSettings = ref(false)
   /** Whether the subtitles window is shown, with the main window minimized */
   const isSubtitlesShown = ref(false)
+  /** The id of the current or loaded dialog; null on a clean slate */
+  const currentDialogId = ref<string | null>(null)
+  /** Optional custom title of the current or loaded dialog */
+  const currentDialogTitle = ref('')
+  /** Source of the current or loaded dialog (falls back to config when empty) */
+  const currentDialogSource = ref<DialogSource | null>(null)
+  /** Translation language of a loaded dialog (falls back to config when empty) */
+  const currentTranslationLanguage = ref<string | null>(null)
+  /** Recordings of the current dialog that stopped early */
+  const incompleteRecordingFiles = ref<string[]>([])
+  /** Whether each recording file of the current dialog exists on disk */
+  const recordingExists = ref<Record<string, boolean>>({})
+  /** Whether the history sidebar panel is open in DialogView */
+  const isHistoryOpen = ref(false)
   /** Whether the running dialog records the microphone too */
   const hasMicrophone = ref(config.value.source === 'microphoneAndSystem')
   /** The file the running session is recorded to; none: not recorded */
   const recording = ref<DialogRecordingState>()
   /** Whether the next session run will be recorded to an audio file */
   const isRecordEnabled = ref(false)
+
+  const effectiveSource = computed<DialogSource>(
+    () => currentDialogSource.value ?? config.value.source
+  )
+  const effectiveTranslationLanguage = computed<string>(
+    () =>
+      currentTranslationLanguage.value ?? config.value.translationTargetLanguage
+  )
+  const hasContent = computed(
+    () => segments.value.length > 0 || sessionBreaks.value.length > 0
+  )
 
   const turns = computed(() => buildDialogTurns(segments.value))
   const feedItems = computed<DialogFeedItem[]>(() =>
@@ -174,7 +217,13 @@ export const useDialogStore = defineStore('dialog', () => {
       })
       return result.text
     },
-    onUpdate: (id, patch) => transcript.update(id, patch),
+    onUpdate: (id, patch) => {
+      transcript.update(id, patch)
+      // when retrying a translation on an idle/loaded dialog, persist it
+      if (!isActive.value && patch.translationState === 'complete') {
+        void dialogHistory.checkpoint()
+      }
+    },
     logError: (message, error) =>
       clientLogger.warn(`${message}: ${String(error)}`, 'dialog'),
   })
@@ -200,9 +249,32 @@ export const useDialogStore = defineStore('dialog', () => {
     canFixInSettings.value = isSettingsFixableDictationError(error)
   }
 
+  async function refreshRecordingExists() {
+    const dialogId = currentDialogId.value
+    const files = sessionBreaks.value
+      .map((item) => item.recordingFile)
+      .filter((file): file is string => Boolean(file))
+    if (!dialogId || files.length === 0) {
+      recordingExists.value = {}
+      return
+    }
+    const result = await useIpcStore().call('check_dialog_recordings', {
+      dialogId,
+      files,
+    })
+    if (!result.success || !result.result) return
+    if (currentDialogId.value !== dialogId) return
+    const next: Record<string, boolean> = {}
+    files.forEach((file, index) => {
+      next[file] = result.result?.[index] ?? false
+    })
+    recordingExists.value = next
+  }
+
   const session = createDialogSession({
     capture: {
       start: async (source) => {
+        const dialogId = currentDialogId.value ?? undefined
         const started = await capture.start(
           source,
           {
@@ -215,13 +287,23 @@ export const useDialogStore = defineStore('dialog', () => {
               isRecordEnabled.value = false
               errorText.value = translate('dialog.recordingFailed')
               canFixInSettings.value = false
+              if (
+                recordingFile &&
+                !incompleteRecordingFiles.value.includes(recordingFile)
+              ) {
+                incompleteRecordingFiles.value = [
+                  ...incompleteRecordingFiles.value,
+                  recordingFile,
+                ]
+              }
               if (isRecordingLinked && recordingFile)
                 void dialogHistory.markRecordingIncomplete(recordingFile)
               else isRecordingFailedEarly = true
             },
           },
           desktopStore.userConfig.stt.microphoneId,
-          isRecordingRequested
+          isRecordingRequested,
+          dialogId
         )
         recordingFile = started.recordingFile
         return started
@@ -243,12 +325,25 @@ export const useDialogStore = defineStore('dialog', () => {
     onStatus: (next) => {
       if (next === 'running') {
         sessionStartedAtMs = Date.now()
+        const dialogId =
+          currentDialogId.value ?? createDialogId(sessionStartedAtMs)
+        currentDialogId.value = dialogId
+        currentDialogSource.value = hasMicrophone.value
+          ? 'microphoneAndSystem'
+          : 'system'
+        currentTranslationLanguage.value =
+          config.value.translationTargetLanguage
+
         if (recordingFile && !isRecordingFailedEarly) {
           recording.value = {
             file: recordingFile,
             startedAtMs: sessionStartedAtMs,
           }
           isRecordEnabled.value = true
+          recordingExists.value = {
+            ...recordingExists.value,
+            [recordingFile]: true,
+          }
         }
         isRecordingLinked = Boolean(recordingFile)
         const isRecorded = Boolean(recordingFile && !isRecordingFailedEarly)
@@ -278,8 +373,6 @@ export const useDialogStore = defineStore('dialog', () => {
             action,
           })
         }
-        // a dialog stopped and saved, e.g. by an external request, goes on
-        // in the entry it already has
         if (!isFirstRun && dialogHistory.resume()) {
           if (recordingFile) {
             void dialogHistory.addRecording(recordingFile, {
@@ -288,12 +381,10 @@ export const useDialogStore = defineStore('dialog', () => {
           }
         } else {
           void dialogHistory.begin({
+            id: dialogId,
             startedAt: sessionStartedAtMs,
             source: hasMicrophone.value ? 'microphoneAndSystem' : 'system',
-            ...(recordingFile && {
-              recordingFile,
-              recordingFiles: [recordingFile],
-            }),
+            ...(recordingFile && { recordingFiles: [recordingFile] }),
             ...(recordingFile &&
               isRecordingFailedEarly && {
                 incompleteRecordingFiles: [recordingFile],
@@ -308,7 +399,7 @@ export const useDialogStore = defineStore('dialog', () => {
         recording.value = undefined
       }
       if (next === 'idle' || next === 'failed') {
-        void dialogHistory.checkpoint()
+        void dialogHistory.checkpoint().then(() => refreshRecordingExists())
         discardUnlinkedRecording()
       }
     },
@@ -363,15 +454,16 @@ export const useDialogStore = defineStore('dialog', () => {
   let isPreparing = false
 
   /**
-   * A session stopped while it started never got an entry: its recording,
-   * closed by now, would wait unnamed for days
+   * A session stopped while it started never got a saved dialog: its recording
+   * is removed immediately.
    */
   function discardUnlinkedRecording() {
     const file = recordingFile
-    if (!file || isRecordingLinked) return
+    const dialogId = currentDialogId.value
+    if (!file || !dialogId || isRecordingLinked) return
     recordingFile = undefined
     void useIpcStore()
-      .call('discard_dialog_recording', { file })
+      .call('discard_dialog_recording', { dialogId, file })
       .then((result) => {
         if (!result.success)
           clientLogger.warn(
@@ -396,41 +488,86 @@ export const useDialogStore = defineStore('dialog', () => {
     recordingFile = undefined
     isRecordingFailedEarly = false
     isRecordingLinked = false
+    if (!currentDialogId.value) {
+      currentDialogId.value = createDialogId(Date.now())
+    }
     try {
       activeStt = await resolveDialogStt({
         getConfig: () => desktopStore.userConfig.stt,
         getRemoteLanguage: () => config.value.remoteLanguage,
         getOwnLanguage: () => config.value.ownLanguage,
-        refreshSecrets: secretsStore.refreshSecrets,
+        refreshSecrets: () => secretsStore.refreshSecrets(),
         getSecrets: () => secretsStore.secrets,
         translate,
       })
-      hasMicrophone.value = config.value.source === 'microphoneAndSystem'
+      const source = currentDialogSource.value ?? config.value.source
+      hasMicrophone.value = source === 'microphoneAndSystem'
       await session.start({ isMicrophoneEnabled: hasMicrophone.value })
     } catch (error) {
+      if (!hasContent.value) currentDialogId.value = null
       showError(asDictationError('microphone', error))
     } finally {
       isPreparing = false
     }
   }
 
-  /** Clears the current transcript and closes the history session. */
-  async function clear() {
-    if (isActive.value) return
-    await dialogHistory.end()
+  function resetLocalState() {
     translationQueue.clear()
     transcript.clear()
     sessionBreaks.value = []
+    currentDialogId.value = null
+    currentDialogTitle.value = ''
+    currentDialogSource.value = null
+    currentTranslationLanguage.value = null
+    incompleteRecordingFiles.value = []
+    recordingExists.value = {}
     errorText.value = ''
     canFixInSettings.value = false
     isRecordEnabled.value = false
+  }
+
+  /** Saves any active session, clears the feed, and starts a clean slate. */
+  async function clear() {
+    if (isActive.value) return
+    await dialogHistory.end()
+    dialogHistory.reset()
+    resetLocalState()
+  }
+
+  /** Loads a saved dialog from history into the dialog view. */
+  async function openDialog(id: string): Promise<boolean> {
+    if (isActive.value || isPreparing) return false
+    await dialogHistory.end()
+    const loaded: Dialog | null = await dialogHistoryStore.getDialog(id)
+    if (!loaded) return false
+    translationQueue.clear()
+    currentDialogId.value = loaded.id
+    currentDialogTitle.value = loaded.title
+    currentDialogSource.value = loaded.source
+    currentTranslationLanguage.value = loaded.translationTargetLanguage
+    hasMicrophone.value = loaded.source === 'microphoneAndSystem'
+    incompleteRecordingFiles.value = [
+      ...(loaded.incompleteRecordingFiles ?? []),
+    ]
+    transcript.load(
+      loaded.segments.map((segment) => ({ ...segment, isFinal: true }))
+    )
+    sessionBreaks.value = (loaded.sessionBreaks ?? []).map((item) => ({
+      ...item,
+    }))
+    errorText.value = ''
+    canFixInSettings.value = false
+    isRecordEnabled.value = false
+    dialogHistory.load(loaded)
+    await refreshRecordingExists()
+    return true
   }
 
   async function stop() {
     await session.stop()
   }
 
-  /** Stops a running dialog and resolves once its transcript is in the history */
+  /** Stops a running dialog and resolves once its transcript is saved */
   async function stopAndSave() {
     if (!isActive.value) return
     await session.stop()
@@ -460,7 +597,7 @@ export const useDialogStore = defineStore('dialog', () => {
   /** The transcript as text, with the translations when there are any */
   function exportText(): string {
     return exportDialogTranscript(segments.value, {
-      includeTranslation: Boolean(config.value.translationTargetLanguage),
+      includeTranslation: Boolean(effectiveTranslationLanguage.value),
       breaks: sessionBreaks.value,
       labels: {
         me: translate('dialog.sideMe'),
@@ -493,12 +630,31 @@ export const useDialogStore = defineStore('dialog', () => {
     })
   }
 
+  async function openRecordingsFolder(dialogId?: string) {
+    return useIpcStore().callOrNotify('open_recordings_folder', {
+      dialogId: dialogId ?? null,
+    })
+  }
+
+  async function showRecording(dialogId: string, file: string) {
+    return useIpcStore().callOrNotify('show_dialog_recording', {
+      dialogId,
+      file,
+    })
+  }
+
   const dialogHistory = createDialogHistory({
-    save: historyStore.saveEditorHistory,
-    getText: exportText,
+    isEnabled: () => isHistoryEnabled.value,
+    save: dialogHistoryStore.saveDialog,
+    getSnapshot: () => ({
+      title: currentDialogTitle.value,
+      translationTargetLanguage: effectiveTranslationLanguage.value,
+      segments: segments.value,
+      sessionBreaks: sessionBreaks.value,
+    }),
     reportError: (error) =>
       clientLogger.warn(
-        `Could not save the dialog to the history: ${String(error)}`,
+        `Could not save the dialog to history: ${String(error)}`,
         'dialog'
       ),
     onRecordingUnlinked: () => {
@@ -506,16 +662,47 @@ export const useDialogStore = defineStore('dialog', () => {
       canFixInSettings.value = false
     },
   })
-  // a history no longer kept on disk loses the entry that names the file
+
+  // turning dialog history off disables recording and warns if one is running
+  watch(isHistoryEnabled, (isOnDisk) => {
+    if (!isOnDisk) isRecordEnabled.value = false
+    if (isOnDisk || !recording.value) return
+    errorText.value = translate('dialog.recordingNotInHistory')
+    canFixInSettings.value = false
+  })
+
+  // if the currently viewed idle dialog is deleted or cleared, reset the view
+  let unlistenDialogsChanged: (() => void) | undefined
+  let isDisposed = false
+  void desktopClient
+    .listen(DESKTOP_EVENTS.DIALOGS_CHANGED, (event) => {
+      if (isActive.value || !currentDialogId.value) return
+      if (
+        event.isCleared ||
+        event.removedDialogIds.includes(currentDialogId.value)
+      ) {
+        dialogHistory.reset()
+        resetLocalState()
+      }
+    })
+    .then((unlisten) => {
+      if (isDisposed) unlisten()
+      else unlistenDialogsChanged = unlisten
+    })
+    .catch(() => undefined)
+
+  // keep currentDialogTitle synced when renamed in the history list
   watch(
-    () => desktopStore.userConfig.editor.history.storage === 'disk',
-    (isOnDisk) => {
-      if (!isOnDisk) isRecordEnabled.value = false
-      if (isOnDisk || !recording.value) return
-      errorText.value = translate('dialog.recordingNotInHistory')
-      canFixInSettings.value = false
+    () =>
+      currentDialogId.value
+        ? dialogHistoryStore.dialogs.find((d) => d.id === currentDialogId.value)
+            ?.title
+        : undefined,
+    (title) => {
+      if (title !== undefined) currentDialogTitle.value = title
     }
   )
+
   // the turns so far reach the history when the window hides and on quit
   watch(
     () => desktopStore.desktopState.isWindowShown,
@@ -534,6 +721,8 @@ export const useDialogStore = defineStore('dialog', () => {
     void Promise.all([stopAndSave(), hideSubtitles()])
   })
   onScopeDispose(() => {
+    isDisposed = true
+    unlistenDialogsChanged?.()
     unregisterFlush()
     unregisterVisibleWork()
     dialogHistory.dispose()
@@ -550,7 +739,7 @@ export const useDialogStore = defineStore('dialog', () => {
   const subtitlesView = computed(() =>
     buildSubtitlesView({
       turns: turns.value,
-      translationLanguage: config.value.translationTargetLanguage,
+      translationLanguage: effectiveTranslationLanguage.value,
       isTranslationOnly: config.value.isTranslationOnly,
       isActive: isActive.value,
       errorText: errorText.value,
@@ -589,7 +778,6 @@ export const useDialogStore = defineStore('dialog', () => {
     isHidingSubtitles = true
     try {
       const result = await useIpcStore().callOrNotify('hide_subtitles')
-      // a window that did not hide is still shown and still updated
       if (!result.success) return
       isSubtitlesShown.value = false
       if (result.result) await updateConfig({ compactGeometry: result.result })
@@ -606,14 +794,24 @@ export const useDialogStore = defineStore('dialog', () => {
 
   return {
     isEnabled,
+    isHistoryEnabled,
     config,
     translationModel,
     status,
     channelStatus,
     levels,
     segments,
+    sessionBreaks,
     turns,
     feedItems,
+    hasContent,
+    currentDialogId,
+    currentDialogTitle,
+    effectiveSource,
+    effectiveTranslationLanguage,
+    incompleteRecordingFiles,
+    recordingExists,
+    isHistoryOpen,
     errorText,
     canFixInSettings,
     isActive,
@@ -623,6 +821,7 @@ export const useDialogStore = defineStore('dialog', () => {
     isRecordEnabled,
     start,
     clear,
+    openDialog,
     stop,
     stopAndSave,
     stopAndExpand,
@@ -633,6 +832,8 @@ export const useDialogStore = defineStore('dialog', () => {
     updateConfig,
     copyTranscript,
     sendToActionMenu,
+    openRecordingsFolder,
+    showRecording,
     showSubtitles,
     hideSubtitles,
   }

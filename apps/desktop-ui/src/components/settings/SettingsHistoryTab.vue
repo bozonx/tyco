@@ -1,6 +1,7 @@
 <template>
   <div class="settings-stack">
     <SettingsEditorHistorySection />
+    <SettingsDialogHistorySection />
     <SettingsChatHistorySection scope="askAi" />
     <SettingsChatHistorySection scope="profiles" />
 
@@ -20,6 +21,7 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import InlineAction from '../common/InlineAction.vue'
 import SettingsChatHistorySection from './SettingsChatHistorySection.vue'
+import SettingsDialogHistorySection from './SettingsDialogHistorySection.vue'
 import SettingsEditorHistorySection from './SettingsEditorHistorySection.vue'
 import SettingsSection from './SettingsSection.vue'
 

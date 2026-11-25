@@ -1,5 +1,15 @@
 <template>
-  <HistoryFilePlayer :file="recordingFileItem" />
+  <div class="dialog-recording-player">
+    <HistoryFilePlayer :file="recordingFileItem" />
+    <IconButton
+      v-if="!isMissing"
+      size="xs"
+      variant="ghost"
+      icon="mdi:folder-open-outline"
+      :label="t('dialog.openRecordingsFolder')"
+      @click="openFolder"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -12,9 +22,18 @@ import type { HistoryListItemFile } from '../../lib/history/history-list-types'
 import { loadRecordingMediaSource } from '../../lib/history/recording-media-url'
 import { useDialogStore } from '../../stores/dialog'
 import { useIpcStore } from '../../stores/ipc'
+import IconButton from '../common/IconButton.vue'
 import HistoryFilePlayer from '../history/HistoryFilePlayer.vue'
 
-const props = defineProps<{ file: string }>()
+const props = withDefaults(
+  defineProps<{
+    dialogId: string
+    file: string
+    isMissing?: boolean
+    isIncomplete?: boolean
+  }>(),
+  { isMissing: false, isIncomplete: false }
+)
 
 const { t } = useI18n()
 const dialog = useDialogStore()
@@ -23,20 +42,36 @@ const isSoundCaptured = useSoundCaptureActivity()
 
 const isPlayDisabled = computed(() => dialog.isActive || isSoundCaptured.value)
 
+function openFolder() {
+  void dialog.showRecording(props.dialogId, props.file)
+}
+
 const recordingFileItem = computed<HistoryListItemFile>(() => ({
   name: props.file,
-  isMissing: false,
+  isMissing: props.isMissing,
   missingLabel: t('history.recordingNotFound'),
+  ...(props.isIncomplete && { note: t('history.recordingIncomplete') }),
   playback: {
     source: async () => {
-      const readRecording = async (file: string): Promise<ArrayBuffer> => {
-        const result = await ipcStore.call('read_dialog_recording', { file })
+      const readRecording = async (
+        dialogId: string,
+        file: string
+      ): Promise<ArrayBuffer> => {
+        const result = await ipcStore.call('read_dialog_recording', {
+          dialogId,
+          file,
+        })
         if (!result.success || !result.result) {
           throw new Error(result.error ?? 'Could not read recording')
         }
         return result.result
       }
-      return loadRecordingMediaSource(props.file, convertFileSrc, readRecording)
+      return loadRecordingMediaSource(
+        props.dialogId,
+        props.file,
+        convertFileSrc,
+        readRecording
+      )
     },
     playTitle: t('history.playRecording'),
     stopTitle: t('history.stopRecording'),
@@ -48,3 +83,12 @@ const recordingFileItem = computed<HistoryListItemFile>(() => ({
   },
 }))
 </script>
+
+<style scoped>
+.dialog-recording-player {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  max-width: 100%;
+}
+</style>

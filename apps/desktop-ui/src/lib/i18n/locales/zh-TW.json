@@ -533,7 +533,6 @@
     "undo": "復原",
     "yesterday": "昨天",
     "filterListen": "系統音訊",
-    "kindDialog": "對話",
     "recordingNotFound": "找不到檔案",
     "playRecording": "播放錄音",
     "playRecordingWhileCapturing": "TyCo 錄音時無法播放",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "術語表",
     "dialogTranslationGlossaryInfo": "對話中的語音翻譯使用翻譯設定中的共用術語表。您可以定義術語規則或保護特定詞彙不被翻譯。",
     "dialogTranslationGlossaryShared": "使用共用術語表",
-    "dialogTranslationGlossaryOpen": "設定術語表"
+    "dialogTranslationGlossaryOpen": "設定術語表",
+    "sectionDialogHistory": "對話歷史紀錄",
+    "dialogHistoryHint": "已儲存的通話逐字稿及其音訊錄音。",
+    "dialogHistoryEnabled": "儲存對話",
+    "dialogHistoryEnabledInfo": "將通話逐字稿與錄音儲存至磁碟，以便日後重新開啟檢視。",
+    "dialogHistoryRetentionDays": "對話保留期間",
+    "dialogHistoryRetentionDaysHint": "超過期限的對話與其錄音將自動刪除。",
+    "dialogHistoryRetentionConfirm": "超過 {period} 的對話及其錄音將會被刪除。",
+    "deleteAllDialogs": "刪除所有對話",
+    "dialogCount": "已儲存的對話：{count}",
+    "clearDialogsConfirmDialog": "所有已儲存的對話及其音訊錄音將被永久刪除。",
+    "dialogHistoryLink": "對話歷史紀錄與保留期間設定位於"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
@@ -1776,7 +1786,16 @@
     "resumeTooltipWithRecord": "繼續語音辨識並錄製為音訊檔案",
     "recordToggleEnableHint": "在啟動時啟用錄製為音訊檔案並儲存至歷史紀錄",
     "recordToggleDisableHint": "停用音訊錄製（僅語音辨識）",
-    "clearMessageSaved": "目前的逐字稿將從視窗中清除。對話仍會保留在歷史記錄中。"
+    "clearMessageSaved": "目前的逐字稿將從視窗中清除。對話仍會保留在歷史記錄中。",
+    "history": "歷史紀錄",
+    "newDialog": "新對話",
+    "searchHistory": "搜尋對話",
+    "renameDialog": "重新命名對話",
+    "deleteDialog": "刪除對話",
+    "openRecordingsFolder": "開啟錄音資料夾",
+    "stopToSwitchHint": "請先停止目前對話再開啟其他對話",
+    "notFound": "找不到對話，可能已被刪除。",
+    "clearHistoryConfirmTitle": "清除對話歷史紀錄？"
   },
   "toolPermissions": {
     "riskRead": "讀取",

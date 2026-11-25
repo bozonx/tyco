@@ -28,6 +28,8 @@ import type {
   CommandRunRecord,
   CropRect,
   DesktopSnapshot,
+  Dialog,
+  DialogSummary,
   EditorHistoryEntry,
   EditorHistoryFailure,
   EditorHistoryItem,
@@ -142,12 +144,13 @@ export interface DesktopCommands {
     result: ChatImage | null
   }
   check_dialog_recordings: {
-    args: { files: Array<string> }
+    args: { dialogId: string; files: Array<string> }
     result: Array<boolean>
   }
   claim_external_job: { args: { id: string }; result: CommandRunPayload | null }
   clear_ai_profile_memory: { args: { profileId: string }; result: void }
   clear_chats: { args: { profileId?: string | null }; result: void }
+  clear_dialogs: { args: undefined; result: void }
   clear_editor_history: { args: undefined; result: void }
   close_socket: {
     args: { id: number; finalMessage?: string | null }
@@ -178,10 +181,14 @@ export interface DesktopCommands {
     args: { id: string; profileId?: string | null }
     result: Chat | null
   }
+  delete_dialog: { args: { id: string }; result: Dialog | null }
   delete_editor_history_item: { args: { id: string }; result: void }
   delete_secret: { args: { id: string }; result: void }
   detach_ai_vault: { args: { vaultId: string }; result: void }
-  discard_dialog_recording: { args: { file: string }; result: void }
+  discard_dialog_recording: {
+    args: { dialogId: string; file: string }
+    result: void
+  }
   execute_script_action: {
     args: { request: ScriptActionRequest }
     result: ScriptExecutionResult
@@ -204,6 +211,7 @@ export interface DesktopCommands {
     result: Chat | null
   }
   get_desktop_state: { args: undefined; result: DesktopSnapshot }
+  get_dialog: { args: { id: string }; result: Dialog | null }
   get_editor_history: { args: undefined; result: Array<EditorHistoryItem> }
   get_hotkey_provider_info: { args: undefined; result: HotkeyProviderInfo }
   get_secret_statuses: { args: undefined; result: Record<string, SecretStatus> }
@@ -238,6 +246,7 @@ export interface DesktopCommands {
     args: { profileId?: string | null }
     result: Array<ChatSummary>
   }
+  list_dialogs: { args: undefined; result: Array<DialogSummary> }
   list_input_devices: { args: undefined; result: Array<AudioInputDevice> }
   list_installed_plugins: { args: undefined; result: Array<InstalledPlugin> }
   list_recent_quick_request_prompts: {
@@ -292,7 +301,7 @@ export interface DesktopCommands {
     }
     result: void
   }
-  open_recordings_folder: { args: undefined; result: void }
+  open_recordings_folder: { args: { dialogId?: string | null }; result: void }
   open_socket: {
     args: { request: SocketRequest; onEvent: DesktopChannel }
     result: number
@@ -349,10 +358,14 @@ export interface DesktopCommands {
     args: { id: string; profileId?: string | null }
     result: ArrayBuffer
   }
-  read_dialog_recording: { args: { file: string }; result: ArrayBuffer }
+  read_dialog_recording: {
+    args: { dialogId: string; file: string }
+    result: ArrayBuffer
+  }
   read_dropped_file: { args: { path: string }; result: ArrayBuffer }
   rebind_hotkeys: { args: undefined; result: void }
   release_deleted_chat_images: { args: { id: string }; result: void }
+  release_dialog_recordings: { args: { id: string }; result: void }
   relink_ai_vault: {
     args: { vaultId: string; path: string }
     result: VaultInfo
@@ -370,6 +383,7 @@ export interface DesktopCommands {
     args: { id: string; title: string; profileId?: string | null }
     result: void
   }
+  rename_dialog: { args: { id: string; title: string }; result: void }
   replace_ai_profile_memory: {
     args: {
       profileId: string
@@ -441,6 +455,7 @@ export interface DesktopCommands {
     args: { profileId: string; fileId: string; name: string }
     result: string
   }
+  save_dialog: { args: { dialog: Dialog }; result: void }
   save_user_config: {
     args: { userConfig: UserConfig; baseConfig: UserConfig }
     result: DesktopSnapshot
@@ -453,6 +468,7 @@ export interface DesktopCommands {
     args: { query: string; profileId?: string | null }
     result: Array<string>
   }
+  search_dialogs: { args: { query: string }; result: Array<string> }
   send_socket_binary: { args: BinaryArgs<SocketFrameMeta>; result: void }
   send_socket_text: { args: { id: number; text: string }; result: void }
   set_ai_vault_chat_history: {
@@ -495,7 +511,10 @@ export interface DesktopCommands {
     args: { summary: string; body: string }
     result: void
   }
-  show_dialog_recording: { args: { file: string }; result: void }
+  show_dialog_recording: {
+    args: { dialogId: string; file: string }
+    result: void
+  }
   show_status_overlay: {
     args: { request?: StatusOverlayRequest | null }
     result: void
@@ -515,6 +534,7 @@ export interface DesktopCommands {
       source?: CaptureSource | null
       microphoneId?: string | null
       isRecorded?: boolean | null
+      dialogId?: string | null
     }
     result: VoiceCaptureInfo
   }

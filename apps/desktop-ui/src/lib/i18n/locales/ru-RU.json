@@ -533,7 +533,6 @@
     "undo": "Отменить",
     "yesterday": "Вчера",
     "filterListen": "Звук системы",
-    "kindDialog": "Диалог",
     "recordingNotFound": "файл не найден",
     "playRecording": "Воспроизвести запись",
     "playRecordingWhileCapturing": "Воспроизведение недоступно, пока TyCo записывает звук",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Глоссарий",
     "dialogTranslationGlossaryInfo": "Для перевода речи в диалоге используется общий глоссарий из настроек перевода. Вы можете задать правила перевода терминов или запретить перевод определённых слов.",
     "dialogTranslationGlossaryShared": "Используется общий глоссарий",
-    "dialogTranslationGlossaryOpen": "Настроить глоссарий"
+    "dialogTranslationGlossaryOpen": "Настроить глоссарий",
+    "sectionDialogHistory": "История диалогов",
+    "dialogHistoryHint": "Сохранённые транскрипты звонков и их аудиозаписи.",
+    "dialogHistoryEnabled": "Сохранять диалоги",
+    "dialogHistoryEnabledInfo": "Сохранять транскрипты и записи звонков на диск, чтобы открывать их позже.",
+    "dialogHistoryRetentionDays": "Хранить диалоги",
+    "dialogHistoryRetentionDaysHint": "Более старые диалоги и их записи удаляются автоматически.",
+    "dialogHistoryRetentionConfirm": "Диалоги старше {period} и их записи будут удалены.",
+    "deleteAllDialogs": "Удалить все диалоги",
+    "dialogCount": "Сохранённых диалогов: {count}",
+    "clearDialogsConfirmDialog": "Все сохранённые диалоги и их аудиозаписи будут удалены безвозвратно.",
+    "dialogHistoryLink": "Настройки истории и срока хранения диалогов находятся в разделе"
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "Продолжить распознавание речи и запись в аудиофайл",
     "recordToggleEnableHint": "Включить запись аудио в файл и сохранение в историю при запуске",
     "recordToggleDisableHint": "Выключить запись аудио (будет выполняться только распознавание речи)",
-    "clearMessageSaved": "Текущий транскрипт будет очищен из окна. Разговор останется в истории."
+    "clearMessageSaved": "Текущий транскрипт будет очищен из окна. Разговор останется в истории.",
+    "history": "История",
+    "newDialog": "Новый диалог",
+    "searchHistory": "Поиск по диалогам",
+    "renameDialog": "Переименовать диалог",
+    "deleteDialog": "Удалить диалог",
+    "openRecordingsFolder": "Открыть папку записей",
+    "stopToSwitchHint": "Остановите диалог, чтобы открыть другой",
+    "notFound": "Диалог не найден. Возможно, он был удалён.",
+    "clearHistoryConfirmTitle": "Очистить историю диалогов?"
   },
   "toolPermissions": {
     "riskRead": "Чтение",

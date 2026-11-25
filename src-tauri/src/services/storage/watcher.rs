@@ -134,6 +134,7 @@ fn is_storage_entry(relative: &Path) -> bool {
     match first {
         "config.json" | "tyco-user.json" | VAULT_MARKER | VAULT_SETTINGS => parts.next().is_none(),
         "history" => parts.next().is_none_or(|name| name == "editor"),
+        "dialogs" => parts.next().is_none_or(|name| name != "recordings"),
         "chats" | "plugins" => true,
         // The Files of a profile are the user's, read on demand.
         "profiles" => !matches!(
@@ -578,8 +579,16 @@ fn announce(app: &AppHandle, user: &UserData, vaults: &[WatchedVault], paths: &[
     // Derived indexes and search text must ignore preserved timestamps.
     for path in paths {
         app.state::<AppState>().history.invalidate_chat_search(path);
+        app.state::<AppState>()
+            .history
+            .invalidate_dialog_search(path);
         if vault_of(vaults, path).is_none() && path.starts_with(user.dir.join("chats")) {
             if let Ok(dirs) = super::chat_history::app_chat_dirs(app) {
+                let _ = std::fs::remove_file(dirs.index);
+            }
+        }
+        if vault_of(vaults, path).is_none() && path.starts_with(user.dir.join("dialogs")) {
+            if let Ok(dirs) = super::dialog_history::app_dialog_dirs(app) {
                 let _ = std::fs::remove_file(dirs.index);
             }
         }

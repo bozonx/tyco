@@ -261,13 +261,15 @@ the system sound in one channel. A dialog capture is never superseded:
 another capture fails with `AppError::CaptureBusy` (`captureBusy`), which
 voice input, voice commands and listening show as "the sound is busy with the
 dialog"; a dialog itself supersedes dictation. It has no duration limit.
-A dialog started with `isRecorded` is also written to a new file of the
-history (`storage/recordings.rs`, see `config-storage.md`): named
-`YYYY-MM-DD HH-MM-SS <6 hex>.opus` by the local time, written in
-`recordings/` of the state folder and moved into `history/recordings/` of the
-data folder once closed; `VoiceCaptureInfo::recording_file` returns the name.
-A recording needs the editor history on disk (`AppError::InvalidInput`
-otherwise; the toolbar disables it) and a writable data folder. The file is
+A dialog started with `isRecorded` is also written to a new file under its own
+folder in dialog history (`storage/recordings.rs`, see `config-storage.md`):
+named `YYYY-MM-DD HH-MM-SS <6 hex>.opus` by local time, written in
+`recordings/<dialog id>/` of the state folder and moved into
+`dialogs/recordings/<dialog id>/` of the data folder once closed;
+`VoiceCaptureInfo::recording_file` returns the file name.
+A recording needs dialog history on disk (`dialog.history.storage == "disk"`,
+`AppError::InvalidInput` otherwise; the toolbar disables it) and a writable data
+folder. The file is
 created before the capture reports started, so a folder that cannot be
 written fails the start. `voice/recording.rs` encodes
 Ogg/Opus while capturing (libopus via the `opus` crate, built from source

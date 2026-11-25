@@ -2,7 +2,7 @@
 //! `<audio>` element, named by id, never by path. It answers byte ranges, so
 //! a long recording streams and seeks without being read whole.
 //!
-//! Requests reach it as `tyco-media://localhost/recording/<file name>`, or
+//! Requests reach it as `tyco-media://localhost/recording/<dialog id>/<file name>`, or
 //! `http://tyco-media.localhost/...` on Windows. See `dev_docs/architecture.md`.
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
@@ -142,21 +142,30 @@ fn file_response(
         .unwrap_or_else(|_| Response::new(Vec::new())))
 }
 
-/// The recording a request path names: `/recording/<file name>`.
-fn recording_name(path: &str) -> Option<String> {
-    let encoded = path.strip_prefix("/recording/")?;
-    percent_encoding::percent_decode_str(encoded)
+/// The recording a request path names: `/recording/<dialog id>/<file name>`.
+fn recording_target(path: &str) -> Option<(String, String)> {
+    let rest = path.strip_prefix("/recording/")?;
+    let (encoded_dialog_id, encoded_name) = rest.split_once('/')?;
+    if encoded_name.contains('/') {
+        return None;
+    }
+    let dialog_id = percent_encoding::percent_decode_str(encoded_dialog_id)
         .decode_utf8()
-        .ok()
-        .map(|name| name.into_owned())
+        .ok()?
+        .into_owned();
+    let name = percent_encoding::percent_decode_str(encoded_name)
+        .decode_utf8()
+        .ok()?
+        .into_owned();
+    Some((dialog_id, name))
 }
 
 /// Answers a request of the scheme with the recordings in `dirs`.
 pub fn respond_with(dirs: &RecordingDirs, request: &Request<Vec<u8>>) -> Response<Vec<u8>> {
-    let Some(name) = recording_name(request.uri().path()) else {
+    let Some((dialog_id, name)) = recording_target(request.uri().path()) else {
         return text_response(StatusCode::NOT_FOUND, "Unknown media");
     };
-    let path = match recordings::playable_file(dirs, &name) {
+    let path = match recordings::playable_file(dirs, &dialog_id, &name) {
         Ok(path) => path,
         Err(AppError::InvalidInput(_)) => {
             return text_response(StatusCode::BAD_REQUEST, "Not a call recording")
@@ -186,6 +195,7 @@ mod tests {
     use super::*;
     use crate::services::test_support::TestDir;
 
+    const DIALOG_ID: &str = "2031-01-02_03-04-05_0d1a0d";
     const NAME: &str = "2031-01-02 03-04-05 0d1a0d.opus";
 
     fn request(path: &str, range: Option<&str>) -> Request<Vec<u8>> {
@@ -199,12 +209,14 @@ mod tests {
     fn with_recording(label: &str, bytes: &[u8]) -> (TestDir, RecordingDirs) {
         let root = TestDir::new(label);
         let dirs = RecordingDirs::at(&root);
-        std::fs::create_dir_all(&dirs.shared).unwrap();
-        std::fs::write(dirs.shared.join(NAME), bytes).unwrap();
+        let dialog_dir = dirs.shared.join(DIALOG_ID);
+        std::fs::create_dir_all(&dialog_dir).unwrap();
+        std::fs::write(dialog_dir.join(NAME), bytes).unwrap();
         (root, dirs)
     }
 
-    const ENCODED_PATH: &str = "/recording/2031-01-02%2003-04-05%200d1a0d.opus";
+    const ENCODED_PATH: &str =
+        "/recording/2031-01-02_03-04-05_0d1a0d/2031-01-02%2003-04-05%200d1a0d.opus";
 
     #[test]
     fn ranges_are_parsed_within_the_file_and_capped() {
@@ -285,15 +297,16 @@ mod tests {
     fn only_finished_recordings_are_served() {
         let (_root, dirs) = with_recording("media-names", b"x");
         for path in [
-            "/recording/..%2F..%2Fsecret.opus",
+            "/recording/..%2F..%2Fsecret/2031-01-02%2003-04-05%200d1a0d.opus",
+            "/recording/2031-01-02_03-04-05_0d1a0d/notes.txt",
             "/recording/notes.txt",
-            "/elsewhere/2031-01-02%2003-04-05%200d1a0d.opus",
+            "/elsewhere/2031-01-02_03-04-05_0d1a0d/2031-01-02%2003-04-05%200d1a0d.opus",
         ] {
             assert!(respond_with(&dirs, &request(path, None))
                 .status()
                 .is_client_error());
         }
-        let absent = "/recording/2031-01-02%2003-04-05%20ffffff.opus";
+        let absent = "/recording/2031-01-02_03-04-05_0d1a0d/2031-01-02%2003-04-05%20ffffff.opus";
         assert_eq!(
             respond_with(&dirs, &request(absent, None)).status(),
             StatusCode::NOT_FOUND
@@ -301,11 +314,11 @@ mod tests {
 
         // a name of its own: the other tests read theirs meanwhile
         let running = "2031-01-02 03-04-05 0d1a0e.opus";
-        std::fs::write(dirs.shared.join(running), b"x").unwrap();
-        recordings::begin_writing(running);
-        let path = "/recording/2031-01-02%2003-04-05%200d1a0e.opus";
+        std::fs::write(dirs.shared.join(DIALOG_ID).join(running), b"x").unwrap();
+        recordings::begin_writing(DIALOG_ID, running);
+        let path = "/recording/2031-01-02_03-04-05_0d1a0d/2031-01-02%2003-04-05%200d1a0e.opus";
         let written = respond_with(&dirs, &request(path, None)).status();
-        recordings::end_writing(running);
+        recordings::end_writing(DIALOG_ID, running);
         assert_eq!(written, StatusCode::NOT_FOUND);
     }
 }

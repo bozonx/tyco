@@ -11,6 +11,8 @@ import {
   type DesktopErrorPayload,
   type DesktopSnapshot,
   type DesktopWindowState,
+  type Dialog,
+  type DialogSummary,
   type EditorHistoryItem,
   type SessionState,
   type UserConfig,
@@ -39,6 +41,7 @@ export interface FakeDesktopOptions {
   window?: Partial<DesktopWindowState>
   history?: EditorHistoryItem[]
   chats?: Chat[]
+  dialogs?: Dialog[]
 }
 
 /** A native command failure as the Rust side serializes it. */
@@ -69,6 +72,7 @@ export class FakeDesktopBackend {
   window: DesktopWindowState
   history: EditorHistoryItem[]
   chats: Chat[]
+  dialogs: Dialog[]
 
   private revision = 1
   private nextId = 1
@@ -104,6 +108,7 @@ export class FakeDesktopBackend {
     }
     this.history = structuredClone(options.history ?? [])
     this.chats = structuredClone(options.chats ?? [])
+    this.dialogs = structuredClone(options.dialogs ?? [])
     this.installDefaultHandlers()
   }
 
@@ -198,12 +203,7 @@ export class FakeDesktopBackend {
       if (entry.id) {
         const existing = this.history.find((item) => item.id === entry.id)
         if (!existing) return null
-        const isDialog = entry.kind === 'dialog'
-        if (
-          (existing.kind !== 'draft' && existing.kind !== 'dialog') ||
-          (existing.kind === 'dialog') !== isDialog
-        )
-          return existing.id
+        if (existing.kind !== 'draft') return existing.id
         this.history = this.history.filter((item) => item.id !== entry.id)
       }
       const {
@@ -212,7 +212,6 @@ export class FakeDesktopBackend {
         instruction,
         id: inputId,
         profileId,
-        dialog,
         ...rest
       } = entry
       const id = inputId ?? this.generateId('history')
@@ -222,7 +221,6 @@ export class FakeDesktopBackend {
         ...(origin ? { origin } : {}),
         ...(instruction ? { instruction } : {}),
         ...(profileId ? { profileId } : {}),
-        ...(dialog && entry.kind === 'dialog' ? { dialog } : {}),
         id,
         createdAt: Date.now(),
       })
@@ -285,6 +283,75 @@ export class FakeDesktopBackend {
         .map((chat) => chat.id)
     )
     this.handle('sync_chat_images', noop)
+
+    const toDialogSummary = (dialog: Dialog): DialogSummary => ({
+      id: dialog.id,
+      title: dialog.title,
+      preview: dialog.segments
+        .map((segment) =>
+          segment.translationState === 'complete' && segment.translation
+            ? segment.translation
+            : segment.text
+        )
+        .join(' ')
+        .slice(0, 140),
+      startedAt: dialog.startedAt,
+      updatedAt: dialog.updatedAt,
+      durationMs: Math.max(
+        0,
+        Math.max(
+          dialog.startedAt,
+          ...dialog.segments.map((s) => s.endMs),
+          ...(dialog.sessionBreaks ?? []).map((b) => b.timestampMs)
+        ) - dialog.startedAt
+      ),
+      segmentCount: dialog.segments.length,
+      source: dialog.source,
+      translationTargetLanguage: dialog.translationTargetLanguage,
+      recordingCount: (dialog.recordingFiles ?? []).length,
+      hasIncompleteRecording:
+        (dialog.incompleteRecordingFiles ?? []).length > 0,
+    })
+
+    this.handle('list_dialogs', () =>
+      [...this.dialogs]
+        .sort((a, b) => b.updatedAt - a.updatedAt)
+        .map(toDialogSummary)
+    )
+    this.handle('get_dialog', ({ id }) =>
+      structuredClone(this.dialogs.find((dialog) => dialog.id === id) ?? null)
+    )
+    this.handle('save_dialog', ({ dialog }) => {
+      this.dialogs = [
+        structuredClone(dialog),
+        ...this.dialogs.filter((item) => item.id !== dialog.id),
+      ]
+    })
+    this.handle('rename_dialog', ({ id, title }) => {
+      const dialog = this.dialogs.find((item) => item.id === id)
+      if (dialog) dialog.title = title.trim()
+    })
+    this.handle('delete_dialog', ({ id }) => {
+      const removed = this.dialogs.find((dialog) => dialog.id === id) ?? null
+      this.dialogs = this.dialogs.filter((dialog) => dialog.id !== id)
+      return removed
+    })
+    this.handle('release_dialog_recordings', noop)
+    this.handle('clear_dialogs', () => {
+      this.dialogs = []
+    })
+    this.handle('search_dialogs', ({ query }) =>
+      this.dialogs
+        .filter((dialog) =>
+          JSON.stringify(dialog).toLowerCase().includes(query.toLowerCase())
+        )
+        .map((dialog) => dialog.id)
+    )
+    this.handle('open_recordings_folder', noop)
+    this.handle('check_dialog_recordings', ({ files }) => files.map(() => true))
+    this.handle('show_dialog_recording', noop)
+    this.handle('read_dialog_recording', () => new ArrayBuffer(0))
+    this.handle('discard_dialog_recording', noop)
 
     this.handle('list_ai_profiles', () => [])
     this.handle('list_ai_vaults', () => [

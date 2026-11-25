@@ -49,12 +49,8 @@ export function createEditorHistoryModel(
   ): Promise<string | null> => {
     // Intentional: with the history turned off nothing the user typed or
     // dictated is kept, here or anywhere else; it is the user's choice. The
-    // backend checks the same setting again. A recorded dialog is kept before
-    // anything was recognized: its entry is the way back to the file
-    const isRecordedDialog = Boolean(
-      entry.dialog?.recordingFile || entry.dialog?.recordingFiles?.length
-    )
-    if (!canRecord() || (!entry.text.trim() && !isRecordedDialog)) return null
+    // backend checks the same setting again.
+    if (!canRecord() || !entry.text.trim()) return null
 
     const saved = await track(call('add_editor_history_item', { entry }))
 
@@ -147,21 +143,6 @@ export function createEditorHistoryModel(
     await loadEditorHistory()
   }
 
-  /**
-   * The undo of a removal is over: the recording of a removed dialog goes too,
-   * unless an entry names it again
-   */
-  const releaseEditorItem = async (item: EditorHistoryItem): Promise<void> => {
-    const files = item.dialog?.recordingFiles?.length
-      ? item.dialog.recordingFiles
-      : item.dialog?.recordingFile
-        ? [item.dialog.recordingFile]
-        : []
-    for (const file of files) {
-      await track(call('discard_dialog_recording', { file }))
-    }
-  }
-
   const clearEditorHistory = async (): Promise<void> => {
     await track(call('clear_editor_history'))
     editorListVersion += 1
@@ -180,7 +161,6 @@ export function createEditorHistoryModel(
     saveSourceFailure,
     removeFromEditorHistory,
     restoreEditorItem,
-    releaseEditorItem,
     clearEditorHistory,
   }
 }

@@ -533,7 +533,6 @@
     "undo": "Скасувати",
     "yesterday": "Учора",
     "filterListen": "Звук системи",
-    "kindDialog": "Діалог",
     "recordingNotFound": "файл не знайдено",
     "playRecording": "Відтворити запис",
     "playRecordingWhileCapturing": "Відтворення недоступне, поки TyCo записує звук",
@@ -1373,7 +1372,18 @@
     "dialogTranslationGlossary": "Глосарій",
     "dialogTranslationGlossaryInfo": "Для перекладу мовлення в діалозі використовується спільний глосарій із налаштувань перекладу. Ви можете задати правила перекладу термінів або захистити певні слова від перекладу.",
     "dialogTranslationGlossaryShared": "Використовується спільний глосарій",
-    "dialogTranslationGlossaryOpen": "Налаштувати глосарій"
+    "dialogTranslationGlossaryOpen": "Налаштувати глосарій",
+    "sectionDialogHistory": "Історія діалогів",
+    "dialogHistoryHint": "Збережені транскрипти дзвінків та їх аудіозаписи.",
+    "dialogHistoryEnabled": "Зберігати діалоги",
+    "dialogHistoryEnabledInfo": "Зберігати транскрипти й записи дзвінків на диск, щоб відкривати їх пізніше.",
+    "dialogHistoryRetentionDays": "Зберігати діалоги",
+    "dialogHistoryRetentionDaysHint": "Старіші діалоги та їх записи видаляються автоматично.",
+    "dialogHistoryRetentionConfirm": "Діалоги, старші за {period}, та їх записи буде видалено.",
+    "deleteAllDialogs": "Видалити всі діалоги",
+    "dialogCount": "Збережених діалогів: {count}",
+    "clearDialogsConfirmDialog": "Усі збережені діалоги та їх аудіозаписи буде остаточно видалено.",
+    "dialogHistoryLink": "Налаштування історії та строку зберігання діалогів знаходяться у розділі"
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {
@@ -1780,7 +1790,16 @@
     "resumeTooltipWithRecord": "Продовжити розпізнавання мовлення та запис в аудіофайл",
     "recordToggleEnableHint": "Увімкнути запис аудіо у файл та збереження в історію під час запуску",
     "recordToggleDisableHint": "Вимкнути запис аудіо (виконуватиметься лише розпізнавання мовлення)",
-    "clearMessageSaved": "Поточну розшифровку буде очищено з вікна. Розмова залишиться збереженою в історії."
+    "clearMessageSaved": "Поточну розшифровку буде очищено з вікна. Розмова залишиться збереженою в історії.",
+    "history": "Історія",
+    "newDialog": "Новий діалог",
+    "searchHistory": "Пошук по діалогах",
+    "renameDialog": "Перейменувати діалог",
+    "deleteDialog": "Видалити діалог",
+    "openRecordingsFolder": "Відкрити папку записів",
+    "stopToSwitchHint": "Зупиніть діалог, щоб відкрити інший",
+    "notFound": "Діалог не знайдено. Можливо, його було видалено.",
+    "clearHistoryConfirmTitle": "Очистити історію діалогів?"
   },
   "toolPermissions": {
     "riskRead": "Читання",

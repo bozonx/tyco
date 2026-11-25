@@ -17,7 +17,8 @@ pub async fn list_input_devices() -> Result<Vec<AudioInputDevice>, AppError> {
 
 /// Starts recording `source`, the microphone by default; PCM16 chunks, then
 /// `end` or `error`, arrive through `on_audio`. A dialog with `is_recorded`
-/// is also recorded to a new file, see `VoiceCaptureInfo::recording_file`.
+/// is also recorded to a new file under `dialogs/recordings/<dialog_id>/`, see
+/// `VoiceCaptureInfo::recording_file`.
 #[tauri::command]
 pub async fn start_voice_capture(
     app: tauri::AppHandle,
@@ -26,6 +27,7 @@ pub async fn start_voice_capture(
     source: Option<CaptureSource>,
     microphone_id: Option<String>,
     is_recorded: Option<bool>,
+    dialog_id: Option<String>,
 ) -> Result<VoiceCaptureInfo, AppError> {
     voice::start_capture(
         &app,
@@ -33,6 +35,7 @@ pub async fn start_voice_capture(
         source.unwrap_or_default(),
         microphone_id,
         is_recorded.unwrap_or(false),
+        dialog_id,
         on_audio,
     )
     .await
@@ -77,54 +80,69 @@ pub async fn unwatch_audio_apps(
         .await
 }
 
-/// Opens the folder of the call recordings in the data folder, creating it.
+/// Opens the folder of the call recordings in the data folder (or of one
+/// dialog), creating it.
 #[tauri::command]
-pub async fn open_recordings_folder(app: tauri::AppHandle) -> Result<(), AppError> {
+pub async fn open_recordings_folder(
+    app: tauri::AppHandle,
+    dialog_id: Option<String>,
+) -> Result<(), AppError> {
     crate::services::background::run_blocking(move || {
-        crate::services::storage::recordings::open_folder(&app)
+        crate::services::storage::recordings::open_folder(&app, dialog_id.as_deref())
     })
     .await?
 }
 
-/// Which of the recordings `files` are there.
+/// Which of the recordings `files` of `dialog_id` are there.
 #[tauri::command]
 pub async fn check_dialog_recordings(
     app: tauri::AppHandle,
+    dialog_id: String,
     files: Vec<String>,
 ) -> Result<Vec<bool>, AppError> {
     crate::services::background::run_blocking(move || {
-        crate::services::storage::recordings::check(&app, &files)
+        crate::services::storage::recordings::check(&app, &dialog_id, &files)
     })
     .await?
 }
 
-/// Opens the folder of the recording `file` in the file manager.
+/// Opens the folder of the recording `(dialog_id, file)` in the file manager.
 #[tauri::command]
-pub async fn show_dialog_recording(app: tauri::AppHandle, file: String) -> Result<(), AppError> {
+pub async fn show_dialog_recording(
+    app: tauri::AppHandle,
+    dialog_id: String,
+    file: String,
+) -> Result<(), AppError> {
     crate::services::background::run_blocking(move || {
-        crate::services::storage::recordings::show(&app, &file)
+        crate::services::storage::recordings::show(&app, &dialog_id, &file)
     })
     .await?
 }
 
-/// The bytes of a finished call recording `file`.
+/// The bytes of a finished call recording `(dialog_id, file)`.
 #[tauri::command]
 pub async fn read_dialog_recording(
     app: tauri::AppHandle,
+    dialog_id: String,
     file: String,
 ) -> Result<tauri::ipc::Response, AppError> {
     crate::services::background::run_blocking(move || {
-        crate::services::storage::recordings::read_file(&app, &file).map(tauri::ipc::Response::new)
+        crate::services::storage::recordings::read_file(&app, &dialog_id, &file)
+            .map(tauri::ipc::Response::new)
     })
     .await?
 }
 
-/// Removes the recording `file` of a removed history entry once the undo of
-/// the removal is over; one an entry still names stays.
+/// Removes an unlinked recording `(dialog_id, file)` unless the saved dialog
+/// still names it.
 #[tauri::command]
-pub async fn discard_dialog_recording(app: tauri::AppHandle, file: String) -> Result<(), AppError> {
+pub async fn discard_dialog_recording(
+    app: tauri::AppHandle,
+    dialog_id: String,
+    file: String,
+) -> Result<(), AppError> {
     crate::services::background::run_blocking(move || {
-        crate::services::storage::discard_dialog_recording(&app, file)
+        crate::services::storage::discard_dialog_recording(&app, dialog_id, file)
     })
     .await?
 }

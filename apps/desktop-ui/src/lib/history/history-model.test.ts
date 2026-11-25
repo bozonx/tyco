@@ -206,23 +206,6 @@ describe('history-model', () => {
     expect(store.editorHistory.value).toHaveLength(2)
   })
 
-  it('discards the recording of a released dialog entry only', async () => {
-    const api = createApi()
-    const store = createHistoryModel(api as unknown as HistoryApi, vi.fn())
-    const file = '2026-11-21 10-00-00 a1b2c3.opus'
-
-    await store.releaseEditorItem(editorItem('1', 'one'))
-    await store.releaseEditorItem({
-      ...editorItem('2', 'two'),
-      kind: 'dialog',
-      dialog: { startedAt: 1, source: 'system', recordingFile: file },
-    })
-
-    expect(api.call.mock.calls).toEqual([
-      ['discard_dialog_recording', { file }],
-    ])
-  })
-
   it('returns and restores the full removed chat', async () => {
     const api = createApi()
     const store = createHistoryModel(api as unknown as HistoryApi, vi.fn())

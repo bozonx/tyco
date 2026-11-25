@@ -89,15 +89,12 @@ import SegmentedControl from '../components/common/SegmentedControl.vue'
 import HistoryList, {
   type HistoryListAction,
   type HistoryListItem,
-  type HistoryListItemFile,
 } from '../components/history/HistoryList.vue'
 import { useCopyText } from '../composables/use-copy-text'
 import { useEditorHistoryChanges } from '../composables/use-editor-history-changes'
 import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useI18n } from '../composables/use-i18n'
-import { useSoundCaptureActivity } from '../composables/use-sound-capture-activity'
 import useToast from '../composables/use-toast'
-import { convertFileSrc } from '../lib/desktop/window'
 import {
   getEditorHistoryNote,
   getEditorHistoryView,
@@ -109,21 +106,16 @@ import {
   type HistoryFilter,
   filterEditorHistory,
 } from '../lib/history/history-filter'
-import { loadRecordingMediaSource } from '../lib/history/recording-media-url'
 import { createRemovalUndo } from '../lib/history/removal-undo'
 import { clientLogger } from '../lib/logger'
 import { useDesktopStore } from '../stores/desktop'
-import { useDialogStatusStore } from '../stores/dialog-status'
 import { useHistoryStore } from '../stores/history'
-import { useIpcStore } from '../stores/ipc'
-import type { EditorHistoryDialog, EditorHistoryItem } from '@tyco/shared'
+import type { EditorHistoryItem } from '@tyco/shared'
 
 const { toastKey } = useToast()
 const { t } = useI18n()
 const historyStore = useHistoryStore()
 const desktopStore = useDesktopStore()
-const dialogStatus = useDialogStatusStore()
-const ipcStore = useIpcStore()
 // the text is already in the history and the window stays open
 const copyText = useCopyText({ saveOutput: false })
 const editorNavigation = useEditorNavigation()
@@ -131,7 +123,6 @@ const editorNavigation = useEditorNavigation()
 const removal = createRemovalUndo<EditorHistoryItem>({
   remove: historyStore.removeFromEditorHistory,
   restore: historyStore.restoreEditorItem,
-  release: historyStore.releaseEditorItem,
   clear: historyStore.clearEditorHistory,
   reportError: (error) => {
     clientLogger.warn(
@@ -161,7 +152,6 @@ const FILTER_LABELS: Record<HistoryFilter, string> = {
   voice: 'history.filterVoice',
   voiceCommands: 'action.voiceCommands',
   listen: 'history.filterListen',
-  dialog: 'history.kindDialog',
   quickAiRequest: 'chat.quickAiRequests',
   translation: 'history.kindTranslate',
   aiTask: 'history.kindAiTask',
@@ -191,26 +181,11 @@ watch(
   { immediate: true }
 )
 
-const recordingFilesOfItem = (
-  dialog?: EditorHistoryDialog | null
-): string[] => {
-  if (!dialog) return []
-  if (dialog.recordingFiles?.length) return dialog.recordingFiles
-  return dialog.recordingFile ? [dialog.recordingFile] : []
-}
-
 const editorItems = computed<HistoryListItem[]>(() =>
   filterEditorHistory(historyStore.editorHistory, filter.value).map((item) => {
     const view = getEditorHistoryView(item)
     const label = t(view.labelKey)
     const note = getEditorHistoryNote(item)
-    const files = recordingFilesOfItem(item.dialog)
-    const fileItems = files.map((file) =>
-      recordingFile(
-        file,
-        item.dialog?.incompleteRecordingFiles?.includes(file) ?? false
-      )
-    )
 
     return {
       id: item.id,
@@ -229,101 +204,9 @@ const editorItems = computed<HistoryListItem[]>(() =>
       },
       searchText: label,
       time: item.createdAt,
-      ...(fileItems.length === 1 && { file: fileItems[0] }),
-      ...(fileItems.length > 1 && { files: fileItems }),
-      ...(fileItems.length > 0 && {
-        filesSection: {
-          title: t('history.recordings'),
-          action: {
-            id: 'openRecordingsFolder',
-            icon: 'mdi:folder-open-outline',
-            title: t('settings.storageOpenFolder'),
-          },
-        },
-      }),
     }
   })
 )
-
-/** Whether each recording a dialog entry names is there */
-const recordingExists = ref<Record<string, boolean>>({})
-const recordingFiles = computed(() =>
-  historyStore.editorHistory.flatMap((item) =>
-    recordingFilesOfItem(item.dialog)
-  )
-)
-let recordingCheck = 0
-const checkRecordings = async () => {
-  const check = ++recordingCheck
-  const files = [...new Set(recordingFiles.value)]
-  if (!files.length) {
-    recordingExists.value = {}
-    return
-  }
-  const result = await ipcStore.call('check_dialog_recordings', { files })
-  if (check !== recordingCheck || !result.success || !result.result) return
-  const exists = result.result
-  recordingExists.value = Object.fromEntries(
-    files.map((file, index) => [file, exists[index] ?? false])
-  )
-}
-// a running dialog rewrites its entry often: only other files are checked again
-watch(
-  () => [...new Set(recordingFiles.value)].sort().join('\n'),
-  () => void checkRecordings(),
-  { immediate: true }
-)
-// Sync can add or remove a file without changing its history entry.
-watch(
-  [() => desktopStore.desktopState.isWindowShown, () => dialogStatus.isActive],
-  ([isShown, isDialogActive], _, onCleanup) => {
-    if (!isShown) return
-    if (!isDialogActive) void checkRecordings()
-    const timer = setInterval(() => {
-      if (recordingFiles.value.length) void checkRecordings()
-    }, 5_000)
-    onCleanup(() => clearInterval(timer))
-  },
-  { immediate: true }
-)
-
-const isSoundCaptured = useSoundCaptureActivity()
-
-const readRecording = async (file: string): Promise<ArrayBuffer> => {
-  const result = await ipcStore.call('read_dialog_recording', { file })
-  if (!result.success || !result.result) {
-    throw new Error(result.error ?? 'Could not read the recording')
-  }
-  return result.result
-}
-
-const recordingFile = (
-  file: string,
-  isIncomplete: boolean
-): HistoryListItemFile => ({
-  name: file,
-  // unknown until checked: the action is offered
-  isMissing: recordingExists.value[file] === false,
-  missingLabel: t('history.recordingNotFound'),
-  ...(isIncomplete && { note: t('history.recordingIncomplete') }),
-  playback: {
-    source: () => loadRecordingMediaSource(file, convertFileSrc, readRecording),
-    playTitle: t('history.playRecording'),
-    stopTitle: t('history.stopRecording'),
-    speedTitle: t('history.playbackSpeed'),
-    // the sound would go into what is recorded or transcribed: a dialog,
-    // listening or a dictation through the speakers
-    ...((dialogStatus.isActive || isSoundCaptured.value) && {
-      disabledTitle: t('history.playRecordingWhileCapturing'),
-    }),
-    unavailableLabel: t('history.recordingUnplayable'),
-  },
-})
-
-const openRecordingsFolder = async () => {
-  const result = await ipcStore.callOrNotify('open_recordings_folder')
-  if (!result.success) void checkRecordings()
-}
 
 const editorActions = computed<HistoryListAction[]>(() => [
   {
@@ -395,9 +278,6 @@ const onEditorAction = async (actionId: string, item: HistoryListItem) => {
       break
     case 'remove':
       await removeEditorItem(item)
-      break
-    case 'openRecordingsFolder':
-      await openRecordingsFolder()
       break
   }
 }

@@ -64,7 +64,7 @@ describe('SettingsDialogTab.vue', () => {
     })
 
     const sections = wrapper.findAllComponents({ name: 'SettingsSection' })
-    expect(sections).toHaveLength(3)
+    expect(sections).toHaveLength(4)
     expect(sections[1].props('title')).toBe('settings.dialogTranslationSection')
     expect(sections[2].props('title')).toBe('settings.dialogRecordingSection')
 

@@ -8,7 +8,6 @@ export type HistoryFilter =
   | 'all'
   | EditorHistoryOrigin
   | 'voiceCommands'
-  | 'dialog'
   | 'translation'
   | 'aiTask'
   | 'problems'
@@ -19,7 +18,6 @@ export const HISTORY_FILTERS: readonly HistoryFilter[] = [
   'voice',
   'voiceCommands',
   'listen',
-  'dialog',
   'quickAiRequest',
   'translation',
   'aiTask',
@@ -65,8 +63,6 @@ export function filterEditorHistory<
       )
     case 'voiceCommands':
       return items.filter(isVoiceCommandHistoryItem)
-    case 'dialog':
-      return items.filter((item) => item.kind === 'dialog')
     case 'translation':
       return items.filter((item) => item.operation === 'translation')
     case 'aiTask':

@@ -5,6 +5,8 @@ import {
   loadRecordingMediaSource,
 } from './recording-media-url'
 
+const DIALOG_ID = '2026-11-20_14-03-05_a1b2c3'
+
 describe('recording media URLs', () => {
   it.each([
     ['tyco-media://localhost/', 'tyco-media://localhost/'],
@@ -12,14 +14,20 @@ describe('recording media URLs', () => {
   ])('keeps the routing of %s and names the file', (base, expected) => {
     const convert = (path: string) => base + encodeURIComponent(path)
     expect(
-      createRecordingMediaUrl('2026-11-20 14-03-05 a1b2c3.opus', convert)
-    ).toBe(`${expected}recording/2026-11-20%2014-03-05%20a1b2c3.opus`)
+      createRecordingMediaUrl(
+        DIALOG_ID,
+        '2026-11-20 14-03-05 a1b2c3.opus',
+        convert
+      )
+    ).toBe(
+      `${expected}recording/${DIALOG_ID}/2026-11-20%2014-03-05%20a1b2c3.opus`
+    )
   })
 
   it('keeps a file name inside the recording path', () => {
     const convert = (path: string) => `tyco-media://localhost/${path}`
-    expect(createRecordingMediaUrl('../x/y.opus', convert)).toBe(
-      'tyco-media://localhost/recording/..%2Fx%2Fy.opus'
+    expect(createRecordingMediaUrl(DIALOG_ID, '../x/y.opus', convert)).toBe(
+      `tyco-media://localhost/recording/${DIALOG_ID}/..%2Fx%2Fy.opus`
     )
   })
 
@@ -29,11 +37,13 @@ describe('recording media URLs', () => {
       .fn()
       .mockResolvedValue(new Uint8Array([1, 2, 3]).buffer)
     const source = await loadRecordingMediaSource(
+      DIALOG_ID,
       '2026-11-20 14-03-05 a1b2c3.opus',
       convert,
       readRecording
     )
     expect(readRecording).toHaveBeenCalledWith(
+      DIALOG_ID,
       '2026-11-20 14-03-05 a1b2c3.opus'
     )
     expect(source.url).toMatch(/^blob:/)
@@ -44,13 +54,14 @@ describe('recording media URLs', () => {
     const convert = () => 'http://tyco-media.localhost/'
     const readRecording = vi.fn()
     const source = await loadRecordingMediaSource(
+      DIALOG_ID,
       '2026-11-20 14-03-05 a1b2c3.opus',
       convert,
       readRecording
     )
     expect(readRecording).not.toHaveBeenCalled()
     expect(source.url).toBe(
-      'http://tyco-media.localhost/recording/2026-11-20%2014-03-05%20a1b2c3.opus'
+      `http://tyco-media.localhost/recording/${DIALOG_ID}/2026-11-20%2014-03-05%20a1b2c3.opus`
     )
   })
 })

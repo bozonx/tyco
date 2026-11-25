@@ -1,73 +1,126 @@
-import type { EditorHistoryDialog, EditorHistoryEntry } from '@tyco/shared'
+import type {
+  Dialog,
+  DialogSegment as StoredDialogSegment,
+  DialogSessionBreak as StoredDialogSessionBreak,
+  DialogSource,
+} from '@tyco/shared'
 
-/** How often a running dialog reaches the history while it has new turns */
+import type { DialogSegment, DialogSessionBreak } from './dialog-transcript'
+
+/** How often a running dialog checkpoints to disk while it has new turns */
 export const DIALOG_HISTORY_INTERVAL_MS = 15_000
 
+export interface DialogHistorySnapshot {
+  title: string
+  translationTargetLanguage: string
+  segments: readonly DialogSegment[]
+  sessionBreaks: readonly DialogSessionBreak[]
+}
+
 export interface DialogHistoryDependencies {
-  /** Upserts the entry; the id it holds, `null` when nothing was stored */
-  save: (entry: EditorHistoryEntry) => Promise<string | null>
-  /** The finished turns of the session as text; the guesses are left out */
-  getText: () => string
+  /** Whether dialog history is saved on disk */
+  isEnabled: () => boolean
+  /** Saves the structured dialog to `dialogs/<id>.json` */
+  save: (dialog: Dialog) => Promise<void>
+  /** Current live state of the dialog; interim segments are excluded on save */
+  getSnapshot: () => DialogHistorySnapshot
   reportError: (error: unknown) => void
   /**
-   * The recording of the session got no entry: the first write failed or stored
-   * nothing. Called once a session; the file waits unnamed
+   * The recording of the session got no saved dialog: the first write failed or
+   * history is off. Called once a session.
    */
   onRecordingUnlinked?: () => void
+  now?: () => number
   setInterval?: (callback: () => void, ms: number) => unknown
   clearInterval?: (handle: unknown) => void
   intervalMs?: number
 }
 
+export interface DialogHistorySessionInit {
+  id: string
+  startedAt: number
+  source: DialogSource
+  recordingFiles?: string[]
+  incompleteRecordingFiles?: string[]
+}
+
 export interface DialogHistory {
   /** Ends the previous session, if any, and opens a new one */
-  begin: (session: EditorHistoryDialog) => Promise<void>
-  /**
-   * Opens the session `end` closed again, so that a dialog resumed after it
-   * goes on in the same entry; false when there is none to reopen
-   */
+  begin: (session: DialogHistorySessionInit) => Promise<void>
+  /** Attaches an existing saved dialog so resuming or retrying updates it */
+  load: (dialog: Dialog) => void
+  /** Reopens the session `end` closed so resuming continues under the same id */
   resume: () => boolean
-  /**
-   * Adds another recording file to the current session; `isIncomplete`: it
-   * stopped before its run began
-   */
+  /** Adds another recording file to the current session */
   addRecording: (
     file: string,
     options?: { isIncomplete?: boolean }
   ) => Promise<void>
-  /** Writes the session when its text changed since the last write */
+  /** Writes the session when its content changed since the last write */
   checkpoint: () => Promise<void>
-  /** A last checkpoint; the session stays closed until `begin` */
+  /** A last checkpoint; the session stays closed until `begin` or `resume` */
   end: () => Promise<void>
-  /** The recording `file` stopped early: the entry tells so */
+  /** Marks a recording as incomplete and checkpoints */
   markRecordingIncomplete: (file: string) => Promise<void>
+  /** Forgets both the open and closed sessions (e.g. starting a new dialog) */
+  reset: () => void
   dispose: () => void
 }
 
 interface Session {
-  meta: EditorHistoryDialog
-  /** The entry's id once it was stored */
-  id?: string
-  /** The text last written; none: the entry was never written */
-  savedText?: string
-  savedMeta?: EditorHistoryDialog
-  /** `onRecordingUnlinked` was called */
+  id: string
+  startedAt: number
+  source: DialogSource
+  recordingFiles: string[]
+  incompleteRecordingFiles: string[]
+  savedFingerprint?: string
+  isSaved: boolean
   isUnlinkReported?: boolean
 }
 
-/**
- * The history entry of a dialog session: one per Start, created with the first
- * finished turn and rewritten under its id as more follow. A session that
- * recognized nothing leaves no entry unless it was recorded: the entry is the
- * way back to the file.
- */
-function withFile(files: readonly string[] | undefined, file: string) {
-  return files?.includes(file) ? [...files] : [...(files ?? []), file]
+function withFile(files: readonly string[], file: string): string[] {
+  return files.includes(file) ? [...files] : [...files, file]
 }
 
+function toStoredSegments(
+  segments: readonly DialogSegment[]
+): StoredDialogSegment[] {
+  return segments
+    .filter((segment) => segment.isFinal)
+    .map((segment) => ({
+      id: segment.id,
+      side: segment.side,
+      startMs: segment.startMs,
+      endMs: segment.endMs,
+      text: segment.text,
+      ...(segment.translation !== undefined && {
+        translation: segment.translation,
+      }),
+      translationState: segment.translationState,
+    }))
+}
+
+function toStoredBreaks(
+  breaks: readonly DialogSessionBreak[]
+): StoredDialogSessionBreak[] {
+  return breaks.map((item) => ({
+    id: item.id,
+    timestampMs: item.timestampMs,
+    isRecording: item.isRecording,
+    ...(item.recordingFile && { recordingFile: item.recordingFile }),
+    ...(item.action && { action: item.action }),
+  }))
+}
+
+/**
+ * Checkpoints a dialog session into `dialogs/<id>.json`. A session without
+ * settled speech is saved only when it has a recording, so the recording stays
+ * reachable.
+ */
 export function createDialogHistory(
   deps: DialogHistoryDependencies
 ): DialogHistory {
+  const now = deps.now ?? (() => Date.now())
   const startInterval =
     deps.setInterval ??
     ((callback: () => void, ms: number) => globalThis.setInterval(callback, ms))
@@ -76,10 +129,8 @@ export function createDialogHistory(
     ((handle: unknown) =>
       globalThis.clearInterval(handle as ReturnType<typeof setInterval>))
   let session: Session | undefined
-  /** The session `end` closed last; `begin` and `dispose` forget it */
   let closed: Session | undefined
   let timer: unknown
-  // writes go one after another: an id comes back before the next one
   let pending = Promise.resolve()
 
   const stopTimer = () => {
@@ -94,108 +145,129 @@ export function createDialogHistory(
     }, deps.intervalMs ?? DIALOG_HISTORY_INTERVAL_MS)
   }
 
-  const hasRecordings = (meta: EditorHistoryDialog) =>
-    Boolean(meta.recordingFile || meta.recordingFiles?.length)
-
   const reportUnlinked = (target: Session) => {
-    if (!hasRecordings(target.meta) || target.id || target.isUnlinkReported)
-      return
+    if (target.isSaved || target.isUnlinkReported) return
+    if (target.recordingFiles.length === 0) return
     target.isUnlinkReported = true
     deps.onRecordingUnlinked?.()
   }
 
-  const write = (target: Session): Promise<void> => {
-    pending = pending.then(async () => {
-      const text = deps.getText()
-      if (!text.trim() && !hasRecordings(target.meta)) return
-      const meta = target.meta
-      if (text === target.savedText && meta === target.savedMeta) return
+  const write = (target: Session | undefined): Promise<void> => {
+    if (!target) return Promise.resolve()
+    const snapshot = deps.getSnapshot()
+    const segments = toStoredSegments(snapshot.segments)
+    const sessionBreaks = toStoredBreaks(snapshot.sessionBreaks)
+    const hasContent = segments.length > 0 || target.recordingFiles.length > 0
+    if (!hasContent) return Promise.resolve()
+
+    const payload: Dialog = {
+      id: target.id,
+      title: snapshot.title,
+      startedAt: target.startedAt,
+      updatedAt: now(),
+      source: target.source,
+      translationTargetLanguage: snapshot.translationTargetLanguage,
+      segments,
+      sessionBreaks,
+      recordingFiles: [...target.recordingFiles],
+      incompleteRecordingFiles: [...target.incompleteRecordingFiles],
+    }
+    const fingerprint = JSON.stringify({ ...payload, updatedAt: 0 })
+    if (target.savedFingerprint === fingerprint) return Promise.resolve()
+
+    const run = pending.then(async () => {
+      if (!deps.isEnabled()) {
+        reportUnlinked(target)
+        return
+      }
       try {
-        const id = await deps.save({
-          ...(target.id && { id: target.id }),
-          text,
-          kind: 'dialog',
-          dialog: meta,
-        })
-        // nothing stored under a known id: the entry was deleted. The
-        // history never brings it back itself, but the undo of the deletion
-        // may, so the next checkpoint tries again
-        if (id === null && target.id) return
-        target.savedText = text
-        target.savedMeta = meta
-        if (id !== null) target.id = id
-        else reportUnlinked(target)
+        await deps.save(payload)
+        target.isSaved = true
+        target.savedFingerprint = fingerprint
       } catch (error) {
         deps.reportError(error)
         reportUnlinked(target)
       }
     })
-    return pending
-  }
-
-  // closed at once, written after: a `begin` meanwhile keeps its own session
-  const end = async () => {
-    stopTimer()
-    const ending = session
-    session = undefined
-    if (!ending) return pending
-    closed = ending
-    await write(ending)
+    pending = run
+    return run
   }
 
   return {
-    async begin(meta) {
-      const ending = end()
+    async begin(init) {
+      stopTimer()
       closed = undefined
-      const current: Session = { meta }
-      session = current
-      startTimer(current)
-      await ending
-      // the first write of a recorded session links its file at once
-      await write(current)
+      const previous = session
+      const next: Session = {
+        id: init.id,
+        startedAt: init.startedAt,
+        source: init.source,
+        recordingFiles: [...(init.recordingFiles ?? [])],
+        incompleteRecordingFiles: [...(init.incompleteRecordingFiles ?? [])],
+        isSaved: false,
+      }
+      session = next
+      await write(previous)
+      if (session !== next) return
+      startTimer(next)
+      if (next.recordingFiles.length > 0) await write(next)
+    },
+    load(dialog) {
+      stopTimer()
+      session = undefined
+      const fingerprint = JSON.stringify({ ...dialog, updatedAt: 0 })
+      closed = {
+        id: dialog.id,
+        startedAt: dialog.startedAt,
+        source: dialog.source,
+        recordingFiles: [...(dialog.recordingFiles ?? [])],
+        incompleteRecordingFiles: [...(dialog.incompleteRecordingFiles ?? [])],
+        savedFingerprint: fingerprint,
+        isSaved: true,
+      }
     },
     resume() {
-      if (session) return true
-      if (!closed) return false
+      if (session || !closed) return false
       session = closed
       closed = undefined
       startTimer(session)
       return true
     },
-    async addRecording(file, options = {}) {
-      if (!session) return
-      const files = session.meta.recordingFiles
-        ? [...session.meta.recordingFiles]
-        : session.meta.recordingFile
-          ? [session.meta.recordingFile]
-          : []
-      if (!files.includes(file)) files.push(file)
-      session.meta = {
-        ...session.meta,
-        recordingFile: session.meta.recordingFile ?? file,
-        recordingFiles: files,
-        ...(options.isIncomplete && {
-          incompleteRecordingFiles: withFile(
-            session.meta.incompleteRecordingFiles,
-            file
-          ),
-        }),
-      }
-      await write(session)
-    },
-    checkpoint: () => (session ? write(session) : pending),
-    end,
-    markRecordingIncomplete(file) {
-      const current = session
-      if (!current || !hasRecordings(current.meta)) return pending
-      current.meta = {
-        ...current.meta,
-        incompleteRecordingFiles: withFile(
-          current.meta.incompleteRecordingFiles,
+    async addRecording(file, options) {
+      const target = session ?? closed
+      if (!target) return
+      target.recordingFiles = withFile(target.recordingFiles, file)
+      if (options?.isIncomplete) {
+        target.incompleteRecordingFiles = withFile(
+          target.incompleteRecordingFiles,
           file
-        ),
+        )
       }
-      return write(current)
+      await write(target)
+    },
+    checkpoint() {
+      return write(session ?? closed)
+    },
+    async end() {
+      stopTimer()
+      const current = session
+      session = undefined
+      if (current) closed = current
+      await write(current)
+    },
+    async markRecordingIncomplete(file) {
+      const target = session ?? closed
+      if (!target) return
+      target.incompleteRecordingFiles = withFile(
+        target.incompleteRecordingFiles,
+        file
+      )
+      await write(target)
+    },
+    reset() {
+      stopTimer()
+      session = undefined
+      closed = undefined
     },
     dispose() {
       stopTimer()

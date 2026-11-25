@@ -263,11 +263,12 @@ describe('DialogToolbar.vue', () => {
     expect(startSpy).toHaveBeenCalledWith({ isRecording: false })
   })
 
-  it('disables record toggle when history is not saved to disk', async () => {
+  it('disables record toggle when dialog history is not saved to disk', async () => {
     desktop.setUserConfig({
-      editor: {
-        ...DEFAULT_USER_CONFIG.editor,
-        history: { ...DEFAULT_USER_CONFIG.editor.history, storage: 'off' },
+      dialog: {
+        ...DEFAULT_USER_CONFIG.dialog,
+        isEnabled: true,
+        history: { ...DEFAULT_USER_CONFIG.dialog.history, storage: 'off' },
       },
     })
     const wrapper = mount(DialogToolbar, {
@@ -281,7 +282,7 @@ describe('DialogToolbar.vue', () => {
     )
   })
 
-  it('clears transcript and resets record toggle when clicking Clear button', async () => {
+  it('clears transcript immediately when dialog history is saved to disk', async () => {
     const dialog = useDialogStore()
     const clearSpy = vi.spyOn(dialog, 'clear').mockImplementation(async () => {
       dialog.isRecordEnabled = false
@@ -306,6 +307,44 @@ describe('DialogToolbar.vue', () => {
 
     const clearButton = wrapper.find('.dialog-toolbar-clear')
     expect(clearButton.exists()).toBe(true)
+    await clearButton.trigger('click')
+    await flushPromises()
+
+    const confirmModal = wrapper.findComponent(ConfirmModal)
+    expect(confirmModal.props('open')).toBe(false)
+    expect(clearSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('asks for confirmation before clearing when dialog history is off', async () => {
+    desktop.setUserConfig({
+      dialog: {
+        ...DEFAULT_USER_CONFIG.dialog,
+        isEnabled: true,
+        history: { ...DEFAULT_USER_CONFIG.dialog.history, storage: 'off' },
+      },
+    })
+    const dialog = useDialogStore()
+    const clearSpy = vi.spyOn(dialog, 'clear').mockImplementation(async () => {
+      dialog.isRecordEnabled = false
+      dialog.segments = []
+    })
+    dialog.segments = [
+      {
+        id: '1',
+        side: 'remote',
+        startMs: 0,
+        endMs: 100,
+        text: 'Existing phrase',
+        isFinal: true,
+        translationState: 'idle',
+      },
+    ]
+
+    const wrapper = mount(DialogToolbar, {
+      global: { plugins: [i18n, desktop.pinia] },
+    })
+
+    const clearButton = wrapper.find('.dialog-toolbar-clear')
     await clearButton.trigger('click')
     await flushPromises()
 

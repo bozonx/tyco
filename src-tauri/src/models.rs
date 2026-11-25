@@ -1,6 +1,7 @@
 mod activation;
 mod chat;
 mod desktop_state;
+mod dialog;
 mod editor_history;
 mod screenshot;
 mod script_action;
@@ -11,6 +12,7 @@ pub mod user_config;
 pub use activation::*;
 pub use chat::*;
 pub use desktop_state::*;
+pub use dialog::*;
 pub use editor_history::*;
 pub use screenshot::*;
 pub use script_action::*;

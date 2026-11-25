@@ -147,6 +147,22 @@ impl Default for DialogRecordingConfig {
     }
 }
 
+/// `dialog.history`.
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct DialogHistoryConfig {
+    #[serde(default, deserialize_with = "lenient")]
+    pub storage: HistoryStorage,
+    /// 0 keeps the dialogs forever.
+    #[serde(default, deserialize_with = "lenient")]
+    pub retention_days: u64,
+}
+
+/// The history of the dialog sessions.
+pub fn dialog_history(config: &Value) -> DialogHistoryConfig {
+    section_at(config, "/dialog/history")
+}
+
 /// The recording options of `dialog`.
 pub fn dialog_recording(config: &Value) -> DialogRecordingConfig {
     section(config, "dialog")

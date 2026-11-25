@@ -39,8 +39,17 @@
             }}</span>
           </span>
           <DialogRecordingPlayer
-            v-if="item.sessionBreak.recordingFile"
+            v-if="item.sessionBreak.recordingFile && dialogId"
+            :dialog-id="dialogId"
             :file="item.sessionBreak.recordingFile"
+            :is-missing="
+              recordingExists?.[item.sessionBreak.recordingFile] === false
+            "
+            :is-incomplete="
+              incompleteRecordingFiles?.includes(
+                item.sessionBreak.recordingFile
+              ) ?? false
+            "
           />
         </div>
         <span class="dialog-feed-break-line" />
@@ -81,6 +90,9 @@ const props = defineProps<{
   /** A translated turn shows its translation without the original */
   isTranslationOnly: boolean
   translationLang?: string
+  dialogId?: string | null
+  recordingExists?: Record<string, boolean>
+  incompleteRecordingFiles?: readonly string[]
 }>()
 
 const emit = defineEmits<{
