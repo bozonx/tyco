@@ -161,7 +161,8 @@
     "toolAllowBatch": "{count} 件すべて許可",
     "toolAllowAlways": "常に許可",
     "toolAllowAlwaysWriteDelete": "書き込みと削除を常に許可",
-    "toolAllowAlwaysDelete": "常に削除を許可"
+    "toolAllowAlwaysDelete": "常に削除を許可",
+    "searchInChat": "チャット内を検索"
   },
   "chatTools": {
     "files": {
@@ -348,7 +349,7 @@
     "change": "変更",
     "charsCount": "文字数: {count}",
     "close": "閉じる",
-    "closeAllHint": "Ctrl+Q で直ちにすべてを閉じます",
+    "closeAllHint": "Ctrl+W で直ちにすべてを閉じます",
     "confirm": "確認",
     "copied": "コピーしました",
     "copy": "コピー",
@@ -367,7 +368,9 @@
     "remove": "削除",
     "retry": "再試行",
     "save": "保存",
-    "closeOrEscapeHint": "Escape または Ctrl+Q でウィンドウを閉じます"
+    "closeOrEscapeHint": "Escape または Ctrl+W でウィンドウを閉じます",
+    "matchCount": "{current} / {total}",
+    "noMatches": "一致なし"
   },
   "desktopErrors": {
     "busy": "別の操作を実行中です。後でもう一度お試しください",
@@ -1808,7 +1811,8 @@
     "deselectTurn": "選択を解除",
     "selectRangeUpTo": "このメッセージまでをすべて選択",
     "copyTurn": "メッセージをコピー",
-    "copyTurnTranslation": "翻訳をコピー"
+    "copyTurnTranslation": "翻訳をコピー",
+    "searchInDialog": "対話内を検索"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

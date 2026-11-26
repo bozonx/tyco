@@ -143,6 +143,17 @@ export const useDialogStore = defineStore('dialog', () => {
       void updateConfig({ isHistoryOpen: value })
     },
   })
+  /** Whether the in-page search bar is open */
+  const isSearchOpen = ref(false)
+  const toggleSearch = () => {
+    isSearchOpen.value = !isSearchOpen.value
+  }
+  const openSearch = () => {
+    isSearchOpen.value = true
+  }
+  const closeSearch = () => {
+    isSearchOpen.value = false
+  }
   /** Whether the running dialog records the microphone too */
   const hasMicrophone = ref(config.value.source === 'microphoneAndSystem')
   /** The file the running session is recorded to; none: not recorded */
@@ -1035,6 +1046,10 @@ export const useDialogStore = defineStore('dialog', () => {
     incompleteRecordingFiles,
     recordingExists,
     isHistoryOpen,
+    isSearchOpen,
+    toggleSearch,
+    openSearch,
+    closeSearch,
     errorText,
     canFixInSettings,
     isActive,

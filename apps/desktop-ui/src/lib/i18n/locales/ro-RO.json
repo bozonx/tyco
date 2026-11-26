@@ -161,7 +161,8 @@
     "toolAllowBatch": "Permite toate ({count})",
     "toolAllowAlways": "Permite întotdeauna",
     "toolAllowAlwaysWriteDelete": "Permite întotdeauna scrierea și ștergerea",
-    "toolAllowAlwaysDelete": "Permite mereu ștergerea"
+    "toolAllowAlwaysDelete": "Permite mereu ștergerea",
+    "searchInChat": "Căutare în chat"
   },
   "chatTools": {
     "files": {
@@ -348,7 +349,7 @@
     "change": "Schimbă",
     "charsCount": "Caractere: {count}",
     "close": "Închide",
-    "closeAllHint": "Ctrl+Q închide totul imediat",
+    "closeAllHint": "Ctrl+W închide totul imediat",
     "confirm": "Confirmă",
     "copied": "Copiat",
     "copy": "Copiază",
@@ -367,7 +368,9 @@
     "remove": "Elimină",
     "retry": "Reîncearcă",
     "save": "Salvează",
-    "closeOrEscapeHint": "Escape sau Ctrl+Q închide fereastra"
+    "closeOrEscapeHint": "Escape sau Ctrl+W închide fereastra",
+    "matchCount": "{current} din {total}",
+    "noMatches": "Nicio potrivire"
   },
   "desktopErrors": {
     "busy": "Altă operație este în curs, încercați mai târziu",
@@ -1812,7 +1815,8 @@
     "deselectTurn": "Deselectează mesajul",
     "selectRangeUpTo": "Selectează totul până la acest mesaj",
     "copyTurn": "Copiază mesajul",
-    "copyTurnTranslation": "Copiază traducerea"
+    "copyTurnTranslation": "Copiază traducerea",
+    "searchInDialog": "Căutare în dialog"
   },
   "toolPermissions": {
     "riskRead": "Citire",

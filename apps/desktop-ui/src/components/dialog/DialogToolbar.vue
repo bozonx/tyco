@@ -127,6 +127,16 @@
       {{ newDialogLabel }}
     </Button>
     <IconButton
+      class="dialog-toolbar-search"
+      :variant="dialog.isSearchOpen ? 'neutral' : 'ghost'"
+      :active="dialog.isSearchOpen"
+      :aria-pressed="dialog.isSearchOpen"
+      icon="mdi:magnify"
+      :label="t('dialog.searchInDialog')"
+      :title="t('dialog.searchInDialog')"
+      @click="dialog.toggleSearch()"
+    />
+    <IconButton
       class="dialog-toolbar-history"
       :variant="dialog.isHistoryOpen ? 'neutral' : 'ghost'"
       :active="dialog.isHistoryOpen"

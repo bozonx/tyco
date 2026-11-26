@@ -7,6 +7,7 @@ import {
   loadFakeDesktop,
   type TestDesktop,
 } from '../../test/install-fake-desktop'
+import { useChatStore } from '../../stores/chat'
 
 const mocks = vi.hoisted(() => ({
   input: { value: 'Next question', clear: vi.fn() },
@@ -29,6 +30,8 @@ const mocks = vi.hoisted(() => ({
     answerToolApproval: vi.fn(),
     modelOptions: [] as any[],
     selectedModel: { id: 'm1', name: 'Model 1' } as any,
+    searchRequestCount: 0,
+    requestSearch: vi.fn(),
     retryLastTurn: vi.fn(async () => 'Retried answer'),
     regenerateMessage: vi.fn(async () => 'New answer'),
     sendInput: vi.fn(async () => true),
@@ -189,6 +192,22 @@ describe('AiChat.vue', () => {
 
     const emptyState = wrapper.find('.chat-empty')
     expect(emptyState.exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('renders content search bar when search is requested', async () => {
+    const wrapper = mountChat()
+    expect(wrapper.findComponent({ name: 'ContentSearchBar' }).exists()).toBe(
+      false
+    )
+
+    const chatStore = useChatStore()
+    chatStore.searchRequestCount++
+    await flushPromises()
+
+    expect(wrapper.findComponent({ name: 'ContentSearchBar' }).exists()).toBe(
+      true
+    )
     wrapper.unmount()
   })
 })

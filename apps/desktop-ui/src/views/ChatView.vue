@@ -45,6 +45,13 @@
         </button>
         <div class="profile-header-actions">
           <IconButton
+            class="profile-search"
+            :label="t('chat.searchInChat')"
+            :title="t('chat.searchInChat')"
+            icon="mdi:magnify"
+            @click="chatStore.requestSearch()"
+          />
+          <IconButton
             class="profile-memory-indicator"
             :icon="memoryModeIcon"
             :label="memoryModeTooltip"

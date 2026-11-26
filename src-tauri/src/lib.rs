@@ -377,6 +377,7 @@ pub fn run() {
             commands::storage::open_storage_location,
             commands::storage::relocate_user_data,
             commands::system::copy_text,
+            commands::system::exit_app,
             commands::system::open_in_browser,
             commands::system::restart_app,
             commands::system::show_desktop_notification,

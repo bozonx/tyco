@@ -17,6 +17,7 @@
     "allow-hide-window",
     "allow-copy-text",
     "allow-execute-script-action",
+    "allow-exit-app",
     "allow-get-chat",
     "allow-list-chats",
     "allow-read-chat-file",

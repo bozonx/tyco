@@ -21,6 +21,12 @@ pub fn restart_app(app: AppHandle) {
     crate::services::runtime::request_restart(&app);
 }
 
+/// Exits the app, draining services and flushing settings.
+#[tauri::command]
+pub fn exit_app(app: AppHandle) {
+    app.exit(0);
+}
+
 /// Opens a chat citation without hiding the conversation.
 #[tauri::command]
 pub async fn open_in_browser(url: String) -> Result<(), AppError> {

@@ -161,7 +161,8 @@
     "toolAllowBatch": "Mind a(z) {count} engedélyezése",
     "toolAllowAlways": "Mindig engedélyezve",
     "toolAllowAlwaysWriteDelete": "Írás és törlés mindig engedélyezve",
-    "toolAllowAlwaysDelete": "Törlés mindig engedélyezve"
+    "toolAllowAlwaysDelete": "Törlés mindig engedélyezve",
+    "searchInChat": "Keresés a csevegésben"
   },
   "chatTools": {
     "files": {
@@ -348,7 +349,7 @@
     "change": "Módosítás",
     "charsCount": "Karakterek: {count}",
     "close": "Bezárás",
-    "closeAllHint": "A Ctrl+Q azonnal bezár mindent",
+    "closeAllHint": "A Ctrl+W azonnal bezár mindent",
     "confirm": "Megerősítés",
     "copied": "Másolva",
     "copy": "Másolás",
@@ -367,7 +368,9 @@
     "remove": "Eltávolítás",
     "retry": "Újra",
     "save": "Mentés",
-    "closeOrEscapeHint": "Az Escape vagy a Ctrl+Q bezárja az ablakot"
+    "closeOrEscapeHint": "Az Escape vagy a Ctrl+W bezárja az ablakot",
+    "matchCount": "{current} / {total}",
+    "noMatches": "Nincs találat"
   },
   "desktopErrors": {
     "busy": "Egy másik művelet fut, próbálja később",
@@ -1812,7 +1815,8 @@
     "deselectTurn": "Kijelölés megszüntetése",
     "selectRangeUpTo": "Összes kijelölése eddig az üzenetig",
     "copyTurn": "Üzenet másolása",
-    "copyTurnTranslation": "Fordítás másolása"
+    "copyTurnTranslation": "Fordítás másolása",
+    "searchInDialog": "Keresés a párbeszédben"
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

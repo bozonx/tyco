@@ -233,7 +233,7 @@ const onConfirmCrop = async (crop: CropRect) => {
   }
 }
 
-// Ctrl+Q over the area selector cancels the capture as a whole
+// Ctrl+W over the area selector cancels the capture as a whole
 useCloseWindowInterceptor(() => {
   if (!activeAreaSelection.value) return false
   void onCancelCrop({ closeAll: true })

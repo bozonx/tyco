@@ -29,7 +29,7 @@ export function createNavPanelModel(deps: NavPanelModelDependencies) {
       shiftKey?: boolean
     }
   ) {
-    // Ctrl+Q is global, see `useCloseWindowStore`
+    // Ctrl+W is global, see `useCloseWindowStore`
     if (event.code !== 'Escape' || event.shiftKey || event.defaultPrevented)
       return
 

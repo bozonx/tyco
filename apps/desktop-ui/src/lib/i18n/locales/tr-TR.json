@@ -161,7 +161,8 @@
     "toolAllowBatch": "Tümüne izin ver ({count})",
     "toolAllowAlways": "Her zaman izin ver",
     "toolAllowAlwaysWriteDelete": "Yazma ve silmeye her zaman izin ver",
-    "toolAllowAlwaysDelete": "Silmeye her zaman izin ver"
+    "toolAllowAlwaysDelete": "Silmeye her zaman izin ver",
+    "searchInChat": "Sohbette ara"
   },
   "chatTools": {
     "files": {
@@ -348,7 +349,7 @@
     "change": "Değiştir",
     "charsCount": "Karakter: {count}",
     "close": "Kapat",
-    "closeAllHint": "Ctrl+Q her şeyi hemen kapatır",
+    "closeAllHint": "Ctrl+W her şeyi hemen kapatır",
     "confirm": "Onayla",
     "copied": "Kopyalandı",
     "copy": "Kopyala",
@@ -367,7 +368,9 @@
     "remove": "Kaldır",
     "retry": "Yeniden dene",
     "save": "Kaydet",
-    "closeOrEscapeHint": "Escape veya Ctrl+Q pencereyi kapatır"
+    "closeOrEscapeHint": "Escape veya Ctrl+W pencereyi kapatır",
+    "matchCount": "{current} / {total}",
+    "noMatches": "Eşleşme yok"
   },
   "desktopErrors": {
     "busy": "Başka bir işlem sürüyor, daha sonra tekrar deneyin",
@@ -1808,7 +1811,8 @@
     "deselectTurn": "Seçimi kaldır",
     "selectRangeUpTo": "Bu mesaja kadar olanları seç",
     "copyTurn": "Mesajı kopyala",
-    "copyTurnTranslation": "Çeviriyi kopyala"
+    "copyTurnTranslation": "Çeviriyi kopyala",
+    "searchInDialog": "Diyalogda ara"
   },
   "toolPermissions": {
     "riskRead": "Okuma",

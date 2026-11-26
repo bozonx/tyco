@@ -161,7 +161,8 @@
     "toolAllowBatch": "Povolit vše ({count})",
     "toolAllowAlways": "Vždy povolit",
     "toolAllowAlwaysWriteDelete": "Vždy povolit zápis a mazání",
-    "toolAllowAlwaysDelete": "Vždy povolit mazání"
+    "toolAllowAlwaysDelete": "Vždy povolit mazání",
+    "searchInChat": "Hledat v chatu"
   },
   "chatTools": {
     "files": {
@@ -348,7 +349,7 @@
     "change": "Změnit",
     "charsCount": "Znaky: {count}",
     "close": "Zavřít",
-    "closeAllHint": "Ctrl+Q okamžitě zavře vše",
+    "closeAllHint": "Ctrl+W okamžitě zavře vše",
     "confirm": "Potvrdit",
     "copied": "Zkopírováno",
     "copy": "Kopírovat",
@@ -367,7 +368,9 @@
     "remove": "Odebrat",
     "retry": "Zkusit znovu",
     "save": "Uložit",
-    "closeOrEscapeHint": "Escape nebo Ctrl+Q zavře okno"
+    "closeOrEscapeHint": "Escape nebo Ctrl+W zavře okno",
+    "matchCount": "{current} z {total}",
+    "noMatches": "Žádné shody"
   },
   "desktopErrors": {
     "busy": "Probíhá jiná operace, zkuste to později",
@@ -1812,7 +1815,8 @@
     "deselectTurn": "Zrušit výběr zprávy",
     "selectRangeUpTo": "Vybrat vše až k této zprávě",
     "copyTurn": "Kopírovat zprávu",
-    "copyTurnTranslation": "Kopírovat překlad"
+    "copyTurnTranslation": "Kopírovat překlad",
+    "searchInDialog": "Hledat v dialogu"
   },
   "toolPermissions": {
     "riskRead": "Čtení",

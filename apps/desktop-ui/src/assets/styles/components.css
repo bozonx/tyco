@@ -343,3 +343,15 @@
 [data-theme='eInk'] .feedback-list-move {
   transition: none;
 }
+
+/* ── Content search highlighting ── */
+
+::highlight(content-search-match) {
+  background-color: var(--app-search-match-bg);
+  color: var(--app-search-match-fg);
+}
+
+::highlight(content-search-match-current) {
+  background-color: var(--app-search-match-current-bg);
+  color: var(--app-search-match-fg);
+}

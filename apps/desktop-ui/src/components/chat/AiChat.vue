@@ -1,5 +1,16 @@
 <template>
   <div ref="dropZoneRef" class="ai-chat">
+    <ContentSearchBar
+      v-if="contentSearch.isOpen.value"
+      v-model="contentSearch.query.value"
+      v-model:match-case="contentSearch.matchCase.value"
+      :count="contentSearch.count.value"
+      :active-index="contentSearch.activeIndex.value"
+      :placeholder="t('chat.searchInChat')"
+      @next="contentSearch.next"
+      @prev="contentSearch.previous"
+      @close="contentSearch.close"
+    />
     <ChatResponseAnnouncer
       :chat-id="chatStore.currentChatParams.id"
       :is-generating="chatStore.isGenerating"
@@ -133,11 +144,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, toRaw } from 'vue'
+import { computed, onMounted, toRaw, watch } from 'vue'
 
 import { useChatFileDrop } from '../../composables/use-chat-file-drop'
 import { useChatScope } from '../../composables/use-chat-scope'
 import { useChatScroll } from '../../composables/use-chat-scroll'
+import { useContentSearch } from '../../composables/use-content-search'
 import { useCopyValue } from '../../composables/use-copy-value'
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
@@ -150,6 +162,7 @@ import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useSecretsStore } from '../../stores/secrets'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
+import ContentSearchBar from '../common/ContentSearchBar.vue'
 import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
@@ -288,6 +301,19 @@ const { dropZoneRef, draggingFiles } = useChatFileDrop({
   canAccept: () => Boolean(chatStore.selectedModel) && !isInlineVoice.value,
   accept: (paths) => chatStore.addDroppedFiles(paths),
 })
+
+const contentSearch = useContentSearch({
+  containerRef: scroller,
+  scopeElementRef: dropZoneRef,
+})
+
+watch(
+  () => chatStore.searchRequestCount,
+  (count) => {
+    if (count > 0) contentSearch.open()
+  }
+)
+
 onMounted(() => {
   // Keys may have changed while the chat was not shown.
   secretsStore.refreshSecrets().catch(() => undefined)

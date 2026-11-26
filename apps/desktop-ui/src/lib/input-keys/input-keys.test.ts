@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   isCloseWindowEvent,
   isCtrlEnter,
+  isQuitEvent,
   isScreenshotShortcut,
   newlineShortcut,
   resolveInputKeyAction,
@@ -78,31 +79,50 @@ describe('input keys', () => {
     expect(newlineShortcut()).toBe('Shift+Enter')
   })
 
-  it('recognizes close window shortcuts (Ctrl+Q or Cmd+Q) on any layout', () => {
-    expect(isCloseWindowEvent({ code: 'KeyQ', ctrlKey: true })).toBe(true)
-    expect(isCloseWindowEvent({ code: 'KeyQ', metaKey: true })).toBe(true)
-    expect(isCloseWindowEvent({ key: 'q', code: 'KeyQ', ctrlKey: true })).toBe(
-      true
-    )
-    expect(isCloseWindowEvent({ key: 'й', code: 'KeyQ', ctrlKey: true })).toBe(
-      true
-    )
-    expect(isCloseWindowEvent({ key: 'q', code: 'KeyA', ctrlKey: true })).toBe(
-      true
-    )
+  it('recognizes close window shortcuts (Ctrl+W or Cmd+W) on any layout', () => {
+    expect(isCloseWindowEvent({ code: 'KeyW', ctrlKey: true })).toBe(true)
+    expect(isCloseWindowEvent({ code: 'KeyW', metaKey: true })).toBe(true)
     expect(isCloseWindowEvent({ key: 'w', code: 'KeyW', ctrlKey: true })).toBe(
+      true
+    )
+    expect(isCloseWindowEvent({ key: 'ц', code: 'KeyW', ctrlKey: true })).toBe(
+      true
+    )
+    expect(isCloseWindowEvent({ key: 'w', code: 'KeyA', ctrlKey: true })).toBe(
+      true
+    )
+    expect(isCloseWindowEvent({ key: 'q', code: 'KeyQ', ctrlKey: true })).toBe(
       false
     )
     expect(
-      isCloseWindowEvent({ code: 'KeyQ', ctrlKey: true, shiftKey: true })
+      isCloseWindowEvent({ code: 'KeyW', ctrlKey: true, shiftKey: true })
     ).toBe(false)
     expect(
-      isCloseWindowEvent({ code: 'KeyQ', ctrlKey: true, altKey: true })
+      isCloseWindowEvent({ code: 'KeyW', ctrlKey: true, altKey: true })
     ).toBe(false)
     expect(
-      isCloseWindowEvent({ code: 'KeyQ', ctrlKey: true, isComposing: true })
+      isCloseWindowEvent({ code: 'KeyW', ctrlKey: true, isComposing: true })
     ).toBe(false)
-    expect(isCloseWindowEvent({ code: 'KeyQ' })).toBe(false)
+    expect(isCloseWindowEvent({ code: 'KeyW' })).toBe(false)
+  })
+
+  it('recognizes quit shortcuts (Ctrl+Q or Cmd+Q) on any layout', () => {
+    expect(isQuitEvent({ code: 'KeyQ', ctrlKey: true })).toBe(true)
+    expect(isQuitEvent({ code: 'KeyQ', metaKey: true })).toBe(true)
+    expect(isQuitEvent({ key: 'q', code: 'KeyQ', ctrlKey: true })).toBe(true)
+    expect(isQuitEvent({ key: 'й', code: 'KeyQ', ctrlKey: true })).toBe(true)
+    expect(isQuitEvent({ key: 'q', code: 'KeyA', ctrlKey: true })).toBe(true)
+    expect(isQuitEvent({ key: 'w', code: 'KeyW', ctrlKey: true })).toBe(false)
+    expect(isQuitEvent({ code: 'KeyQ', ctrlKey: true, shiftKey: true })).toBe(
+      false
+    )
+    expect(isQuitEvent({ code: 'KeyQ', ctrlKey: true, altKey: true })).toBe(
+      false
+    )
+    expect(
+      isQuitEvent({ code: 'KeyQ', ctrlKey: true, isComposing: true })
+    ).toBe(false)
+    expect(isQuitEvent({ code: 'KeyQ' })).toBe(false)
   })
 
   it('recognizes screenshot shortcuts (Ctrl+Shift+S or Cmd+Shift+S) on any layout', () => {

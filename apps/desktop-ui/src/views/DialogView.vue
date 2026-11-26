@@ -30,7 +30,18 @@
       >
     </InlineNotice>
     <div class="dialog-content">
-      <div class="dialog-body">
+      <div ref="dialogBodyRef" class="dialog-body">
+        <ContentSearchBar
+          v-if="dialog.isSearchOpen"
+          v-model="contentSearch.query.value"
+          v-model:match-case="contentSearch.matchCase.value"
+          :count="contentSearch.count.value"
+          :active-index="contentSearch.activeIndex.value"
+          :placeholder="t('dialog.searchInDialog')"
+          @next="contentSearch.next"
+          @prev="contentSearch.previous"
+          @close="dialog.closeSearch"
+        />
         <DialogFeed
           :items="dialog.feedItems"
           :is-bubble="true"
@@ -89,16 +100,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import AppIcon from '../components/common/AppIcon.vue'
 import Button from '../components/common/Button.vue'
+import ContentSearchBar from '../components/common/ContentSearchBar.vue'
 import InlineNotice from '../components/common/InlineNotice.vue'
 import StateMessage from '../components/common/StateMessage.vue'
 import DialogFeed from '../components/dialog/DialogFeed.vue'
 import DialogHistoryPanel from '../components/dialog/DialogHistoryPanel.vue'
 import DialogSelectionToolbar from '../components/dialog/DialogSelectionToolbar.vue'
 import DialogToolbar from '../components/dialog/DialogToolbar.vue'
+import { useContentSearch } from '../composables/use-content-search'
 import { useI18n } from '../composables/use-i18n'
 import { preventMouseFocus } from '../lib/ui/focus'
 import { appNavigation } from '../navigation'
@@ -106,6 +119,22 @@ import { useDialogStore } from '../stores/dialog'
 
 const dialog = useDialogStore()
 const { t } = useI18n()
+const dialogBodyRef = ref<HTMLElement | null>(null)
+const contentSearch = useContentSearch({ containerRef: dialogBodyRef })
+
+watch(
+  () => dialog.isSearchOpen,
+  (open) => {
+    if (open) contentSearch.open()
+    else contentSearch.close()
+  }
+)
+watch(contentSearch.isOpen, (open) => {
+  if (dialog.isSearchOpen !== open) {
+    if (open) dialog.openSearch()
+    else dialog.closeSearch()
+  }
+})
 
 const showHeadphonesNotice = computed(
   () => dialog.hasMicrophone && !dialog.config.isHeadphonesNoticeAcknowledged

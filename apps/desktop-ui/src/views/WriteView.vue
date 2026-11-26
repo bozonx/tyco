@@ -214,7 +214,7 @@ watch(
   }
 )
 
-// any close of the window, Ctrl+Q too, stops what the input started; the
+// any close of the window, Ctrl+W too, stops what the input started; the
 // close itself drops the text, which stays only in the history
 useCloseWindowInterceptor(() => {
   if (desktopStore.desktopState.mode === 'quickInput') {

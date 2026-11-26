@@ -10,7 +10,10 @@ import { useQuickInputStore } from './quick-input'
 import { useVoiceResultStore } from './voice-result'
 import { useWindowStore } from './window'
 
-/** Ctrl+Q and the close cross: cancel everything and hide the window */
+/**
+ * Ctrl+W (close window) and Ctrl+Q (quit app): cancel everything and hide or
+ * exit
+ */
 export const useCloseWindowStore = defineStore('closeWindow', () => {
   const menuModalsStore = useMenuModalsStore()
   const desktopStore = useDesktopStore()
@@ -36,6 +39,9 @@ export const useCloseWindowStore = defineStore('closeWindow', () => {
       if (mode === 'quickInput') quickInputStore.discard()
       if (mode === 'voice') voiceResultStore.step.resetResult()
       void windowStore.hide()
+    },
+    exitApp: () => {
+      void windowStore.exitApp()
     },
   })
 })

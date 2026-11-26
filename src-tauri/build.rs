@@ -78,6 +78,7 @@ fn main() {
             "delete_editor_history_item",
             "delete_secret",
             "execute_script_action",
+            "exit_app",
             "export_chat_file",
             "finish_external_job",
             "finish_selection_run",

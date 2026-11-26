@@ -161,7 +161,8 @@
     "toolAllowBatch": "Να επιτρέπονται όλες ({count})",
     "toolAllowAlways": "Να επιτρέπεται πάντα",
     "toolAllowAlwaysWriteDelete": "Να επιτρέπεται πάντα η εγγραφή και η διαγραφή",
-    "toolAllowAlwaysDelete": "Να επιτρέπεται πάντα η διαγραφή"
+    "toolAllowAlwaysDelete": "Να επιτρέπεται πάντα η διαγραφή",
+    "searchInChat": "Αναζήτηση στη συνομιλία"
   },
   "chatTools": {
     "files": {
@@ -348,7 +349,7 @@
     "change": "Αλλαγή",
     "charsCount": "Χαρακτήρες: {count}",
     "close": "Κλείσιμο",
-    "closeAllHint": "Το Ctrl+Q κλείνει τα πάντα αμέσως",
+    "closeAllHint": "Το Ctrl+W κλείνει τα πάντα αμέσως",
     "confirm": "Επιβεβαίωση",
     "copied": "Αντιγράφηκε",
     "copy": "Αντιγραφή",
@@ -367,7 +368,9 @@
     "remove": "Αφαίρεση",
     "retry": "Επανάληψη",
     "save": "Αποθήκευση",
-    "closeOrEscapeHint": "Το Escape ή το Ctrl+Q κλείνει το παράθυρο"
+    "closeOrEscapeHint": "Το Escape ή το Ctrl+W κλείνει το παράθυρο",
+    "matchCount": "{current} από {total}",
+    "noMatches": "Δεν βρέθηκαν αποτελέσματα"
   },
   "desktopErrors": {
     "busy": "Εκτελείται άλλη λειτουργία, δοκιμάστε αργότερα",
@@ -1812,7 +1815,8 @@
     "deselectTurn": "Αποεπιλογή μηνύματος",
     "selectRangeUpTo": "Επιλογή όλων μέχρι αυτό το μήνυμα",
     "copyTurn": "Αντιγραφή μηνύματος",
-    "copyTurnTranslation": "Αντιγραφή μετάφρασης"
+    "copyTurnTranslation": "Αντιγραφή μετάφρασης",
+    "searchInDialog": "Αναζήτηση στον διάλογο"
   },
   "toolPermissions": {
     "riskRead": "Ανάγνωση",

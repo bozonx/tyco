@@ -418,6 +418,7 @@ export class FakeDesktopBackend {
     this.handle('set_tray_menu_labels', noop)
     this.handle('set_tray_recording', noop)
     this.handle('activate_mode', noop)
+    this.handle('exit_app', noop)
     this.handle('list_input_devices', () => [])
   }
 }

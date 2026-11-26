@@ -161,7 +161,8 @@
     "toolAllowBatch": "Permitir las {count}",
     "toolAllowAlways": "Permitir siempre",
     "toolAllowAlwaysWriteDelete": "Permitir siempre escribir y eliminar",
-    "toolAllowAlwaysDelete": "Permitir siempre eliminar"
+    "toolAllowAlwaysDelete": "Permitir siempre eliminar",
+    "searchInChat": "Buscar en el chat"
   },
   "chatTools": {
     "files": {
@@ -348,7 +349,7 @@
     "change": "Cambiar",
     "charsCount": "Caracteres: {count}",
     "close": "Cerrar",
-    "closeAllHint": "Ctrl+Q cierra todo inmediatamente",
+    "closeAllHint": "Ctrl+W cierra todo inmediatamente",
     "confirm": "Confirmar",
     "copied": "Copiado",
     "copy": "Copiar",
@@ -367,7 +368,9 @@
     "remove": "Quitar",
     "retry": "Reintentar",
     "save": "Guardar",
-    "closeOrEscapeHint": "Escape o Ctrl+Q cierra la ventana"
+    "closeOrEscapeHint": "Escape o Ctrl+W cierra la ventana",
+    "matchCount": "{current} de {total}",
+    "noMatches": "Sin coincidencias"
   },
   "desktopErrors": {
     "busy": "Hay otra operación en curso, inténtalo más tarde",
@@ -1812,7 +1815,8 @@
     "deselectTurn": "Deseleccionar mensaje",
     "selectRangeUpTo": "Seleccionar todo hasta este mensaje",
     "copyTurn": "Copiar mensaje",
-    "copyTurnTranslation": "Copiar traducción"
+    "copyTurnTranslation": "Copiar traducción",
+    "searchInDialog": "Buscar en el diálogo"
   },
   "toolPermissions": {
     "riskRead": "Lectura",

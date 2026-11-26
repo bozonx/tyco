@@ -161,7 +161,8 @@
     "toolAllowBatch": "Разрешить все {count}",
     "toolAllowAlways": "Всегда разрешать",
     "toolAllowAlwaysWriteDelete": "Всегда разрешать запись и удаление",
-    "toolAllowAlwaysDelete": "Всегда разрешать удаление"
+    "toolAllowAlwaysDelete": "Всегда разрешать удаление",
+    "searchInChat": "Поиск в чате"
   },
   "chatTools": {
     "files": {
@@ -348,7 +349,7 @@
     "change": "Изменить",
     "charsCount": "Символов: {count}",
     "close": "Закрыть",
-    "closeAllHint": "Ctrl+Q закрывает всё сразу",
+    "closeAllHint": "Ctrl+W закрывает всё сразу",
     "confirm": "Подтвердить",
     "copied": "Скопировано",
     "copy": "Скопировать",
@@ -367,7 +368,9 @@
     "remove": "Удалить",
     "retry": "Повторить",
     "save": "Сохранить",
-    "closeOrEscapeHint": "Escape или Ctrl+Q закрывает окно"
+    "closeOrEscapeHint": "Escape или Ctrl+W закрывает окно",
+    "matchCount": "{current} из {total}",
+    "noMatches": "Нет совпадений"
   },
   "desktopErrors": {
     "busy": "Выполняется другая операция, попробуйте позже",
@@ -1812,7 +1815,8 @@
     "deselectTurn": "Снять выделение",
     "selectRangeUpTo": "Выбрать всё до этого сообщения",
     "copyTurn": "Скопировать сообщение",
-    "copyTurnTranslation": "Скопировать перевод"
+    "copyTurnTranslation": "Скопировать перевод",
+    "searchInDialog": "Поиск в диалоге"
   },
   "toolPermissions": {
     "riskRead": "Чтение",

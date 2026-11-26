@@ -235,7 +235,7 @@ function onConfirm() {
   if (crop) emit('confirm', crop)
 }
 
-// Ctrl+Q never gets here: `QuickOverlay` intercepts the global close
+// Ctrl+W never gets here: `QuickOverlay` intercepts the global close
 function onCancel() {
   emit('cancel')
 }

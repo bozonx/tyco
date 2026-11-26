@@ -161,7 +161,8 @@
     "toolAllowBatch": "Барлығына рұқсат ({count})",
     "toolAllowAlways": "Әрқашан рұқсат ету",
     "toolAllowAlwaysWriteDelete": "Жазу мен жоюға әрқашан рұқсат ету",
-    "toolAllowAlwaysDelete": "Жоюға әрқашан рұқсат ету"
+    "toolAllowAlwaysDelete": "Жоюға әрқашан рұқсат ету",
+    "searchInChat": "Чаттан іздеу"
   },
   "chatTools": {
     "files": {
@@ -348,7 +349,7 @@
     "change": "Өзгерту",
     "charsCount": "Таңбалар: {count}",
     "close": "Жабу",
-    "closeAllHint": "Ctrl+Q бәрін бірден жабады",
+    "closeAllHint": "Ctrl+W бәрін бірден жабады",
     "confirm": "Растау",
     "copied": "Көшірілді",
     "copy": "Көшіру",
@@ -367,7 +368,9 @@
     "remove": "Алып тастау",
     "retry": "Қайталау",
     "save": "Сақтау",
-    "closeOrEscapeHint": "Escape немесе Ctrl+Q терезені жабады"
+    "closeOrEscapeHint": "Escape немесе Ctrl+W терезені жабады",
+    "matchCount": "{current} / {total}",
+    "noMatches": "Сәйкестіктер жоқ"
   },
   "desktopErrors": {
     "busy": "Басқа операция орындалуда, кейінірек қайталаңыз",
@@ -1812,7 +1815,8 @@
     "deselectTurn": "Таңдауды алып тастау",
     "selectRangeUpTo": "Осы хабарламаға дейінгі барлығын таңдау",
     "copyTurn": "Хабарламаны көшіру",
-    "copyTurnTranslation": "Аударманы көшіру"
+    "copyTurnTranslation": "Аударманы көшіру",
+    "searchInDialog": "Диалогтен іздеу"
   },
   "toolPermissions": {
     "riskRead": "Оқу",

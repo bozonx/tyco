@@ -359,7 +359,7 @@ correction responses are failures and must not replace the source text.
 Overlay headers separate Back (Esc) from the close cross (Shift+Esc). Escape
 returns one step and closes at the root. The cross closes the entire scenario. At the root, a single Close (Esc) button replaces both Back and the cross; Shift+Esc still closes. Header actions follow Other actions, Back, Close order.
 
-Shift+Esc and its alias Ctrl+Q are global: `useCloseWindowStore` handles them
+Shift+Esc and its alias Ctrl+W are global: `useCloseWindowStore` handles them
 once per window, in the capture phase, before any surface. Hints show Shift+Esc.
 The close cancels the running operation, clears the menus, drops the quick input
 or voice result and hides the window; the close cross of quick window overlays

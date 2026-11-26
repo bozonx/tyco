@@ -194,6 +194,7 @@ export interface DesktopCommands {
     args: { request: ScriptActionRequest }
     result: ScriptExecutionResult
   }
+  exit_app: { args: undefined; result: void }
   export_chat_file: {
     args: { id: string; name: string; profileId?: string | null }
     result: boolean

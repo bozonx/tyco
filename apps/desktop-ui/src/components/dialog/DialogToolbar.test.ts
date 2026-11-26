@@ -12,6 +12,7 @@ import { useDialogStatusStore } from '../../stores/dialog-status'
 import { useDialogStore } from '../../stores/dialog'
 import DialogToolbar from './DialogToolbar.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
+import type Button from '../common/Button.vue'
 import IconButton from '../common/IconButton.vue'
 
 vi.mock('./DialogLanguageRoute.vue', () => ({
@@ -467,7 +468,9 @@ describe('DialogToolbar.vue', () => {
       global: { plugins: [i18n, desktop.pinia] },
     })
 
-    const newBtn = wrapper.findComponent('button.dialog-toolbar-new')
+    const newBtn = wrapper.findComponent<typeof Button>(
+      'button.dialog-toolbar-new'
+    )
     expect(newBtn.exists()).toBe(true)
     expect(newBtn.text()).toContain(i18n.global.t('dialog.newDialog'))
     expect(newBtn.props('variant')).toBe('neutral')
@@ -494,5 +497,22 @@ describe('DialogToolbar.vue', () => {
     const lastElement = toolbarChildren[toolbarChildren.length - 1]
     const historyBtn = wrapper.find('.dialog-toolbar-history').element
     expect(lastElement).toBe(historyBtn)
+  })
+
+  it('toggles in-page search on search button click', async () => {
+    const dialog = useDialogStore()
+    const wrapper = mount(DialogToolbar, {
+      global: { plugins: [i18n, desktop.pinia] },
+    })
+
+    const searchBtn = wrapper.find('button.dialog-toolbar-search')
+    expect(searchBtn.exists()).toBe(true)
+    expect(dialog.isSearchOpen).toBe(false)
+
+    await searchBtn.trigger('click')
+    expect(dialog.isSearchOpen).toBe(true)
+
+    await searchBtn.trigger('click')
+    expect(dialog.isSearchOpen).toBe(false)
   })
 })

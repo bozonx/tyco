@@ -9,6 +9,7 @@ import ChatView from './ChatView.vue'
 const mocks = vi.hoisted(() => ({
   startNewChat: vi.fn(),
   openLastOrNewChat: vi.fn(),
+  requestSearch: vi.fn(),
   mediaMatches: false,
   profileId: null as string | null,
   goToEditor: vi.fn(),
@@ -32,6 +33,7 @@ function chatFor(profileId: string | null) {
     currentChatParams: { id: null as string | null },
     startNewChat: () => mocks.startNewChat(profileId),
     openLastOrNewChat: () => mocks.openLastOrNewChat(profileId),
+    requestSearch: () => mocks.requestSearch(profileId),
   })
 }
 const chatState = chatFor(null)
@@ -244,5 +246,17 @@ describe('ChatView.vue', () => {
 
     expect(wrapper.find('.profile-header').exists()).toBe(false)
     expect(mocks.openLastOrNewChat).not.toHaveBeenCalled()
+  })
+
+  it('triggers search when profile search button is clicked', async () => {
+    mocks.profileId = 'writer'
+    const wrapper = mount(ChatView)
+    await flushPromises()
+
+    const searchBtn = wrapper.find('.profile-search')
+    expect(searchBtn.exists()).toBe(true)
+
+    await searchBtn.trigger('click')
+    expect(mocks.requestSearch).toHaveBeenCalledWith('writer')
   })
 })

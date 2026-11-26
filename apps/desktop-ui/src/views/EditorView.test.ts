@@ -121,8 +121,8 @@ describe('Editor actions shortcut', () => {
     await flushPromises()
     window.dispatchEvent(
       new KeyboardEvent('keydown', {
-        key: 'q',
-        code: 'KeyQ',
+        key: 'w',
+        code: 'KeyW',
         ctrlKey: true,
         cancelable: true,
       })
@@ -144,8 +144,8 @@ describe('Editor actions shortcut', () => {
 
     window.dispatchEvent(
       new KeyboardEvent('keydown', {
-        key: 'q',
-        code: 'KeyQ',
+        key: 'w',
+        code: 'KeyW',
         ctrlKey: true,
         cancelable: true,
       })
@@ -156,7 +156,25 @@ describe('Editor actions shortcut', () => {
     wrapper.unmount()
   })
 
-  it('closes editor window on Ctrl+Q or Cmd+Q', async () => {
+  it('closes editor window on Ctrl+W or Cmd+W', async () => {
+    installCloseWindowKeys()
+    const wrapper = mount(EditorView, { global: { stubs: { Editor: true } } })
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'w',
+        code: 'KeyW',
+        ctrlKey: true,
+        cancelable: true,
+      })
+    )
+    await flushPromises()
+
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('exits application on Ctrl+Q or Cmd+Q', async () => {
     installCloseWindowKeys()
     const wrapper = mount(EditorView, { global: { stubs: { Editor: true } } })
 
@@ -170,7 +188,7 @@ describe('Editor actions shortcut', () => {
     )
     await flushPromises()
 
-    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
+    expect(desktop.backend.callsOf('exit_app')).toHaveLength(1)
     wrapper.unmount()
   })
 

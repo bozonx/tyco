@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_USER_CONFIG } from '@tyco/shared'
 import { i18n } from '../lib/i18n'
 import { useDesktopStore } from '../stores/desktop'
+import { useDialogStore } from '../stores/dialog'
 import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import DialogView from './DialogView.vue'
 
@@ -106,6 +107,24 @@ describe('DialogView.vue', () => {
     expect(emptyHint.exists()).toBe(true)
     expect(emptyHint.text()).toContain(
       i18n.global.t('dialog.emptyHeadphonesHint')
+    )
+  })
+
+  it('renders content search bar when isSearchOpen is true', async () => {
+    const wrapper = mount(DialogView, {
+      global: { plugins: [i18n, desktop.pinia] },
+    })
+
+    expect(wrapper.findComponent({ name: 'ContentSearchBar' }).exists()).toBe(
+      false
+    )
+
+    const dialogStore = useDialogStore()
+    dialogStore.openSearch()
+    await flushPromises()
+
+    expect(wrapper.findComponent({ name: 'ContentSearchBar' }).exists()).toBe(
+      true
     )
   })
 

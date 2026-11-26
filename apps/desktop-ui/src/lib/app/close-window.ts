@@ -1,5 +1,6 @@
 import {
   isCloseWindowEvent,
+  isQuitEvent,
   type InputKeyEvent,
 } from '../input-keys/input-keys'
 
@@ -9,15 +10,17 @@ export type CloseWindowInterceptor = () => boolean
 export interface CloseWindowDependencies {
   /** Cancels what is running, clears the menus and hides the window */
   closeWindow: () => void
+  /** Exits the whole application */
+  exitApp?: () => void
 }
 
-/** Ctrl+Q closes the whole window at any step. */
+/** Ctrl+W closes the whole window at any step. */
 export const isCloseAllEvent = isCloseWindowEvent
 
 /**
- * The single owner of Ctrl+Q in a window. A surface that must close in its own
- * way, such as the screenshot area selector, intercepts it; the latest
- * interceptor goes first.
+ * The single owner of Ctrl+W and Ctrl+Q in a window. A surface that must close
+ * in its own way, such as the screenshot area selector, intercepts Ctrl+W; the
+ * latest interceptor goes first. Ctrl+Q exits the application.
  */
 export function createCloseWindowModel(deps: CloseWindowDependencies) {
   const interceptors: CloseWindowInterceptor[] = []
@@ -37,18 +40,29 @@ export function createCloseWindowModel(deps: CloseWindowDependencies) {
     deps.closeWindow()
   }
 
-  /** Handles Ctrl+Q; true when the event was consumed */
+  /**
+   * Handles Ctrl+W (close window) and Ctrl+Q (quit app); true when the event
+   * was consumed
+   */
   function handleKeydown(
     event: InputKeyEvent & {
       preventDefault: () => void
       stopImmediatePropagation: () => void
     }
   ): boolean {
-    if (!isCloseAllEvent(event) && !isCloseWindowEvent(event)) return false
-    event.preventDefault()
-    event.stopImmediatePropagation()
-    closeAll()
-    return true
+    if (isQuitEvent(event)) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      deps.exitApp?.()
+      return true
+    }
+    if (isCloseWindowEvent(event)) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      closeAll()
+      return true
+    }
+    return false
   }
 
   return { intercept, closeAll, handleKeydown }

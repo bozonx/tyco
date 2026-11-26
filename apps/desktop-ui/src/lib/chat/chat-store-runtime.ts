@@ -10,7 +10,7 @@ import {
   type VaultChatHistory,
   maxToolStepsOf,
 } from '@tyco/shared'
-import { computed, unref, watch, type Ref } from 'vue'
+import { computed, ref, unref, watch, type Ref } from 'vue'
 
 import { LlmInstructionKind } from '../../types'
 import { changedChatFiles } from './chat-storage-changes'
@@ -569,6 +569,11 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
       warn(`Could not follow chat changes: ${describeError(error, translate)}`)
     )
 
+  const searchRequestCount = ref(0)
+  const requestSearch = () => {
+    searchRequestCount.value++
+  }
+
   const dispose = () => {
     if (disposed) return
     disposed = true
@@ -633,6 +638,8 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     refreshProfile,
     /** The chats listed in the sidebar */
     history,
+    searchRequestCount,
+    requestSearch,
     /** The chat removed last, while its removal can be undone */
     removedChat: chatRemoval.removed,
     removeChat: chatRemoval.remove,

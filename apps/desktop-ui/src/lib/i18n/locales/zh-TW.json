@@ -161,7 +161,8 @@
     "toolAllowBatch": "全部允許（{count}）",
     "toolAllowAlways": "一律允許",
     "toolAllowAlwaysWriteDelete": "一律允許寫入與刪除",
-    "toolAllowAlwaysDelete": "一律允許刪除"
+    "toolAllowAlwaysDelete": "一律允許刪除",
+    "searchInChat": "在聊天中搜尋"
   },
   "chatTools": {
     "files": {
@@ -348,7 +349,7 @@
     "change": "變更",
     "charsCount": "字元數: {count}",
     "close": "關閉",
-    "closeAllHint": "Ctrl+Q 立即關閉所有內容",
+    "closeAllHint": "Ctrl+W 立即關閉所有內容",
     "confirm": "確認",
     "copied": "已複製",
     "copy": "複製",
@@ -367,7 +368,9 @@
     "remove": "移除",
     "retry": "重試",
     "save": "儲存",
-    "closeOrEscapeHint": "Escape 或 Ctrl+Q 關閉視窗"
+    "closeOrEscapeHint": "Escape 或 Ctrl+W 關閉視窗",
+    "matchCount": "{current} / {total}",
+    "noMatches": "無符合項目"
   },
   "desktopErrors": {
     "busy": "另一項操作正在進行，請稍後重試",
@@ -1808,7 +1811,8 @@
     "deselectTurn": "取消選取訊息",
     "selectRangeUpTo": "選取至此訊息的所有內容",
     "copyTurn": "複製訊息",
-    "copyTurnTranslation": "複製翻譯"
+    "copyTurnTranslation": "複製翻譯",
+    "searchInDialog": "在對話中搜尋"
   },
   "toolPermissions": {
     "riskRead": "讀取",

@@ -48,10 +48,23 @@ export function isCtrlEnter(event: InputKeyEvent): boolean {
 }
 
 /**
- * Checks whether an event represents a shortcut to close the window (Ctrl+Q or
- * Cmd+Q on macOS), regardless of active keyboard layout (e.g. Cyrillic KeyQ).
+ * Checks whether an event represents a shortcut to close the window (Ctrl+W or
+ * Cmd+W on macOS), regardless of active keyboard layout (e.g. Cyrillic KeyW).
  */
 export function isCloseWindowEvent(event: InputKeyEvent): boolean {
+  if (event.isComposing || !onlyCtrl(event)) return false
+  if (event.key && /^[a-z]$/i.test(event.key)) {
+    return event.key.toLowerCase() === 'w'
+  }
+  return event.code === 'KeyW'
+}
+
+/**
+ * Checks whether an event represents a shortcut to quit the application (Ctrl+Q
+ * or Cmd+Q on macOS), regardless of active keyboard layout (e.g. Cyrillic
+ * KeyQ).
+ */
+export function isQuitEvent(event: InputKeyEvent): boolean {
   if (event.isComposing || !onlyCtrl(event)) return false
   if (event.key && /^[a-z]$/i.test(event.key)) {
     return event.key.toLowerCase() === 'q'

@@ -161,7 +161,8 @@
     "toolAllowBatch": "{count}개 모두 허용",
     "toolAllowAlways": "항상 허용",
     "toolAllowAlwaysWriteDelete": "쓰기와 삭제를 항상 허용",
-    "toolAllowAlwaysDelete": "항상 삭제 허용"
+    "toolAllowAlwaysDelete": "항상 삭제 허용",
+    "searchInChat": "채팅에서 검색"
   },
   "chatTools": {
     "files": {
@@ -348,7 +349,7 @@
     "change": "변경",
     "charsCount": "글자 수: {count}",
     "close": "닫기",
-    "closeAllHint": "Ctrl+Q는 즉시 모든 것을 닫습니다",
+    "closeAllHint": "Ctrl+W는 즉시 모든 것을 닫습니다",
     "confirm": "확인",
     "copied": "복사됨",
     "copy": "복사",
@@ -367,7 +368,9 @@
     "remove": "제거",
     "retry": "다시 시도",
     "save": "저장",
-    "closeOrEscapeHint": "Escape 또는 Ctrl+Q는 창을 닫습니다"
+    "closeOrEscapeHint": "Escape 또는 Ctrl+W는 창을 닫습니다",
+    "matchCount": "{current} / {total}",
+    "noMatches": "일치 항목 없음"
   },
   "desktopErrors": {
     "busy": "다른 작업이 진행 중입니다. 나중에 다시 시도하세요",
@@ -1812,7 +1815,8 @@
     "deselectTurn": "선택 취소",
     "selectRangeUpTo": "이 메시지까지 모두 선택",
     "copyTurn": "메시지 복사",
-    "copyTurnTranslation": "번역 복사"
+    "copyTurnTranslation": "번역 복사",
+    "searchInDialog": "대화에서 검색"
   },
   "toolPermissions": {
     "riskRead": "읽기",

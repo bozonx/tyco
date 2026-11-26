@@ -42,7 +42,7 @@ useDismissibleLayer({
   canDismissOutside: false,
   keyboardPhase: 'bubble',
   dismiss: openInsertMenu,
-  // Esc in the editor opens its action menu; Ctrl+Q are global
+  // Esc in the editor opens its action menu; Ctrl+W and Ctrl+Q are global
 })
 </script>
 

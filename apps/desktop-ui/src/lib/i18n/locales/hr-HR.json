@@ -161,7 +161,8 @@
     "toolAllowBatch": "Dopusti sve ({count})",
     "toolAllowAlways": "Uvijek dopusti",
     "toolAllowAlwaysWriteDelete": "Uvijek dopusti pisanje i brisanje",
-    "toolAllowAlwaysDelete": "Uvijek dopusti brisanje"
+    "toolAllowAlwaysDelete": "Uvijek dopusti brisanje",
+    "searchInChat": "Pretraži u razgovoru"
   },
   "chatTools": {
     "files": {
@@ -348,7 +349,7 @@
     "change": "Promijeni",
     "charsCount": "Znakova: {count}",
     "close": "Zatvori",
-    "closeAllHint": "Ctrl+Q odmah zatvara sve",
+    "closeAllHint": "Ctrl+W odmah zatvara sve",
     "confirm": "Potvrdi",
     "copied": "Kopirano",
     "copy": "Kopiraj",
@@ -367,7 +368,9 @@
     "remove": "Ukloni",
     "retry": "Pokušaj ponovno",
     "save": "Spremi",
-    "closeOrEscapeHint": "Escape ili Ctrl+Q zatvara prozor"
+    "closeOrEscapeHint": "Escape ili Ctrl+W zatvara prozor",
+    "matchCount": "{current} od {total}",
+    "noMatches": "Nema podudaranja"
   },
   "desktopErrors": {
     "busy": "U tijeku je druga operacija, pokušajte kasnije",
@@ -1812,7 +1815,8 @@
     "deselectTurn": "Poništi odabir poruke",
     "selectRangeUpTo": "Odaberi sve do ove poruke",
     "copyTurn": "Kopiraj poruku",
-    "copyTurnTranslation": "Kopiraj prijevod"
+    "copyTurnTranslation": "Kopiraj prijevod",
+    "searchInDialog": "Pretraži u dijalogu"
   },
   "toolPermissions": {
     "riskRead": "Čitanje",
