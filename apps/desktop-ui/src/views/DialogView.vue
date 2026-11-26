@@ -48,6 +48,8 @@
           "
           @toggle-single-turn="(id) => dialog.toggleSingleTurn(id)"
           @select-range-up-to="(id) => dialog.selectRangeUpToTurn(id)"
+          @select-turns="(ids) => dialog.setSelectedTurnIds(ids)"
+          @clear-selection="() => dialog.clearSelection()"
           @copy-turn-text="(id) => dialog.copyTurnText(id)"
           @copy-turn-translation="(id) => dialog.copyTurnTranslation(id)"
         >

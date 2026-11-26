@@ -257,6 +257,18 @@ export const useDialogStore = defineStore('dialog', () => {
     selectedTurnIds.value = []
     selectionAnchorId.value = null
   }
+
+  function setSelectedTurnIds(ids: string[]) {
+    selectedTurnIds.value = ids
+    if (ids.length === 0) {
+      selectionAnchorId.value = null
+    } else if (
+      !selectionAnchorId.value ||
+      !ids.includes(selectionAnchorId.value)
+    ) {
+      selectionAnchorId.value = ids[0]
+    }
+  }
   const isActive = computed(
     () => status.value === 'starting' || status.value === 'running'
   )
@@ -1050,6 +1062,7 @@ export const useDialogStore = defineStore('dialog', () => {
     copyTurnText,
     copyTurnTranslation,
     clearSelection,
+    setSelectedTurnIds,
     formatSelectedText,
     copySelected,
     sendSelectedToChat,

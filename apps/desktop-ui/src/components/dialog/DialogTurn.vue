@@ -1,6 +1,7 @@
 <template>
   <article
     class="dialog-turn"
+    :data-turn-id="turn.id"
     :class="[
       `is-${turn.side}`,
       isBubble ? 'is-bubble' : 'is-paragraph',

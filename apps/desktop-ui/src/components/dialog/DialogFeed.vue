@@ -2,12 +2,23 @@
   <div
     ref="scroller"
     class="dialog-feed"
-    :class="{ 'is-bubbles': isBubble }"
+    :class="{ 'is-bubbles': isBubble, 'is-marquee-active': isMarqueeActive }"
     role="log"
     aria-live="polite"
     :aria-label="t('dialog.feedLabel')"
     @scroll.passive="onScroll"
+    @pointerdown="onPointerDown"
   >
+    <div
+      v-if="marqueeBox"
+      class="dialog-marquee-rect"
+      :style="{
+        left: `${marqueeBox.left}px`,
+        top: `${marqueeBox.top}px`,
+        width: `${marqueeBox.width}px`,
+        height: `${marqueeBox.height}px`,
+      }"
+    />
     <template
       v-for="item in items"
       :key="item.type === 'turn' ? item.turn.id : item.sessionBreak.id"
@@ -86,10 +97,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { formatBreakTime } from '../../lib/dialog/dialog-history-list'
+import {
+  MARQUEE_DRAG_THRESHOLD_PX,
+  type MarqueeSelectionMode,
+  computeMarqueeRect,
+  computeMarqueeSelection,
+  getMarqueeMode,
+  isMarqueeIgnoredTarget,
+  rectsIntersect,
+} from '../../lib/dialog/dialog-marquee-selection'
 import type {
   DialogFeedItem,
   DialogSessionBreak,
@@ -127,6 +147,10 @@ const emit = defineEmits<{
   (e: 'toggle-single-turn', turnId: string): void
   /** Select range up to this turn */
   (e: 'select-range-up-to', turnId: string): void
+  /** Select multiple turns from marquee */
+  (e: 'select-turns', turnIds: string[]): void
+  /** Clear all turn selection */
+  (e: 'clear-selection'): void
   /** Copy a turn's original text */
   (e: 'copy-turn-text', turnId: string): void
   /** Copy a turn's translated text */
@@ -137,6 +161,224 @@ const { t, locale } = useI18n()
 const scroller = ref<HTMLElement | null>(null)
 /** Follows new speech until the user scrolls up to read */
 const isFollowing = ref(true)
+
+interface MarqueeSession {
+  startClientX: number
+  startClientY: number
+  startContentX: number
+  startContentY: number
+  currentContentX: number
+  currentContentY: number
+  mode: MarqueeSelectionMode
+  baseSelectedIds: string[]
+  isDragging: boolean
+}
+
+const marqueeSession = ref<MarqueeSession | null>(null)
+const isMarqueeActive = computed(
+  () => marqueeSession.value?.isDragging ?? false
+)
+
+const marqueeBox = computed(() => {
+  const session = marqueeSession.value
+  if (!session || !session.isDragging) return null
+  const left = Math.min(session.startContentX, session.currentContentX)
+  const top = Math.min(session.startContentY, session.currentContentY)
+  const width = Math.abs(session.currentContentX - session.startContentX)
+  const height = Math.abs(session.currentContentY - session.startContentY)
+  return { left, top, width, height }
+})
+
+const allTurnIds = computed(() =>
+  props.items.flatMap((item) => (item.type === 'turn' ? [item.turn.id] : []))
+)
+
+let autoScrollAnimationId: number | null = null
+let latestPointerEvent: PointerEvent | null = null
+
+function stopAutoScroll() {
+  if (autoScrollAnimationId !== null) {
+    cancelAnimationFrame(autoScrollAnimationId)
+    autoScrollAnimationId = null
+  }
+}
+
+function updateSelectionFromCurrentPointer() {
+  const session = marqueeSession.value
+  const element = scroller.value
+  if (!session || !session.isDragging || !element || !latestPointerEvent) return
+
+  const scrollerRect = element.getBoundingClientRect()
+  const screenStartX =
+    session.startContentX - element.scrollLeft + scrollerRect.left
+  const screenStartY =
+    session.startContentY - element.scrollTop + scrollerRect.top
+
+  const marqueeScreenRect = computeMarqueeRect(
+    screenStartX,
+    screenStartY,
+    latestPointerEvent.clientX,
+    latestPointerEvent.clientY
+  )
+
+  const turnElements = element.querySelectorAll<HTMLElement>('[data-turn-id]')
+  const intersectedIds: string[] = []
+
+  turnElements.forEach((turnEl) => {
+    const id = turnEl.getAttribute('data-turn-id')
+    if (!id) return
+    const rect = turnEl.getBoundingClientRect()
+    if (rectsIntersect(marqueeScreenRect, rect)) {
+      intersectedIds.push(id)
+    }
+  })
+
+  const newSelection = computeMarqueeSelection(
+    session.baseSelectedIds,
+    intersectedIds,
+    session.mode,
+    allTurnIds.value
+  )
+
+  emit('select-turns', newSelection)
+}
+
+function stepAutoScroll() {
+  const session = marqueeSession.value
+  const element = scroller.value
+  if (!session || !session.isDragging || !element || !latestPointerEvent) {
+    stopAutoScroll()
+    return
+  }
+
+  const scrollerRect = element.getBoundingClientRect()
+  const AUTO_SCROLL_MARGIN = 32
+  const AUTO_SCROLL_MAX_SPEED = 16
+  let scrollDelta = 0
+
+  if (latestPointerEvent.clientY < scrollerRect.top + AUTO_SCROLL_MARGIN) {
+    const intensity = Math.min(
+      1,
+      (scrollerRect.top + AUTO_SCROLL_MARGIN - latestPointerEvent.clientY) /
+        AUTO_SCROLL_MARGIN
+    )
+    scrollDelta = -Math.round(Math.max(2, intensity * AUTO_SCROLL_MAX_SPEED))
+  } else if (
+    latestPointerEvent.clientY >
+    scrollerRect.bottom - AUTO_SCROLL_MARGIN
+  ) {
+    const intensity = Math.min(
+      1,
+      (latestPointerEvent.clientY -
+        (scrollerRect.bottom - AUTO_SCROLL_MARGIN)) /
+        AUTO_SCROLL_MARGIN
+    )
+    scrollDelta = Math.round(Math.max(2, intensity * AUTO_SCROLL_MAX_SPEED))
+  }
+
+  if (scrollDelta !== 0) {
+    element.scrollTop += scrollDelta
+    session.currentContentY =
+      latestPointerEvent.clientY - scrollerRect.top + element.scrollTop
+    updateSelectionFromCurrentPointer()
+    autoScrollAnimationId = requestAnimationFrame(stepAutoScroll)
+  } else {
+    stopAutoScroll()
+  }
+}
+
+function onPointerDown(event: PointerEvent) {
+  if (event.button !== 0) return
+  if (isMarqueeIgnoredTarget(event.target)) return
+  const element = scroller.value
+  if (!element) return
+
+  const scrollerRect = element.getBoundingClientRect()
+  const startContentX = event.clientX - scrollerRect.left + element.scrollLeft
+  const startContentY = event.clientY - scrollerRect.top + element.scrollTop
+
+  marqueeSession.value = {
+    startClientX: event.clientX,
+    startClientY: event.clientY,
+    startContentX,
+    startContentY,
+    currentContentX: startContentX,
+    currentContentY: startContentY,
+    mode: getMarqueeMode(event),
+    baseSelectedIds: [...(props.selectedTurnIds ?? [])],
+    isDragging: false,
+  }
+
+  latestPointerEvent = event
+  window.addEventListener('pointermove', onWindowPointerMove)
+  window.addEventListener('pointerup', onWindowPointerUp)
+  window.addEventListener('pointercancel', onWindowPointerUp)
+}
+
+function onWindowPointerMove(event: PointerEvent) {
+  const session = marqueeSession.value
+  const element = scroller.value
+  if (!session || !element) return
+
+  latestPointerEvent = event
+
+  if (!session.isDragging) {
+    const dist = Math.hypot(
+      event.clientX - session.startClientX,
+      event.clientY - session.startClientY
+    )
+    if (dist >= MARQUEE_DRAG_THRESHOLD_PX) {
+      session.isDragging = true
+      isFollowing.value = false
+    }
+  }
+
+  if (session.isDragging) {
+    const scrollerRect = element.getBoundingClientRect()
+    session.currentContentX =
+      event.clientX - scrollerRect.left + element.scrollLeft
+    session.currentContentY =
+      event.clientY - scrollerRect.top + element.scrollTop
+
+    updateSelectionFromCurrentPointer()
+
+    const AUTO_SCROLL_MARGIN = 32
+    if (
+      event.clientY < scrollerRect.top + AUTO_SCROLL_MARGIN ||
+      event.clientY > scrollerRect.bottom - AUTO_SCROLL_MARGIN
+    ) {
+      if (autoScrollAnimationId === null) {
+        autoScrollAnimationId = requestAnimationFrame(stepAutoScroll)
+      }
+    } else {
+      stopAutoScroll()
+    }
+  }
+}
+
+function onWindowPointerUp(event: PointerEvent) {
+  window.removeEventListener('pointermove', onWindowPointerMove)
+  window.removeEventListener('pointerup', onWindowPointerUp)
+  window.removeEventListener('pointercancel', onWindowPointerUp)
+  stopAutoScroll()
+
+  const session = marqueeSession.value
+  if (session && !session.isDragging) {
+    if (!event.shiftKey && !event.ctrlKey && !event.metaKey) {
+      emit('clear-selection')
+    }
+  }
+
+  marqueeSession.value = null
+  latestPointerEvent = null
+}
+
+onUnmounted(() => {
+  window.removeEventListener('pointermove', onWindowPointerMove)
+  window.removeEventListener('pointerup', onWindowPointerUp)
+  window.removeEventListener('pointercancel', onWindowPointerUp)
+  stopAutoScroll()
+})
 
 const contextMenuState = ref<{
   x: number
@@ -236,6 +478,7 @@ onMounted(scrollToEnd)
 
 <style scoped>
 .dialog-feed {
+  position: relative;
   flex: 1 1 0%;
   min-height: 0;
   overflow-y: auto;
@@ -243,6 +486,20 @@ onMounted(scrollToEnd)
   flex-direction: column;
   gap: 0.75rem;
   padding: var(--space-md);
+}
+
+.dialog-feed.is-marquee-active {
+  user-select: none;
+  cursor: crosshair;
+}
+
+.dialog-marquee-rect {
+  position: absolute;
+  pointer-events: none;
+  z-index: 10;
+  border: 1px solid var(--color-primary);
+  background-color: color-mix(in oklab, var(--color-primary) 14%, transparent);
+  border-radius: var(--radius-sm);
 }
 
 .dialog-feed-break {
