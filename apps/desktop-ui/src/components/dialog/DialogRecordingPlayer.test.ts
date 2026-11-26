@@ -33,6 +33,10 @@ describe('DialogRecordingPlayer.vue', () => {
     expect(wrapper.find('.history-file-name').attributes('title')).toBe(
       '2026-11-23 12-00-00 a1b2c3.opus'
     )
+    const appIcon = wrapper.findComponent({ name: 'AppIcon' })
+    expect(appIcon.exists()).toBe(true)
+    expect(appIcon.props('icon')).toBe('mdi:waveform')
+
     const playBtn = wrapper.find('button')
     expect(playBtn.attributes('aria-label')).toBe(
       i18n.global.t('history.playRecording')

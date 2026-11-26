@@ -112,6 +112,31 @@ function toStoredBreaks(
   }))
 }
 
+function computePayloadFingerprint(payload: {
+  id: string
+  title: string
+  startedAt: number
+  source: DialogSource
+  translationTargetLanguage: string
+  segments: readonly StoredDialogSegment[]
+  sessionBreaks: readonly StoredDialogSessionBreak[]
+  recordingFiles: readonly string[]
+  incompleteRecordingFiles: readonly string[]
+}): string {
+  return JSON.stringify({
+    id: payload.id,
+    title: payload.title,
+    startedAt: payload.startedAt,
+    updatedAt: 0,
+    source: payload.source,
+    translationTargetLanguage: payload.translationTargetLanguage,
+    segments: payload.segments,
+    sessionBreaks: payload.sessionBreaks,
+    recordingFiles: payload.recordingFiles,
+    incompleteRecordingFiles: payload.incompleteRecordingFiles,
+  })
+}
+
 /**
  * Checkpoints a dialog session into `dialogs/<id>.json`. A session without
  * settled speech is saved only when it has a recording, so the recording stays
@@ -172,7 +197,17 @@ export function createDialogHistory(
       recordingFiles: [...target.recordingFiles],
       incompleteRecordingFiles: [...target.incompleteRecordingFiles],
     }
-    const fingerprint = JSON.stringify({ ...payload, updatedAt: 0 })
+    const fingerprint = computePayloadFingerprint({
+      id: target.id,
+      title: snapshot.title,
+      startedAt: target.startedAt,
+      source: target.source,
+      translationTargetLanguage: snapshot.translationTargetLanguage,
+      segments,
+      sessionBreaks,
+      recordingFiles: target.recordingFiles,
+      incompleteRecordingFiles: target.incompleteRecordingFiles,
+    })
     if (target.savedFingerprint === fingerprint) return Promise.resolve()
 
     const run = pending.then(async () => {
@@ -215,13 +250,29 @@ export function createDialogHistory(
     load(dialog) {
       stopTimer()
       session = undefined
-      const fingerprint = JSON.stringify({ ...dialog, updatedAt: 0 })
+      const recordingFiles = [...(dialog.recordingFiles ?? [])]
+      const incompleteRecordingFiles = [
+        ...(dialog.incompleteRecordingFiles ?? []),
+      ]
+      const fingerprint = computePayloadFingerprint({
+        id: dialog.id,
+        title: dialog.title,
+        startedAt: dialog.startedAt,
+        source: dialog.source,
+        translationTargetLanguage: dialog.translationTargetLanguage,
+        segments: toStoredSegments(
+          dialog.segments.map((s) => ({ ...s, isFinal: true }))
+        ),
+        sessionBreaks: toStoredBreaks(dialog.sessionBreaks ?? []),
+        recordingFiles,
+        incompleteRecordingFiles,
+      })
       closed = {
         id: dialog.id,
         startedAt: dialog.startedAt,
         source: dialog.source,
-        recordingFiles: [...(dialog.recordingFiles ?? [])],
-        incompleteRecordingFiles: [...(dialog.incompleteRecordingFiles ?? [])],
+        recordingFiles,
+        incompleteRecordingFiles,
         savedFingerprint: fingerprint,
         isSaved: true,
       }

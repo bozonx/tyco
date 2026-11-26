@@ -22,7 +22,7 @@ export function filterDialogHistory(
   )
 }
 
-/** Groups saved dialogs by calendar day of their last update, newest first. */
+/** Groups saved dialogs by calendar day of when they started, newest first. */
 export function groupDialogHistory(
   items: readonly DialogSummary[],
   now = Date.now()
@@ -36,11 +36,11 @@ export function groupDialogHistory(
 
   const groups = new Map<DialogHistoryGroup, DialogSummary[]>()
   const sorted = [...items].sort(
-    (a, b) => b.updatedAt - a.updatedAt || b.startedAt - a.startedAt
+    (a, b) => b.startedAt - a.startedAt || b.updatedAt - a.updatedAt
   )
 
   for (const item of sorted) {
-    const time = item.updatedAt || item.startedAt
+    const time = item.startedAt || item.updatedAt
     const key: DialogHistoryGroup =
       time >= startToday.getTime()
         ? 'today'
@@ -110,4 +110,62 @@ export function formatDialogDuration(
     return formatUnit(minutes, 'minute')
   }
   return formatUnit(seconds, 'second')
+}
+
+/**
+ * Formats a session break timestamp for display in the dialog feed. For today,
+ * displays the clock time (e.g. `9:30 AM` or `09:30`). For earlier days,
+ * formats relative days (e.g. `yesterday at 9:30 AM` or `вчера в 9:30`).
+ */
+export function formatBreakTime(
+  timestampMs: number,
+  locale?: string,
+  now = Date.now(),
+  formatAt?: (date: string, time: string) => string
+): string {
+  const target = new Date(timestampMs)
+  const nowDate = new Date(now)
+
+  const startOfToday = new Date(
+    nowDate.getFullYear(),
+    nowDate.getMonth(),
+    nowDate.getDate()
+  ).getTime()
+  const startOfTarget = new Date(
+    target.getFullYear(),
+    target.getMonth(),
+    target.getDate()
+  ).getTime()
+
+  const diffDays = Math.round(
+    (startOfToday - startOfTarget) / (24 * 60 * 60 * 1000)
+  )
+
+  const timeStr = formatDialogStartTime(timestampMs)
+
+  if (diffDays === 0) {
+    return timeStr
+  }
+
+  let dayWord: string
+  try {
+    if (diffDays > 0 && diffDays <= 7) {
+      dayWord = new Intl.RelativeTimeFormat(locale || undefined, {
+        numeric: 'auto',
+      }).format(-diffDays, 'day')
+    } else {
+      dayWord = new Intl.DateTimeFormat(locale || undefined, {
+        dateStyle: 'medium',
+      }).format(timestampMs)
+    }
+  } catch {
+    dayWord = target.toLocaleDateString()
+  }
+
+  if (formatAt) {
+    return formatAt(dayWord, timeStr)
+  }
+
+  const isRussian = locale?.toLowerCase().startsWith('ru')
+  return isRussian ? `${dayWord} в ${timeStr}` : `${dayWord} at ${timeStr}`
 }

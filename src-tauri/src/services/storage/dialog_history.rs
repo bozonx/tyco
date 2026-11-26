@@ -101,12 +101,12 @@ fn write_index(path: &Path, index: &DialogIndex) -> Result<(), AppError> {
     write_json(path, index)
 }
 
-/// Newest first by last update, then start time, then id.
+/// Newest first by start time, then last update, then id.
 fn sorted(mut dialogs: Vec<DialogSummary>) -> Vec<DialogSummary> {
     dialogs.sort_by(|a, b| {
-        b.updated_at_ms
-            .cmp(&a.updated_at_ms)
-            .then_with(|| b.started_at_ms.cmp(&a.started_at_ms))
+        b.started_at_ms
+            .cmp(&a.started_at_ms)
+            .then_with(|| b.updated_at_ms.cmp(&a.updated_at_ms))
             .then_with(|| a.id.cmp(&b.id))
     });
     dialogs

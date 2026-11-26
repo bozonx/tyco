@@ -1,23 +1,14 @@
 <template>
   <aside class="dialog-history-panel" :aria-label="t('dialog.history')">
     <div class="panel-header">
-      <Button
-        variant="primary"
-        class="flex-1"
+      <SearchInput
+        ref="searchInputRef"
+        v-model="query"
+        class="flex-1 panel-search"
         size="sm"
-        icon="mdi:plus"
-        :disabled="dialog.isActive"
-        @click="startNewDialog"
-      >
-        {{ t('dialog.newDialog') }}
-      </Button>
-      <IconButton
-        size="sm"
-        variant="ghost"
-        :active="isSearchOpen"
-        :label="t('dialog.searchHistory')"
-        icon="mdi:magnify"
-        @click="toggleSearch"
+        quiet
+        :placeholder="t('dialog.searchHistory')"
+        @keydown.esc="clearSearch"
       />
     </div>
 
@@ -34,17 +25,6 @@
         {{ t('history.undo') }}
       </Button>
     </InlineNotice>
-
-    <SearchInput
-      v-if="isSearchOpen"
-      ref="searchInputRef"
-      v-model="query"
-      class="panel-search"
-      size="sm"
-      quiet
-      :placeholder="t('dialog.searchHistory')"
-      @keydown.esc="closeSearch"
-    />
 
     <div class="dialog-list-scroll">
       <StateMessage
@@ -146,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useCopyValue } from '../../composables/use-copy-value'
 import { useI18n } from '../../composables/use-i18n'
@@ -168,7 +148,6 @@ import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
-import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import SearchInput from '../common/SearchInput.vue'
 import StateMessage from '../common/StateMessage.vue'
@@ -190,27 +169,30 @@ void dialogHistory.loadDialogs().catch((error: unknown) => {
   toastKey('history.operationFailed', 'error')
 })
 
-const isSearchOpen = ref(false)
 const searchInputRef = ref<{ focus(): void } | null>(null)
 const query = ref('')
 const matchedIds = ref<Set<string> | null>(null)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 let searchRun = 0
 
-async function toggleSearch() {
-  isSearchOpen.value = !isSearchOpen.value
-  if (isSearchOpen.value) {
-    await nextTick()
-    searchInputRef.value?.focus?.()
-  } else {
-    query.value = ''
-  }
+function clearSearch() {
+  query.value = ''
+  matchedIds.value = null
 }
 
-function closeSearch() {
-  isSearchOpen.value = false
-  query.value = ''
+const focusSearch = async () => {
+  await nextTick()
+  searchInputRef.value?.focus()
 }
+
+onMounted(focusSearch)
+
+watch(
+  () => dialog.isHistoryOpen,
+  (isOpen) => {
+    if (isOpen) void focusSearch()
+  }
+)
 
 const listKey = computed(() =>
   dialogHistory.dialogs
@@ -268,12 +250,6 @@ function itemLabel(item: DialogSummary): string {
 function itemTooltip(item: DialogSummary): string {
   if (dialog.isActive) return t('dialog.stopToSwitchHint')
   return itemLabel(item)
-}
-
-async function startNewDialog() {
-  if (dialog.isActive) return
-  await dialog.clear()
-  emit('navigate')
 }
 
 async function selectDialog(id: string) {

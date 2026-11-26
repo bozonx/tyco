@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   filterDialogHistory,
+  formatBreakTime,
   formatDialogDuration,
   formatDialogStartTime,
   groupDialogHistory,
@@ -58,11 +59,11 @@ describe('dialog-history-list', () => {
 
     const groups = groupDialogHistory(
       [
-        summary('older', { updatedAt: older }),
-        summary('todayEarly', { updatedAt: todayEarly }),
-        summary('yesterday', { updatedAt: yesterday }),
-        summary('todayLate', { updatedAt: todayLate }),
-        summary('lastWeek', { updatedAt: lastWeek }),
+        summary('older', { startedAt: older, updatedAt: older }),
+        summary('todayEarly', { startedAt: todayEarly, updatedAt: todayEarly }),
+        summary('yesterday', { startedAt: yesterday, updatedAt: yesterday }),
+        summary('todayLate', { startedAt: todayLate, updatedAt: todayLate }),
+        summary('lastWeek', { startedAt: lastWeek, updatedAt: lastWeek }),
       ],
       now
     )
@@ -78,6 +79,24 @@ describe('dialog-history-list', () => {
       { key: 'previousWeek', ids: ['lastWeek'] },
       { key: 'older', ids: ['older'] },
     ])
+  })
+
+  it('formats break timestamps with relative days for past days', () => {
+    const now = new Date(2026, 10, 26, 11, 0, 0).getTime()
+    const todayMs = new Date(2026, 10, 26, 9, 30, 0).getTime()
+    const yesterdayMs = new Date(2026, 10, 25, 9, 30, 0).getTime()
+    const twoDaysAgoMs = new Date(2026, 10, 24, 9, 30, 0).getTime()
+
+    expect(formatBreakTime(todayMs, 'ru-RU', now)).toMatch(/9:30|09:30/)
+    expect(formatBreakTime(yesterdayMs, 'ru-RU', now)).toMatch(
+      /вчера в (9:30|09:30)/
+    )
+    expect(formatBreakTime(twoDaysAgoMs, 'ru-RU', now)).toMatch(
+      /позавчера в (9:30|09:30)/
+    )
+    expect(formatBreakTime(yesterdayMs, 'en-US', now)).toMatch(
+      /yesterday at (9:30|09:30) AM/
+    )
   })
 
   it('formats durations in human-readable localized format', () => {

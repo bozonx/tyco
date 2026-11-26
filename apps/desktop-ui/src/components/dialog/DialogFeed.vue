@@ -89,7 +89,7 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { formatDialogClock } from '../../lib/dialog/dialog-export'
+import { formatBreakTime } from '../../lib/dialog/dialog-history-list'
 import type {
   DialogFeedItem,
   DialogSessionBreak,
@@ -133,7 +133,7 @@ const emit = defineEmits<{
   (e: 'copy-turn-translation', turnId: string): void
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const scroller = ref<HTMLElement | null>(null)
 /** Follows new speech until the user scrolls up to read */
 const isFollowing = ref(true)
@@ -201,7 +201,9 @@ function breakLabel(sessionBreak: DialogSessionBreak): string {
 }
 
 function formatTime(timestampMs: number): string {
-  return formatDialogClock(timestampMs)
+  return formatBreakTime(timestampMs, locale.value, Date.now(), (date, time) =>
+    t('dialog.breakTimestampAt', { date, time })
+  )
 }
 
 function onScroll() {

@@ -1,6 +1,6 @@
 <template>
   <div class="history-file" :class="{ 'is-active': active }">
-    <AppIcon icon="mdi:file-music-outline" size="xs" />
+    <AppIcon :icon="icon ?? 'mdi:waveform'" size="xs" />
     <span class="history-file-name" :title="file.name">{{ file.name }}</span>
     <span v-if="file.isMissing" class="history-file-missing">{{
       file.missingLabel
@@ -79,8 +79,12 @@ import IconButton from '../common/IconButton.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 
 const props = withDefaults(
-  defineProps<{ file: HistoryListItemFile; isActive?: boolean }>(),
-  { isActive: undefined }
+  defineProps<{
+    file: HistoryListItemFile
+    isActive?: boolean
+    icon?: string
+  }>(),
+  { isActive: undefined, icon: 'mdi:waveform' }
 )
 
 const emit = defineEmits<{ (e: 'toggle'): void; (e: 'stop'): void }>()

@@ -116,16 +116,6 @@
       @click="dialog.showSubtitles()"
     />
     <IconButton
-      v-if="!dialog.isHistoryOpen && isIdle && !isEmpty"
-      class="dialog-toolbar-new"
-      variant="ghost"
-      size="sm"
-      icon="mdi:file-document-plus-outline"
-      :label="t('dialog.startNewDialog')"
-      :title="t('dialog.startNewDialog')"
-      @click="handleClear"
-    />
-    <IconButton
       class="dialog-toolbar-history"
       :variant="dialog.isHistoryOpen ? 'neutral' : 'ghost'"
       :active="dialog.isHistoryOpen"
@@ -135,6 +125,17 @@
       :title="t('dialog.history')"
       @click="dialog.isHistoryOpen = !dialog.isHistoryOpen"
     />
+    <Button
+      class="dialog-toolbar-new"
+      variant="primary"
+      size="sm"
+      icon="mdi:plus"
+      :disabled="dialog.isActive"
+      :title="t('dialog.newDialog')"
+      @click="handleClear"
+    >
+      {{ t('dialog.newDialog') }}
+    </Button>
     <ConfirmModal
       :open="isClearConfirmOpen"
       :title="t('dialog.clearTitle')"

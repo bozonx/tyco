@@ -73,4 +73,28 @@ describe('DialogHistoryPanel.vue', () => {
 
     expect(sendSpy).toHaveBeenCalledOnce()
   })
+
+  it('renders search input in header and focuses it on mount, without new dialog button', async () => {
+    const dialogHistoryStore = useDialogHistoryStore()
+    await dialogHistoryStore.loadDialogs()
+
+    const wrapper = mount(DialogHistoryPanel, {
+      global: { plugins: [i18n, desktop.pinia] },
+      attachTo: document.body,
+    })
+    await flushPromises()
+
+    const header = wrapper.find('.panel-header')
+    expect(header.exists()).toBe(true)
+
+    // No new dialog button in panel
+    expect(header.text()).not.toContain(i18n.global.t('dialog.newDialog'))
+
+    // Search input is rendered in header
+    const input = header.find('input[type="search"]')
+    expect(input.exists()).toBe(true)
+    expect(document.activeElement).toBe(input.element)
+
+    wrapper.unmount()
+  })
 })

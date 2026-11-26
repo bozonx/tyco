@@ -460,4 +460,19 @@ describe('DialogToolbar.vue', () => {
 
     expect(desktop.backend.userConfig.dialog.isHistoryOpen).toBe(false)
   })
+
+  it('renders new dialog button as rightmost button in toolbar with plus icon and label', () => {
+    const wrapper = mount(DialogToolbar, {
+      global: { plugins: [i18n, desktop.pinia] },
+    })
+
+    const newBtn = wrapper.find('button.dialog-toolbar-new')
+    expect(newBtn.exists()).toBe(true)
+    expect(newBtn.text()).toContain(i18n.global.t('dialog.newDialog'))
+
+    // It is the last child of .dialog-toolbar
+    const toolbarChildren = wrapper.find('.dialog-toolbar').element.children
+    const lastElement = toolbarChildren[toolbarChildren.length - 1]
+    expect(lastElement).toBe(newBtn.element)
+  })
 })
