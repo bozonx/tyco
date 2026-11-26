@@ -461,18 +461,38 @@ describe('DialogToolbar.vue', () => {
     expect(desktop.backend.userConfig.dialog.isHistoryOpen).toBe(false)
   })
 
-  it('renders new dialog button as rightmost button in toolbar with plus icon and label', () => {
+  it('renders new dialog button before history button with neutral variant and correct state', async () => {
+    const dialog = useDialogStore()
     const wrapper = mount(DialogToolbar, {
       global: { plugins: [i18n, desktop.pinia] },
     })
 
-    const newBtn = wrapper.find('button.dialog-toolbar-new')
+    const newBtn = wrapper.findComponent('button.dialog-toolbar-new')
     expect(newBtn.exists()).toBe(true)
     expect(newBtn.text()).toContain(i18n.global.t('dialog.newDialog'))
+    expect(newBtn.props('variant')).toBe('neutral')
+    // Empty without currentDialogId -> disabled
+    expect(newBtn.props('disabled')).toBe(true)
 
-    // It is the last child of .dialog-toolbar
+    // With content -> enabled
+    dialog.segments = [
+      {
+        id: '1',
+        side: 'remote',
+        startMs: 0,
+        endMs: 100,
+        text: 'Phrase',
+        isFinal: true,
+        translationState: 'idle',
+      },
+    ]
+    await flushPromises()
+    expect(newBtn.props('disabled')).toBe(false)
+
+    // History button is the last control in toolbar
     const toolbarChildren = wrapper.find('.dialog-toolbar').element.children
     const lastElement = toolbarChildren[toolbarChildren.length - 1]
-    expect(lastElement).toBe(newBtn.element)
+    const historyBtn = wrapper.find('.dialog-toolbar-history').element
+    expect(lastElement).toBe(historyBtn)
   })
 })

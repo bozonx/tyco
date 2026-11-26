@@ -115,6 +115,17 @@
       :disabled="!dialog.isActive"
       @click="dialog.showSubtitles()"
     />
+    <Button
+      class="dialog-toolbar-new"
+      variant="neutral"
+      size="sm"
+      :icon="canRecord ? 'mdi:plus' : 'mdi:eraser'"
+      :disabled="dialog.isActive || isNewDialogDisabled"
+      :title="newDialogTitle"
+      @click="handleClear"
+    >
+      {{ newDialogLabel }}
+    </Button>
     <IconButton
       class="dialog-toolbar-history"
       :variant="dialog.isHistoryOpen ? 'neutral' : 'ghost'"
@@ -125,17 +136,6 @@
       :title="t('dialog.history')"
       @click="dialog.isHistoryOpen = !dialog.isHistoryOpen"
     />
-    <Button
-      class="dialog-toolbar-new"
-      variant="primary"
-      size="sm"
-      icon="mdi:plus"
-      :disabled="dialog.isActive"
-      :title="t('dialog.newDialog')"
-      @click="handleClear"
-    >
-      {{ t('dialog.newDialog') }}
-    </Button>
     <ConfirmModal
       :open="isClearConfirmOpen"
       :title="t('dialog.clearTitle')"
@@ -206,6 +206,9 @@ const isIdle = computed(
 )
 const isStopping = computed(() => dialog.status === 'stopping')
 const isEmpty = computed(() => !dialog.hasContent)
+const isNewDialogDisabled = computed(
+  () => isEmpty.value && !dialog.currentDialogId
+)
 const isClearConfirmOpen = ref(false)
 const isRecordingNoticeOpen = ref(false)
 const recordContainerRef = ref<HTMLElement | null>(null)
@@ -256,6 +259,14 @@ useDismissibleLayer({
 
 // a recording belongs to its dialog history entry: nothing would keep it otherwise
 const canRecord = computed(() => dialog.isHistoryEnabled)
+
+const newDialogLabel = computed(() =>
+  canRecord.value ? t('dialog.newDialog') : t('dialog.clear')
+)
+
+const newDialogTitle = computed(() =>
+  canRecord.value ? t('dialog.newDialog') : t('dialog.clear')
+)
 
 const isRecordToggleDisabled = computed(() => !canRecord.value || !isIdle.value)
 
