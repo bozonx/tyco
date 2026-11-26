@@ -49,9 +49,8 @@ import {
 } from '../lib/stt/dictation-error'
 import { createSttClient } from '../lib/stt/stt-client'
 import { createVoiceCaptureControl } from '../lib/stt/voice-capture'
+import { useChatStore } from './chat'
 import { useDesktopStore } from './desktop'
-import { appNavigation } from '../navigation'
-import { useChatInputStore } from './chat-input'
 import { useDialogHistoryStore } from './dialog-history'
 import { useDialogStatusStore } from './dialog-status'
 import { useHistoryStore } from './history'
@@ -258,10 +257,16 @@ export const useDialogStore = defineStore('dialog', () => {
     selectionAnchorId.value = null
   }
 
-  function setSelectedTurnIds(ids: string[]) {
+  function setSelectedTurnIds(ids: string[], anchorId?: string | null) {
     selectedTurnIds.value = ids
     if (ids.length === 0) {
       selectionAnchorId.value = null
+    } else if (
+      anchorId !== undefined &&
+      anchorId !== null &&
+      ids.includes(anchorId)
+    ) {
+      selectionAnchorId.value = anchorId
     } else if (
       !selectionAnchorId.value ||
       !ids.includes(selectionAnchorId.value)
@@ -269,6 +274,16 @@ export const useDialogStore = defineStore('dialog', () => {
       selectionAnchorId.value = ids[0]
     }
   }
+
+  // Drop stale selection IDs if a draft turn disappears (e.g. dropDraft)
+  watch(turns, (nextTurns) => {
+    if (selectedTurnIds.value.length === 0) return
+    const validIds = new Set(nextTurns.map((turn) => turn.id))
+    const pruned = selectedTurnIds.value.filter((id) => validIds.has(id))
+    if (pruned.length !== selectedTurnIds.value.length) {
+      setSelectedTurnIds(pruned)
+    }
+  })
   const isActive = computed(
     () => status.value === 'starting' || status.value === 'running'
   )
@@ -807,10 +822,7 @@ export const useDialogStore = defineStore('dialog', () => {
   async function sendSelectedToChat() {
     const text = formatSelectedText()
     if (!text) return
-    const chatInputStore = useChatInputStore()
-    chatInputStore.setValue(text + '\n\n')
-    chatInputStore.requestFocus()
-    await appNavigation.goToChat()
+    await useChatStore().attachToCurrentChat(text)
   }
 
   async function sendSelectedToActionMenu() {

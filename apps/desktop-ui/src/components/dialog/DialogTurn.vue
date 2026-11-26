@@ -14,6 +14,7 @@
     ]"
     :title="hoverText"
     :aria-label="isBubble ? sideLabel : undefined"
+    @mousedown="onMouseDown"
     @click="onClick"
     @contextmenu.prevent="emit('contextmenu', $event)"
   >
@@ -22,9 +23,12 @@
       class="dialog-turn-checkbox"
       :class="{ 'is-checked': isSelected && !isExcluded }"
       role="checkbox"
+      tabindex="0"
       :aria-checked="isSelected && !isExcluded"
       :title="t(isSelected ? 'dialog.deselectTurn' : 'dialog.selectTurn')"
       @click.stop="emit('toggle-single')"
+      @keydown.space.prevent.stop="emit('toggle-single')"
+      @keydown.enter.prevent.stop="emit('toggle-single')"
     >
       <AppIcon
         :icon="
@@ -111,6 +115,12 @@ const emit = defineEmits<{
   /** Right-click context menu */
   (e: 'contextmenu', event: MouseEvent): void
 }>()
+
+function onMouseDown(event: MouseEvent) {
+  if (event.shiftKey || event.ctrlKey || event.metaKey) {
+    event.preventDefault()
+  }
+}
 
 function onClick(event: MouseEvent) {
   if (event.ctrlKey || event.metaKey) {

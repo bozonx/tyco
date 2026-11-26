@@ -14,18 +14,23 @@
         @click="dialog.clearSelection"
       />
       <span class="dialog-selection-count">
-        {{ t('dialog.selectionCount', { count: dialog.selectedCount }) }}
+        {{ t('dialog.selectionCount', { count: dialog.activeSelectedCount }) }}
       </span>
     </div>
 
-    <div class="dialog-selection-options">
+    <div
+      v-if="showIncludeMeOption || showUseTranslationOption"
+      class="dialog-selection-options"
+    >
       <FieldCheckbox
+        v-if="showIncludeMeOption"
         :model-value="dialog.selectionIncludeMe"
         :label="t('dialog.selectionIncludeMe')"
         class="dialog-selection-checkbox"
         @update:model-value="(val) => (dialog.selectionIncludeMe = val)"
       />
       <FieldCheckbox
+        v-if="showUseTranslationOption"
         :model-value="dialog.selectionUseTranslation"
         :label="t('dialog.selectionUseTranslation')"
         class="dialog-selection-checkbox"
@@ -68,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useDialogStore } from '../../stores/dialog'
@@ -79,9 +84,45 @@ import IconButton from '../common/IconButton.vue'
 const dialog = useDialogStore()
 const { t } = useI18n()
 
+const showIncludeMeOption = computed(
+  () => dialog.hasMicrophone || dialog.turns.some((turn) => turn.side === 'me')
+)
+
+const showUseTranslationOption = computed(
+  () =>
+    Boolean(dialog.effectiveTranslationLanguage) ||
+    dialog.selectedTurns.some((turn) =>
+      turn.segments.some((s) => s.translationState === 'complete')
+    )
+)
+
 function onKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape' && dialog.hasSelection) {
+    if (event.defaultPrevented) return
+    if (document.querySelector('[role="menu"], [role="dialog"]')) return
     dialog.clearSelection()
+    return
+  }
+
+  if (
+    (event.ctrlKey || event.metaKey) &&
+    !event.shiftKey &&
+    !event.altKey &&
+    event.key.toLowerCase() === 'c' &&
+    dialog.activeSelectedCount > 0
+  ) {
+    const target = event.target as HTMLElement | null
+    if (
+      target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable)
+    ) {
+      return
+    }
+    if (window.getSelection()?.toString()) return
+    event.preventDefault()
+    void dialog.copySelected()
   }
 }
 

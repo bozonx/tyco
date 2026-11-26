@@ -6,6 +6,7 @@
       :style="style"
       role="menu"
       @focusout="onFocusout"
+      @keydown.escape.prevent.stop="emit('close')"
       @contextmenu.prevent
       @mousedown.prevent
     >

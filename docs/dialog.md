@@ -79,9 +79,15 @@ Wayland), the strip stays at the bottom of the screen and clicks pass through
 it to the call, except on its buttons. Elsewhere, drag it to move it and drag
 its lower right corner to resize it; TyCo remembers where it was.
 
-## Exporting the transcript
+## Selecting turns and exporting
 
-The **⋯** menu of the toolbar holds the transcript. **Copy the transcript**
+You can select individual turns at any time — including while a call is running — without interrupting speech recognition or recording:
+
+- **Marquee selection**: drag from the empty space outside the bubbles to draw a selection rectangle. Dragging along one side selects only that speaker's turns; dragging across both sides selects both. Hold **Shift** while dragging to add to the current selection, or **Ctrl** / **Cmd** to toggle turns. Dragging inside a bubble still selects text normally.
+- **Clicks and context menu**: **Ctrl/Cmd + click** toggles a single turn, **Shift + click** selects a range from the anchor turn, and **right-click** opens a menu to select, extend a range, or copy a turn (or its translation).
+- **Selection toolbar**: once turns are selected, a toolbar lets you copy them (**Ctrl/Cmd + C** also copies when no text is highlighted), attach them to the current chat, or send them to the action menu. You can filter out your own turns (**Include me**) or prefer translations (**Use translation**). Press **Escape** or click empty space to clear the selection.
+
+The **⋯** menu of the toolbar holds the full transcript. **Copy the transcript**
 puts it on the clipboard with who said what and when; **Send to the action
 menu** opens the action menu with the transcript as the selected text, e.g.
 to summarize it with a transformation:

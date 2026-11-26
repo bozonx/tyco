@@ -214,6 +214,7 @@ export function createDialogTranscript(
       return segments
     },
     apply(side, part, offsetMs) {
+      const existingDraftId = draftIds.get(side)
       if (part.type === 'partial') {
         const text = part.text.trim()
         const rest = withoutDraft(side)
@@ -221,7 +222,7 @@ export function createDialogTranscript(
           if (rest !== segments) commit(rest)
           return undefined
         }
-        const id = deps.createId()
+        const id = existingDraftId ?? deps.createId()
         draftIds.set(side, id)
         const startMs = Math.max(offsetMs, part.startMs + offsetMs)
         commit([
@@ -245,7 +246,7 @@ export function createDialogTranscript(
         return undefined
       }
       const segment: DialogSegment = {
-        id: deps.createId(),
+        id: existingDraftId ?? deps.createId(),
         side,
         startMs: Math.max(offsetMs, part.segment.startMs + offsetMs),
         endMs: Math.max(part.segment.endMs, part.segment.startMs) + offsetMs,

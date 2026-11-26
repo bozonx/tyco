@@ -2,7 +2,11 @@
   <div
     ref="scroller"
     class="dialog-feed"
-    :class="{ 'is-bubbles': isBubble, 'is-marquee-active': isMarqueeActive }"
+    :class="{
+      'is-bubbles': isBubble,
+      'is-marquee-active': isMarqueeActive,
+      'is-selection-mode': hasSelection,
+    }"
     role="log"
     aria-live="polite"
     :aria-label="t('dialog.feedLabel')"
@@ -76,12 +80,12 @@
     <slot v-if="!hasTurns" name="empty" />
 
     <DialogTurnContextMenu
-      v-if="contextMenuState"
+      v-if="contextMenuState && contextMenuTurn"
       :x="contextMenuState.x"
       :y="contextMenuState.y"
-      :is-selected="isSelected(contextMenuState.turn.id)"
+      :is-selected="isSelected(contextMenuTurn.id)"
       :has-selection="hasSelection"
-      :has-translation="turnHasTranslation(contextMenuState.turn)"
+      :has-translation="turnHasTranslation(contextMenuTurn)"
       @action="onContextMenuAction"
       @close="contextMenuState = null"
     />
@@ -148,7 +152,7 @@ const emit = defineEmits<{
   /** Select range up to this turn */
   (e: 'select-range-up-to', turnId: string): void
   /** Select multiple turns from marquee */
-  (e: 'select-turns', turnIds: string[]): void
+  (e: 'select-turns', turnIds: string[], anchorId?: string | null): void
   /** Clear all turn selection */
   (e: 'clear-selection'): void
   /** Copy a turn's original text */
@@ -171,6 +175,7 @@ interface MarqueeSession {
   currentContentY: number
   mode: MarqueeSelectionMode
   baseSelectedIds: string[]
+  lastEmittedIds: string[] | null
   isDragging: boolean
 }
 
@@ -201,6 +206,17 @@ function stopAutoScroll() {
     cancelAnimationFrame(autoScrollAnimationId)
     autoScrollAnimationId = null
   }
+}
+
+function areSelectionsEqual(
+  a: readonly string[] | null,
+  b: readonly string[]
+): boolean {
+  if (!a || a.length !== b.length) return false
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) return false
+  }
+  return true
 }
 
 function updateSelectionFromCurrentPointer() {
@@ -240,7 +256,18 @@ function updateSelectionFromCurrentPointer() {
     allTurnIds.value
   )
 
-  emit('select-turns', newSelection)
+  if (areSelectionsEqual(session.lastEmittedIds, newSelection)) return
+  session.lastEmittedIds = newSelection
+
+  let anchorId: string | null | undefined
+  if (session.mode === 'replace' && newSelection.length > 0) {
+    const isDraggingUp = session.currentContentY < session.startContentY
+    anchorId = isDraggingUp
+      ? newSelection[newSelection.length - 1]
+      : newSelection[0]
+  }
+
+  emit('select-turns', newSelection, anchorId)
 }
 
 function stepAutoScroll() {
@@ -289,9 +316,22 @@ function stepAutoScroll() {
 
 function onPointerDown(event: PointerEvent) {
   if (event.button !== 0) return
+  if (contextMenuState.value) return
   if (isMarqueeIgnoredTarget(event.target)) return
   const element = scroller.value
   if (!element) return
+
+  // Ignore clicks/drags on the native scrollbar track or thumb
+  const isOnVerticalScrollbar =
+    element.clientWidth > 0 && event.offsetX >= element.clientWidth
+  const isOnHorizontalScrollbar =
+    element.clientHeight > 0 && event.offsetY >= element.clientHeight
+  if (
+    event.target === element &&
+    (isOnVerticalScrollbar || isOnHorizontalScrollbar)
+  ) {
+    return
+  }
 
   const scrollerRect = element.getBoundingClientRect()
   const startContentX = event.clientX - scrollerRect.left + element.scrollLeft
@@ -306,6 +346,7 @@ function onPointerDown(event: PointerEvent) {
     currentContentY: startContentY,
     mode: getMarqueeMode(event),
     baseSelectedIds: [...(props.selectedTurnIds ?? [])],
+    lastEmittedIds: null,
     isDragging: false,
   }
 
@@ -330,6 +371,7 @@ function onWindowPointerMove(event: PointerEvent) {
     if (dist >= MARQUEE_DRAG_THRESHOLD_PX) {
       session.isDragging = true
       isFollowing.value = false
+      window.getSelection()?.removeAllRanges()
     }
   }
 
@@ -364,7 +406,12 @@ function onWindowPointerUp(event: PointerEvent) {
 
   const session = marqueeSession.value
   if (session && !session.isDragging) {
-    if (!event.shiftKey && !event.ctrlKey && !event.metaKey) {
+    if (
+      hasSelection.value &&
+      !event.shiftKey &&
+      !event.ctrlKey &&
+      !event.metaKey
+    ) {
       emit('clear-selection')
     }
   }
@@ -380,17 +427,31 @@ onUnmounted(() => {
   stopAutoScroll()
 })
 
-const contextMenuState = ref<{
-  x: number
-  y: number
-  turn: DialogTurnType
-} | null>(null)
+const contextMenuState = ref<{ x: number; y: number; turnId: string } | null>(
+  null
+)
+
+const contextMenuTurn = computed<DialogTurnType | null>(() => {
+  const turnId = contextMenuState.value?.turnId
+  if (!turnId) return null
+  const item = props.items.find(
+    (entry) => entry.type === 'turn' && entry.turn.id === turnId
+  )
+  return item?.type === 'turn' ? item.turn : null
+})
 
 const hasTurns = computed(() =>
   props.items.some((item) => item.type === 'turn')
 )
 
 const hasSelection = computed(() => (props.selectedTurnIds?.length ?? 0) > 0)
+
+// Pause auto-scroll while the user is actively selecting turns
+watch(hasSelection, (active, wasActive) => {
+  if (active && !wasActive) {
+    isFollowing.value = false
+  }
+})
 
 function isSelected(turnId: string): boolean {
   return Boolean(props.selectedTurnIds?.includes(turnId))
@@ -411,15 +472,19 @@ function turnHasTranslation(turn: DialogTurnType): boolean {
 }
 
 function openContextMenu(event: MouseEvent, turn: DialogTurnType) {
-  contextMenuState.value = { x: event.clientX, y: event.clientY, turn }
+  contextMenuState.value = {
+    x: event.clientX,
+    y: event.clientY,
+    turnId: turn.id,
+  }
 }
 
 function onContextMenuAction(
   action:
     'toggle-select' | 'select-range-up-to' | 'copy-turn' | 'copy-translation'
 ) {
-  if (!contextMenuState.value) return
-  const turn = contextMenuState.value.turn
+  const turn = contextMenuTurn.value
+  if (!turn) return
   if (action === 'toggle-select') {
     emit('toggle-single-turn', turn.id)
   } else if (action === 'select-range-up-to') {
@@ -466,6 +531,11 @@ function scrollToEnd() {
 watch(
   () => props.items,
   async () => {
+    if (marqueeSession.value?.isDragging) {
+      await nextTick()
+      updateSelectionFromCurrentPointer()
+      return
+    }
     if (!isFollowing.value) return
     await nextTick()
     scrollToEnd()
@@ -486,6 +556,10 @@ onMounted(scrollToEnd)
   flex-direction: column;
   gap: 0.75rem;
   padding: var(--space-md);
+}
+
+.dialog-feed:not(.is-bubbles).is-selection-mode {
+  padding-left: calc(var(--space-md) + 0.75rem);
 }
 
 .dialog-feed.is-marquee-active {

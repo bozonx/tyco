@@ -26,8 +26,28 @@ describe('DialogSelectionToolbar.vue', () => {
     desktop.dispose()
   })
 
-  it('renders selection count and triggers actions', async () => {
+  it('renders active selection count and triggers actions', async () => {
     const dialog = useDialogStore()
+    dialog.segments = [
+      {
+        id: 'turn-1',
+        side: 'remote',
+        startMs: 0,
+        endMs: 1000,
+        text: 'Hello',
+        isFinal: true,
+        translationState: 'idle',
+      },
+      {
+        id: 'turn-2',
+        side: 'me',
+        startMs: 2000,
+        endMs: 3000,
+        text: 'Hi',
+        isFinal: true,
+        translationState: 'idle',
+      },
+    ]
     dialog.selectedTurnIds = ['turn-1', 'turn-2']
 
     const wrapper = mount(DialogSelectionToolbar, {
@@ -41,6 +61,61 @@ describe('DialogSelectionToolbar.vue', () => {
     const clearButton = buttons[0]
     await clearButton.trigger('click')
     expect(dialog.selectedTurnIds).toEqual([])
+    wrapper.unmount()
+  })
+
+  it('does not clear selection on Escape when a menu is open', async () => {
+    const dialog = useDialogStore()
+    dialog.selectedTurnIds = ['turn-1']
+
+    const menu = document.createElement('div')
+    menu.setAttribute('role', 'menu')
+    document.body.appendChild(menu)
+
+    const wrapper = mount(DialogSelectionToolbar, {
+      global: { plugins: [i18n] },
+    })
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await flushPromises()
+    expect(dialog.selectedTurnIds).toEqual(['turn-1'])
+
+    document.body.removeChild(menu)
+    wrapper.unmount()
+  })
+
+  it('copies selected turns on Ctrl+C when no text is highlighted', async () => {
+    const dialog = useDialogStore()
+    dialog.segments = [
+      {
+        id: 'turn-1',
+        side: 'remote',
+        startMs: 0,
+        endMs: 1000,
+        text: 'Hello',
+        isFinal: true,
+        translationState: 'idle',
+      },
+    ]
+    dialog.selectedTurnIds = ['turn-1']
+    const copySpy = vi
+      .spyOn(dialog, 'copySelected')
+      .mockResolvedValue(undefined)
+
+    const wrapper = mount(DialogSelectionToolbar, {
+      global: { plugins: [i18n] },
+    })
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'c',
+        ctrlKey: true,
+        cancelable: true,
+      })
+    )
+    await flushPromises()
+    expect(copySpy).toHaveBeenCalledOnce()
+    wrapper.unmount()
   })
 
   it('triggers sendSelectedToActionMenu when clicking action menu button', async () => {

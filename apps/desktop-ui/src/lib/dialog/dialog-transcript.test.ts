@@ -126,6 +126,23 @@ describe('createDialogTranscript', () => {
     expect(model.segments.map((item) => item.text)).toEqual(['yes', 'hello'])
   })
 
+  it('keeps a stable segment id across partial updates and finalization', () => {
+    const { model } = transcript()
+    model.apply('remote', { type: 'partial', text: 'hel', startMs: 0 }, 1000)
+    const firstDraftId = model.segments[0].id
+    model.apply('remote', { type: 'partial', text: 'hello', startMs: 0 }, 1000)
+    expect(model.segments[0].id).toBe(firstDraftId)
+    const settled = model.apply(
+      'remote',
+      {
+        type: 'final',
+        segment: { text: 'hello world', startMs: 0, endMs: 500 },
+      },
+      1000
+    )
+    expect(settled?.id).toBe(firstDraftId)
+  })
+
   it('drops an empty guess and a lost one', () => {
     const { model } = transcript()
     model.apply('me', { type: 'partial', text: 'um', startMs: 0 }, 0)

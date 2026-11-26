@@ -180,7 +180,15 @@ describe('DialogFeed.vue - Marquee Selection', () => {
     expect(feedEl.classes()).toContain('is-marquee-active')
     expect(wrapper.emitted('select-turns')).toBeTruthy()
     const lastEmit = wrapper.emitted('select-turns')!.slice(-1)[0]
-    expect(lastEmit).toEqual([['turn-1']])
+    expect(lastEmit).toEqual([['turn-1'], 'turn-1'])
+
+    // Moving slightly without changing intersection should not emit duplicates
+    const emitCountBefore = wrapper.emitted('select-turns')!.length
+    window.dispatchEvent(
+      new PointerEvent('pointermove', { clientX: 155, clientY: 52 })
+    )
+    await wrapper.vm.$nextTick()
+    expect(wrapper.emitted('select-turns')!.length).toBe(emitCountBefore)
 
     // Drag further to intersect both turns
     window.dispatchEvent(
@@ -189,7 +197,7 @@ describe('DialogFeed.vue - Marquee Selection', () => {
     await wrapper.vm.$nextTick()
 
     const bothEmit = wrapper.emitted('select-turns')!.slice(-1)[0]
-    expect(bothEmit).toEqual([['turn-1', 'turn-2']])
+    expect(bothEmit).toEqual([['turn-1', 'turn-2'], 'turn-1'])
 
     // End drag
     window.dispatchEvent(
@@ -201,6 +209,125 @@ describe('DialogFeed.vue - Marquee Selection', () => {
     expect(feedEl.classes()).not.toContain('is-marquee-active')
 
     wrapper.unmount()
+  })
+
+  it('ignores pointerdown on the native scrollbar', async () => {
+    const wrapper = mount(DialogFeed, {
+      props: {
+        items,
+        isBubble: true,
+        isTranslationOnly: false,
+        selectedTurnIds: ['turn-1'],
+      },
+      global: { plugins: [i18n] },
+    })
+
+    const feedEl = wrapper.find('.dialog-feed')
+    Object.defineProperty(feedEl.element, 'clientWidth', {
+      value: 480,
+      configurable: true,
+    })
+
+    const downEvent = new PointerEvent('pointerdown', {
+      button: 0,
+      clientX: 490,
+      clientY: 100,
+      bubbles: true,
+    })
+    Object.defineProperty(downEvent, 'offsetX', { value: 490 })
+    feedEl.element.dispatchEvent(downEvent)
+
+    window.dispatchEvent(
+      new PointerEvent('pointerup', { button: 0, clientX: 490, clientY: 100 })
+    )
+
+    expect(wrapper.emitted('clear-selection')).toBeUndefined()
+    expect(wrapper.emitted('select-turns')).toBeUndefined()
+  })
+
+  it('uses the bottom turn as anchor when dragging upward', async () => {
+    const wrapper = mount(DialogFeed, {
+      props: {
+        items,
+        isBubble: true,
+        isTranslationOnly: false,
+        selectedTurnIds: [],
+      },
+      global: { plugins: [i18n] },
+      attachTo: document.body,
+    })
+
+    const feedEl = wrapper.find('.dialog-feed')
+    const turnEls = wrapper.findAll('[data-turn-id]')
+
+    vi.spyOn(feedEl.element, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 500,
+      bottom: 500,
+      width: 500,
+      height: 500,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    })
+    vi.spyOn(turnEls[0].element, 'getBoundingClientRect').mockReturnValue({
+      left: 10,
+      top: 10,
+      right: 200,
+      bottom: 60,
+      width: 190,
+      height: 50,
+      x: 10,
+      y: 10,
+      toJSON: () => {},
+    })
+    vi.spyOn(turnEls[1].element, 'getBoundingClientRect').mockReturnValue({
+      left: 300,
+      top: 70,
+      right: 490,
+      bottom: 120,
+      width: 190,
+      height: 50,
+      x: 300,
+      y: 70,
+      toJSON: () => {},
+    })
+
+    feedEl.element.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        button: 0,
+        clientX: 450,
+        clientY: 150,
+        bubbles: true,
+      })
+    )
+    window.dispatchEvent(
+      new PointerEvent('pointermove', { clientX: 50, clientY: 20 })
+    )
+    await wrapper.vm.$nextTick()
+
+    const lastEmit = wrapper.emitted('select-turns')!.slice(-1)[0]
+    expect(lastEmit).toEqual([['turn-1', 'turn-2'], 'turn-2'])
+
+    window.dispatchEvent(new PointerEvent('pointerup'))
+    wrapper.unmount()
+  })
+
+  it('prevents native text selection on Shift+mousedown on a turn', () => {
+    const wrapper = mount(DialogFeed, {
+      props: { items, isBubble: true, isTranslationOnly: false },
+      global: { plugins: [i18n] },
+    })
+
+    const turnEl = wrapper.find('[data-turn-id="turn-1"]')
+    const event = new MouseEvent('mousedown', {
+      shiftKey: true,
+      cancelable: true,
+      bubbles: true,
+    })
+    turnEl.element.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(true)
   })
 
   it('supports Shift modifier for union marquee selection', async () => {
@@ -265,7 +392,7 @@ describe('DialogFeed.vue - Marquee Selection', () => {
 
     // With shift: turn-1 (previously selected) + turn-2 (intersected)
     const lastEmit = wrapper.emitted('select-turns')!.slice(-1)[0]
-    expect(lastEmit).toEqual([['turn-1', 'turn-2']])
+    expect(lastEmit).toEqual([['turn-1', 'turn-2'], undefined])
 
     window.dispatchEvent(new PointerEvent('pointerup'))
     wrapper.unmount()
