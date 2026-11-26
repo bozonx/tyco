@@ -1803,7 +1803,7 @@
     "selectionUseTranslation": "번역 사용",
     "copySelected": "선택 항목 복사",
     "sendToChat": "채팅으로",
-    "promptAi": "AI에 프롬프트",
+    "toActionMenuShort": "작업 메뉴로",
     "microphoneOn": "마이크 켬",
     "microphoneOff": "마이크 끔",
     "microphoneOnHint": "마이크 녹음이 켜져 있으며 내 음성이 받아쓰기됩니다 (클릭하여 음소거)",

@@ -71,6 +71,21 @@ describe('ActionOverlayLayout navigation', () => {
     wrapper.unmount()
   })
 
+  it('shows Back button at root and returns to dialog when actionOrigin is dialog', async () => {
+    desktop.setState({ mode: 'selectionActions', actionOrigin: 'dialog' })
+    const wrapper = mount(ActionOverlayLayout, {
+      global: { plugins: [desktop.pinia] },
+    })
+    expect(wrapper.find('.action-overlay-esc').exists()).toBe(true)
+    expect(wrapper.get('.action-overlay-esc').text()).toContain('common.back')
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await flushPromises()
+    const activateCalls = desktop.backend.callsOf('activate_mode')
+    expect(activateCalls).toContainEqual({ mode: 'dialog' })
+    wrapper.unmount()
+  })
+
   it('goes back from a step over the selection action menu', async () => {
     desktop.setState({ mode: 'selectionActions' })
     const menus = useMenuModalsStore()

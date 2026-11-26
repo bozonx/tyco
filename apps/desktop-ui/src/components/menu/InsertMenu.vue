@@ -135,7 +135,11 @@ const menuModalsStore = useMenuModalsStore()
 const editorInputStore = useEditorInputStore()
 
 const resolvedEscMode = computed(
-  () => props.escMode ?? (props.correction ? 'back' : 'auto')
+  () =>
+    props.escMode ??
+    (props.correction || desktopStore.desktopState?.actionOrigin === 'dialog'
+      ? 'back'
+      : 'auto')
 )
 
 /**

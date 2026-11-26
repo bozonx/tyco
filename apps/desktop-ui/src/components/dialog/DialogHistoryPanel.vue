@@ -374,6 +374,46 @@ async function copyDialogTranscript(id: string) {
   }
 }
 
+async function sendDialogToActionMenu(id: string) {
+  try {
+    let text: string
+    if (dialog.currentDialogId === id) {
+      text = dialog.exportText()
+    } else {
+      const loaded = await dialogHistory.getDialog(id)
+      if (!loaded) {
+        toastKey('dialog.notFound', 'error')
+        return
+      }
+      text = exportDialogTranscript(
+        loaded.segments.map((segment) => ({ ...segment, isFinal: true })),
+        {
+          includeTranslation: Boolean(loaded.translationTargetLanguage),
+          breaks: loaded.sessionBreaks,
+          labels: {
+            me: t('dialog.sideMe'),
+            remote: t('dialog.sideRemote'),
+            translation: t('dialog.translationLabel'),
+            sessionResumed: t('dialog.sessionResumedListening'),
+            sessionResumedRecording: t('dialog.sessionResumedRecording'),
+            sessionStartedListening: t('dialog.sessionStartedListening'),
+            sessionStartedRecording: t('dialog.sessionStartedRecording'),
+            sessionResumedListening: t('dialog.sessionResumedListening'),
+          },
+        }
+      )
+    }
+    if (!text) return
+    await dialog.sendToActionMenu(text)
+  } catch (error) {
+    clientLogger.warn(
+      `Could not send dialog transcript ${id} to action menu: ${String(error)}`,
+      'dialog'
+    )
+    toastKey('history.operationFailed', 'error')
+  }
+}
+
 function getRowMenuItems(item: DialogSummary): DropdownMenuItem[] {
   return [
     {
@@ -385,6 +425,11 @@ function getRowMenuItems(item: DialogSummary): DropdownMenuItem[] {
       label: t('dialog.copy'),
       icon: 'mdi:content-copy',
       action: () => void copyDialogTranscript(item.id),
+    },
+    {
+      label: t('dialog.toActionMenu'),
+      icon: 'mdi:lightning-bolt-outline',
+      action: () => void sendDialogToActionMenu(item.id),
     },
     ...(item.recordingCount > 0
       ? [

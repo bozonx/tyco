@@ -1799,7 +1799,7 @@
     "selectionUseTranslation": "使用翻譯",
     "copySelected": "複製所選內容",
     "sendToChat": "發送到聊天",
-    "promptAi": "發送提示至 AI",
+    "toActionMenuShort": "前往操作選單",
     "microphoneOn": "麥克風已開啟",
     "microphoneOff": "麥克風已關閉",
     "microphoneOnHint": "麥克風錄音已開啟，您的聲音將被轉寫（點擊靜音）",

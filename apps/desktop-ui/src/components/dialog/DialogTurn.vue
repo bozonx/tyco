@@ -194,11 +194,13 @@ const hasFailedTranslation = computed(
 }
 
 .dialog-turn.is-bubble.is-remote .dialog-turn-checkbox {
-  left: -1.5rem;
+  right: -1.5rem;
+  left: auto;
 }
 
 .dialog-turn.is-bubble.is-me .dialog-turn-checkbox {
-  right: -1.5rem;
+  left: -1.5rem;
+  right: auto;
 }
 
 .dialog-turn.is-paragraph .dialog-turn-checkbox {

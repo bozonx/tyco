@@ -51,6 +51,8 @@ pub struct Activation {
     pub settings_tab: Option<String>,
     /// The run the command overlay shows; only for `CommandRun`.
     pub command_run: Option<CommandRunRequest>,
+    /// The mode that opened this activation, e.g. `Dialog` for returning back with Esc.
+    pub action_origin: Option<ActivationMode>,
 }
 
 impl Activation {
@@ -76,6 +78,7 @@ impl Activation {
             history_origin: None,
             settings_tab: None,
             command_run: None,
+            action_origin: None,
         }
     }
 

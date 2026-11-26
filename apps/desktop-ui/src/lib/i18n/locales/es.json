@@ -1803,7 +1803,7 @@
     "selectionUseTranslation": "Usar traducción",
     "copySelected": "Copiar selección",
     "sendToChat": "Al chat",
-    "promptAi": "Prompt a la IA",
+    "toActionMenuShort": "Al menú de acciones",
     "microphoneOn": "Micrófono activado",
     "microphoneOff": "Micrófono desactivado",
     "microphoneOnHint": "Grabación de micrófono activa, tu voz se transcribirá (clic para silenciar)",

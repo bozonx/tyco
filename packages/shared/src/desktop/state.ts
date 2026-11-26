@@ -74,6 +74,7 @@ export const DEFAULT_DESKTOP_VIEW_STATE: DesktopViewState = {
   historyOrigin: null,
   settingsTab: null,
   commandRun: null,
+  actionOrigin: null,
   userConfig: DEFAULT_USER_CONFIG,
   sessionState: DEFAULT_SESSION_STATE,
   userData: DEFAULT_USER_DATA_STATE,
@@ -132,6 +133,7 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
       historyOrigin,
       settingsTab,
       commandRun,
+      actionOrigin: view.actionOrigin,
     },
     window: {
       isWindowShown,

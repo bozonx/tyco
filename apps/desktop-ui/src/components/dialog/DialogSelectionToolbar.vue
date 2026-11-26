@@ -57,11 +57,11 @@
       <Button
         size="sm"
         variant="neutral"
-        icon="mdi:creation-outline"
+        icon="mdi:lightning-bolt-outline"
         :disabled="dialog.activeSelectedCount === 0"
-        @click="dialog.promptAiSelected"
+        @click="dialog.sendSelectedToActionMenu"
       >
-        {{ t('dialog.promptAi') }}
+        {{ t('dialog.toActionMenuShort') }}
       </Button>
     </div>
   </div>

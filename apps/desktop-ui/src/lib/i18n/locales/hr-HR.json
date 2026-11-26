@@ -1803,7 +1803,7 @@
     "selectionUseTranslation": "Koristi prijevod",
     "copySelected": "Kopiraj odabrano",
     "sendToChat": "U chat",
-    "promptAi": "Upit za AI",
+    "toActionMenuShort": "U izbornik radnji",
     "microphoneOn": "Mikrofon uklj.",
     "microphoneOff": "Mikrofon isklj.",
     "microphoneOnHint": "Snimanje mikrofona je uključeno, vaš glas će se transkribirati (kliknite za isključivanje)",

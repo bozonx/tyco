@@ -1803,7 +1803,7 @@
     "selectionUseTranslation": "Использовать перевод",
     "copySelected": "Скопировать выделенное",
     "sendToChat": "В чат",
-    "promptAi": "Промпт в ИИ",
+    "toActionMenuShort": "В меню действий",
     "microphoneOn": "Микрофон вкл",
     "microphoneOff": "Микрофон выкл",
     "microphoneOnHint": "Запись с микрофона включена, голос будет транскрибироваться (нажмите, чтобы выключить)",

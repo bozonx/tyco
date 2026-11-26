@@ -135,26 +135,6 @@
       :title="t('dialog.history')"
       @click="dialog.isHistoryOpen = !dialog.isHistoryOpen"
     />
-    <IconButton
-      class="dialog-toolbar-copy"
-      variant="ghost"
-      size="sm"
-      icon="mdi:content-copy"
-      :disabled="isEmpty"
-      :label="t('dialog.copy')"
-      :title="t('dialog.copy')"
-      @click="dialog.copyTranscript()"
-    />
-    <IconButton
-      class="dialog-toolbar-action-menu"
-      variant="ghost"
-      size="sm"
-      icon="mdi:lightning-bolt-outline"
-      :disabled="isEmpty"
-      :label="t('dialog.toActionMenu')"
-      :title="t('dialog.toActionMenu')"
-      @click="dialog.sendToActionMenu()"
-    />
     <ConfirmModal
       :open="isClearConfirmOpen"
       :title="t('dialog.clearTitle')"

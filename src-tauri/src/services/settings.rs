@@ -36,6 +36,7 @@ trait SettingsHost {
     fn with_disk_changes(&self, config: &Value) -> Result<Value, AppError>;
     /// Writes the config and returns it as saved: with the changes another
     /// device synced meanwhile. A failed write leaves the files as they were.
+    #[allow(clippy::result_large_err)]
     fn write_config(
         &self,
         config: &Value,

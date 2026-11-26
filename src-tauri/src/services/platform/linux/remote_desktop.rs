@@ -315,6 +315,7 @@ impl Worker {
     }
 
     /// Presses `keys`; on failure, how many went through.
+    #[allow(clippy::result_large_err)]
     async fn send(&self, keys: &[KeyEvent]) -> Result<(), (usize, AppError)> {
         let (Some(portal), Some(session)) = (&self.portal, &self.session) else {
             return Err((

@@ -430,50 +430,15 @@ describe('DialogToolbar.vue', () => {
     })
   })
 
-  it('renders copy transcript and action menu icon buttons instead of more menu', async () => {
-    const dialog = useDialogStore()
-    const copySpy = vi
-      .spyOn(dialog, 'copyTranscript')
-      .mockResolvedValue({ success: true, result: undefined })
-    const actionSpy = vi
-      .spyOn(dialog, 'sendToActionMenu')
-      .mockResolvedValue({ success: true, result: undefined })
-
+  it('does not render copy transcript and action menu icon buttons in toolbar', () => {
     const wrapper = mount(DialogToolbar, {
       global: { plugins: [i18n, desktop.pinia] },
     })
 
-    const copyBtn = wrapper.find('button.dialog-toolbar-copy')
-    const actionBtn = wrapper.find('button.dialog-toolbar-action-menu')
-
-    expect(copyBtn.exists()).toBe(true)
-    expect(actionBtn.exists()).toBe(true)
-    // Disabled when empty
-    expect(copyBtn.attributes('disabled')).toBeDefined()
-    expect(actionBtn.attributes('disabled')).toBeDefined()
-
-    // Simulate content
-    dialog.segments = [
-      {
-        id: '1',
-        side: 'remote',
-        startMs: 0,
-        endMs: 100,
-        text: 'Hello',
-        isFinal: true,
-        translationState: 'idle',
-      },
-    ]
-    await flushPromises()
-
-    expect(copyBtn.attributes('disabled')).toBeUndefined()
-    expect(actionBtn.attributes('disabled')).toBeUndefined()
-
-    await copyBtn.trigger('click')
-    expect(copySpy).toHaveBeenCalledTimes(1)
-
-    await actionBtn.trigger('click')
-    expect(actionSpy).toHaveBeenCalledTimes(1)
+    expect(wrapper.find('button.dialog-toolbar-copy').exists()).toBe(false)
+    expect(wrapper.find('button.dialog-toolbar-action-menu').exists()).toBe(
+      false
+    )
   })
 
   it('persists history panel open state in user config', async () => {

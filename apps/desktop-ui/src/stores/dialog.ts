@@ -801,20 +801,30 @@ export const useDialogStore = defineStore('dialog', () => {
     await appNavigation.goToChat()
   }
 
-  async function promptAiSelected() {
+  async function sendSelectedToActionMenu() {
     const text = formatSelectedText()
     if (!text) return
     return useIpcStore().callOrNotify('activate_mode', {
-      mode: 'chatPrompts',
+      mode: 'selectionActions',
       text,
+      actionPageIndex: 0,
+      actionOrigin: 'dialog',
     })
   }
 
+  async function promptAiSelected() {
+    return sendSelectedToActionMenu()
+  }
+
   /** The transcript goes to the action menu as if it were selected text */
-  async function sendToActionMenu() {
+  async function sendToActionMenu(customText?: string) {
+    const text = customText ?? exportText()
+    if (!text) return
     return useIpcStore().callOrNotify('activate_mode', {
       mode: 'selectionActions',
-      text: exportText(),
+      text,
+      actionPageIndex: 0,
+      actionOrigin: 'dialog',
     })
   }
 
@@ -1043,6 +1053,7 @@ export const useDialogStore = defineStore('dialog', () => {
     formatSelectedText,
     copySelected,
     sendSelectedToChat,
+    sendSelectedToActionMenu,
     promptAiSelected,
   }
 })

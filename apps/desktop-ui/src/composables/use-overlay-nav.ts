@@ -9,6 +9,7 @@ import { appNavigation } from '../navigation'
 import { useCloseWindowStore } from '../stores/close-window'
 import { useDesktopStore } from '../stores/desktop'
 import { useEditorInputStore } from '../stores/editor-input'
+import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useI18n } from './use-i18n'
 
@@ -17,7 +18,11 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
   const desktopStore = useDesktopStore()
   const editorInputStore = useEditorInputStore()
   const closeWindowStore = useCloseWindowStore()
+  const ipcStore = useIpcStore()
   const { t } = useI18n()
+
+  const isFromDialog = () =>
+    desktopStore.desktopState?.actionOrigin === 'dialog'
 
   /** A single step over the menu view of its quick window mode */
   const isOverModeMenu = () =>
@@ -33,6 +38,14 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
   const goBack = () => {
     if (menuModalsStore.menuBreadcrumbs.length > 1) {
       menuModalsStore.back()
+    } else if (isFromDialog() && isAtRoot()) {
+      menuModalsStore.cancelPending()
+      menuModalsStore.closeAll()
+      if (isQuickWindow()) {
+        void ipcStore.callOrNotify('activate_mode', { mode: 'dialog' })
+      } else {
+        void appNavigation.goToDialog()
+      }
     } else if (!isQuickWindow()) {
       menuModalsStore.cancelPending()
       menuModalsStore.closeAll()
@@ -45,6 +58,16 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
 
   /** Esc at the root: the quick window closes, the main one shows the editor */
   const hideWindow = () => {
+    if (isFromDialog()) {
+      menuModalsStore.cancelPending()
+      menuModalsStore.closeAll()
+      if (isQuickWindow()) {
+        void ipcStore.callOrNotify('activate_mode', { mode: 'dialog' })
+      } else {
+        void appNavigation.goToDialog()
+      }
+      return
+    }
     if (isQuickWindow()) {
       closeWindowStore.closeAll()
       return
@@ -60,8 +83,9 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
     {
       currentModal: () => menuModalsStore.currentModal,
       canGoBack: () =>
-        menuModalsStore.currentModal !== MenuModals.NONE &&
-        (!isAtRoot() || !isQuickWindow()),
+        (isFromDialog() && isAtRoot()) ||
+        (menuModalsStore.currentModal !== MenuModals.NONE &&
+          (!isAtRoot() || !isQuickWindow())),
       isQuickWindow,
       t,
       goBack,
@@ -70,7 +94,9 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
     },
     () => ({
       ...options?.(),
-      ...(!isQuickWindow() ? { escMode: 'back' as const } : {}),
+      ...(!isQuickWindow() || isFromDialog()
+        ? { escMode: 'back' as const }
+        : {}),
     })
   )
   return { ...nav, isAtRoot }

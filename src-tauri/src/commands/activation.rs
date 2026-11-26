@@ -51,6 +51,7 @@ pub fn activate_mode(
     history_origin: Option<crate::models::EditorHistoryOrigin>,
     text: Option<String>,
     settings_tab: Option<String>,
+    action_origin: Option<ActivationMode>,
 ) -> Result<(), AppError> {
     if !ActivationMode::PUBLIC_MODES.contains(&mode) {
         return Err(AppError::InvalidInput(format!(
@@ -74,6 +75,7 @@ pub fn activate_mode(
     }
     activation.settings_tab = settings_tab;
     activation.selected_text = text;
+    activation.action_origin = action_origin;
     runtime::activate(&app, activation)
 }
 

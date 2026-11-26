@@ -21,7 +21,8 @@
       "customActionIndex": null,
       "historyOrigin": null,
       "settingsTab": null,
-      "commandRun": null
+      "commandRun": null,
+      "actionOrigin": null
     },
     "window": {
       "isWindowShown": true,

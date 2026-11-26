@@ -1799,7 +1799,7 @@
     "selectionUseTranslation": "翻訳を使用",
     "copySelected": "選択項目をコピー",
     "sendToChat": "チャットへ",
-    "promptAi": "AI にプロンプト",
+    "toActionMenuShort": "アクションメニューへ",
     "microphoneOn": "マイク オン",
     "microphoneOff": "マイク オフ",
     "microphoneOnHint": "マイク録音がオンです。自分の声が文字起こしされます（クリックでミュート）",

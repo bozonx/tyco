@@ -39,6 +39,8 @@ pub struct ActivationSnapshot {
     pub settings_tab: Option<String>,
     /// The run the command overlay shows, for `commandRun`.
     pub command_run: Option<CommandRunRequest>,
+    /// The mode that opened this activation, e.g. `dialog` for returning back with Esc.
+    pub action_origin: Option<ActivationMode>,
 }
 #[derive(Debug, Clone, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]

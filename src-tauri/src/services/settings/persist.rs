@@ -278,6 +278,7 @@ impl ConfigFiles {
     /// another device synced into `config.json` meanwhile. A file a newer Tyco
     /// wrote is left alone. When the device file cannot be written after the
     /// user file was, the user file is put back: the save fails as a whole.
+    #[allow(clippy::result_large_err)]
     pub fn save(
         &self,
         device: &DeviceStore,

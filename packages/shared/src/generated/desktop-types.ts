@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: aec557cf02e795a8c6f0aa4f66a089f2ee5398a5da83e9f103df9882f78bbf0f
+// Source hash: 1e837079c224e5b51cbec5578f99cb9b81075827b95359e5fa9c495f2ba0ea90
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -499,6 +499,11 @@ export type DesktopActivationState = {
   settingsTab: string | null
   /** The run the command overlay shows, for `commandRun`. */
   commandRun: CommandRunRequest | null
+  /**
+   * The mode that opened this activation, e.g. `dialog` for returning back with
+   * Esc.
+   */
+  actionOrigin: ActivationMode | null
 }
 
 /**

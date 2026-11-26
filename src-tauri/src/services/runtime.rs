@@ -312,6 +312,7 @@ fn activate_on_main_thread(
         snapshot.activation.history_origin = activation.history_origin;
         snapshot.activation.settings_tab = activation.settings_tab;
         snapshot.activation.command_run = activation.command_run;
+        snapshot.activation.action_origin = activation.action_origin;
         snapshot.window.is_window_shown = true;
         snapshot.window.window_profile = activation.mode.profile();
     });

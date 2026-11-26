@@ -1,6 +1,6 @@
 import { DEFAULT_USER_CONFIG } from '@tyco/shared'
 import { flushPromises, mount } from '@vue/test-utils'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { i18n } from '../../lib/i18n'
 import {
@@ -41,6 +41,36 @@ describe('DialogSelectionToolbar.vue', () => {
     const clearButton = buttons[0]
     await clearButton.trigger('click')
     expect(dialog.selectedTurnIds).toEqual([])
+  })
+
+  it('triggers sendSelectedToActionMenu when clicking action menu button', async () => {
+    const dialog = useDialogStore()
+    dialog.segments = [
+      {
+        id: 'turn-1',
+        side: 'me',
+        startMs: 0,
+        endMs: 1000,
+        text: 'Hello',
+        isFinal: true,
+        translationState: 'idle',
+      },
+    ]
+    dialog.selectedTurnIds = ['turn-1']
+    const spy = vi
+      .spyOn(dialog, 'sendSelectedToActionMenu')
+      .mockResolvedValue(undefined as never)
+
+    const wrapper = mount(DialogSelectionToolbar, {
+      global: { plugins: [i18n] },
+    })
+
+    const buttons = wrapper.findAll('button')
+    // Buttons: [Clear, Copy, To chat, To action menu]
+    const actionMenuBtn = buttons[3]
+    expect(actionMenuBtn.text()).toBe('To action menu')
+    await actionMenuBtn.trigger('click')
+    expect(spy).toHaveBeenCalledOnce()
   })
 
   it('clears selection on Escape key', async () => {

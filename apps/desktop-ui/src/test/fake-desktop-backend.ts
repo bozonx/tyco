@@ -96,6 +96,7 @@ export class FakeDesktopBackend {
       historyOrigin: null,
       settingsTab: null,
       commandRun: null,
+      actionOrigin: null,
       ...structuredClone(options.activation),
     }
     this.window = {
@@ -416,6 +417,7 @@ export class FakeDesktopBackend {
     this.handle('set_operation_catalog', noop)
     this.handle('set_tray_menu_labels', noop)
     this.handle('set_tray_recording', noop)
+    this.handle('activate_mode', noop)
     this.handle('list_input_devices', () => [])
   }
 }

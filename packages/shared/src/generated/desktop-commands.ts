@@ -103,6 +103,7 @@ export interface DesktopCommands {
       historyOrigin?: EditorHistoryOrigin | null
       text?: string | null
       settingsTab?: string | null
+      actionOrigin?: ActivationMode | null
     }
     result: void
   }
