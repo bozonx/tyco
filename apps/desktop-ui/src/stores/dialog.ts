@@ -950,6 +950,7 @@ export const useDialogStore = defineStore('dialog', () => {
     buildSubtitlesView({
       turns: turns.value,
       translationLanguage: effectiveTranslationLanguage.value,
+      hasTranslationModel: Boolean(translationModel.value),
       isTranslationOnly: config.value.isTranslationOnly,
       isActive: isActive.value,
       errorText: errorText.value,

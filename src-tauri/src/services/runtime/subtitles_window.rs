@@ -16,14 +16,31 @@ use crate::locks::MutexExt;
 
 pub const SUBTITLES_WINDOW_LABEL: &str = "subtitles";
 
-/// The smallest strip the subtitles still fit in, in physical pixels.
+/// The smallest strip the subtitles still fit in, in logical pixels.
 const MIN_WIDTH: u32 = 240;
 const MIN_HEIGHT: u32 = 44;
-/// The strip when none was remembered: wide and low...
+/// The strip when none was remembered: wide and low, in logical pixels...
 const DEFAULT_WIDTH: u32 = 760;
-const DEFAULT_HEIGHT: u32 = 80;
-/// ...over the bottom of the screen, above where a taskbar or dock is.
+const DEFAULT_HEIGHT: u32 = 84;
+/// Extra vertical headroom for the click-through anchored layer-shell surface,
+/// in logical pixels, so the bottom-aligned pill can grow upward even at larger
+/// UI scales.
+const ANCHORED_SURFACE_HEIGHT: u32 = 108;
+/// ...over the bottom of the screen, above where a taskbar or dock is, in
+/// logical pixels.
 const DEFAULT_BOTTOM_MARGIN: u32 = 96;
+
+/// A monitor's usable work area in physical pixels together with its scale
+/// factor, so logical defaults scale properly on HiDPI displays.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct MonitorArea {
+    pub work_area: WindowGeometry,
+    pub scale_factor: f64,
+}
+
+fn scaled(logical: u32, scale_factor: f64) -> u32 {
+    (f64::from(logical) * scale_factor.max(1.0)).round() as u32
+}
 
 /// Where a window is and how large, in physical pixels of the desktop.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
@@ -97,7 +114,7 @@ pub enum SubtitlesAction {
 /// The windows the subtitles involve, apart from Tauri.
 pub trait SubtitlesHost {
     /// The work areas of the monitors; the first is where the main window is.
-    fn monitors(&self) -> Vec<WindowGeometry>;
+    fn monitors(&self) -> Vec<MonitorArea>;
     /// Creates the strip if needed; returns whether the compositor anchors it.
     fn prepare_strip(&self) -> Result<bool, AppError>;
     /// Shows the strip, at `geometry` unless it is anchored.
@@ -137,16 +154,16 @@ impl SubtitlesState {
 
 /// Where the strip goes: the remembered place while it is still on a
 /// monitor, else low in the middle of the main window's monitor.
-fn strip_geometry(
-    remembered: Option<WindowGeometry>,
-    monitors: &[WindowGeometry],
-) -> WindowGeometry {
+fn strip_geometry(remembered: Option<WindowGeometry>, monitors: &[MonitorArea]) -> WindowGeometry {
     if let Some(geometry) = remembered {
-        let is_on_screen = monitors.is_empty() || monitors.iter().any(|m| m.intersects(&geometry));
-        if is_on_screen {
+        let matched = monitors
+            .iter()
+            .find(|monitor| monitor.work_area.intersects(&geometry));
+        if monitors.is_empty() || matched.is_some() {
+            let scale = matched.map_or(1.0, |monitor| monitor.scale_factor);
             return WindowGeometry {
-                width: geometry.width.max(MIN_WIDTH),
-                height: geometry.height.max(MIN_HEIGHT),
+                width: geometry.width.max(scaled(MIN_WIDTH, scale)),
+                height: geometry.height.max(scaled(MIN_HEIGHT, scale)),
                 ..geometry
             };
         }
@@ -159,12 +176,19 @@ fn strip_geometry(
             height: DEFAULT_HEIGHT,
         };
     };
-    let width = DEFAULT_WIDTH.min(monitor.width).max(MIN_WIDTH);
-    let height = DEFAULT_HEIGHT.min(monitor.height).max(MIN_HEIGHT);
-    let bottom_margin = DEFAULT_BOTTOM_MARGIN.min(monitor.height.saturating_sub(height));
+    let work = monitor.work_area;
+    let scale = monitor.scale_factor;
+    let min_width = scaled(MIN_WIDTH, scale).min(work.width);
+    let min_height = scaled(MIN_HEIGHT, scale).min(work.height);
+    let width = scaled(DEFAULT_WIDTH, scale).min(work.width).max(min_width);
+    let height = scaled(DEFAULT_HEIGHT, scale)
+        .min(work.height)
+        .max(min_height);
+    let bottom_margin =
+        scaled(DEFAULT_BOTTOM_MARGIN, scale).min(work.height.saturating_sub(height));
     WindowGeometry {
-        x: monitor.x + (monitor.width.saturating_sub(width) / 2) as i32,
-        y: monitor.y + monitor.height.saturating_sub(height + bottom_margin) as i32,
+        x: work.x + (work.width.saturating_sub(width) / 2) as i32,
+        y: work.y + work.height.saturating_sub(height + bottom_margin) as i32,
         width,
         height,
     }
@@ -241,18 +265,21 @@ impl TauriSubtitlesHost<'_> {
     }
 }
 
-fn area_of(monitor: &tauri::Monitor) -> WindowGeometry {
+fn area_of(monitor: &tauri::Monitor) -> MonitorArea {
     let work = monitor.work_area();
-    WindowGeometry {
-        x: work.position.x,
-        y: work.position.y,
-        width: work.size.width,
-        height: work.size.height,
+    MonitorArea {
+        work_area: WindowGeometry {
+            x: work.position.x,
+            y: work.position.y,
+            width: work.size.width,
+            height: work.size.height,
+        },
+        scale_factor: monitor.scale_factor().max(1.0),
     }
 }
 
 impl SubtitlesHost for TauriSubtitlesHost<'_> {
-    fn monitors(&self) -> Vec<WindowGeometry> {
+    fn monitors(&self) -> Vec<MonitorArea> {
         self.on_window(super::MAIN_WINDOW_LABEL, |window| {
             let current = window.current_monitor().ok().flatten().map(|m| area_of(&m));
             let others = window
@@ -344,7 +371,7 @@ fn ensure_strip(app: &AppHandle) -> Result<bool, AppError> {
     let window = super::lifecycle::window_builder(app, &config)?.build()?;
     crate::services::platform::attach_subtitles_surface(
         &window,
-        (DEFAULT_WIDTH, DEFAULT_HEIGHT),
+        (DEFAULT_WIDTH, ANCHORED_SURFACE_HEIGHT),
         DEFAULT_BOTTOM_MARGIN as i32,
     )
 }
@@ -353,11 +380,24 @@ fn ensure_strip(app: &AppHandle) -> Result<bool, AppError> {
 mod tests {
     use super::*;
 
-    const MONITOR: WindowGeometry = WindowGeometry {
-        x: 0,
-        y: 0,
-        width: 1920,
-        height: 1080,
+    const MONITOR: MonitorArea = MonitorArea {
+        work_area: WindowGeometry {
+            x: 0,
+            y: 0,
+            width: 1920,
+            height: 1080,
+        },
+        scale_factor: 1.0,
+    };
+
+    const HIDPI_MONITOR: MonitorArea = MonitorArea {
+        work_area: WindowGeometry {
+            x: 0,
+            y: 0,
+            width: 3840,
+            height: 2160,
+        },
+        scale_factor: 2.0,
     };
 
     #[derive(Default)]
@@ -368,7 +408,7 @@ mod tests {
     }
 
     impl SubtitlesHost for FakeHost {
-        fn monitors(&self) -> Vec<WindowGeometry> {
+        fn monitors(&self) -> Vec<MonitorArea> {
             vec![MONITOR]
         }
         fn prepare_strip(&self) -> Result<bool, AppError> {
@@ -421,7 +461,7 @@ mod tests {
             ..FakeHost::default()
         };
         let state = SubtitlesState::default();
-        show(&host, &state, Some(MONITOR)).unwrap();
+        show(&host, &state, Some(MONITOR.work_area)).unwrap();
         assert_eq!(host.calls.locked()[0], "show None");
         assert!(state.snapshot().is_anchored);
         assert_eq!(hide(&host, &state).unwrap(), None);
@@ -471,5 +511,27 @@ mod tests {
             strip_geometry(Some(off_screen), &[MONITOR]),
             strip_geometry(None, &[MONITOR])
         );
+    }
+
+    #[test]
+    fn scales_default_and_minimum_strip_sizes_on_hidpi_monitors() {
+        let strip = strip_geometry(None, &[HIDPI_MONITOR]);
+        assert_eq!(strip.width, DEFAULT_WIDTH * 2);
+        assert_eq!(strip.height, DEFAULT_HEIGHT * 2);
+        assert_eq!(strip.x, (3840 - (DEFAULT_WIDTH * 2) as i32) / 2);
+        assert_eq!(
+            strip.y,
+            2160 - (DEFAULT_HEIGHT * 2) as i32 - (DEFAULT_BOTTOM_MARGIN * 2) as i32
+        );
+
+        let too_small = WindowGeometry {
+            x: 100,
+            y: 100,
+            width: 300,
+            height: 52,
+        };
+        let clamped = strip_geometry(Some(too_small), &[HIDPI_MONITOR]);
+        assert_eq!(clamped.width, MIN_WIDTH * 2);
+        assert_eq!(clamped.height, MIN_HEIGHT * 2);
     }
 }

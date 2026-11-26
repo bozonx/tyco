@@ -46,7 +46,7 @@
         "url": "subtitles.html",
         "title": "TyCo - subtitles",
         "width": 760,
-        "height": 80,
+        "height": 84,
         "minWidth": 240,
         "minHeight": 44,
         "resizable": true,

@@ -59,12 +59,17 @@ describe('SubtitlesOverlay.vue', () => {
     const wrapper = mount(SubtitlesOverlay)
     await flushPromises()
 
-    // Subtitles texts are rendered
-    expect(wrapper.text()).toContain('Hello world')
-    expect(wrapper.text()).toContain('pending')
+    // Subtitles texts are rendered, with pending words hidden from aria-live spam
+    expect(wrapper.find('.subtitles-main').text()).toBe('Hello world pending')
+    expect(wrapper.find('.subtitles-pending').attributes('aria-hidden')).toBe(
+      'true'
+    )
     expect(wrapper.text()).toContain('Привет мир')
     expect(wrapper.find('.subtitles-main-scroll').classes()).toContain(
       'has-secondary'
+    )
+    expect(wrapper.find('.subtitles-root').classes()).not.toContain(
+      'is-anchored'
     )
 
     // Only one action button is rendered: Expand button
@@ -87,6 +92,35 @@ describe('SubtitlesOverlay.vue', () => {
 
     const calls = desktop.backend.callsOf('request_subtitles_action')
     expect(calls).toEqual([{ action: 'expand' }])
+  })
+
+  it('renders pending-only first phrase dimmed without showing placeholder', async () => {
+    const pendingOnly: SubtitlesView = {
+      mainText: '',
+      mainLang: null,
+      pendingText: 'Speaking now',
+      secondaryText: '',
+      placeholder: 'Listening…',
+      errorText: '',
+      isActive: true,
+      stopLabel: 'Stop',
+      expandLabel: 'Expand',
+      recordingStartedAt: null,
+      recordingLabel: '',
+    }
+
+    desktop.backend.handle(
+      'get_subtitles',
+      () => ({ view: pendingOnly, isAnchored: true }) as SubtitlesSnapshot
+    )
+    desktop.backend.handle('set_subtitles_input_region', () => undefined)
+
+    const wrapper = mount(SubtitlesOverlay)
+    await flushPromises()
+
+    expect(wrapper.find('.subtitles-root').classes()).toContain('is-anchored')
+    expect(wrapper.find('.subtitles-main').text()).toBe('Speaking now')
+    expect(wrapper.text()).not.toContain('Listening…')
   })
 
   it('updates text when DESKTOP_EVENTS.SUBTITLES_CHANGED is emitted', async () => {
