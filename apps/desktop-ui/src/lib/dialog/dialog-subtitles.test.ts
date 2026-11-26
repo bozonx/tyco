@@ -69,6 +69,21 @@ describe('buildSubtitlesView', () => {
     expect(view.secondaryText).toBe('')
   })
 
+  it('includes pending untranslated words even when original is shown under translation', () => {
+    const view = buildSubtitlesView(
+      input(
+        [
+          translated,
+          segment({ id: 'b', startMs: 200, endMs: 300, text: 'how are you' }),
+        ],
+        { isTranslationOnly: false }
+      )
+    )
+    expect(view.mainText).toBe('Привет')
+    expect(view.pendingText).toBe('how are you')
+    expect(view.secondaryText).toBe('Hello there how are you')
+  })
+
   it('shows the original alone without a translation', () => {
     expect(
       buildSubtitlesView(input([translated], { translationLanguage: '' }))

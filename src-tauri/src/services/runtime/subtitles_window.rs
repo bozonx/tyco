@@ -21,7 +21,7 @@ const MIN_WIDTH: u32 = 240;
 const MIN_HEIGHT: u32 = 44;
 /// The strip when none was remembered: wide and low...
 const DEFAULT_WIDTH: u32 = 760;
-const DEFAULT_HEIGHT: u32 = 52;
+const DEFAULT_HEIGHT: u32 = 80;
 /// ...over the bottom of the screen, above where a taskbar or dock is.
 const DEFAULT_BOTTOM_MARGIN: u32 = 96;
 

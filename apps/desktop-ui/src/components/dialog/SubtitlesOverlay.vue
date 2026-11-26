@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="subtitlesRef"
     class="subtitles"
     :class="{ 'is-anchored': isAnchored }"
     @mousedown.left="startDragging"
@@ -13,19 +14,28 @@
       >
         {{ view.errorText }}
       </p>
-      <p
+      <div
         v-if="view.mainText"
-        class="subtitles-main"
-        :class="{ 'is-single-line': Boolean(view.secondaryText) }"
+        ref="mainScrollRef"
+        class="subtitles-main-scroll"
+        :class="{ 'has-secondary': Boolean(view.secondaryText) }"
       >
-        <span :lang="view.mainLang ?? undefined">{{ view.mainText }}</span>
-        <span v-if="view.pendingText" class="subtitles-pending">
-          {{ view.pendingText }}</span
-        >
-      </p>
-      <p v-if="view.secondaryText" class="subtitles-secondary">
-        {{ view.secondaryText }}
-      </p>
+        <p class="subtitles-main">
+          <span :lang="view.mainLang ?? undefined">{{ view.mainText }}</span>
+          <span v-if="view.pendingText" class="subtitles-pending">
+            {{ ' ' + view.pendingText.trim() }}</span
+          >
+        </p>
+      </div>
+      <div
+        v-if="view.secondaryText"
+        ref="secondaryScrollRef"
+        class="subtitles-secondary-scroll"
+      >
+        <p class="subtitles-secondary">
+          {{ view.secondaryText }}
+        </p>
+      </div>
       <p v-if="!view.mainText && !view.errorText" class="subtitles-secondary">
         {{ view.placeholder }}
       </p>
@@ -78,12 +88,24 @@ const EMPTY_VIEW: SubtitlesView = {
 const view = ref<SubtitlesView>(EMPTY_VIEW)
 /** Held at the bottom by the compositor: not moved, clicked through */
 const isAnchored = ref(false)
+const subtitlesRef = ref<HTMLElement | null>(null)
 const actions = ref<HTMLElement | null>(null)
+const mainScrollRef = ref<HTMLElement | null>(null)
+const secondaryScrollRef = ref<HTMLElement | null>(null)
 let stopListening: (() => void) | undefined
 let resizeObserver: ResizeObserver | undefined
 
 const logError = (message: string) => (error: unknown) =>
   clientLogger.error(message, error, 'dialog')
+
+function scrollToBottom() {
+  if (mainScrollRef.value) {
+    mainScrollRef.value.scrollTop = mainScrollRef.value.scrollHeight
+  }
+  if (secondaryScrollRef.value) {
+    secondaryScrollRef.value.scrollTop = secondaryScrollRef.value.scrollHeight
+  }
+}
 
 /**
  * Only the buttons of an anchored strip take the pointer: the rest lets clicks
@@ -123,6 +145,14 @@ function startResizing() {
 }
 
 watch(
+  () => [view.value.mainText, view.value.pendingText, view.value.secondaryText],
+  async () => {
+    await nextTick()
+    scrollToBottom()
+  }
+)
+
+watch(
   () => view.value.isActive,
   async () => {
     await nextTick()
@@ -132,22 +162,33 @@ watch(
 
 onMounted(async () => {
   stopListening = await desktopClient
-    .listen(DESKTOP_EVENTS.SUBTITLES_CHANGED, (next) => {
+    .listen(DESKTOP_EVENTS.SUBTITLES_CHANGED, async (next) => {
       view.value = next
+      await nextTick()
+      scrollToBottom()
     })
     .catch(() => undefined)
   try {
     const snapshot = await invokeDesktop('get_subtitles')
     isAnchored.value = snapshot.isAnchored
-    if (snapshot.view) view.value = snapshot.view
+    if (snapshot.view) {
+      view.value = snapshot.view
+      await nextTick()
+      scrollToBottom()
+    }
   } catch (error) {
     logError('Could not read the subtitles')(error)
   }
   await nextTick()
   await updateInputRegion()
+  scrollToBottom()
   if (typeof ResizeObserver !== 'undefined') {
-    resizeObserver = new ResizeObserver(() => void updateInputRegion())
+    resizeObserver = new ResizeObserver(() => {
+      void updateInputRegion()
+      scrollToBottom()
+    })
     if (actions.value) resizeObserver.observe(actions.value)
+    if (subtitlesRef.value) resizeObserver.observe(subtitlesRef.value)
   }
 })
 
@@ -163,6 +204,16 @@ html,
 body.subtitles-body {
   background: transparent;
   overflow: hidden;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 </style>
 
@@ -172,7 +223,8 @@ body.subtitles-body {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  height: 100dvh;
+  min-height: 2.75rem;
+  max-height: 100%;
   padding: var(--space-xs) var(--space-md);
   border: 1px solid var(--app-border-subtle);
   border-radius: var(--radius-lg);
@@ -202,20 +254,24 @@ body.subtitles-body {
   overflow: hidden;
 }
 
+.subtitles-main-scroll {
+  --main-line-height: 1.35rem;
+  max-height: calc(3 * var(--main-line-height));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.subtitles-main-scroll.has-secondary {
+  max-height: calc(2 * var(--main-line-height));
+}
+
 .subtitles-main {
   font-size: var(--text-title, 1rem);
   font-weight: 500;
-  line-height: 1.25;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.subtitles-main.is-single-line {
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
+  line-height: var(--main-line-height, 1.35rem);
+  margin: 0;
+  word-break: break-word;
 }
 
 .subtitles-pending {
@@ -230,15 +286,20 @@ body.subtitles-body {
   text-overflow: ellipsis;
 }
 
+.subtitles-secondary-scroll {
+  --secondary-line-height: 1.15rem;
+  max-height: var(--secondary-line-height);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .subtitles-secondary {
   font-size: var(--text-small, 0.8125rem);
   color: var(--app-text-muted);
-  line-height: 1.2;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  line-height: var(--secondary-line-height, 1.15rem);
+  margin: 0;
+  word-break: break-word;
 }
 
 .subtitles-actions {

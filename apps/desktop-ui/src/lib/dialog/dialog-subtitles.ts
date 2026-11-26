@@ -40,11 +40,8 @@ export function buildSubtitlesView(input: DialogSubtitlesInput): SubtitlesView {
   return {
     mainText: showsTranslation ? translation : original,
     mainLang: showsTranslation ? input.translationLanguage : null,
-    // with the translation alone, the words still waiting for it follow it
-    pendingText:
-      turn && showsTranslation && input.isTranslationOnly
-        ? turnUntranslatedText(turn)
-        : '',
+    // with the translation, the words still waiting for it follow it
+    pendingText: turn && showsTranslation ? turnUntranslatedText(turn) : '',
     secondaryText: showsTranslation && !input.isTranslationOnly ? original : '',
     placeholder: input.isActive
       ? input.labels.waitingForSpeech
