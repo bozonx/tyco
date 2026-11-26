@@ -445,6 +445,42 @@ it('waits for the language of a translation picked by hand', async () => {
   expect(deps.run).toHaveBeenCalledOnce()
 })
 
+it('runs a pinned command with parameters and dictated text when finished to run', async () => {
+  const { model, deps, partial } = setup()
+  deps.finishDictation = vi.fn(async () => 'Guten Morgen')
+  await model.start()
+  model.pinCommand('translate')
+  model.pinParameter('language', 'de-DE')
+  partial('Guten Morgen')
+  expect(model.canRunLive.value).toBe(true)
+  await model.finish('run')
+  expect(deps.run).toHaveBeenCalledOnce()
+  expect(deps.run).toHaveBeenCalledWith(
+    expect.objectContaining({ id: 'translate' }),
+    'Guten Morgen',
+    expect.any(AbortSignal),
+    undefined,
+    { language: 'de-DE' }
+  )
+})
+
+it('waits in review for a pinned command with parameters when finished for review', async () => {
+  const { model, deps, partial } = setup()
+  deps.finishDictation = vi.fn(async () => 'Guten Morgen')
+  await model.start()
+  model.pinCommand('translate')
+  model.pinParameter('language', 'de-DE')
+  partial('Guten Morgen')
+  expect(model.canRunLive.value).toBe(true)
+  await model.finish('review')
+  expect(deps.run).not.toHaveBeenCalled()
+  expect(model.stage.value).toBe('review')
+  expect(model.command.value?.id).toBe('translate')
+  expect(model.inputText.value).toBe('Guten Morgen')
+  await model.run()
+  expect(deps.run).toHaveBeenCalledOnce()
+})
+
 it('does not run a command that was not recognized when finished to run', async () => {
   const { model, deps } = setup()
   await model.start()

@@ -49,7 +49,8 @@ import {
 } from '../lib/stt/dictation-error'
 import { createSttClient } from '../lib/stt/stt-client'
 import { createVoiceCaptureControl } from '../lib/stt/voice-capture'
-import { useChatStore } from './chat'
+import { appNavigation } from '../navigation'
+import { useChatInputStore } from './chat-input'
 import { useDesktopStore } from './desktop'
 import { useDialogHistoryStore } from './dialog-history'
 import { useDialogStatusStore } from './dialog-status'
@@ -833,7 +834,10 @@ export const useDialogStore = defineStore('dialog', () => {
   async function sendSelectedToChat() {
     const text = formatSelectedText()
     if (!text) return
-    await useChatStore().attachToCurrentChat(text)
+    const chatInputStore = useChatInputStore()
+    chatInputStore.setValue(text + '\n\n')
+    chatInputStore.requestFocus()
+    await appNavigation.goToChat()
   }
 
   async function sendSelectedToActionMenu() {

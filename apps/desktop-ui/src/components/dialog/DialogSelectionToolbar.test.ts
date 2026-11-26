@@ -3,6 +3,8 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { i18n } from '../../lib/i18n'
+import { appNavigation } from '../../navigation'
+import { useChatInputStore } from '../../stores/chat-input'
 import {
   loadFakeDesktop,
   type TestDesktop,
@@ -159,6 +161,46 @@ describe('DialogSelectionToolbar.vue', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     await flushPromises()
     expect(dialog.selectedTurnIds).toEqual([])
+    wrapper.unmount()
+  })
+
+  it('sends formatted selection to chat input with two newlines and navigates to chat', async () => {
+    const dialog = useDialogStore()
+    dialog.segments = [
+      {
+        id: 'turn-1',
+        side: 'remote',
+        startMs: 0,
+        endMs: 1000,
+        text: 'Hello world',
+        isFinal: true,
+        translationState: 'idle',
+      },
+    ]
+    dialog.selectedTurnIds = ['turn-1']
+
+    const chatInput = useChatInputStore()
+    const setValueSpy = vi.spyOn(chatInput, 'setValue')
+    const requestFocusSpy = vi.spyOn(chatInput, 'requestFocus')
+    const goToChatSpy = vi
+      .spyOn(appNavigation, 'goToChat')
+      .mockResolvedValue(undefined as never)
+
+    const wrapper = mount(DialogSelectionToolbar, {
+      global: { plugins: [i18n] },
+    })
+
+    const buttons = wrapper.findAll('button')
+    // Buttons: [Clear, Copy, To chat, To action menu]
+    const toChatBtn = buttons[2]
+    expect(toChatBtn.text()).toBe('To chat')
+    await toChatBtn.trigger('click')
+
+    expect(setValueSpy).toHaveBeenCalledWith(
+      dialog.formatSelectedText() + '\n\n'
+    )
+    expect(requestFocusSpy).toHaveBeenCalledOnce()
+    expect(goToChatSpy).toHaveBeenCalledOnce()
     wrapper.unmount()
   })
 })

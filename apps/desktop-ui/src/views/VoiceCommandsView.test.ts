@@ -227,6 +227,8 @@ describe('separate voice command overlay', () => {
     await flushPromises()
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
     expect(mocks.finish).toHaveBeenLastCalledWith('run')
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter' }))
+    expect(mocks.finish).toHaveBeenLastCalledWith('run')
     window.dispatchEvent(
       new KeyboardEvent('keydown', { code: 'Space', shiftKey: true })
     )

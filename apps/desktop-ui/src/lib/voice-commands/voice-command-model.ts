@@ -465,8 +465,29 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     inputText.value = text
     stage.value = 'review'
     const result = resolveVoice(routes.value, text)
-    if (result.kind === 'match') {
-      const candidate = result.candidates[0]!
+    let candidate: VoiceCandidate | undefined
+    if (
+      result.kind === 'match' &&
+      (!pinnedCommandId.value ||
+        pinnedCommandId.value === result.candidates[0]!.commandId)
+    ) {
+      const match = result.candidates[0]!
+      candidate = {
+        ...match,
+        parameters: { ...match.parameters, ...pinnedParameters.value },
+      }
+    } else if (pinnedCommandId.value) {
+      candidate = {
+        commandId: pinnedCommandId.value,
+        text,
+        parameters: { ...pinnedParameters.value },
+        consumedWordCount: 0,
+        textOffset: 0,
+        commandOffset: 0,
+      }
+    }
+
+    if (candidate) {
       choose(candidate)
       // dropped speech is shown for review before anything runs
       if (

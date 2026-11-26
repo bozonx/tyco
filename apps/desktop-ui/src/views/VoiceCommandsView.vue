@@ -673,11 +673,11 @@ const onKeyDown = (event: KeyboardEvent) => {
       editText()
       return
     } else if (event.code === 'Space' || event.code === 'Enter') {
+      event.preventDefault()
       if (canRunLive.value) {
-        event.preventDefault()
         void voice.finish('run')
-        return
       }
+      return
     } else if (event.key === 'Backspace') {
       if (voice.canStepBack) {
         event.preventDefault()
